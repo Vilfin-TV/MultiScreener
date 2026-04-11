@@ -888,7 +888,7 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
   .top-menu-items{
     display:none;position:fixed;top:44px;left:0;right:0;
     background:#1a1200;border-bottom:2px solid var(--gold);
-    flex-direction:column;z-index:9998;max-height:70vh;overflow-y:auto;
+    flex-direction:column;z-index:9998;max-height:80vh;overflow-y:auto;
     box-shadow:0 8px 32px rgba(0,0,0,.6);
   }
   .top-menu-items.mobile-open{display:flex}
@@ -900,10 +900,30 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
   .top-menu-brand .brand-name{display:none}
   .top-menu-right{padding:0 8px;gap:4px}
   .top-menu-right .um-btn{display:none}
-  .sidebar{width:0;padding:0;border:none;overflow:hidden}
-  .sidebar.open{width:var(--sidebar-w);padding:16px 0}
+  /* Sidebar: show only toggle button on mobile, expand on open */
+  .sidebar{
+    width:42px;padding:8px 0;border-right:1px solid var(--border);
+    overflow:hidden;z-index:600;
+  }
+  .sidebar .sidebar-menu-item .sidebar-label{display:none}
+  .sidebar.open{width:var(--sidebar-w);padding:16px 0;position:fixed;top:44px;left:0;bottom:0;background:var(--dark2);z-index:700}
+  .sidebar.open .sidebar-menu-item .sidebar-label{display:inline;opacity:1}
   .layout{height:calc(100vh - 44px)}
   .lns-grid{grid-template-columns:1fr!important}
+  /* Left menu overlay: ensure it works on mobile */
+  .left-menu-overlay{z-index:800}
+  .left-menu-header{padding:14px 16px;gap:10px}
+  .left-menu-body{padding:20px 16px 40px}
+  /* About section mobile */
+  footer{padding:20px 16px}
+}
+
+/* Very small screens */
+@media(max-width:420px){
+  .top-menubar{padding:0 4px}
+  .mobile-menu-btn{width:32px;height:32px;font-size:16px}
+  .cf-badge{display:none}
+  #live-clock{font-size:9px;padding:3px 6px}
 }
 </style>
 </head>
@@ -1800,7 +1820,7 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
             ],"originalTitle":"Indices"},
             {"title":"Commodities","symbols":[
               {"s":"COMEX:GC1!","d":"Gold"},{"s":"COMEX:SI1!","d":"Silver"},
-              {"s":"NYMEX:CL1!","d":"Crude Oil WTI"},{"s":"ICEEUR:B1!","d":"Brent Oil"},
+              {"s":"NYMEX:CL1!","d":"Crude Oil WTI"},{"s":"TVC:UKOIL","d":"Brent Oil"},
               {"s":"COMEX:HG1!","d":"Copper"}
             ],"originalTitle":"Commodities"},
             {"title":"Forex","symbols":[
@@ -1827,8 +1847,8 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
               {"name":"BSE:SENSEX","displayName":"SENSEX"},
               {"name":"NSE:NIFTY50","displayName":"NIFTY 50"},
               {"name":"NSE:BANKNIFTY","displayName":"Bank Nifty"},
-              {"name":"NSE:MIDCPNIFTY","displayName":"Midcap Nifty"},
-              {"name":"NSE:FINNIFTY","displayName":"Fin Nifty"}
+              {"name":"NSE:NIFTYMIDCAP100","displayName":"Midcap Nifty"},
+              {"name":"NSE:NIFTYFINSERVICE","displayName":"Fin Nifty"}
             ]},
             {"name":"Global Indices","symbols":[
               {"name":"SP:SPX","displayName":"S&P 500"},
@@ -1873,17 +1893,17 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
               {"name":"COMEX:GC1!","displayName":"Gold"},
               {"name":"COMEX:SI1!","displayName":"Silver"},
               {"name":"COMEX:PL1!","displayName":"Platinum"},
-              {"name":"COMEX:PA1!","displayName":"Palladium"}
+              {"name":"TVC:PALLADIUM","displayName":"Palladium"}
             ]},
             {"name":"Energy","symbols":[
               {"name":"NYMEX:CL1!","displayName":"Crude Oil WTI"},
-              {"name":"ICEEUR:B1!","displayName":"Brent Oil"},
+              {"name":"TVC:UKOIL","displayName":"Brent Oil"},
               {"name":"NYMEX:NG1!","displayName":"Natural Gas"}
             ]},
             {"name":"Agricultural","symbols":[
-              {"name":"CBOT:ZW1!","displayName":"Wheat"},
-              {"name":"CBOT:ZC1!","displayName":"Corn"},
-              {"name":"CBOT:ZS1!","displayName":"Soybeans"}
+              {"name":"CME:ZW1!","displayName":"Wheat"},
+              {"name":"CME:ZC1!","displayName":"Corn"},
+              {"name":"CME:ZS1!","displayName":"Soybeans"}
             ]}
           ]
         }
@@ -1965,7 +1985,7 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
           "tabs": [
             { "title": "Indices", "symbols": [
                 {"s":"BSE:SENSEX","d":"SENSEX"},{"s":"NSE:NIFTY50","d":"NIFTY 50"},
-                {"s":"NSE:BANKNIFTY","d":"Bank Nifty"},{"s":"NSE:MIDCPNIFTY","d":"Midcap Nifty"},
+                {"s":"NSE:BANKNIFTY","d":"Bank Nifty"},{"s":"NSE:NIFTYMIDCAP100","d":"Midcap Nifty"},
                 {"s":"CAPITALCOM:US100","d":"Nasdaq 100"},{"s":"SP:SPX","d":"S&P 500"},
                 {"s":"DJ:DJI","d":"Dow Jones"},{"s":"INDEX:NKY","d":"Nikkei 225"},
                 {"s":"HSI:HSI","d":"Hang Seng"},{"s":"XETR:DAX","d":"DAX"},
@@ -1974,7 +1994,7 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
             },
             { "title": "Commodities", "symbols": [
                 {"s":"COMEX:GC1!","d":"Gold"},{"s":"COMEX:SI1!","d":"Silver"},
-                {"s":"NYMEX:CL1!","d":"Crude Oil WTI"},{"s":"ICEEUR:B1!","d":"Brent Oil"},
+                {"s":"NYMEX:CL1!","d":"Crude Oil WTI"},{"s":"TVC:UKOIL","d":"Brent Oil"},
                 {"s":"COMEX:HG1!","d":"Copper"},{"s":"TVC:USOIL","d":"US Oil"}
               ], "originalTitle": "Commodities"
             },
@@ -2010,8 +2030,8 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
                 {"name":"BSE:SENSEX","displayName":"SENSEX"},
                 {"name":"NSE:NIFTY50","displayName":"NIFTY 50"},
                 {"name":"NSE:BANKNIFTY","displayName":"Bank Nifty"},
-                {"name":"NSE:MIDCPNIFTY","displayName":"Midcap Nifty"},
-                {"name":"NSE:FINNIFTY","displayName":"Fin Nifty"},
+                {"name":"NSE:NIFTYMIDCAP100","displayName":"Midcap Nifty"},
+                {"name":"NSE:NIFTYFINSERVICE","displayName":"Fin Nifty"},
                 {"name":"NSE:NIFTYIT","displayName":"Nifty IT"},
                 {"name":"NSE:NIFTYPHARMA","displayName":"Nifty Pharma"}
               ]
@@ -2115,14 +2135,14 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
               "symbols": [
                 {"name":"COMEX:GC1!","displayName":"Gold"},
                 {"name":"COMEX:SI1!","displayName":"Silver"},
-                {"name":"NYMEX:PL1!","displayName":"Platinum"},
+                {"name":"TVC:PLATINUM","displayName":"Platinum"},
                 {"name":"NYMEX:PA1!","displayName":"Palladium"}
               ]
             },
             { "name": "Energy",
               "symbols": [
                 {"name":"NYMEX:CL1!","displayName":"WTI Crude"},
-                {"name":"ICEEUR:B1!","displayName":"Brent Crude"},
+                {"name":"TVC:UKOIL","displayName":"Brent Crude"},
                 {"name":"NYMEX:NG1!","displayName":"Natural Gas"}
               ]
             },
@@ -2891,30 +2911,33 @@ function initLiveClock() {
 // LIVE NEWS GRID — 10 boxes, RSS via allorigins proxy, 30s refresh
 // ═══════════════════════════════════════════════════════════════════
 const NEWS_SOURCES = [
-  // US markets
-  { id:'us1',    flag:'🇺🇸', label:'MarketWatch',         color:'#c0390b', url:'https://feeds.marketwatch.com/marketwatch/topstories/' },
-  { id:'us2',    flag:'🇺🇸', label:'CNBC Top News',       color:'#b5120e', url:'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114' },
-  { id:'us3',    flag:'🇺🇸', label:'Seeking Alpha',       color:'#6b11a1', url:'https://seekingalpha.com/market_currents.xml' },
-  // India markets
+  // Feeds that work well through rss2json (tested & reliable)
+  { id:'us1',    flag:'🇺🇸', label:'CNBC Top News',       color:'#b5120e', url:'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114' },
+  { id:'us2',    flag:'🇺🇸', label:'MarketWatch',         color:'#c0390b', url:'https://feeds.marketwatch.com/marketwatch/topstories/' },
+  { id:'us3',    flag:'🇺🇸', label:'Yahoo Finance',       color:'#6b11a1', url:'https://finance.yahoo.com/news/rssindex' },
   { id:'india1', flag:'🇮🇳', label:'ET Markets',          color:'#e8540f', url:'https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms' },
   { id:'india2', flag:'🇮🇳', label:'Moneycontrol',        color:'#c94200', url:'https://www.moneycontrol.com/rss/MCtopnews.xml' },
   { id:'india3', flag:'🇮🇳', label:'Mint Markets',        color:'#d45000', url:'https://www.livemint.com/rss/markets' },
-  { id:'india4', flag:'🇮🇳', label:'Business Standard',   color:'#b03c00', url:'https://www.business-standard.com/rss/markets-106.rss' },
-  // Asia
-  { id:'japan1', flag:'🇯🇵', label:'NHK World Business',  color:'#c0392b', url:'https://www3.nhk.or.jp/rss/news/cat5.xml' },
-  // Europe & Global
+  { id:'india4', flag:'🇮🇳', label:'NDTV Profit',         color:'#b03c00', url:'https://feeds.feedburner.com/ndtvprofit-latest' },
+  { id:'japan1', flag:'🇯🇵', label:'NHK World',           color:'#c0392b', url:'https://www3.nhk.or.jp/rss/news/cat5.xml' },
   { id:'europe', flag:'🌍',  label:'BBC Business',        color:'#1d4ed8', url:'https://feeds.bbci.co.uk/news/business/rss.xml' },
-  { id:'global', flag:'🌐',  label:'Google Finance',      color:'#0d6b3e', url:'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pKVGlnQVAB?hl=en-IN&gl=IN&ceid=IN:en' },
+  { id:'global', flag:'🌐',  label:'Google Finance News', color:'#0d6b3e', url:'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pKVGlnQVAB?hl=en-IN&gl=IN&ceid=IN:en' },
 ];
-// rss2json.com converts RSS to clean JSON — more reliable than raw XML proxy
-const RSS2JSON = 'https://api.rss2json.com/v1/api.json?count=6&rss_url=';
-let lnsCountdown = 300; // 5 minutes
+
+// Multiple CORS proxies — try in sequence for reliability
+const PROXIES = [
+  url => 'https://api.rss2json.com/v1/api.json?count=6&rss_url=' + encodeURIComponent(url),
+  url => 'https://api.allorigins.win/get?url=' + encodeURIComponent(url),
+  url => 'https://corsproxy.io/?' + encodeURIComponent(url),
+];
+
 let lnsTimer;
 
 function initLiveNews() {
   renderNewsBoxes();
   fetchAllNews();
-  startLnsCountdown();
+  // Silent refresh every 5 minutes
+  lnsTimer = setInterval(fetchAllNews, 300000);
 }
 
 function renderNewsBoxes() {
@@ -2933,36 +2956,43 @@ function renderNewsBoxes() {
 }
 
 function fetchAllNews() {
-  NEWS_SOURCES.forEach(s => fetchFeed(s));
+  NEWS_SOURCES.forEach(s => fetchFeed(s, 0));
 }
 
-function fetchFeed(src) {
+function renderItems(listEl, items) {
+  listEl.innerHTML = items.slice(0, 6).map(item => {
+    const title = (typeof item === 'string' ? item : (item.title || '')).trim();
+    const link  = item.link || item.url || '#';
+    const pub   = item.pubDate || item.published || '';
+    const timeStr = pub ? new Date(pub).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}) : '';
+    return `<a class="lnb-item" href="${link}" target="_blank" rel="noopener">
+      <span class="lnb-text">${title}</span>
+      ${timeStr ? `<span class="lnb-time">${timeStr}</span>` : ''}
+    </a>`;
+  }).join('');
+}
+
+function fetchFeed(src, proxyIdx) {
   const listEl = document.getElementById('lnbl-' + src.id);
-  if (!listEl) return;
-  fetch(RSS2JSON + encodeURIComponent(src.url))
+  if (!listEl || proxyIdx >= PROXIES.length) {
+    if (listEl) listEl.innerHTML = '<div class="lnb-error">Feed unavailable — <a href="' + src.url + '" target="_blank" style="color:var(--gold2)">Open directly</a></div>';
+    return;
+  }
+  const proxyUrl = PROXIES[proxyIdx](src.url);
+  fetch(proxyUrl, { signal: AbortSignal.timeout(8000) })
     .then(r => r.json())
     .then(data => {
-      if (data.status !== 'ok' || !data.items?.length) throw new Error('No items');
-      listEl.innerHTML = data.items.slice(0, 6).map(item => {
-        const title = (item.title || '').trim();
-        const link  = item.link || '#';
-        const pub   = item.pubDate || '';
-        const timeStr = pub ? new Date(pub).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}) : '';
-        return `<a class="lnb-item" href="${link}" target="_blank" rel="noopener">
-          <span class="lnb-text">${title}</span>
-          ${timeStr ? `<span class="lnb-time">${timeStr}</span>` : ''}
-        </a>`;
-      }).join('');
-    })
-    .catch(() => {
-      // Fallback: try allorigins proxy with XML parsing
-      fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(src.url))
-        .then(r => r.json())
-        .then(data => {
-          const xml = new DOMParser().parseFromString(data.contents, 'text/xml');
-          const items = Array.from(xml.querySelectorAll('item')).slice(0, 6);
-          if (!items.length) throw new Error('empty');
-          listEl.innerHTML = items.map(item => {
+      // rss2json returns {status:'ok', items:[...]}
+      if (data.status === 'ok' && data.items?.length) {
+        renderItems(listEl, data.items);
+        return;
+      }
+      // allorigins returns {contents:'...'} — parse as XML
+      if (data.contents) {
+        const xml = new DOMParser().parseFromString(data.contents, 'text/xml');
+        const xmlItems = Array.from(xml.querySelectorAll('item')).slice(0, 6);
+        if (xmlItems.length) {
+          listEl.innerHTML = xmlItems.map(item => {
             const title = item.querySelector('title')?.textContent?.trim() || '';
             const link  = item.querySelector('link')?.textContent?.trim() || '#';
             const pub   = item.querySelector('pubDate')?.textContent?.trim() || '';
@@ -2972,31 +3002,40 @@ function fetchFeed(src) {
               ${timeStr ? `<span class="lnb-time">${timeStr}</span>` : ''}
             </a>`;
           }).join('');
-        })
-        .catch(() => {
-          if (listEl) listEl.innerHTML = `<div class="lnb-error">⚠ Feed unavailable</div>`;
-        });
+          return;
+        }
+      }
+      throw new Error('no data');
+    })
+    .catch(() => {
+      // If this was a raw XML response from corsproxy.io, try parsing response as text
+      if (proxyIdx === 2) {
+        fetch(proxyUrl, { signal: AbortSignal.timeout(8000) })
+          .then(r => r.text())
+          .then(text => {
+            const xml = new DOMParser().parseFromString(text, 'text/xml');
+            const xmlItems = Array.from(xml.querySelectorAll('item')).slice(0, 6);
+            if (xmlItems.length) {
+              listEl.innerHTML = xmlItems.map(item => {
+                const title = item.querySelector('title')?.textContent?.trim() || '';
+                const link  = item.querySelector('link')?.textContent?.trim() || '#';
+                const pub   = item.querySelector('pubDate')?.textContent?.trim() || '';
+                const timeStr = pub ? new Date(pub).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}) : '';
+                return `<a class="lnb-item" href="${link}" target="_blank" rel="noopener">
+                  <span class="lnb-text">${title}</span>
+                  ${timeStr ? `<span class="lnb-time">${timeStr}</span>` : ''}
+                </a>`;
+              }).join('');
+              return;
+            }
+            throw new Error('empty');
+          })
+          .catch(() => fetchFeed(src, proxyIdx + 1));
+        return;
+      }
+      // Try next proxy
+      fetchFeed(src, proxyIdx + 1);
     });
-}
-
-function fmtCountdown(s) {
-  if (s >= 60) return `Refreshing in ${Math.floor(s/60)}m ${s%60}s`;
-  return `Refreshing in ${s}s`;
-}
-
-function startLnsCountdown() {
-  clearInterval(lnsTimer);
-  lnsCountdown = 300;
-  const timerEl = document.getElementById('lns-timer');
-  if (timerEl) timerEl.textContent = fmtCountdown(lnsCountdown);
-  lnsTimer = setInterval(() => {
-    lnsCountdown--;
-    if (timerEl) timerEl.textContent = fmtCountdown(lnsCountdown);
-    if (lnsCountdown <= 0) {
-      lnsCountdown = 300;
-      fetchAllNews();
-    }
-  }, 1000);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -3554,19 +3593,22 @@ const SIDE_CONTENT = {
   }
 };
 
+let _savedScrollMain = 0;
+let _savedScrollWin = 0;
+
 function openSidePanel(key) {
   const content = SIDE_CONTENT[key];
   if (!content) return;
-  // If same menu already open, close it
   const overlay = document.getElementById('left-menu-overlay');
   if (overlay.classList.contains('show') && overlay.dataset.key === key) {
     closeSidePanel();
     return;
   }
   overlay.dataset.key = key;
-  // Save scroll position before opening overlay
+  // Save ALL scroll positions before opening overlay
   const mc = document.querySelector('.main-content');
-  if (mc) _savedScrollY = mc.scrollTop;
+  _savedScrollMain = mc ? mc.scrollTop : 0;
+  _savedScrollWin = window.scrollY || document.documentElement.scrollTop || 0;
   document.getElementById('left-menu-title').textContent = content.title;
   document.getElementById('left-menu-body').innerHTML = content.html;
   overlay.classList.add('show');
@@ -3574,14 +3616,16 @@ function openSidePanel(key) {
   document.body.style.overflow = 'hidden';
 }
 
-let _savedScrollY = 0;
 function closeSidePanel() {
   const overlay = document.getElementById('left-menu-overlay');
   overlay.classList.remove('show');
   document.body.style.overflow = '';
-  // Restore scroll position so page doesn't jump
-  const mc = document.querySelector('.main-content');
-  if (mc) mc.scrollTop = _savedScrollY;
+  // Restore scroll positions — use requestAnimationFrame to ensure DOM has updated
+  requestAnimationFrame(() => {
+    const mc = document.querySelector('.main-content');
+    if (mc) mc.scrollTop = _savedScrollMain;
+    window.scrollTo(0, _savedScrollWin);
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════════
