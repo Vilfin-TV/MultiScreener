@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pre-Market Briefing — Vilfin George</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --burn:#c0390b;--burn2:#e8540f;--burn3:#ff7235;
+  --gold:#f5a623;--gold2:#ffd166;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;
+  --dark:#0f0f0f;--dark2:#1a1a1a;--dark3:#242424;
+  --card:#1e1e1e;--card2:#272727;
+  --text:#f0ede8;--text2:#b0a898;--text3:#6e6558;
+  --border:#3a342c;--border2:#4a4238;
+  --radius:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:#111;color:var(--text);min-height:100vh;overflow-x:hidden}
+.top-menubar{position:sticky;top:0;z-index:1000;background:linear-gradient(135deg,#0d0400 0%,#1a0800 40%,#2a0e00 70%,#1a0800 100%);border-bottom:2px solid var(--gold);display:flex;align-items:center;height:44px;padding:0;box-shadow:0 2px 20px rgba(0,0,0,.5)}
+.top-menu-brand{display:flex;align-items:center;gap:10px;padding:0 16px;border-right:1px solid rgba(255,255,255,.1);height:100%;text-decoration:none}
+.brand-icon{width:30px;height:30px;background:linear-gradient(135deg,var(--burn),var(--burn3));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 0 12px rgba(232,84,15,.5)}
+.brand-name{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:#fff;white-space:nowrap;text-shadow:0 0 20px rgba(232,84,15,.4);line-height:1}
+.brand-name span{color:var(--gold2)}
+.back-btn{margin-left:12px;padding:6px 14px;background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.3);border-radius:6px;color:var(--gold2);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:5px;transition:all .15s;white-space:nowrap}
+.back-btn:hover{background:rgba(245,166,35,.22);border-color:var(--gold2)}
+.top-page-title{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:rgba(255,255,255,.7);padding:0 16px;flex:1}
+.cf-badge-bar{display:flex;align-items:center;gap:5px;padding:0 16px;font-size:10px;color:rgba(255,255,255,.45);font-weight:600;letter-spacing:.4px}
+.cf-dot{width:7px;height:7px;border-radius:50%;background:#4a4a4a;flex-shrink:0}
+.cf-dot.connected{background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.site-header{background:linear-gradient(135deg,#0d0400 0%,#1a0800 30%,#1d4ed8 70%,#3b82f6 100%);padding:32px 20px 26px;text-align:center;position:relative;overflow:hidden}
+.site-header::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 20px,rgba(255,255,255,.02) 20px,rgba(255,255,255,.02) 40px)}
+.site-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.site-header h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(22px,4vw,40px);color:#fff;letter-spacing:4px;position:relative;z-index:1;text-shadow:0 0 40px rgba(59,130,246,.5)}
+.site-header .sub{color:rgba(255,255,255,.6);font-size:12px;margin-top:6px;position:relative;z-index:1;letter-spacing:2px;text-transform:uppercase}
+.site-header .version-badge{display:inline-block;background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.4);border-radius:20px;padding:4px 14px;margin-top:12px;color:var(--gold2);font-size:11px;font-weight:700;letter-spacing:1px;position:relative;z-index:1;text-transform:uppercase}
+.layout{display:flex;min-height:calc(100vh - 44px)}
+.main-content{flex:1;overflow-x:hidden}
+.panel-container{max-width:900px;margin:0 auto;padding:32px 20px 60px}
+.step-header{display:flex;align-items:center;gap:14px;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.step-num{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#1d4ed8,#3b82f6);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:20px;color:#fff;flex-shrink:0}
+.step-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--gold2)}
+.step-sub{font-size:12px;color:var(--text3);margin-top:2px;letter-spacing:.5px}
+.q-block{margin-bottom:24px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.q-label{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.q-num{background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700}
+.option-grid{display:flex;flex-wrap:wrap;gap:8px}
+/* Trader mode cards — bigger and more visual */
+.mode-card{
+  flex:1;min-width:200px;padding:20px;
+  border:2px solid var(--border2);border-radius:var(--radius);
+  background:var(--card2);cursor:pointer;transition:all .2s;
+  text-align:center;position:relative;overflow:hidden;
+}
+.mode-card:hover{border-color:#3b82f6;background:rgba(59,130,246,.08);transform:translateY(-2px);box-shadow:0 4px 16px rgba(59,130,246,.15)}
+.mode-card.selected{border-color:#3b82f6;background:rgba(59,130,246,.18)}
+.mode-card .mode-icon{font-size:36px;margin-bottom:10px;display:block}
+.mode-card .mode-label{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--gold2);margin-bottom:6px}
+.mode-card .mode-desc{font-size:11px;color:var(--text3);line-height:1.6}
+.mode-card.selected::before{content:'✓';position:absolute;top:10px;right:14px;font-size:18px;color:#3b82f6;font-weight:700}
+.opt{padding:8px 16px;border-radius:30px;border:1px solid var(--border2);background:var(--card2);color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;user-select:none}
+.opt:hover{border-color:#3b82f6;color:var(--text);background:rgba(59,130,246,.08)}
+.opt.selected{border-color:#3b82f6;background:rgba(59,130,246,.18);color:#93c5fd;font-weight:600}
+.opt.selected::before{content:'✓ ';font-size:11px}
+.text-input{width:100%;padding:14px 18px;background:var(--card2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;transition:border-color .2s;outline:none}
+.text-input:focus{border-color:#3b82f6}
+.text-input::placeholder{color:var(--text3)}
+.query-ai-btn{width:100%;padding:18px;margin-top:24px;background:linear-gradient(135deg,#1d4ed8,#3b82f6,#60a5fa);border:none;border-radius:12px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(59,130,246,.4)}
+.query-ai-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(59,130,246,.5)}
+.query-ai-btn::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 8px,rgba(255,255,255,.04) 8px,rgba(255,255,255,.04) 16px)}
+.cf-modal-overlay{display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);align-items:center;justify-content:center}
+.cf-modal-overlay.show{display:flex}
+.cf-modal{background:var(--dark2);border:1px solid var(--border2);border-top:3px solid var(--gold);border-radius:14px;padding:28px;width:90%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,.8)}
+.cf-modal-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--gold2);margin-bottom:6px}
+.cf-modal-sub{font-size:12px;color:var(--text3);margin-bottom:20px;line-height:1.6}
+.cf-modal label{font-size:11px;font-weight:700;color:var(--burn2);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:8px}
+.cf-modal input{width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s;margin-bottom:16px}
+.cf-modal input:focus{border-color:var(--gold2)}
+.cf-modal-btns{display:flex;gap:10px;flex-wrap:wrap}
+.cf-connect-btn{padding:11px 22px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border:none;border-radius:8px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;flex:1;transition:all .18s}
+.cf-connect-btn:hover{transform:translateY(-1px)}
+.cf-cancel-btn{padding:11px 18px;background:var(--card2);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+.cf-cancel-btn:hover{border-color:var(--burn2);color:var(--text)}
+.cf-status-msg{font-size:12px;color:var(--text3);margin-top:12px;min-height:18px;text-align:center}
+.output-section{margin-top:32px;display:none}
+.output-section.visible{display:block}
+.output-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.output-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--gold2)}
+.output-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;min-height:200px}
+.output-content{padding:24px;font-size:13px;color:var(--text2);line-height:1.7;white-space:pre-wrap;word-break:break-word;min-height:200px;font-family:'DM Sans',sans-serif}
+.output-placeholder{padding:60px 20px;text-align:center;color:var(--text3)}
+.output-placeholder .icon{font-size:40px;margin-bottom:12px}
+.loading-bar{height:3px;background:linear-gradient(90deg,#1d4ed8,#3b82f6,#93c5fd);background-size:200% 100%;animation:loading 1.5s linear infinite;display:none}
+.loading-bar.active{display:block}
+@keyframes loading{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.copy-btn{padding:10px 20px;background:var(--card2);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
+.copy-btn:hover{border-color:#3b82f6;color:#93c5fd}
+.copy-btn.copied{background:rgba(34,197,94,.15);border-color:var(--green);color:var(--green)}
+.time-display{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:10px 16px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#93c5fd;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.time-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px}
+footer{background:var(--dark2);color:rgba(255,255,255,.4);padding:28px 20px;text-align:center;font-size:11.5px;line-height:1.8;border-top:3px solid #1d4ed8}
+footer strong{color:var(--gold);display:block;font-size:14px;margin-bottom:8px}
+footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
+@media(max-width:700px){.mode-card{min-width:140px}.top-page-title{display:none}}
+</style>
+</head>
+<body>
+
+<div class="top-menubar">
+  <a href="index.html" class="top-menu-brand" style="text-decoration:none">
+    <div class="brand-icon">📰</div>
+    <div class="brand-name">Vilfin<span>TV</span> Multiscreener</div>
+  </a>
+  <a href="index.html" class="back-btn">← Home</a>
+  <div class="top-page-title">📰 PRE-MARKET MORNING BRIEFING</div>
+  <div class="cf-badge-bar">
+    <span class="cf-dot" id="cf-dot"></span>
+    <span id="cf-label">Not Connected</span>
+  </div>
+</div>
+
+<div class="site-header">
+  <h1>📰 India Morning Market Briefing</h1>
+  <div class="sub">Holy Grail Pre-Market Report — Live Data Sourced</div>
+  <div class="version-badge">AI-Powered via Cloudflare Worker</div>
+</div>
+
+<div class="layout">
+<div class="main-content">
+<div class="panel-container">
+
+  <div class="time-display">
+    <div>
+      <div class="time-label">Current Time (IST)</div>
+      <div id="ist-time">Loading...</div>
+    </div>
+    <div style="margin-left:auto">
+      <div class="time-label">Today</div>
+      <div id="today-date">Loading...</div>
+    </div>
+  </div>
+
+  <div class="step-header">
+    <div class="step-num">🌅</div>
+    <div>
+      <div class="step-title">Good Morning — What Kind of Trader Are You Today?</div>
+      <div class="step-sub">Select your mode → the AI fetches live data and generates your personalised briefing</div>
+    </div>
+  </div>
+
+  <!-- TRADER MODE — PRIMARY SELECTOR -->
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">Q1</span> Select Trader Mode ★</div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:4px">
+      <div class="mode-card" id="mode-a" onclick="selectMode('A',this)">
+        <span class="mode-icon">⚡</span>
+        <div class="mode-label">A — Intraday</div>
+        <div class="mode-desc">Levels, technicals, F&O pulse, today's news. Fast and actionable.</div>
+      </div>
+      <div class="mode-card" id="mode-b" onclick="selectMode('B',this)">
+        <span class="mode-icon">📊</span>
+        <div class="mode-label">B — Swing</div>
+        <div class="mode-desc">Weekly view, sectors, FII flows, weekly news. Medium-term perspective.</div>
+      </div>
+      <div class="mode-card" id="mode-c" onclick="selectMode('C',this)">
+        <span class="mode-icon">📋</span>
+        <div class="mode-label">C — Full Report</div>
+        <div class="mode-desc">Everything. All tabs. Complete picture. Intraday + Swing + Macro.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q2: Index Focus -->
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">Q2</span> Index Focus</div>
+    <div class="option-grid" id="q2-opts">
+      <div class="opt" onclick="selectOpt(this,'q2','Nifty 50 + Sensex')">📈 Nifty 50 + Sensex</div>
+      <div class="opt" onclick="selectOpt(this,'q2','Bank Nifty focus')">🏦 Bank Nifty Focus</div>
+      <div class="opt" onclick="selectOpt(this,'q2','Nifty IT + Tech')">💻 Nifty IT / Tech</div>
+      <div class="opt" onclick="selectOpt(this,'q2','Midcap + Smallcap focus')">📊 Midcap / Smallcap</div>
+      <div class="opt" onclick="selectOpt(this,'q2','All major indices')">🌐 All Major Indices</div>
+    </div>
+  </div>
+
+  <!-- Q3: Specific Stocks Watch -->
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">Q3</span> Stocks / Sectors on Your Watchlist (Optional)</div>
+    <input class="text-input" id="q-stocks" type="text" placeholder="e.g. RELIANCE, HDFCBANK, IT sector, Auto sector..."/>
+    <div style="font-size:11px;color:var(--text3);margin-top:6px">AI will include specific data for these in the report</div>
+  </div>
+
+  <!-- Q4: F&O interest -->
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">Q4</span> F&O / Derivatives Interest</div>
+    <div class="option-grid" id="q4-opts">
+      <div class="opt" onclick="selectOpt(this,'q4','Yes – include F&O data, OI, PCR, max pain')">📉 Yes — Include F&O Data</div>
+      <div class="opt" onclick="selectOpt(this,'q4','No – cash market only')">💵 No — Cash Market Only</div>
+      <div class="opt" onclick="selectOpt(this,'q4','Just a brief F&O overview')">👁️ Brief F&O Overview</div>
+    </div>
+  </div>
+
+  <!-- Q5: Global Focus -->
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">Q5</span> Global Market Focus</div>
+    <div class="option-grid" id="q5-opts">
+      <div class="opt" onclick="selectOpt(this,'q5','India only')">🇮🇳 India Only</div>
+      <div class="opt" onclick="selectOpt(this,'q5','India + US markets')">🇮🇳🇺🇸 India + US</div>
+      <div class="opt" onclick="selectOpt(this,'q5','India + US + Japan markets')">🇮🇳🇺🇸🇯🇵 India + US + Japan</div>
+      <div class="opt" onclick="selectOpt(this,'q5','All global markets including commodities and forex')">🌐 All Global + Commodities + Forex</div>
+    </div>
+  </div>
+
+  <button class="query-ai-btn" onclick="queryAI()">
+    🌅 Query AI — Generate Morning Briefing
+  </button>
+
+  <div class="output-section" id="output-section">
+    <div class="output-header">
+      <div class="output-title">📰 Morning Market Briefing</div>
+      <button class="copy-btn" id="copy-btn" onclick="copyOutput()">📋 Copy Report</button>
+    </div>
+    <div class="output-box">
+      <div class="loading-bar" id="loading-bar"></div>
+      <div class="output-content" id="output-content">
+        <div class="output-placeholder"><div class="icon">🌅</div><p>Your personalised morning briefing will appear here.</p></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+</div>
+
+<div class="cf-modal-overlay" id="cf-modal-overlay" onclick="cfModalOverlayClick(event)">
+  <div class="cf-modal">
+    <div class="cf-modal-title">🔗 Cloudflare Worker Required</div>
+    <div class="cf-modal-sub">Enter your Cloudflare Workers URL to use AI analysis. The URL is saved in your browser.</div>
+    <label for="cf-url-input">Cloudflare Workers URL</label>
+    <input type="url" id="cf-url-input" placeholder="https://your-worker.workers.dev" autocomplete="off" spellcheck="false"/>
+    <div class="cf-modal-btns">
+      <button class="cf-connect-btn" onclick="cfDoConnect()">🔗 Connect & Generate</button>
+      <button class="cf-cancel-btn" onclick="cfCloseModal()">Cancel</button>
+    </div>
+    <div class="cf-status-msg" id="cf-status-msg"></div>
+  </div>
+</div>
+
+<footer>
+  <strong>Site Owner: Vilfin George</strong>
+  <div class="disclaimer">SEBI Disclaimer: This briefing is for educational and informational purposes only. It does not constitute investment advice. All data is sourced live from public sources. Every number cited includes its source. Verify all data independently before making any trading decision. Vilfin George is not a SEBI-registered investment advisor.</div>
+  <div style="margin-top:10px;font-size:10px;color:rgba(255,255,255,.2)">Pre-Market Briefing v1.0 | India Morning Market — Holy Grail Prompt | Vilfin George</div>
+</footer>
+
+<script>
+const CF_KEY = 'viltv_cf_worker_url';
+const answers = {};
+let selectedMode = '';
+let pendingAnalysis = false;
+
+// Clock
+function updateClock() {
+  const now = new Date();
+  const ist = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+  document.getElementById('ist-time').textContent = ist.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' IST';
+  document.getElementById('today-date').textContent = ist.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem(CF_KEY);
+  if (saved) { window._cfWorkerUrl = saved; setCFConnected(saved); }
+});
+
+function selectMode(mode, el) {
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedMode = mode;
+}
+
+function selectOpt(el, group, val) {
+  el.closest('.option-grid').querySelectorAll('.opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  answers[group] = val;
+}
+
+function getISTNow() {
+  const now = new Date();
+  return now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' IST';
+}
+
+function buildPrompt() {
+  const modeMap = {
+    'A': 'Intraday — Levels, technicals, F&O pulse, today\'s news',
+    'B': 'Swing — Weekly view, sectors, FII flows, weekly news',
+    'C': 'Full Report — Everything. All tabs. Complete picture.'
+  };
+  const stocks = document.getElementById('q-stocks').value.trim();
+  const promptTime = getISTNow();
+
+  const universalRules = `
+INDIA MORNING MARKET BRIEFING — LIVE DATA FETCH
+PROMPT_TIME: ${promptTime}
+MODE: ${selectedMode || 'C'} — ${modeMap[selectedMode] || 'Full Report'}
+
+═══════════════════════════════════════════════════════
+UNIVERSAL DATA RULES — APPLY TO EVERYTHING
+═══════════════════════════════════════════════════════
+
+NUMBER FETCHING PROTOCOL:
+STEP 1 — WEB SEARCH FIRST: For EVERY number, run live web search. Sources: NSE India (nseindia.com), BSE India, Google Finance, Yahoo Finance, Moneycontrol.
+STEP 2 — CROSS-CHECK: Verify against at least one more source. If sources agree → show number marked [Live]. If they differ → show range.
+STEP 3 — IF WEB SEARCH FAILS: Search for previous close. Mark as [Prev Close: DD MMM YYYY].
+STEP 4 — LAST RESORT: Write "N/A — check [source] directly"
+
+SOURCE CITATION: EVERY number must show: [number] [freshness] Source: [name]
+Example: 22,819 [Live] Source: NSE India
+
+FETCH PRIORITY: NSE India → BSE India → Google Finance → Yahoo Finance → Moneycontrol
+
+INVESTOR PREFERENCES:
+Index Focus: ${answers.q2 || 'All major indices'}
+Watchlist: ${stocks || 'None specified'}
+F&O Data: ${answers.q4 || 'Brief overview'}
+Global Markets: ${answers.q5 || 'All global + commodities + forex'}
+`;
+
+  if (selectedMode === 'A') {
+    return promptTime + '\n\n' + universalRules + `
+
+═══════════════════════════════════════════════════════
+MODE A — INTRADAY BRIEFING (Levels, Technicals, F&O, Today's News)
+═══════════════════════════════════════════════════════
+
+## SECTION 1: OVERNIGHT GLOBAL CUES
+Dow Jones | S&P 500 | Nasdaq 100 — Previous close / overnight change [Live/Delayed]
+Nikkei 225 | SGX Nifty — Current or recent reading [Live]
+US 10Y Yield | Dollar Index (DXY) | Crude Oil (WTI + Brent) | Gold [Live]
+VIX (US) | India VIX [Live]
+1–2 sentence overnight summary: what happened and what it means for today.
+
+## SECTION 2: INDIA PRE-MARKET SNAPSHOT
+GIFT Nifty / SGX Nifty: Level | Implied open | Premium/Discount to last Nifty close [Live]
+FII Net F&O previous session (₹ Cr buy/sell) | FII Cash segment
+DII Net Cash segment | Retail net positions
+Key overnight developments: 2–3 bullet points
+
+## SECTION 3: KEY LEVELS FOR TODAY
+Nifty 50: Previous close | Expected open | Intraday Support S1 | S2 | S3 | Resistance R1 | R2 | R3 | Pivot Point | Trend (Bullish/Bearish/Sideways)
+Bank Nifty: Same structure
+${answers.q2 && answers.q2.includes('Midcap') ? 'Nifty Midcap 150: Same structure' : ''}
+${stocks ? `Watchlist stocks — for each: ${stocks} — CMP | Day range | Key support | Key resistance | Trend` : ''}
+
+## SECTION 4: TECHNICALS (Nifty 50)
+RSI 14 | Signal | MACD | Signal | 20 EMA | 50 EMA | 200 EMA | Price vs EMAs
+Pattern on chart (if any) | Volume trend | Momentum: Bullish/Bearish/Neutral
+
+## SECTION 5: F&O PULSE
+${answers.q4 !== 'No – cash market only' ? `
+Nifty PCR (Put/Call Ratio) | PCR Signal | Max Pain Level | OI build-up: Resistance (highest call OI) | Support (highest put OI)
+Bank Nifty PCR | Max Pain | OI levels
+Active F&O contracts today | FII derivative positions
+Top 5 stocks with highest OI addition (bullish) and OI unwinding (bearish)` : 'F&O data not requested.'}
+
+## SECTION 6: TODAY'S NEWS & TRIGGERS (Last 12 hours)
+News 1: [Time IST] | Headline | Market Impact (Positive/Negative/Neutral) | 1-line detail
+News 2: Same format
+News 3: Same format
+News 4: Same format
+News 5: Same format
+Corporate Actions today: Ex-dividend | Results | AGM
+
+## SECTION 7: INTRADAY STRATEGY OUTLOOK
+Opening strategy (gap up / gap down / flat open): What to do
+Key event risks today
+Overall day bias: Bullish / Bearish / Neutral
+One actionable insight for intraday traders today`;
+  }
+
+  if (selectedMode === 'B') {
+    return promptTime + '\n\n' + universalRules + `
+
+═══════════════════════════════════════════════════════
+MODE B — SWING BRIEFING (Weekly view, Sectors, FII Flows, Weekly News)
+═══════════════════════════════════════════════════════
+
+## SECTION 1: WEEKLY MARKET REVIEW
+Nifty 50: Week open | Week close | Weekly return % | 4-week trend | 52W position (% from high/low)
+Sensex: Same
+Bank Nifty: Same
+${answers.q2 && answers.q2.includes('Midcap') ? 'Nifty Midcap: Same' : ''}
+Global indices weekly: S&P 500 | Nasdaq | Nikkei | DAX — Week return % [Source cited]
+
+## SECTION 2: FII / DII WEEKLY FLOWS
+FII Net Cash last 5 sessions: Day-by-day + Weekly total (₹ Cr)
+DII Net Cash last 5 sessions: Day-by-day + Weekly total
+FII F&O net: Weekly summary
+Assessment: Accumulation / Distribution / Neutral
+
+## SECTION 3: SECTOR ROTATION THIS WEEK
+Top 3 outperforming sectors: Sector | Weekly return % | Why outperforming
+Top 3 underperforming sectors: Sector | Weekly return % | Why underperforming
+Sector to watch next week: Name | Catalyst | Key stocks
+
+## SECTION 4: WEEKLY TECHNICALS (Nifty 50 Weekly Chart)
+Weekly RSI | Weekly MACD | Weekly trend | Key weekly support | Weekly resistance
+Is Nifty in uptrend/downtrend/range? Evidence.
+${stocks ? `Watchlist stocks weekly: ${stocks} — each: Week return % | Trend | Key weekly levels` : ''}
+
+## SECTION 5: WEEKLY NEWS THAT MATTERS FOR SWING TRADERS
+Top 5 news items from the week relevant to 1–4 week outlook:
+News format: Date | Headline | Asset Impacted | Bullish/Bearish signal | Tradable idea
+Upcoming events next 2 weeks: Results season | RBI | Budget | Global events | FOMC
+
+## SECTION 6: SWING TRADER WATCHLIST (Top 5 setups)
+For each stock: Stock | CMP | Setup (Breakout/Pullback/Reversal) | Entry zone | Stop loss | Target | Time horizon | Confidence (High/Medium/Low)
+
+## SECTION 7: WEEKLY OUTLOOK SUMMARY
+Market phase: Early Bull / Mid Bull / Late Bull / Consolidation / Early Bear
+Swing bias for next week: Bullish / Bearish / Neutral with key levels
+Key risks to watch | Key catalysts to watch`;
+  }
+
+  // Mode C — Full Report
+  return promptTime + '\n\n' + universalRules + `
+
+═══════════════════════════════════════════════════════
+MODE C — FULL REPORT (Everything — All tabs)
+═══════════════════════════════════════════════════════
+
+Output both Mode A and Mode B in full, followed by:
+
+## SECTION A1-A7: INTRADAY BRIEFING (same as Mode A above — all sections)
+## SECTION B1-B7: SWING BRIEFING (same as Mode B above — all sections)
+
+## SECTION C1: MACRO OVERVIEW
+India GDP growth | CPI Inflation | RBI Repo Rate | INR/USD | India 10Y G-Sec yield [all with sources]
+US Fed Rate | US CPI | DXY | US 10Y Yield | VIX [all with sources]
+Global commodity overview: Gold | Silver | Crude (WTI + Brent) | Natural Gas [all with sources]
+Forex: USD/INR | JPY/INR | EUR/INR | GBP/INR [all with sources]
+
+## SECTION C2: INSTITUTIONAL ACTIVITY DEEP DIVE
+FII monthly trend (last 3 months): Net buy/sell ₹ Cr per month
+DII monthly trend: Net buy/sell ₹ Cr per month
+Sector-wise FII flow: Where is institutional money going?
+Promoter buying/selling: Recent bulk deals + block deals
+
+## SECTION C3: EARNINGS SEASON TRACKER
+Recent quarterly results (top 10 Nifty companies): Company | EPS vs Est | Revenue vs Est | Guidance | Stock reaction
+Upcoming results this week + next week
+Consensus expectation: Which sectors are expected to beat/miss?
+
+## SECTION C4: GLOBAL RISKS & OPPORTUNITIES
+Top 3 global risks for Indian markets this week/month
+Top 3 global opportunities/tailwinds for Indian markets
+India-specific risks
+India-specific opportunities
+
+## SECTION C5: FINAL INTEGRATED OUTLOOK
+Overall market stance: Bullish / Neutral / Cautious / Bearish
+Best trades/strategies for the week (intraday + swing combined)
+Key levels to watch: Nifty | Bank Nifty | Key supports | Key resistances
+Calendar: Top 5 events this week that could move markets`;
+}
+
+async function queryAI() {
+  if (!selectedMode) { alert('Please select your trader mode (A, B, or C) before proceeding.'); return; }
+  if (!window._cfWorkerUrl) { pendingAnalysis = true; document.getElementById('cf-modal-overlay').classList.add('show'); return; }
+  runAnalysis();
+}
+
+async function runAnalysis() {
+  const section = document.getElementById('output-section');
+  const content = document.getElementById('output-content');
+  const loading = document.getElementById('loading-bar');
+  section.classList.add('visible');
+  loading.classList.add('active');
+  content.innerHTML = '<div class="output-placeholder"><div class="icon">⏳</div><p>Fetching live market data... This may take 30–60 seconds for Mode C.</p></div>';
+  const prompt = buildPrompt();
+  try {
+    const res = await fetch(window._cfWorkerUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 6000,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    loading.classList.remove('active');
+    const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
+    if (textBlocks) {
+      content.style.whiteSpace = 'pre-wrap';
+      content.textContent = textBlocks;
+    } else if (data.error) {
+      content.textContent = 'Error: ' + (data.error.message || JSON.stringify(data.error));
+    } else {
+      content.textContent = JSON.stringify(data, null, 2);
+    }
+  } catch(err) {
+    loading.classList.remove('active');
+    content.textContent = 'Connection error: ' + err.message;
+  }
+}
+
+function copyOutput() {
+  navigator.clipboard.writeText(document.getElementById('output-content').textContent).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.classList.add('copied'); btn.textContent = '✅ Copied!';
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '📋 Copy Report'; }, 2500);
+  });
+}
+
+function cfModalOverlayClick(e) { if (e.target === document.getElementById('cf-modal-overlay')) cfCloseModal(); }
+function cfCloseModal() { document.getElementById('cf-modal-overlay').classList.remove('show'); pendingAnalysis = false; }
+async function cfDoConnect() {
+  const url = document.getElementById('cf-url-input').value.trim();
+  if (!url) { document.getElementById('cf-status-msg').textContent = '⚠️ Please enter a valid URL.'; return; }
+  localStorage.setItem(CF_KEY, url);
+  window._cfWorkerUrl = url;
+  setCFConnected(url);
+  document.getElementById('cf-status-msg').textContent = '✅ Connected!';
+  setTimeout(() => { cfCloseModal(); if (pendingAnalysis) { pendingAnalysis = false; runAnalysis(); } }, 800);
+}
+function setCFConnected(url) {
+  try { const host = new URL(url).hostname.replace('.workers.dev',''); document.getElementById('cf-dot').className = 'cf-dot connected'; document.getElementById('cf-label').textContent = host; }
+  catch(e) { document.getElementById('cf-dot').className = 'cf-dot connected'; document.getElementById('cf-label').textContent = 'Connected'; }
+}
+</script>
+</body>
+</html>

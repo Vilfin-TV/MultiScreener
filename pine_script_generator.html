@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pine Script Generator — Vilfin George</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --burn:#c0390b;--burn2:#e8540f;--burn3:#ff7235;
+  --gold:#f5a623;--gold2:#ffd166;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;
+  --purple:#8b5cf6;--purple2:#7c3aed;
+  --dark:#0f0f0f;--dark2:#1a1a1a;--dark3:#242424;
+  --card:#1e1e1e;--card2:#272727;
+  --text:#f0ede8;--text2:#b0a898;--text3:#6e6558;
+  --border:#3a342c;--border2:#4a4238;
+  --radius:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:#111;color:var(--text);min-height:100vh;overflow-x:hidden}
+.top-menubar{position:sticky;top:0;z-index:1000;background:linear-gradient(135deg,#0d0400 0%,#1a0800 40%,#2a0e00 70%,#1a0800 100%);border-bottom:2px solid var(--gold);display:flex;align-items:center;height:44px;padding:0;box-shadow:0 2px 20px rgba(0,0,0,.5)}
+.top-menu-brand{display:flex;align-items:center;gap:10px;padding:0 16px;border-right:1px solid rgba(255,255,255,.1);height:100%;text-decoration:none}
+.brand-icon{width:30px;height:30px;background:linear-gradient(135deg,var(--burn),var(--burn3));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 0 12px rgba(232,84,15,.5)}
+.brand-name{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:#fff;white-space:nowrap;text-shadow:0 0 20px rgba(232,84,15,.4);line-height:1}
+.brand-name span{color:var(--gold2)}
+.back-btn{margin-left:12px;padding:6px 14px;background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.3);border-radius:6px;color:var(--gold2);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:5px;transition:all .15s;white-space:nowrap}
+.back-btn:hover{background:rgba(245,166,35,.22);border-color:var(--gold2)}
+.top-page-title{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:rgba(255,255,255,.7);padding:0 16px;flex:1}
+.cf-badge-bar{display:flex;align-items:center;gap:5px;padding:0 16px;font-size:10px;color:rgba(255,255,255,.45);font-weight:600;letter-spacing:.4px}
+.cf-dot{width:7px;height:7px;border-radius:50%;background:#4a4a4a;flex-shrink:0}
+.cf-dot.connected{background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.site-header{background:linear-gradient(135deg,#0d0400 0%,#1a0800 30%,#4c1d95 70%,#7c3aed 100%);padding:32px 20px 26px;text-align:center;position:relative;overflow:hidden}
+.site-header::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 20px,rgba(255,255,255,.02) 20px,rgba(255,255,255,.02) 40px)}
+.site-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.site-header h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(22px,4vw,40px);color:#fff;letter-spacing:4px;position:relative;z-index:1;text-shadow:0 0 40px rgba(139,92,246,.5)}
+.site-header .sub{color:rgba(255,255,255,.6);font-size:12px;margin-top:6px;position:relative;z-index:1;letter-spacing:2px;text-transform:uppercase}
+.site-header .version-badge{display:inline-block;background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.4);border-radius:20px;padding:4px 14px;margin-top:12px;color:var(--gold2);font-size:11px;font-weight:700;letter-spacing:1px;position:relative;z-index:1;text-transform:uppercase}
+.layout{display:flex;min-height:calc(100vh - 44px)}
+.main-content{flex:1;overflow-x:hidden}
+.panel-container{max-width:960px;margin:0 auto;padding:32px 20px 60px}
+.step-header{display:flex;align-items:center;gap:14px;margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.step-num{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--purple2),var(--purple));display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:20px;color:#fff;flex-shrink:0}
+.step-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--gold2)}
+.step-sub{font-size:12px;color:var(--text3);margin-top:2px;letter-spacing:.5px}
+.q-block{margin-bottom:20px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px}
+.q-label{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.q-num{background:var(--purple2);color:#fff;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700}
+.q-req{color:var(--red);font-size:14px}
+.option-grid{display:flex;flex-wrap:wrap;gap:8px}
+.opt{padding:7px 14px;border-radius:30px;border:1px solid var(--border2);background:var(--card2);color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;user-select:none}
+.opt:hover{border-color:var(--purple);color:var(--text);background:rgba(139,92,246,.08)}
+.opt.selected{border-color:var(--purple);background:rgba(139,92,246,.2);color:#c4b5fd;font-weight:600}
+.opt.selected::before{content:'✓ ';font-size:11px}
+.text-input{width:100%;padding:12px 16px;background:var(--card2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;transition:border-color .2s;outline:none}
+.text-input:focus{border-color:var(--purple)}
+.text-input::placeholder{color:var(--text3)}
+textarea.text-input{min-height:80px;resize:vertical;line-height:1.6}
+.sub-q{margin-top:12px;padding:14px 16px;background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.2);border-radius:8px;display:none}
+.sub-q.visible{display:block}
+.sub-q-label{font-size:10px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+
+/* TWO COLUMN LAYOUT */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:600px){.two-col{grid-template-columns:1fr}}
+
+.query-ai-btn{width:100%;padding:18px;margin-top:24px;background:linear-gradient(135deg,var(--purple2),var(--purple),#a78bfa);border:none;border-radius:12px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(124,58,237,.4)}
+.query-ai-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(124,58,237,.5)}
+.query-ai-btn::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 8px,rgba(255,255,255,.04) 8px,rgba(255,255,255,.04) 16px)}
+
+.cf-modal-overlay{display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);align-items:center;justify-content:center}
+.cf-modal-overlay.show{display:flex}
+.cf-modal{background:var(--dark2);border:1px solid var(--border2);border-top:3px solid var(--gold);border-radius:14px;padding:28px;width:90%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,.8)}
+.cf-modal-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--gold2);margin-bottom:6px}
+.cf-modal-sub{font-size:12px;color:var(--text3);margin-bottom:20px;line-height:1.6}
+.cf-modal label{font-size:11px;font-weight:700;color:var(--burn2);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:8px}
+.cf-modal input{width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s;margin-bottom:16px}
+.cf-modal input:focus{border-color:var(--gold2)}
+.cf-modal-btns{display:flex;gap:10px;flex-wrap:wrap}
+.cf-connect-btn{padding:11px 22px;background:linear-gradient(135deg,var(--purple2),var(--purple));border:none;border-radius:8px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;flex:1;transition:all .18s}
+.cf-connect-btn:hover{transform:translateY(-1px)}
+.cf-cancel-btn{padding:11px 18px;background:var(--card2);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+.cf-cancel-btn:hover{border-color:var(--burn2);color:var(--text)}
+.cf-status-msg{font-size:12px;color:var(--text3);margin-top:12px;min-height:18px;text-align:center}
+
+/* OUTPUT */
+.output-section{margin-top:32px;display:none}
+.output-section.visible{display:block}
+.output-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px}
+.output-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--gold2)}
+.output-actions{display:flex;gap:8px;flex-wrap:wrap}
+.output-box{background:#0a0a0f;border:1px solid rgba(139,92,246,.3);border-radius:var(--radius);overflow:hidden}
+.output-code{padding:24px;font-size:12.5px;color:#e2d9f3;line-height:1.65;white-space:pre;overflow-x:auto;font-family:'JetBrains Mono',monospace;min-height:200px;tab-size:2}
+.output-placeholder{padding:60px 20px;text-align:center;color:var(--text3)}
+.output-placeholder .icon{font-size:40px;margin-bottom:12px}
+.loading-bar{height:3px;background:linear-gradient(90deg,var(--purple2),var(--purple),#c4b5fd);background-size:200% 100%;animation:loading 1.5s linear infinite;display:none}
+.loading-bar.active{display:block}
+@keyframes loading{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.action-btn{padding:10px 16px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;border:none}
+.action-btn.primary{background:linear-gradient(135deg,var(--purple2),var(--purple));color:#fff}
+.action-btn.primary:hover{transform:translateY(-1px)}
+.action-btn.secondary{background:var(--card2);border:1px solid var(--border2);color:var(--text2)}
+.action-btn.secondary:hover{border-color:var(--purple);color:#c4b5fd}
+.action-btn.success{background:rgba(34,197,94,.15);border:1px solid var(--green);color:var(--green)}
+
+/* TV COPY STEPS */
+.steps-box{background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.2);border-radius:var(--radius);padding:18px;margin-bottom:20px}
+.steps-title{font-size:12px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+.step-list{display:flex;flex-direction:column;gap:8px}
+.step-item{display:flex;gap:10px;align-items:flex-start}
+.step-badge{width:22px;height:22px;background:var(--purple2);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.step-text{font-size:12px;color:var(--text2);line-height:1.6}
+
+footer{background:var(--dark2);color:rgba(255,255,255,.4);padding:28px 20px;text-align:center;font-size:11.5px;line-height:1.8;border-top:3px solid var(--purple2)}
+footer strong{color:var(--gold);display:block;font-size:14px;margin-bottom:8px}
+footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
+@media(max-width:700px){.top-page-title{display:none}.two-col{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="top-menubar">
+  <a href="index.html" class="top-menu-brand" style="text-decoration:none">
+    <div class="brand-icon">📈</div>
+    <div class="brand-name">Vilfin<span>TV</span> Multiscreener</div>
+  </a>
+  <a href="index.html" class="back-btn">← Home</a>
+  <div class="top-page-title">📈 PINE SCRIPT GENERATOR</div>
+  <div class="cf-badge-bar">
+    <span class="cf-dot" id="cf-dot"></span>
+    <span id="cf-label">Not Connected</span>
+  </div>
+</div>
+
+<div class="site-header">
+  <h1>📈 TradingView Pine Script Generator</h1>
+  <div class="sub">Pine Script v6 Strategy — Error-Free, No Repainting</div>
+  <div class="version-badge">AI-Powered via Cloudflare Worker</div>
+</div>
+
+<div class="layout">
+<div class="main-content">
+<div class="panel-container">
+
+  <div class="steps-box">
+    <div class="steps-title">📋 How to Use This Generator</div>
+    <div class="step-list">
+      <div class="step-item"><div class="step-badge">1</div><div class="step-text">Fill in the strategy questionnaire below. Be specific about your entry/exit logic.</div></div>
+      <div class="step-item"><div class="step-badge">2</div><div class="step-text">Click "Generate Pine Script" — the AI generates error-free Pine Script v6 code.</div></div>
+      <div class="step-item"><div class="step-badge">3</div><div class="step-text">Copy the generated code → Open TradingView → Pine Editor → Paste → Add to Chart.</div></div>
+      <div class="step-item"><div class="step-badge">4</div><div class="step-text">Backtest on the same timeframe as your design intent before using live.</div></div>
+    </div>
+  </div>
+
+  <div class="step-header">
+    <div class="step-num">📐</div>
+    <div>
+      <div class="step-title">Strategy Questionnaire</div>
+      <div class="step-sub">Fill all required fields → AI generates clean Pine Script v6 strategy code</div>
+    </div>
+  </div>
+
+  <!-- Q1+Q2: Basics -->
+  <div class="two-col">
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">Q1</span> Trade Direction <span class="q-req">*</span></div>
+      <div class="option-grid" id="q1-opts">
+        <div class="opt" onclick="selectOpt(this,'q1','Long only')">📈 Long Only</div>
+        <div class="opt" onclick="selectOpt(this,'q1','Short only')">📉 Short Only</div>
+        <div class="opt" onclick="selectOpt(this,'q1','Both long and short')">↕️ Both</div>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">Q2</span> Timeframe <span class="q-req">*</span></div>
+      <div class="option-grid" id="q2-opts">
+        <div class="opt" onclick="selectOpt(this,'q2','1 minute (1m)')">1m</div>
+        <div class="opt" onclick="selectOpt(this,'q2','5 minutes (5m)')">5m</div>
+        <div class="opt" onclick="selectOpt(this,'q2','15 minutes (15m)')">15m</div>
+        <div class="opt" onclick="selectOpt(this,'q2','1 hour (1H)')">1H</div>
+        <div class="opt" onclick="selectOpt(this,'q2','4 hours (4H)')">4H</div>
+        <div class="opt" onclick="selectOpt(this,'q2','Daily (1D)')">Daily</div>
+        <div class="opt" onclick="selectOpt(this,'q2','Weekly (1W)')">Weekly</div>
+      </div>
+      <input class="text-input" id="q2-custom" type="text" placeholder="Or type custom: e.g. 3m, 2H, 45m" style="margin-top:8px" oninput="answers.q2=this.value"/>
+    </div>
+  </div>
+
+  <!-- Q3: Trading Idea -->
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">Q3</span> Trading Idea in One Sentence <span class="q-req">*</span></div>
+    <textarea class="text-input" id="q-idea" placeholder="e.g. Buy when RSI crosses above 30 from oversold and price is above 200 EMA. Sell when RSI crosses below 70 from overbought.&#10;&#10;e.g. Buy when MACD line crosses above Signal line and volume is above 20-period average. Exit on opposite MACD crossover."></textarea>
+  </div>
+
+  <!-- Q4: Entry Long -->
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">Q4</span> Long Entry Conditions <span class="q-req">*</span></div>
+    <textarea class="text-input" id="q-long-entry1" placeholder="Condition 1 (required): e.g. RSI(14) crosses above 30" style="min-height:55px;margin-bottom:8px"></textarea>
+    <textarea class="text-input" id="q-long-entry2" placeholder="Condition 2 (optional): e.g. Close price is above 200 EMA" style="min-height:55px;margin-bottom:8px"></textarea>
+    <textarea class="text-input" id="q-long-entry3" placeholder="Condition 3 (optional): e.g. Volume > 20-bar average volume" style="min-height:55px"></textarea>
+  </div>
+
+  <!-- Q5: Short Entry (conditional) -->
+  <div class="q-block" id="short-block">
+    <div class="q-label"><span class="q-num">Q5</span> Short Trade Handling</div>
+    <div class="option-grid" id="q5-opts">
+      <div class="opt" onclick="selectOpt(this,'q5','Use exact reverse of long conditions');showShortSub(false)">🔄 Exact Reverse of Long</div>
+      <div class="opt" onclick="selectOpt(this,'q5','Provide separate short conditions');showShortSub(true)">✏️ Separate Short Conditions</div>
+      <div class="opt" onclick="selectOpt(this,'q5','No short trades');showShortSub(false)">❌ No Short Trades</div>
+    </div>
+    <div class="sub-q" id="short-sub">
+      <div class="sub-q-label">Short Entry Conditions</div>
+      <textarea class="text-input" id="q-short-entry1" placeholder="Short Condition 1 (required): e.g. RSI(14) crosses below 70" style="min-height:55px;margin-bottom:8px"></textarea>
+      <textarea class="text-input" id="q-short-entry2" placeholder="Short Condition 2 (optional)" style="min-height:55px;margin-bottom:8px"></textarea>
+      <textarea class="text-input" id="q-short-entry3" placeholder="Short Condition 3 (optional)" style="min-height:55px"></textarea>
+    </div>
+  </div>
+
+  <!-- Q6 + Q7: Frequency + Stop Loss -->
+  <div class="two-col">
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">Q6</span> Entry Frequency</div>
+      <div class="option-grid" id="q6-opts">
+        <div class="opt" onclick="selectOpt(this,'q6','Yes – enter at every signal')">🔁 Every Signal</div>
+        <div class="opt" onclick="selectOpt(this,'q6','No – first signal only, wait for exit')">1️⃣ First Signal Only</div>
+      </div>
+    </div>
+    <div class="q-block">
+      <div class="q-label"><span class="q-num">Q7</span> Stop Loss</div>
+      <div class="option-grid" id="q7-opts">
+        <div class="opt" onclick="selectOpt(this,'q7','No stop loss')">❌ No Stop Loss</div>
+        <div class="opt" onclick="selectOpt(this,'q7','Fixed %');showStopSub()">📍 Fixed %</div>
+        <div class="opt" onclick="selectOpt(this,'q7','ATR-based stop');showStopSub()">📊 ATR-Based</div>
+        <div class="opt" onclick="selectOpt(this,'q7','Recent swing low/high');showStopSub()">🕯️ Swing Low/High</div>
+        <div class="opt" onclick="selectOpt(this,'q7','Custom stop');showStopSub()">✏️ Custom</div>
+      </div>
+      <div class="sub-q" id="stop-sub">
+        <div class="sub-q-label">Stop Loss Detail</div>
+        <input class="text-input" id="q-stop-detail" type="text" placeholder="e.g. 2% below entry, or ATR(14) × 1.5 below entry, or 3-bar swing low"/>
+        <div class="q-label" style="margin-top:12px">Trailing Stop?</div>
+        <div class="option-grid">
+          <div class="opt" onclick="selectOpt(this,'q7trail','No trailing stop')">❌ No Trailing</div>
+          <div class="opt" onclick="selectOpt(this,'q7trail','Yes – trailing stop');showTrailSub()">✅ Yes — Trailing</div>
+        </div>
+        <div class="sub-q" id="trail-sub">
+          <div class="sub-q-label">Trailing Stop Logic</div>
+          <input class="text-input" id="q-trail-detail" type="text" placeholder="e.g. Trail 2% from highest close after entry, or ATR(14) × 1.5 trailing"/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q8: Exit -->
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">Q8</span> Exit Logic (if stop loss not hit) <span class="q-req">*</span></div>
+    <div class="option-grid" id="q8-opts" style="margin-bottom:10px">
+      <div class="opt" onclick="selectOpt(this,'q8','Indicator reverses (opposite signal)')">🔄 Indicator Reverses</div>
+      <div class="opt" onclick="selectOpt(this,'q8','Market close (end of session)')">🔔 Market Close</div>
+      <div class="opt" onclick="selectOpt(this,'q8','Fixed number of bars/candles')">📏 Fixed Bars</div>
+      <div class="opt" onclick="selectOpt(this,'q8','Target profit % reached')">🎯 Take Profit %</div>
+      <div class="opt" onclick="selectOpt(this,'q8','Custom condition')">✏️ Custom</div>
+    </div>
+    <input class="text-input" id="q-exit-detail" type="text" placeholder="Describe exit detail: e.g. Exit after 10 bars, or target 3%, or when RSI crosses below 50"/>
+  </div>
+
+  <!-- Q9: Filters -->
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">Q9</span> Optional Filters</div>
+    <div class="two-col">
+      <input class="text-input" id="q-time-filter" type="text" placeholder="Time filter (optional): e.g. 9:15–15:15 IST only"/>
+      <input class="text-input" id="q-trend-filter" type="text" placeholder="Trend filter (optional): e.g. Only long if above 200 EMA"/>
+    </div>
+    <input class="text-input" id="q-vol-filter" type="text" placeholder="Volume filter (optional): e.g. Volume must be > 1.5× 20-bar average" style="margin-top:8px"/>
+  </div>
+
+  <!-- Q10: Chart Display -->
+  <div class="q-block">
+    <div class="q-label"><span class="q-num">Q10</span> Chart Display Preferences</div>
+    <div class="option-grid" id="q10-opts">
+      <div class="opt selected" onclick="toggleOpt(this,'entry_arrows')">↑↓ Entry Arrows</div>
+      <div class="opt selected" onclick="toggleOpt(this,'exit_arrows')">✕ Exit Arrows</div>
+      <div class="opt" onclick="toggleOpt(this,'sl_line')">── Stop Loss Line</div>
+      <div class="opt" onclick="toggleOpt(this,'trail_line')">~~ Trailing SL Line</div>
+      <div class="opt" onclick="toggleOpt(this,'indicator_lines')">📊 Indicator Lines</div>
+    </div>
+  </div>
+
+  <button class="query-ai-btn" onclick="queryAI()">
+    ⚡ Generate Pine Script v6
+  </button>
+
+  <div class="output-section" id="output-section">
+    <div class="output-header">
+      <div class="output-title">📋 Generated Pine Script v6</div>
+      <div class="output-actions">
+        <button class="action-btn primary" id="copy-btn" onclick="copyCode()">📋 Copy Code</button>
+        <button class="action-btn secondary" onclick="downloadCode()">⬇️ Download .pine</button>
+      </div>
+    </div>
+    <div class="output-box">
+      <div class="loading-bar" id="loading-bar"></div>
+      <div class="output-code" id="output-content">
+        <div class="output-placeholder"><div class="icon">📈</div><p>Pine Script code will appear here after generation.</p></div>
+      </div>
+    </div>
+    <div style="margin-top:12px;font-size:12px;color:var(--text3);background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.2);border-radius:8px;padding:12px 16px;line-height:1.6">
+      💡 <strong style="color:var(--purple)">To use:</strong> Copy the code above → Open TradingView → Click "Pine Editor" tab at the bottom → Paste → Click "Add to chart" → Backtest on the same timeframe as your design intent.
+    </div>
+  </div>
+
+</div>
+</div>
+</div>
+
+<div class="cf-modal-overlay" id="cf-modal-overlay" onclick="cfModalOverlayClick(event)">
+  <div class="cf-modal">
+    <div class="cf-modal-title">🔗 Cloudflare Worker Required</div>
+    <div class="cf-modal-sub">Enter your Cloudflare Workers URL to use AI code generation. The URL is saved in your browser.</div>
+    <label for="cf-url-input">Cloudflare Workers URL</label>
+    <input type="url" id="cf-url-input" placeholder="https://your-worker.workers.dev" autocomplete="off" spellcheck="false"/>
+    <div class="cf-modal-btns">
+      <button class="cf-connect-btn" onclick="cfDoConnect()">🔗 Connect & Generate</button>
+      <button class="cf-cancel-btn" onclick="cfCloseModal()">Cancel</button>
+    </div>
+    <div class="cf-status-msg" id="cf-status-msg"></div>
+  </div>
+</div>
+
+<footer>
+  <strong>Site Owner: Vilfin George</strong>
+  <div class="disclaimer">Pine Script code generated by AI is provided for educational purposes only. Always backtest thoroughly before using any strategy with real money. Trading involves risk of loss. Vilfin George is not a SEBI-registered investment advisor. Past backtest results do not guarantee future performance.</div>
+  <div style="margin-top:10px;font-size:10px;color:rgba(255,255,255,.2)">Pine Script Generator v1.0 | TradingView Strategy Builder | Vilfin George</div>
+</footer>
+
+<script>
+const CF_KEY = 'viltv_cf_worker_url';
+const answers = {};
+const displayOpts = { entry_arrows: true, exit_arrows: true, sl_line: false, trail_line: false, indicator_lines: false };
+let pendingAnalysis = false;
+let generatedCode = '';
+
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem(CF_KEY);
+  if (saved) { window._cfWorkerUrl = saved; setCFConnected(saved); }
+});
+
+function selectOpt(el, group, val) {
+  el.closest('.option-grid').querySelectorAll('.opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  answers[group] = val;
+}
+
+function toggleOpt(el, key) {
+  displayOpts[key] = !displayOpts[key];
+  el.classList.toggle('selected', displayOpts[key]);
+}
+
+function showShortSub(show) {
+  document.getElementById('short-sub').classList.toggle('visible', show);
+}
+
+function showStopSub() {
+  document.getElementById('stop-sub').classList.add('visible');
+}
+
+function showTrailSub() {
+  document.getElementById('trail-sub').classList.add('visible');
+}
+
+function buildPrompt() {
+  const direction = answers.q1 || 'Long only';
+  const timeframe = answers.q2 || document.getElementById('q2-custom').value.trim() || '15 minutes';
+  const idea = document.getElementById('q-idea').value.trim();
+  const longE1 = document.getElementById('q-long-entry1').value.trim();
+  const longE2 = document.getElementById('q-long-entry2').value.trim();
+  const longE3 = document.getElementById('q-long-entry3').value.trim();
+  const shortHandling = answers.q5 || 'No short trades';
+  const shortE1 = document.getElementById('q-short-entry1').value.trim();
+  const shortE2 = document.getElementById('q-short-entry2').value.trim();
+  const shortE3 = document.getElementById('q-short-entry3').value.trim();
+  const frequency = answers.q6 || 'No – first signal only, wait for exit';
+  const slType = answers.q7 || 'No stop loss';
+  const slDetail = document.getElementById('q-stop-detail').value.trim();
+  const trailType = answers.q7trail || 'No trailing stop';
+  const trailDetail = document.getElementById('q-trail-detail').value.trim();
+  const exitLogic = answers.q8 || 'Indicator reverses';
+  const exitDetail = document.getElementById('q-exit-detail').value.trim();
+  const timeFilter = document.getElementById('q-time-filter').value.trim();
+  const trendFilter = document.getElementById('q-trend-filter').value.trim();
+  const volFilter = document.getElementById('q-vol-filter').value.trim();
+  const chartDisplay = Object.entries(displayOpts).filter(([,v])=>v).map(([k])=>k.replace(/_/g,' ')).join(', ') || 'entry and exit arrows';
+
+  return `You are a TradingView Pine Script v6 expert.
+
+Generate an ERROR-FREE TradingView STRATEGY (not an indicator) based on the questionnaire answers below.
+
+CORE REQUIREMENTS (NON-NEGOTIABLE):
+• Pine Script VERSION 6 only
+• Correct TradingView syntax — no deprecated features
+• NO repainting logic
+• NO Pine version warnings
+• NO multi-line function parsing errors
+• Close-price confirmation only (use barstate.isconfirmed or [1] indexing)
+• Do NOT mix indicator and strategy logic
+• Properly respect position state (no repeated entries unless allowed by Q6)
+• Compiles on TradingView WITHOUT any modification
+
+QUESTIONNAIRE ANSWERS:
+
+Q1. Trade Direction: ${direction}
+Q2. Design Timeframe: ${timeframe}
+Q3. Trading Idea: ${idea || 'Not specified — infer from entry conditions'}
+
+Q4. Long Entry Conditions:
+  Condition 1 (required): ${longE1 || 'Not specified'}
+  Condition 2 (optional): ${longE2 || 'None'}
+  Condition 3 (optional): ${longE3 || 'None'}
+
+Q5. Short Trade Handling: ${shortHandling}
+${shortHandling.includes('separate') ? `  Short Condition 1: ${shortE1 || 'Not specified'}
+  Short Condition 2: ${shortE2 || 'None'}
+  Short Condition 3: ${shortE3 || 'None'}` : ''}
+
+Q6. Entry Frequency: ${frequency}
+  (${frequency.includes('Yes') ? 'Allow re-entry while trade is open' : 'Only enter on first signal, wait for exit before re-entering'})
+
+Q7. Stop Loss Type: ${slType}
+${slDetail ? `  Stop Loss Detail: ${slDetail}` : ''}
+  Trailing Stop: ${trailType}
+${trailDetail ? `  Trailing Detail: ${trailDetail}` : ''}
+
+Q8. Exit Logic (if SL not hit): ${exitLogic}
+${exitDetail ? `  Exit Detail: ${exitDetail}` : ''}
+
+Q9. Optional Filters:
+  Time Filter: ${timeFilter || 'None'}
+  Trend Filter: ${trendFilter || 'None'}
+  Volume Filter: ${volFilter || 'None'}
+
+Q10. Chart Display: ${chartDisplay}
+
+FINAL INSTRUCTIONS:
+- Internally validate logic completeness before coding
+- Resolve any ambiguity using safest assumptions
+- Output ONLY the Pine Script v6 code
+- Do NOT add any explanation, markdown, or commentary
+- Do NOT wrap in code fences or backticks
+- The code must start with //@version=6 and compile without errors
+- Generate the complete strategy now:`;
+}
+
+async function queryAI() {
+  const longE1 = document.getElementById('q-long-entry1').value.trim();
+  if (!answers.q1) { alert('Please select Trade Direction (Q1).'); return; }
+  if (!longE1 && !document.getElementById('q-idea').value.trim()) { alert('Please enter at least a Trading Idea (Q3) or Long Entry Condition 1 (Q4).'); return; }
+  if (!window._cfWorkerUrl) { pendingAnalysis = true; document.getElementById('cf-modal-overlay').classList.add('show'); return; }
+  runAnalysis();
+}
+
+async function runAnalysis() {
+  const section = document.getElementById('output-section');
+  const content = document.getElementById('output-content');
+  const loading = document.getElementById('loading-bar');
+  section.classList.add('visible');
+  loading.classList.add('active');
+  content.innerHTML = '<div class="output-placeholder"><div class="icon">⏳</div><p>Generating Pine Script v6... Please wait 15–30 seconds.</p></div>';
+  const prompt = buildPrompt();
+  try {
+    const res = await fetch(window._cfWorkerUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4000, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    loading.classList.remove('active');
+    if (data.content && data.content[0] && data.content[0].text) {
+      generatedCode = data.content[0].text.replace(/^```[a-z]*\n?/gm,'').replace(/^```$/gm,'').trim();
+      content.style.fontFamily = "'JetBrains Mono', monospace";
+      content.style.whiteSpace = 'pre';
+      content.textContent = generatedCode;
+    } else {
+      content.style.fontFamily = "'DM Sans', sans-serif";
+      content.textContent = data.error ? 'Error: ' + data.error.message : JSON.stringify(data, null, 2);
+    }
+  } catch(err) {
+    loading.classList.remove('active');
+    content.style.fontFamily = "'DM Sans', sans-serif";
+    content.textContent = 'Connection error: ' + err.message;
+  }
+}
+
+function copyCode() {
+  const text = document.getElementById('output-content').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.classList.remove('primary'); btn.classList.add('success');
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => { btn.classList.remove('success'); btn.classList.add('primary'); btn.textContent = '📋 Copy Code'; }, 2500);
+  });
+}
+
+function downloadCode() {
+  const text = generatedCode || document.getElementById('output-content').textContent;
+  if (!text || text.includes('Pine Script code will appear')) return;
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'vilfin_strategy_' + new Date().toISOString().slice(0,10) + '.pine';
+  a.click();
+}
+
+function cfModalOverlayClick(e) { if (e.target === document.getElementById('cf-modal-overlay')) cfCloseModal(); }
+function cfCloseModal() { document.getElementById('cf-modal-overlay').classList.remove('show'); pendingAnalysis = false; }
+async function cfDoConnect() {
+  const url = document.getElementById('cf-url-input').value.trim();
+  if (!url) { document.getElementById('cf-status-msg').textContent = '⚠️ Please enter a valid URL.'; return; }
+  localStorage.setItem(CF_KEY, url);
+  window._cfWorkerUrl = url;
+  setCFConnected(url);
+  document.getElementById('cf-status-msg').textContent = '✅ Connected!';
+  setTimeout(() => { cfCloseModal(); if (pendingAnalysis) { pendingAnalysis = false; runAnalysis(); } }, 800);
+}
+function setCFConnected(url) {
+  try { const host = new URL(url).hostname.replace('.workers.dev',''); document.getElementById('cf-dot').className = 'cf-dot connected'; document.getElementById('cf-label').textContent = host; }
+  catch(e) { document.getElementById('cf-dot').className = 'cf-dot connected'; document.getElementById('cf-label').textContent = 'Connected'; }
+}
+</script>
+</body>
+</html>

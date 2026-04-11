@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Asset Allocation Calculator — VilfinTV Multiscreener</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --burn:#c0390b;--burn2:#e8540f;--burn3:#ff7235;
+  --gold:#f5a623;--gold2:#ffd166;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;
+  --dark:#0f0f0f;--dark2:#1a1a1a;--dark3:#242424;--dark4:#2e2e2e;
+  --card:#1e1e1e;--card2:#272727;
+  --text:#f0ede8;--text2:#b0a898;--text3:#6e6558;
+  --border:#3a342c;--border2:#4a4238;--radius:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:#111;color:var(--text);min-height:100vh}
+.top-bar{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,#0d0400,#1a0800 50%,#2a0e00);border-bottom:2px solid var(--gold);display:flex;align-items:center;gap:14px;padding:0 20px;height:48px;box-shadow:0 2px 20px rgba(0,0,0,.5)}
+.back-btn{display:flex;align-items:center;gap:7px;padding:7px 16px;background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.35);border-radius:8px;color:var(--gold2);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .15s}
+.back-btn:hover{background:rgba(245,166,35,.22);border-color:var(--gold2)}
+.top-bar-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff}
+.calc-body{max-width:960px;margin:0 auto;padding:32px 20px 60px}
+.cc{background:var(--card2);border:1px solid var(--border2);border-radius:var(--radius);padding:24px;margin-bottom:20px}
+.cc-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;color:var(--gold2);margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.cc-title::before{content:'';width:4px;height:20px;background:var(--burn2);border-radius:2px;flex-shrink:0}
+.calc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:20px}
+.calc-field label{display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.calc-input{width:100%;padding:11px 14px;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;outline:none;transition:border-color .2s}
+.calc-input:focus{border-color:var(--burn2)}
+.calc-select{width:100%;padding:11px 14px;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;cursor:pointer}
+.calc-range{width:100%;accent-color:var(--burn2)}
+.range-val{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--gold2);margin-top:4px;display:block}
+.calc-results{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.calc-stat{background:var(--dark3);border-radius:10px;padding:14px;border:1px solid var(--border)}
+.calc-stat-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.calc-stat-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold2)}
+.calc-stat-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.donut-wrap{display:flex;flex-direction:column;align-items:center;gap:16px}
+.donut-canvas{max-width:260px;max-height:260px}
+.donut-legend{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.donut-leg-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
+.donut-leg-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.alloc-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.alloc-table th{background:linear-gradient(135deg,var(--burn),var(--burn2));color:#fff;padding:10px 12px;text-align:left;font-weight:600;white-space:nowrap}
+.alloc-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text2)}
+.alloc-table tr:hover td{background:var(--card2)}
+.alloc-table tr:last-child td{border-bottom:none}
+@media(max-width:700px){.calc-grid{grid-template-columns:1fr}.flex-chart{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <a href="index.html" class="back-btn">&#8592; Back to Home</a>
+  <div class="top-bar-title">&#129529; Asset Allocation Calculator</div>
+</div>
+<div class="calc-body">
+
+  <div class="cc">
+    <div class="cc-title">Your Profile</div>
+    <div class="calc-grid">
+      <div class="calc-field"><label>Currency</label><select class="calc-select" id="al-currency" onchange="calcAlloc()"><option value="₹">🇮🇳 INR — ₹ Rupee</option><option value="¥">🇯🇵 JPY — ¥ Yen</option><option value="$">🇺🇸 USD — $ Dollar</option><option value="€">🇪🇺 EUR — € Euro</option><option value="£">🇬🇧 GBP — £ Pound</option><option value="S$">🇸🇬 SGD — S$ Dollar</option></select></div>
+      <div class="calc-field"><label>Your Age</label><input class="calc-range" type="range" id="al-age" min="18" max="70" value="30" oninput="document.getElementById('al-age-val').textContent=this.value+' yrs';calcAlloc()"/><span class="range-val" id="al-age-val">30 yrs</span></div>
+      <div class="calc-field"><label>Current Total Wealth (all assets)</label><input class="calc-input" type="number" id="al-wealth" value="2000000" min="0" placeholder="e.g. 20,00,000" oninput="calcAlloc()"/><span style="font-size:10px;color:var(--text3);margin-top:4px;display:block">Stocks + MF + FD + Gold + Cash etc.</span></div>
+      <div class="calc-field"><label>Fresh Investable Amount (new money)</label><input class="calc-input" type="number" id="al-invest" value="500000" min="0" placeholder="e.g. 5,00,000" oninput="calcAlloc()"/><span style="font-size:10px;color:var(--text3);margin-top:4px;display:block">What you want to deploy now.</span></div>
+      <div class="calc-field"><label>Risk Profile</label><select class="calc-select" id="al-risk" onchange="calcAlloc()"><option value="aggressive">🔥 Aggressive</option><option value="balanced" selected>⚖️ Balanced</option><option value="conservative">🛡️ Conservative</option></select></div>
+      <div class="calc-field"><label>Investment Horizon</label><select class="calc-select" id="al-horizon" onchange="calcAlloc()"><option value="short">Short Term (&lt;3Y)</option><option value="medium" selected>Medium Term (3–7Y)</option><option value="long">Long Term (7Y+)</option></select></div>
+      <div class="calc-field"><label>Family / Life Stage</label><select class="calc-select" id="al-dependent" onchange="calcAlloc()"><option value="single">Single / No Dependents</option><option value="family" selected>Married with Dependents</option><option value="retired">Near/At Retirement</option></select></div>
+    </div>
+  </div>
+
+  <div class="cc">
+    <div class="cc-title">Wealth Snapshot</div>
+    <div class="calc-results" id="al-summary-stats"></div>
+  </div>
+
+  <div id="al-ins-panel"></div>
+
+  <div class="cc">
+    <div class="cc-title">Recommended Allocation — Net Investable Amount (after insurance)</div>
+    <div class="flex-chart" style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+      <div class="donut-wrap" style="flex:0 0 280px">
+        <canvas class="donut-canvas" id="al-donut" width="260" height="260"></canvas>
+        <div class="donut-legend" id="al-legend"></div>
+      </div>
+      <div style="flex:1;min-width:280px;overflow-x:auto">
+        <table class="alloc-table">
+          <thead><tr><th>Asset Class</th><th>%</th><th>Amount</th><th>Method</th><th>Why</th></tr></thead>
+          <tbody id="al-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div style="margin-top:16px;padding:12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px">
+      <p style="font-size:11px;color:var(--amber);line-height:1.7" id="al-note">Profile note will appear here.</p>
+    </div>
+  </div>
+
+  <div class="cc">
+    <div class="cc-title">&#128202; Equity Sub-Category Breakdown</div>
+    <div style="overflow-x:auto">
+      <table class="alloc-table">
+        <thead><tr><th>Category</th><th>Sub-Category</th><th>% of Equity</th><th>Amount</th><th>Method</th><th>Rationale</th></tr></thead>
+        <tbody id="al-equity-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="cc">
+    <div class="cc-title">&#128203; Debt &amp; Hybrid Sub-Category Breakdown</div>
+    <div style="overflow-x:auto">
+      <table class="alloc-table">
+        <thead><tr><th>Category</th><th>Sub-Category</th><th>% of Debt/Hybrid</th><th>Amount</th><th>Method</th><th>Rationale</th></tr></thead>
+        <tbody id="al-debt-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="cc">
+    <div class="cc-title">&#128221; Investment Method Guide</div>
+    <div id="al-method-notes"></div>
+  </div>
+
+</div>
+<script>
+function drawDonut(canvasId, legendId, segments) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2, R = Math.min(W,H)/2 - 10, r = R*0.55;
+  ctx.clearRect(0,0,W,H);
+  const total = segments.reduce((s,x)=>s+x.value,0);
+  if (!total) return;
+  let angle = -Math.PI/2;
+  segments.forEach(seg => {
+    const slice = (seg.value/total)*2*Math.PI;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,R,angle,angle+slice); ctx.closePath();
+    ctx.fillStyle = seg.color; ctx.fill(); angle += slice;
+  });
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI); ctx.fillStyle = '#1a1a1a'; ctx.fill();
+  ctx.fillStyle = '#ffd166'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = 'bold 11px DM Sans,sans-serif'; ctx.fillText('Breakdown', cx, cy);
+  const legendEl = document.getElementById(legendId);
+  if (legendEl) {
+    legendEl.innerHTML = segments.map(s=>
+      `<div class="donut-leg-item"><div class="donut-leg-dot" style="background:${s.color}"></div><span>${s.label}: <strong style="color:#ffd166">${s.pct}%</strong></span></div>`
+    ).join('');
+  }
+}
+
+function fmt(n, sym) {
+  if (!isFinite(n)||n<0) n=0;
+  if (n>=1e7) return sym+(n/1e7).toFixed(2)+' Cr';
+  if (n>=1e5) return sym+(n/1e5).toFixed(2)+' L';
+  return sym+Math.round(n).toLocaleString('en-IN');
+}
+
+function calcAlloc() {
+  const sym     = document.getElementById('al-currency').value;
+  const age     = parseInt(document.getElementById('al-age').value) || 30;
+  const wealth  = parseFloat(document.getElementById('al-wealth').value) || 0;
+  const invest  = parseFloat(document.getElementById('al-invest').value) || 0;
+  const risk    = document.getElementById('al-risk').value;
+  const horizon = document.getElementById('al-horizon').value;
+  const dep     = document.getElementById('al-dependent').value;
+
+  const CUR_MULT = {'₹':1,'¥':1.8,'$':0.012,'€':0.011,'£':0.0095,'S$':0.016};
+  const cx = CUR_MULT[sym] || 1;
+
+  const HEALTH_BASE_INR =
+    age <= 30 ? 10000 :
+    age <= 40 ? 16000 :
+    age <= 50 ? 27000 :
+    age <= 55 ? 45000 :
+    age <= 60 ? 70000 : 110000;
+
+  const healthFamilyMult = dep === 'family' ? 1.6 : dep === 'retired' ? 1.2 : 1.0;
+  const healthInsAmt = Math.round(HEALTH_BASE_INR * healthFamilyMult * cx);
+
+  const LIFE_BASE_INR =
+    age <= 30 ? 9000  :
+    age <= 40 ? 16000 :
+    age <= 50 ? 32000 :
+    age <= 55 ? 60000 :
+    age <= 60 ? 85000 : 0;
+
+  const lifeInsAmt = dep === 'retired' || age > 60 ? 0 : Math.round(LIFE_BASE_INR * cx);
+
+  const totalInsAmt  = healthInsAmt + lifeInsAmt;
+  const canAffordIns = invest >= totalInsAmt;
+  const investAfterIns = Math.max(invest - totalInsAmt, 0);
+
+  let baseEq = 110 - age;
+  if (risk === 'aggressive') baseEq += 10;
+  if (risk === 'conservative') baseEq -= 15;
+  if (horizon === 'long')  baseEq += 5;
+  if (horizon === 'short') baseEq -= 15;
+  if (dep === 'retired')   baseEq -= 20;
+  if (dep === 'single')    baseEq += 5;
+
+  const EQ_CLAMP = {
+    aggressive:   { min: 15, max: 85 },
+    balanced:     { min: 10, max: 75 },
+    conservative: { min: 5,  max: 55 },
+  };
+  const clamp = EQ_CLAMP[risk];
+  const ageMaxEq = age >= 60 ? 30 : age >= 55 ? 45 : age >= 50 ? 60 : 85;
+  baseEq = Math.min(Math.max(baseEq, clamp.min), Math.min(clamp.max, ageMaxEq));
+
+  const EQUITY_RATIOS = {
+    aggressive:   { mf: 0.55, stocks: 0.33, hybrid: 0.12 },
+    balanced:     { mf: 0.60, stocks: 0.27, hybrid: 0.13 },
+    conservative: { mf: 0.65, stocks: 0.15, hybrid: 0.20 },
+  };
+  const eqR      = EQUITY_RATIOS[risk];
+  const eqMF     = Math.round(baseEq * eqR.mf);
+  const eqStocks = Math.round(baseEq * eqR.stocks);
+  const eqHybrid = baseEq - eqMF - eqStocks;
+  const rem      = 100 - baseEq;
+
+  const NONQ = {
+    aggressive:   { bond:0.14, gold:0.09, silver:0.04, reit:0.14, nrefd:0.10, cash:0.09 },
+    balanced:     { bond:0.25, gold:0.11, silver:0.04, reit:0.10, nrefd:0.12, cash:0.08 },
+    conservative: { bond:0.38, gold:0.14, silver:0.02, reit:0.05, nrefd:0.22, cash:0.09 },
+  };
+  const nq   = NONQ[risk];
+  let bond   = Math.round(rem * nq.bond);
+  let gold   = Math.round(rem * nq.gold);
+  let silver = Math.round(rem * nq.silver);
+  let reit   = Math.round(rem * nq.reit);
+  let nrefd  = Math.round(rem * nq.nrefd);
+  let cash   = Math.max(0, rem - bond - gold - silver - reit - nrefd);
+
+  if (dep === 'retired') {
+    bond  = Math.round(rem * 0.42);
+    nrefd = Math.round(rem * 0.28);
+    gold  = Math.round(rem * 0.12);
+    silver= Math.round(rem * 0.02);
+    reit  = Math.round(rem * 0.04);
+    cash  = Math.max(0, rem - bond - nrefd - gold - silver - reit);
+  }
+  if (horizon === 'short') { bond += 5; reit = Math.max(reit-3,0); silver = Math.max(silver-2,0); }
+  if (dep === 'family')    { nrefd = Math.round(nrefd * 1.15); }
+
+  const allocs = [
+    { name:'Equity Mutual Funds (Core)',  pct:eqMF,      color:'#e8540f', method:'SIP (monthly)',   why:'MF is the core growth engine — professional management, diversification, ELSS tax benefit' },
+    { name:'Equity Stocks (Satellite)',   pct:eqStocks,  color:'#ff7235', method:'Lumpsum / STP',  why:'Direct stock alpha — 8–12 quality large+midcap stocks; review quarterly' },
+    { name:'Hybrid / Debt MF',            pct:eqHybrid,  color:'#f5a623', method:'SIP',            why:'Volatility buffer — multi-asset & equity savings funds reduce drawdown' },
+    { name:'Bonds / Debt',                pct:bond,      color:'#3b82f6', method:'Lumpsum',        why:'Stable income + capital protection; ladder across 1Y/3Y/5Y durations' },
+    { name:'Gold',                        pct:gold,      color:'#ffd166', method:'SIP (Gold ETF)', why:'Inflation hedge + crisis buffer; Gold ETF or Sovereign Gold Bond preferred' },
+    { name:'Silver',                      pct:silver,    color:'#9ca3af', method:'SIP (Silver ETF)',why:'Industrial demand + precious metals diversification' },
+    { name:'REITs & InvITs',              pct:reit,      color:'#8b5cf6', method:'Lumpsum / SIP', why:'Real estate income without ownership; 8–9% yield + appreciation' },
+    { name:'NRE FD / Liquid Fund',        pct:nrefd+cash,color:'#22c55e', method:'Lumpsum',       why:'Emergency fund (6M expenses) + tax-free NRI returns; keep fully accessible' },
+  ].filter(a => a.pct > 0);
+
+  const totalPct = allocs.reduce((s,a) => s+a.pct, 0);
+  allocs.forEach(a => a.pct = Math.round(a.pct / totalPct * 100));
+  const diff = 100 - allocs.reduce((s,a)=>s+a.pct,0);
+  if (diff && allocs.length) allocs[0].pct += diff;
+
+  const retireYrs = Math.max(60 - age, 0);
+  const insAffordTag = canAffordIns
+    ? `<span style="color:#22c55e;font-size:10px">✅ Affordable from this investment</span>`
+    : `<span style="color:#ef4444;font-size:10px">⚠️ Premium exceeds investment — pay from savings/income</span>`;
+
+  document.getElementById('al-summary-stats').innerHTML = [
+    {lbl:'Current Wealth',        val:fmt(wealth,sym),        sub:'Total existing assets'},
+    {lbl:'Fresh Investment',      val:fmt(invest,sym),        sub:'New money to deploy'},
+    {lbl:'After Insurance Cost',  val:fmt(investAfterIns,sym),sub:'Available to invest'},
+    {lbl:'Age',                   val:age+' yrs',             sub:retireYrs>0?`${retireYrs} yrs to retirement`:'At / past retirement'},
+    {lbl:'Risk Profile',          val:risk.charAt(0).toUpperCase()+risk.slice(1), sub:horizon+' horizon'},
+  ].map(s=>`<div class="calc-stat"><div class="calc-stat-lbl">${s.lbl}</div><div class="calc-stat-val" style="font-size:16px">${s.val}</div><div class="calc-stat-sub">${s.sub}</div></div>`).join('');
+
+  const insHtml = `
+  <div style="background:linear-gradient(135deg,rgba(239,68,68,.06),rgba(236,72,153,.04));border:1px solid rgba(239,68,68,.2);border-radius:12px;padding:18px;margin-bottom:20px">
+    <div style="font-size:12px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px">🛡️ Annual Insurance Premiums — Real Fixed Cost (not % of portfolio)</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:12px">
+      ${lifeInsAmt > 0 ? `
+      <div class="calc-stat" style="border-color:rgba(239,68,68,.3)">
+        <div class="calc-stat-lbl">Life Insurance (Term ₹1Cr)</div>
+        <div class="calc-stat-val" style="font-size:20px;color:#ef4444">${fmt(lifeInsAmt,sym)}/yr</div>
+        <div class="calc-stat-sub">Age ${age} est. annual premium</div>
+      </div>` : `
+      <div class="calc-stat" style="border-color:rgba(107,114,128,.3)">
+        <div class="calc-stat-lbl">Life Insurance</div>
+        <div class="calc-stat-val" style="font-size:14px;color:#888">Not Required</div>
+        <div class="calc-stat-sub">At/near retirement — term plan not recommended</div>
+      </div>`}
+      <div class="calc-stat" style="border-color:rgba(236,72,153,.3)">
+        <div class="calc-stat-lbl">Health Insurance ${dep==='family'?'(Family Floater)':dep==='retired'?'(Senior)':'(Individual)'}</div>
+        <div class="calc-stat-val" style="font-size:20px;color:#ec4899">${fmt(healthInsAmt,sym)}/yr</div>
+        <div class="calc-stat-sub">Age ${age} realistic annual premium</div>
+      </div>
+      <div class="calc-stat" style="border-color:rgba(245,158,11,.3)">
+        <div class="calc-stat-lbl">Total Insurance Cost</div>
+        <div class="calc-stat-val" style="font-size:20px;color:#f59e0b">${fmt(totalInsAmt,sym)}/yr</div>
+        <div class="calc-stat-sub">${insAffordTag}</div>
+      </div>
+      <div class="calc-stat" style="border-color:rgba(34,197,94,.3)">
+        <div class="calc-stat-lbl">Net Investable Amount</div>
+        <div class="calc-stat-val" style="font-size:20px;color:#22c55e">${fmt(investAfterIns,sym)}</div>
+        <div class="calc-stat-sub">After insurance; all % below are of this amount</div>
+      </div>
+    </div>
+    <p style="font-size:11px;color:#888;line-height:1.6">
+      💡 <strong>Insurance is a fixed annual expense, not a portfolio allocation %.</strong>
+      The ${Math.round(totalInsAmt/Math.max(invest,1)*100)}% figure shown above reflects the real cost at age ${age}.
+      ${age > 60 ? ' At age 60+, focus on senior citizen health plans (₹60k–1.2L/yr). Check PMJAY for government coverage.' : ''}
+      ${!canAffordIns ? ' ⚠️ Your investment amount is less than the annual insurance premium. Buy insurance from your regular income/savings — never skip it for investment.' : ''}
+      Pay premiums from income/savings first, then invest the remaining amount.
+    </p>
+  </div>`;
+
+  document.getElementById('al-ins-panel').innerHTML = insHtml;
+
+  drawDonut('al-donut', 'al-legend', allocs.map(a => ({
+    label: a.name, value: a.pct, color: a.color, pct: a.pct
+  })));
+
+  document.getElementById('al-table-body').innerHTML = allocs.map(a =>
+    `<tr>
+      <td><strong style="color:var(--gold2)">${a.name}</strong></td>
+      <td><span style="font-family:'JetBrains Mono',monospace;color:#ffd166;font-size:15px;font-weight:700">${a.pct}%</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;color:#b0a898">${fmt(investAfterIns*a.pct/100,sym)}</td>
+      <td><span style="background:rgba(232,84,15,.18);color:var(--burn3);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap">${a.method}</span></td>
+      <td style="font-size:11px;color:#888">${a.why}</td>
+    </tr>`
+  ).join('');
+
+  const EQ_MF_SUBS = {
+    aggressive:   [
+      {sub:'Large Cap Fund',   pct:30, method:'SIP',          rat:'Stable core — Nifty 50 quality; lower volatility within equity'},
+      {sub:'Mid Cap Fund',     pct:30, method:'SIP',          rat:'Higher growth; 3–5Y horizon; review semi-annually'},
+      {sub:'Small Cap Fund',   pct:20, method:'SIP (small)',  rat:'High risk-reward; 5Y+ only; SIP averages volatility'},
+      {sub:'Global / Intl MF', pct:20, method:'SIP',          rat:'USD diversification; reduces India-specific risk'},
+    ],
+    balanced:     [
+      {sub:'Large Cap Fund',   pct:40, method:'SIP',          rat:'Portfolio backbone — proven large companies with strong fundamentals'},
+      {sub:'Mid Cap Fund',     pct:25, method:'SIP',          rat:'Growth balance; good for 3–7Y horizon'},
+      {sub:'Small Cap Fund',   pct:15, method:'SIP (small)',  rat:'Limited; only if 5Y+ horizon; cap monthly SIP strictly'},
+      {sub:'Global / Intl MF', pct:20, method:'SIP',          rat:'Geographic diversification; INR depreciation hedge'},
+    ],
+    conservative: [
+      {sub:'Large Cap Fund',   pct:60, method:'SIP',          rat:'Maximum in safest equity — blue-chips with dividend history'},
+      {sub:'Mid Cap Fund',     pct:20, method:'SIP',          rat:'Modest growth; only CRISIL 5-star funds'},
+      {sub:'Small Cap Fund',   pct:5,  method:'SIP (minimal)',rat:'Minimal; only very long-term portion'},
+      {sub:'Global / Intl MF', pct:15, method:'SIP',          rat:'Stability when Indian market corrects'},
+    ],
+  };
+  const EQ_ST_SUBS = {
+    aggressive:   [
+      {sub:'Large Cap Stocks', pct:45, method:'Lumpsum / Buy on dip',rat:'5–6 high-conviction large-caps; core holding 2Y+'},
+      {sub:'Mid Cap Stocks',   pct:35, method:'STP from debt',       rat:'3–4 quality mid-caps; entry on corrections only'},
+      {sub:'Small Cap Stocks', pct:20, method:'Stagger over 3M',     rat:'2–3 stocks max; strict stop-loss at -15%'},
+    ],
+    balanced:     [
+      {sub:'Large Cap Stocks', pct:65, method:'Lumpsum / Buy on dip',rat:'7–8 quality large-caps across sectors; hold 3Y+'},
+      {sub:'Mid Cap Stocks',   pct:30, method:'STP from debt',       rat:'2–3 quality mid-caps; no momentum chasing'},
+      {sub:'Small Cap Stocks', pct:5,  method:'Stagger / SIP',       rat:'1 stock max; only strong fundamentals'},
+    ],
+    conservative: [
+      {sub:'Large Cap Stocks', pct:90, method:'Lumpsum on dips',     rat:'8–10 blue-chip dividend stocks; hold for income'},
+      {sub:'Mid Cap Stocks',   pct:10, method:'STP from liquid fund', rat:'1 stock only; strict exit at -12%'},
+      {sub:'Small Cap Stocks', pct:0,  method:'Avoid',               rat:'Not suitable'},
+    ],
+  };
+
+  const eqMFAmt = investAfterIns * eqMF / 100;
+  const eqStAmt = investAfterIns * eqStocks / 100;
+  document.getElementById('al-equity-body').innerHTML = [
+    ...EQ_MF_SUBS[risk].map(s =>
+      `<tr>
+        <td style="color:var(--burn3);font-weight:600">Equity MF</td>
+        <td><strong style="color:var(--gold2)">${s.sub}</strong></td>
+        <td><span style="font-family:'JetBrains Mono',monospace;color:#ffd166;font-weight:700">${s.pct}%</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;color:#b0a898">${fmt(eqMFAmt*s.pct/100,sym)}</td>
+        <td><span style="background:rgba(232,84,15,.15);color:var(--burn3);padding:2px 7px;border-radius:8px;font-size:11px">${s.method}</span></td>
+        <td style="font-size:11px;color:#888">${s.rat}</td>
+      </tr>`),
+    ...EQ_ST_SUBS[risk].filter(s=>s.pct>0).map(s =>
+      `<tr>
+        <td style="color:#ff7235;font-weight:600">Direct Stocks</td>
+        <td><strong style="color:var(--gold2)">${s.sub}</strong></td>
+        <td><span style="font-family:'JetBrains Mono',monospace;color:#ffd166;font-weight:700">${s.pct}%</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;color:#b0a898">${fmt(eqStAmt*s.pct/100,sym)}</td>
+        <td><span style="background:rgba(232,84,15,.15);color:var(--burn3);padding:2px 7px;border-radius:8px;font-size:11px">${s.method}</span></td>
+        <td style="font-size:11px;color:#888">${s.rat}</td>
+      </tr>`)
+  ].join('');
+
+  const DEBT_SUBS = {
+    aggressive:   [
+      {sub:'Medium Term Debt Fund', pct:30, method:'Lumpsum / STP',  rat:'3–4Y; better post-tax than FD; ride falling rate cycle'},
+      {sub:'Multi Asset Fund',      pct:30, method:'SIP',            rat:'Auto-rebalancing across equity/debt/gold'},
+      {sub:'Arbitrage Fund',        pct:25, method:'Lumpsum',        rat:'Equity-taxed, debt-risk; park money 3–6M'},
+      {sub:'Money Market Fund',     pct:15, method:'Lumpsum',        rat:'Highest liquidity; T+1 redemption; emergency portion'},
+    ],
+    balanced:     [
+      {sub:'Medium Term Debt Fund', pct:30, method:'Lumpsum / STP',  rat:'Core debt; predictable returns; low credit risk'},
+      {sub:'Multi Asset Fund',      pct:25, method:'SIP',            rat:'One-fund balance; equity+debt+gold in one'},
+      {sub:'Equity Savings Fund',   pct:20, method:'SIP',            rat:'Tax-efficient low-volatility equity via hedging'},
+      {sub:'Arbitrage Fund',        pct:15, method:'Lumpsum',        rat:'Better post-tax than liquid FD; highly liquid'},
+      {sub:'Money Market Fund',     pct:10, method:'Lumpsum',        rat:'Emergency buffer; instant liquidity'},
+    ],
+    conservative: [
+      {sub:'Medium Term Debt Fund', pct:35, method:'Lumpsum / STP',  rat:'Primary wealth preserver — AAA-rated papers only'},
+      {sub:'Multi Asset Fund',      pct:20, method:'SIP',            rat:'Built-in gold and bond allocation; low volatility'},
+      {sub:'Equity Savings Fund',   pct:20, method:'SIP',            rat:'Low-risk equity via arbitrage + derivatives hedge'},
+      {sub:'Money Market Fund',     pct:15, method:'Lumpsum',        rat:'9–12 months emergency buffer; instant withdrawal'},
+      {sub:'Arbitrage Fund',        pct:10, method:'Lumpsum',        rat:'Better than FD post-tax; equity tax treatment'},
+    ],
+  };
+  const debtAmt = investAfterIns * (eqHybrid + bond) / 100;
+  document.getElementById('al-debt-body').innerHTML = DEBT_SUBS[risk].map(s =>
+    `<tr>
+      <td style="color:#3b82f6;font-weight:600">Debt / Hybrid MF</td>
+      <td><strong style="color:var(--gold2)">${s.sub}</strong></td>
+      <td><span style="font-family:'JetBrains Mono',monospace;color:#ffd166;font-weight:700">${s.pct}%</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;color:#b0a898">${fmt(debtAmt*s.pct/100,sym)}</td>
+      <td><span style="background:rgba(59,130,246,.15);color:#60a5fa;padding:2px 7px;border-radius:8px;font-size:11px">${s.method}</span></td>
+      <td style="font-size:11px;color:#888">${s.rat}</td>
+    </tr>`
+  ).join('');
+
+  const methods = [
+    {icon:'📅',name:'SIP (Systematic Investment Plan)',   note:'Best for: Equity MF, Hybrid MF, Gold ETF, Silver ETF. Invest a fixed amount monthly regardless of market level. Rupee-cost averaging removes timing risk. Ideal for all market conditions.'},
+    {icon:'💰',name:'Lumpsum',                            note:'Best for: Bonds, NRE FD, Liquid Funds. Deploy when market PE is low (below 20 for Nifty). Avoid lumpsum in equity at market peaks. Park lumpsum in liquid fund first, then use STP.'},
+    {icon:'🔄',name:'STP (Systematic Transfer Plan)',     note:'Best for: Moving Liquid/Debt → Equity. Park lumpsum in liquid fund, transfer ₹X/week to equity MF over 6–12 months. Much safer than direct lumpsum into volatile equity.'},
+    {icon:'📈',name:'SIP with Step-Up',                  note:'Best for: Young investors. Increase SIP by 10–15%/year. A ₹10,000 SIP stepped up 10%/yr becomes ₹67,275/mo in 20 years — compounding on compounding.'},
+    {icon:'🎯',name:'Buy on Dip',                        note:'Best for: Direct stocks, Large-cap ETFs. Keep 10–15% in liquid fund to deploy during 8–15% market corrections. Only for experienced investors with conviction.'},
+    {icon:'📋',name:'Annual Rebalancing',                note:'Rebalance to target allocation once a year. If equity grew from 60% → 70%, sell 10% and shift to bonds/gold. Forces sell-high buy-low discipline automatically.'},
+  ];
+  document.getElementById('al-method-notes').innerHTML = methods.map(m =>
+    `<div style="display:flex;gap:14px;padding:14px;background:var(--dark3);border-radius:10px;margin-bottom:10px;border:1px solid var(--border)">
+      <div style="font-size:24px;flex-shrink:0">${m.icon}</div>
+      <div><div style="font-weight:700;color:var(--gold2);margin-bottom:4px;font-size:13px">${m.name}</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7">${m.note}</div></div>
+    </div>`
+  ).join('');
+
+  const insNote = lifeInsAmt === 0
+    ? `Life insurance not needed at age ${age}+.`
+    : `Life insurance ~${fmt(lifeInsAmt,sym)}/yr + Health ~${fmt(healthInsAmt,sym)}/yr = ${fmt(totalInsAmt,sym)}/yr fixed cost.`;
+  document.getElementById('al-note').innerHTML = `
+    ⚠️ <strong>Profile: ${risk.charAt(0).toUpperCase()+risk.slice(1)} | Age: ${age} |
+    ${dep==='family'?'With Dependents':dep==='retired'?'Near Retirement':'Single'} |
+    ${horizon==='long'?'Long-term (7Y+)':horizon==='medium'?'Medium-term (3–7Y)':'Short-term (<3Y)'}.</strong>
+    Equity capped at ${baseEq}% (age-adjusted). ${insNote}
+    All allocation % above apply to <strong>${fmt(investAfterIns,sym)}</strong> (after insurance).
+    Insurance premiums are real annual costs — pay from regular income, not portfolio %.
+    Rebalance annually. Consult a SEBI-registered advisor for personalised advice.`;
+}
+
+document.addEventListener('DOMContentLoaded', calcAlloc);
+</script>
+</body>
+</html>

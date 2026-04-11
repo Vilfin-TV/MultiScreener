@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Compare Funds &amp; ETF — VilfinTV Multiscreener</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --burn:#c0390b;--burn2:#e8540f;--burn3:#ff7235;
+  --gold:#f5a623;--gold2:#ffd166;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;
+  --dark:#0f0f0f;--dark2:#1a1a1a;--dark3:#242424;--dark4:#2e2e2e;
+  --card:#1e1e1e;--card2:#272727;
+  --text:#f0ede8;--text2:#b0a898;--text3:#6e6558;
+  --border:#3a342c;--border2:#4a4238;--radius:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:#111;color:var(--text);min-height:100vh}
+.top-bar{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,#0d0400,#1a0800 50%,#2a0e00);border-bottom:2px solid var(--gold);display:flex;align-items:center;gap:14px;padding:0 20px;height:48px;box-shadow:0 2px 20px rgba(0,0,0,.5)}
+.back-btn{display:flex;align-items:center;gap:7px;padding:7px 16px;background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.35);border-radius:8px;color:var(--gold2);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .15s}
+.back-btn:hover{background:rgba(245,166,35,.22);border-color:var(--gold2)}
+.top-bar-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff}
+.calc-body{max-width:960px;margin:0 auto;padding:32px 20px 60px}
+.cc{background:var(--card2);border:1px solid var(--border2);border-radius:var(--radius);padding:24px;margin-bottom:20px}
+.cc-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;color:var(--gold2);margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.cc-title::before{content:'';width:4px;height:20px;background:var(--burn2);border-radius:2px;flex-shrink:0}
+.calc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:20px}
+.calc-field label{display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.calc-input{width:100%;padding:11px 14px;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;outline:none;transition:border-color .2s}
+.calc-input:focus{border-color:var(--burn2)}
+.calc-select{width:100%;padding:11px 14px;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;cursor:pointer}
+.calc-input-text{width:100%;padding:11px 14px;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .2s}
+.calc-input-text:focus{border-color:var(--burn2)}
+.calc-input-text::placeholder{color:var(--text3)}
+.group-label{font-size:11px;font-weight:700;color:var(--burn2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.fund-inputs{display:flex;flex-direction:column;gap:8px}
+.funds-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px}
+.prompt-box{background:#0d0d0d;border:1px solid var(--border);border-radius:12px;padding:20px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#d4c9bb;line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:60vh;overflow-y:auto}
+.paste-area{width:100%;min-height:160px;padding:18px;background:#0d0d0d;border:2px dashed var(--border2);border-radius:12px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;resize:vertical;outline:none;transition:border-color .2s}
+.paste-area:focus{border-color:var(--burn2);border-style:solid}
+.action-btn{padding:12px 22px;border-radius:10px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:8px;margin-right:8px;margin-bottom:8px}
+.action-btn.primary{background:linear-gradient(135deg,var(--burn),var(--burn2));color:#fff}
+.action-btn.primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(192,57,11,.4)}
+.action-btn.secondary{background:var(--card2);border:1px solid var(--border2);color:var(--text2)}
+.action-btn.secondary:hover{color:var(--text);border-color:var(--burn2)}
+.copy-btn{padding:10px 20px;background:linear-gradient(135deg,var(--burn),var(--burn2));border:none;border-radius:8px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:8px}
+.copy-btn.copied{background:linear-gradient(135deg,#16a34a,#22c55e)}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+@media(max-width:700px){.funds-grid{grid-template-columns:1fr}.calc-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <a href="index.html" class="back-btn">&#8592; Back to Home</a>
+  <div class="top-bar-title">&#9878;&#65039; Compare Funds &amp; ETF</div>
+</div>
+<div class="calc-body">
+  <div class="cc">
+    <div class="cc-title">Add Funds / ETFs to Compare</div>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:16px;line-height:1.6">Enter up to 5 funds on each side. You can compare MF vs MF, ETF vs ETF, or MF vs ETF. AI will research all details and return a full styled comparison report.</p>
+    <div class="funds-grid">
+      <div>
+        <div class="group-label">Group A — Funds</div>
+        <div class="fund-inputs">
+          <input class="calc-input-text" type="text" id="cmp-a1" placeholder="Fund 1 — e.g. Mirae Asset Large Cap Fund" oninput="updateCompareQuery()"/>
+          <input class="calc-input-text" type="text" id="cmp-a2" placeholder="Fund 2 — e.g. HDFC Top 100 Fund" oninput="updateCompareQuery()"/>
+          <input class="calc-input-text" type="text" id="cmp-a3" placeholder="Fund 3 — e.g. Axis Bluechip Fund" oninput="updateCompareQuery()"/>
+          <input class="calc-input-text" type="text" id="cmp-a4" placeholder="Fund 4 — e.g. SBI Large Cap Fund" oninput="updateCompareQuery()"/>
+          <input class="calc-input-text" type="text" id="cmp-a5" placeholder="Fund 5 — e.g. Canara Robeco Bluechip" oninput="updateCompareQuery()"/>
+        </div>
+      </div>
+      <div>
+        <div class="group-label">Group B — Funds</div>
+        <div class="fund-inputs">
+          <input class="calc-input-text" type="text" id="cmp-b1" placeholder="Fund 1 — e.g. Nippon India Nifty 50 ETF" oninput="updateCompareQuery()"/>
+          <input class="calc-input-text" type="text" id="cmp-b2" placeholder="Fund 2 — e.g. HDFC Nifty 50 ETF" oninput="updateCompareQuery()"/>
+          <input class="calc-input-text" type="text" id="cmp-b3" placeholder="Fund 3 — e.g. SBI Nifty 50 ETF" oninput="updateCompareQuery()"/>
+          <input class="calc-input-text" type="text" id="cmp-b4" placeholder="Fund 4 — optional" oninput="updateCompareQuery()"/>
+          <input class="calc-input-text" type="text" id="cmp-b5" placeholder="Fund 5 — optional" oninput="updateCompareQuery()"/>
+        </div>
+      </div>
+    </div>
+    <div class="calc-grid" style="margin-bottom:0">
+      <div class="calc-field">
+        <label>Resident Status</label>
+        <select class="calc-select" id="cmp-resident" onchange="updateCompareQuery()">
+          <option value="Indian Resident">🇮🇳 Indian Resident</option>
+          <option value="NRI">🌍 NRI</option>
+          <option value="Japan Resident">🇯🇵 Japan Resident</option>
+          <option value="Others">🌐 Others</option>
+        </select>
+      </div>
+      <div class="calc-field">
+        <label>Investment Horizon</label>
+        <select class="calc-select" id="cmp-horizon" onchange="updateCompareQuery()">
+          <option value="Short Term (less than 1 year)">Short Term &lt;1Y</option>
+          <option value="Medium Term (1–3 years)">Medium Term 1–3Y</option>
+          <option value="Long Term (3–5 years)" selected>Long Term 3–5Y</option>
+          <option value="Very Long Term (5+ years)">Very Long Term 5Y+</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="cc">
+    <div class="cc-title">AI Comparison Query</div>
+    <div class="btn-row">
+      <button class="copy-btn" id="cmp-copy-btn" onclick="copyCompareQuery()">&#128203; Copy Query</button>
+      <span style="font-size:12px;color:var(--text3);align-self:center">Copy → paste into Claude AI → paste the HTML result below → click Render</span>
+    </div>
+    <div class="prompt-box" id="cmp-query-box">Fill in fund names above to generate the query.</div>
+  </div>
+
+  <div class="cc">
+    <div class="cc-title">Paste AI HTML Output &amp; Render</div>
+    <textarea class="paste-area" id="cmp-paste-area" style="min-height:140px;margin-bottom:12px" placeholder="Paste the complete HTML output from Claude AI here...&#10;&#10;It should start with &lt;!DOCTYPE html&gt;"></textarea>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="action-btn primary" onclick="renderCompare()">&#128269; Render Comparison Report</button>
+      <button class="action-btn secondary" onclick="document.getElementById('cmp-paste-area').value='';document.getElementById('cmp-rendered').innerHTML=''">&#128465;&#65039; Clear</button>
+      <button class="action-btn primary" id="cmp-export-btn" onclick="downloadCompare()" style="display:none">&#8595;&#65039; Download HTML</button>
+    </div>
+  </div>
+
+  <div id="cmp-rendered" style="border-radius:12px;overflow:hidden;border:1px solid var(--border);margin-top:4px"></div>
+</div>
+<script>
+let compareHtml = '';
+
+function getFunds(prefix) {
+  return [1,2,3,4,5]
+    .map(i => document.getElementById(`cmp-${prefix}${i}`)?.value?.trim())
+    .filter(Boolean);
+}
+
+function updateCompareQuery() {
+  const groupA   = getFunds('a');
+  const groupB   = getFunds('b');
+  const resident = document.getElementById('cmp-resident').value;
+  const horizon  = document.getElementById('cmp-horizon').value;
+  const today    = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+
+  if (groupA.length === 0 && groupB.length === 0) {
+    document.getElementById('cmp-query-box').textContent = 'Fill in fund names above to generate the query.';
+    return;
+  }
+
+  const allFunds = [...groupA.map((f,i)=>`Group A-${i+1}: ${f}`), ...groupB.map((f,i)=>`Group B-${i+1}: ${f}`)];
+
+  const query = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MULTI ASSET SCREENER — FUND COMPARISON QUERY v8.0
+Generated: ${today} | Tool: Vilfin George
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ROLE: You are a professional mutual fund & ETF research analyst.
+Research ALL funds listed below and output a COMPLETE single-file self-contained HTML comparison report.
+
+INVESTOR PROFILE:
+  Resident Status  : ${resident}
+  Investment Horizon: ${horizon}
+  Report Date      : ${today}
+
+FUNDS TO COMPARE:
+${allFunds.map(f => '  '+f).join('\n')}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DATA SOURCES: AMFI, NSE, BSE, Morningstar, Value Research, CRISIL,
+Tickertape, Screener.in, Moneycontrol, ET Markets, Trendlyne, Yahoo Finance.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+HTML REPORT DESIGN REQUIREMENTS:
+• Fonts: Bebas Neue + DM Sans + JetBrains Mono (Google Fonts)
+• Background: #f4f0eb warm cream, white cards, burnt-orange (#c0390b/#e8540f) accents
+• Header: linear-gradient(135deg,#1a0800,#c0390b,#e8540f,#ff7235) — dark gradient
+• Header title: "Fund Comparison Report" — Bebas Neue, white, letter-spacing 3px
+• Sub-header: list all fund names being compared
+• Dark identity bar (#1a1a1a) with: funds count | investor type | date | horizon
+• Sticky scrollable tab bar: dark #242424 background, gold #ffd166 active underline
+• White cards: border-radius 12px, border #e8e0d8, subtle shadow
+• Card section titles: Bebas Neue with 4px burnt-orange left bar
+• KPI grid: auto-fill columns, cream #f9f7f4 cards, uppercase labels
+• Tables: burnt-orange thead gradient, hover rows
+• Badges: green=buy/positive, red=sell/avoid, amber=hold/neutral, blue=info
+• Footer: dark #1a1a1a, gold "Site Owner: Vilfin George", full SEBI disclaimer
+• Footer: "Generated: ${today} | Multi Asset Screener v8.0 | Vilfin George"
+• All CSS and JS inline — fully self-contained single file
+• Mobile responsive
+• Tab fade-up animation
+
+SEBI DISCLAIMER (include in footer):
+"This comparison report is for educational and informational purposes only. It does not constitute investment advice, a solicitation, or an offer to buy or sell any securities. Vilfin George is not a SEBI-registered investment advisor. All data is sourced from publicly available information. Mutual fund investments are subject to market risks. Past performance is not indicative of future results. Please read all scheme-related documents carefully before investing. Consult your financial advisor before making any investment decision."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPARISON REPORT — 6 TABS REQUIRED:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TAB 1 — OVERVIEW & IDENTITY
+For each fund: Full Name | AMC | Category | Sub-Category | Fund Type (Open/Close/Interval) |
+Benchmark | Fund Manager | Manager Tenure | ISIN (Regular + Direct) | Launch Date |
+TER Regular % | TER Direct % | Exit Load | Lock-in | Min SIP | Min Lumpsum |
+AUM (Cr) | AUM Trend (Growing/Shrinking) | AMFI Risk Rating | Suitable For
+
+Summary verdict box: which fund is best for what investor type.
+
+TAB 2 — PERFORMANCE COMPARISON
+Side-by-side returns table for ALL funds:
+Period: 1M | 3M | 6M | 1Y | 2Y | 3Y | 5Y | 7Y | 10Y | Since Inception
+For each: Fund return % | Benchmark return % | vs Category Avg | CRISIL Rank | VR Rating
+Rolling returns (3Y rolling, 5Y rolling) | Max Drawdown % | Recovery period
+Best Quarter | Worst Quarter | Consistency Score
+Performance verdict: Rank funds 1st to last with reasoning.
+
+TAB 3 — RISK & QUALITY METRICS
+For each fund: Sharpe Ratio | Sortino Ratio | Alpha | Beta | Standard Deviation |
+R-squared | Treynor Ratio | Calmar Ratio | Information Ratio
+Max drawdown % | Drawdown recovery months | Volatility band (Low/Medium/High)
+Quality checklist for each fund (12 items — Yes/No/Partial):
+Beats benchmark 3Y | Beats category 3Y | Low TER | Manager tenure >3Y |
+AUM growing | Positive net flows 3M | Sharpe >1 | Low max drawdown |
+CRISIL 4-star+ | Consistent top-quartile | No SEBI violations | Fund house credibility
+
+TAB 4 — PORTFOLIO & HOLDINGS
+For each fund: Top 10 Holdings (Stock/Security | Sector | Weight%) |
+Sector Allocation (top 5 sectors per fund) | Portfolio Overlap % between all funds |
+Unique holdings | Portfolio Concentration (top 10 weight %) |
+Portfolio P/E | Portfolio P/B | Average Market Cap Tilt |
+Portfolio turnover ratio | Number of holdings
+If ETF: Underlying index | Tracking error | Tracking difference
+
+TAB 5 — TAX & COST ANALYSIS
+For resident: ${resident} | Horizon: ${horizon}
+For each fund:
+  STCG rate + holding period | LTCG rate + holding period | Indexation benefit
+  TER drag on 10Y returns (show compounding impact of TER difference)
+  Exit load impact for this horizon | Stamp duty | STT if applicable
+  Tax-efficient entry: Direct vs Regular (cost difference over 10Y)
+  Best account to hold: Regular taxable | NRE account | NISA (Japan)
+  Net post-tax return estimate for this horizon
+
+TAB 6 — FINAL VERDICT & RECOMMENDATION
+Overall ranking table: Fund Name | Overall Score /100 | Risk Score | Return Score | Quality Score | Cost Score | Verdict Badge
+Composite scoring breakdown per fund (show as horizontal score bars):
+  Performance (30pts) | Risk Management (25pts) | Cost Efficiency (20pts) | Fund Quality (15pts) | Manager Track Record (10pts)
+Best pick for: SIP investor | Lumpsum investor | Short-term | Long-term | Conservative | Aggressive
+Side-by-side comparison summary: 3 key strengths and 1 weakness per fund
+Final recommendation with reasoning (3–4 sentences per fund)
+Investment strategy for this specific portfolio combination
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OUTPUT FORMAT:
+• Output COMPLETE HTML starting with <!DOCTYPE html>
+• No markdown code fences — pure HTML only
+• All CSS and JS embedded inline
+• Do NOT truncate any section — fill every tab with real live data
+• If data unavailable → "No Data Available"
+• Begin output now.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+
+  document.getElementById('cmp-query-box').textContent = query;
+}
+
+function copyCompareQuery() {
+  const text = document.getElementById('cmp-query-box').textContent;
+  if (!text || text === 'Fill in fund names above to generate the query.') {
+    alert('Please enter fund names above to generate the comparison query first.');
+    return;
+  }
+  const btn = document.getElementById('cmp-copy-btn');
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.classList.add('copied'); btn.innerHTML = '✅ Copied!';
+      setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = '📋 Copy Query'; }, 2500);
+    });
+  } else {
+    try {
+      const ta=document.createElement('textarea'); ta.value=text;
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+      btn.classList.add('copied'); btn.innerHTML = '✅ Copied!';
+      setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = '📋 Copy Query'; }, 2500);
+    } catch(e) { alert('Copy failed. Please select and copy manually.'); }
+  }
+}
+
+function renderCompare() {
+  const html = document.getElementById('cmp-paste-area').value.trim();
+  if (!html) { alert('Please paste the HTML output from Claude AI first.'); return; }
+  compareHtml = html;
+  const container = document.getElementById('cmp-rendered');
+  container.innerHTML = '';
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'width:100%;border:none;border-radius:12px;min-height:80vh;display:block';
+  container.appendChild(iframe);
+  const doc = iframe.contentDocument || iframe.contentWindow.document;
+  doc.open(); doc.write(html); doc.close();
+  const resize = () => { try { const h=iframe.contentWindow.document.documentElement.scrollHeight; if(h>400) iframe.style.height=(h+40)+'px'; } catch(e){} };
+  iframe.onload = resize; setTimeout(resize,500); setTimeout(resize,1500);
+  document.getElementById('cmp-export-btn').style.display = 'flex';
+}
+
+function downloadCompare() {
+  if (!compareHtml) return;
+  const blob = new Blob([compareHtml], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `fund_comparison_${new Date().toISOString().slice(0,10)}.html`;
+  a.click();
+}
+</script>
+</body>
+</html>

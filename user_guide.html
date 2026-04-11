@@ -1,0 +1,2072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>User Guide — Multi Asset Screener | Vilfin George</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --burn:#c0390b;--burn2:#e8540f;--burn3:#ff7235;
+  --gold:#f5a623;--gold2:#ffd166;
+  --green:#22c55e;--green2:#16a34a;
+  --red:#ef4444;--red2:#dc2626;
+  --amber:#f59e0b;--amber2:#d97706;
+  --blue:#3b82f6;--blue2:#1d4ed8;
+  --purple:#8b5cf6;--purple2:#7c3aed;
+  --teal:#14b8a6;--teal2:#0d9488;
+  --dark:#0f0f0f;--dark2:#1a1a1a;--dark3:#242424;--dark4:#2e2e2e;
+  --card:#1e1e1e;--card2:#272727;--card3:#1f1f1f;--card4:#222;
+  --text:#f0ede8;--text2:#b0a898;--text3:#6e6558;
+  --border:#3a342c;--border2:#4a4238;
+  --radius:14px;--radius-sm:9px;--radius-xs:6px;
+  --shadow:0 4px 20px rgba(0,0,0,.4);
+  --transition:.2s ease;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:#0e0e0e;color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ── ANIMATED HEADER ── */
+.site-header{
+  background:linear-gradient(135deg,#0d0400 0%,#1a0800 25%,#2a0c00 45%,var(--burn) 70%,var(--burn2) 85%,var(--burn3) 100%);
+  padding:44px 24px 36px;text-align:center;position:relative;overflow:hidden;
+}
+.site-header::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(45deg,transparent,transparent 20px,rgba(255,255,255,.018) 20px,rgba(255,255,255,.018) 40px);
+  animation:headerShimmer 8s linear infinite;
+}
+@keyframes headerShimmer{0%{background-position:0 0}100%{background-position:80px 80px}}
+.site-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent 0%,var(--gold) 30%,var(--gold2) 50%,var(--gold) 70%,transparent 100%)}
+.header-badge-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:14px;position:relative;z-index:1}
+.header-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;border:1px solid;backdrop-filter:blur(4px)}
+.header-badge.version{background:rgba(245,166,35,.15);border-color:rgba(245,166,35,.4);color:var(--gold2)}
+.header-badge.updated{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.3);color:var(--green2)}
+.header-badge.tabs{background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3);color:#a78bfa}
+.site-header h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,6vw,56px);color:#fff;letter-spacing:5px;position:relative;z-index:1;text-shadow:0 0 60px rgba(232,84,15,.6),0 2px 4px rgba(0,0,0,.5);line-height:1}
+.site-header .sub{color:rgba(255,255,255,.65);font-size:12px;margin-top:8px;position:relative;z-index:1;letter-spacing:2.5px;text-transform:uppercase}
+.floating-orb{position:absolute;border-radius:50%;filter:blur(60px);animation:orb 6s ease-in-out infinite;pointer-events:none}
+.orb1{width:200px;height:200px;background:rgba(192,57,11,.25);top:-60px;left:-60px;animation-delay:0s}
+.orb2{width:150px;height:150px;background:rgba(245,166,35,.15);top:-30px;right:-40px;animation-delay:3s}
+@keyframes orb{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(20px,15px) scale(1.1)}}
+
+/* ── SEARCH ── */
+.search-wrap{background:var(--dark2);padding:14px 20px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:400;backdrop-filter:blur(12px)}
+.search-inner{max-width:720px;margin:0 auto}
+.search-row{display:flex;align-items:center;gap:10px}
+.search-box{position:relative;flex:1}
+.search-input{width:100%;padding:11px 44px 11px 46px;background:var(--card2);border:1px solid var(--border2);border-radius:30px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none;transition:all .2s}
+.search-input:focus{border-color:var(--burn2);background:#2a2520;box-shadow:0 0 0 3px rgba(232,84,15,.12)}
+.search-input::placeholder{color:var(--text3)}
+.search-icon-l{position:absolute;left:15px;top:50%;transform:translateY(-50%);font-size:17px;color:var(--text3);pointer-events:none}
+.search-clear{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;display:none;line-height:1;padding:2px}
+.search-clear:hover{color:var(--text)}
+.search-count{font-size:11px;color:var(--text3);margin-top:5px;text-align:center;min-height:14px;letter-spacing:.3px}
+
+/* ── MAIN NAV ── */
+.main-nav{background:var(--dark3);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none;position:sticky;top:74px;z-index:300}
+.main-nav::-webkit-scrollbar{display:none}
+.main-tab{flex-shrink:0;padding:14px 18px;border:none;background:transparent;color:var(--text3);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;position:relative;white-space:nowrap;transition:color .2s;letter-spacing:.4px;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.main-tab:hover{color:var(--text2);background:rgba(255,255,255,.03)}
+.main-tab.active{color:var(--gold2)}
+.main-tab.active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:3px 3px 0 0}
+.tab-icon{font-size:14px}
+
+/* ── PANELS ── */
+.panel{display:none}
+.panel.active{display:block;animation:panelIn .35s cubic-bezier(.16,1,.3,1)}
+@keyframes panelIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── CONTENT WRAP ── */
+.content-wrap{max-width:1040px;margin:0 auto;padding:34px 20px 90px}
+
+/* ── SECTION HERO ── */
+.section-hero{
+  background:linear-gradient(135deg,var(--dark2),var(--card2));
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:28px 28px;margin-bottom:24px;display:flex;align-items:center;gap:20px;
+  position:relative;overflow:hidden;
+}
+.section-hero::before{content:'';position:absolute;top:0;right:0;width:200px;height:100%;background:linear-gradient(135deg,transparent,rgba(192,57,11,.06));pointer-events:none}
+.section-hero-icon{width:56px;height:56px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--burn),var(--burn3));display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 4px 20px rgba(192,57,11,.3)}
+.section-hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(22px,3vw,30px);letter-spacing:2px;color:var(--gold2);line-height:1}
+.section-hero-sub{font-size:13px;color:var(--text3);margin-top:5px;line-height:1.5}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;margin-bottom:18px;transition:border-color var(--transition)}
+.card:hover{border-color:var(--border2)}
+.card-title{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1.5px;color:var(--gold2);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.card-title::before{content:'';width:4px;height:20px;background:linear-gradient(180deg,var(--burn),var(--burn2));border-radius:2px;flex-shrink:0}
+
+/* ── ASSET CLASS HERO CARDS ── */
+.asset-hero-card{
+  border-radius:var(--radius);padding:0;overflow:hidden;margin-bottom:20px;
+  border:1px solid var(--border);transition:transform .2s,box-shadow .2s;
+}
+.asset-hero-card:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.ahc-header{padding:22px 24px 18px;position:relative;overflow:hidden}
+.ahc-header::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 15px,rgba(255,255,255,.015) 15px,rgba(255,255,255,.015) 30px);pointer-events:none}
+.ahc-icon{font-size:36px;margin-bottom:10px;display:block;position:relative;z-index:1}
+.ahc-name{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:#fff;position:relative;z-index:1;line-height:1}
+.ahc-subtitle{font-size:12px;color:rgba(255,255,255,.65);margin-top:4px;position:relative;z-index:1;letter-spacing:.5px}
+.ahc-body{padding:20px 24px;background:var(--card)}
+.ahc-desc{font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:16px}
+.ahc-what{font-size:12.5px;color:var(--text2);line-height:1.75;margin-bottom:14px}
+.pros-cons{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.pros-col{background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.18);border-radius:var(--radius-sm);padding:12px 14px}
+.cons-col{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.18);border-radius:var(--radius-sm);padding:12px 14px}
+.pc-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.pros-col .pc-title{color:var(--green2)}
+.cons-col .pc-title{color:var(--red2)}
+.pc-item{font-size:12px;color:var(--text2);line-height:1.65;padding-left:14px;position:relative;margin-bottom:4px}
+.pc-item::before{content:'•';position:absolute;left:4px;font-size:10px}
+.pros-col .pc-item::before{color:var(--green2)}
+.cons-col .pc-item::before{color:var(--red2)}
+.ahc-tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.ahc-tag{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;background:var(--card2);border:1px solid var(--border);color:var(--text2)}
+.ahc-who{font-size:12px;color:var(--text3);background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.15);border-radius:var(--radius-sm);padding:10px 13px;line-height:1.6}
+.ahc-who strong{color:var(--gold2)}
+
+/* ── COMPARE MATRIX ── */
+.compare-matrix{overflow-x:auto;border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:16px}
+.compare-matrix table{width:100%;border-collapse:collapse;font-size:12px;min-width:600px}
+.compare-matrix th{background:linear-gradient(135deg,var(--burn),var(--burn2));color:#fff;padding:10px 14px;text-align:center;font-weight:700;font-size:11px;letter-spacing:.4px;white-space:nowrap}
+.compare-matrix th:first-child{text-align:left}
+.compare-matrix td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text2);text-align:center;line-height:1.5;vertical-align:middle}
+.compare-matrix td:first-child{text-align:left;font-weight:600;color:var(--text);white-space:nowrap}
+.compare-matrix tr:hover td{background:rgba(255,255,255,.025)}
+.compare-matrix tr:last-child td{border-bottom:none}
+.cm-good{color:var(--green2);font-weight:700}
+.cm-bad{color:var(--red2);font-weight:600}
+.cm-mid{color:var(--amber2);font-weight:600}
+.cm-na{color:var(--text3);font-style:italic}
+
+/* ── KYC / ACCOUNT STEPS ── */
+.kyc-flow{display:flex;flex-direction:column;gap:0;position:relative}
+.kyc-flow::before{content:'';position:absolute;left:22px;top:44px;bottom:22px;width:2px;background:linear-gradient(180deg,var(--burn2) 0%,rgba(192,57,11,.1) 100%)}
+.kyc-step{display:flex;gap:16px;padding-bottom:20px;position:relative}
+.kyc-step:last-child{padding-bottom:0}
+.kyc-num{width:46px;height:46px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--burn),var(--burn3));display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:19px;color:#fff;border:2px solid rgba(232,84,15,.25);position:relative;z-index:1}
+.kyc-body{padding-top:10px;flex:1}
+.kyc-body h4{font-size:14px;font-weight:700;color:var(--text);margin-bottom:5px}
+.kyc-body p{font-size:12.5px;color:var(--text2);line-height:1.75}
+.kyc-docs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.doc-pill{padding:3px 10px;background:var(--card2);border:1px solid var(--border);border-radius:20px;font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px}
+.kyc-note{margin-top:8px;padding:8px 12px;background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.2);border-radius:var(--radius-xs);font-size:12px;color:var(--gold2);line-height:1.6}
+
+/* ── TIMELINE ── */
+.timeline{position:relative;padding-left:28px}
+.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--burn2),rgba(192,57,11,.15))}
+.tl-item{position:relative;margin-bottom:18px}
+.tl-item:last-child{margin-bottom:0}
+.tl-dot{width:16px;height:16px;border-radius:50%;background:var(--burn2);position:absolute;left:-24px;top:2px;border:2px solid var(--dark3)}
+.tl-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+.tl-body{font-size:12.5px;color:var(--text2);line-height:1.7}
+.tl-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:6px;background:rgba(192,57,11,.15);color:var(--burn3);border:1px solid rgba(192,57,11,.25)}
+
+/* ── INFO CARDS ── */
+.info-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:16px}
+.info-card{background:var(--card2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 18px;transition:border-color .2s}
+.info-card:hover{border-color:var(--burn2)}
+.info-card-icon{font-size:22px;margin-bottom:8px;display:block}
+.info-card-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:5px}
+.info-card-body{font-size:12px;color:var(--text2);line-height:1.7}
+.info-card-link{display:inline-flex;align-items:center;gap:5px;margin-top:10px;padding:6px 14px;background:linear-gradient(135deg,var(--burn),var(--burn2));border-radius:20px;color:#fff;font-size:11px;font-weight:700;text-decoration:none;transition:all .15s}
+.info-card-link:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(192,57,11,.35)}
+
+/* ── TAX TABLES ── */
+.tbl-wrap{overflow-x:auto;border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:16px}
+.tax-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.tax-table th{background:linear-gradient(135deg,var(--burn),var(--burn2));color:#fff;padding:11px 14px;text-align:left;font-size:11px;font-weight:700;letter-spacing:.4px;white-space:nowrap}
+.tax-table td{padding:11px 14px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top;line-height:1.6}
+.tax-table tr:hover td{background:var(--card2)}
+.tax-table tr:last-child td{border-bottom:none}
+.tax-table .asset-col{font-weight:700;color:var(--text)}
+.tax-table .rate{color:var(--gold2);font-weight:700;font-family:'JetBrains Mono',monospace}
+.tax-table .good{color:var(--green2);font-weight:600}
+.tax-table .warn{color:var(--amber2);font-weight:600}
+
+/* ── FAQ ── */
+.faq-item{border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;overflow:hidden;transition:border-color .2s,box-shadow .2s}
+.faq-item.open{border-color:var(--burn2);box-shadow:0 4px 16px rgba(192,57,11,.12)}
+.faq-q{padding:14px 18px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--card2);transition:background .15s;gap:12px;user-select:none}
+.faq-item.open .faq-q{background:rgba(192,57,11,.1)}
+.faq-q-text{font-size:13px;font-weight:600;color:var(--text);line-height:1.4;flex:1}
+.faq-arrow{color:var(--burn2);font-size:18px;flex-shrink:0;transition:transform .25s;line-height:1}
+.faq-item.open .faq-arrow{transform:rotate(180deg)}
+.faq-a{display:none;padding:16px 18px;background:var(--card3);font-size:12.5px;color:var(--text2);line-height:1.85;border-top:1px solid var(--border)}
+.faq-item.open .faq-a{display:block;animation:panelIn .2s ease}
+.faq-a strong{color:var(--gold2)}
+.faq-a code{font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(192,57,11,.12);color:var(--burn3);padding:2px 7px;border-radius:4px}
+.faq-a a{color:var(--burn3);font-weight:600}
+
+/* ── RESIDENT TABS ── */
+.rtabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.rtab{padding:8px 18px;border-radius:30px;border:1px solid var(--border2);background:var(--card2);color:var(--text3);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.rtab:hover{border-color:var(--burn2);color:var(--text2)}
+.rtab.active{border-color:var(--burn2);background:rgba(232,84,15,.15);color:var(--gold2)}
+.rpanel{display:none}
+.rpanel.active{display:block;animation:panelIn .2s ease}
+
+/* ── BADGES & ALERTS ── */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.3px}
+.badge-green{background:rgba(34,197,94,.1);color:var(--green2);border:1px solid rgba(34,197,94,.25)}
+.badge-red{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.25)}
+.badge-amber{background:rgba(245,158,11,.1);color:var(--amber2);border:1px solid rgba(245,158,11,.25)}
+.badge-blue{background:rgba(59,130,246,.1);color:#60a5fa;border:1px solid rgba(59,130,246,.25)}
+.badge-purple{background:rgba(139,92,246,.1);color:#a78bfa;border:1px solid rgba(139,92,246,.25)}
+.info-alert{padding:13px 17px;border-radius:var(--radius-sm);margin-bottom:14px;font-size:12.5px;line-height:1.7;display:flex;gap:12px;align-items:flex-start}
+.info-alert.amber{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25)}
+.info-alert.blue{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25)}
+.info-alert.green{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25)}
+.info-alert.red{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25)}
+.info-alert.purple{background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25)}
+.info-alert .icon{font-size:17px;flex-shrink:0;margin-top:1px}
+.info-alert .body{color:var(--text2)}
+.info-alert .body strong{color:var(--text)}
+.note-box{background:rgba(192,57,11,.07);border:1px solid rgba(192,57,11,.2);border-radius:var(--radius-sm);padding:13px 17px;margin:12px 0;font-size:12.5px;color:var(--text2);line-height:1.75}
+.note-box strong{color:var(--burn3)}
+
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;margin-bottom:14px}
+.kpi{background:var(--card2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 16px}
+.kpi-label{font-size:9.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.9px;margin-bottom:5px;font-weight:600}
+.kpi-val{font-size:14px;font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace;word-break:break-word}
+.kpi-note{font-size:11px;color:var(--text3);margin-top:3px}
+
+/* ── STEPS ── */
+.steps{display:flex;flex-direction:column;gap:0}
+.step{display:flex;gap:16px;position:relative;padding-bottom:22px}
+.step:last-child{padding-bottom:0}
+.step:not(:last-child)::after{content:'';position:absolute;left:22px;top:46px;bottom:0;width:2px;background:linear-gradient(180deg,var(--burn2),rgba(192,57,11,.1))}
+.step-num{width:46px;height:46px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--burn),var(--burn3));display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:19px;color:#fff;border:2px solid rgba(232,84,15,.25);position:relative;z-index:1}
+.step-body{padding-top:9px;flex:1}
+.step-body strong{display:block;font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:5px}
+.step-body p{font-size:12.5px;color:var(--text2);line-height:1.75}
+.step-tip{margin-top:8px;padding:8px 12px;background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.2);border-radius:var(--radius-xs);font-size:12px;color:var(--gold2);line-height:1.6}
+
+/* ── GLOSSARY ── */
+.term-item{padding:12px 0;border-bottom:1px solid var(--border);display:flex;gap:16px;align-items:flex-start}
+.term-item:last-child{border-bottom:none}
+.term-name{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--burn3);min-width:160px;flex-shrink:0;padding-top:2px;word-break:break-word;line-height:1.4}
+.term-def{font-size:12.5px;color:var(--text2);line-height:1.7;flex:1}
+.term-example{display:block;margin-top:5px;font-size:11px;color:var(--text3);font-style:italic}
+.term-badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:700;margin-left:6px;vertical-align:middle}
+.term-badge.equity{background:rgba(34,197,94,.12);color:var(--green2);border:1px solid rgba(34,197,94,.2)}
+.term-badge.debt{background:rgba(59,130,246,.12);color:#60a5fa;border:1px solid rgba(59,130,246,.2)}
+.term-badge.risk{background:rgba(239,68,68,.12);color:#f87171;border:1px solid rgba(239,68,68,.2)}
+.term-badge.general{background:rgba(245,158,11,.12);color:var(--amber2);border:1px solid rgba(245,158,11,.2)}
+.term-badge.technical{background:rgba(139,92,246,.12);color:#a78bfa;border:1px solid rgba(139,92,246,.2)}
+
+/* ── SEARCH HIGHLIGHT ── */
+.searchable.hidden{display:none}
+.hl{background:rgba(245,166,35,.28);color:var(--gold2);border-radius:3px;padding:0 2px}
+.no-results{text-align:center;padding:60px 20px;color:var(--text3)}
+.no-results .icon{font-size:48px;margin-bottom:14px}
+
+/* ── GUIDE LIST ── */
+ul.guide-list{padding-left:20px;margin:10px 0}
+ul.guide-list li{font-size:12.5px;color:var(--text2);line-height:1.85;margin-bottom:4px}
+ul.guide-list li strong{color:var(--text)}
+
+/* ── NISA CARD ── */
+.nisa-card{background:linear-gradient(135deg,rgba(139,92,246,.08),rgba(59,130,246,.05));border:1px solid rgba(139,92,246,.25);border-radius:var(--radius);padding:22px 24px;margin-bottom:14px}
+.nisa-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#a78bfa;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+
+/* ── PLATFORM CARD ── */
+.platform-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:16px}
+.platform-card{background:var(--card2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 18px;transition:border-color .2s,transform .15s}
+.platform-card:hover{border-color:var(--burn2);transform:translateY(-2px)}
+.platform-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.platform-desc{font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:10px}
+.platform-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.platform-tag{padding:2px 9px;border-radius:12px;font-size:10px;font-weight:600;background:rgba(192,57,11,.1);border:1px solid rgba(192,57,11,.2);color:var(--burn3)}
+.platform-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:linear-gradient(135deg,var(--burn),var(--burn2));border-radius:20px;color:#fff;font-size:11px;font-weight:700;text-decoration:none;transition:all .15s}
+.platform-btn:hover{transform:translateY(-1px);box-shadow:0 3px 12px rgba(192,57,11,.35)}
+
+/* ── HIGHLIGHT BOX ── */
+.highlight-box{padding:13px 17px;background:var(--card2);border-left:4px solid var(--burn2);border-radius:0 var(--radius-sm) var(--radius-sm) 0;border:1px solid var(--border);border-left-width:4px;margin:12px 0}
+.highlight-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.9px;margin-bottom:5px}
+.highlight-text{font-size:13px;color:var(--text2);line-height:1.75}
+
+/* ── FOOTER ── */
+footer{background:var(--dark2);color:rgba(255,255,255,.4);padding:30px 20px;text-align:center;font-size:11.5px;line-height:1.85;border-top:3px solid var(--burn)}
+footer strong{color:var(--gold);display:block;font-size:14px;margin-bottom:8px}
+footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
+
+/* ── MOBILE ── */
+@media(max-width:700px){
+  .section-hero{flex-direction:column;gap:12px;padding:20px}
+  .pros-cons{grid-template-columns:1fr}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .term-item{flex-direction:column;gap:4px}
+  .term-name{min-width:unset}
+  .content-wrap{padding:24px 14px 70px}
+  .main-tab{padding:12px 13px;font-size:11px}
+  .rtabs{gap:6px}
+  .rtab{padding:7px 13px;font-size:11px}
+  .info-card-grid{grid-template-columns:1fr}
+  .platform-grid{grid-template-columns:1fr}
+  .kyc-flow::before{left:18px}
+  .kyc-num{width:38px;height:38px;font-size:16px}
+}
+
+/* ── DARK SCROLL ── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--dark3)}
+::-webkit-scrollbar-thumb{background:var(--burn);border-radius:3px}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="floating-orb orb1"></div>
+  <div class="floating-orb orb2"></div>
+  <h1>Multi Asset Screener</h1>
+  <div class="sub">Complete Investor Guide &amp; Reference Manual</div>
+  <div class="header-badge-row">
+    <span class="header-badge version">⚡ v8.0 — Vilfin George</span>
+    <span class="header-badge updated">✅ Tax: AY 2026–27</span>
+    <span class="header-badge tabs">📚 9 Tabs · 200+ Topics</span>
+  </div>
+</header>
+
+<div class="search-wrap">
+  <div class="search-inner">
+    <div class="search-row">
+      <div class="search-box">
+        <span class="search-icon-l">🔍</span>
+        <input class="search-input" id="search-input" type="text" placeholder="Search: mutual fund, NISA, KYC, tax, SIP, bond, NRI..."/>
+        <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
+      </div>
+    </div>
+    <div class="search-count" id="search-count"></div>
+  </div>
+</div>
+
+<nav class="main-nav" id="main-nav">
+  <button class="main-tab active" onclick="switchTab(0,this)"><span class="tab-icon">📖</span> How To Use</button>
+  <button class="main-tab" onclick="switchTab(1,this)"><span class="tab-icon">🏢</span> Stocks</button>
+  <button class="main-tab" onclick="switchTab(2,this)"><span class="tab-icon">🪙</span> Mutual Funds</button>
+  <button class="main-tab" onclick="switchTab(3,this)"><span class="tab-icon">📊</span> ETFs</button>
+  <button class="main-tab" onclick="switchTab(4,this)"><span class="tab-icon">📜</span> Bonds</button>
+  <button class="main-tab" onclick="switchTab(5,this)"><span class="tab-icon">⚙️</span> Commodities</button>
+  <button class="main-tab" onclick="switchTab(6,this)"><span class="tab-icon">🏗️</span> REITs &amp; InvITs</button>
+  <button class="main-tab" onclick="switchTab(7,this)"><span class="tab-icon">🧾</span> Tax &amp; Filing</button>
+  <button class="main-tab" onclick="switchTab(8,this)"><span class="tab-icon">🌍</span> KYC &amp; Accounts</button>
+  <button class="main-tab" onclick="switchTab(9,this)"><span class="tab-icon">💸</span> Remittance</button>
+  <button class="main-tab" onclick="switchTab(10,this)"><span class="tab-icon">❓</span> FAQ &amp; Glossary</button>
+</nav>
+
+<!-- ══ TAB 0: HOW TO USE ══ -->
+<div class="panel active" id="tab-0"><div class="content-wrap">
+<div class="section-hero">
+  <div class="section-hero-icon">📖</div>
+  <div><div class="section-hero-title">How To Use This Tool</div><div class="section-hero-sub">10-step workflow · Built-in AI query builder · 16-tab research reports · Export to HTML/PDF</div></div>
+</div>
+
+<div class="card">
+  <div class="card-title">What Is This Tool?</div>
+  <p style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:14px">This is an <strong style="color:var(--text)">AI-Powered Research Query Builder</strong>. It collects your investment preferences through a smart form, then generates a precisely structured prompt for Claude AI. When you paste that prompt into <a href="https://claude.ai" target="_blank" style="color:var(--burn3)">claude.ai</a>, Claude searches 20+ live financial data sources and returns structured data. This tool then instantly renders that data into a <strong style="color:var(--text)">professional 10–16 tab research report</strong> — no coding needed.</p>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Asset Types</div><div class="kpi-val">6</div><div class="kpi-note">Stock, ETF, MF, Bond, Commodity, Currency</div></div>
+    <div class="kpi"><div class="kpi-label">Max Report Tabs</div><div class="kpi-val">16</div><div class="kpi-note">Per asset type (Mutual Fund)</div></div>
+    <div class="kpi"><div class="kpi-label">Markets Covered</div><div class="kpi-val">4+</div><div class="kpi-note">India, US, Japan, Global</div></div>
+    <div class="kpi"><div class="kpi-label">Data Stored?</div><div class="kpi-val">None</div><div class="kpi-note">100% client-side, no server</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Step-by-Step Workflow</div>
+  <div class="steps">
+    <div class="step searchable"><div class="step-num">1</div><div class="step-body"><strong>Select Asset Type (Q1)</strong><p>Choose from Stock, ETF, Mutual Fund, Bond, Commodity, or Currency. Each asset type generates a completely different AI query tailored to that class — up to 16 data tabs.</p></div></div>
+    <div class="step searchable"><div class="step-num">2</div><div class="step-body"><strong>Choose Market &amp; Sub-Category (Q1a/b/c)</strong><p>Select the market (India, US, Japan, Global) and drill down to specific sub-types. For Commodities: Category → Specific item. For Gold/Silver: choose Physical or Digital for a specialised platform comparison report.</p></div></div>
+    <div class="step searchable"><div class="step-num">3</div><div class="step-body"><strong>Enter Asset Name (Q2)</strong><p>Type the full official name — e.g. "Mirae Asset Large Cap Fund — Direct Growth" or "RELIANCE" or "Apple Inc (AAPL)". For MF FOFs, the AI automatically pulls the underlying ETF list.</p><div class="step-tip">💡 Commodities auto-fill from your Q1b/Q1c selection. Digital Gold/Silver pre-fills automatically.</div></div></div>
+    <div class="step searchable"><div class="step-num">4</div><div class="step-body"><strong>Resident / Tax Status (Q3)</strong><p>Choose: Indian Resident, NRI (NRE/NRO), Japan Resident (NISA sub-selection), or Others. This controls STCG/LTCG rates, TDS rates, NISA eligibility, and DTAA treaty notes in your report.</p></div></div>
+    <div class="step searchable"><div class="step-num">5</div><div class="step-body"><strong>Investment Horizon (Q4)</strong><p>Short (&lt;1Y), Medium (1–3Y), Long (3–5Y), Very Long (5Y+). Shapes forecast targets, determines STCG vs LTCG, and adjusts the verdict section.</p></div></div>
+    <div class="step searchable"><div class="step-num">6</div><div class="step-body"><strong>Investment Amount (Q5) — Optional</strong><p>Select currency and enter amount. Used only for Conservative/Moderate/Aggressive allocation guidance in the Verdict tab. Never stored or transmitted.</p></div></div>
+    <div class="step searchable"><div class="step-num">7</div><div class="step-body"><strong>Click "Generate AI Query"</strong><p>Tool builds the structured prompt and auto-switches to the "Copy AI Query" tab. The query includes all field instructions for 10–16 report tabs.</p></div></div>
+    <div class="step searchable"><div class="step-num">8</div><div class="step-body"><strong>Paste into Claude AI</strong><p>Click "Copy Full Query" → open <a href="https://claude.ai" target="_blank" style="color:var(--burn3)">claude.ai</a> → new conversation → paste → send. Claude searches live data and streams structured "Field: Value" data (not HTML code). Takes 1–4 minutes.</p><div class="step-tip">💡 Use Claude Pro or higher — free tier has message limits. Use a fresh conversation each time.</div></div></div>
+    <div class="step searchable"><div class="step-num">9</div><div class="step-body"><strong>Paste AI Output &amp; Render</strong><p>Select all of Claude's response → copy → go to "Paste &amp; Render" tab → paste → click "Render Report". The full styled research report appears in seconds.</p></div></div>
+    <div class="step searchable"><div class="step-num">10</div><div class="step-body"><strong>Export Your Report</strong><p>Click <strong>Download HTML</strong> for a standalone offline file. Click <strong>Export PDF</strong> to print or save via browser print dialog. HTML export is fully self-contained — no internet needed to view it.</p></div></div>
+  </div>
+</div>
+</div></div>
+
+<!-- ══ TAB 1: STOCKS ══ -->
+<div class="panel" id="tab-1"><div class="content-wrap">
+<div class="section-hero">
+  <div class="section-hero-icon">🏢</div>
+  <div><div class="section-hero-title">Stocks — Complete Guide</div><div class="section-hero-sub">What are stocks · Pros &amp; cons · How to invest · India, US &amp; Japan · KYC &amp; brokers</div></div>
+</div>
+
+<!-- WHAT IS A STOCK -->
+<div class="asset-hero-card searchable">
+  <div class="ahc-header" style="background:linear-gradient(135deg,#0d1f0d,#1a3a1a,#16a34a,#22c55e)">
+    <span class="ahc-icon">🏢</span>
+    <div class="ahc-name">What Is a Stock?</div>
+    <div class="ahc-subtitle">Also called Equity Share, Scrip, or Security</div>
+  </div>
+  <div class="ahc-body">
+    <div class="ahc-desc">A <strong style="color:var(--text)">stock (share/equity)</strong> represents fractional ownership of a company. When you buy 100 shares of Reliance Industries, you own a tiny piece of one of India's largest companies. As the company grows and earns more profit, your share value rises. If it pays dividends, you receive a portion of profits. Stocks are listed on exchanges like NSE, BSE (India), NYSE, NASDAQ (US), or TSE (Japan) and trade every business day.</div>
+    <div class="ahc-what"><strong style="color:var(--text)">How it works:</strong> Company lists on exchange via IPO → Investors buy/sell shares → Share price reflects collective investor opinion of the company's value → Company profits → EPS rises → Stock price typically rises over time → Dividends paid from profits → Shareholder wealth grows.</div>
+    <div class="pros-cons">
+      <div class="pros-col">
+        <div class="pc-title">✅ Advantages</div>
+        <div class="pc-item">Highest long-term return potential (12–15%+ CAGR historically in India)</div>
+        <div class="pc-item">Fractional ownership — start with as little as ₹10</div>
+        <div class="pc-item">High liquidity — buy/sell on any market day</div>
+        <div class="pc-item">Dividend income on top of price appreciation</div>
+        <div class="pc-item">Beat inflation significantly over long periods</div>
+        <div class="pc-item">Transparent — all financial data publicly disclosed</div>
+        <div class="pc-item">No lock-in period — exit anytime</div>
+      </div>
+      <div class="cons-col">
+        <div class="pc-title">❌ Disadvantages</div>
+        <div class="pc-item">High short-term volatility — can fall 40–60% in bear markets</div>
+        <div class="pc-item">Requires research, time, and emotional discipline</div>
+        <div class="pc-item">Individual stock risk — company can go bankrupt</div>
+        <div class="pc-item">Market timing temptation can hurt returns</div>
+        <div class="pc-item">Tax on gains: STCG 20%, LTCG 12.5% (India)</div>
+        <div class="pc-item">No guaranteed returns or capital protection</div>
+        <div class="pc-item">NRI restrictions — need PIS permission from RBI</div>
+      </div>
+    </div>
+    <div class="ahc-who"><strong>Best For:</strong> Investors with 3Y+ horizon, willing to research companies, comfortable with short-term volatility, seeking to build wealth over 10–20 years. Not suitable for money needed within 1–2 years.</div>
+  </div>
+</div>
+
+<!-- STOCK MARKETS -->
+<div class="card searchable">
+  <div class="card-title">Stock Markets — India, US &amp; Japan</div>
+  <div class="tbl-wrap">
+    <table class="tax-table">
+      <thead><tr><th>Market</th><th>Main Exchanges</th><th>Key Indices</th><th>Trading Hours (IST)</th><th>Currency</th><th>Min Investment</th></tr></thead>
+      <tbody>
+        <tr><td class="asset-col">🇮🇳 India</td><td>NSE, BSE</td><td>Nifty 50, Sensex, Nifty Next 50</td><td>9:15 AM – 3:30 PM</td><td>INR (₹)</td><td>~₹10 (1 share)</td></tr>
+        <tr><td class="asset-col">🇺🇸 US</td><td>NYSE, NASDAQ</td><td>S&amp;P 500, Dow Jones, NASDAQ 100</td><td>7:00 PM – 1:30 AM</td><td>USD ($)</td><td>$1 (fractional)</td></tr>
+        <tr><td class="asset-col">🇯🇵 Japan</td><td>TSE (Tokyo), OSE</td><td>Nikkei 225, TOPIX, JPX-Nikkei 400</td><td>5:30 AM – 11:30 AM</td><td>JPY (¥)</td><td>~¥3,000 (100 share lot)</td></tr>
+        <tr><td class="asset-col">🌐 Global</td><td>LSE, SGX, HKEX</td><td>FTSE 100, STI, Hang Seng</td><td>Varies</td><td>Local currency</td><td>Varies</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- HOW TO OPEN DEMAT - INDIA -->
+<div class="card searchable">
+  <div class="card-title">How to Open a Demat &amp; Trading Account — India</div>
+  <div class="info-alert blue"><span class="icon">ℹ️</span><div class="body"><strong>Demat Account = Digital safe for your shares.</strong> Trading Account = used to buy/sell. Both are needed together. Most brokers open both in one application. Takes 1–3 days for online KYC.</div></div>
+  <div class="kyc-flow">
+    <div class="kyc-step"><div class="kyc-num">1</div><div class="kyc-body"><h4>Choose Your Broker</h4><p>Select a SEBI-registered stockbroker. Discount brokers (Zerodha, Dhan, Groww) charge ₹0–₹20/trade. Full-service brokers (ICICI Direct, HDFC Securities) charge more but offer advisory services.</p></div></div>
+    <div class="kyc-step"><div class="kyc-num">2</div><div class="kyc-body"><h4>Gather Required Documents</h4><div class="kyc-docs"><span class="doc-pill">📋 PAN Card</span><span class="doc-pill">🪪 Aadhaar Card</span><span class="doc-pill">🏦 Bank Account</span><span class="doc-pill">📸 Passport Photo</span><span class="doc-pill">✍️ Signature</span></div><p>For NRIs also: Passport, Overseas Address Proof, PIS Letter from bank.</p></div></div>
+    <div class="kyc-step"><div class="kyc-num">3</div><div class="kyc-body"><h4>Complete KYC Online (e-KYC)</h4><p>Visit broker's website → Fill application form → Upload PAN + Aadhaar → Complete Aadhaar-based OTP verification (DigiLocker) → Submit bank proof → Take selfie/live photo.</p><div class="kyc-note">💡 In-person verification (IPV) is done via a 1-minute video call or webcam photo. Completely online — no branch visit needed.</div></div></div>
+    <div class="kyc-step"><div class="kyc-num">4</div><div class="kyc-body"><h4>Link Bank Account</h4><p>Add your primary bank account via IFSC code. This is used for fund transfers. Most brokers support UPI, NEFT, and IMPS for adding money to your trading account.</p></div></div>
+    <div class="kyc-step"><div class="kyc-num">5</div><div class="kyc-body"><h4>Account Activation (1–3 Days)</h4><p>CDSL or NSDL (depositories) activates your Demat account. You'll receive your DP ID and Client ID. Login credentials sent via email. Fund your account and start investing.</p></div></div>
+  </div>
+  <div style="margin-top:18px;font-size:11px;font-weight:700;color:var(--burn2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Best Brokers for Indian Residents</div>
+  <div class="platform-grid">
+    <div class="platform-card"><div class="platform-name">🟢 Zerodha</div><div class="platform-desc">India's largest discount broker. ₹0 equity delivery, ₹20/trade F&amp;O. Excellent Kite platform. Also accepts NRI accounts (PIS route).</div><div class="platform-tags"><span class="platform-tag">₹0 Delivery</span><span class="platform-tag">NRI Accepted</span><span class="platform-tag">Best Platform</span></div><a class="platform-btn" href="https://zerodha.com/open-account?c=XKQ288" target="_blank">Open Account →</a></div>
+    <div class="platform-card"><div class="platform-name">🔥 Dhan</div><div class="platform-desc">Super-fast UI, advanced charting, 2500 price alerts. ₹0 delivery trades. Best for active traders. Resident India only.</div><div class="platform-tags"><span class="platform-tag">₹0 Delivery</span><span class="platform-tag">Best Charts</span><span class="platform-tag">Resident Only</span></div><a class="platform-btn" href="https://join.dhan.co/?invite=VFZJN04428" target="_blank">Open Account →</a></div>
+    <div class="platform-card"><div class="platform-name">🟣 Groww</div><div class="platform-desc">Beginner-friendly. Clean UI. Stocks + MF + ETF in one app. ₹0 delivery. Best for first-time investors.</div><div class="platform-tags"><span class="platform-tag">Beginner Friendly</span><span class="platform-tag">₹0 Delivery</span><span class="platform-tag">MF+Stocks</span></div><a class="platform-btn" href="https://groww.in" target="_blank">Open Account →</a></div>
+    <div class="platform-card"><div class="platform-name">🔵 Upstox</div><div class="platform-desc">Backed by Tiger Global. Low fees, good research tools. ₹0 account opening. Strong mobile app.</div><div class="platform-tags"><span class="platform-tag">₹0 Opening</span><span class="platform-tag">Research Tools</span><span class="platform-tag">Mobile First</span></div><a class="platform-btn" href="https://upstox.com" target="_blank">Open Account →</a></div>
+  </div>
+</div>
+
+<!-- STOCKS vs MUTUAL FUNDS COMPARE -->
+<div class="card searchable">
+  <div class="card-title">Stocks vs Mutual Funds vs ETFs — Quick Comparison</div>
+  <div class="compare-matrix">
+    <table>
+      <thead><tr><th>Feature</th><th>Direct Stocks</th><th>Mutual Funds</th><th>ETFs</th></tr></thead>
+      <tbody>
+        <tr><td>Management</td><td class="cm-bad">Self-managed</td><td class="cm-good">Professional manager</td><td class="cm-mid">Index (passive)</td></tr>
+        <tr><td>Minimum Investment</td><td class="cm-good">1 share (~₹10+)</td><td class="cm-good">₹500 SIP</td><td class="cm-mid">1 unit (~₹10–500)</td></tr>
+        <tr><td>Diversification</td><td class="cm-bad">Low (need 15+ stocks)</td><td class="cm-good">High (50–100+ stocks)</td><td class="cm-good">High (tracks index)</td></tr>
+        <tr><td>Cost (Expense)</td><td class="cm-good">Brokerage only</td><td class="cm-mid">TER 0.1–2%/yr</td><td class="cm-good">TER 0.05–0.5%/yr</td></tr>
+        <tr><td>Research Required</td><td class="cm-bad">High</td><td class="cm-good">Low</td><td class="cm-good">Very Low</td></tr>
+        <tr><td>Demat Account</td><td class="cm-bad">Required</td><td class="cm-good">Not required (direct)</td><td class="cm-bad">Required</td></tr>
+        <tr><td>Return Potential</td><td class="cm-good">Highest (if right picks)</td><td class="cm-mid">Market returns ± alpha</td><td class="cm-mid">Market returns exactly</td></tr>
+        <tr><td>Risk</td><td class="cm-bad">Company-specific risk</td><td class="cm-mid">Market risk only</td><td class="cm-mid">Market risk only</td></tr>
+        <tr><td>Liquidity</td><td class="cm-good">Instant (market hours)</td><td class="cm-mid">T+1 to T+3 days</td><td class="cm-good">Instant (market hours)</td></tr>
+        <tr><td>Tax (LTCG &gt;1Y)</td><td class="cm-mid">12.5%</td><td class="cm-mid">12.5% (equity)</td><td class="cm-mid">12.5% (equity)</td></tr>
+        <tr><td>Best For</td><td>Research-savvy investors</td><td>Most retail investors</td><td>Passive, low-cost wealth</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div></div>
+
+<!-- ══ TAB 2: MUTUAL FUNDS ══ -->
+<div class="panel" id="tab-2"><div class="content-wrap">
+<div class="section-hero">
+  <div class="section-hero-icon">🪙</div>
+  <div><div class="section-hero-title">Mutual Funds — Complete Guide</div><div class="section-hero-sub">What are MFs · Types · Direct vs Regular · SIP · KYC · FOF · How to invest</div></div>
+</div>
+
+<div class="asset-hero-card searchable">
+  <div class="ahc-header" style="background:linear-gradient(135deg,#1a1000,#2a1800,#c0390b,#e8540f)">
+    <span class="ahc-icon">🪙</span>
+    <div class="ahc-name">What Is a Mutual Fund?</div>
+    <div class="ahc-subtitle">Pooled investment vehicle managed by professionals</div>
+  </div>
+  <div class="ahc-body">
+    <div class="ahc-desc">A <strong style="color:var(--text)">Mutual Fund</strong> is a pool of money collected from many investors and managed by a professional fund manager. When you invest ₹10,000 in a mutual fund, you're effectively buying a small share of a diversified portfolio of stocks, bonds, or other assets. India has 44 AMCs (Asset Management Companies) managing ₹65+ lakh crore in assets across 1,500+ schemes as of 2025.</div>
+    <div class="ahc-what"><strong style="color:var(--text)">How it works:</strong> You invest → AMC pools money from thousands of investors → Fund Manager buys stocks/bonds per the scheme objective → NAV (Net Asset Value) changes daily → You earn returns as NAV rises → Dividends distributed or reinvested → You redeem units at current NAV when needed.</div>
+    <div class="pros-cons">
+      <div class="pros-col">
+        <div class="pc-title">✅ Advantages</div>
+        <div class="pc-item">Professional management — no research needed</div>
+        <div class="pc-item">Diversification from ₹500/month (SIP)</div>
+        <div class="pc-item">No demat account needed for Direct MF</div>
+        <div class="pc-item">Wide variety — equity, debt, gold, international</div>
+        <div class="pc-item">SIP builds discipline and averages cost</div>
+        <div class="pc-item">ELSS gives Section 80C tax benefit up to ₹1.5L</div>
+        <div class="pc-item">SEBI regulated — transparent, audited</div>
+        <div class="pc-item">T+1 liquidity (open-ended funds)</div>
+      </div>
+      <div class="cons-col">
+        <div class="pc-title">❌ Disadvantages</div>
+        <div class="pc-item">TER (expense ratio) reduces returns by 0.5–2%/yr</div>
+        <div class="pc-item">Returns not guaranteed — NAV can fall</div>
+        <div class="pc-item">Fund manager risk — key person departure</div>
+        <div class="pc-item">Exit load on early redemption</div>
+        <div class="pc-item">Cannot time exactly like stocks</div>
+        <div class="pc-item">Debt MF taxed at slab rate (no LTCG benefit)</div>
+        <div class="pc-item">ELSS has 3-year mandatory lock-in</div>
+      </div>
+    </div>
+    <div class="ahc-who"><strong>Best For:</strong> First-time investors, salaried professionals with ₹1,000+/month to invest, those who prefer not to pick individual stocks, NRIs who want India exposure, Japan residents seeking INR diversification.</div>
+  </div>
+</div>
+
+<!-- MF TYPES -->
+<div class="card searchable">
+  <div class="card-title">Types of Mutual Funds</div>
+  <div class="tbl-wrap">
+    <table class="tax-table">
+      <thead><tr><th>Category</th><th>Sub-Type</th><th>Risk</th><th>Expected Returns</th><th>Ideal Horizon</th><th>Best For</th></tr></thead>
+      <tbody>
+        <tr><td class="asset-col">Large Cap Equity</td><td>Top 100 companies by mkt cap</td><td class="warn">Medium-High</td><td class="good">10–13% CAGR</td><td>5Y+</td><td>Core equity portfolio</td></tr>
+        <tr><td class="asset-col">Mid Cap Equity</td><td>101st–250th companies</td><td style="color:#f87171;font-weight:600">High</td><td class="good">12–16% CAGR</td><td>7Y+</td><td>Growth allocation</td></tr>
+        <tr><td class="asset-col">Small Cap Equity</td><td>251st+ companies</td><td style="color:#ef4444;font-weight:700">Very High</td><td class="good">14–20% CAGR</td><td>10Y+</td><td>Aggressive long-term</td></tr>
+        <tr><td class="asset-col">Flexi Cap</td><td>Any cap size, manager decides</td><td class="warn">Medium-High</td><td class="good">11–15% CAGR</td><td>5Y+</td><td>Balanced equity exposure</td></tr>
+        <tr><td class="asset-col">ELSS (Tax Saving)</td><td>Equity + Section 80C benefit</td><td style="color:#f87171;font-weight:600">High</td><td class="good">11–15% CAGR</td><td>3Y+ (lock-in)</td><td>Tax saving + equity growth</td></tr>
+        <tr><td class="asset-col">Index Fund</td><td>Tracks Nifty 50 / Sensex</td><td class="warn">Medium</td><td class="good">10–12% CAGR</td><td>5Y+</td><td>Low-cost passive investing</td></tr>
+        <tr><td class="asset-col">Multi Asset</td><td>Equity + debt + gold</td><td class="warn">Medium</td><td class="good">9–12% CAGR</td><td>3–5Y</td><td>One-fund diversification</td></tr>
+        <tr><td class="asset-col">Debt MF — Short Duration</td><td>Bonds &lt;3Y maturity</td><td class="good">Low</td><td>6–8% p.a.</td><td>1–3Y</td><td>Better than FD post-tax</td></tr>
+        <tr><td class="asset-col">Liquid Fund</td><td>Overnight/T-bills</td><td class="good">Very Low</td><td>6–7% p.a.</td><td>1 day – 3M</td><td>Emergency fund parking</td></tr>
+        <tr><td class="asset-col">Gold Fund / FOF</td><td>Invests in Gold ETF</td><td class="warn">Medium</td><td>8–12% CAGR</td><td>5Y+</td><td>Gold without demat account</td></tr>
+        <tr><td class="asset-col">International Fund</td><td>US, Global, Japan equity</td><td class="warn">Medium-High</td><td>10–15% CAGR (USD)</td><td>5Y+</td><td>Geographic diversification</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- DIRECT vs REGULAR -->
+<div class="card searchable">
+  <div class="card-title">Direct Plan vs Regular Plan — Why It Matters</div>
+  <div class="compare-matrix">
+    <table>
+      <thead><tr><th>Feature</th><th>Direct Plan</th><th>Regular Plan</th></tr></thead>
+      <tbody>
+        <tr><td>TER (Expense Ratio)</td><td class="cm-good">0.1–1% lower (no commission)</td><td class="cm-bad">0.5–2.5% (includes distributor commission)</td></tr>
+        <tr><td>NAV</td><td class="cm-good">Always Higher</td><td class="cm-bad">Always Lower</td></tr>
+        <tr><td>Same Fund/Portfolio?</td><td colspan="2" style="text-align:center;color:var(--text2)">Yes — identical stocks, same fund manager, same securities</td></tr>
+        <tr><td>Where to Buy</td><td>AMC website, Kuvera, Groww Direct, INDmoney</td><td>Banks, distributors, agents, MF apps with commission</td></tr>
+        <tr><td>Returns Impact</td><td class="cm-good">₹10L for 20Y at 12%: ₹96.4L</td><td class="cm-bad">₹10L for 20Y at 11%: ₹80.6L</td></tr>
+        <tr><td>Difference</td><td colspan="2" style="text-align:center;color:var(--burn3);font-weight:700">₹15.8 Lakh difference on ₹10L over 20 years from just 1% TER</td></tr>
+        <tr><td>Advisory Support</td><td class="cm-bad">None (DIY)</td><td class="cm-good">Distributor/advisor support</td></tr>
+        <tr><td>Verdict</td><td class="cm-good">✅ Always choose Direct</td><td class="cm-bad">Only if advisor adds real value</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note-box"><strong>Key Rule:</strong> The only time Regular Plan is worth it is if your advisor provides comprehensive financial planning that genuinely improves your outcomes beyond the commission cost. Most DIY investors should always choose Direct Plan — the TER difference compounds significantly over time.</div>
+</div>
+
+<!-- HOW TO INVEST IN MF -->
+<div class="card searchable">
+  <div class="card-title">How to Invest in Mutual Funds — Step by Step KYC</div>
+  <div class="kyc-flow">
+    <div class="kyc-step"><div class="kyc-num">1</div><div class="kyc-body"><h4>Complete KYC (One-Time)</h4><p>KYC (Know Your Customer) is mandatory for all MF investments in India. It's a one-time process — once done, it's valid across all AMCs and MF platforms.</p><div class="kyc-docs"><span class="doc-pill">📋 PAN Card</span><span class="doc-pill">🪪 Aadhaar</span><span class="doc-pill">📸 Photo</span><span class="doc-pill">✍️ Signature</span><span class="doc-pill">🏦 Bank Proof</span></div><div class="kyc-note">💡 KYC can be done online via CAMS or KFintech portal in 15 minutes using Aadhaar OTP — completely paperless.</div></div></div>
+    <div class="kyc-step"><div class="kyc-num">2</div><div class="kyc-body"><h4>Choose Your Platform</h4><p><strong>For Direct Plans:</strong> Use Kuvera (free, no commission), AMC websites directly, INDmoney, or Groww (select Direct). <strong>For Regular:</strong> Banks, NJ Wealth, MFD/distributors.</p></div></div>
+    <div class="kyc-step"><div class="kyc-num">3</div><div class="kyc-body"><h4>Select Fund &amp; Mode</h4><p>Search for the fund → Select Direct Growth plan (never Dividend/IDCW for wealth building) → Choose SIP (monthly) or Lumpsum → Enter amount → Set SIP date (1st–28th of month).</p></div></div>
+    <div class="kyc-step"><div class="kyc-num">4</div><div class="kyc-body"><h4>Link Bank &amp; Set NACH Mandate</h4><p>Link your bank account and set up NACH (auto-debit) for SIP. Bank debits your account automatically on SIP date. One-time bank mandate setup.</p></div></div>
+    <div class="kyc-step"><div class="kyc-num">5</div><div class="kyc-body"><h4>Track &amp; Review Quarterly</h4><p>Check NAV performance vs benchmark. Review fund rolling returns vs category average. Consider increasing SIP by 10% every April. Don't panic during market falls — SIP works best in volatile markets (rupee-cost averaging).</p></div></div>
+  </div>
+  <div style="margin-top:18px;font-size:11px;font-weight:700;color:var(--burn2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Best Direct MF Platforms</div>
+  <div class="platform-grid">
+    <div class="platform-card"><div class="platform-name">🟢 Kuvera</div><div class="platform-desc">India's first free Direct MF platform. Zero commission, zero hidden charges. Portfolio analytics, goal tracking, tax P&amp;L reports. Use code 1T6BH for 100 Coins bonus.</div><div class="platform-tags"><span class="platform-tag">100% Free</span><span class="platform-tag">Direct Only</span><span class="platform-tag">NRI Supported</span></div><a class="platform-btn" href="https://kuvera.in/s/wsapp?referral=1T6BH" target="_blank">Join Kuvera →</a></div>
+    <div class="platform-card"><div class="platform-name">💜 INDmoney</div><div class="platform-desc">AI-powered wealth app. Direct MF, US stocks, Indian stocks, FDs all in one. Great portfolio analytics. Shows total net worth.</div><div class="platform-tags"><span class="platform-tag">All-in-One</span><span class="platform-tag">Direct Plans</span><span class="platform-tag">US Stocks Too</span></div><a class="platform-btn" href="https://indmoney.com" target="_blank">Join INDmoney →</a></div>
+    <div class="platform-card"><div class="platform-name">🟣 Groww</div><div class="platform-desc">Simplest UI. Direct and Regular both available — always select Direct. Good for beginners. Stocks + ETF + MF in one app.</div><div class="platform-tags"><span class="platform-tag">Beginner UI</span><span class="platform-tag">Direct Available</span><span class="platform-tag">Mobile First</span></div><a class="platform-btn" href="https://groww.in" target="_blank">Join Groww →</a></div>
+    <div class="platform-card"><div class="platform-name">🔵 MF Central</div><div class="platform-desc">Official industry platform by AMFI, CAMS and KFintech. Consolidate all MF investments, get CAS (Consolidated Account Statement).</div><div class="platform-tags"><span class="platform-tag">Official AMFI</span><span class="platform-tag">CAS Reports</span><span class="platform-tag">All AMCs</span></div><a class="platform-btn" href="https://www.mfcentral.com" target="_blank">Open MFCentral →</a></div>
+  </div>
+</div>
+
+<!-- WHAT IS SIP -->
+<div class="card searchable">
+  <div class="card-title">Understanding SIP — Systematic Investment Plan</div>
+  <p style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:14px">A <strong style="color:var(--text)">SIP</strong> invests a fixed amount (e.g. ₹5,000/month) into a mutual fund on a set date every month, regardless of market levels. When markets are down, you buy more units at a lower price. When markets are up, you buy fewer units at a higher price. Over time, this averages out your cost (rupee-cost averaging) and removes the stress of timing the market.</p>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">₹10,000/mo SIP</div><div class="kpi-val">₹3.5 Cr</div><div class="kpi-note">At 12% CAGR for 30 years</div></div>
+    <div class="kpi"><div class="kpi-label">Amount Invested</div><div class="kpi-val">₹36 Lakh</div><div class="kpi-note">Total contribution over 30 years</div></div>
+    <div class="kpi"><div class="kpi-label">Wealth Created</div><div class="kpi-val">₹3.14 Cr</div><div class="kpi-note">Pure compounding gain</div></div>
+    <div class="kpi"><div class="kpi-label">Step-Up SIP (10%/yr)</div><div class="kpi-val">₹8.5 Cr</div><div class="kpi-note">Same starting ₹10K, 30 years</div></div>
+  </div>
+  <ul class="guide-list">
+    <li><strong>Step-Up SIP:</strong> Increase SIP by 10–15% every year (usually every April). This is the most powerful wealth-building strategy available to salaried investors.</li>
+    <li><strong>STP (Systematic Transfer Plan):</strong> Park lumpsum in a Liquid Fund → Transfer fixed amount weekly/monthly to equity fund. Safer than direct lumpsum into equity.</li>
+    <li><strong>SWP (Systematic Withdrawal Plan):</strong> In retirement, withdraw a fixed amount monthly from your corpus. Better than FD as corpus keeps growing.</li>
+    <li><strong>Pause, not stop:</strong> If cash flow is tight, pause SIP (not stop). Resume when stable. All platforms allow pause without penalty.</li>
+  </ul>
+</div>
+</div></div>
+
+<!-- ══ TAB 3: ETFs ══ -->
+<div class="panel" id="tab-3"><div class="content-wrap">
+<div class="section-hero">
+  <div class="section-hero-icon">📊</div>
+  <div><div class="section-hero-title">ETFs — Exchange Traded Funds</div><div class="section-hero-sub">What are ETFs · Index vs Active · Tracking Error · NISA eligible · India &amp; Japan</div></div>
+</div>
+
+<div class="asset-hero-card searchable">
+  <div class="ahc-header" style="background:linear-gradient(135deg,#0a1a2a,#0d2a40,#1d4ed8,#3b82f6)">
+    <span class="ahc-icon">📊</span>
+    <div class="ahc-name">What Is an ETF?</div>
+    <div class="ahc-subtitle">Exchange Traded Fund — the best of stocks + mutual funds</div>
+  </div>
+  <div class="ahc-body">
+    <div class="ahc-desc">An <strong style="color:var(--text)">ETF (Exchange Traded Fund)</strong> is a basket of securities (stocks, bonds, gold) that trades on a stock exchange throughout the day, just like a stock. Unlike mutual funds which are priced once daily at NAV, ETFs have live prices that fluctuate every second. Most ETFs passively track an index (like Nifty 50 or S&P 500) with very low fees — typically 0.05–0.5% TER vs 1–2% for active funds.</div>
+    <div class="ahc-what"><strong style="color:var(--text)">Key difference from Index Funds:</strong> Both track the same index, but ETFs trade on exchanges (need demat account) while Index Funds are like regular MFs (no demat needed, priced once daily). ETFs can be bought at live prices; Index Funds at end-of-day NAV. For most investors, Index Funds are more convenient; for traders, ETFs are better.</div>
+    <div class="pros-cons">
+      <div class="pros-col">
+        <div class="pc-title">✅ Advantages</div>
+        <div class="pc-item">Ultra-low cost — India ETF TER as low as 0.04%</div>
+        <div class="pc-item">Instant diversification (Nifty ETF = 50 stocks in 1 trade)</div>
+        <div class="pc-item">Live pricing — trade anytime during market hours</div>
+        <div class="pc-item">No fund manager risk — rules-based passive strategy</div>
+        <div class="pc-item">Tax-efficient — lower turnover = lower tax events</div>
+        <div class="pc-item">NISA eligible (Japan) — most NISA investments are ETFs/index funds</div>
+        <div class="pc-item">Currency-hedged variants available for international exposure</div>
+      </div>
+      <div class="cons-col">
+        <div class="pc-title">❌ Disadvantages</div>
+        <div class="pc-item">Requires demat account (unlike direct MF)</div>
+        <div class="pc-item">Brokerage cost on every buy/sell</div>
+        <div class="pc-item">Bid-ask spread on illiquid ETFs can be wide</div>
+        <div class="pc-item">Cannot do SIP automatically (must place orders manually or via Zerodha SIP)</div>
+        <div class="pc-item">Tracking error — ETF may not perfectly match index</div>
+        <div class="pc-item">No alpha — will never beat the index</div>
+      </div>
+    </div>
+    <div class="ahc-who"><strong>Best For:</strong> Cost-conscious long-term investors, Japan NISA account holders (¥ ETFs), passive index investing, those who already have a demat account, international diversification seekers.</div>
+  </div>
+</div>
+
+<!-- NISA GUIDE -->
+<div class="nisa-card searchable">
+  <div class="nisa-title">🇯🇵 NISA — Japan Tax-Free Investment Account</div>
+  <div class="info-alert purple"><span class="icon">⭐</span><div class="body"><strong>NISA is the most powerful investment tool available to Japan residents.</strong> All gains, dividends, and income from NISA investments are 100% tax-free — no 20.315% tax. Every Japan resident (including Indian NRIs living in Japan) should maximise NISA before any other investment.</div></div>
+  <div class="tbl-wrap" style="margin-top:14px">
+    <table class="tax-table">
+      <thead><tr><th>NISA Type (2024 onwards)</th><th>Annual Limit</th><th>Eligible Products</th><th>Best Funds</th></tr></thead>
+      <tbody>
+        <tr><td class="asset-col">Tsumitate 枠 (積立投資枠)</td><td class="rate">¥1,200,000/yr</td><td>SEBI-approved investment trusts &amp; ETFs only</td><td>eMAXIS Slim All-Country, eMAXIS Slim S&amp;P500</td></tr>
+        <tr><td class="asset-col">Seichō 枠 (成長投資枠)</td><td class="rate">¥2,400,000/yr</td><td>Listed stocks, ETFs, most investment trusts</td><td>Any TSE-listed stocks, TOPIX ETF, US stock ETFs</td></tr>
+        <tr><td class="asset-col">Combined Annual Limit</td><td class="rate">¥3,600,000/yr</td><td colspan="2">Unused annual limit does NOT carry forward. Use it or lose it.</td></tr>
+        <tr><td class="asset-col">Lifetime Limit</td><td class="rate">¥18,000,000</td><td colspan="2">Per person. When you sell NISA investments, the cost basis limit gets freed up (can re-invest up to lifetime cap).</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card-title" style="margin-top:16px">How to Open a NISA Account — Step by Step</div>
+  <div class="kyc-flow">
+    <div class="kyc-step"><div class="kyc-num">1</div><div class="kyc-body"><h4>Choose a Japanese Securities Firm (証券会社)</h4><p>Best options: <strong>SBI証券 (SBI Securities)</strong> — most NISA funds, English support. <strong>楽天証券 (Rakuten Securities)</strong> — linked to Rakuten Pay &amp; Rakuten Card for extra points. <strong>マネックス証券 (Monex)</strong> — good US stock access.</p></div></div>
+    <div class="kyc-step"><div class="kyc-num">2</div><div class="kyc-body"><h4>Gather Documents (必要書類)</h4><div class="kyc-docs"><span class="doc-pill">🪪 My Number Card (マイナンバーカード)</span><span class="doc-pill">📋 Residence Card (在留カード) — for non-Japanese</span><span class="doc-pill">🏦 Japanese Bank Account</span></div><p>All document verification is done digitally — no branch visit needed at most online brokers.</p></div></div>
+    <div class="kyc-step"><div class="kyc-num">3</div><div class="kyc-body"><h4>Apply Online (オンライン口座開設)</h4><p>Go to the broker's website → Click 口座開設 (Open Account) → Select NISA account type → Upload My Number Card photo → Fill personal information → Select Special Tax Account (特定口座 源泉徴収あり) alongside NISA.</p><div class="kyc-note">💡 Special Account (特定口座) handles all tax calculations automatically. Always select it — saves you from filing 確定申告 for NISA-adjacent investments.</div></div></div>
+    <div class="kyc-step"><div class="kyc-num">4</div><div class="kyc-body"><h4>Wait for Approval (5–10 days)</h4><p>Tax office confirms only one NISA per person nationwide. Approval letter arrives by post or via app notification. Login credentials sent separately.</p></div></div>
+    <div class="kyc-step"><div class="kyc-num">5</div><div class="kyc-body"><h4>Set Up Monthly SIP (積立設定)</h4><p>Go to 投資信託 (Investment Trust) section → Search for fund (e.g. "eMAXIS Slim オールカントリー") → Click 積立購入 → Set monthly amount → Set debit date → Link bank via 振替 (bank transfer) → Activate. You can start from ¥100/month.</p></div></div>
+    <div class="kyc-step"><div class="kyc-num">6</div><div class="kyc-body"><h4>Best Funds to Hold in NISA</h4>
+    <ul class="guide-list" style="margin-top:6px">
+      <li><strong>eMAXIS Slim 全世界株式 (オール・カントリー)</strong> — Global all-world index, TER 0.0577%. Best single fund for most investors.</li>
+      <li><strong>eMAXIS Slim 米国株式 (S&P500)</strong> — US S&P 500 index, TER 0.0638%. Best for US-focused exposure.</li>
+      <li><strong>SBI・V・S&P500インデックス</strong> — Vanguard-backed S&P500, TER 0.0638%. Similar to above.</li>
+      <li><strong>楽天・全米株式インデックス</strong> — Total US market (Vanguard), TER 0.162%. Slightly higher but still excellent.</li>
+      <li><strong>ニッセイ外国株式インデックス</strong> — Developed world ex-Japan, TER 0.09899%. Good complement to Japan stocks.</li>
+    </ul></div></div>
+  </div>
+</div>
+</div></div>
+
+<!-- ══ TAB 4: BONDS ══ -->
+<div class="panel" id="tab-4"><div class="content-wrap">
+<div class="section-hero">
+  <div class="section-hero-icon">📜</div>
+  <div><div class="section-hero-title">Bonds — Fixed Income Guide</div><div class="section-hero-sub">What are bonds · Types · YTM · Where to buy · NRE FD comparison</div></div>
+</div>
+
+<div class="asset-hero-card searchable">
+  <div class="ahc-header" style="background:linear-gradient(135deg,#0a0a1a,#0d0d2a,#1e3a5f,#2563eb)">
+    <span class="ahc-icon">📜</span>
+    <div class="ahc-name">What Is a Bond?</div>
+    <div class="ahc-subtitle">Fixed-income debt security — lend money, earn interest</div>
+  </div>
+  <div class="ahc-body">
+    <div class="ahc-desc">A <strong style="color:var(--text)">bond</strong> is a loan you give to a government or corporation in exchange for regular interest payments (coupon) and return of principal at maturity. When you buy a ₹1 lakh bond with 9% coupon and 3-year maturity, you receive ₹9,000/year for 3 years and get ₹1 lakh back at the end. Bonds are the stable, predictable component of a diversified portfolio — the opposite of equity's growth potential.</div>
+    <div class="pros-cons">
+      <div class="pros-col">
+        <div class="pc-title">✅ Advantages</div>
+        <div class="pc-item">Predictable income — fixed coupon payments</div>
+        <div class="pc-item">Capital protection if held to maturity (HTM)</div>
+        <div class="pc-item">Lower volatility than equity</div>
+        <div class="pc-item">YTM up to 10–13% on select corporate bonds</div>
+        <div class="pc-item">LTCG 12.5% on listed bonds (held &gt;12 months)</div>
+        <div class="pc-item">Portfolio diversification — negative correlation with equity</div>
+        <div class="pc-item">Government bonds are risk-free</div>
+      </div>
+      <div class="cons-col">
+        <div class="pc-title">❌ Disadvantages</div>
+        <div class="pc-item">Lower long-term returns than equity</div>
+        <div class="pc-item">Interest rate risk — price falls when rates rise</div>
+        <div class="pc-item">Debt MF (not listed bonds) taxed at slab rate</div>
+        <div class="pc-item">Credit risk — corporate bonds can default</div>
+        <div class="pc-item">Illiquid for unlisted bonds (GoldenPi/Wint)</div>
+        <div class="pc-item">Coupon interest taxed as income (slab rate)</div>
+      </div>
+    </div>
+    <div class="ahc-who"><strong>Best For:</strong> Conservative investors, retirees needing income, NRIs who want stable INR returns (NRE FD = tax-free in India), portfolio diversification, short-medium term goals (1–5Y).</div>
+  </div>
+</div>
+
+<div class="card searchable">
+  <div class="card-title">Where to Buy Bonds in India</div>
+  <div class="platform-grid">
+    <div class="platform-card"><div class="platform-name">🟡 GoldenPi</div><div class="platform-desc">India's largest bond marketplace. AAA–BB rated bonds. G-Secs, PSU bonds, corporate NCDs, tax-free bonds. Online purchase, no paperwork. SEBI registered.</div><div class="platform-tags"><span class="platform-tag">Largest Inventory</span><span class="platform-tag">SEBI Registered</span><span class="platform-tag">Online</span></div><a class="platform-btn" href="https://goldenpi.com/sign-up?referrer=SRVL1503290" target="_blank">Join GoldenPi →</a></div>
+    <div class="platform-card"><div class="platform-name">🔵 IndiaBonds</div><div class="platform-desc">Clean platform, wide inventory. Unlisted and listed bonds. Good YTM calculator. Detailed issuer analysis. RBI-registered.</div><div class="platform-tags"><span class="platform-tag">Good UI</span><span class="platform-tag">YTM Calculator</span><span class="platform-tag">RBI Registered</span></div><a class="platform-btn" href="https://www.indiabonds.com/referral/CiY7ZAAt" target="_blank">Join IndiaBonds →</a></div>
+    <div class="platform-card"><div class="platform-name">🟣 Wint Wealth</div><div class="platform-desc">Higher-yield bonds with insurance protection concept. Good for HNI bond investors. Detailed risk disclosure per bond.</div><div class="platform-tags"><span class="platform-tag">Higher Yield</span><span class="platform-tag">HNI Focus</span><span class="platform-tag">Risk Analysis</span></div><a class="platform-btn" href="https://www.wintwealth.com" target="_blank">Join Wint →</a></div>
+    <div class="platform-card"><div class="platform-name">🟢 Zerodha (Listed Bonds)</div><div class="platform-desc">Buy listed NCDs, government bonds, and SGB on NSE/BSE through your demat. Same brokerage as stocks. Best for listed bond trading.</div><div class="platform-tags"><span class="platform-tag">Listed Bonds</span><span class="platform-tag">NSE/BSE</span><span class="platform-tag">Demat Based</span></div><a class="platform-btn" href="https://zerodha.com/open-account?c=XKQ288" target="_blank">Open Zerodha →</a></div>
+  </div>
+  <div class="note-box"><strong>NRE FD vs Corporate Bond vs G-Sec (for NRI Japan Residents):</strong> NRE FD (8% tax-free India, taxable Japan ~6.4% net) vs Corporate Bond YTM 9–10% (LTCG 12.5% = ~7.9% net) vs G-Sec 7% (LTCG 12.5% = ~6.1% net). NRE FD is generally the best risk-adjusted option for NRIs given zero credit risk and India tax-free status.</div>
+</div>
+</div></div>
+
+<!-- ══ TAB 5: COMMODITIES ══ -->
+<div class="panel" id="tab-5"><div class="content-wrap">
+<div class="section-hero">
+  <div class="section-hero-icon">⚙️</div>
+  <div><div class="section-hero-title">Commodities — Complete Guide</div><div class="section-hero-sub">Gold · Silver · Oil · Agriculture · Digital Gold · Physical vs ETF</div></div>
+</div>
+
+<div class="asset-hero-card searchable">
+  <div class="ahc-header" style="background:linear-gradient(135deg,#1a1500,#2a2000,#c0390b,#f5a623)">
+    <span class="ahc-icon">⚙️</span>
+    <div class="ahc-name">What Are Commodities?</div>
+    <div class="ahc-subtitle">Physical goods traded on exchanges — energy, metals, agriculture</div>
+  </div>
+  <div class="ahc-body">
+    <div class="ahc-desc">Commodities are <strong style="color:var(--text)">raw materials and primary agricultural products</strong> that are interchangeable with others of the same type. They include precious metals (gold, silver), energy (crude oil, natural gas), agricultural products (wheat, coffee, cotton), and industrial metals (copper, aluminum). Commodities are priced globally in USD and trade on exchanges like MCX (India), CME (US), and LME (UK).</div>
+    <div class="ahc-what"><strong style="color:var(--text)">Why invest in commodities?</strong> (1) <strong>Inflation hedge</strong> — commodities rise when inflation rises. (2) <strong>Portfolio diversification</strong> — low correlation with stocks. (3) <strong>Crisis hedge</strong> — gold rises when equity falls. (4) <strong>Currency protection</strong> — INR depreciation benefits gold holders. (5) <strong>Supply-demand alpha</strong> — geopolitical events create opportunities.</div>
+    <div class="pros-cons">
+      <div class="pros-col">
+        <div class="pc-title">✅ Advantages</div>
+        <div class="pc-item">Inflation hedge — real assets retain value</div>
+        <div class="pc-item">Portfolio diversification (negative correlation to equity)</div>
+        <div class="pc-item">Gold: safe haven during market crises</div>
+        <div class="pc-item">Global demand ensures liquidity</div>
+        <div class="pc-item">Multiple investment modes: physical, ETF, F&amp;O</div>
+        <div class="pc-item">Digital Gold/Silver accessible from ₹1</div>
+      </div>
+      <div class="cons-col">
+        <div class="pc-title">❌ Disadvantages</div>
+        <div class="pc-item">No income generation (no dividends, coupons)</div>
+        <div class="pc-item">High volatility (crude oil can move ±5%/day)</div>
+        <div class="pc-item">Storage and insurance costs for physical</div>
+        <div class="pc-item">F&amp;O commodities need expertise and margin</div>
+        <div class="pc-item">Tax: Physical gold STCG at slab rate (&lt;2Y)</div>
+        <div class="pc-item">Price driven by geopolitics (oil) or weather (agri)</div>
+      </div>
+    </div>
+    <div class="ahc-who"><strong>Best For:</strong> 10–20% portfolio allocation for all investors as inflation hedge and diversifier. Not suitable as primary portfolio — combine with equity and debt.</div>
+  </div>
+</div>
+
+<!-- GOLD COMPARISON TABLE -->
+<div class="card searchable">
+  <div class="card-title">Gold Investment Modes — Complete Comparison</div>
+  <div class="compare-matrix">
+    <table>
+      <thead><tr><th>Mode</th><th>Physical Gold</th><th>Digital Gold</th><th>Gold ETF</th><th>Gold MF (FOF)</th><th>SGB</th></tr></thead>
+      <tbody>
+        <tr><td>Min Investment</td><td>₹4,000+ (0.5g)</td><td>₹1</td><td>~₹65 (1 unit)</td><td>₹500 SIP</td><td>~₹5,900 (1g)</td></tr>
+        <tr><td>Storage</td><td class="cm-bad">Locker/home</td><td class="cm-good">Platform vault</td><td class="cm-good">CDSL demat</td><td class="cm-good">AMC</td><td class="cm-good">RBI / digital</td></tr>
+        <tr><td>Storage Cost</td><td class="cm-bad">Locker rent</td><td class="cm-mid">0.5–1%/yr</td><td class="cm-mid">TER ~0.5%</td><td class="cm-bad">TER ~0.8%</td><td class="cm-good">Zero</td></tr>
+        <tr><td>Interest/Income</td><td class="cm-na">None</td><td class="cm-na">None</td><td class="cm-na">None</td><td class="cm-na">None</td><td class="cm-good">2.5%/yr</td></tr>
+        <tr><td>SEBI Regulated</td><td class="cm-bad">No</td><td class="cm-bad">No</td><td class="cm-good">Yes</td><td class="cm-good">Yes</td><td class="cm-good">RBI</td></tr>
+        <tr><td>Tax LTCG (&gt;2Y)</td><td class="cm-mid">12.5% (no index)</td><td class="cm-mid">12.5% (no index)</td><td class="cm-bad">Slab rate</td><td class="cm-bad">Slab rate</td><td class="cm-good">0% (maturity)</td></tr>
+        <tr><td>Demat Needed</td><td class="cm-good">No</td><td class="cm-good">No</td><td class="cm-bad">Yes</td><td class="cm-good">No</td><td class="cm-mid">Optional</td></tr>
+        <tr><td>Physical Delivery</td><td class="cm-good">Already physical</td><td class="cm-good">Can convert</td><td class="cm-bad">Cannot</td><td class="cm-bad">Cannot</td><td class="cm-bad">Cannot</td></tr>
+        <tr><td>Verdict</td><td>For jewellery use</td><td>Small SIP amounts</td><td>Demat holders</td><td>No demat holders</td><td class="cm-good">Best overall</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="background:var(--card2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 18px;margin-bottom:10px">
+    <div style="font-size:11px;font-weight:700;color:var(--burn2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">📱 Buy Digital Gold/Silver — Best UPI Apps</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px">
+      <a href="https://phon.pe/772mkuqo" target="_blank" class="platform-btn">📲 Join PhonePe →</a>
+      <a href="https://m.navi.com/X7g9gpUzoKb" target="_blank" class="platform-btn">🔴 Download Navi →</a>
+    </div>
+    <div style="font-size:11px;color:var(--text3)">PhonePe: Buy Digital Gold/Silver + UPI + Mutual Funds in one app. Navi: Win up to ₹100 reward every UPI payment, earn Navi coins.</div>
+  </div>
+  <div class="note-box"><strong>Recommendation:</strong> For most investors — <strong>SGB first</strong> (best tax efficiency, 2.5% extra return), then <strong>Gold ETF</strong> via Zerodha if demat available, then <strong>Gold Fund</strong> if no demat. Digital Gold for convenience in small amounts only. Avoid physical gold for investment — making charges 5–20% are a sunk cost.</div>
+</div>
+</div></div>
+
+<!-- ══ TAB 6: REITs & InvITs ══ -->
+<div class="panel" id="tab-6"><div class="content-wrap">
+<div class="section-hero">
+  <div class="section-hero-icon">🏗️</div>
+  <div>
+    <div class="section-hero-title">REITs &amp; InvITs — Complete Guide</div>
+    <div class="section-hero-sub">Real estate &amp; infrastructure income without ownership · Listed on NSE/BSE · Regular distributions · India &amp; Global</div>
+  </div>
+</div>
+
+<!-- WHAT IS A REIT -->
+<div class="asset-hero-card searchable">
+  <div class="ahc-header" style="background:linear-gradient(135deg,#0a1a2e,#0f2a4a,#1e4080,#2563eb)">
+    <span class="ahc-icon">🏢</span>
+    <div class="ahc-name">What Is a REIT?</div>
+    <div class="ahc-subtitle">Real Estate Investment Trust — own real estate without buying property</div>
+  </div>
+  <div class="ahc-body">
+    <div class="ahc-desc">A <strong style="color:var(--text)">REIT (Real Estate Investment Trust)</strong> is a company that owns, operates, or finances income-producing real estate. When you buy units of a REIT on NSE or BSE, you become a co-owner of commercial properties — office parks, malls, warehouses, hotels — and receive a share of the rental income as regular distributions (like dividends). SEBI mandates that REITs distribute at least <strong style="color:var(--text)">90% of their net distributable cash flows</strong> to unit holders every quarter.</div>
+    <div class="ahc-what"><strong style="color:var(--text)">How it works:</strong> REIT manager collects rent from tenants (corporates like TCS, Amazon, JP Morgan) → Deducts operating costs → Distributes 90%+ to unit holders quarterly → Unit price also appreciates as property values rise → You get both income (yield) and capital appreciation.</div>
+    <div class="pros-cons">
+      <div class="pros-col">
+        <div class="pc-title">✅ Advantages</div>
+        <div class="pc-item">Regular income — quarterly distributions (8–9% yield on cost)</div>
+        <div class="pc-item">Real estate exposure without large capital (buy from ₹300–400/unit)</div>
+        <div class="pc-item">No landlord headaches — professional management</div>
+        <div class="pc-item">Listed on NSE/BSE — buy/sell like stocks anytime</div>
+        <div class="pc-item">Inflation hedge — rents typically rise with inflation</div>
+        <div class="pc-item">Diversification — across multiple properties and tenants</div>
+        <div class="pc-item">Institutional-grade tenants — low vacancy risk</div>
+      </div>
+      <div class="cons-col">
+        <div class="pc-title">❌ Disadvantages</div>
+        <div class="pc-item">Low capital appreciation vs equity — mostly income play</div>
+        <div class="pc-item">Interest rate sensitive — prices fall when rates rise</div>
+        <div class="pc-item">Complex taxation — distributions have 3 components</div>
+        <div class="pc-item">India REITs mostly commercial — no residential exposure</div>
+        <div class="pc-item">Thin trading volumes in some REITs</div>
+        <div class="pc-item">Lease renewals and tenant exit risk</div>
+        <div class="pc-item">Requires demat account</div>
+      </div>
+    </div>
+    <div class="ahc-who"><strong>Best For:</strong> Investors seeking regular income, those wanting real estate exposure without property purchase, portfolio yield enhancement (alongside equity for growth), conservative investors in the 40–60 age group.</div>
+  </div>
+</div>
+
+<!-- WHAT IS AN INVIT -->
+<div class="asset-hero-card searchable">
+  <div class="ahc-header" style="background:linear-gradient(135deg,#0f1a0f,#1a2e1a,#16602a,#22c55e)">
+    <span class="ahc-icon">⚡</span>
+    <div class="ahc-name">What Is an InvIT?</div>
+    <div class="ahc-subtitle">Infrastructure Investment Trust — toll roads, power grids, gas pipelines</div>
+  </div>
+  <div class="ahc-body">
+    <div class="ahc-desc">An <strong style="color:var(--text)">InvIT (Infrastructure Investment Trust)</strong> is similar to a REIT but for infrastructure assets — toll roads, electricity transmission lines, gas pipelines, renewable energy projects, highways, and ports. Infrastructure assets generate steady, long-term cash flows backed by concession agreements (often 30–99 years) with government entities, making InvITs highly predictable income instruments. SEBI mandates <strong style="color:var(--text)">90% distribution</strong> of net distributable cash flows to unit holders.</div>
+    <div class="ahc-what"><strong style="color:var(--text)">How it works:</strong> InvIT acquires infrastructure assets (e.g., a highway with a 30-year toll concession) → Collects tolls/fees → Distributes 90%+ to unit holders quarterly → Asset appreciates as traffic/usage grows → Unit price rises over time. The key advantage over equity: cash flows are contractually guaranteed by concession agreements, making distributions highly predictable.</div>
+    <div class="pros-cons">
+      <div class="pros-col">
+        <div class="pc-title">✅ Advantages</div>
+        <div class="pc-item">High yield — 8–12% distribution yield on many InvITs</div>
+        <div class="pc-item">Contractual cash flows — concession agreements with govt</div>
+        <div class="pc-item">Essential infrastructure — not easily disrupted</div>
+        <div class="pc-item">Listed on NSE/BSE — exit anytime</div>
+        <div class="pc-item">Inflation-linked revenues (toll rates often indexed to WPI)</div>
+        <div class="pc-item">Access to institutional-grade infrastructure assets</div>
+      </div>
+      <div class="cons-col">
+        <div class="pc-title">❌ Disadvantages</div>
+        <div class="pc-item">Regulatory risk — government can cap toll rates</div>
+        <div class="pc-item">Lower liquidity than large-cap stocks</div>
+        <div class="pc-item">Complex tax treatment (same as REIT)</div>
+        <div class="pc-item">Asset deterioration needs capital reinvestment</div>
+        <div class="pc-item">Interest rate sensitivity</div>
+        <div class="pc-item">Thin trading on some InvITs</div>
+      </div>
+    </div>
+    <div class="ahc-who"><strong>Best For:</strong> Income-seeking investors wanting higher yield than bonds, those wanting infrastructure exposure, retirees and near-retirees looking for regular quarterly income, NRIs wanting India income stream.</div>
+  </div>
+</div>
+
+<!-- INDIA REITs LIST -->
+<div class="card searchable">
+  <div class="card-title">India REITs — Listed on NSE/BSE</div>
+  <div class="tbl-wrap">
+    <table class="tax-table">
+      <thead><tr><th>REIT</th><th>Ticker</th><th>Asset Type</th><th>Properties / Area</th><th>Approx Yield</th><th>Major Tenants</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="asset-col">Embassy Office Parks REIT</td>
+          <td style="font-family:JetBrains Mono,monospace;color:var(--gold2)">EMBASSY</td>
+          <td>Office Parks</td>
+          <td>45 MSF across Bengaluru, Mumbai, Pune, NCR</td>
+          <td class="good">~6.5–7.5%</td>
+          <td>Google, JP Morgan, IBM, Microsoft, Cisco</td>
+        </tr>
+        <tr>
+          <td class="asset-col">Mindspace Business Parks REIT</td>
+          <td style="font-family:JetBrains Mono,monospace;color:var(--gold2)">MINDSPACE</td>
+          <td>Office Parks</td>
+          <td>32 MSF across Hyderabad, Mumbai, Pune, Chennai</td>
+          <td class="good">~7–8%</td>
+          <td>Accenture, Qualcomm, Facebook, Barclays</td>
+        </tr>
+        <tr>
+          <td class="asset-col">Brookfield India REIT</td>
+          <td style="font-family:JetBrains Mono,monospace;color:var(--gold2)">BIRET</td>
+          <td>Office Parks</td>
+          <td>20 MSF across Mumbai, Gurugram, Noida, Kolkata</td>
+          <td class="good">~7–8.5%</td>
+          <td>Barclays, TCS, Cognizant, Bosch</td>
+        </tr>
+        <tr>
+          <td class="asset-col">Nexus Select Trust REIT</td>
+          <td style="font-family:JetBrains Mono,monospace;color:var(--gold2)">NEXUS</td>
+          <td>Retail Malls</td>
+          <td>17 Grade-A malls across 14 cities</td>
+          <td class="good">~6–7%</td>
+          <td>H&amp;M, Zara, Cinepolis, Starbucks</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note-box">MSF = Million Square Feet. Yields are approximate trailing 12-month distribution yield as % of unit price and change with market conditions. Always verify current yield on NSE/BSE before investing.</div>
+</div>
+
+<!-- INDIA InvITs LIST -->
+<div class="card searchable">
+  <div class="card-title">India InvITs — Listed on NSE/BSE</div>
+  <div class="tbl-wrap">
+    <table class="tax-table">
+      <thead><tr><th>InvIT</th><th>Ticker</th><th>Asset Type</th><th>Portfolio</th><th>Approx Yield</th><th>Sponsor</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="asset-col">IRB InvIT Fund</td>
+          <td style="font-family:JetBrains Mono,monospace;color:var(--gold2)">IRB</td>
+          <td>Toll Roads</td>
+          <td>7 operational NHAI toll highways across India</td>
+          <td class="good">~9–11%</td>
+          <td>IRB Infrastructure (private)</td>
+        </tr>
+        <tr>
+          <td class="asset-col">IndiGrid InvIT</td>
+          <td style="font-family:JetBrains Mono,monospace;color:var(--gold2)">INDIGRID</td>
+          <td>Power Transmission</td>
+          <td>Electric transmission lines — 7,570+ circuit km</td>
+          <td class="good">~11–13%</td>
+          <td>Sterlite Power (KKR backed)</td>
+        </tr>
+        <tr>
+          <td class="asset-col">PowerGrid InvIT</td>
+          <td style="font-family:JetBrains Mono,monospace;color:var(--gold2)">POWERGRID</td>
+          <td>Power Transmission</td>
+          <td>5 inter-state transmission projects — CERC regulated</td>
+          <td class="good">~11–12%</td>
+          <td>Power Grid Corporation of India (Govt PSU)</td>
+        </tr>
+        <tr>
+          <td class="asset-col">National Highways InvIT</td>
+          <td style="font-family:JetBrains Mono,monospace;color:var(--gold2)">NHAI</td>
+          <td>Highways</td>
+          <td>NHAI-sponsored toll roads across 7 projects</td>
+          <td class="good">~9–10%</td>
+          <td>National Highways Authority of India (Govt)</td>
+        </tr>
+        <tr>
+          <td class="asset-col">Bharat Highways InvIT</td>
+          <td style="font-family:JetBrains Mono,monospace;color:var(--gold2)">BHARAT</td>
+          <td>Toll Roads + Hybrid Annuity</td>
+          <td>8 road assets across India</td>
+          <td class="good">~9–10%</td>
+          <td>NHAI / Private developers</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note-box">InvIT yields are higher than REITs because infrastructure assets have higher operating leverage. PowerGrid InvIT is the safest — government PSU-backed with CERC-regulated revenues. IndiGrid offers the highest yield but with more private-sector risk.</div>
+</div>
+
+<!-- REIT vs InvIT vs REAL ESTATE -->
+<div class="card searchable">
+  <div class="card-title">REIT vs InvIT vs Direct Real Estate vs Equity — Comparison</div>
+  <div class="compare-matrix">
+    <table>
+      <thead><tr><th>Feature</th><th>REIT</th><th>InvIT</th><th>Direct Property</th><th>Real Estate Stocks</th></tr></thead>
+      <tbody>
+        <tr><td>Min Investment</td><td class="cm-good">~₹300–400 (1 unit)</td><td class="cm-good">~₹100–300 (1 unit)</td><td class="cm-bad">₹50L–5 Cr+</td><td class="cm-good">₹1 (1 share)</td></tr>
+        <tr><td>Income Yield</td><td class="cm-good">6–8% p.a.</td><td class="cm-good">9–13% p.a.</td><td class="cm-mid">2–4% gross rental</td><td class="cm-bad">0–1% dividend</td></tr>
+        <tr><td>Capital Growth</td><td class="cm-mid">4–6% p.a.</td><td class="cm-mid">3–5% p.a.</td><td class="cm-mid">5–8% p.a.</td><td class="cm-good">10–15% p.a.</td></tr>
+        <tr><td>Liquidity</td><td class="cm-good">Instant (exchange)</td><td class="cm-good">Instant (exchange)</td><td class="cm-bad">3–12 months</td><td class="cm-good">Instant</td></tr>
+        <tr><td>Management</td><td class="cm-good">Professional</td><td class="cm-good">Professional</td><td class="cm-bad">DIY landlord</td><td class="cm-good">Professional</td></tr>
+        <tr><td>Demat Required</td><td>Yes</td><td>Yes</td><td>No</td><td>Yes</td></tr>
+        <tr><td>Tax on Distribution</td><td class="cm-mid">Partial taxable (complex)</td><td class="cm-mid">Partial taxable (complex)</td><td class="cm-bad">Rental income at slab</td><td class="cm-good">12.5% LTCG</td></tr>
+        <tr><td>Stamp Duty</td><td class="cm-good">None</td><td class="cm-good">None</td><td class="cm-bad">5–8% of property value</td><td class="cm-good">None</td></tr>
+        <tr><td>Risk Type</td><td>Vacancy + rate risk</td><td>Traffic + regulatory risk</td><td>Illiquidity + maintenance</td><td>Market + company risk</td></tr>
+        <tr><td>Best For</td><td>Income + moderate growth</td><td>High income seekers</td><td>Long-term wealth creation</td><td>Capital appreciation</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- TAX TREATMENT -->
+<div class="card searchable">
+  <div class="card-title">REIT &amp; InvIT Tax Treatment — India 2025–26</div>
+  <div class="info-alert blue">
+    <span class="icon">ℹ️</span>
+    <div class="body"><strong>REIT/InvIT distributions have 3 components</strong> each taxed differently — this makes it more complex than regular dividends. Your broker will send a Distribution Tax Statement breaking down each quarterly distribution.</div>
+  </div>
+  <div class="tbl-wrap">
+    <table class="tax-table">
+      <thead><tr><th>Distribution Component</th><th>Tax Treatment</th><th>Rate</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="asset-col">Interest Income Component</td><td>Taxed as income</td><td class="warn">Slab Rate</td><td>TDS 10% deducted by REIT/InvIT if you receive &gt;₹5,000/year. Add to your income in ITR.</td></tr>
+        <tr><td class="asset-col">Dividend Component</td><td>Taxed as income</td><td class="warn">Slab Rate</td><td>Same as company dividends. Taxable in hands of investor at applicable slab rate.</td></tr>
+        <tr><td class="asset-col">Repayment of Debt / SPV Proceeds</td><td class="good">Tax-Free</td><td class="good">0%</td><td>Return of capital — not treated as income. No tax. This is the most tax-efficient component.</td></tr>
+        <tr><td class="asset-col">Capital Gains on Unit Sale (STCG)</td><td>Short-term gains</td><td class="warn">20%</td><td>If units held &lt;36 months. Same as equity STCG post-Budget 2024.</td></tr>
+        <tr><td class="asset-col">Capital Gains on Unit Sale (LTCG)</td><td>Long-term gains</td><td class="good">12.5%</td><td>If units held &gt;36 months. No exemption threshold (unlike equity's ₹1.25L). Budget 2024 rate.</td></tr>
+        <tr><td class="asset-col">NRI TDS on Distribution</td><td>TDS at source</td><td class="warn">30% (interest), 20% (dividend)</td><td>NRIs face higher TDS on income components. File ITR to claim refund if actual tax is lower. DTAA may help.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note-box"><strong>Practical Tax Note:</strong> For a typical REIT distribution of ₹8/unit — approximately ₹3 might be interest (taxable at slab), ₹2 dividend (taxable at slab), and ₹3 return of capital (tax-free). Your actual tax burden is lower than the gross yield suggests. High-income individuals (30% slab) should prefer InvITs with higher return-of-capital components for tax efficiency.</div>
+</div>
+
+<!-- HOW TO INVEST -->
+<div class="card searchable">
+  <div class="card-title">How to Invest in REITs &amp; InvITs</div>
+  <div class="kyc-flow">
+    <div class="kyc-step">
+      <div class="kyc-num">1</div>
+      <div class="kyc-body">
+        <h4>Open a Demat + Trading Account</h4>
+        <p>REITs and InvITs are listed on NSE/BSE and trade like stocks. You need a demat account. Use Zerodha, Dhan, or Groww. Minimum lot size is 1 unit on market (secondary market purchases).</p>
+        <div class="kyc-docs">
+          <span class="doc-pill">📋 PAN Card</span>
+          <span class="doc-pill">🪪 Aadhaar</span>
+          <span class="doc-pill">🏦 Bank Account</span>
+        </div>
+      </div>
+    </div>
+    <div class="kyc-step">
+      <div class="kyc-num">2</div>
+      <div class="kyc-body">
+        <h4>Search the REIT/InvIT on Your Broker Platform</h4>
+        <p>On Zerodha Kite: Search "EMBASSY" / "MINDSPACE" / "INDIGRID" etc. → Select the NSE or BSE listed security → Check current unit price, 52W range, and last distribution yield → Place a CNC (Cash and Carry) order for delivery.</p>
+        <div class="kyc-note">💡 REITs trade at ₹300–400/unit and InvITs at ₹100–300/unit. You can buy even 1 unit in the secondary market. During IPO/FPO of a new REIT, minimum application is typically 200 units (~₹60,000–80,000).</div>
+      </div>
+    </div>
+    <div class="kyc-step">
+      <div class="kyc-num">3</div>
+      <div class="kyc-body">
+        <h4>Understand the Distribution Schedule</h4>
+        <p>All India REITs and InvITs distribute quarterly. Check the REIT's distribution history on their investor relations website or on NSE. Set up bank mandate (ECS/NACH) with your broker to receive distributions directly in your bank account. The record date is usually announced 2–3 weeks before the distribution payment date.</p>
+      </div>
+    </div>
+    <div class="kyc-step">
+      <div class="kyc-num">4</div>
+      <div class="kyc-body">
+        <h4>Track &amp; Report in ITR</h4>
+        <p>Your broker will provide an annual Distribution Tax Statement showing the breakdown of each distribution into: Interest Income / Dividend / Return of Capital components. Use this to fill Schedule OS (Other Sources) and Schedule CG (Capital Gains) in ITR-2.</p>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:18px;font-size:11px;font-weight:700;color:var(--burn2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Best Brokers to Buy REITs &amp; InvITs</div>
+  <div class="platform-grid">
+    <div class="platform-card">
+      <div class="platform-name">🟢 Zerodha</div>
+      <div class="platform-desc">Best overall. Zero delivery brokerage on REITs/InvITs (₹0). Excellent Kite charting. CNC orders for delivery. NRI accounts also supported.</div>
+      <div class="platform-tags"><span class="platform-tag">₹0 Delivery</span><span class="platform-tag">Best Platform</span><span class="platform-tag">NRI Supported</span></div>
+      <a class="platform-btn" href="https://zerodha.com/open-account?c=XKQ288" target="_blank">Open Zerodha →</a>
+    </div>
+    <div class="platform-card">
+      <div class="platform-name">🔥 Dhan</div>
+      <div class="platform-desc">₹0 delivery trades. Excellent charts and real-time data. Good for active REIT/InvIT monitoring. Price alerts on distributions.</div>
+      <div class="platform-tags"><span class="platform-tag">₹0 Delivery</span><span class="platform-tag">Charts</span><span class="platform-tag">Resident Only</span></div>
+      <a class="platform-btn" href="https://join.dhan.co/?invite=VFZJN04428" target="_blank">Open Dhan →</a>
+    </div>
+  </div>
+</div>
+
+<!-- GLOBAL REITS -->
+<div class="card searchable">
+  <div class="card-title">Global REITs — US &amp; Japan</div>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">US REIT Market Size</div><div class="kpi-val">$1.3T+</div><div class="kpi-note">World's largest REIT market</div></div>
+    <div class="kpi"><div class="kpi-label">US REIT Avg Yield</div><div class="kpi-val">3–5%</div><div class="kpi-note">Dividend yield in USD</div></div>
+    <div class="kpi"><div class="kpi-label">Japan REIT (J-REIT)</div><div class="kpi-val">¥20T AUM</div><div class="kpi-note">60+ J-REITs on TSE</div></div>
+    <div class="kpi"><div class="kpi-label">J-REIT Avg Yield</div><div class="kpi-val">3–5%</div><div class="kpi-note">Distribution yield in JPY</div></div>
+  </div>
+  <div class="tbl-wrap">
+    <table class="tax-table">
+      <thead><tr><th>Market</th><th>How to Access</th><th>Key ETFs</th><th>Tax for India Resident</th><th>Best For</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="asset-col">🇺🇸 US REITs</td>
+          <td>US broker or International MF/ETF in India</td>
+          <td>VNQ (Vanguard REIT ETF), IYR (iShares US REIT)</td>
+          <td>Taxed as foreign equity — 20% flat or slab rate</td>
+          <td>USD-denominated income + global diversification</td>
+        </tr>
+        <tr>
+          <td class="asset-col">🇯🇵 J-REITs</td>
+          <td>Japan brokerage (Zerodha Japan, SBI証券). NISA eligible.</td>
+          <td>1343 (NF J-REIT ETF), 1699 (NEXT FUNDS J-REIT)</td>
+          <td>20.315% in Japan (0% if held in NISA account)</td>
+          <td>JPY income, NISA tax-free treatment</td>
+        </tr>
+        <tr>
+          <td class="asset-col">🌐 Global REIT ETF</td>
+          <td>India international MF or direct US ETF</td>
+          <td>VNQI (ex-US), REET (iShares Global REIT)</td>
+          <td>Slab rate (non-equity MF treatment)</td>
+          <td>Single fund global real estate exposure</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note-box"><strong>Japan Residents &amp; J-REITs in NISA:</strong> J-REIT distributions inside a NISA account are completely tax-free (normally 20.315%). For Indian NRIs in Japan, holding J-REITs in your NISA account is an excellent way to earn JPY-denominated real estate income with zero Japan tax. Look for J-REITs with office, logistics, or residential portfolios in Tokyo for stability.</div>
+</div>
+
+<!-- REIT vs BOND vs FD -->
+<div class="card searchable">
+  <div class="card-title">REIT / InvIT vs Bonds vs FD — Income Comparison</div>
+  <div class="compare-matrix">
+    <table>
+      <thead><tr><th>Instrument</th><th>Yield Range</th><th>Safety</th><th>Liquidity</th><th>Capital Growth?</th><th>Tax Efficiency</th></tr></thead>
+      <tbody>
+        <tr><td>🏗️ InvIT (PowerGrid)</td><td class="cm-good">11–12%</td><td class="cm-good">Very High (Govt PSU)</td><td class="cm-good">Exchange listed</td><td class="cm-mid">Moderate</td><td class="cm-good">Partial tax-free (RoC component)</td></tr>
+        <tr><td>🏢 REIT (Embassy)</td><td class="cm-good">6.5–7.5%</td><td class="cm-good">High (Grade-A tenants)</td><td class="cm-good">Exchange listed</td><td class="cm-good">Good</td><td class="cm-mid">Partial tax-free (RoC component)</td></tr>
+        <tr><td>📜 AAA Corporate Bond</td><td class="cm-mid">7.5–9%</td><td class="cm-good">High</td><td class="cm-mid">OTC / Unlisted</td><td class="cm-bad">None (HTM)</td><td class="cm-mid">Coupon at slab rate</td></tr>
+        <tr><td>🏛️ NRE FD (SFB)</td><td class="cm-good">8.5–9%</td><td class="cm-good">DICGC insured ₹5L</td><td class="cm-bad">5-yr lock-in penalty</td><td class="cm-bad">None</td><td class="cm-good">Tax-free in India (NRI)</td></tr>
+        <tr><td>🏦 Bank FD (SBI)</td><td class="cm-mid">6.5–7.5%</td><td class="cm-good">Very High</td><td class="cm-mid">Premature penalty</td><td class="cm-bad">None</td><td class="cm-bad">Fully taxable at slab rate</td></tr>
+        <tr><td>🏛️ SGB (Maturity)</td><td class="cm-good">8–12%+ total</td><td class="cm-good">Sovereign (RBI)</td><td class="cm-mid">8-year tenure</td><td class="cm-good">Good (gold price)</td><td class="cm-good">Zero tax at maturity</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note-box"><strong>Recommendation:</strong> For a retiree / income-seeking investor — allocate 20–30% to REITs+InvITs for high, regular quarterly income with partial tax efficiency. Combine with NRE FD (for NRIs) and SGB for a diversified income portfolio that beats inflation and bank FDs significantly.</div>
+</div>
+
+</div></div>
+<!-- ══ END TAB 6 ══ -->
+
+
+<!-- ══ TAB 6: TAX & FILING ══ -->
+<div class="panel" id="tab-7"><div class="content-wrap">
+<div class="section-hero">
+  <div class="section-hero-icon">🧾</div>
+  <div><div class="section-hero-title">Tax Guide &amp; Filing — AY 2026–27</div><div class="section-hero-sub">Capital gains rates · When to file · How to file ITR · Japan 確定申告 · DTAA · NISA tax</div></div>
+</div>
+
+<div class="info-alert red searchable"><span class="icon">⚠️</span><div class="body"><strong>Disclaimer:</strong> Educational only. Tax laws change. Consult a qualified CA before filing. Rates effective post Budget 2024 (Finance Act 2024) for AY 2025–26 and AY 2026–27.</div></div>
+
+<!-- INDIA TAX RATES -->
+<div class="card searchable">
+  <div class="card-title">India — Capital Gains Tax Rates (Post Budget 2024)</div>
+  <div class="tbl-wrap">
+    <table class="tax-table">
+      <thead><tr><th>Asset Type</th><th>Holding Period</th><th>STCG</th><th>LTCG</th><th>Indexation</th><th>Exemption</th></tr></thead>
+      <tbody>
+        <tr><td class="asset-col">🏢 Equity Shares</td><td>12 months</td><td class="warn">20%</td><td class="good">12.5%</td><td>No</td><td>₹1.25L/yr on LTCG</td></tr>
+        <tr><td class="asset-col">🪙 Equity MF (Direct/Regular)</td><td>12 months</td><td class="warn">20%</td><td class="good">12.5%</td><td>No</td><td>₹1.25L/yr (combined)</td></tr>
+        <tr><td class="asset-col">📊 ETF (Equity)</td><td>12 months</td><td class="warn">20%</td><td class="good">12.5%</td><td>No</td><td>₹1.25L/yr (combined)</td></tr>
+        <tr><td class="asset-col">📜 Listed Bonds/NCDs</td><td>12 months</td><td class="warn">Slab Rate</td><td class="good">12.5%</td><td>No</td><td>None</td></tr>
+        <tr><td class="asset-col">📜 Unlisted Bonds</td><td>24 months</td><td class="warn">Slab Rate</td><td class="good">12.5%</td><td>No</td><td>None</td></tr>
+        <tr><td class="asset-col">🪙 Debt MF (post Apr 2023)</td><td>Any period</td><td class="warn">Slab Rate</td><td class="warn">Slab Rate</td><td>No</td><td>None (Budget 2023 change)</td></tr>
+        <tr><td class="asset-col">🥇 Physical Gold/Silver</td><td>24 months</td><td class="warn">Slab Rate</td><td class="good">12.5%</td><td>No</td><td>None (Budget 2024 removed)</td></tr>
+        <tr><td class="asset-col">📱 Digital Gold/Silver</td><td>24 months</td><td class="warn">Slab Rate</td><td class="good">12.5%</td><td>No</td><td>Same as physical gold</td></tr>
+        <tr><td class="asset-col">📊 Gold ETF/Fund</td><td>Any</td><td class="warn">Slab Rate</td><td class="warn">Slab Rate</td><td>No</td><td>Non-equity MF treatment</td></tr>
+        <tr><td class="asset-col">🏛️ Sovereign Gold Bond (SGB)</td><td>8 years (maturity)</td><td class="warn">Slab Rate</td><td class="good">0% (exempt)</td><td>N/A</td><td>Full exemption at maturity</td></tr>
+        <tr><td class="asset-col">🏠 Residential Property</td><td>24 months</td><td class="warn">Slab Rate</td><td class="good">12.5%</td><td>No</td><td>54 exemption if reinvested</td></tr>
+        <tr><td class="asset-col">💹 F&amp;O Trading</td><td>Any</td><td class="warn">Business Income</td><td class="warn">Business Income</td><td>No</td><td>Expenses deductible</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note-box searchable"><strong>₹1.25 Lakh LTCG Exemption:</strong> Available on equity shares + equity MFs + equity ETFs combined. Use "Tax Harvesting" — sell and immediately rebuy equity investments each year to book gains up to ₹1.25L. This resets your cost basis and permanently saves future LTCG tax. No STT penalty for rebuy.</div>
+</div>
+
+<!-- NRI TDS TABLE -->
+<div class="card searchable">
+  <div class="card-title">NRI — TDS Rates &amp; Key Rules (AY 2026–27)</div>
+  <div class="tbl-wrap">
+    <table class="tax-table">
+      <thead><tr><th>Income Type</th><th>TDS Rate</th><th>DTAA Benefit</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="asset-col">Equity LTCG (&gt;12M)</td><td class="warn">10%</td><td class="good">May reduce with Form 10F + TRC</td><td>Deducted at source by broker</td></tr>
+        <tr><td class="asset-col">Equity STCG (&lt;12M)</td><td class="warn">20%</td><td class="good">DTAA may apply</td><td>Auto-deducted by broker</td></tr>
+        <tr><td class="asset-col">Equity MF LTCG</td><td class="warn">10%</td><td class="good">DTAA may apply</td><td>AMC deducts at redemption</td></tr>
+        <tr><td class="asset-col">Debt MF / Non-equity</td><td class="warn">30%</td><td>Limited</td><td>File ITR to claim refund if lower slab</td></tr>
+        <tr><td class="asset-col">NRE FD Interest</td><td class="good">0% (Tax-Free India)</td><td class="good">N/A — tax-free</td><td>Taxable in country of residence</td></tr>
+        <tr><td class="asset-col">NRO FD Interest</td><td class="warn">30%</td><td class="good">Reduced 10–15% with DTAA</td><td>Submit Form 15CA/15CB for repatriation</td></tr>
+        <tr><td class="asset-col">Dividends (Stocks/MF)</td><td class="warn">20%</td><td class="good">Reduced 10–15% with DTAA</td><td>Submit TRC for DTAA benefit</td></tr>
+        <tr><td class="asset-col">Rent from Indian Property</td><td class="warn">30%</td><td>Limited</td><td>Tenant must deduct and deposit TDS</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- JAPAN TAX -->
+<div class="card searchable">
+  <div class="card-title">Japan — Investment Tax &amp; NISA (2025–26)</div>
+  <div class="tbl-wrap">
+    <table class="tax-table">
+      <thead><tr><th>Income Type</th><th>Standard Rate</th><th>NISA Rate</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="asset-col">Listed Stocks / ETFs Japan</td><td class="warn">20.315%</td><td class="good">0% (Tax-Free)</td><td>National tax 20% + Reconstruction 0.315%</td></tr>
+        <tr><td class="asset-col">Investment Trusts (MF)</td><td class="warn">20.315%</td><td class="good">0% (Tax-Free)</td><td>On distributions and capital gains</td></tr>
+        <tr><td class="asset-col">Dividends (Japan stocks)</td><td class="warn">20.315%</td><td class="good">0% (Tax-Free)</td><td>Withholding at source in 特定口座</td></tr>
+        <tr><td class="asset-col">India Stocks/MF (overseas)</td><td class="warn">20.315%</td><td class="warn">Not Eligible</td><td>Declare in 確定申告; foreign tax credit available</td></tr>
+        <tr><td class="asset-col">NRE FD Interest (India)</td><td class="warn">20.315%</td><td class="warn">Not Eligible</td><td>Tax-free in India, taxable in Japan</td></tr>
+        <tr><td class="asset-col">F&amp;O / Derivatives Japan</td><td class="warn">20.315%</td><td class="warn">Not Eligible</td><td>Loss carryforward 3 years</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- HOW TO FILE ITR - INDIA -->
+<div class="card searchable">
+  <div class="card-title">How to File ITR — India (Step-by-Step)</div>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Filing Deadline</div><div class="kpi-val">31 July</div><div class="kpi-note">Non-audit cases (AY 2026–27)</div></div>
+    <div class="kpi"><div class="kpi-label">ITR Form (Stocks/MF)</div><div class="kpi-val">ITR-2</div><div class="kpi-note">Capital gains, no business income</div></div>
+    <div class="kpi"><div class="kpi-label">ITR Form (F&amp;O traders)</div><div class="kpi-val">ITR-3</div><div class="kpi-note">Business income category</div></div>
+    <div class="kpi"><div class="kpi-label">Penalty (Late Filing)</div><div class="kpi-val">₹5,000</div><div class="kpi-note">After 31 July but before 31 Dec</div></div>
+  </div>
+  <div class="timeline">
+    <div class="tl-item searchable"><div class="tl-dot"></div><div class="tl-title">April–May: Collect All Documents <span class="tl-badge">Prep</span></div><div class="tl-body">Download Form 26AS from income tax portal (shows all TDS deducted). Download AIS (Annual Information Statement) — shows all financial transactions. Collect all broker capital gains statements from Zerodha/Groww (P&amp;L report). Collect bank interest certificates. Download Form 16 from employer.</div></div>
+    <div class="tl-item searchable"><div class="tl-dot"></div><div class="tl-title">May–June: Compute Capital Gains <span class="tl-badge">Calculate</span></div><div class="tl-body">Compute STCG and LTCG separately for each asset type. Apply ₹1.25L LTCG exemption. Net off capital losses (STCL can offset STCG + LTCG; LTCL only vs LTCG). For F&amp;O: compute net profit/loss across all trades — use Quicko or Clear Tax's auto-import from broker.</div></div>
+    <div class="tl-item searchable"><div class="tl-dot"></div><div class="tl-title">June–July: Choose Filing Platform <span class="tl-badge">File</span></div><div class="tl-body"><strong>ClearTax:</strong> Best for NRIs, comprehensive, CA assistance available. <strong>Quicko:</strong> Best for stock/MF investors — auto-imports trades from Zerodha/Groww/Dhan. <strong>TaxBuddy:</strong> AI-powered, good for complex scenarios. <strong>Income Tax Portal:</strong> Direct, free, official — but less user-friendly. <strong>Offline CA:</strong> For complex scenarios with multiple income sources.</div></div>
+    <div class="tl-item searchable"><div class="tl-dot"></div><div class="tl-title">By 31 July: File and e-Verify <span class="tl-badge">Submit</span></div><div class="tl-body">File ITR online → E-verify immediately using Aadhaar OTP, Net Banking, or DSC. E-verification must be done within 30 days of filing. Without e-verification, ITR is invalid. After verification, check refund status via portal or e-Nivaran helpdesk.</div></div>
+    <div class="tl-item searchable"><div class="tl-dot"></div><div class="tl-title">Carry Forward Capital Losses <span class="tl-badge">Tip</span></div><div class="tl-body">Capital losses can be carried forward for 8 years — but only if ITR is filed before the due date. Even if you have zero tax liability, file ITR to preserve carry-forward of losses. This is one of the most overlooked tax planning opportunities.</div></div>
+  </div>
+</div>
+
+<!-- HOW TO FILE JAPAN KAKUTEI SHINKOKU -->
+<div class="card searchable">
+  <div class="card-title">How to File 確定申告 — Japan Tax Return</div>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Filing Period</div><div class="kpi-val">Feb 16 – Mar 15</div><div class="kpi-note">For previous calendar year income</div></div>
+    <div class="kpi"><div class="kpi-label">Who Must File</div><div class="kpi-val">Overseas income</div><div class="kpi-note">Multiple income sources, self-employed</div></div>
+    <div class="kpi"><div class="kpi-label">Filing Method</div><div class="kpi-val">e-Tax or Paper</div><div class="kpi-note">e-Tax requires My Number Card</div></div>
+    <div class="kpi"><div class="kpi-label">Foreign Tax Credit</div><div class="kpi-val">外国税額控除</div><div class="kpi-note">Claim India TDS against Japan tax</div></div>
+  </div>
+  <div class="timeline">
+    <div class="tl-item searchable"><div class="tl-dot"></div><div class="tl-title">January: Gather Income Documents</div><div class="tl-body">Collect 年末調整 (Year-end Tax Adjustment) form from employer. Get 支払調書 (Payment Report) for any freelance/side income. Download capital gains statement from your Japanese securities firm (Rakuten/SBI). Collect NRE FD interest certificate from Indian bank converted to JPY using the average exchange rate for the year.</div></div>
+    <div class="tl-item searchable"><div class="tl-dot"></div><div class="tl-title">January–February: Calculate Overseas Income</div><div class="tl-body">Convert all India income to JPY using average TTM rate for the calendar year. Calculate India capital gains. Note any TDS paid in India — this will be used for foreign tax credit (外国税額控除). Use India-Japan DTAA to identify which income is exempt or reduced rate.</div></div>
+    <div class="tl-item searchable"><div class="tl-dot"></div><div class="tl-title">February: File via e-Tax (推奨)</div><div class="tl-body">Go to <a href="https://www.e-tax.nta.go.jp" target="_blank" style="color:var(--burn3)">e-tax.nta.go.jp</a> → Use My Number Card + IC card reader or smartphone app (JPKI) → Fill Form A (申告書A) for salaried workers or Form B (申告書B) for those with business/overseas income → Enter 外国税額控除 form for TDS paid in India → Submit digitally → Get confirmation number.</div></div>
+    <div class="tl-item searchable"><div class="tl-dot"></div><div class="tl-title">If You Have 特定口座 (Special Account)</div><div class="tl-body">Gains from 特定口座 with 源泉徴収あり are auto-taxed at 20.315% by your broker — you do NOT need to file 確定申告 for these unless you want to carry forward losses or offset with other income. NISA gains are always zero tax — never need to be declared.</div></div>
+  </div>
+  <div class="note-box searchable"><strong>Foreign Tax Credit Calculation:</strong> India TDS paid = ₹50,000 = ~¥90,000. Japan tax on same income = ¥150,000. Foreign tax credit = ¥90,000. Net Japan tax to pay = ¥60,000 (not ¥150,000). File Form 外国税額控除に関する明細書 with your 確定申告. Attach TRC from India and Form 10F.</div>
+</div>
+
+<!-- TAX SAVING STRATEGIES -->
+<div class="card searchable">
+  <div class="card-title">Top Tax-Saving Strategies</div>
+  <div class="info-card-grid">
+    <div class="info-card searchable"><span class="info-card-icon">🎯</span><div class="info-card-title">Tax Harvesting (India)</div><div class="info-card-body">Sell equity investments with LTCG every year to book up to ₹1.25L tax-free. Immediately rebuy the same fund. This resets cost basis and locks in tax-free gains. Repeat every financial year (April–March).</div></div>
+    <div class="info-card searchable"><span class="info-card-icon">📊</span><div class="info-card-title">Hold &gt; 12 Months (Equity)</div><div class="info-card-body">Selling equity even 1 day before 12 months converts LTCG (12.5%) to STCG (20%). Always track purchase date. The 7.5% extra tax on ₹10L gains = ₹75,000 unnecessary penalty.</div></div>
+    <div class="info-card searchable"><span class="info-card-icon">🏛️</span><div class="info-card-title">Prefer SGB over Physical Gold</div><div class="info-card-body">SGB: 0% tax at 8Y maturity + 2.5%/yr interest. Physical/Digital Gold: 12.5% LTCG after 2Y. Gold ETF/Fund: slab rate. SGB is the only gold investment with zero capital gains tax at maturity.</div></div>
+    <div class="info-card searchable"><span class="info-card-icon">💹</span><div class="info-card-title">NISA First (Japan)</div><div class="info-card-body">Always maximise NISA (¥3.6M/yr) before any taxable Japan investment. NISA gains are 100% tax-free forever vs 20.315% in regular account. This alone saves ¥72,000+ per ¥1M of gains annually.</div></div>
+    <div class="info-card searchable"><span class="info-card-icon">🌐</span><div class="info-card-title">DTAA Foreign Tax Credit</div><div class="info-card-body">Submit Form 10F + TRC to Indian broker to get DTAA TDS rates. Claim foreign tax credit in Japan for TDS paid in India. Never pay full tax in both countries — DTAA prevents double taxation.</div></div>
+    <div class="info-card searchable"><span class="info-card-icon">📋</span><div class="info-card-title">Set Off Capital Losses</div><div class="info-card-body">STCL can offset STCG + LTCG. LTCL can only offset LTCG. Carry forward up to 8 years BUT only if ITR filed before due date. File ITR even with zero income to preserve loss carry-forward.</div></div>
+  </div>
+</div>
+</div></div>
+
+<!-- ══ TAB 7: KYC & ACCOUNTS ══ -->
+<div class="panel" id="tab-8"><div class="content-wrap">
+<div class="section-hero">
+  <div class="section-hero-icon">🌍</div>
+  <div><div class="section-hero-title">KYC, Accounts &amp; Brokers</div><div class="section-hero-sub">How to open demat · MF KYC · NRI PIS accounts · Japan NISA · Complete broker guide</div></div>
+</div>
+
+<div class="rtabs">
+  <button class="rtab active" onclick="switchResident(0,this)">🇮🇳 Indian Resident</button>
+  <button class="rtab" onclick="switchResident(1,this)">🌍 NRI</button>
+  <button class="rtab" onclick="switchResident(2,this)">🇯🇵 Japan Resident</button>
+</div>
+
+<!-- INDIAN RESIDENT -->
+<div class="rpanel active" id="rp-0">
+  <div class="card searchable">
+    <div class="card-title">Indian Resident — Complete Investment Setup</div>
+    <div class="kyc-flow">
+      <div class="kyc-step"><div class="kyc-num">1</div><div class="kyc-body"><h4>Get PAN Card (Mandatory)</h4><p>PAN (Permanent Account Number) is mandatory for all investments above ₹50,000. Apply online at <strong>NSDL/UTI PAN portal</strong> using Aadhaar. Get in 5–7 days. Free if applied via Aadhaar (instant e-PAN available).</p><div class="kyc-docs"><span class="doc-pill">🪪 Aadhaar Card</span><span class="doc-pill">📸 Photo</span><span class="doc-pill">📱 Mobile linked to Aadhaar</span></div></div></div>
+      <div class="kyc-step"><div class="kyc-num">2</div><div class="kyc-body"><h4>Complete KYC for Mutual Funds (CKYC / KYC)</h4><p>One-time KYC valid across all AMCs. Do it online via <a href="https://www.cvlkra.com" target="_blank" style="color:var(--burn3)">CVL KRA</a> or through any AMC/platform. Required documents:</p><div class="kyc-docs"><span class="doc-pill">📋 PAN</span><span class="doc-pill">🪪 Aadhaar</span><span class="doc-pill">📸 Selfie/Photo</span><span class="doc-pill">🏦 Cancelled cheque</span><span class="doc-pill">✍️ Signature</span></div><div class="kyc-note">💡 On platforms like Kuvera, Groww, INDmoney — KYC is done in-app in under 10 minutes via Aadhaar OTP. No physical documents needed.</div></div></div>
+      <div class="kyc-step"><div class="kyc-num">3</div><div class="kyc-body"><h4>Open Demat + Trading Account (For Stocks/ETFs)</h4><p>Choose broker (Zerodha, Dhan, Groww) → Apply online → Submit PAN + Aadhaar OTP → Complete video IPV → Link bank account → Activate in 1–3 days. Note: Demat account has Annual Maintenance Charge (AMC) of ₹0–₹750/yr depending on broker.</p></div></div>
+      <div class="kyc-step"><div class="kyc-num">4</div><div class="kyc-body"><h4>Activate Internet Banking &amp; UPI</h4><p>Link your bank account to your trading/MF platform. Set up NACH mandate for SIP auto-debit. Keep UPI active for instant fund transfers. Most brokers support BHIM UPI for same-day fund credit.</p></div></div>
+      <div class="kyc-step"><div class="kyc-num">5</div><div class="kyc-body"><h4>Start Investing</h4><p><strong>For MF SIP:</strong> Kuvera (free, direct) → Search fund → Select Direct Growth → Set monthly SIP → Link bank → Activate.<br/><strong>For Stocks:</strong> Zerodha/Dhan → Add funds via UPI → Search stock → Place CNC (Cash 'n Carry) order for delivery.<br/><strong>For ETFs:</strong> Same as stocks — search ETF ticker (e.g. NIFTYBEES) → Buy via CNC.</p></div></div>
+    </div>
+  </div>
+  <div class="card searchable">
+    <div class="card-title">Recommended Broker Comparison — India Resident</div>
+    <div class="compare-matrix">
+      <table>
+        <thead><tr><th>Broker</th><th>Equity Delivery</th><th>F&O/Intraday</th><th>MF</th><th>Best For</th><th>Demat AMC</th></tr></thead>
+        <tbody>
+          <tr><td>🟢 Zerodha</td><td class="cm-good">₹0</td><td class="cm-mid">₹20/order</td><td class="cm-good">Direct MF</td><td>All-round best</td><td>₹300/yr</td></tr>
+          <tr><td>🔥 Dhan</td><td class="cm-good">₹0</td><td class="cm-mid">₹20/order</td><td class="cm-good">Direct MF</td><td>Active traders</td><td>₹0</td></tr>
+          <tr><td>🟣 Groww</td><td class="cm-good">₹0</td><td class="cm-mid">₹20/order</td><td class="cm-good">Direct+Regular</td><td>Beginners</td><td>₹0</td></tr>
+          <tr><td>🔵 Upstox</td><td class="cm-good">₹0</td><td class="cm-mid">₹20/order</td><td class="cm-mid">Regular only</td><td>Research users</td><td>₹150/yr</td></tr>
+          <tr><td>🔴 ICICI Direct</td><td class="cm-bad">0.27% or ₹35</td><td class="cm-bad">0.03–0.05%</td><td class="cm-mid">Regular only</td><td>Advisory clients</td><td>₹700/yr</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- NRI -->
+<div class="rpanel" id="rp-1">
+  <div class="card searchable">
+    <div class="card-title">NRI — Investment Account Setup (Complete Guide)</div>
+    <div class="info-alert amber"><span class="icon">⚠️</span><div class="body"><strong>NRI investments in India require FEMA compliance.</strong> Use only NRI-designated accounts (NRE/NRO/FCNR). Do NOT use resident Indian accounts — it's a FEMA violation with serious penalties.</div></div>
+    <div class="kyc-flow">
+      <div class="kyc-step"><div class="kyc-num">1</div><div class="kyc-body"><h4>Understand Your Account Options</h4>
+        <ul class="guide-list">
+          <li><strong>NRE Account (Non-Resident External):</strong> For remitting foreign income to India. Interest tax-free in India. Fully repatriable. INR account — currency conversion at credit time.</li>
+          <li><strong>NRO Account (Non-Resident Ordinary):</strong> For India-sourced income (rent, dividends, salary). Interest taxed 30% TDS. Repatriation limited to $1M/year.</li>
+          <li><strong>FCNR Account (Foreign Currency NR):</strong> Fixed deposits in foreign currency (USD, GBP, JPY). No currency risk. Interest tax-free in India.</li>
+          <li><strong>PIS Account (Portfolio Investment Scheme):</strong> RBI permission required for stock market investments. Linked to NRE or NRO account. Required by brokers like Zerodha.</li>
+        </ul>
+      </div></div>
+      <div class="kyc-step"><div class="kyc-num">2</div><div class="kyc-body"><h4>Open NRE/NRO Bank Account (Overseas)</h4><p>Apply at your Indian bank's overseas branch or online. Documents required:</p><div class="kyc-docs"><span class="doc-pill">🛂 Passport copy</span><span class="doc-pill">🪪 Overseas address proof</span><span class="doc-pill">📋 PAN Card</span><span class="doc-pill">📋 Aadhaar (if available)</span><span class="doc-pill">📋 FEMA Declaration</span><span class="doc-pill">🛂 Visa/Residence permit</span></div><div class="kyc-note">💡 Best NRI-friendly banks: SBI (YONO NRI app), HDFC (NRI Portal), ICICI (iMobile NRI). Most allow account opening from abroad — takes 2–4 weeks.</div></div></div>
+      <div class="kyc-step"><div class="kyc-num">3</div><div class="kyc-body"><h4>Get PIS Permission Letter</h4><p>Request PIS (Portfolio Investment Scheme) permission from your NRE/NRO bank. Bank sends PIS letter to SEBI. This is needed before you can trade stocks on NSE/BSE. Zerodha and ICICI Direct NRI accounts handle PIS registration for you.</p></div></div>
+      <div class="kyc-step"><div class="kyc-num">4</div><div class="kyc-body"><h4>Complete NRI KYC for MF/Demat</h4><p>Most AMCs and MF platforms accept NRI KYC online. Additional documents vs resident KYC:</p><div class="kyc-docs"><span class="doc-pill">🛂 Passport</span><span class="doc-pill">📋 Overseas Address Proof</span><span class="doc-pill">💱 FEMA Declaration</span><span class="doc-pill">🏦 NRE/NRO Bank Details</span></div></div></div>
+      <div class="kyc-step"><div class="kyc-num">5</div><div class="kyc-body"><h4>Open NRI Demat + Trading Account</h4><p><strong>Zerodha NRI:</strong> Best overall — supports both PIS (NRE) and non-PIS (NRO) accounts. Online application. Takes 2–4 weeks.<br/><strong>ICICI Direct NRI:</strong> Full-service, handles PIS automatically. Higher brokerage but simpler compliance.<br/><strong>HDFC Securities NRI:</strong> Good for existing HDFC bank customers.</p></div></div>
+      <div class="kyc-step"><div class="kyc-num">6</div><div class="kyc-body"><h4>Submit Form 10F for DTAA Benefit</h4><p>Get Tax Residency Certificate (TRC) from your country of residence (Japan: form from 税務署, UAE: from Ministry of Finance). Submit TRC + Form 10F to your Indian broker/bank. This enables DTAA rates instead of full TDS on dividends and gains.</p></div></div>
+    </div>
+  </div>
+  <div class="card searchable">
+    <div class="card-title">NRI — What You Can &amp; Cannot Invest In</div>
+    <div class="tbl-wrap">
+      <table class="tax-table">
+        <thead><tr><th>Investment</th><th>Allowed?</th><th>Account</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td class="asset-col">Indian Stocks (NSE/BSE)</td><td class="good">✅ Yes</td><td>NRI Demat + PIS</td><td>Via Portfolio Investment Scheme (PIS)</td></tr>
+          <tr><td class="asset-col">Mutual Funds (most)</td><td class="good">✅ Yes</td><td>NRE/NRO</td><td>Most AMCs accept NRI. US/Canada NRI may face restrictions.</td></tr>
+          <tr><td class="asset-col">NRE Fixed Deposits</td><td class="good">✅ Yes</td><td>NRE Account</td><td>Tax-free interest in India. Best safe option.</td></tr>
+          <tr><td class="asset-col">Real Estate</td><td class="good">✅ Yes</td><td>NRE/NRO</td><td>Cannot buy agricultural land without RBI permission.</td></tr>
+          <tr><td class="asset-col">Sovereign Gold Bonds (new)</td><td class="warn">⚠️ Restricted</td><td>NRE Demat</td><td>Cannot buy new SGBs. Can hold existing ones.</td></tr>
+          <tr><td class="asset-col">PPF (new account)</td><td style="color:#f87171;font-weight:600">❌ No</td><td>N/A</td><td>Cannot open new PPF. Existing PPF can continue.</td></tr>
+          <tr><td class="asset-col">Equity Futures &amp; Options</td><td style="color:#f87171;font-weight:600">❌ No</td><td>N/A</td><td>NRIs not allowed to trade derivatives on Indian exchanges.</td></tr>
+          <tr><td class="asset-col">NISA (Japan)</td><td class="good">✅ Yes (if Japan resident)</td><td>Japan brokerage</td><td>Available to all Japan residents including Indian NRIs.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card searchable">
+    <div class="card-title">Best Brokers for NRIs</div>
+    <div class="platform-grid">
+      <div class="platform-card"><div class="platform-name">🟢 Zerodha NRI</div><div class="platform-desc">Best NRI broker. Supports PIS (for NRE) and non-PIS (NRO) accounts. Online application. Kite platform. Direct MF via Coin. Annual charges apply.</div><div class="platform-tags"><span class="platform-tag">PIS Supported</span><span class="platform-tag">Online KYC</span><span class="platform-tag">Best Platform</span></div><a class="platform-btn" href="https://zerodha.com/open-account?c=XKQ288" target="_blank">Open NRI Account →</a></div>
+      <div class="platform-card"><div class="platform-name">🔵 ICICI Direct NRI</div><div class="platform-desc">Full-service NRI broker. PIS handled automatically. Good for those who want advisory support alongside trading. Higher brokerage but simpler compliance.</div><div class="platform-tags"><span class="platform-tag">PIS Handled</span><span class="platform-tag">Advisory</span><span class="platform-tag">Full Service</span></div><a class="platform-btn" href="https://www.icicidirect.com/nri" target="_blank">Open ICICI NRI →</a></div>
+      <div class="platform-card"><div class="platform-name">🟢 Kuvera (MF)</div><div class="platform-desc">Free Direct MF platform. Accepts NRI investors from most countries (except US/Canada). Direct plans only — zero commission. Best for NRI MF investing.</div><div class="platform-tags"><span class="platform-tag">NRI Accepted</span><span class="platform-tag">Direct Plans</span><span class="platform-tag">Free</span></div><a class="platform-btn" href="https://kuvera.in/s/wsapp?referral=1T6BH" target="_blank">Join Kuvera →</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- JAPAN RESIDENT -->
+<div class="rpanel" id="rp-2">
+  <div class="card searchable">
+    <div class="card-title">Japan Resident — Complete Investment Setup</div>
+    <div class="kyc-flow">
+      <div class="kyc-step"><div class="kyc-num">1</div><div class="kyc-body"><h4>Get My Number Card (マイナンバーカード)</h4><p>My Number Card is essential for opening investment accounts in Japan. Apply at your local city/ward office (市役所) with your Residence Card (在留カード). Takes 4–6 weeks. The card has an IC chip used for online identity verification.</p><div class="kyc-docs"><span class="doc-pill">📋 在留カード (Residence Card)</span><span class="doc-pill">📸 Photo (30×40mm)</span></div></div></div>
+      <div class="kyc-step"><div class="kyc-num">2</div><div class="kyc-body"><h4>Open Japanese Bank Account (銀行口座)</h4><p>Required to fund your investment accounts. Easiest for foreigners: <strong>Sony Bank</strong> (English interface, online application), <strong>Japan Post Bank (ゆうちょ銀行)</strong> (accepts short-residence foreigners), <strong>Rakuten Bank</strong> (online, linked to Rakuten ecosystem). Bring Residence Card + My Number Card.</p></div></div>
+      <div class="kyc-step"><div class="kyc-num">3</div><div class="kyc-body"><h4>Choose Japan Securities Firm (証券会社)</h4>
+        <ul class="guide-list">
+          <li><strong>SBI証券 (SBI Securities):</strong> Largest NISA fund lineup. English support. Good for foreigners. Free trades on Japanese stocks.</li>
+          <li><strong>楽天証券 (Rakuten Securities):</strong> Linked to Rakuten Pay/Card — earn points on investments. Great UI. Wide ETF selection.</li>
+          <li><strong>マネックス証券 (Monex):</strong> Best for US stock access. Good research tools. English support available.</li>
+          <li><strong>松井証券 (Matsui):</strong> Free stock trades for holdings under ¥500K. Good for beginners.</li>
+        </ul>
+      </div></div>
+      <div class="kyc-step"><div class="kyc-num">4</div><div class="kyc-body"><h4>Apply Online for Investment Account</h4><p>Go to broker website → Click 口座開設 → Select: NISA account (NISA口座) + Special Tax Account with Withholding (特定口座/源泉徴収あり) → Upload My Number Card + Residence Card → Complete facial verification → Submit. Approval takes 5–10 business days.</p><div class="kyc-note">💡 Always select 特定口座 源泉徴収あり (Special Account with Withholding). This makes the broker handle all tax calculations automatically — no need to file 確定申告 for these gains separately.</div></div></div>
+      <div class="kyc-step"><div class="kyc-num">5</div><div class="kyc-body"><h4>Fund Account &amp; Start NISA SIP</h4><p>Transfer money from your bank via 振替 (bank transfer) or PayPay/Rakuten Pay → Go to 投資信託 section → Search for fund → Select 積立購入 (Regular Purchase) → Set monthly amount (min ¥100) → Choose date → Confirm. Your NISA SIP is now active.</p></div></div>
+      <div class="kyc-step"><div class="kyc-num">6</div><div class="kyc-body"><h4>Invest in India from Japan (Optional)</h4><p>Open NRE/NRO account at SBI India (online via YONO) → Open NRI demat at Zerodha → Use Wise or Revolut to transfer funds from Japan to India → Invest in Indian MFs via Kuvera (accepts Japan NRI) or direct stocks via Zerodha NRI.</p></div></div>
+    </div>
+  </div>
+  <div class="card searchable">
+    <div class="card-title">Best Japan Brokers for Indian NRI Residents</div>
+    <div class="platform-grid">
+      <div class="platform-card"><div class="platform-name">🔵 SBI証券</div><div class="platform-desc">Largest NISA lineup in Japan (2,500+ funds). English support via online chat. Free stock trades. Linked to SBI Bank. Best for beginners wanting NISA SIP.</div><div class="platform-tags"><span class="platform-tag">Most NISA Funds</span><span class="platform-tag">English Support</span><span class="platform-tag">Free Trades</span></div><a class="platform-btn" href="https://www.sbisec.co.jp" target="_blank">SBI証券 →</a></div>
+      <div class="platform-card"><div class="platform-name">🔴 楽天証券</div><div class="platform-desc">Earn Rakuten Points on investments. Best UI/UX. Linked to Rakuten Card (extra 0.5–1% on NISA). Wide ETF selection. English available via help pages.</div><div class="platform-tags"><span class="platform-tag">Rakuten Points</span><span class="platform-tag">Best UI</span><span class="platform-tag">Card Bonus</span></div><a class="platform-btn" href="https://www.rakuten-sec.co.jp" target="_blank">楽天証券 →</a></div>
+      <div class="platform-card"><div class="platform-name">🟠 マネックス証券</div><div class="platform-desc">Best for US stocks (NASDAQ, NYSE). Good research. dポイント compatible. English support. Best if you want Japan + US stocks together.</div><div class="platform-tags"><span class="platform-tag">US Stocks Best</span><span class="platform-tag">Research Tools</span><span class="platform-tag">English</span></div><a class="platform-btn" href="https://www.monex.co.jp" target="_blank">マネックス →</a></div>
+    </div>
+  </div>
+</div>
+</div></div>
+
+<div class="panel" id="tab-9"><div class="content-wrap">
+<div class="section-hero">
+  <div class="section-hero-icon">💸</div>
+  <div>
+    <div class="section-hero-title">Money Remittance Guide</div>
+    <div class="section-hero-sub">Best apps to send money abroad · JPY→INR · USD→INR · Fees · Exchange rates · Referral offers</div>
+  </div>
+</div>
+
+<div class="info-alert amber searchable">
+  <span class="icon">🎁</span>
+  <div class="body"><strong>Referral Bonus:</strong> Using the links below benefits you with special first-transfer rates, fee waivers, or cashback — at no extra cost. Thank you for supporting this tool!</div>
+</div>
+
+<!-- WHY IT MATTERS -->
+<div class="card searchable">
+  <div class="card-title">Why Remittance Platform Choice Matters</div>
+  <p style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:16px">
+    When sending ₹1,00,000 worth of yen from Japan to India, the platform you choose can make a difference of <strong style="color:var(--text)">₹1,500–₹4,000</strong> in a single transfer. Over a year of regular remittances, this adds up to <strong style="color:var(--text)">₹15,000–₹40,000+</strong>. The key factors are: (1) exchange rate markup over mid-market rate, (2) flat/percentage fees, (3) transfer speed, and (4) receiving limits.
+  </p>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Bank Markup (typical)</div><div class="kpi-val">2–4%</div><div class="kpi-note">Hidden in exchange rate</div></div>
+    <div class="kpi"><div class="kpi-label">Wise Markup</div><div class="kpi-val">0.3–0.6%</div><div class="kpi-note">Mid-market rate + small fee</div></div>
+    <div class="kpi"><div class="kpi-label">Revolut Markup</div><div class="kpi-val">0–1%</div><div class="kpi-note">Free weekday, small fee weekend</div></div>
+    <div class="kpi"><div class="kpi-label">Savings vs Bank</div><div class="kpi-val">₹2–4K</div><div class="kpi-note">Per ₹1 lakh transferred</div></div>
+  </div>
+  <div class="note-box"><strong>Mid-Market Rate:</strong> The "real" exchange rate you see on Google or XE.com. Banks and most money transfer services add a markup above this rate — that markup is their hidden profit. Wise uses the mid-market rate (the fairest). Always compare the <em>total amount received</em> rather than just the advertised rate.</div>
+</div>
+
+<!-- PLATFORM CARDS - DETAILED -->
+<div class="card searchable">
+  <div class="card-title">Top Remittance Platforms — Detailed Comparison</div>
+
+  <!-- WISE -->
+  <div style="background:var(--card2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:20px;margin-bottom:14px;transition:border-color .2s" onmouseover="this.style.borderColor='var(--burn2)'" onmouseout="this.style.borderColor='var(--border)'">
+    <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:26px">💚</span>
+          <div>
+            <div style="font-size:16px;font-weight:700;color:var(--text)">Wise (formerly TransferWise)</div>
+            <div style="font-size:11px;color:var(--text3)">Best overall for transparent, low-cost transfers</div>
+          </div>
+          <span class="badge badge-green" style="margin-left:auto">⭐ Best Value</span>
+        </div>
+        <p style="font-size:12.5px;color:var(--text2);line-height:1.75;margin-bottom:12px">Wise uses the <strong style="color:var(--text)">real mid-market exchange rate</strong> (same as Google) and charges a small transparent fee (0.3–0.6%). No hidden markup in the exchange rate — what you see is what you get. Over 16 million customers globally. Also offers a multi-currency account (Wise Account) useful for NRIs juggling JPY, USD, and INR.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;font-size:12px">
+          <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);border-radius:6px;padding:8px 10px">
+            <div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Exchange Rate</div>
+            <div style="color:var(--green2);font-weight:700">Mid-market (0% markup)</div>
+          </div>
+          <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.15);border-radius:6px;padding:8px 10px">
+            <div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Fees (JPY→INR)</div>
+            <div style="color:var(--green2);font-weight:700">~0.5% + ¥500 flat</div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:8px 10px">
+            <div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Transfer Speed</div>
+            <div style="color:var(--text);font-weight:600">1–2 business days</div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:8px 10px">
+            <div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Max per Transfer</div>
+            <div style="color:var(--text);font-weight:600">Up to $1M (varies)</div>
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:10px;font-weight:700;color:var(--burn2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Key Features</div>
+          <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:4px">
+            <li style="font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px"><span style="color:var(--green2);flex-shrink:0">✓</span> Multi-currency Wise Account — hold JPY, USD, INR, GBP, EUR simultaneously</li>
+            <li style="font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px"><span style="color:var(--green2);flex-shrink:0">✓</span> Wise Debit Card — spend abroad at mid-market rate (great for India trips)</li>
+            <li style="font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px"><span style="color:var(--green2);flex-shrink:0">✓</span> Rate lock — fix exchange rate up to 48 hours in advance</li>
+            <li style="font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px"><span style="color:var(--green2);flex-shrink:0">✓</span> Instant transfers to some India banks (IMPS)</li>
+            <li style="font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px"><span style="color:var(--green2);flex-shrink:0">✓</span> FSCS/FCA regulated (UK). Licensed in Japan, India, EU, US</li>
+            <li style="font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px"><span style="color:var(--amber2);flex-shrink:0">✗</span> No cash pickup option — bank transfer only</li>
+          </ul>
+        </div>
+        <div style="background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.2);border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--gold2)">
+          🎁 <strong>Referral Offer:</strong> Your first transfer is fee-free using Vilfin's referral link (up to a certain amount). Sign up via the button below to activate the offer automatically.
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">
+        <a href="https://wise.com/invite/ihpc/vilfinm" target="_blank" class="platform-btn" style="white-space:nowrap">💚 Join Wise →</a>
+        <div style="font-size:10px;color:var(--text3);text-align:center;max-width:130px">First transfer fee-free with referral</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVOLUT -->
+  <div style="background:var(--card2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:20px;margin-bottom:14px;transition:border-color .2s" onmouseover="this.style.borderColor='var(--burn2)'" onmouseout="this.style.borderColor='var(--border)'">
+    <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:26px">🌍</span>
+          <div>
+            <div style="font-size:16px;font-weight:700;color:var(--text)">Revolut</div>
+            <div style="font-size:11px;color:var(--text3)">Best all-in-one fintech — 70M+ users worldwide</div>
+          </div>
+          <span class="badge badge-blue" style="margin-left:auto">🏆 Most Features</span>
+        </div>
+        <p style="font-size:12.5px;color:var(--text2);line-height:1.75;margin-bottom:12px">Revolut is more than a remittance app — it's a full digital bank available in 40+ countries. Free weekday transfers at interbank rate (market rate), small 0.5% fee on weekends when markets are closed. The <strong style="color:var(--text)">Revolut Standard plan is free</strong> and covers most NRI needs. Metal/Premium plans unlock higher limits and cashback.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;font-size:12px">
+          <div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:6px;padding:8px 10px">
+            <div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Weekday Rate</div>
+            <div style="color:#60a5fa;font-weight:700">Interbank (0% markup)</div>
+          </div>
+          <div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:6px;padding:8px 10px">
+            <div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Weekend Fee</div>
+            <div style="color:#60a5fa;font-weight:700">+0.5% surcharge</div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:8px 10px">
+            <div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Transfer Speed</div>
+            <div style="color:var(--text);font-weight:600">Instant to 2 days</div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:8px 10px">
+            <div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Monthly Free Limit</div>
+            <div style="color:var(--text);font-weight:600">£1,000 (Standard)</div>
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:10px;font-weight:700;color:var(--burn2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Key Features</div>
+          <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:4px">
+            <li style="font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px"><span style="color:var(--green2);flex-shrink:0">✓</span> Hold 30+ currencies in one account — JPY, INR, USD, EUR all in one wallet</li>
+            <li style="font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px"><span style="color:var(--green2);flex-shrink:0">✓</span> Revolut Card — spend in India at excellent exchange rates, no foreign transaction fees</li>
+            <li style="font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px"><span style="color:var(--green2);flex-shrink:0">✓</span> Free Standard plan — no monthly fee for basic remittance needs</li>
+            <li style="font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px"><span style="color:var(--green2);flex-shrink:0">✓</span> Stocks, crypto, savings vaults all in one app</li>
+            <li style="font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px"><span style="color:var(--green2);flex-shrink:0">✓</span> Send to 160+ countries. Available in Japan since 2020.</li>
+            <li style="font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px"><span style="color:var(--amber2);flex-shrink:0">✗</span> Weekend rate slightly worse. Monthly limits on free plan.</li>
+          </ul>
+        </div>
+        <div style="background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.2);border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--gold2)">
+          🎁 <strong>Referral Offer:</strong> Sign up via Vilfin's link and get a premium Revolut card for free + exclusive signup rewards. Code: <code style="background:rgba(192,57,11,.15);color:var(--burn3);padding:2px 6px;border-radius:4px">vilfingeorge!APR1-26-AR-JP-H1</code>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">
+        <a href="https://revolut.com/referral/?referral-code=vilfingeorge!APR1-26-AR-JP-H1&geo-redirect" target="_blank" class="platform-btn" style="white-space:nowrap">🌍 Join Revolut →</a>
+        <div style="font-size:10px;color:var(--text3);text-align:center;max-width:130px">Free card + signup bonus</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INSTAREM -->
+  <div style="background:var(--card2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:20px;margin-bottom:14px;transition:border-color .2s" onmouseover="this.style.borderColor='var(--burn2)'" onmouseout="this.style.borderColor='var(--border)'">
+    <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:26px">⚡</span>
+          <div>
+            <div style="font-size:16px;font-weight:700;color:var(--text)">Instarem</div>
+            <div style="font-size:11px;color:var(--text3)">Best for Asia corridors — JPY→INR, SGD→INR</div>
+          </div>
+          <span class="badge badge-amber" style="margin-left:auto">🇯🇵 Asia Focus</span>
+        </div>
+        <p style="font-size:12.5px;color:var(--text2);line-height:1.75;margin-bottom:12px">Instarem is headquartered in Singapore and has particularly strong rates for Asian currency corridors including <strong style="color:var(--text)">JPY→INR</strong>. Competitive exchange rates and low fees. Earn InstaPoints on every transfer — redeemable for fee discounts. Good for regular Japan-to-India remittances.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;font-size:12px">
+          <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:6px;padding:8px 10px">
+            <div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Rate Markup</div>
+            <div style="color:var(--amber2);font-weight:700">~0.3–0.8%</div>
+          </div>
+          <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:6px;padding:8px 10px">
+            <div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">First Transfer</div>
+            <div style="color:var(--amber2);font-weight:700">Special rate offer</div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:8px 10px">
+            <div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Speed</div>
+            <div style="color:var(--text);font-weight:600">Same day to 2 days</div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:6px;padding:8px 10px">
+            <div style="color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">InstaPoints</div>
+            <div style="color:var(--text);font-weight:600">Earn & redeem</div>
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:10px;font-weight:700;color:var(--burn2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Key Features</div>
+          <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:4px">
+            <li style="font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px"><span style="color:var(--green2);flex-shrink:0">✓</span> Strong JPY→INR and SGD→INR rates — competitive for Asia corridors</li>
+            <li style="font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px"><span style="color:var(--green2);flex-shrink:0">✓</span> InstaPoints rewards — earn on every transfer, redeem for discounts</li>
+            <li style="font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px"><span style="color:var(--green2);flex-shrink:0">✓</span> Licensed by MAS (Singapore), RBI (India), FCA (UK), FinCEN (US)</li>
+            <li style="font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px"><span style="color:var(--green2);flex-shrink:0">✓</span> Amaze Card — spend globally at Instarem rates</li>
+            <li style="font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px"><span style="color:var(--amber2);flex-shrink:0">~</span> Rates vary by corridor — always compare before sending</li>
+          </ul>
+        </div>
+        <div style="background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.2);border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--gold2)">
+          🎁 <strong>Referral Offer:</strong> First transfer at a special promotional rate. Use code: <code style="background:rgba(192,57,11,.15);color:var(--burn3);padding:2px 6px;border-radius:4px">cWkMb3</code>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">
+        <a href="https://referral-link.onelink.me/gbf1/a43c48ca?deep_link_sub1=referral&deep_link_value=cWkMb3" target="_blank" class="platform-btn" style="white-space:nowrap">⚡ Join Instarem →</a>
+        <div style="font-size:10px;color:var(--text3);text-align:center;max-width:130px">Code: cWkMb3 · Special rate</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPARISON TABLE -->
+<div class="card searchable">
+  <div class="card-title">Side-by-Side Comparison — All Platforms</div>
+  <div class="compare-matrix">
+    <table>
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>💚 Wise</th>
+          <th>🌍 Revolut</th>
+          <th>⚡ Instarem</th>
+          <th>🏦 Bank Transfer</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Exchange Rate</td><td class="cm-good">Mid-market (0%)</td><td class="cm-good">Interbank (0% weekday)</td><td class="cm-mid">~0.3–0.8% markup</td><td class="cm-bad">1–4% markup</td></tr>
+        <tr><td>Weekend Rate</td><td class="cm-good">Same (no surcharge)</td><td class="cm-mid">+0.5% surcharge</td><td class="cm-good">Same rate</td><td class="cm-bad">Same bad rate</td></tr>
+        <tr><td>Flat Fee</td><td class="cm-mid">~¥500 + 0.5%</td><td class="cm-good">Free (Standard plan)</td><td class="cm-mid">Small flat fee</td><td class="cm-bad">¥2,500–5,000</td></tr>
+        <tr><td>Speed JPY→INR</td><td class="cm-good">1–2 days</td><td class="cm-good">Instant–2 days</td><td class="cm-good">Same day–2 days</td><td class="cm-mid">2–5 days</td></tr>
+        <tr><td>Multi-currency Account</td><td class="cm-good">Yes (30+ currencies)</td><td class="cm-good">Yes (30+ currencies)</td><td class="cm-mid">Limited</td><td class="cm-bad">No</td></tr>
+        <tr><td>Debit Card</td><td class="cm-good">Yes (Wise Card)</td><td class="cm-good">Yes (Revolut Card)</td><td class="cm-good">Yes (Amaze Card)</td><td class="cm-na">N/A</td></tr>
+        <tr><td>Rewards / Cashback</td><td class="cm-na">None</td><td class="cm-good">Cashback on Metal plan</td><td class="cm-good">InstaPoints</td><td class="cm-na">None</td></tr>
+        <tr><td>Japan Support</td><td class="cm-good">Full (JPY supported)</td><td class="cm-good">Full (available in Japan)</td><td class="cm-good">Full (strong JPY)</td><td class="cm-good">Full (your main bank)</td></tr>
+        <tr><td>India NEFT/IMPS</td><td class="cm-good">Yes (IMPS available)</td><td class="cm-good">Yes (via partner banks)</td><td class="cm-good">Yes</td><td class="cm-mid">SWIFT only (NEFT rare)</td></tr>
+        <tr><td>NRE Account Credit</td><td class="cm-good">Yes</td><td class="cm-good">Yes</td><td class="cm-good">Yes</td><td class="cm-good">Yes</td></tr>
+        <tr><td>Referral Bonus</td><td class="cm-good">Fee-free 1st transfer</td><td class="cm-good">Free card + rewards</td><td class="cm-good">Special 1st rate</td><td class="cm-na">None</td></tr>
+        <tr><td>Best For</td><td>Transparency, large amounts</td><td>Regular transfers, travel card</td><td>JPY→INR, Asia</td><td>Convenience only</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- HOW TO SEND MONEY STEP BY STEP -->
+<div class="card searchable">
+  <div class="card-title">How to Send Money Japan → India (Step by Step)</div>
+  <div class="kyc-flow">
+    <div class="kyc-step">
+      <div class="kyc-num">1</div>
+      <div class="kyc-body">
+        <h4>Sign Up on Your Chosen Platform</h4>
+        <p>Download the app (Wise/Revolut/Instarem) → Sign up with email → Verify identity (passport/Residence Card photo + selfie). One-time process. Takes 5–15 minutes. Use referral links above for bonus offers.</p>
+      </div>
+    </div>
+    <div class="kyc-step">
+      <div class="kyc-num">2</div>
+      <div class="kyc-body">
+        <h4>Complete Identity Verification (KYC)</h4>
+        <p>Upload your <strong>My Number Card</strong> or <strong>Residence Card</strong> (在留カード) + passport photo page. Take a live selfie for liveness check. Verification usually instant or within a few hours. Required by Japan financial regulations for all remittance services.</p>
+        <div class="kyc-docs">
+          <span class="doc-pill">🛂 Passport</span>
+          <span class="doc-pill">📋 在留カード or My Number</span>
+          <span class="doc-pill">📸 Selfie</span>
+        </div>
+      </div>
+    </div>
+    <div class="kyc-step">
+      <div class="kyc-num">3</div>
+      <div class="kyc-body">
+        <h4>Add India Bank Account (Recipient)</h4>
+        <p>Add your Indian NRE or NRO bank account as recipient: Enter <strong>IFSC code</strong> (found on your cheque book or bank app) + <strong>Account Number</strong> + Account holder name exactly as registered with the bank. Double-check — wrong IFSC/account number can cause delays or misdirected transfers.</p>
+        <div class="kyc-note">💡 For NRE account: Make sure you state the purpose as "Family Maintenance" or "Savings" (not salary/business income) to keep it FEMA compliant. Your remittance receipt is important for NRE account documentation.</div>
+      </div>
+    </div>
+    <div class="kyc-step">
+      <div class="kyc-num">4</div>
+      <div class="kyc-body">
+        <h4>Enter Amount &amp; Compare Rate</h4>
+        <p>Enter the amount in JPY or INR → The platform shows you: (a) exchange rate, (b) fees, (c) total INR the recipient gets, (d) estimated arrival time. <strong>Always check the "total received" amount</strong> — not just the headline rate. Compare this number across platforms before transferring.</p>
+      </div>
+    </div>
+    <div class="kyc-step">
+      <div class="kyc-num">5</div>
+      <div class="kyc-body">
+        <h4>Fund the Transfer (Pay in JPY)</h4>
+        <p>Link your Japanese bank account via domestic bank transfer (振込). Or use a debit card (higher fees). Wise and Revolut also support 銀行振込 (bank wire) from most Japanese banks. Money is held by the platform until the outgoing transfer is processed.</p>
+      </div>
+    </div>
+    <div class="kyc-step">
+      <div class="kyc-num">6</div>
+      <div class="kyc-body">
+        <h4>Track &amp; Confirm Receipt</h4>
+        <p>All platforms provide real-time transfer tracking. You'll receive email/push notification when money is sent and when it arrives. Average: Wise 1–2 days, Revolut instant–2 days, Instarem same day–2 days. Keep the transfer confirmation for your tax records (important for 確定申告 and NRE account).</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TIPS & BEST PRACTICES -->
+<div class="card searchable">
+  <div class="card-title">Pro Tips — Get the Best Rate Every Time</div>
+  <div class="info-card-grid">
+    <div class="info-card">
+      <span class="info-card-icon">📅</span>
+      <div class="info-card-title">Send on Weekdays</div>
+      <div class="info-card-body">Currency markets close on weekends. Revolut charges +0.5% weekend surcharge. Wise and Instarem maintain rates but liquidity is lower. Best time: Monday to Thursday during Tokyo market hours (9 AM–3 PM JST) when JPY rates are most active and competitive.</div>
+    </div>
+    <div class="info-card">
+      <span class="info-card-icon">📊</span>
+      <div class="info-card-title">Set Rate Alerts</div>
+      <div class="info-card-body">Wise and Revolut allow you to set rate alerts — get notified when JPY→INR hits your target rate. Useful if you're not in a hurry. JPY has been volatile (115–160 range vs INR 0.55–0.75). A 5% better rate on ₹5L transfer = ₹25,000 extra.</div>
+    </div>
+    <div class="info-card">
+      <span class="info-card-icon">💰</span>
+      <div class="info-card-title">Batch Transfers</div>
+      <div class="info-card-body">Flat fees are constant per transfer (e.g. ¥500 on Wise). If you send ¥50,000 per month, consider sending ¥1,50,000 every 3 months to pay the flat fee only once. Reduces fee impact from 1% to 0.33% of transfer amount.</div>
+    </div>
+    <div class="info-card">
+      <span class="info-card-icon">🎁</span>
+      <div class="info-card-title">Use All Referral Bonuses</div>
+      <div class="info-card-body">You can have accounts on all three platforms simultaneously. Use Wise referral for first transfer (fee-free), Revolut for the free card + rewards, Instarem for the InstaPoints. Then pick the best rate for each subsequent transfer by comparing all three.</div>
+    </div>
+    <div class="info-card">
+      <span class="info-card-icon">🏛️</span>
+      <div class="info-card-title">NRE vs NRO Account</div>
+      <div class="info-card-body">Always credit international remittances (overseas salary, savings) to your <strong>NRE account</strong> — interest is tax-free in India and fully repatriable. NRO account is for India-earned income (rent, dividends). Mixing them can cause FEMA issues.</div>
+    </div>
+    <div class="info-card">
+      <span class="info-card-icon">📋</span>
+      <div class="info-card-title">Keep Records</div>
+      <div class="info-card-body">Save every transfer receipt — you need these for: (1) Japan 確定申告 (to prove source of funds), (2) NRE account documentation (bank may ask), (3) India ITR if you bring money back to India later. Most platforms let you export 12-month PDF history.</div>
+    </div>
+  </div>
+</div>
+
+<!-- CORRIDOR SPECIFIC GUIDE -->
+<div class="card searchable">
+  <div class="card-title">Currency Corridor Guide</div>
+  <div class="tbl-wrap">
+    <table class="tax-table">
+      <thead>
+        <tr><th>Corridor</th><th>Best Platform</th><th>2nd Best</th><th>Typical Rate</th><th>Speed</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="asset-col">🇯🇵 JPY → 🇮🇳 INR</td><td class="good">Wise</td><td>Instarem</td><td>¥1 ≈ ₹0.56–0.62</td><td>1–2 days</td><td>Most relevant for Japan-based NRIs. Compare Wise vs Instarem for this corridor.</td></tr>
+        <tr><td class="asset-col">🇺🇸 USD → 🇮🇳 INR</td><td class="good">Wise</td><td>Revolut</td><td>$1 ≈ ₹83–87</td><td>1–2 days</td><td>Wise dominates USD→INR with lowest total cost. Revolut also excellent for regular transfers.</td></tr>
+        <tr><td class="asset-col">🇬🇧 GBP → 🇮🇳 INR</td><td class="good">Wise</td><td>Revolut</td><td>£1 ≈ ₹107–115</td><td>1–2 days</td><td>Both Wise and Revolut have excellent GBP→INR rates from UK.</td></tr>
+        <tr><td class="asset-col">🇸🇬 SGD → 🇮🇳 INR</td><td class="good">Instarem</td><td>Wise</td><td>S$1 ≈ ₹62–67</td><td>Same day</td><td>Instarem headquartered in Singapore — best SGD corridor rates.</td></tr>
+        <tr><td class="asset-col">🇦🇪 AED → 🇮🇳 INR</td><td class="good">Wise</td><td>Instarem</td><td>AED 1 ≈ ₹22–24</td><td>1–2 days</td><td>UAE-based NRIs: Wise offers excellent AED→INR. No personal income tax in UAE adds to savings.</td></tr>
+        <tr><td class="asset-col">🇪🇺 EUR → 🇮🇳 INR</td><td class="good">Wise</td><td>Revolut</td><td>€1 ≈ ₹90–97</td><td>1–2 days</td><td>Wise dominates EUR corridor. Revolut also good for EU-based senders.</td></tr>
+        <tr><td class="asset-col">🇮🇳 INR → 🇯🇵 JPY</td><td class="warn">Limited</td><td>—</td><td>—</td><td>3–5 days</td><td>Outward remittance from India has RBI limits ($250K/yr LRS). Use Wise or bank SWIFT. Less common direction.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note-box"><strong>Rate Disclaimer:</strong> Exchange rates shown are approximate ranges based on 2024–2025 historical data. Actual rates change every second. Always check the live rate on the platform before transferring. The rates above are for reference and comparison only.</div>
+</div>
+
+<!-- FEMA & COMPLIANCE -->
+<div class="card searchable">
+  <div class="card-title">FEMA Compliance — Important Rules for NRIs</div>
+  <ul class="guide-list">
+    <li><strong>Purpose Code Required:</strong> When crediting money to NRE account, the remittance must state a valid purpose (Family Maintenance, Savings from overseas income, etc.). This is reported in the bank's records. Keep your transfer receipts showing the source.</li>
+    <li><strong>LRS (Liberalised Remittance Scheme):</strong> India residents can remit up to $250,000 per financial year abroad under LRS. NRIs repatriating NRE/FCNR funds have no limit — it's fully repatriable. NRO repatriation limited to $1M/year with CA Form 15CA/15CB.</li>
+    <li><strong>5% TCS on LRS:</strong> From Oct 2023, 5% Tax Collected at Source (TCS) applies on outward remittances from India under LRS above ₹7L/year (except education and medical). Residents sending money abroad will have TCS deducted — claimable as tax credit in ITR.</li>
+    <li><strong>Japan Reporting:</strong> Japan residents must declare all overseas transfers and financial accounts in their 確定申告 if they have overseas financial assets above ¥50M. Ordinary NRI salary remittances are not subject to this — it applies to holdings, not transfers.</li>
+    <li><strong>Keep Receipts:</strong> Wise, Revolut, and Instarem all let you export 12-month transfer history as PDF. Keep these for: India ITR filing, NRE account documentation, Japan tax returns, and potential FEMA queries.</li>
+  </ul>
+</div>
+
+</div></div>
+<!-- ══ END TAB 9 ══ -->
+
+<!-- ══ TAB 10: FAQ & GLOSSARY (always last) ══ -->
+<div class="panel" id="tab-10"><div class="content-wrap">
+<div class="section-hero">
+  <div class="section-hero-icon">❓</div>
+  <div><div class="section-hero-title">FAQ &amp; Glossary</div><div class="section-hero-sub">Common questions · 100+ terms A–Z · Investment concepts explained simply</div></div>
+</div>
+
+<!-- FAQs -->
+<div class="card">
+  <div class="card-title">Frequently Asked Questions</div>
+
+  <div class="faq-item searchable"><div class="faq-q" onclick="toggleFAQ(this)"><span class="faq-q-text">What's the difference between Direct and Regular Mutual Fund plans?</span><span class="faq-arrow">▼</span></div><div class="faq-a"><strong>Direct Plan:</strong> You invest directly — no distributor commission. TER is 0.5–1.5% lower. NAV is always higher. Buy via Kuvera, AMC website, INDmoney. <strong>Regular Plan:</strong> Bought through banks/advisors/agents. Identical portfolio — just higher cost due to distributor commission (trail fee). Over 20 years, 1% TER difference on ₹10L = ~₹15-20L less corpus. <strong>Always choose Direct unless your advisor genuinely adds value beyond the commission cost.</strong></div></div>
+
+  <div class="faq-item searchable"><div class="faq-q" onclick="toggleFAQ(this)"><span class="faq-q-text">SIP vs Lumpsum — which is better for me?</span><span class="faq-arrow">▼</span></div><div class="faq-a"><strong>SIP:</strong> Invest fixed amount monthly regardless of market. Rupee-cost averaging — you buy more when markets fall. Removes timing stress. Best for salaried investors. <strong>Lumpsum:</strong> Deploy all money at once. Better if Nifty PE is historically low (&lt;18×). Worse if markets are at all-time highs. <strong>Best strategy:</strong> Park lumpsum in liquid fund → Set up STP to equity over 6–12 months. This gives benefits of both. Step-up SIP (increase 10%/yr) is the most powerful long-term wealth strategy.</div></div>
+
+  <div class="faq-item searchable"><div class="faq-q" onclick="toggleFAQ(this)"><span class="faq-q-text">As an NRI in Japan, can I invest in Indian Mutual Funds?</span><span class="faq-arrow">▼</span></div><div class="faq-a">Yes. Most Indian AMCs accept NRI investments from Japan residents. You need: NRE/NRO bank account in India, PAN card, NRI KYC (done online). Platforms like <strong>Kuvera</strong> and direct AMC websites accept Japan NRI investors. TDS is deducted at source (10% LTCG equity, 30% debt). You can claim foreign tax credit in Japan's 確定申告 for this TDS. <em>Exception: US/Canada NRIs face FATCA restrictions — not applicable for Japan.</em></div></div>
+
+  <div class="faq-item searchable"><div class="faq-q" onclick="toggleFAQ(this)"><span class="faq-q-text">How do I open a NISA account as an Indian living in Japan?</span><span class="faq-arrow">▼</span></div><div class="faq-a">NISA is available to <strong>all Japan residents</strong> including Indians on work/student visas. Requirements: My Number Card (マイナンバーカード) + Residence Card (在留カード) + Japanese bank account. Apply online at SBI証券, 楽天証券, or マネックス証券. Application takes 10 minutes online; approval in 5–10 business days. Select: NISA口座 (NISA Account) + 特定口座 源泉徴収あり. Start SIP from ¥100/month. All gains are 100% tax-free.</div></div>
+
+  <div class="faq-item searchable"><div class="faq-q" onclick="toggleFAQ(this)"><span class="faq-q-text">What is the ₹1.25 Lakh LTCG exemption and how do I use it?</span><span class="faq-arrow">▼</span></div><div class="faq-a">Section 112A gives a ₹1.25 Lakh exemption annually on LTCG from equity shares + equity MF + equity ETF (combined). <strong>Tax Harvesting strategy:</strong> Every year in March, sell equity investments with LTCG up to ₹1.25L and immediately rebuy the same fund. This books tax-free gains and resets your cost basis (reduces future tax liability). Example: You have ₹50L of Nifty ETF with ₹3L LTCG. Sell enough to book ₹1.25L LTCG (tax = ₹0) → Rebuy immediately → New cost basis is higher → Future LTCG is smaller. Repeat annually.</div></div>
+
+  <div class="faq-item searchable"><div class="faq-q" onclick="toggleFAQ(this)"><span class="faq-q-text">Is Digital Gold safe? What happens if PhonePe shuts down?</span><span class="faq-arrow">▼</span></div><div class="faq-a">Digital Gold (PhonePe, Paytm, Google Pay) is backed by <strong>physical gold stored in vaults by MMTC-PAMP or SafeGold</strong>. Gold is held in your name, segregated. Risks: (1) Not regulated by SEBI/RBI — no investor protection like MFs. (2) If platform becomes insolvent, gold recovery is legally unclear. (3) Storage fees 0.5–1%/yr erode returns. (4) Buy-sell spread (you buy at higher rate, sell at lower). <strong>Verdict:</strong> Acceptable for small amounts (&lt;₹50,000) via SIP on UPI apps. For larger amounts, always prefer Gold ETF (SEBI regulated) or SGB (RBI backed).</div></div>
+
+  <div class="faq-item searchable"><div class="faq-q" onclick="toggleFAQ(this)"><span class="faq-q-text">I'm in Japan — do I need to declare my Indian investments in 確定申告?</span><span class="faq-arrow">▼</span></div><div class="faq-a">Yes — Japan taxes worldwide income for all residents. <strong>You must declare:</strong> NRE FD interest (tax-free in India, taxable in Japan), capital gains from Indian stocks/MF, rental income from India property, dividends. <strong>Good news:</strong> You can claim foreign tax credit (外国税額控除) for TDS paid in India — this reduces your Japan tax so you don't pay double. File Form 外国税額控除に関する明細書 with your 確定申告. NISA investments in Japan never need to be declared — they are always tax-free.</div></div>
+
+  <div class="faq-item searchable"><div class="faq-q" onclick="toggleFAQ(this)"><span class="faq-q-text">What ITR form should I use as an NRI with Indian stocks and MF?</span><span class="faq-arrow">▼</span></div><div class="faq-a">Use <strong>ITR-2</strong> if: You have capital gains from stocks/MF/property + no business income. Use <strong>ITR-3</strong> if: You also trade F&O (futures and options are business income). In ITR-2, select "Non-Resident" status. Fill Schedule CG (Capital Gains) with STCG/LTCG amounts. Fill Schedule FA if you have foreign assets to declare (as a non-resident, you don't need to declare overseas assets in Indian ITR). Use platforms: Quicko (best for stock/MF auto-import), ClearTax NRI, or TaxBuddy. File by 31 July (AY 2026–27). Filing late (after 31 July) loses your right to carry forward capital losses.</div></div>
+
+  <div class="faq-item searchable"><div class="faq-q" onclick="toggleFAQ(this)"><span class="faq-q-text">What is Tracking Error and why does it matter for ETFs?</span><span class="faq-arrow">▼</span></div><div class="faq-a">Tracking Error is the <strong>difference between the ETF's actual returns and its benchmark index returns</strong>. An ETF tracking Nifty 50 should ideally return exactly what Nifty 50 returns. But due to TER, cash drag from dividend collection, and rebalancing costs, the ETF may return slightly less. Lower tracking error = better ETF quality. <strong>Good: &lt;0.1%</strong> (Nippon India Nifty 50 ETF TE ~0.06%). <strong>Acceptable: 0.1–0.3%</strong>. <strong>Poor: &gt;0.5%</strong>. When comparing two ETFs tracking the same index, choose the one with lower TER + lower tracking error. In Japan, eMAXIS Slim funds have tracking errors of 0.01–0.05% — world-class efficiency.</div></div>
+
+  <div class="faq-item searchable"><div class="faq-q" onclick="toggleFAQ(this)"><span class="faq-q-text">How do I send money from Japan to India cheaply?</span><span class="faq-arrow">▼</span></div><div class="faq-a"><strong>Best options:</strong> (1) <strong>Wise (TransferWise)</strong> — best exchange rate (mid-market rate), lowest fees (~0.3–0.5%), arrives 1–2 days. Best for most transfers. (2) <strong>Revolut</strong> — excellent for regular transfers, good rates, international bank account. (3) <strong>Instarem</strong> — competitive rates, good for JPY→INR. (4) <strong>Your bank's overseas remittance</strong> — convenient but expensive (often 1–3% markup + fixed fees). For NRE account credit, make sure the remittance is from your overseas salary/income account to be FEMA compliant. Keep remittance receipts — needed for NRE account tax documentation.</div></div>
+</div>
+
+<!-- GLOSSARY -->
+<div class="card">
+  <div class="card-title">Glossary A–Z</div>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px" id="alpha-nav"></div>
+  <div id="glossary-container"></div>
+</div>
+</div></div>
+
+<!-- ══ TAB 9: MONEY REMITTANCE ══ -->
+
+
+<!-- FOOTER -->
+<footer>
+  <strong>Site Owner: Vilfin George</strong>
+  <div class="disclaimer">SEBI Disclaimer: This guide is for educational and informational purposes only. It does not constitute investment advice. Vilfin George is not a SEBI-registered investment advisor. All investments are subject to market risks. Past performance is not indicative of future results. Please consult your financial advisor before investing. Tax information is indicative — consult a CA for personalised advice.</div>
+  <div style="margin-top:10px;font-size:10px;color:rgba(255,255,255,.2)">Multi Asset Screener v8.0 — User Guide | Vilfin George | Updated: April 2026</div>
+</footer>
+
+<script>
+// ── TAB SWITCHING ──
+function switchTab(idx, btn) {
+  document.querySelectorAll('.panel').forEach((p,i) => p.classList.toggle('active', i === idx));
+  document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  btn.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+  if (idx === 8 && !document.getElementById('glossary-container').children.length) buildGlossary();
+}
+
+// ── RESIDENT SUB-TABS ──
+function switchResident(idx, btn) {
+  document.querySelectorAll('.rpanel').forEach((p,i) => p.classList.toggle('active', i === idx));
+  document.querySelectorAll('.rtab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── FAQ TOGGLE ──
+function toggleFAQ(el) {
+  const item = el.parentElement;
+  const wasOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(f => f.classList.remove('open'));
+  if (!wasOpen) item.classList.add('open');
+}
+
+// ── SEARCH ──
+let searchTimeout;
+document.getElementById('search-input').addEventListener('input', function() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => doSearch(this.value), 180);
+});
+
+function doSearch(q) {
+  const clear = document.getElementById('search-clear');
+  const countEl = document.getElementById('search-count');
+  clear.style.display = q.trim() ? 'block' : 'none';
+
+  if (!q.trim()) {
+    document.querySelectorAll('.searchable').forEach(el => {
+      el.classList.remove('hidden');
+      cleanHL(el);
+    });
+    countEl.textContent = '';
+    return;
+  }
+
+  const ql = q.trim().toLowerCase();
+  let found = 0;
+
+  document.querySelectorAll('.searchable').forEach(el => {
+    cleanHL(el);
+    const text = el.textContent.toLowerCase();
+    if (text.includes(ql)) {
+      el.classList.remove('hidden');
+      found++;
+      try { highlightEl(el, q); } catch(e) {}
+    } else {
+      el.classList.add('hidden');
+    }
+  });
+
+  if (found > 0) {
+    countEl.textContent = `${found} result${found !== 1 ? 's' : ''} found`;
+    const first = document.querySelector('.searchable:not(.hidden)');
+    if (first) first.scrollIntoView({behavior:'smooth', block:'nearest'});
+  } else {
+    countEl.textContent = 'No results found — try a different term';
+  }
+}
+
+function cleanHL(el) {
+  const spans = el.querySelectorAll('.hl');
+  spans.forEach(s => {
+    const parent = s.parentNode;
+    if (parent) { parent.replaceChild(document.createTextNode(s.textContent), s); parent.normalize(); }
+  });
+}
+
+function highlightEl(el, q) {
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(`(${escaped})`, 'gi');
+  const walk = (node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      if (!node.textContent.toLowerCase().includes(q.toLowerCase())) return;
+      const parent = node.parentElement;
+      if (!parent || ['SCRIPT','STYLE','INPUT'].includes(parent.tagName)) return;
+      if (parent.classList.contains('hl')) return;
+      const fragment = document.createDocumentFragment();
+      let lastIdx = 0;
+      let match;
+      const re = new RegExp(`(${escaped})`, 'gi');
+      while ((match = re.exec(node.textContent)) !== null) {
+        if (match.index > lastIdx) fragment.appendChild(document.createTextNode(node.textContent.slice(lastIdx, match.index)));
+        const span = document.createElement('span');
+        span.className = 'hl';
+        span.textContent = match[1];
+        fragment.appendChild(span);
+        lastIdx = match.index + match[1].length;
+      }
+      if (lastIdx < node.textContent.length) fragment.appendChild(document.createTextNode(node.textContent.slice(lastIdx)));
+      parent.replaceChild(fragment, node);
+    } else if (node.nodeType === Node.ELEMENT_NODE && !['SCRIPT','STYLE'].includes(node.tagName)) {
+      Array.from(node.childNodes).forEach(walk);
+    }
+  };
+  Array.from(el.childNodes).forEach(walk);
+}
+
+function clearSearch() {
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-clear').style.display = 'none';
+  document.getElementById('search-count').textContent = '';
+  document.querySelectorAll('.searchable').forEach(el => { el.classList.remove('hidden'); cleanHL(el); });
+}
+
+// ── GLOSSARY DATA ──
+const GLOSSARY = [
+  {t:"ADX",d:"Average Directional Index (0-100). Measures trend strength, not direction. >25 = strong trend; <20 = choppy/no trend. Used with +DI/-DI for direction.",c:"technical"},
+  {t:"Alpha",d:"Excess return above benchmark. Positive alpha = fund manager outperformed. Negative = underperformed. Sustained positive alpha over 3-5Y = genuine skill.",c:"general"},
+  {t:"AMC",d:"Asset Management Company. Manages mutual funds. 44 AMCs in India. Examples: HDFC AMC, Mirae Asset, SBI MF, Nippon India.",c:"general"},
+  {t:"AMFI",d:"Association of Mutual Funds in India. Industry body under SEBI. Publishes daily NAV for all MFs. AMFI Registered Distributor (ARMFD) certification.",c:"general"},
+  {t:"ATH",d:"All-Time High. Highest price ever reached. Stocks near ATH after correction can be strong buys if fundamentals support it.",c:"technical"},
+  {t:"AUM",d:"Assets Under Management. Total market value of all fund investments. Rising AUM = investor confidence. Very large AUM can hurt small/mid cap fund performance.",c:"general"},
+  {t:"Backwardation",d:"Commodity futures price < spot price. Implies tight current supply. Positive roll yield for long holders. Seen during supply crises.",c:"technical"},
+  {t:"Beta",d:"Market sensitivity measure. Beta 1.0 = moves with market. >1 = more volatile. <1 = less volatile. Zero beta = uncorrelated (e.g. gold sometimes).",c:"risk"},
+  {t:"Bollinger Bands",d:"Price band 2 standard deviations around 20-day SMA. Band squeeze = breakout imminent. Price touching upper band in uptrend = strength signal.",c:"technical"},
+  {t:"Book Value",d:"Net worth per share = Total Assets minus Total Liabilities divided by shares. Basis of PB ratio. Below book value can mean undervaluation.",c:"equity"},
+  {t:"CAGR",d:"Compound Annual Growth Rate. Annualised return that accounts for compounding. The only valid way to compare investment returns across different periods.",c:"general"},
+  {t:"CASA Ratio",d:"Current + Savings Account deposits divided by total deposits. Banking sector. CASA >40% = low-cost funding = higher margins = competitive advantage.",c:"equity"},
+  {t:"CNC",d:"Cash and Carry. Delivery-based stock order in India. Holds overnight, not squared off same day. Results in actual share delivery to demat account.",c:"general"},
+  {t:"Contango",d:"Commodity futures price > spot price. Normal for storable commodities. Negative roll yield for ETF investors. Cost of carry drives contango.",c:"technical"},
+  {t:"COT Report",d:"Commitment of Traders. Weekly CFTC report. Shows positions of commercial hedgers vs non-commercial speculators in futures. Used as contrarian indicator.",c:"technical"},
+  {t:"CRISIL",d:"India credit rating agency (S&P subsidiary). Rates MFs (1-5), bonds (AAA to D). CRISIL Rank 1 = top 10th percentile of category over 3 years.",c:"general"},
+  {t:"CKYC",d:"Central KYC Registry. One-time KYC valid for all financial products including MF, demat, insurance. Reduces repeated documentation across institutions.",c:"general"},
+  {t:"D/E Ratio",d:"Debt-to-Equity. Total debt divided by equity. Higher = more financial leverage and risk. Zero debt companies are most resilient to downturns.",c:"risk"},
+  {t:"DCF",d:"Discounted Cash Flow. Intrinsic value = sum of future free cash flows discounted by WACC. Margin of Safety = (DCF Value - Market Price) / DCF Value.",c:"equity"},
+  {t:"Delivery Volume %",d:"Percentage of shares traded with actual delivery vs intraday squaring. High delivery = genuine investment buying. Spike = institutional accumulation signal.",c:"technical"},
+  {t:"DII",d:"Domestic Institutional Investors. Indian MFs, insurance companies, pension funds, banks. Often counter FII selling. Net FII+DII flow drives market direction.",c:"general"},
+  {t:"Dividend Yield",d:"Annual dividend divided by share price x 100. Measures income return. High yield may mean income stock or falling price - verify dividend sustainability.",c:"equity"},
+  {t:"DSCR",d:"Debt Service Coverage Ratio. EBITDA divided by annual debt payments. >1.5 = comfortable. <1.0 = cannot service own debt. Critical for bond issuer analysis.",c:"risk"},
+  {t:"Duration",d:"Modified Duration = % price change per 1% interest rate change. Bond with Duration 4 falls ~4% if rates rise 1%. Match duration to investment horizon.",c:"debt"},
+  {t:"DV01",d:"Dollar Value of 01 (also PVBP). Rupee change in bond value per 1 basis point yield change. Used for risk sizing. Large DV01 = high rate sensitivity.",c:"debt"},
+  {t:"DXY",d:"US Dollar Index. Measures USD strength vs 6 currencies (EUR, JPY, GBP, CAD, SEK, CHF). DXY rising = headwind for gold and commodities priced in USD.",c:"general"},
+  {t:"EBITDA",d:"Earnings Before Interest, Tax, Depreciation, Amortisation. Proxy for operating cash flow. Avoids accounting differences. Used in EV/EBITDA valuation.",c:"equity"},
+  {t:"EMA",d:"Exponential Moving Average. Weighted average giving more weight to recent prices. Faster than SMA. 200 EMA = long-term trend indicator for any asset.",c:"technical"},
+  {t:"EPS",d:"Earnings Per Share. Net Profit divided by Total Shares. TTM EPS = last 12 months. Forward EPS = analyst estimate. EPS growth is the primary driver of stock returns.",c:"equity"},
+  {t:"ETF",d:"Exchange Traded Fund. Basket of securities trading on exchange like a stock. Passive index tracking with very low TER. Requires demat account to purchase.",c:"general"},
+  {t:"EV",d:"Enterprise Value. Market Cap + Total Debt minus Cash. Represents total company value. Used in EV/EBITDA (better than PE for leveraged companies).",c:"equity"},
+  {t:"Exit Load",d:"Redemption fee on MF units sold before a specified time. E.g., 1% if sold within 1 year. Deducted from redemption value, not NAV. Designed to reduce short-term trading.",c:"general"},
+  {t:"FCNR",d:"Foreign Currency Non-Resident Account. FDs in foreign currency (USD, JPY, GBP). Eliminates currency risk. Tax-free in India. Good for NRIs needing foreign currency deposits.",c:"general"},
+  {t:"FEMA",d:"Foreign Exchange Management Act. Governs all NRI investments in India. All NRI investments must be through designated NRE/NRO/FCNR accounts to be FEMA compliant.",c:"general"},
+  {t:"FII / FPI",d:"Foreign Institutional Investor / Foreign Portfolio Investor. Net FII buying = bullish signal for Indian markets and INR. Tracked daily on NSE/BSE websites.",c:"general"},
+  {t:"FOF",d:"Fund of Fund. Mutual fund investing in other funds (usually ETFs). Double TER layer. Gold FOF, International FOF are common. No demat needed but higher total TER.",c:"general"},
+  {t:"Free Cash Flow",d:"Operating Cash Flow minus Capital Expenditure. True cash generating ability. FCF greater than Net Profit = high earnings quality. FCF yield >5% = attractive.",c:"equity"},
+  {t:"G-Sec",d:"Government Securities. Bonds issued by Government of India. Risk-free. Benchmark: 10-year G-Sec yield (~7% in 2025). Basis for all bond yield comparisons.",c:"debt"},
+  {t:"Golden Cross",d:"50-day MA crosses above 200-day MA. Long-term bullish signal. Institutional algorithms often have buy triggers at this event. Lagging indicator.",c:"technical"},
+  {t:"Gross NPA",d:"Non-Performing Asset % - loans unpaid for 90+ days divided by total loans. Bank health metric. <2% = excellent. Rising NPA trend = credit quality deterioration.",c:"risk"},
+  {t:"HTM",d:"Hold to Maturity. Strategy of holding bonds until maturity to earn guaranteed YTM. Eliminates mark-to-market price volatility. Used by banks and conservative investors.",c:"debt"},
+  {t:"ISIN",d:"International Securities Identification Number. 12-character alphanumeric unique identifier for a security globally. Indian ISINs start with IN. Used for demat transactions.",c:"general"},
+  {t:"ITR",d:"Income Tax Return. Annual India tax filing. ITR-2 for capital gains (stocks/MF). ITR-3 for F&O traders. Deadline 31 July. E-verify within 30 days of filing.",c:"general"},
+  {t:"JASSO",d:"Japan Student Services Organization. Provides scholarship-type student loans in Japan at very low interest rates (0.1 to 3% per year).",c:"general"},
+  {t:"JPX",d:"Japan Exchange Group. Parent of Tokyo Stock Exchange (TSE) and Osaka Exchange. Largest exchange group in Japan. Lists approximately 3,900 companies.",c:"general"},
+  {t:"Kakutei Shinkoku",d:"Japan annual income tax return filing (確定申告). Period: February 16 to March 15. Required for overseas income, multiple income sources, or self-employed.",c:"general"},
+  {t:"LTCG",d:"Long-Term Capital Gains. Equity: 12.5% rate after 12 months (Rs 1.25L exempt). Physical Gold: 12.5% after 24 months. Debt MF: slab rate for any holding period.",c:"general"},
+  {t:"LTV",d:"Loan-to-Value Ratio. Loan amount divided by asset value. Gold loans: RBI limits LTV to 75%. Higher LTV = higher risk for lender.",c:"general"},
+  {t:"MACD",d:"Moving Average Convergence Divergence. 12-EMA minus 26-EMA. Signal line = 9-day EMA of MACD. Crossover signals buy or sell. Histogram shows momentum direction.",c:"technical"},
+  {t:"Macaulay Duration",d:"Weighted average time in years to receive all bond cash flows. Bond with Macaulay Duration 3Y means cash flows weighted to 3 years. Related to price sensitivity.",c:"debt"},
+  {t:"MMTC-PAMP",d:"MMTC-PAMP India Pvt Ltd. Joint venture between MMTC (Govt of India) and PAMP SA (Switzerland). India most trusted gold refinery. Powers digital gold on PhonePe, Paytm, Amazon Pay.",c:"general"},
+  {t:"Morningstar",d:"Global investment research firm. Provides star ratings (1-5) for MFs based on risk-adjusted performance vs peers. Also has analyst ratings for select funds.",c:"general"},
+  {t:"NACH",d:"National Automated Clearing House. India electronic mandate system for SIP auto-debit. Set up once per bank account. SIP amount debited automatically on SIP date.",c:"general"},
+  {t:"NAV",d:"Net Asset Value. Daily valuation of MF units = (Fund Assets minus Liabilities) divided by Units. Higher NAV does not mean expensive. Always compare fund returns, not NAV levels.",c:"general"},
+  {t:"NIM",d:"Net Interest Margin. (Interest Income minus Interest Expense) divided by Earning Assets. Core bank profitability metric. India private banks: NIM 3-4.5% is healthy.",c:"equity"},
+  {t:"NISA",d:"Nippon Individual Savings Account (少額投資非課税制度). Japan tax-free investment account. All gains and dividends 100% tax-free. Annual limit 3.6M yen. Lifetime cap 18M yen. Available to all Japan residents.",c:"general"},
+  {t:"NPA",d:"Non-Performing Asset. Loan where borrower has not paid for 90+ days. Net NPA = Gross NPA minus loan loss provisions. PCR = provisioning coverage level.",c:"risk"},
+  {t:"NRE Account",d:"Non-Resident External Account. INR account for NRIs. Interest tax-free in India. Fully repatriable. Fund from overseas salary. Best account for NRI investments in India.",c:"general"},
+  {t:"NRO Account",d:"Non-Resident Ordinary Account. For India-sourced income such as rent or dividends. 30% TDS on interest. Repatriation limited to $1M per year with CA certificate.",c:"general"},
+  {t:"NSE",d:"National Stock Exchange of India. Primary exchange by traded volume. Home of Nifty 50 index. Settles trades on T+1 (next business day) basis.",c:"general"},
+  {t:"Open Interest",d:"Total outstanding unsettled futures contracts. Rising OI + rising price = new longs = strong uptrend. Rising OI + falling price = new shorts = downtrend.",c:"technical"},
+  {t:"OPM",d:"Operating Profit Margin = EBIT divided by Revenue x 100. Rising OPM = pricing power or cost control. Falling OPM = competitive pressure or input cost inflation.",c:"equity"},
+  {t:"PAN",d:"Permanent Account Number. 10-character India tax ID. Mandatory for investments above Rs 50,000. Needed for demat and MF KYC. Get instant e-PAN via income tax portal.",c:"general"},
+  {t:"PB Ratio",d:"Price-to-Book Ratio. Market price divided by book value per share. Key for banks and asset-heavy companies. PB below 1 may indicate undervaluation or poor ROE.",c:"equity"},
+  {t:"PCR",d:"Provision Coverage Ratio. Provisions divided by Gross NPA. Higher PCR (>70%) = bank well-provisioned against bad loans. Lower = NPA cleanup pain ahead.",c:"risk"},
+  {t:"PE Ratio",d:"Price-to-Earnings Ratio. Share price divided by EPS. Most widely used valuation metric. Compare vs historical average and sector average, not in absolute isolation.",c:"equity"},
+  {t:"PIS",d:"Portfolio Investment Scheme. RBI permission for NRIs to invest in Indian stocks. Required by stockbrokers. Bank routes all stock trades through designated PIS account.",c:"general"},
+  {t:"Piotroski Score",d:"Financial health score out of 9. Tests profitability (3), leverage (3), and efficiency (3) signals. Score 7-9 = strong quality. 0-2 = weak. Useful quality screen.",c:"equity"},
+  {t:"PPF",d:"Public Provident Fund. Government-backed 7.1% tax-free savings (FY26). Section 80C deductible. 15-year lock-in. Rs 1.5L per year max. Cannot be opened by NRIs.",c:"general"},
+  {t:"ROCE",d:"Return on Capital Employed. EBIT divided by (Total Assets minus Current Liabilities). Measures efficiency of all capital deployed. ROCE > WACC = value creation.",c:"equity"},
+  {t:"ROE",d:"Return on Equity. Net Profit divided by Shareholders Equity x 100. ROE >15% consistently = quality compounder. Check for debt-inflated ROE (high D/E ratio).",c:"equity"},
+  {t:"Roll Yield",d:"Return from rolling expiring futures contracts to next month. Contango = negative roll yield (drag on returns). Backwardation = positive roll yield (gain).",c:"technical"},
+  {t:"RSI",d:"Relative Strength Index (0-100). >70 = overbought. <30 = oversold. 40-60 = neutral. In strong trends, RSI can remain extreme for extended periods.",c:"technical"},
+  {t:"SEBI",d:"Securities and Exchange Board of India. Regulates Indian capital markets: stocks, MFs, ETFs, REITs, AIFs, PMS. Investor protection regulatory body.",c:"general"},
+  {t:"SGB",d:"Sovereign Gold Bond. RBI-issued 8-year bonds backed by gold. 2.5% per year additional interest. Capital gains at 8-year maturity are fully tax-exempt. Best gold investment vehicle.",c:"general"},
+  {t:"Sharpe Ratio",d:"Risk-adjusted return = (Return minus Risk-Free Rate) divided by Standard Deviation. >1 = good. >2 = excellent. Compare only within same asset category.",c:"general"},
+  {t:"SIP",d:"Systematic Investment Plan. Fixed periodic MF investment. Rupee-cost averaging removes timing stress. Step-up SIP (increase 10% per year) = most powerful long-term wealth strategy.",c:"general"},
+  {t:"SMA",d:"Simple Moving Average. Equal weight average over N periods. 20 SMA = short-term trend. 50 SMA = medium-term. 200 SMA = long-term trend separator.",c:"technical"},
+  {t:"Sortino Ratio",d:"Like Sharpe but uses only downside deviation. Better metric for funds that protect capital during downturns while delivering upside.",c:"general"},
+  {t:"STCG",d:"Short-Term Capital Gains. Equity/ETF: 20% for holdings under 12 months. Physical Gold: slab rate for under 24 months. Debt MF: slab rate for any holding period.",c:"general"},
+  {t:"Stochastic",d:"Oscillator (0-100) comparing close to N-period range. >80 = overbought. <20 = oversold. %K crossing %D generates buy/sell signals. Best in ranging markets.",c:"technical"},
+  {t:"Stock-to-Use Ratio",d:"Commodity ending stocks divided by annual consumption. Low = tight supply = bullish price. High = abundance = bearish price. USDA reports monthly for grains.",c:"technical"},
+  {t:"STT",d:"Securities Transaction Tax. India. Equity delivery: 0.1%. Intraday: 0.025%. F&O futures: 0.0625%. Cannot be offset against capital gains. Charged on all NSE/BSE trades.",c:"general"},
+  {t:"STP",d:"Systematic Transfer Plan. Transfers fixed amount from one fund to another periodically. Common use: park lumpsum in liquid fund, then STP to equity over 6-12 months.",c:"general"},
+  {t:"SWP",d:"Systematic Withdrawal Plan. Withdraw fixed amount monthly from MF corpus. Better than FD for retirement income as the corpus continues growing.",c:"general"},
+  {t:"TDS",d:"Tax Deducted at Source. Deducted by payer before crediting income. NRI equity LTCG: 10%. Debt MF: 30%. NRO FD: 30%. Refundable if actual tax is less than TDS deducted.",c:"general"},
+  {t:"TER",d:"Total Expense Ratio. Annual % charged by MF on AUM. Deducted daily from NAV. Direct plans 0.5-1.5% lower than Regular. 1% TER difference = 15-25% less corpus over 20 years.",c:"general"},
+  {t:"Tokutei Koza",d:"Special securities account in Japan (特定口座). Broker handles all tax calculations and withholding automatically. Always choose the gensencho-ari (with withholding) variant.",c:"general"},
+  {t:"Tracking Error",d:"Standard deviation of return difference between ETF and its benchmark index. Lower = better replication. India Nifty ETFs: 0.04-0.2%. Japan eMAXIS Slim: 0.01-0.05%.",c:"technical"},
+  {t:"TRC",d:"Tax Residency Certificate. Document from your country of residence proving tax residency. Required to claim DTAA reduced TDS rates on Indian income.",c:"general"},
+  {t:"TTM",d:"Trailing Twelve Months. Financial data from the most recent 12-month period. More current than annual report. Used for PE, EPS, and revenue metrics.",c:"general"},
+  {t:"VIX",d:"Volatility Index. US VIX: <15 = calm. 25-35 = elevated fear. >35 = panic. India VIX based on Nifty options. Historically, VIX >35 = good long-term buying opportunity.",c:"risk"},
+  {t:"WACC",d:"Weighted Average Cost of Capital. Average cost of debt plus equity capital. Used as DCF discount rate. Companies create value when ROCE exceeds WACC.",c:"equity"},
+  {t:"YTD",d:"Year-to-Date. Performance from January 1 of current year to today. Used for within-year comparison. Not useful for evaluating long-term performance.",c:"general"},
+  {t:"YTM",d:"Yield to Maturity. Total annualised return if bond held to maturity with all coupons reinvested. Primary metric for comparing bonds. Always compare YTM, not coupon rate.",c:"debt"},
+  {t:"Z-Spread",d:"Zero-volatility spread. Constant spread over entire risk-free yield curve to discount all bond cash flows to current market price. More precise than simple credit spread.",c:"debt"}
+].sort((a,b) => a.t.localeCompare(b.t));
+
+function buildGlossary() {
+  const container = document.getElementById('glossary-container');
+  const navEl = document.getElementById('alpha-nav');
+  const letters = [...new Set(GLOSSARY.map(g => g.t[0].toUpperCase()))].sort();
+
+  navEl.innerHTML = letters.map(l =>
+    `<button onclick="scrollToLetter('${l}')" style="padding:4px 10px;border-radius:20px;border:1px solid var(--border2);background:var(--card2);color:var(--text3);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'JetBrains Mono',monospace" onmouseover="this.style.borderColor='var(--burn2)';this.style.color='var(--gold2)';this.style.background='rgba(232,84,15,.1)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)';this.style.background='var(--card2)'">${l}</button>`
+  ).join('');
+
+  let html = '';
+  let curLetter = '';
+  GLOSSARY.forEach(g => {
+    const fl = g.t[0].toUpperCase();
+    if (fl !== curLetter) {
+      if (curLetter) html += '</div>';
+      curLetter = fl;
+      html += `<div id="letter-${fl}" style="margin-bottom:18px"><div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--burn2);letter-spacing:2px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">${fl}</div>`;
+    }
+    const badgeMap = {equity:'equity',debt:'debt',risk:'risk',general:'general',technical:'technical'};
+    const badge = g.c && badgeMap[g.c] ? `<span class="term-badge ${g.c}">${g.c}</span>` : '';
+    html += `<div class="term-item searchable"><div class="term-name">${g.t}${badge}</div><div class="term-def">${g.d}</div></div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function scrollToLetter(l) {
+  const el = document.getElementById('letter-' + l);
+  if (el) el.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ── KEYBOARD SHORTCUTS ──
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') clearSearch();
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    document.getElementById('search-input').focus();
+    document.getElementById('search-input').select();
+  }
+});
+
+// ── INIT ──
+setTimeout(() => buildGlossary(), 200);
+</script>
+</body>
+</html>

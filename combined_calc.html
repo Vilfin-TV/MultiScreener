@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SIP + Lumpsum Calculator — VilfinTV Multiscreener</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --burn:#c0390b;--burn2:#e8540f;--burn3:#ff7235;
+  --gold:#f5a623;--gold2:#ffd166;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;
+  --dark:#0f0f0f;--dark2:#1a1a1a;--dark3:#242424;--dark4:#2e2e2e;
+  --card:#1e1e1e;--card2:#272727;
+  --text:#f0ede8;--text2:#b0a898;--text3:#6e6558;
+  --border:#3a342c;--border2:#4a4238;--radius:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:#111;color:var(--text);min-height:100vh}
+.top-bar{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,#0d0400,#1a0800 50%,#2a0e00);border-bottom:2px solid var(--gold);display:flex;align-items:center;gap:14px;padding:0 20px;height:48px;box-shadow:0 2px 20px rgba(0,0,0,.5)}
+.back-btn{display:flex;align-items:center;gap:7px;padding:7px 16px;background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.35);border-radius:8px;color:var(--gold2);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .15s}
+.back-btn:hover{background:rgba(245,166,35,.22);border-color:var(--gold2)}
+.top-bar-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff}
+.calc-body{max-width:960px;margin:0 auto;padding:32px 20px 60px}
+.cc{background:var(--card2);border:1px solid var(--border2);border-radius:var(--radius);padding:24px;margin-bottom:20px}
+.cc-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;color:var(--gold2);margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.cc-title::before{content:'';width:4px;height:20px;background:var(--burn2);border-radius:2px;flex-shrink:0}
+.calc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:20px}
+.calc-field label{display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.calc-input{width:100%;padding:11px 14px;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;outline:none;transition:border-color .2s}
+.calc-input:focus{border-color:var(--burn2)}
+.calc-select{width:100%;padding:11px 14px;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;cursor:pointer}
+.calc-range{width:100%;accent-color:var(--burn2)}
+.range-val{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--gold2);margin-top:4px;display:block}
+.calc-results{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.calc-stat{background:var(--dark3);border-radius:10px;padding:14px;border:1px solid var(--border)}
+.calc-stat-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.calc-stat-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold2)}
+.calc-stat-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.donut-wrap{display:flex;flex-direction:column;align-items:center;gap:16px}
+.donut-canvas{max-width:240px;max-height:240px}
+.donut-legend{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.donut-leg-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
+.donut-leg-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.alloc-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.alloc-table th{background:linear-gradient(135deg,var(--burn),var(--burn2));color:#fff;padding:10px 12px;text-align:left;font-weight:600;white-space:nowrap}
+.alloc-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text2)}
+.alloc-table tr:hover td{background:var(--card2)}
+.alloc-table tr:last-child td{border-bottom:none}
+@media(max-width:700px){.calc-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <a href="index.html" class="back-btn">&#8592; Back to Home</a>
+  <div class="top-bar-title">&#128290; SIP + Lumpsum Calculator</div>
+</div>
+<div class="calc-body">
+  <div class="cc">
+    <div class="cc-title">Combined Parameters</div>
+    <div class="calc-grid">
+      <div class="calc-field"><label>Currency</label><select class="calc-select" id="sl-currency" onchange="calcSL()"><option value="₹">🇮🇳 INR — ₹ Rupee</option><option value="¥">🇯🇵 JPY — ¥ Yen</option><option value="$">🇺🇸 USD — $ Dollar</option><option value="€">🇪🇺 EUR — € Euro</option><option value="£">🇬🇧 GBP — £ Pound</option><option value="S$">🇸🇬 SGD — S$ Dollar</option></select></div>
+      <div class="calc-field"><label>Initial Lumpsum Amount</label><input class="calc-input" type="number" id="sl-lumpsum" value="200000" min="0" oninput="calcSL()"/></div>
+      <div class="calc-field"><label>Monthly SIP Amount</label><input class="calc-input" type="number" id="sl-sip" value="10000" min="0" oninput="calcSL()"/></div>
+      <div class="calc-field"><label>Expected Annual Return (%)</label><input class="calc-range" type="range" id="sl-rate" min="1" max="30" value="12" step="0.5" oninput="document.getElementById('sl-rate-val').textContent=this.value+'%';calcSL()"/><span class="range-val" id="sl-rate-val">12%</span></div>
+      <div class="calc-field"><label>Investment Period (Years)</label><input class="calc-range" type="range" id="sl-years" min="1" max="40" value="10" oninput="document.getElementById('sl-years-val').textContent=this.value+' yrs';calcSL()"/><span class="range-val" id="sl-years-val">10 yrs</span></div>
+      <div class="calc-field"><label>Step-Up SIP Annually (%)</label><input class="calc-range" type="range" id="sl-stepup" min="0" max="25" value="0" step="1" oninput="document.getElementById('sl-stepup-val').textContent=this.value+'%';calcSL()"/><span class="range-val" id="sl-stepup-val">0%</span></div>
+      <div class="calc-field"><label>Inflation Rate (%)</label><input class="calc-range" type="range" id="sl-inflation" min="0" max="15" value="6" step="0.5" oninput="document.getElementById('sl-inflation-val').textContent=this.value+'%';calcSL()"/><span class="range-val" id="sl-inflation-val">6%</span></div>
+    </div>
+    <div class="calc-results" id="sl-results"></div>
+  </div>
+  <div class="cc">
+    <div class="cc-title">Wealth Breakdown</div>
+    <div class="donut-wrap">
+      <canvas class="donut-canvas" id="sl-donut" width="240" height="240"></canvas>
+      <div class="donut-legend" id="sl-legend"></div>
+    </div>
+  </div>
+  <div class="cc">
+    <div class="cc-title">Year-by-Year Projection</div>
+    <div style="overflow-x:auto">
+      <table class="alloc-table">
+        <thead><tr><th>Year</th><th>Monthly SIP</th><th>Total Invested</th><th>Lumpsum Growth</th><th>SIP Growth</th><th>Combined Value</th><th>Total Gain</th></tr></thead>
+        <tbody id="sl-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+function drawDonut(canvasId, legendId, segments) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2, R = Math.min(W,H)/2 - 10, r = R*0.55;
+  ctx.clearRect(0,0,W,H);
+  const total = segments.reduce((s,x)=>s+x.value,0);
+  if (!total) return;
+  let angle = -Math.PI/2;
+  segments.forEach(seg => {
+    const slice = (seg.value/total)*2*Math.PI;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,R,angle,angle+slice); ctx.closePath();
+    ctx.fillStyle = seg.color; ctx.fill(); angle += slice;
+  });
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI); ctx.fillStyle = '#1a1a1a'; ctx.fill();
+  ctx.fillStyle = '#ffd166'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = 'bold 11px DM Sans,sans-serif'; ctx.fillText('Breakdown', cx, cy);
+  const legendEl = document.getElementById(legendId);
+  if (legendEl) {
+    legendEl.innerHTML = segments.map(s=>
+      `<div class="donut-leg-item"><div class="donut-leg-dot" style="background:${s.color}"></div><span>${s.label}: <strong style="color:#ffd166">${s.pct}%</strong></span></div>`
+    ).join('');
+  }
+}
+
+function fmt(n, sym) {
+  if (!isFinite(n)||n<0) n=0;
+  if (n>=1e7) return sym+(n/1e7).toFixed(2)+' Cr';
+  if (n>=1e5) return sym+(n/1e5).toFixed(2)+' L';
+  return sym+Math.round(n).toLocaleString('en-IN');
+}
+
+function calcSL() {
+  const sym      = document.getElementById('sl-currency').value;
+  const lumpsum  = parseFloat(document.getElementById('sl-lumpsum').value)||0;
+  const monthly  = parseFloat(document.getElementById('sl-sip').value)||0;
+  const rate     = parseFloat(document.getElementById('sl-rate').value)||12;
+  const years    = parseInt(document.getElementById('sl-years').value)||10;
+  const stepup   = parseFloat(document.getElementById('sl-stepup').value)||0;
+  const inflation= parseFloat(document.getElementById('sl-inflation').value)||6;
+  const r = rate/100/12, inf = inflation/100;
+
+  let sipValue=0, sipInvested=0, curMonthly=monthly;
+  const lsValue = lumpsum * Math.pow(1+rate/100, years);
+  const rows=[];
+
+  for(let y=1;y<=years;y++){
+    for(let m=1;m<=12;m++){
+      sipInvested += curMonthly;
+      sipValue = sipValue*(1+r) + curMonthly;
+    }
+    if(stepup>0) curMonthly *= (1+stepup/100);
+    const lsY = lumpsum*Math.pow(1+rate/100,y);
+    const combined = lsY + sipValue;
+    rows.push({y, monthly:monthly, invested:lumpsum+sipInvested, lsY, sipY:sipValue, combined, gain:combined-lumpsum-sipInvested});
+  }
+
+  const totalInvested = lumpsum + sipInvested;
+  const totalValue = lsValue + sipValue;
+  const gain = totalValue - totalInvested;
+  const realVal = totalValue/Math.pow(1+inf,years);
+
+  document.getElementById('sl-results').innerHTML = [
+    {lbl:'Total Invested',val:fmt(totalInvested,sym),sub:'Lumpsum + SIP'},
+    {lbl:'Est. Returns',val:fmt(gain,sym),sub:`@${rate}% p.a.`},
+    {lbl:'Total Corpus',val:fmt(totalValue,sym),sub:'Combined maturity'},
+    {lbl:'Lumpsum Value',val:fmt(lsValue,sym),sub:'Initial investment growth'},
+    {lbl:'SIP Value',val:fmt(sipValue,sym),sub:'Monthly SIP growth'},
+    {lbl:'Real Value',val:fmt(realVal,sym),sub:`Inflation adj @${inflation}%`},
+  ].map(s=>`<div class="calc-stat"><div class="calc-stat-lbl">${s.lbl}</div><div class="calc-stat-val">${s.val}</div><div class="calc-stat-sub">${s.sub}</div></div>`).join('');
+
+  drawDonut('sl-donut','sl-legend',[
+    {label:'Lumpsum Principal',value:lumpsum,color:'#c0390b',pct:Math.round(lumpsum/totalValue*100)},
+    {label:'SIP Invested',value:sipInvested,color:'#e8540f',pct:Math.round(sipInvested/totalValue*100)},
+    {label:'Lumpsum Gains',value:lsValue-lumpsum,color:'#ffd166',pct:Math.round((lsValue-lumpsum)/totalValue*100)},
+    {label:'SIP Gains',value:sipValue-sipInvested,color:'#22c55e',pct:Math.round((sipValue-sipInvested)/totalValue*100)},
+  ]);
+
+  document.getElementById('sl-table-body').innerHTML = rows.map(r=>
+    `<tr><td>${r.y}</td><td>${fmt(r.monthly,sym)}/mo</td><td>${fmt(r.invested,sym)}</td><td>${fmt(r.lsY,sym)}</td><td>${fmt(r.sipY,sym)}</td><td style="color:#ffd166;font-weight:700">${fmt(r.combined,sym)}</td><td style="color:#22c55e">${fmt(r.gain,sym)}</td></tr>`
+  ).join('');
+}
+
+document.addEventListener('DOMContentLoaded', calcSL);
+</script>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SIP Calculator — VilfinTV Multiscreener</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --burn:#c0390b;--burn2:#e8540f;--burn3:#ff7235;
+  --gold:#f5a623;--gold2:#ffd166;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;
+  --dark:#0f0f0f;--dark2:#1a1a1a;--dark3:#242424;--dark4:#2e2e2e;
+  --card:#1e1e1e;--card2:#272727;
+  --text:#f0ede8;--text2:#b0a898;--text3:#6e6558;
+  --border:#3a342c;--border2:#4a4238;--radius:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:#111;color:var(--text);min-height:100vh}
+.top-bar{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,#0d0400,#1a0800 50%,#2a0e00);border-bottom:2px solid var(--gold);display:flex;align-items:center;gap:14px;padding:0 20px;height:48px;box-shadow:0 2px 20px rgba(0,0,0,.5)}
+.back-btn{display:flex;align-items:center;gap:7px;padding:7px 16px;background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.35);border-radius:8px;color:var(--gold2);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .15s}
+.back-btn:hover{background:rgba(245,166,35,.22);border-color:var(--gold2)}
+.top-bar-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff}
+.calc-body{max-width:960px;margin:0 auto;padding:32px 20px 60px}
+.cc{background:var(--card2);border:1px solid var(--border2);border-radius:var(--radius);padding:24px;margin-bottom:20px}
+.cc-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;color:var(--gold2);margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.cc-title::before{content:'';width:4px;height:20px;background:var(--burn2);border-radius:2px;flex-shrink:0}
+.calc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:20px}
+.calc-field label{display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.calc-input{width:100%;padding:11px 14px;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;outline:none;transition:border-color .2s}
+.calc-input:focus{border-color:var(--burn2)}
+.calc-select{width:100%;padding:11px 14px;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;cursor:pointer}
+.calc-range{width:100%;accent-color:var(--burn2)}
+.range-val{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--gold2);margin-top:4px;display:block}
+.calc-results{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.calc-stat{background:var(--dark3);border-radius:10px;padding:14px;border:1px solid var(--border)}
+.calc-stat-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.calc-stat-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold2)}
+.calc-stat-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.donut-wrap{display:flex;flex-direction:column;align-items:center;gap:16px}
+.donut-canvas{max-width:240px;max-height:240px}
+.donut-legend{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.donut-leg-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
+.donut-leg-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.alloc-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.alloc-table th{background:linear-gradient(135deg,var(--burn),var(--burn2));color:#fff;padding:10px 12px;text-align:left;font-weight:600;white-space:nowrap}
+.alloc-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text2)}
+.alloc-table tr:hover td{background:var(--card2)}
+.alloc-table tr:last-child td{border-bottom:none}
+.prompt-box{background:#0d0d0d;border:1px solid var(--border);border-radius:12px;padding:20px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#d4c9bb;line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:60vh;overflow-y:auto}
+.paste-area{width:100%;min-height:160px;padding:18px;background:#0d0d0d;border:2px dashed var(--border2);border-radius:12px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;resize:vertical;outline:none;transition:border-color .2s}
+.paste-area:focus{border-color:var(--burn2);border-style:solid}
+.action-btn{padding:12px 22px;border-radius:10px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:8px;margin-right:8px;margin-bottom:8px}
+.action-btn.primary{background:linear-gradient(135deg,var(--burn),var(--burn2));color:#fff}
+.action-btn.primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(192,57,11,.4)}
+.action-btn.secondary{background:var(--card2);border:1px solid var(--border2);color:var(--text2)}
+.action-btn.secondary:hover{color:var(--text);border-color:var(--burn2)}
+.copy-btn{padding:10px 20px;background:linear-gradient(135deg,var(--burn),var(--burn2));border:none;border-radius:8px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:8px}
+.copy-btn.copied{background:linear-gradient(135deg,#16a34a,#22c55e)}
+@media(max-width:700px){.calc-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <a href="index.html" class="back-btn">&#8592; Back to Home</a>
+  <div class="top-bar-title">&#128200; SIP Calculator</div>
+</div>
+<div class="calc-body">
+  <div class="cc">
+    <div class="cc-title">SIP Parameters</div>
+    <div class="calc-grid">
+      <div class="calc-field"><label>Currency</label><select class="calc-select" id="sip-currency" onchange="calcSIP()"><option value="₹">🇮🇳 INR — ₹ Rupee</option><option value="¥">🇯🇵 JPY — ¥ Yen</option><option value="$">🇺🇸 USD — $ Dollar</option><option value="€">🇪🇺 EUR — € Euro</option><option value="£">🇬🇧 GBP — £ Pound</option><option value="S$">🇸🇬 SGD — S$ Dollar</option></select></div>
+      <div class="calc-field"><label>Monthly SIP Amount</label><input class="calc-input" type="number" id="sip-amount" value="10000" min="1" oninput="calcSIP()"/></div>
+      <div class="calc-field"><label>Expected Annual Return (%)</label><input class="calc-range" type="range" id="sip-rate" min="1" max="30" value="12" step="0.5" oninput="document.getElementById('sip-rate-val').textContent=this.value+'%';calcSIP()"/><span class="range-val" id="sip-rate-val">12%</span></div>
+      <div class="calc-field"><label>Investment Period (Years)</label><input class="calc-range" type="range" id="sip-years" min="1" max="40" value="10" oninput="document.getElementById('sip-years-val').textContent=this.value+' yrs';calcSIP()"/><span class="range-val" id="sip-years-val">10 yrs</span></div>
+      <div class="calc-field"><label>Step-Up SIP Annually (%)</label><input class="calc-range" type="range" id="sip-stepup" min="0" max="25" value="0" step="1" oninput="document.getElementById('sip-stepup-val').textContent=this.value+'%';calcSIP()"/><span class="range-val" id="sip-stepup-val">0%</span></div>
+      <div class="calc-field"><label>Inflation Rate (%)</label><input class="calc-range" type="range" id="sip-inflation" min="0" max="15" value="6" step="0.5" oninput="document.getElementById('sip-inflation-val').textContent=this.value+'%';calcSIP()"/><span class="range-val" id="sip-inflation-val">6%</span></div>
+    </div>
+    <div class="calc-results" id="sip-results"></div>
+  </div>
+  <div class="cc">
+    <div class="cc-title">Wealth Breakdown</div>
+    <div class="donut-wrap">
+      <canvas class="donut-canvas" id="sip-donut" width="240" height="240"></canvas>
+      <div class="donut-legend" id="sip-legend"></div>
+    </div>
+  </div>
+  <div class="cc">
+    <div class="cc-title">Year-by-Year Projection</div>
+    <div style="overflow-x:auto">
+      <table class="alloc-table" id="sip-table">
+        <thead><tr><th>Year</th><th>Monthly SIP</th><th>Total Invested</th><th>Est. Value</th><th>Gain</th><th>Real Value (adj)</th></tr></thead>
+        <tbody id="sip-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+function drawDonut(canvasId, legendId, segments) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2, R = Math.min(W,H)/2 - 10, r = R*0.55;
+  ctx.clearRect(0,0,W,H);
+  const total = segments.reduce((s,x)=>s+x.value,0);
+  if (!total) return;
+  let angle = -Math.PI/2;
+  segments.forEach(seg => {
+    const slice = (seg.value/total)*2*Math.PI;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,R,angle,angle+slice); ctx.closePath();
+    ctx.fillStyle = seg.color; ctx.fill(); angle += slice;
+  });
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI); ctx.fillStyle = '#1a1a1a'; ctx.fill();
+  ctx.fillStyle = '#ffd166'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = 'bold 11px DM Sans,sans-serif'; ctx.fillText('Breakdown', cx, cy);
+  const legendEl = document.getElementById(legendId);
+  if (legendEl) {
+    legendEl.innerHTML = segments.map(s=>
+      `<div class="donut-leg-item"><div class="donut-leg-dot" style="background:${s.color}"></div><span>${s.label}: <strong style="color:#ffd166">${s.pct}%</strong></span></div>`
+    ).join('');
+  }
+}
+
+function fmt(n, sym) {
+  if (!isFinite(n)||n<0) n=0;
+  if (n>=1e7) return sym+(n/1e7).toFixed(2)+' Cr';
+  if (n>=1e5) return sym+(n/1e5).toFixed(2)+' L';
+  return sym+Math.round(n).toLocaleString('en-IN');
+}
+
+function _copyText(text, btnId, resetLabel) {
+  const btn = document.getElementById(btnId);
+  const markCopied = () => {
+    if (btn) { btn.classList.add('copied'); btn.innerHTML = '✅ Copied!'; }
+    setTimeout(() => { if(btn){ btn.classList.remove('copied'); btn.innerHTML = resetLabel; } }, 2500);
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(markCopied).catch(() => { document.execCommand('copy'); markCopied(); });
+  } else {
+    try { const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); markCopied(); } catch(e) { alert('Copy failed. Please select and copy manually.'); }
+  }
+}
+
+function calcSIP() {
+  const sym=document.getElementById('sip-currency').value;
+  const monthly=parseFloat(document.getElementById('sip-amount').value)||0;
+  const rate=parseFloat(document.getElementById('sip-rate').value)||12;
+  const years=parseInt(document.getElementById('sip-years').value)||10;
+  const stepup=parseFloat(document.getElementById('sip-stepup').value)||0;
+  const inflation=parseFloat(document.getElementById('sip-inflation').value)||6;
+  const r=rate/100/12,inf=inflation/100;
+  let totalInvested=0,totalValue=0,curMonthly=monthly;
+  const rows=[];
+  for(let y=1;y<=years;y++){
+    for(let m=1;m<=12;m++){totalInvested+=curMonthly;totalValue=totalValue*(1+r)+curMonthly;}
+    if(stepup>0) curMonthly=curMonthly*(1+stepup/100);
+    const realValue=totalValue/Math.pow(1+inf,y);
+    rows.push({y,monthly:curMonthly/(stepup>0?(1+stepup/100):1),invested:totalInvested,value:totalValue,gain:totalValue-totalInvested,real:realValue});
+  }
+  const gain=totalValue-totalInvested;
+  const realVal=totalValue/Math.pow(1+inf,years);
+  const xirr=totalInvested>0?((Math.pow(totalValue/totalInvested,1/years)-1)*100).toFixed(2):0;
+  document.getElementById('sip-results').innerHTML=[
+    {lbl:'Total Invested',val:fmt(totalInvested,sym),sub:'Your contributions'},
+    {lbl:'Est. Returns',val:fmt(gain,sym),sub:`@${rate}% p.a.`},
+    {lbl:'Total Corpus',val:fmt(totalValue,sym),sub:'Maturity value'},
+    {lbl:'Real Value',val:fmt(realVal,sym),sub:`Inflation-adj @${inflation}%`},
+    {lbl:'Approx CAGR',val:xirr+'%',sub:'Annual growth rate'},
+    {lbl:'Period',val:years+' Years',sub:stepup>0?`Step-up ${stepup}%/yr`:'Fixed SIP'},
+  ].map(s=>`<div class="calc-stat"><div class="calc-stat-lbl">${s.lbl}</div><div class="calc-stat-val">${s.val}</div><div class="calc-stat-sub">${s.sub}</div></div>`).join('');
+  drawDonut('sip-donut','sip-legend',[
+    {label:'Invested',value:totalInvested,color:'#e8540f',pct:Math.round(totalInvested/totalValue*100)},
+    {label:'Returns',value:gain,color:'#ffd166',pct:Math.round(gain/totalValue*100)},
+  ]);
+  document.getElementById('sip-table-body').innerHTML=rows.map(r=>`<tr><td>${r.y}</td><td>${fmt(r.monthly,sym)}/mo</td><td>${fmt(r.invested,sym)}</td><td style="color:#ffd166;font-weight:700">${fmt(r.value,sym)}</td><td style="color:#22c55e">${fmt(r.gain,sym)}</td><td style="color:#888">${fmt(r.real,sym)}</td></tr>`).join('');
+}
+
+document.addEventListener('DOMContentLoaded', calcSIP);
+</script>
+</body>
+</html>

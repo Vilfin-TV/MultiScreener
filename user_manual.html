@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>User Manual — VilfinTV Multiscreener</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --burn:#c0390b;--burn2:#e8540f;--burn3:#ff7235;
+  --gold:#f5a623;--gold2:#ffd166;
+  --green:#22c55e;--green2:#16a34a;
+  --red:#ef4444;--amber:#f59e0b;
+  --dark:#0f0f0f;--dark2:#1a1a1a;--dark3:#242424;--dark4:#2e2e2e;
+  --card:#1e1e1e;--card2:#272727;
+  --text:#f0ede8;--text2:#b0a898;--text3:#6e6558;
+  --border:#3a342c;--border2:#4a4238;
+  --radius:14px;--radius-sm:9px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:#0e0e0e;color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ── TOP BAR (back button) ── */
+.top-bar{
+  position:sticky;top:0;z-index:500;
+  background:linear-gradient(135deg,#0d0400,#1a0800 50%,#2a0e00);
+  border-bottom:2px solid var(--gold);
+  display:flex;align-items:center;gap:14px;
+  padding:0 20px;height:48px;
+  box-shadow:0 2px 20px rgba(0,0,0,.5);
+}
+.back-btn{
+  display:flex;align-items:center;gap:7px;
+  padding:7px 16px;background:rgba(245,166,35,.12);
+  border:1px solid rgba(245,166,35,.35);border-radius:8px;
+  color:var(--gold2);font-family:'DM Sans',sans-serif;
+  font-size:13px;font-weight:700;cursor:pointer;
+  text-decoration:none;transition:all .15s;white-space:nowrap;
+}
+.back-btn:hover{background:rgba(245,166,35,.22);border-color:var(--gold2);transform:translateX(-2px)}
+.top-bar-title{
+  font-family:'Bebas Neue',sans-serif;font-size:18px;
+  letter-spacing:2px;color:#fff;
+  text-shadow:0 0 20px rgba(232,84,15,.4);
+}
+.top-bar-title span{color:var(--gold2)}
+
+/* ── HEADER ── */
+.site-header{
+  background:linear-gradient(135deg,#0d0400 0%,#1a0800 25%,#2a0c00 45%,var(--burn) 70%,var(--burn2) 85%,var(--burn3) 100%);
+  padding:44px 24px 36px;text-align:center;position:relative;overflow:hidden;
+}
+.site-header::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(45deg,transparent,transparent 20px,rgba(255,255,255,.018) 20px,rgba(255,255,255,.018) 40px);
+}
+.site-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),var(--gold),transparent)}
+.site-header h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,6vw,52px);color:#fff;letter-spacing:5px;position:relative;z-index:1;text-shadow:0 0 60px rgba(232,84,15,.6);line-height:1}
+.site-header .sub{color:rgba(255,255,255,.65);font-size:12px;margin-top:8px;position:relative;z-index:1;letter-spacing:2.5px;text-transform:uppercase}
+.header-badges{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:14px;position:relative;z-index:1}
+.hbadge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;border:1px solid}
+.hbadge.v{background:rgba(245,166,35,.15);border-color:rgba(245,166,35,.4);color:var(--gold2)}
+.hbadge.g{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.3);color:var(--green2)}
+
+/* ── LAYOUT ── */
+.um-wrap{max-width:960px;margin:0 auto;padding:40px 20px 80px}
+
+/* ── TOC ── */
+.toc{background:var(--card2);border:1px solid var(--border2);border-left:4px solid var(--gold);border-radius:var(--radius);padding:22px 24px;margin-bottom:36px}
+.toc-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--gold2);margin-bottom:14px}
+.toc-list{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px 20px}
+.toc-list a{display:flex;align-items:center;gap:8px;padding:5px 0;color:var(--text2);font-size:13px;text-decoration:none;transition:color .15s}
+.toc-list a:hover{color:var(--gold2)}
+.toc-list a::before{content:'›';color:var(--burn2);font-weight:700}
+
+/* ── SECTIONS ── */
+.um-section{margin-bottom:40px;scroll-margin-top:70px}
+.um-section-title{
+  font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;
+  color:var(--gold2);margin-bottom:18px;
+  display:flex;align-items:center;gap:12px;padding-bottom:12px;
+  border-bottom:1px solid var(--border);
+}
+.um-section-title::before{content:'';width:4px;height:28px;background:linear-gradient(135deg,var(--burn),var(--burn3));border-radius:2px;flex-shrink:0}
+
+/* ── CARDS ── */
+.um-card{background:var(--card2);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;margin-bottom:14px}
+.um-card-title{font-weight:700;color:var(--gold2);font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.um-card-text{font-size:13px;color:var(--text3);line-height:1.75}
+.um-card-text strong{color:var(--text2)}
+.um-card-text code{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--dark3);padding:1px 6px;border-radius:4px;color:var(--burn3)}
+
+/* ── STEPS ── */
+.um-steps{display:flex;flex-direction:column;gap:14px}
+.um-step{display:flex;gap:14px;align-items:flex-start}
+.um-step-num{
+  width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--burn),var(--burn3));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:15px;color:#fff;
+  box-shadow:0 0 10px rgba(192,57,11,.4);
+}
+.um-step-body{font-size:13px;color:var(--text2);line-height:1.7;padding-top:5px}
+.um-step-body strong{color:var(--text)}
+
+/* ── MENU TABLE ── */
+.menu-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+.menu-table th{background:linear-gradient(135deg,var(--burn),var(--burn2));color:#fff;padding:10px 14px;text-align:left;font-weight:600}
+.menu-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top}
+.menu-table tr:last-child td{border-bottom:none}
+.menu-table tr:hover td{background:rgba(255,255,255,.03)}
+.menu-tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.menu-tag.file{background:rgba(192,57,11,.2);color:var(--burn3);border:1px solid rgba(192,57,11,.3)}
+.menu-tag.news{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.menu-tag.fin{background:rgba(59,130,246,.12);color:#60a5fa;border:1px solid rgba(59,130,246,.2)}
+.menu-tag.vid{background:rgba(236,72,153,.12);color:#f472b6;border:1px solid rgba(236,72,153,.2)}
+.menu-tag.tools{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+
+/* ── TIP BOX ── */
+.tip-box{background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.2);border-left:3px solid var(--gold);border-radius:var(--radius-sm);padding:12px 16px;margin-top:10px;font-size:12.5px;color:var(--text2);line-height:1.7}
+.tip-box strong{color:var(--gold2)}
+
+/* ── KEY BADGE ── */
+.kbd{display:inline-block;background:var(--dark3);border:1px solid var(--border2);border-radius:5px;padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);box-shadow:0 2px 0 var(--border)}
+
+/* ── FOOTER ── */
+.um-footer{text-align:center;padding:28px 20px;border-top:3px solid var(--burn);background:var(--dark2);font-size:12px;color:rgba(255,255,255,.35);line-height:1.9}
+.um-footer strong{color:var(--gold);display:block;font-size:14px;margin-bottom:6px}
+.um-footer a{color:var(--gold2);text-decoration:none}
+.um-footer a:hover{text-decoration:underline}
+
+@media(max-width:600px){
+  .toc-list{grid-template-columns:1fr}
+  .site-header h1{font-size:32px}
+}
+</style>
+</head>
+<body>
+
+<!-- ── TOP BAR WITH BACK BUTTON ── -->
+<div class="top-bar">
+  <a href="index.html" class="back-btn">← Back to Home</a>
+  <div class="top-bar-title">Vilfin<span>TV</span> Multiscreener — User Manual</div>
+</div>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <h1>User Manual</h1>
+  <div class="sub">VilfinTV Multiscreener — Complete Guide</div>
+  <div class="header-badges">
+    <span class="hbadge v">⚡ v8.1 Redesign Edition</span>
+    <span class="hbadge g">✅ Up to Date — 2026</span>
+  </div>
+</header>
+
+<div class="um-wrap">
+
+  <!-- TABLE OF CONTENTS -->
+  <div class="toc">
+    <div class="toc-title">📋 Table of Contents</div>
+    <ul class="toc-list">
+      <li><a href="#overview">1. Overview</a></li>
+      <li><a href="#top-menu">2. Top Menu Bar</a></li>
+      <li><a href="#file-menu">3. File Menu &amp; Cloudflare Workers</a></li>
+      <li><a href="#news-menu">4. News Menu</a></li>
+      <li><a href="#financial-news">5. Financial News Menu</a></li>
+      <li><a href="#financial-video">6. Financial Video Menu</a></li>
+      <li><a href="#tools-menu">7. Tools Menu</a></li>
+      <li><a href="#left-sidebar">8. Left Sidebar</a></li>
+      <li><a href="#live-markets">9. Live Markets (Right Bar)</a></li>
+      <li><a href="#input-form">10. Input Form</a></li>
+      <li><a href="#ai-query">11. Copy AI Query</a></li>
+      <li><a href="#paste-render">12. Paste &amp; Render</a></li>
+      <li><a href="#calculators">13. Financial Calculators</a></li>
+      <li><a href="#tips">14. Tips &amp; Shortcuts</a></li>
+    </ul>
+  </div>
+
+  <!-- 1. OVERVIEW -->
+  <div class="um-section" id="overview">
+    <div class="um-section-title">1. Overview</div>
+    <div class="um-card">
+      <div class="um-card-title">📊 What is VilfinTV Multiscreener?</div>
+      <div class="um-card-text">
+        VilfinTV Multiscreener is a professional, browser-based financial research tool designed for multi-asset analysis across stocks, ETFs, mutual funds, bonds, commodities, currencies, and more.
+        It combines an AI-powered research input form, live market data via TradingView, financial calculators, global news aggregation, and optional Cloudflare Workers integration for a serverless Claude AI backend — all in a single self-contained HTML file, no installation required.
+      </div>
+    </div>
+    <div class="um-card">
+      <div class="um-card-title">🗺️ Layout at a Glance</div>
+      <div class="um-card-text">
+        <strong>Top Menu Bar</strong> — sticky header with File, News, Financial News, Financial Video, Tools menus + VilfinTV brand + Cloudflare status.<br>
+        <strong>Left Sidebar (icons)</strong> — quick access to Instructions, Asset Downloads, Brokers, Insurance, NRE FD, Tax, Loans, and more.<br>
+        <strong>Main Content Area</strong> — three tabs: Input Form, Copy AI Query, Paste &amp; Render.<br>
+        <strong>Right Bar (Live Markets)</strong> — always-visible TradingView live widgets: Overview, Indices, Stocks, Commodities, Forex.
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. TOP MENU BAR -->
+  <div class="um-section" id="top-menu">
+    <div class="um-section-title">2. Top Menu Bar</div>
+    <div class="um-card">
+      <div class="um-card-title">🔝 Navigation Bar</div>
+      <div class="um-card-text">The top menu bar is always visible (sticky). Click any menu item to open its dropdown. Click elsewhere to close. On mobile, menu labels may be shortened.</div>
+    </div>
+    <table class="menu-table">
+      <thead><tr><th>Menu</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><span class="menu-tag file">File</span></td><td>Connect / Disconnect Cloudflare Workers. Exit the application.</td></tr>
+        <tr><td><span class="menu-tag news">News</span></td><td>General news links organised by continent and country (Asia, Middle East, Europe, Americas, Africa &amp; Oceania, Global).</td></tr>
+        <tr><td><span class="menu-tag fin">Financial News</span></td><td>Financial and market-specific news links by region.</td></tr>
+        <tr><td><span class="menu-tag vid">Financial Video</span></td><td>YouTube channel links for financial content by region. Opens YouTube in a new tab — no videos embedded.</td></tr>
+        <tr><td><span class="menu-tag tools">Tools</span></td><td>Financial Calculators (SIP, Lumpsum, Allocation, Compare), Live Markets tabs, and User Manual link.</td></tr>
+      </tbody>
+    </table>
+    <div class="tip-box"><strong>Tip:</strong> The <strong>Cloudflare status badge</strong> (top-right of menu bar) shows a green pulsing dot when connected to a Cloudflare Worker. The Worker hostname is shown next to the dot.</div>
+  </div>
+
+  <!-- 3. FILE MENU -->
+  <div class="um-section" id="file-menu">
+    <div class="um-section-title">3. File Menu &amp; Cloudflare Workers</div>
+    <div class="um-card">
+      <div class="um-card-title">🔗 Cloudflare Workers — Connect</div>
+      <div class="um-card-text">
+        Cloudflare Workers is a serverless platform where you can host a small API that stores your Claude API key securely — so you don't need to paste the key into the browser each session.
+      </div>
+    </div>
+    <div class="um-steps">
+      <div class="um-step"><div class="um-step-num">1</div><div class="um-step-body">Deploy a Cloudflare Worker with your Claude API key stored as a secret environment variable.</div></div>
+      <div class="um-step"><div class="um-step-num">2</div><div class="um-step-body">Click <strong>File → Cloudflare Workers → Connect</strong>. A modal dialog will appear.</div></div>
+      <div class="um-step"><div class="um-step-num">3</div><div class="um-step-body">Enter your Worker URL (e.g. <code>https://my-worker.workers.dev</code>) and click <strong>Connect</strong>.</div></div>
+      <div class="um-step"><div class="um-step-num">4</div><div class="um-step-body">The URL is saved to your browser's <strong>localStorage</strong> — no server storage. On the next visit, it reconnects automatically.</div></div>
+      <div class="um-step"><div class="um-step-num">5</div><div class="um-step-body">To disconnect: <strong>File → Cloudflare Workers → Disconnect</strong>. The saved URL is removed from localStorage.</div></div>
+    </div>
+    <div class="tip-box"><strong>Privacy:</strong> The Worker URL is stored only in your local browser (localStorage). It is never sent to any third party.</div>
+    <div class="um-card" style="margin-top:14px">
+      <div class="um-card-title">✕ Exit</div>
+      <div class="um-card-text">Clicking <strong>File → Exit</strong> will prompt for confirmation and attempt to close the browser tab/window.</div>
+    </div>
+  </div>
+
+  <!-- 4. NEWS MENU -->
+  <div class="um-section" id="news-menu">
+    <div class="um-section-title">4. News Menu</div>
+    <div class="um-card">
+      <div class="um-card-title">🌐 General News by Region</div>
+      <div class="um-card-text">
+        Hover or click a continent/region to see country-level news sources. Click any link to open it in a new browser tab.
+        Regions covered: <strong>Asia</strong> (India, Japan, China, Singapore, Thailand, South Korea), <strong>Middle East</strong> (Saudi Arabia, UAE, Israel), <strong>Europe</strong> (UK, Germany, France), <strong>Americas</strong> (US, Canada, Latin America), <strong>Africa &amp; Oceania</strong> (South Africa, Australia, New Zealand), <strong>Global</strong>.
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. FINANCIAL NEWS -->
+  <div class="um-section" id="financial-news">
+    <div class="um-section-title">5. Financial News Menu</div>
+    <div class="um-card">
+      <div class="um-card-title">📈 Markets &amp; Finance News</div>
+      <div class="um-card-text">
+        Financial and market news sources organised by region. Hover a continent for country-level links.
+        Sources include: Moneycontrol, Economic Times, Livemint, Business Standard (India) · Nikkei Asia (Japan) · SCMP Business (China) · Financial Times, Market Screener, Euromoney (Europe) · Bloomberg, WSJ, CNBC, Yahoo Finance, MarketWatch (Americas) · Reuters Finance, Investing.com, Trading Economics, Morningstar (Global).
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. FINANCIAL VIDEO -->
+  <div class="um-section" id="financial-video">
+    <div class="um-section-title">6. Financial Video Menu</div>
+    <div class="um-card">
+      <div class="um-card-title">📺 YouTube Finance Channels</div>
+      <div class="um-card-text">
+        Opens YouTube channel pages in a new tab. <strong>No videos are embedded</strong> inside the screener — all links open externally on YouTube.
+        Channels by region: <strong>India</strong> (ET Now, CNBC TV18, Zee Business, Moneycontrol, Pranjal Kamra) · <strong>Japan</strong> (Nikkei, TV Tokyo Biz, NHK World) · <strong>USA/Global</strong> (Bloomberg, CNBC, Reuters, WSJ, Motley Fool, Graham Stephan) · <strong>Europe</strong> (FT, Euronews Business, DW Economics) · <strong>Middle East &amp; Africa</strong> (Al Jazeera English).
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. TOOLS MENU -->
+  <div class="um-section" id="tools-menu">
+    <div class="um-section-title">7. Tools Menu</div>
+    <div class="um-card">
+      <div class="um-card-title">🧮 Financial Calculators</div>
+      <div class="um-card-text">Opens the selected calculator as a full-screen overlay. Available: <strong>SIP Calculator</strong>, <strong>Lumpsum Calculator</strong>, <strong>SIP + Lumpsum</strong>, <strong>Asset Allocation</strong>, <strong>Compare Funds &amp; ETF</strong>. Press the ← Back button to return to the main screen.</div>
+    </div>
+    <div class="um-card">
+      <div class="um-card-title">📊 Live Markets</div>
+      <div class="um-card-text">Clicking a market tab (Indices, Stocks, Commodities, Forex) from Tools switches the right bar widget directly.</div>
+    </div>
+  </div>
+
+  <!-- 8. LEFT SIDEBAR -->
+  <div class="um-section" id="left-sidebar">
+    <div class="um-section-title">8. Left Sidebar</div>
+    <div class="um-card">
+      <div class="um-card-title">◀ Icon Navigation</div>
+      <div class="um-card-text">
+        Click the <kbd class="kbd">☰</kbd> toggle at the top of the left sidebar to expand or collapse labels. Click any icon to open a full-screen info page. Available pages:
+      </div>
+    </div>
+    <table class="menu-table">
+      <thead><tr><th>Icon</th><th>Page</th></tr></thead>
+      <tbody>
+        <tr><td>📖</td><td><strong>Instructions</strong> — Step-by-step guide to using the Input Form and AI workflow.</td></tr>
+        <tr><td>⬇️</td><td><strong>Asset Downloads</strong> — Official stock/ETF/fund lists from NSE, BSE, NASDAQ, JPX, SEC and AMFI.</td></tr>
+        <tr><td>🏦</td><td><strong>Best Brokers</strong> — Curated broker referral links (Zerodha, Dhan, Kuvera, IndiaBonds, GoldenPi, PhonePe, Navi).</td></tr>
+        <tr><td>💸</td><td><strong>Remittance</strong> — International transfer apps (Revolut, Instarem, Wise).</td></tr>
+        <tr><td>🛡️</td><td><strong>Life Insurance</strong> — India and Japan term insurance plans with links.</td></tr>
+        <tr><td>🏥</td><td><strong>Health Insurance</strong> — India and Japan health plans including NHI information.</td></tr>
+        <tr><td>🏛️</td><td><strong>NRE FD</strong> — NRE Fixed Deposit information and top Indian bank rates.</td></tr>
+        <tr><td>📑</td><td><strong>Tax Filing</strong> — India tax filing resources for residents and NRIs.</td></tr>
+        <tr><td>💳</td><td><strong>Loans</strong> — Home, personal, and NRI loan resources.</td></tr>
+        <tr><td>🃏</td><td><strong>Credit Cards</strong> — Best credit card recommendations.</td></tr>
+        <tr><td>📱</td><td><strong>SIM Cards</strong> — India and Japan SIM card options.</td></tr>
+        <tr><td>🌐</td><td><strong>Internet Plans</strong> — Broadband and mobile data plans.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 9. LIVE MARKETS -->
+  <div class="um-section" id="live-markets">
+    <div class="um-section-title">9. Live Markets — Right Bar</div>
+    <div class="um-card">
+      <div class="um-card-title">📊 Always-Visible TradingView Widget</div>
+      <div class="um-card-text">
+        The right bar shows live financial data powered by TradingView (free widgets). It is always visible on screens wider than 1100px. Use the tab buttons to switch between:
+        <br><br>
+        <strong>🌐 Overview</strong> — Market overview chart with Indices, Commodities, and Forex tabs.<br>
+        <strong>📈 Indices</strong> — Live quotes: SENSEX, NIFTY, Bank Nifty + S&amp;P 500, Nasdaq, Dow, Nikkei, Hang Seng, DAX, FTSE.<br>
+        <strong>🏢 Stocks</strong> — BSE hot-list screener showing top movers.<br>
+        <strong>🥇 Commodities</strong> — Precious metals (Gold, Silver, Platinum), Energy (Crude, Brent, Gas), Agricultural.<br>
+        <strong>💱 Forex</strong> — Cross rates matrix: INR, USD, EUR, GBP, JPY, AUD, CAD, CHF, SGD, HKD.
+      </div>
+    </div>
+    <div class="tip-box"><strong>Note:</strong> The right bar is hidden on screens narrower than 1100px. Use the <strong>Tools → Live Markets</strong> menu items to switch widget tabs from any screen size.</div>
+  </div>
+
+  <!-- 10. INPUT FORM -->
+  <div class="um-section" id="input-form">
+    <div class="um-section-title">10. Input Form</div>
+    <div class="um-steps">
+      <div class="um-step"><div class="um-step-num">1</div><div class="um-step-body"><strong>Q1 — Asset Type:</strong> Select from Stock, ETF, Mutual Fund, Bond, Commodity, or Currency.</div></div>
+      <div class="um-step"><div class="um-step-num">2</div><div class="um-step-body"><strong>Q1a — Market:</strong> Select the relevant market (India, Global, US, Japan etc.) based on Q1.</div></div>
+      <div class="um-step"><div class="um-step-num">3</div><div class="um-step-body"><strong>Q1b/Q1c — Sub-type:</strong> Additional sub-classifications appear where relevant (e.g. bond type, commodity sub-type).</div></div>
+      <div class="um-step"><div class="um-step-num">4</div><div class="um-step-body"><strong>Q2 — Asset Name:</strong> Type the name or ticker of the asset you want to research.</div></div>
+      <div class="um-step"><div class="um-step-num">5</div><div class="um-step-body"><strong>Q3 — Resident Status:</strong> Resident Indian, NRI, or Japan Resident. This tailors tax &amp; regulatory information.</div></div>
+      <div class="um-step"><div class="um-step-num">6</div><div class="um-step-body"><strong>Q4 — Investment Horizon:</strong> Short, Medium, or Long term.</div></div>
+      <div class="um-step"><div class="um-step-num">7</div><div class="um-step-body"><strong>Q5 — Amount (optional):</strong> Select currency and enter an investment amount for personalised allocation advice.</div></div>
+      <div class="um-step"><div class="um-step-num">8</div><div class="um-step-body">Click the orange <strong>Generate AI Query</strong> button. You will be automatically taken to the Copy AI Query tab.</div></div>
+    </div>
+  </div>
+
+  <!-- 11. COPY AI QUERY -->
+  <div class="um-section" id="ai-query">
+    <div class="um-section-title">11. Copy AI Query</div>
+    <div class="um-card">
+      <div class="um-card-title">🤖 Using the Generated Prompt</div>
+      <div class="um-card-text">
+        Click <strong>Copy Full Query</strong> to copy the complete research prompt to your clipboard. Then:
+        <br><br>
+        1. Open <a href="https://claude.ai" target="_blank" style="color:var(--gold2)">claude.ai</a> (or your preferred AI tool).<br>
+        2. Paste the query and send it.<br>
+        3. The AI will return structured research data (not HTML code) — this is intentional and is fast.<br>
+        4. Copy the entire AI response.
+      </div>
+    </div>
+    <div class="tip-box"><strong>Note:</strong> If you have a Cloudflare Worker connected, the Worker can be extended to call the Claude API directly. The Worker URL is available in <code>window._cfWorkerUrl</code> for custom integrations.</div>
+  </div>
+
+  <!-- 12. PASTE & RENDER -->
+  <div class="um-section" id="paste-render">
+    <div class="um-section-title">12. Paste &amp; Render</div>
+    <div class="um-steps">
+      <div class="um-step"><div class="um-step-num">1</div><div class="um-step-body">Switch to the <strong>Paste &amp; Render</strong> tab.</div></div>
+      <div class="um-step"><div class="um-step-num">2</div><div class="um-step-body">Paste the AI response into the large text area.</div></div>
+      <div class="um-step"><div class="um-step-num">3</div><div class="um-step-body">Click <strong>Generate Report</strong>. The full research report renders instantly in the browser.</div></div>
+      <div class="um-step"><div class="um-step-num">4</div><div class="um-step-body">Use <strong>Export as HTML</strong> to save a standalone file, or <strong>Export as PDF</strong> to print / save as PDF.</div></div>
+    </div>
+    <div class="tip-box">If any data field is missing, the report shows <strong>"No Data Available"</strong> rather than leaving it blank — this makes gaps visible.</div>
+  </div>
+
+  <!-- 13. CALCULATORS -->
+  <div class="um-section" id="calculators">
+    <div class="um-section-title">13. Financial Calculators</div>
+    <div class="um-card">
+      <div class="um-card-title">📈 SIP Calculator</div>
+      <div class="um-card-text">Calculate returns for a Systematic Investment Plan with optional Step-Up SIP. Supports INR, JPY, USD, EUR, GBP, SGD.</div>
+    </div>
+    <div class="um-card">
+      <div class="um-card-title">💰 Lumpsum Calculator</div>
+      <div class="um-card-text">Calculate the future value of a one-time lump sum investment at a given annual return rate.</div>
+    </div>
+    <div class="um-card">
+      <div class="um-card-title">🔢 SIP + Lumpsum</div>
+      <div class="um-card-text">Combines a monthly SIP with an initial lump sum. Shows total corpus, wealth gained, and year-by-year growth.</div>
+    </div>
+    <div class="um-card">
+      <div class="um-card-title">🥧 Asset Allocation</div>
+      <div class="um-card-text">Enter your age, risk profile, investment horizon, and amount to get a personalised asset allocation across Equity MF, Stocks, Hybrid, Bonds, Gold, Silver, REITs, NRE FD. Insurance premiums are factored in as real annual costs.</div>
+    </div>
+    <div class="um-card">
+      <div class="um-card-title">⚖️ Compare Funds &amp; ETF</div>
+      <div class="um-card-text">Enter two fund names and generate a side-by-side AI comparison query. Paste the AI output to render a comparison report.</div>
+    </div>
+  </div>
+
+  <!-- 14. TIPS -->
+  <div class="um-section" id="tips">
+    <div class="um-section-title">14. Tips &amp; Shortcuts</div>
+    <div class="um-card">
+      <div class="um-card-title">💡 Useful Tips</div>
+      <div class="um-card-text">
+        • <strong>Digital Gold/Silver:</strong> Select Commodity → Metals → Gold/Silver → Digital sub-option for a specialised report.<br><br>
+        • <strong>Mutual Fund FOF:</strong> Enter the fund name — the AI query is configured to also pull underlying ETF lists and expense ratios.<br><br>
+        • <strong>Escape key:</strong> Closes any open left sidebar overlay panel.<br><br>
+        • <strong>Right bar tabs:</strong> Switch instantly between Overview, Indices, Stocks, Commodities, Forex — no page reload.<br><br>
+        • <strong>Cloudflare Worker URL</strong> is remembered across browser sessions via <code>localStorage</code>. Clear your browser storage to reset it.<br><br>
+        • <strong>Print/PDF:</strong> The rendered research report is print-optimised. Use Export as PDF for a professional output.<br><br>
+        • <strong>Mobile:</strong> On screens under 1100px the right bar is hidden. Use Tools → Live Markets to access widget tabs.
+      </div>
+    </div>
+    <div class="tip-box"><strong>Data Disclaimer:</strong> All market data in the Live Markets bar is provided by TradingView (free widgets) and is subject to TradingView's terms. Report data is AI-generated from publicly available information — not investment advice.</div>
+  </div>
+
+</div><!-- /um-wrap -->
+
+<footer class="um-footer">
+  <strong>VilfinTV Multiscreener</strong>
+  User Manual — v8.1 &bull; Vilfin George &bull; 2026<br>
+  <a href="index.html">← Return to Home Page</a><br><br>
+  <span>SEBI Disclaimer: This tool is for educational and informational purposes only and does not constitute investment advice. All investments are subject to market risks. Please consult your financial advisor before investing.</span>
+</footer>
+
+</body>
+</html>
