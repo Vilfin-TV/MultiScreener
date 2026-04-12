@@ -472,15 +472,16 @@ async function runAnalysis() {
   const loading = document.getElementById('loading-bar');
   section.classList.add('visible');
   loading.classList.add('active');
-  content.innerHTML = '<div class="output-placeholder"><div class="icon">⏳</div><p>Querying AI... This may take 15–30 seconds.</p></div>';
+  content.innerHTML = '<div class="output-placeholder"><div class="icon">⏳</div><p>Fetching live fund data via Gemini AI... This may take 20–40 seconds.</p></div>';
+  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   const prompt = buildPrompt();
   try {
     const res = await fetch((window._cfWorkerUrl || '').replace(/\/+$/, '') + '/query', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: prompt }),
-      signal: AbortSignal.timeout(60000)
+      body: JSON.stringify({ prompt: prompt, use_search: true }),
+      signal: AbortSignal.timeout(90000)
     });
     const data = await res.json();
     loading.classList.remove('active');
@@ -488,9 +489,10 @@ async function runAnalysis() {
       content.style.fontFamily = "'DM Sans', sans-serif";
       content.style.whiteSpace = 'pre-wrap';
       content.textContent = data.result;
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else if (data.error) {
       const errMsg = typeof data.error === 'string' ? data.error : (data.error.message || JSON.stringify(data.error));
-      content.textContent = 'Error: ' + errMsg;
+      content.textContent = '❌ Error: ' + errMsg;
     } else {
       content.textContent = JSON.stringify(data, null, 2);
     }

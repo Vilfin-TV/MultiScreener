@@ -464,14 +464,15 @@ async function runAnalysis() {
   const loading = document.getElementById('loading-bar');
   section.classList.add('visible');
   loading.classList.add('active');
-  content.innerHTML = '<div class="output-placeholder"><div class="icon">⏳</div><p>Generating Pine Script v6... Please wait 15–30 seconds.</p></div>';
+  content.innerHTML = '<div class="output-placeholder"><div class="icon">⏳</div><p>Generating Pine Script v6 via Gemini AI... Please wait 15–30 seconds.</p></div>';
+  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
   const prompt = buildPrompt();
   try {
     const res = await fetch((window._cfWorkerUrl || '').replace(/\/+$/, '') + '/query', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: prompt }),
-      signal: AbortSignal.timeout(60000)
+      body: JSON.stringify({ prompt: prompt, use_search: false }),
+      signal: AbortSignal.timeout(90000)
     });
     const data = await res.json();
     loading.classList.remove('active');

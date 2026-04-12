@@ -60,7 +60,7 @@ body{font-family:'DM Sans',sans-serif;background:#111;color:var(--text);min-heig
 
 /* ── LEFT MENU FULL-PAGE OVERLAY ── */
 .left-menu-overlay{
-  display:none;position:fixed;inset:0;z-index:500;
+  display:none;position:fixed;top:44px;left:0;right:0;bottom:0;z-index:500;
   background:#111;overflow-y:auto;animation:calcSlideIn .3s ease;
 }
 .left-menu-overlay.show{display:block}
@@ -118,55 +118,64 @@ body{font-family:'DM Sans',sans-serif;background:#111;color:var(--text);min-heig
 /* ── MAIN CONTENT ── (handled in layout wrapper above) */
 
 
-/* ── GLOBAL OVERFLOW FIX v8.0 ── */
+/* ── GLOBAL OVERFLOW FIX v8.1 ── */
 * { box-sizing: border-box; }
-.kpi, .kpi-grid > * { overflow: hidden; }
-.kpi-lbl { 
-  font-size: 9px; color: var(--text3); text-transform: uppercase; 
+.kpi, .kpi-grid > * { overflow: visible; min-height: 0; }
+.kpi-lbl {
+  font-size: 9px; color: var(--text3); text-transform: uppercase;
   letter-spacing: .8px; margin-bottom: 5px; font-weight: 600;
   white-space: normal; word-break: break-word; line-height: 1.3;
 }
-.kpi-val { 
-  font-size: 12px; font-weight: 700; color: var(--text);
-  word-break: break-word; overflow-wrap: anywhere; 
-  white-space: normal; line-height: 1.45; hyphens: auto;
-  font-family: 'DM Sans', sans-serif;
+.kpi-val {
+  font-size: 11.5px; font-weight: 700; color: var(--text);
+  word-break: break-word; overflow-wrap: anywhere;
+  white-space: normal; line-height: 1.5; hyphens: auto;
+  font-family: 'DM Sans', sans-serif; max-width: 100%;
 }
-.kpi-val.mono-val { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; }
-.kpi-val.sm { 
-  font-size: 11.5px; font-family: 'DM Sans', sans-serif;
+.kpi-val.mono-val { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+.kpi-val.sm {
+  font-size: 11px; font-family: 'DM Sans', sans-serif;
   font-weight: 500; line-height: 1.55; word-break: break-word;
   overflow-wrap: anywhere; white-space: normal;
 }
-.badge { 
-  white-space: normal; word-break: break-word; 
+.badge {
+  white-space: normal; word-break: break-word;
   max-width: 100%; display: inline-block; line-height: 1.4;
-  font-size: 10.5px; padding: 3px 8px;
+  font-size: 10px; padding: 3px 8px;
 }
 /* Table cells */
-tbody td { 
-  padding: 9px 12px; vertical-align: middle; line-height: 1.5;
-  word-break: break-word; overflow-wrap: anywhere; 
-  max-width: 280px; white-space: normal;
+tbody td {
+  padding: 8px 10px; vertical-align: middle; line-height: 1.5;
+  word-break: break-word; overflow-wrap: anywhere;
+  max-width: 240px; white-space: normal; font-size: 12px;
 }
-thead th { white-space: nowrap; }
+thead th { white-space: nowrap; font-size: 11px; padding: 8px 10px; }
 /* Highlight boxes */
-.highlight-text { 
-  font-size: 12.5px; line-height: 1.75; 
-  word-break: break-word; overflow-wrap: anywhere; 
+.highlight-text {
+  font-size: 12.5px; line-height: 1.75;
+  word-break: break-word; overflow-wrap: anywhere;
 }
 /* Checklist items */
-.check-item { 
+.check-item {
   word-break: break-word; overflow-wrap: anywhere;
   align-items: flex-start; padding: 8px 12px;
   font-size: 12px; line-height: 1.5;
 }
-/* KPI grid min width */
-.kpi-grid { grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 10px; }
+/* KPI grid min width — responsive */
+.kpi-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
 /* NDA tags */
 .nda-tag { white-space: normal; word-break: break-word; max-width: 200px; }
 /* Risk cards */
 .risk-card-name { word-break: break-word; overflow-wrap: anywhere; line-height: 1.4; }
+/* mc-detail fix */
+.mc-detail { overflow: visible; }
+.mc-detail-val { white-space: normal; word-break: break-word; overflow-wrap: anywhere; font-size: 11.5px; line-height: 1.5; }
+/* peer table fix */
+.peer-table td, .peer-table th { font-size: 11px; padding: 7px 8px; max-width: 160px; }
+/* section card overflow */
+.section-card, .tab-section { overflow: visible; }
+/* Strong buy card fix */
+.strong-buy-card { overflow: visible; word-break: break-word; }
 
 /* ── HEADER ── */
 .site-header{
@@ -2984,8 +2993,8 @@ async function aiQuerySend() {
     const res = await fetch(url + '/query', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: q }),
-      signal: AbortSignal.timeout(30000)
+      body: JSON.stringify({ prompt: q, use_search: true }),
+      signal: AbortSignal.timeout(60000)
     });
     const data = await res.json();
     if (data.error) {
@@ -3034,7 +3043,15 @@ async function autoSendToGemini() {
     return;
   }
 
-  // Show the auto-send result panel
+  // Immediately switch to Paste & Render tab so user sees output as it arrives
+  const pasteTab = document.querySelectorAll('.main-tab')[2];
+  if (pasteTab) switchMain(2, pasteTab);
+
+  // Pre-fill paste area with loading message so user knows it's working
+  const pasteArea = document.getElementById('paste-area');
+  if (pasteArea) pasteArea.value = '⏳ Sending to Gemini AI via Worker… please wait (may take 20–40 seconds)…';
+
+  // Show the auto-send result panel on Copy AI Query tab too
   const panel = document.getElementById('auto-gemini-panel');
   const statusEl = document.getElementById('auto-gemini-status');
   const resultEl = document.getElementById('auto-gemini-result');
@@ -3042,20 +3059,17 @@ async function autoSendToGemini() {
   const renderBtn = document.getElementById('auto-gemini-render');
 
   panel.style.display = 'block';
-  statusEl.textContent = '⏳ Sending to Gemini via Worker… please wait (may take 10–20 sec)';
+  statusEl.textContent = '⏳ Sending to Gemini via Worker… please wait (may take 20–40 sec)';
   resultEl.style.display = 'none';
   copyBtn.style.display = 'none';
   renderBtn.style.display = 'none';
-
-  // Scroll to result panel
-  panel.scrollIntoView({ behavior: 'smooth' });
 
   try {
     const res = await fetch(finalUrl + '/query', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: queryText }),
-      signal: AbortSignal.timeout(60000)
+      body: JSON.stringify({ prompt: queryText, use_search: true }),
+      signal: AbortSignal.timeout(90000)
     });
     const data = await res.json();
     if (data.error) {
@@ -3066,13 +3080,29 @@ async function autoSendToGemini() {
     resultEl.textContent = answer;
     resultEl.style.display = 'block';
     copyBtn.style.display = 'inline-block';
-    // If response looks like HTML, show render button
+
+    // Auto-paste into Paste & Render tab
+    const pasteAreaEl = document.getElementById('paste-area');
+    if (pasteAreaEl) pasteAreaEl.value = answer;
+
+    // If response looks like HTML, show render button and auto-render
     if (answer.includes('<!DOCTYPE') || answer.includes('<html')) {
       renderBtn.style.display = 'inline-block';
       window._autoGeminiHTML = answer;
+      // Switch to Paste & Render tab and auto-render
+      const pasteTab = document.querySelectorAll('.main-tab')[2];
+      if (pasteTab) switchMain(2, pasteTab);
+      setTimeout(renderOutput, 300);
+    } else {
+      // Plain text — paste and switch to Paste & Render tab
+      const pasteTab = document.querySelectorAll('.main-tab')[2];
+      if (pasteTab) switchMain(2, pasteTab);
+      setTimeout(renderOutput, 300);
     }
-    statusEl.textContent = '✅ Gemini response received! You can copy or render below.';
+    statusEl.textContent = '✅ Gemini response received! Auto-rendering report…';
   } catch(err) {
+    const pasteAreaEl = document.getElementById('paste-area');
+    if (pasteAreaEl) pasteAreaEl.value = '';
     statusEl.textContent = '❌ Error: ' + (err.message || 'Request failed. Check your Worker URL.');
   }
 }
@@ -4945,9 +4975,13 @@ TAB 1 — OVERVIEW (return all fields below)
   Stock Splits (last 5 years) | Bonus Issues (last 5 years)
 
 TAB 2 — LIVE INFO (return all fields below)
+  ⚠️ ALL PRICES MUST BE FROM LIVE WEB SEARCH AS OF ${today} — DO NOT USE TRAINING DATA FOR PRICES
   NSE Price | BSE Price | Market Cap | 52W High | 52W High Date | 52W Low | 52W Low Date
   All-Time High | ATH Date | Avg Daily Volume | Delivery Volume % | Beta | Beta vs (Index name)
-  Circuit Limit Up | Circuit Limit Down | Face Value | Dividend Yield TTM | Key Insight (2–3 sentences)
+  Circuit Limit Up | Circuit Limit Down | Face Value | Dividend Yield TTM
+  AI Adoption Status: [Search "[company name] artificial intelligence AI implementation 2025 2026" — output one of: Fully AI Implemented / Partially AI Implemented / AI In Progress / No AI Plan / Not Available / AI-Native Company]
+  AI Adoption Detail: [1 sentence: what AI is being used for, or "No public AI initiatives found"]
+  Key Insight (2–3 sentences)
 
 TAB 3 — OWNERSHIP & INDEX (return all fields below)
   Index 1 Name | Index 1 Weightage % | Index 1 Impact per 1% move
@@ -5144,10 +5178,13 @@ TAB 1 — OVERVIEW (return all fields below)
   If ETF FOF: Underlying ETF Name | Underlying ETF TER % | Total Combined Expense (Fund TER + ETF TER) %
 
 TAB 2 — LIVE INFO (return all fields below)
+  ⚠️ NAV MUST BE FROM LIVE WEB SEARCH AS OF ${today} — search "[Fund Name] NAV today" on AMFI/Moneycontrol
   NAV Regular (latest) | NAV Direct (latest) | AUM (Cr) | AUM Change QoQ
   52W High NAV | 52W High Date | 52W Low NAV | 52W Low Date | All-Time High NAV | ATH Date
   Beta | Beta vs (index) | Sharpe Ratio | Sortino Ratio | Alpha | Standard Deviation | Portfolio Turnover Ratio %
   Dividend Yield TTM | CRISIL Rank | Value Research Rating | Morningstar Rating
+  AMC AI Adoption: [Search "[AMC name] artificial intelligence technology 2025 2026" — output: Fully AI Implemented / Partially AI Implemented / AI In Progress / No AI Plan / Not Available]
+  AMC AI Detail: [1 sentence on how AMC uses AI in fund management, or "No public AI initiatives found"]
   Quarter-wise Returns (last 8 quarters) — Fund % | Benchmark % | vs Benchmark | Category Rank:
     Q1 | Q2 | Q3 | Q4 | Q5 | Q6 | Q7 | Q8
   Key Insight (2–3 sentences about current NAV level)
@@ -5706,9 +5743,20 @@ NOTE — IF ETF FUND OF FUND: also return:
   Underlying ETF Full Name | Underlying ETF Ticker | Underlying ETF TER % | Combined Total Expense (this fund TER + ETF TER) %` : '';
 
   return `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MULTI ASSET SCREENER — AI RESEARCH DATA QUERY v8.0
+MULTI ASSET SCREENER — AI RESEARCH DATA QUERY v8.1
 Generated: ${today} | Tool: Vilfin George
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ LIVE DATA MANDATE — READ BEFORE STARTING ⚠️
+TODAY'S DATE IS: ${today}
+You MUST use Google Search / Grounding to fetch ALL prices, NAVs, and market data as of ${today}.
+• NEVER use training knowledge for any price, NAV, market cap, or live financial metric.
+• NEVER guess, estimate, or use data older than 24 hours for TAB 2 (LIVE INFO) fields.
+• For NSE/BSE Price: search "HDFCBANK NSE price today" or equivalent — use ONLY the live result.
+• If live price cannot be confirmed via search: write "LIVE DATA UNAVAILABLE — check NSE/BSE directly"
+• Training knowledge is ONLY allowed for: company background, tax rules, CEO biography, ESG overview.
+• Every numeric value in TAB 2 must come from a web search result dated ${today} or within 24 hours.
+• If you are not 100% sure of a value from a live source — write "Verify at NSE/BSE" next to the value.
 
 ROLE: Financial data extraction engine.
 Output ONLY structured "Field: Value" data — NO HTML, NO markdown, NO prose.
@@ -5717,35 +5765,35 @@ The report template is pre-built and will render your data instantly.
 ══════════════════════════════════════════
 SPEED PROTOCOL — FOLLOW EXACTLY
 ══════════════════════════════════════════
-STEP 1 — PARALLEL BATCH FETCH (all at once, not one-by-one):
-  Fire all web searches simultaneously for these data groups:
-  [A] Live price, market cap, 52W high/low, ATH, volume, beta → 1 search
-  [B] Financials (revenue, PAT, PE, PB, ROE, EPS) → 1 search
-  [C] Shareholding pattern, FII/DII/Promoter → 1 search
-  [D] Top 5–10 news headlines + corporate actions → 1 search
-  [E] Analyst ratings + price targets (5 brokers) → 1 search
-  [F] Technical signals (RSI, MACD, MAs, support/resistance) → 1 search
-  [G] Tax rules for ${resident} on this asset → use training knowledge first, verify only if uncertain
-  [H] Historical returns (1Y/3Y/5Y) vs benchmark → 1 search
-  [I] Google Trends + social media buzz → 1 search
+STEP 1 — LIVE WEB SEARCH FIRST (mandatory for all price/market data):
+  Search Google for current live data for these groups:
+  [A] LIVE price RIGHT NOW, market cap, 52W high/low, ATH, volume, beta → search "asset name NSE live price ${today}"
+  [B] Latest financials (revenue, PAT, PE, PB, ROE, EPS) — most recent quarterly results → search "asset name Q4 results 2025 2026"
+  [C] Latest shareholding pattern (most recent quarter) FII/DII/Promoter → search "asset name shareholding March 2026"
+  [D] Top 5 RECENT news (last 7 days only) + upcoming corporate actions → search "asset name news ${today}"
+  [E] Analyst ratings + price targets (current, not old) → search "asset name analyst target price 2026"
+  [F] Technical signals (RSI, MACD, MAs, support/resistance) as of ${today} → search "asset name technical analysis today"
+  [G] Tax rules for ${resident} on this asset → use training knowledge, verify only if uncertain
+  [H] Historical returns (1Y/3Y/5Y) vs benchmark → search "asset name returns 2023 2024 2025 2026"
+  [I] Google Trends + social media buzz → search "asset name trending Reddit Twitter today"
 
-STEP 2 — STATIC FROM KNOWLEDGE (do NOT search, use training data):
-  Company background, sector description, CEO background, ESG overview,
-  regulatory framework, standard tax rules for ${resident},
-  asset class definitions, standard risk factors, investment strategy basics.
+STEP 2 — STATIC FROM KNOWLEDGE ONLY (do NOT search, use training data):
+  Company history/founding story, sector description, CEO background, ESG overview,
+  standard tax rules for ${resident}, asset class definitions, standard risk factors.
 
 STEP 3 — OUTPUT IMMEDIATELY AFTER EACH TAB IS READY.
   Do not wait for all tabs to finish. Stream each tab as soon as its data is ready.
   Format strictly as shown below — no additional commentary between tabs.
 
 SPEED RULES:
-  • Max 1 search per data group above — do not repeat searches
+  • CRITICAL: TAB 2 (LIVE INFO) — ALL values must be from live web search. No exceptions.
+  • If price not found via search → write "LIVE DATA UNAVAILABLE — verify at NSE India website"
   • If field not found in first search → try 1 more source before writing "No Data Available"
-  • If STILL not found after 2 sources → try a third source (Tickertape, Trendlyne, Moneycontrol, INDmoney, Groww, Value Research)
+  • If STILL not found after 2 sources → try a third (Tickertape, Trendlyne, Moneycontrol, INDmoney, Groww, Value Research)
   • For ratings (CRISIL/VR/Morningstar): search each platform directly if not found in first batch
   • For holdings: search "[Fund Name] portfolio holdings 2026" specifically
   • For quarter returns: search "[Fund Name] quarterly returns 2025 2026"
-  • For trending stocks: search "trending stocks India Twitter Reddit StockTwits [today's date]"
+  • For trending stocks: search "trending stocks India Twitter Reddit StockTwits ${today}"
   • Values only — no explanations unless the field explicitly says "(2–3 sentences)"
   • Numbers: use native currency, no currency conversion unless asked
   • Stream output: output each ## TAB section immediately as ready, don't buffer
@@ -6992,26 +7040,44 @@ footer .gen{margin-top:10px;font-size:10px;color:rgba(255,255,255,.2)}
 .mc-detail-val{font-size:12px;font-weight:600;color:var(--text);word-break:break-word;line-height:1.4}
 
 @media print{
-  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-  body{background:#f4f0eb!important}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;box-sizing:border-box!important}
+  @page{size:A4;margin:15mm 12mm 15mm 12mm}
+  body{background:#fff!important;color:#111!important;font-size:10pt;line-height:1.5}
   .tab-wrapper{display:none!important}
   .panel{display:block!important;animation:none!important}
-  .panel+.panel{page-break-before:always}
-  .card{break-inside:avoid;box-shadow:none!important;border:1px solid #ddd!important}
+  /* Each TAB section starts on a new page */
+  .tab-panel-section{page-break-before:always;break-before:page}
+  .tab-panel-section:first-child{page-break-before:avoid;break-before:avoid}
+  /* Keep cards together — avoid splitting across pages */
+  .card{break-inside:avoid;box-shadow:none!important;border:1px solid #ccc!important;margin-bottom:8pt}
+  .kpi-grid>*{break-inside:avoid}
+  .strong-buy-card{break-inside:avoid}
+  .peer-row{break-inside:avoid}
+  /* Tables */
   .tbl-wrap{overflow:visible!important}
-  table{min-width:0!important;font-size:10pt}
-  thead th{padding:7px 10px!important;font-size:9pt!important}
-  tbody td{padding:6px 10px!important;font-size:10pt!important}
-  .kpi-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))!important}
+  table{min-width:0!important;font-size:9pt;width:100%!important;border-collapse:collapse}
+  thead th{padding:6px 8px!important;font-size:8pt!important;background:#f0ede8!important;color:#111!important}
+  tbody td{padding:5px 8px!important;font-size:9pt!important;border-bottom:1px solid #ddd!important}
+  thead{display:table-header-group} /* repeat header on each page */
+  /* KPI grids */
+  .kpi-grid{grid-template-columns:repeat(4,1fr)!important;gap:6pt!important}
+  .kpi{padding:8pt!important}
+  .kpi-lbl{font-size:7pt!important}
+  .kpi-val{font-size:10pt!important}
   .checklist{grid-template-columns:repeat(3,1fr)!important}
-  footer{break-inside:avoid}
-  /* Print-friendly hyperlinks */
-  a[href]::after{content:"";} /* Don't show URLs inline — clutters the page */
-  .direct-link{background:#e8e0d8!important;color:#1a1a1a!important;border:1px solid #ccc!important;box-shadow:none!important}
-  .ref-btn{background:#e8e0d8!important;color:#1a1a1a!important;box-shadow:none!important}
-  /* Keep links visible in print */
+  /* Section headers — keep with content below */
+  .section-title,.tab-header{break-after:avoid;page-break-after:avoid}
+  footer{break-inside:avoid;margin-top:20pt;border-top:1px solid #ccc;padding-top:8pt;font-size:8pt;color:#666}
+  /* Hyperlinks — show URL in brackets for PDF */
   a{color:#c0390b!important;text-decoration:underline!important}
-  .direct-link::after,.ref-btn::after{content:" [" attr(href) "]";font-size:7pt;color:#888;word-break:break-all}
+  a[href^="http"]::after{content:" [" attr(href) "]";font-size:7pt;color:#666;word-break:break-all;display:inline}
+  .direct-link,a.ref-btn{background:#f0ede8!important;color:#c0390b!important;border:1px solid #ccc!important;box-shadow:none!important;padding:3pt 6pt!important}
+  .direct-link::after,a.ref-btn::after{content:" [" attr(href) "]";font-size:7pt;color:#888;word-break:break-all;display:block;margin-top:2pt}
+  /* Hide decorative elements */
+  .verdict-banner::before,.site-header::before{display:none!important}
+  /* Page numbers */
+  .site-header{padding:12pt 0!important;margin-bottom:12pt}
+  h1{font-size:18pt!important}
 }
 </style>
 </head>
@@ -7056,10 +7122,24 @@ function downloadOutput() {
 
 function exportPDF() {
   if (!renderedHtml) { alert('Nothing to export — render a report first.'); return; }
-  const iframe = document.querySelector('#rendered-output iframe');
-  if (!iframe) { alert('Please render the report first.'); return; }
-  try { iframe.contentWindow.print(); }
-  catch(e) { const w=window.open('','_blank'); w.document.write(renderedHtml); w.document.close(); setTimeout(()=>w.print(),500); }
+  // Open in new window for clean PDF export with proper page breaks and working hyperlinks
+  const w = window.open('', '_blank');
+  if (!w) { alert('Pop-up blocked. Please allow pop-ups and try again.'); return; }
+  // Inject print-trigger script and improved print styles into the report
+  const printHtml = renderedHtml.replace('</body>', `
+<script>
+// Auto-trigger print dialog after page loads
+window.addEventListener('load', function() {
+  // Add page-break class to each tab section
+  document.querySelectorAll('.tab-panel-section, .card.tab-card, [data-tab]').forEach(function(el, i) {
+    if (i > 0) el.style.pageBreakBefore = 'always';
+  });
+  setTimeout(function() { window.print(); }, 800);
+});
+</scr` + `ipt></body>`);
+  w.document.open();
+  w.document.write(printHtml);
+  w.document.close();
 }
 
 function clearPaste() {
