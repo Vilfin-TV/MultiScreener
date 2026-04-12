@@ -1730,6 +1730,12 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
     <button class="gen-btn" id="gen-btn" onclick="generateQuery()">
       ⚡ Generate AI Query
     </button>
+    <button class="gen-btn" id="gen-auto-btn" onclick="generateAndSendToGemini()" style="margin-top:12px;background:linear-gradient(135deg,#0d6b3e,#16a34a);box-shadow:0 4px 20px rgba(22,163,74,.3)">
+      🚀 Auto Send to Gemini (via Worker)
+    </button>
+    <div style="font-size:11px;color:var(--text3);margin-top:8px;text-align:center">
+      🚀 = Sends directly to Gemini &amp; shows output automatically &nbsp;|&nbsp; ⚡ = Just generates the query text to copy manually
+    </div>
     <div class="validation-msg" id="v-gen" style="margin-top:12px"></div>
   </div>
 
@@ -2985,6 +2991,17 @@ async function aiQuerySend() {
   } catch(err) {
     status.textContent = '⚠️ ' + (err.message || 'Request failed. Check Worker URL and Gemini API key.');
   }
+}
+
+// Generate query then immediately auto-send to Gemini
+async function generateAndSendToGemini() {
+  // First generate the query (same as clicking Generate AI Query)
+  const generated = generateQuery(true); // pass flag to not switch tab
+  if (!generated) return; // validation failed
+  // Small delay to let query render in copy-content
+  await new Promise(r => setTimeout(r, 300));
+  // Then auto-send
+  await autoSendToGemini();
 }
 
 // Auto-send the generated research query to Gemini and show output
@@ -4830,7 +4847,7 @@ function updateSummary() {
 // ═══════════════════════════════════════════════════════════════════
 // GENERATE QUERY
 // ═══════════════════════════════════════════════════════════════════
-function generateQuery() {
+function generateQuery(skipTabSwitch) {
   let valid = true;
   ['v-q1','v-name','v-q3','v-q4'].forEach(id => document.getElementById(id).classList.remove('show'));
 
@@ -4839,7 +4856,7 @@ function generateQuery() {
   if (answers.assetType !== 'Currency' && !answers.assetName.trim()) { document.getElementById('v-name').classList.add('show'); valid = false; }
   if (!answers.resident) { document.getElementById('v-q3').classList.add('show'); valid = false; }
   if (!answers.horizon) { document.getElementById('v-q4').classList.add('show'); valid = false; }
-  if (!valid) return;
+  if (!valid) return false;
 
   const today = new Date().toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
   let residentFull = answers.resident;
@@ -4852,7 +4869,8 @@ function generateQuery() {
 
   generatedQuery = buildQuery(assetLabel, marketLabel, residentFull, answers.horizon, answers.amount, answers.assetType, answers.isDigital, answers.digitalType, today, answers.commSub);
   refreshCopyPanel();
-  switchMain(1, document.querySelectorAll('.main-tab')[1]);
+  if (!skipTabSwitch) switchMain(1, document.querySelectorAll('.main-tab')[1]);
+  return true;
 }
 
 // ═══════════════════════════════════════════════════════════════════
