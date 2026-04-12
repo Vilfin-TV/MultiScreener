@@ -466,14 +466,44 @@ async function queryAI() {
   runAnalysis();
 }
 
+let _mfPbTimer=null,_mfPbEl=null,_mfPbSec=0;
+function _mfPbSet(pct,stage,sid){const f=document.getElementById('ai-pb-fill'),p=document.getElementById('ai-pb-pct'),s=document.getElementById('ai-pb-stage');if(f)f.style.width=pct+'%';if(p)p.textContent=pct+'%';if(s)s.textContent=stage;if(sid){const e=document.getElementById(sid);if(e)e.style.color='#16a34a';}}
+function _mfPbSim(fr,to){clearInterval(_mfPbTimer);let c=fr;_mfPbTimer=setInterval(()=>{if(c<to){c=Math.min(to,c+Math.max(0.1,(to-c)*0.04));const f=document.getElementById('ai-pb-fill'),p=document.getElementById('ai-pb-pct');if(f)f.style.width=Math.round(c)+'%';if(p)p.textContent=Math.round(c)+'%';}},1000);}
+function _mfPbStop(){clearInterval(_mfPbTimer);clearInterval(_mfPbEl);}
+
 async function runAnalysis() {
   const section = document.getElementById('output-section');
   const content = document.getElementById('output-content');
   const loading = document.getElementById('loading-bar');
   section.classList.add('visible');
   loading.classList.add('active');
-  content.innerHTML = '<div class="output-placeholder"><div class="icon">⏳</div><p>Fetching live fund data via Gemini AI... This may take 20–40 seconds.</p></div>';
   section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  _mfPbSec=0; clearInterval(_mfPbEl);
+  content.innerHTML = `<div id="ai-pb-wrap" style="padding:32px 24px 24px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div id="ai-pb-stage" style="font-size:13px;font-weight:700;color:#f5a623">🔌 Connecting to Worker…</div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span id="ai-pb-elapsed" style="font-size:11px;color:#888;font-family:monospace">0s</span>
+        <span id="ai-pb-pct" style="font-size:13px;font-weight:700;color:#16a34a">5%</span>
+      </div>
+    </div>
+    <div style="background:#1a1a1a;border-radius:999px;height:10px;overflow:hidden;border:1px solid #333">
+      <div id="ai-pb-fill" style="height:100%;background:linear-gradient(90deg,#16a34a,#84cc16,#facc15);border-radius:999px;transition:width 0.6s ease;width:5%"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:8px">
+      <span id="ai-pbs1" style="font-size:11px;color:#16a34a">Connect</span>
+      <span id="ai-pbs2" style="font-size:11px;color:#555">Search</span>
+      <span id="ai-pbs3" style="font-size:11px;color:#555">AI Processing</span>
+      <span id="ai-pbs4" style="font-size:11px;color:#555">Receive</span>
+      <span id="ai-pbs5" style="font-size:11px;color:#555">Done</span>
+    </div>
+    <div style="margin-top:16px;text-align:center;color:#888;font-size:12px">⏳ Fetching live NAV & fund data via Google Grounding + AI… 20–40 seconds</div>
+  </div>`;
+  _mfPbEl = setInterval(()=>{_mfPbSec++;const e=document.getElementById('ai-pb-elapsed');if(e)e.textContent=_mfPbSec+'s';},1000);
+
+  setTimeout(()=>{ _mfPbSet(20,'🔍 Searching live NAV & fund data…','ai-pbs2'); },1500);
+  setTimeout(()=>{ _mfPbSet(30,'🤖 AI Processing — generating analysis…','ai-pbs3'); _mfPbSim(30,85); },4000);
 
   const prompt = buildPrompt();
   try {
@@ -483,13 +513,17 @@ async function runAnalysis() {
       body: JSON.stringify({ prompt: prompt, use_search: true }),
       signal: AbortSignal.timeout(90000)
     });
+    _mfPbStop(); _mfPbSet(88,'📥 Receiving response…','ai-pbs4');
     const data = await res.json();
     loading.classList.remove('active');
+    _mfPbSet(100,'✅ Done!','ai-pbs5');
     if (data.result) {
-      content.style.fontFamily = "'DM Sans', sans-serif";
-      content.style.whiteSpace = 'pre-wrap';
-      content.textContent = data.result;
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(()=>{
+        content.style.fontFamily = "'DM Sans', sans-serif";
+        content.style.whiteSpace = 'pre-wrap';
+        content.textContent = data.result;
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 400);
     } else if (data.error) {
       const errMsg = typeof data.error === 'string' ? data.error : (data.error.message || JSON.stringify(data.error));
       content.textContent = '❌ Error: ' + errMsg;
@@ -497,6 +531,7 @@ async function runAnalysis() {
       content.textContent = JSON.stringify(data, null, 2);
     }
   } catch(err) {
+    _mfPbStop();
     loading.classList.remove('active');
     content.textContent = 'Connection error: ' + err.message + '\n\nMake sure your Cloudflare Worker URL is correct and accepting requests.';
   }
