@@ -474,6 +474,9 @@ function _mfPbSet(pct,stage,sid){const f=document.getElementById('ai-pb-fill'),p
 function _mfPbSim(fr,to){clearInterval(_mfPbTimer);let c=fr;_mfPbTimer=setInterval(()=>{if(c<to){c=Math.min(to,c+Math.max(0.1,(to-c)*0.04));const f=document.getElementById('ai-pb-fill'),p=document.getElementById('ai-pb-pct');if(f)f.style.width=Math.round(c)+'%';if(p)p.textContent=Math.round(c)+'%';}},1000);}
 function _mfPbStop(){clearInterval(_mfPbTimer);clearInterval(_mfPbEl);}
 
+window._mfStreamAbort = null;
+window._mfStreamPartial = '';
+
 async function runAnalysis() {
   const section = document.getElementById('output-section');
   const content = document.getElementById('output-content');
@@ -481,6 +484,11 @@ async function runAnalysis() {
   section.classList.add('visible');
   loading.classList.add('active');
   section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Cancel any in-flight query
+  if (window._mfStreamAbort) { window._mfStreamAbort.abort(); }
+  window._mfStreamAbort = new AbortController();
+  window._mfStreamPartial = '';
 
   _mfPbSec=0; clearInterval(_mfPbEl);
   content.innerHTML = `<div id="ai-pb-wrap" style="padding:32px 24px 24px">
@@ -501,43 +509,109 @@ async function runAnalysis() {
       <span id="ai-pbs4" style="font-size:11px;color:#555">Receive</span>
       <span id="ai-pbs5" style="font-size:11px;color:#555">Done</span>
     </div>
-    <div style="margin-top:16px;text-align:center;color:#888;font-size:12px">⏳ Fetching live NAV & fund data via Google Grounding + AI… 20–40 seconds</div>
+    <div style="margin-top:16px;text-align:center;color:#888;font-size:12px">⏳ Fetching live NAV & fund data via Google Grounding + AI… streaming live…</div>
   </div>`;
   _mfPbEl = setInterval(()=>{_mfPbSec++;const e=document.getElementById('ai-pb-elapsed');if(e)e.textContent=_mfPbSec+'s';},1000);
 
-  setTimeout(()=>{ _mfPbSet(20,'🔍 Searching live NAV & fund data…','ai-pbs2'); },1500);
-  setTimeout(()=>{ _mfPbSet(30,'🤖 AI Processing — generating analysis…','ai-pbs3'); _mfPbSim(30,85); },4000);
-
+  const workerBase = (window._cfWorkerUrl || '').replace(/\/+$/, '');
   const prompt = buildPrompt();
-  try {
-    const res = await fetch((window._cfWorkerUrl || '').replace(/\/+$/, '') + '/query', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: prompt, use_search: true }),
-      signal: AbortSignal.timeout(90000)
-    });
-    _mfPbStop(); _mfPbSet(88,'📥 Receiving response…','ai-pbs4');
-    const data = await res.json();
-    loading.classList.remove('active');
-    _mfPbSet(100,'✅ Done!','ai-pbs5');
-    if (data.result) {
-      setTimeout(()=>{
-        content.style.fontFamily = "'DM Sans', sans-serif";
-        content.style.whiteSpace = 'pre-wrap';
-        content.textContent = data.result;
-        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 400);
-    } else if (data.error) {
-      const errMsg = typeof data.error === 'string' ? data.error : (data.error.message || JSON.stringify(data.error));
-      content.textContent = '❌ Error: ' + errMsg;
-    } else {
-      content.textContent = JSON.stringify(data, null, 2);
+  const selectedModel = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
+
+  async function mfTryStream(partialSoFar, attempt) {
+    const body = { prompt, use_search: true, model: selectedModel };
+    if (partialSoFar) body.partial = partialSoFar;
+    let res;
+    try {
+      res = await fetch(workerBase + '/query-stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: window._mfStreamAbort.signal
+      });
+    } catch(e) {
+      if (e.name === 'AbortError') { _mfPbStop(); loading.classList.remove('active'); content.textContent = '⏹ Query cancelled.'; return; }
+      return mfFallback(partialSoFar);
     }
-  } catch(err) {
+    if (!res.ok || !res.body) return mfFallback(partialSoFar);
+
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() || '';
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const raw = line.slice(6).trim();
+          if (!raw) continue;
+          let evt;
+          try { evt = JSON.parse(raw); } catch { continue; }
+          if (evt.error) throw new Error(evt.error);
+          if (evt.status === 'start') {
+            _mfPbSet(25, `🤖 Streaming from ${evt.model || selectedModel}…`, 'ai-pbs3');
+          }
+          if (evt.chunk) {
+            window._mfStreamPartial += evt.chunk;
+            const chars = window._mfStreamPartial.length;
+            const pct = Math.min(90, 25 + Math.floor(chars / 80));
+            _mfPbSet(pct, `🤖 Generating… ${chars.toLocaleString()} chars`, 'ai-pbs3');
+            content.style.fontFamily = "'DM Sans', sans-serif";
+            content.style.whiteSpace = 'pre-wrap';
+            content.textContent = window._mfStreamPartial;
+          }
+          if (evt.done) { mfFinish(window._mfStreamPartial); return; }
+        }
+      }
+      if (window._mfStreamPartial.length > 50) { mfFinish(window._mfStreamPartial); }
+      else return mfFallback('');
+    } catch(e) {
+      if (e.name === 'AbortError') { _mfPbStop(); loading.classList.remove('active'); content.textContent = '⏹ Query cancelled.'; return; }
+      if (attempt < 1 && window._mfStreamPartial.length > 100) {
+        _mfPbSet(65, `⚠️ Resuming from ${window._mfStreamPartial.length.toLocaleString()} chars…`, 'ai-pbs3');
+        await new Promise(r => setTimeout(r, 2000));
+        return mfTryStream(window._mfStreamPartial, attempt + 1);
+      }
+      return mfFallback(window._mfStreamPartial);
+    }
+  }
+
+  async function mfFallback(partialSoFar) {
+    _mfPbSet(35, '🔄 Using standard query…', 'ai-pbs3');
+    const body = { prompt, use_search: true, model: selectedModel };
+    if (partialSoFar) body.partial = partialSoFar;
+    try {
+      const res = await fetch(workerBase + '/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(120000)
+      });
+      _mfPbStop(); _mfPbSet(88, '📥 Receiving response…', 'ai-pbs4');
+      const data = await res.json();
+      if (data.error) throw new Error(typeof data.error === 'string' ? data.error : (data.error.message || JSON.stringify(data.error)));
+      mfFinish(data.result || '');
+    } catch(err) {
+      _mfPbStop();
+      loading.classList.remove('active');
+      content.textContent = '❌ Connection error: ' + err.message + '\n\nMake sure your Cloudflare Worker URL is correct and accepting requests.';
+    }
+  }
+
+  function mfFinish(result) {
     _mfPbStop();
     loading.classList.remove('active');
-    content.textContent = 'Connection error: ' + err.message + '\n\nMake sure your Cloudflare Worker URL is correct and accepting requests.';
+    _mfPbSet(100, '✅ Done!', 'ai-pbs5');
+    content.style.fontFamily = "'DM Sans', sans-serif";
+    content.style.whiteSpace = 'pre-wrap';
+    content.textContent = result;
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+
+  await mfTryStream('', 0);
 }
 
 // COPY OUTPUT

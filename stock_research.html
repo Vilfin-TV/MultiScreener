@@ -370,6 +370,9 @@ function _srPbSet(pct,stage,sid){const f=document.getElementById('ai-pb-fill'),p
 function _srPbSim(fr,to){clearInterval(_srPbTimer);let c=fr;_srPbTimer=setInterval(()=>{if(c<to){c=Math.min(to,c+Math.max(0.1,(to-c)*0.04));const f=document.getElementById('ai-pb-fill'),p=document.getElementById('ai-pb-pct');if(f)f.style.width=Math.round(c)+'%';if(p)p.textContent=Math.round(c)+'%';}},1000);}
 function _srPbStop(){clearInterval(_srPbTimer);clearInterval(_srPbEl);}
 
+window._srStreamAbort = null;
+window._srStreamPartial = '';
+
 async function runAnalysis() {
   const section = document.getElementById('output-section');
   const content = document.getElementById('output-content');
@@ -378,7 +381,11 @@ async function runAnalysis() {
   loading.classList.add('active');
   section.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  // Show progress bar
+  // Cancel any in-flight query
+  if (window._srStreamAbort) { window._srStreamAbort.abort(); }
+  window._srStreamAbort = new AbortController();
+  window._srStreamPartial = '';
+
   _srPbSec=0; clearInterval(_srPbEl);
   content.innerHTML = `<div id="ai-pb-wrap" style="padding:32px 24px 24px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -398,43 +405,109 @@ async function runAnalysis() {
       <span id="ai-pbs4" style="font-size:11px;color:#555">Receive</span>
       <span id="ai-pbs5" style="font-size:11px;color:#555">Done</span>
     </div>
-    <div style="margin-top:16px;text-align:center;color:#888;font-size:12px">⏳ Fetching live stock data via Google Grounding + AI… 20–60 seconds</div>
+    <div style="margin-top:16px;text-align:center;color:#888;font-size:12px">⏳ Fetching live stock data via Google Grounding + AI… streaming live…</div>
   </div>`;
   _srPbEl = setInterval(()=>{_srPbSec++;const e=document.getElementById('ai-pb-elapsed');if(e)e.textContent=_srPbSec+'s';},1000);
 
-  setTimeout(()=>{ _srPbSet(20,'🔍 Searching live market data…','ai-pbs2'); },1500);
-  setTimeout(()=>{ _srPbSet(30,'🤖 AI Processing — generating report…','ai-pbs3'); _srPbSim(30,85); },4000);
-
+  const workerBase = (window._cfWorkerUrl || '').replace(/\/+$/, '');
   const prompt = buildPrompt();
-  try {
-    const res = await fetch((window._cfWorkerUrl || '').replace(/\/+$/, '') + '/query', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: prompt, use_search: true }),
-      signal: AbortSignal.timeout(90000)
-    });
-    _srPbStop(); _srPbSet(88,'📥 Receiving response…','ai-pbs4');
-    const data = await res.json();
-    loading.classList.remove('active');
-    _srPbSet(100,'✅ Done!','ai-pbs5');
-    if (data.result) {
-      setTimeout(()=>{
-        content.style.fontFamily = "'DM Sans', sans-serif";
-        content.style.whiteSpace = 'pre-wrap';
-        content.textContent = data.result;
-        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 400);
-    } else if (data.error) {
-      const errMsg = typeof data.error === 'string' ? data.error : (data.error.message || JSON.stringify(data.error));
-      content.textContent = '❌ Error: ' + errMsg;
-    } else {
-      content.textContent = JSON.stringify(data, null, 2);
+  const selectedModel = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
+
+  async function srTryStream(partialSoFar, attempt) {
+    const body = { prompt, use_search: true, model: selectedModel };
+    if (partialSoFar) body.partial = partialSoFar;
+    let res;
+    try {
+      res = await fetch(workerBase + '/query-stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: window._srStreamAbort.signal
+      });
+    } catch(e) {
+      if (e.name === 'AbortError') { _srPbStop(); loading.classList.remove('active'); content.textContent = '⏹ Query cancelled.'; return; }
+      return srFallback(partialSoFar);
     }
-  } catch(err) {
+    if (!res.ok || !res.body) return srFallback(partialSoFar);
+
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() || '';
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const raw = line.slice(6).trim();
+          if (!raw) continue;
+          let evt;
+          try { evt = JSON.parse(raw); } catch { continue; }
+          if (evt.error) throw new Error(evt.error);
+          if (evt.status === 'start') {
+            _srPbSet(25, `🤖 Streaming from ${evt.model || selectedModel}…`, 'ai-pbs3');
+          }
+          if (evt.chunk) {
+            window._srStreamPartial += evt.chunk;
+            const chars = window._srStreamPartial.length;
+            const pct = Math.min(90, 25 + Math.floor(chars / 80));
+            _srPbSet(pct, `🤖 Generating… ${chars.toLocaleString()} chars`, 'ai-pbs3');
+            content.style.fontFamily = "'DM Sans', sans-serif";
+            content.style.whiteSpace = 'pre-wrap';
+            content.textContent = window._srStreamPartial;
+          }
+          if (evt.done) { srFinish(window._srStreamPartial); return; }
+        }
+      }
+      if (window._srStreamPartial.length > 50) { srFinish(window._srStreamPartial); }
+      else return srFallback('');
+    } catch(e) {
+      if (e.name === 'AbortError') { _srPbStop(); loading.classList.remove('active'); content.textContent = '⏹ Query cancelled.'; return; }
+      if (attempt < 1 && window._srStreamPartial.length > 100) {
+        _srPbSet(65, `⚠️ Resuming from ${window._srStreamPartial.length.toLocaleString()} chars…`, 'ai-pbs3');
+        await new Promise(r => setTimeout(r, 2000));
+        return srTryStream(window._srStreamPartial, attempt + 1);
+      }
+      return srFallback(window._srStreamPartial);
+    }
+  }
+
+  async function srFallback(partialSoFar) {
+    _srPbSet(35, '🔄 Using standard query…', 'ai-pbs3');
+    const body = { prompt, use_search: true, model: selectedModel };
+    if (partialSoFar) body.partial = partialSoFar;
+    try {
+      const res = await fetch(workerBase + '/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(120000)
+      });
+      _srPbStop(); _srPbSet(88, '📥 Receiving response…', 'ai-pbs4');
+      const data = await res.json();
+      if (data.error) throw new Error(typeof data.error === 'string' ? data.error : (data.error.message || JSON.stringify(data.error)));
+      srFinish(data.result || '');
+    } catch(err) {
+      _srPbStop();
+      loading.classList.remove('active');
+      content.textContent = '❌ Connection error: ' + err.message;
+    }
+  }
+
+  function srFinish(result) {
     _srPbStop();
     loading.classList.remove('active');
-    content.textContent = '❌ Connection error: ' + err.message;
+    _srPbSet(100, '✅ Done!', 'ai-pbs5');
+    content.style.fontFamily = "'DM Sans', sans-serif";
+    content.style.whiteSpace = 'pre-wrap';
+    content.textContent = result;
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+
+  await srTryStream('', 0);
 }
 
 function copyOutput() {
