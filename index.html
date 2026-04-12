@@ -60,7 +60,7 @@ body{font-family:'DM Sans',sans-serif;background:#111;color:var(--text);min-heig
 
 /* ── LEFT MENU FULL-PAGE OVERLAY ── */
 .left-menu-overlay{
-  display:none;position:fixed;top:44px;left:0;right:0;bottom:0;z-index:500;
+  display:none;position:fixed;top:44px;left:0;right:0;bottom:0;z-index:700;
   background:#111;overflow-y:auto;animation:calcSlideIn .3s ease;
 }
 .left-menu-overlay.show{display:block}
@@ -3268,7 +3268,33 @@ document.addEventListener('DOMContentLoaded', () => {
   initLiveNews();
   initLiveClock();
   initRbResize();
+  initSidePanelLinks();
 });
+
+// ═══════════════════════════════════════════════════════════════════
+// SIDE PANEL LINK HANDLER — close panel then open link
+// ═══════════════════════════════════════════════════════════════════
+function initSidePanelLinks() {
+  const overlay = document.getElementById('left-menu-overlay');
+  if (!overlay) return;
+  overlay.addEventListener('click', function(e) {
+    const link = e.target.closest('a[href]');
+    if (!link) return;
+    const href = link.getAttribute('href');
+    if (!href || href.startsWith('#')) return;
+    e.preventDefault();
+    // Flash button to confirm click
+    const orig = link.textContent;
+    link.textContent = '↗ Opening…';
+    link.style.opacity = '0.7';
+    closeSidePanel();
+    setTimeout(() => {
+      window.open(href, '_blank', 'noopener,noreferrer');
+      link.textContent = orig;
+      link.style.opacity = '';
+    }, 280);
+  });
+}
 
 // ═══════════════════════════════════════════════════════════════════
 // DRAG-RESIZE RIGHT BAR
@@ -4032,6 +4058,9 @@ function openSidePanel(key) {
     return;
   }
   overlay.dataset.key = key;
+  // Collapse sidebar so it doesn't cover panel content
+  const sidebar = document.querySelector('.sidebar');
+  if (sidebar) sidebar.classList.remove('open');
   // Save ALL scroll positions before opening overlay
   const mc = document.querySelector('.main-content');
   _savedScrollMain = mc ? mc.scrollTop : 0;
