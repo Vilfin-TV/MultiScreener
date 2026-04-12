@@ -215,7 +215,7 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
 <div class="cf-modal-overlay" id="cf-modal-overlay" onclick="cfModalOverlayClick(event)">
   <div class="cf-modal">
     <div class="cf-modal-title">🔗 Cloudflare Worker Required</div>
-    <div class="cf-modal-sub">Enter your Cloudflare Workers URL to use AI analysis. The URL is saved in your browser.</div>
+    <div class="cf-modal-sub">Enter your Cloudflare Workers URL to use AI analysis. The URL is saved in your browser only — never uploaded to GitHub.<br/><a href="user_manual.html#cloudflare" target="_blank" style="color:#ffd166;font-size:11px;display:inline-block;margin-top:6px">📖 How to set up Cloudflare Worker? Step-by-step guide →</a></div>
     <label for="cf-url-input">Cloudflare Workers URL</label>
     <input type="url" id="cf-url-input" placeholder="https://your-worker.workers.dev" autocomplete="off" spellcheck="false"/>
     <div class="cf-modal-btns">
@@ -371,19 +371,23 @@ async function runAnalysis() {
   content.innerHTML = '<div class="output-placeholder"><div class="icon">⏳</div><p>Researching stock data... This may take 20–40 seconds.</p></div>';
   const prompt = buildPrompt();
   try {
-    const res = await fetch(window._cfWorkerUrl, {
+    const res = await fetch(window._cfWorkerUrl + '/query', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4000, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ prompt: prompt }),
+      signal: AbortSignal.timeout(60000)
     });
     const data = await res.json();
     loading.classList.remove('active');
-    if (data.content && data.content[0] && data.content[0].text) {
+    if (data.result) {
       content.style.fontFamily = "'DM Sans', sans-serif";
       content.style.whiteSpace = 'pre-wrap';
-      content.textContent = data.content[0].text;
+      content.textContent = data.result;
+    } else if (data.error) {
+      const errMsg = typeof data.error === 'string' ? data.error : (data.error.message || JSON.stringify(data.error));
+      content.textContent = 'Error: ' + errMsg;
     } else {
-      content.textContent = data.error ? 'Error: ' + data.error.message : JSON.stringify(data, null, 2);
+      content.textContent = JSON.stringify(data, null, 2);
     }
   } catch(err) {
     loading.classList.remove('active');
