@@ -2895,7 +2895,7 @@ function cfModalOverlayClick(e) {
 }
 
 async function cfDoConnect() {
-  const url = document.getElementById('cf-url-input').value.trim();
+  const url = document.getElementById('cf-url-input').value.trim().replace(/\/+$/, ''); // strip trailing slash
   if (!url) {
     document.getElementById('cf-status-msg').textContent = '⚠️ Please enter a valid URL.';
     return;
@@ -2974,7 +2974,7 @@ function aiQueryClose() {
 async function aiQuerySend() {
   const q = document.getElementById('ai-query-input').value.trim();
   if (!q) { document.getElementById('ai-query-status').textContent = '⚠️ Please enter a question.'; return; }
-  const url = window._cfWorkerUrl || localStorage.getItem(CF_KEY);
+  const url = (window._cfWorkerUrl || localStorage.getItem(CF_KEY) || '').replace(/\/+$/, '');
   if (!url) { document.getElementById('ai-query-status').textContent = '⚠️ Not connected. Use File → Connect first.'; return; }
   const status = document.getElementById('ai-query-status');
   const result = document.getElementById('ai-query-result');
@@ -3025,7 +3025,7 @@ async function autoSendToGemini() {
     return;
   }
 
-  const finalUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY);
+  const finalUrl = (window._cfWorkerUrl || localStorage.getItem(CF_KEY) || '').replace(/\/+$/, '');
   const queryEl = document.getElementById('copy-content');
   const queryText = queryEl?.innerText?.trim();
 

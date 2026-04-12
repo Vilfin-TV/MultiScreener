@@ -476,7 +476,7 @@ async function runAnalysis() {
 
   const prompt = buildPrompt();
   try {
-    const res = await fetch(window._cfWorkerUrl + '/query', {
+    const res = await fetch((window._cfWorkerUrl || '').replace(/\/+$/, '') + '/query', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: prompt }),
