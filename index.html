@@ -7841,7 +7841,7 @@ async function sendLosslessJson() {
     const res = await fetch(finalUrl + '/query-stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, use_search: true, model }),
+      body: JSON.stringify({ prompt, use_search: true, model, json_mode: true }),
       signal: window._streamAbort.signal
     });
 
@@ -7866,7 +7866,7 @@ async function sendLosslessJson() {
     } else {
       const data = await fetch(finalUrl + '/query', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, use_search: true, model }), signal: AbortSignal.timeout(120000)
+        body: JSON.stringify({ prompt, use_search: true, model, json_mode: true }), signal: AbortSignal.timeout(120000)
       }).then(r => r.json());
       rawJson = data.result || '';
     }

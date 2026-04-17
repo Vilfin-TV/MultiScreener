@@ -2166,32 +2166,43 @@ function copyWorkerCode() {
   </div>
   <div style="position:relative;margin-bottom:4px">
     <button onclick="copyWorkerCode()" id="worker-copy-btn" style="position:absolute;top:10px;right:10px;z-index:10;background:var(--burn);border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:700;padding:6px 14px;cursor:pointer;letter-spacing:.5px">📋 Copy Code</button>
-  <pre id="worker-code-block" style="background:#0a0a0a;border:1px solid #3a342c;border-radius:10px;padding:16px;padding-top:46px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e2d9c8;white-space:pre;overflow-x:auto;line-height:1.7">// VilfinTV AI Worker v4
-// Multi-key failover · All Gemini models · SSE Streaming · Resume support
+  <pre id="worker-code-block" style="background:#0a0a0a;border:1px solid #3a342c;border-radius:10px;padding:16px;padding-top:46px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e2d9c8;white-space:pre;overflow-x:auto;line-height:1.7">// ╔══════════════════════════════════════════════════════════════╗
+// ║  VilfinTV AI Worker v5                                       ║
+// ║  Multi-key failover · All Gemini models · SSE streaming      ║
+// ║  Resume support · Lossless JSON mode · Model 404 fallback    ║
+// ╚══════════════════════════════════════════════════════════════╝
 
-const GEMINI_MODELS = {
-  free: [
-    'gemini-2.5-flash',
-    'gemini-2.5-flash-latest',
-    'gemini-2.5-flash-preview-04-17',
-    'gemini-2.0-flash',
-    'gemini-2.0-flash-latest',
-    'gemini-2.0-flash-lite',
-    'gemini-1.5-flash',
-    'gemini-1.5-flash-latest',
-    'gemini-1.5-flash-8b',
-  ],
-  pro: [
-    'gemini-3.1-pro',
-    'gemini-2.5-pro',
-    'gemini-2.5-pro-latest',
-    'gemini-2.5-pro-preview-05-06',
-    'gemini-2.5-pro-preview-03-25',
-    'gemini-2.0-pro-exp',
-    'gemini-1.5-pro',
-    'gemini-1.5-pro-latest',
-  ]
-};
+const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
+
+// Free-tier models (priority order — most capable first)
+const FREE_MODELS = [
+  'gemini-2.5-flash-preview-04-17',
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-latest',
+  'gemini-2.0-flash',
+  'gemini-2.0-flash-latest',
+  'gemini-2.0-flash-lite',
+  'gemini-1.5-flash',
+  'gemini-1.5-flash-latest',
+  'gemini-1.5-flash-8b',
+];
+
+// Pro models (require billing)
+const PRO_MODELS = [
+  'gemini-3.1-pro',
+  'gemini-2.5-pro-preview-05-06',
+  'gemini-2.5-pro',
+  'gemini-2.5-pro-latest',
+  'gemini-2.5-pro-preview-03-25',
+  'gemini-2.0-pro-exp',
+  'gemini-1.5-pro',
+  'gemini-1.5-pro-latest',
+];
+
+// Safe fallback — always available
+const FALLBACK_MODEL = 'gemini-2.0-flash';
+
+// ── Helpers ─────────────────────────────────────────────────────
 
 function getKeys(env) {
   return [
@@ -2201,29 +2212,56 @@ function getKeys(env) {
   ].filter(Boolean);
 }
 
-function chooseModel(reqModel, tier) {
-  const all = tier === 'pro'
-    ? [...GEMINI_MODELS.pro, ...GEMINI_MODELS.free]
-    : [...GEMINI_MODELS.free, ...GEMINI_MODELS.pro];
-  return (reqModel &amp;&amp; all.includes(reqModel)) ? reqModel : all[0];
+function pickModel(requested, tier) {
+  const pool = tier === 'pro'
+    ? [...PRO_MODELS, ...FREE_MODELS]
+    : [...FREE_MODELS, ...PRO_MODELS];
+  if (requested && pool.includes(requested)) return requested;
+  return pool[0];
 }
 
+// Multi-turn contents: resume from partial if provided
 function buildContents(prompt, partial) {
-  if (!partial) return [{ role: 'user', parts: [{ text: prompt }] }];
+  if (!partial || !partial.trim()) {
+    return [{ role: 'user', parts: [{ text: prompt }] }];
+  }
   return [
     { role: 'user',  parts: [{ text: prompt }] },
-    { role: 'model', parts: [{ text: partial }] },
-    { role: 'user',  parts: [{ text: 'CONTINUE from exactly where you stopped. Do NOT repeat anything already written above. Just continue seamlessly from the last word.' }] }
+    { role: 'model', parts: [{ text: partial.trim() }] },
+    { role: 'user',  parts: [{ text: 'CONTINUE seamlessly from exactly where you stopped. Do NOT repeat anything already written. Do NOT restart. Just continue from the last word/field.' }] },
   ];
 }
 
+function buildReqBody(prompt, partial, useSearch, jsonMode) {
+  const contents = buildContents(prompt, partial);
+  const body = {
+    contents,
+    generationConfig: {
+      temperature: jsonMode ? 0.1 : 0.3,
+      maxOutputTokens: jsonMode ? 65536 : 16384,
+      // JSON mode: force structured output
+      ...(jsonMode ? { responseMimeType: 'application/json' } : {}),
+    },
+  };
+  // ✅ Correct Google Search tool name for Gemini 2.0+ API
+  if (useSearch) body.tools = [{ googleSearch: {} }];
+  return body;
+}
+
+// ── Main Worker ─────────────────────────────────────────────────
+
 export default {
   async fetch(request, env) {
-    const allowedOrigin = 'https://vilfin-tv.github.io';
+    // Dynamic CORS — allow GitHub Pages, localhost, and 127.0.0.1
+    const origin = request.headers.get('Origin') || '';
+    const allowed = ['https://vilfin-tv.github.io', 'http://localhost', 'http://127.0.0.1'];
+    const corsOrigin = allowed.some(o => origin.startsWith(o)) ? origin : 'https://vilfin-tv.github.io';
+
     const cors = {
-      'Access-Control-Allow-Origin': allowedOrigin,
+      'Access-Control-Allow-Origin': corsOrigin,
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
+      'Vary': 'Origin',
     };
     const jsonH = { ...cors, 'Content-Type': 'application/json' };
 
@@ -2231,41 +2269,69 @@ export default {
 
     const url = new URL(request.url);
 
-    // GET /ping — health + capability check
+    // ── GET /ping ────────────────────────────────────────────────
     if (url.pathname === '/ping') {
       const keys = getKeys(env);
       return new Response(JSON.stringify({
-        status: 'ok', service: 'VilfinTV AI Worker v4',
-        keysConfigured: keys.length, models: GEMINI_MODELS
+        status: 'ok',
+        service: 'VilfinTV AI Worker v5',
+        keysConfigured: keys.length,
+        models: { free: FREE_MODELS, pro: PRO_MODELS },
+        endpoints: ['/ping', '/models', '/query', '/query-stream', '/test-key'],
       }), { headers: jsonH });
     }
 
-    // GET /models — list all models
+    // ── GET /models ──────────────────────────────────────────────
     if (url.pathname === '/models') {
-      return new Response(JSON.stringify(GEMINI_MODELS), { headers: jsonH });
+      return new Response(JSON.stringify({ free: FREE_MODELS, pro: PRO_MODELS }), { headers: jsonH });
     }
 
-    // POST /query — standard query with resume support
+    // ── GET /test-key — verify each key works ───────────────────
+    if (url.pathname === '/test-key') {
+      const keys = getKeys(env);
+      if (!keys.length) return new Response(JSON.stringify({ error: 'No keys configured' }), { status: 500, headers: jsonH });
+      const results = [];
+      for (let i = 0; i &lt; keys.length; i++) {
+        try {
+          const r = await fetch(`${GEMINI_BASE}/${FALLBACK_MODEL}:generateContent?key=${keys[i]}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'Reply with: OK' }] }], generationConfig: { maxOutputTokens: 8 } }),
+          });
+          const d = await r.json().catch(() => null);
+          const reply = d?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          results.push({ key: i + 1, status: r.status, ok: r.ok, reply, error: d?.error?.message });
+        } catch (e) {
+          results.push({ key: i + 1, ok: false, error: e.message });
+        }
+      }
+      return new Response(JSON.stringify({ results }), { headers: jsonH });
+    }
+
+    // ── POST /query — standard (non-streaming) with resume ───────
     if (url.pathname === '/query' &amp;&amp; request.method === 'POST') {
       const body = await request.json().catch(() =&gt; ({}));
-      const { prompt, use_search, model: rm, partial, tier } = body;
+      const { prompt, use_search, model: rm, partial, tier, json_mode } = body;
       if (!prompt) return new Response(JSON.stringify({ error: 'No prompt provided' }), { status: 400, headers: jsonH });
 
       const keys = getKeys(env);
-      if (!keys.length) return new Response(JSON.stringify({ error: 'No API key. Add GEMINI_API_KEY_1 as a Worker secret.' }), { status: 500, headers: jsonH });
+      if (!keys.length) return new Response(JSON.stringify({ error: 'No API key. Add GEMINI_API_KEY_1 as a Worker Secret.' }), { status: 500, headers: jsonH });
 
-      const model = chooseModel(rm, tier);
-      const contents = buildContents(prompt, partial);
-      const reqBody = { contents, generationConfig: { temperature: 0.2, maxOutputTokens: 8192 } };
-      if (use_search) reqBody.tools = [{ google_search: {} }];
+      let model = pickModel(rm, tier);
+      const reqBody = buildReqBody(prompt, partial, use_search, json_mode);
 
       let lastErr = '';
       for (let ki = 0; ki &lt; keys.length; ki++) {
         try {
-          const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${keys[ki]}`,
-            { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reqBody) }
-          );
+          let res = await fetch(`${GEMINI_BASE}/${model}:generateContent?key=${keys[ki]}`,
+            { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reqBody) });
+
+          // Model not found — silently fallback
+          if (res.status === 404) {
+            model = FALLBACK_MODEL;
+            res = await fetch(`${GEMINI_BASE}/${model}:generateContent?key=${keys[ki]}`,
+              { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reqBody) });
+          }
+
           const data = await res.json();
           if (!res.ok) {
             lastErr = data?.error?.message || `HTTP ${res.status}`;
@@ -2274,48 +2340,54 @@ export default {
           }
           const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
           return new Response(JSON.stringify({ result: text, model, key: ki + 1 }), { headers: jsonH });
-        } catch(e) {
+        } catch (e) {
           lastErr = e.message;
           if (ki &lt; keys.length - 1) continue;
         }
       }
-      return new Response(JSON.stringify({ error: lastErr || 'All keys failed' }), { status: 500, headers: jsonH });
+      return new Response(JSON.stringify({ error: lastErr || 'All keys exhausted' }), { status: 500, headers: jsonH });
     }
 
-    // POST /query-stream — SSE streaming query with resume support
+    // ── POST /query-stream — SSE streaming with resume ───────────
     if (url.pathname === '/query-stream' &amp;&amp; request.method === 'POST') {
       const body = await request.json().catch(() =&gt; ({}));
-      const { prompt, use_search, model: rm, partial, tier } = body;
+      const { prompt, use_search, model: rm, partial, tier, json_mode } = body;
       if (!prompt) return new Response(JSON.stringify({ error: 'No prompt provided' }), { status: 400, headers: jsonH });
 
       const keys = getKeys(env);
       if (!keys.length) return new Response(JSON.stringify({ error: 'No API key configured.' }), { status: 500, headers: jsonH });
 
-      const model = chooseModel(rm, tier);
-      const contents = buildContents(prompt, partial);
-      const reqBody = { contents, generationConfig: { temperature: 0.2, maxOutputTokens: 8192 } };
-      if (use_search) reqBody.tools = [{ google_search: {} }];
+      let model = pickModel(rm, tier);
+      const reqBody = buildReqBody(prompt, partial, use_search, json_mode);
 
       const { readable, writable } = new TransformStream();
       const writer = writable.getWriter();
       const enc = new TextEncoder();
-      const sse = async d =&gt; { try { await writer.write(enc.encode(`data: ${JSON.stringify(d)}\n\n`)); } catch {} };
+      const send = async d =&gt; { try { await writer.write(enc.encode(`data: ${JSON.stringify(d)}\n\n`)); } catch {} };
 
       (async () =&gt; {
         for (let ki = 0; ki &lt; keys.length; ki++) {
           try {
-            const gemRes = await fetch(
-              `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&amp;key=${keys[ki]}`,
-              { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reqBody) }
-            );
+            let gemRes = await fetch(`${GEMINI_BASE}/${model}:streamGenerateContent?alt=sse&amp;key=${keys[ki]}`,
+              { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reqBody) });
+
+            // Model 404 — fallback silently
+            if (gemRes.status === 404) {
+              model = FALLBACK_MODEL;
+              gemRes = await fetch(`${GEMINI_BASE}/${model}:streamGenerateContent?alt=sse&amp;key=${keys[ki]}`,
+                { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reqBody) });
+            }
+
             if (!gemRes.ok) {
               const err = await gemRes.json().catch(() =&gt; ({}));
               const code = gemRes.status;
               if ((code === 429 || code === 403 || code === 401) &amp;&amp; ki &lt; keys.length - 1) continue;
-              await sse({ error: err?.error?.message || `HTTP ${code}` });
+              await send({ error: err?.error?.message || `HTTP ${code}`, code });
               break;
             }
-            await sse({ status: 'start', model, key: ki + 1 });
+
+            await send({ status: 'start', model, key: ki + 1 });
+
             const reader = gemRes.body.getReader();
             const dec = new TextDecoder();
             let buf = '';
@@ -2332,28 +2404,34 @@ export default {
                 try {
                   const chunk = JSON.parse(raw);
                   const t = chunk?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                  if (t) await sse({ chunk: t });
+                  if (t) await send({ chunk: t });
                   const reason = chunk?.candidates?.[0]?.finishReason;
-                  if (reason) await sse({ done: true, finishReason: reason });
+                  if (reason &amp;&amp; reason !== 'OTHER') await send({ done: true, finishReason: reason });
                 } catch {}
               }
             }
-            break;
-          } catch(e) {
+            break; // success
+
+          } catch (e) {
             if (ki &lt; keys.length - 1) continue;
-            await sse({ error: e.message });
+            await send({ error: e.message || 'Stream failed' });
           }
         }
         await writer.close().catch(() =&gt; {});
       })();
 
       return new Response(readable, {
-        headers: { ...cors, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no' }
+        headers: {
+          ...cors,
+          'Content-Type': 'text/event-stream; charset=utf-8',
+          'Cache-Control': 'no-cache, no-store',
+          'X-Accel-Buffering': 'no',
+        },
       });
     }
 
-    return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: jsonH });
-  }
+    return new Response(JSON.stringify({ error: 'Not found', path: url.pathname }), { status: 404, headers: jsonH });
+  },
 };</pre>
   </div><!-- /worker-code-wrapper -->
   <div style="margin-top:12px;font-size:12px;color:#6e6558">3. Click <strong>"Save and Deploy"</strong> (top right button).</div>
