@@ -22,7 +22,7 @@ html{scroll-behavior:smooth}
 body{font-family:'DM Sans',sans-serif;background:#111;color:var(--text);min-height:100vh;overflow-x:hidden}
 
 /* ── LAYOUT WRAPPER ── */
-.layout{display:flex;height:calc(100vh - 44px);overflow:hidden}
+.layout{display:flex;height:calc(100vh - 90px);overflow:hidden}
 
 /* ── MAIN CONTENT scroll ── */
 .main-content{flex:1;overflow-y:auto;overflow-x:hidden;min-width:0}
@@ -33,7 +33,7 @@ body{font-family:'DM Sans',sans-serif;background:#111;color:var(--text);min-heig
 .sidebar{
   width:54px;background:var(--dark2);border-right:1px solid var(--border);
   display:flex;flex-direction:column;align-items:center;
-  padding:16px 0;gap:4px;position:sticky;top:44px;height:calc(100vh - 44px);
+  padding:16px 0;gap:4px;position:sticky;top:90px;height:calc(100vh - 90px);
   overflow:hidden;transition:width .25s ease;flex-shrink:0;z-index:600;
 }
 .sidebar.open{width:var(--sidebar-w)}
@@ -843,7 +843,7 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
   width:300px;flex-shrink:0;
   background:var(--dark2);border-left:1px solid var(--border);
   display:flex;flex-direction:column;
-  position:sticky;top:44px;height:calc(100vh - 44px);
+  position:sticky;top:90px;height:calc(100vh - 90px);
   overflow:hidden;z-index:100;
 }
 
@@ -998,6 +998,89 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
   .mobile-menu-btn{width:34px;height:34px;font-size:18px}
   #live-clock{display:none}
 }
+
+/* ── DESKTOP TICKER STRIP ── */
+.desktop-ticker-strip{
+  height:46px;border-bottom:1px solid var(--border);background:var(--dark2);
+  flex-shrink:0;overflow:hidden;
+}
+@media(max-width:900px){.desktop-ticker-strip{display:none}}
+@media(max-width:900px){.layout{height:auto;min-height:calc(100vh - 44px)}.right-bar{top:44px;height:calc(100vh-44px)}}
+
+/* ── RIGHT-BAR AI SIDEBAR ── */
+.rb-ai-messages{
+  flex:1;overflow-y:auto;padding:12px 10px;
+  display:flex;flex-direction:column;gap:10px;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+.rb-ai-messages::-webkit-scrollbar{width:4px}
+.rb-ai-messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.rb-msg{display:flex;gap:8px;align-items:flex-start}
+.rb-msg-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--burn),var(--burn2));display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.rb-msg-bubble{
+  background:var(--card);border:1px solid var(--border);border-radius:0 10px 10px 10px;
+  padding:9px 11px;font-size:12px;line-height:1.6;color:var(--text2);max-width:calc(100% - 40px);
+  white-space:pre-wrap;word-break:break-word;
+}
+.rb-msg.rb-msg-user{flex-direction:row-reverse}
+.rb-msg.rb-msg-user .rb-msg-bubble{
+  background:linear-gradient(135deg,rgba(192,57,11,.15),rgba(232,84,15,.1));
+  border-color:rgba(192,57,11,.3);border-radius:10px 0 10px 10px;color:var(--text)
+}
+.rb-msg.rb-msg-user .rb-msg-avatar{background:var(--card2);font-size:14px}
+.rb-chip{
+  background:var(--card2);border:1px solid var(--border2);border-radius:20px;
+  color:var(--text2);font-size:10px;padding:3px 9px;cursor:pointer;white-space:nowrap;
+  transition:all .15s
+}
+.rb-chip:hover{background:var(--burn);border-color:var(--burn2);color:#fff}
+.rb-ai-input-wrap{
+  border-top:1px solid var(--border);padding:8px 10px 6px;flex-shrink:0;
+  background:var(--dark3)
+}
+.rb-ai-input-row{display:flex;gap:6px;align-items:flex-end}
+.rb-ai-input{
+  flex:1;background:var(--card);border:1px solid var(--border2);border-radius:10px;
+  color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;padding:8px 10px;
+  resize:none;outline:none;max-height:120px;overflow-y:auto;line-height:1.5;
+  transition:border-color .15s;scrollbar-width:thin
+}
+.rb-ai-input:focus{border-color:var(--burn2)}
+.rb-ai-send-btn{
+  width:34px;height:34px;border-radius:10px;background:var(--burn);border:none;
+  color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:background .15s;margin-bottom:2px
+}
+.rb-ai-send-btn:hover{background:var(--burn2)}
+.rb-ai-send-btn:disabled{background:var(--dark4);cursor:not-allowed}
+
+/* ── LOSSLESS JSON RENDERER ── */
+.ljson-wrap{font-family:'DM Sans',sans-serif;padding:16px}
+.ljson-header{background:linear-gradient(135deg,var(--burn),var(--burn2));color:#fff;border-radius:10px;padding:16px 20px;margin-bottom:16px}
+.ljson-header h2{font-family:'Bebas Neue',sans-serif;letter-spacing:2px;font-size:22px;margin-bottom:4px}
+.ljson-header .lj-meta{font-size:11px;opacity:.8}
+.ljson-tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px}
+.ljson-tab{padding:5px 12px;border-radius:20px;border:1px solid var(--border2);background:var(--card2);color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
+.ljson-tab.active{background:var(--burn);border-color:var(--burn2);color:#fff}
+.ljson-panel{display:none}.ljson-panel.active{display:block}
+.lj-section{margin-bottom:16px}
+.lj-section-title{font-size:11px;font-weight:700;color:var(--gold2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.lj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.lj-field{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+.lj-field-name{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px}
+.lj-field-value{font-size:14px;font-weight:600;color:var(--text);margin-bottom:5px;word-break:break-word}
+.lj-field-meta{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.lj-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:12px;letter-spacing:.4px}
+.lj-badge.conf-high{background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.3)}
+.lj-badge.conf-med{background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.3)}
+.lj-badge.conf-low{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3)}
+.lj-badge.status-ok{background:rgba(34,197,94,.1);color:#22c55e;border:1px solid rgba(34,197,94,.2)}
+.lj-badge.status-warn{background:rgba(245,158,11,.1);color:#f59e0b;border:1px solid rgba(245,158,11,.2)}
+.lj-badge.status-na{background:var(--card);color:var(--text3);border:1px solid var(--border)}
+.lj-source{font-size:10px;color:var(--text3);margin-top:3px}
+.ljson-export-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.ljson-export-btn{padding:6px 14px;border-radius:6px;border:1px solid var(--border2);background:var(--card2);color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
+.ljson-export-btn:hover{background:var(--burn);border-color:var(--burn2);color:#fff}
 </style>
 </head>
 <body>
@@ -1370,6 +1453,17 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
       </div>
     </div>
 
+    <!-- TRADE (Broker Platforms) -->
+    <div class="tmenu-item" id="tmenu-trade">
+      <button class="tmenu-btn" onclick="toggleMenu('trade')">Trade <span class="arr">▾</span></button>
+      <div class="tmenu-dropdown" id="tdd-trade">
+        <div class="dd-header">🏦 Broker Platforms</div>
+        <a class="dd-item news-link" href="https://login.dhan.co/?location=DH_WEB" target="_blank"><span class="nl-name">🟠 Dhan</span><span class="nl-url">dhan.co</span></a>
+        <a class="dd-item news-link" href="https://kite.zerodha.com/" target="_blank"><span class="nl-name">🔵 Zerodha Kite</span><span class="nl-url">kite.zerodha.com</span></a>
+        <a class="dd-item news-link" href="https://star.prostocks.com/" target="_blank"><span class="nl-name">⭐ ProStocks Star</span><span class="nl-url">prostocks.com</span></a>
+      </div>
+    </div>
+
     <!-- TOOLS (AI & Utilities) -->
     <div class="tmenu-item" id="tmenu-aitools">
       <button class="tmenu-btn" onclick="toggleMenu('aitools')">Tools <span class="arr">▾</span></button>
@@ -1398,6 +1492,39 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
   </div>
 
 </div><!-- /top-menubar -->
+
+<!-- DESKTOP TICKER STRIP — TradingView scrolling tape, desktop only -->
+<div class="desktop-ticker-strip" id="desktop-ticker-strip">
+  <div class="tradingview-widget-container" style="height:46px">
+    <div class="tradingview-widget-container__widget"></div>
+    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+    {
+      "symbols":[
+        {"proName":"BSE:SENSEX","title":"SENSEX"},
+        {"proName":"NSE:NIFTY","title":"NIFTY 50"},
+        {"proName":"NSE:BANKNIFTY","title":"Bank Nifty"},
+        {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
+        {"proName":"CAPITALCOM:US100","title":"Nasdaq 100"},
+        {"proName":"FOREXCOM:DJI","title":"Dow Jones"},
+        {"proName":"INDEX:NKY","title":"Nikkei 225"},
+        {"proName":"INDEX:DEU40","title":"DAX"},
+        {"proName":"TVC:GOLD","title":"Gold"},
+        {"proName":"TVC:SILVER","title":"Silver"},
+        {"proName":"TVC:USOIL","title":"WTI Oil"},
+        {"proName":"FX:USDINR","title":"USD/INR"},
+        {"proName":"FX:USDJPY","title":"USD/JPY"},
+        {"proName":"FX:EURUSD","title":"EUR/USD"},
+        {"proName":"CAPITALCOM:BTC","title":"Bitcoin"}
+      ],
+      "showSymbolLogo":true,
+      "isTransparent":false,
+      "displayMode":"adaptive",
+      "colorTheme":"dark",
+      "locale":"en"
+    }
+    </script>
+  </div>
+</div>
 
 <!-- MOBILE MARKETS STRIP — TradingView ticker, visible only on mobile -->
 <div class="mobile-markets-strip" id="mobile-markets-strip">
@@ -1839,6 +1966,7 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
       <button class="copy-all-btn" style="background:linear-gradient(135deg,#0d6b3e,#16a34a);border-color:#16a34a" onclick="autoSendToGemini()">🚀 Auto Send to Gemini</button>
+      <button class="copy-all-btn" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-color:#3b82f6" onclick="sendLosslessJson()">📊 Lossless JSON Report</button>
       <button class="copy-all-btn" id="copy-btn" onclick="copyQuery()">📋 Copy Query</button>
     </div>
   </div>
@@ -1876,6 +2004,19 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
     </div>
 
     <pre id="auto-gemini-result" style="display:none;background:var(--dark2);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:12px;color:var(--text2);line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:400px;overflow-y:auto;font-family:'JetBrains Mono',monospace"></pre>
+  </div>
+
+  <!-- LOSSLESS JSON RENDER PANEL -->
+  <div id="ljson-panel" style="display:none;margin-bottom:16px;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:0;overflow:hidden">
+    <div style="background:var(--dark3);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:12px;font-weight:700;color:var(--gold2)">📊 Lossless JSON Report</div>
+      <div style="display:flex;gap:6px">
+        <button onclick="exportLjsonHtml()" class="ljson-export-btn">⬇ HTML</button>
+        <button onclick="exportLjsonPdf()" class="ljson-export-btn">🖨 PDF</button>
+        <button onclick="copyLjsonRaw()" class="ljson-export-btn">📋 Copy JSON</button>
+      </div>
+    </div>
+    <div id="ljson-content" style="padding:0"></div>
   </div>
 
   <div id="copy-content">
@@ -1978,191 +2119,61 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
      PERMANENT RIGHT BAR — Live Markets
 ══════════════════════════════════════════ -->
 <div class="right-bar" id="right-bar">
+
+  <!-- Sidebar header -->
   <div class="rb-header">
-    <div class="rb-title"><span class="rb-dot"></span> LIVE MARKETS</div>
-    <div class="rb-tabs">
-      <button class="rb-tab active" onclick="switchRBTab('overview')" id="rbtab-overview">🌐 Overview</button>
-      <button class="rb-tab" onclick="switchRBTab('indices')" id="rbtab-indices">📈 Indices</button>
-      <button class="rb-tab" onclick="switchRBTab('stocks')" id="rbtab-stocks">🏢 Stocks</button>
-      <button class="rb-tab" onclick="switchRBTab('commodities')" id="rbtab-commodities">🥇 Commodities</button>
-      <button class="rb-tab" onclick="switchRBTab('forex')" id="rbtab-forex">💱 Forex</button>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div class="rb-title">
+        <span style="font-size:16px">🤖</span>
+        <span>AI ASSISTANT</span>
+        <span class="rb-dot" id="rb-ai-dot" style="background:var(--text3)"></span>
+      </div>
+      <button onclick="rbAiClear()" title="Clear chat" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'">🗑</button>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-top:2px" id="rb-ai-model-label">Powered by Gemini via Worker</div>
+  </div>
+
+  <!-- Chat messages area -->
+  <div class="rb-ai-messages" id="rb-ai-messages">
+    <div class="rb-msg rb-msg-bot">
+      <div class="rb-msg-avatar">🤖</div>
+      <div class="rb-msg-bubble">
+        <div style="font-weight:600;margin-bottom:4px;color:var(--gold2)">VilfinTV AI</div>
+        Ask me anything about markets, stocks, ETFs, mutual funds or the economy.
+        <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px" id="rb-quick-chips">
+          <button class="rb-chip" onclick="rbAiChip('NIFTY 50 live price and today\'s outlook')">📈 Nifty Today</button>
+          <button class="rb-chip" onclick="rbAiChip('Gold price analysis today')">🥇 Gold</button>
+          <button class="rb-chip" onclick="rbAiChip('Top 5 BSE gainers today')">🏆 Top Gainers</button>
+          <button class="rb-chip" onclick="rbAiChip('USD to INR rate today')">💱 USD/INR</button>
+          <button class="rb-chip" onclick="rbAiChip('Sensex outlook this week')">📊 Sensex</button>
+          <button class="rb-chip" onclick="rbAiChip('Best mutual funds to invest in 2026')">💰 Best MFs</button>
+        </div>
+      </div>
     </div>
   </div>
-  <div class="rb-content">
 
-    <!-- Overview — Market Overview -->
-    <div class="rb-frame active" id="rbframe-overview">
-      <div class="tradingview-widget-container" style="height:100%;width:100%">
-        <div class="tradingview-widget-container__widget" style="height:calc(100% - 4px);width:100%"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
-        {
-          "colorTheme": "dark",
-          "dateRange": "12M",
-          "locale": "en",
-          "largeChartUrl": "",
-          "isTransparent": false,
-          "showFloatingTooltip": false,
-          "width": "100%",
-          "height": "100%",
-          "showSymbolLogo": true,
-          "showChart": true,
-          "plotLineColorGrowing": "rgba(41,98,255,1)",
-          "plotLineColorFalling": "rgba(41,98,255,1)",
-          "gridLineColor": "rgba(42,46,57,0)",
-          "scaleFontColor": "rgba(209,212,220,1)",
-          "belowLineFillColorGrowing": "rgba(41,98,255,0.12)",
-          "belowLineFillColorFalling": "rgba(41,98,255,0.12)",
-          "belowLineFillColorGrowingBottom": "rgba(41,98,255,0)",
-          "belowLineFillColorFallingBottom": "rgba(41,98,255,0)",
-          "symbolActiveColor": "rgba(41,98,255,0.12)",
-          "support_host": "https://www.tradingview.com",
-          "tabs": [
-            {
-              "title": "Indices",
-              "symbols": [
-                {"s": "BSE:SENSEX", "d": "SENSEX (India)"},
-                {"s": "NSE:NIFTY", "d": "Nifty 50 ★", "logoid": "indices/nifty-50", "currency-logoid": "country/IN"},
-                {"s": "FOREXCOM:SPXUSD", "d": "S&P 500"},
-                {"s": "FOREXCOM:DJI", "d": "Dow Jones"},
-                {"s": "CAPITALCOM:US100", "d": "Nasdaq 100"},
-                {"s": "INDEX:NKY", "d": "Nikkei 225"},
-                {"s": "INDEX:DEU40", "d": "DAX"},
-                {"s": "FOREXCOM:UKXGBP", "d": "FTSE 100"},
-                {"s": "HSI:HSI", "d": "Hang Seng", "logoid": "indices/hang-seng", "currency-logoid": "country/HK"}
-              ],
-              "originalTitle": "Indices"
-            },
-            {
-              "title": "Futures",
-              "symbols": [
-                {"s": "BMFBOVESPA:ISP1!", "d": "S&P 500 Futures"},
-                {"s": "BMFBOVESPA:EUR1!", "d": "Euro Futures"},
-                {"s": "CMCMARKETS:GOLD", "d": "Gold"},
-                {"s": "PYTH:WTI3!", "d": "WTI Crude Oil"},
-                {"s": "BMFBOVESPA:CCM1!", "d": "Corn"}
-              ],
-              "originalTitle": "Futures"
-            },
-            {
-              "title": "Bonds",
-              "symbols": [
-                {"s": "EUREX:FGBL1!", "d": "Euro Bund"},
-                {"s": "EUREX:FBTP1!", "d": "Euro BTP"},
-                {"s": "EUREX:FGBM1!", "d": "Euro BOBL"}
-              ],
-              "originalTitle": "Bonds"
-            },
-            {
-              "title": "Forex",
-              "symbols": [
-                {"s": "FX:EURUSD", "d": "EUR/USD"},
-                {"s": "FX:GBPUSD", "d": "GBP/USD"},
-                {"s": "FX:USDJPY", "d": "USD/JPY"},
-                {"s": "FX:USDCHF", "d": "USD/CHF"},
-                {"s": "FX:AUDUSD", "d": "AUD/USD"},
-                {"s": "FX:USDCAD", "d": "USD/CAD"}
-              ],
-              "originalTitle": "Forex"
-            }
-          ]
-        }
-        </script>
-      </div>
+  <!-- Typing indicator (hidden by default) -->
+  <div id="rb-typing" style="display:none;padding:8px 14px;font-size:12px;color:var(--text3)">
+    <span style="animation:tvBlink 1s infinite">●</span>
+    <span style="animation:tvBlink 1s infinite .2s">●</span>
+    <span style="animation:tvBlink 1s infinite .4s">●</span>
+    &nbsp; Gemini is thinking…
+  </div>
+
+  <!-- Input area -->
+  <div class="rb-ai-input-wrap">
+    <div class="rb-ai-input-row">
+      <textarea id="rb-ai-input" class="rb-ai-input" placeholder="Ask about any stock, market, or topic…" rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();rbAiSend()}"></textarea>
+      <button class="rb-ai-send-btn" id="rb-ai-send-btn" onclick="rbAiSend()" title="Send (Enter)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+      </button>
     </div>
-
-    <!-- Major Indices — Market Quotes -->
-    <div class="rb-frame" id="rbframe-indices">
-      <div class="tradingview-widget-container" style="height:100%;width:100%">
-        <div class="tradingview-widget-container__widget" style="height:calc(100% - 4px);width:100%"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js" async>
-        {
-          "width":"100%","height":"100%","locale":"en","isTransparent":false,"colorTheme":"dark",
-          "showSymbolLogo":true,
-          "symbolsGroups":[
-            {"name":"Indian Indices","symbols":[
-              {"name":"BSE:SENSEX","displayName":"SENSEX"},
-              {"name":"CAPITALCOM:IN50","displayName":"NIFTY 50"},
-              {"name":"BSE:BANKEX","displayName":"Bank Index"},
-              {"name":"BSE:MIDCAP","displayName":"Midcap"},
-              {"name":"BSE:SMLCAP","displayName":"Smallcap"}
-            ]},
-            {"name":"Global Indices","symbols":[
-              {"name":"CAPITALCOM:SPX500","displayName":"S&P 500"},
-              {"name":"CAPITALCOM:US100","displayName":"Nasdaq 100"},
-              {"name":"CAPITALCOM:DJ30","displayName":"Dow Jones"},
-              {"name":"INDEX:NKY","displayName":"Nikkei 225"},
-              {"name":"HSI:HSI","displayName":"Hang Seng"},
-              {"name":"XETR:DAX","displayName":"DAX"},
-              {"name":"CAPITALCOM:UK100","displayName":"FTSE 100"}
-            ]}
-          ]
-        }
-        </script>
-      </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px 6px">
+      <span style="font-size:10px;color:var(--text3)" id="rb-ai-status">Connect Worker (File → Connect) to enable</span>
+      <span style="font-size:10px;color:var(--text3)">Shift+Enter = newline</span>
     </div>
+  </div>
 
-    <!-- Stocks — Hot Lists -->
-    <div class="rb-frame" id="rbframe-stocks">
-      <div class="tradingview-widget-container" style="height:100%;width:100%">
-        <div class="tradingview-widget-container__widget" style="height:calc(100% - 4px);width:100%"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-hotlists.js" async>
-        {
-          "colorTheme":"dark","dateRange":"1D","exchange":"BSE","showChart":true,
-          "locale":"en","isTransparent":false,"showSymbolLogo":false,
-          "width":"100%","height":"100%",
-          "plotLineColorGrowing":"rgba(41,98,255,1)","plotLineColorFalling":"rgba(41,98,255,1)"
-        }
-        </script>
-      </div>
-    </div>
-
-    <!-- Commodities — Market Quotes -->
-    <div class="rb-frame" id="rbframe-commodities">
-      <div class="tradingview-widget-container" style="height:100%;width:100%">
-        <div class="tradingview-widget-container__widget" style="height:calc(100% - 4px);width:100%"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js" async>
-        {
-          "width":"100%","height":"100%","locale":"en","isTransparent":false,"colorTheme":"dark",
-          "showSymbolLogo":true,
-          "symbolsGroups":[
-            {"name":"Precious Metals","symbols":[
-              {"name":"TVC:GOLD","displayName":"Gold"},
-              {"name":"TVC:SILVER","displayName":"Silver"},
-              {"name":"TVC:PLATINUM","displayName":"Platinum"},
-              {"name":"TVC:PALLADIUM","displayName":"Palladium"}
-            ]},
-            {"name":"Energy","symbols":[
-              {"name":"TVC:USOIL","displayName":"Crude Oil WTI"},
-              {"name":"TVC:UKOIL","displayName":"Brent Oil"},
-              {"name":"TVC:NATGAS","displayName":"Natural Gas"}
-            ]},
-            {"name":"Agricultural","symbols":[
-              {"name":"TVC:WHEAT","displayName":"Wheat"},
-              {"name":"CAPITALCOM:CORN","displayName":"Corn"},
-              {"name":"CAPITALCOM:SOYBEANS","displayName":"Soybeans"}
-            ]}
-          ]
-        }
-        </script>
-      </div>
-    </div>
-
-    <!-- Forex — Cross Rates -->
-    <div class="rb-frame" id="rbframe-forex">
-      <div class="tradingview-widget-container" style="height:100%;width:100%">
-        <div class="tradingview-widget-container__widget" style="height:calc(100% - 4px);width:100%"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-forex-cross-rates.js" async>
-        {
-          "width":"100%","height":"100%","locale":"en","isTransparent":false,"colorTheme":"dark",
-          "backgroundColor":"#1a1a1a",
-          "currencies":["INR","USD","EUR","GBP","JPY","AUD","CAD","CHF","SGD","HKD"]
-        }
-        </script>
-      </div>
-    </div>
-
-  </div><!-- /rb-content -->
-  <div class="rb-pow"><a href="https://www.tradingview.com/" target="_blank" rel="noopener">Powered by TradingView</a></div>
 </div><!-- /right-bar -->
 
 <!-- old tv-panel removed — replaced by right-bar above -->
@@ -2473,30 +2484,6 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
     <label for="cf-url-input">Cloudflare Workers URL</label>
     <input type="url" id="cf-url-input" placeholder="https://your-worker.workers.dev"
       autocomplete="off" spellcheck="false"/>
-    <label for="cf-model-select" style="margin-top:14px">AI Model</label>
-    <select id="cf-model-select" style="width:100%;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;padding:10px 12px;margin-bottom:4px">
-      <optgroup label="🆓 Free Models (Recommended)">
-        <option value="gemini-2.5-flash">⚡ Gemini 2.5 Flash (Free • Default)</option>
-        <option value="gemini-2.5-flash-latest">⚡ Gemini 2.5 Flash Latest (Free)</option>
-        <option value="gemini-2.5-flash-preview-04-17">⚡ Gemini 2.5 Flash Preview (Free)</option>
-        <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash (Free)</option>
-        <option value="gemini-2.0-flash-latest">⚡ Gemini 2.0 Flash Latest (Free)</option>
-        <option value="gemini-2.0-flash-lite">⚡ Gemini 2.0 Flash Lite (Free • Fastest)</option>
-        <option value="gemini-1.5-flash">⚡ Gemini 1.5 Flash (Free)</option>
-        <option value="gemini-1.5-flash-latest">⚡ Gemini 1.5 Flash Latest (Free)</option>
-        <option value="gemini-1.5-flash-8b">⚡ Gemini 1.5 Flash 8B (Free • Lightest)</option>
-      </optgroup>
-      <optgroup label="⭐ Pro Models (API billing required)">
-        <option value="gemini-3.1-pro">🌟 Gemini 3.1 Pro (Best)</option>
-        <option value="gemini-2.5-pro">🌟 Gemini 2.5 Pro</option>
-        <option value="gemini-2.5-pro-latest">🌟 Gemini 2.5 Pro Latest</option>
-        <option value="gemini-2.5-pro-preview-05-06">🌟 Gemini 2.5 Pro Preview 05-06</option>
-        <option value="gemini-2.5-pro-preview-03-25">🌟 Gemini 2.5 Pro Preview 03-25</option>
-        <option value="gemini-2.0-pro-exp">🌟 Gemini 2.0 Pro Exp</option>
-        <option value="gemini-1.5-pro">🌟 Gemini 1.5 Pro</option>
-        <option value="gemini-1.5-pro-latest">🌟 Gemini 1.5 Pro Latest</option>
-      </optgroup>
-    </select>
     <div class="cf-modal-btns">
       <button class="cf-connect-btn" onclick="cfDoConnect()">🔗 Connect</button>
       <button class="cf-cancel-btn" onclick="cfCloseModal()">Cancel</button>
@@ -3050,9 +3037,6 @@ function cfLoadSaved() {
     setCFConnected(saved);
     document.getElementById('cf-url-input').value = saved;
   }
-  const savedModel = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
-  const sel = document.getElementById('cf-model-select');
-  if (sel) sel.value = savedModel;
 }
 
 function cfConnect() {
@@ -3081,8 +3065,6 @@ async function cfDoConnect() {
     document.getElementById('cf-status-msg').textContent = '⚠️ Please enter a valid URL.';
     return;
   }
-  const selectedModel = document.getElementById('cf-model-select')?.value || 'gemini-2.0-flash';
-  localStorage.setItem('viltv_ai_model', selectedModel);
   const msg = document.getElementById('cf-status-msg');
   msg.textContent = '⏳ Connecting…';
   document.getElementById('cf-dot').className = 'cf-dot connecting';
@@ -3123,6 +3105,7 @@ function setCFConnected(url) {
   if (label) { const host = new URL(url).hostname.replace('.workers.dev',''); label.textContent = host; }
   if (discItem) discItem.style.display = '';
   window._cfWorkerUrl = url;
+  rbUpdateAiStatus(true);
 }
 
 function setCFDisconnected() {
@@ -3133,6 +3116,7 @@ function setCFDisconnected() {
   if (label) label.textContent = 'Not Connected';
   if (discItem) discItem.style.display = 'none';
   window._cfWorkerUrl = null;
+  rbUpdateAiStatus(false);
 }
 
 // ── AI QUERY via Cloudflare Worker ──────────────────────────────────
@@ -3489,38 +3473,184 @@ function initRbResize() {
   const handle = document.getElementById('rb-resize-handle');
   const rightBar = document.getElementById('right-bar');
   if (!handle || !rightBar) return;
+  const MIN_W = 240, MAX_W = 600;
+  let startX = 0, startW = 0, dragging = false;
 
-  const MIN_W = 200, MAX_W = 650;
-  let dragging = false, startX = 0, startW = 0;
-
-  function onStart(clientX) {
+  handle.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    handle.setPointerCapture(e.pointerId);
     dragging = true;
-    startX = clientX;
-    startW = rightBar.offsetWidth;
+    startX = e.clientX;
+    startW = rightBar.getBoundingClientRect().width;
     handle.classList.add('dragging');
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
-  }
-  function onMove(clientX) {
+  });
+
+  handle.addEventListener('pointermove', e => {
     if (!dragging) return;
-    const newW = Math.max(MIN_W, Math.min(MAX_W, startW + (startX - clientX)));
+    const delta = startX - e.clientX;
+    const newW = Math.max(MIN_W, Math.min(MAX_W, startW + delta));
     rightBar.style.width = newW + 'px';
-  }
-  function onEnd() {
+  });
+
+  handle.addEventListener('pointerup', () => {
     if (!dragging) return;
     dragging = false;
     handle.classList.remove('dragging');
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
+  });
+
+  handle.addEventListener('pointercancel', () => {
+    dragging = false;
+    handle.classList.remove('dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+// RIGHT-BAR AI SIDEBAR
+// ════════════════════════════════════════════════════════════════
+let _rbStreamAbort = null;
+let _rbMsgCount = 0;
+
+function rbAiAppendMessage(text, role) {
+  const container = document.getElementById('rb-ai-messages');
+  if (!container) return;
+  const avatarEmoji = role === 'user' ? '👤' : '🤖';
+  const div = document.createElement('div');
+  div.className = 'rb-msg ' + (role === 'user' ? 'rb-msg-user' : 'rb-msg-bot');
+  div.innerHTML = '<div class="rb-msg-avatar">' + avatarEmoji + '</div>'
+    + '<div class="rb-msg-bubble" id="rb-msg-' + (++_rbMsgCount) + '">'
+    + (role === 'user' ? escHtml(text) : text)
+    + '</div>';
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return 'rb-msg-' + _rbMsgCount;
+}
+
+function escHtml(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function rbAiClear() {
+  const c = document.getElementById('rb-ai-messages');
+  if (!c) return;
+  if (_rbStreamAbort) { _rbStreamAbort.abort(); _rbStreamAbort = null; }
+  c.innerHTML = '';
+  rbAiAppendMessage('Chat cleared. Ask me anything about markets!', 'bot');
+}
+
+function rbAiChip(text) {
+  document.getElementById('rb-quick-chips')?.remove();
+  document.getElementById('rb-ai-input').value = text;
+  rbAiSend();
+}
+
+async function rbAiSend() {
+  const input = document.getElementById('rb-ai-input');
+  const sendBtn = document.getElementById('rb-ai-send-btn');
+  const statusEl = document.getElementById('rb-ai-status');
+  const typingEl = document.getElementById('rb-typing');
+  const q = input?.value?.trim();
+  if (!q) return;
+
+  const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY);
+  if (!workerUrl) {
+    rbAiAppendMessage('⚠️ Please connect a Cloudflare Worker first (File → Connect).', 'bot');
+    return;
   }
 
-  handle.addEventListener('mousedown', e => { onStart(e.clientX); e.preventDefault(); });
-  document.addEventListener('mousemove', e => onMove(e.clientX));
-  document.addEventListener('mouseup', onEnd);
+  // Cancel previous stream
+  if (_rbStreamAbort) { _rbStreamAbort.abort(); }
+  _rbStreamAbort = new AbortController();
 
-  handle.addEventListener('touchstart', e => { onStart(e.touches[0].clientX); e.preventDefault(); }, { passive: false });
-  document.addEventListener('touchmove', e => { if (dragging) { onMove(e.touches[0].clientX); e.preventDefault(); } }, { passive: false });
-  document.addEventListener('touchend', onEnd);
+  // Show user message
+  rbAiAppendMessage(q, 'user');
+  input.value = '';
+  input.style.height = '';
+  if (sendBtn) sendBtn.disabled = true;
+  if (typingEl) typingEl.style.display = 'block';
+
+  // Create bot message container
+  const msgId = rbAiAppendMessage('', 'bot');
+  const msgEl = document.getElementById(msgId);
+  if (msgEl) msgEl.textContent = '';
+
+  const finalUrl = workerUrl.replace(/\/+$/, '');
+  const model = localStorage.getItem('viltv_ai_model') || 'gemini-2.5-flash';
+  let accumulated = '';
+
+  try {
+    const res = await fetch(finalUrl + '/query-stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: q, use_search: true, model }),
+      signal: _rbStreamAbort.signal
+    });
+
+    if (res.ok && res.body) {
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let buf = '';
+      if (typingEl) typingEl.style.display = 'none';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() || '';
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          let evt; try { evt = JSON.parse(line.slice(6)); } catch { continue; }
+          if (evt.error) throw new Error(evt.error);
+          if (evt.chunk) {
+            accumulated += evt.chunk;
+            if (msgEl) {
+              msgEl.textContent = accumulated;
+              document.getElementById('rb-ai-messages').scrollTop = 99999;
+            }
+          }
+          if (evt.done) break;
+        }
+      }
+      if (!accumulated) throw new Error('No response received');
+    } else {
+      // Fallback to /query
+      if (typingEl) typingEl.style.display = 'none';
+      const data = await fetch(finalUrl + '/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: q, use_search: true, model }),
+        signal: AbortSignal.timeout(90000)
+      }).then(r => r.json());
+      if (data.error) throw new Error(typeof data.error === 'string' ? data.error : data.error.message);
+      accumulated = data.result || '';
+      if (msgEl) msgEl.textContent = accumulated;
+    }
+    if (statusEl) statusEl.textContent = '✅ Response received';
+  } catch(e) {
+    if (typingEl) typingEl.style.display = 'none';
+    if (e.name !== 'AbortError') {
+      if (msgEl) msgEl.textContent = '❌ ' + (e.message || 'Error. Check Worker connection.');
+      if (statusEl) statusEl.textContent = '⚠️ ' + e.message;
+    }
+  } finally {
+    if (sendBtn) sendBtn.disabled = false;
+    if (typingEl) typingEl.style.display = 'none';
+    document.getElementById('rb-ai-messages').scrollTop = 99999;
+  }
+}
+
+// Update sidebar status dot when worker connects/disconnects
+function rbUpdateAiStatus(connected) {
+  const dot = document.getElementById('rb-ai-dot');
+  const status = document.getElementById('rb-ai-status');
+  const label = document.getElementById('rb-ai-model-label');
+  if (dot) dot.style.background = connected ? 'var(--green)' : 'var(--text3)';
+  if (status) status.textContent = connected ? 'Ready — type your question' : 'Connect Worker (File → Connect) to enable';
+  if (label) label.textContent = connected ? 'Powered by Gemini via Worker ✅' : 'Powered by Gemini via Worker';
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -7592,6 +7722,289 @@ function escapeHtml(str) {
 }
 
 document.addEventListener('keydown', e => { if (e.key==='Escape') closeSidePanel(); });
+
+// ════════════════════════════════════════════════════════════════
+// LOSSLESS JSON ENGINE
+// ════════════════════════════════════════════════════════════════
+let _ljsonRaw = '';
+
+function buildLosslessJsonPrompt() {
+  const queryEl = document.getElementById('copy-content');
+  const baseQuery = queryEl?.innerText?.trim() || '';
+  if (!baseQuery || baseQuery.includes('No query generated yet')) return null;
+
+  return `${baseQuery}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OUTPUT FORMAT — STRICT LOSSLESS JSON ONLY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Return a SINGLE valid JSON object. No markdown. No prose. No code fences.
+Every data field MUST use this exact wrapper schema:
+
+{
+  "value": "<actual data>",
+  "source": "<source website or API>",
+  "as_of": "<DD-MMM-YYYY>",
+  "confidence": "High|Medium|Low",
+  "status": "Confirmed|Unavailable|Verify",
+  "freshness": "REAL_TIME|LATEST_AVAILABLE|LAST_SETTLEMENT"
+}
+
+TOP-LEVEL STRUCTURE:
+{
+  "report_meta": {
+    "asset_name": { ...field schema... },
+    "asset_type": { ...field schema... },
+    "generated_at": { ...field schema... },
+    "data_as_of": { ...field schema... }
+  },
+  "tabs": {
+    "OVERVIEW": {
+      "section_title": "Company Overview",
+      "fields": {
+        "Full Name": { ...field schema... },
+        "Ticker": { ...field schema... },
+        "Exchange": { ...field schema... },
+        "Sector": { ...field schema... },
+        "Industry": { ...field schema... },
+        "Market Cap": { ...field schema... },
+        "Founded": { ...field schema... },
+        "Headquarters": { ...field schema... }
+      }
+    },
+    "LIVE_DATA": {
+      "section_title": "Live Market Data",
+      "fields": {
+        "CMP": { ...field schema... },
+        "52W High": { ...field schema... },
+        "52W Low": { ...field schema... },
+        "Volume": { ...field schema... },
+        "Beta": { ...field schema... }
+      }
+    },
+    "VALUATION": {
+      "section_title": "Valuation Metrics",
+      "fields": { ... }
+    },
+    "FINANCIALS": {
+      "section_title": "Financial Performance",
+      "fields": { ... }
+    },
+    "VERDICT": {
+      "section_title": "AI Verdict",
+      "fields": {
+        "Overall Score": { ...field schema... },
+        "AI Recommendation": { "value": "Strong Buy|Buy|Hold|Sell|Strong Sell", ...field schema... },
+        "Risk Level": { ...field schema... },
+        "Entry Strategy": { ...field schema... },
+        "Target Price 12M": { ...field schema... }
+      }
+    }
+  }
+}
+
+RULES:
+- status "Unavailable" is a LAST RESORT. Exhaust official sources, aggregators, and market platforms first.
+- Freshness for stocks: REAL_TIME during market hours, LATEST_AVAILABLE at close.
+- Freshness for MFs: LATEST_AVAILABLE (T-1 or T-2 NAV is valid).
+- Do NOT add any text outside the JSON object.
+- Begin output with { and end with }`;
+}
+
+async function sendLosslessJson() {
+  const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY);
+  if (!workerUrl) { cfConnect(); return; }
+
+  const prompt = buildLosslessJsonPrompt();
+  if (!prompt) { alert('⚠️ Generate AI Query first.'); return; }
+
+  const panel = document.getElementById('ljson-panel');
+  const content = document.getElementById('ljson-content');
+  panel.style.display = 'block';
+  content.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3)"><div style="font-size:24px;margin-bottom:8px">⏳</div><div style="font-size:13px">Fetching Lossless JSON from Gemini…</div></div>';
+
+  // Switch to Copy tab to show progress
+  const copyTab = document.querySelectorAll('.main-tab')[1];
+  if (copyTab) switchMain(1, copyTab);
+
+  _aiProgressStart();
+  _aiProgressSet(5, '🔌 Connecting…', 'ps1');
+
+  const finalUrl = workerUrl.replace(/\/+$/, '');
+  const model = localStorage.getItem('viltv_ai_model') || 'gemini-2.5-flash';
+  let rawJson = '';
+
+  if (window._streamAbort) window._streamAbort.abort();
+  window._streamAbort = new AbortController();
+
+  try {
+    const res = await fetch(finalUrl + '/query-stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, use_search: true, model }),
+      signal: window._streamAbort.signal
+    });
+
+    if (res.ok && res.body) {
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let buf = '';
+      _aiProgressSet(25, '🤖 Generating JSON…', 'ps3');
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n'); buf = lines.pop() || '';
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          let evt; try { evt = JSON.parse(line.slice(6)); } catch { continue; }
+          if (evt.chunk) rawJson += evt.chunk;
+          if (evt.done) { _aiProgressSet(90, '📥 Parsing JSON…', 'ps4'); }
+        }
+      }
+    } else {
+      const data = await fetch(finalUrl + '/query', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, use_search: true, model }), signal: AbortSignal.timeout(120000)
+      }).then(r => r.json());
+      rawJson = data.result || '';
+    }
+
+    // Clean up JSON (remove markdown fences if any)
+    rawJson = rawJson.trim().replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
+    _ljsonRaw = rawJson;
+
+    let parsed;
+    try { parsed = JSON.parse(rawJson); }
+    catch(e) {
+      content.innerHTML = '<div style="padding:16px;color:var(--red);font-size:12px">❌ JSON parse error: ' + e.message
+        + '<br><br><pre style="font-size:10px;white-space:pre-wrap;word-break:break-all;color:var(--text3);max-height:200px;overflow-y:auto">' + rawJson.slice(0,2000) + '</pre></div>';
+      _aiProgressStop(); return;
+    }
+
+    _aiProgressSet(100, '✅ Done!', 'ps5');
+    content.innerHTML = renderLjson(parsed);
+    setTimeout(_aiProgressStop, 1500);
+
+    // Switch to the first non-output tab to show the result panel
+    const pasteTab = document.querySelectorAll('.main-tab')[1];
+    if (pasteTab) switchMain(1, pasteTab);
+
+  } catch(e) {
+    _aiProgressStop();
+    if (e.name !== 'AbortError')
+      content.innerHTML = '<div style="padding:16px;color:var(--red);font-size:12px">❌ ' + (e.message || 'Request failed') + '</div>';
+  }
+}
+
+function renderLjson(data) {
+  const meta = data.report_meta || {};
+  const tabs = data.tabs || {};
+
+  function fieldVal(f) {
+    if (!f || typeof f !== 'object') return { val: String(f||'—'), source:'', asOf:'', conf:'', status:'', freshness:'' };
+    return { val: f.value||'—', source: f.source||'', asOf: f.as_of||'', conf: f.confidence||'', status: f.status||'', freshness: f.freshness||'' };
+  }
+  function confBadge(c) {
+    if (!c) return '';
+    const cls = /high/i.test(c)?'conf-high':/low/i.test(c)?'conf-low':'conf-med';
+    return `<span class="lj-badge ${cls}">${c}</span>`;
+  }
+  function statusBadge(s) {
+    if (!s) return '';
+    const cls = /confirmed/i.test(s)?'status-ok':/unavail/i.test(s)?'status-na':'status-warn';
+    return `<span class="lj-badge ${cls}">${s}</span>`;
+  }
+  function renderFields(fields) {
+    if (!fields || typeof fields !== 'object') return '';
+    return '<div class="lj-grid">'
+      + Object.entries(fields).map(([name, f]) => {
+          const {val, source, asOf, conf, status, freshness} = fieldVal(f);
+          return `<div class="lj-field">
+            <div class="lj-field-name">${name}</div>
+            <div class="lj-field-value">${val}</div>
+            <div class="lj-field-meta">${confBadge(conf)}${statusBadge(status)}${freshness?`<span class="lj-badge status-na">${freshness}</span>`:''}</div>
+            ${(source||asOf)?`<div class="lj-source">${source}${asOf?' · '+asOf:''}</div>`:''}
+          </div>`;
+        }).join('')
+      + '</div>';
+  }
+
+  const assetName = fieldVal(meta.asset_name).val;
+  const assetType = fieldVal(meta.asset_type).val;
+  const genAt = fieldVal(meta.generated_at).val;
+
+  const tabKeys = Object.keys(tabs);
+  const tabButtons = tabKeys.map((k,i) => `<button class="ljson-tab${i===0?' active':''}" onclick="switchLjTab('ljtab-${i}')">${tabs[k].section_title||k}</button>`).join('');
+  const tabPanels = tabKeys.map((k,i) => `<div class="ljson-panel${i===0?' active':''}" id="ljtab-${i}">
+    <div class="lj-section"><div class="lj-section-title">${tabs[k].section_title||k}</div>${renderFields(tabs[k].fields)}</div>
+  </div>`).join('');
+
+  return `<div class="ljson-wrap">
+    <div class="ljson-header">
+      <h2>${assetName} — Research Report</h2>
+      <div class="lj-meta">${assetType} · Generated ${genAt} · Lossless JSON v2</div>
+    </div>
+    <div class="ljson-tabs">${tabButtons}</div>
+    ${tabPanels}
+  </div>`;
+}
+
+function switchLjTab(id) {
+  document.querySelectorAll('.ljson-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ljson-tab').forEach(b => b.classList.remove('active'));
+  const panel = document.getElementById(id);
+  if (panel) panel.classList.add('active');
+  // find and activate the button
+  document.querySelectorAll('.ljson-tab').forEach((b,i) => {
+    if (id === 'ljtab-' + i) b.classList.add('active');
+  });
+}
+
+function exportLjsonHtml() {
+  const content = document.getElementById('ljson-content');
+  if (!content) return;
+  const style = [...document.styleSheets].map(s => {
+    try { return [...s.cssRules].map(r => r.cssText).join('\n'); } catch { return ''; }
+  }).join('\n');
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Research Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>body{background:#0f0f0f;color:#f0ede8;font-family:'DM Sans',sans-serif}:root{${getComputedStyle(document.documentElement).cssText}}${style}</style>
+</head><body>${content.innerHTML}</body></html>`;
+  const blob = new Blob([html], { type: 'text/html' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'research-report.html'; a.click();
+}
+
+function exportLjsonPdf() {
+  const content = document.getElementById('ljson-content');
+  if (!content) return;
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Research Report</title>
+<style>
+  body{font-family:Arial,sans-serif;background:#fff;color:#111;margin:20px}
+  .ljson-header{background:#c0390b;color:#fff;padding:14px 18px;border-radius:8px;margin-bottom:14px}
+  .ljson-tabs{display:none}
+  .ljson-panel{display:block!important}
+  .lj-field{border:1px solid #ddd;border-radius:6px;padding:8px;margin-bottom:6px;display:inline-block;width:200px;vertical-align:top;margin-right:6px}
+  .lj-field-name{font-size:9px;color:#666;text-transform:uppercase}
+  .lj-field-value{font-size:13px;font-weight:600;color:#111}
+  .lj-badge{font-size:8px;padding:1px 6px;border-radius:10px;border:1px solid #ccc}
+  .lj-source{font-size:9px;color:#888}
+  h2{color:#fff}
+  @media print{body{margin:0}}
+</style></head><body>${content.innerHTML}<script>window.print();window.close();<\/script></body></html>`);
+  w.document.close();
+}
+
+function copyLjsonRaw() {
+  if (!_ljsonRaw) return;
+  navigator.clipboard.writeText(_ljsonRaw).then(() => {
+    const btn = event.target; btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = '📋 Copy JSON', 2000);
+  });
+}
 </script>
 </body>
 </html>
