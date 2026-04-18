@@ -2148,37 +2148,19 @@ footer{
     <div class="validation-msg" id="v-gen" style="margin-top:12px"></div>
   </div>
 
-  <!-- ── AI PROGRESS — visible in Input Form while report is generating ── -->
-  <div id="auto-gemini-panel" style="display:none;margin-top:20px;background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:18px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-      <div style="font-size:13px;font-weight:700;color:var(--gold2)">🤖 Gemini — Generating Report…</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button id="auto-gemini-copy" onclick="autoGeminiCopy()" style="display:none;padding:7px 14px;background:var(--burn);border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:700;cursor:pointer">📋 Copy Output</button>
-        <button id="auto-gemini-render" onclick="autoGeminiRender()" style="display:none;padding:7px 14px;background:linear-gradient(135deg,#0d6b3e,#16a34a);border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:700;cursor:pointer">📊 View Report</button>
-      </div>
+  <!-- AI state container — hidden, keeps element IDs alive for JS -->
+  <div id="auto-gemini-panel" style="display:none!important;position:absolute;visibility:hidden;pointer-events:none" aria-hidden="true">
+    <div id="auto-gemini-status"></div>
+    <button id="auto-gemini-copy" style="display:none"></button>
+    <button id="auto-gemini-render" style="display:none"></button>
+    <div id="ai-progress-bar">
+      <div id="ai-progress-stage"></div>
+      <div id="ai-elapsed"></div>
+      <div id="ai-progress-pct"></div>
+      <div id="ai-progress-fill"></div>
+      <span id="ps1"></span><span id="ps2"></span><span id="ps3"></span><span id="ps4"></span><span id="ps5"></span>
     </div>
-    <div id="auto-gemini-status" style="font-size:12px;color:var(--text3);margin-bottom:10px"></div>
-    <!-- AI PROGRESS BAR -->
-    <div id="ai-progress-bar" style="display:none;margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <div id="ai-progress-stage" style="font-size:12px;font-weight:700;color:var(--gold2)">⏳ Connecting…</div>
-        <div style="display:flex;gap:10px;align-items:center">
-          <div id="ai-elapsed" style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace">0s</div>
-          <div id="ai-progress-pct" style="font-size:12px;font-weight:700;color:#16a34a;min-width:36px;text-align:right">0%</div>
-        </div>
-      </div>
-      <div style="background:var(--dark2);border-radius:999px;height:8px;overflow:hidden;border:1px solid var(--border)">
-        <div id="ai-progress-fill" style="height:100%;background:linear-gradient(90deg,#16a34a,#84cc16,#facc15);border-radius:999px;transition:width 0.6s ease;width:0%"></div>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-top:6px">
-        <span id="ps1" style="font-size:10px;color:var(--text3)">Connect</span>
-        <span id="ps2" style="font-size:10px;color:var(--text3)">Search</span>
-        <span id="ps3" style="font-size:10px;color:var(--text3)">AI Processing</span>
-        <span id="ps4" style="font-size:10px;color:var(--text3)">Receive</span>
-        <span id="ps5" style="font-size:10px;color:var(--text3)">Render</span>
-      </div>
-    </div>
-    <pre id="auto-gemini-result" style="display:none;background:var(--dark2);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:12px;color:var(--text2);line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:300px;overflow-y:auto;font-family:'JetBrains Mono',monospace"></pre>
+    <pre id="auto-gemini-result"></pre>
   </div>
 
 </div><!-- /input-panel -->
@@ -2192,10 +2174,10 @@ footer{
   <div class="copy-header">
     <div class="copy-header-left">
       <div class="title">🤖 AI Query — Ready</div>
-      <div class="note">Option A: Click <strong>🚀 Auto Send to Gemini</strong> — automatically sends the query to Gemini via your Worker and shows the result here.<br/>Option B: <strong>📋 Copy</strong> the query → paste manually into any AI chat.</div>
+      <div class="note">Option A: Click <strong>🚀 Auto Send</strong> — automatically sends the query to VilfinTV AI and shows the result in the Result tab.<br/>Option B: <strong>📋 Copy</strong> the query → paste manually into any AI chat.</div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <button class="copy-all-btn" style="background:linear-gradient(135deg,#0d6b3e,#16a34a);border-color:#16a34a" onclick="autoSendToGemini()">🚀 Auto Send to Gemini</button>
+      <button class="copy-all-btn" style="background:linear-gradient(135deg,#0d6b3e,#16a34a);border-color:#16a34a" onclick="autoSendToGemini()">🚀 Auto Send</button>
       <button class="copy-all-btn" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-color:#3b82f6" onclick="sendLosslessJson()">📊 Lossless JSON Report</button>
       <button class="copy-all-btn" id="copy-btn" onclick="copyQuery()">📋 Copy Query</button>
     </div>
@@ -2229,6 +2211,25 @@ footer{
 ════════════════════════════════════════ -->
 <div class="panel" id="panel-paste">
 <div class="paste-panel">
+
+  <!-- ── VilfinTV AI Progress bar (shown at top while generating) ── -->
+  <div id="viltv-progress" style="display:none;margin-bottom:16px;padding:24px 22px 18px;background:var(--card);border:1px solid var(--border2);border-radius:14px;text-align:center">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--gold2);margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:10px">
+      <span id="viltv-prog-icon" style="display:inline-block;animation:livePulse 1.2s ease-in-out infinite;font-size:22px">📊</span>
+      VilfinTV — Generating Output For You
+    </div>
+    <div id="viltv-prog-text" style="font-size:12px;color:var(--text3);margin:6px 0 14px">Please wait…</div>
+    <div style="position:relative;height:10px;background:var(--dark3);border-radius:999px;overflow:hidden;margin-bottom:8px;border:1px solid var(--border)">
+      <div id="viltv-prog-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#16a34a,#84cc16,#facc15);border-radius:999px;transition:width .55s ease"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+      <span style="font-size:10px;color:var(--text3)">Start</span>
+      <span style="font-size:10px;color:var(--text3)">Searching</span>
+      <span style="font-size:10px;color:var(--text3)">Generating</span>
+      <span style="font-size:10px;color:var(--text3)">Finalizing</span>
+      <span id="viltv-prog-pct" style="font-size:11px;font-weight:700;color:var(--green);min-width:36px;text-align:right">0%</span>
+    </div>
+  </div>
 
   <!-- ── Result toolbar ── -->
   <div class="result-toolbar">
@@ -2429,7 +2430,7 @@ footer{
       <span style="animation:tvBlink 1s infinite">●</span>
       <span style="animation:tvBlink 1s infinite .2s">●</span>
       <span style="animation:tvBlink 1s infinite .4s">●</span>
-      &nbsp; Gemini is thinking…
+      &nbsp; AI is thinking…
     </div>
     <!-- Input area -->
     <div class="rb-ai-input-wrap">
@@ -2784,9 +2785,8 @@ footer{
   <div class="cf-modal">
     <div class="cf-modal-title">🔗 Cloudflare Workers</div>
     <div class="cf-modal-sub" id="cf-modal-sub">
-      Enter your Cloudflare Workers URL below. Once connected, your Gemini API key stored
-      in the Worker will be used automatically. The URL is saved locally in your browser only — never uploaded to GitHub or any server.<br/>
-      <a href="user_manual.html" target="_blank" style="color:var(--gold2);font-size:11px;display:inline-block;margin-top:6px">📖 How to set up Cloudflare Worker? Step-by-step guide →</a>
+      Enter your AI Service URL below. Once connected, your API key is used automatically. The URL is saved locally in your browser only — never uploaded to GitHub or any server.<br/>
+      <a href="user_manual.html" target="_blank" style="color:var(--gold2);font-size:11px;display:inline-block;margin-top:6px">📖 How to set up? Step-by-step guide →</a>
     </div>
     <label for="cf-url-input">Cloudflare Workers URL</label>
     <input type="url" id="cf-url-input" placeholder="https://your-worker.workers.dev"
@@ -2806,7 +2806,7 @@ footer{
   <div class="cf-modal" style="max-width:600px">
     <div class="cf-modal-title">🤖 AI Query — Cloudflare Worker</div>
     <div class="cf-modal-sub">
-      Ask a financial question. The query is sent to your connected Cloudflare Worker which proxies to Gemini AI.
+      Ask a financial question and get an AI-powered answer.
     </div>
     <label for="ai-query-input">Your Question</label>
     <textarea id="ai-query-input" rows="3" placeholder="e.g. What is the current outlook for NIFTY 50?"
@@ -3383,7 +3383,7 @@ async function cfDoConnect() {
       msg.textContent = '✅ Connected successfully!';
       setTimeout(() => { cfCloseModal(); if (window._pendingAutoSend) { window._pendingAutoSend = false; autoSendToGemini(); } }, 1200);
     } else {
-      msg.textContent = '⚠️ Worker responded with status ' + res.status + '. URL saved anyway.';
+      msg.textContent = '⚠️ Service responded with status ' + res.status + '. URL saved.';
       localStorage.setItem(CF_KEY, url);
       setCFConnected(url);
       setTimeout(() => { cfCloseModal(); if (window._pendingAutoSend) { window._pendingAutoSend = false; autoSendToGemini(); } }, 2000);
@@ -3399,7 +3399,7 @@ async function cfDoConnect() {
 
 function cfDisconnect() {
   closeAllMenus();
-  if (!confirm('Disconnect from Cloudflare Workers?')) return;
+  if (!confirm('Disconnect from AI service?')) return;
   localStorage.removeItem(CF_KEY);
   setCFDisconnected();
 }
@@ -3452,7 +3452,7 @@ async function aiQuerySend() {
   if (!url) { document.getElementById('ai-query-status').textContent = '⚠️ Not connected. Use File → Connect first.'; return; }
   const status = document.getElementById('ai-query-status');
   const result = document.getElementById('ai-query-result');
-  status.textContent = '⏳ Sending to Gemini via Worker…';
+  status.textContent = '⏳ Processing your question…';
   result.style.display = 'none';
   try {
     const res = await fetch(url + '/query', {
@@ -3469,9 +3469,9 @@ async function aiQuerySend() {
     const answer = data.result || data.answer || data.response || JSON.stringify(data);
     result.textContent = answer;
     result.style.display = 'block';
-    status.textContent = '✅ Gemini response received!';
+    status.textContent = '✅ Response received!';
   } catch(err) {
-    status.textContent = '⚠️ ' + (err.message || 'Request failed. Check Worker URL and Gemini API key.');
+    status.textContent = '⚠️ ' + (err.message || 'Request failed. Please try again.');
   }
 }
 
@@ -3479,11 +3479,14 @@ async function aiQuerySend() {
 async function generateAndSendToGemini() {
   const btn = document.getElementById('gen-auto-btn');
   const origText = btn ? btn.innerHTML : '';
-  if (btn) { btn.innerHTML = '⏳ Sending to AI…'; btn.disabled = true; btn.style.opacity = '0.7'; }
+  if (btn) { btn.innerHTML = '⏳ Generating…'; btn.disabled = true; btn.style.opacity = '0.7'; }
   try {
-    const generated = generateQuery(true); // pass flag to not switch tab
+    const generated = generateQuery(true);
     if (!generated) return;
-    await new Promise(r => setTimeout(r, 300));
+    // Jump to Result tab immediately — show branded progress bar there
+    switchMain(2);
+    _vilfinProgressShow();
+    await new Promise(r => setTimeout(r, 150));
     await autoSendToGemini();
   } finally {
     if (btn) { btn.innerHTML = origText; btn.disabled = false; btn.style.opacity = ''; }
@@ -3516,25 +3519,17 @@ async function autoSendToGemini() {
   window._streamAbort = new AbortController();
   window._streamPartial = '';
 
-  const panel = document.getElementById('auto-gemini-panel');
+  // Elements kept invisible — only VilfinTV progress bar shown to user
   const statusEl = document.getElementById('auto-gemini-status');
   const resultEl = document.getElementById('auto-gemini-result');
-  const copyBtn = document.getElementById('auto-gemini-copy');
-  const renderBtn = document.getElementById('auto-gemini-render');
-  panel.style.display = 'block';
-  resultEl.style.display = 'none';
-  resultEl.textContent = '';
-  copyBtn.style.display = 'none';
-  renderBtn.style.display = 'none';
+  const copyBtn  = document.getElementById('auto-gemini-copy');
+  const renderBtn= document.getElementById('auto-gemini-render');
 
   _aiProgressStart();
-  _aiProgressSet(5, '🔌 Connecting to Worker…', 'ps1');
-  statusEl.textContent = '🔌 Connecting to Worker…';
+  _vilfinProgressUpdate(5, '🔍 Searching for data…');
 
-  // Stay on Input Form (panel 0) during processing — jump to Report Output (panel 2) when done
-  // Do NOT switch to panel 1; handleGeminiResult already calls switchMain(2)
   const pasteArea = document.getElementById('paste-area');
-  if (pasteArea) pasteArea.value = '⏳ Streaming from Gemini AI… please wait…';
+  if (pasteArea) pasteArea.value = '';
 
   const selectedModel = localStorage.getItem('viltv_ai_model') || 'gemini-2.5-flash';
 
@@ -3577,15 +3572,15 @@ async function autoSendToGemini() {
           try { evt = JSON.parse(raw); } catch { continue; }
           if (evt.error) throw new Error(evt.error);
           if (evt.status === 'start') {
-            _aiProgressSet(25, '🤖 Streaming from Gemini…', 'ps3');
-            statusEl.textContent = `🤖 Streaming from ${evt.model || selectedModel} (Key ${evt.key || 1})…`;
+            _aiProgressSet(25, 'Generating…', 'ps3');
+            _vilfinProgressUpdate(25, '🤖 Generating your report…');
           }
           if (evt.chunk) {
             window._streamPartial += evt.chunk;
             const chars = window._streamPartial.length;
             const pct = Math.min(90, 25 + Math.floor(chars / 80));
-            _aiProgressSet(pct, `🤖 Generating… ${chars.toLocaleString()} chars`, 'ps3');
-            statusEl.textContent = `🤖 Streaming… ${chars.toLocaleString()} characters received`;
+            _aiProgressSet(pct, `Generating… ${chars.toLocaleString()} chars`, 'ps3');
+            _vilfinProgressUpdate(pct, `✍️ Writing report… ${chars.toLocaleString()} characters`);
             resultEl.textContent = window._streamPartial;
             resultEl.style.display = 'block';
           }
@@ -3615,8 +3610,8 @@ async function autoSendToGemini() {
   }
 
   async function fallbackQuery(partialSoFar) {
-    _aiProgressSet(35, '🔄 Using standard query…', 'ps3');
-    statusEl.textContent = '🔄 Streaming unavailable — using standard query…';
+    _aiProgressSet(35, 'Processing…', 'ps3');
+    _vilfinProgressUpdate(35, '🔄 Processing your request…');
     const body = { prompt: queryText, use_search: true, model: selectedModel };
     if (partialSoFar) body.partial = partialSoFar;
     try {
@@ -3626,47 +3621,36 @@ async function autoSendToGemini() {
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(120000)
       });
-      _aiProgressSet(88, '📥 Receiving response…', 'ps4');
+      _aiProgressSet(88, 'Receiving…', 'ps4');
+      _vilfinProgressUpdate(88, '📥 Almost done…');
       const data = await res.json();
       if (data.error) throw new Error(typeof data.error === 'string' ? data.error : (data.error.message || JSON.stringify(data.error)));
       handleGeminiResult(data.result || '');
     } catch(e) {
       _aiProgressStop();
-      if (pasteArea) pasteArea.value = '';
-      const msg = e.message || 'Request failed.';
-      // Always show the real error — "api key" in the message is often a red herring
-      // (e.g. Gemini returns "API_KEY_SERVICE_DISABLED" for quota/model issues)
-      statusEl.innerHTML = `❌ <strong>Worker error:</strong> <code style="font-size:11px;background:var(--dark2);padding:2px 5px;border-radius:4px">${msg}</code><br>
-        <span style="font-size:11px;color:var(--text3)">Worker: <a href="https://x9-k2-p20-worker.vilfintv.workers.dev" target="_blank" style="color:var(--gold2)">x9-k2-p20-worker.vilfintv.workers.dev</a> &nbsp;|&nbsp;
-        Keys configured ✓ &nbsp;|&nbsp; <a href="https://dash.cloudflare.com" target="_blank" style="color:var(--gold2)">Check Worker logs →</a></span>`;
+      _vilfinProgressError(e.message || 'Request failed.');
     }
   }
 
   function handleGeminiResult(answer) {
-    resultEl.textContent = answer;
-    resultEl.style.display = 'block';
-    copyBtn.style.display = 'inline-block';
     if (pasteArea) pasteArea.value = answer;
-    _aiProgressSet(95, '📊 Rendering report…', 'ps5');
-    statusEl.textContent = '📊 Rendering report…';
     if (answer.includes('<!DOCTYPE') || answer.includes('<html')) {
-      renderBtn.style.display = 'inline-block';
       window._autoGeminiHTML = answer;
     }
-    // Jump directly to Result tab (panel 2)
-    switchMain(2);
+    _aiProgressSet(95, 'Rendering…', 'ps5');
+    _vilfinProgressUpdate(95, '📊 Rendering your report…');
+    // Already on Result tab (switched at generateAndSendToGemini call)
     setTimeout(() => {
       renderOutput();
-      // Show export + clear buttons in Result toolbar
       const eh = document.getElementById('btn-export-html');
       const ep = document.getElementById('btn-export-pdf');
       const cr = document.getElementById('clear-result-btn');
       if (eh) eh.style.display = '';
       if (ep) ep.style.display = '';
       if (cr) cr.style.display = '';
-      _aiProgressSet(100, '✅ Report ready!', 'ps5');
-      statusEl.textContent = '✅ Done! Report rendered in Result tab.';
-      setTimeout(_aiProgressStop, 2500);
+      _aiProgressSet(100, 'Done!', 'ps5');
+      _vilfinProgressUpdate(100, '✅ Your report is ready!');
+      setTimeout(() => { _aiProgressStop(); _vilfinProgressHide(); }, 1800);
     }, 300);
   }
 
@@ -3733,6 +3717,40 @@ function _aiProgressStop() {
   clearInterval(_aiProgElapsed);
   const bar = document.getElementById('ai-progress-bar');
   if (bar) setTimeout(() => { bar.style.display = 'none'; }, 1000);
+}
+
+// ── VilfinTV branded progress bar (shown in Result tab) ──────────
+function _vilfinProgressShow() {
+  const vp = document.getElementById('viltv-progress');
+  const fill = document.getElementById('viltv-prog-fill');
+  const pct  = document.getElementById('viltv-prog-pct');
+  const text = document.getElementById('viltv-prog-text');
+  if (vp) vp.style.display = 'block';
+  if (fill) fill.style.width = '5%';
+  if (pct)  pct.textContent = '5%';
+  if (text) text.textContent = 'Starting up…';
+}
+function _vilfinProgressUpdate(pct, msg) {
+  const fill = document.getElementById('viltv-prog-fill');
+  const pctEl = document.getElementById('viltv-prog-pct');
+  const text  = document.getElementById('viltv-prog-text');
+  if (fill) fill.style.width = pct + '%';
+  if (pctEl) pctEl.textContent = pct + '%';
+  if (text && msg) text.textContent = msg;
+}
+function _vilfinProgressHide() {
+  const vp = document.getElementById('viltv-progress');
+  if (vp) { vp.style.opacity = '0'; vp.style.transition = 'opacity .5s'; setTimeout(() => { vp.style.display = 'none'; vp.style.opacity = ''; vp.style.transition = ''; }, 500); }
+}
+function _vilfinProgressError(msg) {
+  const vp   = document.getElementById('viltv-progress');
+  const text = document.getElementById('viltv-prog-text');
+  const fill = document.getElementById('viltv-prog-fill');
+  const icon = document.getElementById('viltv-prog-icon');
+  if (fill) { fill.style.background = '#ef4444'; fill.style.width = '100%'; }
+  if (text) text.innerHTML = `❌ <strong>Error:</strong> ${msg} — <a href="https://dash.cloudflare.com" target="_blank" style="color:var(--burn2)">Check AI service logs →</a>`;
+  if (icon) { icon.textContent = '⚠️'; icon.style.animation = 'none'; }
+  setTimeout(_vilfinProgressHide, 6000);
 }
 
 function autoGeminiCopy() {
@@ -4025,7 +4043,7 @@ async function rbAiSend() {
 
   const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY);
   if (!workerUrl) {
-    rbAiAppendMessage('⚠️ Please connect a Cloudflare Worker first (File → Connect).', 'bot');
+    rbAiAppendMessage('⚠️ AI service not connected. Please use File → Connect.', 'bot');
     return;
   }
 
@@ -4101,7 +4119,7 @@ async function rbAiSend() {
   } catch(e) {
     if (typingEl) typingEl.style.display = 'none';
     if (e.name !== 'AbortError') {
-      if (msgEl) msgEl.textContent = '❌ ' + (e.message || 'Error. Check Worker connection.');
+      if (msgEl) msgEl.textContent = '❌ ' + (e.message || 'Connection error. Please try again.');
       if (statusEl) statusEl.textContent = '⚠️ ' + e.message;
     }
   } finally {
@@ -4117,7 +4135,7 @@ function rbUpdateAiStatus(connected) {
   const status = document.getElementById('rb-ai-status');
   const label = document.getElementById('rb-ai-model-label');
   if (dot) dot.style.background = connected ? 'var(--green)' : 'var(--text3)';
-  if (status) status.textContent = connected ? 'Ready — type your question' : 'Connect Worker (File → Connect) to enable';
+  if (status) status.textContent = connected ? 'Ready — type your question' : 'AI service not connected. Use File → Connect.';
   if (label) label.textContent = '';
 }
 
@@ -8305,7 +8323,7 @@ async function sendLosslessJson() {
   const panel = document.getElementById('ljson-panel');
   const content = document.getElementById('ljson-content');
   panel.style.display = 'block';
-  content.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3)"><div style="font-size:24px;margin-bottom:8px">⏳</div><div style="font-size:13px">Fetching Lossless JSON from Gemini…</div></div>';
+  content.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3)"><div style="font-size:24px;margin-bottom:8px">⏳</div><div style="font-size:13px">Generating detailed report…</div></div>';
 
   // Stay on Input Form while lossless JSON streams — switchMain(2) fires on completion
 
@@ -8570,11 +8588,11 @@ OUTPUT: Return ONLY the complete HTML starting with <!DOCTYPE html>. No markdown
   const container = document.getElementById('rendered-output');
   if (gmBtn) { gmBtn.disabled = true; gmBtn.textContent = '⏳ Generating…'; }
   if (statusPanel) statusPanel.style.display = 'block';
-  container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:200px;color:#8b5cf6;font-size:13px;gap:10px"><span style="animation:gammaSpin 1.5s linear infinite;display:inline-block;font-size:24px">✨</span> Gemini is designing your Gamma-style report…</div>`;
+  container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:200px;color:#8b5cf6;font-size:13px;gap:10px"><span style="animation:gammaSpin 1.5s linear infinite;display:inline-block;font-size:24px">✨</span> VilfinTV AI is designing your visual report…</div>`;
 
   try {
     let html = '';
-    if (statusText) statusText.textContent = '🔌 Connecting to worker…';
+    if (statusText) statusText.textContent = '🔌 Starting AI generation…';
 
     const res = await fetch(workerUrl + '/query-stream', {
       method: 'POST',
