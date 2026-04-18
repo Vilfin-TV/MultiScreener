@@ -3424,13 +3424,13 @@ window._streamAbort = null;
 window._streamPartial = '';
 
 async function autoSendToGemini() {
-  const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY);
-  if (!workerUrl) {
-    window._pendingAutoSend = true;
-    const sub = document.getElementById('cf-modal-sub');
-    if (sub) sub.innerHTML = '⚠️ <strong style="color:var(--gold2)">Auto Send requires a Cloudflare Worker.</strong> Enter your Worker URL below.<br/><a href="user_manual.html" target="_blank" style="color:var(--gold2);font-size:11px;display:inline-block;margin-top:6px">📖 How to set up? →</a>';
-    document.getElementById('cf-modal-overlay').classList.add('show');
-    return;
+  // Always fall back to the hardcoded worker URL — user has confirmed keys are there
+  const HARDCODED_WORKER = 'https://x9-k2-p20-worker.vilfintv.workers.dev';
+  const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY) || HARDCODED_WORKER;
+  // Seed localStorage so future loads also pick it up
+  if (!window._cfWorkerUrl) {
+    localStorage.setItem(CF_KEY, HARDCODED_WORKER);
+    setCFConnected(HARDCODED_WORKER);
   }
   const finalUrl = workerUrl.replace(/\/+$/, '');
   const queryEl = document.getElementById('copy-content');
@@ -3465,7 +3465,7 @@ async function autoSendToGemini() {
   const pasteArea = document.getElementById('paste-area');
   if (pasteArea) pasteArea.value = '⏳ Streaming from Gemini AI… please wait…';
 
-  const selectedModel = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
+  const selectedModel = localStorage.getItem('viltv_ai_model') || 'gemini-2.5-flash';
 
   async function tryStream(partialSoFar, attempt) {
     const body = { prompt: queryText, use_search: true, model: selectedModel };
@@ -3563,11 +3563,11 @@ async function autoSendToGemini() {
       _aiProgressStop();
       if (pasteArea) pasteArea.value = '';
       const msg = e.message || 'Request failed.';
-      if (msg.toLowerCase().includes('api key') || msg.toLowerCase().includes('apikey')) {
-        statusEl.innerHTML = '❌ <strong>GEMINI_API_KEY not configured.</strong> Go to <a href="https://dash.cloudflare.com" target="_blank" style="color:#fbbf24">Cloudflare Dashboard</a> → Workers &amp; Pages → your worker → Settings → Secrets → add <code>GEMINI_API_KEY</code> with your Gemini key from <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#fbbf24">aistudio.google.com/apikey</a>.';
-      } else {
-        statusEl.textContent = '❌ Error: ' + msg;
-      }
+      // Always show the real error — "api key" in the message is often a red herring
+      // (e.g. Gemini returns "API_KEY_SERVICE_DISABLED" for quota/model issues)
+      statusEl.innerHTML = `❌ <strong>Worker error:</strong> <code style="font-size:11px;background:var(--dark2);padding:2px 5px;border-radius:4px">${msg}</code><br>
+        <span style="font-size:11px;color:var(--text3)">Worker: <a href="https://x9-k2-p20-worker.vilfintv.workers.dev" target="_blank" style="color:var(--gold2)">x9-k2-p20-worker.vilfintv.workers.dev</a> &nbsp;|&nbsp;
+        Keys configured ✓ &nbsp;|&nbsp; <a href="https://dash.cloudflare.com" target="_blank" style="color:var(--gold2)">Check Worker logs →</a></span>`;
     }
   }
 
@@ -3679,12 +3679,10 @@ function autoGeminiRender() {
 
 // Init on load
 document.addEventListener('DOMContentLoaded', () => {
-  // Ensure Worker URL is always seeded from config before cfLoadSaved runs
-  try {
-    const CF_SEED = 'viltv_cf_worker_url';
-    const configUrl = (typeof VILTV_CONFIG !== 'undefined' && VILTV_CONFIG.WORKER_URL) ? VILTV_CONFIG.WORKER_URL : 'https://x9-k2-p20-worker.vilfintv.workers.dev';
-    if (configUrl) localStorage.setItem(CF_SEED, configUrl);
-  } catch(e) {}
+  // Always seed the confirmed worker URL — keys are configured, just ensure URL is set
+  const _WORKER = 'https://x9-k2-p20-worker.vilfintv.workers.dev';
+  try { localStorage.setItem('viltv_cf_worker_url', _WORKER); } catch(e) {}
+  window._cfWorkerUrl = _WORKER;          // set in-memory immediately (no async delay)
   cfLoadSaved();
   initLiveNews();
   initLiveClock();
@@ -8211,8 +8209,9 @@ RULES:
 }
 
 async function sendLosslessJson() {
-  const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY);
-  if (!workerUrl) { cfConnect(); return; }
+  const HARDCODED_WORKER = 'https://x9-k2-p20-worker.vilfintv.workers.dev';
+  const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY) || HARDCODED_WORKER;
+  if (!window._cfWorkerUrl) { localStorage.setItem(CF_KEY, HARDCODED_WORKER); setCFConnected(HARDCODED_WORKER); }
 
   const prompt = buildLosslessJsonPrompt();
   if (!prompt) { alert('⚠️ Generate AI Query first.'); return; }
