@@ -2050,7 +2050,7 @@ footer{
       🚀 Generate Report
     </button>
     <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-      <button onclick="generateQuery();switchMain(1,document.querySelectorAll('.main-tab')[1])" style="padding:7px 16px;background:var(--card2);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:11px;cursor:pointer">⚡ Query Only (manual copy)</button>
+      <button onclick="generateQuery()" style="padding:7px 16px;background:var(--card2);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:11px;cursor:pointer">⚡ Generate Query (manual copy)</button>
     </div>
     <div class="validation-msg" id="v-gen" style="margin-top:12px"></div>
   </div>
@@ -2206,8 +2206,8 @@ footer{
       <div class="footer-col-title">Legal &amp; Support</div>
       <ul class="footer-links">
         <li><a href="user_manual.html" target="_blank">📖 User Manual</a></li>
-        <li><a href="user_manual.html#privacy" target="_blank">🔒 Privacy Policy</a></li>
-        <li><a href="user_manual.html#terms" target="_blank">📋 Terms of Service</a></li>
+        <li><a href="user_manual.html" target="_blank">🔒 Privacy Policy</a></li>
+        <li><a href="user_manual.html" target="_blank">📋 Terms of Service</a></li>
         <li><a href="mailto:vilfingeorge@gmail.com">✉ Contact Us</a></li>
       </ul>
     </div>
@@ -2222,7 +2222,7 @@ footer{
           </span>
           @vilfing on X (Twitter)
         </a>
-        <a href="https://facebook.com" target="_blank" rel="noopener">
+        <a href="https://www.facebook.com/share/19s3NRNKwv/?mibextid=wwXIfr" target="_blank" rel="noopener">
           <span class="footer-social-icon">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="#94a3b8"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
           </span>
@@ -2349,7 +2349,7 @@ footer{
         id="yt-player"
         width="100%"
         height="100%"
-        src="https://www.youtube.com/embed/ydiWklMUhcQ?autoplay=1&mute=1&rel=0&modestbranding=1&enablejsapi=1"
+        src="https://www.youtube.com/embed/ydiWklMUhcQ?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1"
         title="Live Market News"
         frameborder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -2672,7 +2672,7 @@ footer{
     <div class="cf-modal-sub" id="cf-modal-sub">
       Enter your Cloudflare Workers URL below. Once connected, your Gemini API key stored
       in the Worker will be used automatically. The URL is saved locally in your browser only — never uploaded to GitHub or any server.<br/>
-      <a href="user_manual.html#cloudflare" target="_blank" style="color:var(--gold2);font-size:11px;display:inline-block;margin-top:6px">📖 How to set up Cloudflare Worker? Step-by-step guide →</a>
+      <a href="user_manual.html" target="_blank" style="color:var(--gold2);font-size:11px;display:inline-block;margin-top:6px">📖 How to set up Cloudflare Worker? Step-by-step guide →</a>
     </div>
     <label for="cf-url-input">Cloudflare Workers URL</label>
     <input type="url" id="cf-url-input" placeholder="https://your-worker.workers.dev"
@@ -3244,7 +3244,7 @@ function cfCloseModal() {
   document.getElementById('cf-modal-overlay').classList.remove('show');
   // Reset sub text back to default
   const sub = document.getElementById('cf-modal-sub');
-  if (sub) sub.innerHTML = 'Enter your Cloudflare Workers URL below. Once connected, your Gemini API key stored in the Worker will be used automatically. The URL is saved locally in your browser only — never uploaded to GitHub or any server.<br/><a href="user_manual.html#cloudflare" target="_blank" style="color:var(--gold2);font-size:11px;display:inline-block;margin-top:6px">📖 How to set up Cloudflare Worker? Step-by-step guide →</a>';
+  if (sub) sub.innerHTML = 'Enter your Cloudflare Workers URL below. Once connected, your Gemini API key stored in the Worker will be used automatically. The URL is saved locally in your browser only — never uploaded to GitHub or any server.<br/><a href="user_manual.html" target="_blank" style="color:var(--gold2);font-size:11px;display:inline-block;margin-top:6px">📖 How to set up Cloudflare Worker? Step-by-step guide →</a>';
   window._pendingAutoSend = false;
 }
 
@@ -3363,13 +3363,17 @@ async function aiQuerySend() {
 
 // Generate query then immediately auto-send to Gemini
 async function generateAndSendToGemini() {
-  // First generate the query (same as clicking Generate AI Query)
-  const generated = generateQuery(true); // pass flag to not switch tab
-  if (!generated) return; // validation failed
-  // Small delay to let query render in copy-content
-  await new Promise(r => setTimeout(r, 300));
-  // Then auto-send
-  await autoSendToGemini();
+  const btn = document.getElementById('gen-auto-btn');
+  const origText = btn ? btn.innerHTML : '';
+  if (btn) { btn.innerHTML = '⏳ Sending to AI…'; btn.disabled = true; btn.style.opacity = '0.7'; }
+  try {
+    const generated = generateQuery(true); // pass flag to not switch tab
+    if (!generated) return;
+    await new Promise(r => setTimeout(r, 300));
+    await autoSendToGemini();
+  } finally {
+    if (btn) { btn.innerHTML = origText; btn.disabled = false; btn.style.opacity = ''; }
+  }
 }
 
 // Auto-send the generated research query to Gemini and show output
@@ -3381,7 +3385,7 @@ async function autoSendToGemini() {
   if (!workerUrl) {
     window._pendingAutoSend = true;
     const sub = document.getElementById('cf-modal-sub');
-    if (sub) sub.innerHTML = '⚠️ <strong style="color:var(--gold2)">Auto Send requires a Cloudflare Worker.</strong> Enter your Worker URL below.<br/><a href="user_manual.html#cloudflare" target="_blank" style="color:var(--gold2);font-size:11px;display:inline-block;margin-top:6px">📖 How to set up? →</a>';
+    if (sub) sub.innerHTML = '⚠️ <strong style="color:var(--gold2)">Auto Send requires a Cloudflare Worker.</strong> Enter your Worker URL below.<br/><a href="user_manual.html" target="_blank" style="color:var(--gold2);font-size:11px;display:inline-block;margin-top:6px">📖 How to set up? →</a>';
     document.getElementById('cf-modal-overlay').classList.add('show');
     return;
   }
@@ -3413,8 +3417,8 @@ async function autoSendToGemini() {
   _aiProgressSet(5, '🔌 Connecting to Worker…', 'ps1');
   statusEl.textContent = '🔌 Connecting to Worker…';
 
-  const copyTab = document.querySelectorAll('.main-tab')[1];
-  if (copyTab) switchMain(1, copyTab);
+  // Stay on Input Form (panel 0) during processing — jump to Report Output (panel 2) when done
+  // Do NOT switch to panel 1; handleGeminiResult already calls switchMain(2)
   const pasteArea = document.getElementById('paste-area');
   if (pasteArea) pasteArea.value = '⏳ Streaming from Gemini AI… please wait…';
 
@@ -3515,7 +3519,12 @@ async function autoSendToGemini() {
     } catch(e) {
       _aiProgressStop();
       if (pasteArea) pasteArea.value = '';
-      statusEl.textContent = '❌ Error: ' + (e.message || 'Request failed.');
+      const msg = e.message || 'Request failed.';
+      if (msg.toLowerCase().includes('api key') || msg.toLowerCase().includes('apikey')) {
+        statusEl.innerHTML = '❌ <strong>GEMINI_API_KEY not configured.</strong> Go to <a href="https://dash.cloudflare.com" target="_blank" style="color:#fbbf24">Cloudflare Dashboard</a> → Workers &amp; Pages → your worker → Settings → Secrets → add <code>GEMINI_API_KEY</code> with your Gemini key from <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#fbbf24">aistudio.google.com/apikey</a>.';
+      } else {
+        statusEl.textContent = '❌ Error: ' + msg;
+      }
     }
   }
 
@@ -3772,7 +3781,7 @@ function rbSwitchPanel(panel) {
 function ytSwitchChannel(videoId) {
   if (!videoId) return;
   const player = document.getElementById('yt-player');
-  if (player) player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&rel=0&modestbranding=1&enablejsapi=1`;
+  if (player) player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
   const link = document.getElementById('yt-open-link');
   if (link) link.href = `https://www.youtube.com/watch?v=${videoId}`;
 }
@@ -5706,7 +5715,7 @@ function generateQuery(skipTabSwitch) {
 
   generatedQuery = buildQuery(assetLabel, marketLabel, residentFull, answers.horizon, answers.amount, answers.assetType, answers.isDigital, answers.digitalType, today, answers.commSub);
   refreshCopyPanel();
-  if (!skipTabSwitch) switchMain(1, document.querySelectorAll('.main-tab')[1]);
+  // AI Report tab removed — no panel switch on query generation; user stays on Input Form
   return true;
 }
 
@@ -8089,9 +8098,7 @@ async function sendLosslessJson() {
   panel.style.display = 'block';
   content.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3)"><div style="font-size:24px;margin-bottom:8px">⏳</div><div style="font-size:13px">Fetching Lossless JSON from Gemini…</div></div>';
 
-  // Switch to Copy tab to show progress
-  const copyTab = document.querySelectorAll('.main-tab')[1];
-  if (copyTab) switchMain(1, copyTab);
+  // Stay on Input Form while lossless JSON streams — switchMain(2) fires on completion
 
   _aiProgressStart();
   _aiProgressSet(5, '🔌 Connecting…', 'ps1');
@@ -8153,9 +8160,8 @@ async function sendLosslessJson() {
     content.innerHTML = renderLjson(parsed);
     setTimeout(_aiProgressStop, 1500);
 
-    // Switch to the first non-output tab to show the result panel
-    const pasteTab = document.querySelectorAll('.main-tab')[1];
-    if (pasteTab) switchMain(1, pasteTab);
+    // Jump to Report Output (panel 2) to show the rendered Lossless JSON result
+    switchMain(2);
 
   } catch(e) {
     _aiProgressStop();
