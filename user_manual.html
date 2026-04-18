@@ -327,7 +327,7 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
   <h1>Multi Asset Screener</h1>
   <div class="sub">Complete Investor Guide &amp; Reference Manual</div>
   <div class="header-badge-row">
-    <span class="header-badge version">⚡ v8.5.7 — Vilfin George</span>
+    <span class="header-badge version">⚡ v8.6.2 — VilfinTV MultiScreener</span>
     <span class="header-badge updated">✅ Tax: AY 2026–27</span>
     <span class="header-badge tabs">📚 9 Tabs · 200+ Topics</span>
   </div>
@@ -2168,50 +2168,42 @@ function copyWorkerCode() {
   <div style="position:relative;margin-bottom:4px">
     <button onclick="copyWorkerCode()" id="worker-copy-btn" style="position:absolute;top:10px;right:10px;z-index:10;background:var(--burn);border:none;border-radius:6px;color:#fff;font-size:11px;font-weight:700;padding:6px 14px;cursor:pointer;letter-spacing:.5px">📋 Copy Code</button>
   <pre id="worker-code-block" style="background:#0a0a0a;border:1px solid #3a342c;border-radius:10px;padding:16px;padding-top:46px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#e2d9c8;white-space:pre;overflow-x:auto;line-height:1.7">// ╔══════════════════════════════════════════════════════════════╗
-// ║  VilfinTV AI Worker v6                                       ║
-// ║  Multi-key + multi-model cascade · SSE streaming             ║
-// ║  503/429/502 retry · Lossless JSON · Smart model fallback    ║
+// ║  VilfinTV AI Worker v7                                       ║
+// ║  Clean proxy · CORS * · Robust error handling                ║
+// ║  Model cascade · 503/429 retry · SSE streaming               ║
 // ╚══════════════════════════════════════════════════════════════╝
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 
-// Free-tier models (priority order — most capable first)
+// Model options — ordered from most capable to most available
 const FREE_MODELS = [
   'gemini-2.5-flash-preview-04-17',
   'gemini-2.5-flash',
-  'gemini-2.5-flash-latest',
   'gemini-2.0-flash',
-  'gemini-2.0-flash-latest',
   'gemini-2.0-flash-lite',
   'gemini-1.5-flash',
-  'gemini-1.5-flash-latest',
   'gemini-1.5-flash-8b',
 ];
-
-// Pro models (require billing)
 const PRO_MODELS = [
   'gemini-3.1-pro',
   'gemini-2.5-pro-preview-05-06',
   'gemini-2.5-pro',
-  'gemini-2.5-pro-latest',
-  'gemini-2.5-pro-preview-03-25',
   'gemini-2.0-pro-exp',
   'gemini-1.5-pro',
-  'gemini-1.5-pro-latest',
 ];
+const FALLBACK_MODEL = 'gemini-2.0-flash';  // always available fallback
+const LAST_RESORT    = 'gemini-1.5-flash-8b'; // smallest, widest availability
 
-// Fallback chain: first try FALLBACK, then LAST_RESORT
-const FALLBACK_MODEL = 'gemini-2.0-flash';
-const LAST_RESORT    = 'gemini-1.5-flash-8b';
-
-// ✅ HTTP codes that mean "retry with next key or model" (rate limit / overload)
-const RETRY_CODES = new Set([401, 403, 429, 502, 503, 529]);
+// HTTP codes that trigger retry across keys and models
+const RETRY_CODES = new Set([401, 403, 429, 500, 502, 503, 529]);
 
 // ── Helpers ─────────────────────────────────────────────────────
 
+// Pull key from Cloudflare Secrets — supports GEMINI_API_KEY (primary)
+// with optional GEMINI_API_KEY_2 / _3 for multi-key failover
 function getKeys(env) {
   return [
-    env.GEMINI_API_KEY_1 || env.GEMINI_API_KEY,
+    env.GEMINI_API_KEY || env.GEMINI_API_KEY_1,
     env.GEMINI_API_KEY_2,
     env.GEMINI_API_KEY_3,
   ].filter(Boolean);
@@ -2293,16 +2285,12 @@ async function callGemini(model, keys, reqBody) {
 
 export default {
   async fetch(request, env) {
-    // Dynamic CORS — allow GitHub Pages, localhost, and 127.0.0.1
-    const origin = request.headers.get('Origin') || '';
-    const allowed = ['https://vilfin-tv.github.io', 'http://localhost', 'http://127.0.0.1'];
-    const corsOrigin = allowed.some(o => origin.startsWith(o)) ? origin : 'https://vilfin-tv.github.io';
-
+    // CORS Preflight — universal * allows any client to connect.
+    // API key is stored strictly as a Cloudflare Secret (env.GEMINI_API_KEY).
     const cors = {
-      'Access-Control-Allow-Origin': corsOrigin,
+      'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
-      'Vary': 'Origin',
     };
     const jsonH = { ...cors, 'Content-Type': 'application/json' };
 
@@ -2496,23 +2484,33 @@ export default {
 <div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.25);border-radius:12px;padding:20px 24px;margin-bottom:16px">
   <div style="font-size:14px;font-weight:700;color:#fca5a5;margin-bottom:12px">🔧 Troubleshooting Common Errors</div>
   <div style="font-size:13px;color:#b0a898;line-height:1.9">
-    <p><strong style="color:#ffd166">[object Object]</strong> — Worker code is outdated. Re-paste the complete v6 code above (Step 4) and re-deploy.</p>
-    <p><strong style="color:#ffd166">API key not valid</strong> — The GEMINI_API_KEY_1 secret was not saved correctly. Go to Worker → Settings → Variables and Secrets and re-add it as Type "Secret".</p>
-    <p><strong style="color:#ffd166">Failed to fetch / CORS error</strong> — Make sure the Worker URL is correct and begins with <code>https://</code>. The v6 worker auto-accepts localhost and vilfin-tv.github.io origins.</p>
-    <p><strong style="color:#ffd166">429 Rate Limit / 503 High Demand</strong> — v6 automatically rotates through your 3 API keys AND tries fallback models (gemini-2.0-flash → gemini-1.5-flash-8b). Add a 2nd key to nearly eliminate rate limit errors. Visit <a href="https://aistudio.google.com" target="_blank" style="color:var(--burn3)">aistudio.google.com</a> with a different Google account to get a free 2nd key.</p>
-    <p><strong style="color:#ffd166">Empty response</strong> — Gemini returned no text. Try rephrasing your question, or test your key by visiting <code>[worker-url]/test-key</code> in your browser.</p>
+    <p><strong style="color:#ffd166">[object Object] / garbled output</strong> — Worker code is outdated. Re-paste the v7 code above (Step 4) and redeploy.</p>
+    <p><strong style="color:#ffd166">API key not valid / 401</strong> — The <code>GEMINI_API_KEY</code> secret was not saved. Go to Cloudflare → Worker → Settings → Variables and Secrets, click Add Secret, name it exactly <code>GEMINI_API_KEY</code>, paste your Google AI Studio key, save.</p>
+    <p><strong style="color:#ffd166">Failed to fetch / CORS error</strong> — Worker v7 uses <code>Access-Control-Allow-Origin: *</code> — any CORS error means the Worker URL is wrong or the Worker is not deployed. Double-check the URL begins with <code>https://</code> and hit <code>[worker-url]/ping</code> to confirm it's live.</p>
+    <p><strong style="color:#ffd166">503 High Demand / 429 Rate Limit</strong> — v7 cascades through all your keys and then falls back to <code>gemini-2.0-flash</code> and <code>gemini-1.5-flash-8b</code> automatically. If you still hit limits, add a 2nd key from a different Google account at <a href="https://aistudio.google.com" target="_blank" style="color:var(--burn3)">aistudio.google.com</a> and save it as <code>GEMINI_API_KEY_2</code>.</p>
+    <p><strong style="color:#ffd166">Empty response</strong> — Test your key by opening <code>[worker-url]/test-key</code> in your browser. It will show the status of each key.</p>
+  </div>
+</div>
+
+<!-- PUBLIC SECURITY WARNING -->
+<div style="background:rgba(239,68,68,.08);border:2px solid rgba(239,68,68,.35);border-radius:12px;padding:16px 20px;margin-bottom:16px">
+  <div style="font-size:14px;font-weight:700;color:#fca5a5;margin-bottom:10px">⚠️ Privacy &amp; Security Warning — Please Read</div>
+  <div style="font-size:13px;color:#b0a898;line-height:1.9">
+    <strong style="color:#ffd166">Do not share personal financial data in the AI chat.</strong> This includes bank account numbers, portfolio holdings, PAN/Aadhaar, tax details, passwords, brokerage credentials, or any personally identifiable financial information.<br/>
+    The AI chat uses Google's Gemini API via your Cloudflare Worker. All messages you type may be processed by Google's AI systems. Treat the AI assistant as a public tool — do not enter data you would not share publicly.<br/>
+    <strong style="color:#ffd166">The AI provides educational information only</strong> — it is not a licensed financial advisor and its outputs do not constitute investment advice.
   </div>
 </div>
 
 <!-- SECURITY NOTE -->
 <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:12px;padding:16px 20px">
-  <div style="font-size:13px;font-weight:700;color:#86efac;margin-bottom:8px">🔐 Security Summary</div>
+  <div style="font-size:13px;font-weight:700;color:#86efac;margin-bottom:8px">🔐 Technical Security Summary</div>
   <div style="font-size:12px;color:#b0a898;line-height:1.8">
-    ✅ Gemini API key stored as encrypted Secret in Cloudflare — never visible even to you after saving<br/>
-    ✅ Worker URL stored in browser localStorage only — not in any file uploaded to GitHub<br/>
-    ✅ CORS locked to <code style="font-family:monospace">https://vilfin-tv.github.io</code> — other websites cannot use your Worker<br/>
+    ✅ Gemini API key stored as encrypted Secret in Cloudflare — never visible in the browser or GitHub<br/>
+    ✅ Worker URL auto-set from config.js — no manual connect step required<br/>
+    ✅ <code style="font-family:monospace">CORS *</code> is safe because the Gemini API key is never exposed to the frontend<br/>
     ⚠️ Never paste your API key into any text file, GitHub repo, or browser form<br/>
-    ⚠️ Never share your Worker URL publicly if you want to prevent others from using it
+    ⚠️ Never share your Worker URL publicly if you want to prevent abuse of your API quota
   </div>
 </div>
 
