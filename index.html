@@ -992,8 +992,8 @@ footer{
 ══════════════════════════════════════════ */
 /* Right bar always stays dark — it's a media/AI panel */
 .right-bar{
-  width:300px;flex-shrink:0;
-  background:#1e293b;border-left:1px solid #334155;
+  width:310px;flex-shrink:0;
+  background:#080e1a;border-left:1px solid #131d35;
   display:flex;flex-direction:column;
   position:sticky;top:90px;height:calc(100vh - 90px);
   overflow:hidden;z-index:100;
@@ -1005,7 +1005,7 @@ footer{
   -webkit-text-fill-color:#f1f5f9!important;
 }
 .right-bar input::placeholder,.right-bar textarea::placeholder{color:#94a3b8!important}
-.right-bar #yt-channel-select{color:#f1f5f9!important;background:#334155!important;border-color:#475569!important}
+.right-bar #yt-channel-select{color:#e2e8f0!important;background:#0f1d35!important;border-color:#1e3a5f!important}
 
 /* ── DRAG RESIZE HANDLE ── */
 #rb-resize-handle{
@@ -1035,7 +1035,7 @@ footer{
     bottom:0!important;left:0!important;right:0!important;top:auto!important;
     width:100%!important;height:75vh!important;
     border-radius:20px 20px 0 0;
-    border-left:none!important;border-top:2px solid #475569;
+    border-left:none!important;border-top:2px solid #1d4ed8;
     z-index:1500;
     transform:translateY(100%);
     transition:transform .35s cubic-bezier(.32,.72,0,1);
@@ -1049,7 +1049,7 @@ footer{
 .mobile-rb-bar{
   display:none;
   position:fixed;bottom:0;left:0;right:0;
-  background:#0f172a;border-top:1px solid #334155;
+  background:#050a14;border-top:1px solid #1e3a5f;
   padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));
   gap:10px;z-index:1400;
 }
@@ -1083,13 +1083,13 @@ footer{
 }
 @media(max-width:900px){.rb-drag-handle{display:block}}
 .rb-header{
-  background:linear-gradient(135deg,#0f172a,#1e293b);
-  border-bottom:1px solid #334155;
+  background:linear-gradient(135deg,#050a14,#080e1a);
+  border-bottom:1px solid #131d35;
   padding:10px 14px 8px;flex-shrink:0;
 }
 .rb-title{
   font-family:'Bebas Neue',sans-serif;font-size:14px;
-  letter-spacing:2px;color:#fbbf24;
+  letter-spacing:2px;color:#93c5fd;
   display:flex;align-items:center;gap:7px;margin-bottom:6px;
 }
 .rb-dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:tvBlink 2s ease-in-out infinite}
@@ -1120,24 +1120,29 @@ footer{
 
 /* ── LIVE SCORES — sport tab buttons ── */
 .score-sport-btn{
-  padding:3px 10px;background:transparent;border:1px solid #1e3a5f;
-  border-radius:12px;color:#64748b;font-size:12px;cursor:pointer;
-  transition:all .15s;white-space:nowrap;flex-shrink:0;line-height:1.6;
+  padding:4px 10px;background:transparent;border:1px solid #1e3a5f;
+  border-radius:14px;color:#64748b;font-size:10.5px;cursor:pointer;
+  transition:all .15s;white-space:nowrap;flex-shrink:0;line-height:1.5;font-weight:500;
 }
-.score-sport-btn:hover{border-color:#2563eb;color:#93c5fd}
-.score-sport-btn.active{background:#1d4ed8;border-color:#1d4ed8;color:#fff;font-weight:600}
+.score-sport-btn:hover{border-color:#2563eb;color:#93c5fd;background:rgba(37,99,235,.1)}
+.score-sport-btn.active{background:#1d4ed8;border-color:#1d4ed8;color:#fff;font-weight:600;box-shadow:0 2px 8px rgba(29,78,216,.35)}
 /* Score cards */
 .score-card{
-  background:#0d1726;border:1px solid rgba(255,255,255,.06);border-radius:7px;
-  padding:5px 7px;margin-bottom:3px;
+  background:linear-gradient(135deg,#0b1628,#0e1c34);
+  border:1px solid rgba(255,255,255,.07);border-radius:9px;
+  padding:8px 10px;margin-bottom:5px;transition:border-color .15s;
 }
-.score-card-match{font-weight:600;color:#cbd5e1;font-size:9.5px;line-height:1.4;margin-bottom:2px}
-.score-card-status{color:#38bdf8;font-size:8.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase}
-.score-card-teams{display:flex;justify-content:space-between;align-items:center;margin-top:3px;gap:4px}
-.score-team-name{color:#94a3b8;font-size:9px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.score-result{font-weight:700;color:#f1f5f9;font-size:9.5px;flex-shrink:0;text-align:center;padding:0 4px}
-.score-venue{font-size:8px;color:#334155;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.score-no-data{text-align:center;padding:16px 6px;color:#1e3a5f;font-size:10px;line-height:1.6}
+.score-card:hover{border-color:rgba(37,99,235,.3)}
+.score-card-match{font-weight:600;color:#e2e8f0;font-size:11px;line-height:1.4;margin-bottom:3px}
+.score-card-status{color:#38bdf8;font-size:9.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.score-card-teams{display:flex;justify-content:space-between;align-items:center;margin-top:5px;gap:5px}
+.score-team-name{color:#94a3b8;font-size:10.5px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.score-result{font-weight:700;color:#f1f5f9;font-size:12px;flex-shrink:0;text-align:center;padding:2px 7px;background:rgba(255,255,255,.07);border-radius:5px;min-width:32px}
+.score-venue{font-size:9px;color:#475569;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.score-no-data{text-align:center;padding:24px 10px;color:#334155;font-size:11px;line-height:1.8}
+/* Live indicator pulse */
+@keyframes scoreLivePulse{0%,100%{opacity:1}50%{opacity:.4}}
+.score-live-dot{display:inline-block;width:7px;height:7px;background:#ef4444;border-radius:50%;margin-right:4px;animation:scoreLivePulse 1.5s ease-in-out infinite}
 
 /* ── UI THEME v8.6.16 — override legacy gold/orange to blue/navy ── */
 .sp-broker-name{color:#93c5fd}
@@ -2547,8 +2552,8 @@ footer{
   <!-- ── PANEL 2: Live TV / YouTube Channels ── -->
   <div id="rb-panel-video" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
     <!-- Channel selector -->
-    <div style="padding:6px 8px;background:#0f172a;border-bottom:1px solid #334155;flex-shrink:0">
-      <select id="yt-channel-select" onchange="ytSwitchChannel(this.value)" style="width:100%;padding:6px 8px;background:#1e293b;color:#f1f5f9;border:1px solid #475569;border-radius:8px;font-size:11px;font-family:inherit;cursor:pointer">
+    <div style="padding:6px 8px 5px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
+      <select id="yt-channel-select" onchange="ytSwitchChannel(this.value)" style="width:100%;padding:7px 10px;background:#0f1d35;color:#e2e8f0;border:1px solid #1e3a5f;border-radius:9px;font-size:11px;font-family:inherit;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22 viewBox=%220 0 10 6%22><path d=%22M0 0l5 6 5-6z%22 fill=%22%2364748b%22/></svg>');background-repeat:no-repeat;background-position:right 10px center;padding-right:28px">
         <optgroup label="📊 India — Business &amp; Markets">
           <option value="25B1JcOMx3I" selected>💹 NDTV Profit</option>
           <option value="bSdfGABTVGQ">📈 CNBC TV18</option>
@@ -2602,33 +2607,36 @@ footer{
       </select>
     </div>
 
-    <!-- YouTube player — 3/4 height -->
-    <div style="flex:3;overflow:hidden;position:relative;background:#000;min-height:0">
-      <div id="yt-player" style="position:absolute;inset:0;width:100%;height:100%"></div>
-    </div>
-
-    <!-- Fallback bar -->
-    <div id="yt-fallback-bar" style="padding:4px 8px;background:#0f172a;border-top:1px solid #334155;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;transition:background .3s">
-      <span id="yt-geo-hint" style="font-size:9px;color:#475569">Unavailable in region?</span>
-      <a id="yt-open-link" href="https://www.youtube.com/watch?v=25B1JcOMx3I" target="_blank" rel="noopener"
-         style="font-size:9px;font-weight:700;color:#f87171;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);padding:2px 7px;border-radius:4px;text-decoration:none;white-space:nowrap;transition:all .3s">
-        ▶ Open in YouTube ↗
-      </a>
-    </div>
-
-    <!-- ── Live Scores — 1/4 height ── -->
-    <div id="live-scores-box" style="flex:1;min-height:0;max-height:28%;background:#0a0f1a;border-top:2px solid #1e3a5f;display:flex;flex-direction:column;overflow:hidden">
-      <!-- Sport tabs -->
-      <div style="display:flex;gap:2px;padding:4px 5px;background:#0f172a;border-bottom:1px solid #1e293b;flex-shrink:0;overflow-x:auto;scrollbar-width:none">
-        <button class="score-sport-btn active" id="ssb-cricket"  onclick="switchScoreSport('cricket')" >🏏</button>
-        <button class="score-sport-btn"        id="ssb-football" onclick="switchScoreSport('football')">⚽</button>
-        <button class="score-sport-btn"        id="ssb-tennis"   onclick="switchScoreSport('tennis')"  >🎾</button>
-        <button class="score-sport-btn"        id="ssb-baseball" onclick="switchScoreSport('baseball')">⚾</button>
-        <span style="font-size:9px;color:#334155;margin-left:auto;align-self:center;white-space:nowrap;padding-right:2px" id="scores-updated"></span>
+    <!-- YouTube player — exact 16:9, zero black bars -->
+    <div id="yt-video-wrapper" style="width:100%;flex-shrink:0;position:relative;background:#000;overflow:hidden">
+      <!-- padding-top:56.25% = 9/16 = exact 16:9 ratio -->
+      <div style="width:100%;padding-top:56.25%;position:relative;overflow:hidden">
+        <div id="yt-player" style="position:absolute;top:0;left:0;width:100%;height:100%"></div>
       </div>
-      <!-- Score cards -->
-      <div id="live-scores-content" style="flex:1;overflow-y:auto;padding:3px 4px;scrollbar-width:thin;scrollbar-color:#1e293b transparent">
-        <div style="text-align:center;padding:10px;color:#334155;font-size:10px">Loading…</div>
+      <!-- Geo-block overlay — hidden by default, shows only when channel is geo-restricted -->
+      <div id="yt-fallback-bar" style="display:none;position:absolute;bottom:0;left:0;right:0;padding:6px 10px;background:rgba(8,14,26,.93);backdrop-filter:blur(6px);border-top:1px solid rgba(239,68,68,.25);align-items:center;justify-content:space-between;gap:6px">
+        <span id="yt-geo-hint" style="font-size:9.5px;color:#fbbf24;font-weight:500">⚠️ Geo-restricted</span>
+        <a id="yt-open-link" href="https://www.youtube.com/watch?v=25B1JcOMx3I" target="_blank" rel="noopener"
+           style="font-size:9.5px;font-weight:700;color:#fff;background:#dc2626;border:none;padding:4px 10px;border-radius:5px;text-decoration:none;white-space:nowrap;display:flex;align-items:center;gap:4px">
+          ▶ Open in YouTube
+        </a>
+      </div>
+    </div>
+
+    <!-- ── Live Scores — fills all remaining space ── -->
+    <div id="live-scores-box" style="flex:1;min-height:0;background:#080e1a;border-top:1px solid #131d35;display:flex;flex-direction:column;overflow:hidden">
+      <!-- Sport selector header -->
+      <div style="display:flex;align-items:center;gap:4px;padding:7px 8px 6px;background:#0a1120;border-bottom:1px solid #131d35;flex-shrink:0;overflow-x:auto;scrollbar-width:none">
+        <span style="font-size:8.5px;font-weight:800;color:#1d4ed8;letter-spacing:1px;text-transform:uppercase;flex-shrink:0;margin-right:1px">LIVE</span>
+        <button class="score-sport-btn active" id="ssb-cricket"  onclick="switchScoreSport('cricket')" >🏏 Cricket</button>
+        <button class="score-sport-btn"        id="ssb-football" onclick="switchScoreSport('football')">⚽ Football</button>
+        <button class="score-sport-btn"        id="ssb-tennis"   onclick="switchScoreSport('tennis')"  >🎾 Tennis</button>
+        <button class="score-sport-btn"        id="ssb-baseball" onclick="switchScoreSport('baseball')">⚾ Baseball</button>
+        <span style="font-size:8px;color:#1e3a5f;margin-left:auto;align-self:center;white-space:nowrap;flex-shrink:0" id="scores-updated"></span>
+      </div>
+      <!-- Score cards scroll area -->
+      <div id="live-scores-content" style="flex:1;overflow-y:auto;padding:6px 7px 4px;scrollbar-width:thin;scrollbar-color:#1e293b transparent">
+        <div style="text-align:center;padding:20px;color:#334155;font-size:11px">Loading scores…</div>
       </div>
     </div>
   </div>
@@ -4108,34 +4116,17 @@ function ytOnPlayerError(event) {
 }
 
 function ytShowGeoError() {
+  const bar  = document.getElementById('yt-fallback-bar');
   const hint = document.getElementById('yt-geo-hint');
   const link = document.getElementById('yt-open-link');
-  const bar  = document.getElementById('yt-fallback-bar');
-  if (hint) hint.textContent = '⚠️ Not available in your region — open in YouTube:';
-  if (hint) hint.style.color = '#fbbf24';
-  if (bar)  bar.style.background = 'rgba(239,68,68,.10)';
-  if (link) {
-    link.style.background = 'rgba(239,68,68,.35)';
-    link.style.borderColor = 'rgba(239,68,68,.9)';
-    link.style.color = '#fff';
-    link.style.animation = 'ytPulse 1.2s ease-in-out 3';
-    link.textContent = '▶ Open in YouTube ↗ (geo-restricted)';
-  }
+  if (bar)  { bar.style.display = 'flex'; }
+  if (hint) { hint.textContent = '⚠️ Geo-restricted'; hint.style.color = '#fbbf24'; }
+  if (link) { link.textContent = '▶ Open in YouTube'; link.style.animation = 'ytPulse 1.2s ease-in-out 3'; }
 }
 
 function ytHideGeoError() {
-  const hint = document.getElementById('yt-geo-hint');
-  const link = document.getElementById('yt-open-link');
-  const bar  = document.getElementById('yt-fallback-bar');
-  if (hint) { hint.textContent = 'If video unavailable, open in YouTube ↓'; hint.style.color = '#475569'; }
-  if (bar)  bar.style.background = '';
-  if (link) {
-    link.style.background = 'rgba(239,68,68,.12)';
-    link.style.borderColor = 'rgba(239,68,68,.3)';
-    link.style.color = '#f87171';
-    link.style.animation = '';
-    link.textContent = '▶ Watch on YouTube ↗';
-  }
+  const bar = document.getElementById('yt-fallback-bar');
+  if (bar) bar.style.display = 'none';
 }
 
 function ytSwitchChannel(videoId) {
@@ -4246,7 +4237,7 @@ async function fetchLiveScores(sport) {
         const matchName = ev.name || ev.shortName || comp.name || '';
         html += `<div class="score-card">
           <div class="score-card-match">${matchName}</div>
-          <div class="score-card-status" style="color:${statusColor}">${isLive ? '🔴 LIVE · ' : ''}${status}</div>
+          <div class="score-card-status" style="color:${statusColor}">${isLive ? '<span class="score-live-dot"></span>' : ''}${status}</div>
           ${teams}${venue}
         </div>`;
       }
