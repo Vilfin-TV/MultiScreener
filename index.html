@@ -18,9 +18,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
 :root{
-  /* Accent — keep brand burn for buttons & highlights */
-  --burn:#2563eb;--burn2:#3b82f6;--burn3:#60a5fa;
-  --gold:#f59e0b;--gold2:#fbbf24;
+  /* Accent — Blue/Navy brand (v8.6.16 redesign) */
+  --burn:#1d4ed8;--burn2:#2563eb;--burn3:#60a5fa;
+  --gold:#1e3a8a;--gold2:#60a5fa;
   --green:#16a34a;--red:#dc2626;--amber:#d97706;
   /* Light theme palette */
   --dark:#f8fafc;--dark2:#f1f5f9;--dark3:#e2e8f0;--dark4:#cbd5e1;
@@ -67,7 +67,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
   transition:all .15s;white-space:nowrap;overflow:hidden;text-align:left;
 }
 .sidebar-menu-item:hover{background:var(--card2);color:var(--text2)}
-.sidebar-menu-item.active-menu{background:rgba(232,84,15,.15);color:var(--gold2);border-left:3px solid var(--burn2)}
+.sidebar-menu-item.active-menu{background:rgba(29,78,216,.12);color:#60a5fa;border-left:3px solid var(--burn2)}
 .sidebar-icon{font-size:18px;flex-shrink:0;min-width:18px}
 .sidebar-label{opacity:0;transition:opacity .2s .05s;font-size:12px;letter-spacing:.3px}
 .sidebar.open .sidebar-label{opacity:1}
@@ -91,7 +91,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
   flex-shrink:0;
 }
 .left-menu-back-btn:hover{background:rgba(255,255,255,.2);border-color:var(--gold2)}
-.left-menu-page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,4vw,30px);color:#fff;letter-spacing:3px;text-shadow:0 0 20px rgba(232,84,15,.4)}
+.left-menu-page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,4vw,30px);color:#fff;letter-spacing:3px;text-shadow:0 0 20px rgba(59,130,246,.35)}
 .left-menu-body{max-width:900px;margin:0 auto;padding:32px 24px 60px}
 
 /* Sidebar content styles */
@@ -192,28 +192,28 @@ thead th { white-space: nowrap; font-size: 11px; padding: 8px 10px; }
 /* Strong buy card fix */
 .strong-buy-card { overflow: visible; word-break: break-word; }
 
-/* ── HEADER ── */
+/* ── HEADER — v8.6.16 White/Blue/Navy theme ── */
 .site-header{
-  background:linear-gradient(135deg,#0d0400 0%,#1a0800 30%,var(--burn) 70%,var(--burn3) 100%);
-  padding:32px 20px 26px;text-align:center;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#0c1b4d 0%,#0f2d6e 35%,#1d4ed8 75%,#2563eb 100%);
+  padding:28px 20px 22px;text-align:center;position:relative;overflow:hidden;
 }
 .site-header::before{
   content:'';position:absolute;inset:0;
-  background:repeating-linear-gradient(45deg,transparent,transparent 20px,rgba(255,255,255,.02) 20px,rgba(255,255,255,.02) 40px);
+  background:repeating-linear-gradient(45deg,transparent,transparent 24px,rgba(255,255,255,.025) 24px,rgba(255,255,255,.025) 48px);
 }
 .site-header::after{
-  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  content:'';position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent,rgba(147,197,253,.8),#60a5fa,rgba(147,197,253,.8),transparent);
 }
 .site-header h1{
   font-family:'Bebas Neue',sans-serif;font-size:clamp(24px,5vw,44px);
   color:#fff;letter-spacing:4px;position:relative;z-index:1;
-  text-shadow:0 0 40px rgba(232,84,15,.4);
+  text-shadow:0 0 40px rgba(59,130,246,.6),0 2px 8px rgba(0,0,0,.4);
 }
-.site-header .sub{color:rgba(255,255,255,.6);font-size:13px;margin-top:6px;position:relative;z-index:1;letter-spacing:2px;text-transform:uppercase}
+.site-header .sub{color:rgba(255,255,255,.7);font-size:13px;margin-top:6px;position:relative;z-index:1;letter-spacing:2px;text-transform:uppercase}
 .site-header .version-badge{
-  display:inline-block;background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.4);
-  border-radius:20px;padding:4px 14px;margin-top:12px;color:var(--gold2);font-size:11px;
+  display:inline-block;background:rgba(96,165,250,.18);border:1px solid rgba(96,165,250,.45);
+  border-radius:20px;padding:4px 14px;margin-top:12px;color:#93c5fd;font-size:11px;
   font-weight:700;letter-spacing:1px;position:relative;z-index:1;text-transform:uppercase;
 }
 
@@ -278,7 +278,7 @@ thead th { white-space: nowrap; font-size: 11px; padding: 8px 10px; }
   cursor:pointer;transition:all .18s;user-select:none;
 }
 .opt:hover{border-color:var(--burn2);color:var(--text);background:#2d2520}
-.opt.selected{border-color:var(--burn2);background:rgba(232,84,15,.18);color:var(--gold2);font-weight:600}
+.opt.selected{border-color:var(--burn2);background:rgba(29,78,216,.15);color:#1d4ed8;font-weight:600}
 .opt.selected::before{content:'✓ ';font-size:11px}
 
 /* ── SUB-QUESTION ── */
@@ -323,13 +323,13 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 /* ── GENERATE BUTTON ── */
 .gen-btn{
   width:100%;padding:18px;margin-top:32px;
-  background:linear-gradient(135deg,var(--burn),var(--burn2),var(--burn3));
+  background:linear-gradient(135deg,#0f2d6e,#1d4ed8,#3b82f6);
   border:none;border-radius:12px;color:#fff;
   font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;
   cursor:pointer;transition:all .2s;position:relative;overflow:hidden;
-  box-shadow:0 4px 20px rgba(192,57,11,.4);
+  box-shadow:0 4px 20px rgba(29,78,216,.4);
 }
-.gen-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(192,57,11,.5)}
+.gen-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(29,78,216,.55)}
 .gen-btn:active{transform:translateY(0)}
 .gen-btn::before{
   content:'';position:absolute;inset:0;
@@ -444,7 +444,7 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 /* ── RENDERED OUTPUT ── */
 #rendered-output{border-radius:12px;overflow:hidden;border:1px solid var(--border)}
 #rendered-output iframe{width:100%;border:none;min-height:600px;display:block}
-.render-placeholder{
+.render-placeholder{display:none!important}
   text-align:center;padding:80px 20px;background:var(--card2);border:1px solid var(--border);border-radius:12px;color:var(--text3);
 }
 .render-placeholder .icon{font-size:56px;margin-bottom:16px}
@@ -464,8 +464,8 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
   border-radius:8px;padding:10px 14px;margin-top:8px;font-size:12px;color:var(--gold2);
 }
 
-/* ── LIVE NEWS GRID ── */
-.live-news-section{border-top:2px solid var(--burn);background:var(--dark2);padding:20px}
+/* ── LIVE NEWS GRID — now at top of page ── */
+.live-news-section{background:var(--dark2);padding:16px 20px;border-bottom:2px solid var(--burn2)}
 .lns-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .lns-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--gold2);display:flex;align-items:center;gap:8px}
 .lns-title::before{content:'📡';font-size:14px}
@@ -758,7 +758,7 @@ footer{
   font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;
 }
 .calc-back-btn:hover{background:rgba(255,255,255,.2);border-color:var(--gold2)}
-.calc-page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,4vw,30px);color:#fff;letter-spacing:3px;text-shadow:0 0 20px rgba(232,84,15,.4)}
+.calc-page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,4vw,30px);color:#fff;letter-spacing:3px;text-shadow:0 0 20px rgba(59,130,246,.35)}
 .calc-body{max-width:900px;margin:0 auto;padding:32px 20px 60px}
 
 /* Calculator card */
@@ -828,9 +828,9 @@ footer{
 }
 .brand-icon{
   width:30px;height:30px;
-  background:linear-gradient(135deg,var(--burn),var(--burn3));
+  background:linear-gradient(135deg,#1d4ed8,#3b82f6);
   border-radius:8px;display:flex;align-items:center;justify-content:center;
-  font-size:16px;flex-shrink:0;box-shadow:0 0 12px rgba(232,84,15,.5);
+  font-size:16px;flex-shrink:0;box-shadow:0 0 12px rgba(59,130,246,.5);
   position:relative;overflow:hidden;
 }
 .brand-icon::before{
@@ -841,9 +841,9 @@ footer{
 .brand-name{
   font-family:'Bebas Neue',sans-serif;font-size:17px;
   letter-spacing:2px;color:#fff;white-space:nowrap;
-  text-shadow:0 0 20px rgba(232,84,15,.4);line-height:1;
+  text-shadow:0 0 16px rgba(59,130,246,.5);line-height:1;
 }
-.brand-name span{color:var(--gold2)}
+.brand-name span{color:#93c5fd}
 .top-menu-items{display:flex;align-items:center;height:100%;flex:1;overflow:hidden}
 .top-menu-right{
   display:flex;align-items:center;gap:8px;padding:0 12px;
@@ -890,7 +890,7 @@ footer{
   border-bottom:1px solid rgba(255,255,255,.05);white-space:nowrap;
 }
 .dd-item:last-child{border-bottom:none}
-.dd-item:hover{background:rgba(232,84,15,.15);color:var(--gold2)}
+.dd-item:hover{background:rgba(29,78,216,.1);color:#60a5fa}
 .dd-item.danger:hover{background:rgba(239,68,68,.1);color:#ef4444}
 .dd-sep{height:1px;background:var(--border);margin:4px 0}
 .dd-header{
@@ -918,7 +918,7 @@ footer{
   border-bottom:1px solid rgba(255,255,255,.05);
   text-decoration:none;transition:background .12s;
 }
-.news-link:hover{background:rgba(232,84,15,.15)}
+.news-link:hover{background:rgba(29,78,216,.08)}
 .news-link .nl-name{font-size:13px;font-weight:600;color:var(--gold2);margin-bottom:1px}
 .news-link .nl-url{font-size:10px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:230px}
 
@@ -1117,6 +1117,40 @@ footer{
 .rb-pow a{color:rgba(255,255,255,.25);text-decoration:none}
 .rb-pow a:hover{color:rgba(255,255,255,.5)}
 
+/* ── LIVE SCORES — sport tab buttons ── */
+.score-sport-btn{
+  padding:3px 10px;background:transparent;border:1px solid #1e3a5f;
+  border-radius:12px;color:#64748b;font-size:12px;cursor:pointer;
+  transition:all .15s;white-space:nowrap;flex-shrink:0;line-height:1.6;
+}
+.score-sport-btn:hover{border-color:#2563eb;color:#93c5fd}
+.score-sport-btn.active{background:#1d4ed8;border-color:#1d4ed8;color:#fff;font-weight:600}
+/* Score cards */
+.score-card{
+  background:#0d1726;border:1px solid rgba(255,255,255,.06);border-radius:7px;
+  padding:5px 7px;margin-bottom:3px;
+}
+.score-card-match{font-weight:600;color:#cbd5e1;font-size:9.5px;line-height:1.4;margin-bottom:2px}
+.score-card-status{color:#38bdf8;font-size:8.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase}
+.score-card-teams{display:flex;justify-content:space-between;align-items:center;margin-top:3px;gap:4px}
+.score-team-name{color:#94a3b8;font-size:9px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.score-result{font-weight:700;color:#f1f5f9;font-size:9.5px;flex-shrink:0;text-align:center;padding:0 4px}
+.score-venue{font-size:8px;color:#334155;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.score-no-data{text-align:center;padding:16px 6px;color:#1e3a5f;font-size:10px;line-height:1.6}
+
+/* ── UI THEME v8.6.16 — override legacy gold/orange to blue/navy ── */
+.sp-broker-name{color:#93c5fd}
+.sp-broker-btn{background:linear-gradient(135deg,#1d4ed8,#2563eb);box-shadow:none}
+.sp-broker-btn:hover{box-shadow:0 3px 12px rgba(37,99,235,.5)}
+.sp-section-title{color:#2563eb}
+.info-link-btn{background:linear-gradient(135deg,#1d4ed8,#2563eb)}
+.info-link-btn:hover{box-shadow:0 3px 10px rgba(37,99,235,.4)}
+.info-card-title{color:#93c5fd}
+.result-title-badge{background:linear-gradient(135deg,#0f2d6e,#1d4ed8)}
+.sidebar-menu-item.active-menu{background:rgba(29,78,216,.15);color:#93c5fd;border-left:3px solid #2563eb}
+/* Top menu clock — blue accent */
+#live-clock{color:#93c5fd!important;background:rgba(96,165,250,.08)!important;border-color:rgba(96,165,250,.2)!important}
+
 @media(max-width:1100px){
   /* right-bar collapses to mobile drawer below 900px; between 900-1100px it shrinks */
   .right-bar{width:260px}
@@ -1124,12 +1158,12 @@ footer{
 
 /* ── MOBILE HAMBURGER ── */
 .mobile-menu-btn{
-  display:none;width:38px;height:38px;border:1px solid rgba(245,166,35,.4);
-  border-radius:8px;background:rgba(245,166,35,.1);color:#ffd166;
+  display:none;width:38px;height:38px;border:1px solid rgba(96,165,250,.4);
+  border-radius:8px;background:rgba(96,165,250,.1);color:#93c5fd;
   font-size:20px;cursor:pointer;align-items:center;justify-content:center;
   flex-shrink:0;margin-left:auto;margin-right:8px;transition:all .15s;
 }
-.mobile-menu-btn:hover,.mobile-menu-btn.active{background:rgba(245,166,35,.25);border-color:var(--gold)}
+.mobile-menu-btn:hover,.mobile-menu-btn.active{background:rgba(96,165,250,.2);border-color:var(--burn3)}
 
 /* ── MOBILE LIVE MARKETS STRIP (replaces hidden right-bar) ── */
 .mobile-markets-strip{display:none}
@@ -1216,6 +1250,37 @@ footer{
   #live-clock{display:none}
 }
 
+/* ── MOBILE UI v8.6.16 — PowerUp.money inspired ── */
+@media(max-width:900px){
+  /* Clean white card surfaces */
+  .input-panel{padding:16px 12px 80px}
+  .q-block{border-radius:14px;border:1px solid #e2e8f0;background:#fff;padding:14px 14px 10px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  .q-label{font-size:13px;margin-bottom:10px}
+  /* Large touch-friendly option pills */
+  .opt{font-size:12px;padding:10px 12px;border-radius:10px;min-height:40px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:600}
+  .opt.selected{background:var(--burn);color:#fff;border-color:var(--burn);box-shadow:0 2px 8px rgba(29,78,216,.3)}
+  /* Bold section headers */
+  .step-header{padding-bottom:14px;margin-bottom:18px}
+  .step-title{font-size:16px}
+  /* Generate button — full width & prominent */
+  #gen-auto-btn{width:100%;font-size:14px;padding:14px 20px;border-radius:12px;justify-content:center;box-shadow:0 4px 16px rgba(29,78,216,.35)}
+  /* Live news on mobile — better card */
+  .live-news-section{padding:12px}
+  .lnb{border-radius:12px;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+  .lnb-header{border-radius:12px 12px 0 0}
+  /* Result tab */
+  .result-toolbar{flex-wrap:wrap;gap:6px;padding:8px 10px}
+  .result-tool-btn{font-size:10px;padding:5px 10px}
+  /* Bottom padding for FAB buttons */
+  .main-content{padding-bottom:72px}
+}
+/* Mobile FAB — bigger touch targets inspired by powerup.money bottom nav */
+@media(max-width:900px){
+  .mobile-fab-bar{gap:8px;padding:8px 12px 10px;border-top:1px solid rgba(255,255,255,.08)}
+  .mobile-fab-btn{height:48px;min-width:80px;border-radius:12px;font-size:11px;font-weight:700;gap:4px;flex-direction:column;letter-spacing:.2px}
+  .mobile-fab-btn .fab-icon{font-size:18px}
+}
+
 /* ── DESKTOP TICKER STRIP ── */
 .desktop-ticker-strip{
   height:46px;border-bottom:1px solid var(--border);background:var(--dark2);
@@ -1241,8 +1306,8 @@ footer{
 }
 .rb-msg.rb-msg-user{flex-direction:row-reverse}
 .rb-msg.rb-msg-user .rb-msg-bubble{
-  background:linear-gradient(135deg,rgba(192,57,11,.15),rgba(232,84,15,.1));
-  border-color:rgba(192,57,11,.3);border-radius:10px 0 10px 10px;color:var(--text)
+  background:linear-gradient(135deg,rgba(29,78,216,.12),rgba(59,130,246,.08));
+  border-color:rgba(29,78,216,.3);border-radius:10px 0 10px 10px;color:var(--text)
 }
 .rb-msg.rb-msg-user .rb-msg-avatar{background:var(--card2);font-size:14px}
 .rb-chip{
@@ -1313,10 +1378,10 @@ footer{
     <div class="brand-icon">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="2" y="2" width="9" height="9" rx="2" fill="#fff" opacity=".9"/>
-        <rect x="13" y="2" width="9" height="9" rx="2" fill="#ffd166" opacity=".85"/>
-        <rect x="2" y="13" width="9" height="9" rx="2" fill="#ffd166" opacity=".85"/>
+        <rect x="13" y="2" width="9" height="9" rx="2" fill="#60a5fa" opacity=".9"/>
+        <rect x="2" y="13" width="9" height="9" rx="2" fill="#60a5fa" opacity=".9"/>
         <rect x="13" y="13" width="9" height="9" rx="2" fill="#fff" opacity=".9"/>
-        <polyline points="5,17 8,13 11,15 14,10 17,12 20,7" stroke="#c0390b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <polyline points="5,17 8,13 11,15 14,10 17,12 20,7" stroke="#93c5fd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
       </svg>
     </div>
     <div class="brand-name">Vilfin<span>TV</span> Multiscreener</div>
@@ -1673,7 +1738,10 @@ footer{
         <div class="dd-header">🏦 Broker Platforms</div>
         <a class="dd-item news-link" href="https://login.dhan.co/?location=DH_WEB" target="_blank"><span class="nl-name">🟠 Dhan</span><span class="nl-url">dhan.co</span></a>
         <a class="dd-item news-link" href="https://kite.zerodha.com/" target="_blank"><span class="nl-name">🔵 Zerodha Kite</span><span class="nl-url">kite.zerodha.com</span></a>
+        <a class="dd-item news-link" href="https://fyers.in/" target="_blank"><span class="nl-name">⚡ Fyers</span><span class="nl-url">fyers.in</span></a>
+        <a class="dd-item news-link" href="https://groww.in/" target="_blank"><span class="nl-name">🌱 Groww</span><span class="nl-url">groww.in</span></a>
         <a class="dd-item news-link" href="https://star.prostocks.com/" target="_blank"><span class="nl-name">⭐ ProStocks Star</span><span class="nl-url">prostocks.com</span></a>
+        <a class="dd-item news-link" href="https://www.interactivebrokers.co.jp/sso/Login?deepLinkTo=/" target="_blank"><span class="nl-name">🌐 Interactive Brokers Japan</span><span class="nl-url">interactivebrokers.co.jp</span></a>
       </div>
     </div>
 
@@ -1681,13 +1749,41 @@ footer{
     <div class="tmenu-item" id="tmenu-aitools">
       <button class="tmenu-btn" onclick="toggleMenu('aitools')">Tools <span class="arr">▾</span></button>
       <div class="tmenu-dropdown" id="tdd-aitools">
-        <div class="dd-header">AI Assistants</div>
-        <a class="dd-item" href="https://claude.ai" target="_blank">🤖 Claude AI</a>
-        <a class="dd-item" href="https://gemini.google.com" target="_blank">💎 Gemini AI</a>
-        <a class="dd-item" href="https://copilot.microsoft.com" target="_blank">🧠 Microsoft Copilot</a>
-        <a class="dd-item" href="https://chatgpt.com" target="_blank">💬 ChatGPT</a>
+        <div class="dd-header">💬 Chatbots &amp; Assistants</div>
+        <a class="dd-item news-link" href="https://chatgpt.com" target="_blank"><span class="nl-name">🟢 ChatGPT</span><span class="nl-url">General Purpose &amp; Conversational</span></a>
+        <a class="dd-item news-link" href="https://claude.ai" target="_blank"><span class="nl-name">🤖 Claude</span><span class="nl-url">Writing &amp; Coding</span></a>
+        <a class="dd-item news-link" href="https://gemini.google.com" target="_blank"><span class="nl-name">💎 Gemini</span><span class="nl-url">Search &amp; Productivity</span></a>
+        <a class="dd-item news-link" href="https://perplexity.ai" target="_blank"><span class="nl-name">🔍 Perplexity</span><span class="nl-url">AI Search &amp; Research</span></a>
+        <a class="dd-item news-link" href="https://poe.com" target="_blank"><span class="nl-name">🌀 Poe</span><span class="nl-url">Multi-Model Aggregator</span></a>
         <div class="dd-sep"></div>
-        <div class="dd-header">Utilities</div>
+        <div class="dd-header">🎨 Visuals &amp; Design</div>
+        <a class="dd-item news-link" href="https://midjourney.com" target="_blank"><span class="nl-name">🖼 Midjourney</span><span class="nl-url">High-End Image Generation</span></a>
+        <a class="dd-item news-link" href="https://www.adobe.com/products/firefly.html" target="_blank"><span class="nl-name">🔥 Adobe Firefly</span><span class="nl-url">Professional Creative Design</span></a>
+        <a class="dd-item news-link" href="https://canva.com" target="_blank"><span class="nl-name">✏️ Canva Magic Studio</span><span class="nl-url">Graphic Design &amp; Layouts</span></a>
+        <a class="dd-item news-link" href="https://leonardo.ai" target="_blank"><span class="nl-name">🦁 Leonardo.ai</span><span class="nl-url">Image Generation &amp; Assets</span></a>
+        <a class="dd-item news-link" href="https://openai.com/dall-e-3" target="_blank"><span class="nl-name">🎭 DALL-E</span><span class="nl-url">Creative Visuals</span></a>
+        <div class="dd-sep"></div>
+        <div class="dd-header">🎬 Video &amp; Audio</div>
+        <a class="dd-item news-link" href="https://synthesia.io" target="_blank"><span class="nl-name">🎤 Synthesia</span><span class="nl-url">AI Video &amp; Avatars</span></a>
+        <a class="dd-item news-link" href="https://runwayml.com" target="_blank"><span class="nl-name">🚀 Runway</span><span class="nl-url">AI Video Generation</span></a>
+        <a class="dd-item news-link" href="https://suno.com" target="_blank"><span class="nl-name">🎵 Suno</span><span class="nl-url">AI Music Generation</span></a>
+        <a class="dd-item news-link" href="https://elevenlabs.io" target="_blank"><span class="nl-name">🗣 ElevenLabs</span><span class="nl-url">Voice Synthesis &amp; TTS</span></a>
+        <a class="dd-item news-link" href="https://descript.com" target="_blank"><span class="nl-name">✂️ Descript</span><span class="nl-url">Audio &amp; Video Editing</span></a>
+        <div class="dd-sep"></div>
+        <div class="dd-header">✍️ Writing &amp; Productivity</div>
+        <a class="dd-item news-link" href="https://grammarly.com" target="_blank"><span class="nl-name">📝 Grammarly</span><span class="nl-url">Writing &amp; Proofreading</span></a>
+        <a class="dd-item news-link" href="https://notion.so" target="_blank"><span class="nl-name">📓 Notion AI</span><span class="nl-url">Notes &amp; Documents</span></a>
+        <a class="dd-item news-link" href="https://otter.ai" target="_blank"><span class="nl-name">🦦 Otter.ai</span><span class="nl-url">Meeting Transcription</span></a>
+        <a class="dd-item news-link" href="https://jasper.ai" target="_blank"><span class="nl-name">💼 Jasper</span><span class="nl-url">Marketing Copy &amp; Content</span></a>
+        <a class="dd-item news-link" href="https://gamma.app" target="_blank"><span class="nl-name">✨ Gamma</span><span class="nl-url">AI Presentation Maker</span></a>
+        <div class="dd-sep"></div>
+        <div class="dd-header">⚙️ Automation &amp; Dev</div>
+        <a class="dd-item news-link" href="https://zapier.com" target="_blank"><span class="nl-name">⚡ Zapier</span><span class="nl-url">Workflow Automation</span></a>
+        <a class="dd-item news-link" href="https://github.com/features/copilot" target="_blank"><span class="nl-name">🐙 GitHub Copilot</span><span class="nl-url">Coding Assistance</span></a>
+        <a class="dd-item news-link" href="https://cursor.com" target="_blank"><span class="nl-name">🖱 Cursor</span><span class="nl-url">AI Code Editor</span></a>
+        <a class="dd-item news-link" href="https://www.hubspot.com/artificial-intelligence" target="_blank"><span class="nl-name">🏷 HubSpot AI</span><span class="nl-url">CRM &amp; Sales Automation</span></a>
+        <div class="dd-sep"></div>
+        <div class="dd-header">🔧 Utilities</div>
         <a class="dd-item" href="html_converter.html" target="_blank">📄 HTML to File Converter</a>
       </div>
     </div>
@@ -1752,6 +1848,19 @@ footer{
       "colorTheme":"dark","locale":"en"
     }
     </script>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     LIVE FINANCIAL NEWS — top of page (v8.6.16)
+══════════════════════════════════════════ -->
+<div class="live-news-section" id="live-news-section">
+  <div class="lns-header">
+    <div class="lns-title">LIVE FINANCIAL NEWS</div>
+    <div class="lns-timer" id="lns-timer" style="display:none"></div>
+  </div>
+  <div class="lns-grid" id="lns-grid">
+    <!-- 10 boxes injected by JS -->
   </div>
 </div>
 
@@ -2285,17 +2394,6 @@ footer{
 </div>
 </div>
 
-<!-- LIVE NEWS GRID -->
-<div class="live-news-section" id="live-news-section">
-  <div class="lns-header">
-    <div class="lns-title">LIVE FINANCIAL NEWS</div>
-    <div class="lns-timer" id="lns-timer" style="display:none"></div>
-  </div>
-  <div class="lns-grid" id="lns-grid">
-    <!-- 10 boxes injected by JS -->
-  </div>
-</div>
-
 <!-- About Me section removed v8.6.6 — now in footer col 1 -->
 
 <!-- FOOTER -->
@@ -2449,36 +2547,90 @@ footer{
 
   <!-- ── PANEL 2: Live TV / YouTube Channels ── -->
   <div id="rb-panel-video" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
-    <div style="padding:8px 10px 6px;background:#0f172a;border-bottom:1px solid #334155;flex-shrink:0">
-      <select id="yt-channel-select" onchange="ytSwitchChannel(this.value)" style="width:100%;padding:7px 10px;background:#1e293b;color:#f1f5f9;border:1px solid #475569;border-radius:8px;font-size:12px;font-family:inherit;cursor:pointer">
-        <optgroup label="📊 India — Markets &amp; Business">
-          <option value="25B1JcOMx3I" selected>💹 NDTV Profit (Live)</option>
-          <option value="bSdfGABTVGQ">📈 CNBC TV18 (Live)</option>
+    <!-- Channel selector -->
+    <div style="padding:6px 8px;background:#0f172a;border-bottom:1px solid #334155;flex-shrink:0">
+      <select id="yt-channel-select" onchange="ytSwitchChannel(this.value)" style="width:100%;padding:6px 8px;background:#1e293b;color:#f1f5f9;border:1px solid #475569;border-radius:8px;font-size:11px;font-family:inherit;cursor:pointer">
+        <optgroup label="📊 India — Business &amp; Markets">
+          <option value="25B1JcOMx3I" selected>💹 NDTV Profit</option>
+          <option value="bSdfGABTVGQ">📈 CNBC TV18</option>
+          <option value="iEpJwprxDdk">📊 Bloomberg TV</option>
+          <option value="9NyxcX3rhQs">💼 CNBC 24/7</option>
         </optgroup>
-        <optgroup label="🌏 India — Regional News">
-          <option value="4wExBtPQ-JA">📡 Asianet News (Live)</option>
-          <option value="1wECsnGZcfc">📺 24 News Kerala (Live)</option>
-          <option value="tgBTspqA5nY">📰 Manorama News (Live)</option>
+        <optgroup label="🇮🇳 India — National News">
+          <option value="jeE-ZJqweBQ">📡 NDTV 24x7</option>
+          <option value="MX-iD1xdCJw">🗞 Times of India</option>
+          <option value="e1FIApIafWE">📺 India TV News</option>
+          <option value="nyd-xznCpJc">📻 ABP News</option>
+          <option value="N46fFW7LLuo">🔴 India Today</option>
+          <option value="Zer0vaXRpYs">🌐 WION</option>
         </optgroup>
-        <optgroup label="🌍 Global Business &amp; News">
-          <option value="iEpJwprxDdk">📊 Bloomberg TV (Live)</option>
-          <option value="9NyxcX3rhQs">💼 CNBC 24/7 Business</option>
-          <option value="pToB3kRV30Q">🌐 BBC News (Live)</option>
-          <option value="gCNeDWCI0vo">🗺 Al Jazeera English (Live)</option>
+        <optgroup label="🌏 India — Regional (Malayalam)">
+          <option value="4wExBtPQ-JA">📡 Asianet News</option>
+          <option value="1wECsnGZcfc">📺 24 News Kerala</option>
+          <option value="tgBTspqA5nY">📰 Manorama News</option>
+          <option value="TfGaLCW472s">🎙 Mathrubhumi News</option>
+          <option value="nObUcHKZEGY">📻 Reporter Live</option>
+          <option value="korhrBAtJro">📡 News18 Kerala</option>
+          <option value="QOPUc-ryjLs">📺 MediaoneTV Live</option>
+        </optgroup>
+        <optgroup label="🌏 India — Regional (Tamil / Telugu / Kannada)">
+          <option value="NTwbvJDRtPs">📺 Polimer News (Tamil)</option>
+          <option value="gynWNinqmjw">🎙 NewsTamil 24X7 (Tamil)</option>
+          <option value="8STB00X3wNM">📡 Sun News (Tamil)</option>
+          <option value="bGq1yWUTnm8">📻 T News Telugu</option>
+          <option value="AGOSkVgfWjI">📺 TV9 Telugu Live</option>
+          <option value="8XiHf7l6I5g">📡 T News Telugu 2</option>
+          <option value="jdJoOhqCipA">🎙 TV9 Kannada</option>
+        </optgroup>
+        <optgroup label="🌏 South Asia">
+          <option value="Tmd0TGNM3U8">🇧🇩 SOMOY TV (Bangladesh)</option>
+          <option value="o7rnD1x7NQU">🇧🇩 Jamuna TV (Bangladesh)</option>
+        </optgroup>
+        <optgroup label="🌍 International News">
+          <option value="pToB3kRV30Q">🇬🇧 BBC News</option>
+          <option value="gCNeDWCI0vo">🌍 Al Jazeera</option>
+          <option value="NQjabLGdP5g">🌍 Africanews</option>
+          <option value="YDvsBbKfLPA">🇬🇧 Sky News</option>
+          <option value="tO-BENOTfPE">🇬🇧 Sky News (UK 2)</option>
+          <option value="vOTiJkg1voo">🇦🇺 ABC News Australia</option>
+          <option value="lAl3IYrkX4w">🇦🇺 9 News Australia</option>
+          <option value="f0lYkdA-Gtw">🇯🇵 NHK World Japan</option>
+          <option value="coYw-eVU0Ks">🇯🇵 ANNnewsCH (Japan)</option>
+          <option value="gMn2TauYQdk">🇺🇸 LiveNOW from FOX</option>
+          <option value="yDOkVG1uytM">🇺🇸 NBC News</option>
+          <option value="iipR5yUp36o">🇺🇸 ABC News</option>
         </optgroup>
       </select>
     </div>
-    <!-- YT.Player mount point (API replaces this div with an iframe) -->
-    <div style="flex:1;overflow:hidden;position:relative;background:#000;min-height:0">
+
+    <!-- YouTube player — 3/4 height -->
+    <div style="flex:3;overflow:hidden;position:relative;background:#000;min-height:0">
       <div id="yt-player" style="position:absolute;inset:0;width:100%;height:100%"></div>
     </div>
-    <!-- Fallback open-in-YouTube bar -->
-    <div id="yt-fallback-bar" style="padding:6px 10px;background:#0f172a;border-top:1px solid #334155;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;transition:background .3s">
-      <span id="yt-geo-hint" style="font-size:9px;color:#475569">If video unavailable, open in YouTube ↓</span>
+
+    <!-- Fallback bar -->
+    <div id="yt-fallback-bar" style="padding:4px 8px;background:#0f172a;border-top:1px solid #334155;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;transition:background .3s">
+      <span id="yt-geo-hint" style="font-size:9px;color:#475569">Unavailable in region?</span>
       <a id="yt-open-link" href="https://www.youtube.com/watch?v=25B1JcOMx3I" target="_blank" rel="noopener"
-         style="font-size:10px;font-weight:700;color:#f87171;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);padding:3px 8px;border-radius:5px;text-decoration:none;white-space:nowrap;transition:all .3s">
-        ▶ Watch on YouTube ↗
+         style="font-size:9px;font-weight:700;color:#f87171;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);padding:2px 7px;border-radius:4px;text-decoration:none;white-space:nowrap;transition:all .3s">
+        ▶ Open in YouTube ↗
       </a>
+    </div>
+
+    <!-- ── Live Scores — 1/4 height ── -->
+    <div id="live-scores-box" style="flex:1;min-height:0;max-height:28%;background:#0a0f1a;border-top:2px solid #1e3a5f;display:flex;flex-direction:column;overflow:hidden">
+      <!-- Sport tabs -->
+      <div style="display:flex;gap:2px;padding:4px 5px;background:#0f172a;border-bottom:1px solid #1e293b;flex-shrink:0;overflow-x:auto;scrollbar-width:none">
+        <button class="score-sport-btn active" id="ssb-cricket"  onclick="switchScoreSport('cricket')" >🏏</button>
+        <button class="score-sport-btn"        id="ssb-football" onclick="switchScoreSport('football')">⚽</button>
+        <button class="score-sport-btn"        id="ssb-tennis"   onclick="switchScoreSport('tennis')"  >🎾</button>
+        <button class="score-sport-btn"        id="ssb-baseball" onclick="switchScoreSport('baseball')">⚾</button>
+        <span style="font-size:9px;color:#334155;margin-left:auto;align-self:center;white-space:nowrap;padding-right:2px" id="scores-updated"></span>
+      </div>
+      <!-- Score cards -->
+      <div id="live-scores-content" style="flex:1;overflow-y:auto;padding:3px 4px;scrollbar-width:thin;scrollbar-color:#1e293b transparent">
+        <div style="text-align:center;padding:10px;color:#334155;font-size:10px">Loading…</div>
+      </div>
     </div>
   </div>
 
@@ -3784,6 +3936,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initLiveClock();
   initRbResize();
   initSidePanelLinks();
+  _initLiveScores();
 });
 
 // ═══════════════════════════════════════════════════════════════════
@@ -4002,6 +4155,94 @@ function ytSwitchChannel(videoId) {
       el.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
     }
   }
+}
+
+// ── LIVE SCORES ─────────────────────────────────────────────────────
+let _currentScoreSport = 'cricket';
+let _scoreRefreshTimer = null;
+
+function switchScoreSport(sport) {
+  _currentScoreSport = sport;
+  ['cricket','football','tennis','baseball'].forEach(s => {
+    const btn = document.getElementById('ssb-' + s);
+    if (btn) btn.classList.toggle('active', s === sport);
+  });
+  fetchLiveScores(sport);
+}
+
+async function fetchLiveScores(sport) {
+  const box = document.getElementById('live-scores-content');
+  if (!box) return;
+  box.innerHTML = '<div class="score-no-data">Loading scores…</div>';
+
+  const endpoints = {
+    cricket:  'https://site.api.espn.com/apis/site/v2/sports/cricket/8/scoreboard',
+    football: 'https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard',
+    tennis:   'https://site.api.espn.com/apis/site/v2/sports/tennis/scoreboard',
+    baseball: 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard'
+  };
+
+  try {
+    const res = await fetch(endpoints[sport] || endpoints.cricket, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+
+    const events = data.events || data.competitions || [];
+    if (!events.length) {
+      box.innerHTML = '<div class="score-no-data">No live matches right now.<br/>Check back later.</div>';
+      return;
+    }
+
+    let html = '';
+    const shown = events.slice(0, 12);
+    for (const ev of shown) {
+      const comps = ev.competitions || [ev];
+      for (const comp of comps) {
+        const competitors = comp.competitors || [];
+        const status = comp.status?.type?.shortDetail || comp.status?.type?.description || 'Scheduled';
+        const isLive = (comp.status?.type?.state || '').toLowerCase() === 'in';
+        const statusColor = isLive ? '#22c55e' : (status.toLowerCase().includes('final') ? '#ef4444' : '#38bdf8');
+
+        let teams = '', venue = '';
+        if (competitors.length >= 2) {
+          const h = competitors.find(c => c.homeAway === 'home') || competitors[0];
+          const a = competitors.find(c => c.homeAway === 'away') || competitors[1];
+          const hName = h.team?.abbreviation || h.team?.shortDisplayName || h.team?.displayName || '?';
+          const aName = a.team?.abbreviation || a.team?.shortDisplayName || a.team?.displayName || '?';
+          const hScore = h.score !== undefined ? h.score : '';
+          const aScore = a.score !== undefined ? a.score : '';
+          teams = `<div class="score-card-teams">
+            <span class="score-team-name">${hName}</span>
+            <span class="score-result">${hScore} – ${aScore}</span>
+            <span class="score-team-name" style="text-align:right">${aName}</span>
+          </div>`;
+        }
+        if (comp.venue?.fullName) {
+          venue = `<div class="score-venue">📍 ${comp.venue.fullName}</div>`;
+        }
+
+        const matchName = ev.name || ev.shortName || comp.name || '';
+        html += `<div class="score-card">
+          <div class="score-card-match">${matchName}</div>
+          <div class="score-card-status" style="color:${statusColor}">${isLive ? '🔴 LIVE · ' : ''}${status}</div>
+          ${teams}${venue}
+        </div>`;
+      }
+    }
+
+    box.innerHTML = html || '<div class="score-no-data">No matches available.</div>';
+    const ts = document.getElementById('scores-updated');
+    if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+
+  } catch (e) {
+    box.innerHTML = `<div class="score-no-data">Could not load scores.<br/><span style="font-size:9px;color:#1e3a5f">${e.message}</span></div>`;
+  }
+}
+
+function _initLiveScores() {
+  fetchLiveScores('cricket');
+  if (_scoreRefreshTimer) clearInterval(_scoreRefreshTimer);
+  _scoreRefreshTimer = setInterval(() => fetchLiveScores(_currentScoreSport), 60000);
 }
 
 // ── MOBILE RIGHT-BAR DRAWER ─────────────────────────────────────────
@@ -4386,6 +4627,20 @@ const SIDE_CONTENT = {
           <div class="sp-broker-name">🥇 GoldenPi</div>
           <div class="sp-broker-desc">Buy bonds online — corporate, government, and tax-free bonds.</div>
           <a class="sp-broker-btn" href="https://goldenpi.com/sign-up?referrer=SRVL1503290" target="_blank">Join GoldenPi →</a>
+        </div>
+        <div class="sp-broker-card">
+          <div class="sp-broker-name">💎 Wint Wealth — Fixed-Income Bonds</div>
+          <div class="sp-broker-desc">Invest in curated corporate bonds, asset-backed securities, and high-yield fixed income instruments. Use my referral link to get started.</div>
+          <a class="sp-broker-btn" href="https://www.wintwealth.com/bonds/referral/invite?referralCode=3AC7AF" target="_blank">Join Wint Wealth →</a>
+        </div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">🌐 Global Trading Platforms</div>
+        <div class="sp-broker-card">
+          <div class="sp-broker-name">🌐 Interactive Brokers — Global Markets</div>
+          <div class="sp-broker-desc">Trade stocks, options, futures, forex, bonds and funds globally. Ideal for NRIs and international investors — access US, Japan, Europe, and 150+ markets.</div>
+          <a class="sp-broker-btn" href="https://www.interactivebrokers.co.jp/en/accounts/what-you-need-jp.php" target="_blank">Open IBKR Account →</a>
+          <a class="sp-broker-btn" href="https://www.interactivebrokers.co.jp/sso/Login?deepLinkTo=/" target="_blank" style="background:linear-gradient(135deg,#0f2d6e,#1d4ed8)">Login to IBKR →</a>
         </div>
       </div>
       <div class="sp-section">
@@ -8557,23 +8812,32 @@ async function generateGammaReport() {
     dataSection = 'RESEARCH QUERY:\n' + baseQuery.substring(0, 5000);
   }
 
-  const prompt = `You are a world-class financial presentation designer. Create a stunning, self-contained single-page HTML visual report for "${ticker}" (${assetType}).
+  const prompt = `You are a world-class financial presentation designer. Create a stunning Reveal.js-powered HTML presentation for "${ticker}" (${assetType}).
 
-DESIGN REQUIREMENTS (follow exactly):
-• Dark theme: body background #0a0f1e, cards #111827, borders rgba(255,255,255,0.08)
-• Animated gradient header: background linear-gradient(135deg, #1e3a5f, #0d1f3c, #1a1040)
-• Asset name in large Bebas Neue / Impact font with gold color #fbbf24
-• Verdict badge: big colored pill (green=BUY, amber=HOLD, red=SELL)
-• 3-column responsive grid of stat cards — each card: rounded-2xl, dark bg, icon + label + value
-• Color coding: green #22c55e for positive, red #ef4444 for negative, gold #fbbf24 for key data
-• Section cards with left-border accent: Overview, Key Metrics, Price Targets, Risk, Recommendation
-• Data source badges (small pills) on each metric
-• Referral buttons for broker links if present in data
-• Smooth fade-in animations on load
-• Fully responsive — mobile-friendly
-• Footer with generation timestamp and "Powered by VilfinTV MultiScreener"
+TECHNICAL REQUIREMENTS:
+• Load Reveal.js 5 from CDN in <head>:
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/night.css">
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+• In body: use <div class="reveal"><div class="slides"> with multiple <section> slides
+• Initialize at bottom of body with:
+  <script>Reveal.initialize({hash:true,transition:'slide',backgroundTransition:'fade',controls:true,progress:true,center:true});</script>
+• Add custom CSS overriding night theme: primary accent #60a5fa (sky blue), gold #fbbf24, bg #0a0f1e, card bg rgba(255,255,255,0.05)
 
-IMPORTANT: Create a polished investor-grade presentation. Each data point from the research must appear in the visual report. Use the exact values from the data.
+SLIDE STRUCTURE (create all slides with real data from the report):
+• Slide 1 — TITLE: Big asset name, type, country/market, large verdict badge pill (green=BUY / amber=HOLD / red=SELL), generation date
+• Slide 2 — OVERVIEW: Key stats in 3-column grid (price, market cap, P/E, 52w range, volume, sector)
+• Slide 3 — FINANCIALS: Revenue, profit, margins, EPS in a styled table with color coding
+• Slide 4 — PRICE ANALYSIS: Current price, analyst targets (min/avg/max), support/resistance levels
+• Slide 5 — RISK FACTORS: Bulleted list of key risks with emoji indicators (🔴 high, 🟡 medium, 🟢 low)
+• Slide 6 — RECOMMENDATION: Final verdict, reasoning, suggested action, broker links if available
+• Each slide: footer with "📊 VilfinTV MultiScreener" on bottom-left, page number bottom-right
+
+DESIGN:
+• Color code all numbers: green #22c55e positive, red #ef4444 negative, gold #fbbf24 key highlights
+• Cards with glassmorphism: background rgba(255,255,255,0.06), border rgba(255,255,255,0.1), border-radius 12px
+• Verdict badge: padding 8px 24px, border-radius 999px, font-size 1.4em, font-weight 800
+• Use actual financial data — every number/fact from the research must appear on a slide
 
 DATA TO PRESENT:
 ${dataSection}
@@ -8635,14 +8899,22 @@ OUTPUT: Return ONLY the complete HTML starting with <!DOCTYPE html>. No markdown
     html = html.replace(/^```html\s*/im, '').replace(/^```\s*/im, '').replace(/```\s*$/im, '').trim();
 
     if (html && (html.includes('<!DOCTYPE') || html.includes('<html'))) {
-      const pasteArea = document.getElementById('paste-area');
-      if (pasteArea) pasteArea.value = html;
-      window._autoGeminiHTML = html;
-      if (statusText) statusText.textContent = '✅ Rendering presentation…';
-      renderOutput();
-      document.getElementById('btn-export-html').style.display = '';
-      document.getElementById('btn-export-pdf').style.display = '';
-      document.getElementById('clear-result-btn').style.display = '';
+      if (statusText) statusText.textContent = '📥 Downloading report…';
+      // Auto-download as HTML file — does NOT change the existing Result view
+      const fname = `VilfinTV_Gamma_${(answers.assetName || ticker).replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.html`;
+      const blob = new Blob([html], { type: 'text/html' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = fname; a.style.display = 'none';
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 2000);
+      // Show success toast in container (non-intrusive, doesn't replace report)
+      container.innerHTML = `<div style="padding:28px;text-align:center;background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(168,85,247,.05));border-radius:12px;border:1px solid rgba(124,58,237,.2)">
+        <div style="font-size:36px;margin-bottom:10px">✅</div>
+        <div style="font-weight:700;color:#c4b5fd;margin-bottom:6px;font-size:14px">Gamma Style Report Downloaded!</div>
+        <div style="color:#64748b;font-size:12px">File: <code style="color:#a78bfa">${fname}</code></div>
+        <div style="color:#64748b;font-size:11px;margin-top:6px">Check your Downloads folder. The file is a self-contained HTML — open in any browser.</div>
+      </div>`;
     } else {
       throw new Error('AI did not return a valid HTML document. Try again.');
     }
