@@ -279,16 +279,32 @@ thead th { white-space: nowrap; font-size: 11px; padding: 8px 10px; }
 .sub-q.visible{display:block;animation:fadeIn .2s ease}
 .sub-q-label{font-size:11px;font-weight:700;color:var(--burn2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
 
+/* ── GLOBAL INPUT/TEXTAREA/SELECT RESET (prevent browser auto-style conflicts) ── */
+input,textarea,select{
+  color:#334155!important;
+  background-color:#ffffff!important;
+  -webkit-text-fill-color:#334155!important;
+}
+input:focus,textarea:focus,select:focus,
+input:active,textarea:active,select:active{
+  color:#334155!important;
+  background-color:#ffffff!important;
+  -webkit-text-fill-color:#334155!important;
+}
+input::placeholder,textarea::placeholder{color:#94a3b8!important}
+
 /* ── TEXT INPUT ── */
 .text-input-wrap{position:relative}
 .text-input{
   width:100%;padding:14px 18px;
-  background:var(--card2);border:1px solid var(--border2);border-radius:10px;
-  color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;
+  background:#ffffff;border:1px solid var(--border2);border-radius:10px;
+  color:#334155;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;
   transition:border-color .2s;outline:none;
+  -webkit-text-fill-color:#334155;
 }
-.text-input:focus{border-color:var(--burn2);background:#242220}
-.text-input::placeholder{color:var(--text3)}
+.text-input:focus{border-color:var(--burn2);background:#ffffff;color:#334155;-webkit-text-fill-color:#334155}
+.text-input:active{color:#334155!important;background:#ffffff!important}
+.text-input::placeholder{color:#94a3b8}
 
 /* ── ASSET NAME PLACEHOLDER ── */
 #asset-name-placeholder{font-size:11px;color:var(--text3);margin-top:6px;font-style:italic}
@@ -844,13 +860,22 @@ footer .disclaimer{max-width:860px;margin:0 auto;color:rgba(255,255,255,.38)}
 /* ══════════════════════════════════════════
    PERMANENT RIGHT BAR (Live Markets)
 ══════════════════════════════════════════ */
+/* Right bar always stays dark — it's a media/AI panel */
 .right-bar{
   width:300px;flex-shrink:0;
-  background:var(--dark2);border-left:1px solid var(--border);
+  background:#1e293b;border-left:1px solid #334155;
   display:flex;flex-direction:column;
   position:sticky;top:90px;height:calc(100vh - 90px);
   overflow:hidden;z-index:100;
+  color:#f1f5f9;
 }
+/* Override global input reset inside right-bar to keep dark theme */
+.right-bar input,.right-bar textarea,.right-bar select{
+  color:#f1f5f9!important;background-color:#334155!important;
+  -webkit-text-fill-color:#f1f5f9!important;
+}
+.right-bar input::placeholder,.right-bar textarea::placeholder{color:#94a3b8!important}
+.right-bar #yt-channel-select{color:#f1f5f9!important;background:#334155!important;border-color:#475569!important}
 
 /* ── DRAG RESIZE HANDLE ── */
 #rb-resize-handle{
@@ -872,13 +897,13 @@ footer .disclaimer{max-width:860px;margin:0 auto;color:rgba(255,255,255,.38)}
 #rb-resize-handle:hover::after,#rb-resize-handle.dragging::after{opacity:1;background:#fff}
 @media(max-width:1100px){#rb-resize-handle{display:none}}
 .rb-header{
-  background:linear-gradient(135deg,var(--dark3),var(--dark2));
-  border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg,#0f172a,#1e293b);
+  border-bottom:1px solid #334155;
   padding:10px 14px 8px;flex-shrink:0;
 }
 .rb-title{
   font-family:'Bebas Neue',sans-serif;font-size:14px;
-  letter-spacing:2px;color:var(--gold2);
+  letter-spacing:2px;color:#fbbf24;
   display:flex;align-items:center;gap:7px;margin-bottom:6px;
 }
 .rb-dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:tvBlink 2s ease-in-out infinite}
@@ -887,13 +912,14 @@ footer .disclaimer{max-width:860px;margin:0 auto;color:rgba(255,255,255,.38)}
 }
 .rb-tabs::-webkit-scrollbar{display:none}
 .rb-tab{
-  flex-shrink:0;padding:4px 9px;border:none;
-  background:rgba(255,255,255,.06);color:rgba(255,255,255,.45);
-  font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;
+  flex-shrink:0;padding:5px 10px;border:none;
+  background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  font-size:10px;font-weight:600;
   cursor:pointer;border-radius:12px;transition:all .15s;white-space:nowrap;
 }
-.rb-tab:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.75)}
-.rb-tab.active{background:var(--burn);color:#fff}
+.rb-tab:hover{background:rgba(255,255,255,.15);color:rgba(255,255,255,.85)}
+.rb-tab.active{background:#2563eb;color:#fff}
 .rb-content{flex:1;overflow:hidden;position:relative}
 .rb-frame{visibility:hidden;pointer-events:none;width:100%;height:100%;position:absolute;inset:0}
 .rb-frame.active{visibility:visible;pointer-events:auto}
@@ -1503,19 +1529,9 @@ footer .disclaimer{max-width:860px;margin:0 auto;color:rgba(255,255,255,.38)}
       "symbols":[
         {"proName":"NSE:NIFTY","title":"Nifty 50"},
         {"proName":"BSE:SENSEX","title":"Sensex"},
-        {"proName":"NSE:BANKNIFTY","title":"Bank Nifty"},
         {"proName":"TVC:NDX","title":"Nasdaq 100"},
-        {"proName":"SP:SPX","title":"S&P 500"},
-        {"proName":"TVC:DJI","title":"Dow Jones"},
-        {"proName":"TVC:NI225","title":"Nikkei 225"},
-        {"proName":"TVC:DEU40","title":"DAX"},
-        {"proName":"OANDA:XAUUSD","title":"Gold"},
         {"proName":"TVC:UKOIL","title":"Brent Crude"},
-        {"proName":"TVC:USOIL","title":"WTI Oil"},
-        {"proName":"FX:USDINR","title":"USD/INR"},
-        {"proName":"FX:USDJPY","title":"USD/JPY"},
-        {"proName":"FX:EURUSD","title":"EUR/USD"},
-        {"proName":"BITSTAMP:BTCUSD","title":"Bitcoin"}
+        {"proName":"OANDA:XAUUSD","title":"Gold"}
       ],
       "showSymbolLogo":true,
       "isTransparent":false,
@@ -1538,9 +1554,7 @@ footer .disclaimer{max-width:860px;margin:0 auto;color:rgba(255,255,255,.38)}
         {"proName":"BSE:SENSEX","title":"Sensex"},
         {"proName":"TVC:NDX","title":"Nasdaq 100"},
         {"proName":"TVC:UKOIL","title":"Brent Crude"},
-        {"proName":"OANDA:XAUUSD","title":"Gold"},
-        {"proName":"FX:USDINR","title":"USD/INR"},
-        {"proName":"BITSTAMP:BTCUSD","title":"Bitcoin"}
+        {"proName":"OANDA:XAUUSD","title":"Gold"}
       ],
       "showSymbolLogo":true,"isTransparent":true,"displayMode":"adaptive",
       "colorTheme":"dark","locale":"en"
@@ -2040,8 +2054,9 @@ footer .disclaimer{max-width:860px;margin:0 auto;color:rgba(255,255,255,.38)}
   <div class="paste-actions">
     <button class="action-btn primary" onclick="renderOutput()">🔍 Render Report</button>
     <button class="action-btn secondary" onclick="clearPaste()">🗑️ Clear</button>
-    <button class="action-btn success" id="btn-export-html" onclick="downloadOutput()">⬇️ Download HTML</button>
-    <button class="action-btn success" id="btn-export-pdf" onclick="exportPDF()">🖨️ Export PDF</button>
+    <button class="action-btn success show" id="btn-export-html" onclick="downloadOutput()">⬇️ Export HTML</button>
+    <button class="action-btn success show" id="btn-export-pdf" onclick="exportPDF()">🖨️ Export PDF</button>
+    <button class="action-btn show" onclick="generateGammaReport()" style="background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border-color:#7c3aed">✨ Gamma AI Report</button>
   </div>
 
   <div id="rendered-output">
