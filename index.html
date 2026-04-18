@@ -217,11 +217,12 @@ thead th { white-space: nowrap; font-size: 11px; padding: 8px 10px; }
   font-weight:700;letter-spacing:1px;position:relative;z-index:1;text-transform:uppercase;
 }
 
-/* ── MAIN TABS ── */
+/* ── MAIN TABS — sticky so always accessible above live-news ── */
 .main-nav{
   background:#ffffff;border-bottom:2px solid var(--border);
   display:flex;overflow-x:auto;scrollbar-width:none;
-  box-shadow:0 1px 4px rgba(0,0,0,.06);
+  box-shadow:0 2px 8px rgba(0,0,0,.08);
+  position:sticky;top:0;z-index:200;
 }
 .main-nav::-webkit-scrollbar{display:none}
 .main-tab{
@@ -464,8 +465,8 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
   border-radius:8px;padding:10px 14px;margin-top:8px;font-size:12px;color:var(--gold2);
 }
 
-/* ── LIVE NEWS GRID — top of main-content area ── */
-.live-news-section{background:var(--dark2);padding:16px 20px;border-bottom:2px solid var(--burn2);flex-shrink:0}
+/* ── LIVE NEWS GRID — between nav tabs and panels ── */
+.live-news-section{background:var(--dark2);padding:14px 16px 16px;border-bottom:2px solid var(--burn2);flex-shrink:0}
 .lns-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .lns-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--gold2);display:flex;align-items:center;gap:8px}
 .lns-title::before{content:'📡';font-size:14px}
@@ -1926,7 +1927,17 @@ footer{
 ══════════════════════════════════════════ -->
 <div class="main-content">
 
-<!-- ══ LIVE FINANCIAL NEWS — top of main content (v8.6.16) ══ -->
+<!-- MAIN NAVIGATION — sticky, always visible at top -->
+<nav class="main-nav">
+  <button class="main-tab active" id="main-tab-0" onclick="switchMain(0,this)">
+    <span class="tab-icon">📋</span> Input Form
+  </button>
+  <button class="main-tab" id="main-tab-2" onclick="switchMain(2,this)">
+    <span class="tab-icon">📊</span> Result
+  </button>
+</nav>
+
+<!-- ══ LIVE FINANCIAL NEWS — below tabs, above panels (v8.6.16) ══ -->
 <div class="live-news-section" id="live-news-section">
   <div class="lns-header">
     <div class="lns-title">LIVE FINANCIAL NEWS</div>
@@ -1936,16 +1947,6 @@ footer{
     <!-- injected by JS -->
   </div>
 </div>
-
-<!-- MAIN NAVIGATION -->
-<nav class="main-nav">
-  <button class="main-tab active" id="main-tab-0" onclick="switchMain(0,this)">
-    <span class="tab-icon">📋</span> Input Form
-  </button>
-  <button class="main-tab" id="main-tab-2" onclick="switchMain(2,this)">
-    <span class="tab-icon">📊</span> Result
-  </button>
-</nav>
 
 <!-- ════════════════════════════════════════
      PANEL 0 — INPUT FORM
@@ -4171,23 +4172,49 @@ function switchScoreSport(sport) {
 async function fetchLiveScores(sport) {
   const box = document.getElementById('live-scores-content');
   if (!box) return;
-  box.innerHTML = '<div class="score-no-data">Loading scores…</div>';
+  box.innerHTML = '<div class="score-no-data">Loading…</div>';
 
-  const endpoints = {
-    cricket:  'https://site.api.espn.com/apis/site/v2/sports/cricket/8/scoreboard',
-    football: 'https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard',
-    tennis:   'https://site.api.espn.com/apis/site/v2/sports/tennis/scoreboard',
-    baseball: 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard'
+  // ESPN public scoreboards — tested working endpoints
+  const endpointSets = {
+    cricket:  [
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/ipl/scoreboard'
+    ],
+    football: [
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/esp.1/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/ger.1/scoreboard'
+    ],
+    tennis:   [
+      'https://site.api.espn.com/apis/site/v2/sports/tennis/atp/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/tennis/wta/scoreboard'
+    ],
+    baseball: [
+      'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard'
+    ]
   };
 
-  try {
-    const res = await fetch(endpoints[sport] || endpoints.cricket, { cache: 'no-store' });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
+  const urls = endpointSets[sport] || endpointSets.cricket;
+  let data = null;
 
+  // Try each endpoint in order until one works
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (res.ok) { data = await res.json(); break; }
+    } catch(_) {}
+  }
+
+  if (!data) {
+    const sportLabel = {cricket:'🏏 Cricket',football:'⚽ Football',tennis:'🎾 Tennis',baseball:'⚾ Baseball'}[sport] || sport;
+    box.innerHTML = `<div class="score-no-data">${sportLabel} scores unavailable.<br/><span style="font-size:9px;color:#334155">No live matches or API not reachable.</span></div>`;
+    return;
+  }
+
+  try {
     const events = data.events || data.competitions || [];
     if (!events.length) {
-      box.innerHTML = '<div class="score-no-data">No live matches right now.<br/>Check back later.</div>';
+      box.innerHTML = '<div class="score-no-data">No live matches right now.<br/>Check back during match time.</div>';
       return;
     }
 
@@ -4215,10 +4242,7 @@ async function fetchLiveScores(sport) {
             <span class="score-team-name" style="text-align:right">${aName}</span>
           </div>`;
         }
-        if (comp.venue?.fullName) {
-          venue = `<div class="score-venue">📍 ${comp.venue.fullName}</div>`;
-        }
-
+        if (comp.venue?.fullName) venue = `<div class="score-venue">📍 ${comp.venue.fullName}</div>`;
         const matchName = ev.name || ev.shortName || comp.name || '';
         html += `<div class="score-card">
           <div class="score-card-match">${matchName}</div>
@@ -4231,9 +4255,8 @@ async function fetchLiveScores(sport) {
     box.innerHTML = html || '<div class="score-no-data">No matches available.</div>';
     const ts = document.getElementById('scores-updated');
     if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-
-  } catch (e) {
-    box.innerHTML = `<div class="score-no-data">Could not load scores.<br/><span style="font-size:9px;color:#1e3a5f">${e.message}</span></div>`;
+  } catch(e) {
+    box.innerHTML = '<div class="score-no-data">Error parsing scores.</div>';
   }
 }
 
@@ -5933,12 +5956,19 @@ function switchMain(idx, btn) {
   if (btn) {
     btn.classList.add('active');
   } else {
-    // Panel 0 → tab-0, Panel 2 → tab-2 (AI Report tab removed)
     const tId = idx === 0 ? 'main-tab-0' : 'main-tab-2';
     const t = document.getElementById(tId);
     if (t) t.classList.add('active');
   }
   if (idx === 1) refreshCopyPanel();
+  // Auto-scroll the active panel into view (past the live news section)
+  const panelIds = ['panel-input', 'panel-copy', 'panel-paste'];
+  const activePanel = document.getElementById(panelIds[idx]);
+  if (activePanel) {
+    setTimeout(() => {
+      activePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 60);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════
