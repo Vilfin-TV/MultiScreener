@@ -1620,7 +1620,7 @@ footer{
     <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
     {
       "symbols":[
-        {"proName":"NSE:NIFTY","title":"Nifty 50"},
+        {"proName":"NSE:NIFTY50","title":"Nifty 50"},
         {"proName":"BSE:SENSEX","title":"Sensex"},
         {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
         {"proName":"NASDAQ:NDX","title":"Nasdaq 100"},
@@ -1646,7 +1646,7 @@ footer{
     <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
     {
       "symbols":[
-        {"proName":"NSE:NIFTY","title":"Nifty 50"},
+        {"proName":"NSE:NIFTY50","title":"Nifty 50"},
         {"proName":"BSE:SENSEX","title":"Sensex"},
         {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
         {"proName":"NASDAQ:NDX","title":"Nasdaq 100"},
@@ -2324,31 +2324,32 @@ footer{
 
   <!-- ── PANEL 2: Live TV / YouTube Channels ── -->
   <div id="rb-panel-video" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
-    <div style="padding:10px 10px 6px;background:var(--dark3);border-bottom:1px solid var(--border);flex-shrink:0">
+    <div style="padding:8px 10px 6px;background:#0f172a;border-bottom:1px solid #334155;flex-shrink:0">
       <select id="yt-channel-select" onchange="ytSwitchChannel(this.value)" style="width:100%;padding:7px 10px;background:#1e293b;color:#f1f5f9;border:1px solid #475569;border-radius:8px;font-size:12px;font-family:inherit;cursor:pointer">
         <optgroup label="📊 India — Markets &amp; Business">
-          <option value="EN-N1xhtBqU" selected>💹 NDTV Profit (Live)</option>
-          <option value="HKy33SbPckU">📈 CNBC TV18 (Live)</option>
+          <option value="ydiWklMUhcQ" selected>💹 NDTV Profit (Live)</option>
+          <option value="P857H4ej-MQ">📈 CNBC TV18 (Live)</option>
         </optgroup>
         <optgroup label="🌏 India — Regional News">
           <option value="4wExBtPQ-JA">📡 Asianet News (Live)</option>
-          <option value="1wECsnGZcfc">📺 24 News (Live)</option>
+          <option value="1wECsnGZcfc">📺 24 News Kerala (Live)</option>
           <option value="tgBTspqA5nY">📰 Manorama News (Live)</option>
         </optgroup>
         <optgroup label="🌍 Global Business &amp; News">
-          <option value="iEpJwprxDdk">📊 Bloomberg (Live)</option>
-          <option value="dbL8Wud0Ln0">💼 CNBC (Live)</option>
-          <option value="2thdi9qLqs8">🌐 BBC News (Live)</option>
+          <option value="iEpJwprxDdk">📊 Bloomberg TV (Live)</option>
+          <option value="9NyxcX3rhQs">💼 CNBC 24/7 Business</option>
+          <option value="pToB3kRV30Q">🌐 BBC News (Live)</option>
           <option value="gCNeDWCI0vo">🗺 Al Jazeera English (Live)</option>
         </optgroup>
       </select>
     </div>
-    <div style="flex:1;overflow:hidden;position:relative;background:#000">
+    <!-- iframe wrapper -->
+    <div style="flex:1;overflow:hidden;position:relative;background:#000;min-height:0">
       <iframe
         id="yt-player"
         width="100%"
         height="100%"
-        src="https://www.youtube.com/embed/EN-N1xhtBqU?autoplay=1&mute=1&rel=0&modestbranding=1"
+        src="https://www.youtube.com/embed/ydiWklMUhcQ?autoplay=1&mute=1&rel=0&modestbranding=1&enablejsapi=1"
         title="Live Market News"
         frameborder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -2356,8 +2357,13 @@ footer{
         style="position:absolute;inset:0;width:100%;height:100%">
       </iframe>
     </div>
-    <div style="padding:5px 10px;background:var(--dark3);border-top:1px solid var(--border);font-size:9px;color:var(--text3);text-align:center;flex-shrink:0">
-      Live streams — if a channel is offline, select another
+    <!-- Fallback open-in-YouTube bar -->
+    <div style="padding:6px 10px;background:#0f172a;border-top:1px solid #334155;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <span style="font-size:9px;color:#475569">If video unavailable, open in YouTube ↓</span>
+      <a id="yt-open-link" href="https://www.youtube.com/watch?v=ydiWklMUhcQ" target="_blank" rel="noopener"
+         style="font-size:10px;font-weight:700;color:#f87171;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);padding:3px 8px;border-radius:5px;text-decoration:none;white-space:nowrap">
+        ▶ Watch on YouTube ↗
+      </a>
     </div>
   </div>
 
@@ -3764,10 +3770,11 @@ function rbSwitchPanel(panel) {
 }
 
 function ytSwitchChannel(videoId) {
+  if (!videoId) return;
   const player = document.getElementById('yt-player');
-  if (player && videoId) {
-    player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&rel=0&modestbranding=1`;
-  }
+  if (player) player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&rel=0&modestbranding=1&enablejsapi=1`;
+  const link = document.getElementById('yt-open-link');
+  if (link) link.href = `https://www.youtube.com/watch?v=${videoId}`;
 }
 
 // ── MOBILE RIGHT-BAR DRAWER ─────────────────────────────────────────
