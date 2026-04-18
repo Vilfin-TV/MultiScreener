@@ -370,7 +370,39 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .no-query-msg p{font-size:14px;line-height:1.7}
 
 /* ── PASTE PANEL ── */
-.paste-panel{max-width:1200px;margin:0 auto;padding:32px 20px 60px}
+.paste-panel{max-width:1200px;margin:0 auto;padding:20px 20px 60px}
+
+/* ── RESULT TOOLBAR ── */
+.result-toolbar{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+  background:var(--card2);border:1px solid var(--border2);border-radius:12px;
+  padding:12px 16px;margin-bottom:14px;
+}
+.result-toolbar-left,.result-toolbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.result-title-badge{
+  font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;
+  color:var(--gold2);padding:4px 10px;background:rgba(251,191,36,.1);
+  border:1px solid rgba(251,191,36,.25);border-radius:6px;
+}
+.result-tool-btn{
+  padding:6px 14px;border-radius:8px;border:1px solid var(--border2);
+  background:var(--card);color:var(--text2);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.result-tool-btn:hover{border-color:var(--burn2);color:var(--text);background:var(--card2)}
+.result-tool-btn.active{background:rgba(37,99,235,.15);border-color:#3b82f6;color:#60a5fa}
+.result-tool-btn.purple{
+  background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(168,85,247,.15));
+  border-color:#7c3aed;color:#c4b5fd;
+}
+.result-tool-btn.purple:hover{background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff}
+.result-tool-btn.danger{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:#f87171}
+.result-tool-btn.danger:hover{background:rgba(239,68,68,.2);border-color:#ef4444}
+
+/* Gamma animation keyframes */
+@keyframes gammaSpin{to{transform:rotate(360deg)}}
+@keyframes gammaBar{0%{width:0;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0;margin-left:100%}}
+
 .paste-header{
   background:var(--card2);border:1px solid var(--border2);border-radius:12px;
   padding:20px;margin-bottom:20px;
@@ -1793,7 +1825,7 @@ footer{
     <span class="tab-icon">📋</span> Input Form
   </button>
   <button class="main-tab" id="main-tab-2" onclick="switchMain(2,this)">
-    <span class="tab-icon">📥</span> Report Output
+    <span class="tab-icon">📊</span> Result
   </button>
 </nav>
 
@@ -2165,7 +2197,7 @@ footer{
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button onclick="exportLjsonHtml()" class="ljson-export-btn">⬇ Export HTML</button>
         <button onclick="exportLjsonPdf()" class="ljson-export-btn">🖨 Export PDF</button>
-        <button onclick="generateGammaReport()" class="ljson-export-btn" style="background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border-color:#7c3aed">✨ Gamma AI Report</button>
+        <button onclick="generateGammaReport()" class="ljson-export-btn" style="background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border-color:#7c3aed">✨ Gamma Style</button>
         <button onclick="copyLjsonRaw()" class="ljson-export-btn">📋 JSON</button>
       </div>
     </div>
@@ -2182,34 +2214,62 @@ footer{
 </div>
 
 <!-- ════════════════════════════════════════
-     PANEL 2 — PASTE AI OUTPUT & RENDER
+     PANEL 2 — RESULT
 ════════════════════════════════════════ -->
 <div class="panel" id="panel-paste">
 <div class="paste-panel">
-  <div class="paste-header">
-    <div class="title">📥 Paste AI Output — Render Report</div>
-    <div class="note">After copying the query from the previous tab, paste it into any <strong>AI chat (Gemini, Claude, ChatGPT)</strong>. Once it generates the complete HTML report, copy the <strong>entire HTML code</strong> (starting with &lt;!DOCTYPE html&gt;) and paste it below. Click <strong>Render Report</strong> to view it here — or use the Export buttons to save.</div>
+
+  <!-- ── Result toolbar ── -->
+  <div class="result-toolbar">
+    <div class="result-toolbar-left">
+      <span class="result-title-badge">📊 RESULT</span>
+      <button class="result-tool-btn" id="paste-toggle-btn" onclick="togglePasteSection()" title="Paste custom HTML output">
+        📋 Paste HTML
+      </button>
+    </div>
+    <div class="result-toolbar-right">
+      <button class="result-tool-btn purple" onclick="generateGammaReport()" id="gamma-btn" title="Generate a Gamma-style visual report with AI">
+        ✨ Gamma Style
+      </button>
+      <button class="result-tool-btn" id="btn-export-html" onclick="downloadOutput()" style="display:none">⬇️ Export</button>
+      <button class="result-tool-btn" id="btn-export-pdf" onclick="exportPDF()" style="display:none">🖨️ PDF</button>
+      <button class="result-tool-btn danger" onclick="clearResult()" id="clear-result-btn" style="display:none">🗑️ Clear</button>
+    </div>
   </div>
 
-  <div class="paste-area-wrap">
-    <textarea class="paste-area" id="paste-area" placeholder="Paste the complete HTML code from Claude AI here...&#10;&#10;It should start with: &lt;!DOCTYPE html&gt;  or  &lt;html...&#10;&#10;The AI will generate this when you send the query from the Copy AI Query tab."></textarea>
+  <!-- ── Collapsible paste section (hidden by default) ── -->
+  <div id="paste-collapse-section" style="display:none;margin-bottom:12px">
+    <div class="paste-area-wrap">
+      <textarea class="paste-area" id="paste-area" placeholder="Paste the complete HTML output from AI here (starts with &lt;!DOCTYPE html&gt;)…&#10;&#10;The auto Generate Report fills this automatically."></textarea>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="action-btn primary" onclick="renderOutput()">🔍 Render</button>
+      <button class="action-btn secondary" onclick="clearPaste()">🗑️ Clear</button>
+    </div>
   </div>
 
-  <div class="paste-actions">
-    <button class="action-btn primary" onclick="renderOutput()">🔍 Render Report</button>
-    <button class="action-btn secondary" onclick="clearPaste()">🗑️ Clear</button>
-    <button class="action-btn success show" id="btn-export-html" onclick="downloadOutput()">⬇️ Export HTML</button>
-    <button class="action-btn success show" id="btn-export-pdf" onclick="exportPDF()">🖨️ Export PDF</button>
-    <button class="action-btn show" onclick="generateGammaReport()" style="background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border-color:#7c3aed">✨ Gamma AI Report</button>
-  </div>
-
+  <!-- ── Rendered output ── -->
   <div id="rendered-output">
     <div class="render-placeholder">
       <div class="icon">📊</div>
       <h3>Report Will Appear Here</h3>
-      <p>Paste your AI data above and click <strong>Generate Report</strong> to preview the full research report with all tabs.</p>
+      <p>Fill the <strong>Input Form</strong> and click <strong>🚀 Generate Report</strong> — the report renders here automatically.</p>
+      <p style="margin-top:8px;font-size:12px;opacity:.6">Or click <strong>📋 Paste HTML</strong> above to paste manually.</p>
     </div>
   </div>
+
+  <!-- ── Gamma AI status panel ── -->
+  <div id="gamma-status-panel" style="display:none;margin-top:16px;background:linear-gradient(135deg,#1e1b4b,#2e1065);border:1px solid #7c3aed;border-radius:12px;padding:16px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <span style="font-size:20px;animation:gammaSpin 1.5s linear infinite">✨</span>
+      <span style="font-size:13px;font-weight:700;color:#c4b5fd">Generating Gamma-Style Report…</span>
+    </div>
+    <div id="gamma-status-text" style="font-size:12px;color:#8b5cf6;margin-bottom:10px">Connecting to AI…</div>
+    <div style="height:5px;background:#3b0764;border-radius:999px;overflow:hidden">
+      <div style="height:100%;background:linear-gradient(90deg,#7c3aed,#a855f7,#ec4899);border-radius:999px;animation:gammaBar 2s ease-in-out infinite"></div>
+    </div>
+  </div>
+
 </div>
 </div>
 
@@ -3582,12 +3642,19 @@ async function autoSendToGemini() {
       renderBtn.style.display = 'inline-block';
       window._autoGeminiHTML = answer;
     }
-    // Jump directly to Report Output (panel 2); AI Report tab removed
+    // Jump directly to Result tab (panel 2)
     switchMain(2);
     setTimeout(() => {
       renderOutput();
+      // Show export + clear buttons in Result toolbar
+      const eh = document.getElementById('btn-export-html');
+      const ep = document.getElementById('btn-export-pdf');
+      const cr = document.getElementById('clear-result-btn');
+      if (eh) eh.style.display = '';
+      if (ep) ep.style.display = '';
+      if (cr) cr.style.display = '';
       _aiProgressSet(100, '✅ Report ready!', 'ps5');
-      statusEl.textContent = '✅ Done! Report rendered.';
+      statusEl.textContent = '✅ Done! Report rendered in Result tab.';
       setTimeout(_aiProgressStop, 2500);
     }, 300);
   }
@@ -6886,8 +6953,12 @@ function renderOutput() {
   doc.open(); doc.write(renderedHtml); doc.close();
   const resize = () => { try { const h = iframe.contentWindow.document.documentElement.scrollHeight; if(h>400) iframe.style.height=(h+40)+'px'; } catch(e){} };
   iframe.onload = resize; setTimeout(resize,500); setTimeout(resize,1500);
-  document.getElementById('btn-export-html').classList.add('show');
-  document.getElementById('btn-export-pdf').classList.add('show');
+  const _eh = document.getElementById('btn-export-html');
+  const _ep = document.getElementById('btn-export-pdf');
+  const _cr = document.getElementById('clear-result-btn');
+  if (_eh) _eh.style.display = '';
+  if (_ep) _ep.style.display = '';
+  if (_cr) _cr.style.display = '';
 }
 
 // ─── REPORT BUILDER ────────────────────────────────────────────────
@@ -8110,8 +8181,12 @@ function clearPaste() {
       <p>Paste the AI data above and click <strong>Render Report</strong>.</p>
     </div>`;
   renderedHtml = '';
-  document.getElementById('btn-export-html').classList.remove('show');
-  document.getElementById('btn-export-pdf').classList.remove('show');
+  const _eh2 = document.getElementById('btn-export-html');
+  const _ep2 = document.getElementById('btn-export-pdf');
+  const _cr2 = document.getElementById('clear-result-btn');
+  if (_eh2) _eh2.style.display = 'none';
+  if (_ep2) _ep2.style.display = 'none';
+  if (_cr2) _cr2.style.display = 'none';
 }
 
 function escapeHtml(str) {
@@ -8401,32 +8476,156 @@ function copyLjsonRaw() {
   });
 }
 
-// ── Gamma AI Report — opens Gamma with summary pre-filled ────────
-function generateGammaReport() {
-  try {
-    const parsed = _ljsonRaw ? JSON.parse(_ljsonRaw) : null;
-    const ticker  = document.getElementById('ticker-input')?.value?.trim() || 'Stock';
-    const meta    = parsed?.report_meta;
-    const title   = meta?.report_title?.value || `${ticker} Investment Research Report`;
-    const summary = [
-      `# ${title}`,
-      `**Generated:** ${new Date().toLocaleDateString('en-IN')}`,
-      `**Asset:** ${ticker}`,
-      meta?.overall_verdict?.value ? `**Verdict:** ${meta.overall_verdict.value}` : '',
-      '',
-      '## Overview',
-      parsed?.tabs?.OVERVIEW ? Object.entries(parsed.tabs.OVERVIEW)
-        .filter(([,v]) => v?.value)
-        .slice(0, 5)
-        .map(([k,v]) => `- **${k.replace(/_/g,' ')}:** ${v.value}`)
-        .join('\n') : 'See full report for details.',
-    ].filter(Boolean).join('\n');
+// ── Toggle paste section ──────────────────────────────────────────
+function togglePasteSection() {
+  const sec = document.getElementById('paste-collapse-section');
+  const btn = document.getElementById('paste-toggle-btn');
+  if (!sec) return;
+  const visible = sec.style.display !== 'none';
+  sec.style.display = visible ? 'none' : 'block';
+  btn.classList.toggle('active', !visible);
+}
 
-    const url = `https://gamma.app/create?text=${encodeURIComponent(summary)}`;
-    window.open(url, '_blank', 'noopener');
-  } catch (e) {
-    // Fallback: open Gamma homepage
-    window.open('https://gamma.app/create', '_blank', 'noopener');
+// ── Clear result panel ────────────────────────────────────────────
+function clearResult() {
+  const pa = document.getElementById('paste-area');
+  if (pa) pa.value = '';
+  const ro = document.getElementById('rendered-output');
+  if (ro) ro.innerHTML = `<div class="render-placeholder"><div class="icon">📊</div><h3>Report Will Appear Here</h3><p>Fill the <strong>Input Form</strong> and click <strong>🚀 Generate Report</strong>.</p></div>`;
+  document.getElementById('btn-export-html').style.display = 'none';
+  document.getElementById('btn-export-pdf').style.display = 'none';
+  document.getElementById('clear-result-btn').style.display = 'none';
+  window._autoGeminiHTML = '';
+  _ljsonRaw = '';
+}
+
+// ── Gamma AI Report — AI-generated visual presentation ───────────
+async function generateGammaReport() {
+  const WORKER = 'https://x9-k2-p20-worker.vilfintv.workers.dev';
+  const workerUrl = (window._cfWorkerUrl || localStorage.getItem(CF_KEY) || WORKER).replace(/\/+$/, '');
+
+  // Gather available data (prefer structured JSON, then paste, then raw query)
+  const pasteVal  = document.getElementById('paste-area')?.value?.trim() || '';
+  const ljsonData = _ljsonRaw || '';
+  const baseQuery = generatedQuery || '';
+  if (!pasteVal && !ljsonData && !baseQuery) {
+    alert('⚠️ Please Generate Report first, then click ✨ Gamma Style.');
+    return;
+  }
+
+  const ticker    = answers.assetName || answers.market || document.getElementById('ticker-input')?.value?.trim() || 'Asset';
+  const assetType = answers.assetType || 'Investment';
+
+  let dataSection = '';
+  if (ljsonData) {
+    try {
+      const p = JSON.parse(ljsonData);
+      dataSection = 'STRUCTURED DATA (JSON):\n' + JSON.stringify(p, null, 2).substring(0, 7000);
+    } catch { dataSection = 'RAW DATA:\n' + ljsonData.substring(0, 7000); }
+  } else if (pasteVal && !pasteVal.startsWith('<!')) {
+    dataSection = 'REPORT DATA:\n' + pasteVal.substring(0, 7000);
+  } else {
+    dataSection = 'RESEARCH QUERY:\n' + baseQuery.substring(0, 5000);
+  }
+
+  const prompt = `You are a world-class financial presentation designer. Create a stunning, self-contained single-page HTML visual report for "${ticker}" (${assetType}).
+
+DESIGN REQUIREMENTS (follow exactly):
+• Dark theme: body background #0a0f1e, cards #111827, borders rgba(255,255,255,0.08)
+• Animated gradient header: background linear-gradient(135deg, #1e3a5f, #0d1f3c, #1a1040)
+• Asset name in large Bebas Neue / Impact font with gold color #fbbf24
+• Verdict badge: big colored pill (green=BUY, amber=HOLD, red=SELL)
+• 3-column responsive grid of stat cards — each card: rounded-2xl, dark bg, icon + label + value
+• Color coding: green #22c55e for positive, red #ef4444 for negative, gold #fbbf24 for key data
+• Section cards with left-border accent: Overview, Key Metrics, Price Targets, Risk, Recommendation
+• Data source badges (small pills) on each metric
+• Referral buttons for broker links if present in data
+• Smooth fade-in animations on load
+• Fully responsive — mobile-friendly
+• Footer with generation timestamp and "Powered by VilfinTV MultiScreener"
+
+IMPORTANT: Create a polished investor-grade presentation. Each data point from the research must appear in the visual report. Use the exact values from the data.
+
+DATA TO PRESENT:
+${dataSection}
+
+OUTPUT: Return ONLY the complete HTML starting with <!DOCTYPE html>. No markdown fences, no explanation.`;
+
+  // Switch to Result tab, show loading
+  switchMain(2);
+  const gmBtn = document.getElementById('gamma-btn');
+  const statusPanel = document.getElementById('gamma-status-panel');
+  const statusText = document.getElementById('gamma-status-text');
+  const container = document.getElementById('rendered-output');
+  if (gmBtn) { gmBtn.disabled = true; gmBtn.textContent = '⏳ Generating…'; }
+  if (statusPanel) statusPanel.style.display = 'block';
+  container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:200px;color:#8b5cf6;font-size:13px;gap:10px"><span style="animation:gammaSpin 1.5s linear infinite;display:inline-block;font-size:24px">✨</span> Gemini is designing your Gamma-style report…</div>`;
+
+  try {
+    let html = '';
+    if (statusText) statusText.textContent = '🔌 Connecting to worker…';
+
+    const res = await fetch(workerUrl + '/query-stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, use_search: false, model: 'gemini-2.5-flash' }),
+      signal: AbortSignal.timeout(180000)
+    });
+
+    if (res.ok && res.body) {
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let buf = '';
+      if (statusText) statusText.textContent = '🤖 AI is designing your presentation…';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() || '';
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          let evt; try { evt = JSON.parse(line.slice(6)); } catch { continue; }
+          if (evt.chunk) html += evt.chunk;
+          if (evt.done) break;
+        }
+      }
+    } else {
+      if (statusText) statusText.textContent = '🔄 Using standard query…';
+      const data = await fetch(workerUrl + '/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, use_search: false, model: 'gemini-2.5-flash' }),
+        signal: AbortSignal.timeout(180000)
+      }).then(r => r.json());
+      if (data.error) throw new Error(typeof data.error === 'string' ? data.error : data.error.message);
+      html = data.result || '';
+    }
+
+    // Strip markdown fences if present
+    html = html.replace(/^```html\s*/im, '').replace(/^```\s*/im, '').replace(/```\s*$/im, '').trim();
+
+    if (html && (html.includes('<!DOCTYPE') || html.includes('<html'))) {
+      const pasteArea = document.getElementById('paste-area');
+      if (pasteArea) pasteArea.value = html;
+      window._autoGeminiHTML = html;
+      if (statusText) statusText.textContent = '✅ Rendering presentation…';
+      renderOutput();
+      document.getElementById('btn-export-html').style.display = '';
+      document.getElementById('btn-export-pdf').style.display = '';
+      document.getElementById('clear-result-btn').style.display = '';
+    } else {
+      throw new Error('AI did not return a valid HTML document. Try again.');
+    }
+  } catch(e) {
+    container.innerHTML = `<div style="padding:30px;text-align:center">
+      <div style="font-size:32px;margin-bottom:12px">❌</div>
+      <div style="color:#f87171;font-weight:700;margin-bottom:8px">Gamma report failed</div>
+      <div style="color:#94a3b8;font-size:12px">${e.message}</div>
+    </div>`;
+  } finally {
+    if (gmBtn) { gmBtn.disabled = false; gmBtn.textContent = '✨ Gamma Style'; }
+    if (statusPanel) statusPanel.style.display = 'none';
   }
 }
 
