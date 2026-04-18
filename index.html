@@ -940,6 +940,54 @@ footer{
 }
 #rb-resize-handle:hover::after,#rb-resize-handle.dragging::after{opacity:1;background:#fff}
 @media(max-width:1100px){#rb-resize-handle{display:none}}
+
+/* ── MOBILE RIGHT-BAR DRAWER ── */
+/* Mobile: transform off-screen; .mobile-open slides it up */
+@media(max-width:900px){
+  .right-bar{
+    position:fixed!important;
+    bottom:0!important;left:0!important;right:0!important;top:auto!important;
+    width:100%!important;height:75vh!important;
+    border-radius:20px 20px 0 0;
+    border-left:none!important;border-top:2px solid #475569;
+    z-index:1500;
+    transform:translateY(100%);
+    transition:transform .35s cubic-bezier(.32,.72,0,1);
+    display:flex!important; /* override display:none!important */
+  }
+  .right-bar.mobile-open{transform:translateY(0)!important}
+  /* Dim overlay behind drawer */
+  #mobile-rb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1499;backdrop-filter:blur(2px)}
+}
+/* Mobile FAB bottom bar */
+.mobile-rb-bar{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  background:#0f172a;border-top:1px solid #334155;
+  padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));
+  gap:10px;z-index:1400;
+}
+@media(max-width:900px){
+  .mobile-rb-bar{display:flex}
+  .main-content{padding-bottom:62px} /* prevent content hiding under FAB */
+}
+.mobile-rb-btn{
+  flex:1;padding:10px 8px;
+  border:1px solid #334155;border-radius:10px;
+  background:#1e293b;color:#f1f5f9;
+  font-size:13px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:background .15s,border-color .15s;
+}
+.mobile-rb-btn.active,.mobile-rb-btn:active{background:#2563eb;border-color:#3b82f6}
+/* Mobile close handle in rb-header */
+.rb-mobile-close{
+  display:none;background:none;border:none;color:#94a3b8;
+  font-size:20px;cursor:pointer;padding:2px 8px;line-height:1;
+  border-radius:6px;
+}
+.rb-mobile-close:hover{color:#f1f5f9;background:#334155}
+@media(max-width:900px){.rb-mobile-close{display:block}}
 .rb-header{
   background:linear-gradient(135deg,#0f172a,#1e293b);
   border-bottom:1px solid #334155;
@@ -977,7 +1025,8 @@ footer{
 .rb-pow a:hover{color:rgba(255,255,255,.5)}
 
 @media(max-width:1100px){
-  .right-bar{display:none}
+  /* right-bar collapses to mobile drawer below 900px; between 900-1100px it shrinks */
+  .right-bar{width:260px}
 }
 
 /* ── MOBILE HAMBURGER ── */
@@ -999,7 +1048,7 @@ footer{
   .top-menu-right .cf-badge{display:none}
   .top-menu-right .um-btn{display:none}
   #live-clock{font-size:10px;padding:3px 7px}
-  .right-bar{display:none!important}
+  /* right-bar is now a slide-up drawer on mobile — see .right-bar @media(max-width:900px) above */
   /* Show mobile markets strip */
   .mobile-markets-strip{
     display:block;background:var(--dark2);
@@ -1573,9 +1622,12 @@ footer{
       "symbols":[
         {"proName":"NSE:NIFTY","title":"Nifty 50"},
         {"proName":"BSE:SENSEX","title":"Sensex"},
-        {"proName":"TVC:NDX","title":"Nasdaq 100"},
-        {"proName":"TVC:UKOIL","title":"Brent Crude"},
-        {"proName":"OANDA:XAUUSD","title":"Gold"}
+        {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
+        {"proName":"NASDAQ:NDX","title":"Nasdaq 100"},
+        {"proName":"OANDA:XAUUSD","title":"Gold"},
+        {"proName":"OANDA:BCOUSD","title":"Brent Crude"},
+        {"proName":"FX:USDINR","title":"USD/INR"},
+        {"proName":"BITSTAMP:BTCUSD","title":"Bitcoin"}
       ],
       "showSymbolLogo":true,
       "isTransparent":false,
@@ -1596,9 +1648,12 @@ footer{
       "symbols":[
         {"proName":"NSE:NIFTY","title":"Nifty 50"},
         {"proName":"BSE:SENSEX","title":"Sensex"},
-        {"proName":"TVC:NDX","title":"Nasdaq 100"},
-        {"proName":"TVC:UKOIL","title":"Brent Crude"},
-        {"proName":"OANDA:XAUUSD","title":"Gold"}
+        {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
+        {"proName":"NASDAQ:NDX","title":"Nasdaq 100"},
+        {"proName":"OANDA:XAUUSD","title":"Gold"},
+        {"proName":"OANDA:BCOUSD","title":"Brent Crude"},
+        {"proName":"FX:USDINR","title":"USD/INR"},
+        {"proName":"BITSTAMP:BTCUSD","title":"Bitcoin"}
       ],
       "showSymbolLogo":true,"isTransparent":true,"displayMode":"adaptive",
       "colorTheme":"dark","locale":"en"
@@ -1684,13 +1739,10 @@ footer{
 
 <!-- MAIN NAVIGATION -->
 <nav class="main-nav">
-  <button class="main-tab active" onclick="switchMain(0,this)">
+  <button class="main-tab active" id="main-tab-0" onclick="switchMain(0,this)">
     <span class="tab-icon">📋</span> Input Form
   </button>
-  <button class="main-tab" onclick="switchMain(1,this)">
-    <span class="tab-icon">📊</span> AI Report
-  </button>
-  <button class="main-tab" onclick="switchMain(2,this)">
+  <button class="main-tab" id="main-tab-2" onclick="switchMain(2,this)">
     <span class="tab-icon">📥</span> Report Output
   </button>
 </nav>
@@ -2124,33 +2176,7 @@ footer{
   </div>
 </div>
 
-<!-- ABOUT ME -->
-<section style="border-top:2px solid var(--burn);background:linear-gradient(180deg,#141414,#0f0f0f);padding:40px 24px 20px">
-  <div style="max-width:800px;margin:0 auto;text-align:center">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--gold);margin-bottom:6px">About Me</div>
-    <div style="width:60px;height:3px;background:var(--burn);margin:0 auto 18px;border-radius:2px"></div>
-    <p style="font-size:14px;color:var(--text2);line-height:1.8;margin-bottom:16px">
-      Hi, I'm <strong style="color:var(--gold2)">Vilfin George</strong> — a passionate financial technology enthusiast and NRI investor based in Japan.
-      I built the <strong style="color:#fff">VilfinTV MultiScreener</strong> to help investors like me track global markets, compare instruments, and make informed decisions — all from one place.
-    </p>
-    <p style="font-size:13px;color:var(--text3);line-height:1.7;margin-bottom:24px">
-      This tool aggregates live market data, financial news, research tools, and calculators into a single dashboard.
-      It's free, open-source, and built with care for the NRI &amp; retail investor community.
-    </p>
-    <!-- Contact Me -->
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--gold);margin-bottom:14px">Contact Me</div>
-    <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap">
-      <a href="https://x.com/vilfing?s=21" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:rgba(29,155,240,.12);border:1px solid rgba(29,155,240,.3);border-radius:8px;color:#1d9bf0;font-size:13px;font-weight:700;text-decoration:none;transition:all .15s">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-        @vilfing
-      </a>
-      <a href="https://www.facebook.com/share/19s3NRNKwv/?mibextid=wwXIfr" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:rgba(24,119,242,.12);border:1px solid rgba(24,119,242,.3);border-radius:8px;color:#1877f2;font-size:13px;font-weight:700;text-decoration:none;transition:all .15s">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-        Facebook
-      </a>
-    </div>
-  </div>
-</section>
+<!-- About Me section removed v8.6.6 — now in footer col 1 -->
 
 <!-- FOOTER -->
 <footer>
@@ -2243,13 +2269,15 @@ footer{
         <span>AI ASSISTANT</span>
         <span class="rb-dot" id="rb-ai-dot" style="background:var(--text3)"></span>
       </div>
-      <button onclick="rbAiClear()" id="rb-clear-btn" title="Clear chat" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'">🗑</button>
+      <div style="display:flex;gap:4px;align-items:center">
+        <button onclick="rbAiClear()" id="rb-clear-btn" title="Clear chat" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'">🗑</button>
+        <button class="rb-mobile-close" onclick="closeMobileRightBar()" title="Close">✕</button>
+      </div>
     </div>
     <div class="rb-tabs">
       <button class="rb-tab active" id="rbtab-ai" onclick="rbSwitchPanel('ai')">🤖 AI Chat</button>
       <button class="rb-tab" id="rbtab-video" onclick="rbSwitchPanel('video')">📺 Live TV</button>
     </div>
-    <div style="font-size:10px;color:var(--text3);margin-top:4px" id="rb-ai-model-label">Powered by Gemini via Worker</div>
   </div>
 
   <!-- ── PANEL 1: AI Chat ── -->
@@ -2288,7 +2316,7 @@ footer{
         </button>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px 6px">
-        <span style="font-size:10px;color:var(--text3)" id="rb-ai-status">Powered by Gemini</span>
+        <span style="font-size:10px;color:var(--text3)" id="rb-ai-status"></span>
         <span style="font-size:10px;color:var(--text3)">Shift+Enter = newline</span>
       </div>
     </div>
@@ -2297,14 +2325,21 @@ footer{
   <!-- ── PANEL 2: Live TV / YouTube Channels ── -->
   <div id="rb-panel-video" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
     <div style="padding:10px 10px 6px;background:var(--dark3);border-bottom:1px solid var(--border);flex-shrink:0">
-      <select id="yt-channel-select" onchange="ytSwitchChannel(this.value)" style="width:100%;padding:7px 10px;background:var(--card2);color:var(--text);border:1px solid var(--border2);border-radius:8px;font-size:12px;font-family:inherit;cursor:pointer">
-        <optgroup label="📊 Stock Market News — India">
-          <option value="dp8PhLsUcFE" selected>💹 NDTV Profit (Live)</option>
-          <option value="rZ5TqHOfDpw">📈 CNBC Awaaz (Live)</option>
+      <select id="yt-channel-select" onchange="ytSwitchChannel(this.value)" style="width:100%;padding:7px 10px;background:#1e293b;color:#f1f5f9;border:1px solid #475569;border-radius:8px;font-size:12px;font-family:inherit;cursor:pointer">
+        <optgroup label="📊 India — Markets &amp; Business">
+          <option value="EN-N1xhtBqU" selected>💹 NDTV Profit (Live)</option>
+          <option value="HKy33SbPckU">📈 CNBC TV18 (Live)</option>
         </optgroup>
-        <optgroup label="🌍 Global Business News">
-          <option value="sUkEJXpU68">🦊 FOX Business (Live)</option>
-          <option value="bBy6aq8VWWE">🌐 Al Jazeera English (Live)</option>
+        <optgroup label="🌏 India — Regional News">
+          <option value="4wExBtPQ-JA">📡 Asianet News (Live)</option>
+          <option value="1wECsnGZcfc">📺 24 News (Live)</option>
+          <option value="tgBTspqA5nY">📰 Manorama News (Live)</option>
+        </optgroup>
+        <optgroup label="🌍 Global Business &amp; News">
+          <option value="iEpJwprxDdk">📊 Bloomberg (Live)</option>
+          <option value="dbL8Wud0Ln0">💼 CNBC (Live)</option>
+          <option value="2thdi9qLqs8">🌐 BBC News (Live)</option>
+          <option value="gCNeDWCI0vo">🗺 Al Jazeera English (Live)</option>
         </optgroup>
       </select>
     </div>
@@ -2313,10 +2348,10 @@ footer{
         id="yt-player"
         width="100%"
         height="100%"
-        src="https://www.youtube.com/embed/dp8PhLsUcFE?autoplay=1&mute=1&rel=0&modestbranding=1"
+        src="https://www.youtube.com/embed/EN-N1xhtBqU?autoplay=1&mute=1&rel=0&modestbranding=1"
         title="Live Market News"
         frameborder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowfullscreen
         style="position:absolute;inset:0;width:100%;height:100%">
       </iframe>
@@ -3254,7 +3289,7 @@ function setCFConnected(url) {
   const label = document.getElementById('cf-label');
   const discItem = document.getElementById('cf-disconnect-item');
   if (dot)   { dot.className = 'cf-dot connected'; }
-  if (label) { const host = new URL(url).hostname.replace('.workers.dev',''); label.textContent = host; }
+  if (label) { label.textContent = 'Live'; }
   if (discItem) discItem.style.display = '';
   window._cfWorkerUrl = url;
   rbUpdateAiStatus(true);
@@ -3489,8 +3524,8 @@ async function autoSendToGemini() {
       renderBtn.style.display = 'inline-block';
       window._autoGeminiHTML = answer;
     }
-    const pasteTab = document.querySelectorAll('.main-tab')[2];
-    if (pasteTab) switchMain(2, pasteTab);
+    // Jump directly to Report Output (panel 2); AI Report tab removed
+    switchMain(2);
     setTimeout(() => {
       renderOutput();
       _aiProgressSet(100, '✅ Report ready!', 'ps5');
@@ -3586,6 +3621,12 @@ function autoGeminiRender() {
 
 // Init on load
 document.addEventListener('DOMContentLoaded', () => {
+  // Ensure Worker URL is always seeded from config before cfLoadSaved runs
+  try {
+    const CF_SEED = 'viltv_cf_worker_url';
+    const configUrl = (typeof VILTV_CONFIG !== 'undefined' && VILTV_CONFIG.WORKER_URL) ? VILTV_CONFIG.WORKER_URL : 'https://x9-k2-p20-worker.vilfintv.workers.dev';
+    if (configUrl) localStorage.setItem(CF_SEED, configUrl);
+  } catch(e) {}
   cfLoadSaved();
   initLiveNews();
   initLiveClock();
@@ -3718,7 +3759,7 @@ function rbSwitchPanel(panel) {
     tabAi.classList.add('active');
     if (title) title.innerHTML = '<span style="font-size:16px">🤖</span><span>AI ASSISTANT</span><span class="rb-dot" id="rb-ai-dot" style="background:var(--text3)"></span>';
     if (clear) clear.style.display  = 'block';
-    if (label) label.textContent = 'Powered by Gemini via Worker';
+    if (label) label.textContent = '';
   }
 }
 
@@ -3727,6 +3768,29 @@ function ytSwitchChannel(videoId) {
   if (player && videoId) {
     player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&rel=0&modestbranding=1`;
   }
+}
+
+// ── MOBILE RIGHT-BAR DRAWER ─────────────────────────────────────────
+function openMobileRightBar(panel) {
+  rbSwitchPanel(panel);
+  const rb = document.getElementById('right-bar');
+  const overlay = document.getElementById('mobile-rb-overlay');
+  if (rb) rb.classList.add('mobile-open');
+  if (overlay) overlay.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  // Highlight active FAB button
+  document.getElementById('mobile-ai-btn')?.classList.toggle('active', panel === 'ai');
+  document.getElementById('mobile-tv-btn')?.classList.toggle('active', panel === 'video');
+}
+
+function closeMobileRightBar() {
+  const rb = document.getElementById('right-bar');
+  const overlay = document.getElementById('mobile-rb-overlay');
+  if (rb) rb.classList.remove('mobile-open');
+  if (overlay) overlay.style.display = 'none';
+  document.body.style.overflow = '';
+  document.getElementById('mobile-ai-btn')?.classList.remove('active');
+  document.getElementById('mobile-tv-btn')?.classList.remove('active');
 }
 
 function rbAiChip(text) {
@@ -3838,7 +3902,7 @@ function rbUpdateAiStatus(connected) {
   const label = document.getElementById('rb-ai-model-label');
   if (dot) dot.style.background = connected ? 'var(--green)' : 'var(--text3)';
   if (status) status.textContent = connected ? 'Ready — type your question' : 'Connect Worker (File → Connect) to enable';
-  if (label) label.textContent = connected ? 'Powered by Gemini via Worker ✅' : 'Powered by Gemini via Worker';
+  if (label) label.textContent = '';
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -5379,7 +5443,14 @@ function downloadCompare() {
 function switchMain(idx, btn) {
   document.querySelectorAll('.panel').forEach((p,i) => p.classList.toggle('active', i === idx));
   document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  if (btn) {
+    btn.classList.add('active');
+  } else {
+    // Panel 0 → tab-0, Panel 2 → tab-2 (AI Report tab removed)
+    const tId = idx === 0 ? 'main-tab-0' : 'main-tab-2';
+    const t = document.getElementById(tId);
+    if (t) t.classList.add('active');
+  }
   if (idx === 1) refreshCopyPanel();
 }
 
@@ -8263,5 +8334,19 @@ async function loadDynamicPage(pageId, targetSelector) {
   }
 }
 </script>
+
+<!-- ── MOBILE RIGHT-BAR OVERLAY (dim) ── -->
+<div id="mobile-rb-overlay" onclick="closeMobileRightBar()"></div>
+
+<!-- ── MOBILE FAB BOTTOM BAR ── -->
+<div class="mobile-rb-bar" id="mobile-rb-bar">
+  <button class="mobile-rb-btn" id="mobile-ai-btn" onclick="openMobileRightBar('ai')">
+    🤖 AI Chat
+  </button>
+  <button class="mobile-rb-btn" id="mobile-tv-btn" onclick="openMobileRightBar('video')">
+    📺 Live TV
+  </button>
+</div>
+
 </body>
 </html>
