@@ -1084,6 +1084,7 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
 </style>
 </head>
 <body>
+<script src="config.js"></script>
 
 <!-- ══════════════════════════════════════════
      TOP MENU BAR
@@ -1503,18 +1504,19 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
         {"proName":"BSE:SENSEX","title":"SENSEX"},
         {"proName":"NSE:NIFTY","title":"NIFTY 50"},
         {"proName":"NSE:BANKNIFTY","title":"Bank Nifty"},
-        {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
-        {"proName":"CAPITALCOM:US100","title":"Nasdaq 100"},
-        {"proName":"FOREXCOM:DJI","title":"Dow Jones"},
-        {"proName":"INDEX:NKY","title":"Nikkei 225"},
-        {"proName":"INDEX:DEU40","title":"DAX"},
-        {"proName":"TVC:GOLD","title":"Gold"},
+        {"proName":"SP:SPX","title":"S&P 500"},
+        {"proName":"TVC:NDX","title":"Nasdaq 100"},
+        {"proName":"TVC:DJI","title":"Dow Jones"},
+        {"proName":"TVC:NI225","title":"Nikkei 225"},
+        {"proName":"TVC:DEU40","title":"DAX"},
+        {"proName":"OANDA:XAUUSD","title":"Gold"},
         {"proName":"TVC:SILVER","title":"Silver"},
+        {"proName":"TVC:UKOIL","title":"Brent Oil"},
         {"proName":"TVC:USOIL","title":"WTI Oil"},
         {"proName":"FX:USDINR","title":"USD/INR"},
         {"proName":"FX:USDJPY","title":"USD/JPY"},
         {"proName":"FX:EURUSD","title":"EUR/USD"},
-        {"proName":"CAPITALCOM:BTC","title":"Bitcoin"}
+        {"proName":"BITSTAMP:BTCUSD","title":"Bitcoin"}
       ],
       "showSymbolLogo":true,
       "isTransparent":false,
@@ -1536,11 +1538,10 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
         {"proName":"BSE:SENSEX","title":"SENSEX"},
         {"proName":"NSE:NIFTY","title":"NIFTY 50"},
         {"proName":"NSE:BANKNIFTY","title":"Bank Nifty"},
-        {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
-        {"proName":"CAPITALCOM:US100","title":"Nasdaq 100"},
-        {"proName":"FOREXCOM:DJI","title":"Dow Jones"},
-        {"proName":"INDEX:NKY","title":"Nikkei 225"},
-        {"proName":"TVC:GOLD","title":"Gold"},
+        {"proName":"SP:SPX","title":"S&P 500"},
+        {"proName":"TVC:DJI","title":"Dow Jones"},
+        {"proName":"TVC:NI225","title":"Nikkei"},
+        {"proName":"OANDA:XAUUSD","title":"Gold"},
         {"proName":"TVC:USOIL","title":"WTI Oil"},
         {"proName":"FX:USDINR","title":"USD/INR"},
         {"proName":"FX:USDJPY","title":"USD/JPY"}
@@ -2100,14 +2101,13 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
 
 <!-- FOOTER -->
 <footer>
-  <strong>Site Owner: Vilfin George</strong>
   <div class="disclaimer">
-    SEBI Disclaimer: This tool is for educational and informational purposes only and does not constitute investment advice, a solicitation, or an offer to buy or sell any securities. Vilfin George is not a SEBI-registered investment advisor. All data is sourced from publicly available information. Investments in securities are subject to market risks. Past performance is not indicative of future results. Please consult your financial advisor before investing.
+    ⚠️ <strong style="color:rgba(255,255,255,.5)">LEGAL DISCLAIMER</strong> — This platform is provided strictly for <strong>educational and informational purposes only</strong> and does not constitute investment advice, a recommendation, a solicitation, or an offer to buy or sell any financial instrument, security, mutual fund, commodity, or digital asset. All data displayed is sourced from publicly available third-party providers and may be delayed, incomplete, or subject to error. Market prices shown are indicative and not guaranteed. Past performance is not indicative of future results. Investments in equities, derivatives, mutual funds, commodities, and other financial instruments are subject to market, liquidity, and other risks. You may lose all or part of your invested capital. Always conduct your own due diligence and consult a SEBI-registered investment advisor before making any financial decision. This tool is not affiliated with or endorsed by SEBI, NSE, BSE, AMFI, or any regulatory authority.
   </div>
-  <div style="margin-top:14px;padding:10px 16px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;max-width:820px;margin-left:auto;margin-right:auto;font-size:11px;color:rgba(239,68,68,.7);line-height:1.7">
-    <strong style="color:#ef4444">Security Notice:</strong> Do NOT enter or save any passwords, API keys, or sensitive credentials inside this page. The Cloudflare Worker URL is stored only in your browser's local storage and is never uploaded to GitHub, any server, or any database. Always keep your API keys secure in your Cloudflare Worker environment variables only.
+  <div style="margin-top:10px;padding:8px 14px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.18);border-radius:7px;max-width:820px;margin-left:auto;margin-right:auto;font-size:11px;color:rgba(239,68,68,.65);line-height:1.7">
+    🔐 <strong>Security:</strong> Do not share personal financial data, account numbers, or passwords in the AI chat. The AI assistant uses your Cloudflare Worker — your API keys are never stored in this site.
   </div>
-  <div style="margin-top:10px;font-size:10px;color:rgba(255,255,255,.2)">Multi Asset Screener v8.2 — Input Form Edition | Vilfin George</div>
+  <div style="margin-top:10px;font-size:10px;color:rgba(255,255,255,.18)">VilfinTV MultiScreener v8.6.2 &bull; Educational Use Only &bull; Data may be delayed</div>
 </footer>
 
 </div><!-- /main-content -->
@@ -2120,58 +2120,116 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
 ══════════════════════════════════════════ -->
 <div class="right-bar" id="right-bar">
 
-  <!-- Sidebar header -->
+  <!-- Sidebar header with tab switcher -->
   <div class="rb-header">
-    <div style="display:flex;align-items:center;justify-content:space-between">
-      <div class="rb-title">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div class="rb-title" id="rb-panel-title">
         <span style="font-size:16px">🤖</span>
         <span>AI ASSISTANT</span>
         <span class="rb-dot" id="rb-ai-dot" style="background:var(--text3)"></span>
       </div>
-      <button onclick="rbAiClear()" title="Clear chat" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'">🗑</button>
+      <button onclick="rbAiClear()" id="rb-clear-btn" title="Clear chat" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'">🗑</button>
     </div>
-    <div style="font-size:10px;color:var(--text3);margin-top:2px" id="rb-ai-model-label">Powered by Gemini via Worker</div>
+    <div class="rb-tabs">
+      <button class="rb-tab active" id="rbtab-ai" onclick="rbSwitchPanel('ai')">🤖 AI Chat</button>
+      <button class="rb-tab" id="rbtab-video" onclick="rbSwitchPanel('video')">📺 Live TV</button>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-top:4px" id="rb-ai-model-label">Powered by Gemini via Worker</div>
   </div>
 
-  <!-- Chat messages area -->
-  <div class="rb-ai-messages" id="rb-ai-messages">
-    <div class="rb-msg rb-msg-bot">
-      <div class="rb-msg-avatar">🤖</div>
-      <div class="rb-msg-bubble">
-        <div style="font-weight:600;margin-bottom:4px;color:var(--gold2)">VilfinTV AI</div>
-        Ask me anything about markets, stocks, ETFs, mutual funds or the economy.
-        <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px" id="rb-quick-chips">
-          <button class="rb-chip" onclick="rbAiChip('NIFTY 50 live price and today\'s outlook')">📈 Nifty Today</button>
-          <button class="rb-chip" onclick="rbAiChip('Gold price analysis today')">🥇 Gold</button>
-          <button class="rb-chip" onclick="rbAiChip('Top 5 BSE gainers today')">🏆 Top Gainers</button>
-          <button class="rb-chip" onclick="rbAiChip('USD to INR rate today')">💱 USD/INR</button>
-          <button class="rb-chip" onclick="rbAiChip('Sensex outlook this week')">📊 Sensex</button>
-          <button class="rb-chip" onclick="rbAiChip('Best mutual funds to invest in 2026')">💰 Best MFs</button>
+  <!-- ── PANEL 1: AI Chat ── -->
+  <div id="rb-panel-ai" style="display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+    <!-- Chat messages area -->
+    <div class="rb-ai-messages" id="rb-ai-messages">
+      <div class="rb-msg rb-msg-bot">
+        <div class="rb-msg-avatar">🤖</div>
+        <div class="rb-msg-bubble">
+          <div style="font-weight:600;margin-bottom:4px;color:var(--gold2)">VilfinTV AI</div>
+          Ask me anything about markets, stocks, ETFs, mutual funds or the economy.
+          <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px" id="rb-quick-chips">
+            <button class="rb-chip" onclick="rbAiChip('NIFTY 50 live price and today\'s outlook')">📈 Nifty Today</button>
+            <button class="rb-chip" onclick="rbAiChip('Gold price analysis today')">🥇 Gold</button>
+            <button class="rb-chip" onclick="rbAiChip('Top 5 BSE gainers today')">🏆 Top Gainers</button>
+            <button class="rb-chip" onclick="rbAiChip('USD to INR rate today')">💱 USD/INR</button>
+            <button class="rb-chip" onclick="rbAiChip('Sensex outlook this week')">📊 Sensex</button>
+            <button class="rb-chip" onclick="rbAiChip('Best mutual funds to invest in 2026')">💰 Best MFs</button>
+          </div>
         </div>
+      </div>
+    </div>
+    <!-- Typing indicator -->
+    <div id="rb-typing" style="display:none;padding:8px 14px;font-size:12px;color:var(--text3)">
+      <span style="animation:tvBlink 1s infinite">●</span>
+      <span style="animation:tvBlink 1s infinite .2s">●</span>
+      <span style="animation:tvBlink 1s infinite .4s">●</span>
+      &nbsp; Gemini is thinking…
+    </div>
+    <!-- Input area -->
+    <div class="rb-ai-input-wrap">
+      <div class="rb-ai-input-row">
+        <textarea id="rb-ai-input" class="rb-ai-input" placeholder="Ask about any stock, market, or topic…" rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();rbAiSend()}"></textarea>
+        <button class="rb-ai-send-btn" id="rb-ai-send-btn" onclick="rbAiSend()" title="Send (Enter)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+        </button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px 6px">
+        <span style="font-size:10px;color:var(--text3)" id="rb-ai-status">Powered by Gemini</span>
+        <span style="font-size:10px;color:var(--text3)">Shift+Enter = newline</span>
       </div>
     </div>
   </div>
 
-  <!-- Typing indicator (hidden by default) -->
-  <div id="rb-typing" style="display:none;padding:8px 14px;font-size:12px;color:var(--text3)">
-    <span style="animation:tvBlink 1s infinite">●</span>
-    <span style="animation:tvBlink 1s infinite .2s">●</span>
-    <span style="animation:tvBlink 1s infinite .4s">●</span>
-    &nbsp; Gemini is thinking…
-  </div>
-
-  <!-- Input area -->
-  <div class="rb-ai-input-wrap">
-    <div class="rb-ai-input-row">
-      <textarea id="rb-ai-input" class="rb-ai-input" placeholder="Ask about any stock, market, or topic…" rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();rbAiSend()}"></textarea>
-      <button class="rb-ai-send-btn" id="rb-ai-send-btn" onclick="rbAiSend()" title="Send (Enter)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
-      </button>
+  <!-- ── PANEL 2: Live TV / YouTube Channels ── -->
+  <div id="rb-panel-video" style="display:none;flex-direction:column;flex:1;overflow-y:auto;min-height:0;padding:10px 10px 6px">
+    <!-- Global News -->
+    <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-bottom:6px;padding-left:2px">🌍 Global News</div>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px">
+      <a href="https://www.youtube.com/@FoxBusiness/streams" target="_blank" rel="noopener" class="tv-channel-card" style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--text);transition:border-color .15s" onmouseover="this.style.borderColor='var(--burn2)'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="font-size:18px">🦊</span><div><div style="font-size:12px;font-weight:600">FOX Business</div><div style="font-size:10px;color:var(--text3)">US Business &amp; Markets</div></div><span style="margin-left:auto;font-size:10px;color:var(--text3)">▶ Live</span>
+      </a>
+      <a href="https://www.youtube.com/@BBCNews/streams" target="_blank" rel="noopener" class="tv-channel-card" style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--text);transition:border-color .15s" onmouseover="this.style.borderColor='var(--burn2)'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="font-size:18px">🇬🇧</span><div><div style="font-size:12px;font-weight:600">BBC News</div><div style="font-size:10px;color:var(--text3)">UK &amp; World News</div></div><span style="margin-left:auto;font-size:10px;color:var(--text3)">▶ Live</span>
+      </a>
+      <a href="https://www.youtube.com/@AlJazeeraEnglish/streams" target="_blank" rel="noopener" class="tv-channel-card" style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--text);transition:border-color .15s" onmouseover="this.style.borderColor='var(--burn2)'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="font-size:18px">🌐</span><div><div style="font-size:12px;font-weight:600">Al Jazeera English</div><div style="font-size:10px;color:var(--text3)">Global News 24/7</div></div><span style="margin-left:auto;font-size:10px;color:var(--text3)">▶ Live</span>
+      </a>
     </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 10px 6px">
-      <span style="font-size:10px;color:var(--text3)" id="rb-ai-status">Connect Worker (File → Connect) to enable</span>
-      <span style="font-size:10px;color:var(--text3)">Shift+Enter = newline</span>
+    <!-- India News -->
+    <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-bottom:6px;padding-left:2px">🇮🇳 India News</div>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px">
+      <a href="https://www.youtube.com/@ndtv/streams" target="_blank" rel="noopener" class="tv-channel-card" style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--text);transition:border-color .15s" onmouseover="this.style.borderColor='var(--burn2)'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="font-size:18px">📡</span><div><div style="font-size:12px;font-weight:600">NDTV</div><div style="font-size:10px;color:var(--text3)">India News 24/7</div></div><span style="margin-left:auto;font-size:10px;color:var(--text3)">▶ Live</span>
+      </a>
+      <a href="https://www.youtube.com/@TimesNow/streams" target="_blank" rel="noopener" class="tv-channel-card" style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--text);transition:border-color .15s" onmouseover="this.style.borderColor='var(--burn2)'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="font-size:18px">⏰</span><div><div style="font-size:12px;font-weight:600">Times Now</div><div style="font-size:10px;color:var(--text3)">India Breaking News</div></div><span style="margin-left:auto;font-size:10px;color:var(--text3)">▶ Live</span>
+      </a>
+      <a href="https://www.youtube.com/@AsianetNewsTV/streams" target="_blank" rel="noopener" class="tv-channel-card" style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--text);transition:border-color .15s" onmouseover="this.style.borderColor='var(--burn2)'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="font-size:18px">🌴</span><div><div style="font-size:12px;font-weight:600">Asianet News</div><div style="font-size:10px;color:var(--text3)">Kerala &amp; India News</div></div><span style="margin-left:auto;font-size:10px;color:var(--text3)">▶ Live</span>
+      </a>
+      <a href="https://www.youtube.com/@ManoramaNews/streams" target="_blank" rel="noopener" class="tv-channel-card" style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--text);transition:border-color .15s" onmouseover="this.style.borderColor='var(--burn2)'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="font-size:18px">📰</span><div><div style="font-size:12px;font-weight:600">Manorama News</div><div style="font-size:10px;color:var(--text3)">Malayalam News</div></div><span style="margin-left:auto;font-size:10px;color:var(--text3)">▶ Live</span>
+      </a>
+      <a href="https://www.youtube.com/@24NewsKerala/streams" target="_blank" rel="noopener" class="tv-channel-card" style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--text);transition:border-color .15s" onmouseover="this.style.borderColor='var(--burn2)'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="font-size:18px">🔴</span><div><div style="font-size:12px;font-weight:600">24 News</div><div style="font-size:10px;color:var(--text3)">Malayalam News Kerala</div></div><span style="margin-left:auto;font-size:10px;color:var(--text3)">▶ Live</span>
+      </a>
     </div>
+    <!-- Stock News -->
+    <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-bottom:6px;padding-left:2px">📊 Stock &amp; Market News</div>
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px">
+      <a href="https://www.youtube.com/@BloombergTV/streams" target="_blank" rel="noopener" class="tv-channel-card" style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--text);transition:border-color .15s" onmouseover="this.style.borderColor='var(--burn2)'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="font-size:18px">🇺🇸</span><div><div style="font-size:12px;font-weight:600">Bloomberg Markets</div><div style="font-size:10px;color:var(--text3)">US Finance &amp; Equities</div></div><span style="margin-left:auto;font-size:10px;color:var(--text3)">▶ Live</span>
+      </a>
+      <a href="https://www.youtube.com/@BloombergQuicktake/streams" target="_blank" rel="noopener" class="tv-channel-card" style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--text);transition:border-color .15s" onmouseover="this.style.borderColor='var(--burn2)'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="font-size:18px">⚡</span><div><div style="font-size:12px;font-weight:600">Bloomberg Quicktake</div><div style="font-size:10px;color:var(--text3)">Global Markets &amp; EU</div></div><span style="margin-left:auto;font-size:10px;color:var(--text3)">▶ Live</span>
+      </a>
+      <a href="https://www.youtube.com/@NDTVProfit/streams" target="_blank" rel="noopener" class="tv-channel-card" style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--text);transition:border-color .15s" onmouseover="this.style.borderColor='var(--burn2)'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="font-size:18px">💹</span><div><div style="font-size:12px;font-weight:600">NDTV Profit</div><div style="font-size:10px;color:var(--text3)">India Stock Market News</div></div><span style="margin-left:auto;font-size:10px;color:var(--text3)">▶ Live</span>
+      </a>
+      <a href="https://www.youtube.com/@CNBCAwaaz/streams" target="_blank" rel="noopener" class="tv-channel-card" style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--text);transition:border-color .15s" onmouseover="this.style.borderColor='var(--burn2)'" onmouseout="this.style.borderColor='var(--border)'">
+        <span style="font-size:18px">📈</span><div><div style="font-size:12px;font-weight:600">CNBC Awaaz</div><div style="font-size:10px;color:var(--text3)">NSE/BSE Live Market</div></div><span style="margin-left:auto;font-size:10px;color:var(--text3)">▶ Live</span>
+      </a>
+    </div>
+    <div style="font-size:10px;color:var(--text3);text-align:center;padding-bottom:8px">Tap any channel to open in YouTube</div>
   </div>
 
 </div><!-- /right-bar -->
@@ -3539,6 +3597,35 @@ function rbAiClear() {
   if (_rbStreamAbort) { _rbStreamAbort.abort(); _rbStreamAbort = null; }
   c.innerHTML = '';
   rbAiAppendMessage('Chat cleared. Ask me anything about markets!', 'bot');
+}
+
+// ── Right-bar panel switcher (AI ↔ Live TV) ──────────────────────
+function rbSwitchPanel(panel) {
+  const ai    = document.getElementById('rb-panel-ai');
+  const video = document.getElementById('rb-panel-video');
+  const tabAi = document.getElementById('rbtab-ai');
+  const tabVid = document.getElementById('rbtab-video');
+  const title  = document.getElementById('rb-panel-title');
+  const clear  = document.getElementById('rb-clear-btn');
+  const label  = document.getElementById('rb-ai-model-label');
+
+  if (panel === 'video') {
+    ai.style.display    = 'none';
+    video.style.display = 'flex';
+    tabAi.classList.remove('active');
+    tabVid.classList.add('active');
+    if (title) title.innerHTML = '<span style="font-size:16px">📺</span><span>LIVE TV</span>';
+    if (clear) clear.style.display  = 'none';
+    if (label) label.textContent = 'Click any channel to open in YouTube';
+  } else {
+    video.style.display = 'none';
+    ai.style.display    = 'flex';
+    tabVid.classList.remove('active');
+    tabAi.classList.add('active');
+    if (title) title.innerHTML = '<span style="font-size:16px">🤖</span><span>AI ASSISTANT</span><span class="rb-dot" id="rb-ai-dot" style="background:var(--text3)"></span>';
+    if (clear) clear.style.display  = 'block';
+    if (label) label.textContent = 'Powered by Gemini via Worker';
+  }
 }
 
 function rbAiChip(text) {
