@@ -434,6 +434,7 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-label{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;color:#fff;flex:1}
 .lnb-live{font-size:8px;font-weight:700;background:rgba(255,255,255,.2);color:#fff;padding:2px 5px;border-radius:3px;letter-spacing:.5px;animation:livePulse 2s ease-in-out infinite}
 @keyframes livePulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes ytPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(1.04)}}
 .lnb-list{flex:1;padding:8px 4px;display:flex;flex-direction:column;gap:1px;min-height:140px}
 .lnb-item{display:flex;flex-direction:column;padding:6px 10px;border-radius:6px;text-decoration:none;transition:background .15s;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04)}
 .lnb-item:hover{background:rgba(255,255,255,.05)}
@@ -2343,25 +2344,15 @@ footer{
         </optgroup>
       </select>
     </div>
-    <!-- iframe wrapper -->
+    <!-- YT.Player mount point (API replaces this div with an iframe) -->
     <div style="flex:1;overflow:hidden;position:relative;background:#000;min-height:0">
-      <iframe
-        id="yt-player"
-        width="100%"
-        height="100%"
-        src="https://www.youtube.com/embed/ydiWklMUhcQ?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1"
-        title="Live Market News"
-        frameborder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowfullscreen
-        style="position:absolute;inset:0;width:100%;height:100%">
-      </iframe>
+      <div id="yt-player" style="position:absolute;inset:0;width:100%;height:100%"></div>
     </div>
     <!-- Fallback open-in-YouTube bar -->
-    <div style="padding:6px 10px;background:#0f172a;border-top:1px solid #334155;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
-      <span style="font-size:9px;color:#475569">If video unavailable, open in YouTube ↓</span>
+    <div id="yt-fallback-bar" style="padding:6px 10px;background:#0f172a;border-top:1px solid #334155;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;transition:background .3s">
+      <span id="yt-geo-hint" style="font-size:9px;color:#475569">If video unavailable, open in YouTube ↓</span>
       <a id="yt-open-link" href="https://www.youtube.com/watch?v=ydiWklMUhcQ" target="_blank" rel="noopener"
-         style="font-size:10px;font-weight:700;color:#f87171;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);padding:3px 8px;border-radius:5px;text-decoration:none;white-space:nowrap">
+         style="font-size:10px;font-weight:700;color:#f87171;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);padding:3px 8px;border-radius:5px;text-decoration:none;white-space:nowrap;transition:all .3s">
         ▶ Watch on YouTube ↗
       </a>
     </div>
@@ -3391,7 +3382,7 @@ async function autoSendToGemini() {
   }
   const finalUrl = workerUrl.replace(/\/+$/, '');
   const queryEl = document.getElementById('copy-content');
-  const queryText = queryEl?.innerText?.trim();
+  const queryText = generatedQuery || queryEl?.innerText?.trim() || queryEl?.textContent?.trim();
   if (!queryText || queryText.includes('No query generated yet')) {
     alert('⚠️ Please fill the Input Form and click Generate AI Query first.');
     return;
@@ -3778,12 +3769,93 @@ function rbSwitchPanel(panel) {
   }
 }
 
+// ── YOUTUBE IFRAME API ────────────────────────────────────────────────
+var _ytPlayer = null;
+var _ytCurrentId = 'ydiWklMUhcQ';
+var _ytApiReady = false;
+
+(function loadYTApi() {
+  var s = document.createElement('script');
+  s.src = 'https://www.youtube.com/iframe_api';
+  s.async = true;
+  document.head.appendChild(s);
+})();
+
+function onYouTubeIframeAPIReady() {
+  _ytApiReady = true;
+  _ytPlayer = new YT.Player('yt-player', {
+    width: '100%',
+    height: '100%',
+    videoId: _ytCurrentId,
+    playerVars: {
+      autoplay: 1,
+      mute: 1,
+      rel: 0,
+      modestbranding: 1,
+      playsinline: 1,
+      controls: 1
+    },
+    events: {
+      onReady: function(e) { e.target.mute(); e.target.playVideo(); },
+      onError: ytOnPlayerError
+    }
+  });
+}
+
+function ytOnPlayerError(event) {
+  // 100 = not found/private, 101 = embed not allowed, 150 = geo-blocked
+  if ([100, 101, 150].indexOf(event.data) !== -1) {
+    ytShowGeoError();
+  }
+}
+
+function ytShowGeoError() {
+  const hint = document.getElementById('yt-geo-hint');
+  const link = document.getElementById('yt-open-link');
+  const bar  = document.getElementById('yt-fallback-bar');
+  if (hint) hint.textContent = '⚠️ Not available in your region — open in YouTube:';
+  if (hint) hint.style.color = '#fbbf24';
+  if (bar)  bar.style.background = 'rgba(239,68,68,.10)';
+  if (link) {
+    link.style.background = 'rgba(239,68,68,.35)';
+    link.style.borderColor = 'rgba(239,68,68,.9)';
+    link.style.color = '#fff';
+    link.style.animation = 'ytPulse 1.2s ease-in-out 3';
+    link.textContent = '▶ Open in YouTube ↗ (geo-restricted)';
+  }
+}
+
+function ytHideGeoError() {
+  const hint = document.getElementById('yt-geo-hint');
+  const link = document.getElementById('yt-open-link');
+  const bar  = document.getElementById('yt-fallback-bar');
+  if (hint) { hint.textContent = 'If video unavailable, open in YouTube ↓'; hint.style.color = '#475569'; }
+  if (bar)  bar.style.background = '';
+  if (link) {
+    link.style.background = 'rgba(239,68,68,.12)';
+    link.style.borderColor = 'rgba(239,68,68,.3)';
+    link.style.color = '#f87171';
+    link.style.animation = '';
+    link.textContent = '▶ Watch on YouTube ↗';
+  }
+}
+
 function ytSwitchChannel(videoId) {
   if (!videoId) return;
-  const player = document.getElementById('yt-player');
-  if (player) player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
+  _ytCurrentId = videoId;
+  ytHideGeoError();
   const link = document.getElementById('yt-open-link');
   if (link) link.href = `https://www.youtube.com/watch?v=${videoId}`;
+  if (_ytPlayer && typeof _ytPlayer.loadVideoById === 'function') {
+    _ytPlayer.loadVideoById({ videoId: videoId });
+    _ytPlayer.mute();
+  } else {
+    // API not ready yet — swap src on whatever element is there
+    const el = document.getElementById('yt-player');
+    if (el && el.tagName === 'IFRAME') {
+      el.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
+    }
+  }
 }
 
 // ── MOBILE RIGHT-BAR DRAWER ─────────────────────────────────────────
@@ -8005,7 +8077,7 @@ let _ljsonRaw = '';
 
 function buildLosslessJsonPrompt() {
   const queryEl = document.getElementById('copy-content');
-  const baseQuery = queryEl?.innerText?.trim() || '';
+  const baseQuery = generatedQuery || queryEl?.innerText?.trim() || queryEl?.textContent?.trim() || '';
   if (!baseQuery || baseQuery.includes('No query generated yet')) return null;
 
   return `${baseQuery}
