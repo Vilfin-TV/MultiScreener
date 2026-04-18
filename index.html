@@ -498,14 +498,55 @@ footer{
 }
 
 /* ── RESPONSIVE ── */
+@media(max-width:900px){
+  /* Main nav tabs — full-width touch friendly */
+  .main-nav{display:grid;grid-template-columns:1fr 1fr;border-bottom:2px solid var(--border)}
+  .main-tab{
+    padding:14px 10px;font-size:11px;justify-content:center;text-align:center;
+    border-right:1px solid var(--border);
+  }
+  .main-tab:last-child{border-right:none}
+  /* Input form */
+  .input-panel{padding:18px 14px 80px}
+  .step-header{gap:10px;margin-bottom:18px;padding-bottom:14px}
+  .step-num{width:36px;height:36px;font-size:17px}
+  .step-title{font-size:18px}
+  /* Gen button */
+  .gen-btn{width:100%!important;font-size:15px!important;padding:14px 20px!important;box-sizing:border-box}
+  /* Paste panel */
+  .paste-panel{padding:18px 14px 80px}
+  .paste-header .title{font-size:17px}
+  .paste-actions{flex-wrap:wrap;gap:8px}
+  .paste-actions .action-btn{flex:1 1 calc(50% - 4px);min-width:120px;font-size:12px;padding:10px 8px}
+  /* Copy panel */
+  .copy-panel{padding:18px 14px 80px}
+  .copy-header{flex-direction:column;align-items:flex-start;gap:10px}
+}
 @media(max-width:700px){
   .sidebar{width:44px}.sidebar.open{width:220px}
   .side-panel{width:260px}
   .option-grid{gap:6px}
   .opt{font-size:12px;padding:7px 13px}
-  .main-tab{padding:14px 16px;font-size:11px}
-  .paste-actions{flex-direction:column}
+  .main-tab{font-size:10px;padding:12px 8px;gap:4px}
+  .tab-icon{font-size:14px}
+  .paste-actions .action-btn{flex:1 1 100%}
   .copy-header{flex-direction:column;align-items:flex-start}
+  /* AI progress panel on small screens */
+  #auto-gemini-panel{padding:14px}
+  #ai-progress-bar .flex{flex-wrap:wrap}
+}
+@media(max-width:480px){
+  .main-nav{grid-template-columns:1fr 1fr}
+  .main-tab{font-size:9px;padding:11px 6px;letter-spacing:0;gap:3px}
+  .tab-icon{font-size:13px}
+  .input-panel,.paste-panel,.copy-panel{padding:14px 10px 80px}
+  .q-block{margin-bottom:18px}
+  .option-grid{grid-template-columns:1fr 1fr!important;gap:6px}
+  .opt{font-size:11px;padding:7px 8px}
+  .step-header{flex-direction:row;gap:8px}
+  .paste-actions .action-btn{font-size:11px;padding:9px 6px}
+  #auto-gemini-panel{margin-top:14px;padding:12px}
+  #auto-gemini-panel pre{font-size:11px;max-height:200px}
 }
 
 /* ── OVERLAY (kept for compatibility) ── */
@@ -989,6 +1030,14 @@ footer{
 }
 .rb-mobile-close:hover{color:#f1f5f9;background:#334155}
 @media(max-width:900px){.rb-mobile-close{display:block}}
+/* Mobile drag handle */
+.rb-drag-handle{
+  display:none;width:100%;padding:8px 0 4px;text-align:center;cursor:pointer;flex-shrink:0;
+}
+.rb-drag-pill{
+  width:40px;height:4px;background:#475569;border-radius:999px;display:inline-block;
+}
+@media(max-width:900px){.rb-drag-handle{display:block}}
 .rb-header{
   background:linear-gradient(135deg,#0f172a,#1e293b);
   border-bottom:1px solid #334155;
@@ -2056,39 +2105,18 @@ footer{
     <div class="validation-msg" id="v-gen" style="margin-top:12px"></div>
   </div>
 
-</div><!-- /input-panel -->
-</div><!-- /panel-input -->
-
-<!-- ════════════════════════════════════════
-     PANEL 1 — COPY AI QUERY
-════════════════════════════════════════ -->
-<div class="panel" id="panel-copy">
-<div class="copy-panel">
-  <div class="copy-header">
-    <div class="copy-header-left">
-      <div class="title">🤖 AI Query — Ready</div>
-      <div class="note">Option A: Click <strong>🚀 Auto Send to Gemini</strong> — automatically sends the query to Gemini via your Worker and shows the result here.<br/>Option B: <strong>📋 Copy</strong> the query → paste manually into any AI chat.</div>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <button class="copy-all-btn" style="background:linear-gradient(135deg,#0d6b3e,#16a34a);border-color:#16a34a" onclick="autoSendToGemini()">🚀 Auto Send to Gemini</button>
-      <button class="copy-all-btn" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-color:#3b82f6" onclick="sendLosslessJson()">📊 Lossless JSON Report</button>
-      <button class="copy-all-btn" id="copy-btn" onclick="copyQuery()">📋 Copy Query</button>
-    </div>
-  </div>
-
-  <!-- AUTO GEMINI RESULT PANEL -->
-  <div id="auto-gemini-panel" style="display:none;margin-bottom:16px;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:16px">
+  <!-- ── AI PROGRESS — visible in Input Form while report is generating ── -->
+  <div id="auto-gemini-panel" style="display:none;margin-top:20px;background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:18px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-      <div style="font-size:13px;font-weight:700;color:var(--gold2)">🤖 Gemini Response</div>
+      <div style="font-size:13px;font-weight:700;color:var(--gold2)">🤖 Gemini — Generating Report…</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button id="auto-gemini-copy" onclick="autoGeminiCopy()" style="display:none;padding:7px 14px;background:var(--burn);border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:700;cursor:pointer">📋 Copy & Paste to Render</button>
-        <button id="auto-gemini-render" onclick="autoGeminiRender()" style="display:none;padding:7px 14px;background:linear-gradient(135deg,#0d6b3e,#16a34a);border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:700;cursor:pointer">📊 Auto Render Report</button>
+        <button id="auto-gemini-copy" onclick="autoGeminiCopy()" style="display:none;padding:7px 14px;background:var(--burn);border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:700;cursor:pointer">📋 Copy Output</button>
+        <button id="auto-gemini-render" onclick="autoGeminiRender()" style="display:none;padding:7px 14px;background:linear-gradient(135deg,#0d6b3e,#16a34a);border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:700;cursor:pointer">📊 View Report</button>
       </div>
     </div>
-    <div id="auto-gemini-status" style="font-size:12px;color:var(--text3);margin-bottom:8px"></div>
-
+    <div id="auto-gemini-status" style="font-size:12px;color:var(--text3);margin-bottom:10px"></div>
     <!-- AI PROGRESS BAR -->
-    <div id="ai-progress-bar" style="display:none;margin-bottom:14px">
+    <div id="ai-progress-bar" style="display:none;margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <div id="ai-progress-stage" style="font-size:12px;font-weight:700;color:var(--gold2)">⏳ Connecting…</div>
         <div style="display:flex;gap:10px;align-items:center">
@@ -2107,8 +2135,27 @@ footer{
         <span id="ps5" style="font-size:10px;color:var(--text3)">Render</span>
       </div>
     </div>
+    <pre id="auto-gemini-result" style="display:none;background:var(--dark2);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:12px;color:var(--text2);line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:300px;overflow-y:auto;font-family:'JetBrains Mono',monospace"></pre>
+  </div>
 
-    <pre id="auto-gemini-result" style="display:none;background:var(--dark2);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:12px;color:var(--text2);line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:400px;overflow-y:auto;font-family:'JetBrains Mono',monospace"></pre>
+</div><!-- /input-panel -->
+</div><!-- /panel-input -->
+
+<!-- ════════════════════════════════════════
+     PANEL 1 — COPY AI QUERY
+════════════════════════════════════════ -->
+<div class="panel" id="panel-copy">
+<div class="copy-panel">
+  <div class="copy-header">
+    <div class="copy-header-left">
+      <div class="title">🤖 AI Query — Ready</div>
+      <div class="note">Option A: Click <strong>🚀 Auto Send to Gemini</strong> — automatically sends the query to Gemini via your Worker and shows the result here.<br/>Option B: <strong>📋 Copy</strong> the query → paste manually into any AI chat.</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="copy-all-btn" style="background:linear-gradient(135deg,#0d6b3e,#16a34a);border-color:#16a34a" onclick="autoSendToGemini()">🚀 Auto Send to Gemini</button>
+      <button class="copy-all-btn" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-color:#3b82f6" onclick="sendLosslessJson()">📊 Lossless JSON Report</button>
+      <button class="copy-all-btn" id="copy-btn" onclick="copyQuery()">📋 Copy Query</button>
+    </div>
   </div>
 
   <!-- LOSSLESS JSON RENDER PANEL -->
@@ -2262,6 +2309,11 @@ footer{
 ══════════════════════════════════════════ -->
 <div class="right-bar" id="right-bar">
 
+  <!-- Mobile swipe-down handle -->
+  <div class="rb-drag-handle" onclick="closeMobileRightBar()">
+    <div class="rb-drag-pill"></div>
+  </div>
+
   <!-- Sidebar header with tab switcher -->
   <div class="rb-header">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
@@ -2328,8 +2380,8 @@ footer{
     <div style="padding:8px 10px 6px;background:#0f172a;border-bottom:1px solid #334155;flex-shrink:0">
       <select id="yt-channel-select" onchange="ytSwitchChannel(this.value)" style="width:100%;padding:7px 10px;background:#1e293b;color:#f1f5f9;border:1px solid #475569;border-radius:8px;font-size:12px;font-family:inherit;cursor:pointer">
         <optgroup label="📊 India — Markets &amp; Business">
-          <option value="ydiWklMUhcQ" selected>💹 NDTV Profit (Live)</option>
-          <option value="P857H4ej-MQ">📈 CNBC TV18 (Live)</option>
+          <option value="25B1JcOMx3I" selected>💹 NDTV Profit (Live)</option>
+          <option value="bSdfGABTVGQ">📈 CNBC TV18 (Live)</option>
         </optgroup>
         <optgroup label="🌏 India — Regional News">
           <option value="4wExBtPQ-JA">📡 Asianet News (Live)</option>
@@ -2351,7 +2403,7 @@ footer{
     <!-- Fallback open-in-YouTube bar -->
     <div id="yt-fallback-bar" style="padding:6px 10px;background:#0f172a;border-top:1px solid #334155;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;transition:background .3s">
       <span id="yt-geo-hint" style="font-size:9px;color:#475569">If video unavailable, open in YouTube ↓</span>
-      <a id="yt-open-link" href="https://www.youtube.com/watch?v=ydiWklMUhcQ" target="_blank" rel="noopener"
+      <a id="yt-open-link" href="https://www.youtube.com/watch?v=25B1JcOMx3I" target="_blank" rel="noopener"
          style="font-size:10px;font-weight:700;color:#f87171;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);padding:3px 8px;border-radius:5px;text-decoration:none;white-space:nowrap;transition:all .3s">
         ▶ Watch on YouTube ↗
       </a>
@@ -3621,7 +3673,7 @@ function autoGeminiRender() {
   const pasteArea = document.getElementById('paste-area');
   if (pasteArea) pasteArea.value = html;
   // Switch to Paste & Render tab and render
-  switchTab(2);
+  switchMain(2);
   setTimeout(renderOutput, 300);
 }
 
@@ -3771,7 +3823,7 @@ function rbSwitchPanel(panel) {
 
 // ── YOUTUBE IFRAME API ────────────────────────────────────────────────
 var _ytPlayer = null;
-var _ytCurrentId = 'ydiWklMUhcQ';
+var _ytCurrentId = '25B1JcOMx3I';
 var _ytApiReady = false;
 
 (function loadYTApi() {
