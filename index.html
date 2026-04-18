@@ -445,12 +445,56 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-error{padding:12px 10px;font-size:11px;color:var(--red);text-align:center}
 
 /* ── FOOTER ── */
+/* ── PROFESSIONAL FOOTER ── */
 footer{
-  background:#0f172a;color:rgba(255,255,255,.45);padding:28px 20px;
-  text-align:center;font-size:11.5px;line-height:1.8;border-top:3px solid var(--burn);
+  background:#0b1120;color:#94a3b8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  font-size:14px;line-height:1.7;border-top:1px solid #1e293b;
 }
-footer strong{color:var(--gold2);display:block;font-size:14px;margin-bottom:8px}
-footer .disclaimer{max-width:860px;margin:0 auto;color:rgba(255,255,255,.38)}
+.footer-main{
+  max-width:1200px;margin:0 auto;padding:48px 32px 36px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:40px;
+}
+.footer-col-title{
+  font-size:13px;font-weight:700;color:#f1f5f9;letter-spacing:.6px;
+  text-transform:uppercase;margin-bottom:16px;
+}
+.footer-brand-desc{
+  font-size:13px;color:#64748b;line-height:1.75;margin-top:2px;
+}
+.footer-links{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:9px;}
+.footer-links a{
+  color:#94a3b8;text-decoration:none;font-size:13px;
+  transition:color .18s;display:inline-flex;align-items:center;gap:6px;
+}
+.footer-links a:hover{color:#f1f5f9;}
+.footer-social a{
+  display:inline-flex;align-items:center;gap:10px;
+  color:#94a3b8;text-decoration:none;font-size:13px;
+  padding:8px 12px;border-radius:8px;border:1px solid #1e293b;
+  transition:background .18s,color .18s,border-color .18s;width:100%;box-sizing:border-box;
+  margin-bottom:8px;
+}
+.footer-social a:hover{background:#1e293b;color:#f1f5f9;border-color:#334155;}
+.footer-social-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+/* Bottom bar */
+.footer-bottom{
+  border-top:1px solid #1e293b;padding:20px 32px;
+  max-width:1200px;margin:0 auto;
+}
+.footer-legal-text{
+  font-size:11px;color:#475569;line-height:1.8;text-align:center;margin-bottom:12px;
+}
+.footer-legal-text strong{color:#64748b;font-weight:600;}
+.footer-copyright{
+  font-size:11px;color:#334155;text-align:center;letter-spacing:.3px;
+}
+@media(max-width:900px){
+  .footer-main{grid-template-columns:repeat(2,1fr);gap:32px;padding:36px 20px 28px;}
+}
+@media(max-width:540px){
+  .footer-main{grid-template-columns:1fr;gap:28px;padding:28px 16px 20px;}
+  .footer-bottom{padding:16px;}
+}
 
 /* ── RESPONSIVE ── */
 @media(max-width:700px){
@@ -1020,7 +1064,7 @@ footer .disclaimer{max-width:860px;margin:0 auto;color:rgba(255,255,255,.38)}
   .left-menu-overlay{z-index:800}
   .left-menu-header{padding:14px 16px;gap:10px}
   .left-menu-body{padding:20px 16px 60px}
-  footer{padding:20px 16px}
+  /* footer responsive handled in .footer-main media queries */
 }
 
 /* Very small screens */
@@ -2110,20 +2154,75 @@ footer .disclaimer{max-width:860px;margin:0 auto;color:rgba(255,255,255,.38)}
 
 <!-- FOOTER -->
 <footer>
-  <div class="disclaimer">
-    <strong style="color:rgba(255,255,255,.55);font-size:11px;letter-spacing:.5px">⚠ LEGAL DISCLAIMER &amp; LIMITATION OF LIABILITY</strong>
-    <br/><br/>
-    This platform is provided strictly for <strong>educational and informational purposes only</strong>. Nothing on this platform constitutes investment advice, financial advice, trading advice, a recommendation, a solicitation, or an offer to buy or sell any security, financial instrument, mutual fund, commodity, currency, cryptocurrency, or digital asset. Users should not rely on this platform as a basis for making financial decisions.
-    <br/><br/>
-    All market data, prices, indices, and financial information displayed are sourced from publicly available third-party providers — including but not limited to TradingView, Google Finance, NSE, BSE, NYSE, NASDAQ, LSE (London Stock Exchange), Euronext, TSE (Tokyo Stock Exchange), HKEX, SGX, and others — and <strong>may be delayed by 15–20 minutes or more</strong>. Real-time accuracy is not guaranteed. Data is provided "as is" without warranty of any kind.
-    <br/><br/>
-    Past performance of any asset, index, strategy, or investment is not indicative of future results. All investments carry risk, including the possible loss of principal. You may lose all or part of your invested capital. This platform assumes <strong>absolute zero liability</strong> for any financial losses, trading decisions, missed opportunities, or damages of any kind arising from the use of, or reliance on, information provided by this platform or its AI assistant.
-    <br/><br/>
-    The AI assistant is powered by Google Gemini. AI-generated responses are for informational purposes only and may contain errors or outdated information. Do not share personal financial data, account numbers, tax IDs, passwords, or brokerage credentials in the AI chat. Always consult a qualified, licensed financial advisor before making any investment decision.
+
+  <!-- ── 4-COLUMN GRID ── -->
+  <div class="footer-main">
+
+    <!-- Col 1: About -->
+    <div>
+      <div class="footer-col-title">VilfinTV MultiScreener</div>
+      <p class="footer-brand-desc">A free, open-source platform aggregating live market data, financial news, and AI tools for the retail investor community.</p>
+    </div>
+
+    <!-- Col 2: Platform Features -->
+    <div>
+      <div class="footer-col-title">Platform Features</div>
+      <ul class="footer-links">
+        <li><a href="#" onclick="switchMain(0);return false;">🤖 AI Screener</a></li>
+        <li><a href="#" onclick="rbSwitchPanel('video');return false;">📺 Live Market News</a></li>
+        <li><a href="#" onclick="switchMain(0);return false;">📈 Global Tickers</a></li>
+        <li><a href="#" onclick="switchMain(2);return false;">📊 Financial Reports</a></li>
+      </ul>
+    </div>
+
+    <!-- Col 3: Legal & Support -->
+    <div>
+      <div class="footer-col-title">Legal &amp; Support</div>
+      <ul class="footer-links">
+        <li><a href="user_manual.html" target="_blank">📖 User Manual</a></li>
+        <li><a href="user_manual.html#privacy" target="_blank">🔒 Privacy Policy</a></li>
+        <li><a href="user_manual.html#terms" target="_blank">📋 Terms of Service</a></li>
+        <li><a href="mailto:vilfingeorge@gmail.com">✉ Contact Us</a></li>
+      </ul>
+    </div>
+
+    <!-- Col 4: Connect -->
+    <div>
+      <div class="footer-col-title">Connect With Us</div>
+      <div class="footer-social">
+        <a href="https://x.com/vilfing" target="_blank" rel="noopener">
+          <span class="footer-social-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#94a3b8"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.73-8.835L1.254 2.25H8.08l4.261 5.636 5.903-5.636zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </span>
+          @vilfing on X (Twitter)
+        </a>
+        <a href="https://facebook.com" target="_blank" rel="noopener">
+          <span class="footer-social-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#94a3b8"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          </span>
+          Facebook Page
+        </a>
+      </div>
+    </div>
+
+  </div><!-- /footer-main -->
+
+  <!-- ── LEGAL BOTTOM BAR ── -->
+  <div style="border-top:1px solid #1e293b;">
+    <div class="footer-bottom">
+      <p class="footer-legal-text">
+        <strong>⚠ Legal Disclaimer &amp; Limitation of Liability:</strong>
+        This platform is provided strictly for <strong>educational and informational purposes only</strong> and does not constitute investment advice, financial advice, a solicitation, or an offer to buy or sell any security, mutual fund, commodity, currency, or digital asset.
+        All market data is sourced from third-party providers (TradingView, NSE, BSE, NYSE, NASDAQ, LSE, Euronext, TSE, HKEX, SGX) and <strong>may be delayed by 15–20 minutes or more</strong>. Data is provided "as is" without warranty.
+        Past performance is not indicative of future results. All investments carry risk, including possible loss of principal. This platform assumes <strong>absolute zero liability</strong> for any financial losses or damages arising from use of this platform or its AI assistant.
+        AI responses are for informational purposes only and may contain errors. <strong>Do not share personal financial data, account numbers, or brokerage credentials in the AI chat.</strong>
+        Always consult a qualified, licensed financial advisor before making any investment decision.
+        Not affiliated with NSE, BSE, SEBI, NYSE, NASDAQ, LSE, Euronext, TSE, HKEX, SGX, or any regulatory authority.
+      </p>
+      <p class="footer-copyright">© 2026 VilfinTV MultiScreener. All rights reserved. &bull; Educational Use Only</p>
+    </div>
   </div>
-  <div style="margin-top:14px;font-size:10px;color:rgba(255,255,255,.2)">
-    VilfinTV MultiScreener v8.6.2 &bull; Educational Use Only &bull; Market data may be delayed &bull; Not affiliated with NSE, BSE, SEBI, NYSE, NASDAQ, LSE, Euronext, TSE, or any regulatory authority
-  </div>
+
 </footer>
 
 </div><!-- /main-content -->
