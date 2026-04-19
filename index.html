@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multi Asset Screener — Input Tool | Vilfin George</title>
+<title>Multi Asset Screener v8.8.0 — Input Tool | Vilfin George</title>
 <!-- Canonical URL — always index.html -->
 <link rel="canonical" href="https://vilfin-tv.github.io/MultiScreener/index.html"/>
 <script>
@@ -985,6 +985,20 @@ footer{
 }
 .cf-cancel-btn:hover{border-color:var(--burn2);color:var(--text)}
 .cf-status-msg{font-size:12px;color:var(--text3);margin-top:12px;min-height:18px;text-align:center}
+/* ── SERVICES CONNECT MODAL ── */
+.svc-tabs{display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--border2)}
+.svc-tab-btn{padding:8px 13px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text3);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.3px;transition:all .15s;margin-bottom:-1px;white-space:nowrap}
+.svc-tab-btn.active{color:var(--gold2);border-bottom-color:var(--burn2)}
+.svc-tab-btn:hover:not(.active){color:var(--text)}
+.svc-panel{display:none}.svc-panel.active{display:block}
+.svc-field{margin-bottom:12px}
+.svc-field label{font-size:10px;font-weight:700;color:var(--burn2);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:5px}
+.svc-field input{width:100%;padding:10px 12px;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;outline:none;transition:border-color .2s;margin-bottom:0}
+.svc-field input:focus{border-color:var(--gold2)}
+.svc-note{font-size:10px;color:var(--text3);margin-bottom:10px;line-height:1.5}
+.svc-key-saved{display:inline-block;margin-left:6px;color:#22c55e;font-size:10px;font-weight:700}
+.svc-danger-btn{padding:9px 16px;background:#1f1215;border:1px solid #7f1d1d;border-radius:8px;color:#f87171;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.svc-danger-btn:hover{background:#7f1d1d;color:#fff}
 
 /* ══════════════════════════════════════════
    PERMANENT RIGHT BAR (Live Markets)
@@ -1182,7 +1196,7 @@ footer{
   cursor:pointer;display:flex;align-items:center;justify-content:center;
 }
 .yt-pip-hbtn:hover{background:rgba(255,255,255,.25)}
-#yt-pip-close{display:none}
+#yt-pip-close{display:flex!important;background:#dc2626!important;color:#fff!important;font-weight:700!important}
 /* Resize handle in PIP mode */
 #yt-pip-resize{
   display:none;position:absolute;bottom:0;right:0;
@@ -1451,6 +1465,9 @@ footer{
       <button class="tmenu-btn" onclick="toggleMenu('file')">File <span class="arr">▾</span></button>
       <div class="tmenu-dropdown" id="tdd-file">
         <div class="dd-item" onclick="window.location.reload()">🔄 Refresh</div>
+        <div class="dd-sep"></div>
+        <div class="dd-item" onclick="openServicesModal();closeAllMenus()">🔗 Connect Services…</div>
+        <div class="dd-item" onclick="disconnectAllServices();closeAllMenus()" id="svc-disconnect-item" style="display:none">🔌 Disconnect All</div>
         <div class="dd-sep"></div>
         <div class="dd-item danger" onclick="closeApp()">✕ Exit</div>
       </div>
@@ -1863,13 +1880,13 @@ footer{
     {
       "symbols":[
         {"proName":"CAPITALCOM:NIFTY50","title":"Nifty 50"},
-        {"proName":"CAPITALCOM:SENSEX","title":"Sensex"},
+        {"proName":"BSE:SENSEX","title":"Sensex"},
         {"proName":"CAPITALCOM:BANKNIFTY","title":"Bank Nifty"},
-        {"proName":"CAPITALCOM:NIFTY_IT","title":"Nifty IT"},
-        {"proName":"CAPITALCOM:NIFTY_BANK","title":"Nifty Bank"},
-        {"proName":"CAPITALCOM:NIFTY_MIDCAP_100","title":"Nifty MidCap"},
-        {"proName":"CAPITALCOM:NIFTY_FMCG","title":"Nifty FMCG"},
-        {"proName":"CAPITALCOM:NIFTY_PHARMA","title":"Nifty Pharma"},
+        {"proName":"BSE:BSEIT","title":"BSE IT"},
+        {"proName":"BSE:BANKEX","title":"BSE Bankex"},
+        {"proName":"BSE:BSEMIDCAP","title":"BSE MidCap"},
+        {"proName":"BSE:BSEFMCG","title":"BSE FMCG"},
+        {"proName":"BSE:BSEHEALTHCARE","title":"BSE Pharma"},
         {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
         {"proName":"FOREXCOM:NSXUSD","title":"Nasdaq"},
         {"proName":"FOREXCOM:DJI","title":"Dow Jones"},
@@ -2658,7 +2675,7 @@ footer{
           <option value="Zer0vaXRpYs">🌐 WION</option>
         </optgroup>
         <optgroup label="🌏 India — Regional (Malayalam)">
-          <option value="TYGxcesWJH0">📡 BigTV 24x7</option>
+          <option value="GOvhHvvm3RQ">📡 BigTV 24x7</option>
           <option value="EMuPb-vXu_U">📺 News Malayalam 24x7</option>
           <option value="4wExBtPQ-JA">📡 Asianet News</option>
           <option value="1wECsnGZcfc">📺 24 News Kerala</option>
@@ -3097,21 +3114,81 @@ footer{
 </div><!-- /layout -->
 
 <!-- ══════════════════════════════════════════
-     CLOUDFLARE WORKERS MODAL
+     CONNECT SERVICES MODAL (multi-tab)
 ══════════════════════════════════════════ -->
 <div class="cf-modal-overlay" id="cf-modal-overlay" onclick="cfModalOverlayClick(event)">
-  <div class="cf-modal">
-    <div class="cf-modal-title">🔗 Cloudflare Workers</div>
-    <div class="cf-modal-sub" id="cf-modal-sub">
-      Enter your AI Service URL below. Once connected, your API key is used automatically. The URL is saved locally in your browser only — never uploaded to GitHub or any server.<br/>
-      <a href="user_manual.html" target="_blank" style="color:var(--gold2);font-size:11px;display:inline-block;margin-top:6px">📖 How to set up? Step-by-step guide →</a>
+  <div class="cf-modal" style="max-width:520px;width:95vw">
+    <div class="cf-modal-title">🔗 Connect AI Services</div>
+    <div class="cf-modal-sub">All keys are stored locally in your browser only — never sent to GitHub or any third-party server.</div>
+
+    <!-- Tab nav -->
+    <div class="svc-tabs">
+      <button class="svc-tab-btn active" onclick="svcTab('worker',this)">☁️ Coworker</button>
+      <button class="svc-tab-btn" onclick="svcTab('gemini',this)">💎 Gemini</button>
+      <button class="svc-tab-btn" onclick="svcTab('openai',this)">🟢 OpenAI</button>
+      <button class="svc-tab-btn" onclick="svcTab('api3',this)">⚡ Custom API</button>
     </div>
-    <label for="cf-url-input">Cloudflare Workers URL</label>
-    <input type="url" id="cf-url-input" placeholder="https://your-worker.workers.dev"
-      autocomplete="off" spellcheck="false"/>
-    <div class="cf-modal-btns">
-      <button class="cf-connect-btn" onclick="cfDoConnect()">🔗 Connect</button>
+
+    <!-- Tab 1: Cloudflare Worker -->
+    <div class="svc-panel active" id="svc-panel-worker">
+      <div class="svc-note">Cloudflare Worker proxies all AI calls. Keys stay on your server — never exposed in the browser.</div>
+      <div class="svc-field">
+        <label>Worker URL</label>
+        <input type="url" id="cf-url-input" placeholder="https://your-worker.workers.dev" autocomplete="off" spellcheck="false"/>
+      </div>
+    </div>
+
+    <!-- Tab 2: Gemini API -->
+    <div class="svc-panel" id="svc-panel-gemini">
+      <div class="svc-note">Key is saved in your browser only (localStorage). It is sent directly to Google's servers — never to any proxy. Use <code style="background:var(--card);padding:1px 4px;border-radius:3px">aistudio.google.com/apikey</code> to create a key.</div>
+      <div class="svc-field">
+        <label>Key Label (optional)</label>
+        <input type="text" id="svc-gemini-label" placeholder="e.g. My Gemini Key" autocomplete="off"/>
+      </div>
+      <div class="svc-field">
+        <label>API Key <span class="svc-key-saved" id="svc-gemini-saved-badge"></span></label>
+        <input type="password" id="svc-gemini-key" placeholder="AIza…" autocomplete="off" spellcheck="false"/>
+      </div>
+    </div>
+
+    <!-- Tab 3: OpenAI API -->
+    <div class="svc-panel" id="svc-panel-openai">
+      <div class="svc-note">Key is saved in your browser only. Sent directly to OpenAI's servers. Get your key at <code style="background:var(--card);padding:1px 4px;border-radius:3px">platform.openai.com/api-keys</code>.</div>
+      <div class="svc-field">
+        <label>Key Label (optional)</label>
+        <input type="text" id="svc-openai-label" placeholder="e.g. My OpenAI Key" autocomplete="off"/>
+      </div>
+      <div class="svc-field">
+        <label>API Key <span class="svc-key-saved" id="svc-openai-saved-badge"></span></label>
+        <input type="password" id="svc-openai-key" placeholder="sk-…" autocomplete="off" spellcheck="false"/>
+      </div>
+    </div>
+
+    <!-- Tab 4: Custom API -->
+    <div class="svc-panel" id="svc-panel-api3">
+      <div class="svc-note">Custom OpenAI-compatible API endpoint (e.g. Groq, Mistral, local LLM). Must support <code style="background:var(--card);padding:1px 4px;border-radius:3px">/v1/chat/completions</code>.</div>
+      <div class="svc-field">
+        <label>Key Label (optional)</label>
+        <input type="text" id="svc-api3-label" placeholder="e.g. Groq" autocomplete="off"/>
+      </div>
+      <div class="svc-field">
+        <label>Base URL</label>
+        <input type="url" id="svc-api3-url" placeholder="https://api.groq.com/openai" autocomplete="off"/>
+      </div>
+      <div class="svc-field">
+        <label>API Key <span class="svc-key-saved" id="svc-api3-saved-badge"></span></label>
+        <input type="password" id="svc-api3-key" placeholder="API key…" autocomplete="off" spellcheck="false"/>
+      </div>
+      <div class="svc-field">
+        <label>Model Name</label>
+        <input type="text" id="svc-api3-model" placeholder="e.g. llama-3.3-70b-versatile" autocomplete="off"/>
+      </div>
+    </div>
+
+    <div class="cf-modal-btns" style="margin-top:14px">
+      <button class="cf-connect-btn" onclick="svcSave()">💾 Save &amp; Connect</button>
       <button class="cf-cancel-btn" onclick="cfCloseModal()">Cancel</button>
+      <button class="svc-danger-btn" onclick="disconnectAllServices(true)">🗑 Clear All</button>
     </div>
     <div class="cf-status-msg" id="cf-status-msg"></div>
   </div>
@@ -3653,139 +3730,337 @@ function switchRBTab(tabId) {
   rbActiveTab = tabId;
 }
 
-// ── CLOUDFLARE WORKERS ───────────────────────────────────────────────
-const CF_KEY = 'viltv_cf_worker_url';
+// ── AI SERVICES — localStorage keys ─────────────────────────────────
+const CF_KEY        = 'viltv_cf_worker_url';
+const SVC_GEMINI_KEY   = 'viltv_gemini_key';
+const SVC_GEMINI_LBL   = 'viltv_gemini_label';
+const SVC_OPENAI_KEY   = 'viltv_openai_key';
+const SVC_OPENAI_LBL   = 'viltv_openai_label';
+const SVC_API3_KEY     = 'viltv_api3_key';
+const SVC_API3_LBL     = 'viltv_api3_label';
+const SVC_API3_URL     = 'viltv_api3_url';
+const SVC_API3_MODEL   = 'viltv_api3_model';
 
+// ── Load saved settings on startup ───────────────────────────────────
 function cfLoadSaved() {
-  const saved = localStorage.getItem(CF_KEY);
-  if (saved) {
-    setCFConnected(saved);
-    document.getElementById('cf-url-input').value = saved;
-  }
+  const worker = localStorage.getItem(CF_KEY);
+  if (worker) { window._cfWorkerUrl = worker; }
+  _svcRefreshStatus();
 }
 
-function cfConnect() {
+// ── Connect Services Modal ────────────────────────────────────────────
+function openServicesModal() {
   closeAllMenus();
-  const saved = localStorage.getItem(CF_KEY);
-  if (saved) document.getElementById('cf-url-input').value = saved;
+  // Populate fields from localStorage
+  const workerEl = document.getElementById('cf-url-input');
+  if (workerEl) workerEl.value = localStorage.getItem(CF_KEY) || '';
+  const geminiEl = document.getElementById('svc-gemini-key');
+  const geminiLbl= document.getElementById('svc-gemini-label');
+  if (geminiEl)  geminiEl.value = localStorage.getItem(SVC_GEMINI_KEY) ? '••••••••••••' : '';
+  if (geminiLbl) geminiLbl.value= localStorage.getItem(SVC_GEMINI_LBL) || '';
+  const openaiEl = document.getElementById('svc-openai-key');
+  const openaiLbl= document.getElementById('svc-openai-label');
+  if (openaiEl)  openaiEl.value = localStorage.getItem(SVC_OPENAI_KEY) ? '••••••••••••' : '';
+  if (openaiLbl) openaiLbl.value= localStorage.getItem(SVC_OPENAI_LBL) || '';
+  const api3El  = document.getElementById('svc-api3-key');
+  const api3Lbl = document.getElementById('svc-api3-label');
+  const api3Url = document.getElementById('svc-api3-url');
+  const api3Mod = document.getElementById('svc-api3-model');
+  if (api3El)   api3El.value  = localStorage.getItem(SVC_API3_KEY)   ? '••••••••••••' : '';
+  if (api3Lbl)  api3Lbl.value = localStorage.getItem(SVC_API3_LBL)   || '';
+  if (api3Url)  api3Url.value = localStorage.getItem(SVC_API3_URL)   || '';
+  if (api3Mod)  api3Mod.value = localStorage.getItem(SVC_API3_MODEL) || '';
+  // Show saved badges
+  const _badge = (id, key) => { const b=document.getElementById(id); if(b) b.textContent=localStorage.getItem(key)?'✓ Saved':''; };
+  _badge('svc-gemini-saved-badge', SVC_GEMINI_KEY);
+  _badge('svc-openai-saved-badge', SVC_OPENAI_KEY);
+  _badge('svc-api3-saved-badge',   SVC_API3_KEY);
   document.getElementById('cf-status-msg').textContent = '';
   document.getElementById('cf-modal-overlay').classList.add('show');
 }
 
-function cfCloseModal() {
-  document.getElementById('cf-modal-overlay').classList.remove('show');
-  // Reset sub text back to default
-  const sub = document.getElementById('cf-modal-sub');
-  if (sub) sub.innerHTML = 'Enter your Cloudflare Workers URL below. Once connected, your Gemini API key stored in the Worker will be used automatically. The URL is saved locally in your browser only — never uploaded to GitHub or any server.<br/><a href="user_manual.html" target="_blank" style="color:var(--gold2);font-size:11px;display:inline-block;margin-top:6px">📖 How to set up Cloudflare Worker? Step-by-step guide →</a>';
-  window._pendingAutoSend = false;
+function svcTab(id, btn) {
+  document.querySelectorAll('.svc-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.svc-tab-btn').forEach(b => b.classList.remove('active'));
+  const panel = document.getElementById('svc-panel-' + id);
+  if (panel) panel.classList.add('active');
+  if (btn) btn.classList.add('active');
 }
 
+async function svcSave() {
+  const msg = document.getElementById('cf-status-msg');
+  msg.textContent = '⏳ Saving…';
+
+  // Coworker URL
+  const workerEl = document.getElementById('cf-url-input');
+  const workerUrl = (workerEl?.value || '').trim().replace(/\/+$/, '');
+  if (workerUrl) {
+    localStorage.setItem(CF_KEY, workerUrl);
+    window._cfWorkerUrl = workerUrl;
+  } else {
+    localStorage.removeItem(CF_KEY);
+    window._cfWorkerUrl = null;
+  }
+
+  // Gemini key — only save if user entered a real value (not the masked placeholder)
+  const geminiKeyEl = document.getElementById('svc-gemini-key');
+  const geminiKey = (geminiKeyEl?.value || '').trim();
+  if (geminiKey && !geminiKey.startsWith('••')) {
+    localStorage.setItem(SVC_GEMINI_KEY, geminiKey);
+  }
+  const geminiLbl = (document.getElementById('svc-gemini-label')?.value || '').trim();
+  if (geminiLbl) localStorage.setItem(SVC_GEMINI_LBL, geminiLbl);
+
+  // OpenAI key
+  const openaiKeyEl = document.getElementById('svc-openai-key');
+  const openaiKey = (openaiKeyEl?.value || '').trim();
+  if (openaiKey && !openaiKey.startsWith('••')) {
+    localStorage.setItem(SVC_OPENAI_KEY, openaiKey);
+  }
+  const openaiLbl = (document.getElementById('svc-openai-label')?.value || '').trim();
+  if (openaiLbl) localStorage.setItem(SVC_OPENAI_LBL, openaiLbl);
+
+  // Custom API 3
+  const api3KeyEl = document.getElementById('svc-api3-key');
+  const api3Key = (api3KeyEl?.value || '').trim();
+  if (api3Key && !api3Key.startsWith('••')) {
+    localStorage.setItem(SVC_API3_KEY, api3Key);
+  }
+  const api3Lbl = (document.getElementById('svc-api3-label')?.value || '').trim();
+  if (api3Lbl) localStorage.setItem(SVC_API3_LBL, api3Lbl);
+  const api3Url = (document.getElementById('svc-api3-url')?.value || '').trim().replace(/\/+$/, '');
+  if (api3Url) localStorage.setItem(SVC_API3_URL, api3Url);
+  const api3Model = (document.getElementById('svc-api3-model')?.value || '').trim();
+  if (api3Model) localStorage.setItem(SVC_API3_MODEL, api3Model);
+
+  _svcRefreshStatus();
+  msg.textContent = '✅ All settings saved!';
+  setTimeout(() => {
+    cfCloseModal();
+    if (window._pendingAutoSend) { window._pendingAutoSend = false; autoSendToGemini(); }
+  }, 1200);
+}
+
+function disconnectAllServices(fromModal) {
+  if (!fromModal && !confirm('Clear all saved API keys and connection settings?')) return;
+  [CF_KEY, SVC_GEMINI_KEY, SVC_GEMINI_LBL, SVC_OPENAI_KEY, SVC_OPENAI_LBL,
+   SVC_API3_KEY, SVC_API3_LBL, SVC_API3_URL, SVC_API3_MODEL].forEach(k => localStorage.removeItem(k));
+  window._cfWorkerUrl = null;
+  _svcRefreshStatus();
+  if (fromModal) {
+    const msg = document.getElementById('cf-status-msg');
+    if (msg) msg.textContent = '🗑 All keys cleared.';
+    // Clear input fields in modal
+    ['cf-url-input','svc-gemini-key','svc-gemini-label','svc-openai-key','svc-openai-label',
+     'svc-api3-key','svc-api3-label','svc-api3-url','svc-api3-model'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    ['svc-gemini-saved-badge','svc-openai-saved-badge','svc-api3-saved-badge'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.textContent = '';
+    });
+  }
+}
+
+function _svcRefreshStatus() {
+  const hasWorker = !!(window._cfWorkerUrl || localStorage.getItem(CF_KEY));
+  const hasGemini = !!localStorage.getItem(SVC_GEMINI_KEY);
+  const hasOpenAI = !!localStorage.getItem(SVC_OPENAI_KEY);
+  const hasApi3   = !!(localStorage.getItem(SVC_API3_KEY) && localStorage.getItem(SVC_API3_URL));
+  const anyConnected = hasWorker || hasGemini || hasOpenAI || hasApi3;
+
+  const dot  = document.getElementById('cf-dot');
+  const label= document.getElementById('cf-label');
+  const discItem = document.getElementById('svc-disconnect-item');
+  const oldDiscItem = document.getElementById('cf-disconnect-item');
+
+  if (dot) dot.className = anyConnected ? 'cf-dot connected' : 'cf-dot';
+  if (label) {
+    const parts = [];
+    if (hasWorker) parts.push('Worker');
+    if (hasGemini) parts.push('Gemini');
+    if (hasOpenAI) parts.push('OpenAI');
+    if (hasApi3)   parts.push('API3');
+    label.textContent = parts.length ? parts.join('+') : 'Not Connected';
+  }
+  if (discItem) discItem.style.display = anyConnected ? '' : 'none';
+  if (oldDiscItem) oldDiscItem.style.display = anyConnected ? '' : 'none';
+  rbUpdateAiStatus(anyConnected);
+}
+
+function cfConnect() { openServicesModal(); }
+function cfCloseModal() {
+  document.getElementById('cf-modal-overlay').classList.remove('show');
+  window._pendingAutoSend = false;
+}
 function cfModalOverlayClick(e) {
   if (e.target === document.getElementById('cf-modal-overlay')) cfCloseModal();
 }
-
-async function cfDoConnect() {
-  const url = (document.getElementById('cf-url-input')?.value || '').trim().replace(/\/+$/, '');
-  if (!url) {
-    document.getElementById('cf-status-msg').textContent = '⚠️ Please enter a valid Worker URL.';
-    return;
-  }
-  const msg = document.getElementById('cf-status-msg');
-  msg.textContent = '⏳ Connecting…';
-  document.getElementById('cf-dot').className = 'cf-dot connecting';
-  try {
-    const res = await fetch(url + '/ping', { method: 'GET', signal: AbortSignal.timeout(6000) });
-    if (res.ok || res.status === 404) {
-      localStorage.setItem(CF_KEY, url);
-      setCFConnected(url);
-      msg.textContent = '✅ Connected successfully!';
-      setTimeout(() => { cfCloseModal(); if (window._pendingAutoSend) { window._pendingAutoSend = false; autoSendToGemini(); } }, 1200);
-    } else {
-      msg.textContent = '⚠️ Service responded with status ' + res.status + '. URL saved.';
-      localStorage.setItem(CF_KEY, url);
-      setCFConnected(url);
-      setTimeout(() => { cfCloseModal(); if (window._pendingAutoSend) { window._pendingAutoSend = false; autoSendToGemini(); } }, 2000);
-    }
-  } catch(err) {
-    localStorage.setItem(CF_KEY, url);
-    setCFConnected(url);
-    msg.textContent = '✅ URL saved. Worker may require auth — using saved URL.';
-    setTimeout(() => { cfCloseModal(); if (window._pendingAutoSend) { window._pendingAutoSend = false; autoSendToGemini(); } }, 1800);
-  }
-}
-
-function cfDisconnect() {
-  closeAllMenus();
-  if (!confirm('Disconnect from AI service?')) return;
-  localStorage.removeItem(CF_KEY);
-  setCFDisconnected();
-}
+async function cfDoConnect() { await svcSave(); }
+function cfDisconnect() { disconnectAllServices(false); }
 
 function setCFConnected(url) {
-  const dot   = document.getElementById('cf-dot');
-  const label = document.getElementById('cf-label');
-  const discItem = document.getElementById('cf-disconnect-item');
-  if (dot)   { dot.className = 'cf-dot connected'; }
-  if (label) { label.textContent = 'Live'; }
-  if (discItem) discItem.style.display = '';
-  window._cfWorkerUrl = url;
-  rbUpdateAiStatus(true);
+  if (url) { window._cfWorkerUrl = url; localStorage.setItem(CF_KEY, url); }
+  _svcRefreshStatus();
 }
-
 function setCFDisconnected() {
-  const dot   = document.getElementById('cf-dot');
-  const label = document.getElementById('cf-label');
-  const discItem = document.getElementById('cf-disconnect-item');
-  if (dot)   dot.className = 'cf-dot';
-  if (label) label.textContent = 'Not Connected';
-  if (discItem) discItem.style.display = 'none';
   window._cfWorkerUrl = null;
-  rbUpdateAiStatus(false);
+  localStorage.removeItem(CF_KEY);
+  _svcRefreshStatus();
 }
 
-// ── AI QUERY via Cloudflare Worker ──────────────────────────────────
+// ── Direct API helpers (keys stay in localStorage, go directly to official endpoints) ──
+async function _callGeminiDirect(prompt, model) {
+  const key = localStorage.getItem(SVC_GEMINI_KEY);
+  if (!key) throw new Error('No Gemini API key');
+  const m = model || 'gemini-2.0-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`;
+  const res = await fetch(url, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ contents:[{parts:[{text:prompt}]}], generationConfig:{maxOutputTokens:4096} }),
+    signal: AbortSignal.timeout(45000)
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  if (!text) throw new Error('Empty response from Gemini');
+  return text;
+}
+
+async function _callOpenAIDirect(prompt, model) {
+  const key = localStorage.getItem(SVC_OPENAI_KEY);
+  if (!key) throw new Error('No OpenAI API key');
+  const m = model || 'gpt-4o-mini';
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body: JSON.stringify({ model:m, messages:[{role:'user',content:prompt}], max_tokens:4096 }),
+    signal: AbortSignal.timeout(45000)
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  const text = data.choices?.[0]?.message?.content || '';
+  if (!text) throw new Error('Empty response from OpenAI');
+  return text;
+}
+
+async function _callAPI3Direct(prompt, model) {
+  const key  = localStorage.getItem(SVC_API3_KEY);
+  const base = localStorage.getItem(SVC_API3_URL);
+  if (!key || !base) throw new Error('No custom API configured');
+  const m = model || localStorage.getItem(SVC_API3_MODEL) || 'llama-3.3-70b-versatile';
+  const res = await fetch(base.replace(/\/+$/,'') + '/v1/chat/completions', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body: JSON.stringify({ model:m, messages:[{role:'user',content:prompt}], max_tokens:4096 }),
+    signal: AbortSignal.timeout(45000)
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  const text = data.choices?.[0]?.message?.content || '';
+  if (!text) throw new Error('Empty response from custom API');
+  return text;
+}
+
+// ── AI Load Balancer: Worker → Gemini → OpenAI → API3 → prompt user ──
+async function _aiLoadBalancedQuery(prompt, model, onChunk, onDone, onError) {
+  const workerUrl = (window._cfWorkerUrl || localStorage.getItem(CF_KEY) || '').replace(/\/+$/,'');
+
+  // 1. Try Coworker (streaming)
+  if (workerUrl) {
+    try {
+      const m = model || localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
+      const res = await fetch(workerUrl + '/query-stream', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({prompt, model:m, use_search:true}),
+        signal: AbortSignal.timeout(90000)
+      });
+      if (res.ok && res.body) {
+        const reader = res.body.getReader(); const dec = new TextDecoder();
+        let buf='', accumulated='';
+        while(true) {
+          const {done,value} = await reader.read(); if(done) break;
+          buf += dec.decode(value,{stream:true});
+          const lines=buf.split('\n'); buf=lines.pop()||'';
+          for(const line of lines) {
+            if(!line.startsWith('data: ')) continue;
+            let evt; try{evt=JSON.parse(line.slice(6));}catch{continue;}
+            if(evt.error) throw new Error(evt.error);
+            if(evt.chunk){accumulated+=evt.chunk; onChunk&&onChunk(accumulated);}
+            if(evt.done){onDone&&onDone(accumulated); return;}
+          }
+        }
+        if(accumulated.length>30){onDone&&onDone(accumulated); return;}
+      }
+      // Stream empty — try worker non-stream
+      for(const ep of ['/query','/ask','/chat','/generate']){
+        try{
+          const r=await fetch(workerUrl+ep,{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({prompt,model:m,use_search:true}),signal:AbortSignal.timeout(60000)});
+          if(!r.ok&&r.status===404) continue;
+          const txt=await r.text(); let d; try{d=JSON.parse(txt);}catch{d={result:txt};}
+          if(d.error) continue;
+          const text=d.result||d.answer||d.response||d.text||txt||'';
+          if(text){onChunk&&onChunk(text); onDone&&onDone(text); return;}
+        }catch(e){if(e.name==='AbortError')throw e;}
+      }
+    } catch(e) { if(e.name==='AbortError') throw e; /* fall through */ }
+  }
+
+  // 2. Try Gemini direct
+  if (localStorage.getItem(SVC_GEMINI_KEY)) {
+    try {
+      const text = await _callGeminiDirect(prompt, model);
+      onChunk&&onChunk(text); onDone&&onDone(text); return;
+    } catch(e) { /* fall through */ }
+  }
+
+  // 3. Try OpenAI direct
+  if (localStorage.getItem(SVC_OPENAI_KEY)) {
+    try {
+      const text = await _callOpenAIDirect(prompt, model);
+      onChunk&&onChunk(text); onDone&&onDone(text); return;
+    } catch(e) { /* fall through */ }
+  }
+
+  // 4. Try Custom API
+  if (localStorage.getItem(SVC_API3_KEY) && localStorage.getItem(SVC_API3_URL)) {
+    try {
+      const text = await _callAPI3Direct(prompt, model);
+      onChunk&&onChunk(text); onDone&&onDone(text); return;
+    } catch(e) { /* fall through */ }
+  }
+
+  // 5. Nothing available — prompt user
+  const err = new Error('No AI service connected. Use File → Connect Services to add your API key or Coworker URL.');
+  onError&&onError(err); throw err;
+}
+
+// ── AI QUERY modal ───────────────────────────────────────────────────
 function cfAIQuery() {
   closeAllMenus();
-  const _HW = 'https://x9-k2-p20-worker.vilfintv.workers.dev';
-  const url = window._cfWorkerUrl || localStorage.getItem(CF_KEY) || _HW;
-  if (!window._cfWorkerUrl) { window._cfWorkerUrl = _HW; try{ localStorage.setItem(CF_KEY,_HW); }catch(e){} setCFConnected(_HW); }
   document.getElementById('ai-query-input').value = '';
   document.getElementById('ai-query-status').textContent = '';
   document.getElementById('ai-query-result').style.display = 'none';
   document.getElementById('ai-query-overlay').classList.add('show');
 }
-
-function aiQueryClose() {
-  document.getElementById('ai-query-overlay').classList.remove('show');
-}
+function aiQueryClose() { document.getElementById('ai-query-overlay').classList.remove('show'); }
 
 async function aiQuerySend() {
   const q = document.getElementById('ai-query-input').value.trim();
   if (!q) { document.getElementById('ai-query-status').textContent = '⚠️ Please enter a question.'; return; }
-  const url = (window._cfWorkerUrl || localStorage.getItem(CF_KEY) || '').replace(/\/+$/, '');
-  if (!url) { document.getElementById('ai-query-status').textContent = '⚠️ Not connected. Use File → Connect first.'; return; }
   const status = document.getElementById('ai-query-status');
   const result = document.getElementById('ai-query-result');
-  status.textContent = '⏳ Processing your question…';
+  status.textContent = '⏳ Processing…';
   result.style.display = 'none';
+  const model = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
   try {
-    const res = await fetch(url + '/query', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: q, use_search: true }),
-      signal: AbortSignal.timeout(60000)
-    });
-    const data = await res.json();
-    if (data.error) {
-      const errMsg = typeof data.error === 'string' ? data.error : (data.error.message || JSON.stringify(data.error));
-      throw new Error(errMsg);
-    }
-    const answer = data.result || data.answer || data.response || JSON.stringify(data);
-    result.textContent = answer;
-    result.style.display = 'block';
-    status.textContent = '✅ Response received!';
+    await _aiLoadBalancedQuery(q, model,
+      null,
+      (text) => { result.textContent = text; result.style.display = 'block'; status.textContent = '✅ Response received!'; },
+      (err)  => { status.textContent = '⚠️ ' + err.message; }
+    );
   } catch(err) {
-    status.textContent = '⚠️ ' + (err.message || 'Request failed. Please try again.');
+    status.textContent = '⚠️ ' + (err.message || 'Request failed.');
   }
 }
 
@@ -3812,14 +4087,7 @@ window._streamAbort = null;
 window._streamPartial = '';
 
 async function autoSendToGemini() {
-  // Always fall back to the hardcoded worker URL — user has confirmed keys are there
-  const HARDCODED_WORKER = 'https://x9-k2-p20-worker.vilfintv.workers.dev';
-  const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY) || HARDCODED_WORKER;
-  // Seed localStorage so future loads also pick it up
-  if (!window._cfWorkerUrl) {
-    localStorage.setItem(CF_KEY, HARDCODED_WORKER);
-    setCFConnected(HARDCODED_WORKER);
-  }
+  const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY) || '';
   const finalUrl = workerUrl.replace(/\/+$/, '');
   const queryEl = document.getElementById('copy-content');
   const queryText = generatedQuery || queryEl?.innerText?.trim() || queryEl?.textContent?.trim();
@@ -3926,37 +4194,49 @@ async function autoSendToGemini() {
   async function fallbackQuery(partialSoFar) {
     _aiProgressSet(35, 'Processing…', 'ps3');
     _vilfinProgressUpdate(35, '🔄 Processing your request…');
-    // Try multiple endpoint names — workers vary
-    const endpoints = ['/query', '/ask', '/chat', '/generate'];
-    for (const ep of endpoints) {
-      try {
-        const body = { prompt: queryText, model: selectedModel, use_search: true };
-        if (partialSoFar) body.partial = partialSoFar;
-        const res = await fetch(finalUrl + ep, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-          signal: AbortSignal.timeout(120000)
-        });
-        if (!res.ok && res.status === 404) continue; // try next endpoint
-        _aiProgressSet(88, 'Receiving…', 'ps4');
-        _vilfinProgressUpdate(88, '📥 Almost done…');
-        const rawText = await res.text();
-        let data;
-        try { data = JSON.parse(rawText); } catch(_) { data = { result: rawText }; }
-        const errMsg = data.error ? (typeof data.error === 'string' ? data.error : (data.error.message || JSON.stringify(data.error))) : null;
-        if (errMsg) throw new Error(errMsg);
-        const answer = data.result || data.answer || data.response || data.text || data.content || rawText;
-        if (answer) { handleGeminiResult(answer); return; }
-      } catch(e) {
-        if (e.name === 'AbortError') { _aiProgressStop(); return; }
-        // Only throw if this was the last endpoint
-        if (ep === endpoints[endpoints.length - 1]) {
-          _aiProgressStop();
-          _vilfinProgressError('Worker error: ' + (e.message || 'Check your Cloudflare Worker setup.'));
+    // Try multiple worker endpoint names first
+    if (finalUrl) {
+      const endpoints = ['/query', '/ask', '/chat', '/generate'];
+      for (const ep of endpoints) {
+        try {
+          const body = { prompt: queryText, model: selectedModel, use_search: true };
+          if (partialSoFar) body.partial = partialSoFar;
+          const res = await fetch(finalUrl + ep, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body), signal: AbortSignal.timeout(120000)
+          });
+          if (!res.ok && res.status === 404) continue;
+          _aiProgressSet(88, 'Receiving…', 'ps4');
+          _vilfinProgressUpdate(88, '📥 Almost done…');
+          const rawText = await res.text();
+          let data; try { data = JSON.parse(rawText); } catch(_) { data = { result: rawText }; }
+          const errMsg = data.error ? (typeof data.error === 'string' ? data.error : (data.error.message || JSON.stringify(data.error))) : null;
+          if (errMsg) { continue; }
+          const answer = data.result || data.answer || data.response || data.text || data.content || rawText;
+          if (answer) { handleGeminiResult(answer); return; }
+        } catch(e) {
+          if (e.name === 'AbortError') { _aiProgressStop(); return; }
         }
       }
     }
+    // Worker failed — try direct API fallbacks
+    _aiProgressSet(50, 'Trying direct API…', 'ps3');
+    _vilfinProgressUpdate(50, '🔄 Trying direct AI connections…');
+    const directCallers = [
+      ['Gemini', () => _callGeminiDirect(queryText, selectedModel)],
+      ['OpenAI', () => _callOpenAIDirect(queryText, selectedModel)],
+      ['Custom API', () => _callAPI3Direct(queryText, selectedModel)],
+    ];
+    for (const [name, caller] of directCallers) {
+      try {
+        _vilfinProgressUpdate(60, `🤖 Querying ${name}…`);
+        const text = await caller();
+        if (text) { handleGeminiResult(text); return; }
+      } catch(e) { /* try next */ }
+    }
+    // All failed
+    _aiProgressStop();
+    _vilfinProgressError('No AI service available. Use File → Connect Services to add API keys.');
   }
 
   function handleGeminiResult(answer) {
@@ -4185,11 +4465,7 @@ function _renderRandomChips() {
 
 // Init on load
 document.addEventListener('DOMContentLoaded', () => {
-  // Always seed the confirmed worker URL — keys are configured, just ensure URL is set
-  const _WORKER = 'https://x9-k2-p20-worker.vilfintv.workers.dev';
-  try { localStorage.setItem('viltv_cf_worker_url', _WORKER); } catch(e) {}
-  window._cfWorkerUrl = _WORKER;          // set in-memory immediately (no async delay)
-  cfLoadSaved();
+  cfLoadSaved(); // loads saved worker URL + API keys, refreshes status badge
   // Restore default channel
   (() => {
     const defaultCh = localStorage.getItem('viltv_default_channel');
@@ -4488,6 +4764,12 @@ function ytTogglePIP() {
   const left = window.innerWidth  - _pipW - 16;
   const top  = window.innerHeight - Math.round(_pipW * 0.5625) - 120;
 
+  // Move wrapper to document.body so position:fixed is always relative to the viewport
+  // (CSS transforms on ancestor elements can break fixed positioning)
+  wrapper._pipOrigParent = wrapper.parentElement;
+  wrapper._pipOrigNext   = wrapper.nextSibling;
+  document.body.appendChild(wrapper);
+
   Object.assign(wrapper.style, {
     position:'fixed', left:left+'px', top:top+'px',
     width:_pipW+'px', zIndex:'9800',
@@ -4539,6 +4821,16 @@ function ytExitPIP() {
   _ytPipActive = false;
   const wrapper = document.getElementById('yt-video-wrapper');
   if (!wrapper) return;
+  // Restore wrapper to original DOM position before clearing styles
+  if (wrapper._pipOrigParent) {
+    if (wrapper._pipOrigNext && wrapper._pipOrigNext.parentNode === wrapper._pipOrigParent) {
+      wrapper._pipOrigParent.insertBefore(wrapper, wrapper._pipOrigNext);
+    } else {
+      wrapper._pipOrigParent.appendChild(wrapper);
+    }
+    wrapper._pipOrigParent = null;
+    wrapper._pipOrigNext   = null;
+  }
   // Restore inline styles
   ['position','left','top','width','zIndex','boxShadow','borderRadius','border','overflow','flexDirection','display','transition'].forEach(p => wrapper.style[p] = '');
   const hdr = document.getElementById('yt-pip-header');
@@ -4787,9 +5079,48 @@ async function fetchLiveScores(sport) {
   if (!box) return;
   box.innerHTML = '<div class="score-no-data">Loading…</div>';
 
-  // Cricket: ESPN direct first (IPL + all), then TheSportsDB (globally accessible)
+  // Cricket: ESPNcricinfo first, then ESPN site API, then TheSportsDB
   if (sport === 'cricket') {
-    // Try ESPN directly — works in India and from HTTPS pages (GitHub Pages)
+    // 1. Try ESPNcricinfo consumer API — direct live matches feed
+    try {
+      const cri = await fetch('https://hs-consumer-api.espncricinfo.com/v1/pages/home/live-matches?lang=en', {
+        cache:'no-store', signal: AbortSignal.timeout(7000)
+      });
+      if (cri.ok) {
+        const criJ = await cri.json();
+        const matches = criJ.matches || criJ.content?.matches || [];
+        if (matches.length) {
+          let html = '';
+          for (const m of matches.slice(0,12)) {
+            const title = m.title || m.description || 'Cricket Match';
+            const status = m.status || m.statusText || '';
+            const isLive = m.isLive || (m.matchStatus || '').toLowerCase() === 'live' || status.toLowerCase().includes('live');
+            const isFinal = (m.matchStatus || '').toLowerCase().includes('won') || status.toLowerCase().includes('won') || status.toLowerCase().includes('result');
+            const statusColor = isLive ? '#22c55e' : (isFinal ? '#94a3b8' : '#38bdf8');
+            const teams = m.teams || [];
+            let teamsHtml = '';
+            if (teams.length >= 2) {
+              const hName = teams[0]?.shortName || teams[0]?.name || '?';
+              const aName = teams[1]?.shortName || teams[1]?.name || '?';
+              const hScore = teams[0]?.score || teams[0]?.scoreLabel || '';
+              const aScore = teams[1]?.score || teams[1]?.scoreLabel || '';
+              const scoreStr = (hScore || aScore) ? `${hScore} — ${aScore}` : 'vs';
+              teamsHtml = `<div class="score-card-teams"><span class="score-team-name">${hName}</span><span class="score-result">${scoreStr}</span><span class="score-team-name" style="text-align:right">${aName}</span></div>`;
+            }
+            const venue = m.ground?.name ? `<div class="score-venue">📍 ${m.ground.name}</div>` : '';
+            html += `<div class="score-card"><div class="score-card-match">${title}</div><div class="score-card-status" style="color:${statusColor}">${isLive?'<span class="score-live-dot"></span>':''}${status}</div>${teamsHtml}${venue}</div>`;
+          }
+          if (html) {
+            box.innerHTML = html;
+            const ts = document.getElementById('scores-updated');
+            if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+            return;
+          }
+        }
+      }
+    } catch(_) {}
+
+    // 2. Try ESPN site API directly — works in India and from HTTPS pages (GitHub Pages)
     const espnLiveUrls = [
       'https://site.api.espn.com/apis/site/v2/sports/cricket/ipl/scoreboard',
       'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard',
@@ -4938,9 +5269,50 @@ async function fetchPastScores(sport) {
   if (!box) return;
   box.innerHTML = '<div class="score-no-data">Loading past results…</div>';
 
-  // Cricket: Try ESPN IPL/cricket directly first (works in India), then TheSportsDB 5 days
+  // Cricket: ESPNcricinfo recent matches first, then ESPN, then TheSportsDB
   if (sport === 'cricket') {
-    // Attempt 1 — ESPN cricket APIs directly (no proxy, works from India & GitHub Pages)
+    // Attempt 1 — ESPNcricinfo recent matches
+    try {
+      const cri = await fetch('https://hs-consumer-api.espncricinfo.com/v1/pages/home/recent-matches?lang=en', {
+        cache:'no-store', signal: AbortSignal.timeout(7000)
+      });
+      if (cri.ok) {
+        const criJ = await cri.json();
+        const matches = criJ.matches || criJ.content?.matches || [];
+        const finished = matches.filter(m => {
+          const s = (m.matchStatus || m.status || '').toLowerCase();
+          return s.includes('won') || s.includes('result') || s.includes('draw') || s.includes('tied') || s.includes('complete');
+        });
+        if (finished.length) {
+          let html = '';
+          for (const m of finished.slice(0,12)) {
+            const title = m.title || m.description || 'Cricket Match';
+            const status = m.status || m.matchStatus || '';
+            const teams = m.teams || [];
+            let teamsHtml = '';
+            if (teams.length >= 2) {
+              const hName = teams[0]?.shortName || teams[0]?.name || '?';
+              const aName = teams[1]?.shortName || teams[1]?.name || '?';
+              const hScore = teams[0]?.score || teams[0]?.scoreLabel || '';
+              const aScore = teams[1]?.score || teams[1]?.scoreLabel || '';
+              const scoreStr = (hScore || aScore) ? `${hScore} — ${aScore}` : 'FT';
+              teamsHtml = `<div class="score-card-teams"><span class="score-team-name">${hName}</span><span class="score-result">${scoreStr}</span><span class="score-team-name" style="text-align:right">${aName}</span></div>`;
+            }
+            const venue = m.ground?.name ? `<div class="score-venue">📍 ${m.ground.name}</div>` : '';
+            const result = status ? `<div class="score-venue" style="color:#60a5fa">🏆 ${status}</div>` : '';
+            html += `<div class="score-card"><div class="score-card-match">${title}</div><div class="score-card-status" style="color:#94a3b8">Final</div>${teamsHtml}${result}${venue}</div>`;
+          }
+          if (html) {
+            box.innerHTML = html;
+            const ts = document.getElementById('scores-updated');
+            if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+            return;
+          }
+        }
+      }
+    } catch(_) {}
+
+    // Attempt 2 — ESPN cricket APIs directly (no proxy, works from India & GitHub Pages)
     const espnCricUrls = [
       'https://site.api.espn.com/apis/site/v2/sports/cricket/ipl/scoreboard',
       'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard',
@@ -5152,10 +5524,6 @@ async function rbAiSend() {
   const q = input?.value?.trim();
   if (!q) return;
 
-  const _HW = 'https://x9-k2-p20-worker.vilfintv.workers.dev';
-  const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY) || _HW;
-  if (!window._cfWorkerUrl) { window._cfWorkerUrl = _HW; try{ localStorage.setItem(CF_KEY,_HW); }catch(e){} setCFConnected(_HW); }
-
   if (_rbStreamAbort) { _rbStreamAbort.abort(); }
   _rbStreamAbort = new AbortController();
 
@@ -5169,76 +5537,37 @@ async function rbAiSend() {
   const msgEl = document.getElementById(msgId);
   if (msgEl) msgEl.textContent = '';
 
-  const finalUrl = workerUrl.replace(/\/+$/, '');
   const model = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
-  let accumulated = '';
+  const msgsEl = document.getElementById('rb-ai-messages');
 
   try {
-    // Try streaming first
-    let streamOk = false;
-    try {
-      const res = await fetch(finalUrl + '/query-stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: q, model, use_search: true }),
-        signal: _rbStreamAbort.signal
-      });
-      if (res.ok && res.body) {
-        const reader = res.body.getReader();
-        const dec = new TextDecoder();
-        let buf = '';
+    // Check if any service is available, prompt if not
+    const hasAny = !!(window._cfWorkerUrl || localStorage.getItem(CF_KEY) ||
+      localStorage.getItem(SVC_GEMINI_KEY) || localStorage.getItem(SVC_OPENAI_KEY) ||
+      (localStorage.getItem(SVC_API3_KEY) && localStorage.getItem(SVC_API3_URL)));
+    if (!hasAny) {
+      window._pendingAutoSend = false;
+      openServicesModal();
+      if (msgEl) msgEl.textContent = '⚠️ No AI service connected. Configure one above and try again.';
+      return;
+    }
+
+    await _aiLoadBalancedQuery(q, model,
+      (partial) => {
         if (typingEl) typingEl.style.display = 'none';
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buf += dec.decode(value, { stream: true });
-          const lines = buf.split('\n'); buf = lines.pop() || '';
-          for (const line of lines) {
-            if (!line.startsWith('data: ')) continue;
-            let evt; try { evt = JSON.parse(line.slice(6)); } catch { continue; }
-            if (evt.error) throw new Error(evt.error);
-            if (evt.chunk) {
-              accumulated += evt.chunk;
-              if (msgEl) { msgEl.textContent = accumulated; document.getElementById('rb-ai-messages').scrollTop = 99999; }
-            }
-            if (evt.done) { streamOk = true; break; }
-          }
-          if (streamOk) break;
-        }
-        if (accumulated.length > 20) streamOk = true;
+        if (msgEl) { msgEl.textContent = partial; if(msgsEl) msgsEl.scrollTop = 99999; }
+      },
+      (final) => {
+        if (typingEl) typingEl.style.display = 'none';
+        if (msgEl) { msgEl.textContent = final; if(msgsEl) msgsEl.scrollTop = 99999; }
+        if (statusEl) statusEl.textContent = '✅ Response received';
+      },
+      (err) => {
+        if (msgEl) msgEl.textContent = '❌ ' + err.message;
+        if (statusEl) statusEl.textContent = '⚠️ ' + err.message;
       }
-    } catch(streamErr) {
-      if (streamErr.name === 'AbortError') throw streamErr;
-      // Stream failed — fall through to non-stream
-    }
-
-    // Non-streaming fallback: /query → /ask → /chat → /generate
-    if (!streamOk) {
-      if (typingEl) typingEl.style.display = 'none';
-      const endpoints = ['/query', '/ask', '/chat', '/generate'];
-      let lastErr = null;
-      for (const ep of endpoints) {
-        try {
-          const r = await fetch(finalUrl + ep, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: q, model, use_search: true }),
-            signal: AbortSignal.timeout(90000)
-          });
-          if (!r.ok && r.status === 404) continue;
-          const txt = await r.text();
-          let d; try { d = JSON.parse(txt); } catch(_) { d = { result: txt }; }
-          if (d.error) { lastErr = typeof d.error === 'string' ? d.error : (d.error.message || JSON.stringify(d.error)); continue; }
-          accumulated = d.result || d.answer || d.response || d.text || txt || '';
-          if (accumulated) { if (msgEl) msgEl.textContent = accumulated; break; }
-        } catch(epErr) { if (epErr.name === 'AbortError') throw epErr; lastErr = epErr.message; }
-      }
-      if (!accumulated) throw new Error(lastErr || 'No response from worker. Check your Cloudflare Worker configuration.');
-    }
-
-    if (statusEl) statusEl.textContent = '✅ Response received';
+    );
   } catch(e) {
-    if (typingEl) typingEl.style.display = 'none';
     if (e.name !== 'AbortError') {
       if (msgEl) msgEl.textContent = '❌ ' + (e.message || 'Connection error.');
       if (statusEl) statusEl.textContent = '⚠️ ' + (e.message || 'Error');
@@ -5246,7 +5575,7 @@ async function rbAiSend() {
   } finally {
     if (sendBtn) sendBtn.disabled = false;
     if (typingEl) typingEl.style.display = 'none';
-    document.getElementById('rb-ai-messages').scrollTop = 99999;
+    if (msgsEl) msgsEl.scrollTop = 99999;
   }
 }
 
@@ -9455,9 +9784,7 @@ RULES:
 }
 
 async function sendLosslessJson() {
-  const HARDCODED_WORKER = 'https://x9-k2-p20-worker.vilfintv.workers.dev';
-  const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY) || HARDCODED_WORKER;
-  if (!window._cfWorkerUrl) { localStorage.setItem(CF_KEY, HARDCODED_WORKER); setCFConnected(HARDCODED_WORKER); }
+  const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY) || '';
 
   const prompt = buildLosslessJsonPrompt();
   if (!prompt) { alert('⚠️ Generate AI Query first.'); return; }
@@ -9672,8 +9999,7 @@ function clearResult() {
 
 // ── Gamma AI Report — AI-generated visual presentation ───────────
 async function generateGammaReport() {
-  const WORKER = 'https://x9-k2-p20-worker.vilfintv.workers.dev';
-  const workerUrl = (window._cfWorkerUrl || localStorage.getItem(CF_KEY) || WORKER).replace(/\/+$/, '');
+  const workerUrl = (window._cfWorkerUrl || localStorage.getItem(CF_KEY) || '').replace(/\/+$/, '');
 
   // Gather available data (prefer structured JSON, then paste, then raw query)
   const pasteVal  = document.getElementById('paste-area')?.value?.trim() || '';
