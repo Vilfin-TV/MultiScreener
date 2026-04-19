@@ -18,23 +18,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
 :root{
-  /* Accent — Blue/Navy brand (v8.6.16 redesign) */
+  /* Accent — Blue/Navy brand */
   --burn:#1d4ed8;--burn2:#2563eb;--burn3:#60a5fa;
   --gold:#1e3a8a;--gold2:#60a5fa;
   --green:#16a34a;--red:#dc2626;--amber:#d97706;
-  /* Light theme palette */
-  --dark:#f8fafc;--dark2:#f1f5f9;--dark3:#e2e8f0;--dark4:#cbd5e1;
-  --card:#ffffff;--card2:#f8fafc;--card3:#f9fafb;--card4:#f0f4f8;
-  --text:#334155;--text2:#64748b;--text3:#94a3b8;
-  --border:#e2e8f0;--border2:#cbd5e1;
+  /* Dark navy blue theme */
+  --dark:#0a1628;--dark2:#0d1d35;--dark3:#112040;--dark4:#1a2f50;
+  --card:#0d1d35;--card2:#112040;--card3:#132445;--card4:#1a2f50;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+  --border:#1a2f4e;--border2:#243b5a;
   --radius:12px;
   --sidebar-w:240px;
-  /* Nav & header stay dark for brand contrast */
-  --nav-bg:#0f172a;--nav-text:#f1f5f9;--nav-border:#1e293b;
+  --nav-bg:#050a14;--nav-text:#f1f5f9;--nav-border:#0e1e36;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background:#f8fafc;color:#334155;min-height:100vh;overflow-x:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background:#060d1a;color:#e2e8f0;min-height:100vh;overflow-x:hidden}
 
 /* ── LAYOUT WRAPPER ── */
 .layout{display:flex;height:calc(100vh - 90px);overflow:hidden}
@@ -219,9 +218,9 @@ thead th { white-space: nowrap; font-size: 11px; padding: 8px 10px; }
 
 /* ── MAIN TABS — sticky so always accessible above live-news ── */
 .main-nav{
-  background:#ffffff;border-bottom:2px solid var(--border);
+  background:#080e1a;border-bottom:2px solid #1a2f4e;
   display:flex;overflow-x:auto;scrollbar-width:none;
-  box-shadow:0 2px 8px rgba(0,0,0,.08);
+  box-shadow:0 2px 12px rgba(0,0,0,.4);
   position:sticky;top:0;z-index:200;
 }
 .main-nav::-webkit-scrollbar{display:none}
@@ -1817,12 +1816,48 @@ footer{
       "symbols":[
         {"proName":"NSE:NIFTY50","title":"Nifty 50"},
         {"proName":"BSE:SENSEX","title":"Sensex"},
+        {"proName":"NSE:BANKNIFTY","title":"Bank Nifty"},
+        {"proName":"NSE:CNXFINANCE","title":"CNX Finance"},
+        {"proName":"NSE:CNXIT","title":"CNX IT"},
+        {"proName":"NSE:CNXMETAL","title":"CNX Metal"},
+        {"proName":"NSE:NIFTYSMLCAP250","title":"Nifty SmallCap"},
+        {"proName":"NSE:CNX500","title":"CNX 500"},
         {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
-        {"proName":"NASDAQ:NDX","title":"Nasdaq 100"},
-        {"proName":"OANDA:XAUUSD","title":"Gold"},
-        {"proName":"OANDA:BCOUSD","title":"Brent Crude"},
-        {"proName":"FX:USDINR","title":"USD/INR"},
-        {"proName":"BITSTAMP:BTCUSD","title":"Bitcoin"}
+        {"proName":"FOREXCOM:NSXUSD","title":"Nasdaq"},
+        {"proName":"FOREXCOM:DJI","title":"Dow Jones"},
+        {"proName":"SPREADEX:NIKKEI","title":"Nikkei"},
+        {"proName":"HKEX:HSI1!","title":"Hang Seng"},
+        {"proName":"KRX:K2I1!","title":"KOSPI"},
+        {"proName":"ICMARKETS:STOXX50","title":"STOXX 50"},
+        {"proName":"BMFBOVESPA:IBOV","title":"BOVESPA"},
+        {"proName":"FX:EURUSD","title":"EUR/USD"},
+        {"proName":"FX:AUDUSD","title":"AUD/USD"},
+        {"proName":"FX_IDC:USDINR","title":"USD/INR"},
+        {"proName":"FX_IDC:JPYINR","title":"JPY/INR"},
+        {"proName":"FX_IDC:JPYUSD","title":"JPY/USD"},
+        {"proName":"TICKMILL:EURJPY","title":"EUR/JPY"},
+        {"proName":"BITSTAMP:BTCUSD","title":"Bitcoin"},
+        {"proName":"BITSTAMP:ETHUSD","title":"Ethereum"},
+        {"proName":"CMCMARKETS:GOLD","title":"Gold"},
+        {"proName":"MCX:SILVER1!","title":"Silver MCX"},
+        {"proName":"CAPITALCOM:COPPER","title":"Copper"},
+        {"proName":"BLACKBULL:BRENT","title":"Brent Crude"},
+        {"proName":"NYMEX:CL1!","title":"Crude Oil"},
+        {"proName":"MCX:NATURALGAS1!","title":"Natural Gas"},
+        {"proName":"MCX:ALUMINIUM1!","title":"Aluminium"},
+        {"proName":"NCDEX:STEEL1!","title":"Steel"},
+        {"proName":"TVC:USOIL","title":"US Oil"},
+        {"proName":"NASDAQ:NVDA","title":"NVIDIA"},
+        {"proName":"NASDAQ:AAPL","title":"Apple"},
+        {"proName":"NASDAQ:GOOGL","title":"Google"},
+        {"proName":"NASDAQ:AMZN","title":"Amazon"},
+        {"proName":"NASDAQ:QQQ","title":"QQQ ETF"},
+        {"proName":"AMEX:VOO","title":"VOO ETF"},
+        {"proName":"AMEX:VT","title":"VT ETF"},
+        {"proName":"CBOE:VIX","title":"VIX"},
+        {"proName":"TVC:US10Y","title":"US 10Y"},
+        {"proName":"TVC:JP30Y","title":"JP 30Y"},
+        {"proName":"NSE:92GS2030","title":"India Bond"}
       ],
       "showSymbolLogo":true,
       "isTransparent":false,
@@ -1843,12 +1878,22 @@ footer{
       "symbols":[
         {"proName":"NSE:NIFTY50","title":"Nifty 50"},
         {"proName":"BSE:SENSEX","title":"Sensex"},
+        {"proName":"NSE:BANKNIFTY","title":"Bank Nifty"},
         {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
-        {"proName":"NASDAQ:NDX","title":"Nasdaq 100"},
-        {"proName":"OANDA:XAUUSD","title":"Gold"},
-        {"proName":"OANDA:BCOUSD","title":"Brent Crude"},
-        {"proName":"FX:USDINR","title":"USD/INR"},
-        {"proName":"BITSTAMP:BTCUSD","title":"Bitcoin"}
+        {"proName":"FOREXCOM:NSXUSD","title":"Nasdaq"},
+        {"proName":"SPREADEX:NIKKEI","title":"Nikkei"},
+        {"proName":"HKEX:HSI1!","title":"Hang Seng"},
+        {"proName":"FX_IDC:USDINR","title":"USD/INR"},
+        {"proName":"FX_IDC:JPYINR","title":"JPY/INR"},
+        {"proName":"BITSTAMP:BTCUSD","title":"Bitcoin"},
+        {"proName":"CMCMARKETS:GOLD","title":"Gold"},
+        {"proName":"BLACKBULL:BRENT","title":"Brent Crude"},
+        {"proName":"NYMEX:CL1!","title":"Crude Oil"},
+        {"proName":"MCX:NATURALGAS1!","title":"Natural Gas"},
+        {"proName":"NASDAQ:NVDA","title":"NVIDIA"},
+        {"proName":"CBOE:VIX","title":"VIX"},
+        {"proName":"TVC:US10Y","title":"US 10Y"},
+        {"proName":"NSE:CNXIT","title":"CNX IT"}
       ],
       "showSymbolLogo":true,"isTransparent":true,"displayMode":"adaptive",
       "colorTheme":"dark","locale":"en"
@@ -1932,17 +1977,7 @@ footer{
 ══════════════════════════════════════════ -->
 <div class="main-content">
 
-<!-- MAIN NAVIGATION — sticky, always visible at top -->
-<nav class="main-nav">
-  <button class="main-tab active" id="main-tab-0" onclick="switchMain(0,this)">
-    <span class="tab-icon">📋</span> Input Form
-  </button>
-  <button class="main-tab" id="main-tab-2" onclick="switchMain(2,this)">
-    <span class="tab-icon">📊</span> Result
-  </button>
-</nav>
-
-<!-- ══ LIVE FINANCIAL NEWS — below tabs, above panels (v8.6.16) ══ -->
+<!-- ══ LIVE FINANCIAL NEWS — at top of main content ══ -->
 <div class="live-news-section" id="live-news-section">
   <div class="lns-header">
     <div class="lns-title">LIVE FINANCIAL NEWS</div>
@@ -1952,6 +1987,16 @@ footer{
     <!-- injected by JS -->
   </div>
 </div>
+
+<!-- MAIN NAVIGATION — sticky below live news, above panels -->
+<nav class="main-nav">
+  <button class="main-tab active" id="main-tab-0" onclick="switchMain(0,this)">
+    <span class="tab-icon">📋</span> Input Form
+  </button>
+  <button class="main-tab" id="main-tab-2" onclick="switchMain(2,this)">
+    <span class="tab-icon">📊</span> Result
+  </button>
+</nav>
 
 <!-- ════════════════════════════════════════
      PANEL 0 — INPUT FORM
@@ -2517,12 +2562,7 @@ footer{
           <div style="font-weight:600;margin-bottom:4px;color:var(--gold2)">VilfinTV AI</div>
           Ask me anything about markets, stocks, ETFs, mutual funds or the economy.
           <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px" id="rb-quick-chips">
-            <button class="rb-chip" onclick="rbAiChip('NIFTY 50 live price and today\'s outlook')">📈 Nifty Today</button>
-            <button class="rb-chip" onclick="rbAiChip('Gold price analysis today')">🥇 Gold</button>
-            <button class="rb-chip" onclick="rbAiChip('Top 5 BSE gainers today')">🏆 Top Gainers</button>
-            <button class="rb-chip" onclick="rbAiChip('USD to INR rate today')">💱 USD/INR</button>
-            <button class="rb-chip" onclick="rbAiChip('Sensex outlook this week')">📊 Sensex</button>
-            <button class="rb-chip" onclick="rbAiChip('Best mutual funds to invest in 2026')">💰 Best MFs</button>
+            <!-- Filled dynamically by _renderRandomChips() -->
           </div>
         </div>
       </div>
@@ -2561,6 +2601,7 @@ footer{
           <option value="9NyxcX3rhQs">💼 CNBC 24/7</option>
         </optgroup>
         <optgroup label="🇮🇳 India — National News">
+          <option value="b0dA-oXKR9Y">🔴 Republic World</option>
           <option value="jeE-ZJqweBQ">📡 NDTV 24x7</option>
           <option value="MX-iD1xdCJw">🗞 Times of India</option>
           <option value="e1FIApIafWE">📺 India TV News</option>
@@ -2569,6 +2610,8 @@ footer{
           <option value="Zer0vaXRpYs">🌐 WION</option>
         </optgroup>
         <optgroup label="🌏 India — Regional (Malayalam)">
+          <option value="TYGxcesWJH0">📡 BigTV 24x7</option>
+          <option value="EMuPb-vXu_U">📺 News Malayalam 24x7</option>
           <option value="4wExBtPQ-JA">📡 Asianet News</option>
           <option value="1wECsnGZcfc">📺 24 News Kerala</option>
           <option value="tgBTspqA5nY">📰 Manorama News</option>
@@ -2579,11 +2622,10 @@ footer{
         </optgroup>
         <optgroup label="🌏 India — Regional (Tamil / Telugu / Kannada)">
           <option value="NTwbvJDRtPs">📺 Polimer News (Tamil)</option>
-          <option value="gynWNinqmjw">🎙 NewsTamil 24X7 (Tamil)</option>
+          <option value="gynWNinqmjw">🎙 NewsTamil 24X7</option>
           <option value="8STB00X3wNM">📡 Sun News (Tamil)</option>
           <option value="bGq1yWUTnm8">📻 T News Telugu</option>
           <option value="AGOSkVgfWjI">📺 TV9 Telugu Live</option>
-          <option value="8XiHf7l6I5g">📡 T News Telugu 2</option>
           <option value="jdJoOhqCipA">🎙 TV9 Kannada</option>
         </optgroup>
         <optgroup label="🌏 South Asia">
@@ -2591,11 +2633,12 @@ footer{
           <option value="o7rnD1x7NQU">🇧🇩 Jamuna TV (Bangladesh)</option>
         </optgroup>
         <optgroup label="🌍 International News">
+          <option value="XWq5kBlakcQ">🌏 CNA (Channel NewsAsia)</option>
+          <option value="W8nThq62Vb4">🌍 Channels TV (Africa)</option>
           <option value="pToB3kRV30Q">🇬🇧 BBC News</option>
           <option value="gCNeDWCI0vo">🌍 Al Jazeera</option>
           <option value="NQjabLGdP5g">🌍 Africanews</option>
           <option value="YDvsBbKfLPA">🇬🇧 Sky News</option>
-          <option value="tO-BENOTfPE">🇬🇧 Sky News (UK 2)</option>
           <option value="vOTiJkg1voo">🇦🇺 ABC News Australia</option>
           <option value="lAl3IYrkX4w">🇦🇺 9 News Australia</option>
           <option value="f0lYkdA-Gtw">🇯🇵 NHK World Japan</option>
@@ -2603,6 +2646,29 @@ footer{
           <option value="gMn2TauYQdk">🇺🇸 LiveNOW from FOX</option>
           <option value="yDOkVG1uytM">🇺🇸 NBC News</option>
           <option value="iipR5yUp36o">🇺🇸 ABC News</option>
+        </optgroup>
+        <optgroup label="🎵 Music — International Radio">
+          <option value="36YnV9STBqc">☕ Good Life Radio (Chill)</option>
+          <option value="3MOrgUjiigE">🎶 Radio Hits (Pop)</option>
+          <option value="WnCfvAMM9eY">🕺 Radio Mix (70s/80s)</option>
+          <option value="Nt27aBceerI">🎸 Rock FM (Classic Rock)</option>
+          <option value="Zh1_tKjvOOI">🎧 Deep House Hits</option>
+          <option value="b-bK2Vn3D38">🔥 Radio Mix (Pop 2025)</option>
+          <option value="WsDyRAPFBC8">🌊 Monstercat Silk</option>
+          <option value="Dx5qFachd3A">🎹 Cafe Music BGM (Jazz)</option>
+          <option value="SORD03t7nlo">🎺 Cafe Music (Smooth Jazz)</option>
+        </optgroup>
+        <optgroup label="🎵 Music — Indian Languages">
+          <option value="wH26X1mITZs">🎵 Aditya Music (Telugu)</option>
+          <option value="bkpU0GRKmCM">🎶 24 Hours Songs (Mal/Tamil)</option>
+          <option value="16ID7AZP_D4">🎵 123Musix Jukebox (Mal)</option>
+          <option value="3a4FSY4CeIs">🌙 Malayali Mix (Chillstep)</option>
+          <option value="R_Y9jn99lwQ">🎧 ONE8 NICK (Mal Lofi)</option>
+          <option value="veGUxfb6ZeE">🌿 123Musix Relax (Mal)</option>
+          <option value="u9tYgAK-V_c">🎵 Saregama Malayalam</option>
+          <option value="Yb8kSxx9z9M">🎶 Star Music India (Tamil)</option>
+          <option value="AvqEdwCDt8g">🌙 Tamil Music Lofi</option>
+          <option value="v-AkkT-TBMw">🎧 Thamizh Lofi Nights</option>
         </optgroup>
       </select>
     </div>
@@ -2623,17 +2689,30 @@ footer{
       </div>
     </div>
 
-    <!-- ── Live Scores — fills all remaining space ── -->
+    <!-- ── Live / Past Scores — fills all remaining space ── -->
     <div id="live-scores-box" style="flex:1;min-height:0;background:#080e1a;border-top:1px solid #131d35;display:flex;flex-direction:column;overflow:hidden">
-      <!-- Sport selector header -->
-      <div style="display:flex;align-items:center;gap:4px;padding:7px 8px 6px;background:#0a1120;border-bottom:1px solid #131d35;flex-shrink:0;overflow-x:auto;scrollbar-width:none">
-        <span style="font-size:8.5px;font-weight:800;color:#1d4ed8;letter-spacing:1px;text-transform:uppercase;flex-shrink:0;margin-right:1px">LIVE</span>
+
+      <!-- Main tab row: Live Scores / Past Results -->
+      <div style="display:flex;gap:0;background:#050a14;border-bottom:1px solid #131d35;flex-shrink:0">
+        <button id="smt-live" onclick="switchScoreMainTab('live')"
+          style="flex:1;padding:7px 6px;border:none;border-bottom:2px solid #1d4ed8;background:rgba(29,78,216,.12);color:#60a5fa;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.4px;transition:all .15s">
+          🔴 LIVE
+        </button>
+        <button id="smt-past" onclick="switchScoreMainTab('past')"
+          style="flex:1;padding:7px 6px;border:none;border-bottom:2px solid transparent;background:transparent;color:#475569;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.4px;transition:all .15s">
+          📋 PAST
+        </button>
+        <span style="font-size:8px;color:#1e3a5f;align-self:center;white-space:nowrap;padding:0 6px;flex-shrink:0" id="scores-updated"></span>
+      </div>
+
+      <!-- Sport sub-tabs (shown in both modes) -->
+      <div id="score-sport-tabs" style="display:flex;gap:4px;padding:6px 7px 5px;background:#080e1a;border-bottom:1px solid #0e1e36;flex-shrink:0;overflow-x:auto;scrollbar-width:none">
         <button class="score-sport-btn active" id="ssb-cricket"  onclick="switchScoreSport('cricket')" >🏏 Cricket</button>
         <button class="score-sport-btn"        id="ssb-football" onclick="switchScoreSport('football')">⚽ Football</button>
         <button class="score-sport-btn"        id="ssb-tennis"   onclick="switchScoreSport('tennis')"  >🎾 Tennis</button>
         <button class="score-sport-btn"        id="ssb-baseball" onclick="switchScoreSport('baseball')">⚾ Baseball</button>
-        <span style="font-size:8px;color:#1e3a5f;margin-left:auto;align-self:center;white-space:nowrap;flex-shrink:0" id="scores-updated"></span>
       </div>
+
       <!-- Score cards scroll area -->
       <div id="live-scores-content" style="flex:1;overflow-y:auto;padding:6px 7px 4px;scrollbar-width:thin;scrollbar-color:#1e293b transparent">
         <div style="text-align:center;padding:20px;color:#334155;font-size:11px">Loading scores…</div>
@@ -3932,6 +4011,89 @@ function autoGeminiRender() {
   setTimeout(renderOutput, 300);
 }
 
+// ── AI QUICK-CHIP POOL (random 8 shown, auto-refresh every 10 min) ──
+const _chipPool = [
+  // Stocks — India
+  {l:'📈 Nifty 50 today',q:'NIFTY 50 live price and market outlook today'},
+  {l:'📊 Sensex analysis',q:'BSE Sensex movement and analysis this week'},
+  {l:'🏆 BSE Top Gainers',q:'Top 5 BSE gainers today with reasons'},
+  {l:'📉 BSE Losers',q:'Top 5 BSE losers today with analysis'},
+  {l:'🏦 Bank Nifty',q:'Bank Nifty trend and key levels today'},
+  {l:'💎 Mid-cap gems',q:'Best midcap stocks India to watch this week'},
+  {l:'📦 IT sector India',q:'Indian IT sector outlook — TCS, Infosys, Wipro analysis'},
+  {l:'🏭 PSU stocks',q:'Top PSU stocks performance and outlook India'},
+  // Stocks — Global
+  {l:'🇺🇸 S&P 500 today',q:'S&P 500 live price and US market outlook today'},
+  {l:'🇺🇸 Dow Jones',q:'Dow Jones Industrial Average and US economic update today'},
+  {l:'🇯🇵 Nikkei outlook',q:'Nikkei 225 today and Japan market analysis'},
+  {l:'🇨🇳 Hang Seng',q:'Hang Seng Index live and China market sentiment today'},
+  {l:'🇰🇷 KOSPI today',q:'South Korea KOSPI index and market update today'},
+  {l:'🇧🇷 BOVESPA',q:'Brazil BOVESPA emerging market outlook today'},
+  {l:'🤖 AI stocks global',q:'Top AI stocks globally — NVIDIA, Google, Microsoft outlook 2026'},
+  // Commodities
+  {l:'🥇 Gold price',q:'Gold price analysis and forecast today — MCX and international'},
+  {l:'🛢️ Crude Oil',q:'Brent crude oil price and outlook today'},
+  {l:'⚡ Natural Gas',q:'Natural gas futures price and trend today'},
+  {l:'🥈 Silver MCX',q:'Silver price MCX and international forecast today'},
+  {l:'🔶 Copper',q:'Copper commodity price and global demand outlook today'},
+  {l:'🏗️ Steel & Metals',q:'Steel and metal commodity prices India and global today'},
+  // Forex
+  {l:'💱 USD/INR',q:'USD to INR exchange rate today and short-term forecast'},
+  {l:'💴 JPY/INR',q:'Japanese Yen to Indian Rupee rate and outlook'},
+  {l:'💶 EUR/USD',q:'EUR/USD forex rate and technical analysis today'},
+  {l:'🇦🇺 AUD/USD',q:'AUD/USD forex rate and Reserve Bank Australia outlook'},
+  {l:'💷 GBP/INR',q:'British Pound to INR rate and UK market impact'},
+  // Crypto
+  {l:'₿ Bitcoin now',q:'Bitcoin price today and crypto market sentiment'},
+  {l:'🔷 Ethereum',q:'Ethereum price and DeFi market outlook this week'},
+  {l:'🪙 Crypto trends',q:'Top trending cryptocurrencies and altcoin movers today'},
+  // Mutual Funds & ETF
+  {l:'💰 Best MFs India',q:'Best mutual funds to invest in India 2026 — top SIP picks'},
+  {l:'📦 Top ETFs India',q:'Best ETFs to invest in India currently — Nifty, IT, Gold ETFs'},
+  {l:'🌍 Global ETFs',q:'Top global ETFs for Indian investors 2026 — VOO, QQQ, VT'},
+  {l:'📈 ELSS tax funds',q:'Best ELSS tax-saving mutual funds India 2026'},
+  // IPO
+  {l:'🆕 Upcoming IPOs',q:'Upcoming IPOs in India this month 2026 with GMP'},
+  {l:'🔥 IPO subscription',q:'Latest IPO subscription status and grey market premium today India'},
+  // Insurance & NPS
+  {l:'🛡️ Term insurance',q:'Best term life insurance plans in India 2026 comparison'},
+  {l:'🏥 Health cover',q:'Best health insurance plans India 2026 — top family floater plans'},
+  {l:'📋 NPS returns',q:'NPS National Pension Scheme returns and best fund manager 2026'},
+  {l:'🏛️ Govt bonds',q:'India government bond yields and RBI monetary policy outlook'},
+  // Sentiment & Forecast
+  {l:'🔮 Market forecast',q:'Stock market forecast for next week India — technical and fundamental'},
+  {l:'😊 Sentiment now',q:'Current market sentiment — Fear & Greed index and FII/DII data'},
+  {l:'📰 Trending stocks',q:'Most trending stocks in India today with social media sentiment'},
+  {l:'🌍 VIX fear index',q:'CBOE VIX volatility index today and what it signals for markets'},
+  // Political & News
+  {l:'🗳️ India politics',q:'Latest India political news and market impact 2026'},
+  {l:'🗳️ US elections',q:'US political developments and impact on global markets 2026'},
+  {l:'🗳️ Japan elections',q:'Japan election news and Nikkei market impact 2026'},
+  {l:'🌏 Geopolitical risk',q:'Top geopolitical risks affecting global markets now'},
+  // Economy
+  {l:'📊 India GDP',q:'India GDP growth rate and economic outlook 2026'},
+  {l:'💵 US Fed rates',q:'US Federal Reserve interest rate decision and market impact'},
+  {l:'📈 India inflation',q:'India CPI inflation and RBI rate outlook 2026'},
+  {l:'🏦 RBI policy',q:'RBI monetary policy latest and impact on Indian stock market'},
+  // Tech & New Products
+  {l:'🚀 Product launches',q:'Major new product launches affecting stocks this week globally'},
+  {l:'🤖 AI industry news',q:'Latest AI industry news — ChatGPT, Gemini, Claude updates and stocks'},
+  {l:'📱 Tech sector',q:'Global technology sector outlook and top tech stocks to watch'},
+  // Gainers / Losers
+  {l:'🏆 Global Gainers',q:'Top gaining stocks globally today — US, India, Asia'},
+  {l:'📉 Global Losers',q:'Biggest losing stocks globally today with analysis'},
+  {l:'⚡ 52-week highs',q:'Stocks hitting 52-week highs in India today'},
+];
+
+function _renderRandomChips() {
+  const el = document.getElementById('rb-quick-chips');
+  if (!el) return;
+  const shuffled = [..._chipPool].sort(() => Math.random() - 0.5).slice(0, 8);
+  el.innerHTML = shuffled.map(c =>
+    `<button class="rb-chip" onclick="rbAiChip(${JSON.stringify(c.q)})">${c.l}</button>`
+  ).join('');
+}
+
 // Init on load
 document.addEventListener('DOMContentLoaded', () => {
   // Always seed the confirmed worker URL — keys are configured, just ensure URL is set
@@ -3944,6 +4106,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initRbResize();
   initSidePanelLinks();
   _initLiveScores();
+  _renderRandomChips();
+  setInterval(_renderRandomChips, 10 * 60 * 1000); // refresh chips every 10 min
 });
 
 // ═══════════════════════════════════════════════════════════════════
@@ -4147,9 +4311,28 @@ function ytSwitchChannel(videoId) {
   }
 }
 
-// ── LIVE SCORES ─────────────────────────────────────────────────────
+// ── LIVE / PAST SCORES ──────────────────────────────────────────────
 let _currentScoreSport = 'cricket';
+let _currentScoreMode  = 'live'; // 'live' | 'past'
 let _scoreRefreshTimer = null;
+
+function switchScoreMainTab(mode) {
+  _currentScoreMode = mode;
+  const liveBtn = document.getElementById('smt-live');
+  const pastBtn = document.getElementById('smt-past');
+  if (liveBtn) {
+    liveBtn.style.borderBottomColor = mode==='live' ? '#1d4ed8' : 'transparent';
+    liveBtn.style.background = mode==='live' ? 'rgba(29,78,216,.12)' : 'transparent';
+    liveBtn.style.color = mode==='live' ? '#60a5fa' : '#475569';
+  }
+  if (pastBtn) {
+    pastBtn.style.borderBottomColor = mode==='past' ? '#1d4ed8' : 'transparent';
+    pastBtn.style.background = mode==='past' ? 'rgba(29,78,216,.12)' : 'transparent';
+    pastBtn.style.color = mode==='past' ? '#60a5fa' : '#475569';
+  }
+  if (mode === 'live') fetchLiveScores(_currentScoreSport);
+  else fetchPastScores(_currentScoreSport);
+}
 
 function switchScoreSport(sport) {
   _currentScoreSport = sport;
@@ -4157,7 +4340,8 @@ function switchScoreSport(sport) {
     const btn = document.getElementById('ssb-' + s);
     if (btn) btn.classList.toggle('active', s === sport);
   });
-  fetchLiveScores(sport);
+  if (_currentScoreMode === 'live') fetchLiveScores(sport);
+  else fetchPastScores(sport);
 }
 
 async function fetchLiveScores(sport) {
@@ -4251,10 +4435,99 @@ async function fetchLiveScores(sport) {
   }
 }
 
+async function fetchPastScores(sport) {
+  const box = document.getElementById('live-scores-content');
+  if (!box) return;
+  box.innerHTML = '<div class="score-no-data">Loading past results…</div>';
+
+  // Past/completed results endpoints — cricket prioritises IPL
+  const pastEndpoints = {
+    cricket: [
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/ipl/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard'
+    ],
+    football: [
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/esp.1/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/ger.1/scoreboard'
+    ],
+    tennis: [
+      'https://site.api.espn.com/apis/site/v2/sports/tennis/atp/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/tennis/wta/scoreboard'
+    ],
+    baseball: ['https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard']
+  };
+
+  const urls = pastEndpoints[sport] || pastEndpoints.cricket;
+  let allEvents = [];
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        const evs = data.events || data.competitions || [];
+        allEvents = allEvents.concat(evs);
+        if (allEvents.length >= 6) break;
+      }
+    } catch(_) {}
+  }
+
+  // Filter only completed (post) games, fall back to all if none
+  const completed = allEvents.filter(ev => {
+    const comp = (ev.competitions || [ev])[0];
+    return (comp?.status?.type?.state || '').toLowerCase() === 'post';
+  });
+  const toShow = (completed.length ? completed : allEvents).slice(0, 12);
+
+  if (!toShow.length) {
+    box.innerHTML = `<div class="score-no-data">No past results available yet.<br/><span style="font-size:9px;color:#1e3a5f">Results appear after matches complete.</span></div>`;
+    return;
+  }
+
+  let html = '';
+  for (const ev of toShow) {
+    const comps = ev.competitions || [ev];
+    for (const comp of comps) {
+      const competitors = comp.competitors || [];
+      const status = comp.status?.type?.shortDetail || comp.status?.type?.description || 'Final';
+      const statusColor = '#94a3b8';
+      let teams = '', venue = '';
+      if (competitors.length >= 2) {
+        const h = competitors.find(c => c.homeAway === 'home') || competitors[0];
+        const a = competitors.find(c => c.homeAway === 'away') || competitors[1];
+        const hName = h.team?.abbreviation || h.team?.shortDisplayName || '?';
+        const aName = a.team?.abbreviation || a.team?.shortDisplayName || '?';
+        const hScore = h.score !== undefined ? h.score : '–';
+        const aScore = a.score !== undefined ? a.score : '–';
+        const winner = Number(hScore) > Number(aScore) ? 'home' : (Number(aScore) > Number(hScore) ? 'away' : '');
+        teams = `<div class="score-card-teams">
+          <span class="score-team-name" style="${winner==='home'?'color:#60a5fa;font-weight:700':''}">${hName}</span>
+          <span class="score-result">${hScore} – ${aScore}</span>
+          <span class="score-team-name" style="text-align:right;${winner==='away'?'color:#60a5fa;font-weight:700':''}">${aName}</span>
+        </div>`;
+      }
+      if (comp.venue?.fullName) venue = `<div class="score-venue">📍 ${comp.venue.fullName}</div>`;
+      const matchName = ev.name || ev.shortName || comp.name || '';
+      html += `<div class="score-card">
+        <div class="score-card-match">${matchName}</div>
+        <div class="score-card-status" style="color:${statusColor}">✅ ${status}</div>
+        ${teams}${venue}
+      </div>`;
+    }
+  }
+  box.innerHTML = html || '<div class="score-no-data">No completed results found.</div>';
+  const ts = document.getElementById('scores-updated');
+  if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+}
+
 function _initLiveScores() {
   fetchLiveScores('cricket');
   if (_scoreRefreshTimer) clearInterval(_scoreRefreshTimer);
-  _scoreRefreshTimer = setInterval(() => fetchLiveScores(_currentScoreSport), 60000);
+  _scoreRefreshTimer = setInterval(() => {
+    if (_currentScoreMode === 'live') fetchLiveScores(_currentScoreSport);
+    else fetchPastScores(_currentScoreSport);
+  }, 60000);
 }
 
 // ── MOBILE RIGHT-BAR DRAWER ─────────────────────────────────────────
