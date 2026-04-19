@@ -1881,12 +1881,6 @@ footer{
       "symbols":[
         {"proName":"CAPITALCOM:NIFTY50","title":"Nifty 50"},
         {"proName":"BSE:SENSEX","title":"Sensex"},
-        {"proName":"CAPITALCOM:BANKNIFTY","title":"Bank Nifty"},
-        {"proName":"BSE:BSEIT","title":"BSE IT"},
-        {"proName":"BSE:BANKEX","title":"BSE Bankex"},
-        {"proName":"BSE:BSEMIDCAP","title":"BSE MidCap"},
-        {"proName":"BSE:BSEFMCG","title":"BSE FMCG"},
-        {"proName":"BSE:BSEHEALTHCARE","title":"BSE Pharma"},
         {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
         {"proName":"FOREXCOM:NSXUSD","title":"Nasdaq"},
         {"proName":"FOREXCOM:DJI","title":"Dow Jones"},
@@ -4747,170 +4741,140 @@ function ytPrevChannel() {
   if (prev >= 0) { sel.selectedIndex = prev; ytSwitchChannel(sel.value); }
 }
 
-// ── DRAGGABLE / RESIZABLE PIP ─────────────────────────────────────────
+// ── PIP — Opens as a real detached popup window (movable to any monitor) ──
 let _ytPipActive = false;
-let _pipW = 300, _pipH = 0; // height auto from aspect
-let _pipDragging = false, _pipResizing = false;
-let _pipOx = 0, _pipOy = 0; // pointer offset within wrapper
+let _ytPipPopup  = null;
+let _ytPipCheckTimer = null;
 
 function ytTogglePIP() {
   if (_ytPipActive) { ytExitPIP(); return; }
-  const wrapper = document.getElementById('yt-video-wrapper');
-  if (!wrapper) return;
-  _ytPipActive = true;
-  _pipW = Math.min(320, Math.round(window.innerWidth * 0.4));
 
-  // Position: bottom-right corner
-  const left = window.innerWidth  - _pipW - 16;
-  const top  = window.innerHeight - Math.round(_pipW * 0.5625) - 120;
-
-  // Move wrapper to document.body so position:fixed is always relative to the viewport
-  // (CSS transforms on ancestor elements can break fixed positioning)
-  wrapper._pipOrigParent = wrapper.parentElement;
-  wrapper._pipOrigNext   = wrapper.nextSibling;
-  document.body.appendChild(wrapper);
-
-  Object.assign(wrapper.style, {
-    position:'fixed', left:left+'px', top:top+'px',
-    width:_pipW+'px', zIndex:'9800',
-    boxShadow:'0 10px 40px rgba(0,0,0,.9)',
-    borderRadius:'10px', border:'2px solid #1d4ed8',
-    overflow:'hidden', flexDirection:'column', display:'flex',
-    transition:'none'
-  });
-  // Show pip header + resize handle
-  const hdr = document.getElementById('yt-pip-header');
-  const rsz = document.getElementById('yt-pip-resize');
-  if (hdr) { hdr.style.display = 'flex'; hdr.addEventListener('mousedown', _pipMouseDown); hdr.addEventListener('touchstart', _pipTouchStart, {passive:false}); }
-  if (rsz) { rsz.style.display = 'block'; rsz.addEventListener('mousedown', _pipResizeDown); rsz.addEventListener('touchstart', _pipResizeTouchStart, {passive:false}); }
-
-  // Update label with current channel
   const sel = document.getElementById('yt-channel-select');
-  const title = document.getElementById('yt-pip-header-title');
-  if (title && sel) title.textContent = '⧉ ' + (sel.options[sel.selectedIndex]?.text?.replace(/^[^ ]+ /,'') || 'Live TV');
+  const videoId   = sel?.value || _ytCurrentId || '25B1JcOMx3I';
+  const chanLabel = (sel?.options[sel.selectedIndex]?.text || 'Live TV').replace(/^[^\s]+ /,'');
 
-  const btn = document.getElementById('yt-pip-btn');
-  if (btn) { btn.title = 'Exit PIP'; btn.style.color = '#fbbf24'; }
-}
+  // Position popup in bottom-right of primary screen
+  const pw = 640, ph = 400;
+  const sl = window.screen.availLeft  || 0;
+  const st = window.screen.availTop   || 0;
+  const sw = window.screen.availWidth  || screen.width;
+  const sh = window.screen.availHeight || screen.height;
+  const pl = sl + sw - pw - 20;
+  const pt = st + sh - ph - 60;
 
-function ytPIPResize() {
-  _pipW = _pipW < 400 ? 480 : 300;
-  const wrapper = document.getElementById('yt-video-wrapper');
-  if (wrapper) wrapper.style.width = _pipW + 'px';
-}
-function ytPIPNextChannel() {
-  const sel = document.getElementById('yt-channel-select');
-  if (!sel) return;
-  const next = sel.selectedIndex < sel.options.length - 1 ? sel.selectedIndex + 1 : 0;
-  sel.selectedIndex = next;
-  ytSwitchChannel(sel.value);
-  const title = document.getElementById('yt-pip-header-title');
-  if (title) title.textContent = '⧉ ' + (sel.options[next]?.text?.replace(/^[^ ]+ /,'') || 'Live TV');
-}
-function ytPIPPrevChannel() {
-  const sel = document.getElementById('yt-channel-select');
-  if (!sel) return;
-  const prev = sel.selectedIndex > 0 ? sel.selectedIndex - 1 : sel.options.length - 1;
-  sel.selectedIndex = prev;
-  ytSwitchChannel(sel.value);
-  const title = document.getElementById('yt-pip-header-title');
-  if (title) title.textContent = '⧉ ' + (sel.options[prev]?.text?.replace(/^[^ ]+ /,'') || 'Live TV');
-}
+  const popup = window.open('',
+    'viltv_pip_window',
+    `width=${pw},height=${ph},left=${pl},top=${pt},resizable=yes,scrollbars=no,` +
+    `toolbar=no,menubar=no,location=no,status=no`
+  );
 
-function ytExitPIP() {
-  _ytPipActive = false;
-  const wrapper = document.getElementById('yt-video-wrapper');
-  if (!wrapper) return;
-  // Restore wrapper to original DOM position before clearing styles
-  if (wrapper._pipOrigParent) {
-    if (wrapper._pipOrigNext && wrapper._pipOrigNext.parentNode === wrapper._pipOrigParent) {
-      wrapper._pipOrigParent.insertBefore(wrapper, wrapper._pipOrigNext);
-    } else {
-      wrapper._pipOrigParent.appendChild(wrapper);
-    }
-    wrapper._pipOrigParent = null;
-    wrapper._pipOrigNext   = null;
+  if (!popup || popup.closed) {
+    alert('⚠️ Pop-up blocked!\n\nPlease allow pop-ups for this site in your browser settings, then try again.');
+    return;
   }
-  // Restore inline styles
-  ['position','left','top','width','zIndex','boxShadow','borderRadius','border','overflow','flexDirection','display','transition'].forEach(p => wrapper.style[p] = '');
-  const hdr = document.getElementById('yt-pip-header');
-  const rsz = document.getElementById('yt-pip-resize');
-  if (hdr) { hdr.style.display = 'none'; hdr.removeEventListener('mousedown', _pipMouseDown); hdr.removeEventListener('touchstart', _pipTouchStart); }
-  if (rsz) { rsz.style.display = 'none'; rsz.removeEventListener('mousedown', _pipResizeDown); rsz.removeEventListener('touchstart', _pipResizeTouchStart); }
+
+  _ytPipActive = true;
+  _ytPipPopup  = popup;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>${chanLabel} — VilfinTV PIP</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#000;display:flex;flex-direction:column;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+#hdr{background:#050a14;padding:5px 10px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #1d4ed8;flex-shrink:0;-webkit-app-region:drag;user-select:none}
+#title{color:#60a5fa;font-size:11px;font-weight:700;letter-spacing:.4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%}
+#btns{display:flex;gap:5px;flex-shrink:0;-webkit-app-region:no-drag}
+button{padding:4px 10px;border:none;border-radius:5px;cursor:pointer;font-size:11px;font-weight:700;background:rgba(255,255,255,.12);color:#fff;transition:background .15s}
+button:hover{background:rgba(255,255,255,.28)}
+#close-btn{background:#dc2626}
+#close-btn:hover{background:#b91c1c}
+#wrap{flex:1;position:relative}
+iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+</style>
+</head>
+<body>
+<div id="hdr">
+  <span id="title">⧉ ${chanLabel}</span>
+  <div id="btns">
+    <button id="prev-btn" title="Previous channel">◀</button>
+    <button id="next-btn" title="Next channel">▶</button>
+    <button id="close-btn" onclick="window.close()">✕ Close</button>
+  </div>
+</div>
+<div id="wrap">
+  <iframe id="yt-frame"
+    src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=1&rel=0&modestbranding=1"
+    allow="autoplay; fullscreen" allowfullscreen></iframe>
+</div>
+<script>
+// Channel list injected from parent
+var channels = ${JSON.stringify(_ytPipBuildChannelList())};
+var idx = channels.findIndex(c => c.id === '${videoId}');
+if (idx < 0) idx = 0;
+
+function switchTo(i) {
+  idx = (i + channels.length) % channels.length;
+  var c = channels[idx];
+  document.getElementById('yt-frame').src =
+    'https://www.youtube.com/embed/' + c.id + '?autoplay=1&mute=0&controls=1&rel=0&modestbranding=1';
+  document.getElementById('title').textContent = '⧉ ' + c.name;
+}
+document.getElementById('prev-btn').onclick = function(){ switchTo(idx - 1); };
+document.getElementById('next-btn').onclick = function(){ switchTo(idx + 1); };
+<\/script>
+</body>
+</html>`;
+
+  popup.document.open();
+  popup.document.write(html);
+  popup.document.close();
+
+  // Update main page PIP button
+  const btn = document.getElementById('yt-pip-btn');
+  if (btn) { btn.title = 'Close PIP Window'; btn.style.color = '#fbbf24'; }
+
+  // Watch for popup being closed by the user
+  _ytPipCheckTimer = setInterval(() => {
+    if (popup.closed) { _pipPopupClosed(); }
+  }, 800);
+}
+
+function _ytPipBuildChannelList() {
+  const sel = document.getElementById('yt-channel-select');
+  if (!sel) return [];
+  return [...sel.options]
+    .filter(o => o.value)
+    .map(o => ({ id: o.value, name: o.text.replace(/^[^\s]+ /,'') }));
+}
+
+function _pipPopupClosed() {
+  clearInterval(_ytPipCheckTimer);
+  _ytPipActive = false;
+  _ytPipPopup  = null;
   const btn = document.getElementById('yt-pip-btn');
   if (btn) { btn.title = 'Picture in Picture'; btn.style.color = ''; }
 }
 
-// Drag handlers
-function _pipGetWrapper() { return document.getElementById('yt-video-wrapper'); }
-function _pipClamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+function ytExitPIP() {
+  if (_ytPipPopup && !_ytPipPopup.closed) { _ytPipPopup.close(); }
+  _pipPopupClosed();
+}
 
-function _pipMouseDown(e) {
-  if (e.target.closest('.yt-pip-hbtn')) return;
-  e.preventDefault();
-  const w = _pipGetWrapper();
-  const r = w.getBoundingClientRect();
-  _pipOx = e.clientX - r.left; _pipOy = e.clientY - r.top;
-  _pipDragging = true;
-  document.addEventListener('mousemove', _pipMouseMove);
-  document.addEventListener('mouseup',   _pipMouseUp);
+// Stubs kept so any remaining HTML references don't throw
+function ytPIPResize(){}
+function ytPIPNextChannel(){
+  if (_ytPipPopup && !_ytPipPopup.closed) {
+    try { _ytPipPopup.document.getElementById('next-btn')?.click(); } catch(_) {}
+  }
 }
-function _pipMouseMove(e) {
-  if (!_pipDragging) return;
-  const w = _pipGetWrapper();
-  // Allow dragging anywhere — no clamping so user can move outside browser viewport
-  w.style.left = (e.clientX - _pipOx) + 'px';
-  w.style.top  = (e.clientY - _pipOy) + 'px';
+function ytPIPPrevChannel(){
+  if (_ytPipPopup && !_ytPipPopup.closed) {
+    try { _ytPipPopup.document.getElementById('prev-btn')?.click(); } catch(_) {}
+  }
 }
-function _pipMouseUp() { _pipDragging = false; document.removeEventListener('mousemove', _pipMouseMove); document.removeEventListener('mouseup', _pipMouseUp); }
-
-function _pipTouchStart(e) {
-  if (e.target.closest('.yt-pip-hbtn')) return;
-  e.preventDefault();
-  const t = e.touches[0]; const w = _pipGetWrapper(); const r = w.getBoundingClientRect();
-  _pipOx = t.clientX - r.left; _pipOy = t.clientY - r.top;
-  _pipDragging = true;
-  document.addEventListener('touchmove', _pipTouchMove, {passive:false});
-  document.addEventListener('touchend',  _pipTouchEnd);
-}
-function _pipTouchMove(e) {
-  if (!_pipDragging) return; e.preventDefault();
-  const t = e.touches[0]; const w = _pipGetWrapper();
-  w.style.left = (t.clientX - _pipOx) + 'px';
-  w.style.top  = (t.clientY - _pipOy) + 'px';
-}
-function _pipTouchEnd() { _pipDragging = false; document.removeEventListener('touchmove', _pipTouchMove); document.removeEventListener('touchend', _pipTouchEnd); }
-
-// Resize handlers
-function _pipResizeDown(e) {
-  e.preventDefault(); _pipResizing = true;
-  const w = _pipGetWrapper(); const r = w.getBoundingClientRect();
-  _pipOx = e.clientX; _pipOy = e.clientY; _pipW = r.width;
-  document.addEventListener('mousemove', _pipResizeMove);
-  document.addEventListener('mouseup',   _pipResizeUp);
-}
-function _pipResizeMove(e) {
-  if (!_pipResizing) return;
-  const w = _pipGetWrapper();
-  const newW = _pipClamp(_pipW + (e.clientX - _pipOx), 200, 600);
-  w.style.width = newW + 'px'; _pipW = newW;
-}
-function _pipResizeUp() { _pipResizing = false; document.removeEventListener('mousemove', _pipResizeMove); document.removeEventListener('mouseup', _pipResizeUp); }
-
-function _pipResizeTouchStart(e) {
-  e.preventDefault(); _pipResizing = true;
-  const t = e.touches[0]; const w = _pipGetWrapper();
-  _pipOx = t.clientX; _pipW = w.offsetWidth;
-  document.addEventListener('touchmove', _pipResizeTouchMove, {passive:false});
-  document.addEventListener('touchend',  _pipResizeTouchEnd);
-}
-function _pipResizeTouchMove(e) {
-  if (!_pipResizing) return; e.preventDefault();
-  const t = e.touches[0]; const w = _pipGetWrapper();
-  const newW = _pipClamp(_pipW + (t.clientX - _pipOx), 200, Math.min(600, window.innerWidth));
-  w.style.width = newW + 'px'; _pipW = newW;
-}
-function _pipResizeTouchEnd() { _pipResizing = false; document.removeEventListener('touchmove', _pipResizeTouchMove); document.removeEventListener('touchend', _pipResizeTouchEnd); }
 
 async function ytSelectAudio() {
   // Try native browser selectAudioOutput (Chrome/Edge with permission)
