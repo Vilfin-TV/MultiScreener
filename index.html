@@ -2641,7 +2641,7 @@ footer{
   <div id="rb-panel-video" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
     <!-- Channel selector -->
     <div style="padding:6px 8px 5px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
-      <select id="yt-channel-select" onchange="ytSwitchChannel(this.value)" style="width:100%;padding:7px 10px;background:#0f1d35;color:#e2e8f0;border:1px solid #1e3a5f;border-radius:9px;font-size:11px;font-family:inherit;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22 viewBox=%220 0 10 6%22><path d=%22M0 0l5 6 5-6z%22 fill=%22%2364748b%22/></svg>');background-repeat:no-repeat;background-position:right 10px center;padding-right:28px">
+      <select id="yt-channel-select" onchange="ytSwitchChannel(this.value); (() => { const chk=document.getElementById('yt-default-ch-chk'); if(chk?.checked) try{localStorage.setItem('viltv_default_channel',this.value)}catch(e){} })()" style="width:100%;padding:7px 10px;background:#0f1d35;color:#e2e8f0;border:1px solid #1e3a5f;border-radius:9px;font-size:11px;font-family:inherit;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22 viewBox=%220 0 10 6%22><path d=%22M0 0l5 6 5-6z%22 fill=%22%2364748b%22/></svg>');background-repeat:no-repeat;background-position:right 10px center;padding-right:28px">
         <optgroup label="📊 India — Business &amp; Markets">
           <option value="25B1JcOMx3I" selected>💹 NDTV Profit</option>
           <option value="bSdfGABTVGQ">📈 CNBC TV18</option>
@@ -2723,6 +2723,11 @@ footer{
         </optgroup>
       </select>
     </div>
+    <!-- Default channel persistence -->
+    <div style="padding:3px 10px 4px;background:#080e1a;display:flex;align-items:center;gap:7px;flex-shrink:0;border-bottom:1px solid #0d1a30">
+      <input type="checkbox" id="yt-default-ch-chk" onchange="ytToggleDefaultChannel()" style="width:13px;height:13px;accent-color:#2563eb;cursor:pointer;flex-shrink:0"/>
+      <label for="yt-default-ch-chk" style="font-size:10px;color:#64748b;cursor:pointer;user-select:none">📌 Set as default channel on startup</label>
+    </div>
 
     <!-- YouTube player — exact 16:9, zero black bars -->
     <div id="yt-video-wrapper" style="width:100%;flex-shrink:0;position:relative;background:#000;overflow:hidden">
@@ -2732,10 +2737,12 @@ footer{
       </div>
       <!-- PIP drag header (shown only in PIP mode via JS) -->
       <div id="yt-pip-header">
-        <span id="yt-pip-header-title">⧉ PIP — drag to move</span>
+        <span id="yt-pip-header-title">⧉ PIP</span>
         <div id="yt-pip-header-btns">
+          <button class="yt-pip-hbtn" onclick="ytPIPPrevChannel()" title="Previous channel">◀</button>
+          <button class="yt-pip-hbtn" onclick="ytPIPNextChannel()" title="Next channel">▶</button>
           <button class="yt-pip-hbtn" onclick="ytPIPResize()" title="Toggle size">⊞</button>
-          <button class="yt-pip-hbtn" id="yt-pip-close" onclick="ytExitPIP()" title="Close PIP">✕</button>
+          <button class="yt-pip-hbtn" id="yt-pip-close" onclick="ytExitPIP()" title="Close PIP" style="background:#dc2626;color:#fff;font-weight:700">✕</button>
         </div>
       </div>
       <!-- Resize handle -->
@@ -3099,14 +3106,11 @@ footer{
       Enter your AI Service URL below. Once connected, your API key is used automatically. The URL is saved locally in your browser only — never uploaded to GitHub or any server.<br/>
       <a href="user_manual.html" target="_blank" style="color:var(--gold2);font-size:11px;display:inline-block;margin-top:6px">📖 How to set up? Step-by-step guide →</a>
     </div>
-    <label for="cf-url-input">Cloudflare Workers URL <span style="color:#64748b;font-weight:400;text-transform:none">(optional — leave blank to use Gemini key directly)</span></label>
+    <label for="cf-url-input">Cloudflare Workers URL</label>
     <input type="url" id="cf-url-input" placeholder="https://your-worker.workers.dev"
       autocomplete="off" spellcheck="false"/>
-    <label for="cf-gemini-key-input" style="margin-top:14px">Gemini API Key <span style="color:#64748b;font-weight:400;text-transform:none">(from <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#fbbf24">aistudio.google.com</a>)</span></label>
-    <input type="password" id="cf-gemini-key-input" placeholder="AIza…"
-      autocomplete="off" spellcheck="false"/>
     <div class="cf-modal-btns">
-      <button class="cf-connect-btn" onclick="cfDoConnect()">🔗 Save &amp; Connect</button>
+      <button class="cf-connect-btn" onclick="cfDoConnect()">🔗 Connect</button>
       <button class="cf-cancel-btn" onclick="cfCloseModal()">Cancel</button>
     </div>
     <div class="cf-status-msg" id="cf-status-msg"></div>
@@ -3663,9 +3667,7 @@ function cfLoadSaved() {
 function cfConnect() {
   closeAllMenus();
   const saved = localStorage.getItem(CF_KEY);
-  if (saved && saved !== 'direct-gemini') document.getElementById('cf-url-input').value = saved;
-  const savedKey = localStorage.getItem('viltv_gemini_key');
-  if (savedKey) document.getElementById('cf-gemini-key-input').value = savedKey;
+  if (saved) document.getElementById('cf-url-input').value = saved;
   document.getElementById('cf-status-msg').textContent = '';
   document.getElementById('cf-modal-overlay').classList.add('show');
 }
@@ -3684,34 +3686,11 @@ function cfModalOverlayClick(e) {
 
 async function cfDoConnect() {
   const url = (document.getElementById('cf-url-input')?.value || '').trim().replace(/\/+$/, '');
-  const geminiKey = (document.getElementById('cf-gemini-key-input')?.value || '').trim();
-  const msg = document.getElementById('cf-status-msg');
-
-  // Save Gemini key if provided
-  if (geminiKey) {
-    try { localStorage.setItem('viltv_gemini_key', geminiKey); } catch(e) {}
-    window._geminiApiKey = geminiKey;
-  }
-
-  // If no worker URL but Gemini key given — connect via direct Gemini API
-  if (!url && geminiKey) {
-    msg.textContent = '⏳ Verifying Gemini key…';
-    try {
-      const testRes = await _callGeminiDirect('Say "OK"', geminiKey, 'gemini-2.0-flash');
-      msg.textContent = '✅ Gemini API key verified!';
-      setCFConnected('direct-gemini');
-      setTimeout(() => { cfCloseModal(); if (window._pendingAutoSend) { window._pendingAutoSend = false; autoSendToGemini(); } }, 1200);
-    } catch(e) {
-      msg.textContent = '❌ Gemini key error: ' + (e.message || 'Invalid key');
-    }
-    return;
-  }
-
   if (!url) {
-    msg.textContent = '⚠️ Enter a Worker URL or a Gemini API key.';
+    document.getElementById('cf-status-msg').textContent = '⚠️ Please enter a valid Worker URL.';
     return;
   }
-
+  const msg = document.getElementById('cf-status-msg');
   msg.textContent = '⏳ Connecting…';
   document.getElementById('cf-dot').className = 'cf-dot connecting';
   try {
@@ -3951,7 +3930,7 @@ async function autoSendToGemini() {
     const endpoints = ['/query', '/ask', '/chat', '/generate'];
     for (const ep of endpoints) {
       try {
-        const body = { prompt: queryText, use_search: true };
+        const body = { prompt: queryText, model: selectedModel, use_search: true };
         if (partialSoFar) body.partial = partialSoFar;
         const res = await fetch(finalUrl + ep, {
           method: 'POST',
@@ -4210,10 +4189,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const _WORKER = 'https://x9-k2-p20-worker.vilfintv.workers.dev';
   try { localStorage.setItem('viltv_cf_worker_url', _WORKER); } catch(e) {}
   window._cfWorkerUrl = _WORKER;          // set in-memory immediately (no async delay)
-  // Load Gemini API key from localStorage into memory
-  const _savedGemKey = localStorage.getItem('viltv_gemini_key');
-  if (_savedGemKey) window._geminiApiKey = _savedGemKey;
   cfLoadSaved();
+  // Restore default channel
+  (() => {
+    const defaultCh = localStorage.getItem('viltv_default_channel');
+    if (!defaultCh) return;
+    const sel = document.getElementById('yt-channel-select');
+    if (!sel) return;
+    const opt = [...sel.options].find(o => o.value === defaultCh);
+    if (opt) {
+      sel.value = defaultCh;
+      ytSwitchChannel(defaultCh);
+    }
+    // Also check the checkbox
+    const chk = document.getElementById('yt-default-ch-chk');
+    if (chk) chk.checked = true;
+  })();
   initLiveNews();
   initLiveClock();
   initRbResize();
@@ -4406,6 +4397,15 @@ function ytHideGeoError() {
   if (bar) bar.style.display = 'none';
 }
 
+function ytToggleDefaultChannel() {
+  const chk = document.getElementById('yt-default-ch-chk');
+  const sel = document.getElementById('yt-channel-select');
+  if (chk?.checked && sel) {
+    try { localStorage.setItem('viltv_default_channel', sel.value); } catch(e) {}
+  } else {
+    try { localStorage.removeItem('viltv_default_channel'); } catch(e) {}
+  }
+}
 function ytSwitchChannel(videoId) {
   if (!videoId) return;
   _ytCurrentId = videoId;
@@ -4512,10 +4512,27 @@ function ytTogglePIP() {
 }
 
 function ytPIPResize() {
-  // Toggle between small (300px) and large (480px)
   _pipW = _pipW < 400 ? 480 : 300;
   const wrapper = document.getElementById('yt-video-wrapper');
   if (wrapper) wrapper.style.width = _pipW + 'px';
+}
+function ytPIPNextChannel() {
+  const sel = document.getElementById('yt-channel-select');
+  if (!sel) return;
+  const next = sel.selectedIndex < sel.options.length - 1 ? sel.selectedIndex + 1 : 0;
+  sel.selectedIndex = next;
+  ytSwitchChannel(sel.value);
+  const title = document.getElementById('yt-pip-header-title');
+  if (title) title.textContent = '⧉ ' + (sel.options[next]?.text?.replace(/^[^ ]+ /,'') || 'Live TV');
+}
+function ytPIPPrevChannel() {
+  const sel = document.getElementById('yt-channel-select');
+  if (!sel) return;
+  const prev = sel.selectedIndex > 0 ? sel.selectedIndex - 1 : sel.options.length - 1;
+  sel.selectedIndex = prev;
+  ytSwitchChannel(sel.value);
+  const title = document.getElementById('yt-pip-header-title');
+  if (title) title.textContent = '⧉ ' + (sel.options[prev]?.text?.replace(/^[^ ]+ /,'') || 'Live TV');
 }
 
 function ytExitPIP() {
@@ -4549,8 +4566,9 @@ function _pipMouseDown(e) {
 function _pipMouseMove(e) {
   if (!_pipDragging) return;
   const w = _pipGetWrapper();
-  w.style.left = _pipClamp(e.clientX - _pipOx, 0, window.innerWidth  - w.offsetWidth)  + 'px';
-  w.style.top  = _pipClamp(e.clientY - _pipOy, 0, window.innerHeight - w.offsetHeight) + 'px';
+  // Allow dragging anywhere — no clamping so user can move outside browser viewport
+  w.style.left = (e.clientX - _pipOx) + 'px';
+  w.style.top  = (e.clientY - _pipOy) + 'px';
 }
 function _pipMouseUp() { _pipDragging = false; document.removeEventListener('mousemove', _pipMouseMove); document.removeEventListener('mouseup', _pipMouseUp); }
 
@@ -4566,8 +4584,8 @@ function _pipTouchStart(e) {
 function _pipTouchMove(e) {
   if (!_pipDragging) return; e.preventDefault();
   const t = e.touches[0]; const w = _pipGetWrapper();
-  w.style.left = _pipClamp(t.clientX - _pipOx, 0, window.innerWidth  - w.offsetWidth)  + 'px';
-  w.style.top  = _pipClamp(t.clientY - _pipOy, 0, window.innerHeight - w.offsetHeight) + 'px';
+  w.style.left = (t.clientX - _pipOx) + 'px';
+  w.style.top  = (t.clientY - _pipOy) + 'px';
 }
 function _pipTouchEnd() { _pipDragging = false; document.removeEventListener('touchmove', _pipTouchMove); document.removeEventListener('touchend', _pipTouchEnd); }
 
@@ -5119,29 +5137,6 @@ function closeMobileRightBar() {
   document.getElementById('mobile-tv-btn')?.classList.remove('active');
 }
 
-// ── Direct Gemini API call (bypasses Cloudflare Worker) ──────────────────────
-async function _callGeminiDirect(prompt, apiKey, model) {
-  const m = model || localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
-  const key = apiKey || window._geminiApiKey || localStorage.getItem('viltv_gemini_key') || '';
-  if (!key) throw new Error('No Gemini API key configured. Go to File → Connect AI and add your key from aistudio.google.com');
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`;
-  const body = {
-    contents: [{ parts: [{ text: prompt }] }],
-    tools: [{ googleSearch: {} }],
-    generationConfig: { maxOutputTokens: 8192, temperature: 1.0 }
-  };
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(60000)
-  });
-  const j = await res.json();
-  if (j.error) throw new Error(j.error.message || JSON.stringify(j.error));
-  const text = (j.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
-  if (!text) throw new Error('Empty response from Gemini');
-  return text;
-}
 
 function rbAiChip(text) {
   document.getElementById('rb-quick-chips')?.remove();
@@ -5157,131 +5152,96 @@ async function rbAiSend() {
   const q = input?.value?.trim();
   if (!q) return;
 
-  // Cancel previous stream
+  const _HW = 'https://x9-k2-p20-worker.vilfintv.workers.dev';
+  const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY) || _HW;
+  if (!window._cfWorkerUrl) { window._cfWorkerUrl = _HW; try{ localStorage.setItem(CF_KEY,_HW); }catch(e){} setCFConnected(_HW); }
+
   if (_rbStreamAbort) { _rbStreamAbort.abort(); }
   _rbStreamAbort = new AbortController();
 
-  // Show user message
   rbAiAppendMessage(q, 'user');
   input.value = '';
   input.style.height = '';
   if (sendBtn) sendBtn.disabled = true;
   if (typingEl) typingEl.style.display = 'block';
 
-  // Create bot message container
   const msgId = rbAiAppendMessage('', 'bot');
   const msgEl = document.getElementById(msgId);
   if (msgEl) msgEl.textContent = '';
 
-  let accumulated = '';
-
-  // ── Priority 1: Direct Gemini API (if key is configured) ──────────────────
-  const geminiKey = window._geminiApiKey || localStorage.getItem('viltv_gemini_key') || '';
-  if (geminiKey) {
-    try {
-      if (typingEl) typingEl.style.display = 'none';
-      if (statusEl) statusEl.textContent = 'Thinking…';
-      accumulated = await _callGeminiDirect(q, geminiKey);
-      if (msgEl) msgEl.textContent = accumulated;
-      if (statusEl) statusEl.textContent = '✅ Response received';
-      document.getElementById('rb-ai-messages').scrollTop = 99999;
-    } catch(e) {
-      if (e.name !== 'AbortError') {
-        if (msgEl) msgEl.textContent = '❌ ' + (e.message || 'Gemini API error');
-        if (statusEl) statusEl.textContent = '⚠️ ' + e.message;
-      }
-    } finally {
-      if (sendBtn) sendBtn.disabled = false;
-      if (typingEl) typingEl.style.display = 'none';
-    }
-    return;
-  }
-
-  // ── Priority 2: Cloudflare Worker ─────────────────────────────────────────
-  const _HW = 'https://x9-k2-p20-worker.vilfintv.workers.dev';
-  const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY) || _HW;
-  if (!window._cfWorkerUrl) { window._cfWorkerUrl = _HW; try{ localStorage.setItem(CF_KEY,_HW); }catch(e){} setCFConnected(_HW); }
-
   const finalUrl = workerUrl.replace(/\/+$/, '');
   const model = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
+  let accumulated = '';
 
   try {
-    const res = await fetch(finalUrl + '/query-stream', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: q, use_search: true, model }),
-      signal: _rbStreamAbort.signal
-    });
-
-    if (res.ok && res.body) {
-      const reader = res.body.getReader();
-      const dec = new TextDecoder();
-      let buf = '';
-      if (typingEl) typingEl.style.display = 'none';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        const lines = buf.split('\n');
-        buf = lines.pop() || '';
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          let evt; try { evt = JSON.parse(line.slice(6)); } catch { continue; }
-          if (evt.error) throw new Error(evt.error);
-          if (evt.chunk) {
-            accumulated += evt.chunk;
-            if (msgEl) {
-              msgEl.textContent = accumulated;
-              document.getElementById('rb-ai-messages').scrollTop = 99999;
+    // Try streaming first
+    let streamOk = false;
+    try {
+      const res = await fetch(finalUrl + '/query-stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: q, model, use_search: true }),
+        signal: _rbStreamAbort.signal
+      });
+      if (res.ok && res.body) {
+        const reader = res.body.getReader();
+        const dec = new TextDecoder();
+        let buf = '';
+        if (typingEl) typingEl.style.display = 'none';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          const lines = buf.split('\n'); buf = lines.pop() || '';
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            let evt; try { evt = JSON.parse(line.slice(6)); } catch { continue; }
+            if (evt.error) throw new Error(evt.error);
+            if (evt.chunk) {
+              accumulated += evt.chunk;
+              if (msgEl) { msgEl.textContent = accumulated; document.getElementById('rb-ai-messages').scrollTop = 99999; }
             }
+            if (evt.done) { streamOk = true; break; }
           }
-          if (evt.done) break;
+          if (streamOk) break;
         }
+        if (accumulated.length > 20) streamOk = true;
       }
-      if (!accumulated) throw new Error('Worker returned empty response. Check that your Gemini API key is set in the Worker, or add your key directly in File → Connect AI.');
-    } else {
-      // Fallback — try multiple endpoint names, track real errors
+    } catch(streamErr) {
+      if (streamErr.name === 'AbortError') throw streamErr;
+      // Stream failed — fall through to non-stream
+    }
+
+    // Non-streaming fallback: /query → /ask → /chat → /generate
+    if (!streamOk) {
       if (typingEl) typingEl.style.display = 'none';
-      const rbEndpoints = ['/query', '/ask', '/chat', '/generate'];
-      let lastRealError = null;
-      let answered = false;
-      for (const ep of rbEndpoints) {
+      const endpoints = ['/query', '/ask', '/chat', '/generate'];
+      let lastErr = null;
+      for (const ep of endpoints) {
         try {
           const r = await fetch(finalUrl + ep, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: q, use_search: true }),
+            body: JSON.stringify({ prompt: q, model, use_search: true }),
             signal: AbortSignal.timeout(90000)
           });
-          if (!r.ok && r.status === 404) continue; // endpoint doesn't exist, try next
-          const rawText = await r.text();
-          let d; try { d = JSON.parse(rawText); } catch(_) { d = { result: rawText }; }
-          if (d.error) {
-            // Record real error but keep trying other endpoints
-            lastRealError = typeof d.error === 'string' ? d.error : (d.error.message || JSON.stringify(d.error));
-            continue;
-          }
-          accumulated = d.result || d.answer || d.response || d.text || rawText || '';
-          if (accumulated) { if (msgEl) msgEl.textContent = accumulated; answered = true; break; }
-        } catch(epErr) {
-          if (epErr.name === 'AbortError') throw epErr;
-          lastRealError = epErr.message;
-        }
+          if (!r.ok && r.status === 404) continue;
+          const txt = await r.text();
+          let d; try { d = JSON.parse(txt); } catch(_) { d = { result: txt }; }
+          if (d.error) { lastErr = typeof d.error === 'string' ? d.error : (d.error.message || JSON.stringify(d.error)); continue; }
+          accumulated = d.result || d.answer || d.response || d.text || txt || '';
+          if (accumulated) { if (msgEl) msgEl.textContent = accumulated; break; }
+        } catch(epErr) { if (epErr.name === 'AbortError') throw epErr; lastErr = epErr.message; }
       }
-      if (!answered) {
-        const errMsg = lastRealError
-          ? lastRealError + '\n\n💡 Tip: Add your Gemini API key in File → Connect AI to use AI directly.'
-          : 'No AI endpoint responded. Add your Gemini API key in File → Connect AI.';
-        throw new Error(errMsg);
-      }
+      if (!accumulated) throw new Error(lastErr || 'No response from worker. Check your Cloudflare Worker configuration.');
     }
+
     if (statusEl) statusEl.textContent = '✅ Response received';
   } catch(e) {
     if (typingEl) typingEl.style.display = 'none';
     if (e.name !== 'AbortError') {
-      if (msgEl) msgEl.textContent = '❌ ' + (e.message || 'Connection error. Please try again.');
-      if (statusEl) statusEl.textContent = '⚠️ ' + e.message;
+      if (msgEl) msgEl.textContent = '❌ ' + (e.message || 'Connection error.');
+      if (statusEl) statusEl.textContent = '⚠️ ' + (e.message || 'Error');
     }
   } finally {
     if (sendBtn) sendBtn.disabled = false;
