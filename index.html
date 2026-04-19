@@ -1167,20 +1167,29 @@ footer{
   -webkit-appearance:none;width:12px;height:12px;border-radius:50%;
   background:#60a5fa;border:2px solid #1d4ed8;cursor:pointer;
 }
-/* CSS PIP mode — float video in bottom-right corner */
-#yt-video-wrapper.yt-pip-mode{
-  position:fixed!important;bottom:80px!important;right:14px!important;
-  width:260px!important;z-index:9800!important;
-  box-shadow:0 8px 32px rgba(0,0,0,.85)!important;
-  border-radius:10px!important;border:2px solid #1d4ed8!important;
-  overflow:hidden!important;
+/* PIP mode — controlled entirely by JS inline styles; CSS just sets pip-header styles */
+#yt-pip-header{
+  display:none;align-items:center;justify-content:space-between;
+  padding:5px 8px;background:#050a14;cursor:grab;user-select:none;
+  border-bottom:1px solid #1d4ed8;flex-shrink:0;touch-action:none;
 }
-#yt-pip-close{
-  display:none;position:absolute;top:6px;right:6px;z-index:9801;
-  background:rgba(0,0,0,.7);border:none;color:#fff;border-radius:50%;
-  width:22px;height:22px;font-size:13px;cursor:pointer;line-height:1;
+#yt-pip-header:active{cursor:grabbing}
+#yt-pip-header-title{font-size:10px;font-weight:700;color:#60a5fa;letter-spacing:.4px}
+#yt-pip-header-btns{display:flex;gap:4px}
+.yt-pip-hbtn{
+  width:20px;height:20px;border-radius:4px;border:none;
+  background:rgba(255,255,255,.1);color:#fff;font-size:11px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
 }
-#yt-video-wrapper.yt-pip-mode #yt-pip-close{display:flex;align-items:center;justify-content:center}
+.yt-pip-hbtn:hover{background:rgba(255,255,255,.25)}
+#yt-pip-close{display:none}
+/* Resize handle in PIP mode */
+#yt-pip-resize{
+  display:none;position:absolute;bottom:0;right:0;
+  width:16px;height:16px;cursor:nwse-resize;z-index:9810;
+  background:linear-gradient(135deg,transparent 50%,#2563eb 50%);
+  border-radius:0 0 8px 0;
+}
 
 /* ── UI THEME v8.6.16 — override legacy gold/orange to blue/navy ── */
 .sp-broker-name{color:#93c5fd}
@@ -1856,17 +1865,17 @@ footer{
         {"proName":"CAPITALCOM:NIFTY50","title":"Nifty 50"},
         {"proName":"CAPITALCOM:SENSEX","title":"Sensex"},
         {"proName":"CAPITALCOM:BANKNIFTY","title":"Bank Nifty"},
-        {"proName":"NSE:CNXFINANCE","title":"CNX Finance"},
-        {"proName":"NSE:CNXIT","title":"CNX IT"},
-        {"proName":"NSE:CNXMETAL","title":"CNX Metal"},
-        {"proName":"NSE:NIFTYSMLCAP250","title":"Nifty SmallCap"},
-        {"proName":"NSE:CNX500","title":"CNX 500"},
+        {"proName":"CAPITALCOM:NIFTY_IT","title":"Nifty IT"},
+        {"proName":"CAPITALCOM:NIFTY_BANK","title":"Nifty Bank"},
+        {"proName":"CAPITALCOM:NIFTY_MIDCAP_100","title":"Nifty MidCap"},
+        {"proName":"CAPITALCOM:NIFTY_FMCG","title":"Nifty FMCG"},
+        {"proName":"CAPITALCOM:NIFTY_PHARMA","title":"Nifty Pharma"},
         {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
         {"proName":"FOREXCOM:NSXUSD","title":"Nasdaq"},
         {"proName":"FOREXCOM:DJI","title":"Dow Jones"},
         {"proName":"SPREADEX:NIKKEI","title":"Nikkei"},
-        {"proName":"HKEX:HSI1!","title":"Hang Seng"},
-        {"proName":"KRX:K2I1!","title":"KOSPI"},
+        {"proName":"TVC:HSI","title":"Hang Seng"},
+        {"proName":"TVC:KOSPI","title":"KOSPI"},
         {"proName":"ICMARKETS:STOXX50","title":"STOXX 50"},
         {"proName":"BMFBOVESPA:IBOV","title":"BOVESPA"},
         {"proName":"FX:EURUSD","title":"EUR/USD"},
@@ -2641,7 +2650,7 @@ footer{
         </optgroup>
         <optgroup label="🇮🇳 India — National News">
           <option value="b0dA-oXKR9Y">🔴 Republic World</option>
-          <option value="jeE-ZJqweBQ">📡 NDTV 24x7</option>
+          <option value="Zga_5DvpL4U">📡 NDTV 24x7</option>
           <option value="MX-iD1xdCJw">🗞 Times of India</option>
           <option value="e1FIApIafWE">📺 India TV News</option>
           <option value="nyd-xznCpJc">📻 ABP News</option>
@@ -2656,11 +2665,11 @@ footer{
           <option value="tgBTspqA5nY">📰 Manorama News</option>
           <option value="TfGaLCW472s">🎙 Mathrubhumi News</option>
           <option value="nObUcHKZEGY">📻 Reporter Live</option>
-          <option value="korhrBAtJro">📡 News18 Kerala</option>
+          <option value="WP_Z9GqBYqs">📡 News18 Kerala</option>
           <option value="QOPUc-ryjLs">📺 MediaoneTV Live</option>
         </optgroup>
         <optgroup label="🌏 India — Regional (Tamil / Telugu / Kannada)">
-          <option value="NTwbvJDRtPs">📺 Polimer News (Tamil)</option>
+          <option value="JAAGOvje00M">📺 Polimer News (Tamil)</option>
           <option value="gynWNinqmjw">🎙 NewsTamil 24X7</option>
           <option value="8STB00X3wNM">📡 Sun News (Tamil)</option>
           <option value="bGq1yWUTnm8">📻 T News Telugu</option>
@@ -2670,6 +2679,9 @@ footer{
         <optgroup label="🌏 South Asia">
           <option value="Tmd0TGNM3U8">🇧🇩 SOMOY TV (Bangladesh)</option>
           <option value="o7rnD1x7NQU">🇧🇩 Jamuna TV (Bangladesh)</option>
+        </optgroup>
+        <optgroup label="🏆 Sports">
+          <option value="vUWwlrgVS-Q">🏏 Next Sports</option>
         </optgroup>
         <optgroup label="🌍 International News">
           <option value="XWq5kBlakcQ">🌏 CNA (Channel NewsAsia)</option>
@@ -2718,8 +2730,16 @@ footer{
       <div style="width:100%;padding-top:56.25%;position:relative;overflow:hidden">
         <div id="yt-player" style="position:absolute;top:0;left:0;width:100%;height:100%"></div>
       </div>
-      <!-- PIP close button (only visible in PIP mode via CSS) -->
-      <button id="yt-pip-close" onclick="ytExitPIP()" title="Exit PIP">✕</button>
+      <!-- PIP drag header (shown only in PIP mode via JS) -->
+      <div id="yt-pip-header">
+        <span id="yt-pip-header-title">⧉ PIP — drag to move</span>
+        <div id="yt-pip-header-btns">
+          <button class="yt-pip-hbtn" onclick="ytPIPResize()" title="Toggle size">⊞</button>
+          <button class="yt-pip-hbtn" id="yt-pip-close" onclick="ytExitPIP()" title="Close PIP">✕</button>
+        </div>
+      </div>
+      <!-- Resize handle -->
+      <div id="yt-pip-resize"></div>
       <!-- Geo-block overlay — hidden by default -->
       <div id="yt-fallback-bar" style="display:none;position:absolute;bottom:0;left:0;right:0;padding:6px 10px;background:rgba(8,14,26,.93);backdrop-filter:blur(6px);border-top:1px solid rgba(239,68,68,.25);align-items:center;justify-content:space-between;gap:6px">
         <span id="yt-geo-hint" style="font-size:9.5px;color:#fbbf24;font-weight:500">⚠️ Geo-restricted</span>
@@ -3819,7 +3839,7 @@ async function autoSendToGemini() {
   const pasteArea = document.getElementById('paste-area');
   if (pasteArea) pasteArea.value = '';
 
-  const selectedModel = localStorage.getItem('viltv_ai_model') || 'gemini-2.5-flash';
+  const selectedModel = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
 
   async function tryStream(partialSoFar, attempt) {
     const body = { prompt: queryText, use_search: true, model: selectedModel };
@@ -3900,23 +3920,36 @@ async function autoSendToGemini() {
   async function fallbackQuery(partialSoFar) {
     _aiProgressSet(35, 'Processing…', 'ps3');
     _vilfinProgressUpdate(35, '🔄 Processing your request…');
-    const body = { prompt: queryText, use_search: true, model: selectedModel };
-    if (partialSoFar) body.partial = partialSoFar;
-    try {
-      const res = await fetch(finalUrl + '/query', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(120000)
-      });
-      _aiProgressSet(88, 'Receiving…', 'ps4');
-      _vilfinProgressUpdate(88, '📥 Almost done…');
-      const data = await res.json();
-      if (data.error) throw new Error(typeof data.error === 'string' ? data.error : (data.error.message || JSON.stringify(data.error)));
-      handleGeminiResult(data.result || '');
-    } catch(e) {
-      _aiProgressStop();
-      _vilfinProgressError(e.message || 'Request failed.');
+    // Try multiple endpoint names — workers vary
+    const endpoints = ['/query', '/ask', '/chat', '/generate'];
+    for (const ep of endpoints) {
+      try {
+        const body = { prompt: queryText, use_search: true };
+        if (partialSoFar) body.partial = partialSoFar;
+        const res = await fetch(finalUrl + ep, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(120000)
+        });
+        if (!res.ok && res.status === 404) continue; // try next endpoint
+        _aiProgressSet(88, 'Receiving…', 'ps4');
+        _vilfinProgressUpdate(88, '📥 Almost done…');
+        const rawText = await res.text();
+        let data;
+        try { data = JSON.parse(rawText); } catch(_) { data = { result: rawText }; }
+        const errMsg = data.error ? (typeof data.error === 'string' ? data.error : (data.error.message || JSON.stringify(data.error))) : null;
+        if (errMsg) throw new Error(errMsg);
+        const answer = data.result || data.answer || data.response || data.text || data.content || rawText;
+        if (answer) { handleGeminiResult(answer); return; }
+      } catch(e) {
+        if (e.name === 'AbortError') { _aiProgressStop(); return; }
+        // Only throw if this was the last endpoint
+        if (ep === endpoints[endpoints.length - 1]) {
+          _aiProgressStop();
+          _vilfinProgressError('Worker error: ' + (e.message || 'Check your Cloudflare Worker setup.'));
+        }
+      }
     }
   }
 
@@ -4408,34 +4441,189 @@ function ytPrevChannel() {
   if (prev >= 0) { sel.selectedIndex = prev; ytSwitchChannel(sel.value); }
 }
 
+// ── DRAGGABLE / RESIZABLE PIP ─────────────────────────────────────────
 let _ytPipActive = false;
+let _pipW = 300, _pipH = 0; // height auto from aspect
+let _pipDragging = false, _pipResizing = false;
+let _pipOx = 0, _pipOy = 0; // pointer offset within wrapper
+
 function ytTogglePIP() {
+  if (_ytPipActive) { ytExitPIP(); return; }
   const wrapper = document.getElementById('yt-video-wrapper');
-  const btn     = document.getElementById('yt-pip-btn');
   if (!wrapper) return;
-  _ytPipActive = !_ytPipActive;
-  wrapper.classList.toggle('yt-pip-mode', _ytPipActive);
-  if (btn) { btn.title = _ytPipActive ? 'Exit PIP' : 'Picture in Picture'; btn.style.color = _ytPipActive ? '#fbbf24' : ''; }
+  _ytPipActive = true;
+  _pipW = Math.min(320, Math.round(window.innerWidth * 0.4));
+
+  // Position: bottom-right corner
+  const left = window.innerWidth  - _pipW - 16;
+  const top  = window.innerHeight - Math.round(_pipW * 0.5625) - 120;
+
+  Object.assign(wrapper.style, {
+    position:'fixed', left:left+'px', top:top+'px',
+    width:_pipW+'px', zIndex:'9800',
+    boxShadow:'0 10px 40px rgba(0,0,0,.9)',
+    borderRadius:'10px', border:'2px solid #1d4ed8',
+    overflow:'hidden', flexDirection:'column', display:'flex',
+    transition:'none'
+  });
+  // Show pip header + resize handle
+  const hdr = document.getElementById('yt-pip-header');
+  const rsz = document.getElementById('yt-pip-resize');
+  if (hdr) { hdr.style.display = 'flex'; hdr.addEventListener('mousedown', _pipMouseDown); hdr.addEventListener('touchstart', _pipTouchStart, {passive:false}); }
+  if (rsz) { rsz.style.display = 'block'; rsz.addEventListener('mousedown', _pipResizeDown); rsz.addEventListener('touchstart', _pipResizeTouchStart, {passive:false}); }
+
+  // Update label with current channel
+  const sel = document.getElementById('yt-channel-select');
+  const title = document.getElementById('yt-pip-header-title');
+  if (title && sel) title.textContent = '⧉ ' + (sel.options[sel.selectedIndex]?.text?.replace(/^[^ ]+ /,'') || 'Live TV');
+
+  const btn = document.getElementById('yt-pip-btn');
+  if (btn) { btn.title = 'Exit PIP'; btn.style.color = '#fbbf24'; }
 }
+
+function ytPIPResize() {
+  // Toggle between small (300px) and large (480px)
+  _pipW = _pipW < 400 ? 480 : 300;
+  const wrapper = document.getElementById('yt-video-wrapper');
+  if (wrapper) wrapper.style.width = _pipW + 'px';
+}
+
 function ytExitPIP() {
   _ytPipActive = false;
-  document.getElementById('yt-video-wrapper')?.classList.remove('yt-pip-mode');
+  const wrapper = document.getElementById('yt-video-wrapper');
+  if (!wrapper) return;
+  // Restore inline styles
+  ['position','left','top','width','zIndex','boxShadow','borderRadius','border','overflow','flexDirection','display','transition'].forEach(p => wrapper.style[p] = '');
+  const hdr = document.getElementById('yt-pip-header');
+  const rsz = document.getElementById('yt-pip-resize');
+  if (hdr) { hdr.style.display = 'none'; hdr.removeEventListener('mousedown', _pipMouseDown); hdr.removeEventListener('touchstart', _pipTouchStart); }
+  if (rsz) { rsz.style.display = 'none'; rsz.removeEventListener('mousedown', _pipResizeDown); rsz.removeEventListener('touchstart', _pipResizeTouchStart); }
   const btn = document.getElementById('yt-pip-btn');
   if (btn) { btn.title = 'Picture in Picture'; btn.style.color = ''; }
 }
 
-function ytSelectAudio() {
-  if (navigator.mediaDevices && navigator.mediaDevices.selectAudioOutput) {
-    navigator.mediaDevices.selectAudioOutput().then(device => {
-      // Try to apply to any HTMLMediaElement we can access
-      const btn = document.getElementById('yt-audio-btn');
-      if (btn) { btn.style.color = '#22c55e'; setTimeout(() => btn.style.color = '', 2000); }
-    }).catch(() => _ytAudioFallback());
-  } else { _ytAudioFallback(); }
+// Drag handlers
+function _pipGetWrapper() { return document.getElementById('yt-video-wrapper'); }
+function _pipClamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+
+function _pipMouseDown(e) {
+  if (e.target.closest('.yt-pip-hbtn')) return;
+  e.preventDefault();
+  const w = _pipGetWrapper();
+  const r = w.getBoundingClientRect();
+  _pipOx = e.clientX - r.left; _pipOy = e.clientY - r.top;
+  _pipDragging = true;
+  document.addEventListener('mousemove', _pipMouseMove);
+  document.addEventListener('mouseup',   _pipMouseUp);
 }
+function _pipMouseMove(e) {
+  if (!_pipDragging) return;
+  const w = _pipGetWrapper();
+  w.style.left = _pipClamp(e.clientX - _pipOx, 0, window.innerWidth  - w.offsetWidth)  + 'px';
+  w.style.top  = _pipClamp(e.clientY - _pipOy, 0, window.innerHeight - w.offsetHeight) + 'px';
+}
+function _pipMouseUp() { _pipDragging = false; document.removeEventListener('mousemove', _pipMouseMove); document.removeEventListener('mouseup', _pipMouseUp); }
+
+function _pipTouchStart(e) {
+  if (e.target.closest('.yt-pip-hbtn')) return;
+  e.preventDefault();
+  const t = e.touches[0]; const w = _pipGetWrapper(); const r = w.getBoundingClientRect();
+  _pipOx = t.clientX - r.left; _pipOy = t.clientY - r.top;
+  _pipDragging = true;
+  document.addEventListener('touchmove', _pipTouchMove, {passive:false});
+  document.addEventListener('touchend',  _pipTouchEnd);
+}
+function _pipTouchMove(e) {
+  if (!_pipDragging) return; e.preventDefault();
+  const t = e.touches[0]; const w = _pipGetWrapper();
+  w.style.left = _pipClamp(t.clientX - _pipOx, 0, window.innerWidth  - w.offsetWidth)  + 'px';
+  w.style.top  = _pipClamp(t.clientY - _pipOy, 0, window.innerHeight - w.offsetHeight) + 'px';
+}
+function _pipTouchEnd() { _pipDragging = false; document.removeEventListener('touchmove', _pipTouchMove); document.removeEventListener('touchend', _pipTouchEnd); }
+
+// Resize handlers
+function _pipResizeDown(e) {
+  e.preventDefault(); _pipResizing = true;
+  const w = _pipGetWrapper(); const r = w.getBoundingClientRect();
+  _pipOx = e.clientX; _pipOy = e.clientY; _pipW = r.width;
+  document.addEventListener('mousemove', _pipResizeMove);
+  document.addEventListener('mouseup',   _pipResizeUp);
+}
+function _pipResizeMove(e) {
+  if (!_pipResizing) return;
+  const w = _pipGetWrapper();
+  const newW = _pipClamp(_pipW + (e.clientX - _pipOx), 200, 600);
+  w.style.width = newW + 'px'; _pipW = newW;
+}
+function _pipResizeUp() { _pipResizing = false; document.removeEventListener('mousemove', _pipResizeMove); document.removeEventListener('mouseup', _pipResizeUp); }
+
+function _pipResizeTouchStart(e) {
+  e.preventDefault(); _pipResizing = true;
+  const t = e.touches[0]; const w = _pipGetWrapper();
+  _pipOx = t.clientX; _pipW = w.offsetWidth;
+  document.addEventListener('touchmove', _pipResizeTouchMove, {passive:false});
+  document.addEventListener('touchend',  _pipResizeTouchEnd);
+}
+function _pipResizeTouchMove(e) {
+  if (!_pipResizing) return; e.preventDefault();
+  const t = e.touches[0]; const w = _pipGetWrapper();
+  const newW = _pipClamp(_pipW + (t.clientX - _pipOx), 200, Math.min(600, window.innerWidth));
+  w.style.width = newW + 'px'; _pipW = newW;
+}
+function _pipResizeTouchEnd() { _pipResizing = false; document.removeEventListener('touchmove', _pipResizeTouchMove); document.removeEventListener('touchend', _pipResizeTouchEnd); }
+
+async function ytSelectAudio() {
+  // Try native browser selectAudioOutput (Chrome/Edge with permission)
+  if (navigator.mediaDevices?.selectAudioOutput) {
+    try {
+      const device = await navigator.mediaDevices.selectAudioOutput();
+      // Apply to any accessible audio/video elements
+      document.querySelectorAll('audio,video').forEach(el => { if (el.setSinkId) el.setSinkId(device.deviceId).catch(()=>{}); });
+      const btn = document.getElementById('yt-audio-btn');
+      if (btn) { btn.style.color='#22c55e'; setTimeout(()=>btn.style.color='',3000); }
+      return;
+    } catch(e) { if (e.name==='NotAllowedError') return; }
+  }
+  // Enumerate devices and show custom picker
+  if (navigator.mediaDevices?.enumerateDevices) {
+    try {
+      await navigator.mediaDevices.getUserMedia({audio:true}).catch(()=>{});
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const speakers = devices.filter(d => d.kind === 'audiooutput');
+      if (speakers.length > 1) { _ytShowAudioPicker(speakers); return; }
+    } catch(_) {}
+  }
+  _ytAudioFallback();
+}
+
+function _ytShowAudioPicker(devices) {
+  // Remove existing picker
+  document.getElementById('yt-audio-picker')?.remove();
+  const btn = document.getElementById('yt-audio-btn');
+  const rect = btn?.getBoundingClientRect() || {bottom:200,left:200};
+  const picker = document.createElement('div');
+  picker.id = 'yt-audio-picker';
+  Object.assign(picker.style, {
+    position:'fixed', bottom:(window.innerHeight-rect.top+4)+'px', left:rect.left+'px',
+    background:'#0d1d35', border:'1px solid #1e3a5f', borderRadius:'8px',
+    padding:'6px 0', zIndex:'99999', minWidth:'200px',
+    boxShadow:'0 8px 24px rgba(0,0,0,.8)', fontSize:'12px', color:'#e2e8f0'
+  });
+  picker.innerHTML = '<div style="padding:6px 12px 4px;font-size:10px;font-weight:700;color:#60a5fa;letter-spacing:.5px">🔈 SELECT OUTPUT</div>' +
+    devices.map((d,i) => `<button onclick="_ytApplyAudio('${d.deviceId}',this)" style="display:block;width:100%;padding:8px 12px;background:none;border:none;color:#e2e8f0;text-align:left;cursor:pointer;font-size:11px;transition:background .1s" onmouseover="this.style.background='rgba(29,78,216,.3)'" onmouseout="this.style.background='none'">${d.label||'Speaker '+(i+1)}</button>`).join('');
+  document.body.appendChild(picker);
+  setTimeout(() => document.addEventListener('click', ()=>picker.remove(), {once:true}), 100);
+}
+
+function _ytApplyAudio(deviceId, el) {
+  document.querySelectorAll('audio,video').forEach(m => { if (m.setSinkId) m.setSinkId(deviceId).catch(()=>{}); });
+  document.getElementById('yt-audio-picker')?.remove();
+  const btn = document.getElementById('yt-audio-btn');
+  if (btn) { btn.style.color='#22c55e'; setTimeout(()=>btn.style.color='',3000); }
+}
+
 function _ytAudioFallback() {
-  const msg = 'Audio output device:\n\n• Chrome/Edge: Settings → Sound → Output device\n• System: Use OS volume mixer to set the browser output device.';
-  alert(msg);
+  alert('Audio output:\n\nTo change output device:\n• Chrome/Edge: Click the speaker icon in browser address bar → Audio\n• Or use Windows/Mac system sound settings to set default output.\n\nNote: YouTube iframe audio cannot be redirected directly by the browser API on all platforms.');
 }
 
 // ── LIVE / PAST SCORES ──────────────────────────────────────────────
@@ -4492,10 +4680,81 @@ async function _scoresFetch(rawUrl) {
   return null;
 }
 
+// ── ESPNcricinfo consumer API — primary cricket source ──────────────────────
+async function _fetchCricinfoLive() {
+  const cricinfoUrl = 'https://hs-consumer-api.espncricinfo.com/v1/pages/matches/live?lang=en&latest=true';
+  const proxies = [
+    '',
+    'https://corsproxy.io/?',
+    'https://api.allorigins.win/raw?url='
+  ];
+  for (const proxy of proxies) {
+    try {
+      const url = proxy ? proxy + encodeURIComponent(cricinfoUrl) : cricinfoUrl;
+      const res = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(9000) });
+      if (!res.ok) continue;
+      const txt = await res.text();
+      const json = JSON.parse(txt);
+      const matches = json?.content?.matches || json?.matches || [];
+      if (!matches.length) return null;
+      return matches;
+    } catch(_) {}
+  }
+  return null;
+}
+
+function _renderCricinfoMatches(matches, box) {
+  let html = '';
+  const shown = matches.slice(0, 12);
+  for (const m of shown) {
+    const title = m.title || m.description || m.seriesName || 'Cricket Match';
+    const statusText = m.statusText || m.status || m.matchStatus || '';
+    const state = (m.state || m.matchState || '').toLowerCase();
+    const isLive = state === 'live' || state === 'inprogress' || state === 'in progress';
+    const isFinal = state === 'complete' || state === 'finished' || state === 'post';
+    const statusColor = isLive ? '#22c55e' : (isFinal ? '#ef4444' : '#38bdf8');
+
+    let teams = '';
+    const teamsArr = m.teams || [];
+    if (teamsArr.length >= 2) {
+      const t1 = teamsArr[0];
+      const t2 = teamsArr[1];
+      const n1 = t1.team?.abbreviation || t1.team?.shortName || t1.name || '?';
+      const n2 = t2.team?.abbreviation || t2.team?.shortName || t2.name || '?';
+      const s1 = t1.score || (t1.innings?.[0]?.runs !== undefined ? `${t1.innings[0].runs}/${t1.innings[0].wickets}` : '');
+      const s2 = t2.score || (t2.innings?.[0]?.runs !== undefined ? `${t2.innings[0].runs}/${t2.innings[0].wickets}` : '');
+      teams = `<div class="score-card-teams">
+        <span class="score-team-name">${n1}</span>
+        <span class="score-result">${s1 || '–'} v ${s2 || '–'}</span>
+        <span class="score-team-name" style="text-align:right">${n2}</span>
+      </div>`;
+    }
+    const venue = m.ground?.name ? `<div class="score-venue">📍 ${m.ground.name}</div>` : '';
+    html += `<div class="score-card">
+      <div class="score-card-match">${title}</div>
+      <div class="score-card-status" style="color:${statusColor}">${isLive ? '<span class="score-live-dot"></span>' : ''}${statusText}</div>
+      ${teams}${venue}
+    </div>`;
+  }
+  return html;
+}
+
 async function fetchLiveScores(sport) {
   const box = document.getElementById('live-scores-content');
   if (!box) return;
   box.innerHTML = '<div class="score-no-data">Loading…</div>';
+
+  // Cricket: try ESPNcricinfo consumer API first (globally accessible), fall back to ESPN scoreboard
+  if (sport === 'cricket') {
+    const cricoMatches = await _fetchCricinfoLive();
+    if (cricoMatches && cricoMatches.length) {
+      const html = _renderCricinfoMatches(cricoMatches, box);
+      box.innerHTML = html || '<div class="score-no-data">No live cricket matches right now.</div>';
+      const ts = document.getElementById('scores-updated');
+      if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+      return;
+    }
+  }
 
   const rawUrls = {
     cricket:  [
@@ -4585,6 +4844,37 @@ async function fetchPastScores(sport) {
   const box = document.getElementById('live-scores-content');
   if (!box) return;
   box.innerHTML = '<div class="score-no-data">Loading past results…</div>';
+
+  // Cricket: try ESPNcricinfo recent matches endpoint first
+  if (sport === 'cricket') {
+    try {
+      const recentUrl = 'https://hs-consumer-api.espncricinfo.com/v1/pages/matches/recent?lang=en';
+      const proxies = ['', 'https://corsproxy.io/?', 'https://api.allorigins.win/raw?url='];
+      let cricoMatches = null;
+      for (const proxy of proxies) {
+        try {
+          const url = proxy ? proxy + encodeURIComponent(recentUrl) : recentUrl;
+          const res = await fetch(url, { cache:'no-store', signal: AbortSignal.timeout(9000) });
+          if (!res.ok) continue;
+          const json = JSON.parse(await res.text());
+          const ms = json?.content?.matches || json?.matches || [];
+          if (ms.length) { cricoMatches = ms; break; }
+        } catch(_) {}
+      }
+      if (cricoMatches && cricoMatches.length) {
+        const completed = cricoMatches.filter(m => {
+          const s = (m.state || m.matchState || '').toLowerCase();
+          return s === 'complete' || s === 'finished' || s === 'post';
+        });
+        const toRender = (completed.length ? completed : cricoMatches).slice(0, 12);
+        const html = _renderCricinfoMatches(toRender, box);
+        box.innerHTML = html || '<div class="score-no-data">No recent cricket results.</div>';
+        const ts = document.getElementById('scores-updated');
+        if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+        return;
+      }
+    } catch(_) {}
+  }
 
   // Past/completed results endpoints — cricket prioritises IPL
   const pastEndpoints = {
@@ -4732,7 +5022,7 @@ async function rbAiSend() {
   if (msgEl) msgEl.textContent = '';
 
   const finalUrl = workerUrl.replace(/\/+$/, '');
-  const model = localStorage.getItem('viltv_ai_model') || 'gemini-2.5-flash';
+  const model = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
   let accumulated = '';
 
   try {
@@ -4771,17 +5061,29 @@ async function rbAiSend() {
       }
       if (!accumulated) throw new Error('No response received');
     } else {
-      // Fallback to /query
+      // Fallback — try multiple endpoint names
       if (typingEl) typingEl.style.display = 'none';
-      const data = await fetch(finalUrl + '/query', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: q, use_search: true, model }),
-        signal: AbortSignal.timeout(90000)
-      }).then(r => r.json());
-      if (data.error) throw new Error(typeof data.error === 'string' ? data.error : data.error.message);
-      accumulated = data.result || '';
-      if (msgEl) msgEl.textContent = accumulated;
+      const rbEndpoints = ['/query', '/ask', '/chat', '/generate'];
+      let answered = false;
+      for (const ep of rbEndpoints) {
+        try {
+          const r = await fetch(finalUrl + ep, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: q, use_search: true }),
+            signal: AbortSignal.timeout(90000)
+          });
+          if (!r.ok && r.status === 404) continue;
+          const rawText = await r.text();
+          let d; try { d = JSON.parse(rawText); } catch(_) { d = { result: rawText }; }
+          if (d.error) throw new Error(typeof d.error === 'string' ? d.error : (d.error.message || JSON.stringify(d.error)));
+          accumulated = d.result || d.answer || d.response || d.text || rawText || '';
+          if (msgEl) msgEl.textContent = accumulated;
+          answered = true; break;
+        } catch(epErr) {
+          if (ep === rbEndpoints[rbEndpoints.length-1]) throw epErr;
+        }
+      }
     }
     if (statusEl) statusEl.textContent = '✅ Response received';
   } catch(e) {
@@ -9020,7 +9322,7 @@ async function sendLosslessJson() {
   _aiProgressSet(5, '🔌 Connecting…', 'ps1');
 
   const finalUrl = workerUrl.replace(/\/+$/, '');
-  const model = localStorage.getItem('viltv_ai_model') || 'gemini-2.5-flash';
+  const model = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
   let rawJson = '';
 
   if (window._streamAbort) window._streamAbort.abort();
@@ -9297,7 +9599,7 @@ OUTPUT: Return ONLY the complete HTML starting with <!DOCTYPE html>. No markdown
     const res = await fetch(workerUrl + '/query-stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, use_search: false, model: 'gemini-2.5-flash' }),
+      body: JSON.stringify({ prompt, use_search: false, model: 'gemini-2.0-flash' }),
       signal: AbortSignal.timeout(180000)
     });
 
@@ -9324,7 +9626,7 @@ OUTPUT: Return ONLY the complete HTML starting with <!DOCTYPE html>. No markdown
       const data = await fetch(workerUrl + '/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, use_search: false, model: 'gemini-2.5-flash' }),
+        body: JSON.stringify({ prompt, use_search: false, model: 'gemini-2.0-flash' }),
         signal: AbortSignal.timeout(180000)
       }).then(r => r.json());
       if (data.error) throw new Error(typeof data.error === 'string' ? data.error : data.error.message);
