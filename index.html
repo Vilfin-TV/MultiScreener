@@ -1143,6 +1143,45 @@ footer{
 @keyframes scoreLivePulse{0%,100%{opacity:1}50%{opacity:.4}}
 .score-live-dot{display:inline-block;width:7px;height:7px;background:#ef4444;border-radius:50%;margin-right:4px;animation:scoreLivePulse 1.5s ease-in-out infinite}
 
+/* ── VIDEO CONTROLS BAR ── */
+#yt-controls{
+  display:flex;align-items:center;gap:5px;padding:5px 8px;
+  background:#050a14;border-bottom:1px solid #0e1e36;flex-shrink:0;
+  flex-wrap:nowrap;overflow:hidden;
+}
+.ytc-btn{
+  width:28px;height:28px;border:1px solid #1a2f4e;border-radius:6px;
+  background:#0a1628;color:#93c5fd;font-size:13px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:all .15s;padding:0;
+}
+.ytc-btn:hover{background:#1d4ed8;border-color:#2563eb;color:#fff}
+.ytc-btn:active{transform:scale(.92)}
+.ytc-vol{
+  -webkit-appearance:none;appearance:none;
+  height:4px;flex:1;min-width:40px;max-width:90px;
+  background:linear-gradient(to right,#2563eb 0%,#2563eb var(--vol,0%),#1a2f4e var(--vol,0%),#1a2f4e 100%);
+  border-radius:99px;cursor:pointer;outline:none;border:none;
+}
+.ytc-vol::-webkit-slider-thumb{
+  -webkit-appearance:none;width:12px;height:12px;border-radius:50%;
+  background:#60a5fa;border:2px solid #1d4ed8;cursor:pointer;
+}
+/* CSS PIP mode — float video in bottom-right corner */
+#yt-video-wrapper.yt-pip-mode{
+  position:fixed!important;bottom:80px!important;right:14px!important;
+  width:260px!important;z-index:9800!important;
+  box-shadow:0 8px 32px rgba(0,0,0,.85)!important;
+  border-radius:10px!important;border:2px solid #1d4ed8!important;
+  overflow:hidden!important;
+}
+#yt-pip-close{
+  display:none;position:absolute;top:6px;right:6px;z-index:9801;
+  background:rgba(0,0,0,.7);border:none;color:#fff;border-radius:50%;
+  width:22px;height:22px;font-size:13px;cursor:pointer;line-height:1;
+}
+#yt-video-wrapper.yt-pip-mode #yt-pip-close{display:flex;align-items:center;justify-content:center}
+
 /* ── UI THEME v8.6.16 — override legacy gold/orange to blue/navy ── */
 .sp-broker-name{color:#93c5fd}
 .sp-broker-btn{background:linear-gradient(135deg,#1d4ed8,#2563eb);box-shadow:none}
@@ -1814,9 +1853,9 @@ footer{
     <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
     {
       "symbols":[
-        {"proName":"NSE:NIFTY50","title":"Nifty 50"},
-        {"proName":"BSE:SENSEX","title":"Sensex"},
-        {"proName":"NSE:BANKNIFTY","title":"Bank Nifty"},
+        {"proName":"CAPITALCOM:NIFTY50","title":"Nifty 50"},
+        {"proName":"CAPITALCOM:SENSEX","title":"Sensex"},
+        {"proName":"CAPITALCOM:BANKNIFTY","title":"Bank Nifty"},
         {"proName":"NSE:CNXFINANCE","title":"CNX Finance"},
         {"proName":"NSE:CNXIT","title":"CNX IT"},
         {"proName":"NSE:CNXMETAL","title":"CNX Metal"},
@@ -1876,9 +1915,9 @@ footer{
     <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
     {
       "symbols":[
-        {"proName":"NSE:NIFTY50","title":"Nifty 50"},
-        {"proName":"BSE:SENSEX","title":"Sensex"},
-        {"proName":"NSE:BANKNIFTY","title":"Bank Nifty"},
+        {"proName":"CAPITALCOM:NIFTY50","title":"Nifty 50"},
+        {"proName":"CAPITALCOM:SENSEX","title":"Sensex"},
+        {"proName":"CAPITALCOM:BANKNIFTY","title":"Bank Nifty"},
         {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
         {"proName":"FOREXCOM:NSXUSD","title":"Nasdaq"},
         {"proName":"SPREADEX:NIKKEI","title":"Nikkei"},
@@ -1893,7 +1932,7 @@ footer{
         {"proName":"NASDAQ:NVDA","title":"NVIDIA"},
         {"proName":"CBOE:VIX","title":"VIX"},
         {"proName":"TVC:US10Y","title":"US 10Y"},
-        {"proName":"NSE:CNXIT","title":"CNX IT"}
+        {"proName":"CAPITALCOM:COPPER","title":"Copper"}
       ],
       "showSymbolLogo":true,"isTransparent":true,"displayMode":"adaptive",
       "colorTheme":"dark","locale":"en"
@@ -2679,7 +2718,9 @@ footer{
       <div style="width:100%;padding-top:56.25%;position:relative;overflow:hidden">
         <div id="yt-player" style="position:absolute;top:0;left:0;width:100%;height:100%"></div>
       </div>
-      <!-- Geo-block overlay — hidden by default, shows only when channel is geo-restricted -->
+      <!-- PIP close button (only visible in PIP mode via CSS) -->
+      <button id="yt-pip-close" onclick="ytExitPIP()" title="Exit PIP">✕</button>
+      <!-- Geo-block overlay — hidden by default -->
       <div id="yt-fallback-bar" style="display:none;position:absolute;bottom:0;left:0;right:0;padding:6px 10px;background:rgba(8,14,26,.93);backdrop-filter:blur(6px);border-top:1px solid rgba(239,68,68,.25);align-items:center;justify-content:space-between;gap:6px">
         <span id="yt-geo-hint" style="font-size:9.5px;color:#fbbf24;font-weight:500">⚠️ Geo-restricted</span>
         <a id="yt-open-link" href="https://www.youtube.com/watch?v=25B1JcOMx3I" target="_blank" rel="noopener"
@@ -2687,6 +2728,18 @@ footer{
           ▶ Open in YouTube
         </a>
       </div>
+    </div>
+
+    <!-- ── Video Controls Bar ── -->
+    <div id="yt-controls">
+      <button class="ytc-btn" id="yt-mute-btn" onclick="ytToggleMute()" title="Mute / Unmute">🔇</button>
+      <input class="ytc-vol" id="yt-vol-slider" type="range" min="0" max="100" value="0"
+        oninput="ytSetVolume(this.value)" title="Volume" style="--vol:0%">
+      <button class="ytc-btn" onclick="ytPrevChannel()" title="Previous channel">⏮</button>
+      <button class="ytc-btn" onclick="ytNextChannel()" title="Next channel">⏭</button>
+      <button class="ytc-btn" id="yt-pip-btn" onclick="ytTogglePIP()" title="Picture in Picture">⧉</button>
+      <button class="ytc-btn" id="yt-audio-btn" onclick="ytSelectAudio()" title="Audio output">🔈</button>
+      <span id="yt-now-playing" style="font-size:9px;color:#475569;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:2px"></span>
     </div>
 
     <!-- ── Live / Past Scores — fills all remaining space ── -->
@@ -3667,12 +3720,9 @@ function setCFDisconnected() {
 // ── AI QUERY via Cloudflare Worker ──────────────────────────────────
 function cfAIQuery() {
   closeAllMenus();
-  const url = window._cfWorkerUrl || localStorage.getItem(CF_KEY);
-  if (!url) {
-    // No worker URL — open connection dialog first
-    cfConnect();
-    return;
-  }
+  const _HW = 'https://x9-k2-p20-worker.vilfintv.workers.dev';
+  const url = window._cfWorkerUrl || localStorage.getItem(CF_KEY) || _HW;
+  if (!window._cfWorkerUrl) { window._cfWorkerUrl = _HW; try{ localStorage.setItem(CF_KEY,_HW); }catch(e){} setCFConnected(_HW); }
   document.getElementById('ai-query-input').value = '';
   document.getElementById('ai-query-status').textContent = '';
   document.getElementById('ai-query-result').style.display = 'none';
@@ -4299,16 +4349,93 @@ function ytSwitchChannel(videoId) {
   ytHideGeoError();
   const link = document.getElementById('yt-open-link');
   if (link) link.href = `https://www.youtube.com/watch?v=${videoId}`;
+  // Update now-playing label
+  const sel = document.getElementById('yt-channel-select');
+  const np  = document.getElementById('yt-now-playing');
+  if (np && sel) np.textContent = sel.options[sel.selectedIndex]?.text || '';
   if (_ytPlayer && typeof _ytPlayer.loadVideoById === 'function') {
     _ytPlayer.loadVideoById({ videoId: videoId });
-    _ytPlayer.mute();
+    if (_ytMuted) _ytPlayer.mute(); else { _ytPlayer.unMute(); _ytPlayer.setVolume(_ytVolume); }
   } else {
-    // API not ready yet — swap src on whatever element is there
     const el = document.getElementById('yt-player');
     if (el && el.tagName === 'IFRAME') {
       el.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
     }
   }
+}
+
+// ── VIDEO CONTROLS ───────────────────────────────────────────────────
+let _ytMuted  = true;
+let _ytVolume = 60;
+
+function ytToggleMute() {
+  _ytMuted = !_ytMuted;
+  if (_ytPlayer) {
+    if (_ytMuted) _ytPlayer.mute();
+    else { _ytPlayer.unMute(); _ytPlayer.setVolume(_ytVolume); }
+  }
+  const btn = document.getElementById('yt-mute-btn');
+  if (btn) btn.textContent = _ytMuted ? '🔇' : '🔊';
+}
+
+function ytSetVolume(val) {
+  _ytVolume = Number(val);
+  const slider = document.getElementById('yt-vol-slider');
+  if (slider) slider.style.setProperty('--vol', _ytVolume + '%');
+  if (_ytPlayer) {
+    _ytPlayer.setVolume(_ytVolume);
+    if (_ytVolume > 0 && _ytMuted) { _ytMuted = false; _ytPlayer.unMute(); }
+    if (_ytVolume === 0 && !_ytMuted) { _ytMuted = true; _ytPlayer.mute(); }
+  }
+  const btn = document.getElementById('yt-mute-btn');
+  if (btn) btn.textContent = (_ytMuted || _ytVolume === 0) ? '🔇' : '🔊';
+}
+
+function ytNextChannel() {
+  const sel = document.getElementById('yt-channel-select');
+  if (!sel) return;
+  // Skip optgroup labels (options with value='')
+  let next = sel.selectedIndex + 1;
+  while (next < sel.options.length && !sel.options[next].value) next++;
+  if (next < sel.options.length) { sel.selectedIndex = next; ytSwitchChannel(sel.value); }
+}
+
+function ytPrevChannel() {
+  const sel = document.getElementById('yt-channel-select');
+  if (!sel) return;
+  let prev = sel.selectedIndex - 1;
+  while (prev >= 0 && !sel.options[prev].value) prev--;
+  if (prev >= 0) { sel.selectedIndex = prev; ytSwitchChannel(sel.value); }
+}
+
+let _ytPipActive = false;
+function ytTogglePIP() {
+  const wrapper = document.getElementById('yt-video-wrapper');
+  const btn     = document.getElementById('yt-pip-btn');
+  if (!wrapper) return;
+  _ytPipActive = !_ytPipActive;
+  wrapper.classList.toggle('yt-pip-mode', _ytPipActive);
+  if (btn) { btn.title = _ytPipActive ? 'Exit PIP' : 'Picture in Picture'; btn.style.color = _ytPipActive ? '#fbbf24' : ''; }
+}
+function ytExitPIP() {
+  _ytPipActive = false;
+  document.getElementById('yt-video-wrapper')?.classList.remove('yt-pip-mode');
+  const btn = document.getElementById('yt-pip-btn');
+  if (btn) { btn.title = 'Picture in Picture'; btn.style.color = ''; }
+}
+
+function ytSelectAudio() {
+  if (navigator.mediaDevices && navigator.mediaDevices.selectAudioOutput) {
+    navigator.mediaDevices.selectAudioOutput().then(device => {
+      // Try to apply to any HTMLMediaElement we can access
+      const btn = document.getElementById('yt-audio-btn');
+      if (btn) { btn.style.color = '#22c55e'; setTimeout(() => btn.style.color = '', 2000); }
+    }).catch(() => _ytAudioFallback());
+  } else { _ytAudioFallback(); }
+}
+function _ytAudioFallback() {
+  const msg = 'Audio output device:\n\n• Chrome/Edge: Settings → Sound → Output device\n• System: Use OS volume mixer to set the browser output device.';
+  alert(msg);
 }
 
 // ── LIVE / PAST SCORES ──────────────────────────────────────────────
@@ -4344,21 +4471,43 @@ function switchScoreSport(sport) {
   else fetchPastScores(sport);
 }
 
+// CORS proxies — tried in order for geo-restricted ESPN API
+const _SCORE_PROXIES = [
+  '',                                              // direct (works in India / no CORS)
+  'https://corsproxy.io/?',                        // proxy 1
+  'https://api.allorigins.win/raw?url=',           // proxy 2
+];
+
+async function _scoresFetch(rawUrl) {
+  for (const proxy of _SCORE_PROXIES) {
+    try {
+      const url = proxy ? (proxy + encodeURIComponent(rawUrl)) : rawUrl;
+      const res = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(8000) });
+      if (res.ok) {
+        const txt = await res.text();
+        try { return JSON.parse(txt); } catch(_) { continue; }
+      }
+    } catch(_) {}
+  }
+  return null;
+}
+
 async function fetchLiveScores(sport) {
   const box = document.getElementById('live-scores-content');
   if (!box) return;
   box.innerHTML = '<div class="score-no-data">Loading…</div>';
 
-  // ESPN public scoreboards — tested working endpoints
-  const endpointSets = {
+  const rawUrls = {
     cricket:  [
       'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard',
-      'https://site.api.espn.com/apis/site/v2/sports/cricket/ipl/scoreboard'
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/ipl/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/wi.1/scoreboard'
     ],
     football: [
       'https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard',
       'https://site.api.espn.com/apis/site/v2/sports/soccer/esp.1/scoreboard',
-      'https://site.api.espn.com/apis/site/v2/sports/soccer/ger.1/scoreboard'
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/ger.1/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard'
     ],
     tennis:   [
       'https://site.api.espn.com/apis/site/v2/sports/tennis/atp/scoreboard',
@@ -4369,15 +4518,12 @@ async function fetchLiveScores(sport) {
     ]
   };
 
-  const urls = endpointSets[sport] || endpointSets.cricket;
+  const urls = rawUrls[sport] || rawUrls.cricket;
   let data = null;
 
-  // Try each endpoint in order until one works
-  for (const url of urls) {
-    try {
-      const res = await fetch(url, { cache: 'no-store' });
-      if (res.ok) { data = await res.json(); break; }
-    } catch(_) {}
+  for (const rawUrl of urls) {
+    data = await _scoresFetch(rawUrl);
+    if (data) break;
   }
 
   if (!data) {
@@ -4461,16 +4607,13 @@ async function fetchPastScores(sport) {
   const urls = pastEndpoints[sport] || pastEndpoints.cricket;
   let allEvents = [];
 
-  for (const url of urls) {
-    try {
-      const res = await fetch(url, { cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
-        const evs = data.events || data.competitions || [];
-        allEvents = allEvents.concat(evs);
-        if (allEvents.length >= 6) break;
-      }
-    } catch(_) {}
+  for (const rawUrl of urls) {
+    const data = await _scoresFetch(rawUrl);
+    if (data) {
+      const evs = data.events || data.competitions || [];
+      allEvents = allEvents.concat(evs);
+      if (allEvents.length >= 6) break;
+    }
   }
 
   // Filter only completed (post) games, fall back to all if none
@@ -4567,11 +4710,10 @@ async function rbAiSend() {
   const q = input?.value?.trim();
   if (!q) return;
 
-  const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY);
-  if (!workerUrl) {
-    rbAiAppendMessage('⚠️ AI service not connected. Please use File → Connect.', 'bot');
-    return;
-  }
+  const _HW = 'https://x9-k2-p20-worker.vilfintv.workers.dev';
+  const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY) || _HW;
+  // Always seed so future calls work too
+  if (!window._cfWorkerUrl) { window._cfWorkerUrl = _HW; try{ localStorage.setItem(CF_KEY,_HW); }catch(e){} setCFConnected(_HW); }
 
   // Cancel previous stream
   if (_rbStreamAbort) { _rbStreamAbort.abort(); }
