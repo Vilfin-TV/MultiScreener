@@ -3099,11 +3099,14 @@ footer{
       Enter your AI Service URL below. Once connected, your API key is used automatically. The URL is saved locally in your browser only — never uploaded to GitHub or any server.<br/>
       <a href="user_manual.html" target="_blank" style="color:var(--gold2);font-size:11px;display:inline-block;margin-top:6px">📖 How to set up? Step-by-step guide →</a>
     </div>
-    <label for="cf-url-input">Cloudflare Workers URL</label>
+    <label for="cf-url-input">Cloudflare Workers URL <span style="color:#64748b;font-weight:400;text-transform:none">(optional — leave blank to use Gemini key directly)</span></label>
     <input type="url" id="cf-url-input" placeholder="https://your-worker.workers.dev"
       autocomplete="off" spellcheck="false"/>
+    <label for="cf-gemini-key-input" style="margin-top:14px">Gemini API Key <span style="color:#64748b;font-weight:400;text-transform:none">(from <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#fbbf24">aistudio.google.com</a>)</span></label>
+    <input type="password" id="cf-gemini-key-input" placeholder="AIza…"
+      autocomplete="off" spellcheck="false"/>
     <div class="cf-modal-btns">
-      <button class="cf-connect-btn" onclick="cfDoConnect()">🔗 Connect</button>
+      <button class="cf-connect-btn" onclick="cfDoConnect()">🔗 Save &amp; Connect</button>
       <button class="cf-cancel-btn" onclick="cfCloseModal()">Cancel</button>
     </div>
     <div class="cf-status-msg" id="cf-status-msg"></div>
@@ -3660,7 +3663,9 @@ function cfLoadSaved() {
 function cfConnect() {
   closeAllMenus();
   const saved = localStorage.getItem(CF_KEY);
-  if (saved) document.getElementById('cf-url-input').value = saved;
+  if (saved && saved !== 'direct-gemini') document.getElementById('cf-url-input').value = saved;
+  const savedKey = localStorage.getItem('viltv_gemini_key');
+  if (savedKey) document.getElementById('cf-gemini-key-input').value = savedKey;
   document.getElementById('cf-status-msg').textContent = '';
   document.getElementById('cf-modal-overlay').classList.add('show');
 }
@@ -3678,12 +3683,35 @@ function cfModalOverlayClick(e) {
 }
 
 async function cfDoConnect() {
-  const url = document.getElementById('cf-url-input').value.trim().replace(/\/+$/, ''); // strip trailing slash
-  if (!url) {
-    document.getElementById('cf-status-msg').textContent = '⚠️ Please enter a valid URL.';
+  const url = (document.getElementById('cf-url-input')?.value || '').trim().replace(/\/+$/, '');
+  const geminiKey = (document.getElementById('cf-gemini-key-input')?.value || '').trim();
+  const msg = document.getElementById('cf-status-msg');
+
+  // Save Gemini key if provided
+  if (geminiKey) {
+    try { localStorage.setItem('viltv_gemini_key', geminiKey); } catch(e) {}
+    window._geminiApiKey = geminiKey;
+  }
+
+  // If no worker URL but Gemini key given — connect via direct Gemini API
+  if (!url && geminiKey) {
+    msg.textContent = '⏳ Verifying Gemini key…';
+    try {
+      const testRes = await _callGeminiDirect('Say "OK"', geminiKey, 'gemini-2.0-flash');
+      msg.textContent = '✅ Gemini API key verified!';
+      setCFConnected('direct-gemini');
+      setTimeout(() => { cfCloseModal(); if (window._pendingAutoSend) { window._pendingAutoSend = false; autoSendToGemini(); } }, 1200);
+    } catch(e) {
+      msg.textContent = '❌ Gemini key error: ' + (e.message || 'Invalid key');
+    }
     return;
   }
-  const msg = document.getElementById('cf-status-msg');
+
+  if (!url) {
+    msg.textContent = '⚠️ Enter a Worker URL or a Gemini API key.';
+    return;
+  }
+
   msg.textContent = '⏳ Connecting…';
   document.getElementById('cf-dot').className = 'cf-dot connecting';
   try {
@@ -3700,7 +3728,6 @@ async function cfDoConnect() {
       setTimeout(() => { cfCloseModal(); if (window._pendingAutoSend) { window._pendingAutoSend = false; autoSendToGemini(); } }, 2000);
     }
   } catch(err) {
-    // Save URL even if ping fails (CORS may block), treat as connected
     localStorage.setItem(CF_KEY, url);
     setCFConnected(url);
     msg.textContent = '✅ URL saved. Worker may require auth — using saved URL.';
@@ -4183,6 +4210,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const _WORKER = 'https://x9-k2-p20-worker.vilfintv.workers.dev';
   try { localStorage.setItem('viltv_cf_worker_url', _WORKER); } catch(e) {}
   window._cfWorkerUrl = _WORKER;          // set in-memory immediately (no async delay)
+  // Load Gemini API key from localStorage into memory
+  const _savedGemKey = localStorage.getItem('viltv_gemini_key');
+  if (_savedGemKey) window._geminiApiKey = _savedGemKey;
   cfLoadSaved();
   initLiveNews();
   initLiveClock();
@@ -4739,17 +4769,60 @@ async function fetchLiveScores(sport) {
   if (!box) return;
   box.innerHTML = '<div class="score-no-data">Loading…</div>';
 
-  // Cricket: use TheSportsDB (free, no CORS, globally accessible)
+  // Cricket: ESPN direct first (IPL + all), then TheSportsDB (globally accessible)
   if (sport === 'cricket') {
+    // Try ESPN directly — works in India and from HTTPS pages (GitHub Pages)
+    const espnLiveUrls = [
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/ipl/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/wi.1/scoreboard'
+    ];
+    for (const eu of espnLiveUrls) {
+      try {
+        const er = await fetch(eu, { cache:'no-store', signal: AbortSignal.timeout(6000) });
+        if (er.ok) {
+          const ej = await er.json();
+          const evs = ej.events || ej.competitions || [];
+          if (evs.length) {
+            // Found live ESPN data — render it
+            let html = '';
+            for (const ev of evs.slice(0,12)) {
+              const comps = ev.competitions||[ev];
+              for (const comp of comps) {
+                const competitors = comp.competitors||[];
+                const status = comp.status?.type?.shortDetail||comp.status?.type?.description||'Live';
+                const isLive = (comp.status?.type?.state||'').toLowerCase()==='in';
+                const statusColor = isLive?'#22c55e':(status.toLowerCase().includes('final')?'#ef4444':'#38bdf8');
+                let teams='',venue='';
+                if (competitors.length>=2) {
+                  const h=competitors.find(c=>c.homeAway==='home')||competitors[0];
+                  const a=competitors.find(c=>c.homeAway==='away')||competitors[1];
+                  const hName=h.team?.abbreviation||h.team?.shortDisplayName||'?';
+                  const aName=a.team?.abbreviation||a.team?.shortDisplayName||'?';
+                  const hScore=h.score!==undefined?h.score:'';
+                  const aScore=a.score!==undefined?a.score:'';
+                  teams=`<div class="score-card-teams"><span class="score-team-name">${hName}</span><span class="score-result">${hScore} – ${aScore}</span><span class="score-team-name" style="text-align:right">${aName}</span></div>`;
+                }
+                if (comp.venue?.fullName) venue=`<div class="score-venue">📍 ${comp.venue.fullName}</div>`;
+                html+=`<div class="score-card"><div class="score-card-match">${ev.name||''}</div><div class="score-card-status" style="color:${statusColor}">${isLive?'<span class="score-live-dot"></span>':''}${status}</div>${teams}${venue}</div>`;
+              }
+            }
+            if (html) {
+              box.innerHTML = html;
+              const ts=document.getElementById('scores-updated');
+              if(ts) ts.textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+              return;
+            }
+          }
+        }
+      } catch(_) {}
+    }
+
+    // TheSportsDB fallback (globally accessible, no CORS, no geo-block)
     const today = new Date().toISOString().slice(0, 10);
     const events = await _fetchSportsDBCricket(today);
     if (events.length) {
-      // Show all today's matches (live + scheduled)
-      const sorted = [...events].sort((a, b) => {
-        const la = a.strStatus?.toLowerCase() === 'live' ? 0 : 1;
-        const lb = b.strStatus?.toLowerCase() === 'live' ? 0 : 1;
-        return la - lb;
-      });
+      const sorted = [...events].sort((a, b) => (a.strStatus?.toLowerCase()==='live'?0:1) - (b.strStatus?.toLowerCase()==='live'?0:1));
       const html = _renderSportsDBMatches(sorted, false);
       box.innerHTML = html || '<div class="score-no-data">No cricket matches today.</div>';
       const ts = document.getElementById('scores-updated');
@@ -4847,18 +4920,81 @@ async function fetchPastScores(sport) {
   if (!box) return;
   box.innerHTML = '<div class="score-no-data">Loading past results…</div>';
 
-  // Cricket: use TheSportsDB for yesterday + today results (free, no CORS)
+  // Cricket: Try ESPN IPL/cricket directly first (works in India), then TheSportsDB 5 days
   if (sport === 'cricket') {
-    const today = new Date();
-    const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
-    const todayStr = today.toISOString().slice(0, 10);
-    const yestStr = yesterday.toISOString().slice(0, 10);
+    // Attempt 1 — ESPN cricket APIs directly (no proxy, works from India & GitHub Pages)
+    const espnCricUrls = [
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/ipl/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/wi.1/scoreboard'
+    ];
+    let espnData = null;
+    for (const eu of espnCricUrls) {
+      try {
+        const er = await fetch(eu, { cache:'no-store', signal: AbortSignal.timeout(6000) });
+        if (er.ok) {
+          const ej = await er.json();
+          const evs = ej.events || ej.competitions || [];
+          if (evs.length) { espnData = ej; break; }
+        }
+      } catch(_) {}
+    }
+    if (espnData) {
+      // Render using existing ESPN-format renderer (fetchPastScores body below handles it)
+      // Fall through to the ESPN renderer loop at end of this function
+      // by injecting into allEvents
+      const evs = espnData.events || espnData.competitions || [];
+      const completed = evs.filter(ev => (((ev.competitions||[ev])[0])?.status?.type?.state||'').toLowerCase() === 'post');
+      const toShow = (completed.length ? completed : evs).slice(0,12);
+      if (toShow.length) {
+        let html = '';
+        for (const ev of toShow) {
+          const comps = ev.competitions || [ev];
+          for (const comp of comps) {
+            const competitors = comp.competitors || [];
+            const status = comp.status?.type?.shortDetail || comp.status?.type?.description || 'Final';
+            let teams = '', venue = '';
+            if (competitors.length >= 2) {
+              const h = competitors.find(c=>c.homeAway==='home')||competitors[0];
+              const a = competitors.find(c=>c.homeAway==='away')||competitors[1];
+              const hName = h.team?.abbreviation||h.team?.shortDisplayName||'?';
+              const aName = a.team?.abbreviation||a.team?.shortDisplayName||'?';
+              const hScore = h.score!==undefined?h.score:'–';
+              const aScore = a.score!==undefined?a.score:'–';
+              const wH = Number(hScore)>Number(aScore);
+              const wA = Number(aScore)>Number(hScore);
+              teams = `<div class="score-card-teams">
+                <span class="score-team-name" style="${wH?'color:#60a5fa;font-weight:700':''}">${hName}</span>
+                <span class="score-result">${hScore} – ${aScore}</span>
+                <span class="score-team-name" style="text-align:right;${wA?'color:#60a5fa;font-weight:700':''}">${aName}</span>
+              </div>`;
+            }
+            if (comp.venue?.fullName) venue = `<div class="score-venue">📍 ${comp.venue.fullName}</div>`;
+            html += `<div class="score-card">
+              <div class="score-card-match">${ev.name||ev.shortName||''}</div>
+              <div class="score-card-status" style="color:#94a3b8">✅ ${status}</div>
+              ${teams}${venue}
+            </div>`;
+          }
+        }
+        if (html) {
+          box.innerHTML = html;
+          const ts = document.getElementById('scores-updated');
+          if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+          return;
+        }
+      }
+    }
 
-    const [evToday, evYest] = await Promise.all([
-      _fetchSportsDBCricket(todayStr),
-      _fetchSportsDBCricket(yestStr)
-    ]);
-    const allEvs = [...evToday, ...evYest];
+    // Attempt 2 — TheSportsDB last 5 days (globally accessible, no CORS)
+    const today = new Date();
+    const dateStrs = [];
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(today); d.setDate(today.getDate() - i);
+      dateStrs.push(d.toISOString().slice(0, 10));
+    }
+    const dayResults = await Promise.all(dateStrs.map(d => _fetchSportsDBCricket(d)));
+    const allEvs = dayResults.flat();
     if (allEvs.length) {
       const finished = allEvs.filter(ev => {
         const s = (ev.strStatus || '').toLowerCase();
@@ -4866,7 +5002,7 @@ async function fetchPastScores(sport) {
       });
       const toRender = (finished.length ? finished : allEvs).slice(0, 12);
       const html = _renderSportsDBMatches(toRender, true);
-      box.innerHTML = html || '<div class="score-no-data">No recent cricket results.</div>';
+      box.innerHTML = html || '<div class="score-no-data">No recent cricket results found.</div>';
       const ts = document.getElementById('scores-updated');
       if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
       return;
@@ -4983,6 +5119,30 @@ function closeMobileRightBar() {
   document.getElementById('mobile-tv-btn')?.classList.remove('active');
 }
 
+// ── Direct Gemini API call (bypasses Cloudflare Worker) ──────────────────────
+async function _callGeminiDirect(prompt, apiKey, model) {
+  const m = model || localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
+  const key = apiKey || window._geminiApiKey || localStorage.getItem('viltv_gemini_key') || '';
+  if (!key) throw new Error('No Gemini API key configured. Go to File → Connect AI and add your key from aistudio.google.com');
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`;
+  const body = {
+    contents: [{ parts: [{ text: prompt }] }],
+    tools: [{ googleSearch: {} }],
+    generationConfig: { maxOutputTokens: 8192, temperature: 1.0 }
+  };
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(60000)
+  });
+  const j = await res.json();
+  if (j.error) throw new Error(j.error.message || JSON.stringify(j.error));
+  const text = (j.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('');
+  if (!text) throw new Error('Empty response from Gemini');
+  return text;
+}
+
 function rbAiChip(text) {
   document.getElementById('rb-quick-chips')?.remove();
   document.getElementById('rb-ai-input').value = text;
@@ -4996,11 +5156,6 @@ async function rbAiSend() {
   const typingEl = document.getElementById('rb-typing');
   const q = input?.value?.trim();
   if (!q) return;
-
-  const _HW = 'https://x9-k2-p20-worker.vilfintv.workers.dev';
-  const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY) || _HW;
-  // Always seed so future calls work too
-  if (!window._cfWorkerUrl) { window._cfWorkerUrl = _HW; try{ localStorage.setItem(CF_KEY,_HW); }catch(e){} setCFConnected(_HW); }
 
   // Cancel previous stream
   if (_rbStreamAbort) { _rbStreamAbort.abort(); }
@@ -5018,9 +5173,37 @@ async function rbAiSend() {
   const msgEl = document.getElementById(msgId);
   if (msgEl) msgEl.textContent = '';
 
+  let accumulated = '';
+
+  // ── Priority 1: Direct Gemini API (if key is configured) ──────────────────
+  const geminiKey = window._geminiApiKey || localStorage.getItem('viltv_gemini_key') || '';
+  if (geminiKey) {
+    try {
+      if (typingEl) typingEl.style.display = 'none';
+      if (statusEl) statusEl.textContent = 'Thinking…';
+      accumulated = await _callGeminiDirect(q, geminiKey);
+      if (msgEl) msgEl.textContent = accumulated;
+      if (statusEl) statusEl.textContent = '✅ Response received';
+      document.getElementById('rb-ai-messages').scrollTop = 99999;
+    } catch(e) {
+      if (e.name !== 'AbortError') {
+        if (msgEl) msgEl.textContent = '❌ ' + (e.message || 'Gemini API error');
+        if (statusEl) statusEl.textContent = '⚠️ ' + e.message;
+      }
+    } finally {
+      if (sendBtn) sendBtn.disabled = false;
+      if (typingEl) typingEl.style.display = 'none';
+    }
+    return;
+  }
+
+  // ── Priority 2: Cloudflare Worker ─────────────────────────────────────────
+  const _HW = 'https://x9-k2-p20-worker.vilfintv.workers.dev';
+  const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY) || _HW;
+  if (!window._cfWorkerUrl) { window._cfWorkerUrl = _HW; try{ localStorage.setItem(CF_KEY,_HW); }catch(e){} setCFConnected(_HW); }
+
   const finalUrl = workerUrl.replace(/\/+$/, '');
   const model = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
-  let accumulated = '';
 
   try {
     const res = await fetch(finalUrl + '/query-stream', {
@@ -5056,11 +5239,12 @@ async function rbAiSend() {
           if (evt.done) break;
         }
       }
-      if (!accumulated) throw new Error('No response received');
+      if (!accumulated) throw new Error('Worker returned empty response. Check that your Gemini API key is set in the Worker, or add your key directly in File → Connect AI.');
     } else {
-      // Fallback — try multiple endpoint names
+      // Fallback — try multiple endpoint names, track real errors
       if (typingEl) typingEl.style.display = 'none';
       const rbEndpoints = ['/query', '/ask', '/chat', '/generate'];
+      let lastRealError = null;
       let answered = false;
       for (const ep of rbEndpoints) {
         try {
@@ -5070,16 +5254,26 @@ async function rbAiSend() {
             body: JSON.stringify({ prompt: q, use_search: true }),
             signal: AbortSignal.timeout(90000)
           });
-          if (!r.ok && r.status === 404) continue;
+          if (!r.ok && r.status === 404) continue; // endpoint doesn't exist, try next
           const rawText = await r.text();
           let d; try { d = JSON.parse(rawText); } catch(_) { d = { result: rawText }; }
-          if (d.error) throw new Error(typeof d.error === 'string' ? d.error : (d.error.message || JSON.stringify(d.error)));
+          if (d.error) {
+            // Record real error but keep trying other endpoints
+            lastRealError = typeof d.error === 'string' ? d.error : (d.error.message || JSON.stringify(d.error));
+            continue;
+          }
           accumulated = d.result || d.answer || d.response || d.text || rawText || '';
-          if (msgEl) msgEl.textContent = accumulated;
-          answered = true; break;
+          if (accumulated) { if (msgEl) msgEl.textContent = accumulated; answered = true; break; }
         } catch(epErr) {
-          if (ep === rbEndpoints[rbEndpoints.length-1]) throw epErr;
+          if (epErr.name === 'AbortError') throw epErr;
+          lastRealError = epErr.message;
         }
+      }
+      if (!answered) {
+        const errMsg = lastRealError
+          ? lastRealError + '\n\n💡 Tip: Add your Gemini API key in File → Connect AI to use AI directly.'
+          : 'No AI endpoint responded. Add your Gemini API key in File → Connect AI.';
+        throw new Error(errMsg);
       }
     }
     if (statusEl) statusEl.textContent = '✅ Response received';
