@@ -1,0 +1,51 @@
+name: Update Live TV Streams
+
+# ─── Schedule ───────────────────────────────────────────────────────────────
+# Runs at 01:30 UTC daily (07:00 IST) — before Indian market open.
+# Manually triggerable from Actions tab via workflow_dispatch.
+on:
+  schedule:
+    - cron: '30 1 * * *'
+  workflow_dispatch:
+
+# ─── Permissions ────────────────────────────────────────────────────────────
+permissions:
+  contents: write   # needed to commit streams.json back to the repo
+
+jobs:
+  update-streams:
+    name: Refresh YouTube Live Stream IDs
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout the repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # 2. Set up Node.js (update-streams.js uses built-in https module — no npm install needed)
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. Run the updater script
+      - name: Run stream updater
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: node update-streams.js
+
+      # 4. Commit streams.json only if it actually changed
+      - name: Commit updated streams.json
+        run: |
+          git config --global user.name  "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet streams.json; then
+            echo "No changes to commit."
+          else
+            git add streams.json
+            git commit -m "chore: refresh live TV stream IDs [skip ci]"
+            git push
+            echo "streams.json committed and pushed."
+          fi
