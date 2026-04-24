@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multi Asset Screener v8.9.0 — Input Tool | Vilfin George</title>
+<title>Multi Asset Screener v8.9.1 — Input Tool | Vilfin George</title>
 <!-- Canonical URL — always index.html -->
 <link rel="canonical" href="https://vilfin-tv.github.io/MultiScreener/index.html"/>
 <script>
@@ -1884,39 +1884,42 @@ footer{
         {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
         {"proName":"FOREXCOM:NSXUSD","title":"Nasdaq"},
         {"proName":"FOREXCOM:DJI","title":"Dow Jones"},
-        {"proName":"SPREADEX:NIKKEI","title":"Nikkei"},
+        {"proName":"INDEX:NKY","title":"Nikkei"},
         {"proName":"TVC:HSI","title":"Hang Seng"},
         {"proName":"TVC:KOSPI","title":"KOSPI"},
-        {"proName":"ICMARKETS:STOXX50","title":"STOXX 50"},
+        {"proName":"CURRENCYCOM:EU50","title":"STOXX 50"},
         {"proName":"BMFBOVESPA:IBOV","title":"BOVESPA"},
         {"proName":"FX:EURUSD","title":"EUR/USD"},
         {"proName":"FX:AUDUSD","title":"AUD/USD"},
         {"proName":"FX_IDC:USDINR","title":"USD/INR"},
         {"proName":"FX_IDC:JPYINR","title":"JPY/INR"},
         {"proName":"FX_IDC:JPYUSD","title":"JPY/USD"},
-        {"proName":"TICKMILL:EURJPY","title":"EUR/JPY"},
+        {"proName":"FX:EURJPY","title":"EUR/JPY"},
         {"proName":"BITSTAMP:BTCUSD","title":"Bitcoin"},
         {"proName":"BITSTAMP:ETHUSD","title":"Ethereum"},
-        {"proName":"CMCMARKETS:GOLD","title":"Gold"},
-        {"proName":"MCX:SILVER1!","title":"Silver MCX"},
-        {"proName":"CAPITALCOM:COPPER","title":"Copper"},
-        {"proName":"BLACKBULL:BRENT","title":"Brent Crude"},
+        {"proName":"COMEX:GC1!","title":"Gold"},
+        {"proName":"COMEX:SI1!","title":"Silver"},
+        {"proName":"COMEX:HG1!","title":"Copper"},
+        {"proName":"TVC:UKOIL","title":"Brent Crude"},
         {"proName":"NYMEX:CL1!","title":"Crude Oil"},
-        {"proName":"MCX:NATURALGAS1!","title":"Natural Gas"},
-        {"proName":"MCX:ALUMINIUM1!","title":"Aluminium"},
-        {"proName":"NCDEX:STEEL1!","title":"Steel"},
+        {"proName":"NYMEX:NG1!","title":"Natural Gas"},
+        {"proName":"COMEX:ALI1!","title":"Aluminium"},
         {"proName":"TVC:USOIL","title":"US Oil"},
         {"proName":"NASDAQ:NVDA","title":"NVIDIA"},
         {"proName":"NASDAQ:AAPL","title":"Apple"},
+        {"proName":"NASDAQ:MSFT","title":"Microsoft"},
+        {"proName":"NASDAQ:TSLA","title":"Tesla"},
         {"proName":"NASDAQ:GOOGL","title":"Google"},
         {"proName":"NASDAQ:AMZN","title":"Amazon"},
+        {"proName":"TSE:7203","title":"Toyota"},
+        {"proName":"KRX:005930","title":"Samsung"},
         {"proName":"NASDAQ:QQQ","title":"QQQ ETF"},
         {"proName":"AMEX:VOO","title":"VOO ETF"},
         {"proName":"AMEX:VT","title":"VT ETF"},
         {"proName":"CBOE:VIX","title":"VIX"},
         {"proName":"TVC:US10Y","title":"US 10Y"},
         {"proName":"TVC:JP30Y","title":"JP 30Y"},
-        {"proName":"NSE:92GS2030","title":"India Bond"}
+        {"proName":"TVC:IN10Y","title":"India Bond"}
       ],
       "showSymbolLogo":true,
       "isTransparent":false,
@@ -1936,23 +1939,23 @@ footer{
     {
       "symbols":[
         {"proName":"CAPITALCOM:NIFTY50","title":"Nifty 50"},
-        {"proName":"CAPITALCOM:SENSEX","title":"Sensex"},
-        {"proName":"CAPITALCOM:BANKNIFTY","title":"Bank Nifty"},
+        {"proName":"BSE:SENSEX","title":"Sensex"},
+        {"proName":"TVC:BANKNIFTY","title":"Bank Nifty"},
         {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
         {"proName":"FOREXCOM:NSXUSD","title":"Nasdaq"},
-        {"proName":"SPREADEX:NIKKEI","title":"Nikkei"},
-        {"proName":"HKEX:HSI1!","title":"Hang Seng"},
+        {"proName":"INDEX:NKY","title":"Nikkei"},
+        {"proName":"TVC:HSI","title":"Hang Seng"},
         {"proName":"FX_IDC:USDINR","title":"USD/INR"},
         {"proName":"FX_IDC:JPYINR","title":"JPY/INR"},
         {"proName":"BITSTAMP:BTCUSD","title":"Bitcoin"},
-        {"proName":"CMCMARKETS:GOLD","title":"Gold"},
-        {"proName":"BLACKBULL:BRENT","title":"Brent Crude"},
+        {"proName":"COMEX:GC1!","title":"Gold"},
+        {"proName":"TVC:UKOIL","title":"Brent Crude"},
         {"proName":"NYMEX:CL1!","title":"Crude Oil"},
-        {"proName":"MCX:NATURALGAS1!","title":"Natural Gas"},
+        {"proName":"NYMEX:NG1!","title":"Natural Gas"},
         {"proName":"NASDAQ:NVDA","title":"NVIDIA"},
         {"proName":"CBOE:VIX","title":"VIX"},
         {"proName":"TVC:US10Y","title":"US 10Y"},
-        {"proName":"CAPITALCOM:COPPER","title":"Copper"}
+        {"proName":"COMEX:HG1!","title":"Copper"}
       ],
       "showSymbolLogo":true,"isTransparent":true,"displayMode":"adaptive",
       "colorTheme":"dark","locale":"en"
@@ -2830,6 +2833,7 @@ footer{
   <div class="tv-tabs" id="tv-tabs">
     <button class="tv-tab-btn active" onclick="switchTVTab('overview')" id="tvtab-overview">🌐 Overview</button>
     <button class="tv-tab-btn" onclick="switchTVTab('indices')" id="tvtab-indices">📈 Indices</button>
+    <button class="tv-tab-btn" onclick="switchTVTab('global')" id="tvtab-global">🌏 Global</button>
     <button class="tv-tab-btn" onclick="switchTVTab('stocks')" id="tvtab-stocks">🏢 Stocks</button>
     <button class="tv-tab-btn" onclick="switchTVTab('crypto')" id="tvtab-crypto">₿ Crypto</button>
     <button class="tv-tab-btn" onclick="switchTVTab('forex')" id="tvtab-forex">💱 Forex</button>
@@ -2868,13 +2872,24 @@ footer{
           "symbolActiveColor": "rgba(41, 98, 255, 0.12)",
           "tabs": [
             { "title": "Indices", "symbols": [
-                {"s":"BSE:SENSEX","d":"SENSEX"},{"s":"NSE:NIFTY50","d":"NIFTY 50"},
-                {"s":"NSE:BANKNIFTY","d":"Bank Nifty"},{"s":"NSE:NIFTYMIDCAP100","d":"Midcap Nifty"},
+                {"s":"BSE:SENSEX","d":"SENSEX"},{"s":"TVC:NIFTY","d":"NIFTY 50"},
+                {"s":"TVC:BANKNIFTY","d":"Bank Nifty"},
                 {"s":"CAPITALCOM:US100","d":"Nasdaq 100"},{"s":"SP:SPX","d":"S&P 500"},
                 {"s":"DJ:DJI","d":"Dow Jones"},{"s":"INDEX:NKY","d":"Nikkei 225"},
                 {"s":"HSI:HSI","d":"Hang Seng"},{"s":"XETR:DAX","d":"DAX"},
                 {"s":"CURRENCYCOM:UK100","d":"FTSE 100"}
               ], "originalTitle": "Indices"
+            },
+            { "title": "Global Stocks", "symbols": [
+                {"s":"NASDAQ:AAPL","d":"Apple"},{"s":"NASDAQ:MSFT","d":"Microsoft"},
+                {"s":"NASDAQ:NVDA","d":"NVIDIA"},{"s":"NASDAQ:TSLA","d":"Tesla"},
+                {"s":"BSE:RELIANCE","d":"Reliance"},{"s":"BSE:TCS","d":"TCS"},
+                {"s":"BSE:HDFCBANK","d":"HDFC Bank"},{"s":"BSE:INFY","d":"Infosys"},
+                {"s":"TSE:7203","d":"Toyota"},{"s":"TSE:6758","d":"Sony"},
+                {"s":"TSE:8306","d":"Mitsubishi UFJ"},{"s":"TSE:6861","d":"Keyence"},
+                {"s":"KRX:005930","d":"Samsung"},{"s":"KRX:000660","d":"SK Hynix"},
+                {"s":"KRX:005380","d":"Hyundai"}
+              ], "originalTitle": "Global Stocks"
             },
             { "title": "Commodities", "symbols": [
                 {"s":"COMEX:GC1!","d":"Gold"},{"s":"COMEX:SI1!","d":"Silver"},
@@ -2909,15 +2924,34 @@ footer{
           "width": "100%",
           "height": "100%",
           "symbolsGroups": [
-            { "name": "Indian Indices",
+            { "name": "Indian Markets",
               "symbols": [
                 {"name":"BSE:SENSEX","displayName":"SENSEX"},
-                {"name":"NSE:NIFTY50","displayName":"NIFTY 50"},
-                {"name":"NSE:BANKNIFTY","displayName":"Bank Nifty"},
-                {"name":"NSE:NIFTYMIDCAP100","displayName":"Midcap Nifty"},
-                {"name":"NSE:NIFTYFINSERVICE","displayName":"Fin Nifty"},
-                {"name":"NSE:NIFTYIT","displayName":"Nifty IT"},
-                {"name":"NSE:NIFTYPHARMA","displayName":"Nifty Pharma"}
+                {"name":"TVC:NIFTY","displayName":"NIFTY 50"},
+                {"name":"TVC:BANKNIFTY","displayName":"Bank Nifty"},
+                {"name":"BSE:RELIANCE","displayName":"Reliance"},
+                {"name":"BSE:TCS","displayName":"TCS"},
+                {"name":"BSE:HDFCBANK","displayName":"HDFC Bank"},
+                {"name":"BSE:INFY","displayName":"Infosys"}
+              ]
+            },
+            { "name": "US Equities",
+              "symbols": [
+                {"name":"NASDAQ:AAPL","displayName":"Apple"},
+                {"name":"NASDAQ:MSFT","displayName":"Microsoft"},
+                {"name":"NASDAQ:NVDA","displayName":"NVIDIA"},
+                {"name":"NASDAQ:TSLA","displayName":"Tesla"}
+              ]
+            },
+            { "name": "Japan & Korea",
+              "symbols": [
+                {"name":"TSE:7203","displayName":"Toyota"},
+                {"name":"TSE:6758","displayName":"Sony"},
+                {"name":"TSE:8306","displayName":"Mitsubishi UFJ"},
+                {"name":"TSE:6861","displayName":"Keyence"},
+                {"name":"KRX:005930","displayName":"Samsung"},
+                {"name":"KRX:000660","displayName":"SK Hynix"},
+                {"name":"KRX:005380","displayName":"Hyundai"}
               ]
             },
             { "name": "Global Indices",
@@ -2929,6 +2963,57 @@ footer{
                 {"name":"HSI:HSI","displayName":"Hang Seng"},
                 {"name":"XETR:DAX","displayName":"DAX"},
                 {"name":"CURRENCYCOM:UK100","displayName":"FTSE 100"}
+              ]
+            }
+          ],
+          "showSymbolLogo": true,
+          "isTransparent": false,
+          "colorTheme": "dark",
+          "locale": "en"
+        }
+        </script>
+      </div>
+    </div>
+
+    <!-- Global Stocks — Market Quotes widget (US / India / Japan / Korea) -->
+    <div class="tv-widget-frame" id="tvframe-global">
+      <div class="tradingview-widget-container" style="height:100%;width:100%">
+        <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+        <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js" async>
+        {
+          "width": "100%",
+          "height": "100%",
+          "symbolsGroups": [
+            { "name": "US Equities",
+              "symbols": [
+                {"name":"NASDAQ:AAPL","displayName":"Apple"},
+                {"name":"NASDAQ:MSFT","displayName":"Microsoft"},
+                {"name":"NASDAQ:NVDA","displayName":"NVIDIA"},
+                {"name":"NASDAQ:TSLA","displayName":"Tesla"}
+              ]
+            },
+            { "name": "India — BSE",
+              "symbols": [
+                {"name":"BSE:RELIANCE","displayName":"Reliance"},
+                {"name":"BSE:TCS","displayName":"TCS"},
+                {"name":"BSE:HDFCBANK","displayName":"HDFC Bank"},
+                {"name":"BSE:INFY","displayName":"Infosys"}
+              ]
+            },
+            { "name": "Japan — TSE",
+              "symbols": [
+                {"name":"TSE:7203","displayName":"Toyota"},
+                {"name":"TSE:6758","displayName":"Sony"},
+                {"name":"TSE:8306","displayName":"Mitsubishi UFJ"},
+                {"name":"TSE:6861","displayName":"Keyence"}
+              ]
+            },
+            { "name": "South Korea — KRX",
+              "symbols": [
+                {"name":"KRX:005930","displayName":"Samsung Electronics"},
+                {"name":"KRX:000660","displayName":"SK Hynix"},
+                {"name":"KRX:005380","displayName":"Hyundai Motor"}
               ]
             }
           ],
