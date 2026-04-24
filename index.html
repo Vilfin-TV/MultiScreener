@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multi Asset Screener v8.9.1 — Input Tool | Vilfin George</title>
+<title>Multi Asset Screener v8.9.2 — Input Tool | Vilfin George</title>
 <!-- Canonical URL — always index.html -->
 <link rel="canonical" href="https://vilfin-tv.github.io/MultiScreener/index.html"/>
 <script>
@@ -1879,7 +1879,7 @@ footer{
     <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
     {
       "symbols":[
-        {"proName":"CAPITALCOM:NIFTY50","title":"Nifty 50"},
+        {"proName":"NSE:NIFTY","title":"Nifty 50"},
         {"proName":"BSE:SENSEX","title":"Sensex"},
         {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
         {"proName":"FOREXCOM:NSXUSD","title":"Nasdaq"},
@@ -1887,7 +1887,7 @@ footer{
         {"proName":"INDEX:NKY","title":"Nikkei"},
         {"proName":"TVC:HSI","title":"Hang Seng"},
         {"proName":"TVC:KOSPI","title":"KOSPI"},
-        {"proName":"CURRENCYCOM:EU50","title":"STOXX 50"},
+        {"proName":"TVC:SX5E","title":"STOXX 50"},
         {"proName":"BMFBOVESPA:IBOV","title":"BOVESPA"},
         {"proName":"FX:EURUSD","title":"EUR/USD"},
         {"proName":"FX:AUDUSD","title":"AUD/USD"},
@@ -1897,13 +1897,13 @@ footer{
         {"proName":"FX:EURJPY","title":"EUR/JPY"},
         {"proName":"BITSTAMP:BTCUSD","title":"Bitcoin"},
         {"proName":"BITSTAMP:ETHUSD","title":"Ethereum"},
-        {"proName":"COMEX:GC1!","title":"Gold"},
-        {"proName":"COMEX:SI1!","title":"Silver"},
-        {"proName":"COMEX:HG1!","title":"Copper"},
+        {"proName":"TVC:GOLD","title":"Gold"},
+        {"proName":"TVC:SILVER","title":"Silver"},
+        {"proName":"CAPITALCOM:COPPER","title":"Copper"},
         {"proName":"TVC:UKOIL","title":"Brent Crude"},
         {"proName":"NYMEX:CL1!","title":"Crude Oil"},
-        {"proName":"NYMEX:NG1!","title":"Natural Gas"},
-        {"proName":"COMEX:ALI1!","title":"Aluminium"},
+        {"proName":"CAPITALCOM:NATURALGAS","title":"Natural Gas"},
+        {"proName":"LME:AH1!","title":"Aluminium"},
         {"proName":"TVC:USOIL","title":"US Oil"},
         {"proName":"NASDAQ:NVDA","title":"NVIDIA"},
         {"proName":"NASDAQ:AAPL","title":"Apple"},
@@ -1938,9 +1938,9 @@ footer{
     <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
     {
       "symbols":[
-        {"proName":"CAPITALCOM:NIFTY50","title":"Nifty 50"},
+        {"proName":"NSE:NIFTY","title":"Nifty 50"},
         {"proName":"BSE:SENSEX","title":"Sensex"},
-        {"proName":"TVC:BANKNIFTY","title":"Bank Nifty"},
+        {"proName":"NSE:BANKNIFTY","title":"Bank Nifty"},
         {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
         {"proName":"FOREXCOM:NSXUSD","title":"Nasdaq"},
         {"proName":"INDEX:NKY","title":"Nikkei"},
@@ -1948,14 +1948,14 @@ footer{
         {"proName":"FX_IDC:USDINR","title":"USD/INR"},
         {"proName":"FX_IDC:JPYINR","title":"JPY/INR"},
         {"proName":"BITSTAMP:BTCUSD","title":"Bitcoin"},
-        {"proName":"COMEX:GC1!","title":"Gold"},
+        {"proName":"TVC:GOLD","title":"Gold"},
         {"proName":"TVC:UKOIL","title":"Brent Crude"},
         {"proName":"NYMEX:CL1!","title":"Crude Oil"},
-        {"proName":"NYMEX:NG1!","title":"Natural Gas"},
+        {"proName":"CAPITALCOM:NATURALGAS","title":"Natural Gas"},
         {"proName":"NASDAQ:NVDA","title":"NVIDIA"},
         {"proName":"CBOE:VIX","title":"VIX"},
         {"proName":"TVC:US10Y","title":"US 10Y"},
-        {"proName":"COMEX:HG1!","title":"Copper"}
+        {"proName":"CAPITALCOM:COPPER","title":"Copper"}
       ],
       "showSymbolLogo":true,"isTransparent":true,"displayMode":"adaptive",
       "colorTheme":"dark","locale":"en"
@@ -2872,8 +2872,8 @@ footer{
           "symbolActiveColor": "rgba(41, 98, 255, 0.12)",
           "tabs": [
             { "title": "Indices", "symbols": [
-                {"s":"BSE:SENSEX","d":"SENSEX"},{"s":"TVC:NIFTY","d":"NIFTY 50"},
-                {"s":"TVC:BANKNIFTY","d":"Bank Nifty"},
+                {"s":"BSE:SENSEX","d":"SENSEX"},{"s":"NSE:NIFTY","d":"NIFTY 50"},
+                {"s":"NSE:BANKNIFTY","d":"Bank Nifty"},
                 {"s":"CAPITALCOM:US100","d":"Nasdaq 100"},{"s":"SP:SPX","d":"S&P 500"},
                 {"s":"DJ:DJI","d":"Dow Jones"},{"s":"INDEX:NKY","d":"Nikkei 225"},
                 {"s":"HSI:HSI","d":"Hang Seng"},{"s":"XETR:DAX","d":"DAX"},
@@ -2892,9 +2892,10 @@ footer{
               ], "originalTitle": "Global Stocks"
             },
             { "title": "Commodities", "symbols": [
-                {"s":"COMEX:GC1!","d":"Gold"},{"s":"COMEX:SI1!","d":"Silver"},
+                {"s":"TVC:GOLD","d":"Gold"},{"s":"TVC:SILVER","d":"Silver"},
                 {"s":"NYMEX:CL1!","d":"Crude Oil WTI"},{"s":"TVC:UKOIL","d":"Brent Oil"},
-                {"s":"COMEX:HG1!","d":"Copper"},{"s":"TVC:USOIL","d":"US Oil"}
+                {"s":"CAPITALCOM:COPPER","d":"Copper"},{"s":"CAPITALCOM:NATURALGAS","d":"Natural Gas"},
+                {"s":"LME:AH1!","d":"Aluminium"}
               ], "originalTitle": "Commodities"
             },
             { "title": "Bonds", "symbols": [
@@ -2927,8 +2928,8 @@ footer{
             { "name": "Indian Markets",
               "symbols": [
                 {"name":"BSE:SENSEX","displayName":"SENSEX"},
-                {"name":"TVC:NIFTY","displayName":"NIFTY 50"},
-                {"name":"TVC:BANKNIFTY","displayName":"Bank Nifty"},
+                {"name":"NSE:NIFTY","displayName":"NIFTY 50"},
+                {"name":"NSE:BANKNIFTY","displayName":"Bank Nifty"},
                 {"name":"BSE:RELIANCE","displayName":"Reliance"},
                 {"name":"BSE:TCS","displayName":"TCS"},
                 {"name":"BSE:HDFCBANK","displayName":"HDFC Bank"},
@@ -3102,8 +3103,8 @@ footer{
           "symbolsGroups": [
             { "name": "Precious Metals",
               "symbols": [
-                {"name":"COMEX:GC1!","displayName":"Gold"},
-                {"name":"COMEX:SI1!","displayName":"Silver"},
+                {"name":"TVC:GOLD","displayName":"Gold"},
+                {"name":"TVC:SILVER","displayName":"Silver"},
                 {"name":"TVC:PLATINUM","displayName":"Platinum"},
                 {"name":"NYMEX:PA1!","displayName":"Palladium"}
               ]
@@ -3112,12 +3113,13 @@ footer{
               "symbols": [
                 {"name":"NYMEX:CL1!","displayName":"WTI Crude"},
                 {"name":"TVC:UKOIL","displayName":"Brent Crude"},
-                {"name":"NYMEX:NG1!","displayName":"Natural Gas"}
+                {"name":"CAPITALCOM:NATURALGAS","displayName":"Natural Gas"}
               ]
             },
             { "name": "Base Metals & Agri",
               "symbols": [
-                {"name":"COMEX:HG1!","displayName":"Copper"},
+                {"name":"CAPITALCOM:COPPER","displayName":"Copper"},
+                {"name":"LME:AH1!","displayName":"Aluminium"},
                 {"name":"CME:ZC1!","displayName":"Corn"},
                 {"name":"CME:ZW1!","displayName":"Wheat"},
                 {"name":"CME:ZS1!","displayName":"Soybeans"}
