@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multi Asset Screener v8.8.0 — Input Tool | Vilfin George</title>
+<title>Multi Asset Screener v8.8.2 — Input Tool | Vilfin George</title>
 <!-- Canonical URL — always index.html -->
 <link rel="canonical" href="https://vilfin-tv.github.io/MultiScreener/index.html"/>
 <script>
@@ -4332,9 +4332,22 @@ async function autoSendToGemini() {
         if (text) { handleGeminiResult(text); return; }
       } catch(e) { /* try next */ }
     }
-    // All failed
-    _aiProgressStop();
-    _vilfinProgressError('No AI service available. Use File → Connect Services to add API keys.');
+    // All paid services failed — cascade to free AI stack (no API key needed)
+    _vilfinProgressUpdate(70, '🌐 Trying free AI & web sources…');
+    try {
+      await _aiFreeQuery(
+        queryText,
+        (chunk) => { /* chunks not used here — we wait for full result */ },
+        (fullText) => { handleGeminiResult(fullText); },
+        (err) => {
+          _aiProgressStop();
+          _vilfinProgressError('⚠️ All AI sources failed. Please check your internet connection.');
+        }
+      );
+    } catch(e) {
+      _aiProgressStop();
+      _vilfinProgressError('⚠️ All AI sources failed. Please check your internet connection.');
+    }
   }
 
   function handleGeminiResult(answer) {
@@ -9875,38 +9888,18 @@ async function sendLosslessJson() {
   window._streamAbort = new AbortController();
 
   try {
-    const res = await fetch(finalUrl + '/query-stream', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, use_search: true, model, json_mode: true }),
-      signal: window._streamAbort.signal
+    _aiProgressSet(25, '🤖 Generating JSON…', 'ps3');
+
+    // Use load-balanced AI (Coworker → Gemini → OpenAI → Custom → Free — works without any API key)
+    await new Promise((resolve, reject) => {
+      _aiLoadBalancedQuery(
+        prompt,
+        model,
+        (chunk) => { rawJson += chunk; },
+        (full)  => { if (full) rawJson = full; _aiProgressSet(90, '📥 Parsing JSON…', 'ps4'); resolve(); },
+        (err)   => reject(new Error(err || 'AI generation failed'))
+      );
     });
-
-    if (res.ok && res.body) {
-      const reader = res.body.getReader();
-      const dec = new TextDecoder();
-      let buf = '';
-      _aiProgressSet(25, '🤖 Generating JSON…', 'ps3');
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        const lines = buf.split('\n'); buf = lines.pop() || '';
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          let evt; try { evt = JSON.parse(line.slice(6)); } catch { continue; }
-          if (evt.chunk) rawJson += evt.chunk;
-          if (evt.done) { _aiProgressSet(90, '📥 Parsing JSON…', 'ps4'); }
-        }
-      }
-    } else {
-      const data = await fetch(finalUrl + '/query', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, use_search: true, model, json_mode: true }), signal: AbortSignal.timeout(120000)
-      }).then(r => r.json());
-      rawJson = data.result || '';
-    }
 
     // Clean up JSON (remove markdown fences if any)
     rawJson = rawJson.trim().replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
@@ -10141,42 +10134,19 @@ OUTPUT: Return ONLY the complete HTML starting with <!DOCTYPE html>. No markdown
     let html = '';
     if (statusText) statusText.textContent = '🔌 Starting AI generation…';
 
-    const res = await fetch(workerUrl + '/query-stream', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, use_search: false, model: 'gemini-2.0-flash' }),
-      signal: AbortSignal.timeout(180000)
+    // Use load-balanced AI (Coworker → Gemini → OpenAI → Custom → Free — works without any API key)
+    await new Promise((resolve, reject) => {
+      _aiLoadBalancedQuery(
+        prompt,
+        'gemini-2.0-flash',
+        (chunk) => {
+          html += chunk;
+          if (statusText) statusText.textContent = `✍️ Designing… ${html.length.toLocaleString()} chars`;
+        },
+        (full) => { if (full) html = full; resolve(); },
+        (err)  => reject(new Error(err || 'AI generation failed'))
+      );
     });
-
-    if (res.ok && res.body) {
-      const reader = res.body.getReader();
-      const dec = new TextDecoder();
-      let buf = '';
-      if (statusText) statusText.textContent = '🤖 AI is designing your presentation…';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        const lines = buf.split('\n');
-        buf = lines.pop() || '';
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          let evt; try { evt = JSON.parse(line.slice(6)); } catch { continue; }
-          if (evt.chunk) html += evt.chunk;
-          if (evt.done) break;
-        }
-      }
-    } else {
-      if (statusText) statusText.textContent = '🔄 Using standard query…';
-      const data = await fetch(workerUrl + '/query', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, use_search: false, model: 'gemini-2.0-flash' }),
-        signal: AbortSignal.timeout(180000)
-      }).then(r => r.json());
-      if (data.error) throw new Error(typeof data.error === 'string' ? data.error : data.error.message);
-      html = data.result || '';
-    }
 
     // Strip markdown fences if present
     html = html.replace(/^```html\s*/im, '').replace(/^```\s*/im, '').replace(/```\s*$/im, '').trim();

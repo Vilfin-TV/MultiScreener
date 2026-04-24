@@ -15,7 +15,7 @@ const VILTV_CONFIG = {
   DEFAULT_MODEL: 'gemini-2.5-flash',
 
   // App version
-  VERSION: 'v8.6.2',
+  VERSION: 'v8.8.2',
 };
 
 // Auto-register Worker URL into localStorage on load (so all pages can use it)
