@@ -2618,8 +2618,8 @@ footer{
       <div class="rb-msg rb-msg-bot">
         <div class="rb-msg-avatar">🤖</div>
         <div class="rb-msg-bubble">
-          <div style="font-weight:600;margin-bottom:4px;color:var(--gold2)">VilfinTV AI</div>
-          Ask me anything about markets, stocks, ETFs, mutual funds or the economy.
+          <div style="font-weight:600;margin-bottom:4px;color:var(--gold2)">VilfinTV AI <span style="font-size:10px;background:var(--green);color:#000;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px">FREE</span></div>
+          Ask me anything about markets, stocks, ETFs, mutual funds or the economy. No API key required — powered by free AI + live web search.
           <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px" id="rb-quick-chips">
             <!-- Filled dynamically by _renderRandomChips() -->
           </div>
@@ -3956,6 +3956,111 @@ async function _callAPI3Direct(prompt, model) {
 }
 
 // ── AI Load Balancer: Worker → Gemini → OpenAI → API3 → prompt user ──
+// ═══════════════════════════════════════════════════════════════════
+// FREE AI QUERY — Pollinations.ai → DuckDuckGo → Wikipedia → Search links
+// No API key required. Works automatically out-of-the-box.
+// ═══════════════════════════════════════════════════════════════════
+async function _aiFreeQuery(prompt, onChunk, onDone, onError) {
+  const sysPrompt = 'You are VilfinTV AI, a concise and accurate assistant for global financial markets, stocks, ETFs, mutual funds, commodities, crypto, forex and the economy. Give practical, numbers-aware answers. Mention key figures, dates and context. Be balanced and factual. If asked about a live price, explain that you may not have real-time data and suggest where to check. Today is ' + new Date().toDateString() + '.';
+
+  // ── Strategy 1: Pollinations.ai POST with OpenAI model (free, no key, CORS) ──
+  try {
+    const res = await fetch('https://text.pollinations.ai/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [
+          { role: 'system', content: sysPrompt },
+          { role: 'user',   content: prompt }
+        ],
+        model: 'openai',
+        private: true,
+        referrer: 'vilfintv'
+      }),
+      signal: AbortSignal.timeout(60000)
+    });
+    if (res.ok) {
+      const text = (await res.text()).trim();
+      if (text && text.length > 15 && !/^error/i.test(text)) {
+        onChunk && onChunk(text); onDone && onDone(text); return;
+      }
+    }
+  } catch(e) { /* fall through */ }
+
+  // ── Strategy 2: Pollinations.ai GET (simpler endpoint, alternative model) ──
+  try {
+    const url = 'https://text.pollinations.ai/' + encodeURIComponent(prompt) +
+                '?model=mistral&system=' + encodeURIComponent(sysPrompt);
+    const res = await fetch(url, { signal: AbortSignal.timeout(45000) });
+    if (res.ok) {
+      const text = (await res.text()).trim();
+      if (text && text.length > 15 && !/^error/i.test(text)) {
+        onChunk && onChunk(text); onDone && onDone(text); return;
+      }
+    }
+  } catch(e) { /* fall through */ }
+
+  // ── Strategy 3: DuckDuckGo Instant Answer (facts / definitions) ──
+  try {
+    const ddgUrl = 'https://api.duckduckgo.com/?q=' + encodeURIComponent(prompt) + '&format=json&no_html=1&skip_disambig=1';
+    const res = await fetch(ddgUrl, { signal: AbortSignal.timeout(15000) });
+    if (res.ok) {
+      const data = await res.json();
+      const parts = [];
+      if (data.Heading)      parts.push('📌 ' + data.Heading);
+      if (data.AbstractText) parts.push(data.AbstractText);
+      if (data.Answer)       parts.push('Answer: ' + data.Answer);
+      if (data.Definition)   parts.push('Definition: ' + data.Definition);
+      if (Array.isArray(data.RelatedTopics) && data.RelatedTopics.length) {
+        parts.push('\nRelated:');
+        data.RelatedTopics.slice(0, 6).forEach(t => {
+          const tx = (t && t.Text) ? t.Text : '';
+          if (tx) parts.push('• ' + tx);
+        });
+      }
+      if (parts.length > 1) {
+        const text = parts.join('\n') + '\n\n— Source: DuckDuckGo';
+        onChunk && onChunk(text); onDone && onDone(text); return;
+      }
+    }
+  } catch(e) { /* fall through */ }
+
+  // ── Strategy 4: Wikipedia summary ──
+  try {
+    const sRes = await fetch('https://en.wikipedia.org/w/api.php?action=opensearch&search=' +
+                             encodeURIComponent(prompt) + '&limit=1&format=json&origin=*',
+                             { signal: AbortSignal.timeout(15000) });
+    if (sRes.ok) {
+      const sData = await sRes.json();
+      const title = Array.isArray(sData) && sData[1] && sData[1][0];
+      if (title) {
+        const wRes = await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' +
+                                 encodeURIComponent(title),
+                                 { signal: AbortSignal.timeout(15000) });
+        if (wRes.ok) {
+          const w = await wRes.json();
+          if (w.extract) {
+            const link = (w.content_urls && w.content_urls.desktop && w.content_urls.desktop.page) || '';
+            const text = '📚 ' + (w.title || title) + '\n\n' + w.extract +
+                         (link ? '\n\nRead more: ' + link : '') + '\n\n— Source: Wikipedia';
+            onChunk && onChunk(text); onDone && onDone(text); return;
+          }
+        }
+      }
+    }
+  } catch(e) { /* fall through */ }
+
+  // ── Strategy 5: Always-useful live search links (ultimate fallback) ──
+  const q = encodeURIComponent(prompt);
+  const fb = "I couldn't reach a free AI service just now. Here are live search links that always work — click to open in a new tab:\n\n" +
+             "🔎 Google: https://www.google.com/search?q=" + q + "\n" +
+             "🦆 DuckDuckGo: https://duckduckgo.com/?q=" + q + "\n" +
+             "📰 Google News: https://news.google.com/search?q=" + q + "\n" +
+             "📊 TradingView: https://www.tradingview.com/symbols/?query=" + q + "\n" +
+             "📈 Moneycontrol: https://www.moneycontrol.com/india/stockpricequote/search.php?search_str=" + q;
+  onChunk && onChunk(fb); onDone && onDone(fb);
+}
+
 async function _aiLoadBalancedQuery(prompt, model, onChunk, onDone, onError) {
   const workerUrl = (window._cfWorkerUrl || localStorage.getItem(CF_KEY) || '').replace(/\/+$/,'');
 
@@ -4024,9 +4129,8 @@ async function _aiLoadBalancedQuery(prompt, model, onChunk, onDone, onError) {
     } catch(e) { /* fall through */ }
   }
 
-  // 5. Nothing available — prompt user
-  const err = new Error('No AI service connected. Use File → Connect Services to add your API key or Coworker URL.');
-  onError&&onError(err); throw err;
+  // 5. Nothing connected — use the FREE automatic stack (no API key needed)
+  return _aiFreeQuery(prompt, onChunk, onDone, onError);
 }
 
 // ── AI QUERY modal ───────────────────────────────────────────────────
@@ -5505,18 +5609,17 @@ async function rbAiSend() {
   const msgsEl = document.getElementById('rb-ai-messages');
 
   try {
-    // Check if any service is available, prompt if not
-    const hasAny = !!(window._cfWorkerUrl || localStorage.getItem(CF_KEY) ||
+    // Prefer paid services if user has configured any; otherwise use FREE stack.
+    // Either way, no API key is REQUIRED — the free stack always responds.
+    const hasPaid = !!(window._cfWorkerUrl || localStorage.getItem(CF_KEY) ||
       localStorage.getItem(SVC_GEMINI_KEY) || localStorage.getItem(SVC_OPENAI_KEY) ||
       (localStorage.getItem(SVC_API3_KEY) && localStorage.getItem(SVC_API3_URL)));
-    if (!hasAny) {
-      window._pendingAutoSend = false;
-      openServicesModal();
-      if (msgEl) msgEl.textContent = '⚠️ No AI service connected. Configure one above and try again.';
-      return;
-    }
 
-    await _aiLoadBalancedQuery(q, model,
+    const runner = hasPaid ? _aiLoadBalancedQuery.bind(null, q, model) : _aiFreeQuery.bind(null, q);
+
+    if (statusEl) statusEl.textContent = hasPaid ? '⏳ Contacting AI…' : '⏳ Searching free AI & web…';
+
+    await runner(
       (partial) => {
         if (typingEl) typingEl.style.display = 'none';
         if (msgEl) { msgEl.textContent = partial; if(msgsEl) msgsEl.scrollTop = 99999; }
@@ -5527,8 +5630,8 @@ async function rbAiSend() {
         if (statusEl) statusEl.textContent = '✅ Response received';
       },
       (err) => {
-        if (msgEl) msgEl.textContent = '❌ ' + err.message;
-        if (statusEl) statusEl.textContent = '⚠️ ' + err.message;
+        if (msgEl) msgEl.textContent = '❌ ' + (err && err.message ? err.message : 'Error');
+        if (statusEl) statusEl.textContent = '⚠️ ' + (err && err.message ? err.message : 'Error');
       }
     );
   } catch(e) {
@@ -5543,14 +5646,15 @@ async function rbAiSend() {
   }
 }
 
-// Update sidebar status dot when worker connects/disconnects
+// Update sidebar status dot — free stack always available, no key required
 function rbUpdateAiStatus(connected) {
   const dot = document.getElementById('rb-ai-dot');
   const status = document.getElementById('rb-ai-status');
   const label = document.getElementById('rb-ai-model-label');
-  if (dot) dot.style.background = connected ? 'var(--green)' : 'var(--text3)';
-  if (status) status.textContent = connected ? 'Ready — type your question' : 'AI service not connected. Use File → Connect.';
-  if (label) label.textContent = '';
+  // Free AI+search stack is always on; show green unless user explicitly disconnects
+  if (dot) dot.style.background = 'var(--green)';
+  if (status) status.textContent = connected ? 'Ready (API connected) — type your question' : 'Ready (Free AI) — type your question';
+  if (label) label.textContent = connected ? '' : 'Free';
 }
 
 // ═══════════════════════════════════════════════════════════════════
