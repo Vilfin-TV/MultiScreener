@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multi Asset Screener v8.8.2 — Input Tool | Vilfin George</title>
+<title>Multi Asset Screener v8.9.0 — Input Tool | Vilfin George</title>
 <!-- Canonical URL — always index.html -->
 <link rel="canonical" href="https://vilfin-tv.github.io/MultiScreener/index.html"/>
 <script>
@@ -2618,8 +2618,8 @@ footer{
       <div class="rb-msg rb-msg-bot">
         <div class="rb-msg-avatar">🤖</div>
         <div class="rb-msg-bubble">
-          <div style="font-weight:600;margin-bottom:4px;color:var(--gold2)">VilfinTV AI <span style="font-size:10px;background:var(--green);color:#000;padding:1px 6px;border-radius:8px;font-weight:700;margin-left:4px">FREE</span></div>
-          Ask me anything about markets, stocks, ETFs, mutual funds or the economy. No API key required — powered by free AI + live web search.
+          <div style="font-weight:600;margin-bottom:4px;color:var(--gold2)">Market Assistant</div>
+          Ask about any stock, index, sector or macro theme — get intelligent, research-grade answers instantly.
           <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px" id="rb-quick-chips">
             <!-- Filled dynamically by _renderRandomChips() -->
           </div>
@@ -3961,9 +3961,49 @@ async function _callAPI3Direct(prompt, model) {
 // No API key required. Works automatically out-of-the-box.
 // ═══════════════════════════════════════════════════════════════════
 async function _aiFreeQuery(prompt, onChunk, onDone, onError) {
-  const sysPrompt = 'You are VilfinTV AI, a concise and accurate assistant for global financial markets, stocks, ETFs, mutual funds, commodities, crypto, forex and the economy. Give practical, numbers-aware answers. Mention key figures, dates and context. Be balanced and factual. If asked about a live price, explain that you may not have real-time data and suggest where to check. Today is ' + new Date().toDateString() + '.';
+  const sysPrompt = 'You are a professional financial Market Assistant. Provide concise, accurate, research-grade analysis on global markets, equities, ETFs, commodities, crypto and macro themes. Cite key figures and dates. Today is ' + new Date().toDateString() + '.';
 
-  // ── Strategy 1: Pollinations.ai POST with OpenAI model (free, no key, CORS) ──
+  // Helper: reject SSE / error strings, accept real text
+  function _isGoodText(t) {
+    return t && t.length > 20 && !t.startsWith('data:') && !/^(\{|error|<!)/i.test(t);
+  }
+
+  // ── Strategy 1: Pollinations.ai OpenAI-compatible endpoint (JSON response) ──
+  try {
+    const res = await fetch('https://text.pollinations.ai/openai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'openai-large',
+        messages: [
+          { role: 'system', content: sysPrompt },
+          { role: 'user',   content: prompt }
+        ],
+        stream: false,
+        private: true
+      }),
+      signal: AbortSignal.timeout(60000)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const text = (data?.choices?.[0]?.message?.content || '').trim();
+      if (text && text.length > 20) { onChunk && onChunk(text); onDone && onDone(text); return; }
+    }
+  } catch(e) { /* fall through */ }
+
+  // ── Strategy 2: Pollinations.ai GET (plain text, short system prompt to avoid 414) ──
+  try {
+    const shortSys = 'Concise financial AI. Today: ' + new Date().toDateString();
+    const url = 'https://text.pollinations.ai/' + encodeURIComponent(prompt.slice(0, 400)) +
+                '?model=mistral&nologo=true&system=' + encodeURIComponent(shortSys);
+    const res = await fetch(url, { signal: AbortSignal.timeout(45000) });
+    if (res.ok) {
+      const text = (await res.text()).trim();
+      if (_isGoodText(text)) { onChunk && onChunk(text); onDone && onDone(text); return; }
+    }
+  } catch(e) { /* fall through */ }
+
+  // ── Strategy 3: Pollinations.ai POST plain endpoint (stream:false, handles JSON or text) ──
   try {
     const res = await fetch('https://text.pollinations.ai/', {
       method: 'POST',
@@ -3973,34 +4013,24 @@ async function _aiFreeQuery(prompt, onChunk, onDone, onError) {
           { role: 'system', content: sysPrompt },
           { role: 'user',   content: prompt }
         ],
-        model: 'openai',
-        private: true,
-        referrer: 'vilfintv'
+        model: 'mistral',
+        stream: false,
+        private: true
       }),
-      signal: AbortSignal.timeout(60000)
+      signal: AbortSignal.timeout(45000)
     });
     if (res.ok) {
-      const text = (await res.text()).trim();
-      if (text && text.length > 15 && !/^error/i.test(text)) {
-        onChunk && onChunk(text); onDone && onDone(text); return;
+      const raw = (await res.text()).trim();
+      // Extract from JSON if needed (some endpoints wrap response)
+      let text = raw;
+      if (raw.startsWith('{')) {
+        try { const d = JSON.parse(raw); text = d?.choices?.[0]?.message?.content || d?.text || raw; } catch {}
       }
+      if (_isGoodText(text)) { onChunk && onChunk(text); onDone && onDone(text); return; }
     }
   } catch(e) { /* fall through */ }
 
-  // ── Strategy 2: Pollinations.ai GET (simpler endpoint, alternative model) ──
-  try {
-    const url = 'https://text.pollinations.ai/' + encodeURIComponent(prompt) +
-                '?model=mistral&system=' + encodeURIComponent(sysPrompt);
-    const res = await fetch(url, { signal: AbortSignal.timeout(45000) });
-    if (res.ok) {
-      const text = (await res.text()).trim();
-      if (text && text.length > 15 && !/^error/i.test(text)) {
-        onChunk && onChunk(text); onDone && onDone(text); return;
-      }
-    }
-  } catch(e) { /* fall through */ }
-
-  // ── Strategy 3: DuckDuckGo Instant Answer (facts / definitions) ──
+  // ── Strategy 4: DuckDuckGo Instant Answer (facts / definitions) ──
   try {
     const ddgUrl = 'https://api.duckduckgo.com/?q=' + encodeURIComponent(prompt) + '&format=json&no_html=1&skip_disambig=1';
     const res = await fetch(ddgUrl, { signal: AbortSignal.timeout(15000) });
@@ -4025,7 +4055,7 @@ async function _aiFreeQuery(prompt, onChunk, onDone, onError) {
     }
   } catch(e) { /* fall through */ }
 
-  // ── Strategy 4: Wikipedia summary ──
+  // ── Strategy 5: Wikipedia summary ──
   try {
     const sRes = await fetch('https://en.wikipedia.org/w/api.php?action=opensearch&search=' +
                              encodeURIComponent(prompt) + '&limit=1&format=json&origin=*',
@@ -4050,9 +4080,9 @@ async function _aiFreeQuery(prompt, onChunk, onDone, onError) {
     }
   } catch(e) { /* fall through */ }
 
-  // ── Strategy 5: Always-useful live search links (ultimate fallback) ──
+  // ── Strategy 6: Always-useful live search links (ultimate fallback — never fails) ──
   const q = encodeURIComponent(prompt);
-  const fb = "I couldn't reach a free AI service just now. Here are live search links that always work — click to open in a new tab:\n\n" +
+  const fb = "Live intelligence sources are temporarily unavailable. Use these direct links:\n\n" +
              "🔎 Google: https://www.google.com/search?q=" + q + "\n" +
              "🦆 DuckDuckGo: https://duckduckgo.com/?q=" + q + "\n" +
              "📰 Google News: https://news.google.com/search?q=" + q + "\n" +
@@ -4333,7 +4363,7 @@ async function autoSendToGemini() {
       } catch(e) { /* try next */ }
     }
     // All paid services failed — cascade to free AI stack (no API key needed)
-    _vilfinProgressUpdate(70, '🌐 Trying free AI & web sources…');
+    _vilfinProgressUpdate(70, '🌐 Searching intelligence sources…');
     try {
       await _aiFreeQuery(
         queryText,
@@ -4574,24 +4604,80 @@ function _renderRandomChips() {
   ).join('');
 }
 
+// ── Live TV: fetch streams.json (updated daily by GitHub Actions) ────────────
+async function fetchAndPopulateStreams() {
+  try {
+    const res = await fetch('./streams.json?v=' + Date.now());
+    if (!res.ok) return; // gracefully fall back to static HTML select
+    const data = await res.json();
+    if (!Array.isArray(data.channels) || !data.channels.length) return;
+
+    const sel = document.getElementById('yt-channel-select');
+    if (!sel) return;
+
+    // Group channels preserving declaration order
+    const groups = new Map();
+    for (const ch of data.channels) {
+      const g = ch.group || 'Other';
+      if (!groups.has(g)) groups.set(g, []);
+      groups.get(g).push(ch);
+    }
+
+    // Rebuild select from streams.json data
+    sel.innerHTML = '';
+    for (const [groupName, channels] of groups) {
+      const og = document.createElement('optgroup');
+      og.label = groupName;
+      for (const ch of channels) {
+        const opt = document.createElement('option');
+        opt.value = ch.videoId;
+        opt.textContent = ch.label;
+        og.appendChild(opt);
+      }
+      sel.appendChild(og);
+    }
+
+    // Restore saved default channel (or select first option)
+    const savedCh = localStorage.getItem('viltv_default_channel');
+    if (savedCh) {
+      const match = [...sel.options].find(o => o.value === savedCh);
+      if (match) {
+        sel.value = savedCh;
+        ytSwitchChannel(savedCh);
+        const chk = document.getElementById('yt-default-ch-chk');
+        if (chk) chk.checked = true;
+        return;
+      }
+    }
+    // No saved default — load first channel silently (no autoplay on page load)
+  } catch (e) {
+    // streams.json unreachable — static HTML select is the fallback; do nothing
+  }
+}
+
 // Init on load
 document.addEventListener('DOMContentLoaded', () => {
   cfLoadSaved(); // loads saved worker URL + API keys, refreshes status badge
-  // Restore default channel
-  (() => {
+
+  // Load TV channels from streams.json (refreshed daily by GitHub Actions).
+  // Falls back silently to the static HTML <select> if the file isn't found.
+  fetchAndPopulateStreams().then(() => {
+    // If streams.json didn't restore a channel, apply the static-HTML fallback
     const defaultCh = localStorage.getItem('viltv_default_channel');
-    if (!defaultCh) return;
-    const sel = document.getElementById('yt-channel-select');
-    if (!sel) return;
-    const opt = [...sel.options].find(o => o.value === defaultCh);
-    if (opt) {
-      sel.value = defaultCh;
-      ytSwitchChannel(defaultCh);
+    if (defaultCh) {
+      const sel = document.getElementById('yt-channel-select');
+      if (sel) {
+        const opt = [...sel.options].find(o => o.value === defaultCh);
+        if (opt) {
+          sel.value = defaultCh;
+          ytSwitchChannel(defaultCh);
+          const chk = document.getElementById('yt-default-ch-chk');
+          if (chk) chk.checked = true;
+        }
+      }
     }
-    // Also check the checkbox
-    const chk = document.getElementById('yt-default-ch-chk');
-    if (chk) chk.checked = true;
-  })();
+  });
+
   initLiveNews();
   initLiveClock();
   initRbResize();
@@ -5630,7 +5716,7 @@ async function rbAiSend() {
 
     const runner = hasPaid ? _aiLoadBalancedQuery.bind(null, q, model) : _aiFreeQuery.bind(null, q);
 
-    if (statusEl) statusEl.textContent = hasPaid ? '⏳ Contacting AI…' : '⏳ Searching free AI & web…';
+    if (statusEl) statusEl.textContent = '⏳ Analysing…';
 
     await runner(
       (partial) => {
@@ -5666,8 +5752,8 @@ function rbUpdateAiStatus(connected) {
   const label = document.getElementById('rb-ai-model-label');
   // Free AI+search stack is always on; show green unless user explicitly disconnects
   if (dot) dot.style.background = 'var(--green)';
-  if (status) status.textContent = connected ? 'Ready (API connected) — type your question' : 'Ready (Free AI) — type your question';
-  if (label) label.textContent = connected ? '' : 'Free';
+  if (status) status.textContent = connected ? 'Market Intelligence active — type your question' : 'Market Intelligence ready — type your question';
+  if (label) label.textContent = '';
 }
 
 // ═══════════════════════════════════════════════════════════════════
