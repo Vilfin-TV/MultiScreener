@@ -140,8 +140,8 @@ export default {
       if (!prompt || prompt.length < 2) {
         return json({ error: 'prompt is required' }, CORS, 400);
       }
-      if (prompt.length > 4000) {
-        return json({ error: 'prompt too long (max 4000 chars)' }, CORS, 400);
+      if (prompt.length > 32000) {
+        return json({ error: 'prompt too long (max 32000 chars)' }, CORS, 400);
       }
 
       try {

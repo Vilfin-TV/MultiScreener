@@ -5086,7 +5086,9 @@ async function autoSendToGemini() {
   async function fallbackQuery(partialSoFar) {
     _aiProgressSet(35, 'Processing…', 'ps3');
     _vilfinProgressUpdate(35, '🔄 Processing your request…');
-    // Try multiple worker endpoint names first
+
+    // ── Try Worker endpoints ───────────────────────────────────────────────────
+    let workerPromptTooLong = false;
     if (finalUrl) {
       const endpoints = ['/query', '/ask', '/chat', '/generate'];
       for (const ep of endpoints) {
@@ -5098,12 +5100,20 @@ async function autoSendToGemini() {
             body: JSON.stringify(body), signal: AbortSignal.timeout(120000)
           });
           if (!res.ok && res.status === 404) continue;
-          _aiProgressSet(88, 'Receiving…', 'ps4');
-          _vilfinProgressUpdate(88, '📥 Almost done…');
           const rawText = await res.text();
           let data; try { data = JSON.parse(rawText); } catch(_) { data = { result: rawText }; }
           const errMsg = data.error ? (typeof data.error === 'string' ? data.error : (data.error.message || JSON.stringify(data.error))) : null;
-          if (errMsg) { continue; }
+          if (errMsg) {
+            // "Prompt too long" means the Worker has an old character limit (< 32 000).
+            // Break immediately — retrying other endpoints won't help, they use the same limit.
+            if (/prompt too long/i.test(errMsg)) {
+              workerPromptTooLong = true;
+              break;
+            }
+            continue;
+          }
+          _aiProgressSet(88, 'Receiving…', 'ps4');
+          _vilfinProgressUpdate(88, '📥 Almost done…');
           const answer = data.result || data.answer || data.response || data.text || data.content || rawText;
           if (answer) { handleGeminiResult(answer); return; }
         } catch(e) {
@@ -5111,23 +5121,36 @@ async function autoSendToGemini() {
         }
       }
     }
-    // Worker failed — try direct API fallbacks
-    _aiProgressSet(50, 'Trying direct API…', 'ps3');
-    _vilfinProgressUpdate(50, '🔄 Trying direct AI connections…');
-    const directCallers = [
-      ['Gemini', () => _callGeminiDirect(queryText, selectedModel)],
-      ['OpenAI', () => _callOpenAIDirect(queryText, selectedModel)],
-      ['Custom API', () => _callAPI3Direct(queryText, selectedModel)],
-    ];
-    for (const [name, caller] of directCallers) {
-      try {
-        _vilfinProgressUpdate(60, `🤖 Querying ${name}…`);
-        const text = await caller();
-        if (text) { handleGeminiResult(text); return; }
-      } catch(e) { /* try next */ }
+
+    // ── Try direct API keys (Gemini / OpenAI / Custom) ────────────────────────
+    // Only bother if the Worker didn't fail on prompt length — if it did, these
+    // use the same large prompt and local keys aren't configured anyway.
+    if (!workerPromptTooLong) {
+      _aiProgressSet(50, 'Trying direct API…', 'ps3');
+      _vilfinProgressUpdate(50, '🔄 Trying direct AI connections…');
+      const directCallers = [
+        ['Gemini',     () => _callGeminiDirect(queryText, selectedModel)],
+        ['OpenAI',     () => _callOpenAIDirect(queryText, selectedModel)],
+        ['Custom API', () => _callAPI3Direct(queryText, selectedModel)],
+      ];
+      for (const [name, caller] of directCallers) {
+        try {
+          _vilfinProgressUpdate(60, `🤖 Querying ${name}…`);
+          const text = await caller();
+          if (text) { handleGeminiResult(text); return; }
+        } catch(e) { /* try next */ }
+      }
     }
-    // All paid services failed — cascade to free AI stack (no API key needed)
-    _vilfinProgressUpdate(70, '🌐 Searching intelligence sources…');
+
+    // ── Last resort: free AI stack (Pollinations → DuckDuckGo → Wikipedia) ────
+    if (workerPromptTooLong) {
+      _vilfinProgressUpdate(55,
+        '⚠️ Worker limit hit — your Worker needs to be updated (see below). ' +
+        'Trying free AI as backup…'
+      );
+    } else {
+      _vilfinProgressUpdate(70, '🌐 Searching intelligence sources…');
+    }
     try {
       await _aiFreeQuery(
         queryText,
@@ -5137,23 +5160,42 @@ async function autoSendToGemini() {
           // Do NOT route it through buildReport() — show a clean error instead.
           if (!fullText || /^⚠️ Live AI sources are temporarily unavailable/i.test(fullText)) {
             _aiProgressStop();
-            _vilfinProgressError(
-              '⚠️ All AI providers are currently unreachable. ' +
-              'Connect Gemini or the Cloudflare Worker in ⚙️ Settings → API Connect, ' +
-              'or paste your AI response manually in the Paste & Render tab.'
-            );
+            // Give a specific message when the root cause is a Worker prompt-length limit.
+            if (workerPromptTooLong) {
+              _vilfinProgressError(
+                'Your Cloudflare Worker is rejecting the research prompt (too long). ' +
+                'Please copy the updated <strong>worker.js</strong> from the repo and ' +
+                'redeploy it in the <a href="https://dash.cloudflare.com" target="_blank" ' +
+                'style="color:var(--burn2)">Cloudflare Dashboard</a>. ' +
+                'Until then, use the <strong>Copy AI Query</strong> tab to paste into Gemini manually.'
+              );
+            } else {
+              _vilfinProgressError(
+                'All AI sources are temporarily unreachable. ' +
+                'Your Worker is connected — please try again in a moment, ' +
+                'or use the <strong>Copy AI Query</strong> tab to paste into Gemini manually.'
+              );
+            }
             return;
           }
           handleGeminiResult(fullText);
         },
         (err) => {
           _aiProgressStop();
-          _vilfinProgressError('⚠️ All AI sources failed. Please check your internet connection.');
+          _vilfinProgressError(
+            workerPromptTooLong
+              ? 'Worker rejected the prompt (too long). Redeploy the updated worker.js from the repo.'
+              : '⚠️ All AI sources failed. Please check your internet connection.'
+          );
         }
       );
     } catch(e) {
       _aiProgressStop();
-      _vilfinProgressError('⚠️ All AI sources failed. Please check your internet connection.');
+      _vilfinProgressError(
+        workerPromptTooLong
+          ? 'Worker rejected the prompt (too long). Redeploy the updated worker.js from the repo.'
+          : '⚠️ All AI sources failed. Please check your internet connection.'
+      );
     }
   }
 
