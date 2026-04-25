@@ -85,7 +85,20 @@ export default {
       return json({ status: 'ok', service: 'VilfinTV Market Assistant' }, CORS);
     }
 
-    // ── Main AI query endpoint ─────────────────────────────────────────────
+    // ── Daily market snapshot endpoint (called by build.js at build-time) ──
+    // This endpoint is NOT called by the frontend browser — only by the Node.js
+    // build script which reads WORKER_URL from .env / GitHub Secrets.
+    if (url.pathname === '/snapshot' && request.method === 'POST') {
+      try {
+        const snapshot = await generateMarketSnapshot(env);
+        return json(snapshot, CORS);
+      } catch (err) {
+        console.error('snapshot error:', err.message);
+        return json({ error: 'Snapshot generation failed' }, CORS, 503);
+      }
+    }
+
+    // ── Interactive AI query endpoint ──────────────────────────────────────
     if ((url.pathname === '/query' || url.pathname === '/ask') && request.method === 'POST') {
       let body;
       try { body = await request.json(); } catch {
@@ -280,6 +293,93 @@ async function handleQuery(prompt, env) {
   }
 
   throw new Error('All AI providers unavailable');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DAILY MARKET SNAPSHOT (build-time only — called by build.js, NOT the browser)
+// ═══════════════════════════════════════════════════════════════════════════
+async function generateMarketSnapshot(env) {
+  const today   = new Date().toDateString();
+  const liveCtx = await fetchLiveContext('global stock market indices commodities today');
+
+  const snapshotPrompt = `Generate a concise daily market briefing for ${today} covering:
+
+## Key Themes
+- 2-3 dominant macro themes (e.g. rate decisions, geopolitical risks, earnings seasons)
+
+## Major Indices
+- Brief status of: Nifty 50, Sensex, S&P 500, Nasdaq, Nikkei, Hang Seng, STOXX 50
+
+## Commodities
+- Gold, Silver, Crude Oil (WTI & Brent), Natural Gas, Copper — direction and key level
+
+## Forex
+- USD/INR, EUR/USD, JPY/USD — notable moves
+
+## What to Watch
+- 2-3 upcoming events or catalysts this week
+
+Use Markdown. Be concise — max 350 words. Write as a professional market analyst.`;
+
+  const messages = [
+    { role: 'system', content: SYSTEM_PROMPT(today) },
+    { role: 'user',   content: liveCtx + snapshotPrompt },
+  ];
+
+  // Use Groq for high-quality snapshot generation
+  if (env.GROQ_API_KEY) {
+    try {
+      const res = await fetch(GROQ_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${env.GROQ_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model:       GROQ_MODEL,
+          messages,
+          max_tokens:  800,
+          temperature: 0.5,
+          stream:      false,
+        }),
+        signal: AbortSignal.timeout(30000),
+      });
+
+      if (res.ok) {
+        const data  = await res.json();
+        const brief = data.choices?.[0]?.message?.content?.trim();
+        if (brief && brief.length > 50) {
+          return { briefing: brief, generated: new Date().toISOString(), model: GROQ_MODEL };
+        }
+      }
+    } catch (e) { console.warn('Groq snapshot error:', e.message); }
+  }
+
+  // Fallback: DeepSeek
+  if (env.DEEPSEEK_API_KEY) {
+    try {
+      const res = await fetch(DEEPSEEK_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${env.DEEPSEEK_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: DEEPSEEK_MODEL, messages, max_tokens: 800, temperature: 0.5, stream: false,
+        }),
+        signal: AbortSignal.timeout(30000),
+      });
+      if (res.ok) {
+        const data  = await res.json();
+        const brief = data.choices?.[0]?.message?.content?.trim();
+        if (brief && brief.length > 50) {
+          return { briefing: brief, generated: new Date().toISOString(), model: DEEPSEEK_MODEL };
+        }
+      }
+    } catch (e) { console.warn('DeepSeek snapshot error:', e.message); }
+  }
+
+  throw new Error('Cannot generate snapshot — no AI provider available');
 }
 
 // ─── Utility ──────────────────────────────────────────────────────────────
