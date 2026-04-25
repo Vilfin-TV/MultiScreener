@@ -15,6 +15,13 @@
     }
   })();
 </script>
+<script>
+  // Apply saved colour theme before first paint to avoid flash
+  (function(){
+    var t = localStorage.getItem('viltv_theme') || 'black';
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
 :root{
@@ -27,13 +34,77 @@
   --card:#0d1d35;--card2:#112040;--card3:#132445;--card4:#1a2f50;
   --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
   --border:#1a2f4e;--border2:#243b5a;
+  --page-bg:#060d1a;
   --radius:12px;
   --sidebar-w:240px;
   --nav-bg:#050a14;--nav-text:#f1f5f9;--nav-border:#0e1e36;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background:#060d1a;color:#e2e8f0;min-height:100vh;overflow-x:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background:var(--page-bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ══ STANDARD (LIGHT) THEME — Dhan ScanX-inspired ══ */
+[data-theme="standard"]{
+  --gold2:#1d4ed8;--burn3:#1d4ed8;
+  --dark:#f0f4f9;--dark2:#e8edf5;--dark3:#dde3ed;--dark4:#ccd6e3;
+  --card:#ffffff;--card2:#f5f8fc;--card3:#edf2f9;--card4:#e4ebf5;
+  --text:#0f172a;--text2:#374151;--text3:#6b7280;
+  --border:#dde3ed;--border2:#c8d3e0;
+  --page-bg:#f0f4f9;
+  --nav-bg:#ffffff;--nav-text:#0f172a;--nav-border:#dde3ed;
+}
+[data-theme="standard"] body{background:var(--page-bg);color:var(--text)}
+[data-theme="standard"] .main-nav{background:#ffffff;border-bottom:2px solid var(--border2);box-shadow:0 2px 12px rgba(0,0,0,.08)}
+[data-theme="standard"] .main-tab{color:#6b7280}
+[data-theme="standard"] .main-tab:hover{color:#374151}
+[data-theme="standard"] .main-tab.active{color:#1d4ed8}
+[data-theme="standard"] .main-tab.active::after{background:#1d4ed8}
+[data-theme="standard"] .tmenu-dropdown{background:#ffffff;border-color:#c8d3e0;box-shadow:0 8px 32px rgba(0,0,0,.12)}
+[data-theme="standard"] .dd-item{color:#374151;border-bottom-color:rgba(0,0,0,.05)}
+[data-theme="standard"] .dd-item:hover{background:rgba(29,78,216,.07);color:#1d4ed8}
+[data-theme="standard"] .dd-item.danger:hover{background:rgba(239,68,68,.08);color:#dc2626}
+[data-theme="standard"] .dd-sep{background:#e2e8f0}
+[data-theme="standard"] .sidebar{background:#ffffff;border-right-color:var(--border)}
+[data-theme="standard"] .sidebar-toggle{background:var(--card2);border-color:var(--border2);color:var(--text2)}
+[data-theme="standard"] .sidebar-menu-item{color:var(--text3)}
+[data-theme="standard"] .sidebar-menu-item:hover{background:var(--card2);color:var(--text2)}
+[data-theme="standard"] .sidebar-menu-item.active-menu{background:rgba(29,78,216,.08);color:#1d4ed8;border-left-color:#1d4ed8}
+[data-theme="standard"] .prompt-box{background:#f8fafc;color:#1e293b}
+[data-theme="standard"] .prompt-box::-webkit-scrollbar-track{background:#e8edf5}
+[data-theme="standard"] .paste-area{background:#f8fafc;color:#1e293b;border-color:var(--border2)}
+[data-theme="standard"] .nsm-box{background:#ffffff;border-color:rgba(29,78,216,.2);box-shadow:0 24px 60px rgba(0,0,0,.15)}
+[data-theme="standard"] .nsm-title{color:#0f172a}
+[data-theme="standard"] .nsm-info{background:rgba(29,78,216,.06);border-color:rgba(29,78,216,.2)}
+[data-theme="standard"] .nsm-group-title{color:#64748b;border-bottom-color:#e2e8f0}
+[data-theme="standard"] .nsm-feed-name{color:#0f172a}
+[data-theme="standard"] .nsm-feed-lang{background:#edf2f9;color:#374151}
+[data-theme="standard"] .nsm-close{color:#374151}
+[data-theme="standard"] .nsm-reset-btn:hover{background:rgba(0,0,0,.06)}
+[data-theme="standard"] .lnb{background:#ffffff;border-color:var(--border2)}
+[data-theme="standard"] .lnb-text{color:#374151}
+[data-theme="standard"] .lnb-time{color:#6b7280}
+[data-theme="standard"] .lnb-loading{color:#6b7280}
+[data-theme="standard"] .lnb-label{color:#0f172a}
+[data-theme="standard"] .lnb-live{background:rgba(29,78,216,.12);color:#1d4ed8}
+[data-theme="standard"] .lns-timer{background:#ffffff;border-color:var(--border);color:#64748b}
+[data-theme="standard"] .lns-settings-btn{background:rgba(0,0,0,.05);border-color:var(--border2);color:#374151}
+[data-theme="standard"] .lns-settings-btn:hover{background:rgba(29,78,216,.08);color:#1d4ed8;border-color:var(--burn2)}
+[data-theme="standard"] footer{background:#f5f8fc;color:#374151;border-top-color:#e2e8f0}
+[data-theme="standard"] .footer-col-title{color:#0f172a}
+[data-theme="standard"] .footer-brand-desc{color:#64748b}
+[data-theme="standard"] .footer-links a{color:#374151}
+[data-theme="standard"] .footer-links a:hover{color:#0f172a}
+[data-theme="standard"] .footer-social a{color:#374151;border-color:#dde3ed}
+[data-theme="standard"] .footer-social a:hover{background:#e8edf5;color:#0f172a;border-color:#c8d3e0}
+[data-theme="standard"] .footer-legal-text{color:#64748b}
+[data-theme="standard"] .footer-copyright{color:#94a3b8}
+[data-theme="standard"] .opt:hover{background:#e8edf5;color:var(--text)}
+[data-theme="standard"] .opt.selected{background:rgba(29,78,216,.1);color:#1d4ed8;border-color:var(--burn2)}
+/* Active-theme check marks in File menu */
+#theme-black-item::before{content:'';display:inline-block;width:14px}
+#theme-standard-item::before{content:'';display:inline-block;width:14px}
+[data-theme="black"] #theme-black-item::before{content:'✓';color:var(--burn3);width:14px}
+[data-theme="standard"] #theme-standard-item::before{content:'✓';color:var(--burn2);width:14px}
 
 /* ── LAYOUT WRAPPER ── */
 .layout{display:flex;height:calc(100vh - 90px);overflow:hidden}
@@ -1556,6 +1627,9 @@ footer{
         <div class="dd-item" onclick="disconnectAllServices();closeAllMenus()" id="svc-disconnect-item" style="display:none">🔌 Disconnect All</div>
         <div class="dd-sep"></div>
         <div class="dd-item" onclick="openNewsSettings();closeAllMenus()">📰 News Feed Settings…</div>
+        <div class="dd-sep"></div>
+        <div class="dd-item" id="theme-black-item" onclick="setTheme('black');closeAllMenus()">🌑 Black Theme</div>
+        <div class="dd-item" id="theme-standard-item" onclick="setTheme('standard');closeAllMenus()">🌤️ Standard Theme</div>
         <div class="dd-sep"></div>
         <div class="dd-item danger" onclick="closeApp()">✕ Exit</div>
       </div>
@@ -3942,6 +4016,11 @@ document.addEventListener('click', function(e) {
 // Exit app
 function closeApp() {
   if (confirm('Close VilfinTV Multiscreener?')) window.close();
+}
+
+function setTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('viltv_theme', t);
 }
 
 // ── RIGHT BAR TABS ──────────────────────────────────────────────────
