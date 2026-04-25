@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Setup Guide — VilfinTV Market Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:     #060d1b;
+      --card:   #0c1628;
+      --card2:  #0f1e35;
+      --border: rgba(30,58,95,.7);
+      --text:   #e2e8f0;
+      --text2:  #94a3b8;
+      --text3:  #475569;
+      --gold:   #f59e0b;
+      --gold2:  #fbbf24;
+      --burn:   #e65c00;
+      --burn2:  #ff7722;
+      --green:  #22c55e;
+      --blue:   #38bdf8;
+      --purple: #a78bfa;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .guide-header {
+      background: linear-gradient(135deg, #0a1628 0%, #0d1f3c 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 32px 24px 28px;
+      text-align: center;
+    }
+    .guide-logo {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-size: 22px; font-weight: 700; color: var(--text);
+      text-decoration: none; margin-bottom: 10px;
+    }
+    .guide-logo span { color: var(--burn2); }
+    .guide-title {
+      font-size: 26px; font-weight: 700; color: #f1f5f9;
+      margin: 4px 0 8px;
+    }
+    .guide-sub { font-size: 14px; color: var(--text2); max-width: 560px; margin: 0 auto; }
+
+    /* ── Layout ── */
+    .guide-body {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* ── Overview cards ── */
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin: 32px 0;
+    }
+    .overview-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 16px;
+    }
+    .overview-card .oc-icon { font-size: 26px; margin-bottom: 8px; }
+    .overview-card .oc-title { font-size: 13px; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }
+    .overview-card .oc-desc  { font-size: 12px; color: var(--text2); line-height: 1.55; }
+    .oc-free { border-top: 3px solid var(--green); }
+    .oc-recommended { border-top: 3px solid var(--gold2); }
+
+    /* ── Steps ── */
+    .section-title {
+      font-size: 18px; font-weight: 700; color: #f1f5f9;
+      margin: 40px 0 6px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-title::after {
+      content: ''; flex: 1;
+      height: 1px; background: var(--border);
+    }
+    .section-sub { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
+
+    .step-block {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px;
+      background: var(--burn2); color: #fff;
+      border-radius: 50%; font-size: 12px; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .step-head {
+      display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px;
+    }
+    .step-title { font-size: 14px; font-weight: 700; color: #f1f5f9; padding-top: 3px; }
+    .step-body  { font-size: 13px; color: var(--text2); line-height: 1.65; padding-left: 38px; }
+    .step-body p { margin-bottom: 8px; }
+    .step-body ul, .step-body ol { padding-left: 18px; margin-bottom: 8px; }
+    .step-body li { margin-bottom: 4px; }
+    .step-body a  { color: var(--burn2); text-decoration: none; font-weight: 600; }
+    .step-body a:hover { text-decoration: underline; }
+
+    /* ── Code / URL blocks ── */
+    .code-block {
+      background: #050c1a;
+      border: 1px solid rgba(56,93,154,.5);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--gold2);
+      margin: 10px 0;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .cmd-block {
+      background: #050c1a;
+      border-left: 3px solid var(--burn2);
+      border-radius: 0 8px 8px 0;
+      padding: 10px 14px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: #a5f3fc;
+      margin: 10px 0;
+    }
+    .cmd-block::before { content: '$ '; color: var(--text3); }
+
+    /* ── Note / Warning boxes ── */
+    .note-box {
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 12px;
+      line-height: 1.6;
+      margin: 12px 0;
+    }
+    .note-info    { background: rgba(56,189,248,.08); border: 1px solid rgba(56,189,248,.25); color: #7dd3fc; }
+    .note-success { background: rgba(34,197,94,.08);  border: 1px solid rgba(34,197,94,.25);  color: #86efac; }
+    .note-warn    { background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.25); color: #fcd34d; }
+    .note-box strong { font-weight: 700; }
+
+    /* ── Provider comparison table ── */
+    .provider-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin: 16px 0;
+    }
+    .provider-table th {
+      background: var(--card2);
+      color: var(--text2);
+      font-weight: 700;
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .provider-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(30,58,95,.4);
+      color: var(--text2);
+      vertical-align: top;
+    }
+    .provider-table tr:last-child td { border-bottom: none; }
+    .provider-table tr:hover td { background: rgba(30,58,95,.2); }
+    .badge-free    { background: rgba(34,197,94,.15);  color: #4ade80; border-radius: 4px; padding: 2px 7px; font-size: 10px; font-weight: 700; }
+    .badge-paid    { background: rgba(245,158,11,.15); color: #fbbf24; border-radius: 4px; padding: 2px 7px; font-size: 10px; font-weight: 700; }
+    .badge-rec     { background: rgba(251,191,36,.2);  color: #fcd34d; border-radius: 4px; padding: 2px 7px; font-size: 10px; font-weight: 700; }
+
+    /* ── Back button ── */
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--card2); border: 1px solid var(--border);
+      color: var(--text2); border-radius: 8px;
+      padding: 8px 16px; font-size: 12px; font-weight: 600;
+      text-decoration: none; cursor: pointer;
+      transition: color .15s, border-color .15s;
+      margin-bottom: 32px;
+    }
+    .back-btn:hover { color: var(--text); border-color: var(--burn2); }
+
+    /* ── TOC ── */
+    .toc {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin: 0 0 32px;
+    }
+    .toc-title { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 10px; }
+    .toc a { color: var(--text2); text-decoration: none; font-size: 13px; display: block; padding: 3px 0; transition: color .15s; }
+    .toc a:hover { color: var(--burn2); }
+    .toc a::before { content: '›  '; color: var(--burn2); }
+
+    /* ── Final CTA ── */
+    .final-cta {
+      background: linear-gradient(135deg, #0c1e35, #0f2240);
+      border: 1px solid rgba(56,93,154,.6);
+      border-radius: 14px;
+      padding: 30px 28px;
+      text-align: center;
+      margin-top: 48px;
+    }
+    .final-cta h3 { font-size: 18px; font-weight: 700; color: #f1f5f9; margin-bottom: 8px; }
+    .final-cta p  { font-size: 13px; color: var(--text2); margin-bottom: 18px; }
+    .cta-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--burn2); color: #fff; border: none; border-radius: 8px;
+      padding: 11px 24px; font-size: 13px; font-weight: 700; cursor: pointer;
+      text-decoration: none; letter-spacing: .3px;
+      transition: background .15s;
+    }
+    .cta-btn:hover { background: #ff6600; }
+
+    @media (max-width: 600px) {
+      .guide-title { font-size: 20px; }
+      .step-body   { padding-left: 0; margin-top: 8px; }
+      .provider-table { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="guide-header">
+  <div class="guide-logo">🌐 <span>Vilfin</span>TV</div>
+  <h1 class="guide-title">AI Setup Guide</h1>
+  <p class="guide-sub">Connect your own AI service to unlock the full Market Assistant, Intelligent Search, and Gamma Report features.</p>
+</header>
+
+<div class="guide-body">
+
+  <a href="index.html" class="back-btn">← Back to Dashboard</a>
+
+  <!-- What you'll get -->
+  <div class="overview-grid">
+    <div class="overview-card oc-free">
+      <div class="oc-icon">🤖</div>
+      <div class="oc-title">Market Assistant</div>
+      <div class="oc-desc">Ask any question about stocks, indices, commodities, or macro themes — powered by your AI key.</div>
+    </div>
+    <div class="overview-card oc-recommended">
+      <div class="oc-icon">📊</div>
+      <div class="oc-title">Gamma AI Report</div>
+      <div class="oc-desc">Generate a full research brief on any ticker — automatically sent to your AI and formatted as a report.</div>
+    </div>
+    <div class="overview-card oc-free">
+      <div class="oc-icon">🔍</div>
+      <div class="oc-title">Intelligent Search</div>
+      <div class="oc-desc">Context-aware market queries that combine live data from Yahoo Finance with AI-generated analysis.</div>
+    </div>
+  </div>
+
+  <!-- TOC -->
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <a href="#step-key">Step 1 — Get a free API key</a>
+    <a href="#step-worker">Step 2 — Deploy your Cloudflare Worker</a>
+    <a href="#step-secrets">Step 3 — Add your API key as a Worker secret</a>
+    <a href="#step-connect">Step 4 — Connect to the dashboard</a>
+    <a href="#providers">Provider comparison</a>
+    <a href="#faq">FAQ</a>
+  </nav>
+
+  <!-- STEP 1 -->
+  <h2 class="section-title" id="step-key">Step 1 — Get a Free API Key</h2>
+  <p class="section-sub">Choose any one provider. Groq and Gemini are both free with generous daily limits — either is a great starting point.</p>
+
+  <!-- Option A: Groq -->
+  <div class="step-block">
+    <div class="step-head">
+      <span class="step-num">A</span>
+      <span class="step-title">🚀 Groq — Llama 3.3 70B &nbsp;<span class="badge-rec">RECOMMENDED · FREE</span></span>
+    </div>
+    <div class="step-body">
+      <p>Groq provides one of the fastest and most capable free AI APIs available. It uses Meta's open-source Llama 3.3 70B model running on Groq's custom LPU hardware.</p>
+      <ol>
+        <li>Go to <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a></li>
+        <li>Sign up for a free account (Google or email)</li>
+        <li>Click <strong>Create API Key</strong></li>
+        <li>Copy the key — it looks like: <code style="color:var(--gold2)">gsk_••••••••••••••••••••</code></li>
+      </ol>
+      <div class="note-success">✅ Free tier: 6,000 requests / day &nbsp;|&nbsp; 500,000 tokens / day — more than enough for personal use.</div>
+    </div>
+  </div>
+
+  <!-- Option B: Gemini -->
+  <div class="step-block">
+    <div class="step-head">
+      <span class="step-num">B</span>
+      <span class="step-title">💎 Google Gemini 2.0 Flash &nbsp;<span class="badge-free">FREE</span></span>
+    </div>
+    <div class="step-body">
+      <p>Google's Gemini 2.0 Flash is free via AI Studio and provides excellent quality for financial analysis queries.</p>
+      <ol>
+        <li>Go to <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a></li>
+        <li>Sign in with your Google account</li>
+        <li>Click <strong>Create API key</strong></li>
+        <li>Copy the key — it looks like: <code style="color:var(--gold2)">AIzaSy••••••••••••••••••</code></li>
+      </ol>
+      <div class="note-success">✅ Free tier: 1,500 requests / day &nbsp;|&nbsp; 1 million tokens / day (Gemini 2.0 Flash).</div>
+    </div>
+  </div>
+
+  <!-- Option C: OpenAI -->
+  <div class="step-block">
+    <div class="step-head">
+      <span class="step-num">C</span>
+      <span class="step-title">🟢 OpenAI — GPT-4o mini &nbsp;<span class="badge-paid">PAY-PER-USE</span></span>
+    </div>
+    <div class="step-body">
+      <p>OpenAI's GPT-4o mini is very affordable (approximately $0.15 per 1 million input tokens). Best for users who want GPT-quality responses and are comfortable with a small monthly spend.</p>
+      <ol>
+        <li>Go to <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys</a></li>
+        <li>Create an account and add a payment method</li>
+        <li>Click <strong>Create new secret key</strong></li>
+        <li>Copy the key — it looks like: <code style="color:var(--gold2)">sk-proj-••••••••••••••••••••</code></li>
+      </ol>
+      <div class="note-warn">⚠️ A credit card is required. Set a monthly spending limit in your account to avoid unexpected charges.</div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <h2 class="section-title" id="step-worker">Step 2 — Deploy Your Cloudflare Worker</h2>
+  <p class="section-sub">The Worker acts as a secure proxy between the dashboard and the AI API. Your API key is stored on the Worker — never in your browser or in any public file.</p>
+
+  <div class="step-block">
+    <div class="step-head">
+      <span class="step-num">1</span>
+      <span class="step-title">Create a free Cloudflare account</span>
+    </div>
+    <div class="step-body">
+      <p>Go to <a href="https://cloudflare.com" target="_blank" rel="noopener">cloudflare.com</a> and sign up. The Workers free plan gives you 100,000 requests / day — plenty for personal use.</p>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-head">
+      <span class="step-num">2</span>
+      <span class="step-title">Create a new Worker</span>
+    </div>
+    <div class="step-body">
+      <ol>
+        <li>From your Cloudflare Dashboard, go to <strong>Workers &amp; Pages</strong></li>
+        <li>Click <strong>Create</strong> → <strong>Worker</strong></li>
+        <li>Give it a name (e.g. <code style="color:var(--gold2)">market-assistant</code>)</li>
+        <li>Click <strong>Deploy</strong> to create the default worker</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-head">
+      <span class="step-num">3</span>
+      <span class="step-title">Paste the worker.js code</span>
+    </div>
+    <div class="step-body">
+      <p>In the Worker editor, open the <strong>Edit Code</strong> view and replace the entire default code with the contents of <code style="color:var(--gold2)">worker.js</code> from this project's GitHub repository.</p>
+      <div class="note-info">ℹ️ The <code>worker.js</code> file is publicly available in the repository. It contains no API keys or secrets — those are added separately in the next step.</div>
+      <p style="margin-top:8px">After pasting, click <strong>Save and Deploy</strong>.</p>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-head">
+      <span class="step-num">4</span>
+      <span class="step-title">Note your Worker URL</span>
+    </div>
+    <div class="step-body">
+      <p>After deploying, your Worker will have a URL in the format:</p>
+      <div class="code-block">https://your-worker-name.your-username.workers.dev</div>
+      <p>Save this URL — you will paste it into the dashboard settings in Step 4.</p>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <h2 class="section-title" id="step-secrets">Step 3 — Add Your API Key as a Worker Secret</h2>
+  <p class="section-sub">Secrets are encrypted environment variables. Your API key is stored securely on Cloudflare's servers — never visible in the worker code or in your browser.</p>
+
+  <div class="step-block">
+    <div class="step-head">
+      <span class="step-num">A</span>
+      <span class="step-title">Via the Cloudflare Dashboard (easiest)</span>
+    </div>
+    <div class="step-body">
+      <ol>
+        <li>Go to your Worker → <strong>Settings</strong> → <strong>Variables and Secrets</strong></li>
+        <li>Click <strong>Add</strong> under <em>Secret</em></li>
+        <li>Set the variable name based on which key you got in Step 1:</li>
+      </ol>
+      <table class="provider-table" style="margin:12px 0">
+        <thead><tr><th>Provider</th><th>Variable Name</th></tr></thead>
+        <tbody>
+          <tr><td>🚀 Groq</td><td><code style="color:var(--gold2)">GROQ_API_KEY</code></td></tr>
+          <tr><td>💎 Gemini</td><td><code style="color:var(--gold2)">GEMINI_API_KEY</code></td></tr>
+          <tr><td>🟢 OpenAI</td><td><code style="color:var(--gold2)">OPENAI_API_KEY</code></td></tr>
+          <tr><td>🔵 DeepSeek</td><td><code style="color:var(--gold2)">DEEPSEEK_API_KEY</code></td></tr>
+        </tbody>
+      </table>
+      <li>Paste your API key as the value and click <strong>Deploy</strong>.</li>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-head">
+      <span class="step-num">B</span>
+      <span class="step-title">Via the Wrangler CLI (alternative)</span>
+    </div>
+    <div class="step-body">
+      <p>If you prefer using the command line, run one of these commands (you'll be prompted to enter the key value — it is never stored in your shell history):</p>
+      <div class="cmd-block">npx wrangler secret put GROQ_API_KEY</div>
+      <div class="cmd-block">npx wrangler secret put GEMINI_API_KEY</div>
+      <div class="cmd-block">npx wrangler secret put OPENAI_API_KEY</div>
+      <div class="cmd-block">npx wrangler secret put DEEPSEEK_API_KEY</div>
+      <div class="note-info">ℹ️ You can add as many keys as you like. The Worker will try each provider in order and automatically fall back if one is unavailable.</div>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <h2 class="section-title" id="step-connect">Step 4 — Connect to the Dashboard</h2>
+  <p class="section-sub">With your Worker deployed and API key added, the last step is to paste your Worker URL into the dashboard settings.</p>
+
+  <div class="step-block">
+    <div class="step-head">
+      <span class="step-num">1</span>
+      <span class="step-title">Open the Connect AI Services panel</span>
+    </div>
+    <div class="step-body">
+      <p>On the dashboard, click the <strong>⚙️ Settings</strong> button (top-right menu) or the <strong>🔗 Connect AI Services</strong> link in the right sidebar. The settings panel will open.</p>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-head">
+      <span class="step-num">2</span>
+      <span class="step-title">Paste your Worker URL</span>
+    </div>
+    <div class="step-body">
+      <p>In the <strong>☁️ Coworker</strong> tab, paste your Worker URL into the input field:</p>
+      <div class="code-block">https://your-worker-name.your-username.workers.dev</div>
+      <div class="note-warn">⚠️ Do NOT share this URL publicly — anyone with the URL can use your Worker and consume your API quota.</div>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-head">
+      <span class="step-num">3</span>
+      <span class="step-title">Select your preferred AI provider (optional)</span>
+    </div>
+    <div class="step-body">
+      <p>In the <strong>Preferred AI Provider</strong> dropdown, select the provider whose key you added in Step 3. If you leave it on <em>Auto</em>, the Worker will try all configured providers in order.</p>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-head">
+      <span class="step-num">4</span>
+      <span class="step-title">Save &amp; Connect</span>
+    </div>
+    <div class="step-body">
+      <p>Click <strong>💾 Save &amp; Connect</strong>. The status indicator will turn green and display your connected provider. You can now use the full Market Assistant, Intelligent Search, and Gamma Report features.</p>
+      <div class="note-success">✅ Your Worker URL is stored only in your browser's localStorage — never sent to GitHub or any third-party server.</div>
+    </div>
+  </div>
+
+  <!-- Provider comparison -->
+  <h2 class="section-title" id="providers">Provider Comparison</h2>
+  <p class="section-sub">All providers produce high-quality financial analysis. The main differences are speed and cost.</p>
+
+  <table class="provider-table">
+    <thead>
+      <tr>
+        <th>Provider</th>
+        <th>Model</th>
+        <th>Cost</th>
+        <th>Speed</th>
+        <th>Quality</th>
+        <th>Daily Limit</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>🚀 Groq</td>
+        <td>Llama 3.3 70B</td>
+        <td><span class="badge-free">FREE</span></td>
+        <td>⚡⚡⚡ Very fast</td>
+        <td>⭐⭐⭐⭐½</td>
+        <td>6,000 req / day</td>
+      </tr>
+      <tr>
+        <td>💎 Gemini</td>
+        <td>Gemini 2.0 Flash</td>
+        <td><span class="badge-free">FREE</span></td>
+        <td>⚡⚡⚡ Fast</td>
+        <td>⭐⭐⭐⭐⭐</td>
+        <td>1,500 req / day</td>
+      </tr>
+      <tr>
+        <td>🟢 OpenAI</td>
+        <td>GPT-4o mini</td>
+        <td><span class="badge-paid">$0.15 / M tokens</span></td>
+        <td>⚡⚡ Moderate</td>
+        <td>⭐⭐⭐⭐⭐</td>
+        <td>No hard limit</td>
+      </tr>
+      <tr>
+        <td>🔵 DeepSeek</td>
+        <td>DeepSeek Chat</td>
+        <td><span class="badge-paid">$0.14 / M tokens</span></td>
+        <td>⚡⚡ Moderate</td>
+        <td>⭐⭐⭐⭐½</td>
+        <td>No hard limit</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note-info" style="margin-top:8px">
+    ℹ️ <strong>Recommendation for most users:</strong> Start with Groq (fastest, free, high quality). Add Gemini as a second key for automatic fallback if Groq's daily limit is hit.
+  </div>
+
+  <!-- FAQ -->
+  <h2 class="section-title" id="faq">FAQ</h2>
+
+  <div class="step-block">
+    <div class="step-head">
+      <span class="step-num">?</span>
+      <span class="step-title">Is my API key safe?</span>
+    </div>
+    <div class="step-body">
+      <p>Yes. Your API key is stored as an encrypted <em>secret</em> on your Cloudflare Worker — it is never written into any code file, never committed to GitHub, and never visible in the browser. The dashboard only ever stores your Worker URL in your browser's localStorage.</p>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-head">
+      <span class="step-num">?</span>
+      <span class="step-title">Does the dashboard send requests directly to OpenAI or Google?</span>
+    </div>
+    <div class="step-body">
+      <p>No — all AI requests are routed through your personal Cloudflare Worker. The Worker holds your API key and makes the call to the AI provider on your behalf. This means your API key is never exposed in browser network requests.</p>
+      <p style="margin-top:6px">The exception is if you also save a Gemini or OpenAI key directly in the <em>Settings → Gemini / OpenAI tabs</em> of the dashboard — those keys are stored in your browser only and are sent directly to the respective APIs as a fallback if no Worker URL is configured.</p>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-head">
+      <span class="step-num">?</span>
+      <span class="step-title">Can I add multiple API keys?</span>
+    </div>
+    <div class="step-body">
+      <p>Yes. Add as many secrets to your Worker as you like (e.g. both <code style="color:var(--gold2)">GROQ_API_KEY</code> and <code style="color:var(--gold2)">GEMINI_API_KEY</code>). The Worker will automatically cascade — if your primary provider is rate-limited or unavailable, it tries the next one. This gives you a highly reliable AI service with zero downtime.</p>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-head">
+      <span class="step-num">?</span>
+      <span class="step-title">How much will this cost me?</span>
+    </div>
+    <div class="step-body">
+      <p>For most personal users, <strong>nothing</strong>. Groq and Gemini free tiers are extremely generous. The Cloudflare Workers free plan (100,000 requests / day) is also more than sufficient.</p>
+      <p style="margin-top:6px">If you add OpenAI or DeepSeek keys, charges only apply when those providers are actually called. For typical personal use (a few hundred queries per day), the cost would be well under $1 / month.</p>
+    </div>
+  </div>
+
+  <div class="step-block">
+    <div class="step-head">
+      <span class="step-num">?</span>
+      <span class="step-title">I deployed the Worker but it returns an error</span>
+    </div>
+    <div class="step-body">
+      <p>Check these common issues:</p>
+      <ul>
+        <li>The Worker URL must <strong>not</strong> have a trailing slash</li>
+        <li>Make sure you added the secret under <em>Settings → Variables and Secrets → Secret</em> (not "Plain text")</li>
+        <li>After adding a secret, click <strong>Deploy</strong> to apply the changes</li>
+        <li>Open the Worker URL in your browser — you should see <code style="color:var(--gold2)">{"status":"ok"}</code></li>
+        <li>Check the <strong>Logs</strong> tab in your Worker dashboard for error messages</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="final-cta">
+    <h3>Ready to connect?</h3>
+    <p>Once you have your Worker URL, go back to the dashboard and paste it into Settings.</p>
+    <a href="index.html" class="cta-btn">← Return to Dashboard</a>
+  </div>
+
+</div><!-- /guide-body -->
+
+</body>
+</html>

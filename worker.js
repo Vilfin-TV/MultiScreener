@@ -4,44 +4,65 @@
  *
  * DEPLOY STEPS (Cloudflare Dashboard):
  *  1. Workers & Pages → Create → Worker → paste this file → Save & Deploy
- *  2. Settings → Variables → Secret → add GROQ_API_KEY  (your Groq key)
- *  3. Optional: add DEEPSEEK_API_KEY as fallback
- *  4. Settings → Triggers → add custom domain or use *.workers.dev URL
- *  5. Paste the Worker URL into config.js → WORKER_URL
+ *  2. Settings → Variables → Add the following secrets:
+ *       GROQ_API_KEY       — https://console.groq.com/keys        (free, recommended)
+ *       GEMINI_API_KEY     — https://aistudio.google.com/apikey   (free, recommended)
+ *       OPENAI_API_KEY     — https://platform.openai.com/api-keys (paid)
+ *       DEEPSEEK_API_KEY   — https://platform.deepseek.com        (optional)
+ *  3. Settings → Triggers → use *.workers.dev URL
+ *  4. Paste YOUR Worker URL into the "Connect AI Services" modal on the website
  *
- * CORS: locked to vilfin-tv.github.io in production.
- *       Wildcard (*) is active during testing — tighten before going live.
+ * CLI SECRETS (alternative to Dashboard UI):
+ *   npx wrangler secret put GROQ_API_KEY
+ *   npx wrangler secret put GEMINI_API_KEY
+ *   npx wrangler secret put OPENAI_API_KEY
+ *   npx wrangler secret put DEEPSEEK_API_KEY
  *
- * PIPELINE (per request):
+ * CORS: locked to vilfin-tv.github.io + localhost for development.
+ *
+ * PIPELINE (per /query request):
  *  Step A — Live Context: Yahoo Finance Search + DuckDuckGo Instant Answer
- *  Step B — AI Response:  Groq (Llama 3.3 70B) → DeepSeek fallback → Pollinations
+ *  Step B — AI Response:  routes to requested provider, then cascades
  *
- * QUOTA:
- *  Groq free tier:  6,000 requests/day, 500,000 tokens/day
- *  DeepSeek:        $0.14 / M input tokens (cache hit: $0.014)
- *  Pollinations:    free, no key needed (emergency fallback)
+ *  Provider cascade (if no specific provider is requested):
+ *    Groq (Llama 3.3 70B) → Gemini → OpenAI → DeepSeek → Pollinations (free)
+ *
+ * QUOTAS (approximate free tier):
+ *  Groq:        6,000 req/day, 500,000 tokens/day
+ *  Gemini:      1,500 req/day, 1 M tokens/day (Gemini 2.0 Flash)
+ *  OpenAI:      Pay-per-use (gpt-4o-mini is cheapest)
+ *  DeepSeek:    $0.14 / M input tokens
+ *  Pollinations: free, no key (emergency fallback only)
  */
 
 'use strict';
 
-// ─── Allowed origins (add your custom domain here if needed) ──────────────
+// ─── Allowed origins ──────────────────────────────────────────────────────────
 const ALLOWED_ORIGINS = [
   'https://vilfin-tv.github.io',
   'https://vilfintv.github.io',
-  'http://127.0.0.1:5500',   // local dev (Live Server)
+  'http://127.0.0.1:5500',
   'http://localhost:5500',
   'http://localhost:3000',
 ];
 
-// ─── AI Model config ──────────────────────────────────────────────────────
+// ─── Endpoints ────────────────────────────────────────────────────────────────
 const GROQ_ENDPOINT     = 'https://api.groq.com/openai/v1/chat/completions';
 const DEEPSEEK_ENDPOINT = 'https://api.deepseek.com/chat/completions';
-const GROQ_MODEL        = 'llama-3.3-70b-versatile';
-const DEEPSEEK_MODEL    = 'deepseek-chat';
-const MAX_TOKENS        = 1200;
-const TEMPERATURE       = 0.6;
+const OPENAI_ENDPOINT   = 'https://api.openai.com/v1/chat/completions';
+const GEMINI_BASE       = 'https://generativelanguage.googleapis.com/v1beta/models/';
 
-// ─── System prompt ────────────────────────────────────────────────────────
+// ─── Models ───────────────────────────────────────────────────────────────────
+const GROQ_MODEL     = 'llama-3.3-70b-versatile';
+const DEEPSEEK_MODEL = 'deepseek-chat';
+const OPENAI_MODEL   = 'gpt-4o-mini';
+const GEMINI_MODEL   = 'gemini-2.0-flash';
+
+// ─── Generation config ────────────────────────────────────────────────────────
+const MAX_TOKENS  = 1200;
+const TEMPERATURE = 0.6;
+
+// ─── System prompt ────────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = (date) =>
   `You are the Market Assistant for VilfinTV — an institutional-grade financial intelligence platform.
 
@@ -58,12 +79,12 @@ Response guidelines:
 - Never recommend specific buy/sell actions — provide analysis only
 - Close with 2-3 relevant follow-up areas the user might explore`;
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════════
 // MAIN FETCH HANDLER
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════════
 export default {
   async fetch(request, env) {
-    const origin = request.headers.get('Origin') || '';
+    const origin      = request.headers.get('Origin') || '';
     const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
 
     const CORS = {
@@ -73,21 +94,29 @@ export default {
       'Access-Control-Max-Age':       '86400',
     };
 
-    // ── Preflight ──────────────────────────────────────────────────────────
+    // ── Preflight ──────────────────────────────────────────────────────────────
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: CORS });
     }
 
     const url = new URL(request.url);
 
-    // ── Health check ───────────────────────────────────────────────────────
+    // ── Health check ───────────────────────────────────────────────────────────
     if (url.pathname === '/' || url.pathname === '/health') {
-      return json({ status: 'ok', service: 'VilfinTV Market Assistant' }, CORS);
+      return json({
+        status:    'ok',
+        service:   'VilfinTV Market Assistant',
+        providers: {
+          groq:      !!env.GROQ_API_KEY,
+          gemini:    !!env.GEMINI_API_KEY,
+          openai:    !!env.OPENAI_API_KEY,
+          deepseek:  !!env.DEEPSEEK_API_KEY,
+          pollinations: true,
+        },
+      }, CORS);
     }
 
-    // ── Daily market snapshot endpoint (called by build.js at build-time) ──
-    // This endpoint is NOT called by the frontend browser — only by the Node.js
-    // build script which reads WORKER_URL from .env / GitHub Secrets.
+    // ── Daily snapshot endpoint (build-time only — called by build.js) ─────────
     if (url.pathname === '/snapshot' && request.method === 'POST') {
       try {
         const snapshot = await generateMarketSnapshot(env);
@@ -98,23 +127,25 @@ export default {
       }
     }
 
-    // ── Interactive AI query endpoint ──────────────────────────────────────
+    // ── Interactive AI query endpoint ──────────────────────────────────────────
     if ((url.pathname === '/query' || url.pathname === '/ask') && request.method === 'POST') {
       let body;
       try { body = await request.json(); } catch {
         return json({ error: 'Invalid JSON body' }, CORS, 400);
       }
 
-      const prompt = (body.prompt || body.query || body.q || '').trim();
+      const prompt   = (body.prompt || body.query || body.q || '').trim();
+      const provider = (body.provider || '').toLowerCase().trim();
+
       if (!prompt || prompt.length < 2) {
         return json({ error: 'prompt is required' }, CORS, 400);
       }
-      if (prompt.length > 2000) {
-        return json({ error: 'prompt too long (max 2000 chars)' }, CORS, 400);
+      if (prompt.length > 4000) {
+        return json({ error: 'prompt too long (max 4000 chars)' }, CORS, 400);
       }
 
       try {
-        const result = await handleQuery(prompt, env);
+        const result = await handleQuery(prompt, env, provider);
         return json({ result }, CORS);
       } catch (err) {
         console.error('handleQuery error:', err.message);
@@ -126,13 +157,13 @@ export default {
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════════
 // STEP A — LIVE MARKET CONTEXT
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════════
 async function fetchLiveContext(prompt) {
   const parts = [];
 
-  // ── Yahoo Finance search (quotes + recent news headlines) ──────────────
+  // ── Yahoo Finance search ───────────────────────────────────────────────────
   try {
     const yfUrl = 'https://query1.finance.yahoo.com/v1/finance/search'
       + '?q=' + encodeURIComponent(prompt.slice(0, 100))
@@ -141,33 +172,24 @@ async function fetchLiveContext(prompt) {
     const yfRes = await fetch(yfUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; VilfinTV/1.0)',
-        'Accept': 'application/json',
+        'Accept':     'application/json',
       },
       signal: AbortSignal.timeout(5000),
     });
 
     if (yfRes.ok) {
       const yfData = await yfRes.json();
-
-      // Quoted symbols
-      const quotes = (yfData.quotes || [])
-        .slice(0, 4)
-        .filter(q => q.symbol)
+      const quotes = (yfData.quotes || []).slice(0, 4).filter(q => q.symbol)
         .map(q => `${q.longname || q.shortname || q.symbol} (${q.symbol}, ${q.typeDisp || q.quoteType || ''})`)
         .filter(Boolean);
-
-      // News headlines with publisher
-      const news = (yfData.news || [])
-        .slice(0, 4)
-        .filter(n => n.title)
+      const news = (yfData.news || []).slice(0, 4).filter(n => n.title)
         .map(n => `• ${n.title}${n.publisher ? ' — ' + n.publisher : ''}`);
-
       if (quotes.length) parts.push('**Relevant instruments:** ' + quotes.join(', '));
       if (news.length)   parts.push('**Recent headlines:**\n' + news.join('\n'));
     }
   } catch { /* non-fatal */ }
 
-  // ── DuckDuckGo Instant Answer (definitions / factual snippets) ─────────
+  // ── DuckDuckGo Instant Answer ──────────────────────────────────────────────
   try {
     const ddgUrl = 'https://api.duckduckgo.com/?q='
       + encodeURIComponent(prompt.slice(0, 120) + ' stock market')
@@ -179,7 +201,7 @@ async function fetchLiveContext(prompt) {
     });
 
     if (ddgRes.ok) {
-      const ddg = await ddgRes.json();
+      const ddg      = await ddgRes.json();
       const abstract = ddg.AbstractText || ddg.Answer || '';
       if (abstract && abstract.length > 40) {
         parts.push('**Context snippet:** ' + abstract.slice(0, 400));
@@ -192,10 +214,156 @@ async function fetchLiveContext(prompt) {
     : '';
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// STEP B — AI GENERATION
-// ═══════════════════════════════════════════════════════════════════════════
-async function handleQuery(prompt, env) {
+// ═══════════════════════════════════════════════════════════════════════════════
+// STEP B — PROVIDER CALL HELPERS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** Groq — Llama 3.3 70B (OpenAI-compatible) */
+async function callGroq(messages, env, maxTokens) {
+  if (!env.GROQ_API_KEY) return null;
+  try {
+    const res = await fetch(GROQ_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${env.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model:       GROQ_MODEL,
+        messages,
+        max_tokens:  maxTokens || MAX_TOKENS,
+        temperature: TEMPERATURE,
+        stream:      false,
+      }),
+      signal: AbortSignal.timeout(30000),
+    });
+    if (!res.ok) { console.warn('Groq error', res.status, (await res.text()).slice(0, 200)); return null; }
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content?.trim();
+    return (text && text.length > 20) ? text : null;
+  } catch (e) { console.warn('Groq fetch failed:', e.message); return null; }
+}
+
+/** Google Gemini — converts chat messages into a combined text prompt */
+async function callGemini(messages, env, maxTokens) {
+  if (!env.GEMINI_API_KEY) return null;
+  try {
+    // Gemini uses a different format — combine system + user into one prompt
+    const sysContent  = messages.find(m => m.role === 'system')?.content || '';
+    const userContent = messages.find(m => m.role === 'user')?.content   || '';
+    const combined    = sysContent ? `${sysContent}\n\n${userContent}` : userContent;
+
+    const url = `${GEMINI_BASE}${GEMINI_MODEL}:generateContent?key=${env.GEMINI_API_KEY}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: combined }] }],
+        generationConfig: {
+          maxOutputTokens: maxTokens || MAX_TOKENS,
+          temperature:     TEMPERATURE,
+        },
+      }),
+      signal: AbortSignal.timeout(30000),
+    });
+    if (!res.ok) { console.warn('Gemini error', res.status, (await res.text()).slice(0, 200)); return null; }
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    return (text && text.length > 20) ? text : null;
+  } catch (e) { console.warn('Gemini fetch failed:', e.message); return null; }
+}
+
+/** OpenAI — gpt-4o-mini (OpenAI-compatible) */
+async function callOpenAI(messages, env, maxTokens) {
+  if (!env.OPENAI_API_KEY) return null;
+  try {
+    const res = await fetch(OPENAI_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model:       OPENAI_MODEL,
+        messages,
+        max_tokens:  maxTokens || MAX_TOKENS,
+        temperature: TEMPERATURE,
+        stream:      false,
+      }),
+      signal: AbortSignal.timeout(30000),
+    });
+    if (!res.ok) { console.warn('OpenAI error', res.status, (await res.text()).slice(0, 200)); return null; }
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content?.trim();
+    return (text && text.length > 20) ? text : null;
+  } catch (e) { console.warn('OpenAI fetch failed:', e.message); return null; }
+}
+
+/** DeepSeek — deepseek-chat (OpenAI-compatible) */
+async function callDeepSeek(messages, env, maxTokens) {
+  if (!env.DEEPSEEK_API_KEY) return null;
+  try {
+    const res = await fetch(DEEPSEEK_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${env.DEEPSEEK_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model:       DEEPSEEK_MODEL,
+        messages,
+        max_tokens:  maxTokens || MAX_TOKENS,
+        temperature: TEMPERATURE,
+        stream:      false,
+      }),
+      signal: AbortSignal.timeout(30000),
+    });
+    if (!res.ok) { console.warn('DeepSeek error', res.status, (await res.text()).slice(0, 200)); return null; }
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content?.trim();
+    return (text && text.length > 20) ? text : null;
+  } catch (e) { console.warn('DeepSeek fetch failed:', e.message); return null; }
+}
+
+/** Pollinations — free, no key required (emergency last resort) */
+async function callPollinations(messages) {
+  try {
+    const sysShort = `Financial Market Assistant. ${new Date().toDateString()}. Use Markdown.`;
+    const userMsg  = messages.find(m => m.role === 'user')?.content || '';
+    const res = await fetch('https://text.pollinations.ai/openai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model:   'openai-large',
+        messages: [
+          { role: 'system', content: sysShort },
+          { role: 'user',   content: userMsg },
+        ],
+        stream:  false,
+        private: true,
+      }),
+      signal: AbortSignal.timeout(45000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const text = data?.choices?.[0]?.message?.content?.trim();
+    return (text && text.length > 20) ? text : null;
+  } catch (e) { console.warn('Pollinations failed:', e.message); return null; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STEP B — AI GENERATION WITH DYNAMIC PROVIDER ROUTING
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Route to the requested provider first, then cascade through all available
+ * providers until one succeeds.
+ *
+ * @param {string} prompt       - User's question (with live context prepended)
+ * @param {object} env          - Cloudflare Worker environment bindings
+ * @param {string} providerHint - Preferred provider: 'groq'|'gemini'|'openai'|'deepseek'|''
+ */
+async function handleQuery(prompt, env, providerHint) {
   const today       = new Date().toDateString();
   const liveContext = await fetchLiveContext(prompt);
 
@@ -204,100 +372,39 @@ async function handleQuery(prompt, env) {
     { role: 'user',   content: liveContext + prompt },
   ];
 
-  // ── Provider 1: Groq (Llama 3.3 70B — free tier, high quota) ──────────
-  if (env.GROQ_API_KEY) {
-    try {
-      const res = await fetch(GROQ_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'Authorization': `Bearer ${env.GROQ_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model:       GROQ_MODEL,
-          messages,
-          max_tokens:  MAX_TOKENS,
-          temperature: TEMPERATURE,
-          stream:      false,
-        }),
-        signal: AbortSignal.timeout(30000),
-      });
+  const provider = (providerHint || '').toLowerCase();
 
-      if (res.ok) {
-        const data = await res.json();
-        const text = data.choices?.[0]?.message?.content?.trim();
-        if (text && text.length > 20) return text;
-      } else {
-        const errBody = await res.text();
-        console.warn('Groq error', res.status, errBody.slice(0, 200));
-      }
-    } catch (e) {
-      console.warn('Groq fetch failed:', e.message);
-    }
+  // ── Honour explicit provider preference ────────────────────────────────────
+  if (provider === 'groq') {
+    const t = await callGroq(messages, env);
+    if (t) return t;
+  }
+  if (provider === 'gemini') {
+    const t = await callGemini(messages, env);
+    if (t) return t;
+  }
+  if (provider === 'openai') {
+    const t = await callOpenAI(messages, env);
+    if (t) return t;
+  }
+  if (provider === 'deepseek') {
+    const t = await callDeepSeek(messages, env);
+    if (t) return t;
   }
 
-  // ── Provider 2: DeepSeek (cheap, high quality) ──────────────────────────
-  if (env.DEEPSEEK_API_KEY) {
-    try {
-      const res = await fetch(DEEPSEEK_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'Authorization': `Bearer ${env.DEEPSEEK_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model:       DEEPSEEK_MODEL,
-          messages,
-          max_tokens:  MAX_TOKENS,
-          temperature: TEMPERATURE,
-          stream:      false,
-        }),
-        signal: AbortSignal.timeout(30000),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const text = data.choices?.[0]?.message?.content?.trim();
-        if (text && text.length > 20) return text;
-      }
-    } catch (e) {
-      console.warn('DeepSeek fetch failed:', e.message);
-    }
-  }
-
-  // ── Provider 3: Pollinations (free, no key — emergency fallback) ────────
-  try {
-    const sysShort = `Financial Market Assistant. ${today}. Use Markdown.`;
-    const res = await fetch('https://text.pollinations.ai/openai', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'openai-large',
-        messages: [
-          { role: 'system', content: sysShort },
-          { role: 'user',   content: liveContext + prompt },
-        ],
-        stream:  false,
-        private: true,
-      }),
-      signal: AbortSignal.timeout(45000),
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      const text = data?.choices?.[0]?.message?.content?.trim();
-      if (text && text.length > 20) return text;
-    }
-  } catch (e) {
-    console.warn('Pollinations fallback failed:', e.message);
-  }
+  // ── Default cascade: Groq → Gemini → OpenAI → DeepSeek → Pollinations ─────
+  const groq     = await callGroq(messages, env);       if (groq)     return groq;
+  const gemini   = await callGemini(messages, env);     if (gemini)   return gemini;
+  const openai   = await callOpenAI(messages, env);     if (openai)   return openai;
+  const deepseek = await callDeepSeek(messages, env);   if (deepseek) return deepseek;
+  const poll     = await callPollinations(messages);    if (poll)     return poll;
 
   throw new Error('All AI providers unavailable');
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════════
 // DAILY MARKET SNAPSHOT (build-time only — called by build.js, NOT the browser)
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════════
 async function generateMarketSnapshot(env) {
   const today   = new Date().toDateString();
   const liveCtx = await fetchLiveContext('global stock market indices commodities today');
@@ -326,63 +433,22 @@ Use Markdown. Be concise — max 350 words. Write as a professional market analy
     { role: 'user',   content: liveCtx + snapshotPrompt },
   ];
 
-  // Use Groq for high-quality snapshot generation
-  if (env.GROQ_API_KEY) {
-    try {
-      const res = await fetch(GROQ_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'Authorization': `Bearer ${env.GROQ_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model:       GROQ_MODEL,
-          messages,
-          max_tokens:  800,
-          temperature: 0.5,
-          stream:      false,
-        }),
-        signal: AbortSignal.timeout(30000),
-      });
+  // Prefer Groq for daily snapshot (fast, free, high-quality)
+  const groq = await callGroq(messages, env, 800);
+  if (groq) return { briefing: groq, generated: new Date().toISOString(), model: GROQ_MODEL };
 
-      if (res.ok) {
-        const data  = await res.json();
-        const brief = data.choices?.[0]?.message?.content?.trim();
-        if (brief && brief.length > 50) {
-          return { briefing: brief, generated: new Date().toISOString(), model: GROQ_MODEL };
-        }
-      }
-    } catch (e) { console.warn('Groq snapshot error:', e.message); }
-  }
+  // Fallback: Gemini
+  const gemini = await callGemini(messages, env, 800);
+  if (gemini) return { briefing: gemini, generated: new Date().toISOString(), model: GEMINI_MODEL };
 
   // Fallback: DeepSeek
-  if (env.DEEPSEEK_API_KEY) {
-    try {
-      const res = await fetch(DEEPSEEK_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'Authorization': `Bearer ${env.DEEPSEEK_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: DEEPSEEK_MODEL, messages, max_tokens: 800, temperature: 0.5, stream: false,
-        }),
-        signal: AbortSignal.timeout(30000),
-      });
-      if (res.ok) {
-        const data  = await res.json();
-        const brief = data.choices?.[0]?.message?.content?.trim();
-        if (brief && brief.length > 50) {
-          return { briefing: brief, generated: new Date().toISOString(), model: DEEPSEEK_MODEL };
-        }
-      }
-    } catch (e) { console.warn('DeepSeek snapshot error:', e.message); }
-  }
+  const deepseek = await callDeepSeek(messages, env, 800);
+  if (deepseek) return { briefing: deepseek, generated: new Date().toISOString(), model: DEEPSEEK_MODEL };
 
   throw new Error('Cannot generate snapshot — no AI provider available');
 }
 
-// ─── Utility ──────────────────────────────────────────────────────────────
+// ─── Utility ──────────────────────────────────────────────────────────────────
 function json(data, corsHeaders, status = 200) {
   return new Response(JSON.stringify(data), {
     status,

@@ -3253,10 +3253,20 @@ footer{
 
     <!-- Tab 1: Cloudflare Worker -->
     <div class="svc-panel active" id="svc-panel-worker">
-      <div class="svc-note">Cloudflare Worker proxies all AI calls. Keys stay on your server — never exposed in the browser.</div>
+      <div class="svc-note">Your personal Cloudflare Worker proxies all AI calls. API keys stay on your server — never exposed in the browser. <a href="user-setup-guide.html" target="_blank" style="color:var(--burn2);font-weight:600;text-decoration:none">📖 How to set this up →</a></div>
       <div class="svc-field">
         <label>Worker URL</label>
-        <input type="url" id="cf-url-input" placeholder="https://your-worker.workers.dev" autocomplete="off" spellcheck="false"/>
+        <input type="url" id="cf-url-input" placeholder="https://your-worker.your-name.workers.dev" autocomplete="off" spellcheck="false"/>
+      </div>
+      <div class="svc-field">
+        <label>Preferred AI Provider <span style="font-size:9px;color:var(--text3)">(Worker uses this API key)</span></label>
+        <select id="svc-worker-provider" style="width:100%;background:var(--dark4);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:12px;padding:8px 10px;outline:none">
+          <option value="">⚡ Auto — Worker decides (recommended)</option>
+          <option value="gemini">💎 Google Gemini (GEMINI_API_KEY)</option>
+          <option value="groq">🚀 Groq — Llama 3.3 70B (GROQ_API_KEY)</option>
+          <option value="openai">🟢 OpenAI — GPT-4o mini (OPENAI_API_KEY)</option>
+          <option value="deepseek">🔵 DeepSeek (DEEPSEEK_API_KEY)</option>
+        </select>
       </div>
     </div>
 
@@ -3313,6 +3323,9 @@ footer{
       <button class="svc-danger-btn" onclick="disconnectAllServices(true)">🗑 Clear All</button>
     </div>
     <div class="cf-status-msg" id="cf-status-msg"></div>
+    <div style="text-align:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <a href="user-setup-guide.html" target="_blank" style="color:var(--burn2);font-size:11px;font-weight:600;text-decoration:none;letter-spacing:.3px">📖 First time? Read the Setup Guide to deploy your free AI Worker</a>
+    </div>
   </div>
 </div>
 
@@ -3853,15 +3866,16 @@ function switchRBTab(tabId) {
 }
 
 // ── AI SERVICES — localStorage keys ─────────────────────────────────
-const CF_KEY        = 'viltv_cf_worker_url';
-const SVC_GEMINI_KEY   = 'viltv_gemini_key';
-const SVC_GEMINI_LBL   = 'viltv_gemini_label';
-const SVC_OPENAI_KEY   = 'viltv_openai_key';
-const SVC_OPENAI_LBL   = 'viltv_openai_label';
-const SVC_API3_KEY     = 'viltv_api3_key';
-const SVC_API3_LBL     = 'viltv_api3_label';
-const SVC_API3_URL     = 'viltv_api3_url';
-const SVC_API3_MODEL   = 'viltv_api3_model';
+const CF_KEY             = 'viltv_cf_worker_url';
+const SVC_WORKER_PROVIDER= 'viltv_worker_provider';   // preferred provider for the Worker
+const SVC_GEMINI_KEY     = 'viltv_gemini_key';
+const SVC_GEMINI_LBL     = 'viltv_gemini_label';
+const SVC_OPENAI_KEY     = 'viltv_openai_key';
+const SVC_OPENAI_LBL     = 'viltv_openai_label';
+const SVC_API3_KEY       = 'viltv_api3_key';
+const SVC_API3_LBL       = 'viltv_api3_label';
+const SVC_API3_URL       = 'viltv_api3_url';
+const SVC_API3_MODEL     = 'viltv_api3_model';
 
 // ── Load saved settings on startup ───────────────────────────────────
 function cfLoadSaved() {
@@ -3876,6 +3890,8 @@ function openServicesModal() {
   // Populate fields from localStorage
   const workerEl = document.getElementById('cf-url-input');
   if (workerEl) workerEl.value = localStorage.getItem(CF_KEY) || '';
+  const providerEl = document.getElementById('svc-worker-provider');
+  if (providerEl) providerEl.value = localStorage.getItem(SVC_WORKER_PROVIDER) || '';
   const geminiEl = document.getElementById('svc-gemini-key');
   const geminiLbl= document.getElementById('svc-gemini-label');
   if (geminiEl)  geminiEl.value = localStorage.getItem(SVC_GEMINI_KEY) ? '••••••••••••' : '';
@@ -3913,7 +3929,7 @@ async function svcSave() {
   const msg = document.getElementById('cf-status-msg');
   msg.textContent = '⏳ Saving…';
 
-  // Coworker URL
+  // Coworker URL + preferred provider
   const workerEl = document.getElementById('cf-url-input');
   const workerUrl = (workerEl?.value || '').trim().replace(/\/+$/, '');
   if (workerUrl) {
@@ -3923,6 +3939,10 @@ async function svcSave() {
     localStorage.removeItem(CF_KEY);
     window._cfWorkerUrl = null;
   }
+  const providerEl = document.getElementById('svc-worker-provider');
+  const providerVal = (providerEl?.value || '').trim();
+  if (providerVal) localStorage.setItem(SVC_WORKER_PROVIDER, providerVal);
+  else localStorage.removeItem(SVC_WORKER_PROVIDER);
 
   // Gemini key — only save if user entered a real value (not the masked placeholder)
   const geminiKeyEl = document.getElementById('svc-gemini-key');
@@ -3965,7 +3985,7 @@ async function svcSave() {
 
 function disconnectAllServices(fromModal) {
   if (!fromModal && !confirm('Clear all saved API keys and connection settings?')) return;
-  [CF_KEY, SVC_GEMINI_KEY, SVC_GEMINI_LBL, SVC_OPENAI_KEY, SVC_OPENAI_LBL,
+  [CF_KEY, SVC_WORKER_PROVIDER, SVC_GEMINI_KEY, SVC_GEMINI_LBL, SVC_OPENAI_KEY, SVC_OPENAI_LBL,
    SVC_API3_KEY, SVC_API3_LBL, SVC_API3_URL, SVC_API3_MODEL].forEach(k => localStorage.removeItem(k));
   window._cfWorkerUrl = null;
   _svcRefreshStatus();
@@ -3975,6 +3995,8 @@ function disconnectAllServices(fromModal) {
     // Clear input fields in modal
     ['cf-url-input','svc-gemini-key','svc-gemini-label','svc-openai-key','svc-openai-label',
      'svc-api3-key','svc-api3-label','svc-api3-url','svc-api3-model'].forEach(id => {
+      // Also reset provider dropdown
+      const pd = document.getElementById('svc-worker-provider'); if (pd) pd.value = '';
       const el = document.getElementById(id); if (el) el.value = '';
     });
     ['svc-gemini-saved-badge','svc-openai-saved-badge','svc-api3-saved-badge'].forEach(id => {
@@ -4281,18 +4303,19 @@ function _mdToHtml(md) {
   return result;
 }
 
-// ── Cloudflare Worker proxy query (Task 2 / 3) ──────────────────────────────
+// ── Cloudflare Worker proxy query ────────────────────────────────────────────
 async function _aiWorkerQuery(prompt, onChunk, onDone, onError) {
   // Only uses a URL the USER has personally entered in the Settings panel.
   // The system WORKER_URL is never stored here — it lives in .env / GitHub Secrets only.
-  const workerUrl = (localStorage.getItem('viltv_cf_worker_url') || '').replace(/\/+$/, '');
+  const workerUrl = (localStorage.getItem(CF_KEY) || '').replace(/\/+$/, '');
+  const provider  = localStorage.getItem(SVC_WORKER_PROVIDER) || '';
 
   if (!workerUrl) throw new Error('No worker URL configured');
 
   const res = await fetch(workerUrl + '/query', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ prompt, provider }),
     signal: AbortSignal.timeout(60000)
   });
 
@@ -4337,14 +4360,17 @@ async function _aiWorkerQuery(prompt, onChunk, onDone, onError) {
 async function _aiLoadBalancedQuery(prompt, model, onChunk, onDone, onError) {
   const workerUrl = (window._cfWorkerUrl || localStorage.getItem(CF_KEY) || '').replace(/\/+$/,'');
 
-  // 1. Try Coworker (streaming)
+  // 1. Try Coworker — sends provider preference so Worker routes to the right API
   if (workerUrl) {
     try {
-      const m = model || localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
+      const m        = model || localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
+      const provider = localStorage.getItem(SVC_WORKER_PROVIDER) || '';
+      const payload  = JSON.stringify({ prompt, model: m, provider, use_search: true });
+
+      // Try streaming endpoint first
       const res = await fetch(workerUrl + '/query-stream', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({prompt, model:m, use_search:true}),
-        signal: AbortSignal.timeout(90000)
+        body: payload, signal: AbortSignal.timeout(90000),
       });
       if (res.ok && res.body) {
         const reader = res.body.getReader(); const dec = new TextDecoder();
@@ -4363,11 +4389,11 @@ async function _aiLoadBalancedQuery(prompt, model, onChunk, onDone, onError) {
         }
         if(accumulated.length>30){onDone&&onDone(accumulated); return;}
       }
-      // Stream empty — try worker non-stream
+      // Stream empty — try non-stream endpoints
       for(const ep of ['/query','/ask','/chat','/generate']){
         try{
           const r=await fetch(workerUrl+ep,{method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({prompt,model:m,use_search:true}),signal:AbortSignal.timeout(60000)});
+            body:payload, signal:AbortSignal.timeout(60000)});
           if(!r.ok&&r.status===404) continue;
           const txt=await r.text(); let d; try{d=JSON.parse(txt);}catch{d={result:txt};}
           if(d.error) continue;
@@ -4459,7 +4485,18 @@ window._streamPartial = '';
 
 async function autoSendToGemini() {
   const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY) || '';
-  const finalUrl = workerUrl.replace(/\/+$/, '');
+  const finalUrl  = workerUrl.replace(/\/+$/, '');
+
+  // Require a configured AI service for the Gamma report
+  const hasAny = !!(finalUrl || localStorage.getItem(SVC_GEMINI_KEY) || localStorage.getItem(SVC_OPENAI_KEY) ||
+    (localStorage.getItem(SVC_API3_KEY) && localStorage.getItem(SVC_API3_URL)));
+  if (!hasAny) {
+    if (confirm('⚠️ Please configure your AI connection in Settings first.\n\nOpen Settings now?')) {
+      openServicesModal();
+    }
+    return;
+  }
+
   const queryEl = document.getElementById('copy-content');
   const queryText = generatedQuery || queryEl?.innerText?.trim() || queryEl?.textContent?.trim();
   if (!queryText || queryText.includes('No query generated yet')) {
@@ -4487,7 +4524,8 @@ async function autoSendToGemini() {
   const selectedModel = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
 
   async function tryStream(partialSoFar, attempt) {
-    const body = { prompt: queryText, use_search: true, model: selectedModel };
+    const provider = localStorage.getItem(SVC_WORKER_PROVIDER) || '';
+    const body = { prompt: queryText, use_search: true, model: selectedModel, provider };
     if (partialSoFar) body.partial = partialSoFar;
 
     let res;
@@ -5877,21 +5915,33 @@ async function rbAiSend() {
       : '';
     const augmented = contextPrefix + q;
 
-    // ─── Route: user's own configured services → free AI stack ────────────
-    // If the user has personally added an API key or their own Worker URL in
-    // the Settings panel, use those. Otherwise use the free AI stack.
+    // ─── Route: user's own configured services → free AI fallback ─────────
     // The system WORKER_URL is NEVER used here — it is build-time only.
-    const hasPaid = !!(
-      localStorage.getItem(CF_KEY) ||
-      localStorage.getItem(SVC_GEMINI_KEY) ||
-      localStorage.getItem(SVC_OPENAI_KEY) ||
-      (localStorage.getItem(SVC_API3_KEY) && localStorage.getItem(SVC_API3_URL))
-    );
+    const hasWorker = !!(window._cfWorkerUrl || localStorage.getItem(CF_KEY));
+    const hasGemini = !!localStorage.getItem(SVC_GEMINI_KEY);
+    const hasOpenAI = !!localStorage.getItem(SVC_OPENAI_KEY);
+    const hasApi3   = !!(localStorage.getItem(SVC_API3_KEY) && localStorage.getItem(SVC_API3_URL));
+    const hasPaid   = hasWorker || hasGemini || hasOpenAI || hasApi3;
+
+    // ── If nothing is configured, show a one-time prompt to connect services ─
+    if (!hasPaid) {
+      if (typingEl) typingEl.style.display = 'none';
+      if (sendBtn)  sendBtn.disabled = false;
+      if (msgEl) msgEl.innerHTML =
+        '<div style="background:rgba(30,58,95,.35);border:1px solid rgba(56,93,154,.55);border-radius:9px;padding:14px 16px;font-size:12px;color:#94a3b8;line-height:1.7">'
+        + '<div style="color:#f1f5f9;font-weight:700;font-size:13px;margin-bottom:6px">🔗 Connect Your AI Service</div>'
+        + 'To use Market Assistant, please configure your AI connection in Settings.<br/>'
+        + '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">'
+        + '<button onclick="openServicesModal()" style="background:var(--burn2,#e65c00);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.3px">⚙️ Open Settings</button>'
+        + '<button onclick="this.closest(\'div\').closest(\'div\').outerHTML=\'\';" style="background:transparent;color:#475569;border:1px solid #334155;border-radius:6px;padding:6px 12px;font-size:11px;cursor:pointer">Continue with Free AI</button>'
+        + '<a href="user-setup-guide.html" target="_blank" style="display:inline-flex;align-items:center;color:var(--burn2,#e65c00);font-size:11px;font-weight:600;text-decoration:none;padding:6px 0">📖 Setup Guide</a>'
+        + '</div></div>';
+      if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
+      return;
+    }
 
     const model  = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
-    const runner = hasPaid
-      ? _aiLoadBalancedQuery.bind(null, augmented, model)
-      : _aiFreeQuery.bind(null, augmented);
+    const runner = _aiLoadBalancedQuery.bind(null, augmented, model);
 
     await runner(
       (partial) => { if (typingEl) typingEl.style.display = 'none'; renderMd(partial); },
