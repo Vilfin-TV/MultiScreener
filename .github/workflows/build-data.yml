@@ -1,12 +1,12 @@
 name: Build Daily Market Data
 
 # ─── Schedule ────────────────────────────────────────────────────────────────
-# Runs at 01:00 UTC daily (06:30 IST) — before Indian market open.
-# The WORKER_URL secret is read here; it never touches any frontend file.
+# Staggered 15 min after daily_symbols.yml (01:00 UTC) to avoid git-push races.
+# 01:15 UTC  =  06:45 IST  /  10:15 JST — still before both markets open.
 on:
   schedule:
-    - cron: '0 1 * * *'   # 01:00 UTC = 06:30 IST, daily
-  workflow_dispatch:        # manual trigger from Actions tab
+    - cron: '15 1 * * *'
+  workflow_dispatch:            # manual trigger from Actions tab
 
 # ─── Permissions ─────────────────────────────────────────────────────────────
 permissions:
@@ -18,19 +18,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repo
+      # ── 1. Checkout ──────────────────────────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      # 2. Node.js 24 (native fetch built-in, no npm install required)
-      - name: Set up Node.js
+      # ── 2. Node.js 24 (native fetch, no npm install required) ────────────────
+      #    setup-node@v4.4.0+ ships with the Node 24 runner to resolve the
+      #    "Node.js 20 actions are deprecated" warning.
+      - name: Set up Node.js 24
         uses: actions/setup-node@v4
         with:
           node-version: '24'
 
-      # 3. Verify WORKER_URL secret exists before running
+      # ── 3. Verify WORKER_URL secret exists before running ────────────────────
       - name: Verify WORKER_URL secret
         env:
           WORKER_URL: ${{ secrets.WORKER_URL }}
@@ -47,24 +49,31 @@ jobs:
           fi
           echo "✅ WORKER_URL secret is present (value hidden)."
 
-      # 4. Run build script — WORKER_URL injected from GitHub Secret.
-      #    This is the ONLY place the Worker URL appears; it is never written
-      #    to any file that gets deployed to GitHub Pages.
+      # ── 4. Run build script ──────────────────────────────────────────────────
+      #    WORKER_URL is injected from the GitHub Secret — never written to any
+      #    file that gets deployed to GitHub Pages.
+      #    The script retries up to 3× with exponential back-off and writes a
+      #    graceful fallback data.json instead of crashing on Worker timeouts.
       - name: Run build script
         env:
           WORKER_URL: ${{ secrets.WORKER_URL }}
         run: node build.js
 
-      # 4. Commit data.json only if it changed
+      # ── 5. Commit data.json if it changed ────────────────────────────────────
+      #    Pull --rebase before push to survive concurrent workflow pushes.
       - name: Commit data.json
         run: |
           git config --global user.name  "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet data.json; then
-            echo "No changes to data.json — skipping commit."
+
+          git add data.json
+
+          if git diff --staged --quiet; then
+            echo "ℹ️  No changes to data.json — skipping commit."
           else
-            git add data.json
             git commit -m "chore: refresh market snapshot [skip ci]"
+            # Pull rebase to handle any concurrent pushes from other workflows
+            git pull --rebase --autostash origin main || true
             git push
             echo "✅  data.json committed and pushed."
           fi
