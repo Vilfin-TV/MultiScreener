@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multi Asset Screener v8.9.5 — Input Tool | Vilfin George</title>
+<title>Multi Asset Screener v9.0 — Input Tool | Vilfin George</title>
 <!-- Canonical URL — always index.html -->
 <link rel="canonical" href="https://vilfin-tv.github.io/MultiScreener/index.html"/>
 <script>
@@ -487,6 +487,51 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-time{font-size:9.5px;color:var(--text3);margin-top:2px;font-family:'JetBrains Mono',monospace}
 .lnb-loading{padding:16px 10px;font-size:11px;color:var(--text3);text-align:center;animation:livePulse 1.5s ease-in-out infinite}
 .lnb-error{padding:12px 10px;font-size:11px;color:var(--red);text-align:center}
+
+/* ── NEWS SETTINGS BUTTON ── */
+.lns-settings-btn{background:rgba(255,255,255,.06);border:1px solid var(--border2);color:var(--text2);font-size:11px;font-weight:600;padding:5px 12px;border-radius:7px;cursor:pointer;letter-spacing:.3px;transition:background .15s,color .15s}
+.lns-settings-btn:hover{background:rgba(230,92,0,.18);color:var(--gold2);border-color:var(--burn2)}
+
+/* ── NEWS SETTINGS MODAL ── */
+.nsm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:9000;display:none;align-items:flex-start;justify-content:center;padding:30px 12px;overflow-y:auto}
+.nsm-overlay.show{display:flex}
+.nsm-box{background:#0b1628;border:1px solid rgba(56,93,154,.7);border-radius:14px;width:100%;max-width:700px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.nsm-header{background:linear-gradient(135deg,#0d1e35,#101f38);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(30,58,95,.7)}
+.nsm-title{font-size:15px;font-weight:700;color:#f1f5f9;display:flex;align-items:center;gap:8px}
+.nsm-close{background:transparent;border:none;color:var(--text2);font-size:18px;cursor:pointer;line-height:1;padding:4px;transition:color .15s}
+.nsm-close:hover{color:#f87171}
+.nsm-body{padding:18px 22px;max-height:calc(100vh - 200px);overflow-y:auto}
+.nsm-info{font-size:12px;color:var(--text2);background:rgba(56,93,154,.12);border:1px solid rgba(56,93,154,.3);border-radius:8px;padding:10px 14px;margin-bottom:16px;line-height:1.6}
+.nsm-count{font-size:11px;font-weight:700;color:var(--burn2);float:right}
+.nsm-group-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;padding:12px 0 6px;border-bottom:1px solid var(--border);margin-bottom:4px}
+.nsm-feed-row{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:8px;transition:background .12s;cursor:pointer}
+.nsm-feed-row:hover{background:rgba(255,255,255,.04)}
+.nsm-feed-row.selected{background:rgba(230,92,0,.08);border:1px solid rgba(230,92,0,.2)}
+.nsm-feed-row.disabled{opacity:.4;pointer-events:none}
+.nsm-cb{width:16px;height:16px;accent-color:var(--burn2);flex-shrink:0;cursor:pointer}
+.nsm-feed-flag{font-size:14px;flex-shrink:0}
+.nsm-feed-name{font-size:12px;color:var(--text);flex:1;font-weight:500}
+.nsm-feed-lang{font-size:10px;color:var(--text3);flex-shrink:0;background:var(--card2);padding:1px 7px;border-radius:10px}
+.nsm-order-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:5px}
+.nsm-order-item{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:8px 12px}
+.nsm-order-num{font-size:11px;font-weight:700;color:var(--burn2);width:16px;text-align:right;flex-shrink:0}
+.nsm-order-flag{font-size:13px;flex-shrink:0}
+.nsm-order-name{font-size:12px;color:var(--text);flex:1}
+.nsm-order-btns{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+.nsm-ord-btn{background:var(--card);border:1px solid var(--border2);color:var(--text2);font-size:10px;cursor:pointer;width:24px;height:18px;border-radius:3px;display:flex;align-items:center;justify-content:center;transition:background .12s}
+.nsm-ord-btn:hover{background:rgba(230,92,0,.2);color:var(--gold2)}
+.nsm-ord-btn:disabled{opacity:.25;pointer-events:none}
+.nsm-tabs{display:flex;gap:6px;margin-bottom:16px}
+.nsm-tab{background:transparent;border:1px solid var(--border2);color:var(--text2);font-size:12px;font-weight:600;padding:7px 16px;border-radius:8px;cursor:pointer;transition:background .12s,color .12s}
+.nsm-tab.active,.nsm-tab:hover{background:var(--burn2);color:#fff;border-color:var(--burn2)}
+.nsm-pane{display:none}
+.nsm-pane.active{display:block}
+.nsm-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.nsm-save-btn{background:var(--burn2);color:#fff;border:none;border-radius:8px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.3px;transition:background .15s}
+.nsm-save-btn:hover{background:#ff6600}
+.nsm-reset-btn{background:transparent;border:1px solid var(--border2);color:var(--text2);border-radius:8px;padding:9px 16px;font-size:12px;cursor:pointer;transition:background .15s}
+.nsm-reset-btn:hover{background:rgba(255,255,255,.06);color:var(--text)}
+.nsm-sel-count{font-size:11px;color:var(--text3)}
 
 /* ── FOOTER ── */
 /* ── PROFESSIONAL FOOTER ── */
@@ -1510,6 +1555,8 @@ footer{
         <div class="dd-item" onclick="openServicesModal();closeAllMenus()">🔗 Connect Services…</div>
         <div class="dd-item" onclick="disconnectAllServices();closeAllMenus()" id="svc-disconnect-item" style="display:none">🔌 Disconnect All</div>
         <div class="dd-sep"></div>
+        <div class="dd-item" onclick="openNewsSettings();closeAllMenus()">📰 News Feed Settings…</div>
+        <div class="dd-sep"></div>
         <div class="dd-item danger" onclick="closeApp()">✕ Exit</div>
       </div>
     </div>
@@ -2080,11 +2127,14 @@ footer{
 ══════════════════════════════════════════ -->
 <div class="main-content">
 
-<!-- ══ LIVE FINANCIAL NEWS — at top of main content ══ -->
+<!-- ══ LIVE NEWS — at top of main content ══ -->
 <div class="live-news-section" id="live-news-section">
   <div class="lns-header">
-    <div class="lns-title">LIVE FINANCIAL NEWS</div>
-    <div class="lns-timer" id="lns-timer" style="display:none"></div>
+    <div class="lns-title">Live News</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="lns-timer" id="lns-timer" style="display:none"></div>
+      <button class="lns-settings-btn" id="lns-settings-btn" onclick="openNewsSettings()" title="Customize news feeds">⚙️ Customize</button>
+    </div>
   </div>
   <div class="lns-grid" id="lns-grid">
     <!-- injected by JS -->
@@ -3325,6 +3375,47 @@ footer{
     <div class="cf-status-msg" id="cf-status-msg"></div>
     <div style="text-align:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
       <a href="user-setup-guide.html" target="_blank" style="color:var(--burn2);font-size:11px;font-weight:600;text-decoration:none;letter-spacing:.3px">📖 First time? Read the Setup Guide to deploy your free AI Worker</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     NEWS SETTINGS MODAL
+══════════════════════════════════════════ -->
+<div class="nsm-overlay" id="nsm-overlay" onclick="if(event.target===this)closeNewsSettings()">
+  <div class="nsm-box">
+    <div class="nsm-header">
+      <div class="nsm-title">📰 Customize Live News Feeds</div>
+      <button class="nsm-close" onclick="closeNewsSettings()">✕</button>
+    </div>
+    <div class="nsm-body">
+      <div class="nsm-info">
+        Select up to <strong>10 feeds</strong> to display in your live news grid. Use the <strong>Order</strong> tab to arrange them.
+        <span class="nsm-count" id="nsm-count">0 / 10 selected</span>
+      </div>
+      <!-- Tab switcher -->
+      <div class="nsm-tabs">
+        <button class="nsm-tab active" id="nsm-tab-select" onclick="nsmSwitchTab('select',this)">📋 Select Feeds</button>
+        <button class="nsm-tab" id="nsm-tab-order" onclick="nsmSwitchTab('order',this)">↕ Reorder</button>
+      </div>
+
+      <!-- Pane 1: Select feeds -->
+      <div class="nsm-pane active" id="nsm-pane-select">
+        <div id="nsm-feed-list"><!-- rendered by JS --></div>
+      </div>
+
+      <!-- Pane 2: Order selected feeds -->
+      <div class="nsm-pane" id="nsm-pane-order">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Drag or use ▲▼ to reorder your selected feeds.</div>
+        <ol class="nsm-order-list" id="nsm-order-list"><!-- rendered by JS --></ol>
+      </div>
+    </div>
+    <div class="nsm-footer">
+      <span class="nsm-sel-count" id="nsm-footer-count"></span>
+      <div style="display:flex;gap:8px">
+        <button class="nsm-reset-btn" onclick="nsmReset()">↺ Reset to Default</button>
+        <button class="nsm-save-btn" onclick="saveNewsSettings()">💾 Save &amp; Apply</button>
+      </div>
     </div>
   </div>
 </div>
@@ -5990,42 +6081,103 @@ function initLiveClock() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// LIVE NEWS GRID — 10 boxes, RSS via allorigins proxy, 30s refresh
+// LIVE NEWS GRID — 35 feeds, settings-selectable 10 shown at a time
 // ═══════════════════════════════════════════════════════════════════
+
 const NEWS_SOURCES = [
-  // Feeds that work well through rss2json (tested & reliable)
-  { id:'us1',    flag:'🇺🇸', label:'CNBC Top News',       color:'#b5120e', url:'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114' },
-  { id:'us2',    flag:'🇺🇸', label:'MarketWatch',         color:'#c0390b', url:'https://feeds.marketwatch.com/marketwatch/topstories/' },
-  { id:'us3',    flag:'🇺🇸', label:'Yahoo Finance',       color:'#6b11a1', url:'https://finance.yahoo.com/news/rssindex' },
-  { id:'india1', flag:'🇮🇳', label:'ET Markets',          color:'#e8540f', url:'https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms' },
-  { id:'india2', flag:'🇮🇳', label:'Moneycontrol',        color:'#c94200', url:'https://www.moneycontrol.com/rss/MCtopnews.xml' },
-  { id:'india3', flag:'🇮🇳', label:'Mint Markets',        color:'#d45000', url:'https://www.livemint.com/rss/markets' },
-  { id:'india4', flag:'🇮🇳', label:'NDTV Profit',         color:'#b03c00', url:'https://feeds.feedburner.com/ndtvprofit-latest' },
-  { id:'japan1', flag:'🇯🇵', label:'NHK World',           color:'#c0392b', url:'https://www3.nhk.or.jp/rss/news/cat5.xml' },
-  { id:'europe', flag:'🌍',  label:'BBC Business',        color:'#1d4ed8', url:'https://feeds.bbci.co.uk/news/business/rss.xml' },
-  { id:'global', flag:'🌐',  label:'Google Finance News', color:'#0d6b3e', url:'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pKVGlnQVAB?hl=en-IN&gl=IN&ceid=IN:en' },
+  // ── US / Americas ────────────────────────────────────────────────
+  { id:'us1',    flag:'🇺🇸', label:'CNBC Top News',        lang:'English',  group:'🇺🇸 US & Americas', color:'#b5120e', url:'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114' },
+  { id:'us2',    flag:'🇺🇸', label:'MarketWatch',          lang:'English',  group:'🇺🇸 US & Americas', color:'#b52828', url:'https://feeds.marketwatch.com/marketwatch/topstories/' },
+  { id:'us3',    flag:'🇺🇸', label:'Yahoo Finance',        lang:'English',  group:'🇺🇸 US & Americas', color:'#6b11a1', url:'https://finance.yahoo.com/news/rssindex' },
+  { id:'us4',    flag:'🇺🇸', label:'Fox Business',         lang:'English',  group:'🇺🇸 US & Americas', color:'#003580', url:'https://feeds.foxnews.com/foxbusiness/latest' },
+  { id:'us5',    flag:'🇺🇸', label:'Reuters Business',     lang:'English',  group:'🇺🇸 US & Americas', color:'#d05000', url:'https://feeds.reuters.com/reuters/businessNews' },
+  { id:'ca1',    flag:'🇨🇦', label:'CBC Business',         lang:'English',  group:'🇺🇸 US & Americas', color:'#c8102e', url:'https://rss.cbc.ca/lineup/business.xml' },
+  { id:'latam1', flag:'🌎',  label:'MercoPress (LatAm)',   lang:'English',  group:'🇺🇸 US & Americas', color:'#1a6e3e', url:'https://en.mercopress.com/rss' },
+  // ── India — English ──────────────────────────────────────────────
+  { id:'india1', flag:'🇮🇳', label:'ET Markets',           lang:'English',  group:'🇮🇳 India (English)', color:'#e8540f', url:'https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms' },
+  { id:'india2', flag:'🇮🇳', label:'Moneycontrol',         lang:'English',  group:'🇮🇳 India (English)', color:'#c94200', url:'https://www.moneycontrol.com/rss/MCtopnews.xml' },
+  { id:'india3', flag:'🇮🇳', label:'Mint Markets',         lang:'English',  group:'🇮🇳 India (English)', color:'#d45000', url:'https://www.livemint.com/rss/markets' },
+  { id:'india4', flag:'🇮🇳', label:'NDTV Profit',          lang:'English',  group:'🇮🇳 India (English)', color:'#b03c00', url:'https://feeds.feedburner.com/ndtvprofit-latest' },
+  // ── India — Hindi ────────────────────────────────────────────────
+  { id:'hindi1', flag:'🇮🇳', label:'NDTV India (हिंदी)',   lang:'Hindi',    group:'🇮🇳 India (Hindi)',   color:'#a52c00', url:'https://feeds.feedburner.com/NdtvIndia-Hindi' },
+  { id:'hindi2', flag:'🇮🇳', label:'Aaj Tak',              lang:'Hindi',    group:'🇮🇳 India (Hindi)',   color:'#7b1a1a', url:'https://www.aajtak.in/rss/rss.xml' },
+  { id:'hindi3', flag:'🇮🇳', label:'India TV (हिंदी)',     lang:'Hindi',    group:'🇮🇳 India (Hindi)',   color:'#6b2a00', url:'https://www.indiatv.in/rss/news.rss' },
+  // ── India — Malayalam ────────────────────────────────────────────
+  { id:'malay1', flag:'🇮🇳', label:'Mathrubhumi',          lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#1a5276', url:'https://www.mathrubhumi.com/rss' },
+  { id:'malay2', flag:'🇮🇳', label:'Manorama Online',      lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#154360', url:'https://www.manoramaonline.com/news.rss' },
+  // ── India — Tamil ────────────────────────────────────────────────
+  { id:'tamil1', flag:'🇮🇳', label:'Daily Thanthi',        lang:'Tamil',    group:'🇮🇳 India (Tamil)',   color:'#6e2f2f', url:'https://www.dailythanthi.com/rss/' },
+  { id:'tamil2', flag:'🇮🇳', label:'Dinamalar',            lang:'Tamil',    group:'🇮🇳 India (Tamil)',   color:'#5d4037', url:'https://www.dinamalar.com/rss.asp' },
+  // ── India — Kannada ──────────────────────────────────────────────
+  { id:'kann1',  flag:'🇮🇳', label:'Prajavani',            lang:'Kannada',  group:'🇮🇳 India (Kannada)', color:'#4a235a', url:'https://www.prajavani.net/feed' },
+  { id:'kann2',  flag:'🇮🇳', label:'Vijaya Karnataka',     lang:'Kannada',  group:'🇮🇳 India (Kannada)', color:'#3d1a78', url:'https://vijaykarnataka.com/rss' },
+  // ── India — Telugu ───────────────────────────────────────────────
+  { id:'telug1', flag:'🇮🇳', label:'Sakshi',               lang:'Telugu',   group:'🇮🇳 India (Telugu)',  color:'#1a5c3a', url:'https://www.sakshi.com/rss' },
+  { id:'telug2', flag:'🇮🇳', label:'Eenadu',               lang:'Telugu',   group:'🇮🇳 India (Telugu)',  color:'#2e7d32', url:'https://www.eenadu.net/rss.aspx' },
+  // ── India — Marathi ──────────────────────────────────────────────
+  { id:'marat1', flag:'🇮🇳', label:'Maharashtra Times',    lang:'Marathi',  group:'🇮🇳 India (Marathi)', color:'#e65100', url:'https://maharashtratimes.com/rssfeedstopstories.cms' },
+  { id:'marat2', flag:'🇮🇳', label:'Loksatta',             lang:'Marathi',  group:'🇮🇳 India (Marathi)', color:'#bf360c', url:'https://www.loksatta.com/rss/' },
+  // ── India — Bengali ──────────────────────────────────────────────
+  { id:'beng1',  flag:'🇮🇳', label:'Anandabazar Patrika',  lang:'Bengali',  group:'🇮🇳 India (Bengali)', color:'#01579b', url:'https://www.anandabazar.com/rss/' },
+  { id:'beng2',  flag:'🇮🇳', label:'ABP Ananda',           lang:'Bengali',  group:'🇮🇳 India (Bengali)', color:'#0277bd', url:'https://bengali.abplive.com/rss/' },
+  // ── Japan ────────────────────────────────────────────────────────
+  { id:'japan1', flag:'🇯🇵', label:'NHK World',            lang:'English',  group:'🇯🇵 Japan',           color:'#c0392b', url:'https://www3.nhk.or.jp/rss/news/cat5.xml' },
+  { id:'japan2', flag:'🇯🇵', label:'Japan Times',          lang:'English',  group:'🇯🇵 Japan',           color:'#922b21', url:'https://www.japantimes.co.jp/feed/' },
+  // ── Asia Pacific ─────────────────────────────────────────────────
+  { id:'china1', flag:'🇨🇳', label:'CGTN Business',        lang:'English',  group:'🌏 Asia Pacific',     color:'#c62828', url:'https://www.cgtn.com/subscribe/rss/section/business.xml' },
+  { id:'korea1', flag:'🇰🇷', label:'Korea Times',          lang:'English',  group:'🌏 Asia Pacific',     color:'#1a237e', url:'https://www.koreatimes.co.kr/www/rss/rss.aspx' },
+  { id:'thai1',  flag:'🇹🇭', label:'Bangkok Post',         lang:'English',  group:'🌏 Asia Pacific',     color:'#1b5e20', url:'https://www.bangkokpost.com/rss/data/business.xml' },
+  { id:'viet1',  flag:'🇻🇳', label:'VIR Vietnam',          lang:'English',  group:'🌏 Asia Pacific',     color:'#b71c1c', url:'https://vir.com.vn/rss' },
+  // ── Europe & Middle East ─────────────────────────────────────────
+  { id:'eu1',    flag:'🌍',  label:'BBC Business',         lang:'English',  group:'🌍 Europe & Middle East', color:'#1d4ed8', url:'https://feeds.bbci.co.uk/news/business/rss.xml' },
+  { id:'eu2',    flag:'🌍',  label:'Euronews Business',    lang:'English',  group:'🌍 Europe & Middle East', color:'#0d47a1', url:'https://www.euronews.com/rss?level=theme&name=business' },
+  { id:'mid1',   flag:'🌍',  label:'Al Jazeera',           lang:'English',  group:'🌍 Europe & Middle East', color:'#1a6b3e', url:'https://www.aljazeera.com/xml/rss/all.xml' },
+  // ── Global ───────────────────────────────────────────────────────
+  { id:'global', flag:'🌐',  label:'Google Finance News',  lang:'English',  group:'🌐 Global',           color:'#0d6b3e', url:'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pKVGlnQVAB?hl=en-IN&gl=IN&ceid=IN:en' },
 ];
 
-// Multiple CORS proxies — try in sequence for reliability
+// Default 10 feed IDs shown on first visit
+const NEWS_DEFAULT_IDS = ['us1','us2','us3','india1','india2','india3','india4','japan1','eu1','global'];
+const NEWS_MAX = 10;
+const NEWS_IDS_KEY   = 'viltv_news_ids';   // JSON array of selected feed IDs
+const NEWS_ORDER_KEY = 'viltv_news_order';  // JSON array defining display order
+
+// ── CORS proxy chain ─────────────────────────────────────────────────────────
 const PROXIES = [
-  url => 'https://api.rss2json.com/v1/api.json?count=6&rss_url=' + encodeURIComponent(url),
-  url => 'https://api.allorigins.win/get?url=' + encodeURIComponent(url),
-  url => 'https://corsproxy.io/?' + encodeURIComponent(url),
+  u => 'https://api.rss2json.com/v1/api.json?count=6&rss_url=' + encodeURIComponent(u),
+  u => 'https://api.allorigins.win/get?url='                    + encodeURIComponent(u),
+  u => 'https://corsproxy.io/?'                                 + encodeURIComponent(u),
 ];
 
+// ── Active feed helpers ──────────────────────────────────────────────────────
+function _loadActiveIds() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(NEWS_IDS_KEY));
+    if (Array.isArray(saved) && saved.length) return saved.slice(0, NEWS_MAX);
+  } catch(_) {}
+  return NEWS_DEFAULT_IDS.slice();
+}
+
+function getActiveFeeds() {
+  const ids = _loadActiveIds();
+  const map = Object.fromEntries(NEWS_SOURCES.map(s => [s.id, s]));
+  return ids.map(id => map[id]).filter(Boolean);
+}
+
+// ── Core news functions ──────────────────────────────────────────────────────
 let lnsTimer;
 
 function initLiveNews() {
   renderNewsBoxes();
   fetchAllNews();
-  // Silent refresh every 5 minutes
-  lnsTimer = setInterval(fetchAllNews, 300000);
+  lnsTimer = setInterval(fetchAllNews, 300000); // refresh every 5 min
 }
 
 function renderNewsBoxes() {
   const grid = document.getElementById('lns-grid');
   if (!grid) return;
-  grid.innerHTML = NEWS_SOURCES.map(s =>
+  const feeds = getActiveFeeds();
+  grid.innerHTML = feeds.map(s =>
     `<div class="lnb" id="lnb-${s.id}">
       <div class="lnb-header" style="--lnb-color:${s.color}">
         <span class="lnb-flag">${s.flag}</span>
@@ -6038,7 +6190,7 @@ function renderNewsBoxes() {
 }
 
 function fetchAllNews() {
-  NEWS_SOURCES.forEach(s => fetchFeed(s, 0));
+  getActiveFeeds().forEach(s => fetchFeed(s, 0));
 }
 
 function renderItems(listEl, items) {
@@ -6047,77 +6199,180 @@ function renderItems(listEl, items) {
     const link  = item.link || item.url || '#';
     const pub   = item.pubDate || item.published || '';
     const timeStr = pub ? new Date(pub).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}) : '';
-    return `<a class="lnb-item" href="${link}" target="_blank" rel="noopener">
-      <span class="lnb-text">${title}</span>
+    return `<a class="lnb-item" href="${escHtml(link)}" target="_blank" rel="noopener">
+      <span class="lnb-text">${escHtml(title)}</span>
       ${timeStr ? `<span class="lnb-time">${timeStr}</span>` : ''}
     </a>`;
   }).join('');
 }
 
+function _parseXmlItems(xmlStr) {
+  const xml = new DOMParser().parseFromString(xmlStr, 'text/xml');
+  return Array.from(xml.querySelectorAll('item')).slice(0, 6).map(item => ({
+    title:   item.querySelector('title')?.textContent?.trim() || '',
+    link:    item.querySelector('link')?.textContent?.trim()  || '#',
+    pubDate: item.querySelector('pubDate')?.textContent?.trim() || '',
+  })).filter(i => i.title);
+}
+
 function fetchFeed(src, proxyIdx) {
   const listEl = document.getElementById('lnbl-' + src.id);
-  if (!listEl || proxyIdx >= PROXIES.length) {
-    if (listEl) listEl.innerHTML = '<div class="lnb-error">Feed unavailable — <a href="' + src.url + '" target="_blank" style="color:var(--gold2)">Open directly</a></div>';
+  if (!listEl) return;
+  if (proxyIdx >= PROXIES.length) {
+    listEl.innerHTML = `<div class="lnb-error">Feed unavailable — <a href="${src.url}" target="_blank" style="color:var(--gold2)">Open directly</a></div>`;
     return;
   }
   const proxyUrl = PROXIES[proxyIdx](src.url);
-  fetch(proxyUrl, { signal: AbortSignal.timeout(8000) })
-    .then(r => r.json())
+  fetch(proxyUrl, { signal: AbortSignal.timeout(9000) })
+    .then(r => {
+      const ct = r.headers.get('content-type') || '';
+      // corsproxy.io returns raw XML as text
+      if (proxyIdx === 2 || ct.includes('xml') || ct.includes('text/plain')) return r.text().then(t => ({ _raw: t }));
+      return r.json();
+    })
     .then(data => {
-      // rss2json returns {status:'ok', items:[...]}
+      // rss2json → { status:'ok', items:[...] }
       if (data.status === 'ok' && data.items?.length) {
         renderItems(listEl, data.items);
         return;
       }
-      // allorigins returns {contents:'...'} — parse as XML
+      // allorigins → { contents:'...' }
       if (data.contents) {
-        const xml = new DOMParser().parseFromString(data.contents, 'text/xml');
-        const xmlItems = Array.from(xml.querySelectorAll('item')).slice(0, 6);
-        if (xmlItems.length) {
-          listEl.innerHTML = xmlItems.map(item => {
-            const title = item.querySelector('title')?.textContent?.trim() || '';
-            const link  = item.querySelector('link')?.textContent?.trim() || '#';
-            const pub   = item.querySelector('pubDate')?.textContent?.trim() || '';
-            const timeStr = pub ? new Date(pub).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}) : '';
-            return `<a class="lnb-item" href="${link}" target="_blank" rel="noopener">
-              <span class="lnb-text">${title}</span>
-              ${timeStr ? `<span class="lnb-time">${timeStr}</span>` : ''}
-            </a>`;
-          }).join('');
-          return;
-        }
+        const items = _parseXmlItems(data.contents);
+        if (items.length) { renderItems(listEl, items); return; }
       }
-      throw new Error('no data');
+      // raw XML text (corsproxy.io)
+      if (data._raw) {
+        const items = _parseXmlItems(data._raw);
+        if (items.length) { renderItems(listEl, items); return; }
+      }
+      throw new Error('no usable data');
     })
-    .catch(() => {
-      // If this was a raw XML response from corsproxy.io, try parsing response as text
-      if (proxyIdx === 2) {
-        fetch(proxyUrl, { signal: AbortSignal.timeout(8000) })
-          .then(r => r.text())
-          .then(text => {
-            const xml = new DOMParser().parseFromString(text, 'text/xml');
-            const xmlItems = Array.from(xml.querySelectorAll('item')).slice(0, 6);
-            if (xmlItems.length) {
-              listEl.innerHTML = xmlItems.map(item => {
-                const title = item.querySelector('title')?.textContent?.trim() || '';
-                const link  = item.querySelector('link')?.textContent?.trim() || '#';
-                const pub   = item.querySelector('pubDate')?.textContent?.trim() || '';
-                const timeStr = pub ? new Date(pub).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}) : '';
-                return `<a class="lnb-item" href="${link}" target="_blank" rel="noopener">
-                  <span class="lnb-text">${title}</span>
-                  ${timeStr ? `<span class="lnb-time">${timeStr}</span>` : ''}
-                </a>`;
-              }).join('');
-              return;
-            }
-            throw new Error('empty');
-          })
-          .catch(() => fetchFeed(src, proxyIdx + 1));
-        return;
-      }
-      // Try next proxy
-      fetchFeed(src, proxyIdx + 1);
+    .catch(() => fetchFeed(src, proxyIdx + 1));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NEWS SETTINGS MODAL
+// ═══════════════════════════════════════════════════════════════════════════
+
+let _nsmSelected = []; // working copy while modal is open
+
+function openNewsSettings() {
+  _nsmSelected = _loadActiveIds();
+  _nsmRenderSelectPane();
+  _nsmRenderOrderPane();
+  _nsmSyncCount();
+  // Start on Select tab
+  nsmSwitchTab('select', document.getElementById('nsm-tab-select'));
+  document.getElementById('nsm-overlay').classList.add('show');
+}
+
+function closeNewsSettings() {
+  document.getElementById('nsm-overlay').classList.remove('show');
+}
+
+function nsmSwitchTab(tab, btn) {
+  document.querySelectorAll('.nsm-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nsm-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('nsm-pane-' + tab).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (tab === 'order') _nsmRenderOrderPane();
+}
+
+function _nsmSyncCount() {
+  const n = _nsmSelected.length;
+  const el  = document.getElementById('nsm-count');
+  const el2 = document.getElementById('nsm-footer-count');
+  const txt = n + ' / ' + NEWS_MAX + ' selected';
+  if (el)  el.textContent  = txt;
+  if (el2) el2.textContent = txt;
+}
+
+function _nsmRenderSelectPane() {
+  const container = document.getElementById('nsm-feed-list');
+  if (!container) return;
+
+  // Group feeds
+  const groups = [];
+  const seen = new Set();
+  NEWS_SOURCES.forEach(s => {
+    if (!seen.has(s.group)) { seen.add(s.group); groups.push(s.group); }
+  });
+
+  let html = '';
+  groups.forEach(group => {
+    html += `<div class="nsm-group-title">${group}</div>`;
+    NEWS_SOURCES.filter(s => s.group === group).forEach(s => {
+      const checked  = _nsmSelected.includes(s.id);
+      const atLimit  = _nsmSelected.length >= NEWS_MAX && !checked;
+      html += `<div class="nsm-feed-row${checked ? ' selected' : ''}${atLimit ? ' disabled' : ''}" onclick="nsmToggleFeed('${s.id}')" id="nsm-row-${s.id}">
+        <input type="checkbox" class="nsm-cb" ${checked ? 'checked' : ''} ${atLimit ? 'disabled' : ''} onclick="event.stopPropagation();nsmToggleFeed('${s.id}')" id="nsm-cb-${s.id}">
+        <span class="nsm-feed-flag">${s.flag}</span>
+        <span class="nsm-feed-name">${s.label}</span>
+        <span class="nsm-feed-lang">${s.lang}</span>
+      </div>`;
     });
+  });
+  container.innerHTML = html;
+}
+
+function nsmToggleFeed(id) {
+  const idx = _nsmSelected.indexOf(id);
+  if (idx === -1) {
+    if (_nsmSelected.length >= NEWS_MAX) return; // at limit
+    _nsmSelected.push(id);
+  } else {
+    _nsmSelected.splice(idx, 1);
+  }
+  _nsmRenderSelectPane();
+  _nsmSyncCount();
+}
+
+function _nsmRenderOrderPane() {
+  const list = document.getElementById('nsm-order-list');
+  if (!list) return;
+  const map = Object.fromEntries(NEWS_SOURCES.map(s => [s.id, s]));
+  list.innerHTML = _nsmSelected.map((id, i) => {
+    const s = map[id];
+    if (!s) return '';
+    return `<li class="nsm-order-item" id="nsm-ord-${id}">
+      <span class="nsm-order-num">${i+1}</span>
+      <span class="nsm-order-flag">${s.flag}</span>
+      <span class="nsm-order-name">${s.label}</span>
+      <div class="nsm-order-btns">
+        <button class="nsm-ord-btn" ${i===0?'disabled':''} onclick="nsmMove('${id}',-1)" title="Move up">▲</button>
+        <button class="nsm-ord-btn" ${i===_nsmSelected.length-1?'disabled':''} onclick="nsmMove('${id}',+1)" title="Move down">▼</button>
+      </div>
+    </li>`;
+  }).join('');
+}
+
+function nsmMove(id, dir) {
+  const idx = _nsmSelected.indexOf(id);
+  if (idx === -1) return;
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= _nsmSelected.length) return;
+  [_nsmSelected[idx], _nsmSelected[newIdx]] = [_nsmSelected[newIdx], _nsmSelected[idx]];
+  _nsmRenderOrderPane();
+}
+
+function nsmReset() {
+  _nsmSelected = NEWS_DEFAULT_IDS.slice();
+  _nsmRenderSelectPane();
+  _nsmRenderOrderPane();
+  _nsmSyncCount();
+}
+
+function saveNewsSettings() {
+  if (_nsmSelected.length === 0) {
+    alert('Please select at least 1 feed.');
+    return;
+  }
+  localStorage.setItem(NEWS_IDS_KEY, JSON.stringify(_nsmSelected));
+  closeNewsSettings();
+  // Re-render grid with new selection
+  renderNewsBoxes();
+  fetchAllNews();
 }
 
 // ═══════════════════════════════════════════════════════════════════
