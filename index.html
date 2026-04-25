@@ -100,6 +100,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
 [data-theme="standard"] .footer-copyright{color:#94a3b8}
 [data-theme="standard"] .opt:hover{background:#e8edf5;color:var(--text)}
 [data-theme="standard"] .opt.selected{background:rgba(29,78,216,.1);color:#1d4ed8;border-color:var(--burn2)}
+[data-theme="standard"] .dd-submenu{background:#ffffff;border-color:#c8d3e0;box-shadow:8px 8px 32px rgba(0,0,0,.12)}
 /* Active-theme check marks in File menu */
 #theme-black-item::before{content:'';display:inline-block;width:14px}
 #theme-standard-item::before{content:'';display:inline-block;width:14px}
@@ -1623,13 +1624,25 @@ footer{
       <div class="tmenu-dropdown" id="tdd-file">
         <div class="dd-item" onclick="window.location.reload()">🔄 Refresh</div>
         <div class="dd-sep"></div>
-        <div class="dd-item" onclick="openServicesModal();closeAllMenus()">🔗 Connect Services…</div>
-        <div class="dd-item" onclick="disconnectAllServices();closeAllMenus()" id="svc-disconnect-item" style="display:none">🔌 Disconnect All</div>
+        <!-- Settings submenu -->
+        <div class="dd-item dd-has-sub">⚙️ Settings
+          <div class="dd-submenu">
+            <div class="dd-header">Colour Theme</div>
+            <div class="dd-item" id="theme-black-item" onclick="setTheme('black');closeAllMenus()">🌑 Black Theme</div>
+            <div class="dd-item" id="theme-standard-item" onclick="setTheme('standard');closeAllMenus()">🌤️ Standard Theme</div>
+          </div>
+        </div>
+        <!-- API Connect submenu -->
+        <div class="dd-item dd-has-sub">🔌 API Connect
+          <div class="dd-submenu">
+            <div class="dd-header">Services</div>
+            <div class="dd-item" onclick="openServicesModal();closeAllMenus()">🔗 Connect Services…</div>
+            <div class="dd-item" onclick="disconnectAllServices();closeAllMenus()" id="svc-disconnect-item" style="display:none">⛔ Disconnect All</div>
+          </div>
+        </div>
         <div class="dd-sep"></div>
         <div class="dd-item" onclick="openNewsSettings();closeAllMenus()">📰 News Feed Settings…</div>
-        <div class="dd-sep"></div>
-        <div class="dd-item" id="theme-black-item" onclick="setTheme('black');closeAllMenus()">🌑 Black Theme</div>
-        <div class="dd-item" id="theme-standard-item" onclick="setTheme('standard');closeAllMenus()">🌤️ Standard Theme</div>
+        <div class="dd-item" onclick="openLiveTVSettings();closeAllMenus()">📺 Live TV Settings…</div>
         <div class="dd-sep"></div>
         <div class="dd-item danger" onclick="closeApp()">✕ Exit</div>
       </div>
@@ -4021,6 +4034,20 @@ function closeApp() {
 function setTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
   localStorage.setItem('viltv_theme', t);
+}
+
+function openLiveTVSettings() {
+  const m = document.createElement('div');
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center';
+  m.innerHTML = `
+    <div style="background:var(--card2);border:1px solid var(--border2);border-radius:14px;padding:32px 36px;max-width:420px;width:90%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.5)">
+      <div style="font-size:36px;margin-bottom:14px">📺</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--gold2);margin-bottom:10px">LIVE TV SETTINGS</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.75;margin-bottom:24px">Live TV channel customisation — choose your preferred channels and regions — is coming in the next update.</div>
+      <button onclick="this.closest('div[style]').remove()" style="background:var(--burn2);color:#fff;border:none;border-radius:8px;padding:10px 28px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.3px">Close</button>
+    </div>`;
+  document.body.appendChild(m);
+  m.addEventListener('click', e => { if (e.target === m) m.remove(); });
 }
 
 // ── RIGHT BAR TABS ──────────────────────────────────────────────────
