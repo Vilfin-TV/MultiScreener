@@ -4695,9 +4695,27 @@ async function _aiFreeQuery(prompt, onChunk, onDone, onError) {
     }
   } catch(e) { /* fall through */ }
 
-  // ── Strategy 6: Always-useful live search links (ultimate fallback — never fails) ──
-  const q = encodeURIComponent(prompt);
-  const fb = "Live intelligence sources are temporarily unavailable. Use these direct links:\n\n" +
+  // ── Strategy 6: Useful search links — but NEVER encode the full research prompt ──
+  // Extract a short, human-readable search term from the prompt so URLs stay clean.
+  const _shortQuery = (function() {
+    // Try JSON "asset" field first (new prompt format)
+    let m = prompt.match(/"asset"\s*:\s*"([^"]{2,80})"/i);
+    if (m) return m[1].trim();
+    // Try "Asset Name : VALUE" plain-text field
+    m = prompt.match(/Asset Name\s*[:\|]\s*([^\n\r\|]{2,80})/i);
+    if (m) return m[1].trim();
+    // Try "Asset : VALUE"
+    m = prompt.match(/Asset\s*[:\|]\s*([^\n\r\|]{2,80})/i);
+    if (m) return m[1].trim();
+    // Last resort — first meaningful line of the prompt, trimmed
+    const firstLine = prompt.split(/[\n\r]+/)
+      .map(l => l.trim())
+      .find(l => l.length > 3 && !/^[━═\-#*\s]/.test(l));
+    return (firstLine || 'market analysis').slice(0, 80);
+  })();
+  const q  = encodeURIComponent(_shortQuery);
+  const fb = "⚠️ Live AI sources are temporarily unavailable.\n\n" +
+             "Use these direct research links for: " + _shortQuery + "\n\n" +
              "🔎 Google: https://www.google.com/search?q=" + q + "\n" +
              "🦆 DuckDuckGo: https://duckduckgo.com/?q=" + q + "\n" +
              "📰 Google News: https://news.google.com/search?q=" + q + "\n" +
@@ -5114,7 +5132,20 @@ async function autoSendToGemini() {
       await _aiFreeQuery(
         queryText,
         (chunk) => { /* chunks not used here — we wait for full result */ },
-        (fullText) => { handleGeminiResult(fullText); },
+        (fullText) => {
+          // Detect the fallback search-links text from _aiFreeQuery Strategy 6.
+          // Do NOT route it through buildReport() — show a clean error instead.
+          if (!fullText || /^⚠️ Live AI sources are temporarily unavailable/i.test(fullText)) {
+            _aiProgressStop();
+            _vilfinProgressError(
+              '⚠️ All AI providers are currently unreachable. ' +
+              'Connect Gemini or the Cloudflare Worker in ⚙️ Settings → API Connect, ' +
+              'or paste your AI response manually in the Paste & Render tab.'
+            );
+            return;
+          }
+          handleGeminiResult(fullText);
+        },
         (err) => {
           _aiProgressStop();
           _vilfinProgressError('⚠️ All AI sources failed. Please check your internet connection.');
@@ -9576,8 +9607,23 @@ async function pasteFromClipboard() {
 }
 
 function renderOutput() {
-  const raw = document.getElementById('paste-area').value.trim();
+  let raw = document.getElementById('paste-area').value.trim();
   if (!raw) { alert('Please paste the AI data output first.'); return; }
+
+  // ── Auto-detect JSON responses (new prompt format asks for ```json blocks) ──
+  // Handles both auto-generate flow and manual paste without touching buildReport().
+  const _extracted = extractFromCodeBlock(raw);
+  if (_extracted && _extracted.type === 'json') {
+    try {
+      const _parsed  = JSON.parse(_extracted.content);
+      const _tabText = jsonToTabText(_parsed);
+      if (_tabText && _tabText.length > 10) {
+        raw = _tabText;   // converted — buildReport() receives clean ## TAB text
+        document.getElementById('paste-area').value = raw;   // keep textarea in sync
+      }
+    } catch(_e) { /* malformed JSON — fall through and let buildReport try */ }
+  }
+
   renderedHtml = buildReport(raw);
   const container = document.getElementById('rendered-output');
   container.innerHTML = '';
