@@ -24,13 +24,30 @@ jobs:
         with:
           fetch-depth: 1
 
-      # 2. Node.js (uses native fetch — no npm install required)
+      # 2. Node.js 24 (native fetch built-in, no npm install required)
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
 
-      # 3. Run build script — WORKER_URL injected from GitHub Secret
+      # 3. Verify WORKER_URL secret exists before running
+      - name: Verify WORKER_URL secret
+        env:
+          WORKER_URL: ${{ secrets.WORKER_URL }}
+        run: |
+          if [ -z "$WORKER_URL" ]; then
+            echo "❌ ERROR: WORKER_URL secret is not set."
+            echo ""
+            echo "To fix:"
+            echo "  1. Go to your repo → Settings → Secrets and variables → Actions"
+            echo "  2. Click 'New repository secret'"
+            echo "  3. Name: WORKER_URL"
+            echo "  4. Value: https://x9-k2-p30-worker.vilfintv.workers.dev"
+            exit 1
+          fi
+          echo "✅ WORKER_URL secret is present (value hidden)."
+
+      # 4. Run build script — WORKER_URL injected from GitHub Secret.
       #    This is the ONLY place the Worker URL appears; it is never written
       #    to any file that gets deployed to GitHub Pages.
       - name: Run build script
