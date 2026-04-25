@@ -1156,6 +1156,20 @@ footer{
 /* Live indicator pulse */
 @keyframes scoreLivePulse{0%,100%{opacity:1}50%{opacity:.4}}
 .score-live-dot{display:inline-block;width:7px;height:7px;background:#ef4444;border-radius:50%;margin-right:4px;animation:scoreLivePulse 1.5s ease-in-out infinite}
+/* ── PREMIUM CRICKET SCORECARD CARDS ── */
+.sc-card{background:linear-gradient(135deg,#080f20,#0c1830);border:1px solid rgba(30,58,95,.9);border-radius:10px;padding:9px 11px;margin-bottom:6px;transition:border-color .15s}
+.sc-card:hover{border-color:rgba(37,99,235,.45)}
+.sc-head{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.sc-badge{font-size:8px;font-weight:800;letter-spacing:.8px;padding:2px 7px;border-radius:20px;flex-shrink:0;text-transform:uppercase}
+.sc-comp{font-size:9px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.sc-teams{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:5px}
+.sc-team{color:#94a3b8;font-size:10.5px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sc-team.sc-win{color:#60a5fa}
+.sc-score{font-size:11.5px;font-weight:700;color:#f1f5f9;text-align:center;white-space:nowrap;flex-shrink:0;padding:1px 8px;background:rgba(255,255,255,.07);border-radius:5px}
+.sc-score.sc-vs{color:#1e3a5f;font-weight:400;font-size:10px;background:transparent;padding:0}
+.sc-foot{display:flex;justify-content:space-between;align-items:center;gap:4px}
+.sc-status{font-size:9px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;display:flex;align-items:center;gap:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%}
+.sc-venue{font-size:8.5px;color:#1e3a5f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:50%}
 
 /* ── VIDEO CONTROLS BAR ── */
 #yt-controls{
@@ -5432,219 +5446,191 @@ function switchScoreSport(sport) {
   else fetchPastScores(sport);
 }
 
-// CORS proxies — tried in order for geo-restricted ESPN API
-const _SCORE_PROXIES = [
-  '',                                              // direct (works in India / no CORS)
-  'https://corsproxy.io/?',                        // proxy 1
-  'https://api.allorigins.win/raw?url=',           // proxy 2
-];
+// ─── CRICKET SCORES ENGINE ────────────────────────────────────────────────────
+// Data sources (free, no API key required):
+//   1. TheSportsDB  — thesportsdb.com  (primary, globally accessible, no auth)
+//   2. ESPN public JSON — site.api.espn.com (secondary, no auth needed)
+// ─────────────────────────────────────────────────────────────────────────────
 
-async function _scoresFetch(rawUrl) {
-  for (const proxy of _SCORE_PROXIES) {
-    try {
-      const url = proxy ? (proxy + encodeURIComponent(rawUrl)) : rawUrl;
-      const res = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(8000) });
-      if (res.ok) {
-        const txt = await res.text();
-        try { return JSON.parse(txt); } catch(_) { continue; }
-      }
-    } catch(_) {}
-  }
-  return null;
+// Classify match format from league name → returns {label, col, bg}
+function _cricMatchType(name) {
+  const n = (name || '').toLowerCase();
+  if (n.includes('ipl') || n.includes('indian premier'))                     return {label:'IPL',     col:'#f97316',bg:'rgba(249,115,22,.18)'};
+  if (n.includes('test match') || n.includes('test championship') || n.includes(' test ') || n.endsWith(' test')) return {label:'TEST',    col:'#a78bfa',bg:'rgba(167,139,250,.14)'};
+  if (n.includes('t20i') || (n.includes('t20') && (n.includes('intl')||n.includes('international')))) return {label:'T20I',col:'#38bdf8',bg:'rgba(56,189,248,.13)'};
+  if (n.includes('t20') || n.includes('twenty20') || n.includes('twenty-20'))return {label:'T20',     col:'#34d399',bg:'rgba(52,211,153,.13)'};
+  if (n.includes('odi') || n.includes('one day') || n.includes('one-day'))   return {label:'ODI',     col:'#60a5fa',bg:'rgba(96,165,250,.13)'};
+  if (n.includes('hundred'))                                                  return {label:'100-BALL',col:'#f472b6',bg:'rgba(244,114,182,.13)'};
+  if (n.includes('big bash') || n.includes('bbl'))                           return {label:'BBL',     col:'#fbbf24',bg:'rgba(251,191,36,.13)'};
+  if (n.includes('psl'))                                                      return {label:'PSL',     col:'#34d399',bg:'rgba(52,211,153,.13)'};
+  if (n.includes('sa20') || n.includes('sa 20'))                             return {label:'SA20',    col:'#f87171',bg:'rgba(248,113,113,.13)'};
+  if (n.includes('cpl'))                                                      return {label:'CPL',     col:'#fb923c',bg:'rgba(251,146,60,.13)'};
+  if (n.includes('county') || n.includes('ranji') || n.includes('duleep') || n.includes('domestic')) return {label:'DOM',col:'#94a3b8',bg:'rgba(148,163,184,.1)'};
+  return {label:"INT'L", col:'#64748b', bg:'rgba(100,116,139,.1)'};
 }
 
-// ── TheSportsDB free API — globally accessible cricket source ────────────────
-async function _fetchSportsDBCricket(dateStr) {
-  const url = `https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${dateStr}&s=Cricket`;
+// Build one premium scorecard HTML string
+function _cricCard({title, league, status, isLive, isFinal, homeTeam, awayTeam, homeScore, awayScore, venue, result, timeStr, isPast}) {
+  const e = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const mt = _cricMatchType(league || title);
+  const statCol = isLive ? '#22c55e' : isFinal ? '#94a3b8' : '#38bdf8';
+  const hs = homeScore !== '' && homeScore !== null && homeScore !== undefined;
+  const winH = isPast && hs && Number(homeScore) > Number(awayScore);
+  const winA = isPast && hs && Number(awayScore) > Number(homeScore);
+  const scorePart = hs
+    ? `<span class="sc-score">${e(homeScore)} – ${e(awayScore)}</span>`
+    : `<span class="sc-score sc-vs">vs</span>`;
+  const statLine = isLive
+    ? `<span class="score-live-dot"></span>${e(status.slice(0,55))}`
+    : isFinal && result
+      ? `🏆 ${e(String(result).slice(0,55))}`
+      : e(status.slice(0,55));
+  const locPart = venue
+    ? `<span class="sc-venue">📍 ${e(String(venue).slice(0,35))}</span>`
+    : timeStr
+      ? `<span class="sc-venue">🕐 ${e(timeStr)}</span>`
+      : '';
+  return `<div class="sc-card">
+  <div class="sc-head"><span class="sc-badge" style="color:${mt.col};background:${mt.bg}">${mt.label}</span><span class="sc-comp">${e((league||title).slice(0,45))}</span></div>
+  <div class="sc-teams"><span class="sc-team${winH?' sc-win':''}">${e(homeTeam)}</span>${scorePart}<span class="sc-team${winA?' sc-win':''}" style="text-align:right">${e(awayTeam)}</span></div>
+  <div class="sc-foot"><span class="sc-status" style="color:${statCol}">${statLine}</span>${locPart}</div>
+</div>`;
+}
+
+// TheSportsDB: fetch events for a given date
+async function _fetchSportsDB(dateStr) {
   try {
-    const res = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(9000) });
+    const res = await fetch(`https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${dateStr}&s=Cricket`,
+      {cache:'no-store', signal: AbortSignal.timeout(9000)});
     if (!res.ok) return [];
-    const j = await res.json();
-    return j.events || [];
-  } catch(_) { return []; }
+    return (await res.json()).events || [];
+  } catch { return []; }
 }
 
-function _renderSportsDBMatches(events, isPast) {
-  let html = '';
-  const shown = events.slice(0, 12);
-  for (const ev of shown) {
-    const title = ev.strEvent || 'Cricket Match';
-    const league = ev.strLeague ? `<span style="font-size:9px;color:#64748b"> · ${ev.strLeague}</span>` : '';
-    const rawStatus = ev.strStatus || 'Scheduled';
-    const status = rawStatus;
-    const isLive = rawStatus.toLowerCase() === 'live' || rawStatus.toLowerCase().includes('innings') || rawStatus.toLowerCase().includes('over');
-    const isFinal = rawStatus.toLowerCase().includes('finished') || rawStatus.toLowerCase().includes('won') || rawStatus.toLowerCase().includes('draw') || rawStatus.toLowerCase() === 'match finished';
-    const statusColor = isLive ? '#22c55e' : (isFinal ? '#94a3b8' : '#38bdf8');
-
-    const h = ev.strHomeTeam || '?';
-    const a = ev.strAwayTeam || '?';
-    const hs = ev.intHomeScore !== null && ev.intHomeScore !== undefined ? ev.intHomeScore : '';
-    const as_ = ev.intAwayScore !== null && ev.intAwayScore !== undefined ? ev.intAwayScore : '';
-    const scoreStr = (hs !== '' || as_ !== '') ? `${hs} – ${as_}` : (isPast ? 'N/A' : 'vs');
-    const winnerHome = isPast && Number(hs) > Number(as_);
-    const winnerAway = isPast && Number(as_) > Number(hs);
-    const result = ev.strResult ? `<div class="score-venue" style="color:#60a5fa">🏆 ${ev.strResult}</div>` : '';
-    const venue = ev.strVenue ? `<div class="score-venue">📍 ${ev.strVenue}</div>` : '';
-
-    // Local time display
+// Render TheSportsDB events → HTML cards
+function _renderSDB(events, isPast) {
+  return events.slice(0,12).map(ev => {
+    const raw = ev.strStatus || 'Scheduled';
+    const isLive  = /live|innings|over/i.test(raw);
+    const isFinal = /finish|won|draw|result|abandon|decided/i.test(raw);
     let timeStr = '';
-    if (ev.strTimestamp) {
-      try { timeStr = new Date(ev.strTimestamp + 'Z').toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); } catch(_) {}
-    }
-
-    const teams = `<div class="score-card-teams">
-      <span class="score-team-name" style="${winnerHome?'color:#60a5fa;font-weight:700':''}">${h}</span>
-      <span class="score-result">${scoreStr}</span>
-      <span class="score-team-name" style="text-align:right;${winnerAway?'color:#60a5fa;font-weight:700':''}">${a}</span>
-    </div>`;
-
-    html += `<div class="score-card">
-      <div class="score-card-match">${title}${league}</div>
-      <div class="score-card-status" style="color:${statusColor}">${isLive ? '<span class="score-live-dot"></span>' : (timeStr ? '🕐 '+timeStr+' · ' : '')}${status}</div>
-      ${teams}${result}${venue}
-    </div>`;
-  }
-  return html;
+    try { if (ev.strTimestamp) timeStr = new Date(ev.strTimestamp+'Z').toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}); } catch {}
+    return _cricCard({
+      title: ev.strEvent || 'Cricket Match',
+      league: ev.strLeague || '',
+      status: raw, isLive, isFinal,
+      homeTeam: ev.strHomeTeam || '?', awayTeam: ev.strAwayTeam || '?',
+      homeScore: ev.intHomeScore ?? '', awayScore: ev.intAwayScore ?? '',
+      venue: ev.strVenue, result: ev.strResult, timeStr, isPast,
+    });
+  }).join('');
 }
 
+// Render ESPN-format events → HTML cards
+function _renderESPN(events, isPast) {
+  return events.slice(0,12).flatMap(ev => {
+    return (ev.competitions||[ev]).map(comp => {
+      const comps = comp.competitors || [];
+      if (!comps.length) return '';
+      const state  = (comp.status?.type?.state||'').toLowerCase();
+      const isLive  = state === 'in';
+      const isFinal = state === 'post';
+      const status  = comp.status?.type?.shortDetail || comp.status?.type?.description || (isLive?'Live':'Scheduled');
+      const h = comps.find(c=>c.homeAway==='home')||comps[0];
+      const a = comps.find(c=>c.homeAway==='away')||comps[1];
+      return _cricCard({
+        title: ev.name || '', league: ev.name || '',
+        status, isLive, isFinal,
+        homeTeam: h?.team?.abbreviation||h?.team?.shortDisplayName||'?',
+        awayTeam: a?.team?.abbreviation||a?.team?.shortDisplayName||'?',
+        homeScore: h?.score??'', awayScore: a?.score??'',
+        venue: comp.venue?.fullName, result: null, timeStr: '', isPast,
+      });
+    });
+  }).filter(Boolean).join('');
+}
+
+// Stamp the "updated" time in the scores header
+function _stampScoreTime() {
+  const ts = document.getElementById('scores-updated');
+  if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ─── fetchLiveScores ──────────────────────────────────────────────────────────
 async function fetchLiveScores(sport) {
   const box = document.getElementById('live-scores-content');
   if (!box) return;
   box.innerHTML = '<div class="score-no-data">Loading…</div>';
 
-  // Cricket: ESPNcricinfo first, then ESPN site API, then TheSportsDB
+  // ── Cricket: TheSportsDB primary → ESPN public fallback ──────────────────
   if (sport === 'cricket') {
-    // 1. Try ESPNcricinfo consumer API — direct live matches feed
+    // 1. TheSportsDB today (globally accessible, no CORS, no geo-block)
     try {
-      const cri = await fetch('https://hs-consumer-api.espncricinfo.com/v1/pages/home/live-matches?lang=en', {
-        cache:'no-store', signal: AbortSignal.timeout(7000)
-      });
-      if (cri.ok) {
-        const criJ = await cri.json();
-        const matches = criJ.matches || criJ.content?.matches || [];
-        if (matches.length) {
-          let html = '';
-          for (const m of matches.slice(0,12)) {
-            const title = m.title || m.description || 'Cricket Match';
-            const status = m.status || m.statusText || '';
-            const isLive = m.isLive || (m.matchStatus || '').toLowerCase() === 'live' || status.toLowerCase().includes('live');
-            const isFinal = (m.matchStatus || '').toLowerCase().includes('won') || status.toLowerCase().includes('won') || status.toLowerCase().includes('result');
-            const statusColor = isLive ? '#22c55e' : (isFinal ? '#94a3b8' : '#38bdf8');
-            const teams = m.teams || [];
-            let teamsHtml = '';
-            if (teams.length >= 2) {
-              const hName = teams[0]?.shortName || teams[0]?.name || '?';
-              const aName = teams[1]?.shortName || teams[1]?.name || '?';
-              const hScore = teams[0]?.score || teams[0]?.scoreLabel || '';
-              const aScore = teams[1]?.score || teams[1]?.scoreLabel || '';
-              const scoreStr = (hScore || aScore) ? `${hScore} — ${aScore}` : 'vs';
-              teamsHtml = `<div class="score-card-teams"><span class="score-team-name">${hName}</span><span class="score-result">${scoreStr}</span><span class="score-team-name" style="text-align:right">${aName}</span></div>`;
-            }
-            const venue = m.ground?.name ? `<div class="score-venue">📍 ${m.ground.name}</div>` : '';
-            html += `<div class="score-card"><div class="score-card-match">${title}</div><div class="score-card-status" style="color:${statusColor}">${isLive?'<span class="score-live-dot"></span>':''}${status}</div>${teamsHtml}${venue}</div>`;
-          }
-          if (html) {
-            box.innerHTML = html;
-            const ts = document.getElementById('scores-updated');
-            if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-            return;
-          }
-        }
+      const today = new Date().toISOString().slice(0, 10);
+      const events = await _fetchSportsDB(today);
+      if (events.length) {
+        const sorted = [...events].sort((a, b) =>
+          (a.strStatus?.toLowerCase() === 'live' ? 0 : 1) -
+          (b.strStatus?.toLowerCase() === 'live' ? 0 : 1)
+        );
+        const html = _renderSDB(sorted, false);
+        if (html) { box.innerHTML = html; _stampScoreTime(); return; }
       }
     } catch(_) {}
 
-    // 2. Try ESPN site API directly — works in India and from HTTPS pages (GitHub Pages)
-    const espnLiveUrls = [
+    // 2. ESPN public API fallback
+    const espnUrls = [
       'https://site.api.espn.com/apis/site/v2/sports/cricket/ipl/scoreboard',
       'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard',
-      'https://site.api.espn.com/apis/site/v2/sports/cricket/wi.1/scoreboard'
     ];
-    for (const eu of espnLiveUrls) {
+    for (const eu of espnUrls) {
       try {
         const er = await fetch(eu, { cache:'no-store', signal: AbortSignal.timeout(6000) });
         if (er.ok) {
           const ej = await er.json();
           const evs = ej.events || ej.competitions || [];
           if (evs.length) {
-            // Found live ESPN data — render it
-            let html = '';
-            for (const ev of evs.slice(0,12)) {
-              const comps = ev.competitions||[ev];
-              for (const comp of comps) {
-                const competitors = comp.competitors||[];
-                const status = comp.status?.type?.shortDetail||comp.status?.type?.description||'Live';
-                const isLive = (comp.status?.type?.state||'').toLowerCase()==='in';
-                const statusColor = isLive?'#22c55e':(status.toLowerCase().includes('final')?'#ef4444':'#38bdf8');
-                let teams='',venue='';
-                if (competitors.length>=2) {
-                  const h=competitors.find(c=>c.homeAway==='home')||competitors[0];
-                  const a=competitors.find(c=>c.homeAway==='away')||competitors[1];
-                  const hName=h.team?.abbreviation||h.team?.shortDisplayName||'?';
-                  const aName=a.team?.abbreviation||a.team?.shortDisplayName||'?';
-                  const hScore=h.score!==undefined?h.score:'';
-                  const aScore=a.score!==undefined?a.score:'';
-                  teams=`<div class="score-card-teams"><span class="score-team-name">${hName}</span><span class="score-result">${hScore} – ${aScore}</span><span class="score-team-name" style="text-align:right">${aName}</span></div>`;
-                }
-                if (comp.venue?.fullName) venue=`<div class="score-venue">📍 ${comp.venue.fullName}</div>`;
-                html+=`<div class="score-card"><div class="score-card-match">${ev.name||''}</div><div class="score-card-status" style="color:${statusColor}">${isLive?'<span class="score-live-dot"></span>':''}${status}</div>${teams}${venue}</div>`;
-              }
-            }
-            if (html) {
-              box.innerHTML = html;
-              const ts=document.getElementById('scores-updated');
-              if(ts) ts.textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-              return;
-            }
+            const html = _renderESPN(evs, false);
+            if (html) { box.innerHTML = html; _stampScoreTime(); return; }
           }
         }
       } catch(_) {}
     }
 
-    // TheSportsDB fallback (globally accessible, no CORS, no geo-block)
-    const today = new Date().toISOString().slice(0, 10);
-    const events = await _fetchSportsDBCricket(today);
-    if (events.length) {
-      const sorted = [...events].sort((a, b) => (a.strStatus?.toLowerCase()==='live'?0:1) - (b.strStatus?.toLowerCase()==='live'?0:1));
-      const html = _renderSportsDBMatches(sorted, false);
-      box.innerHTML = html || '<div class="score-no-data">No cricket matches today.</div>';
-      const ts = document.getElementById('scores-updated');
-      if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-      return;
-    }
+    box.innerHTML = '<div class="score-no-data">No cricket matches today.<br/><span style="font-size:9px;color:#334155">Check back during match time.</span></div>';
+    return;
   }
 
+  // ── Non-cricket sports (Football / Tennis / Baseball) ─────────────────────
   const rawUrls = {
-    cricket:  [
-      'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard',
-      'https://site.api.espn.com/apis/site/v2/sports/cricket/ipl/scoreboard',
-      'https://site.api.espn.com/apis/site/v2/sports/cricket/wi.1/scoreboard'
-    ],
     football: [
       'https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard',
       'https://site.api.espn.com/apis/site/v2/sports/soccer/esp.1/scoreboard',
       'https://site.api.espn.com/apis/site/v2/sports/soccer/ger.1/scoreboard',
       'https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard'
     ],
-    tennis:   [
+    tennis: [
       'https://site.api.espn.com/apis/site/v2/sports/tennis/atp/scoreboard',
       'https://site.api.espn.com/apis/site/v2/sports/tennis/wta/scoreboard'
     ],
-    baseball: [
-      'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard'
-    ]
+    baseball: ['https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard']
   };
 
-  const urls = rawUrls[sport] || rawUrls.cricket;
+  const urls = rawUrls[sport] || [];
   let data = null;
-
-  for (const rawUrl of urls) {
-    data = await _scoresFetch(rawUrl);
-    if (data) break;
+  for (const url of urls) {
+    try {
+      const r = await fetch(url, { cache:'no-store', signal: AbortSignal.timeout(6000) });
+      if (r.ok) {
+        const d = await r.json();
+        if ((d.events || d.competitions || []).length) { data = d; break; }
+      }
+    } catch(_) {}
   }
 
   if (!data) {
-    const sportLabel = {cricket:'🏏 Cricket',football:'⚽ Football',tennis:'🎾 Tennis',baseball:'⚾ Baseball'}[sport] || sport;
-    box.innerHTML = `<div class="score-no-data">${sportLabel} scores unavailable.<br/><span style="font-size:9px;color:#334155">No live matches or API not reachable.</span></div>`;
+    const label = {football:'⚽ Football', tennis:'🎾 Tennis', baseball:'⚾ Baseball'}[sport] || sport;
+    box.innerHTML = `<div class="score-no-data">${label} scores unavailable.<br/><span style="font-size:9px;color:#334155">No live matches or API not reachable.</span></div>`;
     return;
   }
 
@@ -5654,17 +5640,14 @@ async function fetchLiveScores(sport) {
       box.innerHTML = '<div class="score-no-data">No live matches right now.<br/>Check back during match time.</div>';
       return;
     }
-
     let html = '';
-    const shown = events.slice(0, 12);
-    for (const ev of shown) {
+    for (const ev of events.slice(0, 12)) {
       const comps = ev.competitions || [ev];
       for (const comp of comps) {
         const competitors = comp.competitors || [];
         const status = comp.status?.type?.shortDetail || comp.status?.type?.description || 'Scheduled';
         const isLive = (comp.status?.type?.state || '').toLowerCase() === 'in';
         const statusColor = isLive ? '#22c55e' : (status.toLowerCase().includes('final') ? '#ef4444' : '#38bdf8');
-
         let teams = '', venue = '';
         if (competitors.length >= 2) {
           const h = competitors.find(c => c.homeAway === 'home') || competitors[0];
@@ -5673,25 +5656,14 @@ async function fetchLiveScores(sport) {
           const aName = a.team?.abbreviation || a.team?.shortDisplayName || a.team?.displayName || '?';
           const hScore = h.score !== undefined ? h.score : '';
           const aScore = a.score !== undefined ? a.score : '';
-          teams = `<div class="score-card-teams">
-            <span class="score-team-name">${hName}</span>
-            <span class="score-result">${hScore} – ${aScore}</span>
-            <span class="score-team-name" style="text-align:right">${aName}</span>
-          </div>`;
+          teams = `<div class="score-card-teams"><span class="score-team-name">${hName}</span><span class="score-result">${hScore} – ${aScore}</span><span class="score-team-name" style="text-align:right">${aName}</span></div>`;
         }
         if (comp.venue?.fullName) venue = `<div class="score-venue">📍 ${comp.venue.fullName}</div>`;
-        const matchName = ev.name || ev.shortName || comp.name || '';
-        html += `<div class="score-card">
-          <div class="score-card-match">${matchName}</div>
-          <div class="score-card-status" style="color:${statusColor}">${isLive ? '<span class="score-live-dot"></span>' : ''}${status}</div>
-          ${teams}${venue}
-        </div>`;
+        html += `<div class="score-card"><div class="score-card-match">${ev.name || ev.shortName || ''}</div><div class="score-card-status" style="color:${statusColor}">${isLive ? '<span class="score-live-dot"></span>' : ''}${status}</div>${teams}${venue}</div>`;
       }
     }
-
     box.innerHTML = html || '<div class="score-no-data">No matches available.</div>';
-    const ts = document.getElementById('scores-updated');
-    if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    _stampScoreTime();
   } catch(e) {
     box.innerHTML = '<div class="score-no-data">Error parsing scores.</div>';
   }
@@ -5702,142 +5674,58 @@ async function fetchPastScores(sport) {
   if (!box) return;
   box.innerHTML = '<div class="score-no-data">Loading past results…</div>';
 
-  // Cricket: ESPNcricinfo recent matches first, then ESPN, then TheSportsDB
+  // ── Cricket: TheSportsDB last 5 days primary → ESPN public fallback ────────
   if (sport === 'cricket') {
-    // Attempt 1 — ESPNcricinfo recent matches
+    // 1. TheSportsDB — last 5 days (globally accessible, no CORS, no geo-block)
     try {
-      const cri = await fetch('https://hs-consumer-api.espncricinfo.com/v1/pages/home/recent-matches?lang=en', {
-        cache:'no-store', signal: AbortSignal.timeout(7000)
+      const today = new Date();
+      const dateStrs = Array.from({length: 5}, (_, i) => {
+        const d = new Date(today); d.setDate(today.getDate() - i);
+        return d.toISOString().slice(0, 10);
       });
-      if (cri.ok) {
-        const criJ = await cri.json();
-        const matches = criJ.matches || criJ.content?.matches || [];
-        const finished = matches.filter(m => {
-          const s = (m.matchStatus || m.status || '').toLowerCase();
-          return s.includes('won') || s.includes('result') || s.includes('draw') || s.includes('tied') || s.includes('complete');
+      const dayResults = await Promise.all(dateStrs.map(d => _fetchSportsDB(d)));
+      const allEvs = dayResults.flat();
+      if (allEvs.length) {
+        const finished = allEvs.filter(ev => {
+          const s = (ev.strStatus || '').toLowerCase();
+          return s.includes('finish') || s.includes('won') || s.includes('draw') ||
+                 s.includes('result') || s === 'ft' || s === 'aet';
         });
-        if (finished.length) {
-          let html = '';
-          for (const m of finished.slice(0,12)) {
-            const title = m.title || m.description || 'Cricket Match';
-            const status = m.status || m.matchStatus || '';
-            const teams = m.teams || [];
-            let teamsHtml = '';
-            if (teams.length >= 2) {
-              const hName = teams[0]?.shortName || teams[0]?.name || '?';
-              const aName = teams[1]?.shortName || teams[1]?.name || '?';
-              const hScore = teams[0]?.score || teams[0]?.scoreLabel || '';
-              const aScore = teams[1]?.score || teams[1]?.scoreLabel || '';
-              const scoreStr = (hScore || aScore) ? `${hScore} — ${aScore}` : 'FT';
-              teamsHtml = `<div class="score-card-teams"><span class="score-team-name">${hName}</span><span class="score-result">${scoreStr}</span><span class="score-team-name" style="text-align:right">${aName}</span></div>`;
-            }
-            const venue = m.ground?.name ? `<div class="score-venue">📍 ${m.ground.name}</div>` : '';
-            const result = status ? `<div class="score-venue" style="color:#60a5fa">🏆 ${status}</div>` : '';
-            html += `<div class="score-card"><div class="score-card-match">${title}</div><div class="score-card-status" style="color:#94a3b8">Final</div>${teamsHtml}${result}${venue}</div>`;
-          }
-          if (html) {
-            box.innerHTML = html;
-            const ts = document.getElementById('scores-updated');
-            if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-            return;
-          }
-        }
+        const toRender = (finished.length ? finished : allEvs).slice(0, 12);
+        const html = _renderSDB(toRender, true);
+        if (html) { box.innerHTML = html; _stampScoreTime(); return; }
       }
     } catch(_) {}
 
-    // Attempt 2 — ESPN cricket APIs directly (no proxy, works from India & GitHub Pages)
-    const espnCricUrls = [
+    // 2. ESPN public API fallback
+    const espnUrls = [
       'https://site.api.espn.com/apis/site/v2/sports/cricket/ipl/scoreboard',
       'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard',
-      'https://site.api.espn.com/apis/site/v2/sports/cricket/wi.1/scoreboard'
     ];
-    let espnData = null;
-    for (const eu of espnCricUrls) {
+    for (const eu of espnUrls) {
       try {
         const er = await fetch(eu, { cache:'no-store', signal: AbortSignal.timeout(6000) });
         if (er.ok) {
           const ej = await er.json();
           const evs = ej.events || ej.competitions || [];
-          if (evs.length) { espnData = ej; break; }
+          if (evs.length) {
+            const completed = evs.filter(ev =>
+              (((ev.competitions || [ev])[0])?.status?.type?.state || '').toLowerCase() === 'post'
+            );
+            const toShow = (completed.length ? completed : evs).slice(0, 12);
+            const html = _renderESPN(toShow, true);
+            if (html) { box.innerHTML = html; _stampScoreTime(); return; }
+          }
         }
       } catch(_) {}
     }
-    if (espnData) {
-      // Render using existing ESPN-format renderer (fetchPastScores body below handles it)
-      // Fall through to the ESPN renderer loop at end of this function
-      // by injecting into allEvents
-      const evs = espnData.events || espnData.competitions || [];
-      const completed = evs.filter(ev => (((ev.competitions||[ev])[0])?.status?.type?.state||'').toLowerCase() === 'post');
-      const toShow = (completed.length ? completed : evs).slice(0,12);
-      if (toShow.length) {
-        let html = '';
-        for (const ev of toShow) {
-          const comps = ev.competitions || [ev];
-          for (const comp of comps) {
-            const competitors = comp.competitors || [];
-            const status = comp.status?.type?.shortDetail || comp.status?.type?.description || 'Final';
-            let teams = '', venue = '';
-            if (competitors.length >= 2) {
-              const h = competitors.find(c=>c.homeAway==='home')||competitors[0];
-              const a = competitors.find(c=>c.homeAway==='away')||competitors[1];
-              const hName = h.team?.abbreviation||h.team?.shortDisplayName||'?';
-              const aName = a.team?.abbreviation||a.team?.shortDisplayName||'?';
-              const hScore = h.score!==undefined?h.score:'–';
-              const aScore = a.score!==undefined?a.score:'–';
-              const wH = Number(hScore)>Number(aScore);
-              const wA = Number(aScore)>Number(hScore);
-              teams = `<div class="score-card-teams">
-                <span class="score-team-name" style="${wH?'color:#60a5fa;font-weight:700':''}">${hName}</span>
-                <span class="score-result">${hScore} – ${aScore}</span>
-                <span class="score-team-name" style="text-align:right;${wA?'color:#60a5fa;font-weight:700':''}">${aName}</span>
-              </div>`;
-            }
-            if (comp.venue?.fullName) venue = `<div class="score-venue">📍 ${comp.venue.fullName}</div>`;
-            html += `<div class="score-card">
-              <div class="score-card-match">${ev.name||ev.shortName||''}</div>
-              <div class="score-card-status" style="color:#94a3b8">✅ ${status}</div>
-              ${teams}${venue}
-            </div>`;
-          }
-        }
-        if (html) {
-          box.innerHTML = html;
-          const ts = document.getElementById('scores-updated');
-          if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-          return;
-        }
-      }
-    }
 
-    // Attempt 2 — TheSportsDB last 5 days (globally accessible, no CORS)
-    const today = new Date();
-    const dateStrs = [];
-    for (let i = 0; i < 5; i++) {
-      const d = new Date(today); d.setDate(today.getDate() - i);
-      dateStrs.push(d.toISOString().slice(0, 10));
-    }
-    const dayResults = await Promise.all(dateStrs.map(d => _fetchSportsDBCricket(d)));
-    const allEvs = dayResults.flat();
-    if (allEvs.length) {
-      const finished = allEvs.filter(ev => {
-        const s = (ev.strStatus || '').toLowerCase();
-        return s.includes('finish') || s.includes('won') || s.includes('draw') || s.includes('result');
-      });
-      const toRender = (finished.length ? finished : allEvs).slice(0, 12);
-      const html = _renderSportsDBMatches(toRender, true);
-      box.innerHTML = html || '<div class="score-no-data">No recent cricket results found.</div>';
-      const ts = document.getElementById('scores-updated');
-      if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-      return;
-    }
+    box.innerHTML = '<div class="score-no-data">No recent cricket results found.<br/><span style="font-size:9px;color:#334155">Results appear after matches complete.</span></div>';
+    return;
   }
 
-  // Past/completed results endpoints — cricket prioritises IPL
+  // ── Non-cricket sports (Football / Tennis / Baseball) ─────────────────────
   const pastEndpoints = {
-    cricket: [
-      'https://site.api.espn.com/apis/site/v2/sports/cricket/ipl/scoreboard',
-      'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard'
-    ],
     football: [
       'https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard',
       'https://site.api.espn.com/apis/site/v2/sports/soccer/esp.1/scoreboard',
@@ -5850,19 +5738,19 @@ async function fetchPastScores(sport) {
     baseball: ['https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard']
   };
 
-  const urls = pastEndpoints[sport] || pastEndpoints.cricket;
+  const urls = pastEndpoints[sport] || [];
   let allEvents = [];
-
-  for (const rawUrl of urls) {
-    const data = await _scoresFetch(rawUrl);
-    if (data) {
-      const evs = data.events || data.competitions || [];
-      allEvents = allEvents.concat(evs);
-      if (allEvents.length >= 6) break;
-    }
+  for (const url of urls) {
+    try {
+      const r = await fetch(url, { cache:'no-store', signal: AbortSignal.timeout(6000) });
+      if (r.ok) {
+        const d = await r.json();
+        allEvents = allEvents.concat(d.events || d.competitions || []);
+        if (allEvents.length >= 6) break;
+      }
+    } catch(_) {}
   }
 
-  // Filter only completed (post) games, fall back to all if none
   const completed = allEvents.filter(ev => {
     const comp = (ev.competitions || [ev])[0];
     return (comp?.status?.type?.state || '').toLowerCase() === 'post';
@@ -5880,7 +5768,6 @@ async function fetchPastScores(sport) {
     for (const comp of comps) {
       const competitors = comp.competitors || [];
       const status = comp.status?.type?.shortDetail || comp.status?.type?.description || 'Final';
-      const statusColor = '#94a3b8';
       let teams = '', venue = '';
       if (competitors.length >= 2) {
         const h = competitors.find(c => c.homeAway === 'home') || competitors[0];
@@ -5890,24 +5777,14 @@ async function fetchPastScores(sport) {
         const hScore = h.score !== undefined ? h.score : '–';
         const aScore = a.score !== undefined ? a.score : '–';
         const winner = Number(hScore) > Number(aScore) ? 'home' : (Number(aScore) > Number(hScore) ? 'away' : '');
-        teams = `<div class="score-card-teams">
-          <span class="score-team-name" style="${winner==='home'?'color:#60a5fa;font-weight:700':''}">${hName}</span>
-          <span class="score-result">${hScore} – ${aScore}</span>
-          <span class="score-team-name" style="text-align:right;${winner==='away'?'color:#60a5fa;font-weight:700':''}">${aName}</span>
-        </div>`;
+        teams = `<div class="score-card-teams"><span class="score-team-name" style="${winner==='home'?'color:#60a5fa;font-weight:700':''}">${hName}</span><span class="score-result">${hScore} – ${aScore}</span><span class="score-team-name" style="text-align:right;${winner==='away'?'color:#60a5fa;font-weight:700':''}">${aName}</span></div>`;
       }
       if (comp.venue?.fullName) venue = `<div class="score-venue">📍 ${comp.venue.fullName}</div>`;
-      const matchName = ev.name || ev.shortName || comp.name || '';
-      html += `<div class="score-card">
-        <div class="score-card-match">${matchName}</div>
-        <div class="score-card-status" style="color:${statusColor}">✅ ${status}</div>
-        ${teams}${venue}
-      </div>`;
+      html += `<div class="score-card"><div class="score-card-match">${ev.name || ev.shortName || ''}</div><div class="score-card-status" style="color:#94a3b8">✅ ${status}</div>${teams}${venue}</div>`;
     }
   }
   box.innerHTML = html || '<div class="score-no-data">No completed results found.</div>';
-  const ts = document.getElementById('scores-updated');
-  if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  _stampScoreTime();
 }
 
 function _initLiveScores() {

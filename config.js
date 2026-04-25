@@ -12,5 +12,5 @@ const VILTV_CONFIG = {
   DEFAULT_MODEL: 'gemini-2.5-flash',
 
   // App version
-  VERSION: 'v8.9.3',
+  VERSION: 'v8.9.6',
 };
