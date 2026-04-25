@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multi Asset Screener v8.9.4 — Input Tool | Vilfin George</title>
+<title>Multi Asset Screener v8.9.5 — Input Tool | Vilfin George</title>
 <!-- Canonical URL — always index.html -->
 <link rel="canonical" href="https://vilfin-tv.github.io/MultiScreener/index.html"/>
 <script>
@@ -4828,9 +4828,22 @@ function _renderRandomChips() {
   const el = document.getElementById('rb-quick-chips');
   if (!el) return;
   const shuffled = [..._chipPool].sort(() => Math.random() - 0.5).slice(0, 8);
+
+  // Use data-q + addEventListener so the query string never gets mangled
+  // by HTML attribute double-quote parsing (which broke the old onclick approach)
   el.innerHTML = shuffled.map(c =>
-    `<button class="rb-chip" onclick="rbAiChip(${JSON.stringify(c.q)})">${c.l}</button>`
+    `<button class="rb-chip" data-q="${c.q.replace(/"/g, '&quot;')}">${c.l}</button>`
   ).join('');
+
+  el.querySelectorAll('.rb-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const query = btn.dataset.q;
+      if (!query) return;
+      const inp = document.getElementById('rb-ai-input');
+      if (inp) inp.value = query;
+      rbAiSend();
+    });
+  });
 }
 
 // ── Live TV: fetch streams.json (updated daily by GitHub Actions) ────────────
@@ -5931,9 +5944,9 @@ function closeMobileRightBar() {
 
 
 function rbAiChip(text) {
-  // Populate input and fire — chips stay visible for the next question
+  // Programmatic chip trigger — also called externally if needed
   const inp = document.getElementById('rb-ai-input');
-  if (inp) { inp.value = text; inp.focus(); }
+  if (inp) inp.value = text;
   rbAiSend();
 }
 
