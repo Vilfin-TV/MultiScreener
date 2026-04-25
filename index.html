@@ -438,6 +438,47 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 
 /* ── TEXT INPUT ── */
 .text-input-wrap{position:relative}
+/* ── Symbol Autocomplete dropdown ── */
+.ac-dropdown{
+  position:absolute;top:calc(100% + 4px);left:0;right:0;
+  background:#ffffff;border:1px solid var(--border2);
+  border-top:2px solid var(--burn2);border-radius:0 0 10px 10px;
+  box-shadow:0 8px 28px rgba(0,0,0,.18);
+  max-height:280px;overflow-y:auto;z-index:5000;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+.ac-dropdown::-webkit-scrollbar{width:4px}
+.ac-dropdown::-webkit-scrollbar-thumb{background:var(--burn);border-radius:2px}
+.ac-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 14px;cursor:pointer;
+  border-bottom:1px solid rgba(0,0,0,.05);
+  transition:background .1s;
+}
+.ac-item:last-child{border-bottom:none}
+.ac-item:hover,.ac-item.ac-active{background:rgba(29,78,216,.07)}
+.ac-sym{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
+  color:var(--burn2);background:rgba(29,78,216,.08);
+  padding:2px 7px;border-radius:5px;white-space:nowrap;flex-shrink:0;
+}
+.ac-name{font-size:12px;color:#1e293b;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ac-exch{font-size:10px;color:#94a3b8;white-space:nowrap;flex-shrink:0}
+.ac-type-badge{
+  font-size:9px;font-weight:700;letter-spacing:.4px;padding:1px 6px;
+  border-radius:4px;flex-shrink:0;
+}
+.ac-type-stock{background:rgba(22,163,74,.1);color:#16a34a}
+.ac-type-etf  {background:rgba(37,99,235,.1);color:#2563eb}
+.ac-type-fund {background:rgba(217,119,6,.1);color:#d97706}
+.ac-empty{padding:14px 16px;font-size:12px;color:#94a3b8;text-align:center}
+.ac-loading{padding:14px 16px;font-size:12px;color:#94a3b8;text-align:center;animation:livePulse 1.4s ease-in-out infinite}
+/* Standard-theme dropdown inherits white bg naturally; reinforce text colours */
+[data-theme="standard"] .ac-name{color:#1e293b}
+[data-theme="black"] .ac-dropdown{background:#0d1d35;border-color:var(--border2)}
+[data-theme="black"] .ac-item:hover,[data-theme="black"] .ac-item.ac-active{background:rgba(29,78,216,.15)}
+[data-theme="black"] .ac-name{color:var(--text)}
+[data-theme="black"] .ac-exch{color:var(--text3)}
 .text-input{
   width:100%;padding:14px 18px;
   background:#ffffff;border:1px solid var(--border2);border-radius:10px;
@@ -2523,8 +2564,14 @@ footer{
   ───────────────────────────────────── -->
   <div class="q-block" id="q-name-block" style="display:none">
     <div class="q-label"><span class="q-num">Q2</span> <span id="asset-name-label">Asset Name</span> <span class="q-required">*</span></div>
-    <div class="text-input-wrap">
-      <input class="text-input" id="asset-name" type="text" placeholder="" oninput="answers.assetName=this.value;updateSummary();if(this.value.length>1)showDownstream(true)"/>
+    <div class="text-input-wrap" id="ac-wrap">
+      <input class="text-input" id="asset-name" type="text" placeholder="Type symbol or name…"
+        autocomplete="off" spellcheck="false"
+        oninput="answers.assetName=this.value;updateSummary();if(this.value.length>1)showDownstream(true);acSearch(this.value)"
+        onkeydown="acKeyNav(event)"
+        onfocus="if(this.value.length>=2)acSearch(this.value)"
+      />
+      <div id="ac-dropdown" class="ac-dropdown" style="display:none"></div>
     </div>
     <div id="asset-name-placeholder"></div>
     <div class="validation-msg" id="v-name">Please enter the asset name.</div>
@@ -4090,6 +4137,155 @@ document.addEventListener('click', function(e) {
 function closeApp() {
   if (confirm('Close VilfinTV Multiscreener?')) window.close();
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SYMBOL AUTOCOMPLETE — fetches data/master_symbols.json lazily on first use
+// ═══════════════════════════════════════════════════════════════════════════
+const AC = {
+  data:    null,   // null = not yet loaded | [] = loaded (possibly empty)
+  loading: false,
+  timer:   null,
+  activeIdx: -1,
+
+  SYMBOLS_URL: 'data/master_symbols.json',
+  MAX_RESULTS: 12,
+  DEBOUNCE_MS: 220,
+};
+
+async function acLoad() {
+  if (AC.data !== null || AC.loading) return;
+  AC.loading = true;
+  const dd = document.getElementById('ac-dropdown');
+  if (dd) { dd.innerHTML = '<div class="ac-loading">Loading symbols…</div>'; dd.style.display = 'block'; }
+  try {
+    const r = await fetch(AC.SYMBOLS_URL);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    AC.data = await r.json();
+    console.log(`[AC] Loaded ${AC.data.length.toLocaleString()} symbols`);
+  } catch (e) {
+    console.warn('[AC] Could not load master_symbols.json:', e.message);
+    AC.data = [];          // mark as loaded-but-empty so we don't retry
+  } finally {
+    AC.loading = false;
+    if (dd) dd.style.display = 'none';
+  }
+}
+
+function acSearch(query) {
+  clearTimeout(AC.timer);
+  const q = (query || '').trim();
+  if (q.length < 2) { acClose(); return; }
+
+  // Lazy-load on first keystroke ≥ 2 chars
+  if (AC.data === null) {
+    acLoad().then(() => { if (q === document.getElementById('asset-name')?.value.trim()) acRender(q); });
+    return;
+  }
+
+  AC.timer = setTimeout(() => acRender(q), AC.DEBOUNCE_MS);
+}
+
+function acRender(q) {
+  const dd = document.getElementById('ac-dropdown');
+  if (!dd) return;
+  if (!AC.data || AC.data.length === 0) { dd.style.display = 'none'; return; }
+
+  const ql = q.toLowerCase();
+
+  // Score: symbol exact match > symbol starts-with > name starts-with > name contains
+  const scored = [];
+  for (const item of AC.data) {
+    const sl = item.symbol.toLowerCase();
+    const nl = item.name.toLowerCase();
+    let score = 0;
+    if (sl === ql)              score = 4;
+    else if (sl.startsWith(ql)) score = 3;
+    else if (nl.startsWith(ql)) score = 2;
+    else if (sl.includes(ql) || nl.includes(ql)) score = 1;
+    if (score) scored.push({ score, item });
+    if (scored.length > 500) break;   // cap early scan for performance
+  }
+
+  scored.sort((a, b) => b.score - a.score || a.item.symbol.localeCompare(b.item.symbol));
+  const results = scored.slice(0, AC.MAX_RESULTS).map(s => s.item);
+
+  AC.activeIdx = -1;
+
+  if (results.length === 0) {
+    dd.innerHTML = '<div class="ac-empty">No matches found</div>';
+    dd.style.display = 'block';
+    return;
+  }
+
+  const typeClass = { Stock: 'ac-type-stock', ETF: 'ac-type-etf', Fund: 'ac-type-fund' };
+
+  dd.innerHTML = results.map((r, i) => `
+    <div class="ac-item" data-idx="${i}" data-name="${escHtml(r.name)}" data-symbol="${escHtml(r.symbol)}"
+         onmousedown="acSelect('${escHtml(r.name)}','${escHtml(r.symbol)}')"
+         onmouseover="acHover(${i})">
+      <span class="ac-sym">${escHtml(r.symbol)}</span>
+      <span class="ac-name">${escHtml(r.name)}</span>
+      <span class="ac-exch">${escHtml(r.exchange)}</span>
+      <span class="ac-type-badge ${typeClass[r.type] || 'ac-type-stock'}">${escHtml(r.type)}</span>
+    </div>`).join('');
+
+  dd.style.display = 'block';
+}
+
+function acSelect(name, symbol) {
+  const inp = document.getElementById('asset-name');
+  if (!inp) return;
+  // Populate with "Name (SYMBOL)" for clarity in the AI prompt
+  inp.value = `${name} (${symbol})`;
+  inp.dispatchEvent(new Event('input', { bubbles: true }));
+  answers.assetName = inp.value;
+  updateSummary();
+  showDownstream(true);
+  acClose();
+}
+
+function acHover(idx) {
+  AC.activeIdx = idx;
+  document.querySelectorAll('#ac-dropdown .ac-item').forEach((el, i) => {
+    el.classList.toggle('ac-active', i === idx);
+  });
+}
+
+function acKeyNav(e) {
+  const dd = document.getElementById('ac-dropdown');
+  if (!dd || dd.style.display === 'none') return;
+  const items = dd.querySelectorAll('.ac-item');
+  if (!items.length) return;
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    AC.activeIdx = Math.min(AC.activeIdx + 1, items.length - 1);
+    acHover(AC.activeIdx);
+    items[AC.activeIdx]?.scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    AC.activeIdx = Math.max(AC.activeIdx - 1, 0);
+    acHover(AC.activeIdx);
+    items[AC.activeIdx]?.scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'Enter' && AC.activeIdx >= 0) {
+    e.preventDefault();
+    const el = items[AC.activeIdx];
+    if (el) acSelect(el.dataset.name, el.dataset.symbol);
+  } else if (e.key === 'Escape') {
+    acClose();
+  }
+}
+
+function acClose() {
+  const dd = document.getElementById('ac-dropdown');
+  if (dd) dd.style.display = 'none';
+  AC.activeIdx = -1;
+}
+
+// Close when clicking outside the autocomplete wrap
+document.addEventListener('click', e => {
+  if (!e.target.closest('#ac-wrap')) acClose();
+});
 
 function setTheme(t) {
   document.documentElement.setAttribute('data-theme', t);

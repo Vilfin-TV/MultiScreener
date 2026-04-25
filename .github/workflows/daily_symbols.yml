@@ -1,0 +1,57 @@
+name: Update Master Symbols
+
+# ─── Schedule ─────────────────────────────────────────────────────────────────
+# 01:00 UTC  =  06:30 IST  /  10:00 JST  (before both markets open)
+on:
+  schedule:
+    - cron: '0 1 * * *'
+  workflow_dispatch:          # manual trigger from the Actions tab
+
+# ─── Permissions ──────────────────────────────────────────────────────────────
+permissions:
+  contents: write             # needed to commit master_symbols.json
+
+jobs:
+  update-symbols:
+    name: Download symbol lists → data/master_symbols.json
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # ── 2. Python 3.12 with pip cache ────────────────────────────────────────
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      # ── 3. Install dependencies ───────────────────────────────────────────────
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install requests pandas openpyxl
+
+      # ── 4. Run the updater ────────────────────────────────────────────────────
+      - name: Run update_symbols.py
+        run: python scripts/update_symbols.py
+
+      # ── 5. Commit if changed ──────────────────────────────────────────────────
+      - name: Commit master_symbols.json
+        run: |
+          git config --global user.name  "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add data/master_symbols.json
+
+          if git diff --staged --quiet; then
+            echo "ℹ️  No changes to master_symbols.json — skipping commit."
+          else
+            git commit -m "chore: refresh master_symbols.json [skip ci]"
+            git push
+            echo "✅  master_symbols.json committed and pushed."
+          fi
