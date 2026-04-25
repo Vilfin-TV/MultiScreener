@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Multi Asset Screener v8.9.2 — Input Tool | Vilfin George</title>
+<title>Multi Asset Screener v8.9.3 — Input Tool | Vilfin George</title>
 <!-- Canonical URL — always index.html -->
 <link rel="canonical" href="https://vilfin-tv.github.io/MultiScreener/index.html"/>
 <script>
@@ -1403,6 +1403,33 @@ footer{
 .rb-ai-send-btn:hover{background:var(--burn2)}
 .rb-ai-send-btn:disabled{background:var(--dark4);cursor:not-allowed}
 
+/* ── MARKDOWN RENDERING IN AI BUBBLES ── */
+.rb-msg-bot .rb-msg-bubble{white-space:normal}
+.rb-md-h2{color:var(--gold2);font-size:13px;font-weight:700;margin:10px 0 4px;letter-spacing:.3px}
+.rb-md-h3{color:var(--text);font-size:12px;font-weight:700;margin:8px 0 3px}
+.rb-md-h4{color:var(--text2);font-size:11px;font-weight:600;margin:6px 0 2px;text-transform:uppercase;letter-spacing:.5px}
+.rb-md-p{margin:0 0 6px;line-height:1.65}
+.rb-md-p:last-child{margin-bottom:0}
+.rb-md-ul,.rb-md-ol{padding-left:18px;margin:3px 0 7px}
+.rb-md-ul li,.rb-md-ol li{margin-bottom:3px;line-height:1.6}
+.rb-md-hr{border:none;border-top:1px solid var(--border);margin:10px 0}
+.rb-md-quote{border-left:3px solid var(--burn2);padding:4px 10px;color:var(--text3);margin:6px 0;font-style:italic;background:rgba(255,165,0,.05);border-radius:0 6px 6px 0}
+.rb-md-code{background:var(--dark4);border-radius:3px;padding:1px 5px;font-family:'Courier New',monospace;font-size:10.5px;color:var(--gold2);border:1px solid var(--border)}
+.rb-md-pre{background:var(--dark4);border:1px solid var(--border);border-radius:7px;padding:9px 11px;font-family:'Courier New',monospace;font-size:11px;overflow-x:auto;margin:7px 0;white-space:pre;line-height:1.5}
+.rb-md-strong{font-weight:700;color:var(--text)}
+.rb-md-em{font-style:italic;color:var(--text2)}
+
+/* ── AI LOADING STATE ── */
+.rb-typing-inner{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text3)}
+.rb-typing-dots{display:flex;gap:4px}
+.rb-typing-dots span{
+  display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:var(--burn2);animation:rbDotBounce 1.2s ease-in-out infinite
+}
+.rb-typing-dots span:nth-child(2){animation-delay:.15s}
+.rb-typing-dots span:nth-child(3){animation-delay:.3s}
+@keyframes rbDotBounce{0%,80%,100%{transform:scale(.7);opacity:.4}40%{transform:scale(1.1);opacity:1}}
+
 /* ── LOSSLESS JSON RENDERER ── */
 .ljson-wrap{font-family:'DM Sans',sans-serif;padding:16px}
 .ljson-header{background:linear-gradient(135deg,var(--burn),var(--burn2));color:#fff;border-radius:10px;padding:16px 20px;margin-bottom:16px}
@@ -2630,11 +2657,11 @@ footer{
       </div>
     </div>
     <!-- Typing indicator -->
-    <div id="rb-typing" style="display:none;padding:8px 14px;font-size:12px;color:var(--text3)">
-      <span style="animation:tvBlink 1s infinite">●</span>
-      <span style="animation:tvBlink 1s infinite .2s">●</span>
-      <span style="animation:tvBlink 1s infinite .4s">●</span>
-      &nbsp; AI is thinking…
+    <div id="rb-typing" style="display:none;padding:8px 14px">
+      <div class="rb-typing-inner">
+        <div class="rb-typing-dots"><span></span><span></span><span></span></div>
+        <span id="rb-typing-text">Analysing Market Data…</span>
+      </div>
     </div>
     <!-- Input area -->
     <div class="rb-ai-input-wrap">
@@ -4176,6 +4203,122 @@ async function _aiFreeQuery(prompt, onChunk, onDone, onError) {
              "📊 TradingView: https://www.tradingview.com/symbols/?query=" + q + "\n" +
              "📈 Moneycontrol: https://www.moneycontrol.com/india/stockpricequote/search.php?search_str=" + q;
   onChunk && onChunk(fb); onDone && onDone(fb);
+}
+
+// ── Markdown → safe HTML converter ─────────────────────────────────────────
+function _mdToHtml(md) {
+  if (!md) return '';
+
+  // 1. HTML-escape raw input to prevent XSS
+  let s = md
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // 2. Fenced code blocks (``` ... ```)
+  s = s.replace(/```[\w]*\n?([\s\S]*?)```/g,
+    '<pre class="rb-md-pre"><code>$1</code></pre>');
+
+  // 3. Process line-by-line for structure (headers, lists, HR, blockquote)
+  const lines = s.split('\n');
+  const out   = [];
+  let inList = false, listTag = '';
+
+  const closeList = () => { if (inList) { out.push('</' + listTag + '>'); inList = false; listTag = ''; } };
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    const trimmed = raw.trim();
+
+    // Skip lines inside code blocks (already wrapped above)
+    // Ordered list
+    if (/^\d+\.\s/.test(raw)) {
+      if (!inList || listTag !== 'ol') { closeList(); out.push('<ol class="rb-md-ol">'); inList = true; listTag = 'ol'; }
+      out.push('<li>' + raw.replace(/^\d+\.\s/, '') + '</li>'); continue;
+    }
+    // Unordered list
+    if (/^[-*]\s/.test(raw)) {
+      if (!inList || listTag !== 'ul') { closeList(); out.push('<ul class="rb-md-ul">'); inList = true; listTag = 'ul'; }
+      out.push('<li>' + raw.replace(/^[-*]\s/, '') + '</li>'); continue;
+    }
+    closeList();
+
+    if (/^#{4}\s/.test(raw)) { out.push('<h4 class="rb-md-h4">' + raw.replace(/^#{4}\s/, '') + '</h4>'); continue; }
+    if (/^#{3}\s/.test(raw)) { out.push('<h3 class="rb-md-h3">' + raw.replace(/^#{3}\s/, '') + '</h3>'); continue; }
+    if (/^#{2}\s/.test(raw)) { out.push('<h2 class="rb-md-h2">' + raw.replace(/^#{2}\s/, '') + '</h2>'); continue; }
+    if (/^#\s/.test(raw))   { out.push('<h2 class="rb-md-h2">' + raw.replace(/^#\s/, '')   + '</h2>'); continue; }
+    if (/^---+$/.test(trimmed)) { out.push('<hr class="rb-md-hr">'); continue; }
+    if (/^>\s/.test(raw)) { out.push('<blockquote class="rb-md-quote">' + raw.replace(/^>\s/, '') + '</blockquote>'); continue; }
+    if (trimmed === '') { out.push('<br>'); continue; }
+    out.push('<p class="rb-md-p">' + raw + '</p>');
+  }
+  closeList();
+
+  // 4. Inline formatting on the assembled HTML
+  let result = out.join('');
+  result = result
+    .replace(/\*\*\*([^*\n]+?)\*\*\*/g, '<strong class="rb-md-strong"><em class="rb-md-em">$1</em></strong>')
+    .replace(/\*\*([^*\n]+?)\*\*/g,     '<strong class="rb-md-strong">$1</strong>')
+    .replace(/__([^_\n]+?)__/g,          '<strong class="rb-md-strong">$1</strong>')
+    .replace(/\*([^*\n]+?)\*/g,          '<em class="rb-md-em">$1</em>')
+    .replace(/_([^_\n]+?)_/g,            '<em class="rb-md-em">$1</em>')
+    .replace(/`([^`\n]+?)`/g,            '<code class="rb-md-code">$1</code>');
+
+  return result;
+}
+
+// ── Cloudflare Worker proxy query (Task 2 / 3) ──────────────────────────────
+async function _aiWorkerQuery(prompt, onChunk, onDone, onError) {
+  const workerUrl = (typeof VILTV_CONFIG !== 'undefined' && VILTV_CONFIG.WORKER_URL
+    ? VILTV_CONFIG.WORKER_URL
+    : (localStorage.getItem('viltv_cf_worker_url') || '')
+  ).replace(/\/+$/, '');
+
+  if (!workerUrl) throw new Error('Worker not configured');
+
+  const res = await fetch(workerUrl + '/query', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt }),
+    signal: AbortSignal.timeout(60000)
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => res.status);
+    throw new Error('Worker ' + res.status + ': ' + errText);
+  }
+
+  // Support both streaming (SSE) and JSON responses from the worker
+  const contentType = res.headers.get('content-type') || '';
+  if (contentType.includes('text/event-stream') && res.body) {
+    const reader = res.body.getReader();
+    const dec    = new TextDecoder();
+    let buf = '', accumulated = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop() || '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') { onDone && onDone(accumulated); return; }
+        let evt; try { evt = JSON.parse(raw); } catch { continue; }
+        if (evt.error) throw new Error(evt.error);
+        if (evt.chunk) { accumulated += evt.chunk; onChunk && onChunk(accumulated); }
+        if (evt.result || evt.done) { const t = evt.result || accumulated; onDone && onDone(t); return; }
+      }
+    }
+    if (accumulated) { onDone && onDone(accumulated); return; }
+    throw new Error('Empty stream');
+  }
+
+  // JSON response
+  const data   = await res.json();
+  const text   = data.result || data.answer || data.response || data.text || '';
+  if (!text)   throw new Error('Empty response from worker');
+  onChunk && onChunk(text);
+  onDone  && onDone(text);
 }
 
 async function _aiLoadBalancedQuery(prompt, model, onChunk, onDone, onError) {
@@ -5765,16 +5908,18 @@ function closeMobileRightBar() {
 
 
 function rbAiChip(text) {
-  document.getElementById('rb-quick-chips')?.remove();
-  document.getElementById('rb-ai-input').value = text;
+  // Populate input and fire — chips stay visible for the next question
+  const inp = document.getElementById('rb-ai-input');
+  if (inp) { inp.value = text; inp.focus(); }
   rbAiSend();
 }
 
 async function rbAiSend() {
-  const input = document.getElementById('rb-ai-input');
+  const input   = document.getElementById('rb-ai-input');
   const sendBtn = document.getElementById('rb-ai-send-btn');
   const statusEl = document.getElementById('rb-ai-status');
   const typingEl = document.getElementById('rb-typing');
+  const typingTxt = document.getElementById('rb-typing-text');
   const q = input?.value?.trim();
   if (!q) return;
 
@@ -5785,50 +5930,68 @@ async function rbAiSend() {
   input.value = '';
   input.style.height = '';
   if (sendBtn) sendBtn.disabled = true;
-  if (typingEl) typingEl.style.display = 'block';
+
+  // ── Show "Analysing Market Data…" loading state ──
+  if (typingTxt) typingTxt.textContent = 'Analysing Market Data…';
+  if (typingEl)  typingEl.style.display = 'block';
+  if (statusEl)  statusEl.textContent   = '⏳ Fetching live intelligence…';
 
   const msgId = rbAiAppendMessage('', 'bot');
   const msgEl = document.getElementById(msgId);
-  if (msgEl) msgEl.textContent = '';
-
-  const model = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
   const msgsEl = document.getElementById('rb-ai-messages');
 
+  // ── Helper: render Markdown into the bot bubble ──
+  const renderMd = (text) => {
+    if (!msgEl) return;
+    msgEl.innerHTML = _mdToHtml(text);
+    if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
+  };
+
+  // ── Helper: show plain error ──
+  const showErr = (msg) => {
+    if (msgEl) msgEl.innerHTML =
+      '<span style="color:#f87171">⚠️ ' + escHtml(msg || 'Temporary error — please retry.') + '</span>';
+    if (statusEl) statusEl.textContent = '⚠️ Retry';
+  };
+
   try {
-    // Prefer paid services if user has configured any; otherwise use FREE stack.
-    // Either way, no API key is REQUIRED — the free stack always responds.
-    const hasPaid = !!(window._cfWorkerUrl || localStorage.getItem(CF_KEY) ||
-      localStorage.getItem(SVC_GEMINI_KEY) || localStorage.getItem(SVC_OPENAI_KEY) ||
-      (localStorage.getItem(SVC_API3_KEY) && localStorage.getItem(SVC_API3_URL)));
+    // ─── TIER 1: Cloudflare Worker (secured, live data + AI) ──────────────
+    // All users go through the worker — API keys are server-side only.
+    try {
+      if (typingTxt) typingTxt.textContent = 'Analysing Market Data…';
+      await _aiWorkerQuery(q,
+        (partial) => { if (typingEl) typingEl.style.display = 'none'; renderMd(partial); },
+        (final)   => {
+          if (typingEl) typingEl.style.display = 'none';
+          renderMd(final);
+          if (statusEl) statusEl.textContent = '✅ Analysis complete';
+        },
+        (err) => { throw err; }
+      );
+      return; // worker succeeded — done
+    } catch (workerErr) {
+      if (workerErr.name === 'AbortError') throw workerErr;
+      // Worker unavailable — cascade silently to free AI stack
+      if (typingTxt) typingTxt.textContent = 'Connecting to intelligence network…';
+    }
 
-    const runner = hasPaid ? _aiLoadBalancedQuery.bind(null, q, model) : _aiFreeQuery.bind(null, q);
-
-    if (statusEl) statusEl.textContent = '⏳ Analysing…';
-
-    await runner(
-      (partial) => {
+    // ─── TIER 2: Free AI cascade (no worker needed) ───────────────────────
+    await _aiFreeQuery(q,
+      (partial) => { if (typingEl) typingEl.style.display = 'none'; renderMd(partial); },
+      (final)   => {
         if (typingEl) typingEl.style.display = 'none';
-        if (msgEl) { msgEl.textContent = partial; if(msgsEl) msgsEl.scrollTop = 99999; }
-      },
-      (final) => {
-        if (typingEl) typingEl.style.display = 'none';
-        if (msgEl) { msgEl.textContent = final; if(msgsEl) msgsEl.scrollTop = 99999; }
+        renderMd(final);
         if (statusEl) statusEl.textContent = '✅ Response received';
       },
-      (err) => {
-        if (msgEl) msgEl.textContent = '❌ ' + (err && err.message ? err.message : 'Error');
-        if (statusEl) statusEl.textContent = '⚠️ ' + (err && err.message ? err.message : 'Error');
-      }
+      (err) => { showErr(err && err.message ? err.message : 'Service temporarily unavailable.'); }
     );
+
   } catch(e) {
-    if (e.name !== 'AbortError') {
-      if (msgEl) msgEl.textContent = '❌ ' + (e.message || 'Connection error.');
-      if (statusEl) statusEl.textContent = '⚠️ ' + (e.message || 'Error');
-    }
+    if (e.name !== 'AbortError') showErr(e.message || 'Connection error.');
   } finally {
     if (sendBtn) sendBtn.disabled = false;
     if (typingEl) typingEl.style.display = 'none';
-    if (msgsEl) msgsEl.scrollTop = 99999;
+    if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
   }
 }
 
