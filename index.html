@@ -2657,7 +2657,7 @@ footer{
       🚀 Generate Report
     </button>
     <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-      <button onclick="generateQuery()" style="padding:7px 16px;background:var(--card2);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:11px;cursor:pointer">⚡ Generate Query (manual copy)</button>
+      <button id="gen-copy-btn" onclick="generateAndCopy()" style="padding:7px 16px;background:var(--card2);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:11px;cursor:pointer">⚡ Generate Query (manual copy)</button>
     </div>
     <div class="validation-msg" id="v-gen" style="margin-top:12px"></div>
   </div>
@@ -8492,6 +8492,13 @@ function generateQuery(skipTabSwitch) {
   refreshCopyPanel();
   // AI Report tab removed — no panel switch on query generation; user stays on Input Form
   return true;
+}
+
+// Called by the "⚡ Generate Query (manual copy)" button —
+// generates the prompt AND immediately copies it, showing feedback on the same button.
+function generateAndCopy() {
+  if (!generateQuery()) return;          // validation failed — stop here
+  _copyText(generatedQuery, 'gen-copy-btn', '⚡ Generate Query (manual copy)');
 }
 
 // ═══════════════════════════════════════════════════════════════════
