@@ -10539,6 +10539,208 @@ function jsonToTabText(obj) {
   return out.trim();
 }
 
+// ─── Direct JSON → ScanX HTML Renderer ────────────────────────────
+// Bypasses jsonToTabText() + buildReport() entirely.
+// Takes the parsed {tabs:[...]} object and returns a complete ScanX-styled
+// HTML document with navigation pills, KPI cards, and highlight boxes.
+// NO raw JSON syntax (quotes, braces, brackets) ever appears in the UI.
+function renderJsonReport(parsed) {
+  const assetName = (answers && answers.assetName) || (answers && answers.market) || 'Asset';
+  const assetType = (answers && answers.assetType) || '';
+  const market    = (answers && answers.market) || '';
+  const resident  = (answers && answers.resident) || '';
+  const horizon   = (answers && answers.horizon) || '';
+  const today     = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  const emojiMap  = {'Stock':'🏢','ETF':'📊','Mutual Fund':'🪙','Bond':'📜','Commodity':'⚙️','Currency':'💱'};
+  const emoji     = emojiMap[assetType] || '📈';
+
+  // ── Escape HTML special chars ────────────────────────────────────
+  const esc = s => String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  // ── Flatten any value cleanly — no [object Object], no raw JSON ─
+  function flatVal(v) {
+    if (v === null || v === undefined) return '—';
+    if (Array.isArray(v)) return v.map(x => flatVal(x)).join(', ');
+    if (typeof v === 'object') {
+      return Object.entries(v).map(([k,vv]) => `${k}: ${flatVal(vv)}`).join(' | ');
+    }
+    const s = String(v).trim();
+    return s || '—';
+  }
+
+  // ── Badge classifier ─────────────────────────────────────────────
+  const badgeCls = v => {
+    const t = v.toLowerCase();
+    if (/^(not applicable|n\/a|not available|nil|na$)/i.test(t.trim())) return 'badge-blue';
+    if (/strong buy|buy|bullish|positive|pass|low risk|good|excellent|above|growing|increasing|healthy|eligible|yes|rising|outperform/i.test(t)) return 'badge-green';
+    if (/strong sell|sell|bearish|negative|fail|high risk|poor|below|concern|no$|falling|underperform|reduce/i.test(t)) return 'badge-red';
+    if (/hold|neutral|accumulate|moderate|medium|average|mixed|partial|caution|stable|watch/i.test(t)) return 'badge-amber';
+    return 'badge-blue';
+  };
+  const isBadgeVal = v => {
+    if (/^(not applicable|n\/a|not available|nil)$/i.test(v.trim())) return false;
+    return v.length < 55 &&
+      /\b(strong buy|buy|sell|hold|accumulate|reduce|bullish|bearish|neutral|positive|negative|low|medium|high|excellent|good|average|poor|pass|fail|yes|no|partial|eligible|listed|unlisted|rising|falling|stable|outperform|underperform)\b/i.test(v);
+  };
+  const isLong = v => v.length > 100;
+  const isNDA  = v => /^(no data available|not available|n\/a|nil|none|not applicable)$/i.test(v.trim());
+
+  // ── Linkify URLs → styled ref buttons ───────────────────────────
+  const linkify = s => s.replace(/(https?:\/\/[^\s<>"'\)\]]+)/g, url => {
+    const label = url.replace(/^https?:\/\/(www\.)?/,'').split(/[\/?#]/)[0];
+    return '<a href="'+url+'" target="_blank" rel="noopener" class="ref-btn">'+esc(label)+'</a>';
+  });
+
+  // ── Render a fields object as KPI grid + highlight boxes ─────────
+  function renderFields(fields) {
+    if (!fields || typeof fields !== 'object') return '';
+    const entries = Object.entries(fields);
+    if (!entries.length) return '';
+    let kpiHtml = '', highlightHtml = '';
+    entries.forEach(([k, rawV]) => {
+      const v = flatVal(rawV);
+      if (!v || v === '—' || isNDA(v)) return;
+      if (isLong(v)) {
+        highlightHtml += `<div class="highlight-box"><div class="highlight-label">${esc(k)}</div><div class="highlight-text">${linkify(esc(v))}</div></div>`;
+      } else if (isBadgeVal(v)) {
+        kpiHtml += `<div class="kpi"><div class="kpi-lbl">${esc(k)}</div><div class="kpi-val"><span class="badge ${badgeCls(v)}">${esc(v)}</span></div></div>`;
+      } else {
+        kpiHtml += `<div class="kpi"><div class="kpi-lbl">${esc(k)}</div><div class="kpi-val sm">${linkify(esc(v))}</div></div>`;
+      }
+    });
+    if (!kpiHtml && !highlightHtml) return '';
+    return (kpiHtml ? `<div class="kpi-grid">${kpiHtml}</div>` : '') + highlightHtml;
+  }
+
+  // ── Build tab pills and panels ───────────────────────────────────
+  const tabs = parsed.tabs || [];
+  let tabBtns = '', panels = '';
+
+  tabs.forEach((tab, idx) => {
+    const active  = idx === 0;
+    const tabNum  = String(idx + 1).padStart(2, '0');
+    const tabName = tab.name || `Tab ${tabNum}`;
+    tabBtns += `<button class="tab-btn${active?' active':''}" onclick="showTab(${idx},this)">${tabNum} ${esc(tabName)}</button>`;
+
+    let panelHtml = '';
+    // Main tab fields card
+    if (tab.fields && typeof tab.fields === 'object' && Object.keys(tab.fields).length) {
+      const content = renderFields(tab.fields);
+      if (content) panelHtml += `<div class="card"><div class="card-title">${esc(tabName)}</div>${content}</div>`;
+    }
+    // Sub-section cards
+    if (Array.isArray(tab.subsections)) {
+      tab.subsections.forEach(sub => {
+        if (!sub) return;
+        const subContent = renderFields(sub.fields);
+        if (!subContent) return;
+        const subTitle = sub.title || tabName;
+        panelHtml += `<div class="card"><div class="card-title">${esc(subTitle)}</div>${subContent}</div>`;
+      });
+    }
+    if (!panelHtml) {
+      panelHtml = `<div class="card"><div class="card-title">${esc(tabName)}</div><p class="muted text-sm">No data available for this tab.</p></div>`;
+    }
+    panels += `<div class="panel${active?' active':''}" id="p${idx}">${panelHtml}</div>`;
+  });
+
+  // ── Identity bar ─────────────────────────────────────────────────
+  const idBar = [
+    {lbl:'Asset',   val:assetName},
+    {lbl:'Type',    val:assetType+(market?' — '+market:'')},
+    {lbl:'Status',  val:resident},
+    {lbl:'Horizon', val:horizon},
+    {lbl:'Date',    val:today}
+  ].filter(i=>i.val).map(i=>
+    `<div class="id-item"><div class="lbl">${esc(i.lbl)}</div><div class="val">${esc(i.val)}</div></div>`
+  ).join('');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>${esc(assetName)} — Research Report | Vilfin George</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --accent:#0052FF;--accent2:#1d4ed8;--accent3:#3b82f6;--accent-light:#eff6ff;
+  --green:#16a34a;--green2:#15803d;--red:#dc2626;--red2:#b91c1c;
+  --amber:#d97706;--amber2:#b45309;
+  --dark:#0f172a;--card:#ffffff;--card2:#f8fafc;
+  --text:#0f172a;--text2:#374151;--text3:#6b7280;--muted:#9ca3af;
+  --border:#e2e8f0;--border2:#cbd5e1;
+  --radius:10px;--radius-sm:6px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f1f5f9;color:var(--text);min-height:100vh}
+.site-header{background:linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 60%,#2563eb 100%);padding:28px 24px 24px;text-align:center;position:relative;overflow:hidden}
+.site-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:rgba(255,255,255,.2)}
+.site-header h1{font-family:'DM Sans',sans-serif;font-size:clamp(20px,3.5vw,34px);color:#fff;font-weight:800;letter-spacing:-0.5px;position:relative;z-index:1;line-height:1.1}
+.site-header .sub{color:rgba(255,255,255,.65);font-size:11px;margin-top:5px;position:relative;z-index:1;letter-spacing:1px;text-transform:uppercase}
+.asset-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 18px;margin-top:14px;color:#fff;font-size:12px;font-weight:600;position:relative;z-index:1}
+.asset-badge .market-tag{background:rgba(255,255,255,.2);color:#fff;border-radius:999px;padding:2px 10px;font-size:11px;font-weight:700}
+.id-bar{background:#ffffff;padding:14px 24px;display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:center;border-bottom:1px solid var(--border)}
+.id-item{text-align:center}
+.id-item .lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;font-weight:600}
+.id-item .val{font-size:13px;font-weight:700;color:var(--dark);word-break:break-word}
+.tab-wrapper{background:#ffffff;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.tab-scroll{display:flex;overflow-x:auto;scrollbar-width:none;padding:8px 16px;gap:6px}
+.tab-scroll::-webkit-scrollbar{display:none}
+.tab-btn{flex-shrink:0;height:36px;padding:0 16px;border:1px solid var(--border);background:var(--card2);color:var(--text3);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border-radius:999px;white-space:nowrap;transition:all .15s;letter-spacing:.2px}
+.tab-btn:hover{border-color:var(--accent3);color:var(--accent2);background:var(--accent-light)}
+.tab-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(0,82,255,.22)}
+.panels{max-width:1200px;margin:0 auto;padding:24px 20px 56px}
+.panel{display:none;animation:fadeUp .22s ease}
+.panel.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.card{background:var(--card);border-radius:var(--radius);padding:20px 24px;margin-bottom:16px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.card:hover{box-shadow:var(--shadow-md);border-color:var(--border2)}
+.card-title{font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--accent2);margin-bottom:16px;display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--border);text-transform:uppercase}
+.card-title::before{content:'';width:3px;height:14px;background:var(--accent);border-radius:2px;flex-shrink:0}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:var(--card2);border-radius:var(--radius-sm);padding:12px 14px;border:1px solid var(--border);overflow:hidden;word-break:break-word;transition:all .15s}
+.kpi:hover{border-color:var(--accent3);background:var(--accent-light)}
+.kpi-lbl{font-size:9.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;line-height:1.3;font-weight:600;white-space:normal;word-break:break-word}
+.kpi-val{font-size:13px;font-weight:700;color:var(--text);word-break:break-word;overflow-wrap:anywhere;line-height:1.4;white-space:normal}
+.kpi-val.sm{font-size:12px;font-weight:500;line-height:1.5;word-break:break-word;overflow-wrap:anywhere;white-space:normal}
+.badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.2px;white-space:normal;word-break:break-word;max-width:100%}
+.badge-green{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
+.badge-red{background:#fee2e2;color:#b91c1c;border:1px solid #fecaca}
+.badge-amber{background:#fef3c7;color:#b45309;border:1px solid #fde68a}
+.badge-blue{background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe}
+.highlight-box{margin:8px 0;padding:12px 16px;background:var(--card2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:0 var(--radius-sm) var(--radius-sm) 0}
+.highlight-label{font-size:9.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.highlight-text{font-size:13px;color:var(--text2);line-height:1.65;word-break:break-word;overflow-wrap:anywhere}
+.ref-btn{display:inline-flex;align-items:center;gap:3px;background:var(--accent-light);color:var(--accent2);border:1px solid #bfdbfe;border-radius:4px;padding:1px 7px;font-size:11px;font-weight:600;text-decoration:none;transition:all .15s;margin:2px}
+.ref-btn:hover{background:var(--accent);color:#fff}
+.muted{color:var(--muted)}
+.text-sm{font-size:12px}
+</style>
+<script>
+function showTab(i,btn){
+  document.querySelectorAll('.panel').forEach((p,j)=>p.classList.toggle('active',j===i));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  btn.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+}
+</script>
+</head>
+<body>
+<div class="site-header">
+  <h1>${emoji} ${esc(assetName)}</h1>
+  <div class="sub">Intelligent Market Research — VilfinTV</div>
+  ${assetType ? `<div class="asset-badge"><span>${esc(assetType)}</span>${market ? `<span class="market-tag">${esc(market)}</span>` : ''}</div>` : ''}
+</div>
+${idBar ? `<div class="id-bar">${idBar}</div>` : ''}
+<div class="tab-wrapper"><div class="tab-scroll">${tabBtns}</div></div>
+<div class="panels">${panels}</div>
+</body>
+</html>`;
+}
+
 // ─── Strip markdown fences (defensive pre-processor) ───────────────
 // Aggressively removes ```json / ```html / ``` wrappers and surrounding
 // whitespace. Safe to call on any string — returns the cleaned text.
@@ -10674,15 +10876,39 @@ function renderOutput() {
     ? _extracted.content
     : ((_preCleaned.startsWith('{') || _preCleaned.startsWith('[')) ? _preCleaned : null);
 
+  // ── STAGE 2: If we have a JSON candidate, try direct renderJsonReport() ─────────
+  // This completely bypasses jsonToTabText() + buildReport(), preventing any
+  // raw JSON syntax (quotes, braces, brackets) from appearing in the rendered UI.
   if (_jsonCandidate) {
     try {
-      const _parsed  = JSON.parse(_jsonCandidate);
+      const _parsed = JSON.parse(_jsonCandidate);
+      if (_parsed.tabs && Array.isArray(_parsed.tabs) && _parsed.tabs.length > 0) {
+        // ✅ Direct JSON → ScanX HTML — no intermediate text conversion
+        renderedHtml = renderJsonReport(_parsed);
+        const _c = document.getElementById('rendered-output');
+        _c.innerHTML = '';
+        const _if = document.createElement('iframe');
+        _if.style.cssText = 'width:100%;border:none;border-radius:12px;min-height:85vh;display:block';
+        _c.appendChild(_if);
+        const _d = _if.contentDocument || _if.contentWindow.document;
+        _d.open(); _d.write(renderedHtml); _d.close();
+        const _rz = () => { try { const h = _if.contentWindow.document.documentElement.scrollHeight; if(h>400) _if.style.height=(h+40)+'px'; } catch(e){} };
+        _if.onload = _rz; setTimeout(_rz,500); setTimeout(_rz,1500);
+        const _eh = document.getElementById('btn-export-html');
+        const _ep = document.getElementById('btn-export-pdf');
+        const _cr = document.getElementById('clear-result-btn');
+        if (_eh) _eh.style.display = '';
+        if (_ep) _ep.style.display = '';
+        if (_cr) _cr.style.display = '';
+        return; // DONE — skip jsonToTabText() + buildReport()
+      }
+      // Fallback: non-tabs JSON — convert via jsonToTabText then buildReport
       const _tabText = jsonToTabText(_parsed);
       if (_tabText && _tabText.length > 10) {
-        raw = _tabText;   // converted — buildReport() receives clean ## TAB text
-        document.getElementById('paste-area').value = raw;   // keep textarea in sync
+        raw = _tabText;
+        document.getElementById('paste-area').value = raw;
       }
-    } catch(_e) { /* malformed JSON — fall through and let buildReport try */ }
+    } catch(_e) { /* malformed JSON — fall through to buildReport */ }
   }
 
   renderedHtml = buildReport(raw);
