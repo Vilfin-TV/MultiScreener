@@ -1,0 +1,41 @@
+name: Daily Radio Stream Check
+
+on:
+  schedule:
+    # Every day at 02:00 UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    # Allow manual trigger from GitHub Actions UI
+
+jobs:
+  update-radio-streams:
+    name: Fetch & Verify Radio Streams
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run radio stream updater
+        run: python scripts/update_radio_streams.py
+
+      - name: Check if radio_stations.json changed
+        id: diff
+        run: |
+          git diff --quiet public/data/radio_stations.json && echo "changed=false" >> $GITHUB_OUTPUT || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit updated radio stations
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/data/radio_stations.json
+          git commit -m "chore(radio): auto-update station streams [$(date -u +%Y-%m-%d)]"
+          git push
