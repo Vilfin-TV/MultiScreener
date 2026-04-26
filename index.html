@@ -1358,6 +1358,39 @@ footer{
 .rb-pow a{color:rgba(255,255,255,.25);text-decoration:none}
 .rb-pow a:hover{color:rgba(255,255,255,.5)}
 
+/* ── RADIO PANEL ── */
+.radio-region-sel{width:100%;padding:7px 10px;background:#0f1d35;color:#e2e8f0;border:1px solid #1e3a5f;border-radius:9px;font-size:11px;font-family:inherit;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22 viewBox=%220 0 10 6%22><path d=%22M0 0l5 6 5-6z%22 fill=%22%2364748b%22/></svg>');background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.radio-station-list{flex:1;overflow-y:auto;padding:4px 6px 8px;scrollbar-width:thin;scrollbar-color:#1e293b transparent}
+.radio-station-item{display:flex;align-items:center;gap:6px;padding:7px 9px;border-radius:8px;border:1px solid transparent;cursor:pointer;transition:all .15s;margin-bottom:3px}
+.radio-station-item:hover{background:rgba(37,99,235,.12);border-color:rgba(37,99,235,.3)}
+.radio-station-item.active{background:rgba(37,99,235,.22);border-color:#2563eb}
+.radio-station-name{flex:1;font-size:11px;font-weight:500;color:#cbd5e1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.radio-station-genre{font-size:9px;color:#475569;flex-shrink:0;white-space:nowrap}
+.radio-default-btn{font-size:9px;padding:2px 7px;border:1px solid #1e3a5f;border-radius:9px;background:transparent;color:#475569;cursor:pointer;flex-shrink:0;transition:all .15s;white-space:nowrap;line-height:1.6}
+.radio-default-btn:hover{background:rgba(37,99,235,.2);border-color:#2563eb;color:#93c5fd}
+.radio-default-btn.pinned{background:#2563eb;border-color:#2563eb;color:#fff}
+.radio-player-bar{padding:9px 10px 10px;background:#050a14;border-top:1px solid #131d35;flex-shrink:0;display:flex;flex-direction:column;gap:7px}
+.radio-now-row{display:flex;align-items:center;gap:7px}
+.radio-status-dot{width:7px;height:7px;border-radius:50%;background:#334155;flex-shrink:0;transition:background .3s}
+.radio-status-dot.playing{background:#22c55e;animation:rPulse 1.6s infinite}
+@keyframes rPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+.radio-now-playing{font-size:10.5px;color:#60a5fa;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.radio-controls{display:flex;align-items:center;gap:9px}
+.radio-play-btn{width:34px;height:34px;border-radius:50%;background:#2563eb;border:none;color:#fff;font-size:15px;cursor:pointer;transition:background .15s;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0}
+.radio-play-btn:hover{background:#1d4ed8}
+.radio-play-btn:disabled{background:#1e3a5f;cursor:not-allowed}
+.radio-vol-label{font-size:9px;color:#475569;flex-shrink:0}
+.radio-vol-slider{flex:1;height:3px;accent-color:#2563eb;cursor:pointer}
+.radio-no-data{text-align:center;padding:24px 12px;color:#334155;font-size:11px;line-height:1.6}
+/* ── CUSTOM YOUTUBE URL BAR ── */
+.yt-custom-bar{padding:5px 8px;background:#080e1a;border-bottom:1px solid #0d1a30;display:flex;gap:6px;flex-shrink:0;align-items:center}
+.yt-custom-input{flex:1;padding:5px 8px;background:#0c1525;color:#e2e8f0;border:1px solid #1e3a5f;border-radius:7px;font-size:10px;outline:none;font-family:inherit;transition:border-color .15s}
+.yt-custom-input:focus{border-color:#2563eb}
+.yt-custom-input.ok{border-color:#22c55e}
+.yt-custom-input.err{border-color:#ef4444}
+.yt-custom-play-btn{padding:5px 11px;background:#2563eb;color:#fff;border:none;border-radius:7px;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap;transition:background .15s}
+.yt-custom-play-btn:hover{background:#1d4ed8}
+
 /* ── LIVE SCORES — sport tab buttons ── */
 .score-sport-btn{
   padding:4px 10px;background:transparent;border:1px solid #1e3a5f;
@@ -2906,8 +2939,9 @@ footer{
       </div>
     </div>
     <div class="rb-tabs">
-      <button class="rb-tab active" id="rbtab-ai" onclick="rbSwitchPanel('ai')">🤖 AI Chat</button>
-      <button class="rb-tab" id="rbtab-video" onclick="rbSwitchPanel('video')">📺 Live TV</button>
+      <button class="rb-tab active" id="rbtab-ai"    onclick="rbSwitchPanel('ai')">🤖 AI Chat</button>
+      <button class="rb-tab"        id="rbtab-video" onclick="rbSwitchPanel('video')">📺 Live TV</button>
+      <button class="rb-tab"        id="rbtab-radio" onclick="rbSwitchPanel('radio')">📻 Radio</button>
     </div>
   </div>
 
@@ -3040,6 +3074,15 @@ footer{
       <label for="yt-default-ch-chk" style="font-size:10px;color:#64748b;cursor:pointer;user-select:none">📌 Set as default channel on startup</label>
     </div>
 
+    <!-- ── Custom YouTube URL ── -->
+    <div class="yt-custom-bar">
+      <input class="yt-custom-input" id="yt-custom-url" type="text"
+        placeholder="Paste YouTube URL or video ID…"
+        onkeydown="if(event.key==='Enter')ytPlayCustomUrl()"
+        title="Supports watch?v=, youtu.be/, /live/, /shorts/ links"/>
+      <button class="yt-custom-play-btn" onclick="ytPlayCustomUrl()">▶ Play</button>
+    </div>
+
     <!-- YouTube player — exact 16:9, zero black bars -->
     <div id="yt-video-wrapper" style="width:100%;flex-shrink:0;position:relative;background:#000;overflow:hidden">
       <!-- padding-top:56.25% = 9/16 = exact 16:9 ratio -->
@@ -3110,6 +3153,60 @@ footer{
       </div>
     </div>
   </div>
+
+  <!-- ── PANEL 3: Global Radio ── -->
+  <div id="rb-panel-radio" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+
+    <!-- Region / language selector -->
+    <div style="padding:6px 8px 5px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
+      <select class="radio-region-sel" id="radio-region-select" onchange="radioLoadCategory(this.value)">
+        <option value="us">🇺🇸 United States</option>
+        <option value="japan">🇯🇵 Japan</option>
+        <optgroup label="🇮🇳 India">
+          <option value="india-malayalam">🌿 Malayalam</option>
+          <option value="india-tamil">🎵 Tamil</option>
+          <option value="india-kannada">🎶 Kannada</option>
+          <option value="india-telugu">🎤 Telugu</option>
+          <option value="india-hindi" selected>🇮🇳 Hindi</option>
+          <option value="india-marathi">🟠 Marathi</option>
+          <option value="india-punjabi">🟡 Punjabi</option>
+          <option value="india-bengali">🟢 Bengali</option>
+          <option value="india-bollywood">🎬 Bollywood</option>
+        </optgroup>
+        <option value="africa">🌍 Africa</option>
+        <option value="middle-east">🌙 Middle East</option>
+        <option value="china">🇨🇳 China</option>
+        <option value="korea">🇰🇷 Korea</option>
+        <option value="europe">🇪🇺 Europe</option>
+        <option value="latin-america">🌎 Latin America</option>
+        <option value="canada">🇨🇦 Canada</option>
+        <option value="mexico">🇲🇽 Mexico</option>
+      </select>
+    </div>
+
+    <!-- Station list -->
+    <div class="radio-station-list" id="radio-station-list">
+      <div class="radio-no-data">Loading stations…</div>
+    </div>
+
+    <!-- Player bar -->
+    <div class="radio-player-bar">
+      <div class="radio-now-row">
+        <div class="radio-status-dot" id="radio-dot"></div>
+        <div class="radio-now-playing" id="radio-now-playing">Select a station to play</div>
+      </div>
+      <div class="radio-controls">
+        <button class="radio-play-btn" id="radio-play-btn" onclick="radioTogglePlay()" title="Play / Pause" disabled>▶</button>
+        <span class="radio-vol-label">VOL</span>
+        <input type="range" class="radio-vol-slider" id="radio-vol" min="0" max="100" value="75"
+          oninput="radioSetVolume(this.value)" title="Volume"/>
+      </div>
+      <!-- Hidden HTML5 audio element -->
+      <audio id="radio-audio" preload="none" crossorigin="anonymous"
+        onended="radioOnEnded()" onerror="radioOnError()"></audio>
+    </div>
+
+  </div><!-- /rb-panel-radio -->
 
 </div><!-- /right-bar -->
 
@@ -5647,32 +5744,349 @@ function rbAiClear() {
 function rbSwitchPanel(panel) {
   const ai    = document.getElementById('rb-panel-ai');
   const video = document.getElementById('rb-panel-video');
-  const tabAi = document.getElementById('rbtab-ai');
+  const radio = document.getElementById('rb-panel-radio');
+  const tabAi  = document.getElementById('rbtab-ai');
   const tabVid = document.getElementById('rbtab-video');
+  const tabRad = document.getElementById('rbtab-radio');
   const title  = document.getElementById('rb-panel-title');
   const clear  = document.getElementById('rb-clear-btn');
   const label  = document.getElementById('rb-ai-model-label');
 
+  // Hide all panels, deactivate all tabs
+  [ai, video, radio].forEach(p => { if (p) p.style.display = 'none'; });
+  [tabAi, tabVid, tabRad].forEach(t => { if (t) t.classList.remove('active'); });
+
   if (panel === 'video') {
-    ai.style.display    = 'none';
-    video.style.display = 'flex';
-    tabAi.classList.remove('active');
-    tabVid.classList.add('active');
+    if (video) video.style.display = 'flex';
+    if (tabVid) tabVid.classList.add('active');
     if (title) title.innerHTML = '<span style="font-size:16px">📺</span><span>LIVE TV</span>';
-    if (clear) clear.style.display  = 'none';
-    if (label) label.textContent = 'Click any channel to open in YouTube';
+    if (clear) clear.style.display = 'none';
+    if (label) label.textContent = '';
+  } else if (panel === 'radio') {
+    if (radio) radio.style.display = 'flex';
+    if (tabRad) tabRad.classList.add('active');
+    if (title) title.innerHTML = '<span style="font-size:16px">📻</span><span>GLOBAL RADIO</span>';
+    if (clear) clear.style.display = 'none';
+    if (label) label.textContent = '';
+    // Lazy-init on first open
+    if (!window._radioInitDone) { radioInit(); window._radioInitDone = true; }
   } else {
-    video.style.display = 'none';
-    ai.style.display    = 'flex';
-    tabVid.classList.remove('active');
-    tabAi.classList.add('active');
+    if (ai) ai.style.display = 'flex';
+    if (tabAi) tabAi.classList.add('active');
     if (title) title.innerHTML = '<span style="font-size:16px">🤖</span><span>AI ASSISTANT</span><span class="rb-dot" id="rb-ai-dot" style="background:var(--text3)"></span>';
-    if (clear) clear.style.display  = 'block';
+    if (clear) clear.style.display = 'block';
     if (label) label.textContent = '';
   }
 }
 
-// ── YOUTUBE IFRAME API ────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════
+// CUSTOM YOUTUBE URL PLAYER
+// ═══════════════════════════════════════════════════════════════════════
+function ytExtractVideoId(url) {
+  if (!url) return null;
+  url = url.trim();
+  let m;
+  // watch?v=XXXXXXXXXXX
+  m = url.match(/[?&]v=([A-Za-z0-9_-]{11})/);
+  if (m) return m[1];
+  // youtu.be/XXXXXXXXXXX
+  m = url.match(/youtu\.be\/([A-Za-z0-9_-]{11})/);
+  if (m) return m[1];
+  // youtube.com/embed/XXXXXXXXXXX
+  m = url.match(/youtube\.com\/embed\/([A-Za-z0-9_-]{11})/);
+  if (m) return m[1];
+  // youtube.com/live/XXXXXXXXXXX
+  m = url.match(/youtube\.com\/live\/([A-Za-z0-9_-]{11})/);
+  if (m) return m[1];
+  // youtube.com/shorts/XXXXXXXXXXX
+  m = url.match(/youtube\.com\/shorts\/([A-Za-z0-9_-]{11})/);
+  if (m) return m[1];
+  // Bare 11-char video ID
+  if (/^[A-Za-z0-9_-]{11}$/.test(url)) return url;
+  return null;
+}
+
+function ytPlayCustomUrl() {
+  const input = document.getElementById('yt-custom-url');
+  if (!input) return;
+  const url = input.value.trim();
+  if (!url) return;
+  const id = ytExtractVideoId(url);
+  if (!id) {
+    input.classList.add('err');
+    input.title = 'Invalid YouTube URL — try a watch?v=, youtu.be/ or /live/ link';
+    setTimeout(() => { input.classList.remove('err'); input.title = ''; }, 2500);
+    return;
+  }
+  input.classList.add('ok');
+  setTimeout(() => { input.classList.remove('ok'); }, 1800);
+  // Persist the custom URL in localStorage
+  try { localStorage.setItem('viltv_custom_url', url); } catch(_) {}
+  // Clear channel-select visual selection so it doesn't mislead
+  const sel = document.getElementById('yt-channel-select');
+  if (sel) sel.selectedIndex = -1;
+  const np = document.getElementById('yt-now-playing');
+  if (np) np.textContent = '▶ Custom URL';
+  ytSwitchChannel(id);
+}
+
+// Restore custom URL input on page load
+(function _restoreCustomUrl() {
+  try {
+    const saved = localStorage.getItem('viltv_custom_url');
+    if (saved) {
+      const el = document.getElementById('yt-custom-url');
+      if (el) el.value = saved;
+    }
+  } catch(_) {}
+})();
+
+// ═══════════════════════════════════════════════════════════════════════
+// GLOBAL RADIO ENGINE
+// ═══════════════════════════════════════════════════════════════════════
+var _radioData       = null;   // parsed radio_stations.json
+var _radioCurrentUrl = null;
+var _radioCurrentId  = null;
+var _radioPlaying    = false;
+
+// ── Load JSON from public/data/radio_stations.json ──────────────────
+async function radioInit() {
+  // Try to restore default station from localStorage
+  try {
+    const saved = JSON.parse(localStorage.getItem('radio_default_station') || 'null');
+    if (saved && saved.url) {
+      _radioCurrentUrl = saved.url;
+      _radioCurrentId  = saved.id;
+      const np = document.getElementById('radio-now-playing');
+      if (np) np.textContent = saved.name || 'Default Station';
+    }
+  } catch(_) {}
+
+  // Restore volume
+  try {
+    const vol = localStorage.getItem('radio_volume');
+    if (vol !== null) {
+      const slider = document.getElementById('radio-vol');
+      if (slider) { slider.value = vol; radioSetVolume(vol); }
+    }
+  } catch(_) {}
+
+  // Select the default-station category in the dropdown if known
+  try {
+    const saved = JSON.parse(localStorage.getItem('radio_default_station') || 'null');
+    if (saved && saved.categoryId) {
+      const sel = document.getElementById('radio-region-select');
+      if (sel) sel.value = saved.categoryId;
+    }
+  } catch(_) {}
+
+  // Fetch station data
+  const sel = document.getElementById('radio-region-select');
+  const catId = sel ? sel.value : 'india-hindi';
+
+  try {
+    const resp = await fetch('public/data/radio_stations.json', { cache: 'no-cache' });
+    if (resp.ok) {
+      _radioData = await resp.json();
+    }
+  } catch(_) {}
+
+  radioLoadCategory(catId);
+  // Auto-play the pinned default after stations render
+  setTimeout(radioAutoPlayDefault, 300);
+}
+
+// ── Render stations for chosen category ─────────────────────────────
+function radioLoadCategory(catId) {
+  const list = document.getElementById('radio-station-list');
+  if (!list) return;
+
+  // Try from fetched data first, then hardcode fallback
+  let stations = [];
+  if (_radioData && _radioData.categories) {
+    const cat = _radioData.categories.find(c => c.id === catId);
+    if (cat) stations = cat.stations || [];
+  }
+
+  // Hardcoded fallback for india-hindi (most likely default)
+  if (!stations.length && catId === 'india-hindi') {
+    stations = [
+      { id:'in-hin-airnational', name:'AIR National (Hindi)',  url:'https://air.pc.cdn.bitgravity.com/air/live/pbaudio001/chunklist.m3u8', genre:'National' },
+      { id:'in-hin-mirchi',      name:'Radio Mirchi 98.3 Delhi',url:'https://stream.mirchi.co.in/mirchi983delhi', genre:'Hindi FM' },
+    ];
+  }
+
+  if (!stations.length) {
+    list.innerHTML = '<div class="radio-no-data">No stations found for this region.<br/>Check back after the daily update.</div>';
+    return;
+  }
+
+  // Get default station id for pin styling
+  let defaultId = null;
+  try { defaultId = JSON.parse(localStorage.getItem('radio_default_station') || 'null')?.id; } catch(_) {}
+
+  list.innerHTML = stations.map(st => `
+    <div class="radio-station-item${st.id === _radioCurrentId ? ' active' : ''}"
+         id="rsi-${st.id}" onclick="radioPlay(${JSON.stringify(st.url)},${JSON.stringify(st.id)},${JSON.stringify(st.name)},${JSON.stringify(catId)})">
+      <span style="font-size:14px">${radioGenreIcon(st.genre)}</span>
+      <span class="radio-station-name" title="${_esc(st.name)}">${_esc(st.name)}</span>
+      <span class="radio-station-genre">${_esc(st.genre || '')}</span>
+      <button class="radio-default-btn${st.id === defaultId ? ' pinned' : ''}"
+              id="rdb-${st.id}"
+              onclick="event.stopPropagation();radioSetDefault(${JSON.stringify(st.id)},${JSON.stringify(st.name)},${JSON.stringify(st.url)},${JSON.stringify(catId)})"
+              title="Set as default station">
+        ${st.id === defaultId ? '📌' : '☆'}
+      </button>
+    </div>`).join('');
+
+  // Enable play button now that we have stations
+  const playBtn = document.getElementById('radio-play-btn');
+  if (playBtn) playBtn.disabled = false;
+}
+
+function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function radioGenreIcon(genre) {
+  const g = (genre || '').toLowerCase();
+  if (g.includes('news') || g.includes('talk'))   return '📰';
+  if (g.includes('classical') || g.includes('jazz'))return '🎻';
+  if (g.includes('bollywood')|| g.includes('filmi'))return '🎬';
+  if (g.includes('pop') || g.includes('hit'))      return '🎵';
+  if (g.includes('rock'))                           return '🎸';
+  if (g.includes('chill') || g.includes('lofi'))   return '🌿';
+  if (g.includes('sport'))                          return '🏅';
+  if (g.includes('public') || g.includes('national'))return '📡';
+  return '🎙';
+}
+
+// ── Play a station ───────────────────────────────────────────────────
+function radioPlay(url, id, name, catId) {
+  const audio = document.getElementById('radio-audio');
+  if (!audio) return;
+
+  // Highlight active item in list
+  document.querySelectorAll('.radio-station-item').forEach(el => el.classList.remove('active'));
+  const item = document.getElementById('rsi-' + id);
+  if (item) item.classList.add('active');
+
+  _radioCurrentUrl = url;
+  _radioCurrentId  = id;
+
+  const np = document.getElementById('radio-now-playing');
+  if (np) np.textContent = name || 'Playing…';
+
+  const dot = document.getElementById('radio-dot');
+  if (dot) { dot.style.background = '#fbbf24'; dot.classList.remove('playing'); }
+
+  audio.pause();
+  audio.src = url;
+  audio.load();
+
+  const vol = document.getElementById('radio-vol');
+  audio.volume = vol ? Number(vol.value) / 100 : 0.75;
+
+  audio.play().then(() => {
+    _radioPlaying = true;
+    const btn = document.getElementById('radio-play-btn');
+    if (btn) btn.textContent = '⏸';
+    if (dot) { dot.style.background = '#22c55e'; dot.classList.add('playing'); }
+  }).catch(err => {
+    console.warn('Radio play failed:', err);
+    _radioPlaying = false;
+    radioOnError();
+  });
+}
+
+// ── Toggle play / pause ──────────────────────────────────────────────
+function radioTogglePlay() {
+  const audio = document.getElementById('radio-audio');
+  if (!audio) return;
+
+  if (!_radioCurrentUrl) return; // nothing loaded yet
+
+  if (_radioPlaying) {
+    audio.pause();
+    _radioPlaying = false;
+    const btn = document.getElementById('radio-play-btn');
+    if (btn) btn.textContent = '▶';
+    const dot = document.getElementById('radio-dot');
+    if (dot) { dot.style.background = '#334155'; dot.classList.remove('playing'); }
+  } else {
+    if (!audio.src || audio.src === window.location.href) {
+      // Reload URL if not yet set
+      radioPlay(_radioCurrentUrl, _radioCurrentId,
+        document.getElementById('radio-now-playing')?.textContent || '', '');
+    } else {
+      audio.play().then(() => {
+        _radioPlaying = true;
+        const btn = document.getElementById('radio-play-btn');
+        if (btn) btn.textContent = '⏸';
+        const dot = document.getElementById('radio-dot');
+        if (dot) { dot.style.background = '#22c55e'; dot.classList.add('playing'); }
+      }).catch(() => radioOnError());
+    }
+  }
+}
+
+function radioSetVolume(val) {
+  const audio = document.getElementById('radio-audio');
+  if (audio) audio.volume = Number(val) / 100;
+  try { localStorage.setItem('radio_volume', val); } catch(_) {}
+}
+
+// ── Error / ended handlers ───────────────────────────────────────────
+function radioOnError() {
+  _radioPlaying = false;
+  const btn = document.getElementById('radio-play-btn');
+  if (btn) btn.textContent = '▶';
+  const dot = document.getElementById('radio-dot');
+  if (dot) { dot.style.background = '#ef4444'; dot.classList.remove('playing'); }
+  const np = document.getElementById('radio-now-playing');
+  if (np) np.textContent = '⚠ Stream unavailable — try another station';
+}
+function radioOnEnded() { radioOnError(); } // live streams shouldn't end; treat as error
+
+// ── Set / unset default station ──────────────────────────────────────
+function radioSetDefault(id, name, url, catId) {
+  let current = null;
+  try { current = JSON.parse(localStorage.getItem('radio_default_station') || 'null'); } catch(_) {}
+
+  const isCurrentDefault = current && current.id === id;
+
+  if (isCurrentDefault) {
+    // Un-pin
+    try { localStorage.removeItem('radio_default_station'); } catch(_) {}
+    const btn = document.getElementById('rdb-' + id);
+    if (btn) { btn.textContent = '☆'; btn.classList.remove('pinned'); }
+  } else {
+    // Pin new default — remove old pin styling first
+    if (current) {
+      const oldBtn = document.getElementById('rdb-' + current.id);
+      if (oldBtn) { oldBtn.textContent = '☆'; oldBtn.classList.remove('pinned'); }
+    }
+    try {
+      localStorage.setItem('radio_default_station', JSON.stringify({ id, name, url, categoryId: catId }));
+    } catch(_) {}
+    const btn = document.getElementById('rdb-' + id);
+    if (btn) { btn.textContent = '📌'; btn.classList.add('pinned'); }
+  }
+}
+
+// ── Auto-play default station on first panel open ────────────────────
+function radioAutoPlayDefault() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('radio_default_station') || 'null');
+    if (saved && saved.url && saved.id) {
+      // Switch region dropdown to the saved category
+      const sel = document.getElementById('radio-region-select');
+      if (sel && saved.categoryId) sel.value = saved.categoryId;
+      radioPlay(saved.url, saved.id, saved.name || 'Default Station', saved.categoryId || '');
+    }
+  } catch(_) {}
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// YOUTUBE IFRAME API ────────────────────────────────────────────────
 var _ytPlayer = null;
 var _ytCurrentId = '25B1JcOMx3I';
 var _ytApiReady = false;
@@ -6022,25 +6436,48 @@ function switchScoreSport(sport) {
   else fetchPastScores(sport);
 }
 
-// ─── CRICKET SCORES ENGINE ────────────────────────────────────────────────────
-// Data sources (free, no API key required):
-//   1. TheSportsDB  — thesportsdb.com  (primary, globally accessible, no auth)
-//   2. ESPN public JSON — site.api.espn.com (secondary, no auth needed)
+// ─── CRICKET SCORES ENGINE v2 ─────────────────────────────────────────────────
+// Priority order: IPL → International (ICC/Test/ODI/T20I) → BPL → Other leagues
+// Data sources (free, no API key):
+//   1. ESPN public API — IPL dedicated endpoint (highest priority)
+//   2. ESPN public API — General cricket + WC endpoints
+//   3. TheSportsDB (by date) — globally accessible, CORS-free
+//   4. TheSportsDB IPL league direct feed (league ID 4725)
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Classify match format from league name → returns {label, col, bg}
+// Priority score: lower = shown first
+function _cricPriority(leagueName) {
+  const n = (leagueName || '').toLowerCase();
+  if (n.includes('ipl') || n.includes('indian premier'))  return 0;
+  if (n.includes('wc') || n.includes('world cup') || n.includes('champions trophy') || n.includes('icc')) return 1;
+  if (n.includes('test') || n.includes('t20i') || n.includes('odi') || n.includes('bilateral')) return 1;
+  if (n.includes('bpl') || n.includes('bangladesh premier')) return 2;
+  if (n.includes('wpl') || n.includes('women') || n.includes("women's premier")) return 3;
+  if (n.includes('big bash') || n.includes('bbl'))        return 4;
+  if (n.includes('cpl') || n.includes('caribbean'))       return 4;
+  if (n.includes('sa20') || n.includes('sa 20'))          return 4;
+  if (n.includes('t20') || n.includes('twenty20'))        return 5;
+  if (n.includes('psl'))                                   return 6;
+  if (n.includes('county') || n.includes('ranji') || n.includes('domestic')) return 7;
+  return 8;
+}
+
+// Classify match format → returns {label, col, bg}
 function _cricMatchType(name) {
   const n = (name || '').toLowerCase();
-  if (n.includes('ipl') || n.includes('indian premier'))                     return {label:'IPL',     col:'#f97316',bg:'rgba(249,115,22,.18)'};
+  if (n.includes('ipl') || n.includes('indian premier'))                     return {label:'IPL 🏆',  col:'#f97316',bg:'rgba(249,115,22,.22)'};
+  if (n.includes('wc') || n.includes('world cup') || n.includes('champions trophy')) return {label:'ICC 🌍',col:'#fbbf24',bg:'rgba(251,191,36,.18)'};
   if (n.includes('test match') || n.includes('test championship') || n.includes(' test ') || n.endsWith(' test')) return {label:'TEST',    col:'#a78bfa',bg:'rgba(167,139,250,.14)'};
   if (n.includes('t20i') || (n.includes('t20') && (n.includes('intl')||n.includes('international')))) return {label:'T20I',col:'#38bdf8',bg:'rgba(56,189,248,.13)'};
+  if (n.includes('bpl') || n.includes('bangladesh premier'))                 return {label:'BPL',     col:'#34d399',bg:'rgba(52,211,153,.15)'};
+  if (n.includes('wpl') || n.includes("women's premier"))                    return {label:'WPL',     col:'#f472b6',bg:'rgba(244,114,182,.15)'};
   if (n.includes('t20') || n.includes('twenty20') || n.includes('twenty-20'))return {label:'T20',     col:'#34d399',bg:'rgba(52,211,153,.13)'};
   if (n.includes('odi') || n.includes('one day') || n.includes('one-day'))   return {label:'ODI',     col:'#60a5fa',bg:'rgba(96,165,250,.13)'};
   if (n.includes('hundred'))                                                  return {label:'100-BALL',col:'#f472b6',bg:'rgba(244,114,182,.13)'};
   if (n.includes('big bash') || n.includes('bbl'))                           return {label:'BBL',     col:'#fbbf24',bg:'rgba(251,191,36,.13)'};
-  if (n.includes('psl'))                                                      return {label:'PSL',     col:'#34d399',bg:'rgba(52,211,153,.13)'};
+  if (n.includes('psl'))                                                      return {label:'PSL',     col:'#94a3b8',bg:'rgba(148,163,184,.1)'};
   if (n.includes('sa20') || n.includes('sa 20'))                             return {label:'SA20',    col:'#f87171',bg:'rgba(248,113,113,.13)'};
-  if (n.includes('cpl'))                                                      return {label:'CPL',     col:'#fb923c',bg:'rgba(251,146,60,.13)'};
+  if (n.includes('cpl') || n.includes('caribbean'))                          return {label:'CPL',     col:'#fb923c',bg:'rgba(251,146,60,.13)'};
   if (n.includes('county') || n.includes('ranji') || n.includes('duleep') || n.includes('domestic')) return {label:'DOM',col:'#94a3b8',bg:'rgba(148,163,184,.1)'};
   return {label:"INT'L", col:'#64748b', bg:'rgba(100,116,139,.1)'};
 }
@@ -6138,42 +6575,106 @@ async function fetchLiveScores(sport) {
   if (!box) return;
   box.innerHTML = '<div class="score-no-data">Loading…</div>';
 
-  // ── Cricket: TheSportsDB primary → ESPN public fallback ──────────────────
+  // ── Cricket: parallel multi-source fetch with IPL/INT priority sort ────────
   if (sport === 'cricket') {
-    // 1. TheSportsDB today (globally accessible, no CORS, no geo-block)
-    try {
-      const today = new Date().toISOString().slice(0, 10);
-      const events = await _fetchSportsDB(today);
-      if (events.length) {
-        const sorted = [...events].sort((a, b) =>
-          (a.strStatus?.toLowerCase() === 'live' ? 0 : 1) -
-          (b.strStatus?.toLowerCase() === 'live' ? 0 : 1)
-        );
-        const html = _renderSDB(sorted, false);
-        if (html) { box.innerHTML = html; _stampScoreTime(); return; }
-      }
-    } catch(_) {}
-
-    // 2. ESPN public API fallback
-    const espnUrls = [
-      'https://site.api.espn.com/apis/site/v2/sports/cricket/ipl/scoreboard',
-      'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard',
+    // ESPN endpoints — IPL dedicated first, then general, BPL, WC, WPL
+    const espnEndpoints = [
+      { url:'https://site.api.espn.com/apis/site/v2/sports/cricket/ipl/scoreboard',         label:'IPL'  },
+      { url:'https://site.api.espn.com/apis/site/v2/sports/cricket/28/scoreboard',          label:'IPL2' },
+      { url:'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard',             label:'INT'  },
+      { url:'https://site.api.espn.com/apis/site/v2/sports/cricket/bpl/scoreboard',         label:'BPL'  },
+      { url:'https://site.api.espn.com/apis/site/v2/sports/cricket/wc/scoreboard',          label:'WC'   },
+      { url:'https://site.api.espn.com/apis/site/v2/sports/cricket/wpl/scoreboard',         label:'WPL'  },
     ];
-    for (const eu of espnUrls) {
-      try {
-        const er = await fetch(eu, { cache:'no-store', signal: AbortSignal.timeout(6000) });
-        if (er.ok) {
-          const ej = await er.json();
-          const evs = ej.events || ej.competitions || [];
-          if (evs.length) {
-            const html = _renderESPN(evs, false);
-            if (html) { box.innerHTML = html; _stampScoreTime(); return; }
-          }
-        }
-      } catch(_) {}
+
+    // TheSportsDB today
+    const today = new Date().toISOString().slice(0, 10);
+
+    // Parallel fetch: ESPN leagues + TheSportsDB
+    const [sdbToday, ...espnResults] = await Promise.allSettled([
+      _fetchSportsDB(today),
+      ...espnEndpoints.map(ep =>
+        fetch(ep.url, { cache:'no-store', signal: AbortSignal.timeout(7000) })
+          .then(r => r.ok ? r.json() : null)
+          .catch(() => null)
+      )
+    ]);
+
+    // Collect and deduplicate all matches
+    const seen = new Set();
+    let allCards = [];
+
+    // 1. ESPN results (most reliable for IPL)
+    espnResults.forEach(result => {
+      if (result.status !== 'fulfilled' || !result.value) return;
+      const data = result.value;
+      const evs  = data.events || data.competitions || [];
+      evs.forEach(ev => {
+        const key = ev.id || ev.uid || JSON.stringify(ev.name);
+        if (seen.has(key)) return;
+        seen.add(key);
+        (ev.competitions || [ev]).forEach(comp => {
+          const comps  = comp.competitors || [];
+          if (!comps.length) return;
+          const state   = (comp.status?.type?.state || '').toLowerCase();
+          const isLive  = state === 'in';
+          const isFinal = state === 'post';
+          const status  = comp.status?.type?.shortDetail || comp.status?.type?.description || (isLive ? 'Live' : 'Scheduled');
+          const h = comps.find(c => c.homeAway === 'home') || comps[0];
+          const a = comps.find(c => c.homeAway === 'away') || comps[1];
+          const league = ev.name || ev.shortName || '';
+          allCards.push({
+            priority: _cricPriority(league),
+            isLive,
+            html: _cricCard({
+              title: league, league,
+              status, isLive, isFinal,
+              homeTeam: h?.team?.shortDisplayName || h?.team?.abbreviation || '?',
+              awayTeam: a?.team?.shortDisplayName || a?.team?.abbreviation || '?',
+              homeScore: h?.score ?? '', awayScore: a?.score ?? '',
+              venue: comp.venue?.fullName, result: null, timeStr: '', isPast: false,
+            })
+          });
+        });
+      });
+    });
+
+    // 2. TheSportsDB results
+    if (sdbToday.status === 'fulfilled' && sdbToday.value?.length) {
+      sdbToday.value.forEach(ev => {
+        const key = ev.idEvent || ev.strEvent;
+        if (seen.has(key)) return;
+        seen.add(key);
+        const raw    = ev.strStatus || 'Scheduled';
+        const isLive = /live|innings|over/i.test(raw);
+        const isFinal= /finish|won|draw|result|abandon/i.test(raw);
+        let timeStr = '';
+        try { if (ev.strTimestamp) timeStr = new Date(ev.strTimestamp+'Z').toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}); } catch(_){}
+        allCards.push({
+          priority: _cricPriority(ev.strLeague || ''),
+          isLive,
+          html: _cricCard({
+            title: ev.strEvent || 'Cricket', league: ev.strLeague || '',
+            status: raw, isLive, isFinal,
+            homeTeam: ev.strHomeTeam || '?', awayTeam: ev.strAwayTeam || '?',
+            homeScore: ev.intHomeScore ?? '', awayScore: ev.intAwayScore ?? '',
+            venue: ev.strVenue, result: ev.strResult, timeStr, isPast: false,
+          })
+        });
+      });
     }
 
-    box.innerHTML = '<div class="score-no-data">No cricket matches today.<br/><span style="font-size:9px;color:#334155">Check back during match time.</span></div>';
+    if (allCards.length) {
+      // Sort: live first, then by priority (IPL=0 < INT=1 < BPL=2 …)
+      allCards.sort((a, b) =>
+        (b.isLive ? 1 : 0) - (a.isLive ? 1 : 0) || a.priority - b.priority
+      );
+      box.innerHTML = allCards.slice(0, 14).map(c => c.html).join('');
+      _stampScoreTime();
+      return;
+    }
+
+    box.innerHTML = '<div class="score-no-data">No cricket matches today.<br/><span style="font-size:9px;color:#334155">IPL, International &amp; BPL matches appear here during match time.</span></div>';
     return;
   }
 
@@ -6250,53 +6751,96 @@ async function fetchPastScores(sport) {
   if (!box) return;
   box.innerHTML = '<div class="score-no-data">Loading past results…</div>';
 
-  // ── Cricket: TheSportsDB last 5 days primary → ESPN public fallback ────────
+  // ── Cricket past: parallel multi-source, priority-sorted ──────────────────
   if (sport === 'cricket') {
-    // 1. TheSportsDB — last 5 days (globally accessible, no CORS, no geo-block)
-    try {
-      const today = new Date();
-      const dateStrs = Array.from({length: 5}, (_, i) => {
-        const d = new Date(today); d.setDate(today.getDate() - i);
-        return d.toISOString().slice(0, 10);
-      });
-      const dayResults = await Promise.all(dateStrs.map(d => _fetchSportsDB(d)));
-      const allEvs = dayResults.flat();
-      if (allEvs.length) {
-        const finished = allEvs.filter(ev => {
-          const s = (ev.strStatus || '').toLowerCase();
-          return s.includes('finish') || s.includes('won') || s.includes('draw') ||
-                 s.includes('result') || s === 'ft' || s === 'aet';
-        });
-        const toRender = (finished.length ? finished : allEvs).slice(0, 12);
-        const html = _renderSDB(toRender, true);
-        if (html) { box.innerHTML = html; _stampScoreTime(); return; }
-      }
-    } catch(_) {}
-
-    // 2. ESPN public API fallback
-    const espnUrls = [
+    const today = new Date();
+    const dateStrs = Array.from({length: 5}, (_, i) => {
+      const d = new Date(today); d.setDate(today.getDate() - i);
+      return d.toISOString().slice(0, 10);
+    });
+    const espnEndpoints = [
       'https://site.api.espn.com/apis/site/v2/sports/cricket/ipl/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/28/scoreboard',
       'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/bpl/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/wc/scoreboard',
     ];
-    for (const eu of espnUrls) {
-      try {
-        const er = await fetch(eu, { cache:'no-store', signal: AbortSignal.timeout(6000) });
-        if (er.ok) {
-          const ej = await er.json();
-          const evs = ej.events || ej.competitions || [];
-          if (evs.length) {
-            const completed = evs.filter(ev =>
-              (((ev.competitions || [ev])[0])?.status?.type?.state || '').toLowerCase() === 'post'
-            );
-            const toShow = (completed.length ? completed : evs).slice(0, 12);
-            const html = _renderESPN(toShow, true);
-            if (html) { box.innerHTML = html; _stampScoreTime(); return; }
-          }
-        }
-      } catch(_) {}
+
+    const [sdbResults, ...espnResults] = await Promise.allSettled([
+      Promise.all(dateStrs.map(d => _fetchSportsDB(d))),
+      ...espnEndpoints.map(url =>
+        fetch(url, { cache:'no-store', signal: AbortSignal.timeout(7000) })
+          .then(r => r.ok ? r.json() : null).catch(() => null)
+      )
+    ]);
+
+    const seen = new Set();
+    let allCards = [];
+
+    // ESPN completed matches
+    espnResults.forEach(result => {
+      if (result.status !== 'fulfilled' || !result.value) return;
+      const evs = result.value.events || result.value.competitions || [];
+      evs.forEach(ev => {
+        const key = ev.id || ev.uid || ev.name;
+        if (seen.has(key)) return;
+        seen.add(key);
+        (ev.competitions || [ev]).forEach(comp => {
+          const state = (comp.status?.type?.state || '').toLowerCase();
+          if (state !== 'post') return; // past results only
+          const h = (comp.competitors || []).find(c => c.homeAway === 'home') || (comp.competitors || [])[0];
+          const a = (comp.competitors || []).find(c => c.homeAway === 'away') || (comp.competitors || [])[1];
+          if (!h || !a) return;
+          const league = ev.name || '';
+          const status = comp.status?.type?.shortDetail || 'Final';
+          allCards.push({
+            priority: _cricPriority(league),
+            html: _cricCard({
+              title: league, league, status,
+              isLive: false, isFinal: true,
+              homeTeam: h?.team?.shortDisplayName || h?.team?.abbreviation || '?',
+              awayTeam: a?.team?.shortDisplayName || a?.team?.abbreviation || '?',
+              homeScore: h?.score ?? '', awayScore: a?.score ?? '',
+              venue: comp.venue?.fullName, result: null, timeStr: '', isPast: true,
+            })
+          });
+        });
+      });
+    });
+
+    // TheSportsDB finished matches
+    if (sdbResults.status === 'fulfilled') {
+      const allEvs = sdbResults.value.flat();
+      allEvs.forEach(ev => {
+        const key = ev.idEvent || ev.strEvent;
+        if (seen.has(key)) return;
+        const s = (ev.strStatus || '').toLowerCase();
+        const isFin = s.includes('finish') || s.includes('won') || s.includes('draw') || s.includes('result');
+        if (!isFin) return;
+        seen.add(key);
+        let timeStr = '';
+        try { if (ev.strTimestamp) timeStr = new Date(ev.strTimestamp+'Z').toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}); } catch(_){}
+        allCards.push({
+          priority: _cricPriority(ev.strLeague || ''),
+          html: _cricCard({
+            title: ev.strEvent || 'Cricket', league: ev.strLeague || '',
+            status: ev.strStatus || 'Final', isLive: false, isFinal: true,
+            homeTeam: ev.strHomeTeam || '?', awayTeam: ev.strAwayTeam || '?',
+            homeScore: ev.intHomeScore ?? '', awayScore: ev.intAwayScore ?? '',
+            venue: ev.strVenue, result: ev.strResult, timeStr, isPast: true,
+          })
+        });
+      });
     }
 
-    box.innerHTML = '<div class="score-no-data">No recent cricket results found.<br/><span style="font-size:9px;color:#334155">Results appear after matches complete.</span></div>';
+    if (allCards.length) {
+      allCards.sort((a, b) => a.priority - b.priority);
+      box.innerHTML = allCards.slice(0, 14).map(c => c.html).join('');
+      _stampScoreTime();
+      return;
+    }
+
+    box.innerHTML = '<div class="score-no-data">No recent results found.<br/><span style="font-size:9px;color:#334155">IPL, International &amp; BPL results appear here after matches complete.</span></div>';
     return;
   }
 
