@@ -2634,7 +2634,7 @@ footer{
     <div class="sub-q" id="q3-nri">
       <div class="sub-q-label">Q3a — Which NRI Account?</div>
       <div class="option-grid">
-        <div class="opt" data-q="3b" data-val="NRE Account" onclick="selectOpt(this,'q3b')">NRE Account</div>
+        <div class="opt" data-q="3b" data-val="NRO Account" onclick="selectOpt(this,'q3b')">NRO Account</div>
         <div class="opt" data-q="3b" data-val="NRE Account" onclick="selectOpt(this,'q3b')">NRE Account</div>
       </div>
     </div>
@@ -5297,7 +5297,15 @@ async function autoSendToGemini() {
   }
 
   function handleGeminiResult(answer) {
-    if (pasteArea) pasteArea.value = answer;
+    // Pre-clean the raw AI response: strip markdown fences so that
+    // ```json...``` wrappers never land in the textarea as raw text.
+    // We keep the ORIGINAL answer for HTML detection, but store the
+    // cleaned version so renderOutput() receives a parseable string.
+    const _cleanedAnswer = (typeof stripMarkdownFences === 'function')
+      ? stripMarkdownFences(answer)
+      : answer.replace(/^```(?:json|html)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+
+    if (pasteArea) pasteArea.value = _cleanedAnswer;
     if (answer.includes('<!DOCTYPE') || answer.includes('<html')) {
       window._autoGeminiHTML = answer;
     }
@@ -10248,15 +10256,64 @@ function jsonToTabText(obj) {
   return out.trim();
 }
 
+// ─── Strip markdown fences (defensive pre-processor) ───────────────
+// Aggressively removes ```json / ```html / ``` wrappers and surrounding
+// whitespace. Safe to call on any string — returns the cleaned text.
+function stripMarkdownFences(text) {
+  if (!text) return text;
+  let t = text.trim();
+
+  // Remove a leading ```json or ```html or ``` fence line
+  t = t.replace(/^```(?:json|html|javascript|js|text|markdown)?\s*/i, '');
+
+  // Remove a trailing ``` fence (possibly with trailing whitespace/newlines)
+  t = t.replace(/\s*```\s*$/, '');
+
+  // If there are STILL embedded fences (e.g. AI wrapped in double block),
+  // strip all remaining ``` sequences so JSON.parse doesn't choke
+  // (only strip the fence markers, not any content between them)
+  t = t.replace(/^```(?:json|html|javascript|js|text|markdown)?\s*/gim, '');
+  t = t.replace(/```\s*$/gim, '');
+
+  return t.trim();
+}
+
 // ─── Extract content from markdown code blocks ─────────────────────
 function extractFromCodeBlock(text) {
-  // Try ```json first, then ```html, then any ``` block
-  const jsonMatch = text.match(/```json\s*([\s\S]*?)```/i);
-  if (jsonMatch) return { content: jsonMatch[1].trim(), type: 'json' };
-  const htmlMatch = text.match(/```html\s*([\s\S]*?)```/i);
-  if (htmlMatch) return { content: htmlMatch[1].trim(), type: 'html' };
-  const anyMatch = text.match(/```\w*\s*([\s\S]*?)```/i);
-  if (anyMatch) return { content: anyMatch[1].trim(), type: 'unknown' };
+  if (!text) return null;
+
+  // ── Try closed ```json...``` block (lazy — prefers shortest match) ──
+  const jsonMatchClosed = text.match(/```json\s*([\s\S]*?)```/i);
+  if (jsonMatchClosed) return { content: jsonMatchClosed[1].trim(), type: 'json' };
+
+  // ── Try closed ```html...``` block ──
+  const htmlMatchClosed = text.match(/```html\s*([\s\S]*?)```/i);
+  if (htmlMatchClosed) return { content: htmlMatchClosed[1].trim(), type: 'html' };
+
+  // ── Try any closed ``` block ──
+  const anyMatchClosed = text.match(/```\w*\s*([\s\S]*?)```/i);
+  if (anyMatchClosed) return { content: anyMatchClosed[1].trim(), type: 'unknown' };
+
+  // ── FALLBACK: handle UNCLOSED fences (AI streaming cutoff / truncation) ──
+  // If the block opens with ```json but has no closing ```, grab everything after.
+  const jsonMatchOpen = text.match(/```json\s*([\s\S]+)/i);
+  if (jsonMatchOpen) {
+    const inner = jsonMatchOpen[1].trim();
+    // Sanity check — must start with { or [ to be treated as JSON
+    if (inner.startsWith('{') || inner.startsWith('[')) {
+      return { content: inner, type: 'json' };
+    }
+  }
+
+  const htmlMatchOpen = text.match(/```html\s*([\s\S]+)/i);
+  if (htmlMatchOpen) return { content: htmlMatchOpen[1].trim(), type: 'html' };
+
+  // ── LAST RESORT: try direct JSON parse of stripped text ──
+  const stripped = stripMarkdownFences(text);
+  if ((stripped.startsWith('{') || stripped.startsWith('[')) && stripped.length > 10) {
+    return { content: stripped, type: 'json' };
+  }
+
   return null;
 }
 
@@ -10275,12 +10332,13 @@ async function pasteFromClipboard() {
       return;
     }
 
+    // Strip fences before any extraction attempt
     const extracted = extractFromCodeBlock(text);
 
-    if (extracted && extracted.type === 'json') {
+    if (extracted && (extracted.type === 'json' || extracted.type === 'unknown')) {
       // Try to parse JSON and convert to tab text
       try {
-        const parsed = JSON.parse(extracted.content);
+        const parsed  = JSON.parse(extracted.content);
         const tabText = jsonToTabText(parsed);
         if (tabText) {
           document.getElementById('paste-area').value = tabText;
@@ -10292,8 +10350,9 @@ async function pasteFromClipboard() {
           renderOutput();
         }
       } catch (jsonErr) {
-        showPasteToast('❌ Invalid JSON in code block: ' + jsonErr.message, 'error');
-        document.getElementById('paste-area').value = text;
+        // JSON parse failed — still store cleaned content so buildReport can try
+        document.getElementById('paste-area').value = extracted.content || stripMarkdownFences(text);
+        showPasteToast('⚠️ JSON parse error — pasted cleaned text, click 🔍 Render', 'warn');
       }
     } else if (extracted && extracted.type === 'html') {
       document.getElementById('paste-area').value = extracted.content;
@@ -10303,9 +10362,9 @@ async function pasteFromClipboard() {
       document.getElementById('paste-area').value = text;
       showPasteToast('✅ Data pasted — click 🔍 Render', 'ok');
     } else {
-      // Unknown format — paste raw and let user decide
-      document.getElementById('paste-area').value = text;
-      showPasteToast('⚠️ Format unrecognised — pasted raw text, click 🔍 Render to attempt render', 'warn');
+      // Unknown format — strip fences and paste cleaned text
+      document.getElementById('paste-area').value = stripMarkdownFences(text);
+      showPasteToast('⚠️ Format unrecognised — pasted cleaned text, click 🔍 Render to attempt render', 'warn');
     }
   } catch (err) {
     showPasteToast('❌ Clipboard access denied — please paste manually (Ctrl+V)', 'error');
@@ -10318,12 +10377,23 @@ function renderOutput() {
   let raw = document.getElementById('paste-area').value.trim();
   if (!raw) { alert('Please paste the AI data output first.'); return; }
 
-  // ── Auto-detect JSON responses (new prompt format asks for ```json blocks) ──
-  // Handles both auto-generate flow and manual paste without touching buildReport().
+  // ── STAGE 0: Defensive fence stripping ──────────────────────────────────────
+  // Strip markdown fences BEFORE any parsing attempt so that
+  // ``` json ``` wrappers never reach buildReport() as literal text.
+  // This fires for both the API auto-generate flow AND the manual Paste flow.
+  const _preCleaned = stripMarkdownFences(raw);
+
+  // ── STAGE 1: Auto-detect JSON responses ─────────────────────────────────────
+  // Try extractFromCodeBlock on the ORIGINAL raw text first (handles well-formed
+  // closed blocks), then fall back to direct parse of the cleaned text.
   const _extracted = extractFromCodeBlock(raw);
-  if (_extracted && _extracted.type === 'json') {
+  const _jsonCandidate = (_extracted && _extracted.type === 'json')
+    ? _extracted.content
+    : ((_preCleaned.startsWith('{') || _preCleaned.startsWith('[')) ? _preCleaned : null);
+
+  if (_jsonCandidate) {
     try {
-      const _parsed  = JSON.parse(_extracted.content);
+      const _parsed  = JSON.parse(_jsonCandidate);
       const _tabText = jsonToTabText(_parsed);
       if (_tabText && _tabText.length > 10) {
         raw = _tabText;   // converted — buildReport() receives clean ## TAB text
