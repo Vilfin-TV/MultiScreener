@@ -127,6 +127,19 @@ export default {
       }
     }
 
+    // ── Cricket live scores endpoint — GET /cricket ────────────────────────────
+    // Fetches IPL-first data from ESPN + TheSportsDB; returns structured match JSON.
+    // No auth required. Safe for public browser calls.
+    if (url.pathname === '/cricket' && (request.method === 'GET' || request.method === 'POST')) {
+      try {
+        const cricData = await fetchCricketData();
+        return json(cricData, CORS);
+      } catch (err) {
+        console.error('cricket error:', err.message);
+        return json({ matches: [], error: 'Cricket data temporarily unavailable' }, CORS, 500);
+      }
+    }
+
     // ── Interactive AI query endpoint ──────────────────────────────────────────
     if ((url.pathname === '/query' || url.pathname === '/ask') && request.method === 'POST') {
       let body;
@@ -136,6 +149,8 @@ export default {
 
       const prompt   = (body.prompt || body.query || body.q || '').trim();
       const provider = (body.provider || '').toLowerCase().trim();
+      // Accept a messages array for conversation history support
+      const messages = Array.isArray(body.messages) ? body.messages : null;
 
       if (!prompt || prompt.length < 2) {
         return json({ error: 'prompt is required' }, CORS, 400);
@@ -145,7 +160,7 @@ export default {
       }
 
       try {
-        const result = await handleQuery(prompt, env, provider);
+        const result = await handleQuery(prompt, env, provider, messages);
         return json({ result }, CORS);
       } catch (err) {
         console.error('handleQuery error:', err.message);
@@ -605,14 +620,43 @@ async function callPollinations(messages) {
  * @param {object} env          - Cloudflare Worker environment bindings
  * @param {string} providerHint - Preferred provider: 'groq'|'gemini'|'openai'|'deepseek'|''
  */
-async function handleQuery(prompt, env, providerHint) {
+/**
+ * Main AI query handler.
+ *
+ * @param {string}        prompt        - User prompt (may include flattened history)
+ * @param {object}        env           - Cloudflare env bindings
+ * @param {string}        providerHint  - Preferred provider key
+ * @param {Array|null}    historyMsgs   - Optional [{role,content}] conversation history
+ *                                        from the frontend's _rbChatHistory. When provided,
+ *                                        the full conversation is forwarded to the AI instead
+ *                                        of just the latest prompt — enabling multi-turn memory.
+ */
+async function handleQuery(prompt, env, providerHint, historyMsgs) {
   const today       = new Date().toDateString();
   const liveContext = await fetchLiveContext(prompt);
 
-  const messages = [
-    { role: 'system', content: SYSTEM_PROMPT(today) },
-    { role: 'user',   content: liveContext + prompt },
-  ];
+  // ── Build messages array ─────────────────────────────────────────────────────
+  // If the frontend sent a full conversation history, use it so the AI has
+  // multi-turn context. Otherwise fall back to single-turn mode.
+  let messages;
+  if (historyMsgs && historyMsgs.length > 0) {
+    // Inject live market context into the last user message only (not all turns)
+    const withContext = historyMsgs.map((m, i) => {
+      if (i === historyMsgs.length - 1 && m.role === 'user' && liveContext) {
+        return { role: 'user', content: liveContext + m.content };
+      }
+      return m;
+    });
+    messages = [
+      { role: 'system', content: SYSTEM_PROMPT(today) },
+      ...withContext,
+    ];
+  } else {
+    messages = [
+      { role: 'system', content: SYSTEM_PROMPT(today) },
+      { role: 'user',   content: liveContext + prompt },
+    ];
+  }
 
   const provider = (providerHint || '').toLowerCase();
 
@@ -642,6 +686,153 @@ async function handleQuery(prompt, env, providerHint) {
   const poll     = await callPollinations(messages);    if (poll)     return poll;
 
   throw new Error('All AI providers unavailable');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CRICKET DATA FETCHER  (GET /cricket endpoint)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** Priority score: lower = shown first. PSL=6 means it's filtered out on frontend. */
+function cricPriority(league) {
+  const n = (league || '').toLowerCase();
+  if (n.includes('ipl') || n.includes('indian premier'))  return 0;
+  if (n.includes('wc') || n.includes('world cup') || n.includes('champions trophy') || n.includes('icc')) return 1;
+  if (n.includes('test') || n.includes('t20i') || n.includes('odi') || n.includes('bilateral')) return 1;
+  if (n.includes('bpl') || n.includes('bangladesh premier')) return 2;
+  if (n.includes('wpl') || n.includes("women's premier")) return 3;
+  if (n.includes('big bash') || n.includes('bbl'))         return 4;
+  if (n.includes('cpl') || n.includes('caribbean'))        return 4;
+  if (n.includes('sa20') || n.includes('sa 20'))           return 4;
+  if (n.includes('t20') || n.includes('twenty20'))         return 5;
+  if (n.includes('psl'))                                    return 6; // excluded on frontend
+  if (n.includes('county') || n.includes('ranji') || n.includes('domestic')) return 7;
+  return 8;
+}
+
+/**
+ * Fetch live cricket data from ESPN public APIs (no auth required).
+ * Returns { matches: [...], updated: ISO-date, sources: [...] }
+ */
+async function fetchCricketData() {
+  const espnEndpoints = [
+    { url: 'https://site.api.espn.com/apis/site/v2/sports/cricket/ipl/scoreboard',  league: 'Indian Premier League' },
+    { url: 'https://site.api.espn.com/apis/site/v2/sports/cricket/28/scoreboard',   league: 'IPL' },
+    { url: 'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard',      league: '' },
+    { url: 'https://site.api.espn.com/apis/site/v2/sports/cricket/bpl/scoreboard',  league: 'Bangladesh Premier League' },
+    { url: 'https://site.api.espn.com/apis/site/v2/sports/cricket/wc/scoreboard',   league: 'ICC World Cup' },
+    { url: 'https://site.api.espn.com/apis/site/v2/sports/cricket/wpl/scoreboard',  league: "Women's Premier League" },
+  ];
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  const results = await Promise.allSettled([
+    // TheSportsDB
+    fetch(`https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${today}&s=Cricket`,
+      { headers: { 'User-Agent': 'VilfinTV/1.0' }, signal: AbortSignal.timeout(8000) }
+    ).then(r => r.ok ? r.json() : null).catch(() => null),
+    // ESPN endpoints
+    ...espnEndpoints.map(ep =>
+      fetch(ep.url, { headers: { 'User-Agent': 'VilfinTV/1.0' }, signal: AbortSignal.timeout(7000) })
+        .then(r => r.ok ? r.json() : null).catch(() => null)
+    )
+  ]);
+
+  const [sdbResult, ...espnResults] = results;
+  const seen    = new Set();
+  const matches = [];
+
+  // ── Parse ESPN results ────────────────────────────────────────────────────
+  espnResults.forEach((res, idx) => {
+    if (res.status !== 'fulfilled' || !res.value) return;
+    const data = res.value;
+    (data.events || data.competitions || []).forEach(ev => {
+      const key = ev.id || ev.uid || ev.name;
+      if (seen.has(key)) return;
+      seen.add(key);
+
+      (ev.competitions || [ev]).forEach(comp => {
+        const comps  = comp.competitors || [];
+        if (!comps.length) return;
+
+        const state   = (comp.status?.type?.state || '').toLowerCase();
+        const isLive  = state === 'in';
+        const isFinal = state === 'post';
+        const league  = ev.name || espnEndpoints[idx]?.league || '';
+        const status  = comp.status?.type?.shortDetail || comp.status?.type?.description || (isLive ? 'Live' : 'Scheduled');
+        const h       = comps.find(c => c.homeAway === 'home') || comps[0];
+        const a       = comps.find(c => c.homeAway === 'away') || comps[1];
+
+        matches.push({
+          id:        key + '-' + (comp.id || ''),
+          league,
+          title:     league,
+          status,
+          isLive,
+          isFinal,
+          priority:  cricPriority(league),
+          homeTeam:  h?.team?.abbreviation || h?.team?.shortDisplayName || '?',
+          awayTeam:  a?.team?.abbreviation || a?.team?.shortDisplayName || '?',
+          homeScore: h?.score ?? '',
+          awayScore: a?.score ?? '',
+          venue:     comp.venue?.fullName || null,
+          result:    null,
+          timeStr:   '',
+          source:    'espn',
+        });
+      });
+    });
+  });
+
+  // ── Parse TheSportsDB results ─────────────────────────────────────────────
+  const sdbData = sdbResult?.value;
+  const sdbEvents = sdbData?.events || [];
+  sdbEvents.forEach(ev => {
+    const key = ev.idEvent || ev.strEvent;
+    if (seen.has(key)) return;
+    seen.add(key);
+
+    const raw    = ev.strStatus || 'Scheduled';
+    const isLive = /live|innings|over/i.test(raw);
+    const isFinal= /finish|won|draw|result|abandon/i.test(raw);
+    let timeStr  = '';
+    try {
+      if (ev.strTimestamp) {
+        timeStr = new Date(ev.strTimestamp + 'Z').toLocaleTimeString('en-IN', {
+          hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata'
+        });
+      }
+    } catch { /* non-fatal */ }
+
+    matches.push({
+      id:        String(key),
+      league:    ev.strLeague || '',
+      title:     ev.strEvent || 'Cricket',
+      status:    raw,
+      isLive,
+      isFinal,
+      priority:  cricPriority(ev.strLeague || ''),
+      homeTeam:  ev.strHomeTeam || '?',
+      awayTeam:  ev.strAwayTeam || '?',
+      homeScore: ev.intHomeScore ?? '',
+      awayScore: ev.intAwayScore ?? '',
+      venue:     ev.strVenue || null,
+      result:    ev.strResult || null,
+      timeStr,
+      source:    'sportsdb',
+    });
+  });
+
+  // ── Sort: live first, then by priority ────────────────────────────────────
+  matches.sort((a, b) =>
+    (b.isLive ? 1 : 0) - (a.isLive ? 1 : 0) || a.priority - b.priority
+  );
+
+  return {
+    matches:   matches.slice(0, 20),
+    updated:   new Date().toISOString(),
+    sources:   ['espn', 'thesportsdb'],
+    count:     matches.length,
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
