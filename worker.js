@@ -59,7 +59,7 @@ const OPENAI_MODEL   = 'gpt-4o-mini';
 const GEMINI_MODEL   = 'gemini-2.0-flash';
 
 // ─── Generation config ────────────────────────────────────────────────────────
-const MAX_TOKENS  = 1200;
+const MAX_TOKENS  = 8000;   // raised from 1200 — research reports need 15+ tabs (~5000-8000 tokens)
 const TEMPERATURE = 0.6;
 
 // ─── System prompt ────────────────────────────────────────────────────────────
@@ -158,59 +158,301 @@ export default {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// STEP A — LIVE MARKET CONTEXT
+// STEP A — LIVE MARKET CONTEXT  (cascading multi-source fetcher)
 // ═══════════════════════════════════════════════════════════════════════════════
-async function fetchLiveContext(prompt) {
-  const parts = [];
 
-  // ── Yahoo Finance search ───────────────────────────────────────────────────
+/**
+ * Extract the most likely ticker/asset name from the user prompt.
+ * Returns a short query string suitable for financial API lookups.
+ */
+function extractTicker(prompt) {
+  // Common Indian tickers often appear as ALL-CAPS or with .NS/.BO suffix
+  const tickerRe = /\b([A-Z]{2,10}(?:\.(?:NS|BO|BSE|NSE))?)\b/g;
+  const matches  = [...prompt.matchAll(tickerRe)].map(m => m[1]);
+  // Filter out common English words that happen to be uppercase
+  const stopWords = new Set(['I','AM','THE','AND','OR','FOR','IN','ON','AT','TO','A','IS','ARE','BE',
+    'ETF','MF','IPO','NAV','LTP','EPS','P/E','PE','NSE','BSE','NFO','SIP','FD','RBI','SEBI']);
+  const tickers = matches.filter(m => !stopWords.has(m) && m.length >= 3);
+  return tickers[0] || prompt.split(/\s+/).slice(0, 3).join(' ');
+}
+
+/**
+ * Fetch live quote from Yahoo Finance v8 chart API.
+ * Returns a formatted string with price, change, volume etc., or null on failure.
+ */
+async function fetchYFQuote(symbol) {
   try {
-    const yfUrl = 'https://query1.finance.yahoo.com/v1/finance/search'
-      + '?q=' + encodeURIComponent(prompt.slice(0, 100))
-      + '&quotesCount=4&newsCount=4&enableFuzzyQuery=false&lang=en-US';
-
-    const yfRes = await fetch(yfUrl, {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`
+      + '?interval=1d&range=5d&includePrePost=false';
+    const res = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; VilfinTV/1.0)',
         'Accept':     'application/json',
       },
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(6000),
     });
+    if (!res.ok) return null;
+    const d    = await res.json();
+    const meta = d?.chart?.result?.[0]?.meta;
+    if (!meta) return null;
 
-    if (yfRes.ok) {
-      const yfData = await yfRes.json();
-      const quotes = (yfData.quotes || []).slice(0, 4).filter(q => q.symbol)
+    const price       = meta.regularMarketPrice;
+    const prevClose   = meta.chartPreviousClose || meta.previousClose;
+    const change      = (price && prevClose) ? (price - prevClose).toFixed(2) : null;
+    const changePct   = (price && prevClose) ? (((price - prevClose) / prevClose) * 100).toFixed(2) : null;
+    const volume      = meta.regularMarketVolume ? Number(meta.regularMarketVolume).toLocaleString('en-IN') : null;
+    const mktState    = meta.marketState || '';
+    const currency    = meta.currency || '';
+    const exchName    = meta.exchangeName || meta.fullExchangeName || '';
+    const lastDate    = meta.regularMarketTime
+      ? new Date(meta.regularMarketTime * 1000).toISOString().split('T')[0]
+      : 'N/A';
+
+    if (!price) return null;
+
+    const arrow = changePct !== null ? (parseFloat(changePct) >= 0 ? '▲' : '▼') : '';
+    let out = `**${symbol} (${exchName})** — ${currency} ${price}`;
+    if (change !== null) out += `  ${arrow} ${change} (${changePct}%)`;
+    if (volume)          out += `  | Vol: ${volume}`;
+    out += `  | As of: ${lastDate} [${mktState}]`;
+    return out;
+  } catch { return null; }
+}
+
+/**
+ * Fetch live quote from Yahoo Finance v7 (alternative endpoint).
+ * Falls back to this if v8 returns no usable meta.
+ */
+async function fetchYFQuoteV7(symbol) {
+  try {
+    const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbol)}`;
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; VilfinTV/1.0)',
+        'Accept':     'application/json',
+      },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!res.ok) return null;
+    const d = await res.json();
+    const q = d?.quoteResponse?.result?.[0];
+    if (!q) return null;
+
+    const price     = q.regularMarketPrice;
+    const change    = q.regularMarketChange?.toFixed(2);
+    const changePct = q.regularMarketChangePercent?.toFixed(2);
+    const volume    = q.regularMarketVolume ? Number(q.regularMarketVolume).toLocaleString('en-IN') : null;
+    const currency  = q.currency || '';
+    const exchName  = q.fullExchangeName || q.exchange || '';
+    const lastDate  = q.regularMarketTime
+      ? new Date(q.regularMarketTime * 1000).toISOString().split('T')[0]
+      : 'N/A';
+    const mktState  = q.marketState || '';
+    const mcap      = q.marketCap   ? `₹${(q.marketCap / 1e7).toFixed(0)} Cr` : null;
+    const pe        = q.trailingPE  ? q.trailingPE.toFixed(1) : null;
+    const week52H   = q.fiftyTwoWeekHigh;
+    const week52L   = q.fiftyTwoWeekLow;
+
+    if (!price) return null;
+    const arrow = changePct !== null ? (parseFloat(changePct) >= 0 ? '▲' : '▼') : '';
+    let out = `**${q.longName || q.shortName || symbol} (${symbol}, ${exchName})** — ${currency} ${price}`;
+    if (change !== null) out += `  ${arrow} ${change} (${changePct}%)`;
+    if (volume)          out += `  | Vol: ${volume}`;
+    if (mcap)            out += `  | MCap: ${mcap}`;
+    if (pe)              out += `  | P/E: ${pe}`;
+    if (week52H && week52L) out += `\n  52W High: ${week52H}  |  52W Low: ${week52L}`;
+    out += `  | As of: ${lastDate} [${mktState}]`;
+    return out;
+  } catch { return null; }
+}
+
+/**
+ * Fetch NSE India live quote (for Indian stocks with .NS ticker).
+ * Uses the public NSE quote API (no auth required).
+ */
+async function fetchNSEQuote(nseSymbol) {
+  // nseSymbol should be bare e.g. "HDFCBANK", not "HDFCBANK.NS"
+  const sym = nseSymbol.replace(/\.NS$/i, '').replace(/\.BO$/i, '');
+  try {
+    // NSE requires a cookie-based session, so we use the public getQuote endpoint
+    const url = `https://www.nseindia.com/api/quote-equity?symbol=${encodeURIComponent(sym)}`;
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
+        'Accept':     'application/json',
+        'Referer':    'https://www.nseindia.com/',
+      },
+      signal: AbortSignal.timeout(7000),
+    });
+    if (!res.ok) return null;
+    const d  = await res.json();
+    const pd = d?.priceInfo;
+    if (!pd) return null;
+
+    const ltp      = pd.lastPrice;
+    const change   = pd.change?.toFixed(2);
+    const changePct= pd.pChange?.toFixed(2);
+    const open     = pd.open;
+    const high     = pd.intraDayHighLow?.max;
+    const low      = pd.intraDayHighLow?.min;
+    const prevClose= pd.previousClose;
+
+    if (!ltp) return null;
+    const arrow = changePct ? (parseFloat(changePct) >= 0 ? '▲' : '▼') : '';
+    let out = `**NSE: ${sym}** — ₹${ltp}  ${arrow} ${change} (${changePct}%)`;
+    if (open)     out += `  | Open: ₹${open}`;
+    if (high)     out += `  | H: ₹${high}  L: ₹${low}`;
+    if (prevClose) out += `  | Prev Close: ₹${prevClose}`;
+    return out;
+  } catch { return null; }
+}
+
+/**
+ * Fetch NSE mutual fund NAV from AMFI India (free public API).
+ * amfiCode should be a numeric AMFI scheme code.
+ */
+async function fetchAMFINav(fundName) {
+  try {
+    // AMFI provides a flat text file — we search it by fund name
+    const res = await fetch('https://www.amfiindia.com/spages/NAVAll.txt', {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; VilfinTV/1.0)' },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return null;
+    const text   = await res.text();
+    const lines  = text.split('\n');
+    const search = fundName.toLowerCase().replace(/[^a-z0-9 ]/g, '');
+
+    for (const line of lines) {
+      const cols = line.split(';');
+      if (cols.length < 5) continue;
+      const name = (cols[3] || '').toLowerCase().replace(/[^a-z0-9 ]/g, '');
+      if (name.includes(search.slice(0, 20))) {
+        const nav  = cols[4]?.trim();
+        const date = cols[5]?.trim();
+        const schemeName = cols[3]?.trim();
+        if (nav && parseFloat(nav) > 0) {
+          return `**AMFI NAV — ${schemeName}**: ₹${nav}  | Date: ${date}`;
+        }
+      }
+    }
+    return null;
+  } catch { return null; }
+}
+
+/**
+ * Main live-data cascade:
+ *  1. Yahoo Finance Search (instrument identification + headlines)
+ *  2. Yahoo Finance Quote v7 (live price — richest data)
+ *  3. Yahoo Finance Quote v8 (fallback price endpoint)
+ *  4. NSE India API (Indian stocks — authoritative domestic source)
+ *  5. AMFI NAV API (mutual funds)
+ *  6. DuckDuckGo Instant Answer (general context fallback)
+ *
+ * All sources run concurrently; results are collected and combined.
+ */
+async function fetchLiveContext(prompt) {
+  const parts    = [];
+  const lowerP   = prompt.toLowerCase();
+
+  // ── Detect asset type hints ───────────────────────────────────────────────
+  const isMF      = /mutual\s*fund|nav|flexi\s*cap|bluechip|sip|amfi|growth\s*fund/i.test(prompt);
+  const isIndian  = /nse|bse|nifty|sensex|india|\.ns\b|\.bo\b|₹|inr|hdfc|reliance|tata|infosys|wipro/i.test(prompt);
+  const isCrypto  = /bitcoin|btc|ethereum|eth|crypto|usdt|binance|defi/i.test(prompt);
+
+  // ── Run all fetches concurrently ──────────────────────────────────────────
+  const ticker = extractTicker(prompt);
+
+  const [yfSearchRes, yfV7Res, yfV8Res, nseRes, amfiRes, ddgRes] = await Promise.allSettled([
+
+    // 1. Yahoo Finance Search
+    fetch(
+      'https://query1.finance.yahoo.com/v1/finance/search'
+        + '?q=' + encodeURIComponent(prompt.slice(0, 100))
+        + '&quotesCount=5&newsCount=5&enableFuzzyQuery=false&lang=en-US',
+      {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; VilfinTV/1.0)', 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(5000),
+      }
+    ).then(r => r.ok ? r.json() : null).catch(() => null),
+
+    // 2. Yahoo Finance Quote v7 (for the extracted ticker)
+    (ticker && !isMF) ? fetchYFQuoteV7(
+      isIndian && !ticker.includes('.') ? ticker + '.NS' : ticker
+    ) : Promise.resolve(null),
+
+    // 3. Yahoo Finance Chart v8 (fallback price)
+    (ticker && !isMF) ? fetchYFQuote(
+      isIndian && !ticker.includes('.') ? ticker + '.NS' : ticker
+    ) : Promise.resolve(null),
+
+    // 4. NSE India (Indian equities/ETFs only)
+    (isIndian && !isMF && !isCrypto) ? fetchNSEQuote(ticker) : Promise.resolve(null),
+
+    // 5. AMFI NAV (mutual funds only)
+    isMF ? fetchAMFINav(prompt.slice(0, 60)) : Promise.resolve(null),
+
+    // 6. DuckDuckGo Instant Answer
+    fetch(
+      'https://api.duckduckgo.com/?q='
+        + encodeURIComponent(prompt.slice(0, 120) + ' stock price')
+        + '&format=json&no_html=1&skip_disambig=1&no_redirect=1',
+      {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; VilfinTV/1.0)' },
+        signal: AbortSignal.timeout(4000),
+      }
+    ).then(r => r.ok ? r.json() : null).catch(() => null),
+  ]);
+
+  // ── Process Yahoo Finance Search ──────────────────────────────────────────
+  try {
+    const yfData = yfSearchRes.status === 'fulfilled' ? yfSearchRes.value : null;
+    if (yfData) {
+      const quotes = (yfData.quotes || []).slice(0, 5).filter(q => q.symbol)
         .map(q => `${q.longname || q.shortname || q.symbol} (${q.symbol}, ${q.typeDisp || q.quoteType || ''})`)
         .filter(Boolean);
-      const news = (yfData.news || []).slice(0, 4).filter(n => n.title)
-        .map(n => `• ${n.title}${n.publisher ? ' — ' + n.publisher : ''}`);
-      if (quotes.length) parts.push('**Relevant instruments:** ' + quotes.join(', '));
-      if (news.length)   parts.push('**Recent headlines:**\n' + news.join('\n'));
+      const news = (yfData.news || []).slice(0, 5).filter(n => n.title)
+        .map(n => `• ${n.title}${n.publisher ? ' — ' + n.publisher : ''}${n.providerPublishTime ? ' [' + new Date(n.providerPublishTime * 1000).toISOString().split('T')[0] + ']' : ''}`);
+      if (quotes.length) parts.push('**Identified instruments:** ' + quotes.join(' | '));
+      if (news.length)   parts.push('**Recent news headlines:**\n' + news.join('\n'));
     }
   } catch { /* non-fatal */ }
 
-  // ── DuckDuckGo Instant Answer ──────────────────────────────────────────────
+  // ── Process live price (cascade: v7 → v8 → NSE) ──────────────────────────
+  const priceLines = [];
+
+  const v7 = yfV7Res.status === 'fulfilled' ? yfV7Res.value : null;
+  const v8 = yfV8Res.status === 'fulfilled' ? yfV8Res.value : null;
+  const nse = nseRes.status === 'fulfilled' ? nseRes.value : null;
+  const amfi = amfiRes.status === 'fulfilled' ? amfiRes.value : null;
+
+  if (v7)   priceLines.push(v7);
+  else if (v8)   priceLines.push(v8);   // v8 fallback only if v7 failed
+  if (nse)  priceLines.push(nse);       // NSE adds authoritative domestic data
+  if (amfi) priceLines.push(amfi);      // MF NAV from AMFI
+
+  if (priceLines.length) {
+    parts.push('**Live market data (auto-fetched):**\n' + priceLines.join('\n'));
+  }
+
+  // ── Process DuckDuckGo ────────────────────────────────────────────────────
   try {
-    const ddgUrl = 'https://api.duckduckgo.com/?q='
-      + encodeURIComponent(prompt.slice(0, 120) + ' stock market')
-      + '&format=json&no_html=1&skip_disambig=1&no_redirect=1';
-
-    const ddgRes = await fetch(ddgUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; VilfinTV/1.0)' },
-      signal: AbortSignal.timeout(4000),
-    });
-
-    if (ddgRes.ok) {
-      const ddg      = await ddgRes.json();
+    const ddg = ddgRes.status === 'fulfilled' ? ddgRes.value : null;
+    if (ddg) {
       const abstract = ddg.AbstractText || ddg.Answer || '';
       if (abstract && abstract.length > 40) {
-        parts.push('**Context snippet:** ' + abstract.slice(0, 400));
+        parts.push('**Context:** ' + abstract.slice(0, 400));
       }
     }
   } catch { /* non-fatal */ }
 
+  // ── Assemble context block ────────────────────────────────────────────────
+  const dataNote = priceLines.length
+    ? `(${priceLines.length} live price source${priceLines.length > 1 ? 's' : ''} fetched)`
+    : '(price data unavailable — use knowledge cutoff)';
+
   return parts.length
-    ? '---\n**Live market context (auto-fetched):**\n' + parts.join('\n\n') + '\n---\n\n'
+    ? `---\n**Live market context ${dataNote}:**\n` + parts.join('\n\n') + '\n---\n\n'
     : '';
 }
 
