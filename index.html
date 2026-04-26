@@ -1416,20 +1416,29 @@ footer{
 /* Live indicator pulse */
 @keyframes scoreLivePulse{0%,100%{opacity:1}50%{opacity:.4}}
 .score-live-dot{display:inline-block;width:7px;height:7px;background:#ef4444;border-radius:50%;margin-right:4px;animation:scoreLivePulse 1.5s ease-in-out infinite}
-/* ── PREMIUM CRICKET SCORECARD CARDS ── */
-.sc-card{background:linear-gradient(135deg,#080f20,#0c1830);border:1px solid rgba(30,58,95,.9);border-radius:10px;padding:9px 11px;margin-bottom:6px;transition:border-color .15s}
-.sc-card:hover{border-color:rgba(37,99,235,.45)}
-.sc-head{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+/* ── GOOGLE-STYLE IPL SCOREBOARD CARDS ── */
+/* White floating cards against the dark panel — clean, modern, Google-inspired */
+.sc-card{background:#fff;border:1px solid #e8eaed;border-radius:10px;padding:10px 12px;margin-bottom:7px;box-shadow:0 1px 4px rgba(0,0,0,.22);transition:box-shadow .15s,border-color .15s}
+.sc-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.32);border-color:#c1c7d0}
+.sc-head{display:flex;align-items:center;gap:6px;margin-bottom:7px}
 .sc-badge{font-size:8px;font-weight:800;letter-spacing:.8px;padding:2px 7px;border-radius:20px;flex-shrink:0;text-transform:uppercase}
-.sc-comp{font-size:9px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
-.sc-teams{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:5px}
-.sc-team{color:#94a3b8;font-size:10.5px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sc-team.sc-win{color:#60a5fa}
-.sc-score{font-size:11.5px;font-weight:700;color:#f1f5f9;text-align:center;white-space:nowrap;flex-shrink:0;padding:1px 8px;background:rgba(255,255,255,.07);border-radius:5px}
-.sc-score.sc-vs{color:#1e3a5f;font-weight:400;font-size:10px;background:transparent;padding:0}
-.sc-foot{display:flex;justify-content:space-between;align-items:center;gap:4px}
-.sc-status{font-size:9px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;display:flex;align-items:center;gap:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%}
-.sc-venue{font-size:8.5px;color:#1e3a5f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:50%}
+/* IPL badge uses orange */
+.sc-badge.ipl-badge-style{background:#fff3e0;color:#e65100}
+.sc-comp{font-size:9px;color:#5f6368;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.sc-teams{display:grid;grid-template-columns:1fr auto;gap:2px 8px;margin-bottom:6px}
+.sc-team-row{display:contents}
+.sc-team{color:#202124;font-size:11px;font-weight:600;align-self:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sc-team.batting{color:#1a73e8;font-weight:700}
+.sc-team.sc-win{color:#188038;font-weight:700}
+.sc-score{font-size:11px;font-weight:700;color:#202124;text-align:right;white-space:nowrap;align-self:center}
+.sc-score.batting{color:#1a73e8}
+.sc-score.sc-vs{color:#bdc1c6;font-weight:400;font-size:10px;text-align:center}
+.sc-foot{display:flex;justify-content:space-between;align-items:center;gap:4px;border-top:1px solid #f1f3f4;margin-top:5px;padding-top:5px}
+.sc-status{font-size:9px;font-weight:600;letter-spacing:.2px;display:flex;align-items:center;gap:4px;color:#5f6368;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%}
+.sc-status.live-status{color:#d93025;font-weight:700}
+.sc-venue{font-size:8px;color:#9aa0a6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:50%}
+/* Live pulse dot — red for live matches */
+.score-live-dot{display:inline-block;width:6px;height:6px;background:#d93025;border-radius:50%;margin-right:3px;flex-shrink:0;animation:scoreLivePulse 1.4s ease-in-out infinite}
 
 /* ── VIDEO CONTROLS BAR ── */
 #yt-controls{
@@ -3201,9 +3210,8 @@ footer{
         <input type="range" class="radio-vol-slider" id="radio-vol" min="0" max="100" value="75"
           oninput="radioSetVolume(this.value)" title="Volume"/>
       </div>
-      <!-- Hidden HTML5 audio element -->
-      <audio id="radio-audio" preload="none" crossorigin="anonymous"
-        onended="radioOnEnded()" onerror="radioOnError()"></audio>
+      <!-- Hidden HTML5 audio element — events wired in radioInit() via addEventListener -->
+      <audio id="radio-audio" preload="none" crossorigin="anonymous"></audio>
     </div>
 
   </div><!-- /rb-panel-radio -->
@@ -5720,8 +5728,12 @@ function initRbResize() {
 // ════════════════════════════════════════════════════════════════
 // RIGHT-BAR AI SIDEBAR
 // ════════════════════════════════════════════════════════════════
-let _rbStreamAbort = null;
-let _rbMsgCount = 0;
+let _rbStreamAbort  = null;
+let _rbMsgCount     = 0;
+
+// Conversation history — [{role:'user'|'assistant', content:'...'}]
+// Maintained across follow-up questions; reset on Clear.
+let _rbChatHistory  = [];
 
 function rbAiAppendMessage(text, role) {
   const container = document.getElementById('rb-ai-messages');
@@ -5745,6 +5757,7 @@ function rbAiClear() {
   if (!c) return;
   if (_rbStreamAbort) { _rbStreamAbort.abort(); _rbStreamAbort = null; }
   c.innerHTML = '';
+  _rbChatHistory = []; // reset conversation memory
   rbAiAppendMessage('Chat cleared. Ask me anything about markets!', 'bot');
 }
 
@@ -5900,6 +5913,55 @@ async function radioInit() {
   } catch(_) {}
 
   radioLoadCategory(catId);
+
+  // ── Wire audio element events for reliable UI state sync ────────────
+  // These fire regardless of how playback started/stopped, ensuring the
+  // play button icon always matches the actual audio element state.
+  const _audio = document.getElementById('radio-audio');
+  if (_audio && !_audio._vilfinEventsWired) {
+    _audio._vilfinEventsWired = true;
+
+    _audio.addEventListener('play', () => {
+      _radioPlaying = true;
+      const btn = document.getElementById('radio-play-btn');
+      if (btn) { btn.textContent = '⏸'; btn.disabled = false; }
+      const dot = document.getElementById('radio-dot');
+      if (dot) { dot.style.background = '#22c55e'; dot.classList.add('playing'); }
+    });
+
+    _audio.addEventListener('playing', () => {
+      // 'playing' fires when buffering ends and audio actually starts
+      _radioPlaying = true;
+      const btn = document.getElementById('radio-play-btn');
+      if (btn) { btn.textContent = '⏸'; btn.disabled = false; }
+      const dot = document.getElementById('radio-dot');
+      if (dot) { dot.style.background = '#22c55e'; dot.classList.add('playing'); }
+    });
+
+    _audio.addEventListener('pause', () => {
+      _radioPlaying = false;
+      const btn = document.getElementById('radio-play-btn');
+      if (btn) btn.textContent = '▶';
+      const dot = document.getElementById('radio-dot');
+      if (dot) { dot.style.background = '#334155'; dot.classList.remove('playing'); }
+    });
+
+    _audio.addEventListener('waiting', () => {
+      // Buffering — show hourglass without changing playing state
+      const btn = document.getElementById('radio-play-btn');
+      if (btn && _radioPlaying) btn.textContent = '⏳';
+    });
+
+    _audio.addEventListener('stalled', () => {
+      // Stream stalled — treat like an error after a short grace period
+      const btn = document.getElementById('radio-play-btn');
+      if (btn && _radioPlaying) btn.textContent = '⏳';
+    });
+
+    _audio.addEventListener('error', () => { radioOnError(); });
+    _audio.addEventListener('ended', () => { radioOnError(); }); // live streams shouldn't end
+  }
+
   // Auto-play the pinned default after stations render
   setTimeout(radioAutoPlayDefault, 300);
 }
@@ -5994,45 +6056,43 @@ function radioPlay(url, id, name, catId) {
   audio.volume = vol ? Number(vol.value) / 100 : 0.75;
 
   audio.play().then(() => {
-    _radioPlaying = true;
-    const btn = document.getElementById('radio-play-btn');
-    if (btn) btn.textContent = '⏸';
-    if (dot) { dot.style.background = '#22c55e'; dot.classList.add('playing'); }
-  }).catch(err => {
-    console.warn('Radio play failed:', err);
+    // UI is updated by the 'play'/'playing' event listeners wired in radioInit()
+    // so we only need the catch here for promise-rejection handling.
+  }).catch(error => {
+    console.warn('Radio play failed:', error && error.message ? error.message : error);
     _radioPlaying = false;
     radioOnError();
   });
 }
 
 // ── Toggle play / pause ──────────────────────────────────────────────
+// Uses audio.paused (the actual audio element state) rather than the
+// _radioPlaying flag so the button always reflects reality, even if the
+// stream stalled or errored without triggering onerror.
 function radioTogglePlay() {
   const audio = document.getElementById('radio-audio');
   if (!audio) return;
+  if (!_radioCurrentUrl) return; // nothing selected yet
 
-  if (!_radioCurrentUrl) return; // nothing loaded yet
-
-  if (_radioPlaying) {
+  if (!audio.paused) {
+    // ── Currently playing → pause ──────────────────────────────────
     audio.pause();
-    _radioPlaying = false;
-    const btn = document.getElementById('radio-play-btn');
-    if (btn) btn.textContent = '▶';
-    const dot = document.getElementById('radio-dot');
-    if (dot) { dot.style.background = '#334155'; dot.classList.remove('playing'); }
+    // UI updated by the 'pause' event listener below
   } else {
-    if (!audio.src || audio.src === window.location.href) {
-      // Reload URL if not yet set
-      radioPlay(_radioCurrentUrl, _radioCurrentId,
-        document.getElementById('radio-now-playing')?.textContent || '', '');
-    } else {
-      audio.play().then(() => {
-        _radioPlaying = true;
-        const btn = document.getElementById('radio-play-btn');
-        if (btn) btn.textContent = '⏸';
-        const dot = document.getElementById('radio-dot');
-        if (dot) { dot.style.background = '#22c55e'; dot.classList.add('playing'); }
-      }).catch(() => radioOnError());
+    // ── Currently paused → resume or reload stream ─────────────────
+    // If the audio element has no src set (fresh page load with a saved
+    // default but audio never played), reload the stream first.
+    const srcIsBlank = !audio.src || audio.src === '' || audio.src === window.location.href;
+    const notLoaded  = audio.readyState === HTMLMediaElement.HAVE_NOTHING;
+    if (srcIsBlank || notLoaded) {
+      audio.src = _radioCurrentUrl;
+      audio.load();
     }
+    audio.play().catch(error => {
+      console.warn('Radio resume failed:', error && error.message ? error.message : error);
+      _radioPlaying = false;
+      radioOnError();
+    });
   }
 }
 
@@ -6490,31 +6550,83 @@ function _cricMatchType(name) {
   return {label:"INT'L", col:'#64748b', bg:'rgba(100,116,139,.1)'};
 }
 
-// Build one premium scorecard HTML string
-function _cricCard({title, league, status, isLive, isFinal, homeTeam, awayTeam, homeScore, awayScore, venue, result, timeStr, isPast}) {
+// ─── Google-style IPL / cricket scorecard card ────────────────────────────────
+// Renders a clean white floating card mimicking the Google Search IPL widget.
+// Each team gets its own row with score. Live matches show a red pulse dot.
+function _cricCard({title, league, status, isLive, isFinal, homeTeam, awayTeam,
+                    homeScore, awayScore, homeWickets, awayWickets,
+                    homeOvers, awayOvers, venue, result, timeStr, isPast,
+                    crr, rrr, toss, batting}) {
   const e = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const mt = _cricMatchType(league || title);
-  const statCol = isLive ? '#22c55e' : isFinal ? '#94a3b8' : '#38bdf8';
-  const hs = homeScore !== '' && homeScore !== null && homeScore !== undefined;
-  const winH = isPast && hs && Number(homeScore) > Number(awayScore);
-  const winA = isPast && hs && Number(awayScore) > Number(homeScore);
-  const scorePart = hs
-    ? `<span class="sc-score">${e(homeScore)} – ${e(awayScore)}</span>`
-    : `<span class="sc-score sc-vs">vs</span>`;
-  const statLine = isLive
-    ? `<span class="score-live-dot"></span>${e(status.slice(0,55))}`
-    : isFinal && result
-      ? `🏆 ${e(String(result).slice(0,55))}`
-      : e(status.slice(0,55));
+  const mt  = _cricMatchType(league || title);
+
+  // ── Format a score string in cricket style: "207/6 (20.0)" ──────────────
+  function fmtScore(runs, wkts, ovs) {
+    if (runs === '' || runs === null || runs === undefined) return '';
+    let s = String(runs);
+    if (wkts !== undefined && wkts !== null && wkts !== '') s += '/' + wkts;
+    if (ovs)  s += ' (' + ovs + ')';
+    return s;
+  }
+
+  const hScore = fmtScore(homeScore, homeWickets, homeOvers) || (homeScore !== '' ? String(homeScore||'') : '');
+  const aScore = fmtScore(awayScore, awayWickets, awayOvers) || (awayScore !== '' ? String(awayScore||'') : '');
+  const hasSc  = hScore || aScore;
+
+  // Which team is currently batting (bold blue)
+  const hBat = batting === 'home'  || (!batting && isLive && hasSc && !hScore.includes('('));
+  const aBat = batting === 'away'  || (!batting && isLive && hasSc && !aScore.includes('('));
+
+  // Win detection for completed matches
+  const hNum = parseInt(homeScore) || 0;
+  const aNum = parseInt(awayScore) || 0;
+  const winH = isFinal && hNum > 0 && hNum > aNum;
+  const winA = isFinal && aNum > 0 && aNum > hNum;
+
+  // Badge style: IPL gets special orange pill
+  const isIPL   = mt.label.includes('IPL');
+  const badgeCls = isIPL ? 'sc-badge ipl-badge-style' : 'sc-badge';
+  const badgeSty = isIPL ? '' : `color:${mt.col};background:${mt.bg}`;
+
+  // Status line
+  const liveClass = isLive ? ' live-status' : '';
+  let statLine = '';
+  if (isLive) {
+    statLine = `<span class="score-live-dot"></span><span>LIVE</span>`;
+    if (status && status.length > 3) statLine += `<span style="color:#5f6368;font-weight:400"> · ${e(status.slice(0,52))}</span>`;
+    if (crr)  statLine += `<span style="color:#5f6368;font-weight:400"> · CRR ${e(crr)}</span>`;
+    if (rrr)  statLine += `<span style="color:#1a73e8;font-weight:600"> | RRR ${e(rrr)}</span>`;
+  } else if (isFinal && result) {
+    statLine = `🏆 <span>${e(String(result).slice(0,60))}</span>`;
+  } else if (isFinal) {
+    statLine = `✅ <span>${e(status.slice(0,60))}</span>`;
+  } else {
+    statLine = `<span>${e(status.slice(0,52))}</span>`;
+    if (toss) statLine += `<span style="color:#9aa0a6"> · 🪙 ${e(String(toss).slice(0,40))}</span>`;
+  }
+
+  // Location/time footer
   const locPart = venue
-    ? `<span class="sc-venue">📍 ${e(String(venue).slice(0,35))}</span>`
+    ? `<span class="sc-venue">📍 ${e(String(venue).slice(0,38))}</span>`
     : timeStr
       ? `<span class="sc-venue">🕐 ${e(timeStr)}</span>`
       : '';
+
   return `<div class="sc-card">
-  <div class="sc-head"><span class="sc-badge" style="color:${mt.col};background:${mt.bg}">${mt.label}</span><span class="sc-comp">${e((league||title).slice(0,45))}</span></div>
-  <div class="sc-teams"><span class="sc-team${winH?' sc-win':''}">${e(homeTeam)}</span>${scorePart}<span class="sc-team${winA?' sc-win':''}" style="text-align:right">${e(awayTeam)}</span></div>
-  <div class="sc-foot"><span class="sc-status" style="color:${statCol}">${statLine}</span>${locPart}</div>
+  <div class="sc-head">
+    <span class="${badgeCls}"${badgeSty ? ` style="${badgeSty}"` : ''}>${mt.label}</span>
+    <span class="sc-comp">${e((league||title).slice(0,50))}</span>
+  </div>
+  <div class="sc-teams">
+    <span class="sc-team${winH?' sc-win':hBat?' batting':''}">${e(homeTeam)}</span>
+    <span class="sc-score${hBat?' batting':winH?' sc-win':''}">${hasSc ? e(hScore||'–') : '<span class="sc-vs">vs</span>'}</span>
+    <span class="sc-team${winA?' sc-win':aBat?' batting':''}">${e(awayTeam)}</span>
+    <span class="sc-score${aBat?' batting':winA?' sc-win':''}">${hasSc ? e(aScore||'–') : ''}</span>
+  </div>
+  <div class="sc-foot">
+    <span class="sc-status${liveClass}">${statLine}</span>
+    ${locPart}
+  </div>
 </div>`;
 }
 
@@ -6583,106 +6695,163 @@ async function fetchLiveScores(sport) {
   if (!box) return;
   box.innerHTML = '<div class="score-no-data">Loading…</div>';
 
-  // ── Cricket: parallel multi-source fetch with IPL/INT priority sort ────────
+  // ── Cricket: Google-style IPL-first feed ─────────────────────────────────────
+  // Priority: IPL (0) → International/ICC (1) → BPL/WPL/BBL (2–4) → T20 leagues (5)
+  // PSL (priority 6) is EXCLUDED from output unless it is the absolute only source.
+  // Data sources (all free, no API key):
+  //   1. Worker /cricket endpoint (enriched, pre-filtered) — if Worker is configured
+  //   2. ESPN IPL dedicated endpoints (most reliable for live IPL data)
+  //   3. ESPN General cricket, ICC WC, WPL, BPL endpoints
+  //   4. TheSportsDB (by date) — global fallback
   if (sport === 'cricket') {
-    // ESPN endpoints — IPL dedicated first, then general, BPL, WC, WPL
+    const seen     = new Set();
+    let allCards   = [];
+
+    // ── Helper: parse ESPN event → card object ──────────────────────────────
+    function espnEvToCard(ev) {
+      const cards = [];
+      (ev.competitions || [ev]).forEach(comp => {
+        const comps  = comp.competitors || [];
+        if (!comps.length) return;
+        const state   = (comp.status?.type?.state || '').toLowerCase();
+        const isLive  = state === 'in';
+        const isFinal = state === 'post';
+        const status  = comp.status?.type?.shortDetail || comp.status?.type?.description || (isLive ? 'Live' : 'Scheduled');
+        const h  = comps.find(c => c.homeAway === 'home') || comps[0];
+        const a  = comps.find(c => c.homeAway === 'away') || comps[1];
+        const league = ev.name || ev.shortName || '';
+        const pri = _cricPriority(league);
+        cards.push({
+          priority: pri,
+          isLive,
+          isPSL: pri >= 6,
+          html: _cricCard({
+            title: league, league, status, isLive, isFinal,
+            homeTeam:  h?.team?.abbreviation || h?.team?.shortDisplayName || '?',
+            awayTeam:  a?.team?.abbreviation || a?.team?.shortDisplayName || '?',
+            homeScore: h?.score ?? '',
+            awayScore: a?.score ?? '',
+            venue: comp.venue?.fullName,
+            result: null, timeStr: '', isPast: false,
+          })
+        });
+      });
+      return cards;
+    }
+
+    // ── Helper: parse TheSportsDB event → card object ───────────────────────
+    function sdbEvToCard(ev) {
+      const raw    = ev.strStatus || 'Scheduled';
+      const isLive = /live|innings|over/i.test(raw);
+      const isFinal= /finish|won|draw|result|abandon/i.test(raw);
+      const pri    = _cricPriority(ev.strLeague || '');
+      let timeStr  = '';
+      try { if (ev.strTimestamp) timeStr = new Date(ev.strTimestamp+'Z').toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}); } catch(_){}
+      return {
+        priority: pri,
+        isLive,
+        isPSL: pri >= 6,
+        html: _cricCard({
+          title: ev.strEvent || 'Cricket', league: ev.strLeague || '',
+          status: raw, isLive, isFinal,
+          homeTeam: ev.strHomeTeam || '?', awayTeam: ev.strAwayTeam || '?',
+          homeScore: ev.intHomeScore ?? '', awayScore: ev.intAwayScore ?? '',
+          venue: ev.strVenue, result: ev.strResult, timeStr, isPast: false,
+        })
+      };
+    }
+
+    // ── Step 1: Try Worker /cricket endpoint (returns pre-filtered JSON) ────
+    const workerUrl = (window._cfWorkerUrl || localStorage.getItem('viltv_cf_worker_url') || '').replace(/\/+$/,'');
+    if (workerUrl) {
+      try {
+        const wRes = await fetch(workerUrl + '/cricket', {
+          cache:'no-store', signal: AbortSignal.timeout(8000)
+        });
+        if (wRes.ok) {
+          const wData = await wRes.json();
+          if (Array.isArray(wData.matches) && wData.matches.length) {
+            // Worker returns pre-built card objects — render directly
+            wData.matches.forEach(m => {
+              allCards.push({
+                priority: m.priority ?? _cricPriority(m.league || ''),
+                isLive: m.isLive || false,
+                isPSL: (m.priority ?? _cricPriority(m.league || '')) >= 6,
+                html: _cricCard({
+                  title: m.league || m.title || 'Cricket', league: m.league || '',
+                  status: m.status || 'Scheduled',
+                  isLive: m.isLive || false,
+                  isFinal: m.isFinal || false,
+                  homeTeam: m.homeTeam || '?', awayTeam: m.awayTeam || '?',
+                  homeScore: m.homeScore || '', awayScore: m.awayScore || '',
+                  venue: m.venue, result: m.result, timeStr: m.timeStr || '',
+                  crr: m.crr, rrr: m.rrr, toss: m.toss, batting: m.batting,
+                  isPast: false,
+                })
+              });
+              seen.add(m.id || m.title);
+            });
+          }
+        }
+      } catch { /* non-fatal — fall through to ESPN */ }
+    }
+
+    // ── Step 2: ESPN parallel fetch (IPL-first, 6 endpoints) ───────────────
     const espnEndpoints = [
-      { url:'https://site.api.espn.com/apis/site/v2/sports/cricket/ipl/scoreboard',         label:'IPL'  },
-      { url:'https://site.api.espn.com/apis/site/v2/sports/cricket/28/scoreboard',          label:'IPL2' },
-      { url:'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard',             label:'INT'  },
-      { url:'https://site.api.espn.com/apis/site/v2/sports/cricket/bpl/scoreboard',         label:'BPL'  },
-      { url:'https://site.api.espn.com/apis/site/v2/sports/cricket/wc/scoreboard',          label:'WC'   },
-      { url:'https://site.api.espn.com/apis/site/v2/sports/cricket/wpl/scoreboard',         label:'WPL'  },
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/ipl/scoreboard',      // IPL dedicated
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/28/scoreboard',       // IPL league ID
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard',          // General INT
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/bpl/scoreboard',      // BPL
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/wc/scoreboard',       // World Cup
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/wpl/scoreboard',      // WPL
     ];
 
-    // TheSportsDB today
     const today = new Date().toISOString().slice(0, 10);
-
-    // Parallel fetch: ESPN leagues + TheSportsDB
-    const [sdbToday, ...espnResults] = await Promise.allSettled([
+    const [sdbResult, ...espnResults] = await Promise.allSettled([
       _fetchSportsDB(today),
-      ...espnEndpoints.map(ep =>
-        fetch(ep.url, { cache:'no-store', signal: AbortSignal.timeout(7000) })
-          .then(r => r.ok ? r.json() : null)
-          .catch(() => null)
+      ...espnEndpoints.map(url =>
+        fetch(url, { cache:'no-store', signal: AbortSignal.timeout(7000) })
+          .then(r => r.ok ? r.json() : null).catch(() => null)
       )
     ]);
 
-    // Collect and deduplicate all matches
-    const seen = new Set();
-    let allCards = [];
-
-    // 1. ESPN results (most reliable for IPL)
-    espnResults.forEach(result => {
-      if (result.status !== 'fulfilled' || !result.value) return;
-      const data = result.value;
-      const evs  = data.events || data.competitions || [];
-      evs.forEach(ev => {
-        const key = ev.id || ev.uid || JSON.stringify(ev.name);
+    // ESPN events → cards
+    espnResults.forEach(res => {
+      if (res.status !== 'fulfilled' || !res.value) return;
+      (res.value.events || res.value.competitions || []).forEach(ev => {
+        const key = ev.id || ev.uid || (ev.name + ev.date);
         if (seen.has(key)) return;
         seen.add(key);
-        (ev.competitions || [ev]).forEach(comp => {
-          const comps  = comp.competitors || [];
-          if (!comps.length) return;
-          const state   = (comp.status?.type?.state || '').toLowerCase();
-          const isLive  = state === 'in';
-          const isFinal = state === 'post';
-          const status  = comp.status?.type?.shortDetail || comp.status?.type?.description || (isLive ? 'Live' : 'Scheduled');
-          const h = comps.find(c => c.homeAway === 'home') || comps[0];
-          const a = comps.find(c => c.homeAway === 'away') || comps[1];
-          const league = ev.name || ev.shortName || '';
-          allCards.push({
-            priority: _cricPriority(league),
-            isLive,
-            html: _cricCard({
-              title: league, league,
-              status, isLive, isFinal,
-              homeTeam: h?.team?.shortDisplayName || h?.team?.abbreviation || '?',
-              awayTeam: a?.team?.shortDisplayName || a?.team?.abbreviation || '?',
-              homeScore: h?.score ?? '', awayScore: a?.score ?? '',
-              venue: comp.venue?.fullName, result: null, timeStr: '', isPast: false,
-            })
-          });
-        });
+        espnEvToCard(ev).forEach(c => allCards.push(c));
       });
     });
 
-    // 2. TheSportsDB results
-    if (sdbToday.status === 'fulfilled' && sdbToday.value?.length) {
-      sdbToday.value.forEach(ev => {
+    // TheSportsDB events → cards
+    if (sdbResult.status === 'fulfilled' && sdbResult.value?.length) {
+      sdbResult.value.forEach(ev => {
         const key = ev.idEvent || ev.strEvent;
         if (seen.has(key)) return;
         seen.add(key);
-        const raw    = ev.strStatus || 'Scheduled';
-        const isLive = /live|innings|over/i.test(raw);
-        const isFinal= /finish|won|draw|result|abandon/i.test(raw);
-        let timeStr = '';
-        try { if (ev.strTimestamp) timeStr = new Date(ev.strTimestamp+'Z').toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}); } catch(_){}
-        allCards.push({
-          priority: _cricPriority(ev.strLeague || ''),
-          isLive,
-          html: _cricCard({
-            title: ev.strEvent || 'Cricket', league: ev.strLeague || '',
-            status: raw, isLive, isFinal,
-            homeTeam: ev.strHomeTeam || '?', awayTeam: ev.strAwayTeam || '?',
-            homeScore: ev.intHomeScore ?? '', awayScore: ev.intAwayScore ?? '',
-            venue: ev.strVenue, result: ev.strResult, timeStr, isPast: false,
-          })
-        });
+        allCards.push(sdbEvToCard(ev));
       });
     }
 
     if (allCards.length) {
-      // Sort: live first, then by priority (IPL=0 < INT=1 < BPL=2 …)
+      // ── Sort: Live first → Priority (IPL=0 beats INT=1 beats PSL=6) ──────
       allCards.sort((a, b) =>
         (b.isLive ? 1 : 0) - (a.isLive ? 1 : 0) || a.priority - b.priority
       );
-      box.innerHTML = allCards.slice(0, 14).map(c => c.html).join('');
+
+      // ── Strict PSL filter: exclude PSL unless it's the only source ────────
+      const nonPSL = allCards.filter(c => !c.isPSL);
+      const display = nonPSL.length > 0 ? nonPSL : allCards; // PSL-only fallback
+
+      box.innerHTML = display.slice(0, 12).map(c => c.html).join('');
       _stampScoreTime();
       return;
     }
 
-    box.innerHTML = '<div class="score-no-data">No cricket matches today.<br/><span style="font-size:9px;color:#334155">IPL, International &amp; BPL matches appear here during match time.</span></div>';
+    box.innerHTML = '<div class="score-no-data" style="color:#5f6368">No cricket matches found today.<br/><span style="font-size:9px">IPL &amp; International matches appear here during match time.</span></div>';
     return;
   }
 
@@ -6997,16 +7166,33 @@ async function rbAiSend() {
 
   try {
     // ─── Augment query with pre-built market context from data.json ────────
-    // The context is fetched at build-time by build.js (using the secret Worker URL).
-    // No Worker URL is ever present in this frontend file.
     const contextPrefix = window._marketContext
       ? '**[Market Context — ' + new Date().toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) + ']**\n'
         + window._marketContext + '\n\n---\n\n'
       : '';
-    const augmented = contextPrefix + q;
+
+    // ─── Build conversation-aware messages array ───────────────────────────
+    // Include the full chat history so the AI retains context across
+    // follow-up questions. The history is stored as [{role, content}] and
+    // is sent as-is to backends that support OpenAI-format messages arrays
+    // (Worker, OpenAI, Custom API). For single-prompt backends (Gemini,
+    // Pollinations) we flatten history into the prompt string.
+    _rbChatHistory.push({ role: 'user', content: q });
+
+    // Build the full messages array: inject system context, then history
+    const messagesForBackend = [
+      ..._rbChatHistory   // includes the just-pushed user message
+    ];
+
+    // Flatten history into a single string for single-prompt backends
+    const historyStr = _rbChatHistory.length > 1
+      ? _rbChatHistory.slice(0, -1).map(m =>
+          (m.role === 'user' ? 'User' : 'Assistant') + ': ' + m.content
+        ).join('\n') + '\n\n'
+      : '';
+    const augmented = contextPrefix + historyStr + q;
 
     // ─── Route: user's own configured services → free AI fallback ─────────
-    // The system WORKER_URL is NEVER used here — it is build-time only.
     const hasWorker = !!(window._cfWorkerUrl || localStorage.getItem(CF_KEY));
     const hasGemini = !!localStorage.getItem(SVC_GEMINI_KEY);
     const hasOpenAI = !!localStorage.getItem(SVC_OPENAI_KEY);
@@ -7027,29 +7213,126 @@ async function rbAiSend() {
         + '<a href="user-setup-guide.html" target="_blank" style="display:inline-flex;align-items:center;color:var(--burn2,#e65c00);font-size:11px;font-weight:600;text-decoration:none;padding:6px 0">📖 Setup Guide</a>'
         + '</div></div>';
       if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
+      // Remove the message we just pushed since we're not actually sending it
+      _rbChatHistory.pop();
       return;
     }
 
-    const model  = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
-    const runner = _aiLoadBalancedQuery.bind(null, augmented, model);
+    const model = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
 
-    await runner(
-      (partial) => { if (typingEl) typingEl.style.display = 'none'; renderMd(partial); },
-      (final)   => {
+    // ── Track final response text for history ──────────────────────────────
+    let _finalResponseText = '';
+
+    await _aiLoadBalancedQueryWithHistory(augmented, messagesForBackend, model,
+      (partial) => {
+        if (typingEl) typingEl.style.display = 'none';
+        renderMd(partial);
+        _finalResponseText = partial;
+      },
+      (final) => {
         if (typingEl) typingEl.style.display = 'none';
         renderMd(final);
+        _finalResponseText = final;
         if (statusEl) statusEl.textContent = '✅ Analysis complete';
+        // Save assistant reply to history for follow-up context
+        _rbChatHistory.push({ role: 'assistant', content: _mdStrip(final) });
+        // Keep history bounded (max 20 exchanges = 40 entries) to avoid
+        // overflowing the backend's context window
+        if (_rbChatHistory.length > 40) _rbChatHistory = _rbChatHistory.slice(-40);
       },
-      (err) => { showErr(err && err.message ? err.message : 'Service temporarily unavailable.'); }
+      (err) => {
+        showErr(err && err.message ? err.message : 'Service temporarily unavailable.');
+        // Remove the failed user message from history so next retry is clean
+        if (_rbChatHistory.length && _rbChatHistory[_rbChatHistory.length - 1].role === 'user') {
+          _rbChatHistory.pop();
+        }
+      }
     );
 
   } catch(e) {
     if (e.name !== 'AbortError') showErr(e.message || 'Connection error.');
+    // Roll back the user message push on unexpected errors
+    if (_rbChatHistory.length && _rbChatHistory[_rbChatHistory.length - 1].role === 'user') {
+      _rbChatHistory.pop();
+    }
   } finally {
     if (sendBtn) sendBtn.disabled = false;
     if (typingEl) typingEl.style.display = 'none';
     if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
   }
+}
+
+// ── Strip Markdown for clean history storage (no HTML/symbols in history) ──
+function _mdStrip(md) {
+  return (md || '')
+    .replace(/!\[.*?\]\(.*?\)/g, '')            // images
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')   // links → label only
+    .replace(/#{1,6}\s+/g, '')                  // headers
+    .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')   // bold/italic
+    .replace(/`{1,3}[^`]*`{1,3}/g, '')          // code
+    .replace(/^\s*[-*+]\s+/gm, '')              // bullets
+    .replace(/^\s*\d+\.\s+/gm, '')              // numbered lists
+    .replace(/\n{3,}/g, '\n\n')                 // collapse whitespace
+    .trim()
+    .slice(0, 800); // keep history entries concise to save token budget
+}
+
+// ── History-aware AI balancer ────────────────────────────────────────
+// Wraps _aiLoadBalancedQuery but passes the messages array to backends
+// that support it natively (Worker, OpenAI, CustomAPI).
+// Falls back gracefully to single-prompt mode for others.
+async function _aiLoadBalancedQueryWithHistory(promptStr, messages, model, onChunk, onDone, onError) {
+  const workerUrl = (window._cfWorkerUrl || localStorage.getItem(CF_KEY) || '').replace(/\/+$/,'');
+
+  // 1. Worker — send full messages array in payload
+  if (workerUrl) {
+    try {
+      const provider = localStorage.getItem(SVC_WORKER_PROVIDER) || '';
+      const payload  = JSON.stringify({
+        prompt:    promptStr,          // flat fallback (legacy)
+        messages:  messages,           // structured history array
+        model, provider, use_search: true,
+      });
+
+      // Try streaming first
+      const res = await fetch(workerUrl + '/query-stream', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: payload, signal: AbortSignal.timeout(90000),
+      });
+      if (res.ok && res.body) {
+        const reader = res.body.getReader(); const dec = new TextDecoder();
+        let buf='', accumulated='';
+        while(true) {
+          const {done,value} = await reader.read(); if(done) break;
+          buf += dec.decode(value,{stream:true});
+          const lines=buf.split('\n'); buf=lines.pop()||'';
+          for(const line of lines) {
+            if(!line.startsWith('data: ')) continue;
+            let evt; try{evt=JSON.parse(line.slice(6));}catch{continue;}
+            if(evt.error) throw new Error(evt.error);
+            if(evt.chunk){accumulated+=evt.chunk; onChunk&&onChunk(accumulated);}
+            if(evt.done){onDone&&onDone(accumulated); return;}
+          }
+        }
+        if(accumulated.length>30){onDone&&onDone(accumulated); return;}
+      }
+      // Non-stream fallback
+      for(const ep of ['/query','/ask','/chat','/generate']){
+        try{
+          const r=await fetch(workerUrl+ep,{method:'POST',headers:{'Content-Type':'application/json'},
+            body:payload, signal:AbortSignal.timeout(60000)});
+          if(!r.ok&&r.status===404) continue;
+          const txt=await r.text(); let d; try{d=JSON.parse(txt);}catch{d={result:txt};}
+          if(d.error) continue;
+          const text=d.result||d.answer||d.response||d.text||txt||'';
+          if(text){onChunk&&onChunk(text); onDone&&onDone(text); return;}
+        }catch(e){if(e.name==='AbortError')throw e;}
+      }
+    } catch(e) { if(e.name==='AbortError') throw e; }
+  }
+
+  // 2–5. Fall through to standard _aiLoadBalancedQuery (uses flat prompt with embedded history)
+  return _aiLoadBalancedQuery(promptStr, model, onChunk, onDone, onError);
 }
 
 // Update sidebar status dot — free stack always available, no key required
