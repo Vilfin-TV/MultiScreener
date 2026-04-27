@@ -643,98 +643,157 @@ async function callPollinations(messages) {
 async function handleQuery(prompt, env, providerHint, historyMsgs) {
   const today = new Date().toDateString();
 
-  // ── Detect structured report mode ───────────────────────────────────────────
-  // Report requests contain the sentinel string injected by buildQuery().
-  // For reports: use pre-fetch engine (fast, reliable market data).
-  // For chat:    use fetchLiveContext (lightweight YF quote + DDG snippet).
-  const isReportMode = prompt.includes('OUTPUT FORMAT — STRICT JSON REQUIRED');
-
-  let contextBlock = '';
-  if (isReportMode) {
-    // Pre-fetch all financial data concurrently; returns a structured text block.
-    // If all sources fail, returns '' — AI falls back to training knowledge.
-    contextBlock = await prefetchMarketData(prompt);
-  } else {
-    contextBlock = await fetchLiveContext(prompt);
+  // ── Hybrid report mode ───────────────────────────────────────────────────────
+  // Worker builds the complete 10-tab JSON skeleton from financial APIs (pure JS).
+  // AI is called ONLY for ~60 prose/narrative fields (~2000 tokens vs 15000+).
+  // Sentinel string is injected by buildQuery() in index.html.
+  if (prompt.includes('OUTPUT FORMAT — STRICT JSON REQUIRED')) {
+    return await hybridReport(prompt, env, providerHint);
   }
 
-  // ── Build messages array ─────────────────────────────────────────────────────
-  // If the frontend sent a full conversation history, use it so the AI has
-  // multi-turn context. Otherwise fall back to single-turn mode.
+  // ── Chat mode: lightweight live context + AI cascade ────────────────────────
+  const ctx = await fetchLiveContext(prompt);
   let messages;
   if (historyMsgs && historyMsgs.length > 0) {
-    // Inject context into the last user message only (not all turns)
-    const withContext = historyMsgs.map((m, i) => {
-      if (i === historyMsgs.length - 1 && m.role === 'user' && contextBlock) {
-        // For report mode: append context at the END (after all prompt instructions)
-        // For chat mode:   prepend context so AI sees it first
-        return {
-          role: 'user',
-          content: isReportMode ? (m.content + contextBlock) : (contextBlock + m.content),
-        };
-      }
-      return m;
-    });
-    messages = [
-      { role: 'system', content: SYSTEM_PROMPT(today) },
-      ...withContext,
-    ];
+    const withCtx = historyMsgs.map((m, i) =>
+      (i === historyMsgs.length - 1 && m.role === 'user' && ctx)
+        ? { role: 'user', content: ctx + m.content }
+        : m
+    );
+    messages = [{ role: 'system', content: SYSTEM_PROMPT(today) }, ...withCtx];
   } else {
-    const userContent = isReportMode
-      ? (prompt + contextBlock)      // append after prompt instructions
-      : (contextBlock + prompt);     // prepend for chat
     messages = [
       { role: 'system', content: SYSTEM_PROMPT(today) },
-      { role: 'user',   content: userContent },
+      { role: 'user',   content: ctx + prompt },
     ];
   }
 
   const provider = (providerHint || '').toLowerCase();
+  if (provider === 'groq')     { const t = await callGroq(messages, env);     if (t) return t; }
+  if (provider === 'gemini')   { const t = await callGemini(messages, env);   if (t) return t; }
+  if (provider === 'openai')   { const t = await callOpenAI(messages, env);   if (t) return t; }
+  if (provider === 'deepseek') { const t = await callDeepSeek(messages, env); if (t) return t; }
 
-  // ── Honour explicit provider preference ────────────────────────────────────
-  if (provider === 'groq') {
-    const t = await callGroq(messages, env);
-    if (t) return t;
-  }
-  if (provider === 'gemini') {
-    const t = await callGemini(messages, env);
-    if (t) return t;
-  }
-  if (provider === 'openai') {
-    const t = await callOpenAI(messages, env);
-    if (t) return t;
-  }
-  if (provider === 'deepseek') {
-    const t = await callDeepSeek(messages, env);
-    if (t) return t;
-  }
-
-  // ── Default cascade: Groq → Gemini → OpenAI → DeepSeek → Pollinations ─────
-  const groq     = await callGroq(messages, env);       if (groq)     return groq;
-  const gemini   = await callGemini(messages, env);     if (gemini)   return gemini;
-  const openai   = await callOpenAI(messages, env);     if (openai)   return openai;
-  const deepseek = await callDeepSeek(messages, env);   if (deepseek) return deepseek;
-  const poll     = await callPollinations(messages);    if (poll)     return poll;
+  const groq     = await callGroq(messages, env);     if (groq)     return groq;
+  const gemini   = await callGemini(messages, env);   if (gemini)   return gemini;
+  const openai   = await callOpenAI(messages, env);   if (openai)   return openai;
+  const deepseek = await callDeepSeek(messages, env); if (deepseek) return deepseek;
+  const poll     = await callPollinations(messages);  if (poll)     return poll;
 
   throw new Error('All AI providers unavailable');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// PRE-FETCH MARKET DATA ENGINE  (for structured report /query requests)
+// HYBRID REPORT ENGINE — Global Native JSON Architecture (v2)
 // ═══════════════════════════════════════════════════════════════════════════════
 //
-// Cloudflare Workers cannot use npm packages (no Node.js runtime).
-// All data is fetched via the Web Fetch API from free public endpoints:
-//   • Yahoo Finance v7/quote  — live price, MCap, P/E, P/B, EPS, 52W, beta, MAs
-//   • Yahoo Finance v8/chart  — daily closes (1y) for SMA/RSI, monthly (5y) for CAGR
-//   • Yahoo Finance v1/search — recent news headlines
-//   • NSE India public API    — authoritative Indian live price
-//   • AMFI India              — mutual fund NAV
+// Zero-AI-for-numbers: Worker builds 10-tab JSON skeleton via pure JS mapping.
+// AI is called ONLY for ~60 prose/narrative text fields (~2000 tokens vs 15000+).
 //
-// Result: a `rawMarketContext` string appended to the AI prompt so the AI
-// formats pre-fetched numbers into JSON — no LLM web-searching needed.
+// Global market routing (Yahoo Finance v10/quoteSummary — no API key needed):
+//   US/NASDAQ/NYSE  → AAPL, MSFT       India NSE  → RELIANCE.NS, HDFCBANK.NS
+//   Japan JPX       → 7203.T (Toyota)  UK LSE     → BP.L, AZN.L
+//   Germany Xetra   → BMW.DE, SAP.DE   France     → MC.PA, TTE.PA
+//   Australia ASX   → BHP.AX, CBA.AX   HK HKEX   → 0700.HK (Tencent)
+//   Crypto          → BTC-USD, ETH-USD  Indices   → ^GSPC, ^NSEI, ^BSESN
 
-// ─── NSE ticker lookup table ──────────────────────────────────────────────────
+// ─── Global market suffix routing ────────────────────────────────────────────
+const MARKET_SUFFIX = {
+  'india':'.NS','nse':'.NS','bse':'.NS','nse india':'.NS','bse india':'.NS',
+  'japan':'.T','jpx':'.T','tokyo':'.T','tokyo stock exchange':'.T',
+  'uk':'.L','london':'.L','lse':'.L','united kingdom':'.L',
+  'germany':'.DE','frankfurt':'.DE','xetra':'.DE',
+  'france':'.PA','paris':'.PA','euronext':'.PA',
+  'australia':'.AX','asx':'.AX',
+  'hong kong':'.HK','hkex':'.HK',
+  'canada':'.TO','tsx':'.TO',
+  'singapore':'.SI','sgx':'.SI',
+  'us':'','usa':'','nasdaq':'','nyse':'','united states':'','america':'',
+};
+
+// ─── Global company name → Yahoo Finance ticker ───────────────────────────────
+const GLOBAL_TICKERS = {
+  // US mega/large cap
+  'apple':'AAPL','microsoft':'MSFT','google':'GOOGL','alphabet':'GOOGL',
+  'amazon':'AMZN','meta':'META','facebook':'META','tesla':'TSLA','nvidia':'NVDA',
+  'berkshire hathaway':'BRK-B','berkshire':'BRK-B','jpmorgan':'JPM','jp morgan':'JPM',
+  'johnson & johnson':'JNJ','visa':'V','mastercard':'MA','unitedhealth':'UNH',
+  'exxon':'XOM','walmart':'WMT','procter & gamble':'PG','procter':'PG','chevron':'CVX',
+  'abbvie':'ABBV','costco':'COST','oracle':'ORCL','salesforce':'CRM','adobe':'ADBE',
+  'netflix':'NFLX','amd':'AMD','intel':'INTC','qualcomm':'QCOM','broadcom':'AVGO',
+  'micron':'MU','boeing':'BA','caterpillar':'CAT','pfizer':'PFE','moderna':'MRNA',
+  'merck':'MRK','eli lilly':'LLY','lilly':'LLY','bank of america':'BAC','citigroup':'C',
+  'wells fargo':'WFC','goldman sachs':'GS','morgan stanley':'MS','paypal':'PYPL',
+  'american express':'AXP','blackrock':'BLK',
+  // Japan
+  'toyota':'7203.T','sony':'6758.T','softbank':'9984.T','nintendo':'7974.T',
+  'honda':'7267.T','mitsubishi':'8058.T','keyence':'6861.T',
+  'fast retailing':'9983.T','uniqlo':'9983.T','recruit':'6098.T',
+  'shin-etsu':'4063.T','fanuc':'6954.T','tokyo electron':'8035.T',
+  'kddi':'9433.T','ntt':'9432.T','mufg':'8306.T','mizuho':'8411.T',
+  'smfg':'8316.T','takeda':'4502.T','panasonic':'6752.T','hitachi':'6501.T',
+  // UK
+  'bp':'BP.L','shell':'SHEL.L','astrazeneca':'AZN.L','gsk':'GSK.L',
+  'unilever':'ULVR.L','rio tinto':'RIO.L','glencore':'GLEN.L',
+  'lloyds':'LLOY.L','barclays':'BARC.L','vodafone':'VOD.L',
+  'bt group':'BT-A.L','hsbc':'HSBA.L','diageo':'DGE.L',
+  // Germany
+  'sap':'SAP.DE','siemens':'SIE.DE','bmw':'BMW.DE','mercedes':'MBG.DE',
+  'volkswagen':'VOW3.DE','basf':'BAS.DE','bayer':'BAYN.DE','adidas':'ADS.DE',
+  'allianz':'ALV.DE','deutsche bank':'DBK.DE','infineon':'IFX.DE',
+  // France
+  'lvmh':'MC.PA','totalenergies':'TTE.PA','sanofi':'SAN.PA',
+  'airbus':'AIR.PA','loreal':'OR.PA','bnp paribas':'BNP.PA',
+  // Australia
+  'bhp':'BHP.AX','cba':'CBA.AX','commonwealth bank':'CBA.AX',
+  'westpac':'WBC.AX','anz':'ANZ.AX','nab':'NAB.AX',
+  'csl':'CSL.AX','macquarie':'MQG.AX','woolworths':'WOW.AX',
+  // Hong Kong
+  'tencent':'0700.HK','meituan':'3690.HK','aia':'1299.HK',
+  'ping an':'2318.HK','cnooc':'0883.HK','alibaba hk':'9988.HK',
+  // India NSE
+  'reliance':'RELIANCE.NS','reliance industries':'RELIANCE.NS',
+  'tcs':'TCS.NS','tata consultancy':'TCS.NS',
+  'infosys':'INFY.NS','wipro':'WIPRO.NS',
+  'hcl tech':'HCLTECH.NS','hcl':'HCLTECH.NS','tech mahindra':'TECHM.NS',
+  'hdfc bank':'HDFCBANK.NS','hdfcbank':'HDFCBANK.NS',
+  'icici bank':'ICICIBANK.NS','icicibank':'ICICIBANK.NS',
+  'state bank of india':'SBIN.NS','sbi':'SBIN.NS',
+  'kotak bank':'KOTAKBANK.NS','kotak':'KOTAKBANK.NS',
+  'axis bank':'AXISBANK.NS','axisbank':'AXISBANK.NS',
+  'yes bank':'YESBANK.NS','indusind':'INDUSINDBK.NS',
+  'hul':'HINDUNILVR.NS','hindustan unilever':'HINDUNILVR.NS',
+  'itc':'ITC.NS','bharti airtel':'BHARTIARTL.NS','airtel':'BHARTIARTL.NS',
+  'l&t':'LT.NS','larsen':'LT.NS','larsen & toubro':'LT.NS',
+  'maruti':'MARUTI.NS','maruti suzuki':'MARUTI.NS',
+  'bajaj finance':'BAJFINANCE.NS','bajaj finserv':'BAJAJFINSV.NS',
+  'asian paints':'ASIANPAINT.NS','titan':'TITAN.NS','nestle india':'NESTLEIND.NS',
+  'adani ports':'ADANIPORTS.NS','adani enterprises':'ADANIENT.NS',
+  'adani green':'ADANIGREEN.NS','sun pharma':'SUNPHARMA.NS',
+  'dr reddy':'DRREDDY.NS','cipla':'CIPLA.NS','divis':'DIVISLAB.NS',
+  'ongc':'ONGC.NS','ntpc':'NTPC.NS','power grid':'POWERGRID.NS',
+  'coal india':'COALINDIA.NS','tata motors':'TATAMOTORS.NS',
+  'm&m':'M&M.NS','mahindra':'M&M.NS','tata steel':'TATASTEEL.NS',
+  'jsw steel':'JSWSTEEL.NS','hindalco':'HINDALCO.NS','zomato':'ZOMATO.NS',
+  'paytm':'PAYTM.NS','dmart':'DMART.NS','pidilite':'PIDILITIND.NS',
+  'mrf':'MRF.NS','apollo hospitals':'APOLLOHOSP.NS',
+  // India indices & ETFs
+  'nifty 50':'^NSEI','nifty':'^NSEI','sensex':'^BSESN','bank nifty':'^NSEBANK',
+  'niftybees':'NIFTYBEES.NS','juniorbees':'JUNIORBEES.NS','bankbees':'BANKBEES.NS',
+  // Global indices
+  's&p 500':'^GSPC','sp500':'^GSPC','dow jones':'^DJI','dow':'^DJI',
+  'nasdaq composite':'^IXIC','nikkei':'^N225','hang seng':'^HSI',
+  'ftse':'^FTSE','dax':'^GDAXI','cac 40':'^FCHI',
+  // US ETFs
+  'spy':'SPY','qqq':'QQQ','voo':'VOO','ivv':'IVV','vti':'VTI',
+  'efa':'EFA','gld':'GLD','slv':'SLV',
+  // Crypto
+  'bitcoin':'BTC-USD','btc':'BTC-USD','ethereum':'ETH-USD','eth':'ETH-USD',
+  'solana':'SOL-USD','sol':'SOL-USD','bnb':'BNB-USD','xrp':'XRP-USD',
+  'cardano':'ADA-USD','dogecoin':'DOGE-USD','doge':'DOGE-USD',
+};
+
+// PLACEHOLDER — old NSE_TICKERS replaced; left here so nothing below breaks
 const NSE_TICKERS = {
   // Banks
   'hdfc bank': 'HDFCBANK', 'hdfcbank': 'HDFCBANK',
@@ -808,7 +867,598 @@ const NSE_TICKERS = {
   'mafang': 'MAFANG',
 };
 
-/** Resolve an Indian asset name to its NSE ticker symbol */
+// ─── NEW HYBRID ENGINE FUNCTIONS (replace old pre-fetch functions below) ──────
+
+/** Resolve asset name + market label → Yahoo Finance compatible symbol. */
+async function resolveSymbolGlobal(assetName, market) {
+  const name = (assetName || '').trim();
+  const mkt  = (market || '').toLowerCase().trim();
+  // 1. Already looks like a ticker (uppercase, optional exchange suffix)
+  if (/^[A-Z0-9\-\^]{2,10}(\.[A-Z]{1,3})?$/.test(name)) {
+    const sfx = MARKET_SUFFIX[mkt];
+    if (sfx && sfx !== '' && !name.includes('.') && !name.startsWith('^')) return name + sfx;
+    return name;
+  }
+  // 2. Lookup table (exact then prefix/partial)
+  const lower = name.toLowerCase();
+  if (GLOBAL_TICKERS[lower]) return GLOBAL_TICKERS[lower];
+  for (const [k, v] of Object.entries(GLOBAL_TICKERS)) {
+    if (lower === k || lower.startsWith(k) || k.startsWith(lower)) return v;
+  }
+  // 3. Market-aware Yahoo Finance search fallback
+  const q = (mkt && !['us','usa','nasdaq','nyse','united states','america'].includes(mkt))
+    ? `${name} ${market}` : name;
+  try {
+    const r = await fetch(
+      `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(q)}&quotesCount=3&newsCount=0&lang=en-US`,
+      { headers:{'User-Agent':'Mozilla/5.0','Accept':'application/json'}, signal:AbortSignal.timeout(5000) }
+    );
+    if (r.ok) {
+      const d = await r.json();
+      const sfx = MARKET_SUFFIX[mkt] || '';
+      const hit = (d?.quotes||[]).find(q => sfx ? q.symbol?.endsWith(sfx) : !q.symbol?.includes('.'));
+      if (hit?.symbol) return hit.symbol;
+      if (d?.quotes?.[0]?.symbol) return d.quotes[0].symbol;
+    }
+  } catch { /* non-fatal */ }
+  // 4. Last resort: uppercase name + suffix
+  return name.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,10) + (MARKET_SUFFIX[mkt]||'');
+}
+
+/** Yahoo Finance v10/quoteSummary — 12 modules in one call. Global coverage. */
+async function fetchYFSummaryFull(symbol) {
+  const mods = 'price,summaryProfile,financialData,defaultKeyStatistics,earningsTrend,'
+    + 'institutionOwnership,fundOwnership,majorHoldersBreakdown,'
+    + 'incomeStatementHistory,balanceSheetHistory,cashflowStatementHistory,summaryDetail';
+  try {
+    const r = await fetch(
+      `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=${encodeURIComponent(mods)}&corsDomain=finance.yahoo.com`,
+      { headers:{
+          'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124',
+          'Accept':'application/json','Accept-Language':'en-US,en;q=0.9',
+          'Referer':'https://finance.yahoo.com/',
+        }, signal:AbortSignal.timeout(9000) }
+    );
+    if (!r.ok) { console.warn(`[YFv10] ${symbol} → HTTP ${r.status}`); return null; }
+    const d = await r.json();
+    return d?.quoteSummary?.result?.[0] || null;
+  } catch (e) { console.warn(`[YFv10] ${symbol}:`, e.message); return null; }
+}
+
+/** Yahoo Finance v8/chart — OHLCV history for any global symbol. */
+async function fetchYFChartHistory(symbol, range, interval) {
+  try {
+    const r = await fetch(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=${interval}&includePrePost=false`,
+      { headers:{'User-Agent':'Mozilla/5.0','Accept':'application/json','Referer':'https://finance.yahoo.com/'},
+        signal:AbortSignal.timeout(9000) }
+    );
+    return r.ok ? await r.json() : null;
+  } catch { return null; }
+}
+
+/** Extract adjusted close prices from v8/chart response. */
+function extractCloses(chartJson) {
+  const r = chartJson?.chart?.result?.[0];
+  if (!r) return [];
+  const adj = r.indicators?.adjclose?.[0]?.adjclose;
+  const reg = r.indicators?.quote?.[0]?.close;
+  return ((adj?.length ? adj : reg) || []).filter(v => v !== null && v !== undefined && isFinite(v));
+}
+
+/** Yahoo Finance v1/search — recent news headlines (global). */
+async function fetchYFNewsHeadlines(query) {
+  try {
+    const r = await fetch(
+      `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=0&newsCount=8&lang=en-US`,
+      { headers:{'User-Agent':'Mozilla/5.0','Accept':'application/json'}, signal:AbortSignal.timeout(6000) }
+    );
+    if (!r.ok) return [];
+    const d = await r.json();
+    return (d?.news||[]).slice(0,6).map(n => ({
+      date: n.providerPublishTime
+        ? new Date(n.providerPublishTime*1000).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})
+        : 'Recent',
+      title: n.title||'', publisher: n.publisher||'',
+    }));
+  } catch { return []; }
+}
+
+/** Google News RSS — fallback for news when YF returns nothing. */
+async function fetchGoogleNewsRSS(query) {
+  try {
+    const r = await fetch(
+      `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-IN&gl=IN&ceid=IN:en`,
+      { headers:{'User-Agent':'Mozilla/5.0'}, signal:AbortSignal.timeout(5000) }
+    );
+    if (!r.ok) return [];
+    const text = await r.text();
+    return [...text.matchAll(/<title><!\[CDATA\[(.+?)\]\]><\/title>/g)]
+      .slice(1,7)
+      .map(m => ({ date:'Recent', title:m[1].replace(/\s*-\s*[^-]+$/, '').trim(), publisher:'' }));
+  } catch { return []; }
+}
+
+// ─── Technical indicator calculators — pure JavaScript ────────────────────────
+const _avg = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
+function _sma(c,n) { return c.length>=n ? _avg(c.slice(-n)) : null; }
+function _ema(c,p) {
+  if (c.length<p) return null;
+  const k=2/(p+1); let e=_avg(c.slice(0,p));
+  for (let i=p;i<c.length;i++) e=c[i]*k+e*(1-k);
+  return e;
+}
+function _rsi(c,p=14) {
+  if (c.length<p+2) return null;
+  const d=[]; for(let i=1;i<c.length;i++) d.push(c[i]-c[i-1]);
+  let g=0,l=0;
+  for(let i=0;i<p;i++){if(d[i]>0)g+=d[i];else l+=Math.abs(d[i]);}
+  g/=p; l/=p;
+  for(let i=p;i<d.length;i++){g=(g*(p-1)+Math.max(0,d[i]))/p;l=(l*(p-1)+Math.abs(Math.min(0,d[i])))/p;}
+  return l===0?100:100-100/(1+g/l);
+}
+function _macd(c) { const e12=_ema(c,12),e26=_ema(c,26); return (e12&&e26)?e12-e26:null; }
+function _bb(c,p=20) {
+  if(c.length<p) return null;
+  const s=c.slice(-p),m=_avg(s),std=Math.sqrt(s.reduce((a,v)=>a+(v-m)**2,0)/p);
+  return {upper:m+2*std,lower:m-2*std,mid:m};
+}
+function _cagr(c,yrs) {
+  const n=c.length,pts=Math.min(Math.round(yrs*252),n-1);
+  if(pts<=0||!c[n-1]||!c[n-1-pts]) return null;
+  return ((c[n-1]/c[n-1-pts])**(1/yrs)-1)*100;
+}
+function _cagrMo(c,yrs) {
+  const n=c.length,pts=Math.min(Math.round(yrs*12),n-1);
+  if(pts<=0||!c[n-1]||!c[n-1-pts]) return null;
+  return ((c[n-1]/c[n-1-pts])**(1/yrs)-1)*100;
+}
+function calcTech(daily, monthly) {
+  const n=daily.length, last=daily[n-1]||0;
+  const sma20=_sma(daily,20),sma50=_sma(daily,50),sma100=_sma(daily,100),sma200=_sma(daily,200);
+  const ema5=_ema(daily,5),ema10=_ema(daily,10);
+  const rsi=_rsi(daily,14),macd=_macd(daily),bb=_bb(daily,20);
+  const recent=daily.slice(-63);
+  const s1=recent.length?Math.min(...recent):null, r1=recent.length?Math.max(...recent):null;
+  const s2=n>=252?Math.min(...daily.slice(-252)):null, r2=n>=252?Math.max(...daily.slice(-252)):null;
+  const drets=[]; for(let i=1;i<n;i++){if(daily[i-1]>0)drets.push(daily[i]/daily[i-1]-1);}
+  const vol=drets.length>1?Math.sqrt(drets.reduce((a,v)=>a+(v-_avg(drets))**2,0)/drets.length)*Math.sqrt(252)*100:null;
+  const cross=(sma50&&sma200)?(sma50>sma200?'Golden Cross (Bullish)':'Death Cross (Bearish)'):'N/A';
+  const pct=(ma)=>(!ma||!last)?'N/A':((last-ma)/ma*100).toFixed(2)+'%';
+  const sig=(ma)=>(!ma||!last)?'N/A':(last>ma?'Buy':'Sell');
+  return {
+    sma20,sma50,sma100,sma200,ema5,ema10,rsi,macd,bb,vol,cross,s1,r1,s2,r2,pct,sig,last,
+    ret1y:_cagr(daily,1),
+    ret6m:n>=126?((last/daily[n-126]-1)*100):null,
+    ret3m:n>=63?((last/daily[n-63]-1)*100):null,
+    ret1m:n>=21?((last/daily[n-21]-1)*100):null,
+    ret3y:_cagrMo(monthly,3), ret5y:_cagrMo(monthly,5),
+  };
+}
+
+// ─── Number formatters ────────────────────────────────────────────────────────
+const NDA = 'No Data Available';
+const _n = v => v===null||v===undefined||!isFinite(v);
+const _raw = (obj,key) => { const v=obj?.[key]; return (v&&typeof v==='object'&&'raw' in v)?v.raw:v; };
+function fC(v,cur,dp=2){if(_n(v))return NDA;const s=cur==='INR'?'₹':cur==='JPY'?'¥':cur==='GBP'?'£':cur==='EUR'?'€':'$';return s+Number(v).toFixed(dp);}
+function fL(v,cur){if(_n(v))return NDA;const s=cur==='INR'?'₹':cur==='JPY'?'¥':cur==='GBP'?'£':cur==='EUR'?'€':'$';if(cur==='INR'){if(v>=1e12)return s+(v/1e12).toFixed(2)+' Lakh Cr';if(v>=1e7)return s+(v/1e7).toFixed(2)+' Cr';return s+v.toFixed(0);}if(v>=1e12)return s+(v/1e12).toFixed(2)+'T';if(v>=1e9)return s+(v/1e9).toFixed(2)+'B';if(v>=1e6)return s+(v/1e6).toFixed(2)+'M';return s+v.toFixed(0);}
+function fP(v,dp=2){if(_n(v))return NDA;return(Number(v)*(Math.abs(v)<1?100:1)).toFixed(dp)+'%';}
+function fR(v,dp=2){if(_n(v))return NDA;return Number(v).toFixed(dp)+'%';}
+function fN(v,dp=2){if(_n(v))return NDA;return Number(v).toFixed(dp);}
+
+// ─── 10-Tab JSON skeleton builder — pure JS, zero AI for numeric fields ────────
+function buildStockSkeleton(summary, daily, monthly, news, assetName, market, resident, refLinks, today) {
+  const t  = calcTech(daily, monthly);
+  const P  = summary?.price                        || {};
+  const SP = summary?.summaryProfile               || {};
+  const FD = summary?.financialData                || {};
+  const KS = summary?.defaultKeyStatistics         || {};
+  const SD = summary?.summaryDetail                || {};
+  const MH = summary?.majorHoldersBreakdown        || {};
+  const IO = (summary?.institutionOwnership?.ownershipList||[]).slice(0,10);
+  const FO = (summary?.fundOwnership?.ownershipList       ||[]).slice(0,5);
+  const IS = summary?.incomeStatementHistory?.incomeStatementHistory || [];
+  const BS = summary?.balanceSheetHistory?.balanceSheetStatements   || [];
+  const CF = summary?.cashflowStatementHistory?.cashflowStatements  || [];
+  const ET = summary?.earningsTrend?.trend || [];
+
+  const cur = P.currency||'USD';
+  const px  = _raw(P,'regularMarketPrice')??t.last;
+  const mc  = _raw(P,'marketCap');
+  const vol = _raw(P,'regularMarketVolume');
+  const chg = _raw(P,'regularMarketChangePercent');
+  const w52h= _raw(KS,'fiftyTwoWeekHigh')||_raw(SD,'fiftyTwoWeekHigh');
+  const w52l= _raw(KS,'fiftyTwoWeekLow') ||_raw(SD,'fiftyTwoWeekLow');
+  const beta= _raw(KS,'beta')||_raw(SD,'beta');
+  const pe  = _raw(KS,'trailingPE')||_raw(SD,'trailingPE');
+  const fpe = _raw(KS,'forwardPE');
+  const pb  = _raw(KS,'priceToBook');
+  const eps = _raw(KS,'trailingEps');
+  const feps= _raw(KS,'forwardEps');
+  const bvps= _raw(KS,'bookValue');
+  const peg = _raw(KS,'pegRatio');
+  const ev  = _raw(KS,'enterpriseValue');
+  const evebitda= _raw(KS,'enterpriseToEbitda');
+  const evrev   = _raw(KS,'enterpriseToRevenue');
+  const dy  = _raw(KS,'dividendYield')||_raw(SD,'dividendYield')||_raw(SD,'trailingAnnualDividendYield');
+  const so  = _raw(KS,'sharesOutstanding');
+  const roe = _raw(FD,'returnOnEquity');
+  const roa = _raw(FD,'returnOnAssets');
+  const de  = _raw(FD,'debtToEquity');
+  const fcf = _raw(FD,'freeCashflow');
+  const opc = _raw(FD,'operatingCashflow');
+  const rev = _raw(FD,'totalRevenue');
+  const rg  = _raw(FD,'revenueGrowth');
+  const ebi = _raw(FD,'ebitda');
+  const opm = _raw(FD,'operatingMargins');
+  const npm = _raw(FD,'profitMargins');
+  const gm  = _raw(FD,'grossMargins');
+  const cr  = _raw(FD,'currentRatio');
+  const qr  = _raw(FD,'quickRatio');
+  const tc  = _raw(FD,'totalCash');
+  const td  = _raw(FD,'totalDebt');
+  const rk  = FD.recommendationKey||NDA;
+  const rm  = _raw(FD,'recommendationMean');
+  const na  = _raw(FD,'numberOfAnalystOpinions');
+  const tph = _raw(FD,'targetHighPrice');
+  const tpl = _raw(FD,'targetLowPrice');
+  const tpm = _raw(FD,'targetMeanPrice');
+  const tpd = _raw(FD,'targetMedianPrice');
+  const eg  = _raw(FD,'earningsGrowth');
+
+  const is0=IS[0]||{},is1=IS[1]||{};
+  const rev0=_raw(is0,'totalRevenue')||rev, rev1=_raw(is1,'totalRevenue');
+  const ni0=_raw(is0,'netIncome'), ebt0=_raw(is0,'ebit')||ebi;
+  const cf0=CF[0]||{};
+  const opCF=_raw(cf0,'totalCashFromOperatingActivities')||opc;
+  const capEx=_raw(cf0,'capitalExpenditures');
+  const fcfCalc=(opCF&&capEx)?opCF+capEx:fcf;
+  const eTCY=ET.find(e=>e.period==='0y')||ET[2]||{};
+  const eTNY=ET.find(e=>e.period==='+1y')||ET[3]||{};
+  const epsCY=eTCY.earningsEstimate?.avg?.raw, epsNY=eTNY.earningsEstimate?.avg?.raw;
+  const revCY=eTCY.revenueEstimate?.avg?.raw,  revNY=eTNY.revenueEstimate?.avg?.raw;
+  const egrCY=eTCY.earningsEstimate?.growth?.raw;
+
+  const insPct=_raw(MH,'insidersPercentHeld'), itnPct=_raw(MH,'institutionsPercentHeld');
+  const pubPct=(insPct!=null&&itnPct!=null)?Math.max(0,1-(insPct||0)-(itnPct||0)):null;
+
+  const rkLabel={'strongBuy':'Strong Buy','buy':'Buy','hold':'Hold','underperform':'Underperform','sell':'Sell'}[rk]||rk;
+  const upside=(tpm&&px)?((tpm/px-1)*100).toFixed(1)+'%':NDA;
+
+  const rsiSig =t.rsi?(t.rsi>70?'Overbought':t.rsi<30?'Oversold':'Neutral'):NDA;
+  const macdSig=t.macd?(t.macd>0?'Bullish':'Bearish'):NDA;
+  const volScore=t.vol?Math.min(100,Math.max(0,Math.round(100-t.vol))):50;
+  const valScore=pe?Math.round(pe<10?85:pe<20?70:pe<30?55:pe<50?35:20):50;
+  const momScore=t.ret1y!==null?Math.round(t.ret1y>50?90:t.ret1y>25?75:t.ret1y>10?65:t.ret1y>0?55:t.ret1y>-10?40:30):50;
+
+  const maRow=(ma)=>ma?`${fC(ma,cur)} | ${t.pct(ma)} | ${t.sig(ma)}`:NDA;
+  const nwsF =news.slice(0,5).reduce((a,h,i)=>{a[`News ${i+1}`]=`${h.date} | ${h.title}${h.publisher?' — '+h.publisher:''} | __AI__newsSent${i}__AI__ | __AI__newsImpact${i}__AI__`;return a;},{});
+  const instF =IO.reduce((a,h,i)=>{a[`Holder ${i+1}`]=`${h.organization||NDA} | ${h.pctHeld?.raw?fP(h.pctHeld.raw):NDA} | ${h.position?.raw?Number(h.position.raw).toLocaleString()+' sh':NDA} | ${h.value?.raw?fL(h.value.raw,cur):NDA}`;return a;},{});
+  const mfF   =FO.reduce((a,h,i)=>{a[`MF ${i+1}`]=`${h.organization||NDA} | ${h.pctHeld?.raw?fP(h.pctHeld.raw):NDA} | ${h.position?.raw?Number(h.position.raw).toLocaleString()+' sh':NDA}`;return a;},{});
+
+  return {
+    asset: P.longName||P.shortName||assetName, date: today,
+    tabs: [
+      // ── Tab 1: Overview & Macro ──────────────────────────────────────────────
+      { id:1, name:'Overview & Macro', fields:{
+        'Company Name':P.longName||P.shortName||assetName,
+        'Ticker':P.symbol||assetName, 'Exchange':P.fullExchangeName||P.exchangeName||NDA,
+        'Sector':SP.sector||NDA, 'Industry':SP.industry||NDA, 'Country':SP.country||NDA,
+        'Headquarters':[SP.city,SP.state,SP.country].filter(Boolean).join(', ')||NDA,
+        'Website':SP.website||NDA,
+        'Employees':SP.fullTimeEmployees?Number(SP.fullTimeEmployees).toLocaleString():NDA,
+        'Currency':cur,
+        'Company Background':'__AI__companyBackground__AI__',
+        'Core Business Segments':'__AI__coreSegments__AI__',
+        'Key Subsidiaries':'__AI__keySubsidiaries__AI__',
+        '1Y Return':fR(t.ret1y), '3Y CAGR':fR(t.ret3y), '5Y CAGR':fR(t.ret5y),
+        '6M Return':fR(t.ret6m), '3M Return':fR(t.ret3m), '1M Return':fR(t.ret1m),
+        'Dividend Yield TTM':dy?fP(dy):NDA,
+      }, subsections:[{ title:'Macro & Industry', fields:{
+        'TAM (Market Size)':'__AI__tam__AI__',
+        'Industry Growth Rate':'__AI__industryGrowth__AI__',
+        'Market Position':'__AI__marketPosition__AI__',
+        'Regulatory Environment':'__AI__regulatoryEnv__AI__',
+        'Tailwind 1':'__AI__tailwind1__AI__',
+        'Tailwind 2':'__AI__tailwind2__AI__',
+        'Tailwind 3':'__AI__tailwind3__AI__',
+        'Headwind 1':'__AI__headwind1__AI__',
+        'Headwind 2':'__AI__headwind2__AI__',
+        'Headwind 3':'__AI__headwind3__AI__',
+      }}]},
+
+      // ── Tab 2: Live Market & Technicals ─────────────────────────────────────
+      { id:2, name:'Live Market & Technicals', fields:{
+        'Current Price':fC(px,cur),
+        'Market Cap':fL(mc,cur),
+        '52-Week High':fC(w52h,cur), '52-Week Low':fC(w52l,cur),
+        '1D Change %':chg?fR(chg*100):NDA,
+        'Volume':vol?Number(vol).toLocaleString():NDA,
+        'Beta':fN(beta), 'Dividend Yield TTM':dy?fP(dy):NDA,
+        'Annual Volatility':t.vol?fR(t.vol):NDA,
+        'RSI (14)':t.rsi?fN(t.rsi):NDA, 'RSI Signal':rsiSig,
+        'MACD':t.macd?fN(t.macd):NDA, 'MACD Signal':macdSig,
+        'Bollinger Upper':t.bb?fC(t.bb.upper,cur):NDA,
+        'Bollinger Mid':t.bb?fC(t.bb.mid,cur):NDA,
+        'Bollinger Lower':t.bb?fC(t.bb.lower,cur):NDA,
+        'Support S1 (3M)':t.s1?fC(t.s1,cur):NDA, 'Support S2 (1Y)':t.s2?fC(t.s2,cur):NDA,
+        'Resistance R1 (3M)':t.r1?fC(t.r1,cur):NDA, 'Resistance R2 (1Y)':t.r2?fC(t.r2,cur):NDA,
+        'Golden / Death Cross':t.cross, 'Momentum Score':momScore+'/100',
+        'Key Insight':'__AI__keyInsight__AI__',
+      }, subsections:[{ title:'Moving Averages', fields:{
+        '5d EMA':maRow(t.ema5), '10d EMA':maRow(t.ema10),
+        '20d SMA':maRow(t.sma20), '50d SMA':maRow(t.sma50),
+        '100d SMA':maRow(t.sma100), '200d SMA':maRow(t.sma200),
+        'MA Verdict':t.cross,
+      }}]},
+
+      // ── Tab 3: Financials & Valuation ────────────────────────────────────────
+      { id:3, name:'Financials & Valuation', fields:{
+        'Revenue (TTM)':fL(rev0,cur),
+        'Revenue YoY Growth':rg?fP(rg):(rev1&&rev0?fR((rev0/rev1-1)*100):NDA),
+        'EBITDA':fL(ebi,cur), 'EBIT':fL(ebt0,cur), 'Net Profit / PAT':fL(ni0,cur),
+        'Operating Margin':fP(opm), 'Net Profit Margin':fP(npm), 'Gross Margin':fP(gm),
+        'EPS (TTM)':fC(eps,cur), 'EPS (Forward)':fC(feps,cur),
+        'Revenue Est (FY)':fL(revCY,cur), 'Revenue Est (FY+1)':fL(revNY,cur),
+        'EPS Est (FY)':fC(epsCY,cur), 'EPS Est (FY+1)':fC(epsNY,cur),
+        'Earnings Growth Est':egrCY?fP(egrCY):NDA,
+        'Free Cash Flow':fL(fcfCalc,cur), 'Operating Cash Flow':fL(opCF,cur),
+        'ROE':fP(roe), 'ROA':fP(roa),
+        'Debt-to-Equity':de?fN(de/100)+'x':NDA,
+        'Total Debt':fL(td,cur), 'Total Cash':fL(tc,cur),
+        'Current Ratio':fN(cr), 'Quick Ratio':fN(qr),
+      }, subsections:[{ title:'Valuation Ratios', fields:{
+        'P/E (Trailing)':fN(pe), 'P/E (Forward)':fN(fpe), 'P/B':fN(pb),
+        'EV/EBITDA':fN(evebitda), 'EV/Revenue':fN(evrev), 'Enterprise Value':fL(ev,cur),
+        'PEG Ratio':fN(peg), 'Book Value / Share':fC(bvps,cur),
+        'Shares Outstanding':so?fL(so,cur).replace(/[$₹£€¥]/g,''):NDA,
+        'Valuation Score':valScore+'/100',
+        'Valuation Status':valScore>70?'Cheap':valScore>50?'Fair':'Expensive',
+        'DCF Intrinsic Value':'__AI__dcfValue__AI__',
+        'Margin of Safety':'__AI__marginSafety__AI__',
+      }}]},
+
+      // ── Tab 4: Ownership & Shareholding ──────────────────────────────────────
+      { id:4, name:'Ownership & Shareholding', fields:{
+        'Insider / Promoter %':insPct?fP(insPct):NDA,
+        'Institutional %':itnPct?fP(itnPct):NDA,
+        'Public / Retail %':pubPct?fP(pubPct):NDA,
+        'Institutions Count':_raw(MH,'institutionsCount')?Number(_raw(MH,'institutionsCount')).toLocaleString():NDA,
+        'FII / DII (Latest Qtr)':'__AI__fiidii__AI__',
+        'Upcoming Index Changes':'__AI__indexChanges__AI__',
+        'Recent Index Inclusions':'__AI__indexInclusions__AI__',
+      }, subsections:IO.length?[{ title:'Top Institutional Holders', fields:instF}]:[]},
+
+      // ── Tab 5: Peers & Institutions ───────────────────────────────────────────
+      { id:5, name:'Peers & Institutions', fields:{
+        'Total Institutional %':itnPct?fP(itnPct):NDA,
+        'Peer Comparison':'__AI__peerComparison__AI__',
+        'Best Value Peer':'__AI__bestValuePeer__AI__',
+        'Strong Buy Pick 1':'__AI__strongBuy1__AI__',
+        'Strong Buy Pick 2':'__AI__strongBuy2__AI__',
+        'Strong Buy Pick 3':'__AI__strongBuy3__AI__',
+      }, subsections:FO.length?[{ title:'Top Mutual Fund Holders', fields:mfF }]:[]},
+
+      // ── Tab 6: News & Social Buzz ─────────────────────────────────────────────
+      { id:6, name:'News & Social Buzz', fields:{
+        'Overall Sentiment':'__AI__overallSentiment__AI__',
+        'Management Commentary':'__AI__mgmtCommentary__AI__',
+        'CEO / MD Name':'__AI__ceoName__AI__',
+        'CEO Background':'__AI__ceoBackground__AI__',
+        'Corporate Governance Score':'__AI__govScore__AI__',
+        'ESG Highlights':'__AI__esgHighlights__AI__',
+        'Insider Activity (12M)':'__AI__insiderActivity__AI__',
+        'Social Buzz Score':'__AI__buzzScore__AI__',
+        'Trending Topic':'__AI__trendingTopic__AI__',
+        'Key Positive Narrative':'__AI__posNarrative__AI__',
+      }, subsections:[
+        { title:'Recent News Headlines', fields:Object.keys(nwsF).length?nwsF:{News:NDA} },
+      ]},
+
+      // ── Tab 7: Analysts & Forecasts ───────────────────────────────────────────
+      { id:7, name:'Analysts & Forecasts', fields:{
+        'Consensus Rating':rkLabel,
+        'Consensus Score (1=Buy / 5=Sell)':fN(rm),
+        'Number of Analysts':na?na.toString():NDA,
+        'Target Price (Mean)':fC(tpm,cur), 'Target Price (High)':fC(tph,cur),
+        'Target Price (Low)':fC(tpl,cur),  'Target Price (Median)':fC(tpd,cur),
+        'Upside to Mean Target':upside,
+        'EPS Est FY':fC(epsCY,cur), 'EPS Est FY+1':fC(epsNY,cur),
+        'Revenue Est FY':fL(revCY,cur), 'Revenue Est FY+1':fL(revNY,cur),
+        'Valuation Score':valScore+'/100',
+        'Bull Case':'__AI__bullCase__AI__',
+        'Base Case':'__AI__baseCase__AI__',
+        'Bear Case':'__AI__bearCase__AI__',
+        'Highest Conviction Call':'__AI__convictionCall__AI__',
+        'Durability Score':'__AI__durabilityScore__AI__',
+        'Piotroski Score':'__AI__piotroski__AI__',
+      }},
+
+      // ── Tab 8: Risk Analysis ──────────────────────────────────────────────────
+      { id:8, name:'Risk Analysis', fields:{
+        'Annual Volatility':t.vol?fR(t.vol):NDA,
+        'Beta':fN(beta),
+        'RSI Reading':`${t.rsi?fN(t.rsi):NDA} — ${rsiSig}`,
+        '52W Range Position':(w52h&&w52l&&px)?`${((px-w52l)/(w52h-w52l)*100).toFixed(0)}% of 52W range`:NDA,
+        'Volatility Score':volScore+'/100',
+        'Overall Risk Score':'__AI__riskScore__AI__',
+        'Risk Factor 1':'__AI__risk1__AI__',
+        'Risk Factor 2':'__AI__risk2__AI__',
+        'Risk Factor 3':'__AI__risk3__AI__',
+        'Market Sentiment Gauge':'__AI__mktSentiment__AI__',
+        'Market Sentiment Score':'__AI__mktSentScore__AI__',
+        'Current Market Phase':'__AI__mktPhase__AI__',
+        'Best Action Now':'__AI__bestAction__AI__',
+      }},
+
+      // ── Tab 9: Tax Compliance ──────────────────────────────────────────────────
+      { id:9, name:'Tax Compliance', fields:{
+        'Resident Status':resident||NDA,
+        'Asset Country':SP.country||NDA,
+        'STCG Rate':'__AI__stcgRate__AI__',
+        'STCG Holding Period':'__AI__stcgPeriod__AI__',
+        'LTCG Rate':'__AI__ltcgRate__AI__',
+        'LTCG Holding Period':'__AI__ltcgPeriod__AI__',
+        'Tax Notes':'__AI__taxNotes__AI__',
+        'FEMA / Compliance':'__AI__femaCompliance__AI__',
+        'Reporting Requirements':'__AI__reportingReqs__AI__',
+        'Best Investment Platform':'__AI__bestPlatform__AI__',
+      }},
+
+      // ── Tab 10: Final Verdict ──────────────────────────────────────────────────
+      { id:10, name:'Final Verdict', fields:{
+        'Final Verdict Badge':'__AI__finalBadge__AI__',
+        'AI Recommendation':'__AI__aiRec__AI__',
+        'One-Line Summary':'__AI__oneLiner__AI__',
+        'Short-Term Outlook':'__AI__shortTermOutlook__AI__',
+        'Medium-Term Outlook':'__AI__medTermOutlook__AI__',
+        'Long-Term Outlook':'__AI__longTermOutlook__AI__',
+        'Buy Zone Price':tpl?`Around ${fC(tpl*0.95,cur)}`:'__AI__buyZone__AI__',
+        'Stop Loss Price':px?fC(px*0.85,cur):'__AI__stopLoss__AI__',
+        '6M Target':tpm?fC((px||0)*0.5+tpm*0.5,cur):'__AI__tgt6m__AI__',
+        '12M Analyst Target':fC(tpm,cur), '12M Upside':upside,
+        'Composite — Fundamentals':Math.min(30,Math.round((pe?20:10)+(roe?7:0)+(fcfCalc?3:0)))+'/30',
+        'Composite — Valuation':Math.round(valScore*25/100)+'/25',
+        'Composite — Technicals':Math.round(momScore*20/100)+'/20',
+        'Composite — Management':'__AI__compMgmt__AI__',
+        'Composite — Sector':'__AI__compSector__AI__',
+        'Best Way to Invest':'__AI__bestWayInvest__AI__',
+        'Conservative Allocation %':'__AI__allocConservative__AI__',
+        'Moderate Allocation %':'__AI__allocModerate__AI__',
+        'Aggressive Allocation %':'__AI__allocAggressive__AI__',
+        'Sector Tailwinds':'__AI__sectorTailwinds__AI__',
+        ...(refLinks ? {'Referral Links': refLinks} : {}),
+      }},
+    ],
+  };
+}
+
+// ─── Short NLP prompt — AI handles prose only (~350 tokens in, ~600 out) ──────
+function buildNlpPrompt(summary, daily, news, assetName, assetType, market, resident) {
+  const P=summary?.price||{}, SP=summary?.summaryProfile||{};
+  const FD=summary?.financialData||{}, KS=summary?.defaultKeyStatistics||{};
+  const cur=P.currency||'USD', px=_raw(P,'regularMarketPrice');
+  const pe=_raw(KS,'trailingPE'), pb=_raw(KS,'priceToBook'), roe=_raw(FD,'returnOnEquity');
+  const mc=_raw(P,'marketCap'), rk=FD.recommendationKey||'N/A', tpm=_raw(FD,'targetMeanPrice');
+  const w52h=_raw(KS,'fiftyTwoWeekHigh'), w52l=_raw(KS,'fiftyTwoWeekLow');
+  const t=calcTech(daily,[]);
+  const newsLines=news.slice(0,5).map((h,i)=>`${i+1}. ${h.date}: ${h.title}`).join('\n')||'No recent news';
+  return `You are a financial analyst for VilfinTV. Analyze the data below and return narrative text ONLY.
+Return STRICTLY a JSON object with these exact keys — no markdown, no prose outside JSON.
+
+ASSET: ${assetName} | ${P.longName||assetName} | ${SP.sector||'N/A'} | ${SP.country||market||'N/A'}
+EXCHANGE: ${P.fullExchangeName||'N/A'} | PRICE: ${cur} ${px??'N/A'} | MCAP: ${mc?fL(mc,cur):'N/A'}
+52W: ${w52h??'N/A'} – ${w52l??'N/A'} | 1Y RTN: ${t.ret1y!==null?t.ret1y.toFixed(1)+'%':'N/A'}
+PE: ${pe??'N/A'} | PB: ${pb??'N/A'} | ROE: ${roe?(roe*100).toFixed(1)+'%':'N/A'}
+RSI: ${t.rsi?t.rsi.toFixed(1):'N/A'} | CONSENSUS: ${rk} | TARGET: ${tpm?cur+' '+tpm:'N/A'}
+RESIDENT: ${resident||'N/A'}
+NEWS:\n${newsLines}
+
+Return ONLY this JSON (start { end }):
+{"companyBackground":"3-4 sentences: founding, core business, revenue mix, competitive position","coreSegments":"Revenue mix and key segments in 1-2 sentences","keySubsidiaries":"Key subsidiaries, comma-separated","keyInsight":"2-3 sentences on current investment opportunity based on the data","tam":"TAM size and growth drivers","industryGrowth":"Industry growth rate and trend","marketPosition":"Leadership and competitive moat in 1 sentence","regulatoryEnv":"Key regulatory factors in 1 sentence","tailwind1":"[Title] — [1-sentence detail]","tailwind2":"[Title] — [1-sentence detail]","tailwind3":"[Title] — [1-sentence detail]","headwind1":"[Title] — [1-sentence detail]","headwind2":"[Title] — [1-sentence detail]","headwind3":"[Title] — [1-sentence detail]","overallSentiment":"Positive / Negative / Neutral — from news above","mgmtCommentary":"Latest management commentary in 1-2 sentences","ceoName":"CEO or MD full name","ceoBackground":"CEO background in 1 sentence","govScore":"X/10 with brief reason","esgHighlights":"Key ESG point in 1 sentence","insiderActivity":"Recent insider buying/selling summary","buzzScore":"Social buzz score 0-100 and trend","trendingTopic":"Current top trending topic for this stock","posNarrative":"Key positive social narrative","bullCase":"Bull case: 2-3 sentences on why the stock could outperform","baseCase":"Base case: 2-3 sentences on most likely outcome","bearCase":"Bear case: 2-3 sentences on key downside risks","convictionCall":"Highest conviction analyst call and reason","durabilityScore":"X/100 with brief reason","piotroski":"Estimated Piotroski F-Score X/9","riskScore":"Overall investment risk X/10","risk1":"[Name] — [Low/Medium/High] — [1-sentence]","risk2":"[Name] — [Low/Medium/High] — [1-sentence]","risk3":"[Name] — [Low/Medium/High] — [1-sentence]","mktSentiment":"Extreme Fear / Fear / Neutral / Greed / Extreme Greed","mktSentScore":"0-100","mktPhase":"Early Bull / Mid Bull / Late Bull / Early Bear / Mid Bear / Recovery / Consolidation","bestAction":"Buy / SIP / Hold / Reduce / Avoid — 1-line rationale","stcgRate":"STCG rate for ${resident||'Indian Resident'} on this asset","stcgPeriod":"STCG holding period threshold","ltcgRate":"LTCG rate for ${resident||'Indian Resident'}","ltcgPeriod":"LTCG holding period threshold","taxNotes":"Key tax notes and surcharge","femaCompliance":"FEMA compliance points if applicable","reportingReqs":"Tax reporting requirements","bestPlatform":"Best investment platforms for ${resident||'Indian Resident'}","dcfValue":"DCF intrinsic value estimate with key assumptions","marginSafety":"Margin of safety at current price","fiidii":"Latest FII/DII activity this quarter","indexChanges":"Upcoming index rebalancing","indexInclusions":"Recent index inclusions/exclusions","peerComparison":"Top 3 peers with name, PE, ROE, MCap in 2-3 lines","bestValuePeer":"Best value peer and brief reason","strongBuy1":"[Name] | [Ticker] | [Why] | [Target] | [Upside%]","strongBuy2":"[Name] | [Ticker] | [Why] | [Target] | [Upside%]","strongBuy3":"[Name] | [Ticker] | [Why] | [Target] | [Upside%]","finalBadge":"STRONG BUY or BUY or ACCUMULATE or HOLD or REDUCE or SELL","aiRec":"Strong Buy / Buy / Hold / Sell / Strong Sell — from data only","oneLiner":"One compelling sentence on the investment case","shortTermOutlook":"1-month outlook in 1-2 sentences","medTermOutlook":"3-6 month outlook in 1-2 sentences","longTermOutlook":"1-3 year outlook in 1-2 sentences","buyZone":"Ideal buy zone price range","stopLoss":"Stop loss price with rationale","tgt6m":"6-month price target","tgt12m":"12-month price target","compMgmt":"X/15","compSector":"X/10","bestWayInvest":"SIP / Lumpsum / Buy on Dip — with reason","allocConservative":"X%","allocModerate":"X%","allocAggressive":"X%","sectorTailwinds":"2-3 lines on structural sector tailwinds"}`;
+}
+
+/** Walk JSON skeleton and replace __AI__key__AI__ placeholders with AI values. */
+function mergeAiInsights(skeleton, insights) {
+  if (!insights) return skeleton;
+  try {
+    const merged = JSON.stringify(skeleton).replace(/"__AI__(\w+)__AI__"/g, (_,k) =>
+      JSON.stringify(insights[k] !== undefined ? String(insights[k]) : NDA)
+    );
+    return JSON.parse(merged);
+  } catch { return skeleton; }
+}
+
+/** Strip markdown fences and extract JSON object from AI response. */
+function parseAiJson(raw) {
+  if (!raw) return null;
+  try {
+    const s = raw.replace(/^```(?:json)?\s*/i,'').replace(/\s*```\s*$/,'').trim();
+    const i = s.indexOf('{'), j = s.lastIndexOf('}');
+    if (i<0||j<0) return null;
+    return JSON.parse(s.slice(i, j+1));
+  } catch { return null; }
+}
+
+/** Call AI with compact NLP prompt — 2000 tokens vs 15000+ previously. */
+async function callAiForInsights(nlpPrompt, env, providerHint) {
+  const msgs = [
+    { role:'system', content:'You are a financial analyst. Return ONLY the requested JSON object. No markdown, no prose outside JSON.' },
+    { role:'user',   content:nlpPrompt },
+  ];
+  const maxTok = 2500;
+  const hint = (providerHint||'').toLowerCase();
+  let r = null;
+  if (hint==='groq')    r = await callGroq(msgs,env,maxTok);
+  else if (hint==='gemini')  r = await callGemini(msgs,env,maxTok);
+  else if (hint==='openai')  r = await callOpenAI(msgs,env,maxTok);
+  else if (hint==='deepseek')r = await callDeepSeek(msgs,env,maxTok);
+  if (!r) r = await callGroq(msgs,env,maxTok);
+  if (!r) r = await callGemini(msgs,env,maxTok);
+  if (!r) r = await callOpenAI(msgs,env,maxTok);
+  if (!r) r = await callDeepSeek(msgs,env,maxTok);
+  if (!r) r = await callPollinations(msgs);
+  return parseAiJson(r);
+}
+
+/** Parse structured report request fields from the compact buildQuery() prompt. */
+function parseReportFields(prompt) {
+  const f = lbl => { const m=prompt.match(new RegExp(lbl+'\\s*:\\s*([^\\n|]+)','i')); return m?m[1].replace(/\s+/g,' ').trim():''; };
+  const refM = prompt.match(/Referral Links[^\n]*:\n([\s\S]+?)(?:\n\nOUTPUT|$)/i);
+  return {
+    assetName:    f('Asset Name')||f('Currency Held')||'Unknown Asset',
+    assetType:    f('Asset Type'),
+    market:       f('Market\\s*[/\\s]*Category')||f('Market'),
+    resident:     f('Resident Status'),
+    referralLinks: refM ? refM[1].trim() : '',
+  };
+}
+
+/**
+ * Main hybrid report orchestrator.
+ * 1. Parse asset details from prompt
+ * 2. Resolve global ticker symbol
+ * 3. Fetch financial data from Yahoo Finance v10 + chart + news (parallel)
+ * 4. Build 10-tab JSON skeleton from API data — pure JavaScript, zero AI for numbers
+ * 5. Call AI with compact ~350-token prompt for prose/narrative fields only
+ * 6. Merge AI text into skeleton, return complete JSON string
+ */
+async function hybridReport(prompt, env, providerHint) {
+  const { assetName, assetType, market, resident, referralLinks } = parseReportFields(prompt);
+  const today = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  console.log(`[hybrid] asset="${assetName}" type="${assetType}" market="${market}" resident="${resident}"`);
+
+  const symbol = await resolveSymbolGlobal(assetName, market);
+  console.log(`[hybrid] resolved symbol="${symbol}"`);
+
+  // All 4 fetches run concurrently — wall time = slowest single fetch
+  const [sumRes, dRes, mRes, nwsRes] = await Promise.allSettled([
+    fetchYFSummaryFull(symbol),
+    fetchYFChartHistory(symbol, '1y', '1d'),
+    fetchYFChartHistory(symbol, '5y', '1mo'),
+    fetchYFNewsHeadlines(assetName||symbol),
+  ]);
+
+  const summary = sumRes.status==='fulfilled' ? sumRes.value : null;
+  const daily   = extractCloses(dRes.status==='fulfilled'  ? dRes.value  : null);
+  const monthly = extractCloses(mRes.status==='fulfilled'  ? mRes.value  : null);
+  let news      = nwsRes.status==='fulfilled' ? (nwsRes.value||[]) : [];
+  if (!news.length) news = await fetchGoogleNewsRSS(assetName).catch(()=>[]);
+
+  console.log(`[hybrid] summary=${!!summary} daily=${daily.length}pt monthly=${monthly.length}pt news=${news.length}`);
+
+  // Build JSON skeleton — pure JavaScript, no AI for any numeric field
+  const skeleton = buildStockSkeleton(summary||{}, daily, monthly, news, assetName, market, resident, referralLinks, today);
+
+  // AI called once for prose fields only (~2000 tokens total vs 15000+ previously)
+  const nlpPrompt = buildNlpPrompt(summary||{}, daily, news, assetName, assetType, market, resident);
+  const insights  = await callAiForInsights(nlpPrompt, env, providerHint);
+  console.log(`[hybrid] insights=${!!insights} keys=${insights?Object.keys(insights).length:0}`);
+
+  return JSON.stringify(mergeAiInsights(skeleton, insights));
+}
+
+// ─── Legacy stub — kept so existing chat-mode fetchLiveContext() still compiles ─
 function resolveNSETicker(assetName) {
   const lower = (assetName || '').toLowerCase().replace(/[^a-z0-9&. ]/g, '').trim();
   if (NSE_TICKERS[lower]) return NSE_TICKERS[lower];
@@ -820,388 +1470,7 @@ function resolveNSETicker(assetName) {
   return lower.split(/\s+/)[0].toUpperCase().replace(/[^A-Z0-9&.-]/g, '');
 }
 
-/**
- * Parse the structured "Asset Name / Asset Type / Market" fields that
- * buildQuery() embeds in the prompt. Falls back to empty string for missing.
- */
-function parsePromptFields(prompt) {
-  const get = (key) => {
-    const m = prompt.match(new RegExp(String(key) + '\\s*:\\s*([^\\n]+)', 'i'));
-    return m ? m[1].trim() : '';
-  };
-  return {
-    assetName: get('Asset Name'),
-    assetType: get('Asset Type'),
-    market:    get('Market \\/ Category'),
-    resident:  get('Resident Status'),
-  };
-}
-
-// ─── Yahoo Finance fetchers ───────────────────────────────────────────────────
-
-/** Fetch comprehensive live quote from Yahoo Finance v7 */
-async function fetchYFQuoteFull(symbol) {
-  const FIELDS = [
-    'regularMarketPrice','regularMarketChange','regularMarketChangePercent',
-    'regularMarketVolume','regularMarketOpen','regularMarketDayHigh','regularMarketDayLow',
-    'regularMarketPreviousClose','marketCap','trailingPE','forwardPE','priceToBook',
-    'trailingEps','dividendYield','fiftyTwoWeekHigh','fiftyTwoWeekLow',
-    'fiftyDayAverage','twoHundredDayAverage','beta',
-    'longName','shortName','sector','industry','currency','exchange',
-    'regularMarketTime','marketState','averageVolume','averageVolume10days',
-  ].join(',');
-  try {
-    const res = await fetch(
-      `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbol)}&fields=${FIELDS}`,
-      {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
-          'Accept': 'application/json',
-          'Accept-Language': 'en-US,en;q=0.9',
-        },
-        signal: AbortSignal.timeout(9000),
-      }
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data?.quoteResponse?.result?.[0] || null;
-  } catch { return null; }
-}
-
-/**
- * Fetch OHLCV chart data from Yahoo Finance v8.
- * @param {string} symbol - e.g. "HDFCBANK.NS"
- * @param {string} range  - "1y" | "5y" | "2y"
- * @param {string} interval - "1d" | "1wk" | "1mo"
- */
-async function fetchYFChartData(symbol, range, interval) {
-  try {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`
-      + `?interval=${interval}&range=${range}&includePrePost=false`;
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; VilfinTV/1.0)',
-        'Accept': 'application/json',
-      },
-      signal: AbortSignal.timeout(12000),
-    });
-    return res.ok ? res.json() : null;
-  } catch { return null; }
-}
-
-/** Fetch recent news from Yahoo Finance search */
-async function fetchYFSearchNews(query) {
-  try {
-    const url = 'https://query1.finance.yahoo.com/v1/finance/search'
-      + '?q=' + encodeURIComponent(query)
-      + '&quotesCount=2&newsCount=6&enableFuzzyQuery=false&lang=en-US';
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; VilfinTV/1.0)',
-        'Accept': 'application/json',
-      },
-      signal: AbortSignal.timeout(7000),
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.news || [])
-      .filter(n => n.title)
-      .slice(0, 6)
-      .map(n => {
-        const d = n.providerPublishTime
-          ? new Date(n.providerPublishTime * 1000).toISOString().split('T')[0]
-          : '';
-        return `• ${n.title}${n.publisher ? ' — ' + n.publisher : ''}${d ? ' [' + d + ']' : ''}`;
-      });
-  } catch { return []; }
-}
-
-/** Try Google News RSS as a news fallback (simple XML parse, no DOM needed) */
-async function fetchGoogleNewsRSS(query) {
-  try {
-    const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query + ' stock NSE')}&hl=en-IN&gl=IN&ceid=IN:en`;
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; VilfinTV/1.0)' },
-      signal: AbortSignal.timeout(7000),
-    });
-    if (!res.ok) return [];
-    const xml = await res.text();
-    const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].slice(0, 6);
-    return items.map(m => {
-      const title  = (m[1].match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || m[1].match(/<title>(.*?)<\/title>/) || [])[1] || '';
-      const source = (m[1].match(/<source[^>]*>(.*?)<\/source>/) || [])[1] || '';
-      return title ? `• ${title}${source ? ' — ' + source : ''}` : null;
-    }).filter(Boolean);
-  } catch { return []; }
-}
-
-// ─── Technical calculation helpers ───────────────────────────────────────────
-
-/** Extract clean close prices from a Yahoo Finance v8 chart response */
-function getChartCloses(chartJson) {
-  const result = chartJson?.chart?.result?.[0];
-  if (!result) return [];
-  const adj   = result.indicators?.adjclose?.[0]?.adjclose || [];
-  const plain = result.indicators?.quote?.[0]?.close       || [];
-  const src   = adj.length ? adj : plain;
-  return src.filter(c => c !== null && c !== undefined && !isNaN(c));
-}
-
-/** Simple Moving Average of the last `n` closes */
-function calcSMA(closes, n) {
-  if (!closes || closes.length < n) return null;
-  const slice = closes.slice(-n);
-  return +(slice.reduce((a, b) => a + b, 0) / n).toFixed(2);
-}
-
-/**
- * RSI (14) — Wilder's smoothing.
- * Needs at least period+1 closes.
- */
-function calcRSI(closes, period = 14) {
-  if (!closes || closes.length < period + 1) return null;
-  const src = closes.slice(-(period + 30)); // extra buffer for smoothing
-  let gains = 0, losses = 0;
-  // Initial average
-  for (let i = 1; i <= period; i++) {
-    const d = src[i] - src[i - 1];
-    if (d >= 0) gains += d; else losses -= d;
-  }
-  let avgG = gains / period, avgL = losses / period;
-  // Wilder smoothing for remaining bars
-  for (let i = period + 1; i < src.length; i++) {
-    const d = src[i] - src[i - 1];
-    avgG = (avgG * (period - 1) + (d > 0 ? d : 0)) / period;
-    avgL = (avgL * (period - 1) + (d < 0 ? -d : 0)) / period;
-  }
-  if (avgL === 0) return 100;
-  return +(100 - 100 / (1 + avgG / avgL)).toFixed(1);
-}
-
-/**
- * Calculate percentage return over `periods` data points from end.
- * Works for both daily (periods = trading days) and monthly (periods = months).
- */
-function calcReturnPct(closes, periods) {
-  if (!closes || closes.length < 2) return null;
-  const cur  = closes[closes.length - 1];
-  const idx  = closes.length - 1 - periods;
-  if (idx < 0 || !closes[idx]) return null;
-  return +((cur - closes[idx]) / closes[idx] * 100).toFixed(1);
-}
-
-/** Convert a simple total return to CAGR given number of years */
-function toCagr(totalReturnPct, years) {
-  if (totalReturnPct === null || !years) return null;
-  return +(((Math.pow(1 + totalReturnPct / 100, 1 / years)) - 1) * 100).toFixed(1);
-}
-
-// ─── Context compiler ─────────────────────────────────────────────────────────
-
-/**
- * Assembles all fetched data into a single structured text block
- * that the AI model maps directly into the JSON schema fields.
- */
-function compileRawMarketContext({ symbol, assetName, assetType, quote, dailyCloses, monthlyCloses, news, nseData, amfiData }) {
-  const lines = [];
-  const isMF  = /mutual\s*fund/i.test(assetType);
-  const isETF = /etf/i.test(assetType);
-  const cur   = quote?.currency === 'INR' ? '₹' : (quote?.currency ? quote.currency + ' ' : '');
-  const p     = (v, d = 2) => (v !== null && v !== undefined && !isNaN(v)) ? +parseFloat(v).toFixed(d) : null;
-  const fv    = (v, prefix = '', suffix = '') => (v !== null && v !== undefined) ? `${prefix}${v}${suffix}` : 'No Data Available';
-  const fmtCr = (v) => v ? `₹${(v / 1e7).toFixed(0)} Cr` : 'No Data Available';
-  const fpct  = (v) => v !== null ? `${v >= 0 ? '+' : ''}${v}%` : 'No Data Available';
-  const fdate = (epoch) => epoch ? new Date(epoch * 1000).toISOString().split('T')[0] : 'N/A';
-
-  // ── LIVE PRICE ───────────────────────────────────────────────────────────────
-  if (quote) {
-    lines.push('=== LIVE PRICE DATA (Yahoo Finance ✓live) ===');
-    lines.push(`Current Price: ${fv(p(quote.regularMarketPrice), cur)} ✓live`);
-    if (quote.regularMarketChange !== undefined) {
-      const sign = quote.regularMarketChange >= 0 ? '+' : '';
-      lines.push(`Day Change: ${sign}${p(quote.regularMarketChange)} (${sign}${p(quote.regularMarketChangePercent)}%) ✓live`);
-    }
-    lines.push(`Day Open: ${fv(p(quote.regularMarketOpen), cur)}`);
-    lines.push(`Day High: ${fv(p(quote.regularMarketDayHigh), cur)}`);
-    lines.push(`Day Low: ${fv(p(quote.regularMarketDayLow), cur)}`);
-    lines.push(`Previous Close: ${fv(p(quote.regularMarketPreviousClose), cur)}`);
-    if (quote.regularMarketVolume) {
-      lines.push(`Volume (today): ${Number(quote.regularMarketVolume).toLocaleString('en-IN')} ✓live`);
-      lines.push(`Avg Volume (3m): ${Number(quote.averageVolume || 0).toLocaleString('en-IN')}`);
-    }
-    lines.push(`Market Cap: ${fmtCr(quote.marketCap)} ✓live`);
-    lines.push(`52-Week High: ${fv(p(quote.fiftyTwoWeekHigh), cur)}`);
-    lines.push(`52-Week Low: ${fv(p(quote.fiftyTwoWeekLow), cur)}`);
-    if (quote.dividendYield) lines.push(`Dividend Yield: ${p(quote.dividendYield * 100, 2)}%`);
-    lines.push(`Exchange: ${quote.exchange || 'NSE'}`);
-    lines.push(`Market State: ${quote.marketState || 'N/A'}`);
-    lines.push(`Price As Of: ${fdate(quote.regularMarketTime)}`);
-    lines.push('');
-  }
-
-  // ── FUNDAMENTALS ─────────────────────────────────────────────────────────────
-  if (quote && !isMF) {
-    lines.push('=== FUNDAMENTAL METRICS ===');
-    lines.push(`P/E Ratio (TTM): ${fv(p(quote.trailingPE, 1))}`);
-    lines.push(`Forward P/E: ${fv(p(quote.forwardPE, 1))}`);
-    lines.push(`P/B Ratio: ${fv(p(quote.priceToBook, 2))}`);
-    lines.push(`EPS (TTM): ${fv(p(quote.trailingEps, 2), cur)}`);
-    lines.push(`Beta: ${fv(p(quote.beta, 2))}`);
-    lines.push(`50-Day MA (Yahoo): ${fv(p(quote.fiftyDayAverage, 2), cur)}`);
-    lines.push(`200-Day MA (Yahoo): ${fv(p(quote.twoHundredDayAverage, 2), cur)}`);
-    if (quote.sector)   lines.push(`Sector: ${quote.sector}`);
-    if (quote.industry) lines.push(`Industry: ${quote.industry}`);
-    if (quote.longName) lines.push(`Full Name: ${quote.longName}`);
-    lines.push('');
-  }
-
-  // ── TECHNICALS (calculated from 1-year daily closes) ─────────────────────────
-  if (dailyCloses && dailyCloses.length >= 20) {
-    const last    = dailyCloses[dailyCloses.length - 1];
-    const sma20   = calcSMA(dailyCloses, 20);
-    const sma50   = calcSMA(dailyCloses, Math.min(50,  dailyCloses.length));
-    const sma200  = calcSMA(dailyCloses, Math.min(200, dailyCloses.length));
-    const rsi     = calcRSI(dailyCloses, 14);
-    const vs = (ma) => ma ? fpct(+((last - ma) / ma * 100).toFixed(1)) : 'N/A';
-    const trend   = (sma20 && last > sma20 && sma50 && last > sma50) ? 'Bullish'
-                  : (sma20 && last < sma20 && sma50 && last < sma50) ? 'Bearish' : 'Mixed';
-    const cross   = (sma50 && sma200)
-                  ? (sma50 > sma200 ? 'Golden Cross (50D > 200D — bullish)' : 'Death Cross (50D < 200D — bearish)')
-                  : 'No Data Available';
-
-    lines.push('=== TECHNICAL INDICATORS (calculated from Yahoo Finance 1-year daily price history) ===');
-    lines.push(`Current Price: ${fv(p(last, 2), cur)}`);
-    if (sma20)  lines.push(`20-Day SMA: ${cur}${sma20} | Price vs 20D SMA: ${vs(sma20)}`);
-    if (sma50)  lines.push(`50-Day SMA: ${cur}${sma50} | Price vs 50D SMA: ${vs(sma50)}`);
-    if (sma200) lines.push(`200-Day SMA: ${cur}${sma200} | Price vs 200D SMA: ${vs(sma200)}`);
-    lines.push(`RSI (14): ${fv(rsi)} | Signal: ${rsi === null ? 'N/A' : rsi > 70 ? 'Overbought' : rsi < 30 ? 'Oversold' : 'Neutral'}`);
-    lines.push(`MA Trend: ${trend}`);
-    lines.push(`50D vs 200D Cross: ${cross}`);
-    lines.push('');
-  }
-
-  // ── HISTORICAL RETURNS (calculated from 5-year monthly closes) ───────────────
-  if (monthlyCloses && monthlyCloses.length >= 6) {
-    const r1y   = calcReturnPct(monthlyCloses, Math.min(12, monthlyCloses.length - 1));
-    const r3y   = calcReturnPct(monthlyCloses, Math.min(36, monthlyCloses.length - 1));
-    const r5y   = calcReturnPct(monthlyCloses, Math.min(60, monthlyCloses.length - 1));
-    const c3y   = toCagr(r3y, 3);
-    const c5y   = toCagr(r5y, 5);
-
-    lines.push('=== HISTORICAL RETURNS (calculated from Yahoo Finance monthly price history) ===');
-    lines.push(`1-Year Return: ${r1y !== null ? fpct(r1y) : 'No Data Available'}`);
-    lines.push(`3-Year CAGR: ${c3y !== null ? fpct(c3y) : 'No Data Available'}`);
-    lines.push(`5-Year CAGR: ${c5y !== null ? fpct(c5y) : 'No Data Available'}`);
-    lines.push('Note: Based on adjusted monthly close prices from Yahoo Finance.');
-    lines.push('');
-  }
-
-  // ── MF-specific ───────────────────────────────────────────────────────────────
-  if (amfiData) {
-    lines.push('=== MUTUAL FUND NAV (AMFI India) ===');
-    lines.push(amfiData);
-    lines.push('');
-  }
-
-  // ── NSE authoritative quote ───────────────────────────────────────────────────
-  if (nseData) {
-    lines.push('=== NSE INDIA LIVE QUOTE (authoritative domestic source) ===');
-    lines.push(nseData);
-    lines.push('');
-  }
-
-  // ── News ─────────────────────────────────────────────────────────────────────
-  if (news && news.length) {
-    lines.push('=== RECENT NEWS HEADLINES ===');
-    news.forEach(n => lines.push(n));
-    lines.push('');
-  }
-
-  if (!lines.length) return '';
-  return lines.join('\n');
-}
-
-/**
- * Master pre-fetch orchestrator for structured report requests.
- * Parses the asset name from the prompt, resolves ticker, fires concurrent
- * fetches, and returns a formatted `rawMarketContext` string.
- */
-async function prefetchMarketData(prompt) {
-  const { assetName, assetType, market } = parsePromptFields(prompt);
-
-  const isMF     = /mutual\s*fund/i.test(assetType) || /fund/i.test(market);
-  const isETF    = /etf/i.test(assetType);
-  const isIndian = /india|nse|bse|₹|inr/i.test((market + ' ' + assetType + ' ' + prompt).slice(0, 600));
-
-  // Resolve ticker
-  let ticker = '';
-  if (isIndian && !isMF) {
-    const nse = resolveNSETicker(assetName);
-    ticker = nse + '.NS';
-  } else if (isMF) {
-    // MF — use AMFI; try YF search for ETF sub-types
-    ticker = isETF ? (resolveNSETicker(assetName) + '.NS') : '';
-  } else {
-    // Non-Indian: extract uppercase word (crypto, global ETF, etc.)
-    ticker = extractTicker(prompt);
-  }
-
-  console.log(`[prefetch] asset="${assetName}" type="${assetType}" market="${market}" ticker="${ticker}" isMF=${isMF} isETF=${isETF}`);
-
-  // ── Concurrent fetches ────────────────────────────────────────────────────────
-  const [quoteRes, dailyRes, monthlyRes, newsRes, nseRes, amfiRes] = await Promise.allSettled([
-
-    // 1. YF v7 full quote (price, fundamentals, MA, 52W, sector)
-    ticker ? fetchYFQuoteFull(ticker) : Promise.resolve(null),
-
-    // 2. Daily 1y chart (SMA/RSI calculations, 1Y return)
-    (ticker && !isMF) ? fetchYFChartData(ticker, '1y', '1d') : Promise.resolve(null),
-
-    // 3. Monthly 5y chart (3Y/5Y CAGR)
-    ticker ? fetchYFChartData(ticker, '5y', '1mo') : Promise.resolve(null),
-
-    // 4. News: try YF search first
-    fetchYFSearchNews(assetName || ticker),
-
-    // 5. NSE India (authoritative Indian live price)
-    (isIndian && !isMF) ? fetchNSEQuote(assetName) : Promise.resolve(null),
-
-    // 6. AMFI NAV (mutual funds)
-    isMF ? fetchAMFINav(assetName) : Promise.resolve(null),
-  ]);
-
-  const quote        = quoteRes.status   === 'fulfilled' ? quoteRes.value   : null;
-  const dailyChart   = dailyRes.status   === 'fulfilled' ? dailyRes.value   : null;
-  const monthlyChart = monthlyRes.status === 'fulfilled' ? monthlyRes.value : null;
-  let   news         = newsRes.status    === 'fulfilled' ? (newsRes.value  || []) : [];
-  const nseData      = nseRes.status     === 'fulfilled' ? nseRes.value     : null;
-  const amfiData     = amfiRes.status    === 'fulfilled' ? amfiRes.value    : null;
-
-  const dailyCloses   = getChartCloses(dailyChart);
-  const monthlyCloses = getChartCloses(monthlyChart);
-
-  // ── News fallback: Google News RSS if YF returned nothing ────────────────────
-  if (!news.length && assetName) {
-    news = await fetchGoogleNewsRSS(assetName);
-  }
-
-  console.log(`[prefetch] quote=${quote ? 'OK' : 'FAIL'} daily=${dailyCloses.length}pt monthly=${monthlyCloses.length}pt news=${news.length} nse=${!!nseData} amfi=${!!amfiData}`);
-
-  const ctx = compileRawMarketContext({
-    symbol: ticker, assetName, assetType,
-    quote, dailyCloses, monthlyCloses,
-    news, nseData, amfiData,
-  });
-
-  if (!ctx) {
-    console.warn('[prefetch] Context is empty — all sources failed. AI will use knowledge only.');
-    return '';
-  }
-
-  return '\n\n### RAW MARKET CONTEXT (pre-fetched by server — map these values directly into the JSON fields):\n'
-    + ctx
-    + '### END RAW MARKET CONTEXT\n\n';
-}
+// ─── Legacy Yahoo Finance fetchers removed — replaced by hybrid engine above ──
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CRICKET DATA FETCHER  (GET /cricket endpoint)
