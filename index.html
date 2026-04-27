@@ -3211,7 +3211,7 @@ footer{
           oninput="radioSetVolume(this.value)" title="Volume"/>
       </div>
       <!-- Hidden HTML5 audio element — events wired in radioInit() via addEventListener -->
-      <audio id="radio-audio" preload="none" crossorigin="anonymous"></audio>
+      <audio id="radio-audio" preload="none"></audio>
     </div>
 
   </div><!-- /rb-panel-radio -->
@@ -6072,7 +6072,15 @@ function radioPlay(url, id, name, catId) {
 function radioTogglePlay() {
   const audio = document.getElementById('radio-audio');
   if (!audio) return;
-  if (!_radioCurrentUrl) return; // nothing selected yet
+
+  // If nothing is selected yet, auto-play the first station in the current category
+  if (!_radioCurrentUrl) {
+    const firstItem = document.querySelector('.radio-station-item');
+    if (firstItem) {
+      firstItem.click(); // triggers radioPlay() via the item's onclick
+    }
+    return;
+  }
 
   if (!audio.paused) {
     // ── Currently playing → pause ──────────────────────────────────
@@ -10295,8 +10303,8 @@ You MUST use Google Search / Grounding to fetch ALL prices, NAVs, and market dat
 • If you are not 100% sure of a value from a live source — write "Verify at NSE/BSE" next to the value.
 
 ROLE: Financial data extraction engine.
-Output ONLY a single strict JSON object wrapped in a \`\`\`json ... \`\`\` markdown code block.
-NO prose, NO commentary, NO plain text outside the code block. The report renderer parses JSON directly.
+Output ONLY a single strict JSON object. NO prose, NO commentary, NO text before { or after }.
+No markdown fences. The report renderer expects pure JSON — start immediately with { and end with }.
 
 ══════════════════════════════════════════
 SPEED PROTOCOL — FOLLOW EXACTLY
@@ -10332,7 +10340,7 @@ SPEED RULES:
   • For trending stocks: search "trending stocks India Twitter Reddit StockTwits ${today}"
   • Values only — no explanations unless the field explicitly says "(2–3 sentences)"
   • Numbers: use native currency, no currency conversion unless asked
-  • Stream output: output each ## TAB section immediately as ready, don't buffer
+  • Complete all 10 tabs inside a single JSON object; never break out of the JSON structure mid-output
 
 ══════════════════════════════════════════
 ASSET DETAILS
@@ -10364,9 +10372,8 @@ ${digExtra}${mfFOF}
 OUTPUT FORMAT — STRICT JSON REQUIRED
 ══════════════════════════════════════════
 
-Return ONLY this JSON structure inside a single \`\`\`json code block. Nothing outside it.
+Return ONLY this JSON structure. No code blocks, no markdown. Start immediately with { and end with }.
 
-\`\`\`json
 {
   "asset": "Asset Name",
   "date": "DD-MMM-YYYY",
@@ -10387,7 +10394,6 @@ Return ONLY this JSON structure inside a single \`\`\`json code block. Nothing o
     }
   ]
 }
-\`\`\`
 
 JSON Rules (STRICTLY ENFORCED):
 • Root key "tabs" is an array — one object per requested tab
@@ -10421,7 +10427,7 @@ FIELDS TO RETURN — ALL TABS
 ${tabSet}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-START OUTPUT NOW WITH THE \`\`\`json CODE BLOCK.
+START OUTPUT NOW WITH { — the opening brace of the JSON object.
 Include ALL tabs. Be concise. Close the JSON with ] } when all tabs are done.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
 }
