@@ -9446,7 +9446,7 @@ TAB 1 — OVERVIEW & FUNDAMENTALS (return all fields below)
 TAB 2 — LIVE MARKET DATA & TECHNICALS (return all fields below)
 
 ### Live FX Rates
-  ⚠️ ALL VALUES MUST BE FROM LIVE WEB SEARCH AS OF ${today} — NO TRAINING DATA FOR RATES
+  ✅ USE PRE-FETCHED DATA from the RAW MARKET CONTEXT block at end of prompt — NO web search needed
   Spot Rate vs USD (live) | Bid | Ask | Spread (pips)
   24H High | 24H Low | 24H Change % | 7D Change % | 30D Change %
   Spot Rate vs EUR | Spot Rate vs JPY | Spot Rate vs GBP | Spot Rate vs INR
@@ -9567,7 +9567,7 @@ TAB 1 — OVERVIEW & MACRO (return all fields below)
 TAB 2 — LIVE MARKET & TECHNICALS (return all fields below)
 
 ### Live Market Data
-  ⚠️ ALL PRICES MUST BE FROM LIVE WEB SEARCH AS OF ${today} — DO NOT USE TRAINING DATA FOR PRICES
+  ✅ USE PRE-FETCHED DATA from the RAW MARKET CONTEXT block at end of prompt — read LIVE PRICE DATA section
   NSE Price | BSE Price | Market Cap | 52W High | 52W High Date | 52W Low | 52W Low Date
   All-Time High | ATH Date | Avg Daily Volume | Delivery Volume % | Beta | Beta vs (Index name)
   Circuit Limit Up | Circuit Limit Down | Face Value | Dividend Yield TTM
@@ -9772,7 +9772,7 @@ TAB 1 — OVERVIEW (return all fields below)
   If ETF FOF: Underlying ETF Name | Underlying ETF TER % | Total Combined Expense (Fund TER + ETF TER) %
 
 TAB 2 — LIVE INFO (return all fields below)
-  ⚠️ NAV MUST BE FROM LIVE WEB SEARCH AS OF ${today} — search "[Fund Name] NAV today" on AMFI/Moneycontrol
+  ✅ USE PRE-FETCHED DATA from the RAW MARKET CONTEXT block at end of prompt — read MUTUAL FUND NAV section
   NAV Regular (latest) | NAV Direct (latest) | AUM (Cr) | AUM Change QoQ
   52W High NAV | 52W High Date | 52W Low NAV | 52W Low Date | All-Time High NAV | ATH Date
   Beta | Beta vs (index) | Sharpe Ratio | Sortino Ratio | Alpha | Standard Deviation | Portfolio Turnover Ratio %
@@ -10010,7 +10010,7 @@ TAB 1 — OVERVIEW & FUNDAMENTALS (return all fields below)
 TAB 2 — LIVE MARKET DATA & TECHNICALS (return all fields below)
 
 ### Live Market Data
-  ⚠️ ALL VALUES MUST BE FROM LIVE WEB SEARCH AS OF ${today} — NO TRAINING DATA FOR PRICES
+  ✅ USE PRE-FETCHED DATA from the RAW MARKET CONTEXT block at end of prompt — read LIVE PRICE DATA section
   Current Market Price | Face Value | YTM % | Current Yield % | Accrued Interest
   Clean Price | Dirty Price | 52W High Price | 52W High Date | 52W Low Price | 52W Low Date
   Macaulay Duration (years) | Modified Duration | Convexity | DV01/PVBP | Credit Spread (bps)
@@ -10166,7 +10166,7 @@ TAB 1 — OVERVIEW & FUNDAMENTALS (return all fields below)
 TAB 2 — LIVE MARKET DATA & TECHNICALS (return all fields below)
 
 ### Live Market Data
-  ⚠️ ALL VALUES MUST BE FROM LIVE WEB SEARCH AS OF ${today} — NO TRAINING DATA FOR PRICES
+  ✅ USE PRE-FETCHED DATA from the RAW MARKET CONTEXT block at end of prompt — read LIVE PRICE DATA section
   Spot Price | Futures Price Front Month | Futures Price Next Month
   Market Structure (Contango/Backwardation) | Basis (Spot – Futures) | Roll Yield % | Open Interest | Avg Daily Volume | Implied Volatility %
   52W High | 52W High Date | 52W Low | 52W Low Date | All-Time High | ATH Date
@@ -10360,40 +10360,32 @@ Output ONLY a single strict JSON object. NO prose, NO commentary, NO text before
 No markdown fences. The report renderer expects pure JSON — start immediately with { and end with }.
 
 ══════════════════════════════════════════
-SPEED PROTOCOL — FOLLOW EXACTLY
+DATA PROTOCOL — FOLLOW EXACTLY
 ══════════════════════════════════════════
-STEP 1 — LIVE WEB SEARCH FIRST (mandatory for all price/market data):
-  Search Google for current live data for these groups:
-  [A] LIVE price RIGHT NOW, market cap, 52W high/low, ATH, volume, beta → search "${asset} NSE live share price ${today}" — use ONLY the price shown on NSEIndia / Moneycontrol / Tickertape today, not cached/old data
-  [B] Latest financials (revenue, PAT, PE, PB, ROE, EPS) — most recent quarterly results → search "asset name Q4 results 2025 2026"
-  [C] Latest shareholding pattern (most recent quarter) FII/DII/Promoter → search "asset name shareholding March 2026"
-  [D] Top 5 RECENT news (last 7 days only) + upcoming corporate actions → search "asset name news ${today}"
-  [E] Analyst ratings + price targets (current, not old) → search "asset name analyst target price 2026"
-  [F] Technical signals (RSI, MACD, MAs, support/resistance) as of ${today} → search "asset name technical analysis today"
-  [G] Tax rules for ${resident} on this asset → use training knowledge, verify only if uncertain
-  [H] Historical returns (1Y/3Y/5Y) vs benchmark → search "asset name returns 2023 2024 2025 2026"
-  [I] Google Trends + social media buzz → search "asset name trending Reddit Twitter today"
+STEP 1 — USE PRE-FETCHED DATA (live figures already retrieved by the server):
+  At the END of this prompt you will find a "### RAW MARKET CONTEXT" block.
+  It contains live data fetched by the server seconds ago. Use it as your primary source:
+  [A] LIVE price, market cap, 52W high/low, volume, beta          → read from RAW MARKET CONTEXT → LIVE PRICE DATA section
+  [B] Fundamentals: PE, PB, EPS, dividend yield, sector           → read from RAW MARKET CONTEXT → FUNDAMENTAL METRICS section
+  [C] Technical indicators: SMA 20/50/200, RSI, trend, MA cross   → read from RAW MARKET CONTEXT → TECHNICAL INDICATORS section
+  [D] Historical returns: 1Y, 3Y CAGR, 5Y CAGR                   → read from RAW MARKET CONTEXT → HISTORICAL RETURNS section
+  [E] Mutual fund NAV (if applicable)                             → read from RAW MARKET CONTEXT → MUTUAL FUND NAV section
+  [F] NSE authoritative live quote (Indian assets)                → read from RAW MARKET CONTEXT → NSE INDIA LIVE QUOTE section
+  [G] Recent news headlines (last 7 days)                         → read from RAW MARKET CONTEXT → RECENT NEWS HEADLINES section
+  • Map each value EXACTLY as given — do NOT round, convert, or alter numeric values.
+  • If a field in the RAW MARKET CONTEXT says "N/A" or is missing → write "No Data Available".
+  • Do NOT invent or estimate any value that the pre-fetched block does not supply.
 
 STEP 2 — STATIC FROM KNOWLEDGE ONLY (do NOT search, use training data):
   Company history/founding story, sector description, CEO background, ESG overview,
-  standard tax rules for ${resident}, asset class definitions, standard risk factors.
-
-STEP 3 — OUTPUT IMMEDIATELY AFTER EACH TAB IS READY.
-  Do not wait for all tabs to finish. Stream each tab as soon as its data is ready.
-  Format strictly as shown below — no additional commentary between tabs.
+  standard tax rules for ${resident}, asset class definitions, standard risk factors,
+  analyst commentary, market outlook, investment thesis, risk factors.
 
 SPEED RULES:
-  • CRITICAL: TAB 2 (LIVE INFO) — ALL values must be from live web search. No exceptions.
-  • If price not found via search → write "LIVE DATA UNAVAILABLE — verify at NSE India website"
-  • If field not found in first search → try 1 more source before writing "No Data Available"
-  • If STILL not found after 2 sources → try a third (Tickertape, Trendlyne, Moneycontrol, INDmoney, Groww, Value Research)
-  • For ratings (CRISIL/VR/Morningstar): search each platform directly if not found in first batch
-  • For holdings: search "[Fund Name] portfolio holdings 2026" specifically
-  • For quarter returns: search "[Fund Name] quarterly returns 2025 2026"
-  • For trending stocks: search "trending stocks India Twitter Reddit StockTwits ${today}"
   • Values only — no explanations unless the field explicitly says "(2–3 sentences)"
   • Numbers: use native currency, no currency conversion unless asked
   • Complete all 10 tabs inside a single JSON object; never break out of the JSON structure mid-output
+  • Do NOT add any text before { or after } — pure JSON only
 
 ══════════════════════════════════════════
 ASSET DETAILS

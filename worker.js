@@ -641,18 +641,37 @@ async function callPollinations(messages) {
  *                                        of just the latest prompt — enabling multi-turn memory.
  */
 async function handleQuery(prompt, env, providerHint, historyMsgs) {
-  const today       = new Date().toDateString();
-  const liveContext = await fetchLiveContext(prompt);
+  const today = new Date().toDateString();
+
+  // ── Detect structured report mode ───────────────────────────────────────────
+  // Report requests contain the sentinel string injected by buildQuery().
+  // For reports: use pre-fetch engine (fast, reliable market data).
+  // For chat:    use fetchLiveContext (lightweight YF quote + DDG snippet).
+  const isReportMode = prompt.includes('OUTPUT FORMAT — STRICT JSON REQUIRED');
+
+  let contextBlock = '';
+  if (isReportMode) {
+    // Pre-fetch all financial data concurrently; returns a structured text block.
+    // If all sources fail, returns '' — AI falls back to training knowledge.
+    contextBlock = await prefetchMarketData(prompt);
+  } else {
+    contextBlock = await fetchLiveContext(prompt);
+  }
 
   // ── Build messages array ─────────────────────────────────────────────────────
   // If the frontend sent a full conversation history, use it so the AI has
   // multi-turn context. Otherwise fall back to single-turn mode.
   let messages;
   if (historyMsgs && historyMsgs.length > 0) {
-    // Inject live market context into the last user message only (not all turns)
+    // Inject context into the last user message only (not all turns)
     const withContext = historyMsgs.map((m, i) => {
-      if (i === historyMsgs.length - 1 && m.role === 'user' && liveContext) {
-        return { role: 'user', content: liveContext + m.content };
+      if (i === historyMsgs.length - 1 && m.role === 'user' && contextBlock) {
+        // For report mode: append context at the END (after all prompt instructions)
+        // For chat mode:   prepend context so AI sees it first
+        return {
+          role: 'user',
+          content: isReportMode ? (m.content + contextBlock) : (contextBlock + m.content),
+        };
       }
       return m;
     });
@@ -661,9 +680,12 @@ async function handleQuery(prompt, env, providerHint, historyMsgs) {
       ...withContext,
     ];
   } else {
+    const userContent = isReportMode
+      ? (prompt + contextBlock)      // append after prompt instructions
+      : (contextBlock + prompt);     // prepend for chat
     messages = [
       { role: 'system', content: SYSTEM_PROMPT(today) },
-      { role: 'user',   content: liveContext + prompt },
+      { role: 'user',   content: userContent },
     ];
   }
 
@@ -695,6 +717,490 @@ async function handleQuery(prompt, env, providerHint, historyMsgs) {
   const poll     = await callPollinations(messages);    if (poll)     return poll;
 
   throw new Error('All AI providers unavailable');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PRE-FETCH MARKET DATA ENGINE  (for structured report /query requests)
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// Cloudflare Workers cannot use npm packages (no Node.js runtime).
+// All data is fetched via the Web Fetch API from free public endpoints:
+//   • Yahoo Finance v7/quote  — live price, MCap, P/E, P/B, EPS, 52W, beta, MAs
+//   • Yahoo Finance v8/chart  — daily closes (1y) for SMA/RSI, monthly (5y) for CAGR
+//   • Yahoo Finance v1/search — recent news headlines
+//   • NSE India public API    — authoritative Indian live price
+//   • AMFI India              — mutual fund NAV
+//
+// Result: a `rawMarketContext` string appended to the AI prompt so the AI
+// formats pre-fetched numbers into JSON — no LLM web-searching needed.
+
+// ─── NSE ticker lookup table ──────────────────────────────────────────────────
+const NSE_TICKERS = {
+  // Banks
+  'hdfc bank': 'HDFCBANK', 'hdfcbank': 'HDFCBANK',
+  'icici bank': 'ICICIBANK', 'icicibank': 'ICICIBANK',
+  'axis bank': 'AXISBANK', 'axisbank': 'AXISBANK',
+  'state bank of india': 'SBIN', 'sbi': 'SBIN',
+  'kotak mahindra bank': 'KOTAKBANK', 'kotak bank': 'KOTAKBANK',
+  'indusind bank': 'INDUSINDBK',
+  'punjab national bank': 'PNB', 'pnb': 'PNB',
+  'bank of baroda': 'BANKBARODA',
+  'canara bank': 'CANBK',
+  'yes bank': 'YESBANK',
+  // IT
+  'tcs': 'TCS', 'tata consultancy': 'TCS',
+  'infosys': 'INFY', 'infy': 'INFY',
+  'wipro': 'WIPRO',
+  'hcl technologies': 'HCLTECH', 'hcl tech': 'HCLTECH',
+  'tech mahindra': 'TECHM',
+  'mphasis': 'MPHASIS',
+  'ltimindtree': 'LTIM',
+  'persistent systems': 'PERSISTENT',
+  // Large cap
+  'reliance industries': 'RELIANCE', 'reliance': 'RELIANCE',
+  'larsen & toubro': 'LT', 'larsen toubro': 'LT', 'l&t': 'LT', 'lt': 'LT',
+  'bajaj finance': 'BAJFINANCE',
+  'bajaj finserv': 'BAJAJFINSV',
+  'maruti suzuki': 'MARUTI', 'maruti': 'MARUTI',
+  'sun pharmaceutical': 'SUNPHARMA', 'sun pharma': 'SUNPHARMA',
+  'titan company': 'TITAN', 'titan': 'TITAN',
+  'bharti airtel': 'BHARTIARTL', 'airtel': 'BHARTIARTL',
+  'itc': 'ITC',
+  'nestle india': 'NESTLEIND', 'nestle': 'NESTLEIND',
+  'asian paints': 'ASIANPAINT',
+  'ultratech cement': 'ULTRACEMCO',
+  'divis laboratories': 'DIVISLAB', 'divis labs': 'DIVISLAB',
+  'dr reddys': 'DRREDDY', "dr. reddy's": 'DRREDDY',
+  'cipla': 'CIPLA',
+  'power grid': 'POWERGRID', 'power grid corporation': 'POWERGRID',
+  'ntpc': 'NTPC',
+  'ongc': 'ONGC',
+  'coal india': 'COALINDIA',
+  'jsw steel': 'JSWSTEEL',
+  'tata steel': 'TATASTEEL',
+  'hindalco': 'HINDALCO',
+  'vedanta': 'VEDL',
+  'adani enterprises': 'ADANIENT', 'adani ports': 'ADANIPORTS',
+  'adani green': 'ADANIGREEN', 'adani power': 'ADANIPOWER',
+  'grasim': 'GRASIM',
+  'eicher motors': 'EICHERMOT',
+  'hero motocorp': 'HEROMOTOCO',
+  'bajaj auto': 'BAJAJ-AUTO',
+  'tata motors': 'TATAMOTORS',
+  'm&m': 'M&M', 'mahindra': 'M&M', 'mahindra and mahindra': 'M&M',
+  'apollo hospitals': 'APOLLOHOSP',
+  'dmart': 'DMART', 'avenue supermarts': 'DMART',
+  'zomato': 'ZOMATO',
+  'paytm': 'PAYTM', 'one97 communications': 'PAYTM',
+  'nykaa': 'NYKAA', 'fsh nykaa': 'NYKAA',
+  'policybazaar': 'POLICYBZR',
+  // Indices
+  'nifty50': 'NIFTY50', 'nifty 50': 'NIFTY50',
+  'sensex': 'SENSEX',
+  // ETFs
+  'niftybees': 'NIFTYBEES', 'nifty bees': 'NIFTYBEES',
+  'nippon india etf nifty bees': 'NIFTYBEES', 'nippon nifty bees': 'NIFTYBEES',
+  'bankbees': 'BANKBEES', 'bank bees': 'BANKBEES',
+  'goldbees': 'GOLDBEES', 'gold bees': 'GOLDBEES',
+  'liquidbees': 'LIQUIDBEES',
+  'juniorbees': 'JUNIORBEES', 'junior bees': 'JUNIORBEES',
+  'icicib22': 'ICICIB22',
+  'mafang': 'MAFANG',
+};
+
+/** Resolve an Indian asset name to its NSE ticker symbol */
+function resolveNSETicker(assetName) {
+  const lower = (assetName || '').toLowerCase().replace(/[^a-z0-9&. ]/g, '').trim();
+  if (NSE_TICKERS[lower]) return NSE_TICKERS[lower];
+  // Try partial match (both directions)
+  for (const [key, ticker] of Object.entries(NSE_TICKERS)) {
+    if (lower.includes(key) || key.includes(lower)) return ticker;
+  }
+  // Last resort: take first word, uppercase
+  return lower.split(/\s+/)[0].toUpperCase().replace(/[^A-Z0-9&.-]/g, '');
+}
+
+/**
+ * Parse the structured "Asset Name / Asset Type / Market" fields that
+ * buildQuery() embeds in the prompt. Falls back to empty string for missing.
+ */
+function parsePromptFields(prompt) {
+  const get = (key) => {
+    const m = prompt.match(new RegExp(String(key) + '\\s*:\\s*([^\\n]+)', 'i'));
+    return m ? m[1].trim() : '';
+  };
+  return {
+    assetName: get('Asset Name'),
+    assetType: get('Asset Type'),
+    market:    get('Market \\/ Category'),
+    resident:  get('Resident Status'),
+  };
+}
+
+// ─── Yahoo Finance fetchers ───────────────────────────────────────────────────
+
+/** Fetch comprehensive live quote from Yahoo Finance v7 */
+async function fetchYFQuoteFull(symbol) {
+  const FIELDS = [
+    'regularMarketPrice','regularMarketChange','regularMarketChangePercent',
+    'regularMarketVolume','regularMarketOpen','regularMarketDayHigh','regularMarketDayLow',
+    'regularMarketPreviousClose','marketCap','trailingPE','forwardPE','priceToBook',
+    'trailingEps','dividendYield','fiftyTwoWeekHigh','fiftyTwoWeekLow',
+    'fiftyDayAverage','twoHundredDayAverage','beta',
+    'longName','shortName','sector','industry','currency','exchange',
+    'regularMarketTime','marketState','averageVolume','averageVolume10days',
+  ].join(',');
+  try {
+    const res = await fetch(
+      `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbol)}&fields=${FIELDS}`,
+      {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
+          'Accept': 'application/json',
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+        signal: AbortSignal.timeout(9000),
+      }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.quoteResponse?.result?.[0] || null;
+  } catch { return null; }
+}
+
+/**
+ * Fetch OHLCV chart data from Yahoo Finance v8.
+ * @param {string} symbol - e.g. "HDFCBANK.NS"
+ * @param {string} range  - "1y" | "5y" | "2y"
+ * @param {string} interval - "1d" | "1wk" | "1mo"
+ */
+async function fetchYFChartData(symbol, range, interval) {
+  try {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`
+      + `?interval=${interval}&range=${range}&includePrePost=false`;
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; VilfinTV/1.0)',
+        'Accept': 'application/json',
+      },
+      signal: AbortSignal.timeout(12000),
+    });
+    return res.ok ? res.json() : null;
+  } catch { return null; }
+}
+
+/** Fetch recent news from Yahoo Finance search */
+async function fetchYFSearchNews(query) {
+  try {
+    const url = 'https://query1.finance.yahoo.com/v1/finance/search'
+      + '?q=' + encodeURIComponent(query)
+      + '&quotesCount=2&newsCount=6&enableFuzzyQuery=false&lang=en-US';
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; VilfinTV/1.0)',
+        'Accept': 'application/json',
+      },
+      signal: AbortSignal.timeout(7000),
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.news || [])
+      .filter(n => n.title)
+      .slice(0, 6)
+      .map(n => {
+        const d = n.providerPublishTime
+          ? new Date(n.providerPublishTime * 1000).toISOString().split('T')[0]
+          : '';
+        return `• ${n.title}${n.publisher ? ' — ' + n.publisher : ''}${d ? ' [' + d + ']' : ''}`;
+      });
+  } catch { return []; }
+}
+
+/** Try Google News RSS as a news fallback (simple XML parse, no DOM needed) */
+async function fetchGoogleNewsRSS(query) {
+  try {
+    const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query + ' stock NSE')}&hl=en-IN&gl=IN&ceid=IN:en`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; VilfinTV/1.0)' },
+      signal: AbortSignal.timeout(7000),
+    });
+    if (!res.ok) return [];
+    const xml = await res.text();
+    const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].slice(0, 6);
+    return items.map(m => {
+      const title  = (m[1].match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || m[1].match(/<title>(.*?)<\/title>/) || [])[1] || '';
+      const source = (m[1].match(/<source[^>]*>(.*?)<\/source>/) || [])[1] || '';
+      return title ? `• ${title}${source ? ' — ' + source : ''}` : null;
+    }).filter(Boolean);
+  } catch { return []; }
+}
+
+// ─── Technical calculation helpers ───────────────────────────────────────────
+
+/** Extract clean close prices from a Yahoo Finance v8 chart response */
+function getChartCloses(chartJson) {
+  const result = chartJson?.chart?.result?.[0];
+  if (!result) return [];
+  const adj   = result.indicators?.adjclose?.[0]?.adjclose || [];
+  const plain = result.indicators?.quote?.[0]?.close       || [];
+  const src   = adj.length ? adj : plain;
+  return src.filter(c => c !== null && c !== undefined && !isNaN(c));
+}
+
+/** Simple Moving Average of the last `n` closes */
+function calcSMA(closes, n) {
+  if (!closes || closes.length < n) return null;
+  const slice = closes.slice(-n);
+  return +(slice.reduce((a, b) => a + b, 0) / n).toFixed(2);
+}
+
+/**
+ * RSI (14) — Wilder's smoothing.
+ * Needs at least period+1 closes.
+ */
+function calcRSI(closes, period = 14) {
+  if (!closes || closes.length < period + 1) return null;
+  const src = closes.slice(-(period + 30)); // extra buffer for smoothing
+  let gains = 0, losses = 0;
+  // Initial average
+  for (let i = 1; i <= period; i++) {
+    const d = src[i] - src[i - 1];
+    if (d >= 0) gains += d; else losses -= d;
+  }
+  let avgG = gains / period, avgL = losses / period;
+  // Wilder smoothing for remaining bars
+  for (let i = period + 1; i < src.length; i++) {
+    const d = src[i] - src[i - 1];
+    avgG = (avgG * (period - 1) + (d > 0 ? d : 0)) / period;
+    avgL = (avgL * (period - 1) + (d < 0 ? -d : 0)) / period;
+  }
+  if (avgL === 0) return 100;
+  return +(100 - 100 / (1 + avgG / avgL)).toFixed(1);
+}
+
+/**
+ * Calculate percentage return over `periods` data points from end.
+ * Works for both daily (periods = trading days) and monthly (periods = months).
+ */
+function calcReturnPct(closes, periods) {
+  if (!closes || closes.length < 2) return null;
+  const cur  = closes[closes.length - 1];
+  const idx  = closes.length - 1 - periods;
+  if (idx < 0 || !closes[idx]) return null;
+  return +((cur - closes[idx]) / closes[idx] * 100).toFixed(1);
+}
+
+/** Convert a simple total return to CAGR given number of years */
+function toCagr(totalReturnPct, years) {
+  if (totalReturnPct === null || !years) return null;
+  return +(((Math.pow(1 + totalReturnPct / 100, 1 / years)) - 1) * 100).toFixed(1);
+}
+
+// ─── Context compiler ─────────────────────────────────────────────────────────
+
+/**
+ * Assembles all fetched data into a single structured text block
+ * that the AI model maps directly into the JSON schema fields.
+ */
+function compileRawMarketContext({ symbol, assetName, assetType, quote, dailyCloses, monthlyCloses, news, nseData, amfiData }) {
+  const lines = [];
+  const isMF  = /mutual\s*fund/i.test(assetType);
+  const isETF = /etf/i.test(assetType);
+  const cur   = quote?.currency === 'INR' ? '₹' : (quote?.currency ? quote.currency + ' ' : '');
+  const p     = (v, d = 2) => (v !== null && v !== undefined && !isNaN(v)) ? +parseFloat(v).toFixed(d) : null;
+  const fv    = (v, prefix = '', suffix = '') => (v !== null && v !== undefined) ? `${prefix}${v}${suffix}` : 'No Data Available';
+  const fmtCr = (v) => v ? `₹${(v / 1e7).toFixed(0)} Cr` : 'No Data Available';
+  const fpct  = (v) => v !== null ? `${v >= 0 ? '+' : ''}${v}%` : 'No Data Available';
+  const fdate = (epoch) => epoch ? new Date(epoch * 1000).toISOString().split('T')[0] : 'N/A';
+
+  // ── LIVE PRICE ───────────────────────────────────────────────────────────────
+  if (quote) {
+    lines.push('=== LIVE PRICE DATA (Yahoo Finance ✓live) ===');
+    lines.push(`Current Price: ${fv(p(quote.regularMarketPrice), cur)} ✓live`);
+    if (quote.regularMarketChange !== undefined) {
+      const sign = quote.regularMarketChange >= 0 ? '+' : '';
+      lines.push(`Day Change: ${sign}${p(quote.regularMarketChange)} (${sign}${p(quote.regularMarketChangePercent)}%) ✓live`);
+    }
+    lines.push(`Day Open: ${fv(p(quote.regularMarketOpen), cur)}`);
+    lines.push(`Day High: ${fv(p(quote.regularMarketDayHigh), cur)}`);
+    lines.push(`Day Low: ${fv(p(quote.regularMarketDayLow), cur)}`);
+    lines.push(`Previous Close: ${fv(p(quote.regularMarketPreviousClose), cur)}`);
+    if (quote.regularMarketVolume) {
+      lines.push(`Volume (today): ${Number(quote.regularMarketVolume).toLocaleString('en-IN')} ✓live`);
+      lines.push(`Avg Volume (3m): ${Number(quote.averageVolume || 0).toLocaleString('en-IN')}`);
+    }
+    lines.push(`Market Cap: ${fmtCr(quote.marketCap)} ✓live`);
+    lines.push(`52-Week High: ${fv(p(quote.fiftyTwoWeekHigh), cur)}`);
+    lines.push(`52-Week Low: ${fv(p(quote.fiftyTwoWeekLow), cur)}`);
+    if (quote.dividendYield) lines.push(`Dividend Yield: ${p(quote.dividendYield * 100, 2)}%`);
+    lines.push(`Exchange: ${quote.exchange || 'NSE'}`);
+    lines.push(`Market State: ${quote.marketState || 'N/A'}`);
+    lines.push(`Price As Of: ${fdate(quote.regularMarketTime)}`);
+    lines.push('');
+  }
+
+  // ── FUNDAMENTALS ─────────────────────────────────────────────────────────────
+  if (quote && !isMF) {
+    lines.push('=== FUNDAMENTAL METRICS ===');
+    lines.push(`P/E Ratio (TTM): ${fv(p(quote.trailingPE, 1))}`);
+    lines.push(`Forward P/E: ${fv(p(quote.forwardPE, 1))}`);
+    lines.push(`P/B Ratio: ${fv(p(quote.priceToBook, 2))}`);
+    lines.push(`EPS (TTM): ${fv(p(quote.trailingEps, 2), cur)}`);
+    lines.push(`Beta: ${fv(p(quote.beta, 2))}`);
+    lines.push(`50-Day MA (Yahoo): ${fv(p(quote.fiftyDayAverage, 2), cur)}`);
+    lines.push(`200-Day MA (Yahoo): ${fv(p(quote.twoHundredDayAverage, 2), cur)}`);
+    if (quote.sector)   lines.push(`Sector: ${quote.sector}`);
+    if (quote.industry) lines.push(`Industry: ${quote.industry}`);
+    if (quote.longName) lines.push(`Full Name: ${quote.longName}`);
+    lines.push('');
+  }
+
+  // ── TECHNICALS (calculated from 1-year daily closes) ─────────────────────────
+  if (dailyCloses && dailyCloses.length >= 20) {
+    const last    = dailyCloses[dailyCloses.length - 1];
+    const sma20   = calcSMA(dailyCloses, 20);
+    const sma50   = calcSMA(dailyCloses, Math.min(50,  dailyCloses.length));
+    const sma200  = calcSMA(dailyCloses, Math.min(200, dailyCloses.length));
+    const rsi     = calcRSI(dailyCloses, 14);
+    const vs = (ma) => ma ? fpct(+((last - ma) / ma * 100).toFixed(1)) : 'N/A';
+    const trend   = (sma20 && last > sma20 && sma50 && last > sma50) ? 'Bullish'
+                  : (sma20 && last < sma20 && sma50 && last < sma50) ? 'Bearish' : 'Mixed';
+    const cross   = (sma50 && sma200)
+                  ? (sma50 > sma200 ? 'Golden Cross (50D > 200D — bullish)' : 'Death Cross (50D < 200D — bearish)')
+                  : 'No Data Available';
+
+    lines.push('=== TECHNICAL INDICATORS (calculated from Yahoo Finance 1-year daily price history) ===');
+    lines.push(`Current Price: ${fv(p(last, 2), cur)}`);
+    if (sma20)  lines.push(`20-Day SMA: ${cur}${sma20} | Price vs 20D SMA: ${vs(sma20)}`);
+    if (sma50)  lines.push(`50-Day SMA: ${cur}${sma50} | Price vs 50D SMA: ${vs(sma50)}`);
+    if (sma200) lines.push(`200-Day SMA: ${cur}${sma200} | Price vs 200D SMA: ${vs(sma200)}`);
+    lines.push(`RSI (14): ${fv(rsi)} | Signal: ${rsi === null ? 'N/A' : rsi > 70 ? 'Overbought' : rsi < 30 ? 'Oversold' : 'Neutral'}`);
+    lines.push(`MA Trend: ${trend}`);
+    lines.push(`50D vs 200D Cross: ${cross}`);
+    lines.push('');
+  }
+
+  // ── HISTORICAL RETURNS (calculated from 5-year monthly closes) ───────────────
+  if (monthlyCloses && monthlyCloses.length >= 6) {
+    const r1y   = calcReturnPct(monthlyCloses, Math.min(12, monthlyCloses.length - 1));
+    const r3y   = calcReturnPct(monthlyCloses, Math.min(36, monthlyCloses.length - 1));
+    const r5y   = calcReturnPct(monthlyCloses, Math.min(60, monthlyCloses.length - 1));
+    const c3y   = toCagr(r3y, 3);
+    const c5y   = toCagr(r5y, 5);
+
+    lines.push('=== HISTORICAL RETURNS (calculated from Yahoo Finance monthly price history) ===');
+    lines.push(`1-Year Return: ${r1y !== null ? fpct(r1y) : 'No Data Available'}`);
+    lines.push(`3-Year CAGR: ${c3y !== null ? fpct(c3y) : 'No Data Available'}`);
+    lines.push(`5-Year CAGR: ${c5y !== null ? fpct(c5y) : 'No Data Available'}`);
+    lines.push('Note: Based on adjusted monthly close prices from Yahoo Finance.');
+    lines.push('');
+  }
+
+  // ── MF-specific ───────────────────────────────────────────────────────────────
+  if (amfiData) {
+    lines.push('=== MUTUAL FUND NAV (AMFI India) ===');
+    lines.push(amfiData);
+    lines.push('');
+  }
+
+  // ── NSE authoritative quote ───────────────────────────────────────────────────
+  if (nseData) {
+    lines.push('=== NSE INDIA LIVE QUOTE (authoritative domestic source) ===');
+    lines.push(nseData);
+    lines.push('');
+  }
+
+  // ── News ─────────────────────────────────────────────────────────────────────
+  if (news && news.length) {
+    lines.push('=== RECENT NEWS HEADLINES ===');
+    news.forEach(n => lines.push(n));
+    lines.push('');
+  }
+
+  if (!lines.length) return '';
+  return lines.join('\n');
+}
+
+/**
+ * Master pre-fetch orchestrator for structured report requests.
+ * Parses the asset name from the prompt, resolves ticker, fires concurrent
+ * fetches, and returns a formatted `rawMarketContext` string.
+ */
+async function prefetchMarketData(prompt) {
+  const { assetName, assetType, market } = parsePromptFields(prompt);
+
+  const isMF     = /mutual\s*fund/i.test(assetType) || /fund/i.test(market);
+  const isETF    = /etf/i.test(assetType);
+  const isIndian = /india|nse|bse|₹|inr/i.test((market + ' ' + assetType + ' ' + prompt).slice(0, 600));
+
+  // Resolve ticker
+  let ticker = '';
+  if (isIndian && !isMF) {
+    const nse = resolveNSETicker(assetName);
+    ticker = nse + '.NS';
+  } else if (isMF) {
+    // MF — use AMFI; try YF search for ETF sub-types
+    ticker = isETF ? (resolveNSETicker(assetName) + '.NS') : '';
+  } else {
+    // Non-Indian: extract uppercase word (crypto, global ETF, etc.)
+    ticker = extractTicker(prompt);
+  }
+
+  console.log(`[prefetch] asset="${assetName}" type="${assetType}" market="${market}" ticker="${ticker}" isMF=${isMF} isETF=${isETF}`);
+
+  // ── Concurrent fetches ────────────────────────────────────────────────────────
+  const [quoteRes, dailyRes, monthlyRes, newsRes, nseRes, amfiRes] = await Promise.allSettled([
+
+    // 1. YF v7 full quote (price, fundamentals, MA, 52W, sector)
+    ticker ? fetchYFQuoteFull(ticker) : Promise.resolve(null),
+
+    // 2. Daily 1y chart (SMA/RSI calculations, 1Y return)
+    (ticker && !isMF) ? fetchYFChartData(ticker, '1y', '1d') : Promise.resolve(null),
+
+    // 3. Monthly 5y chart (3Y/5Y CAGR)
+    ticker ? fetchYFChartData(ticker, '5y', '1mo') : Promise.resolve(null),
+
+    // 4. News: try YF search first
+    fetchYFSearchNews(assetName || ticker),
+
+    // 5. NSE India (authoritative Indian live price)
+    (isIndian && !isMF) ? fetchNSEQuote(assetName) : Promise.resolve(null),
+
+    // 6. AMFI NAV (mutual funds)
+    isMF ? fetchAMFINav(assetName) : Promise.resolve(null),
+  ]);
+
+  const quote        = quoteRes.status   === 'fulfilled' ? quoteRes.value   : null;
+  const dailyChart   = dailyRes.status   === 'fulfilled' ? dailyRes.value   : null;
+  const monthlyChart = monthlyRes.status === 'fulfilled' ? monthlyRes.value : null;
+  let   news         = newsRes.status    === 'fulfilled' ? (newsRes.value  || []) : [];
+  const nseData      = nseRes.status     === 'fulfilled' ? nseRes.value     : null;
+  const amfiData     = amfiRes.status    === 'fulfilled' ? amfiRes.value    : null;
+
+  const dailyCloses   = getChartCloses(dailyChart);
+  const monthlyCloses = getChartCloses(monthlyChart);
+
+  // ── News fallback: Google News RSS if YF returned nothing ────────────────────
+  if (!news.length && assetName) {
+    news = await fetchGoogleNewsRSS(assetName);
+  }
+
+  console.log(`[prefetch] quote=${quote ? 'OK' : 'FAIL'} daily=${dailyCloses.length}pt monthly=${monthlyCloses.length}pt news=${news.length} nse=${!!nseData} amfi=${!!amfiData}`);
+
+  const ctx = compileRawMarketContext({
+    symbol: ticker, assetName, assetType,
+    quote, dailyCloses, monthlyCloses,
+    news, nseData, amfiData,
+  });
+
+  if (!ctx) {
+    console.warn('[prefetch] Context is empty — all sources failed. AI will use knowledge only.');
+    return '';
+  }
+
+  return '\n\n### RAW MARKET CONTEXT (pre-fetched by server — map these values directly into the JSON fields):\n'
+    + ctx
+    + '### END RAW MARKET CONTEXT\n\n';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
