@@ -28,18 +28,19 @@
 <style>
 :root{
   /* Accent — Blue/Navy brand */
-  --burn:#1d4ed8;--burn2:#2563eb;--burn3:#60a5fa;
-  --gold:#1e3a8a;--gold2:#60a5fa;
-  --green:#16a34a;--red:#dc2626;--amber:#d97706;
-  /* Dark navy blue theme */
-  --dark:#0a1628;--dark2:#0d1d35;--dark3:#112040;--dark4:#1a2f50;
-  --card:#0d1d35;--card2:#112040;--card3:#132445;--card4:#1a2f50;
-  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
-  --border:#1a2f4e;--border2:#243b5a;
-  --page-bg:#060d1a;
+  --burn:#2563eb;--burn2:#3b82f6;--burn3:#93c5fd;
+  --gold:#1e3a8a;--gold2:#38bdf8;
+  --green:#10b981;--red:#ef4444;--amber:#f59e0b;
+  /* Deep space-navy theme */
+  --dark:#060f1c;--dark2:#0a1830;--dark3:#0e1f3b;--dark4:#162d4f;
+  --card:#0a1830;--card2:#0e1f3b;--card3:#122344;--card4:#1a3050;
+  --text:#e2eeff;--text2:#8ea8c8;--text3:#506480;
+  --border:#162d4a;--border2:#1e3a5c;
+  --page-bg:#030810;
+  --glow:rgba(37,99,235,.35);
   --radius:12px;
   --sidebar-w:240px;
-  --nav-bg:#050a14;--nav-text:#f1f5f9;--nav-border:#0e1e36;
+  --nav-bg:#040913;--nav-text:#f1f5f9;--nav-border:#0c1e38;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -352,21 +353,22 @@ thead th { white-space: nowrap; font-size: 11px; padding: 8px 10px; }
 
 /* ── MAIN TABS — sticky so always accessible above live-news ── */
 .main-nav{
-  background:#080e1a;border-bottom:2px solid #1a2f4e;
+  background:rgba(4,9,19,.92);border-bottom:1px solid rgba(37,99,235,.2);
   display:flex;overflow-x:auto;scrollbar-width:none;
-  box-shadow:0 2px 12px rgba(0,0,0,.4);
+  box-shadow:0 1px 0 rgba(37,99,235,.15),0 4px 28px rgba(0,0,0,.55);
   position:sticky;top:0;z-index:200;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
 }
 .main-nav::-webkit-scrollbar{display:none}
 .main-tab{
-  flex-shrink:0;padding:14px 22px;border:none;background:transparent;
-  color:var(--text3);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:12px;
-  font-weight:600;cursor:pointer;position:relative;white-space:nowrap;
-  transition:color .2s;letter-spacing:.4px;text-transform:uppercase;display:flex;align-items:center;gap:7px;
+  flex-shrink:0;padding:15px 24px;border:none;background:transparent;
+  color:var(--text3);font-family:'DM Sans',sans-serif;font-size:11px;
+  font-weight:700;cursor:pointer;position:relative;white-space:nowrap;
+  transition:color .2s;letter-spacing:.8px;text-transform:uppercase;display:flex;align-items:center;gap:7px;
 }
-.main-tab:hover{color:var(--text)}
-.main-tab.active{color:var(--burn)}
-.main-tab.active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--burn);border-radius:2px 2px 0 0}
+.main-tab:hover{color:var(--text2)}
+.main-tab.active{color:#60a5fa}
+.main-tab.active::after{content:'';position:absolute;bottom:0;left:12px;right:12px;height:2px;background:linear-gradient(90deg,#2563eb,#60a5fa);border-radius:2px 2px 0 0;box-shadow:0 0 8px rgba(96,165,250,.5)}
 .tab-icon{font-size:16px}
 
 /* ── PANELS ── */
@@ -383,37 +385,39 @@ thead th { white-space: nowrap; font-size: 11px; padding: 8px 10px; }
 }
 .step-num{
   width:44px;height:44px;border-radius:50%;
-  background:linear-gradient(135deg,var(--burn),var(--burn3));
+  background:linear-gradient(135deg,#1d4ed8,#60a5fa);
   display:flex;align-items:center;justify-content:center;
   font-family:'Bebas Neue',sans-serif;font-size:20px;color:#fff;flex-shrink:0;
+  box-shadow:0 0 20px rgba(37,99,235,.45);
 }
-.step-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--gold2)}
-.step-sub{font-size:12px;color:var(--text3);margin-top:2px;letter-spacing:.5px}
+.step-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#60a5fa}
+.step-sub{font-size:12px;color:var(--text3);margin-top:2px;letter-spacing:.4px}
 
 /* ── QUESTION BLOCKS ── */
-.q-block{margin-bottom:24px}
+.q-block{margin-bottom:16px;padding:20px;background:rgba(255,255,255,.018);border:1px solid rgba(30,58,92,.7);border-radius:14px}
 .q-label{
   font-size:13px;font-weight:600;color:var(--text2);
   text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;
   display:flex;align-items:center;gap:8px;
 }
 .q-label .q-num{
-  background:var(--burn);color:#fff;padding:2px 8px;
+  background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;padding:2px 9px;
   border-radius:6px;display:inline-flex;align-items:center;justify-content:center;
   font-size:11px;font-weight:700;flex-shrink:0;
+  box-shadow:0 0 10px rgba(37,99,235,.4);
 }
 .q-label .q-required{color:var(--red);font-size:16px;margin-left:2px}
 
 /* ── OPTION CHIPS ── */
 .option-grid{display:flex;flex-wrap:wrap;gap:8px}
 .opt{
-  padding:8px 16px;border-radius:30px;border:1px solid var(--border2);
-  background:var(--card2);color:var(--text2);font-size:13px;font-weight:500;
-  cursor:pointer;transition:all .18s;user-select:none;
+  padding:9px 18px;border-radius:8px;border:1px solid var(--border2);
+  background:rgba(255,255,255,.025);color:var(--text2);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .18s;user-select:none;letter-spacing:.25px;
 }
-.opt:hover{border-color:var(--burn2);color:var(--text);background:#2d2520}
-.opt.selected{border-color:var(--burn2);background:rgba(29,78,216,.15);color:#1d4ed8;font-weight:600}
-.opt.selected::before{content:'✓ ';font-size:11px}
+.opt:hover{border-color:rgba(59,130,246,.5);color:var(--text);background:rgba(37,99,235,.1)}
+.opt.selected{border-color:#3b82f6;background:rgba(37,99,235,.18);color:#60a5fa;font-weight:700;box-shadow:0 0 14px rgba(37,99,235,.25),inset 0 0 0 1px rgba(96,165,250,.1)}
+.opt.selected::before{content:'✓ ';font-size:10px;opacity:.8}
 
 /* ── SUB-QUESTION ── */
 .sub-q{
@@ -497,34 +501,35 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 
 /* ── GENERATE BUTTON ── */
 .gen-btn{
-  width:100%;padding:18px;margin-top:32px;
-  background:linear-gradient(135deg,#0f2d6e,#1d4ed8,#3b82f6);
+  width:100%;padding:18px;margin-top:28px;
+  background:linear-gradient(135deg,#0c2260 0%,#1d4ed8 55%,#2563eb 100%);
   border:none;border-radius:12px;color:#fff;
   font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;
-  cursor:pointer;transition:all .2s;position:relative;overflow:hidden;
-  box-shadow:0 4px 20px rgba(29,78,216,.4);
+  cursor:pointer;transition:all .22s;position:relative;overflow:hidden;
+  box-shadow:0 4px 24px rgba(37,99,235,.45),0 0 0 1px rgba(37,99,235,.18);
 }
-.gen-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(29,78,216,.55)}
+.gen-btn:hover{transform:translateY(-2px);box-shadow:0 8px 36px rgba(37,99,235,.62),0 0 0 1px rgba(96,165,250,.3)}
 .gen-btn:active{transform:translateY(0)}
 .gen-btn::before{
   content:'';position:absolute;inset:0;
-  background:repeating-linear-gradient(45deg,transparent,transparent 8px,rgba(255,255,255,.04) 8px,rgba(255,255,255,.04) 16px);
+  background:repeating-linear-gradient(60deg,transparent,transparent 10px,rgba(255,255,255,.03) 10px,rgba(255,255,255,.03) 20px);
 }
-.gen-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.gen-btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
 
 /* ── SUMMARY CARD ── */
 .summary-card{
-  background:var(--card2);border:1px solid var(--border2);border-radius:12px;
-  padding:20px;margin-bottom:24px;display:none;
+  background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.22);border-radius:12px;
+  padding:20px;margin-bottom:20px;display:none;
+  box-shadow:0 0 32px rgba(37,99,235,.08);
 }
 .summary-card.visible{display:block}
-.summary-title{font-size:11px;font-weight:700;color:var(--burn2);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
-.summary-grid{display:flex;flex-wrap:wrap;gap:10px}
+.summary-title{font-size:10px;font-weight:700;color:#3b82f6;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:14px}
+.summary-grid{display:flex;flex-wrap:wrap;gap:8px}
 .summary-chip{
-  padding:6px 14px;background:rgba(255,255,255,.05);border:1px solid var(--border);
+  padding:5px 13px;background:rgba(255,255,255,.04);border:1px solid rgba(37,99,235,.2);
   border-radius:20px;font-size:12px;color:var(--text2);
 }
-.summary-chip strong{color:var(--gold2)}
+.summary-chip strong{color:#38bdf8}
 
 /* ── COPY PANEL ── */
 .copy-panel{max-width:900px;margin:0 auto;padding:32px 20px 60px}
@@ -1034,12 +1039,13 @@ footer{
 ══════════════════════════════════════════ */
 .top-menubar{
   position:sticky;top:0;z-index:1000;
-  background:linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#0f172a 100%);
-  border-bottom:2px solid var(--burn2);
+  background:linear-gradient(135deg,#030810 0%,#06101e 60%,#030810 100%);
+  border-bottom:1px solid rgba(37,99,235,.25);
   display:flex;align-items:center;
   height:44px;padding:0;
-  box-shadow:0 2px 20px rgba(0,0,0,.35);
+  box-shadow:0 1px 0 rgba(37,99,235,.15),0 4px 24px rgba(0,0,0,.5);
   flex-shrink:0;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
 }
 .top-menu-brand{
   display:flex;align-items:center;gap:10px;
@@ -1050,7 +1056,8 @@ footer{
   width:30px;height:30px;
   background:linear-gradient(135deg,#1d4ed8,#3b82f6);
   border-radius:8px;display:flex;align-items:center;justify-content:center;
-  font-size:16px;flex-shrink:0;box-shadow:0 0 12px rgba(59,130,246,.5);
+  font-size:16px;flex-shrink:0;
+  box-shadow:0 0 18px rgba(59,130,246,.6),0 0 36px rgba(37,99,235,.2);
   position:relative;overflow:hidden;
 }
 .brand-icon::before{
@@ -1060,10 +1067,10 @@ footer{
 .brand-icon svg{position:relative;z-index:1;}
 .brand-name{
   font-family:'Bebas Neue',sans-serif;font-size:17px;
-  letter-spacing:2px;color:#fff;white-space:nowrap;
-  text-shadow:0 0 16px rgba(59,130,246,.5);line-height:1;
+  letter-spacing:2.5px;color:#e2eeff;white-space:nowrap;
+  text-shadow:0 0 20px rgba(96,165,250,.45);line-height:1;
 }
-.brand-name span{color:#93c5fd}
+.brand-name span{color:#38bdf8;text-shadow:0 0 16px rgba(56,189,248,.5)}
 .top-menu-items{display:flex;align-items:center;height:100%;flex:1;overflow:hidden}
 .top-menu-right{
   display:flex;align-items:center;gap:8px;padding:0 12px;
@@ -1090,7 +1097,7 @@ footer{
 
 .tmenu-dropdown{
   display:none;position:fixed;top:44px;left:0;
-  background:#1a1200;border:1px solid var(--border2);
+  background:#06101e;border:1px solid var(--border2);
   border-top:2px solid var(--burn2);
   border-radius:0 0 10px 10px;
   min-width:220px;z-index:9999;
@@ -11529,46 +11536,6 @@ OUTPUT: Return ONLY the complete HTML starting with <!DOCTYPE html>. No markdown
   } finally {
     if (gmBtn) { gmBtn.disabled = false; gmBtn.textContent = '✨ Gamma Style'; }
     if (statusPanel) statusPanel.style.display = 'none';
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// SUPABASE DYNAMIC PAGE LOADER
-// Fetches HTML content from Supabase `page_content` table by page_id
-// Usage: loadDynamicPage('homepage') or loadDynamicPage('market-overview')
-// ═══════════════════════════════════════════════════════════════════
-const _SB_URL = 'https://apmsebmmmvpymewimdpd.supabase.co';
-const _SB_KEY = 'sb_publishable_TDT4YVj6UhPqEVFEINaTjQ_GDscLAK1';
-
-async function loadDynamicPage(pageId, targetSelector) {
-  const target = targetSelector
-    ? document.querySelector(targetSelector)
-    : document.getElementById('rendered-output') || document.querySelector('.main-content');
-  if (!target) { console.warn('loadDynamicPage: no target element'); return; }
-
-  target.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">⏳ Loading page…</div>';
-
-  try {
-    const res = await fetch(
-      `${_SB_URL}/rest/v1/page_content?page_id=eq.${encodeURIComponent(pageId)}&select=html_data`,
-      {
-        headers: {
-          'apikey': _SB_KEY,
-          'Authorization': `Bearer ${_SB_KEY}`,
-          'Content-Type': 'application/json',
-        }
-      }
-    );
-    if (!res.ok) throw new Error(`Supabase HTTP ${res.status}`);
-    const rows = await res.json();
-    if (!rows.length || !rows[0].html_data) {
-      target.innerHTML = `<div style="padding:40px;text-align:center;color:var(--red)">⚠ No content found for page: <code>${pageId}</code></div>`;
-      return;
-    }
-    target.innerHTML = rows[0].html_data;
-  } catch (err) {
-    console.error('loadDynamicPage error:', err);
-    target.innerHTML = `<div style="padding:40px;text-align:center;color:var(--red)">❌ Failed to load page: ${err.message}</div>`;
   }
 }
 
