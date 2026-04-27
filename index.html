@@ -5939,7 +5939,8 @@ async function radioInit() {
     });
 
     _audio.addEventListener('playing', () => {
-      // 'playing' fires when buffering ends and audio actually starts
+      // Fires when buffering ends and audio actually flows — clear any stall watchdog
+      if (window._radioStallTimer) { clearTimeout(window._radioStallTimer); window._radioStallTimer = null; }
       _radioPlaying = true;
       const btn = document.getElementById('radio-play-btn');
       if (btn) { btn.textContent = '⏸'; btn.disabled = false; }
@@ -5949,6 +5950,7 @@ async function radioInit() {
 
     _audio.addEventListener('pause', () => {
       _radioPlaying = false;
+      if (window._radioStallTimer) { clearTimeout(window._radioStallTimer); window._radioStallTimer = null; }
       const btn = document.getElementById('radio-play-btn');
       if (btn) btn.textContent = '▶';
       const dot = document.getElementById('radio-dot');
@@ -5956,15 +5958,23 @@ async function radioInit() {
     });
 
     _audio.addEventListener('waiting', () => {
-      // Buffering — show hourglass without changing playing state
+      // Buffering — show hourglass; start an 8 s stall watchdog
       const btn = document.getElementById('radio-play-btn');
       if (btn && _radioPlaying) btn.textContent = '⏳';
+      if (window._radioStallTimer) clearTimeout(window._radioStallTimer);
+      window._radioStallTimer = setTimeout(() => {
+        if (_radioPlaying && _audio.paused) radioOnError();
+      }, 8000);
     });
 
     _audio.addEventListener('stalled', () => {
-      // Stream stalled — treat like an error after a short grace period
+      // Stream stalled — show hourglass and start 10 s timeout
       const btn = document.getElementById('radio-play-btn');
       if (btn && _radioPlaying) btn.textContent = '⏳';
+      if (window._radioStallTimer) clearTimeout(window._radioStallTimer);
+      window._radioStallTimer = setTimeout(() => {
+        if (_radioPlaying) radioOnError();
+      }, 10000);
     });
 
     _audio.addEventListener('error', () => { radioOnError(); });
@@ -6062,8 +6072,13 @@ function radioPlay(url, id, name, catId) {
   const audio = document.getElementById('radio-audio');
   if (!audio) return;
 
+  // ── Enforce HTTPS — prevent mixed-content blocks on GitHub Pages ──
+  url = url.replace(/^http:\/\//i, 'https://');
+
   // Destroy any previous HLS instance
   if (_radioHls) { try { _radioHls.destroy(); } catch(_){} _radioHls = null; }
+  // Clear any pending stall timeout
+  if (window._radioStallTimer) { clearTimeout(window._radioStallTimer); window._radioStallTimer = null; }
 
   // Highlight active item in list
   document.querySelectorAll('.radio-station-item').forEach(el => el.classList.remove('active'));
@@ -6083,10 +6098,11 @@ function radioPlay(url, id, name, catId) {
   const volume = vol ? Number(vol.value) / 100 : 0.75;
   audio.volume = volume;
 
-  const isHLS = url.includes('.m3u8') || url.includes('.m3U8');
+  // Case-insensitive HLS detection
+  const isHLS = /\.m3u8/i.test(url);
 
   if (isHLS && typeof Hls !== 'undefined' && Hls.isSupported()) {
-    // ── HLS stream via hls.js (Chrome / Firefox) ──────────────────
+    // ── HLS stream via hls.js (Chrome / Firefox / Edge) ───────────
     audio.pause();
     _radioHls = new Hls({
       maxBufferLength: 10,
@@ -6097,13 +6113,13 @@ function radioPlay(url, id, name, catId) {
     _radioHls.attachMedia(audio);
     _radioHls.on(Hls.Events.MANIFEST_PARSED, () => {
       audio.play().catch(err => {
-        console.warn('HLS play failed:', err && err.message ? err.message : err);
+        console.warn('[Radio] HLS play rejected:', err && err.message ? err.message : err);
         radioOnError();
       });
     });
     _radioHls.on(Hls.Events.ERROR, (event, data) => {
       if (data.fatal) {
-        console.warn('HLS fatal error:', data.type, data.details);
+        console.warn('[Radio] HLS fatal error:', data.type, data.details);
         radioOnError();
       }
     });
@@ -6118,7 +6134,7 @@ function radioPlay(url, id, name, catId) {
     audio.src = url;
     audio.load();
     audio.play().catch(error => {
-      console.warn('Radio play failed:', error && error.message ? error.message : error);
+      console.warn('[Radio] Play rejected:', error && error.message ? error.message : error);
       _radioPlaying = false;
       radioOnError();
     });
@@ -6153,7 +6169,8 @@ function radioTogglePlay() {
     const srcIsBlank = !audio.src || audio.src === '' || audio.src === window.location.href;
     const notLoaded  = audio.readyState === HTMLMediaElement.HAVE_NOTHING;
     if (srcIsBlank || notLoaded) {
-      audio.src = _radioCurrentUrl;
+      // Enforce HTTPS on resume too
+      audio.src = (_radioCurrentUrl || '').replace(/^http:\/\//i, 'https://');
       audio.load();
     }
     audio.play().catch(error => {
@@ -6173,12 +6190,14 @@ function radioSetVolume(val) {
 // ── Error / ended handlers ───────────────────────────────────────────
 function radioOnError() {
   _radioPlaying = false;
+  if (window._radioStallTimer) { clearTimeout(window._radioStallTimer); window._radioStallTimer = null; }
+  if (_radioHls) { try { _radioHls.destroy(); } catch(_){} _radioHls = null; }
   const btn = document.getElementById('radio-play-btn');
   if (btn) btn.textContent = '▶';
   const dot = document.getElementById('radio-dot');
   if (dot) { dot.style.background = '#ef4444'; dot.classList.remove('playing'); }
   const np = document.getElementById('radio-now-playing');
-  if (np) np.textContent = '⚠ Stream unavailable — try another station';
+  if (np) np.textContent = '⚠️ Stream Offline — Try another';
 }
 function radioOnEnded() { radioOnError(); } // live streams shouldn't end; treat as error
 
