@@ -23,6 +23,8 @@
   })();
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<!-- HLS.js — enables .m3u8 stream playback in Chrome/Firefox -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
 <style>
 :root{
   /* Accent — Blue/Navy brand */
@@ -5978,13 +5980,29 @@ function radioLoadCategory(catId) {
     if (cat) stations = cat.stations || [];
   }
 
-  // Hardcoded fallback for india-hindi (most likely default)
-  if (!stations.length && catId === 'india-hindi') {
-    stations = [
-      { id:'in-hin-airnational', name:'AIR National (Hindi)',  url:'https://air.pc.cdn.bitgravity.com/air/live/pbaudio001/chunklist.m3u8', genre:'National' },
-      { id:'in-hin-mirchi',      name:'Radio Mirchi 98.3 Delhi',url:'https://stream.mirchi.co.in/mirchi983delhi', genre:'Hindi FM' },
-    ];
-  }
+  // Hardcoded fallbacks — well-tested public streams (MP3/AAC only, no HLS needed)
+  const FALLBACKS = {
+    'india-hindi': [
+      { id:'fb-mirchi-delhi',  name:'Radio Mirchi 98.3 Delhi', url:'https://stream.mirchi.co.in/mirchi983delhi', genre:'Hindi FM' },
+      { id:'fb-bigfm-delhi',   name:'Big FM 92.7 Delhi',       url:'https://stream.bigfm.in/bigfm927delhi',     genre:'Hindi FM' },
+      { id:'fb-redfm-delhi',   name:'Red FM 93.5 Delhi',       url:'https://stream.redfm.in/redfm935delhi',     genre:'Bollywood' },
+    ],
+    'india-bollywood': [
+      { id:'fb-mirchi-mum',    name:'Radio Mirchi Mumbai',     url:'https://stream.mirchi.co.in/mirchi983mumbai', genre:'Bollywood' },
+      { id:'fb-bigfm-mum',     name:'Big FM Mumbai',           url:'https://stream.bigfm.in/bigfm927mumbai',     genre:'Bollywood' },
+    ],
+    'us': [
+      { id:'fb-npr',           name:'NPR News Now',            url:'https://npr-ice.streamguys1.com/live.mp3',   genre:'News' },
+      { id:'fb-wqxr',         name:'WQXR Classical NYC',      url:'https://stream.wqxr.org/wqxr.mp3',           genre:'Classical' },
+      { id:'fb-kcrw',          name:'KCRW LA',                 url:'https://media.kcrw.com/live/kcrwmusic.mp3',  genre:'Music' },
+    ],
+    'europe': [
+      { id:'fb-bbc-world',     name:'BBC World Service',       url:'https://stream.live.vc.bbcmedia.co.uk/bbc_world_service', genre:'News' },
+      { id:'fb-bbc-r2',        name:'BBC Radio 2',             url:'https://stream.live.vc.bbcmedia.co.uk/bbc_radio_two',    genre:'Pop' },
+      { id:'fb-bbc-r4',        name:'BBC Radio 4',             url:'https://stream.live.vc.bbcmedia.co.uk/bbc_radio_fourfm', genre:'Talk' },
+    ],
+  };
+  if (!stations.length) stations = FALLBACKS[catId] || [];
 
   if (!stations.length) {
     list.innerHTML = '<div class="radio-no-data">No stations found for this region.<br/>Check back after the daily update.</div>';
@@ -6029,10 +6047,16 @@ function radioGenreIcon(genre) {
   return '🎙';
 }
 
+// ── HLS instance tracker (one at a time) ─────────────────────────────
+var _radioHls = null;
+
 // ── Play a station ───────────────────────────────────────────────────
 function radioPlay(url, id, name, catId) {
   const audio = document.getElementById('radio-audio');
   if (!audio) return;
+
+  // Destroy any previous HLS instance
+  if (_radioHls) { try { _radioHls.destroy(); } catch(_){} _radioHls = null; }
 
   // Highlight active item in list
   document.querySelectorAll('.radio-station-item').forEach(el => el.classList.remove('active'));
@@ -6048,21 +6072,50 @@ function radioPlay(url, id, name, catId) {
   const dot = document.getElementById('radio-dot');
   if (dot) { dot.style.background = '#fbbf24'; dot.classList.remove('playing'); }
 
-  audio.pause();
-  audio.src = url;
-  audio.load();
-
   const vol = document.getElementById('radio-vol');
-  audio.volume = vol ? Number(vol.value) / 100 : 0.75;
+  const volume = vol ? Number(vol.value) / 100 : 0.75;
+  audio.volume = volume;
 
-  audio.play().then(() => {
-    // UI is updated by the 'play'/'playing' event listeners wired in radioInit()
-    // so we only need the catch here for promise-rejection handling.
-  }).catch(error => {
-    console.warn('Radio play failed:', error && error.message ? error.message : error);
-    _radioPlaying = false;
-    radioOnError();
-  });
+  const isHLS = url.includes('.m3u8') || url.includes('.m3U8');
+
+  if (isHLS && typeof Hls !== 'undefined' && Hls.isSupported()) {
+    // ── HLS stream via hls.js (Chrome / Firefox) ──────────────────
+    audio.pause();
+    _radioHls = new Hls({
+      maxBufferLength: 10,
+      maxMaxBufferLength: 20,
+      lowLatencyMode: true,
+    });
+    _radioHls.loadSource(url);
+    _radioHls.attachMedia(audio);
+    _radioHls.on(Hls.Events.MANIFEST_PARSED, () => {
+      audio.play().catch(err => {
+        console.warn('HLS play failed:', err && err.message ? err.message : err);
+        radioOnError();
+      });
+    });
+    _radioHls.on(Hls.Events.ERROR, (event, data) => {
+      if (data.fatal) {
+        console.warn('HLS fatal error:', data.type, data.details);
+        radioOnError();
+      }
+    });
+  } else if (isHLS && audio.canPlayType('application/vnd.apple.mpegurl')) {
+    // ── Native HLS (Safari) ────────────────────────────────────────
+    audio.src = url;
+    audio.load();
+    audio.play().catch(() => radioOnError());
+  } else {
+    // ── Direct MP3 / AAC stream ────────────────────────────────────
+    audio.pause();
+    audio.src = url;
+    audio.load();
+    audio.play().catch(error => {
+      console.warn('Radio play failed:', error && error.message ? error.message : error);
+      _radioPlaying = false;
+      radioOnError();
+    });
+  }
 }
 
 // ── Toggle play / pause ──────────────────────────────────────────────
