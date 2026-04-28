@@ -1455,32 +1455,35 @@ async function hybridReport(prompt, env, providerHint) {
   let news     = nwsRes.status==='fulfilled' ? (nwsRes.value||[]) : [];
   if (!news.length) news = await fetchGoogleNewsRSS(assetName).catch(()=>[]);
 
-  // ── Fallback: if v10/quoteSummary failed, hydrate `summary` from chart meta
-  // Yahoo's v10 endpoint frequently returns 401/429 for non-US symbols without
-  // session cookies; chart's meta object provides currency/price/52W reliably.
-  if (!summary || !summary.price) {
-    const meta = dRaw?.chart?.result?.[0]?.meta || mRaw?.chart?.result?.[0]?.meta;
-    if (meta) {
-      summary = summary || {};
-      summary.price = summary.price || {
-        symbol: meta.symbol,
-        currency: meta.currency,
-        regularMarketPrice: meta.regularMarketPrice,
-        regularMarketVolume: meta.regularMarketVolume,
-        marketCap: null,
-        fullExchangeName: meta.fullExchangeName || meta.exchangeName,
-        exchangeName: meta.exchangeName,
-        longName: meta.longName || meta.shortName,
-        shortName: meta.shortName,
-      };
-      summary.summaryDetail = summary.summaryDetail || {
-        fiftyTwoWeekHigh: { raw: meta.fiftyTwoWeekHigh },
-        fiftyTwoWeekLow:  { raw: meta.fiftyTwoWeekLow },
-        previousClose:    { raw: meta.previousClose },
-      };
-      console.log(`[hybrid] hydrated summary from chart meta (currency=${meta.currency} px=${meta.regularMarketPrice})`);
-    }
+  // ── Aggressive hydration from chart meta ─────────────────────────────────
+  // v10/quoteSummary frequently 401/429s for non-US tickers without session
+  // cookies. The v8/chart endpoint reliably ships {currency,symbol,price,52W}
+  // in its meta block. We patch summary at every level: missing object,
+  // missing field, OR explicit null/undefined.
+  const meta = dRaw?.chart?.result?.[0]?.meta || mRaw?.chart?.result?.[0]?.meta || {};
+  summary = summary || {};
+  summary.price = summary.price || {};
+  summary.summaryDetail = summary.summaryDetail || {};
+  // Patch only when current value is missing/null
+  const patch = (obj, key, val) => { if ((obj[key]===undefined||obj[key]===null) && val!==undefined && val!==null) obj[key]=val; };
+  patch(summary.price, 'symbol',              meta.symbol);
+  patch(summary.price, 'currency',            meta.currency);
+  patch(summary.price, 'regularMarketPrice',  meta.regularMarketPrice);
+  patch(summary.price, 'regularMarketVolume', meta.regularMarketVolume);
+  patch(summary.price, 'fullExchangeName',    meta.fullExchangeName||meta.exchangeName);
+  patch(summary.price, 'exchangeName',        meta.exchangeName);
+  patch(summary.price, 'longName',            meta.longName||meta.shortName);
+  patch(summary.price, 'shortName',           meta.shortName);
+  if (summary.summaryDetail.fiftyTwoWeekHigh==null && meta.fiftyTwoWeekHigh!=null) summary.summaryDetail.fiftyTwoWeekHigh = { raw: meta.fiftyTwoWeekHigh };
+  if (summary.summaryDetail.fiftyTwoWeekLow ==null && meta.fiftyTwoWeekLow !=null) summary.summaryDetail.fiftyTwoWeekLow  = { raw: meta.fiftyTwoWeekLow  };
+  if (summary.summaryDetail.previousClose   ==null && meta.previousClose   !=null) summary.summaryDetail.previousClose    = { raw: meta.previousClose    };
+  // Last-ditch currency inference from .NS / .T / .L / .DE etc.
+  if (!summary.price.currency) {
+    const sfx = (symbol.match(/\.[A-Z]{1,3}$/)||[''])[0];
+    const SFX_CUR = {'.NS':'INR','.BO':'INR','.T':'JPY','.L':'GBp','.DE':'EUR','.PA':'EUR','.AX':'AUD','.HK':'HKD','.TO':'CAD','.SI':'SGD'};
+    if (SFX_CUR[sfx]) { summary.price.currency = SFX_CUR[sfx]; console.log(`[hybrid] inferred currency ${SFX_CUR[sfx]} from suffix ${sfx}`); }
   }
+  console.log(`[hybrid] currency=${summary.price.currency} px=${summary.price.regularMarketPrice} sym=${summary.price.symbol}`);
 
   console.log(`[hybrid] summary=${!!summary} daily=${daily.length}pt monthly=${monthly.length}pt news=${news.length}`);
 
