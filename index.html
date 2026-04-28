@@ -6120,6 +6120,7 @@ function radioPlay(url, id, name, catId) {
 
   // Case-insensitive HLS detection
   const isHLS = /\.m3u8/i.test(url);
+  console.log(`[Radio] play url=${url} isHLS=${isHLS} Hls=${typeof Hls!=='undefined'} hlsSupported=${typeof Hls!=='undefined'&&Hls.isSupported()}`);
 
   if (isHLS && typeof Hls !== 'undefined' && Hls.isSupported()) {
     // ── HLS stream via hls.js (Chrome / Firefox / Edge) ───────────
@@ -6128,26 +6129,44 @@ function radioPlay(url, id, name, catId) {
       maxBufferLength: 10,
       maxMaxBufferLength: 20,
       lowLatencyMode: true,
+      enableWorker: true,
     });
     _radioHls.loadSource(url);
     _radioHls.attachMedia(audio);
     _radioHls.on(Hls.Events.MANIFEST_PARSED, () => {
-      audio.play().catch(err => {
-        console.warn('[Radio] HLS play rejected:', err && err.message ? err.message : err);
-        radioOnError();
-      });
+      console.log('[Radio] HLS manifest parsed, calling audio.play()');
+      audio.play().then(() => console.log('[Radio] HLS audio.play() resolved'))
+        .catch(err => {
+          console.warn('[Radio] HLS play REJECTED:', err && err.name, err && err.message);
+          radioOnError();
+        });
     });
     _radioHls.on(Hls.Events.ERROR, (event, data) => {
+      console.warn(`[Radio] HLS event=${data.type} details=${data.details} fatal=${data.fatal}`);
       if (data.fatal) {
-        console.warn('[Radio] HLS fatal error:', data.type, data.details);
-        radioOnError();
+        switch (data.type) {
+          case Hls.ErrorTypes.NETWORK_ERROR:
+            console.warn('[Radio] HLS network error, attempting recovery…');
+            _radioHls.startLoad();
+            break;
+          case Hls.ErrorTypes.MEDIA_ERROR:
+            console.warn('[Radio] HLS media error, attempting recovery…');
+            _radioHls.recoverMediaError();
+            break;
+          default:
+            radioOnError();
+        }
       }
     });
   } else if (isHLS && audio.canPlayType('application/vnd.apple.mpegurl')) {
     // ── Native HLS (Safari) ────────────────────────────────────────
+    console.log('[Radio] Using native HLS (Safari)');
     audio.src = url;
     audio.load();
-    audio.play().catch(() => radioOnError());
+    audio.play().catch(err => {
+      console.warn('[Radio] Native HLS play rejected:', err && err.message);
+      radioOnError();
+    });
   } else {
     // ── Direct MP3 / AAC stream ────────────────────────────────────
     audio.pause();
@@ -11299,6 +11318,15 @@ async function sendLosslessJson() {
 
     // Clean up JSON (remove markdown fences if any)
     rawJson = rawJson.trim().replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
+    // Safety net: strip any leftover __AI__placeholder__AI__ strings even if the
+    // worker's mergeAiInsights didn't catch them (older deployed worker version).
+    rawJson = rawJson.replace(/"__AI__\w+__AI__"/g, '"No Data Available"');
+    // Safety net: correct USD→INR for India-Stock when older worker shipped wrong currency
+    if (answers.market && /india/i.test(String(answers.market))) {
+      rawJson = rawJson.replace(/"Currency":\s*"USD"/g, '"Currency":"INR"');
+    } else if (answers.market && /japan/i.test(String(answers.market))) {
+      rawJson = rawJson.replace(/"Currency":\s*"USD"/g, '"Currency":"JPY"');
+    }
     _ljsonRaw = rawJson;
 
     let parsed;
@@ -11511,37 +11539,122 @@ async function generateGammaReport() {
     : (isFiveTabAsset ? fallbackSlides5 : fallbackSlides10);
 
   const revealScriptTag  = '<scr' + 'ipt src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"><\/scr' + 'ipt>';
-  const revealInitTag    = '<scr' + 'ipt>Reveal.initialize({hash:true,transition:"slide",backgroundTransition:"fade",controls:true,progress:true,center:true});<\/scr' + 'ipt>';
+  const chartjsScriptTag = '<scr' + 'ipt src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"><\/scr' + 'ipt>';
+  const revealInitTag    = '<scr' + 'ipt>Reveal.initialize({hash:true,transition:"slide",backgroundTransition:"fade",controls:true,progress:true,center:false,width:1280,height:780,margin:0.04});<\/scr' + 'ipt>';
 
-  const prompt = `You are a world-class financial presentation designer. Create a stunning Reveal.js-powered HTML presentation for "${ticker}" (${assetType}).
+  const prompt = `You are a SENIOR EQUITY-RESEARCH DESIGNER at Goldman Sachs. Build an INSTITUTIONAL-GRADE Reveal.js + Chart.js presentation for "${ticker}" (${assetType}). This must look like a real Bloomberg/sell-side tear sheet — not a slideshow.
 
-TECHNICAL REQUIREMENTS:
-• Load Reveal.js 5 from CDN inside the HTML head section you generate:
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/night.css">
-  ${revealScriptTag}
-• In body: use a div class="reveal" containing div class="slides" with multiple <section> elements
-• Initialize Reveal at bottom of body: ${revealInitTag}
-• Custom CSS: primary accent #60a5fa (sky blue), gold #fbbf24, bg #0a0f1e, card bg rgba(255,255,255,0.05), border-radius 12px
+═══════════════════════════════════════════════════════════════
+TECHNICAL FOUNDATION — copy these tags VERBATIM into the HEAD
+═══════════════════════════════════════════════════════════════
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/black.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+${revealScriptTag}
+${chartjsScriptTag}
 
-SLIDE STRUCTURE — dynamically generate one slide per report section found in the data:
-• Slide 1 — TITLE: Large asset name, type, country/market, verdict badge pill (green=BUY/amber=HOLD/red=SELL), date
+Body shell: <div class="reveal"><div class="slides"><section>...</section></div></div>
+Bottom of body: ${revealInitTag}
+
+═══════════════════════════════════════════════════════════════
+DESIGN SYSTEM — institutional dark navy financial terminal
+═══════════════════════════════════════════════════════════════
+:root tokens you MUST use:
+  --bg:#030814; --panel:#0a1830; --panel2:#0e1f3b; --border:#1e3a5c;
+  --text:#e2eeff; --text2:#8ea8c8; --text3:#506480;
+  --accent:#3b82f6; --accent2:#60a5fa; --accent3:#93c5fd;
+  --green:#10b981; --red:#ef4444; --amber:#f59e0b;
+  --gold:#fbbf24; --teal:#14b8a6; --purple:#a855f7;
+
+GLOBAL CSS (include in <style>):
+• .reveal { background:var(--bg); font-family:'Inter',sans-serif; color:var(--text); }
+• .reveal section { text-align:left; padding:32px 56px; height:100%; box-sizing:border-box; }
+• .reveal h1,.reveal h2 { font-family:'Inter'; font-weight:900; letter-spacing:-0.5px; margin:0; }
+• .num { font-family:'JetBrains Mono',monospace; font-feature-settings:'tnum'; }
+• .card { background:linear-gradient(135deg,var(--panel),var(--panel2)); border:1px solid var(--border); border-radius:14px; padding:18px 22px; box-shadow:0 4px 24px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.04); }
+• .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
+• .kpi { background:linear-gradient(135deg,var(--panel),var(--panel2)); border:1px solid var(--border); border-radius:10px; padding:14px 16px; }
+• .kpi-lbl { font-size:10px; font-weight:700; letter-spacing:1.2px; color:var(--text3); text-transform:uppercase; margin-bottom:6px; }
+• .kpi-val { font-family:'JetBrains Mono'; font-size:24px; font-weight:700; color:var(--accent2); line-height:1.1; }
+• .kpi-sub { font-size:11px; color:var(--text3); margin-top:4px; }
+• .pos { color:var(--green) !important; } .neg { color:var(--red) !important; } .neu { color:var(--gold) !important; }
+• .badge { display:inline-block; padding:8px 24px; border-radius:999px; font-weight:900; font-size:18px; letter-spacing:1.5px; }
+• .badge-buy { background:rgba(16,185,129,.15); color:var(--green); border:1.5px solid var(--green); }
+• .badge-hold { background:rgba(245,158,11,.15); color:var(--amber); border:1.5px solid var(--amber); }
+• .badge-sell { background:rgba(239,68,68,.15); color:var(--red); border:1.5px solid var(--red); }
+• table { width:100%; border-collapse:collapse; font-size:13px; }
+• th { background:var(--panel2); padding:10px 14px; text-align:left; font-weight:700; color:var(--accent2); font-size:11px; letter-spacing:.8px; text-transform:uppercase; border-bottom:1px solid var(--accent); }
+• td { padding:10px 14px; border-bottom:1px solid var(--border); }
+• tr:nth-child(even) td { background:rgba(255,255,255,.02); }
+• .slide-header { display:flex; align-items:center; gap:14px; margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+• .slide-num-pill { font-family:'JetBrains Mono'; font-size:11px; font-weight:700; color:var(--accent2); background:rgba(59,130,246,.12); padding:3px 10px; border-radius:6px; border:1px solid rgba(59,130,246,.3); }
+• .slide-title { font-size:30px; font-weight:900; color:var(--text); letter-spacing:-0.5px; flex:1; }
+• .footer-bar { position:absolute; bottom:14px; left:56px; right:56px; display:flex; justify-content:space-between; font-size:10px; color:var(--text3); font-family:'JetBrains Mono'; letter-spacing:.5px; text-transform:uppercase; }
+• .chart-wrap { position:relative; height:280px; background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px; }
+
+═══════════════════════════════════════════════════════════════
+SLIDE BLUEPRINT — generate ALL of these in order
+═══════════════════════════════════════════════════════════════
+SLIDE 1 — COVER
+• Centered: company logo emoji + asset name (60px font-weight 900)
+• Subtitle: "INSTITUTIONAL EQUITY RESEARCH — VILFINTV"
+• Verdict badge (read 'Final Verdict Badge' or 'aiRec' from data → use .badge-buy/-hold/-sell)
+• Pill row: type | market/country | date
+• Background: subtle radial gradient from var(--accent) at 30% opacity centered top
+
 ${dynamicSlides}
-• LAST SLIDE — CALL TO ACTION: Best action now, allocation recommendation, referral/broker links if in data
-• Each slide: footer "📊 VilfinTV MultiScreener" bottom-left, slide number bottom-right
 
-DESIGN RULES:
-• Color code numbers: green #22c55e = positive, red #ef4444 = negative, gold #fbbf24 = key highlights
-• Cards: glassmorphism background rgba(255,255,255,0.06), border rgba(255,255,255,0.1), border-radius 12px
-• Verdict badge: padding 8px 28px, border-radius 999px, font-size 1.5em, font-weight 900
-• IMPORTANT: Use EVERY data point found in the report — do not skip or summarise tabs
-• For tables: use zebra striping with rgba(255,255,255,0.04) alternate rows
-• For KPI grids: 3-column grid of stat cards (label + value pairs)
+LAST SLIDE — FINAL VERDICT & CALL TO ACTION
+• Big verdict badge centered (use Final Badge from data)
+• 3-column KPI grid: 6M Target | 12M Target | 3Y Target — show price + upside %
+• Best Way to Invest (SIP/Lumpsum/Buy on Dip) as a card
+• Allocation recommendation as a horizontal bar (Conservative/Moderate/Aggressive)
+• Referral links table at bottom
 
-DATA TO PRESENT (loop through ALL tabs):
+═══════════════════════════════════════════════════════════════
+CHART REQUIREMENTS — use Chart.js, not just text
+═══════════════════════════════════════════════════════════════
+On EVERY slide that has numeric data, embed at LEAST ONE Chart.js canvas:
+
+a) PRICE/RETURNS slide → <canvas id="cReturns" width="800" height="280"></canvas>
+   Bar chart of: 1M, 3M, 6M, 1Y, 3Y CAGR, 5Y CAGR — green bars for positive, red for negative
+b) TECHNICALS slide → Line chart with current price + 50DMA + 200DMA + 52W high/low bands
+   OR a gauge for RSI (0-30 red, 30-70 amber, 70-100 red — current value highlighted)
+c) FINANCIALS slide → Grouped bar chart: Revenue / EBITDA / PAT (last 2 years)
+d) OWNERSHIP slide → Doughnut chart: Promoter % / FII % / DII % / Public %
+e) PEERS slide → Horizontal bar chart comparing P/E across 4-5 peers
+f) RISK slide → Radar chart: Volatility / Beta / Liquidity / Quality / Momentum (0-10 scale)
+
+Chart.js config snippet you can adapt (call inside <script>):
+  Chart.defaults.color='#8ea8c8';
+  Chart.defaults.borderColor='#1e3a5c';
+  Chart.defaults.font.family="'Inter',sans-serif";
+  new Chart(document.getElementById('cReturns'), { type:'bar', data:{...}, options:{plugins:{legend:{display:false}}, scales:{...}} });
+
+CRITICAL: every <canvas> must have a corresponding <script> block at the END of <body> (before reveal init) that constructs the Chart.
+
+═══════════════════════════════════════════════════════════════
+LAYOUT RULES (each non-cover slide)
+═══════════════════════════════════════════════════════════════
+1. .slide-header at top with: <span class="slide-num-pill">02 / N</span> + <h2 class="slide-title">Section Title</h2>
+2. Below header: 2-column grid (left = chart in .chart-wrap, right = .kpi-grid with 4-6 KPI cards)
+3. Below the 2-column grid: .card containing a table or supporting commentary
+4. .footer-bar at bottom: left = "${ticker} · ${assetType} · 📊 VilfinTV MultiScreener", right = "PAGE N / TOTAL"
+5. Color-code EVERY number: pos values .pos, neg values .neg, neutral/highlight .neu
+
+DATA INTEGRITY:
+• Use ONLY values from the data block. If a field shows "No Data Available", display "—" with class="num" color:var(--text3).
+• NEVER invent peer names, target prices, returns, or holdings.
+• Strip placeholder strings like "__AI__xxx__AI__" entirely (these are bugs from the source pipeline).
+• If returns array is missing, skip the chart (don't fabricate).
+
+═══════════════════════════════════════════════════════════════
+DATA TO PRESENT (extract every value from this block)
+═══════════════════════════════════════════════════════════════
 ${dataSection}
 
-OUTPUT: Return ONLY the complete HTML starting with <!DOCTYPE html>. No markdown fences, no explanation text outside the HTML.`;
+OUTPUT: Return ONLY the complete HTML starting with <!DOCTYPE html>. No markdown fences. No commentary outside the HTML.`;
 
   // Switch to Result tab, show loading
   switchMain(2);
