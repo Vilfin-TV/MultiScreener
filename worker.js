@@ -1358,15 +1358,23 @@ Return ONLY this JSON (start { end }):
 {"companyBackground":"3-4 sentences: founding, core business, revenue mix, competitive position","coreSegments":"Revenue mix and key segments in 1-2 sentences","keySubsidiaries":"Key subsidiaries, comma-separated","keyInsight":"2-3 sentences on current investment opportunity based on the data","tam":"TAM size and growth drivers","industryGrowth":"Industry growth rate and trend","marketPosition":"Leadership and competitive moat in 1 sentence","regulatoryEnv":"Key regulatory factors in 1 sentence","tailwind1":"[Title] — [1-sentence detail]","tailwind2":"[Title] — [1-sentence detail]","tailwind3":"[Title] — [1-sentence detail]","headwind1":"[Title] — [1-sentence detail]","headwind2":"[Title] — [1-sentence detail]","headwind3":"[Title] — [1-sentence detail]","overallSentiment":"Positive / Negative / Neutral — from news above","mgmtCommentary":"Latest management commentary in 1-2 sentences","ceoName":"CEO or MD full name","ceoBackground":"CEO background in 1 sentence","govScore":"X/10 with brief reason","esgHighlights":"Key ESG point in 1 sentence","insiderActivity":"Recent insider buying/selling summary","buzzScore":"Social buzz score 0-100 and trend","trendingTopic":"Current top trending topic for this stock","posNarrative":"Key positive social narrative","bullCase":"Bull case: 2-3 sentences on why the stock could outperform","baseCase":"Base case: 2-3 sentences on most likely outcome","bearCase":"Bear case: 2-3 sentences on key downside risks","convictionCall":"Highest conviction analyst call and reason","durabilityScore":"X/100 with brief reason","piotroski":"Estimated Piotroski F-Score X/9","riskScore":"Overall investment risk X/10","risk1":"[Name] — [Low/Medium/High] — [1-sentence]","risk2":"[Name] — [Low/Medium/High] — [1-sentence]","risk3":"[Name] — [Low/Medium/High] — [1-sentence]","mktSentiment":"Extreme Fear / Fear / Neutral / Greed / Extreme Greed","mktSentScore":"0-100","mktPhase":"Early Bull / Mid Bull / Late Bull / Early Bear / Mid Bear / Recovery / Consolidation","bestAction":"Buy / SIP / Hold / Reduce / Avoid — 1-line rationale","stcgRate":"STCG rate for ${resident||'Indian Resident'} on this asset","stcgPeriod":"STCG holding period threshold","ltcgRate":"LTCG rate for ${resident||'Indian Resident'}","ltcgPeriod":"LTCG holding period threshold","taxNotes":"Key tax notes and surcharge","femaCompliance":"FEMA compliance points if applicable","reportingReqs":"Tax reporting requirements","bestPlatform":"Best investment platforms for ${resident||'Indian Resident'}","dcfValue":"DCF intrinsic value estimate with key assumptions","marginSafety":"Margin of safety at current price","fiidii":"Latest FII/DII activity this quarter","indexChanges":"Upcoming index rebalancing","indexInclusions":"Recent index inclusions/exclusions","peerComparison":"Top 3 peers with name, PE, ROE, MCap in 2-3 lines","bestValuePeer":"Best value peer and brief reason","strongBuy1":"[Name] | [Ticker] | [Why] | [Target] | [Upside%]","strongBuy2":"[Name] | [Ticker] | [Why] | [Target] | [Upside%]","strongBuy3":"[Name] | [Ticker] | [Why] | [Target] | [Upside%]","finalBadge":"STRONG BUY or BUY or ACCUMULATE or HOLD or REDUCE or SELL","aiRec":"Strong Buy / Buy / Hold / Sell / Strong Sell — from data only","oneLiner":"One compelling sentence on the investment case","shortTermOutlook":"1-month outlook in 1-2 sentences","medTermOutlook":"3-6 month outlook in 1-2 sentences","longTermOutlook":"1-3 year outlook in 1-2 sentences","buyZone":"Ideal buy zone price range","stopLoss":"Stop loss price with rationale","tgt6m":"6-month price target","tgt12m":"12-month price target","compMgmt":"X/15","compSector":"X/10","bestWayInvest":"SIP / Lumpsum / Buy on Dip — with reason","allocConservative":"X%","allocModerate":"X%","allocAggressive":"X%","sectorTailwinds":"2-3 lines on structural sector tailwinds"}`;
 }
 
-/** Walk JSON skeleton and replace __AI__key__AI__ placeholders with AI values. */
+/** Walk JSON skeleton and replace __AI__key__AI__ placeholders with AI values.
+ *  CRITICAL: even when insights is null (AI failed), we MUST strip placeholders
+ *  so the user sees "No Data Available" instead of raw __AI__key__AI__ strings. */
 function mergeAiInsights(skeleton, insights) {
-  if (!insights) return skeleton;
+  const ins = insights || {};
   try {
     const merged = JSON.stringify(skeleton).replace(/"__AI__(\w+)__AI__"/g, (_,k) =>
-      JSON.stringify(insights[k] !== undefined ? String(insights[k]) : NDA)
+      JSON.stringify(ins[k] !== undefined && ins[k] !== null && String(ins[k]).trim() ? String(ins[k]) : NDA)
     );
     return JSON.parse(merged);
-  } catch { return skeleton; }
+  } catch {
+    // Last-ditch: regex strip placeholders from a stringified skeleton
+    try {
+      const stripped = JSON.stringify(skeleton).replace(/"__AI__\w+__AI__"/g, JSON.stringify(NDA));
+      return JSON.parse(stripped);
+    } catch { return skeleton; }
+  }
 }
 
 /** Strip markdown fences and extract JSON object from AI response. */
@@ -1439,11 +1447,40 @@ async function hybridReport(prompt, env, providerHint) {
     fetchYFNewsHeadlines(assetName||symbol),
   ]);
 
-  const summary = sumRes.status==='fulfilled' ? sumRes.value : null;
-  const daily   = extractCloses(dRes.status==='fulfilled'  ? dRes.value  : null);
-  const monthly = extractCloses(mRes.status==='fulfilled'  ? mRes.value  : null);
-  let news      = nwsRes.status==='fulfilled' ? (nwsRes.value||[]) : [];
+  let summary  = sumRes.status==='fulfilled' ? sumRes.value : null;
+  const dRaw   = dRes.status==='fulfilled' ? dRes.value : null;
+  const mRaw   = mRes.status==='fulfilled' ? mRes.value : null;
+  const daily  = extractCloses(dRaw);
+  const monthly= extractCloses(mRaw);
+  let news     = nwsRes.status==='fulfilled' ? (nwsRes.value||[]) : [];
   if (!news.length) news = await fetchGoogleNewsRSS(assetName).catch(()=>[]);
+
+  // ── Fallback: if v10/quoteSummary failed, hydrate `summary` from chart meta
+  // Yahoo's v10 endpoint frequently returns 401/429 for non-US symbols without
+  // session cookies; chart's meta object provides currency/price/52W reliably.
+  if (!summary || !summary.price) {
+    const meta = dRaw?.chart?.result?.[0]?.meta || mRaw?.chart?.result?.[0]?.meta;
+    if (meta) {
+      summary = summary || {};
+      summary.price = summary.price || {
+        symbol: meta.symbol,
+        currency: meta.currency,
+        regularMarketPrice: meta.regularMarketPrice,
+        regularMarketVolume: meta.regularMarketVolume,
+        marketCap: null,
+        fullExchangeName: meta.fullExchangeName || meta.exchangeName,
+        exchangeName: meta.exchangeName,
+        longName: meta.longName || meta.shortName,
+        shortName: meta.shortName,
+      };
+      summary.summaryDetail = summary.summaryDetail || {
+        fiftyTwoWeekHigh: { raw: meta.fiftyTwoWeekHigh },
+        fiftyTwoWeekLow:  { raw: meta.fiftyTwoWeekLow },
+        previousClose:    { raw: meta.previousClose },
+      };
+      console.log(`[hybrid] hydrated summary from chart meta (currency=${meta.currency} px=${meta.regularMarketPrice})`);
+    }
+  }
 
   console.log(`[hybrid] summary=${!!summary} daily=${daily.length}pt monthly=${monthly.length}pt news=${news.length}`);
 
