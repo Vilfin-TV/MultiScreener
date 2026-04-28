@@ -210,13 +210,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
 /* ── LEFT MENU FULL-PAGE OVERLAY ── */
 .left-menu-overlay{
   display:none;position:fixed;top:44px;left:0;right:0;bottom:0;z-index:700;
-  background:#111;overflow-y:auto;animation:calcSlideIn .3s ease;
+  background:var(--page-bg);overflow-y:auto;animation:calcSlideIn .3s ease;
 }
 .left-menu-overlay.show{display:block}
 .left-menu-header{
-  background:linear-gradient(135deg,#0d0400,#1a0800,var(--burn),var(--burn3));
+  background:linear-gradient(135deg,#040d1f 0%,#0a1830 40%,#1d4ed8 100%);
   padding:20px 24px;display:flex;align-items:center;gap:16px;
-  position:sticky;top:0;z-index:10;border-bottom:2px solid var(--burn2);
+  position:sticky;top:0;z-index:10;border-bottom:1px solid rgba(37,99,235,.4);
+  box-shadow:0 4px 24px rgba(37,99,235,.15);
 }
 .left-menu-back-btn{
   padding:8px 18px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);
@@ -966,16 +967,17 @@ footer{
 
 /* ── FULL-PAGE CALCULATOR OVERLAY ── */
 .calc-overlay{
-  display:none;position:fixed;inset:0;z-index:500;
-  background:#111;overflow-y:auto;animation:calcSlideIn .3s ease;
+  display:none;position:fixed;top:44px;left:0;right:0;bottom:0;z-index:500;
+  background:var(--page-bg);overflow-y:auto;animation:calcSlideIn .3s ease;
 }
 .calc-overlay.show{display:block}
 @keyframes calcSlideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
 .calc-header{
-  background:linear-gradient(135deg,#0d0400,#1a0800,var(--burn),var(--burn3));
+  background:linear-gradient(135deg,#040d1f 0%,#0a1830 40%,#1d4ed8 100%);
   padding:20px 24px;display:flex;align-items:center;gap:16px;
-  position:sticky;top:0;z-index:10;border-bottom:2px solid var(--burn2);
+  position:sticky;top:0;z-index:10;border-bottom:1px solid rgba(37,99,235,.4);
+  box-shadow:0 4px 24px rgba(37,99,235,.15);
 }
 .calc-back-btn{
   padding:8px 18px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);
@@ -5977,8 +5979,17 @@ async function radioInit() {
       }, 10000);
     });
 
-    _audio.addEventListener('error', () => { radioOnError(); });
-    _audio.addEventListener('ended', () => { radioOnError(); }); // live streams shouldn't end
+    _audio.addEventListener('error', () => {
+      // Suppress while HLS is attached — HLS reports its own errors and the
+      // <audio> element fires spurious errors during blob-URL transitions.
+      if (_radioHls) return;
+      // Only treat as error if there's an actual MediaError code
+      if (_audio.error && _audio.error.code) radioOnError();
+    });
+    _audio.addEventListener('ended', () => {
+      if (_radioHls) return;
+      radioOnError();
+    });
   }
 
   // Auto-play the pinned default after stations render
@@ -6164,17 +6175,21 @@ function radioTogglePlay() {
     // UI updated by the 'pause' event listener below
   } else {
     // ── Currently paused → resume or reload stream ─────────────────
-    // If the audio element has no src set (fresh page load with a saved
-    // default but audio never played), reload the stream first.
     const srcIsBlank = !audio.src || audio.src === '' || audio.src === window.location.href;
     const notLoaded  = audio.readyState === HTMLMediaElement.HAVE_NOTHING;
-    if (srcIsBlank || notLoaded) {
-      // Enforce HTTPS on resume too
-      audio.src = (_radioCurrentUrl || '').replace(/^http:\/\//i, 'https://');
-      audio.load();
+    const isHLS      = /\.m3u8/i.test(_radioCurrentUrl);
+
+    // If src is missing OR this is an HLS stream that needs hls.js setup,
+    // redo full radioPlay() so HLS attaches correctly.
+    if (srcIsBlank || notLoaded || (isHLS && !_radioHls)) {
+      const np = document.getElementById('radio-now-playing');
+      const name = (np && np.textContent && !np.textContent.startsWith('⚠')) ? np.textContent : 'Station';
+      radioPlay(_radioCurrentUrl, _radioCurrentId, name, '');
+      return;
     }
+
     audio.play().catch(error => {
-      console.warn('Radio resume failed:', error && error.message ? error.message : error);
+      console.warn('[Radio] Resume failed:', error && error.message ? error.message : error);
       _radioPlaying = false;
       radioOnError();
     });
@@ -8341,6 +8356,8 @@ function openSidePanel(key) {
   _savedScrollWin = window.scrollY || document.documentElement.scrollTop || 0;
   document.getElementById('left-menu-title').textContent = content.title;
   document.getElementById('left-menu-body').innerHTML = content.html;
+  // Scroll window to top so the sticky menubar stays visible above the overlay
+  window.scrollTo(0, 0);
   overlay.classList.add('show');
   overlay.scrollTop = 0;
   document.body.style.overflow = 'hidden';
@@ -8413,7 +8430,11 @@ function toggleRightSidebar() {
   document.getElementById('sidebar-right').classList.toggle('open');
 }
 
+var _savedScrollCalc = 0;
 function openCalc(id) {
+  // Save current scroll, then scroll to top so the sticky menubar stays visible
+  _savedScrollCalc = window.scrollY || document.documentElement.scrollTop || 0;
+  window.scrollTo(0, 0);
   document.getElementById('calc-'+id).classList.add('show');
   document.body.style.overflow='hidden';
   if (id==='sip') calcSIP();
@@ -8426,6 +8447,8 @@ function openCalc(id) {
 function closeCalc(id) {
   document.getElementById('calc-'+id).classList.remove('show');
   document.body.style.overflow='';
+  // Restore previous scroll position
+  requestAnimationFrame(() => window.scrollTo(0, _savedScrollCalc));
 }
 
 // ── DONUT CHART DRAWING ──────────────────────────────────────────
