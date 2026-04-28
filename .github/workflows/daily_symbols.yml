@@ -23,12 +23,11 @@ jobs:
         with:
           fetch-depth: 1
 
-      # ── 2. Python 3.12 with pip cache ────────────────────────────────────────
+      # ── 2. Python 3.12 (no pip cache — no requirements.txt to hash) ──────────
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'pip'
 
       # ── 3. Install dependencies ───────────────────────────────────────────────
       - name: Install Python dependencies
