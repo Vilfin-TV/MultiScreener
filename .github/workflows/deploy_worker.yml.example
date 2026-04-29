@@ -1,0 +1,25 @@
+name: Deploy Cloudflare Worker
+
+# Triggers automatically on every push to main that touches worker.js
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'worker.js'
+      - 'wrangler.toml'
+  workflow_dispatch:   # also allow manual trigger from Actions tab
+
+jobs:
+  deploy:
+    name: Deploy worker.js to Cloudflare
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy with Wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # If you don't have a wrangler.toml yet, set the command directly:
+          # command: deploy worker.js --name YOUR-WORKER-NAME

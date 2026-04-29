@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Mutual Fund Live Screener - Vilfin George</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#0d0400"/>
+<meta name="description" content="VilfinTV Mutual Fund Live Screener — evidence-based AI analysis for buy, hold, sell, exit, SIP and lumpsum decisions on any mutual fund."/>
+<meta name="robots" content="index,follow"/>
+<title>Mutual Fund Live Screener — VilfinTV</title>
+<link rel="canonical" href="https://vilfin-tv.github.io/MultiScreener/mf_live_screener.html"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
 :root{
@@ -171,12 +176,44 @@ footer strong{color:var(--gold);display:block;font-size:14px;margin-bottom:8px}
 
 @media(max-width:900px){
   .hero-grid,.metrics-grid,.workflow-grid{grid-template-columns:1fr}
+  .main-content{padding:20px 16px 60px}
+  .panel{padding:18px}
 }
 @media(max-width:700px){
   .top-page-title{display:none}
   .signal-grid{grid-template-columns:1fr}
-  .hero-title{font-size:34px}
+  .hero-title{font-size:30px;letter-spacing:1.5px}
+  .site-header{padding:42px 16px 22px}
+  .site-header h1{font-size:28px;letter-spacing:2.5px}
+  .hero-copy{font-size:13.5px}
+  .section-title{font-size:21px}
+  .btn-row{flex-direction:column}
+  .btn-row .primary-btn,.btn-row .secondary-btn{width:100%;justify-content:center;text-align:center;min-height:48px}
+  .text-input{padding:13px 14px;font-size:16px} /* 16px prevents iOS zoom-on-focus */
+  .cf-badge-bar{font-size:9px;padding:0 10px;gap:4px}
+  .top-menu-brand{padding:0 12px;gap:7px}
+  .brand-name{font-size:14px;letter-spacing:1.5px}
+  .back-btn{margin-left:8px;padding:5px 10px;font-size:11px}
+  .metric-line{flex-wrap:wrap;gap:4px}
+  .metric-value{text-align:left;font-size:12.5px}
+  .output-content{padding:18px;font-size:12.5px}
+  footer{padding:24px 16px;font-size:11px}
 }
+@media(max-width:480px){
+  .site-header h1{font-size:24px;letter-spacing:2px}
+  .hero-title{font-size:26px}
+  .chip{font-size:10px;padding:6px 10px}
+  .cf-modal{padding:22px 18px}
+  .cf-modal-title{font-size:19px}
+  .cf-modal-btns{flex-direction:column}
+  .cf-connect-btn,.cf-cancel-btn,.cf-clear-btn{width:100%}
+  /* Hide the duplicate back-btn in menubar on tiny screens — site-header has one */
+  .top-menubar .back-btn{display:none}
+}
+/* Tap highlight + touch-action — feels native on mobile */
+button,a,.chip,.text-input{-webkit-tap-highlight-color:rgba(245,166,35,.18);touch-action:manipulation}
+/* Hide bottom area when on-screen keyboard is open */
+body.kb-open footer{display:none}
 </style>
 </head>
 <body>
@@ -382,7 +419,56 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('cf-url-input').value = saved;
     setCFConnected(saved);
   }
+  // Submit on Enter for the fund name field — mobile-friendly
+  fundNameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); analyzeBtn.click(); }
+  });
+  // Close modal on Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('cf-modal-overlay').classList.contains('show')) {
+      cfCloseModal();
+    }
+  });
 });
+
+// ── Mobile keyboard handler — same UX pattern as the home page ────────────
+(function() {
+  function isMobile() { return window.innerWidth <= 768; }
+  function isFormEl(el) {
+    if (!el) return false;
+    const t = el.tagName;
+    return t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT';
+  }
+  function bringIntoView(el) {
+    if (!el || !el.scrollIntoView) return;
+    setTimeout(() => {
+      try { el.scrollIntoView({ behavior:'smooth', block:'center' }); }
+      catch(_) { try { el.scrollIntoView(); } catch(__){} }
+    }, 280);
+  }
+  document.addEventListener('focusin', (e) => {
+    if (!isFormEl(e.target) || !isMobile()) return;
+    document.body.classList.add('kb-open');
+    bringIntoView(e.target);
+  }, true);
+  document.addEventListener('focusout', (e) => {
+    if (!isFormEl(e.target)) return;
+    setTimeout(() => {
+      if (!isFormEl(document.activeElement)) document.body.classList.remove('kb-open');
+    }, 120);
+  }, true);
+  if (window.visualViewport) {
+    let initialH = window.visualViewport.height;
+    window.visualViewport.addEventListener('resize', () => {
+      if (!isMobile()) return;
+      const cur = window.visualViewport.height;
+      if (cur > initialH) initialH = cur;
+      const shrunk = (initialH - cur) / initialH > 0.2;
+      document.body.classList.toggle('kb-open', shrunk);
+      if (shrunk) bringIntoView(document.activeElement);
+    });
+  }
+})();
 
 function buildPrompt() {
   const fundName = fundNameInput.value.trim();
@@ -483,8 +569,8 @@ function _mfPbSet(pct, stage, sid) {
 }
 
 function _mfPbStop() {
-  clearInterval(_mfPbTimer);
-  clearInterval(_mfPbEl);
+  if (_mfPbTimer) { clearInterval(_mfPbTimer); _mfPbTimer = null; }
+  if (_mfPbEl)    { clearInterval(_mfPbEl);    _mfPbEl    = null; }
 }
 
 async function runAnalysis() {

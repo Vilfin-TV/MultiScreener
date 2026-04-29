@@ -1271,19 +1271,30 @@ footer{
 
 /* ── MOBILE RIGHT-BAR DRAWER ── */
 /* Mobile: transform off-screen; .mobile-open slides it up */
+/* Use 100dvh (dynamic viewport) so the drawer auto-shrinks when the
+   on-screen keyboard appears — fixes inputs hiding behind the keyboard. */
 @media(max-width:900px){
   .right-bar{
     position:fixed!important;
     bottom:0!important;left:0!important;right:0!important;top:auto!important;
-    width:100%!important;height:75vh!important;
+    width:100%!important;
+    height:75vh!important;          /* fallback for old Safari/Chrome */
+    height:75dvh!important;         /* dynamic viewport — keyboard-aware */
+    max-height:100dvh!important;
     border-radius:20px 20px 0 0;
     border-left:none!important;border-top:2px solid #1d4ed8;
     z-index:1500;
     transform:translateY(100%);
-    transition:transform .35s cubic-bezier(.32,.72,0,1);
+    transition:transform .35s cubic-bezier(.32,.72,0,1), height .2s ease;
     display:flex!important; /* override display:none!important */
   }
   .right-bar.mobile-open{transform:translateY(0)!important}
+  /* When keyboard is open, expand drawer to FULL dynamic viewport so the
+     focused input sits above the keyboard rather than below it. */
+  body.kb-open .right-bar.mobile-open{
+    height:100dvh!important;
+    border-radius:0!important;
+  }
   /* Dim overlay behind drawer */
   #mobile-rb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1499;backdrop-filter:blur(2px)}
 }
@@ -11720,37 +11731,57 @@ OUTPUT: Return ONLY the complete HTML starting with <!DOCTYPE html>. No markdown
   }
 }
 
-// ── Mobile keyboard — hide bottom bar when input/textarea is focused ──────
+// ── Mobile keyboard handler — keeps focused input visible above OS keyboard
+//    via three layers: (1) kb-open class on body so CSS expands drawer to
+//    100dvh, (2) scrollIntoView on the focused element after a short delay
+//    (browser needs time to resize viewport), (3) visualViewport listener
+//    as fallback for Android where focus events alone aren't reliable.
 (function() {
   function isMobile() { return window.innerWidth <= 768; }
+  function isFormEl(el) {
+    if (!el) return false;
+    const t = el.tagName;
+    return t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT';
+  }
+  function bringIntoView(el) {
+    if (!el || !el.scrollIntoView) return;
+    // Wait for keyboard animation + viewport resize before scrolling.
+    // 280ms covers both iOS Safari and Chrome Android.
+    setTimeout(() => {
+      try {
+        el.scrollIntoView({ behavior:'smooth', block:'center', inline:'nearest' });
+      } catch(_) { try { el.scrollIntoView(); } catch(__){} }
+    }, 280);
+  }
   function onFocusIn(e) {
-    const tag = e.target && e.target.tagName;
-    if ((tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') && isMobile()) {
-      document.body.classList.add('kb-open');
-    }
+    if (!isFormEl(e.target) || !isMobile()) return;
+    document.body.classList.add('kb-open');
+    bringIntoView(e.target);
   }
   function onFocusOut(e) {
-    const tag = e.target && e.target.tagName;
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
-      // Slight delay so blur from one input → focus on another doesn't flash
-      setTimeout(() => {
-        const active = document.activeElement;
-        const at = active && active.tagName;
-        if (at !== 'INPUT' && at !== 'TEXTAREA' && at !== 'SELECT') {
-          document.body.classList.remove('kb-open');
-        }
-      }, 120);
-    }
+    if (!isFormEl(e.target)) return;
+    setTimeout(() => {
+      if (!isFormEl(document.activeElement)) {
+        document.body.classList.remove('kb-open');
+      }
+    }, 120);
   }
   document.addEventListener('focusin',  onFocusIn,  true);
   document.addEventListener('focusout', onFocusOut, true);
-  // Also handle visual viewport resize (Android keyboard detection)
+
+  // visualViewport: most reliable signal for keyboard show/hide on Android.
+  // Detects ANY viewport shrinkage of >25% from initial portrait height.
   if (window.visualViewport) {
+    let initialH = window.visualViewport.height;
     window.visualViewport.addEventListener('resize', () => {
       if (!isMobile()) return;
-      const ratio = window.visualViewport.height / window.screen.height;
-      if (ratio < 0.75) {
+      const cur = window.visualViewport.height;
+      // Update baseline on orientation changes (height grows, not shrinks)
+      if (cur > initialH) initialH = cur;
+      const shrunk = (initialH - cur) / initialH > 0.2;
+      if (shrunk) {
         document.body.classList.add('kb-open');
+        bringIntoView(document.activeElement);
       } else {
         document.body.classList.remove('kb-open');
       }
