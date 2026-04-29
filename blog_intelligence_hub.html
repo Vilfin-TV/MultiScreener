@@ -1,0 +1,1329 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Blog Intelligence Hub - Vilfin George</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --burn:#2563eb;--burn2:#3b82f6;--burn3:#93c5fd;
+  --gold:#1e3a8a;--gold2:#38bdf8;
+  --green:#10b981;--red:#ef4444;--amber:#f59e0b;
+  --dark:#060f1c;--dark2:#0a1830;--dark3:#0e1f3b;--dark4:#162d4f;
+  --card:#0a1830;--card2:#0e1f3b;--card3:#122344;
+  --text:#e2eeff;--text2:#8ea8c8;--text3:#506480;
+  --border:#162d4a;--border2:#1e3a5c;
+  --page-bg:#030810;
+  --radius:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:
+    radial-gradient(circle at top right, rgba(37,99,235,.12), transparent 22%),
+    radial-gradient(circle at top left, rgba(56,189,248,.1), transparent 18%),
+    var(--page-bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+a{text-decoration:none;color:inherit}
+
+.top-menubar{
+  position:sticky;top:0;z-index:1000;
+  background:linear-gradient(135deg,#040913 0%,#081324 45%,#10264a 100%);
+  border-bottom:2px solid rgba(56,189,248,.32);
+  display:flex;align-items:center;height:46px;padding:0 14px;gap:12px;
+  box-shadow:0 2px 20px rgba(0,0,0,.35);
+}
+.top-menu-brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-icon{
+  width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--burn),var(--burn3));
+  color:#fff;font-size:13px;font-weight:800;box-shadow:0 0 12px rgba(37,99,235,.45)
+}
+.brand-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff;line-height:1}
+.brand-name span{color:var(--gold2)}
+.back-btn{
+  padding:6px 14px;background:rgba(56,189,248,.09);border:1px solid rgba(56,189,248,.24);
+  border-radius:8px;color:var(--gold2);font-size:12px;font-weight:700;white-space:nowrap
+}
+.back-btn:hover{background:rgba(56,189,248,.16)}
+.top-page-title{
+  flex:1;min-width:0;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;
+  color:rgba(255,255,255,.72)
+}
+.top-status{
+  display:flex;align-items:center;gap:6px;font-size:10px;color:rgba(255,255,255,.5);font-weight:700;letter-spacing:.5px
+}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px rgba(245,158,11,.5)}
+
+.site-header{
+  background:linear-gradient(135deg,#0a1830 0%,#122b54 45%,#1d4ed8 100%);
+  padding:34px 22px 26px;text-align:center;position:relative;overflow:hidden;
+  border-bottom:1px solid rgba(56,189,248,.18);
+}
+.site-header::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(45deg,transparent,transparent 18px,rgba(255,255,255,.02) 18px,rgba(255,255,255,.02) 36px);
+}
+.site-header h1{
+  position:relative;z-index:1;font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(28px,4vw,46px);letter-spacing:4px;color:#fff
+}
+.site-header .sub{
+  position:relative;z-index:1;margin-top:8px;color:rgba(255,255,255,.74);
+  font-size:12px;letter-spacing:1.6px;text-transform:uppercase
+}
+.header-badges{
+  position:relative;z-index:1;margin-top:16px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap
+}
+.header-chip{
+  padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.08);font-size:11px;font-weight:700;color:#dbeafe;letter-spacing:.5px
+}
+
+.page-shell{max-width:1380px;margin:0 auto;padding:24px 20px 64px}
+.hero-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:18px;margin-bottom:18px}
+.panel{
+  background:linear-gradient(180deg,rgba(10,24,48,.92),rgba(14,31,59,.92));
+  border:1px solid var(--border);border-radius:16px;padding:22px;
+  box-shadow:0 18px 40px rgba(0,0,0,.28)
+}
+.eyebrow{font-size:11px;font-weight:700;color:var(--burn3);text-transform:uppercase;letter-spacing:1.2px}
+.hero-title{
+  margin-top:12px;font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:2px;line-height:1;max-width:11ch
+}
+.hero-copy{margin-top:14px;color:var(--text2);font-size:14px;line-height:1.75;max-width:68ch}
+.signal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:20px}
+.signal-card{padding:14px;border:1px solid var(--border2);border-radius:12px;background:rgba(255,255,255,.03)}
+.signal-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.9px}
+.signal-value{margin-top:8px;font-size:14px;font-weight:700;color:#fff}
+
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--gold2)}
+.section-sub{margin-top:6px;font-size:12px;color:var(--text3);line-height:1.7}
+.search-wrap{margin-top:18px}
+.search-box{
+  display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;
+  background:rgba(255,255,255,.04);border:1px solid var(--border2)
+}
+.search-icon{font-size:15px;color:var(--gold2)}
+.search-input{
+  width:100%;border:none;outline:none;background:transparent;color:var(--text);
+  font-family:'DM Sans',sans-serif;font-size:14px
+}
+.search-input::placeholder{color:var(--text3)}
+.search-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.meta-chip{
+  padding:7px 10px;border-radius:999px;background:rgba(37,99,235,.08);
+  border:1px solid rgba(37,99,235,.2);font-size:11px;font-weight:700;color:#bfdbfe
+}
+
+.layout-grid{display:grid;grid-template-columns:280px minmax(0,1fr);gap:18px}
+.sidebar{position:sticky;top:72px;height:fit-content}
+.sidebar-card{
+  background:linear-gradient(180deg,rgba(10,24,48,.92),rgba(14,31,59,.92));
+  border:1px solid var(--border);border-radius:16px;padding:18px
+}
+.sidebar-title{font-size:11px;font-weight:700;color:var(--burn3);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
+.tab-list{display:flex;flex-direction:column;gap:8px}
+.tab-btn{
+  width:100%;text-align:left;padding:11px 12px;border-radius:10px;border:1px solid transparent;
+  background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;
+  transition:all .15s
+}
+.tab-btn:hover{background:rgba(255,255,255,.04);color:#fff;border-color:rgba(255,255,255,.05)}
+.tab-btn.active{background:rgba(37,99,235,.14);color:#dbeafe;border-color:rgba(37,99,235,.28)}
+.tab-count{float:right;color:var(--text3);font-size:11px}
+.sidebar-note{
+  margin-top:16px;padding:12px 13px;border-radius:12px;background:rgba(245,158,11,.08);
+  border:1px solid rgba(245,158,11,.18);font-size:12px;color:#fde68a;line-height:1.6
+}
+
+.toolbar{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  margin-bottom:16px
+}
+.toolbar-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:#fff}
+.toolbar-sub{font-size:12px;color:var(--text3);margin-top:4px}
+.toolbar-stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat-pill{
+  padding:8px 11px;border-radius:10px;background:rgba(255,255,255,.04);
+  border:1px solid var(--border2);font-size:11px;font-weight:700;color:#dbeafe
+}
+
+.briefings-wrap{margin-bottom:18px}
+.briefings-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#fff;margin-bottom:6px}
+.briefings-sub{font-size:12px;color:var(--text3);line-height:1.7;margin-bottom:14px}
+.briefings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.briefing-card{
+  background:linear-gradient(180deg,rgba(12,33,62,.96),rgba(10,24,48,.96));
+  border:1px solid var(--border);border-radius:16px;padding:16px;
+  box-shadow:0 14px 32px rgba(0,0,0,.2)
+}
+.briefing-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:12px}
+.briefing-badge{
+  display:inline-flex;padding:5px 10px;border-radius:999px;background:rgba(56,189,248,.12);
+  border:1px solid rgba(56,189,248,.22);font-size:10px;font-weight:800;color:#bfdbfe;letter-spacing:.7px;text-transform:uppercase
+}
+.briefing-date{font-size:10px;color:var(--text3);letter-spacing:.7px;text-transform:uppercase;white-space:nowrap}
+.briefing-title{font-size:15px;font-weight:700;color:#fff;line-height:1.5}
+.briefing-copy{margin-top:10px;font-size:12px;color:var(--text2);line-height:1.7}
+.briefing-foot{
+  margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap
+}
+.briefing-source{font-size:11px;color:#dbeafe;font-weight:700}
+.briefing-link{
+  font-size:11px;font-weight:700;color:var(--gold2);padding:7px 10px;border-radius:8px;
+  border:1px solid rgba(56,189,248,.2);background:rgba(56,189,248,.06)
+}
+.briefing-link:hover{background:rgba(56,189,248,.12)}
+
+.topics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.topic-card{
+  background:linear-gradient(180deg,rgba(10,24,48,.95),rgba(12,35,68,.95));
+  border:1px solid var(--border);border-radius:16px;padding:16px;min-height:230px;
+  transition:transform .15s,border-color .15s,box-shadow .15s
+}
+.topic-card:hover{transform:translateY(-2px);border-color:rgba(56,189,248,.24);box-shadow:0 12px 28px rgba(0,0,0,.22)}
+.topic-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:14px}
+.topic-category{
+  display:inline-flex;padding:5px 10px;border-radius:999px;background:rgba(37,99,235,.12);
+  border:1px solid rgba(37,99,235,.22);font-size:10px;font-weight:800;color:#bfdbfe;letter-spacing:.7px;text-transform:uppercase
+}
+.topic-region{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.topic-title{font-size:16px;font-weight:700;color:#fff;line-height:1.45;min-height:68px}
+.topic-desc{margin-top:10px;font-size:12px;color:var(--text2);line-height:1.7;min-height:70px}
+.topic-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.tag{
+  padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.06);font-size:10px;font-weight:700;color:var(--text2)
+}
+.topic-foot{
+  margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);
+  display:flex;align-items:center;justify-content:space-between;gap:10px
+}
+.topic-state{font-size:11px;font-weight:700;color:#dbeafe}
+.topic-action{font-size:11px;color:var(--gold2);font-weight:700}
+
+.empty-state{
+  display:none;padding:60px 20px;text-align:center;background:linear-gradient(180deg,rgba(10,24,48,.92),rgba(14,31,59,.92));
+  border:1px solid var(--border);border-radius:16px
+}
+.empty-state.show{display:block}
+.empty-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:#fff}
+.empty-copy{margin-top:10px;font-size:13px;color:var(--text2);line-height:1.7}
+
+footer{
+  margin-top:36px;background:var(--dark2);border-top:1px solid var(--border);border-radius:16px;
+  padding:22px;text-align:center;color:var(--text3);font-size:12px;line-height:1.8
+}
+footer strong{display:block;color:#dbeafe;font-size:14px;margin-bottom:6px}
+
+@media(max-width:1080px){
+  .hero-grid,.layout-grid{grid-template-columns:1fr}
+  .sidebar{position:relative;top:auto}
+}
+@media(max-width:720px){
+  .top-page-title{display:none}
+  .signal-grid{grid-template-columns:1fr}
+  .hero-title{font-size:34px}
+  .topics-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="top-menubar">
+  <a href="index.html" class="top-menu-brand">
+    <div class="brand-icon">VT</div>
+    <div class="brand-name">Vilfin<span>TV</span> Multiscreener</div>
+  </a>
+  <a href="index.html" class="back-btn">Back to Home</a>
+  <div class="top-page-title">BLOG INTELLIGENCE HUB</div>
+  <div class="top-status">
+    <span class="status-dot"></span>
+    <span>Updated April 2026</span>
+  </div>
+</div>
+
+<header class="site-header">
+  <h1>Blog Intelligence Hub</h1>
+  <div class="sub">Technology, markets, policy, taxation, funds, AI, crypto, semiconductors and space</div>
+  <div class="header-badges">
+    <span class="header-chip">17 coverage tabs</span>
+    <span class="header-chip">Fast search and category tabs</span>
+    <span class="header-chip">Current briefings, search and source links</span>
+  </div>
+</header>
+
+<main class="page-shell">
+  <section class="hero-grid">
+    <div class="panel">
+      <div class="eyebrow">News and research</div>
+      <div class="hero-title">A fast way to follow what matters now.</div>
+      <div class="hero-copy">
+        Follow current developments across technology, finance, politics, taxation, mutual funds, ETFs,
+        stocks, brokers, inventions and technology offers, with searchable topic coverage across India, Japan, the US and global markets.
+      </div>
+      <div class="signal-grid">
+        <div class="signal-card">
+          <div class="signal-label">Coverage</div>
+          <div class="signal-value">India, Japan, US and global lanes</div>
+        </div>
+        <div class="signal-card">
+          <div class="signal-label">Structure</div>
+          <div class="signal-value">Separate tabs and searchable update cards</div>
+        </div>
+        <div class="signal-card">
+          <div class="signal-label">Navigation</div>
+          <div class="signal-value">Separate tabs and searchable article sections</div>
+        </div>
+        <div class="signal-card">
+          <div class="signal-label">Current Layer</div>
+          <div class="signal-value">Curated updates with live source links</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="section-title">Search Updates</div>
+      <div class="section-sub">
+        Search by topic, region, category, company, regulator or keyword.
+      </div>
+      <div class="search-wrap">
+        <div class="search-box">
+          <div class="search-icon">Search</div>
+          <input id="searchInput" class="search-input" type="text" placeholder="Search: AI chips, GST, ETF, brokers, Japan tax, market updates"/>
+        </div>
+        <div class="search-meta">
+          <span class="meta-chip" id="topicCountChip">0 topics</span>
+          <span class="meta-chip" id="activeTabChip">All tabs</span>
+          <span class="meta-chip">Current briefings and article search</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="layout-grid">
+    <aside class="sidebar">
+      <div class="sidebar-card">
+        <div class="sidebar-title">Blog Tabs</div>
+        <div class="tab-list" id="tabList"></div>
+        <div class="sidebar-note">
+          Use the tab menu to move across sections and search within the current update feed.
+        </div>
+      </div>
+    </aside>
+
+    <section>
+      <div class="toolbar">
+        <div>
+          <div class="toolbar-title">Coverage Desk</div>
+          <div class="toolbar-sub">Browse current briefings by category or search across all updates.</div>
+        </div>
+        <div class="toolbar-stats">
+          <span class="stat-pill" id="visibleCountPill">0 visible</span>
+          <span class="stat-pill">18 categories</span>
+          <span class="stat-pill" id="briefingCountPill">0 briefings</span>
+        </div>
+      </div>
+
+      <div class="briefings-wrap">
+        <div class="briefings-title">Current Briefings</div>
+        <div class="briefings-sub">Latest linked updates from newsrooms, exchanges, regulators and platform sites.</div>
+        <div class="briefings-grid" id="briefingsGrid"></div>
+      </div>
+
+      <div class="topics-grid" id="topicsGrid"></div>
+      <div class="empty-state" id="emptyState">
+        <div class="empty-title">No Matching Updates</div>
+        <div class="empty-copy">Try a broader keyword or switch to another section.</div>
+      </div>
+    </section>
+  </section>
+
+  <footer>
+    <strong>Blog Intelligence Hub</strong>
+    Coverage across markets, policy, taxation, technology and innovation.
+  </footer>
+</main>
+
+<script>
+const BRIEFINGS = [
+  {
+    title:'Cognichip raises $60 million to push AI-led chip design',
+    category:'technology',
+    region:'US',
+    source:'TechCrunch',
+    date:'April 1, 2026',
+    url:'https://techcrunch.com/2026/04/01/cognichip-wants-ai-to-design-the-chips-that-power-ai-and-just-raised-60m-to-try/',
+    summary:'Cognichip says it wants to use AI to shorten and improve chip-design work. The fresh funding shows investors still see room for new infrastructure companies around the semiconductor toolchain.'
+  },
+  {
+    title:'Uber expands AWS footprint and begins Trainium3 testing',
+    category:'technology',
+    region:'US',
+    source:'TechCrunch',
+    date:'April 7, 2026',
+    url:'https://techcrunch.com/2026/04/07/uber-is-the-latest-to-be-won-over-by-amazons-ai-chips/',
+    summary:'Uber is broadening its use of AWS and testing Amazon Trainium3 chips. The move matters because large platform companies are actively looking for alternatives to Nvidia-heavy AI spending.'
+  },
+  {
+    title:'SiFive reaches a $3.65 billion valuation in open-chip push',
+    category:'technology',
+    region:'US',
+    source:'TechCrunch',
+    date:'April 11, 2026',
+    url:'https://techcrunch.com/2026/04/11/nvidia-backed-sifive-hits-3-65-billion-valuation-for-open-ai-chips/',
+    summary:'SiFive\'s latest valuation reflects continuing confidence in open architecture chip designs. It also signals that AI-era semiconductor investment is spreading beyond the largest established names.'
+  },
+  {
+    title:'Microsoft introduces Maia 200 inference chip',
+    category:'technology',
+    region:'US',
+    source:'TechCrunch',
+    date:'January 26, 2026',
+    url:'https://techcrunch.com/2026/01/26/microsoft-announces-powerful-new-chip-for-ai-inference/',
+    summary:'Microsoft presented Maia 200 as a stronger option for AI inference workloads. The announcement shows how hyperscalers keep building in-house silicon to control cost, capacity and deployment speed.'
+  },
+  {
+    title:'Nvidia unveils Vera Rubin AI computing platform at CES',
+    category:'technology',
+    region:'US',
+    source:'The Verge',
+    date:'January 5, 2026',
+    url:'https://www.theverge.com/tech/855412/nvidia-launches-vera-rubin-ai-computing-platform-at-ces-2026',
+    summary:'Nvidia used CES to show its Vera Rubin platform and reinforce its roadmap for the next AI compute cycle. That keeps pressure on cloud rivals and chip startups trying to catch up on performance and ecosystem depth.'
+  },
+
+  {
+    title:'US indexes hit records after Intel-led rally',
+    category:'finance',
+    region:'US',
+    source:'Bloomberg',
+    date:'April 24, 2026',
+    url:'https://www.bloomberg.com/news/articles/2026-04-24/nasdaq-futures-jump-as-intel-s-blockbuster-sales-view-impresses?itm_content=All-Time_Records-0',
+    summary:'Strong Intel guidance helped lift the Nasdaq 100 and S&P 500 to fresh highs. Falling yields and a calmer geopolitical tone added support to risk appetite.'
+  },
+  {
+    title:'Emerging-market stocks extend strongest rally in years',
+    category:'finance',
+    region:'Global',
+    source:'Bloomberg',
+    date:'April 27, 2026',
+    url:'https://www.bloomberg.com/news/articles/2026-04-27/emerging-stocks-an-even-better-bargain-after-best-rally-in-years',
+    summary:'Bloomberg reported that emerging-market equities kept climbing after a powerful multi-year rally phase. The discussion around valuation suggests investors are still treating many developing markets as relatively inexpensive.'
+  },
+  {
+    title:'Oil jumps as Iran tension darkens the market mood',
+    category:'finance',
+    region:'Global',
+    source:'Bloomberg',
+    date:'April 20, 2026',
+    url:'https://www.bloomberg.com/news/articles/2026-04-19/us-futures-fall-oil-jumps-as-iran-tensions-worsen-markets-wrap',
+    summary:'Oil moved sharply higher as geopolitical tension around Iran escalated. The move matters for inflation expectations, transport costs and the near-term outlook for risk assets.'
+  },
+  {
+    title:'European stocks post their biggest rise since 2022',
+    category:'finance',
+    region:'Europe',
+    source:'Bloomberg',
+    date:'April 8, 2026',
+    url:'https://www.bloomberg.com/news/articles/2026-04-08/european-stocks-set-for-biggest-rise-since-2022-on-us-iran-deal?srnd=phx-industries-energy',
+    summary:'European equities staged a strong rebound after hopes of a US-Iran deal improved sentiment. The rebound highlighted how quickly geopolitical relief can reopen risk-taking across global markets.'
+  },
+  {
+    title:'Foreign investors exit Indian stocks at a record pace',
+    category:'finance',
+    region:'India',
+    source:'Bloomberg',
+    date:'April 11, 2026',
+    url:'https://www.bloomberg.com/news/articles/2026-04-11/global-funds-flee-indian-stocks-at-record-pace-on-growth-fears',
+    summary:'Overseas funds sold Indian equities aggressively as growth worries and energy risks rose. The selling wave became a major test of how much domestic flows could steady the market.'
+  },
+
+  {
+    title:'White House looks for new tariff path after court setback',
+    category:'politics',
+    region:'US',
+    source:'Associated Press',
+    date:'April 28, 2026',
+    url:'https://apnews.com/article/bf712c8ab01f99c3a92e91eb74a9d03f',
+    summary:'After a Supreme Court setback on broad tariff use, the administration began looking at other trade tools. Businesses are now watching whether replacement measures arrive through narrower but still meaningful policy channels.'
+  },
+  {
+    title:'GM says tariff pressure could add billions in costs',
+    category:'politics',
+    region:'US',
+    source:'Associated Press',
+    date:'April 28, 2026',
+    url:'https://apnews.com/article/1b476b4c7e62bbf9cf8155391aec7222',
+    summary:'General Motors warned tariff changes could materially raise costs. That turned trade policy back into an operating issue for manufacturers, not just a headline political debate.'
+  },
+  {
+    title:'US sanctions target a China-based refinery and shippers tied to Iranian oil',
+    category:'politics',
+    region:'Global',
+    source:'AP via KSAT',
+    date:'April 24, 2026',
+    url:'https://www.ksat.com/news/politics/2026/04/24/us-imposes-sanctions-on-a-china-based-oil-refinery-and-40-shippers-over-iranian-oil/',
+    summary:'The sanctions package widened pressure on Iran-related oil flows and added new compliance risk for maritime trade. Energy buyers, shipping operators and banks all have a reason to monitor follow-through closely.'
+  },
+  {
+    title:'Weekly sanctions round-up highlights fresh compliance pressure',
+    category:'politics',
+    region:'Global',
+    source:'Steptoe',
+    date:'April 27, 2026',
+    url:'https://www.steptoe.com/en/news-publications/international-compliance-blog/weekly-sanctions-update-april-27-2026.html',
+    summary:'Steptoe\'s weekly update captured new sanctions developments across jurisdictions. For companies with cross-border exposure, the note reinforces how fast screening and compliance requirements can shift.'
+  },
+  {
+    title:'Political campaigning intensifies in West Bengal',
+    category:'politics',
+    region:'India',
+    source:'Reuters Connect',
+    date:'April 7, 2026',
+    url:'https://www.reutersconnect.com/item/india-politics/dGFnOnJldXRlcnMuY29tLDIwMjY6bmV3c21sX01UMU5VUlBITzAwMDQ0WFEzMA',
+    summary:'Reuters imagery and coverage from West Bengal underlined rising campaign activity and sharper political messaging. State-level politics matter because they often reshape the tone around investment, administration and reform execution.'
+  },
+
+  {
+    title:'India\'s Income-tax Act, 2025 takes effect from April 1',
+    category:'tax',
+    region:'India',
+    source:'Income Tax Department, Government of India',
+    date:'April 1, 2026',
+    url:'https://www.incometaxindia.gov.in/w/income-tax-act-2025-comes-into-force-from-1st-april-2026',
+    summary:'India moved into a new direct-tax framework from April 1, 2026. For taxpayers and advisors, this is the central change shaping the current filing and compliance cycle.'
+  },
+  {
+    title:'India issues corrigendum tied to 2026 tax notification',
+    category:'tax',
+    region:'India',
+    source:'Income Tax Department, Government of India',
+    date:'March 16, 2026',
+    url:'https://www.incometaxindia.gov.in/w/corrigendum-to-notification-no.-20/2026-f.-no.-370149/209/2026-tpl-/-gsr-189-e-',
+    summary:'The department published a corrigendum to refine earlier notified tax material. These follow-up notices matter because small wording changes can carry practical compliance consequences.'
+  },
+  {
+    title:'India notifies Fifth Amendment Rules for 2026',
+    category:'tax',
+    region:'India',
+    source:'Income Tax Department, Government of India',
+    date:'March 30, 2026',
+    url:'https://www.incometaxindia.gov.in/w/notification-no.-48/2026-f.-no.-370142/8/2026-tpl-/-g.s.r.-229-e-',
+    summary:'The Fifth Amendment Rules added another layer of procedural clarification before the new tax regime took hold. Businesses and tax professionals need these updates because operating details often sit in the rules, not only in the Act.'
+  },
+  {
+    title:'Japan\'s current income-tax guide remains the core filing reference',
+    category:'tax',
+    region:'Japan',
+    source:'National Tax Agency Japan',
+    date:'Current 2025 guide',
+    url:'https://www.nta.go.jp/english/taxes/individual/incometax_2025.htm',
+    summary:'Japan\'s National Tax Agency continues to point filers to its individual income-tax guide for procedures and calculations. It remains the key English-language reference for residents navigating filing basics.'
+  },
+  {
+    title:'Japan outlines consumption-tax treatment for platform operators',
+    category:'tax',
+    region:'Japan',
+    source:'National Tax Agency Japan',
+    date:'Current guidance',
+    url:'https://www.nta.go.jp/english/taxes/consumption_tax/05.htm',
+    summary:'Japan\'s guidance on digital-platform and consumption-tax handling is important for marketplace operators and cross-border sellers. It signals where platform responsibility and indirect-tax compliance are converging.'
+  },
+
+  {
+    title:'Equity mutual fund inflows in India jump to Rs 40,450 crore in March',
+    category:'mutual_funds',
+    region:'India',
+    source:'Moneycontrol',
+    date:'April 10, 2026',
+    url:'https://www.moneycontrol.com/news/business/markets/inflow-in-equity-mutual-funds-surges-56-to-rs-40-450-crore-in-march-amid-geopolitical-tensions-market-volatility-13885650.html',
+    summary:'Indian equity-fund inflows surged despite market volatility. Strong interest in flexi-cap, mid-cap and small-cap products suggests retail appetite stayed resilient through a noisy macro backdrop.'
+  },
+  {
+    title:'Debt funds see sharp outflows even as equity demand strengthens',
+    category:'mutual_funds',
+    region:'India',
+    source:'Moneycontrol',
+    date:'April 10, 2026',
+    url:'https://www.moneycontrol.com/news/business/personal-finance/equity-mf-inflows-jump-55-to-rs-40-450-crore-in-march-debt-sees-sharp-outflows-amfi-data-13885356.html',
+    summary:'AMFI data showed a split picture: equity funds pulled in fresh money while debt funds faced large withdrawals. That divergence says a lot about how investors are positioning for return potential versus safety.'
+  },
+  {
+    title:'SEBI introduces life-cycle funds and tighter overlap limits',
+    category:'mutual_funds',
+    region:'India',
+    source:'Mint',
+    date:'February 27, 2026',
+    url:'https://www.livemint.com/mutual-fund/sebi-mutual-funds-overlap-cap-lifecycle-funds-11772175743478.html',
+    summary:'SEBI changed mutual-fund category rules by adding life-cycle funds and limiting portfolio overlap across schemes. The move is meant to make fund positioning clearer and reduce category confusion for investors.'
+  },
+  {
+    title:'Mint\'s mutual-fund coverage keeps focus on portfolio shifts and fund strategy',
+    category:'mutual_funds',
+    region:'India',
+    source:'Mint',
+    date:'Updated section',
+    url:'https://www.livemint.com/mutual-fund',
+    summary:'Mint\'s mutual-fund desk continues to track scheme positioning, manager calls and category-level developments. It remains a useful pulse-check source for how the Indian fund industry is adjusting to regulation and market swings.'
+  },
+  {
+    title:'Gold and silver fund valuation rules move to domestic spot prices',
+    category:'mutual_funds',
+    region:'India',
+    source:'Mint',
+    date:'February 26, 2026',
+    url:'https://www.livemint.com/market/sebi-mutual-funds-gold-silver-etf-valuation-domestic-spot-prices-11772108223741.html',
+    summary:'Valuation for precious-metals fund holdings shifted toward domestic exchange spot prices. The change improves local market relevance and may alter how investors compare metal funds with global price references.'
+  },
+
+  {
+    title:'US ETF inflows cross $500 billion for the year',
+    category:'etf',
+    region:'US',
+    source:'ETF.com',
+    date:'April 13, 2026',
+    url:'https://www.etf.com/sections/weekly-etf-flows/2026-etf-inflows-cross-500b',
+    summary:'ETF inflows moved past the $500 billion mark in 2026, according to ETF.com. Broad-market equity and fixed-income products remained the main magnets for fresh allocations.'
+  },
+  {
+    title:'ETF launches continue to widen investor choice across niches',
+    category:'etf',
+    region:'Global',
+    source:'ETF.com',
+    date:'Launch tracker',
+    url:'https://www.etf.com/tools/etf-launches',
+    summary:'The ETF launch pipeline shows that issuers are still adding new exposures across themes, sectors and asset classes. Product growth remains a sign of intense competition for investor attention and shelf space.'
+  },
+  {
+    title:'Japan Exchange Group approves new ETF listings in early April',
+    category:'etf',
+    region:'Japan',
+    source:'Japan Exchange Group',
+    date:'April 3, 2026',
+    url:'https://www.jpx.co.jp/english/news/1070/20260403.html',
+    summary:'JPX approved another set of ETF listings in early April, continuing the broadening of the local product lineup. More variety can help attract both domestic users and international allocators watching Japan.'
+  },
+  {
+    title:'JPX clears additional Global X and iShares products later in April',
+    category:'etf',
+    region:'Japan',
+    source:'Japan Exchange Group',
+    date:'April 22, 2026',
+    url:'https://www.jpx.co.jp/english/news/1070/20260422-01.html',
+    summary:'A second April approval round added more overseas and commodity-linked ETF options. That pace of approvals suggests Japan still wants to deepen ETF breadth and trading interest.'
+  },
+  {
+    title:'Japan explores call-option ETFs to draw global investors',
+    category:'etf',
+    region:'Japan',
+    source:'Bloomberg',
+    date:'April 14, 2026',
+    url:'https://www.bloomberg.com/news/articles/2026-04-14/japan-exchanges-eye-call-option-etfs-to-attract-global-investors?srnd=phx-etfs',
+    summary:'Bloomberg reported that Japanese exchanges are exploring call-option ETF structures. The idea points to a push for more differentiated products that can stand out in the global ETF market.'
+  },
+
+  {
+    title:'Indian stocks face heavy foreign selling on growth concerns',
+    category:'stocks',
+    region:'India',
+    source:'Bloomberg',
+    date:'April 11, 2026',
+    url:'https://www.bloomberg.com/news/articles/2026-04-11/global-funds-flee-indian-stocks-at-record-pace-on-growth-fears',
+    summary:'Foreign investors sold Indian shares aggressively as worries around growth and imported inflation rose. The key question for the market is whether domestic buyers can keep absorbing those exits.'
+  },
+  {
+    title:'Nikkei posts sharp relief rally after ceasefire hopes improve sentiment',
+    category:'stocks',
+    region:'Japan',
+    source:'Bloomberg',
+    date:'April 8, 2026',
+    url:'https://www.bloomberg.com/news/articles/2026-04-07/japan-stocks-set-to-gain-after-trump-agrees-to-iran-ceasefire',
+    summary:'Japanese equities rallied strongly as the geopolitical tone improved and risk appetite returned. AI-linked and momentum-driven names were among the biggest beneficiaries.'
+  },
+  {
+    title:'US stocks hover near records as markets weigh earnings and oil headlines',
+    category:'stocks',
+    region:'US',
+    source:'Bloomberg',
+    date:'April 27, 2026',
+    url:'https://www.bloomberg.com/news/articles/2026-04-26/us-stock-futures-decline-as-iran-talks-stall-markets-wrap?itm_content=Today%E2%80%99s_Markets_Wrap-0',
+    summary:'US equities stayed close to record highs while investors balanced megacap earnings strength against geopolitical risk. The setup keeps leadership narrow but still supportive for index levels.'
+  },
+  {
+    title:'S&P 500 returns close to peak territory in mid-April',
+    category:'stocks',
+    region:'US',
+    source:'Bloomberg',
+    date:'April 14, 2026',
+    url:'https://www.bloomberg.com/news/articles/2026-04-13/stock-market-today-dow-s-p-live-updates',
+    summary:'A rebound toward prior highs signaled that buyers were still willing to add exposure after earlier volatility. That move reinforced confidence in the durability of the broader US market trend.'
+  },
+  {
+    title:'Emerging-market stocks reclaim record territory on AI and deal optimism',
+    category:'stocks',
+    region:'Global',
+    source:'Bloomberg',
+    date:'April 27, 2026',
+    url:'https://www.bloomberg.com/news/articles/2026-04-27/emerging-stocks-rise-to-record-high-on-ai-iran-offer?srnd=phx-markets',
+    summary:'Emerging-market equities climbed back to record levels as investors responded to AI-linked growth stories and easing geopolitical expectations. It is another sign that global risk appetite remains surprisingly broad.'
+  },
+
+  {
+    title:'Interactive Brokers expands crypto portfolio transfer support',
+    category:'brokers',
+    region:'Global',
+    source:'Interactive Brokers',
+    date:'March 31, 2026',
+    url:'https://investors.interactivebrokers.com/en/general/about/mediaRelations/3-31-26.php',
+    summary:'Interactive Brokers added support for transferring eligible crypto holdings into linked accounts. The update strengthens its pitch to clients who want a broader asset mix inside one platform.'
+  },
+  {
+    title:'Interactive Brokers keeps publishing platform and product updates through its press channel',
+    category:'brokers',
+    region:'Global',
+    source:'Interactive Brokers',
+    date:'Current releases',
+    url:'https://investors.interactivebrokers.com/en/general/about/press-releases-nav.php',
+    summary:'The broker\'s press release feed remains the main source for new product access, platform changes and operating updates. For active users, it is one of the easiest ways to monitor material account-level changes.'
+  },
+  {
+    title:'Interactive Brokers maintains broader release archive for service changes',
+    category:'brokers',
+    region:'Global',
+    source:'Interactive Brokers',
+    date:'Archive',
+    url:'https://www.interactivebrokers.com/en/general/about/press-releases.php',
+    summary:'The public release archive gives a wider look at service rollouts and broker-level announcements. It is useful for tracking how quickly product support and platform capabilities are expanding over time.'
+  },
+  {
+    title:'Legacy press archive still documents older broker product rollouts',
+    category:'brokers',
+    region:'Global',
+    source:'Interactive Brokers',
+    date:'Archive access',
+    url:'https://ndcdyn.interactivebrokers.com/en/general/about/press-releases.php',
+    summary:'The older archive remains a practical reference for historic brokerage updates and feature launches. That longer record helps users compare recent announcements against the broker\'s broader product direction.'
+  },
+  {
+    title:'Zerodha notes positive global cues lifting Nifty sentiment',
+    category:'brokers',
+    region:'India',
+    source:'Zerodha Aftermarket Report',
+    date:'April 1, 2026',
+    url:'https://aftermarketreport.zerodha.com/p/positive-global-cues-lift-nifty-near',
+    summary:'Zerodha\'s market note highlighted stronger global cues feeding into local index sentiment. Broker research briefs like this often shape daily retail mood even when they are not formal investment calls.'
+  },
+
+  {
+    title:'AI-assisted brain-tumor imaging study reports non-inferior diagnostic accuracy',
+    category:'inventions',
+    region:'Global',
+    source:'npj Digital Medicine',
+    date:'April 18, 2026',
+    url:'https://www.nature.com/articles/s41746-026-02651-0',
+    summary:'A multicenter study found AI-augmented confocal laser endomicroscopy performed comparably to frozen-section workflows for surgical diagnosis. That is notable because it points to real operating-room use rather than only lab promise.'
+  },
+  {
+    title:'Nature Health highlights pediatric imaging data gaps',
+    category:'inventions',
+    region:'Global',
+    source:'Nature Health',
+    date:'April 24, 2026',
+    url:'https://www.nature.com/articles/s44360-026-00111-3',
+    summary:'The paper argued that public pediatric imaging datasets remain too limited for dependable AI deployment. Better child-focused data design is emerging as a core condition for safe medical innovation.'
+  },
+  {
+    title:'Study examines how AI appears in public communication and culture',
+    category:'inventions',
+    region:'Global',
+    source:'Humanities and Social Sciences Communications',
+    date:'April 20, 2026',
+    url:'https://www.nature.com/articles/s41599-026-06865-1',
+    summary:'This research looked at how AI is framed and circulated in broader public communication. It matters because invention adoption is shaped not only by engineering but also by trust, interpretation and social context.'
+  },
+  {
+    title:'Scientific Reports publishes fresh applied research on advanced systems',
+    category:'inventions',
+    region:'Global',
+    source:'Scientific Reports',
+    date:'April 20, 2026',
+    url:'https://www.nature.com/articles/s41598-026-49220-9',
+    summary:'The April publication added another example of research moving practical systems work into peer-reviewed form. These translational papers are often the bridge between concept-stage innovation and wider technical adoption.'
+  },
+  {
+    title:'Nature Physics reports another frontier-scale research advance',
+    category:'inventions',
+    region:'Global',
+    source:'Nature Physics',
+    date:'April 16, 2026',
+    url:'https://www.nature.com/articles/s41567-026-03278-4',
+    summary:'Nature Physics published a new high-level research result with implications for future advanced technologies. The immediate commercial path may be distant, but these studies often mark the starting point for later engineering breakthroughs.'
+  },
+
+  {
+    title:'Google Cloud keeps startup credits available for eligible builders',
+    category:'offers',
+    region:'Global',
+    source:'Google Cloud',
+    date:'Current program',
+    url:'https://cloud.google.com/startup',
+    summary:'Google Cloud continues offering sizable credit packages to eligible startups, including stronger support for AI-focused teams. The program is positioned as infrastructure runway plus partner access and operational perks.'
+  },
+  {
+    title:'Google Cloud extends extra startup perks beyond core credits',
+    category:'offers',
+    region:'Global',
+    source:'Google Cloud',
+    date:'Current perks',
+    url:'https://cloud.google.com/startup/perks',
+    summary:'Beyond infrastructure credits, Google highlights software perks, ecosystem offers and support tools for founders. These bundled benefits can matter as much as raw cloud spend for early-stage teams.'
+  },
+  {
+    title:'AWS Activate keeps credit support available up to six figures',
+    category:'offers',
+    region:'Global',
+    source:'AWS Startups',
+    date:'Current program',
+    url:'https://aws.amazon.com/startups/credits?lang=en-US.',
+    summary:'AWS continues to market Activate as a startup runway program with different credit tiers. The offer remains especially relevant for teams choosing AWS-heavy build paths and trying to manage early burn.'
+  },
+  {
+    title:'Microsoft for Startups continues packaging credits, tooling and guidance',
+    category:'offers',
+    region:'Global',
+    source:'Microsoft Learn',
+    date:'Current overview',
+    url:'https://learn.microsoft.com/en-us/startups/microsoft-for-startups/overview',
+    summary:'Microsoft\'s startup program combines cloud support with product access and ecosystem guidance. It remains one of the more structured enterprise-oriented onboarding tracks for young software companies.'
+  },
+  {
+    title:'Microsoft posts April partner promotions and pricing announcements',
+    category:'offers',
+    region:'Global',
+    source:'Microsoft Learn',
+    date:'April 2026',
+    url:'https://learn.microsoft.com/en-us/partner-center/announcements/2026-april',
+    summary:'April partner-center updates included pricing and promotion changes that can affect channel partners and business customers. These notices are worth tracking because they often influence procurement timing and reseller packaging.'
+  },
+  {
+    title:'ROC completes Nasdaq IPO and ties listing to Vision AI expansion',
+    category:'ipo',
+    region:'US',
+    source:'Nasdaq',
+    date:'April 16, 2026',
+    url:'https://www.nasdaq.com/press-release/roc-delivers-24-total-revenue-growth-and-58-product-revenue-growth-completes-nasdaq',
+    summary:'ROC said its Nasdaq listing was completed in the first quarter of 2026 and paired that milestone with stronger product revenue growth. The update fits a market where specialist tech names are using IPOs to fund scale rather than only brand visibility.'
+  },
+  {
+    title:'Off The Hook reports on post-IPO execution and early 2026 momentum',
+    category:'ipo',
+    region:'US',
+    source:'Nasdaq',
+    date:'April 1, 2026',
+    url:'https://www.nasdaq.com/press-release/hook-highlights-post-ipo-execution-and-first-quarter-2026-progress-2026-04-01',
+    summary:'Off The Hook framed the first quarter around expansion after going public, highlighting salesforce growth and inventory plans. It is a useful reminder that public-market follow-through matters as much as deal completion in the IPO window.'
+  },
+  {
+    title:'HeartCore says it regained Nasdaq bid-price compliance',
+    category:'ipo',
+    region:'Japan',
+    source:'Nasdaq',
+    date:'April 22, 2026',
+    url:'https://www.nasdaq.com/press-release/heartcore-regains-compliance-nasdaq-minimum-bid-price-requirement-2026-04-22',
+    summary:'HeartCore, which works with Japanese clients on U.S. listings, said it had regained compliance with Nasdaq’s minimum bid-price rule. The notice matters because post-listing stability is part of the real IPO story, not just the day-one debut.'
+  },
+  {
+    title:'Secondary markets keep pricing SpaceX, OpenAI and Anthropic ahead of potential IPOs',
+    category:'ipo',
+    region:'US',
+    source:'TechCrunch',
+    date:'April 7, 2026',
+    url:'https://techcrunch.com/2026/04/07/how-secondary-markets-are-pricing-spacex-openai-and-anthropic-before-they-go-public/',
+    summary:'TechCrunch highlighted how private secondary activity is shaping expectations for some of the world’s biggest possible future IPOs. That matters because private-market price discovery is now influencing public-market narratives well before official filings appear.'
+  },
+  {
+    title:'Helio points to a broader IPO surge around advanced technology and space',
+    category:'ipo',
+    region:'Global',
+    source:'Nasdaq',
+    date:'April 27, 2026',
+    url:'https://www.nasdaq.com/press-release/helio-highlights-strategic-positioning-within-expanding-space-market-amid-broader-ipo',
+    summary:'Helio used the current market backdrop to argue that investor attention is shifting back toward high-growth public offerings in advanced technology. Even though it is company commentary, it reflects how the IPO conversation is broadening beyond software alone.'
+  },
+
+  {
+    title:'DSP opens a Multi Asset Omni Fund of Fund NFO',
+    category:'nfo',
+    region:'India',
+    source:'Moneycontrol',
+    date:'February 3, 2026',
+    url:'https://www.moneycontrol.com/news/business/markets/dsp-mf-launches-multi-asset-omni-fund-of-fund-nfo-opens-february-5-13809235.html',
+    summary:'DSP launched a multi-asset fund-of-funds NFO built around dynamic allocation across equity, debt and commodities. It stands out because the product pitch is less about timing one asset class and more about packaged allocation discipline.'
+  },
+  {
+    title:'Abakkus launches a small-cap fund NFO as the investable universe widens',
+    category:'nfo',
+    region:'India',
+    source:'Moneycontrol',
+    date:'February 20, 2026',
+    url:'https://www.moneycontrol.com/news/business/markets/abakkus-launches-small-cap-fund-as-small-cap-universe-tops-5-000-stocks-nfo-feb-26-mar-12-13837754.html',
+    summary:'Abakkus positioned its small-cap NFO around the expanding breadth of listed smaller companies. The launch is a clean example of fund houses trying to capture demand in riskier but still popular segments.'
+  },
+  {
+    title:'Invesco launches Sensex and Nifty Bank index-fund NFOs',
+    category:'nfo',
+    region:'India',
+    source:'Economic Times',
+    date:'April 23, 2026',
+    url:'https://m.economictimes.com/mf/mf-news/nfo-alert-invesco-mutual-fund-launches-bse-sensex-and-nifty-bank-based-index-funds/articleshow/130463638.cms',
+    summary:'Invesco introduced two passive-fund NFOs tied to large benchmark exposures. The move fits the broader direction of Indian fund launches, where low-cost index products keep taking a bigger share of new shelf space.'
+  },
+  {
+    title:'Tata announces a Titanium Equity Long-Short Fund under its SIF lineup',
+    category:'nfo',
+    region:'India',
+    source:'Economic Times',
+    date:'April 27, 2026',
+    url:'https://m.economictimes.com/mf/mf-news/nfo-alert-tata-mutual-fund-announces-launch-of-titanium-equity-longshort-fund/articleshow/130548700.cms',
+    summary:'Tata Mutual Fund’s new long-short strategy shows how NFO activity is extending beyond plain vanilla exposure into more specialized structures. That makes this category worth tracking separately from traditional mutual-fund news.'
+  },
+  {
+    title:'Axis opens the Nifty India Defence Index Fund NFO',
+    category:'nfo',
+    region:'India',
+    source:'Angel One',
+    date:'April 17, 2026',
+    url:'https://www.angelone.in/news/mutual-funds/axis-mutual-fund-introduces-nifty-india-defence-index-fund-nfo-opens-april-10-2026/',
+    summary:'Axis brought a defence-themed index-fund NFO to market as interest in strategic manufacturing and defense spending stays elevated. It is a strong example of thematic product design moving into mainstream passive offerings.'
+  },
+
+  {
+    title:'Bluesky discloses a $100 million round led by Bain Capital Crypto',
+    category:'blockchain',
+    region:'US',
+    source:'TechCrunch',
+    date:'March 19, 2026',
+    url:'https://techcrunch.com/2026/03/19/bluesky-announces-100m-series-b-after-ceo-transition/',
+    summary:'Bluesky’s financing round was notable partly because Bain Capital Crypto led it, signaling that blockchain-focused capital remains active around decentralized internet ideas. The overlap between social platforms and open-protocol infrastructure remains a live investment theme.'
+  },
+  {
+    title:'Prediction-market rivalry turns into backing for a dedicated VC fund',
+    category:'blockchain',
+    region:'US',
+    source:'TechCrunch',
+    date:'March 23, 2026',
+    url:'https://techcrunch.com/tag/polymarket/',
+    summary:'TechCrunch’s Polymarket coverage highlights how crypto-native prediction markets are now important enough to help inspire venture capital formation around the category. It shows blockchain activity spreading through finance, media and event forecasting rather than staying limited to tokens alone.'
+  },
+  {
+    title:'Polymarket expands its visibility through partnerships and policy attention',
+    category:'blockchain',
+    region:'US',
+    source:'TechCrunch',
+    date:'April 2026',
+    url:'https://techcrunch.com/tag/polymarket/',
+    summary:'The Polymarket tag archive captures a pattern of partnership activity, regulatory scrutiny and mainstream attention. Taken together, those signals suggest blockchain-based markets are becoming harder for policymakers and large platforms to ignore.'
+  },
+  {
+    title:'Drift freezes withdrawals after a major DeFi theft',
+    category:'blockchain',
+    region:'Global',
+    source:'TechCrunch',
+    date:'April 1, 2026',
+    url:'https://techcrunch.com/2026/04/page/15/',
+    summary:'TechCrunch noted that DeFi platform Drift halted deposits and withdrawals after a multi-million-dollar exploit. That kind of operational shock remains one of the clearest reminders that blockchain adoption still depends on security, not just narrative growth.'
+  },
+  {
+    title:'Interactive Brokers broadens crypto transfer support for linked accounts',
+    category:'blockchain',
+    region:'Global',
+    source:'Interactive Brokers',
+    date:'March 31, 2026',
+    url:'https://investors.interactivebrokers.com/en/general/about/mediaRelations/3-31-26.php',
+    summary:'Interactive Brokers expanded crypto transfer functionality, a small but meaningful infrastructure step for digital-asset usability. When established brokers add these rails, it strengthens the case that blockchain access is slowly getting folded into mainstream finance.'
+  },
+
+  {
+    title:'Drift halts deposits and withdrawals after a major crypto hack',
+    category:'crypto',
+    region:'Global',
+    source:'TechCrunch',
+    date:'April 1, 2026',
+    url:'https://techcrunch.com/2026/04/page/15/',
+    summary:'A major exploit forced Drift to pause user activity, putting exchange and protocol security back at center stage. For crypto markets, events like this still have outsized influence on sentiment and risk appetite.'
+  },
+  {
+    title:'Interactive Brokers adds support for moving crypto into linked accounts',
+    category:'crypto',
+    region:'Global',
+    source:'Interactive Brokers',
+    date:'March 31, 2026',
+    url:'https://investors.interactivebrokers.com/en/general/about/mediaRelations/3-31-26.php',
+    summary:'Interactive Brokers said clients can transfer supported crypto positions into linked accounts. The update matters because it improves utility for investors who want crypto exposure inside a broker they already trust for other assets.'
+  },
+  {
+    title:'Polymarket removes wagers tied to a military rescue after backlash',
+    category:'crypto',
+    region:'US',
+    source:'TechCrunch',
+    date:'April 5, 2026',
+    url:'https://techcrunch.com/2026/04/05/polymarket-took-down-wagers-tied-to-rescue-of-downed-air-force-officer/',
+    summary:'Polymarket pulled a market after criticism that users were effectively betting on the rescue of service members. The episode shows how fast crypto-adjacent products can run into ethical and regulatory pressure when they reach mainstream visibility.'
+  },
+  {
+    title:'Authorities say an insider used Polymarket to profit from classified knowledge',
+    category:'crypto',
+    region:'US',
+    source:'TechCrunch',
+    date:'April 23, 2026',
+    url:'https://techcrunch.com/2026/04/23/authorities-arrest-special-forces-soldier-who-allegedly-made-400k-on-polymarket-bet-involving-maduro-operation/',
+    summary:'Federal authorities alleged that a special forces soldier made Polymarket bets based on nonpublic operational knowledge. It is a striking example of how prediction-market growth can create new legal and surveillance questions for crypto platforms.'
+  },
+  {
+    title:'TechCrunch keeps tracking prediction-market expansion around Kalshi and Polymarket',
+    category:'crypto',
+    region:'US',
+    source:'TechCrunch',
+    date:'April 2026',
+    url:'https://techcrunch.com/tag/polymarket/',
+    summary:'The ongoing Polymarket tag coverage shows that crypto-linked prediction markets remain one of the liveliest crossover stories between regulation, speculation and consumer internet behavior. That makes them a useful lens for broader crypto adoption trends.'
+  },
+
+  {
+    title:'Cognichip raises fresh funding for AI-driven chip design',
+    category:'semiconductor',
+    region:'US',
+    source:'TechCrunch',
+    date:'April 1, 2026',
+    url:'https://techcrunch.com/2026/04/01/cognichip-wants-ai-to-design-the-chips-that-power-ai-and-just-raised-60m-to-try/',
+    summary:'Cognichip’s raise reinforces how much capital is still flowing into semiconductor tooling and design automation. Investors continue to treat chip-design efficiency as a strategic part of the broader AI stack.'
+  },
+  {
+    title:'Uber starts testing Amazon Trainium3 to reduce AI compute dependence',
+    category:'semiconductor',
+    region:'US',
+    source:'TechCrunch',
+    date:'April 7, 2026',
+    url:'https://techcrunch.com/2026/04/07/uber-is-the-latest-to-be-won-over-by-amazons-ai-chips/',
+    summary:'Uber’s Trainium3 testing is a useful read on the semiconductor market because it shows hyperscaler silicon moving from theory toward real customer trials. The story is less about one benchmark and more about supply diversification.'
+  },
+  {
+    title:'SiFive reaches a multibillion-dollar valuation in open-chip development',
+    category:'semiconductor',
+    region:'US',
+    source:'TechCrunch',
+    date:'April 11, 2026',
+    url:'https://techcrunch.com/2026/04/11/nvidia-backed-sifive-hits-3-65-billion-valuation-for-open-ai-chips/',
+    summary:'SiFive’s valuation jump signals sustained demand for alternative chip architectures and licensing models. It also underlines how semiconductor investors are still hunting for ways to participate beyond the top incumbents.'
+  },
+  {
+    title:'Microsoft introduces Maia 200 for inference-heavy AI workloads',
+    category:'semiconductor',
+    region:'US',
+    source:'TechCrunch',
+    date:'January 26, 2026',
+    url:'https://techcrunch.com/2026/01/26/microsoft-announces-powerful-new-chip-for-ai-inference/',
+    summary:'Microsoft’s Maia 200 announcement keeps the custom-silicon race moving deeper into cloud infrastructure. The more that major platforms build in-house chips, the more the semiconductor market tilts toward platform-specific design.'
+  },
+  {
+    title:'Nvidia launches Vera Rubin as the next computing platform for AI',
+    category:'semiconductor',
+    region:'US',
+    source:'The Verge',
+    date:'January 5, 2026',
+    url:'https://www.theverge.com/tech/855412/nvidia-launches-vera-rubin-ai-computing-platform-at-ces-2026',
+    summary:'Nvidia’s Vera Rubin reveal keeps the company at the center of the AI silicon roadmap conversation. The significance is not just raw speed, but how Nvidia continues to set expectations for the next upgrade cycle.'
+  },
+
+  {
+    title:'DeepSeek previews a new model it says narrows the frontier gap',
+    category:'ai',
+    region:'China',
+    source:'TechCrunch',
+    date:'April 24, 2026',
+    url:'https://techcrunch.com/2026/04/24/deepseek-previews-new-ai-model-that-closes-the-gap-with-frontier-models/',
+    summary:'DeepSeek’s preview was notable because it framed open-weight competition as both a performance race and a cost-efficiency race. It is one of the clearest signals that frontier AI pressure is now global and multi-polar.'
+  },
+  {
+    title:'Canva adds tool-calling behavior to its AI design assistant',
+    category:'ai',
+    region:'Global',
+    source:'TechCrunch',
+    date:'April 16, 2026',
+    url:'https://techcrunch.com/2026/04/16/canvas-ai-assistant-can-now-call-various-tools-to-make-designs-for-you/',
+    summary:'Canva’s update pushed AI from one-shot generation toward orchestrated, editable workflows. That matters because the next stage of AI competition is increasingly about useful automation, not just flashy outputs.'
+  },
+  {
+    title:'Microsoft rolls out three new foundational AI models',
+    category:'ai',
+    region:'US',
+    source:'TechCrunch',
+    date:'April 2, 2026',
+    url:'https://techcrunch.com/2026/04/02/microsoft-takes-on-ai-rivals-with-three-new-foundational-models/',
+    summary:'Microsoft’s new model push shows how quickly major labs are segmenting their offerings by use case and cost profile. It also confirms that the enterprise AI field is still crowded enough to reward constant model refreshes.'
+  },
+  {
+    title:'Google Cloud Next spotlights startups and a larger budget for AI agent deployments',
+    category:'ai',
+    region:'Global',
+    source:'TechCrunch',
+    date:'April 22, 2026',
+    url:'https://techcrunch.com/2026/04/22/the-most-interesting-startups-showcased-at-google-cloud-next-2026/',
+    summary:'Google used Cloud Next to show both startup partnerships and a bigger budget to help sell AI agents into enterprises. That makes the event more than a product showcase; it is a distribution play for AI adoption.'
+  },
+  {
+    title:'AI-assisted brain-tumor imaging reaches non-inferior diagnostic performance in study',
+    category:'ai',
+    region:'Global',
+    source:'npj Digital Medicine',
+    date:'April 18, 2026',
+    url:'https://www.nature.com/articles/s41746-026-02651-0',
+    summary:'This study matters because it moves AI discussion away from generic claims and into a concrete clinical workflow. Results like this help separate practical medical AI from the broader hype cycle.'
+  },
+
+  {
+    title:'NASA launches Artemis II on the first crewed Moon flyby in decades',
+    category:'space',
+    region:'US',
+    source:'NASA',
+    date:'April 1, 2026',
+    url:'https://www.nasa.gov/news-release/liftoff-nasa-launches-astronauts-on-historic-artemis-moon-mission',
+    summary:'Artemis II became one of the defining space milestones of the year by putting a crew on a lunar flyby mission. It is the clearest sign that deep-space human exploration is back in an operational phase, not just a planning phase.'
+  },
+  {
+    title:'NASA reports Artemis II completed a key perigee-raise maneuver',
+    category:'space',
+    region:'US',
+    source:'NASA',
+    date:'April 1, 2026',
+    url:'https://www.nasa.gov/blogs/missions/2026/04/01/artemis-ii-flight-update-perigee-raise-maneuver-complete-nasa-to-hold-press-conference/',
+    summary:'NASA’s flight update underlined that Artemis II was not just a symbolic launch but an active mission with key orbital adjustments underway. These operational steps are what turn a headline event into a real mission log.'
+  },
+  {
+    title:'Northrop Grumman CRS-24 carries more than 11,000 pounds of cargo toward the ISS',
+    category:'space',
+    region:'US',
+    source:'NASA',
+    date:'April 3, 2026',
+    url:'https://www.nasa.gov/news-release/nasa-sets-coverage-for-northrop-grummans-crs-24-resupply-launch/',
+    summary:'NASA’s CRS-24 update highlighted the continuing cadence of commercial cargo support for the ISS. These missions rarely get the same public attention as crewed flights, but they are core to the operational space economy.'
+  },
+  {
+    title:'NASA launches six CubeSats to the International Space Station mission stack',
+    category:'space',
+    region:'US',
+    source:'NASA',
+    date:'April 15, 2026',
+    url:'https://www.nasa.gov/image-article/nasa-launches-six-cubesats-to-international-space-station/',
+    summary:'The CubeSat launch group shows how small-satellite experimentation remains a vital innovation channel in space. Education, nonprofit research and lower-cost payloads continue to widen participation in orbital work.'
+  },
+  {
+    title:'NASA small-satellite missions advance space-weather and communications research',
+    category:'space',
+    region:'US',
+    source:'NASA',
+    date:'April 17, 2026',
+    url:'https://www.nasa.gov/blogs/smallsatellites/2026/04',
+    summary:'NASA’s April small-satellite updates reinforce how much innovation is now happening through targeted, lower-cost missions. This side of the space sector matters because it often seeds the next generation of mission tools and science methods.'
+  }
+];
+
+// ═══════════════════════════════════════════════════════════════════
+// LIVE FEED LOADER — refreshed daily by .github/workflows/daily_blog_feed.yml
+// Falls back to the static BRIEFINGS array (above) if the JSON is missing
+// or the network is offline. localStorage caches the JSON for 24 hours
+// so repeat visits don't re-fetch.
+// ═══════════════════════════════════════════════════════════════════
+const FEED_CACHE_KEY = 'viltv_blog_feed_v1';
+const FEED_TTL_MS    = 24 * 60 * 60 * 1000;        // 24 h
+const FEED_URL       = 'data/blog_feed.json';
+
+async function loadLiveFeed() {
+  // 1. Try localStorage cache first (instant render)
+  try {
+    const raw = localStorage.getItem(FEED_CACHE_KEY);
+    if (raw) {
+      const cached = JSON.parse(raw);
+      if (cached && cached.cachedAt && (Date.now() - cached.cachedAt) < FEED_TTL_MS) {
+        return cached.payload;
+      }
+    }
+  } catch (_) {}
+
+  // 2. Fetch fresh JSON from the daily-updated file
+  try {
+    const r = await fetch(FEED_URL + '?v=' + Math.floor(Date.now() / 60000), { cache: 'no-cache' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const payload = await r.json();
+    try {
+      localStorage.setItem(FEED_CACHE_KEY, JSON.stringify({ cachedAt: Date.now(), payload }));
+    } catch (_) {}
+    return payload;
+  } catch (e) {
+    console.warn('[blog] live feed unavailable, falling back to static briefings:', e.message);
+    return null;
+  }
+}
+
+function mergeLiveFeedIntoBriefings(payload) {
+  if (!payload || !payload.categories) return;
+  const live = [];
+  for (const [cat, items] of Object.entries(payload.categories)) {
+    for (const it of items) {
+      live.push({
+        title: it.title || '',
+        category: cat,
+        region: it.domain && it.domain.endsWith('.in') ? 'India' : 'Global',
+        source: it.source || it.domain || 'RSS',
+        date: it.date || '',
+        url: it.url || '#',
+        summary: it.summary || '',
+      });
+    }
+  }
+  if (!live.length) return;
+  // Replace static array with live items but keep static as backup
+  // (safe because the page always re-renders from BRIEFINGS).
+  BRIEFINGS.length = 0;
+  for (const item of live) BRIEFINGS.push(item);
+  // Show generated timestamp if present
+  const stamp = payload.generated;
+  if (stamp) {
+    const el = document.querySelector('header .header-meta') || document.querySelector('header .sub');
+    if (el) {
+      try {
+        const d = new Date(stamp);
+        const tag = ' · Auto-refreshed ' + d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+        if (!el.textContent.includes('Auto-refreshed')) el.textContent += tag;
+      } catch (_) {}
+    }
+  }
+}
+
+const TAB_LABELS = {
+  all:'All Updates',
+  technology:'Technology',
+  finance:'Financial',
+  politics:'Political',
+  tax:'Tax',
+  mutual_funds:'Mutual Funds',
+  etf:'ETF',
+  stocks:'Stocks',
+  brokers:'Brokers',
+  inventions:'Inventions',
+  offers:'Offers',
+  ipo:'IPO',
+  nfo:'NFO',
+  blockchain:'Blockchain',
+  crypto:'Crypto',
+  semiconductor:'Semiconductor',
+  ai:'AI',
+  space:'Space'
+};
+
+let activeTab = 'all';
+
+const tabList = document.getElementById('tabList');
+const briefingsGrid = document.getElementById('briefingsGrid');
+const topicsGrid = document.getElementById('topicsGrid');
+const searchInput = document.getElementById('searchInput');
+const visibleCountPill = document.getElementById('visibleCountPill');
+const briefingCountPill = document.getElementById('briefingCountPill');
+const topicCountChip = document.getElementById('topicCountChip');
+const activeTabChip = document.getElementById('activeTabChip');
+const emptyState = document.getElementById('emptyState');
+
+function categoryCount(category) {
+  if (category === 'all') return BRIEFINGS.length;
+  return BRIEFINGS.filter(item => item.category === category).length;
+}
+
+function buildTabs() {
+  tabList.innerHTML = Object.keys(TAB_LABELS).map(key => `
+    <button class="tab-btn ${key === activeTab ? 'active' : ''}" data-tab="${key}">
+      ${TAB_LABELS[key]}
+      <span class="tab-count">${categoryCount(key)}</span>
+    </button>
+  `).join('');
+
+  tabList.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeTab = btn.dataset.tab;
+      buildTabs();
+      renderPage();
+    });
+  });
+}
+
+function matchesSearch(item, term) {
+  if (!term) return true;
+  const haystack = [
+    item.title,
+    item.category,
+    item.region,
+    item.summary,
+    item.source,
+    item.date
+  ].join(' ').toLowerCase();
+  return haystack.includes(term);
+}
+
+function renderPage() {
+  const term = searchInput.value.trim().toLowerCase();
+  const visibleBriefings = BRIEFINGS.filter(item => {
+    const categoryMatch = activeTab === 'all' || item.category === activeTab;
+    return categoryMatch && matchesSearch(item, term);
+  });
+
+  briefingsGrid.innerHTML = visibleBriefings.map(item => `
+    <article class="briefing-card">
+      <div class="briefing-head">
+        <span class="briefing-badge">${TAB_LABELS[item.category]}</span>
+        <span class="briefing-date">${item.date}</span>
+      </div>
+      <div class="briefing-title">${item.title}</div>
+      <div class="briefing-copy">${item.summary}</div>
+      <div class="briefing-foot">
+        <span class="briefing-source">${item.source} · ${item.region}</span>
+        <a class="briefing-link" href="${item.url}" target="_blank" rel="noopener noreferrer">Reference link</a>
+      </div>
+    </article>
+  `).join('');
+
+  visibleCountPill.textContent = `${visibleBriefings.length} visible`;
+  briefingCountPill.textContent = `${visibleBriefings.length} articles`;
+  topicCountChip.textContent = `${BRIEFINGS.length} articles`;
+  activeTabChip.textContent = activeTab === 'all' ? 'All sections' : TAB_LABELS[activeTab];
+  topicsGrid.style.display = 'none';
+  topicsGrid.innerHTML = '';
+  emptyState.classList.toggle('show', visibleBriefings.length === 0);
+}
+
+searchInput.addEventListener('input', renderPage);
+
+buildTabs();
+renderPage();
+
+// ── Live feed: render static items first, then upgrade with daily-updated RSS ──
+loadLiveFeed().then(payload => {
+  if (payload) {
+    mergeLiveFeedIntoBriefings(payload);
+    buildTabs();   // refresh counts
+    renderPage();  // re-render with live data
+  }
+});
+</script>
+</body>
+</html>
+
+
+
+
+

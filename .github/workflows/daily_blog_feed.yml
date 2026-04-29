@@ -1,0 +1,56 @@
+name: Update Blog Intelligence Hub Feeds
+
+# Runs daily at 04:00 UTC (09:30 IST / 13:00 JST) and on manual dispatch.
+# Output: data/blog_feed.json — read by blog_intelligence_hub.html on load.
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-feed:
+    name: Fetch RSS feeds → data/blog_feed.json
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install --upgrade pip requests
+
+      - name: Fetch RSS and rebuild blog_feed.json
+        run: python scripts/update_blog_feed.py
+
+      - name: Commit blog_feed.json (with rebase-and-retry)
+        run: |
+          git config --global user.name  "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global pull.rebase true
+
+          git add data/blog_feed.json
+          if git diff --staged --quiet; then
+            echo "ℹ️  No changes to blog_feed.json — skipping commit."
+            exit 0
+          fi
+          git commit -m "chore(blog): refresh RSS feeds [skip ci]"
+          for attempt in 1 2 3; do
+            echo "🔄  Push attempt $attempt/3..."
+            if git push origin HEAD:main; then
+              echo "✅  Committed and pushed."
+              exit 0
+            fi
+            echo "⚠️  Push rejected. Pulling and retrying..."
+            git pull --rebase origin main || git rebase --abort
+            sleep 5
+          done
+          echo "❌  All 3 push attempts failed."
+          exit 1
