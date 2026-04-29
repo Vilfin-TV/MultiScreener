@@ -2120,6 +2120,7 @@ footer{
         <a class="dd-item" href="mf_live_screener.html" target="_blank">🧭 MF Live Screener</a>
         <a class="dd-item" href="pre_market_briefing.html" target="_blank">🌅 Pre-Market Briefing</a>
         <a class="dd-item" href="pine_script_generator.html" target="_blank">🌲 Pine Script Generator</a>
+        <a class="dd-item" href="blog_intelligence_hub.html" target="_blank">📰 Blog Intelligence Hub</a>
         <div class="dd-sep"></div>
         <div class="dd-header">Online Screeners</div>
         <a class="dd-item" href="https://www.screener.in/" target="_blank">📋 Screener.in</a>
@@ -2920,6 +2921,7 @@ footer{
         <li><a href="#" onclick="rbSwitchPanel('video');return false;">📺 Live Market News</a></li>
         <li><a href="#" onclick="switchMain(0);return false;">📈 Global Tickers</a></li>
         <li><a href="#" onclick="switchMain(2);return false;">📊 Financial Reports</a></li>
+        <li><a href="blog_intelligence_hub.html" target="_blank" rel="noopener">📰 Blog Intelligence Hub</a></li>
       </ul>
     </div>
 
@@ -3081,11 +3083,17 @@ footer{
     <!-- Channel selector -->
     <div style="padding:6px 8px 5px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
       <select id="yt-channel-select" onchange="ytSwitchChannel(this.value); (() => { const chk=document.getElementById('yt-default-ch-chk'); if(chk?.checked) try{localStorage.setItem('viltv_default_channel',this.value)}catch(e){} })()" style="width:100%;padding:7px 10px;background:#0f1d35;color:#e2e8f0;border:1px solid #1e3a5f;border-radius:9px;font-size:11px;font-family:inherit;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22 viewBox=%220 0 10 6%22><path d=%22M0 0l5 6 5-6z%22 fill=%22%2364748b%22/></svg>');background-repeat:no-repeat;background-position:right 10px center;padding-right:28px">
-        <optgroup label="📊 India — Business &amp; Markets">
-          <option value="25B1JcOMx3I" selected>💹 NDTV Profit</option>
+        <optgroup label="📊 Global — Business &amp; Markets">
+          <option value="iEpJwprxDdk" selected>📊 Bloomberg TV</option>
+          <option value="25B1JcOMx3I">💹 NDTV Profit</option>
           <option value="bSdfGABTVGQ">📈 CNBC TV18</option>
-          <option value="iEpJwprxDdk">📊 Bloomberg TV</option>
           <option value="9NyxcX3rhQs">💼 CNBC 24/7</option>
+          <option value="t9kwjZBLI-A">📊 Bloomberg Originals</option>
+          <option value="MdFO5_mqG6w">💵 Yahoo Finance Live</option>
+          <option value="QliL4CGc7iY">💹 Reuters Business Live</option>
+          <option value="tX9rRjXL1T4">📈 CNBC Television</option>
+          <option value="yNKvkPJl-tg">💼 Fox Business Live</option>
+          <option value="Ap-UM1O9RBU">📊 Schwab Network</option>
         </optgroup>
         <optgroup label="🇮🇳 India — National News">
           <option value="b0dA-oXKR9Y">🔴 Republic World</option>
@@ -3265,7 +3273,8 @@ footer{
       <button class="radio-preset-btn" onclick="radioLoadPreset('bollywood')">🎬 Bollywood</button>
       <button class="radio-preset-btn" onclick="radioLoadPreset('hindi')">🪕 Hindi</button>
       <button class="radio-preset-btn" onclick="radioLoadPreset('malayalam')">🌿 Malayalam</button>
-      <button class="radio-preset-btn" onclick="radioLoadPreset('gulf-nri')">🇦🇪 Gulf NRI</button>
+      <button class="radio-preset-btn" onclick="radioLoadPreset('uae-malayalam')">🇦🇪 UAE Malayalam</button>
+      <button class="radio-preset-btn" onclick="radioLoadPreset('gulf-nri')">🛢️ Gulf NRI</button>
       <button class="radio-preset-btn" onclick="radioLoadPreset('tamil')">🎵 Tamil</button>
       <button class="radio-preset-btn" onclick="radioLoadPreset('telugu')">🎤 Telugu</button>
       <button class="radio-preset-btn" onclick="radioLoadPreset('kannada')">🎶 Kannada</button>
@@ -6173,6 +6182,21 @@ const _RADIO_PRESETS = {
   // diaspora-popular channels (AIR Kochi, Real FM, Club FM India, etc.) which
   // are the same stations UAE/Qatar Malayalis stream most.
   'malayalam':  { path: '/json/stations/bytag/malayalam?limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Malayalam' },
+  // UAE Malayalam: explicit name searches for HIT 96.7, Club FM 99.6,
+  // Radio Keralam, Gold FM, Home FM — the most-listened Dubai/Sharjah
+  // Malayalam stations among the UAE diaspora. Multi-source preset merges
+  // results from each name query so any indexed entry surfaces.
+  'uae-malayalam': { path: 'MULTI', label: 'UAE Malayalam', sources: [
+    '/json/stations/byname/hit%2096?limit=10&hidebroken=true',
+    '/json/stations/byname/club%20fm?limit=15&hidebroken=true&order=clickcount&reverse=true',
+    '/json/stations/byname/club%20fm%2099?limit=10&hidebroken=true',
+    '/json/stations/byname/keralam?limit=10&hidebroken=true&order=clickcount&reverse=true',
+    '/json/stations/byname/gold%20fm?limit=10&hidebroken=true',
+    '/json/stations/byname/home%20fm?limit=10&hidebroken=true',
+    '/json/stations/byname/asianet?limit=10&hidebroken=true',
+    // Plus Malayalam tag for fallback coverage if specific names aren't indexed
+    '/json/stations/bytag/malayalam?limit=20&hidebroken=true&order=clickcount&reverse=true',
+  ], filter: 'uae-malayalam' },
   // Gulf NRI mix: special multi-source preset (handled in radioLoadPreset).
   'gulf-nri':   { path: 'MULTI', label: 'Gulf NRI', sources: [
     '/json/stations/bytag/malayalam?limit=30&hidebroken=true&order=clickcount&reverse=true',
@@ -6267,6 +6291,15 @@ async function radioLoadPreset(presetKey) {
         const id = s.stationuuid || s.url_resolved;
         if (id && !seen.has(id)) { seen.add(id); stations.push(s); }
       }
+    }
+    // Optional post-filter (used by uae-malayalam to keep only relevant matches)
+    if (preset.filter === 'uae-malayalam') {
+      const RX_INCLUDE = /(hit\s*96|club\s*fm|keralam|gold\s*fm|home\s*fm|asianet|malayalam|kochi|kozhikode|kerala)/i;
+      const RX_EXCLUDE = /(albania|kosov|greece|ireland|serbia|german|austria|czech|tirana|dublin)/i;
+      stations = stations.filter(s => {
+        const blob = (s.name || '') + ' ' + (s.country || '') + ' ' + (s.language || '') + ' ' + (s.tags || '');
+        return RX_INCLUDE.test(blob) && !RX_EXCLUDE.test(blob);
+      });
     }
     // Re-sort merged list by clickcount (popularity) so top NRI picks float up
     stations.sort((a, b) => (b.clickcount || 0) - (a.clickcount || 0));
