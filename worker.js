@@ -519,14 +519,18 @@ async function callGroq(messages, env, maxTokens) {
   } catch (e) { console.warn('Groq fetch failed:', e.message); return null; }
 }
 
-/** Google Gemini — converts chat messages into a combined text prompt */
+/** Google Gemini — converts the FULL chat history into a combined text prompt
+ *  so follow-up questions retain context across turns. */
 async function callGemini(messages, env, maxTokens) {
   if (!env.GEMINI_API_KEY) return null;
   try {
-    // Gemini uses a different format — combine system + user into one prompt
-    const sysContent  = messages.find(m => m.role === 'system')?.content || '';
-    const userContent = messages.find(m => m.role === 'user')?.content   || '';
-    const combined    = sysContent ? `${sysContent}\n\n${userContent}` : userContent;
+    const sysContent = messages.find(m => m.role === 'system')?.content || '';
+    // Flatten ALL conversation turns (not just the first user message)
+    const turns = messages
+      .filter(m => m.role === 'user' || m.role === 'assistant')
+      .map(m => (m.role === 'user' ? 'User' : 'Assistant') + ': ' + m.content)
+      .join('\n\n');
+    const combined = sysContent ? `${sysContent}\n\n${turns}\n\nAssistant:` : `${turns}\n\nAssistant:`;
 
     const url = `${GEMINI_BASE}${GEMINI_MODEL}:generateContent?key=${env.GEMINI_API_KEY}`;
     const res = await fetch(url, {
@@ -606,8 +610,10 @@ async function callPollinations(messages) {
   // Try the current models in priority order — first one that responds wins.
   const MODEL_FALLBACKS = ['openai-fast', 'openai', 'gpt-oss', 'mistral'];
   const sysShort = `Financial Market Assistant. ${new Date().toDateString()}. Use Markdown.`;
-  const userMsg  = messages.find(m => m.role === 'user')?.content || '';
-  if (!userMsg) return null;
+  // Pass the FULL history so follow-up questions retain context.
+  const turns = messages.filter(m => m.role === 'user' || m.role === 'assistant');
+  if (!turns.length) return null;
+  const apiMessages = [{ role: 'system', content: sysShort }, ...turns];
 
   for (const model of MODEL_FALLBACKS) {
     try {
@@ -616,10 +622,7 @@ async function callPollinations(messages) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model,
-          messages: [
-            { role: 'system', content: sysShort },
-            { role: 'user',   content: userMsg },
-          ],
+          messages: apiMessages,
           stream:  false,
           private: true,
         }),
