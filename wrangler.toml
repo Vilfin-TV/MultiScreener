@@ -1,0 +1,21 @@
+# Cloudflare Worker configuration for VilfinTV Market Assistant.
+#
+# Auto-deploys via .github/workflows/deploy_worker.yml on every push to main
+# that touches worker.js or this file. Manual deploy: `npx wrangler deploy`.
+
+name = "x9-k2-p30-worker"
+main = "worker.js"
+compatibility_date = "2024-12-01"
+
+# Secrets (API keys) are NOT stored here — they're set in the Cloudflare
+# dashboard (Workers & Pages → x9-k2-p30-worker → Settings → Variables) or via:
+#   npx wrangler secret put GROQ_API_KEY
+#   npx wrangler secret put GEMINI_API_KEY
+#   npx wrangler secret put OPENAI_API_KEY
+#   npx wrangler secret put DEEPSEEK_API_KEY
+#
+# The deploy workflow only updates the code; secrets you've already set
+# stay intact across deploys.
+
+# Custom subdomain (default *.workers.dev — comment out if you set a route)
+workers_dev = true
