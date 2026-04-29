@@ -1382,6 +1382,16 @@ footer{
 
 /* ── RADIO PANEL ── */
 .radio-region-sel{width:100%;padding:7px 10px;background:#0f1d35;color:#e2e8f0;border:1px solid #1e3a5f;border-radius:9px;font-size:11px;font-family:inherit;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22 viewBox=%220 0 10 6%22><path d=%22M0 0l5 6 5-6z%22 fill=%22%2364748b%22/></svg>');background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.radio-preset-btn{
+  background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;
+  font-size:11px;font-weight:600;padding:5px 10px;border-radius:14px;
+  cursor:pointer;white-space:nowrap;transition:all .15s;font-family:'DM Sans',sans-serif;
+  -webkit-tap-highlight-color:rgba(37,99,235,.3);touch-action:manipulation;
+}
+.radio-preset-btn:hover{background:rgba(37,99,235,.18);border-color:#3b82f6;color:#e2eeff}
+.radio-preset-btn.active{background:#1d4ed8;border-color:#3b82f6;color:#fff}
+.radio-station-meta{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0;overflow:hidden}
+.radio-station-tag{font-size:9.5px;color:#506480;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .radio-station-list{flex:1;overflow-y:auto;padding:4px 6px 8px;scrollbar-width:thin;scrollbar-color:#1e293b transparent}
 .radio-station-item{display:flex;align-items:center;gap:6px;padding:7px 9px;border-radius:8px;border:1px solid transparent;cursor:pointer;transition:all .15s;margin-bottom:3px}
 .radio-station-item:hover{background:rgba(37,99,235,.12);border-color:rgba(37,99,235,.3)}
@@ -1557,15 +1567,21 @@ footer{
 }
 
 @media(max-width:900px){
-  /* Full-screen mobile dropdown from hamburger */
+  /* Full-screen mobile dropdown from hamburger.
+     Use 100dvh so the menu doesn't overflow when iOS Safari adjusts its UI. */
   .top-menu-items.mobile-open{
     display:flex!important;
     position:fixed;top:44px;left:0;right:0;bottom:0;
-    background:#0f0c00;
+    height:calc(100dvh - 44px);
+    background:#04091a;       /* solid navy — matches new theme */
     flex-direction:column;z-index:9998;
-    overflow-y:auto;
+    overflow-y:auto;-webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
     box-shadow:0 8px 32px rgba(0,0,0,.8);
+    padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));
   }
+  /* Lock background body scroll while the mobile menu is open */
+  body.mobile-menu-open{overflow:hidden;position:fixed;width:100%}
   .tmenu-item{height:auto;width:100%}
   .tmenu-btn{
     width:100%;padding:14px 18px;
@@ -1573,21 +1589,36 @@ footer{
     border-right:none;
     border-bottom:1px solid rgba(255,255,255,.08);
     font-size:14px;
+    min-height:48px;          /* WCAG touch target */
+    color:#e2eeff;
   }
-  .tmenu-dropdown{
-    position:static!important;top:auto!important;left:auto!important;
+  /* Clear desktop's JS-applied inline left/top so the dropdown sits inline */
+  .top-menu-items.mobile-open .tmenu-dropdown{
+    position:static!important;top:0!important;left:0!important;right:0!important;
     border-radius:0;border:none;
-    border-top:1px solid rgba(255,255,255,.06);
-    box-shadow:none;min-width:100%;
-    background:rgba(255,255,255,.04);
+    border-top:1px solid rgba(59,130,246,.15);
+    box-shadow:none;min-width:100%;max-height:none!important;
+    background:#0a1830;       /* solid panel background — readable text */
+    transform:none!important;
   }
-  .dd-submenu{
-    position:static!important;left:auto!important;top:auto!important;
-    border-radius:0;min-width:100%;box-shadow:none;
-    background:rgba(255,255,255,.04);
+  .top-menu-items.mobile-open .dd-item{
+    padding:13px 22px;min-height:48px;display:flex;align-items:center;
+    color:#dbe4f0;font-size:14px;
   }
-  .dd-has-sub.sub-open>.dd-submenu{display:block!important}
-  .news-link{padding:10px 20px}
+  .top-menu-items.mobile-open .dd-submenu{
+    position:static!important;left:0!important;top:0!important;right:0!important;
+    border-radius:0;min-width:100%;max-height:none!important;
+    box-shadow:none;border:none;
+    background:#0e1f3b;       /* slightly lighter panel for nesting depth */
+    transform:none!important;
+  }
+  .top-menu-items.mobile-open .dd-submenu .dd-item{
+    padding:11px 32px;font-size:13.5px;color:#bccbe0;
+  }
+  .top-menu-items.mobile-open .dd-has-sub.sub-open>.dd-submenu{display:block!important}
+  .top-menu-items.mobile-open .dd-has-sub.sub-open::after{transform:rotate(90deg)}
+  .top-menu-items.mobile-open .dd-has-sub::after{transition:transform .15s ease}
+  .top-menu-items.mobile-open .news-link{padding:11px 24px;min-height:44px}
   .top-menu-brand .brand-name{font-size:14px}
 
   /* Sidebar: icon-only strip on mobile */
@@ -3186,39 +3217,37 @@ footer{
     </div>
   </div>
 
-  <!-- ── PANEL 3: Global Radio ── -->
+  <!-- ── PANEL 3: Global Radio (powered by radio-browser.info) ── -->
   <div id="rb-panel-radio" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
 
-    <!-- Region / language selector -->
-    <div style="padding:6px 8px 5px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
-      <select class="radio-region-sel" id="radio-region-select" onchange="radioLoadCategory(this.value)">
-        <option value="us">🇺🇸 United States</option>
-        <option value="japan">🇯🇵 Japan</option>
-        <optgroup label="🇮🇳 India">
-          <option value="india-malayalam">🌿 Malayalam</option>
-          <option value="india-tamil">🎵 Tamil</option>
-          <option value="india-kannada">🎶 Kannada</option>
-          <option value="india-telugu">🎤 Telugu</option>
-          <option value="india-hindi" selected>🇮🇳 Hindi</option>
-          <option value="india-marathi">🟠 Marathi</option>
-          <option value="india-punjabi">🟡 Punjabi</option>
-          <option value="india-bengali">🟢 Bengali</option>
-          <option value="india-bollywood">🎬 Bollywood</option>
-        </optgroup>
-        <option value="africa">🌍 Africa</option>
-        <option value="middle-east">🌙 Middle East</option>
-        <option value="china">🇨🇳 China</option>
-        <option value="korea">🇰🇷 Korea</option>
-        <option value="europe">🇪🇺 Europe</option>
-        <option value="latin-america">🌎 Latin America</option>
-        <option value="canada">🇨🇦 Canada</option>
-        <option value="mexico">🇲🇽 Mexico</option>
-      </select>
+    <!-- Search box -->
+    <div style="padding:8px 10px 6px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
+      <input type="search" id="radio-search-input"
+             placeholder="🔍 Search 30,000+ stations…"
+             style="width:100%;padding:8px 12px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:13px;font-family:'DM Sans',sans-serif;outline:none"
+             oninput="radioOnSearchInput(this.value)"/>
+    </div>
+
+    <!-- Preset buttons (one-tap loaders) -->
+    <div id="radio-presets" style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:4px;flex-wrap:wrap">
+      <button class="radio-preset-btn" onclick="radioLoadPreset('top-india')">🇮🇳 Top India</button>
+      <button class="radio-preset-btn" onclick="radioLoadPreset('bollywood')">🎬 Bollywood</button>
+      <button class="radio-preset-btn" onclick="radioLoadPreset('hindi')">🪕 Hindi</button>
+      <button class="radio-preset-btn" onclick="radioLoadPreset('malayalam')">🌿 Malayalam</button>
+      <button class="radio-preset-btn" onclick="radioLoadPreset('tamil')">🎵 Tamil</button>
+      <button class="radio-preset-btn" onclick="radioLoadPreset('telugu')">🎤 Telugu</button>
+      <button class="radio-preset-btn" onclick="radioLoadPreset('kannada')">🎶 Kannada</button>
+      <button class="radio-preset-btn" onclick="radioLoadPreset('punjabi')">🟡 Punjabi</button>
+      <button class="radio-preset-btn" onclick="radioLoadPreset('top-us')">🇺🇸 Top US</button>
+      <button class="radio-preset-btn" onclick="radioLoadPreset('top-uk')">🇬🇧 Top UK</button>
+      <button class="radio-preset-btn" onclick="radioLoadPreset('top-japan')">🇯🇵 Japan</button>
+      <button class="radio-preset-btn" onclick="radioLoadPreset('news')">📰 News</button>
+      <button class="radio-preset-btn" onclick="radioLoadPreset('chill')">🌿 Chill</button>
     </div>
 
     <!-- Station list -->
     <div class="radio-station-list" id="radio-station-list">
-      <div class="radio-no-data">Loading stations…</div>
+      <div class="radio-no-data">Tap a preset above to load stations…</div>
     </div>
 
     <!-- Player bar -->
@@ -4200,11 +4229,19 @@ function toggleMenu(id) {
   const wasOpen = item.classList.contains('open');
   closeAllMenus();
   if (!wasOpen) {
-    const btn = item.querySelector('.tmenu-btn');
-    const rect = btn.getBoundingClientRect();
     const dd = item.querySelector('.tmenu-dropdown');
-    dd.style.left = rect.left + 'px';
-    dd.style.top = rect.bottom + 'px';
+    // Mobile: dropdown is inline (position:static via CSS). Strip inline
+    // left/top from a previous desktop session so the dropdown doesn't
+    // jump to a fixed pixel offset and disappear off-screen.
+    if (window.innerWidth <= 900) {
+      dd.style.left = '';
+      dd.style.top = '';
+    } else {
+      const btn = item.querySelector('.tmenu-btn');
+      const rect = btn.getBoundingClientRect();
+      dd.style.left = rect.left + 'px';
+      dd.style.top = rect.bottom + 'px';
+    }
     item.classList.add('open');
   }
 }
@@ -4216,7 +4253,15 @@ function closeAllMenus() {
 function closeMobileMenu() {
   const items = document.querySelector('.top-menu-items');
   const btn   = document.getElementById('mobile-menu-btn');
-  if (items) items.classList.remove('mobile-open');
+  if (!items) return;
+  if (items.classList.contains('mobile-open')) {
+    items.classList.remove('mobile-open');
+    document.body.classList.remove('mobile-menu-open');
+    document.body.style.top = '';
+    if (typeof _savedBodyScroll === 'number') window.scrollTo(0, _savedBodyScroll);
+    items.querySelectorAll('.dd-has-sub.sub-open').forEach(el => el.classList.remove('sub-open'));
+    items.querySelectorAll('.tmenu-item.open').forEach(el => el.classList.remove('open'));
+  }
   if (btn) { btn.classList.remove('active'); btn.textContent = '☰'; }
 }
 
@@ -4241,15 +4286,31 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// Mobile menu toggle
+// Mobile menu toggle — also scroll-locks the background so iOS doesn't
+// rubber-band scroll the page underneath the open drawer.
+let _savedBodyScroll = 0;
 function toggleMobileMenu() {
   const items = document.querySelector('.top-menu-items');
   const btn   = document.getElementById('mobile-menu-btn');
   if (!items) return;
-  const isOpen = items.classList.toggle('mobile-open');
+  const willOpen = !items.classList.contains('mobile-open');
+  if (willOpen) {
+    _savedBodyScroll = window.scrollY || document.documentElement.scrollTop || 0;
+    document.body.classList.add('mobile-menu-open');
+    document.body.style.top = '-' + _savedBodyScroll + 'px';
+    items.classList.add('mobile-open');
+  } else {
+    items.classList.remove('mobile-open');
+    document.body.classList.remove('mobile-menu-open');
+    document.body.style.top = '';
+    window.scrollTo(0, _savedBodyScroll);
+    // Reset any expanded submenu state so next open starts fresh
+    items.querySelectorAll('.dd-has-sub.sub-open').forEach(el => el.classList.remove('sub-open'));
+    items.querySelectorAll('.tmenu-item.open').forEach(el => el.classList.remove('open'));
+  }
   if (btn) {
-    btn.classList.toggle('active', isOpen);
-    btn.textContent = isOpen ? '✕' : '☰';
+    btn.classList.toggle('active', willOpen);
+    btn.textContent = willOpen ? '✕' : '☰';
   }
 }
 
@@ -5924,18 +5985,9 @@ async function radioInit() {
     }
   } catch(_) {}
 
-  // Fetch station data
-  const sel = document.getElementById('radio-region-select');
-  const catId = sel ? sel.value : 'india-hindi';
-
-  try {
-    const resp = await fetch('public/data/radio_stations.json', { cache: 'no-cache' });
-    if (resp.ok) {
-      _radioData = await resp.json();
-    }
-  } catch(_) {}
-
-  radioLoadCategory(catId);
+  // Load the default preset — Top India by default. Public Radio Browser API
+  // streams 30K+ stations in real-time; no static JSON needed any more.
+  radioLoadPreset('top-india');
 
   // ── Wire audio element events for reliable UI state sync ────────────
   // These fire regardless of how playback started/stopped, ensuring the
@@ -6009,76 +6061,156 @@ async function radioInit() {
 }
 
 // ── Render stations for chosen category ─────────────────────────────
-function radioLoadCategory(catId) {
+// ═══════════════════════════════════════════════════════════════════
+// RADIO BROWSER API — free, open, 30K+ stations, no auth required
+// https://api.radio-browser.info — community-curated worldwide directory
+// ═══════════════════════════════════════════════════════════════════
+const _RADIO_API_HOSTS = [
+  'https://de1.api.radio-browser.info',
+  'https://nl1.api.radio-browser.info',
+  'https://at1.api.radio-browser.info',
+];
+let _radioActiveHost = _RADIO_API_HOSTS[0];
+
+async function _rbFetch(path) {
+  // Try mirrors in order if one fails — gives 99.9% reliability
+  for (let i = 0; i < _RADIO_API_HOSTS.length; i++) {
+    const host = _RADIO_API_HOSTS[(_RADIO_API_HOSTS.indexOf(_radioActiveHost) + i) % _RADIO_API_HOSTS.length];
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 6000);
+      const res = await fetch(host + path, {
+        headers: { 'User-Agent': 'VilfinTV-MultiScreener/1.0' },
+        signal: ctrl.signal,
+      });
+      clearTimeout(timer);
+      if (res.ok) {
+        _radioActiveHost = host;
+        return await res.json();
+      }
+    } catch (_) { /* try next mirror */ }
+  }
+  return null;
+}
+
+const _RADIO_PRESETS = {
+  'top-india':  { path: '/json/stations/bycountry/India?limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Top India' },
+  'bollywood':  { path: '/json/stations/search?tag=bollywood&limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Bollywood' },
+  'hindi':      { path: '/json/stations/search?language=hindi&limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Hindi' },
+  'malayalam':  { path: '/json/stations/search?language=malayalam&limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Malayalam' },
+  'tamil':      { path: '/json/stations/search?language=tamil&limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Tamil' },
+  'telugu':     { path: '/json/stations/search?language=telugu&limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Telugu' },
+  'kannada':    { path: '/json/stations/search?language=kannada&limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Kannada' },
+  'punjabi':    { path: '/json/stations/search?language=punjabi&limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Punjabi' },
+  'top-us':     { path: '/json/stations/bycountry/The%20United%20States%20Of%20America?limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Top US' },
+  'top-uk':     { path: '/json/stations/bycountry/The%20United%20Kingdom?limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Top UK' },
+  'top-japan':  { path: '/json/stations/bycountry/Japan?limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Japan' },
+  'news':       { path: '/json/stations/bytag/news?limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'News' },
+  'chill':      { path: '/json/stations/bytag/chillout?limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Chill' },
+};
+
+function _radioRenderStations(stations) {
   const list = document.getElementById('radio-station-list');
   if (!list) return;
-
-  // Try from fetched data first, then hardcode fallback
-  let stations = [];
-  if (_radioData && _radioData.categories) {
-    const cat = _radioData.categories.find(c => c.id === catId);
-    if (cat) stations = cat.stations || [];
-  }
-
-  // Hardcoded fallbacks — every URL below was verified-reachable (HTTP 200, CORS OK).
-  // Indian commercial streams (Mirchi/BigFM/RedFM) gate their public CDN, so we use
-  // BBC Asian Network for South-Asian content + Radio Paradise/SomaFM for the rest.
-  const FALLBACKS = {
-    'india-hindi': [
-      { id:'fb-bbc-asian',   name:'BBC Asian Network',        url:'https://stream.live.vc.bbcmedia.co.uk/bbc_asian_network', genre:'Asian' },
-      { id:'fb-rp-world',    name:'Radio Paradise World/Etc', url:'https://stream.radioparadise.com/world-etc-320',          genre:'World' },
-      { id:'fb-rp-main',     name:'Radio Paradise Main Mix',  url:'https://stream.radioparadise.com/aac-128',                genre:'Eclectic' },
-    ],
-    'india-bollywood': [
-      { id:'fb-bbc-asian',   name:'BBC Asian Network',        url:'https://stream.live.vc.bbcmedia.co.uk/bbc_asian_network', genre:'Asian' },
-      { id:'fb-rp-world',    name:'Radio Paradise World/Etc', url:'https://stream.radioparadise.com/world-etc-320',          genre:'World' },
-      { id:'fb-rp-main',     name:'Radio Paradise Main',      url:'https://stream.radioparadise.com/aac-128',                genre:'Eclectic' },
-    ],
-    'us': [
-      { id:'fb-soma-groove', name:'SomaFM Groove Salad',      url:'https://ice1.somafm.com/groovesalad-128-mp3', genre:'Chill' },
-      { id:'fb-soma-secret', name:'SomaFM Secret Agent',      url:'https://ice1.somafm.com/secretagent-128-mp3', genre:'Lounge' },
-      { id:'fb-soma-lush',   name:'SomaFM Lush',              url:'https://ice1.somafm.com/lush-128-mp3',        genre:'Vocal' },
-      { id:'fb-rp-mellow',   name:'Radio Paradise Mellow',    url:'https://stream.radioparadise.com/mellow-320', genre:'Mellow' },
-      { id:'fb-rp-rock',     name:'Radio Paradise Rock',      url:'https://stream.radioparadise.com/rock-320',   genre:'Rock' },
-    ],
-    'europe': [
-      { id:'fb-bbc-world',   name:'BBC World Service',        url:'https://stream.live.vc.bbcmedia.co.uk/bbc_world_service',  genre:'News' },
-      { id:'fb-bbc-r1',      name:'BBC Radio 1',              url:'https://stream.live.vc.bbcmedia.co.uk/bbc_radio_one',      genre:'Pop' },
-      { id:'fb-bbc-r2',      name:'BBC Radio 2',              url:'https://stream.live.vc.bbcmedia.co.uk/bbc_radio_two',      genre:'Pop' },
-      { id:'fb-bbc-r4',      name:'BBC Radio 4',              url:'https://stream.live.vc.bbcmedia.co.uk/bbc_radio_fourfm',   genre:'Talk' },
-      { id:'fb-bbc-6music',  name:'BBC 6 Music',              url:'https://stream.live.vc.bbcmedia.co.uk/bbc_6music',         genre:'Alternative' },
-    ],
-  };
-  // Default fallback for any unrecognised category
-  if (!FALLBACKS[catId]) FALLBACKS[catId] = FALLBACKS['us'];
-  if (!stations.length) stations = FALLBACKS[catId] || [];
-
-  if (!stations.length) {
-    list.innerHTML = '<div class="radio-no-data">No stations found for this region.<br/>Check back after the daily update.</div>';
+  if (!stations || !stations.length) {
+    list.innerHTML = '<div class="radio-no-data">No stations match. Try a different search or preset.</div>';
     return;
   }
+  // De-dupe by stationuuid + filter blank URLs
+  const seen = new Set();
+  const cleaned = stations.filter(s => {
+    if (!s.url_resolved && !s.url) return false;
+    const id = s.stationuuid || s.url_resolved || s.url;
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  }).slice(0, 60); // cap at 60 per render to keep DOM light
 
-  // Get default station id for pin styling
   let defaultId = null;
   try { defaultId = JSON.parse(localStorage.getItem('radio_default_station') || 'null')?.id; } catch(_) {}
 
-  list.innerHTML = stations.map(st => `
-    <div class="radio-station-item${st.id === _radioCurrentId ? ' active' : ''}"
-         id="rsi-${st.id}" onclick="radioPlay(${JSON.stringify(st.url)},${JSON.stringify(st.id)},${JSON.stringify(st.name)},${JSON.stringify(catId)})">
-      <span style="font-size:14px">${radioGenreIcon(st.genre)}</span>
-      <span class="radio-station-name" title="${_esc(st.name)}">${_esc(st.name)}</span>
-      <span class="radio-station-genre">${_esc(st.genre || '')}</span>
-      <button class="radio-default-btn${st.id === defaultId ? ' pinned' : ''}"
-              id="rdb-${st.id}"
-              onclick="event.stopPropagation();radioSetDefault(${JSON.stringify(st.id)},${JSON.stringify(st.name)},${JSON.stringify(st.url)},${JSON.stringify(catId)})"
-              title="Set as default station">
-        ${st.id === defaultId ? '📌' : '☆'}
-      </button>
-    </div>`).join('');
+  list.innerHTML = cleaned.map(s => {
+    const id     = s.stationuuid || s.changeuuid || (s.url_resolved || s.url);
+    const name   = s.name || 'Unknown station';
+    const url    = s.url_resolved || s.url;
+    const genre  = (s.tags || '').split(',').slice(0, 2).join(', ').replace(/^,/, '').trim() || (s.language || '');
+    const country= s.country || s.countrycode || '';
+    const bitrate= s.bitrate ? s.bitrate + ' kbps' : '';
+    const tagline= [country, bitrate, genre].filter(Boolean).join(' · ');
+    const icon   = radioGenreIcon(genre + ' ' + name);
+    const isActive = id === _radioCurrentId;
+    return `
+      <div class="radio-station-item${isActive ? ' active' : ''}"
+           id="rsi-${_esc(id)}"
+           onclick='radioPlay(${JSON.stringify(url)}, ${JSON.stringify(id)}, ${JSON.stringify(name)}, "rb")'>
+        <span style="font-size:14px;flex-shrink:0">${icon}</span>
+        <div class="radio-station-meta">
+          <span class="radio-station-name" title="${_esc(name)}">${_esc(name)}</span>
+          ${tagline ? `<span class="radio-station-tag">${_esc(tagline)}</span>` : ''}
+        </div>
+        <button class="radio-default-btn${id === defaultId ? ' pinned' : ''}"
+                onclick='event.stopPropagation();radioSetDefault(${JSON.stringify(id)}, ${JSON.stringify(name)}, ${JSON.stringify(url)}, "rb")'
+                title="Set as default">${id === defaultId ? '📌' : '☆'}</button>
+      </div>`;
+  }).join('');
 
-  // Enable play button now that we have stations
   const playBtn = document.getElementById('radio-play-btn');
   if (playBtn) playBtn.disabled = false;
+}
+
+async function radioLoadPreset(presetKey) {
+  const list = document.getElementById('radio-station-list');
+  if (list) list.innerHTML = '<div class="radio-no-data">⏳ Loading stations…</div>';
+
+  // Mark active preset button
+  document.querySelectorAll('.radio-preset-btn').forEach(b => b.classList.remove('active'));
+  const allBtns = document.querySelectorAll('.radio-preset-btn');
+  allBtns.forEach(b => {
+    if (b.textContent.toLowerCase().includes((_RADIO_PRESETS[presetKey]?.label || '').toLowerCase()))
+      b.classList.add('active');
+  });
+
+  const preset = _RADIO_PRESETS[presetKey];
+  if (!preset) return;
+  const stations = await _rbFetch(preset.path);
+  if (!stations) {
+    if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Could not reach Radio Browser API. Please retry.</div>';
+    return;
+  }
+  _radioLastResults = stations;
+  _radioRenderStations(stations);
+}
+
+let _radioSearchTimer = null;
+let _radioLastResults = [];
+function radioOnSearchInput(value) {
+  clearTimeout(_radioSearchTimer);
+  const q = (value || '').trim();
+  if (!q) return; // empty: do nothing (keep current preset list)
+  _radioSearchTimer = setTimeout(async () => {
+    const list = document.getElementById('radio-station-list');
+    if (list) list.innerHTML = '<div class="radio-no-data">🔍 Searching…</div>';
+    document.querySelectorAll('.radio-preset-btn').forEach(b => b.classList.remove('active'));
+    const path = '/json/stations/byname/' + encodeURIComponent(q) + '?limit=60&hidebroken=true&order=clickcount&reverse=true';
+    const stations = await _rbFetch(path);
+    if (!stations) {
+      if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Search failed. Try a preset.</div>';
+      return;
+    }
+    _radioLastResults = stations;
+    _radioRenderStations(stations);
+  }, 350);
+}
+
+// Backwards-compat shim — old code paths still call radioLoadCategory()
+function radioLoadCategory(catId) {
+  // Map old category IDs to new presets
+  const map = {
+    'india-hindi':'hindi','india-malayalam':'malayalam','india-tamil':'tamil',
+    'india-telugu':'telugu','india-kannada':'kannada','india-punjabi':'punjabi',
+    'india-bollywood':'bollywood','us':'top-us','japan':'top-japan','europe':'top-uk',
+  };
+  radioLoadPreset(map[catId] || 'top-india');
 }
 
 function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -11743,10 +11875,22 @@ OUTPUT: Return ONLY the complete HTML starting with <!DOCTYPE html>. No markdown
     const t = el.tagName;
     return t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT';
   }
+  // Returns true if `el` (or any ancestor up to body) has position:fixed.
+  // scrollIntoView on elements inside fixed parents is unreliable (the page
+  // body scrolls behind the fixed element), so we skip in that case — the
+  // fixed parent itself sits above the keyboard via CSS dvh sizing.
+  function hasFixedAncestor(el) {
+    while (el && el !== document.body) {
+      const cs = window.getComputedStyle(el);
+      if (cs && (cs.position === 'fixed' || cs.position === 'sticky')) return true;
+      el = el.parentElement;
+    }
+    return false;
+  }
   function bringIntoView(el) {
     if (!el || !el.scrollIntoView) return;
+    if (hasFixedAncestor(el)) return; // fixed parents handle their own layout
     // Wait for keyboard animation + viewport resize before scrolling.
-    // 280ms covers both iOS Safari and Chrome Android.
     setTimeout(() => {
       try {
         el.scrollIntoView({ behavior:'smooth', block:'center', inline:'nearest' });
@@ -11769,22 +11913,17 @@ OUTPUT: Return ONLY the complete HTML starting with <!DOCTYPE html>. No markdown
   document.addEventListener('focusin',  onFocusIn,  true);
   document.addEventListener('focusout', onFocusOut, true);
 
-  // visualViewport: most reliable signal for keyboard show/hide on Android.
-  // Detects ANY viewport shrinkage of >25% from initial portrait height.
+  // visualViewport: just toggle kb-open class; do NOT call scrollIntoView
+  // here (the focusin handler already did the right thing on user gesture
+  // and a second auto-scroll causes 'jumping' on Android).
   if (window.visualViewport) {
     let initialH = window.visualViewport.height;
     window.visualViewport.addEventListener('resize', () => {
       if (!isMobile()) return;
       const cur = window.visualViewport.height;
-      // Update baseline on orientation changes (height grows, not shrinks)
       if (cur > initialH) initialH = cur;
       const shrunk = (initialH - cur) / initialH > 0.2;
-      if (shrunk) {
-        document.body.classList.add('kb-open');
-        bringIntoView(document.activeElement);
-      } else {
-        document.body.classList.remove('kb-open');
-      }
+      document.body.classList.toggle('kb-open', shrunk);
     });
   }
 })();
