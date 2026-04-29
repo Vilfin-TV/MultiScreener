@@ -721,8 +721,8 @@ footer{
   font-size:14px;line-height:1.7;border-top:1px solid #1e293b;
 }
 .footer-main{
-  max-width:1200px;margin:0 auto;padding:48px 32px 36px;
-  display:grid;grid-template-columns:repeat(4,1fr);gap:40px;
+  max-width:1280px;margin:0 auto;padding:48px 32px 36px;
+  display:grid;grid-template-columns:repeat(5,1fr);gap:32px;
 }
 .footer-col-title{
   font-size:13px;font-weight:700;color:#f1f5f9;letter-spacing:.6px;
@@ -2265,11 +2265,11 @@ footer{
         {"proName":"FOREXCOM:SPXUSD","title":"S&P 500"},
         {"proName":"FOREXCOM:NSXUSD","title":"Nasdaq"},
         {"proName":"FOREXCOM:DJI","title":"Dow Jones"},
-        {"proName":"INDEX:NKY","title":"Nikkei"},
-        {"proName":"TVC:HSI","title":"Hang Seng"},
-        {"proName":"TVC:KOSPI","title":"KOSPI"},
-        {"proName":"TVC:SX5E","title":"STOXX 50"},
-        {"proName":"BMFBOVESPA:IBOV","title":"BOVESPA"},
+        {"proName":"TSE:NI225","title":"Nikkei 225"},
+        {"proName":"NASDAQ:QQQ","title":"Nasdaq 100"},
+        {"proName":"AMEX:SPY","title":"S&P 500 ETF"},
+        {"proName":"NYSE:DIA","title":"Dow Jones ETF"},
+        {"proName":"AMEX:IWM","title":"Russell 2000"},
         {"proName":"FX:EURUSD","title":"EUR/USD"},
         {"proName":"FX:AUDUSD","title":"AUD/USD"},
         {"proName":"FX_IDC:USDINR","title":"USD/INR"},
@@ -2928,9 +2928,40 @@ footer{
       <div class="footer-col-title">Legal &amp; Support</div>
       <ul class="footer-links">
         <li><a href="user_manual.html" target="_blank">📖 User Manual</a></li>
+        <li><a href="user-setup-guide.html" target="_blank">🔌 AI Worker Setup</a></li>
         <li><a href="user_manual.html" target="_blank">🔒 Privacy Policy</a></li>
         <li><a href="user_manual.html" target="_blank">📋 Terms of Service</a></li>
         <li><a href="mailto:vilfingeorge@gmail.com">✉ Contact Us</a></li>
+      </ul>
+    </div>
+
+    <!-- Col 4: Feedback / Issues -->
+    <div>
+      <div class="footer-col-title">Help Us Improve</div>
+      <ul class="footer-links">
+        <li>
+          <a href="https://github.com/Vilfin-TV/MultiScreener/issues/new?template=bug_report.md&title=%5BBug%5D+&labels=bug,user-report"
+             target="_blank" rel="noopener">
+            🐞 Report a Bug
+          </a>
+        </li>
+        <li>
+          <a href="https://github.com/Vilfin-TV/MultiScreener/issues/new?template=feature_request.md&title=%5BFeature%5D+&labels=enhancement,user-request"
+             target="_blank" rel="noopener">
+            💡 Request a Feature
+          </a>
+        </li>
+        <li>
+          <a href="https://github.com/Vilfin-TV/MultiScreener/issues/new?title=%5BFeedback%5D+&labels=feedback&body=%23%23+What+I+like%0A%0A%0A%23%23+What+can+be+better%0A%0A%0A%23%23+General+comment%0A%0A"
+             target="_blank" rel="noopener">
+            💬 Send Feedback
+          </a>
+        </li>
+        <li>
+          <a href="https://github.com/Vilfin-TV/MultiScreener/issues" target="_blank" rel="noopener">
+            📋 View All Issues
+          </a>
+        </li>
       </ul>
     </div>
 
@@ -3234,6 +3265,7 @@ footer{
       <button class="radio-preset-btn" onclick="radioLoadPreset('bollywood')">🎬 Bollywood</button>
       <button class="radio-preset-btn" onclick="radioLoadPreset('hindi')">🪕 Hindi</button>
       <button class="radio-preset-btn" onclick="radioLoadPreset('malayalam')">🌿 Malayalam</button>
+      <button class="radio-preset-btn" onclick="radioLoadPreset('gulf-nri')">🇦🇪 Gulf NRI</button>
       <button class="radio-preset-btn" onclick="radioLoadPreset('tamil')">🎵 Tamil</button>
       <button class="radio-preset-btn" onclick="radioLoadPreset('telugu')">🎤 Telugu</button>
       <button class="radio-preset-btn" onclick="radioLoadPreset('kannada')">🎶 Kannada</button>
@@ -4340,46 +4372,73 @@ function closeApp() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SYMBOL AUTOCOMPLETE — fetches data/master_symbols.json lazily on first use
+// SYMBOL AUTOCOMPLETE — pre-loaded on idle; instant search across 17K symbols
+// Performance: pre-loads 2 MB JSON once, builds a normalised cache for fast
+// case-insensitive scoring, caches recent query results for repeat keystrokes.
 // ═══════════════════════════════════════════════════════════════════════════
 const AC = {
   data:    null,   // null = not yet loaded | [] = loaded (possibly empty)
+  cache:   null,   // [{sym,name,symL,nameL,exch,type}, ...] — pre-lowercased
   loading: false,
   timer:   null,
   activeIdx: -1,
+  qCache:  Object.create(null), // query → results memo (max 24 keys)
 
   SYMBOLS_URL: 'data/master_symbols.json',
   MAX_RESULTS: 12,
-  DEBOUNCE_MS: 220,
+  DEBOUNCE_MS: 120,             // tighter — feels snappier
+  EARLY_TERMINATE: 80,          // stop scanning once we have this many score>=3 hits
 };
 
 async function acLoad() {
-  if (AC.data !== null || AC.loading) return;
+  if (AC.data !== null || AC.loading) return AC.data;
   AC.loading = true;
-  const dd = document.getElementById('ac-dropdown');
-  if (dd) { dd.innerHTML = '<div class="ac-loading">Loading symbols…</div>'; dd.style.display = 'block'; }
   try {
-    const r = await fetch(AC.SYMBOLS_URL);
+    const t0 = performance.now();
+    const r = await fetch(AC.SYMBOLS_URL, { cache: 'force-cache' });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     AC.data = await r.json();
-    console.log(`[AC] Loaded ${AC.data.length.toLocaleString()} symbols`);
+    // Build pre-lowercased cache so each query doesn't re-toLowerCase 17K strings
+    AC.cache = AC.data.map(it => ({
+      sym:   it.symbol,
+      name:  it.name,
+      exch:  it.exchange,
+      type:  it.type,
+      symL:  (it.symbol || '').toLowerCase(),
+      nameL: (it.name   || '').toLowerCase(),
+    }));
+    console.log(`[AC] Loaded ${AC.data.length.toLocaleString()} symbols in ${(performance.now()-t0).toFixed(0)}ms`);
   } catch (e) {
     console.warn('[AC] Could not load master_symbols.json:', e.message);
-    AC.data = [];          // mark as loaded-but-empty so we don't retry
+    AC.data = []; AC.cache = [];
   } finally {
     AC.loading = false;
-    if (dd) dd.style.display = 'none';
   }
+  return AC.data;
 }
+
+// Pre-load on browser-idle so by the time the user types, data is ready.
+(function acPreload() {
+  const start = () => acLoad();
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(start, { timeout: 2500 });
+  } else {
+    setTimeout(start, 1500);
+  }
+})();
 
 function acSearch(query) {
   clearTimeout(AC.timer);
   const q = (query || '').trim();
   if (q.length < 2) { acClose(); return; }
 
-  // Lazy-load on first keystroke ≥ 2 chars
+  // If still loading, show spinner and re-render once data arrives
   if (AC.data === null) {
-    acLoad().then(() => { if (q === document.getElementById('asset-name')?.value.trim()) acRender(q); });
+    const dd = document.getElementById('ac-dropdown');
+    if (dd) { dd.innerHTML = '<div class="ac-loading">⏳ Indexing 17K symbols…</div>'; dd.style.display = 'block'; }
+    acLoad().then(() => {
+      if (q === (document.getElementById('asset-name')?.value || '').trim()) acRender(q);
+    });
     return;
   }
 
@@ -4389,26 +4448,39 @@ function acSearch(query) {
 function acRender(q) {
   const dd = document.getElementById('ac-dropdown');
   if (!dd) return;
-  if (!AC.data || AC.data.length === 0) { dd.style.display = 'none'; return; }
+  if (!AC.cache || AC.cache.length === 0) { dd.style.display = 'none'; return; }
 
   const ql = q.toLowerCase();
-
-  // Score: symbol exact match > symbol starts-with > name starts-with > name contains
-  const scored = [];
-  for (const item of AC.data) {
-    const sl = item.symbol.toLowerCase();
-    const nl = item.name.toLowerCase();
-    let score = 0;
-    if (sl === ql)              score = 4;
-    else if (sl.startsWith(ql)) score = 3;
-    else if (nl.startsWith(ql)) score = 2;
-    else if (sl.includes(ql) || nl.includes(ql)) score = 1;
-    if (score) scored.push({ score, item });
-    if (scored.length > 500) break;   // cap early scan for performance
+  // Per-query memoization — re-typing the same prefix is instant
+  let results = AC.qCache[ql];
+  if (!results) {
+    const t0 = performance.now();
+    const high = []; // score 3-4 (starts-with)
+    const mid  = []; // score 2 (name starts-with)
+    const low  = []; // score 1 (contains)
+    for (const it of AC.cache) {
+      const symL = it.symL, nameL = it.nameL;
+      if (symL === ql)              { high.push({ s:4, it }); }
+      else if (symL.startsWith(ql)) { high.push({ s:3, it }); }
+      else if (nameL.startsWith(ql)){ mid.push ({ s:2, it }); }
+      else if (symL.includes(ql) || nameL.includes(ql)) { low.push({ s:1, it }); }
+      // Early termination: if we already have plenty of high-score hits,
+      // skip the rest — the result list only shows the top 12 anyway.
+      if (high.length >= AC.EARLY_TERMINATE) break;
+    }
+    high.sort((a,b)=> b.s - a.s || a.it.sym.localeCompare(b.it.sym));
+    mid.sort ((a,b)=> a.it.sym.localeCompare(b.it.sym));
+    low.sort ((a,b)=> a.it.sym.localeCompare(b.it.sym));
+    const merged = high.concat(mid).concat(low).slice(0, AC.MAX_RESULTS);
+    results = merged.map(x => ({ symbol:x.it.sym, name:x.it.name, exchange:x.it.exch, type:x.it.type }));
+    // Memoize (cap at 24 keys to avoid memory bloat)
+    const keys = Object.keys(AC.qCache);
+    if (keys.length >= 24) delete AC.qCache[keys[0]];
+    AC.qCache[ql] = results;
+    if (typeof console !== 'undefined' && console.debug) {
+      console.debug(`[AC] '${q}' → ${results.length} hits in ${(performance.now()-t0).toFixed(1)}ms`);
+    }
   }
-
-  scored.sort((a, b) => b.score - a.score || a.item.symbol.localeCompare(b.item.symbol));
-  const results = scored.slice(0, AC.MAX_RESULTS).map(s => s.item);
 
   AC.activeIdx = -1;
 
@@ -6097,7 +6169,17 @@ const _RADIO_PRESETS = {
   'top-india':  { path: '/json/stations/bycountry/India?limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Top India' },
   'bollywood':  { path: '/json/stations/search?tag=bollywood&limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Bollywood' },
   'hindi':      { path: '/json/stations/search?language=hindi&limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Hindi' },
-  'malayalam':  { path: '/json/stations/search?language=malayalam&limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Malayalam' },
+  // Use bytag rather than language= — radio-browser's tag index covers more
+  // diaspora-popular channels (AIR Kochi, Real FM, Club FM India, etc.) which
+  // are the same stations UAE/Qatar Malayalis stream most.
+  'malayalam':  { path: '/json/stations/bytag/malayalam?limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Malayalam' },
+  // Gulf NRI mix: special multi-source preset (handled in radioLoadPreset).
+  'gulf-nri':   { path: 'MULTI', label: 'Gulf NRI', sources: [
+    '/json/stations/bytag/malayalam?limit=30&hidebroken=true&order=clickcount&reverse=true',
+    '/json/stations/bytag/hindi?limit=30&hidebroken=true&order=clickcount&reverse=true',
+    '/json/stations/bytag/bollywood?limit=20&hidebroken=true&order=clickcount&reverse=true',
+    '/json/stations/bytag/tamil?limit=15&hidebroken=true&order=clickcount&reverse=true',
+  ] },
   'tamil':      { path: '/json/stations/search?language=tamil&limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Tamil' },
   'telugu':     { path: '/json/stations/search?language=telugu&limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Telugu' },
   'kannada':    { path: '/json/stations/search?language=kannada&limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Kannada' },
@@ -6172,7 +6254,26 @@ async function radioLoadPreset(presetKey) {
 
   const preset = _RADIO_PRESETS[presetKey];
   if (!preset) return;
-  const stations = await _rbFetch(preset.path);
+
+  let stations;
+  if (preset.path === 'MULTI' && Array.isArray(preset.sources)) {
+    // Fetch multiple endpoints in parallel and de-dupe by stationuuid
+    const arrays = await Promise.all(preset.sources.map(p => _rbFetch(p).catch(() => null)));
+    const seen = new Set();
+    stations = [];
+    for (const arr of arrays) {
+      if (!Array.isArray(arr)) continue;
+      for (const s of arr) {
+        const id = s.stationuuid || s.url_resolved;
+        if (id && !seen.has(id)) { seen.add(id); stations.push(s); }
+      }
+    }
+    // Re-sort merged list by clickcount (popularity) so top NRI picks float up
+    stations.sort((a, b) => (b.clickcount || 0) - (a.clickcount || 0));
+  } else {
+    stations = await _rbFetch(preset.path);
+  }
+
   if (!stations) {
     if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Could not reach Radio Browser API. Please retry.</div>';
     return;

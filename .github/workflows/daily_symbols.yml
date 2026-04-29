@@ -39,18 +39,32 @@ jobs:
       - name: Run update_symbols.py
         run: python scripts/update_symbols.py
 
-      # ── 5. Commit if changed ──────────────────────────────────────────────────
+      # ── 5. Commit if changed (with rebase-and-retry to handle concurrent pushes) ─
       - name: Commit master_symbols.json
         run: |
           git config --global user.name  "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global pull.rebase true
 
           git add data/master_symbols.json
 
           if git diff --staged --quiet; then
             echo "ℹ️  No changes to master_symbols.json — skipping commit."
-          else
-            git commit -m "chore: refresh master_symbols.json [skip ci]"
-            git push
-            echo "✅  master_symbols.json committed and pushed."
+            exit 0
           fi
+
+          git commit -m "chore: refresh master_symbols.json [skip ci]"
+
+          # Retry up to 3 times if remote moved between our checkout and push
+          for attempt in 1 2 3; do
+            echo "🔄  Push attempt $attempt/3..."
+            if git push origin HEAD:main; then
+              echo "✅  master_symbols.json committed and pushed."
+              exit 0
+            fi
+            echo "⚠️  Push rejected (remote moved). Pulling and retrying..."
+            git pull --rebase origin main || git rebase --abort
+            sleep 5
+          done
+          echo "❌  All 3 push attempts failed — giving up."
+          exit 1
