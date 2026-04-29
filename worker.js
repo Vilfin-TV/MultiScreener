@@ -173,7 +173,16 @@ export default {
         return json({ result }, CORS);
       } catch (err) {
         console.error('handleQuery error:', err.message);
-        return json({ error: 'Service temporarily unavailable. Please retry.' }, CORS, 503);
+        // Surface the actual provider-cascade detail so the client can show
+        // a useful error instead of a generic "try again" loop.
+        const detail = err && err.message ? err.message : 'unknown error';
+        return json({
+          error: 'Service temporarily unavailable. Please retry.',
+          detail,
+          hint: detail.includes('All AI providers unavailable')
+            ? 'All configured providers returned empty/failed. Likely a daily quota hit. Try again in an hour or check your provider dashboards.'
+            : undefined,
+        }, CORS, 503);
       }
     }
 
@@ -593,28 +602,44 @@ async function callDeepSeek(messages, env, maxTokens) {
 
 /** Pollinations — free, no key required (emergency last resort) */
 async function callPollinations(messages) {
-  try {
-    const sysShort = `Financial Market Assistant. ${new Date().toDateString()}. Use Markdown.`;
-    const userMsg  = messages.find(m => m.role === 'user')?.content || '';
-    const res = await fetch('https://text.pollinations.ai/openai', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model:   'openai-large',
-        messages: [
-          { role: 'system', content: sysShort },
-          { role: 'user',   content: userMsg },
-        ],
-        stream:  false,
-        private: true,
-      }),
-      signal: AbortSignal.timeout(45000),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    const text = data?.choices?.[0]?.message?.content?.trim();
-    return (text && text.length > 20) ? text : null;
-  } catch (e) { console.warn('Pollinations failed:', e.message); return null; }
+  // 'openai-large' was deprecated by Pollinations in 2026.
+  // Try the current models in priority order — first one that responds wins.
+  const MODEL_FALLBACKS = ['openai-fast', 'openai', 'gpt-oss', 'mistral'];
+  const sysShort = `Financial Market Assistant. ${new Date().toDateString()}. Use Markdown.`;
+  const userMsg  = messages.find(m => m.role === 'user')?.content || '';
+  if (!userMsg) return null;
+
+  for (const model of MODEL_FALLBACKS) {
+    try {
+      const res = await fetch('https://text.pollinations.ai/openai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: sysShort },
+            { role: 'user',   content: userMsg },
+          ],
+          stream:  false,
+          private: true,
+        }),
+        signal: AbortSignal.timeout(45000),
+      });
+      if (!res.ok) {
+        console.warn(`Pollinations ${model}: HTTP ${res.status}`);
+        continue; // try next model
+      }
+      const data = await res.json();
+      const text = data?.choices?.[0]?.message?.content?.trim();
+      if (text && text.length > 20) {
+        console.log(`Pollinations OK via ${model} (${text.length} chars)`);
+        return text;
+      }
+    } catch (e) {
+      console.warn(`Pollinations ${model} threw:`, e.message);
+    }
+  }
+  return null;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -674,13 +699,16 @@ async function handleQuery(prompt, env, providerHint, historyMsgs) {
   if (provider === 'openai')   { const t = await callOpenAI(messages, env);   if (t) return t; }
   if (provider === 'deepseek') { const t = await callDeepSeek(messages, env); if (t) return t; }
 
-  const groq     = await callGroq(messages, env);     if (groq)     return groq;
-  const gemini   = await callGemini(messages, env);   if (gemini)   return gemini;
-  const openai   = await callOpenAI(messages, env);   if (openai)   return openai;
-  const deepseek = await callDeepSeek(messages, env); if (deepseek) return deepseek;
-  const poll     = await callPollinations(messages);  if (poll)     return poll;
+  // Track which providers we tried so logs show the failure cascade
+  const tried = [];
+  const groq     = await callGroq(messages, env);     tried.push('groq:'    +(groq?'ok':'fail')); if (groq)     return groq;
+  const gemini   = await callGemini(messages, env);   tried.push('gemini:'  +(gemini?'ok':'fail'));if (gemini)   return gemini;
+  const openai   = await callOpenAI(messages, env);   tried.push('openai:'  +(openai?'ok':'fail'));if (openai)   return openai;
+  const deepseek = await callDeepSeek(messages, env); tried.push('deepseek:'+(deepseek?'ok':'fail'));if (deepseek) return deepseek;
+  const poll     = await callPollinations(messages);  tried.push('pollinations:'+(poll?'ok':'fail'));if (poll) return poll;
 
-  throw new Error('All AI providers unavailable');
+  console.error('[handleQuery] all providers failed:', tried.join(' | '));
+  throw new Error('All AI providers unavailable: ' + tried.join(', '));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
