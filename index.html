@@ -6748,25 +6748,32 @@ async function iptvInit() {
     // Index channels by id
     const chanById = Object.create(null);
     for (const c of channels) chanById[c.id] = c;
-    // Merge: keep only HTTPS streams with a known channel id
-    _iptvAllChannels = streams
-      .filter(s => s.url && /^https:/.test(s.url) && s.channel && chanById[s.channel])
-      .map(s => {
-        const c = chanById[s.channel];
-        return {
-          id:       s.channel,
-          name:     c.name || s.channel,
-          url:      s.url,
-          country:  c.country || '',
-          language: (c.languages && c.languages[0]) || '',
-          languages: c.languages || [],
-          categories: c.categories || [],
-          logo:     c.logo || '',
-          isNsfw:   c.is_nsfw || false,
-        };
-      })
-      .filter(s => !s.isNsfw);
-    console.log(`[IPTV] Loaded ${_iptvAllChannels.length} HTTPS streams`);
+    // Merge: keep only HTTPS streams with a known channel id, AND de-dupe so
+    // each channel appears at most once. iptv-org often lists 2-3 stream
+    // mirrors per channel — duplicates broke next/prev because findIndex by
+    // channel id always returned the FIRST occurrence.
+    const seen = new Set();
+    _iptvAllChannels = [];
+    for (const s of streams) {
+      if (!s.url || !/^https:/.test(s.url)) continue;
+      if (!s.channel || !chanById[s.channel]) continue;
+      if (seen.has(s.channel)) continue;            // skip duplicates
+      seen.add(s.channel);
+      const c = chanById[s.channel];
+      if (c.is_nsfw) continue;
+      _iptvAllChannels.push({
+        id:         s.channel,
+        name:       c.name || s.channel,
+        url:        s.url,
+        country:    c.country || '',
+        language:   (c.languages && c.languages[0]) || '',
+        languages:  c.languages || [],
+        categories: c.categories || [],
+        logo:       c.logo || '',
+        isNsfw:     false,
+      });
+    }
+    console.log(`[IPTV] Loaded ${_iptvAllChannels.length} unique channels (deduped)`);
     // If user has set a default preset/country, load that. Otherwise All India.
     if (!iptvLoadUserDefault()) iptvLoadPreset('all-india');
   } catch (e) {
@@ -7053,15 +7060,31 @@ function iptvStop() {
 // ── Transport controls ──────────────────────────────────────────────────
 function iptvNext() {
   if (!_iptvLastResults.length) return;
-  let i = _iptvCurrentIndex + 1;
-  if (i >= _iptvLastResults.length) i = 0;
+  // Re-locate current channel each time (covers case where the list was
+  // re-rendered or current is a custom-URL channel not in the list).
+  let i = -1;
+  if (_iptvCurrentChannel) {
+    i = _iptvLastResults.findIndex(c =>
+      c.id === _iptvCurrentChannel.id || c.url === _iptvCurrentChannel.url);
+  }
+  if (i < 0) i = _iptvCurrentIndex;       // last-known index
+  i = (i + 1) % _iptvLastResults.length;
+  if (i < 0) i = 0;
+  _iptvCurrentIndex = i;
   const c = _iptvLastResults[i];
   if (c) iptvPlay(c.url, c.id, c.name);
 }
 function iptvPrev() {
   if (!_iptvLastResults.length) return;
-  let i = _iptvCurrentIndex - 1;
+  let i = -1;
+  if (_iptvCurrentChannel) {
+    i = _iptvLastResults.findIndex(c =>
+      c.id === _iptvCurrentChannel.id || c.url === _iptvCurrentChannel.url);
+  }
+  if (i < 0) i = _iptvCurrentIndex;
+  i = i - 1;
   if (i < 0) i = _iptvLastResults.length - 1;
+  _iptvCurrentIndex = i;
   const c = _iptvLastResults[i];
   if (c) iptvPlay(c.url, c.id, c.name);
 }
