@@ -3035,10 +3035,13 @@ footer{
       </div>
     </div>
     <div class="rb-tabs">
-      <button class="rb-tab active" id="rbtab-ai"    onclick="rbSwitchPanel('ai')">🤖 AI Chat</button>
-      <button class="rb-tab"        id="rbtab-video" onclick="rbSwitchPanel('video')">▶️ YouTube Live</button>
-      <button class="rb-tab"        id="rbtab-iptv"  onclick="rbSwitchPanel('iptv')">📡 Live TV</button>
-      <button class="rb-tab"        id="rbtab-radio" onclick="rbSwitchPanel('radio')">📻 Radio</button>
+      <button class="rb-tab active" id="rbtab-ai"     onclick="rbSwitchPanel('ai')">🤖 AI Chat</button>
+      <button class="rb-tab"        id="rbtab-video"  onclick="rbSwitchPanel('video')">▶️ YouTube Live</button>
+      <button class="rb-tab"        id="rbtab-iptv"   onclick="rbSwitchPanel('iptv')">📡 Live TV</button>
+      <button class="rb-tab"        id="rbtab-radio"  onclick="rbSwitchPanel('radio')">📻 Radio</button>
+      <button class="rb-tab"        id="rbtab-music"  onclick="rbSwitchPanel('music')">🎵 Music</button>
+      <button class="rb-tab"        id="rbtab-podcast" onclick="rbSwitchPanel('podcast')">🎙 Podcast</button>
+      <button class="rb-tab"        id="rbtab-settings" onclick="rbSwitchPanel('settings')" title="Widget Settings">⚙️</button>
     </div>
   </div>
 
@@ -3268,8 +3271,39 @@ footer{
              oninput="iptvOnSearch(this.value)"/>
     </div>
 
-    <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:4px;flex-wrap:wrap">
-      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('all-india')">🇮🇳 All India</button>
+    <!-- Country selector -->
+    <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:6px;align-items:center">
+      <select id="iptv-country" onchange="iptvOnCountryChange(this.value)"
+              style="flex:1;padding:7px 10px;background:#0e1f3b;color:#e2eeff;border:1px solid #1e3a5c;border-radius:8px;font-size:11px;font-family:inherit;cursor:pointer;outline:none">
+        <option value="" selected>🌍 All Countries</option>
+        <option value="IN">🇮🇳 India</option>
+        <option value="US">🇺🇸 United States</option>
+        <option value="GB">🇬🇧 United Kingdom</option>
+        <option value="JP">🇯🇵 Japan</option>
+        <option value="CN">🇨🇳 China</option>
+        <option value="AE">🇦🇪 UAE</option>
+        <option value="SA">🇸🇦 Saudi Arabia</option>
+        <option value="QA">🇶🇦 Qatar</option>
+        <option value="SG">🇸🇬 Singapore</option>
+        <option value="MY">🇲🇾 Malaysia</option>
+        <option value="AU">🇦🇺 Australia</option>
+        <option value="CA">🇨🇦 Canada</option>
+        <option value="DE">🇩🇪 Germany</option>
+        <option value="FR">🇫🇷 France</option>
+        <option value="ES">🇪🇸 Spain</option>
+        <option value="IT">🇮🇹 Italy</option>
+        <option value="BR">🇧🇷 Brazil</option>
+        <option value="MX">🇲🇽 Mexico</option>
+      </select>
+      <button onclick="iptvSetDefault()" title="Save current as default"
+              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#fbbf24;padding:6px 10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">📌 Default</button>
+    </div>
+
+    <!-- Preset categories -->
+    <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:4px;flex-wrap:wrap;max-height:120px;overflow-y:auto">
+      <!-- Languages — Indian -->
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('favorites')">⭐ Favorites</button>
+      <button class="radio-preset-btn iptv-preset active" onclick="iptvLoadPreset('all-india')">🇮🇳 All India</button>
       <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('hindi')">🪕 Hindi</button>
       <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('malayalam')">🌿 Malayalam</button>
       <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('tamil')">🎵 Tamil</button>
@@ -3280,22 +3314,57 @@ footer{
       <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('bengali')">🟢 Bengali</button>
       <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('odia')">🌅 Odia</button>
       <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('assamese')">🌄 Assamese</button>
+      <!-- Categories -->
       <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('news')">📰 News</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('movies')">🎬 Movies</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('entertainment')">🎭 Entertainment</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('music')">🎶 Music</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('food')">🍳 Food</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('lifestyle')">💼 Lifestyle</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('fashion')">👗 Fashion</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('travel')">✈️ Travel</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('spiritual')">🕉 Spiritual</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('nature')">🌳 Nature</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('wild')">🐅 Wild</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('kids')">🧸 Kids</button>
+      <!-- Sports -->
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('sports')">🏆 All Sports</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('cricket')">🏏 Cricket</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('football')">⚽ Football</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('rugby')">🏉 Rugby</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('baseball')">⚾ Baseball</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('tennis')">🎾 Tennis</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('swimming')">🏊 Swimming</button>
+      <!-- Countries -->
       <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('japan')">🇯🇵 Japan</button>
       <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('china')">🇨🇳 China</button>
       <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('world')">🌍 World</button>
     </div>
 
-    <!-- Video player -->
+    <!-- Video player + professional controls -->
     <div id="iptv-player-wrap" style="width:100%;background:#000;flex-shrink:0;display:none">
       <div style="width:100%;padding-top:56.25%;position:relative;overflow:hidden">
         <video id="iptv-player" controls playsinline
                style="position:absolute;top:0;left:0;width:100%;height:100%;background:#000"></video>
       </div>
-      <div style="padding:6px 10px;display:flex;align-items:center;gap:8px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px">
-        <span id="iptv-now" style="flex:1;color:#60a5fa;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</span>
+      <!-- Now-playing + transport controls -->
+      <div style="padding:6px 10px;display:flex;align-items:center;gap:6px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px">
+        <button onclick="iptvPrev()" title="Previous channel"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏮</button>
+        <button onclick="iptvNext()" title="Next channel"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏭</button>
+        <button onclick="iptvToggleMute()" id="iptv-mute-btn" title="Mute"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔊</button>
+        <input type="range" id="iptv-vol" min="0" max="100" value="80" oninput="iptvSetVolume(this.value)"
+               title="Volume"
+               style="flex:0 0 70px;accent-color:#3b82f6;height:14px;cursor:pointer"/>
+        <span id="iptv-now" style="flex:1;color:#60a5fa;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">—</span>
+        <button onclick="iptvToggleFav()" id="iptv-fav-btn" title="Add to favorites"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#fbbf24;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">☆</button>
+        <button onclick="iptvTogglePip()" title="Picture-in-Picture"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⧉</button>
         <button onclick="iptvStop()" title="Stop"
-                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:600;cursor:pointer">⏹ Stop</button>
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏹</button>
       </div>
     </div>
 
@@ -3357,6 +3426,70 @@ footer{
     </div>
 
   </div><!-- /rb-panel-radio -->
+
+  <!-- ── PANEL 5: Music (placeholder — coming soon) ── -->
+  <div id="rb-panel-music" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+    <div style="padding:40px 24px;text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+      <div style="font-size:64px">🎵</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#60a5fa;letter-spacing:2px">MUSIC PLAYER</div>
+      <div style="font-size:13px;color:var(--text2);max-width:300px;line-height:1.6">
+        On-demand music streaming with personalised recommendations.
+        Curated playlists across Bollywood, regional Indian, lo-fi, jazz, and global pop.
+      </div>
+      <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#fbbf24;padding:8px 16px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.5px">⏳ COMING SOON</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:8px">For radio music streams, switch to the 📻 Radio tab.</div>
+    </div>
+  </div><!-- /rb-panel-music -->
+
+  <!-- ── PANEL 6: Podcast (placeholder — coming soon) ── -->
+  <div id="rb-panel-podcast" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+    <div style="padding:40px 24px;text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+      <div style="font-size:64px">🎙</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#60a5fa;letter-spacing:2px">PODCAST HUB</div>
+      <div style="font-size:13px;color:var(--text2);max-width:300px;line-height:1.6">
+        Browse and listen to top financial, technology, business, and educational podcasts.
+        Daily market briefings, founder interviews, sector deep-dives.
+      </div>
+      <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#fbbf24;padding:8px 16px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.5px">⏳ COMING SOON</div>
+    </div>
+  </div><!-- /rb-panel-podcast -->
+
+  <!-- ── PANEL 7: Widget Settings ── -->
+  <div id="rb-panel-settings" style="display:none;flex-direction:column;flex:1;overflow-y:auto;min-height:0;padding:18px 16px 24px">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#60a5fa;letter-spacing:2px;margin-bottom:6px">WIDGET SETTINGS</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:18px">Personalise your right-bar tabs and pick a default landing tab.</div>
+
+    <!-- Default tab picker -->
+    <div style="background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Default tab on startup</div>
+      <select id="widget-default-tab" onchange="widgetSetDefaultTab(this.value)"
+              style="width:100%;padding:9px 12px;background:#0e1f3b;color:#e2eeff;border:1px solid #1e3a5c;border-radius:8px;font-size:13px;font-family:inherit;cursor:pointer;outline:none">
+        <option value="ai">🤖 AI Chat</option>
+        <option value="video">▶️ YouTube Live</option>
+        <option value="iptv">📡 Live TV</option>
+        <option value="radio">📻 Radio</option>
+        <option value="music">🎵 Music</option>
+        <option value="podcast">🎙 Podcast</option>
+      </select>
+      <div id="widget-default-status" style="font-size:11px;color:var(--text3);margin-top:8px">Currently: AI Chat</div>
+    </div>
+
+    <!-- Visible tab toggles -->
+    <div style="background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Visible tabs</div>
+      <div id="widget-tab-toggles" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+
+    <!-- Reset -->
+    <button onclick="widgetResetSettings()"
+            style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;width:100%">
+      ⟲ Reset to defaults
+    </button>
+
+    <div style="margin-top:18px;padding:12px;background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.18);border-radius:9px;font-size:11.5px;color:#bfdbfe;line-height:1.6">
+      <strong>📦 More widgets coming soon:</strong> Calendar · Notes · Calculator · World Clock · Weather · Crypto Tracker.
+    </div>
+  </div><!-- /rb-panel-settings -->
 
 </div><!-- /right-bar -->
 
@@ -5975,52 +6108,124 @@ function rbAiClear() {
   rbAiAppendMessage('Chat cleared. Ask me anything about markets!', 'bot');
 }
 
-// ── Right-bar panel switcher (AI / YT Live / IPTV / Radio) ──────────
+// ── Right-bar panel switcher (AI / YT Live / IPTV / Radio / Music / Podcast / Settings) ─
+const _RB_PANELS = {
+  ai:       { panelId:'rb-panel-ai',       tabId:'rbtab-ai',       title:'🤖 AI ASSISTANT', clear:true },
+  video:    { panelId:'rb-panel-video',    tabId:'rbtab-video',    title:'▶️ YOUTUBE LIVE' },
+  iptv:     { panelId:'rb-panel-iptv',     tabId:'rbtab-iptv',     title:'📡 LIVE TV',  init:'_iptvInitDone',  initFn:'iptvInit' },
+  radio:    { panelId:'rb-panel-radio',    tabId:'rbtab-radio',    title:'📻 GLOBAL RADIO', init:'_radioInitDone', initFn:'radioInit' },
+  music:    { panelId:'rb-panel-music',    tabId:'rbtab-music',    title:'🎵 MUSIC' },
+  podcast:  { panelId:'rb-panel-podcast',  tabId:'rbtab-podcast',  title:'🎙 PODCAST' },
+  settings: { panelId:'rb-panel-settings', tabId:'rbtab-settings', title:'⚙️ WIDGET SETTINGS' },
+};
+
 function rbSwitchPanel(panel) {
-  const ai    = document.getElementById('rb-panel-ai');
-  const video = document.getElementById('rb-panel-video');
-  const iptv  = document.getElementById('rb-panel-iptv');
-  const radio = document.getElementById('rb-panel-radio');
-  const tabAi  = document.getElementById('rbtab-ai');
-  const tabVid = document.getElementById('rbtab-video');
-  const tabIpt = document.getElementById('rbtab-iptv');
-  const tabRad = document.getElementById('rbtab-radio');
-  const title  = document.getElementById('rb-panel-title');
-  const clear  = document.getElementById('rb-clear-btn');
-  const label  = document.getElementById('rb-ai-model-label');
+  const def = _RB_PANELS[panel] || _RB_PANELS.ai;
+  const title = document.getElementById('rb-panel-title');
+  const clear = document.getElementById('rb-clear-btn');
+  // Hide every panel + deactivate every tab
+  Object.values(_RB_PANELS).forEach(p => {
+    const el = document.getElementById(p.panelId);
+    if (el) el.style.display = 'none';
+    const tab = document.getElementById(p.tabId);
+    if (tab) tab.classList.remove('active');
+  });
+  // Show requested panel + activate its tab
+  const el = document.getElementById(def.panelId);
+  if (el) el.style.display = 'flex';
+  const tab = document.getElementById(def.tabId);
+  if (tab) tab.classList.add('active');
+  if (title) {
+    const parts = def.title.split(' ');
+    const icon = parts.shift();
+    title.innerHTML = '<span style="font-size:16px">' + icon + '</span><span>' + parts.join(' ') + '</span>';
+  }
+  if (clear) clear.style.display = def.clear ? 'block' : 'none';
+  // Lazy-init heavy panels on first open
+  if (def.init && !window[def.init]) {
+    window[def.init] = true;
+    try { window[def.initFn] && window[def.initFn](); } catch (e) { console.warn('panel init failed:', e); }
+  }
+  // Remember last-active tab so the next page-load lands here (unless user has set a default)
+  try { localStorage.setItem('viltv_widget_last_tab', panel); } catch(_) {}
+  // Refresh settings panel UI when user opens it
+  if (panel === 'settings') widgetRenderSettings();
+}
 
-  // Hide all panels, deactivate all tabs
-  [ai, video, iptv, radio].forEach(p => { if (p) p.style.display = 'none'; });
-  [tabAi, tabVid, tabIpt, tabRad].forEach(t => { if (t) t.classList.remove('active'); });
-
-  if (panel === 'video') {
-    if (video) video.style.display = 'flex';
-    if (tabVid) tabVid.classList.add('active');
-    if (title) title.innerHTML = '<span style="font-size:16px">▶️</span><span>YOUTUBE LIVE</span>';
-    if (clear) clear.style.display = 'none';
-    if (label) label.textContent = '';
-  } else if (panel === 'iptv') {
-    if (iptv) iptv.style.display = 'flex';
-    if (tabIpt) tabIpt.classList.add('active');
-    if (title) title.innerHTML = '<span style="font-size:16px">📡</span><span>LIVE TV</span>';
-    if (clear) clear.style.display = 'none';
-    if (label) label.textContent = '';
-    if (!window._iptvInitDone) { iptvInit(); window._iptvInitDone = true; }
-  } else if (panel === 'radio') {
-    if (radio) radio.style.display = 'flex';
-    if (tabRad) tabRad.classList.add('active');
-    if (title) title.innerHTML = '<span style="font-size:16px">📻</span><span>GLOBAL RADIO</span>';
-    if (clear) clear.style.display = 'none';
-    if (label) label.textContent = '';
-    if (!window._radioInitDone) { radioInit(); window._radioInitDone = true; }
-  } else {
-    if (ai) ai.style.display = 'flex';
-    if (tabAi) tabAi.classList.add('active');
-    if (title) title.innerHTML = '<span style="font-size:16px">🤖</span><span>AI ASSISTANT</span><span class="rb-dot" id="rb-ai-dot" style="background:var(--text3)"></span>';
-    if (clear) clear.style.display = 'block';
-    if (label) label.textContent = '';
+// ═══════════════════════════════════════════════════════════════════════
+// WIDGET SETTINGS — default tab + visible-tab toggles, persisted in localStorage
+// ═══════════════════════════════════════════════════════════════════════
+const _WIDGET_TAB_LABELS = {
+  ai:'🤖 AI Chat', video:'▶️ YouTube Live', iptv:'📡 Live TV',
+  radio:'📻 Radio', music:'🎵 Music', podcast:'🎙 Podcast',
+};
+function widgetGetSettings() {
+  let s = {};
+  try { s = JSON.parse(localStorage.getItem('viltv_widget_settings') || '{}'); } catch(_) {}
+  if (!s.defaultTab) s.defaultTab = 'ai';
+  if (!s.visible || typeof s.visible !== 'object') {
+    s.visible = { ai:true, video:true, iptv:true, radio:true, music:true, podcast:true };
+  }
+  return s;
+}
+function widgetSaveSettings(s) {
+  try { localStorage.setItem('viltv_widget_settings', JSON.stringify(s)); } catch(_) {}
+}
+function widgetSetDefaultTab(tab) {
+  const s = widgetGetSettings();
+  s.defaultTab = tab;
+  widgetSaveSettings(s);
+  const status = document.getElementById('widget-default-status');
+  if (status) status.textContent = 'Currently: ' + (_WIDGET_TAB_LABELS[tab] || tab);
+}
+function widgetToggleTab(tab, visible) {
+  const s = widgetGetSettings();
+  s.visible[tab] = !!visible;
+  widgetSaveSettings(s);
+  widgetApplyVisibility();
+}
+function widgetApplyVisibility() {
+  const s = widgetGetSettings();
+  Object.entries(_WIDGET_TAB_LABELS).forEach(([key, _]) => {
+    const tab = document.getElementById('rbtab-' + key);
+    if (tab) tab.style.display = (s.visible[key] === false) ? 'none' : '';
+  });
+}
+function widgetResetSettings() {
+  try { localStorage.removeItem('viltv_widget_settings'); } catch(_) {}
+  widgetApplyVisibility();
+  widgetRenderSettings();
+}
+function widgetRenderSettings() {
+  const s = widgetGetSettings();
+  const sel = document.getElementById('widget-default-tab');
+  if (sel) sel.value = s.defaultTab;
+  const status = document.getElementById('widget-default-status');
+  if (status) status.textContent = 'Currently: ' + (_WIDGET_TAB_LABELS[s.defaultTab] || s.defaultTab);
+  const wrap = document.getElementById('widget-tab-toggles');
+  if (wrap) {
+    wrap.innerHTML = Object.entries(_WIDGET_TAB_LABELS).map(([key, label]) => {
+      const checked = s.visible[key] !== false;
+      return `<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px;color:var(--text)">
+        <input type="checkbox" ${checked ? 'checked' : ''} onchange="widgetToggleTab('${key}', this.checked)" style="width:16px;height:16px;accent-color:#3b82f6;cursor:pointer"/>
+        <span>${label}</span>
+      </label>`;
+    }).join('');
   }
 }
+// Apply visibility on load + open default tab on first page-load
+function widgetInitOnLoad() {
+  widgetApplyVisibility();
+  const s = widgetGetSettings();
+  const last = (() => { try { return localStorage.getItem('viltv_widget_last_tab') || ''; } catch(_) { return ''; } })();
+  // First visit (no 'last') → use default. Returning visit → restore last-active tab.
+  const target = last || s.defaultTab || 'ai';
+  // Only auto-switch if the target panel is visible
+  if (s.visible[target] !== false && target !== 'ai') {
+    setTimeout(() => rbSwitchPanel(target), 100);
+  }
+}
+window.addEventListener('DOMContentLoaded', widgetInitOnLoad);
 
 // ═══════════════════════════════════════════════════════════════════════
 // CUSTOM YOUTUBE URL PLAYER
@@ -6438,7 +6643,8 @@ async function iptvInit() {
       })
       .filter(s => !s.isNsfw);
     console.log(`[IPTV] Loaded ${_iptvAllChannels.length} HTTPS streams`);
-    iptvLoadPreset('all-india');
+    // If user has set a default preset/country, load that. Otherwise All India.
+    if (!iptvLoadUserDefault()) iptvLoadPreset('all-india');
   } catch (e) {
     console.warn('[IPTV] catalog fetch failed:', e);
     if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Could not reach iptv-org directory. Please retry.</div>';
@@ -6446,51 +6652,148 @@ async function iptvInit() {
 }
 
 // IPTV preset filters. iptv-org's language field is sparse for India channels,
-// so we fall back to channel-name regex matching for the well-known networks
-// in each Indian language. Language filter wins over country filter.
+// so we fall back to channel-name regex matching. Filters can combine country,
+// language code (when present), category, AND name regex.
 const _IPTV_PRESETS = {
+  // ── Special: favorites (handled in iptvLoadPreset) ─────────────────────
+  'favorites': { favorites: true },
+  // ── Indian languages ───────────────────────────────────────────────────
   'all-india': { country: 'IN' },
-  'hindi':     { country: 'IN', name: /\b(aaj\s*tak|zee\s*hind|abp\s*news|india\s*tv|ndtv\s*india|republic\s*bharat|news18\s*india|tv9\s*bharatvarsh|good\s*news|times\s*now\s*navbharat|hindi\b|bharat\s*samachar|nation\s*news|janta\s*tv|sansad)\b/i },
-  'malayalam': { country: 'IN', name: /\b(asianet|manorama|mathrubhumi|mazhavil|surya|kairali|amrita|reporter|media\s*one|jeevan|24\s*news|goodness|jai\s*hind\s*malayalam|kappa|kaumudi|safari|news18\s*kerala|janam|swasthya\s*tv)\b/i },
-  'tamil':     { country: 'IN', name: /\b(sun\s*tv|vijay\s*tv|star\s*vijay|polimer|kalaignar|raj\s*tv|captain|puthiya\s*thalaimurai|thanthi|news\s*7\s*tamil|j\s*movies|peppers\s*tv|news18\s*tamil|sirippoli|jaya\s*tv|tamil)\b/i },
+  'hindi':     { country: 'IN', name: /\b(aaj\s*tak|zee\s*hind|abp\s*news|india\s*tv|ndtv\s*india|republic\s*bharat|news18\s*india|tv9\s*bharatvarsh|good\s*news|times\s*now\s*navbharat|hindi\b|bharat\s*samachar|janta\s*tv|sansad|dd\s*news|dd\s*national)\b/i },
+  'malayalam': { country: 'IN', name: /\b(asianet|manorama|mathrubhumi|mazhavil|surya|kairali|amrita|reporter|media\s*one|jeevan|24\s*news|goodness|jai\s*hind\s*malayalam|kappa|kaumudi|safari|news18\s*kerala|janam|swasthya|malayalam|kerala)\b/i },
+  'tamil':     { country: 'IN', name: /\b(sun\s*tv|vijay\s*tv|star\s*vijay|polimer|kalaignar|raj\s*tv|captain|puthiya\s*thalaimurai|thanthi|news\s*7\s*tamil|j\s*movies|peppers|news18\s*tamil|jaya\s*tv|tamil)\b/i },
   'telugu':    { country: 'IN', name: /\b(etv\s|tv5|tv9\s*telugu|sakshi|abn\s*andhra|10tv|t\s*news|ntv\s*telugu|raj\s*news|hmtv|mahaa|v6|i\s*news|maa\s*tv|gemini|telugu)\b/i },
-  'kannada':   { country: 'IN', name: /\b(suvarna|public\s*tv|tv9\s*kannada|asianet\s*suvarna|power\s*tv|news18\s*kannada|raj\s*musix\s*kannada|udaya|udaya\s*news|big\s*bangaru|prajaa|kannada)\b/i },
+  'kannada':   { country: 'IN', name: /\b(suvarna|public\s*tv|tv9\s*kannada|asianet\s*suvarna|power\s*tv|news18\s*kannada|udaya|udaya\s*news|kannada)\b/i },
   'marathi':   { country: 'IN', name: /\b(abp\s*majha|saam\s*marathi|tv9\s*marathi|zee\s*marathi|star\s*pravah|news18\s*lokmat|ibn\s*lokmat|jai\s*maharashtra|sahyadri|colors\s*marathi|marathi)\b/i },
   'punjabi':   { country: 'IN', name: /\b(ptc\s*news|ptc\s*punjabi|abp\s*sanjha|zee\s*punjabi|news18\s*punjab|day\s*&\s*night|chardikla|9x\s*tashan|punjab|punjabi)\b/i },
   'bengali':   { country: 'IN', name: /\b(abp\s*ananda|zee\s*bangla|star\s*jalsha|news18\s*bangla|kolkata\s*tv|24\s*ghanta|akash\s*aath|news\s*time\s*bangla|tara\s*muzik|bengali|bangla)\b/i },
   'odia':      { country: 'IN', name: /\b(otv\b|kalinga\s*tv|news18\s*odia|kanak\s*news|tarang|sidharth\s*tv|prarthana|odisha|odia)\b/i },
   'assamese':  { country: 'IN', name: /\b(dy365|news18\s*assam|pratidin\s*time|prag\s*news|protidin|gnn|hayagrib|rongali|assamese|assam)\b/i },
-  'news':      { category: 'news' },
+  // ── Categories (use iptv-org's category field + name regex fallback) ───
+  'news':          { category: 'news' },
+  'movies':        { category: 'movies' },
+  'entertainment': { category: 'entertainment' },
+  'music':         { category: 'music' },
+  'food':          { name: /\b(food|cooking|chef|recipe|kitchen|tlc\b|fyi)\b/i },
+  'lifestyle':     { category: 'lifestyle' },
+  'fashion':       { name: /\b(fashion|style|fashion\s*tv|ftv|e!\s*entertainment)\b/i },
+  'travel':        { name: /\b(travel|discovery|nat\s*geo|lonely\s*planet|world|trvl)\b/i },
+  'spiritual':     { name: /\b(aastha|sanskar|peace|gospel|god\s*tv|spiritual|bhakti|catholic|trinity|ewtn|gospel|kalingatv\s*divine|nikitha\s*tv\s*divine)\b/i },
+  'nature':        { name: /\b(nat\s*geo|national\s*geographic|discovery|earth|nature|planet\s*earth|love\s*nature|smithsonian|history\s*channel)\b/i },
+  'wild':          { name: /\b(wild|animal\s*planet|nat\s*geo\s*wild|animals|safari|jungle)\b/i },
+  'kids':          { category: 'kids' },
+  // ── Sports ────────────────────────────────────────────────────────────
+  'sports':    { category: 'sports' },
+  'cricket':   { name: /\b(cricket|star\s*sports|sony\s*sports|sky\s*sports\s*cricket|willow\s*cricket|fancode|jio\s*hotstar)\b/i, category: 'sports' },
+  'football':  { name: /\b(football|soccer|sky\s*sports\s*football|premier\s*league|la\s*liga|bundesliga|serie\s*a|champions\s*league|fifa|mls\b|copa)\b/i },
+  'rugby':     { name: /\b(rugby|six\s*nations|world\s*rugby|rugby\s*pass|super\s*rugby)\b/i },
+  'baseball':  { name: /\b(baseball|mlb\b|major\s*league\s*baseball|yankees|dodgers|red\s*sox)\b/i },
+  'tennis':    { name: /\b(tennis|atp|wta|wimbledon|us\s*open|australian\s*open|french\s*open|tennis\s*channel)\b/i },
+  'swimming':  { name: /\b(swim|swimming|aquatic|olympic|olympics|fina|world\s*aquatics)\b/i },
+  // ── Countries ─────────────────────────────────────────────────────────
   'japan':     { country: 'JP' },
   'china':     { country: 'CN' },
   'world':     { name: /\b(bbc\s*world|cnn|al\s*jazeera|france\s*24|dw\b|euronews|sky\s*news|cna\b|nhk\s*world|cgtn|tvn|tv5\s*monde|africa\s*news|africanews)\b/i },
 };
 
+// User-selected country override — applied to all presets that don't lock country
+let _iptvUserCountry = (() => { try { return localStorage.getItem('viltv_iptv_country') || ''; } catch(_) { return ''; } })();
+
+function iptvOnCountryChange(code) {
+  _iptvUserCountry = code || '';
+  try { localStorage.setItem('viltv_iptv_country', _iptvUserCountry); } catch(_) {}
+  // Re-apply current preset
+  const active = document.querySelector('.iptv-preset.active');
+  const m = active && (active.getAttribute('onclick') || '').match(/iptvLoadPreset\('([^']+)'\)/);
+  if (m) iptvLoadPreset(m[1]);
+}
+
+function iptvSetDefault() {
+  const active = document.querySelector('.iptv-preset.active');
+  const m = active && (active.getAttribute('onclick') || '').match(/iptvLoadPreset\('([^']+)'\)/);
+  const presetKey = m ? m[1] : 'all-india';
+  try {
+    localStorage.setItem('viltv_iptv_default', JSON.stringify({
+      preset: presetKey,
+      country: _iptvUserCountry,
+    }));
+    const btn = document.querySelector('button[onclick="iptvSetDefault()"]');
+    if (btn) {
+      const orig = btn.textContent;
+      btn.textContent = '✓ Saved';
+      setTimeout(() => { btn.textContent = orig; }, 1500);
+    }
+  } catch(_) {}
+}
+
+// ── Favorites — channels the user starred. Stored as set of station IDs. ──
+function _iptvFavoritesSet() {
+  try { return new Set(JSON.parse(localStorage.getItem('viltv_iptv_favorites') || '[]')); }
+  catch(_) { return new Set(); }
+}
+function _iptvSaveFavorites(set) {
+  try { localStorage.setItem('viltv_iptv_favorites', JSON.stringify([...set])); } catch(_) {}
+}
+function iptvToggleFav() {
+  if (!_iptvCurrentChannel) return;
+  const favs = _iptvFavoritesSet();
+  if (favs.has(_iptvCurrentChannel.id)) favs.delete(_iptvCurrentChannel.id);
+  else favs.add(_iptvCurrentChannel.id);
+  _iptvSaveFavorites(favs);
+  const btn = document.getElementById('iptv-fav-btn');
+  if (btn) btn.textContent = favs.has(_iptvCurrentChannel.id) ? '★' : '☆';
+}
+
 function iptvLoadPreset(key) {
   if (!_iptvAllChannels) { iptvInit(); return; }
   const filter = _IPTV_PRESETS[key] || {};
   // Mark active button
-  document.querySelectorAll('.iptv-preset').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.iptv-preset').forEach(b => {
+    b.classList.remove('active');
     if (b.getAttribute('onclick')?.includes("'" + key + "'")) b.classList.add('active');
   });
 
-  let results = _iptvAllChannels.filter(c => {
-    if (filter.country  && c.country  !== filter.country)  return false;
-    if (filter.language && !c.languages.includes(filter.language)) return false;
-    if (filter.category && !c.categories.includes(filter.category)) return false;
-    if (filter.name     && !filter.name.test(c.name)) return false;
-    return true;
-  });
+  let results;
+  if (filter.favorites) {
+    const favs = _iptvFavoritesSet();
+    results = _iptvAllChannels.filter(c => favs.has(c.id));
+  } else {
+    results = _iptvAllChannels.filter(c => {
+      // User country override applies UNLESS the preset locks a specific country
+      if (!filter.country && _iptvUserCountry && c.country !== _iptvUserCountry) return false;
+      if (filter.country  && c.country  !== filter.country)  return false;
+      if (filter.language && !c.languages.includes(filter.language)) return false;
+      if (filter.category && !c.categories.includes(filter.category)) return false;
+      if (filter.name     && !filter.name.test(c.name)) return false;
+      return true;
+    });
+  }
   // Sort: primary by category (news first), secondary by name
   results.sort((a, b) => {
     const aN = a.categories.includes('news') ? 0 : 1;
     const bN = b.categories.includes('news') ? 0 : 1;
     return aN - bN || a.name.localeCompare(b.name);
   });
-  results = results.slice(0, 200);
+  results = results.slice(0, 250);
   _iptvLastResults = results;
   _iptvRender(results);
+}
+
+// Restore user's saved default preset on first init
+function iptvLoadUserDefault() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('viltv_iptv_default') || 'null');
+    if (saved && saved.preset) {
+      if (saved.country) {
+        _iptvUserCountry = saved.country;
+        const sel = document.getElementById('iptv-country');
+        if (sel) sel.value = saved.country;
+      }
+      iptvLoadPreset(saved.preset);
+      return true;
+    }
+  } catch(_) {}
+  return false;
 }
 
 function _iptvRender(results) {
@@ -6500,17 +6803,22 @@ function _iptvRender(results) {
     list.innerHTML = '<div class="radio-no-data">No channels match this filter.</div>';
     return;
   }
+  const favs = _iptvFavoritesSet();
   list.innerHTML = results.map(c => {
     const lang = (c.languages || []).slice(0, 2).join(', ').toUpperCase();
     const tags = [c.country, lang].filter(Boolean).join(' · ');
     const initial = (c.name || '?')[0].toUpperCase();
+    const isFav = favs.has(c.id);
+    const isActive = _iptvCurrentChannel && _iptvCurrentChannel.id === c.id;
     return `
-      <div class="radio-station-item" onclick='iptvPlay(${JSON.stringify(c.url)}, ${JSON.stringify(c.id)}, ${JSON.stringify(c.name)})'>
+      <div class="radio-station-item${isActive ? ' active' : ''}" data-iptv-id="${_esc(c.id)}"
+           onclick='iptvPlay(${JSON.stringify(c.url)}, ${JSON.stringify(c.id)}, ${JSON.stringify(c.name)})'>
         <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;flex-shrink:0">${_esc(initial)}</span>
         <div class="radio-station-meta">
           <span class="radio-station-name" title="${_esc(c.name)}">${_esc(c.name)}</span>
           ${tags ? '<span class="radio-station-tag">' + _esc(tags) + '</span>' : ''}
         </div>
+        <span style="font-size:13px;flex-shrink:0;color:${isFav ? '#fbbf24' : '#506480'}" title="${isFav ? 'Favorited' : ''}">${isFav ? '★' : ''}</span>
       </div>`;
   }).join('');
 }
@@ -6529,18 +6837,45 @@ function iptvOnSearch(value) {
   }, 200);
 }
 
+// Track currently-playing channel for next/prev/favorite
+let _iptvCurrentChannel = null;
+let _iptvCurrentIndex = -1;
+
 function iptvPlay(url, id, name) {
-  const video   = document.getElementById('iptv-player');
-  const wrap    = document.getElementById('iptv-player-wrap');
-  const nowEl   = document.getElementById('iptv-now');
+  const video = document.getElementById('iptv-player');
+  const wrap  = document.getElementById('iptv-player-wrap');
+  const nowEl = document.getElementById('iptv-now');
+  const favBtn = document.getElementById('iptv-fav-btn');
   if (!video) return;
 
   if (_iptvHls) { try { _iptvHls.destroy(); } catch(_){} _iptvHls = null; }
   if (wrap) wrap.style.display = 'block';
   if (nowEl) nowEl.textContent = name || 'Live TV';
 
-  // Highlight active item
+  // Track current channel (for prev/next/fav)
+  _iptvCurrentChannel = { id, name, url };
+  _iptvCurrentIndex = _iptvLastResults.findIndex(c => c.id === id);
+
+  // Update favorite-button icon
+  if (favBtn) {
+    const favs = _iptvFavoritesSet();
+    favBtn.textContent = favs.has(id) ? '★' : '☆';
+  }
+
+  // Restore saved volume
+  try {
+    const saved = parseFloat(localStorage.getItem('viltv_iptv_volume') || '0.8');
+    if (!isNaN(saved)) {
+      video.volume = Math.min(1, Math.max(0, saved));
+      const slider = document.getElementById('iptv-vol');
+      if (slider) slider.value = Math.round(video.volume * 100);
+    }
+  } catch(_) {}
+
+  // Highlight active item in list
   document.querySelectorAll('#iptv-list .radio-station-item').forEach(el => el.classList.remove('active'));
+  const li = document.querySelector('#iptv-list .radio-station-item[data-iptv-id="' + CSS.escape(id) + '"]');
+  if (li) li.classList.add('active');
 
   const httpsUrl = url.replace(/^http:\/\//i, 'https://');
   const isHls = /\.m3u8/i.test(httpsUrl);
@@ -6568,7 +6903,7 @@ function iptvPlay(url, id, name) {
 
 function iptvOnError(name) {
   const nowEl = document.getElementById('iptv-now');
-  if (nowEl) nowEl.textContent = '⚠️ ' + (name || 'Channel') + ' offline — try another';
+  if (nowEl) nowEl.textContent = '⚠️ ' + (name || 'Channel') + ' offline — try Next';
 }
 
 function iptvStop() {
@@ -6577,6 +6912,53 @@ function iptvStop() {
   const wrap  = document.getElementById('iptv-player-wrap');
   if (video) { try { video.pause(); video.removeAttribute('src'); video.load(); } catch(_){} }
   if (wrap) wrap.style.display = 'none';
+  _iptvCurrentChannel = null;
+  _iptvCurrentIndex = -1;
+}
+
+// ── Transport controls ──────────────────────────────────────────────────
+function iptvNext() {
+  if (!_iptvLastResults.length) return;
+  let i = _iptvCurrentIndex + 1;
+  if (i >= _iptvLastResults.length) i = 0;
+  const c = _iptvLastResults[i];
+  if (c) iptvPlay(c.url, c.id, c.name);
+}
+function iptvPrev() {
+  if (!_iptvLastResults.length) return;
+  let i = _iptvCurrentIndex - 1;
+  if (i < 0) i = _iptvLastResults.length - 1;
+  const c = _iptvLastResults[i];
+  if (c) iptvPlay(c.url, c.id, c.name);
+}
+function iptvSetVolume(val) {
+  const v = Math.min(100, Math.max(0, Number(val) || 0)) / 100;
+  const video = document.getElementById('iptv-player');
+  if (video) video.volume = v;
+  try { localStorage.setItem('viltv_iptv_volume', String(v)); } catch(_) {}
+  // Reflect mute state via icon
+  const btn = document.getElementById('iptv-mute-btn');
+  if (btn) btn.textContent = v === 0 ? '🔇' : (v < 0.4 ? '🔉' : '🔊');
+}
+function iptvToggleMute() {
+  const video = document.getElementById('iptv-player');
+  if (!video) return;
+  video.muted = !video.muted;
+  const btn = document.getElementById('iptv-mute-btn');
+  if (btn) btn.textContent = video.muted ? '🔇' : '🔊';
+}
+async function iptvTogglePip() {
+  const video = document.getElementById('iptv-player');
+  if (!video) return;
+  try {
+    if (document.pictureInPictureElement) {
+      await document.exitPictureInPicture();
+    } else if (video.requestPictureInPicture) {
+      await video.requestPictureInPicture();
+    } else {
+      console.warn('[IPTV] Picture-in-Picture not supported on this browser');
+    }
+  } catch (e) { console.warn('[IPTV] PiP failed:', e); }
 }
 
 // Backwards-compat shim — old code paths still call radioLoadCategory()
