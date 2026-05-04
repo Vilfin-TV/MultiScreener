@@ -1847,7 +1847,7 @@ footer{
         </div>
         <div class="dd-sep"></div>
         <div class="dd-item" onclick="openNewsSettings();closeAllMenus()">📰 News Feed Settings…</div>
-        <div class="dd-item" onclick="openLiveTVSettings();closeAllMenus()">📺 Live TV Settings…</div>
+        <div class="dd-item" onclick="openLiveTVSettings();closeAllMenus()">▶️ YouTube Live Settings…</div>
         <div class="dd-sep"></div>
         <div class="dd-item danger" onclick="closeApp()">✕ Exit</div>
       </div>
@@ -2918,7 +2918,7 @@ footer{
       <div class="footer-col-title">Platform Features</div>
       <ul class="footer-links">
         <li><a href="#" onclick="switchMain(0);return false;">🤖 AI Screener</a></li>
-        <li><a href="#" onclick="rbSwitchPanel('video');return false;">📺 Live Market News</a></li>
+        <li><a href="#" onclick="rbSwitchPanel('video');return false;">▶️ YouTube Live</a></li>
         <li><a href="#" onclick="switchMain(0);return false;">📈 Global Tickers</a></li>
         <li><a href="#" onclick="switchMain(2);return false;">📊 Financial Reports</a></li>
         <li><a href="blog_intelligence_hub.html" target="_blank" rel="noopener">📰 Blog Intelligence Hub</a></li>
@@ -3036,7 +3036,8 @@ footer{
     </div>
     <div class="rb-tabs">
       <button class="rb-tab active" id="rbtab-ai"    onclick="rbSwitchPanel('ai')">🤖 AI Chat</button>
-      <button class="rb-tab"        id="rbtab-video" onclick="rbSwitchPanel('video')">📺 Live TV</button>
+      <button class="rb-tab"        id="rbtab-video" onclick="rbSwitchPanel('video')">▶️ YouTube Live</button>
+      <button class="rb-tab"        id="rbtab-iptv"  onclick="rbSwitchPanel('iptv')">📡 Live TV</button>
       <button class="rb-tab"        id="rbtab-radio" onclick="rbSwitchPanel('radio')">📻 Radio</button>
     </div>
   </div>
@@ -3256,7 +3257,55 @@ footer{
     </div>
   </div>
 
-  <!-- ── PANEL 3: Global Radio (powered by radio-browser.info) ── -->
+  <!-- ── PANEL 3: Live TV (IPTV via HLS.js) ── -->
+  <div id="rb-panel-iptv" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+
+    <!-- Search + region presets -->
+    <div style="padding:8px 10px 6px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
+      <input type="search" id="iptv-search"
+             placeholder="🔍 Search channels…"
+             style="width:100%;padding:8px 12px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:13px;font-family:'DM Sans',sans-serif;outline:none"
+             oninput="iptvOnSearch(this.value)"/>
+    </div>
+
+    <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:4px;flex-wrap:wrap">
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('all-india')">🇮🇳 All India</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('hindi')">🪕 Hindi</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('malayalam')">🌿 Malayalam</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('tamil')">🎵 Tamil</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('telugu')">🎤 Telugu</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('kannada')">🎶 Kannada</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('marathi')">🟠 Marathi</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('punjabi')">🟡 Punjabi</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('bengali')">🟢 Bengali</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('odia')">🌅 Odia</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('assamese')">🌄 Assamese</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('news')">📰 News</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('japan')">🇯🇵 Japan</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('china')">🇨🇳 China</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('world')">🌍 World</button>
+    </div>
+
+    <!-- Video player -->
+    <div id="iptv-player-wrap" style="width:100%;background:#000;flex-shrink:0;display:none">
+      <div style="width:100%;padding-top:56.25%;position:relative;overflow:hidden">
+        <video id="iptv-player" controls playsinline
+               style="position:absolute;top:0;left:0;width:100%;height:100%;background:#000"></video>
+      </div>
+      <div style="padding:6px 10px;display:flex;align-items:center;gap:8px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px">
+        <span id="iptv-now" style="flex:1;color:#60a5fa;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</span>
+        <button onclick="iptvStop()" title="Stop"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:600;cursor:pointer">⏹ Stop</button>
+      </div>
+    </div>
+
+    <!-- Channel list -->
+    <div class="radio-station-list" id="iptv-list">
+      <div class="radio-no-data">Tap a region above to load free-to-air TV channels…</div>
+    </div>
+  </div><!-- /rb-panel-iptv -->
+
+  <!-- ── PANEL 4: Global Radio (powered by radio-browser.info) ── -->
   <div id="rb-panel-radio" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
 
     <!-- Search box -->
@@ -4580,8 +4629,8 @@ function openLiveTVSettings() {
   m.innerHTML = `
     <div style="background:var(--card2);border:1px solid var(--border2);border-radius:14px;padding:32px 36px;max-width:420px;width:90%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.5)">
       <div style="font-size:36px;margin-bottom:14px">📺</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--gold2);margin-bottom:10px">LIVE TV SETTINGS</div>
-      <div style="font-size:13px;color:var(--text2);line-height:1.75;margin-bottom:24px">Live TV channel customisation — choose your preferred channels and regions — is coming in the next update.</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--gold2);margin-bottom:10px">YOUTUBE LIVE SETTINGS</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.75;margin-bottom:24px">YouTube Live channel customisation — choose your preferred channels and regions — is coming in the next update.</div>
       <button onclick="this.closest('div[style]').remove()" style="background:var(--burn2);color:#fff;border:none;border-radius:8px;padding:10px 28px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.3px">Close</button>
     </div>`;
   document.body.appendChild(m);
@@ -5926,35 +5975,43 @@ function rbAiClear() {
   rbAiAppendMessage('Chat cleared. Ask me anything about markets!', 'bot');
 }
 
-// ── Right-bar panel switcher (AI ↔ Live TV) ──────────────────────
+// ── Right-bar panel switcher (AI / YT Live / IPTV / Radio) ──────────
 function rbSwitchPanel(panel) {
   const ai    = document.getElementById('rb-panel-ai');
   const video = document.getElementById('rb-panel-video');
+  const iptv  = document.getElementById('rb-panel-iptv');
   const radio = document.getElementById('rb-panel-radio');
   const tabAi  = document.getElementById('rbtab-ai');
   const tabVid = document.getElementById('rbtab-video');
+  const tabIpt = document.getElementById('rbtab-iptv');
   const tabRad = document.getElementById('rbtab-radio');
   const title  = document.getElementById('rb-panel-title');
   const clear  = document.getElementById('rb-clear-btn');
   const label  = document.getElementById('rb-ai-model-label');
 
   // Hide all panels, deactivate all tabs
-  [ai, video, radio].forEach(p => { if (p) p.style.display = 'none'; });
-  [tabAi, tabVid, tabRad].forEach(t => { if (t) t.classList.remove('active'); });
+  [ai, video, iptv, radio].forEach(p => { if (p) p.style.display = 'none'; });
+  [tabAi, tabVid, tabIpt, tabRad].forEach(t => { if (t) t.classList.remove('active'); });
 
   if (panel === 'video') {
     if (video) video.style.display = 'flex';
     if (tabVid) tabVid.classList.add('active');
-    if (title) title.innerHTML = '<span style="font-size:16px">📺</span><span>LIVE TV</span>';
+    if (title) title.innerHTML = '<span style="font-size:16px">▶️</span><span>YOUTUBE LIVE</span>';
     if (clear) clear.style.display = 'none';
     if (label) label.textContent = '';
+  } else if (panel === 'iptv') {
+    if (iptv) iptv.style.display = 'flex';
+    if (tabIpt) tabIpt.classList.add('active');
+    if (title) title.innerHTML = '<span style="font-size:16px">📡</span><span>LIVE TV</span>';
+    if (clear) clear.style.display = 'none';
+    if (label) label.textContent = '';
+    if (!window._iptvInitDone) { iptvInit(); window._iptvInitDone = true; }
   } else if (panel === 'radio') {
     if (radio) radio.style.display = 'flex';
     if (tabRad) tabRad.classList.add('active');
     if (title) title.innerHTML = '<span style="font-size:16px">📻</span><span>GLOBAL RADIO</span>';
     if (clear) clear.style.display = 'none';
     if (label) label.textContent = '';
-    // Lazy-init on first open
     if (!window._radioInitDone) { radioInit(); window._radioInitDone = true; }
   } else {
     if (ai) ai.style.display = 'flex';
@@ -6334,6 +6391,192 @@ function radioOnSearchInput(value) {
     _radioLastResults = stations;
     _radioRenderStations(stations);
   }, 350);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// LIVE TV (IPTV) — free-to-air HLS streams via iptv-org curated lists
+// All streams are HTTPS m3u8, CORS-permissive, verified by iptv-org community.
+// Loaded lazily on first open of the Live TV tab.
+// ═══════════════════════════════════════════════════════════════════
+const IPTV_API = 'https://iptv-org.github.io/api';
+let _iptvHls = null;
+let _iptvAllChannels = null;   // cached merged channel + stream list
+let _iptvLastResults = [];
+
+async function iptvInit() {
+  // Fetch catalog once on first panel open. Cache in memory only (data is updated daily by iptv-org).
+  if (_iptvAllChannels) { iptvLoadPreset('all-india'); return; }
+  const list = document.getElementById('iptv-list');
+  if (list) list.innerHTML = '<div class="radio-no-data">⏳ Loading channel directory…</div>';
+  try {
+    const [streamsRes, channelsRes] = await Promise.all([
+      fetch(IPTV_API + '/streams.json',  { cache: 'force-cache' }),
+      fetch(IPTV_API + '/channels.json', { cache: 'force-cache' }),
+    ]);
+    if (!streamsRes.ok || !channelsRes.ok) throw new Error('directory fetch failed');
+    const streams  = await streamsRes.json();
+    const channels = await channelsRes.json();
+    // Index channels by id
+    const chanById = Object.create(null);
+    for (const c of channels) chanById[c.id] = c;
+    // Merge: keep only HTTPS streams with a known channel id
+    _iptvAllChannels = streams
+      .filter(s => s.url && /^https:/.test(s.url) && s.channel && chanById[s.channel])
+      .map(s => {
+        const c = chanById[s.channel];
+        return {
+          id:       s.channel,
+          name:     c.name || s.channel,
+          url:      s.url,
+          country:  c.country || '',
+          language: (c.languages && c.languages[0]) || '',
+          languages: c.languages || [],
+          categories: c.categories || [],
+          logo:     c.logo || '',
+          isNsfw:   c.is_nsfw || false,
+        };
+      })
+      .filter(s => !s.isNsfw);
+    console.log(`[IPTV] Loaded ${_iptvAllChannels.length} HTTPS streams`);
+    iptvLoadPreset('all-india');
+  } catch (e) {
+    console.warn('[IPTV] catalog fetch failed:', e);
+    if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Could not reach iptv-org directory. Please retry.</div>';
+  }
+}
+
+// IPTV preset filters. iptv-org's language field is sparse for India channels,
+// so we fall back to channel-name regex matching for the well-known networks
+// in each Indian language. Language filter wins over country filter.
+const _IPTV_PRESETS = {
+  'all-india': { country: 'IN' },
+  'hindi':     { country: 'IN', name: /\b(aaj\s*tak|zee\s*hind|abp\s*news|india\s*tv|ndtv\s*india|republic\s*bharat|news18\s*india|tv9\s*bharatvarsh|good\s*news|times\s*now\s*navbharat|hindi\b|bharat\s*samachar|nation\s*news|janta\s*tv|sansad)\b/i },
+  'malayalam': { country: 'IN', name: /\b(asianet|manorama|mathrubhumi|mazhavil|surya|kairali|amrita|reporter|media\s*one|jeevan|24\s*news|goodness|jai\s*hind\s*malayalam|kappa|kaumudi|safari|news18\s*kerala|janam|swasthya\s*tv)\b/i },
+  'tamil':     { country: 'IN', name: /\b(sun\s*tv|vijay\s*tv|star\s*vijay|polimer|kalaignar|raj\s*tv|captain|puthiya\s*thalaimurai|thanthi|news\s*7\s*tamil|j\s*movies|peppers\s*tv|news18\s*tamil|sirippoli|jaya\s*tv|tamil)\b/i },
+  'telugu':    { country: 'IN', name: /\b(etv\s|tv5|tv9\s*telugu|sakshi|abn\s*andhra|10tv|t\s*news|ntv\s*telugu|raj\s*news|hmtv|mahaa|v6|i\s*news|maa\s*tv|gemini|telugu)\b/i },
+  'kannada':   { country: 'IN', name: /\b(suvarna|public\s*tv|tv9\s*kannada|asianet\s*suvarna|power\s*tv|news18\s*kannada|raj\s*musix\s*kannada|udaya|udaya\s*news|big\s*bangaru|prajaa|kannada)\b/i },
+  'marathi':   { country: 'IN', name: /\b(abp\s*majha|saam\s*marathi|tv9\s*marathi|zee\s*marathi|star\s*pravah|news18\s*lokmat|ibn\s*lokmat|jai\s*maharashtra|sahyadri|colors\s*marathi|marathi)\b/i },
+  'punjabi':   { country: 'IN', name: /\b(ptc\s*news|ptc\s*punjabi|abp\s*sanjha|zee\s*punjabi|news18\s*punjab|day\s*&\s*night|chardikla|9x\s*tashan|punjab|punjabi)\b/i },
+  'bengali':   { country: 'IN', name: /\b(abp\s*ananda|zee\s*bangla|star\s*jalsha|news18\s*bangla|kolkata\s*tv|24\s*ghanta|akash\s*aath|news\s*time\s*bangla|tara\s*muzik|bengali|bangla)\b/i },
+  'odia':      { country: 'IN', name: /\b(otv\b|kalinga\s*tv|news18\s*odia|kanak\s*news|tarang|sidharth\s*tv|prarthana|odisha|odia)\b/i },
+  'assamese':  { country: 'IN', name: /\b(dy365|news18\s*assam|pratidin\s*time|prag\s*news|protidin|gnn|hayagrib|rongali|assamese|assam)\b/i },
+  'news':      { category: 'news' },
+  'japan':     { country: 'JP' },
+  'china':     { country: 'CN' },
+  'world':     { name: /\b(bbc\s*world|cnn|al\s*jazeera|france\s*24|dw\b|euronews|sky\s*news|cna\b|nhk\s*world|cgtn|tvn|tv5\s*monde|africa\s*news|africanews)\b/i },
+};
+
+function iptvLoadPreset(key) {
+  if (!_iptvAllChannels) { iptvInit(); return; }
+  const filter = _IPTV_PRESETS[key] || {};
+  // Mark active button
+  document.querySelectorAll('.iptv-preset').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.iptv-preset').forEach(b => {
+    if (b.getAttribute('onclick')?.includes("'" + key + "'")) b.classList.add('active');
+  });
+
+  let results = _iptvAllChannels.filter(c => {
+    if (filter.country  && c.country  !== filter.country)  return false;
+    if (filter.language && !c.languages.includes(filter.language)) return false;
+    if (filter.category && !c.categories.includes(filter.category)) return false;
+    if (filter.name     && !filter.name.test(c.name)) return false;
+    return true;
+  });
+  // Sort: primary by category (news first), secondary by name
+  results.sort((a, b) => {
+    const aN = a.categories.includes('news') ? 0 : 1;
+    const bN = b.categories.includes('news') ? 0 : 1;
+    return aN - bN || a.name.localeCompare(b.name);
+  });
+  results = results.slice(0, 200);
+  _iptvLastResults = results;
+  _iptvRender(results);
+}
+
+function _iptvRender(results) {
+  const list = document.getElementById('iptv-list');
+  if (!list) return;
+  if (!results.length) {
+    list.innerHTML = '<div class="radio-no-data">No channels match this filter.</div>';
+    return;
+  }
+  list.innerHTML = results.map(c => {
+    const lang = (c.languages || []).slice(0, 2).join(', ').toUpperCase();
+    const tags = [c.country, lang].filter(Boolean).join(' · ');
+    const initial = (c.name || '?')[0].toUpperCase();
+    return `
+      <div class="radio-station-item" onclick='iptvPlay(${JSON.stringify(c.url)}, ${JSON.stringify(c.id)}, ${JSON.stringify(c.name)})'>
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;flex-shrink:0">${_esc(initial)}</span>
+        <div class="radio-station-meta">
+          <span class="radio-station-name" title="${_esc(c.name)}">${_esc(c.name)}</span>
+          ${tags ? '<span class="radio-station-tag">' + _esc(tags) + '</span>' : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+let _iptvSearchTimer = null;
+function iptvOnSearch(value) {
+  clearTimeout(_iptvSearchTimer);
+  const q = (value || '').trim().toLowerCase();
+  if (!q) { _iptvRender(_iptvLastResults); return; }
+  _iptvSearchTimer = setTimeout(() => {
+    if (!_iptvAllChannels) return;
+    const filtered = _iptvAllChannels
+      .filter(c => c.name.toLowerCase().includes(q))
+      .slice(0, 100);
+    _iptvRender(filtered);
+  }, 200);
+}
+
+function iptvPlay(url, id, name) {
+  const video   = document.getElementById('iptv-player');
+  const wrap    = document.getElementById('iptv-player-wrap');
+  const nowEl   = document.getElementById('iptv-now');
+  if (!video) return;
+
+  if (_iptvHls) { try { _iptvHls.destroy(); } catch(_){} _iptvHls = null; }
+  if (wrap) wrap.style.display = 'block';
+  if (nowEl) nowEl.textContent = name || 'Live TV';
+
+  // Highlight active item
+  document.querySelectorAll('#iptv-list .radio-station-item').forEach(el => el.classList.remove('active'));
+
+  const httpsUrl = url.replace(/^http:\/\//i, 'https://');
+  const isHls = /\.m3u8/i.test(httpsUrl);
+  console.log(`[IPTV] play ${name} → ${httpsUrl} (HLS=${isHls})`);
+
+  if (isHls && typeof Hls !== 'undefined' && Hls.isSupported()) {
+    _iptvHls = new Hls({ maxBufferLength: 20, lowLatencyMode: true, enableWorker: true });
+    _iptvHls.loadSource(httpsUrl);
+    _iptvHls.attachMedia(video);
+    _iptvHls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(e => console.warn('[IPTV] play rejected:', e)));
+    _iptvHls.on(Hls.Events.ERROR, (ev, data) => {
+      if (data.fatal) {
+        console.warn('[IPTV] HLS fatal:', data.type, data.details);
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) _iptvHls.startLoad();
+        else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) _iptvHls.recoverMediaError();
+        else { iptvOnError(name); }
+      }
+    });
+  } else if (isHls && video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = httpsUrl; video.play().catch(() => iptvOnError(name));
+  } else {
+    video.src = httpsUrl; video.play().catch(() => iptvOnError(name));
+  }
+}
+
+function iptvOnError(name) {
+  const nowEl = document.getElementById('iptv-now');
+  if (nowEl) nowEl.textContent = '⚠️ ' + (name || 'Channel') + ' offline — try another';
+}
+
+function iptvStop() {
+  if (_iptvHls) { try { _iptvHls.destroy(); } catch(_){} _iptvHls = null; }
+  const video = document.getElementById('iptv-player');
+  const wrap  = document.getElementById('iptv-player-wrap');
+  if (video) { try { video.pause(); video.removeAttribute('src'); video.load(); } catch(_){} }
+  if (wrap) wrap.style.display = 'none';
 }
 
 // Backwards-compat shim — old code paths still call radioLoadCategory()
@@ -6716,7 +6959,7 @@ function ytTogglePIP() {
 
   const sel = document.getElementById('yt-channel-select');
   const videoId   = sel?.value || _ytCurrentId || '25B1JcOMx3I';
-  const chanLabel = (sel?.options[sel.selectedIndex]?.text || 'Live TV').replace(/^[^\s]+ /,'');
+  const chanLabel = (sel?.options[sel.selectedIndex]?.text || 'YouTube Live').replace(/^[^\s]+ /,'');
 
   // Position popup in bottom-right of primary screen
   const pw = 640, ph = 400;
@@ -11762,9 +12005,7 @@ function clearResult() {
 
 // ── Gamma AI Report — AI-generated visual presentation ───────────
 async function generateGammaReport() {
-  const workerUrl = (window._cfWorkerUrl || localStorage.getItem(CF_KEY) || '').replace(/\/+$/, '');
-
-  // Gather available data (prefer structured JSON, then paste, then raw query)
+  // Gather data sources (prefer structured JSON, then paste, then raw query)
   const pasteVal  = document.getElementById('paste-area')?.value?.trim() || '';
   const ljsonData = _ljsonRaw || '';
   const baseQuery = generatedQuery || '';
@@ -11776,165 +12017,20 @@ async function generateGammaReport() {
   const ticker    = answers.assetName || answers.market || document.getElementById('ticker-input')?.value?.trim() || 'Asset';
   const assetType = answers.assetType || 'Investment';
 
-  let dataSection = '';
-  let tabNames = [];
-
-  // ── Parse JSON tabs for dynamic slide generation ────────────────
+  // Build a compact data digest for the AI prompt
+  let dataDigest = '';
   if (ljsonData) {
     try {
       const p = JSON.parse(ljsonData);
-      dataSection = 'STRUCTURED DATA (JSON):\n' + JSON.stringify(p, null, 2).substring(0, 9000);
-    } catch { dataSection = 'RAW DATA:\n' + ljsonData.substring(0, 9000); }
-  } else if (pasteVal && !pasteVal.startsWith('<!')) {
-    dataSection = 'REPORT DATA (structured tab format):\n' + pasteVal.substring(0, 9000);
-    // Extract tab names from ## TAB N: Title format — loop dynamically
-    const tabMatches = pasteVal.match(/^## TAB \d+[:\-\s]+(.+)/gm) || [];
-    tabNames = tabMatches.map(m => m.replace(/^## TAB \d+[:\-\s]+/, '').trim());
+      dataDigest = JSON.stringify(p, null, 2).substring(0, 12000);
+    } catch { dataDigest = ljsonData.substring(0, 12000); }
+  } else if (pasteVal) {
+    dataDigest = pasteVal.substring(0, 12000);
   } else {
-    dataSection = 'RESEARCH QUERY:\n' + baseQuery.substring(0, 6000);
+    dataDigest = baseQuery.substring(0, 6000);
   }
 
-  // Build dynamic slide structure based on actual report tabs found
-  const isFiveTabAsset = ['Bond','Commodity','Currency'].includes(assetType);
-  const fallbackSlides5 = `• Slide 2 — OVERVIEW & FUNDAMENTALS: Asset profile, key metrics (yield/coupon/contract details), historical returns, valuation score
-• Slide 3 — LIVE MARKET DATA & TECHNICALS: Current price/rate/spot, 52W range, RSI, MACD, support/resistance, MA signals verdict
-• Slide 4 — MACRO & NEWS: Top 5 news headlines with sentiment, macro tailwinds/headwinds, supply-demand, social buzz, trending peers
-• Slide 5 — FORECASTS & RISK: Analyst targets, bull/base/bear scenarios, risk scores, market sentiment gauge, checklist
-• Slide 6 — FINAL VERDICT & TAX: AI recommendation badge, composite score breakdown, tax rates summary, price targets, allocation guide, referral links`;
-  const fallbackSlides10 = `• Slide 2 — OVERVIEW & MACRO: Company profile, sector, country, market position, historical returns, macro tailwinds/headwinds
-• Slide 3 — LIVE MARKET & TECHNICALS: Current price, market cap, 52W range, RSI, MACD, support/resistance, MA signals
-• Slide 4 — FINANCIALS & VALUATION: Revenue, PAT, EPS, PE/PB/DCF, valuation signal, score
-• Slide 5 — OWNERSHIP & PEERS: FII/DII/Promoter %, top 5 peers comparison table with ratings
-• Slide 6 — NEWS & SOCIAL BUZZ: Top 5 news headlines with sentiment, social media buzz scores
-• Slide 7 — ANALYSTS & FORECASTS: Broker ratings table, bull/base/bear targets, 12M upside
-• Slide 8 — RISK ANALYSIS: Risk score, market sentiment gauge, key risks, checklist summary
-• Slide 9 — TAX COMPLIANCE: STCG/LTCG rates, NRE account treatment, key tax tips
-• Slide 10 — FINAL VERDICT: AI recommendation badge, composite score breakdown, price targets, allocation guide`;
-  const dynamicSlides = tabNames.length > 0
-    ? tabNames.map((name, i) =>
-        `• Slide ${i + 2} — ${name.toUpperCase()}: Extract ALL key data points from this section into a concise, visually rich slide. Use KPI grids, tables, or bullet points as appropriate.`
-      ).join('\n')
-    : (isFiveTabAsset ? fallbackSlides5 : fallbackSlides10);
-
-  const revealScriptTag  = '<scr' + 'ipt src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"><\/scr' + 'ipt>';
-  const chartjsScriptTag = '<scr' + 'ipt src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"><\/scr' + 'ipt>';
-  const revealInitTag    = '<scr' + 'ipt>Reveal.initialize({hash:true,transition:"slide",backgroundTransition:"fade",controls:true,progress:true,center:false,width:1280,height:780,margin:0.04});<\/scr' + 'ipt>';
-
-  const prompt = `You are a SENIOR EQUITY-RESEARCH DESIGNER at Goldman Sachs. Build an INSTITUTIONAL-GRADE Reveal.js + Chart.js presentation for "${ticker}" (${assetType}). This must look like a real Bloomberg/sell-side tear sheet — not a slideshow.
-
-═══════════════════════════════════════════════════════════════
-TECHNICAL FOUNDATION — copy these tags VERBATIM into the HEAD
-═══════════════════════════════════════════════════════════════
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/black.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-${revealScriptTag}
-${chartjsScriptTag}
-
-Body shell: <div class="reveal"><div class="slides"><section>...</section></div></div>
-Bottom of body: ${revealInitTag}
-
-═══════════════════════════════════════════════════════════════
-DESIGN SYSTEM — institutional dark navy financial terminal
-═══════════════════════════════════════════════════════════════
-:root tokens you MUST use:
-  --bg:#030814; --panel:#0a1830; --panel2:#0e1f3b; --border:#1e3a5c;
-  --text:#e2eeff; --text2:#8ea8c8; --text3:#506480;
-  --accent:#3b82f6; --accent2:#60a5fa; --accent3:#93c5fd;
-  --green:#10b981; --red:#ef4444; --amber:#f59e0b;
-  --gold:#fbbf24; --teal:#14b8a6; --purple:#a855f7;
-
-GLOBAL CSS (include in <style>):
-• .reveal { background:var(--bg); font-family:'Inter',sans-serif; color:var(--text); }
-• .reveal section { text-align:left; padding:32px 56px; height:100%; box-sizing:border-box; }
-• .reveal h1,.reveal h2 { font-family:'Inter'; font-weight:900; letter-spacing:-0.5px; margin:0; }
-• .num { font-family:'JetBrains Mono',monospace; font-feature-settings:'tnum'; }
-• .card { background:linear-gradient(135deg,var(--panel),var(--panel2)); border:1px solid var(--border); border-radius:14px; padding:18px 22px; box-shadow:0 4px 24px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.04); }
-• .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
-• .kpi { background:linear-gradient(135deg,var(--panel),var(--panel2)); border:1px solid var(--border); border-radius:10px; padding:14px 16px; }
-• .kpi-lbl { font-size:10px; font-weight:700; letter-spacing:1.2px; color:var(--text3); text-transform:uppercase; margin-bottom:6px; }
-• .kpi-val { font-family:'JetBrains Mono'; font-size:24px; font-weight:700; color:var(--accent2); line-height:1.1; }
-• .kpi-sub { font-size:11px; color:var(--text3); margin-top:4px; }
-• .pos { color:var(--green) !important; } .neg { color:var(--red) !important; } .neu { color:var(--gold) !important; }
-• .badge { display:inline-block; padding:8px 24px; border-radius:999px; font-weight:900; font-size:18px; letter-spacing:1.5px; }
-• .badge-buy { background:rgba(16,185,129,.15); color:var(--green); border:1.5px solid var(--green); }
-• .badge-hold { background:rgba(245,158,11,.15); color:var(--amber); border:1.5px solid var(--amber); }
-• .badge-sell { background:rgba(239,68,68,.15); color:var(--red); border:1.5px solid var(--red); }
-• table { width:100%; border-collapse:collapse; font-size:13px; }
-• th { background:var(--panel2); padding:10px 14px; text-align:left; font-weight:700; color:var(--accent2); font-size:11px; letter-spacing:.8px; text-transform:uppercase; border-bottom:1px solid var(--accent); }
-• td { padding:10px 14px; border-bottom:1px solid var(--border); }
-• tr:nth-child(even) td { background:rgba(255,255,255,.02); }
-• .slide-header { display:flex; align-items:center; gap:14px; margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--border); }
-• .slide-num-pill { font-family:'JetBrains Mono'; font-size:11px; font-weight:700; color:var(--accent2); background:rgba(59,130,246,.12); padding:3px 10px; border-radius:6px; border:1px solid rgba(59,130,246,.3); }
-• .slide-title { font-size:30px; font-weight:900; color:var(--text); letter-spacing:-0.5px; flex:1; }
-• .footer-bar { position:absolute; bottom:14px; left:56px; right:56px; display:flex; justify-content:space-between; font-size:10px; color:var(--text3); font-family:'JetBrains Mono'; letter-spacing:.5px; text-transform:uppercase; }
-• .chart-wrap { position:relative; height:280px; background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px; }
-
-═══════════════════════════════════════════════════════════════
-SLIDE BLUEPRINT — generate ALL of these in order
-═══════════════════════════════════════════════════════════════
-SLIDE 1 — COVER
-• Centered: company logo emoji + asset name (60px font-weight 900)
-• Subtitle: "INSTITUTIONAL EQUITY RESEARCH — VILFINTV"
-• Verdict badge (read 'Final Verdict Badge' or 'aiRec' from data → use .badge-buy/-hold/-sell)
-• Pill row: type | market/country | date
-• Background: subtle radial gradient from var(--accent) at 30% opacity centered top
-
-${dynamicSlides}
-
-LAST SLIDE — FINAL VERDICT & CALL TO ACTION
-• Big verdict badge centered (use Final Badge from data)
-• 3-column KPI grid: 6M Target | 12M Target | 3Y Target — show price + upside %
-• Best Way to Invest (SIP/Lumpsum/Buy on Dip) as a card
-• Allocation recommendation as a horizontal bar (Conservative/Moderate/Aggressive)
-• Referral links table at bottom
-
-═══════════════════════════════════════════════════════════════
-CHART REQUIREMENTS — use Chart.js, not just text
-═══════════════════════════════════════════════════════════════
-On EVERY slide that has numeric data, embed at LEAST ONE Chart.js canvas:
-
-a) PRICE/RETURNS slide → <canvas id="cReturns" width="800" height="280"></canvas>
-   Bar chart of: 1M, 3M, 6M, 1Y, 3Y CAGR, 5Y CAGR — green bars for positive, red for negative
-b) TECHNICALS slide → Line chart with current price + 50DMA + 200DMA + 52W high/low bands
-   OR a gauge for RSI (0-30 red, 30-70 amber, 70-100 red — current value highlighted)
-c) FINANCIALS slide → Grouped bar chart: Revenue / EBITDA / PAT (last 2 years)
-d) OWNERSHIP slide → Doughnut chart: Promoter % / FII % / DII % / Public %
-e) PEERS slide → Horizontal bar chart comparing P/E across 4-5 peers
-f) RISK slide → Radar chart: Volatility / Beta / Liquidity / Quality / Momentum (0-10 scale)
-
-Chart.js config snippet you can adapt (call inside <script>):
-  Chart.defaults.color='#8ea8c8';
-  Chart.defaults.borderColor='#1e3a5c';
-  Chart.defaults.font.family="'Inter',sans-serif";
-  new Chart(document.getElementById('cReturns'), { type:'bar', data:{...}, options:{plugins:{legend:{display:false}}, scales:{...}} });
-
-CRITICAL: every <canvas> must have a corresponding <script> block at the END of <body> (before reveal init) that constructs the Chart.
-
-═══════════════════════════════════════════════════════════════
-LAYOUT RULES (each non-cover slide)
-═══════════════════════════════════════════════════════════════
-1. .slide-header at top with: <span class="slide-num-pill">02 / N</span> + <h2 class="slide-title">Section Title</h2>
-2. Below header: 2-column grid (left = chart in .chart-wrap, right = .kpi-grid with 4-6 KPI cards)
-3. Below the 2-column grid: .card containing a table or supporting commentary
-4. .footer-bar at bottom: left = "${ticker} · ${assetType} · 📊 VilfinTV MultiScreener", right = "PAGE N / TOTAL"
-5. Color-code EVERY number: pos values .pos, neg values .neg, neutral/highlight .neu
-
-DATA INTEGRITY:
-• Use ONLY values from the data block. If a field shows "No Data Available", display "—" with class="num" color:var(--text3).
-• NEVER invent peer names, target prices, returns, or holdings.
-• Strip placeholder strings like "__AI__xxx__AI__" entirely (these are bugs from the source pipeline).
-• If returns array is missing, skip the chart (don't fabricate).
-
-═══════════════════════════════════════════════════════════════
-DATA TO PRESENT (extract every value from this block)
-═══════════════════════════════════════════════════════════════
-${dataSection}
-
-OUTPUT: Return ONLY the complete HTML starting with <!DOCTYPE html>. No markdown fences. No commentary outside the HTML.`;
-
-  // Switch to Result tab, show loading
+  // Switch to Result tab + show progress
   switchMain(2);
   const gmBtn = document.getElementById('gamma-btn');
   const statusPanel = document.getElementById('gamma-status-panel');
@@ -11942,59 +12038,565 @@ OUTPUT: Return ONLY the complete HTML starting with <!DOCTYPE html>. No markdown
   const container = document.getElementById('rendered-output');
   if (gmBtn) { gmBtn.disabled = true; gmBtn.textContent = '⏳ Generating…'; }
   if (statusPanel) statusPanel.style.display = 'block';
-  container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:200px;color:#8b5cf6;font-size:13px;gap:10px"><span style="animation:gammaSpin 1.5s linear infinite;display:inline-block;font-size:24px">✨</span> VilfinTV AI is designing your visual report…</div>`;
+  container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:200px;color:#8b5cf6;font-size:13px;gap:10px"><span style="animation:gammaSpin 1.5s linear infinite;display:inline-block;font-size:24px">✨</span> VilfinTV AI is extracting tear-sheet data…</div>';
 
+  // ── PROMPT: ask for JSON ONLY (no HTML). Frontend renders the slides. ──
+  const prompt = `You are a senior equity-research analyst at Goldman Sachs.
+Extract the key data from the report below into a STRICT JSON object that the
+VilfinTV frontend will render into a Bloomberg-grade tear-sheet presentation.
+
+ASSET: ${ticker}
+TYPE:  ${assetType}
+
+REPORT DATA:
+${dataDigest}
+
+═══════════════════════════════════════════════════════════════
+RETURN ONLY THIS JSON SHAPE (start with { end with } — no markdown fences):
+═══════════════════════════════════════════════════════════════
+{
+  "asset": "Full company / asset name",
+  "ticker": "Symbol (e.g. RELIANCE.NS)",
+  "type": "Stock / ETF / MF / etc.",
+  "country": "India / US / Japan / ...",
+  "currency": "₹ / $ / ¥ / £ / €",
+  "verdict": "BUY | HOLD | SELL | ACCUMULATE | REDUCE | STRONG BUY",
+  "verdictReason": "One sentence (max 18 words) on why this verdict.",
+  "asOf": "DD MMM YYYY",
+  "tagline": "One-sentence elevator pitch on the company.",
+
+  "kpis": {
+    "Current Price":    {"value": "₹...", "trend": "pos|neg|neu"},
+    "Market Cap":       {"value": "₹... Cr", "trend": "neu"},
+    "P/E (TTM)":        {"value": "..", "trend": "neu"},
+    "P/B":              {"value": "..", "trend": "neu"},
+    "ROE":              {"value": "..%", "trend": "pos"},
+    "Dividend Yield":   {"value": "..%", "trend": "neu"},
+    "52W High":         {"value": "₹...", "trend": "neu"},
+    "52W Low":          {"value": "₹...", "trend": "neu"}
+  },
+
+  "returns": [
+    {"label": "1M",  "value": 0.0},
+    {"label": "3M",  "value": 0.0},
+    {"label": "6M",  "value": 0.0},
+    {"label": "1Y",  "value": 0.0},
+    {"label": "3Y",  "value": 0.0},
+    {"label": "5Y",  "value": 0.0}
+  ],
+
+  "ownership": {
+    "Promoter":      0.0,
+    "Institutional": 0.0,
+    "FII":           0.0,
+    "DII":           0.0,
+    "Public":        0.0
+  },
+
+  "peers": [
+    {"name": "Peer 1", "pe": 0.0, "pb": 0.0, "roe": 0.0, "mcap": "₹...", "verdict": "BUY|HOLD|SELL"},
+    {"name": "Peer 2", "pe": 0.0, "pb": 0.0, "roe": 0.0, "mcap": "₹...", "verdict": "BUY|HOLD|SELL"},
+    {"name": "Peer 3", "pe": 0.0, "pb": 0.0, "roe": 0.0, "mcap": "₹...", "verdict": "BUY|HOLD|SELL"}
+  ],
+
+  "financials": [
+    {"year": "FY24", "revenue": 0, "ebitda": 0, "pat": 0},
+    {"year": "FY25", "revenue": 0, "ebitda": 0, "pat": 0}
+  ],
+
+  "tailwinds": ["Tailwind 1 — one line.", "Tailwind 2 — one line.", "Tailwind 3 — one line."],
+  "headwinds": ["Headwind 1 — one line.", "Headwind 2 — one line.", "Headwind 3 — one line."],
+
+  "risks": [
+    {"name": "Risk 1", "level": "Low|Medium|High", "note": "One line."},
+    {"name": "Risk 2", "level": "Low|Medium|High", "note": "One line."},
+    {"name": "Risk 3", "level": "Low|Medium|High", "note": "One line."}
+  ],
+
+  "news": [
+    {"date": "DD MMM", "headline": "...", "source": "...", "sentiment": "pos|neg|neu"},
+    {"date": "DD MMM", "headline": "...", "source": "...", "sentiment": "pos|neg|neu"},
+    {"date": "DD MMM", "headline": "...", "source": "...", "sentiment": "pos|neg|neu"}
+  ],
+
+  "targets": {"6M": "₹...", "12M": "₹...", "3Y": "₹..."},
+  "allocation": {"Conservative": 0.0, "Moderate": 0.0, "Aggressive": 0.0},
+  "tax": {"STCG": "...", "LTCG": "...", "FEMA": "...", "Notes": "..."},
+  "thesis": "2-sentence investment thesis.",
+  "bestAction": "SIP | Lumpsum | Buy on Dip — one-sentence reason."
+}
+
+RULES:
+• Use ONLY values present in the report data. Missing → "N/A" (string) or 0 (number).
+• NEVER invent peer names, returns, or holdings.
+• Numeric fields (returns, ownership, financials, allocation) must be numbers — not strings.
+• Currency-prefixed string fields (KPIs, prices, targets, mcap) include the currency symbol.
+• Skip the markdown fence — start with { end with } only.`;
+
+  let aiJson = null;
   try {
-    let html = '';
-    if (statusText) statusText.textContent = '🔌 Starting AI generation…';
-
-    // Use load-balanced AI (Coworker → Gemini → OpenAI → Custom → Free — works without any API key)
+    if (statusText) statusText.textContent = '🔌 Asking AI for tear-sheet data…';
+    let raw = '';
     await new Promise((resolve, reject) => {
       _aiLoadBalancedQuery(
         prompt,
         'gemini-2.0-flash',
-        (chunk) => {
-          html += chunk;
-          if (statusText) statusText.textContent = `✍️ Designing… ${html.length.toLocaleString()} chars`;
-        },
-        (full) => { if (full) html = full; resolve(); },
-        (err)  => reject(new Error(err || 'AI generation failed'))
+        (chunk) => { raw += chunk;
+          if (statusText) statusText.textContent = `✍️ Receiving data… ${raw.length.toLocaleString()} chars`; },
+        (full)  => { if (full) raw = full; resolve(); },
+        (err)   => reject(new Error(err || 'AI generation failed'))
       );
     });
-
-    // Strip markdown fences if present
-    html = html.replace(/^```html\s*/im, '').replace(/^```\s*/im, '').replace(/```\s*$/im, '').trim();
-
-    if (html && (html.includes('<!DOCTYPE') || html.includes('<html'))) {
-      if (statusText) statusText.textContent = '📥 Downloading report…';
-      // Auto-download as HTML file — does NOT change the existing Result view
-      const fname = `VilfinTV_Gamma_${(answers.assetName || ticker).replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.html`;
-      const blob = new Blob([html], { type: 'text/html' });
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href = url; a.download = fname; a.style.display = 'none';
-      document.body.appendChild(a); a.click();
-      setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 2000);
-      // Show success toast in container (non-intrusive, doesn't replace report)
-      container.innerHTML = `<div style="padding:28px;text-align:center;background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(168,85,247,.05));border-radius:12px;border:1px solid rgba(124,58,237,.2)">
-        <div style="font-size:36px;margin-bottom:10px">✅</div>
-        <div style="font-weight:700;color:#c4b5fd;margin-bottom:6px;font-size:14px">Gamma Style Report Downloaded!</div>
-        <div style="color:#64748b;font-size:12px">File: <code style="color:#a78bfa">${fname}</code></div>
-        <div style="color:#64748b;font-size:11px;margin-top:6px">Check your Downloads folder. The file is a self-contained HTML — open in any browser.</div>
-      </div>`;
-    } else {
-      throw new Error('AI did not return a valid HTML document. Try again.');
-    }
-  } catch(e) {
+    // Strip markdown fences and isolate the {...} body
+    raw = raw.trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```\s*$/i,'').trim();
+    const i = raw.indexOf('{'), j = raw.lastIndexOf('}');
+    if (i < 0 || j < 0) throw new Error('AI did not return JSON.');
+    aiJson = JSON.parse(raw.slice(i, j + 1));
+  } catch (e) {
     container.innerHTML = `<div style="padding:30px;text-align:center">
       <div style="font-size:32px;margin-bottom:12px">❌</div>
       <div style="color:#f87171;font-weight:700;margin-bottom:8px">Gamma report failed</div>
       <div style="color:#94a3b8;font-size:12px">${e.message}</div>
     </div>`;
-  } finally {
     if (gmBtn) { gmBtn.disabled = false; gmBtn.textContent = '✨ Gamma Style'; }
     if (statusPanel) statusPanel.style.display = 'none';
+    return;
   }
+
+  if (statusText) statusText.textContent = '🎨 Rendering Bloomberg tear-sheet…';
+
+  // ── BUILD THE HTML CLIENT-SIDE — 100% deterministic, no AI markup ──
+  const html = _gammaBuildHtml(aiJson, ticker, assetType);
+
+  // Auto-download
+  if (statusText) statusText.textContent = '📥 Saving file…';
+  const fname = `VilfinTV_Gamma_${(answers.assetName || ticker).replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.html`;
+  const blob = new Blob([html], { type: 'text/html' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = fname; a.style.display = 'none';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 2000);
+
+  container.innerHTML = `<div style="padding:28px;text-align:center;background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(168,85,247,.05));border-radius:12px;border:1px solid rgba(124,58,237,.2)">
+    <div style="font-size:36px;margin-bottom:10px">✅</div>
+    <div style="font-weight:700;color:#c4b5fd;margin-bottom:6px;font-size:14px">Gamma Style Report Downloaded!</div>
+    <div style="color:#64748b;font-size:12px">File: <code style="color:#a78bfa">${fname}</code></div>
+    <div style="color:#64748b;font-size:11px;margin-top:10px;line-height:1.6">
+      Charts are rendered via Chart.js · Open in any browser to view the tear sheet.<br>
+      <button onclick="window.open(URL.createObjectURL(new Blob([atob('${btoa(unescape(encodeURIComponent(html))).slice(0,0)}'+''], {type:'text/html'})))" style="display:none">preview</button>
+    </div>
+  </div>`;
+
+  if (gmBtn) { gmBtn.disabled = false; gmBtn.textContent = '✨ Gamma Style'; }
+  if (statusPanel) statusPanel.style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// GAMMA HTML TEMPLATE — Bloomberg-grade tear sheet via Reveal.js + Chart.js
+// Pure deterministic rendering — no AI markup interpretation.
+// ═══════════════════════════════════════════════════════════════════
+function _gammaBuildHtml(d, ticker, assetType) {
+  const _esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const _num = (v) => (typeof v === 'number' && isFinite(v)) ? v : 0;
+  const _trendCls = (t) => ({'pos':'pos','neg':'neg','neu':'neu'}[t] || '');
+  const _verdictBadge = (v) => {
+    const x = String(v||'').toUpperCase();
+    if (x.includes('STRONG BUY')) return 'badge-strong-buy';
+    if (x.includes('BUY') || x.includes('ACCUMULATE')) return 'badge-buy';
+    if (x.includes('SELL') || x.includes('REDUCE')) return 'badge-sell';
+    return 'badge-hold';
+  };
+
+  const asset    = d.asset    || ticker;
+  const sym      = d.ticker   || ticker;
+  const country  = d.country  || '';
+  const cur      = d.currency || '';
+  const asOf     = d.asOf     || new Date().toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'});
+  const verdict  = d.verdict  || 'HOLD';
+  const verdictReason = d.verdictReason || '';
+  const tagline  = d.tagline  || '';
+  const kpis     = d.kpis     || {};
+  const returns  = Array.isArray(d.returns) ? d.returns : [];
+  const ownership= d.ownership || {};
+  const peers    = Array.isArray(d.peers) ? d.peers : [];
+  const fins     = Array.isArray(d.financials) ? d.financials : [];
+  const tailwinds= Array.isArray(d.tailwinds) ? d.tailwinds : [];
+  const headwinds= Array.isArray(d.headwinds) ? d.headwinds : [];
+  const risks    = Array.isArray(d.risks) ? d.risks : [];
+  const news     = Array.isArray(d.news) ? d.news : [];
+  const targets  = d.targets  || {};
+  const alloc    = d.allocation || {};
+  const tax      = d.tax || {};
+  const thesis   = d.thesis || '';
+  const bestAction = d.bestAction || '';
+
+  const kpiCards = Object.entries(kpis).map(([k,v]) => {
+    const val = (typeof v === 'object') ? v.value : v;
+    const trend = (typeof v === 'object') ? v.trend : 'neu';
+    return `<div class="kpi"><div class="kpi-lbl">${_esc(k)}</div><div class="kpi-val ${_trendCls(trend)}">${_esc(val ?? 'N/A')}</div></div>`;
+  }).join('');
+
+  const peersTable = peers.length ? `
+    <table>
+      <thead><tr><th>Peer</th><th>P/E</th><th>P/B</th><th>ROE</th><th>Mkt Cap</th><th>Verdict</th></tr></thead>
+      <tbody>${peers.map(p => `
+        <tr>
+          <td><strong>${_esc(p.name)}</strong></td>
+          <td class="num">${_esc(_num(p.pe).toFixed(1))}</td>
+          <td class="num">${_esc(_num(p.pb).toFixed(1))}</td>
+          <td class="num">${_esc(_num(p.roe).toFixed(1))}%</td>
+          <td class="num">${_esc(p.mcap || '—')}</td>
+          <td><span class="badge ${_verdictBadge(p.verdict)}" style="font-size:10px;padding:2px 10px">${_esc(p.verdict || '—')}</span></td>
+        </tr>`).join('')}</tbody>
+    </table>` : '<p class="muted">Peer data not available in source report.</p>';
+
+  const newsList = news.length ? news.slice(0,8).map(n => `
+    <div class="news-row">
+      <span class="news-date">${_esc(n.date || '')}</span>
+      <span class="news-head">${_esc(n.headline || '')}</span>
+      <span class="news-src">${_esc(n.source || '')}</span>
+      <span class="dot ${_trendCls(n.sentiment)}"></span>
+    </div>`).join('') : '<p class="muted">No news items in source report.</p>';
+
+  const risksList = risks.length ? risks.map(r => `
+    <div class="risk-row">
+      <div class="risk-name">${_esc(r.name || 'Risk')}</div>
+      <div class="risk-lvl risk-${(r.level||'').toLowerCase()}">${_esc(r.level || 'N/A')}</div>
+      <div class="risk-note">${_esc(r.note || '')}</div>
+    </div>`).join('') : '<p class="muted">No risk factors in source report.</p>';
+
+  // Chart data JSON — embedded in script tag
+  const chartData = {
+    returns:   returns.map(r => ({ label: String(r.label||''), value: _num(r.value) })),
+    ownership: Object.entries(ownership).map(([k,v]) => ({ label: k, value: _num(v) })),
+    financials: fins.map(f => ({ year: String(f.year||''), revenue: _num(f.revenue), ebitda: _num(f.ebitda), pat: _num(f.pat) })),
+    peerPE:    peers.map(p => ({ name: String(p.name||''), pe: _num(p.pe) })),
+    allocation: Object.entries(alloc).map(([k,v]) => ({ label: k, value: _num(v) })),
+  };
+
+  const TEMPLATE = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${_esc(asset)} — Tear Sheet · VilfinTV</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#030814; --panel:#0a1830; --panel2:#0e1f3b; --border:#1e3a5c;
+  --text:#e2eeff; --text2:#8ea8c8; --text3:#506480;
+  --accent:#3b82f6; --accent2:#60a5fa; --accent3:#93c5fd;
+  --green:#10b981; --red:#ef4444; --amber:#f59e0b; --gold:#fbbf24;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:'Inter',sans-serif;color:var(--text)}
+.reveal{background:var(--bg)}
+.reveal section{text-align:left;padding:40px 60px;height:100%;box-sizing:border-box;display:flex;flex-direction:column}
+.reveal h1,.reveal h2{font-family:'Inter';font-weight:900;letter-spacing:-0.5px;margin:0;color:var(--text)}
+.num,.kpi-val{font-family:'JetBrains Mono',monospace;font-feature-settings:'tnum'}
+.muted{color:var(--text3);font-size:13px;font-style:italic}
+.pos{color:var(--green) !important}.neg{color:var(--red) !important}.neu{color:var(--gold) !important}
+
+.slide-header{display:flex;align-items:center;gap:14px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.slide-num-pill{font-family:'JetBrains Mono';font-size:11px;font-weight:700;color:var(--accent2);background:rgba(59,130,246,.12);padding:4px 12px;border-radius:6px;border:1px solid rgba(59,130,246,.3)}
+.slide-title{font-size:30px;font-weight:900;color:var(--text);letter-spacing:-0.5px;flex:1}
+
+.footer-bar{position:absolute;bottom:18px;left:60px;right:60px;display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:'JetBrains Mono';letter-spacing:.5px;text-transform:uppercase}
+
+.cover{justify-content:center;align-items:center;text-align:center;background:radial-gradient(circle at 50% 30%,rgba(59,130,246,.18),transparent 50%)}
+.cover .asset-name{font-size:64px;font-weight:900;letter-spacing:-1.5px;line-height:1;margin-bottom:14px}
+.cover .asset-sym{font-family:'JetBrains Mono';font-size:18px;color:var(--accent2);margin-bottom:8px;letter-spacing:1px}
+.cover .asset-tag{color:var(--text2);font-size:14px;max-width:680px;margin:8px auto 30px;line-height:1.6}
+.cover .pill-row{display:flex;gap:10px;justify-content:center;margin-bottom:30px;flex-wrap:wrap}
+.cover .pill{padding:7px 18px;background:rgba(59,130,246,.08);border:1px solid var(--border);border-radius:999px;font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.5px;text-transform:uppercase}
+.cover .as-of{color:var(--text3);font-size:12px;margin-top:14px;letter-spacing:1px;text-transform:uppercase}
+.cover .institutional{color:var(--text3);font-size:11px;margin-top:6px;letter-spacing:2px;text-transform:uppercase;font-weight:600}
+
+.badge{display:inline-block;padding:10px 30px;border-radius:999px;font-weight:900;font-size:22px;letter-spacing:1.5px;text-transform:uppercase}
+.badge-strong-buy{background:rgba(16,185,129,.18);color:var(--green);border:2px solid var(--green);box-shadow:0 0 24px rgba(16,185,129,.3)}
+.badge-buy{background:rgba(16,185,129,.14);color:var(--green);border:2px solid var(--green)}
+.badge-hold{background:rgba(245,158,11,.14);color:var(--amber);border:2px solid var(--amber)}
+.badge-sell{background:rgba(239,68,68,.14);color:var(--red);border:2px solid var(--red)}
+.verdict-reason{color:var(--text2);font-size:13px;margin-top:12px;font-style:italic}
+
+.two-col{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;flex:1;min-height:0}
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.kpi{background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.kpi-lbl{font-size:9.5px;font-weight:700;letter-spacing:1.2px;color:var(--text3);text-transform:uppercase;margin-bottom:6px}
+.kpi-val{font-size:20px;font-weight:700;color:var(--accent2);line-height:1.1}
+.chart-wrap{position:relative;height:100%;min-height:280px;background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:12px;padding:16px}
+.chart-wrap canvas{width:100%!important;height:100%!important}
+
+.card{background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-top:18px}
+.card h3{font-size:13px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{background:var(--panel2);padding:10px 14px;text-align:left;font-weight:700;color:var(--accent2);font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;border-bottom:1px solid var(--accent)}
+td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--text)}
+tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+
+.tw-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;flex:1}
+.tw-col{background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:12px;padding:18px}
+.tw-col h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
+.tw-col.tw-pos h3{color:var(--green)}.tw-col.tw-neg h3{color:var(--red)}
+.tw-col li{margin-bottom:10px;font-size:13px;color:var(--text2);line-height:1.6;list-style:none;padding-left:18px;position:relative}
+.tw-col.tw-pos li::before{content:'▲';position:absolute;left:0;color:var(--green);font-size:11px;top:3px}
+.tw-col.tw-neg li::before{content:'▼';position:absolute;left:0;color:var(--red);font-size:11px;top:3px}
+
+.news-row{display:grid;grid-template-columns:80px 1fr 120px 14px;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);align-items:center}
+.news-row:last-child{border-bottom:none}
+.news-date{font-family:'JetBrains Mono';font-size:11px;color:var(--text3)}
+.news-head{font-size:13px;color:var(--text);line-height:1.5}
+.news-src{font-size:10.5px;color:var(--accent2);text-align:right;text-transform:uppercase;letter-spacing:.5px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--text3)}
+.dot.pos{background:var(--green);box-shadow:0 0 8px rgba(16,185,129,.6)}
+.dot.neg{background:var(--red);box-shadow:0 0 8px rgba(239,68,68,.6)}
+.dot.neu{background:var(--gold);box-shadow:0 0 8px rgba(251,191,36,.6)}
+
+.risk-row{display:grid;grid-template-columns:160px 90px 1fr;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);align-items:center}
+.risk-row:last-child{border-bottom:none}
+.risk-name{font-weight:700;color:var(--text);font-size:13px}
+.risk-lvl{padding:4px 12px;border-radius:6px;font-size:10.5px;font-weight:700;text-transform:uppercase;text-align:center;letter-spacing:.5px}
+.risk-low{background:rgba(16,185,129,.14);color:var(--green);border:1px solid var(--green)}
+.risk-medium{background:rgba(245,158,11,.14);color:var(--amber);border:1px solid var(--amber)}
+.risk-high{background:rgba(239,68,68,.14);color:var(--red);border:1px solid var(--red)}
+.risk-note{color:var(--text2);font-size:12.5px;line-height:1.5}
+
+.target-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:24px}
+.target-card{background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}
+.target-card .horizon{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;font-weight:700;margin-bottom:8px}
+.target-card .price{font-family:'JetBrains Mono';font-size:28px;font-weight:700;color:var(--accent2)}
+
+.alloc-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+.alloc-cell{background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+.alloc-cell .lbl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-weight:700}
+.alloc-cell .val{font-family:'JetBrains Mono';font-size:24px;font-weight:700;color:var(--accent2);margin-top:6px}
+
+.thesis-block{background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:10px;padding:18px 22px;margin-top:20px;font-size:14px;color:var(--text);line-height:1.7;font-style:italic}
+.action-block{background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(59,130,246,.03));border:1px solid rgba(59,130,246,.4);border-radius:10px;padding:18px 22px;margin-top:14px;font-size:14px;color:var(--text);line-height:1.6}
+.action-block strong{color:var(--accent2);text-transform:uppercase;letter-spacing:.8px;font-size:11px;display:block;margin-bottom:6px}
+
+.tax-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:20px}
+.tax-cell{background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:10px;padding:14px 18px}
+.tax-cell .lbl{font-size:10.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-weight:700;margin-bottom:6px}
+.tax-cell .val{font-size:14px;color:var(--text);line-height:1.5}
+
+@media print{
+  body{background:#fff !important;color:#000 !important}
+  .reveal{background:#fff !important}
+  .reveal section{padding:24px 32px;page-break-after:always}
+  .pos,.neg,.neu{color:#000 !important}
+}
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+  <!-- Slide 1: Cover -->
+  <section class="cover">
+    <div class="asset-sym">${_esc(sym)}${country?' · '+_esc(country):''}</div>
+    <h1 class="asset-name">${_esc(asset)}</h1>
+    <div class="institutional">Institutional Equity Research</div>
+    <div class="asset-tag">${_esc(tagline)}</div>
+    <div class="pill-row">
+      <span class="pill">${_esc(d.type || assetType)}</span>
+      ${cur?'<span class="pill">'+_esc(cur)+'</span>':''}
+      ${asOf?'<span class="pill">'+_esc(asOf)+'</span>':''}
+    </div>
+    <div class="badge ${_verdictBadge(verdict)}">${_esc(verdict)}</div>
+    ${verdictReason?'<div class="verdict-reason">'+_esc(verdictReason)+'</div>':''}
+    <div class="footer-bar"><span>VilfinTV MultiScreener</span><span>${_esc(asOf)}</span></div>
+  </section>
+
+  <!-- Slide 2: KPI snapshot + Returns chart -->
+  <section>
+    <div class="slide-header">
+      <span class="slide-num-pill">02 / 07</span>
+      <h2 class="slide-title">Snapshot &amp; Returns</h2>
+    </div>
+    <div class="two-col">
+      <div class="chart-wrap"><canvas id="cReturns"></canvas></div>
+      <div class="kpi-grid">${kpiCards || '<p class="muted">No KPI data.</p>'}</div>
+    </div>
+    <div class="footer-bar"><span>${_esc(sym)} · ${_esc(d.type || assetType)} · VilfinTV</span><span>02 / 07</span></div>
+  </section>
+
+  <!-- Slide 3: Tailwinds vs Headwinds -->
+  <section>
+    <div class="slide-header">
+      <span class="slide-num-pill">03 / 07</span>
+      <h2 class="slide-title">Tailwinds &amp; Headwinds</h2>
+    </div>
+    <div class="tw-grid">
+      <div class="tw-col tw-pos">
+        <h3>Tailwinds</h3>
+        <ul>${(tailwinds.length?tailwinds:['Not provided in source.']).map(t=>'<li>'+_esc(t)+'</li>').join('')}</ul>
+      </div>
+      <div class="tw-col tw-neg">
+        <h3>Headwinds</h3>
+        <ul>${(headwinds.length?headwinds:['Not provided in source.']).map(t=>'<li>'+_esc(t)+'</li>').join('')}</ul>
+      </div>
+    </div>
+    <div class="footer-bar"><span>${_esc(sym)} · VilfinTV</span><span>03 / 07</span></div>
+  </section>
+
+  <!-- Slide 4: Financials chart + Ownership donut -->
+  <section>
+    <div class="slide-header">
+      <span class="slide-num-pill">04 / 07</span>
+      <h2 class="slide-title">Financials &amp; Ownership</h2>
+    </div>
+    <div class="two-col">
+      <div class="chart-wrap"><canvas id="cFinancials"></canvas></div>
+      <div class="chart-wrap"><canvas id="cOwnership"></canvas></div>
+    </div>
+    <div class="footer-bar"><span>${_esc(sym)} · VilfinTV</span><span>04 / 07</span></div>
+  </section>
+
+  <!-- Slide 5: Peer comparison -->
+  <section>
+    <div class="slide-header">
+      <span class="slide-num-pill">05 / 07</span>
+      <h2 class="slide-title">Peer Comparison</h2>
+    </div>
+    <div class="two-col">
+      <div class="chart-wrap"><canvas id="cPeerPE"></canvas></div>
+      <div class="card" style="margin-top:0">${peersTable}</div>
+    </div>
+    <div class="footer-bar"><span>${_esc(sym)} · VilfinTV</span><span>05 / 07</span></div>
+  </section>
+
+  <!-- Slide 6: News + Risk -->
+  <section>
+    <div class="slide-header">
+      <span class="slide-num-pill">06 / 07</span>
+      <h2 class="slide-title">News Pulse &amp; Risk Map</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:1.3fr .9fr;gap:18px;flex:1">
+      <div class="card" style="margin-top:0;overflow-y:auto">
+        <h3>Recent News</h3>${newsList}
+      </div>
+      <div class="card" style="margin-top:0;overflow-y:auto">
+        <h3>Risk Factors</h3>${risksList}
+      </div>
+    </div>
+    <div class="footer-bar"><span>${_esc(sym)} · VilfinTV</span><span>06 / 07</span></div>
+  </section>
+
+  <!-- Slide 7: Final verdict + targets + allocation + tax -->
+  <section>
+    <div class="slide-header">
+      <span class="slide-num-pill">07 / 07</span>
+      <h2 class="slide-title">Final Verdict &amp; Action Plan</h2>
+    </div>
+    <div style="text-align:center;margin-bottom:8px">
+      <div class="badge ${_verdictBadge(verdict)}">${_esc(verdict)}</div>
+    </div>
+    <div class="target-grid">
+      <div class="target-card"><div class="horizon">6-month target</div><div class="price">${_esc(targets['6M']||'—')}</div></div>
+      <div class="target-card"><div class="horizon">12-month target</div><div class="price">${_esc(targets['12M']||'—')}</div></div>
+      <div class="target-card"><div class="horizon">3-year target</div><div class="price">${_esc(targets['3Y']||'—')}</div></div>
+    </div>
+    <div class="alloc-bar">
+      <div class="alloc-cell"><div class="lbl">Conservative</div><div class="val">${_num(alloc.Conservative).toFixed(0)}%</div></div>
+      <div class="alloc-cell"><div class="lbl">Moderate</div><div class="val">${_num(alloc.Moderate).toFixed(0)}%</div></div>
+      <div class="alloc-cell"><div class="lbl">Aggressive</div><div class="val">${_num(alloc.Aggressive).toFixed(0)}%</div></div>
+    </div>
+    ${thesis?'<div class="thesis-block">'+_esc(thesis)+'</div>':''}
+    ${bestAction?'<div class="action-block"><strong>Best Action</strong>'+_esc(bestAction)+'</div>':''}
+    ${(tax.STCG||tax.LTCG||tax.Notes)?`<div class="tax-grid">
+      ${tax.STCG?'<div class="tax-cell"><div class="lbl">STCG</div><div class="val">'+_esc(tax.STCG)+'</div></div>':''}
+      ${tax.LTCG?'<div class="tax-cell"><div class="lbl">LTCG</div><div class="val">'+_esc(tax.LTCG)+'</div></div>':''}
+      ${tax.FEMA?'<div class="tax-cell"><div class="lbl">FEMA / NRI</div><div class="val">'+_esc(tax.FEMA)+'</div></div>':''}
+      ${tax.Notes?'<div class="tax-cell"><div class="lbl">Notes</div><div class="val">'+_esc(tax.Notes)+'</div></div>':''}
+    </div>`:''}
+    <div class="footer-bar"><span>${_esc(sym)} · VilfinTV · ${_esc(asOf)}</span><span>07 / 07</span></div>
+  </section>
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"><\/script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"><\/script>
+<script>
+(function(){
+  const D = ${JSON.stringify(chartData)};
+  if (typeof Chart === 'undefined') { setTimeout(arguments.callee, 200); return; }
+  Chart.defaults.color = '#8ea8c8';
+  Chart.defaults.borderColor = '#1e3a5c';
+  Chart.defaults.font.family = "'Inter',sans-serif";
+
+  // Returns waterfall
+  if (D.returns.length) {
+    new Chart(document.getElementById('cReturns'), {
+      type:'bar',
+      data:{
+        labels: D.returns.map(r=>r.label),
+        datasets:[{ data: D.returns.map(r=>r.value),
+          backgroundColor: D.returns.map(r=>r.value>=0?'rgba(16,185,129,.85)':'rgba(239,68,68,.85)'),
+          borderColor:    D.returns.map(r=>r.value>=0?'#10b981':'#ef4444'),
+          borderWidth:1, borderRadius:6 }]
+      },
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, title:{display:true,text:'Returns by horizon (%)',color:'#60a5fa',font:{weight:'700',size:12}}, tooltip:{callbacks:{label:(c)=>c.parsed.y.toFixed(2)+'%'}} },
+        scales:{ y:{ticks:{callback:(v)=>v+'%'},grid:{color:'rgba(30,58,92,.3)'}}, x:{grid:{display:false}} }
+      }
+    });
+  }
+  // Ownership doughnut
+  if (D.ownership.length) {
+    new Chart(document.getElementById('cOwnership'), {
+      type:'doughnut',
+      data:{ labels: D.ownership.map(o=>o.label),
+        datasets:[{ data: D.ownership.map(o=>o.value),
+          backgroundColor:['#3b82f6','#60a5fa','#93c5fd','#fbbf24','#10b981','#a855f7'], borderWidth:0 }]
+      },
+      options:{ responsive:true, maintainAspectRatio:false, cutout:'62%',
+        plugins:{ legend:{position:'right',labels:{boxWidth:10,font:{size:11}}}, title:{display:true,text:'Ownership pattern (%)',color:'#60a5fa',font:{weight:'700',size:12}} }
+      }
+    });
+  }
+  // Financials grouped bar
+  if (D.financials.length) {
+    new Chart(document.getElementById('cFinancials'), {
+      type:'bar',
+      data:{ labels: D.financials.map(f=>f.year),
+        datasets:[
+          { label:'Revenue', data: D.financials.map(f=>f.revenue), backgroundColor:'rgba(59,130,246,.85)', borderRadius:5 },
+          { label:'EBITDA',  data: D.financials.map(f=>f.ebitda),  backgroundColor:'rgba(96,165,250,.85)', borderRadius:5 },
+          { label:'PAT',     data: D.financials.map(f=>f.pat),     backgroundColor:'rgba(16,185,129,.85)', borderRadius:5 }
+        ]
+      },
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{position:'top',labels:{boxWidth:10,font:{size:11}}}, title:{display:true,text:'Financials trend',color:'#60a5fa',font:{weight:'700',size:12}} },
+        scales:{ y:{grid:{color:'rgba(30,58,92,.3)'}}, x:{grid:{display:false}} }
+      }
+    });
+  }
+  // Peer P/E horizontal bar
+  if (D.peerPE.length) {
+    new Chart(document.getElementById('cPeerPE'), {
+      type:'bar',
+      data:{ labels: D.peerPE.map(p=>p.name),
+        datasets:[{ data: D.peerPE.map(p=>p.pe),
+          backgroundColor:'rgba(59,130,246,.85)', borderColor:'#60a5fa', borderWidth:1, borderRadius:5 }]
+      },
+      options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, title:{display:true,text:'Peer P/E ratios',color:'#60a5fa',font:{weight:'700',size:12}} },
+        scales:{ x:{grid:{color:'rgba(30,58,92,.3)'}}, y:{grid:{display:false}} }
+      }
+    });
+  }
+
+  Reveal.initialize({hash:true,transition:'slide',controls:true,progress:true,center:false,width:1280,height:780,margin:0.04});
+})();
+<\/script>
+</body>
+</html>`;
+
+  return TEMPLATE;
 }
 
 // ── Mobile keyboard handler — keeps focused input visible above OS keyboard
@@ -12072,7 +12674,10 @@ OUTPUT: Return ONLY the complete HTML starting with <!DOCTYPE html>. No markdown
     🤖 AI Chat
   </button>
   <button class="mobile-rb-btn" id="mobile-tv-btn" onclick="openMobileRightBar('video')">
-    📺 Live TV
+    ▶️ YT Live
+  </button>
+  <button class="mobile-rb-btn" id="mobile-iptv-btn" onclick="openMobileRightBar('iptv')">
+    📡 Live TV
   </button>
 </div>
 

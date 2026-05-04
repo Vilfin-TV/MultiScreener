@@ -121,22 +121,37 @@ a{text-decoration:none;color:inherit}
   border:1px solid rgba(37,99,235,.2);font-size:11px;font-weight:700;color:#bfdbfe
 }
 
-.layout-grid{display:grid;grid-template-columns:280px minmax(0,1fr);gap:18px}
+.layout-grid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:18px}
 .sidebar{position:sticky;top:72px;height:fit-content}
 .sidebar-card{
   background:linear-gradient(180deg,rgba(10,24,48,.92),rgba(14,31,59,.92));
-  border:1px solid var(--border);border-radius:16px;padding:18px
+  border:1px solid var(--border);border-radius:16px;padding:18px;
+  max-height:calc(100vh - 100px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent
 }
+.sidebar-card::-webkit-scrollbar{width:5px}
+.sidebar-card::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 .sidebar-title{font-size:11px;font-weight:700;color:var(--burn3);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
-.tab-list{display:flex;flex-direction:column;gap:8px}
+.sidebar-group{font-size:9.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.4px;margin:14px 0 6px;padding-left:6px;border-left:2px solid var(--burn);opacity:.7}
+.sidebar-group:first-child{margin-top:0}
+.tab-list{display:flex;flex-direction:column;gap:4px}
 .tab-btn{
-  width:100%;text-align:left;padding:11px 12px;border-radius:10px;border:1px solid transparent;
-  background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;
-  transition:all .15s
+  width:100%;text-align:left;padding:9px 12px;border-radius:8px;border:1px solid transparent;
+  background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer;
+  transition:all .15s;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation
 }
 .tab-btn:hover{background:rgba(255,255,255,.04);color:#fff;border-color:rgba(255,255,255,.05)}
 .tab-btn.active{background:rgba(37,99,235,.14);color:#dbeafe;border-color:rgba(37,99,235,.28)}
-.tab-count{float:right;color:var(--text3);font-size:11px}
+.tab-count{color:var(--text3);font-size:11px;font-weight:700;background:rgba(0,0,0,.25);padding:2px 8px;border-radius:999px;min-width:24px;text-align:center}
+.tab-btn.active .tab-count{background:rgba(59,130,246,.25);color:#93c5fd}
+
+/* Mobile: horizontal scrollable tab strip instead of vertical sidebar */
+.mobile-tab-strip{display:none;position:sticky;top:44px;z-index:50;background:linear-gradient(180deg,var(--page-bg) 70%,transparent);padding:8px 0 12px;margin:0 -16px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.mobile-tab-strip::-webkit-scrollbar{display:none}
+.mobile-tab-strip-inner{display:flex;gap:6px;padding:0 16px;width:max-content}
+.mobile-tab-chip{flex-shrink:0;padding:7px 14px;border-radius:999px;background:rgba(14,31,59,.85);border:1px solid var(--border);color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.mobile-tab-chip:hover{color:#fff;border-color:var(--accent)}
+.mobile-tab-chip.active{background:rgba(37,99,235,.22);color:#dbeafe;border-color:#3b82f6;box-shadow:0 0 12px rgba(37,99,235,.3)}
 .sidebar-note{
   margin-top:16px;padding:12px 13px;border-radius:12px;background:rgba(245,158,11,.08);
   border:1px solid rgba(245,158,11,.18);font-size:12px;color:#fde68a;line-height:1.6
@@ -226,12 +241,45 @@ footer strong{display:block;color:#dbeafe;font-size:14px;margin-bottom:6px}
 @media(max-width:1080px){
   .hero-grid,.layout-grid{grid-template-columns:1fr}
   .sidebar{position:relative;top:auto}
+  .sidebar-card{max-height:none}
 }
-@media(max-width:720px){
+@media(max-width:760px){
   .top-page-title{display:none}
   .signal-grid{grid-template-columns:1fr}
-  .hero-title{font-size:34px}
+  .hero-title{font-size:30px}
   .topics-grid{grid-template-columns:1fr}
+  /* On mobile: use horizontal scrollable tab strip; hide vertical sidebar */
+  .sidebar{display:none}
+  .mobile-tab-strip{display:block}
+  .layout-grid{grid-template-columns:1fr;gap:0}
+  /* Full-width content + edge-to-edge cards for mobile */
+  .page-shell{padding:16px 16px 56px;max-width:100%}
+  .panel{padding:16px;border-radius:14px}
+  .briefing-card{padding:14px;border-radius:12px}
+  .briefings-grid{grid-template-columns:1fr;gap:10px}
+  .toolbar{flex-direction:column;align-items:flex-start;gap:8px}
+  .toolbar-stats{width:100%}
+  .stat-pill{padding:6px 10px;font-size:10.5px}
+  .header-badges{justify-content:flex-start}
+  .site-header{padding:32px 18px 26px}
+  .site-header h1{font-size:30px}
+  .header-chip{font-size:10.5px;padding:5px 9px}
+  .top-menu-brand .brand-name{font-size:13px;letter-spacing:1.5px}
+  .back-btn{padding:5px 10px;font-size:11px}
+  .search-box{padding:11px 14px}
+  .briefing-title{font-size:14px}
+  .briefing-copy{font-size:12px}
+  footer{margin-top:24px;padding:18px;font-size:11.5px;border-radius:12px}
+}
+@media(max-width:480px){
+  .site-header h1{font-size:26px;letter-spacing:1.5px}
+  .hero-title{font-size:26px}
+  .briefing-card{padding:12px}
+  .toolbar-title{font-size:20px}
+}
+/* Tap-friendly across the board */
+button,a,.tab-btn,.mobile-tab-chip,.briefing-link{
+  -webkit-tap-highlight-color:rgba(37,99,235,.2);touch-action:manipulation
 }
 </style>
 </head>
@@ -253,9 +301,9 @@ footer strong{display:block;color:#dbeafe;font-size:14px;margin-bottom:6px}
   <h1>Blog Intelligence Hub</h1>
   <div class="sub">Technology, markets, policy, taxation, funds, AI, crypto, semiconductors and space</div>
   <div class="header-badges">
-    <span class="header-chip">17 coverage tabs</span>
-    <span class="header-chip">Fast search and category tabs</span>
-    <span class="header-chip">Current briefings, search and source links</span>
+    <span class="header-chip" id="hdrTabCount">32 coverage tabs</span>
+    <span class="header-chip">Auto-refreshed daily from RSS</span>
+    <span class="header-chip">Markets · Tech · Health · Lifestyle</span>
   </div>
 </header>
 
@@ -307,13 +355,18 @@ footer strong{display:block;color:#dbeafe;font-size:14px;margin-bottom:6px}
     </div>
   </section>
 
+  <!-- Mobile horizontal tab chip strip (sticky under top bar) -->
+  <div class="mobile-tab-strip" id="mobileTabStrip">
+    <div class="mobile-tab-strip-inner" id="mobileTabStripInner"></div>
+  </div>
+
   <section class="layout-grid">
     <aside class="sidebar">
       <div class="sidebar-card">
-        <div class="sidebar-title">Blog Tabs</div>
+        <div class="sidebar-title">Coverage Categories</div>
         <div class="tab-list" id="tabList"></div>
         <div class="sidebar-note">
-          Use the tab menu to move across sections and search within the current update feed.
+          Auto-refreshed daily from public RSS feeds across newsrooms, exchanges, regulators and industry sites.
         </div>
       </div>
     </aside>
@@ -326,7 +379,7 @@ footer strong{display:block;color:#dbeafe;font-size:14px;margin-bottom:6px}
         </div>
         <div class="toolbar-stats">
           <span class="stat-pill" id="visibleCountPill">0 visible</span>
-          <span class="stat-pill">18 categories</span>
+          <span class="stat-pill" id="categoryCountPill">categories</span>
           <span class="stat-pill" id="briefingCountPill">0 briefings</span>
         </div>
       </div>
@@ -1208,24 +1261,45 @@ function mergeLiveFeedIntoBriefings(payload) {
 }
 
 const TAB_LABELS = {
+  // — Foundation —
   all:'All Updates',
-  technology:'Technology',
+  // — Markets & Money —
   finance:'Financial',
-  politics:'Political',
-  tax:'Tax',
-  mutual_funds:'Mutual Funds',
-  etf:'ETF',
   stocks:'Stocks',
-  brokers:'Brokers',
-  inventions:'Inventions',
-  offers:'Offers',
   ipo:'IPO',
   nfo:'NFO',
+  mutual_funds:'Mutual Funds',
+  etf:'ETF',
+  brokers:'Brokers',
+  tax:'Tax',
+  insurance:'Insurance',
+  payment:'Payment',
+  currency:'Currency',
   blockchain:'Blockchain',
   crypto:'Crypto',
-  semiconductor:'Semiconductor',
+  // — Technology —
+  technology:'Technology',
   ai:'AI',
-  space:'Space'
+  semiconductor:'Semiconductor',
+  data_center:'Data Center',
+  internet:'Internet',
+  mobile:'Mobile',
+  inventions:'Inventions',
+  space:'Space',
+  // — Health & Energy —
+  health:'Health',
+  medicine:'Medicine',
+  hospital:'Hospital',
+  energy:'Energy',
+  // — Lifestyle —
+  lifestyle:'Lifestyle',
+  food:'Food',
+  fashion:'Fashion',
+  entertainment:'Entertainment',
+  movie:'Movie',
+  // — Other —
+  politics:'Political',
+  offers:'Offers',
 };
 
 let activeTab = 'all';
@@ -1245,13 +1319,28 @@ function categoryCount(category) {
   return BRIEFINGS.filter(item => item.category === category).length;
 }
 
+// Tab grouping for the desktop sidebar — keeps related tabs together
+// for fast scanning. Mobile uses a flat horizontal chip strip ordered the
+// same way (so 'All' lands first, popular categories near the front).
+const TAB_GROUPS = [
+  { title: 'Markets & Money', keys: ['all','finance','stocks','ipo','nfo','mutual_funds','etf','brokers','tax','insurance','payment','currency','blockchain','crypto'] },
+  { title: 'Technology',      keys: ['technology','ai','semiconductor','data_center','internet','mobile','inventions','space'] },
+  { title: 'Health & Energy', keys: ['health','medicine','hospital','energy'] },
+  { title: 'Lifestyle',       keys: ['lifestyle','food','fashion','entertainment','movie'] },
+  { title: 'Other',           keys: ['politics','offers'] },
+];
+
 function buildTabs() {
-  tabList.innerHTML = Object.keys(TAB_LABELS).map(key => `
-    <button class="tab-btn ${key === activeTab ? 'active' : ''}" data-tab="${key}">
-      ${TAB_LABELS[key]}
-      <span class="tab-count">${categoryCount(key)}</span>
-    </button>
-  `).join('');
+  // Sidebar: grouped vertical list
+  tabList.innerHTML = TAB_GROUPS.map(g => {
+    const items = g.keys.filter(k => TAB_LABELS[k]).map(key => `
+      <button class="tab-btn ${key === activeTab ? 'active' : ''}" data-tab="${key}">
+        <span>${TAB_LABELS[key]}</span>
+        <span class="tab-count">${categoryCount(key)}</span>
+      </button>`).join('');
+    if (!items) return '';
+    return `<div class="sidebar-group">${g.title}</div>${items}`;
+  }).join('');
 
   tabList.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1260,6 +1349,25 @@ function buildTabs() {
       renderPage();
     });
   });
+
+  // Mobile: flat chip strip in the same order as the groups
+  const mobileStrip = document.getElementById('mobileTabStripInner');
+  if (mobileStrip) {
+    const orderedKeys = TAB_GROUPS.flatMap(g => g.keys).filter(k => TAB_LABELS[k]);
+    mobileStrip.innerHTML = orderedKeys.map(key => `
+      <button class="mobile-tab-chip ${key === activeTab ? 'active' : ''}" data-tab="${key}">
+        ${TAB_LABELS[key]} · ${categoryCount(key)}
+      </button>`).join('');
+    mobileStrip.querySelectorAll('.mobile-tab-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        activeTab = chip.dataset.tab;
+        buildTabs();
+        renderPage();
+        // Auto-scroll active chip into view
+        chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      });
+    });
+  }
 }
 
 function matchesSearch(item, term) {
@@ -1301,6 +1409,12 @@ function renderPage() {
   briefingCountPill.textContent = `${visibleBriefings.length} articles`;
   topicCountChip.textContent = `${BRIEFINGS.length} articles`;
   activeTabChip.textContent = activeTab === 'all' ? 'All sections' : TAB_LABELS[activeTab];
+  // Dynamic counts (track real category count incl. 'all')
+  const totalCats = Object.keys(TAB_LABELS).length - 1; // exclude 'all'
+  const catPill = document.getElementById('categoryCountPill');
+  if (catPill) catPill.textContent = totalCats + ' categories';
+  const hdrCount = document.getElementById('hdrTabCount');
+  if (hdrCount) hdrCount.textContent = totalCats + ' coverage tabs';
   topicsGrid.style.display = 'none';
   topicsGrid.innerHTML = '';
   emptyState.classList.toggle('show', visibleBriefings.length === 0);
