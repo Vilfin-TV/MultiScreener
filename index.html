@@ -1276,24 +1276,25 @@ footer{
 @media(max-width:900px){
   .right-bar{
     position:fixed!important;
-    bottom:0!important;left:0!important;right:0!important;top:auto!important;
+    top:0!important;bottom:0!important;left:0!important;right:0!important;
     width:100%!important;
-    height:75vh!important;          /* fallback for old Safari/Chrome */
-    height:75dvh!important;         /* dynamic viewport — keyboard-aware */
+    height:100vh!important;          /* fallback */
+    height:100dvh!important;         /* full viewport — true fullscreen */
     max-height:100dvh!important;
-    border-radius:20px 20px 0 0;
-    border-left:none!important;border-top:2px solid #1d4ed8;
+    border-radius:0!important;       /* edge-to-edge */
+    border:none!important;
     z-index:1500;
     transform:translateY(100%);
-    transition:transform .35s cubic-bezier(.32,.72,0,1), height .2s ease;
-    display:flex!important; /* override display:none!important */
+    transition:transform .35s cubic-bezier(.32,.72,0,1);
+    display:flex!important;
   }
   .right-bar.mobile-open{transform:translateY(0)!important}
-  /* When keyboard is open, expand drawer to FULL dynamic viewport so the
-     focused input sits above the keyboard rather than below it. */
+  /* When mobile drawer is open: lock body scroll + hide bottom FAB bar so
+     widget really feels fullscreen */
+  body.rb-mobile-active{overflow:hidden;position:fixed;width:100%}
+  body.rb-mobile-active .mobile-rb-bar{display:none!important}
   body.kb-open .right-bar.mobile-open{
     height:100dvh!important;
-    border-radius:0!important;
   }
   /* Dim overlay behind drawer */
   #mobile-rb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1499;backdrop-filter:blur(2px)}
@@ -3459,82 +3460,77 @@ footer{
 
   </div><!-- /rb-panel-radio -->
 
-  <!-- ── PANEL 5: Music (radio-browser.info music tags) ── -->
+  <!-- ── PANEL 5: Music (Spotify + YouTube Music free embeds) ── -->
   <div id="rb-panel-music" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
-    <div style="padding:8px 10px 6px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
-      <input type="search" id="music-search" placeholder="🔍 Search music stations…"
-             oninput="musicOnSearch(this.value)"
-             style="width:100%;padding:8px 12px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:13px;font-family:'DM Sans',sans-serif;outline:none"/>
-    </div>
-    <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:4px;flex-wrap:wrap;max-height:120px;overflow-y:auto">
-      <button class="radio-preset-btn music-preset active" onclick="musicLoadPreset('top-music')">🎶 Top</button>
+    <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:4px;flex-wrap:wrap;max-height:90px;overflow-y:auto">
+      <button class="radio-preset-btn music-preset active" onclick="musicLoadPreset('today-top')">🔥 Today's Top</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('bollywood')">🎬 Bollywood</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('hindi')">🪕 Hindi</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('punjabi')">🟡 Punjabi</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('malayalam')">🌿 Malayalam</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('tamil')">🎵 Tamil</button>
-      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('classical')">🎻 Classical</button>
-      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('jazz')">🎺 Jazz</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('telugu')">🎤 Telugu</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('lofi')">🌙 Lo-fi</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('chill')">🌿 Chill</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('workout')">💪 Workout</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('pop')">🎵 Pop</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('rock')">🎸 Rock</button>
-      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('electronic')">🎧 Electronic</button>
-      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('country')">🤠 Country</button>
-      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('reggae')">🎵 Reggae</button>
-      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('latin')">💃 Latin</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('classical')">🎻 Classical</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('jazz')">🎺 Jazz</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('kpop')">🎤 K-pop</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('jpop')">🎤 J-pop</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('devotional')">🕉 Devotional</button>
-      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('sufi')">🌹 Sufi</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('meditation')">🧘 Meditation</button>
+    </div>
+    <!-- Spotify/YouTube embed slot (lazy-loaded only when user clicks a playlist) -->
+    <div id="music-player-wrap" style="width:100%;background:#000;flex-shrink:0;display:none">
+      <iframe id="music-player-iframe" allow="autoplay; encrypted-media; picture-in-picture"
+              style="width:100%;height:152px;border:none;background:#000"></iframe>
+      <div style="padding:5px 10px;display:flex;align-items:center;gap:6px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px">
+        <span id="music-now" style="flex:1;color:#60a5fa;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</span>
+        <button onclick="musicStop()" style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏹ Close</button>
+      </div>
     </div>
     <div class="radio-station-list" id="music-list">
-      <div class="radio-no-data">Tap a category above to load music streams…</div>
-    </div>
-    <div class="radio-player-bar">
-      <div class="radio-now-row">
-        <div class="radio-status-dot" id="music-dot"></div>
-        <div class="radio-now-playing" id="music-now-playing">Select a station to play</div>
-      </div>
-      <div class="radio-controls">
-        <button class="radio-play-btn" id="music-play-btn" onclick="musicTogglePlay()" title="Play / Pause" disabled>▶</button>
-        <span class="radio-vol-label">VOL</span>
-        <input type="range" class="radio-vol-slider" id="music-vol" min="0" max="100" value="75"
-               oninput="musicSetVolume(this.value)" title="Volume"/>
-      </div>
-      <audio id="music-audio" preload="none"></audio>
+      <div class="radio-no-data">Loading curated playlists…</div>
     </div>
   </div><!-- /rb-panel-music -->
 
-  <!-- ── PANEL 6: Movies (iptv-org movie channels) ── -->
+  <!-- ── PANEL 6: Movies (Internet Archive free public-domain films) ── -->
   <div id="rb-panel-movies" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
     <div style="padding:8px 10px 6px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
-      <input type="search" id="movies-search" placeholder="🔍 Search movie channels…"
+      <input type="search" id="movies-search" placeholder="🔍 Search free public-domain movies…"
              oninput="moviesOnSearch(this.value)"
              style="width:100%;padding:8px 12px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:13px;font-family:'DM Sans',sans-serif;outline:none"/>
     </div>
     <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:4px;flex-wrap:wrap;max-height:100px;overflow-y:auto">
-      <button class="radio-preset-btn movies-preset active" onclick="moviesLoadPreset('top-movies')">🎬 All Movies</button>
-      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('hollywood')">🇺🇸 Hollywood</button>
-      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('bollywood')">🎬 Bollywood</button>
+      <button class="radio-preset-btn movies-preset active" onclick="moviesLoadPreset('classics')">🎭 Classics</button>
       <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('action')">💥 Action</button>
       <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('comedy')">😂 Comedy</button>
       <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('horror')">👻 Horror</button>
-      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('classic')">🎭 Classic</button>
-      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('asian')">🌏 Asian</button>
-      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('regional-india')">🇮🇳 Indian Regional</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('scifi')">🚀 Sci-Fi</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('animation')">🎨 Animation</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('drama')">🎭 Drama</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('western')">🤠 Western</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('documentary')">📽 Documentary</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('shorts')">⏱ Shorts</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('silent')">🎬 Silent Era</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('noir')">🕵 Film Noir</button>
     </div>
+    <!-- Internet Archive embed -->
     <div id="movies-player-wrap" style="width:100%;background:#000;flex-shrink:0;display:none">
       <div style="width:100%;padding-top:56.25%;position:relative;overflow:hidden">
-        <video id="movies-player" controls playsinline
-               style="position:absolute;top:0;left:0;width:100%;height:100%;background:#000"></video>
+        <iframe id="movies-player-iframe" allowfullscreen allow="encrypted-media; fullscreen; picture-in-picture"
+                style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#000"></iframe>
       </div>
       <div style="padding:6px 10px;display:flex;align-items:center;gap:6px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px">
         <span id="movies-now" style="flex:1;color:#60a5fa;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">—</span>
-        <button onclick="moviesStop()" title="Stop" style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏹</button>
+        <button onclick="moviesOpenInArchive()" title="Open on archive.org" style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer">↗</button>
+        <button onclick="moviesStop()" title="Stop" style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏹</button>
       </div>
     </div>
     <div class="radio-station-list" id="movies-list">
-      <div class="radio-no-data">Tap a category above to load movie channels…</div>
+      <div class="radio-no-data">⏳ Loading free films from Internet Archive…</div>
     </div>
   </div><!-- /rb-panel-movies -->
 
@@ -6286,10 +6282,12 @@ function widgetGetSettings() {
   let s = {};
   try { s = JSON.parse(localStorage.getItem('viltv_widget_settings') || '{}'); } catch(_) {}
   if (!s.defaultTab) s.defaultTab = 'ai';
-  if (!s.visible || typeof s.visible !== 'object') {
-    s.visible = { ai:true, video:true, iptv:true, radio:true, music:true, movies:true, podcast:true };
+  if (!s.visible || typeof s.visible !== 'object') s.visible = {};
+  // Default every known tab to visible if not explicitly set false.
+  // (Earlier sessions may have stored partial settings without all keys.)
+  for (const key of Object.keys(_WIDGET_TAB_LABELS)) {
+    if (s.visible[key] === undefined) s.visible[key] = true;
   }
-  if (s.visible.movies === undefined) s.visible.movies = true;
   return s;
 }
 function widgetSaveSettings(s) {
@@ -7171,207 +7169,235 @@ const _IPTV_CURATED_INDIA = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════
-// MUSIC ENGINE — radio-browser.info filtered to music tags
-// Reuses the radio audio + HLS pipeline.
+// MUSIC ENGINE — Spotify embed iframes (free, no auth required)
+// Curated public Spotify playlists across genres + Indian languages.
+// 30-second previews work without Spotify login; full play requires
+// the user to log into Spotify in the iframe (one-time per session).
 // ═══════════════════════════════════════════════════════════════════
-let _musicCurrentUrl = null, _musicCurrentId = null, _musicHls = null, _musicLastResults = [];
-const _MUSIC_PRESETS = {
-  'top-music':   '/json/stations/bytag/music?limit=80&hidebroken=true&order=clickcount&reverse=true',
-  'bollywood':   '/json/stations/bytag/bollywood?limit=80&hidebroken=true&order=clickcount&reverse=true',
-  'hindi':       '/json/stations/bytag/hindi?limit=80&hidebroken=true&order=clickcount&reverse=true',
-  'malayalam':   '/json/stations/bytag/malayalam?limit=80&hidebroken=true&order=clickcount&reverse=true',
-  'tamil':       '/json/stations/bytag/tamil?limit=80&hidebroken=true&order=clickcount&reverse=true',
-  'classical':   '/json/stations/bytag/classical?limit=80&hidebroken=true&order=clickcount&reverse=true',
-  'jazz':        '/json/stations/bytag/jazz?limit=80&hidebroken=true&order=clickcount&reverse=true',
-  'lofi':        '/json/stations/bytag/lofi?limit=80&hidebroken=true&order=clickcount&reverse=true',
-  'chill':       '/json/stations/bytag/chillout?limit=80&hidebroken=true&order=clickcount&reverse=true',
-  'pop':         '/json/stations/bytag/pop?limit=80&hidebroken=true&order=clickcount&reverse=true',
-  'rock':        '/json/stations/bytag/rock?limit=80&hidebroken=true&order=clickcount&reverse=true',
-  'electronic':  '/json/stations/bytag/electronic?limit=80&hidebroken=true&order=clickcount&reverse=true',
-  'country':     '/json/stations/bytag/country?limit=80&hidebroken=true&order=clickcount&reverse=true',
-  'reggae':      '/json/stations/bytag/reggae?limit=80&hidebroken=true&order=clickcount&reverse=true',
-  'latin':       '/json/stations/bytag/latin?limit=80&hidebroken=true&order=clickcount&reverse=true',
-  'kpop':        '/json/stations/bytag/k-pop?limit=80&hidebroken=true&order=clickcount&reverse=true',
-  'jpop':        '/json/stations/bytag/j-pop?limit=80&hidebroken=true&order=clickcount&reverse=true',
-  'devotional':  '/json/stations/bytag/devotional?limit=80&hidebroken=true&order=clickcount&reverse=true',
-  'sufi':        '/json/stations/bytag/sufi?limit=80&hidebroken=true&order=clickcount&reverse=true',
+const _MUSIC_PLAYLISTS = {
+  'today-top': [
+    { name:"Today's Top Hits",        sid:'37i9dQZF1DXcBWIGoYBM5M', desc:'Spotify · Global #1' },
+    { name:'Global Top 50',           sid:'37i9dQZEVXbMDoHDwVN2tF', desc:'Spotify · Global Top 50' },
+    { name:'Viral Hits',              sid:'37i9dQZF1DX2L0iB23Enbq', desc:'Spotify · Viral Tracks' },
+    { name:'New Music Friday',        sid:'37i9dQZF1DX4JAvHpjipBk', desc:'Spotify · Fresh Drops' },
+  ],
+  'bollywood': [
+    { name:'Bollywood Butter',        sid:'37i9dQZF1DX0XUfTFmNBRM', desc:'Spotify · Top Bollywood' },
+    { name:'Hot Hits Hindi',          sid:'37i9dQZF1DWTwbZHrJRIgD', desc:'Spotify · Hindi Hits' },
+    { name:'Bollywood Hits',          sid:'37i9dQZF1DX5q67ZpWyRrZ', desc:'Spotify · Modern Bollywood' },
+    { name:'90s Bollywood',           sid:'37i9dQZF1DXcyXyWmCVkdU', desc:'Spotify · Retro' },
+    { name:'Romantic Bollywood',      sid:'37i9dQZF1DX0XUsuxWHRQd', desc:'Spotify · Love Songs' },
+  ],
+  'hindi': [
+    { name:'Hot Hits Hindi',          sid:'37i9dQZF1DWTwbZHrJRIgD', desc:'Spotify · Hindi Top' },
+    { name:'Indie Hindi',             sid:'37i9dQZF1DXa2EmoJM17fs', desc:'Spotify · Indie' },
+    { name:'Hindi Lo-fi',             sid:'37i9dQZF1DX9z9fUhwqZNT', desc:'Spotify · Chill Hindi' },
+    { name:'Sufi Soul',               sid:'37i9dQZF1DX1bF7vvBOKi3', desc:'Spotify · Sufi' },
+  ],
+  'punjabi': [
+    { name:'Punjabi 101',             sid:'37i9dQZF1DX9pi0R2ZGeoq', desc:'Spotify · Bhangra' },
+    { name:'Hot Hits Punjabi',        sid:'37i9dQZF1DXdbXrPNafg9d', desc:'Spotify · Punjabi Top' },
+  ],
+  'malayalam': [
+    { name:'Hot Hits Malayalam',      sid:'37i9dQZF1DX1clOuib1KtQ', desc:'Spotify · Mollywood Top' },
+    { name:'Malayalam Romance',       sid:'37i9dQZF1DX2vVuWfbUoIM', desc:'Spotify · Romantic' },
+    { name:'Best of Malayalam',       sid:'37i9dQZF1DX5b5K4P1Y4Cw', desc:'Spotify · Retro Mal' },
+  ],
+  'tamil': [
+    { name:'Hot Hits Tamil',          sid:'37i9dQZF1DXajFpL2xoRIw', desc:'Spotify · Kollywood Top' },
+    { name:'Tamil Pop Hits',          sid:'37i9dQZF1DWUoY6Ih7vsxr', desc:'Spotify · Pop' },
+    { name:'AR Rahman Essentials',    sid:'37i9dQZF1DZ06evO0BCGl3', desc:'Spotify · Maestro' },
+  ],
+  'telugu': [
+    { name:'Hot Hits Telugu',         sid:'37i9dQZF1DX1i3hvzHpcQV', desc:'Spotify · Tollywood Top' },
+    { name:'Telugu Top Tracks',       sid:'37i9dQZF1DX5Q27plkaOQ3', desc:'Spotify · Telugu' },
+  ],
+  'lofi': [
+    { name:'Lo-fi Beats',             sid:'37i9dQZF1DWWQRwui0ExPn', desc:'Spotify · Study/Chill' },
+    { name:'Chillhop Essentials',     sid:'37i9dQZF1DX36fFxbRIvo7', desc:'Spotify · Chillhop' },
+    { name:'Late Night Vibes',        sid:'37i9dQZF1DX4E3UdUs7fUx', desc:'Spotify · Mellow' },
+  ],
+  'chill': [
+    { name:'Chill Hits',              sid:'37i9dQZF1DX4WYpdgoIcn6', desc:'Spotify · Chill Pop' },
+    { name:'Peaceful Piano',          sid:'37i9dQZF1DX4sWSpwq3LiO', desc:'Spotify · Piano' },
+    { name:'Chill Vibes',             sid:'37i9dQZF1DX889U0CL85jj', desc:'Spotify · Easy' },
+  ],
+  'workout': [
+    { name:'Beast Mode',              sid:'37i9dQZF1DX76Wlfdnj7AP', desc:'Spotify · High Energy' },
+    { name:'Cardio',                  sid:'37i9dQZF1DWSJHnPb1f0X3', desc:'Spotify · Cardio' },
+    { name:'Power Workout',           sid:'37i9dQZF1DXdxcBWuJkbcy', desc:'Spotify · Power Mix' },
+  ],
+  'pop': [
+    { name:'Top 50 Global',           sid:'37i9dQZEVXbMDoHDwVN2tF', desc:'Spotify · Pop Global' },
+    { name:'Pop Rising',              sid:'37i9dQZF1DWUa8ZRTfalHk', desc:'Spotify · Rising' },
+  ],
+  'rock': [
+    { name:'Rock Classics',           sid:'37i9dQZF1DWXRqgorJj26U', desc:'Spotify · Classic Rock' },
+    { name:'Rock This',               sid:'37i9dQZF1DXcF6B6QPhFDv', desc:'Spotify · Modern Rock' },
+  ],
+  'classical': [
+    { name:'Classical Essentials',    sid:'37i9dQZF1DWWEJlAGA9gs0', desc:'Spotify · Greatest Hits' },
+    { name:'Mozart',                  sid:'37i9dQZF1DWVFeEut75IAL', desc:'Spotify · Mozart' },
+    { name:'Bach',                    sid:'37i9dQZF1DWVwWrvBqjxJF', desc:'Spotify · Bach' },
+  ],
+  'jazz': [
+    { name:'Jazz Classics',           sid:'37i9dQZF1DXbITWG1ZJKYt', desc:'Spotify · Jazz Standards' },
+    { name:'Smooth Jazz',             sid:'37i9dQZF1DX6VDO8a6cQME', desc:'Spotify · Smooth' },
+  ],
+  'kpop': [
+    { name:'K-pop ON!',               sid:'37i9dQZF1DX9tPFwDMOaN1', desc:'Spotify · K-pop Top' },
+    { name:'K-pop Daebak',            sid:'37i9dQZF1DX14fiWYoe7Oh', desc:'Spotify · Daebak' },
+  ],
+  'jpop': [
+    { name:'Tokyo Super Hits',        sid:'37i9dQZF1DX8hJzDhjgUa3', desc:'Spotify · J-pop Top' },
+    { name:'J-pop Picks',             sid:'37i9dQZF1DWUoqEG4WY6ce', desc:'Spotify · J-pop' },
+  ],
+  'devotional': [
+    { name:'Bhajan Hits',             sid:'37i9dQZF1DX2pOQabA7H0J', desc:'Spotify · Bhajans' },
+    { name:'Vande Mataram',           sid:'37i9dQZF1DXa6thENXHB9b', desc:'Spotify · Devotional' },
+    { name:'Sufi Soul',               sid:'37i9dQZF1DX1bF7vvBOKi3', desc:'Spotify · Sufi' },
+  ],
+  'meditation': [
+    { name:'Peaceful Meditation',     sid:'37i9dQZF1DWZqd5JICZI0u', desc:'Spotify · Meditation' },
+    { name:'Yoga & Meditation',       sid:'37i9dQZF1DWZeKCadgRdKQ', desc:'Spotify · Yoga' },
+    { name:'Sleep',                   sid:'37i9dQZF1DWZd79rJ6a7lp', desc:'Spotify · Sleep' },
+  ],
 };
-async function musicLoadPreset(key) {
+let _musicCurrentSid = null;
+function musicLoadPreset(key) {
   document.querySelectorAll('.music-preset').forEach(b => {
     b.classList.remove('active');
     if (b.getAttribute('onclick')?.includes("'" + key + "'")) b.classList.add('active');
   });
   const list = document.getElementById('music-list');
-  if (list) list.innerHTML = '<div class="radio-no-data">⏳ Loading…</div>';
-  const path = _MUSIC_PRESETS[key] || _MUSIC_PRESETS['top-music'];
-  const stations = await _rbFetch(path);
-  if (!stations) { if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Could not load music streams.</div>'; return; }
-  _musicLastResults = stations;
-  _musicRender(stations);
-}
-function _musicRender(stations) {
-  const list = document.getElementById('music-list');
   if (!list) return;
-  if (!stations.length) { list.innerHTML = '<div class="radio-no-data">No streams found.</div>'; return; }
-  list.innerHTML = stations.map(s => {
-    const id = s.stationuuid || s.url_resolved;
-    const url = s.url_resolved || s.url;
-    if (!url) return '';
-    const name = s.name || 'Unknown';
-    const tag = (s.tags || '').split(',').slice(0,2).join(', ').trim() || (s.country || '');
-    const isActive = id === _musicCurrentId;
-    return '<div class="radio-station-item' + (isActive ? ' active' : '') + '" onclick=\'musicPlay(' + JSON.stringify(url) + ',' + JSON.stringify(id) + ',' + JSON.stringify(name) + ')\'>'
-      + '<span style="font-size:14px;flex-shrink:0">🎵</span>'
-      + '<div class="radio-station-meta"><span class="radio-station-name" title="' + _esc(name) + '">' + _esc(name) + '</span>'
-      + (tag ? '<span class="radio-station-tag">' + _esc(tag) + '</span>' : '')
+  const playlists = _MUSIC_PLAYLISTS[key] || _MUSIC_PLAYLISTS['today-top'];
+  list.innerHTML = playlists.map(p => {
+    const initial = (p.name || '?')[0].toUpperCase();
+    return '<div class="radio-station-item" onclick=\'musicPlay(' + JSON.stringify(p.sid) + ',' + JSON.stringify(p.name) + ')\'>'
+      + '<span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:6px;background:linear-gradient(135deg,#1ed760,#1db954);color:#000;font-size:16px;font-weight:800;flex-shrink:0">♫</span>'
+      + '<div class="radio-station-meta"><span class="radio-station-name" title="' + _esc(p.name) + '">' + _esc(p.name) + '</span>'
+      + '<span class="radio-station-tag">' + _esc(p.desc) + '</span>'
       + '</div></div>';
   }).join('');
-  const btn = document.getElementById('music-play-btn');
-  if (btn) btn.disabled = false;
 }
-let _musicSearchTimer = null;
-function musicOnSearch(q) {
-  clearTimeout(_musicSearchTimer);
-  q = (q || '').trim();
-  if (!q) { _musicRender(_musicLastResults); return; }
-  _musicSearchTimer = setTimeout(async () => {
-    document.querySelectorAll('.music-preset').forEach(b => b.classList.remove('active'));
-    const stations = await _rbFetch('/json/stations/byname/' + encodeURIComponent(q) + '?limit=60&hidebroken=true&order=clickcount&reverse=true');
-    if (stations) { _musicLastResults = stations; _musicRender(stations); }
-  }, 300);
+function musicPlay(sid, name) {
+  const wrap = document.getElementById('music-player-wrap');
+  const ifr  = document.getElementById('music-player-iframe');
+  const now  = document.getElementById('music-now');
+  if (!wrap || !ifr) return;
+  _musicCurrentSid = sid;
+  ifr.src = 'https://open.spotify.com/embed/playlist/' + encodeURIComponent(sid) + '?utm_source=vilfintv&theme=0';
+  wrap.style.display = 'block';
+  if (now) now.textContent = name || 'Playing…';
 }
-function musicPlay(url, id, name) {
-  const audio = document.getElementById('music-audio');
-  if (!audio) return;
-  url = url.replace(/^http:\/\//i, 'https://');
-  if (_musicHls) { try { _musicHls.destroy(); } catch(_){} _musicHls = null; }
-  _musicCurrentUrl = url; _musicCurrentId = id;
-  document.querySelectorAll('#music-list .radio-station-item').forEach(el => el.classList.remove('active'));
-  const np = document.getElementById('music-now-playing');
-  if (np) np.textContent = name || 'Playing…';
-  const dot = document.getElementById('music-dot');
-  if (dot) dot.style.background = '#fbbf24';
-  const vol = document.getElementById('music-vol');
-  audio.volume = vol ? Number(vol.value)/100 : 0.75;
-  if (/\.m3u8/i.test(url) && typeof Hls !== 'undefined' && Hls.isSupported()) {
-    _musicHls = new Hls({ enableWorker: true });
-    _musicHls.loadSource(url); _musicHls.attachMedia(audio);
-    _musicHls.on(Hls.Events.MANIFEST_PARSED, () => audio.play().catch(()=>musicOnError()));
-    _musicHls.on(Hls.Events.ERROR, (e,d) => { if (d.fatal) musicOnError(); });
-  } else {
-    audio.src = url; audio.play().catch(()=>musicOnError());
-  }
-  audio.addEventListener('playing', () => { const b = document.getElementById('music-play-btn'); if (b) b.textContent = '⏸'; if (dot) { dot.style.background='#22c55e'; } }, { once:false });
-  audio.addEventListener('pause',   () => { const b = document.getElementById('music-play-btn'); if (b) b.textContent = '▶'; if (dot) dot.style.background='#334155'; }, { once:false });
-}
-function musicOnError() { const np = document.getElementById('music-now-playing'); if (np) np.textContent = '⚠️ Stream offline — try another'; const dot = document.getElementById('music-dot'); if (dot) dot.style.background='#ef4444'; }
-function musicTogglePlay() {
-  const audio = document.getElementById('music-audio');
-  if (!audio) return;
-  if (!_musicCurrentUrl) {
-    const first = document.querySelector('#music-list .radio-station-item');
-    if (first) first.click();
-    return;
-  }
-  if (audio.paused) audio.play().catch(()=>musicOnError());
-  else audio.pause();
-}
-function musicSetVolume(v) {
-  const a = document.getElementById('music-audio');
-  if (a) a.volume = Math.max(0, Math.min(100, Number(v))) / 100;
+function musicStop() {
+  const wrap = document.getElementById('music-player-wrap');
+  const ifr  = document.getElementById('music-player-iframe');
+  if (ifr) ifr.src = '';
+  if (wrap) wrap.style.display = 'none';
+  _musicCurrentSid = null;
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// MOVIES ENGINE — iptv-org channels filtered to category=movies + name regex
-// Reuses _iptvAllChannels (lazy loads on first IPTV/Movies open)
+// MOVIES ENGINE — Internet Archive free public-domain films
+// archive.org provides /advancedsearch.php JSON API for queries and
+// /embed/IDENTIFIER for an iframe-able streaming player.
 // ═══════════════════════════════════════════════════════════════════
-let _moviesCurrentChannel = null, _moviesHls = null, _moviesLastResults = [];
-const _MOVIES_PRESETS = {
-  'top-movies':      { category: 'movies' },
-  'hollywood':       { category: 'movies', country: 'US' },
-  'bollywood':       { category: 'movies', country: 'IN', name: /\b(bollywood|hindi|sony\s*max|colors\s*cineplex|zee\s*cinema|star\s*gold|set\s*max)\b/i },
-  'action':          { name: /\b(action|martial|kung\s*fu|fight|combat|thriller)\b/i },
-  'comedy':          { name: /\b(comedy|laugh|funny|sitcom|humor)\b/i },
-  'horror':          { name: /\b(horror|scream|thriller|fright|fear)\b/i },
-  'classic':         { name: /\b(classic|vintage|golden|black\s*&\s*white|monsters)\b/i },
-  'asian':           { category: 'movies', name: /\b(asian|chinese|korean|japanese|kungfu|china|korea|japan)\b/i },
-  'regional-india':  { country: 'IN', name: /\b(movie|cinema|tamil|telugu|kannada|malayalam|marathi|punjabi|bhojpuri|gold\s*movies|sony\s*max|colors\s*cineplex|zee\s*cinema|star\s*gold)\b/i },
+const ARCHIVE_API = 'https://archive.org/advancedsearch.php';
+const _MOVIES_QUERIES = {
+  // Curated category → archive.org search query (their advanced syntax)
+  'classics':    'collection:(feature_films) AND mediatype:(movies) AND year:[1920 TO 1965]',
+  'action':      'collection:(feature_films) AND mediatype:(movies) AND (action OR adventure)',
+  'comedy':      'collection:(feature_films) AND mediatype:(movies) AND (comedy OR slapstick)',
+  'horror':      'collection:(feature_films) AND mediatype:(movies) AND (horror OR thriller)',
+  'scifi':       'collection:(feature_films) AND mediatype:(movies) AND (science fiction OR sci-fi)',
+  'animation':   'collection:(feature_films) AND mediatype:(movies) AND (animation OR cartoon)',
+  'drama':       'collection:(feature_films) AND mediatype:(movies) AND drama',
+  'western':     'collection:(feature_films) AND mediatype:(movies) AND western',
+  'documentary': 'collection:(opensource_movies) AND mediatype:(movies) AND documentary',
+  'shorts':      'collection:(short_films) AND mediatype:(movies)',
+  'silent':      'collection:(silent_films) AND mediatype:(movies)',
+  'noir':        'collection:(film_noir) AND mediatype:(movies)',
 };
+let _moviesLastResults = [];
+let _moviesCurrentId = null;
 async function moviesLoadPreset(key) {
   document.querySelectorAll('.movies-preset').forEach(b => {
     b.classList.remove('active');
     if (b.getAttribute('onclick')?.includes("'" + key + "'")) b.classList.add('active');
   });
   const list = document.getElementById('movies-list');
-  if (list) list.innerHTML = '<div class="radio-no-data">⏳ Loading…</div>';
-  if (!_iptvAllChannels) await iptvInit();   // lazy-load shared catalog
-  const filter = _MOVIES_PRESETS[key] || _MOVIES_PRESETS['top-movies'];
-  let results = (_iptvAllChannels || []).filter(c => {
-    if (filter.country  && c.country  !== filter.country)  return false;
-    if (filter.category && !c.categories.includes(filter.category)) return false;
-    if (filter.name     && !filter.name.test(c.name)) return false;
-    return true;
-  });
-  results.sort((a, b) => a.name.localeCompare(b.name));
-  _moviesLastResults = results.slice(0, 250);
-  _moviesRender(_moviesLastResults);
+  if (list) list.innerHTML = '<div class="radio-no-data">⏳ Loading films from archive.org…</div>';
+  const q = _MOVIES_QUERIES[key] || _MOVIES_QUERIES['classics'];
+  const url = ARCHIVE_API + '?q=' + encodeURIComponent(q)
+    + '&fl[]=identifier&fl[]=title&fl[]=year&fl[]=creator&fl[]=runtime'
+    + '&sort[]=downloads+desc&rows=40&page=1&output=json';
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const docs = (data.response && data.response.docs) || [];
+    _moviesLastResults = docs;
+    _moviesRender(docs);
+  } catch (e) {
+    if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Could not reach archive.org.</div>';
+  }
 }
-function _moviesRender(results) {
+function _moviesRender(docs) {
   const list = document.getElementById('movies-list');
   if (!list) return;
-  if (!results.length) { list.innerHTML = '<div class="radio-no-data">No movie channels match this filter.</div>'; return; }
-  list.innerHTML = results.map(c => {
-    const initial = (c.name || '?')[0].toUpperCase();
-    const tags = [c.country, (c.languages||[]).slice(0,2).join(',').toUpperCase()].filter(Boolean).join(' · ');
-    return '<div class="radio-station-item" onclick=\'moviesPlay(' + JSON.stringify(c.url) + ',' + JSON.stringify(c.id) + ',' + JSON.stringify(c.name) + ')\'>'
-      + '<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:#7c3aed;color:#fff;font-size:11px;font-weight:700;flex-shrink:0">' + _esc(initial) + '</span>'
-      + '<div class="radio-station-meta"><span class="radio-station-name" title="' + _esc(c.name) + '">' + _esc(c.name) + '</span>'
-      + (tags ? '<span class="radio-station-tag">' + _esc(tags) + '</span>' : '')
+  if (!docs.length) { list.innerHTML = '<div class="radio-no-data">No films found in this category.</div>'; return; }
+  list.innerHTML = docs.map(d => {
+    const id = d.identifier;
+    const title = d.title || id;
+    const meta = [d.year, d.creator, d.runtime].filter(Boolean).join(' · ');
+    return '<div class="radio-station-item" onclick=\'moviesPlay(' + JSON.stringify(id) + ',' + JSON.stringify(title) + ')\'>'
+      + '<span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:6px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:16px;font-weight:800;flex-shrink:0">🎬</span>'
+      + '<div class="radio-station-meta"><span class="radio-station-name" title="' + _esc(title) + '">' + _esc(title) + '</span>'
+      + (meta ? '<span class="radio-station-tag">' + _esc(meta) + '</span>' : '')
       + '</div></div>';
   }).join('');
 }
 let _moviesSearchTimer = null;
 function moviesOnSearch(q) {
   clearTimeout(_moviesSearchTimer);
-  q = (q || '').trim().toLowerCase();
+  q = (q || '').trim();
   if (!q) { _moviesRender(_moviesLastResults); return; }
-  _moviesSearchTimer = setTimeout(() => {
-    if (!_iptvAllChannels) return;
-    const filtered = _iptvAllChannels.filter(c => c.name.toLowerCase().includes(q)).slice(0, 100);
-    _moviesRender(filtered);
-  }, 200);
+  _moviesSearchTimer = setTimeout(async () => {
+    document.querySelectorAll('.movies-preset').forEach(b => b.classList.remove('active'));
+    const list = document.getElementById('movies-list');
+    if (list) list.innerHTML = '<div class="radio-no-data">🔍 Searching archive.org…</div>';
+    const url = ARCHIVE_API
+      + '?q=' + encodeURIComponent('mediatype:(movies) AND (' + q + ')')
+      + '&fl[]=identifier&fl[]=title&fl[]=year&fl[]=creator&sort[]=downloads+desc&rows=40&output=json';
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      const docs = (data.response && data.response.docs) || [];
+      _moviesLastResults = docs;
+      _moviesRender(docs);
+    } catch (e) { if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Search failed.</div>'; }
+  }, 350);
 }
-function moviesPlay(url, id, name) {
-  const video = document.getElementById('movies-player');
-  const wrap  = document.getElementById('movies-player-wrap');
-  const nowEl = document.getElementById('movies-now');
-  if (!video) return;
-  if (_moviesHls) { try { _moviesHls.destroy(); } catch(_){} _moviesHls = null; }
+function moviesPlay(identifier, title) {
+  const wrap = document.getElementById('movies-player-wrap');
+  const ifr  = document.getElementById('movies-player-iframe');
+  const now  = document.getElementById('movies-now');
+  if (!ifr) return;
+  _moviesCurrentId = identifier;
+  ifr.src = 'https://archive.org/embed/' + encodeURIComponent(identifier);
   if (wrap) wrap.style.display = 'block';
-  if (nowEl) nowEl.textContent = name || 'Playing…';
-  _moviesCurrentChannel = { id, name, url };
-  const httpsUrl = url.replace(/^http:\/\//i, 'https://');
-  if (/\.m3u8/i.test(httpsUrl) && typeof Hls !== 'undefined' && Hls.isSupported()) {
-    _moviesHls = new Hls({ maxBufferLength: 20, lowLatencyMode: true, enableWorker: true });
-    _moviesHls.loadSource(httpsUrl); _moviesHls.attachMedia(video);
-    _moviesHls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(e => console.warn('[Movies] play rejected:', e)));
-    _moviesHls.on(Hls.Events.ERROR, (e, d) => {
-      if (d.fatal) {
-        if (d.type === Hls.ErrorTypes.NETWORK_ERROR) _moviesHls.startLoad();
-        else if (d.type === Hls.ErrorTypes.MEDIA_ERROR) _moviesHls.recoverMediaError();
-        else if (nowEl) nowEl.textContent = '⚠️ ' + name + ' offline';
-      }
-    });
-  } else {
-    video.src = httpsUrl; video.play().catch(() => { if (nowEl) nowEl.textContent = '⚠️ ' + name + ' offline'; });
-  }
+  if (now) now.textContent = title || 'Now Playing';
 }
 function moviesStop() {
-  if (_moviesHls) { try { _moviesHls.destroy(); } catch(_){} _moviesHls = null; }
-  const v = document.getElementById('movies-player');
-  const w = document.getElementById('movies-player-wrap');
-  if (v) { try { v.pause(); v.removeAttribute('src'); v.load(); } catch(_){} }
-  if (w) w.style.display = 'none';
+  const ifr = document.getElementById('movies-player-iframe');
+  const wrap = document.getElementById('movies-player-wrap');
+  if (ifr) ifr.src = '';
+  if (wrap) wrap.style.display = 'none';
+  _moviesCurrentId = null;
+}
+function moviesOpenInArchive() {
+  if (_moviesCurrentId) window.open('https://archive.org/details/' + encodeURIComponent(_moviesCurrentId), '_blank');
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -8727,10 +8753,15 @@ function openMobileRightBar(panel) {
   const overlay = document.getElementById('mobile-rb-overlay');
   if (rb) rb.classList.add('mobile-open');
   if (overlay) overlay.style.display = 'block';
+  // Lock body scroll + add full-screen body class so CSS hides bottom FAB
+  document.body.classList.add('rb-mobile-active');
   document.body.style.overflow = 'hidden';
   // Highlight active FAB button
-  document.getElementById('mobile-ai-btn')?.classList.toggle('active', panel === 'ai');
-  document.getElementById('mobile-tv-btn')?.classList.toggle('active', panel === 'video');
+  ['ai','tv','iptv','music','podcast'].forEach(k => {
+    const map = { ai:'ai', tv:'video', iptv:'iptv', music:'music', podcast:'podcast' };
+    const btn = document.getElementById('mobile-' + k + '-btn');
+    if (btn) btn.classList.toggle('active', map[k] === panel);
+  });
 }
 
 function closeMobileRightBar() {
@@ -8738,9 +8769,11 @@ function closeMobileRightBar() {
   const overlay = document.getElementById('mobile-rb-overlay');
   if (rb) rb.classList.remove('mobile-open');
   if (overlay) overlay.style.display = 'none';
+  document.body.classList.remove('rb-mobile-active');
   document.body.style.overflow = '';
-  document.getElementById('mobile-ai-btn')?.classList.remove('active');
-  document.getElementById('mobile-tv-btn')?.classList.remove('active');
+  ['ai-btn','tv-btn','iptv-btn','music-btn','podcast-btn'].forEach(id => {
+    document.getElementById('mobile-' + id)?.classList.remove('active');
+  });
 }
 
 
