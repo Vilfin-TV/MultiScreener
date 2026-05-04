@@ -1355,19 +1355,30 @@ footer{
   display:flex;align-items:center;gap:7px;margin-bottom:6px;
 }
 .rb-dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:tvBlink 2s ease-in-out infinite}
+.rb-tabs-wrap{position:relative;display:flex;align-items:center;gap:4px}
+.rb-tabs-arrow{
+  flex-shrink:0;width:22px;height:22px;border:none;border-radius:50%;
+  background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);
+  font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;-webkit-tap-highlight-color:transparent
+}
+.rb-tabs-arrow:hover{background:rgba(37,99,235,.3);color:#fff}
+.rb-tabs-arrow:disabled{opacity:.3;cursor:not-allowed}
 .rb-tabs{
-  display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;
+  display:flex;gap:3px;overflow-x:auto;scrollbar-width:none;flex:1;
+  scroll-behavior:smooth;-webkit-overflow-scrolling:touch
 }
 .rb-tabs::-webkit-scrollbar{display:none}
 .rb-tab{
-  flex-shrink:0;padding:5px 10px;border:none;
-  background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);
+  flex-shrink:0;padding:6px 11px;border:none;
+  background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-  font-size:10px;font-weight:600;
-  cursor:pointer;border-radius:12px;transition:all .15s;white-space:nowrap;
+  font-size:10.5px;font-weight:600;
+  cursor:pointer;border-radius:14px;transition:all .15s;white-space:nowrap;
+  -webkit-tap-highlight-color:transparent
 }
-.rb-tab:hover{background:rgba(255,255,255,.15);color:rgba(255,255,255,.85)}
-.rb-tab.active{background:#2563eb;color:#fff}
+.rb-tab:hover{background:rgba(37,99,235,.18);color:#fff}
+.rb-tab.active{background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;box-shadow:0 2px 8px rgba(37,99,235,.4)}
 .rb-content{flex:1;overflow:hidden;position:relative}
 .rb-frame{visibility:hidden;pointer-events:none;width:100%;height:100%;position:absolute;inset:0}
 .rb-frame.active{visibility:visible;pointer-events:auto}
@@ -3034,14 +3045,19 @@ footer{
         <button class="rb-mobile-close" onclick="closeMobileRightBar()" title="Close">✕</button>
       </div>
     </div>
-    <div class="rb-tabs">
-      <button class="rb-tab active" id="rbtab-ai"     onclick="rbSwitchPanel('ai')">🤖 AI Chat</button>
-      <button class="rb-tab"        id="rbtab-video"  onclick="rbSwitchPanel('video')">▶️ YouTube Live</button>
-      <button class="rb-tab"        id="rbtab-iptv"   onclick="rbSwitchPanel('iptv')">📡 Live TV</button>
-      <button class="rb-tab"        id="rbtab-radio"  onclick="rbSwitchPanel('radio')">📻 Radio</button>
-      <button class="rb-tab"        id="rbtab-music"  onclick="rbSwitchPanel('music')">🎵 Music</button>
-      <button class="rb-tab"        id="rbtab-podcast" onclick="rbSwitchPanel('podcast')">🎙 Podcast</button>
-      <button class="rb-tab"        id="rbtab-settings" onclick="rbSwitchPanel('settings')" title="Widget Settings">⚙️</button>
+    <div class="rb-tabs-wrap">
+      <button class="rb-tabs-arrow" id="rb-tabs-prev" onclick="rbTabsScroll(-1)" title="Previous tab">◀</button>
+      <div class="rb-tabs" id="rb-tabs">
+        <button class="rb-tab active" id="rbtab-ai"      onclick="rbSwitchPanel('ai')">🤖 AI Chat</button>
+        <button class="rb-tab"        id="rbtab-video"   onclick="rbSwitchPanel('video')">▶️ YT Live</button>
+        <button class="rb-tab"        id="rbtab-iptv"    onclick="rbSwitchPanel('iptv')">📡 Live TV</button>
+        <button class="rb-tab"        id="rbtab-radio"   onclick="rbSwitchPanel('radio')">📻 Radio</button>
+        <button class="rb-tab"        id="rbtab-music"   onclick="rbSwitchPanel('music')">🎵 Music</button>
+        <button class="rb-tab"        id="rbtab-movies"  onclick="rbSwitchPanel('movies')">🎬 Movies</button>
+        <button class="rb-tab"        id="rbtab-podcast" onclick="rbSwitchPanel('podcast')">🎙 Podcast</button>
+        <button class="rb-tab"        id="rbtab-settings" onclick="rbSwitchPanel('settings')" title="Widget Settings">⚙️</button>
+      </div>
+      <button class="rb-tabs-arrow" id="rb-tabs-next" onclick="rbTabsScroll(1)" title="Next tab">▶</button>
     </div>
   </div>
 
@@ -3303,6 +3319,7 @@ footer{
     <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:4px;flex-wrap:wrap;max-height:120px;overflow-y:auto">
       <!-- Languages — Indian -->
       <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('favorites')">⭐ Favorites</button>
+      <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('curated-india')">✨ India HD</button>
       <button class="radio-preset-btn iptv-preset active" onclick="iptvLoadPreset('all-india')">🇮🇳 All India</button>
       <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('hindi')">🪕 Hindi</button>
       <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('malayalam')">🌿 Malayalam</button>
@@ -3348,24 +3365,39 @@ footer{
                style="position:absolute;top:0;left:0;width:100%;height:100%;background:#000"></video>
       </div>
       <!-- Now-playing + transport controls -->
-      <div style="padding:6px 10px;display:flex;align-items:center;gap:6px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px">
+      <div style="padding:6px 10px;display:flex;align-items:center;gap:5px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px;flex-wrap:wrap">
         <button onclick="iptvPrev()" title="Previous channel"
                 style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏮</button>
         <button onclick="iptvNext()" title="Next channel"
                 style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏭</button>
+        <button onclick="iptvVolDown()" title="Volume −"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔉</button>
         <button onclick="iptvToggleMute()" id="iptv-mute-btn" title="Mute"
                 style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔊</button>
+        <button onclick="iptvVolUp()" title="Volume +"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔊+</button>
         <input type="range" id="iptv-vol" min="0" max="100" value="80" oninput="iptvSetVolume(this.value)"
                title="Volume"
-               style="flex:0 0 70px;accent-color:#3b82f6;height:14px;cursor:pointer"/>
-        <span id="iptv-now" style="flex:1;color:#60a5fa;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">—</span>
+               style="flex:0 0 60px;accent-color:#3b82f6;height:14px;cursor:pointer"/>
+        <span id="iptv-now" style="flex:1;color:#60a5fa;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:80px">—</span>
         <button onclick="iptvToggleFav()" id="iptv-fav-btn" title="Add to favorites"
                 style="background:#0e1f3b;border:1px solid #1e3a5c;color:#fbbf24;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">☆</button>
+        <button onclick="iptvFullscreen()" title="Fullscreen"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⛶</button>
         <button onclick="iptvTogglePip()" title="Picture-in-Picture"
                 style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⧉</button>
         <button onclick="iptvStop()" title="Stop"
                 style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏹</button>
       </div>
+    </div>
+
+    <!-- Custom M3U/M3U8 URL input (paste & play) -->
+    <div style="padding:5px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:5px">
+      <input type="url" id="iptv-custom-url" placeholder="🔗 Paste any .m3u8 URL to play…"
+             onkeydown="if(event.key==='Enter')iptvPlayCustomUrl()"
+             style="flex:1;padding:7px 10px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:6px;color:#e2eeff;font-size:11px;outline:none;font-family:'JetBrains Mono',monospace"/>
+      <button onclick="iptvPlayCustomUrl()"
+              style="background:#1d4ed8;border:none;color:#fff;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">▶ Play</button>
     </div>
 
     <!-- Channel list -->
@@ -3427,30 +3459,119 @@ footer{
 
   </div><!-- /rb-panel-radio -->
 
-  <!-- ── PANEL 5: Music (placeholder — coming soon) ── -->
+  <!-- ── PANEL 5: Music (radio-browser.info music tags) ── -->
   <div id="rb-panel-music" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
-    <div style="padding:40px 24px;text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
-      <div style="font-size:64px">🎵</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#60a5fa;letter-spacing:2px">MUSIC PLAYER</div>
-      <div style="font-size:13px;color:var(--text2);max-width:300px;line-height:1.6">
-        On-demand music streaming with personalised recommendations.
-        Curated playlists across Bollywood, regional Indian, lo-fi, jazz, and global pop.
+    <div style="padding:8px 10px 6px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
+      <input type="search" id="music-search" placeholder="🔍 Search music stations…"
+             oninput="musicOnSearch(this.value)"
+             style="width:100%;padding:8px 12px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:13px;font-family:'DM Sans',sans-serif;outline:none"/>
+    </div>
+    <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:4px;flex-wrap:wrap;max-height:120px;overflow-y:auto">
+      <button class="radio-preset-btn music-preset active" onclick="musicLoadPreset('top-music')">🎶 Top</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('bollywood')">🎬 Bollywood</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('hindi')">🪕 Hindi</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('malayalam')">🌿 Malayalam</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('tamil')">🎵 Tamil</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('classical')">🎻 Classical</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('jazz')">🎺 Jazz</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('lofi')">🌙 Lo-fi</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('chill')">🌿 Chill</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('pop')">🎵 Pop</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('rock')">🎸 Rock</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('electronic')">🎧 Electronic</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('country')">🤠 Country</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('reggae')">🎵 Reggae</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('latin')">💃 Latin</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('kpop')">🎤 K-pop</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('jpop')">🎤 J-pop</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('devotional')">🕉 Devotional</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('sufi')">🌹 Sufi</button>
+    </div>
+    <div class="radio-station-list" id="music-list">
+      <div class="radio-no-data">Tap a category above to load music streams…</div>
+    </div>
+    <div class="radio-player-bar">
+      <div class="radio-now-row">
+        <div class="radio-status-dot" id="music-dot"></div>
+        <div class="radio-now-playing" id="music-now-playing">Select a station to play</div>
       </div>
-      <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#fbbf24;padding:8px 16px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.5px">⏳ COMING SOON</div>
-      <div style="font-size:11px;color:var(--text3);margin-top:8px">For radio music streams, switch to the 📻 Radio tab.</div>
+      <div class="radio-controls">
+        <button class="radio-play-btn" id="music-play-btn" onclick="musicTogglePlay()" title="Play / Pause" disabled>▶</button>
+        <span class="radio-vol-label">VOL</span>
+        <input type="range" class="radio-vol-slider" id="music-vol" min="0" max="100" value="75"
+               oninput="musicSetVolume(this.value)" title="Volume"/>
+      </div>
+      <audio id="music-audio" preload="none"></audio>
     </div>
   </div><!-- /rb-panel-music -->
 
-  <!-- ── PANEL 6: Podcast (placeholder — coming soon) ── -->
-  <div id="rb-panel-podcast" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
-    <div style="padding:40px 24px;text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
-      <div style="font-size:64px">🎙</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#60a5fa;letter-spacing:2px">PODCAST HUB</div>
-      <div style="font-size:13px;color:var(--text2);max-width:300px;line-height:1.6">
-        Browse and listen to top financial, technology, business, and educational podcasts.
-        Daily market briefings, founder interviews, sector deep-dives.
+  <!-- ── PANEL 6: Movies (iptv-org movie channels) ── -->
+  <div id="rb-panel-movies" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+    <div style="padding:8px 10px 6px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
+      <input type="search" id="movies-search" placeholder="🔍 Search movie channels…"
+             oninput="moviesOnSearch(this.value)"
+             style="width:100%;padding:8px 12px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:13px;font-family:'DM Sans',sans-serif;outline:none"/>
+    </div>
+    <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:4px;flex-wrap:wrap;max-height:100px;overflow-y:auto">
+      <button class="radio-preset-btn movies-preset active" onclick="moviesLoadPreset('top-movies')">🎬 All Movies</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('hollywood')">🇺🇸 Hollywood</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('bollywood')">🎬 Bollywood</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('action')">💥 Action</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('comedy')">😂 Comedy</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('horror')">👻 Horror</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('classic')">🎭 Classic</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('asian')">🌏 Asian</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('regional-india')">🇮🇳 Indian Regional</button>
+    </div>
+    <div id="movies-player-wrap" style="width:100%;background:#000;flex-shrink:0;display:none">
+      <div style="width:100%;padding-top:56.25%;position:relative;overflow:hidden">
+        <video id="movies-player" controls playsinline
+               style="position:absolute;top:0;left:0;width:100%;height:100%;background:#000"></video>
       </div>
-      <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#fbbf24;padding:8px 16px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.5px">⏳ COMING SOON</div>
+      <div style="padding:6px 10px;display:flex;align-items:center;gap:6px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px">
+        <span id="movies-now" style="flex:1;color:#60a5fa;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">—</span>
+        <button onclick="moviesStop()" title="Stop" style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏹</button>
+      </div>
+    </div>
+    <div class="radio-station-list" id="movies-list">
+      <div class="radio-no-data">Tap a category above to load movie channels…</div>
+    </div>
+  </div><!-- /rb-panel-movies -->
+
+  <!-- ── PANEL 7: Podcast (curated free shows) ── -->
+  <div id="rb-panel-podcast" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+    <div style="padding:8px 10px 6px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
+      <input type="search" id="podcast-search" placeholder="🔍 Search podcasts on iTunes…"
+             oninput="podcastOnSearch(this.value)"
+             style="width:100%;padding:8px 12px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:13px;font-family:'DM Sans',sans-serif;outline:none"/>
+    </div>
+    <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:4px;flex-wrap:wrap">
+      <button class="radio-preset-btn podcast-preset active" onclick="podcastLoadCurated()">⭐ Curated</button>
+      <button class="radio-preset-btn podcast-preset" onclick="podcastLoadCategory('Business')">💼 Business</button>
+      <button class="radio-preset-btn podcast-preset" onclick="podcastLoadCategory('Technology')">💻 Technology</button>
+      <button class="radio-preset-btn podcast-preset" onclick="podcastLoadCategory('News')">📰 News</button>
+      <button class="radio-preset-btn podcast-preset" onclick="podcastLoadCategory('Education')">📚 Education</button>
+      <button class="radio-preset-btn podcast-preset" onclick="podcastLoadCategory('Health')">❤️ Health</button>
+      <button class="radio-preset-btn podcast-preset" onclick="podcastLoadCategory('Comedy')">😂 Comedy</button>
+      <button class="radio-preset-btn podcast-preset" onclick="podcastLoadCategory('Sports')">⚽ Sports</button>
+      <button class="radio-preset-btn podcast-preset" onclick="podcastLoadCategory('Society')">🌍 Society</button>
+    </div>
+    <div class="radio-station-list" id="podcast-list">
+      <div class="radio-no-data">Loading curated podcasts…</div>
+    </div>
+    <div class="radio-player-bar">
+      <div class="radio-now-row">
+        <div class="radio-status-dot" id="podcast-dot"></div>
+        <div class="radio-now-playing" id="podcast-now-playing">Select a podcast to play</div>
+      </div>
+      <div class="radio-controls">
+        <button class="radio-play-btn" id="podcast-play-btn" onclick="podcastTogglePlay()" title="Play / Pause" disabled>▶</button>
+        <span class="radio-vol-label">VOL</span>
+        <input type="range" class="radio-vol-slider" id="podcast-vol" min="0" max="100" value="75"
+               oninput="podcastSetVolume(this.value)" title="Volume"/>
+      </div>
+      <audio id="podcast-audio" preload="none" controls
+             style="display:none;width:100%;margin-top:6px"></audio>
     </div>
   </div><!-- /rb-panel-podcast -->
 
@@ -3469,6 +3590,7 @@ footer{
         <option value="iptv">📡 Live TV</option>
         <option value="radio">📻 Radio</option>
         <option value="music">🎵 Music</option>
+        <option value="movies">🎬 Movies</option>
         <option value="podcast">🎙 Podcast</option>
       </select>
       <div id="widget-default-status" style="font-size:11px;color:var(--text3);margin-top:8px">Currently: AI Chat</div>
@@ -6114,8 +6236,9 @@ const _RB_PANELS = {
   video:    { panelId:'rb-panel-video',    tabId:'rbtab-video',    title:'▶️ YOUTUBE LIVE' },
   iptv:     { panelId:'rb-panel-iptv',     tabId:'rbtab-iptv',     title:'📡 LIVE TV',  init:'_iptvInitDone',  initFn:'iptvInit' },
   radio:    { panelId:'rb-panel-radio',    tabId:'rbtab-radio',    title:'📻 GLOBAL RADIO', init:'_radioInitDone', initFn:'radioInit' },
-  music:    { panelId:'rb-panel-music',    tabId:'rbtab-music',    title:'🎵 MUSIC' },
-  podcast:  { panelId:'rb-panel-podcast',  tabId:'rbtab-podcast',  title:'🎙 PODCAST' },
+  music:    { panelId:'rb-panel-music',    tabId:'rbtab-music',    title:'🎵 MUSIC',   init:'_musicInitDone',  initFn:'musicLoadDefault' },
+  movies:   { panelId:'rb-panel-movies',   tabId:'rbtab-movies',   title:'🎬 MOVIES',  init:'_moviesInitDone', initFn:'moviesLoadDefault' },
+  podcast:  { panelId:'rb-panel-podcast',  tabId:'rbtab-podcast',  title:'🎙 PODCAST', init:'_podcastInitDone',initFn:'podcastLoadCurated' },
   settings: { panelId:'rb-panel-settings', tabId:'rbtab-settings', title:'⚙️ WIDGET SETTINGS' },
 };
 
@@ -6157,15 +6280,16 @@ function rbSwitchPanel(panel) {
 // ═══════════════════════════════════════════════════════════════════════
 const _WIDGET_TAB_LABELS = {
   ai:'🤖 AI Chat', video:'▶️ YouTube Live', iptv:'📡 Live TV',
-  radio:'📻 Radio', music:'🎵 Music', podcast:'🎙 Podcast',
+  radio:'📻 Radio', music:'🎵 Music', movies:'🎬 Movies', podcast:'🎙 Podcast',
 };
 function widgetGetSettings() {
   let s = {};
   try { s = JSON.parse(localStorage.getItem('viltv_widget_settings') || '{}'); } catch(_) {}
   if (!s.defaultTab) s.defaultTab = 'ai';
   if (!s.visible || typeof s.visible !== 'object') {
-    s.visible = { ai:true, video:true, iptv:true, radio:true, music:true, podcast:true };
+    s.visible = { ai:true, video:true, iptv:true, radio:true, music:true, movies:true, podcast:true };
   }
+  if (s.visible.movies === undefined) s.visible.movies = true;
   return s;
 }
 function widgetSaveSettings(s) {
@@ -6655,8 +6779,9 @@ async function iptvInit() {
 // so we fall back to channel-name regex matching. Filters can combine country,
 // language code (when present), category, AND name regex.
 const _IPTV_PRESETS = {
-  // ── Special: favorites (handled in iptvLoadPreset) ─────────────────────
-  'favorites': { favorites: true },
+  // ── Special: favorites + curated India (handled in iptvLoadPreset) ─────
+  'favorites':     { favorites: true },
+  'curated-india': { curated: 'india' },
   // ── Indian languages ───────────────────────────────────────────────────
   'all-india': { country: 'IN' },
   'hindi':     { country: 'IN', name: /\b(aaj\s*tak|zee\s*hind|abp\s*news|india\s*tv|ndtv\s*india|republic\s*bharat|news18\s*india|tv9\s*bharatvarsh|good\s*news|times\s*now\s*navbharat|hindi\b|bharat\s*samachar|janta\s*tv|sansad|dd\s*news|dd\s*national)\b/i },
@@ -6754,9 +6879,18 @@ function iptvLoadPreset(key) {
   });
 
   let results;
+  if (filter.curated === 'india') {
+    // Curated direct-stream India channels (verified m3u8, no iptv-org dependency)
+    results = _IPTV_CURATED_INDIA.slice();
+    _iptvLastResults = results;
+    _iptvRender(results);
+    return;
+  }
   if (filter.favorites) {
     const favs = _iptvFavoritesSet();
-    results = _iptvAllChannels.filter(c => favs.has(c.id));
+    // Search favorites in BOTH iptv-org catalog AND curated direct streams
+    const allPool = (_iptvAllChannels || []).concat(_IPTV_CURATED_INDIA);
+    results = allPool.filter(c => favs.has(c.id));
   } else {
     results = _iptvAllChannels.filter(c => {
       // User country override applies UNLESS the preset locks a specific country
@@ -6959,6 +7093,427 @@ async function iptvTogglePip() {
       console.warn('[IPTV] Picture-in-Picture not supported on this browser');
     }
   } catch (e) { console.warn('[IPTV] PiP failed:', e); }
+}
+function iptvVolUp() {
+  const sl = document.getElementById('iptv-vol');
+  if (!sl) return;
+  sl.value = Math.min(100, Number(sl.value || 80) + 10);
+  iptvSetVolume(sl.value);
+}
+function iptvVolDown() {
+  const sl = document.getElementById('iptv-vol');
+  if (!sl) return;
+  sl.value = Math.max(0, Number(sl.value || 80) - 10);
+  iptvSetVolume(sl.value);
+}
+function iptvFullscreen() {
+  const video = document.getElementById('iptv-player');
+  if (!video) return;
+  try {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (video.requestFullscreen) video.requestFullscreen();
+    else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
+  } catch (e) { console.warn('[IPTV] Fullscreen failed:', e); }
+}
+function iptvPlayCustomUrl() {
+  const inp = document.getElementById('iptv-custom-url');
+  const url = (inp && inp.value || '').trim();
+  if (!url) return;
+  iptvPlay(url, 'custom-' + Date.now(), 'Custom Stream');
+  if (inp) inp.value = '';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CURATED DIRECT STREAMS — verified India m3u8 (no proxy needed)
+// Loaded on demand alongside iptv-org catalog when user picks 'curated-india'
+// ═══════════════════════════════════════════════════════════════════
+const _IPTV_CURATED_INDIA = [
+  { id:'cur-aajtak',    name:'Aaj Tak',           url:'https://feeds.intoday.in/aajtak/api/aajtakhd/master.m3u8',                       country:'IN', languages:['hin'], categories:['news'] },
+  { id:'cur-abpnews',   name:'ABP News',          url:'https://d2l4ar6y3mrs4k.cloudfront.net/live-streaming/abpnews-livetv/master.m3u8',  country:'IN', languages:['hin'], categories:['news'] },
+  { id:'cur-abpananda', name:'ABP Ananda',        url:'https://d2l4ar6y3mrs4k.cloudfront.net/live-streaming/ananda-livetv/master.m3u8',   country:'IN', languages:['ben'], categories:['news'] },
+  { id:'cur-abpasmita', name:'ABP Asmita',        url:'https://d2l4ar6y3mrs4k.cloudfront.net/live-streaming/asmita-livetv/master.m3u8',   country:'IN', languages:['guj'], categories:['news'] },
+  { id:'cur-abpganga',  name:'ABP Ganga',         url:'https://d2l4ar6y3mrs4k.cloudfront.net/live-streaming/ganga-livetv/master.m3u8',    country:'IN', languages:['hin'], categories:['news'] },
+  { id:'cur-aastha',    name:'Aastha TV',         url:'https://aasthaott.akamaized.net/110923/smil:aasthatv.smil/index.m3u8',             country:'IN', languages:['hin'], categories:['religious'] },
+  { id:'cur-aasthab',   name:'Aastha Bhajan',     url:'https://aasthaott.akamaized.net/110923/smil:bhajan.smil/playlist.m3u8',            country:'IN', languages:['hin'], categories:['religious'] },
+  { id:'cur-aasthat',   name:'Aastha Tamil',      url:'https://aasthaott.akamaized.net/110923/smil:aasthatamil.smil/playlist.m3u8',       country:'IN', languages:['tam'], categories:['religious'] },
+  { id:'cur-aasthate',  name:'Aastha Telugu',     url:'https://aasthaott.akamaized.net/110923/smil:aasthatelugu.smil/playlist.m3u8',      country:'IN', languages:['tel'], categories:['religious'] },
+  { id:'cur-aasthag',   name:'Aastha Gujarati',   url:'https://aasthaott.akamaized.net/110923/smil:aasthagujrati.smil/playlist.m3u8',     country:'IN', languages:['guj'], categories:['religious'] },
+  { id:'cur-aasthak',   name:'Aastha Kannada',    url:'https://aasthaott.akamaized.net/110923/smil:aasthakannada.smil/playlist.m3u8',     country:'IN', languages:['kan'], categories:['religious'] },
+  { id:'cur-9xjhakaas', name:'9X Jhakaas',        url:'https://9xjio.wiseplayout.com/9X_Jhakaas/master.m3u8',                              country:'IN', languages:['hin'], categories:['music'] },
+  { id:'cur-9xtashan',  name:'9X Tashan',         url:'https://9xjio.wiseplayout.com/9X_Tashan/master.m3u8',                               country:'IN', languages:['pan'], categories:['music'] },
+  { id:'cur-7smusic',   name:'7S Music',          url:'https://mumt03.tangotv.in/7SMUSIC/index.m3u8',                                      country:'IN', languages:['hin'], categories:['music'] },
+  { id:'cur-asianet',   name:'Asianet News',      url:'https://vidcdn.vidgyor.com/asianet-origin/liveabr/playlist.m3u8',                   country:'IN', languages:['mal'], categories:['news'] },
+  { id:'cur-amrita',    name:'Amrita TV',         url:'https://dr1zhpsuem5f4.cloudfront.net/master.m3u8',                                  country:'IN', languages:['mal'], categories:['entertainment'] },
+  { id:'cur-adipoli',   name:'Adipoli',           url:'https://live.hungama.com/linear/adipoli/playlist.m3u8',                             country:'IN', languages:['mal'], categories:['movies'] },
+];
+
+// ═══════════════════════════════════════════════════════════════════
+// MUSIC ENGINE — radio-browser.info filtered to music tags
+// Reuses the radio audio + HLS pipeline.
+// ═══════════════════════════════════════════════════════════════════
+let _musicCurrentUrl = null, _musicCurrentId = null, _musicHls = null, _musicLastResults = [];
+const _MUSIC_PRESETS = {
+  'top-music':   '/json/stations/bytag/music?limit=80&hidebroken=true&order=clickcount&reverse=true',
+  'bollywood':   '/json/stations/bytag/bollywood?limit=80&hidebroken=true&order=clickcount&reverse=true',
+  'hindi':       '/json/stations/bytag/hindi?limit=80&hidebroken=true&order=clickcount&reverse=true',
+  'malayalam':   '/json/stations/bytag/malayalam?limit=80&hidebroken=true&order=clickcount&reverse=true',
+  'tamil':       '/json/stations/bytag/tamil?limit=80&hidebroken=true&order=clickcount&reverse=true',
+  'classical':   '/json/stations/bytag/classical?limit=80&hidebroken=true&order=clickcount&reverse=true',
+  'jazz':        '/json/stations/bytag/jazz?limit=80&hidebroken=true&order=clickcount&reverse=true',
+  'lofi':        '/json/stations/bytag/lofi?limit=80&hidebroken=true&order=clickcount&reverse=true',
+  'chill':       '/json/stations/bytag/chillout?limit=80&hidebroken=true&order=clickcount&reverse=true',
+  'pop':         '/json/stations/bytag/pop?limit=80&hidebroken=true&order=clickcount&reverse=true',
+  'rock':        '/json/stations/bytag/rock?limit=80&hidebroken=true&order=clickcount&reverse=true',
+  'electronic':  '/json/stations/bytag/electronic?limit=80&hidebroken=true&order=clickcount&reverse=true',
+  'country':     '/json/stations/bytag/country?limit=80&hidebroken=true&order=clickcount&reverse=true',
+  'reggae':      '/json/stations/bytag/reggae?limit=80&hidebroken=true&order=clickcount&reverse=true',
+  'latin':       '/json/stations/bytag/latin?limit=80&hidebroken=true&order=clickcount&reverse=true',
+  'kpop':        '/json/stations/bytag/k-pop?limit=80&hidebroken=true&order=clickcount&reverse=true',
+  'jpop':        '/json/stations/bytag/j-pop?limit=80&hidebroken=true&order=clickcount&reverse=true',
+  'devotional':  '/json/stations/bytag/devotional?limit=80&hidebroken=true&order=clickcount&reverse=true',
+  'sufi':        '/json/stations/bytag/sufi?limit=80&hidebroken=true&order=clickcount&reverse=true',
+};
+async function musicLoadPreset(key) {
+  document.querySelectorAll('.music-preset').forEach(b => {
+    b.classList.remove('active');
+    if (b.getAttribute('onclick')?.includes("'" + key + "'")) b.classList.add('active');
+  });
+  const list = document.getElementById('music-list');
+  if (list) list.innerHTML = '<div class="radio-no-data">⏳ Loading…</div>';
+  const path = _MUSIC_PRESETS[key] || _MUSIC_PRESETS['top-music'];
+  const stations = await _rbFetch(path);
+  if (!stations) { if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Could not load music streams.</div>'; return; }
+  _musicLastResults = stations;
+  _musicRender(stations);
+}
+function _musicRender(stations) {
+  const list = document.getElementById('music-list');
+  if (!list) return;
+  if (!stations.length) { list.innerHTML = '<div class="radio-no-data">No streams found.</div>'; return; }
+  list.innerHTML = stations.map(s => {
+    const id = s.stationuuid || s.url_resolved;
+    const url = s.url_resolved || s.url;
+    if (!url) return '';
+    const name = s.name || 'Unknown';
+    const tag = (s.tags || '').split(',').slice(0,2).join(', ').trim() || (s.country || '');
+    const isActive = id === _musicCurrentId;
+    return '<div class="radio-station-item' + (isActive ? ' active' : '') + '" onclick=\'musicPlay(' + JSON.stringify(url) + ',' + JSON.stringify(id) + ',' + JSON.stringify(name) + ')\'>'
+      + '<span style="font-size:14px;flex-shrink:0">🎵</span>'
+      + '<div class="radio-station-meta"><span class="radio-station-name" title="' + _esc(name) + '">' + _esc(name) + '</span>'
+      + (tag ? '<span class="radio-station-tag">' + _esc(tag) + '</span>' : '')
+      + '</div></div>';
+  }).join('');
+  const btn = document.getElementById('music-play-btn');
+  if (btn) btn.disabled = false;
+}
+let _musicSearchTimer = null;
+function musicOnSearch(q) {
+  clearTimeout(_musicSearchTimer);
+  q = (q || '').trim();
+  if (!q) { _musicRender(_musicLastResults); return; }
+  _musicSearchTimer = setTimeout(async () => {
+    document.querySelectorAll('.music-preset').forEach(b => b.classList.remove('active'));
+    const stations = await _rbFetch('/json/stations/byname/' + encodeURIComponent(q) + '?limit=60&hidebroken=true&order=clickcount&reverse=true');
+    if (stations) { _musicLastResults = stations; _musicRender(stations); }
+  }, 300);
+}
+function musicPlay(url, id, name) {
+  const audio = document.getElementById('music-audio');
+  if (!audio) return;
+  url = url.replace(/^http:\/\//i, 'https://');
+  if (_musicHls) { try { _musicHls.destroy(); } catch(_){} _musicHls = null; }
+  _musicCurrentUrl = url; _musicCurrentId = id;
+  document.querySelectorAll('#music-list .radio-station-item').forEach(el => el.classList.remove('active'));
+  const np = document.getElementById('music-now-playing');
+  if (np) np.textContent = name || 'Playing…';
+  const dot = document.getElementById('music-dot');
+  if (dot) dot.style.background = '#fbbf24';
+  const vol = document.getElementById('music-vol');
+  audio.volume = vol ? Number(vol.value)/100 : 0.75;
+  if (/\.m3u8/i.test(url) && typeof Hls !== 'undefined' && Hls.isSupported()) {
+    _musicHls = new Hls({ enableWorker: true });
+    _musicHls.loadSource(url); _musicHls.attachMedia(audio);
+    _musicHls.on(Hls.Events.MANIFEST_PARSED, () => audio.play().catch(()=>musicOnError()));
+    _musicHls.on(Hls.Events.ERROR, (e,d) => { if (d.fatal) musicOnError(); });
+  } else {
+    audio.src = url; audio.play().catch(()=>musicOnError());
+  }
+  audio.addEventListener('playing', () => { const b = document.getElementById('music-play-btn'); if (b) b.textContent = '⏸'; if (dot) { dot.style.background='#22c55e'; } }, { once:false });
+  audio.addEventListener('pause',   () => { const b = document.getElementById('music-play-btn'); if (b) b.textContent = '▶'; if (dot) dot.style.background='#334155'; }, { once:false });
+}
+function musicOnError() { const np = document.getElementById('music-now-playing'); if (np) np.textContent = '⚠️ Stream offline — try another'; const dot = document.getElementById('music-dot'); if (dot) dot.style.background='#ef4444'; }
+function musicTogglePlay() {
+  const audio = document.getElementById('music-audio');
+  if (!audio) return;
+  if (!_musicCurrentUrl) {
+    const first = document.querySelector('#music-list .radio-station-item');
+    if (first) first.click();
+    return;
+  }
+  if (audio.paused) audio.play().catch(()=>musicOnError());
+  else audio.pause();
+}
+function musicSetVolume(v) {
+  const a = document.getElementById('music-audio');
+  if (a) a.volume = Math.max(0, Math.min(100, Number(v))) / 100;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MOVIES ENGINE — iptv-org channels filtered to category=movies + name regex
+// Reuses _iptvAllChannels (lazy loads on first IPTV/Movies open)
+// ═══════════════════════════════════════════════════════════════════
+let _moviesCurrentChannel = null, _moviesHls = null, _moviesLastResults = [];
+const _MOVIES_PRESETS = {
+  'top-movies':      { category: 'movies' },
+  'hollywood':       { category: 'movies', country: 'US' },
+  'bollywood':       { category: 'movies', country: 'IN', name: /\b(bollywood|hindi|sony\s*max|colors\s*cineplex|zee\s*cinema|star\s*gold|set\s*max)\b/i },
+  'action':          { name: /\b(action|martial|kung\s*fu|fight|combat|thriller)\b/i },
+  'comedy':          { name: /\b(comedy|laugh|funny|sitcom|humor)\b/i },
+  'horror':          { name: /\b(horror|scream|thriller|fright|fear)\b/i },
+  'classic':         { name: /\b(classic|vintage|golden|black\s*&\s*white|monsters)\b/i },
+  'asian':           { category: 'movies', name: /\b(asian|chinese|korean|japanese|kungfu|china|korea|japan)\b/i },
+  'regional-india':  { country: 'IN', name: /\b(movie|cinema|tamil|telugu|kannada|malayalam|marathi|punjabi|bhojpuri|gold\s*movies|sony\s*max|colors\s*cineplex|zee\s*cinema|star\s*gold)\b/i },
+};
+async function moviesLoadPreset(key) {
+  document.querySelectorAll('.movies-preset').forEach(b => {
+    b.classList.remove('active');
+    if (b.getAttribute('onclick')?.includes("'" + key + "'")) b.classList.add('active');
+  });
+  const list = document.getElementById('movies-list');
+  if (list) list.innerHTML = '<div class="radio-no-data">⏳ Loading…</div>';
+  if (!_iptvAllChannels) await iptvInit();   // lazy-load shared catalog
+  const filter = _MOVIES_PRESETS[key] || _MOVIES_PRESETS['top-movies'];
+  let results = (_iptvAllChannels || []).filter(c => {
+    if (filter.country  && c.country  !== filter.country)  return false;
+    if (filter.category && !c.categories.includes(filter.category)) return false;
+    if (filter.name     && !filter.name.test(c.name)) return false;
+    return true;
+  });
+  results.sort((a, b) => a.name.localeCompare(b.name));
+  _moviesLastResults = results.slice(0, 250);
+  _moviesRender(_moviesLastResults);
+}
+function _moviesRender(results) {
+  const list = document.getElementById('movies-list');
+  if (!list) return;
+  if (!results.length) { list.innerHTML = '<div class="radio-no-data">No movie channels match this filter.</div>'; return; }
+  list.innerHTML = results.map(c => {
+    const initial = (c.name || '?')[0].toUpperCase();
+    const tags = [c.country, (c.languages||[]).slice(0,2).join(',').toUpperCase()].filter(Boolean).join(' · ');
+    return '<div class="radio-station-item" onclick=\'moviesPlay(' + JSON.stringify(c.url) + ',' + JSON.stringify(c.id) + ',' + JSON.stringify(c.name) + ')\'>'
+      + '<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:#7c3aed;color:#fff;font-size:11px;font-weight:700;flex-shrink:0">' + _esc(initial) + '</span>'
+      + '<div class="radio-station-meta"><span class="radio-station-name" title="' + _esc(c.name) + '">' + _esc(c.name) + '</span>'
+      + (tags ? '<span class="radio-station-tag">' + _esc(tags) + '</span>' : '')
+      + '</div></div>';
+  }).join('');
+}
+let _moviesSearchTimer = null;
+function moviesOnSearch(q) {
+  clearTimeout(_moviesSearchTimer);
+  q = (q || '').trim().toLowerCase();
+  if (!q) { _moviesRender(_moviesLastResults); return; }
+  _moviesSearchTimer = setTimeout(() => {
+    if (!_iptvAllChannels) return;
+    const filtered = _iptvAllChannels.filter(c => c.name.toLowerCase().includes(q)).slice(0, 100);
+    _moviesRender(filtered);
+  }, 200);
+}
+function moviesPlay(url, id, name) {
+  const video = document.getElementById('movies-player');
+  const wrap  = document.getElementById('movies-player-wrap');
+  const nowEl = document.getElementById('movies-now');
+  if (!video) return;
+  if (_moviesHls) { try { _moviesHls.destroy(); } catch(_){} _moviesHls = null; }
+  if (wrap) wrap.style.display = 'block';
+  if (nowEl) nowEl.textContent = name || 'Playing…';
+  _moviesCurrentChannel = { id, name, url };
+  const httpsUrl = url.replace(/^http:\/\//i, 'https://');
+  if (/\.m3u8/i.test(httpsUrl) && typeof Hls !== 'undefined' && Hls.isSupported()) {
+    _moviesHls = new Hls({ maxBufferLength: 20, lowLatencyMode: true, enableWorker: true });
+    _moviesHls.loadSource(httpsUrl); _moviesHls.attachMedia(video);
+    _moviesHls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(e => console.warn('[Movies] play rejected:', e)));
+    _moviesHls.on(Hls.Events.ERROR, (e, d) => {
+      if (d.fatal) {
+        if (d.type === Hls.ErrorTypes.NETWORK_ERROR) _moviesHls.startLoad();
+        else if (d.type === Hls.ErrorTypes.MEDIA_ERROR) _moviesHls.recoverMediaError();
+        else if (nowEl) nowEl.textContent = '⚠️ ' + name + ' offline';
+      }
+    });
+  } else {
+    video.src = httpsUrl; video.play().catch(() => { if (nowEl) nowEl.textContent = '⚠️ ' + name + ' offline'; });
+  }
+}
+function moviesStop() {
+  if (_moviesHls) { try { _moviesHls.destroy(); } catch(_){} _moviesHls = null; }
+  const v = document.getElementById('movies-player');
+  const w = document.getElementById('movies-player-wrap');
+  if (v) { try { v.pause(); v.removeAttribute('src'); v.load(); } catch(_){} }
+  if (w) w.style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PODCAST ENGINE — iTunes Search API (free, no auth, CORS-permissive)
+// Returns podcast metadata; we use feedUrl to pull episode list via RSS proxy.
+// ═══════════════════════════════════════════════════════════════════
+const ITUNES_SEARCH = 'https://itunes.apple.com/search';
+let _podcastCurrentUrl = null;
+const _PODCAST_CURATED = [
+  // Business / Markets
+  { name:'Bloomberg Daybreak Asia',  feedUrl:'https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/2bb84a8f-4e21-4b6a-a4d3-ae210140cad7/c1b9e8b0-1e3a-4c1e-8d7e-ae210140cb2c/podcast.rss', category:'Business', icon:'💼' },
+  { name:'The Daily (NYT)',          feedUrl:'https://feeds.simplecast.com/54nAGcIl', category:'News', icon:'📰' },
+  { name:'Planet Money (NPR)',       feedUrl:'https://feeds.npr.org/510289/podcast.xml', category:'Business', icon:'💰' },
+  { name:'How I Built This',         feedUrl:'https://feeds.npr.org/510313/podcast.xml', category:'Business', icon:'🚀' },
+  { name:'Marketplace',              feedUrl:'https://www.marketplace.org/feed/podcast/marketplace', category:'Business', icon:'📊' },
+  // Technology
+  { name:'a16z Podcast',             feedUrl:'https://feeds.simplecast.com/JGE3yC0V', category:'Technology', icon:'💻' },
+  { name:'Lex Fridman Podcast',      feedUrl:'https://lexfridman.com/feed/podcast/', category:'Technology', icon:'🤖' },
+  { name:'TWiT — This Week in Tech', feedUrl:'https://feeds.twit.tv/twit.xml', category:'Technology', icon:'📡' },
+  { name:'Hard Fork (NYT)',          feedUrl:'https://feeds.simplecast.com/l2i9YnTd', category:'Technology', icon:'🔧' },
+  // Education
+  { name:'Stuff You Should Know',    feedUrl:'https://feeds.megaphone.fm/stuffyoushouldknow', category:'Education', icon:'📚' },
+  { name:'TED Talks Daily',          feedUrl:'https://feeds.feedburner.com/TEDTalks_audio', category:'Education', icon:'🎓' },
+  // News
+  { name:'BBC Global News',          feedUrl:'https://podcasts.files.bbci.co.uk/p02nq0gn.rss', category:'News', icon:'🌍' },
+  { name:'Up First (NPR)',           feedUrl:'https://feeds.npr.org/510318/podcast.xml', category:'News', icon:'☀️' },
+  // Health
+  { name:'The Peter Attia Drive',    feedUrl:'https://peterattiadrive.libsyn.com/rss', category:'Health', icon:'❤️' },
+  { name:'Huberman Lab',             feedUrl:'https://feeds.megaphone.fm/hubermanlab', category:'Health', icon:'🧠' },
+  // Sports
+  { name:'The Bill Simmons Podcast', feedUrl:'https://rss.art19.com/the-bill-simmons-podcast', category:'Sports', icon:'🏀' },
+  { name:'The Cricket Podcast',      feedUrl:'https://thecricketpodcast.libsyn.com/rss', category:'Sports', icon:'🏏' },
+  // Comedy
+  { name:'SmartLess',                feedUrl:'https://rss.art19.com/smartless', category:'Comedy', icon:'😂' },
+  { name:'Conan O’Brien Needs A Friend', feedUrl:'https://feeds.simplecast.com/dHoohVNH', category:'Comedy', icon:'😆' },
+  // Society
+  { name:'This American Life',       feedUrl:'http://feed.thisamericanlife.org/talpodcast', category:'Society', icon:'🌐' },
+  { name:'Radiolab',                 feedUrl:'https://feeds.simplecast.com/EmVW7VGp', category:'Society', icon:'🔬' },
+];
+async function podcastLoadCurated() {
+  document.querySelectorAll('.podcast-preset').forEach(b => {
+    b.classList.remove('active');
+    if (b.getAttribute('onclick')?.includes('podcastLoadCurated')) b.classList.add('active');
+  });
+  _podcastRender(_PODCAST_CURATED.map(p => ({ name: p.name, feedUrl: p.feedUrl, artistName: p.category, artworkUrl60: '', icon: p.icon })));
+}
+async function podcastLoadCategory(category) {
+  document.querySelectorAll('.podcast-preset').forEach(b => {
+    b.classList.remove('active');
+    if (b.getAttribute('onclick')?.includes("'" + category + "'")) b.classList.add('active');
+  });
+  const list = document.getElementById('podcast-list');
+  if (list) list.innerHTML = '<div class="radio-no-data">⏳ Searching iTunes…</div>';
+  try {
+    const res = await fetch(ITUNES_SEARCH + '?media=podcast&entity=podcast&limit=40&term=' + encodeURIComponent(category));
+    const data = await res.json();
+    _podcastRender(data.results || []);
+  } catch (e) {
+    if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Could not reach iTunes.</div>';
+  }
+}
+let _podcastSearchTimer = null;
+function podcastOnSearch(q) {
+  clearTimeout(_podcastSearchTimer);
+  q = (q || '').trim();
+  if (!q) { podcastLoadCurated(); return; }
+  _podcastSearchTimer = setTimeout(async () => {
+    document.querySelectorAll('.podcast-preset').forEach(b => b.classList.remove('active'));
+    const list = document.getElementById('podcast-list');
+    if (list) list.innerHTML = '<div class="radio-no-data">🔍 Searching…</div>';
+    try {
+      const res = await fetch(ITUNES_SEARCH + '?media=podcast&entity=podcast&limit=40&term=' + encodeURIComponent(q));
+      const data = await res.json();
+      _podcastRender(data.results || []);
+    } catch (e) { if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Search failed.</div>'; }
+  }, 300);
+}
+function _podcastRender(results) {
+  const list = document.getElementById('podcast-list');
+  if (!list) return;
+  if (!results.length) { list.innerHTML = '<div class="radio-no-data">No podcasts found.</div>'; return; }
+  list.innerHTML = results.map(p => {
+    const name = p.collectionName || p.name || 'Unknown podcast';
+    const author = p.artistName || '';
+    const feed = p.feedUrl || '';
+    const art = p.artworkUrl60 || '';
+    const icon = p.icon || '';
+    return '<div class="radio-station-item" onclick=\'podcastOpen(' + JSON.stringify(feed) + ',' + JSON.stringify(name) + ')\'>'
+      + (art ? '<img src="' + _esc(art) + '" style="width:34px;height:34px;border-radius:6px;flex-shrink:0;object-fit:cover" alt=""/>'
+            : '<span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:6px;background:#a855f7;color:#fff;font-size:18px;flex-shrink:0">' + (icon || '🎙') + '</span>')
+      + '<div class="radio-station-meta"><span class="radio-station-name" title="' + _esc(name) + '">' + _esc(name) + '</span>'
+      + (author ? '<span class="radio-station-tag">' + _esc(author) + '</span>' : '')
+      + '</div></div>';
+  }).join('');
+}
+async function podcastOpen(feedUrl, name) {
+  if (!feedUrl) return;
+  const list = document.getElementById('podcast-list');
+  const np = document.getElementById('podcast-now-playing');
+  if (np) np.textContent = '⏳ Loading episodes…';
+  // Use a free CORS-relaxing RSS-to-JSON service (rss2json) — no auth required, ~5/s rate
+  try {
+    const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feedUrl));
+    const data = await res.json();
+    if (!data.items || !data.items.length) throw new Error('No episodes');
+    if (list) {
+      list.innerHTML = '<button onclick="podcastLoadCurated()" style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:7px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;margin:8px 10px">⟵ Back to podcasts</button>'
+        + data.items.slice(0, 25).map(ep => {
+          const audio = ep.enclosure?.link || '';
+          if (!audio) return '';
+          const ttl = ep.title || 'Episode';
+          const date = ep.pubDate ? new Date(ep.pubDate).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) : '';
+          return '<div class="radio-station-item" onclick=\'podcastPlay(' + JSON.stringify(audio) + ',' + JSON.stringify(ttl) + ')\'>'
+            + '<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:#a855f7;color:#fff;font-size:11px;flex-shrink:0">▶</span>'
+            + '<div class="radio-station-meta"><span class="radio-station-name" title="' + _esc(ttl) + '">' + _esc(ttl) + '</span>'
+            + (date ? '<span class="radio-station-tag">' + _esc(date) + '</span>' : '')
+            + '</div></div>';
+        }).join('');
+    }
+    if (np) np.textContent = name || 'Pick an episode';
+  } catch (e) {
+    if (np) np.textContent = '⚠️ Could not load episodes';
+    if (list) list.innerHTML += '<div class="radio-no-data">⚠️ Feed unavailable. Try another podcast.</div>';
+  }
+}
+function podcastPlay(url, title) {
+  const audio = document.getElementById('podcast-audio');
+  if (!audio) return;
+  audio.style.display = 'block';
+  audio.src = url;
+  audio.play().catch(()=>{ const np = document.getElementById('podcast-now-playing'); if (np) np.textContent = '⚠️ Play failed'; });
+  _podcastCurrentUrl = url;
+  const np = document.getElementById('podcast-now-playing');
+  if (np) np.textContent = title || 'Playing…';
+  const dot = document.getElementById('podcast-dot');
+  if (dot) dot.style.background = '#22c55e';
+  const btn = document.getElementById('podcast-play-btn');
+  if (btn) { btn.disabled = false; btn.textContent = '⏸'; }
+}
+function podcastTogglePlay() {
+  const audio = document.getElementById('podcast-audio');
+  if (!audio) return;
+  if (!_podcastCurrentUrl) {
+    const first = document.querySelector('#podcast-list .radio-station-item');
+    if (first) first.click();
+    return;
+  }
+  if (audio.paused) audio.play();
+  else audio.pause();
+}
+function podcastSetVolume(v) {
+  const a = document.getElementById('podcast-audio');
+  if (a) a.volume = Math.max(0, Math.min(100, Number(v))) / 100;
+}
+
+function musicLoadDefault()  { musicLoadPreset('top-music'); }
+function moviesLoadDefault() { moviesLoadPreset('top-movies'); }
+
+// ═══════════════════════════════════════════════════════════════════
+// RB-TABS scroll arrow nav
+// ═══════════════════════════════════════════════════════════════════
+function rbTabsScroll(dir) {
+  const wrap = document.getElementById('rb-tabs');
+  if (!wrap) return;
+  wrap.scrollBy({ left: dir * 140, behavior: 'smooth' });
 }
 
 // Backwards-compat shim — old code paths still call radioLoadCategory()
@@ -13060,6 +13615,12 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
   </button>
   <button class="mobile-rb-btn" id="mobile-iptv-btn" onclick="openMobileRightBar('iptv')">
     📡 Live TV
+  </button>
+  <button class="mobile-rb-btn" id="mobile-music-btn" onclick="openMobileRightBar('music')">
+    🎵 Music
+  </button>
+  <button class="mobile-rb-btn" id="mobile-podcast-btn" onclick="openMobileRightBar('podcast')">
+    🎙 Podcast
   </button>
 </div>
 
