@@ -86,12 +86,92 @@ FEEDS: dict[str, list[dict[str, str]]] = {
         {"url": "https://www.livemint.com/rss/money", "source": "Mint Money"},
     ],
     "ipo": [
+        {"url": "https://www.moneycontrol.com/rss/iponews.xml", "source": "Moneycontrol IPO"},
+        {"url": "https://www.business-standard.com/rss/markets/ipos-130.rss", "source": "Business Standard IPO"},
         {"url": "https://economictimes.indiatimes.com/markets/ipo/news/articlelist/74706482.cms", "source": "ET IPO"},
-        {"url": "https://www.livemint.com/rss/markets", "source": "Mint Markets"},
+        {"url": "https://www.investing.com/rss/news_357.rss", "source": "Investing.com IPO (Global)"},
+        {"url": "https://www.cnbc.com/id/100782720/device/rss/rss.html", "source": "CNBC IPOs (US)"},
+        {"url": "https://www.nasdaq.com/feed/rssoutbound?category=IPOs", "source": "NASDAQ IPOs"},
     ],
     "nfo": [
         {"url": "https://www.moneycontrol.com/rss/mfnews.xml", "source": "Moneycontrol MF"},
         {"url": "https://www.business-standard.com/rss/markets/mutual-funds-104.rss", "source": "Business Standard MF"},
+        {"url": "https://economictimes.indiatimes.com/rssfeeds/mutual-funds/articlelist/360199.cms", "source": "ET Mutual Funds"},
+        {"url": "https://www.morningstar.com/feeds/articles", "source": "Morningstar"},
+    ],
+    # ── 15 new lifestyle / industry categories ────────────────────────────────
+    "lifestyle": [
+        {"url": "https://www.thehindu.com/life-and-style/feeder/default.rss", "source": "The Hindu Lifestyle"},
+        {"url": "https://lifehacker.com/feed/rss", "source": "Lifehacker"},
+        {"url": "https://www.bbc.co.uk/programmes/p02nq0lx/episodes/downloads.rss", "source": "BBC Lifestyle"},
+    ],
+    "food": [
+        {"url": "https://www.foodandwine.com/syndication/rss", "source": "Food & Wine"},
+        {"url": "https://www.eater.com/rss/index.xml", "source": "Eater"},
+        {"url": "https://www.bbcgoodfood.com/feed", "source": "BBC Good Food"},
+    ],
+    "fashion": [
+        {"url": "https://www.vogue.com/feed/rss", "source": "Vogue"},
+        {"url": "https://www.gq.com/feed/rss", "source": "GQ"},
+        {"url": "https://www.harpersbazaar.com/rss/all.xml/", "source": "Harper's Bazaar"},
+    ],
+    "health": [
+        {"url": "https://www.healthline.com/rss/news", "source": "Healthline"},
+        {"url": "https://feeds.bbci.co.uk/news/health/rss.xml", "source": "BBC Health"},
+        {"url": "https://www.medicalnewstoday.com/newsfeeds/rss/medical_all.xml", "source": "Medical News Today"},
+    ],
+    "medicine": [
+        {"url": "https://www.nih.gov/news-events/news-releases/feed.xml", "source": "NIH"},
+        {"url": "https://www.medscape.com/cx/rssfeeds/2900.xml", "source": "Medscape"},
+        {"url": "https://www.statnews.com/feed/", "source": "STAT News"},
+    ],
+    "energy": [
+        {"url": "https://oilprice.com/rss/main", "source": "OilPrice"},
+        {"url": "https://www.utilitydive.com/feeds/news/", "source": "Utility Dive"},
+        {"url": "https://www.rechargenews.com/rss", "source": "Recharge News"},
+    ],
+    "data_center": [
+        {"url": "https://www.datacenterdynamics.com/rss/", "source": "DataCenter Dynamics"},
+        {"url": "https://www.datacenterknowledge.com/rss.xml", "source": "DataCenter Knowledge"},
+    ],
+    "hospital": [
+        {"url": "https://www.healthcaredive.com/feeds/news/", "source": "Healthcare Dive"},
+        {"url": "https://www.beckershospitalreview.com/rss/all-articles.xml", "source": "Becker's Hospital Review"},
+    ],
+    "insurance": [
+        {"url": "https://www.insurancejournal.com/rss.xml", "source": "Insurance Journal"},
+        {"url": "https://www.policygenius.com/blog/feed/", "source": "PolicyGenius"},
+        {"url": "https://www.livemint.com/rss/insurance", "source": "Mint Insurance"},
+    ],
+    "entertainment": [
+        {"url": "https://www.hollywoodreporter.com/feed", "source": "Hollywood Reporter"},
+        {"url": "https://variety.com/feed/", "source": "Variety"},
+        {"url": "https://www.rollingstone.com/feed/", "source": "Rolling Stone"},
+    ],
+    "movie": [
+        {"url": "https://www.indiewire.com/feed/", "source": "IndieWire"},
+        {"url": "https://www.imdb.com/news/movie/?ref_=nv_nw_mv", "source": "IMDb Movies"},
+        {"url": "https://variety.com/v/film/feed/", "source": "Variety Film"},
+    ],
+    "mobile": [
+        {"url": "https://www.gsmarena.com/rss-news-reviews.php3", "source": "GSMArena"},
+        {"url": "https://www.androidauthority.com/feed/", "source": "Android Authority"},
+        {"url": "https://9to5mac.com/feed/", "source": "9to5Mac"},
+    ],
+    "internet": [
+        {"url": "https://feeds.arstechnica.com/arstechnica/index", "source": "Ars Technica"},
+        {"url": "https://www.wired.com/feed/rss", "source": "WIRED"},
+        {"url": "https://www.theverge.com/web/rss/index.xml", "source": "The Verge Web"},
+    ],
+    "payment": [
+        {"url": "https://www.pymnts.com/feed/", "source": "PYMNTS"},
+        {"url": "https://www.finextra.com/rss/headlines.aspx", "source": "Finextra"},
+        {"url": "https://www.americanbanker.com/feed", "source": "American Banker"},
+    ],
+    "currency": [
+        {"url": "https://www.investing.com/rss/news_1.rss", "source": "Investing.com Forex"},
+        {"url": "https://www.fxstreet.com/rss/news", "source": "FXStreet"},
+        {"url": "https://www.dailyfx.com/feeds/all", "source": "DailyFX"},
     ],
     "blockchain": [
         {"url": "https://cointelegraph.com/rss/tag/blockchain", "source": "CoinTelegraph"},
