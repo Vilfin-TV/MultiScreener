@@ -4919,7 +4919,6 @@ function getConfiguredWorkerUrl() {
   return (
     window._cfWorkerUrl ||
     localStorage.getItem(CF_KEY) ||
-    (typeof VILTV_CONFIG !== 'undefined' ? VILTV_CONFIG.WORKER_URL : '') ||
     ''
   ).replace(/\/+$/, '');
 }
@@ -9105,7 +9104,7 @@ const NEWS_SOURCES = [
   { id:'hindi3', flag:'🇮🇳', label:'India TV (हिंदी)',     lang:'Hindi',    group:'🇮🇳 India (Hindi)',   color:'#6b2a00', url:'https://news.google.com/rss/search?q=india+tv+hindi&hl=hi&gl=IN&ceid=IN:hi' },
   // ── India — Malayalam ────────────────────────────────────────────
   { id:'malay1', flag:'🇮🇳', label:'Mathrubhumi',          lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#1a5276', url:'https://news.google.com/rss/search?q=mathrubhumi&hl=ml&gl=IN&ceid=IN:ml' },
-  { id:'malay2', flag:'🇮🇳', label:'Manorama Online',       lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#154360', url:'https://news.google.com/rss/search?q=manorama+online&hl=ml&gl=IN&ceid=IN:ml' },
+  { id:'malay2', flag:'🇮🇳', label:'Manorama Online',       lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#154360', url:'https://www.onmanorama.com/news/business.feeds.onmrss.xml', fallbackQuery:'manorama online malayalam' },
   { id:'malay3', flag:'🇮🇳', label:'Deepika Malayalam',     lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#1f618d', url:'https://news.google.com/rss/search?q=deepika+malayalam&hl=ml&gl=IN&ceid=IN:ml' },
   { id:'malay4', flag:'🇮🇳', label:'Marunadan Malayali',    lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#21618c', url:'https://news.google.com/rss/search?q=marunadan+malayali&hl=ml&gl=IN&ceid=IN:ml' },
   // ── India — Tamil ────────────────────────────────────────────────
