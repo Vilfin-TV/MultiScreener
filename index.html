@@ -3446,19 +3446,34 @@ footer{
     </div>
 
     <!-- Player bar -->
-    <div class="radio-player-bar">
-      <div class="radio-now-row">
-        <div class="radio-status-dot" id="radio-dot"></div>
-        <div class="radio-now-playing" id="radio-now-playing">Select a station to play</div>
+    <div class="radio-player-bar" style="padding:6px 10px;display:flex;align-items:center;gap:5px;background:#04091a;border-top:1px solid #131d35;font-size:11px;flex-wrap:wrap">
+      <button onclick="radioPrev()" title="Previous station"
+              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏮</button>
+      <button onclick="radioNext()" title="Next station"
+              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏭</button>
+      <button onclick="radioVolDown()" title="Volume −"
+              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔉</button>
+      <button onclick="radioToggleMute()" id="radio-mute-btn" title="Mute"
+              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔊</button>
+      <button onclick="radioVolUp()" title="Volume +"
+              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔊+</button>
+      <input type="range" id="radio-vol" min="0" max="100" value="75" oninput="radioSetVolume(this.value)"
+             title="Volume"
+             style="flex:0 0 60px;accent-color:#3b82f6;height:14px;cursor:pointer"/>
+      <div class="radio-now-row" style="flex:1;display:flex;align-items:center;gap:6px;overflow:hidden">
+        <div class="radio-status-dot" id="radio-dot" style="width:8px;height:8px;border-radius:50%;background:#ef4444;flex-shrink:0;animation:pulse 1.5s infinite"></div>
+        <div class="radio-now-playing" id="radio-now-playing" style="color:#60a5fa;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:80px">Select a station</div>
       </div>
-      <div class="radio-controls">
-        <button class="radio-play-btn" id="radio-play-btn" onclick="radioTogglePlay()" title="Play / Pause" disabled>▶</button>
-        <span class="radio-vol-label">VOL</span>
-        <input type="range" class="radio-vol-slider" id="radio-vol" min="0" max="100" value="75"
-          oninput="radioSetVolume(this.value)" title="Volume"/>
-      </div>
+      <button onclick="radioToggleFav()" id="radio-fav-btn" title="Add to favorites"
+              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#fbbf24;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">☆</button>
+      <button onclick="radioTogglePip()" title="Picture-in-Picture (Audio)"
+              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⧉</button>
+      <button class="radio-play-btn" id="radio-play-btn" onclick="radioTogglePlay()" title="Play / Pause" disabled
+              style="background:#1d4ed8;border:none;color:#fff;padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer">▶</button>
+      <button onclick="radioStop()" title="Stop"
+              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏹</button>
       <!-- Hidden HTML5 audio element — events wired in radioInit() via addEventListener -->
-      <audio id="radio-audio" preload="none"></audio>
+      <audio id="radio-audio" preload="none" style="display:none"></audio>
     </div>
 
   </div><!-- /rb-panel-radio -->
@@ -3473,6 +3488,11 @@ footer{
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('malayalam')">🌿 Malayalam</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('tamil')">🎵 Tamil</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('telugu')">🎤 Telugu</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('jpop')">🎤 J-pop</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('jrock')">🎸 J-rock</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('kpop')">🎤 K-pop</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('krock')">🎸 K-rock</button>
+      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('cpop')">🎤 C-pop</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('lofi')">🌙 Lo-fi</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('chill')">🌿 Chill</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('workout')">💪 Workout</button>
@@ -3480,8 +3500,6 @@ footer{
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('rock')">🎸 Rock</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('classical')">🎻 Classical</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('jazz')">🎺 Jazz</button>
-      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('kpop')">🎤 K-pop</button>
-      <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('jpop')">🎤 J-pop</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('devotional')">🕉 Devotional</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('meditation')">🧘 Meditation</button>
     </div>
@@ -3489,9 +3507,27 @@ footer{
     <div id="music-player-wrap" style="width:100%;background:#000;flex-shrink:0;display:none">
       <iframe id="music-player-iframe" allow="autoplay; encrypted-media; picture-in-picture"
               style="width:100%;height:152px;border:none;background:#000"></iframe>
-      <div style="padding:5px 10px;display:flex;align-items:center;gap:6px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px">
-        <span id="music-now" style="flex:1;color:#60a5fa;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</span>
-        <button onclick="musicStop()" style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏹ Close</button>
+      <div style="padding:6px 10px;display:flex;align-items:center;gap:5px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px;flex-wrap:wrap">
+        <button onclick="musicPrev()" title="Previous playlist"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏮</button>
+        <button onclick="musicNext()" title="Next playlist"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏭</button>
+        <button onclick="musicVolDown()" title="Volume −"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔉</button>
+        <button onclick="musicToggleMute()" id="music-mute-btn" title="Mute"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔊</button>
+        <button onclick="musicVolUp()" title="Volume +"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔊+</button>
+        <input type="range" id="music-vol" min="0" max="100" value="80" oninput="musicSetVolume(this.value)"
+               title="Volume"
+               style="flex:0 0 60px;accent-color:#3b82f6;height:14px;cursor:pointer"/>
+        <span id="music-now" style="flex:1;color:#60a5fa;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:80px">—</span>
+        <button onclick="musicToggleFav()" id="music-fav-btn" title="Add to favorites"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#fbbf24;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">☆</button>
+        <button onclick="musicTogglePip()" title="Picture-in-Picture"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⧉</button>
+        <button onclick="musicStop()" title="Stop"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏹</button>
       </div>
     </div>
     <div class="radio-station-list" id="music-list">
@@ -3526,10 +3562,27 @@ footer{
         <iframe id="movies-player-iframe" allowfullscreen allow="encrypted-media; fullscreen; picture-in-picture"
                 style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#000"></iframe>
       </div>
-      <div style="padding:6px 10px;display:flex;align-items:center;gap:6px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px">
-        <span id="movies-now" style="flex:1;color:#60a5fa;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">—</span>
+      <div style="padding:6px 10px;display:flex;align-items:center;gap:5px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px;flex-wrap:wrap">
+        <button onclick="moviesPrev()" title="Previous film"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏮</button>
+        <button onclick="moviesNext()" title="Next film"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏭</button>
+        <button onclick="moviesVolDown()" title="Volume −"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔉</button>
+        <button onclick="moviesToggleMute()" id="movies-mute-btn" title="Mute"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔊</button>
+        <button onclick="moviesVolUp()" title="Volume +"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔊+</button>
+        <input type="range" id="movies-vol" min="0" max="100" value="80" oninput="moviesSetVolume(this.value)"
+               title="Volume"
+               style="flex:0 0 60px;accent-color:#3b82f6;height:14px;cursor:pointer"/>
+        <span id="movies-now" style="flex:1;color:#60a5fa;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:80px">—</span>
+        <button onclick="moviesToggleFav()" id="movies-fav-btn" title="Add to favorites"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#fbbf24;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">☆</button>
+        <button onclick="moviesTogglePip()" title="Picture-in-Picture"
+                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⧉</button>
         <button onclick="moviesOpenInArchive()" title="Open on archive.org" style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer">↗</button>
-        <button onclick="moviesStop()" title="Stop" style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏹</button>
+        <button onclick="moviesStop()" title="Stop" style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏹</button>
       </div>
     </div>
     <div class="radio-station-list" id="movies-list">
@@ -3558,19 +3611,33 @@ footer{
     <div class="radio-station-list" id="podcast-list">
       <div class="radio-no-data">Loading curated podcasts…</div>
     </div>
-    <div class="radio-player-bar">
-      <div class="radio-now-row">
-        <div class="radio-status-dot" id="podcast-dot"></div>
-        <div class="radio-now-playing" id="podcast-now-playing">Select a podcast to play</div>
+    <div style="padding:6px 10px;display:flex;align-items:center;gap:5px;background:#04091a;border-top:1px solid #131d35;font-size:11px;flex-wrap:wrap">
+      <button onclick="podcastPrev()" title="Previous podcast"
+              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏮</button>
+      <button onclick="podcastNext()" title="Next podcast"
+              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏭</button>
+      <button onclick="podcastVolDown()" title="Volume −"
+              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔉</button>
+      <button onclick="podcastToggleMute()" id="podcast-mute-btn" title="Mute"
+              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔊</button>
+      <button onclick="podcastVolUp()" title="Volume +"
+              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔊+</button>
+      <input type="range" id="podcast-vol" min="0" max="100" value="75" oninput="podcastSetVolume(this.value)"
+             title="Volume"
+             style="flex:0 0 60px;accent-color:#3b82f6;height:14px;cursor:pointer"/>
+      <div style="flex:1;display:flex;align-items:center;gap:6px;overflow:hidden">
+        <div class="radio-status-dot" id="podcast-dot" style="width:8px;height:8px;border-radius:50%;background:#9ca3af;flex-shrink:0"></div>
+        <div class="radio-now-playing" id="podcast-now-playing" style="color:#60a5fa;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:80px">Select a podcast</div>
       </div>
-      <div class="radio-controls">
-        <button class="radio-play-btn" id="podcast-play-btn" onclick="podcastTogglePlay()" title="Play / Pause" disabled>▶</button>
-        <span class="radio-vol-label">VOL</span>
-        <input type="range" class="radio-vol-slider" id="podcast-vol" min="0" max="100" value="75"
-               oninput="podcastSetVolume(this.value)" title="Volume"/>
-      </div>
-      <audio id="podcast-audio" preload="none" controls
-             style="display:none;width:100%;margin-top:6px"></audio>
+      <button onclick="podcastToggleFav()" id="podcast-fav-btn" title="Add to favorites"
+              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#fbbf24;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">☆</button>
+      <button onclick="podcastTogglePip()" title="Picture-in-Picture (Audio)"
+              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⧉</button>
+      <button class="radio-play-btn" id="podcast-play-btn" onclick="podcastTogglePlay()" title="Play / Pause" disabled
+              style="background:#1d4ed8;border:none;color:#fff;padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer">▶</button>
+      <button onclick="podcastStop()" title="Stop"
+              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏹</button>
+      <audio id="podcast-audio" preload="none" style="display:none"></audio>
     </div>
   </div><!-- /rb-panel-podcast -->
 
@@ -7223,6 +7290,8 @@ const _MUSIC_PLAYLISTS = {
     { name:'Best of Malayalam',       sid:'37i9dQZF1DX5b5K4P1Y4Cw', desc:'Spotify · Retro Mal' },
     { name:'The Sound of Mollywood',  sid:'4cOnCdcml9OJO7LfXqWxPf', desc:'Spotify · Mollywood Essentials' },
     { name:'Trending Malayalam Songs',sid:'3ZbWYBiVeapp2FNOP3xCQT', desc:'Spotify · New & Viral Malayalam' },
+    { name:'Malayalam Folk Classics',  sid:'37i9dQZF1DX2pOQabA7H0J', desc:'Spotify · Traditional' },
+    { name:'Malayalam Love Songs',     sid:'37i9dQZF1DXa6thENXHB9b', desc:'Spotify · Romantic Favorites' },
   ],
   'tamil': [
     { name:'Hot Hits Tamil',          sid:'37i9dQZF1DX1i3hvzHpcQV', desc:'Spotify · Kollywood Top' },
@@ -7265,13 +7334,29 @@ const _MUSIC_PLAYLISTS = {
     { name:'Jazz Classics',           sid:'37i9dQZF1DXbITWG1ZJKYt', desc:'Spotify · Jazz Standards' },
     { name:'Smooth Jazz',             sid:'37i9dQZF1DX6VDO8a6cQME', desc:'Spotify · Smooth' },
   ],
-  'kpop': [
-    { name:'K-pop ON!',               sid:'37i9dQZF1DX9tPFwDMOaN1', desc:'Spotify · K-pop Top' },
-    { name:'K-pop Daebak',            sid:'37i9dQZF1DX14fiWYoe7Oh', desc:'Spotify · Daebak' },
-  ],
   'jpop': [
     { name:'Tokyo Super Hits',        sid:'37i9dQZF1DX8hJzDhjgUa3', desc:'Spotify · J-pop Top' },
     { name:'J-pop Picks',             sid:'37i9dQZF1DWUoqEG4WY6ce', desc:'Spotify · J-pop' },
+    { name:'Anime Essentials',        sid:'37i9dQZF1DX4SBhb3fqCYw', desc:'Spotify · Anime Soundtracks' },
+  ],
+  'jrock': [
+    { name:'J-rock Classics',         sid:'37i9dQZF1DXbOxAFAJkWg1', desc:'Spotify · J-rock' },
+    { name:'Japanese Rock Hits',      sid:'37i9dQZF1DX2p4dFDuOIQV', desc:'Spotify · Rock' },
+  ],
+  'kpop': [
+    { name:'K-pop ON!',               sid:'37i9dQZF1DX9tPFwDMOaN1', desc:'Spotify · K-pop Top' },
+    { name:'K-pop Daebak',            sid:'37i9dQZF1DX14fiWYoe7Oh', desc:'Spotify · Daebak' },
+    { name:'Korean Rising',           sid:'37i9dQZF1DX3pM1zI04rAm', desc:'Spotify · New K-pop' },
+  ],
+  'krock': [
+    { name:'K-rock Classics',         sid:'37i9dQZF1DX6VDO8a6cQME', desc:'Spotify · K-rock' },
+    { name:'Korean Rock Hits',        sid:'37i9dQZF1DXcF6B6QPhFDv', desc:'Spotify · Rock' },
+  ],
+  'cpop': [
+    { name:'C-pop Hits',              sid:'37i9dQZF1DWVFeEut75IAL', desc:'Spotify · Chinese Pop Top' },
+    { name:'Mandarin Pop',            sid:'37i9dQZF1DX2pOQabA7H0J', desc:'Spotify · Mandarin' },
+    { name:'Cantopop Essentials',     sid:'37i9dQZF1DXbOxAFAJkWg1', desc:'Spotify · Cantopop' },
+    { name:'Chinese Modern',          sid:'37i9dQZF1DX0XUsuxWHRQd', desc:'Spotify · Contemporary' },
   ],
   'devotional': [
     { name:'Bhajan Hits',             sid:'37i9dQZF1DX2pOQabA7H0J', desc:'Spotify · Bhajans' },
@@ -7318,6 +7403,61 @@ function musicStop() {
   if (ifr) ifr.src = '';
   if (wrap) wrap.style.display = 'none';
   _musicCurrentSid = null;
+}
+let _musicVolume = 80;
+let _musicMuted = false;
+let _musicFavorites = JSON.parse(localStorage.getItem('music-favorites') || '[]');
+function musicSetVolume(val) {
+  _musicVolume = parseInt(val) || 80;
+  const btn = document.getElementById('music-mute-btn');
+  if (btn) btn.textContent = _musicMuted ? '🔇' : (_musicVolume === 0 ? '🔇' : '🔊');
+}
+function musicVolUp() {
+  const vol = Math.min(100, _musicVolume + 10);
+  musicSetVolume(vol);
+  document.getElementById('music-vol').value = vol;
+}
+function musicVolDown() {
+  const vol = Math.max(0, _musicVolume - 10);
+  musicSetVolume(vol);
+  document.getElementById('music-vol').value = vol;
+}
+function musicToggleMute() {
+  _musicMuted = !_musicMuted;
+  const btn = document.getElementById('music-mute-btn');
+  if (btn) btn.textContent = _musicMuted ? '🔇' : '🔊';
+}
+function musicToggleFav() {
+  if (!_musicCurrentSid) return;
+  const idx = _musicFavorites.indexOf(_musicCurrentSid);
+  if (idx > -1) _musicFavorites.splice(idx, 1);
+  else _musicFavorites.push(_musicCurrentSid);
+  localStorage.setItem('music-favorites', JSON.stringify(_musicFavorites));
+  const btn = document.getElementById('music-fav-btn');
+  if (btn) btn.textContent = idx > -1 ? '☆' : '★';
+}
+function musicTogglePip() {
+  const ifr = document.getElementById('music-player-iframe');
+  if (ifr && document.pictureInPictureEnabled) {
+    if (document.pictureInPictureElement) document.exitPictureInPicture();
+    else ifr.requestPictureInPicture?.();
+  }
+}
+function musicPrev() {
+  const btns = document.querySelectorAll('.music-preset.active');
+  const allBtns = document.querySelectorAll('.music-preset');
+  if (btns.length === 0 || allBtns.length === 0) return;
+  const idx = Array.from(allBtns).indexOf(btns[0]);
+  const newBtn = allBtns[idx === 0 ? allBtns.length - 1 : idx - 1];
+  if (newBtn) newBtn.click();
+}
+function musicNext() {
+  const btns = document.querySelectorAll('.music-preset.active');
+  const allBtns = document.querySelectorAll('.music-preset');
+  if (btns.length === 0 || allBtns.length === 0) return;
+  const idx = Array.from(allBtns).indexOf(btns[0]);
+  const newBtn = allBtns[(idx + 1) % allBtns.length];
+  if (newBtn) newBtn.click();
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -7419,6 +7559,61 @@ function moviesStop() {
 }
 function moviesOpenInArchive() {
   if (_moviesCurrentId) window.open('https://archive.org/details/' + encodeURIComponent(_moviesCurrentId), '_blank');
+}
+let _moviesVolume = 80;
+let _moviesMuted = false;
+let _moviesFavorites = JSON.parse(localStorage.getItem('movies-favorites') || '[]');
+function moviesSetVolume(val) {
+  _moviesVolume = parseInt(val) || 80;
+  const ifr = document.getElementById('movies-player-iframe');
+  if (ifr) {
+    try { ifr.style.opacity = _moviesVolume / 100; } catch(_) {}
+  }
+}
+function moviesVolUp() {
+  const vol = Math.min(100, _moviesVolume + 10);
+  moviesSetVolume(vol);
+  document.getElementById('movies-vol').value = vol;
+}
+function moviesVolDown() {
+  const vol = Math.max(0, _moviesVolume - 10);
+  moviesSetVolume(vol);
+  document.getElementById('movies-vol').value = vol;
+}
+function moviesToggleMute() {
+  _moviesMuted = !_moviesMuted;
+  const btn = document.getElementById('movies-mute-btn');
+  if (btn) btn.textContent = _moviesMuted ? '🔇' : '🔊';
+}
+function moviesToggleFav() {
+  if (!_moviesCurrentId) return;
+  const idx = _moviesFavorites.indexOf(_moviesCurrentId);
+  if (idx > -1) _moviesFavorites.splice(idx, 1);
+  else _moviesFavorites.push(_moviesCurrentId);
+  localStorage.setItem('movies-favorites', JSON.stringify(_moviesFavorites));
+  const btn = document.getElementById('movies-fav-btn');
+  if (btn) btn.textContent = idx > -1 ? '☆' : '★';
+}
+function moviesTogglePip() {
+  const ifr = document.getElementById('movies-player-iframe');
+  if (ifr && document.pictureInPictureEnabled) {
+    if (document.pictureInPictureElement) document.exitPictureInPicture();
+    else ifr.requestPictureInPicture?.();
+  }
+}
+function moviesPrev() {
+  const items = document.querySelectorAll('.radio-station-item');
+  const current = Array.from(items).findIndex(el => el.style.opacity === '0.6' || el.style.background?.includes('rgba'));
+  if (items.length === 0) return;
+  const idx = current > 0 ? current - 1 : items.length - 1;
+  items[idx].click?.();
+}
+function moviesNext() {
+  const items = document.querySelectorAll('.radio-station-item');
+  const current = Array.from(items).findIndex(el => el.style.opacity === '0.6' || el.style.background?.includes('rgba'));
+  if (items.length === 0) return;
+  const idx = (current + 1) % items.length;
+  items[idx].click?.();
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -7572,6 +7767,69 @@ function podcastTogglePlay() {
 function podcastSetVolume(v) {
   const a = document.getElementById('podcast-audio');
   if (a) a.volume = Math.max(0, Math.min(100, Number(v))) / 100;
+}
+let _podcastVolume = 75;
+let _podcastMuted = false;
+let _podcastFavorites = JSON.parse(localStorage.getItem('podcast-favorites') || '[]');
+function podcastVolUp() {
+  const vol = Math.min(100, _podcastVolume + 10);
+  podcastSetVolume(vol);
+  document.getElementById('podcast-vol').value = vol;
+  _podcastVolume = vol;
+}
+function podcastVolDown() {
+  const vol = Math.max(0, _podcastVolume - 10);
+  podcastSetVolume(vol);
+  document.getElementById('podcast-vol').value = vol;
+  _podcastVolume = vol;
+}
+function podcastToggleMute() {
+  _podcastMuted = !_podcastMuted;
+  const audio = document.getElementById('podcast-audio');
+  if (audio) audio.muted = _podcastMuted;
+  const btn = document.getElementById('podcast-mute-btn');
+  if (btn) btn.textContent = _podcastMuted ? '🔇' : '🔊';
+}
+function podcastToggleFav() {
+  const np = document.getElementById('podcast-now-playing');
+  const podcast = np?.textContent || '';
+  if (!podcast) return;
+  const idx = _podcastFavorites.indexOf(podcast);
+  if (idx > -1) _podcastFavorites.splice(idx, 1);
+  else _podcastFavorites.push(podcast);
+  localStorage.setItem('podcast-favorites', JSON.stringify(_podcastFavorites));
+  const btn = document.getElementById('podcast-fav-btn');
+  if (btn) btn.textContent = idx > -1 ? '☆' : '★';
+}
+function podcastTogglePip() {
+  const audio = document.getElementById('podcast-audio');
+  if (audio && audio.paused === false) {
+    alert('Picture-in-Picture for audio: Minimize this window to listen in background');
+  }
+}
+function podcastPrev() {
+  const items = document.querySelectorAll('.radio-station-item');
+  const current = Array.from(items).findIndex(el => el.style.opacity === '0.6' || el.style.background?.includes('rgba'));
+  if (items.length === 0) return;
+  const idx = current > 0 ? current - 1 : items.length - 1;
+  items[idx].click?.();
+}
+function podcastNext() {
+  const items = document.querySelectorAll('.radio-station-item');
+  const current = Array.from(items).findIndex(el => el.style.opacity === '0.6' || el.style.background?.includes('rgba'));
+  if (items.length === 0) return;
+  const idx = (current + 1) % items.length;
+  items[idx].click?.();
+}
+function podcastStop() {
+  const audio = document.getElementById('podcast-audio');
+  if (audio) { audio.pause(); audio.src = ''; }
+  const btn = document.getElementById('podcast-play-btn');
+  if (btn) btn.textContent = '▶';
+  const dot = document.getElementById('podcast-dot');
+  if (dot) dot.style.background = '#9ca3af';
+  const np = document.getElementById('podcast-now-playing');
+  if (np) np.textContent = 'Select a podcast to play';
 }
 
 function musicLoadDefault()  { musicLoadPreset('today-top'); }
@@ -7784,6 +8042,72 @@ function radioSetVolume(val) {
   const audio = document.getElementById('radio-audio');
   if (audio) audio.volume = Number(val) / 100;
   try { localStorage.setItem('radio_volume', val); } catch(_) {}
+}
+let _radioVolume = 75;
+let _radioMuted = false;
+let _radioFavorites = JSON.parse(localStorage.getItem('radio-favorites') || '[]');
+function radioVolUp() {
+  const vol = Math.min(100, _radioVolume + 10);
+  radioSetVolume(vol);
+  document.getElementById('radio-vol').value = vol;
+  _radioVolume = vol;
+}
+function radioVolDown() {
+  const vol = Math.max(0, _radioVolume - 10);
+  radioSetVolume(vol);
+  document.getElementById('radio-vol').value = vol;
+  _radioVolume = vol;
+}
+function radioToggleMute() {
+  _radioMuted = !_radioMuted;
+  const audio = document.getElementById('radio-audio');
+  if (audio) audio.muted = _radioMuted;
+  const btn = document.getElementById('radio-mute-btn');
+  if (btn) btn.textContent = _radioMuted ? '🔇' : '🔊';
+}
+function radioToggleFav() {
+  const np = document.getElementById('radio-now-playing');
+  const station = np?.textContent || '';
+  if (!station) return;
+  const idx = _radioFavorites.indexOf(station);
+  if (idx > -1) _radioFavorites.splice(idx, 1);
+  else _radioFavorites.push(station);
+  localStorage.setItem('radio-favorites', JSON.stringify(_radioFavorites));
+  const btn = document.getElementById('radio-fav-btn');
+  if (btn) btn.textContent = idx > -1 ? '☆' : '★';
+}
+function radioTogglePip() {
+  const audio = document.getElementById('radio-audio');
+  if (audio && audio.paused === false) {
+    alert('Picture-in-Picture for audio: Minimize this window to listen in background');
+  }
+}
+function radioPrev() {
+  const items = document.querySelectorAll('.radio-station-item');
+  const current = Array.from(items).findIndex(el => el.style.opacity === '0.6' || el.style.background?.includes('rgba'));
+  if (items.length === 0) return;
+  const idx = current > 0 ? current - 1 : items.length - 1;
+  items[idx].click?.();
+}
+function radioNext() {
+  const items = document.querySelectorAll('.radio-station-item');
+  const current = Array.from(items).findIndex(el => el.style.opacity === '0.6' || el.style.background?.includes('rgba'));
+  if (items.length === 0) return;
+  const idx = (current + 1) % items.length;
+  items[idx].click?.();
+}
+function radioStop() {
+  _radioPlaying = false;
+  const audio = document.getElementById('radio-audio');
+  if (audio) { audio.pause(); audio.src = ''; }
+  if (window._radioStallTimer) { clearTimeout(window._radioStallTimer); window._radioStallTimer = null; }
+  if (_radioHls) { try { _radioHls.destroy(); } catch(_){} _radioHls = null; }
+  const btn = document.getElementById('radio-play-btn');
+  if (btn) btn.textContent = '▶';
+  const dot = document.getElementById('radio-dot');
+  if (dot) { dot.style.background = '#9ca3af'; dot.classList.remove('playing'); }
+  const np = document.getElementById('radio-now-playing');
+  if (np) np.textContent = 'Select a station to play';
 }
 
 // ── Error / ended handlers ───────────────────────────────────────────
