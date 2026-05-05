@@ -1895,6 +1895,8 @@ footer{
             <a class="news-link" href="https://www.asianetindia.com" target="_blank"><span class="nl-name">📺 Asianet News</span><span class="nl-url">asianetindia.com</span></a>
             <a class="news-link" href="https://www.keralakaumudi.com" target="_blank"><span class="nl-name">📰 Kerala Kaumudi</span><span class="nl-url">keralakaumudi.com</span></a>
             <a class="news-link" href="https://www.deepika.com" target="_blank"><span class="nl-name">📰 Deepika Daily</span><span class="nl-url">deepika.com</span></a>
+            <a class="news-link" href="https://www.deepika.com/latest-news" target="_blank"><span class="nl-name">📰 Deepika Malayalam</span><span class="nl-url">deepika.com/latest-news</span></a>
+            <a class="news-link" href="https://marunadanmalayalee.com" target="_blank"><span class="nl-name">📰 Marunadan Malayali</span><span class="nl-url">marunadanmalayalee.com</span></a>
             <a class="news-link" href="https://www.twentyfournews.com" target="_blank"><span class="nl-name">📺 24 News Kerala</span><span class="nl-url">twentyfournews.com</span></a>
             <a class="news-link" href="https://www.janamtv.com" target="_blank"><span class="nl-name">📺 Janam TV</span><span class="nl-url">janamtv.com</span></a>
             <a class="news-link" href="https://www.reporterlive.com" target="_blank"><span class="nl-name">📺 Reporter Live</span><span class="nl-url">reporterlive.com</span></a>
@@ -9047,6 +9049,33 @@ function initLiveClock() {
 // LIVE NEWS GRID — 35 feeds, settings-selectable 10 shown at a time
 // ═══════════════════════════════════════════════════════════════════
 
+function buildGoogleNewsSearchFeed(query, lang) {
+  const localeMap = {
+    'Malayalam': { hl:'ml', gl:'IN', ceid:'IN:ml' },
+    'Hindi':     { hl:'hi', gl:'IN', ceid:'IN:hi' },
+    'Tamil':     { hl:'ta', gl:'IN', ceid:'IN:ta' },
+    'Kannada':   { hl:'kn', gl:'IN', ceid:'IN:kn' },
+    'Telugu':    { hl:'te', gl:'IN', ceid:'IN:te' },
+    'Marathi':   { hl:'mr', gl:'IN', ceid:'IN:mr' },
+    'Bengali':   { hl:'bn', gl:'IN', ceid:'IN:bn' },
+    'English':   { hl:'en-IN', gl:'IN', ceid:'IN:en' },
+  };
+  const loc = localeMap[lang] || localeMap.English;
+  return 'https://news.google.com/rss/search?q=' + encodeURIComponent(query) +
+    '&hl=' + loc.hl + '&gl=' + loc.gl + '&ceid=' + loc.ceid;
+}
+
+function getNewsFallbackUrl(src) {
+  if (!src || !src.url || src.url.includes('news.google.com/rss/')) return '';
+  const query = (src.fallbackQuery || src.label || '')
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/[^A-Za-z0-9\u00C0-\u024F\u0370-\u1FFF\u2C00-\uD7FF\s&-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!query) return '';
+  return buildGoogleNewsSearchFeed(query, src.lang);
+}
+
 const NEWS_SOURCES = [
   // ── US / Americas ────────────────────────────────────────────────
   { id:'us1',    flag:'🇺🇸', label:'CNBC Top News',        lang:'English',  group:'🇺🇸 US & Americas', color:'#b5120e', url:'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114' },
@@ -9068,6 +9097,8 @@ const NEWS_SOURCES = [
   // ── India — Malayalam ────────────────────────────────────────────
   { id:'malay1', flag:'🇮🇳', label:'Mathrubhumi',          lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#1a5276', url:'https://news.google.com/rss/search?q=mathrubhumi&hl=ml&gl=IN&ceid=IN:ml' },
   { id:'malay2', flag:'🇮🇳', label:'Manorama Online',       lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#154360', url:'https://news.google.com/rss/search?q=manorama+online&hl=ml&gl=IN&ceid=IN:ml' },
+  { id:'malay3', flag:'🇮🇳', label:'Deepika Malayalam',     lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#1f618d', url:'https://news.google.com/rss/search?q=deepika+malayalam&hl=ml&gl=IN&ceid=IN:ml' },
+  { id:'malay4', flag:'🇮🇳', label:'Marunadan Malayali',    lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#21618c', url:'https://news.google.com/rss/search?q=marunadan+malayali&hl=ml&gl=IN&ceid=IN:ml' },
   // ── India — Tamil ────────────────────────────────────────────────
   { id:'tamil1', flag:'🇮🇳', label:'Daily Thanthi',        lang:'Tamil',    group:'🇮🇳 India (Tamil)',   color:'#6e2f2f', url:'https://news.google.com/rss/search?q=daily+thanthi&hl=ta&gl=IN&ceid=IN:ta' },
   { id:'tamil2', flag:'🇮🇳', label:'Dinamalar',            lang:'Tamil',    group:'🇮🇳 India (Tamil)',   color:'#5d4037', url:'https://news.google.com/rss/search?q=dinamalar&hl=ta&gl=IN&ceid=IN:ta' },
@@ -9171,18 +9202,32 @@ function renderItems(listEl, items) {
 
 function _parseXmlItems(xmlStr) {
   const xml = new DOMParser().parseFromString(xmlStr, 'text/xml');
-  return Array.from(xml.querySelectorAll('item')).slice(0, 6).map(item => ({
-    title:   item.querySelector('title')?.textContent?.trim() || '',
-    link:    item.querySelector('link')?.textContent?.trim()  || '#',
-    pubDate: item.querySelector('pubDate')?.textContent?.trim() || '',
-  })).filter(i => i.title);
+  const nodes = Array.from(xml.querySelectorAll('item, entry')).slice(0, 6);
+  return nodes.map(item => {
+    const linkEl = item.querySelector('link');
+    return {
+      title: item.querySelector('title')?.textContent?.trim() || '',
+      link: linkEl?.getAttribute('href') || linkEl?.textContent?.trim() || '#',
+      pubDate:
+        item.querySelector('pubDate')?.textContent?.trim() ||
+        item.querySelector('published')?.textContent?.trim() ||
+        item.querySelector('updated')?.textContent?.trim() ||
+        '',
+    };
+  }).filter(i => i.title);
 }
 
-function fetchFeed(src, proxyIdx) {
+function fetchFeed(src, proxyIdx, usedFallback) {
   const listEl = document.getElementById('lnbl-' + src.id);
   if (!listEl) return;
   if (proxyIdx >= PROXIES.length) {
-    listEl.innerHTML = `<div class="lnb-error">Feed unavailable — <a href="${src.url}" target="_blank" style="color:var(--gold2)">Open directly</a></div>`;
+    const fallbackUrl = !usedFallback ? getNewsFallbackUrl(src) : '';
+    if (fallbackUrl && fallbackUrl !== src.url) {
+      fetchFeed({ ...src, originalUrl: src.originalUrl || src.url, url: fallbackUrl }, 0, true);
+      return;
+    }
+    const directUrl = src.originalUrl || src.url;
+    listEl.innerHTML = `<div class="lnb-error">Feed unavailable — <a href="${directUrl}" target="_blank" style="color:var(--gold2)">Open directly</a></div>`;
     return;
   }
   const proxyUrl = PROXIES[proxyIdx](src.url);
@@ -9211,7 +9256,7 @@ function fetchFeed(src, proxyIdx) {
       }
       throw new Error('no usable data');
     })
-    .catch(() => fetchFeed(src, proxyIdx + 1));
+    .catch(() => fetchFeed(src, proxyIdx + 1, usedFallback));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
