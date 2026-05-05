@@ -1358,13 +1358,14 @@ footer{
 .rb-dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:tvBlink 2s ease-in-out infinite}
 .rb-tabs-wrap{position:relative;display:flex;align-items:center;gap:4px}
 .rb-tabs-arrow{
-  flex-shrink:0;width:22px;height:22px;border:none;border-radius:50%;
-  background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);
-  font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;width:24px;height:24px;border:1px solid #1e3a5f;border-radius:50%;
+  background:linear-gradient(180deg,#122344,#0b1730);color:#dbeafe;
+  font-size:15px;font-weight:700;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 1px rgba(148,163,184,.08),0 4px 12px rgba(2,6,23,.32);
   transition:all .15s;-webkit-tap-highlight-color:transparent
 }
-.rb-tabs-arrow:hover{background:rgba(37,99,235,.3);color:#fff}
-.rb-tabs-arrow:disabled{opacity:.3;cursor:not-allowed}
+.rb-tabs-arrow:hover{background:linear-gradient(180deg,#1d4ed8,#1e40af);border-color:#3b82f6;color:#fff;box-shadow:0 6px 16px rgba(37,99,235,.35)}
+.rb-tabs-arrow:disabled{opacity:.75;cursor:not-allowed;color:#64748b;background:linear-gradient(180deg,#0d1628,#0a1222);box-shadow:none}
 .rb-tabs{
   display:flex;gap:3px;overflow-x:auto;scrollbar-width:none;flex:1;
   scroll-behavior:smooth;-webkit-overflow-scrolling:touch
@@ -3047,7 +3048,7 @@ footer{
       </div>
     </div>
     <div class="rb-tabs-wrap">
-      <button class="rb-tabs-arrow" id="rb-tabs-prev" onclick="rbTabsScroll(-1)" title="Previous tab">◀</button>
+      <button class="rb-tabs-arrow" id="rb-tabs-prev" onclick="rbTabsScroll(-1)" title="Previous tab" aria-label="Previous tab">&#x2039;</button>
       <div class="rb-tabs" id="rb-tabs">
         <button class="rb-tab active" id="rbtab-ai"      onclick="rbSwitchPanel('ai')">🤖 AI Chat</button>
         <button class="rb-tab"        id="rbtab-video"   onclick="rbSwitchPanel('video')">▶️ YT Live</button>
@@ -3058,7 +3059,7 @@ footer{
         <button class="rb-tab"        id="rbtab-podcast" onclick="rbSwitchPanel('podcast')">🎙 Podcast</button>
         <button class="rb-tab"        id="rbtab-settings" onclick="rbSwitchPanel('settings')" title="Widget Settings">⚙️</button>
       </div>
-      <button class="rb-tabs-arrow" id="rb-tabs-next" onclick="rbTabsScroll(1)" title="Next tab">▶</button>
+      <button class="rb-tabs-arrow" id="rb-tabs-next" onclick="rbTabsScroll(1)" title="Next tab" aria-label="Next tab">&#x203A;</button>
     </div>
   </div>
 
@@ -6260,6 +6261,7 @@ function rbSwitchPanel(panel) {
     title.innerHTML = '<span style="font-size:16px">' + icon + '</span><span>' + parts.join(' ') + '</span>';
   }
   if (clear) clear.style.display = def.clear ? 'block' : 'none';
+  rbTabsSyncArrows();
   // Lazy-init heavy panels on first open
   if (def.init && !window[def.init]) {
     window[def.init] = true;
@@ -6338,6 +6340,13 @@ function widgetRenderSettings() {
 // Apply visibility on load + open default tab on first page-load
 function widgetInitOnLoad() {
   widgetApplyVisibility();
+  rbTabsSyncArrows();
+  const tabStrip = document.getElementById('rb-tabs');
+  if (tabStrip && !tabStrip.dataset.arrowBound) {
+    tabStrip.addEventListener('scroll', rbTabsSyncArrows, { passive: true });
+    window.addEventListener('resize', rbTabsSyncArrows);
+    tabStrip.dataset.arrowBound = '1';
+  }
   const s = widgetGetSettings();
   const last = (() => { try { return localStorage.getItem('viltv_widget_last_tab') || ''; } catch(_) { return ''; } })();
   // First visit (no 'last') → use default. Returning visit → restore last-active tab.
@@ -7553,16 +7562,28 @@ function podcastSetVolume(v) {
   if (a) a.volume = Math.max(0, Math.min(100, Number(v))) / 100;
 }
 
-function musicLoadDefault()  { musicLoadPreset('top-music'); }
-function moviesLoadDefault() { moviesLoadPreset('top-movies'); }
+function musicLoadDefault()  { musicLoadPreset('today-top'); }
+function moviesLoadDefault() { moviesLoadPreset('classics'); }
 
 // ═══════════════════════════════════════════════════════════════════
 // RB-TABS scroll arrow nav
 // ═══════════════════════════════════════════════════════════════════
+function rbTabsSyncArrows() {
+  const wrap = document.getElementById('rb-tabs');
+  const prev = document.getElementById('rb-tabs-prev');
+  const next = document.getElementById('rb-tabs-next');
+  if (!wrap || !prev || !next) return;
+  const maxScroll = Math.max(0, wrap.scrollWidth - wrap.clientWidth);
+  const left = Math.max(0, wrap.scrollLeft);
+  prev.disabled = left <= 4;
+  next.disabled = left >= (maxScroll - 4);
+}
+
 function rbTabsScroll(dir) {
   const wrap = document.getElementById('rb-tabs');
   if (!wrap) return;
   wrap.scrollBy({ left: dir * 140, behavior: 'smooth' });
+  window.setTimeout(rbTabsSyncArrows, 220);
 }
 
 // Backwards-compat shim — old code paths still call radioLoadCategory()
