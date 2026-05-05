@@ -3140,6 +3140,7 @@ footer{
           <option value="1dFd8-X3FdQ">📻 Reporter Live</option>
           <option value="8pAvpEJnVa4">📡 News18 Kerala</option>
           <option value="G8SvXQvVQco">📺 MediaoneTV Live</option>
+          <option value="w30Aa72ud1E">📺 Extra Malayalam</option>
         </optgroup>
         <optgroup label="🌏 India — Regional (Tamil / Telugu / Kannada)">
           <option value="cX4Y8m7cEpA">📺 Polimer News (Tamil)</option>
@@ -3557,6 +3558,10 @@ footer{
       <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('shorts')">⏱ Shorts</button>
       <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('silent')">🎬 Silent Era</button>
       <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('noir')">🕵 Film Noir</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('bollywood')">🎬 Bollywood</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('malayalam')">🎬 Malayalam</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('tamil')">🎬 Tamil</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('telugu')">🎬 Telugu</button>
     </div>
     <!-- Internet Archive embed -->
     <div id="movies-player-wrap" style="width:100%;background:#000;flex-shrink:0;display:none">
@@ -7495,6 +7500,36 @@ function musicNext() {
 // /embed/IDENTIFIER for an iframe-able streaming player.
 // ═══════════════════════════════════════════════════════════════════
 const ARCHIVE_API = 'https://archive.org/advancedsearch.php';
+
+// YouTube Indian Movies Database
+const _YOUTUBE_MOVIES = {
+  'bollywood': [
+    {id: '3446A6FzW3o', title: 'Bollywood Movie 1'},
+    {id: 'T9Ol2JHqKlM', title: 'Bollywood Movie 2'},
+    {id: 'fSUMKrxPEd8', title: 'Bollywood Movie 3'},
+  ],
+  'malayalam': [
+    {id: 's0LLVQeMmtU', title: 'Malayalam Movie 1'},
+    {id: 'imf-VCcVtxY', title: 'Malayalam Movie 2'},
+    {id: 'LursjGYTsic', title: 'Malayalam Movie 3'},
+    {id: 'A7Msfo2BUak', title: 'Malayalam Movie 4'},
+    {id: 'qbxprL02jWk', title: 'Malayalam Movie 5'},
+    {id: 'JeKL4S-ovaA', title: 'Malayalam Movie 6'},
+    {id: 'w30Aa72ud1E', title: 'Malayalam Movie 7'},
+  ],
+  'tamil': [
+    {id: 'yNKvkPJl-tg', title: 'Tamil Movie 1'},
+    {id: 'RSX2IJGjFnw', title: 'Tamil Movie 2'},
+    {id: 'A5ygZltd-1M', title: 'Tamil Movie 3'},
+  ],
+  'telugu': [
+    {id: 'CJVBX7KI5nU', title: 'Telugu Movie 1'},
+    {id: 'BOy2xDU1LC8', title: 'Telugu Movie 2'},
+    {id: 'vYRfQo6JMxc', title: 'Telugu Movie 3'},
+    {id: 'yiiqRHY1Bl8', title: 'Telugu Movie 4'},
+  ]
+};
+
 const _MOVIES_QUERIES = {
   // Curated category → archive.org search query (their advanced syntax)
   'classics':    'collection:(feature_films) AND mediatype:(movies) AND year:[1920 TO 1965]',
@@ -7512,13 +7547,23 @@ const _MOVIES_QUERIES = {
 };
 let _moviesLastResults = [];
 let _moviesCurrentId = null;
+let _moviesIsYouTube = false;
 async function moviesLoadPreset(key) {
   document.querySelectorAll('.movies-preset').forEach(b => {
     b.classList.remove('active');
     if (b.getAttribute('onclick')?.includes("'" + key + "'")) b.classList.add('active');
   });
   const list = document.getElementById('movies-list');
-  if (list) list.innerHTML = '<div class="radio-no-data">⏳ Loading films from archive.org…</div>';
+  if (list) list.innerHTML = '<div class="radio-no-data">⏳ Loading…</div>';
+
+  if (_YOUTUBE_MOVIES[key]) {
+    _moviesIsYouTube = true;
+    _moviesLastResults = _YOUTUBE_MOVIES[key];
+    _moviesRenderYouTube(_YOUTUBE_MOVIES[key]);
+    return;
+  }
+
+  _moviesIsYouTube = false;
   const q = _MOVIES_QUERIES[key] || _MOVIES_QUERIES['classics'];
   const url = ARCHIVE_API + '?q=' + encodeURIComponent(q)
     + '&fl[]=identifier&fl[]=title&fl[]=year&fl[]=creator&fl[]=runtime'
@@ -7546,6 +7591,18 @@ function _moviesRender(docs) {
       + '<div class="radio-station-meta"><span class="radio-station-name" title="' + _esc(title) + '">' + _esc(title) + '</span>'
       + (meta ? '<span class="radio-station-tag">' + _esc(meta) + '</span>' : '')
       + '</div></div>';
+  }).join('');
+}
+function _moviesRenderYouTube(docs) {
+  const list = document.getElementById('movies-list');
+  if (!list) return;
+  if (!docs.length) { list.innerHTML = '<div class="radio-no-data">No movies found.</div>'; return; }
+  list.innerHTML = docs.map(d => {
+    const id = d.id;
+    const title = d.title || 'YouTube Movie';
+    return '<div class="radio-station-item" onclick=\'moviesPlayYouTube(' + JSON.stringify(id) + ',' + JSON.stringify(title) + ')\'>'
+      + '<span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:6px;background:linear-gradient(135deg,#ff0000,#ff6b6b);color:#fff;font-size:16px;font-weight:800;flex-shrink:0">▶️</span>'
+      + '<div class="radio-station-meta"><span class="radio-station-name" title="' + _esc(title) + '">' + _esc(title) + '</span></div></div>';
   }).join('');
 }
 let _moviesSearchTimer = null;
@@ -7576,6 +7633,16 @@ function moviesPlay(identifier, title) {
   if (!ifr) return;
   _moviesCurrentId = identifier;
   ifr.src = 'https://archive.org/embed/' + encodeURIComponent(identifier);
+  if (wrap) wrap.style.display = 'block';
+  if (now) now.textContent = title || 'Now Playing';
+}
+function moviesPlayYouTube(youtubeId, title) {
+  const wrap = document.getElementById('movies-player-wrap');
+  const ifr  = document.getElementById('movies-player-iframe');
+  const now  = document.getElementById('movies-now');
+  if (!ifr) return;
+  _moviesCurrentId = youtubeId;
+  ifr.src = 'https://www.youtube.com/embed/' + encodeURIComponent(youtubeId) + '?autoplay=1';
   if (wrap) wrap.style.display = 'block';
   if (now) now.textContent = title || 'Now Playing';
 }
