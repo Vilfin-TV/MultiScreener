@@ -7306,7 +7306,7 @@ function musicPlay(sid, name) {
   const now  = document.getElementById('music-now');
   if (!wrap || !ifr) return;
   _musicCurrentSid = sid;
-  ifr.src = 'https://open.spotify.com/embed/playlist/' + encodeURIComponent(sid) + '?utm_source=vilfintv&theme=0';
+  ifr.src = 'https://open.spotify.com/embed/playlist/' + encodeURIComponent(sid) + '?utm_source=vilfintv&theme=0&autoplay=1';
   wrap.style.display = 'block';
   if (now) now.textContent = name || 'Playing…';
 }
