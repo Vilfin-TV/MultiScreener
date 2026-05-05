@@ -4915,9 +4915,18 @@ const SVC_API3_LBL       = 'viltv_api3_label';
 const SVC_API3_URL       = 'viltv_api3_url';
 const SVC_API3_MODEL     = 'viltv_api3_model';
 
+function getConfiguredWorkerUrl() {
+  return (
+    window._cfWorkerUrl ||
+    localStorage.getItem(CF_KEY) ||
+    (typeof VILTV_CONFIG !== 'undefined' ? VILTV_CONFIG.WORKER_URL : '') ||
+    ''
+  ).replace(/\/+$/, '');
+}
+
 // ── Load saved settings on startup ───────────────────────────────────
 function cfLoadSaved() {
-  const worker = localStorage.getItem(CF_KEY);
+  const worker = getConfiguredWorkerUrl();
   if (worker) { window._cfWorkerUrl = worker; }
   _svcRefreshStatus();
 }
@@ -4927,7 +4936,7 @@ function openServicesModal() {
   closeAllMenus();
   // Populate fields from localStorage
   const workerEl = document.getElementById('cf-url-input');
-  if (workerEl) workerEl.value = localStorage.getItem(CF_KEY) || '';
+  if (workerEl) workerEl.value = getConfiguredWorkerUrl();
   const providerEl = document.getElementById('svc-worker-provider');
   if (providerEl) providerEl.value = localStorage.getItem(SVC_WORKER_PROVIDER) || '';
   const geminiEl = document.getElementById('svc-gemini-key');
@@ -9217,9 +9226,34 @@ function _parseXmlItems(xmlStr) {
   }).filter(i => i.title);
 }
 
-function fetchFeed(src, proxyIdx, usedFallback) {
+async function fetchFeedViaWorker(src) {
+  const workerUrl = getConfiguredWorkerUrl();
+  if (!workerUrl) return null;
+  try {
+    const res = await fetch(workerUrl + '/news-feed', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: src.url, fallbackUrl: getNewsFallbackUrl(src), limit: 6 }),
+      signal: AbortSignal.timeout(12000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return Array.isArray(data.items) && data.items.length ? data.items : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function fetchFeed(src, proxyIdx, usedFallback) {
   const listEl = document.getElementById('lnbl-' + src.id);
   if (!listEl) return;
+  if (proxyIdx === 0 && !usedFallback) {
+    const workerItems = await fetchFeedViaWorker(src);
+    if (workerItems?.length) {
+      renderItems(listEl, workerItems);
+      return;
+    }
+  }
   if (proxyIdx >= PROXIES.length) {
     const fallbackUrl = !usedFallback ? getNewsFallbackUrl(src) : '';
     if (fallbackUrl && fallbackUrl !== src.url) {

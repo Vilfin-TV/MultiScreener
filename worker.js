@@ -98,7 +98,7 @@ export default {
 
     const CORS = {
       'Access-Control-Allow-Origin':  allowOrigin,
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
       'Access-Control-Max-Age':       '86400',
     };
@@ -149,6 +149,24 @@ export default {
       }
     }
 
+    // ── Live news feed proxy — fetch RSS/Atom server-side and return JSON ──
+    if (url.pathname === '/news-feed' && request.method === 'POST') {
+      try {
+        const body = await request.json();
+        const targetUrl = String(body.url || '').trim();
+        const fallbackUrl = String(body.fallbackUrl || '').trim();
+        const limit = Math.max(1, Math.min(12, Number(body.limit) || 6));
+        if (!/^https?:\/\//i.test(targetUrl)) {
+          return json({ error: 'Valid url is required' }, CORS, 400);
+        }
+        const items = await fetchNewsFeedItems(targetUrl, fallbackUrl, limit);
+        return json({ items }, CORS);
+      } catch (err) {
+        console.error('news-feed error:', err.message);
+        return json({ items: [], error: 'News feed unavailable' }, CORS, 200);
+      }
+    }
+
     // ── Interactive AI query endpoint ──────────────────────────────────────────
     if ((url.pathname === '/query' || url.pathname === '/ask') && request.method === 'POST') {
       let body;
@@ -189,6 +207,77 @@ export default {
     return json({ error: 'Not found' }, CORS, 404);
   }
 };
+
+async function fetchNewsFeedItems(url, fallbackUrl, limit = 6) {
+  const tried = new Set();
+  for (const candidate of [url, fallbackUrl]) {
+    const target = String(candidate || '').trim();
+    if (!target || tried.has(target)) continue;
+    tried.add(target);
+    try {
+      const res = await fetch(target, {
+        headers: {
+          'User-Agent': 'VilfinTV/1.0 (+https://vilfin-tv.github.io/MultiScreener/)',
+          'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml;q=0.9, */*;q=0.8',
+        },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!res.ok) continue;
+      const xml = await res.text();
+      const items = parseFeedXml(xml, limit);
+      if (items.length) return items;
+    } catch (_) {}
+  }
+  return [];
+}
+
+function parseFeedXml(xml, limit = 6) {
+  const text = String(xml || '').replace(/\r/g, '');
+  const rssItems = [...text.matchAll(/<item\b[\s\S]*?<\/item>/gi)]
+    .map(m => parseRssItem(m[0]))
+    .filter(i => i.title);
+  if (rssItems.length) return rssItems.slice(0, limit);
+  const atomItems = [...text.matchAll(/<entry\b[\s\S]*?<\/entry>/gi)]
+    .map(m => parseAtomEntry(m[0]))
+    .filter(i => i.title);
+  return atomItems.slice(0, limit);
+}
+
+function parseRssItem(block) {
+  return {
+    title: decodeXml(stripCdata(extractTag(block, 'title'))),
+    link: decodeXml(stripCdata(extractTag(block, 'link'))) || '#',
+    pubDate: decodeXml(stripCdata(extractTag(block, 'pubDate'))),
+  };
+}
+
+function parseAtomEntry(block) {
+  const linkMatch = String(block || '').match(/<link\b[^>]*\bhref=["']([^"']+)["'][^>]*\/?>/i);
+  return {
+    title: decodeXml(stripCdata(extractTag(block, 'title'))),
+    link: decodeXml(linkMatch?.[1] || stripCdata(extractTag(block, 'link'))) || '#',
+    pubDate: decodeXml(stripCdata(extractTag(block, 'published') || extractTag(block, 'updated'))),
+  };
+}
+
+function extractTag(block, tag) {
+  const m = String(block || '').match(new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'));
+  return m ? m[1].trim() : '';
+}
+
+function stripCdata(s) {
+  return String(s || '').replace(/^<!\[CDATA\[/, '').replace(/\]\]>$/, '').trim();
+}
+
+function decodeXml(s) {
+  return String(s || '')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, '&');
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // STEP A — LIVE MARKET CONTEXT  (cascading multi-source fetcher)
