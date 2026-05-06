@@ -9611,6 +9611,60 @@ const NEWS_SOURCES = [
   { id:'mid1',   flag:'🌍',  label:'Al Jazeera',           lang:'English',  group:'🌍 Europe & Middle East', color:'#1a6b3e', url:'https://www.aljazeera.com/xml/rss/all.xml' },
   // ── Global ───────────────────────────────────────────────────────
   { id:'global', flag:'🌐',  label:'Google Finance News',  lang:'English',  group:'🌐 Global',           color:'#0d6b3e', url:'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtVnVHZ0pKVGlnQVAB?hl=en-IN&gl=IN&ceid=IN:en' },
+  // ── Japan (Japanese) ──────────────────────────────────────────────────────
+  { id:'japan2', flag:'🇯🇵', label:'TBS News (日本語)',       lang:'Japanese', group:'🇯🇵 Japan',           color:'#c0392b', url:'https://news.google.com/rss/search?q=TBS+news&hl=ja&gl=JP&ceid=JP:ja' },
+  { id:'japan3', flag:'🇯🇵', label:'Asahi News (朝日新聞)',   lang:'Japanese', group:'🇯🇵 Japan',           color:'#d32f2f', url:'https://news.google.com/rss/search?q=asahi+news&hl=ja&gl=JP&ceid=JP:ja' },
+  // ── Korea (Korean) ────────────────────────────────────────────────────────
+  { id:'korea1', flag:'🇰🇷', label:'YTN News (한국)',        lang:'Korean',   group:'🇰🇷 South Korea',     color:'#1976d2', url:'https://news.google.com/rss/search?q=YTN+news&hl=ko&gl=KR&ceid=KR:ko' },
+  { id:'korea2', flag:'🇰🇷', label:'MBC News (한국)',        lang:'Korean',   group:'🇰🇷 South Korea',     color:'#0d47a1', url:'https://news.google.com/rss/search?q=MBC+news&hl=ko&gl=KR&ceid=KR:ko' },
+  // ── China ──────────────────────────────────────────────────────────────────
+  { id:'china1', flag:'🇨🇳', label:'CCTV News (中文)',       lang:'Chinese',  group:'🇨🇳 China',           color:'#c41c3b', url:'https://news.google.com/rss/search?q=CCTV+news&hl=zh-Hans&gl=CN&ceid=CN:zh-Hans' },
+  { id:'china2', flag:'🇨🇳', label:'China Daily (中文)',     lang:'Chinese',  group:'🇨🇳 China',           color:'#e63946', url:'https://www.chinadaily.com.cn/rss/world_rss.xml' },
+  // ── Mexico ─────────────────────────────────────────────────────────────────
+  { id:'mexico1', flag:'🇲🇽', label:'Excélsior (Español)',   lang:'Spanish',  group:'🇲🇽 Mexico',          color:'#ff6b35', url:'https://news.google.com/rss/search?q=excelsior+mexico&hl=es&gl=MX&ceid=MX:es' },
+  { id:'mexico2', flag:'🇲🇽', label:'Reforma (Español)',     lang:'Spanish',  group:'🇲🇽 Mexico',          color:'#f77f00', url:'https://news.google.com/rss/search?q=reforma+mexico&hl=es&gl=MX&ceid=MX:es' },
+  // ── Canada ─────────────────────────────────────────────────────────────────
+  { id:'canada1', flag:'🇨🇦', label:'CTV News',             lang:'English',  group:'🇨🇦 Canada',          color:'#c1121f', url:'https://news.google.com/rss/search?q=CTV+news&hl=en&gl=CA&ceid=CA:en' },
+  { id:'canada2', flag:'🇨🇦', label:'Global News',          lang:'English',  group:'🇨🇦 Canada',          color:'#a4161a', url:'https://news.google.com/rss/search?q=global+news+canada&hl=en&gl=CA&ceid=CA:en' },
+  // ── Switzerland ────────────────────────────────────────────────────────────
+  { id:'swiss1', flag:'🇨🇭', label:'SRF News (Deutsch)',    lang:'German',   group:'🇨🇭 Switzerland',     color:'#c41c3b', url:'https://news.google.com/rss/search?q=SRF+news&hl=de&gl=CH&ceid=CH:de' },
+  { id:'swiss2', flag:'🇨🇭', label:'RTS News (Français)',   lang:'French',   group:'🇨🇭 Switzerland',     color:'#e63946', url:'https://news.google.com/rss/search?q=RTS+news&hl=fr&gl=CH&ceid=CH:fr' },
+  // ── Australia ──────────────────────────────────────────────────────────────
+  { id:'aus1', flag:'🇦🇺', label:'ABC News',               lang:'English',  group:'🇦🇺 Australia',       color:'#003d82', url:'https://feeds.abcnews.go.com/abcnews/topstories' },
+  { id:'aus2', flag:'🇦🇺', label:'Nine News',              lang:'English',  group:'🇦🇺 Australia',       color:'#004687', url:'https://news.google.com/rss/search?q=nine+news+australia&hl=en&gl=AU&ceid=AU:en' },
+  // ── New Zealand ────────────────────────────────────────────────────────────
+  { id:'nz1', flag:'🇳🇿', label:'RNZ News',                lang:'English',  group:'🇳🇿 New Zealand',     color:'#d1495a', url:'https://news.google.com/rss/search?q=RNZ+news&hl=en&gl=NZ&ceid=NZ:en' },
+  { id:'nz2', flag:'🇳🇿', label:'TVNZ News',               lang:'English',  group:'🇳🇿 New Zealand',     color:'#a02a46', url:'https://news.google.com/rss/search?q=TVNZ+news&hl=en&gl=NZ&ceid=NZ:en' },
+  // ── Bangladesh ─────────────────────────────────────────────────────────────
+  { id:'bang1', flag:'🇧🇩', label:'Dhaka Tribune',          lang:'English',  group:'🇧🇩 Bangladesh',      color:'#006a4e', url:'https://news.google.com/rss/search?q=dhaka+tribune&hl=en&gl=BD&ceid=BD:en' },
+  { id:'bang2', flag:'🇧🇩', label:'bdnews24 (বাংলা)',       lang:'Bengali',  group:'🇧🇩 Bangladesh',      color:'#00562e', url:'https://news.google.com/rss/search?q=bdnews24&hl=bn&gl=BD&ceid=BD:bn' },
+  // ── Thailand ───────────────────────────────────────────────────────────────
+  { id:'thai1', flag:'🇹🇭', label:'Thai PBS (ไทย)',         lang:'Thai',     group:'🇹🇭 Thailand',       color:'#e02d3b', url:'https://news.google.com/rss/search?q=thaipbs+news&hl=th&gl=TH&ceid=TH:th' },
+  { id:'thai2', flag:'🇹🇭', label:'Thai News (ไทย)',        lang:'Thai',     group:'🇹🇭 Thailand',       color:'#c41c3b', url:'https://news.google.com/rss/search?q=thai+news&hl=th&gl=TH&ceid=TH:th' },
+  // ── UAE (United Arab Emirates) ─────────────────────────────────────────────
+  { id:'uae1', flag:'🇦🇪', label:'Khaleej Times',           lang:'English',  group:'🇦🇪 UAE',             color:'#c41c3b', url:'https://news.google.com/rss/search?q=khaleej+times&hl=en&gl=AE&ceid=AE:en' },
+  { id:'uae2', flag:'🇦🇪', label:'Emirates News (العربية)', lang:'Arabic',   group:'🇦🇪 UAE',             color:'#a02a46', url:'https://news.google.com/rss/search?q=emirates+news&hl=ar&gl=AE&ceid=AE:ar' },
+  // ── Brazil ─────────────────────────────────────────────────────────────────
+  { id:'brazil1', flag:'🇧🇷', label:'G1 News (Português)',   lang:'Portuguese', group:'🇧🇷 Brazil',          color:'#009c3b', url:'https://news.google.com/rss/search?q=G1+news&hl=pt&gl=BR&ceid=BR:pt-BR' },
+  { id:'brazil2', flag:'🇧🇷', label:'O Globo (Português)',   lang:'Portuguese', group:'🇧🇷 Brazil',          color:'#00a550', url:'https://news.google.com/rss/search?q=o+globo&hl=pt&gl=BR&ceid=BR:pt-BR' },
+  // ── Argentina ──────────────────────────────────────────────────────────────
+  { id:'arg1', flag:'🇦🇷', label:'Clarín (Español)',        lang:'Spanish',  group:'🇦🇷 Argentina',       color:'#74acdf', url:'https://news.google.com/rss/search?q=clarin+argentina&hl=es&gl=AR&ceid=AR:es' },
+  { id:'arg2', flag:'🇦🇷', label:'La Nación (Español)',     lang:'Spanish',  group:'🇦🇷 Argentina',       color:'#5a9fd4', url:'https://news.google.com/rss/search?q=la+nacion+argentina&hl=es&gl=AR&ceid=AR:es' },
+  // ── France ─────────────────────────────────────────────────────────────────
+  { id:'france1', flag:'🇫🇷', label:'France24 (Français)',   lang:'French',   group:'🇫🇷 France',          color:'#002395', url:'https://www.france24.com/en/rss' },
+  { id:'france2', flag:'🇫🇷', label:'Le Monde (Français)',   lang:'French',   group:'🇫🇷 France',          color:'#1e3a8a', url:'https://news.google.com/rss/search?q=le+monde&hl=fr&gl=FR&ceid=FR:fr' },
+  // ── Russia ─────────────────────────────────────────────────────────────────
+  { id:'russia1', flag:'🇷🇺', label:'TASS News (Русский)',   lang:'Russian',  group:'🇷🇺 Russia',          color:'#d52b1e', url:'https://news.google.com/rss/search?q=TASS+news&hl=ru&gl=RU&ceid=RU:ru' },
+  { id:'russia2', flag:'🇷🇺', label:'Interfax (Русский)',    lang:'Russian',  group:'🇷🇺 Russia',          color:'#b81c1c', url:'https://news.google.com/rss/search?q=interfax+russia&hl=ru&gl=RU&ceid=RU:ru' },
+  // ── South Africa ───────────────────────────────────────────────────────────
+  { id:'sa1', flag:'🇿🇦', label:'News24',                  lang:'English',  group:'🇿🇦 South Africa',    color:'#d32f2f', url:'https://www.news24.com/rss' },
+  { id:'sa2', flag:'🇿🇦', label:'eNews Channel (English)',  lang:'English',  group:'🇿🇦 South Africa',    color:'#b71c1c', url:'https://news.google.com/rss/search?q=enews+south+africa&hl=en&gl=ZA&ceid=ZA:en' },
+  // ── Taiwan ─────────────────────────────────────────────────────────────────
+  { id:'taiwan1', flag:'🇹🇼', label:'CNA Taiwan (中文)',     lang:'Chinese',  group:'🇹🇼 Taiwan',          color:'#de2910', url:'https://news.google.com/rss/search?q=CNA+taiwan&hl=zh-Hant&gl=TW&ceid=TW:zh-Hant' },
+  { id:'taiwan2', flag:'🇹🇼', label:'TVBS News (中文)',      lang:'Chinese',  group:'🇹🇼 Taiwan',          color:'#cc0000', url:'https://news.google.com/rss/search?q=TVBS+news&hl=zh-Hant&gl=TW&ceid=TW:zh-Hant' },
+  // ── Gujarat (India) ────────────────────────────────────────────────────────
+  { id:'guj1', flag:'🇮🇳', label:'Divya Bhaskar (ગુજરાતી)',   lang:'Gujarati', group:'🇮🇳 India (Gujarati)', color:'#ff6f00', url:'https://news.google.com/rss/search?q=divya+bhaskar&hl=gu&gl=IN&ceid=IN:gu' },
+  { id:'guj2', flag:'🇮🇳', label:'Sandesh (ગુજરાતી)',       lang:'Gujarati', group:'🇮🇳 India (Gujarati)', color:'#fb8500', url:'https://news.google.com/rss/search?q=sandesh+gujarati&hl=gu&gl=IN&ceid=IN:gu' },
 ];
 
 // Default 10 feed IDs shown on first visit
