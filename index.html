@@ -8332,7 +8332,6 @@ function radioAutoPlayDefault() {
 var _ytPlayer = null;
 var _ytCurrentId = 'UCIALMKvObZNtJ6AmdCLP7Lg'; // Bloomberg Television (default)
 var _ytApiReady = false;
-let _ytFallbackTimer = null;
 
 function _isValidYoutubeVideoId(id) {
   return typeof id === 'string' && /^[a-zA-Z0-9_-]{11}$/.test(id.trim());
@@ -8377,8 +8376,23 @@ function onYouTubeIframeAPIReady() {
 function ytOnPlayerError(event) {
   // 100 = not found/private, 101 = embed not allowed, 150 = geo-blocked
   if ([100, 101, 150].indexOf(event.data) !== -1) {
-    ytShowGeoError();
+    if (!ytTrySelectedVideoFallback()) ytShowGeoError();
   }
+}
+
+function ytTrySelectedVideoFallback() {
+  const sel = document.getElementById('yt-channel-select');
+  if (!sel || sel.selectedIndex < 0) return false;
+  const opt = sel.options[sel.selectedIndex];
+  const fallbackVideoId = opt?.dataset?.videoId || '';
+  const isCurrentChannelId = typeof _ytCurrentId === 'string' && _ytCurrentId.startsWith('UC');
+  if (!isCurrentChannelId) return false;
+  if (!_isValidYoutubeVideoId(fallbackVideoId) || fallbackVideoId === _ytCurrentId) return false;
+  _ytCurrentId = fallbackVideoId;
+  ytSwitchChannel(fallbackVideoId);
+  const np = document.getElementById('yt-now-playing');
+  if (np && np.textContent) np.textContent += ' (Fallback)';
+  return true;
 }
 
 function ytShowGeoError() {
@@ -8411,10 +8425,6 @@ function ytSwitchChannel(channelIdOrVideoId) {
 
   // Detect if this is a channel ID (starts with UC) or video ID
   const isChannelId = channelIdOrVideoId.startsWith('UC');
-  if (_ytFallbackTimer) {
-    clearTimeout(_ytFallbackTimer);
-    _ytFallbackTimer = null;
-  }
 
   const link = document.getElementById('yt-open-link');
   if (link) {
@@ -8456,23 +8466,6 @@ function ytSwitchChannel(channelIdOrVideoId) {
     frame.src = isChannelId
       ? `https://www.youtube.com/embed/live_stream?channel=${channelIdOrVideoId}&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1`
       : `https://www.youtube.com/embed/${channelIdOrVideoId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
-
-    if (isChannelId) {
-      const selectedOpt = sel && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex] : null;
-      const fallbackVideoId = selectedOpt?.dataset?.videoId || '';
-      const hasDirectVideoFallback = _isValidYoutubeVideoId(fallbackVideoId) && fallbackVideoId !== channelIdOrVideoId;
-      if (hasDirectVideoFallback) {
-        const selectedAtSchedule = channelIdOrVideoId;
-        _ytFallbackTimer = setTimeout(() => {
-          if (_ytCurrentId !== selectedAtSchedule) return;
-          const currentSrc = frame.getAttribute('src') || '';
-          if (currentSrc.includes('live_stream?channel=' + selectedAtSchedule)) {
-            frame.src = `https://www.youtube.com/embed/${fallbackVideoId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
-            if (np && np.textContent) np.textContent += ' (Fallback)';
-          }
-        }, 6000);
-      }
-    }
   }
 }
 
