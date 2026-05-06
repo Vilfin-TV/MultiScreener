@@ -8424,17 +8424,31 @@ function ytSwitchChannel(channelIdOrVideoId) {
   const np  = document.getElementById('yt-now-playing');
   if (np && sel) np.textContent = sel.options[sel.selectedIndex]?.text || '';
 
-  // Use iframe direct URL for channel IDs (live_stream format)
-  // This works better than the JavaScript API for channel IDs
-  const el = document.getElementById('yt-player');
-  if (el && el.tagName === 'IFRAME') {
-    if (isChannelId) {
-      // For channel IDs, use the live_stream?channel= format
-      el.src = `https://www.youtube.com/embed/live_stream?channel=${channelIdOrVideoId}&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1`;
+  // Direct iframe fallback: always render/update an iframe, even if YT API init failed.
+  const host = document.getElementById('yt-player');
+  if (host) {
+    let frame = null;
+    if (host.tagName === 'IFRAME') {
+      frame = host;
     } else {
-      // For video IDs, use the standard embed format
-      el.src = `https://www.youtube.com/embed/${channelIdOrVideoId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
+      frame = host.querySelector('iframe');
+      if (!frame) {
+        frame = document.createElement('iframe');
+        frame.style.position = 'absolute';
+        frame.style.top = '0';
+        frame.style.left = '0';
+        frame.style.width = '100%';
+        frame.style.height = '100%';
+        frame.style.border = '0';
+        frame.allow = 'autoplay; encrypted-media; picture-in-picture; web-share';
+        frame.referrerPolicy = 'strict-origin-when-cross-origin';
+        frame.allowFullscreen = true;
+        host.appendChild(frame);
+      }
     }
+    frame.src = isChannelId
+      ? `https://www.youtube.com/embed/live_stream?channel=${channelIdOrVideoId}&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1`
+      : `https://www.youtube.com/embed/${channelIdOrVideoId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
   }
 }
 
