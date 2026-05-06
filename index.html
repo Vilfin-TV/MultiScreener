@@ -8344,8 +8344,9 @@ function _isValidYoutubeVideoId(id) {
 
 function onYouTubeIframeAPIReady() {
   _ytApiReady = true;
-  const safeVideoId = _isValidYoutubeVideoId(_ytCurrentId) ? _ytCurrentId : '';
-  if (!safeVideoId) return;
+  // Always bootstrap with a valid video ID, then switch to the selected channel/video.
+  // This avoids "Invalid video id" startup failures when the default value is a channel ID (UC...).
+  const safeVideoId = _isValidYoutubeVideoId(_ytCurrentId) ? _ytCurrentId : 'M7lc1UVf-VE';
   _ytPlayer = new YT.Player('yt-player', {
     width: '100%',
     height: '100%',
@@ -8359,7 +8360,12 @@ function onYouTubeIframeAPIReady() {
       controls: 1
     },
     events: {
-      onReady: function(e) { e.target.mute(); e.target.playVideo(); },
+      onReady: function(e) {
+        e.target.mute();
+        e.target.playVideo();
+        // After the iframe exists, route to configured channel/video.
+        if (_ytCurrentId) ytSwitchChannel(_ytCurrentId);
+      },
       onError: ytOnPlayerError
     }
   });
