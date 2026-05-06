@@ -4,6 +4,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="data:,">
 <title>Multi Asset Screener v9.0 — Input Tool | Vilfin George</title>
 <!-- Canonical URL — always index.html -->
 <link rel="canonical" href="https://vilfin-tv.github.io/MultiScreener/index.html"/>
@@ -3649,7 +3650,7 @@ footer{
     <!-- Internet Archive embed -->
     <div id="movies-player-wrap" style="width:100%;background:#000;flex-shrink:0;display:none">
       <div style="width:100%;padding-top:56.25%;position:relative;overflow:hidden">
-        <iframe id="movies-player-iframe" allowfullscreen allow="encrypted-media; fullscreen; picture-in-picture"
+        <iframe id="movies-player-iframe" allow="encrypted-media; fullscreen; picture-in-picture"
                 style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#000"></iframe>
       </div>
       <div style="padding:6px 10px;display:flex;align-items:center;gap:5px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px;flex-wrap:wrap">
@@ -3842,15 +3843,15 @@ footer{
                 {"s":"BSE:HDFCBANK","d":"HDFC Bank"},{"s":"BSE:INFY","d":"Infosys"},
                 {"s":"TSE:7203","d":"Toyota"},{"s":"TSE:6758","d":"Sony"},
                 {"s":"TSE:8306","d":"Mitsubishi UFJ"},{"s":"TSE:6861","d":"Keyence"},
-                {"s":"OTC:SSNLF","d":"Samsung"},{"s":"OTC:HXSCF","d":"SK Hynix"},
-                {"s":"OTC:HYMTF","d":"Hyundai"}
+                {"s":"OTC:SSNLF","d":"Samsung"},{"s":"NASDAQ:MU","d":"Micron (SK Hynix Proxy)"},
+                {"s":"NYSE:TM","d":"Toyota (Hyundai Proxy)"}
               ], "originalTitle": "Global Stocks"
             },
             { "title": "Commodities", "symbols": [
                 {"s":"TVC:GOLD","d":"Gold"},{"s":"TVC:SILVER","d":"Silver"},
                 {"s":"NYMEX:CL1!","d":"Crude Oil WTI"},{"s":"TVC:UKOIL","d":"Brent Oil"},
                 {"s":"CAPITALCOM:COPPER","d":"Copper"},{"s":"CAPITALCOM:NATURALGAS","d":"Natural Gas"},
-                {"s":"CAPITALCOM:ALUMINIUM","d":"Aluminium"}
+                {"s":"LME:AH1!","d":"Aluminium"}
               ], "originalTitle": "Commodities"
             },
             { "title": "Bonds", "symbols": [
@@ -3906,8 +3907,8 @@ footer{
                 {"name":"TSE:8306","displayName":"Mitsubishi UFJ"},
                 {"name":"TSE:6861","displayName":"Keyence"},
                 {"name":"OTC:SSNLF","displayName":"Samsung"},
-                {"name":"OTC:HXSCF","displayName":"SK Hynix"},
-                {"name":"OTC:HYMTF","displayName":"Hyundai"}
+                {"name":"NASDAQ:MU","displayName":"Micron (SK Hynix Proxy)"},
+                {"name":"NYSE:TM","displayName":"Toyota (Hyundai Proxy)"}
               ]
             },
             { "name": "Global Indices",
@@ -3968,8 +3969,8 @@ footer{
             { "name": "South Korea — KRX",
               "symbols": [
                 {"name":"OTC:SSNLF","displayName":"Samsung Electronics"},
-                {"name":"OTC:HXSCF","displayName":"SK Hynix"},
-                {"name":"OTC:HYMTF","displayName":"Hyundai Motor"}
+                {"name":"NASDAQ:MU","displayName":"Micron (SK Hynix Proxy)"},
+                {"name":"NYSE:TM","displayName":"Toyota (Hyundai Proxy)"}
               ]
             }
           ],
@@ -4017,7 +4018,10 @@ footer{
           "width": "100%",
           "height": "100%",
           "defaultColumn": "overview",
-          "screenerType": "crypto_mkt",
+          "screener_type": "crypto_mkt",
+          "market": "crypto",
+          "defaultScreen": "top_gainers",
+          "showToolbar": true,
           "displayCurrency": "USD",
           "colorTheme": "dark",
           "locale": "en",
@@ -4074,7 +4078,7 @@ footer{
             { "name": "Base Metals & Agri",
               "symbols": [
                 {"name":"CAPITALCOM:COPPER","displayName":"Copper"},
-                {"name":"CAPITALCOM:ALUMINIUM","displayName":"Aluminium"},
+                {"name":"LME:AH1!","displayName":"Aluminium"},
                 {"name":"CBOT:ZC1!","displayName":"Corn"},
                 {"name":"CBOT:ZW1!","displayName":"Wheat"},
                 {"name":"CBOT:ZS1!","displayName":"Soybeans"}
@@ -4101,8 +4105,8 @@ footer{
           "height": "100%",
           "defaultColumn": "overview",
           "defaultScreen": "most_capitalized",
-          "market": "india",
-          "screenerType": "etf",
+          "market": "us",
+          "showToolbar": true,
           "colorTheme": "dark",
           "locale": "en",
           "isTransparent": false
@@ -8459,7 +8463,6 @@ function ytSwitchChannel(channelIdOrVideoId) {
         frame.style.border = '0';
         frame.allow = 'autoplay; encrypted-media; picture-in-picture; web-share';
         frame.referrerPolicy = 'strict-origin-when-cross-origin';
-        frame.allowFullscreen = true;
         host.appendChild(frame);
       }
     }
@@ -8579,7 +8582,7 @@ iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
 <div id="wrap">
   <iframe id="yt-frame"
     src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=1&rel=0&modestbranding=1"
-    allow="autoplay; fullscreen" allowfullscreen></iframe>
+    allow="autoplay; fullscreen"></iframe>
 </div>
 <script>
 // Channel list injected from parent
