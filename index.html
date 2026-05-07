@@ -5585,6 +5585,7 @@ async function fetchAndPopulateStreams() {
       var chk = document.getElementById('yt-default-ch-chk');
       if (chk) chk.checked = true;
       if (YT_CHANNELS[savedNo - 1]) ytUpdateInfo(YT_CHANNELS[savedNo - 1]);
+      setTimeout(function() { ytSwitchToChannel(_ytCurrentChNo); }, 300);
       return;
     }
   } catch(e) {}
@@ -5597,6 +5598,7 @@ async function fetchAndPopulateStreams() {
     }
   }
   if (YT_CHANNELS[60]) ytUpdateInfo(YT_CHANNELS[60]);
+  setTimeout(function() { ytSwitchToChannel(_ytCurrentChNo); }, 300);
 }
 // Init on load
 // ── Load pre-built market context from data.json ─────────────────────────
@@ -7954,7 +7956,14 @@ function _ytTryCurrentStage() {
   _ytSetSrc(src);
 }
 
-function ytAdvanceFallback() { _ytFallbackStage++; _ytTryCurrentStage(); }
+var _ytLastAdvance = 0;
+function ytAdvanceFallback() {
+  var now = Date.now();
+  if (now - _ytLastAdvance < 1500) return; // debounce: ignore duplicate errors within 1.5 s
+  _ytLastAdvance = now;
+  _ytFallbackStage++;
+  _ytTryCurrentStage();
+}
 
 // ── Channel number quick-jump ────────────────────────────────────────────────
 function ytPlayByNumber() {
@@ -8005,29 +8014,12 @@ function _isValidYoutubeVideoId(id) {
   return typeof id === 'string' && /^[a-zA-Z0-9_-]{11}$/.test(id.trim());
 }
 
-(function loadYTApi() {
-  var s = document.createElement('script');
-  s.src = 'https://www.youtube.com/iframe_api';
-  s.async = true;
-  document.head.appendChild(s);
-})();
-
-function onYouTubeIframeAPIReady() {
-  _ytApiReady = true;
-  _ytPlayer = new YT.Player('yt-player', {
-    width: '100%', height: '100%',
-    videoId: 'M7lc1UVf-VE',
-    playerVars: { autoplay:1, mute:1, rel:0, modestbranding:1, playsinline:1, controls:1 },
-    events: {
-      onReady: function(e) { e.target.mute(); ytSwitchToChannel(_ytCurrentChNo); },
-      onError: ytOnPlayerError
-    }
-  });
-}
-
-function ytOnPlayerError(event) {
-  if ([100, 101, 150].indexOf(event.data) !== -1) { ytAdvanceFallback(); }
-}
+// YT IFrame API script is NOT loaded — we use direct iframe injection instead.
+// Loading it caused YT.Player to manage the iframe and fire duplicate onError events
+// via both ytOnPlayerError AND the postMessage listener, causing rapid stage-advance
+// (visible as constant reloading on mobile). Direct injection + postMessage is sufficient.
+function onYouTubeIframeAPIReady() { _ytApiReady = true; /* no YT.Player — direct iframe only */ }
+function ytOnPlayerError(event) { /* stub — errors handled via postMessage listener */ }
 
 // postMessage listener catches errors from direct iframe embeds (enablejsapi=1)
 window.addEventListener('message', function(evt) {
