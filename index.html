@@ -2239,7 +2239,7 @@ footer{
     <!-- FINANCIAL NEWS -->
     <!-- NEWS VIDEOS (merged: Financial News + Video) -->
     <div class="tmenu-item" id="tmenu-finvideo">
-      <button class="tmenu-btn" onclick="toggleMenu('finvideo')">News Videos <span class="arr">▾</span></button>
+      <button class="tmenu-btn" onclick="toggleMenu('finvideo')">Videos <span class="arr">▾</span></button>
       <div class="tmenu-dropdown" id="tdd-finvideo">
         <div class="dd-header">News &amp; Financial Video by Region</div>
         <!-- India -->
@@ -2249,7 +2249,7 @@ footer{
             <a class="news-link" href="https://www.youtube.com/@ETNOWlive" target="_blank"><span class="nl-name">📺 ET Now</span><span class="nl-url">youtube.com/@ETNOWlive</span></a>
             <a class="news-link" href="https://www.youtube.com/@ETMoney" target="_blank"><span class="nl-name">📺 ET Money</span><span class="nl-url">youtube.com/@ETMoney</span></a>
             <a class="news-link" href="https://www.youtube.com/@CNBC" target="_blank"><span class="nl-name">📺 CNBC TV18</span><span class="nl-url">youtube.com/@CNBC</span></a>
-            <a class="news-link" href="https://www.youtube.com/@zerodha" target="_blank"><span class="nl-name">📺 Zerodhaonline</span><span class="nl-url">youtube.com/@zerodhaonline</span></a>
+            <a class="news-link" href="https://www.youtube.com/@zerodhaonline" target="_blank"><span class="nl-name">📺 Zerodhaonline</span><span class="nl-url">youtube.com/@zerodhaonline</span></a>
             <a class="news-link" href="https://www.youtube.com/@moneycontrol" target="_blank"><span class="nl-name">📺 Moneycontrol</span><span class="nl-url">youtube.com/@moneycontrol</span></a>
             <a class="news-link" href="https://www.youtube.com/@PowerUpMoney" target="_blank"><span class="nl-name">📺 PowerUp Money</span><span class="nl-url">youtube.com/@PowerUpMoney</span></a>
             <a class="news-link" href="https://www.youtube.com/@myfin-tv" target="_blank"><span class="nl-name">📺 MyFin TV</span><span class="nl-url">youtube.com/@myfin-tv</span></a>
@@ -2859,11 +2859,6 @@ footer{
       <!-- padding-top:56.25% = 9/16 = exact 16:9 ratio -->
       <div style="width:100%;padding-top:56.25%;position:relative;overflow:hidden">
         <div id="yt-player" style="position:absolute;top:0;left:0;width:100%;height:100%"></div>
-        <!-- Tap to Unmute overlay (browsers block autoplay with sound) -->
-        <div id="yt-unmute-overlay" onclick="ytUnmute()" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.55);z-index:10;align-items:center;justify-content:center;cursor:pointer;flex-direction:column;gap:8px">
-          <span style="font-size:36px">🔇</span>
-          <span style="font-size:14px;font-weight:700;color:#fff;font-family:'DM Sans',sans-serif;letter-spacing:.5px">Tap to Unmute</span>
-        </div>
       </div>
       <!-- PIP drag header (shown only in PIP mode via JS) -->
       <div id="yt-pip-header">
@@ -3026,11 +3021,6 @@ footer{
       <div style="width:100%;padding-top:56.25%;position:relative;overflow:hidden">
         <video id="iptv-player" controls playsinline muted
                style="position:absolute;top:0;left:0;width:100%;height:100%;background:#000"></video>
-        <!-- Unmute overlay — auto-dismissed on tap -->
-        <div id="iptv-unmute-overlay" onclick="iptvUnmute()" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:10;align-items:center;justify-content:center;cursor:pointer;flex-direction:column;gap:8px">
-          <div style="font-size:32px">🔇</div>
-          <div style="color:#fff;font-size:13px;font-weight:700;letter-spacing:.5px">Tap to Unmute</div>
-        </div>
       </div>
       <!-- Now-playing + transport controls -->
       <div style="padding:6px 10px;display:flex;align-items:center;gap:5px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px;flex-wrap:wrap">
@@ -4750,59 +4740,25 @@ function rssModalClose(e) {
   document.body.style.overflow = '';
 }
 
-// ── IPTV UNMUTE OVERLAY ───────────────────────────────────────────
-function iptvShowUnmute() {
-  const ov = document.getElementById('iptv-unmute-overlay');
-  if (ov) ov.style.display = 'flex';
-}
-function iptvUnmute() {
-  const vid = document.getElementById('iptv-player');
-  const ov  = document.getElementById('iptv-unmute-overlay');
-  if (vid) { vid.muted = false; vid.volume = 0.8; }
-  if (ov)  ov.style.display = 'none';
-}
-
-// ── YOUTUBE LIVE TV UNMUTE OVERLAY ────────────────────────────────
-function ytShowUnmute() {
-  const ov = document.getElementById('yt-unmute-overlay');
-  if (ov) ov.style.display = 'flex';
-}
-function ytUnmute() {
-  const ov = document.getElementById('yt-unmute-overlay');
-  if (ov) ov.style.display = 'none';
-  // Post-message unmute to the YouTube iframe via IFrame API
-  const iframe = document.querySelector('#yt-player iframe');
-  if (iframe && iframe.contentWindow) {
-    iframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
-  }
-  // Also try re-loading the same src without mute (fallback for live_stream)
-  if (iframe) {
-    var src = iframe.src;
-    if (src.indexOf('mute=1') !== -1) {
-      iframe.src = src.replace('mute=1', 'mute=0');
-    }
-  }
-}
-
 // ── YOUTUBE IFRAME API — MUSIC PLAYER ────────────────────────────
-// Replaces Spotify embed. Height/width = 0 so it's audio-only.
+// Audio-only playback via hidden YT IFrame API player.
 const _YT_MUSIC_PLAYLISTS = {
-  'today-top':  'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
-  'bollywood':  'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
-  'hindi':      'PLFgquLnL59akqvZzWC3ZNDs-S-HFHHb_a',
+  'today-top':  'PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf',
+  'bollywood':  'PLC5CD8EC31D0D3C5A',
+  'hindi':      'PLcRN7uKfCFbK0IZNbZ2Gi7dJ1BcFgV61B',
   'punjabi':    'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
   'malayalam':  'PLFgquLnL59alW28fxmr3GmqxXhlKT42kf',
   'tamil':      'PLFgquLnL59al7GXQRFxXCBv3REzBnBSFN',
-  'telugu':     'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
-  'jpop':       'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
-  'jrock':      'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
-  'kpop':       'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
-  'krock':      'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+  'telugu':     'PLI_7Mg2Z_-2LNjVYf2D8pQGRjSJ8PRxvv',
+  'jpop':       'PLnD2rjprr_0IMrncTwMl0ZZth2tK7OQ5L',
+  'jrock':      'PLnD2rjprr_0IMrncTwMl0ZZth2tK7OQ5L',
+  'kpop':       'PL4fGSI1pDJn6jXS_Tv_N9B8Z0HTRVJE0m',
+  'krock':      'PL4fGSI1pDJn6jXS_Tv_N9B8Z0HTRVJE0m',
   'cpop':       'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
-  'lofi':       'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+  'lofi':       'PL6NdkXsPL07IOu1AZ2Y2lGNYfjDStyT6O',
   'chill':      'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
   'workout':    'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
-  'pop':        'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+  'pop':        'PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf',
   'rock':       'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
   'classical':  'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
   'jazz':       'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
@@ -6997,7 +6953,6 @@ function iptvPlay(url, id, name) {
   if (wrap) wrap.style.display = 'block';
   if (nowEl) nowEl.textContent = name || 'Live TV';
   video.muted = true;
-  iptvShowUnmute();
 
   // Track current channel (for prev/next/fav)
   _iptvCurrentChannel = { id, name, url };
@@ -7356,6 +7311,8 @@ function musicSetVolume(val) {
   _musicVolume = parseInt(val) || 80;
   const btn = document.getElementById('music-mute-btn');
   if (btn) btn.textContent = _musicMuted ? '🔇' : (_musicVolume === 0 ? '🔇' : '🔊');
+  document.getElementById('music-vol').value = _musicVolume;
+  if (_ytMusicPlayer && _ytMusicReady) _ytMusicPlayer.setVolume(_musicVolume);
 }
 function musicVolUp() {
   const vol = Math.min(100, _musicVolume + 10);
@@ -7371,6 +7328,9 @@ function musicToggleMute() {
   _musicMuted = !_musicMuted;
   const btn = document.getElementById('music-mute-btn');
   if (btn) btn.textContent = _musicMuted ? '🔇' : '🔊';
+  if (_ytMusicPlayer && _ytMusicReady) {
+    if (_musicMuted) _ytMusicPlayer.mute(); else _ytMusicPlayer.unMute();
+  }
 }
 function musicToggleFav() {
   if (!_musicCurrentSid) return;
@@ -8342,7 +8302,7 @@ function _ytGetFrame() {
   }
   return f;
 }
-function _ytSetSrc(src) { var f = _ytGetFrame(); if (f) { f.src = src; ytShowUnmute(); } }
+function _ytSetSrc(src) { var f = _ytGetFrame(); if (f) { f.src = src; } }
 
 // ── Channel info strip ───────────────────────────────────────────────────────
 function ytUpdateInfo(ch) {
@@ -9611,6 +9571,8 @@ const NEWS_SOURCES = [
   { id:'india2', flag:'🇮🇳', label:'Moneycontrol',         lang:'English',  group:'🇮🇳 India (English)', color:'#c94200', url:'https://www.moneycontrol.com/rss/MCtopnews.xml' },
   { id:'india3', flag:'🇮🇳', label:'Mint Markets',         lang:'English',  group:'🇮🇳 India (English)', color:'#d45000', url:'https://www.livemint.com/rss/markets' },
   { id:'india4', flag:'🇮🇳', label:'NDTV Profit',          lang:'English',  group:'🇮🇳 India (English)', color:'#b03c00', url:'https://feeds.feedburner.com/ndtvprofit-latest' },
+  { id:'india5', flag:'🇮🇳', label:'Hindustan Times',       lang:'English',  group:'🇮🇳 India (English)', color:'#1a5276', url:'https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml', fallbackQuery:'hindustan times india' },
+  { id:'india6', flag:'🇮🇳', label:'The Hindu',             lang:'English',  group:'🇮🇳 India (English)', color:'#0e4b6e', url:'https://www.thehindu.com/news/national/feeder/default.rss', fallbackQuery:'the hindu news' },
   // ── India — Hindi ────────────────────────────────────────────────
   { id:'hindi1', flag:'🇮🇳', label:'NDTV India (हिंदी)',   lang:'Hindi',    group:'🇮🇳 India (Hindi)',   color:'#a52c00', url:'https://news.google.com/rss/search?q=ndtv+india&hl=hi&gl=IN&ceid=IN:hi' },
   { id:'hindi2', flag:'🇮🇳', label:'Aaj Tak',              lang:'Hindi',    group:'🇮🇳 India (Hindi)',   color:'#7b1a1a', url:'https://news.google.com/rss/search?q=aaj+tak&hl=hi&gl=IN&ceid=IN:hi' },
@@ -9620,6 +9582,7 @@ const NEWS_SOURCES = [
   { id:'malay2', flag:'🇮🇳', label:'Manorama Online',       lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#154360', url:'https://www.onmanorama.com/news/business.feeds.onmrss.xml', fallbackQuery:'manorama online malayalam' },
   { id:'malay3', flag:'🇮🇳', label:'Deepika Malayalam',     lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#1f618d', url:'https://news.google.com/rss/search?q=deepika+malayalam&hl=ml&gl=IN&ceid=IN:ml' },
   { id:'malay4', flag:'🇮🇳', label:'Marunadan Malayali',    lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#21618c', url:'https://news.google.com/rss/search?q=marunadan+malayali&hl=ml&gl=IN&ceid=IN:ml' },
+  { id:'malay5', flag:'🇮🇳', label:'Manorama Online (Malayalam)', lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#2471a3', url:'https://www.onmanorama.com/news.feeds.onmrss.xml', fallbackQuery:'manorama news malayalam' },
   // ── India — Tamil ────────────────────────────────────────────────
   { id:'tamil1', flag:'🇮🇳', label:'Daily Thanthi',        lang:'Tamil',    group:'🇮🇳 India (Tamil)',   color:'#6e2f2f', url:'https://news.google.com/rss/search?q=daily+thanthi&hl=ta&gl=IN&ceid=IN:ta' },
   { id:'tamil2', flag:'🇮🇳', label:'Dinamalar',            lang:'Tamil',    group:'🇮🇳 India (Tamil)',   color:'#5d4037', url:'https://news.google.com/rss/search?q=dinamalar&hl=ta&gl=IN&ceid=IN:ta' },
@@ -9735,7 +9698,7 @@ let lnsTimer;
 function initLiveNews() {
   renderNewsBoxes();
   fetchAllNews();
-  lnsTimer = setInterval(fetchAllNews, 300000); // refresh every 5 min
+  lnsTimer = setInterval(fetchAllNews, 600000); // refresh every 10 min
 }
 
 function renderNewsBoxes() {
