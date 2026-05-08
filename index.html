@@ -3053,10 +3053,8 @@ footer{
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('devotional')">🕉 Devotional</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('meditation')">🧘 Meditation</button>
     </div>
-    <!-- Spotify/YouTube embed slot (lazy-loaded only when user clicks a playlist) -->
-    <div id="music-player-wrap" style="width:100%;background:#000;flex-shrink:0;display:none">
-      <iframe id="music-player-iframe" allow="autoplay; encrypted-media; picture-in-picture"
-              style="width:100%;height:152px;border:none;background:#000"></iframe>
+    <!-- YouTube Music embed slot (hidden — audio plays via YT IFrame API) -->
+    <div id="music-player-wrap" style="display:none;width:100%;background:#000;flex-shrink:0">
       <div style="padding:6px 10px;display:flex;align-items:center;gap:5px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px;flex-wrap:wrap">
         <button onclick="musicPrev()" title="Previous playlist"
                 style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏮</button>
@@ -4709,25 +4707,10 @@ function _ytMusicDoPlay(playlistId, name) {
   _ytMusicPlayer.loadPlaylist({ listType:'playlist', list: playlistId, index:0, startSeconds:0 });
   const now = document.getElementById('music-now');
   if (now) now.textContent = name || 'Playing…';
-  const wrap = document.getElementById('music-player-wrap');
-  if (wrap) wrap.style.display = 'block';
   _ytMediaSession(name || 'Music', 'VilfinTV Music');
 }
 
-function musicPlay(sid, name) {
-  // sid is legacy Spotify ID — map to nearest YT playlist by name heuristic
-  _ytMusicPendingName = name;
-  const ytId = _YT_MUSIC_PLAYLISTS['today-top']; // default; presets pass ytid now
-  _musicCurrentSid = sid;
-  _loadYTApi();
-  if (_ytMusicReady) {
-    _ytMusicDoPlay(ytId, name);
-  } else {
-    _ytMusicPendingId = ytId;
-  }
-  const now = document.getElementById('music-now');
-  if (now) now.textContent = name || 'Loading…';
-}
+// (legacy musicPlay removed — all playback via musicPlayYT with YouTube IFrame API)
 
 function musicPlayYT(playlistId, name) {
   _ytMusicPendingName = name;
@@ -4743,8 +4726,6 @@ function musicPlayYT(playlistId, name) {
 function musicStop() {
   if (_ytMusicPlayer && _ytMusicReady) _ytMusicPlayer.stopVideo();
   const wrap = document.getElementById('music-player-wrap');
-  const ifr  = document.getElementById('music-player-iframe');
-  if (ifr) ifr.src = '';
   if (wrap) wrap.style.display = 'none';
   _musicCurrentSid = null;
 }
@@ -7055,157 +7036,156 @@ const _IPTV_CURATED_INDIA = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════
-// MUSIC ENGINE — Spotify embed iframes (free, no auth required)
-// Curated public Spotify playlists across genres + Indian languages.
-// 30-second previews work without Spotify login; full play requires
-// the user to log into Spotify in the iframe (one-time per session).
+// MUSIC ENGINE — YouTube IFrame API audio player (no auth required)
+// Curated YouTube Music playlists across genres + Indian languages.
+// Audio plays through a hidden YT IFrame API player (audio-only mode).
 // ═══════════════════════════════════════════════════════════════════
 const _MUSIC_PLAYLISTS = {
   'today-top': [
-    { name:'Global Top 50',           sid:'37i9dQZEVXbMDoHDwVN2tF', desc:'Spotify · Global Top 50' },
-    { name:'Viral 50',                sid:'37i9dQZF1DXcBWIGoYBM5M', desc:'Spotify · Viral Tracks' },
-    { name:'New Music Friday',        sid:'1eTPBf5DZu1CEtx8aVjIhJ', desc:'Spotify · Fresh Drops' },
-    { name:'Global Playlist Artist',  sid:'7haeSqCyAAF7Zw5XRAllvJ', desc:'Spotify · Artist Mix' },
-    { name:'RapCaviar',               sid:'37i9dQZF1DX0XQzBL9OAUw', desc:'Spotify · Hip-Hop Top' },
-    { name:'Biggest Hits',            sid:'37i9dQZEVXbMwmF45YlBg', desc:'Spotify · All-Time Hits' },
+    { name:'Global Top 50',           sid:'37i9dQZEVXbMDoHDwVN2tF', desc:'YT Music · Global Top 50' },
+    { name:'Viral 50',                sid:'37i9dQZF1DXcBWIGoYBM5M', desc:'YT Music · Viral Tracks' },
+    { name:'New Music Friday',        sid:'1eTPBf5DZu1CEtx8aVjIhJ', desc:'YT Music · Fresh Drops' },
+    { name:'Global Playlist Artist',  sid:'7haeSqCyAAF7Zw5XRAllvJ', desc:'YT Music · Artist Mix' },
+    { name:'RapCaviar',               sid:'37i9dQZF1DX0XQzBL9OAUw', desc:'YT Music · Hip-Hop Top' },
+    { name:'Biggest Hits',            sid:'37i9dQZEVXbMwmF45YlBg', desc:'YT Music · All-Time Hits' },
   ],
   'bollywood': [
-    { name:'Bollywood Butter',        sid:'37i9dQZF1DX0XUfTFmNBRM', desc:'Spotify · Top Bollywood' },
-    { name:'Hot Hits Hindi',          sid:'37i9dQZF1DX0XUfTFmNBRM', desc:'Spotify · Hindi Hits' },
-    { name:'Bollywood Hits',          sid:'37i9dQZF1DX5q67ZpWyRrZ', desc:'Spotify · Modern Bollywood' },
-    { name:'90s Bollywood',           sid:'37i9dQZF1DXcyXyWmCVkdU', desc:'Spotify · Retro' },
-    { name:'Romantic Bollywood',      sid:'37i9dQZF1DX0XUsuxWHRQd', desc:'Spotify · Love Songs' },
+    { name:'Bollywood Butter',        sid:'37i9dQZF1DX0XUfTFmNBRM', desc:'YT Music · Top Bollywood' },
+    { name:'Hot Hits Hindi',          sid:'37i9dQZF1DX0XUfTFmNBRM', desc:'YT Music · Hindi Hits' },
+    { name:'Bollywood Hits',          sid:'37i9dQZF1DX5q67ZpWyRrZ', desc:'YT Music · Modern Bollywood' },
+    { name:'90s Bollywood',           sid:'37i9dQZF1DXcyXyWmCVkdU', desc:'YT Music · Retro' },
+    { name:'Romantic Bollywood',      sid:'37i9dQZF1DX0XUsuxWHRQd', desc:'YT Music · Love Songs' },
   ],
   'hindi': [
-    { name:'Hot Hits Hindi',          sid:'37i9dQZF1DX0XUfTFmNBRM', desc:'Spotify · Hindi Top' },
-    { name:'Hindi Playlist 1',        sid:'37i9dQZF1DXbVhgADFy3im', desc:'Spotify · Hindi Hits' },
-    { name:'Hindi Playlist 2',        sid:'37i9dQZF1DXd8cOUiye1o2', desc:'Spotify · Hindi Favorites' },
-    { name:'Indie Hindi',             sid:'37i9dQZF1DXa2EmoJM17fs', desc:'Spotify · Indie' },
-    { name:'Hindi Lo-fi',             sid:'37i9dQZF1DX9z9fUhwqZNT', desc:'Spotify · Chill Hindi' },
-    { name:'Sufi Soul',               sid:'37i9dQZF1DX1bF7vvBOKi3', desc:'Spotify · Sufi' },
+    { name:'Hot Hits Hindi',          sid:'37i9dQZF1DX0XUfTFmNBRM', desc:'YT Music · Hindi Top' },
+    { name:'Hindi Playlist 1',        sid:'37i9dQZF1DXbVhgADFy3im', desc:'YT Music · Hindi Hits' },
+    { name:'Hindi Playlist 2',        sid:'37i9dQZF1DXd8cOUiye1o2', desc:'YT Music · Hindi Favorites' },
+    { name:'Indie Hindi',             sid:'37i9dQZF1DXa2EmoJM17fs', desc:'YT Music · Indie' },
+    { name:'Hindi Lo-fi',             sid:'37i9dQZF1DX9z9fUhwqZNT', desc:'YT Music · Chill Hindi' },
+    { name:'Sufi Soul',               sid:'37i9dQZF1DX1bF7vvBOKi3', desc:'YT Music · Sufi' },
   ],
   'punjabi': [
-    { name:'Punjabi 101',             sid:'37i9dQZF1DX9pi0R2ZGeoq', desc:'Spotify · Bhangra' },
-    { name:'Hot Hits Punjabi',        sid:'37i9dQZF1DWXVJK4aT7pmk', desc:'Spotify · Punjabi Top' },
+    { name:'Punjabi 101',             sid:'37i9dQZF1DX9pi0R2ZGeoq', desc:'YT Music · Bhangra' },
+    { name:'Hot Hits Punjabi',        sid:'37i9dQZF1DWXVJK4aT7pmk', desc:'YT Music · Punjabi Top' },
   ],
   'malayalam': [
-    { name:'Hot Hits Malayalam',      sid:'37i9dQZF1DX688wU47emR9', desc:'Spotify · Mollywood Top' },
-    { name:'Malayalam Romance',       sid:'37i9dQZF1DX2vVuWfbUoIM', desc:'Spotify · Romantic' },
-    { name:'Best of Malayalam',       sid:'37i9dQZF1DX5b5K4P1Y4Cw', desc:'Spotify · Retro Mal' },
-    { name:'The Sound of Mollywood',  sid:'4cOnCdcml9OJO7LfXqWxPf', desc:'Spotify · Mollywood Essentials' },
-    { name:'Trending Malayalam Songs',sid:'3ZbWYBiVeapp2FNOP3xCQT', desc:'Spotify · New & Viral Malayalam' },
-    { name:'Malayalam Folk Classics', sid:'37i9dQZF1DX2pOQabA7H0J', desc:'Spotify · Traditional' },
-    { name:'Malayalam Love Songs',    sid:'37i9dQZF1DXa6thENXHB9b', desc:'Spotify · Romantic Favorites' },
-    { name:'Mappila Songs',           sid:'37i9dQZF1DX3J64X0jXZKk', desc:'Spotify · Classical Mappila' },
-    { name:'Malayalam Devotional',    sid:'37i9dQZF1DX1bF7vvBOKi3', desc:'Spotify · Bhajans & Devotional' },
-    { name:'Modern Malayalam',        sid:'37i9dQZF1DXdxcBWuJkbcy', desc:'Spotify · Contemporary' },
-    { name:'Latest Malayalam Hits',   sid:'37i9dQZF1DWSxEc2RjBCQv', desc:'Spotify · Curated Latest' },
-    { name:'Malayalam Chillvibes',    sid:'7f4R19kOBmpsk9JhWbm6zX', desc:'Spotify · Relaxing' },
-    { name:'Mallu Feels',             sid:'5WbmkT3Wr0d57Ji0y4YAPv', desc:'Spotify · Emotional' },
-    { name:'Malayalam Nights',        sid:'37i9dQZF1DX0YqJHUZrLcd', desc:'Spotify · Evening Mood' },
-    { name:'Kairavani Album',         sid:'4RhPUUpql3ckuCz4KcbGV9', desc:'Spotify · Album Collection' },
-    { name:'Theekshana Album',        sid:'6rcKpqkjrG0FtLvQgPUNC2', desc:'Spotify · Album Selection' },
-    { name:'Mallu Classics Forever',  sid:'7wkoe7ETgrhiDKrLbTZRVd', desc:'Spotify · Golden Hits' },
+    { name:'Hot Hits Malayalam',      sid:'37i9dQZF1DX688wU47emR9', desc:'YT Music · Mollywood Top' },
+    { name:'Malayalam Romance',       sid:'37i9dQZF1DX2vVuWfbUoIM', desc:'YT Music · Romantic' },
+    { name:'Best of Malayalam',       sid:'37i9dQZF1DX5b5K4P1Y4Cw', desc:'YT Music · Retro Mal' },
+    { name:'The Sound of Mollywood',  sid:'4cOnCdcml9OJO7LfXqWxPf', desc:'YT Music · Mollywood Essentials' },
+    { name:'Trending Malayalam Songs',sid:'3ZbWYBiVeapp2FNOP3xCQT', desc:'YT Music · New & Viral Malayalam' },
+    { name:'Malayalam Folk Classics', sid:'37i9dQZF1DX2pOQabA7H0J', desc:'YT Music · Traditional' },
+    { name:'Malayalam Love Songs',    sid:'37i9dQZF1DXa6thENXHB9b', desc:'YT Music · Romantic Favorites' },
+    { name:'Mappila Songs',           sid:'37i9dQZF1DX3J64X0jXZKk', desc:'YT Music · Classical Mappila' },
+    { name:'Malayalam Devotional',    sid:'37i9dQZF1DX1bF7vvBOKi3', desc:'YT Music · Bhajans & Devotional' },
+    { name:'Modern Malayalam',        sid:'37i9dQZF1DXdxcBWuJkbcy', desc:'YT Music · Contemporary' },
+    { name:'Latest Malayalam Hits',   sid:'37i9dQZF1DWSxEc2RjBCQv', desc:'YT Music · Curated Latest' },
+    { name:'Malayalam Chillvibes',    sid:'7f4R19kOBmpsk9JhWbm6zX', desc:'YT Music · Relaxing' },
+    { name:'Mallu Feels',             sid:'5WbmkT3Wr0d57Ji0y4YAPv', desc:'YT Music · Emotional' },
+    { name:'Malayalam Nights',        sid:'37i9dQZF1DX0YqJHUZrLcd', desc:'YT Music · Evening Mood' },
+    { name:'Kairavani Album',         sid:'4RhPUUpql3ckuCz4KcbGV9', desc:'YT Music · Album Collection' },
+    { name:'Theekshana Album',        sid:'6rcKpqkjrG0FtLvQgPUNC2', desc:'YT Music · Album Selection' },
+    { name:'Mallu Classics Forever',  sid:'7wkoe7ETgrhiDKrLbTZRVd', desc:'YT Music · Golden Hits' },
   ],
   'tamil': [
-    { name:'Hot Hits Tamil',          sid:'37i9dQZF1DX1i3hvzHpcQV', desc:'Spotify · Kollywood Top' },
-    { name:'Tamil Playlist 1',        sid:'37i9dQZF1DX4Im4BTs2WMg', desc:'Spotify · Tamil Hit 1' },
-    { name:'Tamil Playlist 2',        sid:'37i9dQZF1DWVo4cdnikh7Z', desc:'Spotify · Tamil Hit 2' },
-    { name:'Tamil Playlist 3',        sid:'2YyZxHVQsMU1XFZhB6JybK', desc:'Spotify · Tamil Hit 3' },
-    { name:'Tamil Playlist 4',        sid:'37i9dQZF1DX2x1COalpsUi', desc:'Spotify · Tamil Hit 4' },
-    { name:'Tamil Playlist 5',        sid:'43a73ssTnlw00K8ljXDEfO', desc:'Spotify · Tamil Hit 5' },
-    { name:'Tamil Playlist 6',        sid:'7D816drYinN7SL9lk85Fz7', desc:'Spotify · Tamil Hit 6' },
-    { name:'Tamil Playlist 7',        sid:'4G6wOWQsOOB75gRyMjtAWE', desc:'Spotify · Tamil Hit 7' },
-    { name:'Tamil Playlist 8',        sid:'37i9dQZF1DWYfvJNWU1bKi', desc:'Spotify · Tamil Hit 8' },
-    { name:'Tamil Pop Hits',          sid:'37i9dQZF1DWUoY6Ih7vsxr', desc:'Spotify · Pop' },
-    { name:'AR Rahman Essentials',    sid:'37i9dQZF1DZ06evO0BCGl3', desc:'Spotify · Maestro' },
+    { name:'Hot Hits Tamil',          sid:'37i9dQZF1DX1i3hvzHpcQV', desc:'YT Music · Kollywood Top' },
+    { name:'Tamil Playlist 1',        sid:'37i9dQZF1DX4Im4BTs2WMg', desc:'YT Music · Tamil Hit 1' },
+    { name:'Tamil Playlist 2',        sid:'37i9dQZF1DWVo4cdnikh7Z', desc:'YT Music · Tamil Hit 2' },
+    { name:'Tamil Playlist 3',        sid:'2YyZxHVQsMU1XFZhB6JybK', desc:'YT Music · Tamil Hit 3' },
+    { name:'Tamil Playlist 4',        sid:'37i9dQZF1DX2x1COalpsUi', desc:'YT Music · Tamil Hit 4' },
+    { name:'Tamil Playlist 5',        sid:'43a73ssTnlw00K8ljXDEfO', desc:'YT Music · Tamil Hit 5' },
+    { name:'Tamil Playlist 6',        sid:'7D816drYinN7SL9lk85Fz7', desc:'YT Music · Tamil Hit 6' },
+    { name:'Tamil Playlist 7',        sid:'4G6wOWQsOOB75gRyMjtAWE', desc:'YT Music · Tamil Hit 7' },
+    { name:'Tamil Playlist 8',        sid:'37i9dQZF1DWYfvJNWU1bKi', desc:'YT Music · Tamil Hit 8' },
+    { name:'Tamil Pop Hits',          sid:'37i9dQZF1DWUoY6Ih7vsxr', desc:'YT Music · Pop' },
+    { name:'AR Rahman Essentials',    sid:'37i9dQZF1DZ06evO0BCGl3', desc:'YT Music · Maestro' },
   ],
   'telugu': [
-    { name:'Hot Hits Telugu',         sid:'37i9dQZF1DX6XE7HRLM75P', desc:'Spotify · Tollywood Top' },
-    { name:'Telugu Playlist 1',       sid:'37i9dQZF1DWTt3gMo0DLxA', desc:'Spotify · Telugu Hit 1' },
-    { name:'Telugu Playlist 2',       sid:'37i9dQZF1DWWwrjLPC16W7', desc:'Spotify · Telugu Hit 2' },
-    { name:'Telugu Top Tracks',       sid:'37i9dQZF1DX5Q27plkaOQ3', desc:'Spotify · Telugu' },
+    { name:'Hot Hits Telugu',         sid:'37i9dQZF1DX6XE7HRLM75P', desc:'YT Music · Tollywood Top' },
+    { name:'Telugu Playlist 1',       sid:'37i9dQZF1DWTt3gMo0DLxA', desc:'YT Music · Telugu Hit 1' },
+    { name:'Telugu Playlist 2',       sid:'37i9dQZF1DWWwrjLPC16W7', desc:'YT Music · Telugu Hit 2' },
+    { name:'Telugu Top Tracks',       sid:'37i9dQZF1DX5Q27plkaOQ3', desc:'YT Music · Telugu' },
   ],
   'lofi': [
-    { name:'Lo-fi Beats',             sid:'37i9dQZF1DWWQRwui0ExPn', desc:'Spotify · Study/Chill' },
-    { name:'Chillhop Essentials',     sid:'37i9dQZF1DX36fFxbRIvo7', desc:'Spotify · Chillhop' },
-    { name:'Late Night Vibes',        sid:'37i9dQZF1DX4E3UdUs7fUx', desc:'Spotify · Mellow' },
+    { name:'Lo-fi Beats',             sid:'37i9dQZF1DWWQRwui0ExPn', desc:'YT Music · Study/Chill' },
+    { name:'Chillhop Essentials',     sid:'37i9dQZF1DX36fFxbRIvo7', desc:'YT Music · Chillhop' },
+    { name:'Late Night Vibes',        sid:'37i9dQZF1DX4E3UdUs7fUx', desc:'YT Music · Mellow' },
   ],
   'chill': [
-    { name:'Chill Hits',              sid:'37i9dQZF1DX4WYpdgoIcn6', desc:'Spotify · Chill Pop' },
-    { name:'Peaceful Piano',          sid:'37i9dQZF1DX4sWSpwq3LiO', desc:'Spotify · Piano' },
-    { name:'Chill Vibes',             sid:'37i9dQZF1DX889U0CL85jj', desc:'Spotify · Easy' },
+    { name:'Chill Hits',              sid:'37i9dQZF1DX4WYpdgoIcn6', desc:'YT Music · Chill Pop' },
+    { name:'Peaceful Piano',          sid:'37i9dQZF1DX4sWSpwq3LiO', desc:'YT Music · Piano' },
+    { name:'Chill Vibes',             sid:'37i9dQZF1DX889U0CL85jj', desc:'YT Music · Easy' },
   ],
   'workout': [
-    { name:'Beast Mode',              sid:'37i9dQZF1DX76Wlfdnj7AP', desc:'Spotify · High Energy' },
-    { name:'Cardio',                  sid:'37i9dQZF1DWSJHnPb1f0X3', desc:'Spotify · Cardio' },
-    { name:'Power Workout',           sid:'37i9dQZF1DXdxcBWuJkbcy', desc:'Spotify · Power Mix' },
+    { name:'Beast Mode',              sid:'37i9dQZF1DX76Wlfdnj7AP', desc:'YT Music · High Energy' },
+    { name:'Cardio',                  sid:'37i9dQZF1DWSJHnPb1f0X3', desc:'YT Music · Cardio' },
+    { name:'Power Workout',           sid:'37i9dQZF1DXdxcBWuJkbcy', desc:'YT Music · Power Mix' },
   ],
   'pop': [
-    { name:'Top 50 Global',           sid:'37i9dQZEVXbMDoHDwVN2tF', desc:'Spotify · Pop Global' },
-    { name:'Pop Rising',              sid:'37i9dQZF1DWUa8ZRTfalHk', desc:'Spotify · Rising' },
+    { name:'Top 50 Global',           sid:'37i9dQZEVXbMDoHDwVN2tF', desc:'YT Music · Pop Global' },
+    { name:'Pop Rising',              sid:'37i9dQZF1DWUa8ZRTfalHk', desc:'YT Music · Rising' },
   ],
   'rock': [
-    { name:'Rock Classics',           sid:'37i9dQZF1DWXRqgorJj26U', desc:'Spotify · Classic Rock' },
-    { name:'Rock This',               sid:'37i9dQZF1DXcF6B6QPhFDv', desc:'Spotify · Modern Rock' },
+    { name:'Rock Classics',           sid:'37i9dQZF1DWXRqgorJj26U', desc:'YT Music · Classic Rock' },
+    { name:'Rock This',               sid:'37i9dQZF1DXcF6B6QPhFDv', desc:'YT Music · Modern Rock' },
   ],
   'classical': [
-    { name:'Classical Essentials',    sid:'37i9dQZF1DWWEJlAGA9gs0', desc:'Spotify · Greatest Hits' },
-    { name:'Mozart',                  sid:'37i9dQZF1DWVFeEut75IAL', desc:'Spotify · Mozart' },
-    { name:'Bach',                    sid:'37i9dQZF1DWVwWrvBqjxJF', desc:'Spotify · Bach' },
+    { name:'Classical Essentials',    sid:'37i9dQZF1DWWEJlAGA9gs0', desc:'YT Music · Greatest Hits' },
+    { name:'Mozart',                  sid:'37i9dQZF1DWVFeEut75IAL', desc:'YT Music · Mozart' },
+    { name:'Bach',                    sid:'37i9dQZF1DWVwWrvBqjxJF', desc:'YT Music · Bach' },
   ],
   'jazz': [
-    { name:'Jazz Classics',           sid:'37i9dQZF1DXbITWG1ZJKYt', desc:'Spotify · Jazz Standards' },
-    { name:'Smooth Jazz',             sid:'37i9dQZF1DX6VDO8a6cQME', desc:'Spotify · Smooth' },
+    { name:'Jazz Classics',           sid:'37i9dQZF1DXbITWG1ZJKYt', desc:'YT Music · Jazz Standards' },
+    { name:'Smooth Jazz',             sid:'37i9dQZF1DX6VDO8a6cQME', desc:'YT Music · Smooth' },
   ],
   'jpop': [
-    { name:'Tokyo Super Hits',        sid:'37i9dQZF1DX8hJzDhjgUa3', desc:'Spotify · J-pop Top' },
-    { name:'J-pop Picks',             sid:'37i9dQZF1DWUoqEG4WY6ce', desc:'Spotify · J-pop' },
-    { name:'Anime Essentials',        sid:'37i9dQZF1DX4SBhb3fqCYw', desc:'Spotify · Anime Soundtracks' },
-    { name:'J-pop Rising',            sid:'37i9dQZF1DX3pM1zI04rAm', desc:'Spotify · Emerging Artists' },
-    { name:'Kawaii Japan',            sid:'37i9dQZF1DXbOxAFAJkWg1', desc:'Spotify · Cute & Catchy' },
-    { name:'Latest J-pop Hits',       sid:'37i9dQZEVXbKXQ4mDTEBXq', desc:'Spotify · New Releases' },
-    { name:'Tokyo Vibes',             sid:'32N5O6GoNdhg6nn6yxhlKx', desc:'Spotify · Urban J-pop' },
-    { name:'J-pop Essentials',        sid:'37i9dQZF1DXc57cuGAMEkA', desc:'Spotify · Must-Listen' },
-    { name:'Nippon Nights',           sid:'11r6GBEM7JUkGD7FA73Vm3', desc:'Spotify · Evening J-pop' },
+    { name:'Tokyo Super Hits',        sid:'37i9dQZF1DX8hJzDhjgUa3', desc:'YT Music · J-pop Top' },
+    { name:'J-pop Picks',             sid:'37i9dQZF1DWUoqEG4WY6ce', desc:'YT Music · J-pop' },
+    { name:'Anime Essentials',        sid:'37i9dQZF1DX4SBhb3fqCYw', desc:'YT Music · Anime Soundtracks' },
+    { name:'J-pop Rising',            sid:'37i9dQZF1DX3pM1zI04rAm', desc:'YT Music · Emerging Artists' },
+    { name:'Kawaii Japan',            sid:'37i9dQZF1DXbOxAFAJkWg1', desc:'YT Music · Cute & Catchy' },
+    { name:'Latest J-pop Hits',       sid:'37i9dQZEVXbKXQ4mDTEBXq', desc:'YT Music · New Releases' },
+    { name:'Tokyo Vibes',             sid:'32N5O6GoNdhg6nn6yxhlKx', desc:'YT Music · Urban J-pop' },
+    { name:'J-pop Essentials',        sid:'37i9dQZF1DXc57cuGAMEkA', desc:'YT Music · Must-Listen' },
+    { name:'Nippon Nights',           sid:'11r6GBEM7JUkGD7FA73Vm3', desc:'YT Music · Evening J-pop' },
   ],
   'jrock': [
-    { name:'J-rock Classics',         sid:'37i9dQZF1DXbOxAFAJkWg1', desc:'Spotify · J-rock Top' },
-    { name:'Japanese Rock Hits',      sid:'37i9dQZF1DX2p4dFDuOIQV', desc:'Spotify · Classic Rock' },
-    { name:'Tokyo Legends',           sid:'37i9dQZF1DXcF6B6QPhFDv', desc:'Spotify · Rock Legends' },
-    { name:'Modern J-rock',           sid:'37i9dQZF1DX36fFxbRIvo7', desc:'Spotify · Contemporary' },
+    { name:'J-rock Classics',         sid:'37i9dQZF1DXbOxAFAJkWg1', desc:'YT Music · J-rock Top' },
+    { name:'Japanese Rock Hits',      sid:'37i9dQZF1DX2p4dFDuOIQV', desc:'YT Music · Classic Rock' },
+    { name:'Tokyo Legends',           sid:'37i9dQZF1DXcF6B6QPhFDv', desc:'YT Music · Rock Legends' },
+    { name:'Modern J-rock',           sid:'37i9dQZF1DX36fFxbRIvo7', desc:'YT Music · Contemporary' },
   ],
   'kpop': [
-    { name:'K-pop ON!',               sid:'37i9dQZF1DX9tPFwDMOaN1', desc:'Spotify · K-pop Top' },
-    { name:'K-pop Daebak',            sid:'37i9dQZF1DX14fiWYoe7Oh', desc:'Spotify · Daebak' },
-    { name:'Korean Rising',           sid:'37i9dQZF1DX3pM1zI04rAm', desc:'Spotify · New K-pop' },
-    { name:'Hangul Hits',             sid:'37i9dQZF1DX4WYpdgoIcn6', desc:'Spotify · K-pop Essentials' },
-    { name:'Seoul Vibes',             sid:'37i9dQZF1DWWQRwui0ExPn', desc:'Spotify · Urban K-pop' },
-    { name:'K-pop Romantic',          sid:'37i9dQZF1DX0XUsuxWHRQd', desc:'Spotify · Ballads & Slow Songs' },
-    { name:'Latest K-pop 2024',       sid:'37i9dQZEVXbNxXF4SkHj9F', desc:'Spotify · Current Hits' },
-    { name:'K-pop Universe',          sid:'37i9dQZF1DXdlsL6CGuL98', desc:'Spotify · Global K-pop' },
+    { name:'K-pop ON!',               sid:'37i9dQZF1DX9tPFwDMOaN1', desc:'YT Music · K-pop Top' },
+    { name:'K-pop Daebak',            sid:'37i9dQZF1DX14fiWYoe7Oh', desc:'YT Music · Daebak' },
+    { name:'Korean Rising',           sid:'37i9dQZF1DX3pM1zI04rAm', desc:'YT Music · New K-pop' },
+    { name:'Hangul Hits',             sid:'37i9dQZF1DX4WYpdgoIcn6', desc:'YT Music · K-pop Essentials' },
+    { name:'Seoul Vibes',             sid:'37i9dQZF1DWWQRwui0ExPn', desc:'YT Music · Urban K-pop' },
+    { name:'K-pop Romantic',          sid:'37i9dQZF1DX0XUsuxWHRQd', desc:'YT Music · Ballads & Slow Songs' },
+    { name:'Latest K-pop 2024',       sid:'37i9dQZEVXbNxXF4SkHj9F', desc:'YT Music · Current Hits' },
+    { name:'K-pop Universe',          sid:'37i9dQZF1DXdlsL6CGuL98', desc:'YT Music · Global K-pop' },
   ],
   'krock': [
-    { name:'K-rock Classics',         sid:'37i9dQZF1DX6VDO8a6cQME', desc:'Spotify · K-rock Top' },
-    { name:'Korean Rock Hits',        sid:'37i9dQZF1DXcF6B6QPhFDv', desc:'Spotify · Rock Legacy' },
-    { name:'Seoul Rock Scene',        sid:'37i9dQZF1DX2L0iB23Enbq', desc:'Spotify · Contemporary Rock' },
-    { name:'Korean Metal',            sid:'37i9dQZF1DX1i3hvzHpcQV', desc:'Spotify · Alternative' },
+    { name:'K-rock Classics',         sid:'37i9dQZF1DX6VDO8a6cQME', desc:'YT Music · K-rock Top' },
+    { name:'Korean Rock Hits',        sid:'37i9dQZF1DXcF6B6QPhFDv', desc:'YT Music · Rock Legacy' },
+    { name:'Seoul Rock Scene',        sid:'37i9dQZF1DX2L0iB23Enbq', desc:'YT Music · Contemporary Rock' },
+    { name:'Korean Metal',            sid:'37i9dQZF1DX1i3hvzHpcQV', desc:'YT Music · Alternative' },
   ],
   'cpop': [
-    { name:'C-pop Hits',              sid:'37i9dQZF1DWVFeEut75IAL', desc:'Spotify · Chinese Pop Top' },
-    { name:'Mandarin Pop',            sid:'37i9dQZF1DX2pOQabA7H0J', desc:'Spotify · Mandarin' },
-    { name:'Cantopop Essentials',     sid:'37i9dQZF1DXbOxAFAJkWg1', desc:'Spotify · Cantopop' },
-    { name:'Chinese Modern',          sid:'37i9dQZF1DX0XUsuxWHRQd', desc:'Spotify · Contemporary' },
+    { name:'C-pop Hits',              sid:'37i9dQZF1DWVFeEut75IAL', desc:'YT Music · Chinese Pop Top' },
+    { name:'Mandarin Pop',            sid:'37i9dQZF1DX2pOQabA7H0J', desc:'YT Music · Mandarin' },
+    { name:'Cantopop Essentials',     sid:'37i9dQZF1DXbOxAFAJkWg1', desc:'YT Music · Cantopop' },
+    { name:'Chinese Modern',          sid:'37i9dQZF1DX0XUsuxWHRQd', desc:'YT Music · Contemporary' },
   ],
   'devotional': [
-    { name:'Bhajan Hits',             sid:'37i9dQZF1DX2pOQabA7H0J', desc:'Spotify · Bhajans' },
-    { name:'Vande Mataram',           sid:'37i9dQZF1DXa6thENXHB9b', desc:'Spotify · Devotional' },
-    { name:'Sufi Soul',               sid:'37i9dQZF1DX1bF7vvBOKi3', desc:'Spotify · Sufi' },
+    { name:'Bhajan Hits',             sid:'37i9dQZF1DX2pOQabA7H0J', desc:'YT Music · Bhajans' },
+    { name:'Vande Mataram',           sid:'37i9dQZF1DXa6thENXHB9b', desc:'YT Music · Devotional' },
+    { name:'Sufi Soul',               sid:'37i9dQZF1DX1bF7vvBOKi3', desc:'YT Music · Sufi' },
   ],
   'meditation': [
-    { name:'Peaceful Meditation',     sid:'37i9dQZF1DWZqd5JICZI0u', desc:'Spotify · Meditation' },
-    { name:'Yoga & Meditation',       sid:'37i9dQZF1DWZeKCadgRdKQ', desc:'Spotify · Yoga' },
-    { name:'Sleep',                   sid:'37i9dQZF1DWZd79rJ6a7lp', desc:'Spotify · Sleep' },
+    { name:'Peaceful Meditation',     sid:'37i9dQZF1DWZqd5JICZI0u', desc:'YT Music · Meditation' },
+    { name:'Yoga & Meditation',       sid:'37i9dQZF1DWZeKCadgRdKQ', desc:'YT Music · Yoga' },
+    { name:'Sleep',                   sid:'37i9dQZF1DWZd79rJ6a7lp', desc:'YT Music · Sleep' },
   ],
 };
 let _musicCurrentSid = null;
