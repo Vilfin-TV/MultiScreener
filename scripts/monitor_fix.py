@@ -100,10 +100,22 @@ def get_sheet(client, sheet_name: str):
 #  YouTube helpers
 # ─────────────────────────────────────────────────────────────────────────────
 def yt_is_live(video_id: str) -> bool:
-    """Return True if the YouTube videoId is currently live."""
+    """Return True if the YouTube videoId (or channelId) is currently live."""
     if not YOUTUBE_API_KEY or not video_id:
         return True   # assume OK if we can't check
     try:
+        # If this looks like a channel ID (starts with UC), search for a live stream on that channel
+        if video_id.startswith("UC"):
+            r = requests.get(
+                YT_SEARCH_API,
+                params={"part": "id", "channelId": video_id, "eventType": "live",
+                        "type": "video", "key": YOUTUBE_API_KEY, "maxResults": 1},
+                timeout=HTTP_TIMEOUT,
+            )
+            r.raise_for_status()
+            items = r.json().get("items", [])
+            return len(items) > 0
+        # Otherwise check if the specific video ID is live
         r = requests.get(
             YT_VIDEO_API,
             params={"part": "snippet,liveStreamingDetails", "id": video_id, "key": YOUTUBE_API_KEY},
@@ -121,7 +133,8 @@ def yt_is_live(video_id: str) -> bool:
 
 
 def yt_find_live_id(channel_id: str, search_query: str) -> str | None:
-    """Search for the current live-stream videoId on a channel or by keyword."""
+    """Search for the current live-stream videoId on a channel or by keyword.
+    Falls back to recent uploads if no live stream is active."""
     if not YOUTUBE_API_KEY:
         return None
     # 1. Try channel-based live search
@@ -145,8 +158,28 @@ def yt_find_live_id(channel_id: str, search_query: str) -> str | None:
                 return items[0]["id"]["videoId"]
         except Exception as exc:
             log.warning("yt_find_live_id channel search error: %s", exc)
+        # 2. Fallback: search recent uploads on the channel (no eventType filter)
+        try:
+            r = requests.get(
+                YT_SEARCH_API,
+                params={
+                    "part": "id",
+                    "channelId": channel_id,
+                    "type": "video",
+                    "order": "date",
+                    "key": YOUTUBE_API_KEY,
+                    "maxResults": 1,
+                },
+                timeout=HTTP_TIMEOUT,
+            )
+            r.raise_for_status()
+            items = r.json().get("items", [])
+            if items:
+                return items[0]["id"]["videoId"]
+        except Exception as exc:
+            log.warning("yt_find_live_id recent uploads error: %s", exc)
 
-    # 2. Fall back to keyword search
+    # 3. Fall back to keyword search (with 'live' suffix)
     if search_query:
         try:
             r = requests.get(
@@ -167,6 +200,26 @@ def yt_find_live_id(channel_id: str, search_query: str) -> str | None:
                 return items[0]["id"]["videoId"]
         except Exception as exc:
             log.warning("yt_find_live_id keyword search error: %s", exc)
+        # 4. Final fallback: keyword search without live filter
+        try:
+            r = requests.get(
+                YT_SEARCH_API,
+                params={
+                    "part": "id",
+                    "q": search_query,
+                    "type": "video",
+                    "order": "date",
+                    "key": YOUTUBE_API_KEY,
+                    "maxResults": 1,
+                },
+                timeout=HTTP_TIMEOUT,
+            )
+            r.raise_for_status()
+            items = r.json().get("items", [])
+            if items:
+                return items[0]["id"]["videoId"]
+        except Exception as exc:
+            log.warning("yt_find_live_id fallback search error: %s", exc)
     return None
 
 
@@ -193,6 +246,22 @@ def check_and_fix_streams() -> bool:
         if not vid_id:
             continue
 
+        # If videoId is actually a channel ID (UC...), skip live check
+        # and directly search for a live video from that channel
+        if vid_id.startswith("UC") and not ch_id:
+            ch_id = vid_id  # use videoId as channelId
+            new_id = yt_find_live_id(ch_id, label.replace("🇮🇳", "").replace("📺", "").replace("📡", "").strip())
+            if new_id:
+                log.info("  → %s — channel search found live video: %s", label, new_id)
+                ch["videoId"] = new_id
+                ch["status"]  = "auto-fixed"
+                modified = True
+            else:
+                log.warning("  → %s — no live video found for channel %s", label, ch_id)
+                ch["status"] = "offline"
+            time.sleep(0.3)
+            continue
+
         if yt_is_live(vid_id):
             log.info("  ✓ %s — live", label)
             ch["status"] = "live"
@@ -200,7 +269,7 @@ def check_and_fix_streams() -> bool:
 
         log.warning("  ✗ %s (videoId=%s) offline — searching for replacement…", label, vid_id)
 
-        new_id = yt_find_live_id(ch_id, label.replace("🇮🇳", "").replace("📺", "").strip())
+        new_id = yt_find_live_id(ch_id, label.replace("🇮🇳", "").replace("📺", "").replace("📡", "").strip())
         if new_id and new_id != vid_id:
             log.info("    → replaced with %s", new_id)
             ch["videoId"] = new_id
