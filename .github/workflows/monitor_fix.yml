@@ -1,0 +1,63 @@
+name: Daily Monitor & Auto-Fix
+
+# ─── Schedule ────────────────────────────────────────────────────────────────
+# Runs at 00:00 UTC daily — validates streams, tickers, and radio stations.
+# Manually triggerable from Actions tab via workflow_dispatch.
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+# ─── Permissions ─────────────────────────────────────────────────────────────
+permissions:
+  contents: write   # needed to commit updated JSON files back to the repo
+
+jobs:
+  monitor-fix:
+    name: Run monitor_fix.py
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout the repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # 2. Set up Python
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 3. Install dependencies
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install gspread google-auth requests tradingview_ta
+
+      # 4. Run the monitor & auto-fix script
+      - name: Run monitor_fix.py
+        env:
+          YOUTUBE_API_KEY:   ${{ secrets.YOUTUBE_API_KEY }}
+          GSHEET_CREDS_JSON: ${{ secrets.GSHEET_CREDS_JSON }}
+          GSHEET_DOC_TITLE:  ${{ secrets.GSHEET_DOC_TITLE }}
+        run: python scripts/monitor_fix.py
+
+      # 5. Auto-commit any changed JSON files
+      - name: Commit updated data files
+        run: |
+          git config --global user.name  "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Stage files the script may have modified
+          git add streams.json 2>/dev/null || true
+          git add public/data/radio_stations.json 2>/dev/null || true
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore(monitor): auto-fix streams & radio [$(date -u +%Y-%m-%d)]"
+            git push
+            echo "Changes committed and pushed."
+          fi
