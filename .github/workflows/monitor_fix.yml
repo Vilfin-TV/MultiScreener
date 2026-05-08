@@ -44,20 +44,15 @@ jobs:
           GSHEET_DOC_TITLE:  ${{ secrets.GSHEET_DOC_TITLE }}
         run: python scripts/monitor_fix.py
 
-      # 5. Auto-commit any changed JSON files
+      # 5. Auto-commit any changed files
       - name: Commit updated data files
         run: |
-          git config --global user.name  "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
 
-          # Stage files the script may have modified
+          # Stage all modified files the script may have changed
           git add streams.json 2>/dev/null || true
           git add public/data/radio_stations.json 2>/dev/null || true
 
-          if git diff --cached --quiet; then
-            echo "No changes to commit."
-          else
-            git commit -m "chore(monitor): auto-fix streams & radio [$(date -u +%Y-%m-%d)]"
-            git push
-            echo "Changes committed and pushed."
-          fi
+          git commit -am "Auto-fix broken IDs and links" || echo "No changes to commit"
+          git push
