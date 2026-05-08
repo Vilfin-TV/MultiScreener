@@ -1666,7 +1666,7 @@ footer{
 .radio-preset-btn.active{background:#1d4ed8;border-color:#3b82f6;color:#fff}
 .radio-station-meta{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0;overflow:hidden}
 .radio-station-tag{font-size:9.5px;color:#506480;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.radio-station-list{flex:1;overflow-y:auto;padding:4px 6px 8px;scrollbar-width:thin;scrollbar-color:#1e293b transparent}
+.radio-station-list{flex:1;overflow-y:auto;padding:4px 6px 8px;scrollbar-width:thin;scrollbar-color:#1e293b transparent;min-height:500px;height:60vh}
 .radio-station-item{display:flex;align-items:center;gap:6px;padding:7px 9px;border-radius:8px;border:1px solid transparent;cursor:pointer;transition:all .15s;margin-bottom:3px}
 .radio-station-item:hover{background:rgba(37,99,235,.12);border-color:rgba(37,99,235,.3)}
 .radio-station-item.active{background:rgba(37,99,235,.22);border-color:#2563eb}
@@ -4673,9 +4673,22 @@ function rbDoExpand() {
   const expandBtn= document.getElementById('rb-expand-btn');
   if (!overlay || !content) return;
 
-  const activePanel = document.querySelector('[id^="rb-panel-"]:not([style*="display:none"])') ||
-                      document.getElementById('rb-panel-ai');
+  // Find the currently active panel by checking display state directly
+  const allPanels = document.querySelectorAll('[id^="rb-panel-"]');
+  let activePanel = null;
+  for (var i = 0; i < allPanels.length; i++) {
+    if (allPanels[i].style.display !== 'none' && allPanels[i].style.display !== '') {
+      activePanel = allPanels[i]; break;
+    }
+  }
+  if (!activePanel) activePanel = document.getElementById('rb-panel-ai');
   if (!activePanel) return;
+
+  // Force the panel to be visible in the overlay
+  activePanel.style.display = 'flex';
+  activePanel.style.flex = '1';
+  activePanel.style.minHeight = '0';
+  activePanel.style.overflow = 'auto';
 
   // Capture original parent so we can restore later
   _rbExpandedOriginal = { parent: activePanel.parentNode, next: activePanel.nextSibling, el: activePanel };
@@ -4684,9 +4697,6 @@ function rbDoExpand() {
   if (titleEl && titleBar) titleEl.textContent = titleBar.textContent.trim();
 
   // Physically move the active panel into the overlay
-  activePanel.style.display = 'flex';
-  activePanel.style.flex = '1';
-  activePanel.style.minHeight = '0';
   content.innerHTML = '';
   content.appendChild(activePanel);
 
@@ -4722,7 +4732,12 @@ function rbCollapseExpand(e) {
 }
 
 // ── RSS NEWS MODAL ────────────────────────────────────────────────
-function rssModalOpen(title, snippet, url, source) {
+function rssModalOpen(title, snippet, url, source) { showNewsModal(title, snippet, url, source); }
+function showNewsModalFallback(title, snippet, url, source) {
+  showNewsModal(title, snippet, url, source);
+}
+
+function showNewsModal(title, snippet, url, source) {
   const overlay  = document.getElementById('rss-modal-overlay');
   const headline = document.getElementById('rss-modal-headline');
   const snip     = document.getElementById('rss-modal-snippet');
@@ -7307,7 +7322,7 @@ function musicLoadPreset(key) {
   const ytId = _YT_MUSIC_PLAYLISTS[key] || _YT_MUSIC_PLAYLISTS['today-top'];
   list.innerHTML = playlists.map(p => {
     // Each item plays the category YouTube playlist (audio-only via hidden YT player)
-    return '<div class="radio-station-item" onclick=\'musicPlayYT(' + JSON.stringify(ytId) + ',' + JSON.stringify(p.name) + ')\'>'
+    return '<div class="radio-station-item" data-playlist-id="' + _esc(ytId) + '" onclick=\'musicPlayYT(' + JSON.stringify(ytId) + ',' + JSON.stringify(p.name) + ')\'>'
       + '<span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:6px;background:linear-gradient(135deg,#ff0000,#cc0000);color:#fff;font-size:16px;font-weight:800;flex-shrink:0">▶</span>'
       + '<div class="radio-station-meta"><span class="radio-station-name" title="' + _esc(p.name) + '">' + _esc(p.name) + '</span>'
       + '<span class="radio-station-tag">' + _esc(p.desc || 'YouTube Music') + '</span>'
@@ -9717,10 +9732,29 @@ function getActiveFeeds() {
 // ── Core news functions ──────────────────────────────────────────────────────
 let lnsTimer;
 
+// Event delegation: prevent link navigation and show RSS modal
 function initLiveNews() {
   renderNewsBoxes();
   fetchAllNews();
   lnsTimer = setInterval(fetchAllNews, 600000); // refresh every 10 min
+  // Add delegated click handler on the live-news grid
+  var grid = document.getElementById('lns-grid');
+  if (grid && !grid._newsDelegated) {
+    grid._newsDelegated = true;
+    grid.addEventListener('click', function(e) {
+      var el = e.target.closest('.lnb-item');
+      if (!el) return;
+      e.preventDefault();
+      // Let the inline onclick handler fire; if the item has no onclick,
+      // try extracting title/snippet from the DOM for the modal
+      if (el.hasAttribute('onclick')) return; // inline handler will handle it
+      var titleEl = el.querySelector('.lnb-text');
+      var timeEl  = el.querySelector('.lnb-time');
+      var title = titleEl ? titleEl.textContent.trim() : 'News Story';
+      var snippet = title;
+      showNewsModalFallback(title, snippet, '#', '');
+    });
+  }
 }
 
 function renderNewsBoxes() {
