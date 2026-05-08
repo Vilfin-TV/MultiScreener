@@ -394,7 +394,7 @@ footer,.tmenu-dropdown,.dd-submenu,.dd-item,.lnb,.live-news-section,
 .rss-modal-overlay{
   display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);
   backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
-  z-index:9000;align-items:center;justify-content:center;
+  z-index:99999;align-items:center;justify-content:center;
 }
 .rss-modal-overlay.active{display:flex}
 .rss-modal-box{
@@ -3142,7 +3142,7 @@ footer{
       <button onclick="radioStop()" title="Stop"
               style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏹</button>
       <!-- Hidden HTML5 audio element — events wired in radioInit() via addEventListener -->
-      <audio id="radio-audio" preload="none" style="display:none"></audio>
+      <audio id="radio-audio" preload="none" muted style="display:none"></audio>
     </div>
 
   </div><!-- /rb-panel-radio -->
@@ -3180,6 +3180,8 @@ footer{
     <!-- YouTube Music embed slot (hidden — audio plays via YT IFrame API) -->
     <div id="music-player-wrap" style="display:none;width:100%;background:#000;flex-shrink:0">
       <div style="padding:6px 10px;display:flex;align-items:center;gap:5px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px;flex-wrap:wrap">
+        <button onclick="musicTogglePlay()" id="music-play-btn" title="Play / Pause"
+                style="background:#1d4ed8;border:none;color:#fff;padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer">▶</button>
         <button onclick="musicPrev()" title="Previous playlist"
                 style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏮</button>
         <button onclick="musicNext()" title="Next playlist"
@@ -3314,7 +3316,7 @@ footer{
               style="background:#1d4ed8;border:none;color:#fff;padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer">▶</button>
       <button onclick="podcastStop()" title="Stop"
               style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏹</button>
-      <audio id="podcast-audio" preload="none" style="display:none"></audio>
+      <audio id="podcast-audio" preload="none" muted style="display:none"></audio>
     </div>
   </div><!-- /rb-panel-podcast -->
 
@@ -4786,7 +4788,7 @@ function _loadYTApi() {
 window.onYouTubeIframeAPIReady = function() {
   _ytMusicPlayer = new YT.Player('yt-music-player-div', {
     height: '1', width: '1',
-    playerVars: { autoplay: 1, controls: 0, playsinline: 1, origin: location.origin },
+    playerVars: { autoplay: 1, mute: 1, controls: 0, playsinline: 1, origin: location.origin },
     events: {
       onReady: function(e) {
         _ytMusicReady = true;
@@ -4809,6 +4811,8 @@ function _ytMusicDoPlay(playlistId, name) {
   _ytMusicPlayer.loadPlaylist({ listType:'playlist', list: playlistId, index:0, startSeconds:0 });
   const now = document.getElementById('music-now');
   if (now) now.textContent = name || 'Playing…';
+  const btn = document.getElementById('music-play-btn');
+  if (btn) btn.textContent = '⏸';
   _ytMediaSession(name || 'Music', 'VilfinTV Music');
 }
 
@@ -4829,6 +4833,8 @@ function musicStop() {
   if (_ytMusicPlayer && _ytMusicReady) _ytMusicPlayer.stopVideo();
   const wrap = document.getElementById('music-player-wrap');
   if (wrap) wrap.style.display = 'none';
+  const btn = document.getElementById('music-play-btn');
+  if (btn) btn.textContent = '▶';
   _musicCurrentSid = null;
 }
 
@@ -7337,6 +7343,16 @@ function musicToggleMute() {
     if (_musicMuted) _ytMusicPlayer.mute(); else _ytMusicPlayer.unMute();
   }
 }
+function musicTogglePlay() {
+  if (!_ytMusicPlayer || !_ytMusicReady) return;
+  const btn = document.getElementById('music-play-btn');
+  const state = _ytMusicPlayer.getPlayerState();
+  if (state === YT.PlayerState.PLAYING) {
+    _ytMusicPlayer.pauseVideo(); if (btn) btn.textContent = '▶';
+  } else {
+    _ytMusicPlayer.playVideo(); if (btn) btn.textContent = '⏸';
+  }
+}
 function musicToggleFav() {
   if (!_musicCurrentSid) return;
   const idx = _musicFavorites.indexOf(_musicCurrentSid);
@@ -7868,6 +7884,7 @@ function radioPlay(url, id, name, catId) {
     _radioHls.attachMedia(audio);
     _radioHls.on(Hls.Events.MANIFEST_PARSED, () => {
       console.log('[Radio] HLS manifest parsed, calling audio.play()');
+      audio.muted = true;
       audio.play().then(() => console.log('[Radio] HLS audio.play() resolved'))
         .catch(err => {
           console.warn('[Radio] HLS play REJECTED:', err && err.name, err && err.message);
