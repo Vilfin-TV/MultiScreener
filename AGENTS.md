@@ -27,3 +27,37 @@ When generating, modifying, or reviewing web code, you must **always** strictly 
     *   Clean, polished styling (e.g., subtle shadows, appropriate hover states, and logical alignment).
     *   Modular and easily maintainable code structure.
 
+---
+
+# Manual Setup Checklist
+
+After deploying, complete these one-time manual steps:
+
+## Google Cloud Console
+- [ ] Create a Google Cloud Project (or use existing)
+- [ ] Enable the **YouTube Data API v3**
+- [ ] Enable the **Google Sheets API**
+- [ ] Enable the **Google Drive API** (read-only scope)
+- [ ] Create an API Key for YouTube (restrict to YouTube Data API v3)
+
+## Google Sheets Service Account
+- [ ] Create a Service Account in IAM & Admin → Service Accounts
+- [ ] Generate a JSON key for it and download it
+- [ ] Share the Google Sheet (title: `VilfinTV Screener Config`) with the service account email (Editor role)
+- [ ] The Sheet must have worksheets named: `LiveTV`, `Tickers`
+
+## GitHub Secrets (Settings → Secrets and variables → Actions)
+- [ ] `YOUTUBE_API_KEY` — YouTube Data API v3 key
+- [ ] `GSHEET_CREDS_JSON` — Full contents of the downloaded service-account JSON key (all on one line)
+- [ ] `GSHEET_DOC_TITLE` — Title of the Google Sheet (default: `VilfinTV Screener Config`)
+
+## Verify Workflows Work
+- [ ] Go to Actions tab → select "Daily Monitor & Auto-Fix" → Run workflow (workflow_dispatch)
+- [ ] Check the run logs for errors
+- [ ] Verify `streams.json` and `radio_stations.json` are updated in the repo
+
+## Google Sheet Structure
+The `VilfinTV Screener Config` Google Sheet must have:
+- **LiveTV** worksheet: Columns `Label | VideoId | ChannelId | Status | LastChecked`
+- **Tickers** worksheet: Columns `Symbol | Exchange | Status`
+

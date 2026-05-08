@@ -21,6 +21,7 @@
   // Apply saved colour theme before first paint to avoid flash
   (function(){
     var t = localStorage.getItem('viltv_theme') || 'black';
+    if (t === 'standard') { t = 'midnight'; localStorage.setItem('viltv_theme','midnight'); }
     document.documentElement.setAttribute('data-theme', t);
   })();
 </script>
@@ -169,9 +170,128 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
 [data-theme="standard"] footer{background:linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 55%,#2563eb 100%);border-top-color:#93c5fd;color:#f8fafc}
 /* Active-theme check marks in File menu */
 #theme-black-item::before{content:'';display:inline-block;width:14px}
-#theme-standard-item::before{content:'';display:inline-block;width:14px}
+#theme-midnight-item::before{content:'';display:inline-block;width:14px}
 [data-theme="black"] #theme-black-item::before{content:'✓';color:var(--burn3);width:14px}
-[data-theme="standard"] #theme-standard-item::before{content:'✓';color:var(--burn2);width:14px}
+[data-theme="midnight"] #theme-midnight-item::before{content:'✓';color:#58a6ff;width:14px}
+
+/* ══ MIDNIGHT PRO THEME — GitHub Dark inspired ══ */
+[data-theme="midnight"]{
+  --dark:#0b0e14;--dark2:#161b22;--dark3:#1c2433;--dark4:#21262d;
+  --card:#161b22;--card2:#1c2433;--card3:#21262d;--card4:#2d333b;
+  --text:#e6edf3;--text2:#adbac7;--text3:#636e7b;
+  --border:#30363d;--border2:#444c56;
+  --page-bg:#0b0e14;
+  --nav-bg:#161b22;--nav-text:#e6edf3;--nav-border:#30363d;
+  --glow:rgba(88,166,255,.2);
+  --burn:#2563eb;--burn2:#3b82f6;--burn3:#58a6ff;
+  --gold:#1e3a8a;--gold2:#58a6ff;
+}
+[data-theme="midnight"] body{background:var(--page-bg);color:var(--text)}
+[data-theme="midnight"] .main-nav,[data-theme="midnight"] .site-header,[data-theme="midnight"] .top-menubar{background:var(--dark2);border-bottom-color:var(--border)}
+[data-theme="midnight"] .tmenu-dropdown{background:var(--dark2);border-color:var(--border);box-shadow:0 8px 32px rgba(0,0,0,.45)}
+[data-theme="midnight"] .dd-item{color:var(--text2);border-bottom-color:rgba(255,255,255,.04)}
+[data-theme="midnight"] .dd-item:hover{background:rgba(88,166,255,.1);color:#58a6ff}
+[data-theme="midnight"] .dd-sep{background:var(--border)}
+[data-theme="midnight"] .sidebar{background:var(--dark2);border-right-color:var(--border)}
+[data-theme="midnight"] .right-bar{background:var(--dark2);border-left-color:var(--border)}
+[data-theme="midnight"] .rb-header{background:linear-gradient(135deg,#0b0e14,#161b22);border-bottom-color:var(--border)}
+[data-theme="midnight"] .rb-tab{background:rgba(255,255,255,.06);color:rgba(255,255,255,.4)}
+[data-theme="midnight"] .rb-tab:hover{background:rgba(88,166,255,.1);color:#58a6ff}
+[data-theme="midnight"] .rb-tab.active{background:#2563eb;color:#fff}
+[data-theme="midnight"] .lnb{background:var(--card2);border-color:var(--border2)}
+[data-theme="midnight"] .mobile-rb-bar{background:var(--dark2);border-top-color:var(--border)}
+[data-theme="midnight"] .mobile-rb-btn{background:var(--card2);border-color:var(--border2);color:var(--text2)}
+[data-theme="midnight"] .mobile-rb-btn.active,[data-theme="midnight"] .mobile-rb-btn:active{background:#2563eb;border-color:#3b82f6;color:#fff}
+[data-theme="midnight"] footer{background:var(--dark2);border-top-color:var(--border);color:var(--text)}
+[data-theme="midnight"] .prompt-box{background:var(--card2);color:var(--text);border-color:var(--border2)}
+[data-theme="midnight"] .paste-area{background:var(--card2);color:var(--text);border-color:var(--border2)}
+[data-theme="midnight"] .nsm-box{background:var(--card2);border-color:var(--border2);box-shadow:0 24px 60px rgba(0,0,0,.5)}
+[data-theme="midnight"] .nsm-title,[data-theme="midnight"] .nsm-feed-name{color:var(--text)}
+[data-theme="midnight"] .dd-submenu{background:var(--dark2);border-color:var(--border);box-shadow:8px 8px 32px rgba(0,0,0,.45)}
+[data-theme="midnight"] .rb-ai-input{background:var(--card2);border-color:var(--border2);color:var(--text)}
+[data-theme="midnight"] .rb-msg-bubble{background:var(--card2);border-color:var(--border2);color:var(--text2)}
+[data-theme="midnight"] .rb-md-h2{color:#58a6ff}
+
+/* ── Mobile landscape scroll fix ── */
+@media (orientation:landscape) and (max-width:900px){
+  body{min-height:100vh;overflow-y:auto}
+  .layout{height:auto;min-height:calc(100dvh - 44px);overflow:visible}
+  .main-content{overflow-y:auto;min-height:0}
+  .sidebar{height:auto;position:relative;top:0}
+}
+
+/* ── Widget expand overlay (PC) ── */
+.widget-expand-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
+  backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);
+  z-index:8000;align-items:center;justify-content:center;
+}
+.widget-expand-overlay.active{display:flex}
+.widget-expand-box{
+  width:75vw;height:75vh;background:var(--card2);border:1px solid var(--border2);
+  border-radius:16px;display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 32px 80px rgba(0,0,0,.6);
+}
+.widget-expand-header{
+  padding:10px 14px;background:var(--dark2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.widget-expand-title{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:var(--gold2)}
+.widget-expand-content{flex:1;overflow:auto;min-height:0}
+.rb-expand-btn{
+  background:none;border:1px solid var(--border2);color:var(--text3);
+  border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.rb-expand-btn:hover{border-color:var(--burn2);color:var(--gold2)}
+
+/* ── Mobile bottom bar minimize ── */
+.mobile-rb-minimize-btn{
+  background:none;border:1px solid var(--border2);color:var(--text3);
+  border-radius:8px;padding:8px 12px;font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:all .15s;
+}
+.mobile-rb-minimize-btn:hover{border-color:var(--burn2);color:var(--gold2)}
+.mobile-rb-restore{
+  display:none;position:fixed;bottom:8px;left:50%;transform:translateX(-50%);
+  background:var(--burn);color:#fff;border:none;border-radius:20px;
+  padding:8px 20px;font-size:13px;font-weight:700;cursor:pointer;
+  z-index:1401;box-shadow:0 4px 16px rgba(37,99,235,.45);
+  letter-spacing:.5px;
+}
+.mobile-rb-bar.minimized{display:none!important}
+.mobile-rb-restore.visible{display:block}
+
+/* ── RSS News Modal ── */
+.rss-modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  z-index:9000;align-items:center;justify-content:center;
+}
+.rss-modal-overlay.active{display:flex}
+.rss-modal-box{
+  width:min(540px,92vw);max-height:80vh;background:var(--card2);
+  border:1px solid var(--border2);border-radius:14px;
+  box-shadow:0 24px 64px rgba(0,0,0,.6);overflow:hidden;display:flex;flex-direction:column;
+}
+.rss-modal-header{
+  padding:14px 16px;background:var(--dark2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.rss-modal-title-bar{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--gold2)}
+.rss-modal-close{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;line-height:1;padding:2px 6px;border-radius:4px}
+.rss-modal-close:hover{color:var(--text);background:rgba(255,255,255,.08)}
+.rss-modal-body{padding:18px;overflow-y:auto;flex:1}
+.rss-modal-article-title{font-size:16px;font-weight:700;color:var(--text);line-height:1.45;margin-bottom:12px}
+.rss-modal-snippet{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;border-left:3px solid var(--burn2);padding-left:12px}
+.rss-modal-source{font-size:11px;color:var(--text3);margin-bottom:16px}
+.rss-modal-read-btn{
+  display:inline-block;padding:10px 22px;background:linear-gradient(135deg,var(--burn),var(--burn2));
+  border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;
+  text-decoration:none;cursor:pointer;letter-spacing:.3px;transition:all .15s;
+}
+.rss-modal-read-btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(37,99,235,.4)}
 
 /* ── LAYOUT WRAPPER ── */
 .layout{display:flex;height:calc(100vh - 90px);overflow:hidden}
@@ -823,6 +943,13 @@ footer{
   /* Live TV mobile: limit video player height to show channel list below */
   #iptv-player-wrap{max-height:220px;flex-shrink:1!important}
   #iptv-player-wrap > div:first-child{padding-top:56.25%;max-height:220px;overflow:hidden}
+  #yt-video-wrapper{max-height:280px}
+  #yt-video-wrapper > div:first-child{padding-top:56.25%;max-height:280px;overflow:hidden}
+}
+/* YouTube player: cap vertical height on mobile so channel list/detail stays visible */
+@media(max-width:900px){
+  #yt-video-wrapper{max-height:300px}
+  #yt-video-wrapper > div:first-child{padding-top:56.25%;max-height:300px;overflow:hidden}
 }
 
 /* ── OVERLAY (kept for compatibility) ── */
@@ -1867,7 +1994,7 @@ footer{
           <div class="dd-submenu">
             <div class="dd-header">Colour Theme</div>
             <div class="dd-item" id="theme-black-item" onclick="setTheme('black');closeAllMenus()">🌑 Black Theme</div>
-            <div class="dd-item" id="theme-standard-item" onclick="setTheme('standard');closeAllMenus()">🌤️ Standard Theme</div>
+            <div class="dd-item" id="theme-midnight-item" onclick="setTheme('midnight');closeAllMenus()">🌒 Midnight Pro</div>
           </div>
         </div>
         <!-- API Connect submenu -->
@@ -2057,11 +2184,11 @@ footer{
       </div>
     </div>
 
-    <!-- FINANCIAL VIDEO -->
+    <!-- NEWS VIDEOS -->
     <div class="tmenu-item" id="tmenu-finvideo">
-      <button class="tmenu-btn" onclick="toggleMenu('finvideo')">Financial Video <span class="arr">▾</span></button>
+      <button class="tmenu-btn" onclick="toggleMenu('finvideo')">News Videos <span class="arr">▾</span></button>
       <div class="tmenu-dropdown" id="tdd-finvideo">
-        <div class="dd-header">Financial YouTube by Region</div>
+        <div class="dd-header">News &amp; Financial Video by Region</div>
         <!-- India -->
         <div class="dd-item dd-has-sub">🇮🇳 India — YouTube
           <div class="dd-submenu">
@@ -2579,6 +2706,7 @@ footer{
         <span class="rb-dot" id="rb-ai-dot" style="background:var(--text3)"></span>
       </div>
       <div style="display:flex;gap:4px;align-items:center">
+        <button class="rb-expand-btn" id="rb-expand-btn" onclick="rbToggleExpand()" title="Expand widget">⛶ Expand</button>
         <button onclick="rbAiClear()" id="rb-clear-btn" title="Clear chat" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'">🗑</button>
         <button class="rb-mobile-close" onclick="closeMobileRightBar()" title="Close">✕</button>
       </div>
@@ -2838,8 +2966,13 @@ footer{
     <!-- Video player + professional controls -->
     <div id="iptv-player-wrap" style="width:100%;background:#000;flex-shrink:0;display:none">
       <div style="width:100%;padding-top:56.25%;position:relative;overflow:hidden">
-        <video id="iptv-player" controls playsinline
+        <video id="iptv-player" controls playsinline muted
                style="position:absolute;top:0;left:0;width:100%;height:100%;background:#000"></video>
+        <!-- Unmute overlay — auto-dismissed on tap -->
+        <div id="iptv-unmute-overlay" onclick="iptvUnmute()" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:10;align-items:center;justify-content:center;cursor:pointer;flex-direction:column;gap:8px">
+          <div style="font-size:32px">🔇</div>
+          <div style="color:#fff;font-size:13px;font-weight:700;letter-spacing:.5px">Tap to Unmute</div>
+        </div>
       </div>
       <!-- Now-playing + transport controls -->
       <div style="padding:6px 10px;display:flex;align-items:center;gap:5px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px;flex-wrap:wrap">
@@ -2885,6 +3018,21 @@ footer{
 
   <!-- ── PANEL 4: Global Radio (powered by radio-browser.info) ── -->
   <div id="rb-panel-radio" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+
+    <!-- Featured Stations — embedded iframes -->
+    <div style="padding:8px 10px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
+      <div style="font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">🎙 Featured Stations</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div>
+          <div style="font-size:11px;color:#adbac7;margin-bottom:3px">📻 Radio Mango (Malayalam)</div>
+          <iframe src="https://radiosindia.com/radiomango.html" allow="autoplay" style="border:none;border-radius:10px;width:100%;height:150px" loading="lazy" title="Radio Mango"></iframe>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#adbac7;margin-bottom:3px">🎵 Club FM (Malayalam)</div>
+          <iframe src="https://radiosindia.com/clubfm.html" allow="autoplay" style="border:none;border-radius:10px;width:100%;height:150px" loading="lazy" title="Club FM"></iframe>
+        </div>
+      </div>
+    </div>
 
     <!-- Search box -->
     <div style="padding:8px 10px 6px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
@@ -2951,7 +3099,12 @@ footer{
 
   </div><!-- /rb-panel-radio -->
 
-  <!-- ── PANEL 5: Music (Spotify + YouTube Music free embeds) ── -->
+  <!-- Hidden YouTube IFrame API audio player (shared across Music panel) -->
+  <div id="yt-music-hidden" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+    <div id="yt-music-player-div"></div>
+  </div>
+
+  <!-- ── PANEL 5: Music (YouTube IFrame audio player) ── -->
   <div id="rb-panel-music" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
     <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:4px;flex-wrap:wrap;max-height:140px;overflow-y:auto">
       <button class="radio-preset-btn music-preset active" onclick="musicLoadPreset('today-top')">🔥 Today's Top</button>
@@ -4421,8 +4574,244 @@ document.addEventListener('click', e => {
 });
 
 function setTheme(t) {
+  if (t === 'standard') t = 'midnight';
   document.documentElement.setAttribute('data-theme', t);
   localStorage.setItem('viltv_theme', t);
+}
+
+// ── MOBILE BOTTOM BAR MINIMIZE / RESTORE ──────────────────────────
+function mobileBarMinimize() {
+  const bar = document.getElementById('mobile-rb-bar');
+  const restore = document.getElementById('mobile-rb-restore');
+  if (bar) bar.classList.add('minimized');
+  if (restore) restore.classList.add('visible');
+  // add padding so content isn't hidden under nothing
+  document.querySelector('.main-content')?.style.setProperty('padding-bottom','0');
+}
+function mobileBarRestore() {
+  const bar = document.getElementById('mobile-rb-bar');
+  const restore = document.getElementById('mobile-rb-restore');
+  if (bar) bar.classList.remove('minimized');
+  if (restore) restore.classList.remove('visible');
+  document.querySelector('.main-content')?.style.setProperty('padding-bottom','62px');
+}
+
+// ── WIDGET EXPAND / RESTORE (PC) ─────────────────────────────────
+let _rbExpanded = false;
+function rbToggleExpand() {
+  if (_rbExpanded) {
+    rbRestoreExpand();
+  } else {
+    rbDoExpand();
+  }
+}
+function rbDoExpand() {
+  const overlay  = document.getElementById('widget-expand-overlay');
+  const content  = document.getElementById('widget-expand-content');
+  const titleEl  = document.getElementById('widget-expand-title');
+  const expandBtn= document.getElementById('rb-expand-btn');
+  if (!overlay || !content) return;
+
+  // Clone the currently active panel into the overlay
+  const activePanel = document.querySelector('[id^="rb-panel-"]:not([style*="display:none"])') ||
+                      document.getElementById('rb-panel-ai');
+  if (activePanel) {
+    const titleBar = document.getElementById('rb-panel-title');
+    if (titleEl && titleBar) titleEl.textContent = titleBar.textContent.trim();
+    content.innerHTML = '';
+    const clone = activePanel.cloneNode(true);
+    clone.style.display = 'flex';
+    clone.style.flex = '1';
+    clone.style.minHeight = '0';
+    // Remove IDs from clone to avoid duplicates
+    clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+    content.appendChild(clone);
+  }
+
+  overlay.classList.add('active');
+  if (expandBtn) expandBtn.textContent = '⛶ Restore';
+  _rbExpanded = true;
+  document.body.style.overflow = 'hidden';
+}
+function rbRestoreExpand() {
+  const overlay  = document.getElementById('widget-expand-overlay');
+  const expandBtn= document.getElementById('rb-expand-btn');
+  if (overlay) overlay.classList.remove('active');
+  if (expandBtn) expandBtn.textContent = '⛶ Expand';
+  _rbExpanded = false;
+  document.body.style.overflow = '';
+}
+function rbCollapseExpand(e) {
+  if (e.target === document.getElementById('widget-expand-overlay')) rbRestoreExpand();
+}
+
+// ── RSS NEWS MODAL ────────────────────────────────────────────────
+function rssModalOpen(title, snippet, url, source) {
+  const overlay  = document.getElementById('rss-modal-overlay');
+  const headline = document.getElementById('rss-modal-headline');
+  const snip     = document.getElementById('rss-modal-snippet');
+  const src      = document.getElementById('rss-modal-src');
+  const link     = document.getElementById('rss-modal-link');
+  if (!overlay) return;
+  if (headline) headline.textContent = title || 'News Story';
+  if (snip) {
+    snip.textContent = snippet || '';
+    snip.style.display = snippet ? 'block' : 'none';
+  }
+  if (src) src.textContent = source ? '🗞 Source: ' + source : '';
+  if (link) link.href = url || '#';
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function rssModalClose(e) {
+  if (e && e.target !== document.getElementById('rss-modal-overlay') && e.type !== 'click') return;
+  if (e && e.currentTarget && e.target !== e.currentTarget) return;
+  const overlay = document.getElementById('rss-modal-overlay');
+  if (overlay) overlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+// ── IPTV UNMUTE OVERLAY ───────────────────────────────────────────
+function iptvShowUnmute() {
+  const ov = document.getElementById('iptv-unmute-overlay');
+  if (ov) ov.style.display = 'flex';
+}
+function iptvUnmute() {
+  const vid = document.getElementById('iptv-player');
+  const ov  = document.getElementById('iptv-unmute-overlay');
+  if (vid) { vid.muted = false; vid.volume = 0.8; }
+  if (ov)  ov.style.display = 'none';
+}
+
+// ── YOUTUBE IFRAME API — MUSIC PLAYER ────────────────────────────
+// Replaces Spotify embed. Height/width = 0 so it's audio-only.
+const _YT_MUSIC_PLAYLISTS = {
+  'today-top':  'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+  'bollywood':  'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+  'hindi':      'PLFgquLnL59akqvZzWC3ZNDs-S-HFHHb_a',
+  'punjabi':    'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+  'malayalam':  'PLFgquLnL59alW28fxmr3GmqxXhlKT42kf',
+  'tamil':      'PLFgquLnL59al7GXQRFxXCBv3REzBnBSFN',
+  'telugu':     'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+  'jpop':       'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+  'jrock':      'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+  'kpop':       'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+  'krock':      'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+  'cpop':       'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+  'lofi':       'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+  'chill':      'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+  'workout':    'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+  'pop':        'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+  'rock':       'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+  'classical':  'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+  'jazz':       'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+  'devotional': 'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+  'meditation': 'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
+};
+let _ytMusicPlayer = null;
+let _ytMusicReady  = false;
+let _ytMusicPendingId = null;
+let _ytMusicPendingName = '';
+
+function _loadYTApi() {
+  if (window.YT || document.getElementById('yt-api-script')) return;
+  const s = document.createElement('script');
+  s.id  = 'yt-api-script';
+  s.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(s);
+}
+
+window.onYouTubeIframeAPIReady = function() {
+  _ytMusicPlayer = new YT.Player('yt-music-player-div', {
+    height: '1', width: '1',
+    playerVars: { autoplay: 1, controls: 0, playsinline: 1, origin: location.origin },
+    events: {
+      onReady: function(e) {
+        _ytMusicReady = true;
+        if (_ytMusicPendingId) {
+          _ytMusicDoPlay(_ytMusicPendingId, _ytMusicPendingName);
+          _ytMusicPendingId = null;
+        }
+      },
+      onStateChange: function(e) {
+        if (e.data === YT.PlayerState.PLAYING) {
+          _ytMediaSession(_ytMusicPendingName || 'Music', 'VilfinTV Music');
+        }
+      }
+    }
+  });
+};
+
+function _ytMusicDoPlay(playlistId, name) {
+  if (!_ytMusicPlayer) return;
+  _ytMusicPlayer.loadPlaylist({ listType:'playlist', list: playlistId, index:0, startSeconds:0 });
+  const now = document.getElementById('music-now');
+  if (now) now.textContent = name || 'Playing…';
+  const wrap = document.getElementById('music-player-wrap');
+  if (wrap) wrap.style.display = 'block';
+  _ytMediaSession(name || 'Music', 'VilfinTV Music');
+}
+
+function musicPlay(sid, name) {
+  // sid is legacy Spotify ID — map to nearest YT playlist by name heuristic
+  _ytMusicPendingName = name;
+  const ytId = _YT_MUSIC_PLAYLISTS['today-top']; // default; presets pass ytid now
+  _musicCurrentSid = sid;
+  _loadYTApi();
+  if (_ytMusicReady) {
+    _ytMusicDoPlay(ytId, name);
+  } else {
+    _ytMusicPendingId = ytId;
+  }
+  const now = document.getElementById('music-now');
+  if (now) now.textContent = name || 'Loading…';
+}
+
+function musicPlayYT(playlistId, name) {
+  _ytMusicPendingName = name;
+  _loadYTApi();
+  if (_ytMusicReady) {
+    _ytMusicDoPlay(playlistId, name);
+  } else {
+    _ytMusicPendingId   = playlistId;
+    _ytMusicPendingName = name;
+  }
+}
+
+function musicStop() {
+  if (_ytMusicPlayer && _ytMusicReady) _ytMusicPlayer.stopVideo();
+  const wrap = document.getElementById('music-player-wrap');
+  const ifr  = document.getElementById('music-player-iframe');
+  if (ifr) ifr.src = '';
+  if (wrap) wrap.style.display = 'none';
+  _musicCurrentSid = null;
+}
+
+// ── NAVIGATOR.MEDIA SESSION API ───────────────────────────────────
+function _ytMediaSession(title, artist) {
+  if (!('mediaSession' in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title:  title  || 'VilfinTV Music',
+    artist: artist || 'VilfinTV',
+    album:  'Multi-Asset Screener',
+    artwork: [
+      { src: 'https://vilfin-tv.github.io/MultiScreener/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ]
+  });
+}
+function _radioMediaSession(stationName) {
+  if (!('mediaSession' in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title:  stationName || 'Live Radio',
+    artist: 'VilfinTV Radio',
+    album:  'Global Radio Streams',
+    artwork: [
+      { src: 'https://vilfin-tv.github.io/MultiScreener/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ]
+  });
+  navigator.mediaSession.setActionHandler('play',  () => { document.getElementById('radio-audio')?.play(); });
+  navigator.mediaSession.setActionHandler('pause', () => { document.getElementById('radio-audio')?.pause(); });
+  navigator.mediaSession.setActionHandler('stop',  () => radioStop());
 }
 
 function openLiveTVSettings() {
@@ -6523,6 +6912,8 @@ function iptvPlay(url, id, name) {
   if (_iptvHls) { try { _iptvHls.destroy(); } catch(_){} _iptvHls = null; }
   if (wrap) wrap.style.display = 'block';
   if (nowEl) nowEl.textContent = name || 'Live TV';
+  video.muted = true;
+  iptvShowUnmute();
 
   // Track current channel (for prev/next/fav)
   _iptvCurrentChannel = { id, name, url };
@@ -6864,32 +7255,17 @@ function musicLoadPreset(key) {
   const list = document.getElementById('music-list');
   if (!list) return;
   const playlists = _MUSIC_PLAYLISTS[key] || _MUSIC_PLAYLISTS['today-top'];
+  const ytId = _YT_MUSIC_PLAYLISTS[key] || _YT_MUSIC_PLAYLISTS['today-top'];
   list.innerHTML = playlists.map(p => {
-    const initial = (p.name || '?')[0].toUpperCase();
-    return '<div class="radio-station-item" onclick=\'musicPlay(' + JSON.stringify(p.sid) + ',' + JSON.stringify(p.name) + ')\'>'
-      + '<span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:6px;background:linear-gradient(135deg,#1ed760,#1db954);color:#000;font-size:16px;font-weight:800;flex-shrink:0">♫</span>'
+    // Each item plays the category YouTube playlist (audio-only via hidden YT player)
+    return '<div class="radio-station-item" onclick=\'musicPlayYT(' + JSON.stringify(ytId) + ',' + JSON.stringify(p.name) + ')\'>'
+      + '<span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:6px;background:linear-gradient(135deg,#ff0000,#cc0000);color:#fff;font-size:16px;font-weight:800;flex-shrink:0">▶</span>'
       + '<div class="radio-station-meta"><span class="radio-station-name" title="' + _esc(p.name) + '">' + _esc(p.name) + '</span>'
-      + '<span class="radio-station-tag">' + _esc(p.desc) + '</span>'
+      + '<span class="radio-station-tag">' + _esc(p.desc || 'YouTube Music') + '</span>'
       + '</div></div>';
   }).join('');
 }
-function musicPlay(sid, name) {
-  const wrap = document.getElementById('music-player-wrap');
-  const ifr  = document.getElementById('music-player-iframe');
-  const now  = document.getElementById('music-now');
-  if (!wrap || !ifr) return;
-  _musicCurrentSid = sid;
-  ifr.src = 'https://open.spotify.com/embed/playlist/' + encodeURIComponent(sid) + '?utm_source=vilfintv&theme=0&autoplay=1';
-  wrap.style.display = 'block';
-  if (now) now.textContent = name || 'Playing…';
-}
-function musicStop() {
-  const wrap = document.getElementById('music-player-wrap');
-  const ifr  = document.getElementById('music-player-iframe');
-  if (ifr) ifr.src = '';
-  if (wrap) wrap.style.display = 'none';
-  _musicCurrentSid = null;
-}
+/* musicPlay / musicStop / musicPlayYT defined above in the YT IFrame block */
 let _musicVolume = 80;
 let _musicMuted = false;
 let _musicFavorites = JSON.parse(localStorage.getItem('music-favorites') || '[]');
@@ -7416,6 +7792,7 @@ function radioPlay(url, id, name, catId) {
 
   const np = document.getElementById('radio-now-playing');
   if (np) np.textContent = name || 'Playing…';
+  _radioMediaSession(name);
 
   const dot = document.getElementById('radio-dot');
   if (dot) { dot.style.background = '#fbbf24'; dot.classList.remove('playing'); }
@@ -9298,14 +9675,22 @@ function fetchAllNews() {
 
 function renderItems(listEl, items) {
   listEl.innerHTML = items.slice(0, 6).map(item => {
-    const title = (typeof item === 'string' ? item : (item.title || '')).trim();
-    const link  = item.link || item.url || '#';
-    const pub   = item.pubDate || item.published || '';
+    const title   = (typeof item === 'string' ? item : (item.title || '')).trim();
+    const link    = item.link || item.url || '#';
+    const pub     = item.pubDate || item.published || '';
+    const snippet = item.description || item.summary || item.content || '';
+    const source  = item.source || item.feed || '';
     const timeStr = pub ? new Date(pub).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}) : '';
-    return `<a class="lnb-item" href="${escHtml(link)}" target="_blank" rel="noopener">
-      <span class="lnb-text">${escHtml(title)}</span>
+    const safeTitle   = escHtml(title);
+    const safeSnip    = escHtml(snippet.replace(/<[^>]+>/g,'').slice(0,280));
+    const safeUrl     = escHtml(link);
+    const safeSrc     = escHtml(source);
+    return `<div class="lnb-item" role="button" tabindex="0"
+      onclick="rssModalOpen(${JSON.stringify(title)},${JSON.stringify(snippet.replace(/<[^>]+>/g,'').slice(0,280))},${JSON.stringify(link)},${JSON.stringify(source)})"
+      onkeydown="if(event.key==='Enter')this.click()">
+      <span class="lnb-text">${safeTitle}</span>
       ${timeStr ? `<span class="lnb-time">${timeStr}</span>` : ''}
-    </a>`;
+    </div>`;
   }).join('');
 }
 
@@ -13808,6 +14193,7 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
 
 <!-- ── MOBILE FAB BOTTOM BAR ── -->
 <div class="mobile-rb-bar" id="mobile-rb-bar">
+  <button class="mobile-rb-minimize-btn" onclick="mobileBarMinimize()" title="Minimise bar">⌄</button>
   <button class="mobile-rb-btn" id="mobile-ai-btn" onclick="openMobileRightBar('ai')">
     🤖 AI Chat
   </button>
@@ -13823,6 +14209,36 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
   <button class="mobile-rb-btn" id="mobile-podcast-btn" onclick="openMobileRightBar('podcast')">
     🎙 Podcast
   </button>
+</div>
+
+<!-- Mobile bar restore button (shown when bar is minimised) -->
+<button class="mobile-rb-restore" id="mobile-rb-restore" onclick="mobileBarRestore()">▲ Menu</button>
+
+<!-- Widget expand overlay (PC) -->
+<div class="widget-expand-overlay" id="widget-expand-overlay" onclick="rbCollapseExpand(event)">
+  <div class="widget-expand-box" id="widget-expand-box">
+    <div class="widget-expand-header">
+      <span class="widget-expand-title" id="widget-expand-title">WIDGET</span>
+      <button onclick="rbToggleExpand()" style="background:none;border:1px solid var(--border2);color:var(--text3);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer">✕ Restore</button>
+    </div>
+    <div class="widget-expand-content" id="widget-expand-content"></div>
+  </div>
+</div>
+
+<!-- RSS News Modal -->
+<div class="rss-modal-overlay" id="rss-modal-overlay" onclick="rssModalClose(event)">
+  <div class="rss-modal-box" onclick="event.stopPropagation()">
+    <div class="rss-modal-header">
+      <span class="rss-modal-title-bar">📰 NEWS STORY</span>
+      <button class="rss-modal-close" onclick="rssModalClose()">✕</button>
+    </div>
+    <div class="rss-modal-body" id="rss-modal-body">
+      <div class="rss-modal-article-title" id="rss-modal-headline"></div>
+      <div class="rss-modal-snippet" id="rss-modal-snippet" style="display:none"></div>
+      <div class="rss-modal-source" id="rss-modal-src"></div>
+      <a class="rss-modal-read-btn" id="rss-modal-link" href="#" target="_blank" rel="noopener">Read Full Story →</a>
+    </div>
+  </div>
 </div>
 
 </body>
