@@ -9652,16 +9652,17 @@ const NEWS_SOURCES = [
   { id:'india4', flag:'🇮🇳', label:'NDTV Profit',          lang:'English',  group:'🇮🇳 India (English)', color:'#b03c00', url:'https://feeds.feedburner.com/ndtvprofit-latest' },
   { id:'india5', flag:'🇮🇳', label:'Hindustan Times',       lang:'English',  group:'🇮🇳 India (English)', color:'#1a5276', url:'https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml', fallbackQuery:'hindustan times india' },
   { id:'india6', flag:'🇮🇳', label:'The Hindu',             lang:'English',  group:'🇮🇳 India (English)', color:'#0e4b6e', url:'https://www.thehindu.com/news/national/feeder/default.rss', fallbackQuery:'the hindu news' },
+  { id:'india7', flag:'🇮🇳', label:'OnManorama (English)',    lang:'English',  group:'🇮🇳 India (English)', color:'#2e86c1', url:'https://www.onmanorama.com/news.feeds.onmrss.xml', fallbackQuery:'onmanorama english' },
   // ── India — Hindi ────────────────────────────────────────────────
   { id:'hindi1', flag:'🇮🇳', label:'NDTV India (हिंदी)',   lang:'Hindi',    group:'🇮🇳 India (Hindi)',   color:'#a52c00', url:'https://news.google.com/rss/search?q=ndtv+india&hl=hi&gl=IN&ceid=IN:hi' },
   { id:'hindi2', flag:'🇮🇳', label:'Aaj Tak',              lang:'Hindi',    group:'🇮🇳 India (Hindi)',   color:'#7b1a1a', url:'https://news.google.com/rss/search?q=aaj+tak&hl=hi&gl=IN&ceid=IN:hi' },
   { id:'hindi3', flag:'🇮🇳', label:'India TV (हिंदी)',     lang:'Hindi',    group:'🇮🇳 India (Hindi)',   color:'#6b2a00', url:'https://news.google.com/rss/search?q=india+tv+hindi&hl=hi&gl=IN&ceid=IN:hi' },
   // ── India — Malayalam ────────────────────────────────────────────
   { id:'malay1', flag:'🇮🇳', label:'Mathrubhumi',          lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#1a5276', url:'https://news.google.com/rss/search?q=mathrubhumi&hl=ml&gl=IN&ceid=IN:ml' },
-  { id:'malay2', flag:'🇮🇳', label:'Manorama Online',       lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#154360', url:'https://www.onmanorama.com/news/business.feeds.onmrss.xml', fallbackQuery:'manorama online malayalam' },
+  { id:'malay2', flag:'🇮🇳', label:'Manorama Online',       lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#154360', url:'https://www.manoramaonline.com/news/latest-news.rss.xml', fallbackQuery:'manorama online malayalam' },
   { id:'malay3', flag:'🇮🇳', label:'Deepika Malayalam',     lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#1f618d', url:'https://news.google.com/rss/search?q=deepika+malayalam&hl=ml&gl=IN&ceid=IN:ml' },
   { id:'malay4', flag:'🇮🇳', label:'Marunadan Malayali',    lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#21618c', url:'https://news.google.com/rss/search?q=marunadan+malayali&hl=ml&gl=IN&ceid=IN:ml' },
-  { id:'malay5', flag:'🇮🇳', label:'Manorama Online (Malayalam)', lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#2471a3', url:'https://www.onmanorama.com/news.feeds.onmrss.xml', fallbackQuery:'manorama news malayalam' },
+  { id:'malay5', flag:'🇮🇳', label:'Manorama Online (Malayalam)', lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#2471a3', url:'https://www.manoramaonline.com/news.feeds.onmrss.xml', fallbackQuery:'manorama news malayalam' },
   // ── India — Tamil ────────────────────────────────────────────────
   { id:'tamil1', flag:'🇮🇳', label:'Daily Thanthi',        lang:'Tamil',    group:'🇮🇳 India (Tamil)',   color:'#6e2f2f', url:'https://news.google.com/rss/search?q=daily+thanthi&hl=ta&gl=IN&ceid=IN:ta' },
   { id:'tamil2', flag:'🇮🇳', label:'Dinamalar',            lang:'Tamil',    group:'🇮🇳 India (Tamil)',   color:'#5d4037', url:'https://news.google.com/rss/search?q=dinamalar&hl=ta&gl=IN&ceid=IN:ta' },
@@ -9866,7 +9867,8 @@ async function fetchFeed(src, proxyIdx, usedFallback) {
     return;
   }
   try {
-    const proxyUrl = `${WORKER_PROXY_URL}/?url=${encodeURIComponent(targetUrl)}`;
+    const cacheBuster = '?t=' + new Date().getTime();
+    const proxyUrl = `${WORKER_PROXY_URL}/?url=${encodeURIComponent(targetUrl + cacheBuster)}`;
     const res = await fetch(proxyUrl, { cache: 'no-store', signal: AbortSignal.timeout(12000) });
     if (!res.ok) throw new Error('proxy fetch failed');
     const xmlText = await res.text();
