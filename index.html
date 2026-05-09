@@ -3190,6 +3190,15 @@ footer{
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('devotional')">🕉 Devotional</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('meditation')">🧘 Meditation</button>
     </div>
+    <!-- YouTube Music video embed — visible player with controls -->
+    <div id="music-video-wrap" style="width:100%;background:#000;flex-shrink:0;display:none">
+      <div style="width:100%;padding-top:56.25%;position:relative;overflow:hidden">
+        <iframe id="music-video-iframe" allow="autoplay; encrypted-media; picture-in-picture"
+                allowfullscreen
+                style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"
+                src=""></iframe>
+      </div>
+    </div>
     <!-- YouTube Music embed slot (hidden — audio plays via YT IFrame API) -->
     <div id="music-player-wrap" style="display:none;width:100%;background:#000;flex-shrink:0"></div>
     <!-- Music controls — always visible, identical to YT Live -->
@@ -4756,7 +4765,7 @@ function showNewsModal(title, snippet, url, source) {
     snip.style.display = snippet ? 'block' : 'none';
   }
   if (src) src.textContent = source ? '\uD83D\uDDE0 Source: ' + source : '';
-  if (link) link.href = url || '#';
+  if (link) link.setAttribute('data-url', url || '#');
   overlay.classList.add('active');
   overlay.style.display = 'flex';
   var nm = document.getElementById('newsModal');
@@ -4864,9 +4873,19 @@ window.onYouTubeIframeAPIReady = function() {
 };
 
 function _ytMusicDoPlay(playlistId, name) {
-  if (!_ytMusicPlayer) return;
-  _ytMusicPlayer.loadPlaylist({ listType:'playlist', list: playlistId, index:0, startSeconds:0 });
-  const now = document.getElementById('music-now');
+  // Show visible YouTube embed with playlist first video
+  var vidWrap = document.getElementById('music-video-wrap');
+  var vidIfr  = document.getElementById('music-video-iframe');
+  if (vidWrap && vidIfr) {
+    vidIfr.src = 'https://www.youtube.com/embed/?listType=playlist&list=' + encodeURIComponent(playlistId) +
+                 '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
+    vidWrap.style.display = 'block';
+  }
+  // Also start the hidden API player for background audio
+  if (_ytMusicPlayer && _ytMusicReady) {
+    _ytMusicPlayer.loadPlaylist({ listType:'playlist', list: playlistId, index:0, startSeconds:0 });
+  }
+  var now = document.getElementById('music-now');
   if (now) now.textContent = name || 'Playing…';
   var btnPlay  = document.getElementById('musicPlay');
   var btnPause = document.getElementById('musicPause');
@@ -4890,8 +4909,10 @@ function musicPlayYT(playlistId, name) {
 
 function musicStop() {
   if (_ytMusicPlayer && _ytMusicReady) _ytMusicPlayer.stopVideo();
-  const wrap = document.getElementById('music-player-wrap');
-  if (wrap) wrap.style.display = 'none';
+  var vidWrap = document.getElementById('music-video-wrap');
+  var vidIfr  = document.getElementById('music-video-iframe');
+  if (vidWrap) vidWrap.style.display = 'none';
+  if (vidIfr) vidIfr.src = '';
   var btnPlay  = document.getElementById('musicPlay');
   var btnPause = document.getElementById('musicPause');
   if (btnPlay) btnPlay.style.display = 'inline-block';
@@ -9903,15 +9924,38 @@ function _parseXmlItems(xmlStr) {
   const xml = new DOMParser().parseFromString(xmlStr, 'text/xml');
   const nodes = Array.from(xml.querySelectorAll('item, entry')).slice(0, 6);
   return nodes.map(item => {
+    // Extract link: try <link href="...">, then <link>text</link>, then <guid>, then <enclosure url="...">
     const linkEl = item.querySelector('link');
+    let link = linkEl?.getAttribute('href') || '';
+    if (!link) link = linkEl?.textContent?.trim() || '';
+    if (!link) {
+      const guidEl = item.querySelector('guid');
+      link = guidEl?.textContent?.trim() || '';
+    }
+    if (!link) {
+      const encEl = item.querySelector('enclosure');
+      link = encEl?.getAttribute('url') || '';
+    }
+    if (!link) link = '#';
+    // Clean up CDATA-wrapped or Google News redirect links
+    link = link.replace(/^<!\[CDATA\[|\]\]>$/g, '').trim();
+    // Extract source name
+    const srcEl = item.querySelector('source');
+    const source = srcEl?.textContent?.trim() || srcEl?.innerHTML?.trim() || '';
     return {
       title: item.querySelector('title')?.textContent?.trim() || '',
-      link: linkEl?.getAttribute('href') || linkEl?.textContent?.trim() || '#',
+      link: link,
       pubDate:
         item.querySelector('pubDate')?.textContent?.trim() ||
         item.querySelector('published')?.textContent?.trim() ||
         item.querySelector('updated')?.textContent?.trim() ||
         '',
+      description:
+        item.querySelector('description')?.textContent?.trim() ||
+        item.querySelector('summary')?.textContent?.trim() ||
+        item.querySelector('content')?.textContent?.trim() ||
+        '',
+      source: source,
     };
   }).filter(i => i.title);
 }
@@ -14443,7 +14487,7 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
       <div class="rss-modal-article-title" id="rss-modal-headline"></div>
       <div class="rss-modal-snippet" id="rss-modal-snippet" style="display:none"></div>
       <div class="rss-modal-source" id="rss-modal-src"></div>
-      <a class="rss-modal-read-btn" id="rss-modal-link" href="#" target="_blank" rel="noopener">Read Full Story →</a>
+      <button class="rss-modal-read-btn" id="rss-modal-link" onclick="var u=this.getAttribute('data-url'); if(u&&u!=='#'&&u.startsWith('http')) window.open(u,'_blank');">Read Full Story →</button>
     </div>
   </div>
 </div>
