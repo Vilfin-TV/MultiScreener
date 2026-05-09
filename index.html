@@ -3160,11 +3160,6 @@ footer{
 
   </div><!-- /rb-panel-radio -->
 
-  <!-- Hidden YouTube IFrame API audio player (audio-only, no visual) -->
-  <div id="yt-audio-player" style="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden" aria-hidden="true">
-    <div id="yt-music-player-div"></div>
-  </div>
-
   <!-- ── PANEL 5: Music (YouTube IFrame audio player) ── -->
   <div id="rb-panel-music" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
     <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:4px;flex-wrap:wrap;max-height:140px;overflow-y:auto">
@@ -4782,108 +4777,19 @@ function rssModalClose(e) {
   document.body.style.overflow = '';
 }
 
-// ── YOUTUBE IFRAME API — MUSIC PLAYER ────────────────────────────
-// Audio-only playback via hidden YT IFrame API player.
-const _YT_MUSIC_PLAYLISTS = {
-  'today-top':  'PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf',
-  'bollywood':  'PLcRN7uKGWCGiGv5XU_uF_mEwM-Dk9XzG0',
-  'hindi':      'PLcRN7uKfCFbK0IZNbZ2Gi7dJ1BcFgV61B',
-  'punjabi':    'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
-  'malayalam':  'PLFgquLnL59alW28fxmr3GmqxXhlKT42kf',
-  'tamil':      'PLFgquLnL59al7GXQRFxXCBv3REzBnBSFN',
-  'telugu':     'PLI_7Mg2Z_-2LNjVYf2D8pQGRjSJ8PRxvv',
-  'jpop':       'PLnD2rjprr_0IMrncTwMl0ZZth2tK7OQ5L',
-  'jrock':      'PLnD2rjprr_0IMrncTwMl0ZZth2tK7OQ5L',
-  'kpop':       'PL4fGSI1pDJn6jXS_Tv_N9B8Z0HTRVJE0m',
-  'krock':      'PL4fGSI1pDJn6jXS_Tv_N9B8Z0HTRVJE0m',
-  'cpop':       'PLx0sYbCqOb8TBPRdmBHs5Iftvv9CB5HCq',
-  'lofi':       'PL6NdkXsPL07IOu1AZ2Y2lGNYfjDStyT6O',
-  'chill':      'PL9bw4S5ePsEGwG1s6k6h-DudA-rC_pD-K',
-  'workout':    'PLW_D_uEik5c3j4W64x-r-jYyF0L2M8h-t',
-  'pop':        'PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf',
-  'rock':       'PL1vP21tA1m-GqC3v8C6m_qR2gZ1q5i7fN',
-  'classical':  'PL9bw4S5ePsEGwG1s6k6h-DudA-rC_pD-K',
-  'jazz':       'PLx0sYbCqOb8TBPRdmBHs5Iftvv9CB5HCq',
-  'devotional': 'PLW_D_uEik5c3j4W64x-r-jYyF0L2M8h-t',
-  'meditation': 'PL6NdkXsPL07IOu1AZ2Y2lGNYfjDStyT6O',
-};
-let _ytMusicPlayer = null;
-let _ytMusicReady  = false;
-let _ytMusicPendingId = null;
-let _ytMusicPendingName = '';
+// ── YouTube Music playlist IDs (used by musicLoadPreset) ────────
+const _YT_MUSIC_PLAYLISTS = {'today-top':'PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf','bollywood':'PLcRN7uKGWCGiGv5XU_uF_mEwM-Dk9XzG0','hindi':'PLcRN7uKfCFbK0IZNbZ2Gi7dJ1BcFgV61B','punjabi':'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK','malayalam':'PLFgquLnL59alW28fxmr3GmqxXhlKT42kf','tamil':'PLFgquLnL59al7GXQRFxXCBv3REzBnBSFN','telugu':'PLI_7Mg2Z_-2LNjVYf2D8pQGRjSJ8PRxvv','jpop':'PLnD2rjprr_0IMrncTwMl0ZZth2tK7OQ5L','jrock':'PLnD2rjprr_0IMrncTwMl0ZZth2tK7OQ5L','kpop':'PL4fGSI1pDJn6jXS_Tv_N9B8Z0HTRVJE0m','krock':'PL4fGSI1pDJn6jXS_Tv_N9B8Z0HTRVJE0m','cpop':'PLx0sYbCqOb8TBPRdmBHs5Iftvv9CB5HCq','lofi':'PL6NdkXsPL07IOu1AZ2Y2lGNYfjDStyT6O','chill':'PL9bw4S5ePsEGwG1s6k6h-DudA-rC_pD-K','workout':'PLW_D_uEik5c3j4W64x-r-jYyF0L2M8h-t','pop':'PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf','rock':'PL1vP21tA1m-GqC3v8C6m_qR2gZ1q5i7fN','classical':'PL9bw4S5ePsEGwG1s6k6h-DudA-rC_pD-K','jazz':'PLx0sYbCqOb8TBPRdmBHs5Iftvv9CB5HCq','devotional':'PLW_D_uEik5c3j4W64x-r-jYyF0L2M8h-t','meditation':'PL6NdkXsPL07IOu1AZ2Y2lGNYfjDStyT6O'};
 
-function _loadYTApi() {
-  if (window.YT && window.YT.Player) return;
-  if (document.getElementById('yt-api-script')) return;
-  var s = document.createElement('script');
-  s.id  = 'yt-api-script';
-  s.src = 'https://www.youtube.com/iframe_api';
-  s.onerror = function() { console.error('[YT Music] Failed to load iframe_api script'); };
-  document.head.appendChild(s);
-}
-
-// Retry: if player not ready within 6s of requesting API, retry loading
-var _ytMusicRetry = null;
+// ── YOUTUBE MUSIC PLAYER — visible embed only ──────────────────
+let _musicCurrentId = null;
 function musicPlayYT(playlistId, name) {
-  _ytMusicPendingName = name;
-  _ytMusicPendingId   = playlistId;
-  _loadYTApi();
-  if (_ytMusicReady) {
-    _ytMusicDoPlay(playlistId, name);
-  } else {
-    if (_ytMusicRetry) clearTimeout(_ytMusicRetry);
-    _ytMusicRetry = setTimeout(function() {
-      if (!_ytMusicReady) {
-        console.warn('[YT Music] API not ready after 6s, retrying…');
-        _loadYTApi();
-      }
-      _ytMusicRetry = null;
-    }, 6000);
-  }
-}
-
-window.onYouTubeIframeAPIReady = function() {
-  _ytApiReady = true;
-  try {
-    _ytMusicPlayer = new YT.Player('yt-music-player-div', {
-      height: '1', width: '1',
-      playerVars: { autoplay: 1, mute: 1, controls: 0, playsinline: 1, origin: location.origin },
-      events: {
-        onReady: function(e) {
-          _ytMusicReady = true;
-          window.musicPlayer = _ytMusicPlayer;
-          if (_ytMusicPendingId) {
-            _ytMusicDoPlay(_ytMusicPendingId, _ytMusicPendingName);
-            _ytMusicPendingId = null;
-          }
-        },
-        onError: function(e) {
-          console.warn('[YT Music] Player error:', e && e.data);
-        },
-        onStateChange: function(e) {
-          if (e.data === YT.PlayerState.PLAYING) {
-            _ytMediaSession(_ytMusicPendingName || 'Music', 'VilfinTV Music');
-          }
-        }
-      }
-    });
-  } catch(ex) {
-    console.error('[YT Music] Failed to create player:', ex);
-  }
-};
-
-function _ytMusicDoPlay(playlistId, name) {
-  // Show visible YouTube embed with playlist first video
+  _musicCurrentId = playlistId;
   var vidWrap = document.getElementById('music-video-wrap');
   var vidIfr  = document.getElementById('music-video-iframe');
   if (vidWrap && vidIfr) {
     vidIfr.src = 'https://www.youtube.com/embed/?listType=playlist&list=' + encodeURIComponent(playlistId) +
-                 '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
+                 '&autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1';
     vidWrap.style.display = 'block';
-  }
-  // Also start the hidden API player for background audio
-  if (_ytMusicPlayer && _ytMusicReady) {
-    _ytMusicPlayer.loadPlaylist({ listType:'playlist', list: playlistId, index:0, startSeconds:0 });
   }
   var now = document.getElementById('music-now');
   if (now) now.textContent = name || 'Playing…';
@@ -4894,21 +4800,7 @@ function _ytMusicDoPlay(playlistId, name) {
   _ytMediaSession(name || 'Music', 'VilfinTV Music');
 }
 
-// (legacy musicPlay removed — all playback via musicPlayYT with YouTube IFrame API)
-
-function musicPlayYT(playlistId, name) {
-  _ytMusicPendingName = name;
-  _loadYTApi();
-  if (_ytMusicReady) {
-    _ytMusicDoPlay(playlistId, name);
-  } else {
-    _ytMusicPendingId   = playlistId;
-    _ytMusicPendingName = name;
-  }
-}
-
 function musicStop() {
-  if (_ytMusicPlayer && _ytMusicReady) _ytMusicPlayer.stopVideo();
   var vidWrap = document.getElementById('music-video-wrap');
   var vidIfr  = document.getElementById('music-video-iframe');
   if (vidWrap) vidWrap.style.display = 'none';
@@ -4917,7 +4809,41 @@ function musicStop() {
   var btnPause = document.getElementById('musicPause');
   if (btnPlay) btnPlay.style.display = 'inline-block';
   if (btnPause) btnPause.style.display = 'none';
-  _musicCurrentSid = null;
+  _musicCurrentId = null;
+  var now = document.getElementById('music-now');
+  if (now) now.textContent = '—';
+}
+function musicSetVolume(val) {
+  _musicVolume = parseInt(val) || 80;
+  if (_musicMuted && _musicVolume > 0) _musicMuted = false;
+  var btn = document.getElementById('music-mute-btn');
+  if (btn) btn.textContent = _musicMuted ? '🔇' : '🔊';
+  var slider = document.getElementById('music-vol');
+  if (slider) { slider.value = _musicVolume; slider.style.setProperty('--vol', _musicVolume + '%'); }
+  // postMessage to visible iframe
+  var ifr = document.getElementById('music-video-iframe');
+  if (ifr && ifr.contentWindow) try { ifr.contentWindow.postMessage('{"event":"command","func":"setVolume","args":['+_musicVolume+']}','*'); } catch(e){}
+}
+// Play/pause toggle for the visible embed
+function musicTogglePlay() {
+  var ifr = document.getElementById('music-video-iframe');
+  if (!ifr) return;
+  try {
+    ifr.contentWindow.postMessage('{"event":"command","func":"' + (ifr.src ? 'pauseVideo' : 'playVideo') + '","args":""}', '*');
+  } catch(e) {}
+}
+function musicStop() {
+  var vidWrap = document.getElementById('music-video-wrap');
+  var vidIfr  = document.getElementById('music-video-iframe');
+  if (vidWrap) vidWrap.style.display = 'none';
+  if (vidIfr) vidIfr.src = '';
+  var btnPlay  = document.getElementById('musicPlay');
+  var btnPause = document.getElementById('musicPause');
+  if (btnPlay) btnPlay.style.display = 'inline-block';
+  if (btnPause) btnPause.style.display = 'none';
+  _musicCurrentId = null;
+  var now = document.getElementById('music-now');
+  if (now) now.textContent = '—';
 }
 
 // ── NAVIGATOR.MEDIA SESSION API ───────────────────────────────────
@@ -7417,47 +7343,7 @@ function musicLoadPreset(key) {
 let _musicVolume = 80;
 let _musicMuted = false;
 let _musicFavorites = JSON.parse(localStorage.getItem('music-favorites') || '[]');
-function musicSetVolume(val) {
-  _musicVolume = parseInt(val) || 80;
-  const btn = document.getElementById('music-mute-btn');
-  if (btn) btn.textContent = _musicMuted ? '🔇' : (_musicVolume === 0 ? '🔇' : '🔊');
-  var slider = document.getElementById('music-vol');
-  if (slider) { slider.value = _musicVolume; slider.style.setProperty('--vol', _musicVolume + '%'); }
-  if (_ytMusicPlayer && _ytMusicReady) _ytMusicPlayer.setVolume(_musicVolume);
-}
-function musicVolUp() {
-  const vol = Math.min(100, _musicVolume + 10);
-  musicSetVolume(vol);
-  document.getElementById('music-vol').value = vol;
-}
-function musicVolDown() {
-  const vol = Math.max(0, _musicVolume - 10);
-  musicSetVolume(vol);
-  document.getElementById('music-vol').value = vol;
-}
-function musicToggleMute() {
-  _musicMuted = !_musicMuted;
-  const btn = document.getElementById('music-mute-btn');
-  if (btn) btn.textContent = _musicMuted ? '🔇' : '🔊';
-  if (_ytMusicPlayer && _ytMusicReady) {
-    if (_musicMuted) _ytMusicPlayer.mute(); else _ytMusicPlayer.unMute();
-  }
-}
-function musicTogglePlay() {
-  if (!_ytMusicPlayer || !_ytMusicReady) return;
-  var btnPlay  = document.getElementById('musicPlay');
-  var btnPause = document.getElementById('musicPause');
-  var state = _ytMusicPlayer.getPlayerState();
-  if (state === YT.PlayerState.PLAYING) {
-    _ytMusicPlayer.pauseVideo();
-    if (btnPlay) btnPlay.style.display = 'inline-block';
-    if (btnPause) btnPause.style.display = 'none';
-  } else {
-    _ytMusicPlayer.playVideo();
-    if (btnPlay) btnPlay.style.display = 'none';
-    if (btnPause) btnPause.style.display = 'inline-block';
-  }
-}
+// musicSetVolume, musicVolUp, musicVolDown, musicToggleMute, musicTogglePlay defined above
 function musicToggleFav() {
   if (!_musicCurrentSid) return;
   const idx = _musicFavorites.indexOf(_musicCurrentSid);
