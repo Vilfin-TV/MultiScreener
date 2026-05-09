@@ -4796,9 +4796,9 @@ function openNewsModal(title, url, snippet, sourceName) {
   if (titleEl) titleEl.textContent = title || 'News Story';
 
   if (contentDiv) {
-    var clean = snippet ? snippet.replace(/<[^>]+>/g, '').trim() : '';
+    var clean = snippet ? snippet.replace(/\u2026\s*\[Read more[^\]]*\]/g, '').replace(/<[^>]+>/g, '').trim() : '';
     if (clean) {
-      contentDiv.innerHTML = clean.slice(0, 600);
+      contentDiv.innerHTML = clean;
     } else {
       contentDiv.innerHTML = 'Click "Read Full Story" below to view the complete article on the publisher\'s website.';
     }
@@ -9847,7 +9847,7 @@ let lnsTimer;
     // Extract strictly from data attributes
     var trueUrl = el.getAttribute('data-true-url') || '#';
     var title   = el.getAttribute('data-title') || 'News Story';
-    var snippet = el.getAttribute('data-desc') || '';
+    var snippet = decodeURIComponent(el.getAttribute('data-modal-content') || el.getAttribute('data-desc') || '');
     var source  = el.getAttribute('data-source') || '';
     openNewsModal(title, trueUrl, snippet, source);
   });
@@ -9879,21 +9879,45 @@ function fetchAllNews() {
   getActiveFeeds().forEach(s => fetchFeed(s, 0));
 }
 
+// ── Universal copyright-safe RSS content sanitizer ───────────────
+function _sanitizeRssContent(raw, maxLen) {
+  if (!raw) return '';
+  maxLen = maxLen || 400;
+  // Parse through temp DOM to strip all media/scripts
+  var div = document.createElement('div');
+  div.innerHTML = raw;
+  // Strip unsafe tags
+  div.querySelectorAll('img,iframe,script,style,figure,object,picture,audio,video,svg,canvas,form,input,button').forEach(function(el) { el.remove(); });
+  var text = div.textContent || div.innerText || '';
+  text = text.replace(/\s+/g, ' ').trim();
+  if (!text) return '';
+  // Copyright-safe truncation at word boundary
+  if (text.length > maxLen) {
+    var cut = text.slice(0, maxLen);
+    var lastSpace = cut.lastIndexOf(' ');
+    if (lastSpace > maxLen * 0.7) cut = cut.slice(0, lastSpace);
+    return cut + '\u2026 [Read more on the publisher\'s site]';
+  }
+  return text;
+}
+
 function renderItems(listEl, items) {
   listEl.innerHTML = items.slice(0, 6).map(item => {
     const title   = (typeof item === 'string' ? item : (item.title || '')).trim();
     const link    = item.link || item.url || '#';
     const pub     = item.pubDate || item.published || '';
-    const snippet = item.description || item.summary || item.content || '';
+    const rawDesc = item.description || item.summary || item.content || '';
+    const snippet = _sanitizeRssContent(rawDesc, 400);
     const source  = item.source || item.feed || '';
     const timeStr = pub ? new Date(pub).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}) : '';
-    const safeTitle   = escHtml(title);
-    const safeSnip    = escHtml(snippet.replace(/<[^>]+>/g,'').slice(0,280));
-    const safeUrl     = escHtml(link);
-    const safeSrc     = escHtml(source);
+    const safeTitle = escHtml(title);
+    const safeDesc  = escHtml(snippet);
+    const safeUrl   = escHtml(link);
+    const safeSrc   = escHtml(source);
+    const encodedDesc = encodeURIComponent(snippet);
     return `<div class="lnb-item" role="button" tabindex="0"
-      data-true-url="${escHtml(link)}" data-title="${escHtml(title)}" data-desc="${escHtml(snippet.replace(/<[^>]+>/g,'').slice(0,280))}" data-source="${escHtml(source)}"
-      onclick="event.preventDefault(); rssModalOpen(${JSON.stringify(title)},${JSON.stringify(snippet.replace(/<[^>]+>/g,'').slice(0,280))},${JSON.stringify(link)},${JSON.stringify(source)}); return false"
+      data-true-url="${escHtml(link)}" data-title="${escHtml(title)}" data-desc="${escHtml(snippet)}" data-modal-content="${encodedDesc}" data-source="${escHtml(source)}"
+      onclick="event.preventDefault(); rssModalOpen(${JSON.stringify(title)},${JSON.stringify(snippet)},${JSON.stringify(link)},${JSON.stringify(source)}); return false"
       onkeydown="if(event.key==='Enter'){event.preventDefault();this.click()}">
       <span class="lnb-text">${safeTitle}</span>
       ${timeStr ? `<span class="lnb-time">${timeStr}</span>` : ''}
@@ -9933,6 +9957,8 @@ function _parseXmlItems(xmlStr) {
         '',
       description:
         item.querySelector('description')?.textContent?.trim() ||
+        item.querySelector('content\\:encoded')?.textContent?.trim() ||
+        item.querySelector('encoded')?.textContent?.trim() ||
         item.querySelector('summary')?.textContent?.trim() ||
         item.querySelector('content')?.textContent?.trim() ||
         '',
