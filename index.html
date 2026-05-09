@@ -4770,12 +4770,12 @@ function openNewsModal(title, url, snippet, sourceName) {
   if (srcEl) srcEl.textContent = sourceName ? '\uD83D\uDDE0 Source: ' + sourceName : '';
 
   if (readBtn) {
-    if (url && url !== '#' && (url.startsWith('http://') || url.startsWith('https://'))) {
+    if (url && url !== '#' && url.length > 5) {
       readBtn.href = url;
+      readBtn.target = '_blank';
       readBtn.style.display = '';
     } else {
-      readBtn.href = 'https://www.google.com/search?q=' + encodeURIComponent(title || '');
-      readBtn.target = '_blank';
+      readBtn.style.display = 'none';
     }
   }
 
@@ -9708,24 +9708,12 @@ let lnsTimer;
     // If the inline onclick already showed the modal, don't overwrite it
     var overlay = document.getElementById('rss-modal-overlay');
     if (overlay && overlay.classList.contains('active')) return;
-    // Fallback: extract data from DOM for the modal
-    var titleEl = el.querySelector('.lnb-text');
-    var title   = titleEl ? titleEl.textContent.trim() : 'News Story';
-    var snip    = '';
-    var url     = '#';
-    var source  = '';
-    var oc = el.getAttribute('onclick') || '';
-    var m = oc.match(/rssModalOpen\((.+)\)/);
-    if (m) {
-      try {
-        var args = JSON.parse('[' + m[1] + ']');
-        title  = args[0] || title;
-        snip   = args[1] || '';
-        url    = args[2] || url;
-        source = args[3] || '';
-      } catch(_) {}
-    }
-    openNewsModal(title, url, snip, source);
+    // Extract strictly from data attributes
+    var trueUrl = el.getAttribute('data-true-url') || '#';
+    var title   = el.getAttribute('data-title') || 'News Story';
+    var snippet = el.getAttribute('data-desc') || '';
+    var source  = el.getAttribute('data-source') || '';
+    openNewsModal(title, trueUrl, snippet, source);
   });
 })();
 
@@ -9768,6 +9756,7 @@ function renderItems(listEl, items) {
     const safeUrl     = escHtml(link);
     const safeSrc     = escHtml(source);
     return `<div class="lnb-item" role="button" tabindex="0"
+      data-true-url="${escHtml(link)}" data-title="${escHtml(title)}" data-desc="${escHtml(snippet.replace(/<[^>]+>/g,'').slice(0,280))}" data-source="${escHtml(source)}"
       onclick="event.preventDefault(); rssModalOpen(${JSON.stringify(title)},${JSON.stringify(snippet.replace(/<[^>]+>/g,'').slice(0,280))},${JSON.stringify(link)},${JSON.stringify(source)}); return false"
       onkeydown="if(event.key==='Enter'){event.preventDefault();this.click()}">
       <span class="lnb-text">${safeTitle}</span>
