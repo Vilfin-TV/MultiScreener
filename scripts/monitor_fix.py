@@ -134,38 +134,43 @@ def check_and_fix_csv(youtube) -> bool:
 
     try:
         df = pd.read_csv(CSV_PATH, encoding="utf-8")
+
+        # 1. Strip whitespace from ALL column names
+        df.columns = df.columns.str.strip()
+
+        # 2. Dynamically get the first column (ID column) regardless of its name
+        id_col = df.columns[0]
+
+        # 3. Force the ID column to numeric
+        df[id_col] = pd.to_numeric(df[id_col], errors="coerce")
+
+        # 4. Filter for channels 1 through 20
+        target_mask = (df[id_col] >= 1) & (df[id_col] <= 20)
+
+        # Map other columns with stripped names
+        channel_id_col = "Channel ID" if "Channel ID" in df.columns else df.columns[2]
+        url1_col       = "full url 1 with Video ID" if "full url 1 with Video ID" in df.columns else df.columns[5]
+        url2_col       = "full url 2 with Video ID" if "full url 2 with Video ID" in df.columns else df.columns[6]
     except Exception as exc:
         log.error("Failed to read CSV: %s", exc)
         return False
 
     # Add Status column if not present
-    if "Status" not in df.columns:
-        df["Status"] = ""
+    status_col = "Status"
+    if status_col not in df.columns:
+        df[status_col] = ""
 
     modified = False
-    channel_num_col = "Channel 1"
-    name_col        = "Name of channel"
-    channel_id_col  = "Channel ID"
-    url1_col        = "full url 1 with Video ID"
-    url2_col        = "full url 2 with Video ID"
-    status_col      = "Status"
 
-    # Process only rows where Channel 1 is between 1 and 20
-    for idx, row in df.iterrows():
-        ch_num = row.get(channel_num_col)
+    for idx, row in df[target_mask].iterrows():
+        ch_num = row[id_col]
         if pd.isna(ch_num):
             continue
-        try:
-            ch_num = int(ch_num)
-        except (ValueError, TypeError):
-            continue
-        if ch_num < 1 or ch_num > 20:
-            continue
 
-        ch_name    = str(row.get(name_col, ""))
-        channel_id = str(row.get(channel_id_col, "")) if not pd.isna(row.get(channel_id_col)) else ""
-        url1       = str(row.get(url1_col, ""))   if not pd.isna(row.get(url1_col))   else ""
-        url2       = str(row.get(url2_col, ""))   if not pd.isna(row.get(url2_col))   else ""
+        ch_name    = str(row.iloc[1]) if len(row) > 1 else ""
+        channel_id = str(row.get(channel_id_col, "")).strip() if not pd.isna(row.get(channel_id_col)) else ""
+        url1       = str(row.get(url1_col, "")).strip()   if not pd.isna(row.get(url1_col))   else ""
+        url2       = str(row.get(url2_col, "")).strip()   if not pd.isna(row.get(url2_col))   else ""
 
         log.info("  🔍 Ch %d — %s", ch_num, ch_name)
 
@@ -283,6 +288,9 @@ def sync_csv_to_streams():
 
     try:
         df = pd.read_csv(CSV_PATH, encoding="utf-8")
+        df.columns = df.columns.str.strip()
+        id_col = df.columns[0]
+        df[id_col] = pd.to_numeric(df[id_col], errors="coerce")
     except Exception:
         return
 
@@ -291,19 +299,15 @@ def sync_csv_to_streams():
 
     channels = data.get("channels", [])
     for idx, row in df.iterrows():
-        ch_num = row.get("Channel 1")
+        ch_num = row[id_col]
         if pd.isna(ch_num):
             continue
-        try:
-            ch_num = int(ch_num)
-        except (ValueError, TypeError):
-            continue
+        ch_num = int(ch_num)
         if ch_num < 1 or ch_num > len(channels):
             continue
 
-        ch_name = str(row.get("Name of channel", ""))
-        url1    = str(row.get("full url 1 with Video ID", "")) if not pd.isna(row.get("full url 1 with Video ID")) else ""
-        status  = str(row.get("Status", ""))  if not pd.isna(row.get("Status")) else ""
+        url1   = str(row.get("full url 1 with Video ID", "")) if not pd.isna(row.get("full url 1 with Video ID")) else ""
+        status = str(row.get("Status", ""))  if not pd.isna(row.get("Status")) else ""
 
         vid_id = _extract_video_id(url1)
         if vid_id and url1 != "Broken":
