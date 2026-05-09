@@ -4742,31 +4742,38 @@ function rbCollapseExpand(e) {
 }
 
 // ── RSS NEWS MODAL ────────────────────────────────────────────────
-function rssModalOpen(title, snippet, url, source) { showNewsModal(title, snippet, url, source); }
-function showNewsModalFallback(title, snippet, url, source) {
-  showNewsModal(title, snippet, url, source);
-}
+function rssModalOpen(title, snippet, url, source) { openNewsModal(title, url, snippet, source); }
+function showNewsModalFallback(title, snippet, url, source) { openNewsModal(title, url, snippet, source); }
+function showNewsModal(title, snippet, url, source) { openNewsModal(title, url, snippet, source); }
 
-function showNewsModal(title, snippet, url, source) {
-  const overlay  = document.getElementById('rss-modal-overlay');
-  const headline = document.getElementById('rss-modal-headline');
-  const snip     = document.getElementById('rss-modal-snippet');
-  const src      = document.getElementById('rss-modal-src');
-  const link     = document.getElementById('rss-modal-link');
+function openNewsModal(title, url, snippet, sourceName) {
+  var overlay    = document.getElementById('rss-modal-overlay');
+  var titleEl    = document.getElementById('newsModalTitle');
+  var contentDiv = document.getElementById('newsModalContent');
+  var srcEl      = document.getElementById('rss-modal-src');
+  var readBtn    = document.getElementById('newsModalReadMore');
+  var nm         = document.getElementById('newsModal');
+
   if (!overlay) return;
-  if (headline) headline.textContent = title || 'News Story';
-  if (snip) {
-    snip.textContent = snippet || '';
-    snip.style.display = snippet ? 'block' : 'none';
+
+  if (titleEl) titleEl.textContent = title || 'News Story';
+
+  if (contentDiv) {
+    contentDiv.innerHTML = snippet
+      ? snippet.replace(/<[^>]+>/g, '').slice(0, 600)
+      : 'Summary not provided by the publisher. Please click below to read the full article.';
   }
-  if (src) src.textContent = source ? '\uD83D\uDDE0 Source: ' + source : '';
-  if (link) link.setAttribute('data-url', url || '#');
+
+  if (srcEl) srcEl.textContent = sourceName ? '\uD83D\uDDE0 Source: ' + sourceName : '';
+
+  if (readBtn) readBtn.href = (url && url !== '#') ? url : '#';
+
   overlay.classList.add('active');
   overlay.style.display = 'flex';
-  var nm = document.getElementById('newsModal');
   if (nm) nm.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
+
 function rssModalClose(e) {
   if (e && e.target !== document.getElementById('rss-modal-overlay') && e.type !== 'click') return;
   if (e && e.currentTarget && e.target !== e.currentTarget) return;
@@ -9683,6 +9690,8 @@ let lnsTimer;
 (function _newsDelegate() {
   if (!document.body) { setTimeout(_newsDelegate, 10); return; }
   document.body.addEventListener('click', function(e) {
+    // Skip clicks inside the news modal or its children
+    if (e.target.closest('.rss-modal-overlay') || e.target.closest('#newsModal')) return;
     var el = e.target.closest('.lnb-item');
     if (!el) return;
     e.preventDefault();
@@ -14319,10 +14328,10 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
       <button class="rss-modal-close" onclick="rssModalClose()">✕</button>
     </div>
     <div class="rss-modal-body" id="rss-modal-body">
-      <div class="rss-modal-article-title" id="rss-modal-headline"></div>
-      <div class="rss-modal-snippet" id="rss-modal-snippet" style="display:none"></div>
+      <div class="rss-modal-article-title" id="newsModalTitle"></div>
+      <div id="newsModalContent" style="padding:10px 0;color:var(--text2);font-size:14px;line-height:1.7;overflow-y:auto;max-height:400px;border-left:3px solid var(--burn2);padding-left:12px"></div>
       <div class="rss-modal-source" id="rss-modal-src"></div>
-      <button class="rss-modal-read-btn" id="rss-modal-link" onclick="var u=this.getAttribute('data-url'); if(u&&u!=='#'&&u.startsWith('http')) window.open(u,'_blank');">Read Full Story →</button>
+      <a class="rss-modal-read-btn" id="newsModalReadMore" href="#" target="_blank" rel="noopener">Read Full Story →</a>
     </div>
   </div>
 </div>
