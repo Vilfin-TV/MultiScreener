@@ -7047,7 +7047,9 @@ function iptvPlay(url, id, name) {
     _iptvHls = new Hls({ maxBufferLength: 20, lowLatencyMode: true, enableWorker: true });
     _iptvHls.loadSource(httpsUrl);
     _iptvHls.attachMedia(video);
-    _iptvHls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(e => console.warn('[IPTV] play rejected:', e)));
+    // Play immediately (within user gesture), HLS will start when buffer is ready
+    video.play().catch(e => console.warn('[IPTV] initial play rejected:', e));
+    _iptvHls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(e => console.warn('[IPTV] manifest play rejected:', e)));
     _iptvHls.on(Hls.Events.ERROR, (ev, data) => {
       if (data.fatal) {
         console.warn('[IPTV] HLS fatal:', data.type, data.details);
