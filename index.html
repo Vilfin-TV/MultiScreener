@@ -3160,8 +3160,8 @@ footer{
 
   </div><!-- /rb-panel-radio -->
 
-  <!-- Hidden YouTube IFrame API audio player (replaces Spotify embeds) -->
-  <div id="yt-audio-player" style="position:absolute;top:-9999px;left:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+  <!-- Hidden YouTube IFrame API audio player (audio-only, no visual) -->
+  <div id="yt-audio-player" style="position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden" aria-hidden="true">
     <div id="yt-music-player-div"></div>
   </div>
 
@@ -4776,11 +4776,11 @@ function rssModalClose(e) {
 // ── YOUTUBE IFRAME API — MUSIC PLAYER ────────────────────────────
 // Audio-only playback via hidden YT IFrame API player.
 const _YT_MUSIC_PLAYLISTS = {
-  'today-top':  'PL4fGSI1pDJn5kI81J1fYxoeWdYp8Z6o72',
+  'today-top':  'PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf',
   'bollywood':  'PLcRN7uKGWCGiGv5XU_uF_mEwM-Dk9XzG0',
   'hindi':      'PLcRN7uKfCFbK0IZNbZ2Gi7dJ1BcFgV61B',
   'punjabi':    'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
-  'malayalam':  'RDCLAK5uy_mS5P_Wv-XhQ0x6mG-uE8vY9v-vY9v-vY',
+  'malayalam':  'PLFgquLnL59alW28fxmr3GmqxXhlKT42kf',
   'tamil':      'PLFgquLnL59al7GXQRFxXCBv3REzBnBSFN',
   'telugu':     'PLI_7Mg2Z_-2LNjVYf2D8pQGRjSJ8PRxvv',
   'jpop':       'PLnD2rjprr_0IMrncTwMl0ZZth2tK7OQ5L',
@@ -4804,34 +4804,63 @@ let _ytMusicPendingId = null;
 let _ytMusicPendingName = '';
 
 function _loadYTApi() {
-  if (window.YT || document.getElementById('yt-api-script')) return;
-  const s = document.createElement('script');
+  if (window.YT && window.YT.Player) return;
+  if (document.getElementById('yt-api-script')) return;
+  var s = document.createElement('script');
   s.id  = 'yt-api-script';
   s.src = 'https://www.youtube.com/iframe_api';
+  s.onerror = function() { console.error('[YT Music] Failed to load iframe_api script'); };
   document.head.appendChild(s);
+}
+
+// Retry: if player not ready within 6s of requesting API, retry loading
+var _ytMusicRetry = null;
+function musicPlayYT(playlistId, name) {
+  _ytMusicPendingName = name;
+  _ytMusicPendingId   = playlistId;
+  _loadYTApi();
+  if (_ytMusicReady) {
+    _ytMusicDoPlay(playlistId, name);
+  } else {
+    if (_ytMusicRetry) clearTimeout(_ytMusicRetry);
+    _ytMusicRetry = setTimeout(function() {
+      if (!_ytMusicReady) {
+        console.warn('[YT Music] API not ready after 6s, retrying…');
+        _loadYTApi();
+      }
+      _ytMusicRetry = null;
+    }, 6000);
+  }
 }
 
 window.onYouTubeIframeAPIReady = function() {
   _ytApiReady = true;
-  _ytMusicPlayer = new YT.Player('yt-music-player-div', {
-    height: '1', width: '1',
-    playerVars: { autoplay: 1, mute: 1, controls: 0, playsinline: 1, origin: location.origin },
-    events: {
-      onReady: function(e) {
-        _ytMusicReady = true;
-        window.musicPlayer = _ytMusicPlayer; // expose globally for direct API binding
-        if (_ytMusicPendingId) {
-          _ytMusicDoPlay(_ytMusicPendingId, _ytMusicPendingName);
-          _ytMusicPendingId = null;
-        }
-      },
-      onStateChange: function(e) {
-        if (e.data === YT.PlayerState.PLAYING) {
-          _ytMediaSession(_ytMusicPendingName || 'Music', 'VilfinTV Music');
+  try {
+    _ytMusicPlayer = new YT.Player('yt-music-player-div', {
+      height: '1', width: '1',
+      playerVars: { autoplay: 1, mute: 1, controls: 0, playsinline: 1, origin: location.origin },
+      events: {
+        onReady: function(e) {
+          _ytMusicReady = true;
+          window.musicPlayer = _ytMusicPlayer;
+          if (_ytMusicPendingId) {
+            _ytMusicDoPlay(_ytMusicPendingId, _ytMusicPendingName);
+            _ytMusicPendingId = null;
+          }
+        },
+        onError: function(e) {
+          console.warn('[YT Music] Player error:', e && e.data);
+        },
+        onStateChange: function(e) {
+          if (e.data === YT.PlayerState.PLAYING) {
+            _ytMediaSession(_ytMusicPendingName || 'Music', 'VilfinTV Music');
+          }
         }
       }
-    }
-  });
+    });
+  } catch(ex) {
+    console.error('[YT Music] Failed to create player:', ex);
+  }
 };
 
 function _ytMusicDoPlay(playlistId, name) {
