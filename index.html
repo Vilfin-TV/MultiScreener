@@ -3123,13 +3123,8 @@ footer{
       <button class="radio-preset-btn" onclick="radioLoadPreset('chill')">🌿 Chill</button>
     </div>
 
-    <!-- Station list -->
-    <div class="radio-station-list" id="radio-station-list">
-      <div class="radio-no-data">Tap a preset above to load stations…</div>
-    </div>
-
-    <!-- Player bar -->
-    <div class="radio-player-bar" style="padding:6px 10px;display:flex;align-items:center;gap:5px;background:#04091a;border-top:1px solid #131d35;font-size:11px;flex-wrap:wrap">
+    <!-- Radio controls bar — above station list -->
+    <div class="radio-player-bar" style="padding:6px 10px;display:flex;align-items:center;gap:5px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px;flex-wrap:wrap">
       <button onclick="radioPrev()" title="Previous station"
               style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏮</button>
       <button onclick="radioNext()" title="Next station"
@@ -3155,8 +3150,12 @@ footer{
               style="background:#1d4ed8;border:none;color:#fff;padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer">▶</button>
       <button onclick="radioStop()" title="Stop"
               style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏹</button>
-      <!-- Hidden HTML5 audio element — events wired in radioInit() via addEventListener -->
       <audio id="radio-audio" preload="none" muted style="display:none"></audio>
+    </div>
+
+    <!-- Station list -->
+    <div class="radio-station-list" id="radio-station-list">
+      <div class="radio-no-data">Tap a preset above to load stations…</div>
     </div>
 
   </div><!-- /rb-panel-radio -->
@@ -4767,8 +4766,10 @@ function showNewsModal(title, snippet, url, source) {
 function rssModalClose(e) {
   if (e && e.target !== document.getElementById('rss-modal-overlay') && e.type !== 'click') return;
   if (e && e.currentTarget && e.target !== e.currentTarget) return;
-  const overlay = document.getElementById('rss-modal-overlay');
-  if (overlay) overlay.classList.remove('active');
+  var overlay = document.getElementById('rss-modal-overlay');
+  if (overlay) { overlay.classList.remove('active'); overlay.style.display = 'none'; }
+  var nm = document.getElementById('newsModal');
+  if (nm) { nm.classList.remove('active'); nm.style.display = 'none'; }
   document.body.style.overflow = '';
 }
 
@@ -4811,6 +4812,7 @@ function _loadYTApi() {
 }
 
 window.onYouTubeIframeAPIReady = function() {
+  _ytApiReady = true;
   _ytMusicPlayer = new YT.Player('yt-music-player-div', {
     height: '1', width: '1',
     playerVars: { autoplay: 1, mute: 1, controls: 0, playsinline: 1, origin: location.origin },
@@ -8311,6 +8313,7 @@ var YT_CHANNELS = [
 
 var _ytCurrentChNo   = 61;   // Bloomberg Television default (1-based index)
 var _ytFallbackStage = 0;    // 1=channelId, 2=videoId1, 3=videoId2
+var _ytApiReady      = false;
 var _ytPlayer        = null; // YT IFrame API instance (optional)
 var isGlobalMuted    = true;
 var _ytMuted         = true;
@@ -8533,7 +8536,7 @@ function _isValidYoutubeVideoId(id) {
 // Loading it caused YT.Player to manage the iframe and fire duplicate onError events
 // via both ytOnPlayerError AND the postMessage listener, causing rapid stage-advance
 // (visible as constant reloading on mobile). Direct injection + postMessage is sufficient.
-function onYouTubeIframeAPIReady() { _ytApiReady = true; /* no YT.Player — direct iframe only */ }
+// YT IFrame API ready — handled by onYouTubeIframeAPIReady above
 function ytOnPlayerError(event) { /* stub — errors handled via postMessage listener */ }
 
 // postMessage auto-advance removed — enablejsapi was causing YouTube to fire
