@@ -7287,8 +7287,7 @@ function musicLoadPreset(key) {
   const playlists = _MUSIC_PLAYLISTS[key] || _MUSIC_PLAYLISTS['today-top'];
   const ytId = _YT_MUSIC_PLAYLISTS[key] || _YT_MUSIC_PLAYLISTS['today-top'];
   list.innerHTML = playlists.map(p => {
-    // Each item plays the category YouTube playlist (audio-only via hidden YT player)
-    return '<div class="radio-station-item" data-playlist="' + _esc(ytId) + '" data-playlist-id="' + _esc(ytId) + '" onclick=\'musicPlayYT(' + JSON.stringify(ytId) + ',' + JSON.stringify(p.name) + ')\'>'
+    return '<div class="radio-station-item" data-playlist="' + _esc(p.sid) + '" data-playlist-id="' + _esc(p.sid) + '" onclick=\'musicPlayYT(' + JSON.stringify(p.sid) + ',' + JSON.stringify(p.name) + ')\'>'
       + '<span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:6px;background:linear-gradient(135deg,#ff0000,#cc0000);color:#fff;font-size:16px;font-weight:800;flex-shrink:0">▶</span>'
       + '<div class="radio-station-meta"><span class="radio-station-name" title="' + _esc(p.name) + '">' + _esc(p.name) + '</span>'
       + '<span class="radio-station-tag">' + _esc(p.desc || 'YouTube Music') + '</span>'
