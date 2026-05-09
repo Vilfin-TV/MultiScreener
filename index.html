@@ -9804,20 +9804,20 @@ function getActiveFeeds() {
 // ── Core news functions ──────────────────────────────────────────────────────
 let lnsTimer;
 
-// Bulletproof event delegation on document.body — catches all lnb-item clicks
-document.body.addEventListener('click', function(e) {
-  var el = e.target.closest('.lnb-item');
-  if (!el) return;
-  e.preventDefault();
-  e.stopPropagation();
-  // The inline onclick handler fires first; if it exists, we're done
-  // If the item has no onclick (edge case), extract text from DOM
-  if (!el.hasAttribute('onclick')) {
-    var titleEl = el.querySelector('.lnb-text');
-    var title = titleEl ? titleEl.textContent.trim() : 'News Story';
-    showNewsModalFallback(title, title, '#', '');
-  }
-});
+// ── Bulletproof event delegation — attached after DOM ready ──
+(function _newsDelegate() {
+  if (!document.body) { setTimeout(_newsDelegate, 10); return; }
+  document.body.addEventListener('click', function(e) {
+    var el = e.target.closest('.lnb-item');
+    if (!el) return;
+    e.preventDefault();
+    if (!el.hasAttribute('onclick')) {
+      var titleEl = el.querySelector('.lnb-text');
+      var title = titleEl ? titleEl.textContent.trim() : 'News Story';
+      showNewsModalFallback(title, title, '#', '');
+    }
+  });
+})();
 
 function initLiveNews() {
   renderNewsBoxes();
