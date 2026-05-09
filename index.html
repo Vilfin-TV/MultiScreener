@@ -1565,12 +1565,16 @@ footer{
   display:none;
   position:fixed;bottom:0;left:0;right:0;
   background:#050a14;border-top:1px solid #1e3a5f;
-  padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));
-  gap:10px;z-index:1400;
+  padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));
+  gap:8px;z-index:1400;
+  overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:none;-ms-overflow-style:none;
+  -webkit-overflow-scrolling:touch;
 }
+.mobile-rb-bar::-webkit-scrollbar{display:none}
 @media(max-width:900px){
   .mobile-rb-bar{display:flex}
-  .main-content{padding-bottom:62px} /* prevent content hiding under FAB */
+  .main-content{padding-bottom:62px}
 }
 /* Hide bottom bar when on-screen keyboard is open (input focused on mobile) */
 @media(max-width:768px){
@@ -1582,7 +1586,7 @@ footer{
 }
 .mobile-rb-bar{transition:transform .2s ease;}
 .mobile-rb-btn{
-  flex:1;padding:10px 8px;
+  flex-shrink:0;padding:10px 14px;
   border:1px solid #334155;border-radius:10px;
   background:#1e293b;color:#f1f5f9;
   font-size:13px;font-weight:600;cursor:pointer;
@@ -1666,19 +1670,19 @@ footer{
 .radio-preset-btn.active{background:#1d4ed8;border-color:#3b82f6;color:#fff}
 .radio-station-meta{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0;overflow:hidden}
 .radio-station-tag{font-size:9.5px;color:#506480;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.radio-station-list{flex:1;overflow-y:auto;padding:4px 6px 8px;scrollbar-width:thin;scrollbar-color:#1e293b transparent;min-height:500px;height:60vh}
+.radio-station-list{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 6px 8px;scrollbar-width:thin;scrollbar-color:#1e293b transparent;-webkit-overflow-scrolling:touch}
 
 /* ── Mobile radio scrolling fix ── */
 @media (max-width: 768px) {
-  #rb-panel-radio, .radio-wrapper {
+  #rb-panel-radio, #rb-panel-iptv {
     height: auto !important;
-    min-height: 100vh !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
   }
-  .radio-iframe {
-    height: 350px !important;
-    pointer-events: auto;
+  .radio-station-list {
+    height: auto !important;
+    min-height: 0 !important;
+    flex: 1 1 auto;
   }
 }
 .radio-station-item{display:flex;align-items:center;gap:6px;padding:7px 9px;border-radius:8px;border:1px solid transparent;cursor:pointer;transition:all .15s;margin-bottom:3px}
