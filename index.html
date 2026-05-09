@@ -997,6 +997,13 @@ footer{
 }
 .footer-social a:hover{background:rgba(255,255,255,.12);color:#ffffff;border-color:rgba(255,255,255,.4);}
 .footer-social-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+/* ── Share buttons ── */
+.share-btn{
+  padding:8px 15px;color:#fff!important;text-decoration:none;border-radius:5px;
+  font-size:13px;font-weight:700;cursor:pointer;border:none;transition:opacity .2s;
+  display:inline-flex;align-items:center;justify-content:center;
+}
+.share-btn:hover{opacity:.8}
 /* Bottom bar */
 .footer-bottom{
   border-top:1px solid rgba(147,197,253,.25);padding:20px 32px;
@@ -2752,6 +2759,19 @@ footer{
     </div>
 
   </div><!-- /footer-main -->
+
+  <!-- ── SHARE SECTION ── -->
+  <div class="footer-share-section" style="padding:24px 32px 12px;text-align:center;border-top:1px solid #1e293b;">
+    <h4 style="color:#c9d1d9;margin-bottom:14px;font-size:14px;font-weight:600;">Share VilfinTV</h4>
+    <div class="share-buttons" style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
+      <a href="https://api.whatsapp.com/send?text=Check%20out%20VilfinTV%3A%20Screeners%2C%20Market%20trade%20links%2C%20Live%20News%2C%20Live%20TV%2C%20Radio%20etc.%20https%3A%2F%2Fvilfintv.com" target="_blank" rel="noopener noreferrer" class="share-btn" style="background:#25D366;">WhatsApp</a>
+      <a href="https://twitter.com/intent/tweet?text=Check%20out%20VilfinTV%3A%20Screeners%2C%20Market%20trade%20links%2C%20Live%20News%2C%20Live%20TV%2C%20Radio%20etc.&url=https%3A%2F%2Fvilfintv.com" target="_blank" rel="noopener noreferrer" class="share-btn" style="background:#000;border:1px solid #333;">X (Twitter)</a>
+      <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fvilfintv.com" target="_blank" rel="noopener noreferrer" class="share-btn" style="background:#1877F2;">Facebook</a>
+      <a href="mailto:?subject=Check%20out%20VilfinTV&body=Check%20out%20VilfinTV%3A%20Screeners%2C%20Market%20trade%20links%2C%20Live%20News%2C%20Live%20TV%2C%20Radio%20etc.%0A%0Ahttps%3A%2F%2Fvilfintv.com" class="share-btn" style="background:#EA4335;">Email</a>
+      <button id="shareCopyBtn" class="share-btn" style="background:#4b5563;">Copy Link</button>
+      <button id="shareNativeBtn" class="share-btn" style="background:#238636;">More Options…</button>
+    </div>
+  </div>
 
   <!-- ── LEGAL BOTTOM BAR ── -->
   <div style="border-top:1px solid #1e293b;">
@@ -6133,6 +6153,40 @@ document.addEventListener('DOMContentLoaded', () => {
   try { _initLiveScores(); } catch(e) { console.error('_initLiveScores failed:', e); }
   try { _renderRandomChips(); } catch(e) { console.error('_renderRandomChips failed:', e); }
   try { setInterval(_renderRandomChips, 10 * 60 * 1000); } catch(e) { console.error('chip interval failed:', e); }
+});
+
+// ── SHARE BUTTONS LOGIC — runs after DOM ready ──────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  var shareData = {
+    title: 'VilfinTV | Multi-Asset Screener & Media',
+    text: 'Check out VilfinTV: Screeners, Market trade links, Live News, Live TV, Radio etc.',
+    url: 'https://vilfintv.com'
+  };
+
+  var copyBtn = document.getElementById('shareCopyBtn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async function() {
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        var orig = copyBtn.textContent;
+        copyBtn.textContent = 'Copied!';
+        setTimeout(function() { copyBtn.textContent = orig; }, 2000);
+      } catch(err) {
+        console.error('Clipboard failed:', err);
+      }
+    });
+  }
+
+  var nativeBtn = document.getElementById('shareNativeBtn');
+  if (nativeBtn) {
+    if (!navigator.share) {
+      nativeBtn.style.display = 'none';
+    } else {
+      nativeBtn.addEventListener('click', async function() {
+        try { await navigator.share(shareData); } catch(err) {}
+      });
+    }
+  }
 });
 
 // ═══════════════════════════════════════════════════════════════════
