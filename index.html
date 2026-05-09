@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<meta name="description" content="VilfinTV: Your premium all-in-one platform for real-time financial screening, live global news, 135+ TV channels, and curated music and radio streams."/>
+<meta name="description" content="VilfinTV: Your premium all-in-one platform for real-time financial screening, live global news, 141+ TV channels, and curated music and radio streams."/>
 <meta property="og:title" content="VilfinTV | Multi-Asset Screener &amp; Live Media Dashboard"/>
 <meta property="og:description" content="Real-time financial screening and global media dashboard."/>
 <meta property="og:url" content="https://vilfintv.com"/>
@@ -2846,7 +2846,7 @@ footer{
     <!-- Channel number quick-jump (new) -->
     <div style="padding:5px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:6px;align-items:center">
       <span style="font-size:10px;color:#475569;flex-shrink:0;font-weight:700;letter-spacing:.5px">CH</span>
-      <input type="number" id="yt-ch-num" min="1" max="135" placeholder="1 – 135"
+      <input type="number" id="yt-ch-num" min="1" max="141" placeholder="1 – 141"
         onkeydown="if(event.key==='Enter')ytPlayByNumber()"
         style="flex:1;min-width:0;padding:5px 8px;background:#0f1d35;color:#e2e8f0;border:1px solid #1e3a5f;border-radius:7px;font-size:12px;font-family:inherit;outline:none;-moz-appearance:textfield"/>
       <button onclick="ytPlayByNumber()"
@@ -6061,7 +6061,7 @@ async function fetchAndPopulateStreams() {
   // Restore saved default channel from localStorage
   try {
     var savedNo = parseInt(localStorage.getItem('viltv_default_chno') || '', 10);
-    if (savedNo >= 1 && savedNo <= 135) {
+    if (savedNo >= 1 && savedNo <= 141) {
       _ytCurrentChNo = savedNo;
       var sel = document.getElementById('yt-channel-select');
       if (sel) {
@@ -6823,7 +6823,7 @@ const _IPTV_PRESETS = {
   'kids':          { category: 'kids' },
   // ── Sports ────────────────────────────────────────────────────────────
   'sports':    { category: 'sports' },
-  'cricket':   { name: /\b(cricket|star\s*sports|sony\s*sports|sky\s*sports\s*cricket|willow\s*cricket|fancode|jio\s*hotstar)\b/i, category: 'sports' },
+  'cricket':   { name: /\b(cricket|star\s*sports|sony\s*sports|sky\s*sports\s*cricket|willow\s*cricket|fancode|jio\s*hotstar|ipl\b|iplt20|mumbai\s*indians|csk\b|royal\s*challengers|kkr\b|delhi\s*capitals|rajasthan\s*royals|sunrisers|punjab\s*kings|lucknow\s*super|gujarat\s*titans|icc\b|bcci\b|dd\s*sports|ptv\s*sports|ten\s*cricket|espn\s*cric|supersport\s*cricket|fox\s*cricket)\b/i, category: 'sports' },
   'football':  { name: /\b(football|soccer|sky\s*sports\s*football|premier\s*league|la\s*liga|bundesliga|serie\s*a|champions\s*league|fifa|mls\b|copa)\b/i },
   'rugby':     { name: /\b(rugby|six\s*nations|world\s*rugby|rugby\s*pass|super\s*rugby)\b/i },
   'baseball':  { name: /\b(baseball|mlb\b|major\s*league\s*baseball|yankees|dodgers|red\s*sox)\b/i },
@@ -7358,22 +7358,22 @@ const ARCHIVE_API = 'https://archive.org/advancedsearch.php';
 const _MOVIES_QUERIES = {
   // Curated category → archive.org search query (their advanced syntax)
   'classics':    'collection:(feature_films) AND mediatype:(movies) AND year:[1920 TO 1965]',
-  'action':      'collection:(feature_films) AND mediatype:(movies) AND (action OR adventure)',
-  'comedy':      'collection:(feature_films) AND mediatype:(movies) AND (comedy OR slapstick)',
-  'horror':      'collection:(feature_films) AND mediatype:(movies) AND (horror OR thriller)',
-  'scifi':       'collection:(feature_films) AND mediatype:(movies) AND (science fiction OR sci-fi)',
-  'animation':   'collection:(feature_films) AND mediatype:(movies) AND (animation OR cartoon)',
-  'drama':       'collection:(feature_films) AND mediatype:(movies) AND drama',
-  'western':     'collection:(feature_films) AND mediatype:(movies) AND western',
-  'documentary': 'collection:(opensource_movies) AND mediatype:(movies) AND documentary',
-  'shorts':      'collection:(short_films) AND mediatype:(movies)',
+  'action':      'collection:(feature_films) AND mediatype:(movies) AND (action OR adventure) AND year:[2000 TO 2025]',
+  'comedy':      'collection:(feature_films) AND mediatype:(movies) AND (comedy OR slapstick) AND year:[2000 TO 2025]',
+  'horror':      'collection:(feature_films) AND mediatype:(movies) AND (horror OR thriller) AND year:[2000 TO 2025]',
+  'scifi':       'collection:(feature_films) AND mediatype:(movies) AND (science fiction OR sci-fi) AND year:[2000 TO 2025]',
+  'animation':   'collection:(feature_films) AND mediatype:(movies) AND (animation OR cartoon) AND year:[2000 TO 2025]',
+  'drama':       'collection:(feature_films) AND mediatype:(movies) AND drama AND year:[2000 TO 2025]',
+  'western':     'collection:(feature_films) AND mediatype:(movies) AND western AND year:[2000 TO 2025]',
+  'documentary': 'collection:(opensource_movies) AND mediatype:(movies) AND documentary AND year:[2015 TO 2025]',
+  'shorts':      'collection:(short_films) AND mediatype:(movies) AND year:[2015 TO 2025]',
   'silent':      'collection:(silent_films) AND mediatype:(movies)',
   'noir':        'collection:(film_noir) AND mediatype:(movies)',
-  'bollywood':   'mediatype:(movies) AND (bollywood OR hindi cinema OR "hindi films")',
-  'malayalam':   'mediatype:(movies) AND (subject:"malayalam" OR subject:"malayalam cinema" OR subject:"malayalam comedy") AND -subject:"mahabharat" AND -subject:"mahabharatham"',
-  'tamil':       'mediatype:(movies) AND (tamil OR "tamil films" OR "tamil cinema")',
-  'telugu':      'mediatype:(movies) AND (telugu OR "telugu films" OR "telugu cinema")',
-  'indiancinema': 'mediatype:(movies) AND (indian OR bollywood OR malayalam OR tamil OR telugu OR kannada OR marathi)',
+  'bollywood':   'mediatype:(movies) AND (subject:"bollywood" OR subject:"hindi films" OR subject:"hindi cinema") AND year:[2020 TO 2025]',
+  'malayalam':   'mediatype:(movies) AND (subject:"malayalam" OR subject:"malayalam cinema" OR subject:"malayalam films" OR subject:"malayalam comedy" OR subject:"malayalam drama") AND year:[2020 TO 2025]',
+  'tamil':       'mediatype:(movies) AND (subject:"tamil" OR subject:"tamil cinema" OR subject:"tamil films") AND year:[2020 TO 2025]',
+  'telugu':      'mediatype:(movies) AND (subject:"telugu" OR subject:"telugu cinema" OR subject:"telugu films") AND year:[2020 TO 2025]',
+  'indiancinema': 'mediatype:(movies) AND (subject:"indian cinema" OR subject:"bollywood" OR subject:"tamil" OR subject:"telugu" OR subject:"malayalam") AND year:[2015 TO 2025]',
 };
 let _moviesLastResults = [];
 let _moviesCurrentId = null;
@@ -8077,7 +8077,7 @@ function radioAutoPlayDefault() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// YOUTUBE LIVE — 135-CHANNEL DATA & HYBRID FALLBACK PLAYER
+// YOUTUBE LIVE — 141-CHANNEL DATA & HYBRID FALLBACK PLAYER
 // ═══════════════════════════════════════════════════════════════════════
 var YT_CHANNELS = [
   {no:1,  name:'WION',                     country:'India',          category:'National News', lang:'English',    cid:'UC_gUM8rL-Lrg6O3adPW9K1g', v1:'lHFPPmi-TrY',  v2:''},
@@ -8214,7 +8214,14 @@ var YT_CHANNELS = [
   {no:132,name:'IBC24',                   country:'India',          category:'State News',    lang:'Hindi',      cid:'UCBc13XYipnBIBE3Ff8QaaGg', v1:'',             v2:''},
   {no:133,name:'The Sikkim Chronicle',    country:'India',          category:'State News',    lang:'English',    cid:'UCcwlzxkvBYAVRfo7gSBC61g', v1:'',             v2:''},
   {no:134,name:'Gulistan News',           country:'India',          category:'State News',    lang:'Urdu',       cid:'UCk7rHVFVs1Uf_dDOPKc2l0Q', v1:'',             v2:''},
-  {no:135,name:'News18 J&K',             country:'India',          category:'State News',    lang:'Urdu',       cid:'UCRcye_z41WXpW5JalQm8wJw', v1:'',             v2:''}
+  {no:135,name:'News18 J&K',             country:'India',          category:'State News',    lang:'Urdu',       cid:'UCRcye_z41WXpW5JalQm8wJw', v1:'',             v2:''},
+  // ── Sports / Cricket / IPL ───────────────────────────────────────
+  {no:136,name:'Star Sports (Hindi)',     country:'India',          category:'Sports',         lang:'Hindi',      cid:'',                         v1:'b-K5jxQq1cg',  v2:'cFj9KtVqK_8'},
+  {no:137,name:'JioCinema Sports',        country:'India',          category:'Sports',         lang:'Hindi',      cid:'',                         v1:'BfKX7S1q0d4',  v2:'qY29mB-Bm9A'},
+  {no:138,name:'DD Sports',               country:'India',          category:'Sports',         lang:'Hindi',      cid:'',                         v1:'X8xT-3kQoQs',  v2:'XZQiDxQHMrk'},
+  {no:139,name:'PTV Sports',              country:'Pakistan',       category:'Sports',         lang:'English',    cid:'',                         v1:'_Lx7iWmvGuY',  v2:'yJtJvBmMWuc'},
+  {no:140,name:'Willow Cricket',           country:'USA',            category:'Sports',         lang:'English',    cid:'',                         v1:'3tSfq9RqoAQ',  v2:'7dH_WLwPaUM'},
+  {no:141,name:'Supersport Cricket',       country:'South Africa',   category:'Sports',         lang:'English',    cid:'',                         v1:'DZpjqKgFXMc',  v2:''},
 ];
 
 var _ytCurrentChNo   = 61;   // Bloomberg Television default (1-based index)
@@ -8247,7 +8254,7 @@ function _ytSyncState() {
 (function() {
   try {
     var n = parseInt(localStorage.getItem('viltv_default_chno') || '', 10);
-    if (n >= 1 && n <= 135) _ytCurrentChNo = n;
+    if (n >= 1 && n <= 141) _ytCurrentChNo = n;
   } catch(e) {}
 })();
 
@@ -8316,7 +8323,7 @@ function ytUpdateInfo(ch) {
   el.textContent = parts.join(' · ');
 }
 
-// ── Switch to channel by number (1-135) ─────────────────────────────────────
+// ── Switch to channel by number (1-141) ─────────────────────────────────────
 function ytSwitchToChannel(no) {
   if (!no || no < 1 || no > YT_CHANNELS.length) return;
   var ch = YT_CHANNELS[no - 1];
@@ -8347,7 +8354,7 @@ function ytSwitchToChannel(no) {
 function ytSwitchChannel(val) {
   if (!val) return;
   var n = parseInt(val, 10);
-  if (!isNaN(n) && String(n) === String(val).trim() && n >= 1 && n <= 135) {
+  if (!isNaN(n) && String(n) === String(val).trim() && n >= 1 && n <= 141) {
     ytSwitchToChannel(n); return;
   }
   for (var i = 0; i < YT_CHANNELS.length; i++) {
@@ -8394,7 +8401,7 @@ function ytPlayByNumber() {
   var inp = document.getElementById('yt-ch-num');
   if (!inp) return;
   var no = parseInt(inp.value, 10);
-  if (no >= 1 && no <= 135) {
+  if (no >= 1 && no <= 141) {
     ytSwitchToChannel(no);
     inp.value = '';
   } else {
