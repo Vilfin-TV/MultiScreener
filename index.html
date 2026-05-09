@@ -4759,14 +4759,25 @@ function openNewsModal(title, url, snippet, sourceName) {
   if (titleEl) titleEl.textContent = title || 'News Story';
 
   if (contentDiv) {
-    contentDiv.innerHTML = snippet
-      ? snippet.replace(/<[^>]+>/g, '').slice(0, 600)
-      : 'Summary not provided by the publisher. Please click below to read the full article.';
+    var clean = snippet ? snippet.replace(/<[^>]+>/g, '').trim() : '';
+    if (clean) {
+      contentDiv.innerHTML = clean.slice(0, 600);
+    } else {
+      contentDiv.innerHTML = 'Click "Read Full Story" below to view the complete article on the publisher\'s website.';
+    }
   }
 
   if (srcEl) srcEl.textContent = sourceName ? '\uD83D\uDDE0 Source: ' + sourceName : '';
 
-  if (readBtn) readBtn.href = (url && url !== '#') ? url : '#';
+  if (readBtn) {
+    if (url && url !== '#' && (url.startsWith('http://') || url.startsWith('https://'))) {
+      readBtn.href = url;
+      readBtn.style.display = '';
+    } else {
+      readBtn.href = 'https://www.google.com/search?q=' + encodeURIComponent(title || '');
+      readBtn.target = '_blank';
+    }
+  }
 
   overlay.classList.add('active');
   overlay.style.display = 'flex';
@@ -9694,25 +9705,27 @@ let lnsTimer;
     var el = e.target.closest('.lnb-item');
     if (!el) return;
     e.preventDefault();
-    e.stopPropagation();
-    // Extract data from DOM for the modal
+    // If the inline onclick already showed the modal, don't overwrite it
+    var overlay = document.getElementById('rss-modal-overlay');
+    if (overlay && overlay.classList.contains('active')) return;
+    // Fallback: extract data from DOM for the modal
     var titleEl = el.querySelector('.lnb-text');
     var title   = titleEl ? titleEl.textContent.trim() : 'News Story';
     var snip    = '';
     var url     = '#';
-    // Parse inline onclick for data (rssModalOpen was called first by inline)
+    var source  = '';
     var oc = el.getAttribute('onclick') || '';
     var m = oc.match(/rssModalOpen\((.+)\)/);
     if (m) {
       try {
         var args = JSON.parse('[' + m[1] + ']');
-        title = args[0] || title;
-        snip  = args[1] && args[1] !== '' ? args[1] : title;
-        url   = args[2] || url;
-        var source = args[3] || '';
+        title  = args[0] || title;
+        snip   = args[1] || '';
+        url    = args[2] || url;
+        source = args[3] || '';
       } catch(_) {}
     }
-    showNewsModal(title, snip, url, source || '');
+    openNewsModal(title, url, snip, source);
   });
 })();
 
