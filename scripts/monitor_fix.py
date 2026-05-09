@@ -2,19 +2,19 @@
 """
 monitor_fix.py — VilfinTV Multi-Asset Screener Auto-Monitor & Fix
 ==================================================================
-Checks live-TV YouTube stream IDs, music playlist IDs, ticker symbols,
-and radio stream URLs. Auto-repairs broken entries in the Google Sheet
-and exports updated JSON data files consumed by the frontend.
+Checks live-TV YouTube stream IDs using a 3-Step Hybrid Fallback system,
+validates radio stream URLs, and syncs results to Google Sheets.
 
 Schedule: Daily at 00:00 UTC via GitHub Actions (.github/workflows/monitor_fix.yml)
 
-Dependencies (add to requirements.txt or install in workflow):
-  gspread google-auth requests tradingview_ta
+Dependencies (install in workflow):
+  pandas google-api-python-client gspread google-auth requests tradingview_ta
 """
 
 from __future__ import annotations
 
 import os
+import re
 import sys
 import json
 import logging
@@ -23,9 +23,13 @@ import socket
 from datetime import datetime, timezone
 from pathlib import Path
 
+import pandas as pd
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+
 import requests
 
-# ── Logger — set up BEFORE optional imports so their logging.warning() uses it ──
+# ── Logger ─────────────────────────────────────────────────────────────────
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -34,7 +38,7 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-# ── Optional imports (graceful degradation) ───────────────────────────────────
+# ── Optional imports (graceful degradation) ────────────────────────────────
 try:
     import gspread
     from google.oauth2.service_account import Credentials as SACredentials
@@ -50,25 +54,22 @@ except ImportError:
     TVTA_OK = False
     log.warning("tradingview_ta not installed — ticker checks disabled.")
 
-# ─────────────────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────
 #  Config — read from environment / GitHub Secrets
-# ─────────────────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────
 YOUTUBE_API_KEY   = os.getenv("YOUTUBE_API_KEY", "")
-GSHEET_CREDS_JSON = os.getenv("GSHEET_CREDS_JSON", "")   # full JSON string of service-account key
+GSHEET_CREDS_JSON = os.getenv("GSHEET_CREDS_JSON", "")
 GSHEET_DOC_TITLE  = os.getenv("GSHEET_DOC_TITLE", "VilfinTV Screener Config")
 
+CSV_PATH          = Path("youtube_live_audit.csv")
 STREAMS_JSON      = Path("streams.json")
 RADIO_JSON        = Path("public/data/radio_stations.json")
 
-YT_VIDEO_API      = "https://www.googleapis.com/youtube/v3/videos"
-YT_SEARCH_API     = "https://www.googleapis.com/youtube/v3/search"
-YT_CHANNELS_API   = "https://www.googleapis.com/youtube/v3/channels"
-HTTP_TIMEOUT      = 8   # seconds
 RADIO_TCP_TIMEOUT = 5
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  Google Sheets helper
-# ─────────────────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────
+#  Google Sheets helpers
+# ────────────────────────────────────────────────────────────────────────────
 def _get_gspread_client():
     if not GSPREAD_OK or not GSHEET_CREDS_JSON:
         return None
@@ -96,203 +97,228 @@ def get_sheet(client, sheet_name: str):
         return None
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  YouTube helpers
-# ─────────────────────────────────────────────────────────────────────────────
-def yt_is_live(video_id: str) -> bool:
-    """Return True if the YouTube videoId (or channelId) is currently live."""
-    if not YOUTUBE_API_KEY or not video_id:
-        return True   # assume OK if we can't check
-    try:
-        # If this looks like a channel ID (starts with UC), search for a live stream on that channel
-        if video_id.startswith("UC"):
-            r = requests.get(
-                YT_SEARCH_API,
-                params={"part": "id", "channelId": video_id, "eventType": "live",
-                        "type": "video", "key": YOUTUBE_API_KEY, "maxResults": 1},
-                timeout=HTTP_TIMEOUT,
-            )
-            r.raise_for_status()
-            items = r.json().get("items", [])
-            return len(items) > 0
-        # Otherwise check if the specific video ID is live
-        r = requests.get(
-            YT_VIDEO_API,
-            params={"part": "snippet,liveStreamingDetails", "id": video_id, "key": YOUTUBE_API_KEY},
-            timeout=HTTP_TIMEOUT,
-        )
-        r.raise_for_status()
-        items = r.json().get("items", [])
-        if not items:
-            return False
-        status = items[0].get("snippet", {}).get("liveBroadcastContent", "")
-        return status == "live"
-    except Exception as exc:
-        log.warning("yt_is_live(%s) error: %s", video_id, exc)
-        return True   # network failure → don't mark broken
-
-
-def yt_find_live_id(channel_id: str, search_query: str) -> str | None:
-    """Search for the current live-stream videoId on a channel or by keyword.
-    Falls back to recent uploads if no live stream is active."""
+# ────────────────────────────────────────────────────────────────────────────
+#  YouTube API helpers (googleapiclient.discovery)
+# ────────────────────────────────────────────────────────────────────────────
+def _build_youtube():
+    """Build a YouTube Data API v3 service object."""
     if not YOUTUBE_API_KEY:
+        log.warning("No YOUTUBE_API_KEY set — cannot query YouTube.")
         return None
-    # 1. Try channel-based live search
-    if channel_id:
-        try:
-            r = requests.get(
-                YT_SEARCH_API,
-                params={
-                    "part": "id",
-                    "channelId": channel_id,
-                    "eventType": "live",
-                    "type": "video",
-                    "key": YOUTUBE_API_KEY,
-                    "maxResults": 1,
-                },
-                timeout=HTTP_TIMEOUT,
-            )
-            r.raise_for_status()
-            items = r.json().get("items", [])
-            if items:
-                return items[0]["id"]["videoId"]
-        except Exception as exc:
-            log.warning("yt_find_live_id channel search error: %s", exc)
-        # 2. Fallback: search recent uploads on the channel (no eventType filter)
-        try:
-            r = requests.get(
-                YT_SEARCH_API,
-                params={
-                    "part": "id",
-                    "channelId": channel_id,
-                    "type": "video",
-                    "order": "date",
-                    "key": YOUTUBE_API_KEY,
-                    "maxResults": 1,
-                },
-                timeout=HTTP_TIMEOUT,
-            )
-            r.raise_for_status()
-            items = r.json().get("items", [])
-            if items:
-                return items[0]["id"]["videoId"]
-        except Exception as exc:
-            log.warning("yt_find_live_id recent uploads error: %s", exc)
-
-    # 3. Fall back to keyword search (with 'live' suffix)
-    if search_query:
-        try:
-            r = requests.get(
-                YT_SEARCH_API,
-                params={
-                    "part": "id",
-                    "q": search_query + " live",
-                    "eventType": "live",
-                    "type": "video",
-                    "key": YOUTUBE_API_KEY,
-                    "maxResults": 1,
-                },
-                timeout=HTTP_TIMEOUT,
-            )
-            r.raise_for_status()
-            items = r.json().get("items", [])
-            if items:
-                return items[0]["id"]["videoId"]
-        except Exception as exc:
-            log.warning("yt_find_live_id keyword search error: %s", exc)
-        # 4. Final fallback: keyword search without live filter
-        try:
-            r = requests.get(
-                YT_SEARCH_API,
-                params={
-                    "part": "id",
-                    "q": search_query,
-                    "type": "video",
-                    "order": "date",
-                    "key": YOUTUBE_API_KEY,
-                    "maxResults": 1,
-                },
-                timeout=HTTP_TIMEOUT,
-            )
-            r.raise_for_status()
-            items = r.json().get("items", [])
-            if items:
-                return items[0]["id"]["videoId"]
-        except Exception as exc:
-            log.warning("yt_find_live_id fallback search error: %s", exc)
-    return None
+    try:
+        return build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
+    except Exception as exc:
+        log.error("Failed to build YouTube API client: %s", exc)
+        return None
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  Task 1 — Auto-Fix YouTube Live TV stream IDs (streams.json)
-# ─────────────────────────────────────────────────────────────────────────────
-def check_and_fix_streams() -> bool:
-    """Returns True if streams.json was modified."""
-    if not STREAMS_JSON.exists():
-        log.warning("streams.json not found — skipping Live TV check.")
+def _extract_video_id(url: str) -> str | None:
+    """Extract a YouTube video ID from a watch URL. Returns None if invalid."""
+    if not url or pd.isna(url):
+        return None
+    m = re.search(r'(?:v=|/embed/|youtu\.be/)([A-Za-z0-9_-]{11})', str(url))
+    return m.group(1) if m else None
+
+
+# ────────────────────────────────────────────────────────────────────────────
+#  3-Step Hybrid Fallback — channels 1-20 only
+# ────────────────────────────────────────────────────────────────────────────
+def check_and_fix_csv(youtube) -> bool:
+    """
+    Process only rows 1-20 in youtube_live_audit.csv.
+    Returns True if the CSV was modified.
+    """
+    if not CSV_PATH.exists():
+        log.warning("youtube_live_audit.csv not found — skipping Live TV check.")
         return False
+
+    try:
+        df = pd.read_csv(CSV_PATH, encoding="utf-8")
+    except Exception as exc:
+        log.error("Failed to read CSV: %s", exc)
+        return False
+
+    # Add Status column if not present
+    if "Status" not in df.columns:
+        df["Status"] = ""
+
+    modified = False
+    channel_num_col = "Channel 1"
+    name_col        = "Name of channel"
+    channel_id_col  = "Channel ID"
+    url1_col        = "full url 1 with Video ID"
+    url2_col        = "full url 2 with Video ID"
+    status_col      = "Status"
+
+    # Process only rows where Channel 1 is between 1 and 20
+    for idx, row in df.iterrows():
+        ch_num = row.get(channel_num_col)
+        if pd.isna(ch_num):
+            continue
+        try:
+            ch_num = int(ch_num)
+        except (ValueError, TypeError):
+            continue
+        if ch_num < 1 or ch_num > 20:
+            continue
+
+        ch_name    = str(row.get(name_col, ""))
+        channel_id = str(row.get(channel_id_col, "")) if not pd.isna(row.get(channel_id_col)) else ""
+        url1       = str(row.get(url1_col, ""))   if not pd.isna(row.get(url1_col))   else ""
+        url2       = str(row.get(url2_col, ""))   if not pd.isna(row.get(url2_col))   else ""
+
+        log.info("  🔍 Ch %d — %s", ch_num, ch_name)
+
+        try:
+            # ── Step 1: Search for current live stream on the channel ──
+            if channel_id:
+                try:
+                    search_resp = youtube.search().list(
+                        part="snippet",
+                        channelId=channel_id,
+                        type="video",
+                        eventType="live",
+                        maxResults=1,
+                    ).execute()
+                    items = search_resp.get("items", [])
+                    if items:
+                        new_video_id = items[0]["id"]["videoId"]
+                        new_url = f"https://www.youtube.com/watch?v={new_video_id}"
+                        df.at[idx, url1_col] = new_url
+                        df.at[idx, status_col] = "Active"
+                        log.info("    [OK] Step 1 (channel search) — live: %s -> %s", ch_name, new_video_id)
+                        modified = True
+                        continue
+                except HttpError as e:
+                    if e.resp.status == 403:
+                        log.error("    ⛔ API quota exceeded (HTTP 403). Saving CSV and stopping.")
+                        break
+                    log.warning("    Step 1 search error: %s", e)
+                except Exception as e:
+                    log.warning("    Step 1 search error: %s", e)
+
+            # ── Step 2: Check existing URL 1 video ID ──
+            vid1 = _extract_video_id(url1)
+            if vid1:
+                try:
+                    vid_resp = youtube.videos().list(
+                        part="snippet",
+                        id=vid1,
+                        maxResults=1,
+                    ).execute()
+                    v_items = vid_resp.get("items", [])
+                    if v_items:
+                        status = v_items[0]["snippet"].get("liveBroadcastContent", "")
+                        if status == "live":
+                            df.at[idx, status_col] = "Active"
+                            log.info("    ✓ Step 2 (URL 1) — still live: %s → %s", ch_name, vid1)
+                            modified = True
+                            continue
+                except HttpError as e:
+                    if e.resp.status == 403:
+                        log.error("    ⛔ API quota exceeded (HTTP 403). Saving CSV and stopping.")
+                        break
+                    log.warning("    Step 2 error: %s", e)
+                except Exception as e:
+                    log.warning("    Step 2 error: %s", e)
+
+            # ── Step 3: Check existing URL 2 video ID ──
+            vid2 = _extract_video_id(url2)
+            if vid2:
+                try:
+                    vid_resp = youtube.videos().list(
+                        part="snippet",
+                        id=vid2,
+                        maxResults=1,
+                    ).execute()
+                    v_items = vid_resp.get("items", [])
+                    if v_items:
+                        status = v_items[0]["snippet"].get("liveBroadcastContent", "")
+                        if status == "live":
+                            new_url = f"https://www.youtube.com/watch?v={vid2}"
+                            df.at[idx, url1_col] = new_url
+                            df.at[idx, status_col] = "Active"
+                            log.info("    ✓ Step 3 (URL 2) — live, updated URL 1: %s → %s", ch_name, vid2)
+                            modified = True
+                            continue
+                except HttpError as e:
+                    if e.resp.status == 403:
+                        log.error("    ⛔ API quota exceeded (HTTP 403). Saving CSV and stopping.")
+                        break
+                    log.warning("    Step 3 error: %s", e)
+                except Exception as e:
+                    log.warning("    Step 3 error: %s", e)
+
+            # ── Step 4: All steps failed — mark as Broken / Offline ──
+            df.at[idx, url1_col]  = "Broken"
+            df.at[idx, status_col] = "Offline"
+            log.warning("    ✗ %s — no live stream found, marked Offline", ch_name)
+            modified = True
+
+        except Exception as e:
+            log.error("    Unexpected error on Ch %d: %s", ch_num, e)
+            df.at[idx, status_col] = "Error"
+            modified = True
+
+        time.sleep(0.25)  # gentle with quota
+
+    # Save the updated CSV
+    if modified:
+        try:
+            df.to_csv(CSV_PATH, index=False, encoding="utf-8")
+            log.info("youtube_live_audit.csv updated.")
+        except Exception as exc:
+            log.error("Failed to save CSV: %s", exc)
+
+    return modified
+
+
+# ────────────────────────────────────────────────────────────────────────────
+#  Sync CSV results to streams.json
+# ────────────────────────────────────────────────────────────────────────────
+def sync_csv_to_streams():
+    """Write updated video IDs from the CSV back into streams.json."""
+    if not CSV_PATH.exists() or not STREAMS_JSON.exists():
+        return
+
+    try:
+        df = pd.read_csv(CSV_PATH, encoding="utf-8")
+    except Exception:
+        return
 
     with open(STREAMS_JSON, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     channels = data.get("channels", [])
-    modified = False
-
-    for ch in channels:
-        vid_id    = ch.get("videoId", "")
-        ch_id     = ch.get("channelId", "")
-        label     = ch.get("label", "")
-
-        if not vid_id:
+    for idx, row in df.iterrows():
+        ch_num = row.get("Channel 1")
+        if pd.isna(ch_num):
+            continue
+        try:
+            ch_num = int(ch_num)
+        except (ValueError, TypeError):
+            continue
+        if ch_num < 1 or ch_num > len(channels):
             continue
 
-        # If videoId is actually a channel ID (UC...), skip live check
-        # and directly search for a live video from that channel
-        if vid_id.startswith("UC") and not ch_id:
-            ch_id = vid_id  # use videoId as channelId
-            new_id = yt_find_live_id(ch_id, label.replace("🇮🇳", "").replace("📺", "").replace("📡", "").strip())
-            if new_id:
-                log.info("  → %s — channel search found live video: %s", label, new_id)
-                ch["videoId"] = new_id
-                ch["status"]  = "auto-fixed"
-                modified = True
-            else:
-                log.warning("  → %s — no live video found for channel %s", label, ch_id)
-                ch["status"] = "offline"
-            time.sleep(0.3)
-            continue
+        ch_name = str(row.get("Name of channel", ""))
+        url1    = str(row.get("full url 1 with Video ID", "")) if not pd.isna(row.get("full url 1 with Video ID")) else ""
+        status  = str(row.get("Status", ""))  if not pd.isna(row.get("Status")) else ""
 
-        if yt_is_live(vid_id):
-            log.info("  ✓ %s — live", label)
-            ch["status"] = "live"
-            continue
+        vid_id = _extract_video_id(url1)
+        if vid_id and url1 != "Broken":
+            channels[ch_num - 1]["videoId"] = vid_id
+        channels[ch_num - 1]["status"] = status if status else channels[ch_num - 1].get("status", "")
 
-        log.warning("  ✗ %s (videoId=%s) offline — searching for replacement…", label, vid_id)
-
-        new_id = yt_find_live_id(ch_id, label.replace("🇮🇳", "").replace("📺", "").replace("📡", "").strip())
-        if new_id and new_id != vid_id:
-            log.info("    → replaced with %s", new_id)
-            ch["videoId"] = new_id
-            ch["status"]  = "auto-fixed"
-            modified = True
-        else:
-            log.warning("    → no replacement found — marking offline")
-            ch["status"] = "offline"
-
-        time.sleep(0.3)   # be gentle with quota
-
-    if modified or any(c.get("status") for c in channels):
-        data["updated"] = datetime.now(timezone.utc).isoformat()
-        with open(STREAMS_JSON, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        log.info("streams.json updated.")
-
-    return modified
+    data["updated"] = datetime.now(timezone.utc).isoformat()
+    with open(STREAMS_JSON, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    log.info("streams.json synced from CSV.")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  Task 2 — Auto-Fix ticker symbols (via tradingview_ta)
-# ─────────────────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────
+#  Ticker check (via tradingview_ta)
+# ────────────────────────────────────────────────────────────────────────────
 FALLBACK_TICKERS = {
     "NSE":    "NIFTY",
     "NASDAQ": "IXIC",
@@ -300,7 +326,6 @@ FALLBACK_TICKERS = {
 }
 
 def check_ticker(symbol: str, exchange: str) -> tuple[bool, str]:
-    """Returns (ok, message)."""
     if not TVTA_OK:
         return True, "tradingview_ta not available"
     try:
@@ -313,21 +338,17 @@ def check_ticker(symbol: str, exchange: str) -> tuple[bool, str]:
 
 
 def fix_tickers_in_sheet(client):
-    """Checks tickers listed in the Google Sheet's 'Tickers' worksheet."""
     ws = get_sheet(client, "Tickers")
     if ws is None:
         log.info("No 'Tickers' sheet found — skipping ticker check.")
         return
-
     rows = ws.get_all_records()
-    for i, row in enumerate(rows, start=2):   # row 1 = header
+    for i, row in enumerate(rows, start=2):
         symbol   = str(row.get("Symbol", "")).strip()
         exchange = str(row.get("Exchange", "NSE")).strip()
         status   = str(row.get("Status", "")).strip()
-
         if not symbol or status.lower() in ("broken", "skip"):
             continue
-
         ok, msg = check_ticker(symbol, exchange)
         if ok:
             ws.update_cell(i, list(row.keys()).index("Status") + 1, "OK")
@@ -348,19 +369,16 @@ def fix_tickers_in_sheet(client):
         time.sleep(0.5)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  Task 3 — Radio stream health check (HTTP HEAD + TCP)
-# ─────────────────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────
+#  Radio stream health check (HTTP HEAD + TCP)
+# ────────────────────────────────────────────────────────────────────────────
 def is_stream_reachable(url: str) -> bool:
-    """Quick TCP-connect or HTTP HEAD check."""
     try:
-        # Try HTTP HEAD first
         r = requests.head(url, timeout=RADIO_TCP_TIMEOUT, allow_redirects=True,
                           headers={"User-Agent": "VilfinTV-Monitor/1.0"})
         return r.status_code < 400
     except requests.exceptions.RequestException:
         pass
-    # Fall back to TCP socket
     try:
         from urllib.parse import urlparse
         parsed = urlparse(url)
@@ -373,14 +391,11 @@ def is_stream_reachable(url: str) -> bool:
 
 
 def check_radio_streams() -> bool:
-    """Mark unreachable streams in radio_stations.json. Returns True if file changed."""
     if not RADIO_JSON.exists():
         log.warning("radio_stations.json not found — skipping radio check.")
         return False
-
     with open(RADIO_JSON, "r", encoding="utf-8") as f:
         data = json.load(f)
-
     modified = False
     if isinstance(data, list):
         stations = data
@@ -388,16 +403,13 @@ def check_radio_streams() -> bool:
         stations = [s for cat in data["categories"] for s in cat.get("stations", [])]
     else:
         stations = data.get("stations", [])
-
     for st in stations:
         url  = st.get("url_resolved") or st.get("url") or ""
         name = st.get("name", "?")
         if not url:
             continue
-
         reachable = is_stream_reachable(url)
         prev_status = st.get("viltv_status", "ok")
-
         if reachable:
             if prev_status != "ok":
                 st["viltv_status"] = "ok"
@@ -408,32 +420,26 @@ def check_radio_streams() -> bool:
                 st["viltv_status"] = "broken"
                 modified = True
             log.warning("  ✗ %s — stream not reachable", name)
-
         time.sleep(0.1)
-
     if modified:
         with open(RADIO_JSON, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
         log.info("radio_stations.json updated.")
-
     return modified
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  Task 4 — Sync streams.json to Google Sheet (optional)
-# ─────────────────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────
+#  Sync streams.json to Google Sheet (optional)
+# ────────────────────────────────────────────────────────────────────────────
 def sync_streams_to_sheet(client):
-    """Write current stream statuses to 'LiveTV' worksheet in the Google Sheet."""
     ws = get_sheet(client, "LiveTV")
     if ws is None:
         log.info("No 'LiveTV' sheet — skipping sync.")
         return
     if not STREAMS_JSON.exists():
         return
-
     with open(STREAMS_JSON, "r", encoding="utf-8") as f:
         data = json.load(f)
-
     channels = data.get("channels", [])
     rows = [["Label", "VideoId", "ChannelId", "Status", "LastChecked"]]
     now  = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
@@ -450,34 +456,41 @@ def sync_streams_to_sheet(client):
     log.info("LiveTV sheet synced — %d rows.", len(rows) - 1)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────
 #  Main
-# ─────────────────────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────────────
 def main():
     log.info("═══ VilfinTV Monitor & Auto-Fix ═══")
     log.info("Started at %s UTC", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"))
     log.info("YouTube API key present: %s", "Yes" if YOUTUBE_API_KEY else "No")
     log.info("Google Sheets creds present: %s", "Yes" if GSHEET_CREDS_JSON else "No")
-    log.info("tradingview_ta available: %s", "Yes" if TVTA_OK else "No")
-    log.info("gspread available: %s", "Yes" if GSPREAD_OK else "No")
 
-    results = {"streams": False, "tickers": False, "radio": False, "sync": False}
+    sorted_events = {"csv": False, "radio": False, "sync": False}
     gs_client = _get_gspread_client()
 
-    log.info("── [1/4] Checking YouTube Live TV streams …")
-    results["streams"] = check_and_fix_streams()
+    # ── [1/4] 3-Step Hybrid Fallback for channels 1-20 ──────────────
+    log.info("── [1/4] YouTube Live TV check (3-Step Hybrid Fallback) …")
+    youtube = _build_youtube()
+    if youtube:
+        sorted_events["csv"] = check_and_fix_csv(youtube)
+        sync_csv_to_streams()
+    else:
+        log.warning("Skipping YouTube check — no API key or client build failed.")
 
+    # ── [2/4] Ticker symbols ─────────────────────────────────────────
     log.info("── [2/4] Checking ticker symbols …")
     fix_tickers_in_sheet(gs_client)
 
+    # ── [3/4] Radio stream health ────────────────────────────────────
     log.info("── [3/4] Checking radio stream health …")
-    results["radio"] = check_radio_streams()
+    sorted_events["radio"] = check_radio_streams()
 
+    # ── [4/4] Sync to Google Sheet ───────────────────────────────────
     log.info("── [4/4] Syncing streams to Google Sheet …")
     sync_streams_to_sheet(gs_client)
 
-    modified = [k for k, v in results.items() if v]
-    log.info("═══ Done — modified: %s ═══", ", ".join(modified) if modified else "none")
+    sorted_events = [k for k, v in sorted_events.items() if v]
+    log.info("═══ Done — sorted: %s ═══", ", ".join(sorted_events) if sorted_events else "none")
 
 
 if __name__ == "__main__":
