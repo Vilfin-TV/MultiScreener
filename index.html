@@ -8462,7 +8462,7 @@ function ytSwitchChannel(val) {
   // Direct play (custom URL / unknown ID)
   var isChId = typeof val === 'string' && val.startsWith('UC');
   _ytSetSrc(isChId
-    ? 'https://www.youtube.com/embed/live_stream?channel=' + val + '&autoplay=1&mute=1&enablejsapi=1&rel=0&modestbranding=1&playsinline=1'
+    ? 'https://www.youtube.com/embed/live_stream?channel=' + val + '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1'
     : 'https://www.youtube.com/embed/' + val + '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
 }
 
@@ -8481,7 +8481,7 @@ function _ytTryCurrentStage() {
   var src = '';
   if (_ytFallbackStage === 1)
     src = 'https://www.youtube.com/embed/live_stream?channel=' + ch.cid +
-          '&autoplay=1&mute=1&enablejsapi=1&rel=0&modestbranding=1&playsinline=1';
+          '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
   else if (_ytFallbackStage === 2)
     src = 'https://www.youtube.com/embed/' + ch.v1 +
           '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
