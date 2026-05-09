@@ -4773,11 +4773,6 @@ function showNewsModal(title, snippet, url, source) {
   if (nm) nm.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
-  if (src) src.textContent = source ? '🗞 Source: ' + source : '';
-  if (link) link.href = url || '#';
-  overlay.classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
 function rssModalClose(e) {
   if (e && e.target !== document.getElementById('rss-modal-overlay') && e.type !== 'click') return;
   if (e && e.currentTarget && e.target !== e.currentTarget) return;
