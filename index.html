@@ -6776,6 +6776,8 @@ async function iptvInit() {
     _iptvAllChannels = [];
     for (const s of streams) {
       if (!s.url || !/^https:/.test(s.url)) continue;
+      // Skip .m3u playlist index files — browsers can only play .m3u8 HLS streams
+      if (/\.m3u$/i.test(s.url) && !/\.m3u8$/i.test(s.url)) continue;
       if (!s.channel || !chanById[s.channel]) continue;
       if (seen.has(s.channel)) continue;            // skip duplicates
       seen.add(s.channel);
@@ -7165,6 +7167,33 @@ function iptvPlayCustomUrl() {
   const inp = document.getElementById('iptv-custom-url');
   const url = (inp && inp.value || '').trim();
   if (!url) return;
+
+  // If user pasted a .m3u playlist, fetch it and extract the first .m3u8 stream
+  if (/\.m3u$/i.test(url) && !/\.m3u8$/i.test(url)) {
+    fetch(url).then(r => r.text()).then(text => {
+      const lines = text.split(/\r?\n/);
+      let found = null;
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('#') || !trimmed) continue;
+        if (/\.m3u8/i.test(trimmed) || /^https?:\/\//.test(trimmed)) {
+          found = trimmed; break;
+        }
+      }
+      if (found) {
+        iptvPlay(found, 'custom-' + Date.now(), 'Custom Stream (from playlist)');
+        if (inp) inp.value = found;
+      } else {
+        const nowEl = document.getElementById('iptv-now');
+        if (nowEl) nowEl.textContent = '⚠️ No .m3u8 stream found in playlist';
+      }
+    }).catch(() => {
+      const nowEl = document.getElementById('iptv-now');
+      if (nowEl) nowEl.textContent = '⚠️ Failed to fetch playlist';
+    });
+    return;
+  }
+
   iptvPlay(url, 'custom-' + Date.now(), 'Custom Stream');
   if (inp) inp.value = '';
 }
