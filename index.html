@@ -2497,10 +2497,10 @@ footer{
     {
       "symbols":[
         {"proName":"BSE:SENSEX","title":"Sensex"},
-        {"proName":"BSE:BSE-BANK","title":"BSE-BANK"},
-        {"proName":"S&P:SPX","title":"S&P 500"},
+        {"proName":"NSE:NIFTY_BANK","title":"Bank Nifty"},
+        {"proName":"SP:SPX","title":"S&P 500"},
         {"proName":"NASDAQ:IXIC","title":"Nasdaq"},
-        {"proName":"BLACKBULL:US30","title":"Dow Jones"},
+        {"proName":"TVC:DJI","title":"Dow Jones"},
         {"proName":"NI225","title":"Nikkei 225"},
         {"proName":"NASDAQ:QQQ","title":"Nasdaq 100"},
         {"proName":"FX:EURUSD","title":"EUR/USD"},
@@ -2541,14 +2541,14 @@ footer{
     {
       "symbols":[
         {"proName":"BSE:SENSEX","title":"Sensex"},
-        {"proName":"BSE:BSE-BANK","title":"BSE-BANK"},
-        {"proName":"S&P:SPX","title":"S&P 500"},
+        {"proName":"NSE:NIFTY_BANK","title":"Bank Nifty"},
+        {"proName":"SP:SPX","title":"S&P 500"},
         {"proName":"NASDAQ:IXIC","title":"Nasdaq"},
-        {"proName":"BLACKBULL:US30","title":"Dow Jones"},
+        {"proName":"TVC:DJI","title":"Dow Jones"},
         {"proName":"NI225","title":"Nikkei"},
         {"proName":"SEHKEX:0800","title":"Hang Seng"},
         {"proName":"FX:USDINR","title":"USD/INR"},
-        {"proName":"FX:JPYINR","title":"JPY/INR"},
+        {"proName":"FX_IDC:JPYINR","title":"JPY/INR"},
         {"proName":"BITSTAMP:BTCUSD","title":"Bitcoin"},
         {"proName":"NYMEX:BZ1!","title":"Brent Crude"},
         {"proName":"NASDAQ:NVDA","title":"NVIDIA"},
@@ -7464,7 +7464,7 @@ const _MOVIES_QUERIES = {
   'silent':      'collection:(silent_films) AND mediatype:(movies)',
   'noir':        'collection:(film_noir) AND mediatype:(movies)',
   'bollywood':   'mediatype:(movies) AND (bollywood OR hindi cinema OR "hindi films")',
-  'malayalam':   'mediatype:(movies) AND (malayalam OR "malayalam films" OR "malayalam cinema")',
+  'malayalam':   'mediatype:(movies) AND (subject:"malayalam" OR subject:"malayalam cinema" OR subject:"malayalam comedy") AND -subject:"mahabharat" AND -subject:"mahabharatham"',
   'tamil':       'mediatype:(movies) AND (tamil OR "tamil films" OR "tamil cinema")',
   'telugu':      'mediatype:(movies) AND (telugu OR "telugu films" OR "telugu cinema")',
   'indiancinema': 'mediatype:(movies) AND (indian OR bollywood OR malayalam OR tamil OR telugu OR kannada OR marathi)',
@@ -9804,22 +9804,22 @@ let lnsTimer;
     e.stopPropagation();
     // Extract data from DOM for the modal
     var titleEl = el.querySelector('.lnb-text');
-    var timeEl  = el.querySelector('.lnb-time');
     var title   = titleEl ? titleEl.textContent.trim() : 'News Story';
-    var snip    = title;
+    var snip    = '';
     var url     = '#';
-    // Try to parse inline onclick for data (rssModalOpen was called first by inline)
+    // Parse inline onclick for data (rssModalOpen was called first by inline)
     var oc = el.getAttribute('onclick') || '';
     var m = oc.match(/rssModalOpen\((.+)\)/);
     if (m) {
       try {
         var args = JSON.parse('[' + m[1] + ']');
         title = args[0] || title;
-        snip  = args[1] || snip;
+        snip  = args[1] && args[1] !== '' ? args[1] : title;
         url   = args[2] || url;
+        var source = args[3] || '';
       } catch(_) {}
     }
-    showNewsModal(title, snip, url, '');
+    showNewsModal(title, snip, url, source || '');
   });
 })();
 
