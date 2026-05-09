@@ -381,7 +381,7 @@ footer,.tmenu-dropdown,.dd-submenu,.dd-item,.lnb,.live-news-section,
 }
 .mobile-rb-minimize-btn:hover{border-color:var(--burn2);color:var(--gold2)}
 .mobile-rb-restore{
-  display:none;position:fixed;bottom:8px;left:50%;transform:translateX(-50%);
+  display:none;position:fixed;bottom:20px;left:20px;
   background:var(--burn);color:#fff;border:none;border-radius:20px;
   padding:8px 20px;font-size:13px;font-weight:700;cursor:pointer;
   z-index:1401;box-shadow:0 4px 16px rgba(37,99,235,.45);
@@ -391,10 +391,10 @@ footer,.tmenu-dropdown,.dd-submenu,.dd-item,.lnb,.live-news-section,
 .mobile-rb-restore.visible{display:block}
 
 /* ── RSS News Modal ── */
-.rss-modal-overlay{
-  display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);
-  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
-  z-index:99999;align-items:center;justify-content:center;
+.rss-modal-overlay,#newsModal{
+  display:none;position:fixed;inset:0;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,.8);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  z-index:999999 !important;align-items:center;justify-content:center;
 }
 .rss-modal-overlay.active{display:flex}
 .rss-modal-box{
@@ -2942,6 +2942,15 @@ footer{
   <!-- ── PANEL 3: Live TV (IPTV via HLS.js) ── -->
   <div id="rb-panel-iptv" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
 
+    <!-- Custom M3U/M3U8 URL input (paste & play) — above search for mobile keyboard -->
+    <div style="padding:5px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:5px">
+      <input type="url" id="iptv-custom-url" placeholder="🔗 Paste any .m3u8 URL to play…"
+             onkeydown="if(event.key==='Enter')iptvPlayCustomUrl()"
+             style="flex:1;padding:7px 10px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:6px;color:#e2eeff;font-size:11px;outline:none;font-family:'JetBrains Mono',monospace"/>
+      <button onclick="iptvPlayCustomUrl()"
+              style="background:#1d4ed8;border:none;color:#fff;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">▶ Play</button>
+    </div>
+
     <!-- Search + region presets -->
     <div style="padding:8px 10px 6px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
       <input type="search" id="iptv-search"
@@ -3054,15 +3063,6 @@ footer{
       </div>
     </div>
 
-    <!-- Custom M3U/M3U8 URL input (paste & play) -->
-    <div style="padding:5px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:5px">
-      <input type="url" id="iptv-custom-url" placeholder="🔗 Paste any .m3u8 URL to play…"
-             onkeydown="if(event.key==='Enter')iptvPlayCustomUrl()"
-             style="flex:1;padding:7px 10px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:6px;color:#e2eeff;font-size:11px;outline:none;font-family:'JetBrains Mono',monospace"/>
-      <button onclick="iptvPlayCustomUrl()"
-              style="background:#1d4ed8;border:none;color:#fff;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">▶ Play</button>
-    </div>
-
     <!-- Channel list -->
     <div class="radio-station-list" id="iptv-list">
       <div class="radio-no-data">Tap a region above to load free-to-air TV channels…</div>
@@ -3077,7 +3077,7 @@ footer{
        <div style="font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">🎙 Radio India</div>
        <div style="display:flex;flex-direction:column;gap:6px">
          <div>
-            <iframe src="https://radiosindia.com/radiomango.html" allow="autoplay" style="height:350px!important;width:100%;border:none;overflow:hidden" loading="lazy" title="Radio Mango"></iframe>
+            <iframe src="https://radiosindia.com/radiomango.html" style="height:350px!important;width:100%;border:none;overflow:hidden" loading="lazy" title="Radio Mango"></iframe>
          </div>
        </div>
      </div>
@@ -4769,7 +4769,7 @@ const _YT_MUSIC_PLAYLISTS = {
   'bollywood':  'PLC5CD8EC31D0D3C5A',
   'hindi':      'PLcRN7uKfCFbK0IZNbZ2Gi7dJ1BcFgV61B',
   'punjabi':    'PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSK',
-  'malayalam':  'PLFgquLnL59alW28fxmr3GmqxXhlKT42kf',
+  'malayalam':  'RDCLAK5uy_mS5P_Wv-XhQ0x6mG-uE8vY9v-vY9v-vY',
   'tamil':      'PLFgquLnL59al7GXQRFxXCBv3REzBnBSFN',
   'telugu':     'PLI_7Mg2Z_-2LNjVYf2D8pQGRjSJ8PRxvv',
   'jpop':       'PLnD2rjprr_0IMrncTwMl0ZZth2tK7OQ5L',
@@ -8274,9 +8274,27 @@ var YT_CHANNELS = [
 var _ytCurrentChNo   = 61;   // Bloomberg Television default (1-based index)
 var _ytFallbackStage = 0;    // 1=channelId, 2=videoId1, 3=videoId2
 var _ytPlayer        = null; // YT IFrame API instance (optional)
-var _ytApiReady      = false;
+var isGlobalMuted    = true;
 var _ytMuted         = true;
 var _ytVolume        = 60;
+
+// ── Post-message helpers for the YouTube iframe ──────────────────
+function _ytPostMessage(cmd, val) {
+  var iframe = document.querySelector('#yt-player iframe');
+  if (!iframe || !iframe.contentWindow) return;
+  try {
+    var msg = { event: 'command', func: cmd };
+    if (val !== undefined) msg.args = [val];
+    iframe.contentWindow.postMessage(JSON.stringify(msg), '*');
+  } catch(e) {}
+}
+function _ytSyncState() {
+  if (!isGlobalMuted) {
+    // YouTube iframe loads muted by default; after load, unmute and set volume
+    setTimeout(function() { _ytPostMessage('unMute'); _ytPostMessage('setVolume', _ytVolume); }, 800);
+    setTimeout(function() { _ytPostMessage('unMute'); _ytPostMessage('setVolume', _ytVolume); }, 2000);
+  }
+}
 
 // Read saved default channel immediately (before DOMContentLoaded)
 (function() {
@@ -8339,7 +8357,7 @@ function _ytGetFrame() {
   }
   return f;
 }
-function _ytSetSrc(src) { var f = _ytGetFrame(); if (f) { f.src = src; } }
+function _ytSetSrc(src) { var f = _ytGetFrame(); if (f) { f.src = src; _ytSyncState(); } }
 
 // ── Channel info strip ───────────────────────────────────────────────────────
 function ytUpdateInfo(ch) {
@@ -8487,25 +8505,27 @@ function ytOnPlayerError(event) { /* stub — errors handled via postMessage lis
 
 // ── Video Controls ───────────────────────────────────────────────────────────
 function ytToggleMute() {
-  _ytMuted = !_ytMuted;
-  if (_ytPlayer && _ytPlayer.mute) {
-    if (_ytMuted) _ytPlayer.mute(); else { _ytPlayer.unMute(); _ytPlayer.setVolume(_ytVolume); }
+  isGlobalMuted = !isGlobalMuted;
+  _ytMuted = isGlobalMuted;
+  if (isGlobalMuted) {
+    _ytPostMessage('mute');
+  } else {
+    _ytPostMessage('unMute');
+    _ytPostMessage('setVolume', _ytVolume);
   }
   var btn = document.getElementById('yt-mute-btn');
-  if (btn) btn.textContent = _ytMuted ? '🔇' : '🔊';
+  if (btn) btn.textContent = isGlobalMuted ? '🔇' : '🔊';
 }
 
 function ytSetVolume(val) {
   _ytVolume = Number(val);
   var slider = document.getElementById('yt-vol-slider');
   if (slider) slider.style.setProperty('--vol', _ytVolume + '%');
-  if (_ytPlayer && _ytPlayer.setVolume) {
-    _ytPlayer.setVolume(_ytVolume);
-    if (_ytVolume > 0 && _ytMuted)    { _ytMuted = false; _ytPlayer.unMute(); }
-    if (_ytVolume === 0 && !_ytMuted) { _ytMuted = true;  _ytPlayer.mute(); }
-  }
+  _ytPostMessage('setVolume', _ytVolume);
+  if (_ytVolume > 0 && isGlobalMuted)    { isGlobalMuted = false; _ytMuted = false; _ytPostMessage('unMute'); }
+  if (_ytVolume === 0 && !isGlobalMuted)  { isGlobalMuted = true;  _ytMuted = true;  _ytPostMessage('mute'); }
   var btn = document.getElementById('yt-mute-btn');
-  if (btn) btn.textContent = (_ytMuted || _ytVolume === 0) ? '🔇' : '🔊';
+  if (btn) btn.textContent = (isGlobalMuted || _ytVolume === 0) ? '🔇' : '🔊';
 }
 
 function ytNextChannel() { if (_ytCurrentChNo < YT_CHANNELS.length) ytSwitchToChannel(_ytCurrentChNo + 1); }
