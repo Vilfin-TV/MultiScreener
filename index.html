@@ -8482,6 +8482,11 @@ function ytSwitchChannel(val) {
 function _ytTryCurrentStage() {
   var ch = YT_CHANNELS[_ytCurrentChNo - 1];
   if (!ch) { ytShowGeoError(); return; }
+  // For channels that have both a channel ID and video IDs, skip live_stream
+  // (most aren't 24/7 live) and play the stored video directly
+  if (ch.v1 && ch.cid && _ytFallbackStage === 1) {
+    _ytFallbackStage = 2;
+  }
   // Skip stages with no data
   while (_ytFallbackStage <= 3) {
     if (_ytFallbackStage === 1 && ch.cid) break;
