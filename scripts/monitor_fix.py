@@ -172,142 +172,50 @@ def check_and_fix_csv(youtube) -> bool:
         # 3. Force the ID column to numeric
         df[id_col] = pd.to_numeric(df[id_col], errors="coerce")
 
-        # 4. Filter for channels 1 through 29
-        target_mask = (df[id_col] >= 1) & (df[id_col] <= 29)
+        # 4. Filter for ALL channels (1-141) — HTML scrape can handle any channel
+        target_mask = (df[id_col] >= 1) & (df[id_col] <= 141)
 
         # Map other columns with stripped names
         channel_id_col = "Channel ID" if "Channel ID" in df.columns else df.columns[2]
         url1_col       = "full url 1 with Video ID" if "full url 1 with Video ID" in df.columns else df.columns[5]
         url2_col       = "full url 2 with Video ID" if "full url 2 with Video ID" in df.columns else df.columns[6]
+
+        # ── Scrape all channels with a Channel ID ──
+        status_col = "Status"
+        if status_col not in df.columns:
+            df[status_col] = ""
+
+        for idx, row in df[target_mask].iterrows():
+            ch_num = row[id_col]
+            if pd.isna(ch_num):
+                continue
+
+            ch_name    = str(row.iloc[1]) if len(row) > 1 else ""
+            channel_id = str(row.get(channel_id_col, "")).strip() if not pd.isna(row.get(channel_id_col)) else ""
+            url1       = str(row.get(url1_col, "")).strip()   if not pd.isna(row.get(url1_col))   else ""
+
+            if not channel_id or channel_id == "nan":
+                continue
+
+            # HTML scrape for ALL channels that have a Channel ID
+            log.info("[%d] %s — HTML scraping /live page…", ch_num, ch_name)
+            scraped_id = _scrape_live_video_id(channel_id)
+            if scraped_id:
+                new_url = f"https://www.youtube.com/watch?v={scraped_id}"
+                df.at[idx, url1_col] = new_url
+                df.at[idx, status_col] = "Active"
+                log.info("  [OK] Scraped live ID: %s -> %s", ch_name, scraped_id)
+                modified = True
+            else:
+                log.warning("  [--] No live ID found for %s", ch_name)
+
+            time.sleep(0.6)
+        # ── End of scrape loop ──
     except Exception as exc:
         log.error("Failed to read CSV: %s", exc)
         return False
 
-    # Add Status column if not present
-    status_col = "Status"
-    if status_col not in df.columns:
-        df[status_col] = ""
-
-    modified = False
-
-    for idx, row in df[target_mask].iterrows():
-        ch_num = row[id_col]
-        if pd.isna(ch_num):
-            continue
-
-        ch_name    = str(row.iloc[1]) if len(row) > 1 else ""
-        channel_id = str(row.get(channel_id_col, "")).strip() if not pd.isna(row.get(channel_id_col)) else ""
-        url1       = str(row.get(url1_col, "")).strip()   if not pd.isna(row.get(url1_col))   else ""
-        url2       = str(row.get(url2_col, "")).strip()   if not pd.isna(row.get(url2_col))   else ""
-
-        log.info("  🔍 Ch %d — %s", ch_num, ch_name)
-
-        try:
-            # ── Step 0: HTML scrape for channels 1-29 (24/7 news channels) ──
-            if ch_num <= 29 and channel_id:
-                scraped_id = _scrape_live_video_id(channel_id)
-                if scraped_id:
-                    new_url = f"https://www.youtube.com/watch?v={scraped_id}"
-                    df.at[idx, url1_col] = new_url
-                    df.at[idx, status_col] = "Active"
-                    log.info("    [OK] Step 0 (HTML scrape) — live: %s -> %s", ch_name, scraped_id)
-                    modified = True
-                    time.sleep(0.5)
-                    continue
-
-            # ── Step 1: API search for current live stream on the channel ──
-            if channel_id:
-                try:
-                    search_resp = youtube.search().list(
-                        part="snippet",
-                        channelId=channel_id,
-                        type="video",
-                        eventType="live",
-                        maxResults=1,
-                    ).execute()
-                    items = search_resp.get("items", [])
-                    if items:
-                        new_video_id = items[0]["id"]["videoId"]
-                        new_url = f"https://www.youtube.com/watch?v={new_video_id}"
-                        df.at[idx, url1_col] = new_url
-                        df.at[idx, status_col] = "Active"
-                        log.info("    [OK] Step 1 (channel search) — live: %s -> %s", ch_name, new_video_id)
-                        modified = True
-                        continue
-                except HttpError as e:
-                    if e.resp.status == 403:
-                        log.error("    ⛔ API quota exceeded (HTTP 403). Saving CSV and stopping.")
-                        break
-                    log.warning("    Step 1 search error: %s", e)
-                except Exception as e:
-                    log.warning("    Step 1 search error: %s", e)
-
-            # ── Step 2: Check existing URL 1 video ID ──
-            vid1 = _extract_video_id(url1)
-            if vid1:
-                try:
-                    vid_resp = youtube.videos().list(
-                        part="snippet",
-                        id=vid1,
-                        maxResults=1,
-                    ).execute()
-                    v_items = vid_resp.get("items", [])
-                    if v_items:
-                        status = v_items[0]["snippet"].get("liveBroadcastContent", "")
-                        if status == "live":
-                            df.at[idx, status_col] = "Active"
-                            log.info("    ✓ Step 2 (URL 1) — still live: %s → %s", ch_name, vid1)
-                            modified = True
-                            continue
-                except HttpError as e:
-                    if e.resp.status == 403:
-                        log.error("    ⛔ API quota exceeded (HTTP 403). Saving CSV and stopping.")
-                        break
-                    log.warning("    Step 2 error: %s", e)
-                except Exception as e:
-                    log.warning("    Step 2 error: %s", e)
-
-            # ── Step 3: Check existing URL 2 video ID ──
-            vid2 = _extract_video_id(url2)
-            if vid2:
-                try:
-                    vid_resp = youtube.videos().list(
-                        part="snippet",
-                        id=vid2,
-                        maxResults=1,
-                    ).execute()
-                    v_items = vid_resp.get("items", [])
-                    if v_items:
-                        status = v_items[0]["snippet"].get("liveBroadcastContent", "")
-                        if status == "live":
-                            new_url = f"https://www.youtube.com/watch?v={vid2}"
-                            df.at[idx, url1_col] = new_url
-                            df.at[idx, status_col] = "Active"
-                            log.info("    ✓ Step 3 (URL 2) — live, updated URL 1: %s → %s", ch_name, vid2)
-                            modified = True
-                            continue
-                except HttpError as e:
-                    if e.resp.status == 403:
-                        log.error("    ⛔ API quota exceeded (HTTP 403). Saving CSV and stopping.")
-                        break
-                    log.warning("    Step 3 error: %s", e)
-                except Exception as e:
-                    log.warning("    Step 3 error: %s", e)
-
-            # ── Step 4: All steps failed — mark as Broken / Offline ──
-            df.at[idx, url1_col]  = "Broken"
-            df.at[idx, status_col] = "Offline"
-            log.warning("    ✗ %s — no live stream found, marked Offline", ch_name)
-            modified = True
-
-        except Exception as e:
-            log.error("    Unexpected error on Ch %d: %s", ch_num, e)
-            df.at[idx, status_col] = "Error"
-            modified = True
-
-        time.sleep(0.25)  # gentle with quota
-
-    # Save the updated CSV
+    # ── Save updated CSV ──
     if modified:
         try:
             df.to_csv(CSV_PATH, index=False, encoding="utf-8")
