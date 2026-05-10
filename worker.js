@@ -167,23 +167,6 @@ export default {
       }
     }
 
-    // ── IPTV catalog pre-filter (offloads heavy client-side dedup + filter) ──
-    if (url.pathname === '/iptv-filter' && (request.method === 'GET' || request.method === 'POST')) {
-      try {
-        const params = url.searchParams;
-        const country   = params.get('country') || '';
-        const category  = params.get('category') || '';
-        const nameRegex = params.get('name') || '';
-        const limit     = Math.max(1, Math.min(200, parseInt(params.get('limit')||'50')||50));
-
-        const iptvData = await fetchIptvFiltered(country, category, nameRegex, limit);
-        return json(iptvData, CORS);
-      } catch (err) {
-        console.error('iptv-filter error:', err.message);
-        return json({ channels:[], error:'IPTV catalog temporarily unavailable' }, CORS, 200);
-      }
-    }
-
     // ── Interactive AI query endpoint ──────────────────────────────────────────
     if ((url.pathname === '/query' || url.pathname === '/ask') && request.method === 'POST') {
       let body;
