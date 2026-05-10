@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Stock Screener Query Generator — VilfinTV</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --bg:#030810; --card:#0a1830; --card2:#0e1f3b; --border:#162d4a;
+    --burn:#2563eb; --burn2:#3b82f6; --burn3:#93c5fd;
+    --text:#e2eeff; --text2:#8ea8c8; --text3:#506480;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'DM Sans',sans-serif;
+    background:radial-gradient(circle at top right,rgba(37,99,235,.12),transparent 28%),
+               radial-gradient(circle at top left,rgba(56,189,248,.08),transparent 22%),var(--bg);
+    color:var(--text);min-height:100vh;
+  }
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+  .card2{background:var(--card2);border:1px solid var(--border);border-radius:var(--radius)}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;
+    font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;
+  }
+  .btn-primary{background:linear-gradient(135deg,var(--burn),var(--burn2));color:#fff;border:none}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(37,99,235,.35)}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2)}
+  .btn-outline:hover{border-color:var(--burn2);color:#fff}
+  .btn-success{background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;border:none}
+  .chip{
+    padding:10px 18px;border-radius:10px;border:2px solid var(--border);
+    background:rgba(255,255,255,.02);color:var(--text2);font-size:12.5px;font-weight:600;
+    cursor:pointer;transition:all .18s;user-select:none;text-align:center;
+  }
+  .chip:hover{border-color:rgba(59,130,246,.5);color:var(--text);background:rgba(37,99,235,.08)}
+  .chip.selected{border-color:var(--burn2);background:rgba(37,99,235,.18);color:var(--burn3);font-weight:700;box-shadow:0 0 14px rgba(37,99,235,.25)}
+  .chip-grid{display:flex;flex-wrap:wrap;gap:8px}
+  .label{
+    font-size:10px;font-weight:700;color:var(--burn2);text-transform:uppercase;letter-spacing:1px;
+    margin-bottom:6px;display:block;
+  }
+  .input{
+    width:100%;padding:10px 14px;background:var(--card2);border:1px solid var(--border);
+    border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;
+    outline:none;transition:border-color .2s;
+  }
+  .input:focus{border-color:var(--burn2)}
+  .output-box{
+    background:#0d0d0d;border:1px solid var(--border);border-radius:var(--radius);
+    padding:20px;font-family:'JetBrains Mono',monospace;font-size:12px;
+    color:#d4c9bb;line-height:1.7;white-space:pre-wrap;word-break:break-word;
+    min-height:80px;
+  }
+  .step-num{
+    width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--burn),var(--burn2));
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Bebas Neue',sans-serif;font-size:18px;color:#fff;flex-shrink:0;
+    box-shadow:0 0 16px rgba(37,99,235,.35);
+  }
+  .step-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--burn3)}
+  .fade{opacity:.4;pointer-events:none}
+  .hidden-section{display:none}
+  .field-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+</style>
+</head>
+<body class="min-h-screen">
+<!-- Top menu -->
+<div class="sticky top-0 z-50 bg-gradient-to-r from-[#040913] via-[#081324] to-[#10264a] border-b-2 border-[#38bdf852] px-4 py-0 flex items-center h-[46px] gap-3 shadow-lg">
+  <div class="flex items-center gap-2.5 min-w-0">
+    <div class="w-[30px] h-[30px] rounded-lg bg-gradient-to-br from-[#2563eb] to-[#93c5fd] flex items-center justify-center text-white text-[13px] font-extrabold shadow-[0_0_12px_rgba(37,99,235,.45)]">📊</div>
+    <span class="font-['Bebas_Neue'] text-lg tracking-[2px] text-white leading-none">Vilfin<span class="text-[#38bdf8]">TV</span></span>
+  </div>
+  <div class="flex-1"></div>
+  <a href="index.html" class="btn btn-outline text-xs">← Back to Home</a>
+</div>
+
+<div class="max-w-4xl mx-auto px-4 py-8" id="app">
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <h1 class="font-['Bebas_Neue'] text-[clamp(24px,5vw,40px)] tracking-[3px] text-white mb-2">Stock Screener Query Generator</h1>
+    <p class="text-sm text-[var(--text2)]">Build platform-specific queries across exchanges with smart defaults</p>
+  </div>
+
+  <!-- Step 1: Factor -->
+  <div class="card mb-5">
+    <div class="flex items-center gap-3 mb-5"><div class="step-num">1</div><div class="step-title">Select Factor</div></div>
+    <div class="chip-grid" id="factorGrid"></div>
+  </div>
+
+  <!-- Step 2: Exchange -->
+  <div class="card mb-5" id="exchangeSection">
+    <div class="flex items-center gap-3 mb-5"><div class="step-num">2</div><div class="step-title">Exchange</div></div>
+    <div class="chip-grid" id="exchangeGrid"></div>
+  </div>
+
+  <!-- Step 3: Index -->
+  <div class="card mb-5 hidden-section" id="indexSection">
+    <div class="flex items-center gap-3 mb-5"><div class="step-num">3</div><div class="step-title">Index (Optional)</div></div>
+    <div class="chip-grid" id="indexGrid"></div>
+  </div>
+
+  <!-- Step 4: Platform -->
+  <div class="card mb-5 hidden-section" id="platformSection">
+    <div class="flex items-center gap-3 mb-5"><div class="step-num">4</div><div class="step-title">Target Platform</div></div>
+    <div class="chip-grid" id="platformGrid"></div>
+  </div>
+
+  <!-- Step 5: Values -->
+  <div class="card mb-5 hidden-section" id="valuesSection">
+    <div class="flex items-center gap-3 mb-5"><div class="step-num">5</div><div class="step-title">Parameters <span class="text-xs text-[var(--text3)] font-normal">(edit as needed)</span></div></div>
+    <div class="field-grid" id="valuesGrid"></div>
+  </div>
+
+  <!-- Output -->
+  <div class="card mb-5 hidden-section" id="outputSection">
+    <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+      <div class="flex items-center gap-3"><div class="step-num" style="background:linear-gradient(135deg,#16a34a,#22c55e)">✓</div><div class="step-title">Generated Query</div></div>
+      <div class="flex gap-2 flex-wrap" id="actionBtns"></div>
+    </div>
+    <div class="output-box" id="outputBox"></div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+const state = { factor:null, exchange:null, index:null, platform:null, values:{} };
+
+// ── DATA ──
+const FACTORS = [
+  {id:'momentum',     label:'Momentum',       icon:'📈'},
+  {id:'value',        label:'Value',           icon:'💰'},
+  {id:'deep_value',   label:'Deep Value',      icon:'🏷️'},
+  {id:'growth',       label:'Growth',          icon:'🚀'},
+  {id:'quality',      label:'Quality',         icon:'⭐'},
+  {id:'low_vol',      label:'Low Volatility',  icon:'🛡️'},
+  {id:'val_qual',     label:'Value & Quality', icon:'💎'},
+  {id:'mom_qual',     label:'Momentum & Quality',icon:'⚡'},
+  {id:'div_growth',   label:'Dividend Growth', icon:'💸'},
+  {id:'alpha',        label:'Alpha',           icon:'🎯'},
+];
+
+const EXCHANGES = [
+  {id:'india', label:'🇮🇳 India (NSE/BSE)'},
+  {id:'us',    label:'🇺🇸 United States'},
+  {id:'japan', label:'🇯🇵 Japan'},
+  {id:'global',label:'🌍 Global'},
+];
+
+const INDICES = {
+  india:  [{id:'nifty50',label:'Nifty 50'},{id:'nifty100',label:'Nifty 100'},{id:'nifty500',label:'Nifty 500'}],
+  us:     [{id:'sp500',label:'S&P 500'},{id:'nasdaq100',label:'Nasdaq 100'},{id:'russell2000',label:'Russell 2000'}],
+  japan:  [{id:'nikkei225',label:'Nikkei 225'},{id:'topix',label:'TOPIX'}],
+  global: [{id:'msci_world',label:'MSCI World'},{id:'sp_global1200',label:'S&P Global 1200'}],
+};
+
+const PLATFORMS = {
+  india:  [{id:'screener_in',label:'Screener.in (Fundamental)'},{id:'chartink',label:'Chartink (Technical)'}],
+  us:     [{id:'finviz',label:'Finviz'},{id:'tradingview',label:'TradingView'}],
+  japan:  [{id:'tradingview',label:'TradingView'}],
+  global: [{id:'tradingview',label:'TradingView'}],
+};
+
+// ── Default value matrix [factor][platform] = {field: value, ...} ──
+const DEFAULTS = {
+  momentum: {
+    screener_in: {market_cap:'Market Capitalization > 500', pe:'Price to Earning < 30', rsi:'RSI > 55', roe:'Return on equity > 12'},
+    chartink:    {sma:'Latest Close > Latest SMA(close,200)', rsi:'Latest RSI(14) > 55', volume:'Latest Volume > 500000'},
+    finviz:      {cap:'cap_midover', pe:'fa_pe_u30', rsi:'ta_rsi_ob55', perf:'ta_perf_dup'},
+    tradingview: {mc:'Market Cap > 500 Cr', pe:'P/E < 30', rsi:'RSI > 55', roe:'ROE > 12'},
+  },
+  value: {
+    screener_in: {market_cap:'Market Capitalization > 500', pe:'Price to Earning < 15', pb:'Price to Book Value < 1.5', roe:'Return on equity > 10', de:'Debt to equity < 1'},
+    chartink:    {pe:'Latest Price to Earning < 15', pb:'Latest Price to Book Value < 1.5', de:'Latest Debt to Equity < 1'},
+    finviz:      {cap:'cap_midover', pe:'fa_pe_u15', pb:'fa_pb_u1.5', roe:'fa_roe_o10', de:'fa_debt_eq_u1'},
+    tradingview: {mc:'Market Cap > 500 Cr', pe:'P/E < 15', pb:'P/B < 1.5', roe:'ROE > 10', de:'D/E < 1'},
+  },
+  deep_value: {
+    screener_in: {market_cap:'Market Capitalization > 100', pe:'Price to Earning < 10', pb:'Price to Book Value < 1', div_yield:'Dividend Yield > 2', de:'Debt to equity < 0.5'},
+    chartink:    {pe:'Latest Price to Earning < 10', pb:'Latest Price to Book Value < 1', div_yield:'Latest Dividend Yield > 2'},
+    finviz:      {cap:'cap_smallover', pe:'fa_pe_u10', pb:'fa_pb_u1', div:'fa_div_o2', de:'fa_debt_eq_u0.5'},
+    tradingview: {mc:'Market Cap > 100 Cr', pe:'P/E < 10', pb:'P/B < 1', div:'Div Yield > 2%', de:'D/E < 0.5'},
+  },
+  growth: {
+    screener_in: {market_cap:'Market Capitalization > 500', sales_growth:'Sales growth 3Years > 15', profit_growth:'Profit growth 3Years > 15', roe:'Return on equity > 15'},
+    chartink:    {sales_growth:'Latest Sales Growth 3Y > 15', profit_growth:'Latest Profit Growth 3Y > 15'},
+    finviz:      {cap:'cap_midover', sales_growth:'fa_salesqoq_o15', eps_growth:'fa_epsqoq_o15', roe:'fa_roe_o15'},
+    tradingview: {mc:'Market Cap > 500 Cr', sg:'Sales Growth 3Y > 15%', pg:'Profit Growth 3Y > 15%', roe:'ROE > 15%'},
+  },
+  quality: {
+    screener_in: {market_cap:'Market Capitalization > 1000', roe:'Return on equity > 18', roce:'Return on capital employed > 15', de:'Debt to equity < 0.5', promoter:'Promoter holding > 40'},
+    chartink:    {roe:'Latest Return on Equity > 18', roce:'Latest ROCE > 15', promoter:'Latest Promoter Holding > 40'},
+    finviz:      {cap:'cap_largeover', roe:'fa_roe_o18', roce:'fa_roce_o15', de:'fa_debt_eq_u0.5'},
+    tradingview: {mc:'Market Cap > 1000 Cr', roe:'ROE > 18%', roce:'ROCE > 15%', de:'D/E < 0.5', promoter:'Promoter > 40%'},
+  },
+  low_vol: {
+    screener_in: {market_cap:'Market Capitalization > 500', beta:'Beta < 0.8', std_dev:'Standard Deviation < 2', drawdown:'Max Drawdown > -20'},
+    chartink:    {beta:'Latest Beta < 0.8', std_dev:'Latest Standard Deviation(1Y) < 2'},
+    finviz:      {cap:'cap_midover', beta:'ta_beta_u0.8', volatility:'ta_volatility_wo2'},
+    tradingview: {mc:'Market Cap > 500 Cr', beta:'Beta < 0.8', sd:'Std Dev < 2', drawdown:'Max DD > -20%'},
+  },
+  val_qual: {
+    screener_in: {market_cap:'Market Capitalization > 500', pe:'Price to Earning < 18', roe:'Return on equity > 15', de:'Debt to equity < 1', roce:'Return on capital employed > 12'},
+    chartink:    {pe:'Latest Price to Earning < 18', roe:'Latest Return on Equity > 15', roce:'Latest ROCE > 12'},
+    finviz:      {cap:'cap_midover', pe:'fa_pe_u18', roe:'fa_roe_o15', de:'fa_debt_eq_u1'},
+    tradingview: {mc:'Market Cap > 500 Cr', pe:'P/E < 18', roe:'ROE > 15%', de:'D/E < 1', roce:'ROCE > 12%'},
+  },
+  mom_qual: {
+    screener_in: {market_cap:'Market Capitalization > 500', rsi:'RSI > 55', roe:'Return on equity > 15', sma:'Price > SMA 200', sales_growth:'Sales growth 3Years > 10'},
+    chartink:    {sma:'Latest Close > Latest SMA(close,200)', rsi:'Latest RSI(14) > 55', roe:'Latest Return on Equity > 15'},
+    finviz:      {cap:'cap_midover', rsi:'ta_rsi_ob55', sma:'ta_sma200_pa', roe:'fa_roe_o15'},
+    tradingview: {mc:'Market Cap > 500 Cr', rsi:'RSI > 55', sma:'Price > SMA200', roe:'ROE > 15%'},
+  },
+  div_growth: {
+    screener_in: {market_cap:'Market Capitalization > 500', div_yield:'Dividend Yield > 2', div_growth:'Dividend Growth 5Y > 10', payout:'Payout ratio < 60', de:'Debt to equity < 1'},
+    chartink:    {div_yield:'Latest Dividend Yield > 2', div_growth:'Latest Dividend Growth 5Y > 10'},
+    finviz:      {cap:'cap_midover', div:'fa_div_o2', payout:'fa_payoutratio_u60', de:'fa_debt_eq_u1'},
+    tradingview: {mc:'Market Cap > 500 Cr', div:'Div Yield > 2%', dg:'Div Growth 5Y > 10%', payout:'Payout < 60%', de:'D/E < 1'},
+  },
+  alpha: {
+    screener_in: {market_cap:'Market Capitalization > 100', roe:'Return on equity > 20', pe:'Price to Earning < 25', profit_growth:'Profit growth 5Years > 20', fcf:'Free Cash Flow > 0'},
+    chartink:    {roe:'Latest Return on Equity > 20', pe:'Latest Price to Earning < 25', fcf:'Latest Free Cash Flow > 0'},
+    finviz:      {cap:'cap_smallover', roe:'fa_roe_o20', pe:'fa_pe_u25', eps_growth:'fa_epsyoy_o20'},
+    tradingview: {mc:'Market Cap > 100 Cr', roe:'ROE > 20%', pe:'P/E < 25', pg:'Profit Growth 5Y > 20%', fcf:'FCF > 0'},
+  },
+};
+
+// ── RENDER ──
+function renderChips(containerId, items, selected, onClick) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = items.map(i =>
+    `<button class="chip${selected === i.id ? ' selected' : ''}" data-id="${i.id}">${i.icon||''} ${i.label}</button>`
+  ).join('');
+  el.querySelectorAll('.chip').forEach(btn => {
+    btn.addEventListener('click', () => onClick(btn.dataset.id));
+  });
+}
+
+function show(id) { document.getElementById(id).classList.remove('hidden-section'); }
+function hide(id) { document.getElementById(id).classList.add('hidden-section'); }
+
+function renderAll() {
+  renderChips('factorGrid', FACTORS, state.factor, selectFactor);
+
+  if (state.factor) {
+    show('exchangeSection');
+    renderChips('exchangeGrid', EXCHANGES, state.exchange, selectExchange);
+  } else { hide('exchangeSection'); hide('indexSection'); hide('platformSection'); hide('valuesSection'); hide('outputSection'); }
+
+  if (state.exchange) {
+    show('indexSection');
+    renderChips('indexGrid', INDICES[state.exchange]||[], state.index, selectIndex);
+    show('platformSection');
+    renderChips('platformGrid', PLATFORMS[state.exchange]||[], state.platform, selectPlatform);
+  } else { hide('indexSection'); hide('platformSection'); hide('valuesSection'); hide('outputSection'); }
+
+  if (state.platform) {
+    show('valuesSection');
+    show('outputSection');
+    renderValues();
+    renderOutput();
+  } else { hide('valuesSection'); hide('outputSection'); }
+
+  if (!state.factor) { state.exchange=null; state.index=null; state.platform=null; state.values={}; }
+  if (!state.exchange) { state.index=null; state.platform=null; state.values={}; }
+  if (!state.platform) { state.values={}; }
+}
+
+function selectFactor(id) { state.factor=id; state.exchange=null; state.index=null; state.platform=null; state.values={}; renderAll(); }
+function selectExchange(id) { state.exchange=id; state.index=null; state.platform=null; state.values={}; renderAll(); }
+function selectIndex(id) { state.index=id; renderAll(); }
+function selectPlatform(id) {
+  state.platform=id;
+  // Populate defaults
+  const pDefs = (DEFAULTS[state.factor]||{})[state.platform] || {};
+  state.values = {};
+  for (const [k,v] of Object.entries(pDefs)) { state.values[k]=v; }
+  renderAll();
+}
+
+function renderValues() {
+  const grid = document.getElementById('valuesGrid');
+  if (!grid) return;
+  const pDefs = (DEFAULTS[state.factor]||{})[state.platform] || {};
+  grid.innerHTML = Object.entries(pDefs).map(([key,val]) => {
+    const label = key.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase());
+    return `<div>
+      <label class="label">${label}</label>
+      <input class="input" data-key="${key}" value="${escapeHtml(state.values[key]||'')}" oninput="updateValue(this.dataset.key,this.value)"/>
+    </div>`;
+  }).join('');
+}
+
+function updateValue(key, val) { state.values[key]=val; renderOutput(); }
+
+// ── QUERY GENERATORS ──
+function generateQuery() {
+  const vals = Object.values(state.values).filter(v=>v);
+  if (!vals.length) return 'Select a factor and platform to generate query.';
+
+  switch(state.platform) {
+    case 'screener_in':
+      return vals.join('\nAND ');
+    case 'chartink':
+      return vals.map(v => `( {cash} ( ${v} ) )`).join('\n');
+    case 'finviz': {
+      const codes = vals.join(',');
+      return `https://finviz.com/screener.ashx?v=111&f=${codes}`;
+    }
+    case 'tradingview': {
+      const market = state.exchange==='india'?'Market: India (NSE/BSE)':'';
+      const m = state.exchange==='japan'?'Market: Japan':(state.exchange==='us'?'Market: US':market);
+      let checklist = m ? m+'\n' : '';
+      const items = Object.entries(state.values).map(([k,v],i) => `${i+1}. ${v}`).join('\n');
+      checklist += `Filters to set:\n${items}`;
+      return checklist;
+    }
+    default: return 'Unknown platform';
+  }
+}
+
+function renderOutput() {
+  const box = document.getElementById('outputBox');
+  const actions = document.getElementById('actionBtns');
+  if (!box || !actions) return;
+  const q = generateQuery();
+  box.textContent = q;
+
+  let btns = '';
+  if (state.platform==='screener_in') {
+    btns = `<button class="btn btn-primary" onclick="copyQuery()">📋 Copy Query</button>
+            <a href="https://www.screener.in/screens/new/" target="_blank" class="btn btn-outline">🔗 Open Screener.in</a>`;
+  } else if (state.platform==='chartink') {
+    btns = `<button class="btn btn-primary" onclick="copyQuery()">📋 Copy Query</button>
+            <a href="https://chartink.com/screener" target="_blank" class="btn btn-outline">🔗 Open Chartink</a>`;
+  } else if (state.platform==='finviz') {
+    btns = `<button class="btn btn-success" onclick="openFinviz()">🚀 Open in Finviz</button>`;
+  } else if (state.platform==='tradingview') {
+    btns = `<button class="btn btn-primary" onclick="copyQuery()">📋 Copy Filter List</button>
+            <a href="https://www.tradingview.com/screener/" target="_blank" class="btn btn-outline">🔗 Open TradingView</a>`;
+  }
+  actions.innerHTML = btns;
+}
+
+function copyQuery() {
+  const q = generateQuery();
+  navigator.clipboard.writeText(q).then(()=>{
+    const btn = document.querySelector('#actionBtns .btn-primary');
+    if (btn) { const orig=btn.textContent; btn.textContent='✅ Copied!'; setTimeout(()=>btn.textContent=orig,1800); }
+  }).catch(()=>alert('Copy failed. Please copy manually.'));
+}
+
+function openFinviz() {
+  const q = generateQuery();
+  if (q.startsWith('http')) window.open(q,'_blank');
+}
+
+function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── INIT ──
+renderAll();
+</script>
+</body>
+</html>
