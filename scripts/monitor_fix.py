@@ -121,6 +121,34 @@ def _extract_video_id(url: str) -> str | None:
 
 
 # ────────────────────────────────────────────────────────────────────────────
+#  Direct HTML scrape — bypasses YouTube Data API for 24/7 news channels
+# ────────────────────────────────────────────────────────────────────────────
+def _scrape_live_video_id(channel_id: str) -> str | None:
+    """Fetch the current live video ID by scraping the channel's /live page."""
+    import urllib.request as urlreq
+    url = f"https://www.youtube.com/channel/{channel_id}/live"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9",
+    }
+    try:
+        req = urlreq.Request(url, headers=headers)
+        resp = urlreq.urlopen(req, timeout=12)
+        html = resp.read().decode("utf-8", errors="replace")
+        # YouTube embeds the current video ID in the initial player response JSON
+        m = re.search(r'"videoId":"([a-zA-Z0-9_-]{11})"', html)
+        if m:
+            return m.group(1)
+        # Fallback: try canonical URL in og:video meta tag
+        m2 = re.search(r'<meta\s+property="og:video:url"\s+content="https://www\.youtube\.com/v/([a-zA-Z0-9_-]{11})"', html)
+        if m2:
+            return m2.group(1)
+    except Exception as e:
+        log.warning("Scrape failed for channel %s: %s", channel_id, e)
+    return None
+
+
+# ────────────────────────────────────────────────────────────────────────────
 #  3-Step Hybrid Fallback — channels 1-20 only
 # ────────────────────────────────────────────────────────────────────────────
 def check_and_fix_csv(youtube) -> bool:
@@ -175,7 +203,19 @@ def check_and_fix_csv(youtube) -> bool:
         log.info("  🔍 Ch %d — %s", ch_num, ch_name)
 
         try:
-            # ── Step 1: Search for current live stream on the channel ──
+            # ── Step 0: HTML scrape for channels 1-29 (24/7 news channels) ──
+            if ch_num <= 29 and channel_id:
+                scraped_id = _scrape_live_video_id(channel_id)
+                if scraped_id:
+                    new_url = f"https://www.youtube.com/watch?v={scraped_id}"
+                    df.at[idx, url1_col] = new_url
+                    df.at[idx, status_col] = "Active"
+                    log.info("    [OK] Step 0 (HTML scrape) — live: %s -> %s", ch_name, scraped_id)
+                    modified = True
+                    time.sleep(0.5)
+                    continue
+
+            # ── Step 1: API search for current live stream on the channel ──
             if channel_id:
                 try:
                     search_resp = youtube.search().list(
