@@ -55,6 +55,11 @@ jobs:
           # Stage all modified files the script may have changed
           git add streams.json 2>/dev/null || true
           git add public/data/radio_stations.json 2>/dev/null || true
+          git add youtube_live_audit.csv 2>/dev/null || true
 
-          git commit -am "Auto-fix broken IDs and links" || echo "No changes to commit"
-          git push
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Auto-fix broken IDs and links [skip ci]"
+            git push
+          fi
