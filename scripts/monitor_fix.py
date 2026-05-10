@@ -172,8 +172,8 @@ def check_and_fix_csv(youtube) -> bool:
         # 3. Force the ID column to numeric
         df[id_col] = pd.to_numeric(df[id_col], errors="coerce")
 
-        # 4. Filter for channels 1 through 20
-        target_mask = (df[id_col] >= 1) & (df[id_col] <= 20)
+        # 4. Filter for channels 1 through 29
+        target_mask = (df[id_col] >= 1) & (df[id_col] <= 29)
 
         # Map other columns with stripped names
         channel_id_col = "Channel ID" if "Channel ID" in df.columns else df.columns[2]
