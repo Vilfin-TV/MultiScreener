@@ -65,6 +65,14 @@
   .fade{opacity:.4;pointer-events:none}
   .hidden-section{display:none}
   .field-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+  .toggle-wrap{display:inline-flex;background:var(--card2);border:1px solid var(--border);border-radius:24px;overflow:hidden}
+  .toggle-btn{padding:8px 20px;border:none;background:transparent;color:var(--text3);font-size:12.5px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap}
+  .toggle-btn.active{background:var(--burn);color:#fff}
+  .toggle-btn:hover:not(.active){color:var(--text)}
+  .guardrail-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.4px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);color:#10b981;white-space:nowrap}
+  .guardrail-badge::before{content:'🛡️'}
+  .logic-box{background:rgba(37,99,235,.04);border:1px solid rgba(37,99,235,.15);border-radius:10px;padding:12px 16px;font-size:11px;color:var(--text2);line-height:1.7;margin-top:10px;display:none;white-space:pre-wrap;font-family:'JetBrains Mono',monospace}
+  .logic-box.show{display:block}
 </style>
 </head>
 <body class="min-h-screen">
@@ -83,6 +91,13 @@
   <div class="text-center mb-8">
     <h1 class="font-['Bebas_Neue'] text-[clamp(24px,5vw,40px)] tracking-[3px] text-white mb-2">Stock Screener Query Generator</h1>
     <p class="text-sm text-[var(--text2)]">Build platform-specific queries across exchanges with smart defaults</p>
+  </div>
+
+  <div class="text-center mb-4">
+    <div class="toggle-wrap" id="modeToggle">
+      <button class="toggle-btn active" data-mode="normal">Normal</button>
+      <button class="toggle-btn" data-mode="advanced">Advanced (Institutional Grade)</button>
+    </div>
   </div>
 
   <!-- Step 1: Factor -->
@@ -118,16 +133,103 @@
   <!-- Output -->
   <div class="card mb-5 hidden-section" id="outputSection">
     <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-      <div class="flex items-center gap-3"><div class="step-num" style="background:linear-gradient(135deg,#16a34a,#22c55e)">✓</div><div class="step-title">Generated Query</div></div>
+      <div class="flex items-center gap-3 flex-wrap">
+        <div class="step-num" style="background:linear-gradient(135deg,#16a34a,#22c55e)">✓</div>
+        <div class="step-title">Generated Query</div>
+        <span class="guardrail-badge hidden-section" id="guardrailBadge">Guardrails Active: Low Debt & Overbought Protection</span>
+      </div>
       <div class="flex gap-2 flex-wrap" id="actionBtns"></div>
     </div>
     <div class="output-box" id="outputBox"></div>
+    <div class="flex items-center gap-2 mt-3">
+      <button class="btn btn-outline text-xs hidden-section" id="copyLogicBtn" onclick="copyLogic()">📝 Copy Logic</button>
+    </div>
+    <div class="logic-box hidden-section" id="logicBox"></div>
   </div>
 </div>
 
 <script>
 // ── STATE ──
-const state = { factor:null, exchange:null, index:null, platform:null, values:{} };
+const state = { factor:null, exchange:null, index:null, platform:null, values:{}, mode:'normal' };
+
+// ── MODE TOGGLE ──
+document.getElementById('modeToggle').addEventListener('click', e => {
+  const btn = e.target.closest('.toggle-btn');
+  if (!btn) return;
+  document.querySelectorAll('#modeToggle .toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.mode = btn.dataset.mode;
+  selectPlatform(state.platform); // repopulate defaults and re-render
+});
+
+// ── ADVANCED GUARDRAIL APPENDERS ──
+function getSafetyGuardrails() {
+  if (state.mode !== 'advanced') return [];
+  const p = state.platform;
+  if (!p) return [];
+  const rules = [];
+  // Quality & Safety (all platforms in advanced)
+  if (p === 'screener_in') {
+    rules.push('Debt to equity < 1','Promoter holding > 40%','Average return on equity 3years > 15%','Net cash flow > 0');
+  } else if (p === 'chartink') {
+    rules.push('Latest Debt to Equity < 1','Latest Promoter Holding > 40','Latest ROE 3Y > 15','Latest Net Cash Flow > 0');
+  } else if (p === 'finviz') {
+    rules.push('fa_debt_eq_u1','fa_roe_o15','fa_fcf_positive');
+  } else if (p === 'tradingview') {
+    rules.push('Total Debt/Equity < 100%','Quick Ratio > 1','ROE > 15%','Free Cash Flow > 0');
+  }
+  return rules;
+}
+
+function getAntiMomentumTrap() {
+  if (state.mode !== 'advanced') return [];
+  // Only for Momentum or Momentum+Quality factors
+  if (!['momentum','mom_qual'].includes(state.factor)) return [];
+  const p = state.platform;
+  if (p === 'chartink') {
+    return ['Latest RSI(14) < 75','Latest Close < ( Latest SMA(20, close) * 1.2 )'];
+  } else if (p === 'finviz') {
+    return ['ta_rsi_ob70'];
+  } else if (p === 'screener_in') {
+    return ['RSI < 70','Price < (SMA 20 * 1.2)'];
+  } else if (p === 'tradingview') {
+    return ['RSI(14) < 70','Price within 20% of SMA(20)'];
+  }
+  return [];
+}
+
+function getLogicExplanation() {
+  const lines = [];
+  lines.push('=== ADVANCED MODE: Guardrail Logic ===');
+  lines.push('');
+
+  const safety = getSafetyGuardrails();
+  if (safety.length) {
+    lines.push('[Safety & Quality Guardrails]');
+    lines.push('These filters remove companies with excessive debt, weak promoter backing,');
+    lines.push('declining returns on equity, or negative cash flow.');
+    lines.push('→ ' + safety.join(' ∧ '));
+    lines.push('');
+  }
+
+  const anti = getAntiMomentumTrap();
+  if (anti.length) {
+    lines.push('[Anti-Momentum Trap]');
+    lines.push('Because you selected a Momentum factor in Advanced mode, extra filters');
+    lines.push('prevent buying overbought stocks that have already peaked.');
+    lines.push('RSI must be below overbought territory AND price must be within 20%');
+    lines.push('of the 20-day moving average to avoid buying the top.');
+    lines.push('→ ' + anti.join(' ∧ '));
+    lines.push('');
+  }
+
+  if (!safety.length && !anti.length) {
+    lines.push('Advanced mode is active but no additional guardrails apply');
+    lines.push('for the selected factor + platform combination.');
+  }
+
+  return lines.join('\n');
+}
 
 // ── DATA ──
 const FACTORS = [
@@ -302,11 +404,14 @@ function generateQuery() {
   const vals = Object.values(state.values).filter(v=>v);
   if (!vals.length) return 'Select a factor and platform to generate query.';
 
+  let main = '';
   switch(state.platform) {
     case 'screener_in':
-      return vals.join('\nAND ');
+      main = vals.join('\nAND ');
+      break;
     case 'chartink':
-      return vals.map(v => `( {cash} ( ${v} ) )`).join('\n');
+      main = vals.map(v => `( {cash} ( ${v} ) )`).join('\n');
+      break;
     case 'finviz': {
       const codes = vals.join(',');
       return `https://finviz.com/screener.ashx?v=111&f=${codes}`;
@@ -317,18 +422,55 @@ function generateQuery() {
       let checklist = m ? m+'\n' : '';
       const items = Object.entries(state.values).map(([k,v],i) => `${i+1}. ${v}`).join('\n');
       checklist += `Filters to set:\n${items}`;
-      return checklist;
+      main = checklist;
+      break;
     }
-    default: return 'Unknown platform';
+    default: main = 'Unknown platform';
   }
+
+  // Append advanced guardrails
+  const safety = getSafetyGuardrails();
+  const anti = getAntiMomentumTrap();
+  const extras = [...safety, ...anti];
+  if (extras.length && state.platform !== 'finviz') {
+    if (state.platform === 'screener_in') {
+      main += '\nAND ' + extras.join('\nAND ');
+    } else if (state.platform === 'chartink') {
+      main += '\n' + extras.map(v => `( {cash} ( ${v} ) )`).join('\n');
+    } else if (state.platform === 'tradingview') {
+      main += '\n[Guardrails]\n' + extras.map((v,i) => `${i+1}. ${v}`).join('\n');
+    }
+  }
+  // For Finviz, prepend guardrail codes
+  if (extras.length && state.platform === 'finviz') {
+    main = main.replace('?v=111', '?v=111') + ',' + extras.join(',');
+  }
+
+  return main;
 }
 
 function renderOutput() {
   const box = document.getElementById('outputBox');
   const actions = document.getElementById('actionBtns');
+  const badge = document.getElementById('guardrailBadge');
+  const logicBtn = document.getElementById('copyLogicBtn');
+  const logicBox = document.getElementById('logicBox');
   if (!box || !actions) return;
   const q = generateQuery();
   box.textContent = q;
+
+  // Toggle guardrail badge and logic button
+  if (badge) {
+    if (state.mode === 'advanced') { badge.classList.remove('hidden-section'); }
+    else { badge.classList.add('hidden-section'); }
+  }
+  if (logicBtn) {
+    if (state.mode === 'advanced') { logicBtn.classList.remove('hidden-section'); }
+    else { logicBtn.classList.add('hidden-section'); }
+  }
+  if (logicBox) {
+    logicBox.textContent = getLogicExplanation();
+  }
 
   let btns = '';
   if (state.platform==='screener_in') {
@@ -357,6 +499,16 @@ function copyQuery() {
 function openFinviz() {
   const q = generateQuery();
   if (q.startsWith('http')) window.open(q,'_blank');
+}
+
+function copyLogic() {
+  const logic = getLogicExplanation();
+  navigator.clipboard.writeText(logic).then(()=>{
+    const btn = document.getElementById('copyLogicBtn');
+    const logicBox = document.getElementById('logicBox');
+    if (logicBox) logicBox.classList.toggle('show');
+    if (btn) { const orig=btn.textContent; btn.textContent='✅ Copied!'; setTimeout(()=>btn.textContent=orig,1800); }
+  }).catch(()=>alert('Copy failed. Please copy manually.'));
 }
 
 function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
