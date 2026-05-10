@@ -2840,7 +2840,7 @@ footer{
         <button class="rb-tab"        id="rbtab-video"   onclick="rbSwitchPanel('video')">▶️ YT Live</button>
         <button class="rb-tab"        id="rbtab-iptv"    onclick="rbSwitchPanel('iptv')">📡 Live TV</button>
         <button class="rb-tab"        id="rbtab-radio"   onclick="rbSwitchPanel('radio')">📻 Radio</button>
-        <button class="rb-tab"        id="rbtab-music"   onclick="rbSwitchPanel('music')">🎵 Music</button>
+        <button class="rb-tab"        id="rbtab-music"   onclick="rbSwitchPanel('music')">🎵 YouTube Music</button>
         <button class="rb-tab"        id="rbtab-movies"  onclick="rbSwitchPanel('movies')">🎬 Movies</button>
         <button class="rb-tab"        id="rbtab-podcast" onclick="rbSwitchPanel('podcast')">🎙 Podcast</button>
         <button class="rb-tab"        id="rbtab-settings" onclick="rbSwitchPanel('settings')" title="Widget Settings">⚙️</button>
@@ -3394,7 +3394,7 @@ footer{
         <option value="video">▶️ YouTube Live</option>
         <option value="iptv">📡 Live TV</option>
         <option value="radio">📻 Radio</option>
-        <option value="music">🎵 Music</option>
+        <option value="music">🎵 YouTube Music</option>
         <option value="movies">🎬 Movies</option>
         <option value="podcast">🎙 Podcast</option>
       </select>
@@ -6313,7 +6313,7 @@ const _RB_PANELS = {
   video:    { panelId:'rb-panel-video',    tabId:'rbtab-video',    title:'▶️ YOUTUBE LIVE' },
   iptv:     { panelId:'rb-panel-iptv',     tabId:'rbtab-iptv',     title:'📡 LIVE TV',  init:'_iptvInitDone',  initFn:'iptvInit' },
   radio:    { panelId:'rb-panel-radio',    tabId:'rbtab-radio',    title:'📻 GLOBAL RADIO', init:'_radioInitDone', initFn:'radioInit' },
-  music:    { panelId:'rb-panel-music',    tabId:'rbtab-music',    title:'🎵 MUSIC',   init:'_musicInitDone',  initFn:'musicLoadDefault' },
+  music:    { panelId:'rb-panel-music',    tabId:'rbtab-music',    title:'🎵 YOUTUBE MUSIC',   init:'_musicInitDone',  initFn:'musicLoadDefault' },
   movies:   { panelId:'rb-panel-movies',   tabId:'rbtab-movies',   title:'🎬 MOVIES',  init:'_moviesInitDone', initFn:'moviesLoadDefault' },
   podcast:  { panelId:'rb-panel-podcast',  tabId:'rbtab-podcast',  title:'🎙 PODCAST', init:'_podcastInitDone',initFn:'podcastLoadCurated' },
   settings: { panelId:'rb-panel-settings', tabId:'rbtab-settings', title:'⚙️ WIDGET SETTINGS' },
@@ -6358,7 +6358,7 @@ function rbSwitchPanel(panel) {
 // ═══════════════════════════════════════════════════════════════════════
 const _WIDGET_TAB_LABELS = {
   ai:'🤖 AI Chat', video:'▶️ YouTube Live', iptv:'📡 Live TV',
-  radio:'📻 Radio', music:'🎵 Music', movies:'🎬 Movies', podcast:'🎙 Podcast',
+  radio:'📻 Radio', music:'🎵 YouTube Music', movies:'🎬 Movies', podcast:'🎙 Podcast',
 };
 function widgetGetSettings() {
   let s = {};
@@ -14463,7 +14463,7 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
     📡 Live TV
   </button>
   <button class="mobile-rb-btn" id="mobile-music-btn" onclick="openMobileRightBar('music')">
-    🎵 Music
+    🎵 YouTube Music
   </button>
   <button class="mobile-rb-btn" id="mobile-podcast-btn" onclick="openMobileRightBar('podcast')">
     🎙 Podcast
