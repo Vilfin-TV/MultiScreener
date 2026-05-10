@@ -8482,19 +8482,24 @@ function ytSwitchChannel(val) {
 function _ytTryCurrentStage() {
   var ch = YT_CHANNELS[_ytCurrentChNo - 1];
   if (!ch) { ytShowGeoError(); return; }
-  // For channels that have both a channel ID and video IDs, skip live_stream
+  // For channels that have a known working video ID, skip live_stream
   // (most aren't 24/7 live) and play the stored video directly
   if (ch.v1 && ch.cid && _ytFallbackStage === 1) {
     _ytFallbackStage = 2;
   }
+  // For channels with NO video IDs, skip straight to uploads playlist
+  if (!ch.v1 && !ch.v2 && ch.cid && _ytFallbackStage === 1) {
+    _ytFallbackStage = 4;
+  }
   // Skip stages with no data
-  while (_ytFallbackStage <= 3) {
+  while (_ytFallbackStage <= 4) {
     if (_ytFallbackStage === 1 && ch.cid) break;
     if (_ytFallbackStage === 2 && ch.v1)  break;
     if (_ytFallbackStage === 3 && ch.v2)  break;
+    if (_ytFallbackStage === 4 && ch.cid) break; // always works — uploads playlist
     _ytFallbackStage++;
   }
-  if (_ytFallbackStage > 3) { ytShowGeoError(); return; }
+  if (_ytFallbackStage > 4) { ytShowGeoError(); return; }
   var src = '';
   if (_ytFallbackStage === 1)
     src = 'https://www.youtube.com/embed/live_stream?channel=' + ch.cid +
@@ -8502,14 +8507,18 @@ function _ytTryCurrentStage() {
   else if (_ytFallbackStage === 2)
     src = 'https://www.youtube.com/embed/' + ch.v1 +
           '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
-  else
+  else if (_ytFallbackStage === 3)
     src = 'https://www.youtube.com/embed/' + ch.v2 +
           '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
+  else
+    // Stage 4 — uploads playlist (replaces UC with UU, always works)
+    src = 'https://www.youtube.com/embed/videoseries?list=UU' + ch.cid.slice(2) +
+          '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
   _ytSetSrc(src);
 }
 
 // Manual fallback — called by "Try next source" button in the error bar
-function ytAdvanceFallback() { _ytFallbackStage++; _ytTryCurrentStage(); }
+function ytAdvanceFallback() { _ytFallbackStage++; if (_ytFallbackStage > 4) _ytFallbackStage = 1; _ytTryCurrentStage(); }
 
 // ── Channel number quick-jump ────────────────────────────────────────────────
 function ytPlayByNumber() {
