@@ -96,7 +96,15 @@
   <div class="text-center mb-4">
     <div class="toggle-wrap" id="modeToggle">
       <button class="toggle-btn active" data-mode="normal">Normal</button>
-      <button class="toggle-btn" data-mode="advanced">Advanced (Institutional Grade)</button>
+      <button class="toggle-btn" data-mode="advanced">Advanced</button>
+      <button class="toggle-btn" data-mode="institutional">Institutional / DII Grade</button>
+    </div>
+    <div class="card2 hidden-section mt-3 mx-auto" style="max-width:600px;padding:14px 18px;text-align:left;border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.06)" id="institutionalWarning">
+      <div style="font-size:12px;color:#fbbf24;line-height:1.6">
+        <strong>⚠ Institutional Query Active</strong><br/>
+        Institutional queries strictly filter out micro-caps, companies with negative cash flow,
+        and stocks with low institutional sponsorship. Result sets will be highly concentrated.
+      </div>
     </div>
   </div>
 
@@ -164,19 +172,60 @@ document.getElementById('modeToggle').addEventListener('click', e => {
 
 // ── ADVANCED GUARDRAIL APPENDERS ──
 function getSafetyGuardrails() {
-  if (state.mode !== 'advanced') return [];
+  if (state.mode === 'normal') return [];
   const p = state.platform;
   if (!p) return [];
   const rules = [];
-  // Quality & Safety (all platforms in advanced)
+  // Quality & Safety (Advanced + Institutional)
   if (p === 'screener_in') {
-    rules.push('Debt to equity < 1','Promoter holding > 40%','Average return on equity 3years > 15%','Net cash flow > 0');
+    rules.push('Debt to equity < 1','Promoter holding > 40%','Average return on equity 3years > 15%');
+    if (state.mode === 'institutional') rules.push('Net cash flow > 0','Market Capitalization > 5000','Cash from operations last year > Net Profit last year','FII holding + DII holding > 15%');
+    else rules.push('Net cash flow > 0');
   } else if (p === 'chartink') {
-    rules.push('Latest Debt to Equity < 1','Latest Promoter Holding > 40','Latest ROE 3Y > 15','Latest Net Cash Flow > 0');
+    rules.push('Latest Debt to Equity < 1','Latest Promoter Holding > 40','Latest ROE 3Y > 15');
+    if (state.mode === 'institutional') rules.push('Latest Net Cash Flow > 0','Latest Market Capitalization > 5000','Latest FII+DII Holding > 15');
+    else rules.push('Latest Net Cash Flow > 0');
   } else if (p === 'finviz') {
-    rules.push('fa_debt_eq_u1','fa_roe_o15','fa_fcf_positive');
+    rules.push('fa_debt_eq_u1','fa_roe_o15');
+    if (state.mode === 'institutional') rules.push('fa_fcf_pos','cap_largeover','inst_instown_o30','sh_avgvol_o1000');
+    else rules.push('fa_fcf_positive');
   } else if (p === 'tradingview') {
-    rules.push('Total Debt/Equity < 100%','Quick Ratio > 1','ROE > 15%','Free Cash Flow > 0');
+    rules.push('Total Debt/Equity < 100%','Quick Ratio > 1','ROE > 15%');
+    if (state.mode === 'institutional') rules.push('Free Cash Flow > 0','Market Cap > 5000 Cr','Cash Ops > Net Profit','FII + DII Holding > 15%');
+    else rules.push('Free Cash Flow > 0');
+  }
+  return rules;
+}
+
+function getInstitutionalFactorRules() {
+  if (state.mode !== 'institutional') return [];
+  const f = state.factor;
+  const p = state.platform;
+  const rules = [];
+
+  if (f === 'quality') {
+    if (p === 'screener_in') { rules.push('Piotroski score > 7','Return on capital employed > 15%'); }
+    else if (p === 'finviz') { rules.push('fa_roi_o15','fa_opermargin_o15'); }
+    else if (p === 'chartink') { rules.push('Latest Piotroski Score > 7','Latest ROCE > 15'); }
+    else { rules.push('Piotroski > 7','ROCE > 15%'); }
+  }
+  if (f === 'value' || f === 'deep_value') {
+    if (p === 'screener_in') { rules.push('EV / EBITDA < 10','Altman Z Score > 3'); }
+    else if (p === 'finviz') { rules.push('fa_fpe_u15','fa_pfcf_u15'); }
+    else if (p === 'chartink') { rules.push('Latest EV/EBITDA < 10','Latest Altman Z Score > 3'); }
+    else { rules.push('EV/EBITDA < 10','Altman Z > 3'); }
+  }
+  if (f === 'momentum' || f === 'mom_qual') {
+    if (p === 'screener_in') { rules.push('Change in DII holding > 0','Current Price > 0.9 * 52 week high'); }
+    else if (p === 'finviz') { rules.push('ta_change_open','ta_highlow52w_perc_o90'); }
+    else if (p === 'chartink') { rules.push('Latest Close > Latest SMA( close, 50 )','Latest Volume > SMA( volume, 20 ) * 1.5'); }
+    else { rules.push('DII Change > 0','Price > 90% of 52W High'); }
+  }
+  if (f === 'growth') {
+    if (p === 'screener_in') { rules.push('PEG Ratio < 1.5','YOY Quarterly profit growth > 15','YOY Quarterly sales growth > 15'); }
+    else if (p === 'finviz') { rules.push('fa_peg_u1.5','fa_epsyoy1_o15','fa_salesqoq_o15'); }
+    else if (p === 'chartink') { rules.push('Latest PEG Ratio < 1.5','Latest Quarterly Profit Growth YoY > 15','Latest Quarterly Sales Growth YoY > 15'); }
+    else { rules.push('PEG < 1.5','QoQ Profit Growth > 15%','QoQ Sales Growth > 15%'); }
   }
   return rules;
 }
@@ -200,32 +249,47 @@ function getAntiMomentumTrap() {
 
 function getLogicExplanation() {
   const lines = [];
-  lines.push('=== ADVANCED MODE: Guardrail Logic ===');
+  lines.push('=== ' + (state.mode==='institutional'?'INSTITUTIONAL/DII':'ADVANCED') + ' MODE: Guardrail Logic ===');
   lines.push('');
 
   const safety = getSafetyGuardrails();
   if (safety.length) {
     lines.push('[Safety & Quality Guardrails]');
-    lines.push('These filters remove companies with excessive debt, weak promoter backing,');
-    lines.push('declining returns on equity, or negative cash flow.');
+    if (state.mode==='institutional') {
+      lines.push('Institutional filters remove micro-caps, negative cash-flow companies,');
+      lines.push('and stocks below institutional ownership thresholds. Extra filters');
+      lines.push('for FII+DII holdings, market cap minimums, and operating cash quality.');
+    } else {
+      lines.push('These filters remove companies with excessive debt, weak promoter backing,');
+      lines.push('declining returns on equity, or negative cash flow.');
+    }
     lines.push('→ ' + safety.join(' ∧ '));
+    lines.push('');
+  }
+
+  const inst = getInstitutionalFactorRules();
+  if (inst.length) {
+    lines.push('[Factor-Specific Institutional Rules]');
+    const f = state.factor;
+    if (f==='quality') lines.push('Quality: Piotroski score + ROCE minimums for forensic quality screening.');
+    if (f==='value'||f==='deep_value') lines.push('Value: EV/EBITDA + Altman Z-Score for bankruptcy-resistant deep value.');
+    if (f==='momentum'||f==='mom_qual') lines.push('Momentum: DII accumulation detection + 52W proximity for delivery-based momentum.');
+    if (f==='growth') lines.push('Growth: PEG ratio cap + YOY quarterly growth minimums to filter unsustainable growth.');
+    lines.push('→ ' + inst.join(' ∧ '));
     lines.push('');
   }
 
   const anti = getAntiMomentumTrap();
   if (anti.length) {
     lines.push('[Anti-Momentum Trap]');
-    lines.push('Because you selected a Momentum factor in Advanced mode, extra filters');
-    lines.push('prevent buying overbought stocks that have already peaked.');
     lines.push('RSI must be below overbought territory AND price must be within 20%');
-    lines.push('of the 20-day moving average to avoid buying the top.');
+    lines.push('of the 20-day moving average.');
     lines.push('→ ' + anti.join(' ∧ '));
     lines.push('');
   }
 
-  if (!safety.length && !anti.length) {
-    lines.push('Advanced mode is active but no additional guardrails apply');
-    lines.push('for the selected factor + platform combination.');
+  if (!safety.length && !inst.length && !anti.length) {
+    lines.push('No additional guardrails apply for the selected factor + platform.');
   }
 
   return lines.join('\n');
@@ -382,6 +446,11 @@ function selectPlatform(id) {
   state.values = {};
   for (const [k,v] of Object.entries(pDefs)) { state.values[k]=v; }
   renderAll();
+  // Reset badge text when re-selecting platform
+  const badge = document.getElementById('guardrailBadge');
+  if (badge && state.mode !== 'institutional') {
+    badge.innerHTML = '🛡️ Guardrails Active: Low Debt & Overbought Protection';
+  }
 }
 
 function renderValues() {
@@ -428,22 +497,24 @@ function generateQuery() {
     default: main = 'Unknown platform';
   }
 
-  // Append advanced guardrails
+  // Append guardrails (Advanced + Institutional)
   const safety = getSafetyGuardrails();
   const anti = getAntiMomentumTrap();
-  const extras = [...safety, ...anti];
+  const instFactor = getInstitutionalFactorRules();
+  const extras = [...safety, ...instFactor, ...anti];
   if (extras.length && state.platform !== 'finviz') {
     if (state.platform === 'screener_in') {
       main += '\nAND ' + extras.join('\nAND ');
     } else if (state.platform === 'chartink') {
       main += '\n' + extras.map(v => `( {cash} ( ${v} ) )`).join('\n');
     } else if (state.platform === 'tradingview') {
-      main += '\n[Guardrails]\n' + extras.map((v,i) => `${i+1}. ${v}`).join('\n');
+      const label = state.mode==='institutional'?'[Institutional Guardrails]':'[Guardrails]';
+      main += '\n' + label + '\n' + extras.map((v,i) => `${i+1}. ${v}`).join('\n');
     }
   }
-  // For Finviz, prepend guardrail codes
+  // For Finviz, append guardrail codes to URL
   if (extras.length && state.platform === 'finviz') {
-    main = main.replace('?v=111', '?v=111') + ',' + extras.join(',');
+    main = main + ',' + extras.join(',');
   }
 
   return main;
@@ -459,14 +530,23 @@ function renderOutput() {
   const q = generateQuery();
   box.textContent = q;
 
-  // Toggle guardrail badge and logic button
+  // Toggle guardrail badge, logic button, and institutional warning
+  const instWarn = document.getElementById('institutionalWarning');
   if (badge) {
     if (state.mode === 'advanced') { badge.classList.remove('hidden-section'); }
     else { badge.classList.add('hidden-section'); }
   }
+  if (state.mode === 'institutional' && badge) {
+    badge.classList.remove('hidden-section');
+    badge.innerHTML = '🏛️ Institutional Guardrails Active: Large-Cap, High FII/DII, Forensic Filters';
+  }
   if (logicBtn) {
-    if (state.mode === 'advanced') { logicBtn.classList.remove('hidden-section'); }
+    if (state.mode !== 'normal') { logicBtn.classList.remove('hidden-section'); }
     else { logicBtn.classList.add('hidden-section'); }
+  }
+  if (instWarn) {
+    if (state.mode === 'institutional') { instWarn.classList.remove('hidden-section'); }
+    else { instWarn.classList.add('hidden-section'); }
   }
   if (logicBox) {
     logicBox.textContent = getLogicExplanation();
