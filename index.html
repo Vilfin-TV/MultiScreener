@@ -9082,32 +9082,6 @@ async function fetchLiveScores(sport) {
                 })
 });
 
-// ── NIFTY 50 Worker Test (POC — verify Cloudflare Worker fetches NSE data) ─
-async function testNifty50Worker() {
-  const workerUrl = 'https://x9-k2-p30-worker.vilfintv.workers.dev';
-  const endpoint  = encodeURIComponent('/api/allIndices');
-
-  try {
-    console.log('\u23F3 Testing Cloudflare Worker connection to NSE\u2026');
-    const response = await fetch(workerUrl + '?endpoint=' + endpoint);
-    if (!response.ok) throw new Error('Worker HTTP Error: ' + response.status);
-    const data = await response.json();
-    const nifty50 = data.data.find(function(item) {
-      return item.index === 'NIFTY 50' || item.indexSymbol === 'NIFTY 50';
-    });
-    if (nifty50) {
-      console.log('\u2705 NIFTY 50 Worker Test SUCCESS:', nifty50);
-      alert('SUCCESS! NIFTY 50 is currently at: ' + nifty50.last);
-    } else {
-      console.warn('\u26A0\uFE0F Worker connected, but NIFTY 50 data was not found.', data);
-    }
-  } catch (error) {
-    console.error('\u274C Worker Test FAILED:', error);
-    alert('Worker connection failed. Check the browser console (F12) for exact errors.');
-  }
-}
-
-document.addEventListener('DOMContentLoaded', testNifty50Worker);
               seen.add(m.id || m.title);
             });
           }
