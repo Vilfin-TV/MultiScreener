@@ -195,6 +195,11 @@ FEEDS: dict[str, list[dict[str, str]]] = {
         {"url": "https://www.nasa.gov/feed/", "source": "NASA"},
         {"url": "https://www.space.com/feeds/all", "source": "Space.com"},
     ],
+    "sebi": [
+        {"url": "https://www.moneycontrol.com/rss/business.xml", "source": "Moneycontrol"},
+        {"url": "https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms", "source": "ET Markets"},
+        {"url": "https://www.livemint.com/rss/markets", "source": "Mint Markets"},
+    ],
 }
 
 MAX_PER_CAT = 10
