@@ -568,7 +568,7 @@ function queryAI() {
     return;
   }
 
-  if (!window._cfWorkerUrl) {
+  if (!window._cfWorkerUrl && !localStorage.getItem(CF_KEY)) {
     pendingAnalysis = true;
     document.getElementById('cf-modal-overlay').classList.add('show');
     return;
@@ -647,7 +647,7 @@ async function runAnalysis() {
     if (e) e.textContent = _mfPbSec + 's';
   }, 1000);
 
-  const workerBase = (window._cfWorkerUrl || '').replace(/\/+$/, '');
+  const workerBase = (window._cfWorkerUrl || localStorage.getItem(CF_KEY) || '').replace(/\/+$/, '');
   const prompt = buildPrompt();
   const selectedModel = localStorage.getItem(MODEL_KEY) || 'auto';
 
