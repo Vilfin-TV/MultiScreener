@@ -57,8 +57,8 @@ FEEDS: dict[str, list[dict[str, str]]] = {
         {"url": "https://www.thehindu.com/news/national/feeder/default.rss", "source": "The Hindu"},
     ],
     "tax": [
-        {"url": "https://www.livemint.com/rss/money", "source": "Mint Money"},
-        {"url": "https://economictimes.indiatimes.com/rssfeeds/wealth/tax/articlelist/1466318837.cms", "source": "ET Wealth"},
+        {"url": "https://economictimes.indiatimes.com/rssfeeds/wealth/tax/articlelist/1466318837.cms", "source": "ET Wealth Tax"},
+        {"url": "https://news.google.com/rss/search?q=income+tax+India+ITR&hl=en-IN&gl=IN&ceid=IN:en", "source": "Google News Tax"},
     ],
     "mutual_funds": [
         {"url": "https://www.moneycontrol.com/rss/mfnews.xml", "source": "Moneycontrol MF"},
@@ -196,9 +196,8 @@ FEEDS: dict[str, list[dict[str, str]]] = {
         {"url": "https://www.space.com/feeds/all", "source": "Space.com"},
     ],
     "sebi": [
+        {"url": "https://news.google.com/rss/search?q=SEBI+India+market+regulator&hl=en-IN&gl=IN&ceid=IN:en", "source": "Google News SEBI"},
         {"url": "https://www.moneycontrol.com/rss/business.xml", "source": "Moneycontrol"},
-        {"url": "https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms", "source": "ET Markets"},
-        {"url": "https://www.livemint.com/rss/markets", "source": "Mint Markets"},
     ],
 }
 
