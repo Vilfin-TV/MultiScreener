@@ -1156,7 +1156,7 @@ body{display:block!important}
   <div class="q-block" id="q-name-block" style="display:none">
     <div class="q-label"><span class="q-num">Q2</span> <span id="asset-name-label">Asset Name</span> <span class="q-required">*</span></div>
     <div class="text-input-wrap" id="ac-wrap">
-      <input class="text-input" id="asset-name" type="text" placeholder="Type symbol or name…"
+      <input class="text-input" id="asset-name" type="text" data-ac="stock" placeholder="Type symbol or name…"
         autocomplete="off" spellcheck="false"
         oninput="answers.assetName=this.value;updateSummary();if(this.value.length>1)showDownstream(true);acSearch(this.value)"
         onkeydown="acKeyNav(event)"
@@ -5454,5 +5454,6 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
 }
 document.addEventListener('DOMContentLoaded', function() { cfLoadSaved(); });
 </script>
+<script src="../../scripts/ac-symbols.js" defer></script>
 </body>
 </html>
