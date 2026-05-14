@@ -2939,9 +2939,9 @@ footer{
     <!-- ── Custom YouTube URL ── -->
     <div class="yt-custom-bar">
       <input class="yt-custom-input" id="yt-custom-url" type="text"
-        placeholder="Paste YouTube URL or video ID…"
+        placeholder="Search channels or paste YouTube URL…"
         onkeydown="if(event.key==='Enter')ytPlayCustomUrl()"
-        title="Supports watch?v=, youtu.be/, /live/, /shorts/ links"/>
+        title="Type a channel name to search, or paste a YouTube URL / video ID"/>
       <button class="yt-custom-play-btn" onclick="ytPlayCustomUrl()">&#x25BA; Play</button>
     </div>
 
@@ -6492,23 +6492,39 @@ function ytPlayCustomUrl() {
   if (!input) return;
   const url = input.value.trim();
   if (!url) return;
-  const id = ytExtractVideoId(url);
-  if (!id) {
-    input.classList.add('err');
-    input.title = 'Invalid YouTube URL — try a watch?v=, youtu.be/ or /live/ link';
-    setTimeout(() => { input.classList.remove('err'); input.title = ''; }, 2500);
-    return;
+  try {
+    const id = ytExtractVideoId(url);
+    if (!id) {
+      // Not a URL/ID — treat as channel name search
+      const q = url.toLowerCase();
+      const match = YT_CHANNELS.find(ch =>
+        (ch.name    && ch.name.toLowerCase().includes(q)) ||
+        (ch.country && ch.country.toLowerCase().includes(q)) ||
+        (ch.category && ch.category.toLowerCase().includes(q)) ||
+        (ch.lang    && ch.lang.toLowerCase().includes(q))
+      );
+      if (match) {
+        input.value = '';
+        ytSwitchToChannel(match.no);
+        const np = document.getElementById('yt-now-playing');
+        if (np) np.textContent = '▶ Ch ' + match.no + ' · ' + match.name;
+      } else {
+        input.classList.add('err');
+        setTimeout(() => { input.classList.remove('err'); }, 2000);
+      }
+      return;
+    }
+    input.classList.add('ok');
+    setTimeout(() => { input.classList.remove('ok'); }, 1800);
+    try { localStorage.setItem('viltv_custom_url', url); } catch(_) {}
+    const sel = document.getElementById('yt-channel-select');
+    if (sel) sel.selectedIndex = -1;
+    const np = document.getElementById('yt-now-playing');
+    if (np) np.textContent = '▶ Custom URL';
+    ytSwitchChannel(id);
+  } catch(e) {
+    console.error('[ytPlayCustomUrl] error:', e);
   }
-  input.classList.add('ok');
-  setTimeout(() => { input.classList.remove('ok'); }, 1800);
-  // Persist the custom URL in localStorage
-  try { localStorage.setItem('viltv_custom_url', url); } catch(_) {}
-  // Clear channel-select visual selection so it doesn't mislead
-  const sel = document.getElementById('yt-channel-select');
-  if (sel) sel.selectedIndex = -1;
-  const np = document.getElementById('yt-now-playing');
-  if (np) np.textContent = '▶ Custom URL';
-  ytSwitchChannel(id);
 }
 
 // Restore custom URL input on page load
