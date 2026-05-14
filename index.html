@@ -42,6 +42,11 @@
 @font-face{font-family:'Bebas Neue';font-display:swap}
 @font-face{font-family:'DM Sans';font-display:swap}
 @font-face{font-family:'JetBrains Mono';font-display:swap}
+/* Ticker hide toggle */
+.ticker-toggle{position:absolute;right:6px;top:6px;z-index:10;background:rgba(0,0,0,.6);border:1px solid var(--border);color:var(--text3);font-size:10px;padding:2px 8px;border-radius:10px;cursor:pointer;display:none}
+.desktop-ticker-strip:hover .ticker-toggle,.mobile-markets-strip:hover .ticker-toggle{display:block}
+.ticker-toggle:hover{color:#fff;border-color:var(--burn2)}
+.desktop-ticker-strip,.mobile-markets-strip{position:relative}
 :root{
   /* Accent — Blue/Navy brand */
   --burn:#2563eb;--burn2:#3b82f6;--burn3:#93c5fd;
@@ -2528,6 +2533,7 @@ footer{
 
 <!-- DESKTOP TICKER STRIP — TradingView scrolling tape, desktop only -->
 <div class="desktop-ticker-strip" id="desktop-ticker-strip">
+  <button class="ticker-toggle" onclick="var s=document.getElementById('desktop-ticker-strip');s.style.display=s.style.display==='none'?'block':'none'" title="Show/Hide ticker">▲ Hide</button>
   <div class="tradingview-widget-container" style="height:46px">
     <div class="tradingview-widget-container__widget"></div>
     <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
@@ -2577,6 +2583,7 @@ footer{
 
 <!-- MOBILE MARKETS STRIP — TradingView ticker, visible only on mobile -->
 <div class="mobile-markets-strip" id="mobile-markets-strip">
+  <button class="ticker-toggle" onclick="var s=document.getElementById('mobile-markets-strip');s.style.display=s.style.display==='none'?'block':'none'" title="Show/Hide ticker">▲ Hide</button>
   <div class="tradingview-widget-container">
     <div class="tradingview-widget-container__widget"></div>
     <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
@@ -2925,13 +2932,17 @@ footer{
       <label for="yt-default-ch-chk" style="font-size:10px;color:#64748b;cursor:pointer;user-select:none">&#x1F4CC; Set as default channel on startup</label>
     </div>
 
-    <!-- ── Custom YouTube URL ── -->
-    <div class="yt-custom-bar">
+    <!-- ── Hybrid YouTube: search + paste URL + favorites ── -->
+    <div class="yt-custom-bar" style="flex-wrap:wrap;gap:4px">
       <input class="yt-custom-input" id="yt-custom-url" type="text"
-        placeholder="Paste YouTube URL or video ID…"
+        placeholder="🔍 Search YouTube or paste URL…"
         onkeydown="if(event.key==='Enter')ytPlayCustomUrl()"
-        title="Supports watch?v=, youtu.be/, /live/, /shorts/ links"/>
-      <button class="yt-custom-play-btn" onclick="ytPlayCustomUrl()">&#x25BA; Play</button>
+        oninput="ytSearchSuggest(this.value)"
+        title="Type to search YouTube, paste a full URL, or pick a favorite"/>
+      <button class="yt-custom-play-btn" onclick="ytPlayCustomUrl()">▶ Play</button>
+      <button class="ytc-btn" onclick="ytToggleFav()" id="yt-fav-btn" title="Add to favorites" style="font-size:14px">☆</button>
+      <button class="ytc-btn" onclick="ytShowFavorites()" title="Show favorites" style="font-size:12px">📂</button>
+      <div id="yt-search-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#0d1d35;border:1px solid var(--border);border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:9999;scrollbar-width:thin"></div>
     </div>
 
     <!-- YouTube player — exact 16:9, zero black bars -->
@@ -2966,21 +2977,6 @@ footer{
           </a>
         </div>
       </div>
-    </div>
-
-    <!-- Channel info strip (new) -->
-    <div id="yt-ch-info" style="padding:4px 10px;background:#080e1a;border-top:1px solid #0d1a30;font-size:9.5px;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;letter-spacing:.2px;min-height:22px"></div>
-
-    <!-- ── Video Controls Bar ── -->
-    <div id="yt-controls">
-      <button class="ytc-btn" id="yt-mute-btn" onclick="ytToggleMute()" title="Mute / Unmute">&#x1F507;</button>
-      <input class="ytc-vol" id="yt-vol-slider" type="range" min="0" max="100" value="0"
-        oninput="ytSetVolume(this.value)" title="Volume" style="--vol:0%">
-      <button class="ytc-btn" onclick="ytPrevChannel()" title="Previous channel">&#x23EE;</button>
-      <button class="ytc-btn" onclick="ytNextChannel()" title="Next channel">&#x23ED;</button>
-      <button class="ytc-btn" id="yt-pip-btn" onclick="ytTogglePIP()" title="Picture in Picture">&#x29C9;</button>
-      <button class="ytc-btn" id="yt-audio-btn" onclick="ytSelectAudio()" title="Audio output">&#x1F508;</button>
-      <span id="yt-now-playing" style="font-size:9px;color:#475569;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:2px"></span>
     </div>
 
     <!-- ── Live / Past Scores — fills all remaining space ── -->
@@ -6511,6 +6507,105 @@ function ytPlayCustomUrl() {
   } catch(_) {}
 })();
 
+// ── YouTube Search Suggestions + Favorites ───────────────────────────
+var _ytFavorites = JSON.parse(localStorage.getItem('yt_favorites') || '[]');
+var _ytSearchTimer = null;
+
+function ytSearchSuggest(q) {
+  clearTimeout(_ytSearchTimer);
+  var dd = document.getElementById('yt-search-dropdown');
+  if (!dd) return;
+  q = (q || '').trim();
+  if (q.length < 2 || q.startsWith('http')) { dd.style.display = 'none'; return; }
+  _ytSearchTimer = setTimeout(function() {
+    fetch('https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=' + encodeURIComponent(q))
+      .then(r => r.json()).then(d => {
+        var items = d[1] || [];
+        if (!items.length || q !== (document.getElementById('yt-custom-url')?.value||'').trim()) { dd.style.display='none'; return; }
+        dd.innerHTML = items.slice(0,6).map(function(t,i) {
+          return '<div class="ac-item" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04)" onmousedown="event.preventDefault()" onclick="ytSearchPlay(\''+escJs(t)+'\')">🔍 '+escHtml(t)+'</div>';
+        }).join('');
+        dd.style.display = 'block';
+      }).catch(function(){});
+  }, 200);
+}
+
+function ytSearchPlay(query) {
+  var inp = document.getElementById('yt-custom-url');
+  var dd = document.getElementById('yt-search-dropdown');
+  if (inp) inp.value = query;
+  if (dd) dd.style.display = 'none';
+  // Trigger play with search query
+  inp.classList.add('ok'); setTimeout(function(){inp.classList.remove('ok')},1800);
+  var src = 'https://www.youtube.com/embed?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
+  _ytSetSrc(src);
+  var np = document.getElementById('yt-now-playing');
+  if (np) np.textContent = '\uD83D\uDD0D ' + query;
+}
+
+// Override: if input has a search term (not URL), do YouTube search playback
+(function() {
+  var _orig = ytPlayCustomUrl;
+  ytPlayCustomUrl = function() {
+    var inp = document.getElementById('yt-custom-url');
+    if (!inp) return;
+    var v = inp.value.trim();
+    if (!v) return;
+    var id = ytExtractVideoId(v);
+    if (id) {
+      inp.classList.add('ok'); setTimeout(function(){inp.classList.remove('ok')},1800);
+      try { localStorage.setItem('viltv_custom_url', v); } catch(_){}
+      ytSwitchChannel(id);
+    } else if (v.startsWith('http')) {
+      inp.classList.add('err'); setTimeout(function(){inp.classList.remove('err');inp.title=''},2500);
+    } else {
+      ytSearchPlay(v);
+    }
+  };
+})();
+
+function ytToggleFav() {
+  var ch = YT_CHANNELS[_ytCurrentChNo - 1];
+  if (!ch) return;
+  var key = ch.cid || ch.v1 || ch.no;
+  var idx = _ytFavorites.indexOf(key);
+  if (idx > -1) _ytFavorites.splice(idx, 1);
+  else _ytFavorites.push(key);
+  localStorage.setItem('yt_favorites', JSON.stringify(_ytFavorites));
+  ytSyncFavBtn();
+}
+
+function ytSyncFavBtn() {
+  var ch = YT_CHANNELS[_ytCurrentChNo - 1];
+  var key = ch ? (ch.cid || ch.v1 || ch.no) : '';
+  var isFav = _ytFavorites.indexOf(key) > -1;
+  var btn1 = document.getElementById('yt-fav-btn');
+  var btn2 = document.getElementById('yt-fav-ctrl-btn');
+  if (btn1) btn1.textContent = isFav ? '★' : '☆';
+  if (btn2) btn2.textContent = isFav ? '★' : '☆';
+}
+
+function ytShowFavorites() {
+  var dd = document.getElementById('yt-search-dropdown');
+  if (!dd) return;
+  if (!_ytFavorites.length) {
+    dd.innerHTML = '<div style="padding:10px;color:var(--text3);font-size:11px">No favorites yet. Click ☆ to add.</div>';
+    dd.style.display = 'block';
+    return;
+  }
+  dd.innerHTML = _ytFavorites.map(function(key) {
+    var ch = YT_CHANNELS.find(function(c) { return c.cid === key || c.v1 === key || c.no === key; });
+    var name = ch ? ('['+ch.no+'] '+ch.name) : key;
+    return '<div class="ac-item" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04)" onclick="ytSwitchToChannel('+(ch?ch.no:1)+');document.getElementById(\'yt-search-dropdown\').style.display=\'none\'">⭐ '+escHtml(name)+'</div>';
+  }).join('');
+  dd.style.display = 'block';
+}
+
+function escJs(s) { return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,'\\\''); }
+
+// Sync fav on channel switch
+ytSwitchToChannel = (function(orig) { return function(no) { orig(no); ytSyncFavBtn(); }; })(ytSwitchToChannel);
+
 // ═══════════════════════════════════════════════════════════════════════
 // GLOBAL RADIO ENGINE
 // ═══════════════════════════════════════════════════════════════════════
@@ -8435,15 +8530,8 @@ function _ytGetFrame() {
 }
 function _ytSetSrc(src) { var f = _ytGetFrame(); if (f) { f.src = src; _ytSyncState(); } }
 
-// ── Channel info strip ───────────────────────────────────────────────────────
-function ytUpdateInfo(ch) {
-  if (!ch) return;
-  var el = document.getElementById('yt-ch-info');
-  if (!el) return;
-  var parts = ['Ch ' + ch.no, ch.name, ch.country, ch.category];
-  if (ch.lang) parts.push(ch.lang);
-  el.textContent = parts.join(' · ');
-}
+// ── Channel info (now shown in now-playing only) ──
+function ytUpdateInfo(ch) { /* ch-info removed — info shown in yt-now-playing */ }
 
 // ── Switch to channel by number (1-141) ─────────────────────────────────────
 function ytSwitchToChannel(no) {
