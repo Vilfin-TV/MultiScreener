@@ -3,12 +3,19 @@
  * ─────────────────
  * Runs daily via GitHub Actions (.github/workflows/update-tv.yml).
  *
- * Strategy (two-step, quota-efficient):
- *  1. videos.list  — check if the existing videoId is still live RIGHT NOW.
- *                    Cost: 1 unit per call. Handles 24/7 persistent streams
- *                    (Al Jazeera, BBC, Sky News, etc.) without a search.
- *  2. search.list  — only called when step 1 says the video is offline.
- *                    Cost: 100 units per call. Finds the replacement live ID.
+ * Hybrid strategy — channels are split into two groups:
+ *
+ *  A) Channels WITH channelId (news, sports, regional):
+ *     The frontend uses  youtube.com/embed/live_stream?channel=CHANNEL_ID
+ *     which auto-resolves to the current live broadcast — no video ID needed.
+ *     These channels are SKIPPED here to save API quota.
+ *
+ *  B) Channels WITHOUT channelId (music/playlist streams, South-Asian channels):
+ *     These rely on a specific videoId. We check it is still live and search
+ *     for a replacement if it has gone offline.
+ *
+ *     Step 1: videos.list  — 1 quota unit. Verify existing videoId is live.
+ *     Step 2: search.list  — 100 quota units. Find replacement live video.
  *
  * Requires:  YOUTUBE_API_KEY environment variable (set as a GitHub Secret).
  * Usage:     node update-streams.js
@@ -103,7 +110,14 @@ async function main() {
   let updatedCount = 0;
 
   for (const ch of data.channels) {
-    if (!ch.channelId) continue; // no channel ID → nothing to check
+    // Group A: has channelId → frontend uses live_stream?channel= embed, no video ID needed
+    if (ch.channelId) {
+      console.log(`⏭  ${ch.label} — channelId present, live_stream embed active (skipped)`);
+      continue;
+    }
+
+    // Group B: no channelId → relies on specific videoId (music/playlist/South-Asian channels)
+    if (!ch.videoId) continue; // nothing to verify
 
     process.stdout.write(`🔍  ${ch.label} … `);
 
