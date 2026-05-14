@@ -3495,7 +3495,7 @@ footer{
           "symbolActiveColor": "rgba(41, 98, 255, 0.12)",
           "tabs": [
             { "title": "Indices", "symbols": [
-                {"s":"BSE:SENSEX","d":"SENSEX"},{"s":"BSE:NIFTY","d":"NIFTY 50"},
+                {"s":"BSE:SENSEX","d":"SENSEX"},{"s":"TVC:NIFTY","d":"NIFTY 50"},
                 {"s":"BSE:BANK","d":"Bank Nifty"},
                 {"s":"CAPITALCOM:US100","d":"Nasdaq 100"},{"s":"OANDA:SPX500USD","d":"S&P 500"},
                 {"s":"OANDA:US30USD","d":"Dow Jones"},{"s":"INDEX:NKY","d":"Nikkei 225"},
@@ -3518,7 +3518,7 @@ footer{
                 {"s":"TVC:GOLD","d":"Gold"},{"s":"TVC:SILVER","d":"Silver"},
                 {"s":"NYMEX:CL1!","d":"Crude Oil WTI"},{"s":"TVC:UKOIL","d":"Brent Oil"},
                 {"s":"CAPITALCOM:COPPER","d":"Copper"},{"s":"CAPITALCOM:NATURALGAS","d":"Natural Gas"},
-                {"s":"CAPITALCOM:ALUMINIUM","d":"Aluminium"}
+                {"s":"TVC:ALUMINIUM","d":"Aluminium"}
               ], "originalTitle": "Commodities"
             },
             { "title": "Bonds", "symbols": [
@@ -3551,7 +3551,7 @@ footer{
             { "name": "Indian Markets",
               "symbols": [
                 {"name":"BSE:SENSEX","displayName":"SENSEX"},
-                {"name":"BSE:NIFTY","displayName":"NIFTY 50"},
+                {"name":"TVC:NIFTY","displayName":"NIFTY 50"},
                 {"name":"BSE:BANK","displayName":"Bank Nifty"},
                 {"name":"BSE:RELIANCE","displayName":"Reliance"},
                 {"name":"BSE:TCS","displayName":"TCS"},
@@ -3745,7 +3745,7 @@ footer{
             { "name": "Base Metals & Agri",
               "symbols": [
                 {"name":"CAPITALCOM:COPPER","displayName":"Copper"},
-                {"name":"CAPITALCOM:ALUMINIUM","displayName":"Aluminium"},
+                {"name":"TVC:ALUMINIUM","displayName":"Aluminium"},
                 {"name":"CBOT:ZC1!","displayName":"Corn"},
                 {"name":"CBOT:ZW1!","displayName":"Wheat"},
                 {"name":"CBOT:ZS1!","displayName":"Soybeans"}
@@ -6530,7 +6530,7 @@ function ytSearchSuggest(q) {
   q = (q || '').trim();
   if (q.length < 2 || q.startsWith('http')) { dd.style.display = 'none'; return; }
   _ytSearchTimer = setTimeout(function() {
-    fetch('https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=' + encodeURIComponent(q))
+    fetch(WORKER_PROXY_URL + '/?url=' + encodeURIComponent('https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=' + encodeURIComponent(q)))
       .then(r => r.json()).then(d => {
         var items = d[1] || [];
         if (!items.length || q !== (document.getElementById('yt-custom-url')?.value||'').trim()) { dd.style.display='none'; return; }
@@ -9198,7 +9198,7 @@ async function fetchLiveScores(sport) {
     }
 
     // ── Step 1: Try Worker /cricket endpoint (returns pre-filtered JSON) ────
-    const workerUrl = (window._cfWorkerUrl || localStorage.getItem('viltv_cf_worker_url') || '').replace(/\/+$/,'');
+    const workerUrl = (window._cfWorkerUrl || localStorage.getItem('viltv_cf_worker_url') || '').replace(/\/+$/,'').replace(/^http:/,'https:');
     if (workerUrl) {
       try {
         const wRes = await fetch(workerUrl + '/cricket', {
