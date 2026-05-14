@@ -2911,15 +2911,22 @@ footer{
         onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#1d4ed8'">&#x25BA; Play</button>
     </div>
 
-    <!-- Channel name search (filters the dropdown below) -->
-    <div style="padding:5px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:5px;align-items:center">
-      <input type="search" id="yt-ch-search"
-        placeholder="🔍 Search channels by name…"
-        oninput="ytOnChannelSearch(this.value)"
-        onkeydown="if(event.key==='Enter')ytOnChannelSearchEnter()"
-        style="flex:1;min-width:0;padding:6px 10px;background:#0f1d35;color:#e2e8f0;border:1px solid #1e3a5f;border-radius:7px;font-size:11px;font-family:inherit;outline:none"/>
-      <button onclick="ytOnChannelSearchEnter()"
-        style="padding:5px 12px;background:#1d4ed8;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">&#x25BA;</button>
+    <!-- Channel search + results panel -->
+    <div style="background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
+      <!-- Search input row -->
+      <div style="padding:5px 8px;display:flex;gap:5px;align-items:center">
+        <input type="search" id="yt-ch-search"
+          placeholder="🔍 Search 141 channels — BBC, CNN, Hindi, Malayalam…"
+          oninput="ytOnChannelSearch(this.value)"
+          onkeydown="if(event.key==='Escape'){ytClearChannelSearch()}else if(event.key==='Enter'){ytOnChannelSearchEnter()}"
+          style="flex:1;min-width:0;padding:6px 10px;background:#0f1d35;color:#e2e8f0;border:1px solid #1e3a5f;border-radius:7px;font-size:11px;font-family:inherit;outline:none"/>
+        <button onclick="ytOnChannelSearchEnter()" title="Play first result"
+          style="padding:5px 12px;background:#1d4ed8;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">&#x25BA;</button>
+        <button onclick="ytClearChannelSearch()" title="Clear search" id="yt-ch-search-clear"
+          style="display:none;padding:5px 9px;background:#1e293b;color:#94a3b8;border:1px solid #1e3a5f;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">&#x2715;</button>
+      </div>
+      <!-- Results panel — shown while search is active -->
+      <div id="yt-search-results" style="display:none;max-height:210px;overflow-y:auto;border-top:1px solid #0e1e36;scrollbar-width:thin;scrollbar-color:#1e293b transparent"></div>
     </div>
 
     <!-- Channel selector (JS-populated from YT_CHANNELS) -->
@@ -8586,49 +8593,81 @@ function ytPlayByNumber() {
 }
 
 // ── Channel name search / filter ─────────────────────────────────────────────
-var _ytSearchResults = []; // filtered channel list
+var _ytSearchResults = [];
 
 function ytOnChannelSearch(query) {
   try {
-    var sel = document.getElementById('yt-channel-select');
-    if (!sel) return;
+    var panel = document.getElementById('yt-search-results');
+    var clearBtn = document.getElementById('yt-ch-search-clear');
     var q = (query || '').trim().toLowerCase();
+
     if (!q) {
-      // Restore full list
-      ytBuildSelect();
-      _ytSearchResults = YT_CHANNELS.slice();
+      _ytSearchResults = [];
+      if (panel) panel.style.display = 'none';
+      if (clearBtn) clearBtn.style.display = 'none';
+      ytBuildSelect(); // restore full dropdown
       return;
     }
+
+    if (clearBtn) clearBtn.style.display = '';
+
     var matches = YT_CHANNELS.filter(function(ch) {
-      return (ch.name  && ch.name.toLowerCase().includes(q))  ||
-             (ch.country && ch.country.toLowerCase().includes(q)) ||
+      return (ch.name     && ch.name.toLowerCase().includes(q)) ||
+             (ch.country  && ch.country.toLowerCase().includes(q)) ||
              (ch.category && ch.category.toLowerCase().includes(q)) ||
-             (ch.lang && ch.lang.toLowerCase().includes(q));
+             (ch.lang     && ch.lang.toLowerCase().includes(q));
     });
     _ytSearchResults = matches;
-    sel.innerHTML = '';
+
+    if (!panel) return;
+
     if (!matches.length) {
-      sel.innerHTML = '<option value="">No channels found</option>';
+      panel.style.display = 'block';
+      panel.innerHTML =
+        '<div style="padding:10px 12px;font-size:11px;color:#475569;text-align:center">No channels found for "<b style="color:#94a3b8">' +
+        q.replace(/</g,'&lt;') + '</b>"</div>';
       return;
     }
-    matches.forEach(function(ch) {
-      var o = document.createElement('option');
-      o.value = ch.no;
-      o.textContent = 'Ch ' + ch.no + ' · ' + ch.name + (ch.country ? ' (' + ch.country + ')' : '');
-      sel.appendChild(o);
-    });
+
+    // Build clickable result rows
+    var rows = matches.map(function(ch) {
+      var tag = ch.category || '';
+      var lang = ch.lang ? ' · ' + ch.lang : '';
+      return '<div onclick="ytPickSearchResult(' + ch.no + ')" ' +
+        'style="display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;border-bottom:1px solid #0a1628;transition:background .1s" ' +
+        'onmouseover="this.style.background=\'#0d1f3c\'" onmouseout="this.style.background=\'\'">' +
+        '<span style="font-size:10px;color:#1d4ed8;font-weight:700;flex-shrink:0;min-width:28px">Ch ' + ch.no + '</span>' +
+        '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:#e2e8f0;font-weight:600">' + ch.name + '</span>' +
+        '<span style="font-size:9.5px;color:#475569;white-space:nowrap;flex-shrink:0">' + tag + lang + '</span>' +
+        '<button style="flex-shrink:0;padding:3px 9px;background:#1d4ed8;color:#fff;border:none;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer">&#x25BA;</button>' +
+        '</div>';
+    }).join('');
+
+    panel.innerHTML =
+      '<div style="padding:5px 12px 4px;font-size:9.5px;color:#334155;letter-spacing:.4px;font-weight:700;background:#060c18;border-bottom:1px solid #0a1628">' +
+      matches.length + ' channel' + (matches.length > 1 ? 's' : '') + ' found — click to play</div>' +
+      rows;
+    panel.style.display = 'block';
   } catch(e) {
     console.error('[ytOnChannelSearch] error:', e);
   }
 }
 
+function ytPickSearchResult(no) {
+  ytSwitchToChannel(no);
+  ytClearChannelSearch();
+}
+
+function ytClearChannelSearch() {
+  var inp = document.getElementById('yt-ch-search');
+  if (inp) inp.value = '';
+  ytOnChannelSearch('');
+}
+
 function ytOnChannelSearchEnter() {
   try {
     if (_ytSearchResults.length) {
-      ytSwitchToChannel(_ytSearchResults[0].no);
-      var inp = document.getElementById('yt-ch-search');
-      if (inp) { inp.value = ''; }
-      ytOnChannelSearch(''); // restore full list
+      ytPickSearchResult(_ytSearchResults[0].no);
     }
   } catch(e) {
     console.error('[ytOnChannelSearchEnter] error:', e);
