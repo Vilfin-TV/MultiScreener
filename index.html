@@ -8490,19 +8490,14 @@ function ytSwitchChannel(val) {
     : 'https://www.youtube.com/embed/' + val + '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
 }
 
-// ── 3-step hybrid fallback chain ─────────────────────────────────────────────
+// ── 4-step hybrid fallback chain ─────────────────────────────────────────────
+// Stage 1: live_stream?channel=cid  — auto-resolves current live broadcast; no video ID needed
+// Stage 2: stored v1 video ID       — fallback for channels momentarily offline
+// Stage 3: stored v2 video ID       — second video ID fallback
+// Stage 4: uploads playlist          — always works; uses UU prefix of channelId
 function _ytTryCurrentStage() {
   var ch = YT_CHANNELS[_ytCurrentChNo - 1];
   if (!ch) { ytShowGeoError(); return; }
-  // For channels that have a known working video ID, skip live_stream
-  // (most aren't 24/7 live) and play the stored video directly
-  if (ch.v1 && ch.cid && _ytFallbackStage === 1) {
-    _ytFallbackStage = 2;
-  }
-  // For channels with NO video IDs, skip straight to uploads playlist
-  if (!ch.v1 && !ch.v2 && ch.cid && _ytFallbackStage === 1) {
-    _ytFallbackStage = 4;
-  }
   // Skip stages with no data
   while (_ytFallbackStage <= 4) {
     if (_ytFallbackStage === 1 && ch.cid) break;
