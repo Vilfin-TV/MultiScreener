@@ -2667,6 +2667,9 @@ function onQ1Change(val) {
   answers.assetName=''; answers.amountCurrency=''; answers.amountSymbol=''; answers.amount='';
   answers.isDigital=false; answers.digitalType='';
   document.getElementById('asset-name').value = '';
+  // Update autocomplete filter to match Q1 asset type
+  var acTypeMap = {'Stock':'stock','ETF':'etf','Mutual Fund':'fund','Bond':'bond','Commodity':'commodity','Currency':'currency'};
+  document.getElementById('asset-name').setAttribute('data-ac', acTypeMap[val] || 'stock');
   document.getElementById('invest-amount').value = '';
   document.getElementById('q5-amount-sub').classList.remove('visible');
   document.querySelectorAll('[data-q="5c"]').forEach(o => o.classList.remove('selected'));

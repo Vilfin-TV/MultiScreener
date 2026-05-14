@@ -51,9 +51,13 @@
       else if (it.nameL.startsWith(ql)) score = 2;
       else if (it.nameL.includes(ql)) score = 1;
       if (score > 0) {
-        // Filter by type if specified (fund = only mutual funds, stock = exclude mutual funds)
-        if (filterType === 'fund' && it.type !== 'Mutual Fund') continue;
-        if (filterType === 'stock' && it.type === 'Mutual Fund') continue;
+        // Filter by type: fund/bond/commodity/etf/stock
+        var acType = input.dataset.ac || '';
+        if (acType === 'fund' && it.type !== 'Mutual Fund') continue;
+        if (acType === 'etf' && it.type !== 'ETF') continue;
+        if (acType === 'bond' && it.type !== 'Bond') continue;
+        if (acType === 'commodity' && it.type !== 'Commodity') continue;
+        if (acType === 'stock' && (it.type === 'Mutual Fund' || it.type === 'ETF')) continue;
         results.push({ sym: it.sym, name: it.name, exch: it.exch, type: it.type, score: score });
       }
     }
