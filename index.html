@@ -2953,8 +2953,9 @@ footer{
       <button class="yt-custom-play-btn" onclick="ytPlayCustomUrl()">&#x25BA; Play</button>
       <button class="ytc-btn" onclick="ytToggleFav()" id="yt-fav-btn" title="Add to favorites" style="font-size:14px">&#x2606;</button>
       <button class="ytc-btn" onclick="ytShowFavorites()" title="Show favorites" style="font-size:12px">&#x1F4C2;</button>
-      <div id="yt-search-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#0d1d35;border:1px solid var(--border);border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:9999;scrollbar-width:thin"></div>
     </div>
+    <!-- yt-search-dropdown is body-level (position:fixed) to escape overflow:hidden panels -->
+    <div id="yt-search-dropdown" style="display:none;position:fixed;background:#0d1d35;border:1px solid #1e3a5f;border-radius:0 0 8px 8px;max-height:220px;overflow-y:auto;z-index:99999;scrollbar-width:thin;box-shadow:0 8px 24px rgba(0,0,0,.6)"></div>
 
     <!-- YouTube player — exact 16:9, zero black bars -->
     <div id="yt-video-wrapper" style="width:100%;flex-shrink:0;position:relative;background:#000;overflow:hidden">
@@ -6478,33 +6479,35 @@ window.addEventListener('DOMContentLoaded', widgetInitOnLoad);
 var _ytFavorites   = JSON.parse(localStorage.getItem('yt_favorites') || '[]');
 var _ytSearchTimer = null;
 
+function _ytCloseDropdown() {
+  var dd = document.getElementById('yt-search-dropdown');
+  if (dd) dd.style.display = 'none';
+}
+
 function ytSearchSuggest(q) {
   clearTimeout(_ytSearchTimer);
-  var dd = document.getElementById('yt-search-dropdown');
-  if (!dd) return;
   q = (q || '').trim();
-  if (q.length < 2 || q.startsWith('http')) { dd.style.display = 'none'; return; }
+  if (q.length < 2 || q.startsWith('http')) { _ytCloseDropdown(); return; }
   _ytSearchTimer = setTimeout(function() {
     fetch(WORKER_PROXY_URL + '/?url=' + encodeURIComponent('https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=' + encodeURIComponent(q)))
       .then(function(r) { return r.json(); })
       .then(function(d) {
         var items = d[1] || [];
-        if (!items.length || q !== ((document.getElementById('yt-custom-url') || {}).value || '').trim()) {
-          dd.style.display = 'none'; return;
-        }
-        dd.innerHTML = items.slice(0, 6).map(function(t) {
-          return '<div class="ac-item" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04)" onmousedown="event.preventDefault()" onclick="ytSearchPlay(\'' + escJs(t) + '\')">&#x1F50D; ' + escHtml(t) + '</div>';
-        }).join('');
-        dd.style.display = 'block';
+        var cur = ((document.getElementById('yt-custom-url') || {}).value || '').trim();
+        if (!items.length || q !== cur) { _ytCloseDropdown(); return; }
+        _ytOpenDropdown(items.slice(0, 6).map(function(t) {
+          return '<div class="ac-item" style="padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;color:#e2e8f0"' +
+            ' onmouseover="this.style.background=\'#0f2040\'" onmouseout="this.style.background=\'\'"' +
+            ' onmousedown="event.preventDefault()" onclick="ytSearchPlay(\'' + escJs(t) + '\')">&#x1F50D; ' + escHtml(t) + '</div>';
+        }).join(''));
       }).catch(function() {});
   }, 200);
 }
 
 function ytSearchPlay(query) {
   var inp = document.getElementById('yt-custom-url');
-  var dd  = document.getElementById('yt-search-dropdown');
   if (inp) inp.value = query;
-  if (dd)  dd.style.display = 'none';
+  _ytCloseDropdown();
   if (inp) { inp.classList.add('ok'); setTimeout(function() { inp.classList.remove('ok'); }, 1800); }
   var np = document.getElementById('yt-now-playing');
   if (np) np.textContent = '🔍 Searching: ' + query;
@@ -6516,25 +6519,26 @@ function ytSearchPlay(query) {
       while ((m = re.exec(html)) !== null && videoIds.length < 10) {
         if (videoIds.indexOf(m[1]) === -1) videoIds.push(m[1]);
       }
-      if (!dd) return;
       if (!videoIds.length) {
-        dd.innerHTML = '<div style="padding:10px;color:var(--text3);font-size:11px">No videos found. Try a different search.</div>';
-        dd.style.display = 'block'; return;
+        _ytOpenDropdown('<div style="padding:10px 12px;color:#64748b;font-size:11px">No results found. Try a different search.</div>');
+        return;
       }
-      dd.innerHTML = videoIds.map(function(vid, i) {
-        return '<div class="ac-item" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:8px"' +
-          ' onclick="ytCustomSearchPlay(\'' + vid + '\');document.getElementById(\'yt-search-dropdown\').style.display=\'none\'">' +
-          '<span style="flex-shrink:0;font-size:16px">&#x25BA;</span>' +
-          '<span style="flex:1;font-size:12px;color:var(--text)">Result #' + (i + 1) + '</span>' +
-          '<span style="font-size:10px;color:var(--text3)">' + vid + '</span></div>';
-      }).join('');
-      dd.style.display = 'block';
+      _ytOpenDropdown(
+        '<div style="padding:5px 12px 4px;font-size:9.5px;color:#334155;letter-spacing:.4px;font-weight:700;background:#060c18;border-bottom:1px solid #0a1628">' +
+        videoIds.length + ' results — click to play</div>' +
+        videoIds.map(function(vid, i) {
+          return '<div style="padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:8px"' +
+            ' onmouseover="this.style.background=\'#0f2040\'" onmouseout="this.style.background=\'\'"' +
+            ' onclick="ytCustomSearchPlay(\'' + vid + '\')">' +
+            '<span style="flex-shrink:0;color:#60a5fa;font-size:13px">&#x25BA;</span>' +
+            '<span style="flex:1;font-size:11px;color:#e2e8f0">Result #' + (i + 1) + '</span>' +
+            '<span style="font-size:10px;color:#475569;font-family:monospace">' + vid + '</span></div>';
+        }).join('')
+      );
       if (np) np.textContent = '🔍 ' + videoIds.length + ' results for: ' + query;
     })
     .catch(function() {
-      if (!dd) return;
-      dd.innerHTML = '<div style="padding:10px;color:var(--red);font-size:11px">Search failed. Paste a direct URL instead.</div>';
-      dd.style.display = 'block';
+      _ytOpenDropdown('<div style="padding:10px 12px;color:#ef4444;font-size:11px">Search failed — paste a direct YouTube URL instead.</div>');
     });
 }
 
@@ -6565,21 +6569,37 @@ function ytSyncFavBtn() {
   if (btn2) btn2.textContent = isFav ? '★' : '☆';
 }
 
-function ytShowFavorites() {
-  var dd = document.getElementById('yt-search-dropdown');
-  if (!dd) return;
-  if (!_ytFavorites.length) {
-    dd.innerHTML = '<div style="padding:10px;color:var(--text3);font-size:11px">No favorites yet. Click &#x2606; to add the current channel.</div>';
-    dd.style.display = 'block'; return;
-  }
-  dd.innerHTML = _ytFavorites.map(function(key) {
-    var ch = YT_CHANNELS.find(function(c) { return c.cid === key || c.v1 === key || c.no === key; });
-    var name = ch ? ('[' + ch.no + '] ' + ch.name) : key;
-    return '<div class="ac-item" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04)"' +
-      ' onclick="ytSwitchToChannel(' + (ch ? ch.no : 1) + ');document.getElementById(\'yt-search-dropdown\').style.display=\'none\'">' +
-      '&#x2B50; ' + escHtml(name) + '</div>';
-  }).join('');
+function _ytOpenDropdown(html) {
+  var dd  = document.getElementById('yt-search-dropdown');
+  var bar = document.querySelector('.yt-custom-bar');
+  if (!dd || !bar) return;
+  var r = bar.getBoundingClientRect();
+  dd.style.top    = (r.bottom) + 'px';
+  dd.style.left   = r.left + 'px';
+  dd.style.width  = r.width + 'px';
+  dd.innerHTML    = html;
   dd.style.display = 'block';
+}
+
+function ytShowFavorites() {
+  if (!_ytFavorites.length) {
+    _ytOpenDropdown('<div style="padding:10px 12px;color:#64748b;font-size:11px">No favorites yet — click &#x2606; on any channel to save it.</div>');
+    return;
+  }
+  var rows = _ytFavorites.map(function(key) {
+    var ch   = YT_CHANNELS.find(function(c) { return c.cid === key || c.v1 === key || c.no === key; });
+    var name = ch ? ('[' + ch.no + '] ' + ch.name) : key;
+    return '<div style="padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;color:#e2e8f0;display:flex;align-items:center;gap:8px"' +
+      ' onmouseover="this.style.background=\'#0f2040\'" onmouseout="this.style.background=\'\'"' +
+      ' onclick="ytSwitchToChannel(' + (ch ? ch.no : 1) + ');document.getElementById(\'yt-search-dropdown\').style.display=\'none\'">' +
+      '<span style="color:#fbbf24">&#x2B50;</span>' +
+      '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(name) + '</span>' +
+      '</div>';
+  }).join('');
+  _ytOpenDropdown(
+    '<div style="padding:5px 12px 4px;font-size:9.5px;color:#334155;letter-spacing:.4px;font-weight:700;background:#060c18;border-bottom:1px solid #0a1628">' +
+    _ytFavorites.length + ' saved channel' + (_ytFavorites.length > 1 ? 's' : '') + '</div>' + rows
+  );
 }
 
 function escJs(s)   { return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, '\\\''); }
