@@ -2918,6 +2918,24 @@ footer{
         onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#1d4ed8'">&#x25BA; Play</button>
     </div>
 
+    <!-- Channel search + results panel -->
+    <div style="background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
+      <!-- Search input row -->
+      <div style="padding:5px 8px;display:flex;gap:5px;align-items:center">
+        <input type="search" id="yt-ch-search"
+          placeholder="🔍 Search 141 channels — BBC, CNN, Hindi, Malayalam…"
+          oninput="ytOnChannelSearch(this.value)"
+          onkeydown="if(event.key==='Escape'){ytClearChannelSearch()}else if(event.key==='Enter'){ytOnChannelSearchEnter()}"
+          style="flex:1;min-width:0;padding:6px 10px;background:#0f1d35;color:#e2e8f0;border:1px solid #1e3a5f;border-radius:7px;font-size:11px;font-family:inherit;outline:none"/>
+        <button onclick="ytOnChannelSearchEnter()" title="Play first result"
+          style="padding:5px 12px;background:#1d4ed8;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">&#x25BA;</button>
+        <button onclick="ytClearChannelSearch()" title="Clear search" id="yt-ch-search-clear"
+          style="display:none;padding:5px 9px;background:#1e293b;color:#94a3b8;border:1px solid #1e3a5f;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">&#x2715;</button>
+      </div>
+      <!-- Results panel — shown while search is active -->
+      <div id="yt-search-results" style="display:none;max-height:210px;overflow-y:auto;border-top:1px solid #0e1e36;scrollbar-width:thin;scrollbar-color:#1e293b transparent"></div>
+    </div>
+
     <!-- Channel selector (JS-populated from YT_CHANNELS) -->
     <div style="padding:5px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
       <select id="yt-channel-select" onchange="ytSwitchToChannel(parseInt(this.value,10))"
@@ -2942,8 +2960,9 @@ footer{
       <button class="yt-custom-play-btn" onclick="ytPlayCustomUrl()">▶ Play</button>
       <button class="ytc-btn" onclick="ytToggleFav()" id="yt-fav-btn" title="Add to favorites" style="font-size:14px">☆</button>
       <button class="ytc-btn" onclick="ytShowFavorites()" title="Show favorites" style="font-size:12px">📂</button>
-      <div id="yt-search-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#0d1d35;border:1px solid var(--border);border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:9999;scrollbar-width:thin"></div>
     </div>
+    <!-- yt-search-dropdown is body-level (position:fixed) to escape overflow:hidden panels -->
+    <div id="yt-search-dropdown" style="display:none;position:fixed;background:#0d1d35;border:1px solid #1e3a5f;border-radius:0 0 8px 8px;max-height:220px;overflow-y:auto;z-index:99999;scrollbar-width:thin;box-shadow:0 8px 24px rgba(0,0,0,.6)"></div>
 
     <!-- YouTube player — exact 16:9, zero black bars -->
     <div id="yt-video-wrapper" style="width:100%;flex-shrink:0;position:relative;background:#000;overflow:hidden">
@@ -6458,6 +6477,150 @@ function widgetInitOnLoad() {
 window.addEventListener('DOMContentLoaded', widgetInitOnLoad);
 
 // ═══════════════════════════════════════════════════════════════════════
+// YOUTUBE FAVORITES + SEARCH SUGGEST
+// ═══════════════════════════════════════════════════════════════════════
+var _ytFavorites   = JSON.parse(localStorage.getItem('yt_favorites') || '[]');
+var _ytSearchTimer = null;
+
+function _ytCloseDropdown() {
+  var dd = document.getElementById('yt-search-dropdown');
+  if (dd) dd.style.display = 'none';
+}
+
+function ytSearchSuggest(q) {
+  clearTimeout(_ytSearchTimer);
+  q = (q || '').trim();
+  if (q.length < 2 || q.startsWith('http')) { _ytCloseDropdown(); return; }
+  _ytSearchTimer = setTimeout(function() {
+    fetch(WORKER_PROXY_URL + '/?url=' + encodeURIComponent('https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=' + encodeURIComponent(q)))
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        var items = d[1] || [];
+        var cur = ((document.getElementById('yt-custom-url') || {}).value || '').trim();
+        if (!items.length || q !== cur) { _ytCloseDropdown(); return; }
+        _ytOpenDropdown(items.slice(0, 6).map(function(t) {
+          return '<div class="ac-item" style="padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;color:#e2e8f0"' +
+            ' onmouseover="this.style.background=\'#0f2040\'" onmouseout="this.style.background=\'\'"' +
+            ' onmousedown="event.preventDefault()" onclick="ytSearchPlay(\'' + escJs(t) + '\')">&#x1F50D; ' + escHtml(t) + '</div>';
+        }).join(''));
+      }).catch(function() {});
+  }, 200);
+}
+
+function ytSearchPlay(query) {
+  var inp = document.getElementById('yt-custom-url');
+  if (inp) inp.value = query;
+  _ytCloseDropdown();
+  if (inp) { inp.classList.add('ok'); setTimeout(function() { inp.classList.remove('ok'); }, 1800); }
+  var np = document.getElementById('yt-now-playing');
+  if (np) np.textContent = '🔍 Searching: ' + query;
+  var proxyUrl = WORKER_PROXY_URL + '/?url=' + encodeURIComponent('https://www.youtube.com/results?search_query=' + encodeURIComponent(query));
+  fetch(proxyUrl, { signal: AbortSignal.timeout(10000) })
+    .then(function(r) { return r.text(); })
+    .then(function(html) {
+      var videoIds = [], re = /"videoId":"([a-zA-Z0-9_-]{11})"/g, m;
+      while ((m = re.exec(html)) !== null && videoIds.length < 10) {
+        if (videoIds.indexOf(m[1]) === -1) videoIds.push(m[1]);
+      }
+      if (!videoIds.length) {
+        _ytOpenDropdown('<div style="padding:10px 12px;color:#64748b;font-size:11px">No results found. Try a different search.</div>');
+        return;
+      }
+      _ytOpenDropdown(
+        '<div style="padding:5px 12px 4px;font-size:9.5px;color:#334155;letter-spacing:.4px;font-weight:700;background:#060c18;border-bottom:1px solid #0a1628">' +
+        videoIds.length + ' results — click to play</div>' +
+        videoIds.map(function(vid, i) {
+          return '<div style="padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:8px"' +
+            ' onmouseover="this.style.background=\'#0f2040\'" onmouseout="this.style.background=\'\'"' +
+            ' onclick="ytCustomSearchPlay(\'' + vid + '\')">' +
+            '<span style="flex-shrink:0;color:#60a5fa;font-size:13px">&#x25BA;</span>' +
+            '<span style="flex:1;font-size:11px;color:#e2e8f0">Result #' + (i + 1) + '</span>' +
+            '<span style="font-size:10px;color:#475569;font-family:monospace">' + vid + '</span></div>';
+        }).join('')
+      );
+      if (np) np.textContent = '🔍 ' + videoIds.length + ' results for: ' + query;
+    })
+    .catch(function() {
+      _ytOpenDropdown('<div style="padding:10px 12px;color:#ef4444;font-size:11px">Search failed — paste a direct YouTube URL instead.</div>');
+    });
+}
+
+function ytCustomSearchPlay(vid) {
+  var np = document.getElementById('yt-now-playing');
+  if (np) np.textContent = '▶ Custom: ' + vid;
+  ytSwitchChannel(vid);
+}
+
+function ytToggleFav() {
+  var ch = YT_CHANNELS[_ytCurrentChNo - 1];
+  if (!ch) return;
+  var key = ch.cid || ch.v1 || ch.no;
+  var idx = _ytFavorites.indexOf(key);
+  if (idx > -1) _ytFavorites.splice(idx, 1);
+  else _ytFavorites.push(key);
+  localStorage.setItem('yt_favorites', JSON.stringify(_ytFavorites));
+  ytSyncFavBtn();
+}
+
+function ytSyncFavBtn() {
+  var ch  = YT_CHANNELS[_ytCurrentChNo - 1];
+  var key = ch ? (ch.cid || ch.v1 || ch.no) : '';
+  var isFav = _ytFavorites.indexOf(key) > -1;
+  var btn1 = document.getElementById('yt-fav-btn');
+  var btn2 = document.getElementById('yt-fav-ctrl-btn');
+  if (btn1) btn1.textContent = isFav ? '★' : '☆';
+  if (btn2) btn2.textContent = isFav ? '★' : '☆';
+}
+
+function _ytOpenDropdown(html) {
+  var dd  = document.getElementById('yt-search-dropdown');
+  var bar = document.querySelector('.yt-custom-bar');
+  if (!dd || !bar) return;
+  var r = bar.getBoundingClientRect();
+  dd.style.top    = (r.bottom) + 'px';
+  dd.style.left   = r.left + 'px';
+  dd.style.width  = r.width + 'px';
+  dd.innerHTML    = html;
+  dd.style.display = 'block';
+}
+
+function ytShowFavorites() {
+  if (!_ytFavorites.length) {
+    _ytOpenDropdown('<div style="padding:10px 12px;color:#64748b;font-size:11px">No favorites yet — click &#x2606; on any channel to save it.</div>');
+    return;
+  }
+  var rows = _ytFavorites.map(function(key) {
+    var ch   = YT_CHANNELS.find(function(c) { return c.cid === key || c.v1 === key || c.no === key; });
+    var name = ch ? ('[' + ch.no + '] ' + ch.name) : key;
+    return '<div style="padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;color:#e2e8f0;display:flex;align-items:center;gap:8px"' +
+      ' onmouseover="this.style.background=\'#0f2040\'" onmouseout="this.style.background=\'\'"' +
+      ' onclick="ytSwitchToChannel(' + (ch ? ch.no : 1) + ');document.getElementById(\'yt-search-dropdown\').style.display=\'none\'">' +
+      '<span style="color:#fbbf24">&#x2B50;</span>' +
+      '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(name) + '</span>' +
+      '</div>';
+  }).join('');
+  _ytOpenDropdown(
+    '<div style="padding:5px 12px 4px;font-size:9.5px;color:#334155;letter-spacing:.4px;font-weight:700;background:#060c18;border-bottom:1px solid #0a1628">' +
+    _ytFavorites.length + ' saved channel' + (_ytFavorites.length > 1 ? 's' : '') + '</div>' + rows
+  );
+}
+
+function escJs(s)   { return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, '\\\''); }
+function escHtml(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Sync fav button whenever channel switches
+ytSwitchToChannel = (function(orig) {
+  return function(no) { orig(no); ytSyncFavBtn(); };
+})(ytSwitchToChannel);
+
+// Close search dropdown on outside click
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('yt-search-dropdown');
+  var bar = document.querySelector('.yt-custom-bar');
+  if (dd && bar && !bar.contains(e.target)) dd.style.display = 'none';
+});
+
+// ═══════════════════════════════════════════════════════════════════════
 // CUSTOM YOUTUBE URL PLAYER
 // ═══════════════════════════════════════════════════════════════════════
 function ytExtractVideoId(url) {
@@ -6489,23 +6652,42 @@ function ytPlayCustomUrl() {
   if (!input) return;
   const url = input.value.trim();
   if (!url) return;
-  const id = ytExtractVideoId(url);
-  if (!id) {
-    input.classList.add('err');
-    input.title = 'Invalid YouTube URL — try a watch?v=, youtu.be/ or /live/ link';
-    setTimeout(() => { input.classList.remove('err'); input.title = ''; }, 2500);
-    return;
+  try {
+    const id = ytExtractVideoId(url);
+    if (id) {
+      // Direct video ID or YouTube URL
+      input.classList.add('ok');
+      setTimeout(() => { input.classList.remove('ok'); }, 1800);
+      try { localStorage.setItem('viltv_custom_url', url); } catch(_) {}
+      const sel = document.getElementById('yt-channel-select');
+      if (sel) sel.selectedIndex = -1;
+      const np = document.getElementById('yt-now-playing');
+      if (np) np.textContent = '▶ Custom URL';
+      ytSwitchChannel(id);
+    } else if (url.startsWith('http')) {
+      // Invalid URL that produced no video ID
+      input.classList.add('err');
+      setTimeout(() => { input.classList.remove('err'); }, 2500);
+    } else {
+      // Plain text — first try local channel list, then fall back to YouTube search
+      const q = url.toLowerCase();
+      const match = YT_CHANNELS.find(ch =>
+        (ch.name     && ch.name.toLowerCase().includes(q)) ||
+        (ch.country  && ch.country.toLowerCase().includes(q)) ||
+        (ch.category && ch.category.toLowerCase().includes(q)) ||
+        (ch.lang     && ch.lang.toLowerCase().includes(q))
+      );
+      if (match) {
+        input.value = '';
+        ytSwitchToChannel(match.no);
+      } else {
+        // No local match — search YouTube via proxy
+        ytSearchPlay(url);
+      }
+    }
+  } catch(e) {
+    console.error('[ytPlayCustomUrl] error:', e);
   }
-  input.classList.add('ok');
-  setTimeout(() => { input.classList.remove('ok'); }, 1800);
-  // Persist the custom URL in localStorage
-  try { localStorage.setItem('viltv_custom_url', url); } catch(_) {}
-  // Clear channel-select visual selection so it doesn't mislead
-  const sel = document.getElementById('yt-channel-select');
-  if (sel) sel.selectedIndex = -1;
-  const np = document.getElementById('yt-now-playing');
-  if (np) np.textContent = '▶ Custom URL';
-  ytSwitchChannel(id);
 }
 
 // Restore custom URL input on page load
@@ -8342,13 +8524,13 @@ function radioAutoPlayDefault() {
 // YOUTUBE LIVE — 141-CHANNEL DATA & HYBRID FALLBACK PLAYER
 // ═══════════════════════════════════════════════════════════════════════
 var YT_CHANNELS = [
-  {no:1,  name:'WION',                     country:'India',          category:'National News', lang:'English',    cid:'UC_gUM8rL-Lrg6O3adPW9K1g', v1:'93uX8NdW4v4',  v2:'lHFPPmi-TrY'},
+  {no:1,  name:'WION',                     country:'India',          category:'National News', lang:'English',    cid:'UC_gUM8rL-Lrg6O3adPW9K1g', v1:'lmZRiDMK3OU',  v2:'_KnLD1uPF90'},
   {no:2,  name:'NDTV 24x7',                country:'India',          category:'National News', lang:'English',    cid:'UCZFMm1mMw0F81Z37aaEzTUA', v1:'y4vvJJNF1ro',  v2:'N-ZthvsWswU'},
   {no:3,  name:'India Today',              country:'India',          category:'National News', lang:'English',    cid:'UCYPvAwZP8pZhSMW8qs7cVCw', v1:'eJDNOOA2U9s',  v2:'NbK5e5luLhs'},
   {no:4,  name:'Republic World',           country:'India',          category:'National News', lang:'English',    cid:'UCwqusr8YDwM-3mEYTDeJHzw', v1:'Xi3heFyY2-4',  v2:'fzlIR8I657g'},
   {no:5,  name:'CNN-News18',               country:'India',          category:'National News', lang:'English',    cid:'UCef1-8eOpJgud7szVPlZQAQ', v1:'4yivvIX7Umo',  v2:'EU8EF3doHuI'},
   {no:6,  name:'Times Now',                country:'India',          category:'National News', lang:'English',    cid:'UC6RJ7-PaXg6TIH2BzZfTV7w', v1:'YGYsW7BjIHQ',  v2:'hvblBGBVLfk'},
-  {no:7,  name:'NDTV Profit',              country:'India',          category:'Business News', lang:'English',    cid:'UC3uJIdRFTGgLWrUziaHbzrg', v1:'lcXFuMLO4EE',  v2:'-aEMD8Uxbzw'},
+  {no:7,  name:'NDTV Profit',              country:'India',          category:'Business News', lang:'English',    cid:'UC3uJIdRFTGgLWrUziaHbzrg', v1:'7q7nbRd0720',  v2:'-aEMD8Uxbzw'},
   {no:8,  name:'CNBC-TV18',               country:'India',          category:'Business News', lang:'English',    cid:'UCmRbHAgG2k2vDUvb3xsEunQ', v1:'zJgSPs2SodE',  v2:'l7hhOVZwmG4'},
   {no:9,  name:'Aaj Tak',                 country:'India',          category:'National News', lang:'Hindi',      cid:'UCt4t-jeY85JegMlZ-E5UWtA', v1:'PNxDir65frc',  v2:'2D90PCpYI5o'},
   {no:10, name:'India TV',                country:'India',          category:'National News', lang:'Hindi',      cid:'UCttspZesZIDEwwpVIgoZtWQ', v1:'e1FIApIafWE',  v2:'KrC2OnD5qwA'},
@@ -8357,7 +8539,7 @@ var YT_CHANNELS = [
   {no:13, name:'Zee News',                country:'India',          category:'National News', lang:'Hindi',      cid:'UCIvaYmXn910QMdemBG3v1pQ', v1:'tohGF06LhKs',  v2:''},
   {no:14, name:'Republic Bharat',         country:'India',          category:'National News', lang:'Hindi',      cid:'UC7wXt18f2iA3EDXeqAVuKng', v1:'l-9m8oPfeP4',  v2:'r8qBN7U2PhY'},
   {no:15, name:'ABP News',                country:'India',          category:'National News', lang:'Hindi',      cid:'UCRWFSbif-RFENbBrSiez1DA', v1:'eB7AgvXN1gM',  v2:'aC4hOvf1Ipg'},
-  {no:16, name:'News18 India',            country:'India',          category:'National News', lang:'Hindi',      cid:'UCPP3etACgdUWvizcES1dJ8Q', v1:'ABW_URLKoG8',  v2:'WmLXBhxpImU'},
+  {no:16, name:'News18 India',            country:'India',          category:'National News', lang:'Hindi',      cid:'UCPP3etACgdUWvizcES1dJ8Q', v1:'Io-G_aiF8HA',  v2:'WmLXBhxpImU'},
   {no:17, name:'TV9 Bharatvarsh',         country:'India',          category:'National News', lang:'Hindi',      cid:'UCOutOIcn_oho8pyVN3Ng-Og', v1:'z6XItxZ9y3Y',  v2:'Q23McoqfcsU'},
   {no:18, name:'Times Now Navbharat',     country:'India',          category:'National News', lang:'Hindi',      cid:'UCMk9Tdc-d1BIcAFaSppiVkw', v1:'SvzT96M3Ky4',  v2:'a9iMYyju1gY'},
   {no:19, name:'Polimer News',            country:'India',          category:'State News',    lang:'Tamil',      cid:'UC8Z-VjXBtDJTvq6aqkIskPg', v1:'_hAlDQOPkgE',  v2:'J3jFKoGu9zE'},
@@ -8376,7 +8558,7 @@ var YT_CHANNELS = [
   {no:32, name:'Asianet News',            country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCf8w5m0YsRa8MHQ5bwSGmbw', v1:'s0LLVQeMmtU',  v2:''},
   {no:33, name:'24 News',                 country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCup3etEdjyF1L3sRbU-rKLw', v1:'1wECsnGZcfc',  v2:''},
   {no:34, name:'Mathrubhumi News',        country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCwXrBBZnIh2ER4lal6WbAHw', v1:'YGEgelAiUf0',  v2:''},
-  {no:35, name:'Manorama News',           country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCP0uG-mcMImgKnJz-VjJZmQ', v1:'d9_xuULn8xw',  v2:''},
+  {no:35, name:'Manorama News',           country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCP0uG-mcMImgKnJz-VjJZmQ', v1:'8dc1R2A2aWM',  v2:'tgBTspqA5nY'},
   {no:36, name:'MediaOne TV',             country:'India',          category:'State News',    lang:'Malayalam',  cid:'UC-f7r46JhYv78q5pGrO6ivA', v1:'-8d8-c0yvyU',  v2:''},
   {no:37, name:'Kairali News',            country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCnEvxaWfVL91XIYuyQRO5QA', v1:'yiiqRHY1Bl8',  v2:''},
   {no:38, name:'Janam TV',                country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCNVkxRPqsBNejO6B9thG9Xw', v1:'yFtYg2Bw-oo',  v2:''},
@@ -8395,11 +8577,11 @@ var YT_CHANNELS = [
   {no:51, name:'Prudent Media Goa',       country:'India',          category:'State News',    lang:'Konkani',    cid:'UCJb1MeQClvGeSMeBSVLKnDQ', v1:'',             v2:''},
   {no:52, name:'Goa 365 TV',              country:'India',          category:'State News',    lang:'Konkani',    cid:'UCDFOkbaN9IuV6tjO8Aqo1ww', v1:'',             v2:''},
   {no:53, name:'In Goa 24x7',             country:'India',          category:'State News',    lang:'Konkani',    cid:'UCE9AZSYybiCWNYKr9gbY1lA', v1:'',             v2:''},
-  {no:54, name:'SOMOY TV',                country:'Bangladesh',     category:'News',          lang:'Bengali',    cid:'',                         v1:'pxM8iN3kVd0',  v2:''},
-  {no:55, name:'Jamuna TV',               country:'Bangladesh',     category:'News',          lang:'Bengali',    cid:'',                         v1:'xOjTaJFd-RA',  v2:''},
-  {no:56, name:'Hiru TV 24x7',            country:'Sri Lanka',      category:'News',          lang:'Sinhala',    cid:'',                         v1:'A5ygZltd-1M',  v2:''},
+  {no:54, name:'SOMOY TV',                country:'Bangladesh',     category:'News',          lang:'Bengali',    cid:'UCxHoBXkY88Tb8z1Ssj6CWsQ', v1:'ABnvuDjicEE',  v2:''},
+  {no:55, name:'Jamuna TV',               country:'Bangladesh',     category:'News',          lang:'Bengali',    cid:'UCN6sm8iHiPd0cnoUardDAnw', v1:'DpRyTXZ8Wj8',  v2:''},
+  {no:56, name:'Hiru TV 24x7',            country:'Sri Lanka',      category:'News',          lang:'Sinhala',    cid:'UC2sO_F_Ky4LIAUtSJYXqBDA', v1:'p-OvM8hxx4s',  v2:''},
   {no:57, name:'Al Jazeera English',      country:'Qatar',          category:'National News', lang:'English',    cid:'UCNye-wNBqNL5ZzHSJj3l8Bg', v1:'gCNeDWCI0vo',  v2:''},
-  {no:58, name:'Sky News',                country:'United Kingdom', category:'National News', lang:'English',    cid:'UCoMdktPbSTixAyNGwb-UYkQ', v1:'lYc9weoqvJU',  v2:''},
+  {no:58, name:'Sky News',                country:'United Kingdom', category:'National News', lang:'English',    cid:'UCoMdktPbSTixAyNGwb-UYkQ', v1:'YDvsBbKfLPA',  v2:''},
   {no:59, name:'DW News',                 country:'Germany',        category:'National News', lang:'English',    cid:'UCknLrEdhRCp1aegoMqRaCZg', v1:'LuKwFajn37U',  v2:''},
   {no:60, name:'France 24 English',       country:'France',         category:'National News', lang:'English',    cid:'UCQfwfsi5VrQ8yKZ-UWmAEFg', v1:'Ap-UM1O9RBU',  v2:''},
   {no:61, name:'Bloomberg Television',    country:'United States',  category:'National News', lang:'English',    cid:'UCIALMKvObZNtJ6AmdCLP7Lg', v1:'iEpJwprxDdk',  v2:''},
@@ -8410,7 +8592,7 @@ var YT_CHANNELS = [
   {no:66, name:'NBC News',                country:'United States',  category:'National News', lang:'English',    cid:'UCeY0bbntWzzVIaj2z3QigXg', v1:'yDDev_X0tQk',  v2:''},
   {no:67, name:'CBS News',                country:'United States',  category:'National News', lang:'English',    cid:'UCIZKodCUL1srk0gP8elt5bA', v1:'pBToEXlbdm4',  v2:''},
   {no:68, name:'Fox News',                country:'United States',  category:'National News', lang:'English',    cid:'UCXIJgqnII2ZOINSWNOGFThA', v1:'FrfkabccVFo',  v2:''},
-  {no:69, name:'LiveNOW from FOX',        country:'United States',  category:'National News', lang:'English',    cid:'UCJg9wBPyKMNA5sRDnvzmkdg', v1:'pJ-_cnEu0gY',  v2:'C96oohpWBGw'},
+  {no:69, name:'LiveNOW from FOX',        country:'United States',  category:'National News', lang:'English',    cid:'UCJg9wBPyKMNA5sRDnvzmkdg', v1:'C96oohpWBGw',  v2:''},
   {no:70, name:'Euronews',                country:'France',         category:'National News', lang:'English',    cid:'UCSrZ3UV4jOidv8ppoVuvW9Q', v1:'4mu5Ccj74W8',  v2:''},
   {no:71, name:'Arirang TV',              country:'South Korea',    category:'National News', lang:'Korean',     cid:'UC-PHIZjV-oX8H7zD1cCN2NQ', v1:'trrPwbBZaLg',  v2:''},
   {no:72, name:'CGTN',                    country:'China',          category:'National News', lang:'English',    cid:'UCgrNz-aDmcr2uuto8_DL2jg', v1:'R79Yrpkn1Bk',  v2:'iUt4CkuPz3g'},
@@ -8422,19 +8604,19 @@ var YT_CHANNELS = [
   {no:78, name:'Radio Mix (70s/80s)',      country:'International',  category:'Music',         lang:'English',    cid:'',                         v1:'WnCfvAMM9eY',  v2:''},
   {no:79, name:'Rock FM (Classic Rock)',   country:'International',  category:'Music',         lang:'English',    cid:'',                         v1:'Nt27aBceerI',  v2:''},
   {no:80, name:'Deep House Hits',         country:'International',  category:'Music',         lang:'English',    cid:'',                         v1:'cnVPm1dGQJc',  v2:''},
-  {no:81, name:'Radio Mix (Pop 2025)',     country:'International',  category:'Music',         lang:'English',    cid:'',                         v1:'Uqk9YlmH3b4',  v2:''},
+  {no:81, name:'Radio Mix (Pop 2025)',     country:'International',  category:'Music',         lang:'English',    cid:'',                         v1:'yU35Z4qxCXE',  v2:''},
   {no:82, name:'Monstercat Silk',         country:'Canada',         category:'Music',         lang:'English',    cid:'',                         v1:'WsDyRAPFBC8',  v2:''},
-  {no:83, name:'Cafe Music BGM (Jazz)',    country:'Japan',          category:'Music',         lang:'English',    cid:'',                         v1:'_dnYojGecWc',  v2:''},
-  {no:84, name:'Cafe Music (Smooth Jazz)', country:'Japan',          category:'Music',         lang:'English',    cid:'',                         v1:'rUVpkJ0v8Eo',  v2:''},
-  {no:85, name:'Aditya Music (Telugu)',    country:'India',          category:'Music',         lang:'Telugu',     cid:'',                         v1:'B8ilYn_EO6g',  v2:''},
-  {no:86, name:'24 Hours Songs (Mal)',     country:'India',          category:'Music',         lang:'Malayalam',  cid:'',                         v1:'R_JBMQ9nM8k',  v2:''},
+  {no:83, name:'Cafe Music BGM (Jazz)',    country:'Japan',          category:'Music',         lang:'English',    cid:'UCJhjE7wbdYAae1G25m0tHAA', v1:'KnDqAq9YfME',  v2:''},
+  {no:84, name:'Cafe Music (Smooth Jazz)', country:'Japan',          category:'Music',         lang:'English',    cid:'',                         v1:'SORD03t7nlo',  v2:''},
+  {no:85, name:'Aditya Music (Telugu)',    country:'India',          category:'Music',         lang:'Telugu',     cid:'UCNApqoVYJbYSrni4YsbXzyQ', v1:'GSVU3mRb0MQ',  v2:''},
+  {no:86, name:'24 Hours Songs (Mal)',     country:'India',          category:'Music',         lang:'Malayalam',  cid:'',                         v1:'FLuVUl29qlM',  v2:''},
   {no:87, name:'123Musix Jukebox (Mal)',   country:'India',          category:'Music',         lang:'Malayalam',  cid:'',                         v1:'dFN5l5k3fME',  v2:''},
   {no:88, name:'Malayali Mix (Chillstep)', country:'India',          category:'Music',         lang:'Malayalam',  cid:'',                         v1:'gK8GVzqPnzQ',  v2:''},
   {no:89, name:'ONE8 NICK (Mal Lofi)',     country:'India',          category:'Music',         lang:'Malayalam',  cid:'',                         v1:'R_Y9jn99lwQ',  v2:''},
   {no:90, name:'123Musix Relax (Mal)',     country:'India',          category:'Music',         lang:'Malayalam',  cid:'',                         v1:'bA7HvJsCAiI',  v2:''},
   {no:91, name:'Saregama Malayalam',       country:'India',          category:'Music',         lang:'Malayalam',  cid:'',                         v1:'u9tYgAK-V_c',  v2:''},
   {no:92, name:'Star Music India (Tamil)', country:'India',          category:'Music',         lang:'Tamil',      cid:'',                         v1:'Yb8kSxx9z9M',  v2:''},
-  {no:93, name:'Tamil Music Lofi',         country:'India',          category:'Music',         lang:'Tamil',      cid:'',                         v1:'hKc6_rT2ROQ',  v2:''},
+  {no:93, name:'Tamil Music Lofi',         country:'India',          category:'Music',         lang:'Tamil',      cid:'',                         v1:'GIbmuVTaTWw',  v2:''},
   {no:94, name:'Thamizh Lofi Nights',      country:'India',          category:'Music',         lang:'Tamil',      cid:'',                         v1:'PHdBLGDNa1s',  v2:''},
   {no:95, name:'REPORTER LIVE',           country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCFx1nseXKTc1Culiu3neeSQ', v1:'',             v2:''},
   {no:96, name:'News18 Kerala',           country:'India',          category:'State News',    lang:'Malayalam',  cid:'UC-mMi78WJST4N5o8_i1FoXw', v1:'',             v2:''},
@@ -8493,6 +8675,7 @@ var _ytPlayer        = null; // YT IFrame API instance (optional)
 var isGlobalMuted    = true;
 var _ytMuted         = true;
 var _ytVolume        = 60;
+var _ytStage1Timer   = null; // auto-advance if live_stream?channel= fails silently
 
 // ── Post-message helpers for the YouTube iframe ──────────────────
 function _ytPostMessage(cmd, val) {
@@ -8567,7 +8750,8 @@ function _ytGetFrame() {
   if (!f) {
     f = document.createElement('iframe');
     f.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:0';
-    f.allow = 'autoplay; encrypted-media; picture-in-picture; web-share';
+    f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen; web-share';
+    f.allowFullscreen = true;
     f.referrerPolicy = 'strict-origin-when-cross-origin';
     host.appendChild(f);
   }
@@ -8583,6 +8767,8 @@ function ytSwitchToChannel(no) {
   if (!no || no < 1 || no > YT_CHANNELS.length) return;
   var ch = YT_CHANNELS[no - 1];
   if (!ch) return;
+  clearTimeout(_ytStage1Timer);
+  _ytStage1Timer   = null;
   _ytCurrentChNo   = no;
   _ytFallbackStage = 1;
   ytHideGeoError();
@@ -8623,19 +8809,14 @@ function ytSwitchChannel(val) {
     : 'https://www.youtube.com/embed/' + val + '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
 }
 
-// ── 3-step hybrid fallback chain ─────────────────────────────────────────────
+// ── 4-step hybrid fallback chain ─────────────────────────────────────────────
+// Stage 1: live_stream?channel=cid  — auto-resolves current live broadcast; no video ID needed
+// Stage 2: stored v1 video ID       — fallback for channels momentarily offline
+// Stage 3: stored v2 video ID       — second video ID fallback
+// Stage 4: uploads playlist          — always works; uses UU prefix of channelId
 function _ytTryCurrentStage() {
   var ch = YT_CHANNELS[_ytCurrentChNo - 1];
   if (!ch) { ytShowGeoError(); return; }
-  // For channels that have a known working video ID, skip live_stream
-  // (most aren't 24/7 live) and play the stored video directly
-  if (ch.v1 && ch.cid && _ytFallbackStage === 1) {
-    _ytFallbackStage = 2;
-  }
-  // For channels with NO video IDs, skip straight to uploads playlist
-  if (!ch.v1 && !ch.v2 && ch.cid && _ytFallbackStage === 1) {
-    _ytFallbackStage = 4;
-  }
   // Skip stages with no data
   while (_ytFallbackStage <= 4) {
     if (_ytFallbackStage === 1 && ch.cid) break;
@@ -8645,6 +8826,9 @@ function _ytTryCurrentStage() {
     _ytFallbackStage++;
   }
   if (_ytFallbackStage > 4) { ytShowGeoError(); return; }
+  // Cancel any pending Stage-1 auto-advance timer
+  clearTimeout(_ytStage1Timer);
+  _ytStage1Timer = null;
   var src = '';
   if (_ytFallbackStage === 1)
     src = 'https://www.youtube.com/embed/live_stream?channel=' + ch.cid +
@@ -8660,6 +8844,16 @@ function _ytTryCurrentStage() {
     src = 'https://www.youtube.com/embed/videoseries?list=UU' + ch.cid.slice(2) +
           '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
   _ytSetSrc(src);
+  // Stage 1 uses live_stream?channel= which silently fails on some channels.
+  // After 10s, if still on Stage 1, auto-advance to Stage 2 (direct video ID).
+  if (_ytFallbackStage === 1 && ch.v1) {
+    _ytStage1Timer = setTimeout(function() {
+      if (_ytFallbackStage === 1) {
+        _ytFallbackStage = 2;
+        _ytTryCurrentStage();
+      }
+    }, 10000);
+  }
 }
 
 // Manual fallback — called by "Try next source" button in the error bar
@@ -8676,6 +8870,88 @@ function ytPlayByNumber() {
   } else {
     inp.style.borderColor = '#dc2626';
     setTimeout(function() { inp.style.borderColor = '#1e3a5f'; }, 900);
+  }
+}
+
+// ── Channel name search / filter ─────────────────────────────────────────────
+var _ytSearchResults = [];
+
+function ytOnChannelSearch(query) {
+  try {
+    var panel = document.getElementById('yt-search-results');
+    var clearBtn = document.getElementById('yt-ch-search-clear');
+    var q = (query || '').trim().toLowerCase();
+
+    if (!q) {
+      _ytSearchResults = [];
+      if (panel) panel.style.display = 'none';
+      if (clearBtn) clearBtn.style.display = 'none';
+      ytBuildSelect(); // restore full dropdown
+      return;
+    }
+
+    if (clearBtn) clearBtn.style.display = '';
+
+    var matches = YT_CHANNELS.filter(function(ch) {
+      return (ch.name     && ch.name.toLowerCase().includes(q)) ||
+             (ch.country  && ch.country.toLowerCase().includes(q)) ||
+             (ch.category && ch.category.toLowerCase().includes(q)) ||
+             (ch.lang     && ch.lang.toLowerCase().includes(q));
+    });
+    _ytSearchResults = matches;
+
+    if (!panel) return;
+
+    if (!matches.length) {
+      panel.style.display = 'block';
+      panel.innerHTML =
+        '<div style="padding:10px 12px;font-size:11px;color:#475569;text-align:center">No channels found for "<b style="color:#94a3b8">' +
+        q.replace(/</g,'&lt;') + '</b>"</div>';
+      return;
+    }
+
+    // Build clickable result rows
+    var rows = matches.map(function(ch) {
+      var tag = ch.category || '';
+      var lang = ch.lang ? ' · ' + ch.lang : '';
+      return '<div onclick="ytPickSearchResult(' + ch.no + ')" ' +
+        'style="display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;border-bottom:1px solid #0a1628;transition:background .1s" ' +
+        'onmouseover="this.style.background=\'#0d1f3c\'" onmouseout="this.style.background=\'\'">' +
+        '<span style="font-size:10px;color:#1d4ed8;font-weight:700;flex-shrink:0;min-width:28px">Ch ' + ch.no + '</span>' +
+        '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:#e2e8f0;font-weight:600">' + ch.name + '</span>' +
+        '<span style="font-size:9.5px;color:#475569;white-space:nowrap;flex-shrink:0">' + tag + lang + '</span>' +
+        '<button style="flex-shrink:0;padding:3px 9px;background:#1d4ed8;color:#fff;border:none;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer">&#x25BA;</button>' +
+        '</div>';
+    }).join('');
+
+    panel.innerHTML =
+      '<div style="padding:5px 12px 4px;font-size:9.5px;color:#334155;letter-spacing:.4px;font-weight:700;background:#060c18;border-bottom:1px solid #0a1628">' +
+      matches.length + ' channel' + (matches.length > 1 ? 's' : '') + ' found — click to play</div>' +
+      rows;
+    panel.style.display = 'block';
+  } catch(e) {
+    console.error('[ytOnChannelSearch] error:', e);
+  }
+}
+
+function ytPickSearchResult(no) {
+  ytSwitchToChannel(no);
+  ytClearChannelSearch();
+}
+
+function ytClearChannelSearch() {
+  var inp = document.getElementById('yt-ch-search');
+  if (inp) inp.value = '';
+  ytOnChannelSearch('');
+}
+
+function ytOnChannelSearchEnter() {
+  try {
+    if (_ytSearchResults.length) {
+      ytPickSearchResult(_ytSearchResults[0].no);
+    }
+  } catch(e) {
+    console.error('[ytOnChannelSearchEnter] error:', e);
   }
 }
 
