@@ -30,26 +30,32 @@
     var q = (input.value||'').trim();
     if (q.length < 2) { acClose(input); return; }
     clearTimeout(AC_TIMER);
+    var filterType = input.dataset.ac || ''; // 'fund' or 'stock'
     var resolved = false;
     AC_TIMER = setTimeout(function() {
       if (resolved) return;
-      var results = localSearch(q);
+      var results = localSearch(q, filterType);
       if (results.length) { acRender(input, results); resolved = true; }
-      else acYahooSearch(input, q).then(r => { if (!resolved) { acRender(input, r); resolved = true; } });
+      else acYahooSearch(input, q, filterType).then(r => { if (!resolved) { acRender(input, r); resolved = true; } });
     }, 150);
   }
 
-  function localSearch(q) {
+  function localSearch(q, filterType) {
     if (!DB_CACHE || !DB_CACHE.length) return [];
     var ql = q.toLowerCase(), results = [];
-    for (var i = 0; i < DB_CACHE.length && results.length < 12; i++) {
+    for (var i = 0; i < DB_CACHE.length && results.length < 24; i++) {
       var it = DB_CACHE[i];
       var score = 0;
       if (it.symL.startsWith(ql)) score = 4;
       else if (it.symL.includes(ql)) score = 3;
       else if (it.nameL.startsWith(ql)) score = 2;
       else if (it.nameL.includes(ql)) score = 1;
-      if (score > 0) results.push({ sym: it.sym, name: it.name, exch: it.exch, type: it.type, score: score });
+      if (score > 0) {
+        // Filter by type if specified (fund = only mutual funds, stock = exclude mutual funds)
+        if (filterType === 'fund' && it.type !== 'Mutual Fund') continue;
+        if (filterType === 'stock' && it.type === 'Mutual Fund') continue;
+        results.push({ sym: it.sym, name: it.name, exch: it.exch, type: it.type, score: score });
+      }
     }
     results.sort(function(a,b) { return b.score - a.score; });
     return results.slice(0, 12);
