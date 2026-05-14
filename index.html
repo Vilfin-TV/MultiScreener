@@ -6547,12 +6547,45 @@ function ytSearchPlay(query) {
   var dd = document.getElementById('yt-search-dropdown');
   if (inp) inp.value = query;
   if (dd) dd.style.display = 'none';
-  // Trigger play with search query
   inp.classList.add('ok'); setTimeout(function(){inp.classList.remove('ok')},1800);
-  var src = 'https://www.youtube.com/embed?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
-  _ytSetSrc(src);
   var np = document.getElementById('yt-now-playing');
-  if (np) np.textContent = '\uD83D\uDD0D ' + query;
+  if (np) np.textContent = '\uD83D\uDD0D Searching: ' + query;
+  // Fetch YouTube search results via proxy and show clickable video list
+  var proxyUrl = WORKER_PROXY_URL + '/?url=' + encodeURIComponent('https://www.youtube.com/results?search_query=' + encodeURIComponent(query));
+  fetch(proxyUrl, { signal: AbortSignal.timeout(10000) })
+    .then(function(r) { return r.text(); })
+    .then(function(html) {
+      var videoIds = [];
+      var re = /"videoId":"([a-zA-Z0-9_-]{11})"/g;
+      var m;
+      while ((m = re.exec(html)) !== null && videoIds.length < 10) {
+        if (videoIds.indexOf(m[1]) === -1) videoIds.push(m[1]);
+      }
+      if (!videoIds.length) {
+        dd.innerHTML = '<div style="padding:10px;color:var(--text3);font-size:11px">No videos found. Try a different search.</div>';
+        dd.style.display = 'block';
+        return;
+      }
+      dd.innerHTML = videoIds.map(function(vid, i) {
+        return '<div class="ac-item" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:8px" onclick="ytCustomSearchPlay(\''+vid+'\');document.getElementById(\'yt-search-dropdown\').style.display=\'none\'">'
+          + '<span style="flex-shrink:0;font-size:16px">▶</span>'
+          + '<span style="flex:1;font-size:12px;color:var(--text)">Video #'+(i+1)+'</span>'
+          + '<span style="font-size:10px;color:var(--text3)">'+vid+'</span>'
+          + '</div>';
+      }).join('');
+      dd.style.display = 'block';
+      if (np) np.textContent = '\uD83D\uDD0D ' + videoIds.length + ' results for: ' + query;
+    })
+    .catch(function() {
+      dd.innerHTML = '<div style="padding:10px;color:var(--red);font-size:11px">Search failed. Paste a direct URL instead.</div>';
+      dd.style.display = 'block';
+    });
+}
+
+function ytCustomSearchPlay(vid) {
+  var np = document.getElementById('yt-now-playing');
+  if (np) np.textContent = '\u25B6 Custom: ' + vid;
+  ytSwitchChannel(vid);
 }
 
 // Override: if input has a search term (not URL), do YouTube search playback
