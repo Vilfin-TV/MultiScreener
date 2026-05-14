@@ -2911,6 +2911,17 @@ footer{
         onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#1d4ed8'">&#x25BA; Play</button>
     </div>
 
+    <!-- Channel name search (filters the dropdown below) -->
+    <div style="padding:5px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:5px;align-items:center">
+      <input type="search" id="yt-ch-search"
+        placeholder="🔍 Search channels by name…"
+        oninput="ytOnChannelSearch(this.value)"
+        onkeydown="if(event.key==='Enter')ytOnChannelSearchEnter()"
+        style="flex:1;min-width:0;padding:6px 10px;background:#0f1d35;color:#e2e8f0;border:1px solid #1e3a5f;border-radius:7px;font-size:11px;font-family:inherit;outline:none"/>
+      <button onclick="ytOnChannelSearchEnter()"
+        style="padding:5px 12px;background:#1d4ed8;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">&#x25BA;</button>
+    </div>
+
     <!-- Channel selector (JS-populated from YT_CHANNELS) -->
     <div style="padding:5px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
       <select id="yt-channel-select" onchange="ytSwitchToChannel(parseInt(this.value,10))"
@@ -8427,7 +8438,8 @@ function _ytGetFrame() {
   if (!f) {
     f = document.createElement('iframe');
     f.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:0';
-    f.allow = 'autoplay; encrypted-media; picture-in-picture; web-share';
+    f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen; web-share';
+    f.allowFullscreen = true;
     f.referrerPolicy = 'strict-origin-when-cross-origin';
     host.appendChild(f);
   }
@@ -8538,6 +8550,56 @@ function ytPlayByNumber() {
   } else {
     inp.style.borderColor = '#dc2626';
     setTimeout(function() { inp.style.borderColor = '#1e3a5f'; }, 900);
+  }
+}
+
+// ── Channel name search / filter ─────────────────────────────────────────────
+var _ytSearchResults = []; // filtered channel list
+
+function ytOnChannelSearch(query) {
+  try {
+    var sel = document.getElementById('yt-channel-select');
+    if (!sel) return;
+    var q = (query || '').trim().toLowerCase();
+    if (!q) {
+      // Restore full list
+      ytBuildSelect();
+      _ytSearchResults = YT_CHANNELS.slice();
+      return;
+    }
+    var matches = YT_CHANNELS.filter(function(ch) {
+      return (ch.name  && ch.name.toLowerCase().includes(q))  ||
+             (ch.country && ch.country.toLowerCase().includes(q)) ||
+             (ch.category && ch.category.toLowerCase().includes(q)) ||
+             (ch.lang && ch.lang.toLowerCase().includes(q));
+    });
+    _ytSearchResults = matches;
+    sel.innerHTML = '';
+    if (!matches.length) {
+      sel.innerHTML = '<option value="">No channels found</option>';
+      return;
+    }
+    matches.forEach(function(ch) {
+      var o = document.createElement('option');
+      o.value = ch.no;
+      o.textContent = 'Ch ' + ch.no + ' · ' + ch.name + (ch.country ? ' (' + ch.country + ')' : '');
+      sel.appendChild(o);
+    });
+  } catch(e) {
+    console.error('[ytOnChannelSearch] error:', e);
+  }
+}
+
+function ytOnChannelSearchEnter() {
+  try {
+    if (_ytSearchResults.length) {
+      ytSwitchToChannel(_ytSearchResults[0].no);
+      var inp = document.getElementById('yt-ch-search');
+      if (inp) { inp.value = ''; }
+      ytOnChannelSearch(''); // restore full list
+    }
+  } catch(e) {
+    console.error('[ytOnChannelSearchEnter] error:', e);
   }
 }
 
