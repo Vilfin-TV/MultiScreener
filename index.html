@@ -8229,7 +8229,7 @@ function radioAutoPlayDefault() {
 // YOUTUBE LIVE — 141-CHANNEL DATA & HYBRID FALLBACK PLAYER
 // ═══════════════════════════════════════════════════════════════════════
 var YT_CHANNELS = [
-  {no:1,  name:'WION',                     country:'India',          category:'National News', lang:'English',    cid:'UC_gUM8rL-Lrg6O3adPW9K1g', v1:'JnttcoZFFI8',  v2:'lHFPPmi-TrY'},
+  {no:1,  name:'WION',                     country:'India',          category:'National News', lang:'English',    cid:'UC_gUM8rL-Lrg6O3adPW9K1g', v1:'lmZRiDMK3OU',  v2:'_KnLD1uPF90'},
   {no:2,  name:'NDTV 24x7',                country:'India',          category:'National News', lang:'English',    cid:'UCZFMm1mMw0F81Z37aaEzTUA', v1:'y4vvJJNF1ro',  v2:'N-ZthvsWswU'},
   {no:3,  name:'India Today',              country:'India',          category:'National News', lang:'English',    cid:'UCYPvAwZP8pZhSMW8qs7cVCw', v1:'eJDNOOA2U9s',  v2:'NbK5e5luLhs'},
   {no:4,  name:'Republic World',           country:'India',          category:'National News', lang:'English',    cid:'UCwqusr8YDwM-3mEYTDeJHzw', v1:'Xi3heFyY2-4',  v2:'fzlIR8I657g'},
@@ -8263,7 +8263,7 @@ var YT_CHANNELS = [
   {no:32, name:'Asianet News',            country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCf8w5m0YsRa8MHQ5bwSGmbw', v1:'s0LLVQeMmtU',  v2:''},
   {no:33, name:'24 News',                 country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCup3etEdjyF1L3sRbU-rKLw', v1:'1wECsnGZcfc',  v2:''},
   {no:34, name:'Mathrubhumi News',        country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCwXrBBZnIh2ER4lal6WbAHw', v1:'YGEgelAiUf0',  v2:''},
-  {no:35, name:'Manorama News',           country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCP0uG-mcMImgKnJz-VjJZmQ', v1:'x4s5XC_EIt4',  v2:''},
+  {no:35, name:'Manorama News',           country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCP0uG-mcMImgKnJz-VjJZmQ', v1:'8dc1R2A2aWM',  v2:'tgBTspqA5nY'},
   {no:36, name:'MediaOne TV',             country:'India',          category:'State News',    lang:'Malayalam',  cid:'UC-f7r46JhYv78q5pGrO6ivA', v1:'-8d8-c0yvyU',  v2:''},
   {no:37, name:'Kairali News',            country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCnEvxaWfVL91XIYuyQRO5QA', v1:'yiiqRHY1Bl8',  v2:''},
   {no:38, name:'Janam TV',                country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCNVkxRPqsBNejO6B9thG9Xw', v1:'yFtYg2Bw-oo',  v2:''},
@@ -8380,6 +8380,7 @@ var _ytPlayer        = null; // YT IFrame API instance (optional)
 var isGlobalMuted    = true;
 var _ytMuted         = true;
 var _ytVolume        = 60;
+var _ytStage1Timer   = null; // auto-advance if live_stream?channel= fails silently
 
 // ── Post-message helpers for the YouTube iframe ──────────────────
 function _ytPostMessage(cmd, val) {
@@ -8478,6 +8479,8 @@ function ytSwitchToChannel(no) {
   if (!no || no < 1 || no > YT_CHANNELS.length) return;
   var ch = YT_CHANNELS[no - 1];
   if (!ch) return;
+  clearTimeout(_ytStage1Timer);
+  _ytStage1Timer   = null;
   _ytCurrentChNo   = no;
   _ytFallbackStage = 1;
   ytHideGeoError();
@@ -8535,6 +8538,9 @@ function _ytTryCurrentStage() {
     _ytFallbackStage++;
   }
   if (_ytFallbackStage > 4) { ytShowGeoError(); return; }
+  // Cancel any pending Stage-1 auto-advance timer
+  clearTimeout(_ytStage1Timer);
+  _ytStage1Timer = null;
   var src = '';
   if (_ytFallbackStage === 1)
     src = 'https://www.youtube.com/embed/live_stream?channel=' + ch.cid +
@@ -8550,6 +8556,16 @@ function _ytTryCurrentStage() {
     src = 'https://www.youtube.com/embed/videoseries?list=UU' + ch.cid.slice(2) +
           '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
   _ytSetSrc(src);
+  // Stage 1 uses live_stream?channel= which silently fails on some channels.
+  // After 10s, if still on Stage 1, auto-advance to Stage 2 (direct video ID).
+  if (_ytFallbackStage === 1 && ch.v1) {
+    _ytStage1Timer = setTimeout(function() {
+      if (_ytFallbackStage === 1) {
+        _ytFallbackStage = 2;
+        _ytTryCurrentStage();
+      }
+    }, 10000);
+  }
 }
 
 // Manual fallback — called by "Try next source" button in the error bar
