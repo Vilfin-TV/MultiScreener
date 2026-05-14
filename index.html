@@ -2943,13 +2943,17 @@ footer{
       <label for="yt-default-ch-chk" style="font-size:10px;color:#64748b;cursor:pointer;user-select:none">&#x1F4CC; Set as default channel on startup</label>
     </div>
 
-    <!-- ── Custom YouTube URL ── -->
-    <div class="yt-custom-bar">
+    <!-- ── Custom YouTube URL / Search ── -->
+    <div class="yt-custom-bar" style="flex-wrap:wrap;gap:4px;position:relative">
       <input class="yt-custom-input" id="yt-custom-url" type="text"
-        placeholder="Search channels or paste YouTube URL…"
+        placeholder="🔍 Search YouTube or paste URL…"
         onkeydown="if(event.key==='Enter')ytPlayCustomUrl()"
-        title="Type a channel name to search, or paste a YouTube URL / video ID"/>
+        oninput="ytSearchSuggest(this.value)"
+        title="Type to search YouTube, paste a full URL, or pick a favorite"/>
       <button class="yt-custom-play-btn" onclick="ytPlayCustomUrl()">&#x25BA; Play</button>
+      <button class="ytc-btn" onclick="ytToggleFav()" id="yt-fav-btn" title="Add to favorites" style="font-size:14px">&#x2606;</button>
+      <button class="ytc-btn" onclick="ytShowFavorites()" title="Show favorites" style="font-size:12px">&#x1F4C2;</button>
+      <div id="yt-search-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#0d1d35;border:1px solid var(--border);border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:9999;scrollbar-width:thin"></div>
     </div>
 
     <!-- YouTube player — exact 16:9, zero black bars -->
@@ -2998,6 +3002,7 @@ footer{
       <button class="ytc-btn" onclick="ytNextChannel()" title="Next channel">&#x23ED;</button>
       <button class="ytc-btn" id="yt-pip-btn" onclick="ytTogglePIP()" title="Picture in Picture">&#x29C9;</button>
       <button class="ytc-btn" id="yt-audio-btn" onclick="ytSelectAudio()" title="Audio output">&#x1F508;</button>
+      <button class="ytc-btn" id="yt-fav-ctrl-btn" onclick="ytToggleFav()" title="Add to favorites">&#x2606;</button>
       <span id="yt-now-playing" style="font-size:9px;color:#475569;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:2px"></span>
     </div>
 
@@ -6468,6 +6473,131 @@ function widgetInitOnLoad() {
 window.addEventListener('DOMContentLoaded', widgetInitOnLoad);
 
 // ═══════════════════════════════════════════════════════════════════════
+// YOUTUBE FAVORITES + SEARCH SUGGEST
+// ═══════════════════════════════════════════════════════════════════════
+var _ytFavorites   = JSON.parse(localStorage.getItem('yt_favorites') || '[]');
+var _ytSearchTimer = null;
+
+function ytSearchSuggest(q) {
+  clearTimeout(_ytSearchTimer);
+  var dd = document.getElementById('yt-search-dropdown');
+  if (!dd) return;
+  q = (q || '').trim();
+  if (q.length < 2 || q.startsWith('http')) { dd.style.display = 'none'; return; }
+  _ytSearchTimer = setTimeout(function() {
+    fetch(WORKER_PROXY_URL + '/?url=' + encodeURIComponent('https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=' + encodeURIComponent(q)))
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        var items = d[1] || [];
+        if (!items.length || q !== ((document.getElementById('yt-custom-url') || {}).value || '').trim()) {
+          dd.style.display = 'none'; return;
+        }
+        dd.innerHTML = items.slice(0, 6).map(function(t) {
+          return '<div class="ac-item" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04)" onmousedown="event.preventDefault()" onclick="ytSearchPlay(\'' + escJs(t) + '\')">&#x1F50D; ' + escHtml(t) + '</div>';
+        }).join('');
+        dd.style.display = 'block';
+      }).catch(function() {});
+  }, 200);
+}
+
+function ytSearchPlay(query) {
+  var inp = document.getElementById('yt-custom-url');
+  var dd  = document.getElementById('yt-search-dropdown');
+  if (inp) inp.value = query;
+  if (dd)  dd.style.display = 'none';
+  if (inp) { inp.classList.add('ok'); setTimeout(function() { inp.classList.remove('ok'); }, 1800); }
+  var np = document.getElementById('yt-now-playing');
+  if (np) np.textContent = '🔍 Searching: ' + query;
+  var proxyUrl = WORKER_PROXY_URL + '/?url=' + encodeURIComponent('https://www.youtube.com/results?search_query=' + encodeURIComponent(query));
+  fetch(proxyUrl, { signal: AbortSignal.timeout(10000) })
+    .then(function(r) { return r.text(); })
+    .then(function(html) {
+      var videoIds = [], re = /"videoId":"([a-zA-Z0-9_-]{11})"/g, m;
+      while ((m = re.exec(html)) !== null && videoIds.length < 10) {
+        if (videoIds.indexOf(m[1]) === -1) videoIds.push(m[1]);
+      }
+      if (!dd) return;
+      if (!videoIds.length) {
+        dd.innerHTML = '<div style="padding:10px;color:var(--text3);font-size:11px">No videos found. Try a different search.</div>';
+        dd.style.display = 'block'; return;
+      }
+      dd.innerHTML = videoIds.map(function(vid, i) {
+        return '<div class="ac-item" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;gap:8px"' +
+          ' onclick="ytCustomSearchPlay(\'' + vid + '\');document.getElementById(\'yt-search-dropdown\').style.display=\'none\'">' +
+          '<span style="flex-shrink:0;font-size:16px">&#x25BA;</span>' +
+          '<span style="flex:1;font-size:12px;color:var(--text)">Result #' + (i + 1) + '</span>' +
+          '<span style="font-size:10px;color:var(--text3)">' + vid + '</span></div>';
+      }).join('');
+      dd.style.display = 'block';
+      if (np) np.textContent = '🔍 ' + videoIds.length + ' results for: ' + query;
+    })
+    .catch(function() {
+      if (!dd) return;
+      dd.innerHTML = '<div style="padding:10px;color:var(--red);font-size:11px">Search failed. Paste a direct URL instead.</div>';
+      dd.style.display = 'block';
+    });
+}
+
+function ytCustomSearchPlay(vid) {
+  var np = document.getElementById('yt-now-playing');
+  if (np) np.textContent = '▶ Custom: ' + vid;
+  ytSwitchChannel(vid);
+}
+
+function ytToggleFav() {
+  var ch = YT_CHANNELS[_ytCurrentChNo - 1];
+  if (!ch) return;
+  var key = ch.cid || ch.v1 || ch.no;
+  var idx = _ytFavorites.indexOf(key);
+  if (idx > -1) _ytFavorites.splice(idx, 1);
+  else _ytFavorites.push(key);
+  localStorage.setItem('yt_favorites', JSON.stringify(_ytFavorites));
+  ytSyncFavBtn();
+}
+
+function ytSyncFavBtn() {
+  var ch  = YT_CHANNELS[_ytCurrentChNo - 1];
+  var key = ch ? (ch.cid || ch.v1 || ch.no) : '';
+  var isFav = _ytFavorites.indexOf(key) > -1;
+  var btn1 = document.getElementById('yt-fav-btn');
+  var btn2 = document.getElementById('yt-fav-ctrl-btn');
+  if (btn1) btn1.textContent = isFav ? '★' : '☆';
+  if (btn2) btn2.textContent = isFav ? '★' : '☆';
+}
+
+function ytShowFavorites() {
+  var dd = document.getElementById('yt-search-dropdown');
+  if (!dd) return;
+  if (!_ytFavorites.length) {
+    dd.innerHTML = '<div style="padding:10px;color:var(--text3);font-size:11px">No favorites yet. Click &#x2606; to add the current channel.</div>';
+    dd.style.display = 'block'; return;
+  }
+  dd.innerHTML = _ytFavorites.map(function(key) {
+    var ch = YT_CHANNELS.find(function(c) { return c.cid === key || c.v1 === key || c.no === key; });
+    var name = ch ? ('[' + ch.no + '] ' + ch.name) : key;
+    return '<div class="ac-item" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04)"' +
+      ' onclick="ytSwitchToChannel(' + (ch ? ch.no : 1) + ');document.getElementById(\'yt-search-dropdown\').style.display=\'none\'">' +
+      '&#x2B50; ' + escHtml(name) + '</div>';
+  }).join('');
+  dd.style.display = 'block';
+}
+
+function escJs(s)   { return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, '\\\''); }
+function escHtml(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Sync fav button whenever channel switches
+ytSwitchToChannel = (function(orig) {
+  return function(no) { orig(no); ytSyncFavBtn(); };
+})(ytSwitchToChannel);
+
+// Close search dropdown on outside click
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('yt-search-dropdown');
+  var bar = document.querySelector('.yt-custom-bar');
+  if (dd && bar && !bar.contains(e.target)) dd.style.display = 'none';
+});
+
+// ═══════════════════════════════════════════════════════════════════════
 // CUSTOM YOUTUBE URL PLAYER
 // ═══════════════════════════════════════════════════════════════════════
 function ytExtractVideoId(url) {
@@ -6501,34 +6631,37 @@ function ytPlayCustomUrl() {
   if (!url) return;
   try {
     const id = ytExtractVideoId(url);
-    if (!id) {
-      // Not a URL/ID — treat as channel name search
+    if (id) {
+      // Direct video ID or YouTube URL
+      input.classList.add('ok');
+      setTimeout(() => { input.classList.remove('ok'); }, 1800);
+      try { localStorage.setItem('viltv_custom_url', url); } catch(_) {}
+      const sel = document.getElementById('yt-channel-select');
+      if (sel) sel.selectedIndex = -1;
+      const np = document.getElementById('yt-now-playing');
+      if (np) np.textContent = '▶ Custom URL';
+      ytSwitchChannel(id);
+    } else if (url.startsWith('http')) {
+      // Invalid URL that produced no video ID
+      input.classList.add('err');
+      setTimeout(() => { input.classList.remove('err'); }, 2500);
+    } else {
+      // Plain text — first try local channel list, then fall back to YouTube search
       const q = url.toLowerCase();
       const match = YT_CHANNELS.find(ch =>
-        (ch.name    && ch.name.toLowerCase().includes(q)) ||
-        (ch.country && ch.country.toLowerCase().includes(q)) ||
+        (ch.name     && ch.name.toLowerCase().includes(q)) ||
+        (ch.country  && ch.country.toLowerCase().includes(q)) ||
         (ch.category && ch.category.toLowerCase().includes(q)) ||
-        (ch.lang    && ch.lang.toLowerCase().includes(q))
+        (ch.lang     && ch.lang.toLowerCase().includes(q))
       );
       if (match) {
         input.value = '';
         ytSwitchToChannel(match.no);
-        const np = document.getElementById('yt-now-playing');
-        if (np) np.textContent = '▶ Ch ' + match.no + ' · ' + match.name;
       } else {
-        input.classList.add('err');
-        setTimeout(() => { input.classList.remove('err'); }, 2000);
+        // No local match — search YouTube via proxy
+        ytSearchPlay(url);
       }
-      return;
     }
-    input.classList.add('ok');
-    setTimeout(() => { input.classList.remove('ok'); }, 1800);
-    try { localStorage.setItem('viltv_custom_url', url); } catch(_) {}
-    const sel = document.getElementById('yt-channel-select');
-    if (sel) sel.selectedIndex = -1;
-    const np = document.getElementById('yt-now-playing');
-    if (np) np.textContent = '▶ Custom URL';
-    ytSwitchChannel(id);
   } catch(e) {
     console.error('[ytPlayCustomUrl] error:', e);
   }
