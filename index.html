@@ -1760,6 +1760,33 @@ footer{
 .yt-omni-status{padding:16px;text-align:center;color:#475569;font-size:11px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* ── MUSIC OMNISEARCH ── */
+.music-omni-bar{padding:6px 8px;background:#080e1a;border-bottom:1px solid #0d1a30;display:flex;gap:5px;align-items:center;flex-shrink:0}
+.music-omni-input-wrap{flex:1;min-width:0;position:relative;display:flex;align-items:center}
+.music-omni-trigger{width:100%;padding:7px 10px 7px 30px;background:#0c1525;color:#475569;border:1px solid #1e2a40;border-radius:8px;font-size:11px;font-family:inherit;cursor:pointer;text-align:left;transition:all .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.music-omni-trigger:hover{border-color:#dc2626;color:#e2e8f0;background:#0f1525}
+#music-omni-modal{position:fixed;inset:0;z-index:200001;align-items:flex-start;justify-content:center;padding:60px 16px 16px;background:rgba(2,4,14,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.music-omni-panel{background:linear-gradient(160deg,#0e0b1f 0%,#0a0f20 100%);border:1px solid #2a1535;border-radius:16px;width:100%;max-width:680px;max-height:calc(100vh - 90px);display:flex;flex-direction:column;box-shadow:0 32px 80px rgba(0,0,0,.92),0 0 0 1px rgba(220,38,38,.1);overflow:hidden;animation:ytOmniIn .2s cubic-bezier(.16,1,.3,1)}
+.music-omni-hdr{padding:12px 14px;border-bottom:1px solid #200f2a;display:flex;align-items:center;gap:10px;background:rgba(8,4,20,.9);flex-shrink:0}
+.music-omni-hdr-input{flex:1;padding:9px 12px 9px 38px;background:#130820;color:#e2e8f0;border:1px solid #dc2626;border-radius:10px;font-size:13px;outline:none;font-family:inherit;transition:border-color .15s,box-shadow .15s}
+.music-omni-hdr-input::placeholder{color:#475569}
+.music-omni-hdr-input:focus{border-color:#ef4444;box-shadow:0 0 0 2px rgba(220,38,38,.12)}
+.music-omni-close{width:32px;height:32px;border:1px solid #2a1535;border-radius:8px;background:#130820;color:#94a3b8;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-weight:700;padding:0}
+.music-omni-close:hover{background:#2a1535;color:#fff}
+.music-omni-body{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#2a1535 transparent}
+.music-omni-sec{padding:7px 14px 4px;font-size:9.5px;font-weight:700;color:#4a2860;letter-spacing:.7px;text-transform:uppercase;background:#07041a;border-bottom:1px solid #0e0828;position:sticky;top:0;z-index:2}
+.music-omni-row{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);transition:background .12s}
+.music-omni-row:hover{background:#130a20}
+.music-omni-icon{width:34px;height:34px;border-radius:7px;background:linear-gradient(135deg,#dc2626 0%,#7c2020 100%);color:#fff;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(220,38,38,.25)}
+.music-omni-meta{flex:1;min-width:0}
+.music-omni-name{font-size:12px;color:#e2e8f0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.music-omni-desc{font-size:9.5px;color:#64748b;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.music-omni-genre-tag{font-size:9px;color:#9f5ae0;font-weight:700;text-transform:uppercase;letter-spacing:.5px;flex-shrink:0}
+.music-omni-yt-row{display:flex;align-items:flex-start;gap:10px;padding:9px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);transition:background .12s}
+.music-omni-yt-row:hover{background:#130a20}
+.music-omni-thumb{width:80px;height:45px;border-radius:5px;object-fit:cover;background:#130820;flex-shrink:0;border:1px solid #2a1535}
+.music-omni-status{padding:16px;text-align:center;color:#475569;font-size:11px}
+
 /* ── LIVE SCORES — sport tab buttons ── */
 .score-sport-btn{
   padding:4px 10px;background:transparent;border:1px solid #1e3a5f;
@@ -3262,6 +3289,15 @@ footer{
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('jazz')">🎺 Jazz</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('devotional')">🕉 Devotional</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('meditation')">🧘 Meditation</button>
+    </div>
+    <!-- Music Omnisearch bar -->
+    <div class="music-omni-bar">
+      <div class="music-omni-input-wrap">
+        <span style="position:absolute;left:9px;font-size:14px;color:#64748b;pointer-events:none;z-index:1;line-height:1">♪</span>
+        <button class="music-omni-trigger" id="music-omni-trigger" onclick="musicOmniOpen()">Search playlists or YouTube Music…</button>
+      </div>
+      <button class="ytc-btn" id="music-fav-btn" onclick="musicToggleFav()" title="Favourite playlist">☆</button>
+      <button class="ytc-btn" onclick="musicOmniOpen()" title="Browse all playlists" style="padding:0 9px;font-size:13px">☰</button>
     </div>
     <!-- YouTube Music video embed — visible player with controls -->
     <div id="music-video-wrap" style="width:100%;background:#000;flex-shrink:0;display:none">
@@ -7804,6 +7840,157 @@ function musicNext() {
   const idx = Array.from(allBtns).indexOf(btns[0]);
   const newBtn = allBtns[(idx + 1) % allBtns.length];
   if (newBtn) newBtn.click();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MUSIC OMNISEARCH
+// ═══════════════════════════════════════════════════════════════════
+var _musicOmniTimer = null;
+
+function musicOmniOpen() {
+  var modal = document.getElementById('music-omni-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  setTimeout(function() {
+    var inp = document.getElementById('music-omni-input');
+    if (inp) { inp.value = ''; inp.focus(); }
+    _musicOmniRenderLocal('');
+    var ytEl = document.getElementById('music-omni-yt-results');
+    var loading = document.getElementById('music-omni-loading');
+    if (ytEl) ytEl.innerHTML = '';
+    if (loading) loading.style.display = 'none';
+  }, 50);
+  document.addEventListener('keydown', _musicOmniEscHandler);
+}
+function musicOmniClose() {
+  var modal = document.getElementById('music-omni-modal');
+  if (modal) modal.style.display = 'none';
+  clearTimeout(_musicOmniTimer);
+  document.removeEventListener('keydown', _musicOmniEscHandler);
+}
+function _musicOmniEscHandler(e) { if (e.key === 'Escape') musicOmniClose(); }
+
+function musicOmniInput(val) {
+  clearTimeout(_musicOmniTimer);
+  _musicOmniRenderLocal(val);
+  var q = (val || '').trim();
+  var ytEl = document.getElementById('music-omni-yt-results');
+  var loading = document.getElementById('music-omni-loading');
+  if (q.length > 2) {
+    if (loading) loading.style.display = 'block';
+    if (ytEl) ytEl.innerHTML = '';
+    _musicOmniTimer = setTimeout(function() { _musicOmniYtSearch(q); }, 500);
+  } else {
+    if (loading) loading.style.display = 'none';
+    if (ytEl) ytEl.innerHTML = '';
+  }
+}
+
+function _musicAllPlaylists() {
+  var labels = {
+    'today-top':'Today\'s Top','bollywood':'Bollywood','hindi':'Hindi',
+    'punjabi':'Punjabi','malayalam':'Malayalam','tamil':'Tamil',
+    'telugu':'Telugu','jpop':'J-Pop','jrock':'J-Rock','kpop':'K-Pop',
+    'krock':'K-Rock','cpop':'C-Pop','lofi':'Lo-Fi','chill':'Chill',
+    'workout':'Workout','meditation':'Meditation'
+  };
+  var all = [];
+  Object.keys(_MUSIC_PLAYLISTS).forEach(function(key) {
+    (_MUSIC_PLAYLISTS[key] || []).forEach(function(p) {
+      all.push({ sid: p.sid, name: p.name, desc: p.desc, genre: key, genreLabel: labels[key] || key });
+    });
+  });
+  return all;
+}
+
+function _musicOmniRowHtml(p) {
+  return '<div class="music-omni-row" onclick=\'musicOmniPick(' + JSON.stringify(p.sid) + ',' + JSON.stringify(p.name) + ')\'>'
+    + '<div class="music-omni-icon">&#9654;</div>'
+    + '<div class="music-omni-meta">'
+    + '<div class="music-omni-name">' + _esc(p.name) + '</div>'
+    + '<div class="music-omni-desc">' + _esc(p.desc || 'YouTube Music') + '</div>'
+    + '</div>'
+    + '<span class="music-omni-genre-tag">' + _esc(p.genreLabel || '') + '</span>'
+    + '</div>';
+}
+
+function _musicOmniRenderLocal(q) {
+  var container = document.getElementById('music-omni-playlists');
+  var emptyEl   = document.getElementById('music-omni-empty');
+  if (!container) return;
+  var all = _musicAllPlaylists();
+  var lq  = (q || '').trim().toLowerCase();
+
+  if (!lq) {
+    var html = '';
+    var favs = (_musicFavorites || []).map(function(sid) {
+      return all.find(function(p) { return p.sid === sid; });
+    }).filter(Boolean);
+    if (favs.length) {
+      html += '<div class="music-omni-sec">&#11088; Your Favourites</div>';
+      html += favs.map(_musicOmniRowHtml).join('');
+    }
+    var genreOrder = ['today-top','bollywood','hindi','punjabi','malayalam','tamil','telugu','jpop','jrock','kpop','krock','cpop','lofi','chill','workout','meditation'];
+    genreOrder.forEach(function(key) {
+      var items = all.filter(function(p) { return p.genre === key; });
+      if (!items.length) return;
+      html += '<div class="music-omni-sec">&#127925; ' + _esc(items[0].genreLabel || key) + '</div>';
+      html += items.map(_musicOmniRowHtml).join('');
+    });
+    container.innerHTML = html;
+    if (emptyEl) emptyEl.style.display = 'none';
+    return;
+  }
+
+  var matches = all.filter(function(p) {
+    return (p.name      && p.name.toLowerCase().includes(lq))  ||
+           (p.desc      && p.desc.toLowerCase().includes(lq))  ||
+           (p.genreLabel && p.genreLabel.toLowerCase().includes(lq));
+  });
+  if (!matches.length) {
+    container.innerHTML = '';
+    if (emptyEl) emptyEl.style.display = lq.length > 2 ? 'none' : 'block';
+    return;
+  }
+  if (emptyEl) emptyEl.style.display = 'none';
+  container.innerHTML = '<div class="music-omni-sec">Matching Playlists</div>' + matches.map(_musicOmniRowHtml).join('');
+}
+
+function _musicOmniYtSearch(q) {
+  var loading = document.getElementById('music-omni-loading');
+  var ytEl    = document.getElementById('music-omni-yt-results');
+  fetch(WORKER_PROXY_URL + '/youtube-search?q=' + encodeURIComponent(q + ' music'), { signal: AbortSignal.timeout(8000) })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (loading) loading.style.display = 'none';
+      var items = (d.items || []).filter(function(i) { return i.id; });
+      if (!items.length || !ytEl) return;
+      var html = '<div class="music-omni-sec">YouTube Music Results</div>';
+      html += items.map(function(it) {
+        var thumb = it.thumb || ('https://img.youtube.com/vi/' + it.id + '/mqdefault.jpg');
+        return '<div class="music-omni-yt-row" onclick=\'musicOmniPickYt(' + JSON.stringify(it.id) + ',' + JSON.stringify(it.type) + ',' + JSON.stringify(it.title) + ')\'>'
+          + '<img class="music-omni-thumb" src="' + _esc(thumb) + '" onerror="this.style.display=\'none\'" loading="lazy" alt="">'
+          + '<div class="music-omni-meta">'
+          + '<div class="music-omni-name">' + _esc(it.title) + '</div>'
+          + '<div class="music-omni-desc">' + _esc(it.channel || '') + (it.type === 'playlist' ? ' &middot; Playlist' : ' &middot; Video') + '</div>'
+          + '</div></div>';
+      }).join('');
+      ytEl.innerHTML = html;
+    })
+    .catch(function() { if (loading) loading.style.display = 'none'; });
+}
+
+function musicOmniPick(sid, name) {
+  musicOmniClose();
+  var trigger = document.getElementById('music-omni-trigger');
+  if (trigger) trigger.textContent = name;
+  musicPlayYT(sid, name);
+}
+function musicOmniPickYt(id, type, title) {
+  musicOmniClose();
+  var trigger = document.getElementById('music-omni-trigger');
+  if (trigger) trigger.textContent = title;
+  musicPlayYT(id, title);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -15031,6 +15218,30 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
 </div>
 
 <!-- ═══ OMNISEARCH MODAL ═══ -->
+<div id="music-omni-modal" style="display:none;position:fixed;inset:0;z-index:200001;align-items:flex-start;justify-content:center;padding:60px 16px 16px;background:rgba(2,4,14,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)">
+  <div class="music-omni-panel">
+    <div class="music-omni-hdr">
+      <div style="position:relative;flex:1;display:flex;align-items:center">
+        <span style="position:absolute;left:12px;font-size:17px;color:#dc2626;pointer-events:none;line-height:1">♪</span>
+        <input id="music-omni-input" class="music-omni-hdr-input" type="text"
+          placeholder="Search playlists, genres, or YouTube Music…"
+          oninput="musicOmniInput(this.value)"
+          onkeydown="if(event.key==='Escape')musicOmniClose()"
+          autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+      </div>
+      <button class="music-omni-close" onclick="musicOmniClose()" title="Close (Esc)">&#x2715;</button>
+    </div>
+    <div id="music-omni-body" class="music-omni-body">
+      <div id="music-omni-playlists"></div>
+      <div id="music-omni-yt-results"></div>
+      <div id="music-omni-loading" class="music-omni-status" style="display:none">
+        <span style="display:inline-block;animation:spin 1s linear infinite">&#x27F3;</span>&nbsp;Searching YouTube Music…
+      </div>
+      <div id="music-omni-empty" class="music-omni-status" style="display:none">No results found. Try a different query.</div>
+    </div>
+  </div>
+</div>
+
 <div id="yt-omni-modal" style="display:none;position:fixed;inset:0;z-index:200000;align-items:flex-start;justify-content:center;padding:60px 16px 16px;background:rgba(2,6,23,.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)">
   <div class="yt-omni-panel">
     <!-- Header -->
