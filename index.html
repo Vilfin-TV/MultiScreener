@@ -3358,6 +3358,10 @@ footer{
       <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('tamil')">🎬 Tamil</button>
       <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('telugu')">🎬 Telugu</button>
       <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('indiancinema')">🎬 Indian Cinema</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('thriller')">🔪 Thriller (US)</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('hindi')">🎬 Hindi</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('mexico')">🇲🇽 Mexico</button>
+      <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('korea')">🇰🇷 Korea</button>
     </div>
     <!-- Internet Archive embed -->
     <div id="movies-player-wrap" style="width:100%;background:#000;flex-shrink:0;display:none">
@@ -8018,6 +8022,10 @@ const _MOVIES_QUERIES = {
   'tamil':       'mediatype:(movies) AND (subject:"tamil" OR subject:"tamil cinema" OR subject:"tamil films") AND year:[2020 TO 2025]',
   'telugu':      'mediatype:(movies) AND (subject:"telugu" OR subject:"telugu cinema" OR subject:"telugu films") AND year:[2020 TO 2025]',
   'indiancinema': 'mediatype:(movies) AND (subject:"indian cinema" OR subject:"bollywood" OR subject:"tamil" OR subject:"telugu" OR subject:"malayalam") AND year:[2015 TO 2025]',
+  'thriller':     'collection:(feature_films) AND mediatype:(movies) AND subject:(thriller) AND language:(english) AND year:[2000 TO 2025]',
+  'hindi':        'mediatype:(movies) AND (subject:"hindi films" OR subject:"hindi movies" OR subject:"hindi cinema" OR language:"hindi") AND year:[2018 TO 2025]',
+  'mexico':       'mediatype:(movies) AND (subject:"mexican cinema" OR subject:"mexican films" OR subject:"mexico" OR subject:"cine mexicano") AND year:[2010 TO 2025]',
+  'korea':        'mediatype:(movies) AND (subject:"korean cinema" OR subject:"korean films" OR subject:"south korea" OR language:"korean") AND year:[2010 TO 2025]',
 };
 let _moviesLastResults = [];
 let _moviesCurrentId = null;
