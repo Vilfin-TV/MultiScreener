@@ -23,6 +23,9 @@
 /** Milliseconds before the primary fetch is aborted. */
 const PRIMARY_TIMEOUT_MS = 6000;
 
+/** YouTube Data API v3 base. Requires YOUTUBE_API_KEY env var. */
+const YT_API = 'https://www.googleapis.com/youtube/v3';
+
 /** Browser User-Agent to bypass origin blocks. */
 const SPOOF_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ' +
@@ -38,7 +41,7 @@ const CORS = {
 
 // ══════════════════════════════════════════════════════════════════════════════
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
 
     // ── OPTIONS preflight ─────────────────────────────────────────────────────
     if (request.method === 'OPTIONS') {
@@ -50,10 +53,90 @@ export default {
       return jsonError(405, 'Method not allowed. Use GET.');
     }
 
-    // ── Parse query params ────────────────────────────────────────────────────
-    const { searchParams } = new URL(request.url);
-    const targetUrl        = searchParams.get('url');
-    const fallbackUrl      = searchParams.get('fallback'); // optional
+    const { pathname, searchParams } = new URL(request.url);
+
+    // ── /youtube-live?cid=CHANNEL_ID ─────────────────────────────────────────
+    // Resolves the current active live broadcast for a YouTube channel.
+    // Requires YOUTUBE_API_KEY env var; returns {live, videoId, title} or {live:false}.
+    if (pathname === '/youtube-live') {
+      const cid = (searchParams.get('cid') || '').trim();
+      if (!cid || !cid.startsWith('UC')) {
+        return jsonError(400, 'Invalid or missing cid parameter (must start with UC)');
+      }
+      if (!env || !env.YOUTUBE_API_KEY) {
+        return new Response(JSON.stringify({ live: false, reason: 'API key not configured' }), {
+          status: 200,
+          headers: { ...CORS, 'Content-Type': 'application/json' },
+        });
+      }
+      try {
+        const apiUrl = `${YT_API}/search?part=id,snippet&channelId=${encodeURIComponent(cid)}&eventType=live&type=video&maxResults=1&key=${env.YOUTUBE_API_KEY}`;
+        const res = await fetch(apiUrl, { signal: AbortSignal.timeout(7000) });
+        if (!res.ok) {
+          return new Response(JSON.stringify({ live: false, reason: `API returned ${res.status}` }), {
+            status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
+          });
+        }
+        const data = await res.json();
+        const item = data.items && data.items[0];
+        if (!item) {
+          return new Response(JSON.stringify({ live: false }), {
+            status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
+          });
+        }
+        return new Response(JSON.stringify({
+          live:    true,
+          videoId: item.id.videoId,
+          title:   item.snippet && item.snippet.title || '',
+          thumb:   item.snippet && item.snippet.thumbnails && item.snippet.thumbnails.medium && item.snippet.thumbnails.medium.url || '',
+        }), { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
+      } catch (err) {
+        return new Response(JSON.stringify({ live: false, reason: err.message }), {
+          status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    // ── /youtube-search?q=QUERY ───────────────────────────────────────────────
+    // Returns structured search results (video+playlist) from YouTube Data API.
+    // Falls back to empty results if API key not configured.
+    if (pathname === '/youtube-search') {
+      const q = (searchParams.get('q') || '').trim();
+      if (!q) return jsonError(400, 'Missing q parameter');
+      if (!env || !env.YOUTUBE_API_KEY) {
+        return new Response(JSON.stringify({ items: [], reason: 'API key not configured' }), {
+          status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
+        });
+      }
+      try {
+        const apiUrl = `${YT_API}/search?part=snippet&q=${encodeURIComponent(q)}&maxResults=15&type=video,playlist&key=${env.YOUTUBE_API_KEY}`;
+        const res = await fetch(apiUrl, { signal: AbortSignal.timeout(8000) });
+        if (!res.ok) {
+          return new Response(JSON.stringify({ items: [] }), {
+            status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
+          });
+        }
+        const data = await res.json();
+        const items = (data.items || []).map(item => ({
+          id:      item.id.videoId || item.id.playlistId,
+          type:    item.id.kind === 'youtube#playlist' ? 'playlist' : 'video',
+          title:   item.snippet && item.snippet.title || '',
+          channel: item.snippet && item.snippet.channelTitle || '',
+          thumb:   item.snippet && item.snippet.thumbnails && item.snippet.thumbnails.medium && item.snippet.thumbnails.medium.url || '',
+        })).filter(i => i.id);
+        return new Response(JSON.stringify({ items }), {
+          status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ items: [], reason: err.message }), {
+          status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    // ── Parse query params for generic proxy ──────────────────────────────────
+    const targetUrl   = searchParams.get('url');
+    const fallbackUrl = searchParams.get('fallback'); // optional
 
     if (!targetUrl) {
       return jsonError(400, "Missing required query parameter: 'url'");
