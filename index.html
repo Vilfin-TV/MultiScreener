@@ -8823,10 +8823,11 @@ function ytSwitchChannel(val) {
 }
 
 // ── 4-step hybrid fallback chain ─────────────────────────────────────────────
-// Stage 1: live_stream?channel=cid  — auto-resolves current live broadcast; no video ID needed
-// Stage 2: stored v1 video ID       — fallback for channels momentarily offline
-// Stage 3: stored v2 video ID       — second video ID fallback
-// Stage 4: uploads playlist          — always works; uses UU prefix of channelId
+// Stage 1: /youtube-live API → gets actual live videoId (reliable). Falls back
+//          to live_stream?channel= if API key not configured, then uploads playlist.
+// Stage 2: stored v1 video ID  — manual "Try next source" fallback
+// Stage 3: stored v2 video ID  — second manual fallback
+// Stage 4: uploads playlist    — always works; uses UU prefix of channelId
 function _ytTryCurrentStage() {
   var ch = YT_CHANNELS[_ytCurrentChNo - 1];
   if (!ch) { ytShowGeoError(); return; }
@@ -8835,39 +8836,72 @@ function _ytTryCurrentStage() {
     if (_ytFallbackStage === 1 && ch.cid) break;
     if (_ytFallbackStage === 2 && ch.v1)  break;
     if (_ytFallbackStage === 3 && ch.v2)  break;
-    if (_ytFallbackStage === 4 && ch.cid) break; // always works — uploads playlist
+    if (_ytFallbackStage === 4 && ch.cid) break;
     _ytFallbackStage++;
   }
   if (_ytFallbackStage > 4) { ytShowGeoError(); return; }
-  // Cancel any pending Stage-1 auto-advance timer
   clearTimeout(_ytStage1Timer);
   _ytStage1Timer = null;
+
+  // Stage 1: resolve live videoId via API — avoids deprecated live_stream?channel= embed
+  if (_ytFallbackStage === 1) {
+    var capturedNo = _ytCurrentChNo;
+    var resolved   = false;
+    var cid        = ch.cid;
+    function _useLiveStream() {
+      // Graceful degradation: no API key → use legacy embed + 15s auto-advance
+      _ytSetSrc('https://www.youtube.com/embed/live_stream?channel=' + cid +
+        '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
+      _ytStage1Timer = setTimeout(function() {
+        if (_ytCurrentChNo === capturedNo && _ytFallbackStage === 1) {
+          _ytFallbackStage = 4; _ytTryCurrentStage();
+        }
+      }, 15000);
+    }
+    // 5s hard timeout — if proxy is slow, fall back to live_stream?channel=
+    _ytStage1Timer = setTimeout(function() {
+      if (!resolved && _ytCurrentChNo === capturedNo && _ytFallbackStage === 1) {
+        resolved = true; _useLiveStream();
+      }
+    }, 5000);
+    fetch(WORKER_PROXY_URL + '/youtube-live?cid=' + encodeURIComponent(cid))
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (resolved || _ytCurrentChNo !== capturedNo) return;
+        resolved = true;
+        clearTimeout(_ytStage1Timer); _ytStage1Timer = null;
+        if (d.live && d.videoId) {
+          // Best case: embed the exact current live video ID
+          _ytSetSrc('https://www.youtube.com/embed/' + d.videoId +
+            '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
+        } else if (d.reason === 'API key not configured') {
+          // No key in Cloudflare — degrade to live_stream?channel= with auto-advance
+          _useLiveStream();
+        } else {
+          // Channel not live right now — show uploads playlist
+          _ytFallbackStage = 4; _ytTryCurrentStage();
+        }
+      })
+      .catch(function() {
+        if (resolved || _ytCurrentChNo !== capturedNo) return;
+        resolved = true;
+        clearTimeout(_ytStage1Timer); _ytStage1Timer = null;
+        _useLiveStream();
+      });
+    return; // async — don't fall through
+  }
+
   var src = '';
-  if (_ytFallbackStage === 1)
-    src = 'https://www.youtube.com/embed/live_stream?channel=' + ch.cid +
-          '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
-  else if (_ytFallbackStage === 2)
+  if (_ytFallbackStage === 2)
     src = 'https://www.youtube.com/embed/' + ch.v1 +
           '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
   else if (_ytFallbackStage === 3)
     src = 'https://www.youtube.com/embed/' + ch.v2 +
           '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
   else
-    // Stage 4 — uploads playlist (replaces UC with UU, always works)
     src = 'https://www.youtube.com/embed/videoseries?list=UU' + ch.cid.slice(2) +
           '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
   _ytSetSrc(src);
-  // Stage 1 (live_stream?channel=) can silently fail for offline channels.
-  // After 20s, skip directly to Stage 4 (uploads playlist — always valid).
-  // Stages 2/3 (ephemeral video IDs) are only used via manual "Try next source".
-  if (_ytFallbackStage === 1) {
-    _ytStage1Timer = setTimeout(function() {
-      if (_ytFallbackStage === 1) {
-        _ytFallbackStage = 4; // jump to uploads playlist, bypassing stale video IDs
-        _ytTryCurrentStage();
-      }
-    }, 20000);
-  }
 }
 
 // Manual fallback — called by "Try next source" button in the error bar
