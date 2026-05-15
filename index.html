@@ -6575,6 +6575,7 @@ function ytOmniExecute(q) {
 // ── Pick handlers ────────────────────────────────────────────────────
 function ytOmniPickChannel(no) {
   ytOmniClose();
+  if (typeof rbSwitchPanel === 'function') rbSwitchPanel('video');
   ytSwitchToChannel(no);
 }
 
@@ -6609,26 +6610,29 @@ function _omniRenderChannels(q) {
   var lq = (q||'').trim();
 
   if (!lq) {
-    // No query: show favorites first, then top channels
+    // No query: show favorites pinned at top, then all 141 channels
     var favChannels = _ytFavorites.map(function(key) {
       return YT_CHANNELS.find(function(c){ return c.cid===key||c.v1===key||c.no===key; });
     }).filter(Boolean);
-    var toShow = favChannels.length ? favChannels : YT_CHANNELS.slice(0, 10);
-    var hdr = favChannels.length
-      ? '<div class="yt-omni-section-hdr">⭐ Your Favorites</div>'
-      : '<div class="yt-omni-section-hdr">Featured Live Channels</div>';
-    container.innerHTML = hdr + toShow.slice(0,10).map(_omniChRow).join('');
+    var html = '';
+    if (favChannels.length) {
+      html += '<div class="yt-omni-section-hdr">⭐ Your Favorites</div>';
+      html += favChannels.map(_omniChRow).join('');
+    }
+    html += '<div class="yt-omni-section-hdr">All 141 Live Channels</div>';
+    html += YT_CHANNELS.map(_omniChRow).join('');
+    container.innerHTML = html;
     return;
   }
 
   var matches = _omniLocalSearch(lq);
   if (!matches.length) {
-    container.innerHTML = '';
+    container.innerHTML = '<div class="yt-omni-status">No channels match &ldquo;' + _escHtml(lq) + '&rdquo;</div>';
     return;
   }
   var hdr = '<div class="yt-omni-section-hdr">Live Channels — ' +
     matches.length + ' match' + (matches.length !== 1 ? 'es' : '') + '</div>';
-  container.innerHTML = hdr + matches.slice(0, 20).map(_omniChRow).join('');
+  container.innerHTML = hdr + matches.map(_omniChRow).join('');
 }
 
 function _omniChRow(ch) {
