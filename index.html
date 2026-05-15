@@ -8871,16 +8871,9 @@ function _ytTryCurrentStage() {
     var cachedId   = _ytCacheGet(cid);
 
     if (cachedId) {
-      // Cache hit — play instantly, no API call needed right now
+      // Cache hit — play instantly, zero API calls until cache expires (4h TTL)
       _ytSetSrc('https://www.youtube.com/embed/' + cachedId +
         '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
-      // Silently refresh the cache in background so it stays fresh
-      setTimeout(function() {
-        fetch(WORKER_PROXY_URL + '/youtube-live?cid=' + encodeURIComponent(cid))
-          .then(function(r) { return r.json(); })
-          .then(function(d) { if (d.live && d.videoId) _ytCacheSet(cid, d.videoId); })
-          .catch(function() {});
-      }, 3000);
       return;
     }
 
