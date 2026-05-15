@@ -10488,19 +10488,37 @@ async function fetchFeed(src, proxyIdx, usedFallback) {
     listEl.innerHTML = '<div class="lnb-error">Feed unavailable.</div>';
     return;
   }
+
+  // Helper: try fetching a URL directly (no proxy) — works for CORS-enabled feeds
+  async function tryDirect(url) {
+    try {
+      const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (!r.ok) return null;
+      const xml = await r.text();
+      const items = _parseXmlItems(xml);
+      return items.length ? items : null;
+    } catch(_) { return null; }
+  }
+
   try {
     const separator = targetUrl.includes('?') ? '&' : '?';
     const cacheBuster = separator + 't=' + new Date().getTime();
     const proxyUrl = `${WORKER_PROXY_URL}/?url=${encodeURIComponent(targetUrl + cacheBuster)}`;
     const res = await fetch(proxyUrl, { cache: 'no-store', signal: AbortSignal.timeout(12000) });
-    if (!res.ok) throw new Error('proxy fetch failed');
+
+    // Worker itself is down (503) or gateway error — skip proxy, try direct immediately
+    if (res.status === 503 || res.status === 502) {
+      const items = await tryDirect(targetUrl);
+      if (items) { renderItems(listEl, items); return; }
+      // Direct also failed — fall through to fallback
+      throw new Error('worker-' + res.status);
+    }
+
+    if (!res.ok) throw new Error('proxy-' + res.status);
     const xmlText = await res.text();
     const items = _parseXmlItems(xmlText);
-    if (items.length) {
-      renderItems(listEl, items);
-      return;
-    }
-    throw new Error('rss parse failed');
+    if (items.length) { renderItems(listEl, items); return; }
+    throw new Error('rss-parse');
   } catch (_) {
     const fallbackUrl = !usedFallback ? getNewsFallbackUrl(src) : '';
     if (fallbackUrl && fallbackUrl !== targetUrl) {
