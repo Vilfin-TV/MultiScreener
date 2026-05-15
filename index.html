@@ -8822,9 +8822,30 @@ function ytSwitchChannel(val) {
     : 'https://www.youtube.com/embed/' + val + '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
 }
 
+// ── Live-stream videoId cache (localStorage, 4-hour TTL) ─────────────────────
+var _YT_CACHE_KEY = 'viltv_live_cache';
+var _YT_CACHE_TTL = 4 * 60 * 60 * 1000; // 4 hours in ms
+
+function _ytCacheGet(cid) {
+  try {
+    var store = JSON.parse(localStorage.getItem(_YT_CACHE_KEY) || '{}');
+    var entry = store[cid];
+    if (entry && entry.videoId && (Date.now() - entry.ts) < _YT_CACHE_TTL) return entry.videoId;
+  } catch(e) {}
+  return null;
+}
+function _ytCacheSet(cid, videoId) {
+  try {
+    var store = JSON.parse(localStorage.getItem(_YT_CACHE_KEY) || '{}');
+    store[cid] = { videoId: videoId, ts: Date.now() };
+    localStorage.setItem(_YT_CACHE_KEY, JSON.stringify(store));
+  } catch(e) {}
+}
+
 // ── 4-step hybrid fallback chain ─────────────────────────────────────────────
-// Stage 1: /youtube-live API → gets actual live videoId (reliable). Falls back
-//          to live_stream?channel= if API key not configured, then uploads playlist.
+// Stage 1: Check localStorage cache (4h TTL) → instant play, no API call needed.
+//          Cache miss: load live_stream?channel= immediately, call API in parallel.
+//          API hit → save to cache + upgrade embed. Confirmed offline → uploads playlist.
 // Stage 2: stored v1 video ID  — manual "Try next source" fallback
 // Stage 3: stored v2 video ID  — second manual fallback
 // Stage 4: uploads playlist    — always works; uses UU prefix of channelId
@@ -8843,12 +8864,27 @@ function _ytTryCurrentStage() {
   clearTimeout(_ytStage1Timer);
   _ytStage1Timer = null;
 
-  // Stage 1: load live_stream?channel= immediately (zero wait), then call API
-  // in parallel. If API returns an actual live videoId, swap the src silently.
+  // Stage 1: cache-first, then live_stream?channel= + parallel API upgrade
   if (_ytFallbackStage === 1) {
     var capturedNo = _ytCurrentChNo;
     var cid        = ch.cid;
-    // Load immediately — user sees the channel start loading right away
+    var cachedId   = _ytCacheGet(cid);
+
+    if (cachedId) {
+      // Cache hit — play instantly, no API call needed right now
+      _ytSetSrc('https://www.youtube.com/embed/' + cachedId +
+        '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
+      // Silently refresh the cache in background so it stays fresh
+      setTimeout(function() {
+        fetch(WORKER_PROXY_URL + '/youtube-live?cid=' + encodeURIComponent(cid))
+          .then(function(r) { return r.json(); })
+          .then(function(d) { if (d.live && d.videoId) _ytCacheSet(cid, d.videoId); })
+          .catch(function() {});
+      }, 3000);
+      return;
+    }
+
+    // Cache miss — load live_stream?channel= immediately so there's no blank wait
     _ytSetSrc('https://www.youtube.com/embed/live_stream?channel=' + cid +
       '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
     // Auto-advance to uploads playlist after 20s if live_stream embed fails silently
@@ -8857,24 +8893,22 @@ function _ytTryCurrentStage() {
         _ytFallbackStage = 4; _ytTryCurrentStage();
       }
     }, 20000);
-    // Call API in parallel — if it returns a live videoId, upgrade the embed
+    // Call API in parallel — on success: save to cache + upgrade embed
     fetch(WORKER_PROXY_URL + '/youtube-live?cid=' + encodeURIComponent(cid))
       .then(function(r) { return r.json(); })
       .then(function(d) {
         if (_ytCurrentChNo !== capturedNo || _ytFallbackStage !== 1) return;
         if (d.live && d.videoId) {
-          // Upgrade: swap live_stream?channel= for the real live videoId
           clearTimeout(_ytStage1Timer); _ytStage1Timer = null;
+          _ytCacheSet(cid, d.videoId); // save for next time — instant play
           _ytSetSrc('https://www.youtube.com/embed/' + d.videoId +
             '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
         } else if (!d.live && d.reason !== 'API key not configured') {
-          // Channel confirmed offline — skip straight to uploads playlist
           clearTimeout(_ytStage1Timer); _ytStage1Timer = null;
           _ytFallbackStage = 4; _ytTryCurrentStage();
         }
-        // If API key not configured or live=true without videoId: leave live_stream?channel= running
       })
-      .catch(function() { /* API failed — live_stream?channel= + 20s timer already set */ });
+      .catch(function() { /* API failed — live_stream?channel= + 20s timer already running */ });
     return; // async — don't fall through
   }
 
