@@ -3617,7 +3617,7 @@ footer{
       <button class="panel-ctrl-btn" onclick="iptvPrev()" title="Previous channel">⏮</button>
       <button class="panel-ctrl-btn" onclick="iptvNext()" title="Next channel">⏭</button>
       <button class="panel-ctrl-btn" onclick="iptvVolDown()" title="Volume −">🔉</button>
-      <button class="panel-ctrl-btn" onclick="iptvToggleMute()" id="iptv-mute-btn" title="Mute">🔊</button>
+      <button class="panel-ctrl-btn" onclick="iptvToggleMute()" id="iptv-mute-btn" title="Mute">🔇</button>
       <input class="panel-vol" type="range" id="iptv-vol" min="0" max="100" value="80"
              oninput="iptvSetVolume(this.value)" title="Volume" style="--vol:80%"/>
       <span class="panel-now-label" id="iptv-now">—</span>
@@ -3642,7 +3642,15 @@ footer{
        <span id="radio-india-chevron" style="font-size:12px;transition:transform .3s;transform:rotate(180deg)">▾</span>
      </div>
      <div class="radio-india-body" id="radio-india-body" style="max-height:250px">
-       <iframe src="https://radiosindia.com/radiomango.html" data-src="https://radiosindia.com/radiomango.html" style="height:240px;width:100%;border:none;overflow:hidden;display:block" loading="lazy" title="Radio Mango" id="radio-india-iframe"></iframe>
+       <!-- Placeholder shown until user taps play — prevents autoplay -->
+       <div id="radio-india-placeholder"
+            onclick="radioLoadIndiaPlayer()"
+            style="height:240px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#060d1a;cursor:pointer;border-bottom:1px solid #1e3a5c">
+         <div style="width:56px;height:56px;border-radius:50%;background:#1d4ed8;display:flex;align-items:center;justify-content:center;font-size:22px">▶</div>
+         <div style="font-size:13px;color:#94a3b8;font-weight:600">Radio Mango 91.9 FM</div>
+         <div style="font-size:11px;color:#475569">Tap to load player</div>
+       </div>
+       <iframe src="" data-src="https://radiosindia.com/radiomango.html" style="height:240px;width:100%;border:none;overflow:hidden;display:none" loading="lazy" title="Radio Mango" id="radio-india-iframe"></iframe>
      </div>
 
     <!-- Radio Omnisearch bar -->
@@ -3677,7 +3685,7 @@ footer{
       <button class="panel-play-btn" id="radio-play-btn" onclick="radioTogglePlay()" title="Play / Pause" disabled>▶</button>
       <button class="panel-ctrl-btn" onclick="radioPrev()" title="Previous station">⏮</button>
       <button class="panel-ctrl-btn" onclick="radioNext()" title="Next station">⏭</button>
-      <button class="panel-ctrl-btn" onclick="radioToggleMute()" id="radio-mute-btn" title="Mute">🔊</button>
+      <button class="panel-ctrl-btn" onclick="radioToggleMute()" id="radio-mute-btn" title="Mute">🔇</button>
       <input class="panel-vol" type="range" id="radio-vol" min="0" max="100" value="75"
              oninput="radioSetVolume(this.value)" title="Volume" style="--vol:75%"/>
       <div style="display:flex;align-items:center;gap:5px;flex:1;overflow:hidden;min-width:0">
@@ -3750,7 +3758,7 @@ footer{
       <button class="ytc-btn" onclick="musicNext()" id="musicNext" title="Next">⏭</button>
       <input class="ytc-vol" id="music-vol" type="range" min="0" max="100" value="80"
              oninput="musicSetVolume(this.value)" title="Volume" style="--vol:80%">
-      <button class="ytc-btn" onclick="musicToggleMute()" id="music-mute-btn" title="Mute">🔊</button>
+      <button class="ytc-btn" onclick="musicToggleMute()" id="music-mute-btn" title="Mute">🔇</button>
       <span class="panel-now-label" id="music-now" style="color:#475569">—</span>
       <button class="ytc-btn" onclick="musicStop()" id="musicStop" title="Stop">⏹</button>
     </div>
@@ -3840,7 +3848,7 @@ footer{
       <button class="panel-play-btn" id="podcast-play-btn" onclick="podcastTogglePlay()" title="Play / Pause" disabled>▶</button>
       <button class="panel-ctrl-btn" onclick="podcastPrev()" title="Previous podcast">⏮</button>
       <button class="panel-ctrl-btn" onclick="podcastNext()" title="Next podcast">⏭</button>
-      <button class="panel-ctrl-btn" onclick="podcastToggleMute()" id="podcast-mute-btn" title="Mute">🔊</button>
+      <button class="panel-ctrl-btn" onclick="podcastToggleMute()" id="podcast-mute-btn" title="Mute">🔇</button>
       <input class="panel-vol" type="range" id="podcast-vol" min="0" max="100" value="75"
              oninput="podcastSetVolume(this.value)" title="Volume" style="--vol:75%"/>
       <div style="display:flex;align-items:center;gap:5px;flex:1;overflow:hidden;min-width:0">
@@ -5557,16 +5565,16 @@ function musicPlayYT(playlistId, name) {
   if (vidWrap && vidIfr) {
     // Detect single video ID (short, no PL/RD/OL prefix) vs playlist ID
     var isSingle = playlistId && playlistId.length <= 20 && !playlistId.startsWith('PL') && !playlistId.startsWith('RD') && !playlistId.startsWith('OL') && !playlistId.startsWith('@');
+    var muteParam = _musicMuted ? '&mute=1' : '';
     if (isSingle) {
       vidIfr.src = 'https://www.youtube.com/embed/' + encodeURIComponent(playlistId) +
-                   '?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1';
+                   '?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1' + muteParam;
     } else if (playlistId.startsWith('@') || playlistId.startsWith('UC')) {
-      // Channel handle or ID — use live_stream format
       vidIfr.src = 'https://www.youtube.com/embed/live_stream?channel=' + encodeURIComponent(playlistId) +
-                   '&autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1';
+                   '&autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1' + muteParam;
     } else {
       vidIfr.src = 'https://www.youtube.com/embed/videoseries?list=' + encodeURIComponent(playlistId) +
-                   '&autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1';
+                   '&autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1' + muteParam;
     }
     vidWrap.style.display = 'block';
   }
@@ -5602,6 +5610,13 @@ function musicSetVolume(val) {
   // postMessage to visible iframe
   var ifr = document.getElementById('music-video-iframe');
   if (ifr && ifr.contentWindow) try { ifr.contentWindow.postMessage('{"event":"command","func":"setVolume","args":['+_musicVolume+']}','*'); } catch(e){}
+}
+function musicToggleMute() {
+  _musicMuted = !_musicMuted;
+  var btn = document.getElementById('music-mute-btn');
+  if (btn) btn.textContent = _musicMuted ? '🔇' : '🔊';
+  // Reload iframe with updated mute param to apply immediately
+  if (_musicCurrentId) musicPlayYT(_musicCurrentId, document.getElementById('music-now')?.textContent || '');
 }
 // Play/pause toggle for the visible embed
 function musicTogglePlay() {
@@ -7477,7 +7492,7 @@ function _panelOmniRadioPlay(st) {
   const btn   = document.getElementById('radio-play-btn');
   const trg   = document.getElementById('radio-omni-trigger');
   if (!audio) return;
-  audio.src = st.url; audio.muted = false; audio.play().catch(()=>{});
+  audio.src = st.url; audio.muted = _radioMuted; audio.play().catch(()=>{});
   if (nowEl) nowEl.textContent = st.name;
   if (dot) { dot.className = 'radio-status-dot playing'; }
   if (btn) { btn.textContent = '⏸'; btn.disabled = false; }
@@ -8215,6 +8230,7 @@ const IPTV_API = 'https://iptv-org.github.io/api';
 let _iptvHls = null;
 let _iptvAllChannels = null;   // cached merged channel + stream list
 let _iptvLastResults = [];
+let _iptvMuted = true;         // starts muted; preserved across channel changes
 
 async function iptvInit() {
   // Fetch catalog once on first panel open. Cache in memory only (data is updated daily by iptv-org).
@@ -8487,7 +8503,7 @@ function iptvPlay(url, id, name) {
   const nowBarLabel = document.getElementById('iptv-now-bar-label');
   if (nowBar) nowBar.style.display = 'flex';
   if (nowBarLabel) nowBarLabel.textContent = name || 'Live TV';
-  video.muted = true;
+  video.muted = _iptvMuted;
 
   // Track current channel (for prev/next/fav)
   _iptvCurrentChannel = { id, name, url };
@@ -8612,9 +8628,10 @@ function iptvSetVolume(val) {
 function iptvToggleMute() {
   const video = document.getElementById('iptv-player');
   if (!video) return;
-  video.muted = !video.muted;
+  _iptvMuted = !_iptvMuted;
+  video.muted = _iptvMuted;
   const btn = document.getElementById('iptv-mute-btn');
-  if (btn) btn.textContent = video.muted ? '🔇' : '🔊';
+  if (btn) btn.textContent = _iptvMuted ? '🔇' : '🔊';
 }
 async function iptvTogglePip() {
   const video = document.getElementById('iptv-player');
@@ -8842,7 +8859,7 @@ function musicLoadPreset(key) {
 }
 /* musicPlay / musicStop / musicPlayYT defined above in the YT IFrame block */
 let _musicVolume = 80;
-let _musicMuted = false;
+let _musicMuted = true;
 let _musicFavorites = JSON.parse(localStorage.getItem('music-favorites') || '[]');
 // musicSetVolume, musicVolUp, musicVolDown, musicToggleMute, musicTogglePlay defined above
 function musicToggleFav() {
@@ -9339,6 +9356,7 @@ async function podcastOpen(feedUrl, name) {
 function podcastPlay(url, title) {
   const audio = document.getElementById('podcast-audio');
   if (!audio) return;
+  audio.muted = _podcastMuted;
   audio.style.display = 'block';
   audio.src = url;
   audio.play().catch(()=>{ const np = document.getElementById('podcast-now-playing'); if (np) np.textContent = '⚠️ Play failed'; });
@@ -9366,7 +9384,7 @@ function podcastSetVolume(v) {
   if (a) a.volume = Math.max(0, Math.min(100, Number(v))) / 100;
 }
 let _podcastVolume = 75;
-let _podcastMuted = false;
+let _podcastMuted = true;
 let _podcastFavorites = JSON.parse(localStorage.getItem('podcast-favorites') || '[]');
 function podcastVolUp() {
   const vol = Math.min(100, _podcastVolume + 10);
@@ -9531,7 +9549,7 @@ function radioPlay(url, id, name, catId) {
     _radioHls.attachMedia(audio);
     _radioHls.on(Hls.Events.MANIFEST_PARSED, () => {
       console.log('[Radio] HLS manifest parsed, calling audio.play()');
-      audio.muted = true;
+      audio.muted = _radioMuted;
       audio.play().then(() => console.log('[Radio] HLS audio.play() resolved'))
         .catch(err => {
           console.warn('[Radio] HLS play REJECTED:', err && err.name, err && err.message);
@@ -9558,6 +9576,7 @@ function radioPlay(url, id, name, catId) {
   } else if (isHLS && audio.canPlayType('application/vnd.apple.mpegurl')) {
     // ── Native HLS (Safari) ────────────────────────────────────────
     console.log('[Radio] Using native HLS (Safari)');
+    audio.muted = _radioMuted;
     audio.src = url;
     audio.load();
     audio.play().catch(err => {
@@ -9566,6 +9585,7 @@ function radioPlay(url, id, name, catId) {
     });
   } else {
     // ── Direct MP3 / AAC stream ────────────────────────────────────
+    audio.muted = _radioMuted;
     audio.pause();
     audio.src = url;
     audio.load();
@@ -9643,7 +9663,7 @@ function radioSetVolume(val) {
   try { localStorage.setItem('radio_volume', val); } catch(_) {}
 }
 let _radioVolume = 75;
-let _radioMuted = false;
+let _radioMuted = true;
 let _radioFavorites = JSON.parse(localStorage.getItem('radio-favorites') || '[]');
 function radioVolUp() {
   const vol = Math.min(100, _radioVolume + 10);
@@ -9684,29 +9704,32 @@ function radioTogglePip() {
 function radioToggleIndiaPlayer() {
   const body = document.getElementById('radio-india-body');
   const chevron = document.getElementById('radio-india-chevron');
-  const iframe = document.getElementById('radio-india-iframe');
   if (!body) return;
   const isCollapsed = body.classList.toggle('collapsed');
   body.style.maxHeight = isCollapsed ? '0' : '250px';
   if (chevron) chevron.style.transform = isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)';
-  // Lazy-load iframe on first expand
-  if (!isCollapsed && iframe && !iframe.src && iframe.dataset.src) {
-    iframe.src = iframe.dataset.src;
-  }
+}
+function radioLoadIndiaPlayer() {
+  const iframe = document.getElementById('radio-india-iframe');
+  const placeholder = document.getElementById('radio-india-placeholder');
+  if (!iframe || !placeholder) return;
+  if (!iframe.src && iframe.dataset.src) iframe.src = iframe.dataset.src;
+  placeholder.style.display = 'none';
+  iframe.style.display = 'block';
 }
 function radioPrev() {
-  const items = document.querySelectorAll('.radio-station-item');
-  const current = Array.from(items).findIndex(el => el.style.opacity === '0.6' || el.style.background?.includes('rgba'));
-  if (items.length === 0) return;
-  const idx = current > 0 ? current - 1 : items.length - 1;
-  items[idx].click?.();
+  if (!_radioLastResults.length) return;
+  const cur = _radioLastResults.findIndex(s => (s.stationuuid || s.url_resolved || s.url) === _radioCurrentId);
+  const idx = cur > 0 ? cur - 1 : _radioLastResults.length - 1;
+  const s = _radioLastResults[idx];
+  if (s) radioPlay(s.url_resolved || s.url, s.stationuuid || s.url_resolved || s.url, s.name, 'rb');
 }
 function radioNext() {
-  const items = document.querySelectorAll('.radio-station-item');
-  const current = Array.from(items).findIndex(el => el.style.opacity === '0.6' || el.style.background?.includes('rgba'));
-  if (items.length === 0) return;
-  const idx = (current + 1) % items.length;
-  items[idx].click?.();
+  if (!_radioLastResults.length) return;
+  const cur = _radioLastResults.findIndex(s => (s.stationuuid || s.url_resolved || s.url) === _radioCurrentId);
+  const idx = (cur + 1) % _radioLastResults.length;
+  const s = _radioLastResults[idx];
+  if (s) radioPlay(s.url_resolved || s.url, s.stationuuid || s.url_resolved || s.url, s.name, 'rb');
 }
 function radioStop() {
   _radioPlaying = false;
