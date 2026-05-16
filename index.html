@@ -1092,9 +1092,7 @@ footer{
   .paste-actions .action-btn{font-size:11px;padding:9px 6px}
   #auto-gemini-panel{margin-top:14px;padding:12px}
   #auto-gemini-panel pre{font-size:11px;max-height:200px}
-  /* Live TV mobile: limit video player height to show channel list below */
-  #iptv-player-wrap{max-height:220px;flex-shrink:1!important}
-  #iptv-player-wrap > div:first-child{padding-top:56.25%;max-height:220px;overflow:hidden}
+  /* Live TV mobile: height capped via the main @media(max-width:900px) block */
   #yt-video-wrapper{max-height:280px}
   #yt-video-wrapper > div:first-child{padding-top:56.25%;max-height:280px;overflow:hidden}
 }
@@ -1782,17 +1780,36 @@ footer{
 .radio-station-tag{font-size:9.5px;color:#506480;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .radio-station-list{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 6px 8px;scrollbar-width:thin;scrollbar-color:#1e293b transparent;-webkit-overflow-scrolling:touch}
 
-/* ── Mobile radio scrolling fix ── */
-@media (max-width: 768px) {
-  #rb-panel-radio, #rb-panel-iptv {
-    height: auto !important;
+/* ── Mobile: enforce correct flex-scroll layout for IPTV + Radio ──
+   ROOT CAUSE OF BUG: The old override (height:auto!important on the panel)
+   broke the flex-column layout, causing the channel list to not scroll
+   independently below the video player.
+
+   FIX: Keep panels as overflow:hidden flex columns so only the
+   .radio-station-list child scrolls (flex:1 + overflow-y:auto).
+── */
+@media (max-width: 900px) {
+  #rb-panel-radio,
+  #rb-panel-iptv {
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    min-height: 0 !important;
+    height: 100% !important;       /* fill the available panel height */
+  }
+  .radio-station-list {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
   }
-  .radio-station-list {
-    height: auto !important;
-    min-height: 0 !important;
-    flex: 1 1 auto;
+  /* Constrain video player height on mobile — prevents the player from
+     pushing the channel list off-screen. 40vh leaves ~60% for nav,
+     preset strip, and channel list on any phone. */
+  #iptv-player-wrap {
+    max-height: 40vh !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
   }
 }
 .radio-station-item{display:flex;align-items:center;gap:6px;padding:7px 9px;border-radius:8px;border:1px solid transparent;cursor:pointer;transition:all .15s;margin-bottom:3px}
@@ -1938,10 +1955,9 @@ footer{
 /* ── IPTV PLAYING STATE — collapse top fold, video capped ── */
 #rb-panel-iptv.iptv-playing #iptv-top-fold{display:none!important}
 #rb-panel-iptv.iptv-playing #iptv-now-bar{display:flex!important}
-/* Cap video height so controls + channel list always stay visible */
-#iptv-player-wrap{max-height:52vh;display:flex;flex-direction:column}
-#iptv-player-wrap > div:first-child{flex:1;min-height:0}
-@media(max-width:600px){#iptv-player-wrap{max-height:42vw}}
+/* Cap video height so controls + channel list always stay visible below the player.
+   The player is a flex-shrink:0 block; the channel list below it is flex:1. */
+#iptv-player-wrap{max-height:52vh;overflow:hidden;flex-shrink:0}
 
 /* ── RADIO INDIA — default collapsed, toggle smoothly ── */
 .radio-india-body{transition:max-height .35s ease,padding .35s ease;overflow:hidden}
@@ -1960,7 +1976,6 @@ footer{
   .panel-preset-strip{padding:4px 6px;gap:3px}
   .panel-ctrl-bar{padding:4px 6px;gap:4px}
   .radio-preset-btn{padding:4px 8px;font-size:10px}
-  #iptv-player-wrap{max-height:38vw}
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -3559,26 +3574,27 @@ footer{
       <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('world')">🌍 World</button>
     </div>
 
-    <!-- Video player + professional controls -->
-    <div id="iptv-player-wrap" style="width:100%;background:#000;flex-shrink:0;display:none">
+    <!-- Video player ONLY — capped height on mobile via CSS -->
+    <div id="iptv-player-wrap" style="width:100%;background:#000;flex-shrink:0;display:none;overflow:hidden">
       <div style="width:100%;padding-top:56.25%;position:relative;overflow:hidden">
         <video id="iptv-player" controls playsinline muted
                style="position:absolute;top:0;left:0;width:100%;height:100%;background:#000"></video>
       </div>
-      <!-- Now-playing + transport controls -->
-      <div class="panel-ctrl-bar">
-        <button class="panel-ctrl-btn" onclick="iptvPrev()" title="Previous channel">⏮</button>
-        <button class="panel-ctrl-btn" onclick="iptvNext()" title="Next channel">⏭</button>
-        <button class="panel-ctrl-btn" onclick="iptvVolDown()" title="Volume −">🔉</button>
-        <button class="panel-ctrl-btn" onclick="iptvToggleMute()" id="iptv-mute-btn" title="Mute">🔊</button>
-        <input class="panel-vol" type="range" id="iptv-vol" min="0" max="100" value="80"
-               oninput="iptvSetVolume(this.value)" title="Volume" style="--vol:80%"/>
-        <span class="panel-now-label" id="iptv-now">—</span>
-        <button class="panel-ctrl-btn fav" onclick="iptvToggleFav()" id="iptv-fav-btn" title="Add to favorites">☆</button>
-        <button class="panel-ctrl-btn" onclick="iptvFullscreen()" title="Fullscreen">⛶</button>
-        <button class="panel-ctrl-btn" onclick="iptvTogglePip()" title="Picture-in-Picture">⧉</button>
-        <button class="panel-ctrl-btn" onclick="iptvStop()" title="Stop">⏹</button>
-      </div>
+    </div>
+
+    <!-- Transport controls — always BELOW the video, never clipped by max-height -->
+    <div id="iptv-ctrl-bar" class="panel-ctrl-bar" style="display:none;flex-shrink:0">
+      <button class="panel-ctrl-btn" onclick="iptvPrev()" title="Previous channel">⏮</button>
+      <button class="panel-ctrl-btn" onclick="iptvNext()" title="Next channel">⏭</button>
+      <button class="panel-ctrl-btn" onclick="iptvVolDown()" title="Volume −">🔉</button>
+      <button class="panel-ctrl-btn" onclick="iptvToggleMute()" id="iptv-mute-btn" title="Mute">🔊</button>
+      <input class="panel-vol" type="range" id="iptv-vol" min="0" max="100" value="80"
+             oninput="iptvSetVolume(this.value)" title="Volume" style="--vol:80%"/>
+      <span class="panel-now-label" id="iptv-now">—</span>
+      <button class="panel-ctrl-btn fav" onclick="iptvToggleFav()" id="iptv-fav-btn" title="Add to favorites">☆</button>
+      <button class="panel-ctrl-btn" onclick="iptvFullscreen()" title="Fullscreen">⛶</button>
+      <button class="panel-ctrl-btn" onclick="iptvTogglePip()" title="Picture-in-Picture">⧉</button>
+      <button class="panel-ctrl-btn" onclick="iptvStop()" title="Stop">⏹</button>
     </div>
 
     <!-- Channel list -->
@@ -8353,10 +8369,12 @@ function iptvPlay(url, id, name) {
   const wrap  = document.getElementById('iptv-player-wrap');
   const nowEl = document.getElementById('iptv-now');
   const favBtn = document.getElementById('iptv-fav-btn');
+  const ctrlBar = document.getElementById('iptv-ctrl-bar');
   if (!video) return;
 
   if (_iptvHls) { try { _iptvHls.destroy(); } catch(_){} _iptvHls = null; }
   if (wrap) wrap.style.display = 'block';
+  if (ctrlBar) ctrlBar.style.display = 'flex';
   if (nowEl) nowEl.textContent = name || 'Live TV';
   // Collapse top-fold, show now-playing bar
   const panel = document.getElementById('rb-panel-iptv');
@@ -8427,8 +8445,10 @@ function iptvStop() {
   if (_iptvHls) { try { _iptvHls.destroy(); } catch(_){} _iptvHls = null; }
   const video = document.getElementById('iptv-player');
   const wrap  = document.getElementById('iptv-player-wrap');
+  const ctrlBar = document.getElementById('iptv-ctrl-bar');
   if (video) { try { video.pause(); video.removeAttribute('src'); video.load(); } catch(_){} }
   if (wrap) wrap.style.display = 'none';
+  if (ctrlBar) ctrlBar.style.display = 'none';
   _iptvCurrentChannel = null;
   _iptvCurrentIndex = -1;
   // Restore top-fold
