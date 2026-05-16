@@ -1892,6 +1892,138 @@ footer{
 .panel-preset-strip{cursor:grab}
 .panel-preset-strip.drag-scroll{cursor:grabbing;user-select:none}
 
+/* ══════════════════════════════════════════════════════════════
+   CALENDAR WIDGET
+══════════════════════════════════════════════════════════════ */
+.cal-grid-wrap{width:100%;border-radius:10px;overflow:hidden;background:#080e1a;border:1px solid #1e3a5c}
+.cal-header-row{display:grid;grid-template-columns:repeat(7,1fr);background:#0e1f3b}
+.cal-header-row span{text-align:center;font-size:10px;font-weight:700;color:#60a5fa;padding:6px 0;text-transform:uppercase;letter-spacing:.5px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-cell{min-height:52px;padding:3px 4px;border:1px solid rgba(30,58,92,.4);cursor:pointer;position:relative;transition:background .12s;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.cal-cell:hover{background:rgba(96,165,250,.08)}
+.cal-cell.cal-today{background:rgba(96,165,250,.12);border-color:#2563eb}
+.cal-cell.cal-other-month{opacity:.35}
+.cal-cell.cal-selected{background:rgba(96,165,250,.2);border-color:#60a5fa}
+.cal-cell-date{font-size:12px;font-weight:600;color:#e2e8f0;line-height:1}
+.cal-cell.cal-today .cal-cell-date{color:#60a5fa;font-weight:800}
+.cal-holiday-label{font-size:8px;line-height:1.2;color:#f87171;font-weight:600;word-break:break-word;overflow:hidden;max-height:28px}
+.cal-holiday-label.regional{color:#fb923c}
+.cal-event-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.cal-dots-row{display:flex;flex-wrap:wrap;gap:2px;margin-top:auto}
+.cal-legend{display:flex;flex-wrap:wrap;gap:10px;padding:8px 4px 2px;margin-top:6px}
+.cal-legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:#94a3b8}
+.cal-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.cal-event-form{padding:12px;background:#080e1a;border-top:1px solid #1e3a5c;flex-shrink:0}
+.cal-event-input{width:100%;padding:8px 10px;background:#0c1525;color:#e2e8f0;border:1px solid #1e3a5c;border-radius:7px;font-size:12px;outline:none;font-family:inherit;box-sizing:border-box}
+.cal-event-input:focus{border-color:#2563eb}
+.cal-color-btn{width:18px;height:18px;border-radius:50%;border:2px solid transparent;cursor:pointer;flex-shrink:0;transition:border-color .15s}
+.cal-color-btn.active{border-color:#fff}
+.cal-form-btn{padding:7px 18px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;font-family:inherit}
+.cal-form-save{background:#2563eb;color:#fff}
+.cal-form-save:hover{background:#1d4ed8}
+.cal-form-cancel{background:#1e3a5c;color:#93c5fd}
+.cal-form-cancel:hover{background:#243f62}
+
+/* ══════════════════════════════════════════════════════════════
+   NOTES WIDGET
+══════════════════════════════════════════════════════════════ */
+.notes-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:400px){.notes-grid{grid-template-columns:1fr}}
+.note-card{border-radius:10px;border:1px solid #1e3a5c;padding:10px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:4px;position:relative;min-height:80px}
+.note-card:hover{border-color:#2563eb;transform:translateY(-1px)}
+.note-card-title{font-size:12px;font-weight:700;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.note-card-preview{font-size:10px;color:#64748b;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4}
+.note-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:4px}
+.note-cat-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;background:rgba(96,165,250,.12);color:#60a5fa;text-transform:uppercase;letter-spacing:.4px}
+.note-date{font-size:9px;color:#475569}
+.note-delete-btn{position:absolute;top:6px;right:6px;background:none;border:none;color:#475569;font-size:13px;cursor:pointer;padding:0;line-height:1;opacity:0;transition:opacity .15s}
+.note-card:hover .note-delete-btn{opacity:1}
+.note-pin-icon{position:absolute;top:6px;left:6px;font-size:10px}
+.notes-empty{text-align:center;color:#475569;font-size:12px;padding:32px 16px}
+.notes-overlay{position:absolute;inset:0;z-index:10;background:rgba(4,9,26,.96);display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto}
+.notes-edit-card{background:#080e1a;border:1px solid #1e3a5c;border-radius:12px;padding:16px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:6px}
+.notes-edit-title-input{width:100%;padding:8px 10px;background:#0c1525;color:#e2e8f0;border:1px solid #1e3a5c;border-radius:7px;font-size:13px;font-weight:700;outline:none;font-family:inherit;box-sizing:border-box}
+.notes-edit-title-input:focus{border-color:#2563eb}
+.notes-edit-body{width:100%;min-height:150px;padding:8px 10px;background:#0c1525;color:#e2e8f0;border:1px solid #1e3a5c;border-radius:7px;font-size:12px;outline:none;font-family:inherit;resize:vertical;box-sizing:border-box;line-height:1.6}
+.notes-edit-body:focus{border-color:#2563eb}
+.notes-edit-select{padding:5px 8px;background:#0c1525;color:#e2e8f0;border:1px solid #1e3a5c;border-radius:6px;font-size:11px;outline:none;font-family:inherit;cursor:pointer}
+.notes-color-btn{width:18px;height:18px;border-radius:4px;border:2px solid transparent;cursor:pointer;transition:border-color .15s}
+.notes-color-btn.active{border-color:#60a5fa}
+
+/* ══════════════════════════════════════════════════════════════
+   CALCULATOR WIDGET
+══════════════════════════════════════════════════════════════ */
+.calc-display{background:#04091a;border:1px solid #1e3a5c;border-radius:10px;padding:14px 16px;min-height:72px;display:flex;flex-direction:column;justify-content:space-between;flex-shrink:0}
+.calc-expr{font-size:11px;color:#475569;min-height:16px;text-align:right;word-break:break-all}
+.calc-result{font-size:32px;font-weight:700;color:#e2e8f0;text-align:right;word-break:break-all;line-height:1.1}
+.calc-sci-row{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;flex-shrink:0}
+.calc-keypad{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;flex-shrink:0}
+.calc-key-zero{grid-column:span 2}
+.calc-key{height:46px;border-radius:8px;border:none;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .1s;background:#0e1f3b;color:#e2e8f0}
+.calc-key:hover{opacity:.85}
+.calc-key:active{transform:scale(.95)}
+.calc-key-op{background:#1e3a5c;color:#60a5fa}
+.calc-key-eq{background:#2563eb;color:#fff}
+.calc-key-util{background:#0a192f;color:#94a3b8}
+.calc-key-fn{height:38px;font-size:12px;background:#1a0a2e;color:#a78bfa}
+.calc-sci-row{display:none}
+.calc-sci-row.visible{display:grid}
+.calc-history-wrap{background:#04091a;border:1px solid #1e3a5c;border-radius:10px;padding:10px;flex-shrink:0}
+.calc-history-list{display:flex;flex-direction:column;gap:4px;overflow:hidden;max-height:0;transition:max-height .25s}
+.calc-history-list.open{max-height:220px;overflow-y:auto}
+.calc-history-item{display:flex;justify-content:space-between;align-items:center;padding:4px 6px;border-radius:5px;background:#080e1a;font-size:11px;cursor:pointer;transition:background .12s}
+.calc-history-item:hover{background:#0e1f3b}
+.calc-history-expr{color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%}
+.calc-history-val{color:#60a5fa;font-weight:700}
+
+/* ══════════════════════════════════════════════════════════════
+   WORLD CLOCK WIDGET
+══════════════════════════════════════════════════════════════ */
+.wc-card{background:#080e1a;border:1px solid #1e3a5c;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;position:relative;margin-bottom:6px;transition:border-color .15s}
+.wc-card:hover{border-color:#2563eb}
+.wc-card-flag{font-size:24px;flex-shrink:0}
+.wc-card-info{flex:1;min-width:0}
+.wc-card-city{font-size:14px;font-weight:700;color:#e2e8f0}
+.wc-card-country{font-size:11px;color:#64748b;margin-top:1px}
+.wc-card-time{font-size:22px;font-weight:800;color:#93c5fd;font-variant-numeric:tabular-nums;white-space:nowrap}
+.wc-card-date{font-size:10px;color:#475569;margin-top:1px}
+.wc-card-utc{display:inline-block;font-size:9px;font-weight:700;padding:2px 5px;background:rgba(96,165,250,.1);color:#60a5fa;border-radius:4px;margin-top:3px}
+.wc-remove-btn{position:absolute;top:8px;right:8px;background:none;border:none;color:#334155;font-size:14px;cursor:pointer;transition:color .12s}
+.wc-remove-btn:hover{color:#f87171}
+.wc-modal-overlay{position:absolute;inset:0;z-index:20;background:rgba(4,9,26,.93);display:flex;align-items:flex-start;justify-content:center;padding:16px;backdrop-filter:blur(6px)}
+.wc-modal{background:#080e1a;border:1px solid #1e3a5c;border-radius:12px;padding:16px;width:100%;max-width:340px;display:flex;flex-direction:column;gap:8px}
+.wc-search-results{display:flex;flex-direction:column;gap:4px;max-height:220px;overflow-y:auto;margin-top:6px}
+.wc-result-item{padding:8px 10px;background:#0c1525;border:1px solid #1e3a5c;border-radius:7px;cursor:pointer;font-size:12px;color:#e2e8f0;transition:background .12s}
+.wc-result-item:hover{background:#0e1f3b;border-color:#2563eb}
+.wc-result-tz{font-size:10px;color:#64748b;margin-top:2px}
+
+/* ══════════════════════════════════════════════════════════════
+   WEATHER WIDGET
+══════════════════════════════════════════════════════════════ */
+.weather-current-card{background:linear-gradient(135deg,#0a192f 0%,#0e1f3b 100%);border:1px solid #1e3a5c;border-radius:12px;padding:16px;margin-bottom:8px}
+.weather-city-name{font-size:16px;font-weight:800;color:#e2e8f0;margin-bottom:2px}
+.weather-country{font-size:11px;color:#64748b;margin-bottom:10px}
+.weather-main-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.weather-temp{font-size:42px;font-weight:800;color:#93c5fd;line-height:1}
+.weather-icon-big{font-size:40px;line-height:1}
+.weather-condition{font-size:12px;color:#94a3b8;margin-top:2px}
+.weather-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.weather-stat{background:rgba(255,255,255,.04);border-radius:7px;padding:7px 10px;display:flex;flex-direction:column;gap:2px}
+.weather-stat-label{font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+.weather-stat-val{font-size:13px;font-weight:700;color:#e2e8f0}
+.weather-forecast-strip{overflow-x:auto;display:flex;gap:6px;padding:0 0 8px;margin-bottom:6px;scrollbar-width:none}
+.weather-forecast-strip::-webkit-scrollbar{display:none}
+.weather-fc-card{flex-shrink:0;background:#080e1a;border:1px solid #1e3a5c;border-radius:9px;padding:8px 10px;text-align:center;min-width:60px}
+.weather-fc-day{font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.weather-fc-icon{font-size:18px;margin-bottom:3px}
+.weather-fc-max{font-size:12px;font-weight:700;color:#e2e8f0}
+.weather-fc-min{font-size:10px;color:#475569}
+.weather-saved-strip{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.weather-saved-pill{display:flex;align-items:center;gap:5px;padding:5px 10px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:20px;font-size:11px;color:#93c5fd;cursor:pointer;transition:all .12s;font-family:inherit}
+.weather-saved-pill:hover{border-color:#2563eb;background:#0a192f}
+.weather-saved-pill-x{background:none;border:none;color:#475569;font-size:12px;cursor:pointer;padding:0;margin-left:2px;line-height:1}
+.weather-saved-pill-x:hover{color:#f87171}
+
 /* ── PANEL OMNISEARCH (Radio / Movies / Podcast) ── */
 .panel-omni-bar{padding:6px 8px;background:#080e1a;border-bottom:1px solid #0d1a30;display:flex;gap:5px;align-items:center;flex-shrink:0}
 .panel-omni-input-wrap{flex:1;min-width:0;position:relative;display:flex;align-items:center}
@@ -3041,6 +3173,11 @@ footer{
         <button class="rb-tab"        id="rbtab-music"   onclick="rbSwitchPanel('music')">🎵 YouTube Music</button>
         <button class="rb-tab"        id="rbtab-movies"  onclick="rbSwitchPanel('movies')">🎬 Movies</button>
         <button class="rb-tab"        id="rbtab-podcast" onclick="rbSwitchPanel('podcast')">🎙 Podcast</button>
+        <button class="rb-tab"        id="rbtab-calendar"   onclick="rbSwitchPanel('calendar')">📅 Calendar</button>
+        <button class="rb-tab"        id="rbtab-notes"      onclick="rbSwitchPanel('notes')">📝 Notes</button>
+        <button class="rb-tab"        id="rbtab-calc"       onclick="rbSwitchPanel('calc')">🧮 Calc</button>
+        <button class="rb-tab"        id="rbtab-worldclock" onclick="rbSwitchPanel('worldclock')">🌍 World Clock</button>
+        <button class="rb-tab"        id="rbtab-weather"    onclick="rbSwitchPanel('weather')">🌤 Weather</button>
         <button class="rb-tab"        id="rbtab-settings" onclick="rbSwitchPanel('settings')" title="Widget Settings">⚙️</button>
       </div>
       <button class="rb-tabs-arrow" id="rb-tabs-next" onclick="rbTabsScroll(1)" title="Next tab" aria-label="Next tab">&#x203A;</button>
@@ -3535,6 +3672,227 @@ footer{
       <div class="radio-no-data">Loading curated podcasts…</div>
     </div>
   </div><!-- /rb-panel-podcast -->
+
+  <!-- ── PANEL 8: Calendar ── -->
+  <div id="rb-panel-calendar" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+    <div class="panel-ctrl-bar" style="flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0">
+        <button class="panel-ctrl-btn" onclick="calNavPrev()" title="Previous month">◀</button>
+        <span id="cal-month-label" style="font-size:13px;font-weight:700;color:#93c5fd;min-width:130px;text-align:center"></span>
+        <button class="panel-ctrl-btn" onclick="calNavNext()" title="Next month">▶</button>
+        <button class="panel-ctrl-btn" onclick="calGoToday()" style="font-size:10px;padding:0 6px;min-width:40px">Today</button>
+      </div>
+    </div>
+    <div class="panel-preset-strip" id="cal-country-strip" style="flex-shrink:0">
+      <button class="radio-preset-btn cal-country-btn active" onclick="calSetCountry('IN')">🇮🇳 India</button>
+      <button class="radio-preset-btn cal-country-btn" onclick="calSetCountry('US')">🇺🇸 USA</button>
+      <button class="radio-preset-btn cal-country-btn" onclick="calSetCountry('GB')">🇬🇧 UK</button>
+      <button class="radio-preset-btn cal-country-btn" onclick="calSetCountry('AE')">🇦🇪 UAE</button>
+      <button class="radio-preset-btn cal-country-btn" onclick="calSetCountry('JP')">🇯🇵 Japan</button>
+      <button class="radio-preset-btn cal-country-btn" onclick="calSetCountry('AU')">🇦🇺 Australia</button>
+    </div>
+    <div class="panel-preset-strip" id="cal-region-strip" style="flex-shrink:0"></div>
+    <div style="flex:1;overflow-y:auto;min-height:0;padding:8px">
+      <div class="cal-grid-wrap">
+        <div class="cal-header-row">
+          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+      <div class="cal-legend" id="cal-legend">
+        <span class="cal-legend-item"><span class="cal-dot" style="background:#f87171"></span> National Holiday</span>
+        <span class="cal-legend-item"><span class="cal-dot" style="background:#fb923c"></span> Regional Holiday</span>
+        <span class="cal-legend-item"><span class="cal-dot" style="background:#60a5fa"></span> Your Event</span>
+      </div>
+    </div>
+    <!-- Inline event form -->
+    <div class="cal-event-form" id="cal-event-form" style="display:none">
+      <div style="font-size:12px;font-weight:700;color:#93c5fd;margin-bottom:8px" id="cal-event-form-title">Add Event</div>
+      <input id="cal-event-input" type="text" placeholder="Event title…" class="cal-event-input" maxlength="60" />
+      <div style="display:flex;gap:6px;margin:8px 0;align-items:center">
+        <span style="font-size:11px;color:#64748b">Color:</span>
+        <button class="cal-color-btn active" data-color="#60a5fa" onclick="calPickColor(this)" style="background:#60a5fa"></button>
+        <button class="cal-color-btn" data-color="#34d399" onclick="calPickColor(this)" style="background:#34d399"></button>
+        <button class="cal-color-btn" data-color="#fb923c" onclick="calPickColor(this)" style="background:#fb923c"></button>
+        <button class="cal-color-btn" data-color="#f472b6" onclick="calPickColor(this)" style="background:#f472b6"></button>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="cal-form-btn cal-form-save" onclick="calSaveEvent()">Save</button>
+        <button class="cal-form-btn cal-form-cancel" onclick="calCloseForm()">Cancel</button>
+      </div>
+    </div>
+  </div><!-- /rb-panel-calendar -->
+
+  <!-- ── PANEL 9: Notes ── -->
+  <div id="rb-panel-notes" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+    <div class="panel-ctrl-bar" style="flex-shrink:0;gap:6px">
+      <input id="notes-search" type="text" placeholder="🔍 Search notes…" oninput="notesRender()" style="flex:1;min-width:0;padding:6px 10px;background:#0c1525;color:#e2e8f0;border:1px solid #1e3a5c;border-radius:6px;font-size:12px;outline:none;font-family:inherit" />
+      <button class="panel-ctrl-btn" style="width:auto;padding:0 10px;font-size:11px;white-space:nowrap" onclick="notesNewNote()">+ New</button>
+    </div>
+    <div class="panel-preset-strip" id="notes-cat-strip" style="flex-shrink:0">
+      <button class="radio-preset-btn notes-cat-btn active" onclick="notesSetCat('all')">All</button>
+      <button class="radio-preset-btn notes-cat-btn" onclick="notesSetCat('pinned')">📌 Pinned</button>
+      <button class="radio-preset-btn notes-cat-btn" onclick="notesSetCat('work')">💼 Work</button>
+      <button class="radio-preset-btn notes-cat-btn" onclick="notesSetCat('ideas')">💡 Ideas</button>
+      <button class="radio-preset-btn notes-cat-btn" onclick="notesSetCat('personal')">🏠 Personal</button>
+      <button class="radio-preset-btn notes-cat-btn" onclick="notesSetCat('health')">❤️ Health</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;min-height:0;padding:8px">
+      <div class="notes-grid" id="notes-grid"></div>
+    </div>
+    <!-- Note edit overlay (covers the panel) -->
+    <div class="notes-overlay" id="notes-overlay" style="display:none">
+      <div class="notes-edit-card">
+        <input id="notes-edit-title" type="text" placeholder="Note title…" class="notes-edit-title-input" maxlength="80" />
+        <textarea id="notes-edit-body" placeholder="Write your note here…" class="notes-edit-body"></textarea>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
+          <select id="notes-edit-cat" class="notes-edit-select">
+            <option value="work">💼 Work</option>
+            <option value="ideas">💡 Ideas</option>
+            <option value="personal">🏠 Personal</option>
+            <option value="health">❤️ Health</option>
+          </select>
+          <div style="display:flex;gap:5px;align-items:center">
+            <span style="font-size:11px;color:#64748b">Color:</span>
+            <button class="notes-color-btn active" data-color="#1e3a5c" onclick="notesPickColor(this)" style="background:#1e3a5c"></button>
+            <button class="notes-color-btn" data-color="#1a2e1a" onclick="notesPickColor(this)" style="background:#1a2e1a"></button>
+            <button class="notes-color-btn" data-color="#2e1a1a" onclick="notesPickColor(this)" style="background:#2e1a1a"></button>
+            <button class="notes-color-btn" data-color="#1a1a2e" onclick="notesPickColor(this)" style="background:#1a1a2e"></button>
+            <button class="notes-color-btn" data-color="#2e2a1a" onclick="notesPickColor(this)" style="background:#2e2a1a"></button>
+          </div>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#94a3b8;cursor:pointer;margin-left:auto">
+            <input type="checkbox" id="notes-edit-pin" style="accent-color:#60a5fa" /> 📌 Pin
+          </label>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="cal-form-btn cal-form-save" style="flex:1" onclick="notesSaveEdit()">Save</button>
+          <button class="cal-form-btn cal-form-cancel" onclick="notesCancelEdit()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- /rb-panel-notes -->
+
+  <!-- ── PANEL 10: Calculator ── -->
+  <div id="rb-panel-calc" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+    <div style="flex:1;overflow-y:auto;min-height:0;padding:10px 8px;display:flex;flex-direction:column;gap:8px">
+      <!-- Display -->
+      <div class="calc-display">
+        <div class="calc-expr" id="calc-expr"></div>
+        <div class="calc-result" id="calc-result">0</div>
+      </div>
+      <!-- Mode toggle -->
+      <div class="panel-preset-strip" style="flex-shrink:0">
+        <button class="radio-preset-btn calc-mode-btn active" id="calc-mode-basic" onclick="calcSetMode('basic')">Basic</button>
+        <button class="radio-preset-btn calc-mode-btn" id="calc-mode-sci" onclick="calcSetMode('sci')">Scientific</button>
+      </div>
+      <!-- Scientific row -->
+      <div class="calc-sci-row" id="calc-sci-row">
+        <button class="calc-key calc-key-fn" onclick="calcFn('sin')">sin</button>
+        <button class="calc-key calc-key-fn" onclick="calcFn('cos')">cos</button>
+        <button class="calc-key calc-key-fn" onclick="calcFn('tan')">tan</button>
+        <button class="calc-key calc-key-fn" onclick="calcFn('log')">log</button>
+        <button class="calc-key calc-key-fn" onclick="calcFn('sqrt')">√</button>
+        <button class="calc-key calc-key-fn" onclick="calcFn('sq')">x²</button>
+        <button class="calc-key calc-key-fn" onclick="calcInsert('π')">π</button>
+        <button class="calc-key calc-key-fn" onclick="calcInsert('e')">e</button>
+        <button class="calc-key calc-key-fn" onclick="calcInsert('(')"> ( </button>
+        <button class="calc-key calc-key-fn" onclick="calcInsert(')')"> ) </button>
+      </div>
+      <!-- Main keypad -->
+      <div class="calc-keypad">
+        <button class="calc-key calc-key-util" onclick="calcClear()">C</button>
+        <button class="calc-key calc-key-util" onclick="calcToggleSign()">±</button>
+        <button class="calc-key calc-key-util" onclick="calcInsert('%')">%</button>
+        <button class="calc-key calc-key-op" onclick="calcInsert('÷')">÷</button>
+        <button class="calc-key" onclick="calcInsert('7')">7</button>
+        <button class="calc-key" onclick="calcInsert('8')">8</button>
+        <button class="calc-key" onclick="calcInsert('9')">9</button>
+        <button class="calc-key calc-key-op" onclick="calcInsert('×')">×</button>
+        <button class="calc-key" onclick="calcInsert('4')">4</button>
+        <button class="calc-key" onclick="calcInsert('5')">5</button>
+        <button class="calc-key" onclick="calcInsert('6')">6</button>
+        <button class="calc-key calc-key-op" onclick="calcInsert('−')">−</button>
+        <button class="calc-key" onclick="calcInsert('1')">1</button>
+        <button class="calc-key" onclick="calcInsert('2')">2</button>
+        <button class="calc-key" onclick="calcInsert('3')">3</button>
+        <button class="calc-key calc-key-op" onclick="calcInsert('+')">+</button>
+        <button class="calc-key calc-key-zero" onclick="calcInsert('0')">0</button>
+        <button class="calc-key" onclick="calcInsert('.')">.</button>
+        <button class="calc-key calc-key-eq" onclick="calcEquals()">=</button>
+      </div>
+      <!-- Backspace -->
+      <div style="display:flex;gap:6px">
+        <button class="calc-key calc-key-util" style="flex:1;height:36px;font-size:16px" onclick="calcBackspace()">⌫</button>
+      </div>
+      <!-- History -->
+      <div class="calc-history-wrap">
+        <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:4px 0" onclick="calcToggleHistory()">
+          <span style="font-size:11px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.8px">History</span>
+          <span id="calc-history-arrow" style="font-size:11px;color:#64748b">▼</span>
+        </div>
+        <div id="calc-history-list" class="calc-history-list"></div>
+      </div>
+    </div>
+  </div><!-- /rb-panel-calc -->
+
+  <!-- ── PANEL 11: World Clock ── -->
+  <div id="rb-panel-worldclock" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+    <div class="panel-ctrl-bar" style="flex-shrink:0;gap:6px">
+      <div style="flex:1;font-size:11px;color:#64748b" id="wc-local-time"></div>
+      <button class="panel-ctrl-btn" style="width:auto;padding:0 10px;font-size:11px;white-space:nowrap" onclick="wcOpenAddModal()">+ Add City</button>
+    </div>
+    <div class="panel-preset-strip" id="wc-country-strip" style="flex-shrink:0">
+      <button class="radio-preset-btn" onclick="wcBulkAdd('IN')">🇮🇳 India</button>
+      <button class="radio-preset-btn" onclick="wcBulkAdd('US')">🇺🇸 USA</button>
+      <button class="radio-preset-btn" onclick="wcBulkAdd('GB')">🇬🇧 UK</button>
+      <button class="radio-preset-btn" onclick="wcBulkAdd('AE')">🇦🇪 UAE</button>
+      <button class="radio-preset-btn" onclick="wcBulkAdd('JP')">🇯🇵 Japan</button>
+      <button class="radio-preset-btn" onclick="wcBulkAdd('SG')">🇸🇬 Singapore</button>
+      <button class="radio-preset-btn" onclick="wcBulkAdd('AU')">🇦🇺 Australia</button>
+      <button class="radio-preset-btn" onclick="wcBulkAdd('DE')">🇩🇪 Germany</button>
+      <button class="radio-preset-btn" onclick="wcBulkAdd('FR')">🇫🇷 France</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;min-height:0;padding:8px" id="wc-cards-container"></div>
+    <!-- Add City Modal -->
+    <div class="wc-modal-overlay" id="wc-add-modal" style="display:none">
+      <div class="wc-modal">
+        <div style="font-size:13px;font-weight:700;color:#93c5fd;margin-bottom:10px">Add City</div>
+        <input id="wc-search-input" type="text" placeholder="Search city name…" class="cal-event-input" oninput="wcSearchCity(this.value)" />
+        <div id="wc-search-results" class="wc-search-results"></div>
+        <button class="cal-form-btn cal-form-cancel" style="margin-top:10px;width:100%" onclick="wcCloseAddModal()">Cancel</button>
+      </div>
+    </div>
+  </div><!-- /rb-panel-worldclock -->
+
+  <!-- ── PANEL 12: Weather ── -->
+  <div id="rb-panel-weather" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+    <div class="panel-ctrl-bar" style="flex-shrink:0;gap:6px">
+      <input id="weather-search-input" type="text" placeholder="🔍 Search city…" class="weather-search-input" onkeydown="if(event.key==='Enter')weatherSearch()" style="flex:1;min-width:0;padding:6px 10px;background:#0c1525;color:#e2e8f0;border:1px solid #1e3a5c;border-radius:6px;font-size:12px;outline:none;font-family:inherit" />
+      <button class="panel-ctrl-btn" title="Use my location" onclick="weatherGeolocate()">📍</button>
+    </div>
+    <div class="panel-preset-strip" id="weather-country-strip" style="flex-shrink:0">
+      <button class="radio-preset-btn weather-country-btn" onclick="weatherSetCountry('IN')">🇮🇳 India</button>
+      <button class="radio-preset-btn weather-country-btn" onclick="weatherSetCountry('US')">🇺🇸 USA</button>
+      <button class="radio-preset-btn weather-country-btn" onclick="weatherSetCountry('GB')">🇬🇧 UK</button>
+      <button class="radio-preset-btn weather-country-btn" onclick="weatherSetCountry('AE')">🇦🇪 UAE</button>
+      <button class="radio-preset-btn weather-country-btn" onclick="weatherSetCountry('JP')">🇯🇵 Japan</button>
+      <button class="radio-preset-btn weather-country-btn" onclick="weatherSetCountry('AU')">🇦🇺 Australia</button>
+      <button class="radio-preset-btn weather-country-btn" onclick="weatherSetCountry('DE')">🇩🇪 Germany</button>
+    </div>
+    <div id="weather-state-strip-wrap" style="display:none">
+      <div class="panel-preset-strip" id="weather-state-strip" style="flex-shrink:0"></div>
+    </div>
+    <div style="flex:1;overflow-y:auto;min-height:0;padding:8px">
+      <!-- Saved locations -->
+      <div id="weather-saved-strip" class="weather-saved-strip"></div>
+      <!-- Current weather card -->
+      <div id="weather-current-card" class="weather-current-card" style="display:none"></div>
+      <!-- 7-day forecast -->
+      <div id="weather-forecast-strip" class="weather-forecast-strip" style="display:none"></div>
+      <!-- Empty state -->
+      <div id="weather-empty" class="radio-no-data">Search for a city or tap 📍 to get local weather</div>
+    </div>
+  </div><!-- /rb-panel-weather -->
 
   <!-- ── PANEL 7: Widget Settings ── -->
   <div id="rb-panel-settings" style="display:none;flex-direction:column;flex:1;overflow-y:auto;min-height:0;padding:18px 16px 24px">
@@ -6472,6 +6830,11 @@ const _RB_PANELS = {
   music:    { panelId:'rb-panel-music',    tabId:'rbtab-music',    title:'🎵 YOUTUBE MUSIC',   init:'_musicInitDone',  initFn:'musicLoadDefault' },
   movies:   { panelId:'rb-panel-movies',   tabId:'rbtab-movies',   title:'🎬 MOVIES',  init:'_moviesInitDone', initFn:'moviesLoadDefault' },
   podcast:  { panelId:'rb-panel-podcast',  tabId:'rbtab-podcast',  title:'🎙 PODCAST', init:'_podcastInitDone',initFn:'podcastLoadCurated' },
+  calendar:   { panelId:'rb-panel-calendar',   tabId:'rbtab-calendar',   title:'📅 CALENDAR',    init:'_calendarInitDone',   initFn:'calendarInit' },
+  notes:      { panelId:'rb-panel-notes',      tabId:'rbtab-notes',      title:'📝 NOTES',       init:'_notesInitDone',      initFn:'notesInit' },
+  calc:       { panelId:'rb-panel-calc',       tabId:'rbtab-calc',       title:'🧮 CALCULATOR',  init:'_calcInitDone',       initFn:'calcInit' },
+  worldclock: { panelId:'rb-panel-worldclock', tabId:'rbtab-worldclock', title:'🌍 WORLD CLOCK', init:'_worldclockInitDone', initFn:'worldclockInit' },
+  weather:    { panelId:'rb-panel-weather',    tabId:'rbtab-weather',    title:'🌤 WEATHER',     init:'_weatherInitDone',    initFn:'weatherInit' },
   settings: { panelId:'rb-panel-settings', tabId:'rbtab-settings', title:'⚙️ WIDGET SETTINGS' },
 };
 
@@ -6515,8 +6878,9 @@ function rbSwitchPanel(panel) {
 const _WIDGET_TAB_LABELS = {
   ai:'🤖 AI Chat', video:'▶️ YouTube Live', iptv:'📡 Live TV',
   radio:'📻 Radio', music:'🎵 YouTube Music', movies:'🎬 Movies', podcast:'🎙 Podcast',
+  calendar:'📅 Calendar', notes:'📝 Notes', calc:'🧮 Calculator', worldclock:'🌍 World Clock', weather:'🌤 Weather',
 };
-const _WIDGET_DEFAULT_ORDER = ['ai','video','iptv','radio','music','movies','podcast'];
+const _WIDGET_DEFAULT_ORDER = ['ai','video','iptv','radio','music','movies','podcast','calendar','notes','calc','worldclock','weather'];
 function widgetGetSettings() {
   let s = {};
   try { s = JSON.parse(localStorage.getItem('viltv_widget_settings') || '{}'); } catch(_) {}
@@ -10464,7 +10828,9 @@ function _initLiveScores() {
 // panel key → mobile button id suffix
 const _MOB_BTN_MAP = {
   ai:'ai', video:'tv', iptv:'iptv', radio:'radio',
-  music:'music', movies:'movies', podcast:'podcast', settings:'settings'
+  music:'music', movies:'movies', podcast:'podcast',
+  calendar:'calendar', notes:'notes', calc:'calc', worldclock:'worldclock', weather:'weather',
+  settings:'settings'
 };
 function openMobileRightBar(panel) {
   rbSwitchPanel(panel);
@@ -15569,6 +15935,903 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
     });
   }
 })();
+
+// ══════════════════════════════════════════════════════════════════════
+// CALENDAR WIDGET
+// ══════════════════════════════════════════════════════════════════════
+(function() {
+  const LS_KEY = 'viltv_calendar_events';
+  let _calYear, _calMonth, _calCountry = 'IN', _calRegion = null;
+  let _calSelectedDate = null, _calEventColor = '#60a5fa';
+
+  const _CAL_HOLIDAYS = {
+    IN: {
+      national: {
+        '01-26':'Republic Day','08-15':'Independence Day','10-02':'Gandhi Jayanti',
+        '01-01':'New Year','05-01':'Labour Day','11-14':'Children\'s Day',
+      },
+      states: {
+        MH: {'04-14':'Dr Ambedkar Jayanti','05-01':'Maharashtra Day'},
+        DL: {'10-31':'Sardar Patel Jayanti'},
+        KA: {'11-01':'Karnataka Rajyotsava'},
+        TN: {'01-14':'Pongal','04-14':'Tamil New Year'},
+        WB: {'10-19':'Durga Puja'},
+        GJ: {'01-14':'Uttarayan','05-01':'Gujarat Day'},
+        KL: {'08-30':'Onam'},
+        AP: {'11-01':'AP Formation Day'},
+        UP: {'11-09':'UP Foundation Day'},
+        RJ: {'03-30':'Rajasthan Day'},
+      }
+    },
+    US: {
+      national: {
+        '01-01':'New Year\'s Day','01-15':'MLK Day','02-19':'Presidents Day',
+        '05-27':'Memorial Day','06-19':'Juneteenth','07-04':'Independence Day',
+        '09-02':'Labor Day','10-14':'Columbus Day','11-11':'Veterans Day',
+        '11-28':'Thanksgiving','12-25':'Christmas',
+      },
+      states: {
+        CA: {'03-31':'Cesar Chavez Day','11-29':'Day after Thanksgiving'},
+        TX: {'03-02':'Texas Independence Day','04-21':'San Jacinto Day'},
+        NY: {'02-12':'Lincoln Birthday'},
+        FL: {'04-26':'Confederate Memorial'},
+        WA: {'11-29':'Family Day'},
+        IL: {'03-04':'Casimir Pulaski Day'},
+      }
+    },
+    GB: {
+      national: {
+        '01-01':'New Year\'s Day','03-29':'Good Friday','04-01':'Easter Monday',
+        '05-06':'Early May Bank Holiday','05-27':'Spring Bank Holiday',
+        '08-26':'Summer Bank Holiday','12-25':'Christmas Day','12-26':'Boxing Day',
+      },
+      states: {}
+    },
+    AE: {
+      national: {
+        '01-01':'New Year\'s Day','04-09':'Eid Al Fitr','06-16':'Eid Al Adha',
+        '07-07':'Arafat Day','07-08':'Islamic New Year','09-15':'Prophet Birthday',
+        '11-19':'UAE National Day','12-02':'UAE National Day (2nd)',
+        '12-03':'Commemoration Day',
+      },
+      states: {}
+    },
+    JP: {
+      national: {
+        '01-01':'New Year','01-08':'Coming of Age','02-11':'Foundation Day',
+        '02-23':'Emperor Birthday','03-20':'Vernal Equinox','04-29':'Showa Day',
+        '05-03':'Constitution Day','05-04':'Greenery Day','05-05':'Children\'s Day',
+        '07-15':'Marine Day','08-11':'Mountain Day','09-16':'Respect for Aged',
+        '09-23':'Autumnal Equinox','10-14':'Sports Day','11-03':'Culture Day',
+        '11-23':'Labour Thanksgiving','12-31':'New Year\'s Eve',
+      },
+      states: {}
+    },
+    AU: {
+      national: {
+        '01-01':'New Year\'s Day','01-27':'Australia Day','03-29':'Good Friday',
+        '04-01':'Easter Monday','04-25':'ANZAC Day','12-25':'Christmas',
+        '12-26':'Boxing Day',
+      },
+      states: {
+        NSW: {'06-10':'Queen\'s Birthday'},
+        VIC: {'11-05':'Melbourne Cup'},
+        QLD: {'05-06':'Labour Day'},
+        WA:  {'03-04':'Labour Day'},
+      }
+    },
+  };
+
+  const _CAL_REGIONS = {
+    IN: [
+      {code:'MH',label:'Maharashtra'},{code:'DL',label:'Delhi'},{code:'KA',label:'Karnataka'},
+      {code:'TN',label:'Tamil Nadu'},{code:'WB',label:'West Bengal'},{code:'GJ',label:'Gujarat'},
+      {code:'KL',label:'Kerala'},{code:'AP',label:'Andhra Pradesh'},{code:'UP',label:'Uttar Pradesh'},
+      {code:'RJ',label:'Rajasthan'},
+    ],
+    US: [
+      {code:'CA',label:'California'},{code:'TX',label:'Texas'},{code:'NY',label:'New York'},
+      {code:'FL',label:'Florida'},{code:'WA',label:'Washington'},{code:'IL',label:'Illinois'},
+    ],
+    GB: [], AE: [], JP: [], AU: [
+      {code:'NSW',label:'New South Wales'},{code:'VIC',label:'Victoria'},
+      {code:'QLD',label:'Queensland'},{code:'WA',label:'Western Australia'},
+    ],
+  };
+
+  function _calLoadEvents() {
+    try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch(_) { return []; }
+  }
+  function _calSaveEvents(arr) {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(arr)); } catch(_) {}
+  }
+  function _calGetHoliday(dateStr) {
+    const md = dateStr.slice(5);
+    const h = _CAL_HOLIDAYS[_calCountry] || {};
+    const n = h.national && h.national[md];
+    if (n) return {label:n, type:'national'};
+    if (_calRegion && h.states && h.states[_calRegion] && h.states[_calRegion][md]) {
+      return {label: h.states[_calRegion][md], type:'regional'};
+    }
+    return null;
+  }
+  function _calDateStr(y, m, d) {
+    return y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+  }
+
+  window.calendarInit = function() {
+    const now = new Date();
+    _calYear = now.getFullYear();
+    _calMonth = now.getMonth();
+    calRenderRegions();
+    calRender();
+  };
+
+  window.calSetCountry = function(code) {
+    _calCountry = code;
+    _calRegion = null;
+    document.querySelectorAll('.cal-country-btn').forEach(b => b.classList.toggle('active', b.getAttribute('onclick').includes("'"+code+"'")));
+    calRenderRegions();
+    calRender();
+  };
+
+  window.calRenderRegions = function() {
+    const strip = document.getElementById('cal-region-strip');
+    if (!strip) return;
+    const regions = _CAL_REGIONS[_calCountry] || [];
+    if (!regions.length) { strip.style.display = 'none'; return; }
+    strip.style.display = '';
+    strip.innerHTML = '<button class="radio-preset-btn cal-region-btn active" onclick="calSetRegion(null)">All</button>' +
+      regions.map(r => `<button class="radio-preset-btn cal-region-btn" onclick="calSetRegion('${r.code}')">${r.label}</button>`).join('');
+  };
+
+  window.calSetRegion = function(code) {
+    _calRegion = code;
+    document.querySelectorAll('.cal-region-btn').forEach(b => {
+      const oc = b.getAttribute('onclick');
+      b.classList.toggle('active', code === null ? oc.includes('null') : oc.includes("'"+code+"'"));
+    });
+    calRender();
+  };
+
+  window.calNavPrev = function() { _calMonth--; if (_calMonth<0){_calMonth=11;_calYear--;} calRender(); };
+  window.calNavNext = function() { _calMonth++; if (_calMonth>11){_calMonth=0;_calYear++;} calRender(); };
+  window.calGoToday = function() { const n=new Date(); _calYear=n.getFullYear(); _calMonth=n.getMonth(); calRender(); };
+
+  window.calRender = function() {
+    const lbl = document.getElementById('cal-month-label');
+    if (lbl) lbl.textContent = new Date(_calYear, _calMonth, 1).toLocaleString('default',{month:'long',year:'numeric'});
+    const grid = document.getElementById('cal-grid');
+    if (!grid) return;
+    const events = _calLoadEvents();
+    const firstDay = new Date(_calYear, _calMonth, 1).getDay();
+    const daysInMonth = new Date(_calYear, _calMonth+1, 0).getDate();
+    const today = new Date();
+    let html = '';
+    // leading blanks
+    const prevDays = new Date(_calYear, _calMonth, 0).getDate();
+    for (let i = firstDay-1; i >= 0; i--) {
+      html += `<div class="cal-cell cal-other-month"><span class="cal-cell-date">${prevDays-i}</span></div>`;
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const ds = _calDateStr(_calYear, _calMonth, d);
+      const isToday = today.getFullYear()===_calYear && today.getMonth()===_calMonth && today.getDate()===d;
+      const isSel = _calSelectedDate === ds;
+      const holiday = _calGetHoliday(ds);
+      const dayEvents = events.filter(e => e.date === ds);
+      let cls = 'cal-cell';
+      if (isToday) cls += ' cal-today';
+      if (isSel) cls += ' cal-selected';
+      let inner = `<span class="cal-cell-date">${d}</span>`;
+      if (holiday) inner += `<span class="cal-holiday-label${holiday.type==='regional'?' regional':''}">${holiday.label}</span>`;
+      if (dayEvents.length) {
+        inner += '<div class="cal-dots-row">' + dayEvents.map(e=>`<span class="cal-event-dot" style="background:${e.color||'#60a5fa'}" title="${e.title}"></span>`).join('') + '</div>';
+      }
+      html += `<div class="${cls}" onclick="calSelectDate('${ds}')">${inner}</div>`;
+    }
+    // trailing blanks
+    const total = firstDay + daysInMonth;
+    const trail = total % 7 === 0 ? 0 : 7 - (total % 7);
+    for (let i = 1; i <= trail; i++) html += `<div class="cal-cell cal-other-month"><span class="cal-cell-date">${i}</span></div>`;
+    grid.innerHTML = html;
+  };
+
+  window.calSelectDate = function(ds) {
+    _calSelectedDate = ds;
+    calRender();
+    const form = document.getElementById('cal-event-form');
+    const title = document.getElementById('cal-event-form-title');
+    if (form) {
+      const d = new Date(ds + 'T00:00:00');
+      const label = d.toLocaleDateString('default',{weekday:'short',month:'short',day:'numeric'});
+      if (title) title.textContent = 'Add Event — ' + label;
+      const inp = document.getElementById('cal-event-input');
+      if (inp) inp.value = '';
+      form.style.display = 'block';
+    }
+  };
+
+  window.calPickColor = function(btn) {
+    document.querySelectorAll('.cal-color-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    _calEventColor = btn.getAttribute('data-color');
+  };
+
+  window.calSaveEvent = function() {
+    const inp = document.getElementById('cal-event-input');
+    const title = inp ? inp.value.trim() : '';
+    if (!title || !_calSelectedDate) return;
+    const events = _calLoadEvents();
+    events.push({id: Date.now(), date: _calSelectedDate, title, color: _calEventColor});
+    _calSaveEvents(events);
+    calRender();
+    calCloseForm();
+  };
+
+  window.calCloseForm = function() {
+    const form = document.getElementById('cal-event-form');
+    if (form) form.style.display = 'none';
+    _calSelectedDate = null;
+    calRender();
+  };
+})();
+
+// ══════════════════════════════════════════════════════════════════════
+// NOTES WIDGET
+// ══════════════════════════════════════════════════════════════════════
+(function() {
+  const LS_KEY = 'viltv_notes';
+  let _notesCat = 'all', _notesEditId = null, _notesEditColor = '#1e3a5c';
+  const _CAT_LABELS = {work:'💼 Work', ideas:'💡 Ideas', personal:'🏠 Personal', health:'❤️ Health'};
+
+  function _notesLoad() {
+    try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch(_) { return []; }
+  }
+  function _notesSave(arr) {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(arr)); } catch(_) {}
+  }
+
+  window.notesInit = function() { notesRender(); };
+
+  window.notesSetCat = function(cat) {
+    _notesCat = cat;
+    document.querySelectorAll('.notes-cat-btn').forEach(b => {
+      const oc = b.getAttribute('onclick');
+      b.classList.toggle('active', oc.includes("'"+cat+"'"));
+    });
+    notesRender();
+  };
+
+  window.notesRender = function() {
+    const grid = document.getElementById('notes-grid');
+    if (!grid) return;
+    const search = (document.getElementById('notes-search') || {}).value || '';
+    let notes = _notesLoad();
+    // filter by category
+    if (_notesCat === 'pinned') notes = notes.filter(n => n.pinned);
+    else if (_notesCat !== 'all') notes = notes.filter(n => n.category === _notesCat);
+    // filter by search
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      notes = notes.filter(n => (n.title||'').toLowerCase().includes(q) || (n.body||'').toLowerCase().includes(q));
+    }
+    // Sort pinned first then by ts desc
+    notes.sort((a,b) => (b.pinned?1:0)-(a.pinned?1:0) || (b.ts||0)-(a.ts||0));
+    if (!notes.length) {
+      grid.innerHTML = '<div class="notes-empty">No notes yet.<br>Tap <strong>+ New</strong> to create one.</div>';
+      return;
+    }
+    grid.innerHTML = notes.map(n => {
+      const preview = (n.body||'').replace(/\n/g,' ').slice(0,80);
+      const date = n.ts ? new Date(n.ts).toLocaleDateString('default',{month:'short',day:'numeric'}) : '';
+      const catLabel = _CAT_LABELS[n.category] || n.category || '';
+      return `<div class="note-card" style="background:${n.color||'#080e1a'}" onclick="notesOpenEdit('${n.id}')">
+        ${n.pinned ? '<span class="note-pin-icon">📌</span>' : ''}
+        <button class="note-delete-btn" onclick="event.stopPropagation();notesDelete('${n.id}')" title="Delete">✕</button>
+        <div class="note-card-title" style="margin-top:${n.pinned?'14px':'0'}">${_esc(n.title||'Untitled')}</div>
+        <div class="note-card-preview">${_esc(preview)}</div>
+        <div class="note-card-footer">
+          <span class="note-cat-badge">${catLabel}</span>
+          <span class="note-date">${date}</span>
+        </div>
+      </div>`;
+    }).join('');
+  };
+
+  function _esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  window.notesNewNote = function() {
+    _notesEditId = null;
+    _notesEditColor = '#1e3a5c';
+    const t = document.getElementById('notes-edit-title');
+    const b = document.getElementById('notes-edit-body');
+    const c = document.getElementById('notes-edit-cat');
+    const p = document.getElementById('notes-edit-pin');
+    if (t) t.value = '';
+    if (b) b.value = '';
+    if (c) c.value = 'work';
+    if (p) p.checked = false;
+    document.querySelectorAll('.notes-color-btn').forEach((btn,i) => btn.classList.toggle('active', i===0));
+    const ov = document.getElementById('notes-overlay');
+    if (ov) ov.style.display = 'flex';
+  };
+
+  window.notesOpenEdit = function(id) {
+    const notes = _notesLoad();
+    const n = notes.find(x => String(x.id) === String(id));
+    if (!n) return;
+    _notesEditId = id;
+    _notesEditColor = n.color || '#1e3a5c';
+    const t = document.getElementById('notes-edit-title');
+    const b = document.getElementById('notes-edit-body');
+    const c = document.getElementById('notes-edit-cat');
+    const p = document.getElementById('notes-edit-pin');
+    if (t) t.value = n.title || '';
+    if (b) b.value = n.body || '';
+    if (c) c.value = n.category || 'work';
+    if (p) p.checked = !!n.pinned;
+    document.querySelectorAll('.notes-color-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-color') === _notesEditColor);
+    });
+    const ov = document.getElementById('notes-overlay');
+    if (ov) ov.style.display = 'flex';
+  };
+
+  window.notesPickColor = function(btn) {
+    document.querySelectorAll('.notes-color-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    _notesEditColor = btn.getAttribute('data-color');
+  };
+
+  window.notesSaveEdit = function() {
+    const title = (document.getElementById('notes-edit-title') || {}).value || '';
+    const body  = (document.getElementById('notes-edit-body') || {}).value || '';
+    const category = (document.getElementById('notes-edit-cat') || {}).value || 'work';
+    const pinned = !!(document.getElementById('notes-edit-pin') || {}).checked;
+    let notes = _notesLoad();
+    if (_notesEditId) {
+      notes = notes.map(n => String(n.id) === String(_notesEditId) ? {...n, title, body, category, pinned, color:_notesEditColor, ts:Date.now()} : n);
+    } else {
+      notes.unshift({id: Date.now(), title, body, category, pinned, color:_notesEditColor, ts:Date.now()});
+    }
+    _notesSave(notes);
+    notesCancelEdit();
+    notesRender();
+  };
+
+  window.notesCancelEdit = function() {
+    const ov = document.getElementById('notes-overlay');
+    if (ov) ov.style.display = 'none';
+    _notesEditId = null;
+  };
+
+  window.notesDelete = function(id) {
+    let notes = _notesLoad();
+    notes = notes.filter(n => String(n.id) !== String(id));
+    _notesSave(notes);
+    notesRender();
+  };
+})();
+
+// ══════════════════════════════════════════════════════════════════════
+// CALCULATOR WIDGET
+// ══════════════════════════════════════════════════════════════════════
+(function() {
+  let _calcExpr = '', _calcMode = 'basic', _calcHistOpen = false;
+  const _calcHistory = [];
+
+  function _calcDisplay() {
+    const exprEl = document.getElementById('calc-expr');
+    const resEl  = document.getElementById('calc-result');
+    if (exprEl) exprEl.textContent = _calcExpr;
+    if (resEl) {
+      if (_calcExpr) {
+        try {
+          const val = _calcEval(_calcExpr);
+          resEl.textContent = isFinite(val) ? _calcFmt(val) : 'Error';
+        } catch(_) { resEl.textContent = _calcExpr ? '…' : '0'; }
+      } else { resEl.textContent = '0'; }
+    }
+  }
+
+  function _calcFmt(n) {
+    if (Math.abs(n) > 1e15 || (Math.abs(n) < 1e-10 && n !== 0)) return n.toExponential(6);
+    const s = String(parseFloat(n.toPrecision(12)));
+    return s;
+  }
+
+  function _calcEval(expr) {
+    const s = expr
+      .replace(/÷/g, '/')
+      .replace(/×/g, '*')
+      .replace(/−/g, '-')
+      .replace(/π/g, String(Math.PI))
+      .replace(/e(?![0-9])/g, String(Math.E))
+      .replace(/%/g, '/100');
+    // eslint-disable-next-line no-new-func
+    return Function('"use strict"; return (' + s + ')')();
+  }
+
+  window.calcInit = function() {
+    document.addEventListener('keydown', function(e) {
+      if (document.getElementById('rb-panel-calc') && document.getElementById('rb-panel-calc').style.display !== 'none') {
+        if (e.key >= '0' && e.key <= '9') calcInsert(e.key);
+        else if (e.key === '+') calcInsert('+');
+        else if (e.key === '-') calcInsert('−');
+        else if (e.key === '*') calcInsert('×');
+        else if (e.key === '/') { e.preventDefault(); calcInsert('÷'); }
+        else if (e.key === '.') calcInsert('.');
+        else if (e.key === 'Enter' || e.key === '=') calcEquals();
+        else if (e.key === 'Escape') calcClear();
+        else if (e.key === 'Backspace') calcBackspace();
+        else if (e.key === '(') calcInsert('(');
+        else if (e.key === ')') calcInsert(')');
+        else if (e.key === '%') calcInsert('%');
+      }
+    });
+    _calcDisplay();
+  };
+
+  window.calcInsert = function(ch) { _calcExpr += ch; _calcDisplay(); };
+  window.calcClear = function() { _calcExpr = ''; _calcDisplay(); };
+  window.calcBackspace = function() { _calcExpr = _calcExpr.slice(0,-1); _calcDisplay(); };
+  window.calcToggleSign = function() {
+    if (!_calcExpr) return;
+    if (_calcExpr.startsWith('-(')) {
+      _calcExpr = _calcExpr.slice(2, -1);
+    } else {
+      _calcExpr = '-(' + _calcExpr + ')';
+    }
+    _calcDisplay();
+  };
+
+  window.calcFn = function(fn) {
+    if (!_calcExpr) return;
+    const ops = {sin:'Math.sin(', cos:'Math.cos(', tan:'Math.tan(', log:'Math.log10(', sqrt:'Math.sqrt('};
+    if (fn === 'sq') { _calcExpr = '(' + _calcExpr + ')**2'; }
+    else if (ops[fn]) { _calcExpr = ops[fn] + _calcExpr + ')'; }
+    _calcDisplay();
+  };
+
+  window.calcEquals = function() {
+    if (!_calcExpr) return;
+    try {
+      const val = _calcEval(_calcExpr);
+      const result = isFinite(val) ? _calcFmt(val) : 'Error';
+      _calcHistory.unshift({expr: _calcExpr, val: result});
+      if (_calcHistory.length > 10) _calcHistory.pop();
+      _calcRenderHistory();
+      const exprEl = document.getElementById('calc-expr');
+      if (exprEl) exprEl.textContent = _calcExpr + ' =';
+      _calcExpr = result === 'Error' ? '' : result;
+      _calcDisplay();
+      if (exprEl) exprEl.textContent = (exprEl.textContent || '').split('=')[0].trim() + ' =';
+    } catch(_) {
+      const resEl = document.getElementById('calc-result');
+      if (resEl) resEl.textContent = 'Error';
+    }
+  };
+
+  window.calcSetMode = function(mode) {
+    _calcMode = mode;
+    document.getElementById('calc-mode-basic').classList.toggle('active', mode==='basic');
+    document.getElementById('calc-mode-sci').classList.toggle('active', mode==='sci');
+    const row = document.getElementById('calc-sci-row');
+    if (row) row.classList.toggle('visible', mode==='sci');
+  };
+
+  window.calcToggleHistory = function() {
+    _calcHistOpen = !_calcHistOpen;
+    const list = document.getElementById('calc-history-list');
+    const arrow = document.getElementById('calc-history-arrow');
+    if (list) list.classList.toggle('open', _calcHistOpen);
+    if (arrow) arrow.textContent = _calcHistOpen ? '▲' : '▼';
+  };
+
+  function _calcRenderHistory() {
+    const list = document.getElementById('calc-history-list');
+    if (!list) return;
+    if (!_calcHistory.length) { list.innerHTML = '<div style="font-size:10px;color:#475569;padding:4px 6px">No history yet</div>'; return; }
+    list.innerHTML = _calcHistory.map(h =>
+      `<div class="calc-history-item" onclick="calcInsert('${h.val.replace(/'/g,"\\'")}')">
+        <span class="calc-history-expr">${h.expr}</span>
+        <span class="calc-history-val">${h.val}</span>
+      </div>`
+    ).join('');
+  }
+})();
+
+// ══════════════════════════════════════════════════════════════════════
+// WORLD CLOCK WIDGET
+// ══════════════════════════════════════════════════════════════════════
+(function() {
+  const LS_KEY = 'viltv_worldclock_cities';
+  let _wcTimer = null, _wcSearchTimer = null;
+
+  const _WC_DEFAULTS = [
+    {city:'Mumbai',     country:'India',     timezone:'Asia/Kolkata',       flag:'🇮🇳'},
+    {city:'New York',   country:'USA',       timezone:'America/New_York',   flag:'🇺🇸'},
+    {city:'London',     country:'UK',        timezone:'Europe/London',      flag:'🇬🇧'},
+    {city:'Dubai',      country:'UAE',       timezone:'Asia/Dubai',         flag:'🇦🇪'},
+    {city:'Tokyo',      country:'Japan',     timezone:'Asia/Tokyo',         flag:'🇯🇵'},
+    {city:'Sydney',     country:'Australia', timezone:'Australia/Sydney',   flag:'🇦🇺'},
+  ];
+
+  const _WC_BULK = {
+    IN: [{city:'Mumbai',country:'India',timezone:'Asia/Kolkata',flag:'🇮🇳'},{city:'Delhi',country:'India',timezone:'Asia/Kolkata',flag:'🇮🇳'},{city:'Bangalore',country:'India',timezone:'Asia/Kolkata',flag:'🇮🇳'}],
+    US: [{city:'New York',country:'USA',timezone:'America/New_York',flag:'🇺🇸'},{city:'Los Angeles',country:'USA',timezone:'America/Los_Angeles',flag:'🇺🇸'},{city:'Chicago',country:'USA',timezone:'America/Chicago',flag:'🇺🇸'}],
+    GB: [{city:'London',country:'UK',timezone:'Europe/London',flag:'🇬🇧'},{city:'Edinburgh',country:'UK',timezone:'Europe/London',flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿'}],
+    AE: [{city:'Dubai',country:'UAE',timezone:'Asia/Dubai',flag:'🇦🇪'},{city:'Abu Dhabi',country:'UAE',timezone:'Asia/Dubai',flag:'🇦🇪'}],
+    JP: [{city:'Tokyo',country:'Japan',timezone:'Asia/Tokyo',flag:'🇯🇵'},{city:'Osaka',country:'Japan',timezone:'Asia/Tokyo',flag:'🇯🇵'}],
+    SG: [{city:'Singapore',country:'Singapore',timezone:'Asia/Singapore',flag:'🇸🇬'}],
+    AU: [{city:'Sydney',country:'Australia',timezone:'Australia/Sydney',flag:'🇦🇺'},{city:'Melbourne',country:'Australia',timezone:'Australia/Melbourne',flag:'🇦🇺'}],
+    DE: [{city:'Berlin',country:'Germany',timezone:'Europe/Berlin',flag:'🇩🇪'},{city:'Munich',country:'Germany',timezone:'Europe/Berlin',flag:'🇩🇪'}],
+    FR: [{city:'Paris',country:'France',timezone:'Europe/Paris',flag:'🇫🇷'}],
+  };
+
+  function _wcLoad() {
+    try { const d = JSON.parse(localStorage.getItem(LS_KEY)); return Array.isArray(d) ? d : null; } catch(_) { return null; }
+  }
+  function _wcSave(arr) { try { localStorage.setItem(LS_KEY, JSON.stringify(arr)); } catch(_) {} }
+
+  function _wcGetTime(tz) {
+    return new Intl.DateTimeFormat('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:tz}).format(new Date());
+  }
+  function _wcGetDate(tz) {
+    return new Intl.DateTimeFormat('en-GB', {weekday:'short',month:'short',day:'numeric',timeZone:tz}).format(new Date());
+  }
+  function _wcGetOffset(tz) {
+    const d = new Date();
+    const local = d.getTime();
+    const utcMs = local + d.getTimezoneOffset()*60000;
+    const tzStr = new Intl.DateTimeFormat('en-US',{timeZone:tz,timeZoneName:'short'}).formatToParts(d).find(p=>p.type==='timeZoneName');
+    return tzStr ? tzStr.value : '';
+  }
+
+  window.worldclockInit = function() {
+    let cities = _wcLoad();
+    if (!cities) { cities = _WC_DEFAULTS; _wcSave(cities); }
+    _wcRender(cities);
+    if (_wcTimer) clearInterval(_wcTimer);
+    _wcTimer = setInterval(() => {
+      const cities = _wcLoad() || _WC_DEFAULTS;
+      document.querySelectorAll('.wc-card').forEach((card, i) => {
+        const c = cities[i];
+        if (!c) return;
+        const timeEl = card.querySelector('.wc-card-time');
+        const dateEl = card.querySelector('.wc-card-date');
+        if (timeEl) timeEl.textContent = _wcGetTime(c.timezone);
+        if (dateEl) dateEl.textContent = _wcGetDate(c.timezone);
+      });
+      // Update local time bar
+      const local = document.getElementById('wc-local-time');
+      if (local) {
+        const now = new Date();
+        local.textContent = now.toLocaleTimeString() + ' — ' + now.toLocaleDateString('default',{weekday:'short',month:'short',day:'numeric'});
+      }
+    }, 1000);
+    // init local time
+    const local = document.getElementById('wc-local-time');
+    if (local) {
+      const now = new Date();
+      local.textContent = now.toLocaleTimeString() + ' — ' + now.toLocaleDateString('default',{weekday:'short',month:'short',day:'numeric'});
+    }
+  };
+
+  function _wcRender(cities) {
+    const container = document.getElementById('wc-cards-container');
+    if (!container) return;
+    if (!cities || !cities.length) {
+      container.innerHTML = '<div class="radio-no-data">No cities added. Use + Add City.</div>';
+      return;
+    }
+    container.innerHTML = cities.map((c, i) =>
+      `<div class="wc-card">
+        <div class="wc-card-flag">${c.flag || '🌐'}</div>
+        <div class="wc-card-info">
+          <div class="wc-card-city">${c.city}</div>
+          <div class="wc-card-country">${c.country}</div>
+          <div class="wc-card-utc">${_wcGetOffset(c.timezone)}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="wc-card-time">${_wcGetTime(c.timezone)}</div>
+          <div class="wc-card-date">${_wcGetDate(c.timezone)}</div>
+        </div>
+        <button class="wc-remove-btn" onclick="wcRemove(${i})" title="Remove">✕</button>
+      </div>`
+    ).join('');
+  }
+
+  window.wcRemove = function(i) {
+    let cities = _wcLoad() || [];
+    cities.splice(i, 1);
+    _wcSave(cities);
+    _wcRender(cities);
+  };
+
+  window.wcBulkAdd = function(country) {
+    let cities = _wcLoad() || [];
+    const toAdd = _WC_BULK[country] || [];
+    toAdd.forEach(c => {
+      if (!cities.find(x => x.city === c.city)) cities.push(c);
+    });
+    _wcSave(cities);
+    _wcRender(cities);
+  };
+
+  window.wcOpenAddModal = function() {
+    const m = document.getElementById('wc-add-modal');
+    if (m) { m.style.display = 'flex'; const inp = document.getElementById('wc-search-input'); if (inp) { inp.value = ''; inp.focus(); } }
+    document.getElementById('wc-search-results').innerHTML = '';
+  };
+  window.wcCloseAddModal = function() {
+    const m = document.getElementById('wc-add-modal');
+    if (m) m.style.display = 'none';
+  };
+
+  window.wcSearchCity = function(q) {
+    clearTimeout(_wcSearchTimer);
+    const res = document.getElementById('wc-search-results');
+    if (!q || q.length < 2) { if (res) res.innerHTML = ''; return; }
+    if (res) res.innerHTML = '<div class="wc-result-item">Searching…</div>';
+    _wcSearchTimer = setTimeout(async () => {
+      try {
+        const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=6&q=' + encodeURIComponent(q);
+        const data = await fetch(url, {headers:{'Accept-Language':'en'}}).then(r=>r.json());
+        if (!res) return;
+        if (!data.length) { res.innerHTML = '<div class="wc-result-item">No results</div>'; return; }
+        res.innerHTML = data.map(item => {
+          const parts = (item.display_name||'').split(',');
+          const city = parts[0].trim();
+          const country = parts[parts.length-1].trim();
+          const lat = parseFloat(item.lat), lon = parseFloat(item.lon);
+          return `<div class="wc-result-item" onclick="wcAddFromNominatim('${city.replace(/'/g,"\\'")}','${country.replace(/'/g,"\\'")}',${lat},${lon})">
+            <div>${city}</div>
+            <div class="wc-result-tz">${item.display_name}</div>
+          </div>`;
+        }).join('');
+      } catch(e) {
+        if (res) res.innerHTML = '<div class="wc-result-item">Search failed</div>';
+      }
+    }, 500);
+  };
+
+  window.wcAddFromNominatim = async function(city, country, lat, lon) {
+    try {
+      const tzUrl = `https://timeapi.io/api/timezone/coordinate?latitude=${lat}&longitude=${lon}`;
+      let tz = 'UTC';
+      try {
+        const tzData = await fetch(tzUrl).then(r=>r.json());
+        tz = tzData.timeZone || 'UTC';
+      } catch(_) {
+        // Fallback: estimate timezone from longitude
+        const offset = Math.round(lon / 15);
+        tz = 'Etc/GMT' + (offset >= 0 ? '-' + offset : '+' + Math.abs(offset));
+      }
+      const flag = _wcCountryToFlag(country);
+      let cities = _wcLoad() || [];
+      if (!cities.find(c => c.city === city)) {
+        cities.push({city, country, timezone: tz, flag});
+        _wcSave(cities);
+        _wcRender(cities);
+      }
+      wcCloseAddModal();
+    } catch(e) {
+      console.warn('wcAddFromNominatim error:', e);
+    }
+  };
+
+  function _wcCountryToFlag(country) {
+    const map = {'India':'🇮🇳','United States':'🇺🇸','United Kingdom':'🇬🇧','UAE':'🇦🇪','Japan':'🇯🇵','Australia':'🇦🇺','Germany':'🇩🇪','France':'🇫🇷','Singapore':'🇸🇬','China':'🇨🇳','Brazil':'🇧🇷','Canada':'🇨🇦'};
+    for (const [k,v] of Object.entries(map)) { if (country.toLowerCase().includes(k.toLowerCase())) return v; }
+    return '🌐';
+  }
+})();
+
+// ══════════════════════════════════════════════════════════════════════
+// WEATHER WIDGET
+// ══════════════════════════════════════════════════════════════════════
+(function() {
+  const LS_KEY = 'viltv_weather_saved';
+  let _weatherCountry = null;
+
+  const _WMO_ICONS = {
+    0:'☀️',1:'🌤',2:'⛅',3:'☁️',
+    45:'🌫',48:'🌫',
+    51:'🌦',53:'🌦',55:'🌧',
+    61:'🌧',63:'🌧',65:'🌧',
+    71:'🌨',73:'🌨',75:'❄️',
+    80:'🌦',81:'🌧',82:'⛈',
+    85:'🌨',86:'❄️',
+    95:'⛈',96:'⛈',99:'⛈',
+  };
+  const _WMO_DESC = {
+    0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',
+    45:'Fog',48:'Icy fog',
+    51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',
+    61:'Light rain',63:'Rain',65:'Heavy rain',
+    71:'Light snow',73:'Snow',75:'Heavy snow',
+    80:'Showers',81:'Rain showers',82:'Violent showers',
+    85:'Snow showers',86:'Heavy snow showers',
+    95:'Thunderstorm',96:'Thunderstorm+hail',99:'Severe thunderstorm',
+  };
+
+  const _WEATHER_STATES = {
+    IN: ['Mumbai','Delhi','Bangalore','Hyderabad','Chennai','Kolkata','Jaipur','Ahmedabad','Pune','Surat'],
+    US: ['New York','Los Angeles','Chicago','Houston','Phoenix','Philadelphia','San Antonio','San Diego','Dallas','Seattle'],
+    GB: ['London','Birmingham','Manchester','Glasgow','Liverpool','Leeds','Sheffield','Edinburgh','Bristol','Cardiff'],
+    AE: ['Dubai','Abu Dhabi','Sharjah','Ajman','Ras al-Khaimah'],
+    JP: ['Tokyo','Osaka','Yokohama','Nagoya','Sapporo','Fukuoka','Kyoto','Kobe','Hiroshima'],
+    AU: ['Sydney','Melbourne','Brisbane','Perth','Adelaide','Canberra','Darwin','Hobart'],
+    DE: ['Berlin','Hamburg','Munich','Cologne','Frankfurt','Stuttgart','Düsseldorf'],
+  };
+
+  function _weatherLoadSaved() {
+    try { const d = JSON.parse(localStorage.getItem(LS_KEY)); return Array.isArray(d) ? d : []; } catch(_) { return []; }
+  }
+  function _weatherSaveSaved(arr) { try { localStorage.setItem(LS_KEY, JSON.stringify(arr)); } catch(_) {} }
+
+  window.weatherInit = function() { _weatherRenderSaved(); };
+
+  window.weatherSetCountry = function(code) {
+    _weatherCountry = code;
+    document.querySelectorAll('.weather-country-btn').forEach(b => {
+      b.classList.toggle('active', b.getAttribute('onclick').includes("'"+code+"'"));
+    });
+    const stateWrap = document.getElementById('weather-state-strip-wrap');
+    const stateStrip = document.getElementById('weather-state-strip');
+    const states = _WEATHER_STATES[code] || [];
+    if (states.length && stateStrip) {
+      stateStrip.innerHTML = states.map(s => `<button class="radio-preset-btn" onclick="weatherSearchCity('${s.replace(/'/g,"\\'")}','${code}')">${s}</button>`).join('');
+      if (stateWrap) stateWrap.style.display = '';
+    } else {
+      if (stateWrap) stateWrap.style.display = 'none';
+    }
+  };
+
+  window.weatherSearch = async function() {
+    const inp = document.getElementById('weather-search-input');
+    const q = inp ? inp.value.trim() : '';
+    if (!q) return;
+    await weatherSearchCity(q, null);
+  };
+
+  window.weatherSearchCity = async function(city, country) {
+    _weatherShowStatus('Searching…');
+    try {
+      const qc = city + (country ? ', ' + country : '');
+      const geoUrl = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(qc);
+      const geo = await fetch(geoUrl, {headers:{'Accept-Language':'en'}}).then(r=>r.json());
+      if (!geo || !geo.length) { _weatherShowStatus('City not found. Try a different name.'); return; }
+      const lat = parseFloat(geo[0].lat), lon = parseFloat(geo[0].lon);
+      const parts = (geo[0].display_name||'').split(',');
+      const cityName = parts[0].trim();
+      const countryName = parts[parts.length-1].trim();
+      await _weatherFetchAndRender(cityName, countryName, lat, lon);
+    } catch(e) {
+      _weatherShowStatus('Failed to load weather. Please try again.');
+    }
+  };
+
+  window.weatherGeolocate = function() {
+    if (!navigator.geolocation) { _weatherShowStatus('Geolocation not supported.'); return; }
+    _weatherShowStatus('Getting your location…');
+    navigator.geolocation.getCurrentPosition(async pos => {
+      const lat = pos.coords.latitude, lon = pos.coords.longitude;
+      try {
+        const revUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+        const rev = await fetch(revUrl, {headers:{'Accept-Language':'en'}}).then(r=>r.json());
+        const city = rev.address.city || rev.address.town || rev.address.village || 'My Location';
+        const country = rev.address.country || '';
+        await _weatherFetchAndRender(city, country, lat, lon);
+      } catch(_) { await _weatherFetchAndRender('My Location','',lat,lon); }
+    }, () => _weatherShowStatus('Location access denied.'));
+  };
+
+  async function _weatherFetchAndRender(city, country, lat, lon) {
+    _weatherShowStatus('Loading weather data…');
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=7`;
+      const data = await fetch(url).then(r=>r.json());
+      const c = data.current || {};
+      const d = data.daily || {};
+      const wcode = c.weather_code || 0;
+      const icon = _WMO_ICONS[wcode] || '🌡';
+      const desc = _WMO_DESC[wcode] || 'Unknown';
+      const temp = Math.round(c.temperature_2m || 0);
+      const feels = Math.round(c.apparent_temperature || 0);
+      const hum = Math.round(c.relative_humidity_2m || 0);
+      const wind = Math.round(c.wind_speed_10m || 0);
+      const uv = Math.round(c.uv_index || 0);
+
+      const empty = document.getElementById('weather-empty');
+      if (empty) empty.style.display = 'none';
+
+      const card = document.getElementById('weather-current-card');
+      if (card) {
+        card.style.display = 'block';
+        card.innerHTML = `
+          <div class="weather-city-name">${city}</div>
+          <div class="weather-country">${country}</div>
+          <div class="weather-main-row">
+            <div class="weather-icon-big">${icon}</div>
+            <div>
+              <div class="weather-temp">${temp}°C</div>
+              <div class="weather-condition">${desc}</div>
+            </div>
+          </div>
+          <div class="weather-stats">
+            <div class="weather-stat"><span class="weather-stat-label">Feels Like</span><span class="weather-stat-val">${feels}°C</span></div>
+            <div class="weather-stat"><span class="weather-stat-label">Humidity</span><span class="weather-stat-val">${hum}%</span></div>
+            <div class="weather-stat"><span class="weather-stat-label">Wind</span><span class="weather-stat-val">${wind} km/h</span></div>
+            <div class="weather-stat"><span class="weather-stat-label">UV Index</span><span class="weather-stat-val">${uv}</span></div>
+          </div>
+          <button onclick="weatherSaveLocation('${city.replace(/'/g,"\\'")}','${country.replace(/'/g,"\\'")}',${lat},${lon})" style="margin-top:10px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.3);color:#60a5fa;padding:5px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">📌 Save Location</button>
+        `;
+      }
+
+      // 7-day forecast
+      const forecast = document.getElementById('weather-forecast-strip');
+      if (forecast && d.time) {
+        forecast.style.display = 'flex';
+        const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        forecast.innerHTML = d.time.map((t,i) => {
+          const dt = new Date(t + 'T12:00:00');
+          const dayName = i===0 ? 'Today' : days[dt.getDay()];
+          const fc_icon = _WMO_ICONS[d.weather_code[i]] || '🌡';
+          const max = Math.round(d.temperature_2m_max[i]);
+          const min = Math.round(d.temperature_2m_min[i]);
+          return `<div class="weather-fc-card">
+            <div class="weather-fc-day">${dayName}</div>
+            <div class="weather-fc-icon">${fc_icon}</div>
+            <div class="weather-fc-max">${max}°</div>
+            <div class="weather-fc-min">${min}°</div>
+          </div>`;
+        }).join('');
+      }
+    } catch(e) {
+      _weatherShowStatus('Weather data unavailable. Please try again.');
+    }
+  }
+
+  function _weatherShowStatus(msg) {
+    const empty = document.getElementById('weather-empty');
+    const card = document.getElementById('weather-current-card');
+    const fc = document.getElementById('weather-forecast-strip');
+    if (card) card.style.display = 'none';
+    if (fc) fc.style.display = 'none';
+    if (empty) { empty.style.display = 'block'; empty.textContent = msg; }
+  }
+
+  window.weatherSaveLocation = function(city, country, lat, lon) {
+    let saved = _weatherLoadSaved();
+    if (saved.find(s => s.city === city)) return;
+    if (saved.length >= 5) saved.shift();
+    saved.push({city, country, lat, lon});
+    _weatherSaveSaved(saved);
+    _weatherRenderSaved();
+  };
+
+  function _weatherRenderSaved() {
+    const strip = document.getElementById('weather-saved-strip');
+    if (!strip) return;
+    const saved = _weatherLoadSaved();
+    if (!saved.length) { strip.innerHTML = ''; return; }
+    strip.innerHTML = saved.map(s =>
+      `<button class="weather-saved-pill" onclick="weatherSearchCity('${s.city.replace(/'/g,"\\'")}','${s.country.replace(/'/g,"\\'")}')">
+        ${s.city}
+        <span class="weather-saved-pill-x" onclick="event.stopPropagation();weatherRemoveSaved('${s.city.replace(/'/g,"\\'")}')">✕</span>
+      </button>`
+    ).join('');
+  }
+
+  window.weatherRemoveSaved = function(city) {
+    let saved = _weatherLoadSaved();
+    saved = saved.filter(s => s.city !== city);
+    _weatherSaveSaved(saved);
+    _weatherRenderSaved();
+  };
+})();
 </script>
 
 <!-- ── MOBILE RIGHT-BAR OVERLAY (dim) ── -->
@@ -15598,6 +16861,11 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
   <button class="mobile-rb-btn" id="mobile-podcast-btn" onclick="openMobileRightBar('podcast')">
     <span class="mob-icon">🎙</span><span class="mob-label">Podcast</span>
   </button>
+  <button class="mobile-rb-btn" id="mobile-calendar-btn"   onclick="openMobileRightBar('calendar')"><span class="mob-icon">📅</span><span class="mob-label">Calendar</span></button>
+  <button class="mobile-rb-btn" id="mobile-notes-btn"      onclick="openMobileRightBar('notes')"><span class="mob-icon">📝</span><span class="mob-label">Notes</span></button>
+  <button class="mobile-rb-btn" id="mobile-calc-btn"       onclick="openMobileRightBar('calc')"><span class="mob-icon">🧮</span><span class="mob-label">Calc</span></button>
+  <button class="mobile-rb-btn" id="mobile-worldclock-btn" onclick="openMobileRightBar('worldclock')"><span class="mob-icon">🌍</span><span class="mob-label">World Clock</span></button>
+  <button class="mobile-rb-btn" id="mobile-weather-btn"    onclick="openMobileRightBar('weather')"><span class="mob-icon">🌤</span><span class="mob-label">Weather</span></button>
   <button class="mobile-rb-btn" id="mobile-settings-btn" onclick="openMobileRightBar('settings')">
     <span class="mob-icon">⚙️</span><span class="mob-label">Settings</span>
   </button>
