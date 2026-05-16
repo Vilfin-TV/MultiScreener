@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="description" content="Real-time stock analytics — technical analysis, financials, company profile and more for any global stock."/>
+<title>Stock Status — MultiScreener</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:root{
+  --burn:#2563eb;--burn2:#3b82f6;--burn3:#93c5fd;
+  --green:#10b981;--red:#ef4444;--amber:#f59e0b;--cyan:#38bdf8;
+  --dark:#060f1c;--dark2:#0a1830;--dark3:#0e1f3b;
+  --card:#0a1830;--card2:#0e1f3b;--card3:#122344;--card4:#162d4f;
+  --text:#e2eeff;--text2:#8ea8c8;--text3:#687a94;
+  --border:#162d4a;--border2:#1e3a5c;--border3:#243f6a;
+  --page-bg:#030810;--glow:rgba(37,99,235,.3);
+  --radius:12px;--nav-bg:#040913;
+}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page-bg);color:var(--text);min-height:100vh;overflow-x:hidden;line-height:1.6}
+
+/* ── TOP NAV ── */
+.top-nav{
+  position:sticky;top:0;z-index:200;
+  background:var(--nav-bg);border-bottom:1px solid var(--border);
+  height:46px;padding:0 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  backdrop-filter:blur(16px);
+}
+.nav-left{display:flex;align-items:center;gap:10px}
+.nav-back{
+  display:flex;align-items:center;gap:6px;
+  color:var(--text2);text-decoration:none;
+  font-size:12px;font-weight:600;letter-spacing:.3px;
+  padding:5px 10px;border-radius:6px;
+  border:1px solid var(--border);transition:all .15s;
+}
+.nav-back:hover{color:var(--text);background:var(--card2);border-color:var(--border2)}
+.nav-back svg{opacity:.6}
+.nav-divider{width:1px;height:20px;background:var(--border)}
+.nav-brand{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--burn2);letter-spacing:1.5px}
+.nav-badge{
+  font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+  padding:2px 8px;background:rgba(37,99,235,.12);
+  border:1px solid rgba(59,130,246,.25);border-radius:4px;color:var(--burn3);
+}
+.nav-right{display:flex;align-items:center;gap:8px}
+.nav-live-badge{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.5px;
+}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;animation:glow-pulse 2.2s ease-in-out infinite}
+@keyframes glow-pulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.6)}50%{box-shadow:0 0 0 4px rgba(16,185,129,0)}}
+
+/* ── SEARCH HERO ── */
+.search-hero{
+  position:relative;overflow:hidden;
+  padding:52px 24px 44px;text-align:center;
+  background:linear-gradient(160deg,#030810 0%,#071222 40%,#0a1830 70%,#060f1c 100%);
+  border-bottom:1px solid var(--border);
+}
+.search-hero::before{
+  content:'';position:absolute;
+  top:-100px;left:50%;transform:translateX(-50%);
+  width:800px;height:400px;
+  background:radial-gradient(ellipse,rgba(37,99,235,.09) 0%,transparent 65%);
+  pointer-events:none;
+}
+.search-hero::after{
+  content:'';position:absolute;
+  bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(59,130,246,.2),transparent);
+}
+.hero-eyebrow{
+  font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;
+  color:var(--burn2);margin-bottom:14px;
+}
+.hero-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(40px,6vw,64px);
+  letter-spacing:3px;color:var(--text);
+  line-height:1;margin-bottom:10px;
+}
+.hero-title span{color:var(--burn2)}
+.hero-sub{
+  color:var(--text3);font-size:13px;letter-spacing:.3px;
+  margin-bottom:36px;max-width:480px;margin-left:auto;margin-right:auto;
+}
+
+/* Search input */
+.search-wrap{position:relative;max-width:660px;margin:0 auto 22px}
+.search-row{
+  display:flex;align-items:stretch;
+  background:var(--card);
+  border:1.5px solid var(--border2);border-radius:14px;
+  box-shadow:0 4px 24px rgba(0,0,0,.3);
+  overflow:hidden;transition:border-color .2s,box-shadow .2s;
+}
+.search-row:focus-within{border-color:var(--burn2);box-shadow:0 0 0 3px rgba(59,130,246,.12),0 4px 24px rgba(0,0,0,.3)}
+.search-icon-cell{
+  display:flex;align-items:center;justify-content:center;
+  width:50px;color:var(--text3);flex-shrink:0;
+}
+#stockInput{
+  flex:1;background:transparent;border:none;outline:none;
+  color:var(--text);font-family:'DM Sans',sans-serif;
+  font-size:15px;font-weight:500;padding:15px 8px;
+  min-width:0;
+}
+#stockInput::placeholder{color:var(--text3)}
+.search-btn{
+  padding:0 26px;background:var(--burn);
+  border:none;color:#fff;font-family:'DM Sans',sans-serif;
+  font-size:13px;font-weight:700;cursor:pointer;
+  letter-spacing:.3px;white-space:nowrap;
+  transition:background .15s,transform .1s;flex-shrink:0;
+}
+.search-btn:hover{background:var(--burn2)}
+.search-btn:active{transform:scale(.97)}
+
+/* Autocomplete */
+.ac-drop{
+  display:none;position:absolute;
+  top:calc(100% + 6px);left:0;right:0;
+  background:#06101e;border:1px solid var(--border2);border-radius:12px;
+  box-shadow:0 20px 56px rgba(0,0,0,.65);
+  z-index:500;overflow:hidden;
+  max-height:340px;overflow-y:auto;
+}
+.ac-drop.open{display:block}
+.ac-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 16px;cursor:pointer;
+  border-bottom:1px solid rgba(255,255,255,.04);
+  transition:background .1s;
+}
+.ac-item:last-child{border-bottom:none}
+.ac-item:hover,.ac-item.active{background:var(--card2)}
+.ac-name{font-size:13px;font-weight:500;color:var(--text)}
+.ac-exch{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:2px}
+.ac-sym{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--burn2)}
+.ac-type{
+  font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  padding:2px 6px;border-radius:3px;
+  background:rgba(37,99,235,.15);color:var(--burn3);
+  margin-top:2px;display:inline-block;
+}
+.ac-none{padding:16px;text-align:center;color:var(--text3);font-size:13px}
+.ac-loading-msg{padding:14px 16px;text-align:center;color:var(--text3);font-size:12px;display:flex;align-items:center;justify-content:center;gap:8px}
+
+/* Quick chips */
+.quick-picks{
+  display:flex;align-items:center;justify-content:center;
+  flex-wrap:wrap;gap:7px;
+}
+.quick-label{font-size:11px;color:var(--text3);font-weight:600;letter-spacing:.5px}
+.chip{
+  padding:5px 13px;background:transparent;
+  border:1px solid var(--border2);border-radius:20px;
+  color:var(--text2);font-size:12px;font-weight:600;
+  cursor:pointer;font-family:'DM Sans',sans-serif;
+  transition:all .15s;
+}
+.chip:hover{background:rgba(59,130,246,.08);border-color:var(--burn2);color:var(--burn3)}
+
+/* ── STOCK BANNER ── */
+#stockBanner{
+  display:none;
+  background:linear-gradient(90deg,var(--dark2),var(--dark3));
+  border-bottom:1px solid var(--border);
+  padding:12px 20px;
+}
+.banner-inner{
+  max-width:1440px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;
+}
+.banner-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.banner-live{display:flex;align-items:center;gap:5px}
+.banner-exch{
+  font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;
+  padding:3px 8px;background:rgba(37,99,235,.2);
+  border:1px solid rgba(59,130,246,.35);border-radius:4px;
+  color:var(--burn3);text-transform:uppercase;letter-spacing:.5px;
+}
+.banner-sym{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--text);letter-spacing:.5px}
+.banner-sep{color:var(--border2);font-size:14px}
+.banner-name{font-size:13px;color:var(--text2);font-weight:400}
+.banner-right{display:flex;align-items:center;gap:8px}
+.btn-clear{
+  padding:5px 12px;background:transparent;
+  border:1px solid var(--border2);border-radius:6px;
+  color:var(--text3);font-size:12px;cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all .15s;
+}
+.btn-clear:hover{border-color:var(--red);color:var(--red)}
+
+/* ── EMPTY STATE ── */
+#emptyState{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:55vh;padding:60px 24px;text-align:center;
+}
+.empty-icon{font-size:56px;opacity:.25;margin-bottom:20px}
+.empty-title{font-size:20px;font-weight:600;color:var(--text2);margin-bottom:8px}
+.empty-sub{font-size:14px;color:var(--text3);max-width:360px;line-height:1.7}
+.empty-chips{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-top:24px}
+
+/* ── WIDGETS AREA ── */
+#widgetsArea{display:none;max-width:1440px;margin:0 auto;padding:28px 20px 72px}
+#widgetsArea.show{display:block}
+
+.section-head{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:14px;margin-top:8px;
+}
+.section-head:not(:first-child){margin-top:32px}
+.section-label{
+  font-size:10px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--text3);white-space:nowrap;
+}
+.section-line{flex:1;height:1px;background:var(--border)}
+
+/* Widget card */
+.wcard{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;
+  margin-bottom:20px;
+}
+.wcard-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 16px;border-bottom:1px solid var(--border);
+  background:var(--card2);
+}
+.wcard-title{
+  font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:var(--text2);display:flex;align-items:center;gap:7px;
+}
+.wcard-title svg{opacity:.6}
+.wcard-sub{font-size:11px;color:var(--text3)}
+.wcard-body{width:100%;overflow:hidden}
+.wcard-body .tradingview-widget-container{width:100%}
+
+/* Grids */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:0}
+.grid-6040{display:grid;grid-template-columns:1.55fr 1fr;gap:20px;margin-bottom:0}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:0}
+
+/* Loading skeleton inside widget */
+.wload{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:48px 24px;color:var(--text3);font-size:13px;
+}
+.spin{width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--burn2);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Hide TradingView copyright strip inside our branded cards */
+.wcard-body .tradingview-widget-copyright{display:none!important}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--burn)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:960px){
+  .grid-2,.grid-6040,.grid-3{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .search-hero{padding:36px 16px 32px}
+  .hero-title{font-size:38px}
+  .search-btn{padding:0 16px;font-size:12px}
+  #widgetsArea{padding:20px 12px 56px}
+  .banner-name{display:none}
+  .top-nav{padding:0 14px}
+}
+@media(max-width:380px){
+  .hero-title{font-size:32px}
+  .chip{font-size:11px;padding:4px 10px}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ TOP NAV ═══════════════ -->
+<nav class="top-nav">
+  <div class="nav-left">
+    <a href="index.html" class="nav-back">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      MultiScreener
+    </a>
+    <div class="nav-divider"></div>
+    <span class="nav-brand">VILFIN<span style="color:var(--text2)">-TV</span></span>
+    <span class="nav-badge">Stock Status</span>
+  </div>
+  <div class="nav-right">
+    <div class="nav-live-badge">
+      <div class="live-dot"></div>
+      <span>Live Data</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════ SEARCH HERO ═══════════════ -->
+<section class="search-hero">
+  <div class="hero-eyebrow">Symbol Intelligence · Powered by TradingView</div>
+  <h1 class="hero-title">Stock <span>Status</span></h1>
+  <p class="hero-sub">Real-time analytics, technicals, financials &amp; company intelligence for any global stock</p>
+
+  <div class="search-wrap">
+    <div class="search-row" id="searchRow">
+      <div class="search-icon-cell">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </div>
+      <input type="text" id="stockInput" placeholder="Search company name or ticker symbol…" autocomplete="off" spellcheck="false" aria-label="Stock search"/>
+      <button class="search-btn" id="analyzeBtn" onclick="loadStock()">Analyze →</button>
+    </div>
+    <div class="ac-drop" id="acDrop" role="listbox"></div>
+  </div>
+
+  <div class="quick-picks">
+    <span class="quick-label">Quick access:</span>
+    <button class="chip" onclick="quickLoad('NASDAQ:AAPL','Apple Inc')">AAPL</button>
+    <button class="chip" onclick="quickLoad('BSE:HDFCBANK','HDFC Bank')">HDFC Bank</button>
+    <button class="chip" onclick="quickLoad('NYSE:TM','Toyota Motor')">Toyota</button>
+    <button class="chip" onclick="quickLoad('NASDAQ:TSLA','Tesla')">Tesla</button>
+    <button class="chip" onclick="quickLoad('BSE:RELIANCE','Reliance Industries')">Reliance</button>
+    <button class="chip" onclick="quickLoad('BSE:TCS','Tata Consultancy')">TCS</button>
+    <button class="chip" onclick="quickLoad('BSE:INFY','Infosys')">Infosys</button>
+  </div>
+</section>
+
+<!-- ═══════════════ STOCK BANNER ═══════════════ -->
+<div id="stockBanner">
+  <div class="banner-inner">
+    <div class="banner-left">
+      <div class="banner-live"><div class="live-dot" style="width:8px;height:8px"></div></div>
+      <span class="banner-exch" id="bExch"></span>
+      <span class="banner-sym" id="bSym"></span>
+      <span class="banner-sep">·</span>
+      <span class="banner-name" id="bName"></span>
+    </div>
+    <div class="banner-right">
+      <button class="btn-clear" onclick="clearStock()">✕ Clear</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ EMPTY STATE ═══════════════ -->
+<div id="emptyState">
+  <div class="empty-icon">📊</div>
+  <div class="empty-title">No stock selected</div>
+  <div class="empty-sub">Search for any company above, or pick from quick access chips to load full real-time analytics</div>
+  <div class="empty-chips">
+    <button class="chip" onclick="quickLoad('NASDAQ:AAPL','Apple Inc')">📱 Apple</button>
+    <button class="chip" onclick="quickLoad('BSE:HDFCBANK','HDFC Bank')">🏦 HDFC Bank</button>
+    <button class="chip" onclick="quickLoad('NYSE:TM','Toyota Motor')">🚗 Toyota</button>
+    <button class="chip" onclick="quickLoad('BSE:RELIANCE','Reliance Industries')">🛢️ Reliance</button>
+    <button class="chip" onclick="quickLoad('BSE:TCS','Tata Consultancy')">💻 TCS</button>
+  </div>
+</div>
+
+<!-- ═══════════════ WIDGETS AREA ═══════════════ -->
+<div id="widgetsArea">
+
+  <!-- 1 · Symbol Overview (full width) -->
+  <div class="section-head"><span class="section-label">Symbol Overview</span><div class="section-line"></div></div>
+  <div class="wcard" id="wc-info">
+    <div class="wcard-head">
+      <span class="wcard-title">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        Symbol Info
+      </span>
+      <span class="wcard-sub">Live quote · Market cap · P/E · EPS</span>
+    </div>
+    <div class="wcard-body" id="wb-info"><div class="wload"><div class="spin"></div>Loading symbol data…</div></div>
+  </div>
+
+  <!-- 2 · Advanced Chart + Technical Analysis (60/40) -->
+  <div class="section-head" style="margin-top:4px"><span class="section-label">Chart &amp; Technical Analysis</span><div class="section-line"></div></div>
+  <div class="grid-6040" style="margin-bottom:20px">
+
+    <div class="wcard" id="wc-chart">
+      <div class="wcard-head">
+        <span class="wcard-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          Advanced Chart
+        </span>
+        <span class="wcard-sub">Interactive · Multi-timeframe</span>
+      </div>
+      <div class="wcard-body" id="wb-chart" style="height:520px"><div class="wload"><div class="spin"></div>Loading chart…</div></div>
+    </div>
+
+    <div class="wcard" id="wc-tech">
+      <div class="wcard-head">
+        <span class="wcard-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Technical Analysis
+        </span>
+        <span class="wcard-sub">Oscillators · Moving Averages</span>
+      </div>
+      <div class="wcard-body" id="wb-tech"><div class="wload"><div class="spin"></div>Loading analysis…</div></div>
+    </div>
+
+  </div>
+
+  <!-- 3 · Company Profile + Mini Chart (50/50) -->
+  <div class="section-head"><span class="section-label">Company Intelligence</span><div class="section-line"></div></div>
+  <div class="grid-2" style="margin-bottom:20px">
+
+    <div class="wcard" id="wc-profile">
+      <div class="wcard-head">
+        <span class="wcard-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Company Profile
+        </span>
+        <span class="wcard-sub">Business · Sector · Key executives</span>
+      </div>
+      <div class="wcard-body" id="wb-profile"><div class="wload"><div class="spin"></div>Loading profile…</div></div>
+    </div>
+
+    <div class="wcard" id="wc-mini">
+      <div class="wcard-head">
+        <span class="wcard-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          Price History
+        </span>
+        <span class="wcard-sub">12-month trend</span>
+      </div>
+      <div class="wcard-body" id="wb-mini"><div class="wload"><div class="spin"></div>Loading chart…</div></div>
+    </div>
+
+  </div>
+
+  <!-- 4 · Financials (full width) -->
+  <div class="section-head"><span class="section-label">Financial Statements</span><div class="section-line"></div></div>
+  <div class="wcard" id="wc-fin">
+    <div class="wcard-head">
+      <span class="wcard-title">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Financials
+      </span>
+      <span class="wcard-sub">Income Statement · Balance Sheet · Cash Flow</span>
+    </div>
+    <div class="wcard-body" id="wb-fin"><div class="wload"><div class="spin"></div>Loading financials…</div></div>
+  </div>
+
+  <!-- 5 · News Timeline (full width) -->
+  <div class="section-head"><span class="section-label">News &amp; Market Timeline</span><div class="section-line"></div></div>
+  <div class="wcard" id="wc-news">
+    <div class="wcard-head">
+      <span class="wcard-title">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/></svg>
+        News &amp; Timeline
+      </span>
+      <span class="wcard-sub">Real-time news feed for this symbol</span>
+    </div>
+    <div class="wcard-body" id="wb-news"><div class="wload"><div class="spin"></div>Loading news…</div></div>
+  </div>
+
+</div><!-- /widgetsArea -->
+
+<!-- ═══════════════════════════════════════════
+     AUTOCOMPLETE ENGINE
+═══════════════════════════════════════════ -->
+<script>
+const AC={
+  data:null,cache:null,loading:false,
+  timer:null,activeIdx:-1,
+  qMemo:Object.create(null),
+  URL:'data/master_symbols.json',
+  MAX:10,DEBOUNCE:130,EARLY:70,
+};
+
+async function acLoad(){
+  if(AC.data||AC.loading)return;
+  AC.loading=true;
+  try{
+    const r=await fetch(AC.URL);
+    if(!r.ok)throw new Error('fetch '+r.status);
+    const raw=await r.json();
+    AC.data=raw;
+    AC.cache=raw.map(s=>({
+      ...s,
+      _sl:(s.symbol||'').toLowerCase(),
+      _nl:(s.name||'').toLowerCase(),
+      _el:(s.exchange||'').toLowerCase(),
+    }));
+  }catch(e){
+    AC.data=[];
+    console.warn('[AC] load failed:',e.message);
+  }
+  AC.loading=false;
+}
+
+function acSearch(q){
+  clearTimeout(AC.timer);
+  if(!q||q.length<1){acClose();return;}
+  AC.timer=setTimeout(()=>acRender(q.trim()),AC.DEBOUNCE);
+}
+
+function acRender(q){
+  const ql=q.toLowerCase();
+  if(!ql){acClose();return;}
+  const dd=document.getElementById('acDrop');
+
+  if(!AC.cache){
+    if(!AC.loading){acLoad();}
+    dd.innerHTML='<div class="ac-loading-msg"><div class="spin"></div>Loading symbol database…</div>';
+    dd.classList.add('open');
+    return;
+  }
+
+  if(AC.qMemo[ql]){acShow(AC.qMemo[ql]);return;}
+
+  const hits=[];
+  for(const s of AC.cache){
+    if(hits.length>=AC.EARLY)break;
+    let sc=0;
+    if(s._sl===ql||s._nl===ql)sc=4;
+    else if(s._sl.startsWith(ql))sc=3;
+    else if(s._nl.startsWith(ql))sc=2;
+    else if(s._nl.includes(ql)||s._sl.includes(ql))sc=1;
+    if(sc>0)hits.push({...s,_sc:sc});
+  }
+  hits.sort((a,b)=>b._sc-a._sc||(a.name||'').localeCompare(b.name||''));
+  const top=hits.slice(0,AC.MAX);
+
+  const keys=Object.keys(AC.qMemo);
+  if(keys.length>28)delete AC.qMemo[keys[0]];
+  AC.qMemo[ql]=top;
+  acShow(top);
+}
+
+function acShow(list){
+  const dd=document.getElementById('acDrop');
+  AC.activeIdx=-1;
+  if(!list.length){
+    dd.innerHTML='<div class="ac-none">No matches — try entering a ticker directly (e.g. AAPL, HDFCBANK)</div>';
+    dd.classList.add('open');
+    return;
+  }
+  dd.innerHTML=list.map((s,i)=>{
+    const tv=s.exchange?`${s.exchange}:${s.symbol}`:s.symbol;
+    const safeName=(s.name||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    return `<div class="ac-item" role="option" data-idx="${i}"
+      onclick="acSelect('${tv}','${safeName}')">
+      <div>
+        <div class="ac-name">${s.name||s.symbol}</div>
+        <div class="ac-exch">${s.exchange||''}${s.type?` · ${s.type}`:''}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="ac-sym">${s.symbol}</div>
+        ${s.type?`<span class="ac-type">${s.type}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  dd.classList.add('open');
+}
+
+function acClose(){
+  document.getElementById('acDrop').classList.remove('open');
+  AC.activeIdx=-1;
+}
+
+function acSelect(tvSym,name){
+  document.getElementById('stockInput').value=name?`${name}  (${tvSym})`:tvSym;
+  acClose();
+  loadStockBySymbol(tvSym,name);
+}
+
+function acKeyNav(e){
+  const dd=document.getElementById('acDrop');
+  if(!dd.classList.contains('open'))return;
+  const items=dd.querySelectorAll('.ac-item');
+  if(!items.length)return;
+  if(e.key==='ArrowDown'){
+    e.preventDefault();
+    AC.activeIdx=Math.min(AC.activeIdx+1,items.length-1);
+    items.forEach((el,i)=>el.classList.toggle('active',i===AC.activeIdx));
+  }else if(e.key==='ArrowUp'){
+    e.preventDefault();
+    AC.activeIdx=Math.max(AC.activeIdx-1,0);
+    items.forEach((el,i)=>el.classList.toggle('active',i===AC.activeIdx));
+  }else if(e.key==='Enter'){
+    e.preventDefault();
+    if(AC.activeIdx>=0)items[AC.activeIdx]?.click();
+    else loadStock();
+  }else if(e.key==='Escape'){
+    acClose();
+  }
+}
+
+const inp=document.getElementById('stockInput');
+inp.addEventListener('input',e=>{acLoad();acSearch(e.target.value);});
+inp.addEventListener('keydown',acKeyNav);
+inp.addEventListener('focus',()=>{acLoad();if(inp.value.trim())acSearch(inp.value);});
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#stockInput')&&!e.target.closest('#acDrop'))acClose();
+});
+
+/* ═══════════════════════════════════════════
+   STOCK LOADING & WIDGET ENGINE
+═══════════════════════════════════════════ */
+let _sym=null,_name=null;
+
+function loadStock(){
+  const raw=inp.value.trim();
+  if(!raw)return;
+  const m=raw.match(/\(([^)]+)\)\s*$/);
+  const sym=m?m[1]:raw.replace(/\s+/g,'').toUpperCase();
+  loadStockBySymbol(sym,null);
+}
+
+function quickLoad(sym,name){
+  inp.value=`${name}  (${sym})`;
+  loadStockBySymbol(sym,name);
+}
+
+function loadStockBySymbol(sym,name){
+  if(!sym)return;
+  _sym=sym;_name=name||sym;
+
+  const parts=sym.split(':');
+  const exch=parts.length>1?parts[0]:'';
+  const tick=parts.length>1?parts[1]:parts[0];
+
+  /* Update banner */
+  document.getElementById('stockBanner').style.display='block';
+  document.getElementById('bExch').textContent=exch||'GLOBAL';
+  document.getElementById('bSym').textContent=tick;
+  document.getElementById('bName').textContent=_name;
+
+  /* Swap panels */
+  document.getElementById('emptyState').style.display='none';
+  document.getElementById('widgetsArea').classList.add('show');
+
+  /* Scroll to widgets */
+  setTimeout(()=>document.getElementById('widgetsArea').scrollIntoView({behavior:'smooth',block:'start'}),80);
+
+  /* Inject all widgets */
+  injectAll(sym);
+}
+
+function clearStock(){
+  _sym=null;_name=null;
+  document.getElementById('stockBanner').style.display='none';
+  document.getElementById('widgetsArea').classList.remove('show');
+  document.getElementById('emptyState').style.display='flex';
+  inp.value='';
+  acClose();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ── Widget injector ── */
+function injectWidget(bodyId,scriptSrc,cfg,containerStyle){
+  const body=document.getElementById(bodyId);
+  if(!body)return;
+  body.innerHTML='';
+
+  const wrap=document.createElement('div');
+  wrap.className='tradingview-widget-container';
+  if(containerStyle)wrap.style.cssText=containerStyle;
+
+  const inner=document.createElement('div');
+  inner.className='tradingview-widget-container__widget';
+  if(containerStyle)inner.style.cssText='height:100%;width:100%';
+  wrap.appendChild(inner);
+
+  const copy=document.createElement('div');
+  copy.className='tradingview-widget-copyright';
+  wrap.appendChild(copy);
+
+  const s=document.createElement('script');
+  s.type='text/javascript';s.async=true;s.src=scriptSrc;
+  s.textContent=JSON.stringify(cfg);
+  wrap.appendChild(s);
+
+  body.appendChild(wrap);
+}
+
+function injectAll(sym){
+  const dark={colorTheme:'dark',isTransparent:true,locale:'en'};
+
+  /* 1. Symbol Info */
+  injectWidget('wb-info',
+    'https://s3.tradingview.com/external-embedding/embed-widget-symbol-info.js',
+    {symbol:sym,width:'100%',...dark}
+  );
+
+  /* 2. Advanced Chart (height driven by container CSS) */
+  injectWidget('wb-chart',
+    'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',
+    {
+      autosize:true,symbol:sym,
+      interval:'D',timezone:'Etc/UTC',
+      theme:'dark',style:'1',locale:'en',
+      allow_symbol_change:false,
+      hide_top_toolbar:false,
+      hide_legend:false,
+      save_image:true,
+      calendar:false,
+      support_host:'https://www.tradingview.com',
+    },
+    'height:520px;width:100%'
+  );
+
+  /* 3. Technical Analysis */
+  injectWidget('wb-tech',
+    'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js',
+    {symbol:sym,interval:'1D',width:'100%',height:520,showIntervalTabs:true,displayMode:'single',...dark}
+  );
+
+  /* 4. Company Profile */
+  injectWidget('wb-profile',
+    'https://s3.tradingview.com/external-embedding/embed-widget-symbol-profile.js',
+    {symbol:sym,width:'100%',height:460,...dark}
+  );
+
+  /* 5. Mini Chart (12M history) */
+  injectWidget('wb-mini',
+    'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js',
+    {
+      symbol:sym,width:'100%',height:460,
+      dateRange:'12M',colorTheme:'dark',
+      trendLineColor:'rgba(41,98,255,1)',
+      underLineColor:'rgba(41,98,255,0.28)',
+      underLineBottomColor:'rgba(41,98,255,0)',
+      isTransparent:true,autosize:false,locale:'en',
+    }
+  );
+
+  /* 6. Financials */
+  injectWidget('wb-fin',
+    'https://s3.tradingview.com/external-embedding/embed-widget-financials.js',
+    {symbol:sym,displayMode:'regular',width:'100%',height:830,...dark}
+  );
+
+  /* 7. News Timeline */
+  injectWidget('wb-news',
+    'https://s3.tradingview.com/external-embedding/embed-widget-timeline.js',
+    {feedMode:'symbol',symbol:sym,displayMode:'regular',width:'100%',height:520,...dark}
+  );
+}
+
+/* Pre-warm AC data after page settles */
+setTimeout(acLoad,1200);
+</script>
+</body>
+</html>

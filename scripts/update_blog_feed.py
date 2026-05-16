@@ -39,169 +39,216 @@ SESSION.headers.update({
 })
 
 # ─── Per-category RSS feed list ────────────────────────────────────────────────
-# Each category gets up to MAX_PER_CAT items, drawn from the listed feeds.
+# Rule: primary feeds first, then Google News RSS as a guaranteed fallback.
+# Google News RSS always returns ~10 fresh items and never requires auth.
+# GN_IN = India locale, GN_US = US/global locale.
+def _gn(q: str, india: bool = False) -> dict[str, str]:
+    loc = "en-IN&gl=IN&ceid=IN:en" if india else "en&gl=US&ceid=US:en"
+    return {"url": f"https://news.google.com/rss/search?q={q}&hl={loc}", "source": "Google News"}
+
 FEEDS: dict[str, list[dict[str, str]]] = {
-    "technology": [
-        {"url": "https://www.theverge.com/rss/index.xml", "source": "The Verge"},
-        {"url": "https://feeds.arstechnica.com/arstechnica/index", "source": "Ars Technica"},
-        {"url": "https://feeds.feedburner.com/TechCrunch/", "source": "TechCrunch"},
-    ],
+    # ── Markets & Money ──────────────────────────────────────────────────────
     "finance": [
-        {"url": "https://www.investing.com/rss/news_25.rss", "source": "Investing.com"},
         {"url": "https://feeds.marketwatch.com/marketwatch/topstories/", "source": "MarketWatch"},
         {"url": "https://www.livemint.com/rss/markets", "source": "Mint Markets"},
-    ],
-    "politics": [
-        {"url": "https://feeds.reuters.com/Reuters/PoliticsNews", "source": "Reuters"},
-        {"url": "https://feeds.bbci.co.uk/news/politics/rss.xml", "source": "BBC"},
-        {"url": "https://www.thehindu.com/news/national/feeder/default.rss", "source": "The Hindu"},
-    ],
-    "tax": [
-        {"url": "https://economictimes.indiatimes.com/rssfeeds/wealth/tax/articlelist/1466318837.cms", "source": "ET Wealth Tax"},
-        {"url": "https://news.google.com/rss/search?q=income+tax+India+ITR&hl=en-IN&gl=IN&ceid=IN:en", "source": "Google News Tax"},
-    ],
-    "mutual_funds": [
-        {"url": "https://www.moneycontrol.com/rss/mfnews.xml", "source": "Moneycontrol MF"},
-        {"url": "https://www.business-standard.com/rss/markets/mutual-funds-104.rss", "source": "Business Standard MF"},
-        {"url": "https://www.morningstar.com/feeds/articles", "source": "Morningstar"},
-    ],
-    "etf": [
-        {"url": "https://www.etf.com/rss/news.xml", "source": "ETF.com"},
-        {"url": "https://www.etftrends.com/feed/", "source": "ETF Trends"},
+        {"url": "https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms", "source": "ET Markets"},
+        _gn("global+stock+market+finance+news"),
     ],
     "stocks": [
         {"url": "https://feeds.marketwatch.com/marketwatch/marketpulse/", "source": "MarketWatch"},
         {"url": "https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms", "source": "ET Markets"},
-        {"url": "https://www.investing.com/rss/news_287.rss", "source": "Investing.com Stocks"},
-    ],
-    "brokers": [
         {"url": "https://www.livemint.com/rss/markets", "source": "Mint Markets"},
-        {"url": "https://economictimes.indiatimes.com/markets/stocks/news/articlelist/2146843.cms", "source": "ET Stocks"},
-    ],
-    "inventions": [
-        {"url": "https://www.sciencedaily.com/rss/matter_energy/inventions.xml", "source": "ScienceDaily"},
-        {"url": "https://www.newscientist.com/feed/home/", "source": "New Scientist"},
-    ],
-    "offers": [
-        {"url": "https://www.livemint.com/rss/money", "source": "Mint Money"},
+        _gn("stock+market+BSE+NSE+equity+news", india=True),
     ],
     "ipo": [
         {"url": "https://www.moneycontrol.com/rss/iponews.xml", "source": "Moneycontrol IPO"},
         {"url": "https://www.business-standard.com/rss/markets/ipos-130.rss", "source": "Business Standard IPO"},
         {"url": "https://economictimes.indiatimes.com/markets/ipo/news/articlelist/74706482.cms", "source": "ET IPO"},
-        {"url": "https://www.investing.com/rss/news_357.rss", "source": "Investing.com IPO (Global)"},
-        {"url": "https://www.cnbc.com/id/100782720/device/rss/rss.html", "source": "CNBC IPOs (US)"},
-        {"url": "https://www.nasdaq.com/feed/rssoutbound?category=IPOs", "source": "NASDAQ IPOs"},
+        {"url": "https://www.cnbc.com/id/100782720/device/rss/rss.html", "source": "CNBC IPOs"},
+        _gn("IPO+India+listing+GMP+allotment", india=True),
+        _gn("IPO+US+NASDAQ+NYSE+listing"),
     ],
     "nfo": [
+        {"url": "https://economictimes.indiatimes.com/rssfeeds/mutual-funds/articlelist/360199.cms", "source": "ET Mutual Funds"},
+        {"url": "https://www.moneycontrol.com/rss/mfnews.xml", "source": "Moneycontrol MF"},
+        _gn("NFO+new+fund+offer+mutual+fund+India+SEBI", india=True),
+        _gn("new+fund+offer+open+close+India+2026", india=True),
+    ],
+    "mutual_funds": [
+        {"url": "https://economictimes.indiatimes.com/rssfeeds/mutual-funds/articlelist/360199.cms", "source": "ET Mutual Funds"},
         {"url": "https://www.moneycontrol.com/rss/mfnews.xml", "source": "Moneycontrol MF"},
         {"url": "https://www.business-standard.com/rss/markets/mutual-funds-104.rss", "source": "Business Standard MF"},
-        {"url": "https://economictimes.indiatimes.com/rssfeeds/mutual-funds/articlelist/360199.cms", "source": "ET Mutual Funds"},
-        {"url": "https://www.morningstar.com/feeds/articles", "source": "Morningstar"},
+        _gn("mutual+fund+SIP+NAV+India+returns", india=True),
+        _gn("mutual+fund+investing+top+performing+2026"),
     ],
-    # ── 15 new lifestyle / industry categories ────────────────────────────────
-    "lifestyle": [
-        {"url": "https://www.thehindu.com/life-and-style/feeder/default.rss", "source": "The Hindu Lifestyle"},
-        {"url": "https://lifehacker.com/feed/rss", "source": "Lifehacker"},
-        {"url": "https://www.bbc.co.uk/programmes/p02nq0lx/episodes/downloads.rss", "source": "BBC Lifestyle"},
+    "etf": [
+        {"url": "https://www.etftrends.com/feed/", "source": "ETF Trends"},
+        {"url": "https://etfdb.com/category/etf-education/feed/", "source": "ETFdb"},
+        _gn("ETF+exchange+traded+fund+gold+index+2026"),
+        _gn("ETF+India+BSE+Nifty+Sensex+index+fund", india=True),
     ],
-    "food": [
-        {"url": "https://www.foodandwine.com/syndication/rss", "source": "Food & Wine"},
-        {"url": "https://www.eater.com/rss/index.xml", "source": "Eater"},
-        {"url": "https://www.bbcgoodfood.com/feed", "source": "BBC Good Food"},
+    "brokers": [
+        {"url": "https://www.livemint.com/rss/markets", "source": "Mint Markets"},
+        {"url": "https://economictimes.indiatimes.com/markets/stocks/news/articlelist/2146843.cms", "source": "ET Stocks"},
+        _gn("Zerodha+Groww+Angel+broker+India+trading+platform", india=True),
+        _gn("stock+broker+trading+platform+SEBI+regulation", india=True),
     ],
-    "fashion": [
-        {"url": "https://www.vogue.com/feed/rss", "source": "Vogue"},
-        {"url": "https://www.gq.com/feed/rss", "source": "GQ"},
-        {"url": "https://www.harpersbazaar.com/rss/all.xml/", "source": "Harper's Bazaar"},
+    "sebi": [
+        _gn("SEBI+India+regulation+circular+market+regulator", india=True),
+        _gn("SEBI+order+penalty+NSE+BSE+compliance", india=True),
+        {"url": "https://www.moneycontrol.com/rss/business.xml", "source": "Moneycontrol"},
+        {"url": "https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms", "source": "ET Markets"},
     ],
-    "health": [
-        {"url": "https://www.healthline.com/rss/news", "source": "Healthline"},
-        {"url": "https://feeds.bbci.co.uk/news/health/rss.xml", "source": "BBC Health"},
-        {"url": "https://www.medicalnewstoday.com/newsfeeds/rss/medical_all.xml", "source": "Medical News Today"},
+    "tax": [
+        {"url": "https://economictimes.indiatimes.com/rssfeeds/wealth/tax/articlelist/1466318837.cms", "source": "ET Wealth Tax"},
+        _gn("income+tax+India+ITR+filing+refund+2026", india=True),
+        _gn("GST+India+tax+return+filing+deadline+update", india=True),
     ],
-    "medicine": [
-        {"url": "https://www.nih.gov/news-events/news-releases/feed.xml", "source": "NIH"},
-        {"url": "https://www.medscape.com/cx/rssfeeds/2900.xml", "source": "Medscape"},
-        {"url": "https://www.statnews.com/feed/", "source": "STAT News"},
+    "insurance": [
+        {"url": "https://www.insurancejournal.com/rss.xml", "source": "Insurance Journal"},
+        {"url": "https://www.livemint.com/rss/insurance", "source": "Mint Insurance"},
+        _gn("insurance+India+LIC+health+term+policy", india=True),
+        _gn("insurance+claim+premium+IRDA+regulation+2026"),
     ],
-    "energy": [
-        {"url": "https://oilprice.com/rss/main", "source": "OilPrice"},
-        {"url": "https://www.utilitydive.com/feeds/news/", "source": "Utility Dive"},
-        {"url": "https://www.rechargenews.com/rss", "source": "Recharge News"},
+    "payment": [
+        {"url": "https://www.pymnts.com/feed/", "source": "PYMNTS"},
+        {"url": "https://www.finextra.com/rss/headlines.aspx", "source": "Finextra"},
+        _gn("UPI+payment+India+fintech+digital+wallet", india=True),
+        _gn("digital+payment+fintech+Visa+Mastercard+news"),
+    ],
+    "currency": [
+        {"url": "https://www.fxstreet.com/rss/news", "source": "FXStreet"},
+        {"url": "https://www.dailyfx.com/feeds/all", "source": "DailyFX"},
+        _gn("forex+currency+USD+INR+EUR+exchange+rate"),
+        _gn("rupee+dollar+rate+RBI+forex+reserve", india=True),
+    ],
+    "blockchain": [
+        {"url": "https://cointelegraph.com/rss/tag/blockchain", "source": "CoinTelegraph"},
+        {"url": "https://www.coindesk.com/arc/outboundfeeds/rss/", "source": "CoinDesk"},
+        _gn("blockchain+Web3+DeFi+technology+news+2026"),
+    ],
+    "crypto": [
+        {"url": "https://cointelegraph.com/rss", "source": "CoinTelegraph"},
+        {"url": "https://decrypt.co/feed", "source": "Decrypt"},
+        {"url": "https://www.coindesk.com/arc/outboundfeeds/rss/", "source": "CoinDesk"},
+        _gn("Bitcoin+Ethereum+crypto+price+news+2026"),
+    ],
+    "offers": [
+        {"url": "https://www.livemint.com/rss/money", "source": "Mint Money"},
+        _gn("bank+offer+cashback+credit+card+deal+India", india=True),
+        _gn("discount+offer+sale+shopping+deal+India+2026", india=True),
+    ],
+    # ── Technology ───────────────────────────────────────────────────────────
+    "technology": [
+        {"url": "https://www.theverge.com/rss/index.xml", "source": "The Verge"},
+        {"url": "https://feeds.arstechnica.com/arstechnica/index", "source": "Ars Technica"},
+        {"url": "https://feeds.feedburner.com/TechCrunch/", "source": "TechCrunch"},
+        _gn("technology+news+innovation+2026"),
+    ],
+    "ai": [
+        {"url": "https://venturebeat.com/category/ai/feed/", "source": "VentureBeat AI"},
+        {"url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", "source": "The Verge AI"},
+        {"url": "https://www.artificialintelligence-news.com/feed/", "source": "AI News"},
+        _gn("artificial+intelligence+ChatGPT+Gemini+LLM+2026"),
+    ],
+    "semiconductor": [
+        {"url": "https://www.eetimes.com/feed/", "source": "EE Times"},
+        {"url": "https://semiengineering.com/feed/", "source": "Semiconductor Engineering"},
+        _gn("semiconductor+chip+TSMC+Intel+Nvidia+foundry+2026"),
     ],
     "data_center": [
         {"url": "https://www.datacenterdynamics.com/rss/", "source": "DataCenter Dynamics"},
         {"url": "https://www.datacenterknowledge.com/rss.xml", "source": "DataCenter Knowledge"},
+        _gn("data+center+cloud+AI+infrastructure+hyperscaler+2026"),
     ],
-    "hospital": [
-        {"url": "https://www.healthcaredive.com/feeds/news/", "source": "Healthcare Dive"},
-        {"url": "https://www.beckershospitalreview.com/rss/all-articles.xml", "source": "Becker's Hospital Review"},
-    ],
-    "insurance": [
-        {"url": "https://www.insurancejournal.com/rss.xml", "source": "Insurance Journal"},
-        {"url": "https://www.policygenius.com/blog/feed/", "source": "PolicyGenius"},
-        {"url": "https://www.livemint.com/rss/insurance", "source": "Mint Insurance"},
-    ],
-    "entertainment": [
-        {"url": "https://www.hollywoodreporter.com/feed", "source": "Hollywood Reporter"},
-        {"url": "https://variety.com/feed/", "source": "Variety"},
-        {"url": "https://www.rollingstone.com/feed/", "source": "Rolling Stone"},
-    ],
-    "movie": [
-        {"url": "https://www.indiewire.com/feed/", "source": "IndieWire"},
-        {"url": "https://www.imdb.com/news/movie/?ref_=nv_nw_mv", "source": "IMDb Movies"},
-        {"url": "https://variety.com/v/film/feed/", "source": "Variety Film"},
+    "internet": [
+        {"url": "https://feeds.arstechnica.com/arstechnica/index", "source": "Ars Technica"},
+        {"url": "https://www.wired.com/feed/rss", "source": "WIRED"},
+        _gn("internet+broadband+5G+connectivity+online+platform+2026"),
     ],
     "mobile": [
         {"url": "https://www.gsmarena.com/rss-news-reviews.php3", "source": "GSMArena"},
         {"url": "https://www.androidauthority.com/feed/", "source": "Android Authority"},
         {"url": "https://9to5mac.com/feed/", "source": "9to5Mac"},
+        _gn("smartphone+mobile+launch+review+Android+iPhone+2026"),
     ],
-    "internet": [
-        {"url": "https://feeds.arstechnica.com/arstechnica/index", "source": "Ars Technica"},
-        {"url": "https://www.wired.com/feed/rss", "source": "WIRED"},
-        {"url": "https://www.theverge.com/web/rss/index.xml", "source": "The Verge Web"},
-    ],
-    "payment": [
-        {"url": "https://www.pymnts.com/feed/", "source": "PYMNTS"},
-        {"url": "https://www.finextra.com/rss/headlines.aspx", "source": "Finextra"},
-        {"url": "https://www.americanbanker.com/feed", "source": "American Banker"},
-    ],
-    "currency": [
-        {"url": "https://www.investing.com/rss/news_1.rss", "source": "Investing.com Forex"},
-        {"url": "https://www.fxstreet.com/rss/news", "source": "FXStreet"},
-        {"url": "https://www.dailyfx.com/feeds/all", "source": "DailyFX"},
-    ],
-    "blockchain": [
-        {"url": "https://cointelegraph.com/rss/tag/blockchain", "source": "CoinTelegraph"},
-        {"url": "https://www.coindesk.com/arc/outboundfeeds/rss/", "source": "CoinDesk"},
-    ],
-    "crypto": [
-        {"url": "https://www.coindesk.com/arc/outboundfeeds/rss/", "source": "CoinDesk"},
-        {"url": "https://cointelegraph.com/rss", "source": "CoinTelegraph"},
-        {"url": "https://decrypt.co/feed", "source": "Decrypt"},
-    ],
-    "semiconductor": [
-        {"url": "https://www.eetimes.com/feed/", "source": "EE Times"},
-        {"url": "https://semiengineering.com/feed/", "source": "Semiconductor Engineering"},
-    ],
-    "ai": [
-        {"url": "https://venturebeat.com/category/ai/feed/", "source": "VentureBeat AI"},
-        {"url": "https://www.artificialintelligence-news.com/feed/", "source": "AI News"},
-        {"url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml", "source": "The Verge AI"},
+    "inventions": [
+        {"url": "https://www.sciencedaily.com/rss/matter_energy/inventions.xml", "source": "ScienceDaily"},
+        {"url": "https://www.newscientist.com/feed/home/", "source": "New Scientist"},
+        _gn("invention+patent+breakthrough+technology+innovation+2026"),
     ],
     "space": [
         {"url": "https://www.nasa.gov/feed/", "source": "NASA"},
         {"url": "https://www.space.com/feeds/all", "source": "Space.com"},
+        _gn("space+rocket+satellite+NASA+SpaceX+ISRO+launch+2026"),
     ],
-    "sebi": [
-        {"url": "https://news.google.com/rss/search?q=SEBI+India+market+regulator&hl=en-IN&gl=IN&ceid=IN:en", "source": "Google News SEBI"},
-        {"url": "https://www.moneycontrol.com/rss/business.xml", "source": "Moneycontrol"},
+    # ── Health & Energy ──────────────────────────────────────────────────────
+    "health": [
+        {"url": "https://feeds.bbci.co.uk/news/health/rss.xml", "source": "BBC Health"},
+        {"url": "https://www.healthline.com/rss/news", "source": "Healthline"},
+        {"url": "https://www.medicalnewstoday.com/newsfeeds/rss/medical_all.xml", "source": "Medical News Today"},
+        _gn("health+wellness+fitness+diet+disease+prevention+2026"),
+    ],
+    "medicine": [
+        {"url": "https://www.nih.gov/news-events/news-releases/feed.xml", "source": "NIH"},
+        {"url": "https://www.statnews.com/feed/", "source": "STAT News"},
+        {"url": "https://www.medscape.com/cx/rssfeeds/2900.xml", "source": "Medscape"},
+        _gn("medical+research+drug+approval+FDA+clinical+trial+2026"),
+    ],
+    "hospital": [
+        {"url": "https://www.healthcaredive.com/feeds/news/", "source": "Healthcare Dive"},
+        {"url": "https://www.beckershospitalreview.com/rss/all-articles.xml", "source": "Becker's Hospital Review"},
+        _gn("hospital+healthcare+patient+care+India+Apollo+Fortis", india=True),
+        _gn("hospital+healthcare+system+investment+mergers+2026"),
+    ],
+    "energy": [
+        {"url": "https://oilprice.com/rss/main", "source": "OilPrice"},
+        {"url": "https://www.utilitydive.com/feeds/news/", "source": "Utility Dive"},
+        {"url": "https://www.rechargenews.com/rss", "source": "Recharge News"},
+        _gn("oil+gas+renewable+energy+solar+wind+EV+battery+2026"),
+    ],
+    # ── Lifestyle ────────────────────────────────────────────────────────────
+    "lifestyle": [
+        {"url": "https://www.thehindu.com/life-and-style/feeder/default.rss", "source": "The Hindu Lifestyle"},
+        {"url": "https://lifehacker.com/feed/rss", "source": "Lifehacker"},
+        _gn("lifestyle+wellness+personal+finance+productivity+2026"),
+    ],
+    "food": [
+        {"url": "https://www.foodandwine.com/syndication/rss", "source": "Food & Wine"},
+        {"url": "https://www.eater.com/rss/index.xml", "source": "Eater"},
+        {"url": "https://www.bbcgoodfood.com/feed", "source": "BBC Good Food"},
+        _gn("food+recipe+restaurant+nutrition+trend+2026"),
+    ],
+    "fashion": [
+        {"url": "https://www.vogue.com/feed/rss", "source": "Vogue"},
+        {"url": "https://www.gq.com/feed/rss", "source": "GQ"},
+        {"url": "https://www.harpersbazaar.com/rss/all.xml/", "source": "Harper's Bazaar"},
+        _gn("fashion+luxury+brand+design+trend+2026"),
+    ],
+    "entertainment": [
+        {"url": "https://www.hollywoodreporter.com/feed", "source": "Hollywood Reporter"},
+        {"url": "https://variety.com/feed/", "source": "Variety"},
+        {"url": "https://www.rollingstone.com/feed/", "source": "Rolling Stone"},
+        _gn("entertainment+celebrity+music+show+OTT+streaming+2026"),
+    ],
+    "movie": [
+        {"url": "https://www.indiewire.com/feed/", "source": "IndieWire"},
+        {"url": "https://variety.com/v/film/feed/", "source": "Variety Film"},
+        {"url": "https://www.hollywoodreporter.com/t/movies/feed/", "source": "Hollywood Reporter Film"},
+        _gn("movie+film+box+office+release+Netflix+OTT+2026"),
+        _gn("Bollywood+Hollywood+movie+review+release+2026", india=True),
+    ],
+    # ── Other ────────────────────────────────────────────────────────────────
+    "politics": [
+        {"url": "https://feeds.bbci.co.uk/news/politics/rss.xml", "source": "BBC"},
+        {"url": "https://www.thehindu.com/news/national/feeder/default.rss", "source": "The Hindu"},
+        {"url": "https://feeds.reuters.com/Reuters/PoliticsNews", "source": "Reuters"},
+        _gn("India+politics+parliament+election+government+2026", india=True),
+        _gn("US+politics+White+House+Congress+policy+2026"),
     ],
 }
 
-MAX_PER_CAT = 10
+MAX_PER_CAT = 12   # fetch up to 12; output is capped at 10 after dedup
 ITEM_TIMEOUT = 12
 
 
