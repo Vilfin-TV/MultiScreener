@@ -931,6 +931,9 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-time{font-size:9.5px;color:var(--text3);margin-top:2px;font-family:'JetBrains Mono',monospace}
 .lnb-loading{padding:16px 10px;font-size:11px;color:var(--text3);text-align:center;animation:livePulse 1.5s ease-in-out infinite}
 .lnb-error{padding:12px 10px;font-size:11px;color:var(--red);text-align:center}
+.lnb-stale{padding:5px 10px;font-size:10px;color:var(--text3);text-align:center;border-top:1px solid var(--border)}
+.lnb-retry{background:transparent;border:1px solid var(--border2);color:var(--burn3,#93c5fd);font-size:10px;cursor:pointer;padding:1px 8px;border-radius:4px;margin-left:4px;transition:background .12s;vertical-align:middle}
+.lnb-retry:hover{background:rgba(59,130,246,.15)}
 
 /* ── NEWS SETTINGS BUTTON ── */
 .lns-settings-btn{background:rgba(255,255,255,.06);border:1px solid var(--border2);color:var(--text2);font-size:11px;font-weight:600;padding:5px 12px;border-radius:7px;cursor:pointer;letter-spacing:.3px;transition:background .15s,color .15s}
@@ -11471,14 +11474,72 @@ const NEWS_SOURCES = [
   { id:'jp4', flag:'🇯🇵', label:'Bloomberg Japan (日本語)',  lang:'Japanese', group:'🇯🇵 Japan',           color:'#1a1a2e', url:'https://news.google.com/rss/search?q=bloomberg+japan&hl=ja&gl=JP&ceid=JP:ja' },
 ];
 
+// ── Source lookup registry (keyed by id for retry/cache logic) ───────────────
+const _NEWS_SOURCE_MAP = Object.fromEntries(NEWS_SOURCES.map(s => [s.id, s]));
+
 // Default 10 feed IDs shown on first visit
 const NEWS_DEFAULT_IDS = ['us1','us2','us3','us8','india1','india2','india3','india4','japan1','eu1']; // 10 defaults, customizable via settings
 const NEWS_MAX = 10;
 const NEWS_IDS_KEY   = 'viltv_news_ids';   // JSON array of selected feed IDs
 const NEWS_ORDER_KEY = 'viltv_news_order';  // JSON array defining display order
 
-// ── CORS proxy chain ─────────────────────────────────────────────────────────
+// ── CORS proxy chain — tries multiple public proxies in sequence ──────────────
 const WORKER_PROXY_URL = 'https://screener-proxy.vilfintv.workers.dev';
+
+// Convert rss2json.com item format → internal item format
+function _rss2jsonToItem(it) {
+  return {
+    title: it.title || '',
+    link: it.link || it.guid || '#',
+    pubDate: it.pubDate || '',
+    description: it.description || it.content || '',
+    source: it.author || '',
+  };
+}
+
+// Ordered proxy pool — tried in sequence until one returns valid RSS items
+const _PROXY_CHAIN = [
+  // 1. Our own Cloudflare Worker (primary — fastest, no rate limits)
+  {
+    name: 'worker',
+    build: url => `${WORKER_PROXY_URL}/?url=${encodeURIComponent(url)}`,
+    extract: async r => { const t = await r.text(); return _parseXmlItems(t); },
+    timeout: 12000,
+  },
+  // 2. allorigins.win — free open CORS proxy, returns JSON wrapper
+  {
+    name: 'allorigins',
+    build: url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+    extract: async r => { const j = await r.json(); return _parseXmlItems(j.contents || ''); },
+    timeout: 10000,
+  },
+  // 3. rss2json.com — cloud RSS-to-JSON converter, different infrastructure
+  {
+    name: 'rss2json',
+    build: url => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`,
+    extract: async r => { const j = await r.json(); return j.status === 'ok' ? j.items.map(_rss2jsonToItem) : []; },
+    timeout: 9000,
+  },
+  // 4. corsproxy.io — another free CORS proxy, different CDN
+  {
+    name: 'corsproxy',
+    build: url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+    extract: async r => { const t = await r.text(); return _parseXmlItems(t); },
+    timeout: 9000,
+  },
+];
+
+const _FEED_CACHE_KEY = id => 'viltv_ncache_' + id;
+
+// Global retry handler — onclick in error/stale cards calls this
+window._feedRetry = function(id) {
+  const s = _NEWS_SOURCE_MAP[id];
+  const listEl = document.getElementById('lnbl-' + id);
+  if (s && listEl) {
+    listEl.innerHTML = '<div class="lnb-loading">Retrying…</div>';
+    fetchFeed(s, 0, false);
+  }
+};
 
 // ── Active feed helpers ──────────────────────────────────────────────────────
 function _loadActiveIds() {
@@ -11633,7 +11694,7 @@ function _parseXmlItems(xmlStr) {
   }).filter(i => i.title);
 }
 
-async function fetchFeed(src, proxyIdx, usedFallback) {
+async function fetchFeed(src, _unused, usedFallback) {
   const listEl = document.getElementById('lnbl-' + src.id);
   if (!listEl) return;
   const targetUrl = src.url || src.originalUrl;
@@ -11642,45 +11703,65 @@ async function fetchFeed(src, proxyIdx, usedFallback) {
     return;
   }
 
-  // Helper: try fetching a URL directly (no proxy) — works for CORS-enabled feeds
-  async function tryDirect(url) {
+  // Add cache-buster so proxies don't serve stale 304s
+  const bust = (targetUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
+  const fetchUrl = targetUrl + bust;
+
+  // ── 1. Try each proxy in the chain sequentially ─────────────────────────
+  for (const proxy of _PROXY_CHAIN) {
     try {
-      const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
-      if (!r.ok) return null;
-      const xml = await r.text();
-      const items = _parseXmlItems(xml);
-      return items.length ? items : null;
-    } catch(_) { return null; }
+      const proxyUrl = proxy.build(fetchUrl);
+      const res = await fetch(proxyUrl, { cache: 'no-store', signal: AbortSignal.timeout(proxy.timeout || 10000) });
+      if (!res.ok) continue;
+      const items = await proxy.extract(res);
+      if (items && items.length) {
+        try { sessionStorage.setItem(_FEED_CACHE_KEY(src.id), JSON.stringify({ items, ts: Date.now() })); } catch(_) {}
+        renderItems(listEl, items);
+        return;
+      }
+    } catch(_) { /* try next proxy */ }
   }
 
+  // ── 2. Direct fetch — works for CORS-enabled feeds (BBC, CNBC, NHK…) ────
   try {
-    const separator = targetUrl.includes('?') ? '&' : '?';
-    const cacheBuster = separator + 't=' + new Date().getTime();
-    const proxyUrl = `${WORKER_PROXY_URL}/?url=${encodeURIComponent(targetUrl + cacheBuster)}`;
-    const res = await fetch(proxyUrl, { cache: 'no-store', signal: AbortSignal.timeout(12000) });
-
-    // Worker itself is down (503) or gateway error — skip proxy, try direct immediately
-    if (res.status === 503 || res.status === 502) {
-      const items = await tryDirect(targetUrl);
-      if (items) { renderItems(listEl, items); return; }
-      // Direct also failed — fall through to fallback
-      throw new Error('worker-' + res.status);
+    const r = await fetch(targetUrl, { signal: AbortSignal.timeout(8000) });
+    if (r.ok) {
+      const xml = await r.text();
+      const items = _parseXmlItems(xml);
+      if (items.length) {
+        try { sessionStorage.setItem(_FEED_CACHE_KEY(src.id), JSON.stringify({ items, ts: Date.now() })); } catch(_) {}
+        renderItems(listEl, items);
+        return;
+      }
     }
+  } catch(_) {}
 
-    if (!res.ok) throw new Error('proxy-' + res.status);
-    const xmlText = await res.text();
-    const items = _parseXmlItems(xmlText);
-    if (items.length) { renderItems(listEl, items); return; }
-    throw new Error('rss-parse');
-  } catch (_) {
-    const fallbackUrl = !usedFallback ? getNewsFallbackUrl(src) : '';
+  // ── 3. Try Google News search as fallback URL (for direct-feed sources) ──
+  if (!usedFallback) {
+    const fallbackUrl = getNewsFallbackUrl(src);
     if (fallbackUrl && fallbackUrl !== targetUrl) {
       fetchFeed({ ...src, originalUrl: src.originalUrl || src.url, url: fallbackUrl }, 0, true);
       return;
     }
-    const directUrl = src.originalUrl || src.url || '#';
-    listEl.innerHTML = `<div class="lnb-error">Feed unavailable — <a href="${directUrl}" target="_blank" style="color:var(--gold2)">Open directly</a></div>`;
   }
+
+  // ── 4. All proxies failed — show stale cache with age indicator ──────────
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(_FEED_CACHE_KEY(src.id)));
+    if (cached && cached.items && cached.items.length) {
+      renderItems(listEl, cached.items);
+      const ageMin = Math.round((Date.now() - (cached.ts || 0)) / 60000);
+      const staleEl = document.createElement('div');
+      staleEl.className = 'lnb-stale';
+      staleEl.innerHTML = `⚠️ Cached${ageMin > 0 ? ' &middot; ' + ageMin + 'm ago' : ''} <button class="lnb-retry" onclick="window._feedRetry('${src.id}')">↺ Refresh</button>`;
+      listEl.appendChild(staleEl);
+      return;
+    }
+  } catch(_) {}
+
+  // ── 5. Complete failure — show error with direct link + retry button ─────
+  const directUrl = src.originalUrl || src.url || '#';
+  listEl.innerHTML = `<div class="lnb-error">Feed unavailable &mdash; <a href="${escHtml(directUrl)}" target="_blank" style="color:var(--gold2)">Open directly</a> &nbsp;<button class="lnb-retry" onclick="window._feedRetry('${escHtml(src.id)}')">↺ Retry</button></div>`;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
