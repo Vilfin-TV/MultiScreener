@@ -1732,6 +1732,7 @@ footer{
   font-size:11px;font-weight:600;padding:5px 10px;border-radius:14px;
   cursor:pointer;white-space:nowrap;transition:all .15s;font-family:'DM Sans',sans-serif;
   -webkit-tap-highlight-color:rgba(37,99,235,.3);touch-action:manipulation;
+  flex-shrink:0; /* CRITICAL: prevents chips from compressing inside flex row */
 }
 .radio-preset-btn:hover{background:rgba(37,99,235,.18);border-color:#3b82f6;color:#e2eeff}
 .radio-preset-btn.active{background:#1d4ed8;border-color:#3b82f6;color:#fff}
@@ -1888,9 +1889,37 @@ footer{
 .music-omni-thumb{width:80px;height:45px;border-radius:5px;object-fit:cover;background:#130820;flex-shrink:0;border:1px solid #2a1535}
 .music-omni-status{padding:16px;text-align:center;color:#475569;font-size:11px}
 
-/* ── PANEL PRESET STRIP — drag scroll ── */
-.panel-preset-strip{cursor:grab}
+/* ── PANEL PRESET STRIP — drag scroll + layout containment ── */
+.panel-preset-strip{cursor:grab;width:100%;box-sizing:border-box;min-width:0}
 .panel-preset-strip.drag-scroll{cursor:grabbing;user-select:none}
+
+/* ── IPTV PLAYING STATE — collapse top fold, video capped ── */
+#rb-panel-iptv.iptv-playing #iptv-top-fold{display:none!important}
+#rb-panel-iptv.iptv-playing #iptv-now-bar{display:flex!important}
+/* Cap video height so controls + channel list always stay visible */
+#iptv-player-wrap{max-height:52vh;display:flex;flex-direction:column}
+#iptv-player-wrap > div:first-child{flex:1;min-height:0}
+@media(max-width:600px){#iptv-player-wrap{max-height:42vw}}
+
+/* ── RADIO INDIA — default collapsed, toggle smoothly ── */
+.radio-india-body{transition:max-height .35s ease,padding .35s ease;overflow:hidden}
+
+/* ── ALL PANELS — ensure proper flex layout on mobile ── */
+#rb-panel-iptv,#rb-panel-radio,#rb-panel-music,#rb-panel-movies,
+#rb-panel-podcast,#rb-panel-calendar,#rb-panel-notes,#rb-panel-calc,
+#rb-panel-worldclock,#rb-panel-weather{
+  width:100%;box-sizing:border-box;min-width:0;
+}
+/* Scrollable list area: always fills remaining space */
+.radio-station-list{min-height:0;box-sizing:border-box}
+
+/* ── MOBILE: Reduce padding in preset strips & ctrl bars ── */
+@media(max-width:480px){
+  .panel-preset-strip{padding:4px 6px;gap:3px}
+  .panel-ctrl-bar{padding:4px 6px;gap:4px}
+  .radio-preset-btn{padding:4px 8px;font-size:10px}
+  #iptv-player-wrap{max-height:38vw}
+}
 
 /* ══════════════════════════════════════════════════════════════
    CALENDAR WIDGET
@@ -3333,25 +3362,34 @@ footer{
   <!-- ── PANEL 3: Live TV (IPTV via HLS.js) ── -->
   <div id="rb-panel-iptv" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
 
-    <!-- Custom M3U/M3U8 URL input (paste & play) — above search for mobile keyboard -->
-    <div style="padding:5px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:5px">
-      <input type="url" id="iptv-custom-url" placeholder="🔗 Paste any .m3u8 URL to play…"
-             onkeydown="if(event.key==='Enter')iptvPlayCustomUrl()"
-             style="flex:1;padding:7px 10px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:6px;color:#e2eeff;font-size:11px;outline:none;font-family:'JetBrains Mono',monospace"/>
-      <button onclick="iptvPlayCustomUrl()"
-              style="background:#1d4ed8;border:none;color:#fff;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">▶ Play</button>
+    <!-- Mini now-playing bar — visible ONLY when video is playing -->
+    <div id="iptv-now-bar" style="display:none;padding:5px 10px;background:#060d1a;border-bottom:1px solid #1e3a5c;flex-shrink:0;align-items:center;gap:8px">
+      <span style="width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0;animation:rPulse 1.6s infinite;display:inline-block"></span>
+      <span id="iptv-now-bar-label" style="flex:1;font-size:11px;color:#60a5fa;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Playing…</span>
+      <button onclick="iptvShowSearch()" style="font-size:10px;padding:3px 8px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:5px;color:#94a3b8;cursor:pointer">🔍 Browse</button>
     </div>
 
-    <!-- Search + region presets -->
-    <div style="padding:8px 10px 6px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
-      <input type="search" id="iptv-search"
-             placeholder="🔍 Search channels…"
-             style="width:100%;padding:8px 12px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:13px;font-family:'DM Sans',sans-serif;outline:none"
-             oninput="iptvOnSearch(this.value)"/>
-    </div>
+    <!-- Collapsible top section: URL input + Search + Country -->
+    <div id="iptv-top-fold">
+      <!-- Custom M3U/M3U8 URL input -->
+      <div style="padding:5px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:5px">
+        <input type="url" id="iptv-custom-url" placeholder="🔗 Paste any .m3u8 URL to play…"
+               onkeydown="if(event.key==='Enter')iptvPlayCustomUrl()"
+               style="flex:1;padding:7px 10px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:6px;color:#e2eeff;font-size:11px;outline:none;font-family:'JetBrains Mono',monospace"/>
+        <button onclick="iptvPlayCustomUrl()"
+                style="background:#1d4ed8;border:none;color:#fff;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">▶ Play</button>
+      </div>
 
-    <!-- Country selector -->
-    <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:6px;align-items:center">
+      <!-- Search -->
+      <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
+        <input type="search" id="iptv-search"
+               placeholder="🔍 Search channels…"
+               style="width:100%;padding:7px 10px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:12px;font-family:'DM Sans',sans-serif;outline:none"
+               oninput="iptvOnSearch(this.value)"/>
+      </div>
+
+      <!-- Country selector -->
+      <div style="padding:5px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:6px;align-items:center">
       <select id="iptv-country" onchange="iptvOnCountryChange(this.value)"
               style="flex:1;padding:7px 10px;background:#0e1f3b;color:#e2eeff;border:1px solid #1e3a5c;border-radius:8px;font-size:11px;font-family:inherit;cursor:pointer;outline:none">
         <option value="" selected>🌍 All Countries</option>
@@ -3377,8 +3415,9 @@ footer{
       <button onclick="iptvSetDefault()" title="Save current as default"
               style="background:#0e1f3b;border:1px solid #1e3a5c;color:#fbbf24;padding:6px 10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">📌 Default</button>
     </div>
+    </div><!-- /iptv-top-fold -->
 
-    <!-- Preset categories -->
+    <!-- Preset categories — always visible (needed for switching while watching) -->
     <div class="panel-preset-strip" id="iptv-preset-strip">
       <!-- Languages — Indian -->
       <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('favorites')">⭐ Favorites</button>
@@ -3455,10 +3494,10 @@ footer{
      <!-- Radio India — collapsible embedded player -->
      <div class="radio-india-toggle" id="radio-india-toggle" onclick="radioToggleIndiaPlayer()" title="Toggle Radio India player">
        <span>🎙 Radio India — Featured</span>
-       <span id="radio-india-chevron" style="font-size:12px;transition:transform .3s;transform:rotate(180deg)">▾</span>
+       <span id="radio-india-chevron" style="font-size:12px;transition:transform .3s;transform:rotate(0deg)">▾</span>
      </div>
-     <div class="radio-india-body" id="radio-india-body" style="max-height:360px">
-       <iframe src="https://radiosindia.com/radiomango.html" style="height:350px;width:100%;border:none;overflow:hidden;display:block" loading="lazy" title="Radio Mango"></iframe>
+     <div class="radio-india-body collapsed" id="radio-india-body" style="max-height:0">
+       <iframe src="" data-src="https://radiosindia.com/radiomango.html" style="height:240px;width:100%;border:none;overflow:hidden;display:block" loading="lazy" title="Radio Mango" id="radio-india-iframe"></iframe>
      </div>
 
     <!-- Radio Omnisearch bar -->
@@ -8220,6 +8259,13 @@ function iptvPlay(url, id, name) {
   if (_iptvHls) { try { _iptvHls.destroy(); } catch(_){} _iptvHls = null; }
   if (wrap) wrap.style.display = 'block';
   if (nowEl) nowEl.textContent = name || 'Live TV';
+  // Collapse top-fold, show now-playing bar
+  const panel = document.getElementById('rb-panel-iptv');
+  if (panel) panel.classList.add('iptv-playing');
+  const nowBar = document.getElementById('iptv-now-bar');
+  const nowBarLabel = document.getElementById('iptv-now-bar-label');
+  if (nowBar) nowBar.style.display = 'flex';
+  if (nowBarLabel) nowBarLabel.textContent = name || 'Live TV';
   video.muted = true;
 
   // Track current channel (for prev/next/fav)
@@ -8286,6 +8332,18 @@ function iptvStop() {
   if (wrap) wrap.style.display = 'none';
   _iptvCurrentChannel = null;
   _iptvCurrentIndex = -1;
+  // Restore top-fold
+  const panel = document.getElementById('rb-panel-iptv');
+  if (panel) panel.classList.remove('iptv-playing');
+  const nowBar = document.getElementById('iptv-now-bar');
+  if (nowBar) nowBar.style.display = 'none';
+}
+// Show search (unfold top controls while keeping video playing)
+function iptvShowSearch() {
+  const panel = document.getElementById('rb-panel-iptv');
+  if (panel) panel.classList.toggle('iptv-playing');
+  const fold = document.getElementById('iptv-top-fold');
+  if (fold) fold.style.display = fold.style.display === 'none' ? '' : 'none';
 }
 
 // ── Transport controls ──────────────────────────────────────────────────
@@ -9403,9 +9461,15 @@ function radioTogglePip() {
 function radioToggleIndiaPlayer() {
   const body = document.getElementById('radio-india-body');
   const chevron = document.getElementById('radio-india-chevron');
+  const iframe = document.getElementById('radio-india-iframe');
   if (!body) return;
   const isCollapsed = body.classList.toggle('collapsed');
+  body.style.maxHeight = isCollapsed ? '0' : '250px';
   if (chevron) chevron.style.transform = isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)';
+  // Lazy-load iframe on first expand
+  if (!isCollapsed && iframe && !iframe.src && iframe.dataset.src) {
+    iframe.src = iframe.dataset.src;
+  }
 }
 function radioPrev() {
   const items = document.querySelectorAll('.radio-station-item');
