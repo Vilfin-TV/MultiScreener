@@ -271,6 +271,41 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page-bg);color:
 .tl-attr a{color:var(--saffron);text-decoration:none;font-weight:600}
 .tl-attr a:hover{text-decoration:underline}
 
+/* Stock Scores panel */
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.score-cat{
+  background:var(--card2);border:1px solid var(--border2);border-radius:10px;
+  padding:14px 12px;text-align:center;
+}
+.score-cat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:6px}
+.score-cat-icon{font-size:24px;opacity:.7}
+.scores-cta{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:13px;background:rgba(255,153,51,.1);
+  border:1px solid rgba(255,153,51,.35);border-radius:10px;
+  color:var(--saffron);font-size:13px;font-weight:700;
+  text-decoration:none;letter-spacing:.3px;
+  transition:background .15s,border-color .15s;
+}
+.scores-cta:hover{background:rgba(255,153,51,.18);border-color:var(--saffron)}
+.scores-cta svg{opacity:.7}
+
+/* IPO news feed */
+.ipo-item{
+  display:block;padding:11px 16px;
+  border-bottom:1px solid rgba(255,255,255,.04);
+  text-decoration:none;transition:background .1s;
+}
+.ipo-item:last-child{border-bottom:none}
+.ipo-item:hover{background:var(--card2)}
+.ipo-item-title{font-size:13px;font-weight:500;color:var(--text);line-height:1.45;margin-bottom:4px}
+.ipo-item-meta{font-size:10px;color:var(--text3);display:flex;align-items:center;gap:6px}
+.ipo-item-src{
+  font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+  padding:1px 5px;background:rgba(255,153,51,.12);border-radius:3px;color:var(--saffron);
+}
+.ipo-empty{padding:48px 16px;text-align:center;color:var(--text3);font-size:13px}
+
 /* Scrollbar */
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -440,11 +475,11 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page-bg);color:
     <div class="tl-attr">Powered by <a href="https://trendlyne.com" target="_blank" rel="noopener">Trendlyne</a></div>
   </div>
 
-  <!-- ── ROW 3 · Scores + IPO (50/50) ── -->
+  <!-- ── ROW 3 · Stock Scores + IPO News (50/50) ── -->
   <div class="section-head"><span class="section-label">Scores &amp; IPO Insights</span><div class="section-line"></div></div>
   <div class="grid-2" style="margin-bottom:20px">
 
-    <!-- Stock Scores -->
+    <!-- Stock Scores deep-link panel -->
     <div class="wcard" id="wc-scores">
       <div class="wcard-head">
         <span class="wcard-title">
@@ -453,28 +488,69 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page-bg);color:
         </span>
         <span class="wcard-sub">Fundamental · Technical · Momentum · Valuation</span>
       </div>
-      <div class="wcard-body">
-        <div class="wload" id="scores-loader"><div class="spin"></div>Select a stock to load scores…</div>
-        <iframe id="iframe-scores" class="wcard-iframe" src="" frameborder="0" loading="lazy" style="display:none;height:480px" title="Stock Scores"></iframe>
+      <div class="wcard-body" style="background:var(--card);padding:20px 16px;min-height:400px">
+
+        <!-- Empty state -->
+        <div id="scores-empty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:340px;text-align:center;color:var(--text3)">
+          <div style="font-size:48px;opacity:.2;margin-bottom:16px">📊</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text2);margin-bottom:6px">Select a stock above</div>
+          <div style="font-size:12px;line-height:1.6;max-width:220px">Pick any NSE/BSE company to view its Trendlyne score breakdown</div>
+        </div>
+
+        <!-- Active panel (shown when stock selected) -->
+        <div id="scores-panel" style="display:none">
+          <div class="score-grid">
+            <div class="score-cat">
+              <div class="score-cat-icon">🏦</div>
+              <div class="score-cat-label">Fundamental</div>
+            </div>
+            <div class="score-cat">
+              <div class="score-cat-icon">📈</div>
+              <div class="score-cat-label">Technical</div>
+            </div>
+            <div class="score-cat">
+              <div class="score-cat-icon">⚡</div>
+              <div class="score-cat-label">Momentum</div>
+            </div>
+            <div class="score-cat">
+              <div class="score-cat-icon">💰</div>
+              <div class="score-cat-label">Valuation</div>
+            </div>
+          </div>
+          <p style="font-size:12px;color:var(--text3);line-height:1.65;margin-bottom:16px;text-align:center">
+            Trendlyne scores rate each dimension on a 0–100 scale based on 150+ financial and technical parameters.
+          </p>
+          <a id="scores-tl-link" href="https://trendlyne.com" target="_blank" rel="noopener" class="scores-cta">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            View Full Score on Trendlyne
+          </a>
+          <div style="margin-top:12px;text-align:center">
+            <a id="scores-analysis-link" href="https://trendlyne.com" target="_blank" rel="noopener"
+               style="font-size:11px;color:var(--text3);text-decoration:none">
+              Also view: Full Analysis ↗
+            </a>
+          </div>
+        </div>
+
       </div>
-      <div class="tl-attr">Powered by <a href="https://trendlyne.com" target="_blank" rel="noopener">Trendlyne</a></div>
+      <div class="tl-attr">Score data by <a href="https://trendlyne.com" target="_blank" rel="noopener">Trendlyne</a></div>
     </div>
 
-    <!-- IPO Widget -->
+    <!-- IPO News Feed from blog_feed.json -->
     <div class="wcard" id="wc-ipo">
       <div class="wcard-head">
         <span class="wcard-title">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
           IPO Tracker
         </span>
-        <span class="wcard-sub">Live subscription · Allotment · GMP</span>
+        <span class="wcard-sub">Active IPO · Upcoming · Recently Listed · Daily Updates</span>
       </div>
-      <div class="wcard-body">
-        <iframe id="iframe-ipo" class="wcard-iframe" frameborder="0" loading="lazy"
-          src="https://trendlyne.com/web-widget/ipo-widget/Poppins/"
-          style="height:480px" title="IPO Tracker"></iframe>
+      <div class="wcard-body" style="background:var(--card);overflow-y:auto;max-height:480px">
+        <div id="ipo-feed"><div class="wload"><div class="spin"></div>Loading IPO feed…</div></div>
       </div>
-      <div class="tl-attr">Powered by <a href="https://trendlyne.com/ipo-allotment-status/" target="_blank" rel="noopener">Trendlyne</a></div>
+      <div class="tl-attr">
+        <a href="https://trendlyne.com/ipo-allotment-status/" target="_blank" rel="noopener">View Live IPO Snapshot on Trendlyne ↗</a>
+      </div>
     </div>
 
   </div>
@@ -720,12 +796,62 @@ function injectAll(sym){
   setIframe('iframe-checklist','checklist-loader',
     `${TL_BASE}checklist-widget/${TL_FONT}/${sym}/`);
 
-  setIframe('iframe-scores','scores-loader',
-    `${TL_BASE}stockscore-widget/${TL_FONT}/${sym}/`);
+  /* Scores panel — deep-link to Trendlyne (iframe blocked by X-Frame-Options) */
+  updateScoresPanel(sym);
 }
 
-/* Pre-warm autocomplete after page settles */
+/* ── Stock Scores deep-link panel ── */
+function updateScoresPanel(sym){
+  document.getElementById('scores-empty').style.display='none';
+  document.getElementById('scores-panel').style.display='block';
+  const scoreUrl=`https://trendlyne.com/equity/all/${sym}/`;
+  const analysisUrl=`https://trendlyne.com/research-reports/${sym.toLowerCase()}/`;
+  document.getElementById('scores-tl-link').href=scoreUrl;
+  document.getElementById('scores-analysis-link').href=scoreUrl;
+}
+
+/* ── IPO News feed from blog_feed.json ── */
+function fmtDate(str){
+  if(!str)return'';
+  try{
+    const d=new Date(str);
+    return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+  }catch(_){return str.slice(0,10);}
+}
+
+async function loadIpoFeed(){
+  const feed=document.getElementById('ipo-feed');
+  try{
+    const r=await fetch('data/blog_feed.json');
+    if(!r.ok)throw new Error('status '+r.status);
+    const data=await r.json();
+    const items=(data.categories||data).ipo||[];
+    if(!items.length){
+      feed.innerHTML='<div class="ipo-empty">No IPO updates found. Check back after the next data refresh.</div>';
+      return;
+    }
+    feed.innerHTML=items.map(item=>{
+      const title=(item.title||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      const src=(item.source||'').replace(/&/g,'&amp;');
+      const date=fmtDate(item.published||item.date||'');
+      return `<a class="ipo-item" href="${item.link||'#'}" target="_blank" rel="noopener">
+        <div class="ipo-item-title">${title}</div>
+        <div class="ipo-item-meta">
+          <span class="ipo-item-src">${src}</span>
+          ${date?`<span>${date}</span>`:''}
+        </div>
+      </a>`;
+    }).join('');
+  }catch(e){
+    feed.innerHTML=`<div class="ipo-empty">
+      IPO feed unavailable — <a href="https://trendlyne.com/ipo-allotment-status/" target="_blank" rel="noopener" style="color:var(--saffron)">View on Trendlyne ↗</a>
+    </div>`;
+  }
+}
+
+/* Pre-warm autocomplete and load IPO feed after page settles */
 setTimeout(acLoad,1200);
+loadIpoFeed();
 </script>
 </body>
 </html>
