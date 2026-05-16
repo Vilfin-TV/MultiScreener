@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <meta name="description" content="VilfinTV: Your premium all-in-one platform for real-time financial screening, live global news, 141+ TV channels, and curated music and radio streams."/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -1531,11 +1531,27 @@ footer{
 }
 /* Override global input reset inside right-bar to keep dark theme */
 .right-bar input,.right-bar textarea,.right-bar select{
-  color:#f1f5f9!important;background-color:#334155!important;
+  color:#f1f5f9!important;
   -webkit-text-fill-color:#f1f5f9!important;
 }
+/* Only apply gray background to the AI chat textarea — NOT to widget panel inputs */
+.right-bar .rb-ai-input{background-color:#334155!important}
 .right-bar input::placeholder,.right-bar textarea::placeholder{color:#94a3b8!important}
 .right-bar #yt-channel-select{color:#e2e8f0!important;background:#0f1d35!important;border-color:#1e3a5f!important}
+/* Widget panel inputs: use dark-navy background to override the global white reset.
+   ID selectors give higher specificity than the global "input { bg:#fff !important }" */
+#rb-panel-calendar input,#rb-panel-calendar textarea,#rb-panel-calendar select,
+#rb-panel-notes     input,#rb-panel-notes     textarea,#rb-panel-notes     select,
+#rb-panel-calc      input,#rb-panel-calc      textarea,#rb-panel-calc      select,
+#rb-panel-worldclock input,#rb-panel-worldclock textarea,#rb-panel-worldclock select,
+#rb-panel-weather   input,#rb-panel-weather   textarea,#rb-panel-weather   select,
+#rb-panel-video     input,#rb-panel-video     select,
+#rb-panel-iptv      input,#rb-panel-iptv      select,
+#rb-panel-radio     input,#rb-panel-radio     select,
+#rb-panel-music     input,#rb-panel-music     select,
+#rb-panel-movies    input,#rb-panel-movies    select,
+#rb-panel-podcast   input,#rb-panel-podcast   select,
+#rb-panel-settings  input,#rb-panel-settings  select{background-color:#0c1525!important}
 
 /* ── DRAG RESIZE HANDLE ── */
 #rb-resize-handle{
@@ -1586,6 +1602,32 @@ footer{
   }
   /* Dim overlay behind drawer */
   #mobile-rb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1499;backdrop-filter:blur(2px)}
+
+  /* ══════════════════════════════════════════════════════════════
+     iOS / ANDROID — PREVENT AUTO-ZOOM ON INPUT FOCUS
+     iOS Safari auto-zooms any input whose font-size < 16px.
+     Setting exactly 16px prevents the zoom while keeping the UI
+     looking identical (the visual size doesn't change noticeably).
+  ══════════════════════════════════════════════════════════════ */
+  input[type="text"],
+  input[type="search"],
+  input[type="url"],
+  input[type="email"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px !important;
+    /* Prevent double-tap zoom on interactive elements */
+    touch-action: manipulation;
+  }
+  /* Keep range sliders and checkboxes natural */
+  input[type="range"],
+  input[type="checkbox"],
+  input[type="radio"] {
+    font-size: inherit !important;
+  }
 }
 /* ── Mobile bottom nav bar — Android premium style ── */
 .mobile-rb-bar{
@@ -2052,6 +2094,63 @@ footer{
 .weather-saved-pill:hover{border-color:#2563eb;background:#0a192f}
 .weather-saved-pill-x{background:none;border:none;color:#475569;font-size:12px;cursor:pointer;padding:0;margin-left:2px;line-height:1}
 .weather-saved-pill-x:hover{color:#f87171}
+
+/* ══════════════════════════════════════════════════════════════
+   WIDGET PANELS — MOBILE RESPONSIVE FIXES
+   Ensures Calendar, Notes, Calculator, World Clock, Weather
+   all render correctly on small screens (≤480px)
+══════════════════════════════════════════════════════════════ */
+
+/* Calendar — compact cells on narrow screens */
+@media(max-width:480px){
+  .cal-cell{min-height:36px;padding:2px 2px}
+  .cal-cell-date{font-size:10px}
+  .cal-holiday-label{font-size:6.5px;max-height:18px}
+  .cal-header-row span{font-size:9px;padding:4px 0}
+  .cal-event-form{padding:10px 8px}
+  .cal-event-input{font-size:16px!important} /* prevent iOS zoom */
+  .cal-legend{gap:6px;padding:6px 2px 0}
+  .cal-legend-item{font-size:9px}
+}
+
+/* Notes — overlay always covers full panel; touch delete btn visible */
+@media(max-width:900px){
+  .note-delete-btn{opacity:1!important} /* always show on touch */
+}
+@media(max-width:480px){
+  .notes-grid{grid-template-columns:1fr!important}
+  .notes-edit-body{min-height:120px}
+  .notes-edit-title-input,.notes-edit-body,.notes-edit-select{font-size:16px!important}
+}
+
+/* Calculator — adequate key height on small screens, no scrollbar needed */
+@media(max-width:480px){
+  .calc-key{height:44px;font-size:14px}
+  .calc-key-fn{height:34px;font-size:11px}
+  .calc-result{font-size:26px}
+  .calc-expr{font-size:10px}
+  .calc-display{padding:10px 12px;min-height:60px}
+}
+
+/* World Clock — cards compact on mobile */
+@media(max-width:480px){
+  .wc-card{padding:10px 10px;gap:8px}
+  .wc-card-flag{font-size:20px}
+  .wc-card-city{font-size:13px}
+  .wc-card-time{font-size:18px}
+  .wc-search-input,.wc-search-results input{font-size:16px!important}
+}
+
+/* Weather — single column stats on very small screens */
+@media(max-width:400px){
+  .weather-stats{grid-template-columns:1fr}
+  .weather-temp{font-size:34px}
+  .weather-icon-big{font-size:32px}
+}
+@media(max-width:480px){
+  .weather-current-card{padding:12px 10px}
+  .weather-city-name{font-size:14px}
+}
 
 /* ── PANEL OMNISEARCH (Radio / Movies / Podcast) ── */
 .panel-omni-bar{padding:6px 8px;background:#080e1a;border-bottom:1px solid #0d1a30;display:flex;gap:5px;align-items:center;flex-shrink:0}
@@ -3763,7 +3862,7 @@ footer{
   </div><!-- /rb-panel-calendar -->
 
   <!-- ── PANEL 9: Notes ── -->
-  <div id="rb-panel-notes" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+  <div id="rb-panel-notes" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0;position:relative">
     <div class="panel-ctrl-bar" style="flex-shrink:0;gap:6px">
       <input id="notes-search" type="text" placeholder="🔍 Search notes…" oninput="notesRender()" style="flex:1;min-width:0;padding:6px 10px;background:#0c1525;color:#e2e8f0;border:1px solid #1e3a5c;border-radius:6px;font-size:12px;outline:none;font-family:inherit" />
       <button class="panel-ctrl-btn" style="width:auto;padding:0 10px;font-size:11px;white-space:nowrap" onclick="notesNewNote()">+ New</button>
@@ -3875,7 +3974,7 @@ footer{
   </div><!-- /rb-panel-calc -->
 
   <!-- ── PANEL 11: World Clock ── -->
-  <div id="rb-panel-worldclock" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+  <div id="rb-panel-worldclock" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0;position:relative">
     <div class="panel-ctrl-bar" style="flex-shrink:0;gap:6px">
       <div style="flex:1;font-size:11px;color:#64748b" id="wc-local-time"></div>
       <button class="panel-ctrl-btn" style="width:auto;padding:0 10px;font-size:11px;white-space:nowrap" onclick="wcOpenAddModal()">+ Add City</button>
