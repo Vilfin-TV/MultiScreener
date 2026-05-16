@@ -1805,11 +1805,14 @@ footer{
 @media (max-width: 900px) {
   #rb-panel-radio,
   #rb-panel-iptv {
-    display: flex !important;
+    /* NOTE: display is intentionally NOT set here.
+       JS (rbSwitchPanel) controls display:flex/none on panels.
+       Setting display:flex !important here overrides JS and forces both
+       panels visible simultaneously on every tab — DO NOT add it back. */
     flex-direction: column !important;
     overflow: hidden !important;
     min-height: 0 !important;
-    height: 100% !important;       /* fill the available panel height */
+    height: 100% !important;
   }
   .radio-station-list {
     flex: 1 1 0 !important;
@@ -1817,9 +1820,6 @@ footer{
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
   }
-  /* Constrain video player height on mobile — prevents the player from
-     pushing the channel list off-screen. 40vh leaves ~60% for nav,
-     preset strip, and channel list on any phone. */
   #iptv-player-wrap {
     max-height: 40vh !important;
     overflow: hidden !important;
