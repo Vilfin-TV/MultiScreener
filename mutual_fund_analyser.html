@@ -206,7 +206,7 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
   <!-- Q1: Fund Name -->
   <div class="q-block">
     <div class="q-label"><span class="q-num">Q1</span> Fund Name <span class="q-required">*</span></div>
-    <input class="text-input" id="q-fundname" type="text" data-ac="fund" placeholder="e.g. Parag Parikh Flexi Cap Fund – Direct Plan" oninput="updateSummary()"/>
+    <input class="text-input" id="q-fundname" type="text" data-ac="fund" data-ac-plan="fundPlan" placeholder="e.g. Parag Parikh Flexi Cap Fund – Direct Plan" oninput="updateSummary()"/>
     <div style="display:flex;gap:18px;align-items:center;margin-top:8px;flex-wrap:wrap;font-size:13px;color:var(--text2,#8ea8c8)">
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600"><input type="radio" name="fundPlan" value="direct" checked style="accent-color:var(--burn2,#3b82f6)"/> Direct</label>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600"><input type="radio" name="fundPlan" value="idcw" style="accent-color:var(--burn2,#3b82f6)"/> IDCW</label>
@@ -397,6 +397,8 @@ function updateSummary() {
 function buildPrompt() {
   const fn = document.getElementById('q-fundname').value.trim();
   const age = document.getElementById('q-age').value.trim();
+  const fundPlan = document.querySelector('input[name="fundPlan"]:checked')?.value || 'direct';
+  const planLabel = { direct:'Direct', idcw:'IDCW', regular:'Regular' }[fundPlan] || fundPlan;
   return `MUTUAL FUND EVALUATOR — AI ANALYSIS REQUEST
 ═══════════════════════════════════════════
 
@@ -406,6 +408,9 @@ CRITICAL OPERATING RULES:
 3. Every metric must cite its source. If not found → DATA UNAVAILABLE.
 4. Never fabricate data. If live search unavailable, state it clearly.
 5. Output a comprehensive structured analysis covering all sections below.
+
+PLAN TYPE REQUESTED: ${planLabel}
+IMPORTANT: Only report data for the ${planLabel} plan. If no ${planLabel} plan exists, state this explicitly and show the closest available plan instead.
 
 INVESTOR PROFILE:
 Q1. Fund Name: ${fn || 'Not provided'}
