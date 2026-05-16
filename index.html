@@ -1888,6 +1888,40 @@ footer{
 .music-omni-thumb{width:80px;height:45px;border-radius:5px;object-fit:cover;background:#130820;flex-shrink:0;border:1px solid #2a1535}
 .music-omni-status{padding:16px;text-align:center;color:#475569;font-size:11px}
 
+/* ── PANEL PRESET STRIP — drag scroll ── */
+.panel-preset-strip{cursor:grab}
+.panel-preset-strip.drag-scroll{cursor:grabbing;user-select:none}
+
+/* ── PANEL OMNISEARCH (Radio / Movies / Podcast) ── */
+.panel-omni-bar{padding:6px 8px;background:#080e1a;border-bottom:1px solid #0d1a30;display:flex;gap:5px;align-items:center;flex-shrink:0}
+.panel-omni-input-wrap{flex:1;min-width:0;position:relative;display:flex;align-items:center}
+.panel-omni-trigger{width:100%;padding:7px 10px 7px 30px;background:#0c1525;color:#475569;border:1px solid #1e2a40;border-radius:8px;font-size:11px;font-family:inherit;cursor:pointer;text-align:left;transition:all .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.panel-omni-trigger:hover{border-color:#2563eb;color:#e2e8f0;background:#0f1525}
+#panel-omni-modal{position:fixed;inset:0;z-index:200002;align-items:flex-start;justify-content:center;padding:60px 16px 16px;background:rgba(2,6,23,.93);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.panel-omni-panel{background:linear-gradient(160deg,#07101e 0%,#0a0f20 100%);border:1px solid #1e3a5f;border-radius:16px;width:100%;max-width:680px;max-height:calc(100vh - 90px);display:flex;flex-direction:column;box-shadow:0 32px 80px rgba(0,0,0,.88);overflow:hidden;animation:ytOmniIn .2s cubic-bezier(.16,1,.3,1)}
+.panel-omni-hdr{padding:12px 14px;border-bottom:1px solid #1e3a5f;display:flex;align-items:center;gap:10px;background:#071020;flex-shrink:0}
+.panel-omni-hdr-input{flex:1;padding:9px 12px 9px 36px;background:#0f1d35;color:#e2e8f0;border:1px solid #2563eb;border-radius:10px;font-size:13px;outline:none;font-family:inherit}
+.panel-omni-hdr-input::placeholder{color:#475569}
+.panel-omni-close{width:32px;height:32px;border:1px solid #1e3a5f;border-radius:8px;background:#0f1d35;color:#94a3b8;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-weight:700;padding:0}
+.panel-omni-close:hover{background:#1e3a5f;color:#fff}
+.panel-omni-body{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#1e3a5f transparent}
+.panel-omni-sec{padding:7px 14px 4px;font-size:9.5px;font-weight:700;color:#334155;letter-spacing:.7px;text-transform:uppercase;background:#060c18;border-bottom:1px solid #0a1628;position:sticky;top:0;z-index:2}
+.panel-omni-row{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);transition:background .12s}
+.panel-omni-row:hover{background:#0d1f3c}
+.panel-omni-icon{width:34px;height:34px;border-radius:7px;background:linear-gradient(135deg,#1d4ed8 0%,#1e3a5f 100%);color:#fff;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.panel-omni-meta{flex:1;min-width:0}
+.panel-omni-name{font-size:12px;color:#e2e8f0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.panel-omni-desc{font-size:9.5px;color:#64748b;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.panel-omni-tag{font-size:9px;color:#60a5fa;font-weight:700;text-transform:uppercase;letter-spacing:.5px;flex-shrink:0}
+.panel-omni-status{padding:16px;text-align:center;color:#475569;font-size:11px}
+
+/* ── SETTINGS TAB REORDER ── */
+.widget-tab-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px}
+.widget-tab-label{flex:1;font-size:13px;color:var(--text)}
+.widget-reorder-btn{width:24px;height:24px;border:1px solid #1e3a5c;border-radius:5px;background:#0a1628;color:#64748b;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;transition:all .15s}
+.widget-reorder-btn:hover{background:#1d4ed8;border-color:#2563eb;color:#fff}
+.widget-reorder-btn:disabled{opacity:.25;cursor:not-allowed}
+
 /* ── LIVE SCORES — sport tab buttons ── */
 .score-sport-btn{
   padding:4px 10px;background:transparent;border:1px solid #1e3a5f;
@@ -3290,12 +3324,12 @@ footer{
        <iframe src="https://radiosindia.com/radiomango.html" style="height:350px;width:100%;border:none;overflow:hidden;display:block" loading="lazy" title="Radio Mango"></iframe>
      </div>
 
-    <!-- Search box -->
-    <div style="padding:8px 10px 6px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
-      <input type="search" id="radio-search-input"
-             placeholder="🔍 Search 30,000+ stations…"
-             style="width:100%;padding:8px 12px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:13px;font-family:'DM Sans',sans-serif;outline:none"
-             oninput="radioOnSearchInput(this.value)"/>
+    <!-- Radio Omnisearch bar -->
+    <div class="panel-omni-bar">
+      <div class="panel-omni-input-wrap">
+        <span style="position:absolute;left:9px;font-size:14px;color:#64748b;pointer-events:none;z-index:1;line-height:1">📻</span>
+        <button class="panel-omni-trigger" id="radio-omni-trigger" onclick="panelOmniOpen('radio')">Search 30,000+ stations…</button>
+      </div>
     </div>
 
     <!-- Preset buttons (one-tap loaders) -->
@@ -3406,10 +3440,12 @@ footer{
 
   <!-- ── PANEL 6: Movies (Internet Archive free public-domain films) ── -->
   <div id="rb-panel-movies" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
-    <div style="padding:8px 10px 6px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
-      <input type="search" id="movies-search" placeholder="🔍 Search free public-domain movies…"
-             oninput="moviesOnSearch(this.value)"
-             style="width:100%;padding:8px 12px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:13px;font-family:'DM Sans',sans-serif;outline:none"/>
+    <!-- Movies Omnisearch bar -->
+    <div class="panel-omni-bar">
+      <div class="panel-omni-input-wrap">
+        <span style="position:absolute;left:9px;font-size:14px;color:#64748b;pointer-events:none;z-index:1;line-height:1">🎬</span>
+        <button class="panel-omni-trigger" id="movies-omni-trigger" onclick="panelOmniOpen('movies')">Search free public-domain movies…</button>
+      </div>
     </div>
     <div class="panel-preset-strip" id="movies-preset-strip">
       <button class="radio-preset-btn movies-preset active" onclick="moviesLoadPreset('classics')">🎭 Classics</button>
@@ -3460,10 +3496,12 @@ footer{
 
   <!-- ── PANEL 7: Podcast (curated free shows) ── -->
   <div id="rb-panel-podcast" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
-    <div style="padding:8px 10px 6px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
-      <input type="search" id="podcast-search" placeholder="🔍 Search podcasts on iTunes…"
-             oninput="podcastOnSearch(this.value)"
-             style="width:100%;padding:8px 12px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:13px;font-family:'DM Sans',sans-serif;outline:none"/>
+    <!-- Podcast Omnisearch bar -->
+    <div class="panel-omni-bar">
+      <div class="panel-omni-input-wrap">
+        <span style="position:absolute;left:9px;font-size:14px;color:#64748b;pointer-events:none;z-index:1;line-height:1">🎙</span>
+        <button class="panel-omni-trigger" id="podcast-omni-trigger" onclick="panelOmniOpen('podcast')">Search podcasts on iTunes…</button>
+      </div>
     </div>
     <div class="panel-preset-strip" id="podcast-preset-strip">
       <button class="radio-preset-btn podcast-preset active" onclick="podcastLoadCurated()">⭐ Curated</button>
@@ -6478,15 +6516,25 @@ const _WIDGET_TAB_LABELS = {
   ai:'🤖 AI Chat', video:'▶️ YouTube Live', iptv:'📡 Live TV',
   radio:'📻 Radio', music:'🎵 YouTube Music', movies:'🎬 Movies', podcast:'🎙 Podcast',
 };
+const _WIDGET_DEFAULT_ORDER = ['ai','video','iptv','radio','music','movies','podcast'];
 function widgetGetSettings() {
   let s = {};
   try { s = JSON.parse(localStorage.getItem('viltv_widget_settings') || '{}'); } catch(_) {}
   if (!s.defaultTab) s.defaultTab = 'ai';
   if (!s.visible || typeof s.visible !== 'object') s.visible = {};
-  // Default every known tab to visible if not explicitly set false.
-  // (Earlier sessions may have stored partial settings without all keys.)
   for (const key of Object.keys(_WIDGET_TAB_LABELS)) {
     if (s.visible[key] === undefined) s.visible[key] = true;
+  }
+  // Ensure order array exists and contains all known tabs
+  if (!Array.isArray(s.order) || s.order.length === 0) {
+    s.order = [..._WIDGET_DEFAULT_ORDER];
+  } else {
+    // Add any new tabs not in saved order
+    for (const key of _WIDGET_DEFAULT_ORDER) {
+      if (!s.order.includes(key)) s.order.push(key);
+    }
+    // Remove stale keys
+    s.order = s.order.filter(k => _WIDGET_TAB_LABELS[k]);
   }
   return s;
 }
@@ -6506,11 +6554,29 @@ function widgetToggleTab(tab, visible) {
   widgetSaveSettings(s);
   widgetApplyVisibility();
 }
+function widgetMoveTab(key, dir) {
+  const s = widgetGetSettings();
+  const idx = s.order.indexOf(key);
+  if (idx < 0) return;
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= s.order.length) return;
+  // Swap
+  [s.order[idx], s.order[newIdx]] = [s.order[newIdx], s.order[idx]];
+  widgetSaveSettings(s);
+  widgetApplyVisibility();
+  widgetRenderSettings();
+}
 function widgetApplyVisibility() {
   const s = widgetGetSettings();
-  Object.entries(_WIDGET_TAB_LABELS).forEach(([key, _]) => {
+  const strip = document.getElementById('rb-tabs');
+  if (!strip) return;
+  // Apply tab order — move each rbtab-* to end of strip in specified order
+  s.order.forEach(key => {
     const tab = document.getElementById('rbtab-' + key);
-    if (tab) tab.style.display = (s.visible[key] === false) ? 'none' : '';
+    if (tab) {
+      tab.style.display = (s.visible[key] === false) ? 'none' : '';
+      strip.appendChild(tab); // re-append in order (DOM move)
+    }
   });
 }
 function widgetResetSettings() {
@@ -6525,15 +6591,20 @@ function widgetRenderSettings() {
   const status = document.getElementById('widget-default-status');
   if (status) status.textContent = 'Currently: ' + (_WIDGET_TAB_LABELS[s.defaultTab] || s.defaultTab);
   const wrap = document.getElementById('widget-tab-toggles');
-  if (wrap) {
-    wrap.innerHTML = Object.entries(_WIDGET_TAB_LABELS).map(([key, label]) => {
-      const checked = s.visible[key] !== false;
-      return `<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px;color:var(--text)">
-        <input type="checkbox" ${checked ? 'checked' : ''} onchange="widgetToggleTab('${key}', this.checked)" style="width:16px;height:16px;accent-color:#3b82f6;cursor:pointer"/>
-        <span>${label}</span>
-      </label>`;
-    }).join('');
-  }
+  if (!wrap) return;
+  wrap.innerHTML = s.order.map((key, i) => {
+    const label = _WIDGET_TAB_LABELS[key] || key;
+    const checked = s.visible[key] !== false;
+    const isFirst = i === 0;
+    const isLast = i === s.order.length - 1;
+    return `<div class="widget-tab-row">
+      <input type="checkbox" ${checked ? 'checked' : ''} onchange="widgetToggleTab('${key}', this.checked)"
+             style="width:16px;height:16px;accent-color:#3b82f6;cursor:pointer;flex-shrink:0"/>
+      <span class="widget-tab-label">${label}</span>
+      <button class="widget-reorder-btn" onclick="widgetMoveTab('${key}',-1)" ${isFirst ? 'disabled' : ''} title="Move up">▲</button>
+      <button class="widget-reorder-btn" onclick="widgetMoveTab('${key}',1)" ${isLast ? 'disabled' : ''} title="Move down">▼</button>
+    </div>`;
+  }).join('');
 }
 // Apply visibility on load + open default tab on first page-load
 function widgetInitOnLoad() {
@@ -6547,14 +6618,282 @@ function widgetInitOnLoad() {
   }
   const s = widgetGetSettings();
   const last = (() => { try { return localStorage.getItem('viltv_widget_last_tab') || ''; } catch(_) { return ''; } })();
-  // First visit (no 'last') → use default. Returning visit → restore last-active tab.
   const target = last || s.defaultTab || 'ai';
-  // Only auto-switch if the target panel is visible
   if (s.visible[target] !== false && target !== 'ai') {
     setTimeout(() => rbSwitchPanel(target), 100);
   }
+  // Init drag-to-scroll for all preset strips
+  _initPresetDragScroll();
 }
 window.addEventListener('DOMContentLoaded', widgetInitOnLoad);
+
+// ═══════════════════════════════════════════════════════════════════════
+// PRESET STRIP — drag-to-scroll (mouse drag on desktop)
+// ═══════════════════════════════════════════════════════════════════════
+function _initPresetDragScroll() {
+  document.querySelectorAll('.panel-preset-strip').forEach(function(el) {
+    if (el.dataset.dragBound) return;
+    el.dataset.dragBound = '1';
+    var isDown = false, startX = 0, scrollLeft = 0, moved = false;
+    el.addEventListener('mousedown', function(e) {
+      if (e.button !== 0) return;
+      isDown = true; moved = false;
+      startX = e.pageX - el.getBoundingClientRect().left;
+      scrollLeft = el.scrollLeft;
+      el.classList.add('drag-scroll');
+    });
+    window.addEventListener('mouseup', function() {
+      isDown = false;
+      el.classList.remove('drag-scroll');
+    });
+    el.addEventListener('mousemove', function(e) {
+      if (!isDown) return;
+      e.preventDefault();
+      var x = e.pageX - el.getBoundingClientRect().left;
+      var walk = (x - startX) * 1.8;
+      if (Math.abs(walk) > 4) moved = true;
+      el.scrollLeft = scrollLeft - walk;
+    });
+    // Prevent click firing on drag-end
+    el.addEventListener('click', function(e) {
+      if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; }
+    }, true);
+    // Wheel → horizontal scroll
+    el.addEventListener('wheel', function(e) {
+      if (e.deltaY !== 0) { e.preventDefault(); el.scrollLeft += e.deltaY * 1.5; }
+    }, { passive: false });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PANEL OMNISEARCH — shared modal for Radio / Movies / Podcast
+// ═══════════════════════════════════════════════════════════════════════
+var _panelOmniMode = '';   // 'radio' | 'movies' | 'podcast'
+var _panelOmniTimer = null;
+
+const _PANEL_OMNI_CONFIG = {
+  radio: {
+    icon: '📻', placeholder: 'Search 30,000+ radio stations…',
+    loadingText: 'Searching radio stations…',
+    presets: [
+      {label:'🇮🇳 Top India', key:'top-india'}, {label:'🎬 Bollywood', key:'bollywood'},
+      {label:'🪕 Hindi', key:'hindi'}, {label:'🌿 Malayalam', key:'malayalam'},
+      {label:'🇦🇪 UAE Malayalam', key:'uae-malayalam'}, {label:'🛢️ Gulf NRI', key:'gulf-nri'},
+      {label:'🎵 Tamil', key:'tamil'}, {label:'🎤 Telugu', key:'telugu'},
+      {label:'🎶 Kannada', key:'kannada'}, {label:'🟡 Punjabi', key:'punjabi'},
+      {label:'🇺🇸 Top US', key:'top-us'}, {label:'🇬🇧 Top UK', key:'top-uk'},
+      {label:'🇯🇵 Japan', key:'top-japan'}, {label:'📰 News', key:'news'},
+      {label:'🌿 Chill', key:'chill'}
+    ]
+  },
+  movies: {
+    icon: '🎬', placeholder: 'Search free public-domain movies…',
+    loadingText: 'Searching Internet Archive…',
+    presets: [
+      {label:'🎭 Classics', key:'classics'}, {label:'💥 Action', key:'action'},
+      {label:'😂 Comedy', key:'comedy'}, {label:'👻 Horror', key:'horror'},
+      {label:'🚀 Sci-Fi', key:'scifi'}, {label:'🎨 Animation', key:'animation'},
+      {label:'🎭 Drama', key:'drama'}, {label:'🤠 Western', key:'western'},
+      {label:'📽 Documentary', key:'documentary'}, {label:'🎬 Silent Era', key:'silent'},
+      {label:'🕵 Film Noir', key:'noir'}, {label:'🎬 Bollywood', key:'bollywood'},
+      {label:'🎬 Malayalam', key:'malayalam'}, {label:'🎬 Tamil', key:'tamil'},
+      {label:'🎬 Telugu', key:'telugu'}, {label:'🎬 Indian Cinema', key:'indiancinema'},
+      {label:'🔪 Thriller (US)', key:'thriller'}, {label:'🎬 Hindi', key:'hindi'},
+      {label:'🇲🇽 Mexico', key:'mexico'}, {label:'🇰🇷 Korea', key:'korea'}
+    ]
+  },
+  podcast: {
+    icon: '🎙', placeholder: 'Search podcasts on iTunes…',
+    loadingText: 'Searching iTunes podcasts…',
+    presets: [
+      {label:'⭐ Curated', key:null}, {label:'💼 Business', key:'Business'},
+      {label:'💻 Technology', key:'Technology'}, {label:'📰 News', key:'News'},
+      {label:'📚 Education', key:'Education'}, {label:'❤️ Health', key:'Health'},
+      {label:'😂 Comedy', key:'Comedy'}, {label:'⚽ Sports', key:'Sports'},
+      {label:'🌍 Society', key:'Society'}
+    ]
+  }
+};
+
+function panelOmniOpen(mode) {
+  _panelOmniMode = mode;
+  const cfg = _PANEL_OMNI_CONFIG[mode];
+  if (!cfg) return;
+  const modal = document.getElementById('panel-omni-modal');
+  const input = document.getElementById('panel-omni-input');
+  const icon  = document.getElementById('panel-omni-icon');
+  if (!modal || !input) return;
+  // Set header
+  if (icon) icon.textContent = cfg.icon;
+  input.placeholder = cfg.placeholder;
+  input.value = '';
+  // Render presets in body
+  _panelOmniRenderPresets(mode, cfg);
+  // Show modal
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => input.focus(), 80);
+}
+function panelOmniClose() {
+  const modal = document.getElementById('panel-omni-modal');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+  clearTimeout(_panelOmniTimer);
+}
+function _panelOmniRenderPresets(mode, cfg) {
+  const presetsEl  = document.getElementById('panel-omni-presets');
+  const resultsEl  = document.getElementById('panel-omni-results');
+  const loadingEl  = document.getElementById('panel-omni-loading');
+  const emptyEl    = document.getElementById('panel-omni-empty');
+  if (resultsEl)  resultsEl.innerHTML  = '';
+  if (loadingEl)  loadingEl.style.display = 'none';
+  if (emptyEl)    emptyEl.style.display   = 'none';
+  if (!presetsEl) return;
+  presetsEl.innerHTML = `<div class="panel-omni-sec">Quick Select</div>` +
+    cfg.presets.map(p => `
+      <div class="panel-omni-row" onclick="_panelOmniPresetClick('${mode}','${p.key || '__curated__'}','${p.label}')">
+        <div class="panel-omni-icon">${p.label.split(' ')[0]}</div>
+        <div class="panel-omni-meta">
+          <div class="panel-omni-name">${p.label}</div>
+          <div class="panel-omni-desc">${mode==='radio'?'Radio stations':'mode'==='podcast'?'Podcast category':'Movies category'}</div>
+        </div>
+        <div class="panel-omni-tag">${mode.toUpperCase()}</div>
+      </div>`).join('');
+}
+function _panelOmniPresetClick(mode, key, label) {
+  panelOmniClose();
+  if (mode === 'radio') {
+    radioLoadPreset(key);
+    const trg = document.getElementById('radio-omni-trigger');
+    if (trg) trg.textContent = label;
+  } else if (mode === 'movies') {
+    moviesLoadPreset(key);
+    const trg = document.getElementById('movies-omni-trigger');
+    if (trg) trg.textContent = label;
+  } else if (mode === 'podcast') {
+    if (key === '__curated__') podcastLoadCurated();
+    else podcastLoadCategory(key);
+    const trg = document.getElementById('podcast-omni-trigger');
+    if (trg) trg.textContent = label;
+  }
+}
+function panelOmniInput(value) {
+  clearTimeout(_panelOmniTimer);
+  const q = (value || '').trim();
+  const presetsEl = document.getElementById('panel-omni-presets');
+  const loadingEl = document.getElementById('panel-omni-loading');
+  const loadingTxt= document.getElementById('panel-omni-loading-text');
+  const emptyEl   = document.getElementById('panel-omni-empty');
+  const resultsEl = document.getElementById('panel-omni-results');
+  if (!q) {
+    _panelOmniRenderPresets(_panelOmniMode, _PANEL_OMNI_CONFIG[_panelOmniMode]);
+    return;
+  }
+  if (presetsEl)  presetsEl.innerHTML = '';
+  if (resultsEl)  resultsEl.innerHTML = '';
+  if (emptyEl)    emptyEl.style.display = 'none';
+  if (loadingEl && loadingTxt) {
+    loadingTxt.textContent = _PANEL_OMNI_CONFIG[_panelOmniMode]?.loadingText || 'Searching…';
+    loadingEl.style.display = 'block';
+  }
+  _panelOmniTimer = setTimeout(async () => {
+    try {
+      let html = '';
+      if (_panelOmniMode === 'radio') {
+        const r = await fetch('https://de1.api.radio-browser.info/json/stations/search?name=' + encodeURIComponent(q) + '&limit=20&hidebroken=true&order=clickcount&reverse=true', { signal: AbortSignal.timeout(6000) });
+        const data = await r.json();
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (!data.length) { if (emptyEl) emptyEl.style.display = 'block'; return; }
+        html = `<div class="panel-omni-sec">Radio Stations — "${q}"</div>` +
+          data.map(st => `<div class="panel-omni-row" onclick="_panelOmniRadioPlay(${JSON.stringify({url:st.url_resolved||st.url,name:st.name,country:st.country,codec:st.codec})})">
+            <div class="panel-omni-icon" style="background:linear-gradient(135deg,#1d4ed8,#1e3a5f)">📻</div>
+            <div class="panel-omni-meta">
+              <div class="panel-omni-name">${_esc(st.name)}</div>
+              <div class="panel-omni-desc">${_esc(st.country)} · ${_esc(st.language||'')} · ${_esc(st.codec||'')}</div>
+            </div>
+            <div class="panel-omni-tag">${st.clickcount>0 ? '▶ '+st.clickcount : ''}</div>
+          </div>`).join('');
+      } else if (_panelOmniMode === 'movies') {
+        const r = await fetch('https://archive.org/advancedsearch.php?q=' + encodeURIComponent(q + ' AND mediatype:movies') + '&fl=identifier,title,year,subject&rows=20&output=json&sort=downloads+desc', { signal: AbortSignal.timeout(7000) });
+        const data = await r.json();
+        if (loadingEl) loadingEl.style.display = 'none';
+        const docs = (data.response && data.response.docs) || [];
+        if (!docs.length) { if (emptyEl) emptyEl.style.display = 'block'; return; }
+        html = `<div class="panel-omni-sec">Movies — "${q}"</div>` +
+          docs.map(doc => `<div class="panel-omni-row" onclick="_panelOmniMoviePlay('${_esc(doc.identifier)}','${_esc(doc.title||doc.identifier)}')">
+            <div class="panel-omni-icon" style="background:linear-gradient(135deg,#7c2d12,#1e3a5f)">🎬</div>
+            <div class="panel-omni-meta">
+              <div class="panel-omni-name">${_esc(doc.title||doc.identifier)}</div>
+              <div class="panel-omni-desc">${doc.year||''} · archive.org</div>
+            </div>
+            <div class="panel-omni-tag">FILM</div>
+          </div>`).join('');
+      } else if (_panelOmniMode === 'podcast') {
+        const r = await fetch('https://itunes.apple.com/search?media=podcast&term=' + encodeURIComponent(q) + '&limit=20', { signal: AbortSignal.timeout(7000) });
+        const data = await r.json();
+        if (loadingEl) loadingEl.style.display = 'none';
+        const results = (data.results || []);
+        if (!results.length) { if (emptyEl) emptyEl.style.display = 'block'; return; }
+        html = `<div class="panel-omni-sec">Podcasts — "${q}"</div>` +
+          results.map(p => `<div class="panel-omni-row" onclick="_panelOmniPodcastPlay(${JSON.stringify({feedUrl:p.feedUrl,name:p.trackName,thumb:p.artworkUrl60})})">
+            <div class="panel-omni-icon" style="background:linear-gradient(135deg,#581c87,#1e3a5f)">${p.artworkUrl60?'<img src="'+p.artworkUrl60+'" style="width:34px;height:34px;border-radius:7px;object-fit:cover">':'🎙'}</div>
+            <div class="panel-omni-meta">
+              <div class="panel-omni-name">${_esc(p.trackName)}</div>
+              <div class="panel-omni-desc">${_esc(p.artistName||'')} · ${p.trackCount||0} episodes</div>
+            </div>
+            <div class="panel-omni-tag">PODCAST</div>
+          </div>`).join('');
+      }
+      if (resultsEl) resultsEl.innerHTML = html;
+    } catch(e) {
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (emptyEl) { emptyEl.style.display = 'block'; emptyEl.textContent = 'Search failed. Check connection.'; }
+    }
+  }, 420);
+}
+function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function _panelOmniRadioPlay(st) {
+  panelOmniClose();
+  // Play directly via radio audio
+  const audio = document.getElementById('radio-audio');
+  const nowEl = document.getElementById('radio-now-playing');
+  const dot   = document.getElementById('radio-dot');
+  const btn   = document.getElementById('radio-play-btn');
+  const trg   = document.getElementById('radio-omni-trigger');
+  if (!audio) return;
+  audio.src = st.url; audio.muted = false; audio.play().catch(()=>{});
+  if (nowEl) nowEl.textContent = st.name;
+  if (dot) { dot.className = 'radio-status-dot playing'; }
+  if (btn) { btn.textContent = '⏸'; btn.disabled = false; }
+  if (trg) trg.textContent = st.name;
+}
+function _panelOmniMoviePlay(id, title) {
+  panelOmniClose();
+  const wrap  = document.getElementById('movies-player-wrap');
+  const frame = document.getElementById('movies-player-iframe');
+  const nowEl = document.getElementById('movies-now');
+  const trg   = document.getElementById('movies-omni-trigger');
+  if (!frame) return;
+  frame.src = 'https://archive.org/embed/' + id + '?autoplay=1';
+  if (wrap) wrap.style.display = 'block';
+  if (nowEl) nowEl.textContent = title;
+  if (trg) trg.textContent = title;
+}
+function _panelOmniPodcastPlay(p) {
+  panelOmniClose();
+  if (!p.feedUrl) return;
+  // Trigger podcast load with this feed (reuse existing podcastPlayFeed if present)
+  const trg = document.getElementById('podcast-omni-trigger');
+  if (trg) trg.textContent = p.name;
+  podcastPlayFromFeed(p.feedUrl, p.name, p.thumb);
+}
+// Stub if not yet defined
+if (typeof podcastPlayFromFeed !== 'function') {
+  window.podcastPlayFromFeed = function(feedUrl, name) {
+    // Fall back to loading the feed in the podcast list
+    if (typeof podcastLoadFeed === 'function') podcastLoadFeed(feedUrl, name);
+  };
+}
 
 // ═══════════════════════════════════════════════════════════════════════
 // OMNISEARCH — unified channel + YouTube search
@@ -15315,6 +15654,31 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
         <span style="display:inline-block;animation:spin 1s linear infinite">&#x27F3;</span>&nbsp;Searching YouTube Music…
       </div>
       <div id="music-omni-empty" class="music-omni-status" style="display:none">No results found. Try a different query.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PANEL OMNISEARCH MODAL (Radio / Movies / Podcast — shared) ═══ -->
+<div id="panel-omni-modal" style="display:none;position:fixed;inset:0;z-index:200002;align-items:flex-start;justify-content:center;padding:60px 16px 16px;background:rgba(2,6,23,.93);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)" onclick="if(event.target===this)panelOmniClose()">
+  <div class="panel-omni-panel">
+    <div class="panel-omni-hdr">
+      <div style="position:relative;flex:1;display:flex;align-items:center">
+        <span id="panel-omni-icon" style="position:absolute;left:11px;font-size:16px;pointer-events:none;line-height:1">🔍</span>
+        <input id="panel-omni-input" class="panel-omni-hdr-input" type="text"
+          placeholder="Search…"
+          oninput="panelOmniInput(this.value)"
+          onkeydown="if(event.key==='Escape')panelOmniClose()"
+          autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"/>
+      </div>
+      <button class="panel-omni-close" onclick="panelOmniClose()" title="Close (Esc)">&#x2715;</button>
+    </div>
+    <div id="panel-omni-body" class="panel-omni-body">
+      <div id="panel-omni-presets"></div>
+      <div id="panel-omni-results"></div>
+      <div id="panel-omni-loading" class="panel-omni-status" style="display:none">
+        <span style="display:inline-block;animation:spin 1s linear infinite">&#x27F3;</span>&nbsp;<span id="panel-omni-loading-text">Searching…</span>
+      </div>
+      <div id="panel-omni-empty" class="panel-omni-status" style="display:none">No results found. Try a different query.</div>
     </div>
   </div>
 </div>
