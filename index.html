@@ -1773,6 +1773,67 @@ footer{
 .radio-vol-label{font-size:9px;color:#475569;flex-shrink:0}
 .radio-vol-slider{flex:1;height:3px;accent-color:#2563eb;cursor:pointer}
 .radio-no-data{text-align:center;padding:24px 12px;color:#334155;font-size:11px;line-height:1.6}
+
+/* ── PREMIUM PANEL SHARED COMPONENTS ── */
+/* Horizontal-scroll preset strip — replaces wrap grids in all panels */
+.panel-preset-strip{
+  display:flex;flex-wrap:nowrap;overflow-x:auto;gap:4px;
+  padding:6px 8px;background:#080e1a;border-bottom:1px solid #0d1a30;
+  flex-shrink:0;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;-ms-overflow-style:none;
+}
+.panel-preset-strip::-webkit-scrollbar{display:none}
+/* Unified control bar */
+.panel-ctrl-bar{
+  display:flex;align-items:center;gap:5px;padding:6px 8px;
+  background:#04091a;border-bottom:1px solid #131d35;
+  flex-shrink:0;flex-wrap:nowrap;overflow:hidden;
+}
+/* Uniform control button — inherits from ytc-btn */
+.panel-ctrl-btn{
+  width:28px;height:28px;border:1px solid #1a2f4e;border-radius:6px;
+  background:#0a1628;color:#93c5fd;font-size:13px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;padding:0;transition:all .15s;
+}
+.panel-ctrl-btn:hover{background:#1d4ed8;border-color:#2563eb;color:#fff}
+.panel-ctrl-btn:disabled{opacity:.35;cursor:not-allowed}
+.panel-ctrl-btn.fav{color:#fbbf24}
+.panel-ctrl-btn.fav.active{color:#f59e0b;background:#2d1e0a;border-color:#92400e}
+/* Play button variant — bigger, accent blue */
+.panel-play-btn{
+  width:30px;height:30px;border-radius:50%;background:#2563eb;
+  border:none;color:#fff;font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;padding:0;transition:background .15s;
+}
+.panel-play-btn:hover{background:#1d4ed8}
+.panel-play-btn:disabled{background:#1e3a5f;cursor:not-allowed}
+/* Now-playing label */
+.panel-now-label{
+  font-size:9.5px;color:#60a5fa;font-weight:600;flex:1;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  padding:0 2px;
+}
+/* Volume slider — same as ytc-vol */
+.panel-vol{
+  height:4px;flex:1;min-width:40px;max-width:80px;cursor:pointer;
+  appearance:none;-webkit-appearance:none;
+  background:linear-gradient(to right,#2563eb var(--vol,80%),#1e293b var(--vol,80%));
+  border-radius:2px;
+}
+.panel-vol::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:#60a5fa;cursor:pointer;box-shadow:0 0 0 2px #0a1628}
+/* Collapsible Radio-India featured iframe */
+.radio-india-toggle{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 10px;background:#080e1a;border-bottom:1px solid #131d35;
+  font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;
+  letter-spacing:1px;cursor:pointer;flex-shrink:0;user-select:none;
+}
+.radio-india-toggle:hover{background:#060e1c}
+.radio-india-body{flex-shrink:0;overflow:hidden;transition:max-height .3s ease}
+.radio-india-body.collapsed{max-height:0!important}
+
 /* ── OMNISEARCH BAR ── */
 .yt-omni-bar{padding:6px 8px;background:#080e1a;border-bottom:1px solid #0d1a30;display:flex;gap:5px;align-items:center;flex-shrink:0}
 .yt-omni-input-wrap{flex:1;min-width:0;position:relative;display:flex;align-items:center}
@@ -3147,7 +3208,7 @@ footer{
     </div>
 
     <!-- Preset categories -->
-    <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:4px;flex-wrap:wrap;max-height:120px;overflow-y:auto">
+    <div class="panel-preset-strip" id="iptv-preset-strip">
       <!-- Languages — Indian -->
       <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('favorites')">⭐ Favorites</button>
       <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('curated-india')">✨ India HD</button>
@@ -3196,29 +3257,18 @@ footer{
                style="position:absolute;top:0;left:0;width:100%;height:100%;background:#000"></video>
       </div>
       <!-- Now-playing + transport controls -->
-      <div style="padding:6px 10px;display:flex;align-items:center;gap:5px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px;flex-wrap:wrap">
-        <button onclick="iptvPrev()" title="Previous channel"
-                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏮</button>
-        <button onclick="iptvNext()" title="Next channel"
-                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏭</button>
-        <button onclick="iptvVolDown()" title="Volume −"
-                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔉</button>
-        <button onclick="iptvToggleMute()" id="iptv-mute-btn" title="Mute"
-                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔊</button>
-        <button onclick="iptvVolUp()" title="Volume +"
-                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔊+</button>
-        <input type="range" id="iptv-vol" min="0" max="100" value="80" oninput="iptvSetVolume(this.value)"
-               title="Volume"
-               style="flex:0 0 60px;accent-color:#3b82f6;height:14px;cursor:pointer"/>
-        <span id="iptv-now" style="flex:1;color:#60a5fa;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:80px">—</span>
-        <button onclick="iptvToggleFav()" id="iptv-fav-btn" title="Add to favorites"
-                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#fbbf24;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">☆</button>
-        <button onclick="iptvFullscreen()" title="Fullscreen"
-                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⛶</button>
-        <button onclick="iptvTogglePip()" title="Picture-in-Picture"
-                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⧉</button>
-        <button onclick="iptvStop()" title="Stop"
-                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏹</button>
+      <div class="panel-ctrl-bar">
+        <button class="panel-ctrl-btn" onclick="iptvPrev()" title="Previous channel">⏮</button>
+        <button class="panel-ctrl-btn" onclick="iptvNext()" title="Next channel">⏭</button>
+        <button class="panel-ctrl-btn" onclick="iptvVolDown()" title="Volume −">🔉</button>
+        <button class="panel-ctrl-btn" onclick="iptvToggleMute()" id="iptv-mute-btn" title="Mute">🔊</button>
+        <input class="panel-vol" type="range" id="iptv-vol" min="0" max="100" value="80"
+               oninput="iptvSetVolume(this.value)" title="Volume" style="--vol:80%"/>
+        <span class="panel-now-label" id="iptv-now">—</span>
+        <button class="panel-ctrl-btn fav" onclick="iptvToggleFav()" id="iptv-fav-btn" title="Add to favorites">☆</button>
+        <button class="panel-ctrl-btn" onclick="iptvFullscreen()" title="Fullscreen">⛶</button>
+        <button class="panel-ctrl-btn" onclick="iptvTogglePip()" title="Picture-in-Picture">⧉</button>
+        <button class="panel-ctrl-btn" onclick="iptvStop()" title="Stop">⏹</button>
       </div>
     </div>
 
@@ -3231,14 +3281,13 @@ footer{
   <!-- ── PANEL 4: Global Radio (powered by radio-browser.info) ── -->
   <div id="rb-panel-radio" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
 
-     <!-- Radio India — embedded featured stations -->
-     <div style="padding:8px 10px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
-       <div style="font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">🎙 Radio India</div>
-       <div style="display:flex;flex-direction:column;gap:6px">
-         <div>
-            <iframe src="https://radiosindia.com/radiomango.html" style="height:350px!important;width:100%;border:none;overflow:hidden" loading="lazy" title="Radio Mango"></iframe>
-         </div>
-       </div>
+     <!-- Radio India — collapsible embedded player -->
+     <div class="radio-india-toggle" id="radio-india-toggle" onclick="radioToggleIndiaPlayer()" title="Toggle Radio India player">
+       <span>🎙 Radio India — Featured</span>
+       <span id="radio-india-chevron" style="font-size:12px;transition:transform .3s;transform:rotate(180deg)">▾</span>
+     </div>
+     <div class="radio-india-body" id="radio-india-body" style="max-height:360px">
+       <iframe src="https://radiosindia.com/radiomango.html" style="height:350px;width:100%;border:none;overflow:hidden;display:block" loading="lazy" title="Radio Mango"></iframe>
      </div>
 
     <!-- Search box -->
@@ -3250,7 +3299,7 @@ footer{
     </div>
 
     <!-- Preset buttons (one-tap loaders) -->
-    <div id="radio-presets" style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:4px;flex-wrap:wrap">
+    <div id="radio-presets" class="panel-preset-strip">
       <button class="radio-preset-btn" onclick="radioLoadPreset('top-india')">🇮🇳 Top India</button>
       <button class="radio-preset-btn" onclick="radioLoadPreset('bollywood')">🎬 Bollywood</button>
       <button class="radio-preset-btn" onclick="radioLoadPreset('hindi')">🪕 Hindi</button>
@@ -3269,32 +3318,20 @@ footer{
     </div>
 
     <!-- Radio controls bar — above station list -->
-    <div class="radio-player-bar" style="padding:6px 10px;display:flex;align-items:center;gap:5px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px;flex-wrap:wrap">
-      <button onclick="radioPrev()" title="Previous station"
-              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏮</button>
-      <button onclick="radioNext()" title="Next station"
-              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏭</button>
-      <button onclick="radioVolDown()" title="Volume −"
-              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔉</button>
-      <button onclick="radioToggleMute()" id="radio-mute-btn" title="Mute"
-              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔊</button>
-      <button onclick="radioVolUp()" title="Volume +"
-              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔊+</button>
-      <input type="range" id="radio-vol" min="0" max="100" value="75" oninput="radioSetVolume(this.value)"
-             title="Volume"
-             style="flex:0 0 60px;accent-color:#3b82f6;height:14px;cursor:pointer"/>
-      <div class="radio-now-row" style="flex:1;display:flex;align-items:center;gap:6px;overflow:hidden">
-        <div class="radio-status-dot" id="radio-dot" style="width:8px;height:8px;border-radius:50%;background:#ef4444;flex-shrink:0;animation:pulse 1.5s infinite"></div>
-        <div class="radio-now-playing" id="radio-now-playing" style="color:#60a5fa;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:80px">Select a station</div>
+    <div class="panel-ctrl-bar">
+      <button class="panel-play-btn" id="radio-play-btn" onclick="radioTogglePlay()" title="Play / Pause" disabled>▶</button>
+      <button class="panel-ctrl-btn" onclick="radioPrev()" title="Previous station">⏮</button>
+      <button class="panel-ctrl-btn" onclick="radioNext()" title="Next station">⏭</button>
+      <button class="panel-ctrl-btn" onclick="radioToggleMute()" id="radio-mute-btn" title="Mute">🔊</button>
+      <input class="panel-vol" type="range" id="radio-vol" min="0" max="100" value="75"
+             oninput="radioSetVolume(this.value)" title="Volume" style="--vol:75%"/>
+      <div style="display:flex;align-items:center;gap:5px;flex:1;overflow:hidden;min-width:0">
+        <div class="radio-status-dot" id="radio-dot"></div>
+        <span class="panel-now-label" id="radio-now-playing">Select a station</span>
       </div>
-      <button onclick="radioToggleFav()" id="radio-fav-btn" title="Add to favorites"
-              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#fbbf24;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">☆</button>
-      <button onclick="radioTogglePip()" title="Picture-in-Picture (Audio)"
-              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⧉</button>
-      <button class="radio-play-btn" id="radio-play-btn" onclick="radioTogglePlay()" title="Play / Pause" disabled
-              style="background:#1d4ed8;border:none;color:#fff;padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer">▶</button>
-      <button onclick="radioStop()" title="Stop"
-              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏹</button>
+      <button class="panel-ctrl-btn fav" onclick="radioToggleFav()" id="radio-fav-btn" title="Add to favorites">☆</button>
+      <button class="panel-ctrl-btn" onclick="radioTogglePip()" title="Picture-in-Picture (Audio)">⧉</button>
+      <button class="panel-ctrl-btn" onclick="radioStop()" title="Stop">⏹</button>
       <audio id="radio-audio" preload="none" muted style="display:none"></audio>
     </div>
 
@@ -3307,7 +3344,7 @@ footer{
 
   <!-- ── PANEL 5: Music (YouTube IFrame audio player) ── -->
   <div id="rb-panel-music" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
-    <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:4px;flex-wrap:wrap;max-height:140px;overflow-y:auto">
+    <div class="panel-preset-strip" id="music-preset-strip">
       <button class="radio-preset-btn music-preset active" onclick="musicLoadPreset('today-top')">🔥 Today's Top</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('bollywood')">🎬 Bollywood</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('hindi')">🪕 Hindi</button>
@@ -3350,23 +3387,17 @@ footer{
     </div>
     <!-- YouTube Music embed slot (hidden — audio plays via YT IFrame API) -->
     <div id="music-player-wrap" style="display:none;width:100%;background:#000;flex-shrink:0"></div>
-    <!-- Music controls — always visible, identical to YT Live -->
-    <div id="music-controls" style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:#050a14;border-bottom:1px solid #0e1e36;flex-shrink:0;flex-wrap:nowrap;overflow:hidden">
-      <button onclick="musicTogglePlay()" id="musicPlay" title="Play"
-              style="width:28px;height:28px;border:1px solid #1a2f4e;border-radius:6px;background:#0a1628;color:#93c5fd;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0">▶</button>
-      <button onclick="musicTogglePlay()" id="musicPause" title="Pause"
-              style="width:28px;height:28px;border:1px solid #1a2f4e;border-radius:6px;background:#0a1628;color:#93c5fd;font-size:13px;cursor:pointer;display:none;align-items:center;justify-content:center;flex-shrink:0;padding:0">⏸</button>
-      <button onclick="musicPrev()" id="musicPrev" title="Previous"
-              style="width:28px;height:28px;border:1px solid #1a2f4e;border-radius:6px;background:#0a1628;color:#93c5fd;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0">⏮</button>
-      <button onclick="musicNext()" id="musicNext" title="Next"
-              style="width:28px;height:28px;border:1px solid #1a2f4e;border-radius:6px;background:#0a1628;color:#93c5fd;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0">⏭</button>
+    <!-- Music controls — always visible, premium ytc-btn style -->
+    <div id="music-controls" class="panel-ctrl-bar">
+      <button class="ytc-btn" onclick="musicTogglePlay()" id="musicPlay" title="Play" style="display:flex">▶</button>
+      <button class="ytc-btn" onclick="musicTogglePlay()" id="musicPause" title="Pause" style="display:none">⏸</button>
+      <button class="ytc-btn" onclick="musicPrev()" id="musicPrev" title="Previous">⏮</button>
+      <button class="ytc-btn" onclick="musicNext()" id="musicNext" title="Next">⏭</button>
       <input class="ytc-vol" id="music-vol" type="range" min="0" max="100" value="80"
              oninput="musicSetVolume(this.value)" title="Volume" style="--vol:80%">
-      <button onclick="musicToggleMute()" id="music-mute-btn" title="Mute"
-              style="width:28px;height:28px;border:1px solid #1a2f4e;border-radius:6px;background:#0a1628;color:#93c5fd;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0">🔊</button>
-      <span id="music-now" style="font-size:9px;color:#475569;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:2px">—</span>
-      <button onclick="musicStop()" id="musicStop" title="Stop"
-              style="width:28px;height:28px;border:1px solid #1a2f4e;border-radius:6px;background:#0a1628;color:#93c5fd;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0">⏹</button>
+      <button class="ytc-btn" onclick="musicToggleMute()" id="music-mute-btn" title="Mute">🔊</button>
+      <span class="panel-now-label" id="music-now" style="color:#475569">—</span>
+      <button class="ytc-btn" onclick="musicStop()" id="musicStop" title="Stop">⏹</button>
     </div>
     <div class="radio-station-list" id="music-list">
       <div class="radio-no-data">Loading curated playlists…</div>
@@ -3380,7 +3411,7 @@ footer{
              oninput="moviesOnSearch(this.value)"
              style="width:100%;padding:8px 12px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:13px;font-family:'DM Sans',sans-serif;outline:none"/>
     </div>
-    <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:4px;flex-wrap:wrap;max-height:140px;overflow-y:auto">
+    <div class="panel-preset-strip" id="movies-preset-strip">
       <button class="radio-preset-btn movies-preset active" onclick="moviesLoadPreset('classics')">🎭 Classics</button>
       <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('action')">💥 Action</button>
       <button class="radio-preset-btn movies-preset" onclick="moviesLoadPreset('comedy')">😂 Comedy</button>
@@ -3409,27 +3440,17 @@ footer{
         <iframe id="movies-player-iframe" allow="encrypted-media; fullscreen; picture-in-picture"
                 style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;background:#000"></iframe>
       </div>
-      <div style="padding:6px 10px;display:flex;align-items:center;gap:5px;background:#04091a;border-bottom:1px solid #131d35;font-size:11px;flex-wrap:wrap">
-        <button onclick="moviesPrev()" title="Previous film"
-                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏮</button>
-        <button onclick="moviesNext()" title="Next film"
-                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏭</button>
-        <button onclick="moviesVolDown()" title="Volume −"
-                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔉</button>
-        <button onclick="moviesToggleMute()" id="movies-mute-btn" title="Mute"
-                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔊</button>
-        <button onclick="moviesVolUp()" title="Volume +"
-                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔊+</button>
-        <input type="range" id="movies-vol" min="0" max="100" value="80" oninput="moviesSetVolume(this.value)"
-               title="Volume"
-               style="flex:0 0 60px;accent-color:#3b82f6;height:14px;cursor:pointer"/>
-        <span id="movies-now" style="flex:1;color:#60a5fa;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:80px">—</span>
-        <button onclick="moviesToggleFav()" id="movies-fav-btn" title="Add to favorites"
-                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#fbbf24;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">☆</button>
-        <button onclick="moviesTogglePip()" title="Picture-in-Picture"
-                style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⧉</button>
-        <button onclick="moviesOpenInArchive()" title="Open on archive.org" style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer">↗</button>
-        <button onclick="moviesStop()" title="Stop" style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏹</button>
+      <div class="panel-ctrl-bar">
+        <button class="panel-ctrl-btn" onclick="moviesPrev()" title="Previous film">⏮</button>
+        <button class="panel-ctrl-btn" onclick="moviesNext()" title="Next film">⏭</button>
+        <button class="panel-ctrl-btn" onclick="moviesToggleMute()" id="movies-mute-btn" title="Mute">🔊</button>
+        <input class="panel-vol" type="range" id="movies-vol" min="0" max="100" value="80"
+               oninput="moviesSetVolume(this.value)" title="Volume" style="--vol:80%"/>
+        <span class="panel-now-label" id="movies-now">—</span>
+        <button class="panel-ctrl-btn fav" onclick="moviesToggleFav()" id="movies-fav-btn" title="Add to favorites">☆</button>
+        <button class="panel-ctrl-btn" onclick="moviesTogglePip()" title="Picture-in-Picture">⧉</button>
+        <button class="panel-ctrl-btn" onclick="moviesOpenInArchive()" title="Open on archive.org">↗</button>
+        <button class="panel-ctrl-btn" onclick="moviesStop()" title="Stop">⏹</button>
       </div>
     </div>
     <div class="radio-station-list" id="movies-list">
@@ -3444,7 +3465,7 @@ footer{
              oninput="podcastOnSearch(this.value)"
              style="width:100%;padding:8px 12px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:13px;font-family:'DM Sans',sans-serif;outline:none"/>
     </div>
-    <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:4px;flex-wrap:wrap">
+    <div class="panel-preset-strip" id="podcast-preset-strip">
       <button class="radio-preset-btn podcast-preset active" onclick="podcastLoadCurated()">⭐ Curated</button>
       <button class="radio-preset-btn podcast-preset" onclick="podcastLoadCategory('Business')">💼 Business</button>
       <button class="radio-preset-btn podcast-preset" onclick="podcastLoadCategory('Technology')">💻 Technology</button>
@@ -3455,36 +3476,25 @@ footer{
       <button class="radio-preset-btn podcast-preset" onclick="podcastLoadCategory('Sports')">⚽ Sports</button>
       <button class="radio-preset-btn podcast-preset" onclick="podcastLoadCategory('Society')">🌍 Society</button>
     </div>
+    <!-- Controls bar — moved to TOP for consistency with Radio panel -->
+    <div class="panel-ctrl-bar">
+      <button class="panel-play-btn" id="podcast-play-btn" onclick="podcastTogglePlay()" title="Play / Pause" disabled>▶</button>
+      <button class="panel-ctrl-btn" onclick="podcastPrev()" title="Previous podcast">⏮</button>
+      <button class="panel-ctrl-btn" onclick="podcastNext()" title="Next podcast">⏭</button>
+      <button class="panel-ctrl-btn" onclick="podcastToggleMute()" id="podcast-mute-btn" title="Mute">🔊</button>
+      <input class="panel-vol" type="range" id="podcast-vol" min="0" max="100" value="75"
+             oninput="podcastSetVolume(this.value)" title="Volume" style="--vol:75%"/>
+      <div style="display:flex;align-items:center;gap:5px;flex:1;overflow:hidden;min-width:0">
+        <div class="radio-status-dot" id="podcast-dot"></div>
+        <span class="panel-now-label" id="podcast-now-playing">Select a podcast</span>
+      </div>
+      <button class="panel-ctrl-btn fav" onclick="podcastToggleFav()" id="podcast-fav-btn" title="Add to favorites">☆</button>
+      <button class="panel-ctrl-btn" onclick="podcastTogglePip()" title="Picture-in-Picture (Audio)">⧉</button>
+      <button class="panel-ctrl-btn" onclick="podcastStop()" title="Stop">⏹</button>
+      <audio id="podcast-audio" preload="none" muted style="display:none"></audio>
+    </div>
     <div class="radio-station-list" id="podcast-list">
       <div class="radio-no-data">Loading curated podcasts…</div>
-    </div>
-    <div style="padding:6px 10px;display:flex;align-items:center;gap:5px;background:#04091a;border-top:1px solid #131d35;font-size:11px;flex-wrap:wrap">
-      <button onclick="podcastPrev()" title="Previous podcast"
-              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏮</button>
-      <button onclick="podcastNext()" title="Next podcast"
-              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏭</button>
-      <button onclick="podcastVolDown()" title="Volume −"
-              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔉</button>
-      <button onclick="podcastToggleMute()" id="podcast-mute-btn" title="Mute"
-              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔊</button>
-      <button onclick="podcastVolUp()" title="Volume +"
-              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">🔊+</button>
-      <input type="range" id="podcast-vol" min="0" max="100" value="75" oninput="podcastSetVolume(this.value)"
-             title="Volume"
-             style="flex:0 0 60px;accent-color:#3b82f6;height:14px;cursor:pointer"/>
-      <div style="flex:1;display:flex;align-items:center;gap:6px;overflow:hidden">
-        <div class="radio-status-dot" id="podcast-dot" style="width:8px;height:8px;border-radius:50%;background:#9ca3af;flex-shrink:0"></div>
-        <div class="radio-now-playing" id="podcast-now-playing" style="color:#60a5fa;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:80px">Select a podcast</div>
-      </div>
-      <button onclick="podcastToggleFav()" id="podcast-fav-btn" title="Add to favorites"
-              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#fbbf24;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">☆</button>
-      <button onclick="podcastTogglePip()" title="Picture-in-Picture (Audio)"
-              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⧉</button>
-      <button class="radio-play-btn" id="podcast-play-btn" onclick="podcastTogglePlay()" title="Play / Pause" disabled
-              style="background:#1d4ed8;border:none;color:#fff;padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer">▶</button>
-      <button onclick="podcastStop()" title="Stop"
-              style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:5px 8px;border-radius:6px;font-size:11px;cursor:pointer">⏹</button>
-      <audio id="podcast-audio" preload="none" muted style="display:none"></audio>
     </div>
   </div><!-- /rb-panel-podcast -->
 
@@ -8686,6 +8696,13 @@ function radioTogglePip() {
   if (audio && audio.paused === false) {
     alert('Picture-in-Picture for audio: Minimize this window to listen in background');
   }
+}
+function radioToggleIndiaPlayer() {
+  const body = document.getElementById('radio-india-body');
+  const chevron = document.getElementById('radio-india-chevron');
+  if (!body) return;
+  const isCollapsed = body.classList.toggle('collapsed');
+  if (chevron) chevron.style.transform = isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)';
 }
 function radioPrev() {
   const items = document.querySelectorAll('.radio-station-item');
