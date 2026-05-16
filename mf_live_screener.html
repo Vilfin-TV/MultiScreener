@@ -292,7 +292,7 @@ body.kb-open footer{display:none}
       <div class="section-title">Fund Lookup</div>
       <div class="section-sub">Standalone page ready now. Connect your real API or worker later.</div>
       <div style="margin-top:18px">
-        <input id="fundName" class="text-input" type="text" data-ac="fund" placeholder="Example: Parag Parikh Flexi Cap Fund"/>
+        <input id="fundName" class="text-input" type="text" data-ac="fund" data-ac-plan="fundPlan" placeholder="Example: Parag Parikh Flexi Cap Fund"/>
         <div style="display:flex;gap:18px;align-items:center;margin-top:10px;flex-wrap:wrap;font-size:13px;color:var(--text2,#8ea8c8)">
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600"><input type="radio" name="fundPlan" value="direct" checked style="accent-color:var(--burn2,#3b82f6)"/> Direct</label>
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600"><input type="radio" name="fundPlan" value="idcw" style="accent-color:var(--burn2,#3b82f6)"/> IDCW</label>
@@ -500,6 +500,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function buildPrompt() {
   const fundName = fundNameInput.value.trim();
+  const fundPlan = document.querySelector('input[name="fundPlan"]:checked')?.value || 'direct';
+  const planLabel = { direct:'Direct', idcw:'IDCW', regular:'Regular' }[fundPlan] || fundPlan;
   return `MUTUAL FUND LIVE SCREENER - REAL DATA ANALYSIS REQUEST
 ==================================================
 
@@ -514,6 +516,9 @@ CRITICAL RULES:
 
 FUND TO ANALYZE:
 ${fundName}
+
+PLAN TYPE REQUESTED: ${planLabel}
+IMPORTANT: Only report data for the ${planLabel} plan. If no ${planLabel} plan exists, state this explicitly and show the closest available plan instead.
 
 REQUIRED OUTPUT FORMAT:
 
