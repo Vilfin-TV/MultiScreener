@@ -1839,8 +1839,14 @@ footer{
 .panel-preset-strip{
   display:flex;flex-wrap:nowrap;overflow-x:auto;gap:4px;
   padding:6px 8px;background:#080e1a;border-bottom:1px solid #0d1a30;
-  flex-shrink:0;-webkit-overflow-scrolling:touch;
+  flex-shrink:0;
+  /* native touch horizontal scroll on iOS/Android */
+  -webkit-overflow-scrolling:touch;
+  touch-action: pan-x;           /* allow horizontal swipe, block vertical */
+  overscroll-behavior-x: contain; /* snap back at edges, no scroll chain */
   scrollbar-width:none;-ms-overflow-style:none;
+  /* Ensure strip never wraps — items must scroll */
+  min-width:0;
 }
 .panel-preset-strip::-webkit-scrollbar{display:none}
 /* Unified control bar */
@@ -1990,6 +1996,8 @@ footer{
 .cal-cell.cal-today{background:rgba(96,165,250,.12);border-color:#2563eb}
 .cal-cell.cal-other-month{opacity:.35}
 .cal-cell.cal-selected{background:rgba(96,165,250,.2);border-color:#60a5fa}
+.cal-cell.cal-holiday-nat{background:rgba(248,113,113,.07)}
+.cal-cell.cal-holiday-reg{background:rgba(251,146,60,.07)}
 .cal-cell-date{font-size:12px;font-weight:600;color:#e2e8f0;line-height:1}
 .cal-cell.cal-today .cal-cell-date{color:#60a5fa;font-weight:800}
 .cal-holiday-label{font-size:8px;line-height:1.2;color:#f87171;font-weight:600;word-break:break-word;overflow:hidden;max-height:28px}
@@ -3844,6 +3852,8 @@ footer{
       <button class="radio-preset-btn cal-country-btn" onclick="calSetCountry('AE')">🇦🇪 UAE</button>
       <button class="radio-preset-btn cal-country-btn" onclick="calSetCountry('JP')">🇯🇵 Japan</button>
       <button class="radio-preset-btn cal-country-btn" onclick="calSetCountry('AU')">🇦🇺 Australia</button>
+      <button class="radio-preset-btn cal-country-btn" onclick="calSetCountry('SG')">🇸🇬 Singapore</button>
+      <button class="radio-preset-btn cal-country-btn" onclick="calSetCountry('DE')">🇩🇪 Germany</button>
     </div>
     <div class="panel-preset-strip" id="cal-region-strip" style="flex-shrink:0"></div>
     <div style="flex:1;overflow-y:auto;min-height:0;padding:8px">
@@ -16120,106 +16130,351 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
 })();
 
 // ══════════════════════════════════════════════════════════════════════
-// CALENDAR WIDGET
+// CALENDAR WIDGET  — v2: accurate 2026 holidays + proper scroll
 // ══════════════════════════════════════════════════════════════════════
 (function() {
   const LS_KEY = 'viltv_calendar_events';
   let _calYear, _calMonth, _calCountry = 'IN', _calRegion = null;
   let _calSelectedDate = null, _calEventColor = '#60a5fa';
 
+  /* ── Holiday data ──────────────────────────────────────────────────
+     Keys are YYYY-MM-DD for year-specific dates (lunar/Islamic/Easter)
+     and *-MM-DD for fixed annual dates.  _calGetHoliday() checks the
+     exact date first, then falls back to the fixed MM-DD form.
+  ── */
   const _CAL_HOLIDAYS = {
     IN: {
       national: {
-        '01-26':'Republic Day','08-15':'Independence Day','10-02':'Gandhi Jayanti',
-        '01-01':'New Year','05-01':'Labour Day','11-14':'Children\'s Day',
+        // Fixed annual
+        '*-01-01':'New Year\'s Day',
+        '*-01-14':'Makar Sankranti / Lohri',
+        '*-01-26':'Republic Day',
+        '*-04-14':'Dr. Ambedkar Jayanti',
+        '*-05-01':'Labour Day',
+        '*-08-15':'Independence Day',
+        '*-10-02':'Gandhi Jayanti',
+        '*-11-14':'Children\'s Day',
+        '*-12-25':'Christmas',
+        // 2026 lunar/Islamic dates (approximate)
+        '2026-02-26':'Maha Shivratri',
+        '2026-03-13':'Holi',
+        '2026-03-29':'Gudi Padwa / Ugadi',
+        '2026-03-31':'Eid ul-Fitr',
+        '2026-04-03':'Good Friday',
+        '2026-04-06':'Ram Navami',
+        '2026-04-10':'Mahavir Jayanti',
+        '2026-05-23':'Buddha Purnima',
+        '2026-06-08':'Eid ul-Adha / Bakrid',
+        '2026-07-27':'Muharram',
+        '2026-08-22':'Ganesh Chaturthi',
+        '2026-09-04':'Onam (Thiruonam)',
+        '2026-09-16':'Milad un-Nabi',
+        '2026-10-04':'Dussehra / Vijaya Dashami',
+        '2026-10-20':'Diwali / Lakshmi Puja',
+        '2026-10-22':'Govardhan Puja',
+        '2026-10-23':'Bhai Dooj',
+        '2026-11-05':'Guru Nanak Jayanti',
+        // 2025 fallback
+        '2025-03-14':'Holi',
+        '2025-03-30':'Ram Navami',
+        '2025-03-31':'Eid ul-Fitr',
+        '2025-04-02':'Good Friday',
+        '2025-04-18':'Mahavir Jayanti',
+        '2025-05-12':'Buddha Purnima',
+        '2025-06-07':'Eid ul-Adha',
+        '2025-07-06':'Muharram',
+        '2025-08-16':'Janmashtami',
+        '2025-08-27':'Ganesh Chaturthi',
+        '2025-09-05':'Milad un-Nabi',
+        '2025-10-02':'Dussehra',
+        '2025-10-20':'Diwali',
+        '2025-11-05':'Guru Nanak Jayanti',
       },
       states: {
-        MH: {'04-14':'Dr Ambedkar Jayanti','05-01':'Maharashtra Day'},
-        DL: {'10-31':'Sardar Patel Jayanti'},
-        KA: {'11-01':'Karnataka Rajyotsava'},
-        TN: {'01-14':'Pongal','04-14':'Tamil New Year'},
-        WB: {'10-19':'Durga Puja'},
-        GJ: {'01-14':'Uttarayan','05-01':'Gujarat Day'},
-        KL: {'08-30':'Onam'},
-        AP: {'11-01':'AP Formation Day'},
-        UP: {'11-09':'UP Foundation Day'},
-        RJ: {'03-30':'Rajasthan Day'},
+        MH: {
+          '*-05-01':'Maharashtra Day',
+          '*-04-14':'Dr. Ambedkar Jayanti',
+          '2026-06-26':'Ashadhi Ekadashi',
+          '2025-07-02':'Ashadhi Ekadashi',
+        },
+        DL: {
+          '*-01-26':'Delhi Republic Day Parade',
+          '*-10-31':'Sardar Patel Jayanti',
+        },
+        KA: {
+          '*-11-01':'Karnataka Rajyotsava',
+          '*-04-14':'Ugadi / Ambedkar Jayanti',
+        },
+        TN: {
+          '*-01-14':'Pongal / Tamil New Year',
+          '*-04-14':'Tamil New Year (Vishu)',
+          '*-06-05':'Teacher\'s Day (Tamil Nadu)',
+        },
+        WB: {
+          '*-05-09':'Rabindra Jayanti',
+          '2026-10-04':'Maha Navami / Durga Puja',
+          '2025-10-02':'Maha Navami / Durga Puja',
+        },
+        GJ: {
+          '*-01-14':'Uttarayan',
+          '*-05-01':'Gujarat Day',
+        },
+        KL: {
+          '2026-09-04':'Onam (Thiruonam)',
+          '2025-09-05':'Onam (Thiruonam)',
+          '*-11-01':'Kerala Piravi',
+        },
+        AP: { '*-11-01':'AP Formation Day' },
+        UP: { '*-11-09':'UP Foundation Day' },
+        RJ: { '*-03-30':'Rajasthan Day' },
+        PB: {
+          '*-03-13':'Holla Mohalla',
+          '2026-11-05':'Guru Nanak Jayanti',
+          '2025-11-05':'Guru Nanak Jayanti',
+        },
+        HR: { '*-11-01':'Haryana Day' },
+        BR: { '*-03-22':'Bihar Day' },
+        OD: { '*-04-01':'Odisha Day' },
+        AS: { '*-04-15':'Bohag Bihu' },
       }
     },
     US: {
       national: {
-        '01-01':'New Year\'s Day','01-15':'MLK Day','02-19':'Presidents Day',
-        '05-27':'Memorial Day','06-19':'Juneteenth','07-04':'Independence Day',
-        '09-02':'Labor Day','10-14':'Columbus Day','11-11':'Veterans Day',
-        '11-28':'Thanksgiving','12-25':'Christmas',
+        '*-01-01':'New Year\'s Day',
+        '*-06-19':'Juneteenth',
+        '*-07-04':'Independence Day',
+        '*-11-11':'Veterans Day',
+        '*-12-25':'Christmas Day',
+        // 2026 moveable holidays
+        '2026-01-19':'Martin Luther King Jr. Day',
+        '2026-02-16':'Presidents\' Day',
+        '2026-04-03':'Good Friday',
+        '2026-05-25':'Memorial Day',
+        '2026-09-07':'Labor Day',
+        '2026-10-12':'Columbus Day',
+        '2026-11-26':'Thanksgiving Day',
+        // 2025 moveable
+        '2025-01-20':'Martin Luther King Jr. Day',
+        '2025-02-17':'Presidents\' Day',
+        '2025-04-18':'Good Friday',
+        '2025-05-26':'Memorial Day',
+        '2025-09-01':'Labor Day',
+        '2025-10-13':'Columbus Day',
+        '2025-11-27':'Thanksgiving Day',
       },
       states: {
-        CA: {'03-31':'Cesar Chavez Day','11-29':'Day after Thanksgiving'},
-        TX: {'03-02':'Texas Independence Day','04-21':'San Jacinto Day'},
-        NY: {'02-12':'Lincoln Birthday'},
-        FL: {'04-26':'Confederate Memorial'},
-        WA: {'11-29':'Family Day'},
-        IL: {'03-04':'Casimir Pulaski Day'},
+        CA: { '*-03-31':'Cesar Chavez Day' },
+        TX: { '*-03-02':'Texas Independence Day', '*-04-21':'San Jacinto Day', '*-06-19':'Emancipation Day' },
+        NY: { '*-02-12':'Lincoln\'s Birthday', '*-05-06':'Election Day (NY)' },
+        FL: { '*-04-26':'Confederate Memorial Day' },
+        WA: { '*-11-11':'Veterans Day (WA)' },
+        IL: { '2026-03-02':'Casimir Pulaski Day', '2025-03-03':'Casimir Pulaski Day' },
+        MA: { '*-04-21':'Patriots\' Day (approx)' },
+        HI: { '*-08-21':'Statehood Day', '*-03-26':'Prince Kuhio Day' },
+        AK: { '*-10-18':'Alaska Day', '*-03-30':'Seward\'s Day (approx)' },
       }
     },
     GB: {
       national: {
-        '01-01':'New Year\'s Day','03-29':'Good Friday','04-01':'Easter Monday',
-        '05-06':'Early May Bank Holiday','05-27':'Spring Bank Holiday',
-        '08-26':'Summer Bank Holiday','12-25':'Christmas Day','12-26':'Boxing Day',
+        '*-01-01':'New Year\'s Day',
+        '*-12-25':'Christmas Day',
+        '*-12-26':'Boxing Day',
+        // 2026 dates
+        '2026-04-03':'Good Friday',
+        '2026-04-06':'Easter Monday',
+        '2026-05-04':'Early May Bank Holiday',
+        '2026-05-25':'Spring Bank Holiday',
+        '2026-08-31':'Summer Bank Holiday',
+        // 2025 dates
+        '2025-04-18':'Good Friday',
+        '2025-04-21':'Easter Monday',
+        '2025-05-05':'Early May Bank Holiday',
+        '2025-05-26':'Spring Bank Holiday',
+        '2025-08-25':'Summer Bank Holiday',
       },
-      states: {}
+      states: {
+        SCO: {
+          '*-01-02':'2nd January (Scotland)',
+          '2026-04-03':'Good Friday (Scotland)',
+          '2026-11-30':'St Andrew\'s Day',
+          '2025-11-30':'St Andrew\'s Day',
+        },
+        WAL: { '*-03-01':'St David\'s Day' },
+        NIR: { '*-03-17':'St Patrick\'s Day', '*-07-12':'Orangemen\'s Day' },
+      }
     },
     AE: {
       national: {
-        '01-01':'New Year\'s Day','04-09':'Eid Al Fitr','06-16':'Eid Al Adha',
-        '07-07':'Arafat Day','07-08':'Islamic New Year','09-15':'Prophet Birthday',
-        '11-19':'UAE National Day','12-02':'UAE National Day (2nd)',
-        '12-03':'Commemoration Day',
+        '*-01-01':'New Year\'s Day',
+        '*-12-02':'UAE National Day',
+        '*-12-03':'Commemoration Day',
+        // 2026 Islamic dates (approximate)
+        '2026-03-30':'Arafat Day (Eid Al Adha eve)',
+        '2026-03-31':'Eid Al Fitr Day 1',
+        '2026-04-01':'Eid Al Fitr Day 2',
+        '2026-04-02':'Eid Al Fitr Day 3',
+        '2026-06-07':'Arafat Day',
+        '2026-06-08':'Eid Al Adha Day 1',
+        '2026-06-09':'Eid Al Adha Day 2',
+        '2026-06-10':'Eid Al Adha Day 3',
+        '2026-06-26':'Islamic New Year (Muharram 1)',
+        '2026-09-15':'Prophet\'s Birthday (Mawlid)',
+        // 2025 Islamic dates
+        '2025-03-30':'Eid Al Fitr Day 1',
+        '2025-06-06':'Eid Al Adha Day 1',
+        '2025-06-27':'Islamic New Year',
+        '2025-09-05':'Prophet\'s Birthday',
       },
       states: {}
     },
     JP: {
       national: {
-        '01-01':'New Year','01-08':'Coming of Age','02-11':'Foundation Day',
-        '02-23':'Emperor Birthday','03-20':'Vernal Equinox','04-29':'Showa Day',
-        '05-03':'Constitution Day','05-04':'Greenery Day','05-05':'Children\'s Day',
-        '07-15':'Marine Day','08-11':'Mountain Day','09-16':'Respect for Aged',
-        '09-23':'Autumnal Equinox','10-14':'Sports Day','11-03':'Culture Day',
-        '11-23':'Labour Thanksgiving','12-31':'New Year\'s Eve',
+        '*-01-01':'New Year\'s Day (Ganjitsu)',
+        '*-02-11':'National Foundation Day',
+        '*-02-23':'Emperor\'s Birthday',
+        '*-04-29':'Showa Day',
+        '*-05-03':'Constitution Memorial Day',
+        '*-05-04':'Greenery Day',
+        '*-05-05':'Children\'s Day',
+        '*-08-11':'Mountain Day',
+        '*-11-03':'Culture Day',
+        '*-11-23':'Labour Thanksgiving Day',
+        // Moveable (2026)
+        '2026-01-12':'Coming of Age Day',
+        '2026-03-20':'Vernal Equinox',
+        '2026-07-20':'Marine Day',
+        '2026-09-21':'Respect for the Aged Day',
+        '2026-09-23':'Autumnal Equinox',
+        '2026-10-12':'Sports Day',
+        // 2025
+        '2025-01-13':'Coming of Age Day',
+        '2025-03-20':'Vernal Equinox',
+        '2025-07-21':'Marine Day',
+        '2025-09-15':'Respect for the Aged Day',
+        '2025-09-23':'Autumnal Equinox',
+        '2025-10-13':'Sports Day',
       },
       states: {}
     },
     AU: {
       national: {
-        '01-01':'New Year\'s Day','01-27':'Australia Day','03-29':'Good Friday',
-        '04-01':'Easter Monday','04-25':'ANZAC Day','12-25':'Christmas',
-        '12-26':'Boxing Day',
+        '*-01-01':'New Year\'s Day',
+        '*-01-26':'Australia Day',
+        '*-04-25':'ANZAC Day',
+        '*-12-25':'Christmas Day',
+        '*-12-26':'Boxing Day',
+        // 2026 Easter
+        '2026-04-03':'Good Friday',
+        '2026-04-04':'Easter Saturday',
+        '2026-04-06':'Easter Monday',
+        '2025-04-18':'Good Friday',
+        '2025-04-19':'Easter Saturday',
+        '2025-04-21':'Easter Monday',
       },
       states: {
-        NSW: {'06-10':'Queen\'s Birthday'},
-        VIC: {'11-05':'Melbourne Cup'},
-        QLD: {'05-06':'Labour Day'},
-        WA:  {'03-04':'Labour Day'},
+        NSW: {
+          '2026-06-08':'Queen\'s Birthday (NSW)',
+          '2025-06-09':'Queen\'s Birthday (NSW)',
+          '*-08-04':'Bank Holiday (NSW)',
+        },
+        VIC: {
+          '2026-11-03':'Melbourne Cup Day',
+          '2025-11-04':'Melbourne Cup Day',
+          '2026-06-08':'Queen\'s Birthday (VIC)',
+        },
+        QLD: {
+          '2026-05-04':'Labour Day (QLD)',
+          '2025-05-05':'Labour Day (QLD)',
+          '2026-08-12':'Royal Queensland Show (Brisbane)',
+        },
+        WA: {
+          '2026-03-02':'Labour Day (WA)',
+          '2025-03-03':'Labour Day (WA)',
+          '2026-09-28':'Queen\'s Birthday (WA)',
+        },
+        SA: {
+          '2026-06-08':'Queen\'s Birthday (SA)',
+          '2026-10-05':'Labour Day (SA)',
+        },
+        TAS: {
+          '2026-02-09':'Royal Hobart Regatta',
+          '*-03-10':'Eight Hours Day (TAS)',
+        },
       }
+    },
+    SG: {
+      national: {
+        '*-01-01':'New Year\'s Day',
+        '*-05-01':'Labour Day',
+        '*-08-09':'National Day',
+        '*-12-25':'Christmas Day',
+        '2026-03-31':'Eid ul-Fitr (Hari Raya Puasa)',
+        '2026-04-03':'Good Friday',
+        '2026-05-23':'Vesak Day',
+        '2026-06-08':'Hari Raya Haji',
+        '2026-10-20':'Deepavali',
+        '2025-03-31':'Eid ul-Fitr',
+        '2025-04-18':'Good Friday',
+        '2025-05-12':'Vesak Day',
+        '2025-06-07':'Hari Raya Haji',
+        '2025-10-20':'Deepavali',
+        // Chinese New Year (varies)
+        '2026-02-17':'Chinese New Year Day 1',
+        '2026-02-18':'Chinese New Year Day 2',
+        '2025-01-29':'Chinese New Year Day 1',
+        '2025-01-30':'Chinese New Year Day 2',
+      },
+      states: {}
+    },
+    DE: {
+      national: {
+        '*-01-01':'New Year\'s Day',
+        '*-05-01':'Labour Day',
+        '*-10-03':'German Unity Day',
+        '*-12-25':'Christmas Day',
+        '*-12-26':'2nd Day of Christmas',
+        '2026-04-03':'Good Friday',
+        '2026-04-06':'Easter Monday',
+        '2026-05-14':'Ascension Day',
+        '2026-05-25':'Whit Monday',
+        '2025-04-18':'Good Friday',
+        '2025-04-21':'Easter Monday',
+        '2025-05-29':'Ascension Day',
+        '2025-06-09':'Whit Monday',
+      },
+      states: {}
     },
   };
 
   const _CAL_REGIONS = {
     IN: [
-      {code:'MH',label:'Maharashtra'},{code:'DL',label:'Delhi'},{code:'KA',label:'Karnataka'},
-      {code:'TN',label:'Tamil Nadu'},{code:'WB',label:'West Bengal'},{code:'GJ',label:'Gujarat'},
-      {code:'KL',label:'Kerala'},{code:'AP',label:'Andhra Pradesh'},{code:'UP',label:'Uttar Pradesh'},
-      {code:'RJ',label:'Rajasthan'},
+      {code:'MH',label:'🏙 Maharashtra'},{code:'DL',label:'🗺 Delhi'},
+      {code:'KA',label:'🌿 Karnataka'},{code:'TN',label:'🎵 Tamil Nadu'},
+      {code:'WB',label:'🐅 West Bengal'},{code:'GJ',label:'🦁 Gujarat'},
+      {code:'KL',label:'🌴 Kerala'},{code:'AP',label:'🌾 Andhra Pradesh'},
+      {code:'UP',label:'🏯 Uttar Pradesh'},{code:'RJ',label:'🏜 Rajasthan'},
+      {code:'PB',label:'🌾 Punjab'},{code:'HR',label:'🌻 Haryana'},
+      {code:'BR',label:'🏔 Bihar'},{code:'OD',label:'🌊 Odisha'},
+      {code:'AS',label:'🍃 Assam'},
     ],
     US: [
-      {code:'CA',label:'California'},{code:'TX',label:'Texas'},{code:'NY',label:'New York'},
-      {code:'FL',label:'Florida'},{code:'WA',label:'Washington'},{code:'IL',label:'Illinois'},
+      {code:'CA',label:'🌴 California'},{code:'TX',label:'🤠 Texas'},
+      {code:'NY',label:'🗽 New York'},{code:'FL',label:'☀️ Florida'},
+      {code:'WA',label:'🌲 Washington'},{code:'IL',label:'🏙 Illinois'},
+      {code:'MA',label:'🦞 Massachusetts'},{code:'HI',label:'🌺 Hawaii'},
+      {code:'AK',label:'🐻 Alaska'},
     ],
-    GB: [], AE: [], JP: [], AU: [
-      {code:'NSW',label:'New South Wales'},{code:'VIC',label:'Victoria'},
-      {code:'QLD',label:'Queensland'},{code:'WA',label:'Western Australia'},
+    GB: [
+      {code:'SCO',label:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland'},{code:'WAL',label:'🏴󠁧󠁢󠁷󠁬󠁳󠁿 Wales'},
+      {code:'NIR',label:'🇬🇧 N. Ireland'},
     ],
+    AE: [], JP: [],
+    AU: [
+      {code:'NSW',label:'🦘 New South Wales'},{code:'VIC',label:'🏏 Victoria'},
+      {code:'QLD',label:'☀️ Queensland'},{code:'WA',label:'🌊 W. Australia'},
+      {code:'SA',label:'🍷 S. Australia'},{code:'TAS',label:'🌿 Tasmania'},
+    ],
+    SG: [], DE: [],
   };
 
   function _calLoadEvents() {
@@ -16228,16 +16483,32 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
   function _calSaveEvents(arr) {
     try { localStorage.setItem(LS_KEY, JSON.stringify(arr)); } catch(_) {}
   }
+
+  /* Returns {label, type:'national'|'regional'} for a date, checking both
+     exact YYYY-MM-DD and wildcard *-MM-DD keys. Shows both national + regional
+     when they coincide on the same day. */
   function _calGetHoliday(dateStr) {
-    const md = dateStr.slice(5);
     const h = _CAL_HOLIDAYS[_calCountry] || {};
-    const n = h.national && h.national[md];
-    if (n) return {label:n, type:'national'};
-    if (_calRegion && h.states && h.states[_calRegion] && h.states[_calRegion][md]) {
-      return {label: h.states[_calRegion][md], type:'regional'};
+    const md = '*-' + dateStr.slice(5); // '*-MM-DD'
+
+    // National: check exact date first, then wildcard
+    const natExact = h.national && h.national[dateStr];
+    const natFixed = h.national && h.national[md];
+    const national = natExact || natFixed || null;
+
+    // Regional: same
+    let regional = null;
+    if (_calRegion && h.states && h.states[_calRegion]) {
+      const s = h.states[_calRegion];
+      regional = s[dateStr] || s[md] || null;
     }
+
+    if (national && regional) return {label: national + ' · ' + regional, type:'national'};
+    if (national) return {label: national, type:'national'};
+    if (regional) return {label: regional, type:'regional'};
     return null;
   }
+
   function _calDateStr(y, m, d) {
     return y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
   }
@@ -16253,7 +16524,9 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
   window.calSetCountry = function(code) {
     _calCountry = code;
     _calRegion = null;
-    document.querySelectorAll('.cal-country-btn').forEach(b => b.classList.toggle('active', b.getAttribute('onclick').includes("'"+code+"'")));
+    document.querySelectorAll('.cal-country-btn').forEach(b =>
+      b.classList.toggle('active', b.getAttribute('onclick').includes("'"+code+"'"))
+    );
     calRenderRegions();
     calRender();
   };
@@ -16264,8 +16537,13 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
     const regions = _CAL_REGIONS[_calCountry] || [];
     if (!regions.length) { strip.style.display = 'none'; return; }
     strip.style.display = '';
-    strip.innerHTML = '<button class="radio-preset-btn cal-region-btn active" onclick="calSetRegion(null)">All</button>' +
-      regions.map(r => `<button class="radio-preset-btn cal-region-btn" onclick="calSetRegion('${r.code}')">${r.label}</button>`).join('');
+    strip.innerHTML =
+      '<button class="radio-preset-btn cal-region-btn active" onclick="calSetRegion(null)">All</button>' +
+      regions.map(r =>
+        `<button class="radio-preset-btn cal-region-btn" onclick="calSetRegion('${r.code}')">${r.label}</button>`
+      ).join('');
+    // Re-init drag scroll for the now-populated strip
+    if (typeof _initPresetDragScroll === 'function') _initPresetDragScroll();
   };
 
   window.calSetRegion = function(code) {
@@ -16279,50 +16557,55 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
 
   window.calNavPrev = function() { _calMonth--; if (_calMonth<0){_calMonth=11;_calYear--;} calRender(); };
   window.calNavNext = function() { _calMonth++; if (_calMonth>11){_calMonth=0;_calYear++;} calRender(); };
-  window.calGoToday = function() { const n=new Date(); _calYear=n.getFullYear(); _calMonth=n.getMonth(); calRender(); };
+  window.calGoToday  = function() { const n=new Date(); _calYear=n.getFullYear(); _calMonth=n.getMonth(); calRender(); };
 
   window.calRender = function() {
     const lbl = document.getElementById('cal-month-label');
-    if (lbl) lbl.textContent = new Date(_calYear, _calMonth, 1).toLocaleString('default',{month:'long',year:'numeric'});
+    if (lbl) lbl.textContent = new Date(_calYear, _calMonth, 1)
+      .toLocaleString('default',{month:'long', year:'numeric'});
     const grid = document.getElementById('cal-grid');
     if (!grid) return;
-    const events = _calLoadEvents();
-    const firstDay = new Date(_calYear, _calMonth, 1).getDay();
-    const daysInMonth = new Date(_calYear, _calMonth+1, 0).getDate();
-    const today = new Date();
+    const events    = _calLoadEvents();
+    const firstDay  = new Date(_calYear, _calMonth, 1).getDay();
+    const daysInMon = new Date(_calYear, _calMonth+1, 0).getDate();
+    const today     = new Date();
+    const prevDays  = new Date(_calYear, _calMonth, 0).getDate();
     let html = '';
-    // leading blanks
-    const prevDays = new Date(_calYear, _calMonth, 0).getDate();
-    for (let i = firstDay-1; i >= 0; i--) {
+    // leading blanks (prev month tail)
+    for (let i = firstDay-1; i >= 0; i--)
       html += `<div class="cal-cell cal-other-month"><span class="cal-cell-date">${prevDays-i}</span></div>`;
-    }
-    for (let d = 1; d <= daysInMonth; d++) {
+    // current month days
+    for (let d = 1; d <= daysInMon; d++) {
       const ds = _calDateStr(_calYear, _calMonth, d);
       const isToday = today.getFullYear()===_calYear && today.getMonth()===_calMonth && today.getDate()===d;
-      const isSel = _calSelectedDate === ds;
+      const isSel   = _calSelectedDate === ds;
       const holiday = _calGetHoliday(ds);
-      const dayEvents = events.filter(e => e.date === ds);
+      const dayEvts = events.filter(e => e.date === ds);
       let cls = 'cal-cell';
       if (isToday) cls += ' cal-today';
-      if (isSel) cls += ' cal-selected';
+      if (isSel)   cls += ' cal-selected';
+      if (holiday && holiday.type==='national') cls += ' cal-holiday-nat';
+      if (holiday && holiday.type==='regional') cls += ' cal-holiday-reg';
       let inner = `<span class="cal-cell-date">${d}</span>`;
       if (holiday) inner += `<span class="cal-holiday-label${holiday.type==='regional'?' regional':''}">${holiday.label}</span>`;
-      if (dayEvents.length) {
-        inner += '<div class="cal-dots-row">' + dayEvents.map(e=>`<span class="cal-event-dot" style="background:${e.color||'#60a5fa'}" title="${e.title}"></span>`).join('') + '</div>';
-      }
+      if (dayEvts.length)
+        inner += '<div class="cal-dots-row">' +
+          dayEvts.map(e=>`<span class="cal-event-dot" style="background:${e.color||'#60a5fa'}" title="${e.title}"></span>`).join('') +
+          '</div>';
       html += `<div class="${cls}" onclick="calSelectDate('${ds}')">${inner}</div>`;
     }
     // trailing blanks
-    const total = firstDay + daysInMonth;
+    const total = firstDay + daysInMon;
     const trail = total % 7 === 0 ? 0 : 7 - (total % 7);
-    for (let i = 1; i <= trail; i++) html += `<div class="cal-cell cal-other-month"><span class="cal-cell-date">${i}</span></div>`;
+    for (let i = 1; i <= trail; i++)
+      html += `<div class="cal-cell cal-other-month"><span class="cal-cell-date">${i}</span></div>`;
     grid.innerHTML = html;
   };
 
   window.calSelectDate = function(ds) {
     _calSelectedDate = ds;
     calRender();
-    const form = document.getElementById('cal-event-form');
+    const form  = document.getElementById('cal-event-form');
     const title = document.getElementById('cal-event-form-title');
     if (form) {
       const d = new Date(ds + 'T00:00:00');
@@ -16341,7 +16624,7 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
   };
 
   window.calSaveEvent = function() {
-    const inp = document.getElementById('cal-event-input');
+    const inp   = document.getElementById('cal-event-input');
     const title = inp ? inp.value.trim() : '';
     if (!title || !_calSelectedDate) return;
     const events = _calLoadEvents();
