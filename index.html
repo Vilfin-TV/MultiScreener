@@ -3505,6 +3505,14 @@ footer{
       <button onclick="iptvShowSearch()" style="font-size:10px;padding:3px 8px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:5px;color:#94a3b8;cursor:pointer">🔍 Browse</button>
     </div>
 
+    <!-- IPTV Omnisearch bar -->
+    <div class="panel-omni-bar">
+      <div class="panel-omni-input-wrap">
+        <span style="position:absolute;left:9px;font-size:14px;color:#64748b;pointer-events:none;z-index:1;line-height:1">📡</span>
+        <button class="panel-omni-trigger" id="iptv-omni-trigger" onclick="panelOmniOpen('iptv')">Search live TV channels…</button>
+      </div>
+    </div>
+
     <!-- Collapsible top section: URL input + Search + Country -->
     <div id="iptv-top-fold">
       <!-- Custom M3U/M3U8 URL input -->
@@ -3631,10 +3639,10 @@ footer{
      <!-- Radio India — collapsible embedded player -->
      <div class="radio-india-toggle" id="radio-india-toggle" onclick="radioToggleIndiaPlayer()" title="Toggle Radio India player">
        <span>🎙 Radio India — Featured</span>
-       <span id="radio-india-chevron" style="font-size:12px;transition:transform .3s;transform:rotate(0deg)">▾</span>
+       <span id="radio-india-chevron" style="font-size:12px;transition:transform .3s;transform:rotate(180deg)">▾</span>
      </div>
-     <div class="radio-india-body collapsed" id="radio-india-body" style="max-height:0">
-       <iframe src="" data-src="https://radiosindia.com/radiomango.html" style="height:240px;width:100%;border:none;overflow:hidden;display:block" loading="lazy" title="Radio Mango" id="radio-india-iframe"></iframe>
+     <div class="radio-india-body" id="radio-india-body" style="max-height:250px">
+       <iframe src="https://radiosindia.com/radiomango.html" data-src="https://radiosindia.com/radiomango.html" style="height:240px;width:100%;border:none;overflow:hidden;display:block" loading="lazy" title="Radio Mango" id="radio-india-iframe"></iframe>
      </div>
 
     <!-- Radio Omnisearch bar -->
@@ -7285,6 +7293,19 @@ const _PANEL_OMNI_CONFIG = {
       {label:'😂 Comedy', key:'Comedy'}, {label:'⚽ Sports', key:'Sports'},
       {label:'🌍 Society', key:'Society'}
     ]
+  },
+  iptv: {
+    icon: '📡', placeholder: 'Search live TV channels…',
+    loadingText: 'Searching channels…',
+    presets: [
+      {label:'⭐ Favorites', key:'favorites'}, {label:'✨ India HD', key:'curated-india'},
+      {label:'🇮🇳 All India', key:'all-india'}, {label:'🪕 Hindi', key:'hindi'},
+      {label:'🌿 Malayalam', key:'malayalam'}, {label:'🎵 Tamil', key:'tamil'},
+      {label:'🎤 Telugu', key:'telugu'}, {label:'🎶 Kannada', key:'kannada'},
+      {label:'📰 News', key:'news'}, {label:'🎬 Movies', key:'movies'},
+      {label:'🏆 All Sports', key:'sports'}, {label:'🏏 Cricket', key:'cricket'},
+      {label:'🇯🇵 Japan', key:'japan'}, {label:'🌍 World', key:'world'}
+    ]
   }
 };
 
@@ -7328,7 +7349,7 @@ function _panelOmniRenderPresets(mode, cfg) {
         <div class="panel-omni-icon">${p.label.split(' ')[0]}</div>
         <div class="panel-omni-meta">
           <div class="panel-omni-name">${p.label}</div>
-          <div class="panel-omni-desc">${mode==='radio'?'Radio stations':'mode'==='podcast'?'Podcast category':'Movies category'}</div>
+          <div class="panel-omni-desc">${mode==='radio'?'Radio stations':mode==='podcast'?'Podcast category':mode==='iptv'?'Live TV channels':'Movies category'}</div>
         </div>
         <div class="panel-omni-tag">${mode.toUpperCase()}</div>
       </div>`).join('');
@@ -7347,6 +7368,10 @@ function _panelOmniPresetClick(mode, key, label) {
     if (key === '__curated__') podcastLoadCurated();
     else podcastLoadCategory(key);
     const trg = document.getElementById('podcast-omni-trigger');
+    if (trg) trg.textContent = label;
+  } else if (mode === 'iptv') {
+    iptvLoadPreset(key);
+    const trg = document.getElementById('iptv-omni-trigger');
     if (trg) trg.textContent = label;
   }
 }
@@ -7416,6 +7441,24 @@ function panelOmniInput(value) {
             </div>
             <div class="panel-omni-tag">PODCAST</div>
           </div>`).join('');
+      } else if (_panelOmniMode === 'iptv') {
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (!_iptvAllChannels || !_iptvAllChannels.length) {
+          if (emptyEl) { emptyEl.style.display = 'block'; emptyEl.textContent = 'Load a channel preset first, then search.'; }
+          return;
+        }
+        const ql = q.toLowerCase();
+        const filtered = _iptvAllChannels.filter(c => c.name.toLowerCase().includes(ql)).slice(0, 40);
+        if (!filtered.length) { if (emptyEl) emptyEl.style.display = 'block'; return; }
+        html = `<div class="panel-omni-sec">Live TV — "${q}"</div>` +
+          filtered.map(c => `<div class="panel-omni-row" onclick="_panelOmniIptvPlay(${JSON.stringify({url:c.url,id:c.id,name:c.name})})">
+            <div class="panel-omni-icon" style="background:linear-gradient(135deg,#064e3b,#1e3a5f)">${c.logo?'<img src="'+_esc(c.logo)+'" style="width:34px;height:34px;border-radius:7px;object-fit:contain;background:#000" onerror="this.style.display=\'none\'">':'📡'}</div>
+            <div class="panel-omni-meta">
+              <div class="panel-omni-name">${_esc(c.name)}</div>
+              <div class="panel-omni-desc">${_esc(c.country||'')}${c.language?' · '+_esc(c.language):''}${c.categories&&c.categories[0]?' · '+_esc(c.categories[0]):''}</div>
+            </div>
+            <div class="panel-omni-tag">TV</div>
+          </div>`).join('');
       }
       if (resultsEl) resultsEl.innerHTML = html;
     } catch(e) {
@@ -7466,6 +7509,12 @@ if (typeof podcastPlayFromFeed !== 'function') {
     // Fall back to loading the feed in the podcast list
     if (typeof podcastLoadFeed === 'function') podcastLoadFeed(feedUrl, name);
   };
+}
+function _panelOmniIptvPlay(ch) {
+  panelOmniClose();
+  iptvPlay(ch.url, ch.id, ch.name);
+  const trg = document.getElementById('iptv-omni-trigger');
+  if (trg) trg.textContent = ch.name;
 }
 
 // ═══════════════════════════════════════════════════════════════════════
