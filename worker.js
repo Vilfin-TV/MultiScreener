@@ -168,6 +168,65 @@ export default {
       }
     }
 
+    // ── Streaming AI query endpoint (SSE) ─────────────────────────────────────
+    // Frontend calls /query-stream first; falls back to /query if absent.
+    // This endpoint runs handleQuery() then streams the result as SSE events.
+    if (url.pathname === '/query-stream' && request.method === 'POST') {
+      let body;
+      try { body = await request.json(); } catch {
+        return json({ error: 'Invalid JSON body' }, CORS, 400);
+      }
+
+      const prompt   = (body.prompt || body.query || body.q || '').trim();
+      const provider = (body.provider || '').toLowerCase().trim();
+      const messages = Array.isArray(body.messages) ? body.messages : null;
+
+      if (!prompt || prompt.length < 2) {
+        return json({ error: 'prompt is required' }, CORS, 400);
+      }
+      if (prompt.length > 32000) {
+        return json({ error: 'prompt too long (max 32000 chars)' }, CORS, 400);
+      }
+
+      const encoder = new TextEncoder();
+      const stream  = new ReadableStream({
+        async start(controller) {
+          const sseChunk = (obj) =>
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
+          try {
+            const result = await handleQuery(prompt, env, provider, messages);
+            // Simulate token-by-token streaming: send result in small word groups
+            const words = result.split(' ');
+            const GROUP = 6;
+            let accumulated = '';
+            for (let i = 0; i < words.length; i += GROUP) {
+              const slice = words.slice(i, i + GROUP);
+              const chunk = slice.join(' ') + (i + GROUP < words.length ? ' ' : '');
+              accumulated += chunk;
+              sseChunk({ chunk });
+            }
+            sseChunk({ done: true });
+          } catch (err) {
+            console.error('query-stream error:', err.message);
+            sseChunk({ error: err.message || 'Query failed' });
+          } finally {
+            try { controller.close(); } catch {}
+          }
+        },
+      });
+
+      return new Response(stream, {
+        status: 200,
+        headers: {
+          ...CORS,
+          'Content-Type':      'text/event-stream; charset=utf-8',
+          'Cache-Control':     'no-cache, no-transform',
+          'Connection':        'keep-alive',
+          'X-Accel-Buffering': 'no',
+        },
+      });
+    }
+
     // ── Interactive AI query endpoint ──────────────────────────────────────────
     if ((url.pathname === '/query' || url.pathname === '/ask') && request.method === 'POST') {
       let body;
