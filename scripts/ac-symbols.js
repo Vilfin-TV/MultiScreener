@@ -4,6 +4,9 @@
  * Cascade: local master_symbols.json → Yahoo Finance search → Alpha Vantage
  * Attaches to any input with data-ac="fund" or data-ac="stock"
  * Supports plan filtering via data-ac-plan="fundPlan" for fund radio groups
+ *
+ * Dropdown is appended to document.body and positioned via getBoundingClientRect
+ * to avoid clipping by overflow:hidden ancestors.
  */
 (function() {
   'use strict';
@@ -125,15 +128,38 @@
       .catch(function() { return []; });
   }
 
+  // ── Dropdown is appended to <body> and positioned via getBoundingClientRect
+  // to escape overflow:hidden/clip ancestors on any page. ──────────────────────
+
   function getOrCreateDropdown(input) {
-    var dd = input.parentNode.querySelector('.ac-dropdown');
-    if (!dd) {
-      dd = document.createElement('div');
+    if (!input._acDD) {
+      var dd = document.createElement('div');
       dd.className = 'ac-dropdown';
-      dd.style.cssText = 'position:absolute;top:100%;left:0;right:0;background:#0d1d35;border:1px solid var(--border,#1e3a5c);border-top:2px solid var(--burn2,#3b82f6);border-radius:0 0 10px 10px;box-shadow:0 8px 28px rgba(0,0,0,.3);max-height:300px;overflow-y:auto;z-index:9999;display:none;scrollbar-width:thin;scrollbar-color:#1e3a5f transparent';
-      input.parentNode.style.position = 'relative';
-      input.parentNode.appendChild(dd);
+      dd.style.cssText = [
+        'position:absolute',
+        'background:#0d1d35',
+        'border:1px solid var(--border,#1e3a5c)',
+        'border-top:2px solid var(--burn2,#3b82f6)',
+        'border-radius:0 0 10px 10px',
+        'box-shadow:0 8px 28px rgba(0,0,0,.5)',
+        'max-height:300px',
+        'overflow-y:auto',
+        'z-index:999999',
+        'display:none',
+        'scrollbar-width:thin',
+        'scrollbar-color:#1e3a5f transparent'
+      ].join(';');
+      document.body.appendChild(dd);
+      input._acDD = dd;
     }
+    // Reposition below the input every time (handles scroll / resize)
+    var dd = input._acDD;
+    var rect = input.getBoundingClientRect();
+    var scrollTop  = window.pageYOffset || document.documentElement.scrollTop  || 0;
+    var scrollLeft = window.pageXOffset || document.documentElement.scrollLeft || 0;
+    dd.style.top   = (rect.bottom + scrollTop)  + 'px';
+    dd.style.left  = (rect.left   + scrollLeft) + 'px';
+    dd.style.width = rect.width + 'px';
     return dd;
   }
 
@@ -160,8 +186,8 @@
       var badge = r.type==='ETF'?'ac-type-etf':(r.type==='Fund'?'ac-type-fund':'ac-type-stock');
       return '<div class="ac-item" data-idx="'+i+'" style="display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05);transition:background .1s" onmousedown="event.preventDefault()">'
         +'<span style="font-family:monospace;font-size:11px;font-weight:700;color:var(--burn3,#93c5fd);background:rgba(37,99,235,.15);padding:2px 7px;border-radius:5px;white-space:nowrap">'+esc(r.sym)+'</span>'
-        +'<span style="flex:1;font-size:12px;color:var(--text,#e2eeff);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.name)+'</span>'
-        +'<span style="font-size:10px;color:var(--text3,#506480);white-space:nowrap">'+esc(r.exch)+'</span>'
+        +'<span style="flex:1;font-size:12px;color:#e2eeff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(r.name)+'</span>'
+        +'<span style="font-size:10px;color:#506480;white-space:nowrap">'+esc(r.exch)+'</span>'
         +(r.type?'<span class="'+badge+'" style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(22,163,74,.1);color:#16a34a">'+esc(r.type)+'</span>':'')
         +'</div>';
     }).join('');
@@ -171,6 +197,8 @@
         input.value = r.name || r.sym;
         input.dataset.acSym = r.sym;
         dd.style.display = 'none';
+        // Fire input event so oninput handlers (e.g. updateSummary) pick up the new value
+        input.dispatchEvent(new Event('input', { bubbles: true }));
       });
       item.addEventListener('mouseenter', function() { AC_IDX = parseInt(this.dataset.idx); acHover(dd); });
     });
@@ -184,7 +212,7 @@
   }
 
   function acClose(input) {
-    var dd = input && input.parentNode ? input.parentNode.querySelector('.ac-dropdown') : null;
+    var dd = input && input._acDD ? input._acDD : null;
     if (dd) dd.style.display = 'none';
   }
 
@@ -214,7 +242,7 @@
     document.addEventListener('keydown', function(e) {
       var el = e.target.closest('[data-ac]');
       if (!el) return;
-      var dd = el.parentNode.querySelector('.ac-dropdown');
+      var dd = el._acDD;
       if (!dd || dd.style.display === 'none') return;
       var items = dd.querySelectorAll('.ac-item');
       if (e.key === 'ArrowDown') { e.preventDefault(); AC_IDX = Math.min(AC_IDX+1, items.length-1); if (items[AC_IDX]) items[AC_IDX].scrollIntoView({block:'nearest'}); acHover(dd); }
@@ -222,10 +250,22 @@
       else if (e.key === 'Enter' && AC_IDX >= 0) { e.preventDefault(); if (items[AC_IDX]) items[AC_IDX].click(); }
       else if (e.key === 'Escape') { acClose(el); }
     });
+
     document.addEventListener('click', function(e) {
       if (!e.target.closest('[data-ac]') && !e.target.closest('.ac-dropdown')) {
         document.querySelectorAll('[data-ac]').forEach(function(el) { acClose(el); });
       }
+    });
+
+    // Reposition open dropdowns on scroll/resize
+    ['scroll', 'resize'].forEach(function(evName) {
+      window.addEventListener(evName, function() {
+        document.querySelectorAll('[data-ac]').forEach(function(el) {
+          if (el._acDD && el._acDD.style.display !== 'none') {
+            getOrCreateDropdown(el); // repositions in place
+          }
+        });
+      }, { passive: true });
     });
   }
 
