@@ -479,7 +479,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page-bg);color:
   <div class="section-head"><span class="section-label">Scores &amp; IPO Insights</span><div class="section-line"></div></div>
   <div class="grid-2" style="margin-bottom:20px">
 
-    <!-- Stock Scores deep-link panel -->
+    <!-- Stock Scores — Trendlyne SDK widget (dynamic per stock) -->
     <div class="wcard" id="wc-scores">
       <div class="wcard-head">
         <span class="wcard-title">
@@ -488,69 +488,34 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page-bg);color:
         </span>
         <span class="wcard-sub">Fundamental · Technical · Momentum · Valuation</span>
       </div>
-      <div class="wcard-body" style="background:var(--card);padding:20px 16px;min-height:400px">
-
-        <!-- Empty state -->
-        <div id="scores-empty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:340px;text-align:center;color:var(--text3)">
+      <div class="wcard-body" id="scores-sdk-wrap" style="min-height:400px">
+        <!-- Empty state until stock selected -->
+        <div id="scores-empty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:360px;text-align:center;color:var(--text3);background:var(--card)">
           <div style="font-size:48px;opacity:.2;margin-bottom:16px">📊</div>
           <div style="font-size:14px;font-weight:600;color:var(--text2);margin-bottom:6px">Select a stock above</div>
-          <div style="font-size:12px;line-height:1.6;max-width:220px">Pick any NSE/BSE company to view its Trendlyne score breakdown</div>
+          <div style="font-size:12px;line-height:1.6;max-width:220px">Pick any NSE/BSE company to load its Trendlyne score breakdown</div>
         </div>
-
-        <!-- Active panel (shown when stock selected) -->
-        <div id="scores-panel" style="display:none">
-          <div class="score-grid">
-            <div class="score-cat">
-              <div class="score-cat-icon">🏦</div>
-              <div class="score-cat-label">Fundamental</div>
-            </div>
-            <div class="score-cat">
-              <div class="score-cat-icon">📈</div>
-              <div class="score-cat-label">Technical</div>
-            </div>
-            <div class="score-cat">
-              <div class="score-cat-icon">⚡</div>
-              <div class="score-cat-label">Momentum</div>
-            </div>
-            <div class="score-cat">
-              <div class="score-cat-icon">💰</div>
-              <div class="score-cat-label">Valuation</div>
-            </div>
-          </div>
-          <p style="font-size:12px;color:var(--text3);line-height:1.65;margin-bottom:16px;text-align:center">
-            Trendlyne scores rate each dimension on a 0–100 scale based on 150+ financial and technical parameters.
-          </p>
-          <a id="scores-tl-link" href="https://trendlyne.com" target="_blank" rel="noopener" class="scores-cta">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            View Full Score on Trendlyne
-          </a>
-          <div style="margin-top:12px;text-align:center">
-            <a id="scores-analysis-link" href="https://trendlyne.com" target="_blank" rel="noopener"
-               style="font-size:11px;color:var(--text3);text-decoration:none">
-              Also view: Full Analysis ↗
-            </a>
-          </div>
-        </div>
-
+        <!-- blockquote injected here dynamically -->
       </div>
-      <div class="tl-attr">Score data by <a href="https://trendlyne.com" target="_blank" rel="noopener">Trendlyne</a></div>
+      <div class="tl-attr">Powered by <a href="https://trendlyne.com" target="_blank" rel="noopener">Trendlyne</a></div>
     </div>
 
-    <!-- IPO News Feed from blog_feed.json -->
+    <!-- IPO Tracker — official Trendlyne SDK embed (always visible) -->
     <div class="wcard" id="wc-ipo">
       <div class="wcard-head">
         <span class="wcard-title">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
           IPO Tracker
         </span>
-        <span class="wcard-sub">Active IPO · Upcoming · Recently Listed · Daily Updates</span>
+        <span class="wcard-sub">Active IPO · Upcoming · Recently Listed · GMP</span>
       </div>
-      <div class="wcard-body" style="background:var(--card);overflow-y:auto;max-height:480px">
-        <div id="ipo-feed"><div class="wload"><div class="spin"></div>Loading IPO feed…</div></div>
+      <div class="wcard-body" style="overflow:hidden">
+        <blockquote class="trendlyne-widgets"
+          data-get-url="https://trendlyne.com/web-widget/ipo-widget/Poppins/?activeCol=006AFF&linksCol=006CFF&primary=202020&secondary=666666&positive=00a25b&negative=ff4e54"
+          data-theme="light">
+        </blockquote>
       </div>
-      <div class="tl-attr">
-        <a href="https://trendlyne.com/ipo-allotment-status/" target="_blank" rel="noopener">View Live IPO Snapshot on Trendlyne ↗</a>
-      </div>
+      <div class="tl-attr">Powered by <a href="https://trendlyne.com/ipo-allotment-status/" target="_blank" rel="noopener">Trendlyne</a></div>
     </div>
 
   </div>
@@ -796,62 +761,37 @@ function injectAll(sym){
   setIframe('iframe-checklist','checklist-loader',
     `${TL_BASE}checklist-widget/${TL_FONT}/${sym}/`);
 
-  /* Scores panel — deep-link to Trendlyne (iframe blocked by X-Frame-Options) */
-  updateScoresPanel(sym);
+  /* Stock Scores — Trendlyne SDK widget */
+  injectTlWidget('scores-sdk-wrap',
+    `${TL_BASE}scores-widget/${TL_FONT}/${sym}/`);
 }
 
-/* ── Stock Scores deep-link panel ── */
-function updateScoresPanel(sym){
-  document.getElementById('scores-empty').style.display='none';
-  document.getElementById('scores-panel').style.display='block';
-  const scoreUrl=`https://trendlyne.com/equity/all/${sym}/`;
-  const analysisUrl=`https://trendlyne.com/research-reports/${sym.toLowerCase()}/`;
-  document.getElementById('scores-tl-link').href=scoreUrl;
-  document.getElementById('scores-analysis-link').href=scoreUrl;
+/* ── Trendlyne SDK widget injector ── */
+const TL_SDK_PARAMS = '?activeCol=006AFF&linksCol=006CFF&primary=202020&secondary=666666&positive=00a25b&negative=ff4e54';
+const TL_SDK_SCRIPT = 'https://cdn-static.trendlyne.com/static/js/webwidgets/tl-widgets.js';
+
+function injectTlWidget(containerId, widgetUrl){
+  const wrap = document.getElementById(containerId);
+  if(!wrap) return;
+  const empty = document.getElementById('scores-empty');
+  if(empty) empty.style.display = 'none';
+  wrap.querySelectorAll('.trendlyne-widgets, script').forEach(el => el.remove());
+  const bq = document.createElement('blockquote');
+  bq.className = 'trendlyne-widgets';
+  bq.setAttribute('data-get-url', widgetUrl + TL_SDK_PARAMS);
+  bq.setAttribute('data-theme', 'light');
+  wrap.appendChild(bq);
+  const s = document.createElement('script');
+  s.src = TL_SDK_SCRIPT;
+  s.async = true;
+  s.charset = 'utf-8';
+  wrap.appendChild(s);
 }
 
-/* ── IPO News feed from blog_feed.json ── */
-function fmtDate(str){
-  if(!str)return'';
-  try{
-    const d=new Date(str);
-    return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
-  }catch(_){return str.slice(0,10);}
-}
-
-async function loadIpoFeed(){
-  const feed=document.getElementById('ipo-feed');
-  try{
-    const r=await fetch('data/blog_feed.json');
-    if(!r.ok)throw new Error('status '+r.status);
-    const data=await r.json();
-    const items=(data.categories||data).ipo||[];
-    if(!items.length){
-      feed.innerHTML='<div class="ipo-empty">No IPO updates found. Check back after the next data refresh.</div>';
-      return;
-    }
-    feed.innerHTML=items.map(item=>{
-      const title=(item.title||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
-      const src=(item.source||'').replace(/&/g,'&amp;');
-      const date=fmtDate(item.published||item.date||'');
-      return `<a class="ipo-item" href="${item.link||'#'}" target="_blank" rel="noopener">
-        <div class="ipo-item-title">${title}</div>
-        <div class="ipo-item-meta">
-          <span class="ipo-item-src">${src}</span>
-          ${date?`<span>${date}</span>`:''}
-        </div>
-      </a>`;
-    }).join('');
-  }catch(e){
-    feed.innerHTML=`<div class="ipo-empty">
-      IPO feed unavailable — <a href="https://trendlyne.com/ipo-allotment-status/" target="_blank" rel="noopener" style="color:var(--saffron)">View on Trendlyne ↗</a>
-    </div>`;
-  }
-}
-
-/* Pre-warm autocomplete and load IPO feed after page settles */
+/* Pre-warm autocomplete after page settles */
 setTimeout(acLoad,1200);
-loadIpoFeed();
 </script>
+<!-- Trendlyne SDK — initialises all static blockquote widgets (e.g. IPO Tracker) -->
+<script async src="https://cdn-static.trendlyne.com/static/js/webwidgets/tl-widgets.js" charset="utf-8"></script>
 </body>
 </html>
