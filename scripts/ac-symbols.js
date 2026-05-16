@@ -53,10 +53,20 @@
     var filterType = input.dataset.ac || '';
     var planFilter = getPlanFilter(input);
     AC_TIMER = setTimeout(function() {
+      // Show loading state immediately if DB hasn't loaded yet
+      if (DB_LOADING || !DB_CACHE) {
+        acRenderLoading(input);
+      }
       loadLocal().then(function() {
         var results = localSearch(q, filterType, planFilter);
-        if (results.length) { acRender(input, results); }
-        else { acYahooSearch(input, q, filterType).then(function(r) { acRender(input, r); }); }
+        if (results.length) {
+          acRender(input, results);
+        } else if (filterType !== 'fund') {
+          // Only try Yahoo/AlphaVantage for non-fund types (Indian MF names aren't indexed there)
+          acYahooSearch(input, q, filterType).then(function(r) { acRender(input, r); });
+        } else {
+          acRender(input, []);
+        }
       });
     }, 200);
   }
@@ -115,7 +125,7 @@
       .catch(function() { return []; });
   }
 
-  function acRender(input, results) {
+  function getOrCreateDropdown(input) {
     var dd = input.parentNode.querySelector('.ac-dropdown');
     if (!dd) {
       dd = document.createElement('div');
@@ -124,6 +134,26 @@
       input.parentNode.style.position = 'relative';
       input.parentNode.appendChild(dd);
     }
+    return dd;
+  }
+
+  function acRenderLoading(input) {
+    var dd = getOrCreateDropdown(input);
+    dd.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px;color:var(--text3,#506480);font-size:13px">'
+      + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:ac-spin 1s linear infinite;flex-shrink:0"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>'
+      + '<span>Loading fund database&hellip;</span>'
+      + '</div>';
+    if (!document.getElementById('ac-spin-style')) {
+      var style = document.createElement('style');
+      style.id = 'ac-spin-style';
+      style.textContent = '@keyframes ac-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
+      document.head.appendChild(style);
+    }
+    dd.style.display = 'block';
+  }
+
+  function acRender(input, results) {
+    var dd = getOrCreateDropdown(input);
     if (!results.length) { dd.style.display='none'; return; }
     AC_IDX = -1;
     dd.innerHTML = results.map(function(r,i) {
@@ -161,9 +191,8 @@
   function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
   function acInit() {
-    // Preload local DB on idle
-    if ('requestIdleCallback' in window) { requestIdleCallback(loadLocal, { timeout: 2000 }); }
-    else { setTimeout(loadLocal, 1000); }
+    // Start loading DB immediately — don't wait for idle, fund pages need it right away
+    loadLocal();
 
     document.addEventListener('input', function(e) {
       var el = e.target.closest('[data-ac]');
