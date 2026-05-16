@@ -935,6 +935,16 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-retry{background:transparent;border:1px solid var(--border2);color:var(--burn3,#93c5fd);font-size:10px;cursor:pointer;padding:1px 8px;border-radius:4px;margin-left:4px;transition:background .12s;vertical-align:middle}
 .lnb-retry:hover{background:rgba(59,130,246,.15)}
 
+/* ── Calendar strips — thin visible scrollbar so users know they can scroll ── */
+#cal-country-strip,#cal-region-strip{
+  scrollbar-width:thin;
+  scrollbar-color:#1e3a5f transparent;
+}
+#cal-country-strip::-webkit-scrollbar,
+#cal-region-strip::-webkit-scrollbar{display:block;height:3px}
+#cal-country-strip::-webkit-scrollbar-thumb,
+#cal-region-strip::-webkit-scrollbar-thumb{background:#1e3a5f;border-radius:2px}
+
 /* ── NEWS SETTINGS BUTTON ── */
 .lns-settings-btn{background:rgba(255,255,255,.06);border:1px solid var(--border2);color:var(--text2);font-size:11px;font-weight:600;padding:5px 12px;border-radius:7px;cursor:pointer;letter-spacing:.3px;transition:background .15s,color .15s}
 .lns-settings-btn:hover{background:rgba(230,92,0,.18);color:var(--gold2);border-color:var(--burn2)}
@@ -1774,7 +1784,8 @@ footer{
   background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;
   font-size:11px;font-weight:600;padding:5px 10px;border-radius:14px;
   cursor:pointer;white-space:nowrap;transition:all .15s;font-family:'DM Sans',sans-serif;
-  -webkit-tap-highlight-color:rgba(37,99,235,.3);touch-action:manipulation;
+  -webkit-tap-highlight-color:rgba(37,99,235,.3);
+  touch-action:pan-x; /* pan-x lets the parent strip capture horizontal swipes */
   flex-shrink:0; /* CRITICAL: prevents chips from compressing inside flex row */
 }
 .radio-preset-btn:hover{background:rgba(37,99,235,.18);border-color:#3b82f6;color:#e2eeff}
@@ -7189,9 +7200,40 @@ function _initPresetDragScroll() {
     el.addEventListener('click', function(e) {
       if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; }
     }, true);
-    // Wheel → horizontal scroll
+    // Wheel → horizontal scroll (only when strip actually overflows)
     el.addEventListener('wheel', function(e) {
+      if (el.scrollWidth <= el.clientWidth) return; // nothing to scroll, pass through
       if (e.deltaY !== 0) { e.preventDefault(); el.scrollLeft += e.deltaY * 1.5; }
+    }, { passive: false });
+    // ── Touch support: horizontal swipe scrolls the strip, not the page ──────
+    // Buttons inside have touch-action:manipulation which competes with pan-x.
+    // We resolve the intent ourselves: if gesture is mostly horizontal → scroll strip.
+    var touchStartX = 0, touchStartY = 0, touchStartSL = 0, touchIsHoriz = null, touchScrolled = false;
+    el.addEventListener('touchstart', function(e) {
+      if (e.touches.length !== 1) return;
+      touchStartX  = e.touches[0].clientX;
+      touchStartY  = e.touches[0].clientY;
+      touchStartSL = el.scrollLeft;
+      touchIsHoriz = null;
+      touchScrolled = false;
+    }, { passive: true });
+    el.addEventListener('touchmove', function(e) {
+      if (e.touches.length !== 1) return;
+      var dx = e.touches[0].clientX - touchStartX;
+      var dy = e.touches[0].clientY - touchStartY;
+      // Determine intent on first significant movement (>4px)
+      if (touchIsHoriz === null && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
+        touchIsHoriz = Math.abs(dx) > Math.abs(dy);
+      }
+      if (touchIsHoriz) {
+        e.preventDefault();           // block vertical page scroll
+        el.scrollLeft = touchStartSL - dx;
+        touchScrolled = true;
+      }
+    }, { passive: false });           // must be non-passive to allow preventDefault
+    el.addEventListener('touchend', function(e) {
+      if (touchScrolled) e.preventDefault(); // suppress tap-after-scroll click
+      touchIsHoriz = null; touchScrolled = false;
     }, { passive: false });
   });
 }
