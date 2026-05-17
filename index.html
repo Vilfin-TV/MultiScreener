@@ -10761,7 +10761,7 @@ function _cricPriority(leagueName) {
   const n = (leagueName || '').toLowerCase();
   if (n.includes('ipl') || n.includes('indian premier'))  return 0;
   if (n.includes('wc') || n.includes('world cup') || n.includes('champions trophy') || n.includes('icc')) return 1;
-  if (n.includes('test') || n.includes('t20i') || n.includes('odi') || n.includes('bilateral')) return 1;
+  if (n.includes('test') || n.includes('t20i') || n.includes('odi') || n.includes('bilateral') || /\btour\b/.test(n) || n.includes('international')) return 1;
   if (n.includes('bpl') || n.includes('bangladesh premier')) return 2;
   if (n.includes('wpl') || n.includes('women') || n.includes("women's premier")) return 3;
   if (n.includes('big bash') || n.includes('bbl'))        return 4;
@@ -10967,7 +10967,7 @@ async function fetchLiveScores(sport) {
         cards.push({
           priority: pri,
           isLive,
-          isPSL: pri >= 6,
+          isPSL: pri === 6,
           html: _cricCard({
             title: league, league, status, isLive, isFinal,
             homeTeam:  h?.team?.abbreviation || h?.team?.shortDisplayName || '?',
@@ -10993,7 +10993,7 @@ async function fetchLiveScores(sport) {
       return {
         priority: pri,
         isLive,
-        isPSL: pri >= 6,
+        isPSL: pri === 6,
         html: _cricCard({
           title: ev.strEvent || 'Cricket', league: ev.strLeague || '',
           status: raw, isLive, isFinal,
@@ -11044,7 +11044,8 @@ async function fetchLiveScores(sport) {
     const espnScorepanelUrl = 'https://site.api.espn.com/apis/site/v2/sports/cricket/scorepanel';
 
     const today = new Date().toISOString().slice(0, 10);
-    const [sdbResult, espnResult] = await Promise.allSettled([
+    // Fetch scorepanel (via proxy) + direct international/general ESPN endpoints + SportsDB in parallel
+    const [sdbResult, espnResult, espnGenResult, espnIntlResult] = await Promise.allSettled([
       _fetchSportsDB(today),
       fetch(`${WORKER_PROXY_URL}/?url=${encodeURIComponent(espnScorepanelUrl)}`, { cache:'no-store', signal: AbortSignal.timeout(8000) })
         .then(async r => {
@@ -11052,17 +11053,21 @@ async function fetchLiveScores(sport) {
           const text = await r.text();
           try { return JSON.parse(text); } catch (_) { return null; }
         })
-        .catch(() => null)
+        .catch(() => null),
+      // Direct ESPN general cricket scoreboard — catches INT'L / tour matches
+      fetch('https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard', { cache:'no-store', signal: AbortSignal.timeout(7000) })
+        .then(r => r.ok ? r.json() : null).catch(() => null),
+      // ESPN international cricket league (league 28 = ICC / bilateral series)
+      fetch('https://site.api.espn.com/apis/site/v2/sports/cricket/28/scoreboard', { cache:'no-store', signal: AbortSignal.timeout(7000) })
+        .then(r => r.ok ? r.json() : null).catch(() => null),
     ]);
 
-    // ESPN scorepanel events → cards
-    if (espnResult.status === 'fulfilled' && espnResult.value) {
-      const espnData = espnResult.value;
-      const events = espnData.events ||
-        espnData.competitions ||
-        espnData.scoreboard ||
-        espnData?.sports?.flatMap(s => s.leagues || []).flatMap(l => l.events || []) ||
-        [];
+    // Helper: push ESPN result avoiding duplicates
+    function pushEspnResult(result) {
+      if (result.status !== 'fulfilled' || !result.value) return;
+      const d = result.value;
+      const events = d.events || d.competitions || d.scoreboard ||
+        d?.sports?.flatMap(s => s.leagues || []).flatMap(l => l.events || []) || [];
       events.forEach(ev => {
         const key = ev.id || ev.uid || (ev.name + ev.date);
         if (seen.has(key)) return;
@@ -11070,6 +11075,9 @@ async function fetchLiveScores(sport) {
         espnEvToCard(ev).forEach(c => allCards.push(c));
       });
     }
+
+    // ESPN scorepanel + general + international → cards
+    [espnResult, espnGenResult, espnIntlResult].forEach(pushEspnResult);
 
     // TheSportsDB events → cards
     if (sdbResult.status === 'fulfilled' && sdbResult.value?.length) {
@@ -11100,13 +11108,19 @@ async function fetchLiveScores(sport) {
     return;
   }
 
-  // ── Non-cricket sports (Football / Tennis / Baseball) ─────────────────────
+  // ── Non-cricket sports (Football / Rugby / Tennis / Baseball) ────────────────
   const rawUrls = {
     football: [
       'https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard',
       'https://site.api.espn.com/apis/site/v2/sports/soccer/esp.1/scoreboard',
       'https://site.api.espn.com/apis/site/v2/sports/soccer/ger.1/scoreboard',
       'https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard'
+    ],
+    rugby: [
+      'https://site.api.espn.com/apis/site/v2/sports/rugby/267979/scoreboard', // Super Rugby
+      'https://site.api.espn.com/apis/site/v2/sports/rugby/270557/scoreboard', // Premiership
+      'https://site.api.espn.com/apis/site/v2/sports/rugby/289234/scoreboard', // Top 14
+      'https://site.api.espn.com/apis/site/v2/sports/rugby/180659/scoreboard', // Int'l
     ],
     tennis: [
       'https://site.api.espn.com/apis/site/v2/sports/tennis/atp/scoreboard',
@@ -11127,8 +11141,37 @@ async function fetchLiveScores(sport) {
     } catch(_) {}
   }
 
+  // Rugby fallback: TheSportsDB (free, no key) when ESPN league IDs yield nothing
+  if (!data && sport === 'rugby') {
+    try {
+      const rugRes = await fetch(
+        `https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${new Date().toISOString().slice(0,10)}&s=Rugby+Union`,
+        { cache:'no-store', signal: AbortSignal.timeout(8000) }
+      );
+      if (rugRes.ok) {
+        const rugJson = await rugRes.json();
+        const evs = rugJson.events || [];
+        if (evs.length) {
+          box.innerHTML = evs.slice(0, 12).map(ev => {
+            const raw = ev.strStatus || 'Scheduled';
+            const isLive = /live|playing|progress/i.test(raw);
+            const hScore = ev.intHomeScore != null ? ev.intHomeScore : '';
+            const aScore = ev.intAwayScore != null ? ev.intAwayScore : '';
+            const statusColor = isLive ? '#22c55e' : '#38bdf8';
+            const league = ev.strLeague ? `<div style="font-size:9px;color:#f97316;margin-bottom:3px;letter-spacing:.3px">${ev.strLeague}</div>` : '';
+            const teams = `<div class="score-card-teams"><span class="score-team-name">${ev.strHomeTeam||'?'}</span><span class="score-result">${hScore!==''&&aScore!=='' ? hScore+' – '+aScore : '–'}</span><span class="score-team-name" style="text-align:right">${ev.strAwayTeam||'?'}</span></div>`;
+            const venue = ev.strVenue ? `<div class="score-venue">📍 ${ev.strVenue}</div>` : '';
+            return `<div class="score-card">${league}<div class="score-card-match">${ev.strEvent||'Rugby Match'}</div><div class="score-card-status" style="color:${statusColor}">${isLive?'<span class="score-live-dot"></span>':''}${raw}</div>${teams}${venue}</div>`;
+          }).join('');
+          _stampScoreTime();
+          return;
+        }
+      }
+    } catch(_) {}
+  }
+
   if (!data) {
-    const label = {football:'⚽ Football', tennis:'🎾 Tennis', baseball:'⚾ Baseball'}[sport] || sport;
+    const label = {football:'⚽ Football', rugby:'🏉 Rugby', tennis:'🎾 Tennis', baseball:'⚾ Baseball'}[sport] || sport;
     box.innerHTML = `<div class="score-no-data">${label} scores unavailable.<br/><span style="font-size:9px;color:#334155">No live matches or API not reachable.</span></div>`;
     return;
   }
@@ -11266,12 +11309,18 @@ async function fetchPastScores(sport) {
     return;
   }
 
-  // ── Non-cricket sports (Football / Tennis / Baseball) ─────────────────────
+  // ── Non-cricket sports (Football / Rugby / Tennis / Baseball) ────────────────
   const pastEndpoints = {
     football: [
       'https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard',
       'https://site.api.espn.com/apis/site/v2/sports/soccer/esp.1/scoreboard',
       'https://site.api.espn.com/apis/site/v2/sports/soccer/ger.1/scoreboard'
+    ],
+    rugby: [
+      'https://site.api.espn.com/apis/site/v2/sports/rugby/267979/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/rugby/270557/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/rugby/289234/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/rugby/180659/scoreboard',
     ],
     tennis: [
       'https://site.api.espn.com/apis/site/v2/sports/tennis/atp/scoreboard',
@@ -11298,6 +11347,41 @@ async function fetchPastScores(sport) {
     return (comp?.status?.type?.state || '').toLowerCase() === 'post';
   });
   const toShow = (completed.length ? completed : allEvents).slice(0, 12);
+
+  if (!toShow.length && sport === 'rugby') {
+    // TheSportsDB fallback for past rugby — scan last 3 days
+    try {
+      const rugCards = [];
+      const dates = Array.from({length:3}, (_,i) => {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        return d.toISOString().slice(0,10);
+      });
+      for (const dateStr of dates) {
+        const rr = await fetch(
+          `https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${dateStr}&s=Rugby+Union`,
+          { cache:'no-store', signal: AbortSignal.timeout(8000) }
+        );
+        if (!rr.ok) continue;
+        const rj = await rr.json();
+        (rj.events || []).forEach(ev => {
+          if (!/finish|won|draw|result|decided/i.test(ev.strStatus || '')) return;
+          const hScore = ev.intHomeScore != null ? ev.intHomeScore : '–';
+          const aScore = ev.intAwayScore != null ? ev.intAwayScore : '–';
+          const winner = Number(hScore) > Number(aScore) ? 'home' : Number(aScore) > Number(hScore) ? 'away' : '';
+          const league = ev.strLeague ? `<div style="font-size:9px;color:#f97316;margin-bottom:3px;letter-spacing:.3px">${ev.strLeague}</div>` : '';
+          const teams = `<div class="score-card-teams"><span class="score-team-name" style="${winner==='home'?'color:#60a5fa;font-weight:700':''}">${ev.strHomeTeam||'?'}</span><span class="score-result">${hScore} – ${aScore}</span><span class="score-team-name" style="text-align:right;${winner==='away'?'color:#60a5fa;font-weight:700':''}">${ev.strAwayTeam||'?'}</span></div>`;
+          const venue = ev.strVenue ? `<div class="score-venue">📍 ${ev.strVenue}</div>` : '';
+          rugCards.push(`<div class="score-card">${league}<div class="score-card-match">${ev.strEvent||'Rugby Match'}</div><div class="score-card-status" style="color:#94a3b8">✅ ${ev.strStatus||'Final'}</div>${teams}${venue}</div>`);
+        });
+        if (rugCards.length >= 6) break;
+      }
+      if (rugCards.length) {
+        box.innerHTML = rugCards.slice(0,12).join('');
+        _stampScoreTime();
+        return;
+      }
+    } catch(_) {}
+  }
 
   if (!toShow.length) {
     box.innerHTML = `<div class="score-no-data">No past results available yet.<br/><span style="font-size:9px;color:#1e3a5f">Results appear after matches complete.</span></div>`;
