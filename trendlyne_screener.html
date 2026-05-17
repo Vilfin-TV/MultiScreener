@@ -665,10 +665,10 @@ function loadStockBySymbol(sym,name){
 
   /* Update banner */
   document.getElementById('stockBanner').style.display='block';
-  document.getElementById('bExch').textContent='NSE';
+  document.getElementById('bExch').textContent='BSE';
   document.getElementById('bSym').textContent=sym;
   document.getElementById('bName').textContent=_name;
-  document.getElementById('bTrendlyneLink').href=`https://trendlyne.com/equity/all/${sym}/`;
+  document.getElementById('bTrendlyneLink').href=`https://trendlyne.com/equity/bse/${sym}/`;
 
   /* Swap panels */
   document.getElementById('emptyState').style.display='none';
@@ -710,14 +710,15 @@ function setIframe(iframeId,loaderId,url){
 }
 
 function injectAll(sym){
+  const bse='?exchange=BSE';
   setIframe('iframe-swot','swot-loader',
-    `${TL_BASE}swot-widget/${TL_FONT}/${sym}/`);
+    `${TL_BASE}swot-widget/${TL_FONT}/${sym}/${bse}`);
 
   setIframe('iframe-checklist','checklist-loader',
-    `${TL_BASE}checklist-widget/${TL_FONT}/${sym}/`);
+    `${TL_BASE}checklist-widget/${TL_FONT}/${sym}/${bse}`);
 
   setIframe('iframe-tech','tech-loader',
-    `${TL_BASE}technical-widget/${TL_FONT}/${sym}/`);
+    `${TL_BASE}technical-widget/${TL_FONT}/${sym}/${bse}`);
 }
 
 /* Pre-warm autocomplete after page settles */
