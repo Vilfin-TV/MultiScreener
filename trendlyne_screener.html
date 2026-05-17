@@ -445,40 +445,65 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page-bg);color:
 
   </div>
 
-  <!-- ── ROW 2 · Technical Rating (full width) ── -->
-  <div class="section-head"><span class="section-label">Technical Rating</span><div class="section-line"></div></div>
-  <div class="wcard section-block" id="wc-tech">
-    <div class="wcard-head">
-      <span class="wcard-title">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-        Technical Ratings
-      </span>
-      <span class="wcard-sub">RSI · MACD · SMA / EMA · 60+ indicators · Momentum signals</span>
+  <!-- ── ROW 2 · Technical Rating + TradingView Chart (50 / 50) ── -->
+  <div class="section-head"><span class="section-label">Technical Rating &amp; Chart</span><div class="section-line"></div></div>
+  <div class="grid-2 section-block">
+
+    <!-- Trendlyne Technical Ratings -->
+    <div class="wcard" id="wc-tech">
+      <div class="wcard-head">
+        <span class="wcard-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          Technical Ratings
+        </span>
+        <span class="wcard-sub">RSI · MACD · SMA / EMA · 60+ indicators</span>
+      </div>
+      <div class="wcard-body">
+        <div class="wload" id="tech-loader"><div class="spin"></div>Select a stock to load technical ratings…</div>
+        <iframe id="iframe-tech" class="wcard-iframe" src="" frameborder="0" loading="lazy" style="display:none;height:480px" title="Technical Analysis"></iframe>
+      </div>
+      <div class="tl-attr">Data by <a href="https://trendlyne.com" target="_blank" rel="noopener">Trendlyne</a></div>
     </div>
-    <div class="wcard-body">
-      <div class="wload" id="tech-loader"><div class="spin"></div>Select a stock to load technical ratings…</div>
-      <iframe id="iframe-tech" class="wcard-iframe" src="" frameborder="0" loading="lazy" style="display:none;height:500px" title="Technical Analysis"></iframe>
+
+    <!-- TradingView Advanced Chart -->
+    <div class="wcard" id="wc-tvchart">
+      <div class="wcard-head">
+        <span class="wcard-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          Live Chart
+        </span>
+        <span class="wcard-sub">BSE · Candlestick · Volume · Multi-timeframe</span>
+      </div>
+      <div class="wcard-body" style="position:relative">
+        <div class="wload" id="tvchart-loader"><div class="spin"></div>Select a stock to load chart…</div>
+        <iframe id="iframe-tvchart"
+          src=""
+          style="display:none;width:100%;height:480px;border:none"
+          allowtransparency="true" frameborder="0" scrolling="no"
+          allowfullscreen title="TradingView Chart"></iframe>
+      </div>
+      <div class="tl-attr">Chart by <a href="https://www.tradingview.com" target="_blank" rel="noopener">TradingView</a></div>
     </div>
-    <div class="tl-attr">Data by <a href="https://trendlyne.com" target="_blank" rel="noopener">Trendlyne</a></div>
+
   </div>
 
-  <!-- ── ROW 3 · IPO Tracker (full width) ── -->
-  <div class="section-head"><span class="section-label">IPO Tracker</span><div class="section-line"></div></div>
-  <div class="wcard section-block" id="wc-ipo">
+  <!-- ── ROW 3 · TradingView Fundamental Data (full width) ── -->
+  <div class="section-head"><span class="section-label">Fundamental Data</span><div class="section-line"></div></div>
+  <div class="wcard section-block" id="wc-tvfund">
     <div class="wcard-head">
       <span class="wcard-title">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-        IPO Tracker
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Fundamental Data
       </span>
-      <span class="wcard-sub">Active IPO · Upcoming · Recently Listed · GMP · Allotment Status</span>
+      <span class="wcard-sub">Revenue · EPS · P/E · Dividends · Balance Sheet · Cash Flow</span>
     </div>
-    <div class="wcard-body" style="overflow:hidden">
-      <blockquote class="trendlyne-widgets"
-        data-get-url="https://trendlyne.com/web-widget/ipo-widget/Poppins/?activeCol=006AFF&linksCol=006CFF&primary=202020&secondary=666666&positive=00a25b&negative=ff4e54"
-        data-theme="light">
-      </blockquote>
+    <div class="wcard-body" style="min-height:500px;background:#131722">
+      <div class="wload" id="tvfund-loader" style="background:#131722;color:#64748b">
+        <div class="spin"></div>Select a stock to load fundamentals…
+      </div>
+      <div id="tv-fund-wrap" style="width:100%;min-height:500px"></div>
     </div>
-    <div class="tl-attr">Data by <a href="https://trendlyne.com/ipo-allotment-status/" target="_blank" rel="noopener">Trendlyne</a></div>
+    <div class="tl-attr">Data by <a href="https://www.tradingview.com" target="_blank" rel="noopener">TradingView</a></div>
   </div>
 
 </div><!-- /widgetsArea -->
@@ -719,12 +744,60 @@ function injectAll(sym){
 
   setIframe('iframe-tech','tech-loader',
     `${TL_BASE}technical-widget/${TL_FONT}/${sym}/${bse}`);
+
+  setTVChart(sym);
+  injectTVFundamentals(sym);
+}
+
+/* ── TradingView Advanced Chart (iframe embed, BSE routing) ── */
+function setTVChart(sym){
+  const frame  = document.getElementById('iframe-tvchart');
+  const loader = document.getElementById('tvchart-loader');
+  if(!frame) return;
+  frame.style.display = 'none';
+  if(loader) loader.style.display = 'flex';
+  const tvSym = encodeURIComponent('BSE:' + sym);
+  frame.src = `https://www.tradingview.com/widgetembed/?symbol=${tvSym}&interval=D&theme=dark&style=1&locale=en&toolbar_bg=%230a1830&hide_side_toolbar=0&allow_symbol_change=0&save_image=0&withdateranges=1&details=1`;
+  frame.onload = () => {
+    frame.style.display = 'block';
+    if(loader) loader.style.display = 'none';
+  };
+}
+
+/* ── TradingView Fundamental Data (script-inject, re-created on each stock) ── */
+function injectTVFundamentals(sym){
+  const wrap   = document.getElementById('tv-fund-wrap');
+  const loader = document.getElementById('tvfund-loader');
+  if(!wrap) return;
+  if(loader) loader.style.display = 'none';
+
+  /* Clear previous widget */
+  wrap.innerHTML = '';
+
+  const inner = document.createElement('div');
+  inner.className = 'tradingview-widget-container__widget';
+  wrap.appendChild(inner);
+
+  const s = document.createElement('script');
+  s.type    = 'text/javascript';
+  s.src     = 'https://s3.tradingview.com/external-embedding/embed-widget-financials.js';
+  s.async   = true;
+  s.charset = 'utf-8';
+  s.textContent = JSON.stringify({
+    symbol:          'BSE:' + sym,
+    width:           '100%',
+    height:          520,
+    locale:          'en',
+    colorTheme:      'dark',
+    isTransparent:   false,
+    displayMode:     'regular',
+    largeChartUrl:   ''
+  });
+  wrap.appendChild(s);
 }
 
 /* Pre-warm autocomplete after page settles */
 setTimeout(acLoad,1200);
 </script>
-<!-- Trendlyne SDK — initialises IPO Tracker blockquote widget -->
-<script async src="https://cdn-static.trendlyne.com/static/js/webwidgets/tl-widgets.js" charset="utf-8"></script>
 </body>
 </html>
