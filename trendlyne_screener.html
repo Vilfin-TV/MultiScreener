@@ -3,8 +3,10 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<meta name="description" content="Indian stock deep-dive — SWOT analysis, technical ratings, fundamental checklists and scores powered by Trendlyne."/>
-<title>Indian Stock Trendlyne — MultiScreener</title>
+<meta name="description" content="Indian stock deep-dive — SWOT analysis, technical ratings, fundamental checklists and IPO tracker powered by Trendlyne."/>
+<title>Trendlyne Screener — MultiScreener</title>
+<!-- Favicon: candlestick chart -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230a1830'/><rect x='7' y='10' width='4' height='12' rx='1' fill='%2310b981'/><rect x='8.5' y='6' width='1' height='4' rx='.5' fill='%2310b981'/><rect x='8.5' y='22' width='1' height='4' rx='.5' fill='%2310b981'/><rect x='14' y='8' width='4' height='10' rx='1' fill='%23ef4444'/><rect x='15.5' y='4' width='1' height='4' rx='.5' fill='%23ef4444'/><rect x='15.5' y='18' width='1' height='5' rx='.5' fill='%23ef4444'/><rect x='21' y='12' width='4' height='8' rx='1' fill='%2310b981'/><rect x='22.5' y='8' width='1' height='4' rx='.5' fill='%2310b981'/><rect x='22.5' y='20' width='1' height='4' rx='.5' fill='%2310b981'/></svg>"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
@@ -45,9 +47,14 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page-bg);color:
 .nav-divider{width:1px;height:20px;background:var(--border)}
 .nav-brand{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--burn2);letter-spacing:1.5px}
 .nav-badge{
+  display:flex;align-items:center;gap:6px;
   font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
-  padding:2px 8px;background:rgba(255,153,51,.1);
+  padding:3px 10px 3px 8px;
+  background:rgba(255,153,51,.1);
   border:1px solid rgba(255,153,51,.3);border-radius:4px;color:var(--saffron);
+}
+.nav-badge-icon{
+  width:16px;height:16px;flex-shrink:0;
 }
 .nav-right{display:flex;align-items:center;gap:8px}
 .nav-live-badge{
@@ -91,8 +98,6 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page-bg);color:
   color:var(--text3);font-size:13px;letter-spacing:.3px;
   margin-bottom:36px;max-width:520px;margin-left:auto;margin-right:auto;
 }
-.india-flag{display:inline-flex;align-items:center;gap:5px;vertical-align:middle}
-.flag-bar{width:18px;height:4px;border-radius:2px}
 
 /* Search input */
 .search-wrap{position:relative;max-width:660px;margin:0 auto 22px}
@@ -217,9 +222,11 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page-bg);color:
 
 .section-head{
   display:flex;align-items:center;gap:12px;
-  margin-bottom:14px;margin-top:8px;
+  margin-bottom:14px;
 }
-.section-head:not(:first-child){margin-top:32px}
+.section-head + .section-head,
+.wcard + .section-head,
+.widget-row + .section-head{margin-top:32px}
 .section-label{
   font-size:10px;font-weight:700;letter-spacing:2px;
   text-transform:uppercase;color:var(--text3);white-space:nowrap;
@@ -230,7 +237,6 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page-bg);color:
 .wcard{
   background:var(--card);border:1px solid var(--border);
   border-radius:var(--radius);overflow:hidden;
-  margin-bottom:20px;
 }
 .wcard-head{
   display:flex;align-items:center;justify-content:space-between;
@@ -246,12 +252,11 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page-bg);color:
 .wcard-body{width:100%;overflow:hidden;background:#fff}
 .wcard-iframe{
   width:100%;border:none;display:block;
-  min-height:480px;
 }
 
-/* Grids */
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:0}
-.grid-6040{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;margin-bottom:0}
+/* Grid layouts */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.widget-row{margin-bottom:0}
 
 /* Loading placeholder */
 .wload{
@@ -271,40 +276,8 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page-bg);color:
 .tl-attr a{color:var(--saffron);text-decoration:none;font-weight:600}
 .tl-attr a:hover{text-decoration:underline}
 
-/* Stock Scores panel */
-.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
-.score-cat{
-  background:var(--card2);border:1px solid var(--border2);border-radius:10px;
-  padding:14px 12px;text-align:center;
-}
-.score-cat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:6px}
-.score-cat-icon{font-size:24px;opacity:.7}
-.scores-cta{
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  width:100%;padding:13px;background:rgba(255,153,51,.1);
-  border:1px solid rgba(255,153,51,.35);border-radius:10px;
-  color:var(--saffron);font-size:13px;font-weight:700;
-  text-decoration:none;letter-spacing:.3px;
-  transition:background .15s,border-color .15s;
-}
-.scores-cta:hover{background:rgba(255,153,51,.18);border-color:var(--saffron)}
-.scores-cta svg{opacity:.7}
-
-/* IPO news feed */
-.ipo-item{
-  display:block;padding:11px 16px;
-  border-bottom:1px solid rgba(255,255,255,.04);
-  text-decoration:none;transition:background .1s;
-}
-.ipo-item:last-child{border-bottom:none}
-.ipo-item:hover{background:var(--card2)}
-.ipo-item-title{font-size:13px;font-weight:500;color:var(--text);line-height:1.45;margin-bottom:4px}
-.ipo-item-meta{font-size:10px;color:var(--text3);display:flex;align-items:center;gap:6px}
-.ipo-item-src{
-  font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
-  padding:1px 5px;background:rgba(255,153,51,.12);border-radius:3px;color:var(--saffron);
-}
-.ipo-empty{padding:48px 16px;text-align:center;color:var(--text3);font-size:13px}
+/* Section spacing */
+.section-block{margin-bottom:20px}
 
 /* Scrollbar */
 ::-webkit-scrollbar{width:5px;height:5px}
@@ -313,8 +286,8 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page-bg);color:
 ::-webkit-scrollbar-thumb:hover{background:var(--saffron)}
 
 /* ── RESPONSIVE ── */
-@media(max-width:960px){
-  .grid-2,.grid-6040{grid-template-columns:1fr}
+@media(max-width:900px){
+  .grid-2{grid-template-columns:1fr}
 }
 @media(max-width:640px){
   .search-hero{padding:36px 16px 32px}
@@ -341,7 +314,21 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page-bg);color:
     </a>
     <div class="nav-divider"></div>
     <span class="nav-brand">VILFIN<span style="color:var(--text2)">-TV</span></span>
-    <span class="nav-badge">🇮🇳 Trendlyne</span>
+    <span class="nav-badge">
+      <!-- candlestick icon -->
+      <svg class="nav-badge-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="5" width="2" height="6" rx=".5" fill="#ff9933"/>
+        <rect x="3.5" y="3" width="1" height="2" rx=".5" fill="#ff9933"/>
+        <rect x="3.5" y="11" width="1" height="2" rx=".5" fill="#ff9933"/>
+        <rect x="7" y="4" width="2" height="5" rx=".5" fill="#10b981"/>
+        <rect x="7.5" y="2" width="1" height="2" rx=".5" fill="#10b981"/>
+        <rect x="7.5" y="9" width="1" height="2.5" rx=".5" fill="#10b981"/>
+        <rect x="11" y="6" width="2" height="4" rx=".5" fill="#ff9933"/>
+        <rect x="11.5" y="4" width="1" height="2" rx=".5" fill="#ff9933"/>
+        <rect x="11.5" y="10" width="1" height="2" rx=".5" fill="#ff9933"/>
+      </svg>
+      Trendlyne
+    </span>
   </div>
   <div class="nav-right">
     <div class="nav-live-badge">
@@ -355,7 +342,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page-bg);color:
 <section class="search-hero">
   <div class="hero-eyebrow">🇮🇳 NSE · BSE · Trendlyne Intelligence</div>
   <h1 class="hero-title">Indian Stock <span>Trendlyne</span></h1>
-  <p class="hero-sub">SWOT analysis, technical ratings, fundamental checklists &amp; stock scores for every NSE/BSE listed company</p>
+  <p class="hero-sub">SWOT analysis, technical ratings, fundamental checklists &amp; IPO tracker for every NSE / BSE listed company</p>
 
   <div class="search-wrap">
     <div class="search-row" id="searchRow">
@@ -405,9 +392,9 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page-bg);color:
 
 <!-- ═══════════════ EMPTY STATE ═══════════════ -->
 <div id="emptyState">
-  <div class="empty-icon">🇮🇳</div>
+  <div class="empty-icon">📊</div>
   <div class="empty-title">Search any Indian listed stock</div>
-  <div class="empty-sub">Get SWOT analysis, technical ratings, fundamental checklists and stock scores for any NSE / BSE company via Trendlyne</div>
+  <div class="empty-sub">Get SWOT analysis, technical ratings, fundamental checklists and IPO tracker for any NSE / BSE company via Trendlyne</div>
   <div class="empty-chips">
     <button class="chip" onclick="quickLoad('HDFCBANK','HDFC Bank')">🏦 HDFC Bank</button>
     <button class="chip" onclick="quickLoad('RELIANCE','Reliance Industries')">🛢️ Reliance</button>
@@ -420,9 +407,9 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page-bg);color:
 <!-- ═══════════════ WIDGETS AREA ═══════════════ -->
 <div id="widgetsArea">
 
-  <!-- ── ROW 1 · SWOT + Technical (60/40) ── -->
-  <div class="section-head"><span class="section-label">SWOT &amp; Technical Analysis</span><div class="section-line"></div></div>
-  <div class="grid-6040" style="margin-bottom:20px">
+  <!-- ── ROW 1 · SWOT + Stock Checklist (50 / 50) ── -->
+  <div class="section-head"><span class="section-label">Analysis &amp; Fundamentals</span><div class="section-line"></div></div>
+  <div class="grid-2 section-block">
 
     <!-- SWOT Analysis -->
     <div class="wcard" id="wc-swot">
@@ -435,89 +422,63 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page-bg);color:
       </div>
       <div class="wcard-body">
         <div class="wload" id="swot-loader"><div class="spin"></div>Select a stock to load SWOT…</div>
-        <iframe id="iframe-swot" class="wcard-iframe" src="" frameborder="0" loading="lazy" style="display:none;height:560px" title="SWOT Analysis"></iframe>
+        <iframe id="iframe-swot" class="wcard-iframe" src="" frameborder="0" loading="lazy" style="display:none;height:540px" title="SWOT Analysis"></iframe>
       </div>
-      <div class="tl-attr">Powered by <a href="https://trendlyne.com" target="_blank" rel="noopener">Trendlyne</a></div>
+      <div class="tl-attr">Data by <a href="https://trendlyne.com" target="_blank" rel="noopener">Trendlyne</a></div>
     </div>
 
-    <!-- Technical Analysis -->
-    <div class="wcard" id="wc-tech">
+    <!-- Stock Checklist -->
+    <div class="wcard" id="wc-checklist">
       <div class="wcard-head">
         <span class="wcard-title">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-          Technical Ratings
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Stock Checklist
         </span>
-        <span class="wcard-sub">RSI · MACD · SMA/EMA · 60+ indicators</span>
+        <span class="wcard-sub">Financials · Ownership · Valuation · Peer · Momentum</span>
       </div>
       <div class="wcard-body">
-        <div class="wload" id="tech-loader"><div class="spin"></div>Select a stock to load technicals…</div>
-        <iframe id="iframe-tech" class="wcard-iframe" src="" frameborder="0" loading="lazy" style="display:none;height:560px" title="Technical Analysis"></iframe>
+        <div class="wload" id="checklist-loader"><div class="spin"></div>Select a stock to load checklist…</div>
+        <iframe id="iframe-checklist" class="wcard-iframe" src="" frameborder="0" loading="lazy" style="display:none;height:540px" title="Stock Checklist"></iframe>
       </div>
-      <div class="tl-attr">Powered by <a href="https://trendlyne.com" target="_blank" rel="noopener">Trendlyne</a></div>
+      <div class="tl-attr">Data by <a href="https://trendlyne.com" target="_blank" rel="noopener">Trendlyne</a></div>
     </div>
 
   </div>
 
-  <!-- ── ROW 2 · Stock Checklist (full width) ── -->
-  <div class="section-head"><span class="section-label">Fundamental Checklist</span><div class="section-line"></div></div>
-  <div class="wcard" id="wc-checklist">
+  <!-- ── ROW 2 · Technical Rating (full width) ── -->
+  <div class="section-head"><span class="section-label">Technical Rating</span><div class="section-line"></div></div>
+  <div class="wcard section-block" id="wc-tech">
     <div class="wcard-head">
       <span class="wcard-title">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-        Stock Checklist
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        Technical Ratings
       </span>
-      <span class="wcard-sub">Financials · Ownership · Valuation · Peer Comparison · Momentum</span>
+      <span class="wcard-sub">RSI · MACD · SMA / EMA · 60+ indicators · Momentum signals</span>
     </div>
     <div class="wcard-body">
-      <div class="wload" id="checklist-loader"><div class="spin"></div>Select a stock to load checklist…</div>
-      <iframe id="iframe-checklist" class="wcard-iframe" src="" frameborder="0" loading="lazy" style="display:none;height:580px" title="Stock Checklist"></iframe>
+      <div class="wload" id="tech-loader"><div class="spin"></div>Select a stock to load technical ratings…</div>
+      <iframe id="iframe-tech" class="wcard-iframe" src="" frameborder="0" loading="lazy" style="display:none;height:500px" title="Technical Analysis"></iframe>
     </div>
-    <div class="tl-attr">Powered by <a href="https://trendlyne.com" target="_blank" rel="noopener">Trendlyne</a></div>
+    <div class="tl-attr">Data by <a href="https://trendlyne.com" target="_blank" rel="noopener">Trendlyne</a></div>
   </div>
 
-  <!-- ── ROW 3 · Stock Scores + IPO News (50/50) ── -->
-  <div class="section-head"><span class="section-label">Scores &amp; IPO Insights</span><div class="section-line"></div></div>
-  <div class="grid-2" style="margin-bottom:20px">
-
-    <!-- Stock Scores — Trendlyne SDK widget (dynamic per stock) -->
-    <div class="wcard" id="wc-scores">
-      <div class="wcard-head">
-        <span class="wcard-title">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-          Stock Scores
-        </span>
-        <span class="wcard-sub">Fundamental · Technical · Momentum · Valuation</span>
-      </div>
-      <div class="wcard-body" id="scores-sdk-wrap" style="min-height:400px">
-        <!-- Empty state until stock selected -->
-        <div id="scores-empty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:360px;text-align:center;color:var(--text3);background:var(--card)">
-          <div style="font-size:48px;opacity:.2;margin-bottom:16px">📊</div>
-          <div style="font-size:14px;font-weight:600;color:var(--text2);margin-bottom:6px">Select a stock above</div>
-          <div style="font-size:12px;line-height:1.6;max-width:220px">Pick any NSE/BSE company to load its Trendlyne score breakdown</div>
-        </div>
-        <!-- blockquote injected here dynamically -->
-      </div>
-      <div class="tl-attr">Powered by <a href="https://trendlyne.com" target="_blank" rel="noopener">Trendlyne</a></div>
+  <!-- ── ROW 3 · IPO Tracker (full width) ── -->
+  <div class="section-head"><span class="section-label">IPO Tracker</span><div class="section-line"></div></div>
+  <div class="wcard section-block" id="wc-ipo">
+    <div class="wcard-head">
+      <span class="wcard-title">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        IPO Tracker
+      </span>
+      <span class="wcard-sub">Active IPO · Upcoming · Recently Listed · GMP · Allotment Status</span>
     </div>
-
-    <!-- IPO Tracker — official Trendlyne SDK embed (always visible) -->
-    <div class="wcard" id="wc-ipo">
-      <div class="wcard-head">
-        <span class="wcard-title">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-          IPO Tracker
-        </span>
-        <span class="wcard-sub">Active IPO · Upcoming · Recently Listed · GMP</span>
-      </div>
-      <div class="wcard-body" style="overflow:hidden">
-        <blockquote class="trendlyne-widgets"
-          data-get-url="https://trendlyne.com/web-widget/ipo-widget/Poppins/?activeCol=006AFF&linksCol=006CFF&primary=202020&secondary=666666&positive=00a25b&negative=ff4e54"
-          data-theme="light">
-        </blockquote>
-      </div>
-      <div class="tl-attr">Powered by <a href="https://trendlyne.com/ipo-allotment-status/" target="_blank" rel="noopener">Trendlyne</a></div>
+    <div class="wcard-body" style="overflow:hidden">
+      <blockquote class="trendlyne-widgets"
+        data-get-url="https://trendlyne.com/web-widget/ipo-widget/Poppins/?activeCol=006AFF&linksCol=006CFF&primary=202020&secondary=666666&positive=00a25b&negative=ff4e54"
+        data-theme="light">
+      </blockquote>
     </div>
-
+    <div class="tl-attr">Data by <a href="https://trendlyne.com/ipo-allotment-status/" target="_blank" rel="noopener">Trendlyne</a></div>
   </div>
 
 </div><!-- /widgetsArea -->
@@ -544,7 +505,6 @@ async function acLoad(){
     const r=await fetch(AC.URL);
     if(!r.ok)throw new Error('fetch '+r.status);
     const raw=await r.json();
-    /* Filter to Indian exchanges; if no exchange field assume Indian */
     const indian=raw.filter(s=>{
       if(!s.exchange)return true;
       const ex=(s.exchange||'').toUpperCase();
@@ -575,7 +535,6 @@ function acRender(q){
   if(!ql){acClose();return;}
   const dd=document.getElementById('acDrop');
 
-  /* Position dropdown below input */
   const row=document.getElementById('searchRow');
   const rect=row.getBoundingClientRect();
   dd.style.top=(rect.bottom+window.scrollY+6)+'px';
@@ -619,7 +578,6 @@ function acShow(list){
     return;
   }
   dd.innerHTML=list.map((s,i)=>{
-    /* Prefer just the symbol for Trendlyne (no exchange prefix) */
     const tick=s.symbol||'';
     const safeName=(s.name||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
     return `<div class="ac-item" role="option" data-idx="${i}"
@@ -643,7 +601,6 @@ function acClose(){
 }
 
 function acSelect(sym,name){
-  document.getElementById('stockInput').value=name?`${name}  (${sym})`:sym;
   acClose();
   loadStockBySymbol(sym,name);
 }
@@ -690,19 +647,21 @@ function loadStock(){
   if(!raw)return;
   const m=raw.match(/\(([^)]+)\)\s*$/);
   let sym=m?m[1]:raw.replace(/\s+/g,'').toUpperCase();
-  /* Strip exchange prefix if user typed NSE:HDFCBANK */
   if(sym.includes(':'))sym=sym.split(':')[1];
   loadStockBySymbol(sym,null);
 }
 
 function quickLoad(sym,name){
-  inp.value=`${name}  (${sym})`;
   loadStockBySymbol(sym,name);
 }
 
 function loadStockBySymbol(sym,name){
   if(!sym)return;
   _sym=sym;_name=name||sym;
+
+  /* Clear search box immediately */
+  inp.value='';
+  acClose();
 
   /* Update banner */
   document.getElementById('stockBanner').style.display='block';
@@ -741,7 +700,6 @@ function setIframe(iframeId,loaderId,url){
   if(loader)loader.style.display='flex';
 
   frame.src='';
-  /* Short delay so browser registers src reset */
   setTimeout(()=>{
     frame.src=url;
     frame.onload=()=>{
@@ -755,43 +713,17 @@ function injectAll(sym){
   setIframe('iframe-swot','swot-loader',
     `${TL_BASE}swot-widget/${TL_FONT}/${sym}/`);
 
-  setIframe('iframe-tech','tech-loader',
-    `${TL_BASE}technical-widget/${TL_FONT}/${sym}/`);
-
   setIframe('iframe-checklist','checklist-loader',
     `${TL_BASE}checklist-widget/${TL_FONT}/${sym}/`);
 
-  /* Stock Scores — Trendlyne SDK widget */
-  injectTlWidget('scores-sdk-wrap',
-    `${TL_BASE}scores-widget/${TL_FONT}/${sym}/`);
-}
-
-/* ── Trendlyne SDK widget injector ── */
-const TL_SDK_PARAMS = '?activeCol=006AFF&linksCol=006CFF&primary=202020&secondary=666666&positive=00a25b&negative=ff4e54';
-const TL_SDK_SCRIPT = 'https://cdn-static.trendlyne.com/static/js/webwidgets/tl-widgets.js';
-
-function injectTlWidget(containerId, widgetUrl){
-  const wrap = document.getElementById(containerId);
-  if(!wrap) return;
-  const empty = document.getElementById('scores-empty');
-  if(empty) empty.style.display = 'none';
-  wrap.querySelectorAll('.trendlyne-widgets, script').forEach(el => el.remove());
-  const bq = document.createElement('blockquote');
-  bq.className = 'trendlyne-widgets';
-  bq.setAttribute('data-get-url', widgetUrl + TL_SDK_PARAMS);
-  bq.setAttribute('data-theme', 'light');
-  wrap.appendChild(bq);
-  const s = document.createElement('script');
-  s.src = TL_SDK_SCRIPT;
-  s.async = true;
-  s.charset = 'utf-8';
-  wrap.appendChild(s);
+  setIframe('iframe-tech','tech-loader',
+    `${TL_BASE}technical-widget/${TL_FONT}/${sym}/`);
 }
 
 /* Pre-warm autocomplete after page settles */
 setTimeout(acLoad,1200);
 </script>
-<!-- Trendlyne SDK — initialises all static blockquote widgets (e.g. IPO Tracker) -->
+<!-- Trendlyne SDK — initialises IPO Tracker blockquote widget -->
 <script async src="https://cdn-static.trendlyne.com/static/js/webwidgets/tl-widgets.js" charset="utf-8"></script>
 </body>
 </html>
