@@ -623,6 +623,14 @@ function quickLoad(sym,name){
 
 function loadStockBySymbol(sym,name){
   if(!sym)return;
+
+  /* Auto-clear the search input */
+  inp.value='';
+  acClose();
+
+  /* Route Indian stocks via BSE — NSE blocks external data requests */
+  if(sym.startsWith('NSE:'))sym='BSE:'+sym.slice(4);
+
   _sym=sym;_name=name||sym;
 
   const parts=sym.split(':');
