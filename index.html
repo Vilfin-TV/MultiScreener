@@ -3520,35 +3520,6 @@ footer{
       <span id="yt-now-playing" style="font-size:9px;color:#cbd5e1;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:4px;font-weight:600"></span>
     </div>
 
-    <!-- ── Live / Past Scores — fills all remaining space ── -->
-    <div id="live-scores-box" style="flex:1;min-height:0;background:#080e1a;border-top:1px solid #131d35;display:flex;flex-direction:column;overflow:hidden">
-
-      <!-- Main tab row: Live Scores / Past Results -->
-      <div style="display:flex;gap:0;background:#050a14;border-bottom:1px solid #131d35;flex-shrink:0">
-        <button id="smt-live" onclick="switchScoreMainTab('live')"
-          style="flex:1;padding:7px 6px;border:none;border-bottom:2px solid #1d4ed8;background:rgba(29,78,216,.12);color:#60a5fa;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.4px;transition:all .15s">
-          &#x1F534; LIVE
-        </button>
-        <button id="smt-past" onclick="switchScoreMainTab('past')"
-          style="flex:1;padding:7px 6px;border:none;border-bottom:2px solid transparent;background:transparent;color:#475569;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.4px;transition:all .15s">
-          &#x1F4CB; PAST
-        </button>
-        <span style="font-size:8px;color:#1e3a5f;align-self:center;white-space:nowrap;padding:0 6px;flex-shrink:0" id="scores-updated"></span>
-      </div>
-
-      <!-- Sport sub-tabs (shown in both modes) -->
-      <div id="score-sport-tabs" style="display:flex;gap:4px;padding:6px 7px 5px;background:#080e1a;border-bottom:1px solid #0e1e36;flex-shrink:0;overflow-x:auto;scrollbar-width:none">
-        <button class="score-sport-btn active" id="ssb-cricket"  onclick="switchScoreSport('cricket')" >&#x1F3CF; Cricket</button>
-        <button class="score-sport-btn"        id="ssb-football" onclick="switchScoreSport('football')">&#x26BD; Football</button>
-        <button class="score-sport-btn"        id="ssb-tennis"   onclick="switchScoreSport('tennis')"  >&#x1F3BE; Tennis</button>
-        <button class="score-sport-btn"        id="ssb-baseball" onclick="switchScoreSport('baseball')">&#x26BE; Baseball</button>
-      </div>
-
-      <!-- Score cards scroll area -->
-      <div id="live-scores-content" style="flex:1;overflow-y:auto;padding:6px 7px 4px;scrollbar-width:thin;scrollbar-color:#1e293b transparent">
-        <div style="text-align:center;padding:20px;color:#334155;font-size:11px">Loading scores…</div>
-      </div>
-    </div>
   </div>
 
   <!-- ── PANEL 3: Live TV (IPTV via HLS.js) ── -->
@@ -3757,10 +3728,10 @@ footer{
     </div>
 
     <!-- Embedded radiosindia.com player — tap placeholder to load, fills panel -->
-    <div class="radio-india-body" id="pr-body" style="flex:1;min-height:0">
+    <div class="radio-india-body" id="pr-body" style="flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden">
       <!-- Placeholder: prevents autoplay on tab open -->
       <div id="pr-placeholder" onclick="prLoadPlayer()"
-           style="height:100%;min-height:260px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#060d1a;cursor:pointer;border-bottom:1px solid #1e3a5c">
+           style="flex:1;min-height:260px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#060d1a;cursor:pointer;border-bottom:1px solid #1e3a5c">
         <div style="width:56px;height:56px;border-radius:50%;background:#1d4ed8;display:flex;align-items:center;justify-content:center;font-size:22px">▶</div>
         <div style="font-size:13px;color:#94a3b8;font-weight:600">Radio India — Featured</div>
         <div style="font-size:11px;color:#475569">Tap to load player</div>
@@ -3769,7 +3740,7 @@ footer{
       </div>
       <!-- Full radiosindia.com embed — includes site's own category navigation tabs -->
       <iframe id="pr-iframe" src="" data-src="https://radiosindia.com/"
-              style="width:100%;height:100%;min-height:420px;border:none;display:none"
+              style="flex:1;width:100%;min-height:420px;border:none;display:none"
               loading="lazy" title="Radio India Featured" allow="autoplay"></iframe>
     </div>
 
@@ -3781,32 +3752,34 @@ footer{
   ══════════════════════════════════════════════════════════════════════ -->
   <div id="rb-panel-sports" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
 
-    <!-- Sport selector tabs -->
-    <div style="display:flex;gap:0;background:#050a14;border-bottom:1px solid #131d35;flex-shrink:0">
-      <button class="sw-sport-btn active" id="sw-tab-cricket"  onclick="swSwitchSport('cricket')" >🏏 Cricket</button>
-      <button class="sw-sport-btn"        id="sw-tab-football" onclick="swSwitchSport('football')">⚽ Football</button>
-      <button class="sw-sport-btn"        id="sw-tab-rugby"    onclick="swSwitchSport('rugby')"   >🏉 Rugby</button>
-    </div>
+    <!-- Reuses the proven live-scores engine: same DOM IDs, same backend -->
+    <div id="live-scores-box" style="flex:1;min-height:0;background:#080e1a;display:flex;flex-direction:column;overflow:hidden">
 
-    <!-- IPL filter (cricket only) -->
-    <div id="sw-ipl-bar" style="padding:5px 10px;background:#060d1a;border-bottom:1px solid #0e1e36;flex-shrink:0;display:flex;align-items:center;gap:6px">
-      <span style="font-size:9px;color:#f97316;font-weight:700;letter-spacing:1px">IPL</span>
-      <button id="sw-ipl-btn" onclick="swToggleIPL()" style="font-size:10px;padding:3px 10px;background:rgba(249,115,22,.15);border:1px solid #f97316;border-radius:12px;color:#f97316;cursor:pointer;font-weight:700;transition:all .2s">🏆 IPL Only</button>
-      <span style="margin-left:auto;font-size:9px;color:#334155" id="sw-last-updated"></span>
-    </div>
+      <!-- Main tab row: Live / Past -->
+      <div style="display:flex;gap:0;background:#050a14;border-bottom:1px solid #131d35;flex-shrink:0">
+        <button id="smt-live" onclick="switchScoreMainTab('live')"
+          style="flex:1;padding:7px 6px;border:none;border-bottom:2px solid #1d4ed8;background:rgba(29,78,216,.12);color:#60a5fa;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.4px;transition:all .15s">
+          &#x1F534; LIVE
+        </button>
+        <button id="smt-past" onclick="switchScoreMainTab('past')"
+          style="flex:1;padding:7px 6px;border:none;border-bottom:2px solid transparent;background:transparent;color:#475569;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.4px;transition:all .15s">
+          &#x1F4CB; PAST
+        </button>
+        <span style="font-size:8px;color:#1e3a5f;align-self:center;white-space:nowrap;padding:0 6px;flex-shrink:0" id="scores-updated"></span>
+      </div>
 
-    <!-- Live / Past toggle -->
-    <div style="display:flex;gap:0;background:#050a14;border-bottom:1px solid #131d35;flex-shrink:0">
-      <button class="sw-mode-btn active" id="sw-mode-live" onclick="swSwitchMode('live')">🔴 LIVE</button>
-      <button class="sw-mode-btn"        id="sw-mode-past" onclick="swSwitchMode('past')">📋 PAST</button>
-      <div id="sw-status-chip" style="margin-left:auto;align-self:center;padding:0 10px;font-size:9px;color:#334155;white-space:nowrap"></div>
-    </div>
+      <!-- Sport sub-tabs -->
+      <div id="score-sport-tabs" style="display:flex;gap:4px;padding:6px 7px 5px;background:#080e1a;border-bottom:1px solid #0e1e36;flex-shrink:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch">
+        <button class="score-sport-btn active" id="ssb-cricket"  onclick="switchScoreSport('cricket')" >&#x1F3CF; Cricket</button>
+        <button class="score-sport-btn"        id="ssb-football" onclick="switchScoreSport('football')">&#x26BD; Football</button>
+        <button class="score-sport-btn"        id="ssb-rugby"    onclick="switchScoreSport('rugby')"   >&#x1F3C9; Rugby</button>
+        <button class="score-sport-btn"        id="ssb-tennis"   onclick="switchScoreSport('tennis')"  >&#x1F3BE; Tennis</button>
+        <button class="score-sport-btn"        id="ssb-baseball" onclick="switchScoreSport('baseball')">&#x26BE; Baseball</button>
+      </div>
 
-    <!-- Score cards area -->
-    <div id="sw-content" style="flex:1;overflow-y:auto;padding:6px 7px;scrollbar-width:thin;scrollbar-color:#1e293b transparent">
-      <div style="text-align:center;padding:28px 16px;color:#334155;font-size:12px">
-        <div style="font-size:28px;margin-bottom:8px">🏏</div>
-        Loading scores…
+      <!-- Score cards scroll area -->
+      <div id="live-scores-content" style="flex:1;overflow-y:auto;padding:6px 7px 4px;scrollbar-width:thin;scrollbar-color:#1e293b transparent">
+        <div style="text-align:center;padding:20px;color:#334155;font-size:11px">Loading scores…</div>
       </div>
     </div>
 
@@ -8140,217 +8113,9 @@ function prTogglePlayer() {
 function prStop() {}
 
 // ═══════════════════════════════════════════════════════════════════════
-// SPORTS WIDGET ENGINE — Cricket / Football / Rugby (hybrid failback)
+// SPORTS WIDGET — delegates to the proven ESPN live-scores engine
 // ═══════════════════════════════════════════════════════════════════════
-var _swSport       = 'cricket';
-var _swMode        = 'live';
-var _swIPLOnly     = false;
-var _swCache       = {};
-var _swFetching    = false;
-
-const _SW_PROXY = 'https://screener-proxy.vilfintv.workers.dev';
-const _SW_APIS  = {
-  cricket: {
-    live: [
-      'https://api.cricapi.com/v1/currentMatches?apikey=&offset=0',
-      'https://api.sports.dev.crickapi.io/matches/live',
-    ],
-    past: [
-      'https://api.cricapi.com/v1/matches?apikey=&offset=0',
-    ],
-  },
-  football: {
-    live: ['https://v3.football.api-sports.io/fixtures?live=all'],
-    past: ['https://v3.football.api-sports.io/fixtures?last=20'],
-  },
-  rugby: {
-    live: ['https://v1.rugby.api-sports.io/games?live=all'],
-    past: ['https://v1.rugby.api-sports.io/games?last=20'],
-  },
-};
-
-async function swInit() {
-  swRenderContent('<div style="text-align:center;padding:28px 16px;color:#334155;font-size:11px"><div style="font-size:28px;margin-bottom:8px">🏏</div>Loading…</div>');
-  await swFetch();
-}
-
-async function swFetch() {
-  if (_swFetching) return;
-  _swFetching = true;
-  const cacheKey = _swSport + ':' + _swMode;
-  const chip = document.getElementById('sw-status-chip');
-  if (chip) chip.textContent = 'Fetching…';
-
-  // Check cache (5-min TTL)
-  const cached = _swCache[cacheKey];
-  if (cached && Date.now() - cached.ts < 300000) {
-    _swFetching = false;
-    if (chip) chip.textContent = 'Cached';
-    swRenderMatches(cached.data);
-    return;
-  }
-
-  let data = null;
-
-  // Primary: use existing score engine from the live-scores widget
-  if (_swSport === 'cricket') {
-    try {
-      data = await swFetchCricketDirect();
-    } catch(_) {}
-  }
-
-  // Fallback to Cloudflare Worker proxy if primary failed
-  if (!data) {
-    try {
-      const proxyUrl = _SW_PROXY + '/sports?sport=' + _swSport + '&mode=' + _swMode;
-      const ctrl = new AbortController();
-      const tid  = setTimeout(() => ctrl.abort(), 4000);
-      const res  = await fetch(proxyUrl, { signal:ctrl.signal });
-      clearTimeout(tid);
-      if (res.ok) data = await res.json();
-    } catch(_) {}
-  }
-
-  _swFetching = false;
-
-  if (data) {
-    _swCache[cacheKey] = { data, ts: Date.now() };
-    const ts = document.getElementById('sw-last-updated');
-    if (ts) ts.textContent = 'Updated ' + new Date().toLocaleTimeString();
-    if (chip) chip.textContent = 'Live';
-    swRenderMatches(data);
-  } else {
-    // Attempt to reuse stale cache
-    if (cached) {
-      if (chip) chip.textContent = 'Stale';
-      swRenderMatches(cached.data);
-    } else {
-      swRenderFallback();
-    }
-  }
-}
-
-async function swFetchCricketDirect() {
-  // Reuse the existing cricket score infrastructure from the live-scores widget
-  // fetchCricketScores() returns structured match data already in the page
-  if (typeof fetchCricketScores === 'function') {
-    return await fetchCricketScores(_swMode === 'live');
-  }
-  return null;
-}
-
-function swRenderMatches(data) {
-  if (!data) { swRenderFallback(); return; }
-  let matches = [];
-  if (Array.isArray(data)) matches = data;
-  else if (data.matches) matches = data.matches;
-  else if (data.data)    matches = data.data;
-  else if (data.response) matches = data.response;
-
-  if (_swIPLOnly && _swSport === 'cricket') {
-    matches = matches.filter(m => {
-      const txt = JSON.stringify(m).toLowerCase();
-      return txt.includes('ipl') || txt.includes('indian premier');
-    });
-  }
-
-  if (!matches.length) {
-    swRenderContent(`<div style="text-align:center;padding:32px 16px;color:#475569;font-size:12px">
-      <div style="font-size:32px;margin-bottom:8px">${_swSport==='cricket'?'🏏':_swSport==='football'?'⚽':'🏉'}</div>
-      <div>No ${_swMode} matches found${_swIPLOnly?' for IPL':''}</div>
-      <button onclick="swFetch()" style="margin-top:12px;padding:7px 18px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#60a5fa;font-size:11px;cursor:pointer;font-weight:600">Retry</button>
-    </div>`);
-    return;
-  }
-
-  const html = matches.map(m => swBuildCard(m)).join('');
-  swRenderContent(html);
-}
-
-function swBuildCard(m) {
-  const isLive = _swMode === 'live';
-  // Normalise across different API shapes
-  const name    = m.name || m.title || m.event || (m.teams && m.teams.home && m.teams.away ? m.teams.home.name + ' vs ' + m.teams.away.name : 'Match');
-  const status  = m.status || m.matchType || m.state || '';
-  const venue   = m.venue || m.location || (m.fixture && m.fixture.venue && m.fixture.venue.name) || '';
-  const score   = m.score || m.result || '';
-  let scoreHtml = '';
-  if (Array.isArray(score)) {
-    scoreHtml = score.map(s => `<div class="sw-result" style="font-size:10px">${s.r||0}/${s.w||0} (${s.o||0})</div>`).join('');
-  } else if (typeof score === 'string' && score) {
-    scoreHtml = `<div class="sw-result">${score}</div>`;
-  } else if (m.teams) {
-    const hg = m.goals?.home ?? m.score?.home ?? '';
-    const ag = m.goals?.away ?? m.score?.away ?? '';
-    if (hg !== '' && ag !== '') scoreHtml = `<div class="sw-result">${hg} - ${ag}</div>`;
-  }
-  const statusColor = isLive ? '#22c55e' : '#60a5fa';
-  const leagueLabel = m.series || m.league?.name || m.competition?.name || m.leagueName || '';
-
-  return `<div class="sw-card">
-    ${leagueLabel ? `<div class="sw-card-league" style="color:#f97316">${leagueLabel}</div>` : ''}
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px">
-      <div class="sw-card-match">${name}</div>
-      ${isLive ? '<span style="width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0;margin-top:3px;animation:rPulse 1.6s infinite;display:inline-block"></span>' : ''}
-    </div>
-    <div class="sw-card-status" style="color:${statusColor}">${status}</div>
-    <div class="sw-card-score">
-      ${m.teams ? `<span class="sw-team">${m.teams.home?.name||''}</span>${scoreHtml}<span class="sw-team" style="text-align:right">${m.teams.away?.name||''}</span>` : scoreHtml ? `<span class="sw-team">${name}</span>${scoreHtml}` : `<span class="sw-team">${name}</span>`}
-    </div>
-    ${venue ? `<div style="font-size:9px;color:#334155;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📍 ${venue}</div>` : ''}
-  </div>`;
-}
-
-function swRenderFallback() {
-  const sport = _swSport === 'cricket' ? '🏏' : _swSport === 'football' ? '⚽' : '🏉';
-  swRenderContent(`<div style="text-align:center;padding:32px 16px;color:#475569;font-size:12px">
-    <div style="font-size:32px;margin-bottom:10px">${sport}</div>
-    <div style="margin-bottom:6px;color:#64748b">Could not reach live scores</div>
-    <div style="font-size:10.5px;color:#334155;margin-bottom:14px;line-height:1.6">
-      Check your connection or the data provider may be temporarily unavailable.
-    </div>
-    <button onclick="swFetch()" style="padding:8px 20px;background:#1d4ed8;border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer">🔄 Retry</button>
-    <div style="margin-top:16px;padding:10px;background:rgba(249,115,22,.07);border:1px solid rgba(249,115,22,.2);border-radius:8px;font-size:10.5px;color:#fb923c;line-height:1.5">
-      💡 For live cricket, use the <strong>YT Live</strong> tab for real-time streams.
-    </div>
-  </div>`);
-}
-
-function swRenderContent(html) {
-  const el = document.getElementById('sw-content');
-  if (el) el.innerHTML = html;
-}
-
-function swSwitchSport(sport) {
-  _swSport = sport;
-  document.querySelectorAll('.sw-sport-btn').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById('sw-tab-' + sport);
-  if (btn) btn.classList.add('active');
-  // Show/hide IPL filter bar
-  const iplBar = document.getElementById('sw-ipl-bar');
-  if (iplBar) iplBar.style.display = sport === 'cricket' ? 'flex' : 'none';
-  // Re-apply IPL filter state
-  if (sport !== 'cricket') _swIPLOnly = false;
-  swFetch();
-}
-
-function swSwitchMode(mode) {
-  _swMode = mode;
-  document.querySelectorAll('.sw-mode-btn').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById('sw-mode-' + mode);
-  if (btn) btn.classList.add('active');
-  swFetch();
-}
-
-function swToggleIPL() {
-  _swIPLOnly = !_swIPLOnly;
-  const btn = document.getElementById('sw-ipl-btn');
-  if (btn) {
-    btn.style.background = _swIPLOnly ? '#f97316' : 'rgba(249,115,22,.15)';
-    btn.style.color      = _swIPLOnly ? '#fff'    : '#f97316';
-  }
-  swFetch();
-}
+function swInit() { _initLiveScores(); }
 
 // ═══════════════════════════════════════════════════════════════════════
 // GLOBAL RADIO ENGINE
@@ -10974,7 +10739,7 @@ function switchScoreMainTab(mode) {
 
 function switchScoreSport(sport) {
   _currentScoreSport = sport;
-  ['cricket','football','tennis','baseball'].forEach(s => {
+  ['cricket','football','rugby','tennis','baseball'].forEach(s => {
     const btn = document.getElementById('ssb-' + s);
     if (btn) btn.classList.toggle('active', s === sport);
   });
