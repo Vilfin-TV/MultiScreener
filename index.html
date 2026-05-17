@@ -1914,6 +1914,30 @@ footer{
 .radio-india-body{flex-shrink:0;overflow:hidden;transition:max-height .3s ease}
 .radio-india-body.collapsed{max-height:0!important}
 
+/* ── PREMIUM RADIO custom player ── */
+.pr-cat-bar{display:flex;gap:4px;padding:7px 8px 6px;background:#080e1a;border-bottom:1px solid #0e1e36;flex-shrink:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.pr-cat-bar::-webkit-scrollbar{display:none}
+.pr-cat-btn{padding:4px 10px;border:1px solid #1e3a5f;border-radius:12px;background:transparent;color:#64748b;font-size:9.5px;font-weight:700;cursor:pointer;white-space:nowrap;letter-spacing:.4px;transition:all .15s}
+.pr-cat-btn.active{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
+.pr-cat-btn:hover:not(.active){border-color:#2563eb;color:#93c5fd}
+.pr-now-bar{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#050c1a;border-bottom:1px solid #0e1e36;flex-shrink:0;min-height:40px}
+.pr-live-dot{width:7px;height:7px;border-radius:50%;background:#334155;flex-shrink:0;transition:background .3s}
+.pr-live-dot.playing{background:#22c55e;animation:rDot 1.4s ease-in-out infinite}
+#pr-now-name{font-size:10.5px;font-weight:700;color:#e2e8f0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr-ctrl-btn{width:30px;height:30px;border-radius:50%;border:none;background:#1d4ed8;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.pr-ctrl-btn:hover{background:#2563eb}
+.pr-station-list{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#1e3a5f transparent}
+.pr-station-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;transition:background .12s}
+.pr-station-item:hover{background:#0d1f3c}
+.pr-station-item.playing{background:rgba(29,78,216,.15);border-left:3px solid #1d4ed8}
+.pr-station-logo{width:36px;height:36px;border-radius:8px;object-fit:cover;background:#0f1d35;border:1px solid #1e3a5f;flex-shrink:0}
+.pr-station-info{flex:1;min-width:0}
+.pr-station-name{font-size:11px;font-weight:700;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr-station-meta{font-size:9px;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.pr-station-badge{font-size:8px;padding:2px 5px;border-radius:4px;background:#0f2a5c;color:#60a5fa;margin-left:4px;white-space:nowrap;flex-shrink:0}
+.pr-spinner{display:flex;align-items:center;justify-content:center;flex:1;color:#334155;font-size:11px;gap:8px;padding:20px}
+.pr-spinner::before{content:'';width:18px;height:18px;border:2px solid #1e3a5f;border-top-color:#2563eb;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+
 /* ── OMNISEARCH BAR ── */
 .yt-omni-bar{padding:6px 8px;background:#080e1a;border-bottom:1px solid #0d1a30;display:flex;gap:5px;align-items:center;flex-shrink:0}
 .yt-omni-input-wrap{flex:1;min-width:0;position:relative;display:flex;align-items:center}
@@ -3721,27 +3745,36 @@ footer{
   ══════════════════════════════════════════════════════════════════════ -->
   <div id="rb-panel-premium" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
 
-    <!-- Header badge -->
-    <div class="radio-india-toggle" id="pr-header" onclick="prTogglePlayer()" title="Toggle player">
-      <span>🎙 Radio India — Featured</span>
-      <span id="pr-chevron" style="font-size:12px;transition:transform .3s;transform:rotate(180deg)">▾</span>
+    <!-- Header -->
+    <div class="radio-india-toggle" id="pr-header">
+      <span>🎙 Radio India — Live Stations</span>
+      <span id="pr-live-dot" class="pr-live-dot" style="margin-left:auto;margin-right:6px"></span>
     </div>
 
-    <!-- Embedded radiosindia.com player — tap placeholder to load, fills panel -->
-    <div class="radio-india-body" id="pr-body" style="flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden">
-      <!-- Placeholder: prevents autoplay on tab open -->
-      <div id="pr-placeholder" onclick="prLoadPlayer()"
-           style="flex:1;min-height:260px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#060d1a;cursor:pointer;border-bottom:1px solid #1e3a5c">
-        <div style="width:56px;height:56px;border-radius:50%;background:#1d4ed8;display:flex;align-items:center;justify-content:center;font-size:22px">▶</div>
-        <div style="font-size:13px;color:#94a3b8;font-weight:600">Radio India — Featured</div>
-        <div style="font-size:11px;color:#475569">Tap to load player</div>
-        <div style="font-size:10px;color:#1e3a5c;margin-top:4px">HOME · HINDI · AKASHVANI · BOLLYWOOD</div>
-        <div style="font-size:10px;color:#1e3a5c">TAMIL · MALAYALAM · KANNADA · PUNJABI</div>
-      </div>
-      <!-- Full radiosindia.com embed — includes site's own category navigation tabs -->
-      <iframe id="pr-iframe" src="" data-src="https://radiosindia.com/"
-              style="flex:1;width:100%;min-height:420px;border:none;display:none"
-              loading="lazy" title="Radio India Featured" allow="autoplay"></iframe>
+    <!-- Now-playing bar -->
+    <div class="pr-now-bar">
+      <span id="pr-now-name" style="color:#475569">Select a station to play</span>
+      <button class="pr-ctrl-btn" id="pr-play-btn" onclick="prTogglePlay()" title="Play / Pause">▶</button>
+      <button class="pr-ctrl-btn" style="background:#0f2244;font-size:11px" onclick="prStop()" title="Stop">■</button>
+    </div>
+
+    <!-- Category tabs -->
+    <div class="pr-cat-bar" id="pr-cat-bar">
+      <button class="pr-cat-btn active" onclick="prSelectCat('top-india','All India')">All</button>
+      <button class="pr-cat-btn" onclick="prSelectCat('hindi','Hindi')">Hindi</button>
+      <button class="pr-cat-btn" onclick="prSelectCat('bollywood','Bollywood')">Bollywood</button>
+      <button class="pr-cat-btn" onclick="prSelectCat('akashvani','Akashvani')">Akashvani</button>
+      <button class="pr-cat-btn" onclick="prSelectCat('malayalam','Malayalam')">Malayalam</button>
+      <button class="pr-cat-btn" onclick="prSelectCat('tamil','Tamil')">Tamil</button>
+      <button class="pr-cat-btn" onclick="prSelectCat('kannada','Kannada')">Kannada</button>
+      <button class="pr-cat-btn" onclick="prSelectCat('punjabi','Punjabi')">Punjabi</button>
+      <button class="pr-cat-btn" onclick="prSelectCat('bengali','Bengali')">Bengali</button>
+      <button class="pr-cat-btn" onclick="prSelectCat('telugu','Telugu')">Telugu</button>
+    </div>
+
+    <!-- Station list -->
+    <div class="pr-station-list" id="pr-station-list">
+      <div class="pr-spinner">Loading stations…</div>
     </div>
 
   </div><!-- /rb-panel-premium -->
@@ -8087,30 +8120,146 @@ function ytCustomSearchPlay(vid) { ytOmniPickYt(vid, 'video'); }
 function escJs(s) { return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\'"); }
 
 // ═══════════════════════════════════════════════════════════════════════
-// PREMIUM RADIO ENGINE — Radio India Featured (radiosindia.com iframe)
+// PREMIUM RADIO ENGINE — Radio India custom player (Radio Browser API)
 // ═══════════════════════════════════════════════════════════════════════
-function prInit() { /* panel is ready on first open — nothing to pre-load */ }
+var _prCurrentCat   = 'top-india';
+var _prCurrentId    = null;   // station uuid of currently selected station
 
-function prLoadPlayer() {
-  const iframe      = document.getElementById('pr-iframe');
-  const placeholder = document.getElementById('pr-placeholder');
-  if (!iframe || !placeholder) return;
-  if (!iframe.src && iframe.dataset.src) iframe.src = iframe.dataset.src;
-  placeholder.style.display = 'none';
-  iframe.style.display      = 'block';
+function prInit() {
+  prFetchStations('top-india');
 }
 
-function prTogglePlayer() {
-  const body    = document.getElementById('pr-body');
-  const chevron = document.getElementById('pr-chevron');
-  if (!body) return;
-  const collapsed = body.classList.toggle('collapsed');
-  body.style.maxHeight = collapsed ? '0' : '';
-  if (chevron) chevron.style.transform = collapsed ? 'rotate(0deg)' : 'rotate(180deg)';
+function prSelectCat(tag, label) {
+  _prCurrentCat = tag;
+  // highlight active tab
+  document.querySelectorAll('.pr-cat-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim() === (label || tag));
+  });
+  prFetchStations(tag);
 }
 
-// No-op stubs kept so rbSwitchPanel auto-stop call doesn't throw
-function prStop() {}
+async function prFetchStations(tag) {
+  const list = document.getElementById('pr-station-list');
+  if (!list) return;
+  list.innerHTML = '<div class="pr-spinner">Loading stations…</div>';
+
+  // Resolve Radio Browser API host (shared with main Radio tab)
+  if (!window._radioActiveHost) {
+    if (typeof _RADIO_API_HOSTS !== 'undefined') {
+      window._radioActiveHost = _RADIO_API_HOSTS[0] || 'https://de1.api.radio-browser.info';
+    } else {
+      window._radioActiveHost = 'https://de1.api.radio-browser.info';
+    }
+  }
+
+  let url;
+  if (tag === 'top-india') {
+    url = `${window._radioActiveHost}/json/stations/bycountry/india?hidebroken=true&order=votes&reverse=true&limit=80`;
+  } else if (tag === 'akashvani') {
+    url = `${window._radioActiveHost}/json/stations/search?name=akashvani&country=india&hidebroken=true&order=votes&reverse=true&limit=60`;
+  } else {
+    url = `${window._radioActiveHost}/json/stations/search?tag=${encodeURIComponent(tag)}&country=india&hidebroken=true&order=votes&reverse=true&limit=60`;
+  }
+
+  try {
+    const res = await fetch(url, { headers: { 'User-Agent': 'MultiScreener/1.0' } });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const stations = await res.json();
+    prRenderStations(stations);
+  } catch(e) {
+    // Try fallback host
+    try {
+      const fallHost = 'https://nl1.api.radio-browser.info';
+      let fallUrl;
+      if (tag === 'top-india') {
+        fallUrl = `${fallHost}/json/stations/bycountry/india?hidebroken=true&order=votes&reverse=true&limit=80`;
+      } else if (tag === 'akashvani') {
+        fallUrl = `${fallHost}/json/stations/search?name=akashvani&country=india&hidebroken=true&order=votes&reverse=true&limit=60`;
+      } else {
+        fallUrl = `${fallHost}/json/stations/search?tag=${encodeURIComponent(tag)}&country=india&hidebroken=true&order=votes&reverse=true&limit=60`;
+      }
+      const res2 = await fetch(fallUrl, { headers: { 'User-Agent': 'MultiScreener/1.0' } });
+      const stations2 = await res2.json();
+      prRenderStations(stations2);
+    } catch(e2) {
+      if (list) list.innerHTML = '<div class="pr-spinner" style="color:#ef4444">Could not load stations. Check connection.</div>';
+    }
+  }
+}
+
+function prRenderStations(stations) {
+  const list = document.getElementById('pr-station-list');
+  if (!list) return;
+  if (!stations || stations.length === 0) {
+    list.innerHTML = '<div class="pr-spinner" style="color:#64748b">No stations found for this category.</div>';
+    return;
+  }
+  list.innerHTML = stations.map(s => {
+    const isPlaying = s.stationuuid === _prCurrentId;
+    const logo = s.favicon ? `<img class="pr-station-logo" src="${s.favicon.replace(/"/g,'')}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" loading="lazy"><div class="pr-station-logo" style="display:none;align-items:center;justify-content:center;font-size:16px">📻</div>` : `<div class="pr-station-logo" style="display:flex;align-items:center;justify-content:center;font-size:16px">📻</div>`;
+    const bitrate = s.bitrate ? `<span class="pr-station-badge">${s.bitrate}k</span>` : '';
+    const codec = s.codec ? `<span class="pr-station-badge" style="background:#0a2a1a;color:#4ade80">${s.codec.toUpperCase()}</span>` : '';
+    const lang = s.language ? `${s.language.split(',')[0]} · ` : '';
+    return `<div class="pr-station-item${isPlaying ? ' playing' : ''}" onclick="prPlayStation('${s.stationuuid.replace(/'/g,'\\\'') }','${(s.url_resolved||s.url).replace(/'/g,'\\\'').replace(/"/g,'&quot;')}','${(s.name||'').replace(/'/g,'\\\'').replace(/"/g,'&quot;')}','${(s.favicon||'').replace(/'/g,'\\\'').replace(/"/g,'&quot;')}')" data-uuid="${s.stationuuid}">
+      ${logo}
+      <div class="pr-station-info">
+        <div class="pr-station-name">${s.name || 'Unknown Station'}</div>
+        <div class="pr-station-meta">${lang}${s.votes||0} votes${bitrate}${codec}</div>
+      </div>
+      <div style="font-size:18px;color:${isPlaying?'#22c55e':'#1e3a5f'}">${isPlaying?'▶':'▷'}</div>
+    </div>`;
+  }).join('');
+}
+
+function prPlayStation(uuid, streamUrl, name, favicon) {
+  _prCurrentId = uuid;
+  const nowName = document.getElementById('pr-now-name');
+  if (nowName) nowName.textContent = name || 'Unknown Station';
+  // highlight row
+  document.querySelectorAll('.pr-station-item').forEach(el => {
+    el.classList.toggle('playing', el.dataset.uuid === uuid);
+    const arrow = el.lastElementChild;
+    if (arrow) { arrow.textContent = el.dataset.uuid === uuid ? '▶' : '▷'; arrow.style.color = el.dataset.uuid === uuid ? '#22c55e' : '#1e3a5f'; }
+  });
+  // play via shared radio engine
+  if (typeof radioPlay === 'function') {
+    radioPlay(streamUrl, uuid, name, 'premium');
+  } else {
+    const audio = document.getElementById('radio-audio');
+    if (audio) { audio.src = streamUrl; audio.play().catch(()=>{}); }
+  }
+}
+
+function prTogglePlay() {
+  if (typeof radioTogglePlay === 'function') {
+    radioTogglePlay();
+  } else {
+    const audio = document.getElementById('radio-audio');
+    if (!audio) return;
+    if (audio.paused) audio.play().catch(()=>{}); else audio.pause();
+  }
+}
+
+function prSyncPlayBtn(playing) {
+  const btn = document.getElementById('pr-play-btn');
+  const dot = document.getElementById('pr-live-dot');
+  if (btn) btn.textContent = playing ? '⏸' : '▶';
+  if (dot) { dot.style.background = playing ? '#22c55e' : '#334155'; dot.classList.toggle('playing', playing); }
+}
+
+function prStop() {
+  _prCurrentId = null;
+  const nowName = document.getElementById('pr-now-name');
+  if (nowName) nowName.textContent = 'Select a station to play';
+  document.querySelectorAll('.pr-station-item').forEach(el => {
+    el.classList.remove('playing');
+    const arrow = el.lastElementChild;
+    if (arrow) { arrow.textContent = '▷'; arrow.style.color = '#1e3a5f'; }
+  });
+  prSyncPlayBtn(false);
+  if (typeof radioStop === 'function') radioStop();
+  else { const audio = document.getElementById('radio-audio'); if (audio) { audio.pause(); audio.src = ''; } }
+}
 
 // ═══════════════════════════════════════════════════════════════════════
 // SPORTS WIDGET — delegates to the proven ESPN live-scores engine
@@ -8173,6 +8322,7 @@ async function radioInit() {
       if (btn) { btn.textContent = '⏸'; btn.disabled = false; }
       const dot = document.getElementById('radio-dot');
       if (dot) { dot.style.background = '#22c55e'; dot.classList.add('playing'); }
+      prSyncPlayBtn(true);
     });
 
     _audio.addEventListener('playing', () => {
@@ -8183,6 +8333,7 @@ async function radioInit() {
       if (btn) { btn.textContent = '⏸'; btn.disabled = false; }
       const dot = document.getElementById('radio-dot');
       if (dot) { dot.style.background = '#22c55e'; dot.classList.add('playing'); }
+      prSyncPlayBtn(true);
     });
 
     _audio.addEventListener('pause', () => {
@@ -8192,6 +8343,7 @@ async function radioInit() {
       if (btn) btn.textContent = '▶';
       const dot = document.getElementById('radio-dot');
       if (dot) { dot.style.background = '#334155'; dot.classList.remove('playing'); }
+      prSyncPlayBtn(false);
     });
 
     _audio.addEventListener('waiting', () => {
