@@ -583,6 +583,8 @@ function queryAI() {
     document.getElementById('cf-modal-overlay').classList.add('show');
     return;
   }
+  // Clear input field immediately — does not abort the async analysis payload
+  fundNameInput.value = '';
   runAnalysis();
 }
 

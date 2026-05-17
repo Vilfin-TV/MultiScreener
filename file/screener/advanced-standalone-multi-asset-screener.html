@@ -2261,6 +2261,9 @@ async function generateAndSendToGemini() {
   const btn = document.getElementById('gen-auto-btn');
   const origText = btn ? btn.innerHTML : '';
   if (btn) { btn.innerHTML = '⏳ Generating…'; btn.disabled = true; btn.style.opacity = '0.7'; }
+  // Clear asset name input immediately — does not abort the ongoing analysis payload
+  const assetInp = document.getElementById('asset-name');
+  if (assetInp) assetInp.value = '';
   try {
     const generated = generateQuery(true);
     if (!generated) return;

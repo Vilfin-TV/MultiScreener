@@ -477,6 +477,8 @@ async function queryAI() {
     document.getElementById('cf-modal-overlay').classList.add('show');
     return;
   }
+  // Clear search field — does not abort the ongoing analysis payload
+  document.getElementById('q-fundname').value = '';
   runAnalysis();
 }
 

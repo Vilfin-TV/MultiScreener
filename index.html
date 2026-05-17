@@ -2227,6 +2227,57 @@ footer{
 }
 .score-sport-btn:hover{border-color:#2563eb;color:#93c5fd;background:rgba(37,99,235,.1)}
 .score-sport-btn.active{background:#1d4ed8;border-color:#1d4ed8;color:#fff;font-weight:600;box-shadow:0 2px 8px rgba(29,78,216,.35)}
+/* ── Premium Radio nav tabs ── */
+.pr-nav-btn{
+  flex:1;min-width:max-content;padding:7px 10px;
+  border:none;border-bottom:2px solid transparent;
+  background:transparent;color:#475569;font-size:9.5px;font-weight:700;
+  cursor:pointer;letter-spacing:.8px;transition:all .15s;white-space:nowrap;
+  scroll-snap-align:start;
+}
+.pr-nav-btn:hover{color:#93c5fd;background:rgba(37,99,235,.07)}
+.pr-nav-btn.active{color:#f97316;border-bottom-color:#f97316;background:rgba(249,115,22,.08)}
+/* ── Sports widget sport/mode buttons ── */
+.sw-sport-btn{
+  flex:1;padding:8px 6px;border:none;border-bottom:2px solid transparent;
+  background:transparent;color:#475569;font-size:10.5px;font-weight:700;
+  cursor:pointer;letter-spacing:.4px;transition:all .15s;white-space:nowrap;
+  min-height:44px;
+}
+.sw-sport-btn:hover{color:#93c5fd;background:rgba(37,99,235,.07)}
+.sw-sport-btn.active{color:#60a5fa;border-bottom-color:#1d4ed8;background:rgba(29,78,216,.1)}
+.sw-mode-btn{
+  flex:1;padding:6px 6px;border:none;border-bottom:2px solid transparent;
+  background:transparent;color:#475569;font-size:10px;font-weight:700;
+  cursor:pointer;letter-spacing:.4px;transition:all .15s;min-height:36px;
+}
+.sw-mode-btn:hover{color:#93c5fd}
+.sw-mode-btn.active{color:#60a5fa;border-bottom-color:#1d4ed8;background:rgba(29,78,216,.08)}
+/* ── Sports score cards ── */
+.sw-card{
+  background:linear-gradient(135deg,#0b1628,#0e1c34);
+  border:1px solid rgba(255,255,255,.07);border-radius:9px;
+  padding:9px 11px;margin-bottom:6px;transition:border-color .15s;
+}
+.sw-card:hover{border-color:rgba(37,99,235,.3)}
+.sw-card-league{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px}
+.sw-card-match{font-weight:600;color:#e2e8f0;font-size:11.5px;line-height:1.4;margin-bottom:4px}
+.sw-card-status{font-size:9.5px;font-weight:700;letter-spacing:.5px}
+.sw-card-score{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:5px}
+.sw-team{color:#94a3b8;font-size:10.5px;flex:1;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sw-result{font-weight:700;color:#f1f5f9;font-size:12px;padding:2px 8px;background:rgba(255,255,255,.07);border-radius:5px;min-width:36px;text-align:center;flex-shrink:0}
+/* ── Mobile touch overhaul — glassmorphism panels ── */
+@media(max-width:768px){
+  .pr-nav-btn{padding:8px 9px;font-size:9px;min-height:44px}
+  .sw-sport-btn{font-size:10px}
+  .sw-card,.score-card{padding:10px 12px;border-radius:11px}
+  #rb-panel-premium,#rb-panel-sports{
+    background:rgba(6,13,26,.92);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  }
+  #pr-nav{scrollbar-width:none}
+  .sw-card-match,.score-card-match{font-size:12px}
+}
 /* Score cards */
 .score-card{
   background:linear-gradient(135deg,#0b1628,#0e1c34);
@@ -3338,6 +3389,8 @@ footer{
         <button class="rb-tab"        id="rbtab-video"   onclick="rbSwitchPanel('video')">▶️ YT Live</button>
         <button class="rb-tab"        id="rbtab-iptv"    onclick="rbSwitchPanel('iptv')">📡 Live TV</button>
         <button class="rb-tab"        id="rbtab-radio"   onclick="rbSwitchPanel('radio')">📻 Radio</button>
+        <button class="rb-tab"        id="rbtab-premium" onclick="rbSwitchPanel('premium')">🎙 Premium Radio</button>
+        <button class="rb-tab"        id="rbtab-sports"  onclick="rbSwitchPanel('sports')">🏆 Sports</button>
         <button class="rb-tab"        id="rbtab-music"   onclick="rbSwitchPanel('music')">🎵 YouTube Music</button>
         <button class="rb-tab"        id="rbtab-movies"  onclick="rbSwitchPanel('movies')">🎬 Movies</button>
         <button class="rb-tab"        id="rbtab-podcast" onclick="rbSwitchPanel('podcast')">🎙 Podcast</button>
@@ -3707,6 +3760,98 @@ footer{
     </div>
 
   </div><!-- /rb-panel-radio -->
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       PREMIUM RADIO WIDGET — Radio India Featured (isolated state)
+       DOM prefix: pr-* / IDs: premium-radio-*
+  ══════════════════════════════════════════════════════════════════════ -->
+  <div id="rb-panel-premium" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+
+    <!-- Header badge -->
+    <div style="padding:8px 12px 6px;background:#060d1a;border-bottom:1px solid #0e1e36;flex-shrink:0;display:flex;align-items:center;gap:8px">
+      <span style="width:8px;height:8px;border-radius:50%;background:#f97316;flex-shrink:0;animation:rPulse 1.6s infinite;display:inline-block"></span>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;color:#f97316">RADIO INDIA — FEATURED</span>
+      <span style="margin-left:auto;font-size:9px;color:#334155;letter-spacing:1px">CURATED STREAMS</span>
+    </div>
+
+    <!-- Category nav tabs: HOME | HINDI | AKASHVANI | BOLLYWOOD | TAMIL | MALAYALAM | KANNADA | PUNJABI -->
+    <div id="pr-nav" style="display:flex;gap:0;background:#040b16;border-bottom:1px solid #0e1e36;flex-shrink:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory">
+      <button class="pr-nav-btn active" id="pr-tab-home"      onclick="prSwitchTab('home')"      style="scroll-snap-align:start">HOME</button>
+      <button class="pr-nav-btn"        id="pr-tab-hindi"     onclick="prSwitchTab('hindi')"     style="scroll-snap-align:start">HINDI</button>
+      <button class="pr-nav-btn"        id="pr-tab-akashvani" onclick="prSwitchTab('akashvani')" style="scroll-snap-align:start">AKASHVANI</button>
+      <button class="pr-nav-btn"        id="pr-tab-bollywood" onclick="prSwitchTab('bollywood')" style="scroll-snap-align:start">BOLLYWOOD</button>
+      <button class="pr-nav-btn"        id="pr-tab-tamil"     onclick="prSwitchTab('tamil')"     style="scroll-snap-align:start">TAMIL</button>
+      <button class="pr-nav-btn"        id="pr-tab-malayalam" onclick="prSwitchTab('malayalam')" style="scroll-snap-align:start">MALAYALAM</button>
+      <button class="pr-nav-btn"        id="pr-tab-kannada"   onclick="prSwitchTab('kannada')"   style="scroll-snap-align:start">KANNADA</button>
+      <button class="pr-nav-btn"        id="pr-tab-punjabi"   onclick="prSwitchTab('punjabi')"   style="scroll-snap-align:start">PUNJABI</button>
+    </div>
+
+    <!-- Now playing bar -->
+    <div id="pr-now-bar" style="padding:7px 12px;background:#060e1c;border-bottom:1px solid #0e1e36;flex-shrink:0;display:flex;align-items:center;gap:8px;min-height:36px">
+      <div class="radio-status-dot" id="pr-dot" style="width:7px;height:7px;border-radius:50%;background:#334155;flex-shrink:0"></div>
+      <span id="pr-now-playing" style="flex:1;font-size:11px;color:#94a3b8;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Select a station below</span>
+      <span id="pr-category-badge" style="font-size:9px;padding:2px 7px;border-radius:8px;background:#0e1f3b;color:#60a5fa;border:1px solid #1e3a5c;letter-spacing:.6px;white-space:nowrap">HOME</span>
+    </div>
+
+    <!-- Transport controls -->
+    <div class="panel-ctrl-bar" style="flex-shrink:0">
+      <button class="panel-play-btn" id="pr-play-btn" onclick="prTogglePlay()" title="Play / Pause" disabled>▶</button>
+      <button class="panel-ctrl-btn" onclick="prPrev()" title="Previous">⏮</button>
+      <button class="panel-ctrl-btn" onclick="prNext()" title="Next">⏭</button>
+      <button class="panel-ctrl-btn" id="pr-mute-btn" onclick="prToggleMute()" title="Mute">🔇</button>
+      <input class="panel-vol" type="range" id="pr-vol" min="0" max="100" value="80"
+             oninput="prSetVolume(this.value)" title="Volume" style="--vol:80%"/>
+      <button class="panel-ctrl-btn fav" id="pr-fav-btn" onclick="prToggleFav()" title="Favourite">☆</button>
+      <button class="panel-ctrl-btn" onclick="prStop()" title="Stop">⏹</button>
+      <audio id="pr-audio" preload="none" muted style="display:none"></audio>
+    </div>
+
+    <!-- Loading / error indicator -->
+    <div id="pr-loading" style="display:none;padding:8px 12px;background:#060e1c;text-align:center;font-size:11px;color:#475569;flex-shrink:0">Loading stations…</div>
+
+    <!-- Station list -->
+    <div class="radio-station-list" id="pr-station-list" style="flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#1e293b transparent">
+      <div class="radio-no-data">Select a category above to load stations…</div>
+    </div>
+
+  </div><!-- /rb-panel-premium -->
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SPORTS WIDGET — Cricket / Football / Rugby with Live & Past scores
+       DOM prefix: sw-* / ID: rb-panel-sports
+  ══════════════════════════════════════════════════════════════════════ -->
+  <div id="rb-panel-sports" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+
+    <!-- Sport selector tabs -->
+    <div style="display:flex;gap:0;background:#050a14;border-bottom:1px solid #131d35;flex-shrink:0">
+      <button class="sw-sport-btn active" id="sw-tab-cricket"  onclick="swSwitchSport('cricket')" >🏏 Cricket</button>
+      <button class="sw-sport-btn"        id="sw-tab-football" onclick="swSwitchSport('football')">⚽ Football</button>
+      <button class="sw-sport-btn"        id="sw-tab-rugby"    onclick="swSwitchSport('rugby')"   >🏉 Rugby</button>
+    </div>
+
+    <!-- IPL filter (cricket only) -->
+    <div id="sw-ipl-bar" style="padding:5px 10px;background:#060d1a;border-bottom:1px solid #0e1e36;flex-shrink:0;display:flex;align-items:center;gap:6px">
+      <span style="font-size:9px;color:#f97316;font-weight:700;letter-spacing:1px">IPL</span>
+      <button id="sw-ipl-btn" onclick="swToggleIPL()" style="font-size:10px;padding:3px 10px;background:rgba(249,115,22,.15);border:1px solid #f97316;border-radius:12px;color:#f97316;cursor:pointer;font-weight:700;transition:all .2s">🏆 IPL Only</button>
+      <span style="margin-left:auto;font-size:9px;color:#334155" id="sw-last-updated"></span>
+    </div>
+
+    <!-- Live / Past toggle -->
+    <div style="display:flex;gap:0;background:#050a14;border-bottom:1px solid #131d35;flex-shrink:0">
+      <button class="sw-mode-btn active" id="sw-mode-live" onclick="swSwitchMode('live')">🔴 LIVE</button>
+      <button class="sw-mode-btn"        id="sw-mode-past" onclick="swSwitchMode('past')">📋 PAST</button>
+      <div id="sw-status-chip" style="margin-left:auto;align-self:center;padding:0 10px;font-size:9px;color:#334155;white-space:nowrap"></div>
+    </div>
+
+    <!-- Score cards area -->
+    <div id="sw-content" style="flex:1;overflow-y:auto;padding:6px 7px;scrollbar-width:thin;scrollbar-color:#1e293b transparent">
+      <div style="text-align:center;padding:28px 16px;color:#334155;font-size:12px">
+        <div style="font-size:28px;margin-bottom:8px">🏏</div>
+        Loading scores…
+      </div>
+    </div>
+
+  </div><!-- /rb-panel-sports -->
 
   <!-- ── PANEL 5: Music (YouTube IFrame audio player) ── -->
   <div id="rb-panel-music" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
@@ -4105,6 +4250,8 @@ footer{
         <option value="video">▶️ YouTube Live</option>
         <option value="iptv">📡 Live TV</option>
         <option value="radio">📻 Radio</option>
+        <option value="premium">🎙 Premium Radio</option>
+        <option value="sports">🏆 Sports</option>
         <option value="music">🎵 YouTube Music</option>
         <option value="movies">🎬 Movies</option>
         <option value="podcast">🎙 Podcast</option>
@@ -7105,6 +7252,8 @@ const _RB_PANELS = {
   video:    { panelId:'rb-panel-video',    tabId:'rbtab-video',    title:'▶️ YOUTUBE LIVE' },
   iptv:     { panelId:'rb-panel-iptv',     tabId:'rbtab-iptv',     title:'📡 LIVE TV',  init:'_iptvInitDone',  initFn:'iptvInit' },
   radio:    { panelId:'rb-panel-radio',    tabId:'rbtab-radio',    title:'📻 GLOBAL RADIO', init:'_radioInitDone', initFn:'radioInit' },
+  premium:  { panelId:'rb-panel-premium',  tabId:'rbtab-premium',  title:'🎙 PREMIUM RADIO', init:'_prInitDone',   initFn:'prInit' },
+  sports:   { panelId:'rb-panel-sports',   tabId:'rbtab-sports',   title:'🏆 SPORTS',        init:'_swInitDone',   initFn:'swInit' },
   music:    { panelId:'rb-panel-music',    tabId:'rbtab-music',    title:'🎵 YOUTUBE MUSIC',   init:'_musicInitDone',  initFn:'musicLoadDefault' },
   movies:   { panelId:'rb-panel-movies',   tabId:'rbtab-movies',   title:'🎬 MOVIES',  init:'_moviesInitDone', initFn:'moviesLoadDefault' },
   podcast:  { panelId:'rb-panel-podcast',  tabId:'rbtab-podcast',  title:'🎙 PODCAST', init:'_podcastInitDone',initFn:'podcastLoadCurated' },
@@ -7145,6 +7294,19 @@ function rbSwitchPanel(panel) {
     window[def.init] = true;
     try { window[def.initFn] && window[def.initFn](); } catch (e) { console.warn('panel init failed:', e); }
   }
+  // Auto-stop YouTube when navigating away from the video panel
+  if (panel !== 'video') {
+    try {
+      const ytIframe = document.querySelector('#rb-panel-video iframe[src*="youtube"]');
+      if (ytIframe && ytIframe.contentWindow) {
+        ytIframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+      }
+    } catch(_) {}
+    // Also stop Premium Radio audio when switching away
+    if (panel !== 'premium') {
+      try { prStop && prStop(); } catch(_) {}
+    }
+  }
   // Remember last-active tab so the next page-load lands here (unless user has set a default)
   try { localStorage.setItem('viltv_widget_last_tab', panel); } catch(_) {}
   // Refresh settings panel UI when user opens it
@@ -7156,11 +7318,12 @@ function rbSwitchPanel(panel) {
 // ═══════════════════════════════════════════════════════════════════════
 const _WIDGET_TAB_LABELS = {
   ai:'🤖 AI Chat', video:'▶️ YouTube Live', iptv:'📡 Live TV',
-  radio:'📻 Radio', music:'🎵 YouTube Music', movies:'🎬 Movies', podcast:'🎙 Podcast',
+  radio:'📻 Radio', premium:'🎙 Premium Radio', sports:'🏆 Sports',
+  music:'🎵 YouTube Music', movies:'🎬 Movies', podcast:'🎙 Podcast',
   calendar:'📅 Calendar', notes:'📝 Notes', calc:'🧮 Calculator', worldclock:'🌍 World Clock', weather:'🌤 Weather',
   markets:'📈 Global Markets',
 };
-const _WIDGET_DEFAULT_ORDER = ['ai','video','iptv','radio','music','movies','podcast','calendar','notes','calc','worldclock','weather','markets'];
+const _WIDGET_DEFAULT_ORDER = ['ai','video','iptv','radio','premium','sports','music','movies','podcast','calendar','notes','calc','worldclock','weather','markets'];
 function widgetGetSettings() {
   let s = {};
   try { s = JSON.parse(localStorage.getItem('viltv_widget_settings') || '{}'); } catch(_) {}
@@ -7990,6 +8153,408 @@ function ytSearchPlay(q) {
 }
 function ytCustomSearchPlay(vid) { ytOmniPickYt(vid, 'video'); }
 function escJs(s) { return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\'"); }
+
+// ═══════════════════════════════════════════════════════════════════════
+// PREMIUM RADIO ENGINE — Radio India Featured (fully isolated state)
+// ═══════════════════════════════════════════════════════════════════════
+const _PR_TABS = {
+  home:      { label:'HOME',      query:{ path:'/json/stations/bycountry/India?limit=60&hidebroken=true&order=clickcount&reverse=true' } },
+  hindi:     { label:'HINDI',     query:{ path:'/json/stations/search?language=hindi&limit=60&hidebroken=true&order=clickcount&reverse=true' } },
+  akashvani: { label:'AKASHVANI', query:{ path:'/json/stations/byname/akashvani?limit=40&hidebroken=true' } },
+  bollywood: { label:'BOLLYWOOD', query:{ path:'/json/stations/search?tag=bollywood&limit=60&hidebroken=true&order=clickcount&reverse=true' } },
+  tamil:     { label:'TAMIL',     query:{ path:'/json/stations/search?language=tamil&limit=60&hidebroken=true&order=clickcount&reverse=true' } },
+  malayalam: { label:'MALAYALAM', query:{ path:'/json/stations/bytag/malayalam?limit=60&hidebroken=true&order=clickcount&reverse=true' } },
+  kannada:   { label:'KANNADA',   query:{ path:'/json/stations/search?language=kannada&limit=60&hidebroken=true&order=clickcount&reverse=true' } },
+  punjabi:   { label:'PUNJABI',   query:{ path:'/json/stations/search?language=punjabi&limit=60&hidebroken=true&order=clickcount&reverse=true' } },
+};
+
+var _prCurrentTab    = 'home';
+var _prCurrentUrl    = null;
+var _prCurrentId     = null;
+var _prPlaying       = false;
+var _prHls           = null;
+var _prLastResults   = [];
+var _prTabCache      = {};
+var _prFavs          = [];
+
+const _PR_RB_HOSTS = [
+  'https://de1.api.radio-browser.info',
+  'https://nl1.api.radio-browser.info',
+  'https://at1.api.radio-browser.info',
+];
+
+async function prInit() {
+  try { _prFavs = JSON.parse(localStorage.getItem('viltv_pr_favs') || '[]'); } catch(_) {}
+  await prSwitchTab('home');
+}
+
+async function prSwitchTab(tab) {
+  _prCurrentTab = tab;
+  // Update active nav button
+  document.querySelectorAll('.pr-nav-btn').forEach(b => b.classList.remove('active'));
+  const tabBtn = document.getElementById('pr-tab-' + tab);
+  if (tabBtn) tabBtn.classList.add('active');
+  // Update category badge
+  const badge = document.getElementById('pr-category-badge');
+  if (badge) badge.textContent = (_PR_TABS[tab] || {}).label || tab.toUpperCase();
+  // Load stations (use cache if available)
+  if (_prTabCache[tab]) {
+    _prLastResults = _prTabCache[tab];
+    prRenderList(_prLastResults);
+    return;
+  }
+  prShowLoading(true);
+  const conf = _PR_TABS[tab];
+  if (!conf) return;
+  let stations = [];
+  for (const host of _PR_RB_HOSTS) {
+    try {
+      const res = await fetch(host + conf.query.path, { headers:{ 'User-Agent':'VilfinTV/2.0' } });
+      if (res.ok) { stations = await res.json(); break; }
+    } catch(_) {}
+  }
+  _prTabCache[tab] = stations;
+  _prLastResults   = stations;
+  prShowLoading(false);
+  prRenderList(stations);
+}
+
+function prRenderList(stations) {
+  const list = document.getElementById('pr-station-list');
+  if (!list) return;
+  if (!stations || !stations.length) {
+    list.innerHTML = '<div class="radio-no-data">No stations found — try another category.</div>';
+    return;
+  }
+  list.innerHTML = stations.map((s, i) => {
+    const id  = s.stationuuid || s.url_resolved || s.url || i;
+    const url = s.url_resolved || s.url || '';
+    const isFav = _prFavs.includes(id);
+    const codec = (s.codec || '').toUpperCase().replace('MPEG','MP3') || '';
+    const br    = s.bitrate ? s.bitrate + 'k' : '';
+    return `<div class="radio-station-item" id="pri-${i}" onclick="prPlay('${url.replace(/'/g,"\\'")}','${String(id).replace(/'/g,"\\'")}','${(s.name||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}','pr')" style="min-height:44px;display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #0a1628;cursor:pointer;transition:background .12s" onmouseenter="this.style.background='rgba(37,99,235,.07)'" onmouseleave="this.style.background=''">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11.5px;font-weight:600;color:#e2eeff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name||'Unknown'}</div>
+        ${s.country ? `<div style="font-size:9.5px;color:#475569;margin-top:1px">${s.country}${codec?' · '+codec:''}${br?' · '+br:''}</div>` : ''}
+      </div>
+      <button onclick="event.stopPropagation();prSetFav('${String(id).replace(/'/g,"\\'")}',this)" id="prfav-${i}" style="background:none;border:none;font-size:14px;cursor:pointer;color:${isFav?'#f97316':'#334155'};padding:4px;min-width:28px;min-height:28px;line-height:1">${isFav?'★':'☆'}</button>
+    </div>`;
+  }).join('');
+}
+
+function prShowLoading(show) {
+  const el = document.getElementById('pr-loading');
+  if (el) el.style.display = show ? 'block' : 'none';
+  if (show) {
+    const list = document.getElementById('pr-station-list');
+    if (list) list.innerHTML = '';
+  }
+}
+
+async function prPlay(url, id, name, src) {
+  if (!url) return;
+  prStop();
+  _prCurrentUrl = url;
+  _prCurrentId  = id;
+  _prPlaying    = true;
+  const audio = document.getElementById('pr-audio');
+  if (!audio) return;
+  audio.muted = false;
+  const dot = document.getElementById('pr-dot');
+  const np  = document.getElementById('pr-now-playing');
+  const btn = document.getElementById('pr-play-btn');
+  if (dot) { dot.style.background = '#f97316'; dot.classList.add('playing'); }
+  if (np)  np.textContent = name || 'Playing…';
+  if (btn) { btn.textContent = '⏸'; btn.disabled = false; }
+  if (typeof Hls !== 'undefined' && Hls.isSupported() && url.includes('.m3u8')) {
+    _prHls = new Hls({ maxBufferLength:30 });
+    _prHls.loadSource(url);
+    _prHls.attachMedia(audio);
+    _prHls.on(Hls.Events.MANIFEST_PARSED, () => audio.play().catch(()=>{}));
+  } else {
+    audio.src = url;
+    audio.load();
+    audio.play().catch(()=>{});
+  }
+  audio.onerror = prOnError;
+  audio.onended = prOnError;
+}
+
+function prTogglePlay() {
+  const audio = document.getElementById('pr-audio');
+  if (!audio) return;
+  if (_prPlaying && !audio.paused) { audio.pause(); _prPlaying=false; const btn=document.getElementById('pr-play-btn'); if(btn)btn.textContent='▶'; }
+  else if (_prCurrentUrl) { prPlay(_prCurrentUrl, _prCurrentId, document.getElementById('pr-now-playing')?.textContent||'', 'pr'); }
+}
+
+function prPrev() {
+  if (!_prLastResults.length) return;
+  const cur = _prLastResults.findIndex(s => (s.stationuuid||s.url_resolved||s.url) === _prCurrentId);
+  const s   = _prLastResults[cur > 0 ? cur-1 : _prLastResults.length-1];
+  if (s) prPlay(s.url_resolved||s.url, s.stationuuid||s.url_resolved||s.url, s.name, 'pr');
+}
+function prNext() {
+  if (!_prLastResults.length) return;
+  const cur = _prLastResults.findIndex(s => (s.stationuuid||s.url_resolved||s.url) === _prCurrentId);
+  const s   = _prLastResults[(cur+1) % _prLastResults.length];
+  if (s) prPlay(s.url_resolved||s.url, s.stationuuid||s.url_resolved||s.url, s.name, 'pr');
+}
+function prStop() {
+  _prPlaying = false;
+  const audio = document.getElementById('pr-audio');
+  if (audio) { audio.pause(); audio.src=''; }
+  if (_prHls) { try{_prHls.destroy();}catch(_){} _prHls=null; }
+  const btn = document.getElementById('pr-play-btn');
+  if (btn) btn.textContent = '▶';
+  const dot = document.getElementById('pr-dot');
+  if (dot) { dot.style.background='#334155'; dot.classList.remove('playing'); }
+}
+function prToggleMute() {
+  const audio = document.getElementById('pr-audio');
+  const btn   = document.getElementById('pr-mute-btn');
+  if (!audio) return;
+  audio.muted = !audio.muted;
+  if (btn) btn.textContent = audio.muted ? '🔈' : '🔇';
+}
+function prSetVolume(v) {
+  const audio = document.getElementById('pr-audio');
+  if (audio) audio.volume = v / 100;
+  const el = document.getElementById('pr-vol');
+  if (el) el.style.setProperty('--vol', v + '%');
+}
+function prOnError() {
+  _prPlaying = false;
+  const btn = document.getElementById('pr-play-btn');
+  if (btn) btn.textContent = '▶';
+  const dot = document.getElementById('pr-dot');
+  if (dot) { dot.style.background='#ef4444'; dot.classList.remove('playing'); }
+  const np = document.getElementById('pr-now-playing');
+  if (np) np.textContent = '⚠️ Stream offline — try another';
+}
+function prSetFav(id, btnEl) {
+  const idx = _prFavs.indexOf(id);
+  if (idx >= 0) { _prFavs.splice(idx,1); if(btnEl){btnEl.textContent='☆';btnEl.style.color='#334155';} }
+  else           { _prFavs.push(id);      if(btnEl){btnEl.textContent='★';btnEl.style.color='#f97316';} }
+  try { localStorage.setItem('viltv_pr_favs', JSON.stringify(_prFavs)); } catch(_) {}
+}
+function prToggleFav() {
+  if (!_prCurrentId) return;
+  const btn = document.getElementById('pr-fav-btn');
+  prSetFav(_prCurrentId, btn);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// SPORTS WIDGET ENGINE — Cricket / Football / Rugby (hybrid failback)
+// ═══════════════════════════════════════════════════════════════════════
+var _swSport       = 'cricket';
+var _swMode        = 'live';
+var _swIPLOnly     = false;
+var _swCache       = {};
+var _swFetching    = false;
+
+const _SW_PROXY = 'https://screener-proxy.vilfintv.workers.dev';
+const _SW_APIS  = {
+  cricket: {
+    live: [
+      'https://api.cricapi.com/v1/currentMatches?apikey=&offset=0',
+      'https://api.sports.dev.crickapi.io/matches/live',
+    ],
+    past: [
+      'https://api.cricapi.com/v1/matches?apikey=&offset=0',
+    ],
+  },
+  football: {
+    live: ['https://v3.football.api-sports.io/fixtures?live=all'],
+    past: ['https://v3.football.api-sports.io/fixtures?last=20'],
+  },
+  rugby: {
+    live: ['https://v1.rugby.api-sports.io/games?live=all'],
+    past: ['https://v1.rugby.api-sports.io/games?last=20'],
+  },
+};
+
+async function swInit() {
+  swRenderContent('<div style="text-align:center;padding:28px 16px;color:#334155;font-size:11px"><div style="font-size:28px;margin-bottom:8px">🏏</div>Loading…</div>');
+  await swFetch();
+}
+
+async function swFetch() {
+  if (_swFetching) return;
+  _swFetching = true;
+  const cacheKey = _swSport + ':' + _swMode;
+  const chip = document.getElementById('sw-status-chip');
+  if (chip) chip.textContent = 'Fetching…';
+
+  // Check cache (5-min TTL)
+  const cached = _swCache[cacheKey];
+  if (cached && Date.now() - cached.ts < 300000) {
+    _swFetching = false;
+    if (chip) chip.textContent = 'Cached';
+    swRenderMatches(cached.data);
+    return;
+  }
+
+  let data = null;
+
+  // Primary: use existing score engine from the live-scores widget
+  if (_swSport === 'cricket') {
+    try {
+      data = await swFetchCricketDirect();
+    } catch(_) {}
+  }
+
+  // Fallback to Cloudflare Worker proxy if primary failed
+  if (!data) {
+    try {
+      const proxyUrl = _SW_PROXY + '/sports?sport=' + _swSport + '&mode=' + _swMode;
+      const ctrl = new AbortController();
+      const tid  = setTimeout(() => ctrl.abort(), 4000);
+      const res  = await fetch(proxyUrl, { signal:ctrl.signal });
+      clearTimeout(tid);
+      if (res.ok) data = await res.json();
+    } catch(_) {}
+  }
+
+  _swFetching = false;
+
+  if (data) {
+    _swCache[cacheKey] = { data, ts: Date.now() };
+    const ts = document.getElementById('sw-last-updated');
+    if (ts) ts.textContent = 'Updated ' + new Date().toLocaleTimeString();
+    if (chip) chip.textContent = 'Live';
+    swRenderMatches(data);
+  } else {
+    // Attempt to reuse stale cache
+    if (cached) {
+      if (chip) chip.textContent = 'Stale';
+      swRenderMatches(cached.data);
+    } else {
+      swRenderFallback();
+    }
+  }
+}
+
+async function swFetchCricketDirect() {
+  // Reuse the existing cricket score infrastructure from the live-scores widget
+  // fetchCricketScores() returns structured match data already in the page
+  if (typeof fetchCricketScores === 'function') {
+    return await fetchCricketScores(_swMode === 'live');
+  }
+  return null;
+}
+
+function swRenderMatches(data) {
+  if (!data) { swRenderFallback(); return; }
+  let matches = [];
+  if (Array.isArray(data)) matches = data;
+  else if (data.matches) matches = data.matches;
+  else if (data.data)    matches = data.data;
+  else if (data.response) matches = data.response;
+
+  if (_swIPLOnly && _swSport === 'cricket') {
+    matches = matches.filter(m => {
+      const txt = JSON.stringify(m).toLowerCase();
+      return txt.includes('ipl') || txt.includes('indian premier');
+    });
+  }
+
+  if (!matches.length) {
+    swRenderContent(`<div style="text-align:center;padding:32px 16px;color:#475569;font-size:12px">
+      <div style="font-size:32px;margin-bottom:8px">${_swSport==='cricket'?'🏏':_swSport==='football'?'⚽':'🏉'}</div>
+      <div>No ${_swMode} matches found${_swIPLOnly?' for IPL':''}</div>
+      <button onclick="swFetch()" style="margin-top:12px;padding:7px 18px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#60a5fa;font-size:11px;cursor:pointer;font-weight:600">Retry</button>
+    </div>`);
+    return;
+  }
+
+  const html = matches.map(m => swBuildCard(m)).join('');
+  swRenderContent(html);
+}
+
+function swBuildCard(m) {
+  const isLive = _swMode === 'live';
+  // Normalise across different API shapes
+  const name    = m.name || m.title || m.event || (m.teams && m.teams.home && m.teams.away ? m.teams.home.name + ' vs ' + m.teams.away.name : 'Match');
+  const status  = m.status || m.matchType || m.state || '';
+  const venue   = m.venue || m.location || (m.fixture && m.fixture.venue && m.fixture.venue.name) || '';
+  const score   = m.score || m.result || '';
+  let scoreHtml = '';
+  if (Array.isArray(score)) {
+    scoreHtml = score.map(s => `<div class="sw-result" style="font-size:10px">${s.r||0}/${s.w||0} (${s.o||0})</div>`).join('');
+  } else if (typeof score === 'string' && score) {
+    scoreHtml = `<div class="sw-result">${score}</div>`;
+  } else if (m.teams) {
+    const hg = m.goals?.home ?? m.score?.home ?? '';
+    const ag = m.goals?.away ?? m.score?.away ?? '';
+    if (hg !== '' && ag !== '') scoreHtml = `<div class="sw-result">${hg} - ${ag}</div>`;
+  }
+  const statusColor = isLive ? '#22c55e' : '#60a5fa';
+  const leagueLabel = m.series || m.league?.name || m.competition?.name || m.leagueName || '';
+
+  return `<div class="sw-card">
+    ${leagueLabel ? `<div class="sw-card-league" style="color:#f97316">${leagueLabel}</div>` : ''}
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px">
+      <div class="sw-card-match">${name}</div>
+      ${isLive ? '<span style="width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0;margin-top:3px;animation:rPulse 1.6s infinite;display:inline-block"></span>' : ''}
+    </div>
+    <div class="sw-card-status" style="color:${statusColor}">${status}</div>
+    <div class="sw-card-score">
+      ${m.teams ? `<span class="sw-team">${m.teams.home?.name||''}</span>${scoreHtml}<span class="sw-team" style="text-align:right">${m.teams.away?.name||''}</span>` : scoreHtml ? `<span class="sw-team">${name}</span>${scoreHtml}` : `<span class="sw-team">${name}</span>`}
+    </div>
+    ${venue ? `<div style="font-size:9px;color:#334155;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📍 ${venue}</div>` : ''}
+  </div>`;
+}
+
+function swRenderFallback() {
+  const sport = _swSport === 'cricket' ? '🏏' : _swSport === 'football' ? '⚽' : '🏉';
+  swRenderContent(`<div style="text-align:center;padding:32px 16px;color:#475569;font-size:12px">
+    <div style="font-size:32px;margin-bottom:10px">${sport}</div>
+    <div style="margin-bottom:6px;color:#64748b">Could not reach live scores</div>
+    <div style="font-size:10.5px;color:#334155;margin-bottom:14px;line-height:1.6">
+      Check your connection or the data provider may be temporarily unavailable.
+    </div>
+    <button onclick="swFetch()" style="padding:8px 20px;background:#1d4ed8;border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer">🔄 Retry</button>
+    <div style="margin-top:16px;padding:10px;background:rgba(249,115,22,.07);border:1px solid rgba(249,115,22,.2);border-radius:8px;font-size:10.5px;color:#fb923c;line-height:1.5">
+      💡 For live cricket, use the <strong>YT Live</strong> tab for real-time streams.
+    </div>
+  </div>`);
+}
+
+function swRenderContent(html) {
+  const el = document.getElementById('sw-content');
+  if (el) el.innerHTML = html;
+}
+
+function swSwitchSport(sport) {
+  _swSport = sport;
+  document.querySelectorAll('.sw-sport-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('sw-tab-' + sport);
+  if (btn) btn.classList.add('active');
+  // Show/hide IPL filter bar
+  const iplBar = document.getElementById('sw-ipl-bar');
+  if (iplBar) iplBar.style.display = sport === 'cricket' ? 'flex' : 'none';
+  // Re-apply IPL filter state
+  if (sport !== 'cricket') _swIPLOnly = false;
+  swFetch();
+}
+
+function swSwitchMode(mode) {
+  _swMode = mode;
+  document.querySelectorAll('.sw-mode-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('sw-mode-' + mode);
+  if (btn) btn.classList.add('active');
+  swFetch();
+}
+
+function swToggleIPL() {
+  _swIPLOnly = !_swIPLOnly;
+  const btn = document.getElementById('sw-ipl-btn');
+  if (btn) {
+    btn.style.background = _swIPLOnly ? '#f97316' : 'rgba(249,115,22,.15)';
+    btn.style.color      = _swIPLOnly ? '#fff'    : '#f97316';
+  }
+  swFetch();
+}
 
 // ═══════════════════════════════════════════════════════════════════════
 // GLOBAL RADIO ENGINE

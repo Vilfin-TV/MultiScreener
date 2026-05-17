@@ -363,6 +363,8 @@ async function queryAI() {
   if (!stock) { alert('Please enter the stock name (Q1) before proceeding.'); return; }
   if (!horizon) { alert('Please select or enter an investment horizon (Q2) before proceeding.'); return; }
   if (!window._cfWorkerUrl) { pendingAnalysis = true; document.getElementById('cf-modal-overlay').classList.add('show'); return; }
+  // Clear search field immediately — does not abort the async analysis payload
+  document.getElementById('q-stock').value = '';
   runAnalysis();
 }
 
