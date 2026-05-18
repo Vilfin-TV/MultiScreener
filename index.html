@@ -3846,18 +3846,33 @@ footer{
   </div><!-- /rb-panel-radio -->
 
   <!-- ══════════════════════════════════════════════════════════════════════
-       PREMIUM RADIO WIDGET — Radio India (mytuner iframe)
+       PREMIUM RADIO WIDGET — Radio India Featured (isolated state)
        DOM prefix: pr-* / IDs: premium-radio-*
   ══════════════════════════════════════════════════════════════════════ -->
   <div id="rb-panel-premium" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
 
-    <!-- Premium radio widget — in-app curated stream player -->
-    <iframe id="pr-iframe"
-            src="radio-widget.html"
-            style="flex:1;width:100%;height:100%;border:none;min-height:0;background:#080e1a"
-            allow="autoplay;encrypted-media"
-            title="Radio India — Featured Stations"
-            loading="lazy"></iframe>
+    <!-- Header badge -->
+    <div class="radio-india-toggle" id="pr-header" onclick="prTogglePlayer()" title="Toggle player">
+      <span>🎙 Radio India — Featured</span>
+      <span id="pr-chevron" style="font-size:12px;transition:transform .3s;transform:rotate(180deg)">▾</span>
+    </div>
+
+    <!-- Embedded radiosindia.com player — tap placeholder to load, fills panel -->
+    <div class="radio-india-body" id="pr-body" style="flex:1;min-height:0">
+      <!-- Placeholder: prevents autoplay on tab open -->
+      <div id="pr-placeholder" onclick="prLoadPlayer()"
+           style="height:100%;min-height:260px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#060d1a;cursor:pointer;border-bottom:1px solid #1e3a5c">
+        <div style="width:56px;height:56px;border-radius:50%;background:#1d4ed8;display:flex;align-items:center;justify-content:center;font-size:22px">▶</div>
+        <div style="font-size:13px;color:#94a3b8;font-weight:600">Radio India — Featured</div>
+        <div style="font-size:11px;color:#475569">Tap to load player</div>
+        <div style="font-size:10px;color:#1e3a5c;margin-top:4px">HOME · HINDI · AKASHVANI · BOLLYWOOD</div>
+        <div style="font-size:10px;color:#1e3a5c">TAMIL · MALAYALAM · KANNADA · PUNJABI</div>
+      </div>
+      <!-- Full radiosindia.com embed — includes site's own category navigation tabs -->
+      <iframe id="pr-iframe" src="" data-src="https://radiosindia.com/"
+              style="width:100%;height:100%;min-height:420px;border:none;display:none"
+              loading="lazy" title="Radio India Featured" allow="autoplay"></iframe>
+    </div>
 
   </div><!-- /rb-panel-premium -->
 
@@ -8364,19 +8379,30 @@ function ytCustomSearchPlay(vid) { ytOmniPickYt(vid, 'video'); }
 function escJs(s) { return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\'"); }
 
 // ═══════════════════════════════════════════════════════════════════════
-// PREMIUM RADIO ENGINE — Radio India iframe (radio-widget.html)
+// PREMIUM RADIO ENGINE — Radio India Featured (radiosindia.com iframe)
 // ═══════════════════════════════════════════════════════════════════════
-function prInit() { /* iframe loads automatically via src="radio-widget.html" */ }
-function prStop() {
-  // Pause audio inside the iframe if possible
-  try {
-    const fr = document.getElementById('pr-iframe');
-    if (fr && fr.contentWindow) {
-      const a = fr.contentWindow.document.querySelectorAll('audio');
-      a.forEach(el => { try { el.pause(); } catch(_) {} });
-    }
-  } catch(_) {}
+function prInit() { /* panel is ready on first open — nothing to pre-load */ }
+
+function prLoadPlayer() {
+  const iframe      = document.getElementById('pr-iframe');
+  const placeholder = document.getElementById('pr-placeholder');
+  if (!iframe || !placeholder) return;
+  if (!iframe.src && iframe.dataset.src) iframe.src = iframe.dataset.src;
+  placeholder.style.display = 'none';
+  iframe.style.display      = 'block';
 }
+
+function prTogglePlayer() {
+  const body    = document.getElementById('pr-body');
+  const chevron = document.getElementById('pr-chevron');
+  if (!body) return;
+  const collapsed = body.classList.toggle('collapsed');
+  body.style.maxHeight = collapsed ? '0' : '';
+  if (chevron) chevron.style.transform = collapsed ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+
+// No-op stub kept so rbSwitchPanel auto-stop call doesn't throw
+function prStop() {}
 function prSyncPlayBtn() {}
 function prTogglePlay() {}
 
