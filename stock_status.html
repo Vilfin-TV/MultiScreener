@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <meta name="description" content="Real-time stock analytics — technical analysis, financials, company profile and more for any global stock."/>
 <title>Stock Status — MultiScreener</title>
+<script>(function(){if(localStorage.getItem('viltv_theme')!=='gemini')return;document.documentElement.setAttribute('data-theme','gemini');var s=document.createElement('style');s.textContent='@keyframes gf{0%,100%{background-position:0 50%}50%{background-position:100% 50%}}[data-theme=gemini] body{background:linear-gradient(-45deg,#0d1b3e,#1a0a38,#0a2040,#200845,#0b3030,#280a42,#0d2a38)!important;background-size:500% 500%!important;animation:gf 18s ease infinite!important;color:#e8eaf6!important}[data-theme=gemini] .top-nav,[data-theme=gemini] .top-menubar,[data-theme=gemini] header,[data-theme=gemini] nav{background:rgba(8,5,22,.88)!important;backdrop-filter:blur(14px)!important;-webkit-backdrop-filter:blur(14px)!important;border-bottom-color:rgba(139,92,246,.3)!important}[data-theme=gemini] .card,[data-theme=gemini] .q-block,[data-theme=gemini] .output-section,[data-theme=gemini] .result-box{background:rgba(20,13,44,.88)!important;border-color:rgba(139,92,246,.25)!important}';document.head.appendChild(s);})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
@@ -624,8 +625,6 @@ function quickLoad(sym,name){
 function loadStockBySymbol(sym,name){
   if(!sym)return;
 
-  /* Auto-clear the search input */
-  inp.value='';
   acClose();
 
   /* Route Indian stocks via BSE — NSE blocks external data requests */
@@ -652,6 +651,9 @@ function loadStockBySymbol(sym,name){
 
   /* Inject all widgets */
   injectAll(sym);
+
+  /* Clear search input only after widgets are rendered */
+  inp.value='';
 }
 
 function clearStock(){

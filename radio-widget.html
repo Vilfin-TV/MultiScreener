@@ -6,263 +6,66 @@
 <title>Radio India</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:#080e1a;color:#e2e8f0;font-family:system-ui,sans-serif;overflow-x:hidden}
-
-/* ── Category tabs ── */
-.cats{display:flex;gap:0;background:#050a14;border-bottom:1px solid #131d35;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
-.cats::-webkit-scrollbar{display:none}
-.cat-btn{flex-shrink:0;padding:9px 14px;border:none;background:transparent;color:#475569;font-size:10.5px;font-weight:700;cursor:pointer;letter-spacing:.5px;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
-.cat-btn:hover{color:#93c5fd}
-.cat-btn.active{color:#60a5fa;border-bottom-color:#1d4ed8;background:rgba(29,78,216,.08)}
-
-/* ── Widget area ── */
-.widget-area{padding:10px 10px 6px;flex:1;overflow-y:auto}
-
-/* ── Override mytuner widget colours to match dark theme ── */
-.mytuner-widget{border-radius:10px!important;overflow:hidden!important;background:#0d1a30!important;border:1px solid #1e3a5f!important;margin-bottom:10px}
-
-/* ── Category section ── */
-.cat-section{display:none}
-.cat-section.active{display:block}
-
-/* ── Station grid (for individual player widgets) ── */
-.station-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media(max-width:360px){.station-grid{grid-template-columns:1fr}}
-
-/* ── Branding strip ── */
-.brand-strip{padding:6px 10px;background:#050a14;border-top:1px solid #0e1e36;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.brand-link{font-size:9px;color:#334155;text-decoration:none;letter-spacing:.5px}
-.brand-link:hover{color:#60a5fa}
+html,body{height:100%;overflow:hidden;background:#080e1a}
+#ri-frame{width:100%;height:100%;border:none;display:block}
+#ri-error{display:none;height:100%;background:#080e1a;color:#e2e8f0;font-family:system-ui,sans-serif;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:20px}
+#ri-error.show{display:flex}
+#ri-error h3{font-size:15px;font-weight:700;color:#93c5fd}
+#ri-error p{font-size:12px;color:#64748b;line-height:1.6}
+#ri-error a{color:#3b82f6;text-decoration:none;font-size:12px;font-weight:600}
+#ri-error a:hover{text-decoration:underline}
 </style>
 </head>
-<body style="display:flex;flex-direction:column;min-height:100%">
+<body>
 
-<!-- Category tabs -->
-<div class="cats">
-  <button class="cat-btn active" onclick="showCat('all')">🇮🇳 All India</button>
-  <button class="cat-btn" onclick="showCat('akashvani')">📻 Akashvani</button>
-  <button class="cat-btn" onclick="showCat('bollywood')">🎬 Bollywood</button>
-  <button class="cat-btn" onclick="showCat('hindi')">🎵 Hindi</button>
-  <button class="cat-btn" onclick="showCat('regional')">🌍 Regional</button>
-</div>
+<iframe id="ri-frame"
+        src="https://www.radioindia.in/"
+        allow="autoplay; encrypted-media"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+        title="Radio India — Live Stations"
+        loading="lazy"></iframe>
 
-<!-- Widget sections -->
-<div class="widget-area">
-
-  <!-- ALL INDIA — mytuner India Top Charts (live ranked list) -->
-  <div class="cat-section active" id="cat-all">
-    <div id="mytuner-charts-all" class="mytuner-widget"
-         data-countrycode="IN"
-         data-topstype="week"
-         data-genre=""
-         data-bgcolor="#0d1a30"
-         data-fontcolor="#e2e8f0"
-         data-borderrradius="10"
-         data-requires_initialization="true"
-         style="width:100%;min-height:400px">
-    </div>
-    <script src="https://mytuner-radio.com/static/js/widgets/charts-v1.js" async></script>
-  </div>
-
-  <!-- AKASHVANI / AIR -->
-  <div class="cat-section" id="cat-akashvani">
-    <div class="station-grid">
-
-      <!-- Vividh Bharti -->
-      <div class="mytuner-widget" id="mt-vividh"
-           data-target="238"
-           data-hidehistory="true"
-           data-autoplay="false"
-           data-bgcolor="#0d1a30"
-           data-fontcolor="#e2e8f0"
-           data-requires_initialization="true"
-           style="width:100%"></div>
-
-      <!-- AIR FM Rainbow -->
-      <div class="mytuner-widget" id="mt-rainbow"
-           data-target="su9fj6gmxfyw"
-           data-hidehistory="true"
-           data-autoplay="false"
-           data-bgcolor="#0d1a30"
-           data-fontcolor="#e2e8f0"
-           data-requires_initialization="true"
-           style="width:100%"></div>
-
-      <!-- AIR FM Gold -->
-      <div class="mytuner-widget" id="mt-fmgold"
-           data-target="b2t7daqkp5mz"
-           data-hidehistory="true"
-           data-autoplay="false"
-           data-bgcolor="#0d1a30"
-           data-fontcolor="#e2e8f0"
-           data-requires_initialization="true"
-           style="width:100%"></div>
-
-      <!-- AIR Vividh Bharati (alternate stream) -->
-      <div class="mytuner-widget" id="mt-airwNBk"
-           data-target="wNBk42xDwX"
-           data-hidehistory="true"
-           data-autoplay="false"
-           data-bgcolor="#0d1a30"
-           data-fontcolor="#e2e8f0"
-           data-requires_initialization="true"
-           style="width:100%"></div>
-
-    </div>
-    <script src="https://mytuner-radio.com/static/js/widgets/player-v1.js" async></script>
-  </div>
-
-  <!-- BOLLYWOOD -->
-  <div class="cat-section" id="cat-bollywood">
-    <div class="station-grid">
-
-      <div class="mytuner-widget" id="mt-bolly100"
-           data-target="868"
-           data-hidehistory="true"
-           data-autoplay="false"
-           data-bgcolor="#0d1a30"
-           data-fontcolor="#e2e8f0"
-           data-requires_initialization="true"
-           style="width:100%"></div>
-
-      <div class="mytuner-widget" id="mt-bollyhits"
-           data-target="529"
-           data-hidehistory="true"
-           data-autoplay="false"
-           data-bgcolor="#0d1a30"
-           data-fontcolor="#e2e8f0"
-           data-requires_initialization="true"
-           style="width:100%"></div>
-
-      <div class="mytuner-widget" id="mt-hitsofbw"
-           data-target="ed2wjbwyyepk"
-           data-hidehistory="true"
-           data-autoplay="false"
-           data-bgcolor="#0d1a30"
-           data-fontcolor="#e2e8f0"
-           data-requires_initialization="true"
-           style="width:100%"></div>
-
-      <div class="mytuner-widget" id="mt-mirchi90s"
-           data-target="242"
-           data-hidehistory="true"
-           data-autoplay="false"
-           data-bgcolor="#0d1a30"
-           data-fontcolor="#e2e8f0"
-           data-requires_initialization="true"
-           style="width:100%"></div>
-
-      <div class="mytuner-widget" id="mt-arijit"
-           data-target="320"
-           data-hidehistory="true"
-           data-autoplay="false"
-           data-bgcolor="#0d1a30"
-           data-fontcolor="#e2e8f0"
-           data-requires_initialization="true"
-           style="width:100%"></div>
-
-      <div class="mytuner-widget" id="mt-lata"
-           data-target="591"
-           data-hidehistory="true"
-           data-autoplay="false"
-           data-bgcolor="#0d1a30"
-           data-fontcolor="#e2e8f0"
-           data-requires_initialization="true"
-           style="width:100%"></div>
-
-      <div class="mytuner-widget" id="mt-asha"
-           data-target="589"
-           data-hidehistory="true"
-           data-autoplay="false"
-           data-bgcolor="#0d1a30"
-           data-fontcolor="#e2e8f0"
-           data-requires_initialization="true"
-           style="width:100%"></div>
-
-    </div>
-  </div>
-
-  <!-- HINDI -->
-  <div class="cat-section" id="cat-hindi">
-    <div class="station-grid">
-
-      <div class="mytuner-widget" id="mt-bigfm"
-           data-target="217"
-           data-hidehistory="true"
-           data-autoplay="false"
-           data-bgcolor="#0d1a30"
-           data-fontcolor="#e2e8f0"
-           data-requires_initialization="true"
-           style="width:100%"></div>
-
-      <div class="mytuner-widget" id="mt-ishq"
-           data-target="318"
-           data-hidehistory="true"
-           data-autoplay="false"
-           data-bgcolor="#0d1a30"
-           data-fontcolor="#e2e8f0"
-           data-requires_initialization="true"
-           style="width:100%"></div>
-
-      <div class="mytuner-widget" id="mt-hindihits"
-           data-target="7ksqhvudgsc9"
-           data-hidehistory="true"
-           data-autoplay="false"
-           data-bgcolor="#0d1a30"
-           data-fontcolor="#e2e8f0"
-           data-requires_initialization="true"
-           style="width:100%"></div>
-
-    </div>
-  </div>
-
-  <!-- REGIONAL — India charts filtered by genre -->
-  <div class="cat-section" id="cat-regional">
-    <div id="mytuner-charts-regional" class="mytuner-widget"
-         data-countrycode="IN"
-         data-topstype="week"
-         data-genre="Regional"
-         data-bgcolor="#0d1a30"
-         data-fontcolor="#e2e8f0"
-         data-borderrradius="10"
-         data-requires_initialization="true"
-         style="width:100%;min-height:400px">
-    </div>
-  </div>
-
-</div><!-- /widget-area -->
-
-<!-- Branding -->
-<div class="brand-strip">
-  <span style="font-size:10px;color:#334155;letter-spacing:.5px">🎙 Radio India — Live Stations</span>
-  <a href="https://www.radioindia.in" target="_blank" rel="noopener" class="brand-link">radioindia.in ↗</a>
+<div id="ri-error">
+  <h3>🎙 Radio India</h3>
+  <p>Direct embed is restricted by the station's server.<br>Loading via secure relay…</p>
+  <a href="https://www.radioindia.in/" target="_blank" rel="noopener">Open in new tab ↗</a>
 </div>
 
 <script>
-function showCat(id) {
-  document.querySelectorAll('.cat-section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-  const sec = document.getElementById('cat-' + id);
-  if (sec) sec.classList.add('active');
-  event.currentTarget.classList.add('active');
+(function () {
+  var DIRECT_SRC  = 'https://www.radioindia.in/';
+  var PROXY_BASE  = 'https://screener-proxy.vilfintv.workers.dev';
+  var PROXY_SRC   = PROXY_BASE + '/?url=' + encodeURIComponent(DIRECT_SRC);
 
-  // Re-trigger mytuner widget initialization for newly visible widgets
-  if (window.mytuner_scripts) {
-    const widgets = sec ? sec.querySelectorAll('.mytuner-widget[data-requires_initialization="true"]') : [];
-    widgets.forEach(w => {
-      if (!w.dataset.initialized) {
-        w.dataset.initialized = 'true';
-        // Scripts already loaded — trigger init if needed
-        try {
-          const scripts = window.mytuner_scripts;
-          Object.keys(scripts).forEach(k => {
-            if (typeof scripts[k] === 'function') scripts[k](w);
-          });
-        } catch(_) {}
-      }
-    });
+  var frame = document.getElementById('ri-frame');
+  var errBox = document.getElementById('ri-error');
+  var triedProxy = false;
+
+  function tryProxy() {
+    if (triedProxy) {
+      frame.style.display = 'none';
+      errBox.classList.add('show');
+      return;
+    }
+    triedProxy = true;
+    frame.src = PROXY_SRC;
   }
-}
+
+  frame.addEventListener('error', tryProxy);
+
+  // Detect X-Frame-Options / CSP block via load + blank check
+  frame.addEventListener('load', function () {
+    try {
+      // If the frame loaded but has no content (blocked), contentDocument is null or cross-origin
+      var doc = frame.contentDocument;
+      if (!doc || (doc.body && doc.body.innerHTML === '')) {
+        tryProxy();
+      }
+    } catch (e) {
+      // Cross-origin = successfully loaded (expected for external sites)
+    }
+  });
+})();
 </script>
 </body>
 </html>

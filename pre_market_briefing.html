@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<script>(function(){if(localStorage.getItem('viltv_theme')!=='gemini')return;document.documentElement.setAttribute('data-theme','gemini');var s=document.createElement('style');s.textContent='@keyframes gf{0%,100%{background-position:0 50%}50%{background-position:100% 50%}}[data-theme=gemini] body{background:linear-gradient(-45deg,#0d1b3e,#1a0a38,#0a2040,#200845,#0b3030,#280a42,#0d2a38)!important;background-size:500% 500%!important;animation:gf 18s ease infinite!important;color:#e8eaf6!important}[data-theme=gemini] .top-nav,[data-theme=gemini] .top-menubar,[data-theme=gemini] header,[data-theme=gemini] nav{background:rgba(8,5,22,.88)!important;backdrop-filter:blur(14px)!important;-webkit-backdrop-filter:blur(14px)!important;border-bottom-color:rgba(139,92,246,.3)!important}[data-theme=gemini] .card,[data-theme=gemini] .q-block,[data-theme=gemini] .output-section,[data-theme=gemini] .result-box{background:rgba(20,13,44,.88)!important;border-color:rgba(139,92,246,.25)!important}';document.head.appendChild(s);})();</script>
 <title>Pre-Market Briefing — Vilfin George</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
@@ -105,6 +106,37 @@ footer{background:var(--dark2);color:rgba(255,255,255,.4);padding:28px 20px;text
 footer strong{color:var(--gold);display:block;font-size:14px;margin-bottom:8px}
 footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
 @media(max-width:700px){.mode-card{min-width:140px}.top-page-title{display:none}}
+
+/* ── Stock/ETF autocomplete for Q3 watchlist input ── */
+.q-stocks-wrap{position:relative}
+.pm-ac-drop{
+  display:none;position:absolute;
+  top:calc(100% + 4px);left:0;right:0;
+  background:#1a1a1a;border:1px solid var(--border2);border-radius:10px;
+  box-shadow:0 16px 48px rgba(0,0,0,.75);
+  z-index:600;overflow:hidden;max-height:300px;overflow-y:auto;
+}
+.pm-ac-drop.open{display:block}
+.pm-ac-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;cursor:pointer;
+  border-bottom:1px solid rgba(255,255,255,.05);transition:background .1s;
+}
+.pm-ac-item:last-child{border-bottom:none}
+.pm-ac-item:hover,.pm-ac-item.active{background:var(--card2)}
+.pm-ac-name{font-size:12px;font-weight:600;color:var(--text)}
+.pm-ac-exch{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:2px}
+.pm-ac-sym{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--burn2)}
+.pm-ac-type{
+  font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+  padding:2px 5px;border-radius:3px;
+  background:rgba(232,84,15,.15);color:var(--burn3);
+  margin-top:2px;display:inline-block;
+}
+.pm-ac-none{padding:14px;text-align:center;color:var(--text3);font-size:12px}
+.pm-ac-loading{padding:12px 14px;text-align:center;color:var(--text3);font-size:11px;display:flex;align-items:center;justify-content:center;gap:8px}
+.pm-spin{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--burn2);border-radius:50%;animation:pmSpin .7s linear infinite;flex-shrink:0}
+@keyframes pmSpin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -188,9 +220,12 @@ footer .disclaimer{max-width:820px;margin:0 auto;color:rgba(255,255,255,.35)}
 
   <!-- Q3: Specific Stocks Watch -->
   <div class="q-block">
-    <div class="q-label"><span class="q-num">Q3</span> Stocks / Sectors on Your Watchlist (Optional)</div>
-    <input class="text-input" id="q-stocks" type="text" placeholder="e.g. RELIANCE, HDFCBANK, IT sector, Auto sector..."/>
-    <div style="font-size:11px;color:var(--text3);margin-top:6px">AI will include specific data for these in the report</div>
+    <div class="q-label"><span class="q-num">Q3</span> Stocks / ETFs on Your Watchlist (Optional)</div>
+    <div class="q-stocks-wrap">
+      <input class="text-input" id="q-stocks" type="text" placeholder="Search and add stocks or ETFs…" autocomplete="off" spellcheck="false"/>
+      <div class="pm-ac-drop" id="pmAcDrop" role="listbox"></div>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:6px">Type a name or symbol → select from dropdown to add. Separate multiple with commas. AI includes live data for each.</div>
   </div>
 
   <!-- Q4: F&O interest -->
@@ -566,6 +601,157 @@ function setCFConnected(url) {
   try { const host = new URL(url).hostname.replace('.workers.dev',''); document.getElementById('cf-dot').className = 'cf-dot connected'; document.getElementById('cf-label').textContent = host; }
   catch(e) { document.getElementById('cf-dot').className = 'cf-dot connected'; document.getElementById('cf-label').textContent = 'Connected'; }
 }
+
+/* ══════════════════════════════════════════════════════
+   STOCKS / ETF AUTOCOMPLETE  — Q3 Watchlist Input
+   Same master_symbols.json database as other screeners
+   Multi-symbol: appends to comma-separated list
+══════════════════════════════════════════════════════ */
+const PMAC = {
+  data: null, cache: null, loading: false,
+  timer: null, activeIdx: -1,
+  qMemo: Object.create(null),
+  URL: 'data/master_symbols.json',
+  MAX: 8, DEBOUNCE: 120, EARLY: 60,
+};
+
+async function pmAcLoad() {
+  if (PMAC.data || PMAC.loading) return;
+  PMAC.loading = true;
+  try {
+    const r = await fetch(PMAC.URL);
+    if (!r.ok) throw new Error('fetch ' + r.status);
+    const raw = await r.json();
+    PMAC.data = raw;
+    PMAC.cache = raw.map(s => ({
+      ...s,
+      _sl: (s.symbol || '').toLowerCase(),
+      _nl: (s.name   || '').toLowerCase(),
+    }));
+  } catch(e) {
+    PMAC.data = [];
+    console.warn('[PMAC] symbol database load failed:', e.message);
+  }
+  PMAC.loading = false;
+}
+
+function pmAcCurrentToken(val) {
+  const parts = val.split(',');
+  return parts[parts.length - 1].trimStart();
+}
+
+function pmAcSearch(val) {
+  clearTimeout(PMAC.timer);
+  const token = pmAcCurrentToken(val);
+  if (!token || token.length < 1) { pmAcClose(); return; }
+  PMAC.timer = setTimeout(() => pmAcRender(token.trim()), PMAC.DEBOUNCE);
+}
+
+function pmAcRender(q) {
+  const ql = q.toLowerCase();
+  if (!ql) { pmAcClose(); return; }
+  const dd = document.getElementById('pmAcDrop');
+  if (!PMAC.cache) {
+    if (!PMAC.loading) pmAcLoad();
+    dd.innerHTML = '<div class="pm-ac-loading"><div class="pm-spin"></div>Loading symbol database…</div>';
+    dd.classList.add('open');
+    return;
+  }
+  if (PMAC.qMemo[ql]) { pmAcShow(PMAC.qMemo[ql]); return; }
+  const hits = [];
+  for (const s of PMAC.cache) {
+    if (hits.length >= PMAC.EARLY) break;
+    let sc = 0;
+    if (s._sl === ql || s._nl === ql)          sc = 4;
+    else if (s._sl.startsWith(ql))             sc = 3;
+    else if (s._nl.startsWith(ql))             sc = 2;
+    else if (s._nl.includes(ql) || s._sl.includes(ql)) sc = 1;
+    if (sc > 0) hits.push({ ...s, _sc: sc });
+  }
+  hits.sort((a, b) => b._sc - a._sc || (a.name || '').localeCompare(b.name || ''));
+  const top = hits.slice(0, PMAC.MAX);
+  const keys = Object.keys(PMAC.qMemo);
+  if (keys.length > 28) delete PMAC.qMemo[keys[0]];
+  PMAC.qMemo[ql] = top;
+  pmAcShow(top);
+}
+
+function pmAcShow(list) {
+  const dd = document.getElementById('pmAcDrop');
+  PMAC.activeIdx = -1;
+  if (!list.length) {
+    dd.innerHTML = '<div class="pm-ac-none">No matches — type the symbol directly (e.g. HDFCBANK, RELIANCE)</div>';
+    dd.classList.add('open');
+    return;
+  }
+  dd.innerHTML = list.map((s, i) => {
+    const tv       = s.exchange ? `${s.exchange}:${s.symbol}` : s.symbol;
+    const safeName = (s.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    return `<div class="pm-ac-item" role="option" data-idx="${i}"
+      onclick="pmAcSelect('${tv}','${safeName}')">
+      <div>
+        <div class="pm-ac-name">${s.name || s.symbol}</div>
+        <div class="pm-ac-exch">${s.exchange || ''}${s.type ? ` · ${s.type}` : ''}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="pm-ac-sym">${s.symbol}</div>
+        ${s.type ? `<span class="pm-ac-type">${s.type}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  dd.classList.add('open');
+}
+
+function pmAcClose() {
+  const dd = document.getElementById('pmAcDrop');
+  if (dd) dd.classList.remove('open');
+  PMAC.activeIdx = -1;
+}
+
+function pmAcSelect(tvSym, name) {
+  const inp   = document.getElementById('q-stocks');
+  const parts = inp.value.split(',');
+  /* Replace the last (currently-typed) token with the selected label */
+  parts[parts.length - 1] = ' ' + (name || tvSym);
+  /* Append a comma+space so the user can immediately type the next symbol */
+  inp.value = parts.join(',').replace(/^\s*,\s*/, '') + ', ';
+  inp.focus();
+  const len = inp.value.length;
+  inp.setSelectionRange(len, len);
+  pmAcClose();
+}
+
+function pmAcKeyNav(e) {
+  const dd = document.getElementById('pmAcDrop');
+  if (!dd || !dd.classList.contains('open')) return;
+  const items = dd.querySelectorAll('.pm-ac-item');
+  if (!items.length) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    PMAC.activeIdx = Math.min(PMAC.activeIdx + 1, items.length - 1);
+    items.forEach((el, i) => el.classList.toggle('active', i === PMAC.activeIdx));
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    PMAC.activeIdx = Math.max(PMAC.activeIdx - 1, 0);
+    items.forEach((el, i) => el.classList.toggle('active', i === PMAC.activeIdx));
+  } else if (e.key === 'Enter') {
+    if (PMAC.activeIdx >= 0) { e.preventDefault(); items[PMAC.activeIdx]?.click(); }
+  } else if (e.key === 'Escape') {
+    pmAcClose();
+  }
+}
+
+(function() {
+  const inp = document.getElementById('q-stocks');
+  if (!inp) return;
+  inp.addEventListener('input',   e  => { pmAcLoad(); pmAcSearch(e.target.value); });
+  inp.addEventListener('keydown', pmAcKeyNav);
+  inp.addEventListener('focus',   () => { pmAcLoad(); const t = pmAcCurrentToken(inp.value); if (t.trim()) pmAcSearch(inp.value); });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#q-stocks') && !e.target.closest('#pmAcDrop')) pmAcClose();
+  });
+  setTimeout(pmAcLoad, 800);
+})();
 </script>
 </body>
 </html>

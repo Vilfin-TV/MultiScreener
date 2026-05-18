@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <meta name="description" content="Indian stock deep-dive — SWOT analysis, technical ratings, fundamental checklists and IPO tracker powered by Trendlyne."/>
+<script>(function(){if(localStorage.getItem('viltv_theme')!=='gemini')return;document.documentElement.setAttribute('data-theme','gemini');var s=document.createElement('style');s.textContent='@keyframes gf{0%,100%{background-position:0 50%}50%{background-position:100% 50%}}[data-theme=gemini] body{background:linear-gradient(-45deg,#0d1b3e,#1a0a38,#0a2040,#200845,#0b3030,#280a42,#0d2a38)!important;background-size:500% 500%!important;animation:gf 18s ease infinite!important;color:#e8eaf6!important}[data-theme=gemini] .top-nav,[data-theme=gemini] .top-menubar,[data-theme=gemini] header,[data-theme=gemini] nav{background:rgba(8,5,22,.88)!important;backdrop-filter:blur(14px)!important;-webkit-backdrop-filter:blur(14px)!important;border-bottom-color:rgba(139,92,246,.3)!important}[data-theme=gemini] .card,[data-theme=gemini] .q-block,[data-theme=gemini] .output-section,[data-theme=gemini] .result-box{background:rgba(20,13,44,.88)!important;border-color:rgba(139,92,246,.25)!important}';document.head.appendChild(s);})();</script>
 <title>Trendlyne Screener — MultiScreener</title>
 <!-- Favicon: candlestick chart -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230a1830'/><rect x='7' y='10' width='4' height='12' rx='1' fill='%2310b981'/><rect x='8.5' y='6' width='1' height='4' rx='.5' fill='%2310b981'/><rect x='8.5' y='22' width='1' height='4' rx='.5' fill='%2310b981'/><rect x='14' y='8' width='4' height='10' rx='1' fill='%23ef4444'/><rect x='15.5' y='4' width='1' height='4' rx='.5' fill='%23ef4444'/><rect x='15.5' y='18' width='1' height='5' rx='.5' fill='%23ef4444'/><rect x='21' y='12' width='4' height='8' rx='1' fill='%2310b981'/><rect x='22.5' y='8' width='1' height='4' rx='.5' fill='%2310b981'/><rect x='22.5' y='20' width='1' height='4' rx='.5' fill='%2310b981'/></svg>"/>
@@ -684,8 +685,6 @@ function loadStockBySymbol(sym,name){
   if(!sym)return;
   _sym=sym;_name=name||sym;
 
-  /* Clear search box immediately */
-  inp.value='';
   acClose();
 
   /* Update banner */
@@ -703,6 +702,9 @@ function loadStockBySymbol(sym,name){
 
   /* Inject all Trendlyne iframes */
   injectAll(sym);
+
+  /* Clear search input only after widgets are rendered */
+  inp.value='';
 }
 
 function clearStock(){

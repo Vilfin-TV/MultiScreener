@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <meta name="theme-color" content="#0d0400"/>
+<script>(function(){if(localStorage.getItem('viltv_theme')!=='gemini')return;document.documentElement.setAttribute('data-theme','gemini');var s=document.createElement('style');s.textContent='@keyframes gf{0%,100%{background-position:0 50%}50%{background-position:100% 50%}}[data-theme=gemini] body{background:linear-gradient(-45deg,#0d1b3e,#1a0a38,#0a2040,#200845,#0b3030,#280a42,#0d2a38)!important;background-size:500% 500%!important;animation:gf 18s ease infinite!important;color:#e8eaf6!important}[data-theme=gemini] .top-nav,[data-theme=gemini] .top-menubar,[data-theme=gemini] header,[data-theme=gemini] nav{background:rgba(8,5,22,.88)!important;backdrop-filter:blur(14px)!important;-webkit-backdrop-filter:blur(14px)!important;border-bottom-color:rgba(139,92,246,.3)!important}[data-theme=gemini] .card,[data-theme=gemini] .q-block,[data-theme=gemini] .output-section,[data-theme=gemini] .result-box{background:rgba(20,13,44,.88)!important;border-color:rgba(139,92,246,.25)!important}';document.head.appendChild(s);})();</script>
 <meta name="description" content="VilfinTV Mutual Fund Live Screener — evidence-based AI analysis for buy, hold, sell, exit, SIP and lumpsum decisions on any mutual fund."/>
 <meta name="robots" content="index,follow"/>
 <title>Mutual Fund Live Screener — VilfinTV</title>
@@ -583,8 +584,6 @@ function queryAI() {
     document.getElementById('cf-modal-overlay').classList.add('show');
     return;
   }
-  // Clear input field immediately — does not abort the async analysis payload
-  fundNameInput.value = '';
   runAnalysis();
 }
 
@@ -661,6 +660,8 @@ async function runAnalysis() {
 
   const workerBase = (window._cfWorkerUrl || localStorage.getItem(CF_KEY) || '').replace(/\/+$/, '');
   const prompt = buildPrompt();
+  /* Clear input now that data is captured — result will render below */
+  fundNameInput.value = '';
   const selectedModel = localStorage.getItem(MODEL_KEY) || 'auto';
 
   async function mfTryStream(partialSoFar, attempt) {

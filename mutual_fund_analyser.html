@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<script>(function(){if(localStorage.getItem('viltv_theme')!=='gemini')return;document.documentElement.setAttribute('data-theme','gemini');var s=document.createElement('style');s.textContent='@keyframes gf{0%,100%{background-position:0 50%}50%{background-position:100% 50%}}[data-theme=gemini] body{background:linear-gradient(-45deg,#0d1b3e,#1a0a38,#0a2040,#200845,#0b3030,#280a42,#0d2a38)!important;background-size:500% 500%!important;animation:gf 18s ease infinite!important;color:#e8eaf6!important}[data-theme=gemini] .top-nav,[data-theme=gemini] .top-menubar,[data-theme=gemini] header,[data-theme=gemini] nav{background:rgba(8,5,22,.88)!important;backdrop-filter:blur(14px)!important;-webkit-backdrop-filter:blur(14px)!important;border-bottom-color:rgba(139,92,246,.3)!important}[data-theme=gemini] .card,[data-theme=gemini] .q-block,[data-theme=gemini] .output-section,[data-theme=gemini] .result-box{background:rgba(20,13,44,.88)!important;border-color:rgba(139,92,246,.25)!important}';document.head.appendChild(s);})();</script>
 <title>Mutual Fund Analyser — Vilfin George</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
@@ -477,8 +478,6 @@ async function queryAI() {
     document.getElementById('cf-modal-overlay').classList.add('show');
     return;
   }
-  // Clear search field — does not abort the ongoing analysis payload
-  document.getElementById('q-fundname').value = '';
   runAnalysis();
 }
 
@@ -528,6 +527,8 @@ async function runAnalysis() {
 
   const workerBase = (window._cfWorkerUrl || '').replace(/\/+$/, '');
   const prompt = buildPrompt();
+  /* Clear input now that data is captured — result will render below */
+  document.getElementById('q-fundname').value = '';
   const selectedModel = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
 
   async function mfTryStream(partialSoFar, attempt) {
