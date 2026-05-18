@@ -7067,33 +7067,15 @@ function _renderRandomChips() {
 async function fetchAndPopulateStreams() {
   // Build the channel select from the embedded YT_CHANNELS array
   ytBuildSelect();
-  // Restore saved default channel from localStorage
-  try {
-    var savedNo = parseInt(localStorage.getItem('viltv_default_chno') || '', 10);
-    if (savedNo >= 1 && savedNo <= 141) {
-      _ytCurrentChNo = savedNo;
-      var sel = document.getElementById('yt-channel-select');
-      if (sel) {
-        for (var i = 0; i < sel.options.length; i++) {
-          if (parseInt(sel.options[i].value, 10) === savedNo) { sel.selectedIndex = i; break; }
-        }
-      }
-      var chk = document.getElementById('yt-default-ch-chk');
-      if (chk) chk.checked = true;
-      if (YT_CHANNELS[savedNo - 1]) ytUpdateInfo(YT_CHANNELS[savedNo - 1]);
-      setTimeout(function() { ytSwitchToChannel(_ytCurrentChNo); }, 300);
-      return;
-    }
-  } catch(e) {}
-  // Default: Bloomberg Television (ch 61)
-  _ytCurrentChNo = 61;
+  // Force global default for all users: Bloomberg Television (ch 74)
+  _ytCurrentChNo = 74;
   var defSel = document.getElementById('yt-channel-select');
   if (defSel) {
     for (var j = 0; j < defSel.options.length; j++) {
-      if (parseInt(defSel.options[j].value, 10) === 61) { defSel.selectedIndex = j; break; }
+      if (parseInt(defSel.options[j].value, 10) === 74) { defSel.selectedIndex = j; break; }
     }
   }
-  if (YT_CHANNELS[60]) ytUpdateInfo(YT_CHANNELS[60]);
+  if (YT_CHANNELS[73]) ytUpdateInfo(YT_CHANNELS[73]);
   setTimeout(function() { ytSwitchToChannel(_ytCurrentChNo); }, 300);
 }
 // Init on load
@@ -10465,12 +10447,9 @@ function _ytSyncState() {
   }
 }
 
-// Read saved default channel immediately (before DOMContentLoaded)
+// Global startup default for all users
 (function() {
-  try {
-    var n = parseInt(localStorage.getItem('viltv_default_chno') || '', 10);
-    if (n >= 1 && n <= 141) _ytCurrentChNo = n;
-  } catch(e) {}
+  _ytCurrentChNo = 74;
 })();
 
 // ── Build <select> from YT_CHANNELS data ─────────────────────────────────
