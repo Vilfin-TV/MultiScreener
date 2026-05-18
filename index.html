@@ -4441,7 +4441,7 @@ footer{
           "symbolActiveColor": "rgba(41, 98, 255, 0.12)",
           "tabs": [
             { "title": "Indices", "symbols": [
-                {"s":"BSE:SENSEX","d":"SENSEX"},{"s":"CAPITALCOM:INDIA50","d":"NIFTY 50"},
+                {"s":"BSE:SENSEX","d":"SENSEX"},{"s":"TVC:NIFTY","d":"NIFTY 50"},
                 {"s":"BSE:BANK","d":"Bank Nifty"},
                 {"s":"CAPITALCOM:US100","d":"Nasdaq 100"},{"s":"OANDA:SPX500USD","d":"S&P 500"},
                 {"s":"OANDA:US30USD","d":"Dow Jones"},{"s":"INDEX:NKY","d":"Nikkei 225"},
@@ -4497,7 +4497,7 @@ footer{
             { "name": "Indian Markets",
               "symbols": [
                 {"name":"BSE:SENSEX","displayName":"SENSEX"},
-                {"name":"CAPITALCOM:INDIA50","displayName":"NIFTY 50"},
+                {"name":"TVC:NIFTY","displayName":"NIFTY 50"},
                 {"name":"BSE:BANK","displayName":"Bank Nifty"},
                 {"name":"BSE:RELIANCE","displayName":"Reliance"},
                 {"name":"BSE:TCS","displayName":"TCS"},
@@ -7373,7 +7373,7 @@ var _MKTS_DEFAULT_GROUPS = [
   ]},
   { name: '🇮🇳 India — BSE', symbols: [
     { name: 'BSE:SENSEX',  displayName: 'BSE Sensex' },
-    { name: 'CAPITALCOM:INDIA50',   displayName: 'Nifty 50' },
+    { name: 'TVC:NIFTY',   displayName: 'Nifty 50' },
     { name: 'BSE:BANK',    displayName: 'Bank Nifty' },
     { name: 'BSE:IT',      displayName: 'Nifty IT' },
     { name: 'BSE:AUTO',    displayName: 'Nifty Auto' },
@@ -11248,20 +11248,46 @@ async function _fetchCricinfoLiveItems() {
   return [];
 }
 
-// Route ESPN requests through the proxy to avoid browser CORS errors.
+let _espnWorkerDownUntil = 0;
+
+// Route ESPN requests through multiple CORS-safe proxies.
+// We avoid hammering the Worker when it is returning 5xx.
 async function _fetchEspnJson(path, timeoutMs) {
-  try {
-    const url = 'https://site.api.espn.com' + path;
-    const res = await fetch(`${WORKER_PROXY_URL}/?url=${encodeURIComponent(url)}`, {
-      cache: 'no-store',
-      signal: AbortSignal.timeout(timeoutMs || 7000)
-    });
-    if (!res.ok) return null;
-    const text = await res.text();
-    try { return JSON.parse(text); } catch(_) { return null; }
-  } catch(_) {
-    return null;
+  const url = 'https://site.api.espn.com' + path;
+  const pool = [
+    {
+      name: 'allorigins',
+      build: u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
+    },
+    {
+      name: 'corsproxy',
+      build: u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`
+    },
+    {
+      name: 'worker',
+      build: u => `${WORKER_PROXY_URL}/?url=${encodeURIComponent(u)}`
+    }
+  ];
+
+  for (const p of pool) {
+    if (p.name === 'worker' && Date.now() < _espnWorkerDownUntil) continue;
+    try {
+      const res = await fetch(p.build(url), {
+        cache: 'no-store',
+        signal: AbortSignal.timeout(timeoutMs || 7000)
+      });
+      if (p.name === 'worker' && res.status >= 500) {
+        _espnWorkerDownUntil = Date.now() + 5 * 60 * 1000;
+      }
+      if (!res.ok) continue;
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        if (json) return json;
+      } catch(_) {}
+    } catch(_) {}
   }
+  return null;
 }
 
 // ─── fetchLiveScores ──────────────────────────────────────────────────────────
