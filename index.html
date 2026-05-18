@@ -11218,6 +11218,36 @@ function _stampScoreTime() {
   if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
 }
 
+// ESPNcricinfo live RSS fallback (helps surface international matches when
+// scoreboard endpoints are delayed or sparse).
+async function _fetchCricinfoLiveItems() {
+  const target = 'https://www.espncricinfo.com/rss/livescores.xml';
+  const proxies = [
+    `${WORKER_PROXY_URL}/?url=${encodeURIComponent(target)}`,
+    `https://api.allorigins.win/get?url=${encodeURIComponent(target)}`,
+    `https://corsproxy.io/?url=${encodeURIComponent(target)}`
+  ];
+  for (const u of proxies) {
+    try {
+      const r = await fetch(u, { cache: 'no-store', signal: AbortSignal.timeout(7000) });
+      if (!r.ok) continue;
+      let xml = await r.text();
+      if (u.includes('allorigins.win')) {
+        try { xml = JSON.parse(xml).contents || ''; } catch(_) {}
+      }
+      if (!xml) continue;
+      const doc = new DOMParser().parseFromString(xml, 'text/xml');
+      const items = Array.from(doc.querySelectorAll('item')).slice(0, 20).map(it => ({
+        title: (it.querySelector('title')?.textContent || '').trim(),
+        link:  (it.querySelector('link')?.textContent || '').trim(),
+        pub:   (it.querySelector('pubDate')?.textContent || '').trim()
+      })).filter(it => it.title && it.link);
+      if (items.length) return items;
+    } catch(_) {}
+  }
+  return [];
+}
+
 // Route ESPN requests through the proxy to avoid browser CORS errors.
 async function _fetchEspnJson(path, timeoutMs) {
   try {
@@ -11390,6 +11420,23 @@ async function fetchLiveScores(sport) {
       const display = nonPSL.length > 0 ? nonPSL : allCards; // PSL-only fallback
 
       box.innerHTML = display.slice(0, 12).map(c => c.html).join('');
+      _stampScoreTime();
+      return;
+    }
+
+    // ── Step 3: ESPNcricinfo live RSS fallback (international coverage) ──────
+    const ciItems = await _fetchCricinfoLiveItems();
+    if (ciItems.length) {
+      box.innerHTML = ciItems.slice(0, 12).map(it => {
+        const t = (it.title || 'Live Match').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const l = (it.link || '#').replace(/"/g, '&quot;');
+        return `<div class="score-card">
+          <div style="font-size:9px;color:#f97316;margin-bottom:3px;letter-spacing:.3px">ESPNcricinfo Live</div>
+          <div class="score-card-match">${t}</div>
+          <div class="score-card-status" style="color:#22c55e"><span class="score-live-dot"></span>Live / Recent</div>
+          <div style="margin-top:8px"><a href="${l}" target="_blank" rel="noopener" style="font-size:10px;color:#60a5fa;text-decoration:none">Open scorecard ↗</a></div>
+        </div>`;
+      }).join('');
       _stampScoreTime();
       return;
     }
