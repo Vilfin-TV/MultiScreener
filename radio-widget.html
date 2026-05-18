@@ -21,49 +21,23 @@ html,body{height:100%;overflow:hidden;background:#080e1a}
 <iframe id="ri-frame"
         src="https://www.radioindia.in/"
         allow="autoplay; encrypted-media"
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-        title="Radio India — Live Stations"
+        title="Radio India - Live Stations"
         loading="lazy"></iframe>
 
 <div id="ri-error">
-  <h3>🎙 Radio India</h3>
-  <p>Direct embed is restricted by the station's server.<br>Loading via secure relay…</p>
-  <a href="https://www.radioindia.in/" target="_blank" rel="noopener">Open in new tab ↗</a>
+  <h3>Radio India</h3>
+  <p>Direct iframe is unavailable in your browser session.<br>Open the station in a new tab.</p>
+  <a href="https://www.radioindia.in/" target="_blank" rel="noopener">Open in new tab</a>
 </div>
 
 <script>
 (function () {
-  var DIRECT_SRC  = 'https://www.radioindia.in/';
-  var PROXY_BASE  = 'https://screener-proxy.vilfintv.workers.dev';
-  var PROXY_SRC   = PROXY_BASE + '/?url=' + encodeURIComponent(DIRECT_SRC);
-
   var frame = document.getElementById('ri-frame');
   var errBox = document.getElementById('ri-error');
-  var triedProxy = false;
 
-  function tryProxy() {
-    if (triedProxy) {
-      frame.style.display = 'none';
-      errBox.classList.add('show');
-      return;
-    }
-    triedProxy = true;
-    frame.src = PROXY_SRC;
-  }
-
-  frame.addEventListener('error', tryProxy);
-
-  // Detect X-Frame-Options / CSP block via load + blank check
-  frame.addEventListener('load', function () {
-    try {
-      // If the frame loaded but has no content (blocked), contentDocument is null or cross-origin
-      var doc = frame.contentDocument;
-      if (!doc || (doc.body && doc.body.innerHTML === '')) {
-        tryProxy();
-      }
-    } catch (e) {
-      // Cross-origin = successfully loaded (expected for external sites)
-    }
+  frame.addEventListener('error', function () {
+    frame.style.display = 'none';
+    errBox.classList.add('show');
   });
 })();
 </script>
