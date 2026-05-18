@@ -3857,12 +3857,21 @@ footer{
       <span id="pr-chevron" style="font-size:12px;transition:transform .3s;transform:rotate(180deg)">▾</span>
     </div>
 
-    <!-- Embedded radiosindia.com player — weekday behavior (open by default) -->
-    <div class="radio-india-body" id="pr-body" style="max-height:250px">
+    <!-- Premium controls -->
+    <div style="display:flex;gap:6px;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid #132646;background:linear-gradient(180deg,#0b1d35,#071528)">
+      <div style="font-size:10px;color:#8fb2df;letter-spacing:.5px;text-transform:uppercase">Full Premium Directory</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button onclick="prLoadPlayer()" style="border:1px solid #1f3f6f;background:rgba(45,108,223,.18);color:#dce9ff;border-radius:8px;padding:5px 9px;font-size:10px;cursor:pointer">Reload</button>
+        <button onclick="window.open('https://radiosindia.com/','_blank','noopener')" style="border:1px solid #1f3f6f;background:transparent;color:#9fc0ee;border-radius:8px;padding:5px 9px;font-size:10px;cursor:pointer">Open New Tab</button>
+      </div>
+    </div>
+
+    <!-- Embedded radiosindia.com player — full panel (open by default) -->
+    <div class="radio-india-body" id="pr-body" style="flex:1;min-height:0">
       <iframe id="pr-iframe"
-              src="https://radiosindia.com/radiomango.html"
-              data-src="https://radiosindia.com/radiomango.html"
-              style="height:240px;width:100%;border:none;overflow:hidden;display:block"
+              src="https://radiosindia.com/"
+              data-src="https://radiosindia.com/"
+              style="height:100%;width:100%;border:none;overflow:hidden;display:block;background:#060d1a"
               loading="lazy" title="Radio India Featured" allow="autoplay"></iframe>
     </div>
 
@@ -7067,15 +7076,22 @@ function _renderRandomChips() {
 async function fetchAndPopulateStreams() {
   // Build the channel select from the embedded YT_CHANNELS array
   ytBuildSelect();
-  // Force global default for all users: Bloomberg Television (ch 74)
+  // Default for new users: Bloomberg Television (ch 74).
+  // If a user has saved their own startup channel in localStorage, keep it.
   _ytCurrentChNo = 74;
+  try {
+    var savedNo = parseInt(localStorage.getItem('viltv_default_chno') || '', 10);
+    if (savedNo >= 1 && savedNo <= 141) _ytCurrentChNo = savedNo;
+  } catch(e) {}
   var defSel = document.getElementById('yt-channel-select');
   if (defSel) {
     for (var j = 0; j < defSel.options.length; j++) {
-      if (parseInt(defSel.options[j].value, 10) === 74) { defSel.selectedIndex = j; break; }
+      if (parseInt(defSel.options[j].value, 10) === _ytCurrentChNo) { defSel.selectedIndex = j; break; }
     }
   }
-  if (YT_CHANNELS[73]) ytUpdateInfo(YT_CHANNELS[73]);
+  var chk = document.getElementById('yt-default-ch-chk');
+  if (chk) chk.checked = (_ytCurrentChNo !== 74);
+  if (YT_CHANNELS[_ytCurrentChNo - 1]) ytUpdateInfo(YT_CHANNELS[_ytCurrentChNo - 1]);
   setTimeout(function() { ytSwitchToChannel(_ytCurrentChNo); }, 300);
 }
 // Init on load
@@ -8369,7 +8385,7 @@ function prTogglePlayer() {
   const chevron = document.getElementById('pr-chevron');
   if (!body) return;
   const collapsed = body.classList.toggle('collapsed');
-  body.style.maxHeight = collapsed ? '0' : '250px';
+  body.style.maxHeight = collapsed ? '0' : '';
   if (chevron) chevron.style.transform = collapsed ? 'rotate(0deg)' : 'rotate(180deg)';
 }
 
@@ -10450,6 +10466,10 @@ function _ytSyncState() {
 // Global startup default for all users
 (function() {
   _ytCurrentChNo = 74;
+  try {
+    var savedNo = parseInt(localStorage.getItem('viltv_default_chno') || '', 10);
+    if (savedNo >= 1 && savedNo <= 141) _ytCurrentChNo = savedNo;
+  } catch(e) {}
 })();
 
 // ── Build <select> from YT_CHANNELS data ─────────────────────────────────
