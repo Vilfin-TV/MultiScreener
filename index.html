@@ -4425,7 +4425,7 @@ footer{
           "symbolActiveColor": "rgba(41, 98, 255, 0.12)",
           "tabs": [
             { "title": "Indices", "symbols": [
-                {"s":"BSE:SENSEX","d":"SENSEX"},{"s":"TVC:NIFTY","d":"NIFTY 50"},
+                {"s":"BSE:SENSEX","d":"SENSEX"},{"s":"NSE:NIFTY","d":"NIFTY 50"},
                 {"s":"BSE:BANK","d":"Bank Nifty"},
                 {"s":"CAPITALCOM:US100","d":"Nasdaq 100"},{"s":"OANDA:SPX500USD","d":"S&P 500"},
                 {"s":"OANDA:US30USD","d":"Dow Jones"},{"s":"INDEX:NKY","d":"Nikkei 225"},
@@ -4448,7 +4448,7 @@ footer{
                 {"s":"TVC:GOLD","d":"Gold"},{"s":"TVC:SILVER","d":"Silver"},
                 {"s":"NYMEX:CL1!","d":"Crude Oil WTI"},{"s":"TVC:UKOIL","d":"Brent Oil"},
                 {"s":"CAPITALCOM:COPPER","d":"Copper"},{"s":"CAPITALCOM:NATURALGAS","d":"Natural Gas"},
-                {"s":"TVC:ALUMINIUM","d":"Aluminium"}
+                {"s":"MCX:ALUMINIUM","d":"Aluminium"}
               ], "originalTitle": "Commodities"
             },
             { "title": "Bonds", "symbols": [
@@ -4481,7 +4481,7 @@ footer{
             { "name": "Indian Markets",
               "symbols": [
                 {"name":"BSE:SENSEX","displayName":"SENSEX"},
-                {"name":"TVC:NIFTY","displayName":"NIFTY 50"},
+                {"name":"NSE:NIFTY","displayName":"NIFTY 50"},
                 {"name":"BSE:BANK","displayName":"Bank Nifty"},
                 {"name":"BSE:RELIANCE","displayName":"Reliance"},
                 {"name":"BSE:TCS","displayName":"TCS"},
@@ -4675,7 +4675,7 @@ footer{
             { "name": "Base Metals & Agri",
               "symbols": [
                 {"name":"CAPITALCOM:COPPER","displayName":"Copper"},
-                {"name":"TVC:ALUMINIUM","displayName":"Aluminium"},
+                {"name":"MCX:ALUMINIUM","displayName":"Aluminium"},
                 {"name":"CBOT:ZC1!","displayName":"Corn"},
                 {"name":"CBOT:ZW1!","displayName":"Wheat"},
                 {"name":"CBOT:ZS1!","displayName":"Soybeans"}
@@ -7368,7 +7368,7 @@ var _MKTS_DEFAULT_GROUPS = [
   ]},
   { name: '🇮🇳 India — BSE', symbols: [
     { name: 'BSE:SENSEX',  displayName: 'BSE Sensex' },
-    { name: 'TVC:NIFTY',   displayName: 'Nifty 50' },
+    { name: 'NSE:NIFTY',   displayName: 'Nifty 50' },
     { name: 'BSE:BANK',    displayName: 'Bank Nifty' },
     { name: 'BSE:IT',      displayName: 'Nifty IT' },
     { name: 'BSE:AUTO',    displayName: 'Nifty Auto' },
@@ -11203,6 +11203,22 @@ function _stampScoreTime() {
   if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
 }
 
+// Route ESPN requests through the proxy to avoid browser CORS errors.
+async function _fetchEspnJson(path, timeoutMs) {
+  try {
+    const url = 'https://site.api.espn.com' + path;
+    const res = await fetch(`${WORKER_PROXY_URL}/?url=${encodeURIComponent(url)}`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(timeoutMs || 7000)
+    });
+    if (!res.ok) return null;
+    const text = await res.text();
+    try { return JSON.parse(text); } catch(_) { return null; }
+  } catch(_) {
+    return null;
+  }
+}
+
 // ─── fetchLiveScores ──────────────────────────────────────────────────────────
 async function fetchLiveScores(sport) {
   const box = document.getElementById('live-scores-content');
@@ -11312,25 +11328,13 @@ async function fetchLiveScores(sport) {
     }
 
     // ── Step 2: ESPN cricket scorepanel via Cloudflare Worker proxy ────────────
-    const espnScorepanelUrl = 'https://site.api.espn.com/apis/site/v2/sports/cricket/scorepanel';
-
     const today = new Date().toISOString().slice(0, 10);
-    // Fetch scorepanel (via proxy) + direct international/general ESPN endpoints + SportsDB in parallel
+    // Fetch scorepanel + general cricket feeds via proxy + SportsDB in parallel
     const [sdbResult, espnResult, espnGenResult, espnIntlResult] = await Promise.allSettled([
       _fetchSportsDB(today),
-      fetch(`${WORKER_PROXY_URL}/?url=${encodeURIComponent(espnScorepanelUrl)}`, { cache:'no-store', signal: AbortSignal.timeout(8000) })
-        .then(async r => {
-          if (!r.ok) return null;
-          const text = await r.text();
-          try { return JSON.parse(text); } catch (_) { return null; }
-        })
-        .catch(() => null),
-      // Direct ESPN general cricket scoreboard — catches INT'L / tour matches
-      fetch('https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard', { cache:'no-store', signal: AbortSignal.timeout(7000) })
-        .then(r => r.ok ? r.json() : null).catch(() => null),
-      // ESPN international cricket league (league 28 = ICC / bilateral series)
-      fetch('https://site.api.espn.com/apis/site/v2/sports/cricket/28/scoreboard', { cache:'no-store', signal: AbortSignal.timeout(7000) })
-        .then(r => r.ok ? r.json() : null).catch(() => null),
+      _fetchEspnJson('/apis/site/v2/sports/cricket/scorepanel', 8000),
+      _fetchEspnJson('/apis/site/v2/sports/cricket/scoreboard', 7000),
+      _fetchEspnJson('/apis/site/v2/sports/cricket/28/scoreboard', 7000),
     ]);
 
     // Helper: push ESPN result avoiding duplicates
@@ -11404,11 +11408,9 @@ async function fetchLiveScores(sport) {
   let data = null;
   for (const url of urls) {
     try {
-      const r = await fetch(url, { cache:'no-store', signal: AbortSignal.timeout(6000) });
-      if (r.ok) {
-        const d = await r.json();
-        if ((d.events || d.competitions || []).length) { data = d; break; }
-      }
+      const path = new URL(url).pathname;
+      const d = await _fetchEspnJson(path, 6000);
+      if (d && (d.events || d.competitions || []).length) { data = d; break; }
     } catch(_) {}
   }
 
@@ -11505,8 +11507,7 @@ async function fetchPastScores(sport) {
     const [sdbResults, ...espnResults] = await Promise.allSettled([
       Promise.all(dateStrs.map(d => _fetchSportsDB(d))),
       ...espnEndpoints.map(url =>
-        fetch(url, { cache:'no-store', signal: AbortSignal.timeout(7000) })
-          .then(r => r.ok ? r.json() : null).catch(() => null)
+        _fetchEspnJson(new URL(url).pathname, 7000)
       )
     ]);
 
@@ -11604,9 +11605,8 @@ async function fetchPastScores(sport) {
   let allEvents = [];
   for (const url of urls) {
     try {
-      const r = await fetch(url, { cache:'no-store', signal: AbortSignal.timeout(6000) });
-      if (r.ok) {
-        const d = await r.json();
+      const d = await _fetchEspnJson(new URL(url).pathname, 6000);
+      if (d) {
         allEvents = allEvents.concat(d.events || d.competitions || []);
         if (allEvents.length >= 6) break;
       }
@@ -12159,6 +12159,7 @@ const NEWS_ORDER_KEY = 'viltv_news_order';  // JSON array defining display order
 
 // ── CORS proxy chain — tries multiple public proxies in sequence ──────────────
 const WORKER_PROXY_URL = 'https://screener-proxy.vilfintv.workers.dev';
+let _workerProxyDownUntil = 0;
 
 // Convert rss2json.com item format → internal item format
 function _rss2jsonToItem(it) {
@@ -12383,9 +12384,13 @@ async function fetchFeed(src, _unused, usedFallback) {
 
   // ── 1. Try each proxy in the chain sequentially ─────────────────────────
   for (const proxy of _PROXY_CHAIN) {
+    if (proxy.name === 'worker' && Date.now() < _workerProxyDownUntil) continue;
     try {
       const proxyUrl = proxy.build(fetchUrl);
       const res = await fetch(proxyUrl, { cache: 'no-store', signal: AbortSignal.timeout(proxy.timeout || 10000) });
+      if (proxy.name === 'worker' && res.status >= 500) {
+        _workerProxyDownUntil = Date.now() + 5 * 60 * 1000;
+      }
       if (!res.ok) continue;
       const items = await proxy.extract(res);
       if (items && items.length) {
