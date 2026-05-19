@@ -60,8 +60,8 @@ export default {
         return jsonError(405, 'Method not allowed. Use POST for /feedback.');
       }
 
-      if (!env || !env.WEB3FORMS_KEY) {
-        return jsonError(503, 'Feedback service not configured. Add WEB3FORMS_KEY to Worker environment variables.');
+      if (!env || !env.FORMSPREE_FORM_ID) {
+        return jsonError(503, 'Feedback service not configured. Add FORMSPREE_FORM_ID to Worker environment variables.');
       }
 
       let payload;
@@ -76,18 +76,19 @@ export default {
         return jsonError(400, 'Missing required fields: type, subject, body.');
       }
 
-      // Send via Web3Forms API (free, no domain verification required)
+      // Send via Formspree (free, no domain verification required)
       try {
-        const formRes = await fetch('https://api.web3forms.com/submit', {
+        const formRes = await fetch(`https://formspree.io/f/${env.FORMSPREE_FORM_ID.trim()}`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept':        'application/json',
+          },
           body: JSON.stringify({
-            access_key:  env.WEB3FORMS_KEY.trim(),
-            subject:     subject,
-            from_name:   'VilfinTV Feedback System',
-            email:       'noreply@vilfintv.com',
-            message:     body,
-            // Extra fields shown in the Web3Forms email
+            email:         'noreply@vilfintv.com',
+            subject:       subject,
+            message:       body,
+            _subject:      subject,
             'Report Type': type,
             'Platform':    'vilfintv.com',
             'Timestamp':   new Date().toUTCString(),
@@ -96,15 +97,15 @@ export default {
 
         const result = await formRes.json().catch(() => ({}));
 
-        if (formRes.ok && result.success) {
+        if (formRes.ok) {
           return new Response(
             JSON.stringify({ ok: true, message: 'Feedback received. Thank you!' }),
             { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } }
           );
         }
 
-        const reason = result.message || `HTTP ${formRes.status}`;
-        console.error(`[feedback] Web3Forms error: ${reason}`);
+        const reason = (result.errors && result.errors.map(e => e.message).join(', ')) || `HTTP ${formRes.status}`;
+        console.error(`[feedback] Formspree error: ${reason}`);
         return jsonError(502, `Failed to send feedback: ${reason}`);
 
       } catch (err) {
