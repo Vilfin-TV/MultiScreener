@@ -51,19 +51,17 @@ export default {
     const { pathname, searchParams } = new URL(request.url);
 
     // ── /feedback  POST — Bug reports, feature requests, user feedback ────────
-    // Destination email is stored securely in FEEDBACK_EMAIL env var (never in frontend).
-    // Email is sent via Resend API (RESEND_API_KEY env var).
-    // Required env vars in Cloudflare Workers dashboard:
-    //   FEEDBACK_EMAIL  = vilfintv123@gmail.com
-    //   RESEND_API_KEY  = re_xxxxxxxxxxxx  (from resend.com — free tier)
+    // Email is sent via Web3Forms (web3forms.com — free, no domain verification needed).
+    // Required env var in Cloudflare Workers dashboard:
+    //   WEB3FORMS_KEY  = xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    //   (get your free key at https://web3forms.com — enter vilfintv123@gmail.com as destination)
     if (pathname === '/feedback') {
       if (request.method !== 'POST') {
         return jsonError(405, 'Method not allowed. Use POST for /feedback.');
       }
 
-      // Validate env vars are configured
-      if (!env || !env.FEEDBACK_EMAIL || !env.RESEND_API_KEY) {
-        return jsonError(503, 'Feedback service not configured. Please set FEEDBACK_EMAIL and RESEND_API_KEY in Worker environment variables.');
+      if (!env || !env.WEB3FORMS_KEY) {
+        return jsonError(503, 'Feedback service not configured. Add WEB3FORMS_KEY to Worker environment variables.');
       }
 
       let payload;
@@ -78,40 +76,38 @@ export default {
         return jsonError(400, 'Missing required fields: type, subject, body.');
       }
 
-      // Build rich HTML email from the AI-query formatted markdown body
-      const htmlBody = buildFeedbackEmailHtml(type, subject, body);
-
-      // Send via Resend API  (https://resend.com — free: 100 emails/day)
+      // Send via Web3Forms API (free, no domain verification required)
       try {
-        const emailRes = await fetch('https://api.resend.com/emails', {
+        const formRes = await fetch('https://api.web3forms.com/submit', {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${env.RESEND_API_KEY}`,
-            'Content-Type':  'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            from:    'VilfinTV Feedback <feedback@vilfintv.com>',
-            to:      [env.FEEDBACK_EMAIL],
-            subject: subject,
-            html:    htmlBody,
-            text:    body,   // plain-text fallback
+            access_key:  env.WEB3FORMS_KEY,
+            subject:     subject,
+            from_name:   'VilfinTV Feedback System',
+            message:     body,
+            // Extra fields shown in the Web3Forms email
+            'Report Type': type,
+            'Platform':    'vilfintv.com',
+            'Timestamp':   new Date().toUTCString(),
           }),
         });
 
-        if (emailRes.ok) {
+        const result = await formRes.json().catch(() => ({}));
+
+        if (formRes.ok && result.success) {
           return new Response(
             JSON.stringify({ ok: true, message: 'Feedback received. Thank you!' }),
             { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } }
           );
         }
 
-        // Resend returned an error — log it, return generic failure
-        const errText = await emailRes.text().catch(() => '');
-        console.error(`[feedback] Resend error ${emailRes.status}: ${errText}`);
-        return jsonError(502, 'Failed to send feedback email. Please try again later.');
+        const reason = result.message || `HTTP ${formRes.status}`;
+        console.error(`[feedback] Web3Forms error: ${reason}`);
+        return jsonError(502, `Failed to send feedback: ${reason}`);
 
-      } catch (emailErr) {
-        console.error(`[feedback] Email send exception: ${emailErr.message}`);
+      } catch (err) {
+        console.error(`[feedback] Exception: ${err.message}`);
         return jsonError(500, 'Unexpected error sending feedback.');
       }
     }
