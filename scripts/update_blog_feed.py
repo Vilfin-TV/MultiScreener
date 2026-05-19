@@ -170,7 +170,8 @@ FEEDS: dict[str, list[dict[str, str]]] = {
         {"url": "https://www.gsmarena.com/rss-news-reviews.php3", "source": "GSMArena"},
         {"url": "https://www.androidauthority.com/feed/", "source": "Android Authority"},
         {"url": "https://9to5mac.com/feed/", "source": "9to5Mac"},
-        _gn("smartphone+mobile+launch+review+Android+iPhone+2026"),
+        {"url": "https://feeds.feedburner.com/91mobiles", "source": "91Mobiles"},
+        _gn("smartphone+mobile+launch+review+Android+iPhone+India+2026"),
     ],
     "inventions": [
         {"url": "https://www.sciencedaily.com/rss/matter_energy/inventions.xml", "source": "ScienceDaily"},
