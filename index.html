@@ -2080,6 +2080,78 @@ footer{
   .iptv-geo-item{font-size:9px;padding:6px 6px;}
 }
 
+/* ═══════════════════════════════════════════════════════
+   RADIO / MUSIC / MOVIES / PODCAST — 5-Style Layout System
+   Reuses .iptv-panel-hdr, .iptv-gear-btn, .iptv-settings-panel,
+   .iptv-geo-nav, .iptv-geo-col, .iptv-geo-item (already defined above)
+   ═══════════════════════════════════════════════════════ */
+/* ── Style 2+3: Show sidebar, hide preset strip ── */
+#rb-panel-radio.rp-s2 .iptv-geo-nav,#rb-panel-radio.rp-s3 .iptv-geo-nav,
+#rb-panel-movies.rp-s2 .iptv-geo-nav,#rb-panel-movies.rp-s3 .iptv-geo-nav,
+#rb-panel-podcast.rp-s2 .iptv-geo-nav,#rb-panel-podcast.rp-s3 .iptv-geo-nav,
+#rb-panel-music.rp-s2 .iptv-geo-nav,#rb-panel-music.rp-s3 .iptv-geo-nav{display:flex;}
+#rb-panel-radio.rp-s2 #radio-presets,#rb-panel-radio.rp-s3 #radio-presets,
+#rb-panel-movies.rp-s2 #movies-preset-strip,#rb-panel-movies.rp-s3 #movies-preset-strip,
+#rb-panel-podcast.rp-s2 #podcast-preset-strip,#rb-panel-podcast.rp-s3 #podcast-preset-strip,
+#rb-panel-music.rp-s2 #music-preset-strip,#rb-panel-music.rp-s3 #music-preset-strip{display:none !important;}
+/* ── Style 4: Card Grid ── */
+#rb-panel-radio.rp-s4 #radio-station-list,
+#rb-panel-movies.rp-s4 #movies-list,
+#rb-panel-podcast.rp-s4 #podcast-list,
+#rb-panel-music.rp-s4 #music-list{display:grid;grid-template-columns:repeat(2,1fr);padding:4px;gap:0;overflow-y:auto;flex:1;align-content:start;}
+#rb-panel-radio.rp-s4 .radio-station-item,
+#rb-panel-movies.rp-s4 .radio-station-item,
+#rb-panel-podcast.rp-s4 .radio-station-item,
+#rb-panel-music.rp-s4 .radio-station-item{flex-direction:column;align-items:center;justify-content:flex-start;gap:5px;padding:10px 6px;text-align:center;margin-bottom:0;border-radius:0;border-bottom:1px solid #0d1e38 !important;border-right:1px solid #0d1e38 !important;border-left:none !important;border-top:none !important;min-height:74px;}
+#rb-panel-radio.rp-s4 .radio-station-item > span:first-child,
+#rb-panel-movies.rp-s4 .radio-station-item > span:first-child,
+#rb-panel-podcast.rp-s4 .radio-station-item > span:first-child,
+#rb-panel-music.rp-s4 .radio-station-item > span:first-child{width:36px;height:36px;border-radius:9px;font-size:20px !important;display:inline-flex !important;align-items:center;justify-content:center;flex-shrink:0 !important;}
+#rb-panel-radio.rp-s4 .radio-station-meta,
+#rb-panel-movies.rp-s4 .radio-station-meta,
+#rb-panel-podcast.rp-s4 .radio-station-meta,
+#rb-panel-music.rp-s4 .radio-station-meta{align-items:center;width:100%;}
+#rb-panel-radio.rp-s4 .radio-station-name,
+#rb-panel-movies.rp-s4 .radio-station-name,
+#rb-panel-podcast.rp-s4 .radio-station-name,
+#rb-panel-music.rp-s4 .radio-station-name{font-size:9px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3;text-align:center;}
+#rb-panel-radio.rp-s4 .radio-station-tag,
+#rb-panel-movies.rp-s4 .radio-station-tag,
+#rb-panel-podcast.rp-s4 .radio-station-tag,
+#rb-panel-music.rp-s4 .radio-station-tag{font-size:8px;text-align:center;}
+#rb-panel-radio.rp-s4 .radio-station-item > button,
+#rb-panel-movies.rp-s4 .radio-station-item > button,
+#rb-panel-podcast.rp-s4 .radio-station-item > button,
+#rb-panel-music.rp-s4 .radio-station-item > button{display:none;}
+/* ── Style 5: Compact Dense ── */
+#rb-panel-radio.rp-s5 .radio-station-item,
+#rb-panel-movies.rp-s5 .radio-station-item,
+#rb-panel-podcast.rp-s5 .radio-station-item,
+#rb-panel-music.rp-s5 .radio-station-item{padding:3px 8px;margin-bottom:1px;}
+#rb-panel-radio.rp-s5 .radio-station-name,
+#rb-panel-movies.rp-s5 .radio-station-name,
+#rb-panel-podcast.rp-s5 .radio-station-name,
+#rb-panel-music.rp-s5 .radio-station-name{font-size:10.5px;}
+#rb-panel-radio.rp-s5 .radio-station-tag,
+#rb-panel-movies.rp-s5 .radio-station-tag,
+#rb-panel-podcast.rp-s5 .radio-station-tag,
+#rb-panel-music.rp-s5 .radio-station-tag{font-size:8px;}
+/* Sidebar single column for these panels */
+#rb-panel-radio.rp-s2 .iptv-geo-col,#rb-panel-radio.rp-s3 .iptv-geo-col,
+#rb-panel-movies.rp-s2 .iptv-geo-col,#rb-panel-movies.rp-s3 .iptv-geo-col,
+#rb-panel-podcast.rp-s2 .iptv-geo-col,#rb-panel-podcast.rp-s3 .iptv-geo-col,
+#rb-panel-music.rp-s2 .iptv-geo-col,#rb-panel-music.rp-s3 .iptv-geo-col{width:130px;}
+@media(max-width:480px){
+  #rb-panel-radio.rp-s2 .iptv-geo-col,#rb-panel-radio.rp-s3 .iptv-geo-col,
+  #rb-panel-movies.rp-s2 .iptv-geo-col,#rb-panel-movies.rp-s3 .iptv-geo-col,
+  #rb-panel-podcast.rp-s2 .iptv-geo-col,#rb-panel-podcast.rp-s3 .iptv-geo-col,
+  #rb-panel-music.rp-s2 .iptv-geo-col,#rb-panel-music.rp-s3 .iptv-geo-col{width:100px;}
+  #rb-panel-radio.rp-s4 #radio-station-list,
+  #rb-panel-movies.rp-s4 #movies-list,
+  #rb-panel-podcast.rp-s4 #podcast-list,
+  #rb-panel-music.rp-s4 #music-list{grid-template-columns:repeat(2,1fr);}
+}
+
 /* ── PREMIUM PANEL SHARED COMPONENTS ── */
 /* Horizontal-scroll preset strip — replaces wrap grids in all panels */
 .panel-preset-strip{
@@ -3973,6 +4045,28 @@ footer{
   <!-- ── PANEL 4: Global Radio (powered by radio-browser.info) ── -->
   <div id="rb-panel-radio" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
 
+    <!-- Radio panel header: title + style badge + gear icon -->
+    <div class="iptv-panel-hdr">
+      <div class="iptv-panel-hdr-left">
+        <span style="font-size:12px">📻</span>
+        <span class="iptv-panel-hdr-title">Radio</span>
+        <span class="iptv-style-badge" id="radio-style-badge">Classic</span>
+      </div>
+      <div class="iptv-panel-hdr-right">
+        <button class="iptv-gear-btn" id="radio-gear-btn" onclick="rpToggleSettings('radio')" title="Panel Layout Style">⚙</button>
+      </div>
+    </div>
+    <div class="iptv-settings-panel" id="radio-settings-panel">
+      <div class="iptv-settings-label">Panel Layout Style</div>
+      <div class="iptv-style-row">
+        <button class="iptv-style-btn active" data-rpanel="radio" data-style="1" onclick="rpSetStyle('radio',1)"><span class="iptv-style-icon">≡</span> Classic List</button>
+        <button class="iptv-style-btn" data-rpanel="radio" data-style="2" onclick="rpSetStyle('radio',2)"><span class="iptv-style-icon">⊞</span> Split Dir</button>
+        <button class="iptv-style-btn" data-rpanel="radio" data-style="3" onclick="rpSetStyle('radio',3)"><span class="iptv-style-icon">⧉</span> 3-Column</button>
+        <button class="iptv-style-btn" data-rpanel="radio" data-style="4" onclick="rpSetStyle('radio',4)"><span class="iptv-style-icon">⊟</span> Card Grid</button>
+        <button class="iptv-style-btn" data-rpanel="radio" data-style="5" onclick="rpSetStyle('radio',5)"><span class="iptv-style-icon">⋮</span> Compact</button>
+      </div>
+    </div>
+
     <!-- Radio Omnisearch bar -->
     <div class="panel-omni-bar">
       <div class="panel-omni-input-wrap">
@@ -4018,10 +4112,18 @@ footer{
       <audio id="radio-audio" preload="none" muted style="display:none"></audio>
     </div>
 
-    <!-- Station list -->
-    <div class="radio-station-list" id="radio-station-list">
-      <div class="radio-no-data">Tap a preset above to load stations…</div>
-    </div>
+    <!-- Content area: sidebar + station list -->
+    <div id="radio-content-area" class="iptv-content-area">
+      <div id="radio-geo-nav" class="iptv-geo-nav">
+        <div class="iptv-geo-col" id="radio-geo-col">
+          <div class="iptv-geo-col-title">Browse</div>
+          <div class="iptv-geo-items" id="radio-geo-items"></div>
+        </div>
+      </div>
+      <div class="radio-station-list" id="radio-station-list">
+        <div class="radio-no-data">Tap a preset above to load stations…</div>
+      </div>
+    </div><!-- /radio-content-area -->
 
   </div><!-- /rb-panel-radio -->
 
@@ -4098,6 +4200,29 @@ footer{
 
   <!-- ── PANEL 5: Music (YouTube IFrame audio player) ── -->
   <div id="rb-panel-music" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+
+    <!-- Music panel header: title + style badge + gear icon -->
+    <div class="iptv-panel-hdr">
+      <div class="iptv-panel-hdr-left">
+        <span style="font-size:12px">🎵</span>
+        <span class="iptv-panel-hdr-title">Music</span>
+        <span class="iptv-style-badge" id="music-style-badge">Classic</span>
+      </div>
+      <div class="iptv-panel-hdr-right">
+        <button class="iptv-gear-btn" id="music-gear-btn" onclick="rpToggleSettings('music')" title="Panel Layout Style">⚙</button>
+      </div>
+    </div>
+    <div class="iptv-settings-panel" id="music-settings-panel">
+      <div class="iptv-settings-label">Panel Layout Style</div>
+      <div class="iptv-style-row">
+        <button class="iptv-style-btn active" data-rpanel="music" data-style="1" onclick="rpSetStyle('music',1)"><span class="iptv-style-icon">≡</span> Classic List</button>
+        <button class="iptv-style-btn" data-rpanel="music" data-style="2" onclick="rpSetStyle('music',2)"><span class="iptv-style-icon">⊞</span> Split Dir</button>
+        <button class="iptv-style-btn" data-rpanel="music" data-style="3" onclick="rpSetStyle('music',3)"><span class="iptv-style-icon">⧉</span> 3-Column</button>
+        <button class="iptv-style-btn" data-rpanel="music" data-style="4" onclick="rpSetStyle('music',4)"><span class="iptv-style-icon">⊟</span> Card Grid</button>
+        <button class="iptv-style-btn" data-rpanel="music" data-style="5" onclick="rpSetStyle('music',5)"><span class="iptv-style-icon">⋮</span> Compact</button>
+      </div>
+    </div>
+
     <div class="panel-preset-strip" id="music-preset-strip">
       <button class="radio-preset-btn music-preset active" onclick="musicLoadPreset('today-top')">🔥 Today's Top</button>
       <button class="radio-preset-btn music-preset" onclick="musicLoadPreset('bollywood')">🎬 Bollywood</button>
@@ -4153,13 +4278,45 @@ footer{
       <span class="panel-now-label" id="music-now" style="color:#475569">—</span>
       <button class="ytc-btn" onclick="musicStop()" id="musicStop" title="Stop">⏹</button>
     </div>
-    <div class="radio-station-list" id="music-list">
-      <div class="radio-no-data">Loading curated playlists…</div>
-    </div>
+    <!-- Content area: sidebar + music list -->
+    <div id="music-content-area" class="iptv-content-area">
+      <div id="music-geo-nav" class="iptv-geo-nav">
+        <div class="iptv-geo-col" id="music-geo-col">
+          <div class="iptv-geo-col-title">Genre</div>
+          <div class="iptv-geo-items" id="music-geo-items"></div>
+        </div>
+      </div>
+      <div class="radio-station-list" id="music-list">
+        <div class="radio-no-data">Loading curated playlists…</div>
+      </div>
+    </div><!-- /music-content-area -->
   </div><!-- /rb-panel-music -->
 
   <!-- ── PANEL 6: Movies (Internet Archive free public-domain films) ── -->
   <div id="rb-panel-movies" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+
+    <!-- Movies panel header: title + style badge + gear icon -->
+    <div class="iptv-panel-hdr">
+      <div class="iptv-panel-hdr-left">
+        <span style="font-size:12px">🎬</span>
+        <span class="iptv-panel-hdr-title">Movies</span>
+        <span class="iptv-style-badge" id="movies-style-badge">Classic</span>
+      </div>
+      <div class="iptv-panel-hdr-right">
+        <button class="iptv-gear-btn" id="movies-gear-btn" onclick="rpToggleSettings('movies')" title="Panel Layout Style">⚙</button>
+      </div>
+    </div>
+    <div class="iptv-settings-panel" id="movies-settings-panel">
+      <div class="iptv-settings-label">Panel Layout Style</div>
+      <div class="iptv-style-row">
+        <button class="iptv-style-btn active" data-rpanel="movies" data-style="1" onclick="rpSetStyle('movies',1)"><span class="iptv-style-icon">≡</span> Classic List</button>
+        <button class="iptv-style-btn" data-rpanel="movies" data-style="2" onclick="rpSetStyle('movies',2)"><span class="iptv-style-icon">⊞</span> Split Dir</button>
+        <button class="iptv-style-btn" data-rpanel="movies" data-style="3" onclick="rpSetStyle('movies',3)"><span class="iptv-style-icon">⧉</span> 3-Column</button>
+        <button class="iptv-style-btn" data-rpanel="movies" data-style="4" onclick="rpSetStyle('movies',4)"><span class="iptv-style-icon">⊟</span> Card Grid</button>
+        <button class="iptv-style-btn" data-rpanel="movies" data-style="5" onclick="rpSetStyle('movies',5)"><span class="iptv-style-icon">⋮</span> Compact</button>
+      </div>
+    </div>
+
     <!-- Movies Omnisearch bar -->
     <div class="panel-omni-bar">
       <div class="panel-omni-input-wrap">
@@ -4209,13 +4366,45 @@ footer{
         <button class="panel-ctrl-btn" onclick="moviesStop()" title="Stop">⏹</button>
       </div>
     </div>
-    <div class="radio-station-list" id="movies-list">
-      <div class="radio-no-data">⏳ Loading free films from Internet Archive…</div>
-    </div>
+    <!-- Content area: sidebar + movies list -->
+    <div id="movies-content-area" class="iptv-content-area">
+      <div id="movies-geo-nav" class="iptv-geo-nav">
+        <div class="iptv-geo-col" id="movies-geo-col">
+          <div class="iptv-geo-col-title">Genre</div>
+          <div class="iptv-geo-items" id="movies-geo-items"></div>
+        </div>
+      </div>
+      <div class="radio-station-list" id="movies-list">
+        <div class="radio-no-data">⏳ Loading free films from Internet Archive…</div>
+      </div>
+    </div><!-- /movies-content-area -->
   </div><!-- /rb-panel-movies -->
 
   <!-- ── PANEL 7: Podcast (curated free shows) ── -->
   <div id="rb-panel-podcast" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+
+    <!-- Podcast panel header: title + style badge + gear icon -->
+    <div class="iptv-panel-hdr">
+      <div class="iptv-panel-hdr-left">
+        <span style="font-size:12px">🎙</span>
+        <span class="iptv-panel-hdr-title">Podcast</span>
+        <span class="iptv-style-badge" id="podcast-style-badge">Classic</span>
+      </div>
+      <div class="iptv-panel-hdr-right">
+        <button class="iptv-gear-btn" id="podcast-gear-btn" onclick="rpToggleSettings('podcast')" title="Panel Layout Style">⚙</button>
+      </div>
+    </div>
+    <div class="iptv-settings-panel" id="podcast-settings-panel">
+      <div class="iptv-settings-label">Panel Layout Style</div>
+      <div class="iptv-style-row">
+        <button class="iptv-style-btn active" data-rpanel="podcast" data-style="1" onclick="rpSetStyle('podcast',1)"><span class="iptv-style-icon">≡</span> Classic List</button>
+        <button class="iptv-style-btn" data-rpanel="podcast" data-style="2" onclick="rpSetStyle('podcast',2)"><span class="iptv-style-icon">⊞</span> Split Dir</button>
+        <button class="iptv-style-btn" data-rpanel="podcast" data-style="3" onclick="rpSetStyle('podcast',3)"><span class="iptv-style-icon">⧉</span> 3-Column</button>
+        <button class="iptv-style-btn" data-rpanel="podcast" data-style="4" onclick="rpSetStyle('podcast',4)"><span class="iptv-style-icon">⊟</span> Card Grid</button>
+        <button class="iptv-style-btn" data-rpanel="podcast" data-style="5" onclick="rpSetStyle('podcast',5)"><span class="iptv-style-icon">⋮</span> Compact</button>
+      </div>
+    </div>
+
     <!-- Podcast Omnisearch bar -->
     <div class="panel-omni-bar">
       <div class="panel-omni-input-wrap">
@@ -4251,9 +4440,18 @@ footer{
       <button class="panel-ctrl-btn" onclick="podcastStop()" title="Stop">⏹</button>
       <audio id="podcast-audio" preload="none" muted style="display:none"></audio>
     </div>
-    <div class="radio-station-list" id="podcast-list">
-      <div class="radio-no-data">Loading curated podcasts…</div>
-    </div>
+    <!-- Content area: sidebar + podcast list -->
+    <div id="podcast-content-area" class="iptv-content-area">
+      <div id="podcast-geo-nav" class="iptv-geo-nav">
+        <div class="iptv-geo-col" id="podcast-geo-col">
+          <div class="iptv-geo-col-title">Category</div>
+          <div class="iptv-geo-items" id="podcast-geo-items"></div>
+        </div>
+      </div>
+      <div class="radio-station-list" id="podcast-list">
+        <div class="radio-no-data">Loading curated podcasts…</div>
+      </div>
+    </div><!-- /podcast-content-area -->
   </div><!-- /rb-panel-podcast -->
 
   <!-- ── PANEL 8: Calendar ── -->
@@ -8598,6 +8796,7 @@ var _radioPlaying    = false;
 
 // ── Load JSON from public/data/radio_stations.json ──────────────────
 async function radioInit() {
+  rpRestoreStyle('radio');
   // Try to restore default station from localStorage
   try {
     const saved = JSON.parse(localStorage.getItem('radio_default_station') || 'null');
@@ -9437,6 +9636,164 @@ function _iptvApplyStyle(n, rerender) {
   if (rerender) _iptvRender(_iptvLastResults);
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// RADIO / MUSIC / MOVIES / PODCAST — Shared 5-Style Layout System
+// ═══════════════════════════════════════════════════════════════════
+const _RP_STYLE_NAMES = { 1:'Classic', 2:'Split Dir', 3:'3-Column', 4:'Card Grid', 5:'Compact' };
+
+const _RP_CONFIG = {
+  radio: {
+    panelId:'rb-panel-radio', presetStripId:'radio-presets',
+    geoNavId:'radio-geo-nav', geoItemsId:'radio-geo-items',
+    badgeId:'radio-style-badge', gearId:'radio-gear-btn',
+    settingsPanelId:'radio-settings-panel', storageKey:'viltv_radio_style',
+    sidebar:[
+      {name:'🇮🇳 Top India',     fn:"radioLoadPreset('top-india')"},
+      {name:'🎬 Bollywood',      fn:"radioLoadPreset('bollywood')"},
+      {name:'🪕 Hindi',          fn:"radioLoadPreset('hindi')"},
+      {name:'🌿 Malayalam',      fn:"radioLoadPreset('malayalam')"},
+      {name:'🇦🇪 UAE Malayalam', fn:"radioLoadPreset('uae-malayalam')"},
+      {name:'🛢 Gulf NRI',       fn:"radioLoadPreset('gulf-nri')"},
+      {name:'🎵 Tamil',          fn:"radioLoadPreset('tamil')"},
+      {name:'🎤 Telugu',         fn:"radioLoadPreset('telugu')"},
+      {name:'🎶 Kannada',        fn:"radioLoadPreset('kannada')"},
+      {name:'🟡 Punjabi',        fn:"radioLoadPreset('punjabi')"},
+      {name:'🇺🇸 Top US',        fn:"radioLoadPreset('top-us')"},
+      {name:'🇬🇧 Top UK',        fn:"radioLoadPreset('top-uk')"},
+      {name:'🇯🇵 Japan',         fn:"radioLoadPreset('top-japan')"},
+      {name:'📰 News',           fn:"radioLoadPreset('news')"},
+      {name:'🌿 Chill',          fn:"radioLoadPreset('chill')"},
+    ],
+  },
+  movies: {
+    panelId:'rb-panel-movies', presetStripId:'movies-preset-strip',
+    geoNavId:'movies-geo-nav', geoItemsId:'movies-geo-items',
+    badgeId:'movies-style-badge', gearId:'movies-gear-btn',
+    settingsPanelId:'movies-settings-panel', storageKey:'viltv_movies_style',
+    sidebar:[
+      {name:'🎭 Classics',      fn:"moviesLoadPreset('classics')"},
+      {name:'💥 Action',        fn:"moviesLoadPreset('action')"},
+      {name:'😂 Comedy',        fn:"moviesLoadPreset('comedy')"},
+      {name:'👻 Horror',        fn:"moviesLoadPreset('horror')"},
+      {name:'🚀 Sci-Fi',        fn:"moviesLoadPreset('scifi')"},
+      {name:'🎨 Animation',     fn:"moviesLoadPreset('animation')"},
+      {name:'🎭 Drama',         fn:"moviesLoadPreset('drama')"},
+      {name:'🤠 Western',       fn:"moviesLoadPreset('western')"},
+      {name:'📽 Documentary',   fn:"moviesLoadPreset('documentary')"},
+      {name:'⏱ Shorts',        fn:"moviesLoadPreset('shorts')"},
+      {name:'🎬 Silent Era',    fn:"moviesLoadPreset('silent')"},
+      {name:'🕵 Film Noir',     fn:"moviesLoadPreset('noir')"},
+      {name:'🎬 Bollywood',     fn:"moviesLoadPreset('bollywood')"},
+      {name:'🎬 Malayalam',     fn:"moviesLoadPreset('malayalam')"},
+      {name:'🎬 Tamil',         fn:"moviesLoadPreset('tamil')"},
+      {name:'🎬 Telugu',        fn:"moviesLoadPreset('telugu')"},
+      {name:'🎬 Indian Cinema', fn:"moviesLoadPreset('indiancinema')"},
+      {name:'🔪 Thriller',      fn:"moviesLoadPreset('thriller')"},
+      {name:'🎬 Hindi',         fn:"moviesLoadPreset('hindi')"},
+      {name:'🇲🇽 Mexico',       fn:"moviesLoadPreset('mexico')"},
+      {name:'🇰🇷 Korea',        fn:"moviesLoadPreset('korea')"},
+    ],
+  },
+  podcast: {
+    panelId:'rb-panel-podcast', presetStripId:'podcast-preset-strip',
+    geoNavId:'podcast-geo-nav', geoItemsId:'podcast-geo-items',
+    badgeId:'podcast-style-badge', gearId:'podcast-gear-btn',
+    settingsPanelId:'podcast-settings-panel', storageKey:'viltv_podcast_style',
+    sidebar:[
+      {name:'⭐ Curated',     fn:'podcastLoadCurated()'},
+      {name:'💼 Business',    fn:"podcastLoadCategory('Business')"},
+      {name:'💻 Technology',  fn:"podcastLoadCategory('Technology')"},
+      {name:'📰 News',        fn:"podcastLoadCategory('News')"},
+      {name:'📚 Education',   fn:"podcastLoadCategory('Education')"},
+      {name:'❤️ Health',      fn:"podcastLoadCategory('Health')"},
+      {name:'😂 Comedy',      fn:"podcastLoadCategory('Comedy')"},
+      {name:'⚽ Sports',      fn:"podcastLoadCategory('Sports')"},
+      {name:'🌍 Society',     fn:"podcastLoadCategory('Society')"},
+    ],
+  },
+  music: {
+    panelId:'rb-panel-music', presetStripId:'music-preset-strip',
+    geoNavId:'music-geo-nav', geoItemsId:'music-geo-items',
+    badgeId:'music-style-badge', gearId:'music-gear-btn',
+    settingsPanelId:'music-settings-panel', storageKey:'viltv_music_style',
+    sidebar:[
+      {name:"🔥 Today's Top", fn:"musicLoadPreset('today-top')"},
+      {name:'🎬 Bollywood',   fn:"musicLoadPreset('bollywood')"},
+      {name:'🪕 Hindi',       fn:"musicLoadPreset('hindi')"},
+      {name:'🟡 Punjabi',     fn:"musicLoadPreset('punjabi')"},
+      {name:'🌿 Malayalam',   fn:"musicLoadPreset('malayalam')"},
+      {name:'🎵 Tamil',       fn:"musicLoadPreset('tamil')"},
+      {name:'🎤 Telugu',      fn:"musicLoadPreset('telugu')"},
+      {name:'🎤 J-pop',       fn:"musicLoadPreset('jpop')"},
+      {name:'🎸 J-rock',      fn:"musicLoadPreset('jrock')"},
+      {name:'🎤 K-pop',       fn:"musicLoadPreset('kpop')"},
+      {name:'🎸 K-rock',      fn:"musicLoadPreset('krock')"},
+      {name:'🎤 C-pop',       fn:"musicLoadPreset('cpop')"},
+      {name:'🌙 Lo-fi',       fn:"musicLoadPreset('lofi')"},
+      {name:'🌿 Chill',       fn:"musicLoadPreset('chill')"},
+      {name:'💪 Workout',     fn:"musicLoadPreset('workout')"},
+      {name:'🎵 Pop',         fn:"musicLoadPreset('pop')"},
+      {name:'🎸 Rock',        fn:"musicLoadPreset('rock')"},
+      {name:'🎻 Classical',   fn:"musicLoadPreset('classical')"},
+      {name:'🎺 Jazz',        fn:"musicLoadPreset('jazz')"},
+      {name:'🕉 Devotional',  fn:"musicLoadPreset('devotional')"},
+      {name:'🧘 Meditation',  fn:"musicLoadPreset('meditation')"},
+    ],
+  },
+};
+
+const _rpStyles = { radio:1, movies:1, podcast:1, music:1 };
+
+function rpToggleSettings(key) {
+  const cfg = _RP_CONFIG[key]; if (!cfg) return;
+  const sp = document.getElementById(cfg.settingsPanelId);
+  const gb = document.getElementById(cfg.gearId);
+  if (!sp) return;
+  const isOpen = sp.classList.toggle('open');
+  if (gb) gb.classList.toggle('active', isOpen);
+}
+
+function rpSetStyle(key, n) {
+  _rpStyles[key] = n;
+  const cfg = _RP_CONFIG[key]; if (!cfg) return;
+  try { localStorage.setItem(cfg.storageKey, n); } catch(_) {}
+  const sp = document.getElementById(cfg.settingsPanelId);
+  const gb = document.getElementById(cfg.gearId);
+  if (sp) sp.classList.remove('open');
+  if (gb) gb.classList.remove('active');
+  rpApplyStyle(key, n);
+}
+
+function rpApplyStyle(key, n) {
+  const cfg = _RP_CONFIG[key]; if (!cfg) return;
+  const panel = document.getElementById(cfg.panelId); if (!panel) return;
+  for (let i = 1; i <= 5; i++) panel.classList.remove('rp-s' + i);
+  panel.classList.add('rp-s' + n);
+  document.querySelectorAll('[data-rpanel="' + key + '"]').forEach(b =>
+    b.classList.toggle('active', +b.dataset.style === n));
+  const badge = document.getElementById(cfg.badgeId);
+  if (badge) badge.textContent = _RP_STYLE_NAMES[n] || 'Classic';
+  if (n === 2 || n === 3) rpBuildSidebar(key);
+}
+
+function rpBuildSidebar(key) {
+  const cfg = _RP_CONFIG[key]; if (!cfg) return;
+  const items = document.getElementById(cfg.geoItemsId); if (!items) return;
+  items.innerHTML = cfg.sidebar.map(s =>
+    `<div class="iptv-geo-item" onclick="${s.fn}">
+       <span class="iptv-geo-name">${s.name}</span>
+     </div>`
+  ).join('');
+}
+
+function rpRestoreStyle(key) {
+  const cfg = _RP_CONFIG[key]; if (!cfg) return;
+  let n = 1;
+  try { const s = parseInt(localStorage.getItem(cfg.storageKey)); if (s >= 1 && s <= 5) n = s; } catch(_) {}
+  _rpStyles[key] = n;
+  rpApplyStyle(key, n);
+}
+
 // ── Geo-Navigation ──────────────────────────────────────────────────────────
 const _COUNTRY_NAMES = {
   'IN':'🇮🇳 India','US':'🇺🇸 United States','GB':'🇬🇧 UK','AU':'🇦🇺 Australia',
@@ -10170,6 +10527,7 @@ const _PODCAST_CURATED = [
   { name:'Radiolab',                 feedUrl:'https://feeds.simplecast.com/EmVW7VGp', category:'Society', icon:'🔬' },
 ];
 async function podcastLoadCurated() {
+  rpRestoreStyle('podcast');
   document.querySelectorAll('.podcast-preset').forEach(b => {
     b.classList.remove('active');
     if (b.getAttribute('onclick')?.includes('podcastLoadCurated')) b.classList.add('active');
@@ -10366,8 +10724,8 @@ function podcastStop() {
   if (np) np.textContent = 'Select a podcast to play';
 }
 
-function musicLoadDefault()  { musicLoadPreset('today-top'); }
-function moviesLoadDefault() { moviesLoadPreset('classics'); }
+function musicLoadDefault()  { rpRestoreStyle('music');  musicLoadPreset('today-top'); }
+function moviesLoadDefault() { rpRestoreStyle('movies'); moviesLoadPreset('classics'); }
 
 // ═══════════════════════════════════════════════════════════════════
 // RB-TABS scroll arrow nav
