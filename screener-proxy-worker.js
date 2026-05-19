@@ -35,7 +35,7 @@ const SPOOF_UA =
 /** CORS headers attached to every single response. */
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
@@ -407,7 +407,7 @@ function buildFeedbackEmailHtml(type, subject, markdownBody) {
             <div style="color:#4b5563;font-size:11px;line-height:1.6">
               This report was submitted via the feedback form on <strong style="color:#6b7280">vilfintv.com</strong>.<br>
               The sender's email address is not collected. Reply is not possible from this message.<br>
-              To action this report, copy the <strong style="color:${cfg.colour}>AI Fix Query</strong> block above directly into Claude Code, GitHub Copilot, or VS Code Copilot Chat.
+              To action this report, copy the <strong style="color:${cfg.colour}">AI Fix Query</strong> block above directly into Claude Code, GitHub Copilot, or VS Code Copilot Chat.
             </div>
           </td>
         </tr>
