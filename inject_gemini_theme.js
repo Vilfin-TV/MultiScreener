@@ -1,35 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<script>(function(){var t=localStorage.getItem('viltv_theme');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>HTML to File Converter — VilfinTV MultiScreener</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
-<style>
-:root{--burn:#c0390b;--burn2:#e8540f;--gold:#f5a623;--gold2:#ffd166;--dark:#0f0f0f;--dark2:#1a1a1a;--card:#1e1e1e;--card2:#272727;--text:#f0ede8;--text2:#b0a898;--text3:#6e6558;--border:#3a342c;--border2:#4a4238}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:var(--dark);color:var(--text);min-height:100vh}
-.header{background:linear-gradient(135deg,#0d0400,#1a0800,var(--burn));padding:20px 24px;border-bottom:2px solid var(--gold);display:flex;align-items:center;gap:16px}
-.header h1{font-family:'Bebas Neue',sans-serif;font-size:28px;color:#fff;letter-spacing:3px}
-.header a{color:var(--gold2);font-size:13px;text-decoration:none;margin-left:auto}
-.header a:hover{text-decoration:underline}
-.container{max-width:900px;margin:0 auto;padding:32px 24px}
-label{font-size:13px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:8px}
-textarea{width:100%;height:300px;background:var(--card);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;padding:16px;resize:vertical;line-height:1.6}
-textarea:focus{outline:none;border-color:var(--burn2)}
-.actions{display:flex;gap:12px;margin:20px 0;flex-wrap:wrap}
-.btn{padding:10px 22px;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s}
-.btn-primary{background:linear-gradient(135deg,var(--burn),var(--burn2));color:#fff}
-.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(192,57,11,.4)}
-.btn-secondary{background:var(--card2);border:1px solid var(--border2);color:var(--text2)}
-.btn-secondary:hover{border-color:var(--burn2);color:var(--gold2)}
-.format-row{display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
-.format-row select{padding:8px 14px;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px}
-.status{margin-top:12px;font-size:12px;color:var(--text3);min-height:20px}
-.preview-frame{width:100%;height:400px;border:1px solid var(--border2);border-radius:10px;background:#fff;margin-top:16px}
-footer{text-align:center;padding:24px;font-size:11px;color:var(--text3);border-top:1px solid var(--border)}
+/**
+ * inject_gemini_theme.js
+ * Injects the full Gemini animated theme into every sub-page HTML file.
+ * Run once: node inject_gemini_theme.js
+ */
+const fs = require('fs');
+const path = require('path');
 
+const ROOT = __dirname;
+
+// ── Pages to process (relative to ROOT) ─────────────────────────────────────
+const PAGES = [
+  'sip_calc.html',
+  'lumpsum_calc.html',
+  'allocation_calc.html',
+  'combined_calc.html',
+  'compare_calc.html',
+  'html_converter.html',
+  'pine_script_generator.html',
+  'screener_query_generator.html',
+  'blog_intelligence_hub.html',
+  'user-setup-guide.html',
+  'user_guide.html',
+  'user_manual.html',
+  'radio-widget.html',
+  'pre_market_briefing.html',
+  'stock_research.html',
+  'stock_status.html',
+  'trendlyne_screener.html',
+  'mf_live_screener.html',
+  'mutual_fund_analyser.html',
+  path.join('file', 'screener', 'advanced-standalone-multi-asset-screener.html'),
+];
+
+// ── Theme-init script (sets data-theme from localStorage before first paint) ─
+const THEME_INIT_SCRIPT = `<script>(function(){var t=localStorage.getItem('viltv_theme');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>`;
+
+// ── Comprehensive Gemini CSS block ───────────────────────────────────────────
+const GEMINI_CSS = `
 /* ═══════════════════════════════════════════════════════════
    GEMINI ANIMATED THEME  — matches Google Gemini mobile app
    Auto-applied when data-theme="gemini" is set on <html>
@@ -282,74 +289,61 @@ html[data-theme="gemini"]{
 
 /* ── Selection highlight ── */
 [data-theme="gemini"] ::selection{background:rgba(124,77,255,.35);color:#e8eaf6}
+`;
 
-</style>
-</head>
-<body>
-<div class="header">
-  <h1>HTML to File Converter</h1>
-  <a href="index.html">← Back to MultiScreener</a>
-</div>
-<div class="container">
-  <label>Paste your HTML code below</label>
-  <textarea id="html-input" placeholder="<!DOCTYPE html>&#10;<html>&#10;<head><title>My Page</title></head>&#10;<body>&#10;  <h1>Hello World</h1>&#10;</body>&#10;</html>"></textarea>
+// ── Regex to detect existing gemini/viltv_theme script block ────────────────
+const OLD_SCRIPT_RE = /<script>\s*\(function\(\)\{[^<]*viltv_theme[^<]*\}\)\(\);\s*<\/script>/s;
 
-  <div class="format-row">
-    <label style="margin:0">Export as:</label>
-    <select id="export-format">
-      <option value="html">HTML File (.html)</option>
-      <option value="txt">Text File (.txt)</option>
-    </select>
-    <label style="margin:0;margin-left:12px">Filename:</label>
-    <input type="text" id="filename" value="output" style="padding:8px 14px;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;width:160px"/>
-  </div>
+// ── Helper: inject into a single file ───────────────────────────────────────
+function processFile(filePath) {
+  if (!fs.existsSync(filePath)) {
+    console.warn(`  SKIP (not found): ${filePath}`);
+    return;
+  }
 
-  <div class="actions">
-    <button class="btn btn-primary" onclick="downloadFile()">Download File</button>
-    <button class="btn btn-secondary" onclick="previewHTML()">Preview</button>
-    <button class="btn btn-secondary" onclick="clearAll()">Clear</button>
-  </div>
-  <div class="status" id="status"></div>
+  let html = fs.readFileSync(filePath, 'utf8');
+  let changed = false;
 
-  <iframe id="preview" class="preview-frame" style="display:none" sandbox="allow-same-origin"></iframe>
-</div>
+  // 1. Replace any existing partial theme init script, or insert after <head>
+  if (OLD_SCRIPT_RE.test(html)) {
+    html = html.replace(OLD_SCRIPT_RE, THEME_INIT_SCRIPT);
+    changed = true;
+    console.log(`  [replaced script] ${path.basename(filePath)}`);
+  } else if (!html.includes("localStorage.getItem('viltv_theme')")) {
+    // Insert after the opening <head> tag
+    html = html.replace(/(<head[^>]*>)/, `$1\n${THEME_INIT_SCRIPT}`);
+    changed = true;
+    console.log(`  [added script] ${path.basename(filePath)}`);
+  } else {
+    console.log(`  [script ok]  ${path.basename(filePath)}`);
+  }
 
-<footer>VilfinTV MultiScreener — HTML to File Converter | Vilfin George</footer>
+  // 2. Remove any old/partial gemini CSS injection inside the script (already replaced above)
+  // 3. Add comprehensive Gemini CSS before the closing </style> tag (first occurrence)
+  if (!html.includes('GEMINI ANIMATED THEME  — matches Google Gemini')) {
+    // Insert before the first </style>
+    if (html.includes('</style>')) {
+      html = html.replace('</style>', GEMINI_CSS + '\n</style>');
+      changed = true;
+      console.log(`  [added CSS]  ${path.basename(filePath)}`);
+    } else {
+      // No style block — add one in <head>
+      html = html.replace('</head>', `<style>${GEMINI_CSS}\n</style>\n</head>`);
+      changed = true;
+      console.log(`  [added CSS block] ${path.basename(filePath)}`);
+    }
+  } else {
+    console.log(`  [CSS ok]     ${path.basename(filePath)}`);
+  }
 
-<script>
-function downloadFile() {
-  const html = document.getElementById('html-input').value.trim();
-  if (!html) { setStatus('Please paste HTML code first.'); return; }
-  const fmt = document.getElementById('export-format').value;
-  const name = document.getElementById('filename').value.trim() || 'output';
-  const ext = fmt === 'html' ? '.html' : '.txt';
-  const blob = new Blob([html], { type: fmt === 'html' ? 'text/html' : 'text/plain' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = name + ext;
-  a.click();
-  URL.revokeObjectURL(a.href);
-  setStatus('Downloaded: ' + name + ext);
+  if (changed) {
+    fs.writeFileSync(filePath, html, 'utf8');
+  }
 }
 
-function previewHTML() {
-  const html = document.getElementById('html-input').value.trim();
-  if (!html) { setStatus('Nothing to preview.'); return; }
-  const iframe = document.getElementById('preview');
-  iframe.style.display = 'block';
-  iframe.srcdoc = html;
-  setStatus('Preview updated.');
+// ── Run ──────────────────────────────────────────────────────────────────────
+console.log('\n🎨 Gemini Theme Injector — starting…\n');
+for (const rel of PAGES) {
+  processFile(path.join(ROOT, rel));
 }
-
-function clearAll() {
-  document.getElementById('html-input').value = '';
-  document.getElementById('preview').style.display = 'none';
-  setStatus('Cleared.');
-}
-
-function setStatus(msg) {
-  document.getElementById('status').textContent = msg;
-}
-</script>
-</body>
-</html>
+console.log('\n✅ Done. All pages processed.\n');
