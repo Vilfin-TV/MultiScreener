@@ -82,9 +82,10 @@ export default {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            access_key:  env.WEB3FORMS_KEY,
+            access_key:  env.WEB3FORMS_KEY.trim(),
             subject:     subject,
             from_name:   'VilfinTV Feedback System',
+            email:       'noreply@vilfintv.com',
             message:     body,
             // Extra fields shown in the Web3Forms email
             'Report Type': type,
