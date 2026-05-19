@@ -169,6 +169,23 @@ a{text-decoration:none;color:inherit}
   border:1px solid var(--border2);font-size:11px;font-weight:700;color:#dbeafe
 }
 
+/* ── IPO Live Widget Panel ── */
+#ipoWidgetSection{margin-bottom:24px}
+.ipo-widget-panel{background:linear-gradient(135deg,#0d1e38 0%,#0a1628 100%);border:1px solid #1e3a5f;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.45)}
+.ipo-widget-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px 14px;border-bottom:1px solid #1e3a5f;gap:12px}
+.ipo-widget-meta{display:flex;align-items:center;gap:14px}
+.ipo-widget-icon{width:38px;height:38px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;box-shadow:0 2px 10px rgba(59,130,246,.35)}
+.ipo-widget-title{font-size:15px;font-weight:700;color:#e2e8f0;letter-spacing:.3px}
+.ipo-widget-sub{font-size:11px;color:#64748b;margin-top:3px;letter-spacing:.2px}
+.ipo-live-badge{display:flex;align-items:center;gap:6px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600;color:#22c55e;white-space:nowrap;flex-shrink:0}
+.ipo-live-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px #22c55e;animation:ipo-pulse 1.8s ease-in-out infinite}
+@keyframes ipo-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.7)}}
+.ipo-widget-body{padding:0;min-height:520px;background:#070f1d}
+.ipo-widget-body .trendlyne-widgets,.ipo-widget-body iframe{width:100%!important;min-height:520px!important;border:none!important;display:block}
+.ipo-widget-footer{padding:10px 22px;font-size:11px;color:#475569;border-top:1px solid #1e3a5f;display:flex;align-items:center;gap:4px}
+.ipo-widget-footer a{color:#3b82f6;text-decoration:none;font-weight:600}
+.ipo-widget-footer a:hover{text-decoration:underline}
+/* ─────────────────────────────────── */
 .briefings-wrap{margin-bottom:18px}
 .briefings-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#fff;margin-bottom:6px}
 .briefings-sub{font-size:12px;color:var(--text3);line-height:1.7;margin-bottom:14px}
@@ -381,6 +398,35 @@ button,a,.tab-btn,.mobile-tab-chip,.briefing-link{
           <span class="stat-pill" id="visibleCountPill">0 visible</span>
           <span class="stat-pill" id="categoryCountPill">categories</span>
           <span class="stat-pill" id="briefingCountPill">0 briefings</span>
+        </div>
+      </div>
+
+      <!-- IPO Live Widget — shown only when IPO tab is active -->
+      <div id="ipoWidgetSection" style="display:none;">
+        <div class="ipo-widget-panel">
+          <div class="ipo-widget-head">
+            <div class="ipo-widget-meta">
+              <div class="ipo-widget-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+              </div>
+              <div>
+                <div class="ipo-widget-title">IPO Live Tracker</div>
+                <div class="ipo-widget-sub">Active Listings · Upcoming IPOs · Recently Listed · Grey Market Premium</div>
+              </div>
+            </div>
+            <span class="ipo-live-badge"><span class="ipo-live-dot"></span>Live Data</span>
+          </div>
+          <div class="ipo-widget-body">
+            <blockquote class="trendlyne-widgets"
+              data-get-url="https://trendlyne.com/web-widget/ipo-widget/Poppins/?activeCol=3b82f6&linksCol=3b82f6&primary=0a1628&secondary=94a3b8&positive=22c55e&negative=ef4444"
+              data-theme="dark">
+            </blockquote>
+          </div>
+          <div class="ipo-widget-footer">
+            Real-time IPO intelligence sourced from
+            <a href="https://trendlyne.com/ipo-allotment-status/" target="_blank" rel="noopener noreferrer">Trendlyne</a>
+            &nbsp;·&nbsp; Data refreshed continuously
+          </div>
         </div>
       </div>
 
@@ -1315,6 +1361,57 @@ const BRIEFINGS = [
     url:'https://www.filmfare.com/',
     summary:'Dharma Productions unveiled a bold slate of five films for the upcoming year featuring new directors and emerging talent alongside established stars.'
   },
+  // ── BOLLYWOOD — हिन्दी ──
+  {
+    title:'शाहरुख खान की 'किंग' की शूटिंग मुंबई फिल्म सिटी में शुरू',
+    category:'bollywood',region:'India',source:'Bollywood Hungama',date:'May 17, 2026',url:'https://www.bollywoodhungama.com/',
+    summary:'सिद्धार्थ आनंद के निर्देशन में बनने वाली 'किंग' की शूटिंग मुंबई फिल्म सिटी में एक भव्य सेट के साथ शुरू हुई। फिल्म की अनुमानित लागत ₹350 करोड़ है।'
+  },
+  {
+    title:'बॉलीवुड का OTT बाज़ार 2026 में ₹45,000 करोड़ के पार पहुँचा',
+    category:'bollywood',region:'India',source:'Filmfare',date:'May 15, 2026',url:'https://www.filmfare.com/',
+    summary:'OTT प्लेटफॉर्म नेटफ्लिक्स, अमेज़न प्राइम और जियो सिनेमा की बढ़ती सब्सक्रिप्शन से भारतीय स्ट्रीमिंग बाज़ार ₹45,000 करोड़ के पार पहुँचा।'
+  },
+  {
+    title:'बॉलीवुड में AI तकनीक: डीपफेक से लेकर वर्चुअल सेट तक',
+    category:'bollywood',region:'India',source:'Film Companion',date:'May 12, 2026',url:'https://www.filmcompanion.com/',
+    summary:'हिंदी फिल्म उद्योग में AI-संचालित वर्चुअल प्रोडक्शन सेट और de-aging तकनीक का व्यापक उपयोग शुरू हो गया है, जो प्रोडक्शन लागत में 20% की बचत कर रहा है।'
+  },
+  {
+    title:'आलिया भट्ट की नई प्रोडक्शन कंपनी का पहला प्रोजेक्ट घोषित',
+    category:'bollywood',region:'India',source:'NDTV Movies',date:'May 10, 2026',url:'https://www.ndtv.com/entertainment',
+    summary:'आलिया भट्ट ने अपनी प्रोडक्शन कंपनी के बैनर तले पहली फिल्म घोषित की, जो महिला उद्यमियों की कहानी पर आधारित होगी और 2027 में रिलीज़ होगी।'
+  },
+  {
+    title:'बॉलीवुड-हॉलीवुड को-प्रोडक्शन का नया दौर: चार बड़ी डील्स साइन',
+    category:'bollywood',region:'India',source:'Box Office India',date:'May 8, 2026',url:'https://www.boxofficeindia.com/',
+    summary:'सोनी पिक्चर्स, वॉर्नर ब्रदर्स और डिज़्नी के साथ चार बड़े हिंदी-इंग्लिश को-प्रोडक्शन प्रोजेक्ट साइन हुए, जो भारतीय सिनेमा के वैश्विक विस्तार को रफ़्तार देंगे।'
+  },
+  {
+    title:'मुंबई फिल्म सिटी का ₹5,000 करोड़ का विस्तार: नए स्टेडियम और स्टूडियो',
+    category:'bollywood',region:'India',source:'Filmfare',date:'May 6, 2026',url:'https://www.filmfare.com/',
+    summary:'महाराष्ट्र सरकार ने गोरेगाँव फिल्म सिटी के विस्तार को मंजूरी दी, जिसमें 10 नए स्टेज, VFX हब और एक ओपन-एयर थिएटर शामिल होंगे।'
+  },
+  {
+    title:'2026 में बॉलीवुड के टॉप स्टार्स की फीस: ₹100 करोड़ प्रति फिल्म',
+    category:'bollywood',region:'India',source:'Box Office India',date:'May 4, 2026',url:'https://www.boxofficeindia.com/',
+    summary:'शीर्ष बॉलीवुड अभिनेताओं की फीस 2026 में ₹100 करोड़ प्रति फिल्म के पार पहुँच गई है, जो 2023 की तुलना में 40% अधिक है।'
+  },
+  {
+    title:'कान्स 2026 में भारतीय फिल्मों को मिली भव्य पहचान',
+    category:'bollywood',region:'India',source:'Film Companion',date:'May 2, 2026',url:'https://www.filmcompanion.com/',
+    summary:'कान्स फिल्म महोत्सव 2026 में तीन भारतीय फिल्मों को प्रतिस्पर्धी खंड में शामिल किया गया, जो भारतीय सिनेमा की अंतरराष्ट्रीय पहचान का प्रतीक है।'
+  },
+  {
+    title:'बॉलीवुड में महिला निर्देशकों की धूम: FY26 में 35% फिल्में महिलाओं ने बनाईं',
+    category:'bollywood',region:'India',source:'NDTV Movies',date:'April 29, 2026',url:'https://www.ndtv.com/entertainment',
+    summary:'वित्त वर्ष 2025-26 में हिंदी फिल्म उद्योग में महिला निर्देशकों की संख्या 35% रही, जो 2020 के 12% की तुलना में तीन गुना वृद्धि है।'
+  },
+  {
+    title:'IIFA 2026: मुंबई में रजत जयंती समारोह में 5,000 करोड़ की टिकट बिक्री',
+    category:'bollywood',region:'India',source:'Bollywood Hungama',date:'April 26, 2026',url:'https://www.bollywoodhungama.com/',
+    summary:'IIFA 2026 के रजत जयंती समारोह में ₹5,000 करोड़ की ब्रांड साझेदारी और मीडिया डील्स के साथ तीन दिवसीय भव्य उत्सव का आयोजन किया गया।'
+  },
   // ════════════════════════════════════════════════════════
   // REGIONAL — MUMBAI
   // ════════════════════════════════════════════════════════
@@ -1371,6 +1468,57 @@ const BRIEFINGS = [
     date:'April 18, 2026',
     url:'https://timesofindia.indiatimes.com/',
     summary:'The Navi Mumbai International Airport project reached 85% completion with terminal and runway works on track for its December 2026 operational target.'
+  },
+  // ── MUMBAI — मराठी ──
+  {
+    title:'मुंबई मेट्रो लाइन ३ आरे ते कफ परेड पूर्ण: शहराच्या वाहतुकीत क्रांती',
+    category:'mumbai',region:'India',source:'Maharashtra Times',date:'May 17, 2026',url:'https://maharashtratimes.com/',
+    summary:'मुंबई मेट्रो लाइन ३ चा आरे ते कफ परेड संपूर्ण टप्पा सुरू झाल्याने दररोज ७ लाख प्रवाशांना लाभ होईल आणि रस्त्यावरील वाहतूक कोंडी लक्षणीयरीत्या कमी होईल.'
+  },
+  {
+    title:'बांद्रा-कुर्ला संकुलात नवीन IT टॉवर: ५०,००० नवे रोजगार',
+    category:'mumbai',region:'India',source:'Lokmat',date:'May 14, 2026',url:'https://www.lokmat.com/',
+    summary:'बीकेसी मध्ये नव्याने उभारण्यात येणाऱ्या तीन उच्च-तंत्रज्ञान IT टॉवर्समुळे ५०,००० थेट रोजगार निर्माण होतील आणि मुंबईच्या आर्थिक केंद्राचा विस्तार होईल.'
+  },
+  {
+    title:'धारावी पुनर्विकास: पाच आंतरराष्ट्रीय कन्सोर्शियमच्या निविदा दाखल',
+    category:'mumbai',region:'India',source:'Sakal',date:'May 11, 2026',url:'https://www.esakal.com/',
+    summary:'₹२५,०००  करोड़ मूल्याच्या धारावी पुनर्विकास प्रकल्पासाठी पाच आंतरराष्ट्रीय कन्सोर्शियमनी तांत्रिक निविदा सादर केल्या आहेत.'
+  },
+  {
+    title:'BEST मुंबई: इलेक्ट्रिक बसेसची संख्या १,५०० वर पोहोचली',
+    category:'mumbai',region:'India',source:'Maharashtra Times',date:'May 9, 2026',url:'https://maharashtratimes.com/',
+    summary:'बेस्ट उपक्रमाच्या ई-बस फ्लीटने १,५०० बसेसचा आकडा ओलांडला. डिझेल बसेसच्या तुलनेत ५०% कमी खर्च आणि प्रदूषणात मोठी घट नोंदवली गेली.'
+  },
+  {
+    title:'नवी मुंबई विमानतळ: टर्मिनल बांधकाम डिसेंबर २०२६ पर्यंत पूर्ण होणार',
+    category:'mumbai',region:'India',source:'Lokmat',date:'May 7, 2026',url:'https://www.lokmat.com/',
+    summary:'नवी मुंबई आंतरराष्ट्रीय विमानतळाचे टर्मिनल बांधकाम डिसेंबर २०२६ पर्यंत पूर्ण होण्याचे संकेत मिळाले असून सुरुवातीला वार्षिक दोन कोटी प्रवासी हाताळण्याची क्षमता असेल.'
+  },
+  {
+    title:'मुंबई समुद्रकिनारा रस्ता: वर्सोव्यापर्यंत विस्ताराला राज्य सरकारची मंजुरी',
+    category:'mumbai',region:'India',source:'Sakal',date:'May 5, 2026',url:'https://www.esakal.com/',
+    summary:'मरीन ड्राइव्ह-वर्ली सेतूपासून वर्सोव्यापर्यंत समुद्रकिनारा रस्त्याच्या दुसऱ्या टप्प्याला राज्य सरकारने मंजुरी दिली. पश्चिम उपनगरांची वाहतूक मोठ्या प्रमाणात सुधारेल.'
+  },
+  {
+    title:'मुंबई बंदर आधुनिकीकरण: ₹८,०००  करोड़ प्रकल्पाला केंद्राची संमती',
+    category:'mumbai',region:'India',source:'Maharashtra Times',date:'May 3, 2026',url:'https://maharashtratimes.com/',
+    summary:'मुंबई बंदराच्या आधुनिकीकरणासाठी ₹८,०००  करोड़ च्या योजनेला केंद्र सरकारने मंजुरी दिली. कंटेनर हाताळणी क्षमता दुप्पट होणार.'
+  },
+  {
+    title:'मुंबई विद्यापीठात AI आणि डेटा सायन्स: ५,००० जागांसाठी नोंदणी सुरू',
+    category:'mumbai',region:'India',source:'Lokmat',date:'April 30, 2026',url:'https://www.lokmat.com/',
+    summary:'मुंबई विद्यापीठाने AI, डेटा सायन्स आणि सायबर सिक्युरिटीसाठी नवीन अभ्यासक्रम सुरू केले असून ५,००० जागांसाठी नोंदणी प्रक्रिया सुरू झाली आहे.'
+  },
+  {
+    title:'कोलाबा-वर्सोवा सी-लिंकचे काम अंतिम टप्प्यात; पूल प्रस्थापना सुरू',
+    category:'mumbai',region:'India',source:'Sakal',date:'April 26, 2026',url:'https://www.esakal.com/',
+    summary:'कोलाबा ते वर्सोवा सागरी सेतूची पूल प्रस्थापना (deck erection) सुरू झाली असून हा प्रकल्प २०२७ पर्यंत मुंबईच्या पूर्व-पश्चिम कनेक्टिव्हिटीत क्रांती आणणार आहे.'
+  },
+  {
+    title:'मुंबई स्मार्ट सिटी: MCGM चे डिजिटल ट्विन प्लॅटफॉर्म लाँच',
+    category:'mumbai',region:'India',source:'Maharashtra Times',date:'April 22, 2026',url:'https://maharashtratimes.com/',
+    summary:'मुंबई महानगरपालिकेने शहराचे संपूर्ण डिजिटल ट्विन प्लॅटफॉर्म लाँच केले आहे, ज्यामुळे पायाभूत सुविधांचे नियोजन, पूर व्यवस्थापन आणि वाहतूक नियंत्रण अधिक कुशल होईल.'
   },
   // ════════════════════════════════════════════════════════
   // REGIONAL — TAMIL NADU
@@ -1429,6 +1577,57 @@ const BRIEFINGS = [
     url:'https://www.business-standard.com/',
     summary:'Tamil Nadu\'s EV manufacturing corridor in Hosur and Oragadam secured Rs 18,000 crore in fresh commitments from Ola, Ather, TVS and global OEM suppliers.'
   },
+  // ── TAMIL NADU — தமிழ் ──
+  {
+    title:'தமிழ்நாட்டில் குறைக்கடத்தி தயாரிப்பு திட்டம்: 50% மூலதன மானியம் வழங்கப்படும்',
+    category:'tamil_nadu',region:'India',source:'Dinamalar',date:'May 17, 2026',url:'https://www.dinamalar.com/',
+    summary:'தமிழ்நாடு அரசு குறைக்கடத்தி மற்றும் மின்னணுவியல் துறைக்கு 50% மூலதன மானியம், 100% முத்திரை வரி விலக்கு ஆகியவற்றை அறிவித்துள்ளது. ஆயிரக்கணக்கான வேலைவாய்ப்புகள் உருவாகும் என எதிர்பார்க்கப்படுகிறது.'
+  },
+  {
+    title:'சென்னை மெட்ரோ இரண்டாம் கட்டம்: ₹8,000 கோடி மத்திய ஒதுக்கீடு அறிவிப்பு',
+    category:'tamil_nadu',region:'India',source:'Dinamani',date:'May 14, 2026',url:'https://www.dinamani.com/',
+    summary:'118 கிலோமீட்டர் நீளமுள்ள சென்னை மெட்ரோ இரண்டாம் கட்டத்திற்கு திருத்தப்பட்ட மத்திய பட்ஜெட்டில் ₹8,000 கோடி ஒதுக்கப்பட்டுள்ளது. இது தொழிலாளர் பயணத்தை எளிதாக்கும்.'
+  },
+  {
+    title:'கோலிவுட் 2026ல் ₹5,000 கோடி வசூல் சாதனை படைத்தது',
+    category:'tamil_nadu',region:'India',source:'Ananda Vikatan',date:'May 12, 2026',url:'https://www.vikatan.com/',
+    summary:'2025-26 நிதியாண்டில் தமிழ் திரைப்படத் துறை ₹5,000 கோடிக்கும் அதிகமான உலக அளவிலான வசூலை நிகழ்த்தி வரலாறு படைத்துள்ளது. தேசிய அளவிலான வெளியீடுகள் முக்கிய பங்களித்தன.'
+  },
+  {
+    title:'கோவையில் புதிய ஐடி பூங்கா: 20,000 வேலைவாய்ப்புகள் உருவாகும்',
+    category:'tamil_nadu',region:'India',source:'Dinamalar',date:'May 10, 2026',url:'https://www.dinamalar.com/',
+    summary:'கோயம்புத்தூரில் புதிதாக அமைக்கப்படும் தகவல் தொழில்நுட்ப பூங்காவில் 50 நிறுவனங்கள் செயல்படும். 20,000க்கும் மேற்பட்ட நேரடி வேலைவாய்ப்புகள் உருவாகும் என மதிப்பிடப்படுகிறது.'
+  },
+  {
+    title:'மதுரை விமான நிலையம் விரிவாக்கம்: புதிய சர்வதேச வழிகள் தொடங்கும்',
+    category:'tamil_nadu',region:'India',source:'Dinamani',date:'May 8, 2026',url:'https://www.dinamani.com/',
+    summary:'மதுரை விமான நிலையத்தின் புதிய சர்வதேச முனையம் கட்டுமான பணிகள் 70% முடிந்துவிட்டன. துபாய், சிங்கப்பூர், மலேசியா நேரடி சேவைகள் 2027 தொடங்கும்.'
+  },
+  {
+    title:'தமிழக மீன்வளத் துறையில் AI திட்டம்: மீனவர்களுக்கு ஸ்மார்ட் திரட்டல் உதவி',
+    category:'tamil_nadu',region:'India',source:'Ananda Vikatan',date:'May 6, 2026',url:'https://www.vikatan.com/',
+    summary:'தமிழ்நாடு அரசு AI-சக்தி கொண்ட ஒரு புதிய தொழில்நுட்ப திட்டத்தை அறிமுகப்படுத்தியுள்ளது, இது மீனவர்களுக்கு கடல் ஆழம் மற்றும் மீன் திரட்டல் பகுதிகளை வழிகாட்டும்.'
+  },
+  {
+    title:'IIT மெட்ராஸ் — டீப்டெக் துவக்க நிறுவனங்களுக்கு ₹500 கோடி நிதி',
+    category:'tamil_nadu',region:'India',source:'Dinamalar',date:'May 4, 2026',url:'https://www.dinamalar.com/',
+    summary:'IIT மெட்ராஸ் ஆராய்ச்சி பூங்கா AI, விண்வெளி தொழில்நுட்பம் மற்றும் உயிரி தொழில்நுட்பத் துறைகளில் 50 புதிய துவக்க நிறுவனங்களுக்கு ₹500 கோடி ஆரம்ப நிதி வழங்கும்.'
+  },
+  {
+    title:'தமிழ்நாட்டின் EV உற்பத்தி மண்டலத்தில் ₹18,000 கோடி புதிய முதலீடு',
+    category:'tamil_nadu',region:'India',source:'Dinamani',date:'May 2, 2026',url:'https://www.dinamani.com/',
+    summary:'ஓலா, ஆதர், TVS மற்றும் உலக OEM சப்ளையர்களிடமிருந்து ஹோசூர் மற்றும் ஒரகடம் EV உற்பத்தி மண்டலத்தில் ₹18,000 கோடி புதிய முதலீட்டு அறிவிப்புகள் கிடைத்துள்ளன.'
+  },
+  {
+    title:'சேலம் எஃகு ஆலை நவீனமயமாக்கல்: ₹3,500 கோடி திட்டம் அங்கீகரிக்கப்பட்டது',
+    category:'tamil_nadu',region:'India',source:'Ananda Vikatan',date:'April 29, 2026',url:'https://www.vikatan.com/',
+    summary:'SAIL சேலம் எஃகு ஆலையின் நவீனமயமாக்கல் திட்டத்திற்கு ₹3,500 கோடி ஒதுக்கப்பட்டுள்ளது. உற்பத்தி திறன் 30% அதிகரிக்கும், 2,000 புதிய வேலைவாய்ப்புகள் உருவாகும்.'
+  },
+  {
+    title:'தமிழக அரசு கடல்சார் பொருளாதார மண்டலம்: சென்னை துறைமுக விரிவாக்கம்',
+    category:'tamil_nadu',region:'India',source:'Dinamalar',date:'April 25, 2026',url:'https://www.dinamalar.com/',
+    summary:'சென்னை துறைமுகத்தை மையமாகக் கொண்ட கடல்சார் பொருளாதார மண்டலம் 2028 முன்னர் செயல்படத் தொடங்கும். ஏற்றுமதி வருவாய் 40% அதிகரிக்கும் என மதிப்பிடப்படுகிறது.'
+  },
   // ════════════════════════════════════════════════════════
   // REGIONAL — KERALA
   // ════════════════════════════════════════════════════════
@@ -1485,6 +1684,57 @@ const BRIEFINGS = [
     date:'April 15, 2026',
     url:'https://www.livemint.com/',
     summary:'Kerala\'s spice export sector crossed $4 billion driven by a shift toward value-added products including oleoresins, essential oils and organic-certified spices.'
+  },
+  // ── KERALA — മലയാളം ──
+  {
+    title:'കേരളം ഡിജിറ്റൽ സാക്ഷരതയിൽ ഇന്ത്യയിൽ ഒന്നാം സ്ഥാനം: 100% ലക്ഷ്യം കൈവരിച്ചു',
+    category:'kerala',region:'India',source:'Mathrubhumi',date:'May 17, 2026',url:'https://www.mathrubhumi.com/',
+    summary:'കേരള സർക്കാരിന്റെ ഡിജിറ്റൽ സാക്ഷരതാ ക്യാമ്പെയ്ൻ ഇന്ത്യയിൽ ആദ്യമായി 100% ലക്ഷ്യം കൈവരിച്ചു. ഗ്രാമപ്രദേശങ്ങളിലെ മുതിർന്ന പൗരർ ഉൾപ്പെടെ 3.5 കോടി ജനങ്ങൾ ഡിജിറ്റൽ പരിജ്ഞാനം നേടി.'
+  },
+  {
+    title:'കൊച്ചി വാട്ടർ മെട്രോ 24 ടെർമിനലുകളിലേക്ക്: ദൈനംദിന യാത്രക്കാർ 50,000 കടന്നു',
+    category:'kerala',region:'India',source:'Malayala Manorama',date:'May 14, 2026',url:'https://www.manoramaonline.com/',
+    summary:'കൊച്ചി വാട്ടർ മെട്രോ ശൃംഖല 24 ടെർമിനലുകളിലേക്ക് വ്യാപിച്ചു. 15 ഇലക്ട്രിക് ഹൈബ്രിഡ് ബോട്ടുകൾ ദൈനംദിനം 50,000-ലധികം യാത്രക്കാരെ കൊണ്ടുപോകുന്നു.'
+  },
+  {
+    title:'കേരള AI ആരോഗ്യ ഡയഗ്നോസ്റ്റിക് ശൃംഖല: 150 പ്രാഥമിക ആരോഗ്യ കേന്ദ്രങ്ങളിൽ',
+    category:'kerala',region:'India',source:'Mathrubhumi',date:'May 12, 2026',url:'https://www.mathrubhumi.com/',
+    summary:'കേരള ആരോഗ്യ വകുപ്പ് 150 പ്രാഥമിക ആരോഗ്യ കേന്ദ്രങ്ങളിൽ AI ഡയഗ്നോസ്റ്റിക് ശൃംഖല നടപ്പിലാക്കി. പ്രമേഹ റെറ്റിനോപ്പതി, ക്ഷയം, ചർമ്മ രോഗ സ്ക്രീനിംഗ് ലഭ്യമാകും.'
+  },
+  {
+    title:'തിരുവനന്തപുരം ടെക്‌നോ പാർക്ക് ഫേസ് 4: 40 പുതിയ കമ്പനികൾ, 12,000 ജോലികൾ',
+    category:'kerala',region:'India',source:'Malayala Manorama',date:'May 10, 2026',url:'https://www.manoramaonline.com/',
+    summary:'ടെക്‌നോ പാർക്ക് ഫേസ് 4-ൽ AI, ഫിൻടെക്, സൈബർ സുരക്ഷ മേഖലകളിൽ 40 ആഗോള കമ്പനികൾ ഓഫീസ് സ്ഥാപിച്ചു. 12,000 പുതിയ ടെക് ജോലികൾ ഉണ്ടാകും.'
+  },
+  {
+    title:'കേരള സ്പൈസ് എക്‌സ്‌പോർട്ട്: $4 ബില്യൺ ലക്ഷ്യം ആദ്യമായി കൈവരിച്ചു',
+    category:'kerala',region:'India',source:'Mathrubhumi',date:'May 8, 2026',url:'https://www.mathrubhumi.com/',
+    summary:'ഒലിയോ-റെസിൻ, ഓർഗാനിക് സർട്ടിഫൈഡ് സുഗന്ധദ്രവ്യങ്ങൾ തുടങ്ങിയ മൂല്യവർധിത ഉൽപ്പന്നങ്ങളുടെ നിർയ്യാതനം വഴി കേരളത്തിന്റെ സുഗന്ധദ്രവ്യ കയറ്റുമതി $4 ബില്ലൺ കടന്നു.'
+  },
+  {
+    title:'കൊച്ചിൻ ഷിപ്പ്‌യാർഡ് 5 പുതിയ കപ്പൽ നിർമ്മാണ ഓർഡറുകൾ നേടി: ₹8,000 കോടി',
+    category:'kerala',region:'India',source:'Malayala Manorama',date:'May 5, 2026',url:'https://www.manoramaonline.com/',
+    summary:'കൊച്ചിൻ ഷിപ്പ്‌യാർഡ് ലിമിറ്റഡ് ₹8,000 കോടി മൂല്യമുള്ള 5 പുതിയ കടൽ പ്ലാറ്റ്ഫോം ഓർഡറുകൾ നേടി. ദേശീയ, അന്തർദേശീയ ക്ലയന്റുകൾ ഉൾപ്പെടുന്നു.'
+  },
+  {
+    title:'കേരള സ്റ്റാർട്ടപ്പ് മിഷൻ: 1,000 നൂതന ഉൽപ്പന്നങ്ങൾ വിപണിയിൽ',
+    category:'kerala',region:'India',source:'Mathrubhumi',date:'May 2, 2026',url:'https://www.mathrubhumi.com/',
+    summary:'കേരള സ്റ്റാർട്ടപ്പ് മിഷൻ ഈ വർഷം 1,000 നൂതന ഉൽപ്പന്നങ്ങൾ വിപണിയിൽ ഇറക്കി. കാർഷിക, ആരോഗ്യ, വിദ്യാഭ്യാസ മേഖലകളിൽ ടെക്‌നോളജി സ്പർദ്ധ ഉണ്ടായി.'
+  },
+  {
+    title:'തൃശൂർ പൂരം ആഘോഷം: ₹2,000 കോടി ടൂറിസം-സാമ്പത്തിക ആഘാതം',
+    category:'kerala',region:'India',source:'Malayala Manorama',date:'April 28, 2026',url:'https://www.manoramaonline.com/',
+    summary:'2026-ലെ തൃശൂർ പൂരം ഉത്സവം ₹2,000 കോടി ടൂറിസം വരുമാനം ഉണ്ടാക്കി. 10 ലക്ഷം ദേശ-വിദേശ സഞ്ചാരികൾ പങ്കെടുത്തതായി കണക്കുകൾ സൂചിപ്പിക്കുന്നു.'
+  },
+  {
+    title:'കോഴിക്കോട് ആരോഗ്യ ക്ലസ്റ്റർ: ₹5,000 കോടി ആശുപത്രി നിക്ഷേപം',
+    category:'kerala',region:'India',source:'Mathrubhumi',date:'April 24, 2026',url:'https://www.mathrubhumi.com/',
+    summary:'കോഴിക്കോട്ടെ മെഡിക്കൽ ക്ലസ്റ്ററിൽ 10 പുതിയ സ്‌പെഷ്യലിറ്റി ഹോസ്പിറ്റലുകൾ ₹5,000 കോടി മൊത്ത നിക്ഷേപത്തോടെ ആരംഭിക്കും. മെഡിക്കൽ ടൂറിസം ഗണ്യമായി വളരും.'
+  },
+  {
+    title:'കേരള ഇൻഫ്രാസ്ട്രക്ചർ ഇൻവെസ്റ്റ്‌മെന്റ് ഫണ്ട്: ₹15,000 കോടി ഗ്രീൻ ബോണ്ട്',
+    category:'kerala',region:'India',source:'Malayala Manorama',date:'April 20, 2026',url:'https://www.manoramaonline.com/',
+    summary:'കേരള ഇൻഫ്രാസ്ട്രക്ചർ ഇൻവെസ്റ്റ്‌മെന്റ് ഫണ്ട് ₹15,000 കോടിയുടെ ഗ്രീൻ ബോണ്ട് ഇഷ്യൂ ചെയ്യും. ജലപദ്ധതി, ശുചിത്വ ഇൻഫ്രാ, സൗരോർജ്ജ പദ്ധതികൾ ധനസഹായം ലഭിക്കും.'
   },
   // ════════════════════════════════════════════════════════
   // REGIONAL — ANDHRA PRADESH
@@ -1543,6 +1793,57 @@ const BRIEFINGS = [
     url:'https://www.thehindubusinessline.com/',
     summary:'Andhra Pradesh\'s IT policy offers up to Rs 5 lakh per employee hired reimbursement for IT companies setting up in Visakhapatnam, Vijayawada and Tirupati IT clusters.'
   },
+  // ── ANDHRA PRADESH — తెలుగు ──
+  {
+    title:'ఆంధ్రప్రదేశ్‌లో 15 GW పునరుత్పాదక ఇంధన పార్కు: ₹60,000 కోట్ల పెట్టుబడి',
+    category:'andhra',region:'India',source:'Eenadu',date:'May 17, 2026',url:'https://www.eenadu.net/',
+    summary:'కర్నూలు జిల్లాలో 15 GW సమీకృత పునరుత్పాదక ఇంధన పార్కుకు ఆంధ్రప్రదేశ్ ప్రభుత్వం ఆమోదం తెలిపింది. సోలార్, విండ్ మరియు పంప్డ్ స్టోరేజ్ కలిపి ₹60,000 కోట్ల పెట్టుబడి ఆకర్షించనుంది.'
+  },
+  {
+    title:'విశాఖపట్నం ఫార్మా ఎగుమతులు $8 బిలియన్‌కు చేరాయి: 28% వృద్ధి',
+    category:'andhra',region:'India',source:'Sakshi',date:'May 14, 2026',url:'https://www.sakshi.com/',
+    summary:'విశాఖపట్నం ఫార్మా క్లస్టర్ FY26లో $8 బిలియన్ల ఎగుమతులు సాధించింది. API తయారీ మరియు బయోసిమిలర్ ఉత్పత్తి ద్వారా 28% వృద్ధి నమోదైంది.'
+  },
+  {
+    title:'అమరావతి నిర్మాణం పునఃప్రారంభం: ప్రపంచ బ్యాంకు $1.5 బిలియన్ రుణం',
+    category:'andhra',region:'India',source:'Eenadu',date:'May 11, 2026',url:'https://www.eenadu.net/',
+    summary:'అమరావతి రాజధాని నిర్మాణం ప్రపంచ బ్యాంకు $1.5 బిలియన్ రుణం మంజూరుతో తిరిగి ప్రారంభమైంది. న్యాయ, శాసన భవనాల నిర్మాణ పని వచ్చే నెల మొదలవుతుంది.'
+  },
+  {
+    title:'విజయవాడలో నూతన ఐటీ టవర్లు: 15,000 ఉద్యోగాల అంచనా',
+    category:'andhra',region:'India',source:'Sakshi',date:'May 8, 2026',url:'https://www.sakshi.com/',
+    summary:'విజయవాడ ఐటీ క్లస్టర్‌లో మూడు కొత్త టవర్ల నిర్మాణానికి ప్రభుత్వం అనుమతి మంజూరు చేసింది. 15,000 ప్రత్యక్ష ఉద్యోగాలు మరియు ₹2,000 కోట్ల పెట్టుబడి అంచనా.'
+  },
+  {
+    title:'తిరుపతి విమానాశ్రయంలో కొత్త అంతర్జాతీయ టెర్మినల్: దుబాయ్, సింగపూర్ విమానాలు',
+    category:'andhra',region:'India',source:'Eenadu',date:'May 5, 2026',url:'https://www.eenadu.net/',
+    summary:'తిరుపతి విమానాశ్రయంలో నూతన అంతర్జాతీయ టెర్మినల్ ప్రారంభించబడింది. దుబాయ్, సింగపూర్, కౌలాలంపూర్‌కు నేరుగా విమాన సేవలు పర్యాటక ఆదాయాన్ని గణనీయంగా పెంచనున్నాయి.'
+  },
+  {
+    title:'కాకినాడ LNG టెర్మినల్ నిర్మాణం 70% పూర్తి: $2 బిలియన్ ప్రాజెక్ట్',
+    category:'andhra',region:'India',source:'Sakshi',date:'May 2, 2026',url:'https://www.sakshi.com/',
+    summary:'కాకినాడ LNG టెర్మినల్ నిర్మాణం 70% పూర్తైంది. $2 బిలియన్ విలువైన ఈ ప్రాజెక్ట్ 2027లో పూర్తవుతుంది. దేశ శక్తి భద్రతకు కీలకమైన ఈ ప్రాజెక్ట్ ఆంధ్రను ఇంధన హబ్‌గా మారుస్తుంది.'
+  },
+  {
+    title:'గుంటూరు మిర్చి వ్యాపారం డిజిటల్ వేదికలకు మారింది: ₹3,000 కోట్ల ఆన్‌లైన్ వ్యాపారం',
+    category:'andhra',region:'India',source:'Eenadu',date:'April 29, 2026',url:'https://www.eenadu.net/',
+    summary:'గుంటూరు మిర్చి మార్కెట్ డిజిటల్ ట్రేడింగ్ ప్లాట్‌ఫారమ్‌లకు మారింది. ₹3,000 కోట్ల వార్షిక ఆన్‌లైన్ వ్యాపారంతో రైతులు నేరుగా అంతర్జాతీయ కొనుగోలుదారులకు అమ్ముతున్నారు.'
+  },
+  {
+    title:'నెల్లూరు ఆక్వాకల్చర్ విప్లవం: రొయ్యల ఎగుమతులు 40% పెరిగాయి',
+    category:'andhra',region:'India',source:'Sakshi',date:'April 26, 2026',url:'https://www.sakshi.com/',
+    summary:'నెల్లూరు జిల్లా రొయ్యల వ్యవసాయంలో సాంకేతికత ఉపయోగం 40% ఎగుమతి వృద్ధికి దారితీసింది. AI ఆధారిత నీటి నాణ్యత పర్యవేక్షణ వ్యవస్థ ఉత్పాదకతను రెట్టింపు చేసింది.'
+  },
+  {
+    title:'ఆంధ్రప్రదేశ్ ఐటీ పాలసీ: ఒక్కో ఉద్యోగికి ₹5 లక్షల రీయింబర్స్‌మెంట్',
+    category:'andhra',region:'India',source:'Eenadu',date:'April 23, 2026',url:'https://www.eenadu.net/',
+    summary:'ఆంధ్రప్రదేశ్ ఐటీ పాలసీ విశాఖపట్నం, విజయవాడ, తిరుపతి ఐటీ క్లస్టర్లలో స్థాపించే సంస్థలకు ఒక్కో ఉద్యోగికి ₹5 లక్షల రీయింబర్స్‌మెంట్ అందిస్తుంది.'
+  },
+  {
+    title:'శ్రీకాళహస్తి సోలార్ జోన్: 5 GW సామర్థ్యంతో కొత్త పాలసీ',
+    category:'andhra',region:'India',source:'Sakshi',date:'April 19, 2026',url:'https://www.sakshi.com/',
+    summary:'శ్రీకాళహస్తి సమీపంలో 5 GW సోలార్ జోన్ ఏర్పాటుకు ₹20,000 కోట్ల పెట్టుబడి లక్ష్యంతో కొత్త పాలసీ తీసుకొచ్చారు. జాతీయ గ్రిడ్‌కు అనుసంధానం 2028లో పూర్తవుతుంది.'
+  },
   // ════════════════════════════════════════════════════════
   // REGIONAL — BANGALORE
   // ════════════════════════════════════════════════════════
@@ -1599,6 +1900,57 @@ const BRIEFINGS = [
     date:'April 16, 2026',
     url:'https://economictimes.indiatimes.com/',
     summary:'Bengaluru residential property sales surpassed Rs 1 lakh crore for the first time in a fiscal year, driven by strong IT hiring and infrastructure expansion.'
+  },
+  // ── BANGALORE — ಕನ್ನಡ ──
+  {
+    title:'ಬೆಂಗಳೂರು ಜಾಗತಿಕ ಟಾಪ್ 20 ಸ್ಟಾರ್ಟಪ್ ಕೇಂದ್ರಗಳ ಪಟ್ಟಿಗೆ ಪ್ರವೇಶ',
+    category:'bangalore',region:'India',source:'Prajavani',date:'May 17, 2026',url:'https://www.prajavani.net/',
+    summary:'ಸ್ಟಾರ್ಟಪ್ ಜಿನೋಮ್ ವರದಿಯಲ್ಲಿ ಬೆಂಗಳೂರು ಜಾಗತಿಕ ಟಾಪ್ 20 ಸ್ಟಾರ್ಟಪ್ ಕೇಂದ್ರಗಳ ಪಟ್ಟಿಗೆ ಸೇರಿದೆ. ₹1.9 ಲಕ್ಷ ಕೋಟಿ ಮೌಲ್ಯದ ಪರಿಸರ ವ್ಯವಸ್ಥೆ ಮತ್ತು 44 ಯೂನಿಕಾರ್ನ್‌ಗಳೊಂದಿಗೆ ಭಾರತದ ಐಟಿ ರಾಜಧಾನಿ ಹೊಸ ಎತ್ತರ ತಲುಪಿದೆ.'
+  },
+  {
+    title:'ನಮ್ಮ ಮೆಟ್ರೋ ಪರ್ಪಲ್ ಲೈನ್ ವ್ಹೈಟ್‌ಫೀಲ್ಡ್-ಚಲ್ಲಘಟ್ಟ ಪೂರ್ಣ: 7 ಲಕ್ಷ ಪ್ರಯಾಣಿಕರ ಗುರಿ',
+    category:'bangalore',region:'India',source:'Vijaya Karnataka',date:'May 14, 2026',url:'https://vijaykarnataka.com/',
+    summary:'42 ಕಿಮೀ ಉದ್ದದ ನಮ್ಮ ಮೆಟ್ರೋ ಪರ್ಪಲ್ ಲೈನ್ ವ್ಹೈಟ್‌ಫೀಲ್ಡ್‌ನಿಂದ ಚಲ್ಲಘಟ್ಟದವರೆಗೆ ಸಂಪೂರ್ಣವಾಗಿ ಕಾರ್ಯನಿರ್ವಹಿಸುತ್ತಿದೆ. ದಿನಕ್ಕೆ 7 ಲಕ್ಷ ಪ್ರಯಾಣಿಕರನ್ನು ಹೊತ್ತೊಯ್ಯಬಲ್ಲ ಸಾಮರ್ಥ್ಯ ಹೊಂದಿದೆ.'
+  },
+  {
+    title:'ಕರ್ನಾಟಕ ಭಾರತದ ಮೊದಲ ನಗರ ಡ್ರೋನ್ ವೈದ್ಯಕೀಯ ವಿತರಣಾ ಜಾಲ ಆರಂಭಿಸಿತು',
+    category:'bangalore',region:'India',source:'Prajavani',date:'May 11, 2026',url:'https://www.prajavani.net/',
+    summary:'ಬೆಂಗಳೂರಿನ 15 ಆಸ್ಪತ್ರೆಗಳ ನಡುವೆ ರಕ್ತ, ಲಸಿಕೆ ಮತ್ತು ತುರ್ತು ಔಷಧಗಳ ಡ್ರೋನ್ ವಿತರಣಾ ಜಾಲ ಕಾರ್ಯಾರಂಭ ಮಾಡಿತು. ಭಾರತದ ಮೊದಲ ನಗರ ಡ್ರೋನ್ ವೈದ್ಯಕೀಯ ಸೇವೆ ಇದಾಗಿದೆ.'
+  },
+  {
+    title:'ಎಲೆಕ್ಟ್ರಾನಿಕ್ ಸಿಟಿ ಫೇಸ್ 3: ₹8,000 ಕೋಟಿ ಹೂಡಿಕೆ ಆಕರ್ಷಣೆ',
+    category:'bangalore',region:'India',source:'Vijaya Karnataka',date:'May 9, 2026',url:'https://vijaykarnataka.com/',
+    summary:'ಬೆಂಗಳೂರು ಎಲೆಕ್ಟ್ರಾನಿಕ್ ಸಿಟಿ ಫೇಸ್ 3 ವಿಸ್ತರಣೆಯಲ್ಲಿ ₹8,000 ಕೋಟಿ ಹೂಡಿಕೆ ಆಕರ್ಷಿಸಲಾಗಿದೆ. 25 ಹೊಸ ಕಂಪನಿಗಳು ಆಗಮಿಸಲಿದ್ದು 30,000 ಹೊಸ ಉದ್ಯೋಗಗಳು ಸೃಷ್ಟಿಯಾಗಲಿವೆ.'
+  },
+  {
+    title:'ಬೆಂಗಳೂರು AI ಸ್ಟಾರ್ಟಪ್‌ಗಳಿಗೆ ₹15,000 ಕೋಟಿ ವೆಂಚರ್ ಕ್ಯಾಪಿಟಲ್',
+    category:'bangalore',region:'India',source:'Prajavani',date:'May 6, 2026',url:'https://www.prajavani.net/',
+    summary:'2026ರ ಮೊದಲ ತ್ರೈಮಾಸಿಕದಲ್ಲಿ ಬೆಂಗಳೂರಿನ AI ಸ್ಟಾರ್ಟಪ್‌ಗಳು ₹15,000 ಕೋಟಿ ವೆಂಚರ್ ಕ್ಯಾಪಿಟಲ್ ಸಂಗ್ರಹಿಸಿವೆ. ಇದು ಭಾರತದ ಒಟ್ಟು AI ಹೂಡಿಕೆಯ 60%ಕ್ಕಿಂತ ಅಧಿಕ.'
+  },
+  {
+    title:'ಕೆಂಪೇಗೌಡ ಅಂತಾರಾಷ್ಟ್ರೀಯ ವಿಮಾನ ನಿಲ್ದಾಣ ಟರ್ಮಿನಲ್ 2: ₹12,000 ಕೋಟಿ ವಿಸ್ತರಣೆ',
+    category:'bangalore',region:'India',source:'Vijaya Karnataka',date:'May 4, 2026',url:'https://vijaykarnataka.com/',
+    summary:'ಕೆಂಪೇಗೌಡ ಅಂತಾರಾಷ್ಟ್ರೀಯ ವಿಮಾನ ನಿಲ್ದಾಣದ ₹12,000 ಕೋಟಿ ಟರ್ಮಿನಲ್ 2 ವಿಸ್ತರಣೆ 2027ರ ವೇಳೆಗೆ ಪೂರ್ಣಗೊಳ್ಳಲಿದ್ದು ವಾರ್ಷಿಕ 5.5 ಕೋಟಿ ಪ್ರಯಾಣಿಕರ ಸಾಮರ್ಥ್ಯ ಲಭ್ಯವಾಗಲಿದೆ.'
+  },
+  {
+    title:'ಬೆಂಗಳೂರು ಟೆಕ್ ಸಮಿಟ್ 2026: 50 ದೇಶ, 800 ಪ್ರದರ್ಶಕರ ಭಾಗವಹಿಸುವಿಕೆ',
+    category:'bangalore',region:'India',source:'Prajavani',date:'May 1, 2026',url:'https://www.prajavani.net/',
+    summary:'27ನೇ ಬೆಂಗಳೂರು ಟೆಕ್ ಸಮಿಟ್‌ನಲ್ಲಿ 50 ದೇಶಗಳ ಪ್ರತಿನಿಧಿಗಳು ಭಾಗವಹಿಸಿದರು. AI, ಕ್ವಾಂಟಮ್ ಕಂಪ್ಯೂಟಿಂಗ್, ಬಯೋಟೆಕ್ ಮತ್ತು ಏರೋಸ್ಪೇಸ್ ಕ್ಷೇತ್ರಗಳಲ್ಲಿ 800 ಪ್ರದರ್ಶಕರು ಇದ್ದರು.'
+  },
+  {
+    title:'ಬೆಂಗಳೂರು ವಸತಿ ರಿಯಲ್ ಎಸ್ಟೇಟ್ ₹1 ಲಕ್ಷ ಕೋಟಿ ಮಾರಾಟ ಸಾಧಿಸಿತು',
+    category:'bangalore',region:'India',source:'Vijaya Karnataka',date:'April 28, 2026',url:'https://vijaykarnataka.com/',
+    summary:'ಐಟಿ ನೇಮಕಾತಿ ಮತ್ತು ಮೂಲಸೌಕರ್ಯ ವಿಸ್ತರಣೆಯಿಂದ ಬೆಂಗಳೂರು ವಸತಿ ಆಸ್ತಿ ಮಾರಾಟ ಮೊದಲ ಬಾರಿಗೆ ₹1 ಲಕ್ಷ ಕೋಟಿ ದಾಟಿದೆ.'
+  },
+  {
+    title:'ORR ಕಂಪನಿಗಳ ಸ್ಟ್ಯಾಗರ್ಡ್ ವೇಳೆ: ಬೆಂಗಳೂರು ವಾಹನ ದಟ್ಟಣೆಯಲ್ಲಿ 25% ಕಡಿತ',
+    category:'bangalore',region:'India',source:'Prajavani',date:'April 24, 2026',url:'https://www.prajavani.net/',
+    summary:'ORRನಲ್ಲಿ 200ಕ್ಕೂ ಅಧಿಕ ಟೆಕ್ ಕಂಪನಿಗಳ ಸ್ಟ್ಯಾಗರ್ಡ್ ಆಫೀಸ್ ಸಮಯ ಜಾರಿಗೆ ಬಂದ ನಂತರ ಪೀಕ್ ಅವರ್ ವಾಹನ ದಟ್ಟಣೆ 25% ಇಳಿಕೆಯಾಗಿದೆ.'
+  },
+  {
+    title:'ಕರ್ನಾಟಕ ಸ್ಮಾರ್ಟ್ ಸಿಟಿ: ₹3,000 ಕೋಟಿ ಮೂಲಸೌಕರ್ಯ ಅಭಿವೃದ್ಧಿ ಯೋಜನೆ',
+    category:'bangalore',region:'India',source:'Vijaya Karnataka',date:'April 20, 2026',url:'https://vijaykarnataka.com/',
+    summary:'ಬೆಂಗಳೂರು ಸ್ಮಾರ್ಟ್ ಸಿಟಿ ₹3,000 ಕೋಟಿ ಮೂಲಸೌಕರ್ಯ ಅಭಿವೃದ್ಧಿ ಯೋಜನೆ ಜಾರಿಗೊಳಿಸಿದೆ. ಸ್ಮಾರ್ಟ್ ರಸ್ತೆ ಬೆಳಕು, ಒಳಚರಂಡಿ ನವೀಕರಣ ಮತ್ತು ಡಿಜಿಟಲ್ ನಾಗರಿಕ ಸೇವೆ ಒಳಗೊಂಡಿದೆ.'
   },
   // ════════════════════════════════════════════════════════
   // REGIONAL — PUNE
@@ -1657,6 +2009,57 @@ const BRIEFINGS = [
     url:'https://www.business-standard.com/',
     summary:'MIDC approved a Rs 5,000 crore expansion of Hinjewadi IT Park with 8 million sq ft of new office space expected to create 90,000 additional tech jobs.'
   },
+  // ── PUNE — मराठी ──
+  {
+    title:'पुणे मेट्रो लाइन ३ हिंजेवाडी-शिवाजीनगर मार्गाला केंद्रीय मंत्रिमंडळाची मंजुरी',
+    category:'pune',region:'India',source:'Sakal',date:'May 17, 2026',url:'https://www.esakal.com/',
+    summary:'२३.३ किमी उंच हिंजेवाडी-शिवाजीनगर मेट्रो मार्गाला केंद्रीय मंत्रिमंडळाने मंजुरी दिली. ₹८,८०० करोड़ च्या गुंतवणुकीतून पुण्याचे IT हब शहर केंद्राशी जोडले जाईल.'
+  },
+  {
+    title:'पुणे: चाकण-तळेगाव औद्योगिक पट्ट्यात EV उत्पादकांची मोठी गुंतवणूक',
+    category:'pune',region:'India',source:'Maharashtra Times',date:'May 14, 2026',url:'https://maharashtratimes.com/',
+    summary:'चाकण आणि तळेगाव औद्योगिक पट्ट्यात विद्युत वाहन उत्पादकांनी ₹12,000 करोड़ची गुंतवणूक जाहीर केली आहे. 2027 पर्यंत 50,000 नवे रोजगार निर्माण होतील.'
+  },
+  {
+    title:'पुण्याचे फिनटेक क्षेत्र: ८० नव्या स्टार्टअप्सनी ₹3,000 करोड़ उभारले',
+    category:'pune',region:'India',source:'Lokmat',date:'May 11, 2026',url:'https://www.lokmat.com/',
+    summary:'मुंबई-बेंगळुरूबाहेर पुणे भारताचे सर्वात वेगाने वाढणारे फिनटेक केंद्र बनले आहे. लेंडिंग, इन्शुरटेक आणि वेल्थटेक क्षेत्रात ८० नव्या स्टार्टअप्सनी ₹3,000 करोड़ उभारले.'
+  },
+  {
+    title:'सावित्रीबाई फुले पुणे विद्यापीठाचे AI संशोधन केंद्र: TCS, Infosys भागीदारी',
+    category:'pune',region:'India',source:'Sakal',date:'May 9, 2026',url:'https://www.esakal.com/',
+    summary:'SPPU मध्ये AI आणि डेटा सायन्स संशोधन केंद्राची स्थापना झाली. TCS, Infosys आणि Cognizant यांच्या भागीदारीतून संयुक्त संशोधन कार्यक्रम राबवले जातील.'
+  },
+  {
+    title:'पुणे आंतरराष्ट्रीय विमानतळ: बँकॉक, फ्रँकफर्टसह नव्या आंतरराष्ट्रीय मार्गांचे उद्घाटन',
+    category:'pune',region:'India',source:'Maharashtra Times',date:'May 7, 2026',url:'https://maharashtratimes.com/',
+    summary:'पुणे विमानतळाच्या नव्या एकात्मिक टर्मिनलने वार्षिक १.५ कोटी प्रवासी हाताळण्याची क्षमता प्राप्त केली. बँकॉक आणि फ्रँकफर्टसाठी नव्या सेवा सुरू झाल्या.'
+  },
+  {
+    title:'हिंजेवाडी IT पार्क फेज ५: ₹५,००० करोड़ गुंतवणुकीला MIDC मंजुरी',
+    category:'pune',region:'India',source:'Lokmat',date:'May 4, 2026',url:'https://www.lokmat.com/',
+    summary:'MIDC ने हिंजेवाडी IT पार्क फेज ५ साठी ₹५,०००  करोड़ च्या विस्तार योजनेला मान्यता दिली. ८० लाख चौरस फूट नवे कार्यालय आणि ९०,०००  अतिरिक्त रोजगार अपेक्षित.'
+  },
+  {
+    title:'पुणे-नाशिक द्रुतगती महामार्ग: काम अंतिम टप्प्यात, २०२७ मध्ये उद्घाटन',
+    category:'pune',region:'India',source:'Sakal',date:'May 1, 2026',url:'https://www.esakal.com/',
+    summary:'पुणे-नाशिक द्रुतगती महामार्गाचे बांधकाम अंतिम टप्प्यात पोहोचले असून प्रवास वेळ ४ तासांवरून दीड तासांवर येणार आहे. २०२७ मध्ये उद्घाटन अपेक्षित.'
+  },
+  {
+    title:'पिंपरी-चिंचवडमध्ये ग्रीन इंडस्ट्रियल झोन: ₹8,000 करोड़ पर्यावरणपूरक प्रकल्प',
+    category:'pune',region:'India',source:'Maharashtra Times',date:'April 28, 2026',url:'https://maharashtratimes.com/',
+    summary:'पिंपरी-चिंचवड महानगरपालिकेने ₹8,000 करोड़ च्या ग्रीन इंडस्ट्रियल झोनला परवानगी दिली. सौर ऊर्जाचलित कारखाने आणि झिरो-वेस्ट उत्पादन हे मुख्य वैशिष्ट्य.'
+  },
+  {
+    title:'पुण्यातील स्टार्टअप परिसंस्था: ₹२०,०००  करोड़ मूल्यांकन; ५ नवे युनिकॉर्न',
+    category:'pune',region:'India',source:'Lokmat',date:'April 24, 2026',url:'https://www.lokmat.com/',
+    summary:'पुण्यातील स्टार्टअप परिसंस्थेने ₹२०,०००  करोड़ एकूण मूल्यांकन गाठले. वर्षभरात ५ नवे युनिकॉर्न उदयास आले असून ५०० पेक्षा जास्त सक्रिय स्टार्टअप आहेत.'
+  },
+  {
+    title:'पुणे स्मार्ट सिटी: नागरिकांसाठी डिजिटल सेवा पोर्टल – सर्व परवानग्या ऑनलाइन',
+    category:'pune',region:'India',source:'Sakal',date:'April 20, 2026',url:'https://www.esakal.com/',
+    summary:'पुणे महानगरपालिकेने सर्व नागरी परवानग्या आणि प्रमाणपत्रे ऑनलाइन उपलब्ध करणारे स्मार्ट पोर्टल लाँच केले. ३०० हून अधिक सेवा आता घरबसल्या मिळवता येतात.'
+  },
   // ════════════════════════════════════════════════════════
   // REGIONAL — DELHI NCR
   // ════════════════════════════════════════════════════════
@@ -1714,6 +2117,57 @@ const BRIEFINGS = [
     url:'https://timesofindia.indiatimes.com/',
     summary:'The Noida International Airport at Jewar is on schedule for its October 2026 opening with the first runway and terminal nearing completion, capacity set at 12 million passengers.'
   },
+  // ── DELHI NCR — हिन्दी ──
+  {
+    title:'दिल्ली मेट्रो फेज ५: ९८ किमी के तीन नए कॉरिडोर को केंद्रीय मंजूरी',
+    category:'delhi',region:'India',source:'Dainik Jagran',date:'May 17, 2026',url:'https://www.jagran.com/',
+    summary:'दिल्ली मेट्रो फेज ५ को केंद्रीय मंत्रिमंडल की मंजूरी मिल गई है। लाजपत नगर-साकेत जी ब्लॉक, इंदरलोक-इंद्रप्रस्थ और रिठाला-नरेला को जोड़ने वाले ९८ किमी के तीन नए कॉरिडोर बनेंगे।'
+  },
+  {
+    title:'जेवर अंतर्राष्ट्रीय हवाई अड्डा: अक्टूबर २०२६ में उद्घाटन, १.२ करोड़ यात्रियों की क्षमता',
+    category:'delhi',region:'India',source:'Hindustan',date:'May 14, 2026',url:'https://www.livehindustan.com/',
+    summary:'नोएडा इंटरनेशनल एयरपोर्ट जेवर के पहले रनवे और टर्मिनल का काम लगभग पूरा हो गया है। अक्टूबर २०२६ में उद्घाटन के साथ यह १.२ करोड़ यात्रियों की क्षमता से शुरू होगा।'
+  },
+  {
+    title:'EV नीति और BS-VII से दिल्ली की वायु गुणवत्ता में ४०% सुधार',
+    category:'delhi',region:'India',source:'Dainik Bhaskar',date:'May 11, 2026',url:'https://www.bhaskar.com/',
+    summary:'EV अडॉप्शन नीति और BS-VII उत्सर्जन मानदंडों के लागू होने के बाद दिल्ली की औसत AQI स्तर में २०२४ की तुलना में ४०% का सुधार दर्ज किया गया।'
+  },
+  {
+    title:'दिल्ली में 5G कनेक्टिविटी: सभी मेट्रो स्टेशनों पर हाई-स्पीड इंटरनेट',
+    category:'delhi',region:'India',source:'Dainik Jagran',date:'May 8, 2026',url:'https://www.jagran.com/',
+    summary:'दिल्ली मेट्रो के सभी २७५ स्टेशनों पर 5G हाई-स्पीड इंटरनेट कनेक्टिविटी उपलब्ध हो गई है। यात्रियों को अब ट्रेन यात्रा के दौरान १ Gbps तक की स्पीड मिलेगी।'
+  },
+  {
+    title:'NCR में डेटा सेंटर क्रांति: ₹२५,०००  करोड़ का निवेश, ५०+ नए डेटा सेंटर',
+    category:'delhi',region:'India',source:'Hindustan',date:'May 5, 2026',url:'https://www.livehindustan.com/',
+    summary:'दिल्ली-NCR में ₹२५,०००  करोड़ के डेटा सेंटर निवेश के साथ ५० से अधिक नए डेटा सेंटर बनाए जा रहे हैं। ग्रेटर नोएडा और गुरुग्राम AI कंप्यूट का नया हब बन रहे हैं।'
+  },
+  {
+    title:'दिल्ली-मुंबई एक्सप्रेसवे: यात्रा समय ११ घंटे से ८ घंटे; पहला फेज चालू',
+    category:'delhi',region:'India',source:'Dainik Bhaskar',date:'May 2, 2026',url:'https://www.bhaskar.com/',
+    summary:'दिल्ली-मुंबई एक्सप्रेसवे के पहले चरण के चालू होने से यात्रा का समय ११ घंटे से घटकर ८ घंटे हो गया है। यह भारत का सबसे लंबा ग्रीनफील्ड एक्सप्रेसवे है।'
+  },
+  {
+    title:'दिल्ली सरकार का युवा उड़ान योजना: ₹२,०००  मासिक भत्ता और स्किल ट्रेनिंग',
+    category:'delhi',region:'India',source:'Dainik Jagran',date:'April 29, 2026',url:'https://www.jagran.com/',
+    summary:'दिल्ली सरकार ने २१-३५ वर्ष के पंजीकृत बेरोजगार युवाओं को ₹२,०००  मासिक भत्ता और निशुल्क स्किल ट्रेनिंग देने की युवा उड़ान योजना शुरू की है।'
+  },
+  {
+    title:'कनॉट प्लेस और खान मार्केट: दुनिया के टॉप २५ महंगे रिटेल स्ट्रीट में शामिल',
+    category:'delhi',region:'India',source:'Hindustan',date:'April 26, 2026',url:'https://www.livehindustan.com/',
+    summary:'दिल्ली के कनॉट प्लेस और खान मार्केट दुनिया के टॉप २५ सबसे महंगे रिटेल स्ट्रीट की सूची में शामिल हो गए हैं। वार्षिक किराया ₹३,५०० प्रति वर्ग फुट से अधिक हो गया।'
+  },
+  {
+    title:'दिल्ली में सोलर ऊर्जा उत्पादन: १,०००  MW का नया लक्ष्य, रूफटॉप पर जोर',
+    category:'delhi',region:'India',source:'Dainik Bhaskar',date:'April 23, 2026',url:'https://www.bhaskar.com/',
+    summary:'दिल्ली सरकार ने सरकारी भवनों और आवासीय इमारतों पर रूफटॉप सोलर पैनल के जरिए १,०००  MW उत्पादन का लक्ष्य रखा है। सब्सिडी योजना के तहत नागरिकों को ४०% तक छूट मिलेगी।'
+  },
+  {
+    title:'दिल्ली-NCR क्लाउड किचन हब: जोमैटो, स्विग्गी की ₹५,०००  करोड़ की नई योजना',
+    category:'delhi',region:'India',source:'Dainik Jagran',date:'April 18, 2026',url:'https://www.jagran.com/',
+    summary:'दिल्ली-NCR भारत का सबसे बड़ा क्लाउड किचन बाज़ार बन गया है। जोमैटो, स्विग्गी और Rebel Foods ने मिलकर ₹५,०००  करोड़ के निवेश के साथ १२,०००  से अधिक आउटलेट स्थापित किए हैं।'
+  },
   // ════════════════════════════════════════════════════════
   // REGIONAL — GUJARAT
   // ════════════════════════════════════════════════════════
@@ -1770,6 +2224,57 @@ const BRIEFINGS = [
     date:'April 10, 2026',
     url:'https://economictimes.indiatimes.com/',
     summary:'Gujarat retained its top position in India\'s ease of doing business rankings for the fifth straight year, driven by single-window clearance and plug-and-play industrial parks.'
+  },
+  // ── GUJARAT — ગુજરાતી ──
+  {
+    title:'GIFT સિટીમાં 80 નવી ફંડ મેનેજમેન્ટ સંસ્થાઓ: AIF નોંધણી 300 ને વટાવી',
+    category:'gujarat',region:'India',source:'Sandesh',date:'May 17, 2026',url:'https://sandesh.com/',
+    summary:'GIFT IFSC માં FY26 માં 80 નવી ફંડ મેનેજમેન્ટ સંસ્થાઓ નોંધાઈ. AIF નોંધણી 300 ની સંખ્યા વટાવી ગઈ. વૈશ્વિક ફંડ મેનેજરો ભારત-કેન્દ્રિત વ્યૂહ વિસ્તારી રહ્યા છે.'
+  },
+  {
+    title:'અમદાવાદ-મુંબઈ બુલેટ ટ્રેન: 320 km/h ઝડપે સફળ ટ્રાયલ રન',
+    category:'gujarat',region:'India',source:'Divya Bhaskar',date:'May 14, 2026',url:'https://www.divyabhaskar.co.in/',
+    summary:'ભારતની પ્રથમ બુલેટ ટ્રેને બિલિમોરા-સુરત વિભાગ પર 320 km/h ઝડપે સફળ ટ્રાયલ રન પૂર્ણ કર્યો. સંપૂર્ણ કામગીરી 2027ના મધ્ય સુધીમાં અપેક્ષિત.'
+  },
+  {
+    title:'સુરત ડાયમંડ ઉદ્યોગ: બ્લોકચેઇન ટ્રેકિંગ સિસ્ટમ અપનાવનાર વિશ્વનો પ્રથમ',
+    category:'gujarat',region:'India',source:'Sandesh',date:'May 11, 2026',url:'https://sandesh.com/',
+    summary:'સુરતના હીરા ઉદ્યોગે ખાણથી રિટેલ સુધી હીરાની ઉત્પત્તિ સુનિશ્ચિત કરતી બ્લોકચેઇન ટ્રેકિંગ સિસ્ટમ અમલમાં મૂકી. આ ક્ષેત્રમાં આ પ્રકારનું વૈશ્વિક સ્તરે પ્રથમ પ્રયાસ.'
+  },
+  {
+    title:'ગુજરાત 18 GW સૌર ક્ષમતા સાથે ભારતનું અગ્રણી રાજ્ય',
+    category:'gujarat',region:'India',source:'Divya Bhaskar',date:'May 9, 2026',url:'https://www.divyabhaskar.co.in/',
+    summary:'ગુજરાતે ચારણકા સોલર પાર્ક વિસ્તરણ અને કચ્છ રિન્યૂએબલ ઝોન પ્રોજેક્ટ સાથે 18 GW સ્થાપિત સૌર ક્ષમતા સ્થાપી ભારતમાં પ્રથમ ક્રમ મેળવ્યો.'
+  },
+  {
+    title:'વડોદરા એરોસ્પેસ પાર્ક: Boeing અને Airbus સપ્લાયર્સ ₹3,500 કોટ મૂડી',
+    category:'gujarat',region:'India',source:'Sandesh',date:'May 6, 2026',url:'https://sandesh.com/',
+    summary:'વડોદરા ઍરોસ્પેસ અને ડિફેન્સ પાર્કમાં Boeing અને Airbus Tier-1 સપ્લાયર્સ સહિત 15 વૈશ્વિક કંપનીઓ ₹3,500 કોટ કુલ રોકાણ સાથે આવવા સહમત.'
+  },
+  {
+    title:'ગ્રીન હાઈડ્રોજન: ગુજરાત 2030 સુધી 1 MMT ઉત્પાદનનો લક્ષ્ય',
+    category:'gujarat',region:'India',source:'Divya Bhaskar',date:'May 4, 2026',url:'https://www.divyabhaskar.co.in/',
+    summary:'ગુજરાત સરકારે ₹40,000 કોટ ના ગ્રીન હાઈડ્રોજન ઉત્પાદન ક્ષેત્ર માટે પ્રોત્સાહન જાહેર કર્યાં. 2030 સુધી 1 MMT ઉત્પાદન સ્ક્ષ્ય નક્કી. 15,000 ઉદ્યોગ નોકરીઓ સ્ક્ષ્ય.'
+  },
+  {
+    title:'સુરત ટેક્સટાઇલ ઉદ્યોગ: FY26 માં ₹2 લાખ કોટ નિકાસ, EU ઓર્ડર 35% ઉછળ્યા',
+    category:'gujarat',region:'India',source:'Sandesh',date:'May 1, 2026',url:'https://sandesh.com/',
+    summary:'સુરત ટેક્સટાઇલ ક્ષેત્રે FY26 માં ₹2 લાખ કોટ ની વિક્રમ નિકાસ નોંધી. EU, US અને ઑસ્ટ્રેલિયાથી ઓર્ડર 35% વધ્યા. ઉત્પાદિત કાપડ ઝડપથી વૈશ્વિક ફેશન ચેઇનમાં ઘૂસ્યો.'
+  },
+  {
+    title:'ગાંધીનગર સ્માર્ટ સિટી: AI ટ્રાફિક સિગ્નલ અને સ્માર્ટ ગ્રિડ સાથે ₹5,000 કરોડ ઇન્ફ્રા',
+    category:'gujarat',region:'India',source:'Divya Bhaskar',date:'April 28, 2026',url:'https://www.divyabhaskar.co.in/',
+    summary:'ગાંધીનગર સ્માર્ટ સિટી ₹5,000 કરોડ ઇન્ફ્રા પ્રોજેક્ટ હેઠળ AI ટ્રાફિક સિગ્નલ, સ્માર્ટ ઇલેક્ટ્રિક ગ્રિડ અને ઇ-ગવર્નન્સ ડેશબોર્ડ અમલમાં મૂકાઈ રહ્યા છે. ₹2,500 કરોડ ખર્ચ થઈ ચૂક્યો.'
+  },
+  {
+    title:'GIFT IFSC: ₹10 લાખ કરોડ AUM ધ્યેય — 80 નવા ફંડ હાઉસ સ્થાપિત',
+    category:'gujarat',region:'India',source:'Sandesh',date:'April 24, 2026',url:'https://sandesh.com/',
+    summary:'GIFT IFSC ₹10 લાખ કરોડ AUM ના ઐતિહાસિક ધ્યેય તરફ ઝડપથી આગળ વધી રહ્યો છે. FY26 ના અંત સુધીમાં 80 નવા ફંડ હાઉસ IFSC હેઠળ નોંધાઈ ચૂક્યા છે.'
+  },
+  {
+    title:'ગુજરાત ઇઝ ઑફ ડૂઇંગ બિઝનેસ: સળંગ 5 વર્ષ ભારતમાં પ્રથમ ક્રમ',
+    category:'gujarat',region:'India',source:'Divya Bhaskar',date:'April 20, 2026',url:'https://www.divyabhaskar.co.in/',
+    summary:'ગુજરાત સળંગ 5 વર્ષ ઇઝ ઑફ ડૂઇંગ બિઝનેસ રેન્કિંગ‌માં ભારતમાં અવ્વલ રહ્યું. સિંગલ-વિન્ડો ક્લિયરન્સ, પ્લગ-એન્ડ-પ્લે ઔદ્યોગિક પ્લોટ અને ઝડપી મંજૂરી પ્રક્રિયા મુખ્ય કારણ.'
   },
   // ════════════════════════════════════════════════════════
   // IPO — ADDITIONAL INDIAN LISTINGS
@@ -2205,7 +2710,27 @@ function matchesSearch(item, term) {
   return haystack.includes(term);
 }
 
+// Trendlyne widget initialiser — safe to call multiple times
+let _tlWidgetReady = false;
+function ensureTlWidget() {
+  if (_tlWidgetReady) return;
+  _tlWidgetReady = true;
+  const s = document.createElement('script');
+  s.src = 'https://cdn-static.trendlyne.com/static/js/webwidgets/tl-widgets.js';
+  s.async = true;
+  s.charset = 'utf-8';
+  document.body.appendChild(s);
+}
+
 function renderPage() {
+  // Toggle IPO live widget visibility
+  const ipoSec = document.getElementById('ipoWidgetSection');
+  if (ipoSec) {
+    const show = activeTab === 'ipo';
+    ipoSec.style.display = show ? 'block' : 'none';
+    if (show) ensureTlWidget();
+  }
+
   const term = searchInput.value.trim().toLowerCase();
   const visibleBriefings = BRIEFINGS.filter(item => {
     const categoryMatch = activeTab === 'all' || item.category === activeTab;
