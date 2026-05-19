@@ -85,10 +85,10 @@ export default {
             'Accept':        'application/json',
           },
           body: JSON.stringify({
-            email:         'noreply@vilfintv.com',
             subject:       subject,
             message:       body,
             _subject:      subject,
+            _replyto:      'no-reply@formspree.io',
             'Report Type': type,
             'Platform':    'vilfintv.com',
             'Timestamp':   new Date().toUTCString(),
