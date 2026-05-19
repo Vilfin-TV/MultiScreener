@@ -2008,6 +2008,76 @@ footer{
 .radio-vol-label{font-size:9px;color:#475569;flex-shrink:0}
 .radio-vol-slider{flex:1;height:3px;accent-color:#2563eb;cursor:pointer}
 .radio-no-data{text-align:center;padding:24px 12px;color:#334155;font-size:11px;line-height:1.6}
+.radio-station-meta{display:flex;flex-direction:column;flex:1;overflow:hidden;min-width:0;gap:1px;}
+.radio-station-tag{font-size:9px;color:#3b5a7a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* ═══════════════════════════════════════════════════════
+   LIVE TV — 5-Style Layout System + Geo-Navigation
+   ═══════════════════════════════════════════════════════ */
+/* Panel header bar */
+.iptv-panel-hdr{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:linear-gradient(135deg,#060c1a,#091525);border-bottom:1px solid #172d50;flex-shrink:0;}
+.iptv-panel-hdr-left{display:flex;align-items:center;gap:6px;}
+.iptv-panel-hdr-title{font-size:10px;font-weight:700;letter-spacing:1.5px;color:#60a5fa;text-transform:uppercase;}
+.iptv-style-badge{font-size:9px;padding:1px 7px;border-radius:9px;background:rgba(37,99,235,.18);color:#60a5fa;font-weight:600;letter-spacing:.3px;}
+.iptv-ch-count{font-size:9px;color:#374a62;}
+.iptv-panel-hdr-right{display:flex;align-items:center;gap:5px;}
+.iptv-gear-btn{width:26px;height:26px;border-radius:7px;border:1px solid #172d50;background:#091525;color:#4b6a8a;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;justify-content:center;transition:all .18s;line-height:1;padding:0;}
+.iptv-gear-btn:hover,.iptv-gear-btn.active{background:#1d4ed8;border-color:#3b82f6;color:#fff;}
+/* Settings dropdown */
+.iptv-settings-panel{display:none;flex-direction:column;gap:6px;padding:8px 10px;background:#050b16;border-bottom:1px solid #172d50;flex-shrink:0;}
+.iptv-settings-panel.open{display:flex;}
+.iptv-settings-label{font-size:9px;font-weight:700;letter-spacing:.9px;color:#2d4460;text-transform:uppercase;}
+.iptv-style-row{display:flex;gap:5px;flex-wrap:wrap;}
+.iptv-style-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:7px;border:1px solid #172d50;background:#0a1828;color:#4b6a8a;cursor:pointer;font-size:10px;font-weight:600;transition:all .18s;white-space:nowrap;}
+.iptv-style-btn:hover{border-color:#3b82f6;color:#dbeafe;background:#0e2040;}
+.iptv-style-btn.active{border-color:#2563eb;background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#fff;}
+.iptv-style-icon{font-size:12px;}
+/* Content area — geo-nav sidebar + channel list */
+.iptv-content-area{display:flex;flex:1;overflow:hidden;min-height:0;}
+/* Geo-nav sidebar (hidden by default, shown in Split + Three-Column) */
+.iptv-geo-nav{display:none;flex-shrink:0;overflow:hidden;flex-direction:row;border-right:1px solid #172d50;}
+.iptv-geo-col{display:flex;flex-direction:column;min-height:0;overflow:hidden;width:115px;border-right:1px solid #172d50;}
+.iptv-geo-col:last-child{border-right:none;}
+.iptv-geo-col-title{padding:5px 8px;font-size:9px;font-weight:700;letter-spacing:.8px;color:#2d4460;text-transform:uppercase;background:#050b16;border-bottom:1px solid #172d50;flex-shrink:0;}
+.iptv-geo-col-search{padding:4px 6px;background:#060e1c;border-bottom:1px solid #0d1e38;flex-shrink:0;}
+.iptv-geo-col-search input{width:100%;padding:4px 6px;border-radius:5px;border:1px solid #172d50;background:#091525;color:#b0cce8;font-size:10px;outline:none;box-sizing:border-box;}
+.iptv-geo-items{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:#0d1e38 transparent;}
+.iptv-geo-item{padding:7px 8px;font-size:10px;font-weight:600;cursor:pointer;border-bottom:1px solid rgba(23,45,80,.5);color:#3d5a78;display:flex;justify-content:space-between;align-items:center;gap:3px;transition:background .12s;}
+.iptv-geo-item:hover{background:#0d1e38;color:#b0cce8;}
+.iptv-geo-item.active{background:linear-gradient(90deg,#1d4ed8,#2563eb);color:#fff;border-color:transparent;}
+.iptv-geo-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.iptv-geo-cnt{font-size:8px;color:rgba(255,255,255,.28);background:rgba(255,255,255,.06);border-radius:8px;padding:1px 4px;flex-shrink:0;}
+.iptv-geo-item.active .iptv-geo-cnt{color:rgba(255,255,255,.6);background:rgba(255,255,255,.15);}
+/* ── Style 2: Split Directory ── */
+#rb-panel-iptv.iptv-s2 .iptv-geo-nav{display:flex;}
+#rb-panel-iptv.iptv-s2 .iptv-geo-col{width:138px;}
+#rb-panel-iptv.iptv-s2 #iptv-geo-states-col{display:none !important;}
+#rb-panel-iptv.iptv-s2 #iptv-preset-strip,#rb-panel-iptv.iptv-s2 #iptv-top-fold{display:none !important;}
+/* ── Style 3: Three-Column Pro ── */
+#rb-panel-iptv.iptv-s3 .iptv-geo-nav{display:flex;}
+#rb-panel-iptv.iptv-s3 .iptv-geo-col{width:110px;}
+#rb-panel-iptv.iptv-s3 #iptv-geo-states-col{display:flex !important;}
+#rb-panel-iptv.iptv-s3 #iptv-preset-strip,#rb-panel-iptv.iptv-s3 #iptv-top-fold{display:none !important;}
+/* ── Style 4: Card Grid ── */
+#rb-panel-iptv.iptv-s4 #iptv-list{display:grid;grid-template-columns:repeat(2,1fr);padding:4px;gap:0;overflow-y:auto;flex:1;align-content:start;}
+#rb-panel-iptv.iptv-s4 .radio-station-item{flex-direction:column;align-items:center;justify-content:flex-start;gap:5px;padding:10px 6px;text-align:center;margin-bottom:0;border-radius:0;border-bottom:1px solid #0d1e38 !important;border-right:1px solid #0d1e38 !important;border-left:none !important;border-top:none !important;min-height:74px;}
+#rb-panel-iptv.iptv-s4 .iptv-ch-logo{width:36px;height:36px;border-radius:9px;font-size:14px;font-weight:700;color:#fff;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+#rb-panel-iptv.iptv-s4 .radio-station-meta{align-items:center;width:100%;}
+#rb-panel-iptv.iptv-s4 .radio-station-name{font-size:9px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3;text-align:center;}
+#rb-panel-iptv.iptv-s4 .radio-station-tag{font-size:8px;text-align:center;}
+#rb-panel-iptv.iptv-s4 .radio-station-item > span:last-child{display:none;}
+/* ── Style 5: Compact Dense ── */
+#rb-panel-iptv.iptv-s5 .radio-station-item{padding:3px 8px;margin-bottom:1px;}
+#rb-panel-iptv.iptv-s5 .iptv-ch-logo{width:18px !important;height:18px !important;border-radius:4px !important;font-size:9px !important;}
+#rb-panel-iptv.iptv-s5 .radio-station-name{font-size:10.5px;}
+#rb-panel-iptv.iptv-s5 .radio-station-tag{font-size:8px;}
+/* Responsive */
+@media(max-width:480px){
+  #rb-panel-iptv.iptv-s2 .iptv-geo-col{width:95px;}
+  #rb-panel-iptv.iptv-s3 .iptv-geo-col{width:82px;}
+  #rb-panel-iptv.iptv-s4 #iptv-list{grid-template-columns:repeat(2,1fr);}
+  .iptv-geo-item{font-size:9px;padding:6px 6px;}
+}
 
 /* ── PREMIUM PANEL SHARED COMPONENTS ── */
 /* Horizontal-scroll preset strip — replaces wrap grids in all panels */
@@ -3715,6 +3785,31 @@ footer{
   <!-- ── PANEL 3: Live TV (IPTV via HLS.js) ── -->
   <div id="rb-panel-iptv" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
 
+    <!-- Live TV panel header: title + style badge + gear icon -->
+    <div class="iptv-panel-hdr">
+      <div class="iptv-panel-hdr-left">
+        <span style="font-size:12px">📡</span>
+        <span class="iptv-panel-hdr-title">Live TV</span>
+        <span class="iptv-style-badge" id="iptv-style-badge">Classic</span>
+      </div>
+      <div class="iptv-panel-hdr-right">
+        <span class="iptv-ch-count" id="iptv-ch-count"></span>
+        <button class="iptv-gear-btn" id="iptv-gear-btn" onclick="iptvToggleSettings()" title="Panel Layout Style">⚙</button>
+      </div>
+    </div>
+
+    <!-- Style settings dropdown (hidden until gear icon clicked) -->
+    <div class="iptv-settings-panel" id="iptv-settings-panel">
+      <div class="iptv-settings-label">Panel Layout Style</div>
+      <div class="iptv-style-row">
+        <button class="iptv-style-btn active" data-style="1" onclick="iptvSetStyle(1)"><span class="iptv-style-icon">≡</span> Classic List</button>
+        <button class="iptv-style-btn" data-style="2" onclick="iptvSetStyle(2)"><span class="iptv-style-icon">⊞</span> Split Dir</button>
+        <button class="iptv-style-btn" data-style="3" onclick="iptvSetStyle(3)"><span class="iptv-style-icon">⧉</span> 3-Column</button>
+        <button class="iptv-style-btn" data-style="4" onclick="iptvSetStyle(4)"><span class="iptv-style-icon">⊟</span> Card Grid</button>
+        <button class="iptv-style-btn" data-style="5" onclick="iptvSetStyle(5)"><span class="iptv-style-icon">⋮</span> Compact</button>
+      </div>
+    </div>
+
     <!-- Mini now-playing bar — visible ONLY when video is playing -->
     <div id="iptv-now-bar" style="display:none;padding:5px 10px;background:#060d1a;border-bottom:1px solid #1e3a5c;flex-shrink:0;align-items:center;gap:8px">
       <span style="width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0;animation:rPulse 1.6s infinite;display:inline-block"></span>
@@ -3844,10 +3939,34 @@ footer{
       <button class="panel-ctrl-btn" onclick="iptvStop()" title="Stop">⏹</button>
     </div>
 
-    <!-- Channel list -->
-    <div class="radio-station-list" id="iptv-list">
-      <div class="radio-no-data">Tap a region above to load free-to-air TV channels…</div>
-    </div>
+    <!-- Content area: geo-nav sidebar + channel list (flex row) -->
+    <div id="iptv-content-area" class="iptv-content-area">
+
+      <!-- Geo-nav sidebar — shown in Split Dir (s2) and Three-Column (s3) styles -->
+      <div id="iptv-geo-nav" class="iptv-geo-nav">
+        <!-- Country column -->
+        <div class="iptv-geo-col" id="iptv-geo-countries-col">
+          <div class="iptv-geo-col-title">Country</div>
+          <div class="iptv-geo-col-search">
+            <input type="search" placeholder="Search…" oninput="iptvGeoFilterCountries(this.value)">
+          </div>
+          <div class="iptv-geo-items" id="iptv-geo-countries">
+            <div style="padding:14px 8px;text-align:center;color:#2d4460;font-size:10px">Loading…</div>
+          </div>
+        </div>
+        <!-- State / Language column (India only in s3) -->
+        <div class="iptv-geo-col iptv-state-col" id="iptv-geo-states-col" style="display:none">
+          <div class="iptv-geo-col-title">State / Lang</div>
+          <div class="iptv-geo-items" id="iptv-geo-states"></div>
+        </div>
+      </div>
+
+      <!-- Channel list -->
+      <div class="radio-station-list" id="iptv-list">
+        <div class="radio-no-data">Tap a region above to load free-to-air TV channels…</div>
+      </div>
+
+    </div><!-- /iptv-content-area -->
   </div><!-- /rb-panel-iptv -->
 
   <!-- ── PANEL 4: Global Radio (powered by radio-browser.info) ── -->
@@ -8792,8 +8911,10 @@ let _iptvLastResults = [];
 let _iptvMuted = true;         // starts muted; preserved across channel changes
 
 async function iptvInit() {
+  // Apply saved layout style immediately (before async fetch completes)
+  _iptvRestoreStyle();
   // Fetch catalog once on first panel open. Cache in memory only (data is updated daily by iptv-org).
-  if (_iptvAllChannels) { iptvLoadPreset('all-india'); return; }
+  if (_iptvAllChannels) { _iptvBuildGeoNav(); iptvLoadPreset('all-india'); return; }
   const list = document.getElementById('iptv-list');
   if (list) list.innerHTML = '<div class="radio-no-data">⏳ Loading channel directory…</div>';
   try {
@@ -8835,8 +8956,12 @@ async function iptvInit() {
       });
     }
     console.log(`[IPTV] Loaded ${_iptvAllChannels.length} unique channels (deduped)`);
+    // Restore saved layout style
+    _iptvRestoreStyle();
     // If user has set a default preset/country, load that. Otherwise All India.
     if (!iptvLoadUserDefault()) iptvLoadPreset('all-india');
+    // Build geo-nav country list (for Split/Three-Column styles)
+    _iptvBuildGeoNav();
   } catch (e) {
     console.warn('[IPTV] catalog fetch failed:', e);
     if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Could not reach iptv-org directory. Please retry.</div>';
@@ -9001,6 +9126,9 @@ function iptvLoadUserDefault() {
 function _iptvRender(results) {
   const list = document.getElementById('iptv-list');
   if (!list) return;
+  // Update channel count badge
+  const cnt = document.getElementById('iptv-ch-count');
+  if (cnt) cnt.textContent = results.length + (_iptvAllChannels && _iptvAllChannels.length > results.length ? '/' + _iptvAllChannels.length.toLocaleString() : '') + ' ch';
   if (!results.length) {
     list.innerHTML = '<div class="radio-no-data">No channels match this filter.</div>';
     return;
@@ -9015,7 +9143,7 @@ function _iptvRender(results) {
     return `
       <div class="radio-station-item${isActive ? ' active' : ''}" data-iptv-id="${_esc(c.id)}"
            onclick='iptvPlay(${JSON.stringify(c.url)}, ${JSON.stringify(c.id)}, ${JSON.stringify(c.name)})'>
-        <span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:#1d4ed8;color:#fff;font-size:11px;font-weight:700;flex-shrink:0">${_esc(initial)}</span>
+        <span class="iptv-ch-logo" style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:linear-gradient(135deg,#1d4ed8,#7c3aed);color:#fff;font-size:11px;font-weight:700;flex-shrink:0">${_esc(initial)}</span>
         <div class="radio-station-meta">
           <span class="radio-station-name" title="${_esc(c.name)}">${_esc(c.name)}</span>
           ${tags ? '<span class="radio-station-tag">' + _esc(tags) + '</span>' : ''}
@@ -9259,6 +9387,182 @@ function iptvPlayCustomUrl() {
 
   iptvPlay(url, 'custom-' + Date.now(), 'Custom Stream');
   if (inp) inp.value = '';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// LIVE TV — 5-Style Layout + Geo-Navigation
+// ═══════════════════════════════════════════════════════════════════
+const _IPTV_STYLE_NAMES = { 1:'Classic', 2:'Split Dir', 3:'3-Column', 4:'Card Grid', 5:'Compact' };
+let _iptvStyle = 1;
+
+function _iptvRestoreStyle() {
+  try { const s = parseInt(localStorage.getItem('viltv_iptv_style')); if (s >= 1 && s <= 5) _iptvStyle = s; } catch(_) {}
+  _iptvApplyStyle(_iptvStyle, false);
+}
+
+function iptvToggleSettings() {
+  const sp = document.getElementById('iptv-settings-panel');
+  const gb = document.getElementById('iptv-gear-btn');
+  if (!sp) return;
+  const isOpen = sp.classList.toggle('open');
+  if (gb) gb.classList.toggle('active', isOpen);
+}
+function iptvCloseSettings() {
+  const sp = document.getElementById('iptv-settings-panel');
+  const gb = document.getElementById('iptv-gear-btn');
+  if (sp) sp.classList.remove('open');
+  if (gb) gb.classList.remove('active');
+}
+
+function iptvSetStyle(n) {
+  _iptvStyle = n;
+  try { localStorage.setItem('viltv_iptv_style', n); } catch(_) {}
+  _iptvApplyStyle(n, true);
+  iptvCloseSettings();
+}
+
+function _iptvApplyStyle(n, rerender) {
+  const panel = document.getElementById('rb-panel-iptv');
+  if (!panel) return;
+  for (let i = 1; i <= 5; i++) panel.classList.remove('iptv-s' + i);
+  panel.classList.add('iptv-s' + n);
+  // Update button states
+  document.querySelectorAll('.iptv-style-btn').forEach(b => b.classList.toggle('active', +b.dataset.style === n));
+  // Update style badge
+  const badge = document.getElementById('iptv-style-badge');
+  if (badge) badge.textContent = _IPTV_STYLE_NAMES[n] || 'Classic';
+  // Geo-nav: build if switching to a geo style and channels are loaded
+  if ((n === 2 || n === 3) && _iptvAllChannels) _iptvBuildGeoNav();
+  if (rerender) _iptvRender(_iptvLastResults);
+}
+
+// ── Geo-Navigation ──────────────────────────────────────────────────────────
+const _COUNTRY_NAMES = {
+  'IN':'🇮🇳 India','US':'🇺🇸 United States','GB':'🇬🇧 UK','AU':'🇦🇺 Australia',
+  'CA':'🇨🇦 Canada','DE':'🇩🇪 Germany','FR':'🇫🇷 France','JP':'🇯🇵 Japan',
+  'CN':'🇨🇳 China','AE':'🇦🇪 UAE','SA':'🇸🇦 Saudi Arabia','QA':'🇶🇦 Qatar',
+  'SG':'🇸🇬 Singapore','MY':'🇲🇾 Malaysia','BR':'🇧🇷 Brazil','ES':'🇪🇸 Spain',
+  'IT':'🇮🇹 Italy','MX':'🇲🇽 Mexico','NL':'🇳🇱 Netherlands','TR':'🇹🇷 Turkey',
+  'PK':'🇵🇰 Pakistan','BD':'🇧🇩 Bangladesh','LK':'🇱🇰 Sri Lanka','NP':'🇳🇵 Nepal',
+  'NG':'🇳🇬 Nigeria','ZA':'🇿🇦 S.Africa','EG':'🇪🇬 Egypt','RU':'🇷🇺 Russia',
+  'KR':'🇰🇷 S.Korea','TH':'🇹🇭 Thailand','ID':'🇮🇩 Indonesia','PH':'🇵🇭 Philippines',
+  'VN':'🇻🇳 Vietnam','AR':'🇦🇷 Argentina','CL':'🇨🇱 Chile','CO':'🇨🇴 Colombia',
+  'PT':'🇵🇹 Portugal','SE':'🇸🇪 Sweden','NO':'🇳🇴 Norway','DK':'🇩🇰 Denmark',
+  'FI':'🇫🇮 Finland','PL':'🇵🇱 Poland','RO':'🇷🇴 Romania','GR':'🇬🇷 Greece',
+  'UA':'🇺🇦 Ukraine','AT':'🇦🇹 Austria','CH':'🇨🇭 Switzerland','BE':'🇧🇪 Belgium',
+  'CZ':'🇨🇿 Czech Rep','HU':'🇭🇺 Hungary','IL':'🇮🇱 Israel','IR':'🇮🇷 Iran',
+  'IQ':'🇮🇶 Iraq','KW':'🇰🇼 Kuwait','OM':'🇴🇲 Oman','BH':'🇧🇭 Bahrain',
+  'MA':'🇲🇦 Morocco','DZ':'🇩🇿 Algeria','TN':'🇹🇳 Tunisia','LB':'🇱🇧 Lebanon',
+  'KE':'🇰🇪 Kenya','GH':'🇬🇭 Ghana','ET':'🇪🇹 Ethiopia','TZ':'🇹🇿 Tanzania',
+};
+const _INDIA_STATES = [
+  { key:'all', name:'🇮🇳 All India',    lang:null },
+  { key:'hin', name:'🪕 Hindi',         lang:'hin' },
+  { key:'mal', name:'🌿 Malayalam',     lang:'mal' },
+  { key:'tam', name:'🎵 Tamil',         lang:'tam' },
+  { key:'tel', name:'🎤 Telugu',        lang:'tel' },
+  { key:'kan', name:'🎶 Kannada',       lang:'kan' },
+  { key:'mar', name:'🟠 Marathi',       lang:'mar' },
+  { key:'pan', name:'🟡 Punjabi',       lang:'pan' },
+  { key:'ben', name:'🟢 Bengali',       lang:'ben' },
+  { key:'guj', name:'🟣 Gujarati',      lang:'guj' },
+  { key:'ori', name:'🌅 Odia',          lang:'ori' },
+  { key:'asm', name:'🌄 Assamese',      lang:'asm' },
+  { key:'urd', name:'📖 Urdu',          lang:'urd' },
+];
+let _iptvGeoCountry = 'IN';
+let _iptvGeoState   = null;
+let _iptvGeoCountryData = []; // sorted [{code,name,count}]
+
+function _iptvBuildGeoNav() {
+  if (!_iptvAllChannels) return;
+  const countMap = {};
+  for (const c of _iptvAllChannels) {
+    if (!c.country) continue;
+    countMap[c.country] = (countMap[c.country] || 0) + 1;
+  }
+  _iptvGeoCountryData = Object.entries(countMap)
+    .sort((a, b) => b[1] - a[1])
+    .map(([code, count]) => ({ code, count, name: _COUNTRY_NAMES[code] || ('🌐 ' + code) }));
+
+  const list = document.getElementById('iptv-geo-countries');
+  if (!list) return;
+  list.innerHTML = _iptvGeoCountryData.map(c =>
+    `<div class="iptv-geo-item" data-geo-code="${_esc(c.code)}" onclick="iptvGeoSelectCountry('${_esc(c.code)}')">
+      <span class="iptv-geo-name">${c.name}</span>
+      <span class="iptv-geo-cnt">${c.count}</span>
+    </div>`
+  ).join('');
+
+  // Update channel count badge
+  const cnt = document.getElementById('iptv-ch-count');
+  if (cnt) cnt.textContent = _iptvAllChannels.length.toLocaleString() + ' ch';
+
+  // Auto-select saved country
+  iptvGeoSelectCountry(_iptvGeoCountry || 'IN', false);
+}
+
+function iptvGeoFilterCountries(q) {
+  const term = (q || '').toLowerCase();
+  document.querySelectorAll('#iptv-geo-countries .iptv-geo-item').forEach(el => {
+    el.style.display = el.querySelector('.iptv-geo-name').textContent.toLowerCase().includes(term) ? '' : 'none';
+  });
+}
+
+function iptvGeoSelectCountry(code, render) {
+  if (render === undefined) render = true;
+  _iptvGeoCountry = code;
+  _iptvGeoState = null;
+  // Highlight
+  document.querySelectorAll('#iptv-geo-countries .iptv-geo-item').forEach(el =>
+    el.classList.toggle('active', el.dataset.geoCode === code));
+  const activeEl = document.querySelector('#iptv-geo-countries .iptv-geo-item.active');
+  if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
+
+  const stateCol = document.getElementById('iptv-geo-states-col');
+  const stateList = document.getElementById('iptv-geo-states');
+
+  if (code === 'IN') {
+    if (stateCol) stateCol.style.display = '';
+    if (stateList && _iptvAllChannels) {
+      const inCh = _iptvAllChannels.filter(c => c.country === 'IN');
+      stateList.innerHTML = _INDIA_STATES.map(s => {
+        const cnt = s.lang ? inCh.filter(c => c.languages.includes(s.lang)).length : inCh.length;
+        return `<div class="iptv-geo-item" data-geo-state="${s.key}" onclick="iptvGeoSelectState('${s.key}','${s.lang||''}')">
+          <span class="iptv-geo-name">${s.name}</span>
+          <span class="iptv-geo-cnt">${cnt}</span>
+        </div>`;
+      }).join('');
+    }
+    iptvGeoSelectState('all', '', render);
+  } else {
+    if (stateCol) stateCol.style.display = 'none';
+    if (render && _iptvAllChannels) {
+      const results = _iptvAllChannels.filter(c => c.country === code)
+        .sort((a, b) => a.name.localeCompare(b.name)).slice(0, 250);
+      _iptvLastResults = results;
+      _iptvRender(results);
+    }
+  }
+}
+
+function iptvGeoSelectState(key, lang, render) {
+  if (render === undefined) render = true;
+  _iptvGeoState = { key, lang };
+  document.querySelectorAll('#iptv-geo-states .iptv-geo-item').forEach(el =>
+    el.classList.toggle('active', el.dataset.geoState === key));
+  const activeEl = document.querySelector('#iptv-geo-states .iptv-geo-item.active');
+  if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
+  if (!render || !_iptvAllChannels) return;
+  let results = _iptvAllChannels.filter(c => c.country === 'IN');
+  if (lang) results = results.filter(c => c.languages.includes(lang));
+  results = results.sort((a, b) => {
+    const aN = a.categories.includes('news') ? 0 : 1;
+    const bN = b.categories.includes('news') ? 0 : 1;
+    return aN - bN || a.name.localeCompare(b.name);
+  }).slice(0, 250);
+  _iptvLastResults = results;
+  _iptvRender(results);
 }
 
 // ═══════════════════════════════════════════════════════════════════
