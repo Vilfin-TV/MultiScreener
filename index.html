@@ -1095,6 +1095,62 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .nsm-reset-btn:hover{background:rgba(255,255,255,.06);color:var(--text)}
 .nsm-sel-count{font-size:11px;color:var(--text3)}
 
+/* ════════════════════════════════════════════════════
+   FEEDBACK / BUG / FEATURE MODAL
+   ════════════════════════════════════════════════════ */
+.fb-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:9900;display:none;align-items:center;justify-content:center;padding:20px 12px;overflow-y:auto}
+.fb-overlay.show{display:flex}
+.fb-box{background:var(--dark2,#0b1628);border:1px solid rgba(124,77,255,.35);border-radius:16px;width:100%;max-width:620px;overflow:hidden;box-shadow:0 28px 70px rgba(0,0,0,.7),0 0 40px rgba(124,77,255,.08);animation:fb-in .22s cubic-bezier(.34,1.56,.64,1)}
+@keyframes fb-in{from{opacity:0;transform:scale(.94) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.fb-header{background:linear-gradient(135deg,rgba(20,10,45,.98),rgba(12,8,28,.98));padding:20px 22px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(139,92,246,.22);position:relative;overflow:hidden}
+.fb-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(124,77,255,.7),rgba(0,188,212,.6),rgba(124,77,255,.7),transparent)}
+.fb-header-left{display:flex;align-items:center;gap:12px}
+.fb-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.fb-icon-bug{background:linear-gradient(135deg,#7c4dff,#00bcd4)}
+.fb-icon-feature{background:linear-gradient(135deg,#f59e0b,#ef4444)}
+.fb-icon-feedback{background:linear-gradient(135deg,#10b981,#0891b2)}
+.fb-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;color:#fff}
+.fb-subtitle{font-size:11px;color:var(--text3,#5c6bc0);margin-top:2px;letter-spacing:.4px}
+.fb-close{background:transparent;border:none;color:var(--text3,#5c6bc0);font-size:22px;cursor:pointer;line-height:1;padding:4px 6px;border-radius:6px;transition:all .15s;flex-shrink:0}
+.fb-close:hover{color:#f87171;background:rgba(248,113,113,.1)}
+.fb-body{padding:22px;max-height:calc(100vh - 220px);overflow-y:auto}
+.fb-section{margin-bottom:20px}
+.fb-label{font-size:11px;font-weight:700;color:var(--text3,#5c6bc0);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.fb-label .req{color:#f87171}
+.fb-select,.fb-textarea,.fb-input{width:100%;background:rgba(7,4,18,.7);border:1px solid rgba(139,92,246,.3);border-radius:9px;color:var(--text,#e8eaf6);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s}
+.fb-select{padding:10px 14px;cursor:pointer}
+.fb-input{padding:10px 14px}
+.fb-textarea{padding:12px 14px;resize:vertical;min-height:80px;line-height:1.6}
+.fb-select:focus,.fb-input:focus,.fb-textarea:focus{border-color:rgba(124,77,255,.6);box-shadow:0 0 0 2px rgba(124,77,255,.12)}
+.fb-chips{display:flex;flex-wrap:wrap;gap:8px}
+.fb-chip{padding:7px 14px;border-radius:20px;border:1px solid rgba(139,92,246,.28);background:rgba(20,13,44,.7);color:var(--text2,#9fa8da);font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;user-select:none}
+.fb-chip:hover{border-color:rgba(139,92,246,.55);color:#e8eaf6}
+.fb-chip.active{border-color:#7c4dff;background:rgba(124,77,255,.22);color:#b388ff;font-weight:600}
+.fb-star-row{display:flex;gap:6px;margin-top:2px}
+.fb-star{font-size:26px;cursor:pointer;color:#3a3a5c;transition:color .15s;user-select:none;line-height:1}
+.fb-star.lit{color:#f59e0b}
+.fb-star:hover,.fb-star:hover~.fb-star{color:#3a3a5c}
+.fb-stars-wrap:hover .fb-star{color:#f59e0b}
+.fb-stars-wrap .fb-star:hover~.fb-star{color:#3a3a5c!important}
+.fb-footer{padding:16px 22px;border-top:1px solid rgba(139,92,246,.18);display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(7,4,18,.4)}
+.fb-privacy-note{font-size:10px;color:var(--text3,#5c6bc0);line-height:1.5}
+.fb-actions{display:flex;gap:10px;align-items:center;flex-shrink:0}
+.fb-cancel{background:transparent;border:1px solid rgba(139,92,246,.25);border-radius:8px;color:var(--text2,#9fa8da);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:9px 18px;cursor:pointer;transition:all .15s}
+.fb-cancel:hover{border-color:rgba(139,92,246,.5);color:#e8eaf6}
+.fb-send{background:linear-gradient(135deg,#7c4dff,#00bcd4);border:none;border-radius:8px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;padding:9px 22px;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:7px;min-width:120px;justify-content:center}
+.fb-send:hover{box-shadow:0 4px 16px rgba(124,77,255,.4);transform:translateY(-1px)}
+.fb-send:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.fb-send-spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+.fb-toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(14,9,32,.96);border:1px solid rgba(139,92,246,.4);border-radius:10px;padding:12px 22px;color:#e8eaf6;font-size:13px;font-weight:600;z-index:10000;opacity:0;pointer-events:none;transition:all .35s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.fb-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.fb-toast.success{border-color:rgba(76,175,80,.5);color:#a5d6a7}
+.fb-toast.error{border-color:rgba(239,83,80,.4);color:#ef9a9a}
+@media(max-width:600px){
+  .fb-box{max-width:100%;border-radius:14px 14px 0 0;margin-top:auto}
+  .fb-overlay{align-items:flex-end;padding:0}
+  .fb-body{max-height:70vh}
+}
+
 /* ── FOOTER ── */
 /* ── PROFESSIONAL FOOTER ── */
 footer{
@@ -3413,7 +3469,6 @@ footer{
         <li><a href="user-setup-guide.html" target="_blank">🔌 AI Worker Setup</a></li>
         <li><a href="user_manual.html" target="_blank">🔒 Privacy Policy</a></li>
         <li><a href="user_manual.html" target="_blank">📋 Terms of Service</a></li>
-        <li><a href="mailto:vilfingeorge@gmail.com">✉ Contact Us</a></li>
       </ul>
     </div>
 
@@ -3421,29 +3476,9 @@ footer{
     <div>
       <div class="footer-col-title">Help Us Improve</div>
       <ul class="footer-links">
-        <li>
-          <a href="https://github.com/Vilfin-TV/MultiScreener/issues/new?template=bug_report.md&title=%5BBug%5D+&labels=bug,user-report"
-             target="_blank" rel="noopener">
-            🐞 Report a Bug
-          </a>
-        </li>
-        <li>
-          <a href="https://github.com/Vilfin-TV/MultiScreener/issues/new?template=feature_request.md&title=%5BFeature%5D+&labels=enhancement,user-request"
-             target="_blank" rel="noopener">
-            💡 Request a Feature
-          </a>
-        </li>
-        <li>
-          <a href="https://github.com/Vilfin-TV/MultiScreener/issues/new?title=%5BFeedback%5D+&labels=feedback&body=%23%23+What+I+like%0A%0A%0A%23%23+What+can+be+better%0A%0A%0A%23%23+General+comment%0A%0A"
-             target="_blank" rel="noopener">
-            💬 Send Feedback
-          </a>
-        </li>
-        <li>
-          <a href="https://github.com/Vilfin-TV/MultiScreener/issues" target="_blank" rel="noopener">
-            📋 View All Issues
-          </a>
-        </li>
+        <li><a href="#" onclick="openFeedbackModal('bug');return false;">🐞 Report a Bug</a></li>
+        <li><a href="#" onclick="openFeedbackModal('feature');return false;">💡 Request a Feature</a></li>
+        <li><a href="#" onclick="openFeedbackModal('feedback');return false;">💬 Send Feedback</a></li>
       </ul>
     </div>
 
@@ -18364,6 +18399,381 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
     </div>
   </div>
 </div>
+
+<!-- ══════════════════════════════════════════════════════
+     FEEDBACK / BUG REPORT / FEATURE REQUEST MODAL
+     ══════════════════════════════════════════════════════ -->
+<div class="fb-overlay" id="fb-overlay" onclick="if(event.target===this)closeFeedbackModal()">
+  <div class="fb-box" id="fb-box">
+
+    <!-- Header -->
+    <div class="fb-header">
+      <div class="fb-header-left">
+        <div class="fb-icon" id="fb-icon">🐞</div>
+        <div>
+          <div class="fb-title" id="fb-title">Report a Bug</div>
+          <div class="fb-subtitle" id="fb-subtitle">Help us identify and fix issues</div>
+        </div>
+      </div>
+      <button class="fb-close" onclick="closeFeedbackModal()" aria-label="Close">×</button>
+    </div>
+
+    <!-- Body: Bug Report -->
+    <div class="fb-body" id="fb-body-bug" style="display:none">
+      <div class="fb-section">
+        <div class="fb-label">Which page or feature has the issue? <span class="req">*</span></div>
+        <select class="fb-select" id="fb-bug-page">
+          <option value="">— Select page / feature —</option>
+          <option value="Main Screener (Home)">Main Screener (Home)</option>
+          <option value="AI Market Assistant">AI Market Assistant</option>
+          <option value="Live TV / YouTube">Live TV / YouTube</option>
+          <option value="Live News Feed">Live News Feed</option>
+          <option value="SIP Calculator">SIP Calculator</option>
+          <option value="Lumpsum Calculator">Lumpsum Calculator</option>
+          <option value="Allocation Calculator">Allocation Calculator</option>
+          <option value="Blog Intelligence Hub">Blog Intelligence Hub</option>
+          <option value="Stock Research Analyser">Stock Research Analyser</option>
+          <option value="Pre-Market Briefing">Pre-Market Briefing</option>
+          <option value="Pine Script Generator">Pine Script Generator</option>
+          <option value="Mutual Fund Screener">Mutual Fund Screener</option>
+          <option value="MF Live Screener">MF Live Screener</option>
+          <option value="Radio Widget">Radio Widget</option>
+          <option value="Settings / Theme">Settings / Theme</option>
+          <option value="Navigation / Menu">Navigation / Menu</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="fb-section">
+        <div class="fb-label">What went wrong? <span class="req">*</span></div>
+        <textarea class="fb-textarea" id="fb-bug-desc" placeholder="Describe what happened — e.g. the chart widget shows a blank screen after clicking on NIFTY 50…" style="min-height:90px"></textarea>
+      </div>
+      <div class="fb-section">
+        <div class="fb-label">Expected behaviour</div>
+        <textarea class="fb-textarea" id="fb-bug-expected" placeholder="What should have happened instead?" style="min-height:60px"></textarea>
+      </div>
+      <div class="fb-section">
+        <div class="fb-label">Severity</div>
+        <div class="fb-chips" id="fb-bug-severity">
+          <span class="fb-chip" data-val="Low — Minor visual issue">Low — Minor visual issue</span>
+          <span class="fb-chip active" data-val="Medium — Feature partially broken">Medium — Feature partially broken</span>
+          <span class="fb-chip" data-val="High — Feature completely broken">High — Feature completely broken</span>
+          <span class="fb-chip" data-val="Critical — Page does not load">Critical — Page does not load</span>
+        </div>
+      </div>
+      <div class="fb-section">
+        <div class="fb-label">Your device &amp; browser</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <select class="fb-select" id="fb-bug-device">
+            <option value="Desktop">Desktop / PC</option>
+            <option value="Mobile">Mobile / Phone</option>
+            <option value="Tablet">Tablet</option>
+          </select>
+          <select class="fb-select" id="fb-bug-browser">
+            <option value="Chrome">Chrome</option>
+            <option value="Edge">Edge</option>
+            <option value="Firefox">Firefox</option>
+            <option value="Safari">Safari</option>
+            <option value="Samsung Internet">Samsung Internet</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="fb-section">
+        <div class="fb-label">Additional comments</div>
+        <textarea class="fb-textarea" id="fb-bug-extra" placeholder="Any extra context, screenshots description, steps to reproduce…" style="min-height:60px"></textarea>
+      </div>
+    </div>
+
+    <!-- Body: Feature Request -->
+    <div class="fb-body" id="fb-body-feature" style="display:none">
+      <div class="fb-section">
+        <div class="fb-label">Which area should this feature be in? <span class="req">*</span></div>
+        <select class="fb-select" id="fb-feat-area">
+          <option value="">— Select area —</option>
+          <option value="AI Market Assistant">AI Market Assistant</option>
+          <option value="Screener / Filters">Screener / Filters</option>
+          <option value="Live News Feed">Live News Feed</option>
+          <option value="Live TV / YouTube">Live TV / YouTube</option>
+          <option value="Calculators">Calculators</option>
+          <option value="Charts / TradingView">Charts / TradingView</option>
+          <option value="Blog Intelligence Hub">Blog Intelligence Hub</option>
+          <option value="Stock / MF Research">Stock / MF Research</option>
+          <option value="Mobile Experience">Mobile Experience</option>
+          <option value="Themes / UI">Themes / UI</option>
+          <option value="Performance / Speed">Performance / Speed</option>
+          <option value="New Page / Tool">New Page / Tool</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="fb-section">
+        <div class="fb-label">Describe the feature <span class="req">*</span></div>
+        <textarea class="fb-textarea" id="fb-feat-desc" placeholder="Describe the feature you'd like to see — be as specific as possible…" style="min-height:100px"></textarea>
+      </div>
+      <div class="fb-section">
+        <div class="fb-label">Why do you need this?</div>
+        <textarea class="fb-textarea" id="fb-feat-why" placeholder="What problem does this solve for you? What is your use case?…" style="min-height:70px"></textarea>
+      </div>
+      <div class="fb-section">
+        <div class="fb-label">Priority for you</div>
+        <div class="fb-chips" id="fb-feat-priority">
+          <span class="fb-chip active" data-val="Nice to have">Nice to have</span>
+          <span class="fb-chip" data-val="Important">Important</span>
+          <span class="fb-chip" data-val="Critical for me">Critical for me</span>
+        </div>
+      </div>
+      <div class="fb-section">
+        <div class="fb-label">Any examples or references</div>
+        <textarea class="fb-textarea" id="fb-feat-ref" placeholder="Links to similar tools, screenshots, or design ideas you like…" style="min-height:60px"></textarea>
+      </div>
+    </div>
+
+    <!-- Body: General Feedback -->
+    <div class="fb-body" id="fb-body-feedback" style="display:none">
+      <div class="fb-section">
+        <div class="fb-label">Overall experience rating <span class="req">*</span></div>
+        <div class="fb-stars-wrap fb-star-row" id="fb-stars" onmouseleave="fbStarHover(0)">
+          <span class="fb-star" data-v="1" onmouseenter="fbStarHover(1)" onclick="fbStarPick(1)">★</span>
+          <span class="fb-star" data-v="2" onmouseenter="fbStarHover(2)" onclick="fbStarPick(2)">★</span>
+          <span class="fb-star" data-v="3" onmouseenter="fbStarHover(3)" onclick="fbStarPick(3)">★</span>
+          <span class="fb-star" data-v="4" onmouseenter="fbStarHover(4)" onclick="fbStarPick(4)">★</span>
+          <span class="fb-star" data-v="5" onmouseenter="fbStarHover(5)" onclick="fbStarPick(5)">★</span>
+        </div>
+      </div>
+      <div class="fb-section">
+        <div class="fb-label">What do you like most?</div>
+        <textarea class="fb-textarea" id="fb-fb-like" placeholder="What features or aspects of VilfinTV do you find most useful?…" style="min-height:80px"></textarea>
+      </div>
+      <div class="fb-section">
+        <div class="fb-label">What can be improved?</div>
+        <textarea class="fb-textarea" id="fb-fb-improve" placeholder="What frustrates you or could be better?…" style="min-height:80px"></textarea>
+      </div>
+      <div class="fb-section">
+        <div class="fb-label">Would you recommend VilfinTV?</div>
+        <div class="fb-chips" id="fb-fb-recommend">
+          <span class="fb-chip active" data-val="Yes — definitely">Yes — definitely</span>
+          <span class="fb-chip" data-val="Maybe">Maybe</span>
+          <span class="fb-chip" data-val="Not yet — needs improvement">Not yet — needs improvement</span>
+        </div>
+      </div>
+      <div class="fb-section">
+        <div class="fb-label">Anything else?</div>
+        <textarea class="fb-textarea" id="fb-fb-other" placeholder="Any other comments, suggestions, or thoughts…" style="min-height:60px"></textarea>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="fb-footer">
+      <div class="fb-privacy-note">🔒 Your report is sent privately.<br>No personal data is stored or shared.</div>
+      <div class="fb-actions">
+        <button class="fb-cancel" onclick="closeFeedbackModal()">Cancel</button>
+        <button class="fb-send" id="fb-send-btn" onclick="submitFeedback()">
+          <span class="fb-send-spinner" id="fb-spinner"></span>
+          <span id="fb-send-label">Send Report</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div class="fb-toast" id="fb-toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   FEEDBACK MODAL — Logic
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+  var _fbType   = 'bug';
+  var _fbRating = 0;
+
+  function initChips(groupId) {
+    var chips = document.querySelectorAll('#' + groupId + ' .fb-chip');
+    chips.forEach(function(c){
+      c.addEventListener('click', function(){
+        chips.forEach(function(x){ x.classList.remove('active'); });
+        c.classList.add('active');
+      });
+    });
+  }
+  initChips('fb-bug-severity');
+  initChips('fb-feat-priority');
+  initChips('fb-fb-recommend');
+
+  window.fbStarHover = function(v){
+    document.querySelectorAll('#fb-stars .fb-star').forEach(function(s){
+      s.classList.toggle('lit', v > 0 ? parseInt(s.dataset.v) <= v : parseInt(s.dataset.v) <= _fbRating);
+    });
+  };
+  window.fbStarPick = function(v){ _fbRating = v; fbStarHover(v); };
+
+  window.openFeedbackModal = function(type){
+    _fbType = type; _fbRating = 0;
+    document.querySelectorAll('#fb-stars .fb-star').forEach(function(s){ s.classList.remove('lit'); });
+    var cfg = {
+      bug:      {icon:'🐞', cls:'fb-icon-bug',     title:'Report a Bug',      sub:'Help us identify and fix issues on vilfintv.com',   lbl:'Send Bug Report'},
+      feature:  {icon:'💡', cls:'fb-icon-feature',  title:'Request a Feature', sub:'Tell us what you would like to see added',           lbl:'Send Request'},
+      feedback: {icon:'💬', cls:'fb-icon-feedback', title:'Share Feedback',    sub:'Your thoughts help us improve the platform',         lbl:'Send Feedback'}
+    };
+    var c = cfg[type] || cfg.bug;
+    var ic = document.getElementById('fb-icon');
+    ic.textContent = c.icon; ic.className = 'fb-icon ' + c.cls;
+    document.getElementById('fb-title').textContent    = c.title;
+    document.getElementById('fb-subtitle').textContent = c.sub;
+    document.getElementById('fb-send-label').textContent = c.lbl;
+    ['bug','feature','feedback'].forEach(function(t){
+      document.getElementById('fb-body-' + t).style.display = (t === type) ? 'block' : 'none';
+    });
+    var ov = document.getElementById('fb-overlay');
+    ov.style.display = 'flex';
+    requestAnimationFrame(function(){ ov.classList.add('show'); });
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeFeedbackModal = function(){
+    var ov = document.getElementById('fb-overlay');
+    ov.classList.remove('show');
+    setTimeout(function(){ ov.style.display = 'none'; }, 280);
+    document.body.style.overflow = '';
+  };
+
+  function getChip(id){ var a = document.querySelector('#'+id+' .fb-chip.active'); return a ? a.dataset.val : ''; }
+
+  function buildAIQuery(type, f){
+    var ts    = new Date().toISOString();
+    var theme = (localStorage.getItem('viltv_theme') || 'default').toUpperCase();
+    var ua    = navigator.userAgent;
+    if (type === 'bug') {
+      return ['# Bug Report — vilfintv.com','**Submitted:** '+ts,'**Theme:** '+theme,'',
+        '## Issue Details','| Field | Value |','|-------|-------|',
+        '| Page / Feature | '+(f.page||'N/A')+' |','| Severity | '+(f.severity||'Medium')+' |',
+        '| Device | '+(f.device||'Unknown')+' |','| Browser | '+(f.browser||'Unknown')+' |','',
+        '## What Went Wrong',f.desc||'(not provided)','',
+        '## Expected Behaviour',f.expected||'(not provided)','',
+        '## Additional Context',f.extra||'(none)','',
+        '---','## 🤖 AI Fix Query (Claude / Copilot / VS Code)','```',
+        'You are reviewing a bug report for vilfintv.com (GitHub Pages, static HTML/CSS/JS).',
+        'The user reports the following issue on the "'+( f.page||'unknown')+'" page/feature:','',
+        'PROBLEM: '+(f.desc||'').replace(/\n/g,' '),
+        'EXPECTED: '+(f.expected||'').replace(/\n/g,' '),
+        'SEVERITY: '+(f.severity||'Medium'),
+        'DEVICE: '+(f.device||'')+' / '+(f.browser||''),'',
+        'Please investigate the relevant code in the repository, identify the root cause,',
+        'and provide a specific fix with the file name, line reference, and corrected code.',
+        '```','','**User Agent:** `'+ua+'`'].join('\n');
+    }
+    if (type === 'feature') {
+      return ['# Feature Request — vilfintv.com','**Submitted:** '+ts,'**Theme:** '+theme,'',
+        '## Request Details','| Field | Value |','|-------|-------|',
+        '| Area | '+(f.area||'N/A')+' |','| Priority | '+(f.priority||'Nice to have')+' |','',
+        '## Feature Description',f.desc||'(not provided)','',
+        '## Use Case / Why Needed',f.why||'(not provided)','',
+        '## References / Examples',f.ref||'(none)','',
+        '---','## 🤖 AI Implementation Query (Claude / Copilot / VS Code)','```',
+        'You are helping implement a new feature for vilfintv.com (GitHub Pages, static HTML/CSS/JS).',
+        'Feature area: "'+( f.area||'unknown')+'"','',
+        'FEATURE: '+(f.desc||'').replace(/\n/g,' '),
+        'USE CASE: '+(f.why||'').replace(/\n/g,' '),
+        'PRIORITY: '+(f.priority||'Nice to have'),'',
+        'Please suggest an implementation plan: which files to modify, the approach,',
+        'and provide the key code changes. Keep within static HTML/CSS/JS constraints.',
+        '```'].join('\n');
+    }
+    var stars = '★'.repeat(_fbRating)+'☆'.repeat(5-_fbRating);
+    return ['# User Feedback — vilfintv.com','**Submitted:** '+ts,'**Theme:** '+theme,'',
+      '## Summary','| Field | Value |','|-------|-------|',
+      '| Rating | '+stars+' ('+_fbRating+'/5) |',
+      '| Would Recommend | '+(f.recommend||'N/A')+' |','',
+      '## What They Like',f.like||'(not provided)','',
+      '## What Can Be Improved',f.improve||'(not provided)','',
+      '## Additional Comments',f.other||'(none)','',
+      '---','## 🤖 Improvement Query (Claude / Copilot / VS Code)','```',
+      'You are reviewing user feedback for vilfintv.com. Rating: '+_fbRating+'/5.','',
+      'LIKES: '+(f.like||'').replace(/\n/g,' '),
+      'IMPROVE: '+(f.improve||'').replace(/\n/g,' '),'',
+      'Suggest the top 3 actionable improvements for the codebase.',
+      '```'].join('\n');
+  }
+
+  function collectFields(type){
+    if (type==='bug') return {
+      page:f('fb-bug-page'), desc:f('fb-bug-desc'), expected:f('fb-bug-expected'),
+      severity:getChip('fb-bug-severity'), device:f('fb-bug-device'), browser:f('fb-bug-browser'), extra:f('fb-bug-extra')
+    };
+    if (type==='feature') return {
+      area:f('fb-feat-area'), desc:f('fb-feat-desc'), why:f('fb-feat-why'),
+      priority:getChip('fb-feat-priority'), ref:f('fb-feat-ref')
+    };
+    return { rating:_fbRating, like:f('fb-fb-like'), improve:f('fb-fb-improve'),
+             recommend:getChip('fb-fb-recommend'), other:f('fb-fb-other') };
+  }
+  function f(id){ var el=document.getElementById(id); return el ? el.value : ''; }
+
+  function validate(type, fields){
+    if (type==='bug'){
+      if (!fields.page) return 'Please select the affected page or feature.';
+      if (!fields.desc || fields.desc.trim().length < 10) return 'Please describe the bug (at least 10 characters).';
+    }
+    if (type==='feature'){
+      if (!fields.area) return 'Please select the area for the feature.';
+      if (!fields.desc || fields.desc.trim().length < 10) return 'Please describe the feature (at least 10 characters).';
+    }
+    if (type==='feedback' && !_fbRating) return 'Please select a star rating.';
+    return null;
+  }
+
+  function showToast(msg, cls){
+    var t = document.getElementById('fb-toast');
+    t.textContent = msg; t.className = 'fb-toast ' + (cls||'');
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 4500);
+  }
+
+  window.submitFeedback = function(){
+    var type   = _fbType;
+    var fields = collectFields(type);
+    var err    = validate(type, fields);
+    if (err){ showToast('⚠ '+err,'error'); return; }
+
+    var btn = document.getElementById('fb-send-btn');
+    var sp  = document.getElementById('fb-spinner');
+    var lbl = document.getElementById('fb-send-label');
+    btn.disabled=true; sp.style.display='block'; lbl.textContent='Sending…';
+
+    var labels  = {bug:'Bug Report', feature:'Feature Request', feedback:'User Feedback'};
+    var subject = '[VilfinTV '+( labels[type]||type)+'] '+new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+    var aiQuery = buildAIQuery(type, fields);
+
+    fetch('https://screener-proxy.vilfintv.workers.dev/feedback', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({type:type, subject:subject, body:aiQuery})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      btn.disabled=false; sp.style.display='none';
+      if (data && data.ok){
+        lbl.textContent='✓ Sent!';
+        showToast('✅ Thank you! Your '+(labels[type]||'report')+' has been received.','success');
+        setTimeout(function(){
+          closeFeedbackModal();
+          var defaults={bug:'Send Bug Report',feature:'Send Request',feedback:'Send Feedback'};
+          lbl.textContent = defaults[type]||'Send Report';
+        },1800);
+      } else {
+        lbl.textContent='Send Report';
+        showToast('❌ '+(data&&data.message||'Failed to send. Please try again.'),'error');
+      }
+    })
+    .catch(function(){
+      btn.disabled=false; sp.style.display='none'; lbl.textContent='Send Report';
+      showToast('❌ Network error. Please check your connection.','error');
+    });
+  };
+
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeFeedbackModal(); });
+})();
+</script>
 
 </body>
 </html>
