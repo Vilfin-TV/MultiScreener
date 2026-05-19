@@ -2056,7 +2056,8 @@ footer{
 /* ── Style 3: Three-Column Pro ── */
 #rb-panel-iptv.iptv-s3 .iptv-geo-nav{display:flex;}
 #rb-panel-iptv.iptv-s3 .iptv-geo-col{width:110px;}
-#rb-panel-iptv.iptv-s3 #iptv-geo-states-col{display:flex !important;}
+#rb-panel-iptv.iptv-s3 #iptv-geo-states-col{display:none;}
+#rb-panel-iptv.iptv-s3 #iptv-geo-states-col.iptv-state-active{display:flex;}
 #rb-panel-iptv.iptv-s3 #iptv-preset-strip,#rb-panel-iptv.iptv-s3 #iptv-top-fold{display:none !important;}
 /* ── Style 4: Card Grid ── */
 #rb-panel-iptv.iptv-s4 #iptv-list{display:grid;grid-template-columns:repeat(2,1fr);padding:4px;gap:0;overflow-y:auto;flex:1;align-content:start;}
@@ -3955,7 +3956,7 @@ footer{
           </div>
         </div>
         <!-- State / Language column (India only in s3) -->
-        <div class="iptv-geo-col iptv-state-col" id="iptv-geo-states-col" style="display:none">
+        <div class="iptv-geo-col iptv-state-col" id="iptv-geo-states-col">
           <div class="iptv-geo-col-title">State / Lang</div>
           <div class="iptv-geo-items" id="iptv-geo-states"></div>
         </div>
@@ -9455,24 +9456,39 @@ const _COUNTRY_NAMES = {
   'MA':'🇲🇦 Morocco','DZ':'🇩🇿 Algeria','TN':'🇹🇳 Tunisia','LB':'🇱🇧 Lebanon',
   'KE':'🇰🇪 Kenya','GH':'🇬🇭 Ghana','ET':'🇪🇹 Ethiopia','TZ':'🇹🇿 Tanzania',
 };
+
+// India language states — use BOTH language code AND name-regex (iptv-org lang metadata is sparse)
 const _INDIA_STATES = [
-  { key:'all', name:'🇮🇳 All India',    lang:null },
-  { key:'hin', name:'🪕 Hindi',         lang:'hin' },
-  { key:'mal', name:'🌿 Malayalam',     lang:'mal' },
-  { key:'tam', name:'🎵 Tamil',         lang:'tam' },
-  { key:'tel', name:'🎤 Telugu',        lang:'tel' },
-  { key:'kan', name:'🎶 Kannada',       lang:'kan' },
-  { key:'mar', name:'🟠 Marathi',       lang:'mar' },
-  { key:'pan', name:'🟡 Punjabi',       lang:'pan' },
-  { key:'ben', name:'🟢 Bengali',       lang:'ben' },
-  { key:'guj', name:'🟣 Gujarati',      lang:'guj' },
-  { key:'ori', name:'🌅 Odia',          lang:'ori' },
-  { key:'asm', name:'🌄 Assamese',      lang:'asm' },
-  { key:'urd', name:'📖 Urdu',          lang:'urd' },
+  { key:'all', name:'🇮🇳 All India',  lang:null, regex:null },
+  { key:'hin', name:'🪕 Hindi',       lang:'hin', regex:/aaj\s*tak|zee\s*(news|hind)|abp\s*news|india\s*tv|ndtv|republic\s*bharat|news18\s*india|tv9\s*bharatvarsh|navbharat|lifeok|good\s*news|times\s*now\s*navbharat|dd\s*news|dd\s*national|sansad|india\s*news|bharat\s*samachar|janta\s*tv|hindi/i },
+  { key:'mal', name:'🌿 Malayalam',   lang:'mal', regex:/asianet|manorama|mathrubhumi|mazhavil|surya\s*tv|kairali|amrita\s*tv|reporter|media\s*one|jeevan|kappa|kaumudi|safari|news18\s*kerala|janam\s*tv|goodness\s*tv|24\s*news|malayalam|kerala/i },
+  { key:'tam', name:'🎵 Tamil',       lang:'tam', regex:/sun\s*tv|vijay\s*tv|star\s*vijay|polimer|kalaignar|raj\s*tv|captain|puthiya\s*thalaimurai|thanthi|news\s*7\s*tamil|j\s*movies|peppers\s*tv|news18\s*tamil|jaya\s*tv|tamil/i },
+  { key:'tel', name:'🎤 Telugu',      lang:'tel', regex:/etv\b|tv5\s*news|tv9\s*telugu|sakshi\s*tv|abn\s*andhra|10\s*tv|t\s*news|ntv\s*telugu|raj\s*news|hmtv|mahaa|v6\s*news|i\s*news|maa\s*tv|gemini\s*tv|telugu/i },
+  { key:'kan', name:'🎶 Kannada',     lang:'kan', regex:/suvarna|public\s*tv|tv9\s*kannada|asianet\s*suvarna|power\s*tv|news18\s*kannada|udaya\s*tv|udaya\s*news|colors\s*kannada|kannada/i },
+  { key:'mar', name:'🟠 Marathi',     lang:'mar', regex:/abp\s*majha|saam\s*marathi|tv9\s*marathi|zee\s*marathi|star\s*pravah|news18\s*lokmat|ibn\s*lokmat|jai\s*maharashtra|sahyadri|colors\s*marathi|marathi/i },
+  { key:'pan', name:'🟡 Punjabi',     lang:'pan', regex:/ptc\s*(news|punjabi)|abp\s*sanjha|zee\s*punjabi|news18\s*punjab|day\s*&\s*night|chardikla|9x\s*tashan|punjab|punjabi/i },
+  { key:'ben', name:'🟢 Bengali',     lang:'ben', regex:/abp\s*ananda|zee\s*bangla|star\s*jalsha|news18\s*bangla|kolkata\s*tv|24\s*ghanta|akash\s*aath|news\s*time\s*bangla|tara\s*muzik|bengali|bangla/i },
+  { key:'guj', name:'🟣 Gujarati',    lang:'guj', regex:/abp\s*asmita|zee\s*24\s*kalak|sandesh\s*tv|tv9\s*gujarat|news18\s*gujarat|vtv\s*gujarati|gujarati/i },
+  { key:'ori', name:'🌅 Odia',        lang:'ori', regex:/otv\b|kalinga\s*tv|news18\s*odia|kanak\s*news|tarang\s*tv|sidharth\s*tv|prarthana|odisha|odia/i },
+  { key:'asm', name:'🌄 Assamese',    lang:'asm', regex:/dy365|news18\s*assam|pratidin\s*time|prag\s*news|protidin|gnn\s*news|rongali|assamese|assam/i },
+  { key:'urd', name:'📖 Urdu',        lang:'urd', regex:/urdu\s*1|samaa\s*tv|ary\s*(news|digital)|geo\s*news|dawn\s*news|hum\s*tv|express\s*news|bol\s*news|urdu/i },
 ];
+const _INDIA_STATE_MAP = Object.fromEntries(_INDIA_STATES.map(s => [s.key, s]));
+
+// Generic category filter for all non-India countries
+const _GEO_CATEGORIES = [
+  { key:'cat-all',   name:'All Channels',    cat:null },
+  { key:'cat-news',  name:'📰 News',          cat:'news' },
+  { key:'cat-sport', name:'🏆 Sports',        cat:'sports' },
+  { key:'cat-ent',   name:'🎭 Entertainment', cat:'entertainment' },
+  { key:'cat-movie', name:'🎬 Movies',        cat:'movies' },
+  { key:'cat-music', name:'🎵 Music',         cat:'music' },
+  { key:'cat-kids',  name:'🧸 Kids',          cat:'kids' },
+];
+
 let _iptvGeoCountry = 'IN';
 let _iptvGeoState   = null;
-let _iptvGeoCountryData = []; // sorted [{code,name,count}]
+let _iptvGeoCountryData = [];
 
 function _iptvBuildGeoNav() {
   if (!_iptvAllChannels) return;
@@ -9494,18 +9510,17 @@ function _iptvBuildGeoNav() {
     </div>`
   ).join('');
 
-  // Update channel count badge
   const cnt = document.getElementById('iptv-ch-count');
   if (cnt) cnt.textContent = _iptvAllChannels.length.toLocaleString() + ' ch';
 
-  // Auto-select saved country
   iptvGeoSelectCountry(_iptvGeoCountry || 'IN', false);
 }
 
 function iptvGeoFilterCountries(q) {
   const term = (q || '').toLowerCase();
   document.querySelectorAll('#iptv-geo-countries .iptv-geo-item').forEach(el => {
-    el.style.display = el.querySelector('.iptv-geo-name').textContent.toLowerCase().includes(term) ? '' : 'none';
+    const nameEl = el.querySelector('.iptv-geo-name');
+    el.style.display = nameEl && nameEl.textContent.toLowerCase().includes(term) ? '' : 'none';
   });
 }
 
@@ -9513,54 +9528,95 @@ function iptvGeoSelectCountry(code, render) {
   if (render === undefined) render = true;
   _iptvGeoCountry = code;
   _iptvGeoState = null;
-  // Highlight
+
+  // Highlight active country
   document.querySelectorAll('#iptv-geo-countries .iptv-geo-item').forEach(el =>
     el.classList.toggle('active', el.dataset.geoCode === code));
   const activeEl = document.querySelector('#iptv-geo-countries .iptv-geo-item.active');
   if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
 
-  const stateCol = document.getElementById('iptv-geo-states-col');
+  const stateCol  = document.getElementById('iptv-geo-states-col');
   const stateList = document.getElementById('iptv-geo-states');
+  const stateTitle = stateCol && stateCol.querySelector('.iptv-geo-col-title');
 
   if (code === 'IN') {
-    if (stateCol) stateCol.style.display = '';
+    // India: show language states with count (lang-code + name-regex combined)
+    if (stateCol) stateCol.classList.add('iptv-state-active');
+    if (stateTitle) stateTitle.textContent = 'Language';
     if (stateList && _iptvAllChannels) {
       const inCh = _iptvAllChannels.filter(c => c.country === 'IN');
       stateList.innerHTML = _INDIA_STATES.map(s => {
-        const cnt = s.lang ? inCh.filter(c => c.languages.includes(s.lang)).length : inCh.length;
-        return `<div class="iptv-geo-item" data-geo-state="${s.key}" onclick="iptvGeoSelectState('${s.key}','${s.lang||''}')">
+        let cnt;
+        if (!s.lang && !s.regex) {
+          cnt = inCh.length;
+        } else {
+          cnt = inCh.filter(c =>
+            (s.lang && c.languages.includes(s.lang)) ||
+            (s.regex && s.regex.test(c.name))
+          ).length;
+        }
+        return `<div class="iptv-geo-item" data-geo-state="${s.key}" onclick="iptvGeoSelectState('${s.key}')">
           <span class="iptv-geo-name">${s.name}</span>
           <span class="iptv-geo-cnt">${cnt}</span>
         </div>`;
       }).join('');
     }
-    iptvGeoSelectState('all', '', render);
+    if (render) iptvGeoSelectState('all');
   } else {
-    if (stateCol) stateCol.style.display = 'none';
-    if (render && _iptvAllChannels) {
-      const results = _iptvAllChannels.filter(c => c.country === code)
-        .sort((a, b) => a.name.localeCompare(b.name)).slice(0, 250);
-      _iptvLastResults = results;
-      _iptvRender(results);
+    // Other countries: show generic categories
+    if (stateCol) stateCol.classList.add('iptv-state-active');
+    if (stateTitle) stateTitle.textContent = 'Category';
+    if (stateList && _iptvAllChannels) {
+      const coCh = _iptvAllChannels.filter(c => c.country === code);
+      stateList.innerHTML = _GEO_CATEGORIES.map(s => {
+        const cnt = s.cat ? coCh.filter(c => c.categories.includes(s.cat)).length : coCh.length;
+        return `<div class="iptv-geo-item" data-geo-state="${s.key}" onclick="iptvGeoSelectCategory('${s.key}','${_esc(code)}')">
+          <span class="iptv-geo-name">${s.name}</span>
+          <span class="iptv-geo-cnt">${cnt}</span>
+        </div>`;
+      }).join('');
     }
+    if (render) iptvGeoSelectCategory('cat-all', code);
   }
 }
 
-function iptvGeoSelectState(key, lang, render) {
-  if (render === undefined) render = true;
-  _iptvGeoState = { key, lang };
+function iptvGeoSelectState(key) {
+  _iptvGeoState = key;
   document.querySelectorAll('#iptv-geo-states .iptv-geo-item').forEach(el =>
     el.classList.toggle('active', el.dataset.geoState === key));
   const activeEl = document.querySelector('#iptv-geo-states .iptv-geo-item.active');
   if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
-  if (!render || !_iptvAllChannels) return;
+  if (!_iptvAllChannels) return;
+
+  const s = _INDIA_STATE_MAP[key];
   let results = _iptvAllChannels.filter(c => c.country === 'IN');
-  if (lang) results = results.filter(c => c.languages.includes(lang));
+  if (s && (s.lang || s.regex)) {
+    results = results.filter(c =>
+      (s.lang && c.languages.includes(s.lang)) ||
+      (s.regex && s.regex.test(c.name))
+    );
+  }
   results = results.sort((a, b) => {
     const aN = a.categories.includes('news') ? 0 : 1;
     const bN = b.categories.includes('news') ? 0 : 1;
     return aN - bN || a.name.localeCompare(b.name);
-  }).slice(0, 250);
+  }).slice(0, 300);
+  _iptvLastResults = results;
+  _iptvRender(results);
+}
+
+function iptvGeoSelectCategory(key, country) {
+  _iptvGeoState = key;
+  document.querySelectorAll('#iptv-geo-states .iptv-geo-item').forEach(el =>
+    el.classList.toggle('active', el.dataset.geoState === key));
+  const activeEl = document.querySelector('#iptv-geo-states .iptv-geo-item.active');
+  if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
+  if (!_iptvAllChannels) return;
+
+  const catDef = _GEO_CATEGORIES.find(c => c.key === key);
+  let results = _iptvAllChannels.filter(c => c.country === country);
+  if (catDef && catDef.cat) results = results.filter(c => c.categories.includes(catDef.cat));
+  results = results.sort((a, b) => a.name.localeCompare(b.name)).slice(0, 300);
   _iptvLastResults = results;
   _iptvRender(results);
 }
