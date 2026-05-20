@@ -284,6 +284,220 @@ html[data-theme="gemini"]{
 
 /* ── Selection ── */
 [data-theme="gemini"] ::selection{background:rgba(66,133,244,.3);color:#e3e3e3}
+
+/* ══ NEWS READER THEME — Clean Editorial ══ */
+
+/* ── Variable overrides ── */
+html[data-theme="news-reader"]{
+  --burn:#d81921;--burn2:#e8333a;--burn3:#f04148;
+  --gold:#d81921;--gold2:#b31118;
+  --green:#1a7f37;--red:#d81921;--amber:#c27900;
+  --dark:#f5f7f8;--dark2:#ebeef0;--dark3:#dde1e4;--dark4:#cdd2d6;
+  --card:#ffffff;--card2:#f5f7f8;--card3:#ebeef0;--card4:#dde1e4;
+  --text:#111111;--text2:#444444;--text3:#777777;
+  --border:#e5e7e8;--border2:#d0d4d7;--border3:#bcc1c5;
+  --page-bg:#ffffff;
+  --nav-bg:#111111;--nav-text:#ffffff;--nav-border:#333333;
+  --glow:rgba(216,25,33,.15);
+  --radius:8px;
+}
+
+/* ── Body ── */
+[data-theme="news-reader"] body{
+  background:#ffffff!important;
+  color:#111111!important;
+}
+[data-theme="news-reader"] .layout{background:#ffffff}
+
+/* ── Site header / navigation (editorial masthead — dark bar) ── */
+[data-theme="news-reader"] .site-header,
+[data-theme="news-reader"] .main-nav,
+[data-theme="news-reader"] .top-menubar,
+[data-theme="news-reader"] .top-bar,
+[data-theme="news-reader"] nav.nav,
+[data-theme="news-reader"] .nav-bar{
+  background:#111111!important;
+  border-bottom:3px solid #d81921!important;
+  color:#ffffff!important;
+  box-shadow:0 2px 4px rgba(0,0,0,.15)!important;
+}
+[data-theme="news-reader"] .site-header::after{
+  background:#d81921!important;
+  height:3px!important;
+  animation:none!important;
+}
+[data-theme="news-reader"] .site-header::before{background:none!important}
+
+/* ── Brand ── */
+[data-theme="news-reader"] .brand-icon{
+  background:#d81921!important;
+  box-shadow:none!important;
+}
+[data-theme="news-reader"] .brand-name span{
+  color:#ffffff!important;
+  background:none!important;
+  -webkit-text-fill-color:#ffffff!important;
+  animation:none!important;
+}
+
+/* ── Sidebar ── */
+[data-theme="news-reader"] .sidebar{
+  background:#f5f7f8!important;
+  border-right:1px solid #e5e7e8!important;
+}
+[data-theme="news-reader"] .sidebar-toggle{background:rgba(216,25,33,.08);border-color:#e5e7e8;color:#111111}
+[data-theme="news-reader"] .sidebar-menu-item{color:#444444}
+[data-theme="news-reader"] .sidebar-menu-item:hover{background:rgba(216,25,33,.07);color:#d81921}
+[data-theme="news-reader"] .sidebar-menu-item.active-menu{background:rgba(216,25,33,.1);color:#d81921;border-left:3px solid #d81921}
+
+/* ── Right bar ── */
+[data-theme="news-reader"] .right-bar{background:#f5f7f8!important;border-left:1px solid #e5e7e8!important}
+[data-theme="news-reader"] .rb-header{background:#ffffff;border-bottom:1px solid #e5e7e8}
+[data-theme="news-reader"] .rb-title{color:#111111}
+[data-theme="news-reader"] .rb-tab{background:transparent;color:#777777;border:1px solid #e5e7e8}
+[data-theme="news-reader"] .rb-tab:hover{background:rgba(216,25,33,.07);color:#d81921;border-color:#d81921}
+[data-theme="news-reader"] .rb-tab.active{background:#d81921;color:#ffffff;border-color:#d81921;box-shadow:none}
+[data-theme="news-reader"] .rb-ai-input{background:#ffffff;border-color:#d0d4d7;color:#111111}
+[data-theme="news-reader"] .rb-msg-bubble{background:#ffffff;border-color:#e5e7e8;color:#444444}
+[data-theme="news-reader"] .rb-md-h2{color:#d81921}
+
+/* ── Mobile bottom bar ── */
+[data-theme="news-reader"] .mobile-rb-bar{background:#ffffff!important;border-top:1px solid #e5e7e8!important}
+[data-theme="news-reader"] .mobile-rb-btn{background:#f5f7f8;border-color:#e5e7e8;color:#444444}
+[data-theme="news-reader"] .mobile-rb-btn.active,
+[data-theme="news-reader"] .mobile-rb-btn:active{background:#d81921;border-color:#d81921;color:#ffffff}
+
+/* ── Dropdowns ── */
+[data-theme="news-reader"] .tmenu-dropdown{background:#ffffff;border-color:#e5e7e8;box-shadow:0 8px 24px rgba(0,0,0,.1)}
+[data-theme="news-reader"] .dd-item{color:#444444;border-bottom-color:#f0f0f0}
+[data-theme="news-reader"] .dd-item:hover{background:rgba(216,25,33,.06);color:#d81921}
+[data-theme="news-reader"] .dd-sep{background:#e5e7e8}
+[data-theme="news-reader"] .dd-submenu{background:#ffffff;border-color:#e5e7e8;box-shadow:8px 8px 24px rgba(0,0,0,.08)}
+
+/* ── Cards / panels ── */
+[data-theme="news-reader"] .cc,
+[data-theme="news-reader"] .calc-stat,
+[data-theme="news-reader"] .card,
+[data-theme="news-reader"] .panel,
+[data-theme="news-reader"] .q-block,
+[data-theme="news-reader"] .mode-card,
+[data-theme="news-reader"] .signal-card,
+[data-theme="news-reader"] .news-card,
+[data-theme="news-reader"] .article-card,
+[data-theme="news-reader"] .stat-card,
+[data-theme="news-reader"] .result-card,
+[data-theme="news-reader"] .info-box,
+[data-theme="news-reader"] .output-section,
+[data-theme="news-reader"] .result-box,
+[data-theme="news-reader"] .prompt-box,
+[data-theme="news-reader"] .paste-area,
+[data-theme="news-reader"] .nsm-box,
+[data-theme="news-reader"] .lnb{
+  background:#ffffff!important;
+  border-color:#e5e7e8!important;
+  color:#111111!important;
+}
+[data-theme="news-reader"] .mode-card:hover{border-color:#d81921!important;background:rgba(216,25,33,.05)!important}
+[data-theme="news-reader"] .mode-card.selected{border-color:#d81921!important;background:rgba(216,25,33,.08)!important}
+
+/* ── Form elements ── */
+[data-theme="news-reader"] .calc-input,
+[data-theme="news-reader"] .calc-select,
+[data-theme="news-reader"] .text-input,
+[data-theme="news-reader"] input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+[data-theme="news-reader"] textarea,
+[data-theme="news-reader"] select{
+  background:#ffffff!important;
+  border-color:#d0d4d7!important;
+  color:#111111!important;
+}
+[data-theme="news-reader"] input:focus,
+[data-theme="news-reader"] textarea:focus,
+[data-theme="news-reader"] select:focus{
+  border-color:#d81921!important;
+  outline:none!important;
+  box-shadow:0 0 0 2px rgba(216,25,33,.15)!important;
+}
+[data-theme="news-reader"] input[type="range"]{accent-color:#d81921!important}
+[data-theme="news-reader"] .range-val{color:#d81921!important}
+
+/* ── Right-bar inputs ── */
+[data-theme="news-reader"] .right-bar input,
+[data-theme="news-reader"] .right-bar textarea,
+[data-theme="news-reader"] .right-bar select{background:#ffffff!important;color:#111111!important;border-color:#d0d4d7!important}
+
+/* ── Primary buttons ── */
+[data-theme="news-reader"] .action-btn.primary,
+[data-theme="news-reader"] .copy-btn,
+[data-theme="news-reader"] .query-ai-btn,
+[data-theme="news-reader"] .generate-btn,
+[data-theme="news-reader"] .run-btn,
+[data-theme="news-reader"] button.primary{
+  background:#d81921!important;color:#ffffff!important;
+  box-shadow:0 2px 6px rgba(216,25,33,.25)!important;
+}
+[data-theme="news-reader"] .action-btn.primary:hover,
+[data-theme="news-reader"] .query-ai-btn:hover{background:#b31118!important;box-shadow:0 4px 12px rgba(216,25,33,.35)!important}
+[data-theme="news-reader"] .copy-btn.copied{background:#1a7f37!important}
+
+/* ── Secondary buttons ── */
+[data-theme="news-reader"] .action-btn.secondary{background:#f5f7f8!important;border-color:#d0d4d7!important;color:#444444!important}
+[data-theme="news-reader"] .action-btn.secondary:hover{border-color:#d81921!important;color:#d81921!important}
+
+/* ── Back buttons ── */
+[data-theme="news-reader"] .back-btn{background:rgba(216,25,33,.07)!important;border-color:#e5e7e8!important;color:#d81921!important}
+[data-theme="news-reader"] .back-btn:hover{background:rgba(216,25,33,.13)!important;border-color:#d81921!important;color:#b31118!important}
+
+/* ── Option pills ── */
+[data-theme="news-reader"] .opt{border-color:#d0d4d7!important;background:#f5f7f8!important;color:#444444!important}
+[data-theme="news-reader"] .opt:hover{border-color:#d81921!important;color:#d81921!important}
+[data-theme="news-reader"] .opt.selected{border-color:#d81921!important;background:rgba(216,25,33,.1)!important;color:#d81921!important}
+
+/* ── Tables ── */
+[data-theme="news-reader"] .alloc-table th,[data-theme="news-reader"] table th{background:#111111!important;color:#ffffff!important;border-bottom:2px solid #d81921!important}
+[data-theme="news-reader"] .alloc-table td,[data-theme="news-reader"] table td{border-bottom-color:#e5e7e8!important;color:#444444!important}
+[data-theme="news-reader"] .alloc-table tr:hover td,[data-theme="news-reader"] table tr:hover td{background:rgba(216,25,33,.04)!important}
+
+/* ── Step headers ── */
+[data-theme="news-reader"] .step-header{border-bottom-color:#e5e7e8!important}
+[data-theme="news-reader"] .step-num{background:#d81921!important}
+[data-theme="news-reader"] .step-title,[data-theme="news-reader"] .cc-title{color:#d81921!important}
+[data-theme="news-reader"] .cc-title::before{background:#d81921!important}
+
+/* ── Stat / values ── */
+[data-theme="news-reader"] .calc-stat-val{color:#d81921!important}
+[data-theme="news-reader"] .q-num{background:#d81921!important}
+
+/* ── News / live feed ── */
+[data-theme="news-reader"] .nsm-title,[data-theme="news-reader"] .nsm-feed-name{color:#111111}
+[data-theme="news-reader"] .lnb-text{color:#444444}
+[data-theme="news-reader"] .lnb-label{color:#111111}
+[data-theme="news-reader"] .lnb-live{background:rgba(216,25,33,.1);color:#d81921}
+
+/* ── Blog hub ── */
+[data-theme="news-reader"] .header-chip{background:rgba(216,25,33,.08)!important;border-color:#e5e7e8!important;color:#d81921!important}
+[data-theme="news-reader"] .eyebrow{color:#d81921!important}
+[data-theme="news-reader"] .signal-grid .signal-card,[data-theme="news-reader"] .hero-grid .panel{background:#ffffff!important;border-color:#e5e7e8!important}
+
+/* ── Status indicators ── */
+[data-theme="news-reader"] .cf-dot.connected{background:#1a7f37!important;box-shadow:0 0 6px rgba(26,127,55,.4)!important}
+
+/* ── Left menu overlay ── */
+[data-theme="news-reader"] .left-menu-overlay{background:#ffffff}
+[data-theme="news-reader"] .left-menu-header{background:#111111;border-bottom-color:#d81921}
+[data-theme="news-reader"] .left-menu-page{background:#ffffff}
+
+/* ── Footer ── */
+[data-theme="news-reader"] footer{background:#111111!important;border-top:3px solid #d81921!important;color:#aaaaaa!important}
+
+/* ── Scrollbar ── */
+[data-theme="news-reader"] ::-webkit-scrollbar{width:6px;height:6px}
+[data-theme="news-reader"] ::-webkit-scrollbar-track{background:#f5f7f8}
+[data-theme="news-reader"] ::-webkit-scrollbar-thumb{background:#cdd2d6;border-radius:3px}
+[data-theme="news-reader"] ::-webkit-scrollbar-thumb:hover{background:#bcc1c5}
+
+/* ── Selection ── */
+[data-theme="news-reader"] ::selection{background:rgba(216,25,33,.2);color:#111111}
 </style>
 </head>
 <body>
