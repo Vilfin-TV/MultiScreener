@@ -181,8 +181,17 @@ a{text-decoration:none;color:inherit}
 .ipo-live-badge{display:flex;align-items:center;gap:6px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600;color:#22c55e;white-space:nowrap;flex-shrink:0}
 .ipo-live-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px #22c55e;animation:ipo-pulse 1.8s ease-in-out infinite}
 @keyframes ipo-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.7)}}
-.ipo-widget-body{padding:0;min-height:520px;background:#070f1d}
+.ipo-widget-body{padding:0;min-height:520px;background:#070f1d;display:grid;grid-template-columns:1fr 340px}
 .ipo-widget-body .trendlyne-widgets,.ipo-widget-body iframe{width:100%!important;min-height:520px!important;border:none!important;display:block}
+.ipo-news-panel{border-left:1px solid #1e3a5f;padding:16px 14px;display:flex;flex-direction:column;gap:0;overflow-y:auto;max-height:520px;background:#080e1c}
+.ipo-news-label{font-size:10px;font-weight:700;letter-spacing:.8px;color:#64748b;text-transform:uppercase;padding-bottom:10px;border-bottom:1px solid #1e3a5f;margin-bottom:10px}
+.ipo-news-item{padding:10px 0;border-bottom:1px solid rgba(30,58,95,.5);display:flex;flex-direction:column;gap:4px}
+.ipo-news-item:last-child{border-bottom:none}
+.ipo-news-cat{font-size:9.5px;font-weight:700;letter-spacing:.5px;color:#3b82f6;text-transform:uppercase}
+.ipo-news-title{font-size:12px;font-weight:600;color:#cbd5e1;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ipo-news-title:hover{color:#e2e8f0}
+.ipo-news-meta{font-size:10px;color:#475569}
+@media(max-width:768px){.ipo-widget-body{grid-template-columns:1fr}.ipo-news-panel{border-left:none;border-top:1px solid #1e3a5f;max-height:260px}}
 .ipo-widget-footer{padding:10px 22px;font-size:11px;color:#475569;border-top:1px solid #1e3a5f;display:flex;align-items:center;gap:4px}
 .ipo-widget-footer a{color:#3b82f6;text-decoration:none;font-weight:600}
 .ipo-widget-footer a:hover{text-decoration:underline}
@@ -573,8 +582,6 @@ html[data-theme="gemini"]{
   <h1>Blog Intelligence Hub</h1>
   <div class="sub">Technology, markets, policy, taxation, funds, AI, crypto, semiconductors and space</div>
   <div class="header-badges">
-    <span class="header-chip" id="hdrTabCount">32 coverage tabs</span>
-    <span class="header-chip">Auto-refreshed daily from RSS</span>
     <span class="header-chip">Markets · Tech · Health · Lifestyle</span>
   </div>
 </header>
@@ -676,6 +683,10 @@ html[data-theme="gemini"]{
               data-get-url="https://trendlyne.com/web-widget/ipo-widget/Poppins/?activeCol=3b82f6&linksCol=3b82f6&primary=0a1628&secondary=94a3b8&positive=22c55e&negative=ef4444"
               data-theme="dark">
             </blockquote>
+            <div class="ipo-news-panel" id="ipoNewsPanel">
+              <div class="ipo-news-label">IPO News</div>
+              <div id="ipoNewsItems"></div>
+            </div>
           </div>
           <div class="ipo-widget-footer">
             Real-time IPO intelligence sourced from
@@ -3257,14 +3268,6 @@ function mergeLiveFeedIntoBriefings(payload) {
   // Show generated timestamp if present
   const stamp = payload.generated;
   if (stamp) {
-    const el = document.querySelector('header .header-meta') || document.querySelector('header .sub');
-    if (el) {
-      try {
-        const d = new Date(stamp);
-        const tag = ' · Auto-refreshed ' + d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-        if (!el.textContent.includes('Auto-refreshed')) el.textContent += tag;
-      } catch (_) {}
-    }
     // Update top-nav timestamp
     const navEl = document.getElementById('topNavUpdated');
     if (navEl) {
@@ -3429,7 +3432,21 @@ function renderPage() {
   if (ipoSec) {
     const show = activeTab === 'ipo';
     ipoSec.style.display = show ? 'block' : 'none';
-    if (show) ensureTlWidget();
+    if (show) {
+      ensureTlWidget();
+      // Populate IPO news side panel
+      const panel = document.getElementById('ipoNewsItems');
+      if (panel) {
+        const ipoItems = BRIEFINGS.filter(i => i.category === 'ipo').slice(0, 12);
+        panel.innerHTML = ipoItems.length ? ipoItems.map(it => `
+          <div class="ipo-news-item">
+            <span class="ipo-news-cat">${it.source}</span>
+            <a class="ipo-news-title" href="${it.url}" target="_blank" rel="noopener noreferrer">${it.title}</a>
+            <span class="ipo-news-meta">${it.date}</span>
+          </div>`).join('') :
+          '<div style="color:#475569;font-size:12px;padding:8px 0">No recent IPO news</div>';
+      }
+    }
   }
 
   const term = searchInput.value.trim().toLowerCase();
@@ -3461,8 +3478,6 @@ function renderPage() {
   const totalCats = Object.keys(TAB_LABELS).length - 1; // exclude 'all'
   const catPill = document.getElementById('categoryCountPill');
   if (catPill) catPill.textContent = totalCats + ' categories';
-  const hdrCount = document.getElementById('hdrTabCount');
-  if (hdrCount) hdrCount.textContent = totalCats + ' coverage tabs';
   topicsGrid.style.display = 'none';
   topicsGrid.innerHTML = '';
   emptyState.classList.toggle('show', visibleBriefings.length === 0);
