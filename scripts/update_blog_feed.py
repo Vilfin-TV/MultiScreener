@@ -138,6 +138,53 @@ FEEDS: dict[str, list[dict[str, str]]] = {
         _gn("bank+offer+cashback+credit+card+deal+India", india=True),
         _gn("discount+offer+sale+shopping+deal+India+2026", india=True),
     ],
+    # ── India Regional ───────────────────────────────────────────────────────
+    "bollywood": [
+        {"url": "https://www.bollywoodhungama.com/feed/", "source": "Bollywood Hungama"},
+        {"url": "https://www.filmfare.com/rss/rss.xml", "source": "Filmfare"},
+        _gn("Bollywood+movie+film+actor+actress+OTT+2026", india=True),
+        _gn("Hindi+cinema+box+office+release+streaming+India", india=True),
+    ],
+    "mumbai": [
+        _gn("Mumbai+city+news+Maharashtra+local+development+2026", india=True),
+        _gn("Mumbai+metro+real+estate+infrastructure+BMC", india=True),
+        {"url": "https://www.hindustantimes.com/feeds/rss/cities/mumbai/rssfeed.xml", "source": "Hindustan Times Mumbai"},
+    ],
+    "tamil_nadu": [
+        _gn("Tamil+Nadu+news+Chennai+state+government+2026", india=True),
+        _gn("Kollywood+Tamil+cinema+movie+release+actor+news", india=True),
+        _gn("Tamil+Nadu+politics+DMK+AIADMK+development", india=True),
+    ],
+    "kerala": [
+        _gn("Kerala+news+state+government+Kochi+Trivandrum+2026", india=True),
+        _gn("Kerala+politics+tourism+floods+development+news", india=True),
+        _gn("Malayalam+cinema+Mollywood+movie+OTT+release+2026", india=True),
+    ],
+    "andhra": [
+        _gn("Andhra+Pradesh+Telangana+news+Hyderabad+2026", india=True),
+        _gn("Telugu+cinema+Tollywood+movie+release+actor+news", india=True),
+        _gn("Andhra+government+TDP+YSRCP+development+news", india=True),
+    ],
+    "bangalore": [
+        _gn("Bangalore+Bengaluru+news+tech+startup+Karnataka+2026", india=True),
+        _gn("Bengaluru+metro+traffic+real+estate+IT+industry", india=True),
+        _gn("Karnataka+government+Siddaramaiah+Bengaluru+news", india=True),
+    ],
+    "pune": [
+        _gn("Pune+city+news+Maharashtra+development+2026", india=True),
+        _gn("Pune+real+estate+IT+industry+startup+infrastructure", india=True),
+        _gn("Pune+metro+PMC+traffic+education+news+2026", india=True),
+    ],
+    "delhi": [
+        _gn("Delhi+NCR+news+government+AAP+BJP+development+2026", india=True),
+        _gn("Delhi+metro+air+quality+pollution+infrastructure+news", india=True),
+        {"url": "https://www.hindustantimes.com/feeds/rss/cities/delhi/rssfeed.xml", "source": "Hindustan Times Delhi"},
+    ],
+    "gujarat": [
+        _gn("Gujarat+news+Ahmedabad+Surat+state+government+2026", india=True),
+        _gn("Gujarat+industry+business+GIFT+city+development", india=True),
+        _gn("Gujarat+politics+BJP+election+infrastructure+news", india=True),
+    ],
     # ── Technology ───────────────────────────────────────────────────────────
     "technology": [
         {"url": "https://www.theverge.com/rss/index.xml", "source": "The Verge"},

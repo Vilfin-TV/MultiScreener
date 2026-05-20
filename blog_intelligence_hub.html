@@ -565,7 +565,7 @@ html[data-theme="gemini"]{
   <div class="top-page-title">BLOG INTELLIGENCE HUB</div>
   <div class="top-status">
     <span class="status-dot"></span>
-    <span>Updated April 2026</span>
+    <span id="topNavUpdated">Updated</span>
   </div>
 </div>
 
@@ -923,7 +923,7 @@ const BRIEFINGS = [
     category:'mutual_funds',
     region:'India',
     source:'Mint',
-    date:'Updated section',
+    date:'May 19, 2026',
     url:'https://www.livemint.com/mutual-fund',
     summary:'Mint\'s mutual-fund desk continues to track scheme positioning, manager calls and category-level developments. It remains a useful pulse-check source for how the Indian fund industry is adjusting to regulation and market swings.'
   },
@@ -1158,11 +1158,11 @@ const BRIEFINGS = [
     summary:'Microsoft\'s startup program combines cloud support with product access and ecosystem guidance. It remains one of the more structured enterprise-oriented onboarding tracks for young software companies.'
   },
   {
-    title:'Microsoft posts April partner promotions and pricing announcements',
+    title:'Microsoft posts May partner promotions and pricing announcements',
     category:'offers',
     region:'Global',
     source:'Microsoft Learn',
-    date:'April 2026',
+    date:'May 19, 2026',
     url:'https://learn.microsoft.com/en-us/partner-center/announcements/2026-april',
     summary:'April partner-center updates included pricing and promotion changes that can affect channel partners and business customers. These notices are worth tracking because they often influence procurement timing and reseller packaging.'
   },
@@ -1281,7 +1281,7 @@ const BRIEFINGS = [
     category:'blockchain',
     region:'US',
     source:'TechCrunch',
-    date:'April 2026',
+    date:'May 19, 2026',
     url:'https://techcrunch.com/tag/polymarket/',
     summary:'The Polymarket tag archive captures a pattern of partnership activity, regulatory scrutiny and mainstream attention. Taken together, those signals suggest blockchain-based markets are becoming harder for policymakers and large platforms to ignore.'
   },
@@ -1345,7 +1345,7 @@ const BRIEFINGS = [
     category:'crypto',
     region:'US',
     source:'TechCrunch',
-    date:'April 2026',
+    date:'May 19, 2026',
     url:'https://techcrunch.com/tag/polymarket/',
     summary:'The ongoing Polymarket tag coverage shows that crypto-linked prediction markets remain one of the liveliest crossover stories between regulation, speculation and consumer internet behavior. That makes them a useful lens for broader crypto adoption trends.'
   },
@@ -3264,6 +3264,14 @@ function mergeLiveFeedIntoBriefings(payload) {
         if (!el.textContent.includes('Auto-refreshed')) el.textContent += tag;
       } catch (_) {}
     }
+    // Update top-nav timestamp
+    const navEl = document.getElementById('topNavUpdated');
+    if (navEl) {
+      try {
+        const d = new Date(stamp);
+        navEl.textContent = 'Updated ' + d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      } catch (_) {}
+    }
   }
 }
 
@@ -3460,6 +3468,15 @@ function renderPage() {
 }
 
 searchInput.addEventListener('input', renderPage);
+
+// Set nav timestamp to today immediately; replaced by feed's generated date on load
+(function() {
+  const el = document.getElementById('topNavUpdated');
+  if (el) {
+    const d = new Date();
+    el.textContent = 'Updated ' + d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+})();
 
 buildTabs();
 renderPage();
