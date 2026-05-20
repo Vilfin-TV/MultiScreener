@@ -42,9 +42,10 @@ SESSION.headers.update({
 # Rule: primary feeds first, then Google News RSS as a guaranteed fallback.
 # Google News RSS always returns ~10 fresh items and never requires auth.
 # GN_IN = India locale, GN_US = US/global locale.
-def _gn(q: str, india: bool = False) -> dict[str, str]:
+def _gn(q: str, india: bool = False, when: str = "") -> dict[str, str]:
     loc = "en-IN&gl=IN&ceid=IN:en" if india else "en&gl=US&ceid=US:en"
-    return {"url": f"https://news.google.com/rss/search?q={q}&hl={loc}", "source": "Google News"}
+    when_part = f"+when:{when}" if when else ""
+    return {"url": f"https://news.google.com/rss/search?q={q}{when_part}&hl={loc}", "source": "Google News"}
 
 FEEDS: dict[str, list[dict[str, str]]] = {
     # ── Markets & Money ──────────────────────────────────────────────────────
@@ -146,44 +147,44 @@ FEEDS: dict[str, list[dict[str, str]]] = {
         _gn("Hindi+cinema+box+office+release+streaming+India", india=True),
     ],
     "mumbai": [
-        _gn("Mumbai+city+news+Maharashtra+local+development+2026", india=True),
-        _gn("Mumbai+metro+real+estate+infrastructure+BMC", india=True),
-        {"url": "https://www.hindustantimes.com/feeds/rss/cities/mumbai/rssfeed.xml", "source": "Hindustan Times Mumbai"},
+        _gn("Mumbai+latest+news+Maharashtra+development", india=True, when="30d"),
+        _gn("Mumbai+metro+infrastructure+BMC+project+update", india=True, when="30d"),
+        _gn("Mumbai+real+estate+business+startup+city+2026", india=True, when="14d"),
     ],
     "tamil_nadu": [
-        _gn("Tamil+Nadu+news+Chennai+state+government+2026", india=True),
-        _gn("Kollywood+Tamil+cinema+movie+release+actor+news", india=True),
-        _gn("Tamil+Nadu+politics+DMK+AIADMK+development", india=True),
+        _gn("Tamil+Nadu+latest+news+Chennai+state+government", india=True, when="30d"),
+        _gn("Kollywood+Tamil+cinema+movie+release+actor+news", india=True, when="14d"),
+        _gn("Tamil+Nadu+development+business+technology+2026", india=True, when="30d"),
     ],
     "kerala": [
-        _gn("Kerala+news+state+government+Kochi+Trivandrum+2026", india=True),
-        _gn("Kerala+politics+tourism+floods+development+news", india=True),
-        _gn("Malayalam+cinema+Mollywood+movie+OTT+release+2026", india=True),
+        _gn("Kerala+latest+news+state+government+Kochi+Trivandrum", india=True, when="30d"),
+        _gn("Kerala+tourism+flood+development+health+news", india=True, when="30d"),
+        _gn("Malayalam+cinema+Mollywood+movie+OTT+release+2026", india=True, when="14d"),
     ],
     "andhra": [
-        _gn("Andhra+Pradesh+Telangana+news+Hyderabad+2026", india=True),
-        _gn("Telugu+cinema+Tollywood+movie+release+actor+news", india=True),
-        _gn("Andhra+government+TDP+YSRCP+development+news", india=True),
+        _gn("Andhra+Pradesh+Telangana+latest+news+Hyderabad", india=True, when="30d"),
+        _gn("Telugu+cinema+Tollywood+movie+release+actor+news", india=True, when="14d"),
+        _gn("Andhra+Telangana+government+infrastructure+development", india=True, when="30d"),
     ],
     "bangalore": [
-        _gn("Bangalore+Bengaluru+news+tech+startup+Karnataka+2026", india=True),
-        _gn("Bengaluru+metro+traffic+real+estate+IT+industry", india=True),
-        _gn("Karnataka+government+Siddaramaiah+Bengaluru+news", india=True),
+        _gn("Bangalore+Bengaluru+latest+news+tech+startup+Karnataka", india=True, when="30d"),
+        _gn("Bengaluru+metro+real+estate+IT+industry+jobs", india=True, when="30d"),
+        _gn("Karnataka+government+Bengaluru+infrastructure+news", india=True, when="30d"),
     ],
     "pune": [
-        _gn("Pune+city+news+Maharashtra+development+2026", india=True),
-        _gn("Pune+real+estate+IT+industry+startup+infrastructure", india=True),
-        _gn("Pune+metro+PMC+traffic+education+news+2026", india=True),
+        _gn("Pune+latest+news+Maharashtra+development+city", india=True, when="30d"),
+        _gn("Pune+real+estate+IT+industry+startup+infrastructure", india=True, when="30d"),
+        _gn("Pune+metro+PMC+education+business+news+2026", india=True, when="30d"),
     ],
     "delhi": [
-        _gn("Delhi+NCR+news+government+AAP+BJP+development+2026", india=True),
-        _gn("Delhi+metro+air+quality+pollution+infrastructure+news", india=True),
-        {"url": "https://www.hindustantimes.com/feeds/rss/cities/delhi/rssfeed.xml", "source": "Hindustan Times Delhi"},
+        _gn("Delhi+latest+news+NCR+government+development", india=True, when="30d"),
+        _gn("Delhi+metro+infrastructure+air+quality+city+update", india=True, when="30d"),
+        _gn("Delhi+business+real+estate+education+news+2026", india=True, when="14d"),
     ],
     "gujarat": [
-        _gn("Gujarat+news+Ahmedabad+Surat+state+government+2026", india=True),
-        _gn("Gujarat+industry+business+GIFT+city+development", india=True),
-        _gn("Gujarat+politics+BJP+election+infrastructure+news", india=True),
+        _gn("Gujarat+latest+news+Ahmedabad+Surat+state+government", india=True, when="30d"),
+        _gn("Gujarat+industry+business+GIFT+city+development", india=True, when="30d"),
+        _gn("Gujarat+infrastructure+investment+BJP+news+2026", india=True, when="30d"),
     ],
     # ── Technology ───────────────────────────────────────────────────────────
     "technology": [
@@ -298,6 +299,7 @@ FEEDS: dict[str, list[dict[str, str]]] = {
 
 MAX_PER_CAT = 12   # fetch up to 12; output is capped at 10 after dedup
 ITEM_TIMEOUT = 12
+MAX_AGE_DAYS = 30  # drop articles published more than 30 days ago
 
 
 def strip_html(text: str) -> str:
@@ -351,23 +353,41 @@ def fetch_rss(url: str) -> list[dict[str, Any]]:
     return items
 
 
+_PUB_FMTS = (
+    "%a, %d %b %Y %H:%M:%S %z",
+    "%a, %d %b %Y %H:%M:%S %Z",
+    "%Y-%m-%dT%H:%M:%S%z",
+    "%Y-%m-%dT%H:%M:%SZ",
+    "%Y-%m-%d",
+)
+
+
 def normalise_pub(s: str) -> str:
     """Best-effort date string normaliser → 'Apr 29, 2026'."""
     if not s:
         return ""
-    for fmt in (
-        "%a, %d %b %Y %H:%M:%S %z",
-        "%a, %d %b %Y %H:%M:%S %Z",
-        "%Y-%m-%dT%H:%M:%S%z",
-        "%Y-%m-%dT%H:%M:%SZ",
-        "%Y-%m-%d",
-    ):
+    for fmt in _PUB_FMTS:
         try:
             dt = datetime.strptime(s.strip(), fmt)
             return dt.strftime("%b %d, %Y")
         except ValueError:
             continue
     return s[:24]
+
+
+def parse_pub_dt(s: str) -> datetime | None:
+    """Return a timezone-aware datetime for age filtering, or None if unparseable."""
+    if not s:
+        return None
+    for fmt in _PUB_FMTS:
+        try:
+            dt = datetime.strptime(s.strip(), fmt)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt
+        except ValueError:
+            continue
+    return None
 
 
 def trim_summary(text: str, words: int = 28) -> str:
@@ -377,8 +397,11 @@ def trim_summary(text: str, words: int = 28) -> str:
 
 
 def main() -> int:
+    now_utc = datetime.now(timezone.utc)
+    cutoff = now_utc.replace(tzinfo=timezone.utc)
+
     out: dict[str, Any] = {
-        "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated": now_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "categories": {},
     }
     grand_total = 0
@@ -394,6 +417,11 @@ def main() -> int:
                 key = it["link"]
                 if key in seen:
                     continue
+                # Age filter: skip items older than MAX_AGE_DAYS
+                pub_raw = it.get("pub", "")
+                pub_dt = parse_pub_dt(pub_raw)
+                if pub_dt and (cutoff - pub_dt).days > MAX_AGE_DAYS:
+                    continue
                 seen.add(key)
                 domain = urlparse(it["link"]).hostname or ""
                 cat_items.append({
@@ -402,7 +430,7 @@ def main() -> int:
                     "summary": trim_summary(it.get("desc", ""), words=32),
                     "source": label,
                     "domain": domain,
-                    "date": normalise_pub(it.get("pub", "")),
+                    "date": normalise_pub(pub_raw),
                 })
                 if len(cat_items) >= MAX_PER_CAT:
                     break
