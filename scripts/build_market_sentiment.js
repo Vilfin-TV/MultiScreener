@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Fetches live market data from Yahoo Finance and writes data/market_sentiment.json.
- * Run by GitHub Actions every 30 minutes. No API key required.
+ * Uses crumb-based auth (primary) and per-symbol chart API (fallback).
  */
 
 const https = require('https');
@@ -28,67 +28,139 @@ function calcZone(chg) {
   return 'Extreme Fear';
 }
 
-function fetchUrl(url) {
+const BASE_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  'Accept': 'application/json, text/plain, */*',
+  'Accept-Language': 'en-US,en;q=0.9',
+  'Connection': 'keep-alive',
+};
+
+function httpsGet(url, extraHeaders = {}) {
   return new Promise((resolve, reject) => {
-    const opts = {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; MarketSentimentBot/1.0)',
-        'Accept': 'application/json',
-      },
-      timeout: 10000,
-    };
-    https.get(url, opts, (res) => {
-      let body = '';
-      res.on('data', chunk => body += chunk);
-      res.on('end', () => {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          resolve(body);
-        } else {
-          reject(new Error(`HTTP ${res.statusCode}`));
-        }
-      });
-    }).on('error', reject).on('timeout', () => reject(new Error('Timeout')));
+    const req = https.get(url, { headers: { ...BASE_HEADERS, ...extraHeaders }, timeout: 12000 }, res => {
+      const chunks = [];
+      const setCookies = res.headers['set-cookie'] || [];
+      res.on('data', d => chunks.push(d));
+      res.on('end', () => resolve({ status: res.statusCode, body: Buffer.concat(chunks).toString(), setCookies }));
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
   });
 }
 
-async function main() {
-  const syms = MARKETS.map(m => encodeURIComponent(m.symbol)).join(',');
-  const url  = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${syms}&corsDomain=finance.yahoo.com`;
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+/* ── Approach 1: crumb-based quote API ── */
+async function fetchWithCrumb() {
+  // Get consent cookie
+  const init = await httpsGet('https://fc.yahoo.com');
+  const cookies = (init.setCookies || []).map(c => c.split(';')[0]).join('; ');
+
+  // Get crumb
+  const crumbRes = await httpsGet('https://query1.finance.yahoo.com/v1/test/getcrumb', { Cookie: cookies });
+  if (crumbRes.status !== 200) throw new Error(`crumb HTTP ${crumbRes.status}`);
+  const crumb = crumbRes.body.trim();
+  if (!crumb || crumb.includes('<') || crumb.length > 20) throw new Error('bad crumb: ' + crumb.slice(0, 30));
+
+  const syms = MARKETS.map(m => encodeURIComponent(m.symbol)).join(',');
+  const url = `https://query1.finance.yahoo.com/v8/finance/quote?symbols=${syms}&crumb=${encodeURIComponent(crumb)}`;
+  const quotesRes = await httpsGet(url, { Cookie: cookies });
+  if (quotesRes.status !== 200) throw new Error(`quotes HTTP ${quotesRes.status}`);
+  const j = JSON.parse(quotesRes.body);
+  const results = j?.quoteResponse?.result;
+  if (!results || !results.length) throw new Error('empty result');
+  return results;
+}
+
+/* ── Approach 2: per-symbol chart API ── */
+async function fetchChartPerSymbol() {
+  const results = [];
+  for (const m of MARKETS) {
+    try {
+      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(m.symbol)}?interval=1d&range=5d`;
+      const res = await httpsGet(url);
+      if (res.status !== 200) { console.warn(`  chart ${m.symbol}: HTTP ${res.status}`); results.push(null); continue; }
+      const j = JSON.parse(res.body);
+      const meta = j?.chart?.result?.[0]?.meta;
+      if (!meta) { console.warn(`  chart ${m.symbol}: no meta`); results.push(null); continue; }
+      const price = meta.regularMarketPrice || 0;
+      const prev  = meta.previousClose || meta.chartPreviousClose || price;
+      const chg   = meta.regularMarketChangePercent || (prev ? (price - prev) / prev * 100 : 0);
+      results.push({ symbol: m.symbol, regularMarketPrice: price, regularMarketChangePercent: chg });
+      console.log(`  chart OK ${m.symbol}: ${chg.toFixed(2)}%`);
+    } catch (e) {
+      console.warn(`  chart ${m.symbol}: ${e.message}`);
+      results.push(null);
+    }
+    await sleep(400); // be respectful to Yahoo servers
+  }
+  return results.filter(Boolean);
+}
+
+/* ── Approach 3: query2 v7 (sometimes different CORS behaviour) ── */
+async function fetchQuery2() {
+  const syms = MARKETS.map(m => encodeURIComponent(m.symbol)).join(',');
+  const url = `https://query2.finance.yahoo.com/v7/finance/quote?symbols=${syms}&corsDomain=finance.yahoo.com`;
+  const res = await httpsGet(url, { Referer: 'https://finance.yahoo.com/' });
+  if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
+  const j = JSON.parse(res.body);
+  const results = j?.quoteResponse?.result;
+  if (!results || !results.length) throw new Error('empty');
+  return results;
+}
+
+async function main() {
   let results = [];
+
+  console.log('Approach 1: crumb-based quote API…');
   try {
-    const raw  = await fetchUrl(url);
-    const json = JSON.parse(raw);
-    results = json?.quoteResponse?.result || [];
-  } catch (err) {
-    console.error('Yahoo Finance fetch failed:', err.message);
+    results = await fetchWithCrumb();
+    console.log(`✓ Got ${results.length} quotes via crumb API`);
+  } catch (e) {
+    console.warn('✗ Crumb API:', e.message);
+  }
+
+  if (!results.length) {
+    console.log('Approach 2: query2 v7 API…');
+    try {
+      results = await fetchQuery2();
+      console.log(`✓ Got ${results.length} quotes via query2`);
+    } catch (e) {
+      console.warn('✗ query2:', e.message);
+    }
+  }
+
+  if (!results.length) {
+    console.log('Approach 3: per-symbol chart API…');
+    try {
+      results = await fetchChartPerSymbol();
+      console.log(`✓ Got ${results.length} quotes via chart API`);
+    } catch (e) {
+      console.error('✗ chart API:', e.message);
+    }
+  }
+
+  if (!results.length) {
+    console.error('All data sources failed — keeping existing JSON.');
     process.exit(1);
   }
 
   const markets = MARKETS.map(m => {
-    const q    = results.find(r => r.symbol === m.symbol) || {};
-    const chg  = q.regularMarketChangePercent || 0;
+    const q   = results.find(r => r.symbol === m.symbol) || {};
+    const chg = q.regularMarketChangePercent || 0;
     return {
-      country: m.country,
-      flag:    m.flag,
-      index:   m.index,
-      symbol:  m.symbol,
+      country: m.country, flag: m.flag, index: m.index, symbol: m.symbol,
       price:   Math.round((q.regularMarketPrice || 0) * 100) / 100,
       change:  Math.round(chg * 100) / 100,
       zone:    calcZone(chg),
     };
   });
 
-  const out = {
-    updated: new Date().toISOString(),
-    source:  'yahoo',
-    markets,
-  };
-
+  const out = { updated: new Date().toISOString(), source: 'yahoo', markets };
   const outPath = path.join(__dirname, '..', 'data', 'market_sentiment.json');
   fs.writeFileSync(outPath, JSON.stringify(out, null, 2) + '\n', 'utf8');
-  console.log(`Written ${outPath} — ${new Date().toISOString()}`);
-  markets.forEach(m => console.log(`  ${m.flag} ${m.country}: ${m.change > 0 ? '+' : ''}${m.change}% → ${m.zone}`));
+  console.log(`\nWritten → ${outPath}`);
+  markets.forEach(m => console.log(`  ${m.flag} ${m.country}: ${m.change > 0 ? '+' : ''}${m.change}%  →  ${m.zone}`));
 }
 
 main();

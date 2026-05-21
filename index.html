@@ -8049,22 +8049,32 @@ function _mktSentClkSVG(zoneCls) {
 }
 
 async function _mktSentFetchLive() {
-  const syms = _MKTS_SENT_MARKETS.map(m => encodeURIComponent(m.symbol)).join(',');
-  const ctrl = new AbortController();
-  const tid = setTimeout(() => ctrl.abort(), 5000);
+  // Per-symbol chart API — more CORS-permissive than the quote endpoint
   try {
-    const r = await fetch('https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + syms + '&corsDomain=finance.yahoo.com', {signal: ctrl.signal});
-    clearTimeout(tid);
-    if (!r.ok) return null;
-    const j = await r.json();
-    const res = j?.quoteResponse?.result;
-    if (!res || !res.length) return null;
-    return _MKTS_SENT_MARKETS.map(m => {
-      const q = res.find(x => x.symbol === m.symbol) || {};
-      const z = _mktSentZone(q.regularMarketChangePercent || 0);
-      return {...m, price: q.regularMarketPrice || 0, change: q.regularMarketChangePercent || 0, zone: z.zone, zoneCls: z.cls};
-    });
-  } catch { clearTimeout(tid); return null; }
+    const fetched = await Promise.all(_MKTS_SENT_MARKETS.map(async m => {
+      const ctrl = new AbortController();
+      const tid  = setTimeout(() => ctrl.abort(), 6000);
+      try {
+        const r = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' +
+          encodeURIComponent(m.symbol) + '?interval=1d&range=2d', {signal: ctrl.signal});
+        clearTimeout(tid);
+        if (!r.ok) return null;
+        const j    = await r.json();
+        const meta = j?.chart?.result?.[0]?.meta;
+        if (!meta) return null;
+        const price = meta.regularMarketPrice || 0;
+        const prev  = meta.previousClose || meta.chartPreviousClose || price;
+        const chg   = meta.regularMarketChangePercent || (prev ? (price - prev) / prev * 100 : 0);
+        const z = _mktSentZone(chg);
+        return {...m, price, change: chg, zone: z.zone, zoneCls: z.cls};
+      } catch { clearTimeout(tid); return null; }
+    }));
+    // Need at least 5 successful results to consider this valid
+    const hits = fetched.filter(Boolean).length;
+    if (hits < 5) return null;
+    // Fill any null slots with neutral baseline so all 9 countries always present
+    return _MKTS_SENT_MARKETS.map((m, i) => fetched[i] || {...m, price:0, change:0, zone:'Neutral', zoneCls:'neutral'});
+  } catch { return null; }
 }
 async function _mktSentFetchSnapshot() {
   try {
@@ -8163,15 +8173,26 @@ function mktSentToggle(e) {
   if(_mktSentPanelOpen) _mktSentRenderPanel();
 }
 
-async function _mktSentRefresh() {
-  let data=await _mktSentFetchLive(); let src='live';
-  if(!data){data=await _mktSentFetchSnapshot();src='delayed';}
-  if(!data){data=_mktSentLoadCached();src='cached';}
-  if(!data){data=_MKTS_SENT_MARKETS.map(m=>({...m,price:0,change:0,zone:'Neutral',zoneCls:'neutral'}));src='cached';}
-  _mktSentData=data; _mktSentSaveLast(data);
-  if(data[_mktSentIdx]) _mktSentSaveHist(data[_mktSentIdx].country,data[_mktSentIdx].zoneCls);
+function _mktSentApply(data, src) {
+  _mktSentData = data; _mktSentSaveLast(data);
+  if (data[_mktSentIdx]) _mktSentSaveHist(data[_mktSentIdx].country, data[_mktSentIdx].zoneCls);
   _mktSentSetBadge(src); _mktSentRenderMain(_mktSentIdx);
-  if(_mktSentPanelOpen) _mktSentRenderPanel();
+  if (_mktSentPanelOpen) _mktSentRenderPanel();
+}
+
+async function _mktSentRefresh() {
+  // Tier 2 first — snapshot JSON is always available and fast
+  let data = await _mktSentFetchSnapshot(); let src = 'delayed';
+  // Tier 3 — localStorage cache if JSON unreachable
+  if (!data) { data = _mktSentLoadCached(); src = 'cached'; }
+  // Baseline — all neutral so widget never shows blank
+  if (!data) { data = _MKTS_SENT_MARKETS.map(m=>({...m,price:0,change:0,zone:'Neutral',zoneCls:'neutral'})); src = 'cached'; }
+  _mktSentApply(data, src);
+
+  // Tier 1 — try live chart API in background; upgrade display if it succeeds
+  _mktSentFetchLive().then(live => {
+    if (live) _mktSentApply(live, 'live');
+  }).catch(() => {});
 }
 
 function mktSentInit() {
