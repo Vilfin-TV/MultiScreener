@@ -170,18 +170,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
 [data-theme="standard"] .prompt-box{background:#f8fafc;color:#1e293b;border-color:#dde3ed}
 [data-theme="standard"] .prompt-box::-webkit-scrollbar-track{background:#e8edf5}
 [data-theme="standard"] .paste-area{background:#f8fafc;color:#1e293b}
-/* ── score / sports cards ── */
-[data-theme="standard"] .score-sport-btn{border-color:#dde3ed;color:#64748b;background:#f5f8fc}
-[data-theme="standard"] .score-sport-btn:hover{border-color:#2563eb;color:#1d4ed8;background:rgba(29,78,216,.06)}
-[data-theme="standard"] .score-sport-btn.active{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
-[data-theme="standard"] .score-card{background:#ffffff;border-color:#e2e8f0}
-[data-theme="standard"] .score-card:hover{border-color:rgba(29,78,216,.3)}
-[data-theme="standard"] .score-card-match{color:#0f172a}
-[data-theme="standard"] .score-card-status{color:#0369a1}
-[data-theme="standard"] .score-team-name{color:#374151}
-[data-theme="standard"] .score-result{background:rgba(0,0,0,.04);color:#0f172a}
-[data-theme="standard"] .score-venue{color:#9ca3af}
-[data-theme="standard"] .score-no-data{color:#9ca3af}
+/* ── SofaScore sports panel — standard theme ── */
+[data-theme="standard"] .sf-hdr{background:linear-gradient(135deg,#f0f4f8,#e8eef4)}
+[data-theme="standard"] .sf-hdr-name{color:#0f172a}
+[data-theme="standard"] .sf-tabs{background:#f8fafc;border-bottom-color:#dde3ed}
+[data-theme="standard"] .sf-tab{color:#475569}
+[data-theme="standard"] .sf-tab:hover{background:rgba(29,78,216,.05);color:#1d4ed8}
+[data-theme="standard"] .sf-tab.active{color:#ff6900;border-bottom-color:#ff6900;background:rgba(255,105,0,.06)}
+[data-theme="standard"] .sf-frame-wrap,[data-theme="standard"] .sf-loading,[data-theme="standard"] .sf-blocked{background:#f8fafc}
+[data-theme="standard"] .sf-loading{color:#64748b}
 /* ── calculator / left-menu slide-out ── */
 [data-theme="standard"] .left-menu-page{background:#f0f4f9}
 /* ── footer (reinforce) ── */
@@ -2908,14 +2905,6 @@ footer{
 .widget-reorder-btn:hover{background:#1d4ed8;border-color:#2563eb;color:#fff}
 .widget-reorder-btn:disabled{opacity:.25;cursor:not-allowed}
 
-/* ── LIVE SCORES — sport tab buttons ── */
-.score-sport-btn{
-  padding:4px 10px;background:transparent;border:1px solid #1e3a5f;
-  border-radius:14px;color:#64748b;font-size:10.5px;cursor:pointer;
-  transition:all .15s;white-space:nowrap;flex-shrink:0;line-height:1.5;font-weight:500;
-}
-.score-sport-btn:hover{border-color:#2563eb;color:#93c5fd;background:rgba(37,99,235,.1)}
-.score-sport-btn.active{background:#1d4ed8;border-color:#1d4ed8;color:#fff;font-weight:600;box-shadow:0 2px 8px rgba(29,78,216,.35)}
 /* ── Premium Radio nav tabs ── */
 .pr-nav-btn{
   flex:1;min-width:max-content;padding:7px 10px;
@@ -2926,87 +2915,111 @@ footer{
 }
 .pr-nav-btn:hover{color:#93c5fd;background:rgba(37,99,235,.07)}
 .pr-nav-btn.active{color:#f97316;border-bottom-color:#f97316;background:rgba(249,115,22,.08)}
-/* ── Sports widget sport/mode buttons ── */
-.sw-sport-btn{
-  flex:1;padding:8px 6px;border:none;border-bottom:2px solid transparent;
-  background:transparent;color:#475569;font-size:10.5px;font-weight:700;
-  cursor:pointer;letter-spacing:.4px;transition:all .15s;white-space:nowrap;
-  min-height:44px;
+/* ══════════════════════════════════════════════════════════
+   SOFASCORE SPORTS PANEL
+══════════════════════════════════════════════════════════ */
+.sf-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 13px;background:linear-gradient(135deg,#080d1a,#0d1527);
+  border-bottom:1px solid rgba(255,105,0,.18);flex-shrink:0;
 }
-.sw-sport-btn:hover{color:#93c5fd;background:rgba(37,99,235,.07)}
-.sw-sport-btn.active{color:#60a5fa;border-bottom-color:#1d4ed8;background:rgba(29,78,216,.1)}
-.sw-mode-btn{
-  flex:1;padding:6px 6px;border:none;border-bottom:2px solid transparent;
-  background:transparent;color:#475569;font-size:10px;font-weight:700;
-  cursor:pointer;letter-spacing:.4px;transition:all .15s;min-height:36px;
+.sf-hdr-brand{display:flex;align-items:center;gap:8px}
+.sf-hdr-dot{
+  width:9px;height:9px;flex-shrink:0;border-radius:50%;background:#ff6900;
+  box-shadow:0 0 8px rgba(255,105,0,.75);
 }
-.sw-mode-btn:hover{color:#93c5fd}
-.sw-mode-btn.active{color:#60a5fa;border-bottom-color:#1d4ed8;background:rgba(29,78,216,.08)}
-/* ── Sports score cards ── */
-.sw-card{
-  background:linear-gradient(135deg,#0b1628,#0e1c34);
-  border:1px solid rgba(255,255,255,.07);border-radius:9px;
-  padding:9px 11px;margin-bottom:6px;transition:border-color .15s;
+.sf-hdr-name{font-size:12.5px;font-weight:700;color:#f1f5f9;letter-spacing:.25px}
+.sf-hdr-live{
+  font-size:8px;font-weight:800;letter-spacing:.9px;
+  color:#ff6900;background:rgba(255,105,0,.13);
+  border:1px solid rgba(255,105,0,.32);border-radius:4px;padding:2px 6px;
+  animation:sfLivePulse 2s ease-in-out infinite;
 }
-.sw-card:hover{border-color:rgba(37,99,235,.3)}
-.sw-card-league{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px}
-.sw-card-match{font-weight:600;color:#e2e8f0;font-size:11.5px;line-height:1.4;margin-bottom:4px}
-.sw-card-status{font-size:9.5px;font-weight:700;letter-spacing:.5px}
-.sw-card-score{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:5px}
-.sw-team{color:#94a3b8;font-size:10.5px;flex:1;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sw-result{font-weight:700;color:#f1f5f9;font-size:12px;padding:2px 8px;background:rgba(255,255,255,.07);border-radius:5px;min-width:36px;text-align:center;flex-shrink:0}
-/* ── Mobile touch overhaul — glassmorphism panels ── */
+@keyframes sfLivePulse{0%,100%{opacity:1}50%{opacity:.4}}
+.sf-hdr-open{
+  font-size:14px;color:#475569;text-decoration:none;
+  width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+  border-radius:7px;border:1px solid rgba(255,255,255,.08);transition:all .15s;
+}
+.sf-hdr-open:hover{color:#f1f5f9;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18)}
+/* ── Sport selector tabs ── */
+.sf-tabs{
+  display:flex;background:#05080e;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  overflow-x:auto;scrollbar-width:none;flex-shrink:0;-webkit-overflow-scrolling:touch;
+}
+.sf-tabs::-webkit-scrollbar{display:none}
+.sf-tab{
+  flex-shrink:0;padding:9px 12px;
+  border:none;border-bottom:2.5px solid transparent;
+  background:transparent;color:#4b5563;
+  font-size:10.5px;font-weight:700;cursor:pointer;
+  letter-spacing:.35px;transition:all .15s;white-space:nowrap;min-height:42px;
+}
+.sf-tab:hover{color:#94a3b8;background:rgba(255,255,255,.03)}
+.sf-tab.active{
+  color:#ff6900;border-bottom-color:#ff6900;
+  background:rgba(255,105,0,.07);
+}
+/* ── iframe wrapper ── */
+.sf-frame-wrap{
+  flex:1;position:relative;overflow:hidden;
+  min-height:0;background:#05080e;
+}
+/* ── Loading state ── */
+.sf-loading{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:13px;background:#05080e;z-index:10;
+  color:#475569;font-size:11px;pointer-events:none;
+}
+.sf-spinner{
+  width:30px;height:30px;
+  border:2.5px solid rgba(255,105,0,.12);
+  border-top-color:#ff6900;border-radius:50%;
+  animation:sfSpin .7s linear infinite;
+}
+@keyframes sfSpin{to{transform:rotate(360deg)}}
+/* ── iframe ── */
+#sf-iframe{
+  width:100%;height:100%;border:none;display:block;
+  opacity:0;transition:opacity .4s ease;
+}
+#sf-iframe.sf-ready{opacity:1}
+/* ── Fallback / blocked state ── */
+.sf-blocked{
+  position:absolute;inset:0;display:none;
+  flex-direction:column;align-items:center;justify-content:center;
+  gap:11px;background:#05080e;text-align:center;padding:28px 20px;
+}
+.sf-blocked-ico{font-size:40px;margin-bottom:2px}
+.sf-blocked-ttl{color:#e2e8f0;font-size:14px;font-weight:700}
+.sf-blocked-desc{
+  color:#64748b;font-size:11px;line-height:1.75;
+  max-width:240px;
+}
+.sf-blocked-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:10px 22px;
+  background:linear-gradient(135deg,#ff6900,#ff8500);
+  color:#fff;text-decoration:none;border-radius:9px;
+  font-size:12px;font-weight:700;margin-top:8px;
+  box-shadow:0 4px 14px rgba(255,105,0,.35);
+  transition:opacity .15s,transform .15s;
+}
+.sf-blocked-btn:hover{opacity:.88;transform:translateY(-1px)}
+/* ── Mobile overhaul ── */
 @media(max-width:768px){
   .pr-nav-btn{padding:8px 9px;font-size:9px;min-height:44px}
-  .sw-sport-btn{font-size:10px}
-  .sw-card,.score-card{padding:10px 12px;border-radius:11px}
   #rb-panel-premium,#rb-panel-sports{
-    background:rgba(6,13,26,.92);
-    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    background:rgba(5,8,14,.96);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   }
   #pr-nav{scrollbar-width:none}
-  .sw-card-match,.score-card-match{font-size:12px}
+  .sf-tab{font-size:10px;padding:8px 10px;min-height:40px}
+  .sf-hdr{padding:8px 11px}
+  .sf-hdr-name{font-size:12px}
 }
-/* Score cards */
-.score-card{
-  background:linear-gradient(135deg,#0b1628,#0e1c34);
-  border:1px solid rgba(255,255,255,.07);border-radius:9px;
-  padding:8px 10px;margin-bottom:5px;transition:border-color .15s;
-}
-.score-card:hover{border-color:rgba(37,99,235,.3)}
-.score-card-match{font-weight:600;color:#e2e8f0;font-size:11px;line-height:1.4;margin-bottom:3px}
-.score-card-status{color:#38bdf8;font-size:9.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
-.score-card-teams{display:flex;justify-content:space-between;align-items:center;margin-top:5px;gap:5px}
-.score-team-name{color:#94a3b8;font-size:10.5px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
-.score-result{font-weight:700;color:#f1f5f9;font-size:12px;flex-shrink:0;text-align:center;padding:2px 7px;background:rgba(255,255,255,.07);border-radius:5px;min-width:32px}
-.score-venue{font-size:9px;color:#475569;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.score-no-data{text-align:center;padding:24px 10px;color:#334155;font-size:11px;line-height:1.8}
-/* Live indicator pulse */
-@keyframes scoreLivePulse{0%,100%{opacity:1}50%{opacity:.4}}
-.score-live-dot{display:inline-block;width:7px;height:7px;background:#ef4444;border-radius:50%;margin-right:4px;animation:scoreLivePulse 1.5s ease-in-out infinite}
-/* ── GOOGLE-STYLE IPL SCOREBOARD CARDS ── */
-/* White floating cards against the dark panel — clean, modern, Google-inspired */
-.sc-card{background:#fff;border:1px solid #e8eaed;border-radius:10px;padding:10px 12px;margin-bottom:7px;box-shadow:0 1px 4px rgba(0,0,0,.22);transition:box-shadow .15s,border-color .15s}
-.sc-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.32);border-color:#c1c7d0}
-.sc-head{display:flex;align-items:center;gap:6px;margin-bottom:7px}
-.sc-badge{font-size:8px;font-weight:800;letter-spacing:.8px;padding:2px 7px;border-radius:20px;flex-shrink:0;text-transform:uppercase}
-/* IPL badge uses orange */
-.sc-badge.ipl-badge-style{background:#fff3e0;color:#e65100}
-.sc-comp{font-size:9px;color:#5f6368;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
-.sc-teams{display:grid;grid-template-columns:1fr auto;gap:2px 8px;margin-bottom:6px}
-.sc-team-row{display:contents}
-.sc-team{color:#202124;font-size:11px;font-weight:600;align-self:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sc-team.batting{color:#1a73e8;font-weight:700}
-.sc-team.sc-win{color:#188038;font-weight:700}
-.sc-score{font-size:11px;font-weight:700;color:#202124;text-align:right;white-space:nowrap;align-self:center}
-.sc-score.batting{color:#1a73e8}
-.sc-score.sc-vs{color:#bdc1c6;font-weight:400;font-size:10px;text-align:center}
-.sc-foot{display:flex;justify-content:space-between;align-items:center;gap:4px;border-top:1px solid #f1f3f4;margin-top:5px;padding-top:5px}
-.sc-status{font-size:9px;font-weight:600;letter-spacing:.2px;display:flex;align-items:center;gap:4px;color:#5f6368;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%}
-.sc-status.live-status{color:#d93025;font-weight:700}
-.sc-venue{font-size:8px;color:#9aa0a6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:50%}
-/* Live pulse dot — red for live matches */
-.score-live-dot{display:inline-block;width:6px;height:6px;background:#d93025;border-radius:50%;margin-right:3px;flex-shrink:0;animation:scoreLivePulse 1.4s ease-in-out infinite}
 
 /* ── VIDEO CONTROLS BAR ── */
 #yt-controls{
@@ -4668,41 +4681,67 @@ footer{
   </div><!-- /rb-panel-premium -->
 
   <!-- ══════════════════════════════════════════════════════════════════════
-       SPORTS WIDGET — Cricket / Football / Rugby with Live & Past scores
-       DOM prefix: sw-* / ID: rb-panel-sports
+       SPORTS WIDGET — SofaScore live scores embed
+       ID: rb-panel-sports
   ══════════════════════════════════════════════════════════════════════ -->
   <div id="rb-panel-sports" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
 
-    <!-- Reuses the proven live-scores engine: same DOM IDs, same backend -->
-    <div id="live-scores-box" style="flex:1;min-height:0;background:#080e1a;display:flex;flex-direction:column;overflow:hidden">
-
-      <!-- Main tab row: Live / Past -->
-      <div style="display:flex;gap:0;background:#050a14;border-bottom:1px solid #131d35;flex-shrink:0">
-        <button id="smt-live" onclick="switchScoreMainTab('live')"
-          style="flex:1;padding:7px 6px;border:none;border-bottom:2px solid #1d4ed8;background:rgba(29,78,216,.12);color:#60a5fa;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.4px;transition:all .15s">
-          &#x1F534; LIVE
-        </button>
-        <button id="smt-past" onclick="switchScoreMainTab('past')"
-          style="flex:1;padding:7px 6px;border:none;border-bottom:2px solid transparent;background:transparent;color:#475569;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:.4px;transition:all .15s">
-          &#x1F4CB; PAST
-        </button>
-        <span style="font-size:8px;color:#1e3a5f;align-self:center;white-space:nowrap;padding:0 6px;flex-shrink:0" id="scores-updated"></span>
+    <!-- Header bar -->
+    <div class="sf-hdr">
+      <div class="sf-hdr-brand">
+        <span class="sf-hdr-dot"></span>
+        <span class="sf-hdr-name">SofaScore</span>
+        <span class="sf-hdr-live">LIVE</span>
       </div>
-
-      <!-- Sport sub-tabs -->
-      <div id="score-sport-tabs" style="display:flex;gap:4px;padding:6px 7px 5px;background:#080e1a;border-bottom:1px solid #0e1e36;flex-shrink:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch">
-        <button class="score-sport-btn active" id="ssb-cricket"  onclick="switchScoreSport('cricket')" >&#x1F3CF; Cricket</button>
-        <button class="score-sport-btn"        id="ssb-football" onclick="switchScoreSport('football')">&#x26BD; Football</button>
-        <button class="score-sport-btn"        id="ssb-rugby"    onclick="switchScoreSport('rugby')"   >&#x1F3C9; Rugby</button>
-        <button class="score-sport-btn"        id="ssb-tennis"   onclick="switchScoreSport('tennis')"  >&#x1F3BE; Tennis</button>
-        <button class="score-sport-btn"        id="ssb-baseball" onclick="switchScoreSport('baseball')">&#x26BE; Baseball</button>
-      </div>
-
-      <!-- Score cards scroll area -->
-      <div id="live-scores-content" style="flex:1;overflow-y:auto;padding:6px 7px 4px;scrollbar-width:thin;scrollbar-color:#1e293b transparent">
-        <div style="text-align:center;padding:20px;color:#334155;font-size:11px">Loading scores…</div>
-      </div>
+      <a class="sf-hdr-open" href="https://www.sofascore.com" target="_blank" rel="noopener noreferrer" title="Open SofaScore">&#x2197;&#xFE0E;</a>
     </div>
+
+    <!-- Sport selector tabs -->
+    <div class="sf-tabs" id="sf-tabs">
+      <button class="sf-tab active" onclick="sfSwitchSport('football',this)">&#x26BD; Football</button>
+      <button class="sf-tab"        onclick="sfSwitchSport('cricket',this)" >&#x1F3CF; Cricket</button>
+      <button class="sf-tab"        onclick="sfSwitchSport('basketball',this)">&#x1F3C0; Basketball</button>
+      <button class="sf-tab"        onclick="sfSwitchSport('tennis',this)"  >&#x1F3BE; Tennis</button>
+      <button class="sf-tab"        onclick="sfSwitchSport('rugby',this)"   >&#x1F3C9; Rugby</button>
+      <button class="sf-tab"        onclick="sfSwitchSport('baseball',this)">&#x26BE; Baseball</button>
+      <button class="sf-tab"        onclick="sfSwitchSport('handball',this)">&#x1F91C; Handball</button>
+    </div>
+
+    <!-- iframe wrapper — fills remaining height -->
+    <div class="sf-frame-wrap" id="sf-frame-wrap">
+
+      <!-- Loading spinner (shown while iframe loads) -->
+      <div class="sf-loading" id="sf-loading">
+        <div class="sf-spinner"></div>
+        <span>Loading SofaScore&hellip;</span>
+      </div>
+
+      <!-- SofaScore iframe -->
+      <iframe
+        id="sf-iframe"
+        src="about:blank"
+        frameborder="0"
+        scrolling="yes"
+        allowtransparency="true"
+        loading="lazy"
+        title="SofaScore Live Scores"
+        sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-top-navigation"
+      ></iframe>
+
+      <!-- Fallback shown if browser blocks the embed -->
+      <div class="sf-blocked" id="sf-blocked">
+        <div class="sf-blocked-ico">&#x1F3C6;</div>
+        <div class="sf-blocked-ttl">Live Scores</div>
+        <div class="sf-blocked-desc">
+          Your browser is blocking the embedded view.<br>
+          Open SofaScore directly for full live scores.
+        </div>
+        <a href="https://www.sofascore.com" target="_blank" rel="noopener noreferrer" class="sf-blocked-btn">
+          Open SofaScore &#x2197;&#xFE0E;
+        </a>
+      </div>
+
+    </div><!-- /sf-frame-wrap -->
 
   </div><!-- /rb-panel-sports -->
 
@@ -8356,7 +8395,6 @@ document.addEventListener('DOMContentLoaded', () => {
   try { initLiveClock(); } catch(e) { console.error('initLiveClock failed:', e); }
   try { initRbResize(); } catch(e) { console.error('initRbResize failed:', e); }
   try { initSidePanelLinks(); } catch(e) { console.error('initSidePanelLinks failed:', e); }
-  try { _initLiveScores(); } catch(e) { console.error('_initLiveScores failed:', e); }
   try { _renderRandomChips(); } catch(e) { console.error('_renderRandomChips failed:', e); }
   try { setInterval(_renderRandomChips, 10 * 60 * 1000); } catch(e) { console.error('chip interval failed:', e); }
   try { setTimeout(ytRestoreSettings, 200); } catch(e) { console.error('ytRestoreSettings failed:', e); }
@@ -9752,9 +9790,75 @@ function prSyncPlayBtn() {}
 function prTogglePlay() {}
 
 // ═══════════════════════════════════════════════════════════════════════
-// SPORTS WIDGET — delegates to the proven ESPN live-scores engine
+// SPORTS WIDGET — SofaScore iframe embed
 // ═══════════════════════════════════════════════════════════════════════
-function swInit() { _initLiveScores(); }
+var _sfCurrentSport = 'football';
+
+var _SF_URLS = {
+  football:   'https://www.sofascore.com/football',
+  cricket:    'https://www.sofascore.com/cricket',
+  basketball: 'https://www.sofascore.com/basketball',
+  tennis:     'https://www.sofascore.com/tennis',
+  rugby:      'https://www.sofascore.com/rugby',
+  baseball:   'https://www.sofascore.com/baseball',
+  handball:   'https://www.sofascore.com/handball'
+};
+
+function swInit() {
+  sfLoadIframe(_sfCurrentSport);
+}
+
+function sfLoadIframe(sport) {
+  var iframe  = document.getElementById('sf-iframe');
+  var loading = document.getElementById('sf-loading');
+  var blocked = document.getElementById('sf-blocked');
+  if (!iframe) return;
+
+  // Reset states
+  if (loading) { loading.style.display = 'flex'; }
+  if (blocked) { blocked.style.display = 'none'; }
+  iframe.classList.remove('sf-ready');
+
+  var url = _SF_URLS[sport] || _SF_URLS.football;
+  iframe.src = url;
+
+  // Reveal iframe on load; detect block via blank document
+  iframe.onload = function() {
+    if (loading) loading.style.display = 'none';
+    try {
+      var doc = iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document);
+      // Some browsers return a blank doc when X-Frame-Options blocks embedding
+      if (doc && doc.body && doc.body.innerHTML.trim() === '') {
+        if (blocked) blocked.style.display = 'flex';
+        return;
+      }
+    } catch (e) {
+      // Cross-origin block expected for external sites — iframe still loaded OK
+    }
+    iframe.classList.add('sf-ready');
+  };
+
+  iframe.onerror = function() {
+    if (loading) loading.style.display = 'none';
+    if (blocked) blocked.style.display = 'flex';
+  };
+
+  // Safety timeout — reveal after 10 s regardless (handles CSP / slow networks)
+  setTimeout(function() {
+    if (!loading) return;
+    if (loading.style.display !== 'none') {
+      loading.style.display = 'none';
+      iframe.classList.add('sf-ready');
+    }
+  }, 10000);
+}
+
+function sfSwitchSport(sport, btn) {
+  _sfCurrentSport = sport;
+  document.querySelectorAll('.sf-tab').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  sfLoadIframe(sport);
+}
 
 // ═══════════════════════════════════════════════════════════════════════
 // GLOBAL RADIO ENGINE
