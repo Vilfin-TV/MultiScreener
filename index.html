@@ -3342,83 +3342,72 @@ footer{
 
 /* == MARKET SENTIMENT WIDGET == */
 .mkt-sent-widget{
-  position:relative;display:flex;align-items:center;height:100%;
-  flex-shrink:0;cursor:pointer;padding:0 4px;
+  position:relative;display:flex;align-items:center;height:100%;flex-shrink:0;padding:0 4px;
 }
 .mkt-sent-body{
-  display:flex;align-items:center;gap:7px;
-  padding:5px 10px;border-radius:8px;
-  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
-  transition:background .15s,border-color .15s;white-space:nowrap;
-  height:34px;box-sizing:border-box;
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  padding:4px 11px 4px 8px;border-radius:10px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  transition:background .15s,border-color .15s;white-space:nowrap;min-height:38px;
 }
-.mkt-sent-widget:hover .mkt-sent-body{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2)}
-.mkt-sent-flag{font-size:15px;line-height:1}
-.mkt-sent-main{display:flex;align-items:center;gap:5px}
-.mkt-sent-country{font-size:11px;font-weight:600;color:rgba(255,255,255,.85);letter-spacing:.2px}
-.mkt-sent-dot{font-size:11px;color:rgba(255,255,255,.3)}
-.mkt-sent-zone{font-size:11px;font-weight:700;letter-spacing:.2px}
-.mkt-sent-zone.extreme-greed{color:#22c55e}
-.mkt-sent-zone.greed{color:#86efac}
-.mkt-sent-zone.neutral{color:#94a3b8}
-.mkt-sent-zone.fear{color:#fb923c}
-.mkt-sent-zone.extreme-fear{color:#ef4444}
-.mkt-sent-zone.loading{color:rgba(255,255,255,.4)}
-.mkt-sent-hist{display:flex;align-items:center;gap:3px}
-.mkt-sent-day{
-  width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;
-  font-size:8px;font-weight:700;letter-spacing:.2px;
-}
-.mkt-sent-day.extreme-greed{background:rgba(34,197,94,.2);color:#22c55e;border:1px solid rgba(34,197,94,.3)}
-.mkt-sent-day.greed{background:rgba(134,239,172,.15);color:#86efac;border:1px solid rgba(134,239,172,.25)}
-.mkt-sent-day.neutral{background:rgba(148,163,184,.15);color:#94a3b8;border:1px solid rgba(148,163,184,.2)}
-.mkt-sent-day.fear{background:rgba(251,146,60,.15);color:#fb923c;border:1px solid rgba(251,146,60,.25)}
-.mkt-sent-day.extreme-fear{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.25)}
-.mkt-sent-day.empty{background:rgba(255,255,255,.05);color:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.08)}
-.mkt-sent-badge{
-  font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
-  padding:2px 6px;border-radius:4px;
-}
-.mkt-sent-badge.live{background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.25)}
-.mkt-sent-badge.delayed{background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.2)}
-.mkt-sent-badge.cached{background:rgba(148,163,184,.1);color:#94a3b8;border:1px solid rgba(148,163,184,.15)}
+.mkt-sent-widget:hover .mkt-sent-body{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.2)}
+/* Mini gauge */
+.mkt-sent-gauge-mini{display:flex;align-items:center;flex-shrink:0}
+/* Text block */
+.mkt-sent-text{display:flex;flex-direction:column;gap:1px;min-width:0}
+.mkt-sent-headline{font-size:10px;color:rgba(255,255,255,.55);white-space:nowrap;line-height:1.2}
+.mkt-sent-zone{font-size:12px;font-weight:700;letter-spacing:.1px;line-height:1.2}
+.mkt-sent-zone.extreme-fear{color:#16a34a}
+.mkt-sent-zone.fear{color:#ca8a04}
+.mkt-sent-zone.neutral{color:#9ca3af}
+.mkt-sent-zone.greed{color:#ea580c}
+.mkt-sent-zone.extreme-greed{color:#dc2626}
+.mkt-sent-zone.loading{color:rgba(255,255,255,.3)}
+/* History clocks */
+.mkt-sent-hist{display:flex;align-items:flex-end;gap:5px}
+.mkt-sent-clk-wrap{display:flex;flex-direction:column;align-items:center;gap:2px}
+.mkt-sent-clk{display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mkt-sent-clk-lbl{font-size:8px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:rgba(255,255,255,.35);line-height:1}
+/* Badge */
+.mkt-sent-badge{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 6px;border-radius:4px;flex-shrink:0}
+.mkt-sent-badge.live{background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.2)}
+.mkt-sent-badge.delayed{background:rgba(234,88,12,.1);color:#ea580c;border:1px solid rgba(234,88,12,.2)}
+.mkt-sent-badge.cached{background:rgba(156,163,175,.1);color:#9ca3af;border:1px solid rgba(156,163,175,.15)}
 /* Expanded panel */
 .mkt-sent-panel{
-  position:absolute;top:calc(100% + 4px);left:50%;transform:translateX(-50%);
-  min-width:280px;background:var(--dark2,#1a1f2e);border:1px solid rgba(255,255,255,.12);
-  border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.6);z-index:1000;padding:0;
-  overflow:hidden;
+  position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  min-width:300px;background:var(--dark2,#1a1f2e);border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;box-shadow:0 16px 48px rgba(0,0,0,.7);z-index:1100;overflow:hidden;
 }
 .mkt-sent-ph{
   font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
-  color:var(--gold2,#f5a623);padding:10px 14px 8px;border-bottom:1px solid rgba(255,255,255,.08);
+  color:var(--gold2,#f5a623);padding:10px 16px 8px;border-bottom:1px solid rgba(255,255,255,.08);
 }
-.mkt-sent-row{
-  display:flex;align-items:center;gap:8px;padding:7px 14px;
-  border-bottom:1px solid rgba(255,255,255,.05);transition:background .1s;
-}
+.mkt-sent-ph-sm{font-size:9px;padding-top:6px;padding-bottom:6px;border-bottom:none;border-top:1px solid rgba(255,255,255,.08)}
+/* Full gauge area */
+.mkt-sent-gauge-full{display:flex;flex-direction:column;align-items:center;padding:14px 16px 4px;gap:4px}
+.mkt-sent-panel-desc{font-size:11px;color:rgba(255,255,255,.5);text-align:center;padding:0 16px 10px;line-height:1.5}
+.mkt-sent-panel-sep{height:1px;background:rgba(255,255,255,.06);margin:0}
+/* Rows */
+.mkt-sent-row{display:flex;align-items:center;gap:8px;padding:6px 16px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .1s}
 .mkt-sent-row:last-of-type{border-bottom:none}
 .mkt-sent-row:hover{background:rgba(255,255,255,.04)}
-.mkt-sent-row .mkt-sent-flag{font-size:13px}
+.mkt-sent-row-flag{font-size:13px;flex-shrink:0}
 .mkt-sent-row-info{flex:1;min-width:0}
 .mkt-sent-row-country{font-size:11px;font-weight:600;color:rgba(255,255,255,.85)}
-.mkt-sent-row-idx{font-size:10px;color:rgba(255,255,255,.4)}
-.mkt-sent-row-chg{font-size:11px;font-weight:700;min-width:48px;text-align:right}
-.mkt-sent-row-chg.pos{color:#22c55e}
-.mkt-sent-row-chg.neg{color:#ef4444}
-.mkt-sent-row-chg.flat{color:#94a3b8}
-.mkt-sent-row-zone{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap}
-.mkt-sent-row-zone.extreme-greed{background:rgba(34,197,94,.15);color:#22c55e}
-.mkt-sent-row-zone.greed{background:rgba(134,239,172,.1);color:#86efac}
-.mkt-sent-row-zone.neutral{background:rgba(148,163,184,.1);color:#94a3b8}
-.mkt-sent-row-zone.fear{background:rgba(251,146,60,.1);color:#fb923c}
-.mkt-sent-row-zone.extreme-fear{background:rgba(239,68,68,.15);color:#ef4444}
-.mkt-sent-pf{
-  font-size:9px;color:rgba(255,255,255,.3);padding:7px 14px;text-align:center;
-  border-top:1px solid rgba(255,255,255,.06);
-}
-@media(max-width:900px){.mkt-sent-hist,.mkt-sent-badge{display:none}}
-@media(max-width:700px){.mkt-sent-widget{display:none}}
+.mkt-sent-row-idx{font-size:10px;color:rgba(255,255,255,.35)}
+.mkt-sent-row-chg{font-size:11px;font-weight:700;min-width:50px;text-align:right;flex-shrink:0}
+.mkt-sent-row-chg.pos{color:#22c55e}.mkt-sent-row-chg.neg{color:#ef4444}.mkt-sent-row-chg.flat{color:#9ca3af}
+.mkt-sent-row-zone{font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap;flex-shrink:0}
+.mkt-sent-row-zone.extreme-fear{background:rgba(22,163,74,.12);color:#16a34a}
+.mkt-sent-row-zone.fear{background:rgba(202,138,4,.12);color:#ca8a04}
+.mkt-sent-row-zone.neutral{background:rgba(156,163,175,.1);color:#9ca3af}
+.mkt-sent-row-zone.greed{background:rgba(234,88,12,.12);color:#ea580c}
+.mkt-sent-row-zone.extreme-greed{background:rgba(220,38,38,.12);color:#dc2626}
+.mkt-sent-pf{font-size:9px;color:rgba(255,255,255,.25);padding:7px 16px;text-align:center;border-top:1px solid rgba(255,255,255,.05)}
+@media(max-width:1050px){.mkt-sent-hist{display:none}}
+@media(max-width:820px){.mkt-sent-badge{display:none}}
+@media(max-width:680px){.mkt-sent-widget{display:none}}
 </style>
 </head>
 <body>
@@ -3799,19 +3788,22 @@ footer{
   </div><!-- /top-menu-items -->
 
   <!-- MARKET SENTIMENT WIDGET -->
-  <div id="mkt-sent-widget" class="mkt-sent-widget" onclick="mktSentToggle(event)">
-    <div class="mkt-sent-body">
-      <span class="mkt-sent-flag" id="mkt-sent-flag">🌐</span>
-      <div class="mkt-sent-main">
-        <span class="mkt-sent-country" id="mkt-sent-country">Markets</span>
-        <span class="mkt-sent-dot">·</span>
+  <div id="mkt-sent-widget" class="mkt-sent-widget">
+    <div class="mkt-sent-body" onclick="mktSentToggle(event)">
+      <div class="mkt-sent-gauge-mini" id="mkt-sent-gauge-mini"></div>
+      <div class="mkt-sent-text">
+        <span class="mkt-sent-headline">The <span id="mkt-sent-country">market</span> is in</span>
         <span class="mkt-sent-zone" id="mkt-sent-zone">Loading…</span>
       </div>
       <div class="mkt-sent-hist" id="mkt-sent-hist"></div>
       <span class="mkt-sent-badge" id="mkt-sent-badge"></span>
     </div>
     <div class="mkt-sent-panel" id="mkt-sent-panel" style="display:none">
-      <div class="mkt-sent-ph">Global Market Sentiment</div>
+      <div class="mkt-sent-ph">Market Sentiment &mdash; <span id="mkt-sent-panel-ctry">Global</span></div>
+      <div class="mkt-sent-gauge-full" id="mkt-sent-gauge-full"></div>
+      <div class="mkt-sent-panel-desc" id="mkt-sent-panel-desc"></div>
+      <div class="mkt-sent-panel-sep"></div>
+      <div class="mkt-sent-ph mkt-sent-ph-sm">All Markets</div>
       <div id="mkt-sent-rows"></div>
       <div class="mkt-sent-pf" id="mkt-sent-pf"></div>
     </div>
@@ -7974,6 +7966,20 @@ const _MKTS_SENT_MARKETS = [
   {country:'Australia', flag:'🇦🇺', index:'ASX 200',    symbol:'^AXJO'},
   {country:'Taiwan',    flag:'🇹🇼', index:'TWII',       symbol:'^TWII'},
 ];
+const _MKTS_SENT_ZONE_CFG = {
+  'extreme-fear': {color:'#16a34a', label:'Extreme Fear zone'},
+  'fear':         {color:'#ca8a04', label:'Fear zone'},
+  'neutral':      {color:'#9ca3af', label:'Neutral zone'},
+  'greed':        {color:'#ea580c', label:'Greed zone'},
+  'extreme-greed':{color:'#dc2626', label:'Extreme Greed zone'},
+};
+const _MKTS_SENT_DESCS = {
+  'extreme-fear': 'Investors are in extreme panic. Markets are deeply oversold — historically a potential buying opportunity.',
+  'fear':         'Markets are cautious. Risk appetite is subdued and investors are defensive.',
+  'neutral':      'Sentiment is balanced. Neither fear nor greed is dominating the market.',
+  'greed':        'Optimism is building. Investors are confident and markets are trending positively.',
+  'extreme-greed':'Markets may be overheated. Caution is advised — a correction could be near.',
+};
 let _mktSentData = null, _mktSentIdx = 0, _mktSentPanelOpen = false;
 
 function _mktSentZone(chg) {
@@ -7982,6 +7988,64 @@ function _mktSentZone(chg) {
   if (chg > -0.5) return {zone:'Neutral',       cls:'neutral'};
   if (chg > -1.5) return {zone:'Fear',          cls:'fear'};
   return           {zone:'Extreme Fear',        cls:'extreme-fear'};
+}
+function _mktSentScore(chg) { return Math.max(0, Math.min(100, (chg + 3) / 6 * 100)); }
+
+function _mktSentArcPath(cx, cy, R, r, a1, a2) {
+  function pt(deg, rad) {
+    const a = deg * Math.PI / 180;
+    return [+(cx + rad * Math.cos(a)).toFixed(2), +(cy - rad * Math.sin(a)).toFixed(2)];
+  }
+  const [x1,y1]=pt(a1,R),[x2,y2]=pt(a2,R),[x3,y3]=pt(a2,r),[x4,y4]=pt(a1,r);
+  return `M${x1},${y1} A${R},${R} 0 0,0 ${x2},${y2} L${x3},${y3} A${r},${r} 0 0,1 ${x4},${y4}Z`;
+}
+
+function _mktSentMiniGaugeSVG(score, zoneCls) {
+  const cx=16,cy=15,R=12,r=7,g=1.5;
+  const colors=['#16a34a','#ca8a04','#9ca3af','#ea580c','#dc2626'];
+  const active=Math.min(4,Math.floor(score/20));
+  let s='';
+  for(let i=0;i<5;i++){
+    const a1=180-i*36,a2=180-(i+1)*36;
+    s+=`<path d="${_mktSentArcPath(cx,cy,R,r,a1-g,a2+g)}" fill="${colors[i]}" opacity="${i===active?1:.2}"/>`;
+  }
+  const na=180-(score/100)*180, nr=na*Math.PI/180;
+  const tx=+(cx+(R-2)*Math.cos(nr)).toFixed(1), ty=+(cy-(R-2)*Math.sin(nr)).toFixed(1);
+  const col=colors[active];
+  return `<svg width="32" height="18" viewBox="0 0 32 18" style="display:block">${s}<line x1="${cx}" y1="${cy}" x2="${tx}" y2="${ty}" stroke="${col}" stroke-width="1.8" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="2" fill="${col}"/></svg>`;
+}
+
+function _mktSentFullGaugeSVG(score, zoneCls) {
+  const cx=140,cy=115,R=90,r=66,g=1.5,W=280,H=135;
+  const colors=['#16a34a','#ca8a04','#9ca3af','#ea580c','#dc2626'];
+  const labels=['EXTREME\nFEAR','FEAR','NEUTRAL','GREED','EXTREME\nGREED'];
+  const active=Math.min(4,Math.floor(score/20));
+  let segs='';
+  for(let i=0;i<5;i++){
+    const a1=180-i*36,a2=180-(i+1)*36;
+    segs+=`<path d="${_mktSentArcPath(cx,cy,R,r,a1-g,a2+g)}" fill="${colors[i]}" opacity="${i===active?1:.18}"/>`;
+  }
+  // Zone label on active arc midpoint
+  const midA=(180-active*36-18)*Math.PI/180;
+  const lx=+(cx+(R+10)*Math.cos(midA)).toFixed(1), ly=+(cy-(R+10)*Math.sin(midA)).toFixed(1);
+  const na=180-(score/100)*180, nr=na*Math.PI/180;
+  const tx=+(cx+(R-6)*Math.cos(nr)).toFixed(1), ty=+(cy-(R-6)*Math.sin(nr)).toFixed(1);
+  const col=colors[active];
+  const scoreStr=score.toFixed(1);
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+    ${segs}
+    <text x="${lx}" y="${ly}" text-anchor="middle" fill="${col}" font-size="8" font-weight="700" font-family="DM Sans,sans-serif" opacity="0.9">${labels[active].replace('\n',' ')}</text>
+    <line x1="${cx}" y1="${cy}" x2="${tx}" y2="${ty}" stroke="${col}" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="6" fill="${col}"/>
+    <circle cx="${cx}" cy="${cy}" r="3" fill="rgba(0,0,0,.4)"/>
+    <text x="${cx}" y="${cy+20}" text-anchor="middle" fill="${col}" font-size="26" font-weight="700" font-family="DM Sans,sans-serif">${scoreStr}</text>
+  </svg>`;
+}
+
+function _mktSentClkSVG(zoneCls) {
+  const c=(_MKTS_SENT_ZONE_CFG[zoneCls]||{color:'#9ca3af'}).color;
+  const bg=c+'22';
+  return `<svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="10" fill="${bg}" stroke="${c}" stroke-width="1.5"/><circle cx="11" cy="11" r="1.3" fill="${c}"/><line x1="11" y1="11" x2="11" y2="5.5" stroke="${c}" stroke-width="1.5" stroke-linecap="round"/><line x1="11" y1="11" x2="15.5" y2="11" stroke="${c}" stroke-width="1.5" stroke-linecap="round"/></svg>`;
 }
 
 async function _mktSentFetchLive() {
@@ -8002,7 +8066,6 @@ async function _mktSentFetchLive() {
     });
   } catch { clearTimeout(tid); return null; }
 }
-
 async function _mktSentFetchSnapshot() {
   try {
     const r = await fetch('data/market_sentiment.json?t=' + Date.now(), {cache:'no-cache'});
@@ -8012,7 +8075,6 @@ async function _mktSentFetchSnapshot() {
     return j.markets.map(m => { const z = _mktSentZone(m.change || 0); return {...m, zone: z.zone, zoneCls: z.cls}; });
   } catch { return null; }
 }
-
 function _mktSentLoadCached() {
   try {
     const raw = localStorage.getItem('mkt_sent_last');
@@ -8022,107 +8084,110 @@ function _mktSentLoadCached() {
     return d.markets.map(m => { const z = _mktSentZone(m.change || 0); return {...m, zone: z.zone, zoneCls: z.cls}; });
   } catch { return null; }
 }
-
-function _mktSentSaveLast(data) {
-  try { localStorage.setItem('mkt_sent_last', JSON.stringify({ts: Date.now(), markets: data})); } catch {}
-}
-
+function _mktSentSaveLast(data) { try { localStorage.setItem('mkt_sent_last', JSON.stringify({ts: Date.now(), markets: data})); } catch {} }
 function _mktSentSaveHist(country, zoneCls) {
   try {
-    const key = 'mkt_sent_h_' + country;
-    const today = new Date().toISOString().slice(0,10);
-    let h = JSON.parse(localStorage.getItem(key) || '[]');
-    h = h.filter(x => x.d !== today);
-    h.push({d: today, z: zoneCls});
-    if (h.length > 5) h = h.slice(-5);
-    localStorage.setItem(key, JSON.stringify(h));
+    const key='mkt_sent_h_'+country, today=new Date().toISOString().slice(0,10);
+    let h=JSON.parse(localStorage.getItem(key)||'[]');
+    h=h.filter(x=>x.d!==today); h.push({d:today,z:zoneCls});
+    if(h.length>5) h=h.slice(-5);
+    localStorage.setItem(key,JSON.stringify(h));
   } catch {}
 }
-
-function _mktSentGetHist(country) {
-  try { return JSON.parse(localStorage.getItem('mkt_sent_h_' + country) || '[]'); } catch { return []; }
-}
+function _mktSentGetHist(country) { try { return JSON.parse(localStorage.getItem('mkt_sent_h_'+country)||'[]'); } catch { return []; } }
 
 function _mktSentRenderMain(idx) {
   if (!_mktSentData) return;
   const m = _mktSentData[idx];
-  const fe = document.getElementById('mkt-sent-flag');
-  if (!fe) return;
-  fe.textContent = m.flag;
-  document.getElementById('mkt-sent-country').textContent = m.country + ' Market';
-  const ze = document.getElementById('mkt-sent-zone');
-  ze.textContent = m.zone; ze.className = 'mkt-sent-zone ' + m.zoneCls;
+  const score = _mktSentScore(m.change);
+  // Mini gauge
+  const gEl = document.getElementById('mkt-sent-gauge-mini');
+  if (gEl) gEl.innerHTML = _mktSentMiniGaugeSVG(score, m.zoneCls);
+  // Headline + zone
+  const cEl = document.getElementById('mkt-sent-country');
+  if (cEl) cEl.textContent = m.country;
+  const zEl = document.getElementById('mkt-sent-zone');
+  if (zEl) { zEl.className = 'mkt-sent-zone ' + m.zoneCls; zEl.textContent = (_MKTS_SENT_ZONE_CFG[m.zoneCls]||{label:m.zone+' zone'}).label; }
+  // History clocks
   const hist = _mktSentGetHist(m.country);
-  let html = '';
-  for (let i = 0; i < 5; i++) {
-    const h = hist[i];
-    if (h) {
-      const lbl = new Date(h.d + 'T12:00:00').toLocaleDateString('en',{weekday:'narrow'});
-      html += `<span class="mkt-sent-day ${h.z}" title="${h.d}">${lbl}</span>`;
-    } else {
-      html += `<span class="mkt-sent-day empty">—</span>`;
+  const hEl = document.getElementById('mkt-sent-hist');
+  if (hEl) {
+    const days = ['M','T','W','T','F'];
+    let html = '';
+    for (let i = 0; i < 5; i++) {
+      const h = hist[i];
+      const cls = h ? h.z : 'neutral';
+      const lbl = h ? new Date(h.d+'T12:00:00').toLocaleDateString('en',{weekday:'short'}).toUpperCase().slice(0,3) : days[i];
+      html += `<div class="mkt-sent-clk-wrap"><div class="mkt-sent-clk">${_mktSentClkSVG(cls)}</div><span class="mkt-sent-clk-lbl">${lbl}</span></div>`;
     }
+    hEl.innerHTML = html;
   }
-  document.getElementById('mkt-sent-hist').innerHTML = html;
 }
 
 function _mktSentRenderPanel() {
   if (!_mktSentData) return;
+  const m = _mktSentData[_mktSentIdx];
+  const score = _mktSentScore(m.change);
+  const ctryEl = document.getElementById('mkt-sent-panel-ctry');
+  if (ctryEl) ctryEl.textContent = m.country;
+  const gfEl = document.getElementById('mkt-sent-gauge-full');
+  if (gfEl) gfEl.innerHTML = _mktSentFullGaugeSVG(score, m.zoneCls);
+  const descEl = document.getElementById('mkt-sent-panel-desc');
+  if (descEl) descEl.textContent = _MKTS_SENT_DESCS[m.zoneCls] || '';
   const rowsEl = document.getElementById('mkt-sent-rows');
-  if (!rowsEl) return;
-  rowsEl.innerHTML = _mktSentData.map(m => {
-    const sgn = m.change > 0 ? '+' : '';
-    const cc = m.change > 0.1 ? 'pos' : m.change < -0.1 ? 'neg' : 'flat';
-    return `<div class="mkt-sent-row"><span class="mkt-sent-flag">${m.flag}</span><div class="mkt-sent-row-info"><div class="mkt-sent-row-country">${m.country}</div><div class="mkt-sent-row-idx">${m.index}</div></div><span class="mkt-sent-row-chg ${cc}">${sgn}${m.change.toFixed(2)}%</span><span class="mkt-sent-row-zone ${m.zoneCls}">${m.zone}</span></div>`;
-  }).join('');
-  const ts = (() => { try { return JSON.parse(localStorage.getItem('mkt_sent_last') || '{}').ts || 0; } catch { return 0; } })();
-  const ago = ts ? Math.round((Date.now() - ts) / 60000) : 0;
-  const pf = document.getElementById('mkt-sent-pf');
-  if (pf) pf.textContent = ago > 0 ? 'Updated ' + ago + ' min ago · Auto-refreshes every 10 min' : 'Market Intelligence';
+  if (rowsEl) {
+    rowsEl.innerHTML = _mktSentData.map(r => {
+      const sgn=r.change>0?'+':'', cc=r.change>0.1?'pos':r.change<-0.1?'neg':'flat';
+      return `<div class="mkt-sent-row"><span class="mkt-sent-row-flag">${r.flag}</span><div class="mkt-sent-row-info"><div class="mkt-sent-row-country">${r.country}</div><div class="mkt-sent-row-idx">${r.index}</div></div><span class="mkt-sent-row-chg ${cc}">${sgn}${r.change.toFixed(2)}%</span><span class="mkt-sent-row-zone ${r.zoneCls}">${r.zone}</span></div>`;
+    }).join('');
+  }
+  const ts=(()=>{try{return JSON.parse(localStorage.getItem('mkt_sent_last')||'{}').ts||0;}catch{return 0;}})();
+  const ago=ts?Math.round((Date.now()-ts)/60000):0;
+  const pf=document.getElementById('mkt-sent-pf');
+  if(pf) pf.textContent=ago>0?'Updated '+ago+' min ago · Refreshes every 10 min':'Market Intelligence';
 }
 
 function _mktSentSetBadge(type) {
-  const el = document.getElementById('mkt-sent-badge');
-  if (!el) return;
-  el.className = 'mkt-sent-badge ' + type;
-  el.textContent = type === 'live' ? 'Live' : type === 'delayed' ? 'Delayed' : 'Cached';
+  const el=document.getElementById('mkt-sent-badge');
+  if(!el) return;
+  el.className='mkt-sent-badge '+type;
+  el.textContent=type==='live'?'Live':type==='delayed'?'Delayed':'Cached';
 }
 
 function mktSentToggle(e) {
-  if (e) e.stopPropagation();
-  const panel = document.getElementById('mkt-sent-panel');
-  if (!panel) return;
-  _mktSentPanelOpen = !_mktSentPanelOpen;
-  panel.style.display = _mktSentPanelOpen ? 'block' : 'none';
-  if (_mktSentPanelOpen) _mktSentRenderPanel();
+  if(e) e.stopPropagation();
+  const panel=document.getElementById('mkt-sent-panel');
+  if(!panel) return;
+  _mktSentPanelOpen=!_mktSentPanelOpen;
+  panel.style.display=_mktSentPanelOpen?'block':'none';
+  if(_mktSentPanelOpen) _mktSentRenderPanel();
 }
 
 async function _mktSentRefresh() {
-  let data = await _mktSentFetchLive();    let src = 'live';
-  if (!data) { data = await _mktSentFetchSnapshot(); src = 'delayed'; }
-  if (!data) { data = _mktSentLoadCached(); src = 'cached'; }
-  if (!data) { data = _MKTS_SENT_MARKETS.map(m => ({...m, price:0, change:0, zone:'Neutral', zoneCls:'neutral'})); src = 'cached'; }
-  _mktSentData = data;
-  _mktSentSaveLast(data);
-  if (data[_mktSentIdx]) _mktSentSaveHist(data[_mktSentIdx].country, data[_mktSentIdx].zoneCls);
-  _mktSentSetBadge(src);
-  _mktSentRenderMain(_mktSentIdx);
-  if (_mktSentPanelOpen) _mktSentRenderPanel();
+  let data=await _mktSentFetchLive(); let src='live';
+  if(!data){data=await _mktSentFetchSnapshot();src='delayed';}
+  if(!data){data=_mktSentLoadCached();src='cached';}
+  if(!data){data=_MKTS_SENT_MARKETS.map(m=>({...m,price:0,change:0,zone:'Neutral',zoneCls:'neutral'}));src='cached';}
+  _mktSentData=data; _mktSentSaveLast(data);
+  if(data[_mktSentIdx]) _mktSentSaveHist(data[_mktSentIdx].country,data[_mktSentIdx].zoneCls);
+  _mktSentSetBadge(src); _mktSentRenderMain(_mktSentIdx);
+  if(_mktSentPanelOpen) _mktSentRenderPanel();
 }
 
 function mktSentInit() {
   _mktSentRefresh();
-  setInterval(() => {
-    if (!_mktSentData) return;
-    _mktSentIdx = (_mktSentIdx + 1) % _MKTS_SENT_MARKETS.length;
-    if (_mktSentData[_mktSentIdx]) _mktSentSaveHist(_mktSentData[_mktSentIdx].country, _mktSentData[_mktSentIdx].zoneCls);
+  setInterval(()=>{
+    if(!_mktSentData) return;
+    _mktSentIdx=(_mktSentIdx+1)%_MKTS_SENT_MARKETS.length;
+    if(_mktSentData[_mktSentIdx]) _mktSentSaveHist(_mktSentData[_mktSentIdx].country,_mktSentData[_mktSentIdx].zoneCls);
     _mktSentRenderMain(_mktSentIdx);
-  }, 60000);
-  setInterval(_mktSentRefresh, 10 * 60 * 1000);
-  document.addEventListener('click', e => {
-    if (!e.target.closest('#mkt-sent-widget')) {
-      const p = document.getElementById('mkt-sent-panel');
-      if (p) { p.style.display = 'none'; _mktSentPanelOpen = false; }
+    if(_mktSentPanelOpen) _mktSentRenderPanel();
+  },60000);
+  setInterval(_mktSentRefresh,10*60*1000);
+  document.addEventListener('click',e=>{
+    if(!e.target.closest('#mkt-sent-widget')){
+      const p=document.getElementById('mkt-sent-panel');
+      if(p){p.style.display='none';_mktSentPanelOpen=false;}
     }
   });
 }
