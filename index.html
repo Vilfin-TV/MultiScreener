@@ -8158,17 +8158,26 @@ function _mktSentFullGaugeSVG(score, zoneCls) {
   </svg>`;
 }
 
+// ── Bug-fix: use LOCAL date parts so UTC-offset timezones don't shift the date ──
+// toISOString() returns UTC which can be ±1 calendar day from the user's local date.
+function _mktSentLocalDateStr(d) {
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+
 function _mktSentWeekDates() {
-  // Returns Mon–Fri of the current ISO week: [{date:'YYYY-MM-DD', label:'MON', isToday, isFuture}]
-  const now = new Date();
-  const todayStr = now.toISOString().slice(0, 10);
-  const dow = now.getDay(); // 0=Sun … 6=Sat
-  const mon = new Date(now);
-  mon.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
-  mon.setHours(0, 0, 0, 0);
+  // Returns Mon–Fri of the current LOCAL week.
+  // Uses local date arithmetic throughout — no UTC conversion — so the
+  // highlighted day always matches the user's system clock regardless of timezone.
+  const now      = new Date();
+  const todayStr = _mktSentLocalDateStr(now);   // strictly LOCAL
+  const dow      = now.getDay();                 // 0=Sun … 6=Sat  (local)
+  const baseDate = now.getDate() - (dow === 0 ? 6 : dow - 1); // Monday of this week
   return ['MON','TUE','WED','THU','FRI'].map((label, i) => {
-    const d = new Date(mon); d.setDate(mon.getDate() + i);
-    const dStr = d.toISOString().slice(0, 10);
+    // new Date(y, m, d) constructor uses LOCAL calendar — no UTC shift
+    const d    = new Date(now.getFullYear(), now.getMonth(), baseDate + i);
+    const dStr = _mktSentLocalDateStr(d);
     return {date: dStr, label, isToday: dStr === todayStr, isFuture: dStr > todayStr};
   });
 }
@@ -8184,23 +8193,48 @@ function _mktSentClkSVG(zoneCls, isToday, isFuture) {
 }
 
 async function _mktSentFetchLive() {
-  // Per-symbol chart API — more CORS-permissive than the quote endpoint
+  // Per-symbol chart API — more CORS-permissive than the quote endpoint.
+  // Uses range=5d so we can backfill Mon–Fri history clocks from daily OHLCV data.
   try {
     const fetched = await Promise.all(_MKTS_SENT_MARKETS.map(async m => {
       const ctrl = new AbortController();
-      const tid  = setTimeout(() => ctrl.abort(), 6000);
+      const tid  = setTimeout(() => ctrl.abort(), 8000);
       try {
-        const r = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/' +
-          encodeURIComponent(m.symbol) + '?interval=1d&range=2d', {signal: ctrl.signal});
+        const r = await fetch(
+          'https://query1.finance.yahoo.com/v8/finance/chart/' +
+          encodeURIComponent(m.symbol) + '?interval=1d&range=5d',
+          {signal: ctrl.signal}
+        );
         clearTimeout(tid);
         if (!r.ok) return null;
-        const j    = await r.json();
-        const meta = j?.chart?.result?.[0]?.meta;
+        const j      = await r.json();
+        const result = j?.chart?.result?.[0];
+        const meta   = result?.meta;
         if (!meta) return null;
         const price = meta.regularMarketPrice || 0;
         const prev  = meta.previousClose || meta.chartPreviousClose || price;
         const chg   = meta.regularMarketChangePercent || (prev ? (price - prev) / prev * 100 : 0);
-        const z = _mktSentZone(chg);
+        const z     = _mktSentZone(chg);
+
+        // ── Backfill weekly history from daily closes ──────────────────────────
+        // Walk the OHLCV series.  For each completed day (i≥1), compute the
+        // close-over-previous-close change and save the zone to localStorage so
+        // the Mon–Fri clocks show colour for the whole week, not just today.
+        const timestamps = result?.timestamp                       || [];
+        const closes     = result?.indicators?.quote?.[0]?.close  || [];
+        for (let i = 1; i < timestamps.length; i++) {
+          const c  = closes[i];
+          const cp = closes[i - 1];
+          if (c == null || cp == null || cp === 0) continue;
+          // Convert Unix timestamp → LOCAL calendar date (avoids UTC-offset shift)
+          const dayDate = new Date(timestamps[i] * 1000);
+          const dayStr  = _mktSentLocalDateStr(dayDate);
+          const dayChg  = (c - cp) / cp * 100;
+          _mktSentSaveHistForDate(m.country, dayStr, _mktSentZone(dayChg).cls);
+        }
+        // ── Save today's zone from live meta (most accurate for current day) ──
+        _mktSentSaveHistForDate(m.country, _mktSentLocalDateStr(new Date()), z.cls);
+
         return {...m, price, change: chg, zone: z.zone, zoneCls: z.cls};
       } catch { clearTimeout(tid); return null; }
     }));
@@ -8208,7 +8242,9 @@ async function _mktSentFetchLive() {
     const hits = fetched.filter(Boolean).length;
     if (hits < 5) return null;
     // Fill any null slots with neutral baseline so all 9 countries always present
-    return _MKTS_SENT_MARKETS.map((m, i) => fetched[i] || {...m, price:0, change:0, zone:'Neutral', zoneCls:'neutral'});
+    return _MKTS_SENT_MARKETS.map((m, i) =>
+      fetched[i] || {...m, price: 0, change: 0, zone: 'Neutral', zoneCls: 'neutral'}
+    );
   } catch { return null; }
 }
 async function _mktSentFetchSnapshot() {
@@ -8230,14 +8266,20 @@ function _mktSentLoadCached() {
   } catch { return null; }
 }
 function _mktSentSaveLast(data) { try { localStorage.setItem('mkt_sent_last', JSON.stringify({ts: Date.now(), markets: data})); } catch {} }
-function _mktSentSaveHist(country, zoneCls) {
+// Saves a zone for an ARBITRARY date (used by the 5-day backfill above)
+function _mktSentSaveHistForDate(country, dateStr, zoneCls) {
   try {
-    const key='mkt_sent_h_'+country, today=new Date().toISOString().slice(0,10);
-    let h=JSON.parse(localStorage.getItem(key)||'[]');
-    h=h.filter(x=>x.d!==today); h.push({d:today,z:zoneCls});
-    if(h.length>5) h=h.slice(-5);
-    localStorage.setItem(key,JSON.stringify(h));
+    const key = 'mkt_sent_h_' + country;
+    let h = JSON.parse(localStorage.getItem(key) || '[]');
+    h = h.filter(x => x.d !== dateStr);
+    h.push({d: dateStr, z: zoneCls});
+    if (h.length > 7) h = h.slice(-7);   // keep a full week + buffer
+    localStorage.setItem(key, JSON.stringify(h));
   } catch {}
+}
+// Saves today's zone (delegates to the generic helper, using LOCAL date)
+function _mktSentSaveHist(country, zoneCls) {
+  _mktSentSaveHistForDate(country, _mktSentLocalDateStr(new Date()), zoneCls);
 }
 function _mktSentGetHist(country) { try { return JSON.parse(localStorage.getItem('mkt_sent_h_'+country)||'[]'); } catch { return []; } }
 
