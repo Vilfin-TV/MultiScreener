@@ -6517,6 +6517,9 @@ function setTheme(t) {
   document.querySelectorAll('.theme-swatch').forEach(function(s) {
     s.classList.toggle('active', s.getAttribute('data-theme') === t);
   });
+  // Re-render markets widget with the correct colorTheme for the new theme
+  _mktsWidgetDirty = true;
+  setTimeout(mktsInitWidget, 80);
 }
 // Apply swatch active state on page load
 (function(){
@@ -8578,6 +8581,10 @@ function mktsGetGroups() {
   return JSON.parse(JSON.stringify(_MKTS_DEFAULT_GROUPS));
 }
 
+function _mktsIsLightTheme() {
+  // news-reader is the only theme with a white right-bar background
+  return document.documentElement.getAttribute('data-theme') === 'news-reader';
+}
 function mktsInitWidget() {
   if (!_mktsWidgetDirty) return;
   _mktsWidgetDirty = false;
@@ -8588,8 +8595,10 @@ function mktsInitWidget() {
   var groups = mktsGetGroups();
   var cfg = {
     width: '100%', height: '100%',
-    showSymbolLogo: true, isTransparent: true,
-    colorTheme: 'dark', locale: 'en',
+    showSymbolLogo: true,
+    isTransparent: false,
+    colorTheme: _mktsIsLightTheme() ? 'light' : 'dark',
+    locale: 'en',
     symbolsGroups: groups
   };
 
