@@ -2961,53 +2961,84 @@ footer{
   color:#ff6900;border-bottom-color:#ff6900;
   background:rgba(255,105,0,.07);
 }
-/* ── iframe wrapper ── */
-.sf-frame-wrap{
-  flex:1;position:relative;overflow:hidden;
-  min-height:0;background:#05080e;
+/* ── Scores scroll area ── */
+.sf-scores-wrap{
+  flex:1;overflow-y:auto;padding:8px 8px 12px;
+  background:#05080e;
+  scrollbar-width:thin;scrollbar-color:#1a2030 transparent;
 }
-/* ── Loading state ── */
-.sf-loading{
-  position:absolute;inset:0;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:13px;background:#05080e;z-index:10;
-  color:#475569;font-size:11px;pointer-events:none;
+.sf-scores-wrap::-webkit-scrollbar{width:4px}
+.sf-scores-wrap::-webkit-scrollbar-thumb{background:#1a2030;border-radius:2px}
+/* ── Score card ── */
+.sf-card{
+  background:linear-gradient(135deg,#0b1323,#0e1830);
+  border:1px solid rgba(255,255,255,.07);border-radius:10px;
+  padding:10px 12px;margin-bottom:6px;transition:border-color .15s;
+  cursor:default;
 }
+.sf-card:hover{border-color:rgba(255,105,0,.22)}
+.sf-card-league{
+  font-size:8.5px;font-weight:800;letter-spacing:.9px;
+  text-transform:uppercase;color:#ff6900;margin-bottom:7px;
+}
+.sf-card-teams{
+  display:grid;grid-template-columns:1fr auto 1fr;
+  gap:4px 6px;align-items:center;margin-bottom:6px;
+}
+.sf-card-team{
+  color:#94a3b8;font-size:11px;font-weight:500;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.sf-card-team.right{text-align:right}
+.sf-card-team.winning{color:#f1f5f9;font-weight:700}
+.sf-card-score{
+  font-size:13px;font-weight:800;color:#f1f5f9;
+  text-align:center;padding:2px 8px;
+  background:rgba(255,255,255,.08);border-radius:6px;
+  white-space:nowrap;
+}
+.sf-card-status{
+  font-size:9px;font-weight:600;letter-spacing:.35px;
+  color:#475569;text-transform:uppercase;
+  display:flex;align-items:center;gap:5px;
+}
+.sf-card-status.live{color:#22c55e}
+/* ── Live pulse dot ── */
+.sf-live-dot{
+  display:inline-block;width:6px;height:6px;flex-shrink:0;
+  background:#22c55e;border-radius:50%;
+  animation:sfLivePulse 1.2s ease-in-out infinite;
+}
+/* ── Section header (league grouper) ── */
+.sf-section-hdr{
+  font-size:8.5px;font-weight:800;letter-spacing:.9px;
+  text-transform:uppercase;color:#334155;
+  padding:10px 4px 4px;
+}
+/* ── Empty / error state ── */
+.sf-no-data{
+  text-align:center;padding:40px 16px;
+  color:#334155;font-size:11px;line-height:1.9;
+}
+.sf-no-data .sf-spinner{margin:0 auto 12px}
+/* ── Loading spinner (reused for inline loading) ── */
+@keyframes sfSpin{to{transform:rotate(360deg)}}
 .sf-spinner{
-  width:30px;height:30px;
-  border:2.5px solid rgba(255,105,0,.12);
+  width:26px;height:26px;
+  border:2.5px solid rgba(255,105,0,.14);
   border-top-color:#ff6900;border-radius:50%;
   animation:sfSpin .7s linear infinite;
 }
-@keyframes sfSpin{to{transform:rotate(360deg)}}
-/* ── iframe ── */
-#sf-iframe{
-  width:100%;height:100%;border:none;display:block;
-  opacity:0;transition:opacity .4s ease;
+/* ── Refresh button ── */
+.sf-refresh-btn{
+  width:26px;height:26px;
+  border:1px solid rgba(255,255,255,.09);border-radius:7px;
+  background:transparent;color:#475569;font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;flex-shrink:0;padding:0;
 }
-#sf-iframe.sf-ready{opacity:1}
-/* ── Fallback / blocked state ── */
-.sf-blocked{
-  position:absolute;inset:0;display:none;
-  flex-direction:column;align-items:center;justify-content:center;
-  gap:11px;background:#05080e;text-align:center;padding:28px 20px;
-}
-.sf-blocked-ico{font-size:40px;margin-bottom:2px}
-.sf-blocked-ttl{color:#e2e8f0;font-size:14px;font-weight:700}
-.sf-blocked-desc{
-  color:#64748b;font-size:11px;line-height:1.75;
-  max-width:240px;
-}
-.sf-blocked-btn{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:10px 22px;
-  background:linear-gradient(135deg,#ff6900,#ff8500);
-  color:#fff;text-decoration:none;border-radius:9px;
-  font-size:12px;font-weight:700;margin-top:8px;
-  box-shadow:0 4px 14px rgba(255,105,0,.35);
-  transition:opacity .15s,transform .15s;
-}
-.sf-blocked-btn:hover{opacity:.88;transform:translateY(-1px)}
+.sf-refresh-btn:hover{color:#f1f5f9;background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.2)}
+.sf-refresh-btn.spinning{animation:sfSpin .7s linear infinite}
 /* ── Mobile overhaul ── */
 @media(max-width:768px){
   .pr-nav-btn{padding:8px 9px;font-size:9px;min-height:44px}
@@ -4690,58 +4721,32 @@ footer{
     <div class="sf-hdr">
       <div class="sf-hdr-brand">
         <span class="sf-hdr-dot"></span>
-        <span class="sf-hdr-name">SofaScore</span>
+        <span class="sf-hdr-name">Live Scores</span>
         <span class="sf-hdr-live">LIVE</span>
       </div>
-      <a class="sf-hdr-open" href="https://www.sofascore.com" target="_blank" rel="noopener noreferrer" title="Open SofaScore">&#x2197;&#xFE0E;</a>
+      <div style="display:flex;align-items:center;gap:7px">
+        <span id="sf-updated" style="font-size:9px;color:#334155;white-space:nowrap"></span>
+        <button class="sf-refresh-btn" id="sf-refresh-btn" onclick="sfRefreshNow()" title="Refresh scores">&#x21BA;</button>
+      </div>
     </div>
 
     <!-- Sport selector tabs -->
     <div class="sf-tabs" id="sf-tabs">
-      <button class="sf-tab active" onclick="sfSwitchSport('football',this)">&#x26BD; Football</button>
-      <button class="sf-tab"        onclick="sfSwitchSport('cricket',this)" >&#x1F3CF; Cricket</button>
+      <button class="sf-tab active" onclick="sfSwitchSport('football',this)"  >&#x26BD; Football</button>
+      <button class="sf-tab"        onclick="sfSwitchSport('cricket',this)"   >&#x1F3CF; Cricket</button>
       <button class="sf-tab"        onclick="sfSwitchSport('basketball',this)">&#x1F3C0; Basketball</button>
-      <button class="sf-tab"        onclick="sfSwitchSport('tennis',this)"  >&#x1F3BE; Tennis</button>
-      <button class="sf-tab"        onclick="sfSwitchSport('rugby',this)"   >&#x1F3C9; Rugby</button>
-      <button class="sf-tab"        onclick="sfSwitchSport('baseball',this)">&#x26BE; Baseball</button>
-      <button class="sf-tab"        onclick="sfSwitchSport('handball',this)">&#x1F91C; Handball</button>
+      <button class="sf-tab"        onclick="sfSwitchSport('tennis',this)"    >&#x1F3BE; Tennis</button>
+      <button class="sf-tab"        onclick="sfSwitchSport('rugby',this)"     >&#x1F3C9; Rugby</button>
+      <button class="sf-tab"        onclick="sfSwitchSport('baseball',this)"  >&#x26BE; Baseball</button>
+      <button class="sf-tab"        onclick="sfSwitchSport('hockey',this)"    >&#x1F3D2; Hockey</button>
     </div>
 
-    <!-- iframe wrapper — fills remaining height -->
-    <div class="sf-frame-wrap" id="sf-frame-wrap">
-
-      <!-- Loading spinner (shown while iframe loads) -->
-      <div class="sf-loading" id="sf-loading">
-        <div class="sf-spinner"></div>
-        <span>Loading SofaScore&hellip;</span>
+    <!-- Scrollable scores area -->
+    <div class="sf-scores-wrap" id="sf-scores-wrap">
+      <div id="sf-scores-content">
+        <div class="sf-no-data"><div class="sf-spinner"></div>Loading scores&hellip;</div>
       </div>
-
-      <!-- SofaScore iframe -->
-      <iframe
-        id="sf-iframe"
-        src="about:blank"
-        frameborder="0"
-        scrolling="yes"
-        allowtransparency="true"
-        loading="lazy"
-        title="SofaScore Live Scores"
-        sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-top-navigation"
-      ></iframe>
-
-      <!-- Fallback shown if browser blocks the embed -->
-      <div class="sf-blocked" id="sf-blocked">
-        <div class="sf-blocked-ico">&#x1F3C6;</div>
-        <div class="sf-blocked-ttl">Live Scores</div>
-        <div class="sf-blocked-desc">
-          Your browser is blocking the embedded view.<br>
-          Open SofaScore directly for full live scores.
-        </div>
-        <a href="https://www.sofascore.com" target="_blank" rel="noopener noreferrer" class="sf-blocked-btn">
-          Open SofaScore &#x2197;&#xFE0E;
-        </a>
-      </div>
-
-    </div><!-- /sf-frame-wrap -->
+    </div>
 
   </div><!-- /rb-panel-sports -->
 
@@ -9832,74 +9837,196 @@ function prSyncPlayBtn() {}
 function prTogglePlay() {}
 
 // ═══════════════════════════════════════════════════════════════════════
-// SPORTS WIDGET — SofaScore iframe embed
+// SPORTS WIDGET — Direct API live scores (ESPN + TheSportsDB, no proxy)
+// ESPN's site.api.espn.com endpoints are publicly accessible with
+// permissive CORS headers — no proxy/worker needed.
+// TheSportsDB free tier (no API key) covers Cricket, Rugby, Hockey.
 // ═══════════════════════════════════════════════════════════════════════
-var _sfCurrentSport = 'football';
-
-var _SF_URLS = {
-  football:   'https://www.sofascore.com/football',
-  cricket:    'https://www.sofascore.com/cricket',
-  basketball: 'https://www.sofascore.com/basketball',
-  tennis:     'https://www.sofascore.com/tennis',
-  rugby:      'https://www.sofascore.com/rugby',
-  baseball:   'https://www.sofascore.com/baseball',
-  handball:   'https://www.sofascore.com/handball'
-};
+var _sfCurrentSport  = 'football';
+var _sfRefreshTimer  = null;
+var _sfFetching      = false;
 
 function swInit() {
-  sfLoadIframe(_sfCurrentSport);
-}
-
-function sfLoadIframe(sport) {
-  var iframe  = document.getElementById('sf-iframe');
-  var loading = document.getElementById('sf-loading');
-  var blocked = document.getElementById('sf-blocked');
-  if (!iframe) return;
-
-  // Reset states
-  if (loading) { loading.style.display = 'flex'; }
-  if (blocked) { blocked.style.display = 'none'; }
-  iframe.classList.remove('sf-ready');
-
-  var url = _SF_URLS[sport] || _SF_URLS.football;
-  iframe.src = url;
-
-  // Reveal iframe on load; detect block via blank document
-  iframe.onload = function() {
-    if (loading) loading.style.display = 'none';
-    try {
-      var doc = iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document);
-      // Some browsers return a blank doc when X-Frame-Options blocks embedding
-      if (doc && doc.body && doc.body.innerHTML.trim() === '') {
-        if (blocked) blocked.style.display = 'flex';
-        return;
-      }
-    } catch (e) {
-      // Cross-origin block expected for external sites — iframe still loaded OK
-    }
-    iframe.classList.add('sf-ready');
-  };
-
-  iframe.onerror = function() {
-    if (loading) loading.style.display = 'none';
-    if (blocked) blocked.style.display = 'flex';
-  };
-
-  // Safety timeout — reveal after 10 s regardless (handles CSP / slow networks)
-  setTimeout(function() {
-    if (!loading) return;
-    if (loading.style.display !== 'none') {
-      loading.style.display = 'none';
-      iframe.classList.add('sf-ready');
-    }
-  }, 10000);
+  sfLoadScores(_sfCurrentSport);
+  if (_sfRefreshTimer) clearInterval(_sfRefreshTimer);
+  _sfRefreshTimer = setInterval(function() { sfLoadScores(_sfCurrentSport); }, 60000);
 }
 
 function sfSwitchSport(sport, btn) {
   _sfCurrentSport = sport;
   document.querySelectorAll('.sf-tab').forEach(function(b) { b.classList.remove('active'); });
   if (btn) btn.classList.add('active');
-  sfLoadIframe(sport);
+  sfLoadScores(sport);
+}
+
+function sfRefreshNow() {
+  sfLoadScores(_sfCurrentSport);
+}
+
+// ── Render a single score card ───────────────────────────────────────
+function _sfCard(league, home, away, hScore, aScore, statusText, isLive, isFinished) {
+  var hWin = isFinished && Number(hScore) > Number(aScore);
+  var aWin = isFinished && Number(aScore) > Number(hScore);
+  var hLead = isLive && Number(hScore) > Number(aScore);
+  var aLead = isLive && Number(aScore) > Number(hScore);
+  var scoreStr = (hScore !== '' && aScore !== '') ? hScore + ' – ' + aScore : 'vs';
+  return '<div class="sf-card">' +
+    '<div class="sf-card-league">' + _sfEsc(league) + '</div>' +
+    '<div class="sf-card-teams">' +
+      '<span class="sf-card-team' + (hWin || hLead ? ' winning' : '') + '">' + _sfEsc(home) + '</span>' +
+      '<span class="sf-card-score">' + scoreStr + '</span>' +
+      '<span class="sf-card-team right' + (aWin || aLead ? ' winning' : '') + '">' + _sfEsc(away) + '</span>' +
+    '</div>' +
+    '<div class="sf-card-status' + (isLive ? ' live' : '') + '">' +
+      (isLive ? '<span class="sf-live-dot"></span>' : '') +
+      _sfEsc(statusText) +
+    '</div>' +
+  '</div>';
+}
+function _sfEsc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Fetch from ESPN scoreboard API ───────────────────────────────────
+async function _sfESPN(path, leagueName) {
+  var res = await fetch('https://site.api.espn.com' + path,
+    { signal: AbortSignal.timeout(8000), cache: 'no-store' });
+  if (!res.ok) throw new Error('ESPN ' + res.status);
+  var j = await res.json();
+  var events = j.events || [];
+  if (!events.length) return '';
+  return events.map(function(ev) {
+    var comp = (ev.competitions || [])[0]; if (!comp) return '';
+    var home = (comp.competitors || []).find(function(c){return c.homeAway==='home';});
+    var away = (comp.competitors || []).find(function(c){return c.homeAway==='away';});
+    var st   = comp.status && comp.status.type;
+    var live = st && !st.completed && (st.name||'').indexOf('IN_PROGRESS') !== -1;
+    var done = st && !!st.completed;
+    var txt  = (st && (st.shortDetail || st.description)) || '';
+    return _sfCard(
+      (comp.notes && comp.notes[0] && comp.notes[0].text) || leagueName,
+      (home && (home.team.shortDisplayName || home.team.displayName)) || '?',
+      (away && (away.team.shortDisplayName || away.team.displayName)) || '?',
+      (home && home.score) || '', (away && away.score) || '',
+      txt, live, done
+    );
+  }).join('');
+}
+
+// ── Fetch from TheSportsDB (free, no key, CORS-open) ─────────────────
+async function _sfSportsDB(sport) {
+  var today = new Date().toISOString().slice(0, 10);
+  var url = 'https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=' +
+            today + '&s=' + encodeURIComponent(sport);
+  var res = await fetch(url, { signal: AbortSignal.timeout(8000), cache: 'no-store' });
+  if (!res.ok) throw new Error('SportsDB ' + res.status);
+  var j = await res.json();
+  var events = j.event || [];
+  if (!events.length) return '';
+  return events.map(function(ev) {
+    var hs = ev.intHomeScore != null ? String(ev.intHomeScore) : '';
+    var as = ev.intAwayScore != null ? String(ev.intAwayScore) : '';
+    var done = ['Match Finished','FT','AP','AET'].indexOf(ev.strStatus) !== -1;
+    var live = !done && ev.strStatus && ev.strStatus !== 'Not Started' &&
+               ev.strStatus !== '' && ev.strStatus !== null;
+    var txt  = ev.strProgress || ev.strStatus || '';
+    return _sfCard(ev.strLeague || sport, ev.strHomeTeam || '?', ev.strAwayTeam || '?',
+                   hs, as, txt, live, done);
+  }).join('');
+}
+
+// ── Main load orchestrator ────────────────────────────────────────────
+async function sfLoadScores(sport) {
+  if (_sfFetching) return;
+  _sfFetching = true;
+  var content = document.getElementById('sf-scores-content');
+  var btn     = document.getElementById('sf-refresh-btn');
+  if (content) content.innerHTML = '<div class="sf-no-data"><div class="sf-spinner" style="margin:0 auto 10px"></div>Loading…</div>';
+  if (btn) btn.classList.add('spinning');
+
+  try {
+    var html = '';
+
+    if (sport === 'football') {
+      // Top 6 leagues + ISL — all fired in parallel
+      var leagues = [
+        ['/apis/site/v2/sports/soccer/eng.1/scoreboard', 'Premier League'],
+        ['/apis/site/v2/sports/soccer/esp.1/scoreboard', 'La Liga'],
+        ['/apis/site/v2/sports/soccer/ger.1/scoreboard', 'Bundesliga'],
+        ['/apis/site/v2/sports/soccer/ita.1/scoreboard', 'Serie A'],
+        ['/apis/site/v2/sports/soccer/fra.1/scoreboard', 'Ligue 1'],
+        ['/apis/site/v2/sports/soccer/usa.1/scoreboard', 'MLS'],
+        ['/apis/site/v2/sports/soccer/ind.1/scoreboard', 'ISL (India)'],
+      ];
+      var results = await Promise.allSettled(leagues.map(function(l){return _sfESPN(l[0],l[1]);}));
+      results.forEach(function(r, i) {
+        if (r.status === 'fulfilled' && r.value)
+          html += '<div class="sf-section-hdr">' + leagues[i][1] + '</div>' + r.value;
+      });
+
+    } else if (sport === 'cricket') {
+      html = await _sfSportsDB('Cricket');
+
+    } else if (sport === 'basketball') {
+      var bkLeagues = [
+        ['/apis/site/v2/sports/basketball/nba/scoreboard', 'NBA'],
+        ['/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard', 'NCAA'],
+      ];
+      var bkRes = await Promise.allSettled(bkLeagues.map(function(l){return _sfESPN(l[0],l[1]);}));
+      bkRes.forEach(function(r, i) {
+        if (r.status === 'fulfilled' && r.value)
+          html += '<div class="sf-section-hdr">' + bkLeagues[i][1] + '</div>' + r.value;
+      });
+
+    } else if (sport === 'tennis') {
+      var tnLeagues = [
+        ['/apis/site/v2/sports/tennis/atp/scoreboard', 'ATP'],
+        ['/apis/site/v2/sports/tennis/wta/scoreboard', 'WTA'],
+      ];
+      var tnRes = await Promise.allSettled(tnLeagues.map(function(l){return _sfESPN(l[0],l[1]);}));
+      tnRes.forEach(function(r, i) {
+        if (r.status === 'fulfilled' && r.value)
+          html += '<div class="sf-section-hdr">' + tnLeagues[i][1] + '</div>' + r.value;
+      });
+
+    } else if (sport === 'rugby') {
+      // TheSportsDB primary + ESPN fallback
+      try { html = await _sfSportsDB('Rugby Union'); } catch(e) {}
+      if (!html) {
+        var rgRes = await Promise.allSettled([
+          _sfESPN('/apis/site/v2/sports/rugby/267979/scoreboard', 'Super Rugby'),
+          _sfESPN('/apis/site/v2/sports/rugby/270557/scoreboard', 'Premiership'),
+        ]);
+        rgRes.forEach(function(r, i) {
+          var names = ['Super Rugby','Premiership'];
+          if (r.status === 'fulfilled' && r.value)
+            html += '<div class="sf-section-hdr">' + names[i] + '</div>' + r.value;
+        });
+      }
+
+    } else if (sport === 'baseball') {
+      html = await _sfESPN('/apis/site/v2/sports/baseball/mlb/scoreboard', 'MLB');
+
+    } else if (sport === 'hockey') {
+      try { html = await _sfSportsDB('Ice Hockey'); } catch(e) {}
+      if (!html) html = await _sfESPN('/apis/site/v2/sports/hockey/nhl/scoreboard', 'NHL');
+    }
+
+    if (content) {
+      content.innerHTML = html ||
+        '<div class="sf-no-data">&#x1F3C6;<br>No matches scheduled today.<br>Check back later or try another sport.</div>';
+    }
+    // Update timestamp
+    var upd = document.getElementById('sf-updated');
+    if (upd) upd.textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+  } catch(e) {
+    if (content)
+      content.innerHTML = '<div class="sf-no-data">&#x26A0;&#xFE0F;<br>Could not load scores.<br>Tap &#x21BA; to retry.</div>';
+  }
+
+  _sfFetching = false;
+  if (btn) btn.classList.remove('spinning');
 }
 
 // ═══════════════════════════════════════════════════════════════════════
