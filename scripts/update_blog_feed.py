@@ -2,8 +2,10 @@
 """
 VilfinTV Blog Intelligence Hub — Daily RSS Feed Updater
 ========================================================
-Fetches 5–10 recent items per category from public RSS feeds and writes a
-unified JSON file the static blog page reads at load. Runs once per day.
+Fetches up to MAX_PER_CAT new items per category from public RSS feeds and
+ACCUMULATES them into data/blog_feed.json.  Articles are kept for MAX_AGE_DAYS
+(7 days) so each tab shows a rolling week of coverage rather than only today's
+snapshot.  Runs once per day via GitHub Actions.
 
 Output: data/blog_feed.json
 """
@@ -297,9 +299,10 @@ FEEDS: dict[str, list[dict[str, str]]] = {
 }
 
 # ── Tuning constants ──────────────────────────────────────────────────────────
-MAX_PER_CAT  = 12   # max items fetched per category (trimmed to 10 in output)
-ITEM_TIMEOUT = 12   # per-feed HTTP timeout in seconds
-MAX_AGE_DAYS = 7    # drop any article published more than 7 days ago
+MAX_PER_CAT   = 12   # max NEW items fetched per category per daily run
+MAX_PER_STORE = 50   # max articles kept per category across all days (rolling window)
+ITEM_TIMEOUT  = 12   # per-feed HTTP timeout in seconds
+MAX_AGE_DAYS  = 7    # articles older than this many days are pruned from the store
 
 
 def strip_html(text: str) -> str:
@@ -359,6 +362,7 @@ _PUB_FMTS = (
     "%Y-%m-%dT%H:%M:%S%z",
     "%Y-%m-%dT%H:%M:%SZ",
     "%Y-%m-%d",
+    "%b %d, %Y",   # stored display format  e.g. "May 20, 2026"
 )
 
 
@@ -398,49 +402,107 @@ def trim_summary(text: str, words: int = 28) -> str:
 
 def main() -> int:
     now_utc = datetime.now(timezone.utc)
-    cutoff = now_utc.replace(tzinfo=timezone.utc)
+
+    # ── Load existing accumulated data (7-day rolling store) ──────────────────
+    existing: dict[str, list[dict[str, Any]]] = {}
+    if OUT_FILE.exists():
+        try:
+            old = json.loads(OUT_FILE.read_text(encoding="utf-8"))
+            existing = old.get("categories", {})
+            total_stored = sum(len(v) for v in existing.values())
+            log.info(f"Loaded existing feed: {total_stored} stored items across {len(existing)} categories")
+        except Exception as exc:
+            log.warning(f"Could not load existing feed: {exc} — starting fresh")
+
+    def is_fresh(item: dict[str, Any]) -> bool:
+        """Return True if the article is still within the 7-day retention window."""
+        # Primary: fetched_at (ISO, always UTC, most reliable)
+        fa = item.get("fetched_at", "")
+        if fa:
+            try:
+                dt = datetime.fromisoformat(fa.replace("Z", "+00:00"))
+                return (now_utc - dt).days <= MAX_AGE_DAYS
+            except Exception:
+                pass
+        # Fallback: parse the stored display date (e.g. "May 20, 2026")
+        pub_dt = parse_pub_dt(item.get("date", ""))
+        if pub_dt:
+            return (now_utc - pub_dt).days <= MAX_AGE_DAYS
+        return True  # keep if date is unparseable — better safe than pruning
+
+    def sort_key(item: dict[str, Any]) -> datetime:
+        """Sort by fetched_at first (reliable), then by publication date."""
+        fa = item.get("fetched_at", "")
+        if fa:
+            try:
+                return datetime.fromisoformat(fa.replace("Z", "+00:00"))
+            except Exception:
+                pass
+        return parse_pub_dt(item.get("date", "")) or datetime(2000, 1, 1, tzinfo=timezone.utc)
 
     out: dict[str, Any] = {
         "generated": now_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "categories": {},
     }
     grand_total = 0
+
     for cat, feeds in FEEDS.items():
         log.info(f"📂 {cat}")
-        seen: set[str] = set()
-        cat_items: list[dict[str, Any]] = []
+
+        # Step 1 — carry forward existing articles still within the 7-day window
+        carried = [it for it in existing.get(cat, []) if is_fresh(it)]
+        carried_urls: set[str] = {it["url"] for it in carried if it.get("url")}
+
+        # Step 2 — fetch new articles from RSS feeds (deduplicated against carried)
+        new_items: list[dict[str, Any]] = []
+        new_urls: set[str] = set()
         for src in feeds:
-            url = src["url"]
+            url  = src["url"]
             label = src["source"]
             log.info(f"  ↳ {label}")
             for it in fetch_rss(url):
                 key = it["link"]
-                if key in seen:
+                if key in carried_urls or key in new_urls:
                     continue
-                # Age filter: skip items older than MAX_AGE_DAYS
                 pub_raw = it.get("pub", "")
-                pub_dt = parse_pub_dt(pub_raw)
-                if pub_dt and (cutoff - pub_dt).days > MAX_AGE_DAYS:
+                pub_dt  = parse_pub_dt(pub_raw)
+                if pub_dt and (now_utc - pub_dt).days > MAX_AGE_DAYS:
                     continue
-                seen.add(key)
+                new_urls.add(key)
                 domain = urlparse(it["link"]).hostname or ""
-                cat_items.append({
-                    "title": strip_html(it["title"]),
-                    "url": it["link"],
-                    "summary": trim_summary(it.get("desc", ""), words=32),
-                    "source": label,
-                    "domain": domain,
-                    "date": normalise_pub(pub_raw),
+                new_items.append({
+                    "title":      strip_html(it["title"]),
+                    "url":        it["link"],
+                    "summary":    trim_summary(it.get("desc", ""), words=32),
+                    "source":     label,
+                    "domain":     domain,
+                    "date":       normalise_pub(pub_raw),
+                    "fetched_at": now_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 })
-                if len(cat_items) >= MAX_PER_CAT:
+                if len(new_items) >= MAX_PER_CAT:
                     break
-            if len(cat_items) >= MAX_PER_CAT:
+            if len(new_items) >= MAX_PER_CAT:
                 break
-        # Trim to 5–10 items: prefer more if available, but always at least the first 5
-        cat_items = cat_items[:MAX_PER_CAT]
+
+        # Step 3 — merge: new articles first (higher fetch priority), then carry-overs
+        merged = new_items + carried
+
+        # Step 4 — sort newest-first, deduplicate, cap at MAX_PER_STORE
+        merged.sort(key=sort_key, reverse=True)
+        seen_final: set[str] = set()
+        cat_items: list[dict[str, Any]] = []
+        for item in merged:
+            u = item.get("url", "")
+            if u and u not in seen_final:
+                seen_final.add(u)
+                cat_items.append(item)
+            if len(cat_items) >= MAX_PER_STORE:
+                break
+
         out["categories"][cat] = cat_items
         grand_total += len(cat_items)
-        log.info(f"  → {len(cat_items)} items")
+        log.info(f"  → {len(cat_items)} items  ({len(new_items)} new · {len(carried)} carried over)")
+
     log.info(f"✓ Total {grand_total} items across {len(FEEDS)} categories")
 
     OUT_FILE.parent.mkdir(parents=True, exist_ok=True)
