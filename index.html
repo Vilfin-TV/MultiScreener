@@ -3339,6 +3339,86 @@ footer{
 .ljson-export-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .ljson-export-btn{padding:6px 14px;border-radius:6px;border:1px solid var(--border2);background:var(--card2);color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
 .ljson-export-btn:hover{background:var(--burn);border-color:var(--burn2);color:#fff}
+
+/* == MARKET SENTIMENT WIDGET == */
+.mkt-sent-widget{
+  position:relative;display:flex;align-items:center;height:100%;
+  flex-shrink:0;cursor:pointer;padding:0 4px;
+}
+.mkt-sent-body{
+  display:flex;align-items:center;gap:7px;
+  padding:5px 10px;border-radius:8px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
+  transition:background .15s,border-color .15s;white-space:nowrap;
+  height:34px;box-sizing:border-box;
+}
+.mkt-sent-widget:hover .mkt-sent-body{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2)}
+.mkt-sent-flag{font-size:15px;line-height:1}
+.mkt-sent-main{display:flex;align-items:center;gap:5px}
+.mkt-sent-country{font-size:11px;font-weight:600;color:rgba(255,255,255,.85);letter-spacing:.2px}
+.mkt-sent-dot{font-size:11px;color:rgba(255,255,255,.3)}
+.mkt-sent-zone{font-size:11px;font-weight:700;letter-spacing:.2px}
+.mkt-sent-zone.extreme-greed{color:#22c55e}
+.mkt-sent-zone.greed{color:#86efac}
+.mkt-sent-zone.neutral{color:#94a3b8}
+.mkt-sent-zone.fear{color:#fb923c}
+.mkt-sent-zone.extreme-fear{color:#ef4444}
+.mkt-sent-zone.loading{color:rgba(255,255,255,.4)}
+.mkt-sent-hist{display:flex;align-items:center;gap:3px}
+.mkt-sent-day{
+  width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;
+  font-size:8px;font-weight:700;letter-spacing:.2px;
+}
+.mkt-sent-day.extreme-greed{background:rgba(34,197,94,.2);color:#22c55e;border:1px solid rgba(34,197,94,.3)}
+.mkt-sent-day.greed{background:rgba(134,239,172,.15);color:#86efac;border:1px solid rgba(134,239,172,.25)}
+.mkt-sent-day.neutral{background:rgba(148,163,184,.15);color:#94a3b8;border:1px solid rgba(148,163,184,.2)}
+.mkt-sent-day.fear{background:rgba(251,146,60,.15);color:#fb923c;border:1px solid rgba(251,146,60,.25)}
+.mkt-sent-day.extreme-fear{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.25)}
+.mkt-sent-day.empty{background:rgba(255,255,255,.05);color:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.08)}
+.mkt-sent-badge{
+  font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  padding:2px 6px;border-radius:4px;
+}
+.mkt-sent-badge.live{background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.25)}
+.mkt-sent-badge.delayed{background:rgba(245,158,11,.12);color:#f59e0b;border:1px solid rgba(245,158,11,.2)}
+.mkt-sent-badge.cached{background:rgba(148,163,184,.1);color:#94a3b8;border:1px solid rgba(148,163,184,.15)}
+/* Expanded panel */
+.mkt-sent-panel{
+  position:absolute;top:calc(100% + 4px);left:50%;transform:translateX(-50%);
+  min-width:280px;background:var(--dark2,#1a1f2e);border:1px solid rgba(255,255,255,.12);
+  border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.6);z-index:1000;padding:0;
+  overflow:hidden;
+}
+.mkt-sent-ph{
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--gold2,#f5a623);padding:10px 14px 8px;border-bottom:1px solid rgba(255,255,255,.08);
+}
+.mkt-sent-row{
+  display:flex;align-items:center;gap:8px;padding:7px 14px;
+  border-bottom:1px solid rgba(255,255,255,.05);transition:background .1s;
+}
+.mkt-sent-row:last-of-type{border-bottom:none}
+.mkt-sent-row:hover{background:rgba(255,255,255,.04)}
+.mkt-sent-row .mkt-sent-flag{font-size:13px}
+.mkt-sent-row-info{flex:1;min-width:0}
+.mkt-sent-row-country{font-size:11px;font-weight:600;color:rgba(255,255,255,.85)}
+.mkt-sent-row-idx{font-size:10px;color:rgba(255,255,255,.4)}
+.mkt-sent-row-chg{font-size:11px;font-weight:700;min-width:48px;text-align:right}
+.mkt-sent-row-chg.pos{color:#22c55e}
+.mkt-sent-row-chg.neg{color:#ef4444}
+.mkt-sent-row-chg.flat{color:#94a3b8}
+.mkt-sent-row-zone{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.mkt-sent-row-zone.extreme-greed{background:rgba(34,197,94,.15);color:#22c55e}
+.mkt-sent-row-zone.greed{background:rgba(134,239,172,.1);color:#86efac}
+.mkt-sent-row-zone.neutral{background:rgba(148,163,184,.1);color:#94a3b8}
+.mkt-sent-row-zone.fear{background:rgba(251,146,60,.1);color:#fb923c}
+.mkt-sent-row-zone.extreme-fear{background:rgba(239,68,68,.15);color:#ef4444}
+.mkt-sent-pf{
+  font-size:9px;color:rgba(255,255,255,.3);padding:7px 14px;text-align:center;
+  border-top:1px solid rgba(255,255,255,.06);
+}
+@media(max-width:900px){.mkt-sent-hist,.mkt-sent-badge{display:none}}
+@media(max-width:700px){.mkt-sent-widget{display:none}}
 </style>
 </head>
 <body>
@@ -3408,15 +3488,16 @@ footer{
       </div>
     </div>
 
-    <!-- NEWS -->
-    <div class="tmenu-item" id="tmenu-news">
-      <button class="tmenu-btn" onclick="toggleMenu('news')">News <span class="arr">▾</span></button>
-      <div class="tmenu-dropdown" id="tdd-news">
+    <!-- NEWS & MEDIA (merged: News + Videos) -->
+    <div class="tmenu-item" id="tmenu-newsmedia">
+      <button class="tmenu-btn" onclick="toggleMenu('newsmedia')">News &amp; Media <span class="arr">▾</span></button>
+      <div class="tmenu-dropdown" id="tdd-newsmedia">
+        <!-- VilfinTV -->
         <div class="dd-header">VilfinTV</div>
         <a class="dd-item" href="blog_intelligence_hub.html" target="_blank">📰 VilfinTV Blog</a>
         <div class="dd-sep"></div>
-        <div class="dd-header">General News by Region</div>
-        <!-- Asia -->
+        <!-- News by Region -->
+        <div class="dd-header">News by Region</div>
         <div class="dd-item dd-has-sub">🌏 Asia
           <div class="dd-submenu">
             <div class="dd-header">Asia — General News</div>
@@ -3431,7 +3512,6 @@ footer{
             <a class="news-link" href="https://www.koreatimes.co.kr" target="_blank"><span class="nl-name">🇰🇷 Korea Times</span><span class="nl-url">koreatimes.co.kr</span></a>
           </div>
         </div>
-        <!-- Malayalam News -->
         <div class="dd-item dd-has-sub">🇮🇳 Malayalam News
           <div class="dd-submenu">
             <div class="dd-header">Malayalam — News</div>
@@ -3447,7 +3527,6 @@ footer{
             <a class="news-link" href="https://www.reporterlive.com" target="_blank"><span class="nl-name">📺 Reporter Live</span><span class="nl-url">reporterlive.com</span></a>
           </div>
         </div>
-        <!-- Middle East -->
         <div class="dd-item dd-has-sub">🌍 Middle East
           <div class="dd-submenu">
             <div class="dd-header">Middle East — General News</div>
@@ -3458,7 +3537,6 @@ footer{
             <a class="news-link" href="https://www.haaretz.com" target="_blank"><span class="nl-name">🇮🇱 Haaretz (Israel)</span><span class="nl-url">haaretz.com</span></a>
           </div>
         </div>
-        <!-- Europe -->
         <div class="dd-item dd-has-sub">🌍 Europe
           <div class="dd-submenu">
             <div class="dd-header">Europe — General News</div>
@@ -3470,7 +3548,6 @@ footer{
             <a class="news-link" href="https://www.dw.com/en/" target="_blank"><span class="nl-name">🇩🇪 Deutsche Welle</span><span class="nl-url">dw.com</span></a>
           </div>
         </div>
-        <!-- Americas -->
         <div class="dd-item dd-has-sub">🌎 Americas
           <div class="dd-submenu">
             <div class="dd-header">Americas — General News</div>
@@ -3483,7 +3560,6 @@ footer{
             <a class="news-link" href="https://www.bbc.com/mundo" target="_blank"><span class="nl-name">🇧🇷 BBC Mundo (Latin America)</span><span class="nl-url">bbc.com/mundo</span></a>
           </div>
         </div>
-        <!-- Africa & Oceania -->
         <div class="dd-item dd-has-sub">🌍 Africa &amp; Oceania
           <div class="dd-submenu">
             <div class="dd-header">Africa &amp; Oceania — News</div>
@@ -3493,7 +3569,6 @@ footer{
             <a class="news-link" href="https://www.nzherald.co.nz" target="_blank"><span class="nl-name">🇳🇿 NZ Herald</span><span class="nl-url">nzherald.co.nz</span></a>
           </div>
         </div>
-        <!-- Global -->
         <div class="dd-item dd-has-sub">🌐 Global / International
           <div class="dd-submenu">
             <div class="dd-header">Global News</div>
@@ -3502,17 +3577,10 @@ footer{
             <a class="news-link" href="https://www.aljazeera.com/news/" target="_blank"><span class="nl-name">🌐 Al Jazeera World</span><span class="nl-url">aljazeera.com/news</span></a>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- FINANCIAL NEWS -->
-    <!-- NEWS VIDEOS (merged: Financial News + Video) -->
-    <div class="tmenu-item" id="tmenu-finvideo">
-      <button class="tmenu-btn" onclick="toggleMenu('finvideo')">Videos <span class="arr">▾</span></button>
-      <div class="tmenu-dropdown" id="tdd-finvideo">
-        <div class="dd-header">News &amp; Financial Video by Region</div>
-        <!-- India -->
-        <div class="dd-item dd-has-sub">🇮🇳 India — YouTube
+        <div class="dd-sep"></div>
+        <!-- YouTube Channels -->
+        <div class="dd-header">YouTube Channels</div>
+        <div class="dd-item dd-has-sub">🇮🇳 India — Finance YouTube
           <div class="dd-submenu">
             <div class="dd-header">India — Finance YouTube</div>
             <a class="news-link" href="https://www.youtube.com/@ETNOWlive" target="_blank"><span class="nl-name">📺 ET Now</span><span class="nl-url">youtube.com/@ETNOWlive</span></a>
@@ -3526,7 +3594,6 @@ footer{
             <a class="news-link" href="https://www.youtube.com/@ShankarNath" target="_blank"><span class="nl-name">📺 Shankar Nath</span><span class="nl-url">youtube.com/@ShankarNath</span></a>
           </div>
         </div>
-        <!-- Malayalam YouTube -->
         <div class="dd-item dd-has-sub">🇮🇳 Malayalam — YouTube
           <div class="dd-submenu">
             <div class="dd-header">Malayalam — Finance YouTube</div>
@@ -3536,7 +3603,6 @@ footer{
             <a class="news-link" href="https://www.youtube.com/@ReporterLive" target="_blank"><span class="nl-name">📺 Reporter Live</span><span class="nl-url">youtube.com/@ReporterLive</span></a>
           </div>
         </div>
-        <!-- Japan -->
         <div class="dd-item dd-has-sub">🇯🇵 Japan — YouTube
           <div class="dd-submenu">
             <div class="dd-header">Japan — Finance YouTube</div>
@@ -3544,7 +3610,6 @@ footer{
             <a class="news-link" href="https://www.youtube.com/@Reuters" target="_blank"><span class="nl-name">📺 Reuters (Business)</span><span class="nl-url">youtube.com/@Reuters</span></a>
           </div>
         </div>
-        <!-- USA / Global -->
         <div class="dd-item dd-has-sub">🇺🇸 USA / Global — YouTube
           <div class="dd-submenu">
             <div class="dd-header">USA / Global — Finance YouTube</div>
@@ -3555,7 +3620,6 @@ footer{
             <a class="news-link" href="https://www.youtube.com/@GrahamStephan" target="_blank"><span class="nl-name">📺 Graham Stephan</span><span class="nl-url">youtube.com/@GrahamStephan</span></a>
           </div>
         </div>
-        <!-- Europe -->
         <div class="dd-item dd-has-sub">🌍 Europe — YouTube
           <div class="dd-submenu">
             <div class="dd-header">Europe — Finance YouTube</div>
@@ -3565,20 +3629,17 @@ footer{
             <a class="news-link" href="https://www.youtube.com/@AlJazeeraEnglish" target="_blank"><span class="nl-name">📺 Al Jazeera English</span><span class="nl-url">youtube.com/@AlJazeeraEnglish</span></a>
           </div>
         </div>
+        <div class="dd-sep"></div>
         <!-- Podcasts -->
-        <div class="dd-item dd-has-sub">🎙️ Podcasts
-          <div class="dd-submenu">
-            <div class="dd-header">Finance Podcasts — India &amp; Global</div>
-            <a class="news-link" href="https://www.etmoney.com/learn/" target="_blank"><span class="nl-name">🎙️ ET Money Learn</span><span class="nl-url">etmoney.com/learn</span></a>
-            <a class="news-link" href="https://zerodha.com/varsity/" target="_blank"><span class="nl-name">🎙️ Zerodha Varsity</span><span class="nl-url">zerodha.com/varsity</span></a>
-            <a class="news-link" href="https://www.youtube.com/@ETMoney" target="_blank"><span class="nl-name">🎙️ ET Money YouTube</span><span class="nl-url">youtube.com/@ETMoney</span></a>
-            <a class="news-link" href="https://www.youtube.com/@PowerUpMoney" target="_blank"><span class="nl-name">🎙️ PowerUp Money</span><span class="nl-url">youtube.com/@PowerUpMoney</span></a>
-            <a class="news-link" href="https://www.youtube.com/@myfin-tv" target="_blank"><span class="nl-name">🎙️ MyFin TV (Malayalam)</span><span class="nl-url">youtube.com/@myfin-tv</span></a>
-            <a class="news-link" href="https://www.youtube.com/@ShankarNath" target="_blank"><span class="nl-name">🎙️ Shankar Nath</span><span class="nl-url">youtube.com/@ShankarNath</span></a>
-            <a class="news-link" href="https://www.npr.org/sections/money/" target="_blank"><span class="nl-name">🎙️ Planet Money (NPR)</span><span class="nl-url">npr.org/sections/money</span></a>
-            <a class="news-link" href="https://www.marketplace.org/" target="_blank"><span class="nl-name">🎙️ Marketplace (APM)</span><span class="nl-url">marketplace.org</span></a>
-          </div>
-        </div>
+        <div class="dd-header">Podcasts</div>
+        <a class="news-link dd-item" href="https://www.etmoney.com/learn/" target="_blank"><span class="nl-name">🎙️ ET Money Learn</span><span class="nl-url">etmoney.com/learn</span></a>
+        <a class="news-link dd-item" href="https://zerodha.com/varsity/" target="_blank"><span class="nl-name">🎙️ Zerodha Varsity</span><span class="nl-url">zerodha.com/varsity</span></a>
+        <a class="news-link dd-item" href="https://www.youtube.com/@ETMoney" target="_blank"><span class="nl-name">🎙️ ET Money YouTube</span><span class="nl-url">youtube.com/@ETMoney</span></a>
+        <a class="news-link dd-item" href="https://www.youtube.com/@PowerUpMoney" target="_blank"><span class="nl-name">🎙️ PowerUp Money</span><span class="nl-url">youtube.com/@PowerUpMoney</span></a>
+        <a class="news-link dd-item" href="https://www.youtube.com/@myfin-tv" target="_blank"><span class="nl-name">🎙️ MyFin TV (Malayalam)</span><span class="nl-url">youtube.com/@myfin-tv</span></a>
+        <a class="news-link dd-item" href="https://www.youtube.com/@ShankarNath" target="_blank"><span class="nl-name">🎙️ Shankar Nath</span><span class="nl-url">youtube.com/@ShankarNath</span></a>
+        <a class="news-link dd-item" href="https://www.npr.org/sections/money/" target="_blank"><span class="nl-name">🎙️ Planet Money (NPR)</span><span class="nl-url">npr.org/sections/money</span></a>
+        <a class="news-link dd-item" href="https://www.marketplace.org/" target="_blank"><span class="nl-name">🎙️ Marketplace (APM)</span><span class="nl-url">marketplace.org</span></a>
       </div>
     </div>
 
@@ -3736,6 +3797,25 @@ footer{
     </div>
 
   </div><!-- /top-menu-items -->
+
+  <!-- MARKET SENTIMENT WIDGET -->
+  <div id="mkt-sent-widget" class="mkt-sent-widget" onclick="mktSentToggle(event)">
+    <div class="mkt-sent-body">
+      <span class="mkt-sent-flag" id="mkt-sent-flag">🌐</span>
+      <div class="mkt-sent-main">
+        <span class="mkt-sent-country" id="mkt-sent-country">Markets</span>
+        <span class="mkt-sent-dot">·</span>
+        <span class="mkt-sent-zone" id="mkt-sent-zone">Loading…</span>
+      </div>
+      <div class="mkt-sent-hist" id="mkt-sent-hist"></div>
+      <span class="mkt-sent-badge" id="mkt-sent-badge"></span>
+    </div>
+    <div class="mkt-sent-panel" id="mkt-sent-panel" style="display:none">
+      <div class="mkt-sent-ph">Global Market Sentiment</div>
+      <div id="mkt-sent-rows"></div>
+      <div class="mkt-sent-pf" id="mkt-sent-pf"></div>
+    </div>
+  </div>
 
   <!-- Right section -->
   <div class="top-menu-right">
@@ -7882,6 +7962,171 @@ async function loadMarketSnapshot() {
   } catch { /* silent — fallback to query-only mode */ }
 }
 
+// ── MARKET SENTIMENT WIDGET ──────────────────────────────────────
+const _MKTS_SENT_MARKETS = [
+  {country:'US',        flag:'🇺🇸', index:'S&P 500',    symbol:'^GSPC'},
+  {country:'India',     flag:'🇮🇳', index:'NIFTY 50',   symbol:'^NSEI'},
+  {country:'Japan',     flag:'🇯🇵', index:'Nikkei 225', symbol:'^N225'},
+  {country:'Europe',    flag:'🇪🇺', index:'STOXX 50',   symbol:'^STOXX50E'},
+  {country:'China',     flag:'🇨🇳', index:'SSE Comp.',  symbol:'000001.SS'},
+  {country:'Korea',     flag:'🇰🇷', index:'KOSPI',      symbol:'^KS11'},
+  {country:'Brazil',    flag:'🇧🇷', index:'IBOVESPA',   symbol:'^BVSP'},
+  {country:'Australia', flag:'🇦🇺', index:'ASX 200',    symbol:'^AXJO'},
+  {country:'Taiwan',    flag:'🇹🇼', index:'TWII',       symbol:'^TWII'},
+];
+let _mktSentData = null, _mktSentIdx = 0, _mktSentPanelOpen = false;
+
+function _mktSentZone(chg) {
+  if (chg > 1.5)  return {zone:'Extreme Greed', cls:'extreme-greed'};
+  if (chg > 0.5)  return {zone:'Greed',         cls:'greed'};
+  if (chg > -0.5) return {zone:'Neutral',       cls:'neutral'};
+  if (chg > -1.5) return {zone:'Fear',          cls:'fear'};
+  return           {zone:'Extreme Fear',        cls:'extreme-fear'};
+}
+
+async function _mktSentFetchLive() {
+  const syms = _MKTS_SENT_MARKETS.map(m => encodeURIComponent(m.symbol)).join(',');
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), 5000);
+  try {
+    const r = await fetch('https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + syms + '&corsDomain=finance.yahoo.com', {signal: ctrl.signal});
+    clearTimeout(tid);
+    if (!r.ok) return null;
+    const j = await r.json();
+    const res = j?.quoteResponse?.result;
+    if (!res || !res.length) return null;
+    return _MKTS_SENT_MARKETS.map(m => {
+      const q = res.find(x => x.symbol === m.symbol) || {};
+      const z = _mktSentZone(q.regularMarketChangePercent || 0);
+      return {...m, price: q.regularMarketPrice || 0, change: q.regularMarketChangePercent || 0, zone: z.zone, zoneCls: z.cls};
+    });
+  } catch { clearTimeout(tid); return null; }
+}
+
+async function _mktSentFetchSnapshot() {
+  try {
+    const r = await fetch('data/market_sentiment.json?t=' + Date.now(), {cache:'no-cache'});
+    if (!r.ok) return null;
+    const j = await r.json();
+    if (!j.markets || !j.markets.length) return null;
+    return j.markets.map(m => { const z = _mktSentZone(m.change || 0); return {...m, zone: z.zone, zoneCls: z.cls}; });
+  } catch { return null; }
+}
+
+function _mktSentLoadCached() {
+  try {
+    const raw = localStorage.getItem('mkt_sent_last');
+    if (!raw) return null;
+    const d = JSON.parse(raw);
+    if (!d.markets) return null;
+    return d.markets.map(m => { const z = _mktSentZone(m.change || 0); return {...m, zone: z.zone, zoneCls: z.cls}; });
+  } catch { return null; }
+}
+
+function _mktSentSaveLast(data) {
+  try { localStorage.setItem('mkt_sent_last', JSON.stringify({ts: Date.now(), markets: data})); } catch {}
+}
+
+function _mktSentSaveHist(country, zoneCls) {
+  try {
+    const key = 'mkt_sent_h_' + country;
+    const today = new Date().toISOString().slice(0,10);
+    let h = JSON.parse(localStorage.getItem(key) || '[]');
+    h = h.filter(x => x.d !== today);
+    h.push({d: today, z: zoneCls});
+    if (h.length > 5) h = h.slice(-5);
+    localStorage.setItem(key, JSON.stringify(h));
+  } catch {}
+}
+
+function _mktSentGetHist(country) {
+  try { return JSON.parse(localStorage.getItem('mkt_sent_h_' + country) || '[]'); } catch { return []; }
+}
+
+function _mktSentRenderMain(idx) {
+  if (!_mktSentData) return;
+  const m = _mktSentData[idx];
+  const fe = document.getElementById('mkt-sent-flag');
+  if (!fe) return;
+  fe.textContent = m.flag;
+  document.getElementById('mkt-sent-country').textContent = m.country + ' Market';
+  const ze = document.getElementById('mkt-sent-zone');
+  ze.textContent = m.zone; ze.className = 'mkt-sent-zone ' + m.zoneCls;
+  const hist = _mktSentGetHist(m.country);
+  let html = '';
+  for (let i = 0; i < 5; i++) {
+    const h = hist[i];
+    if (h) {
+      const lbl = new Date(h.d + 'T12:00:00').toLocaleDateString('en',{weekday:'narrow'});
+      html += `<span class="mkt-sent-day ${h.z}" title="${h.d}">${lbl}</span>`;
+    } else {
+      html += `<span class="mkt-sent-day empty">—</span>`;
+    }
+  }
+  document.getElementById('mkt-sent-hist').innerHTML = html;
+}
+
+function _mktSentRenderPanel() {
+  if (!_mktSentData) return;
+  const rowsEl = document.getElementById('mkt-sent-rows');
+  if (!rowsEl) return;
+  rowsEl.innerHTML = _mktSentData.map(m => {
+    const sgn = m.change > 0 ? '+' : '';
+    const cc = m.change > 0.1 ? 'pos' : m.change < -0.1 ? 'neg' : 'flat';
+    return `<div class="mkt-sent-row"><span class="mkt-sent-flag">${m.flag}</span><div class="mkt-sent-row-info"><div class="mkt-sent-row-country">${m.country}</div><div class="mkt-sent-row-idx">${m.index}</div></div><span class="mkt-sent-row-chg ${cc}">${sgn}${m.change.toFixed(2)}%</span><span class="mkt-sent-row-zone ${m.zoneCls}">${m.zone}</span></div>`;
+  }).join('');
+  const ts = (() => { try { return JSON.parse(localStorage.getItem('mkt_sent_last') || '{}').ts || 0; } catch { return 0; } })();
+  const ago = ts ? Math.round((Date.now() - ts) / 60000) : 0;
+  const pf = document.getElementById('mkt-sent-pf');
+  if (pf) pf.textContent = ago > 0 ? 'Updated ' + ago + ' min ago · Auto-refreshes every 10 min' : 'Market Intelligence';
+}
+
+function _mktSentSetBadge(type) {
+  const el = document.getElementById('mkt-sent-badge');
+  if (!el) return;
+  el.className = 'mkt-sent-badge ' + type;
+  el.textContent = type === 'live' ? 'Live' : type === 'delayed' ? 'Delayed' : 'Cached';
+}
+
+function mktSentToggle(e) {
+  if (e) e.stopPropagation();
+  const panel = document.getElementById('mkt-sent-panel');
+  if (!panel) return;
+  _mktSentPanelOpen = !_mktSentPanelOpen;
+  panel.style.display = _mktSentPanelOpen ? 'block' : 'none';
+  if (_mktSentPanelOpen) _mktSentRenderPanel();
+}
+
+async function _mktSentRefresh() {
+  let data = await _mktSentFetchLive();    let src = 'live';
+  if (!data) { data = await _mktSentFetchSnapshot(); src = 'delayed'; }
+  if (!data) { data = _mktSentLoadCached(); src = 'cached'; }
+  if (!data) { data = _MKTS_SENT_MARKETS.map(m => ({...m, price:0, change:0, zone:'Neutral', zoneCls:'neutral'})); src = 'cached'; }
+  _mktSentData = data;
+  _mktSentSaveLast(data);
+  if (data[_mktSentIdx]) _mktSentSaveHist(data[_mktSentIdx].country, data[_mktSentIdx].zoneCls);
+  _mktSentSetBadge(src);
+  _mktSentRenderMain(_mktSentIdx);
+  if (_mktSentPanelOpen) _mktSentRenderPanel();
+}
+
+function mktSentInit() {
+  _mktSentRefresh();
+  setInterval(() => {
+    if (!_mktSentData) return;
+    _mktSentIdx = (_mktSentIdx + 1) % _MKTS_SENT_MARKETS.length;
+    if (_mktSentData[_mktSentIdx]) _mktSentSaveHist(_mktSentData[_mktSentIdx].country, _mktSentData[_mktSentIdx].zoneCls);
+    _mktSentRenderMain(_mktSentIdx);
+  }, 60000);
+  setInterval(_mktSentRefresh, 10 * 60 * 1000);
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#mkt-sent-widget')) {
+      const p = document.getElementById('mkt-sent-panel');
+      if (p) { p.style.display = 'none'; _mktSentPanelOpen = false; }
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   try { cfLoadSaved(); } catch(e) { console.error('cfLoadSaved failed:', e); }
   try { loadMarketSnapshot(); } catch(e) { console.error('loadMarketSnapshot failed:', e); }
@@ -7894,6 +8139,7 @@ document.addEventListener('DOMContentLoaded', () => {
   try { _renderRandomChips(); } catch(e) { console.error('_renderRandomChips failed:', e); }
   try { setInterval(_renderRandomChips, 10 * 60 * 1000); } catch(e) { console.error('chip interval failed:', e); }
   try { setTimeout(ytRestoreSettings, 200); } catch(e) { console.error('ytRestoreSettings failed:', e); }
+  try { mktSentInit(); } catch(e) { console.error('mktSentInit failed:', e); }
 });
 
 // ── SHARE BUTTONS LOGIC — runs after DOM ready ──────────────────
