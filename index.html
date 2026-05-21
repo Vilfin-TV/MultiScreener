@@ -108,8 +108,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
 [data-theme="standard"] .lnb-text{color:#374151}
 [data-theme="standard"] .lnb-time{color:#6b7280}
 [data-theme="standard"] .lnb-loading{color:#6b7280}
-[data-theme="standard"] .lnb-label{color:#0f172a}
-[data-theme="standard"] .lnb-live{background:rgba(29,78,216,.12);color:#1d4ed8}
+[data-theme="standard"] .lnb-label{color:#ffffff!important}
+[data-theme="standard"] .lnb-live{background:rgba(255,255,255,.2)!important;color:#ffffff!important}
 [data-theme="standard"] .lns-timer{background:#ffffff;border-color:var(--border);color:#64748b}
 [data-theme="standard"] .lns-settings-btn{background:rgba(0,0,0,.05);border-color:var(--border2);color:#374151}
 [data-theme="standard"] .lns-settings-btn:hover{background:rgba(29,78,216,.08);color:#1d4ed8;border-color:var(--burn2)}
@@ -521,8 +521,8 @@ html[data-theme="gemini"]{
 /* ── News / live feed ── */
 [data-theme="gemini"] .nsm-title,[data-theme="gemini"] .nsm-feed-name{color:#e3e3e3}
 [data-theme="gemini"] .lnb-text{color:#9aa0a6}
-[data-theme="gemini"] .lnb-label{color:#e3e3e3}
-[data-theme="gemini"] .lnb-live{background:rgba(66,133,244,.12);color:#4285f4}
+[data-theme="gemini"] .lnb-label{color:#ffffff!important}
+[data-theme="gemini"] .lnb-live{background:rgba(255,255,255,.2)!important;color:#ffffff!important}
 
 /* ── Blog hub ── */
 [data-theme="gemini"] .header-chip{background:rgba(66,133,244,.1)!important;border-color:#3c4043!important;color:#4285f4!important}
@@ -735,8 +735,8 @@ html[data-theme="news-reader"]{
 /* ── News / live feed ── */
 [data-theme="news-reader"] .nsm-title,[data-theme="news-reader"] .nsm-feed-name{color:#111111}
 [data-theme="news-reader"] .lnb-text{color:#444444}
-[data-theme="news-reader"] .lnb-label{color:#111111}
-[data-theme="news-reader"] .lnb-live{background:rgba(216,25,33,.1);color:#d81921}
+[data-theme="news-reader"] .lnb-label{color:#ffffff!important}
+[data-theme="news-reader"] .lnb-live{background:rgba(255,255,255,.2)!important;color:#ffffff!important}
 
 /* ── Blog hub ── */
 [data-theme="news-reader"] .header-chip{background:rgba(216,25,33,.08)!important;border-color:#e5e7e8!important;color:#d81921!important}
@@ -1359,6 +1359,9 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-flag{font-size:14px}
 .lnb-label{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;color:#fff;flex:1}
 .lnb-live{font-size:8px;font-weight:700;background:rgba(255,255,255,.2);color:#fff;padding:2px 5px;border-radius:3px;letter-spacing:.5px;animation:livePulse 2s ease-in-out infinite}
+/* lnb-header ALWAYS sits on a coloured/dark background — lock heading text to white regardless of theme */
+.lnb-header .lnb-label{color:#ffffff!important}
+.lnb-header .lnb-live{color:#ffffff!important;background:rgba(255,255,255,.2)!important}
 @keyframes livePulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes ytPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(1.04)}}
 .lnb-list{flex:1;padding:8px 4px;display:flex;flex-direction:column;gap:1px;min-height:140px}
@@ -2616,7 +2619,7 @@ footer{
 .yt-omni-close-btn{width:32px;height:32px;border:1px solid #1e3a5f;border-radius:8px;background:#0f1d35;color:#94a3b8;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-weight:700}
 .yt-omni-close-btn:hover{background:#1e3a5f;color:#fff}
 .yt-omni-body{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#1e3a5f transparent}
-.yt-omni-section-hdr{padding:7px 14px 5px;font-size:9.5px;font-weight:700;color:#334155;letter-spacing:.6px;text-transform:uppercase;background:#060c18;border-bottom:1px solid #0a1628;position:sticky;top:0;z-index:1}
+.yt-omni-section-hdr{padding:7px 14px 5px;font-size:9.5px;font-weight:700;color:#64748b;letter-spacing:.6px;text-transform:uppercase;background:#060c18;border-bottom:1px solid #0a1628;position:sticky;top:0;z-index:1}
 .yt-omni-ch-row{display:flex;align-items:center;gap:10px;padding:8px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);transition:background .1s}
 .yt-omni-ch-row:hover{background:#0d1f3c}
 .yt-omni-vid-row{display:flex;align-items:flex-start;gap:10px;padding:9px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);transition:background .1s}
@@ -2641,7 +2644,7 @@ footer{
 .music-omni-close{width:32px;height:32px;border:1px solid #2a1535;border-radius:8px;background:#130820;color:#94a3b8;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-weight:700;padding:0}
 .music-omni-close:hover{background:#2a1535;color:#fff}
 .music-omni-body{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#2a1535 transparent}
-.music-omni-sec{padding:7px 14px 4px;font-size:9.5px;font-weight:700;color:#4a2860;letter-spacing:.7px;text-transform:uppercase;background:#07041a;border-bottom:1px solid #0e0828;position:sticky;top:0;z-index:2}
+.music-omni-sec{padding:7px 14px 4px;font-size:9.5px;font-weight:700;color:#a78bfa;letter-spacing:.7px;text-transform:uppercase;background:#07041a;border-bottom:1px solid #0e0828;position:sticky;top:0;z-index:2}
 .music-omni-row{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04);transition:background .12s}
 .music-omni-row:hover{background:#130a20}
 .music-omni-icon{width:34px;height:34px;border-radius:7px;background:linear-gradient(135deg,#dc2626 0%,#7c2020 100%);color:#fff;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(220,38,38,.25)}
