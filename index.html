@@ -2577,6 +2577,13 @@ footer{
 .pr-spinner::before{content:'';width:18px;height:18px;border:2px solid #1e3a5f;border-top-color:#2563eb;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
 
 /* ── OMNISEARCH BAR ── */
+/* ── YouTube Live panel settings ── */
+#yt-settings-panel{flex-direction:column;gap:7px;padding:8px 10px;background:#050b16;border-bottom:1px solid #0d1a30;flex-shrink:0}
+/* ── Calendar weekend cells ── */
+.cal-cell.cal-weekend .cal-cell-date{color:#93c5fd}
+/* ── YT Live fill-panel layout ── */
+#rb-panel-video[data-ytl="4"] #yt-video-wrapper{flex:1;min-height:0}
+#rb-panel-video[data-ytl="4"] #yt-video-wrapper>div{padding-top:0!important;height:100%}
 .yt-omni-bar{padding:6px 8px;background:#080e1a;border-bottom:1px solid #0d1a30;display:flex;gap:5px;align-items:center;flex-shrink:0}
 .yt-omni-input-wrap{flex:1;min-width:0;position:relative;display:flex;align-items:center}
 .yt-omni-input{width:100%;padding:7px 26px 7px 30px;background:#0c1525;color:#e2e8f0;border:1px solid #1e3a5f;border-radius:8px;font-size:11px;outline:none;font-family:inherit;transition:border-color .15s}
@@ -4121,6 +4128,26 @@ footer{
       </div>
       <button class="ytc-btn" onclick="ytToggleFav()" id="yt-fav-btn" title="Add to favorites" style="font-size:15px;flex-shrink:0">&#x2606;</button>
       <button class="ytc-btn" onclick="ytOmniOpen()" title="Browse all channels" style="flex-shrink:0;font-size:13px">&#x2630;</button>
+      <button class="ytc-btn" onclick="ytToggleSettings()" id="yt-gear-btn" title="Panel Settings" style="flex-shrink:0;font-size:13px">&#x2699;</button>
+    </div>
+    <!-- YouTube Live settings panel -->
+    <div id="yt-settings-panel" style="display:none;flex-direction:column;gap:7px;padding:8px 10px;background:#050b16;border-bottom:1px solid #0d1a30;flex-shrink:0">
+      <div style="font-size:9px;font-weight:700;letter-spacing:.9px;color:#2d4460;text-transform:uppercase">Video Size</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        <button class="iptv-style-btn active" id="yt-layout-btn-1" onclick="ytSetLayout(1)" title="Standard 16:9">📺 Standard</button>
+        <button class="iptv-style-btn" id="yt-layout-btn-2" onclick="ytSetLayout(2)" title="Compact — shorter video">◻ Compact</button>
+        <button class="iptv-style-btn" id="yt-layout-btn-3" onclick="ytSetLayout(3)" title="Large — taller 4:3 video">⬜ Large</button>
+        <button class="iptv-style-btn" id="yt-layout-btn-4" onclick="ytSetLayout(4)" title="Fill — video fills panel">⬛ Fill Panel</button>
+      </div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:.9px;color:#2d4460;text-transform:uppercase">Options</div>
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer">
+        <input type="checkbox" id="yt-opt-defbar" checked onchange="ytToggleDefaultBar()" style="accent-color:#2563eb;width:13px;height:13px">
+        <span style="font-size:10px;color:#9aa0a6">Show default channel bar</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer">
+        <input type="checkbox" id="yt-opt-ctrlbar" checked onchange="ytToggleCtrlBar()" style="accent-color:#2563eb;width:13px;height:13px">
+        <span style="font-size:10px;color:#9aa0a6">Show player controls bar</span>
+      </label>
     </div>
 
     <!-- Channel selector (state/navigation — hidden, driven by Omnisearch) -->
@@ -4797,6 +4824,26 @@ footer{
         <span id="cal-month-label" style="font-size:13px;font-weight:700;color:#93c5fd;min-width:130px;text-align:center"></span>
         <button class="panel-ctrl-btn" onclick="calNavNext()" title="Next month">▶</button>
         <button class="panel-ctrl-btn" onclick="calGoToday()" style="font-size:10px;padding:0 6px;min-width:40px">Today</button>
+      </div>
+      <button class="iptv-gear-btn" id="cal-gear-btn" onclick="calToggleSettings()" title="Calendar Settings">&#x2699;</button>
+    </div>
+    <!-- Calendar settings panel -->
+    <div id="cal-settings-panel" class="iptv-settings-panel" style="flex-shrink:0">
+      <div class="iptv-settings-label">First Day of Week</div>
+      <div class="iptv-style-row">
+        <button class="iptv-style-btn active" id="cal-fday-0" onclick="calSetFirstDay(0)">☀ Sunday</button>
+        <button class="iptv-style-btn" id="cal-fday-1" onclick="calSetFirstDay(1)">💼 Monday</button>
+      </div>
+      <div class="iptv-settings-label">Options</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer">
+          <input type="checkbox" id="cal-opt-labels" checked onchange="calToggleHolidayLabels()" style="accent-color:#2563eb;width:13px;height:13px">
+          <span style="font-size:10px;color:#9aa0a6">Show holiday labels</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer">
+          <input type="checkbox" id="cal-opt-weekends" checked onchange="calToggleWeekends()" style="accent-color:#2563eb;width:13px;height:13px">
+          <span style="font-size:10px;color:#9aa0a6">Highlight weekends</span>
+        </label>
       </div>
     </div>
     <div class="panel-preset-strip" id="cal-country-strip" style="flex-shrink:0">
@@ -6442,6 +6489,12 @@ function rbDoExpand() {
   if (expandBtn) expandBtn.textContent = '⛶ Restore';
   _rbExpanded = true;
   document.body.style.overflow = 'hidden';
+
+  // Markets widget is iframe-based and sized to the sidebar — force re-render at full size
+  if (activePanel.id === 'rb-panel-markets') {
+    _mktsWidgetDirty = true;
+    setTimeout(mktsInitWidget, 80);
+  }
 }
 function rbRestoreExpand() {
   const overlay  = document.getElementById('widget-expand-overlay');
@@ -7840,6 +7893,7 @@ document.addEventListener('DOMContentLoaded', () => {
   try { _initLiveScores(); } catch(e) { console.error('_initLiveScores failed:', e); }
   try { _renderRandomChips(); } catch(e) { console.error('_renderRandomChips failed:', e); }
   try { setInterval(_renderRandomChips, 10 * 60 * 1000); } catch(e) { console.error('chip interval failed:', e); }
+  try { setTimeout(ytRestoreSettings, 200); } catch(e) { console.error('ytRestoreSettings failed:', e); }
 });
 
 // ── SHARE BUTTONS LOGIC — runs after DOM ready ──────────────────
@@ -8061,17 +8115,17 @@ var _MKTS_DEFAULT_GROUPS = [
     { name: 'OANDA:SPX500USD',  displayName: 'S&P 500' },
     { name: 'CAPITALCOM:US100', displayName: 'Nasdaq 100' },
     { name: 'OANDA:US30USD',    displayName: 'Dow Jones' },
-    { name: 'TVC:VIX',         displayName: 'VIX Fear Index' },
-    { name: 'TVC:RUT',         displayName: 'Russell 2000' },
+    { name: 'CBOE:VIX',         displayName: 'VIX Fear Index' },
+    { name: 'CAPITALCOM:US2000',displayName: 'Russell 2000' },
     { name: 'BMFBOVESPA:IBOV', displayName: 'Brazil Bovespa' },
     { name: 'TSX:TSX',         displayName: 'Canada TSX' }
   ]},
   { name: '🇪🇺 Europe', symbols: [
     { name: 'XETR:DAX',         displayName: 'Germany DAX' },
     { name: 'OANDA:UK100GBP',   displayName: 'UK FTSE 100' },
-    { name: 'CAPITALCOM:FRA40', displayName: 'France CAC 40' },
+    { name: 'EURONEXT:FCHI',    displayName: 'France CAC 40' },
     { name: 'CAPITALCOM:EU50',  displayName: 'Euro Stoxx 50' },
-    { name: 'CAPITALCOM:AEX',   displayName: 'Netherlands AEX' },
+    { name: 'EURONEXT:AEX',     displayName: 'Netherlands AEX' },
     { name: 'BME:IBC',          displayName: 'Spain IBEX 35' },
     { name: 'SIX:SMI',          displayName: 'Switzerland SMI' }
   ]},
@@ -8222,12 +8276,21 @@ function mktsRenderEditor() {
     } else {
       html += '<div style="padding:8px 10px;font-size:11px;color:var(--text3);font-style:italic">No symbols yet — add one below</div>';
     }
-    // Add symbol row
-    html += '<div style="display:flex;gap:6px;padding:8px 10px;background:var(--card2);border-top:1px solid var(--border)">';
+    // Add symbol — search bar + popular picks
+    html += '<div style="padding:8px 10px 4px;background:var(--card2);border-top:1px solid var(--border)">';
+    html += '<div style="font-size:9px;font-weight:700;letter-spacing:.8px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">🔍 Search & Add Symbol</div>';
+    html += '<input id="mkts-search-' + gi + '" type="text" placeholder="Search Nasdaq, Gold, Apple, VIX…" ' +
+      'oninput="mktsFilterPopular(' + gi + ',this.value)" onfocus="mktsFilterPopular(' + gi + ',this.value)" ' +
+      'style="width:100%;box-sizing:border-box;background:var(--card);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:6px 10px;font-size:11px;outline:none;margin-bottom:5px" ' +
+      'onfocus2="this.style.borderColor=\'var(--burn2)\'" onblur="this.style.borderColor=\'var(--border2)\'">';
+    html += '<div id="mkts-results-' + gi + '" style="display:flex;flex-wrap:wrap;gap:4px;max-height:96px;overflow-y:auto;margin-bottom:6px">';
+    html += '<span style="font-size:10px;color:var(--text3);padding:2px 0">Click a symbol above to pick, or type to filter — or enter manually below</span>';
+    html += '</div>';
+    html += '<div style="display:flex;gap:6px">';
     html += '<input id="mkts-sym-' + gi + '" type="text" placeholder="EXCHANGE:SYMBOL" onkeydown="if(event.key===\'Enter\')mktsAddSymbol(' + gi + ')" style="flex:1.5;background:var(--card);border:1px solid var(--border2);border-radius:5px;color:var(--text);padding:5px 8px;font-size:11px;font-family:monospace;outline:none" onfocus="this.style.borderColor=\'var(--burn2)\'" onblur="this.style.borderColor=\'var(--border2)\'">';
     html += '<input id="mkts-lbl-' + gi + '" type="text" placeholder="Display Name" onkeydown="if(event.key===\'Enter\')mktsAddSymbol(' + gi + ')" style="flex:1;background:var(--card);border:1px solid var(--border2);border-radius:5px;color:var(--text);padding:5px 8px;font-size:11px;outline:none" onfocus="this.style.borderColor=\'var(--burn2)\'" onblur="this.style.borderColor=\'var(--border2)\'">';
     html += '<button onclick="mktsAddSymbol(' + gi + ')" style="background:var(--burn);border:none;color:#fff;border-radius:5px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">+ Add</button>';
-    html += '</div>';
+    html += '</div></div>';
     html += '</div>';
   });
   if (!_mktsEditorGroups.length) {
@@ -8238,6 +8301,105 @@ function mktsRenderEditor() {
 
 function mktsEsc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Popular symbol catalogue for quick-pick search ──
+var _MKTS_POPULAR = [
+  {sym:'OANDA:SPX500USD',  name:'S&P 500',             grp:'🌎 Americas'},
+  {sym:'CAPITALCOM:US100', name:'Nasdaq 100',           grp:'🌎 Americas'},
+  {sym:'OANDA:US30USD',    name:'Dow Jones',            grp:'🌎 Americas'},
+  {sym:'CBOE:VIX',         name:'VIX Fear Index',       grp:'🌎 Americas'},
+  {sym:'CAPITALCOM:US2000',name:'Russell 2000',         grp:'🌎 Americas'},
+  {sym:'BMFBOVESPA:IBOV',  name:'Brazil Bovespa',       grp:'🌎 Americas'},
+  {sym:'TSX:TSX',          name:'Canada TSX',           grp:'🌎 Americas'},
+  {sym:'XETR:DAX',         name:'Germany DAX',          grp:'🇪🇺 Europe'},
+  {sym:'OANDA:UK100GBP',   name:'UK FTSE 100',          grp:'🇪🇺 Europe'},
+  {sym:'EURONEXT:FCHI',    name:'France CAC 40',        grp:'🇪🇺 Europe'},
+  {sym:'CAPITALCOM:EU50',  name:'Euro Stoxx 50',        grp:'🇪🇺 Europe'},
+  {sym:'EURONEXT:AEX',     name:'Netherlands AEX',      grp:'🇪🇺 Europe'},
+  {sym:'BME:IBC',          name:'Spain IBEX 35',        grp:'🇪🇺 Europe'},
+  {sym:'SIX:SMI',          name:'Switzerland SMI',      grp:'🇪🇺 Europe'},
+  {sym:'OMX:OMXS30',       name:'Sweden OMX 30',        grp:'🇪🇺 Europe'},
+  {sym:'EURONEXT:BEL20',   name:'Belgium BEL 20',       grp:'🇪🇺 Europe'},
+  {sym:'INDEX:NKY',        name:'Japan Nikkei 225',     grp:'🌏 Asia-Pacific'},
+  {sym:'HSI:HSI',          name:'Hong Kong Hang Seng',  grp:'🌏 Asia-Pacific'},
+  {sym:'SSE:000001',       name:'China Shanghai',       grp:'🌏 Asia-Pacific'},
+  {sym:'SZSE:399001',      name:'China Shenzhen',       grp:'🌏 Asia-Pacific'},
+  {sym:'ASX:XJO',          name:'Australia ASX 200',    grp:'🌏 Asia-Pacific'},
+  {sym:'KRX:KOSPI',        name:'South Korea KOSPI',    grp:'🌏 Asia-Pacific'},
+  {sym:'SGX:STI',          name:'Singapore STI',        grp:'🌏 Asia-Pacific'},
+  {sym:'BSE:SENSEX',       name:'BSE Sensex',           grp:'🇮🇳 India'},
+  {sym:'TVC:NIFTY',        name:'Nifty 50',             grp:'🇮🇳 India'},
+  {sym:'BSE:BANK',         name:'Bank Nifty',           grp:'🇮🇳 India'},
+  {sym:'BSE:IT',           name:'Nifty IT',             grp:'🇮🇳 India'},
+  {sym:'BSE:AUTO',         name:'Nifty Auto',           grp:'🇮🇳 India'},
+  {sym:'BSE:METAL',        name:'Nifty Metal',          grp:'🇮🇳 India'},
+  {sym:'BSE:MIDCAP',       name:'BSE Midcap',           grp:'🇮🇳 India'},
+  {sym:'BINANCE:BTCUSDT',  name:'Bitcoin BTC/USDT',     grp:'₿ Crypto'},
+  {sym:'BINANCE:ETHUSDT',  name:'Ethereum ETH/USDT',    grp:'₿ Crypto'},
+  {sym:'BINANCE:BNBUSDT',  name:'BNB/USDT',             grp:'₿ Crypto'},
+  {sym:'BINANCE:SOLUSDT',  name:'Solana SOL/USDT',      grp:'₿ Crypto'},
+  {sym:'BINANCE:XRPUSDT',  name:'XRP/USDT',             grp:'₿ Crypto'},
+  {sym:'OANDA:EURUSD',     name:'EUR/USD',              grp:'💱 Forex'},
+  {sym:'OANDA:GBPUSD',     name:'GBP/USD',              grp:'💱 Forex'},
+  {sym:'OANDA:USDJPY',     name:'USD/JPY',              grp:'💱 Forex'},
+  {sym:'OANDA:USDCHF',     name:'USD/CHF',              grp:'💱 Forex'},
+  {sym:'OANDA:AUDUSD',     name:'AUD/USD',              grp:'💱 Forex'},
+  {sym:'OANDA:XAUUSD',     name:'Gold XAU/USD',         grp:'🪙 Commodities'},
+  {sym:'OANDA:XAGUSD',     name:'Silver XAG/USD',       grp:'🪙 Commodities'},
+  {sym:'NYMEX:CL1!',       name:'Crude Oil WTI',        grp:'🪙 Commodities'},
+  {sym:'NYMEX:NG1!',       name:'Natural Gas',          grp:'🪙 Commodities'},
+  {sym:'CBOT:ZW1!',        name:'Wheat',                grp:'🪙 Commodities'},
+  {sym:'NASDAQ:AAPL',      name:'Apple',                grp:'🇺🇸 US Stocks'},
+  {sym:'NASDAQ:MSFT',      name:'Microsoft',            grp:'🇺🇸 US Stocks'},
+  {sym:'NASDAQ:GOOGL',     name:'Alphabet (Google)',    grp:'🇺🇸 US Stocks'},
+  {sym:'NASDAQ:AMZN',      name:'Amazon',               grp:'🇺🇸 US Stocks'},
+  {sym:'NASDAQ:NVDA',      name:'NVIDIA',               grp:'🇺🇸 US Stocks'},
+  {sym:'NASDAQ:TSLA',      name:'Tesla',                grp:'🇺🇸 US Stocks'},
+  {sym:'NYSE:META',        name:'Meta Platforms',       grp:'🇺🇸 US Stocks'},
+  {sym:'NYSE:BRK.B',       name:'Berkshire Hathaway',   grp:'🇺🇸 US Stocks'},
+  {sym:'NSE:RELIANCE',     name:'Reliance Industries',  grp:'🇮🇳 India Stocks'},
+  {sym:'NSE:INFY',         name:'Infosys',              grp:'🇮🇳 India Stocks'},
+  {sym:'NSE:TCS',          name:'TCS',                  grp:'🇮🇳 India Stocks'},
+  {sym:'NSE:HDFCBANK',     name:'HDFC Bank',            grp:'🇮🇳 India Stocks'},
+  {sym:'NSE:WIPRO',        name:'Wipro',                grp:'🇮🇳 India Stocks'},
+  {sym:'NSE:ICICIBANK',    name:'ICICI Bank',           grp:'🇮🇳 India Stocks'},
+  {sym:'NSE:BAJFINANCE',   name:'Bajaj Finance',        grp:'🇮🇳 India Stocks'},
+];
+
+function mktsFilterPopular(gi, q) {
+  var el = document.getElementById('mkts-results-' + gi);
+  if (!el) return;
+  var lq = (q || '').toLowerCase().trim();
+  var list = lq
+    ? _MKTS_POPULAR.filter(function(s) {
+        return s.sym.toLowerCase().indexOf(lq) !== -1 ||
+               s.name.toLowerCase().indexOf(lq) !== -1 ||
+               s.grp.toLowerCase().indexOf(lq) !== -1;
+      })
+    : _MKTS_POPULAR;
+  list = list.slice(0, 18);
+  if (!list.length) { el.innerHTML = '<span style="font-size:10px;color:var(--text3)">No matches — enter EXCHANGE:SYMBOL manually below</span>'; return; }
+  el.innerHTML = list.map(function(s) {
+    var safeS = s.sym.replace(/'/g,"\\'"); var safeN = s.name.replace(/'/g,"\\'");
+    return '<button onclick="mktsPickSymbol(' + gi + ',\'' + safeS + '\',\'' + safeN + '\')" title="' + mktsEsc(s.grp) + '" ' +
+      'style="display:inline-flex;flex-direction:column;align-items:flex-start;padding:4px 7px;border-radius:6px;border:1px solid var(--border);background:var(--card);cursor:pointer;transition:all .15s;gap:1px" ' +
+      'onmouseover="this.style.borderColor=\'var(--burn2)\';this.style.background=\'var(--card2)\'" ' +
+      'onmouseout="this.style.borderColor=\'var(--border)\';this.style.background=\'var(--card)\'">' +
+      '<span style="font-size:9px;font-family:monospace;color:var(--burn3);font-weight:600">' + mktsEsc(s.sym) + '</span>' +
+      '<span style="font-size:9px;color:var(--text2)">' + mktsEsc(s.name) + '</span>' +
+      '</button>';
+  }).join('');
+}
+
+function mktsPickSymbol(gi, sym, name) {
+  var symEl = document.getElementById('mkts-sym-' + gi);
+  var lblEl = document.getElementById('mkts-lbl-' + gi);
+  if (symEl) { symEl.value = sym; symEl.style.borderColor = 'var(--burn2)'; setTimeout(function(){ symEl.style.borderColor = 'var(--border2)'; }, 800); }
+  if (lblEl) { lblEl.value = name; }
+  var srch = document.getElementById('mkts-search-' + gi);
+  if (srch) srch.value = '';
+  mktsFilterPopular(gi, '');
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -11974,6 +12136,67 @@ function ytOnPlayerError(event) { /* stub — errors handled via postMessage lis
 // duplicate error events, making the iframe reload 2-3 times per channel switch
 // (visible as "blinking" on PC and full-page blink on mobile).
 // Fallback is now manual: use the dropdown or ⏮/⏭ buttons.
+
+// ── YouTube Live Panel Settings ───────────────────────────────────────────────
+var _ytLayout = 1;
+var _ytShowDefaultBar = true;
+var _ytShowCtrlBar = true;
+
+function ytToggleSettings() {
+  var sp = document.getElementById('yt-settings-panel');
+  var gb = document.getElementById('yt-gear-btn');
+  if (!sp) return;
+  var open = sp.style.display === 'none' || sp.style.display === '';
+  sp.style.display = open ? 'flex' : 'none';
+  if (gb) { gb.style.background = open ? '#1d4ed8' : ''; gb.style.color = open ? '#fff' : ''; }
+}
+
+function ytSetLayout(n) {
+  _ytLayout = n;
+  try { localStorage.setItem('viltv_yt_layout', n); } catch(_) {}
+  var wrap = document.querySelector('#yt-video-wrapper > div');
+  var ytw  = document.getElementById('yt-video-wrapper');
+  if (n === 4) {
+    // Fill panel — remove padding-top trick, let the flex box fill height
+    if (wrap) { wrap.style.paddingTop = '0'; wrap.style.height = '100%'; }
+    if (ytw)  { ytw.style.flex = '1'; ytw.style.minHeight = '0'; }
+  } else {
+    var pts = ['56.25%', '38%', '75%'];
+    if (wrap) { wrap.style.paddingTop = pts[n-1] || '56.25%'; wrap.style.height = ''; }
+    if (ytw)  { ytw.style.flex = ''; ytw.style.minHeight = ''; }
+  }
+  [1,2,3,4].forEach(function(i) {
+    var b = document.getElementById('yt-layout-btn-' + i);
+    if (b) b.classList.toggle('active', i === n);
+  });
+}
+
+function ytToggleDefaultBar() {
+  var chk = document.getElementById('yt-opt-defbar');
+  var bar = document.querySelector('#rb-panel-video > div[style*="yt-default-ch-chk"]');
+  // find the default-channel persistence bar by its checkbox
+  var bars = document.querySelectorAll('#rb-panel-video > div');
+  bars.forEach(function(d) { if (d.querySelector('#yt-default-ch-chk')) { d.style.display = (chk && !chk.checked) ? 'none' : ''; } });
+  try { localStorage.setItem('viltv_yt_defbar', chk ? (chk.checked ? '1' : '0') : '1'); } catch(_) {}
+}
+
+function ytToggleCtrlBar() {
+  var chk = document.getElementById('yt-opt-ctrlbar');
+  var bars = document.querySelectorAll('#rb-panel-video > div');
+  bars.forEach(function(d) { if (d.querySelector('#yt-mute-btn')) { d.style.display = (chk && !chk.checked) ? 'none' : ''; } });
+  try { localStorage.setItem('viltv_yt_ctrlbar', chk ? (chk.checked ? '1' : '0') : '1'); } catch(_) {}
+}
+
+function ytRestoreSettings() {
+  try {
+    var n = parseInt(localStorage.getItem('viltv_yt_layout')) || 1;
+    if (n >= 1 && n <= 4) ytSetLayout(n);
+    var def = localStorage.getItem('viltv_yt_defbar');
+    if (def === '0') { var c = document.getElementById('yt-opt-defbar'); if (c) { c.checked = false; ytToggleDefaultBar(); } }
+    var ctrl = localStorage.getItem('viltv_yt_ctrlbar');
+    if (ctrl === '0') { var c2 = document.getElementById('yt-opt-ctrlbar'); if (c2) { c2.checked = false; ytToggleCtrlBar(); } }
+  } catch(_) {}
+}
 
 // ── Video Controls ───────────────────────────────────────────────────────────
 function ytToggleMute() {
@@ -18148,6 +18371,51 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
   const LS_KEY = 'viltv_calendar_events';
   let _calYear, _calMonth, _calCountry = 'IN', _calRegion = null;
   let _calSelectedDate = null, _calEventColor = '#60a5fa';
+  let _calFirstDay = 0;           // 0 = Sunday, 1 = Monday
+  let _calShowHolidayLabels = true;
+  let _calHighlightWeekends = true;
+
+  function _calRestoreSettings() {
+    try {
+      var fd = localStorage.getItem('viltv_cal_firstday');
+      if (fd === '1') { _calFirstDay = 1; var b0 = document.getElementById('cal-fday-0'); var b1 = document.getElementById('cal-fday-1'); if (b0) b0.classList.remove('active'); if (b1) b1.classList.add('active'); }
+      var sl = localStorage.getItem('viltv_cal_showlabels');
+      if (sl === '0') { _calShowHolidayLabels = false; var c = document.getElementById('cal-opt-labels'); if (c) c.checked = false; }
+      var hw = localStorage.getItem('viltv_cal_weekends');
+      if (hw === '0') { _calHighlightWeekends = false; var c2 = document.getElementById('cal-opt-weekends'); if (c2) c2.checked = false; }
+    } catch(_) {}
+  }
+
+  window.calToggleSettings = function() {
+    var sp = document.getElementById('cal-settings-panel');
+    var gb = document.getElementById('cal-gear-btn');
+    if (!sp) return;
+    var open = !sp.classList.contains('open');
+    sp.classList.toggle('open', open);
+    if (gb) gb.classList.toggle('active', open);
+  };
+
+  window.calSetFirstDay = function(d) {
+    _calFirstDay = d;
+    try { localStorage.setItem('viltv_cal_firstday', d); } catch(_) {}
+    document.getElementById('cal-fday-0').classList.toggle('active', d === 0);
+    document.getElementById('cal-fday-1').classList.toggle('active', d === 1);
+    calRender();
+  };
+
+  window.calToggleHolidayLabels = function() {
+    var c = document.getElementById('cal-opt-labels');
+    _calShowHolidayLabels = c ? c.checked : true;
+    try { localStorage.setItem('viltv_cal_showlabels', _calShowHolidayLabels ? '1' : '0'); } catch(_) {}
+    calRender();
+  };
+
+  window.calToggleWeekends = function() {
+    var c = document.getElementById('cal-opt-weekends');
+    _calHighlightWeekends = c ? c.checked : true;
+    try { localStorage.setItem('viltv_cal_weekends', _calHighlightWeekends ? '1' : '0'); } catch(_) {}
+    calRender();
+  };
 
   /* ── Holiday data ──────────────────────────────────────────────────
      Keys are YYYY-MM-DD for year-specific dates (lunar/Islamic/Easter)
@@ -18529,6 +18797,7 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
     const now = new Date();
     _calYear = now.getFullYear();
     _calMonth = now.getMonth();
+    _calRestoreSettings();
     calRenderRegions();
     calRender();
   };
@@ -18577,11 +18846,24 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
       .toLocaleString('default',{month:'long', year:'numeric'});
     const grid = document.getElementById('cal-grid');
     if (!grid) return;
+
+    // Update day-of-week header to match first-day setting
+    const dayNames = _calFirstDay === 1
+      ? ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+      : ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const hdrEl = document.querySelector('.cal-header-row');
+    if (hdrEl) hdrEl.innerHTML = dayNames.map(d=>`<span>${d}</span>`).join('');
+
     const events    = _calLoadEvents();
-    const firstDay  = new Date(_calYear, _calMonth, 1).getDay();
+    const rawFirst  = new Date(_calYear, _calMonth, 1).getDay(); // 0=Sun
+    // Shift so the grid column matches the selected first day (0=Sun or 1=Mon)
+    const firstDay  = (_calFirstDay === 1) ? (rawFirst + 6) % 7 : rawFirst;
     const daysInMon = new Date(_calYear, _calMonth+1, 0).getDate();
     const today     = new Date();
     const prevDays  = new Date(_calYear, _calMonth, 0).getDate();
+    const showLabels = _calShowHolidayLabels !== false;
+    const hlWeekends = _calHighlightWeekends !== false;
+
     let html = '';
     // leading blanks (prev month tail)
     for (let i = firstDay-1; i >= 0; i--)
@@ -18589,6 +18871,8 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
     // current month days
     for (let d = 1; d <= daysInMon; d++) {
       const ds = _calDateStr(_calYear, _calMonth, d);
+      const dow = new Date(_calYear, _calMonth, d).getDay(); // 0=Sun,6=Sat
+      const isWeekend = (dow === 0 || dow === 6);
       const isToday = today.getFullYear()===_calYear && today.getMonth()===_calMonth && today.getDate()===d;
       const isSel   = _calSelectedDate === ds;
       const holiday = _calGetHoliday(ds);
@@ -18596,10 +18880,11 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
       let cls = 'cal-cell';
       if (isToday) cls += ' cal-today';
       if (isSel)   cls += ' cal-selected';
+      if (hlWeekends && isWeekend) cls += ' cal-weekend';
       if (holiday && holiday.type==='national') cls += ' cal-holiday-nat';
       if (holiday && holiday.type==='regional') cls += ' cal-holiday-reg';
       let inner = `<span class="cal-cell-date">${d}</span>`;
-      if (holiday) inner += `<span class="cal-holiday-label${holiday.type==='regional'?' regional':''}">${holiday.label}</span>`;
+      if (showLabels && holiday) inner += `<span class="cal-holiday-label${holiday.type==='regional'?' regional':''}">${holiday.label}</span>`;
       if (dayEvts.length)
         inner += '<div class="cal-dots-row">' +
           dayEvts.map(e=>`<span class="cal-event-dot" style="background:${e.color||'#60a5fa'}" title="${e.title}"></span>`).join('') +
