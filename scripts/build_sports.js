@@ -1,21 +1,19 @@
 #!/usr/bin/env node
 /**
- * Fetches today's sports scores from TheSportsDB (free tier, no API key required)
- * and writes data/sports.json for the GitHub Pages static frontend.
+ * Fetches TODAY + YESTERDAY sports data from TheSportsDB (free tier, no API key)
+ * and writes data/sports.json with live / today / yesterday buckets.
  *
- * TheSportsDB endpoint:
- *   https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=YYYY-MM-DD&s=SPORT
+ * Schema per sport:
+ *   { live: [{name, events}], today: [{name, events}], yesterday: [{name, events}], liveCount: N }
  *
- * Runs via GitHub Actions every 15 minutes (.github/workflows/sports.yml)
+ * Runs via GitHub Actions every 5 minutes (.github/workflows/sports.yml)
  */
-
 'use strict';
 
 const https = require('https');
 const fs    = require('fs');
 const path  = require('path');
 
-// Sports to fetch — key matches the frontend sport selector values
 const SPORTS = [
   { key: 'football',   query: 'Soccer'      },
   { key: 'cricket',    query: 'Cricket'     },
@@ -28,7 +26,8 @@ const SPORTS = [
 
 const FINISHED_STATUSES = new Set([
   'Match Finished', 'FT', 'AP', 'AET', 'AOT', 'Full Time',
-  'After Extra Time', 'After Penalties',
+  'After Extra Time', 'After Penalties', 'Finished', 'Complete',
+  'Post', 'Final',
 ]);
 
 /* ── HTTP helper ── */
@@ -36,7 +35,7 @@ function httpsGet(url) {
   return new Promise((resolve, reject) => {
     const req = https.get(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; MultiScreener-SportsFetcher/1.0)',
+        'User-Agent': 'Mozilla/5.0 (compatible; MultiScreener-SportsFetcher/1.1)',
         'Accept': 'application/json',
       },
       timeout: 15000,
@@ -52,72 +51,149 @@ function httpsGet(url) {
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-/* ── Fetch events for one sport ── */
+/* ── Fetch events for one sport on a specific date ── */
 async function fetchSportEvents(sportQuery, date) {
   const url = `https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${date}&s=${encodeURIComponent(sportQuery)}`;
   const res = await httpsGet(url);
   if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
   const j = JSON.parse(res.body);
-  // TheSportsDB uses 'events' for eventsday endpoint (note: NOT 'event')
   return j.events || j.event || [];
 }
 
-/* ── Group raw events into league buckets ── */
-function groupByLeague(events) {
-  const byLeague = {};
-  const order    = [];
+/* ── Split today's events into live / today (finished + upcoming) ── */
+function groupTodayBuckets(events) {
+  const liveBuckets  = {};
+  const liveOrder    = [];
+  const todayBuckets = {};
+  const todayOrder   = [];
+  let liveCount = 0;
 
   for (const ev of events) {
     const lg = ev.strLeague || 'Unknown';
-    if (!byLeague[lg]) { byLeague[lg] = []; order.push(lg); }
+    const hs = ev.intHomeScore != null ? String(ev.intHomeScore) : null;
+    const as = ev.intAwayScore != null ? String(ev.intAwayScore) : null;
+
+    const isFinished   = FINISHED_STATUSES.has(ev.strStatus);
+    const isNotStarted = !ev.strStatus || ev.strStatus === 'Not Started' ||
+                         ev.strStatus === '' || ev.strStatus === 'NS' ||
+                         ev.strStatus === 'Postponed' || ev.strStatus === 'Cancelled' ||
+                         ev.strStatus === 'Abandoned';
+    const isLive       = !isFinished && !isNotStarted;
+
+    const match = {
+      home:      ev.strHomeTeam  || '?',
+      away:      ev.strAwayTeam  || '?',
+      homeScore: hs,
+      awayScore: as,
+      status:    ev.strProgress || ev.strStatus || '',
+      isLive,
+      isFinished,
+    };
+
+    if (isLive) {
+      liveCount++;
+      if (!liveBuckets[lg]) { liveBuckets[lg] = []; liveOrder.push(lg); }
+      liveBuckets[lg].push(match);
+    } else {
+      if (!todayBuckets[lg]) { todayBuckets[lg] = []; todayOrder.push(lg); }
+      todayBuckets[lg].push(match);
+    }
+  }
+
+  return {
+    live:      liveOrder.map(name  => ({ name, events: liveBuckets[name]  })),
+    today:     todayOrder.map(name => ({ name, events: todayBuckets[name] })),
+    liveCount,
+  };
+}
+
+/* ── Group yesterday's events by league (all finished) ── */
+function groupAllByLeague(events) {
+  const buckets = {};
+  const order   = [];
+
+  for (const ev of events) {
+    const lg = ev.strLeague || 'Unknown';
+    if (!buckets[lg]) { buckets[lg] = []; order.push(lg); }
 
     const hs = ev.intHomeScore != null ? String(ev.intHomeScore) : null;
     const as = ev.intAwayScore != null ? String(ev.intAwayScore) : null;
-    const isFinished = FINISHED_STATUSES.has(ev.strStatus);
-    const isLive     = !isFinished &&
-                       !!ev.strStatus &&
-                       ev.strStatus !== 'Not Started' &&
-                       ev.strStatus !== '';
+    const isFinished   = FINISHED_STATUSES.has(ev.strStatus);
+    const isNotStarted = !ev.strStatus || ev.strStatus === 'Not Started' ||
+                         ev.strStatus === '' || ev.strStatus === 'NS' ||
+                         ev.strStatus === 'Postponed' || ev.strStatus === 'Cancelled' ||
+                         ev.strStatus === 'Abandoned';
+    const isLive       = !isFinished && !isNotStarted;
 
-    byLeague[lg].push({
-      home:       ev.strHomeTeam  || '?',
-      away:       ev.strAwayTeam  || '?',
-      homeScore:  hs,
-      awayScore:  as,
-      status:     ev.strProgress || ev.strStatus || '',
+    buckets[lg].push({
+      home:      ev.strHomeTeam  || '?',
+      away:      ev.strAwayTeam  || '?',
+      homeScore: hs,
+      awayScore: as,
+      status:    ev.strProgress || ev.strStatus || '',
       isLive,
       isFinished,
     });
   }
 
-  return order.map(name => ({ name, events: byLeague[name] }));
+  return order.map(name => ({ name, events: buckets[name] }));
 }
 
 /* ── Main ── */
 async function main() {
-  const date = new Date().toISOString().slice(0, 10); // UTC date: YYYY-MM-DD
-  console.log(`Build Sports — date: ${date}\n`);
+  const now = new Date();
+
+  // UTC dates
+  const todayStr = now.toISOString().slice(0, 10);
+  const yd = new Date(now);
+  yd.setUTCDate(yd.getUTCDate() - 1);
+  const yestStr = yd.toISOString().slice(0, 10);
+
+  console.log(`Build Sports — today: ${todayStr}  |  yesterday: ${yestStr}\n`);
 
   const sports = {};
 
   for (const sport of SPORTS) {
     process.stdout.write(`  ${sport.key.padEnd(12)}: `);
     try {
-      const events = await fetchSportEvents(sport.query, date);
-      sports[sport.key] = groupByLeague(events);
-      const total = events.length;
-      const leagues = sports[sport.key].length;
-      console.log(`${total} events across ${leagues} league(s)`);
+      // Fetch today and yesterday sequentially (respect free tier rate limits)
+      let todayEvents = [];
+      let yestEvents  = [];
+
+      try {
+        todayEvents = await fetchSportEvents(sport.query, todayStr);
+      } catch (e) {
+        console.warn(`[today err: ${e.message}]`);
+      }
+      await sleep(350);
+
+      try {
+        yestEvents = await fetchSportEvents(sport.query, yestStr);
+      } catch (e) {
+        console.warn(`[yesterday err: ${e.message}]`);
+      }
+
+      const { live, today, liveCount } = groupTodayBuckets(todayEvents);
+      const yesterday = groupAllByLeague(yestEvents);
+
+      sports[sport.key] = { live, today, yesterday, liveCount };
+
+      const todayTotal = todayEvents.length;
+      const yestTotal  = yestEvents.length;
+      console.log(`${liveCount} live | ${todayTotal - liveCount} today | ${yestTotal} yesterday`);
+
     } catch (e) {
       console.log(`ERROR — ${e.message}`);
-      sports[sport.key] = [];
+      sports[sport.key] = { live: [], today: [], yesterday: [], liveCount: 0 };
     }
-    await sleep(500); // be respectful to TheSportsDB free tier
+
+    await sleep(350); // respectful pacing between sports
   }
 
   const out = {
     generated: new Date().toISOString(),
-    date,
+    date:      todayStr,
+    yesterday: yestStr,
     sports,
   };
 

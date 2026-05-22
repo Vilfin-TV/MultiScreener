@@ -1974,13 +1974,13 @@ footer{
 .dd-has-sub{position:relative}
 .dd-has-sub::after{content:'›';position:absolute;right:12px;opacity:.5;font-size:14px}
 .dd-submenu{
-  display:none;position:fixed;left:auto;top:auto;
+  display:none;position:fixed;
+  /* left/top set dynamically by _tmenuPositionSub() on mouseenter */
   background:#1a1200;border:1px solid var(--border2);
   border-top:2px solid var(--burn2);border-radius:0 10px 10px 10px;
   min-width:260px;max-height:70vh;overflow-y:auto;
   box-shadow:8px 8px 32px rgba(0,0,0,.6);z-index:10000;
 }
-.dd-has-sub:hover .dd-submenu{left:auto;top:auto}
 .dd-submenu::-webkit-scrollbar{width:4px}
 .dd-submenu::-webkit-scrollbar-thumb{background:var(--burn);border-radius:2px}
 .dd-has-sub:hover .dd-submenu{display:block;animation:fadeIn .12s ease}
@@ -3027,6 +3027,36 @@ footer{
   background:rgba(255,105,0,.18);border-color:rgba(255,105,0,.4);color:#ff8f40;
 }
 .sf-comp-btn:hover:not(.active){border-color:#334155;color:#64748b}
+/* ── Time-bucket tabs: LIVE / TODAY / PAST ── */
+.sf-tab-bar{
+  display:flex;gap:5px;padding:6px 8px;
+  background:#04060b;border-bottom:1px solid rgba(255,255,255,.05);
+  flex-shrink:0;
+}
+.sf-tab-btn{
+  flex:1;padding:6px 5px;
+  border:1px solid #1a2a40;border-radius:8px;
+  background:transparent;color:#475569;
+  font-size:9px;font-weight:800;cursor:pointer;
+  letter-spacing:.5px;transition:all .15s;
+  display:flex;align-items:center;justify-content:center;gap:4px;
+  white-space:nowrap;
+}
+.sf-tab-btn.active{
+  background:rgba(255,105,0,.14);border-color:rgba(255,105,0,.45);color:#ff8f40;
+}
+.sf-tab-btn.live-active{
+  background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.45);color:#22c55e;
+}
+.sf-tab-btn:hover:not(.active):not(.live-active){border-color:#2d3f52;color:#64748b}
+.sf-live-count{
+  font-size:8px;font-weight:900;
+  background:#22c55e;color:#020d04;
+  border-radius:9px;padding:0 5px;
+  min-width:14px;text-align:center;
+  line-height:14px;height:14px;
+  display:inline-block;flex-shrink:0;
+}
 /* ── Scores scroll area ── */
 .sf-scores-wrap{
   flex:1;overflow-y:auto;padding:8px 8px 12px;
@@ -3115,6 +3145,7 @@ footer{
   #pr-nav{scrollbar-width:none}
   .sf-sport-btn{font-size:10px;padding:6px 10px}
   .sf-comp-btn{font-size:9px;padding:4px 9px}
+  .sf-tab-btn{font-size:9px;padding:6px 4px}
   .sf-hdr{padding:8px 11px}
   .sf-hdr-name{font-size:12px}
 }
@@ -4805,10 +4836,17 @@ footer{
       <button class="sf-sport-btn" onclick="sfSwitchSport('baseball',this)">&#x26BE; Baseball</button>
       <button class="sf-sport-btn" onclick="sfSwitchSport('hockey',this)">&#x1F3D2; Hockey</button>
     </div>
-    <!-- Competition filter chips (visible only for Cricket) -->
+    <!-- Time-bucket tabs: LIVE / TODAY / PAST -->
+    <div class="sf-tab-bar" id="sf-tab-bar">
+      <button class="sf-tab-btn" id="sf-tab-live" onclick="sfSwitchTab('live',this)">
+        &#x1F534; LIVE <span class="sf-live-count" id="sf-live-count" style="display:none">0</span>
+      </button>
+      <button class="sf-tab-btn" id="sf-tab-today" onclick="sfSwitchTab('today',this)">TODAY</button>
+      <button class="sf-tab-btn" id="sf-tab-past" onclick="sfSwitchTab('past',this)">PAST</button>
+    </div>
+    <!-- Cricket competition sub-filter (visible only for Cricket) -->
     <div class="sf-comp-bar" id="sf-comp-bar">
       <button class="sf-comp-btn active" onclick="sfFilterComp('all',this)">All</button>
-      <button class="sf-comp-btn" onclick="sfFilterComp('live',this)">&#x1F534; Live</button>
       <button class="sf-comp-btn" onclick="sfFilterComp('ipl',this)">&#x1F1EE;&#x1F1F3; IPL</button>
       <button class="sf-comp-btn" onclick="sfFilterComp('t20i',this)">&#x26A1; T20I</button>
       <button class="sf-comp-btn" onclick="sfFilterComp('odi',this)">&#x1F30D; ODI</button>
@@ -6373,25 +6411,60 @@ function toggleMenu(id) {
   closeAllMenus();
   if (!wasOpen) {
     const dd = item.querySelector('.tmenu-dropdown');
-    // Mobile: dropdown is inline (position:static via CSS). Strip inline
-    // left/top from a previous desktop session so the dropdown doesn't
-    // jump to a fixed pixel offset and disappear off-screen.
+    // Mobile: dropdown renders inline (CSS overrides position). Clear any
+    // previous desktop pixel offsets so it stays inside the mobile panel.
     if (window.innerWidth <= 900) {
       dd.style.left = '';
-      dd.style.top = '';
+      dd.style.top  = '';
     } else {
-      const btn = item.querySelector('.tmenu-btn');
+      const btn  = item.querySelector('.tmenu-btn');
       const rect = btn.getBoundingClientRect();
-      dd.style.left = rect.left + 'px';
-      dd.style.top = rect.bottom + 'px';
+      const vw   = window.innerWidth;
+      const ddW  = dd.offsetWidth || 220; // actual rendered width or min-width fallback
+      // Align left edge with the button, but clamp so it never clips the right edge
+      let left = rect.left;
+      if (left + ddW > vw - 8) left = vw - ddW - 8;
+      if (left < 0) left = 0;
+      dd.style.left = left + 'px';
+      dd.style.top  = rect.bottom + 'px';
     }
     item.classList.add('open');
   }
 }
 function closeAllMenus() {
   document.querySelectorAll('.tmenu-item.open').forEach(el => el.classList.remove('open'));
-  // Don't auto-close mobile menu when opening a dropdown inside it
 }
+
+// ── Submenu positioning — position:fixed, calculated on mouseenter ──────────
+// Uses capture-phase listener so coordinates are set BEFORE CSS :hover renders
+// the submenu. Falls back to right-side if flipping left would also overflow.
+(function () {
+  function _tmenuPositionSub(hasSubEl) {
+    var sub = hasSubEl.querySelector(':scope > .dd-submenu');
+    if (!sub) return;
+    var r   = hasSubEl.getBoundingClientRect();
+    var vw  = window.innerWidth;
+    var vh  = window.innerHeight;
+    var sw  = 270;  // safe over-estimate of min-width:260px
+    var sh  = 420;  // reasonable height cap for all known sub-menus
+    // Try right of parent; flip left if it would overflow
+    var left = r.right + 2;
+    if (left + sw > vw - 8) left = r.left - sw - 2;
+    if (left < 4)            left = 4;
+    // Clamp top so the bottom of submenu stays on-screen
+    var top = r.top;
+    if (top + sh > vh - 8) top = Math.max(4, vh - sh - 8);
+    sub.style.left = left + 'px';
+    sub.style.top  = top  + 'px';
+  }
+  document.addEventListener('mouseenter', function (e) {
+    var item = e.target && e.target.closest && e.target.closest('.dd-has-sub');
+    if (!item) return;
+    // Only act when inside an open dropdown or sub-menu
+    if (!item.closest('.tmenu-item.open')) return;
+    _tmenuPositionSub(item);
+  }, true);
+}());
 
 function closeMobileMenu() {
   const items = document.querySelector('.top-menu-items');
@@ -8787,37 +8860,32 @@ var _MKTS_DEFAULT_GROUPS = [
     { name: 'OANDA:SPX500USD',  displayName: 'S&P 500' },
     { name: 'CAPITALCOM:US100', displayName: 'Nasdaq 100' },
     { name: 'OANDA:US30USD',    displayName: 'Dow Jones' },
-    { name: 'CBOE:VIX',         displayName: 'VIX Fear Index' },
-    { name: 'CAPITALCOM:US2000',displayName: 'Russell 2000' },
-    { name: 'BMFBOVESPA:IBOV', displayName: 'Brazil Bovespa' },
-    { name: 'TSX:TSX',         displayName: 'Canada TSX' }
+    { name: 'BMFBOVESPA:IBOV',  displayName: 'Brazil Bovespa' },
+    { name: 'TSX:TSX',          displayName: 'Canada TSX' }
   ]},
   { name: '🇪🇺 Europe', symbols: [
-    { name: 'XETR:DAX',         displayName: 'Germany DAX' },
-    { name: 'OANDA:UK100GBP',   displayName: 'UK FTSE 100' },
-    { name: 'EURONEXT:FCHI',    displayName: 'France CAC 40' },
-    { name: 'CAPITALCOM:EU50',  displayName: 'Euro Stoxx 50' },
-    { name: 'EURONEXT:AEX',     displayName: 'Netherlands AEX' },
-    { name: 'BME:IBC',          displayName: 'Spain IBEX 35' },
-    { name: 'SIX:SMI',          displayName: 'Switzerland SMI' }
+    { name: 'XETR:DAX',        displayName: 'Germany DAX' },
+    { name: 'OANDA:UK100GBP',  displayName: 'UK FTSE 100' },
+    { name: 'CAPITALCOM:EU50', displayName: 'Euro Stoxx 50' },
+    { name: 'BME:IBC',         displayName: 'Spain IBEX 35' },
+    { name: 'SIX:SMI',         displayName: 'Switzerland SMI' }
   ]},
   { name: '🌏 Asia-Pacific', symbols: [
     { name: 'INDEX:NKY',   displayName: 'Japan Nikkei 225' },
     { name: 'HSI:HSI',     displayName: 'Hong Kong Hang Seng' },
     { name: 'SSE:000001',  displayName: 'China Shanghai' },
     { name: 'SZSE:399001', displayName: 'China Shenzhen' },
-    { name: 'ASX:XJO',     displayName: 'Australia ASX 200' },
-    { name: 'KRX:KOSPI',   displayName: 'South Korea KOSPI' },
-    { name: 'SGX:STI',     displayName: 'Singapore STI' }
+    { name: 'ASX:XJO',     displayName: 'Australia ASX 200' }
   ]},
   { name: '🇮🇳 India — BSE', symbols: [
-    { name: 'BSE:SENSEX',  displayName: 'BSE Sensex' },
-    { name: 'TVC:NIFTY',   displayName: 'Nifty 50' },
-    { name: 'BSE:BANK',    displayName: 'Bank Nifty' },
-    { name: 'BSE:IT',      displayName: 'Nifty IT' },
-    { name: 'BSE:AUTO',    displayName: 'Nifty Auto' },
-    { name: 'BSE:METAL',   displayName: 'Nifty Metal' },
-    { name: 'BSE:MIDCAP',  displayName: 'BSE Midcap' }
+    { name: 'BSE:SENSEX', displayName: 'BSE Sensex' },
+    { name: 'BSE:MID150', displayName: 'Midcap 150' },
+    { name: 'BSE:BSE500', displayName: 'BSE 500' },
+    { name: 'BSE:SNSX50', displayName: 'BSE 50' },
+    { name: 'BSE:AUTO',   displayName: 'BSE Auto' },
+    { name: 'BSE:METAL',  displayName: 'BSE Metal' },
+    { name: 'BSE:BANK',   displayName: 'BSE Bank' },
+    { name: 'BSE:IT',     displayName: 'BSE IT' }
   ]}
 ];
 
@@ -9008,11 +9076,17 @@ var _MKTS_POPULAR = [
   {sym:'SGX:STI',          name:'Singapore STI',        grp:'🌏 Asia-Pacific'},
   {sym:'BSE:SENSEX',       name:'BSE Sensex',           grp:'🇮🇳 India'},
   {sym:'TVC:NIFTY',        name:'Nifty 50',             grp:'🇮🇳 India'},
-  {sym:'BSE:BANK',         name:'Bank Nifty',           grp:'🇮🇳 India'},
-  {sym:'BSE:IT',           name:'Nifty IT',             grp:'🇮🇳 India'},
-  {sym:'BSE:AUTO',         name:'Nifty Auto',           grp:'🇮🇳 India'},
-  {sym:'BSE:METAL',        name:'Nifty Metal',          grp:'🇮🇳 India'},
+  {sym:'BSE:MID150',       name:'BSE Midcap 150',       grp:'🇮🇳 India'},
+  {sym:'BSE:BSE500',       name:'BSE 500',              grp:'🇮🇳 India'},
+  {sym:'BSE:SNSX50',       name:'BSE 50 (Sensex 50)',   grp:'🇮🇳 India'},
+  {sym:'BSE:BANK',         name:'BSE Bank',             grp:'🇮🇳 India'},
+  {sym:'BSE:IT',           name:'BSE IT',               grp:'🇮🇳 India'},
+  {sym:'BSE:AUTO',         name:'BSE Auto',             grp:'🇮🇳 India'},
+  {sym:'BSE:METAL',        name:'BSE Metal',            grp:'🇮🇳 India'},
   {sym:'BSE:MIDCAP',       name:'BSE Midcap',           grp:'🇮🇳 India'},
+  {sym:'BSE:SMLCAP',       name:'BSE Smallcap',         grp:'🇮🇳 India'},
+  {sym:'NSE:NIFTYIT',      name:'Nifty IT',             grp:'🇮🇳 India'},
+  {sym:'NSE:CNXPHARMA',    name:'Nifty Pharma',         grp:'🇮🇳 India'},
   {sym:'BINANCE:BTCUSDT',  name:'Bitcoin BTC/USDT',     grp:'₿ Crypto'},
   {sym:'BINANCE:ETHUSDT',  name:'Ethereum ETH/USDT',    grp:'₿ Crypto'},
   {sym:'BINANCE:BNBUSDT',  name:'BNB/USDT',             grp:'₿ Crypto'},
@@ -9071,13 +9145,29 @@ function mktsFilterPopular(gi, q) {
 }
 
 function mktsPickSymbol(gi, sym, name) {
-  var symEl = document.getElementById('mkts-sym-' + gi);
-  var lblEl = document.getElementById('mkts-lbl-' + gi);
-  if (symEl) { symEl.value = sym; symEl.style.borderColor = 'var(--burn2)'; setTimeout(function(){ symEl.style.borderColor = 'var(--border2)'; }, 800); }
-  if (lblEl) { lblEl.value = name; }
+  // Check for duplicates
+  var grp = _mktsEditorGroups[gi];
+  if (grp && grp.symbols.some(function(s) { return s.name === sym; })) {
+    // Already added — flash the existing row
+    var rows = document.querySelectorAll('#mkts-editor-body .sf-flash');
+    // Brief toast instead of silent ignore
+    var res = document.getElementById('mkts-results-' + gi);
+    if (res) {
+      var orig = res.innerHTML;
+      res.innerHTML = '<span style="font-size:10px;color:#f97316;font-weight:700">⚠ ' + sym + ' is already in this group</span>';
+      setTimeout(function() { res.innerHTML = orig; }, 1500);
+    }
+    return;
+  }
+  // One-click add — immediately push to group
+  if (grp) grp.symbols.push({ name: sym, displayName: name });
+  // Auto-save to localStorage so the pick is persisted even before user clicks Save
+  try { localStorage.setItem(_MKTS_LS_KEY, JSON.stringify(_mktsEditorGroups)); } catch(_) {}
+  _mktsWidgetDirty = true;
+  mktsRenderEditor();
+  // Clear search box so user can search next symbol
   var srch = document.getElementById('mkts-search-' + gi);
-  if (srch) srch.value = '';
-  mktsFilterPopular(gi, '');
+  if (srch) { srch.value = ''; mktsFilterPopular(gi, ''); }
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -9960,27 +10050,29 @@ function prSyncPlayBtn() {}
 function prTogglePlay() {}
 
 // ═══════════════════════════════════════════════════════════════════════
-// SPORTS WIDGET — Multi-source live scores (ESPN + TheSportsDB, no proxy)
-// Premium radio-style pill UI; cricket sub-filter chips; deduplication.
+// SPORTS WIDGET — LIVE / TODAY / PAST tabs, static JSON backend
+// Data written every 5 min by GitHub Actions (scripts/build_sports.js)
 // ═══════════════════════════════════════════════════════════════════════
-var _sfCurrentSport  = 'football';
-var _sfCurrentComp   = 'all';
-var _sfRefreshTimer  = null;
-var _sfFetching      = false;
-var _sfSeenMatches   = new Set(); // cross-source deduplication
+var _sfCurrentSport = 'football';
+var _sfCurrentComp  = 'all';
+var _sfCurrentTab   = 'live';   // 'live' | 'today' | 'past'
+var _sfRefreshTimer = null;
+var _sfFetching     = false;
+var _sfCurrentData  = null;     // { live, today, yesterday, liveCount }
 
 function swInit() {
   sfLoadScores(_sfCurrentSport);
   if (_sfRefreshTimer) clearInterval(_sfRefreshTimer);
-  _sfRefreshTimer = setInterval(function() { sfLoadScores(_sfCurrentSport); }, 15 * 60 * 1000); // 15 min — matches GitHub Actions schedule
+  _sfRefreshTimer = setInterval(function() { sfLoadScores(_sfCurrentSport); }, 5 * 60 * 1000);
 }
 
+// ── Sport selector ────────────────────────────────────────────────────
 function sfSwitchSport(sport, btn) {
   _sfCurrentSport = sport;
   _sfCurrentComp  = 'all';
+  _sfCurrentData  = null;
   document.querySelectorAll('.sf-sport-btn').forEach(function(b) { b.classList.remove('active'); });
   if (btn) btn.classList.add('active');
-  // Show competition sub-filter only for cricket
   var compBar = document.getElementById('sf-comp-bar');
   if (compBar) {
     compBar.classList.toggle('visible', sport === 'cricket');
@@ -9991,23 +10083,42 @@ function sfSwitchSport(sport, btn) {
   sfLoadScores(sport);
 }
 
-// ── Filter cricket cards by competition type ─────────────────────────
+// ── Time-bucket tab switch (LIVE / TODAY / PAST) ─────────────────────
+function sfSwitchTab(tab, btn) {
+  _sfCurrentTab  = tab;
+  _sfCurrentComp = 'all';
+  document.querySelectorAll('.sf-tab-btn').forEach(function(b) {
+    b.classList.remove('active', 'live-active');
+  });
+  if (btn) {
+    var liveCount = _sfCurrentData ? (_sfCurrentData.liveCount || 0) : 0;
+    btn.classList.add(tab === 'live' && liveCount > 0 ? 'live-active' : 'active');
+  }
+  // Reset comp filter
+  var compBar = document.getElementById('sf-comp-bar');
+  if (compBar) {
+    compBar.querySelectorAll('.sf-comp-btn').forEach(function(b) { b.classList.remove('active'); });
+    var firstBtn = compBar.querySelector('.sf-comp-btn');
+    if (firstBtn) firstBtn.classList.add('active');
+  }
+  sfRenderTab();
+}
+
+// ── Cricket competition sub-filter ────────────────────────────────────
 function sfFilterComp(comp, btn) {
   _sfCurrentComp = comp;
   document.querySelectorAll('.sf-comp-btn').forEach(function(b) { b.classList.remove('active'); });
   if (btn) btn.classList.add('active');
-  var cards = document.querySelectorAll('#sf-scores-content .sf-card');
-  cards.forEach(function(c) {
+  _sfApplyCompFilter(comp);
+}
+
+function _sfApplyCompFilter(comp) {
+  document.querySelectorAll('#sf-scores-content .sf-card').forEach(function(c) {
     var cComp = c.dataset.comp || 'other';
-    var cLive = c.dataset.live === '1';
-    var show  = comp === 'all'
-                || (comp === 'live'  && cLive)
-                || (comp !== 'live'  && cComp === comp);
-    c.style.display = show ? '' : 'none';
+    c.style.display = (comp === 'all' || cComp === comp) ? '' : 'none';
   });
-  // Hide section headers whose cards are all hidden
   document.querySelectorAll('#sf-scores-content .sf-section-hdr').forEach(function(hdr) {
-    var sib = hdr.nextElementSibling;
+    var sib    = hdr.nextElementSibling;
     var hasVis = false;
     while (sib && !sib.classList.contains('sf-section-hdr')) {
       if (sib.classList.contains('sf-card') && sib.style.display !== 'none') hasVis = true;
@@ -10022,30 +10133,28 @@ function sfRefreshNow() { sfLoadScores(_sfCurrentSport); }
 // ── Classify cricket league → filter key ────────────────────────────
 function _sfCompKey(league) {
   var l = (league || '').toLowerCase();
-  if (l.includes('ipl') || l.includes('indian premier'))    return 'ipl';
-  if (l.includes('test'))                                    return 'test';
-  if (l.includes('t20 international') || l.includes('t20i') || l.includes('twenty20 int')) return 't20i';
-  if (l.includes('one day') || l.includes(' odi') || l.includes('one-day')) return 'odi';
-  // Domestic T20 leagues (BBL, PSL, CPL, SA20, The Hundred, etc.)
-  if (l.includes('t20') || l.includes('bbl') || l.includes('psl') || l.includes('cpl') ||
-      l.includes('sa20') || l.includes('hundred') || l.includes('super smash'))  return 'other';
+  if (l.includes('ipl') || l.includes('indian premier'))                      return 'ipl';
+  if (l.includes('test'))                                                      return 'test';
+  if (l.includes('t20 international') || l.includes('t20i') ||
+      l.includes('twenty20 int'))                                              return 't20i';
+  if (l.includes('one day') || l.includes(' odi') || l.includes('one-day'))   return 'odi';
+  if (l.includes('t20') || l.includes('bbl') || l.includes('psl') ||
+      l.includes('cpl') || l.includes('sa20') || l.includes('hundred') ||
+      l.includes('super smash'))                                               return 'other';
   return 'other';
 }
 
-// ── Render a score card with dedup + filter data attrs ───────────────
+// ── Render a single match card ───────────────────────────────────────
 function _sfCard(league, home, away, hScore, aScore, statusText, isLive, isFinished) {
-  // Cross-source deduplication (sorted team names)
-  var matchKey = [String(home || '').toLowerCase().replace(/\s+/g, ''),
-                  String(away || '').toLowerCase().replace(/\s+/g, '')].sort().join('|');
-  if (matchKey !== '?|?' && _sfSeenMatches.has(matchKey)) return '';
-  _sfSeenMatches.add(matchKey);
-
   var compKey  = _sfCompKey(league);
-  var hWin     = isFinished && Number(hScore) > Number(aScore);
-  var aWin     = isFinished && Number(aScore) > Number(hScore);
-  var hLead    = isLive    && Number(hScore) > Number(aScore);
-  var aLead    = isLive    && Number(aScore) > Number(hScore);
-  var scoreStr = (hScore !== '' && aScore !== '') ? hScore + ' – ' + aScore : 'vs';
+  var hasScore = hScore != null && hScore !== '' && aScore != null && aScore !== '';
+  var hNum     = parseFloat(hScore);
+  var aNum     = parseFloat(aScore);
+  var hWin     = isFinished && hasScore && hNum > aNum;
+  var aWin     = isFinished && hasScore && aNum > hNum;
+  var hLead    = isLive    && hasScore && hNum > aNum;
+  var aLead    = isLive    && hasScore && aNum > hNum;
+  var scoreStr = hasScore ? hScore + ' – ' + aScore : 'vs';
   return '<div class="sf-card" data-comp="' + compKey + '" data-live="' + (isLive ? '1' : '0') + '">' +
     '<div class="sf-card-league">' + _sfEsc(league) + '</div>' +
     '<div class="sf-card-teams">' +
@@ -10061,77 +10170,58 @@ function _sfCard(league, home, away, hScore, aScore, statusText, isLive, isFinis
 }
 
 function _sfEsc(s) {
-  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// ── ESPN scoreboard API (CORS-open, no key needed) ───────────────────
-async function _sfESPN(path, leagueName) {
-  var res = await fetch('https://site.api.espn.com' + path,
-    { signal: AbortSignal.timeout(8000), cache: 'no-store' });
-  if (!res.ok) throw new Error('ESPN ' + res.status);
-  var j = await res.json();
-  var events = j.events || [];
-  if (!events.length) return '';
-  return events.map(function(ev) {
-    var comp = (ev.competitions || [])[0]; if (!comp) return '';
-    var home = (comp.competitors || []).find(function(c) { return c.homeAway === 'home'; });
-    var away = (comp.competitors || []).find(function(c) { return c.homeAway === 'away'; });
-    var st   = comp.status && comp.status.type;
-    var live = st && !st.completed && (st.name || '').indexOf('IN_PROGRESS') !== -1;
-    var done = st && !!st.completed;
-    var txt  = (st && (st.shortDetail || st.description)) || '';
-    return _sfCard(
-      (comp.notes && comp.notes[0] && comp.notes[0].text) || leagueName,
-      (home && (home.team.shortDisplayName || home.team.displayName)) || '?',
-      (away && (away.team.shortDisplayName || away.team.displayName)) || '?',
-      (home && home.score) || '', (away && away.score) || '',
-      txt, live, done
-    );
-  }).join('');
-}
-
-// ── TheSportsDB (free, no key, CORS-open) — grouped by league ────────
-async function _sfSportsDB(sport) {
-  var now   = new Date();
-  var today = now.getFullYear() + '-' +
-              String(now.getMonth() + 1).padStart(2, '0') + '-' +
-              String(now.getDate()).padStart(2, '0');
-  var url = 'https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=' +
-            today + '&s=' + encodeURIComponent(sport);
-  var res = await fetch(url, { signal: AbortSignal.timeout(8000), cache: 'no-store' });
-  if (!res.ok) throw new Error('SportsDB ' + res.status);
-  var j = await res.json();
-  var events = j.event || [];
-  if (!events.length) return '';
-  // Group by competition name
-  var byLeague = {};
-  var leagueOrder = [];
-  events.forEach(function(ev) {
-    var lg = ev.strLeague || sport;
-    if (!byLeague[lg]) { byLeague[lg] = []; leagueOrder.push(lg); }
-    byLeague[lg].push(ev);
-  });
+// ── Build HTML from an array of league groups ─────────────────────────
+function _sfRenderGroups(groups) {
   var html = '';
-  leagueOrder.forEach(function(lg) {
-    html += '<div class="sf-section-hdr">' + _sfEsc(lg) + '</div>';
-    byLeague[lg].forEach(function(ev) {
-      var hs   = ev.intHomeScore != null ? String(ev.intHomeScore) : '';
-      var as   = ev.intAwayScore != null ? String(ev.intAwayScore) : '';
-      var done = ['Match Finished', 'FT', 'AP', 'AET', 'Full Time'].indexOf(ev.strStatus) !== -1;
-      var live = !done && ev.strStatus && ev.strStatus !== 'Not Started' &&
-                 ev.strStatus !== '' && ev.strStatus !== null;
-      var txt  = ev.strProgress || ev.strStatus || '';
-      html += _sfCard(lg, ev.strHomeTeam || '?', ev.strAwayTeam || '?', hs, as, txt, live, done);
+  (groups || []).forEach(function(league) {
+    if (!league.events || !league.events.length) return;
+    html += '<div class="sf-section-hdr">' + _sfEsc(league.name) + '</div>';
+    league.events.forEach(function(ev) {
+      html += _sfCard(
+        league.name, ev.home, ev.away,
+        ev.homeScore != null ? String(ev.homeScore) : '',
+        ev.awayScore != null ? String(ev.awayScore) : '',
+        ev.status || '', ev.isLive, ev.isFinished
+      );
     });
   });
   return html;
 }
 
-// ── Main load orchestrator — reads from static data/sports.json ──────
+// ── Render active tab from cached data ───────────────────────────────
+function sfRenderTab() {
+  var content = document.getElementById('sf-scores-content');
+  if (!content) return;
+  if (!_sfCurrentData) {
+    content.innerHTML = '<div class="sf-no-data"><div class="sf-spinner" style="margin:0 auto 10px"></div>Loading…</div>';
+    return;
+  }
+  var dataKey = _sfCurrentTab === 'past' ? 'yesterday' : _sfCurrentTab;
+  var groups  = _sfCurrentData[dataKey] || [];
+  var html    = _sfRenderGroups(groups);
+
+  if (!html) {
+    var empty = {
+      live:  '&#x1F534;<br>No live matches right now.<br>Try <b>TODAY</b> or <b>PAST</b> for recent results.',
+      today: '&#x1F4C5;<br>No matches recorded for today yet.<br>See <b>PAST</b> for yesterday’s results.',
+      past:  '&#x1F4CB;<br>No results available from yesterday.',
+    };
+    content.innerHTML = '<div class="sf-no-data">' + (empty[_sfCurrentTab] || 'No data.') + '</div>';
+  } else {
+    content.innerHTML = html;
+    if (_sfCurrentSport === 'cricket' && _sfCurrentComp !== 'all') {
+      _sfApplyCompFilter(_sfCurrentComp);
+    }
+  }
+}
+
+// ── Main load: fetch static JSON, pick best tab, render ──────────────
 async function sfLoadScores(sport) {
   if (_sfFetching) return;
-  _sfFetching    = true;
-  _sfSeenMatches = new Set();
+  _sfFetching = true;
   var content = document.getElementById('sf-scores-content');
   var btn     = document.getElementById('sf-refresh-btn');
   var upd     = document.getElementById('sf-updated');
@@ -10139,46 +10229,44 @@ async function sfLoadScores(sport) {
   if (btn) btn.classList.add('spinning');
 
   try {
-    // Cache-bust with timestamp so we always get the freshest GitHub Pages build
     var res = await fetch('data/sports.json?v=' + Date.now(),
       { signal: AbortSignal.timeout(10000), cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     var j = await res.json();
 
-    var sportData = (j.sports && j.sports[sport]) || [];
-    var html = '';
+    var sportData = (j.sports && j.sports[sport]) ||
+                    { live: [], today: [], yesterday: [], liveCount: 0 };
+    _sfCurrentData = sportData;
 
-    sportData.forEach(function(league) {
-      if (!league.events || !league.events.length) return;
-      html += '<div class="sf-section-hdr">' + _sfEsc(league.name) + '</div>';
-      league.events.forEach(function(ev) {
-        html += _sfCard(
-          league.name,
-          ev.home, ev.away,
-          ev.homeScore != null ? String(ev.homeScore) : '',
-          ev.awayScore != null ? String(ev.awayScore) : '',
-          ev.status || '', ev.isLive, ev.isFinished
-        );
-      });
-    });
-
-    if (content) {
-      content.innerHTML = html ||
-        '<div class="sf-no-data">&#x1F3C6;<br>No matches scheduled today.<br>Check back later or try another sport.</div>';
+    // Live count badge
+    var liveCount = sportData.liveCount || 0;
+    var liveCnt   = document.getElementById('sf-live-count');
+    if (liveCnt) {
+      liveCnt.textContent    = liveCount;
+      liveCnt.style.display  = liveCount > 0 ? '' : 'none';
     }
 
-    // Show how fresh the data is
+    // Auto-select best tab: live > today > past
+    var todayHasData = (sportData.today || []).some(function(g) { return g.events && g.events.length > 0; });
+    var bestTab = liveCount > 0 ? 'live' : todayHasData ? 'today' : 'past';
+    _sfCurrentTab = bestTab;
+
+    // Update tab button styles
+    document.querySelectorAll('.sf-tab-btn').forEach(function(b) {
+      b.classList.remove('active', 'live-active');
+    });
+    var tabEl = document.getElementById('sf-tab-' + bestTab);
+    if (tabEl) tabEl.classList.add(bestTab === 'live' && liveCount > 0 ? 'live-active' : 'active');
+
+    // Freshness timestamp
     if (upd && j.generated) {
       var diffMin = Math.round((Date.now() - new Date(j.generated).getTime()) / 60000);
-      upd.textContent = diffMin < 1 ? 'Just updated' :
+      upd.textContent = diffMin < 1  ? 'Just updated' :
                         diffMin < 60 ? diffMin + ' min ago' :
                         new Date(j.generated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    // Re-apply active cricket sub-filter
-    if (sport === 'cricket' && _sfCurrentComp !== 'all') {
-      sfFilterComp(_sfCurrentComp, null);
-    }
+    sfRenderTab();
 
   } catch(e) {
     console.warn('sfLoadScores:', e.message);
