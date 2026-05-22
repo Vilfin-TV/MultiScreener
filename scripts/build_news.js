@@ -380,7 +380,7 @@ async function callGemini(prompt) {
       { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
       { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_MEDIUM_AND_ABOVE' }
     ],
-    generationConfig: { maxOutputTokens: 600, temperature: 0.4 }
+    generationConfig: { maxOutputTokens: 1400, temperature: 0.55 }
   });
 
   var apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + GOOGLE_AI_API_KEY;
@@ -413,8 +413,8 @@ async function callGroq(prompt) {
   var body = JSON.stringify({
     model:       'llama-3.1-8b-instant',
     messages:    [{ role: 'user', content: prompt }],
-    max_tokens:  600,
-    temperature: 0.4
+    max_tokens:  1400,
+    temperature: 0.55
   });
 
   var response = await httpsGet('https://api.groq.com/openai/v1/chat/completions', {
@@ -438,18 +438,32 @@ async function callGroq(prompt) {
 }
 
 /* ═══════════════════════════════════════════════════
-   BUILD PROMPT
+   BUILD PROMPT — full 4-5 paragraph article
 ═══════════════════════════════════════════════════ */
 function buildPrompt(item, isMalayalam) {
-  var base = 'You are a professional journalist. Write a 200-word news article about: '
-    + item.title
-    + '. Context: ' + (item.description || 'No additional context available.')
-    + ' Style: factual, balanced, impartial, BBC News style. Do not reproduce source text verbatim.';
+  var base = 'You are a senior journalist at an international news publication. '
+    + 'Write a complete, factual, well-researched news article of 4 to 5 paragraphs '
+    + '(450 to 600 words) about this story: "' + item.title + '"\n\n'
+    + 'Source context: ' + (item.description || 'No additional context available.') + '\n\n'
+    + 'Article structure:\n'
+    + '* Paragraph 1 — The lede: the single most important fact, with who/what/when/where\n'
+    + '* Paragraph 2 — Background and context that explains why this matters\n'
+    + '* Paragraph 3 — Key details, relevant data, expert viewpoints or official statements\n'
+    + '* Paragraph 4 — Broader impact, public reaction, or wider implications\n'
+    + '* Paragraph 5 — What happens next, open questions, or conclusion\n\n'
+    + 'Style rules:\n'
+    + '- BBC / Reuters journalism standard: factual, balanced, impartial\n'
+    + '- Cross-check the facts stated in the context before writing\n'
+    + '- Do NOT copy source text verbatim\n'
+    + '- Do NOT use bullet points, headers, or markdown formatting\n'
+    + '- Write in plain flowing prose paragraphs only\n'
+    + '- Do NOT include a byline, dateline, or "Source:" footer\n'
+    + '- Separate each paragraph with a blank line\n';
 
   if (isMalayalam) {
-    return base + ' Write the article entirely in Malayalam script (not transliteration). End with: Source: ' + item.sourceName;
+    return base + '- Write ENTIRELY in Malayalam script (not transliteration). Every single word must be in Malayalam.';
   }
-  return base + ' End with: Source: ' + item.sourceName;
+  return base;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -568,8 +582,8 @@ async function buildSection(sectionId, feedPool, meta) {
       aiGenerated: true
     });
 
-    // Gentle rate-limit pause between AI calls
-    if (j < selected.length - 1) await sleep(600);
+    // Gentle rate-limit pause between AI calls (longer for extended content)
+    if (j < selected.length - 1) await sleep(1000);
   }
 
   return {
@@ -601,6 +615,42 @@ function makePlaceholderSection(sectionId, meta) {
 }
 
 /* ═══════════════════════════════════════════════════
+   MERGE ITEMS — accumulate stories across runs, keep 48h
+   newItems     — freshly generated items from this run
+   existingItems — items already in data/news.json
+═══════════════════════════════════════════════════ */
+function mergeItems(newItems, existingItems) {
+  var TWO_DAYS = 48 * 60 * 60 * 1000;
+  var now = Date.now();
+
+  // Purge existing items older than 48 hours
+  var validExisting = (existingItems || []).filter(function(item) {
+    if (!item || !item.publishedAt) return false;
+    return now - new Date(item.publishedAt).getTime() < TWO_DAYS;
+  });
+
+  // Add new items that aren't already represented (by ID or title similarity)
+  var toAdd = (newItems || []).filter(function(newItem) {
+    // Skip if same ID already exists
+    var idMatch = validExisting.some(function(e) { return e.id === newItem.id; });
+    if (idMatch) return false;
+    // Skip if title is too similar (dedup)
+    return !isDuplicate(newItem, validExisting);
+  });
+
+  console.log('  Merge: +' + toAdd.length + ' new stories, ' + validExisting.length + ' existing kept');
+
+  // Newest first: new items before existing, then sort by publishedAt descending
+  var combined = toAdd.concat(validExisting);
+  combined.sort(function(a, b) {
+    return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+  });
+
+  // Cap at 20 per section to keep JSON size manageable
+  return combined.slice(0, 20);
+}
+
+/* ═══════════════════════════════════════════════════
    MAIN
 ═══════════════════════════════════════════════════ */
 async function main() {
@@ -610,6 +660,19 @@ async function main() {
   console.log('Gemini key:', GOOGLE_AI_API_KEY ? 'present (' + GOOGLE_AI_API_KEY.slice(0,4) + '...)' : 'MISSING');
   console.log('Groq key  :', GROQ_API_KEY      ? 'present (' + GROQ_API_KEY.slice(0,4) + '...)'      : 'MISSING');
   console.log('='.repeat(60));
+
+  // ── Load existing JSON to accumulate stories over 48 hours ───────────────
+  var dataDir = path.join(__dirname, '..', 'data');
+  var outPath = path.join(dataDir, 'news.json');
+  var existingData = null;
+  if (fs.existsSync(outPath)) {
+    try {
+      existingData = JSON.parse(fs.readFileSync(outPath, 'utf8'));
+      console.log('Loaded existing news.json for accumulation merge');
+    } catch(e) {
+      console.warn('Could not read existing news.json:', e.message);
+    }
+  }
 
   var output = {
     generated: new Date().toISOString(),
@@ -621,7 +684,17 @@ async function main() {
   for (var i = 0; i < sectionIds.length; i++) {
     var sid = sectionIds[i];
     try {
-      output.sections[sid] = await buildSection(sid, SOURCE_POOL[sid], SECTION_META[sid]);
+      var newSection = await buildSection(sid, SOURCE_POOL[sid], SECTION_META[sid]);
+
+      // Merge new items with surviving existing items (within 48h window)
+      var existingItems = existingData
+        && existingData.sections
+        && existingData.sections[sid]
+        && existingData.sections[sid].items
+        ? existingData.sections[sid].items
+        : [];
+      newSection.items = mergeItems(newSection.items, existingItems);
+      output.sections[sid] = newSection;
     } catch (e) {
       console.error('Section', sid, 'failed entirely:', e.message);
       output.sections[sid] = makePlaceholderSection(sid, SECTION_META[sid]);
@@ -629,13 +702,11 @@ async function main() {
   }
 
   // Ensure data directory exists
-  var dataDir = path.join(__dirname, '..', 'data');
   if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
     console.log('\nCreated data/ directory');
   }
 
-  var outPath = path.join(dataDir, 'news.json');
   fs.writeFileSync(outPath, JSON.stringify(output, null, 2) + '\n', 'utf8');
 
   // Summary
