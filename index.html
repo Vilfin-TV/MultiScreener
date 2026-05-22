@@ -8463,9 +8463,7 @@ function _mktSentSetBadge(type) {
   if (type === 'live') {
     lbl = 'Live'; cls = 'live';
   } else if (type === 'delayed') {
-    // Show exact snapshot update time instead of generic "Delayed"
-    lbl = _mktSentSnapshotTime ? ('⏱ ' + _mktSentSnapshotTime) : 'Snapshot';
-    cls = 'delayed';
+    lbl = 'Snapshot'; cls = 'delayed';
   } else {
     lbl = 'Cached'; cls = 'cached';
   }
