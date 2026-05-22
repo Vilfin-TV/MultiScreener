@@ -29,28 +29,80 @@ const BLOCKED_KEYWORDS = [
 
 const MAX_ITEMS_PER_SECTION = 6;
 const REQUEST_TIMEOUT_MS    = 15000;
+// How many feeds to randomly pick from each section's pool each run
+const FEEDS_PER_SECTION     = 3;
 
-const SOURCES = {
+// ── Source pool ──────────────────────────────────────────────────────────────
+// Each section has a larger pool; FEEDS_PER_SECTION are picked at random each
+// run so stories rotate and readers get fresh variety on every 6-hour cycle.
+// Google Trends RSS (geo=IN / geo=US) surfaces what millions of people are
+// actively searching — ideal as a "trending" signal.
+const SOURCE_POOL = {
+
   trending: [
-    'https://news.google.com/rss/headlines/section/topic/HEADLINES?hl=en-IN&gl=IN&ceid=IN:en',
-    'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml',
+    // Google Trends — real-time public interest signals
+    { url: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=IN', name: 'Google Trends India' },
+    { url: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=US', name: 'Google Trends US' },
+    // Google News Top Headlines
+    { url: 'https://news.google.com/rss/headlines/section/topic/HEADLINES?hl=en-IN&gl=IN&ceid=IN:en', name: 'Google News India' },
+    { url: 'https://news.google.com/rss/headlines/section/topic/HEADLINES?hl=en-US&gl=US&ceid=US:en', name: 'Google News US' },
+    // High-traffic global sources
+    { url: 'https://feeds.bbci.co.uk/news/rss.xml',                  name: 'BBC News' },
+    { url: 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml', name: 'NY Times' },
+    { url: 'https://www.theguardian.com/world/rss',                   name: 'The Guardian' },
+    { url: 'https://feeds.reuters.com/reuters/topNews',               name: 'Reuters' },
+    { url: 'https://apnews.com/rss',                                  name: 'AP News' },
+    { url: 'https://www.axios.com/feeds/feed.rss',                    name: 'Axios' },
   ],
+
   global: [
-    'https://feeds.bbci.co.uk/news/world/rss.xml',
-    'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',
+    { url: 'https://feeds.bbci.co.uk/news/world/rss.xml',             name: 'BBC World' },
+    { url: 'https://www.aljazeera.com/xml/rss/all.xml',               name: 'Al Jazeera' },
+    { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',  name: 'NY Times World' },
+    { url: 'https://feeds.reuters.com/reuters/topNews',               name: 'Reuters' },
+    { url: 'https://apnews.com/rss',                                  name: 'AP News' },
+    { url: 'https://www.theguardian.com/international/rss',           name: 'The Guardian' },
+    { url: 'https://www.dw.com/rss/rss.xml',                          name: 'DW News' },
+    { url: 'https://www.euronews.com/rss',                            name: 'Euronews' },
+    { url: 'https://feeds.bbci.co.uk/news/business/rss.xml',          name: 'BBC Business' },
+    { url: 'https://www.nhk.or.jp/rss/news/cat0.xml',                 name: 'NHK World' },
+    { url: 'https://www.bangkokpost.com/rss/data/breakingnews.xml',   name: 'Bangkok Post' },
   ],
+
   india: [
-    'https://www.thehindu.com/feeder/default.rss',
-    'https://timesofindia.indiatimes.com/rssfeedstopstories.cms',
+    { url: 'https://www.thehindu.com/feeder/default.rss',                               name: 'The Hindu' },
+    { url: 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms',                name: 'Times of India' },
+    { url: 'https://feeds.feedburner.com/ndtvnews-top-stories',                         name: 'NDTV' },
+    { url: 'https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml',           name: 'Hindustan Times' },
+    { url: 'https://indianexpress.com/feed/',                                           name: 'Indian Express' },
+    { url: 'https://www.livemint.com/rss/news',                                         name: 'Mint' },
+    { url: 'https://www.businessstandard.com/rss/home_page_top_stories.rss',            name: 'Business Standard' },
+    { url: 'https://news.google.com/rss/headlines/section/geo/India?hl=en-IN&gl=IN&ceid=IN:en', name: 'Google News India' },
+    { url: 'https://www.ndtv.com/rss/india',                                            name: 'NDTV India' },
+    { url: 'https://economictimes.indiatimes.com/news/india/rssfeeds/1466318837.cms',   name: 'ET India' },
   ],
+
   stock: [
-    'https://economictimes.indiatimes.com/markets/stocks/rss.cms',
-    'https://www.moneycontrol.com/rss/MCrecentnews.xml',
+    { url: 'https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms',      name: 'ET Markets' },
+    { url: 'https://www.moneycontrol.com/rss/MCtopnews.xml',                            name: 'Moneycontrol' },
+    { url: 'https://www.livemint.com/rss/markets',                                      name: 'Mint Markets' },
+    { url: 'https://feeds.feedburner.com/ndtvprofit-latest',                            name: 'NDTV Profit' },
+    { url: 'https://www.businessstandard.com/rss/markets-106.rss',                      name: 'Business Standard' },
+    { url: 'https://economictimes.indiatimes.com/markets/stocks/rss.cms',               name: 'ET Stocks' },
+    { url: 'https://www.moneycontrol.com/rss/MCrecentnews.xml',                         name: 'Moneycontrol Latest' },
+    { url: 'https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-IN&gl=IN&ceid=IN:en', name: 'Google Finance News' },
+    { url: 'https://feeds.bbci.co.uk/news/business/rss.xml',                            name: 'BBC Business' },
+    { url: 'https://www.reuters.com/rssFeed/businessNews',                               name: 'Reuters Business' },
   ],
+
   malayalam: [
-    'https://www.manoramaonline.com/news/kerala.rssxml',
-    'https://www.mathrubhumi.com/rss/news.xml',
-  ]
+    { url: 'https://www.mathrubhumi.com/rss/news.xml',                name: 'Mathrubhumi' },
+    { url: 'https://www.manoramaonline.com/news/kerala.rssxml',       name: 'Manorama Online' },
+    { url: 'https://www.deepika.com/rss.xml',                         name: 'Deepika Malayalam' },
+    { url: 'https://www.marunadanmalayali.com/rss.xml',               name: 'Marunadan Malayali' },
+    { url: 'https://www.madhyamam.com/rss.xml',                       name: 'Madhyamam' },
+    { url: 'https://www.asianetnews.com/rss',                         name: 'Asianet News' },
+  ],
 };
 
 const SECTION_META = {
@@ -136,17 +188,33 @@ function httpsGet(rawUrl, options) {
 
 function sleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
 
+// Fisher-Yates shuffle — used to randomise feed selection each run
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
 /* ═══════════════════════════════════════════════════
-   RSS FETCHER
+   RSS FETCHER — accepts {url, name} feed object
+   Returns array of parsed items tagged with sourceName
 ═══════════════════════════════════════════════════ */
-async function fetchRSS(feedUrl) {
+async function fetchRSS(feedObj) {
+  var feedUrl  = feedObj.url  || feedObj;
+  var feedName = feedObj.name || (feedUrl.replace(/^https?:\/\//, '').split('/')[0]);
   try {
-    console.log('  Fetching:', feedUrl.replace(/^https?:\/\//, '').split('/')[0]);
+    console.log('  Fetching:', feedName);
     var xml = await httpsGet(feedUrl);
-    return xml;
+    var items = parseRSS(xml);
+    // Tag every item with the human-readable source name
+    items.forEach(function(item){ item.sourceName = feedName; });
+    return items;
   } catch (e) {
-    console.warn('  Feed failed:', feedUrl.split('/')[2] || feedUrl, '-', e.message);
-    return null;
+    console.warn('  Feed failed:', feedName, '-', e.message);
+    return [];
   }
 }
 
@@ -418,19 +486,29 @@ async function generateStory(item, isMalayalam) {
 
 /* ═══════════════════════════════════════════════════
    BUILD SECTION
+   feedPool — array of {url, name} objects (full pool)
 ═══════════════════════════════════════════════════ */
-async function buildSection(sectionId, feedUrls, meta) {
+async function buildSection(sectionId, feedPool, meta) {
   console.log('\n[Section]', sectionId.toUpperCase());
   var isMalayalam = sectionId === 'malayalam';
 
-  // Fetch all feeds
+  // Randomly pick FEEDS_PER_SECTION from the pool so stories rotate each run.
+  // Always include the first entry (highest-signal source) + random extras.
+  var pool    = feedPool || [];
+  var first   = pool.slice(0, 1);
+  var rest    = shuffle(pool.slice(1));
+  var chosen  = first.concat(rest).slice(0, FEEDS_PER_SECTION);
+  console.log('  Sources chosen:', chosen.map(function(f){ return f.name || f.url; }).join(', '));
+
+  // Fetch all chosen feeds in PARALLEL for speed
+  var results = await Promise.allSettled(chosen.map(function(f){ return fetchRSS(f); }));
   var allItems = [];
-  for (var i = 0; i < feedUrls.length; i++) {
-    var xml   = await fetchRSS(feedUrls[i]);
-    var parsed = parseRSS(xml);
-    console.log('  Parsed', parsed.length, 'items from feed', i + 1);
-    allItems = allItems.concat(parsed);
-  }
+  results.forEach(function(r, i) {
+    if (r.status === 'fulfilled') {
+      console.log('  Parsed', r.value.length, 'items from', chosen[i].name || chosen[i].url);
+      allItems = allItems.concat(r.value);
+    }
+  });
 
   // Filter blocked content
   allItems = allItems.filter(filterItem);
@@ -538,12 +616,12 @@ async function main() {
     sections:  {}
   };
 
-  var sectionIds = Object.keys(SOURCES);
+  var sectionIds = Object.keys(SOURCE_POOL);
 
   for (var i = 0; i < sectionIds.length; i++) {
     var sid = sectionIds[i];
     try {
-      output.sections[sid] = await buildSection(sid, SOURCES[sid], SECTION_META[sid]);
+      output.sections[sid] = await buildSection(sid, SOURCE_POOL[sid], SECTION_META[sid]);
     } catch (e) {
       console.error('Section', sid, 'failed entirely:', e.message);
       output.sections[sid] = makePlaceholderSection(sid, SECTION_META[sid]);
