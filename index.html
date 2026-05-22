@@ -8304,11 +8304,16 @@ async function _mktSentFetchSnapshot() {
     if (j.updated) {
       const upd = new Date(j.updated);
       _mktSentSnapshotTime = upd.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-      // Save snapshot zones for the snapshot's LOCAL date so history clocks fill in
-      const snapshotDateStr = _mktSentLocalDateStr(upd);
+      // Save under LOCAL date (for same-timezone users) AND UTC date (for east-of-UTC users
+      // where midnight has passed locally but the snapshot is dated the previous UTC day)
+      const snapshotDateLocal = _mktSentLocalDateStr(upd);
+      const snapshotDateUTC   = upd.toISOString().slice(0, 10);
       j.markets.forEach(m => {
         const z = _mktSentZone(m.change || 0);
-        _mktSentSaveHistForDate(m.country, snapshotDateStr, z.cls);
+        _mktSentSaveHistForDate(m.country, snapshotDateLocal, z.cls);
+        if (snapshotDateUTC !== snapshotDateLocal) {
+          _mktSentSaveHistForDate(m.country, snapshotDateUTC, z.cls);
+        }
       });
     }
 
@@ -8344,7 +8349,7 @@ function _mktSentSaveHistForDate(country, dateStr, zoneCls) {
     let h = JSON.parse(localStorage.getItem(key) || '[]');
     h = h.filter(x => x.d !== dateStr);
     h.push({d: dateStr, z: zoneCls});
-    if (h.length > 7) h = h.slice(-7);   // keep a full week + buffer
+    if (h.length > 14) h = h.slice(-14);  // keep 2 weeks so current-week days aren't evicted by today's entry
     localStorage.setItem(key, JSON.stringify(h));
   } catch {}
 }
@@ -9049,7 +9054,7 @@ const _WIDGET_DEFAULT_ORDER = ['ai','video','iptv','radio','premium','sports','m
 function widgetGetSettings() {
   let s = {};
   try { s = JSON.parse(localStorage.getItem('viltv_widget_settings') || '{}'); } catch(_) {}
-  if (!s.defaultTab) s.defaultTab = 'ai';
+  if (!s.defaultTab) s.defaultTab = 'video';
   if (!s.visible || typeof s.visible !== 'object') s.visible = {};
   for (const key of Object.keys(_WIDGET_TAB_LABELS)) {
     if (s.visible[key] === undefined) s.visible[key] = true;
@@ -9147,8 +9152,11 @@ function widgetInitOnLoad() {
   }
   const s = widgetGetSettings();
   const last = (() => { try { return localStorage.getItem('viltv_widget_last_tab') || ''; } catch(_) { return ''; } })();
-  const target = last || s.defaultTab || 'ai';
-  if (s.visible[target] !== false && target !== 'ai') {
+  // 'ai' was the old built-in default; treat it the same as "nothing saved" so first-time
+  // visitors land on YouTube Live instead. Explicit user choices are preserved.
+  const effectiveDefault = (s.defaultTab && s.defaultTab !== 'ai') ? s.defaultTab : 'video';
+  const target = last || effectiveDefault;
+  if (s.visible[target] !== false) {
     setTimeout(() => rbSwitchPanel(target), 100);
   }
   // Init drag-to-scroll for all preset strips
@@ -9924,7 +9932,7 @@ var _sfSeenMatches   = new Set(); // cross-source deduplication
 function swInit() {
   sfLoadScores(_sfCurrentSport);
   if (_sfRefreshTimer) clearInterval(_sfRefreshTimer);
-  _sfRefreshTimer = setInterval(function() { sfLoadScores(_sfCurrentSport); }, 60000);
+  _sfRefreshTimer = setInterval(function() { sfLoadScores(_sfCurrentSport); }, 15 * 60 * 1000); // 15 min — matches GitHub Actions schedule
 }
 
 function sfSwitchSport(sport, btn) {
@@ -10079,109 +10087,61 @@ async function _sfSportsDB(sport) {
   return html;
 }
 
-// ── Main load orchestrator ────────────────────────────────────────────
+// ── Main load orchestrator — reads from static data/sports.json ──────
 async function sfLoadScores(sport) {
   if (_sfFetching) return;
   _sfFetching    = true;
-  _sfSeenMatches = new Set(); // reset dedup for fresh load
+  _sfSeenMatches = new Set();
   var content = document.getElementById('sf-scores-content');
   var btn     = document.getElementById('sf-refresh-btn');
+  var upd     = document.getElementById('sf-updated');
   if (content) content.innerHTML = '<div class="sf-no-data"><div class="sf-spinner" style="margin:0 auto 10px"></div>Loading…</div>';
   if (btn) btn.classList.add('spinning');
 
   try {
+    // Cache-bust with timestamp so we always get the freshest GitHub Pages build
+    var res = await fetch('data/sports.json?v=' + Date.now(),
+      { signal: AbortSignal.timeout(10000), cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var j = await res.json();
+
+    var sportData = (j.sports && j.sports[sport]) || [];
     var html = '';
 
-    if (sport === 'football') {
-      var leagues = [
-        ['/apis/site/v2/sports/soccer/eng.1/scoreboard',  'Premier League'],
-        ['/apis/site/v2/sports/soccer/esp.1/scoreboard',  'La Liga'],
-        ['/apis/site/v2/sports/soccer/ger.1/scoreboard',  'Bundesliga'],
-        ['/apis/site/v2/sports/soccer/ita.1/scoreboard',  'Serie A'],
-        ['/apis/site/v2/sports/soccer/fra.1/scoreboard',  'Ligue 1'],
-        ['/apis/site/v2/sports/soccer/usa.1/scoreboard',  'MLS'],
-        ['/apis/site/v2/sports/soccer/ind.1/scoreboard',  'ISL (India)'],
-      ];
-      var fRes = await Promise.allSettled(leagues.map(function(l) { return _sfESPN(l[0], l[1]); }));
-      fRes.forEach(function(r, i) {
-        if (r.status === 'fulfilled' && r.value)
-          html += '<div class="sf-section-hdr">' + leagues[i][1] + '</div>' + r.value;
+    sportData.forEach(function(league) {
+      if (!league.events || !league.events.length) return;
+      html += '<div class="sf-section-hdr">' + _sfEsc(league.name) + '</div>';
+      league.events.forEach(function(ev) {
+        html += _sfCard(
+          league.name,
+          ev.home, ev.away,
+          ev.homeScore != null ? String(ev.homeScore) : '',
+          ev.awayScore != null ? String(ev.awayScore) : '',
+          ev.status || '', ev.isLive, ev.isFinished
+        );
       });
-
-    } else if (sport === 'cricket') {
-      // ── Multi-source cricket: TheSportsDB (all) + ESPN league IDs ──
-      // ESPN cricket league IDs: 8=IPL, 6=ICC/International, 27=T20WC
-      var cricSrc = await Promise.allSettled([
-        _sfSportsDB('Cricket'),                                                       // all formats
-        _sfESPN('/apis/site/v2/sports/cricket/8/scoreboard',  'IPL'),                // ESPN IPL
-        _sfESPN('/apis/site/v2/sports/cricket/6/scoreboard',  'International Cricket'), // ESPN ICC
-        _sfESPN('/apis/site/v2/sports/cricket/27/scoreboard', 'T20 World Cup'),       // T20 WC
-      ]);
-      // TheSportsDB primary (grouped by league)
-      if (cricSrc[0].status === 'fulfilled' && cricSrc[0].value) html += cricSrc[0].value;
-      // ESPN supplementary — dedup via _sfSeenMatches silently drops already-shown matches
-      var espnLabels = ['IPL', 'International Cricket', 'T20 World Cup'];
-      cricSrc.slice(1).forEach(function(r, i) {
-        if (r.status === 'fulfilled' && r.value)
-          html += '<div class="sf-section-hdr">' + espnLabels[i] + '</div>' + r.value;
-      });
-
-    } else if (sport === 'basketball') {
-      var bkL = [
-        ['/apis/site/v2/sports/basketball/nba/scoreboard',                     'NBA'],
-        ['/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard', 'NCAA'],
-      ];
-      var bkR = await Promise.allSettled(bkL.map(function(l) { return _sfESPN(l[0], l[1]); }));
-      bkR.forEach(function(r, i) {
-        if (r.status === 'fulfilled' && r.value)
-          html += '<div class="sf-section-hdr">' + bkL[i][1] + '</div>' + r.value;
-      });
-
-    } else if (sport === 'tennis') {
-      var tnL = [
-        ['/apis/site/v2/sports/tennis/atp/scoreboard', 'ATP'],
-        ['/apis/site/v2/sports/tennis/wta/scoreboard', 'WTA'],
-      ];
-      var tnR = await Promise.allSettled(tnL.map(function(l) { return _sfESPN(l[0], l[1]); }));
-      tnR.forEach(function(r, i) {
-        if (r.status === 'fulfilled' && r.value)
-          html += '<div class="sf-section-hdr">' + tnL[i][1] + '</div>' + r.value;
-      });
-
-    } else if (sport === 'rugby') {
-      try { html = await _sfSportsDB('Rugby Union'); } catch(e) {}
-      if (!html) {
-        var rgR = await Promise.allSettled([
-          _sfESPN('/apis/site/v2/sports/rugby/267979/scoreboard', 'Super Rugby'),
-          _sfESPN('/apis/site/v2/sports/rugby/270557/scoreboard', 'Premiership'),
-        ]);
-        rgR.forEach(function(r, i) {
-          var n = ['Super Rugby', 'Premiership'];
-          if (r.status === 'fulfilled' && r.value)
-            html += '<div class="sf-section-hdr">' + n[i] + '</div>' + r.value;
-        });
-      }
-
-    } else if (sport === 'baseball') {
-      html = await _sfESPN('/apis/site/v2/sports/baseball/mlb/scoreboard', 'MLB');
-
-    } else if (sport === 'hockey') {
-      try { html = await _sfSportsDB('Ice Hockey'); } catch(e) {}
-      if (!html) html = await _sfESPN('/apis/site/v2/sports/hockey/nhl/scoreboard', 'NHL');
-    }
+    });
 
     if (content) {
       content.innerHTML = html ||
         '<div class="sf-no-data">&#x1F3C6;<br>No matches scheduled today.<br>Check back later or try another sport.</div>';
     }
-    // Re-apply active competition filter after fresh load
+
+    // Show how fresh the data is
+    if (upd && j.generated) {
+      var diffMin = Math.round((Date.now() - new Date(j.generated).getTime()) / 60000);
+      upd.textContent = diffMin < 1 ? 'Just updated' :
+                        diffMin < 60 ? diffMin + ' min ago' :
+                        new Date(j.generated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Re-apply active cricket sub-filter
     if (sport === 'cricket' && _sfCurrentComp !== 'all') {
       sfFilterComp(_sfCurrentComp, null);
     }
-    var upd = document.getElementById('sf-updated');
-    if (upd) upd.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   } catch(e) {
+    console.warn('sfLoadScores:', e.message);
     if (content)
       content.innerHTML = '<div class="sf-no-data">&#x26A0;&#xFE0F;<br>Could not load scores.<br>Tap &#x21BA; to retry.</div>';
   }

@@ -109,6 +109,55 @@ async function fetchQuery2() {
   return results;
 }
 
+/* ── Fetch full weekly history (last 7 trading days via 10-day chart API) ── */
+async function fetchWeeklyHistory() {
+  console.log('\nFetching weekly history via chart API…');
+  const historyMap = {}; // date → { country → {country, change, zoneCls} }
+
+  for (const m of MARKETS) {
+    try {
+      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(m.symbol)}?interval=1d&range=10d`;
+      const res = await httpsGet(url);
+      if (res.status !== 200) { console.warn(`  ${m.symbol}: HTTP ${res.status}`); continue; }
+      const j      = JSON.parse(res.body);
+      const result = j?.chart?.result?.[0];
+      if (!result) { console.warn(`  ${m.symbol}: no chart result`); continue; }
+
+      const timestamps = result.timestamp || [];
+      const closes     = result.indicators?.quote?.[0]?.close || [];
+
+      for (let i = 1; i < timestamps.length; i++) {
+        const close    = closes[i];
+        const prevClose = closes[i - 1];
+        if (close == null || prevClose == null || prevClose === 0) continue;
+
+        const date = new Date(timestamps[i] * 1000).toISOString().slice(0, 10);
+        const chg  = Math.round(((close - prevClose) / prevClose) * 10000) / 100;
+        const zone = calcZone(chg);
+
+        if (!historyMap[date]) historyMap[date] = {};
+        historyMap[date][m.country] = {
+          country: m.country,
+          change:  chg,
+          zoneCls: zone.toLowerCase().replace(/\s+/g, '-'),
+        };
+      }
+      console.log(`  ✓ ${m.symbol}: ${timestamps.length} data points`);
+    } catch (e) {
+      console.warn(`  ✗ ${m.symbol}: ${e.message}`);
+    }
+    await sleep(300);
+  }
+
+  // Sort dates newest-first; only keep days where ≥5 markets reported (handles market holidays)
+  return Object.keys(historyMap)
+    .sort()
+    .reverse()
+    .filter(d => Object.keys(historyMap[d]).length >= 5)
+    .slice(0, 7)
+    .map(d => ({ date: d, markets: Object.values(historyMap[d]) }));
+}
+
 async function main() {
   let results = [];
 
@@ -157,29 +206,32 @@ async function main() {
     };
   });
 
-  // ── Accumulate daily history (last 7 trading days) ──────────────────────
-  // Read existing JSON (if any) to carry forward previous days' snapshots.
+  // ── Build full weekly history from 10-day chart API ──────────────────────
   const outPath = path.join(__dirname, '..', 'data', 'market_sentiment.json');
-  let existingHistory = [];
+
+  let history = [];
   try {
-    const existing = JSON.parse(fs.readFileSync(outPath, 'utf8'));
-    if (Array.isArray(existing.history)) existingHistory = existing.history;
-  } catch (_) { /* first run or missing file — start fresh */ }
+    history = await fetchWeeklyHistory();
+    console.log(`✓ History: ${history.length} trading days from chart API`);
+  } catch (e) {
+    console.warn('✗ Weekly history fetch failed:', e.message);
+  }
 
-  // Today's date in local time (GitHub Actions runs UTC — use UTC date for consistency)
-  const todayStr = new Date().toISOString().slice(0, 10);
-
-  // Build today's history entry (compact: country + change + zoneCls only)
-  const todayEntry = {
-    date: todayStr,
-    markets: markets.map(m => ({ country: m.country, change: m.change, zoneCls: m.zoneCls })),
-  };
-
-  // Merge: remove any existing entry for today, prepend today's, keep last 7 days
-  const history = [
-    todayEntry,
-    ...existingHistory.filter(d => d.date !== todayStr),
-  ].slice(0, 7);
+  // Fallback: if chart history empty, use existing JSON + today's entry
+  if (!history.length) {
+    console.log('  Falling back to single-day accumulation…');
+    let existingHistory = [];
+    try {
+      const existing = JSON.parse(fs.readFileSync(outPath, 'utf8'));
+      if (Array.isArray(existing.history)) existingHistory = existing.history;
+    } catch (_) {}
+    const todayStr   = new Date().toISOString().slice(0, 10);
+    const todayEntry = {
+      date:    todayStr,
+      markets: markets.map(m => ({ country: m.country, change: m.change, zoneCls: m.zoneCls })),
+    };
+    history = [todayEntry, ...existingHistory.filter(d => d.date !== todayStr)].slice(0, 7);
+  }
 
   const out = { updated: new Date().toISOString(), source: 'yahoo', markets, history };
   fs.writeFileSync(outPath, JSON.stringify(out, null, 2) + '\n', 'utf8');

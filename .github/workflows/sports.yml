@@ -1,0 +1,33 @@
+name: Update Sports Scores
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # every 15 minutes
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Generate sports scores
+        run: node scripts/build_sports.js
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/sports.json
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "chore(data): refresh sports scores [skip ci]"
+            git push
+          fi
