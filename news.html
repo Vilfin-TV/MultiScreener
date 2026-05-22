@@ -231,10 +231,27 @@ body{
 }
 @keyframes livePulse{0%,100%{opacity:1}50%{opacity:.7}}
 
-/* Mobile nav */
+/* Mobile nav — two-row layout */
 @media(max-width:700px){
   .news-nav-links{display:none}
-  .brand-name{font-size:16px}
+  .brand-name{font-size:15px}
+  /* Nav must auto-size to accommodate second row */
+  .top-menubar{height:auto}
+  /* Allow nav to wrap to two rows */
+  .nav-inner{flex-wrap:wrap;height:auto;padding:0 10px 8px;gap:0}
+  /* Row 1: brand + right side — 46px tall */
+  .nav-brand-group{height:46px;padding-right:10px}
+  .nav-home-link{padding:5px 10px;font-size:11px}
+  .news-nav-right{height:46px}
+  /* Row 2: search input spans full width */
+  .news-search-wrap{
+    order:10;
+    flex:0 0 100%;max-width:none;
+    padding:0;
+  }
+  .news-search-input{font-size:13px;padding:8px 34px 8px 34px}
+  /* Section anchors clear the taller nav */
+  .news-section{scroll-margin-top:106px}
 }
 
 /* ═══════════════════════════════════════════════════
@@ -674,6 +691,71 @@ footer.news-footer{
 }
 
 /* ═══════════════════════════════════════════════════
+   SEARCH BOX — nav integrated
+═══════════════════════════════════════════════════ */
+.news-search-wrap{
+  flex:1;display:flex;align-items:center;
+  padding:0 12px;min-width:0;max-width:320px;
+}
+.news-search-box{
+  position:relative;display:flex;align-items:center;width:100%;
+}
+.news-search-icon-svg{
+  position:absolute;left:10px;
+  color:rgba(255,255,255,.45);pointer-events:none;flex-shrink:0;
+}
+.news-search-input{
+  width:100%;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:22px;
+  padding:7px 34px 7px 32px;
+  color:#fff;font-size:13px;
+  font-family:'DM Sans',-apple-system,sans-serif;
+  outline:none;
+  transition:background .2s,border-color .2s,box-shadow .2s;
+  letter-spacing:.2px;
+}
+.news-search-input::placeholder{color:rgba(255,255,255,.38)}
+.news-search-input:focus{
+  background:rgba(255,255,255,.13);
+  border-color:rgba(147,197,253,.55);
+  box-shadow:0 0 0 3px rgba(59,130,246,.18);
+}
+.news-search-clear{
+  position:absolute;right:9px;
+  background:none;border:none;cursor:pointer;
+  color:rgba(255,255,255,.45);font-size:13px;
+  padding:2px 4px;border-radius:4px;line-height:1;
+  transition:color .15s;display:none;
+}
+.news-search-clear:hover{color:#fff}
+/* Mobile: search takes full available space */
+@media(max-width:700px){
+  .news-search-wrap{max-width:none;flex:1;padding:0 8px}
+}
+
+/* Search results banner — inline flow (search input stays in sticky nav) */
+.search-results-bar{
+  background:rgba(37,99,235,.1);
+  border-bottom:1px solid rgba(37,99,235,.2);
+  padding:9px 24px;
+  display:none;align-items:center;justify-content:space-between;
+  font-size:13px;color:var(--text2);gap:12px;
+}
+.search-results-count{color:var(--burn3);font-weight:700}
+.search-clear-btn{
+  background:none;border:1px solid var(--border2);
+  border-radius:6px;padding:3px 10px;
+  color:var(--text3);font-size:12px;cursor:pointer;
+  transition:all .15s;flex-shrink:0;
+}
+.search-clear-btn:hover{border-color:var(--burn2);color:var(--text)}
+/* Hide sections with no search matches */
+.search-active .news-section{display:none}
+.search-active .news-section.has-match{display:block}
+
+/* ═══════════════════════════════════════════════════
    SMOOTH TRANSITIONS
 ═══════════════════════════════════════════════════ */
 .top-menubar,.news-card,.news-hero-card,footer{
@@ -744,12 +826,31 @@ footer.news-footer{
       <a class="news-nav-link" href="#stock">📈 Stock</a>
       <a class="news-nav-link" href="#malayalam">🎭 Malayalam</a>
     </div>
+    <!-- SEARCH BOX -->
+    <div class="news-search-wrap">
+      <div class="news-search-box">
+        <svg class="news-search-icon-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" class="news-search-input" id="news-search-input"
+               placeholder="Search stories…" autocomplete="off" spellcheck="false"
+               aria-label="Search news stories"/>
+        <button class="news-search-clear" id="news-search-clear" onclick="clearSearch()" title="Clear search" aria-label="Clear search">✕</button>
+      </div>
+    </div>
+
     <div class="news-nav-right">
       <button class="news-theme-btn" onclick="cycleTheme()" title="Change theme">🎨</button>
       <span class="news-live-badge">LIVE</span>
     </div>
   </div>
 </nav>
+
+<!-- ══════════════════════════════════════════
+     SEARCH RESULTS BANNER (shown when query active)
+══════════════════════════════════════════ -->
+<div class="search-results-bar" id="search-results-bar" role="status" aria-live="polite">
+  <span id="search-results-text"></span>
+  <button class="search-clear-btn" onclick="clearSearch()">Clear</button>
+</div>
 
 <!-- ══════════════════════════════════════════
      PAGE HERO
@@ -1119,10 +1220,101 @@ function handleOverlayClick(e) {
   }
 }
 
-// Close on Escape key
+// Keyboard: Escape closes story or clears search; '/' and Ctrl+K focus search
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeStory();
+  var searchInput = document.getElementById('news-search-input');
+  if (e.key === 'Escape') {
+    if (document.getElementById('story-modal-overlay').classList.contains('active')) {
+      closeStory(); return;
+    }
+    if (searchInput && searchInput.value) { clearSearch(); return; }
+  }
+  // '/' or Ctrl+K → focus search
+  if ((e.key === '/' || (e.ctrlKey && e.key === 'k')) && document.activeElement !== searchInput) {
+    e.preventDefault();
+    if (searchInput) { searchInput.focus(); searchInput.select(); }
+  }
 });
+
+/* ═══════════════════════════════════════════════════
+   SEARCH — real-time filter across all sections
+═══════════════════════════════════════════════════ */
+(function() {
+  var searchInput  = document.getElementById('news-search-input');
+  var searchClear  = document.getElementById('news-search-clear');
+  var resultsBar   = document.getElementById('search-results-bar');
+  var resultsText  = document.getElementById('search-results-text');
+
+  function doSearch(q) {
+    q = (q || '').trim().toLowerCase();
+    var sections = document.querySelectorAll('.news-section');
+
+    if (!q) {
+      // ── Clear state ──────────────────────────────────
+      document.documentElement.classList.remove('search-active');
+      sections.forEach(function(sec) {
+        sec.classList.remove('has-match');
+        sec.querySelectorAll('.news-hero-card,.news-card').forEach(function(c) {
+          c.style.display = '';
+        });
+      });
+      resultsBar.style.display = 'none';
+      searchClear.style.display = 'none';
+      return;
+    }
+
+    // ── Active search ────────────────────────────────
+    searchClear.style.display = '';
+    document.documentElement.classList.add('search-active');
+
+    var totalFound = 0;
+    sections.forEach(function(sec) {
+      var cards = sec.querySelectorAll('.news-hero-card,.news-card');
+      var matched = 0;
+      cards.forEach(function(card) {
+        // Match against aria-label (headline) + visible text (teaser)
+        var haystack = (card.getAttribute('aria-label') || '').toLowerCase()
+          + ' ' + (card.innerText || '').toLowerCase();
+        if (haystack.includes(q)) {
+          card.style.display = '';
+          matched++;
+          totalFound++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+      if (matched > 0) {
+        sec.classList.add('has-match');
+      } else {
+        sec.classList.remove('has-match');
+      }
+    });
+
+    // ── Results banner ───────────────────────────────
+    resultsBar.style.display = 'flex';
+    if (totalFound === 0) {
+      resultsText.innerHTML = 'No stories found for <strong>&ldquo;' + esc(q) + '&rdquo;</strong>';
+    } else {
+      resultsText.innerHTML = '<span class="search-results-count">' + totalFound + '</span>&nbsp;'
+        + (totalFound === 1 ? 'story' : 'stories') + ' matched &ldquo;<strong>' + esc(q) + '</strong>&rdquo;';
+    }
+  }
+
+  // Expose clearSearch globally (used by button onclick and Escape handler)
+  window.clearSearch = function() {
+    searchInput.value = '';
+    doSearch('');
+    searchInput.focus();
+  };
+
+  // Live filter on every keystroke
+  searchInput.addEventListener('input', function() { doSearch(this.value); });
+
+  // Also trigger on Enter
+  searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { doSearch(this.value); e.preventDefault(); }
+  });
+})();
 
 /* ═══════════════════════════════════════════════════
    FORMAT DATE
