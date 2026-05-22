@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="description" content="VilfinTV News — AI-assisted news aggregation across Trending, Global, India, Stock, and Malayalam sections."/>
+<meta property="og:title" content="VilfinTV News"/>
+<meta property="og:description" content="Real-time news aggregation: Trending, Global, India, Stock, Malayalam."/>
+<meta property="og:url" content="https://vilfintv.com/news.html"/>
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="VilfinTV"/>
+<link rel="icon" href="data:,">
+<title>VilfinTV News | Live News Aggregator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=Noto+Sans+Malayalam:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<script>
+  // Apply saved colour theme before first paint
+  (function(){
+    var t = localStorage.getItem('viltv_theme') || 'black';
+    if (t === 'standard') { t = 'midnight'; localStorage.setItem('viltv_theme','midnight'); }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+<style>
+/* ═══════════════════════════════════════════════════
+   THEME VARIABLES — all themes from index.html
+═══════════════════════════════════════════════════ */
+:root{
+  --burn:#2563eb;--burn2:#3b82f6;--burn3:#93c5fd;
+  --gold:#1e3a8a;--gold2:#38bdf8;
+  --green:#10b981;--red:#ef4444;--amber:#f59e0b;
+  --dark:#060f1c;--dark2:#0a1830;--dark3:#0e1f3b;--dark4:#162d4f;
+  --card:#0a1830;--card2:#0e1f3b;--card3:#122344;--card4:#1a3050;
+  --text:#e2eeff;--text2:#8ea8c8;--text3:#687a94;
+  --border:#162d4a;--border2:#1e3a5c;
+  --page-bg:#030810;
+  --glow:rgba(37,99,235,.35);
+  --radius:12px;
+  --nav-bg:#040913;--nav-text:#f1f5f9;--nav-border:#0c1e38;
+}
+[data-theme="standard"]{
+  --gold2:#1d4ed8;--burn3:#1d4ed8;
+  --dark:#f0f4f9;--dark2:#e8edf5;--dark3:#dde3ed;--dark4:#ccd6e3;
+  --card:#ffffff;--card2:#f5f8fc;--card3:#edf2f9;--card4:#e4ebf5;
+  --text:#0f172a;--text2:#374151;--text3:#6b7280;
+  --border:#dde3ed;--border2:#c8d3e0;
+  --page-bg:#f0f4f9;
+  --nav-bg:#ffffff;--nav-text:#0f172a;--nav-border:#dde3ed;
+}
+[data-theme="midnight"]{
+  --dark:#0b0e14;--dark2:#161b22;--dark3:#1c2433;--dark4:#21262d;
+  --card:#161b22;--card2:#1c2433;--card3:#21262d;--card4:#2d333b;
+  --text:#e6edf3;--text2:#adbac7;--text3:#636e7b;
+  --border:#30363d;--border2:#444c56;
+  --page-bg:#0b0e14;
+  --nav-bg:#161b22;--nav-text:#e6edf3;--nav-border:#30363d;
+  --glow:rgba(88,166,255,.2);
+  --burn:#2563eb;--burn2:#3b82f6;--burn3:#58a6ff;
+  --gold:#1e3a8a;--gold2:#58a6ff;
+}
+[data-theme="maroon"]{
+  --dark:#1a0a0a;--dark2:#2d1111;--dark3:#3d1a1a;--dark4:#4d2222;
+  --card:#2d1111;--card2:#3d1a1a;--card3:#4d2222;--card4:#5d2a2a;
+  --text:#f5e6e6;--text2:#c9a8a8;--text3:#8a6a6a;
+  --border:#3d1a1a;--border2:#5d2a2a;
+  --page-bg:#1a0a0a;
+  --glow:rgba(220,20,60,.25);
+  --burn:#8b0000;--burn2:#b22222;--burn3:#dc143c;
+  --gold:#8b0000;--gold2:#dc143c;
+}
+[data-theme="silver"]{
+  --dark:#f5f5f7;--dark2:#e8e8ed;--dark3:#dcdce0;--dark4:#cfcfd4;
+  --card:#ffffff;--card2:#f8f8fa;--card3:#e8e8ed;--card4:#dcdce0;
+  --text:#1d1d1f;--text2:#515154;--text3:#8e8e93;
+  --border:#dcdce0;--border2:#c7c7cc;
+  --page-bg:#f5f5f7;
+  --glow:rgba(0,102,204,.18);
+  --burn:#0066cc;--burn2:#4099ff;--burn3:#73b9ff;
+  --gold:#0066cc;--gold2:#4099ff;
+}
+[data-theme="gold"]{
+  --dark:#1a1500;--dark2:#2d2200;--dark3:#3d3000;--dark4:#4d3e00;
+  --card:#2d2200;--card2:#3d3000;--card3:#4d3e00;--card4:#5d4e00;
+  --text:#fff8e6;--text2:#d4c08a;--text3:#9e8b50;
+  --border:#3d3000;--border2:#5d4e00;
+  --page-bg:#1a1500;
+  --glow:rgba(212,175,55,.3);
+  --burn:#b8860b;--burn2:#d4af37;--burn3:#f5d060;
+  --gold:#b8860b;--gold2:#d4af37;
+}
+html[data-theme="gemini"]{
+  --burn:#4285f4;--burn2:#9b72cb;--burn3:#d96570;
+  --gold:#f8bc24;--gold2:#f8bc24;
+  --green:#34a853;--red:#ea4335;--amber:#fbbc04;
+  --dark:#1e1f20;--dark2:#282a2c;--dark3:#313335;--dark4:#3c4043;
+  --card:#1e1f20;--card2:#282a2c;--card3:#313335;--card4:#3c4043;
+  --text:#e3e3e3;--text2:#9aa0a6;--text3:#7a8186;
+  --border:#3c4043;--border2:#4a4e52;
+  --page-bg:#131314;
+  --nav-bg:#1e1f20;--nav-text:#e3e3e3;--nav-border:#3c4043;
+}
+html[data-theme="news-reader"]{
+  --burn:#d81921;--burn2:#e8333a;--burn3:#f04148;
+  --gold:#d81921;--gold2:#b31118;
+  --green:#1a7f37;--red:#d81921;--amber:#c27900;
+  --dark:#f5f7f8;--dark2:#ebeef0;--dark3:#dde1e4;--dark4:#cdd2d6;
+  --card:#ffffff;--card2:#f5f7f8;--card3:#ebeef0;--card4:#dde1e4;
+  --text:#111111;--text2:#444444;--text3:#777777;
+  --border:#e5e7e8;--border2:#d0d4d7;
+  --page-bg:#ffffff;
+  --nav-bg:#111111;--nav-text:#ffffff;--nav-border:#333333;
+}
+
+/* ═══════════════════════════════════════════════════
+   THEME-SPECIFIC NAV OVERRIDES
+═══════════════════════════════════════════════════ */
+[data-theme="standard"] .top-menubar{background:linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 55%,#2563eb 100%);border-bottom-color:#93c5fd}
+[data-theme="midnight"] .top-menubar{background:var(--dark2);border-bottom-color:var(--border)}
+[data-theme="maroon"] .top-menubar{background:linear-gradient(135deg,#1a0a0a,#2d1111)}
+[data-theme="silver"] .top-menubar{background:linear-gradient(135deg,#2d2d30,#48484a);border-bottom-color:var(--border)}
+[data-theme="gold"] .top-menubar{background:linear-gradient(135deg,#1a1500,#2d2200);border-bottom-color:var(--border)}
+[data-theme="gemini"] .top-menubar{background:#1e1f20!important;border-bottom:1px solid #3c4043!important}
+[data-theme="news-reader"] .top-menubar{background:#111111!important;border-bottom:3px solid #d81921!important}
+
+/* ═══════════════════════════════════════════════════
+   THEME-SPECIFIC FOOTER OVERRIDES
+═══════════════════════════════════════════════════ */
+[data-theme="standard"] footer{background:linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 55%,#2563eb 100%);border-top-color:#93c5fd;color:#f8fafc}
+[data-theme="midnight"] footer{background:var(--dark2);border-top-color:var(--border);color:var(--text)}
+[data-theme="maroon"] footer{background:linear-gradient(135deg,#1a0a0a,#2d1111);border-top-color:var(--border)}
+[data-theme="silver"] footer{background:linear-gradient(135deg,#2d2d30,#48484a);border-top-color:var(--border)}
+[data-theme="gold"] footer{background:linear-gradient(135deg,#1a1500,#2d2200);border-top-color:var(--border)}
+[data-theme="gemini"] footer{background:#1e1f20!important;border-top:1px solid #3c4043!important;color:#9aa0a6!important}
+[data-theme="news-reader"] footer{background:#111111!important;border-top:3px solid #d81921!important;color:#aaaaaa!important}
+
+/* ═══════════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--page-bg);color:var(--text);
+  min-height:100vh;overflow-x:hidden;
+  transition:background-color .5s ease,color .5s ease;
+}
+
+/* ═══════════════════════════════════════════════════
+   TOP NAV BAR
+═══════════════════════════════════════════════════ */
+.top-menubar{
+  position:sticky;top:0;z-index:1000;
+  background:linear-gradient(135deg,#0c1b4d 0%,#0f2d6e 35%,#1d4ed8 75%,#2563eb 100%);
+  border-bottom:1px solid rgba(147,197,253,.35);
+  height:52px;padding:0;
+  box-shadow:0 1px 0 rgba(37,99,235,.15),0 4px 24px rgba(0,0,0,.5);
+  flex-shrink:0;
+}
+.nav-inner{
+  max-width:1400px;margin:0 auto;
+  display:flex;align-items:center;height:100%;
+  padding:0 16px;gap:0;
+}
+.nav-brand-group{
+  display:flex;align-items:center;gap:0;
+  border-right:1px solid rgba(255,255,255,.12);
+  padding-right:16px;margin-right:4px;height:100%;
+  flex-shrink:0;
+}
+.nav-home-link{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:8px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  color:rgba(255,255,255,.9);text-decoration:none;
+  font-size:12px;font-weight:600;letter-spacing:.3px;
+  transition:all .15s;flex-shrink:0;margin-right:12px;
+}
+.nav-home-link:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff}
+.nav-brand{
+  display:flex;align-items:center;gap:8px;
+}
+.brand-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:linear-gradient(135deg,#3b82f6,#38bdf8);
+  box-shadow:0 0 8px rgba(59,130,246,.6);
+  flex-shrink:0;
+}
+.brand-name{
+  font-family:'Bebas Neue',sans-serif;font-size:18px;
+  letter-spacing:2px;color:#e2eeff;white-space:nowrap;
+}
+.brand-news-tag{
+  display:inline-block;
+  background:var(--red,#ef4444);
+  color:#fff;font-size:10px;font-weight:700;
+  letter-spacing:1.5px;padding:1px 6px;border-radius:4px;
+  margin-left:6px;vertical-align:middle;font-family:'DM Sans',sans-serif;
+}
+.news-nav-links{
+  display:flex;align-items:center;gap:2px;
+  flex:1;overflow-x:auto;height:100%;
+  scrollbar-width:none;
+}
+.news-nav-links::-webkit-scrollbar{display:none}
+.news-nav-link{
+  display:flex;align-items:center;
+  padding:0 14px;height:100%;
+  color:rgba(255,255,255,.7);text-decoration:none;
+  font-size:13px;font-weight:600;letter-spacing:.3px;
+  transition:all .15s;white-space:nowrap;border-right:1px solid rgba(255,255,255,.06);
+}
+.news-nav-link:hover{background:rgba(255,255,255,.07);color:#fff}
+.news-nav-right{
+  display:flex;align-items:center;gap:8px;
+  padding:0 12px;border-left:1px solid rgba(255,255,255,.1);
+  height:100%;flex-shrink:0;
+}
+.news-theme-btn{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  border-radius:8px;color:#fff;font-size:16px;cursor:pointer;
+  width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;padding:0;
+}
+.news-theme-btn:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.3)}
+.news-live-badge{
+  background:#ef4444;color:#fff;
+  font-size:10px;font-weight:700;letter-spacing:1.5px;
+  padding:3px 8px;border-radius:20px;
+  animation:livePulse 2s ease-in-out infinite;
+}
+@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.7}}
+
+/* Mobile nav */
+@media(max-width:700px){
+  .news-nav-links{display:none}
+  .brand-name{font-size:16px}
+}
+
+/* ═══════════════════════════════════════════════════
+   PAGE HERO
+═══════════════════════════════════════════════════ */
+.news-page-hero{
+  background:linear-gradient(135deg,var(--dark2),var(--dark3));
+  border-bottom:1px solid var(--border);
+  padding:28px 32px 20px;
+  position:relative;overflow:hidden;
+}
+.news-page-hero::before{
+  content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+  background:repeating-linear-gradient(90deg,transparent,transparent 80px,rgba(37,99,235,.03) 80px,rgba(37,99,235,.03) 81px);
+  pointer-events:none;
+}
+.news-page-hero-inner{max-width:1400px;margin:0 auto;position:relative;z-index:1}
+.news-page-title{
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:clamp(24px,4vw,42px);font-weight:800;
+  color:var(--text);line-height:1.15;margin-bottom:8px;
+}
+.news-page-subtitle{
+  font-size:14px;color:var(--text3);line-height:1.6;
+  max-width:600px;
+}
+.news-page-meta{
+  display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap;
+}
+.news-page-meta-chip{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.06);border:1px solid var(--border2);
+  border-radius:20px;padding:5px 12px;font-size:11px;
+  color:var(--text3);letter-spacing:.3px;
+}
+.news-page-meta-chip span{color:var(--text2);font-weight:600}
+
+/* ═══════════════════════════════════════════════════
+   MAIN LAYOUT
+═══════════════════════════════════════════════════ */
+.news-page-body{
+  max-width:1400px;margin:0 auto;
+  padding:32px 24px 60px;
+}
+@media(max-width:768px){.news-page-body{padding:20px 12px 48px}}
+
+/* ═══════════════════════════════════════════════════
+   SECTION WRAPPER
+═══════════════════════════════════════════════════ */
+.news-section{
+  margin-bottom:56px;
+  scroll-margin-top:68px;
+}
+
+/* Section header bar */
+.news-section-header{
+  display:flex;align-items:center;gap:10px;
+  padding-bottom:12px;margin-bottom:20px;
+  border-bottom:2px solid var(--border);
+  position:relative;
+}
+.news-section-header::after{
+  content:'';position:absolute;bottom:-2px;left:0;
+  width:60px;height:2px;
+  background:var(--section-accent,var(--burn2));
+  border-radius:2px;
+}
+.news-section-icon{font-size:22px;line-height:1}
+.news-section-name{
+  font-family:'Bebas Neue',sans-serif;font-size:20px;
+  letter-spacing:2.5px;color:var(--text);
+}
+.news-section-badge{
+  margin-left:auto;
+  background:var(--section-accent,var(--burn2));
+  color:#fff;font-size:10px;font-weight:700;
+  padding:3px 10px;border-radius:20px;letter-spacing:.5px;
+}
+
+/* Per-section accent colours */
+.news-section-trending{--section-accent:#ef4444}
+.news-section-global{--section-accent:#3b82f6}
+.news-section-india{--section-accent:#f97316}
+.news-section-stock{--section-accent:#10b981}
+.news-section-malayalam{--section-accent:#8b5cf6}
+
+/* ═══════════════════════════════════════════════════
+   FEATURED HERO CARD
+═══════════════════════════════════════════════════ */
+.news-hero-card{
+  position:relative;overflow:hidden;
+  border-radius:14px;margin-bottom:20px;
+  cursor:pointer;min-height:320px;
+  display:flex;align-items:flex-end;
+  background:var(--card2);
+  border:1px solid var(--border2);
+  box-shadow:0 4px 24px rgba(0,0,0,.3);
+  transition:transform .2s ease,box-shadow .2s ease;
+}
+.news-hero-card:hover{transform:translateY(-2px);box-shadow:0 8px 40px rgba(0,0,0,.45)}
+.news-hero-img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;border-radius:14px;
+  transition:transform .4s ease;
+}
+.news-hero-card:hover .news-hero-img{transform:scale(1.03)}
+.news-hero-gradient{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,.9) 0%,rgba(0,0,0,.55) 50%,rgba(0,0,0,.1) 100%);
+  border-radius:14px;
+}
+.news-hero-body{
+  position:relative;z-index:2;
+  padding:28px 28px 24px;width:100%;
+}
+.news-source-badge{
+  display:inline-block;
+  background:var(--section-accent,var(--burn2));
+  color:#fff;font-size:10px;font-weight:700;
+  letter-spacing:1px;padding:3px 10px;border-radius:4px;
+  margin-bottom:10px;text-transform:uppercase;
+}
+.news-hero-headline{
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:clamp(18px,2.5vw,28px);font-weight:700;
+  color:#fff;line-height:1.3;margin-bottom:10px;
+  text-shadow:0 2px 8px rgba(0,0,0,.5);
+}
+.news-hero-meta{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.news-hero-time{
+  font-size:12px;color:rgba(255,255,255,.65);
+}
+.news-hero-read{
+  font-size:12px;color:rgba(255,255,255,.9);font-weight:600;
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+  border-radius:20px;padding:4px 14px;transition:all .15s;cursor:pointer;
+}
+.news-hero-read:hover{background:rgba(255,255,255,.25);color:#fff}
+
+/* ═══════════════════════════════════════════════════
+   HEADLINE CARDS GRID
+═══════════════════════════════════════════════════ */
+.news-cards-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:16px;
+}
+@media(max-width:600px){.news-cards-grid{grid-template-columns:1fr}}
+
+.news-card{
+  background:var(--card);border:1px solid var(--border2);
+  border-radius:12px;padding:18px;
+  cursor:pointer;transition:all .18s;
+  display:flex;flex-direction:column;gap:10px;
+  position:relative;overflow:hidden;
+}
+.news-card::before{
+  content:'';position:absolute;top:0;left:0;
+  width:3px;height:100%;
+  background:var(--section-accent,var(--burn2));
+  opacity:0;transition:opacity .18s;
+}
+.news-card:hover{
+  background:var(--card2);border-color:var(--section-accent,var(--burn2));
+  transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.2);
+}
+.news-card:hover::before{opacity:1}
+
+.news-card-source{
+  display:inline-block;
+  background:var(--section-accent,var(--burn2));
+  color:#fff;font-size:9px;font-weight:700;
+  letter-spacing:1px;padding:2px 8px;border-radius:4px;
+  text-transform:uppercase;align-self:flex-start;
+}
+.news-card-headline{
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:15px;font-weight:700;color:var(--text);
+  line-height:1.4;
+}
+.news-card-teaser{
+  font-size:13px;color:var(--text3);line-height:1.6;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.news-card-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:auto;padding-top:4px;
+}
+.news-card-time{font-size:11px;color:var(--text3)}
+.news-card-read{
+  font-size:12px;font-weight:700;
+  color:var(--section-accent,var(--burn2));
+  text-decoration:none;
+  display:flex;align-items:center;gap:4px;
+  transition:gap .15s;
+}
+.news-card-read:hover{gap:8px}
+
+/* Malayalam font */
+.news-section-malayalam .news-card-headline,
+.news-section-malayalam .news-hero-headline{
+  font-family:'Noto Sans Malayalam','DM Sans',sans-serif;
+}
+
+/* ═══════════════════════════════════════════════════
+   PLACEHOLDER / EMPTY STATE
+═══════════════════════════════════════════════════ */
+.news-placeholder{
+  background:var(--card2);border:1px dashed var(--border2);
+  border-radius:12px;padding:48px 32px;text-align:center;
+  min-height:200px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:12px;
+}
+.news-placeholder-icon{font-size:40px;opacity:.4}
+.news-placeholder-text{
+  font-size:15px;color:var(--text3);line-height:1.6;
+  max-width:320px;
+}
+.news-placeholder-sub{font-size:12px;color:var(--text3);opacity:.7}
+
+/* ═══════════════════════════════════════════════════
+   FULL STORY MODAL
+═══════════════════════════════════════════════════ */
+.story-modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.82);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  z-index:9999;
+  align-items:flex-end;justify-content:center;
+}
+.story-modal-overlay.active{display:flex}
+
+.story-modal{
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:18px 18px 0 0;
+  width:100%;max-width:760px;
+  max-height:92vh;
+  display:flex;flex-direction:column;
+  box-shadow:0 -8px 64px rgba(0,0,0,.6);
+  animation:modalSlideUp .35s cubic-bezier(.32,.72,0,1) both;
+  overflow:hidden;
+}
+@media(min-width:800px){
+  .story-modal-overlay{align-items:center}
+  .story-modal{border-radius:18px;max-height:88vh}
+}
+@keyframes modalSlideUp{
+  from{transform:translateY(100px);opacity:0}
+  to{transform:translateY(0);opacity:1}
+}
+
+.story-modal-header{
+  padding:16px 20px 14px;
+  background:var(--dark2);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.story-modal-drag{
+  width:36px;height:4px;border-radius:2px;
+  background:var(--border2);margin:0 auto 14px;cursor:pointer;
+}
+.story-modal-section-pill{
+  padding:4px 12px;border-radius:20px;
+  font-size:10px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:#fff;
+}
+.story-modal-close{
+  background:none;border:none;cursor:pointer;
+  color:var(--text3);font-size:22px;line-height:1;
+  padding:2px 6px;border-radius:6px;
+  transition:all .15s;
+}
+.story-modal-close:hover{background:rgba(255,255,255,.08);color:var(--text)}
+
+.story-modal-body{
+  padding:24px 28px 32px;
+  overflow-y:auto;flex:1;
+  scrollbar-width:thin;scrollbar-color:var(--border2) transparent;
+}
+.story-modal-body::-webkit-scrollbar{width:5px}
+.story-modal-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+.story-modal-headline{
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:clamp(20px,3.5vw,28px);font-weight:700;
+  color:var(--text);line-height:1.3;margin-bottom:16px;
+}
+.story-modal-meta{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  font-size:12px;color:var(--text3);margin-bottom:20px;
+  padding-bottom:16px;border-bottom:1px solid var(--border);
+}
+.story-modal-meta-sep{opacity:.4}
+.story-modal-ai-badge{
+  background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);
+  color:#818cf8;font-size:10px;font-weight:600;
+  padding:2px 8px;border-radius:4px;letter-spacing:.3px;
+}
+.story-body{
+  font-size:16px;color:var(--text2);line-height:1.9;
+  margin-bottom:24px;
+}
+.story-body p{margin-bottom:14px}
+.story-body strong{color:var(--text);font-weight:600}
+
+.story-modal-disclaimer{
+  background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);
+  border-radius:8px;padding:12px 16px;margin-bottom:20px;
+  font-size:12px;color:var(--text3);line-height:1.7;
+  display:flex;gap:8px;align-items:flex-start;
+}
+.story-modal-disclaimer::before{content:'ℹ️';flex-shrink:0;font-size:14px}
+
+.story-modal-source-link{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 18px;
+  background:linear-gradient(135deg,var(--burn),var(--burn2));
+  border-radius:8px;color:#fff;text-decoration:none;
+  font-size:13px;font-weight:700;
+  transition:all .15s;margin-bottom:20px;
+}
+.story-modal-source-link:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(37,99,235,.4)}
+
+.story-modal-share{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding-top:16px;border-top:1px solid var(--border);
+}
+.story-modal-share-label{font-size:12px;color:var(--text3);font-weight:600;flex-shrink:0}
+.share-btn-sm{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:20px;
+  font-size:12px;font-weight:700;color:#fff;
+  text-decoration:none;border:none;cursor:pointer;
+  transition:opacity .15s;
+}
+.share-btn-sm:hover{opacity:.85}
+.share-wa{background:#25D366}
+.share-tw{background:#000;border:1px solid #333}
+
+/* ═══════════════════════════════════════════════════
+   LEGAL DISCLAIMER BANNER
+═══════════════════════════════════════════════════ */
+.news-legal-banner{
+  background:var(--card2);border:1px solid var(--border);
+  border-left:3px solid var(--text3);
+  border-radius:10px;padding:20px 24px;
+  margin:0 24px 40px;
+  max-width:1400px;margin-left:auto;margin-right:auto;
+}
+@media(max-width:768px){.news-legal-banner{margin:0 12px 32px}}
+.news-legal-banner-title{
+  font-size:11px;font-weight:700;color:var(--text3);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;
+}
+.news-legal-banner-text{
+  font-size:12px;color:var(--text3);line-height:1.8;
+}
+.news-legal-banner-text a{color:var(--burn2);text-decoration:none}
+.news-legal-banner-text a:hover{text-decoration:underline}
+
+/* ═══════════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════════ */
+footer.news-footer{
+  background:linear-gradient(135deg,#0c1b4d 0%,#0f2d6e 35%,#1d4ed8 75%,#2563eb 100%);
+  color:rgba(248,250,252,.8);
+  font-size:14px;line-height:1.7;
+  border-top:1px solid rgba(147,197,253,.35);
+}
+.footer-main{
+  max-width:1280px;margin:0 auto;
+  padding:48px 32px 36px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:32px;
+}
+@media(max-width:900px){.footer-main{grid-template-columns:repeat(2,1fr);gap:24px;padding:36px 20px 28px}}
+@media(max-width:500px){.footer-main{grid-template-columns:1fr;gap:20px;padding:28px 16px 20px}}
+
+.footer-col-title{
+  font-size:13px;font-weight:700;color:#fff;
+  letter-spacing:.6px;text-transform:uppercase;margin-bottom:14px;
+}
+.footer-brand-desc{font-size:13px;color:rgba(248,250,252,.65);line-height:1.75}
+.footer-links{list-style:none;display:flex;flex-direction:column;gap:9px}
+.footer-links a{
+  color:rgba(248,250,252,.8);text-decoration:none;font-size:13px;
+  transition:color .18s;display:inline-flex;align-items:center;gap:6px;
+}
+.footer-links a:hover{color:#fff}
+.footer-social a{
+  display:inline-flex;align-items:center;gap:10px;
+  color:rgba(248,250,252,.8);text-decoration:none;font-size:13px;
+  padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.2);
+  transition:background .18s,color .18s,border-color .18s;
+  width:100%;box-sizing:border-box;margin-bottom:8px;
+}
+.footer-social a:hover{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4)}
+.footer-social-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.footer-bottom{
+  border-top:1px solid rgba(147,197,253,.25);
+  padding:20px 32px;max-width:1200px;margin:0 auto;
+}
+.footer-legal-text{
+  font-size:11px;color:rgba(248,250,252,.65);
+  line-height:1.8;text-align:center;margin-bottom:12px;
+}
+.footer-legal-text strong{color:rgba(248,250,252,.8);font-weight:600}
+.footer-copyright{
+  font-size:11px;color:rgba(248,250,252,.45);
+  text-align:center;letter-spacing:.3px;
+}
+.share-btn{
+  padding:8px 15px;color:#fff!important;text-decoration:none;border-radius:5px;
+  font-size:13px;font-weight:700;cursor:pointer;border:none;transition:opacity .2s;
+  display:inline-flex;align-items:center;justify-content:center;
+}
+.share-btn:hover{opacity:.8}
+
+/* ═══════════════════════════════════════════════════
+   LOADING SKELETON
+═══════════════════════════════════════════════════ */
+@keyframes shimmer{
+  0%{background-position:-400px 0}
+  100%{background-position:400px 0}
+}
+.skeleton{
+  background:linear-gradient(90deg,var(--card2) 25%,var(--card3) 50%,var(--card2) 75%);
+  background-size:800px 100%;
+  animation:shimmer 1.5s infinite;
+  border-radius:6px;
+}
+
+/* ═══════════════════════════════════════════════════
+   SMOOTH TRANSITIONS
+═══════════════════════════════════════════════════ */
+.top-menubar,.news-card,.news-hero-card,footer{
+  transition:background-color .5s ease,color .5s ease,border-color .5s ease;
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     TOP NAVIGATION BAR
+══════════════════════════════════════════ -->
+<nav class="top-menubar" id="top-menubar">
+  <div class="nav-inner">
+    <div class="nav-brand-group">
+      <a href="index.html" class="nav-home-link" title="Back to Home">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home
+      </a>
+      <div class="nav-brand">
+        <span class="brand-dot"></span>
+        <span class="brand-name">VilfinTV <span class="brand-news-tag">NEWS</span></span>
+      </div>
+    </div>
+    <div class="news-nav-links" id="news-nav-links">
+      <a class="news-nav-link" href="#trending">🔥 Trending</a>
+      <a class="news-nav-link" href="#global">🌍 Global</a>
+      <a class="news-nav-link" href="#india">🇮🇳 India</a>
+      <a class="news-nav-link" href="#stock">📈 Stock</a>
+      <a class="news-nav-link" href="#malayalam">🎭 Malayalam</a>
+    </div>
+    <div class="news-nav-right">
+      <button class="news-theme-btn" onclick="cycleTheme()" title="Change theme">🎨</button>
+      <span class="news-live-badge">LIVE</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════
+     PAGE HERO
+══════════════════════════════════════════ -->
+<div class="news-page-hero">
+  <div class="news-page-hero-inner">
+    <h1 class="news-page-title">Today's Intelligence</h1>
+    <p class="news-page-subtitle">Curated global news coverage — Trending, World Affairs, Indian Markets &amp; Malayalam stories, refreshed every 6 hours.</p>
+    <div class="news-page-meta">
+      <div class="news-page-meta-chip">Last updated: <span id="last-updated-time">—</span></div>
+      <div class="news-page-meta-chip">Stories: <span id="total-story-count">—</span></div>
+      <div class="news-page-meta-chip">Refresh cycle: <span>Every 6 hours</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MAIN NEWS BODY
+══════════════════════════════════════════ -->
+<div class="news-page-body" id="news-page-body">
+  <!-- Sections rendered by JS -->
+  <div id="sections-container"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     LEGAL DISCLAIMER
+══════════════════════════════════════════ -->
+<div class="news-legal-banner">
+  <div class="news-legal-banner-title">Editorial Disclosure</div>
+  <p class="news-legal-banner-text">
+    VilfinTV News is an AI-assisted news aggregation service. All stories are editorial summaries created from publicly available RSS feeds and news sources.
+    Content does not reproduce original articles verbatim. VilfinTV does not claim ownership of original reporting.
+    For takedown requests: <a href="mailto:filmonjoseph@gmail.com">filmonjoseph@gmail.com</a>.
+    Stories are provided for informational purposes only.
+  </p>
+</div>
+
+<!-- ══════════════════════════════════════════
+     FULL STORY MODAL
+══════════════════════════════════════════ -->
+<div class="story-modal-overlay" id="story-modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="story-modal" id="story-modal" role="dialog" aria-modal="true" aria-labelledby="story-modal-headline">
+    <div class="story-modal-drag" onclick="closeStory()" title="Close"></div>
+    <div class="story-modal-header">
+      <span class="story-modal-section-pill" id="story-section-pill" style="background:#3b82f6">Section</span>
+      <button class="story-modal-close" onclick="closeStory()" title="Close story">✕</button>
+    </div>
+    <div class="story-modal-body" id="story-modal-body">
+      <!-- content injected by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════ -->
+<footer class="news-footer">
+  <div class="footer-main">
+    <div>
+      <div class="footer-col-title">VilfinTV News</div>
+      <p class="footer-brand-desc">AI-assisted global news aggregation. Trending stories, market intelligence, regional coverage, and Malayalam news — refreshed every 6 hours.</p>
+    </div>
+    <div>
+      <div class="footer-col-title">Sections</div>
+      <ul class="footer-links">
+        <li><a href="#trending">🔥 Trending Now</a></li>
+        <li><a href="#global">🌍 Global News</a></li>
+        <li><a href="#india">🇮🇳 India News</a></li>
+        <li><a href="#stock">📈 Stock News</a></li>
+        <li><a href="#malayalam">🎭 Malayalam News</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">VilfinTV Platform</div>
+      <ul class="footer-links">
+        <li><a href="index.html">📊 MultiScreener Dashboard</a></li>
+        <li><a href="blog_intelligence_hub.html" target="_blank">📰 Blog Intelligence Hub</a></li>
+        <li><a href="user_manual.html" target="_blank">📖 User Manual</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Connect</div>
+      <div class="footer-social">
+        <a href="https://x.com/vilfing" target="_blank" rel="noopener">
+          <span class="footer-social-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#94a3b8"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.73-8.835L1.254 2.25H8.08l4.261 5.636 5.903-5.636zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </span>
+          @vilfing on X
+        </a>
+        <a href="mailto:filmonjoseph@gmail.com">
+          <span class="footer-social-icon">✉️</span>
+          filmonjoseph@gmail.com
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:20px 32px 12px;text-align:center;border-top:1px solid rgba(147,197,253,.15)">
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+      <a href="https://api.whatsapp.com/send?text=Check%20out%20VilfinTV%20News%3A%20https%3A%2F%2Fvilfintv.com%2Fnews.html" target="_blank" rel="noopener" class="share-btn" style="background:#25D366">WhatsApp</a>
+      <a href="https://twitter.com/intent/tweet?text=Live+news+aggregator+by+VilfinTV&url=https%3A%2F%2Fvilfintv.com%2Fnews.html" target="_blank" rel="noopener" class="share-btn" style="background:#000;border:1px solid #333">X (Twitter)</a>
+      <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fvilfintv.com%2Fnews.html" target="_blank" rel="noopener" class="share-btn" style="background:#1877F2">Facebook</a>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid rgba(147,197,253,.15)">
+    <div class="footer-bottom">
+      <p class="footer-legal-text">
+        VilfinTV News is an AI-assisted aggregation service. All content is created from publicly available RSS feeds.
+        Content does not reproduce source articles verbatim. VilfinTV does not claim ownership of original reporting.
+        Stories are for informational purposes only. Not affiliated with any regulatory authority.
+      </p>
+      <p class="footer-copyright">© 2026 VilfinTV. All rights reserved. &bull; For takedown requests: filmonjoseph@gmail.com</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   THEME MANAGEMENT
+═══════════════════════════════════════════════════ */
+const THEMES = ['black','midnight','maroon','silver','gold','gemini','news-reader','standard'];
+
+function setNewsTheme() {
+  var t = localStorage.getItem('viltv_theme') || 'black';
+  if (t === 'standard') { t = 'midnight'; }
+  document.documentElement.setAttribute('data-theme', t);
+}
+
+function setTheme(t) {
+  if (t === 'standard') t = 'midnight';
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('viltv_theme', t);
+}
+
+function cycleTheme() {
+  var cur = localStorage.getItem('viltv_theme') || 'black';
+  var idx = THEMES.indexOf(cur);
+  var next = THEMES[(idx + 1) % THEMES.length];
+  setTheme(next);
+}
+
+// Apply on load
+setNewsTheme();
+
+/* ═══════════════════════════════════════════════════
+   SECTION METADATA
+═══════════════════════════════════════════════════ */
+const SECTION_META = {
+  trending: {
+    id: 'trending',
+    label: 'Trending Now',
+    icon: '🔥',
+    accent: '#ef4444',
+    cssClass: 'news-section-trending',
+    image: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80'
+  },
+  global: {
+    id: 'global',
+    label: 'Global News',
+    icon: '🌍',
+    accent: '#3b82f6',
+    cssClass: 'news-section-global',
+    image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&q=80'
+  },
+  india: {
+    id: 'india',
+    label: 'India News',
+    icon: '🇮🇳',
+    accent: '#f97316',
+    cssClass: 'news-section-india',
+    image: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=1200&q=80'
+  },
+  stock: {
+    id: 'stock',
+    label: 'Stock News',
+    icon: '📈',
+    accent: '#10b981',
+    cssClass: 'news-section-stock',
+    image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80'
+  },
+  malayalam: {
+    id: 'malayalam',
+    label: 'Malayalam News',
+    icon: '🎭',
+    accent: '#8b5cf6',
+    cssClass: 'news-section-malayalam',
+    image: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=1200&q=80'
+  }
+};
+
+/* ═══════════════════════════════════════════════════
+   UTILITY: TIME AGO
+═══════════════════════════════════════════════════ */
+function timeAgo(isoStr) {
+  if (!isoStr) return '—';
+  var diff = Date.now() - new Date(isoStr).getTime();
+  var mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return mins + 'm ago';
+  var hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  var days = Math.floor(hrs / 24);
+  return days + 'd ago';
+}
+
+/* ═══════════════════════════════════════════════════
+   FILTER: REMOVE EXPIRED ITEMS
+═══════════════════════════════════════════════════ */
+function isItemValid(item) {
+  if (!item || !item.publishedAt) return false;
+  var age = Date.now() - new Date(item.publishedAt).getTime();
+  return age < 48 * 60 * 60 * 1000; // 48 hours
+}
+
+/* ═══════════════════════════════════════════════════
+   RENDER: SECTION
+═══════════════════════════════════════════════════ */
+function renderSection(sectionId, sectionData, meta) {
+  var items = (sectionData && sectionData.items) ? sectionData.items.filter(isItemValid) : [];
+  var heroImage = (sectionData && sectionData.image) ? sectionData.image : meta.image;
+
+  var section = document.createElement('div');
+  section.className = 'news-section ' + meta.cssClass;
+  section.id = sectionId;
+
+  // Section header
+  var count = items.length;
+  section.innerHTML = '<div class="news-section-header">'
+    + '<span class="news-section-icon">' + meta.icon + '</span>'
+    + '<span class="news-section-name">' + meta.label + '</span>'
+    + '<span class="news-section-badge">' + count + ' stories</span>'
+    + '</div>';
+
+  if (items.length === 0) {
+    section.innerHTML += '<div class="news-placeholder">'
+      + '<div class="news-placeholder-icon">' + meta.icon + '</div>'
+      + '<div class="news-placeholder-text">Content updating…</div>'
+      + '<div class="news-placeholder-sub">New stories will appear at the next scheduled refresh.</div>'
+      + '</div>';
+    return section;
+  }
+
+  // Hero card — first item
+  var hero = items[0];
+  var heroHtml = '<div class="news-hero-card" onclick="openStory(' + JSON.stringify(hero).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026') + ',' + JSON.stringify(meta) + ')">'
+    + '<img class="news-hero-img" src="' + escAttr(heroImage) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+    + '<div class="news-hero-gradient"></div>'
+    + '<div class="news-hero-body">'
+    + '<div class="news-source-badge">' + esc(hero.source || 'Source') + '</div>'
+    + '<div class="news-hero-headline">' + esc(hero.headline) + '</div>'
+    + '<div class="news-hero-meta">'
+    + '<span class="news-hero-time">' + timeAgo(hero.publishedAt) + '</span>'
+    + '<span class="news-hero-read">Read full story</span>'
+    + '</div>'
+    + '</div>'
+    + '</div>';
+  section.innerHTML += heroHtml;
+
+  // Grid cards — remaining items
+  var gridItems = items.slice(1);
+  if (gridItems.length > 0) {
+    var gridHtml = '<div class="news-cards-grid">';
+    gridItems.forEach(function(item) {
+      var dataStr = JSON.stringify(item).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
+      var metaStr = JSON.stringify(meta).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
+      gridHtml += '<div class="news-card" onclick="openStory(' + dataStr + ',' + metaStr + ')">'
+        + '<div class="news-card-source">' + esc(item.source || 'Source') + '</div>'
+        + '<div class="news-card-headline">' + esc(item.headline) + '</div>'
+        + '<div class="news-card-teaser">' + esc(item.teaser || '') + '</div>'
+        + '<div class="news-card-footer">'
+        + '<span class="news-card-time">' + timeAgo(item.publishedAt) + '</span>'
+        + '<span class="news-card-read">Read →</span>'
+        + '</div>'
+        + '</div>';
+    });
+    gridHtml += '</div>';
+    section.innerHTML += gridHtml;
+  }
+
+  return section;
+}
+
+/* ═══════════════════════════════════════════════════
+   MODAL: OPEN STORY
+═══════════════════════════════════════════════════ */
+function openStory(item, meta) {
+  var overlay = document.getElementById('story-modal-overlay');
+  var body = document.getElementById('story-modal-body');
+  var pill = document.getElementById('story-section-pill');
+
+  // Set section pill
+  pill.textContent = (meta.icon || '') + ' ' + (meta.label || 'Story');
+  pill.style.background = meta.accent || '#3b82f6';
+
+  // Build story content
+  var storyHtml = '<h2 class="story-modal-headline" id="story-modal-headline">' + esc(item.headline) + '</h2>';
+
+  storyHtml += '<div class="story-modal-meta">'
+    + '<span>Originally reported by <strong>' + esc(item.source || 'Source') + '</strong></span>'
+    + '<span class="story-modal-meta-sep">·</span>'
+    + '<span>' + formatDate(item.publishedAt) + '</span>'
+    + '<span class="story-modal-meta-sep">·</span>'
+    + '<span class="story-modal-ai-badge">AI-assisted summary</span>'
+    + '</div>';
+
+  // Story body
+  var storyContent = item.story || item.teaser || '';
+  // If story is plain text, wrap in paragraphs
+  if (storyContent && !storyContent.includes('<p>')) {
+    storyContent = storyContent.split('\n').filter(function(l){ return l.trim(); })
+      .map(function(l){ return '<p>' + esc(l) + '</p>'; }).join('');
+  }
+  storyHtml += '<div class="story-body">' + (storyContent || '<p>Full story unavailable.</p>') + '</div>';
+
+  // Disclaimer
+  storyHtml += '<div class="story-modal-disclaimer">'
+    + 'AI-assisted editorial summary. Facts verified across multiple sources. '
+    + 'This is a summary — not verbatim reproduction of the original article.'
+    + '</div>';
+
+  // Source link
+  if (item.sourceUrl) {
+    storyHtml += '<a class="story-modal-source-link" href="' + escAttr(item.sourceUrl) + '" target="_blank" rel="noopener noreferrer">'
+      + 'Open original source ↗'
+      + '</a>';
+  }
+
+  // Share buttons
+  var shareText = encodeURIComponent(item.headline || 'Read this story on VilfinTV News');
+  var shareUrl = encodeURIComponent('https://vilfintv.com/news.html');
+  storyHtml += '<div class="story-modal-share">'
+    + '<span class="story-modal-share-label">Share:</span>'
+    + '<a class="share-btn-sm share-wa" href="https://api.whatsapp.com/send?text=' + shareText + '%20' + shareUrl + '" target="_blank" rel="noopener">WhatsApp</a>'
+    + '<a class="share-btn-sm share-tw" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank" rel="noopener">X (Twitter)</a>'
+    + '</div>';
+
+  body.innerHTML = storyHtml;
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+/* ═══════════════════════════════════════════════════
+   MODAL: CLOSE STORY
+═══════════════════════════════════════════════════ */
+function closeStory() {
+  document.getElementById('story-modal-overlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('story-modal-overlay')) {
+    closeStory();
+  }
+}
+
+// Close on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeStory();
+});
+
+/* ═══════════════════════════════════════════════════
+   FORMAT DATE
+═══════════════════════════════════════════════════ */
+function formatDate(isoStr) {
+  if (!isoStr) return '—';
+  try {
+    var d = new Date(isoStr);
+    return d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  } catch(e) { return '—'; }
+}
+
+/* ═══════════════════════════════════════════════════
+   ESCAPE HELPERS
+═══════════════════════════════════════════════════ */
+function esc(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+function escAttr(str) {
+  if (!str) return '';
+  return String(str).replace(/"/g,'&quot;');
+}
+
+/* ═══════════════════════════════════════════════════
+   LOAD NEWS PAGE
+═══════════════════════════════════════════════════ */
+async function loadNewsPage() {
+  var container = document.getElementById('sections-container');
+
+  // Show loading skeleton
+  container.innerHTML = '<div style="padding:48px;text-align:center;color:var(--text3)">'
+    + '<div style="font-size:32px;margin-bottom:12px">📡</div>'
+    + '<div style="font-size:15px">Loading latest intelligence…</div>'
+    + '</div>';
+
+  var data = null;
+  try {
+    var resp = await fetch('data/news.json?_=' + Date.now());
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    data = await resp.json();
+  } catch (e) {
+    console.warn('News data unavailable:', e.message);
+  }
+
+  container.innerHTML = '';
+  var totalStories = 0;
+
+  var sectionOrder = ['trending', 'global', 'india', 'stock', 'malayalam'];
+  sectionOrder.forEach(function(sid) {
+    var meta = SECTION_META[sid];
+    var sectionData = (data && data.sections && data.sections[sid]) ? data.sections[sid] : null;
+    var el = renderSection(sid, sectionData, meta);
+    container.appendChild(el);
+    if (sectionData && sectionData.items) {
+      totalStories += sectionData.items.filter(isItemValid).length;
+    }
+  });
+
+  // Update meta chips
+  if (data && data.generated) {
+    document.getElementById('last-updated-time').textContent = timeAgo(data.generated);
+  } else {
+    document.getElementById('last-updated-time').textContent = 'Pending update';
+  }
+  document.getElementById('total-story-count').textContent = totalStories || '—';
+}
+
+/* ═══════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function() {
+  loadNewsPage();
+});
+</script>
+</body>
+</html>

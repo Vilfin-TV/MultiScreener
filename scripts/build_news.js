@@ -1,0 +1,581 @@
+/**
+ * build_news.js — VilfinTV News content generator
+ * Runs in GitHub Actions (Node 20). Zero npm dependencies.
+ * Fetches RSS feeds, parses XML with regex, generates AI summaries,
+ * writes data/news.json (48h expiry per item).
+ *
+ * Env vars: GOOGLE_AI_API_KEY, GROQ_API_KEY  (GitHub Secrets)
+ */
+
+'use strict';
+
+const https = require('https');
+const http  = require('http');
+const fs    = require('fs');
+const path  = require('path');
+const url   = require('url');
+
+/* ═══════════════════════════════════════════════════
+   CONFIGURATION
+═══════════════════════════════════════════════════ */
+const GOOGLE_AI_API_KEY = process.env.GOOGLE_AI_API_KEY || '';
+const GROQ_API_KEY      = process.env.GROQ_API_KEY || '';
+
+const BLOCKED_KEYWORDS = [
+  'riot', 'genocide', 'lynching', 'hate speech', 'communal violence',
+  'mob violence', 'explicit', 'graphic content', 'rape', 'slaughter',
+  'massacre', 'pogrom', 'beheading', 'ethnic cleansing'
+];
+
+const MAX_ITEMS_PER_SECTION = 6;
+const REQUEST_TIMEOUT_MS    = 15000;
+
+const SOURCES = {
+  trending: [
+    'https://news.google.com/rss/headlines/section/topic/HEADLINES?hl=en-IN&gl=IN&ceid=IN:en',
+    'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml',
+  ],
+  global: [
+    'https://feeds.bbci.co.uk/news/world/rss.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',
+  ],
+  india: [
+    'https://www.thehindu.com/feeder/default.rss',
+    'https://timesofindia.indiatimes.com/rssfeedstopstories.cms',
+  ],
+  stock: [
+    'https://economictimes.indiatimes.com/markets/stocks/rss.cms',
+    'https://www.moneycontrol.com/rss/MCrecentnews.xml',
+  ],
+  malayalam: [
+    'https://www.manoramaonline.com/news/kerala.rssxml',
+    'https://www.mathrubhumi.com/rss/news.xml',
+  ]
+};
+
+const SECTION_META = {
+  trending: {
+    image:  'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80',
+    label:  '🔥 Trending Now',
+    accent: '#ef4444'
+  },
+  global: {
+    image:  'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&q=80',
+    label:  '🌍 Global News',
+    accent: '#3b82f6'
+  },
+  india: {
+    image:  'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=1200&q=80',
+    label:  '🇮🇳 India News',
+    accent: '#f97316'
+  },
+  stock: {
+    image:  'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80',
+    label:  '📈 Stock News',
+    accent: '#10b981'
+  },
+  malayalam: {
+    image:  'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=1200&q=80',
+    label:  '🎭 Malayalam News',
+    accent: '#8b5cf6'
+  }
+};
+
+/* ═══════════════════════════════════════════════════
+   HTTP HELPER — supports GET and POST, follows redirects
+   Returns Promise<string> (response body)
+═══════════════════════════════════════════════════ */
+function httpsGet(rawUrl, options) {
+  return new Promise(function(resolve, reject) {
+    options = options || {};
+    var parsedUrl = url.parse(rawUrl);
+    var transport = parsedUrl.protocol === 'https:' ? https : http;
+
+    var reqOptions = {
+      hostname: parsedUrl.hostname,
+      port:     parsedUrl.port || (parsedUrl.protocol === 'https:' ? 443 : 80),
+      path:     parsedUrl.path || '/',
+      method:   options.method || 'GET',
+      headers:  Object.assign({
+        'User-Agent': 'VilfinTV-NewsBot/2.0 (+https://vilfintv.com)',
+        'Accept':     'application/json, text/xml, application/xml, */*',
+        'Connection': 'close'
+      }, options.headers || {})
+    };
+
+    var req = transport.request(reqOptions, function(res) {
+      // Follow redirects (max 4 hops)
+      if ([301,302,303,307,308].includes(res.statusCode) && res.headers.location) {
+        var hops = (options._redirects || 0) + 1;
+        if (hops > 4) { reject(new Error('Too many redirects')); res.resume(); return; }
+        res.resume();
+        httpsGet(res.headers.location, Object.assign({}, options, { _redirects: hops, method: 'GET', body: undefined }))
+          .then(resolve).catch(reject);
+        return;
+      }
+      if (res.statusCode && res.statusCode >= 400) {
+        res.resume();
+        reject(new Error('HTTP ' + res.statusCode + ' for ' + rawUrl));
+        return;
+      }
+      var chunks = [];
+      res.on('data', function(c) { chunks.push(c); });
+      res.on('end',  function()  { resolve(Buffer.concat(chunks).toString('utf8')); });
+      res.on('error', reject);
+    });
+
+    req.setTimeout(REQUEST_TIMEOUT_MS, function() {
+      req.destroy(new Error('Request timeout: ' + rawUrl));
+    });
+
+    if (options.body) req.write(options.body);
+    req.on('error', reject);
+    req.end();
+  });
+}
+
+function sleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
+
+/* ═══════════════════════════════════════════════════
+   RSS FETCHER
+═══════════════════════════════════════════════════ */
+async function fetchRSS(feedUrl) {
+  try {
+    console.log('  Fetching:', feedUrl.replace(/^https?:\/\//, '').split('/')[0]);
+    var xml = await httpsGet(feedUrl);
+    return xml;
+  } catch (e) {
+    console.warn('  Feed failed:', feedUrl.split('/')[2] || feedUrl, '-', e.message);
+    return null;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   XML PARSER — regex-based, no xml2js
+═══════════════════════════════════════════════════ */
+function extractTagValue(block, tag) {
+  // CDATA variant
+  var cdRe = new RegExp('<' + tag + '[^>]*>\\s*<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>\\s*<\\/' + tag + '>', 'i');
+  // Plain variant
+  var plRe = new RegExp('<' + tag + '[^>]*>([\\s\\S]*?)<\\/' + tag + '>', 'i');
+  var m = cdRe.exec(block) || plRe.exec(block);
+  return m ? m[1].trim() : '';
+}
+
+function decodeEntities(str) {
+  return str
+    .replace(/&amp;/g,  '&')
+    .replace(/&lt;/g,   '<')
+    .replace(/&gt;/g,   '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g,  "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#(\d+);/g, function(_, n){ return String.fromCharCode(parseInt(n,10)); });
+}
+
+function parseRSS(xml) {
+  if (!xml) return [];
+  var items = [];
+
+  // Try <item> blocks, fall back to <entry> (Atom)
+  var blockRe = /<item[\s>]([\s\S]*?)<\/item>/gi;
+  var m;
+  var found = false;
+  while ((m = blockRe.exec(xml)) !== null) {
+    found = true;
+    processBlock(m[1], items);
+  }
+  if (!found) {
+    var entryRe = /<entry[\s>]([\s\S]*?)<\/entry>/gi;
+    while ((m = entryRe.exec(xml)) !== null) {
+      processBlock(m[1], items);
+    }
+  }
+  return items;
+}
+
+function processBlock(block, items) {
+  var title = decodeEntities(extractTagValue(block, 'title').replace(/<[^>]+>/g,''));
+  if (!title || title.length < 5) return;
+
+  var link = extractTagValue(block, 'link') || extractTagValue(block, 'guid');
+  // Atom <link href="..."/>
+  if (!link) {
+    var am = block.match(/<link[^>]+href=["']([^"']+)["']/i);
+    if (am) link = am[1];
+  }
+
+  var description = decodeEntities(
+    (extractTagValue(block, 'description') || extractTagValue(block, 'summary') || extractTagValue(block, 'content'))
+      .replace(/<[^>]+>/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+  ).slice(0, 500);
+
+  var pubDate = extractTagValue(block, 'pubDate')
+    || extractTagValue(block, 'published')
+    || extractTagValue(block, 'updated')
+    || extractTagValue(block, 'dc:date');
+
+  var publishedAt = null;
+  if (pubDate) {
+    try { publishedAt = new Date(pubDate).toISOString(); } catch(e) {}
+  }
+  if (!publishedAt) publishedAt = new Date().toISOString();
+
+  // Infer source name from link domain
+  var sourceName = 'Source';
+  if (link) {
+    var dm = link.match(/https?:\/\/(?:www\.)?([^\/]+)/);
+    if (dm) {
+      var parts = dm[1].split('.');
+      // "economictimes.indiatimes.com" → "Economictimes"
+      // "bbc.co.uk" → "Bbc"
+      var name = parts.length >= 2 ? parts[parts.length - 2] : parts[0];
+      sourceName = name.charAt(0).toUpperCase() + name.slice(1);
+    }
+  }
+
+  items.push({
+    title:       title,
+    link:        link || '',
+    description: description,
+    publishedAt: publishedAt,
+    sourceName:  sourceName
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   CONTENT FILTER
+═══════════════════════════════════════════════════ */
+function filterItem(item) {
+  var text = (item.title + ' ' + item.description).toLowerCase();
+  for (var i = 0; i < BLOCKED_KEYWORDS.length; i++) {
+    if (text.includes(BLOCKED_KEYWORDS[i])) {
+      console.log('  [FILTERED]', item.title.slice(0, 60));
+      return false;
+    }
+  }
+  return true;
+}
+
+/* ═══════════════════════════════════════════════════
+   DEDUP — Jaccard on word sets
+═══════════════════════════════════════════════════ */
+function titleWords(title) {
+  return new Set(
+    title.toLowerCase()
+      .replace(/[^a-z0-9ഀ-ൿ ]/g, ' ')
+      .split(/\s+/)
+      .filter(function(w){ return w.length > 3; })
+  );
+}
+
+function isDuplicate(item, seen) {
+  var words = titleWords(item.title);
+  for (var i = 0; i < seen.length; i++) {
+    var sw = titleWords(seen[i].title);
+    var intersection = 0;
+    words.forEach(function(w){ if (sw.has(w)) intersection++; });
+    var union = words.size + sw.size - intersection;
+    if (union > 0 && intersection / union > 0.5) return true;
+  }
+  return false;
+}
+
+/* ═══════════════════════════════════════════════════
+   CORROBORATION — story appears in ≥1 source
+═══════════════════════════════════════════════════ */
+function isCorroborated(item, otherItems) {
+  var words = titleWords(item.title);
+  for (var i = 0; i < otherItems.length; i++) {
+    if (otherItems[i] === item) continue;
+    var sw = titleWords(otherItems[i].title);
+    var intersection = 0;
+    words.forEach(function(w){ if (sw.has(w)) intersection++; });
+    var union = words.size + sw.size - intersection;
+    if (union > 0 && intersection / union > 0.3) return true;
+  }
+  return false;
+}
+
+/* ═══════════════════════════════════════════════════
+   GEMINI API CALL
+═══════════════════════════════════════════════════ */
+async function callGemini(prompt) {
+  if (!GOOGLE_AI_API_KEY) throw new Error('No GOOGLE_AI_API_KEY');
+
+  var body = JSON.stringify({
+    contents: [{ parts: [{ text: prompt }] }],
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HATE_SPEECH',       threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+      { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_MEDIUM_AND_ABOVE' }
+    ],
+    generationConfig: { maxOutputTokens: 600, temperature: 0.4 }
+  });
+
+  var apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + GOOGLE_AI_API_KEY;
+  var response = await httpsGet(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type':   'application/json',
+      'Content-Length': Buffer.byteLength(body)
+    },
+    body: body
+  });
+
+  var parsed = JSON.parse(response);
+  var text = parsed
+    && parsed.candidates
+    && parsed.candidates[0]
+    && parsed.candidates[0].content
+    && parsed.candidates[0].content.parts
+    && parsed.candidates[0].content.parts[0].text;
+  if (!text) throw new Error('Gemini: empty or blocked response');
+  return text.trim();
+}
+
+/* ═══════════════════════════════════════════════════
+   GROQ API CALL (fallback)
+═══════════════════════════════════════════════════ */
+async function callGroq(prompt) {
+  if (!GROQ_API_KEY) throw new Error('No GROQ_API_KEY');
+
+  var body = JSON.stringify({
+    model:       'llama-3.1-8b-instant',
+    messages:    [{ role: 'user', content: prompt }],
+    max_tokens:  600,
+    temperature: 0.4
+  });
+
+  var response = await httpsGet('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + GROQ_API_KEY,
+      'Content-Type':  'application/json',
+      'Content-Length': Buffer.byteLength(body)
+    },
+    body: body
+  });
+
+  var parsed = JSON.parse(response);
+  var text = parsed
+    && parsed.choices
+    && parsed.choices[0]
+    && parsed.choices[0].message
+    && parsed.choices[0].message.content;
+  if (!text) throw new Error('Groq: empty response');
+  return text.trim();
+}
+
+/* ═══════════════════════════════════════════════════
+   BUILD PROMPT
+═══════════════════════════════════════════════════ */
+function buildPrompt(item, isMalayalam) {
+  var base = 'You are a professional journalist. Write a 200-word news article about: '
+    + item.title
+    + '. Context: ' + (item.description || 'No additional context available.')
+    + ' Style: factual, balanced, impartial, BBC News style. Do not reproduce source text verbatim.';
+
+  if (isMalayalam) {
+    return base + ' Write the article entirely in Malayalam script (not transliteration). End with: Source: ' + item.sourceName;
+  }
+  return base + ' End with: Source: ' + item.sourceName;
+}
+
+/* ═══════════════════════════════════════════════════
+   GENERATE STORY — Gemini → Groq → RSS fallback
+═══════════════════════════════════════════════════ */
+async function generateStory(item, isMalayalam) {
+  var prompt = buildPrompt(item, isMalayalam);
+  var story  = null;
+
+  try {
+    story = await callGemini(prompt);
+    console.log('    [Gemini OK]', item.title.slice(0, 55));
+  } catch (e) {
+    console.warn('    [Gemini FAIL]', e.message);
+  }
+
+  if (!story) {
+    try {
+      story = await callGroq(prompt);
+      console.log('    [Groq OK]', item.title.slice(0, 55));
+    } catch (e) {
+      console.warn('    [Groq FAIL]', e.message);
+    }
+  }
+
+  if (!story) {
+    story = (item.description || 'Story unavailable.')
+      + '\n\n[Summary from source. Full story unavailable.]';
+    console.warn('    [RSS fallback]', item.title.slice(0, 55));
+  }
+
+  return story.trim();
+}
+
+/* ═══════════════════════════════════════════════════
+   BUILD SECTION
+═══════════════════════════════════════════════════ */
+async function buildSection(sectionId, feedUrls, meta) {
+  console.log('\n[Section]', sectionId.toUpperCase());
+  var isMalayalam = sectionId === 'malayalam';
+
+  // Fetch all feeds
+  var allItems = [];
+  for (var i = 0; i < feedUrls.length; i++) {
+    var xml   = await fetchRSS(feedUrls[i]);
+    var parsed = parseRSS(xml);
+    console.log('  Parsed', parsed.length, 'items from feed', i + 1);
+    allItems = allItems.concat(parsed);
+  }
+
+  // Filter blocked content
+  allItems = allItems.filter(filterItem);
+
+  // Deduplicate
+  var deduped = [];
+  allItems.forEach(function(item) {
+    if (!isDuplicate(item, deduped)) deduped.push(item);
+  });
+
+  // Sort newest first
+  deduped.sort(function(a, b) {
+    return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+  });
+
+  console.log('  Items after dedup+filter:', deduped.length);
+  var selected = deduped.slice(0, MAX_ITEMS_PER_SECTION);
+
+  // Placeholder if empty
+  if (selected.length === 0) {
+    console.warn('  No items for', sectionId, '— inserting placeholder');
+    return makePlaceholderSection(sectionId, meta);
+  }
+
+  // Generate stories
+  var outputItems = [];
+  for (var j = 0; j < selected.length; j++) {
+    var item = selected[j];
+    console.log('  Generating', (j + 1) + '/' + selected.length + ':', item.title.slice(0, 65));
+
+    var storyText = await generateStory(item, isMalayalam);
+
+    // Wrap paragraphs
+    var storyHtml = storyText
+      .split('\n')
+      .filter(function(l){ return l.trim(); })
+      .map(function(l){
+        return '<p>' + l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>';
+      })
+      .join('');
+
+    var teaser = storyText.replace(/<[^>]+>/g, '').slice(0, 120).trim();
+    if (teaser.length === 120) teaser += '…';
+
+    var id = sectionId + '-' + Date.now() + '-' + j;
+
+    outputItems.push({
+      id:          id,
+      headline:    item.title,
+      teaser:      teaser,
+      story:       storyHtml,
+      source:      item.sourceName,
+      sourceUrl:   item.link || '',
+      publishedAt: item.publishedAt,
+      expiresAt:   new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+      verified:    isCorroborated(item, allItems),
+      aiGenerated: true
+    });
+
+    // Gentle rate-limit pause between AI calls
+    if (j < selected.length - 1) await sleep(600);
+  }
+
+  return {
+    image:  meta.image,
+    label:  meta.label,
+    accent: meta.accent,
+    items:  outputItems
+  };
+}
+
+function makePlaceholderSection(sectionId, meta) {
+  return {
+    image:  meta.image,
+    label:  meta.label,
+    accent: meta.accent,
+    items: [{
+      id:          sectionId + '-placeholder-' + Date.now(),
+      headline:    'Content updating…',
+      teaser:      'New stories will appear at the next scheduled refresh.',
+      story:       '<p>New stories will appear at the next scheduled refresh. Please check back shortly.</p>',
+      source:      'VilfinTV',
+      sourceUrl:   'https://vilfintv.com/news.html',
+      publishedAt: new Date().toISOString(),
+      expiresAt:   new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
+      verified:    false,
+      aiGenerated: false
+    }]
+  };
+}
+
+/* ═══════════════════════════════════════════════════
+   MAIN
+═══════════════════════════════════════════════════ */
+async function main() {
+  console.log('='.repeat(60));
+  console.log('VilfinTV News Builder v2');
+  console.log('Started   :', new Date().toISOString());
+  console.log('Gemini key:', GOOGLE_AI_API_KEY ? 'present (' + GOOGLE_AI_API_KEY.slice(0,4) + '...)' : 'MISSING');
+  console.log('Groq key  :', GROQ_API_KEY      ? 'present (' + GROQ_API_KEY.slice(0,4) + '...)'      : 'MISSING');
+  console.log('='.repeat(60));
+
+  var output = {
+    generated: new Date().toISOString(),
+    sections:  {}
+  };
+
+  var sectionIds = Object.keys(SOURCES);
+
+  for (var i = 0; i < sectionIds.length; i++) {
+    var sid = sectionIds[i];
+    try {
+      output.sections[sid] = await buildSection(sid, SOURCES[sid], SECTION_META[sid]);
+    } catch (e) {
+      console.error('Section', sid, 'failed entirely:', e.message);
+      output.sections[sid] = makePlaceholderSection(sid, SECTION_META[sid]);
+    }
+  }
+
+  // Ensure data directory exists
+  var dataDir = path.join(__dirname, '..', 'data');
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+    console.log('\nCreated data/ directory');
+  }
+
+  var outPath = path.join(dataDir, 'news.json');
+  fs.writeFileSync(outPath, JSON.stringify(output, null, 2) + '\n', 'utf8');
+
+  // Summary
+  var totalItems = 0;
+  console.log('\n' + '='.repeat(60));
+  console.log('Output:', outPath);
+  sectionIds.forEach(function(sid) {
+    var count = output.sections[sid] && output.sections[sid].items
+      ? output.sections[sid].items.length : 0;
+    totalItems += count;
+    console.log('  ' + sid.padEnd(12) + ':', count, 'items');
+  });
+  console.log('  TOTAL       :', totalItems, 'items');
+  console.log('Completed :', new Date().toISOString());
+  console.log('='.repeat(60));
+}
+
+main().catch(function(e) {
+  console.error('FATAL:', e);
+  process.exit(1);
+});
