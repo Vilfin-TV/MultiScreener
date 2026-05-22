@@ -472,20 +472,21 @@ body{
 .story-modal{
   background:var(--card);
   border:1px solid var(--border2);
-  border-radius:18px 18px 0 0;
+  border-radius:20px 20px 0 0;
   width:100%;max-width:760px;
-  max-height:92vh;
+  /* Mobile: 90% of screen height so content is visible */
+  height:90vh;
   display:flex;flex-direction:column;
   box-shadow:0 -8px 64px rgba(0,0,0,.6);
-  animation:modalSlideUp .35s cubic-bezier(.32,.72,0,1) both;
+  animation:modalSlideUp .3s cubic-bezier(.32,.72,0,1) both;
   overflow:hidden;
 }
 @media(min-width:800px){
   .story-modal-overlay{align-items:center}
-  .story-modal{border-radius:18px;max-height:88vh}
+  .story-modal{border-radius:18px;height:auto;max-height:88vh}
 }
 @keyframes modalSlideUp{
-  from{transform:translateY(100px);opacity:0}
+  from{transform:translateY(60px);opacity:0}
   to{transform:translateY(0);opacity:1}
 }
 
@@ -678,6 +679,45 @@ footer.news-footer{
 .top-menubar,.news-card,.news-hero-card,footer{
   transition:background-color .5s ease,color .5s ease,border-color .5s ease;
 }
+
+/* ═══════════════════════════════════════════════════
+   MOBILE POLISH
+═══════════════════════════════════════════════════ */
+@media(max-width:600px){
+  /* Hero card — shorter on mobile so headline stays visible */
+  .news-hero-card{min-height:220px}
+  .news-hero-body{padding:18px 16px 16px}
+  .news-hero-headline{font-size:17px!important}
+
+  /* Section header */
+  .news-section-header{margin-bottom:14px}
+  .news-section-name{font-size:16px;letter-spacing:1.5px}
+
+  /* Legal banner */
+  .news-legal-banner{margin:0 12px 24px;padding:14px 16px}
+
+  /* Footer: single column on phones */
+  .footer-main{grid-template-columns:1fr!important;gap:20px!important;padding:28px 16px 20px!important}
+  .footer-bottom{padding:14px 16px}
+
+  /* Page hero tighter */
+  .news-page-hero{padding:18px 16px 14px}
+  .news-page-title{font-size:26px}
+  .news-page-subtitle{font-size:13px}
+  .news-page-meta{gap:8px;margin-top:12px}
+  .news-page-meta-chip{font-size:11px;padding:4px 10px}
+
+  /* Modal drag pill larger tap target */
+  .story-modal-drag{width:44px;height:5px;margin-bottom:0}
+  .story-modal-header{padding:14px 16px 12px}
+  .story-modal-close{font-size:20px}
+  .story-modal-headline{font-size:18px!important}
+
+  /* Share buttons wrap nicely */
+  .story-modal-share{gap:6px}
+  .share-btn-sm{font-size:11px;padding:6px 12px}
+  .story-modal-source-link{font-size:12px;padding:7px 14px}
+}
 </style>
 </head>
 <body>
@@ -768,7 +808,7 @@ footer.news-footer{
   <div class="footer-main">
     <div>
       <div class="footer-col-title">VilfinTV News</div>
-      <p class="footer-brand-desc">AI-assisted global news aggregation. Trending stories, market intelligence, regional coverage, and Malayalam news — refreshed every 6 hours.</p>
+      <p class="footer-brand-desc">AI-assisted global news aggregation. Trending stories, market intelligence, regional coverage, and Malayalam news.</p>
     </div>
     <div>
       <div class="footer-col-title">Sections</div>
@@ -926,6 +966,23 @@ function isItemValid(item) {
 }
 
 /* ═══════════════════════════════════════════════════
+   STORY CACHE — avoids embedding JSON in onclick attrs
+   (inline JSON breaks on any headline containing quotes)
+═══════════════════════════════════════════════════ */
+window._SC = [];  // [{item, meta}, …]
+
+function _cacheStory(item, meta) {
+  var idx = window._SC.length;
+  window._SC.push({ item: item, meta: meta });
+  return idx;
+}
+
+function openStoryIdx(idx) {
+  var d = window._SC[idx];
+  if (d) openStory(d.item, d.meta);
+}
+
+/* ═══════════════════════════════════════════════════
    RENDER: SECTION
 ═══════════════════════════════════════════════════ */
 function renderSection(sectionId, sectionData, meta) {
@@ -953,9 +1010,10 @@ function renderSection(sectionId, sectionData, meta) {
     return section;
   }
 
-  // Hero card — first item
+  // Hero card — first item (uses cache index, no JSON in onclick)
   var hero = items[0];
-  var heroHtml = '<div class="news-hero-card" onclick="openStory(' + JSON.stringify(hero).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026') + ',' + JSON.stringify(meta) + ')">'
+  var heroIdx = _cacheStory(hero, meta);
+  var heroHtml = '<div class="news-hero-card" onclick="openStoryIdx(' + heroIdx + ')" role="button" tabindex="0" aria-label="' + esc(hero.headline) + '">'
     + '<img class="news-hero-img" src="' + escAttr(heroImage) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
     + '<div class="news-hero-gradient"></div>'
     + '<div class="news-hero-body">'
@@ -973,9 +1031,8 @@ function renderSection(sectionId, sectionData, meta) {
   if (gridItems.length > 0) {
     var gridHtml = '<div class="news-cards-grid">';
     gridItems.forEach(function(item) {
-      var dataStr = JSON.stringify(item).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
-      var metaStr = JSON.stringify(meta).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
-      gridHtml += '<div class="news-card" onclick="openStory(' + dataStr + ',' + metaStr + ')">'
+      var cardIdx = _cacheStory(item, meta);
+      gridHtml += '<div class="news-card" onclick="openStoryIdx(' + cardIdx + ')" role="button" tabindex="0" aria-label="' + esc(item.headline) + '">'
         + '<div class="news-card-headline">' + esc(item.headline) + '</div>'
         + '<div class="news-card-teaser">' + esc(item.teaser || '') + '</div>'
         + '<div class="news-card-footer">'
@@ -1099,6 +1156,7 @@ function escAttr(str) {
    LOAD NEWS PAGE
 ═══════════════════════════════════════════════════ */
 async function loadNewsPage() {
+  window._SC = [];  // reset story cache on each load
   var container = document.getElementById('sections-container');
 
   // Show loading skeleton
