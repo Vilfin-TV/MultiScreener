@@ -153,11 +153,35 @@ async function main() {
       price:   Math.round((q.regularMarketPrice || 0) * 100) / 100,
       change:  Math.round(chg * 100) / 100,
       zone:    calcZone(chg),
+      zoneCls: calcZone(chg).toLowerCase().replace(/\s+/g, '-'),
     };
   });
 
-  const out = { updated: new Date().toISOString(), source: 'yahoo', markets };
+  // ── Accumulate daily history (last 7 trading days) ──────────────────────
+  // Read existing JSON (if any) to carry forward previous days' snapshots.
   const outPath = path.join(__dirname, '..', 'data', 'market_sentiment.json');
+  let existingHistory = [];
+  try {
+    const existing = JSON.parse(fs.readFileSync(outPath, 'utf8'));
+    if (Array.isArray(existing.history)) existingHistory = existing.history;
+  } catch (_) { /* first run or missing file — start fresh */ }
+
+  // Today's date in local time (GitHub Actions runs UTC — use UTC date for consistency)
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  // Build today's history entry (compact: country + change + zoneCls only)
+  const todayEntry = {
+    date: todayStr,
+    markets: markets.map(m => ({ country: m.country, change: m.change, zoneCls: m.zoneCls })),
+  };
+
+  // Merge: remove any existing entry for today, prepend today's, keep last 7 days
+  const history = [
+    todayEntry,
+    ...existingHistory.filter(d => d.date !== todayStr),
+  ].slice(0, 7);
+
+  const out = { updated: new Date().toISOString(), source: 'yahoo', markets, history };
   fs.writeFileSync(outPath, JSON.stringify(out, null, 2) + '\n', 'utf8');
   console.log(`\nWritten → ${outPath}`);
   markets.forEach(m => console.log(`  ${m.flag} ${m.country}: ${m.change > 0 ? '+' : ''}${m.change}%  →  ${m.zone}`));
