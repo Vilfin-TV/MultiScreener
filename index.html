@@ -173,10 +173,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
 /* ── SofaScore sports panel — standard theme ── */
 [data-theme="standard"] .sf-hdr{background:linear-gradient(135deg,#f0f4f8,#e8eef4)}
 [data-theme="standard"] .sf-hdr-name{color:#0f172a}
-[data-theme="standard"] .sf-tabs{background:#f8fafc;border-bottom-color:#dde3ed}
-[data-theme="standard"] .sf-tab{color:#475569}
-[data-theme="standard"] .sf-tab:hover{background:rgba(29,78,216,.05);color:#1d4ed8}
-[data-theme="standard"] .sf-tab.active{color:#ff6900;border-bottom-color:#ff6900;background:rgba(255,105,0,.06)}
+[data-theme="standard"] .sf-sport-bar{background:#f8fafc;border-bottom-color:#dde3ed}
+[data-theme="standard"] .sf-sport-btn{color:#475569;border-color:#c8d4e0}
+[data-theme="standard"] .sf-sport-btn:hover:not(.active){border-color:#ff6900;color:#ff6900}
+[data-theme="standard"] .sf-comp-bar{background:#f1f5f9;border-bottom-color:#dde3ed}
+[data-theme="standard"] .sf-comp-btn{color:#94a3b8;border-color:#dde3ed}
 [data-theme="standard"] .sf-frame-wrap,[data-theme="standard"] .sf-loading,[data-theme="standard"] .sf-blocked{background:#f8fafc}
 [data-theme="standard"] .sf-loading{color:#64748b}
 /* ── calculator / left-menu slide-out ── */
@@ -2942,25 +2943,42 @@ footer{
   border-radius:7px;border:1px solid rgba(255,255,255,.08);transition:all .15s;
 }
 .sf-hdr-open:hover{color:#f1f5f9;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18)}
-/* ── Sport selector tabs ── */
-.sf-tabs{
-  display:flex;background:#05080e;
-  border-bottom:1px solid rgba(255,255,255,.06);
+/* ── Sport selector — pill chips (premium radio style) ── */
+.sf-sport-bar{
+  display:flex;gap:4px;padding:7px 8px 6px;
+  background:#05080e;border-bottom:1px solid rgba(255,255,255,.05);
   overflow-x:auto;scrollbar-width:none;flex-shrink:0;-webkit-overflow-scrolling:touch;
 }
-.sf-tabs::-webkit-scrollbar{display:none}
-.sf-tab{
-  flex-shrink:0;padding:9px 12px;
-  border:none;border-bottom:2.5px solid transparent;
-  background:transparent;color:#4b5563;
-  font-size:10.5px;font-weight:700;cursor:pointer;
-  letter-spacing:.35px;transition:all .15s;white-space:nowrap;min-height:42px;
+.sf-sport-bar::-webkit-scrollbar{display:none}
+.sf-sport-btn{
+  padding:5px 11px;border:1px solid #1a2a40;border-radius:14px;
+  background:transparent;color:#475569;
+  font-size:9.5px;font-weight:700;cursor:pointer;
+  white-space:nowrap;letter-spacing:.4px;transition:all .15s;flex-shrink:0;
 }
-.sf-tab:hover{color:#94a3b8;background:rgba(255,255,255,.03)}
-.sf-tab.active{
-  color:#ff6900;border-bottom-color:#ff6900;
-  background:rgba(255,105,0,.07);
+.sf-sport-btn.active{
+  background:#ff6900;border-color:#ff6900;color:#fff;
+  box-shadow:0 2px 8px rgba(255,105,0,.35);
 }
+.sf-sport-btn:hover:not(.active){border-color:rgba(255,105,0,.4);color:#ff8f40}
+/* ── Competition sub-filter (Cricket) ── */
+.sf-comp-bar{
+  display:none;gap:4px;padding:5px 8px;
+  background:#040710;border-bottom:1px solid rgba(255,255,255,.04);
+  overflow-x:auto;scrollbar-width:none;flex-shrink:0;
+}
+.sf-comp-bar.visible{display:flex}
+.sf-comp-bar::-webkit-scrollbar{display:none}
+.sf-comp-btn{
+  padding:3px 9px;border:1px solid #0e1c2e;border-radius:10px;
+  background:transparent;color:#334155;
+  font-size:8.5px;font-weight:700;cursor:pointer;
+  white-space:nowrap;letter-spacing:.3px;transition:all .15s;flex-shrink:0;
+}
+.sf-comp-btn.active{
+  background:rgba(255,105,0,.18);border-color:rgba(255,105,0,.4);color:#ff8f40;
+}
+.sf-comp-btn:hover:not(.active){border-color:#334155;color:#64748b}
 /* ── Scores scroll area ── */
 .sf-scores-wrap{
   flex:1;overflow-y:auto;padding:8px 8px 12px;
@@ -3047,7 +3065,8 @@ footer{
     backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   }
   #pr-nav{scrollbar-width:none}
-  .sf-tab{font-size:10px;padding:8px 10px;min-height:40px}
+  .sf-sport-btn{font-size:10px;padding:6px 10px}
+  .sf-comp-btn{font-size:9px;padding:4px 9px}
   .sf-hdr{padding:8px 11px}
   .sf-hdr-name{font-size:12px}
 }
@@ -4730,15 +4749,25 @@ footer{
       </div>
     </div>
 
-    <!-- Sport selector tabs -->
-    <div class="sf-tabs" id="sf-tabs">
-      <button class="sf-tab active" onclick="sfSwitchSport('football',this)"  >&#x26BD; Football</button>
-      <button class="sf-tab"        onclick="sfSwitchSport('cricket',this)"   >&#x1F3CF; Cricket</button>
-      <button class="sf-tab"        onclick="sfSwitchSport('basketball',this)">&#x1F3C0; Basketball</button>
-      <button class="sf-tab"        onclick="sfSwitchSport('tennis',this)"    >&#x1F3BE; Tennis</button>
-      <button class="sf-tab"        onclick="sfSwitchSport('rugby',this)"     >&#x1F3C9; Rugby</button>
-      <button class="sf-tab"        onclick="sfSwitchSport('baseball',this)"  >&#x26BE; Baseball</button>
-      <button class="sf-tab"        onclick="sfSwitchSport('hockey',this)"    >&#x1F3D2; Hockey</button>
+    <!-- Sport selector — pill chips -->
+    <div class="sf-sport-bar" id="sf-tabs">
+      <button class="sf-sport-btn active" onclick="sfSwitchSport('football',this)">&#x26BD; Football</button>
+      <button class="sf-sport-btn" onclick="sfSwitchSport('cricket',this)">&#x1F3CF; Cricket</button>
+      <button class="sf-sport-btn" onclick="sfSwitchSport('basketball',this)">&#x1F3C0; Basketball</button>
+      <button class="sf-sport-btn" onclick="sfSwitchSport('tennis',this)">&#x1F3BE; Tennis</button>
+      <button class="sf-sport-btn" onclick="sfSwitchSport('rugby',this)">&#x1F3C9; Rugby</button>
+      <button class="sf-sport-btn" onclick="sfSwitchSport('baseball',this)">&#x26BE; Baseball</button>
+      <button class="sf-sport-btn" onclick="sfSwitchSport('hockey',this)">&#x1F3D2; Hockey</button>
+    </div>
+    <!-- Competition filter chips (visible only for Cricket) -->
+    <div class="sf-comp-bar" id="sf-comp-bar">
+      <button class="sf-comp-btn active" onclick="sfFilterComp('all',this)">All</button>
+      <button class="sf-comp-btn" onclick="sfFilterComp('live',this)">&#x1F534; Live</button>
+      <button class="sf-comp-btn" onclick="sfFilterComp('ipl',this)">&#x1F1EE;&#x1F1F3; IPL</button>
+      <button class="sf-comp-btn" onclick="sfFilterComp('t20i',this)">&#x26A1; T20I</button>
+      <button class="sf-comp-btn" onclick="sfFilterComp('odi',this)">&#x1F30D; ODI</button>
+      <button class="sf-comp-btn" onclick="sfFilterComp('test',this)">&#x1F4CB; Tests</button>
+      <button class="sf-comp-btn" onclick="sfFilterComp('other',this)">&#x1F3C6; T20 Leagues</button>
     </div>
 
     <!-- Scrollable scores area -->
@@ -9837,14 +9866,14 @@ function prSyncPlayBtn() {}
 function prTogglePlay() {}
 
 // ═══════════════════════════════════════════════════════════════════════
-// SPORTS WIDGET — Direct API live scores (ESPN + TheSportsDB, no proxy)
-// ESPN's site.api.espn.com endpoints are publicly accessible with
-// permissive CORS headers — no proxy/worker needed.
-// TheSportsDB free tier (no API key) covers Cricket, Rugby, Hockey.
+// SPORTS WIDGET — Multi-source live scores (ESPN + TheSportsDB, no proxy)
+// Premium radio-style pill UI; cricket sub-filter chips; deduplication.
 // ═══════════════════════════════════════════════════════════════════════
 var _sfCurrentSport  = 'football';
+var _sfCurrentComp   = 'all';
 var _sfRefreshTimer  = null;
 var _sfFetching      = false;
+var _sfSeenMatches   = new Set(); // cross-source deduplication
 
 function swInit() {
   sfLoadScores(_sfCurrentSport);
@@ -9854,23 +9883,76 @@ function swInit() {
 
 function sfSwitchSport(sport, btn) {
   _sfCurrentSport = sport;
-  document.querySelectorAll('.sf-tab').forEach(function(b) { b.classList.remove('active'); });
+  _sfCurrentComp  = 'all';
+  document.querySelectorAll('.sf-sport-btn').forEach(function(b) { b.classList.remove('active'); });
   if (btn) btn.classList.add('active');
+  // Show competition sub-filter only for cricket
+  var compBar = document.getElementById('sf-comp-bar');
+  if (compBar) {
+    compBar.classList.toggle('visible', sport === 'cricket');
+    compBar.querySelectorAll('.sf-comp-btn').forEach(function(b) { b.classList.remove('active'); });
+    var firstBtn = compBar.querySelector('.sf-comp-btn');
+    if (firstBtn) firstBtn.classList.add('active');
+  }
   sfLoadScores(sport);
 }
 
-function sfRefreshNow() {
-  sfLoadScores(_sfCurrentSport);
+// ── Filter cricket cards by competition type ─────────────────────────
+function sfFilterComp(comp, btn) {
+  _sfCurrentComp = comp;
+  document.querySelectorAll('.sf-comp-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  var cards = document.querySelectorAll('#sf-scores-content .sf-card');
+  cards.forEach(function(c) {
+    var cComp = c.dataset.comp || 'other';
+    var cLive = c.dataset.live === '1';
+    var show  = comp === 'all'
+                || (comp === 'live'  && cLive)
+                || (comp !== 'live'  && cComp === comp);
+    c.style.display = show ? '' : 'none';
+  });
+  // Hide section headers whose cards are all hidden
+  document.querySelectorAll('#sf-scores-content .sf-section-hdr').forEach(function(hdr) {
+    var sib = hdr.nextElementSibling;
+    var hasVis = false;
+    while (sib && !sib.classList.contains('sf-section-hdr')) {
+      if (sib.classList.contains('sf-card') && sib.style.display !== 'none') hasVis = true;
+      sib = sib.nextElementSibling;
+    }
+    hdr.style.display = hasVis ? '' : 'none';
+  });
 }
 
-// ── Render a single score card ───────────────────────────────────────
+function sfRefreshNow() { sfLoadScores(_sfCurrentSport); }
+
+// ── Classify cricket league → filter key ────────────────────────────
+function _sfCompKey(league) {
+  var l = (league || '').toLowerCase();
+  if (l.includes('ipl') || l.includes('indian premier'))    return 'ipl';
+  if (l.includes('test'))                                    return 'test';
+  if (l.includes('t20 international') || l.includes('t20i') || l.includes('twenty20 int')) return 't20i';
+  if (l.includes('one day') || l.includes(' odi') || l.includes('one-day')) return 'odi';
+  // Domestic T20 leagues (BBL, PSL, CPL, SA20, The Hundred, etc.)
+  if (l.includes('t20') || l.includes('bbl') || l.includes('psl') || l.includes('cpl') ||
+      l.includes('sa20') || l.includes('hundred') || l.includes('super smash'))  return 'other';
+  return 'other';
+}
+
+// ── Render a score card with dedup + filter data attrs ───────────────
 function _sfCard(league, home, away, hScore, aScore, statusText, isLive, isFinished) {
-  var hWin = isFinished && Number(hScore) > Number(aScore);
-  var aWin = isFinished && Number(aScore) > Number(hScore);
-  var hLead = isLive && Number(hScore) > Number(aScore);
-  var aLead = isLive && Number(aScore) > Number(hScore);
+  // Cross-source deduplication (sorted team names)
+  var matchKey = [String(home || '').toLowerCase().replace(/\s+/g, ''),
+                  String(away || '').toLowerCase().replace(/\s+/g, '')].sort().join('|');
+  if (matchKey !== '?|?' && _sfSeenMatches.has(matchKey)) return '';
+  _sfSeenMatches.add(matchKey);
+
+  var compKey  = _sfCompKey(league);
+  var hWin     = isFinished && Number(hScore) > Number(aScore);
+  var aWin     = isFinished && Number(aScore) > Number(hScore);
+  var hLead    = isLive    && Number(hScore) > Number(aScore);
+  var aLead    = isLive    && Number(aScore) > Number(hScore);
   var scoreStr = (hScore !== '' && aScore !== '') ? hScore + ' – ' + aScore : 'vs';
-  return '<div class="sf-card">' +
+  return '<div class="sf-card" data-comp="' + compKey + '" data-live="' + (isLive ? '1' : '0') + '">' +
     '<div class="sf-card-league">' + _sfEsc(league) + '</div>' +
     '<div class="sf-card-teams">' +
       '<span class="sf-card-team' + (hWin || hLead ? ' winning' : '') + '">' + _sfEsc(home) + '</span>' +
@@ -9883,11 +9965,12 @@ function _sfCard(league, home, away, hScore, aScore, statusText, isLive, isFinis
     '</div>' +
   '</div>';
 }
+
 function _sfEsc(s) {
-  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// ── Fetch from ESPN scoreboard API ───────────────────────────────────
+// ── ESPN scoreboard API (CORS-open, no key needed) ───────────────────
 async function _sfESPN(path, leagueName) {
   var res = await fetch('https://site.api.espn.com' + path,
     { signal: AbortSignal.timeout(8000), cache: 'no-store' });
@@ -9897,10 +9980,10 @@ async function _sfESPN(path, leagueName) {
   if (!events.length) return '';
   return events.map(function(ev) {
     var comp = (ev.competitions || [])[0]; if (!comp) return '';
-    var home = (comp.competitors || []).find(function(c){return c.homeAway==='home';});
-    var away = (comp.competitors || []).find(function(c){return c.homeAway==='away';});
+    var home = (comp.competitors || []).find(function(c) { return c.homeAway === 'home'; });
+    var away = (comp.competitors || []).find(function(c) { return c.homeAway === 'away'; });
     var st   = comp.status && comp.status.type;
-    var live = st && !st.completed && (st.name||'').indexOf('IN_PROGRESS') !== -1;
+    var live = st && !st.completed && (st.name || '').indexOf('IN_PROGRESS') !== -1;
     var done = st && !!st.completed;
     var txt  = (st && (st.shortDetail || st.description)) || '';
     return _sfCard(
@@ -9913,9 +9996,12 @@ async function _sfESPN(path, leagueName) {
   }).join('');
 }
 
-// ── Fetch from TheSportsDB (free, no key, CORS-open) ─────────────────
+// ── TheSportsDB (free, no key, CORS-open) — grouped by league ────────
 async function _sfSportsDB(sport) {
-  var today = new Date().toISOString().slice(0, 10);
+  var now   = new Date();
+  var today = now.getFullYear() + '-' +
+              String(now.getMonth() + 1).padStart(2, '0') + '-' +
+              String(now.getDate()).padStart(2, '0');
   var url = 'https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=' +
             today + '&s=' + encodeURIComponent(sport);
   var res = await fetch(url, { signal: AbortSignal.timeout(8000), cache: 'no-store' });
@@ -9923,22 +10009,35 @@ async function _sfSportsDB(sport) {
   var j = await res.json();
   var events = j.event || [];
   if (!events.length) return '';
-  return events.map(function(ev) {
-    var hs = ev.intHomeScore != null ? String(ev.intHomeScore) : '';
-    var as = ev.intAwayScore != null ? String(ev.intAwayScore) : '';
-    var done = ['Match Finished','FT','AP','AET'].indexOf(ev.strStatus) !== -1;
-    var live = !done && ev.strStatus && ev.strStatus !== 'Not Started' &&
-               ev.strStatus !== '' && ev.strStatus !== null;
-    var txt  = ev.strProgress || ev.strStatus || '';
-    return _sfCard(ev.strLeague || sport, ev.strHomeTeam || '?', ev.strAwayTeam || '?',
-                   hs, as, txt, live, done);
-  }).join('');
+  // Group by competition name
+  var byLeague = {};
+  var leagueOrder = [];
+  events.forEach(function(ev) {
+    var lg = ev.strLeague || sport;
+    if (!byLeague[lg]) { byLeague[lg] = []; leagueOrder.push(lg); }
+    byLeague[lg].push(ev);
+  });
+  var html = '';
+  leagueOrder.forEach(function(lg) {
+    html += '<div class="sf-section-hdr">' + _sfEsc(lg) + '</div>';
+    byLeague[lg].forEach(function(ev) {
+      var hs   = ev.intHomeScore != null ? String(ev.intHomeScore) : '';
+      var as   = ev.intAwayScore != null ? String(ev.intAwayScore) : '';
+      var done = ['Match Finished', 'FT', 'AP', 'AET', 'Full Time'].indexOf(ev.strStatus) !== -1;
+      var live = !done && ev.strStatus && ev.strStatus !== 'Not Started' &&
+                 ev.strStatus !== '' && ev.strStatus !== null;
+      var txt  = ev.strProgress || ev.strStatus || '';
+      html += _sfCard(lg, ev.strHomeTeam || '?', ev.strAwayTeam || '?', hs, as, txt, live, done);
+    });
+  });
+  return html;
 }
 
 // ── Main load orchestrator ────────────────────────────────────────────
 async function sfLoadScores(sport) {
   if (_sfFetching) return;
-  _sfFetching = true;
+  _sfFetching    = true;
+  _sfSeenMatches = new Set(); // reset dedup for fresh load
   var content = document.getElementById('sf-scores-content');
   var btn     = document.getElementById('sf-refresh-btn');
   if (content) content.innerHTML = '<div class="sf-no-data"><div class="sf-spinner" style="margin:0 auto 10px"></div>Loading…</div>';
@@ -9948,59 +10047,72 @@ async function sfLoadScores(sport) {
     var html = '';
 
     if (sport === 'football') {
-      // Top 6 leagues + ISL — all fired in parallel
       var leagues = [
-        ['/apis/site/v2/sports/soccer/eng.1/scoreboard', 'Premier League'],
-        ['/apis/site/v2/sports/soccer/esp.1/scoreboard', 'La Liga'],
-        ['/apis/site/v2/sports/soccer/ger.1/scoreboard', 'Bundesliga'],
-        ['/apis/site/v2/sports/soccer/ita.1/scoreboard', 'Serie A'],
-        ['/apis/site/v2/sports/soccer/fra.1/scoreboard', 'Ligue 1'],
-        ['/apis/site/v2/sports/soccer/usa.1/scoreboard', 'MLS'],
-        ['/apis/site/v2/sports/soccer/ind.1/scoreboard', 'ISL (India)'],
+        ['/apis/site/v2/sports/soccer/eng.1/scoreboard',  'Premier League'],
+        ['/apis/site/v2/sports/soccer/esp.1/scoreboard',  'La Liga'],
+        ['/apis/site/v2/sports/soccer/ger.1/scoreboard',  'Bundesliga'],
+        ['/apis/site/v2/sports/soccer/ita.1/scoreboard',  'Serie A'],
+        ['/apis/site/v2/sports/soccer/fra.1/scoreboard',  'Ligue 1'],
+        ['/apis/site/v2/sports/soccer/usa.1/scoreboard',  'MLS'],
+        ['/apis/site/v2/sports/soccer/ind.1/scoreboard',  'ISL (India)'],
       ];
-      var results = await Promise.allSettled(leagues.map(function(l){return _sfESPN(l[0],l[1]);}));
-      results.forEach(function(r, i) {
+      var fRes = await Promise.allSettled(leagues.map(function(l) { return _sfESPN(l[0], l[1]); }));
+      fRes.forEach(function(r, i) {
         if (r.status === 'fulfilled' && r.value)
           html += '<div class="sf-section-hdr">' + leagues[i][1] + '</div>' + r.value;
       });
 
     } else if (sport === 'cricket') {
-      html = await _sfSportsDB('Cricket');
+      // ── Multi-source cricket: TheSportsDB (all) + ESPN league IDs ──
+      // ESPN cricket league IDs: 8=IPL, 6=ICC/International, 27=T20WC
+      var cricSrc = await Promise.allSettled([
+        _sfSportsDB('Cricket'),                                                       // all formats
+        _sfESPN('/apis/site/v2/sports/cricket/8/scoreboard',  'IPL'),                // ESPN IPL
+        _sfESPN('/apis/site/v2/sports/cricket/6/scoreboard',  'International Cricket'), // ESPN ICC
+        _sfESPN('/apis/site/v2/sports/cricket/27/scoreboard', 'T20 World Cup'),       // T20 WC
+      ]);
+      // TheSportsDB primary (grouped by league)
+      if (cricSrc[0].status === 'fulfilled' && cricSrc[0].value) html += cricSrc[0].value;
+      // ESPN supplementary — dedup via _sfSeenMatches silently drops already-shown matches
+      var espnLabels = ['IPL', 'International Cricket', 'T20 World Cup'];
+      cricSrc.slice(1).forEach(function(r, i) {
+        if (r.status === 'fulfilled' && r.value)
+          html += '<div class="sf-section-hdr">' + espnLabels[i] + '</div>' + r.value;
+      });
 
     } else if (sport === 'basketball') {
-      var bkLeagues = [
-        ['/apis/site/v2/sports/basketball/nba/scoreboard', 'NBA'],
+      var bkL = [
+        ['/apis/site/v2/sports/basketball/nba/scoreboard',                     'NBA'],
         ['/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard', 'NCAA'],
       ];
-      var bkRes = await Promise.allSettled(bkLeagues.map(function(l){return _sfESPN(l[0],l[1]);}));
-      bkRes.forEach(function(r, i) {
+      var bkR = await Promise.allSettled(bkL.map(function(l) { return _sfESPN(l[0], l[1]); }));
+      bkR.forEach(function(r, i) {
         if (r.status === 'fulfilled' && r.value)
-          html += '<div class="sf-section-hdr">' + bkLeagues[i][1] + '</div>' + r.value;
+          html += '<div class="sf-section-hdr">' + bkL[i][1] + '</div>' + r.value;
       });
 
     } else if (sport === 'tennis') {
-      var tnLeagues = [
+      var tnL = [
         ['/apis/site/v2/sports/tennis/atp/scoreboard', 'ATP'],
         ['/apis/site/v2/sports/tennis/wta/scoreboard', 'WTA'],
       ];
-      var tnRes = await Promise.allSettled(tnLeagues.map(function(l){return _sfESPN(l[0],l[1]);}));
-      tnRes.forEach(function(r, i) {
+      var tnR = await Promise.allSettled(tnL.map(function(l) { return _sfESPN(l[0], l[1]); }));
+      tnR.forEach(function(r, i) {
         if (r.status === 'fulfilled' && r.value)
-          html += '<div class="sf-section-hdr">' + tnLeagues[i][1] + '</div>' + r.value;
+          html += '<div class="sf-section-hdr">' + tnL[i][1] + '</div>' + r.value;
       });
 
     } else if (sport === 'rugby') {
-      // TheSportsDB primary + ESPN fallback
       try { html = await _sfSportsDB('Rugby Union'); } catch(e) {}
       if (!html) {
-        var rgRes = await Promise.allSettled([
+        var rgR = await Promise.allSettled([
           _sfESPN('/apis/site/v2/sports/rugby/267979/scoreboard', 'Super Rugby'),
           _sfESPN('/apis/site/v2/sports/rugby/270557/scoreboard', 'Premiership'),
         ]);
-        rgRes.forEach(function(r, i) {
-          var names = ['Super Rugby','Premiership'];
+        rgR.forEach(function(r, i) {
+          var n = ['Super Rugby', 'Premiership'];
           if (r.status === 'fulfilled' && r.value)
-            html += '<div class="sf-section-hdr">' + names[i] + '</div>' + r.value;
+            html += '<div class="sf-section-hdr">' + n[i] + '</div>' + r.value;
         });
       }
 
@@ -10016,9 +10128,12 @@ async function sfLoadScores(sport) {
       content.innerHTML = html ||
         '<div class="sf-no-data">&#x1F3C6;<br>No matches scheduled today.<br>Check back later or try another sport.</div>';
     }
-    // Update timestamp
+    // Re-apply active competition filter after fresh load
+    if (sport === 'cricket' && _sfCurrentComp !== 'all') {
+      sfFilterComp(_sfCurrentComp, null);
+    }
     var upd = document.getElementById('sf-updated');
-    if (upd) upd.textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    if (upd) upd.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   } catch(e) {
     if (content)
