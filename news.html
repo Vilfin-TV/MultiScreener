@@ -515,21 +515,23 @@ body{
 
 .story-modal-body{
   padding:24px 28px 32px;
-  overflow-y:auto;flex:1;
+  overflow-y:auto;flex:1;min-height:0;
+  background:var(--card);
   scrollbar-width:thin;scrollbar-color:var(--border2) transparent;
 }
 .story-modal-body::-webkit-scrollbar{width:5px}
 .story-modal-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+@media(max-width:600px){.story-modal-body{padding:18px 16px 24px}}
 
 .story-modal-headline{
   font-family:'Playfair Display',Georgia,serif;
-  font-size:clamp(20px,3.5vw,28px);font-weight:700;
-  color:var(--text);line-height:1.3;margin-bottom:16px;
+  font-size:clamp(18px,3.5vw,26px);font-weight:700;
+  color:var(--text);line-height:1.35;margin-bottom:14px;
 }
 .story-modal-meta{
   display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-  font-size:12px;color:var(--text3);margin-bottom:20px;
-  padding-bottom:16px;border-bottom:1px solid var(--border);
+  font-size:12px;color:var(--text2);margin-bottom:20px;
+  padding-bottom:14px;border-bottom:1px solid var(--border);
 }
 .story-modal-meta-sep{opacity:.4}
 .story-modal-ai-badge{
@@ -538,10 +540,10 @@ body{
   padding:2px 8px;border-radius:4px;letter-spacing:.3px;
 }
 .story-body{
-  font-size:16px;color:var(--text2);line-height:1.9;
+  font-size:16px;color:var(--text);line-height:1.9;
   margin-bottom:24px;
 }
-.story-body p{margin-bottom:14px}
+.story-body p{margin-bottom:16px;color:var(--text)}
 .story-body strong{color:var(--text);font-weight:600}
 
 .story-modal-disclaimer{
@@ -715,11 +717,10 @@ footer.news-footer{
 <div class="news-page-hero">
   <div class="news-page-hero-inner">
     <h1 class="news-page-title">Today's Intelligence</h1>
-    <p class="news-page-subtitle">Curated global news coverage — Trending, World Affairs, Indian Markets &amp; Malayalam stories, refreshed every 6 hours.</p>
+    <p class="news-page-subtitle">Curated global news coverage — Trending, World Affairs, Indian Markets &amp; Malayalam stories.</p>
     <div class="news-page-meta">
       <div class="news-page-meta-chip">Last updated: <span id="last-updated-time">—</span></div>
       <div class="news-page-meta-chip">Stories: <span id="total-story-count">—</span></div>
-      <div class="news-page-meta-chip">Refresh cycle: <span>Every 6 hours</span></div>
     </div>
   </div>
 </div>
@@ -740,7 +741,6 @@ footer.news-footer{
   <p class="news-legal-banner-text">
     VilfinTV News is an AI-assisted news aggregation service. All stories are editorial summaries created from publicly available RSS feeds and news sources.
     Content does not reproduce original articles verbatim. VilfinTV does not claim ownership of original reporting.
-    For takedown requests: <a href="mailto:filmonjoseph@gmail.com">filmonjoseph@gmail.com</a>.
     Stories are provided for informational purposes only.
   </p>
 </div>
@@ -789,17 +789,19 @@ footer.news-footer{
       </ul>
     </div>
     <div>
-      <div class="footer-col-title">Connect</div>
+      <div class="footer-col-title">Connect With Us</div>
       <div class="footer-social">
         <a href="https://x.com/vilfing" target="_blank" rel="noopener">
           <span class="footer-social-icon">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="#94a3b8"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.73-8.835L1.254 2.25H8.08l4.261 5.636 5.903-5.636zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
           </span>
-          @vilfing on X
+          @vilfing on X (Twitter)
         </a>
-        <a href="mailto:filmonjoseph@gmail.com">
-          <span class="footer-social-icon">✉️</span>
-          filmonjoseph@gmail.com
+        <a href="https://www.facebook.com/share/19s3NRNKwv/?mibextid=wwXIfr" target="_blank" rel="noopener">
+          <span class="footer-social-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#94a3b8"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </span>
+          Facebook Page
         </a>
       </div>
     </div>
@@ -820,7 +822,7 @@ footer.news-footer{
         Content does not reproduce source articles verbatim. VilfinTV does not claim ownership of original reporting.
         Stories are for informational purposes only. Not affiliated with any regulatory authority.
       </p>
-      <p class="footer-copyright">© 2026 VilfinTV. All rights reserved. &bull; For takedown requests: filmonjoseph@gmail.com</p>
+      <p class="footer-copyright">© 2026 VilfinTV. All rights reserved.</p>
     </div>
   </div>
 </footer>
@@ -957,7 +959,6 @@ function renderSection(sectionId, sectionData, meta) {
     + '<img class="news-hero-img" src="' + escAttr(heroImage) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
     + '<div class="news-hero-gradient"></div>'
     + '<div class="news-hero-body">'
-    + '<div class="news-source-badge">' + esc(hero.source || 'Source') + '</div>'
     + '<div class="news-hero-headline">' + esc(hero.headline) + '</div>'
     + '<div class="news-hero-meta">'
     + '<span class="news-hero-time">' + timeAgo(hero.publishedAt) + '</span>'
@@ -975,7 +976,6 @@ function renderSection(sectionId, sectionData, meta) {
       var dataStr = JSON.stringify(item).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
       var metaStr = JSON.stringify(meta).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
       gridHtml += '<div class="news-card" onclick="openStory(' + dataStr + ',' + metaStr + ')">'
-        + '<div class="news-card-source">' + esc(item.source || 'Source') + '</div>'
         + '<div class="news-card-headline">' + esc(item.headline) + '</div>'
         + '<div class="news-card-teaser">' + esc(item.teaser || '') + '</div>'
         + '<div class="news-card-footer">'
@@ -1007,8 +1007,6 @@ function openStory(item, meta) {
   var storyHtml = '<h2 class="story-modal-headline" id="story-modal-headline">' + esc(item.headline) + '</h2>';
 
   storyHtml += '<div class="story-modal-meta">'
-    + '<span>Originally reported by <strong>' + esc(item.source || 'Source') + '</strong></span>'
-    + '<span class="story-modal-meta-sep">·</span>'
     + '<span>' + formatDate(item.publishedAt) + '</span>'
     + '<span class="story-modal-meta-sep">·</span>'
     + '<span class="story-modal-ai-badge">AI-assisted summary</span>'
