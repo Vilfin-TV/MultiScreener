@@ -28,10 +28,10 @@ const BLOCKED_KEYWORDS = [
 ];
 
 const MAX_ITEMS_PER_SECTION = 6;
-const REQUEST_TIMEOUT_MS    = 18000;
+const REQUEST_TIMEOUT_MS    = 22000;
 // How many feeds to randomly pick from each section's pool each run
-// (first entry in each pool is always included + N-1 random picks)
-const FEEDS_PER_SECTION     = 4;
+// (first two entries in each pool are always included + random extras)
+const FEEDS_PER_SECTION     = 5;
 
 // ── Source pool ──────────────────────────────────────────────────────────────
 // Each section has a larger pool; FEEDS_PER_SECTION are picked at random each
@@ -76,7 +76,7 @@ const SOURCE_POOL = {
     { url: 'https://www.livemint.com/rss/news',                                          name: 'Mint' },
     { url: 'https://economictimes.indiatimes.com/news/india/rssfeeds/1466318837.cms',    name: 'ET India' },
     { url: 'https://www.ndtv.com/rss/india',                                             name: 'NDTV India' },
-    { url: 'https://feeds.feedburner.com/ndtvnews-top-stories',                          name: 'NDTV Top' },
+    { url: 'https://www.ndtv.com/rss/top-stories',                                      name: 'NDTV Top' },
   ],
 
   // ── stock: Google Finance/Business as anchor, financial publications as pool ─
@@ -89,7 +89,7 @@ const SOURCE_POOL = {
     { url: 'https://economictimes.indiatimes.com/markets/stocks/rss.cms',                name: 'ET Stocks' },
     { url: 'https://www.businessstandard.com/rss/markets-106.rss',                       name: 'Business Standard' },
     { url: 'https://www.moneycontrol.com/rss/MCtopnews.xml',                             name: 'Moneycontrol' },
-    { url: 'https://feeds.feedburner.com/ndtvprofit-latest',                             name: 'NDTV Profit' },
+    { url: 'https://finance.yahoo.com/news/rssindex',                                    name: 'Yahoo Finance' },
   ],
 
   // ── malayalam: Mathrubhumi is most reliable, rest as pool ───────────────────
@@ -147,19 +147,33 @@ function httpsGet(rawUrl, options) {
       path:     parsedUrl.path || '/',
       method:   options.method || 'GET',
       headers:  Object.assign({
-        'User-Agent': 'VilfinTV-NewsBot/2.0 (+https://vilfintv.com)',
-        'Accept':     'application/json, text/xml, application/xml, */*',
-        'Connection': 'close'
+        'User-Agent':      'Mozilla/5.0 (compatible; VilfinNewsBot/2.1; +https://vilfintv.com/bot)',
+        'Accept':          'application/rss+xml, application/xml, text/xml, application/atom+xml, */*;q=0.9',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'identity',   // explicitly request no compression
+        'Cache-Control':   'no-cache',
+        'Connection':      'close'
       }, options.headers || {})
     };
 
     var req = transport.request(reqOptions, function(res) {
-      // Follow redirects (max 4 hops)
+      // Follow redirects (max 5 hops), resolving relative Location URLs
       if ([301,302,303,307,308].includes(res.statusCode) && res.headers.location) {
         var hops = (options._redirects || 0) + 1;
-        if (hops > 4) { reject(new Error('Too many redirects')); res.resume(); return; }
+        if (hops > 5) { reject(new Error('Too many redirects')); res.resume(); return; }
         res.resume();
-        httpsGet(res.headers.location, Object.assign({}, options, { _redirects: hops, method: 'GET', body: undefined }))
+        var loc = res.headers.location;
+        // Resolve protocol-relative (//host/path) and absolute-path (/path) redirects
+        if (loc.startsWith('//')) {
+          loc = parsedUrl.protocol + loc;
+        } else if (loc.startsWith('/')) {
+          loc = parsedUrl.protocol + '//' + parsedUrl.host + loc;
+        } else if (!/^https?:\/\//i.test(loc)) {
+          // Relative path — resolve against base
+          var base = (parsedUrl.pathname || '/').replace(/[^/]*$/, '');
+          loc = parsedUrl.protocol + '//' + parsedUrl.host + base + loc;
+        }
+        httpsGet(loc, Object.assign({}, options, { _redirects: hops, method: 'GET', body: undefined }))
           .then(resolve).catch(reject);
         return;
       }
@@ -207,12 +221,26 @@ async function fetchRSS(feedObj) {
     console.log('  Fetching:', feedName);
     var xml = await httpsGet(feedUrl);
     var items = parseRSS(xml);
-    // Tag every item with the human-readable source name
+    if (!items.length && xml && xml.length > 200) {
+      // Possibly got HTML bot-detection page or empty feed — log but don't retry
+      console.warn('  Feed returned 0 parsed items:', feedName, '(response', xml.length, 'chars)');
+    }
     items.forEach(function(item){ item.sourceName = feedName; });
     return items;
   } catch (e) {
-    console.warn('  Feed failed:', feedName, '-', e.message);
-    return [];
+    // Single retry after a short back-off (helps with transient network hiccups)
+    console.warn('  Feed failed (attempt 1):', feedName, '-', e.message, '— retrying in 3s');
+    await sleep(3000);
+    try {
+      var xml2 = await httpsGet(feedUrl);
+      var items2 = parseRSS(xml2);
+      items2.forEach(function(item){ item.sourceName = feedName; });
+      console.log('  Retry OK:', feedName, '(' + items2.length + ' items)');
+      return items2;
+    } catch (e2) {
+      console.warn('  Feed failed (attempt 2):', feedName, '-', e2.message);
+      return [];
+    }
   }
 }
 
@@ -488,8 +516,12 @@ async function generateStory(item, isMalayalam) {
   }
 
   if (!story) {
-    story = (item.description || 'Story unavailable.')
-      + '\n\n[Summary from source. Full story unavailable.]';
+    // No-AI fallback: compose a clean article from the RSS headline + description
+    var desc = (item.description || '').trim();
+    var src  = item.sourceName ? ' via ' + item.sourceName : '';
+    story = item.title + '.\n\n'
+      + (desc ? desc + '\n\n' : '')
+      + 'This story was sourced' + src + '. Full editorial coverage will be available at the next scheduled update.';
     console.warn('    [RSS fallback]', item.title.slice(0, 55));
   }
 
@@ -505,11 +537,11 @@ async function buildSection(sectionId, feedPool, meta) {
   var isMalayalam = sectionId === 'malayalam';
 
   // Randomly pick FEEDS_PER_SECTION from the pool so stories rotate each run.
-  // Always include the first entry (highest-signal source) + random extras.
+  // Always include the first TWO anchored entries + random extras for variety.
   var pool    = feedPool || [];
-  var first   = pool.slice(0, 1);
-  var rest    = shuffle(pool.slice(1));
-  var chosen  = first.concat(rest).slice(0, FEEDS_PER_SECTION);
+  var anchors = pool.slice(0, 2);
+  var rest    = shuffle(pool.slice(2));
+  var chosen  = anchors.concat(rest).slice(0, FEEDS_PER_SECTION);
   console.log('  Sources chosen:', chosen.map(function(f){ return f.name || f.url; }).join(', '));
 
   // Fetch all chosen feeds in PARALLEL for speed

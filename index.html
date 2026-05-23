@@ -19620,6 +19620,17 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
       if (sl === '0') { _calShowHolidayLabels = false; var c = document.getElementById('cal-opt-labels'); if (c) c.checked = false; }
       var hw = localStorage.getItem('viltv_cal_weekends');
       if (hw === '0') { _calHighlightWeekends = false; var c2 = document.getElementById('cal-opt-weekends'); if (c2) c2.checked = false; }
+      // Restore last-used country
+      var cc = localStorage.getItem('viltv_cal_country');
+      if (cc) {
+        _calCountry = cc;
+        document.querySelectorAll('.cal-country-btn').forEach(function(b) {
+          b.classList.toggle('active', (b.getAttribute('onclick') || '').includes("'"+cc+"'"));
+        });
+      }
+      // Restore last-used region
+      var rr = localStorage.getItem('viltv_cal_region');
+      if (rr && rr !== 'null') _calRegion = rr;
     } catch(_) {}
   }
 
@@ -20036,12 +20047,20 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
     _calMonth = now.getMonth();
     _calRestoreSettings();
     calRenderRegions();
+    // Re-apply saved region active state after buttons are created
+    if (_calRegion) {
+      document.querySelectorAll('.cal-region-btn').forEach(function(b) {
+        var oc = b.getAttribute('onclick') || '';
+        b.classList.toggle('active', oc.includes("'"+_calRegion+"'"));
+      });
+    }
     calRender();
   };
 
   window.calSetCountry = function(code) {
     _calCountry = code;
     _calRegion = null;
+    try { localStorage.setItem('viltv_cal_country', code); localStorage.removeItem('viltv_cal_region'); } catch(_) {}
     document.querySelectorAll('.cal-country-btn').forEach(b =>
       b.classList.toggle('active', b.getAttribute('onclick').includes("'"+code+"'"))
     );
@@ -20066,6 +20085,7 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
 
   window.calSetRegion = function(code) {
     _calRegion = code;
+    try { localStorage.setItem('viltv_cal_region', code === null ? 'null' : code); } catch(_) {}
     document.querySelectorAll('.cal-region-btn').forEach(b => {
       const oc = b.getAttribute('onclick');
       b.classList.toggle('active', code === null ? oc.includes('null') : oc.includes("'"+code+"'"));
@@ -20632,7 +20652,8 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
 // WEATHER WIDGET
 // ══════════════════════════════════════════════════════════════════════
 (function() {
-  const LS_KEY = 'viltv_weather_saved';
+  const LS_KEY      = 'viltv_weather_saved';
+  const LS_LAST_KEY = 'viltv_weather_last_city';
   let _weatherCountry = null;
 
   const _WMO_ICONS = {
@@ -20671,7 +20692,16 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
   }
   function _weatherSaveSaved(arr) { try { localStorage.setItem(LS_KEY, JSON.stringify(arr)); } catch(_) {} }
 
-  window.weatherInit = function() { _weatherRenderSaved(); };
+  window.weatherInit = function() {
+    _weatherRenderSaved();
+    // Auto-load last viewed city on panel open
+    try {
+      var last = JSON.parse(localStorage.getItem(LS_LAST_KEY));
+      if (last && last.city && last.lat && last.lon) {
+        _weatherFetchAndRender(last.city, last.country || '', last.lat, last.lon);
+      }
+    } catch(_) {}
+  };
 
   window.weatherSetCountry = function(code) {
     _weatherCountry = code;
@@ -20746,6 +20776,9 @@ tr:nth-child(even) td{background:rgba(255,255,255,.02)}
 
       const empty = document.getElementById('weather-empty');
       if (empty) empty.style.display = 'none';
+
+      // Persist last-viewed city for auto-load on next panel open
+      try { localStorage.setItem(LS_LAST_KEY, JSON.stringify({city, country, lat, lon})); } catch(_) {}
 
       const card = document.getElementById('weather-current-card');
       if (card) {

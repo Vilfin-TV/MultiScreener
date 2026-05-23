@@ -579,6 +579,7 @@ body{
   border-radius:8px;color:#fff;text-decoration:none;
   font-size:13px;font-weight:700;
   transition:all .15s;margin-bottom:20px;
+  border:none;cursor:pointer;font-family:inherit;
 }
 .story-modal-source-link:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(37,99,235,.4)}
 
@@ -894,6 +895,91 @@ footer.news-footer{
   .nmw-tab{font-size:11px;padding:5px 10px}
   .nmw-screener-select{max-width:100%}
 }
+
+/* ── Global Markets: edit overlay ── */
+.nmw-gm-edit-btn{
+  position:absolute;top:8px;right:8px;z-index:10;
+  background:rgba(6,15,28,.88);
+  border:1px solid var(--border2);
+  color:var(--text2);border-radius:6px;
+  padding:4px 10px;font-size:11px;cursor:pointer;
+  transition:all .15s;white-space:nowrap;
+  font-family:inherit;font-weight:600;letter-spacing:.3px;
+}
+.nmw-gm-edit-btn:hover{background:var(--card2);color:var(--text);border-color:var(--burn2)}
+.nmw-gm-editor{
+  position:absolute;right:0;top:0;bottom:0;
+  width:270px;max-width:88%;
+  background:var(--card);
+  border-left:1px solid var(--border2);
+  z-index:20;display:flex;flex-direction:column;
+  overflow:hidden;
+  animation:nmwGMSlide .2s ease-out;
+}
+@keyframes nmwGMSlide{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.nmw-gm-editor-hd{
+  padding:10px 12px;background:var(--dark2);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.nmw-gm-etabs{
+  display:flex;gap:4px;padding:8px 10px;
+  background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.nmw-gm-etab{
+  flex:1;padding:4px 8px;border-radius:5px;font-size:10px;font-weight:700;
+  background:transparent;border:1px solid var(--border);
+  color:var(--text2);cursor:pointer;transition:all .15s;font-family:inherit;
+  white-space:nowrap;
+}
+.nmw-gm-etab.active{background:var(--burn);border-color:var(--burn);color:#fff}
+.nmw-gm-sym-list{flex:1;overflow-y:auto;padding:8px 10px;min-height:0;
+  scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.nmw-gm-sym-list::-webkit-scrollbar{width:4px}
+.nmw-gm-sym-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.nmw-gm-sym-row{
+  display:flex;align-items:center;gap:5px;
+  padding:5px 7px;border-radius:6px;margin-bottom:3px;
+  background:var(--card2);border:1px solid var(--border);
+}
+.nmw-gm-sym-name{font-size:9px;font-weight:800;color:var(--gold2);flex-shrink:0;letter-spacing:.3px}
+.nmw-gm-sym-label{font-size:11px;color:var(--text2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nmw-gm-sym-del{
+  background:none;border:none;color:var(--text3);cursor:pointer;
+  font-size:13px;flex-shrink:0;padding:0 2px;line-height:1;
+  transition:color .15s;font-family:inherit;
+}
+.nmw-gm-sym-del:hover{color:#ef4444}
+.nmw-gm-add-row{
+  display:flex;flex-direction:column;gap:5px;padding:8px 10px;
+  border-top:1px solid var(--border);background:var(--dark2);flex-shrink:0;
+}
+.nmw-gm-inp{
+  width:100%;background:var(--card);border:1px solid var(--border2);
+  color:var(--text);border-radius:5px;padding:5px 8px;
+  font-size:11px;font-family:inherit;box-sizing:border-box;outline:none;
+}
+.nmw-gm-inp:focus{border-color:var(--burn2)}
+.nmw-gm-inp::placeholder{color:var(--text3)}
+.nmw-gm-add-btn{
+  padding:5px 10px;background:var(--burn);border:none;color:#fff;
+  border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;
+  font-family:inherit;transition:opacity .15s;
+}
+.nmw-gm-add-btn:hover{opacity:.85}
+.nmw-gm-editor-ft{
+  display:flex;gap:6px;padding:8px 10px;
+  background:var(--dark2);border-top:1px solid var(--border);flex-shrink:0;
+}
+.nmw-gm-reset-btn{
+  flex:1;padding:6px;background:transparent;border:1px solid var(--border2);
+  color:var(--text2);border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;
+}
+.nmw-gm-apply-btn{
+  flex:1;padding:6px;background:var(--green);border:none;color:#fff;
+  border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;
+}
+.nmw-gm-apply-btn:hover{opacity:.88}
 </style>
 </head>
 <body>
@@ -1252,6 +1338,31 @@ function renderSection(sectionId, sectionData, meta) {
 }
 
 /* ═══════════════════════════════════════════════════
+   MODAL: OPEN EXTERNAL LINK — hybrid mobile/desktop
+   Mobile (≤768px): new tab; Desktop: centred popup
+═══════════════════════════════════════════════════ */
+function openSourceLink(btn) {
+  var href = btn && btn.getAttribute ? btn.getAttribute('data-href') : null;
+  if (!href) return;
+  if (window.innerWidth <= 768) {
+    // Mobile — standard new tab, strip opener for security
+    var w = window.open(href, '_blank');
+    if (w) { try { w.opener = null; } catch(_) {} }
+  } else {
+    // Desktop — centred popup
+    var W = 600, H = 700;
+    var left = Math.max(0, Math.round(((window.screen.availWidth  || screen.width)  - W) / 2));
+    var top  = Math.max(0, Math.round(((window.screen.availHeight || screen.height) - H) / 2));
+    window.open(
+      href, '_blank',
+      'width=' + W + ',height=' + H +
+      ',left=' + left + ',top=' + top +
+      ',toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes'
+    );
+  }
+}
+
+/* ═══════════════════════════════════════════════════
    MODAL: OPEN STORY
 ═══════════════════════════════════════════════════ */
 function openStory(item, meta) {
@@ -1287,11 +1398,11 @@ function openStory(item, meta) {
     + 'Content is independently composed — not verbatim reproduction of original reporting.'
     + '</div>';
 
-  // Source link
+  // Source link — hybrid: mobile=new tab, desktop=centered popup
   if (item.sourceUrl) {
-    storyHtml += '<a class="story-modal-source-link" href="' + escAttr(item.sourceUrl) + '" target="_blank" rel="noopener noreferrer">'
-      + 'Open original source ↗'
-      + '</a>';
+    storyHtml += '<button class="story-modal-source-link" data-href="' + escAttr(item.sourceUrl) + '" onclick="openSourceLink(this)">'
+      + 'Read Full Story ↗'
+      + '</button>';
   }
 
   // Share buttons
@@ -1540,6 +1651,188 @@ var _NMW_CONFIGS = {
   }
 };
 
+/* ═══════════════════════════════════════════════════
+   GLOBAL MARKETS — custom injection + symbol editor
+═══════════════════════════════════════════════════ */
+var _NMW_GM_LS = 'nmw_globalmarkets_tabs';
+var _NMW_GM_DEFAULT_TABS = [
+  { title:'Indices', symbols:[
+    {s:'OANDA:SPX500USD',d:'S&P 500'},{s:'CAPITALCOM:US100',d:'Nasdaq 100'},
+    {s:'OANDA:US30USD',d:'Dow Jones'},{s:'BSE:SENSEX',d:'Sensex'},
+    {s:'NSE:NIFTY50',d:'Nifty 50'},{s:'FOREXCOM:NISIT',d:'Nikkei 225'},
+    {s:'INDEX:DEU40',d:'DAX 40'},{s:'FOREXCOM:UKXGBP',d:'FTSE 100'},
+    {s:'INDEX:CAC40',d:'CAC 40'},{s:'INDEX:HSI',d:'Hang Seng'}
+  ]},
+  { title:'Commodities', symbols:[
+    {s:'CME_MINI:GC1!',d:'Gold'},{s:'NYMEX:CL1!',d:'Crude Oil'},
+    {s:'TVC:SILVER',d:'Silver'},{s:'NYMEX:NG1!',d:'Natural Gas'}
+  ]},
+  { title:'Currencies', symbols:[
+    {s:'FX:EURUSD',d:'EUR/USD'},{s:'FX:GBPUSD',d:'GBP/USD'},
+    {s:'FX:USDJPY',d:'USD/JPY'},{s:'FX_IDC:USDINR',d:'USD/INR'},
+    {s:'BITSTAMP:BTCUSD',d:'Bitcoin'}
+  ]}
+];
+var _nmwGMEditState = { tabs: null, activeTabIdx: 0 };
+
+function _nmwGMGetTabs() {
+  try {
+    var s = localStorage.getItem(_NMW_GM_LS);
+    if (s) { var t = JSON.parse(s); if (Array.isArray(t) && t.length) return t; }
+  } catch(_) {}
+  return JSON.parse(JSON.stringify(_NMW_GM_DEFAULT_TABS));
+}
+
+function _nmwInjectGMWidget(container, tabs) {
+  container.innerHTML = '';
+  var cfg = {
+    colorTheme:'dark', dateRange:'1D', showChart:true, locale:'en',
+    width:'100%', height:'100%', isTransparent:false,
+    showSymbolLogo:true, showFloatingTooltip:false,
+    plotLineColorGrowing:'rgba(41,98,255,1)', plotLineColorFalling:'rgba(41,98,255,1)',
+    gridLineColor:'rgba(42,46,57,0)', scaleFontColor:'rgba(209,212,220,1)',
+    belowLineFillColorGrowing:'rgba(41,98,255,.12)', belowLineFillColorFalling:'rgba(41,98,255,.12)',
+    belowLineFillColorGrowingBottom:'rgba(41,98,255,0)', belowLineFillColorFallingBottom:'rgba(41,98,255,0)',
+    symbolActiveColor:'rgba(41,98,255,.12)',
+    tabs: tabs
+  };
+  var tv = document.createElement('div');
+  tv.className = 'tradingview-widget-container';
+  tv.style.cssText = 'height:100%;width:100%;max-width:860px;margin:0 auto;display:flex;flex-direction:column';
+  var wdg = document.createElement('div');
+  wdg.className = 'tradingview-widget-container__widget';
+  wdg.style.cssText = 'flex:1;min-height:0;width:100%';
+  tv.appendChild(wdg);
+  var cr = document.createElement('div');
+  cr.className = 'tradingview-widget-copyright';
+  cr.style.cssText = 'flex-shrink:0;padding:3px 6px;text-align:center;background:#030810';
+  cr.innerHTML = '<a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank" style="color:#334155;font-size:9px;text-decoration:none">Track all markets on TradingView</a>';
+  tv.appendChild(cr);
+  container.appendChild(tv);
+  var sc = document.createElement('script');
+  sc.type = 'text/javascript';
+  sc.src = 'https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js';
+  sc.async = true;
+  sc.textContent = JSON.stringify(cfg);
+  tv.appendChild(sc);
+}
+
+function _nmwInjectGlobalMarkets(wrapId) {
+  var wrap = document.getElementById(wrapId);
+  if (!wrap || wrap.dataset.nmwLoaded) return;
+  wrap.dataset.nmwLoaded = '1';
+  // NOTE: do NOT override position — the CSS .nmw-wrap has position:absolute;inset:0
+  // which gives correct dimensions. We only need flex-direction:column (already in CSS).
+
+  // TV widget container (fills remaining space, flex:1 within the absolute wrap)
+  var tvWrap = document.createElement('div');
+  tvWrap.id = 'nmw-gm-tv';
+  tvWrap.style.cssText = 'position:absolute;inset:0;overflow:hidden;display:flex;flex-direction:column';
+  wrap.appendChild(tvWrap);
+
+  // Edit button (top-right overlay, z-index above TV widget)
+  var editBtn = document.createElement('button');
+  editBtn.className = 'nmw-gm-edit-btn';
+  editBtn.innerHTML = '⚙️ Edit Symbols';
+  editBtn.title = 'Customise tracked symbols';
+  editBtn.onclick = function() { _nmwOpenGMEditor(); };
+  wrap.appendChild(editBtn);
+
+  _nmwInjectGMWidget(tvWrap, _nmwGMGetTabs());
+}
+
+/* ── Global Markets Editor ── */
+function _nmwGMEditorHTML() {
+  var tabs = _nmwGMEditState.tabs;
+  var ai   = _nmwGMEditState.activeTabIdx;
+  var tabBtns = tabs.map(function(t, i) {
+    return '<button class="nmw-gm-etab' + (i === ai ? ' active' : '') + '" onclick="_nmwGMSetTab(' + i + ')">' + t.title + '</button>';
+  }).join('');
+  var symbols = (tabs[ai] && tabs[ai].symbols) ? tabs[ai].symbols : [];
+  var symRows = symbols.length ? symbols.map(function(sym, si) {
+    return '<div class="nmw-gm-sym-row">'
+      + '<span class="nmw-gm-sym-name">' + sym.s + '</span>'
+      + '<span class="nmw-gm-sym-label">' + sym.d + '</span>'
+      + '<button class="nmw-gm-sym-del" onclick="_nmwGMDel(' + si + ')" title="Remove">✕</button>'
+      + '</div>';
+  }).join('')
+  : '<div style="color:var(--text3);font-size:12px;padding:8px 4px">No symbols — add one below.</div>';
+
+  return '<div class="nmw-gm-editor-hd">'
+    + '<span style="font-weight:700;font-size:13px;color:var(--text)">Edit Symbols</span>'
+    + '<button onclick="var e=document.getElementById(\'nmw-gm-editor\');if(e)e.remove();" '
+    + 'style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;line-height:1;font-family:inherit">✕</button>'
+    + '</div>'
+    + '<div class="nmw-gm-etabs">' + tabBtns + '</div>'
+    + '<div class="nmw-gm-sym-list">' + symRows + '</div>'
+    + '<div class="nmw-gm-add-row">'
+    + '<input class="nmw-gm-inp" id="nmw-gm-inp-sym" placeholder="TV Symbol (e.g. NSE:NIFTY50)" />'
+    + '<input class="nmw-gm-inp" id="nmw-gm-inp-lbl" placeholder="Label (e.g. Nifty 50)" />'
+    + '<button class="nmw-gm-add-btn" onclick="_nmwGMAdd()">+ Add Symbol</button>'
+    + '</div>'
+    + '<div class="nmw-gm-editor-ft">'
+    + '<button class="nmw-gm-reset-btn" onclick="_nmwGMReset()">Reset Defaults</button>'
+    + '<button class="nmw-gm-apply-btn" onclick="_nmwGMApply()">✓ Apply & Save</button>'
+    + '</div>';
+}
+
+function _nmwOpenGMEditor() {
+  var existing = document.getElementById('nmw-gm-editor');
+  if (existing) { existing.remove(); return; } // toggle off
+  _nmwGMEditState.tabs = JSON.parse(JSON.stringify(_nmwGMGetTabs()));
+  _nmwGMEditState.activeTabIdx = 0;
+  var ed = document.createElement('div');
+  ed.id = 'nmw-gm-editor';
+  ed.className = 'nmw-gm-editor';
+  ed.innerHTML = _nmwGMEditorHTML();
+  var wrap = document.getElementById('nmw-wrap-globalmarkets');
+  if (wrap) wrap.appendChild(ed);
+}
+
+function _nmwGMSetTab(idx) {
+  _nmwGMEditState.activeTabIdx = idx;
+  var ed = document.getElementById('nmw-gm-editor');
+  if (ed) ed.innerHTML = _nmwGMEditorHTML();
+}
+
+function _nmwGMDel(si) {
+  var ai = _nmwGMEditState.activeTabIdx;
+  _nmwGMEditState.tabs[ai].symbols.splice(si, 1);
+  _nmwGMSetTab(ai);
+}
+
+function _nmwGMAdd() {
+  var symEl = document.getElementById('nmw-gm-inp-sym');
+  var lblEl = document.getElementById('nmw-gm-inp-lbl');
+  var sym = symEl ? symEl.value.trim().toUpperCase() : '';
+  var lbl = lblEl ? lblEl.value.trim() : '';
+  if (!sym) {
+    if (symEl) { symEl.style.borderColor = '#ef4444'; setTimeout(function(){ symEl.style.borderColor = ''; }, 1500); }
+    return;
+  }
+  if (!lbl) lbl = sym.indexOf(':') >= 0 ? sym.split(':')[1] : sym;
+  var ai = _nmwGMEditState.activeTabIdx;
+  _nmwGMEditState.tabs[ai].symbols.push({ s: sym, d: lbl });
+  if (symEl) symEl.value = '';
+  if (lblEl) lblEl.value = '';
+  _nmwGMSetTab(ai);
+}
+
+function _nmwGMReset() {
+  if (!confirm('Reset Global Markets to default symbols?')) return;
+  _nmwGMEditState.tabs = JSON.parse(JSON.stringify(_NMW_GM_DEFAULT_TABS));
+  _nmwGMSetTab(0);
+}
+
+function _nmwGMApply() {
+  try { localStorage.setItem(_NMW_GM_LS, JSON.stringify(_nmwGMEditState.tabs)); } catch(_) {}
+  var ed = document.getElementById('nmw-gm-editor');
+  if (ed) ed.remove();
+  // Re-inject widget with updated symbols
+  var tvWrap = document.getElementById('nmw-gm-tv');
+  if (tvWrap) _nmwInjectGMWidget(tvWrap, _nmwGMGetTabs());
+}
+
 function _nmwInject(wrapId, src, cfg) {
   var wrap = document.getElementById(wrapId);
   if (!wrap || wrap.dataset.nmwLoaded) return;
@@ -1582,6 +1875,8 @@ function nmwSwitch(key, btnEl) {
   if (!c) return;
   if (c._custom && key === 'screener') {
     _nmwInjectScreener('nmw-wrap-screener');
+  } else if (key === 'globalmarkets') {
+    _nmwInjectGlobalMarkets('nmw-wrap-globalmarkets');
   } else if (!c._custom) {
     _nmwInject('nmw-wrap-' + key, c.src, c.cfg);
   }
