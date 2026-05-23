@@ -9442,6 +9442,29 @@ function widgetInitOnLoad() {
     tabStrip.addEventListener('scroll', rbTabsSyncArrows, { passive: true });
     window.addEventListener('resize', rbTabsSyncArrows);
     tabStrip.dataset.arrowBound = '1';
+    // Mouse drag-scroll for rb-tabs (desktop UX)
+    (function() {
+      var down = false, sx = 0, sl = 0;
+      tabStrip.style.cursor = 'grab';
+      tabStrip.addEventListener('mousedown', function(e) {
+        if (e.button !== 0) return;
+        down = true; sx = e.clientX; sl = tabStrip.scrollLeft;
+        tabStrip.style.cursor = 'grabbing';
+        tabStrip.style.userSelect = 'none';
+        e.preventDefault();
+      }, { passive: false });
+      document.addEventListener('mousemove', function(e) {
+        if (!down) return;
+        tabStrip.scrollLeft = sl - (e.clientX - sx);
+        rbTabsSyncArrows();
+      });
+      document.addEventListener('mouseup', function() {
+        if (!down) return;
+        down = false;
+        tabStrip.style.cursor = 'grab';
+        tabStrip.style.userSelect = '';
+      });
+    })();
   }
   const s = widgetGetSettings();
   const last = (() => { try { return localStorage.getItem('viltv_widget_last_tab') || ''; } catch(_) { return ''; } })();
@@ -9461,7 +9484,7 @@ window.addEventListener('DOMContentLoaded', widgetInitOnLoad);
 // PRESET STRIP — drag-to-scroll (mouse drag on desktop)
 // ═══════════════════════════════════════════════════════════════════════
 function _initPresetDragScroll() {
-  document.querySelectorAll('.panel-preset-strip').forEach(function(el) {
+  document.querySelectorAll('.panel-preset-strip, .stk-sub-bar, .pr-cat-bar').forEach(function(el) {
     if (el.dataset.dragBound) return;
     el.dataset.dragBound = '1';
     var isDown = false, startX = 0, scrollLeft = 0, moved = false;

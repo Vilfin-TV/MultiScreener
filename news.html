@@ -800,6 +800,86 @@ footer.news-footer{
   .share-btn-sm{font-size:11px;padding:6px 12px}
   .story-modal-source-link{font-size:12px;padding:7px 14px}
 }
+
+/* ═══════════════════════════════════════════════════
+   MARKET INTELLIGENCE WIDGET BLOCK
+═══════════════════════════════════════════════════ */
+.nmw-block{
+  margin-bottom:56px;
+  border-radius:14px;
+  overflow:hidden;
+  border:1px solid var(--border2);
+  box-shadow:0 4px 24px rgba(0,0,0,.25);
+}
+.nmw-header{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 20px;
+  background:var(--card2);
+  border-bottom:2px solid #0d2e1f;
+  position:relative;
+}
+.nmw-header::after{
+  content:'';position:absolute;bottom:-2px;left:0;
+  width:72px;height:2px;
+  background:#10b981;border-radius:2px;
+}
+.nmw-header-icon{font-size:20px;line-height:1}
+.nmw-header-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:18px;letter-spacing:2.5px;color:var(--text);
+}
+.nmw-header-badge{
+  margin-left:auto;
+  background:rgba(16,185,129,.15);
+  border:1px solid rgba(16,185,129,.4);
+  color:#34d399;font-size:10px;font-weight:700;
+  padding:3px 10px;border-radius:20px;letter-spacing:.6px;
+  display:flex;align-items:center;gap:5px;
+}
+.nmw-live-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:#10b981;flex-shrink:0;
+  animation:nmwPulse 2s ease-in-out infinite;
+}
+@keyframes nmwPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.nmw-tabs{
+  display:flex;overflow-x:auto;
+  gap:5px;padding:8px 14px;
+  background:var(--dark2);
+  border-bottom:1px solid var(--border);
+  scrollbar-width:none;
+  cursor:grab;
+  user-select:none;
+}
+.nmw-tabs:active{cursor:grabbing}
+.nmw-tabs::-webkit-scrollbar{display:none}
+.nmw-tab{
+  flex-shrink:0;padding:6px 14px;
+  border:1px solid var(--border2);border-radius:8px;
+  background:transparent;color:var(--text3);
+  font-size:12px;font-weight:700;cursor:pointer;
+  letter-spacing:.4px;white-space:nowrap;
+  transition:all .15s;
+}
+.nmw-tab.active{
+  background:rgba(16,185,129,.14);
+  border-color:rgba(16,185,129,.5);color:#34d399;
+}
+.nmw-tab:hover:not(.active){
+  background:var(--card2);border-color:var(--border);color:var(--text2);
+}
+.nmw-area{
+  height:540px;background:var(--dark);
+  position:relative;overflow:hidden;
+}
+.nmw-wrap{
+  position:absolute;inset:0;
+  flex-direction:column;
+}
+@media(max-width:768px){
+  .nmw-area{height:420px}
+  .nmw-tab{font-size:11px;padding:5px 10px}
+}
 </style>
 </head>
 <body>
@@ -1066,8 +1146,10 @@ function timeAgo(isoStr) {
 ═══════════════════════════════════════════════════ */
 function isItemValid(item) {
   if (!item || !item.publishedAt) return false;
-  // Filter out backend placeholder items – never show these on the frontend
-  if (item.headline === 'Content updating…' || item.headline === 'Content updating...') return false;
+  // Robustly filter ALL backend placeholder items – never show on the frontend
+  if (!item.headline) return false;
+  var hl = item.headline.trim().toLowerCase();
+  if (hl.startsWith('content updating') || hl === 'placeholder' || hl === 'loading...') return false;
   var age = Date.now() - new Date(item.publishedAt).getTime();
   return age < 48 * 60 * 60 * 1000; // 48 hours
 }
@@ -1351,6 +1433,164 @@ function escAttr(str) {
 }
 
 /* ═══════════════════════════════════════════════════
+   MARKET INTELLIGENCE WIDGETS — injected below Stock News
+═══════════════════════════════════════════════════ */
+var _NMW_CONFIGS = {
+  topstories: {
+    label:'📰 Top Stories',
+    src:'https://s3.tradingview.com/external-embedding/embed-widget-timeline.js',
+    cfg:{ feedMode:'all_symbols', isTransparent:false, displayMode:'regular',
+          width:'100%', height:'100%', colorTheme:'dark', locale:'en' }
+  },
+  heatmap: {
+    label:'🔥 Stock Heatmap',
+    src:'https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js',
+    cfg:{ exchanges:[], dataSource:'SPX500', grouping:'sector',
+          blockSize:'market_cap_basic', blockColor:'change', locale:'en',
+          colorTheme:'dark', hasTopBar:true, isDataSetEnabled:true,
+          isZoomEnabled:true, hasSymbolTooltip:true, isMonoSize:false,
+          width:'100%', height:'100%' }
+  },
+  etf: {
+    label:'📊 ETF Heatmap',
+    src:'https://s3.tradingview.com/external-embedding/embed-widget-etf-heatmap.js',
+    cfg:{ dataSource:'AllUSEtf', blockSize:'aum', blockColor:'change',
+          grouping:'asset_class', locale:'en', colorTheme:'dark',
+          hasTopBar:true, isDataSetEnabled:true, isZoomEnabled:true,
+          hasSymbolTooltip:true, isMonoSize:false, width:'100%', height:'100%' }
+  },
+  crypto: {
+    label:'🪙 Crypto Heatmap',
+    src:'https://s3.tradingview.com/external-embedding/embed-widget-crypto-coins-heatmap.js',
+    cfg:{ dataSource:'Crypto', blockSize:'market_cap_calc', blockColor:'change',
+          locale:'en', colorTheme:'dark', hasTopBar:true, isDataSetEnabled:true,
+          isZoomEnabled:true, hasSymbolTooltip:true, isMonoSize:false,
+          width:'100%', height:'100%' }
+  },
+  fxrates: {
+    label:'💱 Forex Rates',
+    src:'https://s3.tradingview.com/external-embedding/embed-widget-forex-cross-rates.js',
+    cfg:{ width:'100%', height:'100%', isTransparent:false, colorTheme:'dark',
+          locale:'en', backgroundColor:'#060f1c',
+          currencies:['EUR','USD','JPY','GBP','CHF','AUD','CAD','NZD','CNY','INR'] }
+  },
+  fxheat: {
+    label:'🌡 Forex Heatmap',
+    src:'https://s3.tradingview.com/external-embedding/embed-widget-forex-heat-map.js',
+    cfg:{ width:'100%', height:'100%', isTransparent:false, colorTheme:'dark',
+          locale:'en', backgroundColor:'#060f1c',
+          currencies:['EUR','USD','JPY','GBP','CHF','AUD','CAD','NZD','CNY','INR'] }
+  },
+  calendar: {
+    label:'📅 Economic Calendar',
+    src:'https://s3.tradingview.com/external-embedding/embed-widget-events.js',
+    cfg:{ width:'100%', height:'100%', colorTheme:'dark', isTransparent:false,
+          locale:'en', importanceFilter:'-1,0,1',
+          countryFilter:'ar,au,br,ca,cn,de,fr,gb,id,in,jp,kr,mx,ru,sa,tr,us,za' }
+  }
+};
+
+function _nmwInject(wrapId, src, cfg) {
+  var wrap = document.getElementById(wrapId);
+  if (!wrap || wrap.dataset.nmwLoaded) return;
+  wrap.dataset.nmwLoaded = '1';
+  var tv = document.createElement('div');
+  tv.className = 'tradingview-widget-container';
+  tv.style.cssText = 'height:100%;width:100%;display:flex;flex-direction:column';
+  var wdg = document.createElement('div');
+  wdg.className = 'tradingview-widget-container__widget';
+  wdg.style.cssText = 'flex:1;min-height:0;width:100%';
+  tv.appendChild(wdg);
+  var cr = document.createElement('div');
+  cr.className = 'tradingview-widget-copyright';
+  cr.style.cssText = 'flex-shrink:0;padding:3px 6px;text-align:center;background:#030810';
+  cr.innerHTML = '<a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank" style="color:#334155;font-size:9px;text-decoration:none">Track all markets on TradingView</a>';
+  tv.appendChild(cr);
+  wrap.appendChild(tv);
+  var sc = document.createElement('script');
+  sc.type = 'text/javascript';
+  sc.src = src;
+  sc.async = true;
+  sc.textContent = JSON.stringify(cfg);
+  tv.appendChild(sc);
+}
+
+var _nmwCurrentKey = null;
+
+function nmwSwitch(key, btnEl) {
+  // Deactivate all tab buttons
+  var tabs = document.querySelectorAll('.nmw-tab');
+  tabs.forEach(function(b) { b.classList.remove('active'); });
+  if (btnEl) btnEl.classList.add('active');
+  // Hide/show wrap divs
+  Object.keys(_NMW_CONFIGS).forEach(function(k) {
+    var w = document.getElementById('nmw-wrap-' + k);
+    if (w) w.style.display = (k === key) ? 'flex' : 'none';
+  });
+  _nmwCurrentKey = key;
+  // Lazy-inject widget
+  var c = _NMW_CONFIGS[key];
+  if (c) _nmwInject('nmw-wrap-' + key, c.src, c.cfg);
+}
+
+function buildMarketWidgetsBlock() {
+  var keys = Object.keys(_NMW_CONFIGS);
+  var block = document.createElement('div');
+  block.className = 'nmw-block';
+
+  // Header
+  block.innerHTML = '<div class="nmw-header">'
+    + '<span class="nmw-header-icon">📊</span>'
+    + '<span class="nmw-header-title">Market Intelligence</span>'
+    + '<span class="nmw-header-badge"><span class="nmw-live-dot"></span>Live Data</span>'
+    + '</div>';
+
+  // Tab bar
+  var tabBar = document.createElement('div');
+  tabBar.className = 'nmw-tabs';
+  tabBar.id = 'nmw-tab-bar';
+  keys.forEach(function(k, i) {
+    var btn = document.createElement('button');
+    btn.className = 'nmw-tab' + (i === 0 ? ' active' : '');
+    btn.id = 'nmw-tab-' + k;
+    btn.textContent = _NMW_CONFIGS[k].label;
+    btn.onclick = (function(key, b){ return function(){ nmwSwitch(key, b); }; })(k, btn);
+    tabBar.appendChild(btn);
+  });
+  block.appendChild(tabBar);
+
+  // Widget area
+  var area = document.createElement('div');
+  area.className = 'nmw-area';
+  keys.forEach(function(k, i) {
+    var wrap = document.createElement('div');
+    wrap.className = 'nmw-wrap';
+    wrap.id = 'nmw-wrap-' + k;
+    wrap.style.display = (i === 0) ? 'flex' : 'none';
+    area.appendChild(wrap);
+  });
+  block.appendChild(area);
+
+  // Mouse-drag scroll for tab bar
+  (function() {
+    var down = false, sx = 0, sl = 0;
+    tabBar.addEventListener('mousedown', function(e) {
+      down = true; sx = e.clientX; sl = tabBar.scrollLeft;
+      tabBar.style.cursor = 'grabbing'; e.preventDefault();
+    }, { passive: false });
+    document.addEventListener('mousemove', function(e) {
+      if (!down) return;
+      tabBar.scrollLeft = sl - (e.clientX - sx);
+    });
+    document.addEventListener('mouseup', function() {
+      if (down) { down = false; tabBar.style.cursor = 'grab'; }
+    });
+  })();
+
+  return block;
+}
+
+/* ═══════════════════════════════════════════════════
    LOAD NEWS PAGE
 ═══════════════════════════════════════════════════ */
 async function loadNewsPage() {
@@ -1383,6 +1623,14 @@ async function loadNewsPage() {
     container.appendChild(el);
     if (sectionData && sectionData.items) {
       totalStories += sectionData.items.filter(isItemValid).length;
+    }
+    // Inject Market Intelligence widget block directly below Stock News
+    if (sid === 'stock') {
+      var mktBlock = buildMarketWidgetsBlock();
+      container.appendChild(mktBlock);
+      setTimeout(function() {
+        nmwSwitch('topstories', document.getElementById('nmw-tab-topstories'));
+      }, 150);
     }
   });
 
