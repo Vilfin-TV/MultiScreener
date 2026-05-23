@@ -585,72 +585,37 @@ async function generateHeroImage(headline, sectionId) {
 }
 
 /* ═══════════════════════════════════════════════════
-   BUILD PROMPT — Axios Smart Brevity JSON format
-   AI returns a structured JSON object that is then
-   converted to rich HTML by storyJsonToHtml().
+   BUILD PROMPT — professional news journalist style
+   Produces clean flowing prose paragraphs (inverted
+   pyramid) suitable for Trending, Global and India.
 ═══════════════════════════════════════════════════ */
-function buildPrompt(item, relatedContext, isMalayalam) {
+function buildPrompt(item, relatedContext) {
   var multiSrc = relatedContext
     ? '\n\nADDITIONAL REPORTING from other publications:\n' + relatedContext
     : '';
 
-  var emojiList = isMalayalam
-    ? '🏛️, 🌊, 🎭, 🏥, 🌾, 📚, ⚡, 🔍, 🎯, 🏘️'
-    : '🧠, 📊, 🔮, ⚡, 🌐, 🏛️, 💰, 🔍, ⚖️, 🎯, 📢, 🏢, 📈, 🌊, 🛡️, 🔬';
-
-  var langNote = isMalayalam
-    ? '\nLANGUAGE RULE: Write ALL text values ENTIRELY in Malayalam script (not transliteration). Every single word in every field must be in Malayalam.'
-    : '';
-
   return (
-    'You are a senior journalist writing in "Axios Smart Brevity" style.\n'
-    + 'Write a complete, factual, multi-source news article about the following story.\n\n'
+    'You are a professional news journalist writing for an international wire service.\n'
+    + 'Write a complete, factual 5-6 paragraph article in AP / BBC / Reuters style.\n\n'
     + 'PRIMARY HEADLINE: "' + item.title + '"\n'
     + 'SOURCE CONTEXT: ' + (item.description || 'No additional context.') + multiSrc + '\n\n'
-    + 'Return ONLY a valid JSON object — no markdown code fences, no extra text, no explanation.\n'
-    + 'Use EXACTLY this structure:\n\n'
-    + '{\n'
-    + '  "lead_bold": "3-6 word bold phrase that dramatically opens the story",\n'
-    + '  "lead_rest": "Rest of the opening sentence giving key who/what/when/where context (30-50 words)",\n'
-    + '  "why_it_matters": "Single sentence explaining the broader significance to readers (20-30 words)",\n'
-    + '  "zoom_in": "A sharp crystallising insight — the core meaning behind the headlines (20-35 words)",\n'
-    + '  "sections": [\n'
-    + '    {\n'
-    + '      "emoji": "one emoji from this list: ' + emojiList + '",\n'
-    + '      "number": 1,\n'
-    + '      "label": "1-2 word section label",\n'
-    + '      "body": "Main fact for this specific angle of the story (25-40 words)",\n'
-    + '      "sub_bold": "2-4 word bold sub-opener",\n'
-    + '      "sub_rest": "Key data point, implication or expert view completing this section (20-30 words)"\n'
-    + '    },\n'
-    + '    {\n'
-    + '      "emoji": "different emoji",\n'
-    + '      "number": 2,\n'
-    + '      "label": "1-2 word label",\n'
-    + '      "body": "Second completely different angle of the story (25-40 words)",\n'
-    + '      "sub_bold": "2-4 word bold opener",\n'
-    + '      "sub_rest": "Completing thought with impact or context (20-30 words)"\n'
-    + '    },\n'
-    + '    {\n'
-    + '      "emoji": "different emoji",\n'
-    + '      "number": 3,\n'
-    + '      "label": "1-2 word label",\n'
-    + '      "body": "Third angle — what happens next, reactions, or future outlook (25-40 words)",\n'
-    + '      "sub_bold": "2-4 word bold opener",\n'
-    + '      "sub_rest": "Forward-looking implication or open question (20-30 words)"\n'
-    + '    }\n'
-    + '  ]\n'
-    + '}\n\n'
+    + 'ARTICLE STRUCTURE (inverted pyramid):\n'
+    + 'Paragraph 1 — THE LEDE: The single most important fact. Who/What/When/Where in the opening sentence.\n'
+    + 'Paragraph 2 — BACKGROUND: Context, history, and why this development matters.\n'
+    + 'Paragraph 3 — KEY DETAILS: Specific data, figures, official statements or expert views.\n'
+    + 'Paragraph 4 — REACTIONS & IMPACT: How stakeholders, markets or the public are responding.\n'
+    + 'Paragraph 5 — WIDER CONTEXT: Related developments, regional or global implications.\n'
+    + 'Paragraph 6 — WHAT NEXT: Upcoming decisions, open questions, or what to watch.\n\n'
     + 'CRITICAL RULES:\n'
-    + '- SYNTHESISE from ALL sources above — never rely on a single source alone\n'
-    + '- FACT-CHECK: only state facts consistent across multiple sources provided\n'
+    + '- Begin immediately with the first word of the article — NO title, NO headline, NO byline\n'
     + '- 100% original prose — do NOT copy any phrase from any source verbatim\n'
-    + '- Balanced, impartial reporting — BBC/Reuters standard\n'
-    + '- No markdown (**bold**), no HTML tags inside JSON string values\n'
-    + '- Each section MUST cover a distinctly different angle of the story\n'
-    + '- Emojis must reflect each section\'s specific topic\n'
-    + '- Return ONLY the JSON object — nothing before or after it\n'
-    + langNote
+    + '- SYNTHESISE from ALL provided sources — do not rely on a single source\n'
+    + '- FACT-CHECK: only assert facts consistent across multiple provided sources\n'
+    + '- Balanced, impartial reporting — no opinion, no speculation\n'
+    + '- Each paragraph: 2-4 clear, active-voice sentences\n'
+    + '- NO bullet points, NO headers, NO bold text, NO markdown, NO HTML tags in your output\n'
+    + '- Separate paragraphs with a blank line only\n'
+    + '- Do NOT include a dateline, word count, or source footer\n'
   );
 }
 
@@ -724,17 +689,28 @@ function storyJsonToHtml(data) {
 }
 
 /* ═══════════════════════════════════════════════════
-   GENERATE STORY — Gemini → Groq (70B) → RSS fallback
+   GENERATE STORY — journalist prose
+   Gemini 1.5 Flash → Groq 70B → RSS fallback
    Returns { html: string, teaser: string }
+   Used ONLY for Trending / Global / India sections.
 ═══════════════════════════════════════════════════ */
-async function generateStory(item, relatedContext, isMalayalam) {
-  var prompt  = buildPrompt(item, relatedContext, isMalayalam);
+function proseToHtml(text) {
+  // Split on blank lines (paragraph breaks), wrap each in <p>
+  var paras = text.split(/\n\s*\n/).map(function(p){ return p.trim(); }).filter(Boolean);
+  if (!paras.length) paras = [text.trim()];
+  return paras.map(function(p) {
+    return '<p>' + p.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>';
+  }).join('');
+}
+
+async function generateStory(item, relatedContext) {
+  var prompt  = buildPrompt(item, relatedContext);
   var rawText = null;
 
   // ── 1. Gemini 1.5 Flash ──────────────────────────────────────────────────
   try {
     rawText = await callGemini(prompt);
-    console.log('    [Gemini ✓]', item.title.slice(0, 55));
+    console.log('    [Gemini ✓] journalist article');
   } catch (e) {
     console.warn('    [Gemini ✗]', e.message);
   }
@@ -743,65 +719,56 @@ async function generateStory(item, relatedContext, isMalayalam) {
   if (!rawText) {
     try {
       rawText = await callGroq(prompt);
-      console.log('    [Groq ✓]', item.title.slice(0, 55));
+      console.log('    [Groq ✓] journalist article');
     } catch (e) {
       console.warn('    [Groq ✗]', e.message);
     }
   }
 
-  // ── 3. Try to parse Axios Smart Brevity JSON ──────────────────────────────
-  if (rawText) {
-    try {
-      var jsonStr = extractJson(rawText);
-      var data    = JSON.parse(jsonStr);
-      if (data && (data.lead_bold || data.lead_rest || data.sections)) {
-        console.log('    [Smart Brevity ✓] structured article');
-        var teaser = ((data.lead_bold || '') + ' ' + (data.lead_rest || '')).trim();
-        if (teaser.length > 120) teaser = teaser.slice(0, 120) + '…';
-        return { html: storyJsonToHtml(data), teaser: teaser };
-      }
-    } catch (e) {
-      console.warn('    [JSON parse fail]', e.message, '— using plain text');
-    }
-
-    // Plain text fallback (AI returned prose instead of JSON)
-    var storyHtml = rawText
-      .split('\n')
-      .filter(function(l) { return l.trim(); })
-      .map(function(l) {
-        return '<p>' + l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>';
-      })
-      .join('');
-    var plainTeaser = rawText.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').slice(0, 120).trim();
-    if (plainTeaser.length === 120) plainTeaser += '…';
-    return { html: storyHtml, teaser: plainTeaser };
+  // ── 3. Convert AI prose → HTML paragraphs ────────────────────────────────
+  if (rawText && rawText.trim().length > 50) {
+    var html   = proseToHtml(rawText.trim());
+    var teaser = rawText.replace(/\s+/g, ' ').trim().slice(0, 140);
+    if (teaser.length >= 140) teaser = teaser.slice(0, 137) + '…';
+    return { html: html, teaser: teaser };
   }
 
   // ── 4. RSS description fallback ───────────────────────────────────────────
   var desc = (item.description || '').trim();
   var src  = item.sourceName ? ' via ' + item.sourceName : '';
-  var fallbackText = item.title + '.\n\n'
-    + (desc ? desc + '\n\n' : '')
-    + 'This story was sourced' + src + '. Full editorial coverage will be available at the next scheduled update.';
+  var fallbackText = item.title + '.'
+    + (desc ? '\n\n' + desc : '')
+    + '\n\nThis story was sourced' + src
+    + '. Full editorial coverage will be available at the next scheduled update.';
   console.warn('    [RSS fallback]', item.title.slice(0, 55));
-  var fallbackHtml = fallbackText
-    .split('\n')
-    .filter(function(l) { return l.trim(); })
-    .map(function(l) {
-      return '<p>' + l.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>';
-    })
-    .join('');
-  var fallbackTeaser = (item.description || item.title).slice(0, 120).trim();
-  if (fallbackTeaser.length === 120) fallbackTeaser += '…';
-  return { html: fallbackHtml, teaser: fallbackTeaser };
+  var fallbackTeaser = (desc || item.title).slice(0, 140).trim();
+  return { html: proseToHtml(fallbackText), teaser: fallbackTeaser };
+}
+
+/* ═══════════════════════════════════════════════════
+   RSS STORY BUILDER — stock / malayalam only
+   No AI. Uses raw RSS description as the story.
+   Returns { html: string, teaser: string }
+═══════════════════════════════════════════════════ */
+function rssStory(item) {
+  var desc = (item.description || '').trim();
+  var html = desc
+    ? '<p>' + desc.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>'
+    : '<p>Full story available at the original source.</p>';
+  var teaser = desc.slice(0, 140) || item.title.slice(0, 140);
+  if (teaser.length >= 140) teaser = teaser.slice(0, 137) + '…';
+  return { html: html, teaser: teaser };
 }
 
 /* ═══════════════════════════════════════════════════
    BUILD SECTION
+   isRssOnly: stock + malayalam → raw RSS feed only
+   aiSection: trending + global + india → AI headline
+              rewrite + journalist article generation
 ═══════════════════════════════════════════════════ */
 async function buildSection(sectionId, feedPool, meta) {
   console.log('\n[Section]', sectionId.toUpperCase());
-  var isMalayalam = sectionId === 'malayalam';
+  var isRssOnly = (sectionId === 'stock' || sectionId === 'malayalam');
 
   // Always include first 2 anchored feeds + random extras
   var pool    = feedPool || [];
@@ -843,21 +810,38 @@ async function buildSection(sectionId, feedPool, meta) {
   var sectionImage = await generateHeroImage(selected[0].title, sectionId);
 
   // ── Generate stories ─────────────────────────────────────────────────────
+  console.log('  Mode:', isRssOnly ? '📰 RSS-only (no AI article)' : '🤖 AI journalist article');
+
   var outputItems = [];
   for (var j = 0; j < selected.length; j++) {
     var item = selected[j];
     console.log('  Story', (j + 1) + '/' + selected.length + ':', item.title.slice(0, 65));
 
-    // Multi-source context for this story
-    var relatedContext = gatherRelatedContext(item, allItems);
-    if (relatedContext) console.log('    Cross-refs found:', relatedContext.split('\n').length);
+    var headline, storyResult, relCtxLines;
 
-    // Copyright-safe headline rewrite
-    var headline = await rewriteHeadline(item.title);
-    console.log('    Headline:', headline.slice(0, 60));
+    if (isRssOnly) {
+      // ── Stock + Malayalam: raw RSS headline + RSS description ──────────
+      headline    = item.title;                     // no Groq rewrite
+      storyResult = rssStory(item);                 // no AI article
+      relCtxLines = 0;
+      console.log('    [RSS only] headline + description');
 
-    // Article generation (Gemini → Groq → RSS) — returns { html, teaser }
-    var storyResult = await generateStory(item, relatedContext, isMalayalam);
+    } else {
+      // ── Trending + Global + India: AI headline + AI journalist article ──
+      var relatedContext = gatherRelatedContext(item, allItems);
+      relCtxLines = relatedContext ? relatedContext.split('\n').length : 0;
+      if (relCtxLines > 0) console.log('    Cross-refs found:', relCtxLines);
+
+      // Groq fast: copyright-safe headline rewrite
+      headline = await rewriteHeadline(item.title);
+      console.log('    Headline:', headline.slice(0, 60));
+
+      // Gemini → Groq 70B → RSS: full journalist article
+      storyResult = await generateStory(item, relatedContext);
+
+      // Rate-limit pause: Gemini free tier 15 RPM; 2.5s gap + API latency ≥ 4s
+      if (j < selected.length - 1) await sleep(2500);
+    }
 
     outputItems.push({
       id:          sectionId + '-' + Date.now() + '-' + j,
@@ -869,12 +853,9 @@ async function buildSection(sectionId, feedPool, meta) {
       publishedAt: item.publishedAt,
       expiresAt:   new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
       verified:    isCorroborated(item, allItems),
-      aiGenerated: true,
-      multiSource: (relatedContext.split('\n').length >= 2)
+      aiGenerated: !isRssOnly,
+      multiSource: relCtxLines >= 2
     });
-
-    // Rate-limit pause: Gemini free tier = 15 RPM (~4s/req). 2.5s gap + call time ≥ 4s.
-    if (j < selected.length - 1) await sleep(2500);
   }
 
   return { image: sectionImage, label: meta.label, accent: meta.accent, items: outputItems };

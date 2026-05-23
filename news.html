@@ -1568,10 +1568,13 @@ function openStory(item, meta) {
   // Build story content
   var storyHtml = '<h2 class="story-modal-headline" id="story-modal-headline">' + esc(item.headline) + '</h2>';
 
+  var badgeLabel = item.aiGenerated === false
+    ? 'Source report'
+    : 'AI-written article';
   storyHtml += '<div class="story-modal-meta">'
     + '<span>' + formatDate(item.publishedAt) + '</span>'
     + '<span class="story-modal-meta-sep">·</span>'
-    + '<span class="story-modal-ai-badge">AI-written article</span>'
+    + '<span class="story-modal-ai-badge">' + badgeLabel + '</span>'
     + '</div>';
 
   // Story body — item.story is already HTML (may contain classed <p> tags)
@@ -1584,10 +1587,10 @@ function openStory(item, meta) {
   storyHtml += '<div class="story-body">' + (storyContent || '<p>Full story unavailable.</p>') + '</div>';
 
   // Disclaimer
-  storyHtml += '<div class="story-modal-disclaimer">'
-    + 'AI-written news article. Facts cross-checked across multiple public sources. '
-    + 'Content is independently composed — not verbatim reproduction of original reporting.'
-    + '</div>';
+  var disclaimerText = item.aiGenerated === false
+    ? 'Source report. Headlines and summaries are directly from the original news source.'
+    : 'AI-written news article. Facts cross-checked across multiple public sources. Content is independently composed — not verbatim reproduction of original reporting.';
+  storyHtml += '<div class="story-modal-disclaimer">' + disclaimerText + '</div>';
 
   // Source link — hybrid: mobile=new tab, desktop=centered popup
   if (item.sourceUrl) {
