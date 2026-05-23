@@ -869,16 +869,30 @@ footer.news-footer{
   background:var(--card2);border-color:var(--border);color:var(--text2);
 }
 .nmw-area{
-  height:540px;background:var(--dark);
+  height:560px;background:var(--dark);
   position:relative;overflow:hidden;
 }
 .nmw-wrap{
   position:absolute;inset:0;
   flex-direction:column;
 }
+/* ── Screener market-selector bar ── */
+.nmw-screener-bar{
+  flex-shrink:0;display:flex;align-items:center;gap:8px;
+  padding:6px 10px;background:#060f1c;border-bottom:1px solid var(--border)
+}
+.nmw-screener-select{
+  flex:1;max-width:300px;background:var(--card);border:1px solid var(--border2);
+  color:var(--text);border-radius:7px;padding:5px 9px;
+  font-size:12px;font-weight:600;cursor:pointer;outline:none;
+  -webkit-appearance:none;appearance:none
+}
+.nmw-screener-select:focus{border-color:var(--burn2)}
+.nmw-screener-tv{flex:1;position:relative;overflow:hidden;min-height:0}
 @media(max-width:768px){
-  .nmw-area{height:420px}
+  .nmw-area{height:440px}
   .nmw-tab{font-size:11px;padding:5px 10px}
+  .nmw-screener-select{max-width:100%}
 }
 </style>
 </head>
@@ -1487,6 +1501,42 @@ var _NMW_CONFIGS = {
     cfg:{ width:'100%', height:'100%', colorTheme:'dark', isTransparent:false,
           locale:'en', importanceFilter:'-1,0,1',
           countryFilter:'ar,au,br,ca,cn,de,fr,gb,id,in,jp,kr,mx,ru,sa,tr,us,za' }
+  },
+  screener: {
+    label:'🔍 Stock Screener',
+    _custom: true
+  },
+  globalmarkets: {
+    label:'🌍 Global Markets',
+    src:'https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js',
+    cfg:{
+      colorTheme:'dark', dateRange:'1D', showChart:true, locale:'en',
+      width:'100%', height:'100%', isTransparent:false,
+      showSymbolLogo:true, showFloatingTooltip:false,
+      plotLineColorGrowing:'rgba(41,98,255,1)', plotLineColorFalling:'rgba(41,98,255,1)',
+      gridLineColor:'rgba(42,46,57,0)', scaleFontColor:'rgba(209,212,220,1)',
+      belowLineFillColorGrowing:'rgba(41,98,255,.12)', belowLineFillColorFalling:'rgba(41,98,255,.12)',
+      belowLineFillColorGrowingBottom:'rgba(41,98,255,0)', belowLineFillColorFallingBottom:'rgba(41,98,255,0)',
+      symbolActiveColor:'rgba(41,98,255,.12)',
+      tabs:[
+        { title:'Indices', symbols:[
+          {s:'OANDA:SPX500USD',d:'S&P 500'},{s:'CAPITALCOM:US100',d:'Nasdaq 100'},
+          {s:'OANDA:US30USD',d:'Dow Jones'},{s:'BSE:SENSEX',d:'Sensex'},
+          {s:'NSE:NIFTY50',d:'Nifty 50'},{s:'FOREXCOM:NISIT',d:'Nikkei 225'},
+          {s:'INDEX:DEU40',d:'DAX 40'},{s:'FOREXCOM:UKXGBP',d:'FTSE 100'},
+          {s:'INDEX:CAC40',d:'CAC 40'},{s:'INDEX:HSI',d:'Hang Seng'}
+        ]},
+        { title:'Commodities', symbols:[
+          {s:'CME_MINI:GC1!',d:'Gold'},{s:'NYMEX:CL1!',d:'Crude Oil'},
+          {s:'TVC:SILVER',d:'Silver'},{s:'NYMEX:NG1!',d:'Natural Gas'}
+        ]},
+        { title:'Currencies', symbols:[
+          {s:'FX:EURUSD',d:'EUR/USD'},{s:'FX:GBPUSD',d:'GBP/USD'},
+          {s:'FX:USDJPY',d:'USD/JPY'},{s:'FX_IDC:USDINR',d:'USD/INR'},
+          {s:'BITSTAMP:BTCUSD',d:'Bitcoin'}
+        ]}
+      ]
+    }
   }
 };
 
@@ -1528,9 +1578,13 @@ function nmwSwitch(key, btnEl) {
     if (w) w.style.display = (k === key) ? 'flex' : 'none';
   });
   _nmwCurrentKey = key;
-  // Lazy-inject widget
   var c = _NMW_CONFIGS[key];
-  if (c) _nmwInject('nmw-wrap-' + key, c.src, c.cfg);
+  if (!c) return;
+  if (c._custom && key === 'screener') {
+    _nmwInjectScreener('nmw-wrap-screener');
+  } else if (!c._custom) {
+    _nmwInject('nmw-wrap-' + key, c.src, c.cfg);
+  }
 }
 
 function buildMarketWidgetsBlock() {
@@ -1588,6 +1642,117 @@ function buildMarketWidgetsBlock() {
   })();
 
   return block;
+}
+
+/* ═══════════════════════════════════════════════════
+   SCREENER — market list + injection helpers
+═══════════════════════════════════════════════════ */
+var _NMW_SCREENER_MARKETS = [
+  { value:'america',      label:'🇺🇸 USA (NYSE / NASDAQ)' },
+  { value:'india',        label:'🇮🇳 India (BSE / NSE)' },
+  { value:'uk',           label:'🇬🇧 UK (LSE)' },
+  { value:'germany',      label:'🇩🇪 Germany (XETR)' },
+  { value:'france',       label:'🇫🇷 France' },
+  { value:'japan',        label:'🇯🇵 Japan (TSE)' },
+  { value:'australia',    label:'🇦🇺 Australia (ASX)' },
+  { value:'canada',       label:'🇨🇦 Canada (TSX)' },
+  { value:'brazil',       label:'🇧🇷 Brazil (BOVESPA)' },
+  { value:'hongkong',     label:'🇭🇰 Hong Kong (HKEX)' },
+  { value:'korea',        label:'🇰🇷 South Korea (KRX)' },
+  { value:'taiwan',       label:'🇹🇼 Taiwan (TWSE)' },
+  { value:'italy',        label:'🇮🇹 Italy (MIL)' },
+  { value:'spain',        label:'🇪🇸 Spain (BME)' },
+  { value:'singapore',    label:'🇸🇬 Singapore (SGX)' },
+  { value:'malaysia',     label:'🇲🇾 Malaysia (MYX)' },
+  { value:'indonesia',    label:'🇮🇩 Indonesia (IDX)' },
+  { value:'thailand',     label:'🇹🇭 Thailand (SET)' },
+  { value:'vietnam',      label:'🇻🇳 Vietnam (HNX)' },
+  { value:'philippines',  label:'🇵🇭 Philippines (PSE)' },
+  { value:'mexico',       label:'🇲🇽 Mexico (BMV)' },
+  { value:'turkey',       label:'🇹🇷 Turkey (BIST)' },
+  { value:'saudi_arabia', label:'🇸🇦 Saudi Arabia (TADAWUL)' },
+  { value:'uae',          label:'🇦🇪 UAE (DFM / ADX)' },
+  { value:'russia',       label:'🇷🇺 Russia (MOEX)' },
+  { value:'sweden',       label:'🇸🇪 Sweden (NASDAQ OMX)' },
+  { value:'switzerland',  label:'🇨🇭 Switzerland (SIX)' },
+  { value:'netherlands',  label:'🇳🇱 Netherlands (AEX)' },
+  { value:'norway',       label:'🇳🇴 Norway (OSE)' },
+  { value:'poland',       label:'🇵🇱 Poland (WSE)' },
+  { value:'israel',       label:'🇮🇱 Israel (TASE)' },
+  { value:'egypt',        label:'🇪🇬 Egypt (EGX)' },
+  { value:'pakistan',     label:'🇵🇰 Pakistan (PSX)' },
+  { value:'denmark',      label:'🇩🇰 Denmark (NASDAQ OMX)' },
+  { value:'finland',      label:'🇫🇮 Finland (NASDAQ OMX)' },
+  { value:'greece',       label:'🇬🇷 Greece (ATHEX)' },
+  { value:'portugal',     label:'🇵🇹 Portugal (EURONEXT)' },
+  { value:'new_zealand',  label:'🇳🇿 New Zealand (NZX)' },
+  { value:'colombia',     label:'🇨🇴 Colombia (BVC)' },
+  { value:'chile',        label:'🇨🇱 Chile (BCS)' },
+  { value:'argentina',    label:'🇦🇷 Argentina (BYMA)' },
+];
+
+function _nmwInjectScreener(wrapId) {
+  var wrap = document.getElementById(wrapId);
+  if (!wrap || wrap.dataset.nmwLoaded) return;
+  wrap.dataset.nmwLoaded = '1';
+  wrap.style.flexDirection = 'column';
+
+  var savedMkt = (function(){
+    try { return localStorage.getItem('nmw_screener_market') || 'india'; } catch(_){ return 'india'; }
+  })();
+
+  // ── Market selector bar ──
+  var bar = document.createElement('div');
+  bar.className = 'nmw-screener-bar';
+
+  var lbl = document.createElement('span');
+  lbl.style.cssText = 'font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.5px;white-space:nowrap';
+  lbl.textContent = '📊 Market:';
+  bar.appendChild(lbl);
+
+  var sel = document.createElement('select');
+  sel.className = 'nmw-screener-select';
+  _NMW_SCREENER_MARKETS.forEach(function(m) {
+    var opt = document.createElement('option');
+    opt.value = m.value; opt.textContent = m.label;
+    if (m.value === savedMkt) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.onchange = function() {
+    var mkt = this.value;
+    try { localStorage.setItem('nmw_screener_market', mkt); } catch(_){}
+    var tvFrame = wrap.querySelector('.nmw-screener-tv');
+    if (tvFrame) { tvFrame.innerHTML = ''; _nmwInjectScreenerWidget(tvFrame, mkt); }
+  };
+  bar.appendChild(sel);
+  wrap.appendChild(bar);
+
+  // ── Widget frame ──
+  var tvFrame = document.createElement('div');
+  tvFrame.className = 'nmw-screener-tv';
+  wrap.appendChild(tvFrame);
+  _nmwInjectScreenerWidget(tvFrame, savedMkt);
+}
+
+function _nmwInjectScreenerWidget(container, market) {
+  var tv = document.createElement('div');
+  tv.className = 'tradingview-widget-container';
+  tv.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column';
+  var wdg = document.createElement('div');
+  wdg.className = 'tradingview-widget-container__widget';
+  wdg.style.cssText = 'flex:1;min-height:0;width:100%';
+  tv.appendChild(wdg);
+  container.appendChild(tv);
+  var sc = document.createElement('script');
+  sc.type = 'text/javascript';
+  sc.src = 'https://s3.tradingview.com/external-embedding/embed-widget-screener.js';
+  sc.async = true;
+  sc.textContent = JSON.stringify({
+    width:'100%', height:'100%', defaultColumn:'overview',
+    defaultScreen:'general', market:market, showToolbar:true,
+    colorTheme:'dark', locale:'en', isTransparent:false
+  });
+  tv.appendChild(sc);
 }
 
 /* ═══════════════════════════════════════════════════

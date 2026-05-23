@@ -28,9 +28,10 @@ const BLOCKED_KEYWORDS = [
 ];
 
 const MAX_ITEMS_PER_SECTION = 6;
-const REQUEST_TIMEOUT_MS    = 15000;
+const REQUEST_TIMEOUT_MS    = 18000;
 // How many feeds to randomly pick from each section's pool each run
-const FEEDS_PER_SECTION     = 3;
+// (first entry in each pool is always included + N-1 random picks)
+const FEEDS_PER_SECTION     = 4;
 
 // ── Source pool ──────────────────────────────────────────────────────────────
 // Each section has a larger pool; FEEDS_PER_SECTION are picked at random each
@@ -39,69 +40,66 @@ const FEEDS_PER_SECTION     = 3;
 // actively searching — ideal as a "trending" signal.
 const SOURCE_POOL = {
 
+  // ── trending: Google News top-headlines as position-0 (always fetched) ──────
   trending: [
-    // Google Trends — real-time public interest signals
-    { url: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=IN', name: 'Google Trends India' },
-    { url: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=US', name: 'Google Trends US' },
-    // Google News Top Headlines
-    { url: 'https://news.google.com/rss/headlines/section/topic/HEADLINES?hl=en-IN&gl=IN&ceid=IN:en', name: 'Google News India' },
     { url: 'https://news.google.com/rss/headlines/section/topic/HEADLINES?hl=en-US&gl=US&ceid=US:en', name: 'Google News US' },
-    // High-traffic global sources
-    { url: 'https://feeds.bbci.co.uk/news/rss.xml',                  name: 'BBC News' },
+    { url: 'https://news.google.com/rss/headlines/section/topic/HEADLINES?hl=en-IN&gl=IN&ceid=IN:en', name: 'Google News India' },
+    { url: 'https://feeds.bbci.co.uk/news/rss.xml',                    name: 'BBC News' },
+    { url: 'https://apnews.com/rss',                                    name: 'AP News' },
     { url: 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml', name: 'NY Times' },
-    { url: 'https://www.theguardian.com/world/rss',                   name: 'The Guardian' },
-    { url: 'https://feeds.reuters.com/reuters/topNews',               name: 'Reuters' },
-    { url: 'https://apnews.com/rss',                                  name: 'AP News' },
-    { url: 'https://www.axios.com/feeds/feed.rss',                    name: 'Axios' },
+    { url: 'https://www.theguardian.com/world/rss',                     name: 'The Guardian' },
+    { url: 'https://www.axios.com/feeds/feed.rss',                      name: 'Axios' },
+    { url: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=US', name: 'Google Trends US' },
+    { url: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=IN', name: 'Google Trends India' },
   ],
 
+  // ── global: reliable world-news RSS, Google News world as anchor ────────────
   global: [
-    { url: 'https://feeds.bbci.co.uk/news/world/rss.xml',             name: 'BBC World' },
-    { url: 'https://www.aljazeera.com/xml/rss/all.xml',               name: 'Al Jazeera' },
-    { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',  name: 'NY Times World' },
-    { url: 'https://feeds.reuters.com/reuters/topNews',               name: 'Reuters' },
-    { url: 'https://apnews.com/rss',                                  name: 'AP News' },
-    { url: 'https://www.theguardian.com/international/rss',           name: 'The Guardian' },
-    { url: 'https://www.dw.com/rss/rss.xml',                          name: 'DW News' },
-    { url: 'https://www.euronews.com/rss',                            name: 'Euronews' },
-    { url: 'https://feeds.bbci.co.uk/news/business/rss.xml',          name: 'BBC Business' },
-    { url: 'https://www.nhk.or.jp/rss/news/cat0.xml',                 name: 'NHK World' },
-    { url: 'https://www.bangkokpost.com/rss/data/breakingnews.xml',   name: 'Bangkok Post' },
+    { url: 'https://news.google.com/rss/headlines/section/topic/WORLD?hl=en&gl=US&ceid=US:en', name: 'Google News World' },
+    { url: 'https://feeds.bbci.co.uk/news/world/rss.xml',               name: 'BBC World' },
+    { url: 'https://apnews.com/rss',                                     name: 'AP News' },
+    { url: 'https://www.aljazeera.com/xml/rss/all.xml',                  name: 'Al Jazeera' },
+    { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml',     name: 'NY Times World' },
+    { url: 'https://www.theguardian.com/international/rss',              name: 'The Guardian' },
+    { url: 'https://www.dw.com/rss/rss.xml',                             name: 'DW News' },
+    { url: 'https://feeds.bbci.co.uk/news/business/rss.xml',             name: 'BBC Business' },
+    { url: 'https://www.nhk.or.jp/rss/news/cat0.xml',                    name: 'NHK World' },
   ],
 
+  // ── india: Google India news as anchor, Indian publications as pool ──────────
   india: [
-    { url: 'https://www.thehindu.com/feeder/default.rss',                               name: 'The Hindu' },
-    { url: 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms',                name: 'Times of India' },
-    { url: 'https://feeds.feedburner.com/ndtvnews-top-stories',                         name: 'NDTV' },
-    { url: 'https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml',           name: 'Hindustan Times' },
-    { url: 'https://indianexpress.com/feed/',                                           name: 'Indian Express' },
-    { url: 'https://www.livemint.com/rss/news',                                         name: 'Mint' },
-    { url: 'https://www.businessstandard.com/rss/home_page_top_stories.rss',            name: 'Business Standard' },
     { url: 'https://news.google.com/rss/headlines/section/geo/India?hl=en-IN&gl=IN&ceid=IN:en', name: 'Google News India' },
-    { url: 'https://www.ndtv.com/rss/india',                                            name: 'NDTV India' },
-    { url: 'https://economictimes.indiatimes.com/news/india/rssfeeds/1466318837.cms',   name: 'ET India' },
+    { url: 'https://www.thehindu.com/feeder/default.rss',                                name: 'The Hindu' },
+    { url: 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms',                 name: 'Times of India' },
+    { url: 'https://indianexpress.com/feed/',                                            name: 'Indian Express' },
+    { url: 'https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml',            name: 'Hindustan Times' },
+    { url: 'https://www.livemint.com/rss/news',                                          name: 'Mint' },
+    { url: 'https://economictimes.indiatimes.com/news/india/rssfeeds/1466318837.cms',    name: 'ET India' },
+    { url: 'https://www.ndtv.com/rss/india',                                             name: 'NDTV India' },
+    { url: 'https://feeds.feedburner.com/ndtvnews-top-stories',                          name: 'NDTV Top' },
   ],
 
+  // ── stock: Google Finance/Business as anchor, financial publications as pool ─
   stock: [
-    { url: 'https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms',      name: 'ET Markets' },
-    { url: 'https://www.moneycontrol.com/rss/MCtopnews.xml',                            name: 'Moneycontrol' },
-    { url: 'https://www.livemint.com/rss/markets',                                      name: 'Mint Markets' },
-    { url: 'https://feeds.feedburner.com/ndtvprofit-latest',                            name: 'NDTV Profit' },
-    { url: 'https://www.businessstandard.com/rss/markets-106.rss',                      name: 'Business Standard' },
-    { url: 'https://economictimes.indiatimes.com/markets/stocks/rss.cms',               name: 'ET Stocks' },
-    { url: 'https://www.moneycontrol.com/rss/MCrecentnews.xml',                         name: 'Moneycontrol Latest' },
-    { url: 'https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-IN&gl=IN&ceid=IN:en', name: 'Google Finance News' },
-    { url: 'https://feeds.bbci.co.uk/news/business/rss.xml',                            name: 'BBC Business' },
-    { url: 'https://www.reuters.com/rssFeed/businessNews',                               name: 'Reuters Business' },
+    { url: 'https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-IN&gl=IN&ceid=IN:en', name: 'Google Finance India' },
+    { url: 'https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-US&gl=US&ceid=US:en', name: 'Google Finance US' },
+    { url: 'https://feeds.bbci.co.uk/news/business/rss.xml',                             name: 'BBC Business' },
+    { url: 'https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms',       name: 'ET Markets' },
+    { url: 'https://www.livemint.com/rss/markets',                                       name: 'Mint Markets' },
+    { url: 'https://economictimes.indiatimes.com/markets/stocks/rss.cms',                name: 'ET Stocks' },
+    { url: 'https://www.businessstandard.com/rss/markets-106.rss',                       name: 'Business Standard' },
+    { url: 'https://www.moneycontrol.com/rss/MCtopnews.xml',                             name: 'Moneycontrol' },
+    { url: 'https://feeds.feedburner.com/ndtvprofit-latest',                             name: 'NDTV Profit' },
   ],
 
+  // ── malayalam: Mathrubhumi is most reliable, rest as pool ───────────────────
   malayalam: [
     { url: 'https://www.mathrubhumi.com/rss/news.xml',                name: 'Mathrubhumi' },
     { url: 'https://www.manoramaonline.com/news/kerala.rssxml',       name: 'Manorama Online' },
+    { url: 'https://www.asianetnews.com/rss',                         name: 'Asianet News' },
+    { url: 'https://www.madhyamam.com/rss.xml',                       name: 'Madhyamam' },
     { url: 'https://www.deepika.com/rss.xml',                         name: 'Deepika Malayalam' },
     { url: 'https://www.marunadanmalayali.com/rss.xml',               name: 'Marunadan Malayali' },
-    { url: 'https://www.madhyamam.com/rss.xml',                       name: 'Madhyamam' },
-    { url: 'https://www.asianetnews.com/rss',                         name: 'Asianet News' },
   ],
 };
 
@@ -623,9 +621,12 @@ function mergeItems(newItems, existingItems) {
   var TWO_DAYS = 48 * 60 * 60 * 1000;
   var now = Date.now();
 
-  // Purge existing items older than 48 hours
+  // Purge existing items older than 48 hours AND strip any placeholder items
+  // so real stories can always replace them on the next successful fetch
   var validExisting = (existingItems || []).filter(function(item) {
-    if (!item || !item.publishedAt) return false;
+    if (!item || !item.publishedAt || !item.headline) return false;
+    var hl = item.headline.trim().toLowerCase();
+    if (hl.startsWith('content updating') || hl === 'placeholder' || hl === 'loading...') return false;
     return now - new Date(item.publishedAt).getTime() < TWO_DAYS;
   });
 
