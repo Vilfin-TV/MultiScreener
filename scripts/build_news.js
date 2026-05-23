@@ -111,14 +111,18 @@ const SOURCE_POOL = {
   ],
 
   // ── malayalam ───────────────────────────────────────────────────────────────
+  // Anchors (pos 0-1) MUST be sources that work from GitHub Actions (non-India IPs).
+  // Google News is geo-agnostic; YouTube Atom feeds are always accessible.
   malayalam: [
-    { url: 'https://www.mathrubhumi.com/rss/news.xml',                name: 'Mathrubhumi' },
-    { url: 'https://www.manoramaonline.com/news/kerala.rssxml',       name: 'Manorama Online' },
-    { url: 'https://www.asianetnews.com/rss',                         name: 'Asianet News' },
-    { url: 'https://www.madhyamam.com/rss.xml',                       name: 'Madhyamam' },
-    { url: 'https://www.deepika.com/rss.xml',                         name: 'Deepika Malayalam' },
-    { url: 'https://www.marunadanmalayali.com/rss.xml',               name: 'Marunadan Malayali' },
     { url: 'https://news.google.com/rss/headlines/section/geo/India?hl=ml&gl=IN&ceid=IN:ml', name: 'Google News Malayalam' },
+    { url: 'https://news.google.com/rss/search?q=kerala+news&hl=ml&gl=IN&ceid=IN:ml',        name: 'Google Kerala Search' },
+    { url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCt9NKhiheNmBUZYVe0igMlg',   name: 'Janam TV YT' },
+    { url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCbGkCBm7P6p3a7PGQRmMhsQ',   name: 'Asianet News YT' },
+    { url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCyhmnsZTNxF_lFr3lOcGgdQ',   name: 'Manorama News YT' },
+    { url: 'https://www.mathrubhumi.com/rss/news.xml',                                        name: 'Mathrubhumi' },
+    { url: 'https://www.asianetnews.com/rss',                                                 name: 'Asianet News' },
+    { url: 'https://www.manoramaonline.com/news/kerala.rssxml',                               name: 'Manorama Online' },
+    { url: 'https://www.madhyamam.com/rss.xml',                                               name: 'Madhyamam' },
   ],
 };
 
@@ -291,11 +295,11 @@ function processBlock(block, items) {
     if (am) link = am[1];
   }
 
+  // Decode entities FIRST so &lt;ol&gt; → <ol>, then strip the decoded tags cleanly
   var description = decodeEntities(
-    (extractTagValue(block, 'description') || extractTagValue(block, 'summary') ||
-     extractTagValue(block, 'media:description') || extractTagValue(block, 'content'))
-      .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
-  ).slice(0, 500);
+    extractTagValue(block, 'description') || extractTagValue(block, 'summary') ||
+    extractTagValue(block, 'media:description') || extractTagValue(block, 'content')
+  ).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 500);
 
   var pubDate = extractTagValue(block, 'pubDate') || extractTagValue(block, 'published')
     || extractTagValue(block, 'updated') || extractTagValue(block, 'dc:date');
@@ -375,9 +379,9 @@ function gatherRelatedContext(item, allItems) {
 }
 
 /* ═══════════════════════════════════════════════════
-   GEMINI API
+   GEMINI API — with 429 / quota retry (1 back-off)
 ═══════════════════════════════════════════════════ */
-async function callGemini(prompt) {
+async function callGemini(prompt, attempt) {
   if (!GOOGLE_AI_API_KEY) throw new Error('No GOOGLE_AI_API_KEY');
 
   var body = JSON.stringify({
@@ -391,22 +395,44 @@ async function callGemini(prompt) {
   });
 
   var apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + GOOGLE_AI_API_KEY;
-  var response = await httpsGet(apiUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
-    body
-  });
+
+  var response;
+  try {
+    response = await httpsGet(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+      body
+    });
+  } catch (e) {
+    if (!attempt && (e.message.includes('429') || e.message.includes('503'))) {
+      console.warn('    [Gemini 429/503] Rate limit — waiting 25s then retry');
+      await sleep(25000);
+      return callGemini(prompt, 1);
+    }
+    throw e;
+  }
 
   var parsed = JSON.parse(response);
+  // Gemini may return 200 with an error body (quota exceeded)
+  if (parsed.error) {
+    var code = parsed.error.code || 0;
+    if (!attempt && (code === 429 || code === 503 || code === 500)) {
+      console.warn('    [Gemini error ' + code + '] ' + (parsed.error.message || '') + ' — waiting 25s');
+      await sleep(25000);
+      return callGemini(prompt, 1);
+    }
+    throw new Error('Gemini: ' + (parsed.error.message || 'API error ' + code));
+  }
+
   var text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error('Gemini: empty or blocked response');
   return text.trim();
 }
 
 /* ═══════════════════════════════════════════════════
-   GROQ API — article-length (70B model)
+   GROQ API — article-length (70B model), 429 retry
 ═══════════════════════════════════════════════════ */
-async function callGroq(prompt) {
+async function callGroq(prompt, attempt) {
   if (!GROQ_API_KEY) throw new Error('No GROQ_API_KEY');
 
   var body = JSON.stringify({
@@ -416,17 +442,38 @@ async function callGroq(prompt) {
     temperature: 0.55
   });
 
-  var response = await httpsGet('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization':  'Bearer ' + GROQ_API_KEY,
-      'Content-Type':   'application/json',
-      'Content-Length': Buffer.byteLength(body)
-    },
-    body
-  });
+  var response;
+  try {
+    response = await httpsGet('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization':  'Bearer ' + GROQ_API_KEY,
+        'Content-Type':   'application/json',
+        'Content-Length': Buffer.byteLength(body)
+      },
+      body
+    });
+  } catch (e) {
+    if (!attempt && e.message.includes('429')) {
+      console.warn('    [Groq 70B 429] Rate limited — waiting 20s');
+      await sleep(20000);
+      return callGroq(prompt, 1);
+    }
+    throw e;
+  }
 
   var parsed = JSON.parse(response);
+  if (parsed.error) {
+    var isRateLimit = parsed.error.type === 'rate_limit_exceeded'
+      || (parsed.error.message || '').toLowerCase().includes('rate');
+    if (!attempt && isRateLimit) {
+      console.warn('    [Groq 70B rate limit]', parsed.error.message || '' , '— waiting 20s');
+      await sleep(20000);
+      return callGroq(prompt, 1);
+    }
+    throw new Error('Groq: ' + (parsed.error.message || 'API error'));
+  }
+
   var text = parsed?.choices?.[0]?.message?.content;
   if (!text) throw new Error('Groq: empty response');
   return text.trim();
@@ -826,8 +873,8 @@ async function buildSection(sectionId, feedPool, meta) {
       multiSource: (relatedContext.split('\n').length >= 2)
     });
 
-    // Gentle rate-limit pause between AI calls
-    if (j < selected.length - 1) await sleep(1200);
+    // Rate-limit pause: Gemini free tier = 15 RPM (~4s/req). 2.5s gap + call time ≥ 4s.
+    if (j < selected.length - 1) await sleep(2500);
   }
 
   return { image: sectionImage, label: meta.label, accent: meta.accent, items: outputItems };

@@ -1346,7 +1346,9 @@ function renderSection(sectionId, sectionData, meta) {
   var hero = items[0];
   var heroIdx = _cacheStory(hero, meta);
   var heroHtml = '<div class="news-hero-card" onclick="openStoryIdx(' + heroIdx + ')" role="button" tabindex="0" aria-label="' + esc(hero.headline) + '">'
-    + '<img class="news-hero-img" src="' + escAttr(heroImage) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+    + '<img class="news-hero-img" src="' + escAttr(heroImage) + '" alt="" loading="lazy"'
+    + ' data-fallback="' + escAttr(meta.image) + '"'
+    + ' onerror="if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}else{this.style.display=\'none\';}">'
     + '<div class="news-hero-gradient"></div>'
     + '<div class="news-hero-body">'
     + '<div class="news-hero-headline">' + esc(hero.headline) + '</div>'
@@ -1426,10 +1428,10 @@ function openStory(item, meta) {
     + '<span class="story-modal-ai-badge">AI-written article</span>'
     + '</div>';
 
-  // Story body
+  // Story body — item.story is already HTML (may contain classed <p> tags)
   var storyContent = item.story || item.teaser || '';
-  // If story is plain text, wrap in paragraphs
-  if (storyContent && !storyContent.includes('<p>')) {
+  // Only wrap as plain text if there are NO HTML tags at all in the content
+  if (storyContent && !/<[a-zA-Z]/.test(storyContent)) {
     storyContent = storyContent.split('\n').filter(function(l){ return l.trim(); })
       .map(function(l){ return '<p>' + esc(l) + '</p>'; }).join('');
   }
