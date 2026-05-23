@@ -607,6 +607,151 @@ body{
   .story-body .story-sub-bullets li{background:rgba(0,0,0,.03);border-color:rgba(100,116,139,.25)}
 }
 
+/* ═══════════════════════════════════════════════
+   WORLD NEWS SECTION  — list-based compact layout
+═══════════════════════════════════════════════ */
+.world-news-wrap{padding:0 0 40px 0}
+.world-section-hdr{
+  display:flex;align-items:center;gap:8px;
+  padding:20px 0 10px;
+  border-bottom:1px solid var(--border2);
+  margin-bottom:0;
+  position:sticky;top:0;z-index:2;
+  background:var(--bg);
+}
+.world-section-hdr-flag{font-size:22px;line-height:1;flex-shrink:0}
+.world-section-hdr-info{flex:1;min-width:0}
+.world-section-hdr-name{
+  font-size:14px;font-weight:700;color:var(--text);line-height:1.2;
+}
+.world-section-hdr-lang{
+  font-size:11px;color:var(--text3);
+  display:inline-block;margin-top:2px;
+}
+.world-section-hdr-count{
+  font-size:11px;color:var(--text3);white-space:nowrap;
+  background:rgba(255,255,255,.06);padding:3px 9px;border-radius:20px;
+}
+.world-region-card{
+  background:var(--card2);
+  border-radius:12px;
+  border:1px solid var(--border);
+  overflow:hidden;
+  margin-bottom:16px;
+}
+.world-region-header{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 16px;
+  background:rgba(255,255,255,.03);
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.world-region-flag{font-size:20px;flex-shrink:0}
+.world-region-name{font-size:13px;font-weight:700;color:var(--text)}
+.world-region-lang{
+  font-size:10px;color:var(--text3);
+  background:rgba(255,255,255,.07);padding:2px 8px;border-radius:20px;
+  font-weight:600;letter-spacing:.3px;
+}
+.world-region-badge{
+  font-size:10px;color:var(--text3);margin-left:auto;white-space:nowrap;
+}
+.world-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:11px 16px;
+  border-bottom:1px solid rgba(255,255,255,.04);
+  cursor:pointer;transition:background .12s;
+}
+.world-item:last-child{border-bottom:none}
+.world-item:hover{background:rgba(255,255,255,.05)}
+.world-item-body{flex:1;min-width:0}
+.world-item-headline{
+  font-size:13.5px;line-height:1.55;
+  color:var(--text);font-weight:500;
+  margin-bottom:4px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.world-item-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.world-item-source{
+  font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+}
+.world-item-time{font-size:10.5px;color:var(--text3)}
+.world-item-arrow{
+  font-size:13px;color:var(--text3);flex-shrink:0;
+  opacity:0;transition:opacity .12s;padding-top:2px;
+}
+.world-item:hover .world-item-arrow{opacity:1}
+.world-empty{
+  padding:32px 20px;text-align:center;
+  color:var(--text3);font-size:13px;
+}
+
+/* World popup modal */
+.world-modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.72);
+  z-index:10100;
+  display:none;align-items:center;justify-content:center;
+  padding:16px;
+}
+.world-modal-overlay.active{display:flex}
+.world-modal{
+  background:var(--card);
+  border-radius:16px;border:1px solid var(--border2);
+  max-width:560px;width:100%;
+  max-height:88vh;display:flex;flex-direction:column;
+  box-shadow:0 24px 80px rgba(0,0,0,.65);
+  overflow:hidden;
+}
+.world-modal-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px;border-bottom:1px solid var(--border);
+  gap:10px;
+}
+.world-modal-source-pill{
+  display:flex;align-items:center;gap:7px;
+  font-size:12px;font-weight:700;color:#fff;
+  padding:4px 12px;border-radius:20px;
+}
+.world-modal-source-flag{font-size:16px}
+.world-modal-close{
+  background:rgba(255,255,255,.07);border:none;cursor:pointer;
+  border-radius:8px;color:var(--text);font-size:18px;
+  width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+  transition:background .15s;flex-shrink:0;font-family:inherit;
+}
+.world-modal-close:hover{background:rgba(255,255,255,.15)}
+.world-modal-body{
+  padding:20px 24px;overflow-y:auto;flex:1;
+}
+.world-modal-body::-webkit-scrollbar{width:4px}
+.world-modal-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.world-modal-headline{
+  font-size:20px;line-height:1.5;font-weight:700;
+  color:var(--text);margin-bottom:14px;
+  font-family:'Playfair Display',Georgia,serif;
+}
+.world-modal-teaser{
+  font-size:15px;line-height:1.8;color:var(--text2);
+}
+.world-modal-ftr{
+  padding:14px 24px;border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.world-modal-read-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:9px 20px;border-radius:8px;
+  background:linear-gradient(135deg,var(--burn,#2563eb),var(--burn2,#1d4ed8));
+  color:#fff;text-decoration:none;font-size:13px;font-weight:700;
+  transition:all .15s;border:none;cursor:pointer;font-family:inherit;
+}
+.world-modal-read-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(37,99,235,.4)}
+.world-modal-time{font-size:12px;color:var(--text3)}
+@media(max-width:600px){
+  .world-modal-headline{font-size:17px}
+  .world-modal-body{padding:16px 18px}
+  .world-modal-ftr{padding:12px 18px}
+}
+
 .story-modal-disclaimer{
   background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);
   border-radius:8px;padding:12px 16px;margin-bottom:20px;
@@ -1052,6 +1197,7 @@ footer.news-footer{
       <a class="news-nav-link" href="#india">🇮🇳 India</a>
       <a class="news-nav-link" href="#stock">📈 Stock</a>
       <a class="news-nav-link" href="#malayalam">🎭 Malayalam</a>
+      <a class="news-nav-link" href="#world">🌐 World</a>
     </div>
     <!-- SEARCH BOX -->
     <div class="news-search-wrap">
@@ -1676,20 +1822,32 @@ var _NMW_CONFIGS = {
       symbolActiveColor:'rgba(41,98,255,.12)',
       tabs:[
         { title:'Indices', symbols:[
-          {s:'OANDA:SPX500USD',d:'S&P 500'},{s:'CAPITALCOM:US100',d:'Nasdaq 100'},
-          {s:'OANDA:US30USD',d:'Dow Jones'},{s:'BSE:SENSEX',d:'Sensex'},
-          {s:'NSE:NIFTY50',d:'Nifty 50'},{s:'FOREXCOM:NISIT',d:'Nikkei 225'},
-          {s:'INDEX:DEU40',d:'DAX 40'},{s:'FOREXCOM:UKXGBP',d:'FTSE 100'},
-          {s:'INDEX:CAC40',d:'CAC 40'},{s:'INDEX:HSI',d:'Hang Seng'}
+          {s:'BSE:SENSEX',d:'SENSEX'},{s:'TVC:NIFTY',d:'NIFTY 50'},
+          {s:'BSE:BANK',d:'Bank Nifty'},
+          {s:'CAPITALCOM:US100',d:'Nasdaq 100'},{s:'OANDA:SPX500USD',d:'S&P 500'},
+          {s:'OANDA:US30USD',d:'Dow Jones'},{s:'INDEX:NKY',d:'Nikkei 225'},
+          {s:'HSI:HSI',d:'Hang Seng'},{s:'XETR:DAX',d:'DAX'},
+          {s:'OANDA:UK100GBP',d:'FTSE 100'}
+        ]},
+        { title:'Global Stocks', symbols:[
+          {s:'NASDAQ:AAPL',d:'Apple'},{s:'NASDAQ:MSFT',d:'Microsoft'},
+          {s:'NASDAQ:NVDA',d:'NVIDIA'},{s:'NASDAQ:TSLA',d:'Tesla'},
+          {s:'BSE:RELIANCE',d:'Reliance'},{s:'BSE:TCS',d:'TCS'},
+          {s:'BSE:HDFCBANK',d:'HDFC Bank'},{s:'BSE:INFY',d:'Infosys'}
         ]},
         { title:'Commodities', symbols:[
-          {s:'CME_MINI:GC1!',d:'Gold'},{s:'NYMEX:CL1!',d:'Crude Oil'},
-          {s:'TVC:SILVER',d:'Silver'},{s:'NYMEX:NG1!',d:'Natural Gas'}
+          {s:'TVC:GOLD',d:'Gold'},{s:'TVC:SILVER',d:'Silver'},
+          {s:'NYMEX:CL1!',d:'Crude Oil WTI'},{s:'TVC:UKOIL',d:'Brent Oil'},
+          {s:'CAPITALCOM:COPPER',d:'Copper'},{s:'CAPITALCOM:NATURALGAS',d:'Natural Gas'}
         ]},
-        { title:'Currencies', symbols:[
-          {s:'FX:EURUSD',d:'EUR/USD'},{s:'FX:GBPUSD',d:'GBP/USD'},
-          {s:'FX:USDJPY',d:'USD/JPY'},{s:'FX_IDC:USDINR',d:'USD/INR'},
-          {s:'BITSTAMP:BTCUSD',d:'Bitcoin'}
+        { title:'Bonds', symbols:[
+          {s:'US10Y',d:'US 10Y'},{s:'IN10Y',d:'India 10Y'},
+          {s:'US02Y',d:'US 2Y'},{s:'DE10Y',d:'Germany 10Y'}
+        ]},
+        { title:'Forex', symbols:[
+          {s:'FX:USDINR',d:'USD/INR'},{s:'FX:EURUSD',d:'EUR/USD'},
+          {s:'FX:GBPUSD',d:'GBP/USD'},{s:'FX:USDJPY',d:'USD/JPY'},
+          {s:'FX:AUDUSD',d:'AUD/USD'}
         ]}
       ]
     }
@@ -1702,20 +1860,34 @@ var _NMW_CONFIGS = {
 var _NMW_GM_LS = 'nmw_globalmarkets_tabs';
 var _NMW_GM_DEFAULT_TABS = [
   { title:'Indices', symbols:[
-    {s:'OANDA:SPX500USD',d:'S&P 500'},{s:'CAPITALCOM:US100',d:'Nasdaq 100'},
-    {s:'OANDA:US30USD',d:'Dow Jones'},{s:'BSE:SENSEX',d:'Sensex'},
-    {s:'NSE:NIFTY50',d:'Nifty 50'},{s:'FOREXCOM:NISIT',d:'Nikkei 225'},
-    {s:'INDEX:DEU40',d:'DAX 40'},{s:'FOREXCOM:UKXGBP',d:'FTSE 100'},
-    {s:'INDEX:CAC40',d:'CAC 40'},{s:'INDEX:HSI',d:'Hang Seng'}
+    {s:'BSE:SENSEX',d:'SENSEX'},{s:'TVC:NIFTY',d:'NIFTY 50'},
+    {s:'BSE:BANK',d:'Bank Nifty'},
+    {s:'CAPITALCOM:US100',d:'Nasdaq 100'},{s:'OANDA:SPX500USD',d:'S&P 500'},
+    {s:'OANDA:US30USD',d:'Dow Jones'},{s:'INDEX:NKY',d:'Nikkei 225'},
+    {s:'HSI:HSI',d:'Hang Seng'},{s:'XETR:DAX',d:'DAX'},
+    {s:'OANDA:UK100GBP',d:'FTSE 100'}
+  ]},
+  { title:'Global Stocks', symbols:[
+    {s:'NASDAQ:AAPL',d:'Apple'},{s:'NASDAQ:MSFT',d:'Microsoft'},
+    {s:'NASDAQ:NVDA',d:'NVIDIA'},{s:'NASDAQ:TSLA',d:'Tesla'},
+    {s:'BSE:RELIANCE',d:'Reliance'},{s:'BSE:TCS',d:'TCS'},
+    {s:'BSE:HDFCBANK',d:'HDFC Bank'},{s:'BSE:INFY',d:'Infosys'},
+    {s:'TSE:7203',d:'Toyota'},{s:'TSE:6758',d:'Sony'}
   ]},
   { title:'Commodities', symbols:[
-    {s:'CME_MINI:GC1!',d:'Gold'},{s:'NYMEX:CL1!',d:'Crude Oil'},
-    {s:'TVC:SILVER',d:'Silver'},{s:'NYMEX:NG1!',d:'Natural Gas'}
+    {s:'TVC:GOLD',d:'Gold'},{s:'TVC:SILVER',d:'Silver'},
+    {s:'NYMEX:CL1!',d:'Crude Oil WTI'},{s:'TVC:UKOIL',d:'Brent Oil'},
+    {s:'CAPITALCOM:COPPER',d:'Copper'},{s:'CAPITALCOM:NATURALGAS',d:'Natural Gas'},
+    {s:'CAPITALCOM:ALUMINUM',d:'Aluminium'}
   ]},
-  { title:'Currencies', symbols:[
-    {s:'FX:EURUSD',d:'EUR/USD'},{s:'FX:GBPUSD',d:'GBP/USD'},
-    {s:'FX:USDJPY',d:'USD/JPY'},{s:'FX_IDC:USDINR',d:'USD/INR'},
-    {s:'BITSTAMP:BTCUSD',d:'Bitcoin'}
+  { title:'Bonds', symbols:[
+    {s:'US10Y',d:'US 10Y'},{s:'IN10Y',d:'India 10Y'},
+    {s:'US02Y',d:'US 2Y'},{s:'DE10Y',d:'Germany 10Y'}
+  ]},
+  { title:'Forex', symbols:[
+    {s:'FX:USDINR',d:'USD/INR'},{s:'FX:EURUSD',d:'EUR/USD'},
+    {s:'FX:GBPUSD',d:'GBP/USD'},{s:'FX:USDJPY',d:'USD/JPY'},
+    {s:'FX:AUDUSD',d:'AUD/USD'}
   ]}
 ];
 var _nmwGMEditState = { tabs: null, activeTabIdx: 0 };
@@ -2139,6 +2311,9 @@ async function loadNewsPage() {
     }
   });
 
+  // World News section — separate data source, loaded in parallel
+  loadWorldSection(container);
+
   // Update meta chips
   if (data && data.generated) {
     document.getElementById('last-updated-time').textContent = timeAgo(data.generated);
@@ -2149,11 +2324,153 @@ async function loadNewsPage() {
 }
 
 /* ═══════════════════════════════════════════════════
+   WORLD NEWS — load, render, popup
+═══════════════════════════════════════════════════ */
+var _worldStoryCache = [];
+
+function _wTimeAgo(iso) {
+  if (!iso) return '';
+  var diff = Date.now() - new Date(iso).getTime();
+  var m = Math.floor(diff / 60000);
+  if (m < 1)  return 'just now';
+  if (m < 60) return m + 'm ago';
+  var h = Math.floor(m / 60);
+  if (h < 24) return h + 'h ago';
+  return Math.floor(h / 24) + 'd ago';
+}
+
+function openWorldStory(idx) {
+  var item = _worldStoryCache[idx];
+  if (!item) return;
+  var overlay = document.getElementById('world-modal-overlay');
+  var pillEl  = document.getElementById('world-modal-source-pill');
+  var headEl  = document.getElementById('world-modal-headline');
+  var teasEl  = document.getElementById('world-modal-teaser');
+  var readBtn = document.getElementById('world-modal-read-btn');
+  var timeEl  = document.getElementById('world-modal-time');
+
+  pillEl.style.background = item._accent || '#3b82f6';
+  pillEl.innerHTML = '<span class="world-modal-source-flag">' + (item._flag || '') + '</span>'
+    + esc(item.source || '');
+  headEl.textContent  = item.headline || '';
+  teasEl.textContent  = item.teaser   || 'No summary available.';
+  readBtn.href        = item.url      || '#';
+  timeEl.textContent  = _wTimeAgo(item.publishedAt);
+
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeWorldStory() {
+  var overlay = document.getElementById('world-modal-overlay');
+  if (overlay) { overlay.classList.remove('active'); document.body.style.overflow = ''; }
+}
+
+function renderWorldSection(data, container) {
+  var wrap = document.createElement('div');
+  wrap.id = 'world';
+  wrap.className = 'world-news-wrap';
+
+  // Section header
+  var sh = document.createElement('div');
+  sh.className = 'news-section-header';
+  sh.innerHTML = '<span class="news-section-icon">🌐</span>'
+    + '<span class="news-section-name">World News</span>'
+    + '<span class="news-section-badge">' + (data && data.regions ? data.regions.length : 0) + ' regions</span>';
+  wrap.appendChild(sh);
+
+  if (!data || !data.regions || data.regions.length === 0) {
+    var emp = document.createElement('div');
+    emp.className = 'news-placeholder';
+    emp.innerHTML = '<div class="news-placeholder-icon">🌐</div>'
+      + '<div class="news-placeholder-text">World headlines loading…</div>'
+      + '<div class="news-placeholder-sub">Headlines from 25+ countries refresh every 3 hours.</div>';
+    wrap.appendChild(emp);
+    container.appendChild(wrap);
+    return;
+  }
+
+  data.regions.forEach(function(region) {
+    var card = document.createElement('div');
+    card.className = 'world-region-card';
+
+    var hdr = document.createElement('div');
+    hdr.className = 'world-region-header';
+    hdr.innerHTML = '<span class="world-region-flag">' + (region.flag || '') + '</span>'
+      + '<span class="world-region-name">' + esc(region.name || '') + '</span>'
+      + '<span class="world-region-lang">' + esc(region.language || '') + '</span>'
+      + '<span class="world-region-badge">' + (region.items ? region.items.length : 0) + ' stories</span>';
+    card.appendChild(hdr);
+
+    (region.items || []).forEach(function(item) {
+      var idx = _worldStoryCache.length;
+      _worldStoryCache.push(Object.assign({}, item, { _flag: region.flag, _accent: region.accent }));
+
+      var row = document.createElement('div');
+      row.className = 'world-item';
+      row.setAttribute('role', 'button');
+      row.setAttribute('tabindex', '0');
+      row.setAttribute('aria-label', item.headline || '');
+      row.onclick = (function(i){ return function(){ openWorldStory(i); }; })(idx);
+      row.onkeydown = (function(i){ return function(e){ if (e.key==='Enter'||e.key===' ') openWorldStory(i); }; })(idx);
+
+      var sourceDot = '<span class="world-item-source" style="color:' + (region.accent || '#3b82f6') + '">'
+        + esc(item.source || '') + '</span>';
+
+      row.innerHTML = '<div class="world-item-body">'
+        + '<div class="world-item-headline">' + esc(item.headline || '') + '</div>'
+        + '<div class="world-item-meta">' + sourceDot
+        + '<span class="world-item-time">' + _wTimeAgo(item.publishedAt) + '</span>'
+        + '</div>'
+        + '</div>'
+        + '<span class="world-item-arrow">›</span>';
+      card.appendChild(row);
+    });
+
+    wrap.appendChild(card);
+  });
+
+  container.appendChild(wrap);
+}
+
+async function loadWorldSection(container) {
+  var data = null;
+  try {
+    var resp = await fetch('data/world.json?_=' + Date.now());
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    data = await resp.json();
+  } catch(e) {
+    console.warn('World data unavailable:', e.message);
+  }
+  renderWorldSection(data, container);
+}
+
+/* ═══════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', function() {
   loadNewsPage();
 });
 </script>
+
+<!-- World News popup modal -->
+<div class="world-modal-overlay" id="world-modal-overlay" onclick="if(event.target===this)closeWorldStory()">
+  <div class="world-modal" id="world-modal">
+    <div class="world-modal-hdr">
+      <span class="world-modal-source-pill" id="world-modal-source-pill">Source</span>
+      <button class="world-modal-close" onclick="closeWorldStory()" title="Close">✕</button>
+    </div>
+    <div class="world-modal-body">
+      <h2 class="world-modal-headline" id="world-modal-headline"></h2>
+      <p class="world-modal-teaser" id="world-modal-teaser"></p>
+    </div>
+    <div class="world-modal-ftr">
+      <a class="world-modal-read-btn" id="world-modal-read-btn" href="#" target="_blank" rel="noopener noreferrer">
+        Read Full Story ↗
+      </a>
+      <span class="world-modal-time" id="world-modal-time"></span>
+    </div>
+  </div>
+</div>
 </body>
 </html>
