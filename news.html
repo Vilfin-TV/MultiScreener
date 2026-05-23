@@ -1895,63 +1895,7 @@ var _NMW_CONFIGS = {
   },
   marketquotes: {
     label:'📋 Market Quotes',
-    src:'https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js',
-    cfg:{
-      width:'100%', height:'100%', colorTheme:'dark', isTransparent:false,
-      locale:'en', showSymbolLogo:true,
-      symbolsGroups:[
-        {
-          name:'Indices', originalName:'Indices',
-          symbols:[
-            {name:'BSE:SENSEX',       displayName:'SENSEX'},
-            {name:'TVC:NIFTY',        displayName:'NIFTY 50'},
-            {name:'BSE:BANK',         displayName:'Bank Nifty'},
-            {name:'OANDA:SPX500USD',  displayName:'S&P 500'},
-            {name:'CAPITALCOM:US100', displayName:'Nasdaq 100'},
-            {name:'OANDA:US30USD',    displayName:'Dow Jones'},
-            {name:'INDEX:NKY',        displayName:'Nikkei 225'},
-            {name:'HSI:HSI',          displayName:'Hang Seng'},
-            {name:'XETR:DAX',         displayName:'DAX'},
-            {name:'OANDA:UK100GBP',   displayName:'FTSE 100'}
-          ]
-        },
-        {
-          name:'Commodities', originalName:'Commodities',
-          symbols:[
-            {name:'TVC:GOLD',              displayName:'Gold'},
-            {name:'TVC:SILVER',            displayName:'Silver'},
-            {name:'NYMEX:CL1!',            displayName:'Crude Oil WTI'},
-            {name:'TVC:UKOIL',             displayName:'Brent Oil'},
-            {name:'CAPITALCOM:COPPER',     displayName:'Copper'},
-            {name:'CAPITALCOM:NATURALGAS', displayName:'Natural Gas'}
-          ]
-        },
-        {
-          name:'Forex', originalName:'Forex',
-          symbols:[
-            {name:'FX:USDINR',  displayName:'USD/INR'},
-            {name:'FX:EURUSD',  displayName:'EUR/USD'},
-            {name:'FX:GBPUSD',  displayName:'GBP/USD'},
-            {name:'FX:USDJPY',  displayName:'USD/JPY'},
-            {name:'FX:AUDUSD',  displayName:'AUD/USD'},
-            {name:'FX:USDCNY',  displayName:'USD/CNY'}
-          ]
-        },
-        {
-          name:'Global Stocks', originalName:'Global Stocks',
-          symbols:[
-            {name:'NASDAQ:AAPL',    displayName:'Apple'},
-            {name:'NASDAQ:MSFT',    displayName:'Microsoft'},
-            {name:'NASDAQ:NVDA',    displayName:'NVIDIA'},
-            {name:'NASDAQ:TSLA',    displayName:'Tesla'},
-            {name:'BSE:RELIANCE',   displayName:'Reliance'},
-            {name:'BSE:TCS',        displayName:'TCS'},
-            {name:'BSE:HDFCBANK',   displayName:'HDFC Bank'},
-            {name:'BSE:INFY',       displayName:'Infosys'}
-          ]
-        }
-      ]
-    }
+    _custom: true
   }
 };
 
@@ -2151,6 +2095,229 @@ function _nmwGMApply() {
   if (tvWrap) _nmwInjectGMWidget(tvWrap, _nmwGMGetTabs());
 }
 
+/* ═══════════════════════════════════════════════════
+   MARKET QUOTES — custom injection + symbol editor
+═══════════════════════════════════════════════════ */
+var _NMW_MQ_LS = 'nmw_mq_groups';
+var _NMW_MQ_DEFAULT_GROUPS = [
+  { name:'Indices', originalName:'Indices', symbols:[
+    {name:'BSE:SENSEX',       displayName:'SENSEX'},
+    {name:'TVC:NIFTY',        displayName:'NIFTY 50'},
+    {name:'BSE:BANK',         displayName:'Bank Nifty'},
+    {name:'OANDA:SPX500USD',  displayName:'S&P 500'},
+    {name:'CAPITALCOM:US100', displayName:'Nasdaq 100'},
+    {name:'OANDA:US30USD',    displayName:'Dow Jones'},
+    {name:'INDEX:NKY',        displayName:'Nikkei 225'},
+    {name:'HSI:HSI',          displayName:'Hang Seng'},
+    {name:'XETR:DAX',         displayName:'DAX'},
+    {name:'OANDA:UK100GBP',   displayName:'FTSE 100'}
+  ]},
+  { name:'Commodities', originalName:'Commodities', symbols:[
+    {name:'TVC:GOLD',              displayName:'Gold'},
+    {name:'TVC:SILVER',            displayName:'Silver'},
+    {name:'NYMEX:CL1!',            displayName:'Crude Oil WTI'},
+    {name:'TVC:UKOIL',             displayName:'Brent Oil'},
+    {name:'CAPITALCOM:COPPER',     displayName:'Copper'},
+    {name:'CAPITALCOM:NATURALGAS', displayName:'Natural Gas'}
+  ]},
+  { name:'Forex', originalName:'Forex', symbols:[
+    {name:'FX:USDINR', displayName:'USD/INR'},
+    {name:'FX:EURUSD', displayName:'EUR/USD'},
+    {name:'FX:GBPUSD', displayName:'GBP/USD'},
+    {name:'FX:USDJPY', displayName:'USD/JPY'},
+    {name:'FX:AUDUSD', displayName:'AUD/USD'},
+    {name:'FX:USDCNY', displayName:'USD/CNY'}
+  ]},
+  { name:'Global Stocks', originalName:'Global Stocks', symbols:[
+    {name:'NASDAQ:AAPL',  displayName:'Apple'},
+    {name:'NASDAQ:MSFT',  displayName:'Microsoft'},
+    {name:'NASDAQ:NVDA',  displayName:'NVIDIA'},
+    {name:'NASDAQ:TSLA',  displayName:'Tesla'},
+    {name:'BSE:RELIANCE', displayName:'Reliance'},
+    {name:'BSE:TCS',      displayName:'TCS'},
+    {name:'BSE:HDFCBANK', displayName:'HDFC Bank'},
+    {name:'BSE:INFY',     displayName:'Infosys'}
+  ]}
+];
+var _nmwMQEditState = { groups: null, activeGroupIdx: 0 };
+
+function _nmwMQGetGroups() {
+  try {
+    var s = localStorage.getItem(_NMW_MQ_LS);
+    if (s) { var g = JSON.parse(s); if (Array.isArray(g) && g.length) return g; }
+  } catch(_) {}
+  return JSON.parse(JSON.stringify(_NMW_MQ_DEFAULT_GROUPS));
+}
+
+function _nmwInjectMQWidget(container, groups) {
+  container.innerHTML = '';
+  var cfg = {
+    width:'100%', height:'100%', colorTheme:'dark', isTransparent:false,
+    locale:'en', showSymbolLogo:true,
+    symbolsGroups: groups
+  };
+  var tv = document.createElement('div');
+  tv.className = 'tradingview-widget-container';
+  tv.style.cssText = 'height:100%;width:100%;max-width:880px;margin:0 auto;display:flex;flex-direction:column';
+  var wdg = document.createElement('div');
+  wdg.className = 'tradingview-widget-container__widget';
+  wdg.style.cssText = 'flex:1;min-height:0;width:100%';
+  tv.appendChild(wdg);
+  var cr = document.createElement('div');
+  cr.className = 'tradingview-widget-copyright';
+  cr.style.cssText = 'flex-shrink:0;padding:3px 6px;text-align:center;background:#030810';
+  cr.innerHTML = '<a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank" style="color:#334155;font-size:9px;text-decoration:none">Track all markets on TradingView</a>';
+  tv.appendChild(cr);
+  container.appendChild(tv);
+  var sc = document.createElement('script');
+  sc.type = 'text/javascript';
+  sc.src = 'https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js';
+  sc.async = true;
+  sc.textContent = JSON.stringify(cfg);
+  tv.appendChild(sc);
+}
+
+function _nmwInjectMarketQuotes(wrapId) {
+  var wrap = document.getElementById(wrapId);
+  if (!wrap || wrap.dataset.nmwLoaded) return;
+  wrap.dataset.nmwLoaded = '1';
+  var tvWrap = document.createElement('div');
+  tvWrap.id = 'nmw-mq-tv';
+  tvWrap.style.cssText = 'position:absolute;inset:0;overflow:hidden;display:flex;flex-direction:column';
+  wrap.appendChild(tvWrap);
+  var editBtn = document.createElement('button');
+  editBtn.className = 'nmw-gm-edit-btn';
+  editBtn.innerHTML = '⚙️ Edit Markets';
+  editBtn.title = 'Customise tracked markets & symbols';
+  editBtn.onclick = function() { _nmwOpenMQEditor(); };
+  wrap.appendChild(editBtn);
+  _nmwInjectMQWidget(tvWrap, _nmwMQGetGroups());
+}
+
+function _nmwMQEditorHTML() {
+  var groups = _nmwMQEditState.groups;
+  var ai = _nmwMQEditState.activeGroupIdx;
+  var grpBtns = groups.map(function(g, i) {
+    return '<button class="nmw-gm-etab' + (i === ai ? ' active' : '') + '" onclick="_nmwMQSetGroup(' + i + ')">' + _escAttr(g.name) + '</button>';
+  }).join('');
+  var symbols = (groups[ai] && groups[ai].symbols) ? groups[ai].symbols : [];
+  var symRows = symbols.length ? symbols.map(function(sym, si) {
+    return '<div class="nmw-gm-sym-row">'
+      + '<span class="nmw-gm-sym-name">' + _escAttr(sym.name) + '</span>'
+      + '<span class="nmw-gm-sym-label">' + _escAttr(sym.displayName) + '</span>'
+      + '<button class="nmw-gm-sym-del" onclick="_nmwMQDel(' + si + ')" title="Remove">✕</button>'
+      + '</div>';
+  }).join('')
+  : '<div style="color:var(--text3);font-size:12px;padding:8px 4px">No symbols — add one below.</div>';
+  var grpName = groups[ai] ? _escAttr(groups[ai].name) : '';
+  var delGrpBtn = groups.length > 1
+    ? '<button class="nmw-gm-sym-del" onclick="_nmwMQDelGroup(' + ai + ')" title="Delete this group" style="font-size:11px;color:#ef4444">🗑 Del</button>'
+    : '';
+  return '<div class="nmw-gm-editor-hd">'
+    + '<span style="font-weight:700;font-size:13px;color:var(--text)">⚙️ Edit Markets</span>'
+    + '<button onclick="var e=document.getElementById(\'nmw-mq-editor\');if(e)e.remove();" '
+    + 'style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;line-height:1;font-family:inherit">✕</button>'
+    + '</div>'
+    + '<div class="nmw-gm-etabs" style="flex-wrap:wrap;row-gap:4px">'
+    + grpBtns
+    + '<button class="nmw-gm-etab" onclick="_nmwMQPromptGroup()" style="background:rgba(37,99,235,.12);border-color:var(--burn2);color:var(--burn3)">+ Group</button>'
+    + '</div>'
+    + '<div class="nmw-gm-sym-list">' + symRows + '</div>'
+    + '<div class="nmw-gm-add-row">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">'
+    + '<span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Add to: ' + grpName + '</span>'
+    + delGrpBtn
+    + '</div>'
+    + '<input class="nmw-gm-inp" id="nmw-mq-inp-sym" placeholder="TV Symbol (e.g. BSE:SENSEX)" />'
+    + '<input class="nmw-gm-inp" id="nmw-mq-inp-lbl" placeholder="Display Name (e.g. SENSEX)" />'
+    + '<button class="nmw-gm-add-btn" onclick="_nmwMQAdd()">+ Add Symbol</button>'
+    + '</div>'
+    + '<div class="nmw-gm-editor-ft">'
+    + '<button class="nmw-gm-reset-btn" onclick="_nmwMQReset()">Reset Defaults</button>'
+    + '<button class="nmw-gm-apply-btn" onclick="_nmwMQApply()">✓ Apply & Save</button>'
+    + '</div>';
+}
+
+function _escAttr(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function _nmwOpenMQEditor() {
+  var existing = document.getElementById('nmw-mq-editor');
+  if (existing) { existing.remove(); return; }
+  _nmwMQEditState.groups = JSON.parse(JSON.stringify(_nmwMQGetGroups()));
+  _nmwMQEditState.activeGroupIdx = 0;
+  var ed = document.createElement('div');
+  ed.id = 'nmw-mq-editor';
+  ed.className = 'nmw-gm-editor';
+  ed.innerHTML = _nmwMQEditorHTML();
+  var wrap = document.getElementById('nmw-wrap-marketquotes');
+  if (wrap) wrap.appendChild(ed);
+}
+
+function _nmwMQSetGroup(idx) {
+  _nmwMQEditState.activeGroupIdx = idx;
+  var ed = document.getElementById('nmw-mq-editor');
+  if (ed) ed.innerHTML = _nmwMQEditorHTML();
+}
+
+function _nmwMQDel(si) {
+  var ai = _nmwMQEditState.activeGroupIdx;
+  _nmwMQEditState.groups[ai].symbols.splice(si, 1);
+  _nmwMQSetGroup(ai);
+}
+
+function _nmwMQDelGroup(gi) {
+  if (_nmwMQEditState.groups.length <= 1) return;
+  if (!confirm('Remove group "' + _nmwMQEditState.groups[gi].name + '"?')) return;
+  _nmwMQEditState.groups.splice(gi, 1);
+  _nmwMQEditState.activeGroupIdx = Math.max(0, _nmwMQEditState.activeGroupIdx - 1);
+  var ed = document.getElementById('nmw-mq-editor');
+  if (ed) ed.innerHTML = _nmwMQEditorHTML();
+}
+
+function _nmwMQPromptGroup() {
+  var name = prompt('New group name:');
+  if (!name || !name.trim()) return;
+  _nmwMQEditState.groups.push({ name: name.trim(), originalName: name.trim(), symbols: [] });
+  _nmwMQEditState.activeGroupIdx = _nmwMQEditState.groups.length - 1;
+  var ed = document.getElementById('nmw-mq-editor');
+  if (ed) ed.innerHTML = _nmwMQEditorHTML();
+}
+
+function _nmwMQAdd() {
+  var symEl = document.getElementById('nmw-mq-inp-sym');
+  var lblEl = document.getElementById('nmw-mq-inp-lbl');
+  var sym = symEl ? symEl.value.trim().toUpperCase() : '';
+  var lbl = lblEl ? lblEl.value.trim() : '';
+  if (!sym) {
+    if (symEl) { symEl.style.borderColor = '#ef4444'; setTimeout(function(){ symEl.style.borderColor = ''; }, 1500); }
+    return;
+  }
+  if (!lbl) lbl = sym.indexOf(':') >= 0 ? sym.split(':')[1] : sym;
+  var ai = _nmwMQEditState.activeGroupIdx;
+  _nmwMQEditState.groups[ai].symbols.push({ name: sym, displayName: lbl });
+  if (symEl) symEl.value = '';
+  if (lblEl) lblEl.value = '';
+  _nmwMQSetGroup(ai);
+}
+
+function _nmwMQReset() {
+  if (!confirm('Reset Market Quotes to default symbols?')) return;
+  _nmwMQEditState.groups = JSON.parse(JSON.stringify(_NMW_MQ_DEFAULT_GROUPS));
+  _nmwMQEditState.activeGroupIdx = 0;
+  var ed = document.getElementById('nmw-mq-editor');
+  if (ed) ed.innerHTML = _nmwMQEditorHTML();
+}
+
+function _nmwMQApply() {
+  try { localStorage.setItem(_NMW_MQ_LS, JSON.stringify(_nmwMQEditState.groups)); } catch(_) {}
+  var ed = document.getElementById('nmw-mq-editor');
+  if (ed) ed.remove();
+  var tvWrap = document.getElementById('nmw-mq-tv');
+  if (tvWrap) _nmwInjectMQWidget(tvWrap, _nmwMQGetGroups());
+}
+
 function _nmwInject(wrapId, src, cfg) {
   var wrap = document.getElementById(wrapId);
   if (!wrap || wrap.dataset.nmwLoaded) return;
@@ -2195,6 +2362,8 @@ function nmwSwitch(key, btnEl) {
     _nmwInjectScreener('nmw-wrap-screener');
   } else if (key === 'globalmarkets') {
     _nmwInjectGlobalMarkets('nmw-wrap-globalmarkets');
+  } else if (key === 'marketquotes') {
+    _nmwInjectMarketQuotes('nmw-wrap-marketquotes');
   } else if (!c._custom) {
     _nmwInject('nmw-wrap-' + key, c.src, c.cfg);
   }
