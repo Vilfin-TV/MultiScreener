@@ -810,7 +810,11 @@ footer.news-footer{
 <nav class="top-menubar" id="top-menubar">
   <div class="nav-inner">
     <div class="nav-brand-group">
-      <a href="index.html" class="nav-home-link" title="Back to Home">
+      <a href="https://vilfintv.com" class="nav-home-link" title="Back to VilfinTV Dashboard" style="margin-right:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </a>
+      <a href="https://vilfintv.com/news.html" class="nav-home-link" title="News Home">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         Home
       </a>
@@ -1062,6 +1066,8 @@ function timeAgo(isoStr) {
 ═══════════════════════════════════════════════════ */
 function isItemValid(item) {
   if (!item || !item.publishedAt) return false;
+  // Filter out backend placeholder items – never show these on the frontend
+  if (item.headline === 'Content updating…' || item.headline === 'Content updating...') return false;
   var age = Date.now() - new Date(item.publishedAt).getTime();
   return age < 48 * 60 * 60 * 1000; // 48 hours
 }
@@ -1105,8 +1111,8 @@ function renderSection(sectionId, sectionData, meta) {
   if (items.length === 0) {
     section.innerHTML += '<div class="news-placeholder">'
       + '<div class="news-placeholder-icon">' + meta.icon + '</div>'
-      + '<div class="news-placeholder-text">Content updating…</div>'
-      + '<div class="news-placeholder-sub">New stories will appear at the next scheduled refresh.</div>'
+      + '<div class="news-placeholder-text">Stories will be available shortly.</div>'
+      + '<div class="news-placeholder-sub">Our editors refresh this section regularly — check back soon.</div>'
       + '</div>';
     return section;
   }

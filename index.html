@@ -3057,6 +3057,33 @@ footer{
   line-height:14px;height:14px;
   display:inline-block;flex-shrink:0;
 }
+/* ── Stocks sub-tab bar ── */
+.stk-sub-bar{
+  display:flex;overflow-x:auto;gap:3px;
+  padding:5px 6px;background:var(--dark2);
+  border-bottom:1px solid var(--border);flex-shrink:0;
+  scrollbar-width:none;
+}
+.stk-sub-bar::-webkit-scrollbar{display:none}
+.stk-sub-tab{
+  flex-shrink:0;padding:4px 10px;
+  border:1px solid var(--border2);border-radius:7px;
+  background:transparent;color:var(--text3);
+  font-size:10px;font-weight:700;cursor:pointer;
+  letter-spacing:.4px;white-space:nowrap;
+  transition:all .15s;
+}
+.stk-sub-tab.active{
+  background:rgba(37,99,235,.18);
+  border-color:rgba(59,130,246,.6);color:#93c5fd;
+}
+.stk-sub-tab:hover:not(.active){
+  border-color:#2d3f52;color:var(--text2);
+}
+.stk-wrap{
+  flex:1;overflow:hidden;min-height:0;
+  background:#05080e;
+}
 /* ── Scores scroll area ── */
 .sf-scores-wrap{
   flex:1;overflow-y:auto;padding:8px 8px 12px;
@@ -4353,6 +4380,7 @@ footer{
         <button class="rb-tab"        id="rbtab-worldclock" onclick="rbSwitchPanel('worldclock')">🌍 World Clock</button>
         <button class="rb-tab"        id="rbtab-weather"    onclick="rbSwitchPanel('weather')">🌤 Weather</button>
         <button class="rb-tab"        id="rbtab-markets"    onclick="rbSwitchPanel('markets')">📈 Markets</button>
+        <button class="rb-tab"        id="rbtab-stocks"     onclick="rbSwitchPanel('stocks')">📊 Stocks</button>
       </div>
       <button class="rb-tabs-arrow" id="rb-tabs-next" onclick="rbTabsScroll(1)" title="Next tab" aria-label="Next tab">&#x203A;</button>
     </div>
@@ -5420,6 +5448,28 @@ footer{
       <div id="mkts-widget-inner" style="height:100%;width:100%"></div>
     </div>
   </div><!-- /rb-panel-markets -->
+
+  <!-- ── PANEL: Stocks & Market Tools (TradingView widgets) ── -->
+  <div id="rb-panel-stocks" style="display:none;flex-direction:column;flex:1;overflow:hidden;min-height:0">
+    <!-- Sub-tab bar -->
+    <div class="stk-sub-bar" id="stk-sub-bar">
+      <button class="stk-sub-tab active" id="stk-tab-news"     onclick="stkSwitch('news',this)">📰 News</button>
+      <button class="stk-sub-tab"        id="stk-tab-ecomap"   onclick="stkSwitch('ecomap',this)">🪙 Crypto HM</button>
+      <button class="stk-sub-tab"        id="stk-tab-heatmap"  onclick="stkSwitch('heatmap',this)">🔥 Stocks HM</button>
+      <button class="stk-sub-tab"        id="stk-tab-etf"      onclick="stkSwitch('etf',this)">📊 ETF HM</button>
+      <button class="stk-sub-tab"        id="stk-tab-fxrates"  onclick="stkSwitch('fxrates',this)">💱 FX Rates</button>
+      <button class="stk-sub-tab"        id="stk-tab-fxheat"   onclick="stkSwitch('fxheat',this)">🌡 FX Heat</button>
+      <button class="stk-sub-tab"        id="stk-tab-calendar" onclick="stkSwitch('calendar',this)">📅 Calendar</button>
+    </div>
+    <!-- Widget containers — one per sub-tab -->
+    <div id="stk-wrap-news"     class="stk-wrap" style="flex:1;overflow:hidden;min-height:0;display:flex"></div>
+    <div id="stk-wrap-ecomap"   class="stk-wrap" style="flex:1;overflow:hidden;min-height:0;display:none"></div>
+    <div id="stk-wrap-heatmap"  class="stk-wrap" style="flex:1;overflow:hidden;min-height:0;display:none"></div>
+    <div id="stk-wrap-etf"      class="stk-wrap" style="flex:1;overflow:hidden;min-height:0;display:none"></div>
+    <div id="stk-wrap-fxrates"  class="stk-wrap" style="flex:1;overflow:hidden;min-height:0;display:none"></div>
+    <div id="stk-wrap-fxheat"   class="stk-wrap" style="flex:1;overflow:hidden;min-height:0;display:none"></div>
+    <div id="stk-wrap-calendar" class="stk-wrap" style="flex:1;overflow:hidden;min-height:0;display:none"></div>
+  </div><!-- /rb-panel-stocks -->
 
   <!-- ══ MARKETS EDITOR MODAL ══ -->
   <div id="mkts-editor-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:99000;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeMarketsEditor()">
@@ -8797,6 +8847,7 @@ const _RB_PANELS = {
   worldclock: { panelId:'rb-panel-worldclock', tabId:'rbtab-worldclock', title:'🌍 WORLD CLOCK', init:'_worldclockInitDone', initFn:'worldclockInit' },
   weather:    { panelId:'rb-panel-weather',    tabId:'rbtab-weather',    title:'🌤 WEATHER',     init:'_weatherInitDone',    initFn:'weatherInit' },
   markets:  { panelId:'rb-panel-markets',  tabId:'rbtab-markets',  title:'📈 GLOBAL MARKETS' },
+  stocks:   { panelId:'rb-panel-stocks',   tabId:'rbtab-stocks',   title:'📊 STOCK TOOLS', init:'_stocksInitDone', initFn:'stocksInit' },
   settings: { panelId:'rb-panel-settings', tabId:'rbtab-settings', title:'⚙️ WIDGET SETTINGS' },
 };
 
@@ -9171,6 +9222,118 @@ function mktsPickSymbol(gi, sym, name) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// STOCKS PANEL — TradingView widget sub-tabs (lazy-loaded per sub-tab)
+// ═══════════════════════════════════════════════════════════════════════
+var _STK_CURRENT = 'news';
+
+/* Inject a TradingView widget into a container div (once per container) */
+function _stkInjectWidget(wrapId, scriptSrc, config) {
+  var wrap = document.getElementById(wrapId);
+  if (!wrap || wrap.dataset.stkLoaded) return;
+  wrap.dataset.stkLoaded = '1';
+  wrap.style.flexDirection = 'column';
+
+  // Build container
+  var tvContainer = document.createElement('div');
+  tvContainer.className = 'tradingview-widget-container';
+  tvContainer.style.cssText = 'height:100%;width:100%;display:flex;flex-direction:column';
+
+  var tvWidget = document.createElement('div');
+  tvWidget.className = 'tradingview-widget-container__widget';
+  tvWidget.style.cssText = 'flex:1;min-height:0;width:100%';
+  tvContainer.appendChild(tvWidget);
+
+  var tvCopyright = document.createElement('div');
+  tvCopyright.className = 'tradingview-widget-copyright';
+  tvCopyright.style.cssText = 'flex-shrink:0;padding:3px 6px;font-size:10px;text-align:center;background:#05080e';
+  tvCopyright.innerHTML = '<a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank" style="color:#475569;text-decoration:none;font-size:9px">Track all markets on TradingView</a>';
+  tvContainer.appendChild(tvCopyright);
+
+  // Append to wrapper FIRST so script finds the container
+  wrap.appendChild(tvContainer);
+
+  // Inject script — TradingView reads its own textContent for the JSON config
+  var sc = document.createElement('script');
+  sc.type = 'text/javascript';
+  sc.src = scriptSrc;
+  sc.async = true;
+  sc.textContent = JSON.stringify(config);
+  tvContainer.appendChild(sc);
+}
+
+var _STK_CONFIGS = {
+  news: {
+    src: 'https://s3.tradingview.com/external-embedding/embed-widget-timeline.js',
+    cfg: { feedMode:'all_symbols', isTransparent:false, displayMode:'regular',
+           width:'100%', height:'100%', colorTheme:'dark', locale:'en' }
+  },
+  ecomap: {
+    src: 'https://s3.tradingview.com/external-embedding/embed-widget-crypto-coins-heatmap.js',
+    cfg: { dataSource:'Crypto', blockSize:'market_cap_calc', blockColor:'change',
+           locale:'en', colorTheme:'dark', hasTopBar:true, isDataSetEnabled:true,
+           isZoomEnabled:true, hasSymbolTooltip:true, isMonoSize:false,
+           width:'100%', height:'100%' }
+  },
+  heatmap: {
+    src: 'https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js',
+    cfg: { exchanges:[], dataSource:'SPX500', grouping:'sector',
+           blockSize:'market_cap_basic', blockColor:'change', locale:'en',
+           colorTheme:'dark', hasTopBar:true, isDataSetEnabled:true,
+           isZoomEnabled:true, hasSymbolTooltip:true, isMonoSize:false,
+           width:'100%', height:'100%' }
+  },
+  etf: {
+    src: 'https://s3.tradingview.com/external-embedding/embed-widget-etf-heatmap.js',
+    cfg: { dataSource:'AllUSEtf', blockSize:'aum', blockColor:'change',
+           grouping:'asset_class', locale:'en', colorTheme:'dark',
+           hasTopBar:true, isDataSetEnabled:true, isZoomEnabled:true,
+           hasSymbolTooltip:true, isMonoSize:false, width:'100%', height:'100%' }
+  },
+  fxrates: {
+    src: 'https://s3.tradingview.com/external-embedding/embed-widget-forex-cross-rates.js',
+    cfg: { width:'100%', height:'100%', isTransparent:false, colorTheme:'dark',
+           locale:'en', backgroundColor:'#05080e',
+           currencies:['EUR','USD','JPY','GBP','CHF','AUD','CAD','NZD','CNY','INR'] }
+  },
+  fxheat: {
+    src: 'https://s3.tradingview.com/external-embedding/embed-widget-forex-heat-map.js',
+    cfg: { width:'100%', height:'100%', isTransparent:false, colorTheme:'dark',
+           locale:'en', backgroundColor:'#05080e',
+           currencies:['EUR','USD','JPY','GBP','CHF','AUD','CAD','NZD','CNY','INR'] }
+  },
+  calendar: {
+    src: 'https://s3.tradingview.com/external-embedding/embed-widget-events.js',
+    cfg: { width:'100%', height:'100%', colorTheme:'dark', isTransparent:false,
+           locale:'en', importanceFilter:'-1,0,1',
+           countryFilter:'ar,au,br,ca,cn,de,fr,gb,id,in,jp,kr,mx,ru,sa,tr,us,za' }
+  }
+};
+
+function stocksInit() {
+  // Load the first sub-tab (news) on panel open
+  stkSwitch('news', document.getElementById('stk-tab-news'));
+}
+
+function stkSwitch(key, btnEl) {
+  // Deactivate all sub-tab buttons
+  var bar = document.getElementById('stk-sub-bar');
+  if (bar) bar.querySelectorAll('.stk-sub-tab').forEach(function(b) { b.classList.remove('active'); });
+  if (btnEl) btnEl.classList.add('active');
+
+  // Hide all wrap divs, show the selected one
+  ['news','ecomap','heatmap','etf','fxrates','fxheat','calendar'].forEach(function(k) {
+    var w = document.getElementById('stk-wrap-' + k);
+    if (w) w.style.display = (k === key) ? 'flex' : 'none';
+  });
+
+  _STK_CURRENT = key;
+
+  // Lazy-inject the widget if not yet loaded
+  var cfg = _STK_CONFIGS[key];
+  if (cfg) _stkInjectWidget('stk-wrap-' + key, cfg.src, cfg.cfg);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 // WIDGET SETTINGS — default tab + visible-tab toggles, persisted in localStorage
 // ═══════════════════════════════════════════════════════════════════════
 const _WIDGET_TAB_LABELS = {
@@ -9178,9 +9341,9 @@ const _WIDGET_TAB_LABELS = {
   radio:'📻 Radio', premium:'🎙 Premium Radio', sports:'🏆 Sports',
   music:'🎵 YouTube Music', movies:'🎬 Movies', podcast:'🎙 Podcast',
   calendar:'📅 Calendar', notes:'📝 Notes', calc:'🧮 Calculator', worldclock:'🌍 World Clock', weather:'🌤 Weather',
-  markets:'📈 Global Markets',
+  markets:'📈 Global Markets', stocks:'📊 Stock Tools',
 };
-const _WIDGET_DEFAULT_ORDER = ['ai','video','iptv','radio','premium','sports','music','movies','podcast','calendar','notes','calc','worldclock','weather','markets'];
+const _WIDGET_DEFAULT_ORDER = ['ai','video','iptv','radio','premium','sports','music','movies','podcast','calendar','notes','calc','worldclock','weather','markets','stocks'];
 function widgetGetSettings() {
   let s = {};
   try { s = JSON.parse(localStorage.getItem('viltv_widget_settings') || '{}'); } catch(_) {}
