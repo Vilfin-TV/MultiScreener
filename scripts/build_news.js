@@ -41,10 +41,11 @@ const BLOCKED_KEYWORDS = [
   'massacre', 'pogrom', 'beheading', 'ethnic cleansing'
 ];
 
-const MAX_ITEMS_PER_SECTION = 6;
+const MAX_ITEMS_PER_SECTION = 8;  // trending gets up to 8 stories for broad topic coverage
 const REQUEST_TIMEOUT_MS    = 22000;
-// First TWO entries per section are always fetched; rest are randomly sampled
-const FEEDS_PER_SECTION     = 5;
+// First TWO entries per section are always fetched; rest are randomly sampled.
+// 7 feeds → 2 anchors + 5 random from a pool of 30+ for trending = per-cycle variety
+const FEEDS_PER_SECTION     = 7;
 
 /* ═══════════════════════════════════════════════════
    SOURCE POOL
@@ -55,18 +56,58 @@ const FEEDS_PER_SECTION     = 5;
 ═══════════════════════════════════════════════════ */
 const SOURCE_POOL = {
 
-  // ── trending ────────────────────────────────────────────────────────────────
+  // ── trending ─────────────────────────────────────────────────────────────────
+  // Anchors (pos 0-1) always included. 5 random feeds sampled from the rest each run
+  // so topics rotate: Politics, AI/Tech, Finance, Health, Entertainment, Energy, etc.
   trending: [
-    { url: 'https://news.google.com/rss/headlines/section/topic/HEADLINES?hl=en-US&gl=US&ceid=US:en', name: 'Google News US' },
-    { url: 'https://news.google.com/rss/headlines/section/topic/HEADLINES?hl=en-IN&gl=IN&ceid=IN:en', name: 'Google News India' },
+    // ── Anchors (always fetched) ─────────────────────────────────────────────
+    { url: 'https://news.google.com/rss/headlines/section/topic/HEADLINES?hl=en-US&gl=US&ceid=US:en', name: 'Google Trending US' },
+    { url: 'https://news.google.com/rss/headlines/section/topic/HEADLINES?hl=en-IN&gl=IN&ceid=IN:en', name: 'Google Trending India' },
+    // ── Wire services ────────────────────────────────────────────────────────
     { url: 'https://feeds.bbci.co.uk/news/rss.xml',                    name: 'BBC News' },
     { url: 'https://apnews.com/rss',                                    name: 'AP News' },
-    { url: 'https://www.theguardian.com/world/rss',                     name: 'The Guardian' },
     { url: 'https://www.aljazeera.com/xml/rss/all.xml',                 name: 'Al Jazeera' },
     { url: 'https://www.axios.com/feeds/feed.rss',                      name: 'Axios' },
+    // ── Politics ─────────────────────────────────────────────────────────────
+    { url: 'https://news.google.com/rss/headlines/section/topic/POLITICS?hl=en-US&gl=US&ceid=US:en', name: 'Google Politics US' },
+    { url: 'https://news.google.com/rss/headlines/section/topic/NATION?hl=en-IN&gl=IN&ceid=IN:en',   name: 'Google Politics India' },
+    // ── AI & Technology ──────────────────────────────────────────────────────
+    { url: 'https://techcrunch.com/feed/',                               name: 'TechCrunch' },
+    { url: 'https://www.theverge.com/rss/index.xml',                    name: 'The Verge' },
+    { url: 'https://feeds.arstechnica.com/arstechnica/index',           name: 'Ars Technica' },
+    { url: 'https://www.wired.com/feed/rss',                            name: 'Wired' },
+    { url: 'https://news.google.com/rss/search?q=artificial+intelligence+AI+ChatGPT&hl=en-US&gl=US&ceid=US:en', name: 'AI News' },
+    { url: 'https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=en-US&gl=US&ceid=US:en', name: 'Google Tech US' },
+    // ── Finance: Stock, ETF, Mutual Fund, Forex, Gold, Tax ───────────────────
+    { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html',     name: 'CNBC Top' },
+    { url: 'https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-US&gl=US&ceid=US:en', name: 'Google Business US' },
+    { url: 'https://news.google.com/rss/search?q=ETF+mutual+fund+stock+market+investing&hl=en-US&gl=US&ceid=US:en', name: 'ETF & Funds' },
+    { url: 'https://news.google.com/rss/search?q=forex+currency+exchange+rate+dollar&hl=en-US&gl=US&ceid=US:en', name: 'Forex News' },
+    { url: 'https://news.google.com/rss/search?q=gold+silver+price+commodities&hl=en-US&gl=US&ceid=US:en', name: 'Gold & Commodities' },
+    { url: 'https://news.google.com/rss/search?q=tax+income+tax+GST+policy&hl=en-IN&gl=IN&ceid=IN:en', name: 'Tax News India' },
+    { url: 'https://news.google.com/rss/search?q=mutual+fund+SIP+SEBI+NSE+BSE&hl=en-IN&gl=IN&ceid=IN:en', name: 'India Mutual Funds' },
+    // ── Health ───────────────────────────────────────────────────────────────
+    { url: 'https://news.google.com/rss/headlines/section/topic/HEALTH?hl=en-US&gl=US&ceid=US:en', name: 'Google Health' },
+    { url: 'https://news.google.com/rss/search?q=health+medicine+cancer+nutrition+wellness&hl=en-US&gl=US&ceid=US:en', name: 'Health & Medicine' },
+    // ── Entertainment, Movies, Food ───────────────────────────────────────────
+    { url: 'https://news.google.com/rss/headlines/section/topic/ENTERTAINMENT?hl=en-US&gl=US&ceid=US:en', name: 'Google Entertainment' },
+    { url: 'https://news.google.com/rss/search?q=movies+new+releases+cinema+Hollywood+Bollywood&hl=en-US&gl=US&ceid=US:en', name: 'Movies & Cinema' },
+    { url: 'https://news.google.com/rss/search?q=food+recipe+restaurant+cuisine+trends&hl=en-US&gl=US&ceid=US:en', name: 'Food Trends' },
+    // ── Energy & Environment ──────────────────────────────────────────────────
+    { url: 'https://oilprice.com/rss/main',                             name: 'OilPrice News' },
+    { url: 'https://news.google.com/rss/search?q=energy+oil+solar+renewable+nuclear&hl=en-US&gl=US&ceid=US:en', name: 'Energy News' },
+    // ── Science & Space ───────────────────────────────────────────────────────
+    { url: 'https://news.google.com/rss/headlines/section/topic/SCIENCE?hl=en-US&gl=US&ceid=US:en', name: 'Google Science' },
+    // ── Google Trends ─────────────────────────────────────────────────────────
     { url: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=US', name: 'Google Trends US' },
     { url: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=IN', name: 'Google Trends India' },
+    { url: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=JP', name: 'Google Trends Japan' },
+    { url: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=GB', name: 'Google Trends UK' },
+    // ── YouTube News Channels ─────────────────────────────────────────────────
     { url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCNye-wNBqNL5ZzHSJj3l8Bg', name: 'Al Jazeera YT' },
+    { url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCVTyTA7-g9nopHeHbeuvpRA', name: 'CNN YT' },
+    { url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UC16niRr50-MSBwiO3YDb3RA', name: 'BBC News YT' },
+    { url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCknLrEdhRCp1aegoMqRaCZg', name: 'DW News YT' },
   ],
 
   // ── global ──────────────────────────────────────────────────────────────────
@@ -746,12 +787,28 @@ async function generateStory(item, relatedContext) {
 }
 
 /* ═══════════════════════════════════════════════════
+   SOURCE-NAME CLEANER
+   Google News RSS aggregation embeds " - Source Name"
+   patterns inside descriptions. Strip them so the
+   RSS-only story modal looks clean.
+═══════════════════════════════════════════════════ */
+function cleanRssDescription(desc) {
+  if (!desc) return '';
+  // Cut the text before the first embedded " - Source Name" attribution
+  // (Capitalized Latin words following a dash, common in Google News descriptions)
+  var cut = desc.search(/\s[-–—]\s[A-Z][a-zA-Z\s\.]{2,50}(?=\s[-–—]|[A-Z][a-z]|\s*$)/);
+  var result = (cut > 40) ? desc.slice(0, cut).trim() : desc;
+  return result.replace(/\s{2,}/g, ' ').trim();
+}
+
+/* ═══════════════════════════════════════════════════
    RSS STORY BUILDER — stock / malayalam only
    No AI. Uses raw RSS description as the story.
    Returns { html: string, teaser: string }
 ═══════════════════════════════════════════════════ */
 function rssStory(item) {
-  var desc = (item.description || '').trim();
+  var raw  = (item.description || '').trim();
+  var desc = cleanRssDescription(raw) || raw;  // fallback to raw if cleaner strips too much
   var html = desc
     ? '<p>' + desc.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>'
     : '<p>Full story available at the original source.</p>';

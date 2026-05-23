@@ -69,8 +69,10 @@ const WORLD_REGIONS = [
   {
     id: 'mexico', flag: '🇲🇽', name: 'Mexico', language: 'Español', accent: '#16a34a',
     feeds: [
-      { url: 'https://www.excelsior.com.mx/rss',                                  name: 'Excélsior' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Mexico?hl=es&gl=MX&ceid=MX:es', name: 'Google News MX' },
+      { url: 'https://www.excelsior.com.mx/rss',                                  name: 'Excélsior' },
+      { url: 'https://news.google.com/rss/search?q=mexico+noticias&hl=es&gl=MX&ceid=MX:es', name: 'Google Noticias MX' },
+      { url: 'https://www.proceso.com.mx/rss',                                    name: 'Proceso MX' },
     ]
   },
   // ── United Kingdom ─────────────────────────────────────────────────────────
@@ -356,6 +358,43 @@ function httpsGet(rawUrl) {
 }
 
 /* ═══════════════════════════════════════════════════
+   HEADLINE & TEASER CLEANERS
+   Google News RSS aggregation appends "- Source Name"
+   to every headline and embeds source names in
+   descriptions. These helpers strip that noise.
+═══════════════════════════════════════════════════ */
+
+/**
+ * Strip trailing " - Source Name" from Google News aggregated headlines.
+ * Only removes the LAST attribution suffix so legitimate em-dashes inside
+ * the headline are preserved.
+ *   "India jails journalist - The Hindu"  →  "India jails journalist"
+ *   "Budget 2026: key points – Economic Times"  →  "Budget 2026: key points"
+ */
+function cleanHeadline(title) {
+  if (!title) return '';
+  // Match the very last "[-–—] Source Name" where source name is ≤ 60 Latin chars
+  var cleaned = title
+    .replace(/\s+[-–—]\s+[A-Za-z][A-Za-z0-9 \.\-&\']{1,59}$/, '')
+    .trim();
+  return cleaned.length >= 5 ? cleaned : title.trim();
+}
+
+/**
+ * Strip embedded source attributions from RSS description text.
+ * Cuts the text at the first " - SourceName" pattern that looks like
+ * a news outlet name (capitalized Latin word(s) with no meaningful content
+ * following). Also collapses runs of whitespace.
+ */
+function cleanTeaser(desc) {
+  if (!desc) return '';
+  // Cut before "- Capitalized Source-Looking Words" embedded in the text
+  var cut = desc.search(/\s[-–—]\s[A-Z][a-zA-Z\s\.]{2,50}(?=\s[-–—]|[A-Z][a-z]|\s*$)/);
+  var result = (cut > 40) ? desc.slice(0, cut).trim() : desc;
+  return result.replace(/\s{2,}/g, ' ').trim().slice(0, 280);
+}
+
+/* ═══════════════════════════════════════════════════
    RSS / ATOM PARSER
 ═══════════════════════════════════════════════════ */
 function decodeEntities(str) {
@@ -387,7 +426,9 @@ function parseRSS(xml) {
 }
 
 function processBlock(block, items) {
-  var title = decodeEntities(extractTagValue(block, 'title').replace(/<[^>]+>/g, ''));
+  var rawTitle = decodeEntities(extractTagValue(block, 'title').replace(/<[^>]+>/g, ''));
+  // Strip "- Source Name" suffix added by Google News aggregation
+  var title = cleanHeadline(rawTitle);
   if (!title || title.length < 5) return;
 
   var link = extractTagValue(block, 'link') || extractTagValue(block, 'guid');
@@ -396,10 +437,12 @@ function processBlock(block, items) {
     if (am) link = am[1];
   }
 
-  // Decode entities FIRST, then strip HTML tags
+  // Decode entities FIRST, then strip HTML tags, then clean source attributions
   var rawDesc = extractTagValue(block, 'description') || extractTagValue(block, 'summary')
     || extractTagValue(block, 'media:description') || extractTagValue(block, 'content');
-  var description = decodeEntities(rawDesc).replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().slice(0, 300);
+  var description = cleanTeaser(
+    decodeEntities(rawDesc).replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim()
+  );
 
   var pubDate = extractTagValue(block, 'pubDate') || extractTagValue(block, 'published')
     || extractTagValue(block, 'updated') || extractTagValue(block, 'dc:date');
@@ -407,7 +450,12 @@ function processBlock(block, items) {
   if (pubDate) { try { publishedAt = new Date(pubDate).toISOString(); } catch(e){} }
   if (!publishedAt) publishedAt = new Date().toISOString();
 
-  items.push({ title, link: link || '', description, publishedAt });
+  // Discard items that are more than 7 days old — prevents "1403d ago" artifacts
+  // from RSS feeds with stale or wrong pubDate values
+  var age = Date.now() - new Date(publishedAt).getTime();
+  if (age > 7 * 24 * 60 * 60 * 1000) return;
+
+  items.push({ title: title, link: link || '', description: description, publishedAt: publishedAt });
 }
 
 /* ═══════════════════════════════════════════════════
