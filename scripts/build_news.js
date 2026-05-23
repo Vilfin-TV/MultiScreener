@@ -899,10 +899,20 @@ function mergeItems(newItems, existingItems) {
     return now - new Date(item.publishedAt).getTime() < TWO_DAYS;
   });
 
-  // Add new items not already represented
+  // Add new items not already represented.
+  // IMPORTANT: output items use .headline (not raw RSS .title), so we compare
+  // headlines directly here — isDuplicate() expects raw .title and would crash.
   var toAdd = (newItems || []).filter(function(newItem) {
+    if (!newItem || !newItem.headline) return false;
+    // Never persist placeholder entries into the rolling archive
+    var newHl = newItem.headline.trim().toLowerCase();
+    if (newHl.startsWith('content updating') || newHl === 'placeholder' || newHl === 'loading...') return false;
+    // Skip if same id already present
     if (validExisting.some(function(e){ return e.id === newItem.id; })) return false;
-    return !isDuplicate(newItem, validExisting);
+    // Skip if headline is too similar to an archived story (Jaccard > 0.5)
+    return !validExisting.some(function(e) {
+      return jaccardSimilarity(newItem.headline || '', e.headline || '') > 0.5;
+    });
   });
 
   console.log('  Merge: +' + toAdd.length + ' new, ' + validExisting.length + ' existing kept');
