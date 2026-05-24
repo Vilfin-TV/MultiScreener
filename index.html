@@ -1427,7 +1427,9 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lns-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--gold2);display:flex;align-items:center;gap:8px}
 .lns-title::before{content:'📡';font-size:14px}
 .lns-timer{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);background:var(--card);border:1px solid var(--border);border-radius:6px;padding:4px 10px}
-.lns-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.lns-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:900px){.lns-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.lns-grid{grid-template-columns:1fr}}
 .lnb{background:var(--card);border:1px solid var(--border2);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
 .lnb-header{display:flex;align-items:center;gap:7px;padding:8px 12px;background:var(--lnb-color,var(--burn));position:relative}
 .lnb-flag{font-size:14px}
@@ -1452,8 +1454,20 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-retry:hover{background:rgba(59,130,246,.15)}
 
 /* ── LIVE NEWS CARD GRID (box-style with pictures) ── */
-.lnb-card-grid{padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:7px;min-height:140px}
+.lnb-card-grid{padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;min-height:140px}
 .lnb-card-grid .lnb-loading,.lnb-card-grid .lnb-error,.lnb-card-grid .lnb-stale{grid-column:1/-1}
+/* Hero card — first item, spans full width, horizontal layout */
+.lnb-hero-card{grid-column:1/-1;display:flex;flex-direction:row;background:var(--card2);border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s;min-height:88px}
+.lnb-hero-card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.3);border-color:var(--burn3)}
+.lnb-hero-img-wrap{position:relative;width:130px;flex-shrink:0;background:var(--card3);overflow:hidden}
+.lnb-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .3s ease}
+.lnb-hero-card:hover .lnb-hero-img{transform:scale(1.05)}
+.lnb-hero-no-img{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;opacity:.45}
+.lnb-hero-body{padding:9px 10px;display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.lnb-hero-title{font-size:12px;font-weight:700;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.lnb-hero-card:hover .lnb-hero-title{color:var(--gold2)}
+.lnb-hero-time{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:auto;padding-top:3px}
+/* Small cards (items 2-9) */
 .lnb-news-card{background:var(--card2);border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s,border-color .15s}
 .lnb-news-card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.3);border-color:var(--burn3)}
 .lnb-card-img-wrap{position:relative;width:100%;padding-top:52%;overflow:hidden;flex-shrink:0;background:var(--card3)}
@@ -1464,7 +1478,9 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-card-title{font-size:11px;font-weight:600;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .lnb-news-card:hover .lnb-card-title{color:var(--gold2)}
 .lnb-card-time{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:auto;padding-top:3px}
-@media(max-width:480px){.lnb-card-grid{grid-template-columns:1fr 1fr;gap:5px;padding:6px}}
+/* Text-only card (no RSS image for items 2-9) */
+.lnb-news-card.lnb-text-card .lnb-card-title{-webkit-line-clamp:2}
+@media(max-width:480px){.lnb-card-grid{grid-template-columns:1fr 1fr;gap:5px;padding:6px}.lnb-hero-img-wrap{width:100px}}
 
 /* ── Calendar strips — thin visible scrollbar so users know they can scroll ── */
 #cal-country-strip,#cal-region-strip{
@@ -8622,6 +8638,7 @@ function _mktSentGetHist(country) { try { return JSON.parse(localStorage.getItem
 function _mktSentRenderMain(idx) {
   if (!_mktSentData) return;
   const m = _mktSentData[idx];
+  if (!m) return;
   const score = _mktSentScore(m.change);
   const zoneLbl = (_MKTS_SENT_ZONE_CFG[m.zoneCls]||{label: m.zone + ' zone'}).label;
   const gaugeSVG = _mktSentMiniGaugeSVG(score, m.zoneCls);
@@ -8631,7 +8648,7 @@ function _mktSentRenderMain(idx) {
   });
   // Country text — desktop + mobile
   ['mkt-sent-country','mkt-sent-mb-country'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.textContent = m.country;
+    const el = document.getElementById(id); if (el) el.textContent = (m.flag ? m.flag + ' ' : '') + m.country;
   });
   // Zone label — desktop + mobile
   ['mkt-sent-zone','mkt-sent-mb-zone'].forEach(id => {
@@ -8669,9 +8686,10 @@ function _mktSentRenderPanel() {
   }
 
   const m = _mktSentData[_mktSentIdx];
+  if (!m) return;
   const score = _mktSentScore(m.change);
   const ctryEl = document.getElementById('mkt-sent-panel-ctry');
-  if (ctryEl) ctryEl.textContent = m.country;
+  if (ctryEl) ctryEl.textContent = (m.flag ? m.flag + ' ' : '') + m.country;
 
   const gfEl = document.getElementById('mkt-sent-gauge-full');
   if (gfEl) gfEl.innerHTML = isLiveDay ? _mktSentFullGaugeSVG(score, m.zoneCls) : '';
@@ -8795,7 +8813,7 @@ function mktSentInit() {
   _mktSentRefresh();
   setInterval(()=>{
     if(!_mktSentData) return;
-    _mktSentIdx=(_mktSentIdx+1)%_MKTS_SENT_MARKETS.length;
+    _mktSentIdx=(_mktSentIdx+1)%_mktSentData.length;
     if(_mktSentData[_mktSentIdx]) _mktSentSaveHist(_mktSentData[_mktSentIdx].country,_mktSentData[_mktSentIdx].zoneCls);
     _mktSentRenderMain(_mktSentIdx);
     if(_mktSentPanelOpen) _mktSentRenderPanel();
@@ -14954,8 +14972,8 @@ const NEWS_SOURCES = [
 const _NEWS_SOURCE_MAP = Object.fromEntries(NEWS_SOURCES.map(s => [s.id, s]));
 
 // Default 10 feed IDs shown on first visit
-const NEWS_DEFAULT_IDS = ['us1','us2','us3','us8','india1','india2','india3','india4','japan1','eu1']; // 10 defaults, customizable via settings
-const NEWS_MAX = 10;
+const NEWS_DEFAULT_IDS = ['us1','us2','us3','india1','india2','india3','india4','japan1','eu1']; // 9 defaults, customizable via settings
+const NEWS_MAX = 9;
 const NEWS_IDS_KEY   = 'viltv_news_ids';   // JSON array of selected feed IDs
 const NEWS_ORDER_KEY = 'viltv_news_order';  // JSON array defining display order
 
@@ -15066,6 +15084,32 @@ function initLiveNews() {
   lnsTimer = setInterval(fetchAllNews, 600000);
 }
 
+// Unique Unsplash fallback images per channel group (no duplicates across groups)
+const _LNB_FALLBACKS = {
+  '🇺🇸 US & Americas':        'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=500&q=70',
+  '🇮🇳 India (English)':      'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=500&q=70',
+  '🇮🇳 India (Hindi)':        'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=500&q=70',
+  '🇮🇳 India (Malayalam)':    'https://images.unsplash.com/photo-1563536313-be6fc5d4b0d5?w=500&q=70',
+  '🇮🇳 India (Tamil)':        'https://images.unsplash.com/photo-1468611083934-17bd02c3b08d?w=500&q=70',
+  '🇮🇳 India (Kannada)':      'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=500&q=70',
+  '🇮🇳 India (Telugu)':       'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=500&q=70',
+  '🇮🇳 India (Marathi)':      'https://images.unsplash.com/photo-1576319155264-99536e0be1ee?w=500&q=70',
+  '🇮🇳 India (Bengali)':      'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=500&q=70',
+  '🇯🇵 Japan':                'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=500&q=70',
+  '🌏 Asia Pacific':           'https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=500&q=70',
+  '🌍 Europe & Middle East':   'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=500&q=70',
+  '🌐 Global':                 'https://images.unsplash.com/photo-1495020689067-958852a7765e?w=500&q=70',
+  '🇨🇳 China':                'https://images.unsplash.com/photo-1518770660439-4636190af475?w=500&q=70',
+  '🇰🇷 South Korea':           'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=500&q=70',
+  '🇲🇽 Mexico':               'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=500&q=70',
+  '🇨🇦 Canada':               'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=500&q=70',
+  '🇨🇭 Switzerland':           'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=500&q=70',
+  '🇦🇺 Australia':             'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=500&q=70',
+  '🇳🇿 New Zealand':           'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=500&q=70',
+  '🇧🇩 Bangladesh':            'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=500&q=70',
+};
+const _LNB_FALLBACK_DEFAULT = 'https://images.unsplash.com/photo-1453738773917-9c3eff1db985?w=500&q=70';
+
 function renderNewsBoxes() {
   const grid = document.getElementById('lns-grid');
   if (!grid) return;
@@ -15077,7 +15121,7 @@ function renderNewsBoxes() {
         <span class="lnb-label">${s.label}</span>
         <span class="lnb-live">LIVE</span>
       </div>
-      <div class="lnb-card-grid" id="lnbl-${s.id}" data-color="${escHtml(s.color)}" data-flag="${s.flag}"><div class="lnb-loading">Loading…</div></div>
+      <div class="lnb-card-grid" id="lnbl-${s.id}" data-color="${escHtml(s.color)}" data-flag="${s.flag}" data-group="${escHtml(s.group||'')}"><div class="lnb-loading">Loading…</div></div>
     </div>`
   ).join('');
 }
@@ -15110,7 +15154,12 @@ function _sanitizeRssContent(raw, maxLen) {
 
 function renderItems(listEl, items) {
   const channelFlag = listEl.dataset.flag || '📰';
-  listEl.innerHTML = items.slice(0, 4).map(item => {
+  const channelGroup = listEl.dataset.group || '';
+  const fallbackImg = _LNB_FALLBACKS[channelGroup] || _LNB_FALLBACK_DEFAULT;
+  const shown = items.slice(0, 9);
+  if (!shown.length) return;
+
+  listEl.innerHTML = shown.map((item, i) => {
     const title   = (typeof item === 'string' ? item : (item.title || '')).trim();
     const link    = item.link || item.url || '#';
     const pub     = item.pubDate || item.published || '';
@@ -15119,28 +15168,49 @@ function renderItems(listEl, items) {
     const source  = item.source || item.feed || '';
     const imgSrc  = item.image || '';
     const timeStr = pub ? new Date(pub).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}) : '';
-    const safeTitle   = escHtml(title);
-    const encodedDesc = encodeURIComponent(snippet);
-    const imgHtml = imgSrc
-      ? `<img class="lnb-card-img" src="${escHtml(imgSrc)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-        + `<div class="lnb-card-no-img" style="display:none">${channelFlag}</div>`
-      : `<div class="lnb-card-no-img">${channelFlag}</div>`;
-    return `<div class="lnb-news-card" role="button" tabindex="0"
-      data-true-url="${escHtml(link)}" data-title="${safeTitle}" data-modal-content="${encodedDesc}" data-source="${escHtml(source)}"
-      onclick="event.preventDefault(); rssModalOpen(${JSON.stringify(title)},${JSON.stringify(snippet)},${JSON.stringify(link)},${JSON.stringify(source)}); return false"
-      onkeydown="if(event.key==='Enter'){event.preventDefault();this.click()}">
-      <div class="lnb-card-img-wrap">${imgHtml}</div>
-      <div class="lnb-card-body">
-        <div class="lnb-card-title">${safeTitle}</div>
-        ${timeStr ? `<div class="lnb-card-time">${timeStr}</div>` : ''}
-      </div>
-    </div>`;
+    const safeTitle = escHtml(title);
+    const clickAttrs = `role="button" tabindex="0" data-true-url="${escHtml(link)}" data-title="${safeTitle}" onclick="event.preventDefault();rssModalOpen(${JSON.stringify(title)},${JSON.stringify(snippet)},${JSON.stringify(link)},${JSON.stringify(source)});return false" onkeydown="if(event.key==='Enter'){event.preventDefault();this.click()}"`;
+
+    if (i === 0) {
+      // Hero card — horizontal, always has image (RSS or fallback)
+      const heroSrc = imgSrc || fallbackImg;
+      return `<div class="lnb-hero-card" ${clickAttrs}>
+        <div class="lnb-hero-img-wrap">
+          <img class="lnb-hero-img" src="${escHtml(heroSrc)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="lnb-hero-no-img" style="display:none">${channelFlag}</div>
+        </div>
+        <div class="lnb-hero-body">
+          <div class="lnb-hero-title">${safeTitle}</div>
+          ${timeStr ? `<div class="lnb-hero-time">${timeStr}</div>` : ''}
+        </div>
+      </div>`;
+    } else if (imgSrc) {
+      // Small card with RSS image
+      return `<div class="lnb-news-card" ${clickAttrs}>
+        <div class="lnb-card-img-wrap">
+          <img class="lnb-card-img" src="${escHtml(imgSrc)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="lnb-card-no-img" style="display:none">${channelFlag}</div>
+        </div>
+        <div class="lnb-card-body">
+          <div class="lnb-card-title">${safeTitle}</div>
+          ${timeStr ? `<div class="lnb-card-time">${timeStr}</div>` : ''}
+        </div>
+      </div>`;
+    } else {
+      // Text-only small card (no RSS image)
+      return `<div class="lnb-news-card lnb-text-card" ${clickAttrs}>
+        <div class="lnb-card-body">
+          <div class="lnb-card-title">${safeTitle}</div>
+          ${timeStr ? `<div class="lnb-card-time">${timeStr}</div>` : ''}
+        </div>
+      </div>`;
+    }
   }).join('');
 }
 
 function _parseXmlItems(xmlStr) {
   const xml = new DOMParser().parseFromString(xmlStr, 'text/xml');
-  const nodes = Array.from(xml.querySelectorAll('item, entry')).slice(0, 6);
+  const nodes = Array.from(xml.querySelectorAll('item, entry')).slice(0, 10);
   return nodes.map(item => {
     // Extract link: try <link href="...">, then <link>text</link>, then <guid>, then <enclosure url="...">
     const linkEl = item.querySelector('link');
