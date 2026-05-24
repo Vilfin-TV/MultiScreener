@@ -152,27 +152,98 @@ const SOURCE_POOL = {
   ],
 
   // ── malayalam ───────────────────────────────────────────────────────────────
-  // Anchors (pos 0-1) MUST be sources that work from GitHub Actions (non-India IPs).
-  // Google News is geo-agnostic; YouTube Atom feeds are always accessible.
   malayalam: [
     { url: 'https://news.google.com/rss/headlines/section/geo/India?hl=ml&gl=IN&ceid=IN:ml', name: 'Google News Malayalam' },
     { url: 'https://news.google.com/rss/search?q=kerala+news&hl=ml&gl=IN&ceid=IN:ml',        name: 'Google Kerala Search' },
-    { url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCt9NKhiheNmBUZYVe0igMlg',   name: 'Janam TV YT' },
     { url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCbGkCBm7P6p3a7PGQRmMhsQ',   name: 'Asianet News YT' },
     { url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCyhmnsZTNxF_lFr3lOcGgdQ',   name: 'Manorama News YT' },
     { url: 'https://www.mathrubhumi.com/rss/news.xml',                                        name: 'Mathrubhumi' },
     { url: 'https://www.asianetnews.com/rss',                                                 name: 'Asianet News' },
     { url: 'https://www.manoramaonline.com/news/kerala.rssxml',                               name: 'Manorama Online' },
-    { url: 'https://www.madhyamam.com/rss.xml',                                               name: 'Madhyamam' },
+  ],
+
+  // ── Malayalam Edition sub-categories (RSS-only, Malayalam language) ─────────
+  ml_trending: [
+    { url: 'https://news.google.com/rss/headlines/section/geo/India/IN-KL?hl=ml&gl=IN&ceid=IN:ml', name: 'Google Kerala' },
+    { url: 'https://news.google.com/rss/search?q=kerala+viral+trending&hl=ml&gl=IN&ceid=IN:ml',    name: 'Kerala Trending' },
+    { url: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=IN',                   name: 'Google Trends IN' },
+    { url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCbGkCBm7P6p3a7PGQRmMhsQ',        name: 'Asianet YT' },
+  ],
+  ml_movies: [
+    { url: 'https://news.google.com/rss/search?q=malayalam+cinema+film+movie&hl=ml&gl=IN&ceid=IN:ml',       name: 'Malayalam Cinema' },
+    { url: 'https://news.google.com/rss/search?q=mollywood+new+movie+release+OTT&hl=ml&gl=IN&ceid=IN:ml',  name: 'Mollywood OTT' },
+    { url: 'https://news.google.com/rss/search?q=കേരള+സിനിമ+ചലച്ചിത്രം&hl=ml&gl=IN&ceid=IN:ml',            name: 'Kerala Cinema ML' },
+  ],
+  ml_music: [
+    { url: 'https://news.google.com/rss/search?q=malayalam+music+song+album+singer&hl=ml&gl=IN&ceid=IN:ml', name: 'Malayalam Music' },
+    { url: 'https://news.google.com/rss/search?q=kerala+music+album+concert&hl=ml&gl=IN&ceid=IN:ml',        name: 'Kerala Music' },
+    { url: 'https://news.google.com/rss/search?q=malayalam+song+new+release&hl=ml&gl=IN&ceid=IN:ml',        name: 'New Songs' },
+  ],
+  ml_local: [
+    { url: 'https://news.google.com/rss/search?q=kerala+district+local+news&hl=ml&gl=IN&ceid=IN:ml',   name: 'Kerala Local' },
+    { url: 'https://news.google.com/rss/search?q=thiruvananthapuram+kochi+kozhikode&hl=ml&gl=IN&ceid=IN:ml', name: 'City News' },
+    { url: 'https://news.google.com/rss/search?q=kerala+government+panchayath+local+body&hl=ml&gl=IN&ceid=IN:ml', name: 'Local Bodies' },
+  ],
+  ml_science: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/SCIENCE?hl=ml&gl=IN&ceid=IN:ml',              name: 'Google Science ML' },
+    { url: 'https://news.google.com/rss/search?q=science+research+discovery+ശാസ്ത്രം&hl=ml&gl=IN&ceid=IN:ml', name: 'Science Malayalam' },
+    { url: 'https://news.google.com/rss/search?q=kerala+science+technology+innovation&hl=ml&gl=IN&ceid=IN:ml', name: 'Kerala Science' },
+  ],
+  ml_space: [
+    { url: 'https://news.google.com/rss/search?q=ISRO+space+mission+rocket+satellite&hl=ml&gl=IN&ceid=IN:ml',  name: 'ISRO Space' },
+    { url: 'https://news.google.com/rss/search?q=NASA+space+planet+ബഹിരാകാശം+chandrayaan&hl=ml&gl=IN&ceid=IN:ml', name: 'Space Malayalam' },
+  ],
+  ml_sports: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/SPORTS?hl=ml&gl=IN&ceid=IN:ml',                 name: 'Google Sports ML' },
+    { url: 'https://news.google.com/rss/search?q=cricket+football+sports+kerala+IPL&hl=ml&gl=IN&ceid=IN:ml',   name: 'Kerala Sports' },
+    { url: 'https://news.google.com/rss/search?q=കേരള+കായികം+ക്രിക്കറ്റ്+ഫുട്ബോൾ&hl=ml&gl=IN&ceid=IN:ml',     name: 'Sports ML' },
+  ],
+  ml_health: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/HEALTH?hl=ml&gl=IN&ceid=IN:ml',                 name: 'Google Health ML' },
+    { url: 'https://news.google.com/rss/search?q=health+ayurveda+wellness+lifestyle+kerala&hl=ml&gl=IN&ceid=IN:ml', name: 'Kerala Health' },
+    { url: 'https://news.google.com/rss/search?q=ആരോഗ്യം+ആയുർവേദം+kerala+hospital&hl=ml&gl=IN&ceid=IN:ml',    name: 'Health Malayalam' },
+  ],
+  ml_food: [
+    { url: 'https://news.google.com/rss/search?q=food+agriculture+farming+kerala+rice&hl=ml&gl=IN&ceid=IN:ml',  name: 'Kerala Food & Farm' },
+    { url: 'https://news.google.com/rss/search?q=കൃഷി+ഭക്ഷണം+agriculture+food+recipe&hl=ml&gl=IN&ceid=IN:ml', name: 'Food Malayalam' },
+    { url: 'https://news.google.com/rss/search?q=kerala+vegetable+fish+price+market&hl=ml&gl=IN&ceid=IN:ml',   name: 'Market Prices' },
+  ],
+  ml_realestate: [
+    { url: 'https://news.google.com/rss/search?q=real+estate+property+kerala+home+flat&hl=ml&gl=IN&ceid=IN:ml',      name: 'Kerala Property' },
+    { url: 'https://news.google.com/rss/search?q=kerala+house+construction+apartment+land&hl=ml&gl=IN&ceid=IN:ml',   name: 'Kerala Real Estate' },
+    { url: 'https://news.google.com/rss/search?q=interior+home+design+kerala&hl=ml&gl=IN&ceid=IN:ml',                name: 'Home Design' },
+  ],
+  ml_career: [
+    { url: 'https://news.google.com/rss/search?q=job+employment+career+vacancy+Kerala+PSC&hl=ml&gl=IN&ceid=IN:ml',   name: 'Kerala Jobs' },
+    { url: 'https://news.google.com/rss/search?q=government+job+recruitment+notification+kerala&hl=ml&gl=IN&ceid=IN:ml', name: 'Govt Recruitment' },
+    { url: 'https://news.google.com/rss/search?q=തൊഴിൽ+വേതനം+recruitment+PSC+job&hl=ml&gl=IN&ceid=IN:ml',           name: 'Jobs Malayalam' },
+  ],
+  ml_tech: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=ml&gl=IN&ceid=IN:ml',                  name: 'Google Tech ML' },
+    { url: 'https://news.google.com/rss/search?q=technology+smartphone+gadget+kerala+IT&hl=ml&gl=IN&ceid=IN:ml',    name: 'Kerala Tech' },
+    { url: 'https://news.google.com/rss/search?q=mobile+phone+computer+app+tech+news+india&hl=ml&gl=IN&ceid=IN:ml', name: 'Tech News' },
   ],
 };
 
 const SECTION_META = {
-  trending: { image: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80', label: '🔥 Trending Now',    accent: '#ef4444' },
-  global:   { image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&q=80', label: '🌍 Global News',     accent: '#3b82f6' },
-  india:    { image: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=1200&q=80', label: '🇮🇳 India News',     accent: '#f97316' },
-  stock:    { image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80', label: '📈 Stock News',      accent: '#10b981' },
-  malayalam:{ image: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=1200&q=80', label: '🎭 Malayalam News',  accent: '#8b5cf6' }
+  trending:     { image: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80', label: '🔥 Trending Now',      accent: '#ef4444' },
+  global:       { image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&q=80', label: '🌍 Global News',       accent: '#3b82f6' },
+  india:        { image: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=1200&q=80', label: '🇮🇳 India News',       accent: '#f97316' },
+  stock:        { image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80', label: '📈 Stock News',        accent: '#10b981' },
+  malayalam:    { image: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=1200&q=80', label: '🎭 Malayalam News',    accent: '#8b5cf6' },
+  // ── Malayalam Edition sub-categories ──────────────────────────────────────
+  ml_trending:  { image: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80', label: 'Top Trending Kerala', accent: '#ef4444' },
+  ml_movies:    { image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&q=80', label: 'Movie News',          accent: '#f59e0b' },
+  ml_music:     { image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1200&q=80', label: 'Music News',          accent: '#ec4899' },
+  ml_local:     { image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1200&q=80', label: 'Local News',          accent: '#06b6d4' },
+  ml_science:   { image: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=1200&q=80', label: 'Science News',        accent: '#6366f1' },
+  ml_space:     { image: 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1200&q=80', label: 'Space News',          accent: '#1e3a8a' },
+  ml_sports:    { image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80', label: 'Sports News',         accent: '#16a34a' },
+  ml_health:    { image: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=1200&q=80', label: 'Health & Lifestyle',  accent: '#0ea5e9' },
+  ml_food:      { image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&q=80', label: 'Food & Agriculture',  accent: '#84cc16' },
+  ml_realestate:{ image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=80', label: 'Home & Real Estate',  accent: '#d97706' },
+  ml_career:    { image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1200&q=80', label: 'Career & Jobs',      accent: '#7c3aed' },
+  ml_tech:      { image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80', label: 'Technology News',    accent: '#2563eb' },
 };
 
 /* ═══════════════════════════════════════════════════
@@ -308,9 +379,11 @@ function extractTagValue(block, tag) {
 
 function decodeEntities(str) {
   return str
-    .replace(/&amp;/g,  '&').replace(/&lt;/g,   '<').replace(/&gt;/g,   '>')
-    .replace(/&quot;/g, '"').replace(/&#39;/g,  "'").replace(/&nbsp;/g, ' ')
-    .replace(/&#(\d+);/g, function(_, n){ return String.fromCharCode(parseInt(n,10)); });
+    .replace(/&amp;/g,  '&').replace(/&lt;/g,  '<').replace(/&gt;/g,  '>')
+    .replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ').replace(/&hellip;/g, '…').replace(/&mdash;/g, '—').replace(/&ndash;/g, '–')
+    .replace(/&#x([0-9a-fA-F]+);/g, function(_, h){ return String.fromCharCode(parseInt(h, 16)); })
+    .replace(/&#(\d+);/g,           function(_, n){ return String.fromCharCode(parseInt(n, 10)); });
 }
 
 function parseRSS(xml) {
@@ -326,8 +399,16 @@ function parseRSS(xml) {
   return items;
 }
 
+/** Strip trailing " - Source Name" appended by Google News aggregation */
+function cleanHeadline(title) {
+  if (!title) return '';
+  var cleaned = title.replace(/\s+[-–—]\s+[A-Za-z][A-Za-z0-9 &\.\-\']{1,59}$/, '').trim();
+  return cleaned.length >= 5 ? cleaned : title.trim();
+}
+
 function processBlock(block, items) {
-  var title = decodeEntities(extractTagValue(block, 'title').replace(/<[^>]+>/g,''));
+  var rawTitle = decodeEntities(extractTagValue(block, 'title').replace(/<[^>]+>/g, ''));
+  var title = cleanHeadline(rawTitle);
   if (!title || title.length < 5) return;
 
   var link = extractTagValue(block, 'link') || extractTagValue(block, 'guid');
@@ -827,7 +908,7 @@ function rssStory(item) {
 ═══════════════════════════════════════════════════ */
 async function buildSection(sectionId, feedPool, meta) {
   console.log('\n[Section]', sectionId.toUpperCase());
-  var isRssOnly = (sectionId === 'stock' || sectionId === 'malayalam');
+  var isRssOnly = (sectionId === 'stock' || sectionId === 'malayalam' || sectionId.startsWith('ml_'));
 
   // Always include first 2 anchored feeds + random extras
   var pool    = feedPool || [];

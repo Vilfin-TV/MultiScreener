@@ -337,6 +337,90 @@ body{
 .news-section-india{--section-accent:#f97316}
 .news-section-stock{--section-accent:#10b981}
 .news-section-malayalam{--section-accent:#8b5cf6}
+/* Malayalam Edition sub-category accent colours */
+.news-section-ml-movies  {--section-accent:#f59e0b}
+.news-section-ml-music   {--section-accent:#ec4899}
+.news-section-ml-local   {--section-accent:#06b6d4}
+.news-section-ml-science {--section-accent:#6366f1}
+.news-section-ml-space   {--section-accent:#1e3a8a}
+.news-section-ml-sports  {--section-accent:#16a34a}
+.news-section-ml-health  {--section-accent:#0ea5e9}
+.news-section-ml-food    {--section-accent:#84cc16}
+.news-section-ml-real    {--section-accent:#d97706}
+.news-section-ml-career  {--section-accent:#7c3aed}
+.news-section-ml-tech    {--section-accent:#2563eb}
+
+/* ═══════════════════════════════════════════════════
+   MALAYALAM EDITION — Category tabs block
+═══════════════════════════════════════════════════ */
+.ml-cat-block{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;margin:0 0 32px;overflow:hidden;
+}
+.ml-cat-header{
+  display:flex;align-items:center;gap:10px;
+  padding:16px 20px 14px;border-bottom:1px solid var(--border);
+}
+.ml-cat-title{
+  font-family:'Playfair Display',serif;font-size:18px;
+  font-weight:700;color:var(--text);
+}
+.ml-cat-subtitle{
+  font-size:11.5px;color:var(--text3);margin-left:auto;
+  white-space:nowrap;
+}
+.ml-cat-tabs{
+  display:flex;flex-wrap:wrap;gap:0;
+  background:var(--dark2);border-bottom:1px solid var(--border);padding:0;
+}
+.ml-cat-tab{
+  padding:9px 14px;font-size:11.5px;font-weight:600;
+  color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;
+  transition:color .15s,border-color .15s,background .15s;
+  white-space:nowrap;user-select:none;letter-spacing:.2px;
+}
+.ml-cat-tab:hover{color:var(--text);}
+.ml-cat-tab.active{
+  color:var(--burn2);border-bottom-color:var(--burn2);
+  background:rgba(37,99,235,.07);
+}
+.ml-cat-content{padding:0;min-height:180px;}
+.ml-cat-list{display:flex;flex-direction:column;gap:0;}
+.ml-cat-item{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:14px 20px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .15s;
+}
+.ml-cat-item:last-child{border-bottom:none;}
+.ml-cat-item:hover{background:var(--card2);}
+.ml-cat-item-num{
+  font-size:11px;font-weight:700;color:var(--text3);
+  min-width:22px;padding-top:3px;font-variant-numeric:tabular-nums;
+}
+.ml-cat-item-body{flex:1;min-width:0;}
+.ml-cat-item-hl{
+  font-family:'Noto Sans Malayalam','DM Sans',sans-serif;
+  font-size:14px;font-weight:600;color:var(--text);
+  line-height:1.55;margin-bottom:5px;
+}
+.ml-cat-item-meta{
+  font-size:11px;color:var(--text3);
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.ml-cat-item-src{font-weight:600;color:var(--burn3);}
+.ml-cat-item-arrow{
+  font-size:20px;color:var(--text3);padding-left:4px;opacity:.5;flex-shrink:0;
+}
+.ml-cat-empty{padding:40px 24px;text-align:center;color:var(--text3);}
+.ml-cat-empty-icon{font-size:30px;margin-bottom:8px;}
+.ml-cat-empty-text{font-size:13px;line-height:1.6;}
+@media(max-width:600px){
+  .ml-cat-tab{font-size:11px;padding:8px 10px;}
+  .ml-cat-item{padding:12px 14px;gap:10px;}
+  .ml-cat-item-hl{font-size:13px;}
+  .ml-cat-header{padding:12px 14px 11px;}
+  .ml-cat-title{font-size:16px;}
+}
 
 /* ═══════════════════════════════════════════════════
    FEATURED HERO CARD
@@ -1450,8 +1534,41 @@ const SECTION_META = {
     accent: '#8b5cf6',
     cssClass: 'news-section-malayalam',
     image: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=1200&q=80'
-  }
+  },
+  // ── Malayalam Edition sub-categories ──────────────────────────────────────
+  ml_trending:  { id:'ml_trending',  label:'Top Trending Kerala', icon:'🔥', accent:'#ef4444', cssClass:'news-section-trending',  image:'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80' },
+  ml_movies:    { id:'ml_movies',    label:'Movie News',          icon:'🎬', accent:'#f59e0b', cssClass:'news-section-ml-movies',  image:'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&q=80' },
+  ml_music:     { id:'ml_music',     label:'Music News',          icon:'🎵', accent:'#ec4899', cssClass:'news-section-ml-music',   image:'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1200&q=80' },
+  ml_local:     { id:'ml_local',     label:'Local News',          icon:'📍', accent:'#06b6d4', cssClass:'news-section-ml-local',   image:'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1200&q=80' },
+  ml_science:   { id:'ml_science',   label:'Science News',        icon:'🔬', accent:'#6366f1', cssClass:'news-section-ml-science', image:'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=1200&q=80' },
+  ml_space:     { id:'ml_space',     label:'Space News',          icon:'🚀', accent:'#1e3a8a', cssClass:'news-section-ml-space',   image:'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1200&q=80' },
+  ml_sports:    { id:'ml_sports',    label:'Sports News',         icon:'🏏', accent:'#16a34a', cssClass:'news-section-ml-sports',  image:'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80' },
+  ml_health:    { id:'ml_health',    label:'Health & Lifestyle',  icon:'🏥', accent:'#0ea5e9', cssClass:'news-section-ml-health',  image:'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=1200&q=80' },
+  ml_food:      { id:'ml_food',      label:'Food & Agriculture',  icon:'🌾', accent:'#84cc16', cssClass:'news-section-ml-food',    image:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&q=80' },
+  ml_realestate:{ id:'ml_realestate',label:'Home & Real Estate',  icon:'🏠', accent:'#d97706', cssClass:'news-section-ml-real',    image:'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=80' },
+  ml_career:    { id:'ml_career',    label:'Career & Jobs',       icon:'💼', accent:'#7c3aed', cssClass:'news-section-ml-career',  image:'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1200&q=80' },
+  ml_tech:      { id:'ml_tech',      label:'Technology News',     icon:'💻', accent:'#2563eb', cssClass:'news-section-ml-tech',    image:'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80' }
 };
+
+/* ═══════════════════════════════════════════════════
+   MALAYALAM EDITION — 12 category tab definitions
+═══════════════════════════════════════════════════ */
+var ML_CATEGORIES = [
+  { id:'ml_trending',   label:'🔥 Trending Kerala' },
+  { id:'ml_movies',     label:'🎬 Movies' },
+  { id:'ml_music',      label:'🎵 Music' },
+  { id:'ml_local',      label:'📍 Local' },
+  { id:'ml_science',    label:'🔬 Science' },
+  { id:'ml_space',      label:'🚀 Space' },
+  { id:'ml_sports',     label:'🏏 Sports' },
+  { id:'ml_health',     label:'🏥 Health' },
+  { id:'ml_food',       label:'🌾 Food & Agri' },
+  { id:'ml_realestate', label:'🏠 Real Estate' },
+  { id:'ml_career',     label:'💼 Career' },
+  { id:'ml_tech',       label:'💻 Tech' }
+];
+
+var _newsData = null; // stores fetched data for category switching without re-fetch
 
 /* ═══════════════════════════════════════════════════
    UTILITY: TIME AGO
@@ -2522,6 +2639,93 @@ function _nmwInjectScreenerWidget(container, market) {
 }
 
 /* ═══════════════════════════════════════════════════
+   MALAYALAM EDITION — Build category block
+═══════════════════════════════════════════════════ */
+function buildMalayalamCategoriesBlock(data) {
+  var wrap = document.createElement('div');
+  wrap.className = 'ml-cat-block';
+  wrap.id = 'ml-categories-block';
+
+  // Header
+  var hdr = document.createElement('div');
+  hdr.className = 'ml-cat-header';
+  hdr.innerHTML = '<span style="font-size:22px">📰</span>'
+    + '<span class="ml-cat-title">മലയാളം എഡിഷൻ</span>'
+    + '<span class="ml-cat-subtitle">12 Categories · Malayalam</span>';
+  wrap.appendChild(hdr);
+
+  // Tab bar
+  var tabBar = document.createElement('div');
+  tabBar.className = 'ml-cat-tabs';
+  tabBar.id = 'ml-cat-tabs';
+  ML_CATEGORIES.forEach(function(cat, i) {
+    var tab = document.createElement('div');
+    tab.className = 'ml-cat-tab' + (i === 0 ? ' active' : '');
+    tab.textContent = cat.label;
+    tab.setAttribute('data-catid', cat.id);
+    tab.onclick = (function(id){ return function(){ _showMlCategory(id); }; })(cat.id);
+    tabBar.appendChild(tab);
+  });
+  wrap.appendChild(tabBar);
+
+  // Content area
+  var content = document.createElement('div');
+  content.className = 'ml-cat-content';
+  content.id = 'ml-cat-content';
+  wrap.appendChild(content);
+
+  // Render first category immediately
+  _showMlCategory(ML_CATEGORIES[0].id, data);
+
+  return wrap;
+}
+
+function _showMlCategory(catId, data) {
+  // Activate correct tab
+  var tabBar = document.getElementById('ml-cat-tabs');
+  if (tabBar) {
+    Array.prototype.forEach.call(tabBar.querySelectorAll('.ml-cat-tab'), function(t) {
+      t.classList.toggle('active', t.getAttribute('data-catid') === catId);
+    });
+  }
+
+  var content = document.getElementById('ml-cat-content');
+  if (!content) return;
+
+  var src = data || _newsData;
+  var items = (src && src.sections && src.sections[catId] && src.sections[catId].items)
+    ? src.sections[catId].items.filter(isItemValid)
+    : [];
+
+  if (items.length === 0) {
+    var catMeta = SECTION_META[catId] || {};
+    content.innerHTML = '<div class="ml-cat-empty">'
+      + '<div class="ml-cat-empty-icon">' + (catMeta.icon || '📰') + '</div>'
+      + '<div class="ml-cat-empty-text">Latest stories loading — check back shortly.</div>'
+      + '</div>';
+    return;
+  }
+
+  var html = '<div class="ml-cat-list">';
+  items.forEach(function(item, i) {
+    var itemUrl = item.url || item.link || '#';
+    html += '<div class="ml-cat-item" onclick="window.open(\'' + escAttr(itemUrl) + '\',\'_blank\')" role="button" tabindex="0" aria-label="' + esc(item.headline || '') + '">'
+      + '<div class="ml-cat-item-num">' + (i + 1) + '</div>'
+      + '<div class="ml-cat-item-body">'
+      + '<div class="ml-cat-item-hl">' + esc(item.headline || '') + '</div>'
+      + '<div class="ml-cat-item-meta">'
+      + (item.source ? '<span class="ml-cat-item-src">' + esc(item.source) + '</span>' : '')
+      + '<span>' + timeAgo(item.publishedAt) + '</span>'
+      + '</div>'
+      + '</div>'
+      + '<span class="ml-cat-item-arrow">›</span>'
+      + '</div>';
+  });
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════════════
    LOAD NEWS PAGE
 ═══════════════════════════════════════════════════ */
 async function loadNewsPage() {
@@ -2543,6 +2747,8 @@ async function loadNewsPage() {
     console.warn('News data unavailable:', e.message);
   }
 
+  _newsData = data; // store globally for category tab switching
+
   container.innerHTML = '';
   var totalStories = 0;
 
@@ -2562,6 +2768,11 @@ async function loadNewsPage() {
       setTimeout(function() {
         nmwSwitch('topstories', document.getElementById('nmw-tab-topstories'));
       }, 150);
+    }
+    // Inject Malayalam Edition categories block directly below Malayalam News
+    if (sid === 'malayalam') {
+      var mlBlock = buildMalayalamCategoriesBlock(data);
+      container.appendChild(mlBlock);
     }
   });
 
@@ -2704,6 +2915,8 @@ async function loadWorldSection(container) {
 ═══════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', function() {
   loadNewsPage();
+  // Auto-refresh all RSS news content every 15 minutes
+  setInterval(function() { loadNewsPage(); }, 15 * 60 * 1000);
 });
 </script>
 
