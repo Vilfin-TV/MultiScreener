@@ -1456,31 +1456,31 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 /* ── LIVE NEWS CARD GRID (box-style with pictures) ── */
 .lnb-card-grid{padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;min-height:140px}
 .lnb-card-grid .lnb-loading,.lnb-card-grid .lnb-error,.lnb-card-grid .lnb-stale{grid-column:1/-1}
-/* Hero card — first item, spans full width, horizontal layout */
-.lnb-hero-card{grid-column:1/-1;display:flex;flex-direction:row;background:var(--card2);border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s;min-height:88px}
+/* Hero card — full-width vertical, image on top, full headline below */
+.lnb-hero-card{grid-column:1/-1;display:flex;flex-direction:column;background:var(--card2);border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s}
 .lnb-hero-card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.3);border-color:var(--burn3)}
-.lnb-hero-img-wrap{position:relative;width:130px;flex-shrink:0;background:var(--card3);overflow:hidden}
+.lnb-hero-img-wrap{position:relative;width:100%;padding-top:46%;overflow:hidden;flex-shrink:0;background:var(--card3)}
 .lnb-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .3s ease}
-.lnb-hero-card:hover .lnb-hero-img{transform:scale(1.05)}
-.lnb-hero-no-img{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;opacity:.45}
-.lnb-hero-body{padding:9px 10px;display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
-.lnb-hero-title{font-size:12px;font-weight:700;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.lnb-hero-card:hover .lnb-hero-img{transform:scale(1.04)}
+.lnb-hero-no-img{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:36px;opacity:.4}
+.lnb-hero-body{padding:9px 11px 11px;display:flex;flex-direction:column;gap:4px;border-top:2px solid var(--burn2)}
+.lnb-hero-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.5}
 .lnb-hero-card:hover .lnb-hero-title{color:var(--gold2)}
-.lnb-hero-time{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:auto;padding-top:3px}
-/* Small cards (items 2-9) */
+.lnb-hero-time{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;padding-top:2px}
+/* Small cards (items 2–9) */
 .lnb-news-card{background:var(--card2);border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s,border-color .15s}
 .lnb-news-card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.3);border-color:var(--burn3)}
 .lnb-card-img-wrap{position:relative;width:100%;padding-top:52%;overflow:hidden;flex-shrink:0;background:var(--card3)}
 .lnb-card-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .3s ease}
 .lnb-news-card:hover .lnb-card-img{transform:scale(1.05)}
 .lnb-card-no-img{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;opacity:.5}
-.lnb-card-body{padding:7px 8px 8px;display:flex;flex-direction:column;gap:3px;flex:1}
-.lnb-card-title{font-size:11px;font-weight:600;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.lnb-card-body{padding:7px 8px 9px;display:flex;flex-direction:column;gap:3px;flex:1}
+.lnb-card-title{font-size:11.5px;font-weight:600;color:var(--text);line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .lnb-news-card:hover .lnb-card-title{color:var(--gold2)}
 .lnb-card-time{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:auto;padding-top:3px}
-/* Text-only card (no RSS image for items 2-9) */
-.lnb-news-card.lnb-text-card .lnb-card-title{-webkit-line-clamp:2}
-@media(max-width:480px){.lnb-card-grid{grid-template-columns:1fr 1fr;gap:5px;padding:6px}.lnb-hero-img-wrap{width:100px}}
+/* Text-only card shows more lines since no image */
+.lnb-news-card.lnb-text-card .lnb-card-title{-webkit-line-clamp:4}
+@media(max-width:480px){.lnb-card-grid{grid-template-columns:1fr 1fr;gap:5px;padding:6px}}
 
 /* ── Calendar strips — thin visible scrollbar so users know they can scroll ── */
 #cal-country-strip,#cal-region-strip{
@@ -7035,6 +7035,14 @@ function rbCollapseExpand(e) {
 function rssModalOpen(title, snippet, url, source) { openNewsModal(title, url, snippet, source); }
 function showNewsModalFallback(title, snippet, url, source) { openNewsModal(title, url, snippet, source); }
 function showNewsModal(title, snippet, url, source) { openNewsModal(title, url, snippet, source); }
+// Safe click handler for live-news cards — reads from data attributes to avoid quote-escaping issues
+function lnbCardOpen(el) {
+  var title   = el.dataset.title   || '';
+  var snippet = el.dataset.snippet ? decodeURIComponent(el.dataset.snippet) : '';
+  var url     = el.dataset.url     || '#';
+  var source  = el.dataset.source  || '';
+  rssModalOpen(title, snippet, url, source);
+}
 
 function openNewsModal(title, url, snippet, sourceName) {
   var overlay    = document.getElementById('rss-modal-overlay');
@@ -15168,16 +15176,21 @@ function renderItems(listEl, items) {
     const source  = item.source || item.feed || '';
     const imgSrc  = item.image || '';
     const timeStr = pub ? new Date(pub).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}) : '';
-    const safeTitle = escHtml(title);
-    const clickAttrs = `role="button" tabindex="0" data-true-url="${escHtml(link)}" data-title="${safeTitle}" onclick="event.preventDefault();rssModalOpen(${JSON.stringify(title)},${JSON.stringify(snippet)},${JSON.stringify(link)},${JSON.stringify(source)});return false" onkeydown="if(event.key==='Enter'){event.preventDefault();this.click()}"`;
+    // Store all dynamic data in data-attributes — avoids quote-escaping issues in onclick
+    const safeTitle  = escHtml(title);
+    const safeUrl    = escHtml(link);
+    const safeSrc    = escHtml(source);
+    const encSnippet = encodeURIComponent(snippet);
+    const dataAttrs  = `data-title="${safeTitle}" data-snippet="${encSnippet}" data-url="${safeUrl}" data-source="${safeSrc}"`;
+    const clickAttrs = `role="button" tabindex="0" ${dataAttrs} onclick="lnbCardOpen(this)" onkeydown="if(event.key==='Enter')lnbCardOpen(this)"`;
 
     if (i === 0) {
-      // Hero card — horizontal, always has image (RSS or fallback)
+      // Hero card — full-width vertical, image on top, full headline visible
       const heroSrc = imgSrc || fallbackImg;
       return `<div class="lnb-hero-card" ${clickAttrs}>
         <div class="lnb-hero-img-wrap">
-          <img class="lnb-hero-img" src="${escHtml(heroSrc)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-          <div class="lnb-hero-no-img" style="display:none">${channelFlag}</div>
+          <img class="lnb-hero-img" src="${escHtml(heroSrc)}" alt="" loading="lazy" onerror="this.closest('.lnb-hero-img-wrap').style.display='none'">
+          <div class="lnb-hero-no-img">${channelFlag}</div>
         </div>
         <div class="lnb-hero-body">
           <div class="lnb-hero-title">${safeTitle}</div>
@@ -15188,8 +15201,8 @@ function renderItems(listEl, items) {
       // Small card with RSS image
       return `<div class="lnb-news-card" ${clickAttrs}>
         <div class="lnb-card-img-wrap">
-          <img class="lnb-card-img" src="${escHtml(imgSrc)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-          <div class="lnb-card-no-img" style="display:none">${channelFlag}</div>
+          <img class="lnb-card-img" src="${escHtml(imgSrc)}" alt="" loading="lazy" onerror="this.closest('.lnb-card-img-wrap').style.display='none'">
+          <div class="lnb-card-no-img">${channelFlag}</div>
         </div>
         <div class="lnb-card-body">
           <div class="lnb-card-title">${safeTitle}</div>
@@ -15197,7 +15210,7 @@ function renderItems(listEl, items) {
         </div>
       </div>`;
     } else {
-      // Text-only small card (no RSS image)
+      // Text-only small card — no image area, headline gets more lines
       return `<div class="lnb-news-card lnb-text-card" ${clickAttrs}>
         <div class="lnb-card-body">
           <div class="lnb-card-title">${safeTitle}</div>
