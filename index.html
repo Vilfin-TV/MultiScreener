@@ -2159,7 +2159,7 @@ footer{
 ══════════════════════════════════════════ */
 /* Right bar always stays dark — it's a media/AI panel */
 .right-bar{
-  width:310px;flex-shrink:0;
+  width:360px;flex-shrink:0;
   background:#080e1a;border-left:1px solid #131d35;
   display:flex;flex-direction:column;
   position:sticky;top:90px;height:calc(100vh - 90px);
@@ -2524,6 +2524,12 @@ footer{
 #rb-panel-iptv.iptv-s3 #iptv-geo-states-col{display:none;}
 #rb-panel-iptv.iptv-s3 #iptv-geo-states-col.iptv-state-active{display:flex;}
 #rb-panel-iptv.iptv-s3 #iptv-preset-strip,#rb-panel-iptv.iptv-s3 #iptv-top-fold{display:none !important;}
+/* Channel list compact in 3-col — small logo, full name visible */
+#rb-panel-iptv.iptv-s3 .radio-station-item{padding:4px 5px;margin-bottom:1px;gap:5px;}
+#rb-panel-iptv.iptv-s3 .iptv-ch-logo{width:20px!important;height:20px!important;border-radius:4px!important;font-size:8px!important;flex-shrink:0;}
+#rb-panel-iptv.iptv-s3 .radio-station-name{font-size:9.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#rb-panel-iptv.iptv-s3 .radio-station-tag{font-size:8px;}
+#rb-panel-iptv.iptv-s3 .radio-station-item > button{display:none;}
 /* ── Style 4: Card Grid ── */
 #rb-panel-iptv.iptv-s4 #iptv-list{display:grid;grid-template-columns:repeat(2,1fr);padding:4px;gap:0;overflow-y:auto;flex:1;align-content:start;}
 #rb-panel-iptv.iptv-s4 .radio-station-item{flex-direction:column;align-items:center;justify-content:flex-start;gap:5px;padding:10px 6px;text-align:center;margin-bottom:0;border-radius:0;border-bottom:1px solid #0d1e38 !important;border-right:1px solid #0d1e38 !important;border-left:none !important;border-top:none !important;min-height:74px;}
@@ -3322,7 +3328,7 @@ footer{
 
 @media(max-width:1100px){
   /* right-bar collapses to mobile drawer below 900px; between 900-1100px it shrinks */
-  .right-bar{width:260px}
+  .right-bar{width:300px}
 }
 
 /* ── MOBILE HAMBURGER ── */
@@ -15275,15 +15281,14 @@ function renderItems(listEl, items) {
 
     if (i === 0) {
       // Hero card — full-width vertical, image on top, full headline visible
-      // Cascade: RSS image → group fallback → hide wrap
+      // Always show group fallback as CSS background; RSS image overlays it if it loads.
+      // If RSS image fails, just hide the <img> — background stays visible.
       const heroSrc = imgSrc || fallbackImg;
-      const heroOnerror = imgSrc
-        ? `this.onerror=null;this.src='${escHtml(fallbackImg)}'`
-        : `this.closest('.lnb-hero-img-wrap').style.display='none'`;
+      const heroOnerror = `this.onerror=null;this.src='${escHtml(fallbackImg)}'`;
+      const wrapBg = `background-image:url('${escHtml(fallbackImg)}');background-size:cover;background-position:center`;
       return `<div class="lnb-hero-card" ${clickAttrs}>
-        <div class="lnb-hero-img-wrap">
+        <div class="lnb-hero-img-wrap" style="${wrapBg}">
           <img class="lnb-hero-img" src="${escHtml(heroSrc)}" alt="" loading="lazy" onerror="${heroOnerror}">
-          <div class="lnb-hero-no-img">${channelFlag}</div>
         </div>
         <div class="lnb-hero-body">
           <div class="lnb-hero-title">${safeTitle}</div>
