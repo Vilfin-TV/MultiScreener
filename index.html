@@ -803,6 +803,34 @@ html[data-theme="news-reader"]{
 /* ── Selection ── */
 [data-theme="news-reader"] ::selection{background:rgba(216,25,33,.2);color:#111111}
 
+/* ── Market Sentiment widget & panel ── */
+[data-theme="news-reader"] .mkt-sent-body{background:rgba(0,0,0,.04)!important;border-color:rgba(0,0,0,.1)!important}
+[data-theme="news-reader"] .mkt-sent-widget:hover .mkt-sent-body{background:rgba(0,0,0,.07)!important;border-color:rgba(0,0,0,.18)!important}
+[data-theme="news-reader"] .mkt-sent-headline{color:rgba(0,0,0,.5)!important}
+[data-theme="news-reader"] .mkt-sent-zone.loading{color:rgba(0,0,0,.3)!important}
+[data-theme="news-reader"] .mkt-sent-clk-lbl{color:rgba(0,0,0,.35)!important}
+[data-theme="news-reader"] .mkt-sent-clk-lbl.today{color:rgba(0,0,0,.8)!important}
+[data-theme="news-reader"] .mkt-sent-panel{background:#ffffff!important;border-color:#e5e7e8!important;box-shadow:0 16px 48px rgba(0,0,0,.15)!important}
+[data-theme="news-reader"] .mkt-sent-ph{color:#d81921!important;border-bottom-color:#e5e7e8!important}
+[data-theme="news-reader"] .mkt-sent-ph-sm{border-top-color:#e5e7e8!important}
+[data-theme="news-reader"] .mkt-sent-panel-desc{color:rgba(0,0,0,.55)!important}
+[data-theme="news-reader"] .mkt-sent-panel-sep{background:#e5e7e8!important}
+[data-theme="news-reader"] .mkt-sent-row{border-bottom-color:#f0f0f0!important}
+[data-theme="news-reader"] .mkt-sent-row:hover{background:rgba(0,0,0,.03)!important}
+[data-theme="news-reader"] .mkt-sent-row-country{color:#111111!important}
+[data-theme="news-reader"] .mkt-sent-row-idx{color:rgba(0,0,0,.45)!important}
+[data-theme="news-reader"] .mkt-sent-pf{color:rgba(0,0,0,.35)!important;border-top-color:#e5e7e8!important}
+[data-theme="news-reader"] .mkt-sent-mobile-bar{background:#f5f7f8!important;border-bottom-color:#e5e7e8!important}
+[data-theme="news-reader"] .mkt-sent-mobile-bar:active{background:rgba(0,0,0,.04)!important}
+[data-theme="news-reader"] .mkt-sent-mb-hl{color:rgba(0,0,0,.5)!important}
+[data-theme="news-reader"] .mkt-sent-day-picker{border-bottom-color:#e5e7e8!important}
+[data-theme="news-reader"] .mkt-sent-day-btn{background:#f5f7f8!important;border-color:#e5e7e8!important;color:#444!important}
+[data-theme="news-reader"] .mkt-sent-day-btn:hover:not(:disabled){background:rgba(0,0,0,.06)!important;border-color:#c8cdd2!important;color:#111!important}
+[data-theme="news-reader"] .mkt-sent-day-btn.active{background:#d81921!important;border-color:#d81921!important;color:#fff!important}
+[data-theme="news-reader"] .mkt-sent-day-btn:disabled{opacity:.3!important}
+/* TradingView ticker strips — keep dark so TV widget renders correctly */
+[data-theme="news-reader"] .desktop-ticker-strip,[data-theme="news-reader"] .mobile-markets-strip{background:#111111!important}
+
 /* ── Animated theme colour swatches ── */
 /* ── Theme list items (replaces swatch circles — tap-friendly on mobile) ── */
 .theme-list-item{display:flex!important;align-items:center;gap:9px;min-height:38px;font-size:12px!important}
@@ -3596,6 +3624,12 @@ footer{
 @media(max-width:1050px){.mkt-sent-hist{display:none}}
 @media(max-width:820px){.mkt-sent-badge{display:none}}
 @media(max-width:680px){.mkt-sent-widget{display:none}.mkt-sent-mobile-bar{display:flex}}
+/* Day picker strip inside expanded sentiment panel */
+.mkt-sent-day-picker{display:flex;gap:5px;padding:8px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.mkt-sent-day-btn{flex:1;padding:5px 0;border-radius:6px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.65);font-size:10px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .15s;line-height:1.2}
+.mkt-sent-day-btn:hover:not(:disabled){background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff}
+.mkt-sent-day-btn.active{background:var(--burn,#d81921);border-color:var(--burn,#d81921);color:#fff}
+.mkt-sent-day-btn:disabled{opacity:.25;cursor:default}
 </style>
 </head>
 <body>
@@ -4054,6 +4088,7 @@ footer{
 </div>
 <div id="mkt-sent-panel" class="mkt-sent-panel" style="display:none">
   <div class="mkt-sent-ph">Market Sentiment &mdash; <span id="mkt-sent-panel-ctry">Global</span></div>
+  <div class="mkt-sent-day-picker" id="mkt-sent-day-picker"></div>
   <div class="mkt-sent-gauge-full" id="mkt-sent-gauge-full"></div>
   <div class="mkt-sent-panel-desc" id="mkt-sent-panel-desc"></div>
   <div class="mkt-sent-panel-sep"></div>
@@ -8351,7 +8386,7 @@ const _MKTS_SENT_DESCS = {
   'greed':        'Optimism is building. Investors are confident and markets are trending positively.',
   'extreme-greed':'Markets may be overheated. Caution is advised — a correction could be near.',
 };
-let _mktSentData = null, _mktSentIdx = 0, _mktSentPanelOpen = false;
+let _mktSentData = null, _mktSentIdx = 0, _mktSentPanelOpen = false, _mktSentSelectedDay = null;
 
 function _mktSentZone(chg) {
   if (chg > 1.5)  return {zone:'Extreme Greed', cls:'extreme-greed'};
@@ -8605,25 +8640,63 @@ function _mktSentRenderMain(idx) {
 
 function _mktSentRenderPanel() {
   if (!_mktSentData) return;
+  const weekDates = _mktSentWeekDates();
+  const todayStr = weekDates.find(w => w.isToday)?.date || _mktSentLocalDateStr(new Date());
+  const activeDay = _mktSentSelectedDay || todayStr;
+  const isLiveDay = activeDay === todayStr;
+
+  // Day picker
+  const dpEl = document.getElementById('mkt-sent-day-picker');
+  if (dpEl) {
+    dpEl.innerHTML = weekDates.map(wd =>
+      `<button class="mkt-sent-day-btn${wd.date===activeDay?' active':''}"${wd.isFuture?' disabled':''} onclick="_mktSentDaySelect('${wd.date}')">${wd.label}</button>`
+    ).join('');
+  }
+
   const m = _mktSentData[_mktSentIdx];
   const score = _mktSentScore(m.change);
   const ctryEl = document.getElementById('mkt-sent-panel-ctry');
-  if (ctryEl) ctryEl.textContent = m.country;
+  if (ctryEl) ctryEl.textContent = isLiveDay ? m.country : activeDay;
+
   const gfEl = document.getElementById('mkt-sent-gauge-full');
-  if (gfEl) gfEl.innerHTML = _mktSentFullGaugeSVG(score, m.zoneCls);
+  if (gfEl) gfEl.innerHTML = isLiveDay ? _mktSentFullGaugeSVG(score, m.zoneCls) : '';
+
   const descEl = document.getElementById('mkt-sent-panel-desc');
-  if (descEl) descEl.textContent = _MKTS_SENT_DESCS[m.zoneCls] || '';
+  if (descEl) descEl.textContent = isLiveDay
+    ? (_MKTS_SENT_DESCS[m.zoneCls] || '')
+    : 'Historical sentiment — tap a market row for details.';
+
   const rowsEl = document.getElementById('mkt-sent-rows');
   if (rowsEl) {
-    rowsEl.innerHTML = _mktSentData.map(r => {
-      const sgn=r.change>0?'+':'', cc=r.change>0.1?'pos':r.change<-0.1?'neg':'flat';
-      return `<div class="mkt-sent-row"><span class="mkt-sent-row-flag">${r.flag}</span><div class="mkt-sent-row-info"><div class="mkt-sent-row-country">${r.country}</div><div class="mkt-sent-row-idx">${r.index}</div></div><span class="mkt-sent-row-chg ${cc}">${sgn}${r.change.toFixed(2)}%</span><span class="mkt-sent-row-zone ${r.zoneCls}">${r.zone}</span></div>`;
-    }).join('');
+    if (isLiveDay) {
+      rowsEl.innerHTML = _mktSentData.map(r => {
+        const sgn=r.change>0?'+':'', cc=r.change>0.1?'pos':r.change<-0.1?'neg':'flat';
+        return `<div class="mkt-sent-row"><span class="mkt-sent-row-flag">${r.flag}</span><div class="mkt-sent-row-info"><div class="mkt-sent-row-country">${r.country}</div><div class="mkt-sent-row-idx">${r.index}</div></div><span class="mkt-sent-row-chg ${cc}">${sgn}${r.change.toFixed(2)}%</span><span class="mkt-sent-row-zone ${r.zoneCls}">${r.zone}</span></div>`;
+      }).join('');
+    } else {
+      const rows = _MKTS_SENT_MARKETS.map(mk => {
+        const hist = _mktSentGetHist(mk.country);
+        const rec = hist.find(x => x.d === activeDay);
+        if (!rec) return '';
+        const zoneLbl = (_MKTS_SENT_ZONE_CFG[rec.z]||{}).label || rec.z;
+        return `<div class="mkt-sent-row"><span class="mkt-sent-row-flag">${mk.flag}</span><div class="mkt-sent-row-info"><div class="mkt-sent-row-country">${mk.country}</div><div class="mkt-sent-row-idx">${mk.index}</div></div><span class="mkt-sent-row-zone ${rec.z}">${zoneLbl}</span></div>`;
+      }).join('');
+      rowsEl.innerHTML = rows || '<div class="mkt-sent-pf" style="padding:14px">No data cached for this day yet.</div>';
+    }
   }
+
   const ts=(()=>{try{return JSON.parse(localStorage.getItem('mkt_sent_last')||'{}').ts||0;}catch{return 0;}})();
   const ago=ts?Math.round((Date.now()-ts)/60000):0;
   const pf=document.getElementById('mkt-sent-pf');
-  if(pf) pf.textContent=ago>0?'Updated '+ago+' min ago · Refreshes every 10 min':'Market Intelligence';
+  if(pf) pf.textContent=isLiveDay?(ago>0?'Updated '+ago+' min ago · Refreshes every 10 min':'Market Intelligence'):'Historical view · '+activeDay;
+}
+
+function _mktSentDaySelect(dateStr) {
+  const weekDates = _mktSentWeekDates();
+  const wd = weekDates.find(w => w.date === dateStr);
+  if (!wd || wd.isFuture) return;
+  _mktSentSelectedDay = wd.isToday ? null : dateStr;
+  _mktSentRenderPanel();
 }
 
 function _mktSentSetBadge(type) {
@@ -8676,6 +8749,7 @@ function mktSentToggle(e) {
     }
   } else {
     panel.style.display = 'none';
+    _mktSentSelectedDay = null;
   }
 }
 

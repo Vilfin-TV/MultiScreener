@@ -76,8 +76,13 @@ const SOURCE_POOL = {
     { url: 'https://www.theverge.com/rss/index.xml',                    name: 'The Verge' },
     { url: 'https://feeds.arstechnica.com/arstechnica/index',           name: 'Ars Technica' },
     { url: 'https://www.wired.com/feed/rss',                            name: 'Wired' },
-    { url: 'https://news.google.com/rss/search?q=artificial+intelligence+AI+ChatGPT&hl=en-US&gl=US&ceid=US:en', name: 'AI News' },
+    { url: 'https://news.google.com/rss/search?q=artificial+intelligence+AI+ChatGPT+LLM&hl=en-US&gl=US&ceid=US:en', name: 'AI News' },
     { url: 'https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=en-US&gl=US&ceid=US:en', name: 'Google Tech US' },
+    { url: 'https://news.google.com/rss/search?q=AI+machine+learning+OpenAI+Gemini+Claude&hl=en-US&gl=US&ceid=US:en', name: 'AI Models' },
+    { url: 'https://news.google.com/rss/search?q=AI+technology+India+Japan+Asia+startup&hl=en-US&gl=US&ceid=US:en', name: 'AI Asia' },
+    { url: 'https://news.google.com/rss/search?q=technology+innovation+gadget+semiconductor&hl=en-US&gl=US&ceid=US:en', name: 'Tech Innovation' },
+    { url: 'https://www.technologyreview.com/feed/',                    name: 'MIT Tech Review' },
+    { url: 'https://feeds.feedburner.com/venturebeat/SZYF',            name: 'VentureBeat AI' },
     // ── Finance: Stock, ETF, Mutual Fund, Forex, Gold, Tax ───────────────────
     { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html',     name: 'CNBC Top' },
     { url: 'https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-US&gl=US&ceid=US:en', name: 'Google Business US' },
@@ -98,6 +103,12 @@ const SOURCE_POOL = {
     { url: 'https://news.google.com/rss/search?q=energy+oil+solar+renewable+nuclear&hl=en-US&gl=US&ceid=US:en', name: 'Energy News' },
     // ── Science & Space ───────────────────────────────────────────────────────
     { url: 'https://news.google.com/rss/headlines/section/topic/SCIENCE?hl=en-US&gl=US&ceid=US:en', name: 'Google Science' },
+    { url: 'https://news.google.com/rss/search?q=space+NASA+SpaceX+rocket+launch+satellite&hl=en-US&gl=US&ceid=US:en', name: 'Space News' },
+    { url: 'https://news.google.com/rss/search?q=ISRO+space+mission+India+Japan+ESA&hl=en-US&gl=US&ceid=US:en', name: 'ISRO & ESA Space' },
+    { url: 'https://news.google.com/rss/search?q=science+discovery+physics+biology+research&hl=en-US&gl=US&ceid=US:en', name: 'Science Discovery' },
+    { url: 'https://news.google.com/rss/search?q=climate+environment+biodiversity+research&hl=en-US&gl=US&ceid=US:en', name: 'Climate Science' },
+    { url: 'https://www.nasa.gov/rss/dyn/breaking_news.rss',            name: 'NASA News' },
+    { url: 'https://www.sciencedaily.com/rss/top/science.xml',         name: 'Science Daily' },
     // ── Google Trends ─────────────────────────────────────────────────────────
     { url: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=US', name: 'Google Trends US' },
     { url: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=IN', name: 'Google Trends India' },
@@ -138,16 +149,42 @@ const SOURCE_POOL = {
   ],
 
   // ── stock ───────────────────────────────────────────────────────────────────
+  // Anchors (pos 0-1) always included. Rest randomly sampled for variety.
   stock: [
+    // ── Anchors ─────────────────────────────────────────────────────────────
     { url: 'https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-IN&gl=IN&ceid=IN:en', name: 'Google Finance India' },
     { url: 'https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-US&gl=US&ceid=US:en', name: 'Google Finance US' },
-    { url: 'https://feeds.bbci.co.uk/news/business/rss.xml',                             name: 'BBC Business' },
+    // ── India Markets ────────────────────────────────────────────────────────
     { url: 'https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms',       name: 'ET Markets' },
     { url: 'https://www.livemint.com/rss/markets',                                       name: 'Mint Markets' },
     { url: 'https://economictimes.indiatimes.com/markets/stocks/rss.cms',                name: 'ET Stocks' },
     { url: 'https://www.businessstandard.com/rss/markets-106.rss',                       name: 'Business Standard' },
     { url: 'https://www.moneycontrol.com/rss/MCtopnews.xml',                             name: 'Moneycontrol' },
+    // ── Mutual Funds & ETFs (India) ──────────────────────────────────────────
+    { url: 'https://news.google.com/rss/search?q=mutual+fund+SIP+SEBI+NAV+India&hl=en-IN&gl=IN&ceid=IN:en', name: 'India Mutual Funds' },
+    { url: 'https://news.google.com/rss/search?q=AMFI+mutual+fund+NFO+SIP+returns&hl=en-IN&gl=IN&ceid=IN:en', name: 'AMFI Fund News' },
+    { url: 'https://economictimes.indiatimes.com/mutual-funds/rssfeeds/1522278249.cms',  name: 'ET Mutual Funds' },
+    { url: 'https://www.moneycontrol.com/rss/mutualfunds.xml',                           name: 'MC Mutual Funds' },
+    // ── ETFs (US & Asia) ─────────────────────────────────────────────────────
+    { url: 'https://news.google.com/rss/search?q=ETF+fund+flows+US+Asia+Europe+index&hl=en-US&gl=US&ceid=US:en', name: 'ETF Global' },
+    { url: 'https://news.google.com/rss/search?q=ETF+Japan+Nikkei+Asia+Pacific+fund&hl=en-US&gl=US&ceid=US:en', name: 'ETF Asia' },
+    // ── Bonds & Fixed Income ─────────────────────────────────────────────────
+    { url: 'https://news.google.com/rss/search?q=government+bonds+yield+treasury+debt&hl=en-US&gl=US&ceid=US:en', name: 'US Bonds' },
+    { url: 'https://news.google.com/rss/search?q=India+bonds+RBI+gilt+debt+market&hl=en-IN&gl=IN&ceid=IN:en',    name: 'India Bonds' },
+    { url: 'https://news.google.com/rss/search?q=Japan+bonds+BOJ+JGB+yield+Asia&hl=en-US&gl=US&ceid=US:en',      name: 'Japan Bonds' },
+    // ── Commodities ──────────────────────────────────────────────────────────
+    { url: 'https://news.google.com/rss/search?q=gold+silver+crude+oil+commodity+price&hl=en-US&gl=US&ceid=US:en', name: 'Commodities Global' },
+    { url: 'https://news.google.com/rss/search?q=MCX+India+commodity+gold+crude+copper&hl=en-IN&gl=IN&ceid=IN:en', name: 'MCX India' },
+    { url: 'https://news.google.com/rss/search?q=commodity+futures+Asia+Europe+wheat+metal&hl=en-US&gl=US&ceid=US:en', name: 'Commodities Asia-EU' },
+    { url: 'https://oilprice.com/rss/main',                                               name: 'OilPrice.com' },
+    // ── Trending Stocks ───────────────────────────────────────────────────────
+    { url: 'https://news.google.com/rss/search?q=trending+stocks+top+gainers+NSE+BSE&hl=en-IN&gl=IN&ceid=IN:en', name: 'NSE Trending Stocks' },
+    { url: 'https://news.google.com/rss/search?q=stock+rally+breakout+52+week+high&hl=en-US&gl=US&ceid=US:en',   name: 'Stock Momentum US' },
+    { url: 'https://news.google.com/rss/search?q=Nikkei+Japan+stock+market+Tokyo+rally&hl=en-US&gl=US&ceid=US:en', name: 'Japan Stocks' },
+    // ── US & Global Finance ───────────────────────────────────────────────────
+    { url: 'https://feeds.bbci.co.uk/news/business/rss.xml',                             name: 'BBC Business' },
     { url: 'https://finance.yahoo.com/news/rssindex',                                    name: 'Yahoo Finance' },
+    { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html',                      name: 'CNBC Markets' },
     { url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCIALMKvObZNtJ6AmdCLP7Lg', name: 'Bloomberg YT' },
   ],
 
@@ -399,11 +436,45 @@ function parseRSS(xml) {
   return items;
 }
 
-/** Strip trailing " - Source Name" appended by Google News aggregation */
+/**
+ * Strip trailing " - Source Name" or "| Source" appended by aggregators.
+ * Also strips a leading "Source: " prefix pattern.
+ */
 function cleanHeadline(title) {
   if (!title) return '';
-  var cleaned = title.replace(/\s+[-–—]\s+[A-Za-z][A-Za-z0-9 &\.\-\']{1,59}$/, '').trim();
+  var cleaned = title
+    // Remove trailing " - Source Name" / " – Source" / " | Source"  (Google News style)
+    .replace(/\s+[-–—|]\s+[A-Za-z][A-Za-z0-9 &\.\-\']{1,59}$/, '')
+    // Remove leading "Source Name: " prefix (some feed generators)
+    .replace(/^[A-Za-z][A-Za-z0-9 ]{2,30}:\s+/, '')
+    .trim();
   return cleaned.length >= 5 ? cleaned : title.trim();
+}
+
+/** Extract image URL from an RSS/Atom item block — tries 4 common patterns */
+function extractItemImage(block) {
+  // 1. <media:content url="..."> or <media:content url="..." medium="image">
+  var m = block.match(/<media:content[^>]+url=["']([^"'\s]+)["'][^>]*>/i);
+  if (m && /\.(jpg|jpeg|png|webp|gif)/i.test(m[1])) return m[1];
+
+  // 2. <media:thumbnail url="...">
+  m = block.match(/<media:thumbnail[^>]+url=["']([^"'\s]+)["']/i);
+  if (m) return m[1];
+
+  // 3. <enclosure type="image/..." url="...">  (either attribute order)
+  m = block.match(/<enclosure[^>]+type=["']image\/[^"']+["'][^>]*url=["']([^"'\s]+)["']/i)
+   || block.match(/<enclosure[^>]+url=["']([^"'\s]+)["'][^>]*type=["']image\/[^"']+["']/i);
+  if (m) return m[1];
+
+  // 4. First <img src="..."> inside content:encoded or description CDATA
+  var rawContent = extractTagValue(block, 'content:encoded')
+    || extractTagValue(block, 'content')
+    || extractTagValue(block, 'description');
+  var decoded = decodeEntities(rawContent);
+  m = decoded.match(/<img[^>]+src=["']([^"'\s]+)["']/i);
+  if (m && /^https?:\/\//i.test(m[1])) return m[1];
+
+  return null;
 }
 
 function processBlock(block, items) {
@@ -440,7 +511,9 @@ function processBlock(block, items) {
     }
   }
 
-  items.push({ title, link: link || '', description, publishedAt, sourceName });
+  var imageUrl = extractItemImage(block);
+
+  items.push({ title, link: link || '', description, publishedAt, sourceName, imageUrl });
 }
 
 /* ═══════════════════════════════════════════════════
@@ -655,6 +728,7 @@ async function rewriteHeadline(originalTitle) {
     'Rewrite this news headline into a completely original, copyright-safe version '
     + 'that preserves the core news value but uses entirely different words and structure. '
     + 'Professional journalism style. Maximum 15 words. '
+    + 'IMPORTANT: Write in English ONLY — never use Japanese, Hindi, or any other language. '
     + 'Return ONLY the rewritten headline — no quotes, no explanation.\n\n'
     + 'Original: ' + originalTitle;
   try {
@@ -719,7 +793,11 @@ function buildPrompt(item, relatedContext) {
     : '';
 
   return (
-    'You are a professional news journalist writing for an international wire service.\n'
+    'LANGUAGE REQUIREMENT: You MUST write EXCLUSIVELY in English. '
+    + 'Do NOT use Japanese, Hindi, Malayalam, Arabic, or any other language — '
+    + 'regardless of the language of the source material. '
+    + 'English only, from the first word to the last.\n\n'
+    + 'You are a professional news journalist writing for an international wire service.\n'
     + 'Write a complete, factual 5-6 paragraph article in AP / BBC / Reuters style.\n\n'
     + 'PRIMARY HEADLINE: "' + item.title + '"\n'
     + 'SOURCE CONTEXT: ' + (item.description || 'No additional context.') + multiSrc + '\n\n'
@@ -731,6 +809,7 @@ function buildPrompt(item, relatedContext) {
     + 'Paragraph 5 — WIDER CONTEXT: Related developments, regional or global implications.\n'
     + 'Paragraph 6 — WHAT NEXT: Upcoming decisions, open questions, or what to watch.\n\n'
     + 'CRITICAL RULES:\n'
+    + '- ENGLISH ONLY — any non-English output is a critical error\n'
     + '- Begin immediately with the first word of the article — NO title, NO headline, NO byline\n'
     + '- 100% original prose — do NOT copy any phrase from any source verbatim\n'
     + '- SYNTHESISE from ALL provided sources — do not rely on a single source\n'
@@ -887,17 +966,38 @@ function cleanRssDescription(desc) {
 /* ═══════════════════════════════════════════════════
    RSS STORY BUILDER — stock / malayalam only
    No AI. Uses raw RSS description as the story.
-   Returns { html: string, teaser: string }
+   Returns { html: string, teaser: string, image: string|null }
 ═══════════════════════════════════════════════════ */
-function rssStory(item) {
+
+/** Unsplash fallback images keyed by section — used when RSS has no embedded image */
+var RSS_FALLBACK_IMAGES = {
+  stock:        'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=70',
+  malayalam:    'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800&q=70',
+  ml_trending:  'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=70',
+  ml_movies:    'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&q=70',
+  ml_music:     'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=70',
+  ml_local:     'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=70',
+  ml_science:   'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=800&q=70',
+  ml_space:     'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800&q=70',
+  ml_sports:    'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=70',
+  ml_health:    'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&q=70',
+  ml_food:      'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=70',
+  ml_realestate:'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=70',
+  ml_career:    'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800&q=70',
+  ml_tech:      'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=70'
+};
+
+function rssStory(item, sectionId) {
   var raw  = (item.description || '').trim();
-  var desc = cleanRssDescription(raw) || raw;  // fallback to raw if cleaner strips too much
+  var desc = cleanRssDescription(raw) || raw;
   var html = desc
     ? '<p>' + desc.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>'
     : '<p>Full story available at the original source.</p>';
   var teaser = desc.slice(0, 140) || item.title.slice(0, 140);
   if (teaser.length >= 140) teaser = teaser.slice(0, 137) + '…';
-  return { html: html, teaser: teaser };
+  // Use RSS-embedded image; fall back to section-themed Unsplash
+  var image = item.imageUrl || (sectionId ? (RSS_FALLBACK_IMAGES[sectionId] || null) : null);
+  return { html: html, teaser: teaser, image: image };
 }
 
 /* ═══════════════════════════════════════════════════
@@ -960,11 +1060,11 @@ async function buildSection(sectionId, feedPool, meta) {
     var headline, storyResult, relCtxLines;
 
     if (isRssOnly) {
-      // ── Stock + Malayalam: raw RSS headline + RSS description ──────────
-      headline    = item.title;                     // no Groq rewrite
-      storyResult = rssStory(item);                 // no AI article
+      // ── Stock + Malayalam: raw RSS headline + RSS description + image ──
+      headline    = item.title;                        // no Groq rewrite
+      storyResult = rssStory(item, sectionId);         // passes sectionId for fallback image
       relCtxLines = 0;
-      console.log('    [RSS only] headline + description');
+      console.log('    [RSS only] headline + description' + (storyResult.image ? ' + image' : ''));
 
     } else {
       // ── Trending + Global + India: AI headline + AI journalist article ──
@@ -978,12 +1078,14 @@ async function buildSection(sectionId, feedPool, meta) {
 
       // Gemini → Groq 70B → RSS: full journalist article
       storyResult = await generateStory(item, relatedContext);
+      // AI articles do NOT use RSS images (per task requirement)
+      storyResult.image = null;
 
       // Rate-limit pause: Gemini free tier 15 RPM; 2.5s gap + API latency ≥ 4s
       if (j < selected.length - 1) await sleep(2500);
     }
 
-    outputItems.push({
+    var outItem = {
       id:          sectionId + '-' + Date.now() + '-' + j,
       headline:    headline,
       teaser:      storyResult.teaser,
@@ -995,7 +1097,9 @@ async function buildSection(sectionId, feedPool, meta) {
       verified:    isCorroborated(item, allItems),
       aiGenerated: !isRssOnly,
       multiSource: relCtxLines >= 2
-    });
+    };
+    if (storyResult.image) outItem.image = storyResult.image;
+    outputItems.push(outItem);
   }
 
   return { image: sectionImage, label: meta.label, accent: meta.accent, items: outputItems };
