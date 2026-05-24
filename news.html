@@ -869,8 +869,9 @@ body{
 .world-cards-grid{
   display:grid;
   grid-template-columns:repeat(3,1fr);
-  gap:14px;
+  gap:10px;
   padding:0 14px 14px;
+  align-items:start;
 }
 @media(max-width:960px){.world-cards-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:540px){.world-cards-grid{grid-template-columns:1fr;gap:10px;padding:0 12px 12px}}
@@ -880,9 +881,9 @@ body{
   background:var(--card2);
   border:1px solid var(--border);
   border-radius:10px;
-  padding:14px 16px;
+  padding:12px 14px;
   cursor:pointer;
-  display:flex;flex-direction:column;gap:8px;
+  display:flex;flex-direction:column;gap:6px;
   transition:transform .15s,box-shadow .15s,border-color .15s;
   position:relative;overflow:hidden;
 }
@@ -899,33 +900,39 @@ body{
 }
 .world-story-card:hover::before{opacity:1}
 .world-story-headline{
-  font-size:13.5px;line-height:1.5;
-  color:var(--text);font-weight:600;
-  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  font-size:12.5px;line-height:1.45;
+  color:var(--text);font-weight:700;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.world-story-teaser{
+  font-size:11px;color:var(--text2);line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
 }
 .world-story-meta{
-  display:flex;align-items:center;gap:7px;flex-wrap:wrap;
-  margin-top:auto;padding-top:6px;
+  display:flex;align-items:center;gap:5px;flex-wrap:wrap;
+  margin-top:auto;padding-top:5px;
   border-top:1px solid var(--border);
 }
 .world-story-source{
-  font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;
+  font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;
 }
-.world-story-time{font-size:10px;color:var(--text3)}
+.world-story-meta-sep{font-size:9px;color:var(--text3)}
+.world-story-time{font-size:9.5px;color:var(--text3)}
 .world-story-read{
-  margin-left:auto;font-size:10px;font-weight:700;
+  margin-left:auto;font-size:9.5px;font-weight:700;
   color:var(--world-accent,var(--burn2));opacity:0;
   transition:opacity .15s;
 }
 .world-story-card:hover .world-story-read{opacity:1}
 
-/* World story card image — edge-to-edge thumbnail */
+/* World story card image — compact edge-to-edge strip */
 .world-story-img-wrap{
-  width:calc(100% + 28px);height:52px;overflow:hidden;
-  margin:-12px -14px 8px -14px;flex-shrink:0;
+  width:calc(100% + 28px);height:44px;overflow:hidden;
+  margin:-12px -14px 6px -14px;flex-shrink:0;
+  border-radius:0;
 }
 .world-story-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s ease}
-.world-story-card:hover .world-story-img{transform:scale(1.04)}
+.world-story-card:hover .world-story-img{transform:scale(1.06)}
 
 .world-empty{
   padding:32px 20px;text-align:center;
@@ -934,8 +941,10 @@ body{
 @media(max-width:600px){
   .world-region-header{padding:8px 0}
   .world-region-name{font-size:15px;letter-spacing:1.2px}
-  .world-story-card{padding:12px 14px}
-  .world-story-headline{font-size:13px}
+  .world-story-card{padding:10px 12px}
+  .world-story-headline{font-size:12px}
+  .world-story-teaser{display:none}
+  .world-story-img-wrap{width:calc(100% + 24px);margin:-10px -12px 6px -12px}
 }
 
 /* World popup modal */
@@ -3060,6 +3069,14 @@ function closeWorldStory() {
 }
 
 /* Generate a deterministic picsum image URL per headline (unique per article, fast CDN) */
+// Decode any residual HTML/XML entities stored in world.json before display
+function _wDecodeHtml(s) {
+  if (!s || s.indexOf('&') === -1) return s || '';
+  var d = document.createElement('div');
+  d.innerHTML = s;
+  return d.textContent || d.innerText || s;
+}
+
 function _wCardImgUrl(headline) {
   var s = 0;
   for (var i = 0; i < (headline || '').length; i++) { s = ((s << 5) - s + (headline || '').charCodeAt(i)) | 0; }
@@ -3127,10 +3144,19 @@ function renderWorldSection(data, container) {
       card.onclick = (function(i){ return function(){ openWorldStory(i); }; })(idx);
       card.onkeydown = (function(i){ return function(e){ if (e.key==='Enter'||e.key===' ') openWorldStory(i); }; })(idx);
 
+      // Use RSS image if available; otherwise use per-story picsum seed (deterministic)
       var wImgSrc = item.image || _wCardImgUrl(item.headline || '');
-      card.innerHTML = '<div class="world-story-img-wrap"><img class="world-story-img" src="' + escAttr(wImgSrc) + '" alt="" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></div>'
-        + '<div class="world-story-headline">' + esc(item.headline || '') + '</div>'
+      var cleanTitle  = esc(_wDecodeHtml(item.headline || ''));
+      var cleanTeaser = item.teaser ? esc(_wDecodeHtml(item.teaser)) : '';
+      var cleanSource = item.source ? esc(_wDecodeHtml(item.source)) : '';
+      // Trim teaser to 120 chars max for compactness
+      if (cleanTeaser.length > 120) cleanTeaser = cleanTeaser.slice(0, cleanTeaser.lastIndexOf(' ', 120)) + '…';
+      card.innerHTML =
+        '<div class="world-story-img-wrap"><img class="world-story-img" src="' + escAttr(wImgSrc) + '" alt="" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></div>'
+        + '<div class="world-story-headline">' + cleanTitle + '</div>'
+        + (cleanTeaser ? '<div class="world-story-teaser">' + cleanTeaser + '</div>' : '')
         + '<div class="world-story-meta">'
+        + (cleanSource ? '<span class="world-story-source" style="color:' + escAttr(accent) + '">' + cleanSource + '</span><span class="world-story-meta-sep">·</span>' : '')
         + '<span class="world-story-time">' + _wTimeAgo(item.publishedAt) + '</span>'
         + '<span class="world-story-read">Read ›</span>'
         + '</div>';

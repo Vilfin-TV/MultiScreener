@@ -410,7 +410,15 @@ function decodeEntities(str) {
   if (!str) return '';
   return str
     .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"')
-    .replace(/&#39;/g,"'").replace(/&nbsp;/g,' ')
+    .replace(/&#39;/g,"'").replace(/&apos;/g,"'").replace(/&nbsp;/g,' ')
+    // Common typographic named entities
+    .replace(/&mdash;/g,'—').replace(/&ndash;/g,'–').replace(/&hellip;/g,'…')
+    .replace(/&rsquo;/g,'’').replace(/&lsquo;/g,'‘')
+    .replace(/&rdquo;/g,'”').replace(/&ldquo;/g,'“')
+    .replace(/&bull;/g,'•').replace(/&middot;/g,'·').replace(/&copy;/g,'©')
+    // Hex numeric entities (&#xHHHH;) — covers &#x2018; &#x2019; &#x2014; etc.
+    .replace(/&#x([0-9A-Fa-f]+);/g, function(_,h){ return String.fromCharCode(parseInt(h,16)); })
+    // Decimal numeric entities (&#NNN;)
     .replace(/&#(\d+);/g, function(_,n){ return String.fromCharCode(parseInt(n,10)); });
 }
 
