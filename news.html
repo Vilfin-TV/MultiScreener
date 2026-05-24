@@ -832,11 +832,15 @@ body{
 
 /* Region block: channel-name header + article card grid */
 .world-region-card{
-  margin-bottom:28px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  overflow:hidden;
+  margin-bottom:20px;
 }
 .world-region-header{
   display:flex;align-items:center;gap:10px;
-  padding:10px 0 10px;
+  padding:10px 16px 10px;
   border-bottom:2px solid var(--border2);
   margin-bottom:14px;
 }
@@ -865,9 +869,10 @@ body{
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:14px;
+  padding:0 14px 14px;
 }
 @media(max-width:960px){.world-cards-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:540px){.world-cards-grid{grid-template-columns:1fr;gap:10px}}
+@media(max-width:540px){.world-cards-grid{grid-template-columns:1fr;gap:10px;padding:0 12px 12px}}
 
 /* Individual story card */
 .world-story-card{
@@ -2873,7 +2878,12 @@ function _showMlCategory(catId, data) {
   // Try specific sub-category first; fall back to main malayalam section
   var catSection = src && src.sections && (src.sections[catId] || src.sections['malayalam']);
   var items = (catSection && catSection.items)
-    ? catSection.items.filter(isItemValid)
+    ? catSection.items.filter(function(item) {
+        if (!item || !item.publishedAt || !item.headline) return false;
+        var hl = item.headline.trim().toLowerCase();
+        if (hl.startsWith('content updating') || hl === 'placeholder' || hl === 'loading...') return false;
+        return Date.now() - new Date(item.publishedAt).getTime() < 7 * 24 * 60 * 60 * 1000;
+      })
     : [];
 
   var catMeta = SECTION_META[catId] || {};

@@ -8649,14 +8649,14 @@ function _mktSentRenderPanel() {
   const dpEl = document.getElementById('mkt-sent-day-picker');
   if (dpEl) {
     dpEl.innerHTML = weekDates.map(wd =>
-      `<button class="mkt-sent-day-btn${wd.date===activeDay?' active':''}"${wd.isFuture?' disabled':''} onclick="_mktSentDaySelect('${wd.date}')">${wd.label}</button>`
+      `<button class="mkt-sent-day-btn${wd.date===activeDay?' active':''}"${wd.isFuture?' disabled':''} onclick="event.stopPropagation();_mktSentDaySelect('${wd.date}')">${wd.label}</button>`
     ).join('');
   }
 
   const m = _mktSentData[_mktSentIdx];
   const score = _mktSentScore(m.change);
   const ctryEl = document.getElementById('mkt-sent-panel-ctry');
-  if (ctryEl) ctryEl.textContent = isLiveDay ? m.country : activeDay;
+  if (ctryEl) ctryEl.textContent = m.country;
 
   const gfEl = document.getElementById('mkt-sent-gauge-full');
   if (gfEl) gfEl.innerHTML = isLiveDay ? _mktSentFullGaugeSVG(score, m.zoneCls) : '';
