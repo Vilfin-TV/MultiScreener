@@ -868,13 +868,14 @@ body{
 /* Story card grid */
 .world-cards-grid{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns:repeat(4,1fr);
   gap:10px;
   padding:0 14px 14px;
   align-items:start;
 }
-@media(max-width:960px){.world-cards-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:540px){.world-cards-grid{grid-template-columns:1fr;gap:10px;padding:0 12px 12px}}
+@media(max-width:1100px){.world-cards-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:720px){.world-cards-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.world-cards-grid{grid-template-columns:1fr;gap:10px;padding:0 12px 12px}}
 
 /* Individual story card */
 .world-story-card{
@@ -928,8 +929,8 @@ body{
 /* World story card image — compact edge-to-edge strip */
 .world-story-img-wrap{
   width:calc(100% + 28px);height:44px;overflow:hidden;
-  margin:-12px -14px 6px -14px;flex-shrink:0;
-  border-radius:0;
+  margin:-12px -14px 0 -14px;flex-shrink:0;
+  border-radius:8px 8px 0 0;
 }
 .world-story-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s ease}
 .world-story-card:hover .world-story-img{transform:scale(1.06)}
@@ -944,7 +945,7 @@ body{
   .world-story-card{padding:10px 12px}
   .world-story-headline{font-size:12px}
   .world-story-teaser{display:none}
-  .world-story-img-wrap{width:calc(100% + 24px);margin:-10px -12px 6px -12px}
+  .world-story-img-wrap{width:calc(100% + 24px);margin:-10px -12px 0 -12px;border-radius:6px 6px 0 0}
 }
 
 /* World popup modal */
@@ -3156,7 +3157,6 @@ function renderWorldSection(data, container) {
         + '<div class="world-story-headline">' + cleanTitle + '</div>'
         + (cleanTeaser ? '<div class="world-story-teaser">' + cleanTeaser + '</div>' : '')
         + '<div class="world-story-meta">'
-        + (cleanSource ? '<span class="world-story-source" style="color:' + escAttr(accent) + '">' + cleanSource + '</span><span class="world-story-meta-sep">·</span>' : '')
         + '<span class="world-story-time">' + _wTimeAgo(item.publishedAt) + '</span>'
         + '<span class="world-story-read">Read ›</span>'
         + '</div>';
