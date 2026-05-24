@@ -239,13 +239,22 @@ const WORLD_REGIONS = [
       { url: 'https://news.google.com/rss/headlines/section/geo/Taiwan?hl=zh-TW&gl=TW&ceid=TW:zh-Hant', name: 'Google News TW' },
     ]
   },
+  // ── Thailand ───────────────────────────────────────────────────────────────
+  {
+    id: 'thailand', flag: '🇹🇭', name: 'Thailand', language: 'English / ไทย', accent: '#dc143c',
+    feeds: [
+      { url: 'https://www.bangkokpost.com/rss/data/topstories.xml',              name: 'Bangkok Post' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Thailand?hl=th&gl=TH&ceid=TH:th', name: 'Google News Thai' },
+      { url: 'https://www.thaipbsworld.com/feed/',                               name: 'Thai PBS World' },
+    ]
+  },
   // ── Asia Pacific ───────────────────────────────────────────────────────────
   {
     id: 'asia-pac', flag: '🌏', name: 'Asia Pacific', language: 'English', accent: '#06b6d4',
     feeds: [
-      { url: 'https://www.bangkokpost.com/rss/data/topstories.xml',              name: 'Bangkok Post' },
       { url: 'https://vir.com.vn/rss/home.rss',                                  name: 'VIR Vietnam' },
       { url: 'https://news.google.com/rss/headlines/section/geo/SoutheastAsia?hl=en&gl=US&ceid=US:en', name: 'Google SEA' },
+      { url: 'https://www.straitstimes.com/RSS/Breaking-News.xml',               name: 'Straits Times SG' },
     ]
   },
   // ── Australia & NZ ─────────────────────────────────────────────────────────
