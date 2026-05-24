@@ -449,6 +449,7 @@ body{
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:16px;
+  align-items:start;
 }
 @media(max-width:900px){.ml-card-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:540px){.ml-card-grid{grid-template-columns:1fr;gap:12px}}
@@ -465,7 +466,7 @@ body{
   border-color:var(--burn3);
 }
 .ml-news-card-img-wrap{
-  position:relative;width:100%;padding-top:42%;/* compact 2.4:1 */
+  position:relative;width:100%;padding-top:26%;/* thumbnail 3.8:1 — keeps text readable */
   overflow:hidden;flex-shrink:0;background:var(--card3);
 }
 .ml-news-card-img{
@@ -488,7 +489,7 @@ body{
   font-family:'Noto Sans Malayalam','DM Sans',sans-serif;
   font-size:13.5px;font-weight:700;color:var(--text);
   line-height:1.5;
-  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;
 }
 .ml-news-card-meta{
   font-size:11px;color:var(--text3);
@@ -541,9 +542,9 @@ body{
 .ml-hero-src{font-weight:700;color:var(--burn3);}
 @media(max-width:600px){
   .ml-hero-card{flex-direction:column}
-  .ml-hero-img-wrap{width:100%;height:180px}
-  .ml-hero-body{padding:14px 16px}
-  .ml-hero-hl{font-size:15px}
+  .ml-hero-img-wrap{width:100%;height:130px}
+  .ml-hero-body{padding:12px 14px}
+  .ml-hero-hl{font-size:14px}
 }
 
 .ml-cat-empty{padding:40px 24px;text-align:center;color:var(--text3);}
@@ -920,8 +921,8 @@ body{
 
 /* World story card image — edge-to-edge thumbnail */
 .world-story-img-wrap{
-  width:calc(100% + 28px);height:68px;overflow:hidden;
-  margin:-12px -14px 10px -14px;flex-shrink:0;
+  width:calc(100% + 28px);height:52px;overflow:hidden;
+  margin:-12px -14px 8px -14px;flex-shrink:0;
 }
 .world-story-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s ease}
 .world-story-card:hover .world-story-img{transform:scale(1.04)}

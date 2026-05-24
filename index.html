@@ -803,6 +803,23 @@ html[data-theme="news-reader"]{
 /* ── Selection ── */
 [data-theme="news-reader"] ::selection{background:rgba(216,25,33,.2);color:#111111}
 
+/* ── Market Sentiment widget & panel — Standard (light) theme ── */
+[data-theme="standard"] .mkt-sent-body{background:rgba(255,255,255,.15)!important;border-color:rgba(255,255,255,.35)!important}
+[data-theme="standard"] .mkt-sent-widget:hover .mkt-sent-body{background:rgba(255,255,255,.25)!important;border-color:rgba(255,255,255,.5)!important}
+[data-theme="standard"] .mkt-sent-panel{background:#ffffff!important;border-color:#dde3ed!important;box-shadow:0 16px 48px rgba(0,0,0,.15)!important}
+[data-theme="standard"] .mkt-sent-ph{color:#1d4ed8!important;border-bottom-color:#e2e8f0!important}
+[data-theme="standard"] .mkt-sent-ph-sm{border-top-color:#e2e8f0!important}
+[data-theme="standard"] .mkt-sent-panel-sep{background:#e2e8f0!important}
+[data-theme="standard"] .mkt-sent-row{border-bottom-color:#f0f2f5!important}
+[data-theme="standard"] .mkt-sent-row:hover{background:#f5f8fc!important}
+[data-theme="standard"] .mkt-sent-pf{color:#9ca3af!important;border-top-color:#e2e8f0!important}
+[data-theme="standard"] .mkt-sent-day-picker{border-bottom-color:#e2e8f0!important}
+[data-theme="standard"] .mkt-sent-day-btn{background:#f0f4f9!important;border-color:#dde3ed!important;color:#374151!important}
+[data-theme="standard"] .mkt-sent-day-btn:hover:not(:disabled){background:#e8edf5!important;border-color:#c8d3e0!important;color:#0f172a!important}
+[data-theme="standard"] .mkt-sent-day-btn.active{background:#1d4ed8!important;border-color:#1d4ed8!important;color:#fff!important}
+[data-theme="standard"] .mkt-sent-day-btn:disabled{opacity:.3!important}
+[data-theme="standard"] .mkt-sent-mobile-bar{background:#1e3a8a!important;border-bottom-color:#3b5fa8!important}
+
 /* ── Market Sentiment widget & panel ── */
 [data-theme="news-reader"] .mkt-sent-body{background:rgba(0,0,0,.04)!important;border-color:rgba(0,0,0,.1)!important}
 [data-theme="news-reader"] .mkt-sent-widget:hover .mkt-sent-body{background:rgba(0,0,0,.07)!important;border-color:rgba(0,0,0,.18)!important}
@@ -3586,8 +3603,8 @@ footer{
 .mkt-sent-gauge-mini{display:flex;align-items:center;flex-shrink:0}
 /* Text block */
 .mkt-sent-text{display:flex;flex-direction:column;gap:1px;min-width:0}
-.mkt-sent-headline{font-size:10px;color:rgba(255,255,255,.65);white-space:nowrap;line-height:1.2}
-#mkt-sent-country,#mkt-sent-mb-country{font-weight:700;color:#fff;font-size:11px;letter-spacing:.2px}
+.mkt-sent-headline{font-size:10px;color:var(--text2);white-space:nowrap;line-height:1.2}
+#mkt-sent-country,#mkt-sent-mb-country{font-weight:700;color:var(--text);font-size:12px;letter-spacing:.2px}
 .mkt-sent-zone{font-size:12px;font-weight:700;letter-spacing:.1px;line-height:1.2}
 .mkt-sent-zone.extreme-fear{color:#16a34a}
 .mkt-sent-zone.fear{color:#ca8a04}
@@ -3599,8 +3616,8 @@ footer{
 .mkt-sent-hist{display:flex;align-items:flex-end;gap:5px}
 .mkt-sent-clk-wrap{display:flex;flex-direction:column;align-items:center;gap:2px}
 .mkt-sent-clk{display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.mkt-sent-clk-lbl{font-size:8px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:rgba(255,255,255,.35);line-height:1}
-.mkt-sent-clk-lbl.today{color:rgba(255,255,255,.85);font-weight:700}
+.mkt-sent-clk-lbl{font-size:8px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--text3);line-height:1}
+.mkt-sent-clk-lbl.today{color:var(--text);font-weight:700}
 /* Badge */
 .mkt-sent-badge{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 6px;border-radius:4px;flex-shrink:0}
 .mkt-sent-badge.live{background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.2)}
@@ -3609,27 +3626,27 @@ footer{
 /* Expanded panel — coordinates set by JS */
 .mkt-sent-panel{
   position:fixed;top:50px;left:50%;transform:translateX(-50%);
-  min-width:300px;width:300px;background:var(--dark2,#1a1f2e);border:1px solid rgba(255,255,255,.12);
+  min-width:400px;width:400px;background:var(--card,#0a1830);border:1px solid var(--border2);
   border-radius:12px;box-shadow:0 16px 48px rgba(0,0,0,.7);z-index:9999;overflow:hidden;
   max-height:90vh;overflow-y:auto;
 }
 .mkt-sent-ph{
   font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
-  color:var(--gold2,#f5a623);padding:10px 16px 8px;border-bottom:1px solid rgba(255,255,255,.08);
+  color:var(--gold2,#f5a623);padding:10px 16px 8px;border-bottom:1px solid var(--border);
 }
 .mkt-sent-ph-sm{font-size:9px;padding-top:6px;padding-bottom:6px;border-bottom:none;border-top:1px solid rgba(255,255,255,.08)}
 /* Full gauge area */
 .mkt-sent-gauge-full{display:flex;flex-direction:column;align-items:center;padding:14px 16px 4px;gap:4px}
-.mkt-sent-panel-desc{font-size:11px;color:rgba(255,255,255,.5);text-align:center;padding:0 16px 10px;line-height:1.5}
-.mkt-sent-panel-sep{height:1px;background:rgba(255,255,255,.06);margin:0}
+.mkt-sent-panel-desc{font-size:11px;color:var(--text2);text-align:center;padding:0 16px 10px;line-height:1.5}
+.mkt-sent-panel-sep{height:1px;background:var(--border);margin:0}
 /* Rows */
-.mkt-sent-row{display:flex;align-items:center;gap:8px;padding:6px 16px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .1s}
+.mkt-sent-row{display:flex;align-items:center;gap:8px;padding:7px 16px;border-bottom:1px solid var(--border);transition:background .1s}
 .mkt-sent-row:last-of-type{border-bottom:none}
-.mkt-sent-row:hover{background:rgba(255,255,255,.04)}
-.mkt-sent-row-flag{font-size:13px;flex-shrink:0}
+.mkt-sent-row:hover{background:var(--card2)}
+.mkt-sent-row-cc{font-size:9px;font-weight:800;letter-spacing:.6px;min-width:26px;text-align:center;color:var(--text3);flex-shrink:0;font-family:'JetBrains Mono','Courier New',monospace}
 .mkt-sent-row-info{flex:1;min-width:0}
-.mkt-sent-row-country{font-size:11px;font-weight:600;color:rgba(255,255,255,.85)}
-.mkt-sent-row-idx{font-size:10px;color:rgba(255,255,255,.35)}
+.mkt-sent-row-country{font-size:12px;font-weight:700;color:var(--text)}
+.mkt-sent-row-idx{font-size:10px;color:var(--text3)}
 .mkt-sent-row-chg{font-size:11px;font-weight:700;min-width:50px;text-align:right;flex-shrink:0}
 .mkt-sent-row-chg.pos{color:#22c55e}.mkt-sent-row-chg.neg{color:#ef4444}.mkt-sent-row-chg.flat{color:#9ca3af}
 .mkt-sent-row-zone{font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap;flex-shrink:0}
@@ -3638,7 +3655,7 @@ footer{
 .mkt-sent-row-zone.neutral{background:rgba(156,163,175,.1);color:#9ca3af}
 .mkt-sent-row-zone.greed{background:rgba(234,88,12,.12);color:#ea580c}
 .mkt-sent-row-zone.extreme-greed{background:rgba(220,38,38,.12);color:#dc2626}
-.mkt-sent-pf{font-size:9px;color:rgba(255,255,255,.25);padding:7px 16px;text-align:center;border-top:1px solid rgba(255,255,255,.05)}
+.mkt-sent-pf{font-size:9px;color:var(--text3);padding:7px 16px;text-align:center;border-top:1px solid var(--border)}
 /* Mobile sentiment bar */
 .mkt-sent-mobile-bar{
   display:none;align-items:center;gap:8px;cursor:pointer;width:100%;
@@ -3649,7 +3666,7 @@ footer{
 .mkt-sent-mobile-bar:active{background:rgba(255,255,255,.06)}
 .mkt-sent-mb-gauge{display:flex;align-items:center;flex-shrink:0}
 .mkt-sent-mb-text{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0}
-.mkt-sent-mb-hl{font-size:10px;color:rgba(255,255,255,.55);white-space:nowrap;line-height:1.2}
+.mkt-sent-mb-hl{font-size:10px;color:var(--text2);white-space:nowrap;line-height:1.2}
 .mkt-sent-mb-days{display:flex;align-items:flex-end;gap:4px;flex-shrink:0}
 .mkt-sent-mobile-bar .mkt-sent-badge{display:inline-block!important}
 /* Responsive breakpoints */
@@ -3657,9 +3674,9 @@ footer{
 @media(max-width:820px){.mkt-sent-badge{display:none}}
 @media(max-width:680px){.mkt-sent-widget{display:none}.mkt-sent-mobile-bar{display:flex}}
 /* Day picker strip inside expanded sentiment panel */
-.mkt-sent-day-picker{display:flex;gap:5px;padding:8px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
-.mkt-sent-day-btn{flex:1;padding:5px 0;border-radius:6px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:rgba(255,255,255,.65);font-size:10px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .15s;line-height:1.2}
-.mkt-sent-day-btn:hover:not(:disabled){background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff}
+.mkt-sent-day-picker{display:flex;gap:5px;padding:8px 16px;border-bottom:1px solid var(--border)}
+.mkt-sent-day-btn{flex:1;padding:5px 0;border-radius:6px;border:1px solid var(--border2);background:var(--card2);color:var(--text2);font-size:10px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .15s;line-height:1.2}
+.mkt-sent-day-btn:hover:not(:disabled){background:var(--card3);border-color:var(--border2);color:var(--text)}
 .mkt-sent-day-btn.active{background:var(--burn,#d81921);border-color:var(--burn,#d81921);color:#fff}
 .mkt-sent-day-btn:disabled{opacity:.25;cursor:default}
 </style>
@@ -8655,9 +8672,9 @@ function _mktSentRenderMain(idx) {
   ['mkt-sent-gauge-mini','mkt-sent-mb-gauge'].forEach(id => {
     const el = document.getElementById(id); if (el) el.innerHTML = gaugeSVG;
   });
-  // Country text — desktop + mobile
+  // Country text — desktop + mobile (flag emoji omitted — renders as 2-letter code on Windows)
   ['mkt-sent-country','mkt-sent-mb-country'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.textContent = (m.flag ? m.flag + ' ' : '') + m.country;
+    const el = document.getElementById(id); if (el) el.textContent = m.country;
   });
   // Zone label — desktop + mobile
   ['mkt-sent-zone','mkt-sent-mb-zone'].forEach(id => {
@@ -8698,7 +8715,7 @@ function _mktSentRenderPanel() {
   if (!m) return;
   const score = _mktSentScore(m.change);
   const ctryEl = document.getElementById('mkt-sent-panel-ctry');
-  if (ctryEl) ctryEl.textContent = (m.flag ? m.flag + ' ' : '') + m.country;
+  if (ctryEl) ctryEl.textContent = m.country;
 
   const gfEl = document.getElementById('mkt-sent-gauge-full');
   if (gfEl) gfEl.innerHTML = isLiveDay ? _mktSentFullGaugeSVG(score, m.zoneCls) : '';
@@ -8708,12 +8725,15 @@ function _mktSentRenderPanel() {
     ? (_MKTS_SENT_DESCS[m.zoneCls] || '')
     : 'Historical sentiment — tap a market row for details.';
 
+  // Country → ISO code map for clean panel row labels (no flag emoji, consistent on all OS)
+  const _CC = {US:'US',India:'IN',Japan:'JP',Europe:'EU',China:'CN',Korea:'KR',Brazil:'BR',Australia:'AU',Taiwan:'TW'};
   const rowsEl = document.getElementById('mkt-sent-rows');
   if (rowsEl) {
     if (isLiveDay) {
       rowsEl.innerHTML = _mktSentData.map(r => {
-        const sgn=r.change>0?'+':'', cc=r.change>0.1?'pos':r.change<-0.1?'neg':'flat';
-        return `<div class="mkt-sent-row"><span class="mkt-sent-row-flag">${r.flag}</span><div class="mkt-sent-row-info"><div class="mkt-sent-row-country">${r.country}</div><div class="mkt-sent-row-idx">${r.index}</div></div><span class="mkt-sent-row-chg ${cc}">${sgn}${r.change.toFixed(2)}%</span><span class="mkt-sent-row-zone ${r.zoneCls}">${r.zone}</span></div>`;
+        const sgn=r.change>0?'+':'', chgCls=r.change>0.1?'pos':r.change<-0.1?'neg':'flat';
+        const iso = _CC[r.country] || r.country.slice(0,2).toUpperCase();
+        return `<div class="mkt-sent-row"><span class="mkt-sent-row-cc">${iso}</span><div class="mkt-sent-row-info"><div class="mkt-sent-row-country">${r.country}</div><div class="mkt-sent-row-idx">${r.index}</div></div><span class="mkt-sent-row-chg ${chgCls}">${sgn}${r.change.toFixed(2)}%</span><span class="mkt-sent-row-zone ${r.zoneCls}">${r.zone}</span></div>`;
       }).join('');
     } else {
       const rows = _MKTS_SENT_MARKETS.map(mk => {
@@ -8721,7 +8741,8 @@ function _mktSentRenderPanel() {
         const rec = hist.find(x => x.d === activeDay);
         if (!rec) return '';
         const zoneLbl = (_MKTS_SENT_ZONE_CFG[rec.z]||{}).label || rec.z;
-        return `<div class="mkt-sent-row"><span class="mkt-sent-row-flag">${mk.flag}</span><div class="mkt-sent-row-info"><div class="mkt-sent-row-country">${mk.country}</div><div class="mkt-sent-row-idx">${mk.index}</div></div><span class="mkt-sent-row-zone ${rec.z}">${zoneLbl}</span></div>`;
+        const iso = _CC[mk.country] || mk.country.slice(0,2).toUpperCase();
+        return `<div class="mkt-sent-row"><span class="mkt-sent-row-cc">${iso}</span><div class="mkt-sent-row-info"><div class="mkt-sent-row-country">${mk.country}</div><div class="mkt-sent-row-idx">${mk.index}</div></div><span class="mkt-sent-row-zone ${rec.z}">${zoneLbl}</span></div>`;
       }).join('');
       rowsEl.innerHTML = rows || '<div class="mkt-sent-pf" style="padding:14px">No data cached for this day yet.</div>';
     }
@@ -8780,12 +8801,12 @@ function mktSentToggle(e) {
       if (widget) {
         const r = widget.getBoundingClientRect();
         topPx = Math.round(r.bottom + 6);
-        leftPx = Math.round(Math.max(8, r.left + r.width / 2 - 150));
+        leftPx = Math.round(Math.max(8, r.left + r.width / 2 - 200));
       }
       Object.assign(panel.style, {
         position:'fixed', top:topPx+'px', left:leftPx+'px',
         bottom:'auto', right:'auto', transform:'none',
-        width:'300px', maxWidth:'none', borderRadius:'12px',
+        width:'400px', maxWidth:'none', borderRadius:'12px',
         maxHeight:'90vh', overflowY:'auto', zIndex:'9999'
       });
     }
@@ -15226,10 +15247,14 @@ function renderItems(listEl, items) {
 
     if (i === 0) {
       // Hero card — full-width vertical, image on top, full headline visible
+      // Cascade: RSS image → group fallback → hide wrap
       const heroSrc = imgSrc || fallbackImg;
+      const heroOnerror = imgSrc
+        ? `this.onerror=null;this.src='${escHtml(fallbackImg)}'`
+        : `this.closest('.lnb-hero-img-wrap').style.display='none'`;
       return `<div class="lnb-hero-card" ${clickAttrs}>
         <div class="lnb-hero-img-wrap">
-          <img class="lnb-hero-img" src="${escHtml(heroSrc)}" alt="" loading="lazy" onerror="this.closest('.lnb-hero-img-wrap').style.display='none'">
+          <img class="lnb-hero-img" src="${escHtml(heroSrc)}" alt="" loading="lazy" onerror="${heroOnerror}">
           <div class="lnb-hero-no-img">${channelFlag}</div>
         </div>
         <div class="lnb-hero-body">
