@@ -913,6 +913,14 @@ body{
 }
 .world-story-card:hover .world-story-read{opacity:1}
 
+/* World story card image — edge-to-edge thumbnail */
+.world-story-img-wrap{
+  width:calc(100% + 28px);height:90px;overflow:hidden;
+  margin:-12px -14px 10px -14px;flex-shrink:0;
+}
+.world-story-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s ease}
+.world-story-card:hover .world-story-img{transform:scale(1.04)}
+
 .world-empty{
   padding:32px 20px;text-align:center;
   color:var(--text3);font-size:13px;
@@ -2832,20 +2840,20 @@ function buildMalayalamCategoriesBlock(data) {
   return wrap;
 }
 
-/* Unsplash fallback images keyed by ML category */
-var _ML_CAT_FALLBACK_IMGS = {
-  ml_trending:   'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=70',
-  ml_movies:     'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&q=70',
-  ml_music:      'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=70',
-  ml_local:      'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=70',
-  ml_science:    'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=800&q=70',
-  ml_space:      'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800&q=70',
-  ml_sports:     'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=70',
-  ml_health:     'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&q=70',
-  ml_food:       'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=70',
-  ml_realestate: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=70',
-  ml_career:     'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800&q=70',
-  ml_tech:       'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=70'
+/* Per-category image pools — 4 unique Unsplash photos per category, rotated by article index */
+var _ML_IMG_POOLS = {
+  ml_trending:   ['https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=700&q=70','https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=700&q=70','https://images.unsplash.com/photo-1495020689067-958852a7765e?w=700&q=70','https://images.unsplash.com/photo-1453738773917-9c3eff1db985?w=700&q=70'],
+  ml_movies:     ['https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=700&q=70','https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=700&q=70','https://images.unsplash.com/photo-1485846234645-a62644f84728?w=700&q=70','https://images.unsplash.com/photo-1524712245354-2c4e5e7121c3?w=700&q=70'],
+  ml_music:      ['https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=700&q=70','https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=700&q=70','https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=700&q=70','https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=700&q=70'],
+  ml_local:      ['https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=700&q=70','https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=700&q=70','https://images.unsplash.com/photo-1563536313-be6fc5d4b0d5?w=700&q=70','https://images.unsplash.com/photo-1468611083934-17bd02c3b08d?w=700&q=70'],
+  ml_science:    ['https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=700&q=70','https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=700&q=70','https://images.unsplash.com/photo-1576319155264-99536e0be1ee?w=700&q=70','https://images.unsplash.com/photo-1530026186672-2cd00ffc50d8?w=700&q=70'],
+  ml_space:      ['https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=700&q=70','https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=700&q=70','https://images.unsplash.com/photo-1614730321220-6af8c57b2c5c?w=700&q=70','https://images.unsplash.com/photo-1614726365952-510103b1bdb8?w=700&q=70'],
+  ml_sports:     ['https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=700&q=70','https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=700&q=70','https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=700&q=70','https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=700&q=70'],
+  ml_health:     ['https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=700&q=70','https://images.unsplash.com/photo-1631549916768-4119b4220fd2?w=700&q=70','https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=700&q=70','https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=700&q=70'],
+  ml_food:       ['https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=700&q=70','https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=700&q=70','https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=700&q=70','https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=700&q=70'],
+  ml_realestate: ['https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=700&q=70','https://images.unsplash.com/photo-1448630360428-65456885c650?w=700&q=70','https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=700&q=70','https://images.unsplash.com/photo-1560520653-9e0e4c89eb11?w=700&q=70'],
+  ml_career:     ['https://images.unsplash.com/photo-1521791136064-7986c2920216?w=700&q=70','https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=700&q=70','https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=700&q=70','https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=700&q=70'],
+  ml_tech:       ['https://images.unsplash.com/photo-1518770660439-4636190af475?w=700&q=70','https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=700&q=70','https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=700&q=70','https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=700&q=70']
 };
 
 function _showMlCategory(catId, data) {
@@ -2869,7 +2877,7 @@ function _showMlCategory(catId, data) {
     : [];
 
   var catMeta = SECTION_META[catId] || {};
-  var fallbackImg = _ML_CAT_FALLBACK_IMGS[catId] || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=70';
+  var imgPool = _ML_IMG_POOLS[catId] || _ML_IMG_POOLS['ml_trending'];
   var accentColor = catMeta.accent || '#8b5cf6';
 
   if (items.length === 0) {
@@ -2884,8 +2892,9 @@ function _showMlCategory(catId, data) {
   var html = '<div class="ml-card-grid">';
 
   items.forEach(function(item, i) {
-    var itemUrl = item.url || item.link || '#';
-    var imgSrc  = item.image || fallbackImg;
+    var itemUrl  = item.url || item.link || '#';
+    var poolImg  = imgPool[i % imgPool.length];
+    var imgSrc   = item.image || poolImg;
     var headline = esc(item.headline || '');
     var teaser   = esc(item.teaser   || '');
     var srcName  = esc(item.source   || '');
@@ -2896,7 +2905,7 @@ function _showMlCategory(catId, data) {
       html += '<div class="ml-hero-card" onclick="window.open(\'' + escAttr(itemUrl) + '\',\'_blank\')" role="button" tabindex="0" aria-label="' + headline + '" style="--section-accent:' + accentColor + '">'
         + '<div class="ml-hero-img-wrap">'
         + '<img class="ml-hero-img" src="' + escAttr(imgSrc) + '" alt="" loading="lazy"'
-        + ' onerror="this.src=\'' + escAttr(fallbackImg) + '\';">'
+        + ' onerror="this.src=\'' + escAttr(imgPool[0]) + '\';">'
         + '</div>'
         + '<div class="ml-hero-body">'
         + '<span class="ml-hero-cat">' + esc(catMeta.label || '') + '</span>'
@@ -2913,7 +2922,7 @@ function _showMlCategory(catId, data) {
       html += '<div class="ml-news-card" onclick="window.open(\'' + escAttr(itemUrl) + '\',\'_blank\')" role="button" tabindex="0" aria-label="' + headline + '" style="--section-accent:' + accentColor + '">'
         + '<div class="ml-news-card-img-wrap">'
         + '<img class="ml-news-card-img" src="' + escAttr(imgSrc) + '" alt="" loading="lazy"'
-        + ' onerror="this.src=\'' + escAttr(fallbackImg) + '\';">'
+        + ' onerror="this.src=\'' + escAttr(poolImg) + '\';">'
         + '</div>'
         + '<div class="ml-news-card-body">'
         + '<span class="ml-news-card-cat">' + esc(catMeta.label || '') + '</span>'
@@ -3039,6 +3048,13 @@ function closeWorldStory() {
   if (overlay) { overlay.classList.remove('active'); document.body.style.overflow = ''; }
 }
 
+/* Generate a deterministic picsum image URL per headline (unique per article, fast CDN) */
+function _wCardImgUrl(headline) {
+  var s = 0;
+  for (var i = 0; i < (headline || '').length; i++) { s = ((s << 5) - s + (headline || '').charCodeAt(i)) | 0; }
+  return 'https://picsum.photos/seed/' + (Math.abs(s) || 42) + '/480/270';
+}
+
 function renderWorldSection(data, container) {
   var wrap = document.createElement('div');
   wrap.id = 'world';
@@ -3100,7 +3116,9 @@ function renderWorldSection(data, container) {
       card.onclick = (function(i){ return function(){ openWorldStory(i); }; })(idx);
       card.onkeydown = (function(i){ return function(e){ if (e.key==='Enter'||e.key===' ') openWorldStory(i); }; })(idx);
 
-      card.innerHTML = '<div class="world-story-headline">' + esc(item.headline || '') + '</div>'
+      var wImgSrc = item.image || _wCardImgUrl(item.headline || '');
+      card.innerHTML = '<div class="world-story-img-wrap"><img class="world-story-img" src="' + escAttr(wImgSrc) + '" alt="" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></div>'
+        + '<div class="world-story-headline">' + esc(item.headline || '') + '</div>'
         + '<div class="world-story-meta">'
         + '<span class="world-story-source" style="color:' + accent + '">' + esc(item.source || '') + '</span>'
         + '<span class="world-story-time">' + _wTimeAgo(item.publishedAt) + '</span>'

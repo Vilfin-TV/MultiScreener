@@ -425,6 +425,19 @@ function parseRSS(xml) {
   return items;
 }
 
+function extractItemImage(block) {
+  var m = block.match(/<media:content[^>]+url=["']([^"']+\.(jpg|jpeg|png|webp))[^"']*["']/i);
+  if (m) return m[1];
+  m = block.match(/<media:thumbnail[^>]+url=["']([^"']+\.(jpg|jpeg|png|webp))[^"']*["']/i);
+  if (m) return m[1];
+  m = block.match(/<enclosure[^>]+type=["']image\/[^"']*["'][^>]+url=["']([^"']+)["']/i)
+    || block.match(/<enclosure[^>]+url=["']([^"']+\.(jpg|jpeg|png|webp))[^"']*["']/i);
+  if (m) return m[1];
+  m = block.match(/<img[^>]+src=["']([^"']+\.(jpg|jpeg|png|webp))[^"']*["']/i);
+  if (m) return m[1];
+  return null;
+}
+
 function processBlock(block, items) {
   var rawTitle = decodeEntities(extractTagValue(block, 'title').replace(/<[^>]+>/g, ''));
   // Strip "- Source Name" suffix added by Google News aggregation
@@ -455,7 +468,8 @@ function processBlock(block, items) {
   var age = Date.now() - new Date(publishedAt).getTime();
   if (age > 7 * 24 * 60 * 60 * 1000) return;
 
-  items.push({ title: title, link: link || '', description: description, publishedAt: publishedAt });
+  var imageUrl = extractItemImage(block);
+  items.push({ title: title, link: link || '', description: description, publishedAt: publishedAt, imageUrl: imageUrl || null });
 }
 
 /* ═══════════════════════════════════════════════════
@@ -529,7 +543,7 @@ async function buildRegion(region) {
   console.log('  Selected', selected.length, 'of', deduped.length, 'deduped items');
 
   return selected.map(function(item) {
-    return {
+    var out = {
       headline:    item.title,
       teaser:      item.description || '',
       source:      item.sourceName || '',
@@ -537,6 +551,8 @@ async function buildRegion(region) {
       publishedAt: item.publishedAt,
       expiresAt:   new Date(Date.now() + EXPIRY_HOURS * 3600000).toISOString()
     };
+    if (item.imageUrl) out.image = item.imageUrl;
+    return out;
   });
 }
 
