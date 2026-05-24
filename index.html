@@ -1469,6 +1469,12 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-stale{padding:5px 10px;font-size:10px;color:var(--text3);text-align:center;border-top:1px solid var(--border)}
 .lnb-retry{background:transparent;border:1px solid var(--border2);color:var(--burn3,#93c5fd);font-size:10px;cursor:pointer;padding:1px 8px;border-radius:4px;margin-left:4px;transition:background .12s;vertical-align:middle}
 .lnb-retry:hover{background:rgba(59,130,246,.15)}
+/* ── Channel box "More" footer ── */
+.lnb-more-footer{display:flex;justify-content:flex-end;align-items:center;padding:5px 10px 7px;border-top:1px solid var(--border);background:linear-gradient(135deg,var(--card2),var(--card));margin-top:auto}
+.lnb-more-btn{font-size:9.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--lnb-color,var(--burn3));text-decoration:none;display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border-radius:6px;border:1px solid var(--border2);background:var(--card3);transition:background .15s,color .15s,border-color .15s,transform .1s}
+.lnb-more-btn:hover{background:var(--lnb-color,var(--burn3));color:#fff!important;border-color:var(--lnb-color,var(--burn3));transform:translateX(1px)}
+.lnb-more-btn svg{width:10px;height:10px;flex-shrink:0;transition:transform .15s}
+.lnb-more-btn:hover svg{transform:translateX(2px)}
 
 /* ── LIVE NEWS CARD GRID (box-style with pictures) ── */
 .lnb-card-grid{padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;min-height:140px}
@@ -15162,20 +15168,42 @@ const _LNB_FALLBACKS = {
 };
 const _LNB_FALLBACK_DEFAULT = 'https://images.unsplash.com/photo-1453738773917-9c3eff1db985?w=500&q=70';
 
+// Map channel group → news.html anchor section
+function _lnbMoreHash(group) {
+  if (!group) return '#trending';
+  if (group.includes('Malayalam')) return '#malayalam';
+  if (group.includes('Global') || group.includes('🌐')) return '#global';
+  // Region groups → global
+  const globalGroups = ['Japan','Korea','China','Europe','Middle East','Asia','UK','United Kingdom',
+    'Australia','New Zealand','Brazil','Argentina','France','Russia','South Africa',
+    'Nigeria','Nepal','UAE','Taiwan','Thailand','Bangladesh','Switzerland','Mexico'];
+  if (globalGroups.some(r => group.includes(r))) return '#global';
+  // India (non-Malayalam), US, Canada, English → trending
+  return '#trending';
+}
+
 function renderNewsBoxes() {
   const grid = document.getElementById('lns-grid');
   if (!grid) return;
   const feeds = getActiveFeeds();
-  grid.innerHTML = feeds.map(s =>
-    `<div class="lnb" id="lnb-${s.id}">
-      <div class="lnb-header" style="--lnb-color:${s.color}">
+  grid.innerHTML = feeds.map(s => {
+    const moreHash = _lnbMoreHash(s.group || '');
+    const moreUrl  = 'https://vilfintv.com/news.html' + moreHash;
+    return `<div class="lnb" id="lnb-${s.id}" style="--lnb-color:${s.color}">
+      <div class="lnb-header">
         <span class="lnb-flag">${s.flag}</span>
         <span class="lnb-label">${s.label}</span>
         <span class="lnb-live">LIVE</span>
       </div>
       <div class="lnb-card-grid" id="lnbl-${s.id}" data-color="${escHtml(s.color)}" data-flag="${s.flag}" data-group="${escHtml(s.group||'')}"><div class="lnb-loading">Loading…</div></div>
-    </div>`
-  ).join('');
+      <div class="lnb-more-footer">
+        <a href="${moreUrl}" class="lnb-more-btn" target="_blank" rel="noopener">
+          More Stories
+          <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5h6M5.5 2.5 8 5l-2.5 2.5"/></svg>
+        </a>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function fetchAllNews() {
