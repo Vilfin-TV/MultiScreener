@@ -24,13 +24,16 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROC_API }}
         run: node scripts/build_news.js
       - name: Commit if changed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
           git add data/news.json
           if git diff --cached --quiet; then
             echo "No changes"
           else
             git commit -m "chore(data): refresh news content [skip ci]"
-            git push
+            git push origin main
           fi

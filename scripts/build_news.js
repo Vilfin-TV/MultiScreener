@@ -366,7 +366,8 @@ function processBlock(block, items) {
    CONTENT FILTERS
 ═══════════════════════════════════════════════════ */
 function filterItem(item) {
-  var text = (item.title + ' ' + item.description).toLowerCase();
+  if (!item || !item.title) return false;  // guard: skip items with no title
+  var text = ((item.title || '') + ' ' + (item.description || '')).toLowerCase();
   for (var i = 0; i < BLOCKED_KEYWORDS.length; i++) {
     if (text.includes(BLOCKED_KEYWORDS[i])) {
       console.log('  [FILTERED]', item.title.slice(0, 60));
@@ -380,6 +381,7 @@ function filterItem(item) {
    DEDUP — Jaccard similarity on word sets
 ═══════════════════════════════════════════════════ */
 function titleWords(title) {
+  if (!title) return new Set();  // guard: undefined/null/'' → empty set
   return new Set(
     title.toLowerCase().replace(/[^a-z0-9ഀ-ൿ ]/g, ' ')
       .split(/\s+/).filter(function(w){ return w.length > 3; })
