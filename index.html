@@ -1451,6 +1451,21 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-retry{background:transparent;border:1px solid var(--border2);color:var(--burn3,#93c5fd);font-size:10px;cursor:pointer;padding:1px 8px;border-radius:4px;margin-left:4px;transition:background .12s;vertical-align:middle}
 .lnb-retry:hover{background:rgba(59,130,246,.15)}
 
+/* ── LIVE NEWS CARD GRID (box-style with pictures) ── */
+.lnb-card-grid{padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:7px;min-height:140px}
+.lnb-card-grid .lnb-loading,.lnb-card-grid .lnb-error,.lnb-card-grid .lnb-stale{grid-column:1/-1}
+.lnb-news-card{background:var(--card2);border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s,border-color .15s}
+.lnb-news-card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.3);border-color:var(--burn3)}
+.lnb-card-img-wrap{position:relative;width:100%;padding-top:52%;overflow:hidden;flex-shrink:0;background:var(--card3)}
+.lnb-card-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .3s ease}
+.lnb-news-card:hover .lnb-card-img{transform:scale(1.05)}
+.lnb-card-no-img{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;opacity:.5}
+.lnb-card-body{padding:7px 8px 8px;display:flex;flex-direction:column;gap:3px;flex:1}
+.lnb-card-title{font-size:11px;font-weight:600;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.lnb-news-card:hover .lnb-card-title{color:var(--gold2)}
+.lnb-card-time{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:auto;padding-top:3px}
+@media(max-width:480px){.lnb-card-grid{grid-template-columns:1fr 1fr;gap:5px;padding:6px}}
+
 /* ── Calendar strips — thin visible scrollbar so users know they can scroll ── */
 #cal-country-strip,#cal-region-strip{
   scrollbar-width:thin;
@@ -14950,12 +14965,15 @@ let _workerProxyDownUntil = 0;
 
 // Convert rss2json.com item format → internal item format
 function _rss2jsonToItem(it) {
+  // rss2json exposes thumbnail as it.thumbnail or first enclosure
+  const image = it.thumbnail || it.enclosure?.link || '';
   return {
     title: it.title || '',
     link: it.link || it.guid || '#',
     pubDate: it.pubDate || '',
     description: it.description || it.content || '',
     source: it.author || '',
+    image: image,
   };
 }
 
@@ -15059,7 +15077,7 @@ function renderNewsBoxes() {
         <span class="lnb-label">${s.label}</span>
         <span class="lnb-live">LIVE</span>
       </div>
-      <div class="lnb-list" id="lnbl-${s.id}"><div class="lnb-loading">Loading…</div></div>
+      <div class="lnb-card-grid" id="lnbl-${s.id}" data-color="${escHtml(s.color)}" data-flag="${s.flag}"><div class="lnb-loading">Loading…</div></div>
     </div>`
   ).join('');
 }
@@ -15091,25 +15109,31 @@ function _sanitizeRssContent(raw, maxLen) {
 }
 
 function renderItems(listEl, items) {
-  listEl.innerHTML = items.slice(0, 6).map(item => {
+  const channelFlag = listEl.dataset.flag || '📰';
+  listEl.innerHTML = items.slice(0, 4).map(item => {
     const title   = (typeof item === 'string' ? item : (item.title || '')).trim();
     const link    = item.link || item.url || '#';
     const pub     = item.pubDate || item.published || '';
     const rawDesc = item.description || item.summary || item.content || '';
     const snippet = _sanitizeRssContent(rawDesc, 400);
     const source  = item.source || item.feed || '';
+    const imgSrc  = item.image || '';
     const timeStr = pub ? new Date(pub).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}) : '';
-    const safeTitle = escHtml(title);
-    const safeDesc  = escHtml(snippet);
-    const safeUrl   = escHtml(link);
-    const safeSrc   = escHtml(source);
+    const safeTitle   = escHtml(title);
     const encodedDesc = encodeURIComponent(snippet);
-    return `<div class="lnb-item" role="button" tabindex="0"
-      data-true-url="${escHtml(link)}" data-title="${escHtml(title)}" data-desc="${escHtml(snippet)}" data-modal-content="${encodedDesc}" data-source="${escHtml(source)}"
+    const imgHtml = imgSrc
+      ? `<img class="lnb-card-img" src="${escHtml(imgSrc)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        + `<div class="lnb-card-no-img" style="display:none">${channelFlag}</div>`
+      : `<div class="lnb-card-no-img">${channelFlag}</div>`;
+    return `<div class="lnb-news-card" role="button" tabindex="0"
+      data-true-url="${escHtml(link)}" data-title="${safeTitle}" data-modal-content="${encodedDesc}" data-source="${escHtml(source)}"
       onclick="event.preventDefault(); rssModalOpen(${JSON.stringify(title)},${JSON.stringify(snippet)},${JSON.stringify(link)},${JSON.stringify(source)}); return false"
       onkeydown="if(event.key==='Enter'){event.preventDefault();this.click()}">
-      <span class="lnb-text">${safeTitle}</span>
-      ${timeStr ? `<span class="lnb-time">${timeStr}</span>` : ''}
+      <div class="lnb-card-img-wrap">${imgHtml}</div>
+      <div class="lnb-card-body">
+        <div class="lnb-card-title">${safeTitle}</div>
+        ${timeStr ? `<div class="lnb-card-time">${timeStr}</div>` : ''}
+      </div>
     </div>`;
   }).join('');
 }
@@ -15136,6 +15160,28 @@ function _parseXmlItems(xmlStr) {
     // Extract source name
     const srcEl = item.querySelector('source');
     const source = srcEl?.textContent?.trim() || srcEl?.innerHTML?.trim() || '';
+    // Extract image — try media:content, media:thumbnail, enclosure, then first <img> in description
+    let image = '';
+    try {
+      const mc = item.querySelector('content') || item.querySelector('thumbnail');
+      if (mc) image = mc.getAttribute('url') || '';
+      if (!image) {
+        const enc = item.querySelector('enclosure');
+        if (enc && /^image\//i.test(enc.getAttribute('type') || '')) image = enc.getAttribute('url') || '';
+      }
+      if (!image) {
+        const descRaw =
+          item.querySelector('description')?.textContent ||
+          item.querySelector('encoded')?.textContent ||
+          item.querySelector('summary')?.textContent || '';
+        if (descRaw) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = descRaw;
+          const firstImg = tmp.querySelector('img');
+          if (firstImg) image = firstImg.getAttribute('src') || '';
+        }
+      }
+    } catch(_) {}
     return {
       title: item.querySelector('title')?.textContent?.trim() || '',
       link: link,
@@ -15152,6 +15198,7 @@ function _parseXmlItems(xmlStr) {
         item.querySelector('content')?.textContent?.trim() ||
         '',
       source: source,
+      image: image,
     };
   }).filter(i => i.title);
 }
