@@ -2900,9 +2900,11 @@ function _showMlCategory(catId, data) {
     var srcName  = esc(item.source   || '');
     var ago      = timeAgo(item.publishedAt);
 
+    var storyIdx = _cacheStory(item, catMeta);
+
     if (i === 0) {
       /* Hero card — full-width first story */
-      html += '<div class="ml-hero-card" onclick="window.open(\'' + escAttr(itemUrl) + '\',\'_blank\')" role="button" tabindex="0" aria-label="' + headline + '" style="--section-accent:' + accentColor + '">'
+      html += '<div class="ml-hero-card" onclick="openStoryIdx(' + storyIdx + ')" role="button" tabindex="0" aria-label="' + headline + '" style="--section-accent:' + accentColor + '">'
         + '<div class="ml-hero-img-wrap">'
         + '<img class="ml-hero-img" src="' + escAttr(imgSrc) + '" alt="" loading="lazy"'
         + ' onerror="this.src=\'' + escAttr(imgPool[0]) + '\';">'
@@ -2912,14 +2914,13 @@ function _showMlCategory(catId, data) {
         + '<div class="ml-hero-hl">' + headline + '</div>'
         + (teaser ? '<div class="ml-hero-teaser">' + teaser + '</div>' : '')
         + '<div class="ml-hero-meta">'
-        + (srcName ? '<span class="ml-hero-src">' + srcName + '</span><span>·</span>' : '')
         + '<span>' + ago + '</span>'
         + '</div>'
         + '</div>'
         + '</div>';
     } else {
       /* Regular card */
-      html += '<div class="ml-news-card" onclick="window.open(\'' + escAttr(itemUrl) + '\',\'_blank\')" role="button" tabindex="0" aria-label="' + headline + '" style="--section-accent:' + accentColor + '">'
+      html += '<div class="ml-news-card" onclick="openStoryIdx(' + storyIdx + ')" role="button" tabindex="0" aria-label="' + headline + '" style="--section-accent:' + accentColor + '">'
         + '<div class="ml-news-card-img-wrap">'
         + '<img class="ml-news-card-img" src="' + escAttr(imgSrc) + '" alt="" loading="lazy"'
         + ' onerror="this.src=\'' + escAttr(poolImg) + '\';">'
@@ -2928,7 +2929,6 @@ function _showMlCategory(catId, data) {
         + '<span class="ml-news-card-cat">' + esc(catMeta.label || '') + '</span>'
         + '<div class="ml-news-card-hl">' + headline + '</div>'
         + '<div class="ml-news-card-meta">'
-        + (srcName ? '<span class="ml-news-card-src">' + srcName + '</span><span>·</span>' : '')
         + '<span>' + ago + '</span>'
         + '</div>'
         + '</div>'
@@ -3120,7 +3120,6 @@ function renderWorldSection(data, container) {
       card.innerHTML = '<div class="world-story-img-wrap"><img class="world-story-img" src="' + escAttr(wImgSrc) + '" alt="" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></div>'
         + '<div class="world-story-headline">' + esc(item.headline || '') + '</div>'
         + '<div class="world-story-meta">'
-        + '<span class="world-story-source" style="color:' + accent + '">' + esc(item.source || '') + '</span>'
         + '<span class="world-story-time">' + _wTimeAgo(item.publishedAt) + '</span>'
         + '<span class="world-story-read">Read ›</span>'
         + '</div>';
