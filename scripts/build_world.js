@@ -15,8 +15,8 @@ const path  = require('path');
 const url   = require('url');
 
 const REQUEST_TIMEOUT_MS = 18000;
-const MAX_PER_REGION     = 10;
-const EXPIRY_HOURS       = 3;  // world news refreshes more frequently
+const MAX_PER_REGION     = 20;   // layout needs 13 (hero+3+6+3); keep extra buffer
+const EXPIRY_HOURS       = 3;    // world news refreshes more frequently
 
 /* ═══════════════════════════════════════════════════
    WORLD REGIONS — sorted by continent/country
@@ -37,7 +37,8 @@ const WORLD_REGIONS = [
       { url: 'https://feeds.reuters.com/reuters/topNews',                         name: 'Reuters' },
       { url: 'https://feeds.reuters.com/reuters/businessNews',                    name: 'Reuters Business' },
       { url: 'https://en.mercopress.com/rss.xml',                                 name: 'MercoPress' },
-      { url: 'https://feeds.bloomberg.com/markets/news.rss',                     name: 'Bloomberg' },
+      { url: 'https://news.google.com/rss/search?q=bloomberg+markets&hl=en&gl=US&ceid=US:en', name: 'Bloomberg' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/US?hl=en&gl=US&ceid=US:en', name: 'Google News US' },
     ]
   },
   // ── Canada ─────────────────────────────────────────────────────────────────
@@ -56,6 +57,8 @@ const WORLD_REGIONS = [
     feeds: [
       { url: 'https://g1.globo.com/rss/g1/',                                      name: 'G1 News' },
       { url: 'https://oglobo.globo.com/rss.xml',                                  name: 'O Globo' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Brazil?hl=pt-BR&gl=BR&ceid=BR:pt-419', name: 'Google News Brasil' },
+      { url: 'https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml',    name: 'Agência Brasil' },
     ]
   },
   // ── Argentina ──────────────────────────────────────────────────────────────
@@ -64,6 +67,8 @@ const WORLD_REGIONS = [
     feeds: [
       { url: 'https://www.clarin.com/rss/lo-ultimo/',                             name: 'Clarín' },
       { url: 'https://www.lanacion.com.ar/arcio/rss/',                            name: 'La Nación' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Argentina?hl=es&gl=AR&ceid=AR:es', name: 'Google News AR' },
+      { url: 'https://www.infobae.com/feeds/rss/',                               name: 'Infobae' },
     ]
   },
   // ── Mexico ─────────────────────────────────────────────────────────────────
@@ -83,6 +88,9 @@ const WORLD_REGIONS = [
       { url: 'https://feeds.bbci.co.uk/news/rss.xml',                            name: 'BBC News' },
       { url: 'https://feeds.skynews.com/feeds/rss/home.xml',                     name: 'Sky News UK' },
       { url: 'https://feeds.bbci.co.uk/news/business/rss.xml',                   name: 'BBC Business' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/UK?hl=en&gl=GB&ceid=GB:en', name: 'Google News UK' },
+      { url: 'https://www.theguardian.com/world/rss',                            name: 'The Guardian' },
+      { url: 'https://www.independent.co.uk/news/rss',                          name: 'The Independent' },
     ]
   },
   // ── France ─────────────────────────────────────────────────────────────────
@@ -92,6 +100,8 @@ const WORLD_REGIONS = [
       { url: 'https://www.france24.com/en/rss',                                   name: 'France24' },
       { url: 'https://www.lemonde.fr/rss/une.xml',                                name: 'Le Monde' },
       { url: 'https://www.rfi.fr/fr/rss',                                         name: 'RFI' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/France?hl=fr&gl=FR&ceid=FR:fr', name: 'Google News France' },
+      { url: 'https://www.lefigaro.fr/rss/figaro_actualites.xml',                name: 'Le Figaro' },
     ]
   },
   // ── Switzerland ────────────────────────────────────────────────────────────
@@ -100,6 +110,8 @@ const WORLD_REGIONS = [
     feeds: [
       { url: 'https://www.srf.ch/news/bnf/rss/1890',                              name: 'SRF News' },
       { url: 'https://www.rts.ch/rss/news.xml',                                   name: 'RTS News' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Switzerland?hl=de&gl=CH&ceid=CH:de', name: 'Google News CH' },
+      { url: 'https://www.nzz.ch/recent.rss',                                   name: 'NZZ' },
     ]
   },
   // ── Europe / Middle East ───────────────────────────────────────────────────
@@ -118,6 +130,8 @@ const WORLD_REGIONS = [
     feeds: [
       { url: 'https://tass.com/rss/v2.xml',                                       name: 'TASS' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Russia?hl=ru&gl=RU&ceid=RU:ru', name: 'Google News RU' },
+      { url: 'https://ria.ru/export/rss2/archive/index.xml',                     name: 'RIA Novosti' },
+      { url: 'https://www.rt.com/rss/',                                          name: 'RT News' },
     ]
   },
   // ── India (English) ────────────────────────────────────────────────────────
@@ -247,6 +261,8 @@ const WORLD_REGIONS = [
     feeds: [
       { url: 'https://www.cna.com.tw/rss/aall.xml',                              name: 'CNA Taiwan' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Taiwan?hl=zh-TW&gl=TW&ceid=TW:zh-Hant', name: 'Google News TW' },
+      { url: 'https://news.google.com/rss/search?q=taiwan+news&hl=zh-TW&gl=TW&ceid=TW:zh-Hant', name: 'Taiwan Latest' },
+      { url: 'https://www.storm.mg/rss.xml',                                     name: 'Storm Media TW' },
     ]
   },
   // ── Thailand ───────────────────────────────────────────────────────────────
@@ -265,6 +281,8 @@ const WORLD_REGIONS = [
       { url: 'https://vir.com.vn/rss/home.rss',                                  name: 'VIR Vietnam' },
       { url: 'https://news.google.com/rss/headlines/section/geo/SoutheastAsia?hl=en&gl=US&ceid=US:en', name: 'Google SEA' },
       { url: 'https://www.straitstimes.com/RSS/Breaking-News.xml',               name: 'Straits Times SG' },
+      { url: 'https://asia.nikkei.com/rss/feed/nar',                             name: 'Nikkei Asia' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/SoutheastAsia?hl=en&gl=SG&ceid=SG:en', name: 'Google SEA (SG)' },
     ]
   },
   // ── Australia & NZ ─────────────────────────────────────────────────────────
@@ -276,7 +294,8 @@ const WORLD_REGIONS = [
       { url: 'https://www.rnz.co.nz/rss/news.xml',                              name: 'RNZ NZ' },
       { url: 'https://www.tvnz.co.nz/content/dam/tvnz/rss/news.rss',            name: 'TVNZ' },
       { url: 'https://www.9news.com.au/rss',                                     name: 'Nine News AU' },
-      { url: 'https://feeds.news.com.au/public/rss/2.0/news_home_1.xml',        name: 'News.com.au' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/Australia?hl=en&gl=AU&ceid=AU:en', name: 'Google News AU' },
+      { url: 'https://www.smh.com.au/rss/feed.xml',                             name: 'Sydney Morning Herald' },
     ]
   },
   // ── Bangladesh ─────────────────────────────────────────────────────────────
@@ -521,10 +540,10 @@ function processBlock(block, items) {
   if (pubDate) { try { publishedAt = new Date(pubDate).toISOString(); } catch(e){} }
   if (!publishedAt) publishedAt = new Date().toISOString();
 
-  // Discard items that are more than 7 days old — prevents "1403d ago" artifacts
-  // from RSS feeds with stale or wrong pubDate values
+  // Discard items that are more than 14 days old — prevents "1403d ago" artifacts
+  // from RSS feeds with stale or wrong pubDate values; 14d gives thin feeds more coverage
   var age = Date.now() - new Date(publishedAt).getTime();
-  if (age > 7 * 24 * 60 * 60 * 1000) return;
+  if (age > 14 * 24 * 60 * 60 * 1000) return;
 
   var imageUrl = extractItemImage(block);
   items.push({ title: title, link: link || '', description: description, publishedAt: publishedAt, imageUrl: imageUrl || null });
