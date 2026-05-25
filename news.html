@@ -881,24 +881,44 @@ body{
 }
 .world-np-side-time{font-size:10px;color:var(--text3);padding-top:2px}
 
-/* Center hero */
+/* Center hero — full-bleed image with gradient overlay (BBC/Reuters style) */
 .world-np-center{
   grid-area:center;border-right:1px solid var(--border);
-  display:flex;flex-direction:column;cursor:pointer;transition:background .15s;
+  position:relative;overflow:hidden;cursor:pointer;
+  min-height:260px;display:flex;flex-direction:column;
+  background:var(--dark3);
+  transition:filter .2s ease;
 }
-.world-np-center:hover{background:var(--card2)}
-.world-np-hero-img{width:100%;height:115px;object-fit:cover;object-position:top center;display:block;flex-shrink:0}
-.world-np-hero-body{padding:16px 20px 14px;display:flex;flex-direction:column;gap:8px;flex:1}
-/* No line-clamp — show full hero headline */
+.world-np-center:hover{filter:brightness(1.1)}
+/* Image fills entire card */
+.world-np-hero-img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:center;display:block;
+}
+/* Dark gradient so white text is always readable */
+.world-np-hero-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,.9) 0%,rgba(0,0,0,.55) 45%,rgba(0,0,0,.05) 100%);
+}
+/* Text sits at the bottom of the card */
+.world-np-hero-body{
+  position:relative;z-index:2;
+  padding:18px 20px 16px;
+  margin-top:auto;
+  display:flex;flex-direction:column;gap:7px;
+}
+/* White headline on dark overlay */
 .world-np-hero-hl{
   font-family:'Playfair Display',Georgia,serif;
-  font-size:clamp(16px,2vw,22px);font-weight:700;color:var(--text);line-height:1.4;
+  font-size:clamp(16px,2vw,21px);font-weight:700;
+  color:#fff;line-height:1.38;
+  text-shadow:0 1px 6px rgba(0,0,0,.6);
 }
-/* Show full teaser */
 .world-np-hero-teaser{
-  font-size:13px;color:var(--text2);line-height:1.65;
+  font-size:12.5px;color:rgba(255,255,255,.8);line-height:1.6;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
 }
-.world-np-hero-time{font-size:11px;color:var(--text3);margin-top:auto;padding-top:8px;border-top:1px solid var(--border)}
+.world-np-hero-time{font-size:10.5px;color:rgba(255,255,255,.5);padding-top:2px}
 
 /* Right: Latest list */
 .world-np-right{grid-area:right;display:flex;flex-direction:column}
@@ -907,8 +927,8 @@ body{
   color:var(--text3);padding:10px 14px 8px;border-bottom:1px solid var(--border);
 }
 .world-np-latest-item{
-  padding:9px 12px;border-bottom:1px solid var(--border);
-  cursor:pointer;transition:background .15s;display:flex;flex-direction:column;gap:3px;
+  padding:7px 12px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .15s;display:flex;flex-direction:column;gap:2px;
 }
 .world-np-latest-item:hover{background:var(--card2)}
 .world-np-latest-item:last-child{border-bottom:none}
@@ -966,9 +986,9 @@ body{
     grid-template-areas:"center" "left";
   }
   .world-np-left{flex-direction:column;border-top:1px solid var(--border)}
+  .world-np-center{min-height:200px}
   .world-np-side-card{border-right:none;border-bottom:1px solid var(--border)}
   .world-np-side-card:last-child{border-bottom:none}
-  .world-np-hero-img{height:100px}
   .world-np-bottom{grid-template-columns:1fr}
   .world-np-grid-card{border-right:none;border-bottom:1px solid var(--border)}
   .world-np-grid-card:last-child{border-bottom:none}
@@ -3090,9 +3110,9 @@ function _buildNpLayout(items, getImg, getOnClick, timeFunc) {
   }
 
   var hero      = items[0];
-  var sides     = items.slice(1, 3);
-  var latest    = items.slice(3, 8);
-  var gridItems = items.slice(8, 11);
+  var sides     = items.slice(1, 4);   /* 3 sidebar stories */
+  var latest    = items.slice(4, 10);  /* 6 latest stories  */
+  var gridItems = items.slice(10, 13); /* 3 bottom-grid stories */
 
   var wrap = document.createElement('div');
   wrap.className = 'world-np-wrap';
@@ -3113,6 +3133,7 @@ function _buildNpLayout(items, getImg, getOnClick, timeFunc) {
     heroEl.onkeydown = (function(fn){ return function(e){ if(e.key==='Enter'||e.key===' ')fn(); }; })(heroEl.onclick);
     heroEl.innerHTML =
       '<img class="world-np-hero-img" src="' + escAttr(heroImg) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+      + '<div class="world-np-hero-overlay"></div>'
       + '<div class="world-np-hero-body">'
       + '<div class="world-np-hero-hl">' + heroHl + '</div>'
       + (heroTe ? '<div class="world-np-hero-teaser">' + heroTe + '</div>' : '')
