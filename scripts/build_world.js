@@ -37,6 +37,7 @@ const WORLD_REGIONS = [
       { url: 'https://feeds.reuters.com/reuters/topNews',                         name: 'Reuters' },
       { url: 'https://feeds.reuters.com/reuters/businessNews',                    name: 'Reuters Business' },
       { url: 'https://en.mercopress.com/rss.xml',                                 name: 'MercoPress' },
+      { url: 'https://feeds.bloomberg.com/markets/news.rss',                     name: 'Bloomberg' },
     ]
   },
   // ── Canada ─────────────────────────────────────────────────────────────────
@@ -140,6 +141,7 @@ const WORLD_REGIONS = [
       { url: 'https://news.google.com/rss/headlines/section/geo/India?hl=hi&gl=IN&ceid=IN:hi', name: 'Google News हिंदी' },
       { url: 'https://www.indiatvnews.com/rssfeed.xml',                          name: 'India TV' },
       { url: 'https://www.ndtv.com/rss/india',                                   name: 'NDTV India' },
+      { url: 'https://news.google.com/rss/search?q=aaj+tak&hl=hi&gl=IN&ceid=IN:hi', name: 'Aaj Tak' },
     ]
   },
   // ── India (Malayalam) ──────────────────────────────────────────────────────
@@ -195,6 +197,7 @@ const WORLD_REGIONS = [
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/India?hl=bn&gl=IN&ceid=IN:bn', name: 'Google News Bengali' },
       { url: 'https://www.abpananda.in/feed/',                                    name: 'ABP Ananda' },
+      { url: 'https://www.anandabazar.com/rss/front-page.rss',                  name: 'Anandabazar' },
     ]
   },
   // ── India (Gujarati) ───────────────────────────────────────────────────────
@@ -203,6 +206,7 @@ const WORLD_REGIONS = [
     feeds: [
       { url: 'https://news.google.com/rss/headlines/section/geo/India?hl=gu&gl=IN&ceid=IN:gu', name: 'Google News Gujarati' },
       { url: 'https://www.divyabhaskar.co.in/rss/1.rss',                         name: 'Divya Bhaskar' },
+      { url: 'https://www.sandesh.com/feed/',                                    name: 'Sandesh' },
     ]
   },
   // ── Japan ──────────────────────────────────────────────────────────────────
@@ -212,6 +216,9 @@ const WORLD_REGIONS = [
       { url: 'https://www3.nhk.or.jp/rss/news/cat0.xml',                         name: 'NHK World' },
       { url: 'https://www.japantimes.co.jp/feed/topstories',                     name: 'Japan Times' },
       { url: 'https://news.google.com/rss/headlines/section/geo/Japan?hl=ja&gl=JP&ceid=JP:ja', name: 'Google News Japan' },
+      { url: 'https://rss.asahi.com/rss/asahi/newsheadlines.rdf',                name: 'Asahi Shimbun' },
+      { url: 'https://news.google.com/rss/search?q=bloomberg+japan&hl=ja&gl=JP&ceid=JP:ja', name: 'Bloomberg Japan' },
+      { url: 'https://news.google.com/rss/search?q=tbs+news&hl=ja&gl=JP&ceid=JP:ja', name: 'TBS News' },
     ]
   },
   // ── South Korea ────────────────────────────────────────────────────────────
@@ -220,6 +227,8 @@ const WORLD_REGIONS = [
     feeds: [
       { url: 'https://www.koreatimes.co.kr/www/rss/rss_main.xml',                name: 'Korea Times' },
       { url: 'https://news.google.com/rss/headlines/section/geo/SouthKorea?hl=ko&gl=KR&ceid=KR:ko', name: 'Google News Korea' },
+      { url: 'https://news.google.com/rss/search?q=YTN+뉴스&hl=ko&gl=KR&ceid=KR:ko', name: 'YTN News' },
+      { url: 'https://news.google.com/rss/search?q=MBC+뉴스&hl=ko&gl=KR&ceid=KR:ko', name: 'MBC News' },
     ]
   },
   // ── China ──────────────────────────────────────────────────────────────────
@@ -229,6 +238,7 @@ const WORLD_REGIONS = [
       { url: 'https://www.cgtn.com/subscribe/rss/section/business.xml',          name: 'CGTN Business' },
       { url: 'https://www.chinadaily.com.cn/rss/china_rss.xml',                  name: 'China Daily' },
       { url: 'https://news.google.com/rss/headlines/section/geo/China?hl=zh-CN&gl=CN&ceid=CN:zh-Hans', name: 'Google News China' },
+      { url: 'https://news.google.com/rss/search?q=CCTV+新闻&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', name: 'CCTV News' },
     ]
   },
   // ── Taiwan ─────────────────────────────────────────────────────────────────
@@ -265,6 +275,8 @@ const WORLD_REGIONS = [
       { url: 'https://www.skynews.com.au/rss.xml',                               name: 'Sky News AU' },
       { url: 'https://www.rnz.co.nz/rss/news.xml',                              name: 'RNZ NZ' },
       { url: 'https://www.tvnz.co.nz/content/dam/tvnz/rss/news.rss',            name: 'TVNZ' },
+      { url: 'https://www.9news.com.au/rss',                                     name: 'Nine News AU' },
+      { url: 'https://feeds.news.com.au/public/rss/2.0/news_home_1.xml',        name: 'News.com.au' },
     ]
   },
   // ── Bangladesh ─────────────────────────────────────────────────────────────
@@ -274,6 +286,8 @@ const WORLD_REGIONS = [
       { url: 'https://www.dhakatribune.com/feed',                                 name: 'Dhaka Tribune' },
       { url: 'https://www.thedailystar.net/frontpage/rss.xml',                   name: 'Daily Star BD' },
       { url: 'https://bangla.bdnews24.com/feed/',                                name: 'bdnews24 বাংলা' },
+      { url: 'https://www.bd-pratidin.com/feed/',                                name: 'BD Pratidin' },
+      { url: 'https://news.google.com/rss/search?q=news24+bangladesh&hl=bn&gl=BD&ceid=BD:bn', name: 'News24 BD' },
     ]
   },
   // ── Nepal ──────────────────────────────────────────────────────────────────
@@ -291,6 +305,8 @@ const WORLD_REGIONS = [
     feeds: [
       { url: 'https://www.khaleejtimes.com/feed',                                 name: 'Khaleej Times' },
       { url: 'https://news.google.com/rss/headlines/section/geo/UAE?hl=en&gl=AE&ceid=AE:en', name: 'Google News UAE' },
+      { url: 'https://news.google.com/rss/headlines/section/geo/UAE?hl=ar&gl=AE&ceid=AE:ar', name: 'Emirates News (عربي)' },
+      { url: 'https://wam.ae/en/feeds/rss.xml',                                  name: 'WAM UAE' },
     ]
   },
   // ── South Africa ───────────────────────────────────────────────────────────
@@ -299,6 +315,7 @@ const WORLD_REGIONS = [
     feeds: [
       { url: 'https://feeds.news24.com/articles/news24/TopStories/rss',          name: 'News24 SA' },
       { url: 'https://news.google.com/rss/headlines/section/geo/SouthAfrica?hl=en&gl=ZA&ceid=ZA:en', name: 'Google News ZA' },
+      { url: 'https://www.enewschannel.com/feed/',                               name: 'eNews Channel' },
     ]
   },
   // ── Nigeria ────────────────────────────────────────────────────────────────
@@ -309,6 +326,30 @@ const WORLD_REGIONS = [
       { url: 'https://dailypost.ng/feed/',                                        name: 'Daily Post NG' },
       { url: 'https://www.vanguardngr.com/feed/',                                name: 'Vanguard NG' },
       { url: 'https://saharareporters.com/rss.xml',                              name: 'Sahara Reporters' },
+    ]
+  },
+  // ── Tech News ─────────────────────────────────────────────────────────────
+  {
+    id: 'tech', flag: '💻', name: 'Tech News', language: 'English', accent: '#6366f1',
+    feeds: [
+      { url: 'https://www.wired.com/feed/rss',                                   name: 'Wired' },
+      { url: 'https://www.engadget.com/rss.xml',                                 name: 'Engadget' },
+      { url: 'https://techcrunch.com/feed/',                                     name: 'TechCrunch' },
+      { url: 'https://techcrunch.com/category/artificial-intelligence/feed/',    name: 'TechCrunch AI' },
+      { url: 'https://www.techradar.com/rss',                                    name: 'TechRadar' },
+      { url: 'https://www.cnet.com/rss/news/',                                   name: 'CNET' },
+      { url: 'https://www.theverge.com/rss/index.xml',                           name: 'The Verge' },
+      { url: 'https://feeds.arstechnica.com/arstechnica/index',                  name: 'Ars Technica' },
+    ]
+  },
+  // ── Space News ────────────────────────────────────────────────────────────
+  {
+    id: 'space', flag: '🚀', name: 'Space News', language: 'English', accent: '#0ea5e9',
+    feeds: [
+      { url: 'https://www.space.com/feeds/all',                                  name: 'Space.com' },
+      { url: 'https://spacenews.com/feed/',                                      name: 'SpaceNews' },
+      { url: 'https://www.universetoday.com/feed/',                              name: 'Universe Today' },
+      { url: 'https://www.nasa.gov/rss/dyn/breaking_news.rss',                  name: 'NASA' },
     ]
   },
 ];
