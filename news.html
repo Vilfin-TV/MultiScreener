@@ -827,125 +827,150 @@ body{
 }
 
 /* ═══════════════════════════════════════════════
-   WORLD NEWS SECTION  — card/box layout
+   WORLD NEWS + MALAYALAM — Newspaper Layout
 ═══════════════════════════════════════════════ */
 .world-news-wrap{padding:0 0 40px 0}
 
-/* Region block: channel-name header + article card grid */
-.world-region-card{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:14px;
-  overflow:hidden;
-  margin-bottom:20px;
+/* Region block */
+.world-region-block{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;margin-bottom:20px;
 }
-.world-region-header{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 16px 10px;
-  border-bottom:2px solid var(--border2);
-  margin-bottom:14px;
+/* Subtle accent divider — no channel name, just flag + line */
+.world-region-divider{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 14px;background:var(--dark2);
+  border-bottom:1px solid var(--border);
 }
-.world-region-flag{font-size:22px;flex-shrink:0;line-height:1}
-.world-region-name{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:17px;letter-spacing:1.8px;font-weight:400;
-  color:var(--text);
-}
-.world-region-lang{
-  font-size:10px;color:var(--text3);
-  background:rgba(255,255,255,.07);padding:2px 8px;border-radius:20px;
-  font-weight:600;letter-spacing:.3px;
-}
-.world-region-accent-bar{
-  flex:1;height:2px;border-radius:2px;margin-left:4px;
-  background:var(--world-accent,var(--burn2));opacity:.6;
-}
+.world-region-flag{font-size:18px;flex-shrink:0;line-height:1}
+.world-region-accent-bar{flex:1;height:2px;border-radius:2px;opacity:.55}
 .world-region-badge{
-  font-size:10px;color:var(--text3);white-space:nowrap;
-  background:rgba(255,255,255,.06);padding:3px 9px;border-radius:20px;flex-shrink:0;
+  font-size:9.5px;color:var(--text3);
+  background:rgba(255,255,255,.06);padding:2px 8px;border-radius:20px;flex-shrink:0;
 }
 
-/* Story card grid */
-.world-cards-grid{
+/* ── Newspaper 3-panel top row ── */
+/* DOM order: center → left → right (hero first for mobile) */
+.world-np-top{
   display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:10px;
-  padding:0 14px 14px;
-  align-items:start;
+  grid-template-columns:200px 1fr 192px;
+  grid-template-areas:"left center right";
+  gap:0;border-bottom:1px solid var(--border);
 }
-@media(max-width:1100px){.world-cards-grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:720px){.world-cards-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:480px){.world-cards-grid{grid-template-columns:1fr;gap:10px;padding:0 12px 12px}}
 
-/* Individual story card */
-.world-story-card{
-  background:var(--card2);
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:12px 14px;
-  cursor:pointer;
-  display:flex;flex-direction:column;gap:6px;
-  transition:transform .15s,box-shadow .15s,border-color .15s;
-  position:relative;overflow:hidden;
+/* Left sidebar */
+.world-np-left{
+  grid-area:left;border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
 }
-.world-story-card::before{
-  content:'';position:absolute;top:0;left:0;
-  width:3px;height:100%;
-  background:var(--world-accent,var(--burn2));
-  opacity:.7;
+.world-np-side-card{
+  display:flex;gap:0;padding:13px;
+  border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .15s;
 }
-.world-story-card:hover{
-  transform:translateY(-2px);
-  box-shadow:0 4px 20px rgba(0,0,0,.2);
-  border-color:var(--world-accent,var(--burn2));
+.world-np-side-card:hover{background:var(--card2)}
+.world-np-side-card:last-child{border-bottom:none;flex:1;align-items:flex-start}
+.world-np-side-img{
+  width:76px;height:58px;object-fit:cover;border-radius:6px;flex-shrink:0;
 }
-.world-story-card:hover::before{opacity:1}
-.world-story-headline{
-  font-size:12.5px;line-height:1.45;
-  color:var(--text);font-weight:700;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+.world-np-side-body{padding:0 0 0 10px;display:flex;flex-direction:column;gap:5px}
+.world-np-side-hl{
+  font-size:12.5px;font-weight:700;color:var(--text);line-height:1.45;
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;
 }
-.world-story-teaser{
-  font-size:11px;color:var(--text2);line-height:1.5;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+.world-np-side-time{font-size:10px;color:var(--text3);margin-top:auto}
+
+/* Center hero */
+.world-np-center{
+  grid-area:center;border-right:1px solid var(--border);
+  display:flex;flex-direction:column;cursor:pointer;transition:background .15s;
 }
-.world-story-meta{
-  display:flex;align-items:center;gap:5px;flex-wrap:wrap;
-  margin-top:auto;padding-top:5px;
+.world-np-center:hover{background:var(--card2)}
+.world-np-hero-img{width:100%;height:210px;object-fit:cover;display:block;flex-shrink:0}
+.world-np-hero-body{padding:16px 20px 14px;display:flex;flex-direction:column;gap:8px;flex:1}
+.world-np-hero-hl{
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:clamp(17px,2vw,23px);font-weight:700;color:var(--text);line-height:1.35;
+}
+.world-np-hero-teaser{
+  font-size:13px;color:var(--text2);line-height:1.65;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.world-np-hero-time{font-size:11px;color:var(--text3);margin-top:auto;padding-top:6px}
+
+/* Right: Latest list */
+.world-np-right{grid-area:right;display:flex;flex-direction:column}
+.world-np-latest-hdr{
+  font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--text3);padding:10px 14px 8px;border-bottom:1px solid var(--border);
+}
+.world-np-latest-item{
+  padding:9px 12px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .15s;display:flex;flex-direction:column;gap:3px;
+}
+.world-np-latest-item:hover{background:var(--card2)}
+.world-np-latest-item:last-child{border-bottom:none}
+.world-np-latest-hl{
+  font-size:11.5px;font-weight:600;color:var(--text);line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.world-np-latest-meta{display:flex;align-items:center;gap:4px;margin-top:2px}
+.world-np-latest-dot{font-size:8px;color:var(--burn2)}
+.world-np-latest-time{font-size:10px;color:var(--text3)}
+
+/* Bottom 3-col grid */
+.world-np-bottom{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:0;
   border-top:1px solid var(--border);
 }
-.world-story-source{
-  font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;
+.world-np-grid-card{
+  border-right:1px solid var(--border);display:flex;flex-direction:column;
+  cursor:pointer;transition:background .15s;overflow:hidden;
 }
-.world-story-meta-sep{font-size:9px;color:var(--text3)}
-.world-story-time{font-size:9.5px;color:var(--text3)}
-.world-story-read{
-  margin-left:auto;font-size:9.5px;font-weight:700;
-  color:var(--world-accent,var(--burn2));opacity:0;
-  transition:opacity .15s;
+.world-np-grid-card:last-child{border-right:none}
+.world-np-grid-card:hover{background:var(--card2)}
+.world-np-grid-img{width:100%;height:120px;object-fit:cover;display:block;flex-shrink:0}
+.world-np-grid-body{padding:12px 14px;display:flex;flex-direction:column;gap:5px;flex:1}
+.world-np-grid-hl{
+  font-size:13px;font-weight:700;color:var(--text);line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
 }
-.world-story-card:hover .world-story-read{opacity:1}
+.world-np-grid-teaser{
+  font-size:11.5px;color:var(--text2);line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.world-np-grid-time{font-size:10px;color:var(--text3);margin-top:auto}
 
-/* World story card image — compact edge-to-edge strip */
-.world-story-img-wrap{
-  width:calc(100% + 28px);height:64px;overflow:hidden;
-  margin:-12px -14px 0 -14px;flex-shrink:0;
-  border-radius:8px 8px 0 0;
-}
-.world-story-img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block;transition:transform .3s ease}
-.world-story-card:hover .world-story-img{transform:scale(1.06)}
+.world-empty{padding:32px 20px;text-align:center;color:var(--text3);font-size:13px}
 
-.world-empty{
-  padding:32px 20px;text-align:center;
-  color:var(--text3);font-size:13px;
+/* Responsive */
+@media(max-width:900px){
+  .world-np-top{
+    grid-template-columns:1fr 1fr;
+    grid-template-areas:"center center" "left left";
+  }
+  .world-np-right{display:none}
+  .world-np-center{border-right:none}
+  .world-np-left{
+    border-right:none;border-top:1px solid var(--border);
+    flex-direction:row;
+  }
+  .world-np-side-card{flex:1;border-bottom:none;border-right:1px solid var(--border)}
+  .world-np-side-card:last-child{border-right:none}
 }
 @media(max-width:600px){
-  .world-region-header{padding:8px 0}
-  .world-region-name{font-size:15px;letter-spacing:1.2px}
-  .world-story-card{padding:10px 12px}
-  .world-story-headline{font-size:12px}
-  .world-story-teaser{display:none}
-  .world-story-img-wrap{width:calc(100% + 24px);height:54px;margin:-10px -12px 0 -12px;border-radius:6px 6px 0 0}
+  .world-np-top{
+    grid-template-columns:1fr;
+    grid-template-areas:"center" "left";
+  }
+  .world-np-left{flex-direction:column;border-top:1px solid var(--border)}
+  .world-np-side-card{border-right:none;border-bottom:1px solid var(--border)}
+  .world-np-side-card:last-child{border-bottom:none}
+  .world-np-hero-img{height:165px}
+  .world-np-bottom{grid-template-columns:1fr}
+  .world-np-grid-card{border-right:none;border-bottom:1px solid var(--border)}
+  .world-np-grid-card:last-child{border-bottom:none}
+  .world-np-grid-img{height:145px}
 }
 
 /* World popup modal */
@@ -2899,7 +2924,6 @@ function _showMlCategory(catId, data) {
 
   var catMeta = SECTION_META[catId] || {};
   var imgPool = _ML_IMG_POOLS[catId] || _ML_IMG_POOLS['ml_trending'];
-  var accentColor = catMeta.accent || '#8b5cf6';
 
   if (items.length === 0) {
     content.innerHTML = '<div class="ml-cat-empty">'
@@ -2909,56 +2933,19 @@ function _showMlCategory(catId, data) {
     return;
   }
 
-  /* ── Manorama-style card grid ── */
-  var html = '<div class="ml-card-grid">';
+  /* Pre-cache all items so onclick closures get stable indices */
+  var storyIndices = items.map(function(item) { return _cacheStory(item, catMeta); });
 
-  items.forEach(function(item, i) {
-    var itemUrl  = item.url || item.link || '#';
-    var poolImg  = imgPool[i % imgPool.length];
-    var imgSrc   = item.image || poolImg;
-    var headline = esc(item.headline || '');
-    var teaser   = esc(item.teaser   || '');
-    var srcName  = esc(item.source   || '');
-    var ago      = timeAgo(item.publishedAt);
-
-    var storyIdx = _cacheStory(item, catMeta);
-
-    if (i === 0) {
-      /* Hero card — full-width first story */
-      html += '<div class="ml-hero-card" onclick="openStoryIdx(' + storyIdx + ')" role="button" tabindex="0" aria-label="' + headline + '" style="--section-accent:' + accentColor + '">'
-        + '<div class="ml-hero-img-wrap">'
-        + '<img class="ml-hero-img" src="' + escAttr(imgSrc) + '" alt="" loading="lazy"'
-        + ' onerror="this.src=\'' + escAttr(imgPool[0]) + '\';">'
-        + '</div>'
-        + '<div class="ml-hero-body">'
-        + '<span class="ml-hero-cat">' + esc(catMeta.label || '') + '</span>'
-        + '<div class="ml-hero-hl">' + headline + '</div>'
-        + (teaser ? '<div class="ml-hero-teaser">' + teaser + '</div>' : '')
-        + '<div class="ml-hero-meta">'
-        + '<span>' + ago + '</span>'
-        + '</div>'
-        + '</div>'
-        + '</div>';
-    } else {
-      /* Regular card */
-      html += '<div class="ml-news-card" onclick="openStoryIdx(' + storyIdx + ')" role="button" tabindex="0" aria-label="' + headline + '" style="--section-accent:' + accentColor + '">'
-        + '<div class="ml-news-card-img-wrap">'
-        + '<img class="ml-news-card-img" src="' + escAttr(imgSrc) + '" alt="" loading="lazy"'
-        + ' onerror="this.src=\'' + escAttr(poolImg) + '\';">'
-        + '</div>'
-        + '<div class="ml-news-card-body">'
-        + '<span class="ml-news-card-cat">' + esc(catMeta.label || '') + '</span>'
-        + '<div class="ml-news-card-hl">' + headline + '</div>'
-        + '<div class="ml-news-card-meta">'
-        + '<span>' + ago + '</span>'
-        + '</div>'
-        + '</div>'
-        + '</div>';
-    }
-  });
-
-  html += '</div>';
-  content.innerHTML = html;
+  content.innerHTML = '';
+  content.appendChild(_buildNpLayout(
+    items,
+    function(item, i) { return item.image || imgPool[i % imgPool.length]; },
+    function(item, i) {
+      var idx = storyIndices[items.indexOf(item)];
+      return (function(si){ return function(){ openStoryIdx(si); }; })(idx);
+    },
+    timeAgo
+  ));
 }
 
 /* ═══════════════════════════════════════════════════
@@ -3084,12 +3071,123 @@ function _wCardImgUrl(headline) {
   return 'https://picsum.photos/seed/' + (Math.abs(s) || 42) + '/480/270';
 }
 
+/* Build the newspaper 3-panel layout for a list of story items.
+   Used by both World News regions and Malayalam Edition categories. */
+function _buildNpLayout(items, getImg, getOnClick, timeFunc) {
+  var hero      = items[0];
+  var sides     = items.slice(1, 3);
+  var latest    = items.slice(3, 8);
+  var gridItems = items.slice(8, 11);
+
+  var wrap = document.createElement('div');
+  wrap.className = 'world-np-wrap';
+
+  /* ── Top 3-panel row ── */
+  var top = document.createElement('div');
+  top.className = 'world-np-top';
+
+  /* Center hero — added first in DOM for mobile focus */
+  if (hero) {
+    var heroImg = getImg(hero, 0);
+    var heroHl  = esc(_wDecodeHtml(hero.headline || ''));
+    var heroTe  = hero.teaser ? esc(_wDecodeHtml(hero.teaser)) : '';
+    var heroEl  = document.createElement('div');
+    heroEl.className = 'world-np-center';
+    heroEl.setAttribute('role','button');heroEl.setAttribute('tabindex','0');
+    heroEl.onclick = getOnClick(hero, 0);
+    heroEl.onkeydown = (function(fn){ return function(e){ if(e.key==='Enter'||e.key===' ')fn(); }; })(heroEl.onclick);
+    heroEl.innerHTML =
+      '<img class="world-np-hero-img" src="' + escAttr(heroImg) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+      + '<div class="world-np-hero-body">'
+      + '<div class="world-np-hero-hl">' + heroHl + '</div>'
+      + (heroTe ? '<div class="world-np-hero-teaser">' + heroTe + '</div>' : '')
+      + '<div class="world-np-hero-time">' + timeFunc(hero.publishedAt) + '</div>'
+      + '</div>';
+    top.appendChild(heroEl);
+  }
+
+  /* Left sidebar — 2 compact image+text cards */
+  if (sides.length) {
+    var leftEl = document.createElement('div');
+    leftEl.className = 'world-np-left';
+    sides.forEach(function(item, si) {
+      var sImg = getImg(item, si + 1);
+      var sHl  = esc(_wDecodeHtml(item.headline || ''));
+      var card = document.createElement('div');
+      card.className = 'world-np-side-card';
+      card.setAttribute('role','button');card.setAttribute('tabindex','0');
+      card.onclick = getOnClick(item, si + 1);
+      card.onkeydown = (function(fn){ return function(e){ if(e.key==='Enter'||e.key===' ')fn(); }; })(card.onclick);
+      card.innerHTML =
+        '<img class="world-np-side-img" src="' + escAttr(sImg) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+        + '<div class="world-np-side-body">'
+        + '<div class="world-np-side-hl">' + sHl + '</div>'
+        + '<span class="world-np-side-time">' + timeFunc(item.publishedAt) + '</span>'
+        + '</div>';
+      leftEl.appendChild(card);
+    });
+    top.appendChild(leftEl);
+  }
+
+  /* Right — Latest text list */
+  if (latest.length) {
+    var rightEl = document.createElement('div');
+    rightEl.className = 'world-np-right';
+    rightEl.innerHTML = '<div class="world-np-latest-hdr">Latest</div>';
+    latest.forEach(function(item, li) {
+      var lHl = esc(_wDecodeHtml(item.headline || ''));
+      var lEl = document.createElement('div');
+      lEl.className = 'world-np-latest-item';
+      lEl.setAttribute('role','button');lEl.setAttribute('tabindex','0');
+      lEl.onclick = getOnClick(item, li + 3);
+      lEl.onkeydown = (function(fn){ return function(e){ if(e.key==='Enter'||e.key===' ')fn(); }; })(lEl.onclick);
+      lEl.innerHTML =
+        '<div class="world-np-latest-hl">' + lHl + '</div>'
+        + '<div class="world-np-latest-meta">'
+        + '<span class="world-np-latest-dot">●</span>'
+        + '<span class="world-np-latest-time">' + timeFunc(item.publishedAt) + '</span>'
+        + '</div>';
+      rightEl.appendChild(lEl);
+    });
+    top.appendChild(rightEl);
+  }
+
+  wrap.appendChild(top);
+
+  /* Bottom 3-col image grid */
+  if (gridItems.length) {
+    var btm = document.createElement('div');
+    btm.className = 'world-np-bottom';
+    gridItems.forEach(function(item, gi) {
+      var gImg = getImg(item, gi + 8);
+      var gHl  = esc(_wDecodeHtml(item.headline || ''));
+      var gTe  = item.teaser ? esc(_wDecodeHtml(item.teaser)) : '';
+      if (gTe.length > 110) gTe = gTe.slice(0, gTe.lastIndexOf(' ', 110)) + '…';
+      var gc = document.createElement('div');
+      gc.className = 'world-np-grid-card';
+      gc.setAttribute('role','button');gc.setAttribute('tabindex','0');
+      gc.onclick = getOnClick(item, gi + 8);
+      gc.onkeydown = (function(fn){ return function(e){ if(e.key==='Enter'||e.key===' ')fn(); }; })(gc.onclick);
+      gc.innerHTML =
+        '<img class="world-np-grid-img" src="' + escAttr(gImg) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+        + '<div class="world-np-grid-body">'
+        + '<div class="world-np-grid-hl">' + gHl + '</div>'
+        + (gTe ? '<div class="world-np-grid-teaser">' + gTe + '</div>' : '')
+        + '<div class="world-np-grid-time">' + timeFunc(item.publishedAt) + '</div>'
+        + '</div>';
+      btm.appendChild(gc);
+    });
+    wrap.appendChild(btm);
+  }
+
+  return wrap;
+}
+
 function renderWorldSection(data, container) {
   var wrap = document.createElement('div');
   wrap.id = 'world';
   wrap.className = 'world-news-wrap';
 
-  // Section header
   var sh = document.createElement('div');
   sh.className = 'news-section-header';
   sh.innerHTML = '<span class="news-section-icon">🌐</span>'
@@ -3111,60 +3209,36 @@ function renderWorldSection(data, container) {
   data.regions.forEach(function(region) {
     var items = region.items || [];
     if (!items.length) return;
-
     var accent = region.accent || '#3b82f6';
 
-    // Region block: channel-name header + card grid
-    var block = document.createElement('div');
-    block.className = 'world-region-card';
-
-    // Header row: Flag + Channel/Country Name + language pill + accent bar + story count
-    var hdr = document.createElement('div');
-    hdr.className = 'world-region-header';
-    hdr.innerHTML = '<span class="world-region-flag">' + (region.flag || '') + '</span>'
-      + '<span class="world-region-name">' + esc(region.name || '') + '</span>'
-      + '<span class="world-region-lang">' + esc(region.language || '') + '</span>'
-      + '<span class="world-region-accent-bar" style="background:' + accent + '"></span>'
-      + '<span class="world-region-badge">' + items.length + ' stories</span>';
-    block.appendChild(hdr);
-
-    // Card grid
-    var grid = document.createElement('div');
-    grid.className = 'world-cards-grid';
-
+    /* Store all items in the cache and return their indices */
+    var cacheBase = _worldStoryCache.length;
     items.forEach(function(item) {
-      var idx = _worldStoryCache.length;
       _worldStoryCache.push(Object.assign({}, item, { _flag: region.flag, _accent: accent }));
-
-      var card = document.createElement('div');
-      card.className = 'world-story-card';
-      card.style.setProperty('--world-accent', accent);
-      card.setAttribute('role', 'button');
-      card.setAttribute('tabindex', '0');
-      card.setAttribute('aria-label', item.headline || '');
-      card.onclick = (function(i){ return function(){ openWorldStory(i); }; })(idx);
-      card.onkeydown = (function(i){ return function(e){ if (e.key==='Enter'||e.key===' ') openWorldStory(i); }; })(idx);
-
-      // Use RSS image if available; otherwise use per-story picsum seed (deterministic)
-      var wImgSrc = item.image || _wCardImgUrl(item.headline || '');
-      var cleanTitle  = esc(_wDecodeHtml(item.headline || ''));
-      var cleanTeaser = item.teaser ? esc(_wDecodeHtml(item.teaser)) : '';
-      var cleanSource = item.source ? esc(_wDecodeHtml(item.source)) : '';
-      // Trim teaser to 120 chars max for compactness
-      if (cleanTeaser.length > 120) cleanTeaser = cleanTeaser.slice(0, cleanTeaser.lastIndexOf(' ', 120)) + '…';
-      card.innerHTML =
-        '<div class="world-story-img-wrap"><img class="world-story-img" src="' + escAttr(wImgSrc) + '" alt="" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></div>'
-        + '<div class="world-story-headline">' + cleanTitle + '</div>'
-        + (cleanTeaser ? '<div class="world-story-teaser">' + cleanTeaser + '</div>' : '')
-        + '<div class="world-story-meta">'
-        + '<span class="world-story-time">' + _wTimeAgo(item.publishedAt) + '</span>'
-        + '<span class="world-story-read">Read ›</span>'
-        + '</div>';
-
-      grid.appendChild(card);
     });
 
-    block.appendChild(grid);
+    var block = document.createElement('div');
+    block.className = 'world-region-block';
+
+    /* Subtle divider: flag emoji + accent line (no channel/source name) */
+    var divider = document.createElement('div');
+    divider.className = 'world-region-divider';
+    divider.innerHTML = '<span class="world-region-flag">' + (region.flag || '') + '</span>'
+      + '<span class="world-region-accent-bar" style="background:' + accent + '"></span>'
+      + '<span class="world-region-badge">' + items.length + ' stories</span>';
+    block.appendChild(divider);
+
+    /* Newspaper layout */
+    block.appendChild(_buildNpLayout(
+      items,
+      function(item) { return item.image || _wCardImgUrl(item.headline || ''); },
+      function(item, localIdx) {
+        var cIdx = cacheBase + items.indexOf(item);
+        return (function(i){ return function(){ openWorldStory(i); }; })(cIdx);
+      },
+      _wTimeAgo
+    ));
+
     wrap.appendChild(block);
   });
 
