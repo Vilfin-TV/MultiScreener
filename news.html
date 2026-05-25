@@ -886,7 +886,7 @@ body{
   display:flex;flex-direction:column;cursor:pointer;transition:background .15s;
 }
 .world-np-center:hover{background:var(--card2)}
-.world-np-hero-img{width:100%;height:210px;object-fit:cover;display:block;flex-shrink:0}
+.world-np-hero-img{width:100%;height:115px;object-fit:cover;display:block;flex-shrink:0}
 .world-np-hero-body{padding:16px 20px 14px;display:flex;flex-direction:column;gap:8px;flex:1}
 .world-np-hero-hl{
   font-family:'Playfair Display',Georgia,serif;
@@ -966,7 +966,7 @@ body{
   .world-np-left{flex-direction:column;border-top:1px solid var(--border)}
   .world-np-side-card{border-right:none;border-bottom:1px solid var(--border)}
   .world-np-side-card:last-child{border-bottom:none}
-  .world-np-hero-img{height:165px}
+  .world-np-hero-img{height:100px}
   .world-np-bottom{grid-template-columns:1fr}
   .world-np-grid-card{border-right:none;border-bottom:1px solid var(--border)}
   .world-np-grid-card:last-child{border-bottom:none}
@@ -2918,6 +2918,8 @@ function _showMlCategory(catId, data) {
         if (!item || !item.publishedAt || !item.headline) return false;
         var hl = item.headline.trim().toLowerCase();
         if (hl.startsWith('content updating') || hl === 'placeholder' || hl === 'loading...') return false;
+        if (hl.length < 18) return false;
+        if (/^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d{1,2}$/.test(hl)) return false;
         return Date.now() - new Date(item.publishedAt).getTime() < 7 * 24 * 60 * 60 * 1000;
       })
     : [];
@@ -2939,7 +2941,7 @@ function _showMlCategory(catId, data) {
   content.innerHTML = '';
   content.appendChild(_buildNpLayout(
     items,
-    function(item, i) { return item.image || imgPool[i % imgPool.length]; },
+    function(item) { return item.image || _wCardImgUrl(item.headline || ''); },
     function(item, i) {
       var idx = storyIndices[items.indexOf(item)];
       return (function(si){ return function(){ openStoryIdx(si); }; })(idx);
@@ -3074,6 +3076,17 @@ function _wCardImgUrl(headline) {
 /* Build the newspaper 3-panel layout for a list of story items.
    Used by both World News regions and Malayalam Edition categories. */
 function _buildNpLayout(items, getImg, getOnClick, timeFunc) {
+  /* Deduplicate images within this layout — if a URL repeats, swap in a
+     picsum image seeded by the headline so every card looks distinct. */
+  var _usedImgs = {};
+  function _uniqueImg(item, i) {
+    var url = getImg(item, i);
+    var fb  = _wCardImgUrl(item.headline || '');
+    if (!url || _usedImgs[url]) return fb;
+    _usedImgs[url] = true;
+    return url;
+  }
+
   var hero      = items[0];
   var sides     = items.slice(1, 3);
   var latest    = items.slice(3, 8);
@@ -3088,7 +3101,7 @@ function _buildNpLayout(items, getImg, getOnClick, timeFunc) {
 
   /* Center hero — added first in DOM for mobile focus */
   if (hero) {
-    var heroImg = getImg(hero, 0);
+    var heroImg = _uniqueImg(hero, 0);
     var heroHl  = esc(_wDecodeHtml(hero.headline || ''));
     var heroTe  = hero.teaser ? esc(_wDecodeHtml(hero.teaser)) : '';
     var heroEl  = document.createElement('div');
@@ -3111,7 +3124,7 @@ function _buildNpLayout(items, getImg, getOnClick, timeFunc) {
     var leftEl = document.createElement('div');
     leftEl.className = 'world-np-left';
     sides.forEach(function(item, si) {
-      var sImg = getImg(item, si + 1);
+      var sImg = _uniqueImg(item, si + 1);
       var sHl  = esc(_wDecodeHtml(item.headline || ''));
       var card = document.createElement('div');
       card.className = 'world-np-side-card';
@@ -3159,7 +3172,7 @@ function _buildNpLayout(items, getImg, getOnClick, timeFunc) {
     var btm = document.createElement('div');
     btm.className = 'world-np-bottom';
     gridItems.forEach(function(item, gi) {
-      var gImg = getImg(item, gi + 8);
+      var gImg = _uniqueImg(item, gi + 8);
       var gHl  = esc(_wDecodeHtml(item.headline || ''));
       var gTe  = item.teaser ? esc(_wDecodeHtml(item.teaser)) : '';
       if (gTe.length > 110) gTe = gTe.slice(0, gTe.lastIndexOf(' ', 110)) + '…';
@@ -3207,7 +3220,15 @@ function renderWorldSection(data, container) {
   }
 
   data.regions.forEach(function(region) {
-    var items = region.items || [];
+    /* Strip items with no real headline (date-only strings, blanks, very short text) */
+    var items = (region.items || []).filter(function(item) {
+      if (!item || !item.headline) return false;
+      var hl = item.headline.trim();
+      if (hl.length < 18) return false;                                          // too short / date-only
+      if (/^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}$/i.test(hl)) return false;
+      if (/^(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d/i.test(hl) && hl.length < 25) return false;
+      return true;
+    });
     if (!items.length) return;
     var accent = region.accent || '#3b82f6';
 
