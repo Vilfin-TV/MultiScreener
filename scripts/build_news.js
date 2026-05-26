@@ -591,7 +591,7 @@ async function callGemini(prompt, attempt) {
     generationConfig: { maxOutputTokens: 2000, temperature: 0.55 }
   });
 
-  var apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + GOOGLE_AI_API_KEY;
+  var apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GOOGLE_AI_API_KEY;
 
   var response;
   try {
@@ -712,6 +712,16 @@ async function callGroqFast(prompt, attempt) {
   }
 
   var parsed = JSON.parse(response);
+  if (parsed.error) {
+    var isRateLimit2 = (parsed.error.type === 'rate_limit_exceeded')
+      || ((parsed.error.message || '').toLowerCase().includes('rate'));
+    if (!attempt && isRateLimit2) {
+      console.warn('    [Groq fast 429] Rate limited — waiting 15s');
+      await sleep(15000);
+      return callGroqFast(prompt, 1);
+    }
+    throw new Error('Groq fast: ' + (parsed.error.message || 'API error'));
+  }
   var text = parsed?.choices?.[0]?.message?.content;
   if (!text) throw new Error('Groq fast: empty response');
   return text.trim();
@@ -1231,6 +1241,11 @@ async function main() {
 }
 
 main().catch(function(e) {
-  console.error('FATAL:', e);
-  process.exit(1);
+  // Log prominently but do NOT exit(1) — the commit step should still run
+  // so any partial data already written makes it to the repo.
+  console.error('='.repeat(65));
+  console.error('FATAL ERROR (non-zero exit suppressed so commit step runs):');
+  console.error(e && e.message ? e.message : String(e));
+  console.error('='.repeat(65));
+  process.exit(0);
 });
