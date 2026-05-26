@@ -8526,19 +8526,30 @@ function _mktSentLocalDateStr(d) {
 }
 
 function _mktSentWeekDates() {
-  // Returns Mon–Fri of the current LOCAL week.
-  // Uses local date arithmetic throughout — no UTC conversion — so the
-  // highlighted day always matches the user's system clock regardless of timezone.
+  // Returns the last 5 weekdays (Mon–Fri) ending on TODAY — never future dates.
+  // Walks backwards from today collecting weekdays, then reverses to
+  // chronological order (oldest → newest, left → right in the UI).
+  // Works across week boundaries: Tuesday shows Wed–Fri (last week) + Mon–Tue.
   const now      = new Date();
-  const todayStr = _mktSentLocalDateStr(now);   // strictly LOCAL
-  const dow      = now.getDay();                 // 0=Sun … 6=Sat  (local)
-  const baseDate = now.getDate() - (dow === 0 ? 6 : dow - 1); // Monday of this week
-  return ['MON','TUE','WED','THU','FRI'].map((label, i) => {
-    // new Date(y, m, d) constructor uses LOCAL calendar — no UTC shift
-    const d    = new Date(now.getFullYear(), now.getMonth(), baseDate + i);
-    const dStr = _mktSentLocalDateStr(d);
-    return {date: dStr, label, isToday: dStr === todayStr, isFuture: dStr > todayStr};
-  });
+  const todayStr = _mktSentLocalDateStr(now);
+  const DAY_LABELS = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const days = [];
+  // Start from today and step back one calendar day at a time
+  let d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  while (days.length < 5) {
+    const dow = d.getDay(); // 0=Sun … 6=Sat
+    if (dow >= 1 && dow <= 5) {          // Mon–Fri only
+      days.unshift({                     // prepend → result is oldest-first
+        date:     _mktSentLocalDateStr(d),
+        label:    DAY_LABELS[dow],
+        isToday:  _mktSentLocalDateStr(d) === todayStr,
+        isFuture: false                  // we never include future dates
+      });
+    }
+    // Step one day back (local calendar arithmetic)
+    d = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1);
+  }
+  return days;
 }
 
 function _mktSentClkSVG(zoneCls, isToday, isFuture) {
@@ -8711,7 +8722,11 @@ function _mktSentRenderMain(idx) {
 function _mktSentRenderPanel() {
   if (!_mktSentData) return;
   const weekDates = _mktSentWeekDates();
-  const todayStr = weekDates.find(w => w.isToday)?.date || _mktSentLocalDateStr(new Date());
+  // On weekdays: todayStr = today's date. On weekends: fall back to the most
+  // recent Friday (last entry in the list) so the gauge still shows live data.
+  const todayStr = weekDates.find(w => w.isToday)?.date
+    || weekDates[weekDates.length - 1]?.date
+    || _mktSentLocalDateStr(new Date());
   const activeDay = _mktSentSelectedDay || todayStr;
   const isLiveDay = activeDay === todayStr;
 
