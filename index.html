@@ -15149,44 +15149,46 @@ function initLiveNews() {
   lnsTimer = setInterval(fetchAllNews, 600000);
 }
 
-// Unique Unsplash fallback images per channel group (no duplicates across groups)
+// Unique picsum fallback images per channel group — seeded for determinism, no duplicates.
+// Using picsum.photos (stable CDN, never removes seeded images) instead of Unsplash photo IDs
+// which can be taken down when photographers delete their accounts.
 const _LNB_FALLBACKS = {
-  '🇺🇸 US & Americas':        'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=500&q=70',
-  '🇮🇳 India (English)':      'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=500&q=70',
-  '🇮🇳 India (Hindi)':        'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=500&q=70',
-  '🇮🇳 India (Malayalam)':    'https://images.unsplash.com/photo-1563536313-be6fc5d4b0d5?w=500&q=70',
-  '🇮🇳 India (Tamil)':        'https://images.unsplash.com/photo-1468611083934-17bd02c3b08d?w=500&q=70',
-  '🇮🇳 India (Kannada)':      'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=500&q=70',
-  '🇮🇳 India (Telugu)':       'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=500&q=70',
-  '🇮🇳 India (Marathi)':      'https://images.unsplash.com/photo-1576319155264-99536e0be1ee?w=500&q=70',
-  '🇮🇳 India (Bengali)':      'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=500&q=70',
-  '🇯🇵 Japan':                'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=500&q=70',
-  '🌏 Asia Pacific':           'https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=500&q=70',
-  '🌍 Europe & Middle East':   'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=500&q=70',
-  '🌐 Global':                 'https://images.unsplash.com/photo-1495020689067-958852a7765e?w=500&q=70',
-  '🇨🇳 China':                'https://images.unsplash.com/photo-1518770660439-4636190af475?w=500&q=70',
-  '🇰🇷 South Korea':           'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=500&q=70',
-  '🇲🇽 Mexico':               'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=500&q=70',
-  '🇨🇦 Canada':               'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=500&q=70',
-  '🇨🇭 Switzerland':           'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=500&q=70',
-  '🇦🇺 Australia':             'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=500&q=70',
-  '🇳🇿 New Zealand':           'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=500&q=70',
-  '🇧🇩 Bangladesh':            'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=500&q=70',
-  '🇬🇧 United Kingdom':       'https://images.unsplash.com/photo-1529655683826-aba9b3e77383?w=500&q=70',
-  '🇹🇭 Thailand':             'https://images.unsplash.com/photo-1506665531195-3566af2b4dfa?w=500&q=70',
-  '🇺🇦 Ukraine':              'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=500&q=70',
-  '🇫🇷 France':               'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=500&q=70',
-  '🇷🇺 Russia':               'https://images.unsplash.com/photo-1547448415-e9f5b28e570d?w=500&q=70',
-  '🇿🇦 South Africa':         'https://images.unsplash.com/photo-1508361001413-7a9dca21d08a?w=500&q=70',
-  '🇳🇬 Nigeria':              'https://images.unsplash.com/photo-1548504774-8e3d03a95b06?w=500&q=70',
-  '🇳🇵 Nepal':                'https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=500&q=70',
-  '🇦🇪 UAE':                  'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=500&q=70',
-  '🇧🇷 Brazil':               'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=500&q=70',
-  '🇦🇷 Argentina':            'https://images.unsplash.com/photo-1583422409516-2895a77efded?w=500&q=70',
-  '🇹🇼 Taiwan':               'https://images.unsplash.com/photo-1470004914212-05527e49370b?w=500&q=70',
-  '🇮🇳 India (Gujarati)':     'https://images.unsplash.com/photo-1530081728027-33f7e0d6cd7b?w=500&q=70',
+  '🇺🇸 US & Americas':        'https://picsum.photos/seed/lnb-usamericas/500/280',
+  '🇮🇳 India (English)':      'https://picsum.photos/seed/lnb-indiaen/500/280',
+  '🇮🇳 India (Hindi)':        'https://picsum.photos/seed/lnb-indiahi/500/280',
+  '🇮🇳 India (Malayalam)':    'https://picsum.photos/seed/lnb-indiaml/500/280',
+  '🇮🇳 India (Tamil)':        'https://picsum.photos/seed/lnb-indiata/500/280',
+  '🇮🇳 India (Kannada)':      'https://picsum.photos/seed/lnb-indiakn/500/280',
+  '🇮🇳 India (Telugu)':       'https://picsum.photos/seed/lnb-indiate/500/280',
+  '🇮🇳 India (Marathi)':      'https://picsum.photos/seed/lnb-indiamr/500/280',
+  '🇮🇳 India (Bengali)':      'https://picsum.photos/seed/lnb-indiabn/500/280',
+  '🇮🇳 India (Gujarati)':     'https://picsum.photos/seed/lnb-indiagu/500/280',
+  '🇯🇵 Japan':                'https://picsum.photos/seed/lnb-japannews/500/280',
+  '🌏 Asia Pacific':           'https://picsum.photos/seed/lnb-asiapac/500/280',
+  '🌍 Europe & Middle East':   'https://picsum.photos/seed/lnb-europeme/500/280',
+  '🌐 Global':                 'https://picsum.photos/seed/lnb-globalnews/500/280',
+  '🇨🇳 China':                'https://picsum.photos/seed/lnb-chinanews/500/280',
+  '🇰🇷 South Korea':           'https://picsum.photos/seed/lnb-koreasnews/500/280',
+  '🇲🇽 Mexico':               'https://picsum.photos/seed/lnb-mexiconews/500/280',
+  '🇨🇦 Canada':               'https://picsum.photos/seed/lnb-canadanews/500/280',
+  '🇨🇭 Switzerland':           'https://picsum.photos/seed/lnb-swissnews/500/280',
+  '🇦🇺 Australia':             'https://picsum.photos/seed/lnb-australianews/500/280',
+  '🇳🇿 New Zealand':           'https://picsum.photos/seed/lnb-nzealandnews/500/280',
+  '🇧🇩 Bangladesh':            'https://picsum.photos/seed/lnb-bangladeshnews/500/280',
+  '🇬🇧 United Kingdom':       'https://picsum.photos/seed/lnb-uknews/500/280',
+  '🇹🇭 Thailand':             'https://picsum.photos/seed/lnb-thailandnews/500/280',
+  '🇺🇦 Ukraine':              'https://picsum.photos/seed/lnb-ukrainenews/500/280',
+  '🇫🇷 France':               'https://picsum.photos/seed/lnb-francenews/500/280',
+  '🇷🇺 Russia':               'https://picsum.photos/seed/lnb-russianews/500/280',
+  '🇿🇦 South Africa':         'https://picsum.photos/seed/lnb-safricanews/500/280',
+  '🇳🇬 Nigeria':              'https://picsum.photos/seed/lnb-nigerianews/500/280',
+  '🇳🇵 Nepal':                'https://picsum.photos/seed/lnb-nepalnews/500/280',
+  '🇦🇪 UAE':                  'https://picsum.photos/seed/lnb-uaenews/500/280',
+  '🇧🇷 Brazil':               'https://picsum.photos/seed/lnb-brazilnews/500/280',
+  '🇦🇷 Argentina':            'https://picsum.photos/seed/lnb-argentinanews/500/280',
+  '🇹🇼 Taiwan':               'https://picsum.photos/seed/lnb-taiwannews/500/280',
 };
-const _LNB_FALLBACK_DEFAULT = 'https://images.unsplash.com/photo-1453738773917-9c3eff1db985?w=500&q=70';
+const _LNB_FALLBACK_DEFAULT = 'https://picsum.photos/seed/lnb-worlddefault/500/280';
 
 // Map channel group → news.html anchor section
 function _lnbMoreHash(group) {
@@ -15298,7 +15300,8 @@ function renderItems(listEl, items) {
       // Always show group fallback as CSS background; RSS image overlays it if it loads.
       // If RSS image fails, just hide the <img> — background stays visible.
       const heroSrc = imgSrc || fallbackImg;
-      const heroOnerror = `this.onerror=null;this.src='${escHtml(fallbackImg)}'`;
+      // On error: hide the <img> (removes broken-icon) — CSS background always shows below it.
+      const heroOnerror = `this.onerror=null;this.style.display='none'`;
       const wrapBg = `background-image:url('${escHtml(fallbackImg)}');background-size:cover;background-position:center`;
       return `<div class="lnb-hero-card" ${clickAttrs}>
         <div class="lnb-hero-img-wrap" style="${wrapBg}">
