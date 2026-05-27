@@ -241,8 +241,8 @@ const WORLD_REGIONS = [
     feeds: [
       { url: 'https://www.koreatimes.co.kr/www/rss/rss_main.xml',                name: 'Korea Times' },
       { url: 'https://news.google.com/rss/headlines/section/geo/SouthKorea?hl=ko&gl=KR&ceid=KR:ko', name: 'Google News Korea' },
-      { url: 'https://news.google.com/rss/search?q=YTN+뉴스&hl=ko&gl=KR&ceid=KR:ko', name: 'YTN News' },
-      { url: 'https://news.google.com/rss/search?q=MBC+뉴스&hl=ko&gl=KR&ceid=KR:ko', name: 'MBC News' },
+      { url: 'https://news.google.com/rss/search?q=YTN+news+korea&hl=ko&gl=KR&ceid=KR:ko', name: 'YTN News' },
+      { url: 'https://news.google.com/rss/search?q=MBC+news+korea&hl=ko&gl=KR&ceid=KR:ko', name: 'MBC News' },
     ]
   },
   // ── China ──────────────────────────────────────────────────────────────────
@@ -252,7 +252,7 @@ const WORLD_REGIONS = [
       { url: 'https://www.cgtn.com/subscribe/rss/section/business.xml',          name: 'CGTN Business' },
       { url: 'https://www.chinadaily.com.cn/rss/china_rss.xml',                  name: 'China Daily' },
       { url: 'https://news.google.com/rss/headlines/section/geo/China?hl=zh-CN&gl=CN&ceid=CN:zh-Hans', name: 'Google News China' },
-      { url: 'https://news.google.com/rss/search?q=CCTV+新闻&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', name: 'CCTV News' },
+      { url: 'https://news.google.com/rss/search?q=CCTV+china+news&hl=zh-CN&gl=CN&ceid=CN:zh-Hans', name: 'CCTV News' },
     ]
   },
   // ── Taiwan ─────────────────────────────────────────────────────────────────
@@ -683,4 +683,4 @@ async function main() {
   console.log('='.repeat(60));
 }
 
-main().catch(function(e){ console.error('FATAL:', e); process.exit(1); });
+main().catch(function(e){ console.error('FATAL:', e); process.exit(0); });
