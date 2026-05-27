@@ -14914,6 +14914,9 @@ const NEWS_SOURCES = [
   // ── India — Tamil ────────────────────────────────────────────────
   { id:'tamil1', flag:'🇮🇳', label:'Daily Thanthi',        lang:'Tamil',    group:'🇮🇳 India (Tamil)',   color:'#6e2f2f', url:'https://news.google.com/rss/search?q=daily+thanthi&hl=ta&gl=IN&ceid=IN:ta' },
   { id:'tamil2', flag:'🇮🇳', label:'Dinamalar',            lang:'Tamil',    group:'🇮🇳 India (Tamil)',   color:'#5d4037', url:'https://news.google.com/rss/search?q=dinamalar&hl=ta&gl=IN&ceid=IN:ta' },
+  { id:'tamil3', flag:'🇮🇳', label:'Hindu Tamil',          lang:'Tamil',    group:'🇮🇳 India (Tamil)',   color:'#4a235a', url:'https://news.google.com/rss/search?q=hindutamil+news&hl=ta&gl=IN&ceid=IN:ta', fallbackQuery:'hindu tamil news' },
+  { id:'tamil4', flag:'🇮🇳', label:'Dinakaran',            lang:'Tamil',    group:'🇮🇳 India (Tamil)',   color:'#3e1f62', url:'https://news.google.com/rss/search?q=dinakaran+tamil+news&hl=ta&gl=IN&ceid=IN:ta', fallbackQuery:'dinakaran tamil' },
+  { id:'tamil5', flag:'🇮🇳', label:'Maalai Malar',         lang:'Tamil',    group:'🇮🇳 India (Tamil)',   color:'#5c2475', url:'https://news.google.com/rss/search?q=maalaimalar+news&hl=ta&gl=IN&ceid=IN:ta', fallbackQuery:'maalaimalar news' },
   // ── India — Kannada ──────────────────────────────────────────────
   { id:'kann1',  flag:'🇮🇳', label:'Prajavani',            lang:'Kannada',  group:'🇮🇳 India (Kannada)', color:'#4a235a', url:'https://news.google.com/rss/search?q=prajavani&hl=kn&gl=IN&ceid=IN:kn' },
   { id:'kann2',  flag:'🇮🇳', label:'Vijaya Karnataka',     lang:'Kannada',  group:'🇮🇳 India (Kannada)', color:'#3d1a78', url:'https://news.google.com/rss/search?q=vijaya+karnataka&hl=kn&gl=IN&ceid=IN:kn' },
@@ -15031,6 +15034,23 @@ const NEWS_SOURCES = [
   { id:'us9', flag:'🇺🇸', label:'Bloomberg',               lang:'English',  group:'🇺🇸 US & Americas',    color:'#472a91', url:'https://news.google.com/rss/search?q=bloomberg+news&hl=en&gl=US&ceid=US:en' },
   // ── Japan — Additional ───────────────────────────────────────────────
   { id:'jp4', flag:'🇯🇵', label:'Bloomberg Japan (日本語)',  lang:'Japanese', group:'🇯🇵 Japan',           color:'#1a1a2e', url:'https://news.google.com/rss/search?q=bloomberg+japan&hl=ja&gl=JP&ceid=JP:ja' },
+  // ── Philippines ──────────────────────────────────────────────────────
+  { id:'ph1', flag:'🇵🇭', label:'Manila Standard',          lang:'English',  group:'🇵🇭 Philippines',     color:'#1565c0', url:'https://news.google.com/rss/search?q=manila+standard&hl=en&gl=PH&ceid=PH:en', fallbackQuery:'manila standard philippines' },
+  { id:'ph2', flag:'🇵🇭', label:'Philippine Daily Inquirer', lang:'English', group:'🇵🇭 Philippines',     color:'#c62828', url:'https://news.google.com/rss/search?q=philippine+inquirer&hl=en&gl=PH&ceid=PH:en', fallbackQuery:'inquirer philippines' },
+  { id:'ph3', flag:'🇵🇭', label:'PhilStar',                 lang:'English',  group:'🇵🇭 Philippines',     color:'#1a237e', url:'https://news.google.com/rss/search?q=philstar+news&hl=en&gl=PH&ceid=PH:en', fallbackQuery:'philstar philippines' },
+  { id:'ph4', flag:'🇵🇭', label:'Manila Times',             lang:'English',  group:'🇵🇭 Philippines',     color:'#0d47a1', url:'https://news.google.com/rss/search?q=manila+times+news&hl=en&gl=PH&ceid=PH:en', fallbackQuery:'manila times' },
+  // ── Singapore ─────────────────────────────────────────────────────────
+  { id:'sg1', flag:'🇸🇬', label:'Straits Times',            lang:'English',  group:'🇸🇬 Singapore',       color:'#c41c3b', url:'https://news.google.com/rss/search?q=straits+times+singapore&hl=en&gl=SG&ceid=SG:en', fallbackQuery:'straits times singapore' },
+  { id:'sg2', flag:'🇸🇬', label:'Business Times SG',        lang:'English',  group:'🇸🇬 Singapore',       color:'#8b0000', url:'https://news.google.com/rss/search?q=business+times+singapore&hl=en&gl=SG&ceid=SG:en', fallbackQuery:'business times singapore' },
+  { id:'sg3', flag:'🇸🇬', label:'Zaobao (联合早报)',         lang:'Chinese',  group:'🇸🇬 Singapore',       color:'#7b1a1a', url:'https://news.google.com/rss/search?q=zaobao+singapore&hl=zh-Hans&gl=SG&ceid=SG:zh-Hans', fallbackQuery:'zaobao singapore' },
+  { id:'sg4', flag:'🇸🇬', label:'Tamil Murasu',             lang:'Tamil',    group:'🇸🇬 Singapore',       color:'#d32f2f', url:'https://news.google.com/rss/search?q=tamil+murasu+singapore&hl=ta&gl=SG&ceid=SG:ta', fallbackQuery:'tamil murasu singapore' },
+  // ── Malaysia ──────────────────────────────────────────────────────────
+  { id:'my1', flag:'🇲🇾', label:'Berita Harian (Melayu)',   lang:'Malay',    group:'🇲🇾 Malaysia',         color:'#cc0000', url:'https://news.google.com/rss/search?q=berita+harian+malaysia&hl=ms&gl=MY&ceid=MY:ms', fallbackQuery:'berita harian malaysia' },
+  { id:'my2', flag:'🇲🇾', label:'Free Malaysia Today',      lang:'English',  group:'🇲🇾 Malaysia',         color:'#b71c1c', url:'https://news.google.com/rss/search?q=free+malaysia+today&hl=en&gl=MY&ceid=MY:en', fallbackQuery:'free malaysia today news' },
+  // ── Sri Lanka ─────────────────────────────────────────────────────────
+  { id:'lk1', flag:'🇱🇰', label:'Daily Mirror LK',          lang:'English',  group:'🇱🇰 Sri Lanka',        color:'#8b1a1a', url:'https://news.google.com/rss/search?q=daily+mirror+sri+lanka&hl=en&gl=LK&ceid=LK:en', fallbackQuery:'daily mirror sri lanka' },
+  { id:'lk2', flag:'🇱🇰', label:'The Times (Sri Lanka)',    lang:'English',  group:'🇱🇰 Sri Lanka',        color:'#7b1c3b', url:'https://news.google.com/rss/search?q=times+sri+lanka+news&hl=en&gl=LK&ceid=LK:en', fallbackQuery:'times sri lanka' },
+  { id:'lk3', flag:'🇱🇰', label:'Daily News LK',            lang:'English',  group:'🇱🇰 Sri Lanka',        color:'#6b2d1a', url:'https://news.google.com/rss/search?q=daily+news+sri+lanka&hl=en&gl=LK&ceid=LK:en', fallbackQuery:'daily news sri lanka' },
 ];
 
 // ── Source lookup registry (keyed by id for retry/cache logic) ───────────────
@@ -15187,6 +15207,10 @@ const _LNB_FALLBACKS = {
   '🇧🇷 Brazil':               'https://picsum.photos/seed/lnb-brazilnews/500/280',
   '🇦🇷 Argentina':            'https://picsum.photos/seed/lnb-argentinanews/500/280',
   '🇹🇼 Taiwan':               'https://picsum.photos/seed/lnb-taiwannews/500/280',
+  '🇵🇭 Philippines':          'https://picsum.photos/seed/lnb-philippines/500/280',
+  '🇸🇬 Singapore':            'https://picsum.photos/seed/lnb-singapore/500/280',
+  '🇲🇾 Malaysia':             'https://picsum.photos/seed/lnb-malaysia/500/280',
+  '🇱🇰 Sri Lanka':            'https://picsum.photos/seed/lnb-srilanka/500/280',
 };
 const _LNB_FALLBACK_DEFAULT = 'https://picsum.photos/seed/lnb-worlddefault/500/280';
 
@@ -15198,7 +15222,8 @@ function _lnbMoreHash(group) {
   // Region groups → global
   const globalGroups = ['Japan','Korea','China','Europe','Middle East','Asia','UK','United Kingdom',
     'Australia','New Zealand','Brazil','Argentina','France','Russia','South Africa',
-    'Nigeria','Nepal','UAE','Taiwan','Thailand','Bangladesh','Switzerland','Mexico'];
+    'Nigeria','Nepal','UAE','Taiwan','Thailand','Bangladesh','Switzerland','Mexico',
+    'Philippines','Singapore','Malaysia','Sri Lanka'];
   if (globalGroups.some(r => group.includes(r))) return '#global';
   // India (non-Malayalam), US, Canada, English → trending
   return '#trending';
