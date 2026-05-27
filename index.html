@@ -4527,7 +4527,7 @@ footer{
       <div class="yt-omni-input-wrap">
         <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:14px;color:#475569;pointer-events:none">⌕</span>
         <input type="text" id="yt-omni-input" class="yt-omni-input"
-          placeholder="Search 148 channels, paste URL, or search YouTube…"
+          placeholder="Search 171 channels, paste URL, or search YouTube…"
           oninput="ytOmniInput(this.value)"
           onfocus="ytOmniOpen()"
           onkeydown="ytOmniBarKeydown(event)"
@@ -12974,7 +12974,7 @@ function radioAutoPlayDefault() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// YOUTUBE LIVE — 148-CHANNEL DATA & HYBRID FALLBACK PLAYER
+// YOUTUBE LIVE — 171-CHANNEL DATA & HYBRID FALLBACK PLAYER
 // ═══════════════════════════════════════════════════════════════════════
 var YT_CHANNELS = [
   {no:1,  name:'WION',                     country:'India',          category:'National News', lang:'English',    cid:'UC_gUM8rL-Lrg6O3adPW9K1g', v1:'lmZRiDMK3OU',  v2:'_KnLD1uPF90'},
@@ -13126,6 +13126,34 @@ var YT_CHANNELS = [
   {no:146,name:'Tai Chi for Beginners',        country:'International', category:'Fitness & Wellness', lang:'English', cid:'', v1:'zhe6OL31oek', v2:''},
   {no:147,name:'10 Min Chair Workout',         country:'International', category:'Fitness & Wellness', lang:'English', cid:'', v1:'wbbCqU0dBe4', v2:''},
   {no:148,name:'Fix Belly Fat 14 Days',        country:'International', category:'Fitness & Wellness', lang:'English', cid:'', v1:'G8q5JuhvrOw', v2:''},
+  // Entertainment / Movies
+  {no:149,name:'Warner Bros. Entertainment',   country:'International', category:'Entertainment',    lang:'English', cid:'UCgKkNPU2Ib7_TcyAl8M2S-w', v1:'G43NInZfoPE',  v2:''},
+  {no:150,name:'Warner Bros. Harry Potter',    country:'International', category:'Entertainment',    lang:'English', cid:'UCgKkNPU2Ib7_TcyAl8M2S-w', v1:'WVwP298MU7I',  v2:''},
+  {no:151,name:'Warner Bros. Rewind',          country:'International', category:'Entertainment',    lang:'English', cid:'UCsQQo8qb62ikp9kc954V7eQ', v1:'igcstjLsLsA',  v2:''},
+  {no:152,name:'ClipZone: High Octane',        country:'International', category:'Entertainment',    lang:'English', cid:'UCwXgxPwky2cyU7iNXeV75LA', v1:'XghNs0Cx6JQ',  v2:''},
+  // Kids
+  {no:153,name:'Disney Channel',               country:'International', category:'Kids',             lang:'English', cid:'UCktaw9L-f65LzUUdjmCFkbQ', v1:'s1Ylmj87gXY',  v2:'dt6dEz1rDzo'},
+  {no:154,name:'Disney Channel Animation',     country:'International', category:'Kids',             lang:'English', cid:'UCw7SNYrYei7F5ttQO3o-rpA', v1:'_HviSyC7zSU',  v2:''},
+  {no:155,name:'Disney Kids',                  country:'International', category:'Kids',             lang:'English', cid:'UC7Gf2tZ8coTX2ckTPgn62iQ', v1:'F4Tnje7wi-o',  v2:''},
+  {no:156,name:'Disney Jr.',                   country:'International', category:'Kids',             lang:'English', cid:'UCNcdbMyA59zE-Vk668bKWOg', v1:'yzKTO-6KWHU',  v2:''},
+  {no:157,name:'Peppa Pig',                    country:'International', category:'Kids',             lang:'English', cid:'UCAOtE1V7Ots4DjM8JLlrYgg', v1:'arEbprCTn4M',  v2:''},
+  {no:158,name:'Bluey',                        country:'International', category:'Kids',             lang:'English', cid:'UCVzLLZkDuFGAE2BGdBuBNBg', v1:'RHUauMcYlX0',  v2:''},
+  {no:159,name:'Boomerang UK',                 country:'UK',            category:'Kids',             lang:'English', cid:'UCmst562fALOY2cKb4IFgqEg', v1:'rEKifG2XUZg',  v2:''},
+  {no:160,name:'Avatar: The Last Airbender',   country:'International', category:'Kids',             lang:'English', cid:'UC5UxQbRoUOSlDfE6PXpIz0g', v1:'0IGLf-hQTwI',  v2:''},
+  // News & Documentary
+  {no:161,name:'Arise News Live',              country:'Nigeria',       category:'News',             lang:'English', cid:'UCyEJX-kSj0kOOCS7Qlq2G7g', v1:'TJ5V8KRSu9Y',  v2:''},
+  {no:162,name:'Ultimate Nature Documentaries',country:'International', category:'Documentary',      lang:'English', cid:'UCSmi9AQVgpfy-iP8omwd7vA', v1:'yyvzht3NFpE',  v2:''},
+  // Indian Movies / Entertainment
+  {no:163,name:'Movie Mela',                   country:'India',         category:'Movies',           lang:'Hindi',   cid:'', v1:'ZJa2xH5tlMA',  v2:''},
+  {no:164,name:'TRP Entertainments',           country:'India',         category:'Entertainment',    lang:'Hindi',   cid:'', v1:'ofI2JVD0UQk',  v2:''},
+  {no:165,name:'Speed Audio & Video',          country:'India',         category:'Movies',           lang:'Hindi',   cid:'', v1:'f6aOMUH2Pqg',  v2:''},
+  {no:166,name:'Eros Universe South',          country:'India',         category:'Movies',           lang:'Tamil',   cid:'', v1:'asffbk9CSI8',  v2:''},
+  {no:167,name:'M0VIES',                       country:'International', category:'Movies',           lang:'English', cid:'', v1:'HuhHimUtULw',  v2:''},
+  {no:168,name:'Spot Movie Time',              country:'International', category:'Movies',           lang:'English', cid:'', v1:'ST1FPNmv6aM',  v2:''},
+  // India - Malayalam / Tamil
+  {no:169,name:'hello kerala',                 country:'India',         category:'Entertainment',    lang:'Malayalam',cid:'', v1:'n3tinLxq1LI',  v2:''},
+  {no:170,name:'TVNXT Malayalam',              country:'India',         category:'Entertainment',    lang:'Malayalam',cid:'', v1:'yjaFvFuQ-QM',  v2:''},
+  {no:171,name:'Vijay Antony',                 country:'India',         category:'Music',            lang:'Tamil',   cid:'', v1:'71GL-33HKzw',  v2:''},
 ];
 
 var _ytCurrentChNo   = 78;   // Bloomberg Television default (1-based index)
