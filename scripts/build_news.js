@@ -6,8 +6,8 @@
  *   1. Fetch RSS + YouTube channel feeds (multi-source)
  *   2. Deduplicate, filter, sort newest-first
  *   3. Groq (llama-3.1-8b-instant) → rewrite every headline (copyright-safe)
- *   4. Gemini 1.5 Flash → write 4-5 paragraph article, multi-source context
- *      └─ Groq llama-3.3-70b-versatile fallback → RSS description fallback
+ *   4. Gemini 2.0 Flash → write 5-6 paragraph article, multi-source context
+ *      └─ Groq llama-3.3-70b-versatile fallback → enhanced RSS multi-source fallback
  *   5. Groq (llama-3.1-8b-instant) → generate image prompt for top story
  *      └─ Pollinations.ai free image URL (no API key needed)
  *   6. Write data/news.json  (items expire after 48 h, new always first)
@@ -588,7 +588,7 @@ async function callGemini(prompt, attempt) {
       { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
       { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_MEDIUM_AND_ABOVE' }
     ],
-    generationConfig: { maxOutputTokens: 2000, temperature: 0.55 }
+    generationConfig: { maxOutputTokens: 2500, temperature: 0.55 }
   });
 
   var apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GOOGLE_AI_API_KEY;
@@ -903,7 +903,7 @@ function storyJsonToHtml(data) {
 
 /* ═══════════════════════════════════════════════════
    GENERATE STORY — journalist prose
-   Gemini 1.5 Flash → Groq 70B → RSS fallback
+   Gemini 2.0 Flash → Groq 70B → RSS multi-source fallback
    Returns { html: string, teaser: string }
    Used ONLY for Trending / Global / India sections.
 ═══════════════════════════════════════════════════ */
@@ -946,16 +946,48 @@ async function generateStory(item, relatedContext) {
     return { html: html, teaser: teaser };
   }
 
-  // ── 4. RSS description fallback ───────────────────────────────────────────
-  var desc = (item.description || '').trim();
-  var src  = item.sourceName ? ' via ' + item.sourceName : '';
-  var fallbackText = item.title + '.'
-    + (desc ? '\n\n' + desc : '')
-    + '\n\nThis story was sourced' + src
-    + '. Full editorial coverage will be available at the next scheduled update.';
-  console.warn('    [RSS fallback]', item.title.slice(0, 55));
-  var fallbackTeaser = (desc || item.title).slice(0, 140).trim();
-  return { html: proseToHtml(fallbackText), teaser: fallbackTeaser };
+  // ── 4. Enhanced RSS fallback — multi-source synthesis ───────
+  // Both AI APIs failed (rate-limited or unavailable). Build a proper
+  // multi-paragraph article from the primary RSS description PLUS all
+  // related context gathered from other sources.
+  // Never show a stub stub message with scheduling promises.
+  console.warn('    [RSS fallback - multi-source]', item.title.slice(0, 55));
+
+  var paragraphs = [];
+
+  // Para 1: primary item description
+  var mainDesc = (item.description || '').replace(/\s+/g, ' ').trim();
+  if (mainDesc.length > 20) paragraphs.push(mainDesc);
+
+  // Additional paragraphs from related context lines.
+  // gatherRelatedContext() formats as: "[Source] Title — description"
+  if (relatedContext) {
+    relatedContext.split('
+').forEach(function(line) {
+      var dashIdx = line.indexOf(' — ');
+      var ctxText = dashIdx >= 0 ? line.slice(dashIdx + 3).replace(/\s+/g, ' ').trim() : '';
+      if (ctxText.length > 40) {
+        var alreadyPresent = paragraphs.some(function(p) {
+          return jaccardSimilarity(p, ctxText) > 0.55;
+        });
+        if (!alreadyPresent) paragraphs.push(ctxText);
+      }
+    });
+  }
+
+  // Clean attribution paragraph
+  var srcLabel = item.sourceName || 'wire services';
+  paragraphs.push('Reporting by ' + srcLabel + '. Read the full story at the original publication.');
+
+  var fallbackHtml = paragraphs.map(function(p) {
+    return '<p>' + p.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</p>';
+  }).join('');
+
+  var fallbackTeaser = paragraphs[0]
+    ? paragraphs[0].slice(0, 137) + (paragraphs[0].length > 137 ? '…' : '')
+    : item.title.slice(0, 140);
+
+  return { html: fallbackHtml, teaser: fallbackTeaser };
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1091,8 +1123,9 @@ async function buildSection(sectionId, feedPool, meta) {
       // AI articles do NOT use RSS images (per task requirement)
       storyResult.image = null;
 
-      // Rate-limit pause: Gemini free tier 15 RPM; 2.5s gap + API latency ≥ 4s
-      if (j < selected.length - 1) await sleep(2500);
+      // Rate-limit pause: Gemini free tier = 15 RPM (1 call per 4 s on average).
+      // With ~2 s API latency + 5 s sleep = ~7 s per item → max ~8.5 RPM — safely under limit.
+      if (j < selected.length - 1) await sleep(5000);
     }
 
     var outItem = {
@@ -1217,6 +1250,14 @@ async function main() {
     } catch (e) {
       console.error('Section', sid, 'failed entirely:', e.message);
       output.sections[sid] = makePlaceholderSection(sid, SECTION_META[sid]);
+    }
+
+    // After each AI section (trending / global / india), pause 12 s before the next
+    // so Gemini's 15 RPM free-tier quota has time to recover between bursts.
+    var _isAiSec = (sid === 'trending' || sid === 'global' || sid === 'india');
+    if (_isAiSec && i < sectionIds.length - 1) {
+      console.log('  [Rate-limit buffer] 12 s pause before next section...');
+      await sleep(12000);
     }
   }
 
