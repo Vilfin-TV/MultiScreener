@@ -962,8 +962,7 @@ async function generateStory(item, relatedContext) {
   // Additional paragraphs from related context lines.
   // gatherRelatedContext() formats as: "[Source] Title — description"
   if (relatedContext) {
-    relatedContext.split('
-').forEach(function(line) {
+    relatedContext.split('\n').forEach(function(line) {
       var dashIdx = line.indexOf(' — ');
       var ctxText = dashIdx >= 0 ? line.slice(dashIdx + 3).replace(/\s+/g, ' ').trim() : '';
       if (ctxText.length > 40) {
