@@ -114,6 +114,28 @@ export default {
       }
     }
 
+    // ── /api/login  POST — issue a JWT session token ──────────────────────────
+    if (pathname === '/api/login') {
+      if (request.method !== 'POST') {
+        return jsonError(405, 'Method not allowed. Use POST for /api/login.');
+      }
+      let body;
+      try { body = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      const { username, password } = body || {};
+      if (!env.ADMIN_USERNAME || !env.LINK_CONSOLE_PASSWORD || !env.JWT_SECRET) {
+        return jsonError(503, 'Auth not configured. Set ADMIN_USERNAME, LINK_CONSOLE_PASSWORD and JWT_SECRET in Worker environment.');
+      }
+      if (!username || !password || username !== env.ADMIN_USERNAME || password !== env.LINK_CONSOLE_PASSWORD) {
+        return jsonError(401, 'Invalid credentials.');
+      }
+      const now = Math.floor(Date.now() / 1000);
+      const token = await signJWT({ sub: username, iat: now, exp: now + 86400 }, env.JWT_SECRET);
+      return new Response(
+        JSON.stringify({ ok: true, token }),
+        { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // ── /api/post-link  POST — append an external link to links.json via GitHub API ──
     if (pathname === '/api/post-link') {
       if (request.method !== 'POST') {
@@ -123,14 +145,11 @@ export default {
       let body;
       try { body = await request.json(); } catch (_) { return jsonError(400, 'Invalid JSON body.'); }
 
-      const { url, days, password } = body || {};
+      const { url, days } = body || {};
 
-      if (!env || !env.LINK_CONSOLE_PASSWORD) {
-        return jsonError(503, 'Link console not configured. Set LINK_CONSOLE_PASSWORD in Worker environment.');
-      }
-      if (!password || password !== env.LINK_CONSOLE_PASSWORD) {
-        return jsonError(401, 'Unauthorized.');
-      }
+      const auth = await requireAuth(request, env);
+      if (auth.error) return auth.error;
+
       if (!url || typeof url !== 'string') {
         return jsonError(400, 'Missing or invalid url.');
       }
@@ -216,14 +235,11 @@ export default {
       let body;
       try { body = await request.json(); } catch (_) { return jsonError(400, 'Invalid JSON body.'); }
 
-      const { links, password } = body || {};
+      const { links } = body || {};
 
-      if (!env || !env.LINK_CONSOLE_PASSWORD) {
-        return jsonError(503, 'Link console not configured. Set LINK_CONSOLE_PASSWORD in Worker environment.');
-      }
-      if (!password || password !== env.LINK_CONSOLE_PASSWORD) {
-        return jsonError(401, 'Unauthorized.');
-      }
+      const auth = await requireAuth(request, env);
+      if (auth.error) return auth.error;
+
       if (!Array.isArray(links)) {
         return jsonError(400, 'links must be an array.');
       }
@@ -494,6 +510,58 @@ function jsonError(status, message, extra = {}) {
       },
     }
   );
+}
+
+/* ── JWT (HS256) using Web Crypto API ── */
+function _b64urlEncode(data) {
+  const b64 = (typeof data === 'string')
+    ? btoa(unescape(encodeURIComponent(data)))
+    : btoa(String.fromCharCode(...new Uint8Array(data)));
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function _b64urlDecodeStr(str) {
+  const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  return decodeURIComponent(escape(atob(b64.padEnd(b64.length + (4 - b64.length % 4) % 4, '='))));
+}
+function _b64urlDecodeBytes(str) {
+  const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  const binary = atob(b64.padEnd(b64.length + (4 - b64.length % 4) % 4, '='));
+  return Uint8Array.from(binary, c => c.charCodeAt(0));
+}
+async function _hmacKey(secret, usage) {
+  return crypto.subtle.importKey('raw', new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' }, false, [usage]);
+}
+async function signJWT(payload, secret) {
+  const h = _b64urlEncode(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const p = _b64urlEncode(JSON.stringify(payload));
+  const input = `${h}.${p}`;
+  const key = await _hmacKey(secret, 'sign');
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(input));
+  return `${input}.${_b64urlEncode(sig)}`;
+}
+async function verifyJWT(token, secret) {
+  const parts = token.split('.');
+  if (parts.length !== 3) throw new Error('Malformed token.');
+  const [h, p, s] = parts;
+  const key = await _hmacKey(secret, 'verify');
+  const ok = await crypto.subtle.verify('HMAC', key, _b64urlDecodeBytes(s),
+    new TextEncoder().encode(`${h}.${p}`));
+  if (!ok) throw new Error('Invalid signature.');
+  const payload = JSON.parse(_b64urlDecodeStr(p));
+  if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) throw new Error('Token expired.');
+  return payload;
+}
+async function requireAuth(request, env) {
+  if (!env || !env.JWT_SECRET) return { error: jsonError(503, 'JWT_SECRET not configured in Worker environment.') };
+  const auth = request.headers.get('Authorization') || '';
+  if (!auth.startsWith('Bearer ')) return { error: jsonError(401, 'Missing Bearer token. Please sign in.') };
+  try {
+    const payload = await verifyJWT(auth.slice(7), env.JWT_SECRET);
+    return { payload };
+  } catch(err) {
+    return { error: jsonError(401, 'Session expired or invalid. Please sign in again.') };
+  }
 }
 
 /**
