@@ -1,0 +1,22 @@
+name: Deploy Screener Proxy Worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'screener-proxy-worker.js'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy screener-proxy-worker.js to Cloudflare
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy with Wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy screener-proxy-worker.js --name screener-proxy --compatibility-date 2024-12-01

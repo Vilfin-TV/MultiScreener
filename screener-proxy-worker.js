@@ -114,6 +114,99 @@ export default {
       }
     }
 
+    // ── /api/post-link  POST — append an external link to links.json via GitHub API ──
+    if (pathname === '/api/post-link') {
+      if (request.method !== 'POST') {
+        return jsonError(405, 'Method not allowed. Use POST for /api/post-link.');
+      }
+
+      let body;
+      try { body = await request.json(); } catch (_) { return jsonError(400, 'Invalid JSON body.'); }
+
+      const { url, days, password } = body || {};
+
+      if (!env || !env.LINK_CONSOLE_PASSWORD) {
+        return jsonError(503, 'Link console not configured. Set LINK_CONSOLE_PASSWORD in Worker environment.');
+      }
+      if (!password || password !== env.LINK_CONSOLE_PASSWORD) {
+        return jsonError(401, 'Unauthorized.');
+      }
+      if (!url || typeof url !== 'string') {
+        return jsonError(400, 'Missing or invalid url.');
+      }
+      try { new URL(url); } catch (_) { return jsonError(400, 'url is not a valid URL.'); }
+      const daysInt = parseInt(days);
+      if (!daysInt || daysInt < 1 || daysInt > 90) {
+        return jsonError(400, 'days must be an integer between 1 and 90.');
+      }
+      if (!env || !env.GITHUB_TOKEN) {
+        return jsonError(503, 'GitHub integration not configured. Set GITHUB_TOKEN in Worker environment.');
+      }
+
+      const REPO      = 'Vilfin-TV/MultiScreener';
+      const FILE_PATH = 'links.json';
+      const BRANCH    = 'main';
+      const GH_API    = `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`;
+      const GH_HEADERS = {
+        'Authorization': `token ${env.GITHUB_TOKEN}`,
+        'Accept':        'application/vnd.github.v3+json',
+        'User-Agent':    'vilfintv-screener-proxy',
+        'Content-Type':  'application/json',
+      };
+
+      // 1. GET current file
+      let sha   = null;
+      let links = [];
+      try {
+        const ghGet = await fetch(`${GH_API}?ref=${BRANCH}`, { headers: GH_HEADERS });
+        if (ghGet.ok) {
+          const fileData = await ghGet.json();
+          sha = fileData.sha;
+          const decoded = atob(fileData.content.replace(/\n/g, ''));
+          links = JSON.parse(decoded);
+          if (!Array.isArray(links)) links = [];
+        } else if (ghGet.status !== 404) {
+          const err = await ghGet.text();
+          return jsonError(502, `GitHub GET failed: HTTP ${ghGet.status}`, { detail: err.slice(0, 200) });
+        }
+      } catch (err) {
+        return jsonError(502, `GitHub GET error: ${err.message}`);
+      }
+
+      // 2. Remove already-expired entries, then append the new link
+      const now       = new Date();
+      const expiresAt = new Date(now.getTime() + daysInt * 86400000).toISOString();
+      links = links.filter(l => l && l.expires_at && new Date(l.expires_at) > now);
+      links.push({ url, expires_at: expiresAt });
+
+      // 3. PUT updated file back to GitHub
+      const putPayload = {
+        message: `feat(links): add ${new URL(url).hostname}`,
+        content: btoa(JSON.stringify(links, null, 2)),
+        branch:  BRANCH,
+      };
+      if (sha) putPayload.sha = sha;
+
+      try {
+        const ghPut = await fetch(GH_API, {
+          method:  'PUT',
+          headers: GH_HEADERS,
+          body:    JSON.stringify(putPayload),
+        });
+        if (!ghPut.ok) {
+          const err = await ghPut.text();
+          return jsonError(502, `GitHub PUT failed: HTTP ${ghPut.status}`, { detail: err.slice(0, 200) });
+        }
+      } catch (err) {
+        return jsonError(502, `GitHub PUT error: ${err.message}`);
+      }
+
+      return new Response(
+        JSON.stringify({ ok: true, message: 'Link added successfully.', expires_at: expiresAt }),
+        { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // ── Only allow GET for all other routes ──────────────────────────────────
     if (request.method !== 'GET') {
       return jsonError(405, 'Method not allowed. Use GET.');
