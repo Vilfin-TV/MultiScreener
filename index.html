@@ -1476,34 +1476,33 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-more-btn svg{width:10px;height:10px;flex-shrink:0;transition:transform .15s}
 .lnb-more-btn:hover svg{transform:translateX(2px)}
 
-/* ── LIVE NEWS CARD GRID (box-style with pictures) ── */
-.lnb-card-grid{padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;min-height:140px}
-.lnb-card-grid .lnb-loading,.lnb-card-grid .lnb-error,.lnb-card-grid .lnb-stale{grid-column:1/-1}
-/* Hero card — full-width vertical, image on top, full headline below */
-.lnb-hero-card{grid-column:1/-1;display:flex;flex-direction:column;background:var(--card2);border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s}
-.lnb-hero-card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.3);border-color:var(--burn3)}
-.lnb-hero-img-wrap{position:relative;width:100%;padding-top:46%;overflow:hidden;flex-shrink:0;background:var(--card3)}
+/* ── LIVE NEWS — newspaper layout: hero left + headline list right ── */
+.lnb-card-grid{padding:0;display:flex;flex-direction:row;min-height:220px;overflow:hidden}
+.lnb-card-grid .lnb-loading,.lnb-card-grid .lnb-error,.lnb-card-grid .lnb-stale{padding:16px;flex:1;text-align:center;align-self:center;font-size:11px}
+/* Hero card — left ~52%, image stacked above headline + snippet */
+.lnb-hero-card{flex:0 0 52%;display:flex;flex-direction:column;border-right:1px solid var(--border);cursor:pointer;transition:background .15s;min-width:0}
+.lnb-hero-card:hover{background:rgba(255,255,255,.04)}
+.lnb-hero-img-wrap{position:relative;width:100%;padding-top:52%;overflow:hidden;flex-shrink:0;background:var(--card3)}
 .lnb-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .3s ease}
 .lnb-hero-card:hover .lnb-hero-img{transform:scale(1.04)}
 .lnb-hero-no-img{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:36px;opacity:.4}
-.lnb-hero-body{padding:9px 11px 11px;display:flex;flex-direction:column;gap:4px;border-top:2px solid var(--burn2)}
+.lnb-hero-body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:5px;border-top:2px solid var(--burn2);flex:1}
 .lnb-hero-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.5}
 .lnb-hero-card:hover .lnb-hero-title{color:var(--gold2)}
-.lnb-hero-time{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;padding-top:2px}
-/* Small cards (items 2–9) */
-.lnb-news-card{background:var(--card2);border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s,border-color .15s}
-.lnb-news-card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.3);border-color:var(--burn3)}
-.lnb-card-img-wrap{position:relative;width:100%;padding-top:38%;overflow:hidden;flex-shrink:0;background:var(--card3)}
-.lnb-card-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .3s ease}
-.lnb-news-card:hover .lnb-card-img{transform:scale(1.05)}
-.lnb-card-no-img{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;opacity:.5}
-.lnb-card-body{padding:7px 8px 9px;display:flex;flex-direction:column;gap:3px;flex:1}
-.lnb-card-title{font-size:13px;font-weight:600;color:var(--text);line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.lnb-news-card:hover .lnb-card-title{color:var(--gold2)}
-.lnb-card-time{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:auto;padding-top:3px}
-/* Text-only card shows more lines since no image */
-.lnb-news-card.lnb-text-card .lnb-card-title{-webkit-line-clamp:4}
-@media(max-width:480px){.lnb-card-grid{grid-template-columns:1fr 1fr;gap:5px;padding:6px}}
+.lnb-hero-snippet{font-size:11px;color:var(--text3);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-top:1px}
+.lnb-hero-time{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:auto;padding-top:4px}
+/* Right column — vertical list of headlines */
+.lnb-right-col{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.lnb-list-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;text-decoration:none}
+.lnb-list-item:hover{background:rgba(255,255,255,.05)}
+.lnb-list-item:last-child{border-bottom:none}
+.lnb-list-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.lnb-list-category{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--lnb-color,var(--burn3));line-height:1}
+.lnb-list-title{font-size:12px;font-weight:600;color:var(--text);line-height:1.42;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lnb-list-item:hover .lnb-list-title{color:var(--gold2)}
+.lnb-list-time{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:auto;padding-top:2px}
+.lnb-list-thumb{width:52px;height:42px;border-radius:5px;object-fit:cover;flex-shrink:0;background:var(--card3)}
+@media(max-width:600px){.lnb-card-grid{flex-direction:column}.lnb-hero-card{flex:0 0 auto;border-right:none;border-bottom:1px solid var(--border)}.lnb-hero-img-wrap{padding-top:45%}.lnb-list-thumb{width:44px;height:36px}}
 
 /* ── Calendar strips — thin visible scrollbar so users know they can scroll ── */
 #cal-country-strip,#cal-region-strip{
@@ -15336,68 +15335,67 @@ function _cleanNewsTitle(title) {
 }
 
 function renderItems(listEl, items) {
-  const channelFlag = listEl.dataset.flag || '📰';
   const channelGroup = listEl.dataset.group || '';
   const fallbackImg = _LNB_FALLBACKS[channelGroup] || _LNB_FALLBACK_DEFAULT;
   const shown = items.slice(0, 9);
   if (!shown.length) return;
 
-  listEl.innerHTML = shown.map((item, i) => {
+  function _d(item) {
     const title   = _cleanNewsTitle(typeof item === 'string' ? item : (item.title || ''));
     const link    = item.link || item.url || '#';
-    const pub     = item.pubDate || item.published || '';
     const rawDesc = item.description || item.summary || item.content || '';
-    const snippet = _sanitizeRssContent(rawDesc, 400);
+    const snippet = _sanitizeRssContent(rawDesc, 200);
     const source  = item.source || item.feed || '';
-    const imgSrc  = item.image || '';
-    const timeStr = pub ? new Date(pub).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}) : '';
-    // Store all dynamic data in data-attributes — avoids quote-escaping issues in onclick
-    const safeTitle  = escHtml(title);
-    const safeUrl    = escHtml(link);
-    const safeSrc    = escHtml(source);
-    const encSnippet = encodeURIComponent(snippet);
-    const dataAttrs  = `data-title="${safeTitle}" data-snippet="${encSnippet}" data-url="${safeUrl}" data-source="${safeSrc}"`;
-    const clickAttrs = `role="button" tabindex="0" ${dataAttrs} onclick="lnbCardOpen(this)" onkeydown="if(event.key==='Enter')lnbCardOpen(this)"`;
+    const pub     = item.pubDate || item.published || '';
+    return {
+      title, snippet, source,
+      imgSrc:   item.image || '',
+      category: item.category || '',
+      timeStr:  pub ? new Date(pub).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}) : '',
+      safeTitle:  escHtml(title),
+      safeUrl:    escHtml(link),
+      safeSrc:    escHtml(source),
+      encSnippet: encodeURIComponent(snippet),
+    };
+  }
 
-    if (i === 0) {
-      // Hero card — full-width vertical, image on top, full headline visible
-      // Always show group fallback as CSS background; RSS image overlays it if it loads.
-      // If RSS image fails, just hide the <img> — background stays visible.
-      const heroSrc = imgSrc || fallbackImg;
-      // On error: hide the <img> (removes broken-icon) — CSS background always shows below it.
-      const heroOnerror = `this.onerror=null;this.style.display='none'`;
-      const wrapBg = `background-image:url('${escHtml(fallbackImg)}');background-size:cover;background-position:center`;
-      return `<div class="lnb-hero-card" ${clickAttrs}>
-        <div class="lnb-hero-img-wrap" style="${wrapBg}">
-          <img class="lnb-hero-img" src="${escHtml(heroSrc)}" alt="" loading="lazy" onerror="${heroOnerror}">
-        </div>
-        <div class="lnb-hero-body">
-          <div class="lnb-hero-title">${safeTitle}</div>
-          ${timeStr ? `<div class="lnb-hero-time">${timeStr}</div>` : ''}
-        </div>
-      </div>`;
-    } else if (imgSrc) {
-      // Small card with RSS image
-      return `<div class="lnb-news-card" ${clickAttrs}>
-        <div class="lnb-card-img-wrap">
-          <img class="lnb-card-img" src="${escHtml(imgSrc)}" alt="" loading="lazy" onerror="this.closest('.lnb-card-img-wrap').style.display='none'">
-          <div class="lnb-card-no-img">${channelFlag}</div>
-        </div>
-        <div class="lnb-card-body">
-          <div class="lnb-card-title">${safeTitle}</div>
-          ${timeStr ? `<div class="lnb-card-time">${timeStr}</div>` : ''}
-        </div>
-      </div>`;
-    } else {
-      // Text-only small card — no image area, headline gets more lines
-      return `<div class="lnb-news-card lnb-text-card" ${clickAttrs}>
-        <div class="lnb-card-body">
-          <div class="lnb-card-title">${safeTitle}</div>
-          ${timeStr ? `<div class="lnb-card-time">${timeStr}</div>` : ''}
-        </div>
-      </div>`;
-    }
+  function _ca(d) {
+    return `role="button" tabindex="0" data-title="${d.safeTitle}" data-snippet="${d.encSnippet}" data-url="${d.safeUrl}" data-source="${d.safeSrc}" onclick="lnbCardOpen(this)" onkeydown="if(event.key==='Enter')lnbCardOpen(this)"`;
+  }
+
+  // ── Hero card (item 0) ──────────────────────────────────────────────
+  const h = _d(shown[0]);
+  const heroSrc = h.imgSrc || fallbackImg;
+  const wrapBg  = `background-image:url('${escHtml(fallbackImg)}');background-size:cover;background-position:center`;
+  const heroHtml = `<div class="lnb-hero-card" ${_ca(h)}>
+    <div class="lnb-hero-img-wrap" style="${wrapBg}">
+      <img class="lnb-hero-img" src="${escHtml(heroSrc)}" alt="" loading="lazy" onerror="this.onerror=null;this.style.display='none'">
+    </div>
+    <div class="lnb-hero-body">
+      <div class="lnb-hero-title">${h.safeTitle}</div>
+      ${h.snippet ? `<div class="lnb-hero-snippet">${escHtml(h.snippet)}</div>` : ''}
+      ${h.timeStr ? `<div class="lnb-hero-time">${h.timeStr}</div>` : ''}
+    </div>
+  </div>`;
+
+  // ── Right list (items 1–8) ─────────────────────────────────────────
+  const listHtml = shown.slice(1).map(item => {
+    const d = _d(item);
+    const catLabel = d.category || d.source || '';
+    const thumbHtml = d.imgSrc
+      ? `<img class="lnb-list-thumb" src="${escHtml(d.imgSrc)}" alt="" loading="lazy" onerror="this.remove()">`
+      : '';
+    return `<div class="lnb-list-item" ${_ca(d)}>
+      <div class="lnb-list-body">
+        ${catLabel ? `<div class="lnb-list-category">${escHtml(catLabel.slice(0, 30))}</div>` : ''}
+        <div class="lnb-list-title">${d.safeTitle}</div>
+        ${d.timeStr ? `<div class="lnb-list-time">${d.timeStr}</div>` : ''}
+      </div>
+      ${thumbHtml}
+    </div>`;
   }).join('');
+
+  listEl.innerHTML = heroHtml + `<div class="lnb-right-col">${listHtml}</div>`;
 }
 
 function _parseXmlItems(xmlStr) {
@@ -15461,6 +15459,7 @@ function _parseXmlItems(xmlStr) {
         '',
       source: source,
       image: image,
+      category: Array.from(item.querySelectorAll('category')).map(el => el.textContent?.trim()).filter(Boolean).join(' · ').slice(0, 40),
     };
   }).filter(i => i.title);
 }
