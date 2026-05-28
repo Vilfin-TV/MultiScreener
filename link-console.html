@@ -5,187 +5,227 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Link Console — VilfinTV</title>
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body{
-      min-height:100vh;
-      background:#030810;
-      background-image:
-        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(37,99,235,.18), transparent);
-      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-      display:flex;flex-direction:column;
-      align-items:center;justify-content:flex-start;
-      padding:32px 16px 48px;
+    body {
+      min-height: 100vh;
+      background: #030810;
+      background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(37,99,235,.18), transparent);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex; flex-direction: column;
+      align-items: center; padding: 32px 16px 64px;
     }
 
-    /* ── Top brand strip ── */
-    .brand{
-      display:flex;align-items:center;gap:10px;
-      margin-bottom:32px;
-      opacity:.7;
+    /* ── Brand strip ── */
+    .brand {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 28px; opacity: .6;
     }
-    .brand-dot{
-      width:8px;height:8px;border-radius:50%;
-      background:#3b82f6;
-    }
-    .brand-name{
-      font-size:11px;font-weight:800;letter-spacing:2px;
-      text-transform:uppercase;color:#8ea8c8;
+    .brand-dot { width: 7px; height: 7px; border-radius: 50%; background: #3b82f6; }
+    .brand-name {
+      font-size: 10.5px; font-weight: 800; letter-spacing: 2.2px;
+      text-transform: uppercase; color: #8ea8c8;
     }
 
-    /* ── Main card shell ── */
-    .console{
-      width:100%;max-width:860px;
-      background:#0a1830;
-      border:1px solid #162d4a;
-      border-radius:20px;
-      overflow:hidden;
+    /* ── Console card ── */
+    .console {
+      width: 100%; max-width: 940px;
+      background: #0a1830; border: 1px solid #162d4a;
+      border-radius: 20px; overflow: hidden;
     }
 
-    /* ── Card header ── */
-    .console-hdr{
-      padding:28px 32px 24px;
-      border-bottom:1px solid #162d4a;
-      background:linear-gradient(135deg,rgba(37,99,235,.08),transparent);
-      display:flex;align-items:center;gap:14px;
+    .console-hdr {
+      padding: 24px 32px;
+      border-bottom: 1px solid #162d4a;
+      background: linear-gradient(135deg, rgba(37,99,235,.08), transparent);
+      display: flex; align-items: center; gap: 14px;
     }
-    .console-icon{
-      width:44px;height:44px;border-radius:12px;
-      background:linear-gradient(135deg,#2563eb,#3b82f6);
-      display:flex;align-items:center;justify-content:center;
-      font-size:22px;flex-shrink:0;
+    .console-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
     }
-    .console-hdr-text{}
-    .console-title{
-      font-size:18px;font-weight:800;color:#e2eeff;letter-spacing:.3px;
-    }
-    .console-sub{
-      font-size:12px;color:#687a94;margin-top:2px;
-    }
+    .console-title { font-size: 18px; font-weight: 800; color: #e2eeff; letter-spacing: .3px; }
+    .console-sub { font-size: 12px; color: #687a94; margin-top: 2px; }
 
-    /* ── Two-column body ── */
-    .console-body{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-    }
+    .console-body { display: grid; grid-template-columns: 1fr 1.4fr; }
 
     /* ── Form panel ── */
-    .form-panel{
-      padding:28px 32px;
-      border-right:1px solid #162d4a;
+    .form-panel { padding: 28px 28px; border-right: 1px solid #162d4a; }
+
+    .field-label {
+      display: block; font-size: 9.5px; font-weight: 800;
+      letter-spacing: 1.4px; text-transform: uppercase;
+      color: #8ea8c8; margin-bottom: 7px;
+    }
+    input[type="url"], input[type="number"], input[type="password"] {
+      width: 100%; background: #0e1f3b; border: 1px solid #1e3a5c;
+      border-radius: 10px; color: #e2eeff; font-size: 13.5px;
+      padding: 11px 13px; outline: none;
+      transition: border-color .15s, box-shadow .15s;
+      margin-bottom: 18px; font-family: inherit;
+    }
+    input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.1); }
+    input::placeholder { color: #2d4a6a; }
+    input[type="number"] { -moz-appearance: textfield; }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      color: #fff; border: none; border-radius: 10px;
+      padding: 12px; font-size: 13.5px; font-weight: 700;
+      cursor: pointer; letter-spacing: .3px;
+      transition: opacity .15s, transform .1s; font-family: inherit;
+    }
+    .btn-primary:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+    .btn-primary:active:not(:disabled) { transform: translateY(0); }
+    .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
+
+    .form-status {
+      margin-top: 12px; padding: 10px 13px; border-radius: 8px;
+      font-size: 12px; line-height: 1.5; display: none;
+    }
+    .form-status.ok  { display: block; background: rgba(16,185,129,.1);  color: #34d399; border: 1px solid rgba(16,185,129,.2); }
+    .form-status.err { display: block; background: rgba(239,68,68,.1);   color: #f87171; border: 1px solid rgba(239,68,68,.2); }
+
+    /* ── Links panel ── */
+    .links-panel { padding: 22px 24px; display: flex; flex-direction: column; }
+
+    .links-panel-hdr {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+    }
+    .links-panel-title {
+      font-size: 9.5px; font-weight: 800; letter-spacing: 1.4px;
+      text-transform: uppercase; color: #8ea8c8; flex: 1;
+    }
+    .count-badge {
+      background: rgba(255,255,255,.05); color: #687a94;
+      border-radius: 20px; padding: 2px 9px; font-size: 10px;
+    }
+    .dirty-badge {
+      background: rgba(245,158,11,.12); color: #fbbf24;
+      border: 1px solid rgba(245,158,11,.25);
+      border-radius: 20px; padding: 2px 10px;
+      font-size: 10px; font-weight: 700; display: none;
     }
 
-    label{
-      display:block;font-size:10px;font-weight:700;
-      letter-spacing:1.2px;text-transform:uppercase;
-      color:#8ea8c8;margin-bottom:7px;
-    }
-    input{
-      width:100%;
-      background:#0e1f3b;
-      border:1px solid #1e3a5c;
-      border-radius:10px;color:#e2eeff;
-      font-size:14px;padding:12px 14px;
-      outline:none;transition:border-color .15s,box-shadow .15s;
-      margin-bottom:20px;font-family:inherit;
-    }
-    input:focus{
-      border-color:#3b82f6;
-      box-shadow:0 0 0 3px rgba(59,130,246,.12);
-    }
-    input::placeholder{color:#2d4a6a}
-    input[type="number"]{-moz-appearance:textfield}
-    input[type="number"]::-webkit-outer-spin-button,
-    input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none}
+    /* ── Link items ── */
+    .links-list { display: flex; flex-direction: column; gap: 7px; flex: 1; }
 
-    .btn{
-      width:100%;
-      background:linear-gradient(135deg,#2563eb,#3b82f6);
-      color:#fff;border:none;border-radius:10px;
-      padding:13px;font-size:14px;font-weight:700;
-      cursor:pointer;letter-spacing:.3px;
-      transition:opacity .15s,transform .1s;
-      font-family:inherit;
+    .link-item {
+      background: #0e1f3b; border: 1px solid #1e3a5c;
+      border-radius: 10px; overflow: hidden;
+      transition: border-color .15s, opacity .2s, transform .2s;
     }
-    .btn:hover{opacity:.9;transform:translateY(-1px)}
-    .btn:active{transform:translateY(0)}
-    .btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+    .link-item.is-deleting { opacity: 0; transform: translateX(12px); }
 
-    .status{
-      margin-top:14px;padding:11px 14px;border-radius:9px;
-      font-size:12.5px;line-height:1.5;display:none;
+    .link-item-main {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
     }
-    .status.ok{
-      background:rgba(16,185,129,.1);color:#34d399;
-      border:1px solid rgba(16,185,129,.2);display:block;
+    .link-favicon {
+      width: 28px; height: 28px; border-radius: 6px;
+      background: #162d4a; display: flex; align-items: center;
+      justify-content: center; font-size: 13px; overflow: hidden; flex-shrink: 0;
     }
-    .status.err{
-      background:rgba(239,68,68,.1);color:#f87171;
-      border:1px solid rgba(239,68,68,.2);display:block;
+    .link-favicon img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+    .link-body { flex: 1; min-width: 0; }
+    .link-host {
+      font-size: 12.5px; font-weight: 700; color: #e2eeff;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .link-exp { font-size: 10px; color: #687a94; margin-top: 2px; }
+    .link-exp.expiring { color: #fbbf24; }
+    .link-exp.expired  { color: #f87171; }
+
+    /* Action buttons */
+    .link-actions { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
+    .act-btn {
+      width: 29px; height: 29px;
+      border: 1px solid #1e3a5c; background: transparent;
+      border-radius: 7px; color: #8ea8c8; cursor: pointer;
+      font-size: 13px; display: flex; align-items: center;
+      justify-content: center; transition: all .15s;
+      padding: 0; font-family: inherit; line-height: 1;
+    }
+    .act-btn:hover:not(:disabled) { background: #162d4a; color: #e2eeff; border-color: #3b82f6; }
+    .act-btn:disabled { opacity: .2; cursor: not-allowed; }
+    .act-btn.active  { background: rgba(59,130,246,.12); color: #60a5fa; border-color: #3b82f6; }
+    .act-btn.danger:hover:not(:disabled) { background: rgba(239,68,68,.1); color: #f87171; border-color: rgba(239,68,68,.35); }
+
+    /* Renew inline row */
+    .renew-row {
+      display: none; align-items: center; flex-wrap: wrap; gap: 8px;
+      padding: 9px 12px 10px;
+      background: rgba(59,130,246,.05);
+      border-top: 1px solid #1a2f4a;
+    }
+    .renew-row.open { display: flex; }
+    .renew-lbl { font-size: 11.5px; color: #8ea8c8; white-space: nowrap; }
+    .renew-input-days {
+      width: 62px; background: #0a1830; border: 1px solid #1e3a5c;
+      border-radius: 7px; color: #e2eeff; font-size: 13px;
+      padding: 5px 8px; outline: none; font-family: inherit;
+      transition: border-color .15s; -moz-appearance: textfield;
+    }
+    .renew-input-days::-webkit-inner-spin-button,
+    .renew-input-days::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .renew-input-days:focus { border-color: #3b82f6; }
+    .renew-ok-btn {
+      background: #2563eb; color: #fff; border: none; border-radius: 7px;
+      padding: 5px 13px; font-size: 11.5px; font-weight: 700;
+      cursor: pointer; transition: opacity .15s; font-family: inherit;
+    }
+    .renew-ok-btn:hover { opacity: .85; }
+    .renew-x-btn {
+      background: transparent; color: #687a94; border: 1px solid #1e3a5c;
+      border-radius: 7px; padding: 5px 10px; font-size: 11.5px;
+      cursor: pointer; transition: all .15s; font-family: inherit;
+    }
+    .renew-x-btn:hover { border-color: #3d5470; color: #8ea8c8; }
+
+    /* Save row */
+    .save-row { display: flex; gap: 8px; margin-top: 16px; }
+    .btn-save {
+      flex: 1;
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: #fff; border: none; border-radius: 9px;
+      padding: 10px 16px; font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: opacity .15s, transform .1s; font-family: inherit;
+    }
+    .btn-save:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+    .btn-save:disabled { opacity: .3; cursor: not-allowed; transform: none; }
+    .btn-discard {
+      background: transparent; color: #687a94;
+      border: 1px solid #1e3a5c; border-radius: 9px;
+      padding: 10px 14px; font-size: 12px;
+      cursor: pointer; transition: all .15s; font-family: inherit;
+    }
+    .btn-discard:hover { border-color: #3b82f6; color: #8ea8c8; }
+
+    .save-status {
+      margin-top: 10px; padding: 9px 12px; border-radius: 8px;
+      font-size: 12px; line-height: 1.5; display: none;
+    }
+    .save-status.ok  { display: block; background: rgba(16,185,129,.1);  color: #34d399; border: 1px solid rgba(16,185,129,.2); }
+    .save-status.err { display: block; background: rgba(239,68,68,.1);   color: #f87171; border: 1px solid rgba(239,68,68,.2); }
+
+    .empty-note {
+      font-size: 12px; color: #2d4a6a; text-align: center;
+      padding: 24px 12px; border: 1px dashed #162d4a; border-radius: 10px;
     }
 
-    /* ── Active links panel ── */
-    .links-panel{
-      padding:28px 32px;
-      display:flex;flex-direction:column;
-    }
-    .links-panel-title{
-      font-size:10px;font-weight:700;letter-spacing:1.2px;
-      text-transform:uppercase;color:#8ea8c8;margin-bottom:16px;
-    }
-    .links-list{
-      display:flex;flex-direction:column;gap:9px;
-      flex:1;
-    }
-    .link-item{
-      background:#0e1f3b;border:1px solid #1e3a5c;
-      border-radius:10px;padding:11px 14px;
-      display:flex;align-items:center;gap:10px;
-      transition:border-color .15s;
-    }
-    .link-item:hover{border-color:#3b82f6}
-    .link-item-favicon{
-      width:28px;height:28px;border-radius:6px;
-      background:#162d4a;display:flex;align-items:center;
-      justify-content:center;font-size:13px;overflow:hidden;flex-shrink:0;
-    }
-    .link-item-favicon img{width:100%;height:100%;object-fit:cover;border-radius:6px}
-    .link-item-body{flex:1;min-width:0}
-    .link-item-host{
-      font-size:12.5px;font-weight:700;color:#e2eeff;
-      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-    }
-    .link-item-exp{
-      font-size:10px;color:#687a94;margin-top:2px;
-    }
-    .link-item-dot{
-      width:7px;height:7px;border-radius:50%;
-      background:#10b981;flex-shrink:0;
-    }
-    .link-item-dot.expiring{background:#f59e0b}
-    .empty-note{
-      font-size:12px;color:#2d4a6a;
-      text-align:center;padding:24px 0;
-      border:1px dashed #162d4a;border-radius:10px;
-    }
-
-    /* ── Refresh button ── */
-    .refresh-btn{
-      margin-top:14px;background:none;border:1px solid #162d4a;
-      border-radius:8px;color:#687a94;padding:7px 14px;
-      font-size:11px;cursor:pointer;transition:all .15s;
-      font-family:inherit;width:100%;
-    }
-    .refresh-btn:hover{border-color:#3b82f6;color:#e2eeff}
-
-    /* ── Mobile: single column ── */
-    @media(max-width:640px){
-      body{padding:20px 12px 40px}
-      .brand{margin-bottom:20px}
-      .console-hdr{padding:20px 20px 18px}
-      .console-body{grid-template-columns:1fr}
-      .form-panel{padding:22px 20px;border-right:none;border-bottom:1px solid #162d4a}
-      .links-panel{padding:22px 20px}
+    /* ── Mobile ── */
+    @media (max-width: 640px) {
+      body { padding: 16px 10px 48px; }
+      .brand { margin-bottom: 16px; }
+      .console-hdr { padding: 18px; }
+      .console-body { grid-template-columns: 1fr; }
+      .form-panel { border-right: none; border-bottom: 1px solid #162d4a; padding: 20px 18px; }
+      .links-panel { padding: 20px 18px; }
+      .act-btn { width: 32px; height: 32px; font-size: 14px; }
     }
   </style>
 </head>
@@ -199,149 +239,349 @@
 
 <div class="console">
 
-  <!-- Header -->
   <div class="console-hdr">
     <div class="console-icon">🔗</div>
-    <div class="console-hdr-text">
+    <div>
       <div class="console-title">Link Console</div>
-      <div class="console-sub">Post an external link to the public news feed.</div>
+      <div class="console-sub">Manage external links on the public news feed.</div>
     </div>
   </div>
 
-  <!-- Body: Form | Active Links -->
   <div class="console-body">
 
-    <!-- Form -->
+    <!-- Left: Post new link -->
     <div class="form-panel">
-      <label for="lnk-url">URL</label>
+      <label class="field-label" for="lnk-url">URL</label>
       <input type="url" id="lnk-url" placeholder="https://example.com/article"
              autocomplete="off" autocapitalize="none" spellcheck="false">
 
-      <label for="lnk-days">Visible for (days)</label>
+      <label class="field-label" for="lnk-days">Visible for (days)</label>
       <input type="number" id="lnk-days" placeholder="7" min="1" max="90" value="7">
 
-      <label for="lnk-pass">Password</label>
+      <label class="field-label" for="lnk-pass">Password</label>
       <input type="password" id="lnk-pass" placeholder="••••••••">
 
-      <button class="btn" id="lnk-btn">Post Link</button>
-      <div class="status" id="lnk-status"></div>
+      <button class="btn-primary" id="post-btn">Post New Link</button>
+      <div class="form-status" id="form-status"></div>
     </div>
 
-    <!-- Active Links -->
+    <!-- Right: Link manager -->
     <div class="links-panel">
-      <div class="links-panel-title">Active Links</div>
+      <div class="links-panel-hdr">
+        <div class="links-panel-title">Active Links</div>
+        <span class="count-badge" id="count-badge">—</span>
+        <span class="dirty-badge" id="dirty-badge">Unsaved</span>
+      </div>
+
       <div class="links-list" id="links-list">
         <div class="empty-note">Loading…</div>
       </div>
-      <button class="refresh-btn" id="refresh-btn" onclick="refreshList()">↻ Refresh</button>
+
+      <div class="save-row">
+        <button class="btn-save" id="save-btn" disabled>Save Changes</button>
+        <button class="btn-discard" id="discard-btn">Discard</button>
+      </div>
+      <div class="save-status" id="save-status"></div>
     </div>
 
-  </div><!-- /console-body -->
-</div><!-- /console -->
+  </div>
+</div>
 
 <script>
-  var WORKER = 'https://screener-proxy.vilfintv.workers.dev/api/post-link';
-  var LINKS_URL = 'https://vilfintv.com/links.json';
+'use strict';
 
-  // ── Submit ──────────────────────────────────────────────────────────────
-  document.getElementById('lnk-btn').addEventListener('click', async function() {
-    var url      = document.getElementById('lnk-url').value.trim();
-    var days     = parseInt(document.getElementById('lnk-days').value) || 0;
-    var password = document.getElementById('lnk-pass').value;
-    var btn      = this;
-    var status   = document.getElementById('lnk-status');
+var WORKER    = 'https://screener-proxy.vilfintv.workers.dev';
+var LINKS_URL = 'https://vilfintv.com/links.json';
 
-    status.className = 'status';
-    status.textContent = '';
+/* ── State ─────────────────────────────────────────────────────────────── */
+var linksState    = [];   // working copy
+var linksOriginal = [];   // last-saved snapshot for discard
+var isDirty       = false;
+var activeRenew   = -1;   // index of item whose renew row is open
 
-    if (!url)      return setErr('URL is required.');
-    if (!password) return setErr('Password is required.');
-    try { new URL(url); } catch(e) { return setErr('Invalid URL — must include https://'); }
-    if (days < 1 || days > 90) return setErr('Days must be between 1 and 90.');
+/* ── Init ──────────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+  loadLinks();
+  document.getElementById('post-btn').addEventListener('click', postNewLink);
+  document.getElementById('save-btn').addEventListener('click', saveChanges);
+  document.getElementById('discard-btn').addEventListener('click', discardChanges);
+  document.getElementById('links-list').addEventListener('click', handleListClick);
+});
 
-    btn.disabled    = true;
-    btn.textContent = 'Posting…';
+/* ── Load from server ──────────────────────────────────────────────────── */
+async function loadLinks() {
+  document.getElementById('links-list').innerHTML = '<div class="empty-note">Loading…</div>';
+  try {
+    var res  = await fetch(LINKS_URL + '?_=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+    if (!Array.isArray(data)) throw new Error('Unexpected format');
+    linksState    = data;
+    linksOriginal = deepCopy(data);
+    activeRenew   = -1;
+    clearDirty();
+    renderLinks();
+  } catch(e) {
+    document.getElementById('links-list').innerHTML =
+      '<div class="empty-note">Could not load links.json<br>'
+      + '<small style="opacity:.6">' + esc(e.message) + '</small></div>';
+  }
+}
 
-    try {
-      var res  = await fetch(WORKER, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ url, days, password }),
-      });
-      var data = await res.json();
+/* ── Render ─────────────────────────────────────────────────────────────── */
+function renderLinks() {
+  var listEl = document.getElementById('links-list');
+  var now    = new Date();
+  var total  = linksState.length;
 
-      if (res.ok && data.ok) {
-        status.className   = 'status ok';
-        status.textContent = '✓ Posted — expires ' +
-          new Date(data.expires_at).toLocaleDateString(undefined,
-            { month: 'short', day: 'numeric', year: 'numeric' });
-        document.getElementById('lnk-url').value  = '';
-        document.getElementById('lnk-pass').value = '';
-        setTimeout(refreshList, 1500);
-      } else {
-        setErr(data.message || ('Server error ' + res.status));
-      }
-    } catch(e) {
-      setErr('Network error: ' + e.message);
-    }
+  document.getElementById('count-badge').textContent =
+    total + ' link' + (total !== 1 ? 's' : '');
 
-    btn.disabled    = false;
-    btn.textContent = 'Post Link';
-
-    function setErr(msg) {
-      status.className   = 'status err';
-      status.textContent = msg;
-    }
-  });
-
-  // ── Active links list ────────────────────────────────────────────────────
-  async function refreshList() {
-    var listEl = document.getElementById('links-list');
-    listEl.innerHTML = '<div class="empty-note">Loading…</div>';
-    var now = new Date();
-    try {
-      var res  = await fetch(LINKS_URL + '?_=' + Date.now());
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      var all  = await res.json();
-      if (!Array.isArray(all)) throw new Error('Unexpected format');
-
-      var active = all.filter(function(l) {
-        return l && l.url && (!l.expires_at || new Date(l.expires_at) > now);
-      });
-
-      if (!active.length) {
-        listEl.innerHTML = '<div class="empty-note">No active links yet.</div>';
-        return;
-      }
-
-      listEl.innerHTML = '';
-      active.forEach(function(l) {
-        var host = '';
-        try { host = new URL(l.url).hostname.replace(/^www\./, ''); } catch(e) { host = l.url; }
-        var daysLeft = l.expires_at
-          ? Math.ceil((new Date(l.expires_at) - now) / 86400000)
-          : null;
-        var expLabel = daysLeft === null ? '–' : daysLeft <= 1 ? 'Expires today' : daysLeft + 'd left';
-        var dotClass = daysLeft !== null && daysLeft <= 2 ? 'link-item-dot expiring' : 'link-item-dot';
-        var favicon  = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(host) + '&sz=32';
-
-        var item = document.createElement('div');
-        item.className = 'link-item';
-        item.innerHTML =
-          '<div class="link-item-favicon"><img src="' + favicon + '" alt="" onerror="this.parentNode.innerHTML=\'🔗\'"></div>'
-          + '<div class="link-item-body">'
-            + '<div class="link-item-host">' + host + '</div>'
-            + '<div class="link-item-exp">⏱ ' + expLabel + '</div>'
-          + '</div>'
-          + '<div class="' + dotClass + '"></div>';
-        listEl.appendChild(item);
-      });
-    } catch(e) {
-      listEl.innerHTML = '<div class="empty-note">Could not load links.json<br><small style="opacity:.6">' + e.message + '</small></div>';
-    }
+  if (!total) {
+    listEl.innerHTML = '<div class="empty-note">No links yet. Add one on the left.</div>';
+    return;
   }
 
-  refreshList();
+  listEl.innerHTML = '';
+  linksState.forEach(function(link, idx) {
+    listEl.appendChild(buildItem(link, idx, total, now));
+  });
+}
+
+function buildItem(link, idx, total, now) {
+  var host = '';
+  try { host = new URL(link.url).hostname.replace(/^www\./, ''); }
+  catch(e) { host = link.url; }
+
+  var expiry   = link.expires_at ? new Date(link.expires_at) : null;
+  var daysLeft = expiry ? Math.ceil((expiry - now) / 86400000) : null;
+
+  var expCls  = 'link-exp';
+  var expText = '–';
+  if (daysLeft !== null) {
+    if      (daysLeft <= 0) { expCls += ' expired';  expText = 'Expired'; }
+    else if (daysLeft <= 2) { expCls += ' expiring'; expText = 'Expires today'; }
+    else                    { expText = daysLeft + ' days left'; }
+  }
+
+  var favicon     = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(host) + '&sz=32';
+  var isRenewOpen = (activeRenew === idx);
+
+  var el = document.createElement('div');
+  el.className  = 'link-item';
+  el.dataset.idx = idx;
+
+  el.innerHTML =
+    '<div class="link-item-main">'
+      + '<div class="link-favicon"><img src="' + esc(favicon) + '" alt="" onerror="this.parentNode.innerHTML=\'🔗\'"></div>'
+      + '<div class="link-body">'
+        + '<div class="link-host" title="' + esc(link.url) + '">' + esc(host) + '</div>'
+        + '<div class="' + expCls + '">⏱ ' + expText + '</div>'
+      + '</div>'
+      + '<div class="link-actions">'
+        + '<button class="act-btn"        data-action="up"     title="Move up"   ' + (idx === 0       ? 'disabled' : '') + '>↑</button>'
+        + '<button class="act-btn"        data-action="down"   title="Move down" ' + (idx === total-1  ? 'disabled' : '') + '>↓</button>'
+        + '<button class="act-btn' + (isRenewOpen ? ' active' : '') + '" data-action="renew-toggle" title="Renew (extend expiry)">↻</button>'
+        + '<button class="act-btn danger" data-action="delete" title="Delete">✕</button>'
+      + '</div>'
+    + '</div>'
+    + '<div class="renew-row' + (isRenewOpen ? ' open' : '') + '">'
+      + '<span class="renew-lbl">Add</span>'
+      + '<input type="number" class="renew-input-days" data-for="' + idx + '" value="7" min="1" max="90">'
+      + '<span class="renew-lbl">days to expiry</span>'
+      + '<button class="renew-ok-btn" data-action="renew-confirm">Confirm</button>'
+      + '<button class="renew-x-btn"  data-action="renew-cancel">Cancel</button>'
+    + '</div>';
+
+  return el;
+}
+
+/* ── Event delegation ────────────────────────────────────────────────────── */
+function handleListClick(e) {
+  var btn  = e.target.closest('[data-action]');
+  if (!btn) return;
+  var item = btn.closest('[data-idx]');
+  if (!item) return;
+  var idx    = parseInt(item.dataset.idx, 10);
+  var action = btn.dataset.action;
+
+  if      (action === 'up')           moveUp(idx);
+  else if (action === 'down')         moveDown(idx);
+  else if (action === 'renew-toggle') toggleRenew(idx);
+  else if (action === 'renew-confirm') applyRenew(idx, item);
+  else if (action === 'renew-cancel') closeRenew();
+  else if (action === 'delete')       deleteLink(idx, item);
+}
+
+/* ── Actions ─────────────────────────────────────────────────────────────── */
+function moveUp(idx) {
+  if (idx === 0) return;
+  swap(idx, idx - 1);
+  if (activeRenew === idx)     activeRenew = idx - 1;
+  else if (activeRenew === idx - 1) activeRenew = idx;
+  markDirty(); renderLinks();
+}
+
+function moveDown(idx) {
+  if (idx === linksState.length - 1) return;
+  swap(idx, idx + 1);
+  if (activeRenew === idx)     activeRenew = idx + 1;
+  else if (activeRenew === idx + 1) activeRenew = idx;
+  markDirty(); renderLinks();
+}
+
+function swap(a, b) {
+  var tmp = linksState[a];
+  linksState[a] = linksState[b];
+  linksState[b] = tmp;
+}
+
+function toggleRenew(idx) {
+  activeRenew = (activeRenew === idx) ? -1 : idx;
+  renderLinks();
+}
+
+function closeRenew() {
+  activeRenew = -1;
+  renderLinks();
+}
+
+function applyRenew(idx, itemEl) {
+  var input = itemEl.querySelector('.renew-input-days');
+  var days  = parseInt(input ? input.value : 7, 10);
+  if (!days || days < 1 || days > 90) return;
+
+  var link = linksState[idx];
+  var base = (link.expires_at && new Date(link.expires_at) > new Date())
+             ? new Date(link.expires_at) : new Date();
+  link.expires_at = new Date(base.getTime() + days * 86400000).toISOString();
+
+  activeRenew = -1;
+  markDirty();
+  renderLinks();
+}
+
+function deleteLink(idx, itemEl) {
+  itemEl.classList.add('is-deleting');
+  setTimeout(function() {
+    if (activeRenew === idx)      activeRenew = -1;
+    else if (activeRenew > idx)   activeRenew--;
+    linksState.splice(idx, 1);
+    markDirty();
+    renderLinks();
+  }, 200);
+}
+
+/* ── Dirty state ─────────────────────────────────────────────────────────── */
+function markDirty() {
+  isDirty = true;
+  document.getElementById('dirty-badge').style.display = 'block';
+  document.getElementById('save-btn').disabled = false;
+}
+
+function clearDirty() {
+  isDirty = false;
+  document.getElementById('dirty-badge').style.display = 'none';
+  document.getElementById('save-btn').disabled = true;
+}
+
+function discardChanges() {
+  linksState  = deepCopy(linksOriginal);
+  activeRenew = -1;
+  clearDirty();
+  hideSaveStatus();
+  renderLinks();
+}
+
+/* ── Save ────────────────────────────────────────────────────────────────── */
+async function saveChanges() {
+  var password = document.getElementById('lnk-pass').value;
+  if (!password) {
+    setSaveStatus('err', 'Enter your password in the field on the left first.');
+    return;
+  }
+  var btn = document.getElementById('save-btn');
+  btn.disabled    = true;
+  btn.textContent = 'Saving…';
+  hideSaveStatus();
+
+  try {
+    var res  = await fetch(WORKER + '/api/update-links', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ links: linksState, password: password }),
+    });
+    var data = await res.json();
+
+    if (res.ok && data.ok) {
+      linksOriginal = deepCopy(linksState);
+      clearDirty();
+      setSaveStatus('ok', '✓ Changes saved successfully.');
+    } else {
+      setSaveStatus('err', data.message || ('Server error ' + res.status));
+    }
+  } catch(e) {
+    setSaveStatus('err', 'Network error: ' + e.message);
+  }
+
+  btn.textContent = 'Save Changes';
+  btn.disabled    = !isDirty;
+}
+
+/* ── Post new link ──────────────────────────────────────────────────────── */
+async function postNewLink() {
+  var url      = document.getElementById('lnk-url').value.trim();
+  var days     = parseInt(document.getElementById('lnk-days').value, 10) || 0;
+  var password = document.getElementById('lnk-pass').value;
+  var btn      = document.getElementById('post-btn');
+
+  hideFormStatus();
+
+  if (!url)        return setFormStatus('err', 'URL is required.');
+  if (!password)   return setFormStatus('err', 'Password is required.');
+  try { new URL(url); } catch(e) { return setFormStatus('err', 'Invalid URL — must start with https://'); }
+  if (days < 1 || days > 90) return setFormStatus('err', 'Days must be between 1 and 90.');
+
+  btn.disabled    = true;
+  btn.textContent = 'Posting…';
+
+  try {
+    var res  = await fetch(WORKER + '/api/post-link', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ url: url, days: days, password: password }),
+    });
+    var data = await res.json();
+
+    if (res.ok && data.ok) {
+      setFormStatus('ok', '✓ Posted — expires '
+        + new Date(data.expires_at).toLocaleDateString(undefined,
+            { month: 'short', day: 'numeric', year: 'numeric' }));
+      document.getElementById('lnk-url').value = '';
+      await loadLinks();   // reload fresh list; clears any unsaved management changes
+    } else {
+      setFormStatus('err', data.message || ('Server error ' + res.status));
+    }
+  } catch(e) {
+    setFormStatus('err', 'Network error: ' + e.message);
+  }
+
+  btn.disabled    = false;
+  btn.textContent = 'Post New Link';
+}
+
+/* ── Status helpers ─────────────────────────────────────────────────────── */
+function setFormStatus(type, msg)  { var el = document.getElementById('form-status'); el.className = 'form-status ' + type; el.textContent = msg; }
+function hideFormStatus()          { document.getElementById('form-status').className = 'form-status'; }
+function setSaveStatus(type, msg)  { var el = document.getElementById('save-status'); el.className = 'save-status ' + type; el.textContent = msg; }
+function hideSaveStatus()          { document.getElementById('save-status').className = 'save-status'; }
+
+/* ── Utilities ──────────────────────────────────────────────────────────── */
+function deepCopy(v) { return JSON.parse(JSON.stringify(v)); }
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                  .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 </script>
 </body>
 </html>

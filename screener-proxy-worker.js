@@ -207,6 +207,96 @@ export default {
       );
     }
 
+    // ── /api/update-links  POST — replace entire links.json via GitHub API ──────
+    if (pathname === '/api/update-links') {
+      if (request.method !== 'POST') {
+        return jsonError(405, 'Method not allowed. Use POST for /api/update-links.');
+      }
+
+      let body;
+      try { body = await request.json(); } catch (_) { return jsonError(400, 'Invalid JSON body.'); }
+
+      const { links, password } = body || {};
+
+      if (!env || !env.LINK_CONSOLE_PASSWORD) {
+        return jsonError(503, 'Link console not configured. Set LINK_CONSOLE_PASSWORD in Worker environment.');
+      }
+      if (!password || password !== env.LINK_CONSOLE_PASSWORD) {
+        return jsonError(401, 'Unauthorized.');
+      }
+      if (!Array.isArray(links)) {
+        return jsonError(400, 'links must be an array.');
+      }
+      for (const link of links) {
+        if (!link || typeof link.url !== 'string') {
+          return jsonError(400, 'Each link must have a url string.');
+        }
+        try { new URL(link.url); } catch (_) {
+          return jsonError(400, `Invalid URL in links: ${String(link.url).slice(0, 60)}`);
+        }
+      }
+      if (!env || !env.GITHUB_TOKEN) {
+        return jsonError(503, 'GitHub integration not configured. Set GITHUB_TOKEN in Worker environment.');
+      }
+
+      const REPO      = 'Vilfin-TV/MultiScreener';
+      const FILE_PATH = 'links.json';
+      const BRANCH    = 'main';
+      const GH_API    = `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`;
+      const GH_HEADERS = {
+        'Authorization': `token ${env.GITHUB_TOKEN}`,
+        'Accept':        'application/vnd.github.v3+json',
+        'User-Agent':    'vilfintv-screener-proxy',
+        'Content-Type':  'application/json',
+      };
+
+      // 1. GET current sha (required for the PUT)
+      let sha = null;
+      try {
+        const ghGet = await fetch(`${GH_API}?ref=${BRANCH}`, { headers: GH_HEADERS });
+        if (ghGet.ok) {
+          sha = (await ghGet.json()).sha;
+        } else if (ghGet.status !== 404) {
+          const err = await ghGet.text();
+          return jsonError(502, `GitHub GET failed: HTTP ${ghGet.status}`, { detail: err.slice(0, 200) });
+        }
+      } catch (err) {
+        return jsonError(502, `GitHub GET error: ${err.message}`);
+      }
+
+      // 2. Strip to known fields only, then PUT
+      const cleanLinks = links.map(l => Object.assign(
+        { url: l.url },
+        l.expires_at ? { expires_at: l.expires_at } : {}
+      ));
+
+      const putPayload = {
+        message: 'chore(links): update via management console',
+        content: btoa(JSON.stringify(cleanLinks, null, 2)),
+        branch:  BRANCH,
+      };
+      if (sha) putPayload.sha = sha;
+
+      try {
+        const ghPut = await fetch(GH_API, {
+          method:  'PUT',
+          headers: GH_HEADERS,
+          body:    JSON.stringify(putPayload),
+        });
+        if (!ghPut.ok) {
+          const err = await ghPut.text();
+          return jsonError(502, `GitHub PUT failed: HTTP ${ghPut.status}`, { detail: err.slice(0, 200) });
+        }
+      } catch (err) {
+        return jsonError(502, `GitHub PUT error: ${err.message}`);
+      }
+
+      return new Response(
+        JSON.stringify({ ok: true, message: 'Links updated successfully.' }),
+        { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // ── Only allow GET for all other routes ──────────────────────────────────
     if (request.method !== 'GET') {
       return jsonError(405, 'Method not allowed. Use GET.');
