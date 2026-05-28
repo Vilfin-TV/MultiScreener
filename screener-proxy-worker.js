@@ -145,7 +145,7 @@ export default {
       let body;
       try { body = await request.json(); } catch (_) { return jsonError(400, 'Invalid JSON body.'); }
 
-      const { url, days } = body || {};
+      const { url, days, name, description } = body || {};
 
       const auth = await requireAuth(request, env);
       if (auth.error) return auth.error;
@@ -196,7 +196,10 @@ export default {
       const now       = new Date();
       const expiresAt = new Date(now.getTime() + daysInt * 86400000).toISOString();
       links = links.filter(l => l && l.expires_at && new Date(l.expires_at) > now);
-      links.push({ url, expires_at: expiresAt });
+      const newLink = { url, expires_at: expiresAt };
+      if (name && typeof name === 'string' && name.trim()) newLink.name = name.trim().slice(0, 80);
+      if (description && typeof description === 'string' && description.trim()) newLink.description = description.trim().slice(0, 160);
+      links.push(newLink);
 
       // 3. PUT updated file back to GitHub
       const putPayload = {
@@ -280,11 +283,14 @@ export default {
         return jsonError(502, `GitHub GET error: ${err.message}`);
       }
 
-      // 2. Strip to known fields only, then PUT
-      const cleanLinks = links.map(l => Object.assign(
-        { url: l.url },
-        l.expires_at ? { expires_at: l.expires_at } : {}
-      ));
+      // 2. Strip to known fields only (preserve name + description), then PUT
+      const cleanLinks = links.map(l => {
+        const out = { url: l.url };
+        if (l.expires_at) out.expires_at = l.expires_at;
+        if (l.name && typeof l.name === 'string') out.name = l.name.slice(0, 80);
+        if (l.description && typeof l.description === 'string') out.description = l.description.slice(0, 160);
+        return out;
+      });
 
       const putPayload = {
         message: 'chore(links): update via management console',

@@ -1094,6 +1094,10 @@ body{
   font-size:11px;color:var(--text3);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
+.ext-link-desc{
+  font-size:11.5px;color:var(--text3);line-height:1.45;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
 .ext-link-expires{
   font-size:10px;color:var(--text3);background:rgba(255,255,255,.05);
   border-radius:20px;padding:2px 8px;margin-top:5px;display:inline-block;
@@ -3367,6 +3371,9 @@ function renderExternalLinksSection(links, container) {
     var host = '';
     try { host = new URL(link.url).hostname.replace(/^www\./, ''); } catch(e) { host = link.url; }
 
+    var displayName = (link.name && link.name.trim()) ? link.name.trim() : host;
+    var displayDesc = (link.description && link.description.trim()) ? link.description.trim() : '';
+
     var daysLeft = '';
     if (link.expires_at) {
       var diff = Math.ceil((new Date(link.expires_at) - Date.now()) / 86400000);
@@ -3384,8 +3391,8 @@ function renderExternalLinksSection(links, container) {
     card.innerHTML =
       '<div class="ext-link-favicon"><img src="' + faviconUrl + '" alt="" onerror="this.parentNode.innerHTML=\'🔗\'"></div>'
       + '<div class="ext-link-body">'
-        + '<div class="ext-link-host">' + host + '</div>'
-        + '<div class="ext-link-url">' + link.url + '</div>'
+        + '<div class="ext-link-host">' + displayName + '</div>'
+        + (displayDesc ? '<div class="ext-link-desc">' + displayDesc + '</div>' : '<div class="ext-link-url">' + host + '</div>')
         + (daysLeft ? '<span class="ext-link-expires">⏱ ' + daysLeft + '</span>' : '')
       + '</div>'
       + '<span class="ext-link-btn">Visit ↗</span>';

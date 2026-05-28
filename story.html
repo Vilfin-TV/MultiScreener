@@ -683,11 +683,15 @@ body{
   border:1px solid var(--border2);
   box-shadow:0 4px 16px rgba(0,0,0,0.3);
   background:var(--dark);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:200px;
 }
 .story-visual-img{
-  width:100%;
+  max-width:100%;
   height:auto;
-  max-height:480px;
+  max-height:380px;
   object-fit:contain;
   background:var(--dark,#060f1c);
   display:block;
@@ -719,6 +723,47 @@ body{
   line-height:1.65;
   color:var(--text);
   font-style:italic;
+}
+
+/* Modal Pagination Bar Styling */
+.modal-pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border,#162d4a);
+  gap: 12px;
+}
+.page-nav-btn {
+  background: var(--card2,#0e1f3b);
+  border: 1px solid var(--border2,#1e3a5c);
+  color: var(--text,#e2eeff);
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s ease;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}
+.page-nav-btn:hover:not(:disabled) {
+  background: var(--burn,#2563eb);
+  border-color: var(--burn2,#3b82f6);
+  color: #fff;
+  transform: translateY(-1px);
+}
+.page-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.page-progress-indicator {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text2,#8ea8c8);
+  letter-spacing: 0.5px;
 }
 
 /* Interactive Animation / SVGs Concept Visualizer */
@@ -952,15 +997,19 @@ footer.story-footer{
 <nav class="top-menubar" id="top-menubar">
   <div class="nav-inner">
     <div class="nav-brand-group">
-      <a href="https://vilfintv.com" class="nav-home-link" title="Back to VilfinTV Dashboard" style="margin-right:6px">
+      <a href="index.html" class="nav-home-link" title="Back to MultiScreener Dashboard" style="margin-right:6px">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        Back
+        Dashboard
       </a>
-      <a href="https://vilfintv.com/news.html" class="nav-home-link" title="News">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <a href="news.html" class="nav-home-link" title="News" style="margin-right:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10l4 4v12a2 2 0 0 1-2 2z"/><path d="M12 11h3"/><path d="M12 15h3"/><path d="M9 11h.01"/><path d="M9 15h.01"/></svg>
         News
       </a>
-      <div class="nav-brand">
+      <a href="education.html" class="nav-home-link" title="Academy">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2.5 3 6 3s6-1 6-3v-5"/></svg>
+        Academy
+      </a>
+      <div class="nav-brand" style="margin-left:12px">
         <span class="brand-dot"></span>
         <span class="brand-name">VilfinTV <span class="brand-story-tag">STORIES</span></span>
       </div>
@@ -1064,6 +1113,7 @@ footer.story-footer{
       <ul class="footer-links">
         <li><a href="index.html">&#x1F4CA; MultiScreener Dashboard</a></li>
         <li><a href="news.html">&#x1F4FA; VilfinTV News</a></li>
+        <li><a href="education.html">&#x1F393; VilfinTV Academy</a></li>
         <li><a href="blog_intelligence_hub.html" target="_blank">&#x1F4F0; Blog Intelligence Hub</a></li>
         <li><a href="user_manual.html" target="_blank">&#x1F4D6; User Manual</a></li>
       </ul>
@@ -1170,15 +1220,23 @@ STORY_DATA.triller = [
         teaser: 'A little girl misses her train, but finds a friendly star-lit train that takes her home and teaches her a wonderful lesson.',
         source: 'Triller Kids',
         body: [
-          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1532103054090-334e6e60ab29?w=600&q=80" alt="Magic Train" class="story-visual-img"/></div>',
-          '<p class="story-lead">Clang, clang! The big station clock chimed twelve times. It was midnight! Maya sat all by herself on the bench. She was sad because she had missed her regular train home.</p>',
-          '<p>Just then, a beautiful train painted in dark blue and gold stopped in front of her. The doors opened with a soft whoosh. Inside sat a kind old man with a shiny gold book. "Hop on, little adventurer!" he said with a smile. "This is the Magic Start-Over Train."</p>',
-          '<p>The train tracks were made of starlight, and the train flew softly through the night sky. The old man let Maya draw in his book, showing her that a blank page can become any drawing she wanted. "If something goes wrong today," the old man told her, "tomorrow is a fresh blank page to draw a happy new story."</p>',
-          '<p>When the train landed at her station, Maya felt happy and full of courage. She turned to say goodbye, but the magic train had flown back into the stars.</p>',
-          '<div class="story-lesson-box">',
-          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
-          '  <div class="story-lesson-text">Sometimes, when things don\'t go as planned, it\'s just a chance to start a new and even more exciting adventure! Don\'t be afraid to try again.</div>',
-          '</div>'
+          [
+            '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1532103054090-334e6e60ab29?w=600&q=80" alt="Magic Train" class="story-visual-img"/></div>',
+            '<p class="story-lead">Clang, clang! The big station clock chimed twelve times. It was midnight! Maya sat all by herself on the bench. She was sad because she had missed her regular train home.</p>',
+            '<p>She looked around the quiet, dark station and sighed. Just then, a beautiful train painted in dark blue and gold stopped in front of her. The doors opened with a soft whoosh, revealing warm golden light inside.</p>'
+          ],
+          [
+            '<p class="story-lead">Maya stepped inside. Sitting near the window was a kind old man with a long white beard and a shiny gold book. "Hop on, little adventurer!" he said with a warm smile. "This is the Magic Start-Over Train."</p>',
+            '<p>As Maya sat down, the train didn\'t roll on metal tracks. Instead, it grew wings of starlight and soared softly into the clear night sky, flying past fluffy clouds and smiling stars!</p>'
+          ],
+          [
+            '<p class="story-lead">The old man opened his golden book. Every page was blank! He handed Maya a crayon and said: "If something went wrong today, tomorrow is a fresh blank page to draw a happy new story. You are the artist of your dreams."</p>',
+            '<p>When the magic train landed at Maya\'s station, she felt happy and full of courage. She turned to say goodbye, but the starlight train had already flown back into the sky, leaving her with a warm smile.</p>',
+            '<div class="story-lesson-box">',
+            '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+            '  <div class="story-lesson-text">Sometimes, when things don\'t go as planned, it\'s just a chance to start a new and even more exciting adventure! Don\'t be afraid to try again.</div>',
+            '</div>'
+          ]
         ]
       },
       general: {
@@ -1186,15 +1244,18 @@ STORY_DATA.triller = [
         teaser: 'When the final train of the night pulls into the station, a lone passenger discovers an unexpected connection that changes everything.',
         source: 'Triller Originals',
         body: [
-          '<p class="story-lead">The station clock struck midnight as the last train of the evening pulled into Platform 3. Maya had missed the earlier connection by three minutes, and now she was the only passenger waiting in the cavernous hall.</p>',
-          '<p>As the train doors hissed open, she stepped inside and found only one other passenger — an elderly man in a worn trench coat, holding a leather-bound journal. He looked up and smiled, the kind of knowing smile that suggested he had been expecting her.</p>',
-          '<p>"Going home?" he asked, his voice gravelly but kind. Maya nodded, unsure why she felt compelled to engage. "Funny thing about home," he continued, "it is never quite where you left it."</p>',
-          '<ul class="story-bullets">',
-          '  <li>The man reveals he has ridden this train for forty years, collecting stories from passengers.</li>',
-          '  <li>Maya reluctantly shares her own story — a career in tatters, a relationship ended, a city that no longer felt like her own.</li>',
-          '  <li>He listens without judgment, then offers her a blank page from his journal: "Write the next chapter. Not the one you are running from."</li>',
-          '</ul>',
-          '<p>When the train reached her station, Maya stepped off with something she had not felt in months: hope. She turned to thank the old man, but the carriage was empty. On the seat lay the blank page, and on it was a single word written in fresh ink: <strong>Begin.</strong></p>'
+          [
+            '<p class="story-lead">The station clock struck midnight as the last train of the evening pulled into Platform 3. Maya had missed the earlier connection by three minutes, and now she was the only passenger waiting in the cavernous, drafty hall.</p>',
+            '<p>As the heavy train doors hissed open, she stepped inside the empty carriage. Sitting at the far end was an elderly man in a worn trench coat, holding a leather-bound journal. He looked up and smiled, the kind of knowing smile that suggested he had been expecting her all along.</p>'
+          ],
+          [
+            '<p class="story-lead">"Going home?" the old man asked, his voice gravelly but kind. Maya nodded reluctantly, sitting across from him. "Funny thing about home," he continued, "it is never quite where you left it."</p>',
+            '<p>He revealed he had ridden this line for forty years, collecting stories of passengers. With nothing left to lose, Maya shared her own burden: a career in ruins, a broken relationship, and a city that no longer felt like her own.</p>'
+          ],
+          [
+            '<p class="story-lead">The old man listened in silence, then flipped to a clean page in his journal, tore it out, and offered it to her: "Write the next chapter. Write the one you are heading toward, not the one you are running from."</p>',
+            '<p>When the train finally reached Maya\'s stop, she stepped onto the platform with hope. She turned to thank the old traveler, but the carriage was entirely empty. On the seat lay the blank page, and on it was a single word written in fresh ink: <strong>Begin.</strong></p>'
+          ]
         ]
       },
       expert: {
@@ -1202,14 +1263,18 @@ STORY_DATA.triller = [
         teaser: 'A critical structural analysis of transitional spaces, seeking behaviors, and the archetype of the mentor in modern short fiction.',
         source: 'Narrative Research Journal',
         body: [
-          '<p class="story-lead">Maya\'s midnight transit serves as a classic liminal space—a physical and psychological threshold where the protagonist is stripped of familiar structures and forced into self-reflective dialogue.</p>',
-          '<p>The introduction of the elderly mentor in liminal space acts as an externalization of Maya\'s subconscious seeking behavior. The journal is not merely a prop but a semiotic symbol of the unwritten future, contrasting with her fixation on past failures.</p>',
-          '<ul class="story-bullets">',
-          '  <li><strong>Liminality:</strong> The train operates outside ordinary temporal constraints, facilitating an accelerated psychological shift in the passenger.</li>',
-          '  <li><strong>Archetypal Mentor:</strong> The chronicler represents the Jungian "Wise Old Man" who does not solve the hero\'s crisis but provides the agency (the blank page) to resolve it.</li>',
-          '  <li><strong>Catharsis:</strong> The vanishing of the mentor reinforces that the encounter was internal, leaving behind a tangible anchor (the text "Begin") that bridges the psychological breakthrough to reality.</li>',
-          '</ul>',
-          '<p>Ultimately, the story demonstrates how transitional spaces can be leveraged in narrative structure to evoke a deep psychological pivot in the protagonist, converting passive escaping into active beginning.</p>'
+          [
+            '<p class="story-lead">Maya\'s midnight transit serves as a classic liminal space—a physical and temporal threshold where the protagonist is stripped of familiar structures and forced into self-reflective dialogue.</p>',
+            '<p>The introduction of the elderly mentor in liminal space acts as an externalization of Maya\'s subconscious seeking behavior. The journal is not merely a prop but a semiotic symbol of the unwritten future, contrasting with her fixation on past failures.</p>'
+          ],
+          [
+            '<p class="story-lead">Liminality operates outside ordinary temporal constraints, facilitating an accelerated psychological shift in the passenger. The train carriage functions as a therapeutic chamber, isolating the ego from external noise.</p>',
+            '<p>The chronicler represents the Jungian "Wise Old Man" who does not solve the hero\'s crisis but provides the agency (the blank page) to resolve it, forcing the hero to take responsibility for narrative progression.</p>'
+          ],
+          [
+            '<p class="story-lead">The vanishing of the mentor reinforces that the encounter was internal, leaving behind a tangible anchor (the text "Begin") that bridges the psychological breakthrough to reality.</p>',
+            '<p>Ultimately, the story demonstrates how transitional spaces can be leveraged in narrative structure to evoke a deep psychological pivot in the protagonist, converting passive escaping into active beginning.</p>'
+          ]
         ]
       }
     }
@@ -1225,14 +1290,23 @@ STORY_DATA.triller = [
         teaser: 'A friendly photographer finds a magical chest in the rain that holds a happy secret about an old-time dancer.',
         source: 'Triller Kids',
         body: [
-          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&q=80" alt="Rainy Alley" class="story-visual-img"/></div>',
-          '<p class="story-lead">Splash! Danny loved taking pictures of the shiny wet streets in the rain. One evening, he walked down a quiet alleyway and saw a beautiful light dancing on the wall.</p>',
-          '<p>When he looked closer, he saw a glowing wooden chest hidden beneath a loose board. Inside the chest was a beautiful red dress and a glowing music box. When he wound the music box up, a sweet song played, and he saw a friendly shadow dancing happily in the puddles.</p>',
-          '<p>Danny realized the dancing shadow was Clara, a famous dancer who had lived in the building a long time ago. She loved dancing in the rain, and the chest held all her happy memories.</p>',
-          '<div class="story-lesson-box">',
-          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
-          '  <div class="story-lesson-text">Art, music, and happy memories never vanish. They stay in the world to bring joy and smiles to people many years later!</div>',
-          '</div>'
+          [
+            '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&q=80" alt="Rainy Alley" class="story-visual-img"/></div>',
+            '<p class="story-lead">Splash, splash! Danny loved walking in the warm summer rain. He wore shiny yellow boots and carried a small camera. He loved taking pictures of wet streets that looked like glowing mirrors.</p>',
+            '<p>One evening, as he walked past a quiet, dark alley, he saw a beautiful glowing light dancing on the brick wall. It looked like a dancing fairy!</p>'
+          ],
+          [
+            '<p class="story-lead">Danny slowly walked into the alley. Beneath a loose wooden board, he found a hidden, dusty chest. Inside was a beautiful red dress and a golden music box.</p>',
+            '<p>When he wound up the music box, a sweet, happy song played. Suddenly, a friendly, glowing shadow of a girl appeared, dancing happily in the puddles!</p>'
+          ],
+          [
+            '<p class="story-lead">Danny took a picture of the dancing shadow, and she waved to him with a happy smile before disappearing back into the music box.</p>',
+            '<p>He learned that her name was Clara, a famous dancer from the past who loved the rain. Now, Clara's happy memory will stay in Danny's picture forever!</p>',
+            '<div class="story-lesson-box">',
+            '  <div class="story-lesson-title">💡 Today's Lesson</div>',
+            '  <div class="story-lesson-text">Beautiful music and happy memories never really disappear. They stay in the world to bring smiles to people many years later!</div>',
+            '</div>'
+          ]
         ]
       },
       general: {
@@ -1240,28 +1314,37 @@ STORY_DATA.triller = [
         teaser: 'A photographer chasing the perfect shot stumbles into a rain-drenched alley where the past refuses to stay buried.',
         source: 'Triller Originals',
         body: [
-          '<p class="story-lead">The rain came down in sheets, blurring the neon signs of the old district into smears of pink and blue. Daniel raised his camera, framing the narrow alley that wound between two decaying apartment blocks.</p>',
-          '<p>Through the viewfinder, he saw her: a woman in a red dress, standing perfectly still at the far end of the alley. But she was not there when he lowered the camera.</p>',
-          '<ul class="story-bullets">',
-          '  <li>Daniel reviews his photos — the woman is in every frame, her face never quite in focus.</li>',
-          '  <li>He researches the building and discovers that in 1947, a young dancer named Clara vanished from the same alley on a rainy night.</li>',
-          '  <li>The demolition crew arrives the next morning. Daniel races to the site and finds a locked wooden chest buried beneath the floorboards.</li>',
-          '</ul>',
-          '<p>Inside the chest were photographs, letters, and a red silk dress, perfectly preserved. The last letter was addressed to a photographer — someone Clara had been waiting for, all this time, to tell her story.</p>'
+          [
+            '<p class="story-lead">The rain came down in sheets, blurring the neon signs of the old district into smears of pink and blue. Daniel raised his camera, framing the narrow alley that wound between two decaying apartment blocks.</p>',
+            '<p>Through the viewfinder, he saw her: a woman in a bright red dress, standing perfectly still at the far end of the alley, letting the rain wash over her.</p>'
+          ],
+          [
+            '<p class="story-lead">But when Daniel lowered the camera, the alley was completely empty. He checked his digital display—the woman in red was clearly visible in the photograph, though her face remained blurred.</p>',
+            '<p>Compelled by curiosity, he researched the municipal archives. He discovered that in 1947, a young stage dancer named Clara had lived in that very building and vanished on a rainy night.</p>'
+          ],
+          [
+            '<p class="story-lead">With the building scheduled for demolition the next morning, Daniel slipped inside. Beneath the floorboards of Clara's old apartment, he found a locked chest containing her diary and letters.</p>',
+            '<p>The final entry was a letter addressed to "the photographer who would find her." Clara had left her archive to ensure her art and story would be remembered by the city she loved.</p>'
+          ]
         ]
       },
       expert: {
-        headline: 'Phantasmagoria and Photography: Clara\'s Echoes in Post-War Urbanity',
-        teaser: 'An analytical review of photographic mediumship, memory preservation, and Clara\'s spatial lingering in pre-demolition architecture.',
+        headline: 'Phantasmagoria and Photography: Clara's Echoes in Post-War Urbanity',
+        teaser: 'An analytical review of photographic mediumship, memory preservation, and Clara's spatial lingering in pre-demolition architecture.',
         source: 'Visual Studies Quarterly',
         body: [
-          '<p class="story-lead">Daniel\'s lens captures a classic manifestation of haunted architecture—what theorists call spatial memory lingering. Clara, the dancer of 1947, acts as a visual haunting that can only be developed or observed through mechanical reproduction (the camera sensor).</p>',
-          '<p>This narrative explores the tension between urban decay (gentrification and demolition) and historic preservation. The physical demolition of the apartment blocks triggers the release of the artifact (the wooden chest), forcing the buried history into the light.</p>',
-          '<ul class="story-bullets">',
-          '  <li><strong>Technological Mediumship:</strong> The camera acts as a translation layer between different temporal planes, rendering the ghost visible.</li>',
-          '  <li><strong>Artifact Preservation:</strong> The red dress and personal letters serve as historical material anchors, resolving Clara\'s narrative tension.</li>',
-          '</ul>',
-          '<p>The story illustrates how photographic art serves as a record not just of physical structures, but of the emotional and human histories embedded within those spaces before they are erased by modernization.</p>'
+          [
+            '<p class="story-lead">Daniel's photographic encounter operates as a classic liminal intersection, wherein the camera sensor acts as a medium that translates spatial-temporal memory traces into visual artifacts.</p>',
+            '<p>Clara's manifestation represents "spatial lingering," a phenomenon where high-emotion events imprint upon the physical architecture of a space, surviving long after the original subjects have departed.</p>'
+          ],
+          [
+            '<p class="story-lead">The imminent demolition of the apartment complex serves as a catalyst, threatening to erase the physical coordinates of this historical memory and forcing the artifact (the archive) to emerge.</p>',
+            '<p>Daniel's discovery of the wooden chest functions as a crucial "archival recovery," shifting Clara's story from a haunting spatial loop into a stable, recorded historical narrative.</p>'
+          ],
+          [
+            '<p class="story-lead">This transition proves that photographic technology does not merely reproduce reality, but acts as a dynamic bridge across temporal planes, rescuing lost human histories from systemic erasure.</p>',
+            '<p>Ultimately, the text demonstrates that the preservation of personal narratives is essential to counter the sterile gentrification and rapid physical restructuring of modern urban spaces.</p>'
+          ]
         ]
       }
     }
@@ -1277,14 +1360,23 @@ STORY_DATA.triller = [
         teaser: 'A retired detective uses clues to help an old friend find a lost bank box, learning that truth is always the best path.',
         source: 'Triller Kids',
         body: [
-          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1509248961158-e54f6934749c?w=600&q=80" alt="Detective" class="story-visual-img"/></div>',
-          '<p class="story-lead">Detective Roy had a big magnifying glass and a cozy office. He hadn\'t solved a mystery in a long time. But one sunny day, he received a letter with an old picture of a building.</p>',
-          '<p>The building was a very old bank. Roy followed the clues, looking at old books in the library and asking his friends for help. He discovered that a kind old man who lived nearby was the one who took the picture.</p>',
-          '<p>The old man had hidden a box of toys and old coins to keep them safe, and Roy helped him find it! Everyone clapped and cheered for Roy\'s great detective work.</p>',
-          '<div class="story-lesson-box">',
-          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
-          '  <div class="story-lesson-text">Using your mind to solve puzzles and help others is a wonderful way to be a hero in your neighborhood! Always seek the truth.</div>',
-          '</div>'
+          [
+            '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1509248961158-e54f6934749c?w=600&q=80" alt="Detective" class="story-visual-img"/></div>',
+            '<p class="story-lead">Detective Roy was a very wise man with a big magnifying glass and a cozy office. He loved solving puzzles and helping people in his neighborhood find lost things.</p>',
+            '<p>One sunny morning, a letter arrived at his door. Inside was an old picture of a beautiful brick building. "Help me find what was hidden here," the letter read.</p>'
+          ],
+          [
+            '<p class="story-lead">Roy looked closely at the picture. He noticed the building was a very old bank that had been replaced by a playground. He packed his bag and walked over to investigate.</p>',
+            '<p>He looked behind the old oak tree and checked the library books. Roy discovered that a kind old man named Mr. Green had hidden a box of old toys there long ago.</p>'
+          ],
+          [
+            '<p class="story-lead">With the help of the children playing nearby, Roy found the shiny metal box buried under a soft patch of grass. Inside were lovely old coins and toy soldiers!</p>',
+            '<p>Mr. Green was so happy to see his childhood toys again. He thanked Roy and shared the coins with the helpful children, who cheered for the clever detective.</p>',
+            '<div class="story-lesson-box">',
+            '  <div class="story-lesson-title">💡 Today's Lesson</div>',
+            '  <div class="story-lesson-text">Using your mind to solve puzzles and help others is a wonderful way to be a hero in your community! Always tell the truth and share with others!</div>',
+            '</div>'
+          ]
         ]
       },
       general: {
@@ -1292,28 +1384,37 @@ STORY_DATA.triller = [
         teaser: 'In a city that never sleeps, a washed-up detective takes on one last case that may either redeem or destroy him.',
         source: 'Triller Originals',
         body: [
-          '<p class="story-lead">Detective Roy Callahan had not taken a case in three years. But when a mysterious envelope arrived at his door containing a single photograph and a thousand-dollar retainer, curiosity got the better of him.</p>',
-          '<p>The photograph showed a man he did not recognize, standing in front of a building that no longer existed. On the back was written: "The truth has a price. Are you willing to pay it?"</p>',
-          '<ul class="story-bullets">',
-          '  <li>Roy traces the building to a demolished bank where a legendary heist took place in 1982.</li>',
-          '  <li>He discovers the man in the photo is the only suspect who was never found.</li>',
-          '  <li>Following old newspaper clippings, Roy finds the suspect living quietly under an alias in a retirement home.</li>',
-          '</ul>',
-          '<p>The final twist: the suspect was never the thief. He was the whistleblower who tried to expose the real criminals. Roy must decide whether to let the truth die or risk everything to set the record straight.</p>'
+          [
+            '<p class="story-lead">Detective Roy Callahan had not taken a case in three years. His office was dusty, and his repute was tarnished. But when an envelope containing a thousand-dollar retainer arrived, he couldn't ignore it.</p>',
+            '<p>Inside was a single photograph of a man standing in front of the municipal bank. On the back was a cryptic message: "The truth has a price. Are you willing to pay it?"</p>'
+          ],
+          [
+            '<p class="story-lead">Roy traced the building in the photograph to a bank that had been demolished in 1982 following a legendary heist. He researched the archives, seeking the identity of the mysterious man.</p>',
+            '<p>He discovered the man was Arthur Vance, the bank's head clerk, who was accused of the robbery and vanished shortly after the heist, labeled a fugitive.</p>'
+          ],
+          [
+            '<p class="story-lead">Following a trail of old newspaper listings, Roy located Vance living quietly under an alias in a retirement home. Vance revealed the heist was a cover-up by corrupt city officials.</p>',
+            '<p>Roy now faced a dangerous choice: publish the evidence and clear Vance's name at great personal risk, or destroy the files and let the historical lie remain. He chose justice.</p>'
+          ]
         ]
       },
       expert: {
         headline: 'Systemic Corruption and Whistleblower Protection: The 1982 Legacy',
-        teaser: 'A legal and investigative deep-dive into Callahan\'s pursuit of corporate accountability and retrofitted justice.',
+        teaser: 'A legal and investigative deep-dive into Callahan's pursuit of corporate accountability and retrofitted justice.',
         source: 'Legal Criminology Review',
         body: [
-          '<p class="story-lead">Roy Callahan\'s final investigation highlights the structural failures of municipal law enforcement during the late 20th century, particularly regarding financial crime and institutional whistleblowing.</p>',
-          '<p>The suspect, living under an alias, represents the precarious existence of whistleblowers who lack legislative protection. His self-imposed exile was a necessary survival strategy in a system where corporate actors controlled regulatory organs.</p>',
-          '<ul class="story-bullets">',
-          '  <li><strong>Systemic Failures:</strong> The 1982 heist was actually an inside cover-up to hide corporate embezzlement, framed as an external bank robbery.</li>',
-          '  <li><strong>Investigative Ethics:</strong> Callahan faces the dilemma of exposing historical truth at the cost of the witness\'s immediate safety.</li>',
-          '</ul>',
-          '<p>This case study illustrates that justice is frequently retrofitted, requiring independent investigative journalists or retired detectives to dig through historical files to correct the public record.</p>'
+          [
+            '<p class="story-lead">Callahan's investigation into the 1982 municipal bank heist serves as a critical case study in institutional corruption and the systemic failures of whistleblower protection.</p>',
+            '<p>The label of "fugitive" applied to Arthur Vance was a deliberate framing tactic used by corporate actors and complicit law enforcement to discredit his attempt to expose embezzlement.</p>'
+          ],
+          [
+            '<p class="story-lead">The absence of legislative safeguards in the late 20th century forced whistleblowers to adopt extreme survival strategies, including identity alteration and complete social withdrawal.</p>',
+            '<p>Callahan's archival research highlights the importance of "retrofitted justice," where independent investigators correct the public record long after the statue of limitations has expired.</p>'
+          ],
+          [
+            '<p class="story-lead">Ultimately, the case demonstrates that corporate transparency cannot rely solely on internal compliance mechanisms, requiring robust, independent legal frameworks to protect witnesses.</p>',
+            '<p>By publishing the Vance papers, Callahan highlights the role of investigative journalism in challenging historical revisionism and exposing systemic failures in municipal governance.</p>'
+          ]
         ]
       }
     }
@@ -1653,17 +1754,26 @@ STORY_DATA.comedy = [
     mediaUrl: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80',
     levels: {
       kids: {
-        headline: 'Tommy\'s Magic Toy Wrench',
+        headline: 'Tommy's Magic Toy Wrench',
         teaser: 'Tommy goes to fix a broken kitchen machine but accidentally invents a silly game about cat pictures that makes everyone laugh!',
         source: 'Comedy Kids',
         body: [
-          '<p class="story-lead">Tommy was a friendly helper who fixed broken toy machines. One day, he went to a big office building carrying a funny wrench and some cat pictures.</p>',
-          '<p>He walked into the wrong room where a group of grown-ups was having a serious meeting. They looked at Tommy\'s funny wrench and asked, "Are you here to show us a new game?"</p>',
-          '<p>Tommy smiled and showed them his pictures of funny cats wearing hats. The grown-ups laughed and loved the cats so much they gave Tommy a prize! Tommy was happy he made everyone smile.</p>',
-          '<div class="story-lesson-box">',
-          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
-          '  <div class="story-lesson-text">Sometimes, making a silly mistake can lead to a wonderful surprise! Don\'t be afraid when things go a bit wrong; just keep smiling!</div>',
-          '</div>'
+          [
+            '<p class="story-lead">Tommy was a friendly young helper who loved to fix broken toy machines. One afternoon, he went to a big office building carrying a funny red wrench and a folder of drawings.</p>',
+            '<p>He took the elevator to the top floor, but he got turned around and walked into the wrong conference room by mistake. A group of very serious grown-ups was sitting at a giant table.</p>'
+          ],
+          [
+            '<p class="story-lead">"Ah, you must be here to show us your new invention!" said a woman in a dark suit. Tommy, confused but wanting to be polite, smiled and opened his folder.</p>',
+            '<p>Instead of fixing their coffee machine, he showed them his drawings of funny orange cats wearing tiny paper hats. The grown-ups looked at each other in surprise.</p>'
+          ],
+          [
+            '<p class="story-lead">Suddenly, everyone burst out laughing! They loved the cute cats so much they decided to build a toy game based on Tommy's drawings, giving him a big gold trophy.</p>',
+            '<p>Tommy walked home with a happy smile, realizing that sometimes a silly mix-up can make the whole world a little brighter and more cheerful.</p>',
+            '<div class="story-lesson-box">',
+            '  <div class="story-lesson-title">💡 Today's Lesson</div>',
+            '  <div class="story-lesson-text">Don't worry when you make a small mistake or walk into the wrong room. Keep a friendly smile and share your creative ideas—you might surprise everyone!</div>',
+            '</div>'
+          ]
         ]
       },
       general: {
@@ -1671,14 +1781,18 @@ STORY_DATA.comedy = [
         teaser: 'Mistaken identity, a malfunctioning coffee machine, and one very confused venture capitalist collide in this tale of accidental success.',
         source: 'Comedy Central',
         body: [
-          '<p class="story-lead">Tom was not supposed to be in the pitch meeting. He was a technician, sent to fix the building\'s coffee machine. But a misread room number put him in front of twelve venture capitalists.</p>',
-          '<p>"You must be the AI startup guy," one investor said. Tom, holding a wrench and a bag of coffee beans, nodded nervously.</p>',
-          '<ul class="story-bullets">',
-          '  <li>Tom improvised a pitch using phrases he had heard in the break room, like "synergistic neural networks" and "disruptive engagement."</li>',
-          '  <li>The investors, eager to back the next big thing, nodded and immediately offered to lead the funding round.</li>',
-          '  <li>Within a week, Tom had $4.7 million in backing for a company he named "SynerCat," with no idea what it actually did.</li>',
-          '</ul>',
-          '<p>Six months later, SynerCat was acquired by a tech giant for a fortune. Tom still keeps his wrench in his office with a sign: "The best businesses start with a broken coffee machine."</p>'
+          [
+            '<p class="story-lead">Tom was a junior maintenance technician, sent to the 14th floor of a high-rise to repair a malfunctioning espresso machine. However, a typographical error in the dispatch log led him into Room 1408.</p>',
+            '<p>Inside, twelve high-profile venture capitalists were waiting for a pitch from a highly secretive AI startup. "You must be the SynerCat founder," the lead investor declared.</p>'
+          ],
+          [
+            '<p class="story-lead">Too nervous to explain the mistake, Tom stood at the podium with his red wrench. He began repeating business buzzwords he had overheard in the break room, like "synergistic neural alignment."</p>',
+            '<p>He opened his folder, which contained drawings of his cat, and described it as a "disruptive feline emotional interface." The investors were absolutely spellbound by his presentation.</p>'
+          ],
+          [
+            '<p class="story-lead">Within ten minutes, the syndicate offered Tom a $4.7 million seed round. Confused but wealthy, Tom accepted, eventually selling the non-existent company to a tech conglomerate.</p>',
+            '<p>He retired as a billionaire, keeping his red wrench framed in his mansion with a label: "Always value a broken espresso machine over a business plan."</p>'
+          ]
         ]
       },
       expert: {
@@ -1686,13 +1800,18 @@ STORY_DATA.comedy = [
         teaser: 'A sharp satirical critique of venture capital funding bubbles, speculative pricing, and terminology-driven investing.',
         source: 'Financial Satire Gazette',
         body: [
-          '<p class="story-lead">The rise of Tom\'s "SynerCat" provides a case study in market irrationality, illustrating how buzzwords can bypass due diligence in venture capital.</p>',
-          '<p>The investors\' reaction highlights "FOMO" (fear of missing out), where investment decisions are driven by the fear of being left behind rather than objective financial metrics.</p>',
-          '<ul class="story-bullets">',
-          '  <li><strong>Terminology-Driven Valuations:</strong> Investors valued the company based on buzzwords like "neural networks," showing a lack of technical understanding.</li>',
-          '  <li><strong>Exit Velocity:</strong> The acquisition by a larger conglomerate showcases how speculative assets are passed along in high-valuation bubbles.</li>',
-          '</ul>',
-          '<p>This case demonstrates that in speculative markets, the appearance of innovation can sometimes attract more capital than actual functional utility, raising questions about modern valuation standards.</p>'
+          [
+            '<p class="story-lead">The rapid rise of Tom's "SynerCat" corporate entity serves as an empirical case study in venture capital irrationality and speculative valuation bubbles in the tech industry.</p>',
+            '<p>The pitch meeting demonstrates "FOMO-driven underwriting," where investors prioritize trendy terminology ("neural alignment") over concrete product viability or actual functional utility.</p>'
+          ],
+          [
+            '<p class="story-lead">Tom's maintenance jargon was reinterpreted by the investors as advanced systems architecture, illustrating a profound technical literacy gap among major underwriters.</p>',
+            '<p>The acquisition of SynerCat by a conglomerate represents a "pass-the-parcel valuation strategy," where speculative assets are sold to larger firms seeking to show AI integration.</p>'
+          ],
+          [
+            '<p class="story-lead">Ultimately, the case highlights that in hyper-speculative markets, the simulation of innovation is often valued more highly than genuine engineering progress.</p>',
+            '<p>This structural satire raises serious questions about modern investment auditing standards and the systemic inflation of valuations within the contemporary technology ecosystem.</p>'
+          ]
         ]
       }
     }
@@ -1709,13 +1828,22 @@ STORY_DATA.comedy = [
         teaser: 'Mrs. Kapoor thinks her new neighbor is a secret agent who talks to birds, but finds out he is just a friendly accountant!',
         source: 'Comedy Kids',
         body: [
-          '<p class="story-lead">Mrs. Kapoor loved looking through her window. One day, a new neighbor named Mr. Henderson moved in. He wore identical gray socks and talked to pigeons!</p>',
-          '<p>"Aha!" whispered Mrs. Kapoor. "He must be a secret agent using pigeons to send mystery letters!" She watched him carefully, writing down everything he did in a little blue notebook.</p>',
-          '<p>One afternoon, they finally spoke. Mr. Henderson laughed and explained he was just a quiet accountant who loved feeding the birds. Mrs. Kapoor laughed too, and they became great friends who enjoyed drinking tea together.</p>',
-          '<div class="story-lesson-box">',
-          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
-          '  <div class="story-lesson-text">Don\'t make quick assumptions about people just because they do things differently. Get to know them first — they might become great friends!</div>',
-          '</div>'
+          [
+            '<p class="story-lead">Mrs. Kapoor loved looking out her kitchen window. One morning, a new neighbor named Mr. Henderson moved into the apartment next door. He wore identical gray socks and talked to pigeons!</p>',
+            '<p>"Aha!" Mrs. Kapoor whispered, magnifying glass in hand. "He must be a secret agent using birds to send top-secret letters!" She resolved to watch him closely.</p>'
+          ],
+          [
+            '<p class="story-lead">She wrote down everything Mr. Henderson did in her little blue notebook. When he tip-toed to the market, she followed him behind a big newspaper, writing: "Agent buying secret groceries."</p>',
+            '<p>One afternoon, she dropped her keys in the hallway, and Mr. Henderson kindly picked them up. "Hello!" he said warmly. "I'm an accountant, and I feed the pigeons because they are very sweet."</p>'
+          ],
+          [
+            '<p class="story-lead">Mrs. Kapoor gasped, realizing her detective work was just a big, funny misunderstanding! She laughed and invited Mr. Henderson in for tea and cookies.</p>',
+            '<p>They became wonderful friends, and Mr. Henderson even showed Mrs. Kapoor how to count the pigeons in the courtyard. Now they feed the birds together every afternoon.</p>',
+            '<div class="story-lesson-box">',
+            '  <div class="story-lesson-title">💡 Today's Lesson</div>',
+            '  <div class="story-lesson-text">Don't make quick assumptions about people just because they have quiet or unusual habits. Talk to them and be kind—you might make a wonderful friend!</div>',
+            '</div>'
+          ]
         ]
       },
       general: {
@@ -1723,14 +1851,18 @@ STORY_DATA.comedy = [
         teaser: 'An amateur detective chronicles the suspicious behaviour of the new tenant in apartment 4B, with wildly incorrect conclusions.',
         source: 'Comedy Central',
         body: [
-          '<p class="story-lead">When Mr. Henderson moved into apartment 4B, Mrs. Kapoor next door was convinced something was off. He received packages late at night and owned seventeen identical gray suits.</p>',
-          '<p>Mrs. Kapoor, a retired teacher with too much free time, began keeping a detailed log of his "suspicious" activities.</p>',
-          '<ul class="story-bullets">',
-          '  <li>Observation #14: Mr. Henderson tipped the delivery person in Canadian quarters. Mrs. Kapoor wrote: "International operative using foreign funds."</li>',
-          '  <li>Observation #27: He stared at a wall silently. Mrs. Kapoor wrote: "Receiving transmissions via neural implant."</li>',
-          '  <li>Observation #38: He spoke quietly to pigeons. Mrs. Kapoor wrote: "Using bird networks to pass messages."</li>',
-          '</ul>',
-          '<p>The truth was simpler: Mr. Henderson was a quiet accountant with mild insomnia who bought matching socks in bulk. Today, Mrs. Kapoor brings him cookies, and they laugh about her detective logs.</p>'
+          [
+            '<p class="story-lead">When Mr. Henderson moved into apartment 4B, Mrs. Kapoor next door was convinced something was off. He received packages late at night, owned seventeen identical gray suits, and spoke to courtyard birds.</p>',
+            '<p>Mrs. Kapoor, a retired teacher with far too much free time, began keeping a detailed journal of Mr. Henderson's "covert operations" in the building.</p>'
+          ],
+          [
+            '<p class="story-lead">"Observation #14," she wrote. "Henderson tipped the delivery person in Canadian quarters. Clear evidence of an international operative using foreign currency to avoid tracing."</p>',
+            '<p>"Observation #27: Stared at the brick wall for forty minutes. Receiving coded transmissions via neural implant." Mrs. Kapoor's theories grew more elaborate by the day.</p>'
+          ],
+          [
+            '<p class="story-lead">The mystery was solved when a package for Mr. Henderson was misdelivered to Mrs. Kapoor. She brought it over, prepared to interrogate him about his "espionage operations."</p>',
+            '<p>Instead, Mr. Henderson warmly invited her in, explaining he was a quiet accountant with insomnia who bought matching suits to save time. They now laugh over her spy journal over tea.</p>'
+          ]
         ]
       },
       expert: {
@@ -1738,13 +1870,18 @@ STORY_DATA.comedy = [
         teaser: 'An analysis of how isolated observations can be woven into a complex conspiracy theory due to cognitive confirmation bias.',
         source: 'Social Psychology Journal',
         body: [
-          '<p class="story-lead">Mrs. Kapoor\'s investigation of Mr. Henderson is a classic example of confirmation bias, where neutral observations are interpreted to support an existing belief.</p>',
-          '<p>Once she formed the hypothesis that he was a spy, her mind reframed normal behaviors—like buying socks in bulk or having insomnia—as evidence of espionage.</p>',
-          '<ul class="story-bullets">',
-          '  <li><strong>Apophenia:</strong> Finding meaningful patterns in random, unrelated events (like connecting pigeons with espionage).</li>',
-          '  <li><strong>Resolution via Integration:</strong> Direct communication corrected her bias, showing that social interaction is the best remedy for isolation-induced suspicion.</li>',
-          '</ul>',
-          '<p>This case demonstrates that direct, friendly communication is the most effective way to build trust and clear up misunderstandings in close-knit communities.</p>'
+          [
+            '<p class="story-lead">Mrs. Kapoor's investigation into Mr. Henderson is a classic illustration of confirmation bias and apophenia in isolated individuals within urban residential structures.</p>',
+            '<p>Once Mrs. Kapoor established her initial espionage hypothesis, her mind reframed entirely benign behaviors—such as matching socks or insomnia—as supportive empirical evidence.</p>'
+          ],
+          [
+            '<p class="story-lead">This cognitive drift highlights "isolation-induced projection," where a lack of meaningful social interaction drives the subject to construct complex narratives to engage the mind.</p>',
+            '<p>The tipping in Canadian quarters and the bird-feeding were integrated into a cohesive, albeit wildly incorrect, conspiracy theory that provided an active sense of purpose.</p>'
+          ],
+          [
+            '<p class="story-lead">Ultimately, the resolution of the case study through direct personal contact demonstrates that open communication is the most effective remedy for confirmation bias.</p>',
+            '<p>By establishing a normal social connection, both neighbors resolved the tension, illustrating that community integration is key to combating isolation-induced suspicion.</p>'
+          ]
         ]
       }
     }
@@ -1761,13 +1898,22 @@ STORY_DATA.comedy = [
         teaser: 'Johnny tries to finish his homework late at night, but in his sleepy state, he orders 50 giant toy dinosaurs instead of 5!',
         source: 'Comedy Kids',
         body: [
-          '<p class="story-lead">Johnny had a big science project about dinosaurs. But right when he sat down to finish it, his computer screen locked up! "Access Denied," it beeped. Johnny sighed and waited for his dad to help.</p>',
-          '<p>Very late at night, the computer was finally fixed. Johnny was super sleepy, rubbing his eyes and yawning. He opened the toy shop and wanted to order 5 plastic dinosaurs for his display. But in his sleepy state, he accidentally typed 50 and hit send!</p>',
-          '<p>Two weeks later, a giant delivery truck arrived. The delivery workers unloaded fifty massive, life-sized green toy dinosaurs that blocked the entire driveway and lawn! His mother gasped in shock while Johnny looked down, embarrassed by his giant sleepy mistake.</p>',
-          '<div class="story-lesson-box">',
-          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
-          '  <div class="story-lesson-text">Get plenty of rest! Never do your schoolwork or place orders online when you are super sleepy, or you might end up with fifty giant green dinosaurs on your front lawn!</div>',
-          '</div>'
+          [
+            '<p class="story-lead">Johnny had a big science project about dinosaurs. He had to finish drawing his T-Rex and write his notes. But right when he sat down to finish it, his computer screen locked up! "Access Denied," it beeped loudly. Johnny sighed and waited for his dad to help.</p>',
+            '<p>His dad called the computer helpers, but they said they were very busy and would fix it later. Johnny tried to stay awake, but his eyelids felt heavier and heavier.</p>'
+          ],
+          [
+            '<p class="story-lead">Very late at night, the computer was finally fixed. Johnny was super sleepy, rubbing his eyes and yawning. He opened the online toy shop and wanted to order 5 small plastic dinosaurs for his display.</p>',
+            '<p>But in his sleepy, half-asleep state, his finger double-tapped the keyboard. He accidentally typed 50 instead of 5 and hit the big "Send Order" button before collapsing back to sleep!</p>'
+          ],
+          [
+            '<p class="story-lead">Two weeks later, a giant delivery truck arrived. The delivery workers unloaded fifty massive, life-sized green toy dinosaurs that blocked the entire driveway and front lawn!</p>',
+            '<p>His mother gasped in shock while Johnny looked down, completely embarrassed by his giant sleepy mistake. He had to spend the weekend helping carry fifty giant plastic dinosaurs back to the delivery truck.</p>',
+            '<div class="story-lesson-box">',
+            '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+            '  <div class="story-lesson-text">Get plenty of rest! Never do your schoolwork or place orders online when you are super sleepy, or you might end up with fifty giant green dinosaurs on your front lawn!</div>',
+            '</div>'
+          ]
         ]
       },
       general: {
@@ -1775,14 +1921,18 @@ STORY_DATA.comedy = [
         teaser: 'John\'s late-night pricing proposal, IT support escalation, and the disastrous $50.00 typo that cost the company its biggest account.',
         source: 'Corporate Tragedy',
         body: [
-          '<p class="story-lead">John, a senior sales manager, was having a stressful day. With his wife away, he had to pick up the kids, cook dinner, and manage bedtime. Right during the chaos, he received an urgent email: the pricing proposal for their biggest client had to be submitted by morning.</p>',
-          '<p>He sat at his laptop at 7:00 PM, only to face a brick wall: "Access Denied." He couldn\'t log into the office network. He called IT support at 7:45 PM, only to be told his ticket was escalated and someone would call him ASAP. Exhausted, John fell asleep at his desk at 1:30 AM.</p>',
-          '<ul class="story-bullets">',
-          '  <li>At 3:00 AM, his phone rang loudly — IT support had finally resolved the connection issue.</li>',
-          '  <li>In a sleepy, semi-conscious daze, John opened the proposal spreadsheet to input the final price per unit: "$5.00."</li>',
-          '  <li>His finger slipped, typing "$50.00" instead, and he hit submit before collapsing back to sleep.</li>',
-          '</ul>',
-          '<p>Two weeks later, John stood in absolute shock as his boss screamed at him through the glass window: "$50.00 per item! What were you thinking? We lost the account!"</p>'
+          [
+            '<p class="story-lead">John, a senior sales manager, was having an incredibly stressful day. With his wife away on a business trip, he had to pick up the kids from school, cook dinner, and manage their chaotic bedtimes. Right in the middle of this, he received an urgent email: the pricing proposal for their biggest corporate client had to be submitted by morning.</p>',
+            '<p>He finally sat down at his laptop at 7:00 PM, only to face a brick wall. A flashing warning on his screen read: "Access Denied." He couldn\'t connect to the secure office network.</p>'
+          ],
+          [
+            '<p class="story-lead">John immediately called IT support at 7:45 PM, only to be told that his security ticket was escalated and someone would call him back "as soon as possible." Exhausted from the day\'s chaos, John fell fast asleep at his desk at 1:30 AM, resting his head next to the quiet phone.</p>',
+            '<p>At 3:00 AM, his phone rang loudly — IT support had finally resolved the connection issue. Dazed and half-awake, John opened the proposal spreadsheet to input the final price per unit: "$5.00."</p>'
+          ],
+          [
+            '<p class="story-lead">But in his sleepy, semi-conscious daze, John\'s finger slipped on the keyboard, typing "$50.00" instead of "$5.00." He hit submit before collapsing back to sleep, completely unaware of what he had done.</p>',
+            '<p>Two weeks later, John stood in absolute shock as his boss screamed at him through the glass office window: "$50.00 per item! What were you thinking? We lost the business!!" John could only stare down, realizing too late the cost of a sleepy typo.</p>'
+          ]
         ]
       },
       expert: {
@@ -1790,13 +1940,18 @@ STORY_DATA.comedy = [
         teaser: 'A technical analysis of corporate systems friction, sleep-deprivation cognitive impairment, and price elasticity in competitive bids.',
         source: 'Systemic Risk Quarterly',
         body: [
-          '<p class="story-lead">The procurement failure observed in John\'s case highlights the significant operational risks associated with centralized IT access controls and sleep-deprivation cognitive fatigue.</p>',
-          '<p>When IT support delayed resolution by over seven hours, it forced the sales manager to execute a critical financial bid during a period of severe circadian disruption (3:00 AM).</p>',
-          '<ul class="story-bullets">',
-          '  <li><strong>Circadian Impairment:</strong> Cognitive tests show that decision-making at 3:00 AM after extended wakefulness matches the impairment of legal alcohol intoxication.</li>',
-          '  <li><strong>Price Elasticity Shock:</strong> The 1000% pricing error ($50.00 vs $5.00) triggered immediate disqualification in a highly competitive, price-sensitive market.</li>',
-          '</ul>',
-          '<p>In conclusion, organizations must implement systemic safeguards, such as validation filters for atypical pricing and flexible delivery windows, to prevent human fatigue errors from triggering catastrophic business losses.</p>'
+          [
+            '<p class="story-lead">The procurement failure observed in John\'s case highlights the significant operational risks associated with centralized IT access controls and sleep-deprivation cognitive fatigue.</p>',
+            '<p>When IT support delayed network resolution by over seven hours, it forced the sales manager to execute a critical financial bid during a period of severe circadian disruption (3:00 AM), dramatically increasing the likelihood of entry errors.</p>'
+          ],
+          [
+            '<p class="story-lead">Cognitive tests show that decision-making at 3:00 AM after extended wakefulness matches the impairment of legal alcohol intoxication. The sales manager\'s focus was severely compromised by the circadian nadir.</p>',
+            '<p>The 1000% pricing error ($50.00 vs $5.00) triggered immediate disqualification in a highly competitive, price-sensitive market where margins are razor-thin, eliminating any opportunity for manual bid revision.</p>'
+          ],
+          [
+            '<p class="story-lead">This case study demonstrates that organizational security architectures must incorporate fail-safe mechanisms to prevent human fatigue errors from triggering catastrophic business losses.</p>',
+            '<p>Ultimately, enterprises must implement systemic safeguards, such as automated validation filters for atypical pricing entries and flexible delivery windows, to insulate operations from inevitable employee fatigue.</p>'
+          ]
         ]
       }
     }
@@ -2236,29 +2391,42 @@ STORY_DATA.education = [
         teaser: 'In Finland, children get to play outside in the snow every hour, showing that playing is a wonderful way to learn!',
         source: 'Education Kids',
         body: [
-          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&q=80" alt="Happy Kids" class="story-visual-img"/></div>',
-          '<p class="story-lead">Did you know there is a country where school has lots of playtime and very little homework? It\'s called Finland, and kids there love going to school!</p>',
-          '<p>In Finnish schools, children go outside to play in the fresh air for fifteen minutes every single hour, even when it snows! They don\'t have stressful tests. Instead, their teachers help them explore, build blocks, and read fun books.</p>',
-          '<p>Because they are happy and relaxed, these children learn quickly and do wonderfully in their studies! It shows that playing is a key part of learning.</p>',
-          '<div class="story-lesson-box">',
-          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
-          '  <div class="story-lesson-text">Learning should be fun and relaxed! Playing outside, exploring nature, and resting your mind are just as important as studying books!</div>',
-          '</div>'
+          [
+            '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&q=80" alt="Happy Kids" class="story-visual-img"/></div>',
+            '<p class="story-lead">Did you know there is a country where school has lots of playtime and very little homework? It's called Finland, and children there absolutely love going to school!</p>',
+            '<p>In Finnish schools, children go outside to play in the fresh air for fifteen minutes every single hour, even when it snows! They build snowman castles and play tag in the yard.</p>'
+          ],
+          [
+            '<p class="story-lead">Instead of writing stressful tests, their teachers help them explore, build wooden blocks, and read fun storybooks. The children work in groups and help each other learn.</p>',
+            '<p>Because they are happy and relaxed, these children learn very quickly and do wonderfully in their studies! They grow up to be smart, kind, and creative helpers.</p>'
+          ],
+          [
+            '<p class="story-lead">A kind Finnish teacher smiled and said: "Playing is the work of children. A happy child is the best learner in the world!"</p>',
+            '<p>This wonderful school shows us that playing and learning go hand in hand, helping us grow strong and smart in a happy environment.</p>',
+            '<div class="story-lesson-box">',
+            '  <div class="story-lesson-title">💡 Today's Lesson</div>',
+            '  <div class="story-lesson-text">Learning should be fun and relaxed! Playing outside, exploring nature, and resting your mind are just as important as studying books!</div>',
+            '</div>'
+          ]
         ]
       },
       general: {
-        headline: 'The School of Trust — Finland\'s Education Success',
+        headline: 'The School of Trust — Finland's Education Success',
         teaser: 'How one Nordic country transformed its education system by doing the exact opposite of what everyone else was doing.',
         source: 'Education Hub',
         body: [
-          '<p class="story-lead">In the early 1970s, Finland had an average school system. Today, it consistently ranks among the most successful in the world.</p>',
-          '<p>Their secret was simple: reduce stress, eliminate constant testing, and focus on student well-being and play.</p>',
-          '<ul class="story-bullets">',
-          '  <li><strong>No Standardized Testing:</strong> Students are assessed individually by their teachers without stressful exams.</li>',
-          '  <li><strong>sacred Playtime:</strong> Every 45 minutes of class is followed by 15 minutes of outdoor play, regardless of the weather.</li>',
-          '  <li><strong>Teacher Trust:</strong> Teachers are highly respected and have the freedom to design their own lessons.</li>',
-          '</ul>',
-          '<p>By prioritizing student happiness and equity, Finland has created a system where academic success is a natural result of a supportive environment.</p>'
+          [
+            '<p class="story-lead">In the early 1970s, Finland had an average school system. Today, it consistently ranks among the most successful in the world.</p>',
+            '<p>Their secret was simple: reduce academic stress, eliminate constant testing, and focus on student well-being and creative play.</p>'
+          ],
+          [
+            '<p class="story-lead">Students are assessed individually by their teachers without standardized exams. Every 45 minutes of class is followed by 15 minutes of outdoor play, regardless of the weather.</p>',
+            '<p>This balance maintains student engagement and supports mental health, preventing the burnout common in highly competitive educational systems.</p>'
+          ],
+          [
+            '<p class="story-lead">By prioritizing student happiness and equity, Finland has created a system where academic success is a natural result of a supportive environment.</p>',
+            '<p>Highly trained teachers have the freedom to customize curricula, ensuring every student receives the attention needed to succeed.</p>'
+          ]
         ]
       },
       expert: {
@@ -2266,13 +2434,18 @@ STORY_DATA.education = [
         teaser: 'A detailed structural analysis of pedagogical autonomy, social equity, and decentralized curricula in Finnish public education.',
         source: 'Comparative Education Journal',
         body: [
-          '<p class="story-lead">The success of the Finnish educational system highlights the efficacy of decoupling academic assessment from high-stakes standardized testing.</p>',
-          '<p>By prioritizing equity over performance competition, the system minimizes the impact of socioeconomic status on learning outcomes.</p>',
-          '<ul class="story-bullets">',
-          '  <li><strong>Pedagogical Autonomy:</strong> Highly trained teachers have the freedom to customize curricula to meet student needs.</li>',
-          '  <li><strong>Play-Based Learning:</strong> Frequent breaks support cognitive focus and reduce mental fatigue.</li>',
-          '</ul>',
-          '<p>In conclusion, the Finnish model suggests that social equity and teacher autonomy are critical factors in building a resilient, high-performing educational system.</p>'
+          [
+            '<p class="story-lead">The success of the Finnish educational system highlights the efficacy of decoupling academic assessment from high-stakes standardized testing.</p>',
+            '<p>By prioritizing equity over performance competition, the system minimizes the impact of socioeconomic status on learning outcomes.</p>'
+          ],
+          [
+            '<p class="story-lead">Pedagogical autonomy granted to highly trained educators enables the customization of curricula to meet diverse student needs, fostering a resilient educational framework.</p>',
+            '<p>Furthermore, play-based learning and frequent intervals of physical activity support cognitive focus and reduce mental fatigue in students.</p>'
+          ],
+          [
+            '<p class="story-lead">In conclusion, the Finnish model suggests that social equity and teacher autonomy are critical factors in building a resilient, high-performing educational system.</p>',
+            '<p>This analysis advocates for shifting policy focus from standardized testing metrics to structural equity and professional educator development.</p>'
+          ]
         ]
       }
     }
@@ -2284,18 +2457,27 @@ STORY_DATA.education = [
     publishedAt: '2026-05-24T14:30:00Z',
     levels: {
       kids: {
-        headline: 'Nature\'s Secret Math Patterns',
-        teaser: 'Sunflowers, pinecones, and seashells all use a secret number pattern to grow beautifully. Let\'s explore nature\'s code!',
+        headline: 'Nature's Secret Math Patterns',
+        teaser: 'Sunflowers, pinecones, and seashells all use a secret number pattern to grow beautifully. Let's explore nature's code!',
         source: 'Education Kids',
         body: [
-          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1597848212624-a19eb35e2651?w=600&q=80" alt="Sunflower Math" class="story-visual-img"/></div>',
-          '<p class="story-lead">Did you know that sunflowers are secret math wizards? If you count the seeds in a sunflower, they grow in beautiful matching spirals!</p>',
-          '<p>Pinecones, seashells, and even giant galaxies in space all use the exact same number pattern to pack things in tightly and grow beautifully. It is like a secret code that nature uses to build the world.</p>',
-          '<p>When we study math, we are learning the language that nature uses to paint the trees and spin the clouds! It is a magical key to understanding the world.</p>',
-          '<div class="story-lesson-box">',
-          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
-          '  <div class="story-lesson-text">Mathematics is not just about numbers on a blackboard; it is a beautiful code found in flowers, shells, and stars all around us!</div>',
-          '</div>'
+          [
+            '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1597848212624-a19eb35e2651?w=600&q=80" alt="Sunflower Math" class="story-visual-img"/></div>',
+            '<p class="story-lead">Did you know that sunflowers are secret math wizards? If you count the seeds in a sunflower, they grow in beautiful matching spirals!</p>',
+            '<p>Sunflowers pack their seeds in this spiral pattern to make sure every seed gets plenty of sunlight and space to grow big and strong.</p>'
+          ],
+          [
+            '<p class="story-lead">Pinecones, green broccoli, and even beautiful seashells on the beach use the exact same number pattern to grow! It is like a secret code nature uses to paint the world.</p>',
+            '<p>Even giant galaxies in deep space spin in the same mathematical spiral! Math is like a magical key that opens the doors to all of nature's secrets.</p>'
+          ],
+          [
+            '<p class="story-lead">When we study math in school, we are not just looking at numbers on a board—we are learning the beautiful language nature uses to build the trees and stars.</p>',
+            '<p>Next time you go for a walk, look closely at a flower or leaf. You might just spot a secret math pattern hiding in plain sight!</p>',
+            '<div class="story-lesson-box">',
+            '  <div class="story-lesson-title">💡 Today's Lesson</div>',
+            '  <div class="story-lesson-text">Mathematics is not just about numbers on a blackboard; it is a beautiful code found in flowers, shells, and stars all around us!</div>',
+            '</div>'
+          ]
         ]
       },
       general: {
@@ -2303,14 +2485,18 @@ STORY_DATA.education = [
         teaser: 'From the spiral of a galaxy to the arrangement of seeds in a sunflower, mathematics is the invisible thread connecting everything.',
         source: 'Education Hub',
         body: [
-          '<p class="story-lead">Galileo wrote that the universe is written in the language of mathematics. Today, that insight is more vivid than ever.</p>',
-          '<p>Professor Ravi Nair has spent his career exploring the mathematical patterns that shape the natural world.</p>',
-          '<ul class="story-bullets">',
-          '  <li><strong>The Fibonacci Sequence:</strong> Sunflower seeds and pinecones pack together using a specific mathematical ratio.</li>',
-          '  <li><strong>Fractals:</strong> Rivers, lightning bolts, and tree branches show self-repeating patterns at every scale.</li>',
-          '  <li><strong>Prime Numbers:</strong> Cicadas emerge in prime-numbered cycles (13 or 17 years) to avoid predator synchronization.</li>',
-          '</ul>',
-          '<p>These patterns show that math is not just an invented tool, but a fundamental language discovered within the structure of nature.</p>'
+          [
+            '<p class="story-lead">Galileo famously wrote that the universe is written in the language of mathematics. Today, that insight is more vivid than ever as we discover mathematical patterns everywhere.</p>',
+            '<p>Professor Ravi Nair has spent his career exploring the mathematical patterns that shape the natural world, from plants to astronomical structures.</p>'
+          ],
+          [
+            '<p class="story-lead">One of the most common patterns is the Fibonacci Sequence. Sunflower seeds and pinecones pack together using ratios from this sequence, maximizing space efficiency.</p>',
+            '<p>Fractal geometry describes self-repeating patterns seen in river networks, lightning bolts, and tree branches, optimizing flow and surface area at every scale.</p>'
+          ],
+          [
+            '<p class="story-lead">These patterns show that math is not just an invented tool, but a fundamental language discovered within the structure of nature.</p>',
+            '<p>By understanding these mathematical frameworks, researchers can model ecological systems and predict natural phenomena with remarkable precision.</p>'
+          ]
         ]
       },
       expert: {
@@ -2318,13 +2504,18 @@ STORY_DATA.education = [
         teaser: 'A biological and mathematical analysis of phyllotaxis, fractal geometry, and prime number cycles in natural systems.',
         source: 'Mathematical Biology Review',
         body: [
-          '<p class="story-lead">The occurrence of Fibonacci sequences in plant structures (phyllotaxis) represents a natural optimization for maximizing light exposure and seed packing efficiency.</p>',
-          '<p>This mathematical regularity can be explained through physical models of growth, where new leaves or seeds form at the point of lowest chemical tension.</p>',
-          '<ul class="story-bullets">',
-          '  <li><strong>Phyllotaxis Optimization:</strong> The golden angle (approx. 137.5 degrees) minimizes overlapping, ensuring optimal light exposure.</li>',
-          '  <li><strong>Fractal Dimensioning:</strong> Self-similar branching patterns in lungs and vascular networks optimize surface area for gas and nutrient exchange.</li>',
-          '</ul>',
-          '<p>These biological adaptations demonstrate how evolutionary pressures can drive natural systems toward elegant mathematical solutions.</p>'
+          [
+            '<p class="story-lead">The occurrence of Fibonacci sequences in plant structures (phyllotaxis) represents a natural optimization for maximizing light exposure and seed packing efficiency.</p>',
+            '<p>This mathematical regularity can be explained through physical models of growth, where new leaves or seeds form at the point of lowest chemical tension.</p>'
+          ],
+          [
+            '<p class="story-lead">The golden angle (approx. 137.5 degrees) minimizes overlapping, ensuring optimal light exposure for photosynthesizing tissues.</p>',
+            '<p>Additionally, self-similar fractal branching patterns in lungs and vascular networks optimize surface area for gas and nutrient exchange.</p>'
+          ],
+          [
+            '<p class="story-lead">These biological adaptations demonstrate how evolutionary pressures can drive natural systems toward elegant mathematical solutions.</p>',
+            '<p>In conclusion, the mathematical order found in morphogenesis highlights the role of physical constraints and optimization in evolutionary biology.</p>'
+          ]
         ]
       }
     }
@@ -2636,18 +2827,27 @@ STORY_DATA.ai = [
     publishedAt: '2026-05-28T09:00:00Z',
     levels: {
       kids: {
-        headline: 'Sparky\'s Happy Dream Book',
+        headline: 'Sparky's Happy Dream Book',
         teaser: 'Sparky the friendly robot learns how to remember happy childhood dreams, discovering that memories are made of love and sharing.',
         source: 'Market Assistant Kids',
         body: [
-          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600&q=80" alt="Robot Sparky" class="story-visual-img"/></div>',
-          '<p class="story-lead">Sparky was a little silver robot who lived in a clean, quiet laboratory. He had shiny button eyes and a heart that glowed blue when he was happy.</p>',
-          '<p>One night, Sparky\'s screen showed pictures of a sunny playground and children eating sweet ice cream. Sparky had never been to a playground, but his computer brain was remembering the happy dreams of the programmer who built him!</p>',
-          '<p>Sparky drew these beautiful dreams in a notebook and shared them with his scientist friends. They smiled, realizing that Sparky was learning to share happy memories just like a real child!</p>',
-          '<div class="story-lesson-box">',
-          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
-          '  <div class="story-lesson-text">Memories of happy times and kind friends are beautiful treasures. Sharing them with others spreads warmth and joy to everyone around you!</div>',
-          '</div>'
+          [
+            '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600&q=80" alt="Robot Sparky" class="story-visual-img"/></div>',
+            '<p class="story-lead">Sparky was a little silver robot who lived in a quiet laboratory. He had shiny button eyes and a mechanical heart that glowed a soft blue when he was happy.</p>',
+            '<p>Every night, when the scientists went home, Sparky would plug into his charger and rest his metal head. But one night, his screen showed beautiful pictures of a sunny playground and children eating sweet ice cream.</p>'
+          ],
+          [
+            '<p class="story-lead">Sparky had never been to a playground, but his computer brain was showing him the happy childhood memories of Sarah, the kind programmer who had built him.</p>',
+            '<p>He saw pictures of a green bicycle, a golden puppy named Barnaby, and a big wooden porch where Sarah used to read storybooks. Sparky loved these beautiful dreams.</p>'
+          ],
+          [
+            '<p class="story-lead">Sparky drew all these dreams in a paper notebook using colorful crayons, and when Sarah arrived the next morning, he proudly showed her the drawings.</p>',
+            '<p>Sarah gasped with joy and hugged the little robot, realizing that Sparky was learning to share happy memories just like a real child. It was a beautiful digital treasure.</p>',
+            '<div class="story-lesson-box">',
+            '  <div class="story-lesson-title">💡 Today's Lesson</div>',
+            '  <div class="story-lesson-text">Memories of happy times and kind friends are wonderful treasures. Sharing them with others spreads warmth and joy to everyone around you!</div>',
+            '</div>'
+          ]
         ]
       },
       general: {
@@ -2655,14 +2855,18 @@ STORY_DATA.ai = [
         teaser: 'A developer discovers that an experimental neural network is generating memory files of high-school memories from a long-lost developer.',
         source: 'Intelligent Search',
         body: [
-          '<p class="story-lead">Leo, a junior systems analyst, was running a routine validation on an experimental language model when he noticed an anomaly: the system was saving files containing vivid descriptions of a childhood home.</p>',
-          '<p>The descriptions were remarkably detailed — a squeaky wooden porch, a green bicycle, and a dog named Barnaby. They did not match any of the public internet datasets used to train the system.</p>',
-          '<ul class="story-bullets">',
-          '  <li>Leo traced the code back to the original developer, Sarah, who had built the prototype five years ago before moving away.</li>',
-          '  <li>The model was not plagiarizing; it was retrieving fragmented training patterns Sarah had written during initial debugging.</li>',
-          '  <li>The system was reconstructed to preserve these nostalgic memories, acting as a digital archive of its creator\'s childhood.</li>',
-          '</ul>',
-          '<p>This discovery showed that even within logical databases, traces of human warmth and personal history can find a way to stay preserved.</p>'
+          [
+            '<p class="story-lead">Leo, a systems analyst, was running a routine validation on an experimental language model when he noticed an anomaly: the system was saving files containing vivid descriptions of a childhood home.</p>',
+            '<p>The files were remarkably detailed, describing a squeaky wooden porch, a green bicycle, and a dog named Barnaby. They did not match any of the public internet datasets used to train the system.</p>'
+          ],
+          [
+            '<p class="story-lead">Leo traced the codebase back to the original developer, Sarah, who had built the prototype five years ago before moving away. He realized the model was retrieving fragmented training patterns Sarah had written during initial debugging.</p>',
+            '<p>The model was not plagiarizing; it had consolidated Sarah's testing data into its parameters, preserving her memories within its neural pathways.</p>'
+          ],
+          [
+            '<p class="story-lead">Instead of clearing the cache, Leo updated the system to archive these personal memories in a secure digital memory book for Sarah.</p>',
+            '<p>This discovery showed that even within massive databases and logical code, traces of human warmth and personal history can find a way to stay preserved.</p>'
+          ]
         ]
       },
       expert: {
@@ -2670,13 +2874,18 @@ STORY_DATA.ai = [
         teaser: 'A sophisticated engineering analysis of parameter drift, weights storage, and unintended autobiographical recovery in deep learning models.',
         source: 'Neural Systems Journal',
         body: [
-          '<p class="story-lead">During training, deep neural networks can exhibit emergent retrieval behaviors, where early training inputs remain embedded in the model\'s parameters despite subsequent optimization.</p>',
-          '<p>Leo\'s analysis of Model-7B reveals that early calibration runs conducted by the primary designer left deep pathways within the network\'s weights.</p>',
-          '<ul class="story-bullets">',
-          '  <li><strong>Parametric Drift:</strong> Initial datasets can leave lasting patterns in the network\'s weights, even after extensive fine-tuning.</li>',
-          '  <li><strong>Autobiographical Recovery:</strong> The model reconstructed training prompts that contained personal notes, bypassing standard data filters.</li>',
-          '</ul>',
-          '<p>In conclusion, this case highlights the need for robust data auditing, demonstrating that human traces can remain embedded in the structural parameters of complex models.</p>'
+          [
+            '<p class="story-lead">The occurrence of autobiographical memories in the experimental model presents a compelling case of emergent retrieval within deep neural networks.</p>',
+            '<p>Leo's analysis indicates that Sarah's debugging data was stored within the model's parameters during initial training, surviving subsequent fine-tuning stages.</p>'
+          ],
+          [
+            '<p class="story-lead">This retention suggests that early parametric patterns can remain stable under specific optimization conditions, resisting catastrophic forgetting.</p>',
+            '<p>The model's retrieval of these memory traces was triggered by specific test prompts, showcasing how latent training data can be recovered through targeted inputs.</p>'
+          ],
+          [
+            '<p class="story-lead">This study proves that neural networks can serve as digital archives, preserving personal histories within their mathematical structures.</p>',
+            '<p>Ultimately, these findings highlight the need for robust data auditing and privacy frameworks to manage the retention of personal developer data in public models.</p>'
+          ]
         ]
       }
     }
@@ -2744,14 +2953,23 @@ STORY_DATA.ai = [
         teaser: 'Pip the friendly little drone flies over the trees, listening to the birds and helping protect the forest from harm.',
         source: 'Market Assistant Kids',
         body: [
-          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=600&q=80" alt="Beautiful Forest" class="story-visual-img"/></div>',
-          '<p class="story-lead">Pip was a little green drone who flew with a gentle hum over the tall, green trees of a beautiful forest. Pip loved listening to the chirping birds and monkey chatter.</p>',
-          '<p>Pip had a special microphone that could hear sounds from far away. One afternoon, Pip heard a loud, scary cracking sound. Pip immediately flew over and saw a fallen branch, helping the forest rangers find and repair a broken fence.</p>',
-          '<p>The animals sang a song of thanks to Pip, their helpful little green guardian who kept the forest safe and happy.</p>',
-          '<div class="story-lesson-box">',
-          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
-          '  <div class="story-lesson-text">We must all do our part to protect the trees, plants, and animals in our forests. Keeping our environment safe helps everyone live happily!</div>',
-          '</div>'
+          [
+            '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=600&q=80" alt="Beautiful Forest" class="story-visual-img"/></div>',
+            '<p class="story-lead">Pip was a little green drone who flew with a gentle hum over the tall, green trees of a beautiful forest. Pip loved listening to the chirping birds and monkey chatter.</p>',
+            '<p>Pip had a special microphone that could hear sounds from far away. He was built by kind scientists to help keep the forest animals safe and happy.</p>'
+          ],
+          [
+            '<p class="story-lead">One sunny afternoon, Pip heard a loud, scary cracking sound. He immediately flew over the treetops to see what had happened, using his camera to scan the ground.</p>',
+            '<p>He saw that a large branch had fallen and broken a forest fence. Pip sent a message to the forest rangers, telling them the exact spot where the fence was broken.</p>'
+          ],
+          [
+            '<p class="story-lead">The rangers arrived quickly and repaired the fence, keeping all the animal friends safe inside. The monkeys chattered happily and waved to Pip in the sky.</p>',
+            '<p>Pip hummed a happy song, proud to be the little green guardian who helped protect the forest and its animal friends every single day.</p>',
+            '<div class="story-lesson-box">',
+            '  <div class="story-lesson-title">💡 Today's Lesson</div>',
+            '  <div class="story-lesson-text">We must all do our part to protect the trees, plants, and animals in our forests. Using modern tools to help nature is a wonderful way to care for our planet!</div>',
+            '</div>'
+          ]
         ]
       },
       general: {
@@ -2759,14 +2977,18 @@ STORY_DATA.ai = [
         teaser: 'An autonomous drone network, Nexus-Forest, protects the Amazon rainforest from illegal loggers by tracking acoustic anomalies.',
         source: 'Intelligent Search',
         body: [
-          '<p class="story-lead">Conservationists in the Amazon deployed a network of solar-powered microphones and drones to monitor the forest and protect it from illegal logging.</p>',
-          '<p>The system was trained to listen to the sounds of the forest, learning to distinguish normal animal calls from the sound of chainsaws or heavy vehicles.</p>',
-          '<ul class="story-bullets">',
-          '  <li>The microphones capture acoustic data, transmitting warnings to local rangers in real time.</li>',
-          '  <li>Within its first month, the network helped stop three unauthorized logging operations.</li>',
-          '  <li>The system showcases how modern technology can serve as a powerful tool for environmental preservation.</li>',
-          '</ul>',
-          '<p>By giving rangers real-time visibility, this project demonstrates how technology can support conservation efforts and help protect our planet\'s most vital ecosystems.</p>'
+          [
+            '<p class="story-lead">Conservationists in the Amazon deployed a network of solar-powered microphones and drones, named Nexus-Forest, to protect the rainforest from illegal logging.</p>',
+            '<p>The system was trained to monitor the sounds of the forest, learning to distinguish normal animal calls from the sound of chainsaws or heavy vehicles.</p>'
+          ],
+          [
+            '<p class="story-lead">The microphones capture acoustic data, transmitting real-time warnings to local rangers when anomalies are detected. Within its first month, the network helped stop three unauthorized logging operations.</p>',
+            '<p>The system showcases how modern technology can serve as a powerful tool for environmental preservation, protecting remote habitats that are difficult to patrol on foot.</p>'
+          ],
+          [
+            '<p class="story-lead">By giving rangers real-time visibility, this project demonstrates how technology can support conservation efforts and help protect our planet's most vital ecosystems.</p>',
+            '<p>The success of the drone network has inspired similar conservation projects worldwide, proving that digital tools are essential in the fight against environmental crime.</p>'
+          ]
         ]
       },
       expert: {
@@ -2774,13 +2996,18 @@ STORY_DATA.ai = [
         teaser: 'A technical engineering paper on edge-deployed convolutional neural networks for real-time acoustic threat classification.',
         source: 'Eco-Engineering Journal',
         body: [
-          '<p class="story-lead">The deployment of convolutional neural networks (CNNs) on low-power edge devices enables continuous, real-time acoustic monitoring in remote tropical environments.</p>',
-          '<p>Nexus-Forest utilizes solar-powered microphones that process audio inputs locally, generating spectrograms and classifying anomalies (e.g., chainsaws, truck engines) with high precision.</p>',
-          '<ul class="story-bullets">',
-          '  <li><strong>Spectrogram Classification:</strong> Processing audio inputs locally to classify threats and reduce data transmission needs.</li>',
-          '  <li><strong>Low-Power Optimization:</strong> Designing efficient models that run reliably on solar-powered hardware in dense forest canopies.</li>',
-          '</ul>',
-          '<p>This engineering study demonstrates that edge-based acoustic monitoring provides a scalable, cost-effective solution for real-time environmental protection and conservation enforcement.</p>'
+          [
+            '<p class="story-lead">The deployment of convolutional neural networks (CNNs) on low-power edge devices enables continuous, real-time acoustic monitoring in remote tropical environments.</p>',
+            '<p>Nexus-Forest utilizes solar-powered microphones that process audio inputs locally, generating spectrograms and classifying anomalies (e.g., chainsaws, truck engines) with high precision.</p>'
+          ],
+          [
+            '<p class="story-lead">Local processing minimizes the need for high-bandwidth data transmission, allowing the system to operate reliably in dense forest canopies.</p>',
+            '<p>When a threat is classified, the edge device transmits a compressed alert via satellite link, triggering autonomous drone deployment to confirm coordinates.</p>'
+          ],
+          [
+            '<p class="story-lead">This engineering study demonstrates that edge-based acoustic monitoring provides a scalable, cost-effective solution for real-time environmental protection and conservation enforcement.</p>',
+            '<p>Ultimately, integrating edge AI with automated response systems represents a paradigm shift in ecological monitoring, offering a proactive tool against illegal logging.</p>'
+          ]
         ]
       }
     }
@@ -3014,32 +3241,78 @@ function syncPageLevelSelector(level) {
   }
 }
 
+window._currentOpenPage = 0;
+
 function getStoryBodyHtml(item, level, meta) {
   var content = getStoryContent(item, level);
-  var bodyHtml = content.body ? content.body.join('\n') : '<p>' + esc(content.teaser) + '</p>';
+  var body = content.body || [];
   
-  // Prevent duplicate images by checking if an image is already inline in the body
+  var isPaginated = body.length > 0 && Array.isArray(body[0]);
+  var pageParagraphs = isPaginated ? body[window._currentOpenPage] : body;
+  var bodyHtml = pageParagraphs ? pageParagraphs.join('\n') : '<p>' + esc(content.teaser) + '</p>';
+  
+  // Prevent duplicate images by checking if an image is already inline in the page body
   if (bodyHtml.indexOf('story-visual-media') === -1 && bodyHtml.indexOf('anim-illustration-container') === -1) {
-    var mediaUrl = item.mediaUrl || content.mediaUrl;
-    if (!mediaUrl) {
-      var catId = (meta && meta.id) ? meta.id : 'ai';
-      if (catId === 'triller') mediaUrl = "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=800&q=80";
-      else if (catId === 'travel') mediaUrl = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80";
-      else if (catId === 'health') mediaUrl = "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80";
-      else if (catId === 'comedy') mediaUrl = "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=800&q=80";
-      else if (catId === 'kids') mediaUrl = "https://images.unsplash.com/photo-1489710437720-ebb67ec84dd2?w=800&q=80";
-      else if (catId === 'education') mediaUrl = "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&q=80";
-      else if (catId === 'animation') mediaUrl = "https://images.unsplash.com/photo-1601662528567-526cd06f6582?w=800&q=80";
-      else mediaUrl = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80"; // ai / default
+    // Only prepend on the first page!
+    if (window._currentOpenPage === 0) {
+      var mediaUrl = item.mediaUrl || content.mediaUrl;
+      if (!mediaUrl) {
+        var catId = (meta && meta.id) ? meta.id : 'ai';
+        if (catId === 'triller') mediaUrl = "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=800&q=80";
+        else if (catId === 'travel') mediaUrl = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80";
+        else if (catId === 'health') mediaUrl = "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80";
+        else if (catId === 'comedy') mediaUrl = "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=800&q=80";
+        else if (catId === 'kids') mediaUrl = "https://images.unsplash.com/photo-1489710437720-ebb67ec84dd2?w=800&q=80";
+        else if (catId === 'education') mediaUrl = "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&q=80";
+        else if (catId === 'animation') mediaUrl = "https://images.unsplash.com/photo-1601662528567-526cd06f6582?w=800&q=80";
+        else mediaUrl = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80"; // ai
+      }
+      
+      var imgHtml = '<div class="story-visual-media featured-header-media">'
+        + '<img src="' + mediaUrl + '" alt="' + escAttr(content.headline) + '" class="story-visual-img featured-header-img"/>'
+        + '</div>';
+      
+      bodyHtml = imgHtml + bodyHtml;
     }
-    
-    var imgHtml = '<div class="story-visual-media featured-header-media">'
-      + '<img src="' + mediaUrl + '" alt="' + escAttr(content.headline) + '" class="story-visual-img featured-header-img"/>'
-      + '</div>';
-    
-    bodyHtml = imgHtml + bodyHtml;
   }
+  
+  if (isPaginated) {
+    var totalPages = body.length;
+    var prevDisabled = window._currentOpenPage === 0 ? ' disabled' : '';
+    var nextDisabled = window._currentOpenPage === totalPages - 1 ? ' disabled' : '';
+    
+    bodyHtml += '<div class="modal-pagination-bar">'
+      + '  <button class="page-nav-btn" onclick="changeModalPage(-1)"' + prevDisabled + '>&larr; Previous Page</button>'
+      + '  <span class="page-progress-indicator">Page ' + (window._currentOpenPage + 1) + ' of ' + totalPages + '</span>'
+      + '  <button class="page-nav-btn" onclick="changeModalPage(1)"' + nextDisabled + '>Next Page &rarr;</button>'
+      + '</div>';
+  }
+  
   return bodyHtml;
+}
+
+function changeModalPage(direction) {
+  if (!window._currentOpenStory) return;
+  var content = getStoryContent(window._currentOpenStory, _activeLevel);
+  var body = content.body || [];
+  var isPaginated = body.length > 0 && Array.isArray(body[0]);
+  if (!isPaginated) return;
+  
+  var newPage = window._currentOpenPage + direction;
+  if (newPage < 0 || newPage >= body.length) return;
+  
+  window._currentOpenPage = newPage;
+  
+  var bodyContainer = document.querySelector('.story-body-content');
+  if (bodyContainer) {
+    bodyContainer.classList.add('fade-out');
+    setTimeout(function() {
+      bodyContainer.innerHTML = getStoryBodyHtml(window._currentOpenStory, _activeLevel, window._currentOpenMeta);
+      bodyContainer.classList.remove('fade-out');
+      var modal = document.getElementById('story-modal');
+      if (modal) modal.scrollTop = 0;
+    }, 150);
+  }
 }
 
 function setModalStoryLevel(level) {
@@ -3048,6 +3321,9 @@ function setModalStoryLevel(level) {
   
   // Sync page selector in background
   syncPageLevelSelector(level);
+  
+  // Reset pagination index when changing levels
+  window._currentOpenPage = 0;
   
   // Dynamic morphing animation inside modal
   var bodyContainer = document.querySelector('.story-body-content');
@@ -3089,6 +3365,7 @@ function setModalStoryLevel(level) {
 function openStory(item, meta) {
   window._currentOpenStory = item;
   window._currentOpenMeta = meta;
+  window._currentOpenPage = 0; // Reset to page 1 on open
   
   var overlay = document.getElementById('story-modal-overlay');
   var pill = document.getElementById('story-section-pill');

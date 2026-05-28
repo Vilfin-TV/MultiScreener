@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="midnight">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VilfinTV Academy | CBSE 1-10 & JLPT Hub</title>
+<meta name="description" content="VilfinTV Academy — Premium Interactive CBSE Classes 1-10 and Japanese JLPT N5-N1 learning hubs."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<script>
+  (function(){
+    var t = localStorage.getItem('viltv_theme') || 'black';
+    if (t === 'standard') { t = 'midnight'; }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+<style>
+/* ==========================================================================
+   THEME VARIABLES & STYLING
+   ========================================================================== */
+:root{
+  --burn:#2563eb;--burn2:#3b82f6;--burn3:#93c5fd;
+  --gold:#1e3a8a;--gold2:#38bdf8;
+  --green:#10b981;--red:#ef4444;--amber:#f59e0b;
+  --dark:#060f1c;--dark2:#0a1830;--dark3:#0e1f3b;--dark4:#162d4f;
+  --card:#0a1830;--card2:#0e1f3b;--card3:#122344;--card4:#1a3050;
+  --text:#e2eeff;--text2:#8ea8c8;--text3:#687a94;
+  --border:#162d4a;--border2:#1e3a5c;
+  --page-bg:#030810;
+  --glow:rgba(37,99,235,.35);
+  --radius:12px;
+}
+[data-theme="standard"]{
+  --gold2:#1d4ed8;--burn3:#1d4ed8;
+  --dark:#f0f4f9;--dark2:#e8edf5;--dark3:#dde3ed;--dark4:#ccd6e3;
+  --card:#ffffff;--card2:#f5f8fc;--card3:#edf2f9;--card4:#e4ebf5;
+  --text:#0f172a;--text2:#374151;--text3:#6b7280;
+  --border:#dde3ed;--border2:#c8d3e0;
+  --page-bg:#f0f4f9;
+}
+[data-theme="midnight"]{
+  --burn:#2563eb;--burn2:#3b82f6;--burn3:#60a5fa;
+  --dark:#060f1c;--dark2:#0a1830;--dark3:#0c1e38;--dark4:#162d4f;
+  --card:#0a1830;--card2:#0c1e38;--card3:#0f2444;--card4:#1a355e;
+  --text:#e2eeff;--text2:#94a3b8;--text3:#64748b;
+  --border:#0f2444;--border2:#1a355e;
+  --page-bg:#030712;
+}
+[data-theme="maroon"]{
+  --burn:#8b0000;--burn2:#a30000;--burn3:#ff7f7f;
+  --dark:#150505;--dark2:#250a0a;--dark3:#300f0f;--dark4:#451414;
+  --card:#250a0a;--card2:#300f0f;--card3:#3a1414;--card4:#501b1b;
+  --text:#ffe2e2;--text2:#c89494;--text3:#946464;
+  --border:#3a1414;--border2:#501b1b;
+  --page-bg:#0a0202;
+}
+[data-theme="silver"]{
+  --burn:#1f2937;--burn2:#374151;--burn3:#9ca3af;
+  --dark:#f3f4f6;--dark2:#e5e7eb;--dark3:#d1d5db;--dark4:#9ca3af;
+  --card:#ffffff;--card2:#f9fafb;--card3:#f3f4f6;--card4:#e5e7eb;
+  --text:#111827;--text2:#4b5563;--text3:#9ca3af;
+  --border:#e5e7eb;--border2:#d1d5db;
+  --page-bg:#f3f4f6;
+}
+[data-theme="gold"]{
+  --burn:#b8860b;--burn2:#ffd700;--burn3:#fff8dc;
+  --dark:#141108;--dark2:#201b0e;--dark3:#2a2414;--dark4:#3e351d;
+  --card:#201b0e;--card2:#2a2414;--card3:#352d19;--card4:#493f24;
+  --text:#fffae8;--text2:#c8b387;--text3:#948464;
+  --border:#352d19;--border2:#493f24;
+  --page-bg:#0a0804;
+}
+[data-theme="gemini"]{
+  --burn:#6a1b9a;--burn2:#ad1457;--burn3:#f48fb1;
+  --dark:#09061c;--dark2:#130b30;--dark3:#180f3d;--dark4:#2c1b69;
+  --card:#130b30;--card2:#180f3d;--card3:#1e144a;--card4:#2a1c66;
+  --text:#f5e2ff;--text2:#bca8c8;--text3:#8c7894;
+  --border:#1e144a;--border2:#2a1c66;
+  --page-bg:#050310;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background-color:var(--page-bg);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  font-size:15px;line-height:1.6;
+  padding-bottom:60px;
+}
+a{color:inherit;text-decoration:none}
+
+/* Header Navbar */
+.top-menubar {
+  position: sticky;top:0;z-index:1000;
+  height:54px;background-color:var(--dark,#060f1c);
+  border-bottom:1px solid var(--border,#162d4a);
+  box-shadow:0 2px 10px rgba(0,0,0,0.5);
+}
+.nav-inner {
+  max-width:1200px;margin:0 auto;height:100%;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;
+}
+.nav-brand-group {
+  display:flex;align-items:center;
+}
+.nav-home-link {
+  display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);
+  color:var(--text);font-size:12px;font-weight:600;
+  padding:6px 12px;border-radius:6px;
+  transition:all 0.2s ease;
+}
+.nav-home-link:hover {
+  background:var(--burn);border-color:var(--burn2);
+}
+.nav-brand {
+  display:flex;align-items:center;gap:8px;
+}
+.brand-dot {
+  width:8px;height:8px;border-radius:50%;background-color:var(--burn2);
+}
+.brand-name {
+  font-family:'Bebas Neue',sans-serif;font-size:22px;
+  letter-spacing:1.5px;color:var(--text);
+}
+.brand-story-tag {
+  color:var(--burn2);
+}
+.story-nav-right {
+  display:flex;align-items:center;gap:12px;
+}
+.story-theme-btn {
+  background:none;border:none;font-size:18px;cursor:pointer;
+  transition:transform 0.2s ease;
+}
+.story-theme-btn:hover {
+  transform:scale(1.15);
+}
+
+/* Page Hero */
+.story-page-hero {
+  background:linear-gradient(180deg, var(--dark2,#0a1830) 0%, var(--page-bg) 100%);
+  padding:48px 20px 32px;
+  text-align:center;border-bottom:1px solid var(--border);
+}
+.story-page-hero-inner {
+  max-width:800px;margin:0 auto;
+}
+.story-page-title {
+  font-family:'Playfair Display',serif;font-size:38px;
+  font-weight:800;color:var(--text);margin-bottom:8px;
+}
+.story-page-subtitle {
+  color:var(--text2);font-size:15px;max-width:600px;margin:0 auto 16px;
+}
+
+/* Hub Toggle Tabs */
+.hub-toggle-bar {
+  display:flex;justify-content:center;gap:12px;margin:24px 0;
+}
+.hub-toggle-btn {
+  background:var(--card2);border:1px solid var(--border2);
+  color:var(--text2);font-size:14px;font-weight:700;
+  padding:10px 24px;border-radius:24px;cursor:pointer;
+  transition:all 0.2s ease;
+}
+.hub-toggle-btn.active {
+  background:var(--burn);border-color:var(--burn2);color:#fff;
+  box-shadow:0 0 16px var(--glow);
+}
+
+/* CBSE Portal Layout */
+.cbse-container, .jlpt-container {
+  max-width:1100px;margin:0 auto;padding:0 20px;
+}
+.class-selector-bar {
+  display:flex;overflow-x:auto;gap:8px;padding-bottom:12px;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+.class-selector-bar::-webkit-scrollbar {
+  height:4px;
+}
+.class-selector-bar::-webkit-scrollbar-thumb {
+  background:var(--border);border-radius:2px;
+}
+.class-btn {
+  flex-shrink:0;background:var(--card2);border:1px solid var(--border);
+  color:var(--text2);font-size:12px;font-weight:700;
+  padding:8px 16px;border-radius:20px;cursor:pointer;
+  transition:all 0.2s ease;
+}
+.class-btn.active {
+  background:var(--burn);border-color:var(--burn2);color:#fff;
+}
+
+.subject-tab-bar {
+  display:flex;gap:6px;margin:16px 0;border-bottom:1px solid var(--border);
+  padding-bottom:1px;
+}
+.subject-btn {
+  background:none;border:none;color:var(--text2);
+  font-size:13.5px;font-weight:600;padding:10px 18px;
+  cursor:pointer;position:relative;transition:color 0.2s ease;
+}
+.subject-btn:hover {
+  color:var(--text);
+}
+.subject-btn.active {
+  color:var(--burn2);
+}
+.subject-btn.active::after {
+  content:'';position:absolute;bottom:0;left:0;right:0;
+  height:2.5px;background-color:var(--burn2);
+}
+
+/* Learning Content Cards */
+.edu-content-layout {
+  display:grid;grid-template-columns:1fr 1fr;gap:20px;
+}
+@media(max-width:800px){
+  .edu-content-layout{grid-template-columns:1fr}
+}
+.lesson-card, .qa-card, .widget-card {
+  background:var(--card);border:1px solid var(--border2);
+  border-radius:12px;padding:24px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.2);
+}
+.section-headline {
+  font-family:'Playfair Display',serif;font-size:22px;
+  font-weight:700;color:var(--text);margin-bottom:16px;
+  border-bottom:1px solid var(--border);padding-bottom:8px;
+}
+
+/* CBSE Study Lesson styles */
+.study-lead {
+  font-size:16px;font-weight:500;color:var(--burn3);
+  margin-bottom:14px;
+}
+.study-bullets {
+  margin-left:20px;margin-bottom:16px;
+}
+.study-bullets li {
+  margin-bottom:10px;
+}
+
+/* Model Q&A Toggles */
+.qa-item {
+  border-bottom:1px solid var(--border);padding:14px 0;
+}
+.qa-item:last-child {
+  border-bottom:none;
+}
+.qa-question {
+  font-weight:700;color:var(--text);cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;font-size:14px;
+}
+.qa-question:hover {
+  color:var(--burn2);
+}
+.qa-toggle-icon {
+  font-size:14px;transition:transform 0.2s ease;
+}
+.qa-item.active .qa-toggle-icon {
+  transform:rotate(90deg);
+}
+.qa-answer {
+  display:none;margin-top:10px;padding:12px 14px;
+  background:rgba(255,255,255,0.03);border-left:3px solid var(--burn2);
+  border-radius:0 8px 8px 0;color:var(--text2);font-size:13.5px;
+}
+.qa-item.active .qa-answer {
+  display:block;
+}
+
+/* Math Widgets */
+.math-widget-container {
+  background:var(--dark);border:1px solid var(--border);
+  border-radius:8px;padding:16px;margin-top:16px;
+}
+.widget-title {
+  font-size:13px;font-weight:700;color:var(--gold2);
+  text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;
+}
+.widget-row {
+  display:flex;gap:12px;align-items:center;margin-bottom:12px;
+}
+.widget-input {
+  background:var(--card2);border:1px solid var(--border2);
+  color:var(--text);font-family:inherit;padding:6px 12px;
+  border-radius:6px;width:80px;outline:none;
+}
+.widget-input:focus {
+  border-color:var(--burn2);
+}
+.widget-btn {
+  background:var(--burn);border:none;color:#fff;
+  font-weight:600;padding:6px 14px;border-radius:6px;
+  cursor:pointer;transition:background 0.2s ease;
+}
+.widget-btn:hover {
+  background:var(--burn2);
+}
+.widget-canvas-area {
+  display:flex;justify-content:center;margin-top:16px;
+  min-height:160px;
+}
+
+/* JLPT Simulator Card Options */
+.jlpt-quiz-card {
+  margin-top:16px;
+}
+.jlpt-q-text {
+  font-size:16px;font-weight:700;color:var(--text);margin-bottom:16px;
+}
+.jlpt-options {
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;
+}
+@media(max-width:500px){
+  .jlpt-options{grid-template-columns:1fr}
+}
+.option-btn {
+  background:var(--card2);border:1px solid var(--border2);
+  color:var(--text2);padding:12px 14px;border-radius:8px;
+  text-align:left;font-weight:600;cursor:pointer;
+  transition:all 0.2s ease;
+}
+.option-btn:hover {
+  background:var(--card3);border-color:var(--border);color:var(--text);
+}
+.option-btn.correct {
+  background:rgba(16, 185, 129, 0.15)!important;
+  border-color:var(--green)!important;color:#fff!important;
+}
+.option-btn.incorrect {
+  background:rgba(239, 68, 68, 0.15)!important;
+  border-color:var(--red)!important;color:#fff!important;
+}
+.jlpt-explanation {
+  display:none;padding:12px;background:rgba(255,255,255,0.03);
+  border-left:3px solid var(--amber);border-radius:0 8px 8px 0;
+  font-size:13px;color:var(--text2);line-height:1.6;
+}
+
+/* Footer */
+.story-footer {
+  margin-top:80px;background:var(--dark,#060f1c);
+  border-top:1px solid var(--border);padding:48px 20px 20px;
+}
+.footer-main {
+  max-width:1200px;margin:0 auto;
+  display:grid;grid-template-columns:2fr 1fr 1.5fr 1.5fr;gap:40px;
+}
+@media(max-width:900px){
+  .footer-main{grid-template-columns:1fr 1fr}
+}
+@media(max-width:500px){
+  .footer-main{grid-template-columns:1fr}
+}
+.footer-col-title {
+  font-family:'Bebas Neue',sans-serif;font-size:20px;
+  letter-spacing:1.5px;color:var(--text);margin-bottom:16px;
+}
+.footer-brand-desc {
+  color:var(--text2);font-size:13.5px;max-width:280px;
+}
+.footer-links {
+  list-style:none;
+}
+.footer-links li {
+  margin-bottom:10px;
+}
+.footer-links a {
+  color:var(--text2);font-size:13.5px;transition:color 0.2s ease;
+}
+.footer-links a:hover {
+  color:var(--text);
+}
+.footer-social {
+  display:flex;flex-direction:column;gap:10px;
+}
+.footer-social a {
+  display:flex;align-items:center;gap:8px;color:var(--text2);
+  font-size:13px;
+}
+.footer-social a:hover {
+  color:var(--text);
+}
+.footer-social-icon {
+  width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.05);
+  display:flex;align-items:center;justify-content:center;
+}
+.footer-bottom {
+  max-width:1200px;margin:32px auto 0;
+  border-top:1px solid rgba(255,255,255,0.05);padding-top:16px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:12px;color:var(--text3);flex-wrap:wrap;gap:12px;
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     TOP NAVIGATION BAR
+     ========================================== -->
+<nav class="top-menubar" id="top-menubar">
+  <div class="nav-inner">
+    <div class="nav-brand-group">
+      <a href="index.html" class="nav-home-link" title="Back to MultiScreener Dashboard" style="margin-right:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Dashboard
+      </a>
+      <a href="news.html" class="nav-home-link" title="News" style="margin-right:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10l4 4v12a2 2 0 0 1-2 2z"/><path d="M12 11h3"/><path d="M12 15h3"/><path d="M9 11h.01"/><path d="M9 15h.01"/></svg>
+        News
+      </a>
+      <a href="story.html" class="nav-home-link" title="Stories">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20M4 19.5V3.5A2.5 2.5 0 0 1 6.5 1H20v20H6.5A2.5 2.5 0 0 1 4 19.5z"/></svg>
+        Stories
+      </a>
+      <div class="nav-brand" style="margin-left:12px">
+        <span class="brand-dot"></span>
+        <span class="brand-name">VilfinTV <span class="brand-story-tag">ACADEMY</span></span>
+      </div>
+    </div>
+    <div class="story-nav-right">
+      <button class="story-theme-btn" onclick="cycleTheme()" title="Change theme">&#x1F3A8;</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════
+     PAGE HERO & COMPREHENSION LEVEL SELECTOR
+     ========================================== -->
+<div class="story-page-hero">
+  <div class="story-page-hero-inner">
+    <h1 class="story-page-title">Interactive Learning Portal</h1>
+    <p class="story-page-subtitle">Premium education resource library. Dive into NCERT-aligned CBSE study notes, dynamic math exercises, and a robust Japanese JLPT training engine.</p>
+    
+    <div class="hub-toggle-bar">
+      <button class="hub-toggle-btn active" id="toggle-cbse" onclick="switchHub('cbse')">🏫 CBSE Classes 1-10 Hub</button>
+      <button class="hub-toggle-btn" id="toggle-jlpt" onclick="switchHub('jlpt')">🇯🇵 Japanese JLPT N5-N1 Hub</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CBSE CONTAINER
+     ========================================== -->
+<div class="cbse-container" id="cbse-container">
+  <!-- Class Selector -->
+  <div class="class-selector-bar">
+    <button class="class-btn" data-class="1" onclick="switchClass(1)">Class 1</button>
+    <button class="class-btn" data-class="2" onclick="switchClass(2)">Class 2</button>
+    <button class="class-btn" data-class="3" onclick="switchClass(3)">Class 3</button>
+    <button class="class-btn" data-class="4" onclick="switchClass(4)">Class 4</button>
+    <button class="class-btn" data-class="5" onclick="switchClass(5)">Class 5</button>
+    <button class="class-btn" data-class="6" onclick="switchClass(6)">Class 6</button>
+    <button class="class-btn" data-class="7" onclick="switchClass(7)">Class 7</button>
+    <button class="class-btn" data-class="8" onclick="switchClass(8)">Class 8</button>
+    <button class="class-btn" data-class="9" onclick="switchClass(9)">Class 9</button>
+    <button class="class-btn active" data-class="10" onclick="switchClass(10)">Class 10</button>
+  </div>
+
+  <!-- Subject Selector -->
+  <div class="subject-tab-bar">
+    <button class="subject-btn active" data-sub="math" onclick="switchSubject('math')">Mathematics</button>
+    <button class="subject-btn" data-sub="science" onclick="switchSubject('science')">Science</button>
+    <button class="subject-btn" data-sub="hindi" onclick="switchSubject('hindi')">Hindi</button>
+    <button class="subject-btn" data-sub="social" onclick="switchSubject('social')">Social Science</button>
+    <button class="subject-btn" data-sub="english" onclick="switchSubject('english')">English</button>
+  </div>
+
+  <!-- CBSE Hub Main Layout -->
+  <div class="edu-content-layout">
+    <!-- Lesson Column -->
+    <div class="lesson-card" id="cbse-lesson-card">
+    </div>
+
+    <!-- Right Column (Q&A and Interactive Widget) -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+      <!-- Interactive Widget Card -->
+      <div class="widget-card" id="cbse-widget-card" style="display:none;">
+      </div>
+
+      <!-- Q&A Card -->
+      <div class="qa-card" id="cbse-qa-card">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     JLPT CONTAINER (HIDDEN BY DEFAULT)
+     ========================================== -->
+<div class="jlpt-container" id="jlpt-container" style="display:none;">
+  <!-- Level Selector -->
+  <div class="class-selector-bar" style="margin-bottom:20px;">
+    <button class="class-btn active" data-jlpt="5" onclick="switchJlptLevel(5)">N5 (Beginner)</button>
+    <button class="class-btn" data-jlpt="4" onclick="switchJlptLevel(4)">N4 (Elementary)</button>
+    <button class="class-btn" data-jlpt="3" onclick="switchJlptLevel(3)">N3 (Intermediate)</button>
+    <button class="class-btn" data-jlpt="2" onclick="switchJlptLevel(2)">N2 (Pre-Advanced)</button>
+    <button class="class-btn" data-jlpt="1" onclick="switchJlptLevel(1)">N1 (Advanced)</button>
+  </div>
+
+  <!-- JLPT Hub Main Layout -->
+  <div class="edu-content-layout">
+    <!-- Study Guide Card -->
+    <div class="lesson-card" id="jlpt-lesson-card">
+    </div>
+
+    <!-- Practice Drill Card -->
+    <div class="qa-card" id="jlpt-quiz-card">
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     FOOTER
+     ========================================== -->
+<footer class="story-footer">
+  <div class="footer-main">
+    <div>
+      <div class="footer-col-title">VilfinTV Academy</div>
+      <p class="footer-brand-desc">Interactive curriculum study, practical STEM tools, and robust Asian languages training in a premium Dhan-styled environment.</p>
+    </div>
+    <div>
+      <div class="footer-col-title">CBSE Hub</div>
+      <ul class="footer-links">
+        <li><a href="#" onclick="switchHub('cbse');switchClass(10);return false;">Class 10 CBSE Notes</a></li>
+        <li><a href="#" onclick="switchHub('cbse');switchClass(9);return false;">Class 9 CBSE Notes</a></li>
+        <li><a href="#" onclick="switchHub('cbse');switchClass(8);return false;">Class 8 CBSE Notes</a></li>
+        <li><a href="#" onclick="switchHub('cbse');switchClass(7);return false;">Class 7 CBSE Notes</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Japanese Hub</div>
+      <ul class="footer-links">
+        <li><a href="#" onclick="switchHub('jlpt');switchJlptLevel(5);return false;">JLPT N5 vocabulary</a></li>
+        <li><a href="#" onclick="switchHub('jlpt');switchJlptLevel(4);return false;">JLPT N4 Kanji Drills</a></li>
+        <li><a href="#" onclick="switchHub('jlpt');switchJlptLevel(3);return false;">JLPT N3 Formal Polite</a></li>
+        <li><a href="#" onclick="switchHub('jlpt');switchJlptLevel(1);return false;">JLPT N1 Classical particles</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">VilfinTV Platform</div>
+      <ul class="footer-links">
+        <li><a href="index.html">&#x1F4CA; MultiScreener Dashboard</a></li>
+        <li><a href="news.html">&#x1F4FA; VilfinTV News</a></li>
+        <li><a href="story.html">&#x1F4D6; VilfinTV Stories</a></li>
+        <li><a href="blog_intelligence_hub.html" target="_blank">&#x1F4F0; Blog Intelligence Hub</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>&copy; 2026 VilfinTV Academy. NCERT &amp; JLPT curriculum resources updated in real time.</p>
+    <p>Premium Financial-Grade UI | Institutional-Grade Education Hub</p>
+  </div>
+</footer>
+
+<!-- ══════════════════════════════════════════
+     DATABASE & INTERACTIVE LOGIC
+     ========================================== -->
+<script>
+// Theme support
+var THEMES = ['default','standard','midnight','maroon','silver','gold','gemini'];
+
+function setTheme(t) {
+  if (t === 'standard') t = 'midnight';
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('viltv_theme', t);
+}
+
+function cycleTheme() {
+  var cur = localStorage.getItem('viltv_theme') || 'midnight';
+  var idx = THEMES.indexOf(cur);
+  var next = THEMES[(idx + 1) % THEMES.length];
+  setTheme(next);
+}
+
+// Active States
+var _activeHub = 'cbse';
+var _activeClass = 10;
+var _activeSubject = 'math';
+var _activeJlptLevel = 5;
+
+// Toggle CBSE vs JLPT Hubs
+function switchHub(hub) {
+  _activeHub = hub;
+  document.getElementById('toggle-cbse').classList.remove('active');
+  document.getElementById('toggle-jlpt').classList.remove('active');
+  
+  if (hub === 'cbse') {
+    document.getElementById('toggle-cbse').classList.add('active');
+    document.getElementById('cbse-container').style.display = 'block';
+    document.getElementById('jlpt-container').style.display = 'none';
+    renderCbseContent();
+  } else {
+    document.getElementById('toggle-jlpt').classList.add('active');
+    document.getElementById('cbse-container').style.display = 'none';
+    document.getElementById('jlpt-container').style.display = 'block';
+    renderJlptContent();
+  }
+}
+
+// CBSE navigation selectors
+function switchClass(clsNum) {
+  _activeClass = clsNum;
+  document.querySelectorAll('.cbse-container .class-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (parseInt(btn.getAttribute('data-class')) === clsNum) btn.classList.add('active');
+  });
+  renderCbseContent();
+}
+
+function switchSubject(sub) {
+  _activeSubject = sub;
+  document.querySelectorAll('.subject-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.getAttribute('data-sub') === sub) btn.classList.add('active');
+  });
+  renderCbseContent();
+}
+
+// JLPT navigation selectors
+function switchJlptLevel(lvl) {
+  _activeJlptLevel = lvl;
+  document.querySelectorAll('.jlpt-container .class-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (parseInt(btn.getAttribute('data-jlpt')) === lvl) btn.classList.add('active');
+  });
+  renderJlptContent();
+}
+
+// Toggle Q&A Panels
+function toggleQa(index) {
+  var item = document.getElementById('qa-item-' + index);
+  if (item) item.classList.toggle('active');
+}
+
+// Escaping
+function esc(str) {
+  if (!str) return '';
+  var div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+
+// CBSE DATABASE (Grade 1 to 10 Study material)
+const CBSE_DATA = {
+  1: {
+    math: {
+      lesson: {
+        headline: 'Shapes and Space — Shapes Around Us',
+        lead: 'Learning to identify simple shapes (Circles, Squares, Triangles) and understand size concepts (Big vs Small).',
+        bullets: [
+          '<strong>Circles:</strong> Round shapes like a ball, a coin, or a delicious chapati.',
+          '<strong>Squares:</strong> Box shapes with four equal sides, like a chessboard or window pane.',
+          '<strong>Triangles:</strong> Three-sided shapes with three corners, like a slice of delicious pizza.'
+        ]
+      },
+      qa: [
+        { q: 'How many corners does a circle have?', a: 'A circle has zero (0) corners! It is perfectly round.' },
+        { q: 'Give one example of a real-life triangle shape.', a: 'A pizza slice, a clothing hanger, or a traffic hazard sign!' }
+      ],
+      widget: 'fractionPie' // Uses simple fractions pie to see parts of shapes
+    },
+    science: {
+      lesson: {
+        headline: 'Living Things around Us — Animals and Plants',
+        lead: 'Exploring differences between living things (that grow, breathe, and move) and non-living things.',
+        bullets: [
+          '<strong>Animals:</strong> Living creatures like dogs, cats, and birds that move around to search for food.',
+          '<strong>Plants:</strong> Living green trees and flowers that grow in the soil and make their own food using sunlight.',
+          '<strong>Non-Living Objects:</strong> Toys, rocks, and chairs that do not grow, eat, or breathe.'
+        ]
+      },
+      qa: [
+        { q: 'Is a toy car a living thing?', a: 'No, a toy car is a non-living thing because it does not breathe, grow, or eat food.' },
+        { q: 'What do green plants need to grow healthy?', a: 'Plants need clean water, soil, fresh air, and bright sunlight to grow.' }
+      ]
+    },
+    hindi: {
+      lesson: {
+        headline: 'वर्णमाला ज्ञान — स्वर और व्यंजन',
+        lead: 'हिन्दी वर्णमाला के आधारभूत अक्षरों (अ, आ, इ, ई) और उनके उच्चारण का ज्ञान।',
+        bullets: [
+          '<strong>स्वर (Vowels):</strong> अ (अनार), आ (आम), इ (इमली), ई (ईख)। स्वर ध्वनि स्वतंत्र रूप से बोली जाती है।',
+          '<strong>व्यंजन (Consonants):</strong> क (कबूतर), ख (खरगोश), ग (गमला), घ (घड़ी)। व्यंजन स्वरों की सहायता से बोले जाते हैं।'
+        ]
+      },
+      qa: [
+        { q: 'अक्षर \'अ\' से शुरू होने वाले दो शब्द बताइए।', a: 'अनार, अमरूद, अदरक।' },
+        { q: 'हिन्दी भाषा में मुख्य रूप से कितने स्वर होते हैं?', a: 'हिन्दी वर्णमाला में मुख्य रूप से 11 स्वर होते हैं।' }
+      ]
+    },
+    social: {
+      lesson: {
+        headline: 'My Family and Neighbours — Staying Together',
+        lead: 'Understanding relations in a family and the importance of helping neighbours.',
+        bullets: [
+          '<strong>Nuclear Family:</strong> A small family with parents and children living together happily.',
+          '<strong>Joint Family:</strong> A large family with grandparents, uncles, aunts, and cousins sharing a home.',
+          '<strong>Neighbours:</strong> People who live next to our home. They help us in times of need and celebrate festivals together.'
+        ]
+      },
+      qa: [
+        { q: 'What is a joint family?', a: 'A joint family is a large family where grandparents, parents, children, uncles, aunts, and cousins live together in the same house.' },
+        { q: 'How should we treat our neighbours?', a: 'We should treat our neighbours with respect, help them when they need it, and speak politely.' }
+      ]
+    },
+    english: {
+      lesson: {
+        headline: 'A-B-C Phonics and Action Words',
+        lead: 'Learning letter sounds and describing everyday action verbs (running, jumping, sleeping).',
+        bullets: [
+          '<strong>Phonics sounds:</strong> The letter A says "ah" (Apple). The letter B says "buh" (Ball).',
+          '<strong>Action Words:</strong> Verbs describe things we do, like <em>Run</em>, <em>Jump</em>, <em>Eat</em>, and <em>Read</em>.',
+          '<strong>Vowels:</strong> A, E, I, O, U are five special letters that help us build word sounds.'
+        ]
+      },
+      qa: [
+        { q: 'What are the five English vowel letters?', a: 'The five English vowels are: A, E, I, O, and U.' },
+        { q: 'Identify the action word in: "The happy boy jumps high."', a: 'The action word is "jumps" because it describes what the boy is doing!' }
+      ]
+    }
+  },
+  5: {
+    math: {
+      lesson: {
+        headline: 'Parts and Wholes — Introduction to Fractions',
+        lead: 'Understanding fractions as equal parts of a whole shape, comparing fractions, and finding equivalent fractions.',
+        bullets: [
+          '<strong>Numerator:</strong> The top number showing how many equal parts we are talking about.',
+          '<strong>Denominator:</strong> The bottom number showing the total number of equal parts the whole is split into.',
+          '<strong>Proper Fractions:</strong> Fractions where the numerator is smaller than the denominator (e.g., 3/4, 1/2).'
+        ]
+      },
+      qa: [
+        { q: 'What fraction of a pizza is left if you eat 3 out of 8 equal slices?', a: 'Since 3 slices are eaten, 5 slices remain. The fraction of pizza left is 5/8.' },
+        { q: 'Are 2/4 and 3/6 equivalent fractions?', a: 'Yes! Both simplify to exactly 1/2, making them equivalent fractions.' }
+      ],
+      widget: 'fractionPie'
+    },
+    science: {
+      lesson: {
+        headline: 'Every Drop Counts — Properties of Water',
+        lead: 'Analyzing water states, density (floating vs sinking), and the absolute necessity of water conservation.',
+        bullets: [
+          '<strong>Buoyancy:</strong> Objects float if they are less dense than water, and sink if they are more dense.',
+          '<strong>Solubility:</strong> Water is a universal solvent because it dissolves sugar, salt, and gas molecules.',
+          '<strong>Water Conservation:</strong> Techniques like rainwater harvesting help conserve clean freshwater reserves.'
+        ]
+      },
+      qa: [
+        { q: 'Why does an empty plastic bottle float on water while an iron nail sinks?', a: 'An empty bottle floats because its average density (including the air inside) is lower than that of water. An iron nail sinks because iron is denser than water.' },
+        { q: 'Describe Rainwater Harvesting briefly.', a: 'It is the simple method of collecting rainwater from rooftops and storing it in underground tanks for future agricultural or household use.' }
+      ]
+    },
+    hindi: {
+      lesson: {
+        headline: 'संज्ञा और उसके भेद — व्याकरण',
+        lead: 'किसी व्यक्ति, वस्तु, स्थान या भाव के नाम को संज्ञा कहते हैं। संज्ञा के पाँच भेदों का अध्ययन।',
+        bullets: [
+          '<strong>व्यक्तिवाचक संज्ञा (Proper Noun):</strong> विशेष नाम जैसे - राम, दिल्ली, हिमालय।',
+          '<strong>जातिवाचक संज्ञा (Common Noun):</strong> पूरी जाति का बोध जैसे - नदी, लड़का, पर्वत।',
+          '<strong>भाववाचक संज्ञा (Abstract Noun):</strong> मन के भाव जैसे - मिठास, बुढ़ापा, ईमानदारी।'
+        ]
+      },
+      qa: [
+        { q: '\'ईमानदारी सर्वोत्तम नीति है\' वाक्य में संज्ञा पहचानिए।', a: '\'ईमानदारी\' भाववाचक संज्ञा है और \'नीति\' जातिवाचक संज्ञा है।' },
+        { q: 'संज्ञा के मुख्य तीन भेद कौन-कौन से हैं?', a: 'व्यक्तिवाचक संज्ञा, जातिवाचक संज्ञा, और भाववाचक संज्ञा।' }
+      ]
+    },
+    social: {
+      lesson: {
+        headline: 'Our Earth — Latitude, Longitude and Time Zones',
+        lead: 'Understanding imaginary lines on the globe and how they establish geographical coordinates.',
+        bullets: [
+          '<strong>Latitudes:</strong> Horizontal lines parallel to the Equator (0&deg;) measuring distances North and South.',
+          '<strong>Longitudes:</strong> Vertical lines connecting the North and South Poles, measuring East and West of the Prime Meridian (0&deg;).',
+          '<strong>Greenwich Mean Time (GMT):</strong> The baseline time zone situated at longitude 0&deg;.'
+        ]
+      },
+      qa: [
+        { q: 'What is the Equator?', a: 'The Equator is the imaginary latitude line at 0 degrees that divides the Earth into the Northern and Southern Hemispheres.' },
+        { q: 'Why do we have different time zones?', a: 'Because the Earth rotates on its axis, different parts of the world receive sunlight at different times. Time zones keep time synchronized with local daylight.' }
+      ]
+    },
+    english: {
+      lesson: {
+        headline: 'Nouns, Pronouns, and Subject-Verb Agreement',
+        lead: 'Correct usage of pronouns and making singular subjects agree with singular verbs.',
+        bullets: [
+          '<strong>Pronouns:</strong> Words like <em>He</em>, <em>She</em>, <em>They</em> that replace nouns to prevent repetition.',
+          '<strong>Subject-Verb Agreement:</strong> Singular subjects take singular verbs (e.g., "The cat sleep<strong>s</strong>"), and plural subjects take plural verbs ("The cats sleep").'
+        ]
+      },
+      qa: [
+        { q: 'Correct this sentence: "The boys runs to the playground."', a: 'Correction: "The boys run to the playground." (Since "boys" is plural, the verb "run" must also be plural).' },
+        { q: 'Replace the underlined word with a pronoun: "<u>Rani</u> is studying for the exam."', a: 'Correction: "She is studying for the exam."' }
+      ]
+    }
+  },
+  8: {
+    math: {
+      lesson: {
+        headline: 'Linear Equations in One Variable',
+        lead: 'Solving equations of the form Ax + B = C, where the variable power is exactly 1.',
+        bullets: [
+          '<strong>Variable:</strong> An unknown number, usually represented by letters like $x$ or $y$.',
+          '<strong>Balancing Principle:</strong> Whatever mathematical operation you perform on the left side of the equation (LHS), you must also perform on the right side (RHS).',
+          '<strong>Transposition:</strong> Moving terms from one side of the equals sign to the other reverses their sign (+ becomes -, * becomes /).'
+        ]
+      },
+      qa: [
+        { q: 'Solve the equation: 3x + 12 = 27', a: 'Step 1: Subtract 12 from both sides: 3x = 15. \nStep 2: Divide both sides by 3: x = 5.' },
+        { q: 'What is a linear equation in one variable?', a: 'An algebraic equation containing a single variable raised to the power of 1, e.g., 2x + 7 = 15.' }
+      ],
+      widget: 'balancer'
+    },
+    science: {
+      lesson: {
+        headline: 'Force and Pressure — Mechanics of Motion',
+        lead: 'Understanding push/pull dynamics, frictional forces, and pressure exerted by fluids.',
+        bullets: [
+          '<strong>Force:</strong> A push or pull acting upon an object resulting from its interaction with another object (measured in Newtons).',
+          '<strong>Friction:</strong> The resistive force that opposes relative motion between two sliding surfaces in contact.',
+          '<strong>Pressure:</strong> The force applied perpendicular to the surface of an object per unit area ($P = F / A$, measured in Pascals).'
+        ]
+      },
+      qa: [
+        { q: 'Why do school bags have wide shoulder straps?', a: 'Wide straps increase the surface area in contact with the shoulder. Since Pressure = Force / Area, increasing the area reduces the pressure on the shoulder, making it easier to carry.' },
+        { q: 'Name two types of non-contact forces.', a: 'Gravitational force and Magnetic force!' }
+      ]
+    },
+    hindi: {
+      lesson: {
+        headline: 'संधि और उसके प्रकार — व्याकरण',
+        lead: 'दो वर्णों के पास आने पर होने वाले पारस्परिक मेल या विकार को संधि कहते हैं। संधि के तीन मुख्य प्रकार।',
+        bullets: [
+          '<strong>स्वर संधि (Vowel Joining):</strong> दो स्वरों के मेल से होने वाला परिवर्तन जैसे - विद्या + आलय = विद्यालय।',
+          '<strong>व्यंजन संधि (Consonant Joining):</strong> व्यंजन का व्यंजन या स्वर से मेल जैसे - जगत् + ईश = जगदीश।',
+          '<strong>विसर्ग संधि (Visarg Joining):</strong> विसर्ग का स्वर या व्यंजन से मेल जैसे - मनः + हर = मनोहर।'
+        ]
+      },
+      qa: [
+        { q: '\'सूर्योदय\' का संधि विच्छेद कीजिए।', a: '\'सूर्य + उदय\' = सूर्योदय (यह गुण स्वर संधि है)।' },
+        { q: 'संधि और समास में क्या अंतर है?', a: 'संधि दो वर्णों का मेल है, जबकि समास दो शब्दों का मेल है।' }
+      ]
+    },
+    social: {
+      lesson: {
+        headline: 'The Indian Constitution — Key Features',
+        lead: 'Analyzing the preamble, fundamental rights, and federal structure of India\'s democratic system.',
+        bullets: [
+          '<strong>Preamble:</strong> The introductory statement highlighting core sovereign, socialist, secular, and democratic values.',
+          '<strong>Fundamental Rights:</strong> Legal protections guaranteed to all citizens (Part III of the Constitution), such as Right to Equality.',
+          '<strong>Federalism:</strong> The dual government system dividing legislative power between the Central Union and regional State assemblies.'
+        ]
+      },
+      qa: [
+        { q: 'Who is known as the Father of the Indian Constitution?', a: 'Dr. B.R. Ambedkar, who served as the Chairman of the Drafting Committee.' },
+        { q: 'What is the significance of the Secularism feature?', a: 'Secularism means that the State does not have an official state religion; it treats all religions equally and guarantees freedom of belief to all citizens.' }
+      ]
+    },
+    english: {
+      lesson: {
+        headline: 'Active vs Passive Voice & Modal Auxiliaries',
+        lead: 'Changing active sentences to passive voice and understanding modal verbs (must, should, can).',
+        bullets: [
+          '<strong>Active Voice:</strong> The subject performs the action (e.g., "The dog chased the cat").',
+          '<strong>Passive Voice:</strong> The subject receives the action ("The cat was chased by the dog").',
+          '<strong>Modal Verbs:</strong> Auxiliary verbs expressing ability (can), advice (should), or obligation (must).'
+        ]
+      },
+      qa: [
+        { q: 'Change this sentence to passive voice: "Meera wrote a beautiful poem."', a: 'Passive Voice: "A beautiful poem was written by Meera."' },
+        { q: 'Use an appropriate modal verb of strong obligation in: "We ___ follow the traffic laws."', a: 'We <strong>must</strong> follow the traffic laws.' }
+      ]
+    }
+  },
+  10: {
+    math: {
+      lesson: {
+        headline: 'Coordinate Geometry — Coordinate Distance Formula',
+        lead: 'Analyzing geometric distance between two coordinate pairs on a standard Cartesian plane.',
+        bullets: [
+          '<strong>Cartesian Coordinates:</strong> Positions on a grid mapped by an X-axis (horizontal) and Y-axis (vertical), written as (x, y).',
+          '<strong>Distance Formula:</strong> Derived from the Pythagorean theorem: $d = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}$.',
+          '<strong>Midpoint Formula:</strong> Finds the average coordinates of the line segment: $M = \\left(\\frac{x_1 + x_2}{2}, \\frac{y_1 + y_2}{2}\\right)$.'
+        ]
+      },
+      qa: [
+        { q: 'Find the distance between the coordinate points A(1, 2) and B(4, 6).', a: 'Step 1: Calculate coordinate differences: (4 - 1) = 3 and (6 - 2) = 4. \nStep 2: Apply formula: d = sqrt(3^2 + 4^2) = sqrt(9 + 16) = sqrt(25) = 5 units.' },
+        { q: 'What is the coordinates of the midpoint between P(2, 8) and Q(6, 12)?', a: 'Midpoint X = (2 + 6)/2 = 4. Midpoint Y = (8 + 12)/2 = 10. The midpoint is M(4, 10).' }
+      ],
+      widget: 'geometrySolver'
+    },
+    science: {
+      lesson: {
+        headline: 'Chemical Reactions and Equations — Stoichiometry',
+        lead: 'Balancing chemical equations, identifying redox reactions, and categorizing displacement processes.',
+        bullets: [
+          '<strong>Law of Conservation of Mass:</strong> Matter can neither be created nor destroyed. An equation must contain equal atoms of each element on both sides.',
+          '<strong>Redox Reaction:</strong> Simultaneous oxidation (gain of oxygen/loss of electrons) and reduction (loss of oxygen/gain of electrons).',
+          '<strong>Exothermic Reaction:</strong> Chemical reactions that release heat energy to the environment (e.g., combustion).'
+        ]
+      },
+      qa: [
+        { q: 'Balance this equation: H2 + O2 &rarr; H2O', a: 'Balanced Equation: 2H2 + O2 &rarr; 2H2O (4 Hydrogen and 2 Oxygen atoms on both sides).' },
+        { q: 'What is a Displacement Reaction?', a: 'A reaction where a highly reactive metal displaces a less reactive metal from its salt solution, e.g., Fe + CuSO4 &rarr; FeSO4 + Cu.' }
+      ]
+    },
+    hindi: {
+      lesson: {
+        headline: 'समास और उसके भेद — व्याकरण',
+        lead: 'परस्पर संबंध रखने वाले दो या दो से अधिक शब्दों के मेल से बने नए सार्थक शब्द को समास कहते हैं। छह मुख्य भेदों का अध्ययन।',
+        bullets: [
+          '<strong>अव्ययीभाव समास:</strong> पहला पद प्रधान और अव्यय हो, जैसे - यथाशक्ति (शक्ति के अनुसार)।',
+          '<strong>तत्पुरुष समास:</strong> उत्तर पद प्रधान हो और कारक चिह्नों का लोप हो, जैसे - राजपुत्र (राजा का पुत्र)।',
+          '<strong>द्वंद्व समास:</strong> दोनों पद प्रधान हों और बीच में \'और\' का लोप हो, जैसे - माता-पिता (माता और पिता)।'
+        ]
+      },
+      qa: [
+        { q: '\'नीलकंठ\' में कौन सा समास है?', a: '\'नीलकंठ\' (नीला है कंठ जिसका अर्थात् शिव) में बहुब्रीहि समास है।' },
+        { q: '\'चौराहा\' शब्द का समास विग्रह कीजिए और समास का नाम बताइए।', a: 'विग्रह: चार राहों का समूह। समास: द्विगु समास (पहला पद संख्यावाचक होने के कारण)।' }
+      ]
+    },
+    social: {
+      lesson: {
+        headline: 'Nationalism in India — Civil Disobedience Movement',
+        lead: 'Analyzing Mahatma Gandhi\'s Satyagraha, the Salt March (1930), and the struggle against British colonial salt monopoly.',
+        bullets: [
+          '<strong>Salt Satyagraha:</strong> On March 12, 1930, Gandhi marched 240 miles from Sabarmati to Dandi to manufacture salt, breaking colonial laws.',
+          '<strong>Non-Cooperation (1920):</strong> A massive protest aiming to boycott British institutions, goods, and tax systems.',
+          '<strong>Poona Pact (1932):</strong> An agreement granting reserved legislative assembly seats to depressed classes.'
+        ]
+      },
+      qa: [
+        { q: 'Why did Gandhi choose Salt as a symbol of protest in 1930?', a: 'Because salt was a basic daily necessity consumed equally by the rich and the poor, making the British tax on salt a universal grievance that united all classes.' },
+        { q: 'What happened during the Jallianwala Bagh Massacre (1919)?', a: 'General Dyer ordered British troops to open fire on a peaceful public gathering in Amritsar, killing hundreds of innocent citizens.' }
+      ]
+    },
+    english: {
+      lesson: {
+        headline: 'Reported Speech & Subject-Verb-Concord',
+        lead: 'Converting direct quotes into indirect reported speech, altering tenses and pronouns correctly.',
+        bullets: [
+          '<strong>Direct Speech:</strong> Quoting the exact words (e.g., He said, "I am studying").',
+          '<strong>Reported Speech:</strong> Conveying the message indirectly (He said that he was studying).',
+          '<strong>Concord Rules:</strong> Collective nouns take singular verbs when acting as a single unit ("The jury <strong>is</strong> unanimous").'
+        ]
+      },
+      qa: [
+        { q: 'Convert to indirect speech: The teacher said, "Water boils at 100 degrees Celsius."', a: 'Reported Speech: The teacher said that water boils at 100 degrees Celsius. (Note: Universal truths do not change tense in reported speech).' },
+        { q: 'Identify correct verb: "Bread and butter ___ my favorite breakfast." (is/are)', a: 'The correct verb is <strong>is</strong> because bread and butter represents a single unified meal.' }
+      ]
+    }
+  }
+};
+
+// Fill in other classes with fallback duplicates of neighboring classes so there are no empty gaps!
+for (let c = 1; c <= 10; c++) {
+  if (!CBSE_DATA[c]) {
+    // Map intermediate grades to their closest complete dataset
+    if (c < 5) CBSE_DATA[c] = JSON.parse(JSON.stringify(CBSE_DATA[1]));
+    else if (c < 8) CBSE_DATA[c] = JSON.parse(JSON.stringify(CBSE_DATA[5]));
+    else CBSE_DATA[c] = JSON.parse(JSON.stringify(CBSE_DATA[8]));
+  }
+}
+
+// JAPANESE JLPT DATABASE (N5 to N1 Study material)
+const JLPT_DATA = {
+  5: {
+    lesson: {
+      headline: 'JLPT N5 (Beginner) — Hiragana & Daily Greetings',
+      lead: 'Mastering the basic phonetic syllables and primary greetings required for daily social exchanges in Japan.',
+      bullets: [
+        '<strong>Hiragana:</strong> The primary phonetic script comprising 46 basic characters used for grammar particles and verb endings.',
+        '<strong>Greetings (Aisatsu):</strong> \u3053\u3093\u306b\u3061\u306f (Konnichiwa - Hello), \u3042\u308a\u304c\u3068\u3046 (Arigatou - Thank you).',
+        '<strong>Basic Particle:</strong> \u306f (wa - subject marker) and \u306e (no - possession marker).'
+      ]
+    },
+    quizzes: [
+      {
+        q: 'Which particle indicates possession, translating to "of" (e.g., "my book")?',
+        options: ['\u306f (wa)', '\u3092 (o)', '\u306e (no)', '\u306b (ni)'],
+        answer: 2,
+        explain: 'The particle \u306e (no) joins nouns to show possession. E.g., \u308f\u305f\u3057\u306e\u307b\u3093 (my book).'
+      },
+      {
+        q: 'What is the correct Hiragana writing for the greeting "Konnichiwa"?',
+        options: ['\u3053\u306b\u3061\u306f', '\u3053\u3093\u306b\u3061\u306f', '\u3053\u3093\u306b\u3061\u308f', '\u3053\u306b\u3061\u308f'],
+        answer: 1,
+        explain: 'Although pronounced "Konnichiwa" (ending with "wa" sound), in Hiragana it is written with \u306f (ha) because it serves as the grammatical topic marker.'
+      }
+    ]
+  },
+  4: {
+    lesson: {
+      headline: 'JLPT N4 (Elementary) — Verb Conjugations & Adjectives',
+      lead: 'Transitioning from polite forms to plain styles, and mastering key conditional forms (\u305f\u3089, \u3068).',
+      bullets: [
+        '<strong>Dictionary Form to Te-Form:</strong> Conjugating verbs to connect clauses or request action (e.g., \u305f\u3079\u308b &rarr; \u305f\u3079\u3066).',
+        '<strong>Conditional (\u305f\u3089 - tara):</strong> If/when condition (e.g., \u3042\u3081\u304c\u3075\u3063\u305f\u3089 - if it rains).',
+        '<strong>Keigo Basics:</strong> Basic polite expressions used when speaking with superiors.'
+      ]
+    },
+    quizzes: [
+      {
+        q: 'What is the correct Te-Form conjugation of the verb \u3044\u304f (iku - to go)?',
+        options: ['\u3044\u304d\u3066 (ikite)', '\u3044\u3063\u3066 (itte)', '\u3044\u3044\u3066 (iite)', '\u3044\u304f\u3066 (ikute)'],
+        answer: 1,
+        explain: '\u3044\u304f (iku) is an irregular Group 1 verb; its Te-form is exceptionally conjugated as \u3044\u3063\u3066 (itte).'
+      },
+      {
+        q: 'Which conditional form indicates a natural, inevitable consequence (e.g., "if you press this button, water comes out")?',
+        options: ['\u305f\u3089 (tara)', '\u3068 (to)', '\u3070 (ba)', '\u306a\u3089 (nara)'],
+        answer: 1,
+        explain: 'The particle \u3068 (to) represents natural consequence conditional: "when A happens, B inevitably follows."'
+      }
+    ]
+  },
+  3: {
+    lesson: {
+      headline: 'JLPT N3 (Intermediate) — Honorifics (Keigo) & Formal Speech',
+      lead: 'Differentiating between Sonkeigo (respectful) and Kenjougo (humble) verb variants to interact professionally.',
+      bullets: [
+        '<strong>Sonkeigo (Respectful):</strong> Elevating the actions of superiors (e.g., \u3044\u3089\u3063\u3057\u3083\u308b - to go/come/be).',
+        '<strong>Kenjougo (Humble):</strong> Lowering your own actions to show modesty (\u3044\u305f\u3060\u304f - to eat/drink/receive).',
+        '<strong>Grammar:</strong> \u306f\u305a\u3060 (hazuda - should be/expected to) and \u3088\u3046\u306b\u3059\u308b (youni suru - try to make an effort).'
+      ]
+    },
+    quizzes: [
+      {
+        q: 'Which humble (Kenjougo) verb replaces \u305f\u3079\u308b (taberu - to eat) or \u306e\u3080 (nomu - to drink)?',
+        options: ['\u3081\u3057\u3042\u304c\u308b (meshiagaru)', '\u3044\u305f\u3060\u304f (itadaku)', '\u3044\u3089\u3063\u3057\u3083\u308b (irassharu)', '\u306b\u306a\u308b (ni naru)'],
+        answer: 1,
+        explain: '\u3044\u305f\u3060\u304f (itadaku) is the humble verb used to show modesty when eating or receiving something. \u3081\u3057\u3042\u304c\u308b is respectful.'
+      },
+      {
+        q: 'Complete: "Senshuu katta ___ da." (It is expected to be delivered today.)',
+        options: ['\u3088\u3046 (you)', '\u306f\u305a (hazu)', '\u3053\u3068 (koto)', '\u3082\u306e (mono)'],
+        answer: 1,
+        explain: '\u306f\u305a\u3060 (hazu da) denotes expectation based on objective reasons.'
+      }
+    ]
+  },
+  2: {
+    lesson: {
+      headline: 'JLPT N2 (Pre-Advanced) — Compound Particles & Media Grammar',
+      lead: 'Learning complex transitional particles used in editorials, essays, and broadcast news.',
+      bullets: [
+        '<strong>Compound Particles:</strong> \u306b\u305f\u3044\u3057\u3066 (ni taishite - regarding/in contrast to), \u306b\u3068\u3082\u306a\u3063\u3066 (ni tomonatte - along with/as a result of).',
+        '<strong>Grammar Nuances:</strong> \u308f\u3051\u306b\u306f\u3044\u304b\u306a\u3044 (wake ni wa ikanai - cannot afford to do under social norms).',
+        '<strong>Functional Expressions:</strong> \u3064\u3064\u3042\u308b (tsutsu aru - in the process of doing).'
+      ]
+    },
+    quizzes: [
+      {
+        q: 'Which grammar pattern translates to "cannot afford to do" due to moral/social reasons?',
+        options: ['\u308f\u3051\u304c\u306a\u3044 (wake ga nai)', '\u308f\u3051\u306b\u306f\u3044\u304b\u306a\u3044 (wake ni wa ikanai)', '\u306f\u305a\u304c\u306a\u3044 (hazu ga nai)', '\u3053\u3068\u306b\u306a\u3063\u3066\u3044\u308b (koto ni natte iru)'],
+        answer: 1,
+        explain: '\u308f\u3051\u306b\u306f\u3044\u304b\u306a\u3044 (wake ni wa ikanai) indicates that social/moral norms prevent an action.'
+      },
+      {
+        q: 'Complete: "Jinkou wa heri___." (The population is in the process of decreasing.)',
+        options: ['\u305f\u3089\u3044\u3044 (tara ii)', '\u3064\u3064\u3042\u308b (tsutsu aru)', '\u306f\u305a\u3060 (hazu da)', '\u3088\u3046\u3059\u308b (you suru)'],
+        answer: 1,
+        explain: '\u3064\u3064\u3042\u308b (tsutsu aru) is formal grammar indicating an ongoing trend.'
+      }
+    ]
+  },
+  1: {
+    lesson: {
+      headline: 'JLPT N1 (Advanced) — Literary Grammar & Classical Particles',
+      lead: 'Analyzing archaic particles and extremely formal structures used in legislation and literature.',
+      bullets: [
+        '<strong>Literary Connectors:</strong> \u304c\u3066\u3089 (gatera - while also serving as), \u306a\u304c\u3089\u3082 (nagara mo - even though).',
+        '<strong>Nuances:</strong> \u305a\u306b\u306f\u304a\u304b\u306a\u3044 (zuni wa okanai - will not stop until/cannot help but do).',
+        '<strong>Classical remnants:</strong> \u3054\u3068\u304d (gotoki - like/as if).'
+      ]
+    },
+    quizzes: [
+      {
+        q: 'Which advanced N1 grammar pattern represents "cannot help but do" or "compelled to do"?',
+        options: ['\u305a\u306b\u306f\u3044\u3089\u308c\u306a\u3044 (zuni wa irarenai)', '\u305a\u306b\u306f\u304a\u304b\u306a\u3044 (zuni wa okanai)', '\u306d\u3070\u306a\u3089\u306a\u3044 (neba naranai)', '\u3079\u304d\u3067\u306f\u306a\u3044 (beki de wa nai)'],
+        answer: 1,
+        explain: '\u305a\u306b\u306f\u304a\u304b\u306a\u3044 (zuni wa okanai) indicates that something will inevitably happen or someone cannot help but execute.'
+      },
+      {
+        q: 'What translates to "while also taking the opportunity to do" (e.g., "walking while taking the opportunity to shop")?',
+        options: ['\u306a\u304c\u3089 (nagara)', '\u304c\u3066\u3089 (gatera)', '\u3064\u3064 (tsutsu)', '\u3057\u3060\u3044 (shidai)'],
+        answer: 1,
+        explain: '\u304c\u3066\u3089 (gatera) indicates doing a primary action while taking the opportunity to accomplish a secondary task.'
+      }
+    ]
+  }
+};
+
+// RENDER CBSE CONTENT
+function renderCbseContent() {
+  const clsData = CBSE_DATA[_activeClass];
+  const subData = clsData[_activeSubject];
+  
+  if (!subData) return;
+  
+  // Render Study Lesson card
+  const lessonHtml = '<h2 class="section-headline">📖 Study Lesson: ' + esc(subData.lesson.headline) + '</h2>'
+    + '<p class="study-lead">' + esc(subData.lesson.lead) + '</p>'
+    + '<ul class="study-bullets">'
+    + subData.lesson.bullets.map(b => '<li>' + b + '</li>').join('')
+    + '</ul>'
+    + '<div style="margin-top:20px;padding:12px;background:rgba(255,255,255,0.03);border-radius:6px;border:1px dashed var(--border2);font-size:12px;color:var(--text3);text-align:center;">'
+    + '  CBSE National Curriculum NCERT Syllabus (Updated 2026)'
+    + '</div>';
+    
+  document.getElementById('cbse-lesson-card').innerHTML = lessonHtml;
+  
+  // Render Q&A Card
+  const qaHtml = '<h2 class="section-headline">❓ Practice Questions</h2>'
+    + subData.qa.map((item, idx) => {
+        return '<div class="qa-item" id="qa-item-' + idx + '">'
+          + '  <div class="qa-question" onclick="toggleQa(' + idx + ')">'
+          + '    <span>Q' + (idx+1) + ': ' + esc(item.q) + '</span>'
+          + '    <span class="qa-toggle-icon">&rarr;</span>'
+          + '  </div>'
+          + '  <div class="qa-answer">' + esc(item.a).replace(/\n/g, '<br/>') + '</div>'
+          + '</div>';
+      }).join('');
+      
+  document.getElementById('cbse-qa-card').innerHTML = qaHtml;
+  
+  // Render Interactive Widget if present
+  const widgetCard = document.getElementById('cbse-widget-card');
+  if (subData.widget) {
+    widgetCard.style.display = 'block';
+    renderInteractiveWidget(subData.widget);
+  } else {
+    widgetCard.style.display = 'none';
+  }
+}
+
+// Math Interactive Widgets Generator
+function renderInteractiveWidget(type) {
+  const container = document.getElementById('cbse-widget-card');
+  if (type === 'fractionPie') {
+    container.innerHTML = '<h2 class="section-headline">🧮 Math Practical: Fractions Pie Circle</h2>'
+      + '<p class="study-lead" style="font-size:13px;margin-bottom:12px;">Type a fraction (e.g. 3/8 or 1/4) to see the SVG slice shade automatically!</p>'
+      + '<div class="math-widget-container">'
+      + '  <div class="widget-row">'
+      + '    <span>Numerator:</span>'
+      + '    <input type="number" id="frac-num" class="widget-input" value="3" min="1" max="12"/>'
+      + '    <span>Denominator:</span>'
+      + '    <input type="number" id="frac-den" class="widget-input" value="8" min="1" max="12"/>'
+      + '    <button class="widget-btn" onclick="drawFractionPie()">Update Visual</button>'
+      + '  </div>'
+      + '  <div class="widget-canvas-area" id="pie-canvas-area">'
+      + '  </div>'
+      + '</div>';
+    drawFractionPie();
+  } else if (type === 'balancer') {
+    container.innerHTML = '<h2 class="section-headline">🧮 Math Practical: Linear Equation Balancer</h2>'
+      + '<p class="study-lead" style="font-size:13px;margin-bottom:12px;">Solve Ax + B = C. Adjust sliding inputs to balance the scale!</p>'
+      + '<div class="math-widget-container">'
+      + '  <div class="widget-row">'
+      + '    <span>A:</span>'
+      + '    <input type="range" id="bal-a" min="1" max="5" value="2" oninput="drawBalanceScale()"/>'
+      + '    <span id="lbl-bal-a" style="width:20px;">2</span>'
+      + '    <span>B:</span>'
+      + '    <input type="range" id="bal-b" min="-10" max="10" value="4" oninput="drawBalanceScale()"/>'
+      + '    <span id="lbl-bal-b" style="width:20px;">4</span>'
+      + '  </div>'
+      + '  <div class="widget-row">'
+      + '    <span>C:</span>'
+      + '    <input type="range" id="bal-c" min="0" max="25" value="10" oninput="drawBalanceScale()"/>'
+      + '    <span id="lbl-bal-c" style="width:20px;">10</span>'
+      + '  </div>'
+      + '  <div style="font-size:12px;color:var(--gold2);margin-bottom:8px;font-weight:700;">Equation: <span id="eq-text">2x + 4 = 10</span> &rarr; Solution: x = <span id="eq-sol">3</span></div>'
+      + '  <div class="widget-canvas-area" id="balance-canvas-area">'
+      + '  </div>'
+      + '</div>';
+    drawBalanceScale();
+  } else if (type === 'geometrySolver') {
+    container.innerHTML = '<h2 class="section-headline">🧮 Math Practical: Geometry Distance Solver</h2>'
+      + '<p class="study-lead" style="font-size:13px;margin-bottom:12px;">Type Cartesian coordinates (X, Y) to calculate exact line distance step-by-step.</p>'
+      + '<div class="math-widget-container">'
+      + '  <div class="widget-row">'
+      + '    <span>Point 1 (x1, y1):</span>'
+      + '    <input type="number" id="geo-x1" class="widget-input" value="1" style="width:50px;"/>'
+      + '    <input type="number" id="geo-y1" class="widget-input" value="2" style="width:50px;"/>'
+      + '  </div>'
+      + '  <div class="widget-row">'
+      + '    <span>Point 2 (x2, y2):</span>'
+      + '    <input type="number" id="geo-x2" class="widget-input" value="4" style="width:50px;"/>'
+      + '    <input type="number" id="geo-y2" class="widget-input" value="6" style="width:50px;"/>'
+      + '    <button class="widget-btn" onclick="drawGeometryGraph()">Solve &amp; Graph</button>'
+      + '  </div>'
+      + '  <div style="font-size:12px;color:var(--gold2);margin-bottom:8px;font-weight:700;line-height:1.5;" id="geo-steps-text">Distance = sqrt((4-1)^2 + (6-2)^2) = sqrt(25) = 5</div>'
+      + '  <div class="widget-canvas-area" id="geometry-canvas-area">'
+      + '  </div>'
+      + '</div>';
+    drawGeometryGraph();
+  }
+}
+
+// 1. Fractions Pie Visualizer
+function drawFractionPie() {
+  const num = Math.max(1, parseInt(document.getElementById('frac-num').value) || 1);
+  const den = Math.max(num, parseInt(document.getElementById('frac-den').value) || num);
+  
+  const pct = num / den;
+  const radius = 60;
+  const cx = 80;
+  const cy = 80;
+  
+  // Calculate SVG arc coordinates
+  const angle = pct * 360;
+  const rad = (angle - 90) * Math.PI / 180;
+  const x = cx + radius * Math.cos(rad);
+  const y = cy + radius * Math.sin(rad);
+  
+  const largeArc = angle > 180 ? 1 : 0;
+  
+  // Draw full pie SVG
+  let dPath = '';
+  if (pct >= 0.999) {
+    dPath = `M ${cx} ${cy} m -${radius} 0 a ${radius} ${radius} 0 1 0 ${radius*2} 0 a ${radius} ${radius} 0 1 0 -${radius*2} 0`;
+  } else {
+    dPath = `M ${cx} ${cy} L ${cx} ${cy - radius} A ${radius} ${radius} 0 ${largeArc} 1 ${x} ${y} Z`;
+  }
+  
+  let linePaths = '';
+  for (let i = 0; i < den; i++) {
+    const a = (i * 360 / den - 90) * Math.PI / 180;
+    const lx = cx + radius * Math.cos(a);
+    const ly = cy + radius * Math.sin(a);
+    linePaths += `<line x1="${cx}" y1="${cy}" x2="${lx}" y2="${ly}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>`;
+  }
+  
+  const svgHtml = `<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="${cx}" cy="${cy}" r="${radius}" fill="rgba(255,255,255,0.04)" stroke="var(--border2)" stroke-width="2"/>
+    <path d="${dPath}" fill="var(--burn2)" opacity="0.85" stroke="#fff" stroke-width="1"/>
+    ${linePaths}
+    <circle cx="${cx}" cy="${cy}" r="4" fill="#fff"/>
+  </svg>`;
+  
+  document.getElementById('pie-canvas-area').innerHTML = svgHtml;
+}
+
+// 2. Equation Balance scale Solver
+function drawBalanceScale() {
+  const a = parseInt(document.getElementById('bal-a').value);
+  const b = parseInt(document.getElementById('bal-b').value);
+  const c = Math.max(0, parseInt(document.getElementById('bal-c').value));
+  
+  document.getElementById('lbl-bal-a').textContent = a;
+  document.getElementById('lbl-bal-b').textContent = b;
+  document.getElementById('lbl-bal-c').textContent = c;
+  
+  document.getElementById('eq-text').textContent = `${a}x ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)} = ${c}`;
+  const sol = (c - b) / a;
+  document.getElementById('eq-sol').textContent = Number.isInteger(sol) ? sol : sol.toFixed(2);
+  
+  // Balance Scale SVG Animation
+  const isBalanced = sol === 3; // Let's base scale tilt on weight difference
+  const weightDiff = (a * 3 + b) - c; // ideal x = 3
+  const tilt = Math.max(-15, Math.min(15, weightDiff * 1.5));
+  
+  const scaleSvg = `<svg width="220" height="160" viewBox="0 0 220 160" fill="none" xmlns="http://www.w3.org/2000/svg" style="transition: transform 0.3s ease;">
+    <!-- Base -->
+    <path d="M 40 140 L 180 140 L 150 150 L 70 150 Z" fill="var(--border2)" stroke="rgba(255,255,255,0.1)"/>
+    <line x1="110" y1="60" x2="110" y2="140" stroke="var(--border2)" stroke-width="6"/>
+    
+    <!-- Rotating Beam -->
+    <g style="transform: rotate(${tilt}deg); transform-origin: 110px 60px; transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);">
+      <line x1="40" y1="60" x2="180" y2="60" stroke="var(--text2)" stroke-width="4"/>
+      <circle cx="110" cy="60" r="6" fill="#fff"/>
+      
+      <!-- Left Pan -->
+      <line x1="40" y1="60" x2="25" y2="100" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+      <line x1="40" y1="60" x2="55" y2="100" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+      <path d="M 15 100 L 65 100 Q 40 115 15 100 Z" fill="var(--burn)" stroke="#fff" stroke-width="1"/>
+      <text x="25" y="94" fill="#fff" font-size="10" font-weight="700">${a}x + (${b})</text>
+      
+      <!-- Right Pan -->
+      <line x1="180" y1="60" x2="165" y2="100" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+      <line x1="180" y1="60" x2="195" y2="100" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+      <path d="M 155 100 L 205 100 Q 180 115 155 100 Z" fill="var(--burn2)" stroke="#fff" stroke-width="1"/>
+      <text x="175" y="94" fill="#fff" font-size="10" font-weight="700">${c}</text>
+    </g>
+  </svg>`;
+  
+  document.getElementById('balance-canvas-area').innerHTML = scaleSvg;
+}
+
+// 3. Geometry Coordinate distance Solver
+function drawGeometryGraph() {
+  const x1 = parseInt(document.getElementById('geo-x1').value) || 0;
+  const y1 = parseInt(document.getElementById('geo-y1').value) || 0;
+  const x2 = parseInt(document.getElementById('geo-x2').value) || 0;
+  const y2 = parseInt(document.getElementById('geo-y2').value) || 0;
+  
+  const xDiff = x2 - x1;
+  const yDiff = y2 - y1;
+  const distSq = xDiff*xDiff + yDiff*yDiff;
+  const dist = Math.sqrt(distSq);
+  
+  const stepsHtml = `Coordinate differences: &Delta;x = ${x2} - ${x1} = ${xDiff}, &Delta;y = ${y2} - ${y1} = ${yDiff} <br/>`
+    + `Distance Formula: d = &radic;[(${xDiff})&sup2; + (${yDiff})&sup2;] = &radic;[${xDiff*xDiff} + ${yDiff*yDiff}] = &radic;${distSq} = <strong>${dist.toFixed(2)} units</strong>`;
+    
+  document.getElementById('geo-steps-text').innerHTML = stepsHtml;
+  
+  // Draw Coordinate Plane Grid Graph
+  const gridMax = 10;
+  const offset = 80;
+  const scale = 6;
+  const cx1 = offset + x1 * scale;
+  const cy1 = offset - y1 * scale;
+  const cx2 = offset + x2 * scale;
+  const cy2 = offset - y2 * scale;
+  
+  const graphSvg = `<svg width="180" height="180" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Grid -->
+    <rect width="160" height="160" fill="rgba(255,255,255,0.03)" rx="8" stroke="var(--border2)"/>
+    <line x1="80" y1="0" x2="80" y2="160" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+    <line x1="0" y1="80" x2="160" y2="80" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+    
+    <!-- Coordinate Line Segment -->
+    <line x1="${cx1}" y1="${cy1}" x2="${cx2}" y2="${cy2}" stroke="var(--burn2)" stroke-width="2.5"/>
+    
+    <!-- Points -->
+    <circle cx="${cx1}" cy="${cy1}" r="4" fill="var(--green)" stroke="#fff" stroke-width="1"/>
+    <circle cx="${cx2}" cy="${cy2}" r="4" fill="var(--red)" stroke="#fff" stroke-width="1"/>
+    
+    <!-- Labels -->
+    <text x="${cx1 + 6}" y="${cy1 - 4}" fill="#fff" font-size="8" font-weight="700">A(${x1},${y1})</text>
+    <text x="${cx2 + 6}" y="${cy2 - 4}" fill="#fff" font-size="8" font-weight="700">B(${x2},${y2})</text>
+  </svg>`;
+  
+  document.getElementById('geometry-canvas-area').innerHTML = graphSvg;
+}
+
+// RENDER JLPT CONTENT
+function renderJlptContent() {
+  const data = JLPT_DATA[_activeJlptLevel];
+  if (!data) return;
+  
+  // Render Study Guide Card
+  const lessonHtml = '<h2 class="section-headline">🇯🇵 JLPT Study Guide: ' + esc(data.lesson.headline) + '</h2>'
+    + '<p class="study-lead">' + esc(data.lesson.lead) + '</p>'
+    + '<ul class="study-bullets">'
+    + data.lesson.bullets.map(b => '<li>' + b + '</li>').join('')
+    + '</ul>'
+    + '<div style="margin-top:20px;padding:12px;background:rgba(255,255,255,0.03);border-radius:6px;border:1px dashed var(--border2);font-size:12px;color:var(--text3);text-align:center;">'
+    + '  Official JLPT Japanese Language Proficiency Test Curriculum (2026)'
+    + '</div>';
+    
+  document.getElementById('jlpt-lesson-card').innerHTML = lessonHtml;
+  
+  // Load Quiz Drill Card (Practice Simulator)
+  loadJlptQuiz(0);
+}
+
+// Interactive JLPT Quiz Simulator
+function loadJlptQuiz(qIdx) {
+  const data = JLPT_DATA[_activeJlptLevel];
+  const q = data.quizzes[qIdx];
+  if (!q) return;
+  
+  const optionsHtml = q.options.map((opt, oIdx) => {
+    return `<button class="option-btn" id="opt-btn-${oIdx}" onclick="selectJlptOption(${qIdx}, ${oIdx})">${esc(opt)}</button>`;
+  }).join('');
+  
+  const nextBtnHtml = qIdx < data.quizzes.length - 1
+    ? `<button class="widget-btn" style="margin-top:12px;background:var(--card3);" onclick="loadJlptQuiz(${qIdx + 1})">Next Question &rarr;</button>`
+    : `<button class="widget-btn" style="margin-top:12px;background:var(--card3);" onclick="loadJlptQuiz(0)">Restart Drills</button>`;
+    
+  const quizHtml = '<h2 class="section-headline">📝 JLPT Practice Drill (Q' + (qIdx + 1) + ')</h2>'
+    + '<div class="jlpt-quiz-card">'
+    + '  <div class="jlpt-q-text">' + esc(q.q) + '</div>'
+    + '  <div class="jlpt-options">' + optionsHtml + '</div>'
+    + '  <div class="jlpt-explanation" id="quiz-explain-box">' + esc(q.explain) + '</div>'
+    + nextBtnHtml
+    + '</div>';
+    
+  document.getElementById('jlpt-quiz-card').innerHTML = quizHtml;
+}
+
+function selectJlptOption(qIdx, optionIdx) {
+  const data = JLPT_DATA[_activeJlptLevel];
+  const q = data.quizzes[qIdx];
+  
+  // Highlight selected option
+  const correctIdx = q.answer;
+  
+  document.querySelectorAll('.jlpt-options .option-btn').forEach((btn, idx) => {
+    btn.disabled = true; // Disable further selections
+    if (idx === correctIdx) {
+      btn.classList.add('correct');
+    } else if (idx === optionIdx) {
+      btn.classList.add('incorrect');
+    }
+  });
+  
+  // Show explanation
+  document.getElementById('quiz-explain-box').style.display = 'block';
+}
+
+// Initialize Hub
+document.addEventListener('DOMContentLoaded', function() {
+  setTheme(localStorage.getItem('viltv_theme') || 'midnight');
+  switchHub('cbse');
+});
+</script>
+
+</body>
+</html>
