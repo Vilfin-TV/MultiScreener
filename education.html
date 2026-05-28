@@ -172,6 +172,41 @@ a{color:inherit;text-decoration:none}
   box-shadow:0 0 16px var(--glow);
 }
 
+/* Academy notice banner */
+.academy-notice-banner {
+  max-width:1100px; margin:0 auto 24px; padding:0 20px;
+  display:none;
+}
+.academy-notice-banner.visible { display:block; }
+.academy-notice-card {
+  background:linear-gradient(135deg,rgba(37,99,235,.12),rgba(99,102,241,.08));
+  border:1px solid rgba(99,102,241,.3); border-radius:14px;
+  padding:16px 20px; display:flex; gap:14px; align-items:flex-start;
+  animation:fadeUp .4s ease;
+}
+.academy-notice-icon {
+  font-size:24px; flex-shrink:0; margin-top:2px;
+}
+.academy-notice-body { flex:1; min-width:0; }
+.academy-notice-tag {
+  display:inline-block; font-size:8.5px; font-weight:800; letter-spacing:.8px;
+  text-transform:uppercase; padding:2px 8px; border-radius:10px;
+  background:rgba(99,102,241,.15); color:#818cf8;
+  border:1px solid rgba(99,102,241,.25); margin-bottom:6px;
+}
+.academy-notice-headline {
+  font-size:14px; font-weight:800; color:#e2eeff; margin-bottom:4px;
+}
+.academy-notice-text {
+  font-size:12px; color:#8ea8c8; line-height:1.6;
+}
+.academy-notice-dismiss {
+  background:transparent; border:none; color:#4d6a8a;
+  cursor:pointer; font-size:16px; padding:0; flex-shrink:0;
+  transition:color .15s;
+}
+.academy-notice-dismiss:hover { color:#e2eeff; }
+
 /* CBSE Portal Layout */
 .cbse-container, .jlpt-container {
   max-width:1100px;margin:0 auto;padding:0 20px;
@@ -624,6 +659,11 @@ a{color:inherit;text-decoration:none}
     </div>
   </div>
 </div>
+
+<!-- ══════════════════════════════════════════
+     ACADEMY NOTICE BANNER (admin-managed)
+     ========================================== -->
+<div class="academy-notice-banner" id="academy-notice-banner"></div>
 
 <!-- ══════════════════════════════════════════
      CBSE CONTAINER
@@ -2471,6 +2511,69 @@ function selectJlptOption(qIdx, optionIdx) {
   document.getElementById('quiz-explain-box').style.display = 'block';
 }
 
+/* ==========================================================================
+   ACADEMY NOTICES — load admin notices from content.json and show banner
+   ========================================================================== */
+async function _loadAcademyNotices() {
+  try {
+    var resp = await fetch('https://vilfintv.com/content.json?_=' + Date.now());
+    if (!resp.ok) return;
+    var data = await resp.json();
+    if (!Array.isArray(data)) return;
+
+    var now     = new Date();
+    var notices = data.filter(function(item) {
+      return (item.section || '').startsWith('academy_')
+          && item.heading
+          && (!item.expires_at || new Date(item.expires_at) > now);
+    }).sort(function(a, b) {
+      return new Date(b.published_at) - new Date(a.published_at);
+    });
+
+    var bannerEl = document.getElementById('academy-notice-banner');
+    if (!bannerEl || !notices.length) return;
+
+    /* Show the most recent notice as the primary banner, list others below */
+    var html = '';
+    notices.forEach(function(notice, idx) {
+      var typeIcon = '📢';
+      if (notice.section === 'academy_cbse')  typeIcon = '📗';
+      if (notice.section === 'academy_jlpt')  typeIcon = '🇯🇵';
+      var typeLabel = notice.section === 'academy_cbse'  ? 'CBSE Update'
+                    : notice.section === 'academy_jlpt'  ? 'JLPT Update'
+                    : 'Announcement';
+      html += '<div class="academy-notice-card" id="anc-' + idx + '">'
+        + '<div class="academy-notice-icon">' + typeIcon + '</div>'
+        + '<div class="academy-notice-body">'
+          + '<div class="academy-notice-tag">' + typeLabel + '</div>'
+          + '<div class="academy-notice-headline">' + _escHtml(notice.heading) + '</div>'
+          + (notice.story ? '<div class="academy-notice-text">' + _escHtml(notice.story) + '</div>' : '')
+        + '</div>'
+        + '<button class="academy-notice-dismiss" title="Dismiss" onclick="dismissAcademyNotice(\'anc-' + idx + '\')">✕</button>'
+        + '</div>';
+    });
+    bannerEl.innerHTML = html;
+    bannerEl.classList.add('visible');
+  } catch(e) {
+    /* Silent — notices are a progressive enhancement */
+  }
+}
+
+function dismissAcademyNotice(id) {
+  var el = document.getElementById(id);
+  if (el) { el.style.opacity='0'; el.style.transform='translateY(-6px)'; el.style.transition='all .2s';
+    setTimeout(function() {
+      el.remove();
+      var banner = document.getElementById('academy-notice-banner');
+      if (banner && !banner.querySelector('.academy-notice-card')) banner.classList.remove('visible');
+    }, 200);
+  }
+}
+
+function _escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 // Initialize Hub
 document.addEventListener('DOMContentLoaded', function() {
   setTheme(localStorage.getItem('viltv_theme') || 'midnight');
@@ -2478,6 +2581,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initialize recall game
   loadKanaRecallDrill();
   loadKanjiGame();
+  // Load admin notices
+  _loadAcademyNotices();
 });
 </script>
 

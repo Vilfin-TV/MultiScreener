@@ -13230,6 +13230,12 @@ async function _loadPageConfig() {
     _initTicker('tv-desktop-container', desktopSyms ? [] : _TICKER_DESKTOP_DEFAULTS, desktopSyms || [], false);
     _initTicker('tv-mobile-container',  mobileSyms  ? [] : _TICKER_MOBILE_DEFAULTS,  mobileSyms  || [], true);
 
+    // ── Apply admin-configured markets watchlist groups ───────────────────────
+    if (Array.isArray(cfg.markets_groups) && cfg.markets_groups.length) {
+      _MKTS_DEFAULT_GROUPS = cfg.markets_groups;
+      _mktsWidgetDirty = true;
+    }
+
   } catch(e) {
     // Silent fail — init tickers with built-in defaults
     _initTicker('tv-desktop-container', _TICKER_DESKTOP_DEFAULTS, [], false);

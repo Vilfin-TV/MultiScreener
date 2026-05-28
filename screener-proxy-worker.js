@@ -327,10 +327,15 @@ export default {
       const auth = await requireAuth(request, env);
       if (auth.error) return auth.error;
 
-      const { section, heading, story, photo, days } = body || {};
+      const { section, heading, story, photo, link_url, days } = body || {};
       const VALID_SECTIONS = ['trending','global','india','stock','malayalam',
         'ml_trending','ml_movies','ml_music','ml_local','ml_science','ml_space',
-        'ml_sports','ml_health','ml_food','ml_realestate','ml_career','ml_tech'];
+        'ml_sports','ml_health','ml_food','ml_realestate','ml_career','ml_tech',
+        /* story.html pinned categories */
+        'story_triller','story_travel','story_health','story_comedy',
+        'story_kids','story_education','story_animation','story_ai',
+        /* education.html notices */
+        'academy_notice','academy_cbse','academy_jlpt'];
       if (!section || !VALID_SECTIONS.includes(section)) return jsonError(400, 'Invalid section.');
       if (!heading || typeof heading !== 'string' || !heading.trim()) return jsonError(400, 'heading is required.');
       if (!story   || typeof story   !== 'string' || !story.trim())   return jsonError(400, 'story is required.');
@@ -354,6 +359,7 @@ export default {
       items = items.filter(i => i && i.expires_at && new Date(i.expires_at) > now);
       const newItem = { id: String(Date.now()), section, heading: heading.trim().slice(0,200), story: story.trim().slice(0,2000), published_at: now.toISOString(), expires_at: expiresAt };
       if (photo && typeof photo === 'string' && photo.trim().startsWith('http')) newItem.photo = photo.trim().slice(0,500);
+      if (link_url && typeof link_url === 'string' && link_url.trim().startsWith('http')) newItem.link_url = link_url.trim().slice(0,500);
       items.push(newItem);
 
       const put = { message: `feat(content): publish ${section} post`, content: btoa(unescape(encodeURIComponent(JSON.stringify(items, null, 2)))), branch: BRANCH };
@@ -467,6 +473,19 @@ export default {
         .map(s => ({ proName: String(s.proName || '').trim().slice(0, 50), title: String(s.title || '').trim().slice(0, 40) }))
         .filter(s => s.proName);
 
+      // ── Markets watchlist groups ───────────────────────────────────────────
+      const cleanMkts = (Array.isArray(config.markets_groups) ? config.markets_groups : [])
+        .map(g => ({
+          name:    String(g.name || '').trim().slice(0, 60),
+          symbols: (Array.isArray(g.symbols) ? g.symbols : [])
+            .map(s => ({
+              name:        String(s.name        || '').trim().toUpperCase().slice(0, 60),
+              displayName: String(s.displayName || '').trim().slice(0, 60),
+            }))
+            .filter(s => s.name),
+        }))
+        .filter(g => g.name);
+
       const cleanConfig = {
         youtube_overrides:     cleanYTOv,
         youtube_channels:      cleanYT,
@@ -474,6 +493,7 @@ export default {
         news_channels:         cleanNews,
         ticker_symbols:        cleanTicker,
         ticker_symbols_mobile: cleanTickerMobile,
+        markets_groups:        cleanMkts,
       };
 
       const REPO = 'Vilfin-TV/MultiScreener', FILE_PATH = 'config.json', BRANCH = 'main';
