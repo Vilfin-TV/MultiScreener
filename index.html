@@ -1488,33 +1488,32 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-hero-no-img{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:36px;opacity:.4}
 .lnb-hero-body{padding:9px 12px 8px;display:flex;flex-direction:column;gap:4px;border-top:2px solid var(--burn2);cursor:pointer;transition:background .15s}
 .lnb-hero-body:hover{background:rgba(255,255,255,.04)}
-.lnb-hero-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.5}
+.lnb-hero-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .lnb-hero-body:hover .lnb-hero-title{color:var(--gold2)}
-.lnb-hero-snippet{font-size:11px;color:var(--text3);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-top:1px}
+.lnb-hero-snippet{font-size:11px;color:var(--text3);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:1px}
 .lnb-hero-time{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;padding-top:2px}
 /* Sub-stories inside hero column — fill empty space below main story */
 .lnb-hero-subs{display:flex;flex-direction:column;flex:1;border-top:1px solid var(--border);overflow:hidden}
 /* flex:1 on each sub so they equally share remaining hero height */
-.lnb-hero-sub{flex:1;padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .15s;display:flex;flex-direction:column;gap:2px;justify-content:center;min-height:52px}
+.lnb-hero-sub{flex:1;padding:6px 12px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .15s;display:flex;flex-direction:column;gap:2px;justify-content:center;overflow:hidden;min-height:0}
 .lnb-hero-sub:hover{background:rgba(255,255,255,.05)}
 .lnb-hero-sub:last-child{border-bottom:none}
-.lnb-hero-sub-title{font-size:11.5px;font-weight:600;color:var(--text2);line-height:1.42}
+.lnb-hero-sub-title{font-size:11px;font-weight:600;color:var(--text2);line-height:1.38;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .lnb-hero-sub:hover .lnb-hero-sub-title{color:var(--gold2)}
-.lnb-hero-sub-desc{font-size:10px;color:var(--text3);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:1px}
+.lnb-hero-sub-desc{font-size:10px;color:var(--text3);line-height:1.4;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;margin-top:1px}
 .lnb-hero-sub-time{font-size:8.5px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:1px}
 /* Right column — vertical list, full headlines + descriptions */
 .lnb-right-col{display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.lnb-list-item{flex:1;display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;min-height:58px}
+.lnb-list-item{flex:1;display:flex;align-items:center;gap:8px;padding:5px 10px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;overflow:hidden;min-height:0}
 .lnb-list-item:hover{background:rgba(255,255,255,.05)}
 .lnb-list-item:last-child{border-bottom:none}
-.lnb-list-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.lnb-list-category{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--lnb-color,var(--burn3));line-height:1}
-.lnb-list-title{font-size:11.5px;font-weight:600;color:var(--text);line-height:1.42}
+.lnb-list-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;overflow:hidden}
+.lnb-list-category{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--lnb-color,var(--burn3));line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lnb-list-title{font-size:11px;font-weight:600;color:var(--text);line-height:1.38;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .lnb-list-item:hover .lnb-list-title{color:var(--gold2)}
-.lnb-list-desc{font-size:10px;color:var(--text3);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:1px}
-.lnb-list-time{font-size:8.5px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:2px}
-.lnb-list-thumb{width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--card3);border:2px solid var(--border2);align-self:center}
-@media(max-width:600px){.lnb-card-grid{grid-template-columns:1fr;height:auto}.lnb-hero-card{border-right:none;border-bottom:1px solid var(--border)}.lnb-hero-img-wrap{padding-top:42%}.lnb-list-thumb{width:44px;height:44px}}
+.lnb-list-time{font-size:8.5px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:1px}
+.lnb-list-thumb{width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--card3);border:2px solid var(--border2)}
+@media(max-width:600px){.lnb-card-grid{grid-template-columns:1fr;height:auto}.lnb-hero-card{border-right:none;border-bottom:1px solid var(--border)}.lnb-hero-img-wrap{padding-top:42%}.lnb-list-thumb{width:40px;height:40px}}
 
 /* ── Calendar strips — thin visible scrollbar so users know they can scroll ── */
 #cal-country-strip,#cal-region-strip{
