@@ -1477,32 +1477,42 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-more-btn:hover svg{transform:translateX(2px)}
 
 /* ── LIVE NEWS — newspaper layout: hero left + headline list right ── */
-.lnb-card-grid{padding:0;display:flex;flex-direction:row;min-height:220px;overflow:hidden}
+.lnb-card-grid{padding:0;display:flex;flex-direction:row;overflow:hidden}
 .lnb-card-grid .lnb-loading,.lnb-card-grid .lnb-error,.lnb-card-grid .lnb-stale{padding:16px;flex:1;text-align:center;align-self:center;font-size:11px}
-/* Hero card — left ~52%, image stacked above headline + snippet */
-.lnb-hero-card{flex:0 0 52%;display:flex;flex-direction:column;border-right:1px solid var(--border);cursor:pointer;transition:background .15s;min-width:0}
-.lnb-hero-card:hover{background:rgba(255,255,255,.04)}
-.lnb-hero-img-wrap{position:relative;width:100%;padding-top:52%;overflow:hidden;flex-shrink:0;background:var(--card3)}
+/* Hero card — left ~50%, image + headline + snippet + sub-stories fill the column */
+.lnb-hero-card{flex:0 0 50%;display:flex;flex-direction:column;border-right:1px solid var(--border);min-width:0}
+.lnb-hero-img-wrap{position:relative;width:100%;padding-top:38%;overflow:hidden;flex-shrink:0;background:var(--card3)}
 .lnb-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .3s ease}
-.lnb-hero-card:hover .lnb-hero-img{transform:scale(1.04)}
+.lnb-hero-card:hover .lnb-hero-img{transform:scale(1.03)}
 .lnb-hero-no-img{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:36px;opacity:.4}
-.lnb-hero-body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:5px;border-top:2px solid var(--burn2);flex:1}
+.lnb-hero-body{padding:9px 12px 8px;display:flex;flex-direction:column;gap:4px;border-top:2px solid var(--burn2);cursor:pointer;transition:background .15s}
+.lnb-hero-body:hover{background:rgba(255,255,255,.04)}
 .lnb-hero-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.5}
-.lnb-hero-card:hover .lnb-hero-title{color:var(--gold2)}
+.lnb-hero-body:hover .lnb-hero-title{color:var(--gold2)}
 .lnb-hero-snippet{font-size:11px;color:var(--text3);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-top:1px}
-.lnb-hero-time{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:auto;padding-top:4px}
-/* Right column — vertical list of headlines */
+.lnb-hero-time{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;padding-top:2px}
+/* Sub-stories inside hero column — fill empty space below main story */
+.lnb-hero-subs{display:flex;flex-direction:column;flex:1;border-top:1px solid var(--border);overflow:hidden}
+.lnb-hero-sub{padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .15s;display:flex;flex-direction:column;gap:2px}
+.lnb-hero-sub:hover{background:rgba(255,255,255,.05)}
+.lnb-hero-sub:last-child{border-bottom:none}
+.lnb-hero-sub-title{font-size:11.5px;font-weight:600;color:var(--text2);line-height:1.42}
+.lnb-hero-sub:hover .lnb-hero-sub-title{color:var(--gold2)}
+.lnb-hero-sub-desc{font-size:10px;color:var(--text3);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:1px}
+.lnb-hero-sub-time{font-size:8.5px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:1px}
+/* Right column — vertical list, full headlines + descriptions */
 .lnb-right-col{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.lnb-list-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;text-decoration:none}
+.lnb-list-item{display:flex;align-items:flex-start;gap:8px;padding:7px 10px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
 .lnb-list-item:hover{background:rgba(255,255,255,.05)}
 .lnb-list-item:last-child{border-bottom:none}
-.lnb-list-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.lnb-list-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .lnb-list-category{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--lnb-color,var(--burn3));line-height:1}
-.lnb-list-title{font-size:12px;font-weight:600;color:var(--text);line-height:1.42;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lnb-list-title{font-size:11.5px;font-weight:600;color:var(--text);line-height:1.42}
 .lnb-list-item:hover .lnb-list-title{color:var(--gold2)}
-.lnb-list-time{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:auto;padding-top:2px}
-.lnb-list-thumb{width:54px;height:54px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--card3);border:2px solid var(--border2)}
-@media(max-width:600px){.lnb-card-grid{flex-direction:column}.lnb-hero-card{flex:0 0 auto;border-right:none;border-bottom:1px solid var(--border)}.lnb-hero-img-wrap{padding-top:45%}.lnb-list-thumb{width:46px;height:46px}}
+.lnb-list-desc{font-size:10px;color:var(--text3);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:1px}
+.lnb-list-time{font-size:8.5px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:2px}
+.lnb-list-thumb{width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--card3);border:2px solid var(--border2);align-self:center}
+@media(max-width:600px){.lnb-card-grid{flex-direction:column}.lnb-hero-card{flex:0 0 auto;border-right:none;border-bottom:1px solid var(--border)}.lnb-hero-img-wrap{padding-top:42%}.lnb-list-thumb{width:44px;height:44px}}
 
 /* ── Calendar strips — thin visible scrollbar so users know they can scroll ── */
 #cal-country-strip,#cal-region-strip{
@@ -15336,9 +15346,10 @@ function _cleanNewsTitle(title) {
 
 function renderItems(listEl, items) {
   const channelGroup = listEl.dataset.group || '';
-  const fallbackImg = _LNB_FALLBACKS[channelGroup] || _LNB_FALLBACK_DEFAULT;
-  const shown = items.slice(0, 9);
-  if (!shown.length) return;
+  const fallbackImg  = _LNB_FALLBACKS[channelGroup] || _LNB_FALLBACK_DEFAULT;
+  // hero=0, sub-stories=1-2, right-list=3-13 (up to 11 items)
+  const all = items.slice(0, 14);
+  if (!all.length) return;
 
   function _d(item) {
     const title   = _cleanNewsTitle(typeof item === 'string' ? item : (item.title || ''));
@@ -15358,35 +15369,44 @@ function renderItems(listEl, items) {
       encSnippet: encodeURIComponent(snippet),
     };
   }
-
   function _ca(d) {
     return `role="button" tabindex="0" data-title="${d.safeTitle}" data-snippet="${d.encSnippet}" data-url="${d.safeUrl}" data-source="${d.safeSrc}" onclick="lnbCardOpen(this)" onkeydown="if(event.key==='Enter')lnbCardOpen(this)"`;
   }
-
-  // ── Hero card (item 0) ──────────────────────────────────────────────
-  const h = _d(shown[0]);
-  const heroSrc = h.imgSrc || fallbackImg;
-  const wrapBg  = `background-image:url('${escHtml(fallbackImg)}');background-size:cover;background-position:center`;
-  const heroHtml = `<div class="lnb-hero-card" ${_ca(h)}>
-    <div class="lnb-hero-img-wrap" style="${wrapBg}">
-      <img class="lnb-hero-img" src="${escHtml(heroSrc)}" alt="" loading="lazy" onerror="this.onerror=null;this.style.display='none'">
-    </div>
-    <div class="lnb-hero-body">
-      <div class="lnb-hero-title">${h.safeTitle}</div>
-      ${h.snippet ? `<div class="lnb-hero-snippet">${escHtml(h.snippet)}</div>` : ''}
-      ${h.timeStr ? `<div class="lnb-hero-time">${h.timeStr}</div>` : ''}
-    </div>
-  </div>`;
-
-  // Deterministic picsum seed from title string — unique per headline
   function _thumbFallback(title) {
     let h = 0;
     for (let i = 0; i < title.length; i++) { h = Math.imul(31, h) + title.charCodeAt(i) | 0; }
     return `https://picsum.photos/seed/lnbt${Math.abs(h) % 8999 + 1000}/80/80`;
   }
 
-  // ── Right list (items 1–8) ─────────────────────────────────────────
-  const listHtml = shown.slice(1).map(item => {
+  // ── Hero (item 0) ────────────────────────────────────────────────
+  const h = _d(all[0]);
+  const heroSrc = h.imgSrc || fallbackImg;
+  const wrapBg  = `background-image:url('${escHtml(fallbackImg)}');background-size:cover;background-position:center`;
+
+  // ── Sub-stories (items 1-2) fill the empty space in hero column ──
+  const subHtml = all.slice(1, 3).map(item => {
+    const d = _d(item);
+    return `<div class="lnb-hero-sub" ${_ca(d)}>
+      <div class="lnb-hero-sub-title">${d.safeTitle}</div>
+      ${d.snippet ? `<div class="lnb-hero-sub-desc">${escHtml(d.snippet)}</div>` : ''}
+      ${d.timeStr ? `<div class="lnb-hero-sub-time">${d.timeStr}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  const heroHtml = `<div class="lnb-hero-card">
+    <div class="lnb-hero-img-wrap" style="${wrapBg}">
+      <img class="lnb-hero-img" src="${escHtml(heroSrc)}" alt="" loading="lazy" onerror="this.onerror=null;this.style.display='none'">
+    </div>
+    <div class="lnb-hero-body" ${_ca(h)}>
+      <div class="lnb-hero-title">${h.safeTitle}</div>
+      ${h.snippet ? `<div class="lnb-hero-snippet">${escHtml(h.snippet)}</div>` : ''}
+      ${h.timeStr ? `<div class="lnb-hero-time">${h.timeStr}</div>` : ''}
+    </div>
+    ${subHtml ? `<div class="lnb-hero-subs">${subHtml}</div>` : ''}
+  </div>`;
+
+  // ── Right list (items 3-13) — full headline + description ────────
+  const listHtml = all.slice(3).map(item => {
     const d = _d(item);
     const catLabel = d.category || d.source || '';
     const thumbSrc = d.imgSrc || _thumbFallback(d.title);
@@ -15394,6 +15414,7 @@ function renderItems(listEl, items) {
       <div class="lnb-list-body">
         ${catLabel ? `<div class="lnb-list-category">${escHtml(catLabel.slice(0, 30))}</div>` : ''}
         <div class="lnb-list-title">${d.safeTitle}</div>
+        ${d.snippet ? `<div class="lnb-list-desc">${escHtml(d.snippet)}</div>` : ''}
         ${d.timeStr ? `<div class="lnb-list-time">${d.timeStr}</div>` : ''}
       </div>
       <img class="lnb-list-thumb" src="${escHtml(thumbSrc)}" alt="" loading="lazy" onerror="this.style.opacity=0">
@@ -15405,7 +15426,7 @@ function renderItems(listEl, items) {
 
 function _parseXmlItems(xmlStr) {
   const xml = new DOMParser().parseFromString(xmlStr, 'text/xml');
-  const nodes = Array.from(xml.querySelectorAll('item, entry')).slice(0, 10);
+  const nodes = Array.from(xml.querySelectorAll('item, entry')).slice(0, 15);
   return nodes.map(item => {
     // Extract link: try <link href="...">, then <link>text</link>, then <guid>, then <enclosure url="...">
     const linkEl = item.querySelector('link');
