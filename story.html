@@ -3129,11 +3129,8 @@ function renderCategory(cat) {
   if (cat.id === 'animation') defaultHeroBg = "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&q=80";
   if (cat.id === 'ai') defaultHeroBg = "https://images.unsplash.com/photo-1677442136019-21780efad99a?w=1200&q=80";
 
-  /* Use pinned story photo if available */
-  var heroBg = (hero._photo && hero._photo.startsWith('http')) ? hero._photo : defaultHeroBg;
-
   var heroHtml = '<div class="story-hero-card" onclick="openStoryIdx(' + heroIdx + ')" role="button" tabindex="0" aria-label="' + esc(heroContent.headline) + '">'
-    + '<img src="' + heroBg + '" class="story-hero-img" alt="Featured Background" onerror="this.src=\'' + defaultHeroBg + '\'"/>'
+    + '<img src="' + defaultHeroBg + '" class="story-hero-img" alt="Featured Background"/>'
     + '<div class="story-hero-gradient"></div>'
     + '<div class="story-hero-body">'
     + '<div class="story-source-badge">' + esc(heroContent.source) + '</div>'
@@ -3424,69 +3421,12 @@ document.addEventListener('keydown', function(e) {
 });
 
 /* ==========================================================================
-   PINNED STORIES — load admin-pinned stories from content.json and prepend
-   them to the matching STORY_DATA category, then re-render the active tab.
-   ========================================================================== */
-var _PINNED_LOADED = false;
-
-async function _loadPinnedStories() {
-  try {
-    var resp = await fetch('https://vilfintv.com/content.json?_=' + Date.now());
-    if (!resp.ok) return;
-    var data = await resp.json();
-    if (!Array.isArray(data)) return;
-
-    var now = new Date();
-    var pinned = data.filter(function(item) {
-      return (item.section || '').startsWith('story_')
-          && item.heading
-          && (!item.expires_at || new Date(item.expires_at) > now);
-    });
-
-    if (!pinned.length) return;
-
-    /* Group by category and prepend; newest first */
-    pinned.forEach(function(item) {
-      var catId = item.section.replace(/^story_/, '');
-      if (!STORY_DATA[catId]) STORY_DATA[catId] = [];
-
-      /* Remove duplicate (by id) if previously loaded */
-      STORY_DATA[catId] = STORY_DATA[catId].filter(function(s) { return s._contentId !== item.id; });
-
-      var story = {
-        _contentId:  item.id,
-        _pinned:     true,
-        _photo:      item.photo   || '',
-        _linkUrl:    item.link_url || '',
-        headline:    item.heading,
-        teaser:      item.story   || '',
-        source:      '📌 Featured',
-        publishedAt: item.published_at || new Date().toISOString(),
-        body:        [[[item.story || '']]]
-      };
-
-      STORY_DATA[catId].unshift(story);
-    });
-
-    _PINNED_LOADED = true;
-
-    /* Re-render current active tab to show pinned stories */
-    var activeCat = CATEGORIES.find(function(c) { return c.id === _activeTabId; });
-    if (activeCat) renderCategory(activeCat);
-
-  } catch(e) {
-    /* Silent — pinned stories are a progressive enhancement */
-  }
-}
-
-/* ==========================================================================
    INIT
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', function() {
   buildTabBar();
   syncPageLevelSelector(_activeLevel);
   switchTab('ai'); // Default to AI stories on launch
-  _loadPinnedStories();
 });
 </script>
 
