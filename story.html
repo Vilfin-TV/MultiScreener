@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="description" content="VilfinTV Stories — Curated short-form stories across Triller, Travel, Health, Comedy, Kids, Education & Animation."/>
+<meta property="og:title" content="VilfinTV Stories"/>
+<meta property="og:description" content="Curated short-form stories across multiple genres."/>
+<meta property="og:url" content="https://vilfintv.com/story.html"/>
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="VilfinTV"/>
+<link rel="icon" href="data:,">
+<title>VilfinTV Stories | Curated Short-Form Content</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<script>
+  (function(){
+    var t = localStorage.getItem('viltv_theme') || 'black';
+    if (t === 'standard') { t = 'midnight'; localStorage.setItem('viltv_theme','midnight'); }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+<style>
+/* ==========================================================================
+   THEME VARIABLES
+   ========================================================================== */
+:root{
+  --burn:#2563eb;--burn2:#3b82f6;--burn3:#93c5fd;
+  --gold:#1e3a8a;--gold2:#38bdf8;
+  --green:#10b981;--red:#ef4444;--amber:#f59e0b;
+  --dark:#060f1c;--dark2:#0a1830;--dark3:#0e1f3b;--dark4:#162d4f;
+  --card:#0a1830;--card2:#0e1f3b;--card3:#122344;--card4:#1a3050;
+  --text:#e2eeff;--text2:#8ea8c8;--text3:#687a94;
+  --border:#162d4a;--border2:#1e3a5c;
+  --page-bg:#030810;
+  --glow:rgba(37,99,235,.35);
+  --radius:12px;
+  --nav-bg:#040913;--nav-text:#f1f5f9;--nav-border:#0c1e38;
+}
+[data-theme="standard"]{
+  --gold2:#1d4ed8;--burn3:#1d4ed8;
+  --dark:#f0f4f9;--dark2:#e8edf5;--dark3:#dde3ed;--dark4:#ccd6e3;
+  --card:#ffffff;--card2:#f5f8fc;--card3:#edf2f9;--card4:#e4ebf5;
+  --text:#0f172a;--text2:#374151;--text3:#6b7280;
+  --border:#dde3ed;--border2:#c8d3e0;
+  --page-bg:#f0f4f9;
+  --nav-bg:#ffffff;--nav-text:#0f172a;--nav-border:#dde3ed;
+}
+[data-theme="midnight"]{
+  --dark:#0b0e14;--dark2:#161b22;--dark3:#1c2433;--dark4:#21262d;
+  --card:#161b22;--card2:#1c2433;--card3:#21262d;--card4:#2d333b;
+  --text:#e6edf3;--text2:#adbac7;--text3:#636e7b;
+  --border:#30363d;--border2:#444c56;
+  --page-bg:#0b0e14;
+  --nav-bg:#161b22;--nav-text:#e6edf3;--nav-border:#30363d;
+  --glow:rgba(88,166,255,.2);
+  --burn:#2563eb;--burn2:#3b82f6;--burn3:#58a6ff;
+  --gold:#1e3a8a;--gold2:#58a6ff;
+}
+[data-theme="maroon"]{
+  --dark:#1a0a0a;--dark2:#2d1111;--dark3:#3d1a1a;--dark4:#4d2222;
+  --card:#2d1111;--card2:#3d1a1a;--card3:#4d2222;--card4:#5d2a2a;
+  --text:#f5e6e6;--text2:#c9a8a8;--text3:#8a6a6a;
+  --border:#3d1a1a;--border2:#5d2a2a;
+  --page-bg:#1a0a0a;
+  --glow:rgba(220,20,60,.25);
+  --burn:#8b0000;--burn2:#b22222;--burn3:#dc143c;
+  --gold:#8b0000;--gold2:#dc143c;
+}
+[data-theme="silver"]{
+  --dark:#f5f5f7;--dark2:#e8e8ed;--dark3:#dcdce0;--dark4:#cfcfd4;
+  --card:#ffffff;--card2:#f8f8fa;--card3:#e8e8ed;--card4:#dcdce0;
+  --text:#1d1d1f;--text2:#515154;--text3:#8e8e93;
+  --border:#dcdce0;--border2:#c7c7cc;
+  --page-bg:#f5f5f7;
+  --glow:rgba(0,102,204,.18);
+  --burn:#0066cc;--burn2:#4099ff;--burn3:#73b9ff;
+  --gold:#0066cc;--gold2:#4099ff;
+}
+[data-theme="gold"]{
+  --dark:#1a1500;--dark2:#2d2200;--dark3:#3d3000;--dark4:#4d3e00;
+  --card:#2d2200;--card2:#3d3000;--card3:#4d3e00;--card4:#5d4e00;
+  --text:#fff8e6;--text2:#d4c08a;--text3:#9e8b50;
+  --border:#3d3000;--border2:#5d4e00;
+  --page-bg:#1a1500;
+  --glow:rgba(212,175,55,.3);
+  --burn:#b8860b;--burn2:#d4af37;--burn3:#f5d060;
+  --gold:#b8860b;--gold2:#d4af37;
+}
+html[data-theme="gemini"]{
+  --burn:#4285f4;--burn2:#9b72cb;--burn3:#d96570;
+  --gold:#f8bc24;--gold2:#f8bc24;
+  --green:#34a853;--red:#ea4335;--amber:#fbbc04;
+  --dark:#1e1f20;--dark2:#282a2c;--dark3:#313335;--dark4:#3c4043;
+  --card:#1e1f20;--card2:#282a2c;--card3:#313335;--card4:#3c4043;
+  --text:#e3e3e3;--text2:#9aa0a6;--text3:#7a8186;
+  --border:#3c4043;--border2:#4a4e52;
+  --page-bg:#131314;
+  --nav-bg:#1e1f20;--nav-text:#e3e3e3;--nav-border:#3c4043;
+}
+html[data-theme="news-reader"]{
+  --burn:#d81921;--burn2:#e8333a;--burn3:#f04148;
+  --gold:#d81921;--gold2:#b31118;
+  --green:#1a7f37;--red:#d81921;--amber:#c27900;
+  --dark:#f5f7f8;--dark2:#ebeef0;--dark3:#dde1e4;--dark4:#cdd2d6;
+  --card:#ffffff;--card2:#f5f7f8;--card3:#ebeef0;--card4:#dde1e4;
+  --text:#111111;--text2:#444444;--text3:#777777;
+  --border:#e5e7e8;--border2:#d0d4d7;
+  --page-bg:#ffffff;
+  --nav-bg:#111111;--nav-text:#ffffff;--nav-border:#333333;
+}
+[data-theme="standard"] .top-menubar{background:linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 55%,#2563eb 100%);border-bottom-color:#93c5fd}
+[data-theme="midnight"] .top-menubar{background:var(--dark2);border-bottom-color:var(--border)}
+[data-theme="maroon"] .top-menubar{background:linear-gradient(135deg,#1a0a0a,#2d1111)}
+[data-theme="silver"] .top-menubar{background:linear-gradient(135deg,#2d2d30,#48484a);border-bottom-color:var(--border)}
+[data-theme="gold"] .top-menubar{background:linear-gradient(135deg,#1a1500,#2d2200);border-bottom-color:var(--border)}
+[data-theme="gemini"] .top-menubar{background:#1e1f20!important;border-bottom:1px solid #3c4043!important}
+[data-theme="news-reader"] .top-menubar{background:#111111!important;border-bottom:3px solid #d81921!important}
+[data-theme="news-reader"] .story-body .story-bullets li{background:rgba(0,0,0,.04);border-left-color:rgba(100,116,139,.3)}
+[data-theme="news-reader"] .story-body .story-sub-bullets li{background:rgba(0,0,0,.04);border-left-color:rgba(100,116,139,.3)}
+[data-theme="news-reader"] .story-modal-ai-badge{background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.3);color:#4338ca}
+[data-theme="news-reader"] .story-modal-header{background:#f0f2f5;border-bottom-color:#d0d4d7}
+[data-theme="news-reader"] .story-modal-close{color:#444}
+[data-theme="news-reader"] .story-modal-close:hover{background:rgba(0,0,0,.07);color:#111}
+[data-theme="standard"] footer{background:linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 55%,#2563eb 100%);border-top-color:#93c5fd;color:#f8fafc}
+[data-theme="midnight"] footer{background:var(--dark2);border-top-color:var(--border);color:var(--text)}
+[data-theme="maroon"] footer{background:linear-gradient(135deg,#1a0a0a,#2d1111);border-top-color:var(--border)}
+[data-theme="silver"] footer{background:linear-gradient(135deg,#2d2d30,#48484a);border-top-color:var(--border)}
+[data-theme="gold"] footer{background:linear-gradient(135deg,#1a1500,#2d2200);border-top-color:var(--border)}
+[data-theme="gemini"] footer{background:#1e1f20!important;border-top:1px solid #3c4043!important;color:#9aa0a6!important}
+[data-theme="news-reader"] footer{background:#111111!important;border-top:3px solid #d81921!important;color:#aaaaaa!important}
+
+/* ==========================================================================
+   RESET & BASE
+   ========================================================================== */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--page-bg);color:var(--text);
+  min-height:100vh;overflow-x:hidden;
+  transition:background-color .5s ease,color .5s ease;
+}
+
+/* ==========================================================================
+   TOP NAV BAR
+   ========================================================================== */
+.top-menubar{
+  position:sticky;top:0;z-index:1000;
+  background:linear-gradient(135deg,#0c1b4d 0%,#0f2d6e 35%,#1d4ed8 75%,#2563eb 100%);
+  border-bottom:1px solid rgba(147,197,253,.35);
+  height:52px;padding:0;
+  box-shadow:0 1px 0 rgba(37,99,235,.15),0 4px 24px rgba(0,0,0,.5);
+  flex-shrink:0;
+}
+.nav-inner{
+  max-width:1400px;margin:0 auto;
+  display:flex;align-items:center;height:100%;
+  padding:0 16px;gap:0;
+}
+.nav-brand-group{
+  display:flex;align-items:center;gap:0;
+  border-right:1px solid rgba(255,255,255,.12);
+  padding-right:16px;margin-right:4px;height:100%;
+  flex-shrink:0;
+}
+.nav-home-link{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:8px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  color:rgba(255,255,255,.9);text-decoration:none;
+  font-size:12px;font-weight:600;letter-spacing:.3px;
+  transition:all .15s;flex-shrink:0;margin-right:12px;
+}
+.nav-home-link:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff}
+.nav-brand{
+  display:flex;align-items:center;gap:8px;
+}
+.brand-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:linear-gradient(135deg,#3b82f6,#38bdf8);
+  box-shadow:0 0 8px rgba(59,130,246,.6);
+  flex-shrink:0;
+}
+.brand-name{
+  font-family:'Bebas Neue',sans-serif;font-size:18px;
+  letter-spacing:2px;color:#e2eeff;white-space:nowrap;
+}
+.brand-story-tag{
+  display:inline-block;
+  background:var(--amber,#f59e0b);
+  color:#fff;font-size:10px;font-weight:700;
+  letter-spacing:1.5px;padding:1px 6px;border-radius:4px;
+  margin-left:6px;vertical-align:middle;font-family:'DM Sans',sans-serif;
+}
+.story-nav-right{
+  display:flex;align-items:center;gap:8px;
+  padding:0 12px;border-left:1px solid rgba(255,255,255,.1);
+  height:100%;flex-shrink:0;margin-left:auto;
+}
+.story-theme-btn{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  border-radius:8px;color:#fff;font-size:16px;cursor:pointer;
+  width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;padding:0;
+}
+.story-theme-btn:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.3)}
+
+@media(max-width:700px){
+  .brand-name{font-size:15px}
+  .top-menubar{height:auto}
+  .nav-inner{flex-wrap:wrap;height:auto;padding:0 10px 8px;gap:0}
+  .nav-brand-group{height:46px;padding-right:10px}
+  .nav-home-link{padding:5px 10px;font-size:11px}
+  .story-nav-right{height:46px}
+}
+
+/* ==========================================================================
+   PAGE HERO
+   ========================================================================== */
+.story-page-hero{
+  background:linear-gradient(135deg,var(--dark2),var(--dark3));
+  border-bottom:1px solid var(--border);
+  padding:28px 32px 20px;
+  position:relative;overflow:hidden;
+}
+.story-page-hero::before{
+  content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+  background:repeating-linear-gradient(90deg,transparent,transparent 80px,rgba(245,158,11,.03) 80px,rgba(245,158,11,.03) 81px);
+  pointer-events:none;
+}
+.story-page-hero-inner{max-width:1400px;margin:0 auto;position:relative;z-index:1}
+.story-page-title{
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:clamp(24px,4vw,42px);font-weight:800;
+  color:var(--text);line-height:1.15;margin-bottom:8px;
+}
+.story-page-subtitle{
+  font-size:14px;color:var(--text3);line-height:1.6;
+  max-width:600px;
+}
+.story-page-meta{
+  display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap;
+}
+.story-page-meta-chip{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.06);border:1px solid var(--border2);
+  border-radius:20px;padding:5px 12px;font-size:11px;
+  color:var(--text3);letter-spacing:.3px;
+}
+.story-page-meta-chip span{color:var(--text2);font-weight:600}
+
+/* ==========================================================================
+   TAB NAVIGATION BAR
+   ========================================================================== */
+.story-tab-bar{
+  position:sticky;top:52px;z-index:999;
+  background:var(--card2);
+  border-bottom:1px solid var(--border);
+  overflow-x:auto;scrollbar-width:none;
+}
+.story-tab-bar::-webkit-scrollbar{display:none}
+.story-tab-inner{
+  max-width:1400px;margin:0 auto;
+  display:flex;align-items:center;
+  padding:0 16px;gap:0;
+}
+.story-tab-btn{
+  flex-shrink:0;padding:14px 20px;
+  font-size:13px;font-weight:600;
+  color:var(--text3);cursor:pointer;
+  border:none;background:none;
+  border-bottom:3px solid transparent;
+  transition:all .18s;white-space:nowrap;
+  font-family:inherit;letter-spacing:.3px;
+  position:relative;
+}
+.story-tab-btn:hover{color:var(--text);background:rgba(255,255,255,.03)}
+.story-tab-btn.active{
+  color:var(--burn2);
+  border-bottom-color:var(--burn2);
+  background:rgba(37,99,235,.07);
+}
+.story-tab-icon{margin-right:6px;font-size:15px}
+
+@media(max-width:700px){
+  .story-tab-bar{top:auto}
+  .story-tab-btn{padding:12px 14px;font-size:12px}
+}
+
+/* ==========================================================================
+   MAIN LAYOUT
+   ========================================================================== */
+.story-page-body{
+  max-width:1400px;margin:0 auto;
+  padding:32px 24px 60px;
+}
+@media(max-width:768px){.story-page-body{padding:20px 12px 48px}}
+
+/* ==========================================================================
+   SECTION WRAPPER
+   ========================================================================== */
+.story-section{
+  margin-bottom:56px;
+  scroll-margin-top:120px;
+}
+.story-section-header{
+  display:flex;align-items:center;gap:10px;
+  padding-bottom:12px;margin-bottom:20px;
+  border-bottom:2px solid var(--border);
+  position:relative;
+}
+.story-section-header::after{
+  content:'';position:absolute;bottom:-2px;left:0;
+  width:60px;height:2px;
+  background:var(--section-accent,var(--burn2));
+  border-radius:2px;
+}
+.story-section-icon{font-size:22px;line-height:1}
+.story-section-name{
+  font-family:'Bebas Neue',sans-serif;font-size:20px;
+  letter-spacing:2.5px;color:var(--text);
+}
+.story-section-badge{
+  margin-left:auto;
+  background:var(--section-accent,var(--burn2));
+  color:#fff;font-size:10px;font-weight:700;
+  padding:3px 10px;border-radius:20px;letter-spacing:.5px;
+}
+
+/* Per-category accent colours */
+.story-section-triller  {--section-accent:#ef4444}
+.story-section-travel   {--section-accent:#06b6d4}
+.story-section-health   {--section-accent:#10b981}
+.story-section-comedy   {--section-accent:#f59e0b}
+.story-section-kids     {--section-accent:#ec4899}
+.story-section-education{--section-accent:#6366f1}
+.story-section-animation{--section-accent:#8b5cf6}
+
+/* ==========================================================================
+   FEATURED HERO CARD
+   ========================================================================== */
+.story-hero-card{
+  position:relative;overflow:hidden;
+  border-radius:14px;margin-bottom:20px;
+  cursor:pointer;min-height:320px;
+  display:flex;align-items:flex-end;
+  background:var(--card2);
+  border:1px solid var(--border2);
+  box-shadow:0 4px 24px rgba(0,0,0,.3);
+  transition:transform .2s ease,box-shadow .2s ease;
+}
+.story-hero-card:hover{transform:translateY(-2px);box-shadow:0 8px 40px rgba(0,0,0,.45)}
+.story-hero-img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;border-radius:14px;
+  transition:transform .4s ease;
+}
+.story-hero-card:hover .story-hero-img{transform:scale(1.03)}
+.story-hero-gradient{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,.9) 0%,rgba(0,0,0,.55) 50%,rgba(0,0,0,.1) 100%);
+  border-radius:14px;
+}
+.story-hero-body{
+  position:relative;z-index:2;
+  padding:28px 28px 24px;width:100%;
+}
+.story-source-badge{
+  display:inline-block;
+  background:var(--section-accent,var(--burn2));
+  color:#fff;font-size:10px;font-weight:700;
+  letter-spacing:1px;padding:3px 10px;border-radius:4px;
+  margin-bottom:10px;text-transform:uppercase;
+}
+.story-hero-headline{
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:clamp(18px,2.5vw,28px);font-weight:700;
+  color:#fff;line-height:1.3;margin-bottom:10px;
+  text-shadow:0 2px 8px rgba(0,0,0,.5);
+}
+.story-hero-teaser{
+  font-size:13px;color:rgba(255,255,255,.7);line-height:1.6;
+  margin-bottom:12px;max-width:600px;
+}
+.story-hero-meta{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.story-hero-time{
+  font-size:12px;color:rgba(255,255,255,.65);
+}
+.story-hero-read{
+  font-size:12px;color:rgba(255,255,255,.9);font-weight:600;
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+  border-radius:20px;padding:4px 14px;transition:all .15s;cursor:pointer;
+}
+.story-hero-read:hover{background:rgba(255,255,255,.25);color:#fff}
+
+/* ==========================================================================
+   STORY CARDS GRID
+   ========================================================================== */
+.story-cards-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:16px;
+}
+@media(max-width:600px){.story-cards-grid{grid-template-columns:1fr}}
+
+.story-card{
+  background:var(--card);border:1px solid var(--border2);
+  border-radius:12px;padding:18px;
+  cursor:pointer;transition:all .18s;
+  display:flex;flex-direction:column;gap:10px;
+  position:relative;overflow:hidden;
+}
+.story-card::before{
+  content:'';position:absolute;top:0;left:0;
+  width:3px;height:100%;
+  background:var(--section-accent,var(--burn2));
+  opacity:0;transition:opacity .18s;
+}
+.story-card:hover{
+  background:var(--card2);border-color:var(--section-accent,var(--burn2));
+  transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.2);
+}
+.story-card:hover::before{opacity:1}
+
+.story-card-source{
+  display:inline-block;
+  background:var(--section-accent,var(--burn2));
+  color:#fff;font-size:9px;font-weight:700;
+  letter-spacing:1px;padding:2px 8px;border-radius:4px;
+  text-transform:uppercase;align-self:flex-start;
+}
+.story-card-headline{
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:15px;font-weight:700;color:var(--text);
+  line-height:1.4;
+}
+.story-card-teaser{
+  font-size:13px;color:var(--text3);line-height:1.6;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.story-card-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:auto;padding-top:4px;
+}
+.story-card-time{font-size:11px;color:var(--text3)}
+.story-card-read{
+  font-size:12px;font-weight:700;
+  color:var(--section-accent,var(--burn2));
+  text-decoration:none;
+  display:flex;align-items:center;gap:4px;
+  transition:gap .15s;
+}
+.story-card-read:hover{gap:8px}
+
+/* ==========================================================================
+   PLACEHOLDER / EMPTY STATE
+   ========================================================================== */
+.story-placeholder{
+  background:var(--card2);border:1px dashed var(--border2);
+  border-radius:12px;padding:48px 32px;text-align:center;
+  min-height:200px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:12px;
+}
+.story-placeholder-icon{font-size:40px;opacity:.4}
+.story-placeholder-text{
+  font-size:15px;color:var(--text3);line-height:1.6;
+  max-width:320px;
+}
+.story-placeholder-sub{font-size:12px;color:var(--text3);opacity:.7}
+
+/* ==========================================================================
+   FULL STORY MODAL
+   ========================================================================== */
+.story-modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.82);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  z-index:9999;
+  align-items:flex-end;justify-content:center;
+}
+.story-modal-overlay.active{display:flex}
+
+.story-modal{
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:20px 20px 0 0;
+  width:100%;max-width:760px;
+  height:90vh;
+  display:flex;flex-direction:column;
+  box-shadow:0 -8px 64px rgba(0,0,0,.6);
+  animation:modalSlideUp .3s cubic-bezier(.32,.72,0,1) both;
+  overflow:hidden;
+}
+@media(min-width:800px){
+  .story-modal-overlay{align-items:center}
+  .story-modal{border-radius:18px;height:auto;max-height:88vh}
+}
+@keyframes modalSlideUp{
+  from{transform:translateY(60px);opacity:0}
+  to{transform:translateY(0);opacity:1}
+}
+
+.story-modal-header{
+  padding:16px 20px 14px;
+  background:var(--dark2);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.story-modal-drag{
+  width:36px;height:4px;border-radius:2px;
+  background:var(--border2);margin:0 auto 14px;cursor:pointer;
+}
+.story-modal-section-pill{
+  padding:4px 12px;border-radius:20px;
+  font-size:10px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:#fff;
+}
+.story-modal-close{
+  background:none;border:none;cursor:pointer;
+  color:var(--text3);font-size:22px;line-height:1;
+  padding:2px 6px;border-radius:6px;
+  transition:all .15s;
+}
+.story-modal-close:hover{background:rgba(255,255,255,.08);color:var(--text)}
+
+.story-modal-body{
+  padding:24px 28px 32px;
+  overflow-y:auto;flex:1;min-height:0;
+  background:var(--card);
+  scrollbar-width:thin;scrollbar-color:var(--border2) transparent;
+}
+.story-modal-body::-webkit-scrollbar{width:5px}
+.story-modal-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+@media(max-width:600px){.story-modal-body{padding:18px 16px 24px}}
+
+.story-modal-headline{
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:clamp(18px,3.5vw,26px);font-weight:700;
+  color:var(--text);line-height:1.35;margin-bottom:14px;
+}
+.story-modal-meta{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  font-size:12px;color:var(--text2);margin-bottom:20px;
+  padding-bottom:14px;border-bottom:1px solid var(--border);
+}
+.story-modal-meta-sep{opacity:.4}
+.story-body{
+  font-size:16px;color:var(--text);line-height:1.9;
+  margin-bottom:24px;
+}
+.story-body p{margin-bottom:16px;color:var(--text)}
+.story-body strong{color:var(--text);font-weight:600}
+.story-body .story-lead{
+  font-size:17px;line-height:1.8;margin-bottom:20px;color:var(--text);
+}
+.story-body .story-bullets{
+  list-style:none;padding:0;margin:0 0 18px 0;
+}
+.story-body .story-bullets li{
+  padding:13px 16px;
+  background:rgba(37,99,235,.07);
+  border-left:3px solid var(--burn,#2563eb);
+  border-radius:0 8px 8px 0;
+  font-size:15px;line-height:1.75;color:var(--text);
+}
+.story-body .story-zoom{
+  font-size:15px;line-height:1.75;margin-bottom:20px;
+  padding:13px 16px;
+  background:rgba(99,102,241,.07);
+  border-left:3px solid #6366f1;border-radius:0 8px 8px 0;
+  color:var(--text2,var(--text));font-style:italic;
+}
+.story-body .story-section-item{
+  font-size:15.5px;line-height:1.75;margin-bottom:6px;color:var(--text);
+}
+
+.story-modal-disclaimer{
+  background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);
+  border-radius:8px;padding:12px 16px;margin-bottom:20px;
+  font-size:12px;color:var(--text3);line-height:1.7;
+  display:flex;gap:8px;align-items:flex-start;
+}
+.story-modal-disclaimer::before{content:'\2139\FE0F';flex-shrink:0;font-size:14px}
+
+.story-modal-share{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding-top:16px;border-top:1px solid var(--border);
+}
+.story-modal-share-label{font-size:12px;color:var(--text3);font-weight:600;flex-shrink:0}
+.share-btn-sm{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:20px;
+  font-size:12px;font-weight:700;color:#fff;
+  text-decoration:none;border:none;cursor:pointer;
+  transition:opacity .15s;
+}
+.share-btn-sm:hover{opacity:.85}
+.share-wa{background:#25D366}
+.share-tw{background:#000;border:1px solid #333}
+
+/* ==========================================================================
+   LEGAL DISCLAIMER BANNER
+   ========================================================================== */
+.story-legal-banner{
+  background:var(--card2);border:1px solid var(--border);
+  border-left:3px solid var(--text3);
+  border-radius:10px;padding:20px 24px;
+  margin:0 24px 40px;
+  max-width:1400px;margin-left:auto;margin-right:auto;
+}
+@media(max-width:768px){.story-legal-banner{margin:0 12px 32px}}
+.story-legal-banner-title{
+  font-size:11px;font-weight:700;color:var(--text3);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;
+}
+.story-legal-banner-text{
+  font-size:12px;color:var(--text3);line-height:1.8;
+}
+
+/* ==========================================================================
+   FOOTER
+   ========================================================================== */
+footer.story-footer{
+  background:linear-gradient(135deg,#0c1b4d 0%,#0f2d6e 35%,#1d4ed8 75%,#2563eb 100%);
+  color:rgba(248,250,252,.8);
+  font-size:14px;line-height:1.7;
+  border-top:1px solid rgba(147,197,253,.35);
+}
+.footer-main{
+  max-width:1280px;margin:0 auto;
+  padding:48px 32px 36px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:32px;
+}
+@media(max-width:900px){.footer-main{grid-template-columns:repeat(2,1fr);gap:24px;padding:36px 20px 28px}}
+@media(max-width:500px){.footer-main{grid-template-columns:1fr;gap:20px;padding:28px 16px 20px}}
+
+.footer-col-title{
+  font-size:13px;font-weight:700;color:#fff;
+  letter-spacing:.6px;text-transform:uppercase;margin-bottom:14px;
+}
+.footer-brand-desc{font-size:13px;color:rgba(248,250,252,.65);line-height:1.75}
+.footer-links{list-style:none;display:flex;flex-direction:column;gap:9px}
+.footer-links a{
+  color:rgba(248,250,252,.8);text-decoration:none;font-size:13px;
+  transition:color .18s;display:inline-flex;align-items:center;gap:6px;
+}
+.footer-links a:hover{color:#fff}
+.footer-social a{
+  display:inline-flex;align-items:center;gap:10px;
+  color:rgba(248,250,252,.8);text-decoration:none;font-size:13px;
+  padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.2);
+  transition:background .18s,color .18s,border-color .18s;
+  width:100%;box-sizing:border-box;margin-bottom:8px;
+}
+.footer-social a:hover{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4)}
+.footer-social-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.footer-bottom{
+  border-top:1px solid rgba(147,197,253,.25);
+  padding:20px 32px;max-width:1200px;margin:0 auto;
+}
+.footer-legal-text{
+  font-size:11px;color:rgba(248,250,252,.65);
+  line-height:1.8;text-align:center;margin-bottom:12px;
+}
+.footer-legal-text strong{color:rgba(248,250,252,.8);font-weight:600}
+.footer-copyright{
+  font-size:11px;color:rgba(248,250,252,.45);
+  text-align:center;letter-spacing:.3px;
+}
+.share-btn{
+  padding:8px 15px;color:#fff!important;text-decoration:none;border-radius:5px;
+  font-size:13px;font-weight:700;cursor:pointer;border:none;transition:opacity .2s;
+  display:inline-flex;align-items:center;justify-content:center;
+}
+.share-btn:hover{opacity:.8}
+
+/* ==========================================================================
+   SMOOTH TRANSITIONS
+   ========================================================================== */
+.top-menubar,.story-card,.story-hero-card,footer{
+  transition:background-color .5s ease,color .5s ease,border-color .5s ease;
+}
+
+/* ==========================================================================
+   MOBILE POLISH
+   ========================================================================== */
+@media(max-width:600px){
+  .story-hero-card{min-height:220px}
+  .story-hero-body{padding:18px 16px 16px}
+  .story-hero-headline{font-size:17px!important}
+  .story-hero-teaser{font-size:12px}
+
+  .story-section-header{margin-bottom:14px}
+  .story-section-name{font-size:16px;letter-spacing:1.5px}
+
+  .story-legal-banner{margin:0 12px 24px;padding:14px 16px}
+
+  .footer-main{grid-template-columns:1fr!important;gap:20px!important;padding:28px 16px 20px!important}
+  .footer-bottom{padding:14px 16px}
+
+  .story-page-hero{padding:18px 16px 14px}
+  .story-page-title{font-size:26px}
+  .story-page-subtitle{font-size:13px}
+  .story-page-meta{gap:8px;margin-top:12px}
+  .story-page-meta-chip{font-size:11px;padding:4px 10px}
+
+  .story-modal-drag{width:44px;height:5px;margin-bottom:0}
+  .story-modal-header{padding:14px 16px 12px}
+  .story-modal-close{font-size:20px}
+  .story-modal-headline{font-size:18px!important}
+
+  .story-modal-share{gap:6px}
+  .share-btn-sm{font-size:11px;padding:6px 12px}
+
+  .story-card{padding:14px;border-radius:10px}
+  .story-card-headline{font-size:14px}
+  .story-card-teaser{font-size:12px}
+  .story-card-source{font-size:8.5px}
+  .story-card-time{font-size:10px}
+
+  .story-placeholder{padding:32px 20px;min-height:160px}
+  .story-placeholder-icon{font-size:32px}
+  .story-placeholder-text{font-size:14px}
+}
+</style>
+</head>
+<body>
+
+<!-- ==========================================================================
+     TOP NAVIGATION BAR
+     ========================================================================== -->
+<nav class="top-menubar" id="top-menubar">
+  <div class="nav-inner">
+    <div class="nav-brand-group">
+      <a href="https://vilfintv.com" class="nav-home-link" title="Back to VilfinTV Dashboard" style="margin-right:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </a>
+      <a href="https://vilfintv.com/news.html" class="nav-home-link" title="News">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        News
+      </a>
+      <div class="nav-brand">
+        <span class="brand-dot"></span>
+        <span class="brand-name">VilfinTV <span class="brand-story-tag">STORIES</span></span>
+      </div>
+    </div>
+    <div class="story-nav-right">
+      <button class="story-theme-btn" onclick="cycleTheme()" title="Change theme">&#x1F3A8;</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ==========================================================================
+     TAB NAVIGATION BAR
+     ========================================================================== -->
+<div class="story-tab-bar" id="story-tab-bar">
+  <div class="story-tab-inner" id="story-tab-inner">
+  </div>
+</div>
+
+<!-- ==========================================================================
+     PAGE HERO
+     ========================================================================== -->
+<div class="story-page-hero">
+  <div class="story-page-hero-inner">
+    <h1 class="story-page-title">Stories That Inspire</h1>
+    <p class="story-page-subtitle">Curated short-form stories spanning Triller, Travel, Health, Comedy, Kids, Education &amp; Animation.</p>
+    <div class="story-page-meta">
+      <div class="story-page-meta-chip">Categories: <span id="category-count">7</span></div>
+      <div class="story-page-meta-chip">Stories: <span id="total-story-count">—</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     MAIN CONTENT
+     ========================================================================== -->
+<div class="story-page-body" id="story-page-body">
+  <div id="story-content-area">
+  </div>
+</div>
+
+<!-- ==========================================================================
+     LEGAL DISCLAIMER
+     ========================================================================== -->
+<div class="story-legal-banner">
+  <div class="story-legal-banner-title">Content Disclosure</div>
+  <p class="story-legal-banner-text">
+    VilfinTV Stories features original short-form narratives and curated content across multiple genres.
+    All stories are independently authored as creative works. VilfinTV does not claim ownership of any third-party intellectual property referenced within stories.
+    Content is for informational and entertainment purposes only.
+  </p>
+</div>
+
+<!-- ==========================================================================
+     FULL STORY MODAL
+     ========================================================================== -->
+<div class="story-modal-overlay" id="story-modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="story-modal" id="story-modal" role="dialog" aria-modal="true" aria-labelledby="story-modal-headline">
+    <div class="story-modal-drag" onclick="closeStory()" title="Close"></div>
+    <div class="story-modal-header">
+      <span class="story-modal-section-pill" id="story-section-pill" style="background:#3b82f6">Category</span>
+      <button class="story-modal-close" onclick="closeStory()" title="Close story">&times;</button>
+    </div>
+    <div class="story-modal-body" id="story-modal-body">
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     FOOTER
+     ========================================================================== -->
+<footer class="story-footer">
+  <div class="footer-main">
+    <div>
+      <div class="footer-col-title">VilfinTV Stories</div>
+      <p class="footer-brand-desc">Curated short-form stories across multiple genres. Original narratives, inspiring tales, and engaging content for every audience.</p>
+    </div>
+    <div>
+      <div class="footer-col-title">Genres</div>
+      <ul class="footer-links">
+        <li><a href="#" onclick="switchTab('triller');return false;">&#x1F3AC; Triller Stories</a></li>
+        <li><a href="#" onclick="switchTab('travel');return false;">&#x2708; Travel Stories</a></li>
+        <li><a href="#" onclick="switchTab('health');return false;">&#x1F3E5; Health Stories</a></li>
+        <li><a href="#" onclick="switchTab('comedy');return false;">&#x1F602; Comedy Stories</a></li>
+        <li><a href="#" onclick="switchTab('kids');return false;">&#x1F476; Kids Stories</a></li>
+        <li><a href="#" onclick="switchTab('education');return false;">&#x1F4DA; Education Stories</a></li>
+        <li><a href="#" onclick="switchTab('animation');return false;">&#x2728; Animation Stories</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">VilfinTV Platform</div>
+      <ul class="footer-links">
+        <li><a href="index.html">&#x1F4CA; MultiScreener Dashboard</a></li>
+        <li><a href="news.html">&#x1F4FA; VilfinTV News</a></li>
+        <li><a href="blog_intelligence_hub.html" target="_blank">&#x1F4F0; Blog Intelligence Hub</a></li>
+        <li><a href="user_manual.html" target="_blank">&#x1F4D6; User Manual</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Connect With Us</div>
+      <div class="footer-social">
+        <a href="https://x.com/vilfing" target="_blank" rel="noopener">
+          <span class="footer-social-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#94a3b8"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.73-8.835L1.254 2.25H8.08l4.261 5.636 5.903-5.636zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </span>
+          @vilfing on X (Twitter)
+        </a>
+        <a href="https://www.facebook.com/share/19s3NRNKwv/?mibextid=wwXIfr" target="_blank" rel="noopener">
+          <span class="footer-social-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#94a3b8"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </span>
+          Facebook Page
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:20px 32px 12px;text-align:center;border-top:1px solid rgba(147,197,253,.15)">
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+      <a href="https://api.whatsapp.com/send?text=Check%20out%20VilfinTV%20Stories%3A%20https%3A%2F%2Fvilfintv.com%2Fstory.html" target="_blank" rel="noopener" class="share-btn" style="background:#25D366">WhatsApp</a>
+      <a href="https://twitter.com/intent/tweet?text=Discover+curated+stories+on+VilfinTV&url=https%3A%2F%2Fvilfintv.com%2Fstory.html" target="_blank" rel="noopener" class="share-btn" style="background:#000;border:1px solid #333">X (Twitter)</a>
+      <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fvilfintv.com%2Fstory.html" target="_blank" rel="noopener" class="share-btn" style="background:#1877F2">Facebook</a>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid rgba(147,197,253,.15)">
+    <div class="footer-bottom">
+      <p class="footer-legal-text">
+        VilfinTV Stories features original short-form narratives and curated content. All stories are independently authored.
+        Content is for informational and entertainment purposes only. Not affiliated with any regulatory authority.
+      </p>
+      <p class="footer-copyright">&#xA9; 2026 VilfinTV. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ==========================================================================
+   THEME MANAGEMENT
+   ========================================================================== */
+var THEMES = ['black','midnight','maroon','silver','gold','gemini','news-reader','standard'];
+
+function setNewsTheme() {
+  var t = localStorage.getItem('viltv_theme') || 'black';
+  if (t === 'standard') { t = 'midnight'; }
+  document.documentElement.setAttribute('data-theme', t);
+}
+
+function setTheme(t) {
+  if (t === 'standard') t = 'midnight';
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('viltv_theme', t);
+}
+
+function cycleTheme() {
+  var cur = localStorage.getItem('viltv_theme') || 'black';
+  var idx = THEMES.indexOf(cur);
+  var next = THEMES[(idx + 1) % THEMES.length];
+  setTheme(next);
+}
+
+setNewsTheme();
+
+/* ==========================================================================
+   CATEGORY METADATA
+   ========================================================================== */
+var CATEGORIES = [
+  { id:'triller',   label:'Triller',   icon:'&#x1F3AC;', accent:'#ef4444', cssClass:'story-section-triller',  desc:'Short cinematic narratives and dramatic micro-stories.' },
+  { id:'travel',    label:'Travel',    icon:'&#x2708;',  accent:'#06b6d4', cssClass:'story-section-travel',   desc:'Journeys, destinations, and tales from around the world.' },
+  { id:'health',    label:'Health',    icon:'&#x1F3E5;', accent:'#10b981', cssClass:'story-section-health',   desc:'Wellness journeys, medical breakthroughs, and lifestyle stories.' },
+  { id:'comedy',    label:'Comedy',    icon:'&#x1F602;', accent:'#f59e0b', cssClass:'story-section-comedy',   desc:'Humorous tales, satire, and feel-good narratives.' },
+  { id:'kids',      label:'Kids',      icon:'&#x1F476;', accent:'#ec4899', cssClass:'story-section-kids',     desc:'Fables, adventures, and stories for young minds.' },
+  { id:'education', label:'Education', icon:'&#x1F4DA;', accent:'#6366f1', cssClass:'story-section-education',desc:'Knowledge-driven narratives and learning journeys.' },
+  { id:'animation', label:'Animation', icon:'&#x2728;', accent:'#8b5cf6', cssClass:'story-section-animation',desc:'Animated tales, character-driven stories, and visual narratives.' }
+];
+
+/* ==========================================================================
+   STORY DATA — embedded sample stories for each category
+   ========================================================================== */
+var STORY_DATA = {};
+
+STORY_DATA.triller = [
+  {
+    headline: 'The Last Train Home — A Midnight Crossing',
+    teaser: 'When the final train of the night pulls into the station, a lone passenger discovers an unexpected connection that changes everything.',
+    source: 'Triller Originals',
+    publishedAt: '2026-05-27T14:30:00Z',
+    body: [
+      '<p class="story-lead">The station clock struck midnight as the last train of the evening pulled into Platform 3. Maya had missed the earlier connection by three minutes, and now she was the only passenger waiting in the cavernous hall. The fluorescent lights flickered, casting long shadows across the tiled floor. She shivered, pulling her jacket tighter around her shoulders.</p>',
+      '<p>As the train doors hissed open, she stepped inside and found only one other passenger — an elderly man in a worn trench coat, holding a leather-bound journal. He looked up and smiled, the kind of knowing smile that suggested he had been expecting her.</p>',
+      '<p>"Going home?" he asked, his voice gravelly but kind. Maya nodded, unsure why she felt compelled to engage. "Funny thing about home," he continued, "it is never quite where you left it."</p>',
+      '<ul class="story-bullets"><li>The man reveals he has ridden this train for forty years, collecting stories from passengers.</li><li>Maya reluctantly shares her own story — a career in tatters, a relationship ended, a city that no longer felt like her own.</li><li>He listens without judgment, then offers her a blank page from his journal: "Write the next chapter. Not the one you are running from."</li></ul>',
+      '<p>When the train reached her station, Maya stepped off with something she had not felt in months: hope. She turned to thank the old man, but the carriage was empty. On the seat lay the blank page, and on it, written in ink that had not been there before, was a single word: <strong>Begin.</strong></p>'
+    ]
+  },
+  {
+    headline: 'Echoes in the Rain — A Ghost in the Alley',
+    teaser: 'A photographer chasing the perfect shot stumbles into a rain-drenched alley where the past refuses to stay buried.',
+    source: 'Triller Originals',
+    publishedAt: '2026-05-26T10:15:00Z',
+    body: [
+      '<p class="story-lead">The rain came down in sheets, blurring the neon signs of the old district into smears of pink and blue. Daniel raised his camera, framing the narrow alley that wound between two decaying apartment blocks. The city planning commission had slated this neighbourhood for demolition, and he wanted to capture it before it vanished.</p>',
+      '<p>Through the viewfinder, he saw her. A woman in a red dress, standing perfectly still at the far end of the alley. She was not there when he lowered the camera.</p>',
+      '<ul class="story-bullets"><li>Daniel reviews his photos — the woman is in every frame, her face never quite in focus.</li><li>He researches the building and discovers that in 1947, a young dancer named Clara vanished from the same alley on a rainy night identical to this one.</li><li>The demolition crew arrives the next morning. Daniel races to the site and finds a locked wooden chest buried beneath the floorboards.</li></ul>',
+      '<p>Inside the chest: photographs, letters, and a red silk dress, perfectly preserved. The last letter was addressed to a photographer — someone Clara had been waiting for, all this time.</p>'
+    ]
+  },
+  {
+    headline: 'Neon Noir — The Detective Who Knew Too Little',
+    teaser: 'In a city that never sleeps, a washed-up detective takes on one last case that may either redeem or destroy him.',
+    source: 'Triller Originals',
+    publishedAt: '2026-05-24T08:45:00Z',
+    body: [
+      '<p class="story-lead">Detective Roy Callahan had not taken a case in three years. The last one had cost him his partner, his marriage, and very nearly his sanity. But when a mysterious envelope arrived at his door containing a single photograph and a thousand-dollar retainer, curiosity got the better of him.</p>',
+      '<p>The photograph showed a man he did not recognize, standing in front of a building that no longer existed. On the back, in elegant cursive: "The truth has a price. Are you willing to pay it?"</p>',
+      '<ul class="story-bullets"><li>Roy traces the building to a demolished bank where a legendary heist took place in 1982.</li><li>He discovers the man in the photo is the only suspect who was never found — presumed dead for forty years.</li><li>Following a trail of old newspaper clippings and reluctant witnesses, Roy finds a retirement home where the suspect has been living under an alias.</li></ul>',
+      '<p>The final twist: the suspect was never the thief. He was the whistleblower who tried to expose the real criminals and was silenced for it. Roy must decide whether to let the truth die with the old man or risk everything to set the record straight.</p>'
+    ]
+  },
+  {
+    headline: 'The Signal — A Tower in the Storm',
+    teaser: 'A radio operator in a remote outpost receives a transmission from a source that should not exist.',
+    source: 'Triller Originals',
+    publishedAt: '2026-05-22T16:20:00Z',
+    body: [
+      '<p class="story-lead">Station Kilo-Seven was the loneliest posting in the entire network. Perched on a windswept cliff in the North Atlantic, it was manned by a single operator: Lieutenant Sarah Keane. Her job was to monitor emergency frequencies — a task that had been uneventful for eighteen months. Until tonight.</p>',
+      '<p>The signal came through at 02:47 AM. A distress call on a frequency that had been officially decommissioned in 1991. The voice on the other end was calm, almost clinical: "This is Flight 447. We are 200 miles off course. Does anyone read?"</p>',
+      '<ul class="story-bullets"><li>Flight 447 disappeared over the Atlantic in 2009 with 228 people aboard. No distress call was ever received — until now.</li><li>Sarah logs the transmission and alerts her superiors. They dismiss it as a prank or atmospheric anomaly.</li><li>Determined to uncover the truth, she triangulates the signal and discovers it is originating from a point 3,000 feet below the ocean surface.</li></ul>',
+      '<p>What Sarah uncovers next defies explanation: a black box recorder, transmitting on a loop for seventeen years, finally breaking through the interference. The final cockpit recording reveals something no investigation had ever considered.</p>'
+    ]
+  },
+  {
+    headline: 'Shadows on the Bridge — A Photograph That Should Not Exist',
+    teaser: 'An old photograph found at a flea market leads a journalist down a rabbit hole of unsolved disappearances.',
+    source: 'Triller Originals',
+    publishedAt: '2026-05-20T20:00:00Z',
+    body: [
+      '<p class="story-lead">At a Sunday flea market in Brooklyn, journalist Ava Chen paid five dollars for a box of vintage photographs. Most were unremarkable — family picnics, wedding portraits, faded landscapes. But one image made her pause: a group of seven people standing on the Brooklyn Bridge at dusk. The date stamp read March 14, 1986. Every person in the photograph had been reported missing within six months of that date.</p>',
+      '<p>Ava spent the next year tracing each face. The more she uncovered, the more disturbing the pattern became.</p>',
+      '<ul class="story-bullets"><li>All seven individuals were connected to a defunct research laboratory that conducted classified experiments.</li><li>The photographer has never been identified — no fingerprints, no records, nothing on the negative.</li><li>Every investigator who had previously looked into the case either retired abruptly or died under unusual circumstances.</li></ul>',
+      '<p>Ava publishes her findings against the advice of everyone she knows. Three days later, an eighth person appears in the photograph — a figure she did not notice before. The figure is looking directly at the camera. And it looks exactly like her.</p>'
+    ]
+  }
+];
+
+STORY_DATA.travel = [
+  {
+    headline: 'The Silk Road Revisited — A Solo Journey Across Central Asia',
+    teaser: 'One traveller retraces the ancient Silk Road through Uzbekistan, Kyrgyzstan, and Kazakhstan — discovering that the greatest journeys happen within.',
+    source: 'Travel Chronicles',
+    publishedAt: '2026-05-25T12:00:00Z',
+    body: [
+      '<p class="story-lead">The idea had been brewing for years — a solo trip across the heart of Central Asia, following the ancient trade routes that once connected East and West. At thirty-two, Liam had a stable job, a comfortable apartment, and a nagging sense that life was passing him by. He booked a one-way ticket to Tashkent and did not look back.</p>',
+      '<p>Uzbekistan welcomed him with azure-tiled mosques and the scent of plov drifting through Samarkand\'s ancient bazaars. But it was in the Pamir Mountains of Kyrgyzstan that the journey truly began.</p>',
+      '<ul class="story-bullets"><li>Three weeks living with a nomadic family in a yurt at 3,500 metres, learning to herd yaks and bake bread over an open fire.</li><li>A midnight trek to a hot spring under a sky so full of stars it felt like falling into the universe.</li><li>An unexpected friendship with a 72-year-old Kazakh eagle hunter who taught him that "a man who has not been lost has never truly travelled."</li></ul>',
+      '<p>By the time he reached Almaty, Liam had not found what he was looking for — because he had stopped looking. Instead, he had found something better: the understanding that the road itself was the destination, and that every stranger carries a story worth hearing.</p>'
+    ]
+  },
+  {
+    headline: 'Islands of Solitude — Finding Peace in the Faroe Islands',
+    teaser: 'A burned-out executive trades boardroom meetings for sheep-dotted cliffs and discovers a different definition of success.',
+    source: 'Travel Chronicles',
+    publishedAt: '2026-05-23T09:30:00Z',
+    body: [
+      '<p class="story-lead">After fifteen years in investment banking, Nina collapsed at her desk. The doctor said it was exhaustion; Nina knew it was something deeper. She took a six-month sabbatical and, on a whim, booked a flight to the Faroe Islands — a place she had once seen in a nature documentary and never forgotten.</p>',
+      '<p>The islands were everything the corporate world was not: windswept, raw, achingly beautiful. There were more sheep than people, and the silence was so profound it took her a week to stop hearing the phantom ping of email notifications.</p>',
+      '<ul class="story-bullets"><li>She hiked to the edge of Lake Sorvagsvatn, the famous "lake above the ocean," and felt tears stream down her face for no reason she could name.</li><li>She learned to knit from an 80-year-old woman who had never owned a mobile phone.</li><li>She watched the Northern Lights dance over the village of Gjogv and realized she had not checked her phone in eleven days.</li></ul>',
+      '<p>Nina did not return to banking. She opened a small guesthouse on the islands, where she now hosts travellers seeking the same silence that saved her. "I spent thirty-seven years chasing success," she tells her guests, "and found it in a place where the sheep outnumber the people."</p>'
+    ]
+  },
+  {
+    headline: 'The Trans-Siberian Chronicle — 9,289 Kilometres of Stories',
+    teaser: 'Seven days on the legendary Trans-Siberian Railway reveals the soul of Russia through the lives of its passengers.',
+    source: 'Travel Chronicles',
+    publishedAt: '2026-05-21T14:00:00Z',
+    body: [
+      '<p class="story-lead">The Trans-Siberian Railway is not just a train journey — it is a moving village, a microcosm of humanity hurtling across the largest country on Earth. When Marcus boarded in Moscow, he expected scenic landscapes and perhaps a few interesting conversations. What he got was a masterclass in the human condition.</p>',
+      '<p>Over seven days and seven time zones, he met a cast of characters straight out of a Tolstoy novel.</p>',
+      '<ul class="story-bullets"><li>A retired ballet dancer heading to Vladivostok to see her grandson for the first time, carrying only a photograph and a jar of homemade jam.</li><li>A young soldier returning from leave, who spoke no English but communicated volumes through shared meals of black bread and smoked fish.</li><li>An oil executive who confessed at 3 AM, over vodka, that he envied Marcus\'s freedom more than Marcus envied his wealth.</li></ul>',
+      '<p>When the train finally pulled into Vladivostok, Marcus stepped onto the platform a different person. The landscapes had been stunning, but it was the stories — the raw, unfiltered stories of strangers becoming friends — that he would carry with him forever.</p>'
+    ]
+  },
+  {
+    headline: 'Temple Trails — A Spiritual Pilgrimage Through Southeast Asia',
+    teaser: 'From the golden spires of Myanmar to the jungle temples of Cambodia, one seeker discovers that spirituality wears many faces.',
+    source: 'Travel Chronicles',
+    publishedAt: '2026-05-19T11:15:00Z',
+    body: [
+      '<p class="story-lead">Priya was not religious in any conventional sense, but she was deeply spiritual. After her mother passed away, she felt an inexplicable pull toward the ancient temples of Southeast Asia — a call to walk where millions had walked before her, searching for meaning in stone and silence.</p>',
+      '<p>Her journey began at dawn in Bagan, Myanmar, where 2,200 pagodas rise from the mist like the skeletal remains of a forgotten kingdom.</p>',
+      '<ul class="story-bullets"><li>In Bagan, a monk told her: "You do not find enlightenment. You become it, one small kindness at a time."</li><li>At Angkor Wat, she sat in meditation as the sun rose behind the iconic spires, and for the first time since her mother\'s passing, she felt peace.</li><li>In a remote monastery in Laos, she spent three days in silence, learning that grief is not a wound to be healed but a companion to be accepted.</li></ul>',
+      '<p>Priya returned home with no answers — only better questions. The temples had not given her what she sought; they had simply shown her that the seeking itself was the point.</p>'
+    ]
+  },
+  {
+    headline: 'The Patagonia Crossing — Where Mountains Meet the Soul',
+    teaser: 'A gruelling trek through Torres del Paine challenges everything one hiker thought she knew about endurance and beauty.',
+    source: 'Travel Chronicles',
+    publishedAt: '2026-05-17T16:40:00Z',
+    body: [
+      '<p class="story-lead">The W Trek in Chilean Patagonia is not for the faint of heart. Over five days, hikers cover 76 kilometres through some of the most dramatic terrain on the planet — glacial lakes, granite spires, and winds strong enough to knock a person off their feet. Emma had trained for six months, but nothing prepared her for the reality.</p>',
+      '<p>By day two, her boots had given her blisters the size of coins. By day three, a storm flooded her tent. By day four, she was ready to quit.</p>',
+      '<ul class="story-bullets"><li>At the lowest point, a fellow hiker — a 64-year-old grandmother from Scotland — shared her chocolate bar and said: "The mountain does not care how fast you go. It only cares that you keep going."</li><li>On the final day, Emma reached the base of the Torres at sunrise. The granite towers glowed orange in the first light, reflected perfectly in the glacial lake below.</li><li>She sat there for an hour, crying and laughing, as condors circled overhead.</li></ul>',
+      '<p>Emma learned that endurance is not about physical strength — it is about the stories we tell ourselves when we think we cannot take another step. And sometimes, the best story is simply: "Keep going."</p>'
+    ]
+  }
+];
+
+STORY_DATA.health = [
+  {
+    headline: 'The Blue Zone Secret — Lessons from the World\'s Longest-Lived People',
+    teaser: 'Researchers spent decades studying communities where people routinely live past 100. The secret is simpler than anyone imagined.',
+    source: 'Health & Wellness',
+    publishedAt: '2026-05-26T07:30:00Z',
+    body: [
+      '<p class="story-lead">In five pockets around the world — from Okinawa, Japan, to Sardinia, Italy — people live extraordinarily long, healthy lives. They do not follow fad diets, take expensive supplements, or spend hours in the gym. So what is their secret?</p>',
+      '<p>Dr. Marco Santini spent fifteen years studying these "Blue Zones" and discovered that longevity is not about deprivation or extreme discipline. It is about integration — weaving healthy habits so seamlessly into daily life that they become invisible.</p>',
+      '<ul class="story-bullets"><li><strong>The 80% Rule:</strong> Okinawans stop eating when they are 80% full. This simple practice, called "hara hachi bu," naturally limits calorie intake without counting or restricting.</li><li><strong>Natural Movement:</strong> None of these populations go to the gym. Instead, they walk everywhere, tend gardens, and live in environments that make movement unavoidable.</li><li><strong>Purpose:</strong> Every Blue Zone culture has a concept of life purpose — "ikigai" in Okinawa, "plan de vida" in Costa Rica. Having a reason to wake up in the morning is literally life-extending.</li><li><strong>Connection:</strong> Loneliness is as deadly as smoking. In Blue Zones, people stay deeply connected to family, friends, and community throughout their lives.</li></ul>',
+      '<p>The most striking finding: none of these people were trying to live long. They were simply living well, and longevity was a byproduct. As one Sardinian centenarian told Dr. Santini: "I did not add years to my life. I added life to my years."</p>'
+    ]
+  },
+  {
+    headline: 'Running from Darkness — How Exercise Saved Me from Depression',
+    teaser: 'After losing her brother to suicide, a woman discovers that putting one foot in front of the other is the most powerful medicine.',
+    source: 'Health & Wellness',
+    publishedAt: '2026-05-24T19:00:00Z',
+    body: [
+      '<p class="story-lead">When her younger brother Alex took his own life at twenty-six, Rebecca\'s world collapsed. For months, she barely left her apartment. She stopped answering calls, stopped eating properly, stopped caring about anything. The darkness was so complete she could not imagine light again.</p>',
+      '<p>Then one morning, almost on automatic pilot, she put on an old pair of running shoes and walked to the end of her street. The next day, she made it two blocks. The next, four.</p>',
+      '<ul class="story-bullets"><li>It took eight months before she could run a full kilometre without stopping. But by then, she did not want to stop.</li><li>Running became her therapy — the rhythmic pounding of her feet on pavement a meditation that quieted the noise in her head.</li><li>She joined a running group and discovered that every person there was running from something — grief, anxiety, addiction, heartbreak. They were running toward healing.</li></ul>',
+      '<p>Three years later, Rebecca completed her first marathon. She crossed the finish line wearing Alex\'s favourite band T-shirt, and when they placed the medal around her neck, she finally felt something she thought she had lost forever: joy. "I found out that movement is the antidote to despair," she says. "As long as I am moving forward, I am winning."</p>'
+    ]
+  },
+  {
+    headline: 'The Microbiome Revolution — Your Gut is Your Second Brain',
+    teaser: 'Groundbreaking research reveals that the trillions of bacteria living in your digestive system control more than just digestion.',
+    source: 'Health & Wellness',
+    publishedAt: '2026-05-22T13:45:00Z',
+    body: [
+      '<p class="story-lead">For decades, scientists viewed gut bacteria as simple digestive helpers. But new research has revealed something astonishing: your gut microbiome directly influences your mood, immune system, brain function, and even your personality. Some researchers now call it the "second brain."</p>',
+      '<p>Dr. Amara Osei, a microbiologist at Cambridge, has been at the forefront of this revolution. Her team\'s research has uncovered connections that sound like science fiction but are increasingly backed by rigorous data.</p>',
+      '<ul class="story-bullets"><li><strong>Mood Regulation:</strong> Certain gut bacteria produce up to 90% of the body\'s serotonin — the "happiness chemical." An imbalanced microbiome can literally cause depression.</li><li><strong>Immune Function:</strong> 70% of the immune system resides in the gut. A healthy microbiome trains immune cells to distinguish friend from foe.</li><li><strong>Brain Health:</strong> The gut-brain axis is a direct communication highway. Gut bacteria produce neurotransmitters that affect memory, focus, and even decision-making.</li><li><strong>Practical Steps:</strong> A diverse diet rich in fibre, fermented foods, and polyphenols can dramatically improve microbiome health in as little as two weeks.</li></ul>',
+      '<p>"The implications are enormous," Dr. Osei explains. "We are not just what we eat — we are what our microbes eat. The future of medicine may lie not in treating symptoms but in cultivating the right bacterial ecosystem within each of us."</p>'
+    ]
+  },
+  {
+    headline: 'The Sleep Cure — Why Rest is the Ultimate Performance Enhancer',
+    teaser: 'Elite athletes and Fortune 500 CEOs share one common habit: they treat sleep as a non-negotiable pillar of success.',
+    source: 'Health & Wellness',
+    publishedAt: '2026-05-20T06:15:00Z',
+    body: [
+      '<p class="story-lead">In a culture that glorifies hustle and celebrates exhaustion, sleep has become a casualty of ambition. But the science is undeniable: sleep is the single most powerful performance-enhancing, health-promoting, and longevity-extending activity available — and it is completely free.</p>',
+      '<p>LeBron James sleeps twelve hours a day during the season. Jeff Bezos insists on eight hours. Roger Federer reportedly sleeps eleven to twelve hours. These are not lazy people — they are people who understand that sleep is when the body repairs, the brain consolidates, and the spirit restores.</p>',
+      '<ul class="story-bullets"><li><strong>Cognitive Function:</strong> One night of poor sleep reduces reaction time by 300% and impairs decision-making to the level of being legally intoxicated.</li><li><strong>Emotional Resilience:</strong> Sleep deprivation amplifies the amygdala\'s response to negative stimuli by 60%, making everything feel worse than it is.</li><li><strong>Physical Recovery:</strong> Growth hormone, which repairs muscle tissue and burns fat, is released primarily during deep sleep.</li><li><strong>The Protocol:</strong> Consistent wake-up times, zero screens one hour before bed, a cool dark room, and a wind-down ritual are the evidence-based pillars of sleep hygiene.</li></ul>',
+      '<p>"We have been sold a lie that success requires sacrifice, and that sleep is the first thing to go," says sleep scientist Dr. Matthew Chang. "The truth is exactly the opposite. The people performing at the highest levels in every field are the ones who protect their sleep like their lives depend on it — because they do."</p>'
+    ]
+  }
+];
+
+STORY_DATA.comedy = [
+  {
+    headline: 'The Accidental Billionaire — A Satirical Guide to Failing Upwards',
+    teaser: 'Mistaken identity, a malfunctioning coffee machine, and one very confused venture capitalist collide in this tale of accidental success.',
+    source: 'Comedy Central',
+    publishedAt: '2026-05-27T10:00:00Z',
+    body: [
+      '<p class="story-lead">Tom was not supposed to be in the pitch meeting. He was supposed to be fixing the building\'s coffee machine on the third floor. But a misread room number, a borrowed blazer from the lost-and-found, and an unfortunately timed PowerPoint presentation about cat memes propelled him into the most surreal forty-eight hours of his life.</p>',
+      '<p>When he walked into Conference Room A, twelve venture capitalists turned to look at him expectantly. "You must be the AI guy," one of them said. Tom, holding a wrench and a bag of coffee beans, nodded weakly.</p>',
+      '<ul class="story-bullets"><li>Tom improvised a pitch based entirely on things he had overheard in the break room, using phrases like "synergistic neural blockchain" and "disruptive cat-based engagement protocols."</li><li>The investors, terrified of appearing out of touch, nodded vigorously and asked if they could lead the Series A round.</li><li>By Friday, Tom had $4.7 million in funding, a company he named "SynerCat," and absolutely no idea what the company actually did.</li></ul>',
+      '<p>Six months later, SynerCat was acquired by a major tech conglomerate for $2.3 billion. Tom, now wealthy beyond comprehension, still has the wrench. He keeps it mounted on his office wall with a plaque that reads: "The best ventures start with a broken coffee machine."</p>'
+    ]
+  },
+  {
+    headline: 'My Neighbour is Definitely a Spy (Or Just Very Weird)',
+    teaser: 'An amateur detective chronicles the suspicious behaviour of the new tenant in apartment 4B, with wildly incorrect conclusions.',
+    source: 'Comedy Central',
+    publishedAt: '2026-05-25T15:30:00Z',
+    body: [
+      '<p class="story-lead">When Mr. Henderson moved into apartment 4B, Mrs. Kapoor from 4A immediately knew something was off. He received packages at 3 AM. He spoke in hushed tones on the balcony. He owned seventeen identical grey suits. And once — she was certain of this — she saw him communicating with a pigeon.</p>',
+      '<p>Mrs. Kapoor, a retired schoolteacher with too much time and an overactive imagination, began keeping a detailed log. Her observations grew increasingly elaborate.</p>',
+      '<ul class="story-bullets"><li>Observation #14: "Subject received a pizza delivery but tipped the driver with foreign currency. Clearly an international operative." (It was Canadian quarters.)</li><li>Observation #27: "Subject was seen staring at a wall for forty-five minutes. Probably transmitting data through a neural implant." (He was meditating.)</li><li>Observation #38: "Subject\'s laundry includes an unusual number of grey socks. No civilian owns that many matching socks." (He bought them in bulk online.)</li></ul>',
+      '<p>The truth, when it finally emerged, was far more mundane and far more hilarious: Mr. Henderson was an insomniac accountant who ordered late-night gadgets, had a bad habit of talking to himself, and genuinely loved pigeons. Mrs. Kapoor now brings him tea every Tuesday, and they both laugh about the time she almost called Interpol over a misdelivered Amazon package.</p>'
+    ]
+  },
+  {
+    headline: 'The World\'s Worst Cooking Show — A Culinary Disaster in Three Courses',
+    teaser: 'When a tech blogger decides to launch a live cooking show with zero kitchen experience, the results are explosively entertaining.',
+    source: 'Comedy Central',
+    publishedAt: '2026-05-23T12:45:00Z',
+    body: [
+      '<p class="story-lead">"How hard can cooking be?" Those were the famous last words of Darren Kim, a tech blogger with 2.3 million subscribers who decided to branch out into culinary content. The result was "Darren Cooks," a livestreamed cooking show that would go down in internet history — mostly for the wrong reasons.</p>',
+      '<p>Episode one was titled "Simple Pasta." It ended with a small kitchen fire, a melted spatula, and pasta that was somehow both burnt and raw simultaneously.</p>',
+      '<ul class="story-bullets"><li><strong>Episode 2 — "Easy Omelette":</strong> Darren used a metal whisk in a non-stick pan, created a substance that a viewer described as "scrambled regret," and accidentally set off the smoke alarm, which triggered a building evacuation.</li><li><strong>Episode 3 — "Homemade Bread":</strong> The yeast did not activate. The dough did not rise. The final product was described by a professional baker in the comments as "a brick with ambition."</li><li><strong>Episode 4 — "Sushi for Beginners":</strong> The health department was not called, but they should have been. The rice was crunchy. The "fish" was questionable. The rolling mat caught fire somehow.</li></ul>',
+      '<p>Surprisingly, Darren Cooks became a massive hit — not for the food, but for the comedy. Viewers tuned in not to learn cooking, but to watch things go wrong in increasingly creative ways. Today, the show has 8 million subscribers, and Darren has finally learned to make toast without supervision. Mostly.</p>'
+    ]
+  },
+  {
+    headline: 'The Conference Call That Never Ended — A Corporate Fable',
+    teaser: 'What happens when a routine Zoom meeting glitches and traps twelve colleagues in a call that nobody can leave?',
+    source: 'Comedy Central',
+    publishedAt: '2026-05-21T09:00:00Z',
+    body: [
+      '<p class="story-lead">It was supposed to be a fifteen-minute standup. But when the "End Meeting for All" button mysteriously greyed out, twelve employees of Meridian Corp found themselves trapped in what would become known as The Eternal Call.</p>',
+      '<p>At first, everyone laughed. Then they tried logging out and back in. Then they tried restarting their computers. Then the panic set in. The call continued. And continued. And continued.</p>',
+      '<ul class="story-bullets"><li><strong>Hour 2:</strong> Someone ordered pizza to their desk via the call. The pizza arrived, sparking a heated debate about pineapple as a topping that fractured the team into two irreconcilable factions.</li><li><strong>Hour 6:</strong> A junior developer discovered she could share her screen and started playing episodes of a nature documentary. By hour eight, the entire team was emotionally invested in the migration patterns of Arctic terns.</li><li><strong>Hour 14:</strong> Greg from accounting, who had been on mute the entire time, unmuted to reveal he had been quietly working on his novel and was now on chapter seven.</li></ul>',
+      '<p>The "bug" was eventually traced to a prank by the IT department, who had been watching from a separate call the entire time and were now in danger of being fired. But something unexpected happened: the forced togetherness had made the team more connected than any team-building exercise ever had. Management decided to make "The Eternal Call" a monthly event. Attendance is, surprisingly, near-perfect.</p>'
+    ]
+  },
+  {
+    headline: 'How I Accidentally Became a Local Legend by Returning a Shopping Cart',
+    teaser: 'One small act of civic decency spirals into absurd fame in this modern parable about small-town life and social media.',
+    source: 'Comedy Central',
+    publishedAt: '2026-05-19T14:20:00Z',
+    body: [
+      '<p class="story-lead">All Kevin did was return a shopping cart. It was a windy Tuesday afternoon, and he had watched someone abandon their cart in the middle of the parking lot, where it was slowly rolling toward a very expensive-looking BMW. He jogged over, caught the cart, and pushed it to the corral. That was it. That was the entire action.</p>',
+      '<p>Unknown to Kevin, a local influencer had filmed the entire thing and posted it with the caption: "There are still heroes among us." The video went viral in their town of 12,000 people.</p>',
+      '<ul class="story-bullets"><li>By Wednesday, Kevin was recognized at the gas station. "Are you the Cart Guy?" the attendant asked, offering him a free coffee.</li><li>By Thursday, the local newspaper ran a front-page story: "Anonymous Cart Hero Restores Faith in Humanity." Kevin had not even been anonymous — he just had not expected anyone to care.</li><li>By Friday, someone had started a petition to name the town\'s new park bench after him. The petition gathered 800 signatures. The bench now reads: "In honour of the Cart Guy, who did what we all should do."</li></ul>',
+      '<p>Kevin is now the town\'s reluctant mascot of civic virtue. He has accepted his role with quiet bewilderment. "I literally just pushed a cart," he tells anyone who asks. "The bar for heroism has apparently been lowered significantly." But every Tuesday, without fail, he can be found in the grocery store parking lot — returning carts, one at a time, slightly embarrassed by his own legend.</p>'
+    ]
+  }
+];
+
+STORY_DATA.kids = [
+  {
+    headline: 'Luna and the Star Garden — A Bedtime Adventure',
+    teaser: 'When a little girl discovers she can plant stars, she embarks on a magical journey to light up the darkest corners of the world.',
+    source: 'Kids Corner',
+    publishedAt: '2026-05-26T19:00:00Z',
+    body: [
+      '<p class="story-lead">Every night before bed, Luna would look out her window and talk to the stars. "Why do some places have so many stars and others have none?" she asked her grandmother one evening. Her grandmother smiled and handed her a tiny silver seed. "Because no one has planted them there yet," she whispered.</p>',
+      '<p>That night, Luna pressed the seed into the soil of her windowsill planter. By morning, a shimmering stalk had grown, and at its tip, a single star pulsed with gentle light. When Luna touched it, the star detached and floated into the sky, settling over the neighbour\'s house, where a little boy had been afraid of the dark.</p>',
+      '<ul class="story-bullets"><li>Luna planted more seeds. Each one grew a star of a different colour — blue for calm, gold for courage, pink for kindness.</li><li>She sent stars to a hospital, where sick children smiled for the first time in weeks. She sent one to the old library, where books long forgotten began to glow with the stories inside them.</li><li>She even sent a star to the deepest part of the ocean, where a lonely whale sang a song of thanks that echoed across the seas.</li></ul>',
+      '<p>Soon, Luna\'s stars were everywhere, and the world was a little brighter, a little kinder, a little braver. And every night, she would sit by her window, watching her garden of stars twinkle back at her, knowing that a little light, planted with love, could reach even the darkest corners.</p>'
+    ]
+  },
+  {
+    headline: 'The Dragon Who Forgot How to Fly — A Tale of Friendship',
+    teaser: 'A young dragon named Ember loses the ability to fly and must rely on an unlikely friend — a mouse with big ideas — to find his wings again.',
+    source: 'Kids Corner',
+    publishedAt: '2026-05-24T16:30:00Z',
+    body: [
+      '<p class="story-lead">Ember was the smallest dragon in the Valley of Wings, but he had the biggest heart. Every morning, he would launch himself from the highest cliff and soar above the treetops, his orange scales glinting in the sun. Until the morning he could not.</p>',
+      '<p>No matter how hard he flapped, no matter how high he climbed, Ember could not get off the ground. His wings felt heavy, as if someone had tied invisible weights to them. The other dragons tried to help, but nothing worked. Ember sat at the edge of the cliff, feeling like half a dragon.</p>',
+      '<ul class="story-bullets"><li>That was when he met Pip, a tiny field mouse with enormous ears and an even more enormous imagination. "Maybe you are not supposed to fly the same way," Pip squeaked. "Maybe you need a different kind of flying."</li><li>Pip had Ember try everything: running fast with his wings out (like a kite), jumping from smaller rocks first, even imagining himself as light as a feather.</li><li>None of it worked. But Ember noticed something: every time Pip made him laugh, his wings felt a tiny bit lighter. Every time he helped someone, the weight lifted a little more.</li></ul>',
+      '<p>On the seventh day, Ember realized the truth: the weights were not in his wings — they were in his heart. He had been so worried about being the best flyer that he had forgotten why he loved flying in the first place. He closed his eyes, remembered the joy of the wind beneath his wings, and leaped. This time, he soared higher than ever before — with Pip clinging to his back, cheering at the top of his tiny lungs.</p>'
+    ]
+  },
+  {
+    headline: 'Captain Coral and the Plastic Sea — An Underwater Mission',
+    teaser: 'A brave octopus rallies the ocean creatures to clean up their home and teach the humans a valuable lesson about caring for the sea.',
+    source: 'Kids Corner',
+    publishedAt: '2026-05-22T11:00:00Z',
+    body: [
+      '<p class="story-lead">Deep beneath the waves, in the turquoise waters of Coral Cove, lived Captain Coral — an octopus with eight arms and an even bigger sense of responsibility. Coral Cove had always been the most beautiful reef in the ocean, with rainbow-coloured fish, dancing sea anemones, and the happiest turtles you ever saw. But lately, something was wrong.</p>',
+      '<p>Strange objects had begun appearing in the cove: crinkly clear things that wrapped around the coral, colourful rings that got stuck on turtles\' flippers, and tiny round beads that the fish kept mistaking for food. The reef was getting sick.</p>',
+      '<ul class="story-bullets"><li>Captain Coral called a Grand Shell Council, gathering every creature in the reef — from the tiniest shrimp to the grandest whale.</li><li>They devised a plan: the crabs would snip away the tangled wraps, the turtles would collect the floating rings, and the whales would use their songs to push the debris toward the shore.</li><li>But the most important part of the plan was the message in a bottle they sent to the humans above: a shell decorated with a simple drawing of a clean ocean, with the words "Help us keep our home beautiful."</li></ul>',
+      '<p>A little girl on the beach found the bottle. She showed it to her class, who showed it to their parents, who showed it to the whole town. Soon, people were cleaning the beach every weekend, and the strange objects stopped appearing in Coral Cove. Captain Coral watched from below, waving one tentacle in gratitude. "Every creature, big or small," she said, "can make a difference — even the ones with only two arms."</p>'
+    ]
+  },
+  {
+    headline: 'The Clockwork Kingdom — Where Time Stands Still',
+    teaser: 'Two siblings discover a hidden world inside an old grandfather clock, where every tick tells a story and every tock is an adventure.',
+    source: 'Kids Corner',
+    publishedAt: '2026-05-20T18:00:00Z',
+    body: [
+      '<p class="story-lead">Twins Max and Mia had always been told never to touch the antique grandfather clock in their grandmother\'s attic. "It is older than memory," Grandma would say, "and it knows things." Naturally, the first thing they did when Grandma went to visit her sister was climb the attic stairs and open the clock\'s heavy wooden door.</p>',
+      '<p>Inside, instead of pendulums and gears, they found a staircase — a spiral one, going down and down and down, glowing with a warm amber light. The twins looked at each other, grinned, and stepped inside.</p>',
+      '<ul class="story-bullets"><li>They emerged in a city made entirely of clockwork: buildings that ticked, streets that moved like conveyor belts, and lampposts that chimed on the hour.</li><li>They met the Clockmaker, a kind old man who explained that each clock in the kingdom contained one hour of one person\'s life — a precious memory, preserved forever.</li><li>Max found the clock containing his first bike ride without training wheels. Mia found hers containing the day she learned to whistle. They both found the clock containing the last time they saw their grandfather before he passed away — and in that moment, surrounded by ticking memories, they understood what their grandmother meant.</li></ul>',
+      '<p>When they climbed back out of the clock, only five minutes had passed in the real world. But Max and Mia were different now. They had seen that time was not just something that passed — it was something you could hold onto, if you remembered to cherish every moment. They never told Grandma what they had found. But every night, they made sure to create a memory worth keeping.</p>'
+    ]
+  },
+  {
+    headline: 'The Elephant Who Painted the Sky — A Colourful Fable',
+    teaser: 'In a world of grey, one elephant discovers the power of colour and creativity, teaching everyone that art is for all creatures great and small.',
+    source: 'Kids Corner',
+    publishedAt: '2026-05-18T07:45:00Z',
+    body: [
+      '<p class="story-lead">In the Land of Grey, everything was the same colour — the trees, the rivers, the clouds, even the elephants. Nobody minded, because nobody knew any different. Nobody except Elara, a young elephant who had once found a single red petal blown in from somewhere beyond the mountains. She kept it pressed between two leaves and looked at it every day, marvelling at its impossible colour.</p>',
+      '<p>One morning, Elara woke up with an idea as big as her ears: if the world was grey, she would paint it. She gathered berries, crushed flowers, and mixed mud into pots of colour — blues from blueberries, yellows from dandelions, and reds from the petals she had been saving.</p>',
+      '<ul class="story-bullets"><li>Elara started small, painting a single tree with bright green leaves. The other animals gathered, curious and cautious. "What are you doing?" they asked. "Making the world more beautiful," Elara replied.</li><li>Soon, everyone wanted to help. The birds brought feathers for brushes. The monkeys mixed new colours. The hippos painted the riverbank with swirls of purple and gold.</li><li>When the sun set that evening, the Land of Grey had transformed into the Land of Colour. And high above, painted by Elara\'s trunk stretched toward the heavens, the sky bloomed with the most beautiful sunset anyone had ever seen — orange and pink and deep, deep violet.</li></ul>',
+      '<p>From that day on, the animals never stopped painting. Every morning brought new colours, new creations, new ways to express the joy in their hearts. And Elara, the elephant who dared to dream in colour, became known as the artist who taught the world that beauty is not something you find — it is something you create.</p>'
+    ]
+  }
+];
+
+STORY_DATA.education = [
+  {
+    headline: 'The School That Defied Gravity — Finland\'s Education Revolution',
+    teaser: 'How one Nordic country transformed its education system by doing the exact opposite of what everyone else was doing.',
+    source: 'Education Hub',
+    publishedAt: '2026-05-26T08:00:00Z',
+    body: [
+      '<p class="story-lead">In the early 1970s, Finland had a mediocre education system. By the 2000s, it was consistently ranked among the best in the world. The transformation was not the result of more testing, longer hours, or stricter discipline. It was the result of trusting teachers, eliminating competition, and putting student well-being at the centre of everything.</p>',
+      '<p>The key insight was counterintuitive: by making school less stressful, students learned more. Finnish children start formal schooling at age seven — later than almost any other country. They have the shortest school days and the least homework. And yet, they consistently outperform their global peers.</p>',
+      '<ul class="story-bullets"><li><strong>No Standardized Testing:</strong> Finland has exactly one standardized exam, at the end of high school. Teachers assess students individually using their professional judgment, not bubble sheets.</li><li><strong>Teacher Autonomy:</strong> Teaching is one of the most respected professions in Finland, competitive to enter and highly paid. Teachers design their own curricula within broad national guidelines.</li><li><strong>Play is Sacred:</strong> Finnish law mandates fifteen minutes of outdoor free play for every forty-five minutes of instruction. Rain, snow, or sunshine — the children go outside.</li><li><strong>Equity Over Excellence:</strong> There are no private schools in Finland. Every child, regardless of background, attends the same high-quality public schools. The gap between the highest and lowest performers is the smallest in the world.</li></ul>',
+      '<p>"We did not set out to be the best," a Finnish education official once said. "We set out to give every child the best possible start, regardless of their background. It turned out those were the same thing."</p>'
+    ]
+  },
+  {
+    headline: 'The Language of the Universe — How Mathematics Reveals Hidden Patterns',
+    teaser: 'From the spiral of a galaxy to the arrangement of seeds in a sunflower, mathematics is the invisible thread connecting everything.',
+    source: 'Education Hub',
+    publishedAt: '2026-05-24T14:30:00Z',
+    body: [
+      '<p class="story-lead">Galileo described mathematics as the language in which the universe is written. Four hundred years later, his insight has only grown deeper. Mathematics is not just a tool for calculation — it is a lens through which we can see the hidden architecture of reality.</p>',
+      '<p>Professor Ravi Nair has spent his career exploring the connections between abstract mathematics and the natural world. His lectures, which regularly draw standing-room-only crowds, are not about equations — they are about beauty.</p>',
+      '<ul class="story-bullets"><li><strong>The Fibonacci Sequence in Nature:</strong> The arrangement of sunflower seeds, pinecones, and nautilus shells all follow the same mathematical pattern. It is as if nature is solving an optimization problem — packing seeds as efficiently as possible using a simple recursive rule.</li><li><strong>Fractals Everywhere:</strong> Coastlines, broccoli, lightning bolts, and blood vessels all exhibit fractal patterns — self-similar structures that repeat at every scale, from the microscopic to the cosmic.</li><li><strong>Prime Numbers and Cicadas:</strong> Certain cicada species emerge every 13 or 17 years — both prime numbers. This is not a coincidence. Prime-numbered cycles make it extremely difficult for predators to synchronize with the cicadas\' emergence.</li></ul>',
+      '<p>"The most beautiful thing about mathematics," Professor Nair tells his students, "is that it was not invented — it was discovered. The universe was speaking this language long before we learned to listen. Our job is simply to pay attention."</p>'
+    ]
+  },
+  {
+    headline: 'The Girl Who Built a Satellite — A Teenager\'s Journey to Space',
+    teaser: 'At sixteen, Aisha built a working CubeSat in her bedroom. By eighteen, she was presenting it to NASA engineers.',
+    source: 'Education Hub',
+    publishedAt: '2026-05-22T10:15:00Z',
+    body: [
+      '<p class="story-lead">Aisha grew up in a small apartment in Mumbai, sharing a room with her grandmother and a view of the night sky through a single window. When she was twelve, her science teacher showed the class a video about the International Space Station, and something clicked. "I want to build something that goes up there," she said. Her classmates laughed. Aisha did not.</p>',
+      '<p>Over the next two years, she devoured every online course, every YouTube tutorial, every textbook she could find on satellite engineering. She taught herself Python, learned circuit design, and — after a hundred failed attempts — built a working prototype of a CubeSat on her bedroom floor.</p>',
+      '<ul class="story-bullets"><li>Her satellite, named "Drishti" (Sanskrit for "vision"), was designed to monitor air quality in urban areas — a problem she saw every day in her own city.</li><li>She submitted her design to a global youth competition and won first place, earning a trip to present her work at a NASA outreach programme.</li><li>The engineers were stunned. "This is undergraduate-level work," one of them said. "She is in high school."</li></ul>',
+      '<p>Drishti is now scheduled to launch as part of a university rideshare mission. Aisha, now studying aerospace engineering on a full scholarship, has a simple message for every young person with a big dream: "Do not wait for someone to give you permission. The internet is your laboratory. The stars are your limit. Start building."</p>'
+    ]
+  },
+  {
+    headline: 'Learning to Learn — The Science of Memory and Mastery',
+    teaser: 'Cognitive science reveals that most people study incorrectly. The techniques that actually work are counterintuitive and remarkably simple.',
+    source: 'Education Hub',
+    publishedAt: '2026-05-20T16:00:00Z',
+    body: [
+      '<p class="story-lead">For decades, students have been told to study in quiet environments, focus on one subject at a time, and reread their notes until the information sticks. According to the latest cognitive science, nearly all of this advice is wrong.</p>',
+      '<p>Researchers have identified a set of evidence-based learning techniques that dramatically outperform traditional study methods. The catch: they feel harder, and that is exactly why they work.</p>',
+      '<ul class="story-bullets"><li><strong>Active Recall (Not Rereading):</strong> Rereading creates an illusion of mastery. The brain confuses familiarity with understanding. Instead, close the book and try to retrieve the information from memory. The struggle itself strengthens the neural pathway.</li><li><strong>Spaced Repetition:</strong> Cramming works for short-term recall but fails catastrophically for long-term retention. Review material at increasing intervals — one day, three days, one week, one month — to lock it into long-term memory.</li><li><strong>Interleaving (Not Blocking):</strong> Practicing one skill until perfect before moving to the next feels efficient but produces poor transfer. Mix different types of problems together. The brain learns to discriminate between problem types, not just execute routines.</li><li><strong>The Testing Effect:</strong> Tests are not just assessments — they are among the most powerful learning tools. The act of retrieving information strengthens it far more than re-studying.</li></ul>',
+      '<p>"The students who learn the most are not the ones who study the longest," explains cognitive psychologist Dr. Sarah Lin. "They are the ones who study the smartest. Learning is not about time — it is about technique. And the best techniques feel uncomfortable, because real learning always does."</p>'
+    ]
+  },
+  {
+    headline: 'The Ancient Library of Wisdom — What Timbuktu\'s Manuscripts Teach Us',
+    teaser: 'Centuries before the European Renaissance, African scholars were producing vast bodies of knowledge in mathematics, astronomy, and medicine.',
+    source: 'Education Hub',
+    publishedAt: '2026-05-18T12:30:00Z',
+    body: [
+      '<p class="story-lead">When most people think of great centres of learning, they think of Athens, Baghdad, or Oxford. Few think of Timbuktu. But from the 14th to the 16th centuries, this city on the southern edge of the Sahara was home to one of the world\'s greatest repositories of knowledge — the Sankore University and its associated libraries.</p>',
+      '<p>The manuscripts of Timbuktu, hundreds of thousands of them, covered an astonishing range of subjects: astronomy, mathematics, medicine, law, philosophy, and poetry. Written in Arabic and African languages, they represented centuries of scholarly tradition that rivalled anything happening in Europe at the time.</p>',
+      '<ul class="story-bullets"><li><strong>Medical Knowledge:</strong> Manuscripts described surgical techniques — including cataract removal — that were more advanced than their European counterparts.</li><li><strong>Astronomy:</strong> Scholars in Timbuktu calculated the movements of celestial bodies with remarkable precision, using mathematics derived from both Islamic and indigenous African traditions.</li><li><strong>Ethics and Governance:</strong> The manuscripts contain extensive writings on justice, governance, and the rights of citizens — ideas that prefigure modern democratic thought by centuries.</li><li><strong>Preservation Against All Odds:</strong> When extremists threatened to destroy the manuscripts in 2012, local families smuggled them to safety in a clandestine operation that saved over 350,000 irreplaceable documents.</li></ul>',
+      '<p>"The story of Timbuktu is not just African history," says Dr. Fatima Diallo, a manuscript preservationist. "It is human history. It reminds us that civilizations do not emerge from a single source — they rise wherever people value knowledge, wherever a child is taught to read, wherever a scholar is free to think."</p>'
+    ]
+  }
+];
+
+STORY_DATA.animation = [
+  {
+    headline: 'Pixel Dreams — The Animator Who Brought Her Sketches to Life',
+    teaser: 'A self-taught animator from a small Indian village uses open-source software to create a viral short film that captures the world\'s imagination.',
+    source: 'Animation World',
+    publishedAt: '2026-05-25T20:30:00Z',
+    body: [
+      '<p class="story-lead">Growing up in a village with intermittent electricity, Devi never imagined she would become an animator. She had never seen a Pixar film until she was fifteen, when a travelling cinema set up a projector in the town square and showed "Finding Nemo." She walked home that night in a daze, replaying every frame in her mind, and decided that whatever magic created those moving images — she wanted to learn it.</p>',
+      '<p>With no formal training and a second-hand laptop that crashed if she rendered more than thirty seconds of video, Devi taught herself animation using free, open-source software. She watched thousands of hours of tutorials, often buffering for hours on the village\'s unreliable connection. She drew every frame of her first short — a four-minute piece called "The Elephant\'s Kite" — by hand using a borrowed drawing tablet.</p>',
+      '<ul class="story-bullets"><li>The short film told a wordless story of a young elephant who builds a kite from fallen leaves and learns to fly — a metaphor for her own journey.</li><li>She uploaded it to YouTube, expecting a few hundred views. Within a week, it had been viewed over two million times.</li><li>Animation studios from Mumbai to Montreal reached out. Pixar invited her to their campus. A major streaming platform acquired the rights to develop "The Elephant\'s Kite" into a series.</li></ul>',
+      '<p>Devi now runs an animation workshop in her village, teaching other young people that geography and resources do not determine destiny — imagination and persistence do. "Every frame I drew was an act of faith," she says. "I could not see the final film, but I believed it was there, waiting to be discovered, one drawing at a time."</p>'
+    ]
+  },
+  {
+    headline: 'Beyond the Frame — The Evolution of Animation as an Art Form',
+    teaser: 'From hand-drawn cels to AI-assisted rendering, animation has undergone a century-long transformation that mirrors the evolution of visual storytelling itself.',
+    source: 'Animation World',
+    publishedAt: '2026-05-23T17:00:00Z',
+    body: [
+      '<p class="story-lead">In 1908, French artist Emile Cohl created "Fantasmagorie," widely considered the first fully animated film. It was 70 seconds long, composed of 700 drawings, each photographed individually. Over a century later, animators are creating entire feature films in virtual reality, using tools Cohl could never have imagined. Yet the fundamental challenge remains the same: making the inanimate feel alive.</p>',
+      '<p>The history of animation is a story of relentless innovation, driven by artists who refused to accept the limitations of their tools.</p>',
+      '<ul class="story-bullets"><li><strong>The Golden Age (1928-1960):</strong> Walt Disney\'s "Steamboat Willie" introduced synchronized sound. "Snow White" proved that animation could sustain a feature-length narrative. By the 1940s, studios were producing masterpieces at a staggering rate.</li><li><strong>The Digital Revolution (1990-2010):</strong> Pixar\'s "Toy Story" in 1995 was the first fully computer-animated feature film. It required 800,000 machine hours to render and changed the industry forever. Hand-drawn animation, once the only game in town, suddenly seemed obsolete.</li><li><strong>The Hybrid Era (2010-Present):</strong> Films like "Spider-Man: Into the Spider-Verse" proved that the best approach is neither purely traditional nor purely digital — it is a fusion. The film combined hand-drawn line work, digital painting, and 3D rendering at varying frame rates to create a visual language that felt entirely new.</li></ul>',
+      '<p>"Animation is not a genre — it is a medium," says historian Dr. Elena Vasquez. "It can do things live action cannot: visualize the abstract, bring dreams to life, and connect with audiences on a primal level that transcends language and culture. Every frame is a choice, and every choice tells a story."</p>'
+    ]
+  },
+  {
+    headline: 'The Dancing Colours — A Journey into Abstract Animation',
+    teaser: 'An animator explores how colour, rhythm, and motion combine to create emotional experiences without a single word of dialogue.',
+    source: 'Animation World',
+    publishedAt: '2026-05-21T13:15:00Z',
+    body: [
+      '<p class="story-lead">What if a film had no characters, no plot, and no dialogue — yet moved its audience to tears? Abstract animator Kenji Tanaka has spent thirty years proving that colour and motion alone can tell stories more powerful than words. His films are symphonies of shape and hue, and they have been shown in galleries from the Tate Modern to the Mori Art Museum.</p>',
+      '<p>Tanaka\'s process begins not with a storyboard but with music. He listens to a piece of classical music — often Debussy or Takemitsu — and paints what he feels, not what he sees. The resulting animations are fluid, dreamlike, and deeply emotional.</p>',
+      '<ul class="story-bullets"><li><strong>Colour as Emotion:</strong> Warm hues evoke comfort and energy; cool tones suggest calm or melancholy. But Tanaka discovered that the relationship between colours matters more than the colours themselves — a sudden shift from blue to gold can feel like hope breaking through despair.</li><li><strong>Rhythm as Narrative:</strong> Fast, erratic motion creates tension; slow, sweeping movements induce meditation. By carefully modulating the pacing, Tanaka guides the viewer\'s emotional journey as precisely as any scriptwriter.</li><li><strong>The Power of Abstraction:</strong> Without recognizable characters, viewers project their own emotions onto the animation. A swirling red shape is not "anger" — it is the viewer\'s anger, given form. The experience becomes deeply personal.</li></ul>',
+      '<p>"Language divides us," Tanaka says. "Words mean different things to different people. But a red circle moving slowly across a blue field — that feeling is universal. Abstract animation is the closest thing we have to a visual language that every human being can understand."</p>'
+    ]
+  },
+  {
+    headline: 'Coding the Canvas — How Generative Art is Redefining Animation',
+    teaser: 'Artists who code are creating animations that evolve in real time, never playing the same way twice — a radical break from traditional filmmaking.',
+    source: 'Animation World',
+    publishedAt: '2026-05-19T09:45:00Z',
+    body: [
+      '<p class="story-lead">Traditional animation is fixed — every frame is determined in advance, and every viewing is identical. Generative animation flips this model entirely. Instead of creating specific images, artists write algorithms that create infinite variations. The result is an animation that is never the same twice, that evolves and adapts, that exists somewhere between code and choreography.</p>',
+      '<p>Sofia Reyes is one of the pioneers of this movement. Her piece "Bloom," which was projected onto the facade of the Sydney Opera House in 2025, used real-time weather data, crowd movement, and a particle system to create an ever-shifting garden of light.</p>',
+      '<ul class="story-bullets"><li><strong>How It Works:</strong> Instead of drawing frames, generative artists write rules — "if-then" statements that govern how shapes, colours, and movements behave. The computer executes these rules live, creating a unique animation every time the code runs.</li><li><strong>Interactive Dimension:</strong> Some generative pieces respond to sound, motion, or even the viewer\'s heartbeat. The audience becomes part of the creation process.</li><li><strong>Democratization:</strong> Tools like Processing, p5.js, and TouchDesigner have made generative art accessible to anyone with a computer. The barrier to entry is no longer artistic training — it is curiosity and willingness to learn to code.</li></ul>',
+      '<p>"We are moving from being filmmakers to being gardeners," Reyes explains. "Instead of controlling every frame, we plant seeds — rules, parameters, initial conditions — and watch them grow into something we could never have imagined. The art is not in the output. It is in the system that produces it."</p>'
+    ]
+  }
+];
+
+/* ==========================================================================
+   UTILITY FUNCTIONS
+   ========================================================================== */
+function esc(str) {
+  if (!str) return '';
+  var div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+
+function escAttr(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function timeAgo(isoStr) {
+  if (!isoStr) return '—';
+  var now = Date.now();
+  var then = new Date(isoStr).getTime();
+  var diff = Math.floor((now - then) / 60000);
+  if (diff < 1) return 'Just now';
+  if (diff < 60) return diff + 'm ago';
+  var hrs = Math.floor(diff / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  var days = Math.floor(hrs / 24);
+  return days + 'd ago';
+}
+
+/* ==========================================================================
+   STORY CACHE
+   ========================================================================== */
+window._SC = [];
+
+function _cacheStories(items, meta) {
+  var indices = [];
+  for (var i = 0; i < items.length; i++) {
+    indices.push(window._SC.length);
+    window._SC.push({ item: items[i], meta: meta });
+  }
+  return indices;
+}
+
+function openStoryIdx(idx) {
+  var d = window._SC[idx];
+  if (d) openStory(d.item, d.meta);
+}
+
+/* ==========================================================================
+   RENDER CATEGORY TAB CONTENT
+   ========================================================================== */
+var _cachedIndices = {};
+
+function renderCategory(cat) {
+  var items = STORY_DATA[cat.id] || [];
+  var meta = cat;
+  var container = document.getElementById('story-content-area');
+  container.innerHTML = '';
+  window._SC = [];
+  _cachedIndices[cat.id] = [];
+
+  var section = document.createElement('div');
+  section.className = 'story-section ' + meta.cssClass;
+  section.id = 'section-' + cat.id;
+
+  var count = items.length;
+  section.innerHTML = '<div class="story-section-header">'
+    + '<span class="story-section-icon">' + meta.icon + '</span>'
+    + '<span class="story-section-name">' + meta.label + ' Stories</span>'
+    + '<span class="story-section-badge">' + count + ' stories</span>'
+    + '</div>';
+
+  if (items.length === 0) {
+    section.innerHTML += '<div class="story-placeholder">'
+      + '<div class="story-placeholder-icon">' + meta.icon + '</div>'
+      + '<div class="story-placeholder-text">Stories in this category will be available soon.</div>'
+      + '<div class="story-placeholder-sub">' + meta.desc + '</div>'
+      + '</div>';
+    container.appendChild(section);
+    updateStoryCount();
+    return;
+  }
+
+  var hero = items[0];
+  var heroIdx = window._SC.length;
+  window._SC.push({ item: hero, meta: meta });
+  var heroHtml = '<div class="story-hero-card" onclick="openStoryIdx(' + heroIdx + ')" role="button" tabindex="0" aria-label="' + esc(hero.headline) + '">'
+    + '<div class="story-hero-gradient"></div>'
+    + '<div class="story-hero-body">'
+    + '<div class="story-source-badge">' + esc(hero.source) + '</div>'
+    + '<div class="story-hero-headline">' + esc(hero.headline) + '</div>'
+    + '<div class="story-hero-teaser">' + esc(hero.teaser) + '</div>'
+    + '<div class="story-hero-meta">'
+    + '<span class="story-hero-time">' + timeAgo(hero.publishedAt) + '</span>'
+    + '<span class="story-hero-read">Read full story</span>'
+    + '</div>'
+    + '</div>'
+    + '</div>';
+  section.innerHTML += heroHtml;
+
+  var gridItems = items.slice(1);
+  if (gridItems.length > 0) {
+    var gridHtml = '<div class="story-cards-grid">';
+    for (var i = 0; i < gridItems.length; i++) {
+      var item = gridItems[i];
+      var idx = window._SC.length;
+      window._SC.push({ item: item, meta: meta });
+      gridHtml += '<div class="story-card" onclick="openStoryIdx(' + idx + ')" role="button" tabindex="0">'
+        + '<div class="story-card-source">' + esc(item.source) + '</div>'
+        + '<div class="story-card-headline">' + esc(item.headline) + '</div>'
+        + '<div class="story-card-teaser">' + esc(item.teaser) + '</div>'
+        + '<div class="story-card-footer">'
+        + '<span class="story-card-time">' + timeAgo(item.publishedAt) + '</span>'
+        + '<span class="story-card-read">Read &rarr;</span>'
+        + '</div>'
+        + '</div>';
+    }
+    gridHtml += '</div>';
+    section.innerHTML += gridHtml;
+  }
+
+  container.appendChild(section);
+  updateStoryCount();
+}
+
+function updateStoryCount() {
+  var total = 0;
+  for (var k in STORY_DATA) {
+    if (STORY_DATA.hasOwnProperty(k)) total += STORY_DATA[k].length;
+  }
+  document.getElementById('total-story-count').textContent = total;
+}
+
+/* ==========================================================================
+   TAB NAVIGATION
+   ========================================================================== */
+var _activeTabId = 'triller';
+
+function buildTabBar() {
+  var inner = document.getElementById('story-tab-inner');
+  inner.innerHTML = '';
+  for (var i = 0; i < CATEGORIES.length; i++) {
+    var cat = CATEGORIES[i];
+    var btn = document.createElement('button');
+    btn.className = 'story-tab-btn';
+    btn.setAttribute('data-tab', cat.id);
+    btn.innerHTML = '<span class="story-tab-icon">' + cat.icon + '</span>' + cat.label;
+    btn.onclick = (function(id) { return function() { switchTab(id); }; })(cat.id);
+    inner.appendChild(btn);
+  }
+}
+
+function switchTab(tabId) {
+  _activeTabId = tabId;
+  var cat = null;
+  for (var i = 0; i < CATEGORIES.length; i++) {
+    if (CATEGORIES[i].id === tabId) { cat = CATEGORIES[i]; break; }
+  }
+  if (!cat) return;
+
+  var btns = document.querySelectorAll('.story-tab-btn');
+  for (var j = 0; j < btns.length; j++) {
+    btns[j].classList.remove('active');
+    if (btns[j].getAttribute('data-tab') === tabId) btns[j].classList.add('active');
+  }
+
+  renderCategory(cat);
+}
+
+/* ==========================================================================
+   FULL STORY MODAL
+   ========================================================================== */
+function openStory(item, meta) {
+  var overlay = document.getElementById('story-modal-overlay');
+  var pill = document.getElementById('story-section-pill');
+  var body = document.getElementById('story-modal-body');
+
+  pill.textContent = meta.label;
+  pill.style.background = meta.accent;
+
+  var html = '<div class="story-modal-headline" id="story-modal-headline">' + esc(item.headline) + '</div>'
+    + '<div class="story-modal-meta">'
+    + '<span>' + esc(item.source) + '</span>'
+    + '<span class="story-modal-meta-sep">|</span>'
+    + '<span>' + timeAgo(item.publishedAt) + '</span>'
+    + '</div>'
+    + '<div class="story-body">'
+    + (item.body ? item.body.join('\n') : '<p>' + esc(item.teaser) + '</p>')
+    + '</div>'
+    + '<div class="story-modal-share">'
+    + '<span class="story-modal-share-label">Share:</span>'
+    + '<button class="share-btn-sm share-wa" onclick="event.stopPropagation();window.open(\'https://api.whatsapp.com/send?text=\'+encodeURIComponent(\'' + escAttr(item.headline) + ' \'+window.location.href),\'_blank\')">WhatsApp</button>'
+    + '<button class="share-btn-sm share-tw" onclick="event.stopPropagation();window.open(\'https://twitter.com/intent/tweet?text=\'+encodeURIComponent(\'' + escAttr(item.headline) + '\')+\'&url=\'+encodeURIComponent(window.location.href),\'_blank\')">X</button>'
+    + '</div>';
+
+  body.innerHTML = html;
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeStory() {
+  var overlay = document.getElementById('story-modal-overlay');
+  overlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function handleOverlayClick(event) {
+  if (event.target === event.currentTarget) {
+    closeStory();
+  }
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeStory();
+});
+
+/* ==========================================================================
+   INIT
+   ========================================================================== */
+document.addEventListener('DOMContentLoaded', function() {
+  buildTabBar();
+  switchTab('triller');
+});
+</script>
+
+</body>
+</html>
