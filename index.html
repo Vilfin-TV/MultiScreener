@@ -1444,9 +1444,8 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lns-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--gold2);display:flex;align-items:center;gap:8px}
 .lns-title::before{content:'📡';font-size:14px}
 .lns-timer{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);background:var(--card);border:1px solid var(--border);border-radius:6px;padding:4px 10px}
-.lns-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-items:start}
-@media(max-width:900px){.lns-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:560px){.lns-grid{grid-template-columns:1fr}}
+.lns-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;align-items:start}
+@media(max-width:700px){.lns-grid{grid-template-columns:1fr}}
 .lnb{background:var(--card);border:1px solid var(--border2);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
 .lnb-header{display:flex;align-items:center;gap:7px;padding:8px 12px;background:var(--lnb-color,var(--burn));position:relative}
 .lnb-flag{font-size:14px}
@@ -1478,7 +1477,7 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 
 /* ── LIVE NEWS — newspaper layout: hero left + headline list right ── */
 /* CSS Grid guarantees both columns are always exactly the same height */
-.lnb-card-grid{padding:0;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;height:520px}
+.lnb-card-grid{padding:0;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;height:580px}
 .lnb-card-grid .lnb-loading,.lnb-card-grid .lnb-error,.lnb-card-grid .lnb-stale{padding:16px;text-align:center;font-size:11px;grid-column:1/-1}
 /* Hero card — left column, stretches to match right column height automatically */
 .lnb-hero-card{display:flex;flex-direction:column;border-right:1px solid var(--border);min-width:0;overflow:hidden}
@@ -1513,7 +1512,7 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-list-item:hover .lnb-list-title{color:var(--gold2)}
 .lnb-list-time{font-size:8.5px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:1px}
 .lnb-list-thumb{width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--card3);border:2px solid var(--border2)}
-@media(max-width:600px){.lnb-card-grid{grid-template-columns:1fr;height:auto}.lnb-hero-card{border-right:none;border-bottom:1px solid var(--border)}.lnb-hero-img-wrap{padding-top:42%}.lnb-list-thumb{width:40px;height:40px}}
+@media(max-width:700px){.lnb-card-grid{grid-template-columns:1fr;height:auto}.lnb-hero-card{border-right:none;border-bottom:1px solid var(--border)}.lnb-hero-img-wrap{padding-top:48%}.lnb-list-thumb{width:40px;height:40px}}
 
 /* ── Calendar strips — thin visible scrollbar so users know they can scroll ── */
 #cal-country-strip,#cal-region-strip{
@@ -6094,7 +6093,7 @@ footer{
     </div>
     <div class="nsm-body">
       <div class="nsm-info">
-        Select up to <strong>10 feeds</strong> to display in your live news grid. Use the <strong>Order</strong> tab to arrange them.
+        Select up to <strong>8 feeds</strong> to display in your live news grid. Use the <strong>Order</strong> tab to arrange them.
         <span class="nsm-count" id="nsm-count">0 / 10 selected</span>
       </div>
       <!-- Tab switcher -->
@@ -15110,8 +15109,8 @@ const NEWS_SOURCES = [
 const _NEWS_SOURCE_MAP = Object.fromEntries(NEWS_SOURCES.map(s => [s.id, s]));
 
 // Default 10 feed IDs shown on first visit
-const NEWS_DEFAULT_IDS = ['us1','us2','us3','india1','india2','india3','india4','japan1','eu1']; // 9 defaults, customizable via settings
-const NEWS_MAX = 9;
+const NEWS_DEFAULT_IDS = ['us1','us2','india1','india2','india3','india4','japan1','eu1']; // 8 defaults, customizable via settings
+const NEWS_MAX = 8;
 const NEWS_IDS_KEY   = 'viltv_news_ids';   // JSON array of selected feed IDs
 const NEWS_ORDER_KEY = 'viltv_news_order';  // JSON array defining display order
 
@@ -15183,7 +15182,7 @@ function _loadActiveIds() {
     const saved = JSON.parse(localStorage.getItem(NEWS_IDS_KEY));
     if (Array.isArray(saved) && saved.length) return saved.slice(0, NEWS_MAX);
   } catch(_) {}
-  return NEWS_DEFAULT_IDS.slice();
+  return NEWS_DEFAULT_IDS.slice(0, NEWS_MAX);
 }
 
 function getActiveFeeds() {
@@ -15353,7 +15352,7 @@ function renderItems(listEl, items) {
   const channelGroup = listEl.dataset.group || '';
   const fallbackImg  = _LNB_FALLBACKS[channelGroup] || _LNB_FALLBACK_DEFAULT;
   // hero=0, sub-stories=1-2, right-list=3-13 (up to 11 items)
-  const all = items.slice(0, 14);
+  const all = items.slice(0, 16);
   if (!all.length) return;
 
   function _d(item) {
@@ -15410,8 +15409,8 @@ function renderItems(listEl, items) {
     ${subHtml ? `<div class="lnb-hero-subs">${subHtml}</div>` : ''}
   </div>`;
 
-  // ── Right list (items 5-11, 7 items) — full headline + time ──────
-  const listHtml = all.slice(5, 12).map(item => {
+  // ── Right list (items 5-13, 8 items) — full headline + time ──────
+  const listHtml = all.slice(5, 13).map(item => {
     const d = _d(item);
     const catLabel = d.category || d.source || '';
     const thumbSrc = d.imgSrc || _thumbFallback(d.title);
@@ -15430,7 +15429,7 @@ function renderItems(listEl, items) {
 
 function _parseXmlItems(xmlStr) {
   const xml = new DOMParser().parseFromString(xmlStr, 'text/xml');
-  const nodes = Array.from(xml.querySelectorAll('item, entry')).slice(0, 15);
+  const nodes = Array.from(xml.querySelectorAll('item, entry')).slice(0, 16);
   return nodes.map(item => {
     // Extract link: try <link href="...">, then <link>text</link>, then <guid>, then <enclosure url="...">
     const linkEl = item.querySelector('link');
@@ -15674,7 +15673,7 @@ function nsmMove(id, dir) {
 }
 
 function nsmReset() {
-  _nsmSelected = NEWS_DEFAULT_IDS.slice();
+  _nsmSelected = NEWS_DEFAULT_IDS.slice(0, NEWS_MAX);
   _nsmRenderSelectPane();
   _nsmRenderOrderPane();
   _nsmSyncCount();
