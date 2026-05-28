@@ -1501,8 +1501,8 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-list-title{font-size:12px;font-weight:600;color:var(--text);line-height:1.42;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .lnb-list-item:hover .lnb-list-title{color:var(--gold2)}
 .lnb-list-time{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:auto;padding-top:2px}
-.lnb-list-thumb{width:52px;height:42px;border-radius:5px;object-fit:cover;flex-shrink:0;background:var(--card3)}
-@media(max-width:600px){.lnb-card-grid{flex-direction:column}.lnb-hero-card{flex:0 0 auto;border-right:none;border-bottom:1px solid var(--border)}.lnb-hero-img-wrap{padding-top:45%}.lnb-list-thumb{width:44px;height:36px}}
+.lnb-list-thumb{width:54px;height:54px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--card3);border:2px solid var(--border2)}
+@media(max-width:600px){.lnb-card-grid{flex-direction:column}.lnb-hero-card{flex:0 0 auto;border-right:none;border-bottom:1px solid var(--border)}.lnb-hero-img-wrap{padding-top:45%}.lnb-list-thumb{width:46px;height:46px}}
 
 /* ── Calendar strips — thin visible scrollbar so users know they can scroll ── */
 #cal-country-strip,#cal-region-strip{
@@ -15378,20 +15378,25 @@ function renderItems(listEl, items) {
     </div>
   </div>`;
 
+  // Deterministic picsum seed from title string — unique per headline
+  function _thumbFallback(title) {
+    let h = 0;
+    for (let i = 0; i < title.length; i++) { h = Math.imul(31, h) + title.charCodeAt(i) | 0; }
+    return `https://picsum.photos/seed/lnbt${Math.abs(h) % 8999 + 1000}/80/80`;
+  }
+
   // ── Right list (items 1–8) ─────────────────────────────────────────
   const listHtml = shown.slice(1).map(item => {
     const d = _d(item);
     const catLabel = d.category || d.source || '';
-    const thumbHtml = d.imgSrc
-      ? `<img class="lnb-list-thumb" src="${escHtml(d.imgSrc)}" alt="" loading="lazy" onerror="this.remove()">`
-      : '';
+    const thumbSrc = d.imgSrc || _thumbFallback(d.title);
     return `<div class="lnb-list-item" ${_ca(d)}>
       <div class="lnb-list-body">
         ${catLabel ? `<div class="lnb-list-category">${escHtml(catLabel.slice(0, 30))}</div>` : ''}
         <div class="lnb-list-title">${d.safeTitle}</div>
         ${d.timeStr ? `<div class="lnb-list-time">${d.timeStr}</div>` : ''}
       </div>
-      ${thumbHtml}
+      <img class="lnb-list-thumb" src="${escHtml(thumbSrc)}" alt="" loading="lazy" onerror="this.style.opacity=0">
     </div>`;
   }).join('');
 
