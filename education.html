@@ -309,6 +309,184 @@ a{color:inherit;text-decoration:none}
   min-height:160px;
 }
 
+/* Sub-navigation Hub Bar */
+.sub-hub-bar {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+.sub-hub-btn {
+  background: var(--card2);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sub-hub-btn.active {
+  background: var(--gold);
+  border-color: var(--gold2);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+}
+
+/* Kana Interactive Layout */
+.kana-layout {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 20px;
+}
+@media(max-width: 850px) {
+  .kana-layout { grid-template-columns: 1fr; }
+}
+.kana-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-width: thin;
+}
+.kana-grid::-webkit-scrollbar { width: 4px; }
+.kana-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.kana-card {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.kana-card:hover {
+  background: var(--card2);
+  border-color: var(--gold2);
+  transform: translateY(-1px);
+}
+.kana-card.active {
+  border-color: var(--burn2);
+  background: rgba(37,99,235,0.08);
+}
+.kana-char {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.kana-romaji {
+  font-size: 11px;
+  color: var(--text2);
+  font-family: monospace;
+  text-transform: uppercase;
+}
+
+.kana-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.kana-details-box {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 20px;
+  min-height: 230px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.kana-details-header {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+.kana-details-big {
+  font-size: 60px;
+  font-weight: 800;
+  color: var(--gold2);
+}
+.kana-details-title {
+  font-size: 13px;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.kana-details-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Kana Recall Game */
+.kana-game-box {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 20px;
+}
+.kana-game-char {
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--text);
+  text-align: center;
+  margin: 10px 0;
+  background: var(--dark);
+  border-radius: 8px;
+  padding: 10px 0;
+}
+.kana-score-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text3);
+  margin-bottom: 10px;
+}
+
+/* JLPT Pagination Row */
+.quiz-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.quiz-nav-btn {
+  background: var(--card3);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.quiz-nav-btn:hover:not(:disabled) {
+  background: var(--burn);
+  color: #fff;
+}
+.quiz-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+
 /* JLPT Simulator Card Options */
 .jlpt-quiz-card {
   margin-top:16px;
@@ -497,23 +675,65 @@ a{color:inherit;text-decoration:none}
      JLPT CONTAINER (HIDDEN BY DEFAULT)
      ========================================== -->
 <div class="jlpt-container" id="jlpt-container" style="display:none;">
-  <!-- Level Selector -->
-  <div class="class-selector-bar" style="margin-bottom:20px;">
-    <button class="class-btn active" data-jlpt="5" onclick="switchJlptLevel(5)">N5 (Beginner)</button>
-    <button class="class-btn" data-jlpt="4" onclick="switchJlptLevel(4)">N4 (Elementary)</button>
-    <button class="class-btn" data-jlpt="3" onclick="switchJlptLevel(3)">N3 (Intermediate)</button>
-    <button class="class-btn" data-jlpt="2" onclick="switchJlptLevel(2)">N2 (Pre-Advanced)</button>
-    <button class="class-btn" data-jlpt="1" onclick="switchJlptLevel(1)">N1 (Advanced)</button>
+  <!-- Japanese Sub-Hub Selector -->
+  <div class="sub-hub-bar">
+    <button class="sub-hub-btn active" id="sub-hub-chart" onclick="switchJpSubHub('chart')">📙 Interactive Kana Chart</button>
+    <button class="sub-hub-btn" id="sub-hub-levels" onclick="switchJpSubHub('levels')">📚 JLPT Levels N5-N1 Hub</button>
   </div>
 
-  <!-- JLPT Hub Main Layout -->
-  <div class="edu-content-layout">
-    <!-- Study Guide Card -->
-    <div class="lesson-card" id="jlpt-lesson-card">
+  <!-- KANA INTERACTIVE CHART SECTION -->
+  <div id="jp-kana-section" class="kana-layout">
+    <div>
+      <div class="sub-hub-bar" style="border-bottom:none; margin-bottom:12px; padding-bottom:0;">
+        <button class="class-btn active" id="btn-kana-hira" onclick="toggleKanaType('hiragana')">Hiragana (Phonetics)</button>
+        <button class="class-btn" id="btn-kana-kata" onclick="toggleKanaType('katakana')">Katakana (Foreign Words)</button>
+      </div>
+      <div class="kana-grid" id="kana-grid-area">
+        <!-- Dyn Grid -->
+      </div>
+    </div>
+    
+    <div class="kana-sidebar">
+      <!-- Syllable details -->
+      <div class="kana-details-box" id="kana-details-box">
+        <div style="text-align:center; color:var(--text3);">Click any Character card on the left to inspect its stroke notes, pronunciation and example vocabulary!</div>
+      </div>
+      
+      <!-- Recall Game -->
+      <div class="kana-game-box">
+        <div class="kana-score-row">
+          <span>CHARACTER RECALL GAME</span>
+          <span id="kana-score-display">SCORE: 0 / 0</span>
+        </div>
+        <div class="kana-game-char" id="kana-game-question">あ</div>
+        <p class="study-lead" style="font-size:12px; margin-bottom:8px; text-align:center;">Identify the correct romaji syllable sound:</p>
+        <div class="jlpt-options" id="kana-game-options" style="margin-bottom:0;">
+          <!-- Dyn game options -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JLPT LEVELS VIEW (CONTAINER THAT HOLDS SELECTOR AND LEVELS CONTENT) -->
+  <div id="jp-levels-section" style="display:none;">
+    <!-- Level Selector -->
+    <div class="class-selector-bar" style="margin-bottom:20px;">
+      <button class="class-btn active" data-jlpt="5" onclick="switchJlptLevel(5)">N5 (Beginner)</button>
+      <button class="class-btn" data-jlpt="4" onclick="switchJlptLevel(4)">N4 (Elementary)</button>
+      <button class="class-btn" data-jlpt="3" onclick="switchJlptLevel(3)">N3 (Intermediate)</button>
+      <button class="class-btn" data-jlpt="2" onclick="switchJlptLevel(2)">N2 (Pre-Advanced)</button>
+      <button class="class-btn" data-jlpt="1" onclick="switchJlptLevel(1)">N1 (Advanced)</button>
     </div>
 
-    <!-- Practice Drill Card -->
-    <div class="qa-card" id="jlpt-quiz-card">
+    <!-- JLPT Hub Main Layout -->
+    <div class="edu-content-layout">
+      <!-- Study Guide Card -->
+      <div class="lesson-card" id="jlpt-lesson-card">
+      </div>
+
+      <!-- Practice Drill Card -->
+      <div class="qa-card" id="jlpt-quiz-card">
+      </div>
     </div>
   </div>
 </div>
@@ -974,8 +1194,319 @@ for (let c = 1; c <= 10; c++) {
   }
 }
 
-// JAPANESE JLPT DATABASE (N5 to N1 Study material)
+// JAPANESE KANA DATA DATABASE (Seion basic 46 characters)
+const KANA_DATA = [
+  { h: 'あ', k: 'ア', r: 'a', stroke: '3 strokes. Curved vertical, horizontal bar, looping curl.', word: '朝 (asa - morning)' },
+  { h: 'い', k: 'イ', r: 'i', stroke: '2 strokes. Parallel curved vertical strokes, left side longer.', word: '犬 (inu - dog)' },
+  { h: 'う', k: 'ウ', r: 'u', stroke: '2 strokes. Short top slash, large sweeping open hook below.', word: '海 (umi - sea)' },
+  { h: 'え', k: 'エ', r: 'e', stroke: '2 strokes. Short top tick, linked zigzag Z-like lower line.', word: '駅 (eki - station)' },
+  { h: 'お', k: 'オ', r: 'o', stroke: '3 strokes. Horizontal line, vertical loop, top right dot.', word: 'お茶 (ocha - green tea)' },
+  
+  { h: 'か', k: 'カ', r: 'ka', stroke: '3 strokes. Curved hook, long sweeping vertical slash, tick.', word: '傘 (kasa - umbrella)' },
+  { h: 'き', k: 'キ', r: 'ki', stroke: '4 strokes. Parallel horizontal lines, vertical stroke, bottom curl.', word: '切符 (kippu - ticket)' },
+  { h: 'く', k: 'ク', r: 'ku', stroke: '1 stroke. Single sharp sideways chevron pointing left.', word: '薬 (kusuri - medicine)' },
+  { h: 'け', k: 'ケ', r: 'ke', stroke: '3 strokes. Left vertical bar, horizontal cross, right vertical hook.', word: '携帯 (keitai - phone)' },
+  { h: 'こ', k: 'コ', r: 'ko', stroke: '2 strokes. Upper horizontal curve, lower flat base line.', word: '言葉 (kotoba - word)' },
+  
+  { h: 'さ', k: 'サ', r: 'sa', stroke: '3 strokes. Horizontal bar, slash downwards, looping bottom curve.', word: '魚 (sakana - fish)' },
+  { h: 'し', k: 'シ', r: 'shi', stroke: '1 stroke. Vertical line looping up into a hook (like fishhook).', word: '食堂 (shokudou - canteen)' },
+  { h: 'す', k: 'ス', r: 'su', stroke: '2 strokes. Horizontal bar, looping vertical line with tail.', word: '寿司 (sushi - sushi)' },
+  { h: 'せ', k: 'セ', r: 'se', stroke: '3 strokes. Long horizontal, short hook, curved right vertical.', word: '先生 (sensei - teacher)' },
+  { h: 'そ', k: 'ソ', r: 'so', stroke: '1 stroke. Continuous Z-like zigzag flowing into a C-curve.', word: '空 (sora - sky)' },
+  
+  { h: 'た', k: 'タ', r: 'ta', stroke: '4 strokes. Cross lines on left, two short horizontal lines on right.', word: '卵 (tamago - egg)' },
+  { h: 'ち', k: 'チ', r: 'chi', stroke: '2 strokes. Horizontal line, vertical line looping down.', word: '地下鉄 (chikatetsu - subway)' },
+  { h: 'つ', k: 'ツ', r: 'tsu', stroke: '1 stroke. Horizontal stroke curving down into a hook.', word: '机 (tsukue - desk)' },
+  { h: 'て', k: 'テ', r: 'te', stroke: '1 stroke. Flat horizontal line dropping into a semi-circle.', word: '手紙 (tegami - letter)' },
+  { h: 'と', k: 'ト', r: 'to', stroke: '2 strokes. Short downward slash connecting to an open curve.', word: '友達 (tomodachi - friend)' },
+  
+  { h: 'な', k: 'ナ', r: 'na', stroke: '4 strokes. Cross lines on left, short loop, dot on top right.', word: '夏 (natsu - summer)' },
+  { h: 'に', k: 'ニ', r: 'ni', stroke: '3 strokes. Left vertical line, two short parallel bars on right.', word: '肉 (niku - meat)' },
+  { h: 'ぬ', k: 'ヌ', r: 'nu', stroke: '2 strokes. Intertwined vertical slashes ending in a tight loop.', word: 'ぬいぐるみ (nuigurumi - plush)' },
+  { h: 'ね', k: 'ネ', r: 'ne', stroke: '2 strokes. Vertical bar, looping complex vertical with looped tail.', word: '猫 (neko - cat)' },
+  { h: 'の', k: 'ノ', r: 'no', stroke: '1 stroke. A single continuous circular loop curving out.', word: '飲み物 (nomimono - drink)' },
+  
+  { h: 'は', k: 'ハ', r: 'ha', stroke: '3 strokes. Left vertical line, horizontal bar, looped vertical.', word: '花 (hana - flower)' },
+  { h: 'ひ', k: 'ヒ', r: 'hi', stroke: '1 stroke. Large curved loop (resembles an open smile).', word: '飛行機 (hikouki - airplane)' },
+  { h: 'ふ', k: 'フ', r: 'fu', stroke: '4 strokes. Center loop, left dot, right dot, bottom stroke.', word: '船 (fune - ship)' },
+  { h: 'へ', k: 'ヘ', r: 'he', stroke: '1 stroke. Simple upward wedge and longer downward slope.', word: '部屋 (heya - room)' },
+  { h: 'ほ', k: 'ホ', r: 'ho', stroke: '4 strokes. Left vertical, two horizontal lines, looped vertical.', word: '本 (hon - book)' },
+  
+  { h: 'ま', k: 'マ', r: 'ma', stroke: '3 strokes. Two horizontal lines, vertical line with looped tail.', word: '窓 (mado - window)' },
+  { h: 'み', k: 'ミ', r: 'mi', stroke: '2 strokes. Downward looping vertical, crossed by downward slash.', word: '水 (mizu - water)' },
+  { h: 'む', k: 'ム', r: 'mu', stroke: '3 strokes. Horizontal, looping vertical hook, top right tick.', word: '虫 (mushi - insect)' },
+  { h: 'め', k: 'メ', r: 'me', stroke: '2 strokes. Downward slash crossed by curved loop (no tail loop).', word: '眼鏡 (megane - glasses)' },
+  { h: 'も', k: 'モ', r: 'mo', stroke: '3 strokes. Fishing hook shape crossed by two horizontal lines.', word: '森 (mori - forest)' },
+  
+  { h: 'や', k: 'ヤ', r: 'ya', stroke: '3 strokes. Hook curve, slash across, small tick next to hook.', word: '山 (yama - mountain)' },
+  { h: 'ゆ', k: 'ユ', r: 'yu', stroke: '2 strokes. Open loop, vertical stroke crossing the tail.', word: '雪 (yuki - snow)' },
+  { h: 'よ', k: 'ヨ', r: 'yo', stroke: '2 strokes. Horizontal line, vertical line with loop on right.', word: '夜 (yoru - night)' },
+  
+  { h: 'ら', k: 'ラ', r: 'ra', stroke: '2 strokes. Top slash, vertical loop line below.', word: '来週 (raishuu - next week)' },
+  { h: 'り', k: 'リ', r: 'ri', stroke: '2 strokes. Short left vertical, long right vertical hook.', word: '料理 (ryouri - cooking)' },
+  { h: 'る', k: 'ル', r: 'ru', stroke: '1 stroke. Z-like horizontal line flowing into a looped bottom tail.', word: '留守 (rusu - absence)' },
+  { h: 'れ', k: 'レ', r: 're', stroke: '2 strokes. Left vertical, vertical looping with outward curve.', word: '冷蔵庫 (reizouko - fridge)' },
+  { h: 'ろ', k: 'ロ', r: 'ro', stroke: '1 stroke. Exactly like "ru" but without the closed loop tail.', word: '六 (roku - six)' },
+  
+  { h: 'わ', k: 'ワ', r: 'wa', stroke: '2 strokes. Left vertical, vertical loop with wide open right.', word: '私 (watashi - I / me)' },
+  { h: 'を', k: 'ヲ', r: 'wo', stroke: '3 strokes. Two horizontal lines, hooked vertical cross line.', word: '音楽 (ongaku - music *used as object particle)' },
+  { h: 'ん', k: 'ン', r: 'n', stroke: '1 stroke. Downward stroke shifting into a looping wave up.', word: '日本語 (nihongo - Japanese)' }
+];
+
 const JLPT_DATA = {
+  5: {
+    lesson: {
+      headline: 'JLPT N5 (Beginner) — Phonetics, Particles & 10 Core Kanji',
+      lead: 'Establishing the foundational blocks of the Japanese language. Covers Hiragana, Katakana, crucial structural particles, and essential character definitions.',
+      bullets: [
+        '<strong>Hiragana & Katakana:</strong> Hiragana is utilized for native grammatical structures, while Katakana represents borrowed foreign terms (e.g. カメラ - kamera).',
+        '<strong>Structural Particles:</strong> は (wa - topic marker), の (no - possession), に (ni - time/destination), を (o - direct object), が (ga - subject marker).',
+        '<strong>Greetings & Aisatsu:</strong> こんにちは (Konnichiwa - Hello *written with は), ありがとう (Arigatou - Thank you).',
+        '<strong>N5 Core Kanji:</strong> 一 (ichi - one), 二 (ni - two), 三 (san - three), 人 (hito - person), 日 (hi - sun/day), 本 (hon - book/origin), 水 (mizu - water), 木 (ki - tree), 金 (kane - gold/money), 土 (tsuchi - soil).'
+      ]
+    },
+    quizzes: [
+      {
+        q: 'Which particle indicates possession, translating to "of" (e.g. "my book" / わたしのほん)?',
+        options: ['は (wa)', 'を (o)', 'の (no)', 'に (ni)'],
+        answer: 2,
+        explain: 'The particle の (no) joins nouns to indicate possession. E.g. わたしのほん (my book / book of mine).'
+      },
+      {
+        q: 'What is the correct Hiragana spelling for the standard greeting "Konnichiwa" (Hello)?',
+        options: ['こんにちわ', 'こんにちは', 'こにちは', 'こにちわ'],
+        answer: 1,
+        explain: 'Although pronounced "Konnichiwa" with a "wa" sound, it is historically and grammatically written ending with the particle は (ha) because it denotes the topic marker.'
+      },
+      {
+        q: 'Identify the direct object marker particle in: "I drink green tea" (お茶__飲みます)。',
+        options: ['は (wa)', 'を (o)', 'に (ni)', 'が (ga)'],
+        answer: 1,
+        explain: 'The particle を (o) designates the direct object of a transitive verb. "お茶を飲みます" (Ocha o nomimasu - I drink green tea).'
+      },
+      {
+        q: 'What is the correct Kunyomi (Japanese reading) for the N5 beginner Kanji "水" (water)?',
+        options: ['すい (sui)', 'みず (mizu)', 'かわ (kawa)', 'ひ (hi)'],
+        answer: 1,
+        explain: 'The character 水 has the Kunyomi reading "みず" (mizu) representing water. Its Onyomi (Chinese) reading is "すい" (sui) as in 水曜日 (suiyoubi - Wednesday).'
+      },
+      {
+        q: 'Which particle is used to mark a specific time or destination (e.g. "I go to school at 8:00")?',
+        options: ['に (ni)', 'を (o)', 'で (de)', 'と (to)'],
+        answer: 0,
+        explain: 'The particle に (ni) marks the specific point of time (8:00に) or the target of motion/destination (学校に行きます).'
+      },
+      {
+        q: 'Which N5 Kanji represents "Book" or "Origin", and combines with "Sun" (日) to write "Japan" (日本)?',
+        options: ['木 (ki)', '人 (hito)', '本 (hon)', '金 (kane)'],
+        answer: 2,
+        explain: 'The Kanji 本 (hon) means book or origin. Combined with 日 (sun), it forms 日本 (Nihon / Nippon), literally "origin of the sun" or "Land of the Rising Sun".'
+      }
+    ]
+  },
+  4: {
+    lesson: {
+      headline: 'JLPT N4 (Elementary) — Verb Conjugations & Adjectives',
+      lead: 'Progressing from polite styles to basic plain/casual formats. Developing competency in fluid spoken expressions and complex conditional phrases.',
+      bullets: [
+        '<strong>Verb Forms:</strong> Plain/Dictionary Form (to eat - たべる), Negative Form (tabenai - たべない), Past Form (tabeta - たべた), and Te-form (tabete - たべた).',
+        '<strong>The Vital Te-form (~て):</strong> Used to link actions, make polite requests (~て ください), and represent ongoing states (~て いる).',
+        '<strong>Conditional Structures:</strong> ~たら (tara - if/when general condition), ~と (to - natural/inevitable consequence, e.g. "when spring comes, flowers bloom").',
+        '<strong>Adjective Conjugations:</strong> I-adjectives (e.g. さむい) vs Na-adjectives (e.g. しずかな). Past negative of さむい is 寒くなかった (samukunakatta).'
+      ]
+    },
+    quizzes: [
+      {
+        q: 'What is the correct Te-Form conjugation of the irregular Group 1 verb "いく" (iku - to go)?',
+        options: ['いきて (ikite)', 'いって (itte)', 'いいて (iite)', 'いくて (ikute)'],
+        answer: 1,
+        explain: 'The verb いく (to go) is a noted irregular Group 1 verb. Its Te-form is exceptionally conjugated as いって (itte).'
+      },
+      {
+        q: 'Which conditional form designates an inevitable, natural consequence (e.g. "if you press this button, water flows")?',
+        options: ['たら (tara)', 'と (to)', 'ば (ba)', 'なら (nara)'],
+        answer: 1,
+        explain: 'The particle と (to) is the natural conditional. When Action A happens, Action B naturally or inevitably follows.'
+      },
+      {
+        q: 'What is the correct past-negative casual conjugation of the I-adjective "寒い" (samui - cold)?',
+        options: ['寒くないでした (samuku nai deshita)', '寒くなかった (samukunakatta)', '寒くないかった (samuku naikatta)', '寒かったない (samukattanai)'],
+        answer: 1,
+        explain: 'To conjugate an I-adjective to past negative, drop the final "i", add "ku", then add "nakatta". Hence, 寒い becomes 寒くなかった (it was not cold).'
+      },
+      {
+        q: 'What is the meaning of the N4 grammar pattern "〜すぎます" (sugimasu) added to a verb stem?',
+        options: ['To want to do', 'To do too much', 'To start doing', 'To finish doing'],
+        answer: 1,
+        explain: 'The suffix 〜すぎる (sugiru / sugimasu) means "to do to excess" or "too much". E.g., 食べすぎました (tabesugimashita - I ate too much).'
+      },
+      {
+        q: 'Which particle must be used with the verb "できます" (dekiru - to be able to) to mark the skill/ability?',
+        options: ['を (o)', 'が (ga)', 'に (ni)', 'で (de)'],
+        answer: 1,
+        explain: 'Verbs of potential and ability like できます (dekiru) take the subject marker が (ga) rather than the direct object を (o). E.g. 日本語ができます.'
+      },
+      {
+        q: 'What is the meaning of the N4 level Kanji "新" as in "新しい" (atarashii) or "新聞" (shinbun)?',
+        options: ['Old', 'New', 'High', 'Bright'],
+        answer: 1,
+        explain: 'The Kanji 新 represents "New" (新しい - atarashii). Combined with 聞 (to hear), it writes 新聞 (shinbun - newspaper, literally new hearings).'
+      }
+    ]
+  },
+  3: {
+    lesson: {
+      headline: 'JLPT N3 (Intermediate) — Honorifics (Keigo) & Formal Speech',
+      lead: 'Bridging everyday speech with polite, business-grade Japanese. Developing expertise in respectful and humble verbs, expectations, and targeted efforts.',
+      bullets: [
+        '<strong>Keigo Classifications:</strong> Respectful Sonkeigo (elevates actions of superiors) vs Humble Kenjougo (lowers actions of oneself to show modesty).',
+        '<strong>Respectful (Sonkeigo):</strong> いらっしゃる (irassharu - to go/come/be), おっしゃる (ossharu - to say), 召し上がる (meshiagaru - to eat/drink).',
+        '<strong>Humble (Kenjougo):</strong> いただく (itadaku - to eat/drink/receive), 申し上げる (moushiageru - to say), 伺う (ukagau - to visit/ask).',
+        '<strong>Nuance Particles:</strong> 〜はずだ (hazu da - expected/should be based on objective reasons), 〜ようにする (youni suru - try/make an effort to establish a habit).'
+      ]
+    },
+    quizzes: [
+      {
+        q: 'Which humble (Kenjougo) verb is used to replace the casual verbs "食べる" (to eat) or "もらう" (to receive)?',
+        options: ['召し上がる (meshiagaru)', 'いただく (itadaku)', 'いらっしゃる (irassharu)', 'おっしゃる (ossharu)'],
+        answer: 1,
+        explain: 'いただく (itadaku) is the humble verb used to express eating, drinking, or receiving from a superior. 召し上がる is respectful.'
+      },
+      {
+        q: 'Complete the sentence with the appropriate intermediate expectation grammar: "The train is scheduled for 3:00, so it ___ arrive soon" (来る___だ).',
+        options: ['よう (you)', 'はず (hazu)', 'こと (koto)', 'ため (tame)'],
+        answer: 1,
+        explain: '〜はずだ (hazu da) denotes a logical expectation based on objective evidence: "It should arrive soon."'
+      },
+      {
+        q: 'What does the grammar construction "〜ようにする" (youni suru) indicate?',
+        options: ['Deciding to do', 'Making a habit/effort to do', 'Being able to do', 'Regretting doing'],
+        answer: 1,
+        explain: '〜ようにする (youni suru) signifies making a conscious, continuous effort to do something or establish a healthy habit. E.g., 毎日野菜を食べるようにしています.'
+      },
+      {
+        q: 'Identify the correct reading of the N3 intermediate Kanji compound "技術" (technology / skill).',
+        options: ['ぎじゅつ (gijutsu)', 'わざじゅつ (wazajutsu)', 'きじゅつ (kijutsu)', 'ぎしゅつ (gishutsu)'],
+        answer: 0,
+        explain: '技術 is read as "ぎじゅつ" (gijutsu), combining 技 (skill/craft) and 術 (technique/method).'
+      },
+      {
+        q: 'Which grammar connector denotes "for the sake of" or "in order to" (e.g. "studying for the sake of the exam")?',
+        options: ['ために (tame ni)', 'ように (you ni)', 'はずで (hazu de)', 'ばかりに (bakari ni)'],
+        answer: 0,
+        explain: '〜ために (tame ni) indicates a purpose, goal, or benefit: "for the sake of / in order to". It takes a dictionary verb or noun + の.'
+      },
+      {
+        q: 'What does the particle "〜ばかり" (bakari) mean when placed directly after the past tense Ta-form of a verb (e.g. 食べたばかり)?',
+        options: ['Only eating', 'Just finished eating', 'About to eat', 'Should have eaten'],
+        answer: 1,
+        explain: 'When 〜ばかり is paired with a past-tense verb (Verb-たばかり), it indicates that the action has just been completed: "just finished doing".'
+      }
+    ]
+  },
+  2: {
+    lesson: {
+      headline: 'JLPT N2 (Pre-Advanced) — Compound Particles & Media Grammar',
+      lead: 'Expanding literacy to comprehend newspapers, journals, and broadcast television. Mastering compound connectors, social boundaries, and developing trends.',
+      bullets: [
+        '<strong>Compound Particles:</strong> に 対して (ni taishite - in contrast to / regarding), に 伴って (ni tomonatte - along with / in parallel with).',
+        '<strong>Social and Moral Norms:</strong> 〜わけにはいかない (wake ni wa ikanai - cannot afford to do under social norms or moral obligation).',
+        '<strong>Continuous Trends:</strong> 〜つつある (tsutsu aru - in the process of / currently developing, e.g. "the population is decreasing").',
+        '<strong>Physical tendencies:</strong> 〜がちだ (gachi da - tendency to happen frequently, usually with negative outcomes, e.g. "tendency to forget").'
+      ]
+    },
+    quizzes: [
+      {
+        q: 'Which N2 grammar pattern translates to "cannot afford to do" due to moral, social or corporate expectations?',
+        options: ['わけがない (wake ga nai)', 'わけにはいかない (wake ni wa ikanai)', 'はずがない (hazu ga nai)', 'ことにしている (koto ni shite iru)'],
+        answer: 1,
+        explain: '〜わけにはいかない (wake ni wa ikanai) indicates that while you physically could perform the action, social codes or moral rules prevent you from doing so.'
+      },
+      {
+        q: 'Complete: "The temperature is in the process of dropping" (気温が下がり___).',
+        options: ['つつある (tsutsu aru)', 'がちだ (gachi da)', 'わけだ (wake da)', 'ようとする (you to suru)'],
+        answer: 0,
+        explain: '〜つつある (tsutsu aru) is a formal, written expression used to show an ongoing trend or process: "is in the process of dropping".'
+      },
+      {
+        q: 'What is the meaning of the N2 compound particle "〜にともなって" (ni tomonatte)?',
+        options: ['Instead of', 'Along with / as a result of', 'Regarding / in contrast to', 'In spite of'],
+        answer: 1,
+        explain: '〜に伴って (ni tomonatte) means "along with", "in proportion to", or "as a result of", indicating that one change triggers another in parallel.'
+      },
+      {
+        q: 'What is the correct reading of the N2 pre-advanced Kanji compound "環境" (environment)?',
+        options: ['かんきょう (kankyou)', 'かんけい (kankei)', 'えんきょう (enkyou)', 'こうきょう (koukyou)'],
+        answer: 0,
+        explain: '環境 is read as "かんきょう" (kankyou), combining 環 (ring/circle/surroundings) and 境 (boundary/border).'
+      },
+      {
+        q: 'What does "〜気味" (gimi) indicate when added to a noun (e.g. 風邪気味 - kaze-gimi)?',
+        options: ['Completely cured', 'A slight feeling or tendency of', ' Afraid of', 'Disliking'],
+        answer: 1,
+        explain: '〜気味 (gimi) denotes a slight physical or mental tendency of a state, usually negative: "a touch of / slight feeling of". E.g. 風邪気味 (a touch of a cold).'
+      },
+      {
+        q: 'Which N2 grammar connector represents "simply because of / as a result of" (expressing regret or an unexpected negative outcome)?',
+        options: ['ばかりに (bakari ni)', 'ためだけに (tame dake ni)', 'おかげで (okage de)', 'せいにして (sei ni shite)'],
+        answer: 0,
+        explain: '〜ばかりに (bakari ni) means "simply because of / solely due to," highlighting that a single factor caused an unfortunate or regrettable result.'
+      }
+    ]
+  },
+  1: {
+    lesson: {
+      headline: 'JLPT N1 (Advanced) — Literary Grammar & Classical Particles',
+      lead: 'Reaching professional and fluent level competency. Analyzing formal written articles, legislative draftings, literary texts, and ancient classical remnants.',
+      bullets: [
+        '<strong>Autobiographical & Compelled Action:</strong> 〜ずにはおかない (zuni wa okanai - will not stop until / cannot help but execute).',
+        '<strong>Simultaneous Occurrences:</strong> 〜がてら (gatera - while also taking the opportunity to complete a secondary task, e.g. "walking while buying groceries").',
+        '<strong>Classical Similes:</strong> 〜ごとき (gotoki - classical remnant meaning "like" or "as if" / 怒涛のごとく - like a raging torrent).',
+        '<strong>Advanced Kanji Compounds:</strong> Reading and writing highly technical, philosophical, and specialized characters (e.g. 緻密 - chimitsu - highly detailed).'
+      ]
+    },
+    quizzes: [
+      {
+        q: 'Which advanced N1 grammar pattern represents "will not stop until" or "compelled to execute"?',
+        options: ['ずにはいられない (zuni wa irarenai)', 'ずにはおかない (zuni wa okanai)', 'ねばならない (neba naranai)', 'べきではない (beki de wa nai)'],
+        answer: 1,
+        explain: '〜ずにはおかない (zuni wa okanai) is a strong, formal expression indicating that the speaker or an event will inevitably cause something to happen, or cannot stop until it is completed.'
+      },
+      {
+        q: 'Identify the pattern meaning "while also taking the opportunity to do" (e.g. "taking a walk while also picking up dinner")?',
+        options: ['ながら (nagara)', 'がてら (gatera)', 'ついでに (tsuide ni)', 'しだい (shidai)'],
+        answer: 1,
+        explain: '〜がてら (gatera) is an advanced connector indicating a primary activity (e.g. 散歩 - walking) during which one conveniently completes a secondary task.'
+      },
+      {
+        q: 'What is the classical grammatical meaning of the N1 particle remnant "〜ごとき" (gotoki)?',
+        options: ['In contrast to', 'Like / as if', 'Because of', 'Only / nothing but'],
+        answer: 1,
+        explain: '〜ごとき (gotoki) is a classical Japanese remnant equivalent to the modern 〜のような (no you na), meaning "like / in the manner of / as if".'
+      },
+      {
+        q: 'Identify the correct reading and meaning of the N1 advanced compound "緻密" (e.g. 緻密な計画).',
+        options: ['ちみつ (chimitsu) - Extremely detailed/precise', 'てつみつ (tetsumitsu) - Secret/confidential', 'じみつ (jimitsu) - Earthy/simple', 'ちけい (chikei) - Rugged terrain'],
+        answer: 0,
+        explain: '緻密 is read as "ちみつ" (chimitsu) meaning highly detailed, precise, or minute. E.g. 緻密な計画 (a meticulous/highly precise plan).'
+      },
+      {
+        q: 'Which N1 grammar connector acts as a formal "because" or "due to" (often in writing or public statements)?',
+        options: ['ゆえに (yue ni)', 'からこそ (kara koso)', 'ものの (mono no)', 'どころか (dokoroka)'],
+        answer: 0,
+        explain: '〜ゆえに (yue ni) is a formal, literary particle meaning "because of / due to," expressing a causal link between clauses. Equivalent to 〜ために.'
+      },
+      {
+        q: 'What does the N1 suffix "〜ずくめ" (zukume) mean when added to a noun (e.g. 黒ずくめの服)?',
+        options: ['Hating the color', 'Entirely filled with / nothing but', 'Trying to avoid', 'Occasionally wearing'],
+        answer: 1,
+        explain: '〜ずくめ (zukume) means "entirely filled with / nothing but / covered in". E.g. 黒ずくめの服 (clothes entirely of black / dressed in all black).'
+      }
+    ]
+  }
+};
+
+// JAPANESE JLPT DATABASE (N5 to N1 Study material)
   5: {
     lesson: {
       headline: 'JLPT N5 (Beginner) — Hiragana & Daily Greetings',
@@ -1346,6 +1877,164 @@ function drawGeometryGraph() {
   document.getElementById('geometry-canvas-area').innerHTML = graphSvg;
 }
 
+// STATE FOR JAPANESE PORTAL
+var _activeJpSubHub = 'chart'; // 'chart' or 'levels'
+var _activeKanaType = 'hiragana'; // 'hiragana' or 'katakana'
+var _selectedKanaIdx = 0;
+var _activeJlptQuizIdx = 0; // index from 0 to 5
+
+// Recall Game State
+var _recallQuestionIdx = 0;
+var _recallScoreCorrect = 0;
+var _recallScoreTotal = 0;
+
+// Switch Japanese sub-areas
+function switchJpSubHub(area) {
+  _activeJpSubHub = area;
+  document.getElementById('sub-hub-chart').classList.remove('active');
+  document.getElementById('sub-hub-levels').classList.remove('active');
+  
+  if (area === 'chart') {
+    document.getElementById('sub-hub-chart').classList.add('active');
+    document.getElementById('jp-kana-section').style.display = 'grid';
+    document.getElementById('jp-levels-section').style.display = 'none';
+    renderKanaChart();
+  } else {
+    document.getElementById('sub-hub-levels').classList.add('active');
+    document.getElementById('jp-kana-section').style.display = 'none';
+    document.getElementById('jp-levels-section').style.display = 'block';
+    renderJlptContent();
+  }
+}
+
+// Toggle Hiragana vs Katakana
+function toggleKanaType(type) {
+  _activeKanaType = type;
+  document.getElementById('btn-kana-hira').classList.remove('active');
+  document.getElementById('btn-kana-kata').classList.remove('active');
+  
+  if (type === 'hiragana') {
+    document.getElementById('btn-kana-hira').classList.add('active');
+  } else {
+    document.getElementById('btn-kana-kata').classList.add('active');
+  }
+  renderKanaChart();
+}
+
+// Render the 46 Kana Grid cards
+function renderKanaChart() {
+  const container = document.getElementById('kana-grid-area');
+  let gridHtml = '';
+  
+  KANA_DATA.forEach((item, idx) => {
+    const char = _activeKanaType === 'hiragana' ? item.h : item.k;
+    const isActiveClass = idx === _selectedKanaIdx ? ' active' : '';
+    gridHtml += '<div class="kana-card' + isActiveClass + '" onclick="selectKanaCharacter(' + idx + ')">'
+      + '  <div class="kana-char">' + esc(char) + '</div>'
+      + '  <div class="kana-romaji">' + esc(item.r) + '</div>'
+      + '</div>';
+  });
+  
+  container.innerHTML = gridHtml;
+  renderKanaDetails(_selectedKanaIdx);
+}
+
+// Select a character to show details
+function selectKanaCharacter(idx) {
+  _selectedKanaIdx = idx;
+  document.querySelectorAll('.kana-grid .kana-card').forEach((card, i) => {
+    card.classList.remove('active');
+    if (i === idx) card.classList.add('active');
+  });
+  renderKanaDetails(idx);
+}
+
+// Render side details panel
+function renderKanaDetails(idx) {
+  const item = KANA_DATA[idx];
+  if (!item) return;
+  
+  const char = _activeKanaType === 'hiragana' ? item.h : item.k;
+  const typeLabel = _activeKanaType === 'hiragana' ? 'Hiragana Phonetic' : 'Katakana Foreign';
+  
+  const detailsHtml = '<div class="kana-details-header">'
+    + '  <div class="kana-details-big">' + esc(char) + '</div>'
+    + '  <div>'
+    + '    <div class="kana-details-title">Syllable sound</div>'
+    + '    <div class="kana-details-val" style="font-size:24px; text-transform:uppercase; color:var(--gold2);">' + esc(item.r) + '</div>'
+    + '  </div>'
+    + '</div>'
+    + '<div style="margin-bottom:12px;">'
+    + '  <div class="kana-details-title">Alphabet Type</div>'
+    + '  <div class="kana-details-val" style="font-size:13.5px;">' + typeLabel + ' script</div>'
+    + '</div>'
+    + '<div style="margin-bottom:12px;">'
+    + '  <div class="kana-details-title">Stroke Guidelines</div>'
+    + '  <div class="kana-details-val" style="font-weight:400; font-size:13px; color:var(--text2);">' + esc(item.stroke) + '</div>'
+    + '</div>'
+    + '<div>'
+    + '  <div class="kana-details-title">Standard Vocabulary Example</div>'
+    + '  <div class="kana-details-val" style="color:var(--green); font-size:14px;">' + esc(item.word) + '</div>'
+    + '</div>';
+    
+  document.getElementById('kana-details-box').innerHTML = detailsHtml;
+}
+
+// Setup character recall game
+function loadKanaRecallDrill() {
+  // Select a random character index
+  const rIdx = Math.floor(Math.random() * KANA_DATA.length);
+  _recallQuestionIdx = rIdx;
+  
+  const item = KANA_DATA[rIdx];
+  const char = _activeKanaType === 'hiragana' ? item.h : item.k;
+  document.getElementById('kana-game-question').textContent = char;
+  
+  // Generate 4 multiple choice options (including correct answer)
+  let options = [item.r];
+  while (options.length < 4) {
+    const randomItem = KANA_DATA[Math.floor(Math.random() * KANA_DATA.length)];
+    if (!options.includes(randomItem.r)) {
+      options.push(randomItem.r);
+    }
+  }
+  
+  // Shuffle options
+  options.sort(() => Math.random() - 0.5);
+  
+  const optionsHtml = options.map(opt => {
+    return '<button class="option-btn" style="padding:10px 12px; font-size:13px;" onclick="selectKanaRecallOption(\'' + esc(opt) + '\')">' + esc(opt) + '</button>';
+  }).join('');
+  
+  document.getElementById('kana-game-options').innerHTML = optionsHtml;
+}
+
+// Select recall game option
+function selectKanaRecallOption(selectedRomaji) {
+  const item = KANA_DATA[_recallQuestionIdx];
+  const correctRomaji = item.r;
+  
+  _recallScoreTotal++;
+  const isCorrect = selectedRomaji === correctRomaji;
+  if (isCorrect) _recallScoreCorrect++;
+  
+  document.getElementById('kana-score-display').textContent = 'SCORE: ' + _recallScoreCorrect + ' / ' + _recallScoreTotal;
+  
+  // Highlight correctness
+  document.querySelectorAll('#kana-game-options .option-btn').forEach(btn => {
+    btn.disabled = true;
+    if (btn.textContent === correctRomaji) {
+      btn.classList.add('correct');
+    } else if (btn.textContent === selectedRomaji) {
+      btn.classList.add('incorrect');
+    }
+  });
+  
+  // Load next question automatically after 1.2s
+  setTimeout(loadKanaRecallDrill, 1300);
+}
+
+
 // RENDER JLPT CONTENT
 function renderJlptContent() {
   const data = JLPT_DATA[_activeJlptLevel];
@@ -1416,6 +2105,8 @@ function selectJlptOption(qIdx, optionIdx) {
 document.addEventListener('DOMContentLoaded', function() {
   setTheme(localStorage.getItem('viltv_theme') || 'midnight');
   switchHub('cbse');
+  // Initialize recall game
+  loadKanaRecallDrill();
 });
 </script>
 
