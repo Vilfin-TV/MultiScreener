@@ -13165,13 +13165,13 @@ function _initTicker(containerId, baseSymbols, customSymbols, transparent) {
   el.appendChild(s);
 }
 
-/** Initialise both desktop and mobile tickers with optional custom symbols. */
+/** Initialise both desktop and mobile tickers (used as a quick-init with defaults). */
 function _initTickers(customSymbols) {
-  _initTicker('tv-desktop-container', _TICKER_DESKTOP_DEFAULTS, customSymbols, false);
-  _initTicker('tv-mobile-container',  _TICKER_MOBILE_DEFAULTS,  customSymbols, true);
+  _initTicker('tv-desktop-container', _TICKER_DESKTOP_DEFAULTS, Array.isArray(customSymbols) ? customSymbols : [], false);
+  _initTicker('tv-mobile-container',  _TICKER_MOBILE_DEFAULTS,  Array.isArray(customSymbols) ? customSymbols : [], true);
 }
 
-/** Fetch config.json, merge custom channels into global arrays, init tickers. */
+/** Fetch config.json, apply overrides to built-in arrays, init tickers. */
 async function _loadPageConfig() {
   try {
     var r = await fetch('/config.json?_=' + Date.now());
@@ -13179,45 +13179,61 @@ async function _loadPageConfig() {
     var cfg = await r.json();
     if (!cfg || typeof cfg !== 'object' || Array.isArray(cfg)) throw new Error('bad format');
 
-    // ── Merge custom YouTube channels (prepend — appear first in picker) ─────
-    if (Array.isArray(cfg.youtube_channels) && cfg.youtube_channels.length) {
-      var ytSlot = YT_CHANNELS.length + 1;
-      var customYT = cfg.youtube_channels.map(function(ch, i) {
-        return {
-          no: ytSlot + i,
-          name:     ch.name     || 'Custom Channel',
-          country:  ch.country  || 'Custom',
-          category: ch.category || 'Custom',
-          lang:     ch.lang     || 'English',
-          cid:      ch.cid      || '',
-          v1:       ch.v1       || '',
-          v2:       ch.v2       || ''
-        };
-      });
-      // Unshift so they appear at the top of the selector list
-      for (var i = customYT.length - 1; i >= 0; i--) {
-        YT_CHANNELS.unshift(customYT[i]);
-      }
-    }
-
-    // ── Merge custom news channels (append to NEWS_SOURCES) ──────────────────
-    if (Array.isArray(cfg.news_channels) && cfg.news_channels.length) {
-      var existingIds = {};
-      NEWS_SOURCES.forEach(function(s) { existingIds[s.id] = true; });
-      cfg.news_channels.forEach(function(ch) {
-        if (ch.id && !existingIds[ch.id]) {
-          NEWS_SOURCES.push(ch);
-          existingIds[ch.id] = true;
+    // ── Apply YouTube channel overrides (patch built-in entries) ─────────────
+    if (cfg.youtube_overrides && typeof cfg.youtube_overrides === 'object') {
+      YT_CHANNELS.forEach(function(ch) {
+        var patch = cfg.youtube_overrides[String(ch.no)];
+        if (patch) {
+          if (patch.name !== undefined) ch.name = patch.name;
+          if (patch.cid  !== undefined) ch.cid  = patch.cid;
+          if (patch.v1   !== undefined) ch.v1   = patch.v1;
+          if (patch.v2   !== undefined) ch.v2   = patch.v2;
         }
       });
     }
 
-    // ── Init tickers with custom symbols ─────────────────────────────────────
-    _initTickers(cfg.ticker_symbols || []);
+    // ── Prepend custom YouTube channels (appear first in picker) ─────────────
+    if (Array.isArray(cfg.youtube_channels) && cfg.youtube_channels.length) {
+      var ytSlot = YT_CHANNELS.length + 1;
+      var customYT = cfg.youtube_channels.map(function(ch, i) {
+        return { no: ytSlot + i, name: ch.name || 'Custom Channel',
+          country: ch.country || 'Custom', category: ch.category || 'Custom',
+          lang: ch.lang || 'English', cid: ch.cid || '', v1: ch.v1 || '', v2: ch.v2 || '' };
+      });
+      for (var i = customYT.length - 1; i >= 0; i--) YT_CHANNELS.unshift(customYT[i]);
+    }
+
+    // ── Apply news source overrides ───────────────────────────────────────────
+    if (cfg.news_overrides && typeof cfg.news_overrides === 'object') {
+      NEWS_SOURCES.forEach(function(src) {
+        var patch = cfg.news_overrides[src.id];
+        if (patch) {
+          if (patch.label !== undefined) src.label = patch.label;
+          if (patch.url   !== undefined) src.url   = patch.url;
+          if (patch.color !== undefined) src.color = patch.color;
+        }
+      });
+    }
+
+    // ── Append custom news channels ───────────────────────────────────────────
+    if (Array.isArray(cfg.news_channels) && cfg.news_channels.length) {
+      var existingIds = {};
+      NEWS_SOURCES.forEach(function(s) { existingIds[s.id] = true; });
+      cfg.news_channels.forEach(function(ch) {
+        if (ch.id && !existingIds[ch.id]) { NEWS_SOURCES.push(ch); existingIds[ch.id] = true; }
+      });
+    }
+
+    // ── Init tickers (full override if set, else defaults) ────────────────────
+    var desktopSyms = (cfg.ticker_symbols        && cfg.ticker_symbols.length)        ? cfg.ticker_symbols        : null;
+    var mobileSyms  = (cfg.ticker_symbols_mobile && cfg.ticker_symbols_mobile.length) ? cfg.ticker_symbols_mobile : null;
+    _initTicker('tv-desktop-container', desktopSyms ? [] : _TICKER_DESKTOP_DEFAULTS, desktopSyms || [], false);
+    _initTicker('tv-mobile-container',  mobileSyms  ? [] : _TICKER_MOBILE_DEFAULTS,  mobileSyms  || [], true);
 
   } catch(e) {
-    // Silent fail — init tickers with defaults only
-    _initTickers([]);
+    // Silent fail — init tickers with built-in defaults
+    _initTicker('tv-desktop-container', _TICKER_DESKTOP_DEFAULTS, [], false);
+    _initTicker('tv-mobile-container',  _TICKER_MOBILE_DEFAULTS,  [], true);
   }
 }
 

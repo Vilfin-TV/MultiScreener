@@ -410,7 +410,20 @@ export default {
       if (!config || typeof config !== 'object') return jsonError(400, 'config object required.');
       if (!env.GITHUB_TOKEN) return jsonError(503, 'GitHub not configured.');
 
-      // Sanitize YouTube channels
+      // ── YouTube channel overrides (map: no → patch) ─────────────────────────
+      const rawYTOv = (config.youtube_overrides && typeof config.youtube_overrides === 'object' && !Array.isArray(config.youtube_overrides)) ? config.youtube_overrides : {};
+      const cleanYTOv = {};
+      for (const [no, patch] of Object.entries(rawYTOv)) {
+        if (!patch || typeof patch !== 'object') continue;
+        const p = {};
+        if (patch.name !== undefined) p.name = String(patch.name).trim().slice(0, 80);
+        if (patch.cid  !== undefined) p.cid  = String(patch.cid).trim().slice(0, 50);
+        if (patch.v1   !== undefined) p.v1   = String(patch.v1).trim().slice(0, 20);
+        if (patch.v2   !== undefined) p.v2   = String(patch.v2).trim().slice(0, 20);
+        if (Object.keys(p).length) cleanYTOv[no] = p;
+      }
+
+      // ── Custom YouTube channels (additions) ───────────────────────────────
       const cleanYT = (Array.isArray(config.youtube_channels) ? config.youtube_channels : [])
         .map(ch => ({
           name:     String(ch.name     || '').trim().slice(0, 80),
@@ -422,7 +435,19 @@ export default {
           lang:     String(ch.lang     || '').trim().slice(0, 30),
         })).filter(ch => ch.name);
 
-      // Sanitize news channels
+      // ── News source overrides (map: id → patch) ────────────────────────────
+      const rawNsOv = (config.news_overrides && typeof config.news_overrides === 'object' && !Array.isArray(config.news_overrides)) ? config.news_overrides : {};
+      const cleanNsOv = {};
+      for (const [id, patch] of Object.entries(rawNsOv)) {
+        if (!patch || typeof patch !== 'object') continue;
+        const p = {};
+        if (patch.label !== undefined) p.label = String(patch.label).trim().slice(0, 80);
+        if (patch.url   !== undefined) p.url   = String(patch.url).trim().slice(0, 500);
+        if (patch.color !== undefined) p.color = String(patch.color).trim().slice(0, 10);
+        if (Object.keys(p).length) cleanNsOv[id] = p;
+      }
+
+      // ── Custom news channels (additions) ──────────────────────────────────
       const cleanNews = (Array.isArray(config.news_channels) ? config.news_channels : [])
         .map(ch => ({
           id:    String(ch.id    || '').trim().slice(0, 30),
@@ -434,14 +459,22 @@ export default {
           url:   String(ch.url   || '').trim().slice(0, 500),
         })).filter(ch => ch.label && ch.url);
 
-      // Sanitize ticker symbols
+      // ── Ticker symbols (full replacement lists) ────────────────────────────
       const cleanTicker = (Array.isArray(config.ticker_symbols) ? config.ticker_symbols : [])
-        .map(s => ({
-          proName: String(s.proName || '').trim().slice(0, 50),
-          title:   String(s.title   || '').trim().slice(0, 40),
-        })).filter(s => s.proName);
+        .map(s => ({ proName: String(s.proName || '').trim().slice(0, 50), title: String(s.title || '').trim().slice(0, 40) }))
+        .filter(s => s.proName);
+      const cleanTickerMobile = (Array.isArray(config.ticker_symbols_mobile) ? config.ticker_symbols_mobile : [])
+        .map(s => ({ proName: String(s.proName || '').trim().slice(0, 50), title: String(s.title || '').trim().slice(0, 40) }))
+        .filter(s => s.proName);
 
-      const cleanConfig = { youtube_channels: cleanYT, news_channels: cleanNews, ticker_symbols: cleanTicker };
+      const cleanConfig = {
+        youtube_overrides:     cleanYTOv,
+        youtube_channels:      cleanYT,
+        news_overrides:        cleanNsOv,
+        news_channels:         cleanNews,
+        ticker_symbols:        cleanTicker,
+        ticker_symbols_mobile: cleanTickerMobile,
+      };
 
       const REPO = 'Vilfin-TV/MultiScreener', FILE_PATH = 'config.json', BRANCH = 'main';
       const GH_API = `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`;

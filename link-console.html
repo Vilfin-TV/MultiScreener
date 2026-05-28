@@ -497,6 +497,125 @@
       margin-right: 3px;
     }
 
+    /* ══ BUILT-IN LIST — search bar & rows ════════════════════════════════════ */
+    .builtin-search-row {
+      display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap;
+    }
+    .builtin-search {
+      flex: 1; min-width: 120px; background: #0e1f3b; border: 1px solid #1e3a5c;
+      border-radius: 8px; color: #e2eeff; font-size: 12.5px; padding: 7px 11px;
+      outline: none; font-family: inherit; transition: border-color .15s;
+    }
+    .builtin-search:focus { border-color: #3b82f6; }
+    .builtin-search::placeholder { color: #2d4a6a; }
+    .filter-chip {
+      background: transparent; border: 1px solid #1e3a5c; border-radius: 20px;
+      color: #4d6a8a; font-size: 10.5px; font-weight: 600; padding: 4px 11px;
+      cursor: pointer; transition: all .15s; font-family: inherit; white-space: nowrap;
+    }
+    .filter-chip:hover { border-color: #3b82f6; color: #e2eeff; }
+    .filter-chip.active { background: rgba(59,130,246,.12); border-color: #3b82f6; color: #60a5fa; }
+    .filter-chip.music { border-color: rgba(168,85,247,.4); color: #a855f7; }
+    .filter-chip.music.active { background: rgba(168,85,247,.12); border-color: #a855f7; }
+
+    .builtin-list-wrap {
+      max-height: 340px; overflow-y: auto; border: 1px solid #162d4a;
+      border-radius: 10px; background: #060f1e; scrollbar-width: thin;
+      scrollbar-color: #1e3a5c transparent;
+    }
+    .builtin-list-wrap::-webkit-scrollbar { width: 4px; }
+    .builtin-list-wrap::-webkit-scrollbar-track { background: transparent; }
+    .builtin-list-wrap::-webkit-scrollbar-thumb { background: #1e3a5c; border-radius: 2px; }
+
+    .bl-row {
+      display: flex; align-items: center; gap: 9px; padding: 8px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.03); transition: background .1s;
+    }
+    .bl-row:last-child { border-bottom: none; }
+    .bl-row:hover { background: rgba(59,130,246,.04); }
+    .bl-row.has-override { border-left: 2px solid #6366f1; }
+    .bl-no {
+      font-size: 9px; color: #1e3a5c; font-weight: 700; width: 20px;
+      text-align: right; flex-shrink: 0; font-family: monospace;
+    }
+    .bl-name {
+      font-size: 12px; font-weight: 600; color: #e2eeff; flex: 1; min-width: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .bl-meta {
+      font-size: 9.5px; color: #3d5470; white-space: nowrap; flex-shrink: 0;
+    }
+    .bl-v1 {
+      font-size: 9.5px; color: #4d6a8a; font-family: monospace; white-space: nowrap;
+      overflow: hidden; max-width: 80px; text-overflow: ellipsis; flex-shrink: 0;
+    }
+    .bl-override-badge {
+      font-size: 8.5px; background: rgba(99,102,241,.15); color: #818cf8;
+      border: 1px solid rgba(99,102,241,.25); border-radius: 10px;
+      padding: 1px 5px; flex-shrink: 0;
+    }
+
+    /* Inline edit panel inside builtin list */
+    .bl-edit-panel {
+      display: none; flex-direction: column; gap: 8px;
+      padding: 10px 12px 12px; background: rgba(99,102,241,.05);
+      border-top: 1px solid rgba(99,102,241,.15);
+    }
+    .bl-edit-panel.open { display: flex; }
+    .bl-edit-panel label { font-size: 9.5px; color: #8ea8c8; margin-bottom: 2px; }
+    .bl-edit-panel input {
+      width: 100%; background: #0a1830; border: 1px solid #1e3a5c;
+      border-radius: 6px; color: #e2eeff; font-size: 12px;
+      padding: 5px 9px; outline: none; font-family: inherit; margin-bottom: 0;
+      transition: border-color .15s;
+    }
+    .bl-edit-panel input:focus { border-color: #6366f1; }
+    .bl-edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .bl-save-btn {
+      background: #6366f1; color: #fff; border: none; border-radius: 6px;
+      padding: 5px 13px; font-size: 11px; font-weight: 700;
+      cursor: pointer; transition: opacity .15s; font-family: inherit;
+    }
+    .bl-save-btn:hover { opacity: .85; }
+    .bl-reset-btn {
+      background: transparent; color: #687a94; border: 1px solid #1e3a5c;
+      border-radius: 6px; padding: 5px 10px; font-size: 11px;
+      cursor: pointer; font-family: inherit; transition: all .15s;
+    }
+    .bl-reset-btn:hover { color: #f87171; border-color: rgba(239,68,68,.4); }
+    .bl-cancel-btn {
+      background: transparent; color: #687a94; border: 1px solid #1e3a5c;
+      border-radius: 6px; padding: 5px 10px; font-size: 11px;
+      cursor: pointer; font-family: inherit; transition: all .15s;
+    }
+    .bl-cancel-btn:hover { border-color: #3d5470; color: #8ea8c8; }
+
+    /* Section divider within sub-panel */
+    .hp-section-hdr {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 0 7px; margin-bottom: 2px;
+    }
+    .hp-section-title {
+      font-size: 9.5px; font-weight: 800; letter-spacing: 1.2px;
+      text-transform: uppercase; color: #8ea8c8; flex: 1;
+    }
+    .hp-section-count {
+      font-size: 9.5px; color: #3d5470;
+    }
+    .hp-section-divider {
+      height: 1px; background: linear-gradient(90deg, #1e3a5c 0%, transparent 100%);
+      margin-bottom: 12px;
+    }
+
+    /* Ticker full-list management */
+    .ticker-mode-badge {
+      display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: .6px;
+      text-transform: uppercase; padding: 2px 8px; border-radius: 10px;
+      border: 1px solid; margin-left: 6px;
+    }
+    .ticker-mode-badge.defaults { border-color: rgba(16,185,129,.3); color: #34d399; background: rgba(16,185,129,.08); }
+    .ticker-mode-badge.custom   { border-color: rgba(99,102,241,.3); color: #818cf8; background: rgba(99,102,241,.08); }
+
     /* ── Mobile ── */
     @media (max-width: 640px) {
       body { padding: 16px 10px 48px; }
@@ -511,6 +630,7 @@
       .act-btn { width: 32px; height: 32px; font-size: 14px; }
       .hp-body { grid-template-columns: 1fr; }
       .hp-form-panel { border-right: none; border-bottom: 1px solid #162d4a; }
+      .bl-edit-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -693,9 +813,10 @@
 
       <!-- Sub-tab bar -->
       <div class="hp-subtabs">
-        <div class="hp-stab active" data-stab="yt" onclick="switchHomeTab('yt')">📺 YouTube Channels</div>
-        <div class="hp-stab" data-stab="news" onclick="switchHomeTab('news')">📡 Live News Channels</div>
-        <div class="hp-stab" data-stab="ticker" onclick="switchHomeTab('ticker')">📈 Ticker Symbols</div>
+        <div class="hp-stab active" data-stab="yt"     onclick="switchHomeTab('yt')">📺 YouTube Channels</div>
+        <div class="hp-stab"        data-stab="music"  onclick="switchHomeTab('music')">🎵 Music Channels</div>
+        <div class="hp-stab"        data-stab="news"   onclick="switchHomeTab('news')">📡 Live News</div>
+        <div class="hp-stab"        data-stab="ticker" onclick="switchHomeTab('ticker')">📈 Ticker Symbols</div>
       </div>
 
       <!-- Toolbar -->
@@ -705,112 +826,219 @@
         <button class="hp-save-btn" id="hp-save-btn" onclick="saveConfig()" disabled>💾 Save to Site</button>
       </div>
 
-      <!-- ── YouTube sub-panel ── -->
-      <div class="hp-spanel active" id="hp-yt">
-        <div class="hp-body">
-          <div class="hp-form-panel">
-            <p style="font-size:11px;color:#4d6a8a;margin-bottom:16px;line-height:1.6;">
-              Add custom YouTube channels to your Live TV grid. These appear at the top of the channel selector alongside the built-in 176 channels.
-            </p>
-            <label class="field-label">Channel Name</label>
-            <input type="text" id="yt-name" placeholder="e.g. BBC World News" maxlength="80" autocomplete="off">
-            <label class="field-label">YouTube Channel ID <span style="opacity:.45;font-weight:400">(UC…)</span></label>
-            <input type="text" id="yt-cid" placeholder="UCxxxxxxxxxxxxxxxxxx" maxlength="50" autocomplete="off" spellcheck="false">
-            <label class="field-label">Fallback Video ID 1</label>
-            <input type="text" id="yt-v1" placeholder="Video ID (11 chars)" maxlength="20" autocomplete="off" spellcheck="false">
-            <label class="field-label">Fallback Video ID 2 <span style="opacity:.45;font-weight:400">(optional)</span></label>
-            <input type="text" id="yt-v2" placeholder="Video ID (11 chars)" maxlength="20" autocomplete="off" spellcheck="false">
-            <label class="field-label">Country</label>
-            <input type="text" id="yt-country" placeholder="India" maxlength="40" value="India" autocomplete="off">
-            <label class="field-label">Category</label>
-            <input type="text" id="yt-category" placeholder="National News" maxlength="40" value="National News" autocomplete="off">
-            <label class="field-label">Language</label>
-            <input type="text" id="yt-lang" placeholder="English" maxlength="30" value="English" autocomplete="off">
-            <button class="btn-primary" onclick="addYtChannel()">+ Add Channel</button>
-            <div class="form-status" id="yt-form-status"></div>
+      <!-- ══ YOUTUBE CHANNELS SUB-PANEL ══ -->
+      <div class="hp-spanel active" id="hp-yt" style="padding:18px 22px;">
+
+        <!-- Built-in channels section -->
+        <div class="hp-section-hdr">
+          <div class="hp-section-title">📋 All Built-in Live TV Channels</div>
+          <span class="hp-section-count" id="yt-builtin-count">Loading…</span>
+        </div>
+        <p style="font-size:11px;color:#4d6a8a;margin-bottom:10px;line-height:1.5;">
+          Edit any channel's name, stream ID (cid), or video IDs (v1/v2) if a stream goes dead. Changes are saved as overrides — built-in data is not deleted.
+        </p>
+        <div class="builtin-search-row">
+          <input type="text" class="builtin-search" id="yt-search" placeholder="🔍 Search channels by name, country or language…" oninput="renderBuiltinYt()">
+          <button class="filter-chip" id="fchip-all"    onclick="setYtFilter('all')">All</button>
+          <button class="filter-chip" id="fchip-news"   onclick="setYtFilter('news')">News</button>
+          <button class="filter-chip" id="fchip-edited" onclick="setYtFilter('edited')">Edited</button>
+        </div>
+        <div class="builtin-list-wrap" id="yt-builtin-list">
+          <div style="padding:20px;text-align:center;color:#2d4a6a;font-size:12px;">Loading channel data…</div>
+        </div>
+
+        <!-- Divider -->
+        <div style="margin:20px 0 4px;">
+          <div class="hp-section-hdr" style="cursor:pointer;" onclick="toggleSection('hp-yt-add')">
+            <div class="hp-section-title">➕ Add New Custom Channel</div>
+            <span style="font-size:10px;color:#3d5470;" id="hp-yt-add-toggle">▼ Expand</span>
           </div>
-          <div class="hp-list-panel">
+          <div class="hp-section-divider"></div>
+        </div>
+        <div id="hp-yt-add" style="display:none;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;">
+            <div>
+              <label class="field-label">Channel Name</label>
+              <input type="text" id="yt-name" placeholder="e.g. BBC World News" maxlength="80" autocomplete="off">
+            </div>
+            <div>
+              <label class="field-label">Channel ID <span style="opacity:.4;font-weight:400">(UC…)</span></label>
+              <input type="text" id="yt-cid" placeholder="UCxxxxxxxxxxxxxxxxxx" maxlength="50" autocomplete="off" spellcheck="false">
+            </div>
+            <div>
+              <label class="field-label">Video ID 1 <span style="opacity:.4;font-weight:400">(primary stream)</span></label>
+              <input type="text" id="yt-v1" placeholder="Video ID (11 chars)" maxlength="20" autocomplete="off" spellcheck="false">
+            </div>
+            <div>
+              <label class="field-label">Video ID 2 <span style="opacity:.4;font-weight:400">(fallback)</span></label>
+              <input type="text" id="yt-v2" placeholder="Video ID (11 chars)" maxlength="20" autocomplete="off" spellcheck="false">
+            </div>
+            <div>
+              <label class="field-label">Country</label>
+              <input type="text" id="yt-country" placeholder="India" maxlength="40" value="India" autocomplete="off">
+            </div>
+            <div>
+              <label class="field-label">Category</label>
+              <input type="text" id="yt-category" placeholder="National News" maxlength="40" value="National News" autocomplete="off">
+            </div>
+            <div>
+              <label class="field-label">Language</label>
+              <input type="text" id="yt-lang" placeholder="English" maxlength="30" value="English" autocomplete="off">
+            </div>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:10px;align-items:center;">
+            <button class="btn-primary" style="max-width:200px;" onclick="addYtChannel()">+ Add Channel</button>
+            <div class="form-status" id="yt-form-status" style="flex:1;margin-top:0;"></div>
+          </div>
+          <!-- Custom channel list -->
+          <div style="margin-top:14px;">
             <div class="links-panel-hdr">
-              <div class="links-panel-title">Custom YouTube Channels</div>
+              <div class="links-panel-title">Custom Channels Added</div>
               <span class="count-badge" id="yt-count">0</span>
             </div>
-            <div class="hp-list" id="yt-list">
-              <div class="empty-note">Loading…</div>
+            <div class="hp-list" id="yt-list" style="max-height:200px;overflow-y:auto;">
+              <div class="empty-note">No custom channels yet.</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ── News sub-panel ── -->
-      <div class="hp-spanel" id="hp-news">
-        <div class="hp-body">
-          <div class="hp-form-panel">
-            <p style="font-size:11px;color:#4d6a8a;margin-bottom:16px;line-height:1.6;">
-              Add custom RSS news sources. Each source needs a unique ID and a valid RSS feed URL. Custom channels appear in the Live News selector.
-            </p>
-            <label class="field-label">Source ID <span style="opacity:.45;font-weight:400">(unique, e.g. custom1)</span></label>
-            <input type="text" id="news-id" placeholder="custom1" maxlength="30" autocomplete="off" spellcheck="false">
-            <label class="field-label">Flag Emoji</label>
-            <input type="text" id="news-flag" placeholder="🌐" maxlength="10" value="🌐" autocomplete="off">
-            <label class="field-label">Display Label</label>
-            <input type="text" id="news-label" placeholder="e.g. Al Jazeera English" maxlength="80" autocomplete="off">
-            <label class="field-label">Language</label>
-            <input type="text" id="news-lang" placeholder="English" maxlength="30" value="English" autocomplete="off">
-            <label class="field-label">Group <span style="opacity:.45;font-weight:400">(shown in picker)</span></label>
-            <input type="text" id="news-group" placeholder="🌍 Custom Sources" maxlength="60" value="🌍 Custom Sources" autocomplete="off">
-            <label class="field-label">Accent Color <span style="opacity:.45;font-weight:400">(hex)</span></label>
-            <input type="text" id="news-color" placeholder="#4f46e5" maxlength="10" value="#4f46e5" autocomplete="off" spellcheck="false">
-            <label class="field-label">RSS Feed URL</label>
-            <input type="url" id="news-url" placeholder="https://feeds.example.com/rss.xml" autocomplete="off" spellcheck="false">
-            <button class="btn-primary" onclick="addNewsChannel()">+ Add News Source</button>
-            <div class="form-status" id="news-form-status"></div>
+      <!-- ══ MUSIC CHANNELS SUB-PANEL ══ -->
+      <div class="hp-spanel" id="hp-music" style="padding:18px 22px;">
+        <div class="hp-section-hdr">
+          <div class="hp-section-title">🎵 YouTube Music Channels</div>
+          <span class="hp-section-count" id="music-builtin-count">—</span>
+        </div>
+        <p style="font-size:11px;color:#4d6a8a;margin-bottom:10px;line-height:1.5;">
+          Edit video IDs for music/lofi stream channels. These channels use static playlist video IDs — update them here when a playlist expires.
+        </p>
+        <div class="builtin-search-row">
+          <input type="text" class="builtin-search" id="music-search" placeholder="🔍 Search music channels…" oninput="renderBuiltinMusic()">
+        </div>
+        <div class="builtin-list-wrap" id="music-builtin-list">
+          <div style="padding:20px;text-align:center;color:#2d4a6a;font-size:12px;">Loading…</div>
+        </div>
+      </div>
+
+      <!-- ══ LIVE NEWS SUB-PANEL ══ -->
+      <div class="hp-spanel" id="hp-news" style="padding:18px 22px;">
+
+        <!-- Built-in sources -->
+        <div class="hp-section-hdr">
+          <div class="hp-section-title">📋 All Built-in News Sources</div>
+          <span class="hp-section-count" id="news-builtin-count">Loading…</span>
+        </div>
+        <p style="font-size:11px;color:#4d6a8a;margin-bottom:10px;line-height:1.5;">
+          Edit any source's RSS URL or display label if a feed changes or goes dead. Only the changed fields are saved as overrides.
+        </p>
+        <div class="builtin-search-row">
+          <input type="text" class="builtin-search" id="news-search" placeholder="🔍 Search sources by name or language…" oninput="renderBuiltinNews()">
+          <button class="filter-chip active" id="nfchip-all"    onclick="setNewsFilter('all')">All</button>
+          <button class="filter-chip"        id="nfchip-edited" onclick="setNewsFilter('edited')">Edited</button>
+        </div>
+        <div class="builtin-list-wrap" id="news-builtin-list">
+          <div style="padding:20px;text-align:center;color:#2d4a6a;font-size:12px;">Loading channel data…</div>
+        </div>
+
+        <!-- Add custom -->
+        <div style="margin:20px 0 4px;">
+          <div class="hp-section-hdr" style="cursor:pointer;" onclick="toggleSection('hp-news-add')">
+            <div class="hp-section-title">➕ Add New Custom News Source</div>
+            <span style="font-size:10px;color:#3d5470;" id="hp-news-add-toggle">▼ Expand</span>
           </div>
-          <div class="hp-list-panel">
+          <div class="hp-section-divider"></div>
+        </div>
+        <div id="hp-news-add" style="display:none;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;">
+            <div>
+              <label class="field-label">Source ID <span style="opacity:.4;font-weight:400">(unique)</span></label>
+              <input type="text" id="news-id" placeholder="custom1" maxlength="30" autocomplete="off" spellcheck="false">
+            </div>
+            <div>
+              <label class="field-label">Flag Emoji</label>
+              <input type="text" id="news-flag" placeholder="🌐" maxlength="10" value="🌐" autocomplete="off">
+            </div>
+            <div style="grid-column:1/-1;">
+              <label class="field-label">Display Label</label>
+              <input type="text" id="news-label" placeholder="e.g. Al Jazeera English" maxlength="80" autocomplete="off">
+            </div>
+            <div>
+              <label class="field-label">Language</label>
+              <input type="text" id="news-lang" placeholder="English" maxlength="30" value="English" autocomplete="off">
+            </div>
+            <div>
+              <label class="field-label">Accent Color <span style="opacity:.4;font-weight:400">(hex)</span></label>
+              <input type="text" id="news-color" placeholder="#4f46e5" maxlength="10" value="#4f46e5" autocomplete="off" spellcheck="false">
+            </div>
+            <div>
+              <label class="field-label">Group Name</label>
+              <input type="text" id="news-group" placeholder="🌍 Custom Sources" maxlength="60" value="🌍 Custom Sources" autocomplete="off">
+            </div>
+            <div style="grid-column:1/-1;">
+              <label class="field-label">RSS Feed URL</label>
+              <input type="url" id="news-url" placeholder="https://feeds.example.com/rss.xml" autocomplete="off" spellcheck="false">
+            </div>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:10px;align-items:center;">
+            <button class="btn-primary" style="max-width:220px;" onclick="addNewsChannel()">+ Add News Source</button>
+            <div class="form-status" id="news-form-status" style="flex:1;margin-top:0;"></div>
+          </div>
+          <div style="margin-top:14px;">
             <div class="links-panel-hdr">
-              <div class="links-panel-title">Custom News Sources</div>
+              <div class="links-panel-title">Custom Sources Added</div>
               <span class="count-badge" id="news-count">0</span>
             </div>
-            <div class="hp-list" id="news-list">
-              <div class="empty-note">Loading…</div>
+            <div class="hp-list" id="news-list" style="max-height:200px;overflow-y:auto;">
+              <div class="empty-note">No custom sources yet.</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ── Ticker sub-panel ── -->
-      <div class="hp-spanel" id="hp-ticker">
-        <div class="hp-body">
-          <div class="hp-form-panel">
-            <p style="font-size:11px;color:#4d6a8a;margin-bottom:16px;line-height:1.6;">
-              Add custom symbols to the scrolling ticker tape. Use TradingView's <code style="background:#0e1f3b;padding:1px 5px;border-radius:4px;color:#818cf8">EXCHANGE:SYMBOL</code> format (e.g. <code style="background:#0e1f3b;padding:1px 5px;border-radius:4px;color:#818cf8">NSE:TATAMOTORS</code>). Custom symbols appear first in the tape.
-            </p>
-            <label class="field-label">Symbol <span style="opacity:.45;font-weight:400">(EXCHANGE:SYMBOL)</span></label>
-            <input type="text" id="ticker-pro" placeholder="e.g. NSE:TATAMOTORS" maxlength="50" autocomplete="off" spellcheck="false">
-            <label class="field-label">Display Title</label>
-            <input type="text" id="ticker-title" placeholder="e.g. Tata Motors" maxlength="40" autocomplete="off" spellcheck="false">
-            <button class="btn-primary" onclick="addTickerSymbol()">+ Add Symbol</button>
-            <div class="form-status" id="ticker-form-status"></div>
-            <div style="margin-top:20px;padding:12px;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);border-radius:8px;">
-              <div style="font-size:9.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6366f1;margin-bottom:8px;">Common Exchanges</div>
-              <div style="font-size:10.5px;color:#4d6a8a;line-height:1.8;">
-                BSE: → BSE India &nbsp;·&nbsp; NSE: → NSE India<br>
-                NASDAQ: → Nasdaq &nbsp;·&nbsp; NYSE: → New York<br>
-                FX: → Forex &nbsp;·&nbsp; TVC: → TradingView Comm.<br>
-                BITSTAMP: → Crypto &nbsp;·&nbsp; OANDA: → CFD
-              </div>
-            </div>
+      <!-- ══ TICKER SYMBOLS SUB-PANEL ══ -->
+      <div class="hp-spanel" id="hp-ticker" style="padding:18px 22px;">
+
+        <div class="hp-section-hdr">
+          <div class="hp-section-title">
+            📈 Ticker Tape Symbols
+            <span class="ticker-mode-badge defaults" id="ticker-mode-badge">Using Defaults</span>
           </div>
-          <div class="hp-list-panel">
-            <div class="links-panel-hdr">
-              <div class="links-panel-title">Custom Ticker Symbols</div>
-              <span class="count-badge" id="ticker-count">0</span>
-            </div>
-            <div style="font-size:10px;color:#3d5470;margin-bottom:10px;">Custom symbols appear first in the tape.</div>
-            <div class="hp-list" id="ticker-list">
-              <div class="empty-note">Loading…</div>
-            </div>
-          </div>
+          <button class="filter-chip" onclick="resetTickerToDefaults()" style="font-size:9.5px;">↺ Reset to Defaults</button>
         </div>
+        <p style="font-size:11px;color:#4d6a8a;margin-bottom:10px;line-height:1.5;">
+          Manage the scrolling ticker tape. If you add any symbols below, they <strong style="color:#818cf8;">replace the default list entirely</strong> — so add all symbols you want. Use <code style="background:#0e1f3b;padding:1px 5px;border-radius:4px;color:#818cf8;">EXCHANGE:SYMBOL</code> format. Desktop and Mobile tapes can be managed separately.
+        </p>
+
+        <!-- Desktop ticker -->
+        <div class="hp-section-hdr" style="margin-top:8px;">
+          <div class="hp-section-title" style="color:#60a5fa;">🖥 Desktop Ticker</div>
+          <span class="hp-section-count" id="ticker-count">—</span>
+        </div>
+        <div class="builtin-search-row" style="margin-bottom:8px;">
+          <input type="text" id="ticker-pro" placeholder="EXCHANGE:SYMBOL  (e.g. NSE:TATAMOTORS)" maxlength="50" autocomplete="off" spellcheck="false" style="background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:12.5px;padding:7px 11px;outline:none;flex:1;margin-bottom:0;font-family:inherit;">
+          <input type="text" id="ticker-title" placeholder="Display name (e.g. Tata Motors)" maxlength="40" autocomplete="off" style="background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:12.5px;padding:7px 11px;outline:none;width:180px;margin-bottom:0;font-family:inherit;">
+          <button class="hp-save-btn" style="padding:7px 14px;font-size:12px;" onclick="addTickerSymbol('desktop')">+ Add</button>
+        </div>
+        <div class="form-status" id="ticker-form-status" style="margin-bottom:8px;"></div>
+        <div class="builtin-list-wrap" id="ticker-list" style="max-height:260px;">
+          <div style="padding:20px;text-align:center;color:#2d4a6a;font-size:12px;">Loading…</div>
+        </div>
+
+        <!-- Mobile ticker -->
+        <div class="hp-section-hdr" style="margin-top:16px;">
+          <div class="hp-section-title" style="color:#818cf8;">📱 Mobile Ticker</div>
+          <span class="hp-section-count" id="ticker-mobile-count">—</span>
+        </div>
+        <div class="builtin-search-row" style="margin-bottom:8px;">
+          <input type="text" id="ticker-mobile-pro" placeholder="EXCHANGE:SYMBOL" maxlength="50" autocomplete="off" spellcheck="false" style="background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:12.5px;padding:7px 11px;outline:none;flex:1;margin-bottom:0;font-family:inherit;">
+          <input type="text" id="ticker-mobile-title" placeholder="Display name" maxlength="40" autocomplete="off" style="background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:12.5px;padding:7px 11px;outline:none;width:180px;margin-bottom:0;font-family:inherit;">
+          <button class="hp-save-btn" style="padding:7px 14px;font-size:12px;" onclick="addTickerSymbol('mobile')">+ Add</button>
+        </div>
+        <div class="form-status" id="ticker-mobile-form-status" style="margin-bottom:8px;"></div>
+        <div class="builtin-list-wrap" id="ticker-mobile-list" style="max-height:220px;">
+          <div style="padding:20px;text-align:center;color:#2d4a6a;font-size:12px;">Loading…</div>
+        </div>
+
       </div>
 
     </div><!-- /tab-homepage -->
@@ -1477,11 +1705,19 @@ function setCiStatus(t, m) {
 /* ══════════════════════════════════════════════════════════════════════════════
    HOME PAGE TAB — config.json manager
 ══════════════════════════════════════════════════════════════════════════════ */
-var CONFIG_URL  = 'https://vilfintv.com/config.json';
-var configState = { youtube_channels: [], news_channels: [], ticker_symbols: [] };
-var _configLoaded = false;
-var _hpDirty = false;
+var CONFIG_URL   = 'https://vilfintv.com/config.json';
+var BUILTIN_URL  = 'https://vilfintv.com/channels-data.json';
+var configState  = {
+  youtube_overrides: {}, youtube_channels: [],
+  news_overrides:    {}, news_channels:    [],
+  ticker_symbols:    [], ticker_symbols_mobile: []
+};
+var _builtinData   = null;
+var _configLoaded  = false;
+var _hpDirty       = false;
 var _activeHomeTab = 'yt';
+var _ytFilter      = 'all';
+var _newsFilter    = 'all';
 
 /* ── Sub-tab switch ─────────────────────────────────────────────────────────── */
 function switchHomeTab(name) {
@@ -1494,35 +1730,69 @@ function switchHomeTab(name) {
   });
 }
 
-/* ── Load config.json ───────────────────────────────────────────────────────── */
+/* ── Toggle collapsible add-new sections ────────────────────────────────────── */
+function toggleSection(id) {
+  var panel  = document.getElementById(id);
+  var toggle = document.getElementById(id + '-toggle');
+  if (!panel) return;
+  var isOpen = panel.style.display !== 'none' && panel.style.display !== '';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if (toggle) toggle.textContent = isOpen ? '▼ Expand' : '▲ Collapse';
+}
+
+/* ── Load config.json + channels-data.json in parallel ──────────────────────── */
 async function loadConfig() {
-  ['yt-list','news-list','ticker-list'].forEach(function(id) {
+  var loadingHtml = '<div style="padding:16px;text-align:center;color:#2d4a6a;font-size:12px;">Loading…</div>';
+  ['yt-builtin-list','music-builtin-list','news-builtin-list','ticker-list','ticker-mobile-list'].forEach(function(id) {
     var el = document.getElementById(id);
-    if (el) el.innerHTML = '<div class="empty-note">Loading…</div>';
+    if (el) el.innerHTML = loadingHtml;
   });
+
   try {
-    var res = await fetch(CONFIG_URL + '?_=' + Date.now());
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    var data = await res.json();
-    if (data && typeof data === 'object' && !Array.isArray(data)) {
-      configState.youtube_channels = Array.isArray(data.youtube_channels) ? data.youtube_channels : [];
-      configState.news_channels    = Array.isArray(data.news_channels)    ? data.news_channels    : [];
-      configState.ticker_symbols   = Array.isArray(data.ticker_symbols)   ? data.ticker_symbols   : [];
+    var results    = await Promise.all([
+      fetch(CONFIG_URL  + '?_=' + Date.now()),
+      fetch(BUILTIN_URL + '?_=' + Date.now())
+    ]);
+    var cfgRes     = results[0];
+    var builtinRes = results[1];
+
+    /* ── config.json ── */
+    if (cfgRes.ok) {
+      var data = await cfgRes.json();
+      if (data && typeof data === 'object' && !Array.isArray(data)) {
+        configState.youtube_overrides    = (data.youtube_overrides && !Array.isArray(data.youtube_overrides))
+                                           ? data.youtube_overrides : {};
+        configState.youtube_channels     = Array.isArray(data.youtube_channels)      ? data.youtube_channels      : [];
+        configState.news_overrides       = (data.news_overrides && !Array.isArray(data.news_overrides))
+                                           ? data.news_overrides    : {};
+        configState.news_channels        = Array.isArray(data.news_channels)         ? data.news_channels         : [];
+        configState.ticker_symbols       = Array.isArray(data.ticker_symbols)        ? data.ticker_symbols        : [];
+        configState.ticker_symbols_mobile= Array.isArray(data.ticker_symbols_mobile) ? data.ticker_symbols_mobile : [];
+      }
     } else {
-      configState = { youtube_channels: [], news_channels: [], ticker_symbols: [] };
+      setHpSaveStatus('err', 'config.json not found — starting fresh.');
     }
-    _configLoaded = true;
-    _hpDirty = false;
-    setHpDirty(false);
+
+    /* ── channels-data.json ── */
+    if (builtinRes.ok) {
+      _builtinData = await builtinRes.json();
+    } else {
+      _builtinData = null;
+      setHpSaveStatus('err', 'channels-data.json missing — run: node scripts/extract-channels.js');
+    }
   } catch(e) {
-    configState = { youtube_channels: [], news_channels: [], ticker_symbols: [] };
-    _configLoaded = true;
-    setHpDirty(false);
-    setHpSaveStatus('err', 'Note: config.json not found — starting fresh.');
+    setHpSaveStatus('err', 'Load error: ' + e.message);
   }
+
+  _configLoaded = true;
+  setHpDirty(false);
+  renderBuiltinYt();
+  renderBuiltinMusic();
+  renderBuiltinNews();
   renderYtList();
   renderNewsList();
   renderTickerList();
+  renderTickerMobileList();
 }
 
 /* ── Dirty state ────────────────────────────────────────────────────────────── */
@@ -1573,7 +1843,382 @@ function setHpSaveStatus(t, m) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
-   YOUTUBE CHANNELS
+   BUILT-IN YOUTUBE CHANNELS — searchable list with inline override editor
+══════════════════════════════════════════════════════════════════════════════ */
+function setYtFilter(type) {
+  _ytFilter = type;
+  ['fchip-all','fchip-news','fchip-edited'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.toggle('active', id === 'fchip-' + type);
+  });
+  renderBuiltinYt();
+}
+
+function renderBuiltinYt() {
+  var listEl  = document.getElementById('yt-builtin-list');
+  var countEl = document.getElementById('yt-builtin-count');
+  if (!listEl) return;
+
+  if (!_builtinData || !Array.isArray(_builtinData.youtube_channels)) {
+    listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#4d6a8a;font-size:12px;">'
+      + 'Run <code style="background:#0e1f3b;padding:1px 6px;border-radius:4px;color:#818cf8;">node scripts/extract-channels.js</code> to load channel data.</div>';
+    return;
+  }
+
+  var q         = ((document.getElementById('yt-search') || {}).value || '').trim().toLowerCase();
+  var overrides = configState.youtube_overrides || {};
+  var channels  = _builtinData.youtube_channels;
+
+  var filtered = channels.filter(function(ch) {
+    if (_ytFilter === 'news'   && (ch.category || '').toLowerCase().includes('music')) return false;
+    if (_ytFilter === 'edited' && !overrides[String(ch.no)]) return false;
+    if (q) {
+      var hay = ((ch.name||'') + ' ' + (ch.country||'') + ' ' + (ch.lang||'') + ' ' + (ch.category||'')).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  if (countEl) countEl.textContent = filtered.length + ' / ' + channels.length + ' channels';
+
+  if (!filtered.length) {
+    listEl.innerHTML = '<div style="padding:16px;text-align:center;color:#2d4a6a;font-size:12px;">No channels match your filter.</div>';
+    return;
+  }
+
+  listEl.innerHTML = '';
+  filtered.forEach(function(ch) {
+    var noStr   = String(ch.no);
+    var ovr     = overrides[noStr] || null;
+    var effName = (ovr && ovr.name) ? ovr.name : (ch.name || '');
+    var effCid  = (ovr && ovr.cid)  ? ovr.cid  : (ch.cid  || '');
+    var effV1   = (ovr && ovr.v1)   ? ovr.v1   : (ch.v1   || '');
+    var effV2   = (ovr && ovr.v2)   ? ovr.v2   : (ch.v2   || '');
+    var panelId = 'yt-' + noStr;
+    var catShort = (ch.category || '').replace(' News','').replace(' Channels','');
+
+    var entry = document.createElement('div');
+    entry.style.cssText = (ovr ? 'border-left:2px solid #6366f1;' : '') + 'border-bottom:1px solid rgba(255,255,255,.03);';
+
+    entry.innerHTML =
+      '<div class="bl-row" style="border-bottom:none;" data-no="' + esc(noStr) + '">'
+        + '<div class="bl-no">' + esc(noStr) + '</div>'
+        + '<div class="bl-name" title="' + esc(effName) + '">' + esc(effName)
+          + (ovr ? ' <span class="bl-override-badge">Edited</span>' : '') + '</div>'
+        + '<div class="bl-meta">' + esc(ch.country || '') + ' · ' + esc(catShort) + '</div>'
+        + '<div class="bl-v1" title="v1: ' + esc(effV1 || '–') + '">' + esc(effV1 ? effV1.slice(0, 11) : '–') + '</div>'
+        + '<button class="act-btn" style="width:auto;padding:0 9px;height:26px;font-size:10.5px;flex-shrink:0;" '
+          + 'onclick="toggleBlPanel(\'' + esc(panelId) + '\')">✎ Edit</button>'
+      + '</div>'
+      + '<div class="bl-edit-panel" data-bl-panel="' + esc(panelId) + '">'
+        + '<div style="font-size:9px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#4d6a8a;margin-bottom:4px;">'
+          + 'Ch #' + esc(noStr) + ' · ' + esc(ch.country || '') + ' · ' + esc(ch.lang || '') + '</div>'
+        + '<div><label>Channel Name</label>'
+          + '<input type="text" id="ble-yt-name-' + esc(noStr) + '" value="' + esc(effName) + '" placeholder="' + esc(ch.name || '') + '" maxlength="80"></div>'
+        + '<div class="bl-edit-grid">'
+          + '<div><label>Channel ID (cid)</label>'
+            + '<input type="text" id="ble-yt-cid-' + esc(noStr) + '" value="' + esc(effCid) + '" placeholder="UC…" maxlength="50" spellcheck="false"></div>'
+          + '<div><label>Video ID 1 — Primary</label>'
+            + '<input type="text" id="ble-yt-v1-' + esc(noStr) + '" value="' + esc(effV1) + '" placeholder="11-char stream ID" maxlength="20" spellcheck="false"></div>'
+          + '<div><label>Video ID 2 — Fallback</label>'
+            + '<input type="text" id="ble-yt-v2-' + esc(noStr) + '" value="' + esc(effV2) + '" placeholder="Backup stream ID" maxlength="20" spellcheck="false"></div>'
+        + '</div>'
+        + '<div style="display:flex;gap:7px;flex-wrap:wrap;">'
+          + '<button class="bl-save-btn"   onclick="saveYtOverride(\'' + esc(noStr) + '\')">💾 Save Override</button>'
+          + (ovr ? '<button class="bl-reset-btn" onclick="resetYtOverride(\'' + esc(noStr) + '\')">↺ Reset to Default</button>' : '')
+          + '<button class="bl-cancel-btn" onclick="closeBlPanel(\'' + esc(panelId) + '\')">Cancel</button>'
+        + '</div>'
+      + '</div>';
+
+    listEl.appendChild(entry);
+  });
+}
+
+/* ── Inline edit panel toggle / close ──────────────────────────────────────── */
+function toggleBlPanel(panelId) {
+  var panel  = document.querySelector('[data-bl-panel="' + panelId + '"]');
+  if (!panel) return;
+  var isOpen = panel.classList.contains('open');
+  document.querySelectorAll('.bl-edit-panel.open').forEach(function(p) { p.classList.remove('open'); });
+  if (!isOpen) panel.classList.add('open');
+}
+function closeBlPanel(panelId) {
+  var panel = document.querySelector('[data-bl-panel="' + panelId + '"]');
+  if (panel) panel.classList.remove('open');
+}
+
+/* ── YouTube override save / reset ──────────────────────────────────────────── */
+function saveYtOverride(noStr) {
+  var g = function(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  var name = g('ble-yt-name-' + noStr);
+  var cid  = g('ble-yt-cid-'  + noStr);
+  var v1   = g('ble-yt-v1-'   + noStr);
+  var v2   = g('ble-yt-v2-'   + noStr);
+
+  var orig = {};
+  if (_builtinData && _builtinData.youtube_channels) {
+    orig = _builtinData.youtube_channels.find(function(c) { return String(c.no) === noStr; }) || {};
+  }
+
+  var patch = {};
+  if (name && name !== (orig.name || '')) patch.name = name;
+  if (cid  && cid  !== (orig.cid  || '')) patch.cid  = cid;
+  if (v1   && v1   !== (orig.v1   || '')) patch.v1   = v1;
+  if (v2   !== (orig.v2 || ''))           patch.v2   = v2;
+
+  if (!configState.youtube_overrides) configState.youtube_overrides = {};
+  if (Object.keys(patch).length > 0) {
+    configState.youtube_overrides[noStr] = patch;
+  } else {
+    delete configState.youtube_overrides[noStr];
+  }
+  markHpDirty();
+  closeBlPanel('yt-' + noStr);
+  renderBuiltinYt();
+}
+
+function resetYtOverride(noStr) {
+  if (configState.youtube_overrides) delete configState.youtube_overrides[noStr];
+  markHpDirty();
+  renderBuiltinYt();
+  renderBuiltinMusic(); /* keep music tab in sync */
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   BUILT-IN MUSIC CHANNELS — filtered view of music-category channels
+══════════════════════════════════════════════════════════════════════════════ */
+function renderBuiltinMusic() {
+  var listEl  = document.getElementById('music-builtin-list');
+  var countEl = document.getElementById('music-builtin-count');
+  if (!listEl) return;
+
+  if (!_builtinData || !Array.isArray(_builtinData.youtube_channels)) {
+    listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#4d6a8a;font-size:12px;">channels-data.json not loaded.</div>';
+    return;
+  }
+
+  var q         = ((document.getElementById('music-search') || {}).value || '').trim().toLowerCase();
+  var overrides = configState.youtube_overrides || {};
+
+  var music = _builtinData.youtube_channels.filter(function(ch) {
+    if (!(ch.category || '').toLowerCase().includes('music')) return false;
+    if (q) {
+      var hay = ((ch.name||'') + ' ' + (ch.country||'') + ' ' + (ch.lang||'')).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  if (countEl) countEl.textContent = music.length + ' channels';
+
+  if (!music.length) {
+    listEl.innerHTML = '<div style="padding:16px;text-align:center;color:#2d4a6a;font-size:12px;">No music channels found.</div>';
+    return;
+  }
+
+  listEl.innerHTML = '';
+  music.forEach(function(ch) {
+    var noStr   = String(ch.no);
+    var ovr     = overrides[noStr] || null;
+    var effName = (ovr && ovr.name) ? ovr.name : (ch.name || '');
+    var effV1   = (ovr && ovr.v1)  ? ovr.v1   : (ch.v1   || '');
+    var effV2   = (ovr && ovr.v2)  ? ovr.v2   : (ch.v2   || '');
+    var panelId = 'mc-' + noStr; /* distinct prefix — avoids DOM collision with yt tab */
+
+    var entry = document.createElement('div');
+    entry.style.cssText = (ovr ? 'border-left:2px solid #a855f7;' : '') + 'border-bottom:1px solid rgba(255,255,255,.03);';
+
+    entry.innerHTML =
+      '<div class="bl-row" style="border-bottom:none;">'
+        + '<div class="bl-no">' + esc(noStr) + '</div>'
+        + '<div class="bl-name" title="' + esc(effName) + '">🎵 ' + esc(effName)
+          + (ovr ? ' <span class="bl-override-badge" style="background:rgba(168,85,247,.15);color:#c084fc;border-color:rgba(168,85,247,.3);">Edited</span>' : '') + '</div>'
+        + '<div class="bl-meta">' + esc(ch.country || '') + ' · ' + esc(ch.lang || '') + '</div>'
+        + '<div class="bl-v1" title="v1: ' + esc(effV1 || '–') + '">' + esc(effV1 ? effV1.slice(0, 11) : '–') + '</div>'
+        + '<button class="act-btn" style="width:auto;padding:0 9px;height:26px;font-size:10.5px;flex-shrink:0;" '
+          + 'onclick="toggleBlPanel(\'' + esc(panelId) + '\')">✎ Edit</button>'
+      + '</div>'
+      + '<div class="bl-edit-panel" data-bl-panel="' + esc(panelId) + '" '
+          + 'style="background:rgba(168,85,247,.05);border-top-color:rgba(168,85,247,.2);">'
+        + '<div style="font-size:9px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#a855f7;margin-bottom:4px;">'
+          + '🎵 Music Ch #' + esc(noStr) + ' — ' + esc(ch.name || '') + '</div>'
+        + '<div><label>Channel Name</label>'
+          + '<input type="text" id="ble-mc-name-' + esc(noStr) + '" value="' + esc(effName) + '" placeholder="' + esc(ch.name || '') + '" maxlength="80"></div>'
+        + '<div class="bl-edit-grid">'
+          + '<div><label>Video ID 1 — Playlist/Stream</label>'
+            + '<input type="text" id="ble-mc-v1-' + esc(noStr) + '" value="' + esc(effV1) + '" placeholder="YouTube video/playlist ID" maxlength="20" spellcheck="false"></div>'
+          + '<div><label>Video ID 2 — Fallback</label>'
+            + '<input type="text" id="ble-mc-v2-' + esc(noStr) + '" value="' + esc(effV2) + '" placeholder="Backup ID" maxlength="20" spellcheck="false"></div>'
+        + '</div>'
+        + '<div style="display:flex;gap:7px;flex-wrap:wrap;">'
+          + '<button class="bl-save-btn" style="background:#7c3aed;" onclick="saveMusicOverride(\'' + esc(noStr) + '\')">💾 Save</button>'
+          + (ovr ? '<button class="bl-reset-btn" onclick="resetYtOverride(\'' + esc(noStr) + '\')">↺ Reset</button>' : '')
+          + '<button class="bl-cancel-btn" onclick="closeBlPanel(\'' + esc(panelId) + '\')">Cancel</button>'
+        + '</div>'
+      + '</div>';
+
+    listEl.appendChild(entry);
+  });
+}
+
+function saveMusicOverride(noStr) {
+  var g = function(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  var name = g('ble-mc-name-' + noStr);
+  var v1   = g('ble-mc-v1-'  + noStr);
+  var v2   = g('ble-mc-v2-'  + noStr);
+
+  var orig = {};
+  if (_builtinData && _builtinData.youtube_channels) {
+    orig = _builtinData.youtube_channels.find(function(c) { return String(c.no) === noStr; }) || {};
+  }
+
+  var patch = {};
+  if (name && name !== (orig.name || '')) patch.name = name;
+  if (v1   && v1   !== (orig.v1   || '')) patch.v1   = v1;
+  if (v2   !== (orig.v2 || ''))           patch.v2   = v2;
+
+  if (!configState.youtube_overrides) configState.youtube_overrides = {};
+  if (Object.keys(patch).length > 0) {
+    configState.youtube_overrides[noStr] = patch;
+  } else {
+    delete configState.youtube_overrides[noStr];
+  }
+  markHpDirty();
+  closeBlPanel('mc-' + noStr);
+  renderBuiltinMusic();
+  renderBuiltinYt(); /* keep yt tab in sync */
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   BUILT-IN NEWS SOURCES — searchable list with inline override editor
+══════════════════════════════════════════════════════════════════════════════ */
+function setNewsFilter(type) {
+  _newsFilter = type;
+  ['nfchip-all','nfchip-edited'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.toggle('active', id === 'nfchip-' + type);
+  });
+  renderBuiltinNews();
+}
+
+function renderBuiltinNews() {
+  var listEl  = document.getElementById('news-builtin-list');
+  var countEl = document.getElementById('news-builtin-count');
+  if (!listEl) return;
+
+  if (!_builtinData || !Array.isArray(_builtinData.news_sources)) {
+    listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#4d6a8a;font-size:12px;">'
+      + 'Run <code style="background:#0e1f3b;padding:1px 6px;border-radius:4px;color:#818cf8;">node scripts/extract-channels.js</code> to load source data.</div>';
+    return;
+  }
+
+  var q         = ((document.getElementById('news-search') || {}).value || '').trim().toLowerCase();
+  var overrides = configState.news_overrides || {};
+  var sources   = _builtinData.news_sources;
+
+  var filtered = sources.filter(function(src) {
+    if (_newsFilter === 'edited' && !overrides[src.id]) return false;
+    if (q) {
+      var hay = ((src.label||'') + ' ' + (src.lang||'') + ' ' + (src.group||'') + ' ' + (src.id||'')).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  if (countEl) countEl.textContent = filtered.length + ' / ' + sources.length + ' sources';
+
+  if (!filtered.length) {
+    listEl.innerHTML = '<div style="padding:16px;text-align:center;color:#2d4a6a;font-size:12px;">No sources match your filter.</div>';
+    return;
+  }
+
+  listEl.innerHTML = '';
+  filtered.forEach(function(src) {
+    var ovr      = overrides[src.id] || null;
+    var effLabel = (ovr && ovr.label) ? ovr.label : (src.label || '');
+    var effUrl   = (ovr && ovr.url)   ? ovr.url   : (src.url   || '');
+    var effColor = (ovr && ovr.color) ? ovr.color : (src.color || '#4f46e5');
+    var panelId  = 'ns-' + src.id;
+
+    var hostDisplay = '';
+    try { hostDisplay = new URL(effUrl).hostname.replace(/^www\./, '').slice(0, 26); }
+    catch(e) { hostDisplay = src.id; }
+
+    var entry = document.createElement('div');
+    entry.style.cssText = (ovr ? 'border-left:2px solid #6366f1;' : '') + 'border-bottom:1px solid rgba(255,255,255,.03);';
+
+    entry.innerHTML =
+      '<div class="bl-row" style="border-bottom:none;">'
+        + '<div style="width:22px;text-align:center;font-size:14px;flex-shrink:0;">' + esc(src.flag || '🌐') + '</div>'
+        + '<div class="bl-name" title="' + esc(effLabel) + '">' + esc(effLabel)
+          + (ovr ? ' <span class="bl-override-badge">Edited</span>' : '') + '</div>'
+        + '<div class="bl-meta">' + esc(src.lang || '') + '</div>'
+        + '<div class="bl-v1" title="' + esc(hostDisplay) + '">' + esc(hostDisplay) + '</div>'
+        + '<div style="font-size:8.5px;color:' + esc(effColor) + ';background:' + esc(effColor) + '22;'
+          + 'padding:1px 6px;border-radius:8px;flex-shrink:0;white-space:nowrap;">' + esc(src.id) + '</div>'
+        + '<button class="act-btn" style="width:auto;padding:0 9px;height:26px;font-size:10.5px;flex-shrink:0;" '
+          + 'onclick="toggleBlPanel(\'' + esc(panelId) + '\')">✎ Edit</button>'
+      + '</div>'
+      + '<div class="bl-edit-panel" data-bl-panel="' + esc(panelId) + '">'
+        + '<div style="font-size:9px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#4d6a8a;margin-bottom:4px;">'
+          + 'Source: ' + esc(src.id) + ' · ' + esc(src.group || '') + '</div>'
+        + '<div><label>Display Label</label>'
+          + '<input type="text" id="ble-ns-label-' + esc(src.id) + '" value="' + esc(effLabel) + '" placeholder="' + esc(src.label || '') + '" maxlength="80"></div>'
+        + '<div><label>RSS Feed URL</label>'
+          + '<input type="url" id="ble-ns-url-' + esc(src.id) + '" value="' + esc(effUrl) + '" '
+          + 'placeholder="https://…" spellcheck="false" style="font-size:11px;"></div>'
+        + '<div class="bl-edit-grid">'
+          + '<div><label>Accent Color (hex)</label>'
+            + '<input type="text" id="ble-ns-color-' + esc(src.id) + '" value="' + esc(effColor) + '" placeholder="#4f46e5" maxlength="10" spellcheck="false"></div>'
+        + '</div>'
+        + '<div style="display:flex;gap:7px;flex-wrap:wrap;">'
+          + '<button class="bl-save-btn"   onclick="saveNewsOverride(\'' + esc(src.id) + '\')">💾 Save Override</button>'
+          + (ovr ? '<button class="bl-reset-btn" onclick="resetNewsOverride(\'' + esc(src.id) + '\')">↺ Reset</button>' : '')
+          + '<button class="bl-cancel-btn" onclick="closeBlPanel(\'' + esc(panelId) + '\')">Cancel</button>'
+        + '</div>'
+      + '</div>';
+
+    listEl.appendChild(entry);
+  });
+}
+
+function saveNewsOverride(srcId) {
+  var g = function(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  var label = g('ble-ns-label-' + srcId);
+  var url   = g('ble-ns-url-'   + srcId);
+  var color = g('ble-ns-color-' + srcId);
+
+  var orig = {};
+  if (_builtinData && _builtinData.news_sources) {
+    orig = _builtinData.news_sources.find(function(s) { return s.id === srcId; }) || {};
+  }
+
+  var patch = {};
+  if (label && label !== (orig.label || '')) patch.label = label;
+  if (url && url !== (orig.url || '')) {
+    try { new URL(url); patch.url = url; } catch(e) { /* skip invalid URL */ }
+  }
+  if (color && color !== (orig.color || '')) patch.color = color;
+
+  if (!configState.news_overrides) configState.news_overrides = {};
+  if (Object.keys(patch).length > 0) {
+    configState.news_overrides[srcId] = patch;
+  } else {
+    delete configState.news_overrides[srcId];
+  }
+  markHpDirty();
+  closeBlPanel('ns-' + srcId);
+  renderBuiltinNews();
+}
+
+function resetNewsOverride(srcId) {
+  if (configState.news_overrides) delete configState.news_overrides[srcId];
+  markHpDirty();
+  renderBuiltinNews();
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   CUSTOM YOUTUBE CHANNELS (add new / manage list)
 ══════════════════════════════════════════════════════════════════════════════ */
 function addYtChannel() {
   var name     = document.getElementById('yt-name').value.trim();
@@ -1591,11 +2236,7 @@ function addYtChannel() {
   configState.youtube_channels.unshift({ name: name, cid: cid, v1: v1, v2: v2, country: country, category: category, lang: lang });
   markHpDirty();
   renderYtList();
-
-  // Clear form fields
-  ['yt-name','yt-cid','yt-v1','yt-v2'].forEach(function(id) {
-    document.getElementById(id).value = '';
-  });
+  ['yt-name','yt-cid','yt-v1','yt-v2'].forEach(function(id) { document.getElementById(id).value = ''; });
   setHpFieldStatus('yt-form-status', 'ok', '✓ Channel added — click Save to Site to publish.');
 }
 
@@ -1606,7 +2247,7 @@ function renderYtList() {
   if (count) count.textContent = items.length;
   if (!listEl) return;
   if (!items.length) {
-    listEl.innerHTML = '<div class="empty-note">No custom YouTube channels yet. Add one on the left.</div>';
+    listEl.innerHTML = '<div class="empty-note">No custom channels yet. Add one above.</div>';
     return;
   }
   listEl.innerHTML = '';
@@ -1616,12 +2257,14 @@ function renderYtList() {
     el.innerHTML =
       '<div class="hp-item-icon">📺</div>'
       + '<div class="hp-item-body">'
-        + '<div class="hp-item-title">' + esc(ch.name) + ' <span style="font-size:9.5px;font-weight:400;color:#4d6a8a;">' + esc(ch.country) + ' · ' + esc(ch.lang) + '</span></div>'
-        + '<div class="hp-item-sub">CID: ' + esc(ch.cid || '(none)') + ' · V1: ' + esc(ch.v1 || '–') + (ch.v2 ? ' · V2: ' + esc(ch.v2) : '') + '</div>'
+        + '<div class="hp-item-title">' + esc(ch.name) + ' <span style="font-size:9.5px;font-weight:400;color:#4d6a8a;">'
+          + esc(ch.country || '') + ' · ' + esc(ch.lang || '') + '</span></div>'
+        + '<div class="hp-item-sub">CID: ' + esc(ch.cid || '(none)') + ' · V1: ' + esc(ch.v1 || '–')
+          + (ch.v2 ? ' · V2: ' + esc(ch.v2) : '') + '</div>'
       + '</div>'
       + '<div class="hp-item-actions">'
-        + '<button class="act-btn" title="Move up" onclick="moveYtUp(' + idx + ')" ' + (idx===0?'disabled':'') + '>↑</button>'
-        + '<button class="act-btn" title="Move down" onclick="moveYtDown(' + idx + ')" ' + (idx===items.length-1?'disabled':'') + '>↓</button>'
+        + '<button class="act-btn" title="Move up"   onclick="moveYtUp('   + idx + ')" ' + (idx === 0 ? 'disabled' : '') + '>↑</button>'
+        + '<button class="act-btn" title="Move down" onclick="moveYtDown(' + idx + ')" ' + (idx === items.length - 1 ? 'disabled' : '') + '>↓</button>'
         + '<button class="act-btn danger" title="Delete" onclick="deleteYt(' + idx + ', this)">✕</button>'
       + '</div>';
     listEl.appendChild(el);
@@ -1631,36 +2274,31 @@ function renderYtList() {
 function deleteYt(idx, btn) {
   var item = btn.closest('.hp-item');
   if (item) item.classList.add('is-removing');
-  setTimeout(function() {
-    configState.youtube_channels.splice(idx, 1);
-    markHpDirty();
-    renderYtList();
-  }, 200);
+  setTimeout(function() { configState.youtube_channels.splice(idx, 1); markHpDirty(); renderYtList(); }, 200);
 }
-
 function moveYtUp(idx) {
   if (idx === 0) return;
-  var a = configState.youtube_channels[idx-1];
-  configState.youtube_channels[idx-1] = configState.youtube_channels[idx];
-  configState.youtube_channels[idx] = a;
+  var t = configState.youtube_channels[idx - 1];
+  configState.youtube_channels[idx - 1] = configState.youtube_channels[idx];
+  configState.youtube_channels[idx] = t;
   markHpDirty(); renderYtList();
 }
 function moveYtDown(idx) {
   if (idx >= configState.youtube_channels.length - 1) return;
-  var a = configState.youtube_channels[idx+1];
-  configState.youtube_channels[idx+1] = configState.youtube_channels[idx];
-  configState.youtube_channels[idx] = a;
+  var t = configState.youtube_channels[idx + 1];
+  configState.youtube_channels[idx + 1] = configState.youtube_channels[idx];
+  configState.youtube_channels[idx] = t;
   markHpDirty(); renderYtList();
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
-   NEWS CHANNELS
+   CUSTOM NEWS CHANNELS (add new / manage list)
 ══════════════════════════════════════════════════════════════════════════════ */
 function addNewsChannel() {
   var id    = document.getElementById('news-id').value.trim();
-  var flag  = document.getElementById('news-flag').value.trim() || '🌐';
+  var flag  = document.getElementById('news-flag').value.trim()  || '🌐';
   var label = document.getElementById('news-label').value.trim();
-  var lang  = document.getElementById('news-lang').value.trim() || 'English';
+  var lang  = document.getElementById('news-lang').value.trim()  || 'English';
   var group = document.getElementById('news-group').value.trim() || '🌍 Custom Sources';
   var color = document.getElementById('news-color').value.trim() || '#4f46e5';
   var url   = document.getElementById('news-url').value.trim();
@@ -1671,14 +2309,12 @@ function addNewsChannel() {
   if (!url)   return setHpFieldStatus('news-form-status', 'err', 'RSS Feed URL is required.');
   try { new URL(url); } catch(e) { return setHpFieldStatus('news-form-status', 'err', 'Invalid RSS URL.'); }
 
-  // Check for duplicate ID
   var exists = configState.news_channels.some(function(ch) { return ch.id === id; });
-  if (exists) return setHpFieldStatus('news-form-status', 'err', 'Source ID "' + esc(id) + '" already exists. Use a unique ID.');
+  if (exists) return setHpFieldStatus('news-form-status', 'err', 'ID "' + esc(id) + '" already exists.');
 
   configState.news_channels.push({ id: id, flag: flag, label: label, lang: lang, group: group, color: color, url: url });
   markHpDirty();
   renderNewsList();
-
   ['news-id','news-label','news-url'].forEach(function(i) { document.getElementById(i).value = ''; });
   setHpFieldStatus('news-form-status', 'ok', '✓ Source added — click Save to Site to publish.');
 }
@@ -1690,19 +2326,19 @@ function renderNewsList() {
   if (count) count.textContent = items.length;
   if (!listEl) return;
   if (!items.length) {
-    listEl.innerHTML = '<div class="empty-note">No custom news sources yet. Add one on the left.</div>';
+    listEl.innerHTML = '<div class="empty-note">No custom sources yet. Add one above.</div>';
     return;
   }
   listEl.innerHTML = '';
   items.forEach(function(ch, idx) {
-    var el = document.createElement('div');
+    var el   = document.createElement('div');
     el.className = 'hp-item';
     var host = '';
-    try { host = new URL(ch.url).hostname.replace(/^www\./,''); } catch(e) { host = ''; }
+    try { host = new URL(ch.url).hostname.replace(/^www\./, ''); } catch(e) { host = ''; }
     el.innerHTML =
-      '<div class="hp-item-icon" style="background:' + esc(ch.color) + '22;font-size:16px;">' + esc(ch.flag) + '</div>'
+      '<div class="hp-item-icon" style="background:' + esc(ch.color || '#4f46e5') + '22;font-size:16px;">' + esc(ch.flag || '🌐') + '</div>'
       + '<div class="hp-item-body">'
-        + '<div class="hp-item-title">' + esc(ch.label) + ' <span style="font-size:9.5px;font-weight:400;color:#4d6a8a;">' + esc(ch.lang) + '</span></div>'
+        + '<div class="hp-item-title">' + esc(ch.label) + ' <span style="font-size:9.5px;font-weight:400;color:#4d6a8a;">' + esc(ch.lang || '') + '</span></div>'
         + '<div class="hp-item-sub">ID: ' + esc(ch.id) + ' · ' + esc(host) + '</div>'
       + '</div>'
       + '<div class="hp-item-actions">'
@@ -1715,100 +2351,189 @@ function renderNewsList() {
 function deleteNews(idx, btn) {
   var item = btn.closest('.hp-item');
   if (item) item.classList.add('is-removing');
-  setTimeout(function() {
-    configState.news_channels.splice(idx, 1);
-    markHpDirty();
-    renderNewsList();
-  }, 200);
+  setTimeout(function() { configState.news_channels.splice(idx, 1); markHpDirty(); renderNewsList(); }, 200);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
-   TICKER SYMBOLS
+   TICKER SYMBOLS — desktop + mobile; shows defaults when no custom list is set
 ══════════════════════════════════════════════════════════════════════════════ */
-function addTickerSymbol() {
-  var proName = document.getElementById('ticker-pro').value.trim().toUpperCase();
-  var title   = document.getElementById('ticker-title').value.trim();
+function addTickerSymbol(type) {
+  var isM      = (type === 'mobile');
+  var proId    = isM ? 'ticker-mobile-pro'         : 'ticker-pro';
+  var titleId  = isM ? 'ticker-mobile-title'       : 'ticker-title';
+  var statusId = isM ? 'ticker-mobile-form-status' : 'ticker-form-status';
+  var arr      = isM ? configState.ticker_symbols_mobile : configState.ticker_symbols;
 
-  setHpFieldStatus('ticker-form-status', '', '');
-  if (!proName) return setHpFieldStatus('ticker-form-status', 'err', 'Symbol is required (e.g. NSE:TATAMOTORS).');
-  if (!proName.includes(':')) return setHpFieldStatus('ticker-form-status', 'err', 'Use EXCHANGE:SYMBOL format (e.g. NSE:TATAMOTORS).');
-  if (!title)   return setHpFieldStatus('ticker-form-status', 'err', 'Display Title is required.');
+  var proName = ((document.getElementById(proId)   || {}).value || '').trim().toUpperCase();
+  var title   = ((document.getElementById(titleId) || {}).value || '').trim();
 
-  var exists = configState.ticker_symbols.some(function(s) { return s.proName === proName; });
-  if (exists) return setHpFieldStatus('ticker-form-status', 'err', 'Symbol ' + proName + ' already added.');
+  setHpFieldStatus(statusId, '', '');
+  if (!proName)               return setHpFieldStatus(statusId, 'err', 'Symbol required (e.g. NSE:TATAMOTORS).');
+  if (!proName.includes(':')) return setHpFieldStatus(statusId, 'err', 'Use EXCHANGE:SYMBOL format.');
+  if (!title)                 return setHpFieldStatus(statusId, 'err', 'Display name is required.');
+  if (arr.some(function(s) { return s.proName === proName; }))
+    return setHpFieldStatus(statusId, 'err', proName + ' already in list.');
 
-  configState.ticker_symbols.push({ proName: proName, title: title });
+  arr.push({ proName: proName, title: title });
   markHpDirty();
-  renderTickerList();
-
-  document.getElementById('ticker-pro').value   = '';
-  document.getElementById('ticker-title').value = '';
-  setHpFieldStatus('ticker-form-status', 'ok', '✓ Symbol added — click Save to Site to publish.');
+  document.getElementById(proId).value   = '';
+  document.getElementById(titleId).value = '';
+  setHpFieldStatus(statusId, 'ok', '✓ Added — click Save to Site to publish.');
+  if (isM) renderTickerMobileList(); else renderTickerList();
 }
 
+/* ── Desktop ticker ──────────────────────────────────────────────────────────── */
 function renderTickerList() {
-  var listEl = document.getElementById('ticker-list');
-  var count  = document.getElementById('ticker-count');
-  var items  = configState.ticker_symbols;
-  if (count) count.textContent = items.length;
+  var listEl  = document.getElementById('ticker-list');
+  var countEl = document.getElementById('ticker-count');
+  var badge   = document.getElementById('ticker-mode-badge');
   if (!listEl) return;
-  if (!items.length) {
-    listEl.innerHTML = '<div class="empty-note">No custom ticker symbols yet. Add one on the left.</div>';
+
+  var custom   = configState.ticker_symbols || [];
+  var defaults = (_builtinData && _builtinData.ticker_desktop) ? _builtinData.ticker_desktop : [];
+
+  if (custom.length > 0) {
+    if (badge)   { badge.className = 'ticker-mode-badge custom'; badge.textContent = 'Custom List'; }
+    if (countEl) countEl.textContent = custom.length + ' symbols';
+    _renderTickerItems(listEl, custom, 'desktop');
+  } else {
+    if (badge)   { badge.className = 'ticker-mode-badge defaults'; badge.textContent = 'Using Defaults'; }
+    if (countEl) countEl.textContent = defaults.length + ' defaults (read-only)';
+    _renderTickerDefaults(listEl, defaults);
+  }
+}
+
+/* ── Mobile ticker ───────────────────────────────────────────────────────────── */
+function renderTickerMobileList() {
+  var listEl  = document.getElementById('ticker-mobile-list');
+  var countEl = document.getElementById('ticker-mobile-count');
+  if (!listEl) return;
+
+  var custom   = configState.ticker_symbols_mobile || [];
+  var defaults = (_builtinData && _builtinData.ticker_mobile) ? _builtinData.ticker_mobile : [];
+
+  if (custom.length > 0) {
+    if (countEl) countEl.textContent = custom.length + ' symbols';
+    _renderTickerItems(listEl, custom, 'mobile');
+  } else {
+    if (countEl) countEl.textContent = defaults.length + ' defaults (read-only)';
+    _renderTickerDefaults(listEl, defaults);
+  }
+}
+
+/* ── Shared renderers ────────────────────────────────────────────────────────── */
+function _renderTickerDefaults(listEl, defaults) {
+  if (!defaults.length) {
+    listEl.innerHTML = '<div style="padding:14px;text-align:center;color:#2d4a6a;font-size:12px;">channels-data.json not generated yet.</div>';
     return;
   }
+  listEl.innerHTML = '';
+  defaults.forEach(function(sym) {
+    var parts  = sym.proName.split(':');
+    var exch   = parts[0] || '';
+    var ticker = parts.slice(1).join(':') || sym.proName;
+    var el     = document.createElement('div');
+    el.className = 'bl-row';
+    el.style.opacity = '.65';
+    el.innerHTML =
+      '<div style="width:30px;height:20px;border-radius:5px;background:rgba(16,185,129,.10);font-size:9.5px;'
+        + 'font-weight:800;color:#34d399;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+        + esc(exch) + '</div>'
+      + '<div class="bl-name" style="font-size:11px;">' + esc(sym.title)
+        + ' <span class="ticker-badge" style="font-size:8.5px;">' + esc(ticker) + '</span></div>'
+      + '<div class="bl-meta" style="font-size:8px;color:#1e3a5c;font-style:italic;">default</div>';
+    listEl.appendChild(el);
+  });
+}
+
+function _renderTickerItems(listEl, items, type) {
+  if (!items.length) {
+    listEl.innerHTML = '<div class="empty-note">No symbols yet. Add one above.</div>';
+    return;
+  }
+  var upFn  = type === 'mobile' ? 'moveMobileTickerUp'   : 'moveTickerUp';
+  var dnFn  = type === 'mobile' ? 'moveMobileTickerDown' : 'moveTickerDown';
+  var delFn = type === 'mobile' ? 'deleteMobileTicker'   : 'deleteTicker';
+
   listEl.innerHTML = '';
   items.forEach(function(sym, idx) {
     var parts  = sym.proName.split(':');
     var exch   = parts[0] || '';
     var ticker = parts.slice(1).join(':') || sym.proName;
-
-    var el = document.createElement('div');
+    var el     = document.createElement('div');
     el.className = 'hp-item';
     el.innerHTML =
-      '<div class="hp-item-icon" style="background:rgba(16,185,129,.12);font-size:11px;font-weight:800;color:#34d399;letter-spacing:.3px;">' + esc(exch) + '</div>'
+      '<div class="hp-item-icon" style="background:rgba(16,185,129,.12);font-size:11px;font-weight:800;color:#34d399;letter-spacing:.3px;">'
+        + esc(exch) + '</div>'
       + '<div class="hp-item-body">'
         + '<div class="hp-item-title">' + esc(sym.title) + ' <span class="ticker-badge">' + esc(ticker) + '</span></div>'
         + '<div class="hp-item-sub">' + esc(sym.proName) + '</div>'
       + '</div>'
       + '<div class="hp-item-actions">'
-        + '<button class="act-btn" title="Move up"   onclick="moveTickerUp(' + idx + ')"   ' + (idx===0?'disabled':'') + '>↑</button>'
-        + '<button class="act-btn" title="Move down" onclick="moveTickerDown(' + idx + ')" ' + (idx===items.length-1?'disabled':'') + '>↓</button>'
-        + '<button class="act-btn danger" title="Delete" onclick="deleteTicker(' + idx + ', this)">✕</button>'
+        + '<button class="act-btn" title="Move up"   onclick="' + upFn  + '(' + idx + ')" ' + (idx === 0 ? 'disabled' : '') + '>↑</button>'
+        + '<button class="act-btn" title="Move down" onclick="' + dnFn  + '(' + idx + ')" ' + (idx === items.length - 1 ? 'disabled' : '') + '>↓</button>'
+        + '<button class="act-btn danger" title="Delete" onclick="' + delFn + '(' + idx + ',this)">✕</button>'
       + '</div>';
     listEl.appendChild(el);
   });
 }
 
+/* ── Reset both tickers to built-in defaults ────────────────────────────────── */
+function resetTickerToDefaults() {
+  configState.ticker_symbols        = [];
+  configState.ticker_symbols_mobile = [];
+  markHpDirty();
+  renderTickerList();
+  renderTickerMobileList();
+}
+
+/* ── Desktop ticker actions ──────────────────────────────────────────────────── */
 function deleteTicker(idx, btn) {
   var item = btn.closest('.hp-item');
   if (item) item.classList.add('is-removing');
-  setTimeout(function() {
-    configState.ticker_symbols.splice(idx, 1);
-    markHpDirty();
-    renderTickerList();
-  }, 200);
+  setTimeout(function() { configState.ticker_symbols.splice(idx, 1); markHpDirty(); renderTickerList(); }, 200);
 }
-
 function moveTickerUp(idx) {
   if (idx === 0) return;
-  var a = configState.ticker_symbols[idx-1];
-  configState.ticker_symbols[idx-1] = configState.ticker_symbols[idx];
-  configState.ticker_symbols[idx] = a;
+  var t = configState.ticker_symbols[idx - 1];
+  configState.ticker_symbols[idx - 1] = configState.ticker_symbols[idx];
+  configState.ticker_symbols[idx] = t;
   markHpDirty(); renderTickerList();
 }
 function moveTickerDown(idx) {
   if (idx >= configState.ticker_symbols.length - 1) return;
-  var a = configState.ticker_symbols[idx+1];
-  configState.ticker_symbols[idx+1] = configState.ticker_symbols[idx];
-  configState.ticker_symbols[idx] = a;
+  var t = configState.ticker_symbols[idx + 1];
+  configState.ticker_symbols[idx + 1] = configState.ticker_symbols[idx];
+  configState.ticker_symbols[idx] = t;
   markHpDirty(); renderTickerList();
+}
+
+/* ── Mobile ticker actions ───────────────────────────────────────────────────── */
+function deleteMobileTicker(idx, btn) {
+  var item = btn.closest('.hp-item');
+  if (item) item.classList.add('is-removing');
+  setTimeout(function() { configState.ticker_symbols_mobile.splice(idx, 1); markHpDirty(); renderTickerMobileList(); }, 200);
+}
+function moveMobileTickerUp(idx) {
+  if (idx === 0) return;
+  var t = configState.ticker_symbols_mobile[idx - 1];
+  configState.ticker_symbols_mobile[idx - 1] = configState.ticker_symbols_mobile[idx];
+  configState.ticker_symbols_mobile[idx] = t;
+  markHpDirty(); renderTickerMobileList();
+}
+function moveMobileTickerDown(idx) {
+  if (idx >= configState.ticker_symbols_mobile.length - 1) return;
+  var t = configState.ticker_symbols_mobile[idx + 1];
+  configState.ticker_symbols_mobile[idx + 1] = configState.ticker_symbols_mobile[idx];
+  configState.ticker_symbols_mobile[idx] = t;
+  markHpDirty(); renderTickerMobileList();
 }
 
 /* ── Field-level status helper ──────────────────────────────────────────────── */
 function setHpFieldStatus(id, t, m) {
   var e = document.getElementById(id);
   if (!e) return;
-  e.className = 'form-status' + (t ? ' ' + t : '');
+  e.className   = 'form-status' + (t ? ' ' + t : '');
   e.textContent = m;
 }
 </script>
