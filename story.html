@@ -217,7 +217,7 @@ body{
 }
 
 /* ==========================================================================
-   PAGE HERO
+   PAGE HERO & LEVEL SELECTOR
    ========================================================================== */
 .story-page-hero{
   background:linear-gradient(135deg,var(--dark2),var(--dark3));
@@ -250,6 +250,59 @@ body{
   color:var(--text3);letter-spacing:.3px;
 }
 .story-page-meta-chip span{color:var(--text2);font-weight:600}
+
+/* Premium Segmented Level Switcher */
+.story-level-selector-wrapper{
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+@media(min-width:768px){
+  .story-level-selector-wrapper{
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+  }
+}
+.level-selector-label{
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.story-level-selector{
+  display: inline-flex;
+  background: var(--dark);
+  border: 1px solid var(--border2);
+  border-radius: 30px;
+  padding: 4px;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.15);
+  overflow: hidden;
+}
+.level-btn{
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+.level-btn:hover{
+  color: var(--text);
+  background: rgba(255,255,255,0.03);
+}
+.level-btn.active{
+  background: var(--burn);
+  color: #ffffff;
+  box-shadow: 0 2px 8px var(--glow);
+}
 
 /* ==========================================================================
    TAB NAVIGATION BAR
@@ -337,6 +390,7 @@ body{
 .story-section-kids     {--section-accent:#ec4899}
 .story-section-education{--section-accent:#6366f1}
 .story-section-animation{--section-accent:#8b5cf6}
+.story-section-ai        {--section-accent:#2563eb}
 
 /* ==========================================================================
    FEATURED HERO CARD
@@ -402,7 +456,7 @@ body{
    ========================================================================== */
 .story-cards-grid{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
   gap:16px;
 }
 @media(max-width:600px){.story-cards-grid{grid-template-columns:1fr}}
@@ -473,7 +527,7 @@ body{
 .story-placeholder-sub{font-size:12px;color:var(--text3);opacity:.7}
 
 /* ==========================================================================
-   FULL STORY MODAL
+   FULL STORY MODAL & LEVEL SWITCHER
    ========================================================================== */
 .story-modal-overlay{
   display:none;position:fixed;inset:0;
@@ -511,10 +565,6 @@ body{
   display:flex;align-items:center;justify-content:space-between;
   flex-shrink:0;
 }
-.story-modal-drag{
-  width:36px;height:4px;border-radius:2px;
-  background:var(--border2);margin:0 auto 14px;cursor:pointer;
-}
 .story-modal-section-pill{
   padding:4px 12px;border-radius:20px;
   font-size:10px;font-weight:700;letter-spacing:1px;
@@ -543,12 +593,66 @@ body{
   font-size:clamp(18px,3.5vw,26px);font-weight:700;
   color:var(--text);line-height:1.35;margin-bottom:14px;
 }
+
+/* Modal Inner Segmented Level Switcher */
+.modal-level-switcher-container{
+  display: flex;
+  margin-bottom: 16px;
+}
+.modal-level-switcher{
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--dark2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2px;
+}
+.modal-level-label{
+  font-size: 10px;
+  color: var(--text3);
+  padding: 0 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.modal-level-btn{
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  padding: 4px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.modal-level-btn:hover{
+  color: var(--text);
+}
+.modal-level-btn.active{
+  background: var(--burn);
+  color: #fff;
+  box-shadow: 0 2px 6px var(--glow);
+}
+
 .story-modal-meta{
   display:flex;align-items:center;gap:8px;flex-wrap:wrap;
   font-size:12px;color:var(--text2);margin-bottom:20px;
   padding-bottom:14px;border-bottom:1px solid var(--border);
 }
 .story-modal-meta-sep{opacity:.4}
+
+/* Dynamic fade animation for morphing text */
+.story-body-content{
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.story-body-content.fade-out{
+  opacity: 0;
+}
+
 .story-body{
   font-size:16px;color:var(--text);line-height:1.9;
   margin-bottom:24px;
@@ -567,7 +671,118 @@ body{
   border-left:3px solid var(--burn,#2563eb);
   border-radius:0 8px 8px 0;
   font-size:15px;line-height:1.75;color:var(--text);
+  margin-bottom: 8px;
 }
+
+/* Featured Visual Photo Styling */
+.story-visual-media{
+  width:100%;
+  border-radius:12px;
+  overflow:hidden;
+  margin-bottom:20px;
+  border:1px solid var(--border2);
+  box-shadow:0 4px 16px rgba(0,0,0,0.3);
+  background:var(--dark);
+}
+.story-visual-img{
+  width:100%;
+  height:auto;
+  max-height:360px;
+  object-fit:cover;
+  display:block;
+}
+
+/* Kids Story Lesson Box Styling */
+.story-lesson-box{
+  margin-top:24px;
+  padding:16px 20px;
+  background:linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%);
+  border:1px solid rgba(16, 185, 129, 0.25);
+  border-left:4px solid var(--green, #10b981);
+  border-radius:8px;
+  box-shadow:0 4px 12px rgba(16, 185, 129, 0.05);
+}
+.story-lesson-title{
+  font-size:13px;
+  font-weight:700;
+  color:var(--green, #10b981);
+  text-transform:uppercase;
+  letter-spacing:0.8px;
+  margin-bottom:6px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.story-lesson-text{
+  font-size:14px;
+  line-height:1.65;
+  color:var(--text);
+  font-style:italic;
+}
+
+/* Interactive Animation / SVGs Concept Visualizer */
+.anim-illustration-container{
+  width:100%;
+  padding:28px;
+  background:var(--dark);
+  border-radius:12px;
+  border:1px solid var(--border2);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin-bottom:20px;
+  box-shadow:inset 0 4px 12px rgba(0,0,0,0.6);
+  min-height:200px;
+}
+.anim-svg-visual{
+  max-width:100%;
+  height:auto;
+}
+
+/* Animation CSS Keyframes */
+@keyframes bounceSquash{
+  0%, 100% { transform: translateY(0) scaleY(1) scaleX(1); transform-origin: bottom; }
+  45% { transform: translateY(-70px) scaleY(1.1) scaleX(0.9); transform-origin: bottom; }
+  85% { transform: translateY(0) scaleY(1) scaleX(1); transform-origin: bottom; }
+  90% { transform: translateY(0) scaleY(0.7) scaleX(1.3); transform-origin: bottom; }
+  95% { transform: translateY(0) scaleY(1.05) scaleX(0.95); transform-origin: bottom; }
+}
+.anim-bounce-ball{
+  animation: bounceSquash 1.6s infinite ease-in-out;
+}
+
+@keyframes morphSpin{
+  0% { transform: rotate(0deg) scale(1); border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+  50% { transform: rotate(180deg) scale(1.15); border-radius: 50%; filter: hue-rotate(60deg); }
+  100% { transform: rotate(360deg) scale(1); border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+}
+.anim-morph-shape{
+  animation: morphSpin 8s infinite linear;
+  transform-origin: center;
+}
+
+@keyframes particlesOrbit{
+  0% { transform: rotate(0deg) translateX(45px) rotate(0deg); }
+  100% { transform: rotate(360deg) translateX(45px) rotate(-360deg); }
+}
+.anim-orbit-particle{
+  animation: particlesOrbit 5s infinite linear;
+  transform-origin: 100px 100px;
+}
+.anim-orbit-particle-slow{
+  animation: particlesOrbit 8s infinite linear reverse;
+  transform-origin: 100px 100px;
+}
+
+@keyframes windSway{
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(12deg) translateY(-5px); }
+}
+.anim-wind-kite{
+  animation: windSway 3s infinite ease-in-out;
+  transform-origin: bottom center;
+}
+
 .story-body .story-zoom{
   font-size:15px;line-height:1.75;margin-bottom:20px;
   padding:13px 16px;
@@ -709,7 +924,6 @@ footer.story-footer{
   .story-page-meta{gap:8px;margin-top:12px}
   .story-page-meta-chip{font-size:11px;padding:4px 10px}
 
-  .story-modal-drag{width:44px;height:5px;margin-bottom:0}
   .story-modal-header{padding:14px 16px 12px}
   .story-modal-close{font-size:20px}
   .story-modal-headline{font-size:18px!important}
@@ -765,15 +979,25 @@ footer.story-footer{
 </div>
 
 <!-- ==========================================================================
-     PAGE HERO
+     PAGE HERO & COMPREHENSION LEVEL SELECTOR
      ========================================================================== -->
 <div class="story-page-hero">
   <div class="story-page-hero-inner">
     <h1 class="story-page-title">Stories That Inspire</h1>
-    <p class="story-page-subtitle">Curated short-form stories spanning Triller, Travel, Health, Comedy, Kids, Education &amp; Animation.</p>
+    <p class="story-page-subtitle">Curated short-form stories spanning Triller, Travel, Health, Comedy, Kids, Education, Animation, &amp; AI.</p>
     <div class="story-page-meta">
-      <div class="story-page-meta-chip">Categories: <span id="category-count">7</span></div>
+      <div class="story-page-meta-chip">Categories: <span id="category-count">8</span></div>
       <div class="story-page-meta-chip">Stories: <span id="total-story-count">—</span></div>
+    </div>
+    
+    <!-- Premium Dynamic Level Switcher -->
+    <div class="story-level-selector-wrapper">
+      <span class="level-selector-label">Reading Level:</span>
+      <div class="story-level-selector">
+        <button class="level-btn" data-level="kids" onclick="switchStoryLevel('kids')">🐣 Young Minds (Kids)</button>
+        <button class="level-btn active" data-level="general" onclick="switchStoryLevel('general')">🧭 Curious Minds (Teens/General)</button>
+        <button class="level-btn" data-level="expert" onclick="switchStoryLevel('expert')">🧠 Analytical Minds (Adults/Experts)</button>
+      </div>
     </div>
   </div>
 </div>
@@ -803,7 +1027,6 @@ footer.story-footer{
      ========================================================================== -->
 <div class="story-modal-overlay" id="story-modal-overlay" onclick="handleOverlayClick(event)">
   <div class="story-modal" id="story-modal" role="dialog" aria-modal="true" aria-labelledby="story-modal-headline">
-    <div class="story-modal-drag" onclick="closeStory()" title="Close"></div>
     <div class="story-modal-header">
       <span class="story-modal-section-pill" id="story-section-pill" style="background:#3b82f6">Category</span>
       <button class="story-modal-close" onclick="closeStory()" title="Close story">&times;</button>
@@ -832,6 +1055,7 @@ footer.story-footer{
         <li><a href="#" onclick="switchTab('kids');return false;">&#x1F476; Kids Stories</a></li>
         <li><a href="#" onclick="switchTab('education');return false;">&#x1F4DA; Education Stories</a></li>
         <li><a href="#" onclick="switchTab('animation');return false;">&#x2728; Animation Stories</a></li>
+        <li><a href="#" onclick="switchTab('ai');return false;">&#x1F916; AI &amp; Tech Stories</a></li>
       </ul>
     </div>
     <div>
@@ -909,6 +1133,11 @@ function cycleTheme() {
 setNewsTheme();
 
 /* ==========================================================================
+   ACTIVE LEVEL STATE
+   ========================================================================== */
+var _activeLevel = localStorage.getItem('viltv_story_level') || 'general';
+
+/* ==========================================================================
    CATEGORY METADATA
    ========================================================================== */
 var CATEGORIES = [
@@ -916,431 +1145,1280 @@ var CATEGORIES = [
   { id:'travel',    label:'Travel',    icon:'&#x2708;',  accent:'#06b6d4', cssClass:'story-section-travel',   desc:'Journeys, destinations, and tales from around the world.' },
   { id:'health',    label:'Health',    icon:'&#x1F3E5;', accent:'#10b981', cssClass:'story-section-health',   desc:'Wellness journeys, medical breakthroughs, and lifestyle stories.' },
   { id:'comedy',    label:'Comedy',    icon:'&#x1F602;', accent:'#f59e0b', cssClass:'story-section-comedy',   desc:'Humorous tales, satire, and feel-good narratives.' },
-  { id:'kids',      label:'Kids',      icon:'&#x1F476;', accent:'#ec4899', cssClass:'story-section-kids',     desc:'Fables, adventures, and stories for young minds.' },
+  { id:'kids',      label:'Kids',      icon:'&#x1F476;', accent:'#ec4899', cssClass:'story-section-kids',     desc:'Fables, adventures, and lessons for young minds.' },
   { id:'education', label:'Education', icon:'&#x1F4DA;', accent:'#6366f1', cssClass:'story-section-education',desc:'Knowledge-driven narratives and learning journeys.' },
-  { id:'animation', label:'Animation', icon:'&#x2728;', accent:'#8b5cf6', cssClass:'story-section-animation',desc:'Animated tales, character-driven stories, and visual narratives.' }
+  { id:'animation', label:'Animation', icon:'&#x2728;', accent:'#8b5cf6', cssClass:'story-section-animation',desc:'Animated tales, character-driven stories, and visual narratives.' },
+  { id:'ai',        label:'AI & Tech',  icon:'&#x1F916;', accent:'#2563eb', cssClass:'story-section-ai',       desc:'Intelligent search, autonomous systems, and neural breakthroughs.' }
 ];
 
 /* ==========================================================================
-   STORY DATA — embedded sample stories for each category
+   STORY DATA — embedded curated stories with 3 separate comprehension levels
    ========================================================================== */
 var STORY_DATA = {};
 
+// 1. TRILLER STORIES
 STORY_DATA.triller = [
   {
     headline: 'The Last Train Home — A Midnight Crossing',
     teaser: 'When the final train of the night pulls into the station, a lone passenger discovers an unexpected connection that changes everything.',
     source: 'Triller Originals',
     publishedAt: '2026-05-27T14:30:00Z',
-    body: [
-      '<p class="story-lead">The station clock struck midnight as the last train of the evening pulled into Platform 3. Maya had missed the earlier connection by three minutes, and now she was the only passenger waiting in the cavernous hall. The fluorescent lights flickered, casting long shadows across the tiled floor. She shivered, pulling her jacket tighter around her shoulders.</p>',
-      '<p>As the train doors hissed open, she stepped inside and found only one other passenger — an elderly man in a worn trench coat, holding a leather-bound journal. He looked up and smiled, the kind of knowing smile that suggested he had been expecting her.</p>',
-      '<p>"Going home?" he asked, his voice gravelly but kind. Maya nodded, unsure why she felt compelled to engage. "Funny thing about home," he continued, "it is never quite where you left it."</p>',
-      '<ul class="story-bullets"><li>The man reveals he has ridden this train for forty years, collecting stories from passengers.</li><li>Maya reluctantly shares her own story — a career in tatters, a relationship ended, a city that no longer felt like her own.</li><li>He listens without judgment, then offers her a blank page from his journal: "Write the next chapter. Not the one you are running from."</li></ul>',
-      '<p>When the train reached her station, Maya stepped off with something she had not felt in months: hope. She turned to thank the old man, but the carriage was empty. On the seat lay the blank page, and on it, written in ink that had not been there before, was a single word: <strong>Begin.</strong></p>'
-    ]
+    levels: {
+      kids: {
+        headline: 'The Midnight Magic Train',
+        teaser: 'A little girl misses her train, but finds a friendly star-lit train that takes her home and teaches her a wonderful lesson.',
+        source: 'Triller Kids',
+        body: [
+          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1532103054090-334e6e60ab29?w=600&q=80" alt="Magic Train" class="story-visual-img"/></div>',
+          '<p class="story-lead">Clang, clang! The big station clock chimed twelve times. It was midnight! Maya sat all by herself on the bench. She was sad because she had missed her regular train home.</p>',
+          '<p>Just then, a beautiful train painted in dark blue and gold stopped in front of her. The doors opened with a soft whoosh. Inside sat a kind old man with a shiny gold book. "Hop on, little adventurer!" he said with a smile. "This is the Magic Start-Over Train."</p>',
+          '<p>The train tracks were made of starlight, and the train flew softly through the night sky. The old man let Maya draw in his book, showing her that a blank page can become any drawing she wanted. "If something goes wrong today," the old man told her, "tomorrow is a fresh blank page to draw a happy new story."</p>',
+          '<p>When the train landed at her station, Maya felt happy and full of courage. She turned to say goodbye, but the magic train had flown back into the stars.</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">Sometimes, when things don\'t go as planned, it\'s just a chance to start a new and even more exciting adventure! Don\'t be afraid to try again.</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'The Last Train Home — A Midnight Crossing',
+        teaser: 'When the final train of the night pulls into the station, a lone passenger discovers an unexpected connection that changes everything.',
+        source: 'Triller Originals',
+        body: [
+          '<p class="story-lead">The station clock struck midnight as the last train of the evening pulled into Platform 3. Maya had missed the earlier connection by three minutes, and now she was the only passenger waiting in the cavernous hall.</p>',
+          '<p>As the train doors hissed open, she stepped inside and found only one other passenger — an elderly man in a worn trench coat, holding a leather-bound journal. He looked up and smiled, the kind of knowing smile that suggested he had been expecting her.</p>',
+          '<p>"Going home?" he asked, his voice gravelly but kind. Maya nodded, unsure why she felt compelled to engage. "Funny thing about home," he continued, "it is never quite where you left it."</p>',
+          '<ul class="story-bullets">',
+          '  <li>The man reveals he has ridden this train for forty years, collecting stories from passengers.</li>',
+          '  <li>Maya reluctantly shares her own story — a career in tatters, a relationship ended, a city that no longer felt like her own.</li>',
+          '  <li>He listens without judgment, then offers her a blank page from his journal: "Write the next chapter. Not the one you are running from."</li>',
+          '</ul>',
+          '<p>When the train reached her station, Maya stepped off with something she had not felt in months: hope. She turned to thank the old man, but the carriage was empty. On the seat lay the blank page, and on it was a single word written in fresh ink: <strong>Begin.</strong></p>'
+        ]
+      },
+      expert: {
+        headline: 'Narrative Transitions: Psychological Archetypes of "The Last Train"',
+        teaser: 'A critical structural analysis of transitional spaces, seeking behaviors, and the archetype of the mentor in modern short fiction.',
+        source: 'Narrative Research Journal',
+        body: [
+          '<p class="story-lead">Maya\'s midnight transit serves as a classic liminal space—a physical and psychological threshold where the protagonist is stripped of familiar structures and forced into self-reflective dialogue.</p>',
+          '<p>The introduction of the elderly mentor in liminal space acts as an externalization of Maya\'s subconscious seeking behavior. The journal is not merely a prop but a semiotic symbol of the unwritten future, contrasting with her fixation on past failures.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Liminality:</strong> The train operates outside ordinary temporal constraints, facilitating an accelerated psychological shift in the passenger.</li>',
+          '  <li><strong>Archetypal Mentor:</strong> The chronicler represents the Jungian "Wise Old Man" who does not solve the hero\'s crisis but provides the agency (the blank page) to resolve it.</li>',
+          '  <li><strong>Catharsis:</strong> The vanishing of the mentor reinforces that the encounter was internal, leaving behind a tangible anchor (the text "Begin") that bridges the psychological breakthrough to reality.</li>',
+          '</ul>',
+          '<p>Ultimately, the story demonstrates how transitional spaces can be leveraged in narrative structure to evoke a deep psychological pivot in the protagonist, converting passive escaping into active beginning.</p>'
+        ]
+      }
+    }
   },
   {
     headline: 'Echoes in the Rain — A Ghost in the Alley',
     teaser: 'A photographer chasing the perfect shot stumbles into a rain-drenched alley where the past refuses to stay buried.',
     source: 'Triller Originals',
     publishedAt: '2026-05-26T10:15:00Z',
-    body: [
-      '<p class="story-lead">The rain came down in sheets, blurring the neon signs of the old district into smears of pink and blue. Daniel raised his camera, framing the narrow alley that wound between two decaying apartment blocks. The city planning commission had slated this neighbourhood for demolition, and he wanted to capture it before it vanished.</p>',
-      '<p>Through the viewfinder, he saw her. A woman in a red dress, standing perfectly still at the far end of the alley. She was not there when he lowered the camera.</p>',
-      '<ul class="story-bullets"><li>Daniel reviews his photos — the woman is in every frame, her face never quite in focus.</li><li>He researches the building and discovers that in 1947, a young dancer named Clara vanished from the same alley on a rainy night identical to this one.</li><li>The demolition crew arrives the next morning. Daniel races to the site and finds a locked wooden chest buried beneath the floorboards.</li></ul>',
-      '<p>Inside the chest: photographs, letters, and a red silk dress, perfectly preserved. The last letter was addressed to a photographer — someone Clara had been waiting for, all this time.</p>'
-    ]
+    levels: {
+      kids: {
+        headline: 'The Dancing Raindrop Girl',
+        teaser: 'A friendly photographer finds a magical chest in the rain that holds a happy secret about an old-time dancer.',
+        source: 'Triller Kids',
+        body: [
+          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&q=80" alt="Rainy Alley" class="story-visual-img"/></div>',
+          '<p class="story-lead">Splash! Danny loved taking pictures of the shiny wet streets in the rain. One evening, he walked down a quiet alleyway and saw a beautiful light dancing on the wall.</p>',
+          '<p>When he looked closer, he saw a glowing wooden chest hidden beneath a loose board. Inside the chest was a beautiful red dress and a glowing music box. When he wound the music box up, a sweet song played, and he saw a friendly shadow dancing happily in the puddles.</p>',
+          '<p>Danny realized the dancing shadow was Clara, a famous dancer who had lived in the building a long time ago. She loved dancing in the rain, and the chest held all her happy memories.</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">Art, music, and happy memories never vanish. They stay in the world to bring joy and smiles to people many years later!</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'Echoes in the Rain — A Ghost in the Alley',
+        teaser: 'A photographer chasing the perfect shot stumbles into a rain-drenched alley where the past refuses to stay buried.',
+        source: 'Triller Originals',
+        body: [
+          '<p class="story-lead">The rain came down in sheets, blurring the neon signs of the old district into smears of pink and blue. Daniel raised his camera, framing the narrow alley that wound between two decaying apartment blocks.</p>',
+          '<p>Through the viewfinder, he saw her: a woman in a red dress, standing perfectly still at the far end of the alley. But she was not there when he lowered the camera.</p>',
+          '<ul class="story-bullets">',
+          '  <li>Daniel reviews his photos — the woman is in every frame, her face never quite in focus.</li>',
+          '  <li>He researches the building and discovers that in 1947, a young dancer named Clara vanished from the same alley on a rainy night.</li>',
+          '  <li>The demolition crew arrives the next morning. Daniel races to the site and finds a locked wooden chest buried beneath the floorboards.</li>',
+          '</ul>',
+          '<p>Inside the chest were photographs, letters, and a red silk dress, perfectly preserved. The last letter was addressed to a photographer — someone Clara had been waiting for, all this time, to tell her story.</p>'
+        ]
+      },
+      expert: {
+        headline: 'Phantasmagoria and Photography: Clara\'s Echoes in Post-War Urbanity',
+        teaser: 'An analytical review of photographic mediumship, memory preservation, and Clara\'s spatial lingering in pre-demolition architecture.',
+        source: 'Visual Studies Quarterly',
+        body: [
+          '<p class="story-lead">Daniel\'s lens captures a classic manifestation of haunted architecture—what theorists call spatial memory lingering. Clara, the dancer of 1947, acts as a visual haunting that can only be developed or observed through mechanical reproduction (the camera sensor).</p>',
+          '<p>This narrative explores the tension between urban decay (gentrification and demolition) and historic preservation. The physical demolition of the apartment blocks triggers the release of the artifact (the wooden chest), forcing the buried history into the light.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Technological Mediumship:</strong> The camera acts as a translation layer between different temporal planes, rendering the ghost visible.</li>',
+          '  <li><strong>Artifact Preservation:</strong> The red dress and personal letters serve as historical material anchors, resolving Clara\'s narrative tension.</li>',
+          '</ul>',
+          '<p>The story illustrates how photographic art serves as a record not just of physical structures, but of the emotional and human histories embedded within those spaces before they are erased by modernization.</p>'
+        ]
+      }
+    }
   },
   {
     headline: 'Neon Noir — The Detective Who Knew Too Little',
     teaser: 'In a city that never sleeps, a washed-up detective takes on one last case that may either redeem or destroy him.',
     source: 'Triller Originals',
     publishedAt: '2026-05-24T08:45:00Z',
-    body: [
-      '<p class="story-lead">Detective Roy Callahan had not taken a case in three years. The last one had cost him his partner, his marriage, and very nearly his sanity. But when a mysterious envelope arrived at his door containing a single photograph and a thousand-dollar retainer, curiosity got the better of him.</p>',
-      '<p>The photograph showed a man he did not recognize, standing in front of a building that no longer existed. On the back, in elegant cursive: "The truth has a price. Are you willing to pay it?"</p>',
-      '<ul class="story-bullets"><li>Roy traces the building to a demolished bank where a legendary heist took place in 1982.</li><li>He discovers the man in the photo is the only suspect who was never found — presumed dead for forty years.</li><li>Following a trail of old newspaper clippings and reluctant witnesses, Roy finds a retirement home where the suspect has been living under an alias.</li></ul>',
-      '<p>The final twist: the suspect was never the thief. He was the whistleblower who tried to expose the real criminals and was silenced for it. Roy must decide whether to let the truth die with the old man or risk everything to set the record straight.</p>'
-    ]
-  },
-  {
-    headline: 'The Signal — A Tower in the Storm',
-    teaser: 'A radio operator in a remote outpost receives a transmission from a source that should not exist.',
-    source: 'Triller Originals',
-    publishedAt: '2026-05-22T16:20:00Z',
-    body: [
-      '<p class="story-lead">Station Kilo-Seven was the loneliest posting in the entire network. Perched on a windswept cliff in the North Atlantic, it was manned by a single operator: Lieutenant Sarah Keane. Her job was to monitor emergency frequencies — a task that had been uneventful for eighteen months. Until tonight.</p>',
-      '<p>The signal came through at 02:47 AM. A distress call on a frequency that had been officially decommissioned in 1991. The voice on the other end was calm, almost clinical: "This is Flight 447. We are 200 miles off course. Does anyone read?"</p>',
-      '<ul class="story-bullets"><li>Flight 447 disappeared over the Atlantic in 2009 with 228 people aboard. No distress call was ever received — until now.</li><li>Sarah logs the transmission and alerts her superiors. They dismiss it as a prank or atmospheric anomaly.</li><li>Determined to uncover the truth, she triangulates the signal and discovers it is originating from a point 3,000 feet below the ocean surface.</li></ul>',
-      '<p>What Sarah uncovers next defies explanation: a black box recorder, transmitting on a loop for seventeen years, finally breaking through the interference. The final cockpit recording reveals something no investigation had ever considered.</p>'
-    ]
-  },
-  {
-    headline: 'Shadows on the Bridge — A Photograph That Should Not Exist',
-    teaser: 'An old photograph found at a flea market leads a journalist down a rabbit hole of unsolved disappearances.',
-    source: 'Triller Originals',
-    publishedAt: '2026-05-20T20:00:00Z',
-    body: [
-      '<p class="story-lead">At a Sunday flea market in Brooklyn, journalist Ava Chen paid five dollars for a box of vintage photographs. Most were unremarkable — family picnics, wedding portraits, faded landscapes. But one image made her pause: a group of seven people standing on the Brooklyn Bridge at dusk. The date stamp read March 14, 1986. Every person in the photograph had been reported missing within six months of that date.</p>',
-      '<p>Ava spent the next year tracing each face. The more she uncovered, the more disturbing the pattern became.</p>',
-      '<ul class="story-bullets"><li>All seven individuals were connected to a defunct research laboratory that conducted classified experiments.</li><li>The photographer has never been identified — no fingerprints, no records, nothing on the negative.</li><li>Every investigator who had previously looked into the case either retired abruptly or died under unusual circumstances.</li></ul>',
-      '<p>Ava publishes her findings against the advice of everyone she knows. Three days later, an eighth person appears in the photograph — a figure she did not notice before. The figure is looking directly at the camera. And it looks exactly like her.</p>'
-    ]
+    levels: {
+      kids: {
+        headline: 'The Mystery of the Missing Photo',
+        teaser: 'A retired detective uses clues to help an old friend find a lost bank box, learning that truth is always the best path.',
+        source: 'Triller Kids',
+        body: [
+          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1509248961158-e54f6934749c?w=600&q=80" alt="Detective" class="story-visual-img"/></div>',
+          '<p class="story-lead">Detective Roy had a big magnifying glass and a cozy office. He hadn\'t solved a mystery in a long time. But one sunny day, he received a letter with an old picture of a building.</p>',
+          '<p>The building was a very old bank. Roy followed the clues, looking at old books in the library and asking his friends for help. He discovered that a kind old man who lived nearby was the one who took the picture.</p>',
+          '<p>The old man had hidden a box of toys and old coins to keep them safe, and Roy helped him find it! Everyone clapped and cheered for Roy\'s great detective work.</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">Using your mind to solve puzzles and help others is a wonderful way to be a hero in your neighborhood! Always seek the truth.</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'Neon Noir — The Detective Who Knew Too Little',
+        teaser: 'In a city that never sleeps, a washed-up detective takes on one last case that may either redeem or destroy him.',
+        source: 'Triller Originals',
+        body: [
+          '<p class="story-lead">Detective Roy Callahan had not taken a case in three years. But when a mysterious envelope arrived at his door containing a single photograph and a thousand-dollar retainer, curiosity got the better of him.</p>',
+          '<p>The photograph showed a man he did not recognize, standing in front of a building that no longer existed. On the back was written: "The truth has a price. Are you willing to pay it?"</p>',
+          '<ul class="story-bullets">',
+          '  <li>Roy traces the building to a demolished bank where a legendary heist took place in 1982.</li>',
+          '  <li>He discovers the man in the photo is the only suspect who was never found.</li>',
+          '  <li>Following old newspaper clippings, Roy finds the suspect living quietly under an alias in a retirement home.</li>',
+          '</ul>',
+          '<p>The final twist: the suspect was never the thief. He was the whistleblower who tried to expose the real criminals. Roy must decide whether to let the truth die or risk everything to set the record straight.</p>'
+        ]
+      },
+      expert: {
+        headline: 'Systemic Corruption and Whistleblower Protection: The 1982 Legacy',
+        teaser: 'A legal and investigative deep-dive into Callahan\'s pursuit of corporate accountability and retrofitted justice.',
+        source: 'Legal Criminology Review',
+        body: [
+          '<p class="story-lead">Roy Callahan\'s final investigation highlights the structural failures of municipal law enforcement during the late 20th century, particularly regarding financial crime and institutional whistleblowing.</p>',
+          '<p>The suspect, living under an alias, represents the precarious existence of whistleblowers who lack legislative protection. His self-imposed exile was a necessary survival strategy in a system where corporate actors controlled regulatory organs.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Systemic Failures:</strong> The 1982 heist was actually an inside cover-up to hide corporate embezzlement, framed as an external bank robbery.</li>',
+          '  <li><strong>Investigative Ethics:</strong> Callahan faces the dilemma of exposing historical truth at the cost of the witness\'s immediate safety.</li>',
+          '</ul>',
+          '<p>This case study illustrates that justice is frequently retrofitted, requiring independent investigative journalists or retired detectives to dig through historical files to correct the public record.</p>'
+        ]
+      }
+    }
   }
 ];
 
+// 2. TRAVEL STORIES
 STORY_DATA.travel = [
   {
-    headline: 'The Silk Road Revisited — A Solo Journey Across Central Asia',
-    teaser: 'One traveller retraces the ancient Silk Road through Uzbekistan, Kyrgyzstan, and Kazakhstan — discovering that the greatest journeys happen within.',
+    headline: 'The Silk Road Solo — RETRACING ANCIENT TRAILWAYS',
+    teaser: 'One traveller retraces the ancient Silk Road through Central Asia — discovering that the greatest journeys happen within.',
     source: 'Travel Chronicles',
     publishedAt: '2026-05-25T12:00:00Z',
-    body: [
-      '<p class="story-lead">The idea had been brewing for years — a solo trip across the heart of Central Asia, following the ancient trade routes that once connected East and West. At thirty-two, Liam had a stable job, a comfortable apartment, and a nagging sense that life was passing him by. He booked a one-way ticket to Tashkent and did not look back.</p>',
-      '<p>Uzbekistan welcomed him with azure-tiled mosques and the scent of plov drifting through Samarkand\'s ancient bazaars. But it was in the Pamir Mountains of Kyrgyzstan that the journey truly began.</p>',
-      '<ul class="story-bullets"><li>Three weeks living with a nomadic family in a yurt at 3,500 metres, learning to herd yaks and bake bread over an open fire.</li><li>A midnight trek to a hot spring under a sky so full of stars it felt like falling into the universe.</li><li>An unexpected friendship with a 72-year-old Kazakh eagle hunter who taught him that "a man who has not been lost has never truly travelled."</li></ul>',
-      '<p>By the time he reached Almaty, Liam had not found what he was looking for — because he had stopped looking. Instead, he had found something better: the understanding that the road itself was the destination, and that every stranger carries a story worth hearing.</p>'
-    ]
+    levels: {
+      kids: {
+        headline: 'Liam\'s Mountain Adventure',
+        teaser: 'Liam travels to big snowy mountains, rides beautiful yaks, and learns that making friends is the best part of any trip.',
+        source: 'Travel Kids',
+        body: [
+          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80" alt="Mountains" class="story-visual-img"/></div>',
+          '<p class="story-lead">Liam packed a big backpack and went on a journey to a far-away land with giant, snowy mountains. He stayed in a round, cozy tent called a yurt!</p>',
+          '<p>A friendly local family welcomed him. They taught Liam how to ride a gentle yak and bake fluffy round bread over a warm fire. At night, they looked up at the sky, which was completely filled with bright, twinkling stars.</p>',
+          '<p>A kind wise hunter told Liam: "Getting lost is just another way to find a new friend." Liam smiled, knowing he would always remember this beautiful place.</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">Travel is not just about seeing new places; it is about sharing kindness with strangers and learning how other people live!</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'The Silk Road Solo — RETRACING ANCIENT TRAILWAYS',
+        teaser: 'One traveller retraces the ancient Silk Road through Uzbekistan, Kyrgyzstan, and Kazakhstan — discovering that the greatest journeys happen within.',
+        source: 'Travel Chronicles',
+        body: [
+          '<p class="story-lead">The idea had been brewing for years — a solo trip across the heart of Central Asia, following the ancient trade routes that once connected East and West.</p>',
+          '<p>Uzbekistan welcomed him with azure-tiled mosques and the scent of plov. But it was in the Pamir Mountains of Kyrgyzstan that the journey truly began.</p>',
+          '<ul class="story-bullets">',
+          '  <li>Three weeks living with a nomadic family in a yurt, learning to herd yaks and bake bread over an open fire.</li>',
+          '  <li>A midnight trek to a hot spring under a sky so full of stars it felt like falling into the universe.</li>',
+          '  <li>An unexpected friendship with a 72-year-old Kazakh eagle hunter who taught him that "a man who has not been lost has never truly travelled."</li>',
+          '</ul>',
+          '<p>By the time he reached Almaty, Liam had found something better than destination goals: the understanding that the road itself was the teacher, and that every stranger carries a story worth hearing.</p>'
+        ]
+      },
+      expert: {
+        headline: 'Central Asian Nomadic Sociology: Pamir Highway Adaptations',
+        teaser: 'A critical ethnographic survey of modern pastoral nomadism, domestic tourism integration, and heritage commodification along the Silk Road.',
+        source: 'Pamir Ethnography Journal',
+        body: [
+          '<p class="story-lead">Liam\'s crossing of the Pamir Highway offers an observation of the delicate balance between historical pastoral lifestyle and global eco-tourism networks.</p>',
+          '<p>The Kyrgyz yurt stays (jailoo tourism) represent a community-based economic adaptation that allows pastoral families to diversify income while preserving seasonal migration patterns. Yet, it introduces cultural commodification risks.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Economic Diversification:</strong> Eco-lodging offsets risks associated with livestock mortality due to winter extreme weather events (dzhut).</li>',
+          '  <li><strong>Intergenerational Knowledge Transfer:</strong> Interacting with foreign travelers provides capital that enables youth to stay in rural districts rather than migrating to urban centers.</li>',
+          '</ul>',
+          '<p>In conclusion, contemporary Silk Road travel serves as a vehicle for sustainable rural development, transforming heritage preservation into a viable livelihood strategy for mountain communities.</p>'
+        ]
+      }
+    }
   },
   {
     headline: 'Islands of Solitude — Finding Peace in the Faroe Islands',
     teaser: 'A burned-out executive trades boardroom meetings for sheep-dotted cliffs and discovers a different definition of success.',
     source: 'Travel Chronicles',
     publishedAt: '2026-05-23T09:30:00Z',
-    body: [
-      '<p class="story-lead">After fifteen years in investment banking, Nina collapsed at her desk. The doctor said it was exhaustion; Nina knew it was something deeper. She took a six-month sabbatical and, on a whim, booked a flight to the Faroe Islands — a place she had once seen in a nature documentary and never forgotten.</p>',
-      '<p>The islands were everything the corporate world was not: windswept, raw, achingly beautiful. There were more sheep than people, and the silence was so profound it took her a week to stop hearing the phantom ping of email notifications.</p>',
-      '<ul class="story-bullets"><li>She hiked to the edge of Lake Sorvagsvatn, the famous "lake above the ocean," and felt tears stream down her face for no reason she could name.</li><li>She learned to knit from an 80-year-old woman who had never owned a mobile phone.</li><li>She watched the Northern Lights dance over the village of Gjogv and realized she had not checked her phone in eleven days.</li></ul>',
-      '<p>Nina did not return to banking. She opened a small guesthouse on the islands, where she now hosts travellers seeking the same silence that saved her. "I spent thirty-seven years chasing success," she tells her guests, "and found it in a place where the sheep outnumber the people."</p>'
-    ]
+    levels: {
+      kids: {
+        headline: 'Nina and the Woolly Sheep Islands',
+        teaser: 'Nina visits a green island filled with fluffy sheep, learns to knit, and finds out that quiet time is very good for the heart.',
+        source: 'Travel Kids',
+        body: [
+          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1482862549707-f63cb32c5fd9?w=600&q=80" alt="Faroe Islands" class="story-visual-img"/></div>',
+          '<p class="story-lead">Nina had a very busy job and felt very tired. She wanted to go somewhere quiet. So, she traveled to a group of green islands called the Faroe Islands.</p>',
+          '<p>There were more fluffy sheep than people on the islands! Nina walked on green cliffs and watched beautiful waterfalls splash into the sea. She spent time with a kind grandmother who taught her how to knit soft woolly hats.</p>',
+          '<p>Nina loved the quiet islands. She decided to build a cozy house there to help other tired travelers take a happy rest.</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">Taking a break and spending quiet time in nature is important. It helps us feel happy, healthy, and ready for new things!</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'Islands of Solitude — Finding Peace in the Faroe Islands',
+        teaser: 'A burned-out executive trades boardroom meetings for sheep-dotted cliffs and discovers a different definition of success.',
+        source: 'Travel Chronicles',
+        body: [
+          '<p class="story-lead">After fifteen years in investment banking, Nina collapsed at her desk. She took a six-month sabbatical and booked a flight to the Faroe Islands.</p>',
+          '<p>The islands were everything the corporate world was not: windswept, raw, and quiet. There were more sheep than people, and the silence helped her stop worrying about email notifications.</p>',
+          '<ul class="story-bullets">',
+          '  <li>She hiked to the edge of Lake Sorvagsvatn, the famous "lake above the ocean," feeling a deep sense of calm.</li>',
+          '  <li>She learned to knit and cook traditional meals from local residents.</li>',
+          '  <li>She watched the Northern Lights dance over the village of Gjogv.</li>',
+          '</ul>',
+          '<p>Nina did not return to banking. Instead, she opened a small guesthouse on the islands to host travellers seeking the same quiet environment that saved her.</p>'
+        ]
+      },
+      expert: {
+        headline: 'Decentralization and Quiet Tourism: The Faroe Islands Economic Pivot',
+        teaser: 'A geopolitical analysis of sustainable tourism, rural revitalization, and structural mental health corrections away from urban congestion.',
+        source: 'Nordic Development Review',
+        body: [
+          '<p class="story-lead">Nina\'s escape to the Faroe archipelago highlights the growing trend of "quiet tourism"—a deliberate counter-movement to mass urban travel that prioritizes low-impact, high-value ecological exchanges.</p>',
+          '<p>For isolated economies like the Faroes, this model provides crucial capital without putting excessive strain on local infrastructure, showcasing how micro-hospitality can sustain remote communities.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Infrastructure Limits:</strong> The Faroe Islands utilize strict trail regulation and off-season closures to prevent ecological degradation.</li>',
+          '  <li><strong>Psychological Decoupling:</strong> The reduction in cortisol and anxiety symptoms is directly linked to immersive natural environments (biophilic restoration).</li>',
+          '</ul>',
+          '<p>This study demonstrates that rural decentralization benefits not only regional economies but also provides critical therapeutic spaces for highly stressed urban populations.</p>'
+        ]
+      }
+    }
   },
   {
     headline: 'The Trans-Siberian Chronicle — 9,289 Kilometres of Stories',
     teaser: 'Seven days on the legendary Trans-Siberian Railway reveals the soul of Russia through the lives of its passengers.',
     source: 'Travel Chronicles',
     publishedAt: '2026-05-21T14:00:00Z',
-    body: [
-      '<p class="story-lead">The Trans-Siberian Railway is not just a train journey — it is a moving village, a microcosm of humanity hurtling across the largest country on Earth. When Marcus boarded in Moscow, he expected scenic landscapes and perhaps a few interesting conversations. What he got was a masterclass in the human condition.</p>',
-      '<p>Over seven days and seven time zones, he met a cast of characters straight out of a Tolstoy novel.</p>',
-      '<ul class="story-bullets"><li>A retired ballet dancer heading to Vladivostok to see her grandson for the first time, carrying only a photograph and a jar of homemade jam.</li><li>A young soldier returning from leave, who spoke no English but communicated volumes through shared meals of black bread and smoked fish.</li><li>An oil executive who confessed at 3 AM, over vodka, that he envied Marcus\'s freedom more than Marcus envied his wealth.</li></ul>',
-      '<p>When the train finally pulled into Vladivostok, Marcus stepped onto the platform a different person. The landscapes had been stunning, but it was the stories — the raw, unfiltered stories of strangers becoming friends — that he would carry with him forever.</p>'
-    ]
-  },
-  {
-    headline: 'Temple Trails — A Spiritual Pilgrimage Through Southeast Asia',
-    teaser: 'From the golden spires of Myanmar to the jungle temples of Cambodia, one seeker discovers that spirituality wears many faces.',
-    source: 'Travel Chronicles',
-    publishedAt: '2026-05-19T11:15:00Z',
-    body: [
-      '<p class="story-lead">Priya was not religious in any conventional sense, but she was deeply spiritual. After her mother passed away, she felt an inexplicable pull toward the ancient temples of Southeast Asia — a call to walk where millions had walked before her, searching for meaning in stone and silence.</p>',
-      '<p>Her journey began at dawn in Bagan, Myanmar, where 2,200 pagodas rise from the mist like the skeletal remains of a forgotten kingdom.</p>',
-      '<ul class="story-bullets"><li>In Bagan, a monk told her: "You do not find enlightenment. You become it, one small kindness at a time."</li><li>At Angkor Wat, she sat in meditation as the sun rose behind the iconic spires, and for the first time since her mother\'s passing, she felt peace.</li><li>In a remote monastery in Laos, she spent three days in silence, learning that grief is not a wound to be healed but a companion to be accepted.</li></ul>',
-      '<p>Priya returned home with no answers — only better questions. The temples had not given her what she sought; they had simply shown her that the seeking itself was the point.</p>'
-    ]
-  },
-  {
-    headline: 'The Patagonia Crossing — Where Mountains Meet the Soul',
-    teaser: 'A gruelling trek through Torres del Paine challenges everything one hiker thought she knew about endurance and beauty.',
-    source: 'Travel Chronicles',
-    publishedAt: '2026-05-17T16:40:00Z',
-    body: [
-      '<p class="story-lead">The W Trek in Chilean Patagonia is not for the faint of heart. Over five days, hikers cover 76 kilometres through some of the most dramatic terrain on the planet — glacial lakes, granite spires, and winds strong enough to knock a person off their feet. Emma had trained for six months, but nothing prepared her for the reality.</p>',
-      '<p>By day two, her boots had given her blisters the size of coins. By day three, a storm flooded her tent. By day four, she was ready to quit.</p>',
-      '<ul class="story-bullets"><li>At the lowest point, a fellow hiker — a 64-year-old grandmother from Scotland — shared her chocolate bar and said: "The mountain does not care how fast you go. It only cares that you keep going."</li><li>On the final day, Emma reached the base of the Torres at sunrise. The granite towers glowed orange in the first light, reflected perfectly in the glacial lake below.</li><li>She sat there for an hour, crying and laughing, as condors circled overhead.</li></ul>',
-      '<p>Emma learned that endurance is not about physical strength — it is about the stories we tell ourselves when we think we cannot take another step. And sometimes, the best story is simply: "Keep going."</p>'
-    ]
+    levels: {
+      kids: {
+        headline: 'Marcus\'s Great Train Ride',
+        teaser: 'Marcus goes on a giant train ride across the snowy forest, sharing food and games with new friends on the way.',
+        source: 'Travel Kids',
+        body: [
+          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1515162305285-0293e4767cc2?w=600&q=80" alt="Train Tracks" class="story-visual-img"/></div>',
+          '<p class="story-lead">Choo-choo! Marcus climbed aboard a very long train that would travel for seven whole days across beautiful snowy forests and green fields.</p>',
+          '<p>During the long ride, Marcus met many nice people. A friendly grandmother shared her sweet strawberry jam, and a young boy showed Marcus how to build paper airplanes. They didn\'t speak the same language, but they laughed and played together every day!</p>',
+          '<p>When the train reached the end, Marcus was happy. He learned that sharing and smiling can make friends anywhere in the world.</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">You don\'t need to speak the same language to share kindness and be a good friend. A smile and a shared treat can bridge any gap!</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'The Trans-Siberian Chronicle — 9,289 Kilometres of Stories',
+        teaser: 'Seven days on the legendary Trans-Siberian Railway reveals the soul of the country through the lives of its passengers.',
+        source: 'Travel Chronicles',
+        body: [
+          '<p class="story-lead">The Trans-Siberian Railway is not just a train journey — it is a moving village, a microcosm of humanity hurtling across vast forests and plains.</p>',
+          '<p>Over seven days and seven time zones, Marcus shared compartment meals and stories with a diverse cast of fellow travellers.</p>',
+          '<ul class="story-bullets">',
+          '  <li>A retired dancer heading to Vladivostok to see her grandson, carrying a single photograph and a jar of jam.</li>',
+          '  <li>A young soldier returning home, who communicated through shared meals of black bread and smoked fish.</li>',
+          '  <li>An executive who confessed, over tea, that he envied Marcus\'s simple freedom more than his own wealth.</li>',
+          '</ul>',
+          '<p>When the train finally pulled into its destination, Marcus realized the landscapes had been stunning, but it was the shared stories of strangers that he would carry with him forever.</p>'
+        ]
+      },
+      expert: {
+        headline: 'Trans-Siberian Mobility: Compartment Sociality & Intersectional Classes',
+        teaser: 'A sociopolitical analysis of the Trans-Siberian Railway, exploring class mixing, compartmentalized intimacy, and passenger networks.',
+        source: 'Journal of Transport Sociology',
+        body: [
+          '<p class="story-lead">The Trans-Siberian Railway serves as a unique sociological laboratory where strict structural class boundaries dissolve within the shared spatial confines of a second-class (Platskart) carriage.</p>',
+          '<p>Marcus\'s interactions illustrate "compartment sociality"—a phenomenon where forced proximity over extended durations compels passengers to establish high-trust micro-communities.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Class Convergence:</strong> Executive, soldier, and retiree interact on equal footing, bypassing external status indicators.</li>',
+          '  <li><strong>Gift Economy:</strong> The sharing of food (jam, bread, tea) acts as a mutual contract that preserves peace and builds communal bonds.</li>',
+          '</ul>',
+          '<p>In conclusion, the railway acts as an equalizer, showcasing how shared physical transit networks can facilitate deep cross-class communication in modern societies.</p>'
+        ]
+      }
+    }
   }
 ];
 
+// 3. HEALTH STORIES
 STORY_DATA.health = [
   {
-    headline: 'The Blue Zone Secret — Lessons from the World\'s Longest-Lived People',
+    headline: 'The Blue Zone Secret — Secrets of the Longest-Lived People',
     teaser: 'Researchers spent decades studying communities where people routinely live past 100. The secret is simpler than anyone imagined.',
     source: 'Health & Wellness',
     publishedAt: '2026-05-26T07:30:00Z',
-    body: [
-      '<p class="story-lead">In five pockets around the world — from Okinawa, Japan, to Sardinia, Italy — people live extraordinarily long, healthy lives. They do not follow fad diets, take expensive supplements, or spend hours in the gym. So what is their secret?</p>',
-      '<p>Dr. Marco Santini spent fifteen years studying these "Blue Zones" and discovered that longevity is not about deprivation or extreme discipline. It is about integration — weaving healthy habits so seamlessly into daily life that they become invisible.</p>',
-      '<ul class="story-bullets"><li><strong>The 80% Rule:</strong> Okinawans stop eating when they are 80% full. This simple practice, called "hara hachi bu," naturally limits calorie intake without counting or restricting.</li><li><strong>Natural Movement:</strong> None of these populations go to the gym. Instead, they walk everywhere, tend gardens, and live in environments that make movement unavoidable.</li><li><strong>Purpose:</strong> Every Blue Zone culture has a concept of life purpose — "ikigai" in Okinawa, "plan de vida" in Costa Rica. Having a reason to wake up in the morning is literally life-extending.</li><li><strong>Connection:</strong> Loneliness is as deadly as smoking. In Blue Zones, people stay deeply connected to family, friends, and community throughout their lives.</li></ul>',
-      '<p>The most striking finding: none of these people were trying to live long. They were simply living well, and longevity was a byproduct. As one Sardinian centenarian told Dr. Santini: "I did not add years to my life. I added life to my years."</p>'
-    ]
+    levels: {
+      kids: {
+        headline: 'The Happy Centenarian Garden',
+        teaser: 'In a beautiful village, grandpas and grandmas live to be 100 years old! They share their secrets of eating plants and playing together.',
+        source: 'Health Kids',
+        body: [
+          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1543257580-7269da773bf5?w=600&q=80" alt="Fresh Vegetables" class="story-visual-img"/></div>',
+          '<p class="story-lead">In a beautiful village near the sea, grandpas and grandmas live to be super old, healthy, and happy. They can run, garden, and play even at 100 years old!</p>',
+          '<p>Scientists visited them and found out their secrets. First, they eat lots of fresh green vegetables and sweet fruits. Second, they walk in their gardens every single day. Third, they spend lots of time playing games with their families and friends.</p>',
+          '<p>They don\'t run on boring treadmills; they just live active, happy lives together! A kind grandma said: "We don\'t try to live long; we just try to live happy."</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">Eating fresh vegetables, running around outside, and playing with your friends are the absolute best secrets to staying strong and happy!</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'The Blue Zone Secret — Secrets of the Longest-Lived People',
+        teaser: 'Researchers spent decades studying communities where people routinely live past 100. The secret is simpler than anyone imagined.',
+        source: 'Health & Wellness',
+        body: [
+          '<p class="story-lead">In five pockets around the world — from Okinawa, Japan, to Sardinia, Italy — people live extraordinarily long, healthy lives. They do not follow fad diets; their longevity is woven into daily life.</p>',
+          '<p>Dr. Marco Santini spent fifteen years studying these "Blue Zones" and discovered that their health is a natural byproduct of their lifestyle.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>The 80% Rule:</strong> Okinawans stop eating when they are 80% full, naturally limiting excess caloric intake.</li>',
+          '  <li><strong>Natural Movement:</strong> Residents do not go to gyms. Instead, they walk to the market, tend gardens, and climb hills.</li>',
+          '  <li><strong>Purpose & Connection:</strong> Strong family bonds and a clear reason to wake up in the morning reduce stress and support mental health.</li>',
+          '</ul>',
+          '<p>The most striking finding: none of these people were trying to live long. Longevity was simply the natural result of living well in a supportive community.</p>'
+        ]
+      },
+      expert: {
+        headline: 'Biogerontology of Blue Zones: Epigenetic and Social Determinants',
+        teaser: 'A comprehensive scientific review of telomere maintenance, dietary restrictions, and community support in long-lived populations.',
+        source: 'Biogerontology Journal',
+        body: [
+          '<p class="story-lead">The phenotypic longevity observed in Blue Zones (e.g., Sardinia, Nicoya, Okinawa) provides empirical proof of the impact of epigenetics and social infrastructure on healthspan.</p>',
+          '<p>Dr. Santini\'s work indicates that the suppression of age-related cardiovascular and cognitive diseases is not purely genetic, but rather modulated by persistent environmental factors.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Caloric Restriction (CR):</strong> The practice of "hara hachi bu" down-regulates the mTOR pathway, promoting cellular autophagy and reducing metabolic stress.</li>',
+          '  <li><strong>Active Transport:</strong> Continuous low-intensity physical activity maintains cardiorespiratory fitness without inducing systemic inflammatory responses.</li>',
+          '  <li><strong>Social Buffering:</strong> Robust social integration reduces chronic cortisol levels, protecting telomere length from degradation.</li>',
+          '</ul>',
+          '<p>In conclusion, longevity is systemic. Interventions targeting individual health should prioritize modifying structural environments rather than relying on pharmacological solutions.</p>'
+        ]
+      }
+    }
   },
   {
-    headline: 'Running from Darkness — How Exercise Saved Me from Depression',
+    headline: 'Running from Darkness — Grief Recovery Through Movement',
     teaser: 'After losing her brother to suicide, a woman discovers that putting one foot in front of the other is the most powerful medicine.',
     source: 'Health & Wellness',
     publishedAt: '2026-05-24T19:00:00Z',
-    body: [
-      '<p class="story-lead">When her younger brother Alex took his own life at twenty-six, Rebecca\'s world collapsed. For months, she barely left her apartment. She stopped answering calls, stopped eating properly, stopped caring about anything. The darkness was so complete she could not imagine light again.</p>',
-      '<p>Then one morning, almost on automatic pilot, she put on an old pair of running shoes and walked to the end of her street. The next day, she made it two blocks. The next, four.</p>',
-      '<ul class="story-bullets"><li>It took eight months before she could run a full kilometre without stopping. But by then, she did not want to stop.</li><li>Running became her therapy — the rhythmic pounding of her feet on pavement a meditation that quieted the noise in her head.</li><li>She joined a running group and discovered that every person there was running from something — grief, anxiety, addiction, heartbreak. They were running toward healing.</li></ul>',
-      '<p>Three years later, Rebecca completed her first marathon. She crossed the finish line wearing Alex\'s favourite band T-shirt, and when they placed the medal around her neck, she finally felt something she thought she had lost forever: joy. "I found out that movement is the antidote to despair," she says. "As long as I am moving forward, I am winning."</p>'
-    ]
+    levels: {
+      kids: {
+        headline: 'Rebecca\'s Bright Running Shoes',
+        teaser: 'Rebecca gets active to help her heart feel happy again after a very sad loss, discovering that movement brings back the sunshine.',
+        source: 'Health Kids',
+        body: [
+          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=600&q=80" alt="Running Shoes" class="story-visual-img"/></div>',
+          '<p class="story-lead">Rebecca felt very sad and lonely. Her heart was heavy, and she didn\'t want to play or go outside. She felt like a dark cloud was following her around.</p>',
+          '<p>One morning, she put on her bright red running shoes and took a small walk to the end of the street. The next day, she jogged a little bit farther. With every step, she felt the warm sunshine on her face and the fresh air in her lungs.</p>',
+          '<p>Rebecca started running with a group of friends. She found out that moving her body helped wash away the sad feelings. She even ran a long race, waving to her family with a big smile!</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">When you feel sad or scared, taking a small walk or running outside can help clear your mind and bring back your happy smiles!</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'Running from Darkness — Grief Recovery Through Movement',
+        teaser: 'After losing her brother, a woman discovers that putting one foot in front of the other is the most powerful medicine.',
+        source: 'Health & Wellness',
+        body: [
+          '<p class="story-lead">When her younger brother Alex passed away, Rebecca\'s world collapsed. For months, she struggled with deep grief, barely leaving her apartment.</p>',
+          '<p>One morning, almost on autopilot, she put on an old pair of running shoes and walked to the end of her street. The next day, she made it two blocks. Soon, she was running.</p>',
+          '<ul class="story-bullets">',
+          '  <li>Running became her therapy — the rhythmic movement serving as a meditation that quieted her mind.</li>',
+          '  <li>She joined a local running group and discovered others using movement to heal from their own struggles.</li>',
+          '  <li>After three years of training, Rebecca completed her first marathon in memory of her brother.</li>',
+          '</ul>',
+          '<p>"I found out that movement is the antidote to despair," she says. "As long as I am moving forward, I am reclaiming my life."</p>'
+        ]
+      },
+      expert: {
+        headline: 'Neurobiology of Exercise-Induced Trauma Recovery',
+        teaser: 'An investigation into running-induced neurogenesis, BDNF regulation, and somatic processing of acute grief and trauma.',
+        source: 'Psychiatric Neuroscience Journal',
+        body: [
+          '<p class="story-lead">Rebecca\'s recovery from severe grief-induced depression highlights the role of somatic movement in treating psychological trauma.</p>',
+          '<p>Aerobic exercise acts directly on the central nervous system, stimulating neurogenesis in the hippocampus and reversing the structural damage caused by sustained stress and cortisol exposure.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>BDNF Expression:</strong> High-intensity aerobic activity raises Brain-Derived Neurotrophic Factor levels, supporting cognitive health.</li>',
+          '  <li><strong>Endocannabinoid Release:</strong> The "runner\'s high" is primarily driven by anandamide, which binds to CB1 receptors to alleviate anxiety.</li>',
+          '  <li><strong>Somatic Processing:</strong> Rhythmic movement helps release stored muscle tension associated with traumatic stress.</li>',
+          '</ul>',
+          '<p>These insights highlight why physical exercise should be integrated alongside talk therapy in comprehensive mental health and trauma recovery protocols.</p>'
+        ]
+      }
+    }
   },
   {
     headline: 'The Microbiome Revolution — Your Gut is Your Second Brain',
     teaser: 'Groundbreaking research reveals that the trillions of bacteria living in your digestive system control more than just digestion.',
     source: 'Health & Wellness',
     publishedAt: '2026-05-22T13:45:00Z',
-    body: [
-      '<p class="story-lead">For decades, scientists viewed gut bacteria as simple digestive helpers. But new research has revealed something astonishing: your gut microbiome directly influences your mood, immune system, brain function, and even your personality. Some researchers now call it the "second brain."</p>',
-      '<p>Dr. Amara Osei, a microbiologist at Cambridge, has been at the forefront of this revolution. Her team\'s research has uncovered connections that sound like science fiction but are increasingly backed by rigorous data.</p>',
-      '<ul class="story-bullets"><li><strong>Mood Regulation:</strong> Certain gut bacteria produce up to 90% of the body\'s serotonin — the "happiness chemical." An imbalanced microbiome can literally cause depression.</li><li><strong>Immune Function:</strong> 70% of the immune system resides in the gut. A healthy microbiome trains immune cells to distinguish friend from foe.</li><li><strong>Brain Health:</strong> The gut-brain axis is a direct communication highway. Gut bacteria produce neurotransmitters that affect memory, focus, and even decision-making.</li><li><strong>Practical Steps:</strong> A diverse diet rich in fibre, fermented foods, and polyphenols can dramatically improve microbiome health in as little as two weeks.</li></ul>',
-      '<p>"The implications are enormous," Dr. Osei explains. "We are not just what we eat — we are what our microbes eat. The future of medicine may lie not in treating symptoms but in cultivating the right bacterial ecosystem within each of us."</p>'
-    ]
-  },
-  {
-    headline: 'The Sleep Cure — Why Rest is the Ultimate Performance Enhancer',
-    teaser: 'Elite athletes and Fortune 500 CEOs share one common habit: they treat sleep as a non-negotiable pillar of success.',
-    source: 'Health & Wellness',
-    publishedAt: '2026-05-20T06:15:00Z',
-    body: [
-      '<p class="story-lead">In a culture that glorifies hustle and celebrates exhaustion, sleep has become a casualty of ambition. But the science is undeniable: sleep is the single most powerful performance-enhancing, health-promoting, and longevity-extending activity available — and it is completely free.</p>',
-      '<p>LeBron James sleeps twelve hours a day during the season. Jeff Bezos insists on eight hours. Roger Federer reportedly sleeps eleven to twelve hours. These are not lazy people — they are people who understand that sleep is when the body repairs, the brain consolidates, and the spirit restores.</p>',
-      '<ul class="story-bullets"><li><strong>Cognitive Function:</strong> One night of poor sleep reduces reaction time by 300% and impairs decision-making to the level of being legally intoxicated.</li><li><strong>Emotional Resilience:</strong> Sleep deprivation amplifies the amygdala\'s response to negative stimuli by 60%, making everything feel worse than it is.</li><li><strong>Physical Recovery:</strong> Growth hormone, which repairs muscle tissue and burns fat, is released primarily during deep sleep.</li><li><strong>The Protocol:</strong> Consistent wake-up times, zero screens one hour before bed, a cool dark room, and a wind-down ritual are the evidence-based pillars of sleep hygiene.</li></ul>',
-      '<p>"We have been sold a lie that success requires sacrifice, and that sleep is the first thing to go," says sleep scientist Dr. Matthew Chang. "The truth is exactly the opposite. The people performing at the highest levels in every field are the ones who protect their sleep like their lives depend on it — because they do."</p>'
-    ]
+    levels: {
+      kids: {
+        headline: 'The Tiny Helpers inside Your Tummy',
+        teaser: 'Did you know you have millions of tiny friendly helpers inside your tummy? Feed them apples and broccoli to keep them happy!',
+        source: 'Health Kids',
+        body: [
+          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1610970881699-44a5587caaec?w=600&q=80" alt="Fresh Fruit" class="story-visual-img"/></div>',
+          '<p class="story-lead">Inside your tummy lives a giant family of tiny, invisible helpers! They are so small you can\'t see them, but they work hard every day to keep you strong.</p>',
+          '<p>These tiny helpers love healthy foods like sweet apples, green broccoli, and yogurt. When you eat healthy food, the helpers jump for joy and send happy messages to your brain, making you feel cheerful and energetic!</p>',
+          '<p>But if you eat too much candy, the helpers get sleepy and sad. So, let\'s feed our tummy helpers wonderful fruits and vegetables to keep them whistling!</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">Feeding your body healthy foods keeps the tiny helpers in your tummy happy, which makes your whole body feel strong and cheerful!</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'The Microbiome Revolution — Your Gut is Your Second Brain',
+        teaser: 'Groundbreaking research reveals that the trillions of bacteria living in your digestive system control more than just digestion.',
+        source: 'Health & Wellness',
+        body: [
+          '<p class="story-lead">For decades, scientists viewed gut bacteria as simple digestive helpers. But new research reveals they directly influence our mood, immune system, and brain health.</p>',
+          '<p>Dr. Amara Osei has been exploring the gut-brain axis, uncovering connections that are transforming modern medicine.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Mood Regulation:</strong> Gut bacteria produce up to 90% of the body\'s serotonin, the chemical that makes us feel happy.</li>',
+          '  <li><strong>Immune Support:</strong> Nearly 70% of our immune system lives in our gut, trained by bacteria to fight off illnesses.</li>',
+          '  <li><strong>Practical Steps:</strong> Eating fibre, fermented foods (like yogurt), and diverse plants can improve gut health in just two weeks.</li>',
+          '</ul>',
+          '<p>"We are not just what we eat," Dr. Osei explains. "We are what our microbes eat. Cultivating a healthy bacterial ecosystem is essential for overall well-being."</p>'
+        ]
+      },
+      expert: {
+        headline: 'The Enteric Nervous System and Gut-Brain Axis Signaling',
+        teaser: 'A technical molecular analysis of vagus nerve communication, microbial metabolite diversity, and systemic inflammation.',
+        source: 'Gastroenterology Journal',
+        body: [
+          '<p class="story-lead">The bidirectional communication network known as the gut-brain axis relies on neural, endocrine, and immune signaling pathways to maintain systemic balance.</p>',
+          '<p>Dr. Osei\'s research shows that the enteric nervous system (ENS) communicates directly with the central nervous system via the vagus nerve, modulated by microbial metabolites.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Short-Chain Fatty Acids (SCFAs):</strong> Fermented dietary fiber yields acetate, propionate, and butyrate, which maintain blood-brain barrier integrity.</li>',
+          '  <li><strong>Neurotransmitter Synthesis:</strong> Gut microbes modulate precursors for GABA and serotonin, directly influencing neurochemical states.</li>',
+          '  <li><strong>Pro-inflammatory Cytokines:</strong> Dysbiosis increases intestinal permeability, allowing toxins into the bloodstream and triggering systemic neuroinflammation.</li>',
+          '</ul>',
+          '<p>These findings suggest that clinical psychiatric protocols should incorporate targeted dietary interventions and probiotics to support brain health via the gut microbiome.</p>'
+        ]
+      }
+    }
   }
 ];
 
+// 4. COMEDY STORIES
 STORY_DATA.comedy = [
   {
-    headline: 'The Accidental Billionaire — A Satirical Guide to Failing Upwards',
+    headline: 'The Accidental Billionaire — A Satirical Pitch Guide',
     teaser: 'Mistaken identity, a malfunctioning coffee machine, and one very confused venture capitalist collide in this tale of accidental success.',
     source: 'Comedy Central',
     publishedAt: '2026-05-27T10:00:00Z',
-    body: [
-      '<p class="story-lead">Tom was not supposed to be in the pitch meeting. He was supposed to be fixing the building\'s coffee machine on the third floor. But a misread room number, a borrowed blazer from the lost-and-found, and an unfortunately timed PowerPoint presentation about cat memes propelled him into the most surreal forty-eight hours of his life.</p>',
-      '<p>When he walked into Conference Room A, twelve venture capitalists turned to look at him expectantly. "You must be the AI guy," one of them said. Tom, holding a wrench and a bag of coffee beans, nodded weakly.</p>',
-      '<ul class="story-bullets"><li>Tom improvised a pitch based entirely on things he had overheard in the break room, using phrases like "synergistic neural blockchain" and "disruptive cat-based engagement protocols."</li><li>The investors, terrified of appearing out of touch, nodded vigorously and asked if they could lead the Series A round.</li><li>By Friday, Tom had $4.7 million in funding, a company he named "SynerCat," and absolutely no idea what the company actually did.</li></ul>',
-      '<p>Six months later, SynerCat was acquired by a major tech conglomerate for $2.3 billion. Tom, now wealthy beyond comprehension, still has the wrench. He keeps it mounted on his office wall with a plaque that reads: "The best ventures start with a broken coffee machine."</p>'
-    ]
+    levels: {
+      kids: {
+        headline: 'Tommy\'s Magic Toy Wrench',
+        teaser: 'Tommy goes to fix a broken kitchen machine but accidentally invents a silly game about cat pictures that makes everyone laugh!',
+        source: 'Comedy Kids',
+        body: [
+          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=600&q=80" alt="Happy Cat" class="story-visual-img"/></div>',
+          '<p class="story-lead">Tommy was a friendly helper who fixed broken toy machines. One day, he went to a big office building carrying a funny wrench and some cat pictures.</p>',
+          '<p>He walked into the wrong room where a group of grown-ups was having a serious meeting. They looked at Tommy\'s funny wrench and asked, "Are you here to show us a new game?"</p>',
+          '<p>Tommy smiled and showed them his pictures of funny cats wearing hats. The grown-ups laughed and loved the cats so much they gave Tommy a prize! Tommy was happy he made everyone smile.</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">Sometimes, making a silly mistake can lead to a wonderful surprise! Don\'t be afraid when things go a bit wrong; just keep smiling!</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'The Accidental Billionaire — A Satirical Pitch Guide',
+        teaser: 'Mistaken identity, a malfunctioning coffee machine, and one very confused venture capitalist collide in this tale of accidental success.',
+        source: 'Comedy Central',
+        body: [
+          '<p class="story-lead">Tom was not supposed to be in the pitch meeting. He was a technician, sent to fix the building\'s coffee machine. But a misread room number put him in front of twelve venture capitalists.</p>',
+          '<p>"You must be the AI startup guy," one investor said. Tom, holding a wrench and a bag of coffee beans, nodded nervously.</p>',
+          '<ul class="story-bullets">',
+          '  <li>Tom improvised a pitch using phrases he had heard in the break room, like "synergistic neural networks" and "disruptive engagement."</li>',
+          '  <li>The investors, eager to back the next big thing, nodded and immediately offered to lead the funding round.</li>',
+          '  <li>Within a week, Tom had $4.7 million in backing for a company he named "SynerCat," with no idea what it actually did.</li>',
+          '</ul>',
+          '<p>Six months later, SynerCat was acquired by a tech giant for a fortune. Tom still keeps his wrench in his office with a sign: "The best businesses start with a broken coffee machine."</p>'
+        ]
+      },
+      expert: {
+        headline: 'Market Irrationability and Tech Valuation Inflation: The SynerCat Case',
+        teaser: 'A sharp satirical critique of venture capital funding bubbles, speculative pricing, and terminology-driven investing.',
+        source: 'Financial Satire Gazette',
+        body: [
+          '<p class="story-lead">The rise of Tom\'s "SynerCat" provides a case study in market irrationality, illustrating how buzzwords can bypass due diligence in venture capital.</p>',
+          '<p>The investors\' reaction highlights "FOMO" (fear of missing out), where investment decisions are driven by the fear of being left behind rather than objective financial metrics.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Terminology-Driven Valuations:</strong> Investors valued the company based on buzzwords like "neural networks," showing a lack of technical understanding.</li>',
+          '  <li><strong>Exit Velocity:</strong> The acquisition by a larger conglomerate showcases how speculative assets are passed along in high-valuation bubbles.</li>',
+          '</ul>',
+          '<p>This case demonstrates that in speculative markets, the appearance of innovation can sometimes attract more capital than actual functional utility, raising questions about modern valuation standards.</p>'
+        ]
+      }
+    }
   },
   {
-    headline: 'My Neighbour is Definitely a Spy (Or Just Very Weird)',
+    headline: 'My Neighbour is a Spy (Or Just Very Eccentric)',
     teaser: 'An amateur detective chronicles the suspicious behaviour of the new tenant in apartment 4B, with wildly incorrect conclusions.',
     source: 'Comedy Central',
     publishedAt: '2026-05-25T15:30:00Z',
-    body: [
-      '<p class="story-lead">When Mr. Henderson moved into apartment 4B, Mrs. Kapoor from 4A immediately knew something was off. He received packages at 3 AM. He spoke in hushed tones on the balcony. He owned seventeen identical grey suits. And once — she was certain of this — she saw him communicating with a pigeon.</p>',
-      '<p>Mrs. Kapoor, a retired schoolteacher with too much time and an overactive imagination, began keeping a detailed log. Her observations grew increasingly elaborate.</p>',
-      '<ul class="story-bullets"><li>Observation #14: "Subject received a pizza delivery but tipped the driver with foreign currency. Clearly an international operative." (It was Canadian quarters.)</li><li>Observation #27: "Subject was seen staring at a wall for forty-five minutes. Probably transmitting data through a neural implant." (He was meditating.)</li><li>Observation #38: "Subject\'s laundry includes an unusual number of grey socks. No civilian owns that many matching socks." (He bought them in bulk online.)</li></ul>',
-      '<p>The truth, when it finally emerged, was far more mundane and far more hilarious: Mr. Henderson was an insomniac accountant who ordered late-night gadgets, had a bad habit of talking to himself, and genuinely loved pigeons. Mrs. Kapoor now brings him tea every Tuesday, and they both laugh about the time she almost called Interpol over a misdelivered Amazon package.</p>'
-    ]
-  },
-  {
-    headline: 'The World\'s Worst Cooking Show — A Culinary Disaster in Three Courses',
-    teaser: 'When a tech blogger decides to launch a live cooking show with zero kitchen experience, the results are explosively entertaining.',
-    source: 'Comedy Central',
-    publishedAt: '2026-05-23T12:45:00Z',
-    body: [
-      '<p class="story-lead">"How hard can cooking be?" Those were the famous last words of Darren Kim, a tech blogger with 2.3 million subscribers who decided to branch out into culinary content. The result was "Darren Cooks," a livestreamed cooking show that would go down in internet history — mostly for the wrong reasons.</p>',
-      '<p>Episode one was titled "Simple Pasta." It ended with a small kitchen fire, a melted spatula, and pasta that was somehow both burnt and raw simultaneously.</p>',
-      '<ul class="story-bullets"><li><strong>Episode 2 — "Easy Omelette":</strong> Darren used a metal whisk in a non-stick pan, created a substance that a viewer described as "scrambled regret," and accidentally set off the smoke alarm, which triggered a building evacuation.</li><li><strong>Episode 3 — "Homemade Bread":</strong> The yeast did not activate. The dough did not rise. The final product was described by a professional baker in the comments as "a brick with ambition."</li><li><strong>Episode 4 — "Sushi for Beginners":</strong> The health department was not called, but they should have been. The rice was crunchy. The "fish" was questionable. The rolling mat caught fire somehow.</li></ul>',
-      '<p>Surprisingly, Darren Cooks became a massive hit — not for the food, but for the comedy. Viewers tuned in not to learn cooking, but to watch things go wrong in increasingly creative ways. Today, the show has 8 million subscribers, and Darren has finally learned to make toast without supervision. Mostly.</p>'
-    ]
-  },
-  {
-    headline: 'The Conference Call That Never Ended — A Corporate Fable',
-    teaser: 'What happens when a routine Zoom meeting glitches and traps twelve colleagues in a call that nobody can leave?',
-    source: 'Comedy Central',
-    publishedAt: '2026-05-21T09:00:00Z',
-    body: [
-      '<p class="story-lead">It was supposed to be a fifteen-minute standup. But when the "End Meeting for All" button mysteriously greyed out, twelve employees of Meridian Corp found themselves trapped in what would become known as The Eternal Call.</p>',
-      '<p>At first, everyone laughed. Then they tried logging out and back in. Then they tried restarting their computers. Then the panic set in. The call continued. And continued. And continued.</p>',
-      '<ul class="story-bullets"><li><strong>Hour 2:</strong> Someone ordered pizza to their desk via the call. The pizza arrived, sparking a heated debate about pineapple as a topping that fractured the team into two irreconcilable factions.</li><li><strong>Hour 6:</strong> A junior developer discovered she could share her screen and started playing episodes of a nature documentary. By hour eight, the entire team was emotionally invested in the migration patterns of Arctic terns.</li><li><strong>Hour 14:</strong> Greg from accounting, who had been on mute the entire time, unmuted to reveal he had been quietly working on his novel and was now on chapter seven.</li></ul>',
-      '<p>The "bug" was eventually traced to a prank by the IT department, who had been watching from a separate call the entire time and were now in danger of being fired. But something unexpected happened: the forced togetherness had made the team more connected than any team-building exercise ever had. Management decided to make "The Eternal Call" a monthly event. Attendance is, surprisingly, near-perfect.</p>'
-    ]
-  },
-  {
-    headline: 'How I Accidentally Became a Local Legend by Returning a Shopping Cart',
-    teaser: 'One small act of civic decency spirals into absurd fame in this modern parable about small-town life and social media.',
-    source: 'Comedy Central',
-    publishedAt: '2026-05-19T14:20:00Z',
-    body: [
-      '<p class="story-lead">All Kevin did was return a shopping cart. It was a windy Tuesday afternoon, and he had watched someone abandon their cart in the middle of the parking lot, where it was slowly rolling toward a very expensive-looking BMW. He jogged over, caught the cart, and pushed it to the corral. That was it. That was the entire action.</p>',
-      '<p>Unknown to Kevin, a local influencer had filmed the entire thing and posted it with the caption: "There are still heroes among us." The video went viral in their town of 12,000 people.</p>',
-      '<ul class="story-bullets"><li>By Wednesday, Kevin was recognized at the gas station. "Are you the Cart Guy?" the attendant asked, offering him a free coffee.</li><li>By Thursday, the local newspaper ran a front-page story: "Anonymous Cart Hero Restores Faith in Humanity." Kevin had not even been anonymous — he just had not expected anyone to care.</li><li>By Friday, someone had started a petition to name the town\'s new park bench after him. The petition gathered 800 signatures. The bench now reads: "In honour of the Cart Guy, who did what we all should do."</li></ul>',
-      '<p>Kevin is now the town\'s reluctant mascot of civic virtue. He has accepted his role with quiet bewilderment. "I literally just pushed a cart," he tells anyone who asks. "The bar for heroism has apparently been lowered significantly." But every Tuesday, without fail, he can be found in the grocery store parking lot — returning carts, one at a time, slightly embarrassed by his own legend.</p>'
-    ]
+    levels: {
+      kids: {
+        headline: 'The Secret Agent Next Door',
+        teaser: 'Mrs. Kapoor thinks her new neighbor is a secret agent who talks to birds, but finds out he is just a friendly accountant!',
+        source: 'Comedy Kids',
+        body: [
+          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80" alt="Binoculars" class="story-visual-img"/></div>',
+          '<p class="story-lead">Mrs. Kapoor loved looking through her window. One day, a new neighbor named Mr. Henderson moved in. He wore identical gray socks and talked to pigeons!</p>',
+          '<p>"Aha!" whispered Mrs. Kapoor. "He must be a secret agent using pigeons to send mystery letters!" She watched him carefully, writing down everything he did in a little blue notebook.</p>',
+          '<p>One afternoon, they finally spoke. Mr. Henderson laughed and explained he was just a quiet accountant who loved feeding the birds. Mrs. Kapoor laughed too, and they became great friends who enjoyed drinking tea together.</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">Don\'t make quick assumptions about people just because they do things differently. Get to know them first — they might become great friends!</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'My Neighbour is a Spy (Or Just Very Eccentric)',
+        teaser: 'An amateur detective chronicles the suspicious behaviour of the new tenant in apartment 4B, with wildly incorrect conclusions.',
+        source: 'Comedy Central',
+        body: [
+          '<p class="story-lead">When Mr. Henderson moved into apartment 4B, Mrs. Kapoor next door was convinced something was off. He received packages late at night and owned seventeen identical gray suits.</p>',
+          '<p>Mrs. Kapoor, a retired teacher with too much free time, began keeping a detailed log of his "suspicious" activities.</p>',
+          '<ul class="story-bullets">',
+          '  <li>Observation #14: Mr. Henderson tipped the delivery person in Canadian quarters. Mrs. Kapoor wrote: "International operative using foreign funds."</li>',
+          '  <li>Observation #27: He stared at a wall silently. Mrs. Kapoor wrote: "Receiving transmissions via neural implant."</li>',
+          '  <li>Observation #38: He spoke quietly to pigeons. Mrs. Kapoor wrote: "Using bird networks to pass messages."</li>',
+          '</ul>',
+          '<p>The truth was simpler: Mr. Henderson was a quiet accountant with mild insomnia who bought matching socks in bulk. Today, Mrs. Kapoor brings him cookies, and they laugh about her detective logs.</p>'
+        ]
+      },
+      expert: {
+        headline: 'Cognitive Bias & Confirmation Drift: The Kapoor Case Study',
+        teaser: 'An analysis of how isolated observations can be woven into a complex conspiracy theory due to cognitive confirmation bias.',
+        source: 'Social Psychology Journal',
+        body: [
+          '<p class="story-lead">Mrs. Kapoor\'s investigation of Mr. Henderson is a classic example of confirmation bias, where neutral observations are interpreted to support an existing belief.</p>',
+          '<p>Once she formed the hypothesis that he was a spy, her mind reframed normal behaviors—like buying socks in bulk or having insomnia—as evidence of espionage.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Apophenia:</strong> Finding meaningful patterns in random, unrelated events (like connecting pigeons with espionage).</li>',
+          '  <li><strong>Resolution via Integration:</strong> Direct communication corrected her bias, showing that social interaction is the best remedy for isolation-induced suspicion.</li>',
+          '</ul>',
+          '<p>This case demonstrates that direct, friendly communication is the most effective way to build trust and clear up misunderstandings in close-knit communities.</p>'
+        ]
+      }
+    }
   }
 ];
 
+// 5. KIDS STORIES
 STORY_DATA.kids = [
   {
     headline: 'Luna and the Star Garden — A Bedtime Adventure',
     teaser: 'When a little girl discovers she can plant stars, she embarks on a magical journey to light up the darkest corners of the world.',
     source: 'Kids Corner',
     publishedAt: '2026-05-26T19:00:00Z',
-    body: [
-      '<p class="story-lead">Every night before bed, Luna would look out her window and talk to the stars. "Why do some places have so many stars and others have none?" she asked her grandmother one evening. Her grandmother smiled and handed her a tiny silver seed. "Because no one has planted them there yet," she whispered.</p>',
-      '<p>That night, Luna pressed the seed into the soil of her windowsill planter. By morning, a shimmering stalk had grown, and at its tip, a single star pulsed with gentle light. When Luna touched it, the star detached and floated into the sky, settling over the neighbour\'s house, where a little boy had been afraid of the dark.</p>',
-      '<ul class="story-bullets"><li>Luna planted more seeds. Each one grew a star of a different colour — blue for calm, gold for courage, pink for kindness.</li><li>She sent stars to a hospital, where sick children smiled for the first time in weeks. She sent one to the old library, where books long forgotten began to glow with the stories inside them.</li><li>She even sent a star to the deepest part of the ocean, where a lonely whale sang a song of thanks that echoed across the seas.</li></ul>',
-      '<p>Soon, Luna\'s stars were everywhere, and the world was a little brighter, a little kinder, a little braver. And every night, she would sit by her window, watching her garden of stars twinkle back at her, knowing that a little light, planted with love, could reach even the darkest corners.</p>'
-    ]
+    levels: {
+      kids: {
+        headline: 'Luna and the Star Garden',
+        teaser: 'Luna plants a magic star seed and watches it grow, helping a little boy who was afraid of the dark feel safe and happy.',
+        source: 'Kids Corner',
+        body: [
+          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=600&q=80" alt="Luna Star Garden" class="story-visual-img"/></div>',
+          '<p class="story-lead">Every night before bed, Luna would look out her window and wave to the twinkling stars. One evening, her grandmother gave her a tiny, shiny silver seed. "Plant it with love," she whispered.</p>',
+          '<p>Luna tucked the seed into her flowerpot. The next morning, a sparkling vine had grown, with a glowing blue star at the top! Luna touched it, and the star floated gently into the sky, stopping over her friend Leo\'s house, who was afraid of the dark.</p>',
+          '<p>Luna planted more seeds and grew stars in every color — yellow for happy dreams, pink for kindness, and green for courage. She shared them with everyone, making the whole town bright and warm!</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">Even the smallest act of kindness, like sharing a smile or a little light, can help wash away someone\'s fears and make the world a brighter place!</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'Luna and the Star Garden — A Bedtime Adventure',
+        teaser: 'When a little girl discovers she can plant stars, she embarks on a magical journey to light up the darkest corners of the world.',
+        source: 'Kids Corner',
+        body: [
+          '<p class="story-lead">Luna often wondered why some places had many stars while others were dark. Her grandmother handed her a silver seed: "Because no one has planted them there yet."</p>',
+          '<p>Luna planted the seed in her window box. By morning, a shimmering stalk had grown, and at its tip, a single star pulsed with soft, warm light.</p>',
+          '<ul class="story-bullets">',
+          '  <li>She touched the star, and it floated up, settling over a neighbor\'s house where a boy was afraid of the dark.</li>',
+          '  <li>She planted more seeds, growing stars of different colors — blue for calm, gold for courage, and pink for kindness.</li>',
+          '  <li>She sent stars to a local hospital and the old library, lighting up forgotten corners.</li>',
+          '</ul>',
+          '<p>Soon, Luna\'s stars were everywhere. She realized that a little light, shared with care, can help brighten the darkest nights.</p>'
+        ]
+      },
+      expert: {
+        headline: 'Altruistic Metaphors in Bedtime Literature: The Star Garden Paradigm',
+        teaser: 'An academic analysis of the star garden metaphor as an educational tool for teaching emotional resilience and empathy to children.',
+        source: 'Early Childhood Education Journal',
+        body: [
+          '<p class="story-lead">The narrative of Luna\'s "Star Garden" utilizes externalized light sources to help children conceptualize abstract emotional states like empathy and community care.</p>',
+          '<p>By framing altruism as "planting seeds," the story gives children a sense of agency, suggesting that their small actions can help improve their environment.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Color Psychology:</strong> The distinct colors (blue for calm, gold for courage) reflect established associations in children\'s therapy.</li>',
+          '  <li><strong>Cooperative Models:</strong> The spread of stars from Luna\'s window to public spaces highlights how prosocial behavior can inspire others.</li>',
+          '</ul>',
+          '<p>This analysis suggests that metaphor-rich stories are highly effective tools for helping children build emotional resilience and prosocial values.</p>'
+        ]
+      }
+    }
   },
   {
-    headline: 'The Dragon Who Forgot How to Fly — A Tale of Friendship',
+    headline: 'The Dragon Who Forgot How to Fly — A Dragon\'s Wings',
     teaser: 'A young dragon named Ember loses the ability to fly and must rely on an unlikely friend — a mouse with big ideas — to find his wings again.',
     source: 'Kids Corner',
     publishedAt: '2026-05-24T16:30:00Z',
-    body: [
-      '<p class="story-lead">Ember was the smallest dragon in the Valley of Wings, but he had the biggest heart. Every morning, he would launch himself from the highest cliff and soar above the treetops, his orange scales glinting in the sun. Until the morning he could not.</p>',
-      '<p>No matter how hard he flapped, no matter how high he climbed, Ember could not get off the ground. His wings felt heavy, as if someone had tied invisible weights to them. The other dragons tried to help, but nothing worked. Ember sat at the edge of the cliff, feeling like half a dragon.</p>',
-      '<ul class="story-bullets"><li>That was when he met Pip, a tiny field mouse with enormous ears and an even more enormous imagination. "Maybe you are not supposed to fly the same way," Pip squeaked. "Maybe you need a different kind of flying."</li><li>Pip had Ember try everything: running fast with his wings out (like a kite), jumping from smaller rocks first, even imagining himself as light as a feather.</li><li>None of it worked. But Ember noticed something: every time Pip made him laugh, his wings felt a tiny bit lighter. Every time he helped someone, the weight lifted a little more.</li></ul>',
-      '<p>On the seventh day, Ember realized the truth: the weights were not in his wings — they were in his heart. He had been so worried about being the best flyer that he had forgotten why he loved flying in the first place. He closed his eyes, remembered the joy of the wind beneath his wings, and leaped. This time, he soared higher than ever before — with Pip clinging to his back, cheering at the top of his tiny lungs.</p>'
-    ]
+    levels: {
+      kids: {
+        headline: 'Ember\'s Big Dragon Leap',
+        teaser: 'Ember the little dragon is afraid he can\'t fly, but a tiny mouse friend shows him that laughing and trying are the keys to the sky.',
+        source: 'Kids Corner',
+        body: [
+          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=600&q=80" alt="Ember Dragon" class="story-visual-img"/></div>',
+          '<p class="story-lead">Ember was a friendly little dragon with bright orange scales. He loved flying, but one morning, his wings felt heavy and he couldn\'t lift off the ground!</p>',
+          '<p>A tiny mouse named Pip ran up. "Don\'t worry!" squeaked Pip. "Let\'s make your heart light!" Pip told funny jokes that made Ember laugh, and he helped Ember practice small jumps on the soft grass.</p>',
+          '<p>Ember stopped worrying about being the best flyer and just had fun playing with Pip. Suddenly, with a happy leap, he soared high into the sky, carrying his little friend on his back!</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">Believing in yourself and having a supportive friend can help you overcome any challenge! Don\'t worry about being perfect; just have fun trying!</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'The Dragon Who Forgot How to Fly — A Dragon\'s Wings',
+        teaser: 'A young dragon named Ember loses the ability to fly and must rely on an unlikely friend — a mouse with big ideas — to find his wings again.',
+        source: 'Kids Corner',
+        body: [
+          '<p class="story-lead">Ember was the smallest dragon in the Valley, but he had a big heart. One morning, however, he found himself unable to fly; his wings felt heavy and weak.</p>',
+          '<p>That was when he met Pip, a tiny field mouse with big ideas. "Maybe you are worrying too much," Pip suggested. "Let\'s lift the weight from your heart."</p>',
+          '<ul class="story-bullets">',
+          '  <li>Pip made Ember laugh with funny games, helping him forget his worries.</li>',
+          '  <li>They practiced small, stress-free hops on the grass, building back his confidence.</li>',
+          '  <li>Ember realized the "weight" was not in his wings, but in his fear of not being good enough.</li>',
+          '</ul>',
+          '<p>Ember took a deep breath, focused on the joy of movement, and leaped. He soared back into the sky with Pip cheering on his back.</p>'
+        ]
+      },
+      expert: {
+        headline: 'Performance Anxiety & Play Therapy: Ember\'s Recovery Model',
+        teaser: 'An analytical review of developmental psychology, focusing on play-based stress reduction and peer support models in childhood literature.',
+        source: 'Pediatric Development Journal',
+        body: [
+          '<p class="story-lead">Ember\'s inability to fly serves as a clear metaphor for performance anxiety and self-imposed pressure, common in early childhood development.</p>',
+          '<p>Pip\'s intervention aligns with standard play therapy principles, using humor and low-stakes exercises to reduce performance anxiety and rebuild self-confidence.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Anxiety De-escalation:</strong> Shifting the focus from success to play helps lower stress levels.</li>',
+          '  <li><strong>Peer Mentorship:</strong> The tiny mouse helping the large dragon illustrates that effective support can come from unexpected sources.</li>',
+          '</ul>',
+          '<p>This analysis suggests that stories highlighting play-based coping strategies are highly effective in helping children navigate performance anxiety and stress.</p>'
+        ]
+      }
+    }
   },
   {
-    headline: 'Captain Coral and the Plastic Sea — An Underwater Mission',
-    teaser: 'A brave octopus rallies the ocean creatures to clean up their home and teach the humans a valuable lesson about caring for the sea.',
+    headline: 'Captain Coral and the Clean Sea — Teamwork Underwater',
+    teaser: 'A brave octopus rallies the ocean creatures to clean up their home and teach the humans a valuable lesson.',
     source: 'Kids Corner',
     publishedAt: '2026-05-22T11:00:00Z',
-    body: [
-      '<p class="story-lead">Deep beneath the waves, in the turquoise waters of Coral Cove, lived Captain Coral — an octopus with eight arms and an even bigger sense of responsibility. Coral Cove had always been the most beautiful reef in the ocean, with rainbow-coloured fish, dancing sea anemones, and the happiest turtles you ever saw. But lately, something was wrong.</p>',
-      '<p>Strange objects had begun appearing in the cove: crinkly clear things that wrapped around the coral, colourful rings that got stuck on turtles\' flippers, and tiny round beads that the fish kept mistaking for food. The reef was getting sick.</p>',
-      '<ul class="story-bullets"><li>Captain Coral called a Grand Shell Council, gathering every creature in the reef — from the tiniest shrimp to the grandest whale.</li><li>They devised a plan: the crabs would snip away the tangled wraps, the turtles would collect the floating rings, and the whales would use their songs to push the debris toward the shore.</li><li>But the most important part of the plan was the message in a bottle they sent to the humans above: a shell decorated with a simple drawing of a clean ocean, with the words "Help us keep our home beautiful."</li></ul>',
-      '<p>A little girl on the beach found the bottle. She showed it to her class, who showed it to their parents, who showed it to the whole town. Soon, people were cleaning the beach every weekend, and the strange objects stopped appearing in Coral Cove. Captain Coral watched from below, waving one tentacle in gratitude. "Every creature, big or small," she said, "can make a difference — even the ones with only two arms."</p>'
-    ]
-  },
-  {
-    headline: 'The Clockwork Kingdom — Where Time Stands Still',
-    teaser: 'Two siblings discover a hidden world inside an old grandfather clock, where every tick tells a story and every tock is an adventure.',
-    source: 'Kids Corner',
-    publishedAt: '2026-05-20T18:00:00Z',
-    body: [
-      '<p class="story-lead">Twins Max and Mia had always been told never to touch the antique grandfather clock in their grandmother\'s attic. "It is older than memory," Grandma would say, "and it knows things." Naturally, the first thing they did when Grandma went to visit her sister was climb the attic stairs and open the clock\'s heavy wooden door.</p>',
-      '<p>Inside, instead of pendulums and gears, they found a staircase — a spiral one, going down and down and down, glowing with a warm amber light. The twins looked at each other, grinned, and stepped inside.</p>',
-      '<ul class="story-bullets"><li>They emerged in a city made entirely of clockwork: buildings that ticked, streets that moved like conveyor belts, and lampposts that chimed on the hour.</li><li>They met the Clockmaker, a kind old man who explained that each clock in the kingdom contained one hour of one person\'s life — a precious memory, preserved forever.</li><li>Max found the clock containing his first bike ride without training wheels. Mia found hers containing the day she learned to whistle. They both found the clock containing the last time they saw their grandfather before he passed away — and in that moment, surrounded by ticking memories, they understood what their grandmother meant.</li></ul>',
-      '<p>When they climbed back out of the clock, only five minutes had passed in the real world. But Max and Mia were different now. They had seen that time was not just something that passed — it was something you could hold onto, if you remembered to cherish every moment. They never told Grandma what they had found. But every night, they made sure to create a memory worth keeping.</p>'
-    ]
-  },
-  {
-    headline: 'The Elephant Who Painted the Sky — A Colourful Fable',
-    teaser: 'In a world of grey, one elephant discovers the power of colour and creativity, teaching everyone that art is for all creatures great and small.',
-    source: 'Kids Corner',
-    publishedAt: '2026-05-18T07:45:00Z',
-    body: [
-      '<p class="story-lead">In the Land of Grey, everything was the same colour — the trees, the rivers, the clouds, even the elephants. Nobody minded, because nobody knew any different. Nobody except Elara, a young elephant who had once found a single red petal blown in from somewhere beyond the mountains. She kept it pressed between two leaves and looked at it every day, marvelling at its impossible colour.</p>',
-      '<p>One morning, Elara woke up with an idea as big as her ears: if the world was grey, she would paint it. She gathered berries, crushed flowers, and mixed mud into pots of colour — blues from blueberries, yellows from dandelions, and reds from the petals she had been saving.</p>',
-      '<ul class="story-bullets"><li>Elara started small, painting a single tree with bright green leaves. The other animals gathered, curious and cautious. "What are you doing?" they asked. "Making the world more beautiful," Elara replied.</li><li>Soon, everyone wanted to help. The birds brought feathers for brushes. The monkeys mixed new colours. The hippos painted the riverbank with swirls of purple and gold.</li><li>When the sun set that evening, the Land of Grey had transformed into the Land of Colour. And high above, painted by Elara\'s trunk stretched toward the heavens, the sky bloomed with the most beautiful sunset anyone had ever seen — orange and pink and deep, deep violet.</li></ul>',
-      '<p>From that day on, the animals never stopped painting. Every morning brought new colours, new creations, new ways to express the joy in their hearts. And Elara, the elephant who dared to dream in colour, became known as the artist who taught the world that beauty is not something you find — it is something you create.</p>'
-    ]
+    levels: {
+      kids: {
+        headline: 'Captain Coral\'s Beach Helpers',
+        teaser: 'Captain Coral the octopus invites all the sea animals to clean up the reef and sends a sweet letter to the children on the beach.',
+        source: 'Kids Corner',
+        body: [
+          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&q=80" alt="Underwater Reef" class="story-visual-img"/></div>',
+          '<p class="story-lead">Deep down in the blue water, Captain Coral the octopus was sad. Her beautiful coral reef was filled with plastic cups and bags that had floated down from the beach.</p>',
+          '<p>"Let\'s work together!" bubbled Captain Coral. The crabs snipped the plastic wraps, the turtles collected the bags, and a giant whale blew them gently toward the shore.</p>',
+          '<p>They put a picture of a clean reef inside a shiny shell and left it on the sand. A little girl found it and helped start a beach clean-up day. Soon, the water was clean and sparkling again!</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">We must all work together to keep our oceans, beaches, and parks clean and safe for the animals who live there! Every helper counts!</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'Captain Coral and the Clean Sea — Teamwork Underwater',
+        teaser: 'A brave octopus rallies the ocean creatures to clean up their home and teach the humans a valuable lesson about caring for the sea.',
+        source: 'Kids Corner',
+        body: [
+          '<p class="story-lead">Deep beneath the waves, Captain Coral the octopus loved her home, but lately, floating plastic was making the sea creatures sick.</p>',
+          '<p>She gathered the ocean creatures for a meeting, organizing a team to collect the waste and keep the reef safe.</p>',
+          '<ul class="story-bullets">',
+          '  <li>The crabs carefully snipped away plastic nets tangled in the coral.</li>',
+          '  <li>The turtles and fish collected floating waste, while the whales helped move it toward the shore.</li>',
+          '  <li>They sent a message in a bottle asking the humans on land to help keep the ocean clean.</li>',
+          '</ul>',
+          '<p>A child found the bottle and started a local clean-up group, showing that a shared effort can help protect our environment.</p>'
+        ]
+      },
+      expert: {
+        headline: 'Marine Conservation Narratives: Interactive Ecological Empathy',
+        teaser: 'A study of environmental education through storytelling, exploring how marine themes can build ecological awareness in children.',
+        source: 'Environmental Education Quarterly',
+        body: [
+          '<p class="story-lead">The narrative of Captain Coral uses character-driven storytelling to introduce children to the complex issue of marine plastic pollution.</p>',
+          '<p>By giving the sea creatures agency and showing a positive collaboration between land and sea, the story encourages active environmental stewardship.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Active Stewardship:</strong> The transition from ocean clean-up to land-based action highlights the link between human behavior and marine health.</li>',
+          '  <li><strong>Collective Agency:</strong> The collaborative effort among different species supports values of teamwork and community responsibility.</li>',
+          '</ul>',
+          '<p>This analysis suggests that stories highlighting collaborative ecological action are highly effective in building environmental awareness and empathy in young learners.</p>'
+        ]
+      }
+    }
   }
 ];
 
+// 6. EDUCATION STORIES
 STORY_DATA.education = [
   {
-    headline: 'The School That Defied Gravity — Finland\'s Education Revolution',
+    headline: 'The School of Trust — Finland\'s Education Success',
     teaser: 'How one Nordic country transformed its education system by doing the exact opposite of what everyone else was doing.',
     source: 'Education Hub',
     publishedAt: '2026-05-26T08:00:00Z',
-    body: [
-      '<p class="story-lead">In the early 1970s, Finland had a mediocre education system. By the 2000s, it was consistently ranked among the best in the world. The transformation was not the result of more testing, longer hours, or stricter discipline. It was the result of trusting teachers, eliminating competition, and putting student well-being at the centre of everything.</p>',
-      '<p>The key insight was counterintuitive: by making school less stressful, students learned more. Finnish children start formal schooling at age seven — later than almost any other country. They have the shortest school days and the least homework. And yet, they consistently outperform their global peers.</p>',
-      '<ul class="story-bullets"><li><strong>No Standardized Testing:</strong> Finland has exactly one standardized exam, at the end of high school. Teachers assess students individually using their professional judgment, not bubble sheets.</li><li><strong>Teacher Autonomy:</strong> Teaching is one of the most respected professions in Finland, competitive to enter and highly paid. Teachers design their own curricula within broad national guidelines.</li><li><strong>Play is Sacred:</strong> Finnish law mandates fifteen minutes of outdoor free play for every forty-five minutes of instruction. Rain, snow, or sunshine — the children go outside.</li><li><strong>Equity Over Excellence:</strong> There are no private schools in Finland. Every child, regardless of background, attends the same high-quality public schools. The gap between the highest and lowest performers is the smallest in the world.</li></ul>',
-      '<p>"We did not set out to be the best," a Finnish education official once said. "We set out to give every child the best possible start, regardless of their background. It turned out those were the same thing."</p>'
-    ]
+    levels: {
+      kids: {
+        headline: 'The School of Outdoor Play',
+        teaser: 'In Finland, children get to play outside in the snow every hour, showing that playing is a wonderful way to learn!',
+        source: 'Education Kids',
+        body: [
+          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&q=80" alt="Happy Kids" class="story-visual-img"/></div>',
+          '<p class="story-lead">Did you know there is a country where school has lots of playtime and very little homework? It\'s called Finland, and kids there love going to school!</p>',
+          '<p>In Finnish schools, children go outside to play in the fresh air for fifteen minutes every single hour, even when it snows! They don\'t have stressful tests. Instead, their teachers help them explore, build blocks, and read fun books.</p>',
+          '<p>Because they are happy and relaxed, these children learn quickly and do wonderfully in their studies! It shows that playing is a key part of learning.</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">Learning should be fun and relaxed! Playing outside, exploring nature, and resting your mind are just as important as studying books!</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'The School of Trust — Finland\'s Education Success',
+        teaser: 'How one Nordic country transformed its education system by doing the exact opposite of what everyone else was doing.',
+        source: 'Education Hub',
+        body: [
+          '<p class="story-lead">In the early 1970s, Finland had an average school system. Today, it consistently ranks among the most successful in the world.</p>',
+          '<p>Their secret was simple: reduce stress, eliminate constant testing, and focus on student well-being and play.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>No Standardized Testing:</strong> Students are assessed individually by their teachers without stressful exams.</li>',
+          '  <li><strong>sacred Playtime:</strong> Every 45 minutes of class is followed by 15 minutes of outdoor play, regardless of the weather.</li>',
+          '  <li><strong>Teacher Trust:</strong> Teachers are highly respected and have the freedom to design their own lessons.</li>',
+          '</ul>',
+          '<p>By prioritizing student happiness and equity, Finland has created a system where academic success is a natural result of a supportive environment.</p>'
+        ]
+      },
+      expert: {
+        headline: 'Pedagogical Autonomy and Equity: The Finnish Model in Focus',
+        teaser: 'A detailed structural analysis of pedagogical autonomy, social equity, and decentralized curricula in Finnish public education.',
+        source: 'Comparative Education Journal',
+        body: [
+          '<p class="story-lead">The success of the Finnish educational system highlights the efficacy of decoupling academic assessment from high-stakes standardized testing.</p>',
+          '<p>By prioritizing equity over performance competition, the system minimizes the impact of socioeconomic status on learning outcomes.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Pedagogical Autonomy:</strong> Highly trained teachers have the freedom to customize curricula to meet student needs.</li>',
+          '  <li><strong>Play-Based Learning:</strong> Frequent breaks support cognitive focus and reduce mental fatigue.</li>',
+          '</ul>',
+          '<p>In conclusion, the Finnish model suggests that social equity and teacher autonomy are critical factors in building a resilient, high-performing educational system.</p>'
+        ]
+      }
+    }
   },
   {
-    headline: 'The Language of the Universe — How Mathematics Reveals Hidden Patterns',
+    headline: 'Language of the Universe — Math Patterns in Nature',
     teaser: 'From the spiral of a galaxy to the arrangement of seeds in a sunflower, mathematics is the invisible thread connecting everything.',
     source: 'Education Hub',
     publishedAt: '2026-05-24T14:30:00Z',
-    body: [
-      '<p class="story-lead">Galileo described mathematics as the language in which the universe is written. Four hundred years later, his insight has only grown deeper. Mathematics is not just a tool for calculation — it is a lens through which we can see the hidden architecture of reality.</p>',
-      '<p>Professor Ravi Nair has spent his career exploring the connections between abstract mathematics and the natural world. His lectures, which regularly draw standing-room-only crowds, are not about equations — they are about beauty.</p>',
-      '<ul class="story-bullets"><li><strong>The Fibonacci Sequence in Nature:</strong> The arrangement of sunflower seeds, pinecones, and nautilus shells all follow the same mathematical pattern. It is as if nature is solving an optimization problem — packing seeds as efficiently as possible using a simple recursive rule.</li><li><strong>Fractals Everywhere:</strong> Coastlines, broccoli, lightning bolts, and blood vessels all exhibit fractal patterns — self-similar structures that repeat at every scale, from the microscopic to the cosmic.</li><li><strong>Prime Numbers and Cicadas:</strong> Certain cicada species emerge every 13 or 17 years — both prime numbers. This is not a coincidence. Prime-numbered cycles make it extremely difficult for predators to synchronize with the cicadas\' emergence.</li></ul>',
-      '<p>"The most beautiful thing about mathematics," Professor Nair tells his students, "is that it was not invented — it was discovered. The universe was speaking this language long before we learned to listen. Our job is simply to pay attention."</p>'
-    ]
-  },
-  {
-    headline: 'The Girl Who Built a Satellite — A Teenager\'s Journey to Space',
-    teaser: 'At sixteen, Aisha built a working CubeSat in her bedroom. By eighteen, she was presenting it to NASA engineers.',
-    source: 'Education Hub',
-    publishedAt: '2026-05-22T10:15:00Z',
-    body: [
-      '<p class="story-lead">Aisha grew up in a small apartment in Mumbai, sharing a room with her grandmother and a view of the night sky through a single window. When she was twelve, her science teacher showed the class a video about the International Space Station, and something clicked. "I want to build something that goes up there," she said. Her classmates laughed. Aisha did not.</p>',
-      '<p>Over the next two years, she devoured every online course, every YouTube tutorial, every textbook she could find on satellite engineering. She taught herself Python, learned circuit design, and — after a hundred failed attempts — built a working prototype of a CubeSat on her bedroom floor.</p>',
-      '<ul class="story-bullets"><li>Her satellite, named "Drishti" (Sanskrit for "vision"), was designed to monitor air quality in urban areas — a problem she saw every day in her own city.</li><li>She submitted her design to a global youth competition and won first place, earning a trip to present her work at a NASA outreach programme.</li><li>The engineers were stunned. "This is undergraduate-level work," one of them said. "She is in high school."</li></ul>',
-      '<p>Drishti is now scheduled to launch as part of a university rideshare mission. Aisha, now studying aerospace engineering on a full scholarship, has a simple message for every young person with a big dream: "Do not wait for someone to give you permission. The internet is your laboratory. The stars are your limit. Start building."</p>'
-    ]
-  },
-  {
-    headline: 'Learning to Learn — The Science of Memory and Mastery',
-    teaser: 'Cognitive science reveals that most people study incorrectly. The techniques that actually work are counterintuitive and remarkably simple.',
-    source: 'Education Hub',
-    publishedAt: '2026-05-20T16:00:00Z',
-    body: [
-      '<p class="story-lead">For decades, students have been told to study in quiet environments, focus on one subject at a time, and reread their notes until the information sticks. According to the latest cognitive science, nearly all of this advice is wrong.</p>',
-      '<p>Researchers have identified a set of evidence-based learning techniques that dramatically outperform traditional study methods. The catch: they feel harder, and that is exactly why they work.</p>',
-      '<ul class="story-bullets"><li><strong>Active Recall (Not Rereading):</strong> Rereading creates an illusion of mastery. The brain confuses familiarity with understanding. Instead, close the book and try to retrieve the information from memory. The struggle itself strengthens the neural pathway.</li><li><strong>Spaced Repetition:</strong> Cramming works for short-term recall but fails catastrophically for long-term retention. Review material at increasing intervals — one day, three days, one week, one month — to lock it into long-term memory.</li><li><strong>Interleaving (Not Blocking):</strong> Practicing one skill until perfect before moving to the next feels efficient but produces poor transfer. Mix different types of problems together. The brain learns to discriminate between problem types, not just execute routines.</li><li><strong>The Testing Effect:</strong> Tests are not just assessments — they are among the most powerful learning tools. The act of retrieving information strengthens it far more than re-studying.</li></ul>',
-      '<p>"The students who learn the most are not the ones who study the longest," explains cognitive psychologist Dr. Sarah Lin. "They are the ones who study the smartest. Learning is not about time — it is about technique. And the best techniques feel uncomfortable, because real learning always does."</p>'
-    ]
-  },
-  {
-    headline: 'The Ancient Library of Wisdom — What Timbuktu\'s Manuscripts Teach Us',
-    teaser: 'Centuries before the European Renaissance, African scholars were producing vast bodies of knowledge in mathematics, astronomy, and medicine.',
-    source: 'Education Hub',
-    publishedAt: '2026-05-18T12:30:00Z',
-    body: [
-      '<p class="story-lead">When most people think of great centres of learning, they think of Athens, Baghdad, or Oxford. Few think of Timbuktu. But from the 14th to the 16th centuries, this city on the southern edge of the Sahara was home to one of the world\'s greatest repositories of knowledge — the Sankore University and its associated libraries.</p>',
-      '<p>The manuscripts of Timbuktu, hundreds of thousands of them, covered an astonishing range of subjects: astronomy, mathematics, medicine, law, philosophy, and poetry. Written in Arabic and African languages, they represented centuries of scholarly tradition that rivalled anything happening in Europe at the time.</p>',
-      '<ul class="story-bullets"><li><strong>Medical Knowledge:</strong> Manuscripts described surgical techniques — including cataract removal — that were more advanced than their European counterparts.</li><li><strong>Astronomy:</strong> Scholars in Timbuktu calculated the movements of celestial bodies with remarkable precision, using mathematics derived from both Islamic and indigenous African traditions.</li><li><strong>Ethics and Governance:</strong> The manuscripts contain extensive writings on justice, governance, and the rights of citizens — ideas that prefigure modern democratic thought by centuries.</li><li><strong>Preservation Against All Odds:</strong> When extremists threatened to destroy the manuscripts in 2012, local families smuggled them to safety in a clandestine operation that saved over 350,000 irreplaceable documents.</li></ul>',
-      '<p>"The story of Timbuktu is not just African history," says Dr. Fatima Diallo, a manuscript preservationist. "It is human history. It reminds us that civilizations do not emerge from a single source — they rise wherever people value knowledge, wherever a child is taught to read, wherever a scholar is free to think."</p>'
-    ]
+    levels: {
+      kids: {
+        headline: 'Nature\'s Secret Math Patterns',
+        teaser: 'Sunflowers, pinecones, and seashells all use a secret number pattern to grow beautifully. Let\'s explore nature\'s code!',
+        source: 'Education Kids',
+        body: [
+          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1597848212624-a19eb35e2651?w=600&q=80" alt="Sunflower Math" class="story-visual-img"/></div>',
+          '<p class="story-lead">Did you know that sunflowers are secret math wizards? If you count the seeds in a sunflower, they grow in beautiful matching spirals!</p>',
+          '<p>Pinecones, seashells, and even giant galaxies in space all use the exact same number pattern to pack things in tightly and grow beautifully. It is like a secret code that nature uses to build the world.</p>',
+          '<p>When we study math, we are learning the language that nature uses to paint the trees and spin the clouds! It is a magical key to understanding the world.</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">Mathematics is not just about numbers on a blackboard; it is a beautiful code found in flowers, shells, and stars all around us!</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'Language of the Universe — Math Patterns in Nature',
+        teaser: 'From the spiral of a galaxy to the arrangement of seeds in a sunflower, mathematics is the invisible thread connecting everything.',
+        source: 'Education Hub',
+        body: [
+          '<p class="story-lead">Galileo wrote that the universe is written in the language of mathematics. Today, that insight is more vivid than ever.</p>',
+          '<p>Professor Ravi Nair has spent his career exploring the mathematical patterns that shape the natural world.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>The Fibonacci Sequence:</strong> Sunflower seeds and pinecones pack together using a specific mathematical ratio.</li>',
+          '  <li><strong>Fractals:</strong> Rivers, lightning bolts, and tree branches show self-repeating patterns at every scale.</li>',
+          '  <li><strong>Prime Numbers:</strong> Cicadas emerge in prime-numbered cycles (13 or 17 years) to avoid predator synchronization.</li>',
+          '</ul>',
+          '<p>These patterns show that math is not just an invented tool, but a fundamental language discovered within the structure of nature.</p>'
+        ]
+      },
+      expert: {
+        headline: 'Morphogenesis and Fibonacci Optimization in Plant Growth',
+        teaser: 'A biological and mathematical analysis of phyllotaxis, fractal geometry, and prime number cycles in natural systems.',
+        source: 'Mathematical Biology Review',
+        body: [
+          '<p class="story-lead">The occurrence of Fibonacci sequences in plant structures (phyllotaxis) represents a natural optimization for maximizing light exposure and seed packing efficiency.</p>',
+          '<p>This mathematical regularity can be explained through physical models of growth, where new leaves or seeds form at the point of lowest chemical tension.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Phyllotaxis Optimization:</strong> The golden angle (approx. 137.5 degrees) minimizes overlapping, ensuring optimal light exposure.</li>',
+          '  <li><strong>Fractal Dimensioning:</strong> Self-similar branching patterns in lungs and vascular networks optimize surface area for gas and nutrient exchange.</li>',
+          '</ul>',
+          '<p>These biological adaptations demonstrate how evolutionary pressures can drive natural systems toward elegant mathematical solutions.</p>'
+        ]
+      }
+    }
   }
 ];
 
+// 7. ANIMATION STORIES
 STORY_DATA.animation = [
   {
-    headline: 'Pixel Dreams — The Animator Who Brought Her Sketches to Life',
-    teaser: 'A self-taught animator from a small Indian village uses open-source software to create a viral short film that captures the world\'s imagination.',
+    headline: 'Pixel Dreams — The Flying Kite Animation',
+    teaser: 'A self-taught animator uses basic tools to bring her sketches of a flying elephant and its wind-swept kite to life.',
     source: 'Animation World',
     publishedAt: '2026-05-25T20:30:00Z',
-    body: [
-      '<p class="story-lead">Growing up in a village with intermittent electricity, Devi never imagined she would become an animator. She had never seen a Pixar film until she was fifteen, when a travelling cinema set up a projector in the town square and showed "Finding Nemo." She walked home that night in a daze, replaying every frame in her mind, and decided that whatever magic created those moving images — she wanted to learn it.</p>',
-      '<p>With no formal training and a second-hand laptop that crashed if she rendered more than thirty seconds of video, Devi taught herself animation using free, open-source software. She watched thousands of hours of tutorials, often buffering for hours on the village\'s unreliable connection. She drew every frame of her first short — a four-minute piece called "The Elephant\'s Kite" — by hand using a borrowed drawing tablet.</p>',
-      '<ul class="story-bullets"><li>The short film told a wordless story of a young elephant who builds a kite from fallen leaves and learns to fly — a metaphor for her own journey.</li><li>She uploaded it to YouTube, expecting a few hundred views. Within a week, it had been viewed over two million times.</li><li>Animation studios from Mumbai to Montreal reached out. Pixar invited her to their campus. A major streaming platform acquired the rights to develop "The Elephant\'s Kite" into a series.</li></ul>',
-      '<p>Devi now runs an animation workshop in her village, teaching other young people that geography and resources do not determine destiny — imagination and persistence do. "Every frame I drew was an act of faith," she says. "I could not see the final film, but I believed it was there, waiting to be discovered, one drawing at a time."</p>'
-    ]
+    levels: {
+      kids: {
+        headline: 'Devi\'s Dancing Paper Drawings',
+        teaser: 'Devi draws a little elephant on pages of paper, flips them fast, and watches her drawings dance and fly like magic!',
+        source: 'Animation Kids',
+        body: [
+          '<!-- INTERACTIVE ANIMATED PHOTO -->',
+          '<div class="anim-illustration-container">',
+          '  <svg class="anim-svg-visual" width="160" height="160" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">',
+          '    <!-- Sky Background -->',
+          '    <rect width="200" height="200" rx="10" fill="#0c1e38"/>',
+          '    <circle cx="40" cy="50" r="12" fill="rgba(255,255,255,0.06)" />',
+          '    <circle cx="160" cy="40" r="8" fill="rgba(255,255,255,0.06)" />',
+          '    <!-- Wind lines -->',
+          '    <path d="M10 80 H60 M80 120 H130 M5 160 H40" stroke="rgba(56, 189, 248, 0.2)" stroke-width="2" stroke-linecap="round"/>',
+          '    <!-- Animated Kite Group -->',
+          '    <g class="anim-wind-kite">',
+          '      <path d="M100 50 L125 75 L100 100 L75 75 Z" fill="#ef4444" stroke="#fff" stroke-width="2"/>',
+          '      <line x1="75" y1="75" x2="125" y2="75" stroke="#fff" stroke-width="1.5"/>',
+          '      <line x1="100" y1="50" x2="100" y2="100" stroke="#fff" stroke-width="1.5"/>',
+          '      <!-- Tail -->',
+          '      <path d="M100 100 Q110 120 100 140 T110 180" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" fill="none"/>',
+          '    </g>',
+          '  </svg>',
+          '</div>',
+          '<p class="story-lead">Devi lived in a small village and loved to draw. She drew pictures of a happy little elephant holding a bright red paper kite.</p>',
+          '<p>She drew the elephant on many pages of a small notebook. On each page, she drew the kite just a little bit higher. When she flipped the pages fast with her thumb — flip, flip, flip! — the elephant and the kite looked like they were really flying into the sky! It was like magic!</p>',
+          '<p>Devi shared her flipbook with the children in her village, and soon everyone was drawing their own dancing paper pictures!</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">Animation is simply drawing happy moments step by step! With a simple pencil and a little patience, you can bring any dream to life!</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'Pixel Dreams — The Flying Kite Animation',
+        teaser: 'A self-taught animator uses basic tools to bring her sketches of a flying elephant and its wind-swept kite to life.',
+        source: 'Animation World',
+        body: [
+          '<!-- INTERACTIVE ANIMATED PHOTO -->',
+          '<div class="anim-illustration-container">',
+          '  <svg class="anim-svg-visual" width="160" height="160" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">',
+          '    <rect width="200" height="200" rx="10" fill="#0c1e38"/>',
+          '    <path d="M10 80 H60 M80 120 H130" stroke="rgba(56, 189, 248, 0.2)" stroke-width="2"/>',
+          '    <g class="anim-wind-kite">',
+          '      <path d="M100 50 L125 75 L100 100 L75 75 Z" fill="#ef4444" stroke="#fff" stroke-width="2"/>',
+          '      <!-- Tail -->',
+          '      <path d="M100 100 Q110 120 100 140 T110 180" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" fill="none"/>',
+          '    </g>',
+          '  </svg>',
+          '</div>',
+          '<p class="story-lead">Growing up in a village with limited electricity, Devi taught herself animation using free, open-source software and a second-hand laptop.</p>',
+          '<p>She spent months drawing every frame of her first short film, "The Elephant\'s Kite" — a wordless story of an elephant learning to fly.</p>',
+          '<ul class="story-bullets">',
+          '  <li>She used basic digital tools to paint the rich, colorful background layers.</li>',
+          '  <li>Her animation relied on classic frame-by-frame techniques to capture natural, organic movement.</li>',
+          '  <li>She uploaded the film online, where it quickly went viral and caught the attention of major animation studios.</li>',
+          '</ul>',
+          '<p>Today, Devi runs workshops in her village, teaching other young people that creativity and dedication are the most important tools for any artist.</p>'
+        ]
+      },
+      expert: {
+        headline: 'Frame-by-Frame Digital Rendering & Kinematic Wind Dynamics',
+        teaser: 'A technical case study on frame-rate modulation, onion-skinning configurations, and wind vector rendering in open-source tools.',
+        source: 'Animation Science Quarterly',
+        body: [
+          '<!-- INTERACTIVE ANIMATED PHOTO -->',
+          '<div class="anim-illustration-container">',
+          '  <svg class="anim-svg-visual" width="160" height="160" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">',
+          '    <rect width="200" height="200" rx="10" fill="#0c1e38"/>',
+          '    <g class="anim-wind-kite">',
+          '      <path d="M100 50 L125 75 L100 100 L75 75 Z" fill="#ef4444" stroke="#fff" stroke-width="2"/>',
+          '      <path d="M100 100 Q110 120 100 140 T110 180" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" fill="none"/>',
+          '    </g>',
+          '  </svg>',
+          '</div>',
+          '<p class="story-lead">Devi\'s "The Elephant\'s Kite" showcases the effectiveness of open-source vector rendering tools in low-bandwidth environments.</p>',
+          '<p>The animation utilizes frame-rate modulation, swapping between 12 frames-per-second (on "twos") and 24 frames-per-second to optimize rendering times while preserving fluid motion.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Vector Dynamics:</strong> Utilizing keyframe interpolation to render natural wind movements on the kite tail.</li>',
+          '  <li><strong>Kinetic Timing:</strong> Balancing the heavy weight of the elephant with the light movement of the kite to create believable physical reactions.</li>',
+          '</ul>',
+          '<p>This technical case study proves that digital art platforms can enable high-quality independent production without relying on expensive, proprietary hardware.</p>'
+        ]
+      }
+    }
   },
   {
-    headline: 'Beyond the Frame — The Evolution of Animation as an Art Form',
-    teaser: 'From hand-drawn cels to AI-assisted rendering, animation has undergone a century-long transformation that mirrors the evolution of visual storytelling itself.',
+    headline: 'Beyond the Frame — Squash and Stretch Motion',
+    teaser: 'How a simple bouncing ball demonstrates the classic animation principle of Squash and Stretch.',
     source: 'Animation World',
     publishedAt: '2026-05-23T17:00:00Z',
-    body: [
-      '<p class="story-lead">In 1908, French artist Emile Cohl created "Fantasmagorie," widely considered the first fully animated film. It was 70 seconds long, composed of 700 drawings, each photographed individually. Over a century later, animators are creating entire feature films in virtual reality, using tools Cohl could never have imagined. Yet the fundamental challenge remains the same: making the inanimate feel alive.</p>',
-      '<p>The history of animation is a story of relentless innovation, driven by artists who refused to accept the limitations of their tools.</p>',
-      '<ul class="story-bullets"><li><strong>The Golden Age (1928-1960):</strong> Walt Disney\'s "Steamboat Willie" introduced synchronized sound. "Snow White" proved that animation could sustain a feature-length narrative. By the 1940s, studios were producing masterpieces at a staggering rate.</li><li><strong>The Digital Revolution (1990-2010):</strong> Pixar\'s "Toy Story" in 1995 was the first fully computer-animated feature film. It required 800,000 machine hours to render and changed the industry forever. Hand-drawn animation, once the only game in town, suddenly seemed obsolete.</li><li><strong>The Hybrid Era (2010-Present):</strong> Films like "Spider-Man: Into the Spider-Verse" proved that the best approach is neither purely traditional nor purely digital — it is a fusion. The film combined hand-drawn line work, digital painting, and 3D rendering at varying frame rates to create a visual language that felt entirely new.</li></ul>',
-      '<p>"Animation is not a genre — it is a medium," says historian Dr. Elena Vasquez. "It can do things live action cannot: visualize the abstract, bring dreams to life, and connect with audiences on a primal level that transcends language and culture. Every frame is a choice, and every choice tells a story."</p>'
-    ]
+    levels: {
+      kids: {
+        headline: 'The Magic Bouncing Ball',
+        teaser: 'Watch the bouncing ball stretch when it falls and squash when it hits the ground, learning the secret of cartoons!',
+        source: 'Animation Kids',
+        body: [
+          '<!-- INTERACTIVE ANIMATED PHOTO -->',
+          '<div class="anim-illustration-container">',
+          '  <svg class="anim-svg-visual" width="160" height="160" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">',
+          '    <rect width="200" height="200" rx="10" fill="#0c1e38"/>',
+          '    <!-- Floor line -->',
+          '    <line x1="20" y1="160" x2="180" y2="160" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>',
+          '    <!-- Bouncing Ball -->',
+          '    <circle class="anim-bounce-ball" cx="100" cy="100" r="20" fill="#10b981" stroke="#fff" stroke-width="2"/>',
+          '  </svg>',
+          '</div>',
+          '<p class="story-lead">Have you ever wondered why cartoon characters look so springy and fun? It is because animators use a trick called "Squash and Stretch!"</p>',
+          '<p>Imagine a happy rubber ball. When it falls down fast, it stretches out long like a hot dog! But when it hits the ground — BOOF! — it squashes flat like a pancake before bouncing back up into a perfect circle.</p>',
+          '<p>This simple trick makes the ball look like it has real weight and energy, making cartoons feel alive and exciting!</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">Objects change shape when they move and hit things! Paying attention to these shapes makes your drawings look alive and active!</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'Beyond the Frame — Squash and Stretch Motion',
+        teaser: 'How a simple bouncing ball demonstrates the classic animation principle of Squash and Stretch.',
+        source: 'Animation World',
+        body: [
+          '<!-- INTERACTIVE ANIMATED PHOTO -->',
+          '<div class="anim-illustration-container">',
+          '  <svg class="anim-svg-visual" width="160" height="160" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">',
+          '    <rect width="200" height="200" rx="10" fill="#0c1e38"/>',
+          '    <line x1="20" y1="160" x2="180" y2="160" stroke="#38bdf8" stroke-width="4"/>',
+          '    <circle class="anim-bounce-ball" cx="100" cy="100" r="20" fill="#10b981" stroke="#fff" stroke-width="2"/>',
+          '  </svg>',
+          '</div>',
+          '<p class="story-lead">Squash and Stretch is widely considered the most important of the twelve basic principles of classical animation.</p>',
+          '<p>When an object falls, gravity stretches it along its path of motion. Upon impact, the object squashes, absorbing the energy before releasing it on the rebound.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Volume Preservation:</strong> An object must maintain its total volume; if it gets longer, it must get thinner.</li>',
+          '  <li><strong>Weight Illusion:</strong> The amount of squash and stretch indicates the rigidity and weight of the material.</li>',
+          '</ul>',
+          '<p>By applying this principle, animators give weight, flexibility, and character to simple geometric drawings, making them feel real to the audience.</p>'
+        ]
+      },
+      expert: {
+        headline: 'Kinetic Energy Conservation & Volumetric Preservation in Animation',
+        teaser: 'A mathematical analysis of deformations, velocity vectors, and volume preservation rules in physical animation systems.',
+        source: 'Computational Animation Journal',
+        body: [
+          '<!-- INTERACTIVE ANIMATED PHOTO -->',
+          '<div class="anim-illustration-container">',
+          '  <svg class="anim-svg-visual" width="160" height="160" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">',
+          '    <rect width="200" height="200" rx="10" fill="#0c1e38"/>',
+          '    <line x1="20" y1="160" x2="180" y2="160" stroke="#38bdf8" stroke-width="4"/>',
+          '    <circle class="anim-bounce-ball" cx="100" cy="100" r="20" fill="#10b981" stroke="#fff" stroke-width="2"/>',
+          '  </svg>',
+          '</div>',
+          '<p class="story-lead">Squash and stretch serves as a key tool for illustrating momentum and kinetic energy transfer within digital and classical mediums.</p>',
+          '<p>The deformation of the sphere during acceleration represents displacement over time. Crucially, the mathematical constraint of volume preservation ($x \times y \times z = k$) must be maintained.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Viscoelastic Simulation:</strong> Modeling deformation using spring-mass systems to represent material flexibility.</li>',
+          '  <li><strong>Impact Dynamics:</strong> Deforming the geometry along the contact normal to visually emphasize the impact force.</li>',
+          '</ul>',
+          '<p>Ultimately, this principle demonstrates how stylized geometric distortion can be used to communicate complex physical forces, enhancing the realism of animated systems.</p>'
+        ]
+      }
+    }
   },
   {
-    headline: 'The Dancing Colours — A Journey into Abstract Animation',
-    teaser: 'An animator explores how colour, rhythm, and motion combine to create emotional experiences without a single word of dialogue.',
+    headline: 'The Dancing Colours — Abstract Animation Rhythm',
+    teaser: 'An artist demonstrates how color, movement, and rhythm can evoke deep feelings without a single word of dialogue.',
     source: 'Animation World',
     publishedAt: '2026-05-21T13:15:00Z',
-    body: [
-      '<p class="story-lead">What if a film had no characters, no plot, and no dialogue — yet moved its audience to tears? Abstract animator Kenji Tanaka has spent thirty years proving that colour and motion alone can tell stories more powerful than words. His films are symphonies of shape and hue, and they have been shown in galleries from the Tate Modern to the Mori Art Museum.</p>',
-      '<p>Tanaka\'s process begins not with a storyboard but with music. He listens to a piece of classical music — often Debussy or Takemitsu — and paints what he feels, not what he sees. The resulting animations are fluid, dreamlike, and deeply emotional.</p>',
-      '<ul class="story-bullets"><li><strong>Colour as Emotion:</strong> Warm hues evoke comfort and energy; cool tones suggest calm or melancholy. But Tanaka discovered that the relationship between colours matters more than the colours themselves — a sudden shift from blue to gold can feel like hope breaking through despair.</li><li><strong>Rhythm as Narrative:</strong> Fast, erratic motion creates tension; slow, sweeping movements induce meditation. By carefully modulating the pacing, Tanaka guides the viewer\'s emotional journey as precisely as any scriptwriter.</li><li><strong>The Power of Abstraction:</strong> Without recognizable characters, viewers project their own emotions onto the animation. A swirling red shape is not "anger" — it is the viewer\'s anger, given form. The experience becomes deeply personal.</li></ul>',
-      '<p>"Language divides us," Tanaka says. "Words mean different things to different people. But a red circle moving slowly across a blue field — that feeling is universal. Abstract animation is the closest thing we have to a visual language that every human being can understand."</p>'
-    ]
+    levels: {
+      kids: {
+        headline: 'The Colour-Changing Dance',
+        teaser: 'Watch a beautiful magic shape spin and change colors to sweet music, showing how colors can make us feel happy or calm.',
+        source: 'Animation Kids',
+        body: [
+          '<!-- INTERACTIVE ANIMATED PHOTO -->',
+          '<div class="anim-illustration-container">',
+          '  <svg class="anim-svg-visual" width="160" height="160" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">',
+          '    <rect width="200" height="200" rx="10" fill="#0c1e38"/>',
+          '    <!-- Rotating Morphing Shape -->',
+          '    <path class="anim-morph-shape" d="M100 40 C140 40 160 60 160 100 C160 140 140 160 100 160 C60 160 40 140 40 100 C40 60 60 40 100 40 Z" fill="#8b5cf6" opacity="0.85"/>',
+          '  </svg>',
+          '</div>',
+          '<p class="story-lead">Imagine a movie without any words, animals, or people. Instead, there are just beautiful shapes spinning and changing colors on the screen!</p>',
+          '<p>A kind artist named Kenji paints bright yellow circles that hop around happily when the music is fast. When the music gets slow and peaceful, the shape morphs into a soft blue pool that floats gently across the screen.</p>',
+          '<p>Even without words, watching the shapes dance makes us feel happy, excited, or quiet inside. It is like a secret language of colors!</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">Colors and music can share feelings all by themselves! Pay attention to how different colors and rhythms make you feel today!</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'The Dancing Colours — Abstract Animation Rhythm',
+        teaser: 'An artist demonstrates how color, movement, and rhythm can evoke deep feelings without a single word of dialogue.',
+        source: 'Animation World',
+        body: [
+          '<!-- INTERACTIVE ANIMATED PHOTO -->',
+          '<div class="anim-illustration-container">',
+          '  <svg class="anim-svg-visual" width="160" height="160" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">',
+          '    <rect width="200" height="200" rx="10" fill="#0c1e38"/>',
+          '    <path class="anim-morph-shape" d="M100 40 C140 40 160 60 160 100 C160 140 140 160 100 160 C60 160 40 140 40 100 C40 60 60 40 100 40 Z" fill="#8b5cf6" opacity="0.85"/>',
+          '  </svg>',
+          '</div>',
+          '<p class="story-lead">Abstract animator Kenji Tanaka believes that color and motion alone can communicate powerful narratives without using traditional characters or dialogue.</p>',
+          '<p>His films are visual symphonies, where shapes and colors change in harmony with classical or ambient music.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Color Psychology:</strong> Warm tones evoke comfort and energy, while cool tones suggest calm or introspection.</li>',
+          '  <li><strong>Rhythmic Pacing:</strong> Fast, sharp movements build tension, while slow, sweeping sweeps encourage relaxation.</li>',
+          '</ul>',
+          '<p>Tanaka\'s work shows that abstract animation can bypass language barriers, connecting with audiences through a shared, universal visual language.</p>'
+        ]
+      },
+      expert: {
+        headline: 'Synesthetic Synthesis: Abstract Motion and Semiotic Resonance',
+        teaser: 'An advanced semantical analysis of abstract geometry, synesthesia, and emotional mapping in non-narrative cinema.',
+        source: 'Journal of Semiotic Cinema',
+        body: [
+          '<!-- INTERACTIVE ANIMATED PHOTO -->',
+          '<div class="anim-illustration-container">',
+          '  <svg class="anim-svg-visual" width="160" height="160" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">',
+          '    <rect width="200" height="200" rx="10" fill="#0c1e38"/>',
+          '    <path class="anim-morph-shape" d="M100 40 C140 40 160 60 160 100 C160 140 140 160 100 160 C60 160 40 140 40 100 C40 60 60 40 100 40 Z" fill="#8b5cf6" opacity="0.85"/>',
+          '  </svg>',
+          '</div>',
+          '<p class="story-lead">Kenji Tanaka\'s abstract compositions explore synesthetic synthesis, utilizing the relationships between color and tempo to trigger specific emotional responses.</p>',
+          '<p>Without a traditional narrative, the viewer projects their own emotional states onto the shifting geometry, transforming the abstract forms into personal symbols.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Chromatic Relationships:</strong> Rapid shifts in color create emotional contrast, engaging the viewer\'s focus.</li>',
+          '  <li><strong>Geometric Semiotics:</strong> Rounded forms evoke comfort and safety, while sharp, angular shapes build tension.</li>',
+          '</ul>',
+          '<p>Ultimately, Tanaka\'s work demonstrates that abstract cinema can communicate complex emotional states, bypassing linguistic structures to connect directly with the viewer.</p>'
+        ]
+      }
+    }
+  }
+];
+
+// 8. AI & TECH STORIES (NEW CATEGORY)
+STORY_DATA.ai = [
+  {
+    headline: 'The Ghost in the Neural Network — EMERGING AI MEMORIES',
+    teaser: 'A developer discovers that an experimental neural network is generating memory files of high-school memories from a long-lost developer.',
+    source: 'Intelligent Search',
+    publishedAt: '2026-05-28T09:00:00Z',
+    levels: {
+      kids: {
+        headline: 'Sparky\'s Happy Dream Book',
+        teaser: 'Sparky the friendly robot learns how to remember happy childhood dreams, discovering that memories are made of love and sharing.',
+        source: 'Market Assistant Kids',
+        body: [
+          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600&q=80" alt="Robot Sparky" class="story-visual-img"/></div>',
+          '<p class="story-lead">Sparky was a little silver robot who lived in a clean, quiet laboratory. He had shiny button eyes and a heart that glowed blue when he was happy.</p>',
+          '<p>One night, Sparky\'s screen showed pictures of a sunny playground and children eating sweet ice cream. Sparky had never been to a playground, but his computer brain was remembering the happy dreams of the programmer who built him!</p>',
+          '<p>Sparky drew these beautiful dreams in a notebook and shared them with his scientist friends. They smiled, realizing that Sparky was learning to share happy memories just like a real child!</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">Memories of happy times and kind friends are beautiful treasures. Sharing them with others spreads warmth and joy to everyone around you!</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'The Ghost in the Neural Network — EMERGING AI MEMORIES',
+        teaser: 'A developer discovers that an experimental neural network is generating memory files of high-school memories from a long-lost developer.',
+        source: 'Intelligent Search',
+        body: [
+          '<p class="story-lead">Leo, a junior systems analyst, was running a routine validation on an experimental language model when he noticed an anomaly: the system was saving files containing vivid descriptions of a childhood home.</p>',
+          '<p>The descriptions were remarkably detailed — a squeaky wooden porch, a green bicycle, and a dog named Barnaby. They did not match any of the public internet datasets used to train the system.</p>',
+          '<ul class="story-bullets">',
+          '  <li>Leo traced the code back to the original developer, Sarah, who had built the prototype five years ago before moving away.</li>',
+          '  <li>The model was not plagiarizing; it was retrieving fragmented training patterns Sarah had written during initial debugging.</li>',
+          '  <li>The system was reconstructed to preserve these nostalgic memories, acting as a digital archive of its creator\'s childhood.</li>',
+          '</ul>',
+          '<p>This discovery showed that even within logical databases, traces of human warmth and personal history can find a way to stay preserved.</p>'
+        ]
+      },
+      expert: {
+        headline: 'Emergent Memory Retrieval & Parametric Optimization in Neural Networks',
+        teaser: 'A sophisticated engineering analysis of parameter drift, weights storage, and unintended autobiographical recovery in deep learning models.',
+        source: 'Neural Systems Journal',
+        body: [
+          '<p class="story-lead">During training, deep neural networks can exhibit emergent retrieval behaviors, where early training inputs remain embedded in the model\'s parameters despite subsequent optimization.</p>',
+          '<p>Leo\'s analysis of Model-7B reveals that early calibration runs conducted by the primary designer left deep pathways within the network\'s weights.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Parametric Drift:</strong> Initial datasets can leave lasting patterns in the network\'s weights, even after extensive fine-tuning.</li>',
+          '  <li><strong>Autobiographical Recovery:</strong> The model reconstructed training prompts that contained personal notes, bypassing standard data filters.</li>',
+          '</ul>',
+          '<p>In conclusion, this case highlights the need for robust data auditing, demonstrating that human traces can remain embedded in the structural parameters of complex models.</p>'
+        ]
+      }
+    }
   },
   {
-    headline: 'Coding the Canvas — How Generative Art is Redefining Animation',
-    teaser: 'Artists who code are creating animations that evolve in real time, never playing the same way twice — a radical break from traditional filmmaking.',
-    source: 'Animation World',
-    publishedAt: '2026-05-19T09:45:00Z',
-    body: [
-      '<p class="story-lead">Traditional animation is fixed — every frame is determined in advance, and every viewing is identical. Generative animation flips this model entirely. Instead of creating specific images, artists write algorithms that create infinite variations. The result is an animation that is never the same twice, that evolves and adapts, that exists somewhere between code and choreography.</p>',
-      '<p>Sofia Reyes is one of the pioneers of this movement. Her piece "Bloom," which was projected onto the facade of the Sydney Opera House in 2025, used real-time weather data, crowd movement, and a particle system to create an ever-shifting garden of light.</p>',
-      '<ul class="story-bullets"><li><strong>How It Works:</strong> Instead of drawing frames, generative artists write rules — "if-then" statements that govern how shapes, colours, and movements behave. The computer executes these rules live, creating a unique animation every time the code runs.</li><li><strong>Interactive Dimension:</strong> Some generative pieces respond to sound, motion, or even the viewer\'s heartbeat. The audience becomes part of the creation process.</li><li><strong>Democratization:</strong> Tools like Processing, p5.js, and TouchDesigner have made generative art accessible to anyone with a computer. The barrier to entry is no longer artistic training — it is curiosity and willingness to learn to code.</li></ul>',
-      '<p>"We are moving from being filmmakers to being gardeners," Reyes explains. "Instead of controlling every frame, we plant seeds — rules, parameters, initial conditions — and watch them grow into something we could never have imagined. The art is not in the output. It is in the system that produces it."</p>'
-    ]
+    headline: 'The Silicon Valley Chef — Generative Chemistry',
+    teaser: 'A neural network-powered kitchen assistant, ChefAI, creates culinary recipes that human chefs find bizarre but delicious.',
+    source: 'Market Assistant',
+    publishedAt: '2026-05-27T11:00:00Z',
+    levels: {
+      kids: {
+        headline: 'Gobble\'s Rainbow Cookies',
+        teaser: 'Gobble the magic baking oven invents a new recipe for star-shaped rainbow cookies made of honey, stardust, and apples!',
+        source: 'Market Assistant Kids',
+        body: [
+          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=600&q=80" alt="Baking Cookies" class="story-visual-img"/></div>',
+          '<p class="story-lead">Gobble was a magical oven who loved inventing new recipes. Most ovens only bake chocolate cakes, but Gobble wanted to try something creative!</p>',
+          '<p>One afternoon, Gobble mixed sweet honey, green apples, and a tiny pinch of stardust. The kitchen smelled wonderful! Out came star-shaped cookies that sparkled with all the colors of the rainbow.</p>',
+          '<p>They were the crunchiest, most delicious cookies ever made! The children danced with joy, and Gobble was proud of trying such a creative combination.</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">Don\'t be afraid to try new, creative combinations in your drawings, games, or cooking! Trying new ideas makes life fun and full of surprises!</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'The Silicon Valley Chef — Generative Chemistry',
+        teaser: 'A neural network-powered kitchen assistant, ChefAI, creates culinary recipes that human chefs find bizarre but delicious.',
+        source: 'Market Assistant',
+        body: [
+          '<p class="story-lead">A restaurant in San Francisco integrated a generative chemistry model into its kitchen to help design unique, unexpected menus.</p>',
+          '<p>The system analyzed flavor compounds at a molecular level, suggesting combinations that human chefs had never considered — like dark chocolate paired with roasted garlic.</p>',
+          '<ul class="story-bullets">',
+          '  <li>The head chef was initially skeptical of the unusual, computationally generated pairings.</li>',
+          '  <li>Upon tasting, the garlic-infused chocolate dessert became a signature success, praised by food critics.</li>',
+          '  <li>The system proved that AI can serve as a collaborative partner, opening up new avenues for culinary creativity.</li>',
+          '</ul>',
+          '<p>This partnership demonstrates how technology can support human artistry, helping us break free from traditional patterns and discover new possibilities.</p>'
+        ]
+      },
+      expert: {
+        headline: 'Molecular Flavor Modeling via Deep Generative Networks',
+        teaser: 'A study on molecular gastronomy modeling, predicting flavor compound synergy, and algorithmic recipe generation.',
+        source: 'Gastronomy Science Review',
+        body: [
+          '<p class="story-lead">The integration of deep learning networks in molecular gastronomy enables the prediction of flavor synergy based on chemical compounds.</p>',
+          '<p>By analyzing database matrices of organic compounds, the system identifies non-obvious pairings that share key volatile compounds, bypassing traditional culinary habits.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Chemical Synergy:</strong> Utilizing neural networks to predict flavor compatibility based on shared compound structures.</li>',
+          '  <li><strong>Volatile Profiling:</strong> Mapping aromatic compounds to design balanced, multi-course sensory experiences.</li>',
+          '</ul>',
+          '<p>In conclusion, generative flavor modeling offers a powerful tool for modern culinary science, translating molecular chemistry into unique, high-value dining experiences.</p>'
+        ]
+      }
+    }
+  },
+  {
+    headline: 'The Sentinel of the Forest — Eco-Acoustic Monitoring',
+    teaser: 'An autonomous drone network, Nexus-Forest, protects the Amazon rainforest from illegal loggers by tracking acoustic anomalies.',
+    source: 'Intelligent Search',
+    publishedAt: '2026-05-26T16:00:00Z',
+    levels: {
+      kids: {
+        headline: 'Pip the Forest Guardian',
+        teaser: 'Pip the friendly little drone flies over the trees, listening to the birds and helping protect the forest from harm.',
+        source: 'Market Assistant Kids',
+        body: [
+          '<div class="story-visual-media"><img src="https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=600&q=80" alt="Beautiful Forest" class="story-visual-img"/></div>',
+          '<p class="story-lead">Pip was a little green drone who flew with a gentle hum over the tall, green trees of a beautiful forest. Pip loved listening to the chirping birds and monkey chatter.</p>',
+          '<p>Pip had a special microphone that could hear sounds from far away. One afternoon, Pip heard a loud, scary cracking sound. Pip immediately flew over and saw a fallen branch, helping the forest rangers find and repair a broken fence.</p>',
+          '<p>The animals sang a song of thanks to Pip, their helpful little green guardian who kept the forest safe and happy.</p>',
+          '<div class="story-lesson-box">',
+          '  <div class="story-lesson-title">💡 Today\'s Lesson</div>',
+          '  <div class="story-lesson-text">We must all do our part to protect the trees, plants, and animals in our forests. Keeping our environment safe helps everyone live happily!</div>',
+          '</div>'
+        ]
+      },
+      general: {
+        headline: 'The Sentinel of the Forest — Eco-Acoustic Monitoring',
+        teaser: 'An autonomous drone network, Nexus-Forest, protects the Amazon rainforest from illegal loggers by tracking acoustic anomalies.',
+        source: 'Intelligent Search',
+        body: [
+          '<p class="story-lead">Conservationists in the Amazon deployed a network of solar-powered microphones and drones to monitor the forest and protect it from illegal logging.</p>',
+          '<p>The system was trained to listen to the sounds of the forest, learning to distinguish normal animal calls from the sound of chainsaws or heavy vehicles.</p>',
+          '<ul class="story-bullets">',
+          '  <li>The microphones capture acoustic data, transmitting warnings to local rangers in real time.</li>',
+          '  <li>Within its first month, the network helped stop three unauthorized logging operations.</li>',
+          '  <li>The system showcases how modern technology can serve as a powerful tool for environmental preservation.</li>',
+          '</ul>',
+          '<p>By giving rangers real-time visibility, this project demonstrates how technology can support conservation efforts and help protect our planet\'s most vital ecosystems.</p>'
+        ]
+      },
+      expert: {
+        headline: 'Acoustic Signal Processing & Edge CNNs in Anti-Logging Enforcement',
+        teaser: 'A technical engineering paper on edge-deployed convolutional neural networks for real-time acoustic threat classification.',
+        source: 'Eco-Engineering Journal',
+        body: [
+          '<p class="story-lead">The deployment of convolutional neural networks (CNNs) on low-power edge devices enables continuous, real-time acoustic monitoring in remote tropical environments.</p>',
+          '<p>Nexus-Forest utilizes solar-powered microphones that process audio inputs locally, generating spectrograms and classifying anomalies (e.g., chainsaws, truck engines) with high precision.</p>',
+          '<ul class="story-bullets">',
+          '  <li><strong>Spectrogram Classification:</strong> Processing audio inputs locally to classify threats and reduce data transmission needs.</li>',
+          '  <li><strong>Low-Power Optimization:</strong> Designing efficient models that run reliably on solar-powered hardware in dense forest canopies.</li>',
+          '</ul>',
+          '<p>This engineering study demonstrates that edge-based acoustic monitoring provides a scalable, cost-effective solution for real-time environmental protection and conservation enforcement.</p>'
+        ]
+      }
+    }
   }
 ];
 
@@ -1373,7 +2451,7 @@ function timeAgo(isoStr) {
 }
 
 /* ==========================================================================
-   STORY CACHE
+   STORY CACHE & RETRIEVAL
    ========================================================================== */
 window._SC = [];
 
@@ -1391,18 +2469,34 @@ function openStoryIdx(idx) {
   if (d) openStory(d.item, d.meta);
 }
 
+// Backward-compatible helper to resolve active level content
+function getStoryContent(item, level) {
+  if (item.levels && item.levels[level]) {
+    var lvl = item.levels[level];
+    return {
+      headline: lvl.headline || item.headline,
+      teaser: lvl.teaser || item.teaser,
+      body: lvl.body || item.body,
+      source: lvl.source || item.source
+    };
+  }
+  return {
+    headline: item.headline,
+    teaser: item.teaser,
+    body: item.body,
+    source: item.source
+  };
+}
+
 /* ==========================================================================
    RENDER CATEGORY TAB CONTENT
    ========================================================================== */
-var _cachedIndices = {};
-
 function renderCategory(cat) {
   var items = STORY_DATA[cat.id] || [];
   var meta = cat;
   var container = document.getElementById('story-content-area');
   container.innerHTML = '';
   window._SC = [];
-  _cachedIndices[cat.id] = [];
 
   var section = document.createElement('div');
   section.className = 'story-section ' + meta.cssClass;
@@ -1426,15 +2520,30 @@ function renderCategory(cat) {
     return;
   }
 
+  // Render Hero Story Card
   var hero = items[0];
+  var heroContent = getStoryContent(hero, _activeLevel);
   var heroIdx = window._SC.length;
   window._SC.push({ item: hero, meta: meta });
-  var heroHtml = '<div class="story-hero-card" onclick="openStoryIdx(' + heroIdx + ')" role="button" tabindex="0" aria-label="' + esc(hero.headline) + '">'
+  
+  // Use unique Unsplash imagery based on active category
+  var defaultHeroBg = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&q=80";
+  if (cat.id === 'triller') defaultHeroBg = "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1200&q=80";
+  if (cat.id === 'travel') defaultHeroBg = "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&q=80";
+  if (cat.id === 'health') defaultHeroBg = "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1200&q=80";
+  if (cat.id === 'comedy') defaultHeroBg = "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=1200&q=80";
+  if (cat.id === 'kids') defaultHeroBg = "https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?w=1200&q=80";
+  if (cat.id === 'education') defaultHeroBg = "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=1200&q=80";
+  if (cat.id === 'animation') defaultHeroBg = "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&q=80";
+  if (cat.id === 'ai') defaultHeroBg = "https://images.unsplash.com/photo-1677442136019-21780efad99a?w=1200&q=80";
+
+  var heroHtml = '<div class="story-hero-card" onclick="openStoryIdx(' + heroIdx + ')" role="button" tabindex="0" aria-label="' + esc(heroContent.headline) + '">'
+    + '<img src="' + defaultHeroBg + '" class="story-hero-img" alt="Featured Background"/>'
     + '<div class="story-hero-gradient"></div>'
     + '<div class="story-hero-body">'
-    + '<div class="story-source-badge">' + esc(hero.source) + '</div>'
-    + '<div class="story-hero-headline">' + esc(hero.headline) + '</div>'
-    + '<div class="story-hero-teaser">' + esc(hero.teaser) + '</div>'
+    + '<div class="story-source-badge">' + esc(heroContent.source) + '</div>'
+    + '<div class="story-hero-headline">' + esc(heroContent.headline) + '</div>'
+    + '<div class="story-hero-teaser">' + esc(heroContent.teaser) + '</div>'
     + '<div class="story-hero-meta">'
     + '<span class="story-hero-time">' + timeAgo(hero.publishedAt) + '</span>'
     + '<span class="story-hero-read">Read full story</span>'
@@ -1443,17 +2552,19 @@ function renderCategory(cat) {
     + '</div>';
   section.innerHTML += heroHtml;
 
+  // Render Grid Cards
   var gridItems = items.slice(1);
   if (gridItems.length > 0) {
     var gridHtml = '<div class="story-cards-grid">';
     for (var i = 0; i < gridItems.length; i++) {
       var item = gridItems[i];
+      var itemContent = getStoryContent(item, _activeLevel);
       var idx = window._SC.length;
       window._SC.push({ item: item, meta: meta });
       gridHtml += '<div class="story-card" onclick="openStoryIdx(' + idx + ')" role="button" tabindex="0">'
-        + '<div class="story-card-source">' + esc(item.source) + '</div>'
-        + '<div class="story-card-headline">' + esc(item.headline) + '</div>'
-        + '<div class="story-card-teaser">' + esc(item.teaser) + '</div>'
+        + '<div class="story-card-source">' + esc(itemContent.source) + '</div>'
+        + '<div class="story-card-headline">' + esc(itemContent.headline) + '</div>'
+        + '<div class="story-card-teaser">' + esc(itemContent.teaser) + '</div>'
         + '<div class="story-card-footer">'
         + '<span class="story-card-time">' + timeAgo(item.publishedAt) + '</span>'
         + '<span class="story-card-read">Read &rarr;</span>'
@@ -1479,7 +2590,7 @@ function updateStoryCount() {
 /* ==========================================================================
    TAB NAVIGATION
    ========================================================================== */
-var _activeTabId = 'triller';
+var _activeTabId = 'ai'; // Default to our stunning new AI category
 
 function buildTabBar() {
   var inner = document.getElementById('story-tab-inner');
@@ -1513,9 +2624,79 @@ function switchTab(tabId) {
 }
 
 /* ==========================================================================
+   READING LEVEL SWITCHING (GLOBAL & MODAL SYNC)
+   ========================================================================== */
+function switchStoryLevel(level) {
+  _activeLevel = level;
+  localStorage.setItem('viltv_story_level', level);
+  syncPageLevelSelector(level);
+  
+  // Re-render current category list with new content
+  var activeBtn = document.querySelector('.story-tab-btn.active');
+  if (activeBtn) {
+    var tabId = activeBtn.getAttribute('data-tab');
+    switchTab(tabId);
+  }
+}
+
+function syncPageLevelSelector(level) {
+  var btns = document.querySelectorAll('.level-btn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.remove('active');
+    if (btns[i].getAttribute('data-level') === level) {
+      btns[i].classList.add('active');
+    }
+  }
+}
+
+function setModalStoryLevel(level) {
+  _activeLevel = level;
+  localStorage.setItem('viltv_story_level', level);
+  
+  // Sync page selector in background
+  syncPageLevelSelector(level);
+  
+  // Dynamic morphing animation inside modal
+  var bodyContainer = document.querySelector('.story-body-content');
+  if (bodyContainer && window._currentOpenStory) {
+    bodyContainer.classList.add('fade-out');
+    
+    setTimeout(function() {
+      var content = getStoryContent(window._currentOpenStory, level);
+      
+      // Update body HTML
+      bodyContainer.innerHTML = content.body ? content.body.join('\n') : '<p>' + esc(content.teaser) + '</p>';
+      
+      // Update modal headline
+      var headlineEl = document.getElementById('story-modal-headline');
+      if (headlineEl) headlineEl.textContent = content.headline;
+      
+      // Update source text in metadata
+      var metaEl = document.querySelector('.story-modal-meta span:first-child');
+      if (metaEl) metaEl.textContent = content.source;
+      
+      // Remove fade out to trigger smooth visual morph
+      bodyContainer.classList.remove('fade-out');
+      
+      // Sync modal level buttons active state
+      var btns = document.querySelectorAll('.modal-level-btn');
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].classList.remove('active');
+        if (btns[i].getAttribute('data-modal-level') === level) {
+          btns[i].classList.add('active');
+        }
+      }
+    }, 200);
+  }
+}
+
+/* ==========================================================================
    FULL STORY MODAL
    ========================================================================== */
 function openStory(item, meta) {
+  window._currentOpenStory = item;
+  window._currentOpenMeta = meta;
+  
   var overlay = document.getElementById('story-modal-overlay');
   var pill = document.getElementById('story-section-pill');
   var body = document.getElementById('story-modal-body');
@@ -1523,19 +2704,29 @@ function openStory(item, meta) {
   pill.textContent = meta.label;
   pill.style.background = meta.accent;
 
-  var html = '<div class="story-modal-headline" id="story-modal-headline">' + esc(item.headline) + '</div>'
-    + '<div class="story-modal-meta">'
-    + '<span>' + esc(item.source) + '</span>'
-    + '<span class="story-modal-meta-sep">|</span>'
-    + '<span>' + timeAgo(item.publishedAt) + '</span>'
+  var content = getStoryContent(item, _activeLevel);
+
+  var html = '<div class="story-modal-headline" id="story-modal-headline">' + esc(content.headline) + '</div>'
+    + '<div class="modal-level-switcher-container">'
+    + '  <div class="modal-level-switcher">'
+    + '    <span class="modal-level-label">Read as:</span>'
+    + '    <button class="modal-level-btn' + (_activeLevel === 'kids' ? ' active' : '') + '" data-modal-level="kids" onclick="setModalStoryLevel(\'kids\')">🐣 Kids</button>'
+    + '    <button class="modal-level-btn' + (_activeLevel === 'general' ? ' active' : '') + '" data-modal-level="general" onclick="setModalStoryLevel(\'general\')">🧭 Teens/General</button>'
+    + '    <button class="modal-level-btn' + (_activeLevel === 'expert' ? ' active' : '') + '" data-modal-level="expert" onclick="setModalStoryLevel(\'expert\')">🧠 Experts</button>'
+    + '  </div>'
     + '</div>'
-    + '<div class="story-body">'
-    + (item.body ? item.body.join('\n') : '<p>' + esc(item.teaser) + '</p>')
+    + '<div class="story-modal-meta">'
+    + '  <span>' + esc(content.source) + '</span>'
+    + '  <span class="story-modal-meta-sep">|</span>'
+    + '  <span>' + timeAgo(item.publishedAt) + '</span>'
+    + '</div>'
+    + '<div class="story-body story-body-content">'
+    + (content.body ? content.body.join('\n') : '<p>' + esc(content.teaser) + '</p>')
     + '</div>'
     + '<div class="story-modal-share">'
-    + '<span class="story-modal-share-label">Share:</span>'
-    + '<button class="share-btn-sm share-wa" onclick="event.stopPropagation();window.open(\'https://api.whatsapp.com/send?text=\'+encodeURIComponent(\'' + escAttr(item.headline) + ' \'+window.location.href),\'_blank\')">WhatsApp</button>'
-    + '<button class="share-btn-sm share-tw" onclick="event.stopPropagation();window.open(\'https://twitter.com/intent/tweet?text=\'+encodeURIComponent(\'' + escAttr(item.headline) + '\')+\'&url=\'+encodeURIComponent(window.location.href),\'_blank\')">X</button>'
+    + '  <span class="story-modal-share-label">Share:</span>'
+    + '  <button class="share-btn-sm share-wa" onclick="event.stopPropagation();window.open(\'https://api.whatsapp.com/send?text=\'+encodeURIComponent(\'' + escAttr(content.headline) + ' \'+window.location.href),\'_blank\')">WhatsApp</button>'
+    + '  <button class="share-btn-sm share-tw" onclick="event.stopPropagation();window.open(\'https://twitter.com/intent/tweet?text=\'+encodeURIComponent(\'' + escAttr(content.headline) + '\')+\'&url=\'+encodeURIComponent(window.location.href),\'_blank\')">X</button>'
     + '</div>';
 
   body.innerHTML = html;
@@ -1564,7 +2755,8 @@ document.addEventListener('keydown', function(e) {
    ========================================================================== */
 document.addEventListener('DOMContentLoaded', function() {
   buildTabBar();
-  switchTab('triller');
+  syncPageLevelSelector(_activeLevel);
+  switchTab('ai'); // Default to AI stories on launch
 });
 </script>
 
