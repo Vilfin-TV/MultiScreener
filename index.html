@@ -4171,86 +4171,16 @@ footer{
 <!-- DESKTOP TICKER STRIP — TradingView scrolling tape, desktop only -->
 <div class="desktop-ticker-strip" id="desktop-ticker-strip">
   <button class="ticker-toggle" onclick="var s=document.getElementById('desktop-ticker-strip');s.style.display=s.style.display==='none'?'block':'none'" title="Show/Hide ticker">▲ Hide</button>
-  <div class="tradingview-widget-container" style="height:46px">
+  <div class="tradingview-widget-container" style="height:46px" id="tv-desktop-container">
     <div class="tradingview-widget-container__widget"></div>
-    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
-    {
-      "symbols":[
-        {"proName":"BSE:SENSEX","title":"Sensex"},
-        {"proName":"BSE:BANK","title":"Bank Nifty"},
-        {"proName":"OANDA:SPX500USD","title":"S&P 500"},
-        {"proName":"OANDA:NAS100USD","title":"Nasdaq 100"},
-        {"proName":"OANDA:US30USD","title":"Dow Jones"},
-        {"proName":"INDEX:NKY","title":"Nikkei 225"},
-        {"proName":"NASDAQ:QQQ","title":"Nasdaq 100"},
-        {"proName":"FX:EURUSD","title":"EUR/USD"},
-        {"proName":"FX:AUDUSD","title":"AUD/USD"},
-        {"proName":"FX:USDINR","title":"USD/INR"},
-        {"proName":"FX:USDJPY","title":"USD/JPY"},
-        {"proName":"FX:EURJPY","title":"EUR/JPY"},
-        {"proName":"BITSTAMP:BTCUSD","title":"Bitcoin"},
-        {"proName":"BITSTAMP:ETHUSD","title":"Ethereum"},
-        {"proName":"TVC:GOLD","title":"Gold"},
-        {"proName":"TVC:SILVER","title":"Silver"},
-        {"proName":"TVC:USOIL","title":"US Oil"},
-        {"proName":"NASDAQ:NVDA","title":"NVIDIA"},
-        {"proName":"NASDAQ:AAPL","title":"Apple"},
-        {"proName":"NASDAQ:MSFT","title":"Microsoft"},
-        {"proName":"NASDAQ:TSLA","title":"Tesla"},
-        {"proName":"NASDAQ:GOOGL","title":"Google"},
-        {"proName":"NASDAQ:AMZN","title":"Amazon"},
-        {"proName":"BSE:RELIANCE","title":"Reliance"},
-        {"proName":"BSE:TCS","title":"TCS"},
-        {"proName":"BSE:HDFCBANK","title":"HDFC Bank"},
-        {"proName":"BSE:ICICIBANK","title":"ICICI Bank"},
-        {"proName":"BSE:INFY","title":"Infosys"},
-        {"proName":"BSE:SBIN","title":"SBI"},
-        {"proName":"BSE:LT","title":"L&T"},
-        {"proName":"BSE:BHARTIARTL","title":"Bharti Airtel"}
-      ],
-      "showSymbolLogo":true,
-      "isTransparent":false,
-      "displayMode":"adaptive",
-      "colorTheme":"dark",
-      "locale":"en"
-    }
-    </script>
   </div>
 </div>
 
 <!-- MOBILE MARKETS STRIP — TradingView ticker, visible only on mobile -->
 <div class="mobile-markets-strip" id="mobile-markets-strip">
   <button class="ticker-toggle" onclick="var s=document.getElementById('mobile-markets-strip');s.style.display=s.style.display==='none'?'block':'none'" title="Show/Hide ticker">▲ Hide</button>
-  <div class="tradingview-widget-container">
+  <div class="tradingview-widget-container" id="tv-mobile-container">
     <div class="tradingview-widget-container__widget"></div>
-    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
-    {
-      "symbols":[
-        {"proName":"BSE:SENSEX","title":"Sensex"},
-        {"proName":"BSE:BANK","title":"Bank Nifty"},
-        {"proName":"OANDA:SPX500USD","title":"S&P 500"},
-        {"proName":"OANDA:NAS100USD","title":"Nasdaq 100"},
-        {"proName":"OANDA:US30USD","title":"Dow Jones"},
-        {"proName":"INDEX:NKY","title":"Nikkei"},
-        {"proName":"FX:USDINR","title":"USD/INR"},
-        {"proName":"OANDA:USDJPY","title":"USD/JPY"},
-        {"proName":"BITSTAMP:BTCUSD","title":"Bitcoin"},
-        {"proName":"TVC:UKOIL","title":"Brent Crude"},
-        {"proName":"NASDAQ:NVDA","title":"NVIDIA"},
-        {"proName":"NYSE:SHV","title":"USD 3M"},
-        {"proName":"BSE:RELIANCE","title":"Reliance"},
-        {"proName":"BSE:TCS","title":"TCS"},
-        {"proName":"BSE:HDFCBANK","title":"HDFC Bank"},
-        {"proName":"BSE:ICICIBANK","title":"ICICI Bank"},
-        {"proName":"BSE:INFY","title":"Infosys"},
-        {"proName":"BSE:SBIN","title":"SBI"},
-        {"proName":"BSE:LT","title":"L&T"},
-        {"proName":"BSE:BHARTIARTL","title":"Airtel"}
-      ],
-      "showSymbolLogo":true,"isTransparent":true,"displayMode":"adaptive",
-      "colorTheme":"dark","locale":"en"
-    }
-    </script>
   </div>
 </div>
 
@@ -13173,6 +13103,126 @@ var YT_CHANNELS = [
   {no:175,name:'The Amazing World of Gumball',country:'International', category:'Kids',             lang:'English', cid:'UCoBpC9J2EcbAMprw7YjC93A', v1:'nIyaCRNwxhU', v2:''},
   {no:176,name:'Mr Bean World',               country:'International', category:'Entertainment',    lang:'English', cid:'UCzoFjzSkbrDD1GHsz2YNLig', v1:'kRL8tyCl1lQ', v2:''},
 ];
+
+// ═══════════════════════════════════════════════════════════════════════
+// CONFIG.JSON — Dynamic config: custom YouTube / News channels + Ticker
+// ═══════════════════════════════════════════════════════════════════════
+
+/** Default symbols for the desktop ticker tape. */
+var _TICKER_DESKTOP_DEFAULTS = [
+  {proName:'BSE:SENSEX',title:'Sensex'},{proName:'BSE:BANK',title:'Bank Nifty'},
+  {proName:'OANDA:SPX500USD',title:'S&P 500'},{proName:'OANDA:NAS100USD',title:'Nasdaq 100'},
+  {proName:'OANDA:US30USD',title:'Dow Jones'},{proName:'INDEX:NKY',title:'Nikkei 225'},
+  {proName:'NASDAQ:QQQ',title:'Nasdaq 100'},{proName:'FX:EURUSD',title:'EUR/USD'},
+  {proName:'FX:AUDUSD',title:'AUD/USD'},{proName:'FX:USDINR',title:'USD/INR'},
+  {proName:'FX:USDJPY',title:'USD/JPY'},{proName:'FX:EURJPY',title:'EUR/JPY'},
+  {proName:'BITSTAMP:BTCUSD',title:'Bitcoin'},{proName:'BITSTAMP:ETHUSD',title:'Ethereum'},
+  {proName:'TVC:GOLD',title:'Gold'},{proName:'TVC:SILVER',title:'Silver'},
+  {proName:'TVC:USOIL',title:'US Oil'},{proName:'NASDAQ:NVDA',title:'NVIDIA'},
+  {proName:'NASDAQ:AAPL',title:'Apple'},{proName:'NASDAQ:MSFT',title:'Microsoft'},
+  {proName:'NASDAQ:TSLA',title:'Tesla'},{proName:'NASDAQ:GOOGL',title:'Google'},
+  {proName:'NASDAQ:AMZN',title:'Amazon'},{proName:'BSE:RELIANCE',title:'Reliance'},
+  {proName:'BSE:TCS',title:'TCS'},{proName:'BSE:HDFCBANK',title:'HDFC Bank'},
+  {proName:'BSE:ICICIBANK',title:'ICICI Bank'},{proName:'BSE:INFY',title:'Infosys'},
+  {proName:'BSE:SBIN',title:'SBI'},{proName:'BSE:LT',title:'L&T'},
+  {proName:'BSE:BHARTIARTL',title:'Bharti Airtel'}
+];
+
+/** Default symbols for the mobile ticker tape (shorter list). */
+var _TICKER_MOBILE_DEFAULTS = [
+  {proName:'BSE:SENSEX',title:'Sensex'},{proName:'BSE:BANK',title:'Bank Nifty'},
+  {proName:'OANDA:SPX500USD',title:'S&P 500'},{proName:'OANDA:NAS100USD',title:'Nasdaq 100'},
+  {proName:'OANDA:US30USD',title:'Dow Jones'},{proName:'INDEX:NKY',title:'Nikkei'},
+  {proName:'FX:USDINR',title:'USD/INR'},{proName:'OANDA:USDJPY',title:'USD/JPY'},
+  {proName:'BITSTAMP:BTCUSD',title:'Bitcoin'},{proName:'TVC:UKOIL',title:'Brent Crude'},
+  {proName:'NASDAQ:NVDA',title:'NVIDIA'},{proName:'NYSE:SHV',title:'USD 3M'},
+  {proName:'BSE:RELIANCE',title:'Reliance'},{proName:'BSE:TCS',title:'TCS'},
+  {proName:'BSE:HDFCBANK',title:'HDFC Bank'},{proName:'BSE:ICICIBANK',title:'ICICI Bank'},
+  {proName:'BSE:INFY',title:'Infosys'},{proName:'BSE:SBIN',title:'SBI'},
+  {proName:'BSE:LT',title:'L&T'},{proName:'BSE:BHARTIARTL',title:'Airtel'}
+];
+
+/** Initialise a single TradingView ticker-tape widget dynamically. */
+function _initTicker(containerId, baseSymbols, customSymbols, transparent) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  // Prepend custom symbols before the defaults
+  var allSymbols = (Array.isArray(customSymbols) ? customSymbols : []).concat(baseSymbols);
+  var widget = el.querySelector('.tradingview-widget-container__widget');
+  if (!widget) { widget = document.createElement('div'); widget.className = 'tradingview-widget-container__widget'; el.appendChild(widget); }
+  var s = document.createElement('script');
+  s.type  = 'text/javascript';
+  s.src   = 'https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js';
+  s.async = true;
+  s.textContent = JSON.stringify({
+    symbols: allSymbols,
+    showSymbolLogo: true,
+    isTransparent: transparent ? true : false,
+    displayMode: 'adaptive',
+    colorTheme: 'dark',
+    locale: 'en'
+  });
+  el.appendChild(s);
+}
+
+/** Initialise both desktop and mobile tickers with optional custom symbols. */
+function _initTickers(customSymbols) {
+  _initTicker('tv-desktop-container', _TICKER_DESKTOP_DEFAULTS, customSymbols, false);
+  _initTicker('tv-mobile-container',  _TICKER_MOBILE_DEFAULTS,  customSymbols, true);
+}
+
+/** Fetch config.json, merge custom channels into global arrays, init tickers. */
+async function _loadPageConfig() {
+  try {
+    var r = await fetch('/config.json?_=' + Date.now());
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var cfg = await r.json();
+    if (!cfg || typeof cfg !== 'object' || Array.isArray(cfg)) throw new Error('bad format');
+
+    // ── Merge custom YouTube channels (prepend — appear first in picker) ─────
+    if (Array.isArray(cfg.youtube_channels) && cfg.youtube_channels.length) {
+      var ytSlot = YT_CHANNELS.length + 1;
+      var customYT = cfg.youtube_channels.map(function(ch, i) {
+        return {
+          no: ytSlot + i,
+          name:     ch.name     || 'Custom Channel',
+          country:  ch.country  || 'Custom',
+          category: ch.category || 'Custom',
+          lang:     ch.lang     || 'English',
+          cid:      ch.cid      || '',
+          v1:       ch.v1       || '',
+          v2:       ch.v2       || ''
+        };
+      });
+      // Unshift so they appear at the top of the selector list
+      for (var i = customYT.length - 1; i >= 0; i--) {
+        YT_CHANNELS.unshift(customYT[i]);
+      }
+    }
+
+    // ── Merge custom news channels (append to NEWS_SOURCES) ──────────────────
+    if (Array.isArray(cfg.news_channels) && cfg.news_channels.length) {
+      var existingIds = {};
+      NEWS_SOURCES.forEach(function(s) { existingIds[s.id] = true; });
+      cfg.news_channels.forEach(function(ch) {
+        if (ch.id && !existingIds[ch.id]) {
+          NEWS_SOURCES.push(ch);
+          existingIds[ch.id] = true;
+        }
+      });
+    }
+
+    // ── Init tickers with custom symbols ─────────────────────────────────────
+    _initTickers(cfg.ticker_symbols || []);
+
+  } catch(e) {
+    // Silent fail — init tickers with defaults only
+    _initTickers([]);
+  }
+}
+
+// Kick off config load + ticker init as soon as DOM is ready
+document.addEventListener('DOMContentLoaded', function() { _loadPageConfig(); });
 
 var _ytCurrentChNo   = 78;   // Bloomberg Television default (1-based index)
 var _ytFallbackStage = 0;    // 1=channelId, 2=videoId1, 3=videoId2

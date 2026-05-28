@@ -404,6 +404,99 @@
     .ci-status.ok  { display: block; background: rgba(16,185,129,.1);  color: #34d399; border: 1px solid rgba(16,185,129,.2); }
     .ci-status.err { display: block; background: rgba(239,68,68,.1);   color: #f87171; border: 1px solid rgba(239,68,68,.2); }
 
+    /* ══ HOME PAGE TAB ════════════════════════════════════════════════════════ */
+
+    /* Sub-tab bar inside Home tab */
+    .hp-subtabs {
+      display: flex; gap: 0; border-bottom: 1px solid #162d4a;
+      background: rgba(0,0,0,.12); overflow-x: auto;
+    }
+    .hp-stab {
+      padding: 11px 20px; font-size: 11px; font-weight: 700;
+      letter-spacing: .3px; color: #4d6a8a; cursor: pointer; white-space: nowrap;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: color .15s, border-color .15s; display: flex; align-items: center; gap: 6px;
+    }
+    .hp-stab:hover { color: #8ea8c8; }
+    .hp-stab.active { color: #e2eeff; border-bottom-color: #6366f1; }
+
+    /* Toolbar: dirty badge + save btn */
+    .hp-toolbar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 24px; border-bottom: 1px solid #0e1f3b;
+      background: rgba(99,102,241,.04);
+    }
+    .hp-dirty-badge {
+      background: rgba(245,158,11,.12); color: #fbbf24;
+      border: 1px solid rgba(245,158,11,.25);
+      border-radius: 20px; padding: 2px 10px;
+      font-size: 10px; font-weight: 700; display: none; flex-shrink: 0;
+    }
+    .hp-save-btn {
+      margin-left: auto;
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      color: #fff; border: none; border-radius: 9px;
+      padding: 8px 18px; font-size: 12.5px; font-weight: 700;
+      cursor: pointer; transition: opacity .15s; font-family: inherit; flex-shrink: 0;
+    }
+    .hp-save-btn:hover:not(:disabled) { opacity: .85; }
+    .hp-save-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .hp-save-status {
+      font-size: 11.5px; line-height: 1.4;
+    }
+    .hp-save-status.ok  { color: #34d399; }
+    .hp-save-status.err { color: #f87171; }
+
+    /* Sub-panels */
+    .hp-spanel { display: none; }
+    .hp-spanel.active { display: block; }
+
+    /* 2-col body inside each sub-panel */
+    .hp-body {
+      display: grid; grid-template-columns: 1fr 1.4fr;
+    }
+    .hp-form-panel {
+      padding: 22px 24px; border-right: 1px solid #162d4a;
+    }
+    .hp-list-panel {
+      padding: 18px 22px; display: flex; flex-direction: column;
+    }
+
+    /* HP list items */
+    .hp-list { display: flex; flex-direction: column; gap: 7px; flex: 1; min-height: 80px; }
+    .hp-item {
+      background: #0e1f3b; border: 1px solid #1e3a5c;
+      border-radius: 9px; padding: 10px 12px;
+      display: flex; align-items: flex-start; gap: 10px;
+      transition: opacity .2s, transform .2s;
+    }
+    .hp-item.is-removing { opacity: 0; transform: translateX(12px); }
+    .hp-item-icon {
+      width: 30px; height: 30px; border-radius: 7px;
+      background: rgba(99,102,241,.15); display: flex; align-items: center;
+      justify-content: center; font-size: 14px; flex-shrink: 0;
+    }
+    .hp-item-body { flex: 1; min-width: 0; }
+    .hp-item-title {
+      font-size: 12.5px; font-weight: 700; color: #e2eeff;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .hp-item-sub {
+      font-size: 10px; color: #4d6a8a; margin-top: 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      font-family: monospace;
+    }
+    .hp-item-actions { display: flex; gap: 3px; flex-shrink: 0; }
+
+    /* Ticker drag-sort badge */
+    .ticker-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(99,102,241,.1); border: 1px solid rgba(99,102,241,.2);
+      color: #818cf8; border-radius: 20px; padding: 2px 9px;
+      font-size: 10px; font-weight: 700; letter-spacing: .3px;
+      margin-right: 3px;
+    }
+
     /* ── Mobile ── */
     @media (max-width: 640px) {
       body { padding: 16px 10px 48px; }
@@ -416,6 +509,8 @@
       .form-panel { border-right: none; border-bottom: 1px solid #162d4a; padding: 20px 18px; }
       .links-panel { padding: 20px 18px; }
       .act-btn { width: 32px; height: 32px; font-size: 14px; }
+      .hp-body { grid-template-columns: 1fr; }
+      .hp-form-panel { border-right: none; border-bottom: 1px solid #162d4a; }
     }
   </style>
 </head>
@@ -473,6 +568,9 @@
       </div>
       <div class="c-tab" data-tab="content" onclick="switchTab('content')">
         <span class="c-tab-icon">📝</span> Content Posts
+      </div>
+      <div class="c-tab" data-tab="homepage" onclick="switchTab('homepage')">
+        <span class="c-tab-icon">🏠</span> Home Page
       </div>
     </div>
 
@@ -589,6 +687,133 @@
 
       </div>
     </div><!-- /tab-content -->
+
+    <!-- ══ HOME PAGE TAB ══ -->
+    <div class="c-panel" id="tab-homepage">
+
+      <!-- Sub-tab bar -->
+      <div class="hp-subtabs">
+        <div class="hp-stab active" data-stab="yt" onclick="switchHomeTab('yt')">📺 YouTube Channels</div>
+        <div class="hp-stab" data-stab="news" onclick="switchHomeTab('news')">📡 Live News Channels</div>
+        <div class="hp-stab" data-stab="ticker" onclick="switchHomeTab('ticker')">📈 Ticker Symbols</div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="hp-toolbar">
+        <span class="hp-dirty-badge" id="hp-dirty-badge">Unsaved Changes</span>
+        <div class="hp-save-status" id="hp-save-status"></div>
+        <button class="hp-save-btn" id="hp-save-btn" onclick="saveConfig()" disabled>💾 Save to Site</button>
+      </div>
+
+      <!-- ── YouTube sub-panel ── -->
+      <div class="hp-spanel active" id="hp-yt">
+        <div class="hp-body">
+          <div class="hp-form-panel">
+            <p style="font-size:11px;color:#4d6a8a;margin-bottom:16px;line-height:1.6;">
+              Add custom YouTube channels to your Live TV grid. These appear at the top of the channel selector alongside the built-in 176 channels.
+            </p>
+            <label class="field-label">Channel Name</label>
+            <input type="text" id="yt-name" placeholder="e.g. BBC World News" maxlength="80" autocomplete="off">
+            <label class="field-label">YouTube Channel ID <span style="opacity:.45;font-weight:400">(UC…)</span></label>
+            <input type="text" id="yt-cid" placeholder="UCxxxxxxxxxxxxxxxxxx" maxlength="50" autocomplete="off" spellcheck="false">
+            <label class="field-label">Fallback Video ID 1</label>
+            <input type="text" id="yt-v1" placeholder="Video ID (11 chars)" maxlength="20" autocomplete="off" spellcheck="false">
+            <label class="field-label">Fallback Video ID 2 <span style="opacity:.45;font-weight:400">(optional)</span></label>
+            <input type="text" id="yt-v2" placeholder="Video ID (11 chars)" maxlength="20" autocomplete="off" spellcheck="false">
+            <label class="field-label">Country</label>
+            <input type="text" id="yt-country" placeholder="India" maxlength="40" value="India" autocomplete="off">
+            <label class="field-label">Category</label>
+            <input type="text" id="yt-category" placeholder="National News" maxlength="40" value="National News" autocomplete="off">
+            <label class="field-label">Language</label>
+            <input type="text" id="yt-lang" placeholder="English" maxlength="30" value="English" autocomplete="off">
+            <button class="btn-primary" onclick="addYtChannel()">+ Add Channel</button>
+            <div class="form-status" id="yt-form-status"></div>
+          </div>
+          <div class="hp-list-panel">
+            <div class="links-panel-hdr">
+              <div class="links-panel-title">Custom YouTube Channels</div>
+              <span class="count-badge" id="yt-count">0</span>
+            </div>
+            <div class="hp-list" id="yt-list">
+              <div class="empty-note">Loading…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── News sub-panel ── -->
+      <div class="hp-spanel" id="hp-news">
+        <div class="hp-body">
+          <div class="hp-form-panel">
+            <p style="font-size:11px;color:#4d6a8a;margin-bottom:16px;line-height:1.6;">
+              Add custom RSS news sources. Each source needs a unique ID and a valid RSS feed URL. Custom channels appear in the Live News selector.
+            </p>
+            <label class="field-label">Source ID <span style="opacity:.45;font-weight:400">(unique, e.g. custom1)</span></label>
+            <input type="text" id="news-id" placeholder="custom1" maxlength="30" autocomplete="off" spellcheck="false">
+            <label class="field-label">Flag Emoji</label>
+            <input type="text" id="news-flag" placeholder="🌐" maxlength="10" value="🌐" autocomplete="off">
+            <label class="field-label">Display Label</label>
+            <input type="text" id="news-label" placeholder="e.g. Al Jazeera English" maxlength="80" autocomplete="off">
+            <label class="field-label">Language</label>
+            <input type="text" id="news-lang" placeholder="English" maxlength="30" value="English" autocomplete="off">
+            <label class="field-label">Group <span style="opacity:.45;font-weight:400">(shown in picker)</span></label>
+            <input type="text" id="news-group" placeholder="🌍 Custom Sources" maxlength="60" value="🌍 Custom Sources" autocomplete="off">
+            <label class="field-label">Accent Color <span style="opacity:.45;font-weight:400">(hex)</span></label>
+            <input type="text" id="news-color" placeholder="#4f46e5" maxlength="10" value="#4f46e5" autocomplete="off" spellcheck="false">
+            <label class="field-label">RSS Feed URL</label>
+            <input type="url" id="news-url" placeholder="https://feeds.example.com/rss.xml" autocomplete="off" spellcheck="false">
+            <button class="btn-primary" onclick="addNewsChannel()">+ Add News Source</button>
+            <div class="form-status" id="news-form-status"></div>
+          </div>
+          <div class="hp-list-panel">
+            <div class="links-panel-hdr">
+              <div class="links-panel-title">Custom News Sources</div>
+              <span class="count-badge" id="news-count">0</span>
+            </div>
+            <div class="hp-list" id="news-list">
+              <div class="empty-note">Loading…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Ticker sub-panel ── -->
+      <div class="hp-spanel" id="hp-ticker">
+        <div class="hp-body">
+          <div class="hp-form-panel">
+            <p style="font-size:11px;color:#4d6a8a;margin-bottom:16px;line-height:1.6;">
+              Add custom symbols to the scrolling ticker tape. Use TradingView's <code style="background:#0e1f3b;padding:1px 5px;border-radius:4px;color:#818cf8">EXCHANGE:SYMBOL</code> format (e.g. <code style="background:#0e1f3b;padding:1px 5px;border-radius:4px;color:#818cf8">NSE:TATAMOTORS</code>). Custom symbols appear first in the tape.
+            </p>
+            <label class="field-label">Symbol <span style="opacity:.45;font-weight:400">(EXCHANGE:SYMBOL)</span></label>
+            <input type="text" id="ticker-pro" placeholder="e.g. NSE:TATAMOTORS" maxlength="50" autocomplete="off" spellcheck="false">
+            <label class="field-label">Display Title</label>
+            <input type="text" id="ticker-title" placeholder="e.g. Tata Motors" maxlength="40" autocomplete="off" spellcheck="false">
+            <button class="btn-primary" onclick="addTickerSymbol()">+ Add Symbol</button>
+            <div class="form-status" id="ticker-form-status"></div>
+            <div style="margin-top:20px;padding:12px;background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);border-radius:8px;">
+              <div style="font-size:9.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6366f1;margin-bottom:8px;">Common Exchanges</div>
+              <div style="font-size:10.5px;color:#4d6a8a;line-height:1.8;">
+                BSE: → BSE India &nbsp;·&nbsp; NSE: → NSE India<br>
+                NASDAQ: → Nasdaq &nbsp;·&nbsp; NYSE: → New York<br>
+                FX: → Forex &nbsp;·&nbsp; TVC: → TradingView Comm.<br>
+                BITSTAMP: → Crypto &nbsp;·&nbsp; OANDA: → CFD
+              </div>
+            </div>
+          </div>
+          <div class="hp-list-panel">
+            <div class="links-panel-hdr">
+              <div class="links-panel-title">Custom Ticker Symbols</div>
+              <span class="count-badge" id="ticker-count">0</span>
+            </div>
+            <div style="font-size:10px;color:#3d5470;margin-bottom:10px;">Custom symbols appear first in the tape.</div>
+            <div class="hp-list" id="ticker-list">
+              <div class="empty-note">Loading…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-homepage -->
 
   </div><!-- /console -->
 </div><!-- /dashboard-view -->
@@ -1056,7 +1281,8 @@ function switchTab(name) {
   document.querySelectorAll('.c-panel').forEach(function(p) {
     p.classList.toggle('active', p.id === 'tab-' + name);
   });
-  if (name === 'content') loadContent();
+  if (name === 'content')  loadContent();
+  if (name === 'homepage') loadConfig();
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -1245,6 +1471,344 @@ function setCpFormStatus(t, m) {
 function setCiStatus(t, m) {
   var e = document.getElementById('ci-status');
   e.className = 'ci-status' + (t ? ' ' + t : '');
+  e.textContent = m;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   HOME PAGE TAB — config.json manager
+══════════════════════════════════════════════════════════════════════════════ */
+var CONFIG_URL  = 'https://vilfintv.com/config.json';
+var configState = { youtube_channels: [], news_channels: [], ticker_symbols: [] };
+var _configLoaded = false;
+var _hpDirty = false;
+var _activeHomeTab = 'yt';
+
+/* ── Sub-tab switch ─────────────────────────────────────────────────────────── */
+function switchHomeTab(name) {
+  _activeHomeTab = name;
+  document.querySelectorAll('.hp-stab').forEach(function(t) {
+    t.classList.toggle('active', t.dataset.stab === name);
+  });
+  document.querySelectorAll('.hp-spanel').forEach(function(p) {
+    p.classList.toggle('active', p.id === 'hp-' + name);
+  });
+}
+
+/* ── Load config.json ───────────────────────────────────────────────────────── */
+async function loadConfig() {
+  ['yt-list','news-list','ticker-list'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.innerHTML = '<div class="empty-note">Loading…</div>';
+  });
+  try {
+    var res = await fetch(CONFIG_URL + '?_=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      configState.youtube_channels = Array.isArray(data.youtube_channels) ? data.youtube_channels : [];
+      configState.news_channels    = Array.isArray(data.news_channels)    ? data.news_channels    : [];
+      configState.ticker_symbols   = Array.isArray(data.ticker_symbols)   ? data.ticker_symbols   : [];
+    } else {
+      configState = { youtube_channels: [], news_channels: [], ticker_symbols: [] };
+    }
+    _configLoaded = true;
+    _hpDirty = false;
+    setHpDirty(false);
+  } catch(e) {
+    configState = { youtube_channels: [], news_channels: [], ticker_symbols: [] };
+    _configLoaded = true;
+    setHpDirty(false);
+    setHpSaveStatus('err', 'Note: config.json not found — starting fresh.');
+  }
+  renderYtList();
+  renderNewsList();
+  renderTickerList();
+}
+
+/* ── Dirty state ────────────────────────────────────────────────────────────── */
+function setHpDirty(dirty) {
+  _hpDirty = dirty;
+  var badge = document.getElementById('hp-dirty-badge');
+  var btn   = document.getElementById('hp-save-btn');
+  if (badge) badge.style.display = dirty ? 'block' : 'none';
+  if (btn)   btn.disabled = !dirty;
+  if (!dirty) setHpSaveStatus('', '');
+}
+function markHpDirty() { setHpDirty(true); }
+
+/* ── Save config ────────────────────────────────────────────────────────────── */
+async function saveConfig() {
+  var btn = document.getElementById('hp-save-btn');
+  btn.disabled    = true;
+  btn.textContent = '⏳ Saving…';
+  setHpSaveStatus('', '');
+  try {
+    var res  = await authFetch(WORKER + '/api/update-config', {
+      method: 'POST',
+      body:   JSON.stringify({ config: configState }),
+    });
+    var data = await res.json();
+    if (res.ok && data.ok) {
+      setHpDirty(false);
+      setHpSaveStatus('ok', '✓ Saved! Changes are live on the site.');
+      btn.textContent = '💾 Save to Site';
+    } else {
+      setHpSaveStatus('err', data.message || 'Server error ' + res.status);
+      btn.disabled    = false;
+      btn.textContent = '💾 Save to Site';
+    }
+  } catch(e) {
+    if (e.message !== 'SESSION_EXPIRED') {
+      setHpSaveStatus('err', 'Network error: ' + e.message);
+    }
+    btn.disabled    = false;
+    btn.textContent = '💾 Save to Site';
+  }
+}
+function setHpSaveStatus(t, m) {
+  var e = document.getElementById('hp-save-status');
+  if (!e) return;
+  e.className = 'hp-save-status' + (t ? ' ' + t : '');
+  e.textContent = m;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   YOUTUBE CHANNELS
+══════════════════════════════════════════════════════════════════════════════ */
+function addYtChannel() {
+  var name     = document.getElementById('yt-name').value.trim();
+  var cid      = document.getElementById('yt-cid').value.trim();
+  var v1       = document.getElementById('yt-v1').value.trim();
+  var v2       = document.getElementById('yt-v2').value.trim();
+  var country  = document.getElementById('yt-country').value.trim() || 'Custom';
+  var category = document.getElementById('yt-category').value.trim() || 'Custom';
+  var lang     = document.getElementById('yt-lang').value.trim() || 'English';
+
+  setHpFieldStatus('yt-form-status', '', '');
+  if (!name) return setHpFieldStatus('yt-form-status', 'err', 'Channel Name is required.');
+  if (!cid && !v1) return setHpFieldStatus('yt-form-status', 'err', 'Channel ID or Fallback Video ID 1 is required.');
+
+  configState.youtube_channels.unshift({ name: name, cid: cid, v1: v1, v2: v2, country: country, category: category, lang: lang });
+  markHpDirty();
+  renderYtList();
+
+  // Clear form fields
+  ['yt-name','yt-cid','yt-v1','yt-v2'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  setHpFieldStatus('yt-form-status', 'ok', '✓ Channel added — click Save to Site to publish.');
+}
+
+function renderYtList() {
+  var listEl = document.getElementById('yt-list');
+  var count  = document.getElementById('yt-count');
+  var items  = configState.youtube_channels;
+  if (count) count.textContent = items.length;
+  if (!listEl) return;
+  if (!items.length) {
+    listEl.innerHTML = '<div class="empty-note">No custom YouTube channels yet. Add one on the left.</div>';
+    return;
+  }
+  listEl.innerHTML = '';
+  items.forEach(function(ch, idx) {
+    var el = document.createElement('div');
+    el.className = 'hp-item';
+    el.innerHTML =
+      '<div class="hp-item-icon">📺</div>'
+      + '<div class="hp-item-body">'
+        + '<div class="hp-item-title">' + esc(ch.name) + ' <span style="font-size:9.5px;font-weight:400;color:#4d6a8a;">' + esc(ch.country) + ' · ' + esc(ch.lang) + '</span></div>'
+        + '<div class="hp-item-sub">CID: ' + esc(ch.cid || '(none)') + ' · V1: ' + esc(ch.v1 || '–') + (ch.v2 ? ' · V2: ' + esc(ch.v2) : '') + '</div>'
+      + '</div>'
+      + '<div class="hp-item-actions">'
+        + '<button class="act-btn" title="Move up" onclick="moveYtUp(' + idx + ')" ' + (idx===0?'disabled':'') + '>↑</button>'
+        + '<button class="act-btn" title="Move down" onclick="moveYtDown(' + idx + ')" ' + (idx===items.length-1?'disabled':'') + '>↓</button>'
+        + '<button class="act-btn danger" title="Delete" onclick="deleteYt(' + idx + ', this)">✕</button>'
+      + '</div>';
+    listEl.appendChild(el);
+  });
+}
+
+function deleteYt(idx, btn) {
+  var item = btn.closest('.hp-item');
+  if (item) item.classList.add('is-removing');
+  setTimeout(function() {
+    configState.youtube_channels.splice(idx, 1);
+    markHpDirty();
+    renderYtList();
+  }, 200);
+}
+
+function moveYtUp(idx) {
+  if (idx === 0) return;
+  var a = configState.youtube_channels[idx-1];
+  configState.youtube_channels[idx-1] = configState.youtube_channels[idx];
+  configState.youtube_channels[idx] = a;
+  markHpDirty(); renderYtList();
+}
+function moveYtDown(idx) {
+  if (idx >= configState.youtube_channels.length - 1) return;
+  var a = configState.youtube_channels[idx+1];
+  configState.youtube_channels[idx+1] = configState.youtube_channels[idx];
+  configState.youtube_channels[idx] = a;
+  markHpDirty(); renderYtList();
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   NEWS CHANNELS
+══════════════════════════════════════════════════════════════════════════════ */
+function addNewsChannel() {
+  var id    = document.getElementById('news-id').value.trim();
+  var flag  = document.getElementById('news-flag').value.trim() || '🌐';
+  var label = document.getElementById('news-label').value.trim();
+  var lang  = document.getElementById('news-lang').value.trim() || 'English';
+  var group = document.getElementById('news-group').value.trim() || '🌍 Custom Sources';
+  var color = document.getElementById('news-color').value.trim() || '#4f46e5';
+  var url   = document.getElementById('news-url').value.trim();
+
+  setHpFieldStatus('news-form-status', '', '');
+  if (!id)    return setHpFieldStatus('news-form-status', 'err', 'Source ID is required.');
+  if (!label) return setHpFieldStatus('news-form-status', 'err', 'Display Label is required.');
+  if (!url)   return setHpFieldStatus('news-form-status', 'err', 'RSS Feed URL is required.');
+  try { new URL(url); } catch(e) { return setHpFieldStatus('news-form-status', 'err', 'Invalid RSS URL.'); }
+
+  // Check for duplicate ID
+  var exists = configState.news_channels.some(function(ch) { return ch.id === id; });
+  if (exists) return setHpFieldStatus('news-form-status', 'err', 'Source ID "' + esc(id) + '" already exists. Use a unique ID.');
+
+  configState.news_channels.push({ id: id, flag: flag, label: label, lang: lang, group: group, color: color, url: url });
+  markHpDirty();
+  renderNewsList();
+
+  ['news-id','news-label','news-url'].forEach(function(i) { document.getElementById(i).value = ''; });
+  setHpFieldStatus('news-form-status', 'ok', '✓ Source added — click Save to Site to publish.');
+}
+
+function renderNewsList() {
+  var listEl = document.getElementById('news-list');
+  var count  = document.getElementById('news-count');
+  var items  = configState.news_channels;
+  if (count) count.textContent = items.length;
+  if (!listEl) return;
+  if (!items.length) {
+    listEl.innerHTML = '<div class="empty-note">No custom news sources yet. Add one on the left.</div>';
+    return;
+  }
+  listEl.innerHTML = '';
+  items.forEach(function(ch, idx) {
+    var el = document.createElement('div');
+    el.className = 'hp-item';
+    var host = '';
+    try { host = new URL(ch.url).hostname.replace(/^www\./,''); } catch(e) { host = ''; }
+    el.innerHTML =
+      '<div class="hp-item-icon" style="background:' + esc(ch.color) + '22;font-size:16px;">' + esc(ch.flag) + '</div>'
+      + '<div class="hp-item-body">'
+        + '<div class="hp-item-title">' + esc(ch.label) + ' <span style="font-size:9.5px;font-weight:400;color:#4d6a8a;">' + esc(ch.lang) + '</span></div>'
+        + '<div class="hp-item-sub">ID: ' + esc(ch.id) + ' · ' + esc(host) + '</div>'
+      + '</div>'
+      + '<div class="hp-item-actions">'
+        + '<button class="act-btn danger" title="Delete" onclick="deleteNews(' + idx + ', this)">✕</button>'
+      + '</div>';
+    listEl.appendChild(el);
+  });
+}
+
+function deleteNews(idx, btn) {
+  var item = btn.closest('.hp-item');
+  if (item) item.classList.add('is-removing');
+  setTimeout(function() {
+    configState.news_channels.splice(idx, 1);
+    markHpDirty();
+    renderNewsList();
+  }, 200);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   TICKER SYMBOLS
+══════════════════════════════════════════════════════════════════════════════ */
+function addTickerSymbol() {
+  var proName = document.getElementById('ticker-pro').value.trim().toUpperCase();
+  var title   = document.getElementById('ticker-title').value.trim();
+
+  setHpFieldStatus('ticker-form-status', '', '');
+  if (!proName) return setHpFieldStatus('ticker-form-status', 'err', 'Symbol is required (e.g. NSE:TATAMOTORS).');
+  if (!proName.includes(':')) return setHpFieldStatus('ticker-form-status', 'err', 'Use EXCHANGE:SYMBOL format (e.g. NSE:TATAMOTORS).');
+  if (!title)   return setHpFieldStatus('ticker-form-status', 'err', 'Display Title is required.');
+
+  var exists = configState.ticker_symbols.some(function(s) { return s.proName === proName; });
+  if (exists) return setHpFieldStatus('ticker-form-status', 'err', 'Symbol ' + proName + ' already added.');
+
+  configState.ticker_symbols.push({ proName: proName, title: title });
+  markHpDirty();
+  renderTickerList();
+
+  document.getElementById('ticker-pro').value   = '';
+  document.getElementById('ticker-title').value = '';
+  setHpFieldStatus('ticker-form-status', 'ok', '✓ Symbol added — click Save to Site to publish.');
+}
+
+function renderTickerList() {
+  var listEl = document.getElementById('ticker-list');
+  var count  = document.getElementById('ticker-count');
+  var items  = configState.ticker_symbols;
+  if (count) count.textContent = items.length;
+  if (!listEl) return;
+  if (!items.length) {
+    listEl.innerHTML = '<div class="empty-note">No custom ticker symbols yet. Add one on the left.</div>';
+    return;
+  }
+  listEl.innerHTML = '';
+  items.forEach(function(sym, idx) {
+    var parts  = sym.proName.split(':');
+    var exch   = parts[0] || '';
+    var ticker = parts.slice(1).join(':') || sym.proName;
+
+    var el = document.createElement('div');
+    el.className = 'hp-item';
+    el.innerHTML =
+      '<div class="hp-item-icon" style="background:rgba(16,185,129,.12);font-size:11px;font-weight:800;color:#34d399;letter-spacing:.3px;">' + esc(exch) + '</div>'
+      + '<div class="hp-item-body">'
+        + '<div class="hp-item-title">' + esc(sym.title) + ' <span class="ticker-badge">' + esc(ticker) + '</span></div>'
+        + '<div class="hp-item-sub">' + esc(sym.proName) + '</div>'
+      + '</div>'
+      + '<div class="hp-item-actions">'
+        + '<button class="act-btn" title="Move up"   onclick="moveTickerUp(' + idx + ')"   ' + (idx===0?'disabled':'') + '>↑</button>'
+        + '<button class="act-btn" title="Move down" onclick="moveTickerDown(' + idx + ')" ' + (idx===items.length-1?'disabled':'') + '>↓</button>'
+        + '<button class="act-btn danger" title="Delete" onclick="deleteTicker(' + idx + ', this)">✕</button>'
+      + '</div>';
+    listEl.appendChild(el);
+  });
+}
+
+function deleteTicker(idx, btn) {
+  var item = btn.closest('.hp-item');
+  if (item) item.classList.add('is-removing');
+  setTimeout(function() {
+    configState.ticker_symbols.splice(idx, 1);
+    markHpDirty();
+    renderTickerList();
+  }, 200);
+}
+
+function moveTickerUp(idx) {
+  if (idx === 0) return;
+  var a = configState.ticker_symbols[idx-1];
+  configState.ticker_symbols[idx-1] = configState.ticker_symbols[idx];
+  configState.ticker_symbols[idx] = a;
+  markHpDirty(); renderTickerList();
+}
+function moveTickerDown(idx) {
+  if (idx >= configState.ticker_symbols.length - 1) return;
+  var a = configState.ticker_symbols[idx+1];
+  configState.ticker_symbols[idx+1] = configState.ticker_symbols[idx];
+  configState.ticker_symbols[idx] = a;
+  markHpDirty(); renderTickerList();
+}
+
+/* ── Field-level status helper ──────────────────────────────────────────────── */
+function setHpFieldStatus(id, t, m) {
+  var e = document.getElementById(id);
+  if (!e) return;
+  e.className = 'form-status' + (t ? ' ' + t : '');
   e.textContent = m;
 }
 </script>

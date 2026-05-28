@@ -398,6 +398,71 @@ export default {
       return new Response(JSON.stringify({ ok: true, message: 'Content updated.' }), { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
     }
 
+    // ── /api/update-config  POST — replace config.json (YouTube, News, Ticker) ─
+    if (pathname === '/api/update-config') {
+      if (request.method !== 'POST') return jsonError(405, 'Use POST.');
+      let body;
+      try { body = await request.json(); } catch (_) { return jsonError(400, 'Invalid JSON.'); }
+      const auth = await requireAuth(request, env);
+      if (auth.error) return auth.error;
+
+      const { config } = body || {};
+      if (!config || typeof config !== 'object') return jsonError(400, 'config object required.');
+      if (!env.GITHUB_TOKEN) return jsonError(503, 'GitHub not configured.');
+
+      // Sanitize YouTube channels
+      const cleanYT = (Array.isArray(config.youtube_channels) ? config.youtube_channels : [])
+        .map(ch => ({
+          name:     String(ch.name     || '').trim().slice(0, 80),
+          cid:      String(ch.cid      || '').trim().slice(0, 50),
+          v1:       String(ch.v1       || '').trim().slice(0, 20),
+          v2:       String(ch.v2       || '').trim().slice(0, 20),
+          country:  String(ch.country  || '').trim().slice(0, 40),
+          category: String(ch.category || '').trim().slice(0, 40),
+          lang:     String(ch.lang     || '').trim().slice(0, 30),
+        })).filter(ch => ch.name);
+
+      // Sanitize news channels
+      const cleanNews = (Array.isArray(config.news_channels) ? config.news_channels : [])
+        .map(ch => ({
+          id:    String(ch.id    || '').trim().slice(0, 30),
+          flag:  String(ch.flag  || '').trim().slice(0, 10),
+          label: String(ch.label || '').trim().slice(0, 80),
+          lang:  String(ch.lang  || '').trim().slice(0, 30),
+          group: String(ch.group || '').trim().slice(0, 60),
+          color: String(ch.color || '#888888').trim().slice(0, 10),
+          url:   String(ch.url   || '').trim().slice(0, 500),
+        })).filter(ch => ch.label && ch.url);
+
+      // Sanitize ticker symbols
+      const cleanTicker = (Array.isArray(config.ticker_symbols) ? config.ticker_symbols : [])
+        .map(s => ({
+          proName: String(s.proName || '').trim().slice(0, 50),
+          title:   String(s.title   || '').trim().slice(0, 40),
+        })).filter(s => s.proName);
+
+      const cleanConfig = { youtube_channels: cleanYT, news_channels: cleanNews, ticker_symbols: cleanTicker };
+
+      const REPO = 'Vilfin-TV/MultiScreener', FILE_PATH = 'config.json', BRANCH = 'main';
+      const GH_API = `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`;
+      const GH_H = { 'Authorization': `token ${env.GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'vilfintv-proxy', 'Content-Type': 'application/json' };
+
+      let sha = null;
+      try {
+        const r = await fetch(`${GH_API}?ref=${BRANCH}`, { headers: GH_H });
+        if (r.ok) sha = (await r.json()).sha;
+        else if (r.status !== 404) return jsonError(502, `GitHub GET failed: ${r.status}`);
+      } catch (e) { return jsonError(502, `GitHub GET error: ${e.message}`); }
+
+      const put = { message: 'chore(config): update via console', content: btoa(unescape(encodeURIComponent(JSON.stringify(cleanConfig, null, 2)))), branch: BRANCH };
+      if (sha) put.sha = sha;
+      try {
+        const r = await fetch(GH_API, { method: 'PUT', headers: GH_H, body: JSON.stringify(put) });
+        if (!r.ok) { const e = await r.text(); return jsonError(502, `GitHub PUT failed: ${r.status}`, { detail: e.slice(0,200) }); }
+      } catch (e) { return jsonError(502, `GitHub PUT error: ${e.message}`); }
+      return new Response(JSON.stringify({ ok: true, message: 'Config updated.' }), { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
+    }
+
     // ── Only allow GET for all other routes ──────────────────────────────────
     if (request.method !== 'GET') {
       return jsonError(405, 'Method not allowed. Use GET.');
