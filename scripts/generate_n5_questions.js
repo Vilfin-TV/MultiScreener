@@ -154,7 +154,7 @@ const quizzes = [
   },
   {
     q: 'Complete the sentence: "This room is clean and beautiful." (この部屋はきれいで、___です。)',
-    options: ['明るい', '明るくて', '明るく', '明るい'],
+    options: ['明るい', '明るくて', '明るく', '明るいで'],
     answer: 0,
     explain: 'To connect a Na-adjective to another clause, use the "de" form (きれい + で). The final clause finishes with the standard adjective + です (明るいです).'
   },
@@ -1239,6 +1239,8 @@ if (quizzes.length !== 200) {
   process.exit(1);
 }
 
+const questionTexts = new Set();
+
 quizzes.forEach((item, index) => {
   const qNum = index + 1;
   
@@ -1247,16 +1249,30 @@ quizzes.forEach((item, index) => {
     process.exit(1);
   }
   
+  const normalizedQ = item.q.trim().toLowerCase();
+  if (questionTexts.has(normalizedQ)) {
+    console.error(`❌ Duplicate question detected at Question ${qNum}: "${item.q}"`);
+    process.exit(1);
+  }
+  questionTexts.add(normalizedQ);
+  
   if (!item.options || !Array.isArray(item.options) || item.options.length !== 4) {
     console.error(`❌ Question ${qNum} must have exactly 4 choices.`);
     process.exit(1);
   }
   
+  const optionTexts = new Set();
   item.options.forEach((opt, oIdx) => {
     if (!opt || typeof opt !== 'string' || opt.trim() === '') {
       console.error(`❌ Question ${qNum} choice ${oIdx} is invalid or empty.`);
       process.exit(1);
     }
+    const normalizedOpt = opt.trim().toLowerCase();
+    if (optionTexts.has(normalizedOpt)) {
+      console.error(`❌ Duplicate choice option detected in Question ${qNum}: "${opt}"`);
+      process.exit(1);
+    }
+    optionTexts.add(normalizedOpt);
   });
   
   if (typeof item.answer !== 'number' || item.answer < 0 || item.answer > 3) {
