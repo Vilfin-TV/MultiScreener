@@ -61,22 +61,26 @@ const MAX_RETRIES = 3;
 const RETRY_BASE  = 4_000;    // 4 s, 8 s, 16 s back-off
 
 // ─── HTTP/S request helper ─────────────────────────────────────────────────
-function postJson(url, body) {
+function requestJson(url, method = 'POST', body = {}) {
   return new Promise((resolve, reject) => {
     const parsed   = new URL(url);
     const lib      = parsed.protocol === 'https:' ? https : http;
-    const payload  = JSON.stringify(body);
+    const payload  = method === 'POST' ? JSON.stringify(body) : '';
+
+    const headers = {
+      'User-Agent':     'VilfinTV-BuildScript/1.0',
+    };
+    if (method === 'POST') {
+      headers['Content-Type'] = 'application/json';
+      headers['Content-Length'] = Buffer.byteLength(payload);
+    }
 
     const req = lib.request({
       hostname: parsed.hostname,
       port:     parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
       path:     parsed.pathname + parsed.search,
-      method:   'POST',
-      headers: {
-        'Content-Type':   'application/json',
-        'Content-Length': Buffer.byteLength(payload),
-        'User-Agent':     'VilfinTV-BuildScript/1.0',
-      },
+      method:   method,
+      headers:  headers,
     }, (res) => {
       let data = '';
       res.on('data', chunk => { data += chunk; });
@@ -93,7 +97,9 @@ function postJson(url, body) {
 
     req.on('error', reject);
     req.setTimeout(TIMEOUT_MS, () => req.destroy(new Error(`Request timeout (${TIMEOUT_MS / 1000}s)`)));
-    req.write(payload);
+    if (method === 'POST') {
+      req.write(payload);
+    }
     req.end();
   });
 }
@@ -107,7 +113,12 @@ async function fetchWithRetry() {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       console.log(`  ⏳  Attempt ${attempt}/${MAX_RETRIES} → ${ENDPOINT}`);
-      const response = await postJson(ENDPOINT, {});
+      let response = await requestJson(ENDPOINT, 'POST', {});
+
+      if (response.status === 405) {
+        console.log(`  ⚠️   HTTP 405 received. Retrying snapshot generation using GET method…`);
+        response = await requestJson(ENDPOINT, 'GET');
+      }
 
       if (response.status !== 200) {
         throw new Error(
