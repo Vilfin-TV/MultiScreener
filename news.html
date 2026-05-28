@@ -1110,6 +1110,52 @@ body{
 }
 .ext-link-btn:hover{opacity:.85}
 
+/* ── Custom Content Posts — featured cards shown at top of each section ── */
+.custom-posts-block{margin-bottom:18px}
+.custom-post-card{
+  display:flex;gap:0;border-radius:12px;overflow:hidden;
+  background:var(--card2);border:1px solid var(--border2);
+  margin-bottom:12px;transition:border-color .15s;
+  position:relative;
+}
+.custom-post-card:last-child{margin-bottom:0}
+.custom-post-card:hover{border-color:var(--burn2)}
+.cp-badge{
+  position:absolute;top:10px;left:10px;
+  background:var(--burn2);color:#fff;font-size:8px;font-weight:800;
+  text-transform:uppercase;letter-spacing:1px;padding:2px 8px;border-radius:10px;z-index:1;
+}
+.cp-photo-wrap{
+  width:220px;flex-shrink:0;position:relative;overflow:hidden;background:var(--card3);
+}
+.cp-photo{width:100%;height:100%;object-fit:cover;display:block;min-height:140px}
+.cp-no-photo{
+  width:220px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:40px;opacity:.3;background:var(--card3);
+}
+.cp-body{padding:16px 18px;flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:6px}
+.cp-heading{
+  font-size:15px;font-weight:800;color:var(--text);line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.cp-story{
+  font-size:12.5px;color:var(--text2);line-height:1.6;
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;
+}
+.cp-meta{font-size:10px;color:var(--text3);margin-top:4px;font-family:'JetBrains Mono',monospace}
+.cp-readmore{
+  display:inline-flex;align-items:center;gap:5px;margin-top:6px;
+  font-size:11px;font-weight:700;color:var(--burn3);cursor:pointer;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:6px;padding:4px 10px;width:fit-content;transition:background .15s;
+}
+.cp-readmore:hover{background:rgba(255,255,255,.08)}
+@media(max-width:640px){
+  .cp-photo-wrap{width:100%;height:160px}
+  .custom-post-card{flex-direction:column}
+  .cp-no-photo{width:100%;height:80px}
+}
+
 .story-modal-disclaimer{
   background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);
   border-radius:8px;padding:12px 16px;margin-bottom:20px;
@@ -3023,6 +3069,95 @@ function _showMlCategory(catId, data) {
 /* ═══════════════════════════════════════════════════
    LOAD NEWS PAGE
 ═══════════════════════════════════════════════════ */
+/* ── Custom content posts (from content.json) ─────────────────────────────── */
+window._customContent = [];
+
+async function _loadCustomContent() {
+  try {
+    var resp = await fetch('content.json?_=' + Date.now());
+    if (!resp.ok) return;
+    var data = await resp.json();
+    var now  = new Date();
+    window._customContent = Array.isArray(data)
+      ? data.filter(function(i) { return i && (!i.expires_at || new Date(i.expires_at) > now); })
+      : [];
+  } catch(e) { /* silently ignore — content.json is optional */ }
+}
+
+function _renderCustomPosts(sectionId, container) {
+  var posts = window._customContent.filter(function(p) { return p.section === sectionId; });
+  if (!posts.length) return;
+  var block = document.createElement('div');
+  block.className = 'custom-posts-block';
+  posts.forEach(function(post) {
+    var card = document.createElement('div');
+    card.className = 'custom-post-card';
+    var photoHtml = post.photo
+      ? '<div class="cp-photo-wrap"><img class="cp-photo" src="' + escAttr(post.photo) + '" alt="" loading="lazy" onerror="this.parentNode.innerHTML=\'<div class=cp-no-photo>📰</div>\'"></div>'
+      : '<div class="cp-no-photo">📰</div>';
+    var pubDate = post.published_at
+      ? new Date(post.published_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})
+      : '';
+    card.innerHTML =
+      '<span class="cp-badge">✦ Featured</span>'
+      + photoHtml
+      + '<div class="cp-body">'
+        + '<div class="cp-heading">' + esc(post.heading) + '</div>'
+        + '<div class="cp-story">' + esc(post.story) + '</div>'
+        + '<div class="cp-meta">' + (pubDate ? 'Published ' + pubDate : '') + ' · VilfinTV Staff</div>'
+        + '<div class="cp-readmore" onclick="openCustomPost(' + JSON.stringify(post.id) + ')">Read Full Story ↗</div>'
+      + '</div>';
+    block.appendChild(card);
+  });
+  container.insertBefore(block, container.firstChild);
+}
+
+function openCustomPost(id) {
+  var post = window._customContent.find(function(p) { return p.id === id; });
+  if (!post) return;
+  var overlay = document.getElementById('story-modal-overlay');
+  var body    = document.getElementById('story-modal-body');
+  var pill    = document.getElementById('story-section-pill');
+  if (!overlay || !body) return;
+
+  if (pill) {
+    pill.textContent = '✦ Featured';
+    pill.style.background = '#6366f1';
+  }
+
+  var pubDate = post.published_at
+    ? new Date(post.published_at).toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})
+    : '';
+
+  var html = '<h2 class="story-modal-headline" id="story-modal-headline">' + esc(post.heading) + '</h2>'
+    + '<div class="story-modal-meta">'
+      + '<span>' + (pubDate || '') + '</span>'
+      + '<span class="story-modal-meta-sep">·</span>'
+      + '<span class="story-modal-ai-badge" style="background:rgba(99,102,241,.15);color:#818cf8">VilfinTV Staff</span>'
+    + '</div>';
+
+  if (post.photo) {
+    html += '<img src="' + escAttr(post.photo) + '" style="width:100%;border-radius:10px;margin-bottom:18px;max-height:280px;object-fit:cover;display:block" alt="" loading="lazy">';
+  }
+
+  var paras = (post.story || '').split(/\n\n+/).filter(Boolean);
+  html += '<div class="story-body">'
+    + paras.map(function(p) { return '<p>' + esc(p) + '</p>'; }).join('')
+    + '</div>';
+
+  var shareText = encodeURIComponent(post.heading || 'Read this story on VilfinTV News');
+  var shareUrl  = encodeURIComponent('https://vilfintv.com/news.html');
+  html += '<div class="story-modal-share">'
+    + '<span class="story-modal-share-label">Share:</span>'
+    + '<a class="share-btn-sm share-wa" href="https://api.whatsapp.com/send?text=' + shareText + '%20' + shareUrl + '" target="_blank" rel="noopener">WhatsApp</a>'
+    + '<a class="share-btn-sm share-tw" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank" rel="noopener">X (Twitter)</a>'
+    + '</div>';
+
+  body.innerHTML = html;
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
 async function loadNewsPage() {
   window._SC = [];  // reset story cache on each load
   var container = document.getElementById('sections-container');
@@ -3033,11 +3168,15 @@ async function loadNewsPage() {
     + '<div style="font-size:15px">Loading latest intelligence…</div>'
     + '</div>';
 
+  // Load custom content.json in parallel with news.json
   var data = null;
   try {
-    var resp = await fetch('data/news.json?_=' + Date.now());
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    data = await resp.json();
+    var results = await Promise.all([
+      fetch('data/news.json?_=' + Date.now()).catch(function() { return null; }),
+      _loadCustomContent()
+    ]);
+    var newsResp = results[0];
+    if (newsResp && newsResp.ok) data = await newsResp.json();
   } catch (e) {
     console.warn('News data unavailable:', e.message);
   }
@@ -3052,6 +3191,8 @@ async function loadNewsPage() {
     var meta = SECTION_META[sid];
     var sectionData = (data && data.sections && data.sections[sid]) ? data.sections[sid] : null;
     var el = renderSection(sid, sectionData, meta);
+    // Inject custom content posts at top of each section
+    _renderCustomPosts(sid, el);
     container.appendChild(el);
     if (sectionData && sectionData.items) {
       totalStories += sectionData.items.filter(isItemValid).length;

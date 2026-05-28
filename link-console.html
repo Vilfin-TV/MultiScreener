@@ -96,6 +96,23 @@
     ══════════════════════════════════ */
     #dashboard-view { width: 100%; }
 
+    /* ── Console tabs ── */
+    .console-tabs {
+      display: flex; gap: 0; border-bottom: 1px solid #162d4a;
+      background: rgba(0,0,0,.2);
+    }
+    .c-tab {
+      padding: 13px 22px; font-size: 11.5px; font-weight: 700;
+      letter-spacing: .4px; color: #4d6a8a; cursor: pointer;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: color .15s, border-color .15s; display: flex; align-items: center; gap: 7px;
+    }
+    .c-tab:hover { color: #8ea8c8; }
+    .c-tab.active { color: #e2eeff; border-bottom-color: #3b82f6; }
+    .c-tab-icon { font-size: 14px; }
+    .c-panel { display: none; }
+    .c-panel.active { display: block; }
+
     /* Console card */
     .console {
       width: 100%; max-width: 940px; margin: 0 auto;
@@ -311,6 +328,82 @@
       padding: 24px 12px; border: 1px dashed #162d4a; border-radius: 10px;
     }
 
+    /* ══ CONTENT CMS ═══════════════════════════════════════════════════════ */
+    .content-body { display: grid; grid-template-columns: 1fr 1.4fr; }
+    .content-form-panel { padding: 24px 28px; border-right: 1px solid #162d4a; }
+    .content-form-panel select {
+      width: 100%; background: #0e1f3b; border: 1px solid #1e3a5c;
+      border-radius: 10px; color: #e2eeff; font-size: 13px;
+      padding: 10px 13px; outline: none; margin-bottom: 16px;
+      font-family: inherit; cursor: pointer; transition: border-color .15s;
+      -webkit-appearance: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238ea8c8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+    }
+    .content-form-panel select:focus { border-color: #3b82f6; }
+    .content-form-panel textarea {
+      width: 100%; background: #0e1f3b; border: 1px solid #1e3a5c;
+      border-radius: 10px; color: #e2eeff; font-size: 13px;
+      padding: 11px 13px; outline: none; resize: vertical;
+      margin-bottom: 16px; font-family: inherit; line-height: 1.6;
+      min-height: 110px; transition: border-color .15s, box-shadow .15s;
+    }
+    .content-form-panel textarea:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.1); }
+    .content-form-panel textarea::placeholder { color: #2d4a6a; }
+    .photo-preview-wrap { margin-bottom: 16px; }
+    .photo-preview {
+      width: 100%; height: 120px; object-fit: cover; border-radius: 8px;
+      display: none; margin-top: 8px; border: 1px solid #1e3a5c;
+    }
+    .photo-preview.visible { display: block; }
+
+    /* Content panel (right) */
+    .content-panel-right { padding: 22px 24px; display: flex; flex-direction: column; }
+    .content-panel-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .content-panel-title {
+      font-size: 9.5px; font-weight: 800; letter-spacing: 1.4px;
+      text-transform: uppercase; color: #8ea8c8; flex: 1;
+    }
+
+    /* Content items */
+    .content-list { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .ci-item {
+      background: #0e1f3b; border: 1px solid #1e3a5c; border-radius: 10px;
+      overflow: hidden; transition: opacity .2s, transform .2s;
+    }
+    .ci-item.is-deleting { opacity: 0; transform: translateX(12px); }
+    .ci-main { display: flex; gap: 10px; padding: 10px 12px; }
+    .ci-photo {
+      width: 54px; height: 54px; border-radius: 7px; object-fit: cover;
+      flex-shrink: 0; background: #162d4a; display: flex;
+      align-items: center; justify-content: center; font-size: 20px;
+      overflow: hidden;
+    }
+    .ci-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .ci-body { flex: 1; min-width: 0; }
+    .ci-section-badge {
+      display: inline-block; font-size: 8.5px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: .7px;
+      padding: 1px 7px; border-radius: 10px; margin-bottom: 4px;
+      background: rgba(99,102,241,.15); color: #818cf8; border: 1px solid rgba(99,102,241,.2);
+    }
+    .ci-heading {
+      font-size: 12px; font-weight: 700; color: #e2eeff;
+      display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .ci-snippet {
+      font-size: 10.5px; color: #4d6a8a; margin-top: 2px;
+      display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .ci-meta { font-size: 9px; color: #3d5470; margin-top: 3px; font-family: monospace; }
+    .ci-actions { display: flex; align-items: center; gap: 3px; flex-shrink: 0; align-self: center; }
+    .ci-status {
+      margin-top: 10px; padding: 9px 12px; border-radius: 8px;
+      font-size: 12px; line-height: 1.5; display: none;
+    }
+    .ci-status.ok  { display: block; background: rgba(16,185,129,.1);  color: #34d399; border: 1px solid rgba(16,185,129,.2); }
+    .ci-status.err { display: block; background: rgba(239,68,68,.1);   color: #f87171; border: 1px solid rgba(239,68,68,.2); }
+
     /* ── Mobile ── */
     @media (max-width: 640px) {
       body { padding: 16px 10px 48px; }
@@ -318,6 +411,8 @@
       .console-hdr { padding: 16px 18px; }
       .session-user { display: none; }
       .console-body { grid-template-columns: 1fr; }
+      .content-body { grid-template-columns: 1fr; }
+      .content-form-panel { border-right: none; border-bottom: 1px solid #162d4a; }
       .form-panel { border-right: none; border-bottom: 1px solid #162d4a; padding: 20px 18px; }
       .links-panel { padding: 20px 18px; }
       .act-btn { width: 32px; height: 32px; font-size: 14px; }
@@ -360,10 +455,10 @@
 
     <!-- Header -->
     <div class="console-hdr">
-      <div class="console-icon">🔗</div>
+      <div class="console-icon">⚙️</div>
       <div class="console-hdr-text">
-        <div class="console-title">Link Console</div>
-        <div class="console-sub">Manage external links on the public news feed.</div>
+        <div class="console-title">VilfinTV Console</div>
+        <div class="console-sub">Manage links and publish content to your news feed.</div>
       </div>
       <div class="session-info">
         <span class="session-user" id="session-user"></span>
@@ -371,48 +466,130 @@
       </div>
     </div>
 
-    <!-- Body -->
-    <div class="console-body">
-
-      <!-- Left: Post new link -->
-      <div class="form-panel">
-        <label class="field-label" for="lnk-url">URL</label>
-        <input type="url" id="lnk-url" placeholder="https://example.com/article"
-               autocomplete="off" autocapitalize="none" spellcheck="false">
-
-        <label class="field-label" for="lnk-name">Display Name <span style="opacity:.4;font-weight:400">(optional)</span></label>
-        <input type="text" id="lnk-name" placeholder="e.g. Breaking: US-Iran Deal Latest"
-               maxlength="80" autocomplete="off" spellcheck="false">
-
-        <label class="field-label" for="lnk-desc">Description <span style="opacity:.4;font-weight:400">(optional)</span></label>
-        <input type="text" id="lnk-desc" placeholder="One-line summary shown to readers"
-               maxlength="160" autocomplete="off" spellcheck="false">
-
-        <label class="field-label" for="lnk-days">Visible for (days)</label>
-        <input type="number" id="lnk-days" placeholder="7" min="1" max="90" value="7">
-
-        <button class="btn-primary" id="post-btn">Post New Link</button>
-        <div class="form-status" id="form-status"></div>
+    <!-- Tab bar -->
+    <div class="console-tabs">
+      <div class="c-tab active" data-tab="links" onclick="switchTab('links')">
+        <span class="c-tab-icon">🔗</span> Links
       </div>
-
-      <!-- Right: Link manager -->
-      <div class="links-panel">
-        <div class="links-panel-hdr">
-          <div class="links-panel-title">Active Links</div>
-          <span class="count-badge" id="count-badge">—</span>
-          <span class="dirty-badge" id="dirty-badge">Unsaved</span>
-        </div>
-        <div class="links-list" id="links-list">
-          <div class="empty-note">Loading…</div>
-        </div>
-        <div class="save-row">
-          <button class="btn-save" id="save-btn" disabled>Save Changes</button>
-          <button class="btn-discard" id="discard-btn">Discard</button>
-        </div>
-        <div class="save-status" id="save-status"></div>
+      <div class="c-tab" data-tab="content" onclick="switchTab('content')">
+        <span class="c-tab-icon">📝</span> Content Posts
       </div>
+    </div>
 
-    </div><!-- /console-body -->
+    <!-- ══ LINKS TAB ══ -->
+    <div class="c-panel active" id="tab-links">
+      <div class="console-body">
+
+        <!-- Left: Post new link -->
+        <div class="form-panel">
+          <label class="field-label" for="lnk-url">URL</label>
+          <input type="url" id="lnk-url" placeholder="https://example.com/article"
+                 autocomplete="off" autocapitalize="none" spellcheck="false">
+
+          <label class="field-label" for="lnk-name">Display Name <span style="opacity:.4;font-weight:400">(optional)</span></label>
+          <input type="text" id="lnk-name" placeholder="e.g. Breaking: US-Iran Deal Latest"
+                 maxlength="80" autocomplete="off" spellcheck="false">
+
+          <label class="field-label" for="lnk-desc">Description <span style="opacity:.4;font-weight:400">(optional)</span></label>
+          <input type="text" id="lnk-desc" placeholder="One-line summary shown to readers"
+                 maxlength="160" autocomplete="off" spellcheck="false">
+
+          <label class="field-label" for="lnk-days">Visible for (days)</label>
+          <input type="number" id="lnk-days" placeholder="7" min="1" max="90" value="7">
+
+          <button class="btn-primary" id="post-btn">Post New Link</button>
+          <div class="form-status" id="form-status"></div>
+        </div>
+
+        <!-- Right: Link manager -->
+        <div class="links-panel">
+          <div class="links-panel-hdr">
+            <div class="links-panel-title">Active Links</div>
+            <span class="count-badge" id="count-badge">—</span>
+            <span class="dirty-badge" id="dirty-badge">Unsaved</span>
+          </div>
+          <div class="links-list" id="links-list">
+            <div class="empty-note">Loading…</div>
+          </div>
+          <div class="save-row">
+            <button class="btn-save" id="save-btn" disabled>Save Changes</button>
+            <button class="btn-discard" id="discard-btn">Discard</button>
+          </div>
+          <div class="save-status" id="save-status"></div>
+        </div>
+
+      </div>
+    </div><!-- /tab-links -->
+
+    <!-- ══ CONTENT POSTS TAB ══ -->
+    <div class="c-panel" id="tab-content">
+      <div class="content-body">
+
+        <!-- Left: Publish new post -->
+        <div class="content-form-panel">
+          <label class="field-label" for="cp-section">News Section</label>
+          <select id="cp-section">
+            <option value="">— Select a section —</option>
+            <optgroup label="Main Sections">
+              <option value="trending">🔥 Trending</option>
+              <option value="global">🌍 Global News</option>
+              <option value="india">🇮🇳 India News</option>
+              <option value="stock">📈 Stock News</option>
+              <option value="malayalam">🎭 Malayalam News</option>
+            </optgroup>
+            <optgroup label="Malayalam Sub-Sections">
+              <option value="ml_trending">🔥 Top Trending Kerala</option>
+              <option value="ml_movies">🎬 Movie News</option>
+              <option value="ml_music">🎵 Music News</option>
+              <option value="ml_local">📍 Local News</option>
+              <option value="ml_science">🔬 Science News</option>
+              <option value="ml_space">🚀 Space News</option>
+              <option value="ml_sports">🏏 Sports News</option>
+              <option value="ml_health">🏥 Health &amp; Lifestyle</option>
+              <option value="ml_food">🌾 Food &amp; Agriculture</option>
+              <option value="ml_realestate">🏠 Home &amp; Real Estate</option>
+              <option value="ml_career">💼 Career &amp; Jobs</option>
+              <option value="ml_tech">💻 Technology News</option>
+            </optgroup>
+          </select>
+
+          <label class="field-label" for="cp-heading">Headline</label>
+          <input type="text" id="cp-heading" placeholder="Enter the article headline…"
+                 maxlength="200" autocomplete="off" spellcheck="true">
+
+          <label class="field-label" for="cp-story">Full Story</label>
+          <textarea id="cp-story" placeholder="Write the full story here. Be detailed — readers will see the complete text…" maxlength="2000" rows="6" spellcheck="true"></textarea>
+
+          <label class="field-label" for="cp-photo">Photo URL <span style="opacity:.4;font-weight:400">(optional)</span></label>
+          <div class="photo-preview-wrap">
+            <input type="url" id="cp-photo" placeholder="https://example.com/image.jpg"
+                   autocomplete="off" oninput="previewPhoto(this.value)">
+            <img id="cp-photo-preview" class="photo-preview" src="" alt="Preview"
+                 onerror="this.classList.remove('visible')">
+          </div>
+
+          <label class="field-label" for="cp-days">Visible for (days)</label>
+          <input type="number" id="cp-days" placeholder="30" min="1" max="365" value="30">
+
+          <button class="btn-primary" id="cp-publish-btn" onclick="publishContent()">Publish Post</button>
+          <div class="form-status" id="cp-form-status"></div>
+        </div>
+
+        <!-- Right: Published content manager -->
+        <div class="content-panel-right">
+          <div class="content-panel-hdr">
+            <div class="content-panel-title">Published Posts</div>
+            <span class="count-badge" id="cp-count-badge">—</span>
+          </div>
+          <div class="content-list" id="content-list">
+            <div class="empty-note">Loading…</div>
+          </div>
+          <div class="ci-status" id="ci-status"></div>
+        </div>
+
+      </div>
+    </div><!-- /tab-content -->
+
   </div><!-- /console -->
 </div><!-- /dashboard-view -->
 
@@ -867,6 +1044,208 @@ function deepCopy(v) { return JSON.parse(JSON.stringify(v)); }
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
                   .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   CONSOLE TABS
+══════════════════════════════════════════════════════════════════════════════ */
+function switchTab(name) {
+  document.querySelectorAll('.c-tab').forEach(function(t) {
+    t.classList.toggle('active', t.dataset.tab === name);
+  });
+  document.querySelectorAll('.c-panel').forEach(function(p) {
+    p.classList.toggle('active', p.id === 'tab-' + name);
+  });
+  if (name === 'content') loadContent();
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   CONTENT CMS
+══════════════════════════════════════════════════════════════════════════════ */
+var CONTENT_URL    = 'https://vilfintv.com/content.json';
+var contentState   = [];
+var _contentLoaded = false;
+
+var SECTION_LABELS = {
+  trending:'🔥 Trending', global:'🌍 Global News', india:'🇮🇳 India News',
+  stock:'📈 Stock News', malayalam:'🎭 Malayalam News',
+  ml_trending:'🔥 Trending Kerala', ml_movies:'🎬 Movie News', ml_music:'🎵 Music News',
+  ml_local:'📍 Local News', ml_science:'🔬 Science', ml_space:'🚀 Space',
+  ml_sports:'🏏 Sports', ml_health:'🏥 Health', ml_food:'🌾 Food',
+  ml_realestate:'🏠 Real Estate', ml_career:'💼 Career', ml_tech:'💻 Tech'
+};
+
+/* ── Load content.json ──────────────────────────────────────────────────────── */
+async function loadContent() {
+  var listEl = document.getElementById('content-list');
+  listEl.innerHTML = '<div class="empty-note">Loading…</div>';
+  try {
+    var resp = await fetch(CONTENT_URL + '?_=' + Date.now());
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
+    contentState = Array.isArray(data) ? data : [];
+    _contentLoaded = true;
+    renderContent();
+  } catch(e) {
+    listEl.innerHTML = '<div class="empty-note">Could not load content.json<br><small style="opacity:.6">' + esc(e.message) + '</small></div>';
+  }
+}
+
+/* ── Render content list ────────────────────────────────────────────────────── */
+function renderContent() {
+  var listEl = document.getElementById('content-list');
+  var badge  = document.getElementById('cp-count-badge');
+  var now    = new Date();
+  var active = contentState.filter(function(i) { return !i.expires_at || new Date(i.expires_at) > now; });
+  badge.textContent = active.length + ' post' + (active.length !== 1 ? 's' : '');
+
+  if (!active.length) {
+    listEl.innerHTML = '<div class="empty-note">No content posts yet. Publish one on the left.</div>';
+    return;
+  }
+  listEl.innerHTML = '';
+  active.forEach(function(item) { listEl.appendChild(buildContentItem(item)); });
+}
+
+/* ── Build a single content item row ───────────────────────────────────────── */
+function buildContentItem(item) {
+  var now      = new Date();
+  var expiry   = item.expires_at ? new Date(item.expires_at) : null;
+  var daysLeft = expiry ? Math.ceil((expiry - now) / 86400000) : null;
+  var expText  = daysLeft === null ? '' : (daysLeft <= 0 ? 'Expired' : daysLeft + 'd left');
+  var expColor = daysLeft !== null && daysLeft <= 2 ? '#fbbf24' : '#3d5470';
+  var sectionLabel = SECTION_LABELS[item.section] || item.section;
+
+  var el = document.createElement('div');
+  el.className   = 'ci-item';
+  el.dataset.cid = item.id;
+
+  var photoHtml = item.photo
+    ? '<div class="ci-photo"><img src="' + esc(item.photo) + '" alt="" onerror="this.parentNode.innerHTML=\'📰\'"></div>'
+    : '<div class="ci-photo">📰</div>';
+
+  el.innerHTML =
+    '<div class="ci-main">'
+      + photoHtml
+      + '<div class="ci-body">'
+        + '<span class="ci-section-badge">' + esc(sectionLabel) + '</span>'
+        + '<div class="ci-heading">' + esc(item.heading) + '</div>'
+        + '<div class="ci-snippet">' + esc((item.story || '').slice(0, 80)) + '…</div>'
+        + '<div class="ci-meta">'
+          + (item.published_at ? new Date(item.published_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '')
+          + (expText ? ' · <span style="color:' + expColor + '">' + expText + '</span>' : '')
+        + '</div>'
+      + '</div>'
+      + '<div class="ci-actions">'
+        + '<button class="act-btn danger" title="Delete post" onclick="deleteContentItem(\'' + esc(item.id) + '\',this)">✕</button>'
+      + '</div>'
+    + '</div>';
+
+  return el;
+}
+
+/* ── Delete a content item ──────────────────────────────────────────────────── */
+async function deleteContentItem(id, btn) {
+  var el = btn.closest('.ci-item');
+  if (el) el.classList.add('is-deleting');
+  var newItems = contentState.filter(function(i) { return i.id !== id; });
+  setCiStatus('', '');
+  try {
+    var res  = await authFetch(WORKER + '/api/update-content', {
+      method: 'POST',
+      body:   JSON.stringify({ items: newItems }),
+    });
+    var data = await res.json();
+    if (res.ok && data.ok) {
+      contentState = newItems;
+      renderContent();
+    } else {
+      if (el) el.classList.remove('is-deleting');
+      setCiStatus('err', data.message || 'Server error ' + res.status);
+    }
+  } catch(e) {
+    if (el) el.classList.remove('is-deleting');
+    if (e.message !== 'SESSION_EXPIRED') setCiStatus('err', 'Network error: ' + e.message);
+  }
+}
+
+/* ── Publish new content ────────────────────────────────────────────────────── */
+async function publishContent() {
+  var section = document.getElementById('cp-section').value;
+  var heading = document.getElementById('cp-heading').value.trim();
+  var story   = document.getElementById('cp-story').value.trim();
+  var photo   = document.getElementById('cp-photo').value.trim();
+  var days    = parseInt(document.getElementById('cp-days').value, 10) || 0;
+  var btn     = document.getElementById('cp-publish-btn');
+
+  setCpFormStatus('', '');
+
+  if (!section) return setCpFormStatus('err', 'Please select a section.');
+  if (!heading) return setCpFormStatus('err', 'Headline is required.');
+  if (!story)   return setCpFormStatus('err', 'Story is required.');
+  if (days < 1 || days > 365) return setCpFormStatus('err', 'Days must be between 1 and 365.');
+  if (photo) {
+    try { new URL(photo); } catch(e) { return setCpFormStatus('err', 'Invalid photo URL.'); }
+  }
+
+  btn.disabled    = true;
+  btn.textContent = 'Publishing…';
+
+  var payload = { section: section, heading: heading, story: story, days: days };
+  if (photo) payload.photo = photo;
+
+  try {
+    var res  = await authFetch(WORKER + '/api/post-content', {
+      method: 'POST',
+      body:   JSON.stringify(payload),
+    });
+    var data = await res.json();
+    if (res.ok && data.ok) {
+      setCpFormStatus('ok', '✓ Published! Visible until '
+        + new Date(data.expires_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}));
+      // Clear form
+      document.getElementById('cp-section').value = '';
+      document.getElementById('cp-heading').value = '';
+      document.getElementById('cp-story').value   = '';
+      document.getElementById('cp-photo').value   = '';
+      var prev = document.getElementById('cp-photo-preview');
+      if (prev) { prev.src = ''; prev.classList.remove('visible'); }
+      // Refresh list
+      await loadContent();
+    } else {
+      setCpFormStatus('err', data.message || 'Server error ' + res.status);
+    }
+  } catch(e) {
+    if (e.message !== 'SESSION_EXPIRED') setCpFormStatus('err', 'Network error: ' + e.message);
+  }
+
+  btn.disabled    = false;
+  btn.textContent = 'Publish Post';
+}
+
+/* ── Photo URL preview ──────────────────────────────────────────────────────── */
+function previewPhoto(url) {
+  var prev = document.getElementById('cp-photo-preview');
+  if (!prev) return;
+  if (url && url.startsWith('http')) {
+    prev.src = url;
+    prev.classList.add('visible');
+  } else {
+    prev.src = '';
+    prev.classList.remove('visible');
+  }
+}
+
+/* ── Status helpers (content tab) ───────────────────────────────────────────── */
+function setCpFormStatus(t, m) {
+  var e = document.getElementById('cp-form-status');
+  e.className = 'form-status' + (t ? ' ' + t : '');
+  e.textContent = m;
+}
+function setCiStatus(t, m) {
+  var e = document.getElementById('ci-status');
+  e.className = 'ci-status' + (t ? ' ' + t : '');
+  e.textContent = m;
 }
 </script>
 </body>

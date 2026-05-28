@@ -319,6 +319,85 @@ export default {
       );
     }
 
+    // ── /api/post-content  POST — append a custom content post to content.json ─
+    if (pathname === '/api/post-content') {
+      if (request.method !== 'POST') return jsonError(405, 'Use POST.');
+      let body;
+      try { body = await request.json(); } catch (_) { return jsonError(400, 'Invalid JSON.'); }
+      const auth = await requireAuth(request, env);
+      if (auth.error) return auth.error;
+
+      const { section, heading, story, photo, days } = body || {};
+      const VALID_SECTIONS = ['trending','global','india','stock','malayalam',
+        'ml_trending','ml_movies','ml_music','ml_local','ml_science','ml_space',
+        'ml_sports','ml_health','ml_food','ml_realestate','ml_career','ml_tech'];
+      if (!section || !VALID_SECTIONS.includes(section)) return jsonError(400, 'Invalid section.');
+      if (!heading || typeof heading !== 'string' || !heading.trim()) return jsonError(400, 'heading is required.');
+      if (!story   || typeof story   !== 'string' || !story.trim())   return jsonError(400, 'story is required.');
+      const daysInt = parseInt(days);
+      if (!daysInt || daysInt < 1 || daysInt > 365) return jsonError(400, 'days must be 1–365.');
+      if (!env.GITHUB_TOKEN) return jsonError(503, 'GitHub not configured.');
+
+      const REPO = 'Vilfin-TV/MultiScreener', FILE_PATH = 'content.json', BRANCH = 'main';
+      const GH_API = `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`;
+      const GH_H = { 'Authorization': `token ${env.GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'vilfintv-proxy', 'Content-Type': 'application/json' };
+
+      let sha = null, items = [];
+      try {
+        const r = await fetch(`${GH_API}?ref=${BRANCH}`, { headers: GH_H });
+        if (r.ok) { const d = await r.json(); sha = d.sha; items = JSON.parse(atob(d.content.replace(/\n/g,''))); if (!Array.isArray(items)) items = []; }
+        else if (r.status !== 404) return jsonError(502, `GitHub GET failed: ${r.status}`);
+      } catch (e) { return jsonError(502, `GitHub GET error: ${e.message}`); }
+
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + daysInt * 86400000).toISOString();
+      items = items.filter(i => i && i.expires_at && new Date(i.expires_at) > now);
+      const newItem = { id: String(Date.now()), section, heading: heading.trim().slice(0,200), story: story.trim().slice(0,2000), published_at: now.toISOString(), expires_at: expiresAt };
+      if (photo && typeof photo === 'string' && photo.trim().startsWith('http')) newItem.photo = photo.trim().slice(0,500);
+      items.push(newItem);
+
+      const put = { message: `feat(content): publish ${section} post`, content: btoa(unescape(encodeURIComponent(JSON.stringify(items, null, 2)))), branch: BRANCH };
+      if (sha) put.sha = sha;
+      try {
+        const r = await fetch(GH_API, { method: 'PUT', headers: GH_H, body: JSON.stringify(put) });
+        if (!r.ok) { const e = await r.text(); return jsonError(502, `GitHub PUT failed: ${r.status}`, { detail: e.slice(0,200) }); }
+      } catch (e) { return jsonError(502, `GitHub PUT error: ${e.message}`); }
+      return new Response(JSON.stringify({ ok: true, id: newItem.id, expires_at: expiresAt }), { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
+    }
+
+    // ── /api/update-content  POST — replace entire content.json ─────────────
+    if (pathname === '/api/update-content') {
+      if (request.method !== 'POST') return jsonError(405, 'Use POST.');
+      let body;
+      try { body = await request.json(); } catch (_) { return jsonError(400, 'Invalid JSON.'); }
+      const auth = await requireAuth(request, env);
+      if (auth.error) return auth.error;
+
+      const { items } = body || {};
+      if (!Array.isArray(items)) return jsonError(400, 'items must be an array.');
+      if (!env.GITHUB_TOKEN) return jsonError(503, 'GitHub not configured.');
+
+      const REPO = 'Vilfin-TV/MultiScreener', FILE_PATH = 'content.json', BRANCH = 'main';
+      const GH_API = `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`;
+      const GH_H = { 'Authorization': `token ${env.GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'vilfintv-proxy', 'Content-Type': 'application/json' };
+
+      let sha = null;
+      try {
+        const r = await fetch(`${GH_API}?ref=${BRANCH}`, { headers: GH_H });
+        if (r.ok) sha = (await r.json()).sha;
+        else if (r.status !== 404) return jsonError(502, `GitHub GET failed: ${r.status}`);
+      } catch (e) { return jsonError(502, `GitHub GET error: ${e.message}`); }
+
+      const clean = items.map(i => { const o = { id: String(i.id||Date.now()), section: String(i.section||''), heading: String(i.heading||'').slice(0,200), story: String(i.story||'').slice(0,2000), published_at: i.published_at||new Date().toISOString(), expires_at: i.expires_at||'' }; if (i.photo) o.photo = String(i.photo).slice(0,500); return o; });
+      const put = { message: 'chore(content): update via console', content: btoa(unescape(encodeURIComponent(JSON.stringify(clean, null, 2)))), branch: BRANCH };
+      if (sha) put.sha = sha;
+      try {
+        const r = await fetch(GH_API, { method: 'PUT', headers: GH_H, body: JSON.stringify(put) });
+        if (!r.ok) { const e = await r.text(); return jsonError(502, `GitHub PUT failed: ${r.status}`, { detail: e.slice(0,200) }); }
+      } catch (e) { return jsonError(502, `GitHub PUT error: ${e.message}`); }
+      return new Response(JSON.stringify({ ok: true, message: 'Content updated.' }), { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
+    }
+
     // ── Only allow GET for all other routes ──────────────────────────────────
     if (request.method !== 'GET') {
       return jsonError(405, 'Method not allowed. Use GET.');
