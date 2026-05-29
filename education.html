@@ -6822,6 +6822,10 @@ function renderLessonTabContent() {
       });
       html += '</div>';
     });
+    const mocBtnHtml = '<div style="margin-top:24px; text-align:center; padding-top:16px; border-top:1px solid var(--border);">'
+      + '  <button class="hub-toggle-btn active" style="background:var(--gold2); border:none; box-shadow:0 0 12px var(--glow);" onclick="openMocTestModal()">🎯 Take N' + _activeJlptLevel + ' MOC Test</button>'
+      + '</div>';
+    html += mocBtnHtml;
     container.innerHTML = html;
   } else if (_activeLessonTab === 'listening') {
     if (!textbook || !textbook.listening) { container.innerHTML = '<p>No data</p>'; return; }
@@ -6837,6 +6841,10 @@ function renderLessonTabContent() {
         + '  <div style="color:var(--amber); font-size:12px; border-top:1px dashed var(--border2); padding-top:8px;">💡 ' + esc(item.notes) + '</div>'
         + '</div>';
     });
+    const mocBtnHtml = '<div style="margin-top:24px; text-align:center; padding-top:16px; border-top:1px solid var(--border);">'
+      + '  <button class="hub-toggle-btn active" style="background:var(--gold2); border:none; box-shadow:0 0 12px var(--glow);" onclick="openMocTestModal()">🎯 Take N' + _activeJlptLevel + ' MOC Test</button>'
+      + '</div>';
+    html += mocBtnHtml;
     container.innerHTML = html;
   } else if (_activeLessonTab === 'reading') {
     if (!textbook || !textbook.reading) { container.innerHTML = '<p>No data</p>'; return; }
@@ -6859,6 +6867,10 @@ function renderLessonTabContent() {
       });
       html += '  </div></div>';
     });
+    const mocBtnHtml = '<div style="margin-top:24px; text-align:center; padding-top:16px; border-top:1px solid var(--border);">'
+      + '  <button class="hub-toggle-btn active" style="background:var(--gold2); border:none; box-shadow:0 0 12px var(--glow);" onclick="openMocTestModal()">🎯 Take N' + _activeJlptLevel + ' MOC Test</button>'
+      + '</div>';
+    html += mocBtnHtml;
     container.innerHTML = html;
   }
 }
