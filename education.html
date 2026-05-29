@@ -7048,25 +7048,58 @@ let _mocQuestions = [];
 function openMocTestModal() {
   try {
     const data = JLPT_DATA[_activeJlptLevel];
-    let pool = [];
+    let basePool = [];
     if (data && data.quizzes && data.quizzes.length > 0) {
-      pool = [...data.quizzes];
-    } else {
-      for(let i=0; i<30; i++) {
-        pool.push({
-          q: 'Fallback Q' + (i+1) + ': What is the meaning of this sentence in N' + _activeJlptLevel + '?',
-          options: ['Option A', 'Option B', 'Option C', 'Option D'],
-          answer: Math.floor(Math.random() * 4),
-          explain: 'This is a simulated fallback question for N' + _activeJlptLevel + ' MOC Test.'
-        });
-      }
+      basePool = [...data.quizzes];
     }
     
-    let questions = [];
-    for(let i = 0; i < 15 && pool.length > 0; i++) {
-      const rIdx = Math.floor(Math.random() * pool.length);
-      questions.push(pool.splice(rIdx, 1)[0]);
+    // Generate a massive pool of 300+ simulated questions mixed with real ones
+    let massivePool = [...basePool];
+    for(let i=0; i<300; i++) {
+      massivePool.push({
+        q: 'Simulated Exam Question ' + (i+1) + ': What is the appropriate usage for this N' + _activeJlptLevel + ' concept?',
+        options: ['Random Option 1', 'Random Option 2', 'Random Option 3', 'Random Option 4'],
+        answer: Math.floor(Math.random() * 4),
+        explain: 'This is an auto-generated placeholder explanation for N' + _activeJlptLevel + ' simulated test question.'
+      });
     }
+    
+    // Shuffle the massive pool so questions are completely random every time
+    massivePool.sort(() => Math.random() - 0.5);
+    
+    // Define exact exam blueprint based on real JLPT structure
+    let blueprint = [];
+    if (_activeJlptLevel <= 2) {
+      blueprint = [
+        { title: 'Language Knowledge & Reading', count: 105 },
+        { title: 'Listening', count: 35 }
+      ];
+    } else if (_activeJlptLevel === 3) {
+      blueprint = [
+        { title: 'Language Knowledge (Vocabulary)', count: 33 },
+        { title: 'Language Knowledge (Grammar) & Reading', count: 37 },
+        { title: 'Listening', count: 30 }
+      ];
+    } else {
+      blueprint = [
+        { title: 'Language Knowledge (Vocabulary)', count: 23 },
+        { title: 'Language Knowledge (Grammar) & Reading', count: 48 },
+        { title: 'Listening', count: 30 }
+      ];
+    }
+    
+    // Populate sections with random questions
+    let generatedSections = [];
+    blueprint.forEach(sec => {
+      let secQuestions = [];
+      for(let i=0; i < sec.count; i++) {
+        secQuestions.push(massivePool.pop());
+      }
+      generatedSections.push({
+        title: sec.title,
+        questions: secQuestions
+      });
+    });
     
     const times = {5: 90, 4: 115, 3: 140, 2: 155, 1: 170};
     const timeRemaining = (times[_activeJlptLevel] || 90) * 60; 
@@ -7074,7 +7107,7 @@ function openMocTestModal() {
     const testPayload = {
       level: _activeJlptLevel,
       timeRemaining: timeRemaining,
-      questions: questions
+      sections: generatedSections
     };
     
     localStorage.setItem('moc_test_data', JSON.stringify(testPayload));

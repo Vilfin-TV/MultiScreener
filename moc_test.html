@@ -22,8 +22,10 @@
     .header {
       display: flex; justify-content: space-between; align-items: center;
       border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px;
+      position: sticky; top: 0; background: var(--bg); z-index: 100;
     }
     .timer { font-size: 24px; font-weight: bold; color: var(--gold); }
+    .section-header { background: rgba(56, 189, 248, 0.1); padding: 15px; border-left: 4px solid var(--blue); font-size: 20px; font-weight: bold; margin: 30px 0 20px 0; border-radius: 4px; }
     .q-block { background: var(--card); padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border); }
     .q-text { font-size: 18px; margin-bottom: 15px; font-weight: bold; }
     .option { display: block; padding: 10px; background: rgba(255,255,255,0.05); margin-bottom: 8px; border-radius: 4px; cursor: pointer; }
@@ -41,14 +43,15 @@
   
   <div id="quiz-container">Loading...</div>
   
-  <div style="text-align:center; margin-top: 30px;">
-    <button class="btn" id="submit-btn" onclick="submitTest()" style="display:none;">Submit Final Answers</button>
+  <div style="text-align:center; margin-top: 40px; padding-bottom:40px;">
+    <button class="btn" id="submit-btn" onclick="submitTest()" style="display:none; width:100%; max-width:400px; padding:20px; font-size:20px;">Submit Final Answers</button>
   </div>
 
   <script>
-    let _questions = [];
+    let _sections = [];
     let _interval = null;
     let _timeRemaining = 0;
+    let _totalQuestions = 0;
     
     function esc(s) {
       if(!s) return '';
@@ -65,7 +68,7 @@
         
         const data = JSON.parse(rawData);
         document.getElementById('test-title').innerText = 'JLPT N' + data.level + ' MOC Test';
-        _questions = data.questions;
+        _sections = data.sections;
         _timeRemaining = data.timeRemaining;
         
         renderQuestions();
@@ -90,20 +93,29 @@
     
     function renderQuestions() {
       let html = '';
-      _questions.forEach((q, idx) => {
-        html += '<div class="q-block" id="q-' + idx + '">'
-          + '  <div class="q-text">' + (idx+1) + '. ' + esc(q.q) + '</div>';
-          
-        q.options.forEach((opt, oIdx) => {
-          html += '<label class="option">'
-            + '  <input type="radio" name="ans_' + idx + '" value="' + oIdx + '" style="margin-right:10px;">'
-            + '  ' + esc(opt)
-            + '</label>';
-        });
+      let globalIdx = 0;
+      
+      _sections.forEach((sec, sIdx) => {
+        html += '<div class="section-header">' + esc(sec.title) + '</div>';
         
-        html += '  <div class="explain" id="exp-' + idx + '">' + esc(q.explain) + '</div>'
-          + '</div>';
+        sec.questions.forEach((q) => {
+          html += '<div class="q-block" id="q-' + globalIdx + '">'
+            + '  <div class="q-text">' + (globalIdx+1) + '. ' + esc(q.q) + '</div>';
+            
+          q.options.forEach((opt, oIdx) => {
+            html += '<label class="option">'
+              + '  <input type="radio" name="ans_' + globalIdx + '" value="' + oIdx + '" style="margin-right:10px;">'
+              + '  ' + esc(opt)
+              + '</label>';
+          });
+          
+          html += '  <div class="explain" id="exp-' + globalIdx + '">' + esc(q.explain) + '</div>'
+            + '</div>';
+            
+          globalIdx++;
+        });
       });
+      _totalQuestions = globalIdx;
       document.getElementById('quiz-container').innerHTML = html;
     }
     
@@ -112,26 +124,35 @@
       document.getElementById('submit-btn').style.display = 'none';
       
       let score = 0;
-      _questions.forEach((q, idx) => {
-        const selected = document.querySelector('input[name="ans_' + idx + '"]:checked');
-        const expBox = document.getElementById('exp-' + idx);
-        const block = document.getElementById('q-' + idx);
-        
-        expBox.style.display = 'block';
-        
-        if (selected && parseInt(selected.value) === q.answer) {
-          score++;
-          block.style.borderLeft = '4px solid var(--green)';
-        } else {
-          block.style.borderLeft = '4px solid var(--red)';
-        }
-        
-        document.querySelectorAll('input[name="ans_' + idx + '"]').forEach(inp => inp.disabled = true);
+      let globalIdx = 0;
+      
+      _sections.forEach((sec) => {
+        sec.questions.forEach((q) => {
+          const selected = document.querySelector('input[name="ans_' + globalIdx + '"]:checked');
+          const expBox = document.getElementById('exp-' + globalIdx);
+          const block = document.getElementById('q-' + globalIdx);
+          
+          expBox.style.display = 'block';
+          
+          if (selected && parseInt(selected.value) === q.answer) {
+            score++;
+            block.style.borderLeft = '4px solid var(--green)';
+          } else {
+            block.style.borderLeft = '4px solid var(--red)';
+          }
+          
+          document.querySelectorAll('input[name="ans_' + globalIdx + '"]').forEach(inp => inp.disabled = true);
+          globalIdx++;
+        });
       });
       
-      const finalHtml = '<div style="text-align:center; padding:30px; background:rgba(255,255,255,0.1); border-radius:12px; margin-bottom:30px;">'
+      const percentage = Math.round((score / _totalQuestions) * 100);
+      let passStatus = percentage >= 50 ? '<span style="color:var(--green)">PASSED</span>' : '<span style="color:var(--red)">FAILED</span>';
+      
+      const finalHtml = '<div style="text-align:center; padding:30px; background:rgba(255,255,255,0.1); border-radius:12px; margin-bottom:30px; border: 2px solid var(--gold);">'
         + '  <h2 style="color:var(--gold); margin:0 0 10px 0;">TEST COMPLETE</h2>'
-        + '  <div style="font-size:24px;">Final Score: <strong>' + score + ' / ' + _questions.length + '</strong></div>'
+        + '  <div style="font-size:32px; margin-bottom:10px;">Final Score: <strong>' + score + ' / ' + _totalQuestions + '</strong></div>'
+        + '  <div style="font-size:24px;">' + passStatus + ' (' + percentage + '%)</div>'
         + '</div>';
         
       document.getElementById('quiz-container').insertAdjacentHTML('afterbegin', finalHtml);
