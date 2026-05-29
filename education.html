@@ -6539,13 +6539,8 @@ function renderKanjiDetails(idx) {
       <polygon points="65,30 70,40 60,40" fill="#fff"/>
     </svg>`;
   } else {
-    // Sakura visual for others
-    kanjiSvgVisual = `<svg width="100" height="100" viewBox="0 0 120 120" style="background:#060f1c; border-radius:6px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
-      <circle cx="60" cy="52" r="10" fill="var(--red)" opacity="0.3"/>
-      <circle cx="48" cy="65" r="10" fill="var(--red)" opacity="0.3"/>
-      <circle cx="72" cy="65" r="10" fill="var(--red)" opacity="0.3"/>
-      <circle cx="60" cy="68" r="4" fill="var(--amber)"/>
-    </svg>`;
+    // No visual for generic kanji to prevent misleading placeholder
+    kanjiSvgVisual = '';
   }
 
   const detailsHtml = '<div class="kana-details-header">'
@@ -6834,7 +6829,7 @@ function renderLessonTabContent() {
     textbook.listening.forEach(item => {
       html += '<div style="background:var(--card2); border:1px solid var(--border2); padding:16px; border-radius:8px; margin-bottom:16px;">'
         + '  <div style="font-size:32px; text-align:center; margin-bottom:12px;">🎧</div>'
-        + '  <div style="text-align:center; margin-bottom:16px;"><button class="widget-btn" onclick="alert(\'Audio playback simulated.\')">Play Audio Track</button></div>'
+        + '  <div style="text-align:center; margin-bottom:16px;"><button class="widget-btn" onclick="playAudioTranscript(this, \'' + btoa(unescape(encodeURIComponent(item.transcript))) + '\')">Play Audio Track</button></div>'
         + '  <div style="font-weight:700; color:var(--gold2); font-size:16px; margin-bottom:8px;">' + esc(item.title) + '</div>'
         + '  <div style="background:rgba(0,0,0,0.3); border-radius:6px; padding:12px; font-family:monospace; margin-bottom:12px; line-height:1.6;">' + esc(item.transcript).replace(/\n/g, '<br/>') + '</div>'
         + '  <div style="font-weight:700; margin-bottom:6px; color:var(--text);">English Translation:</div>'
@@ -6867,6 +6862,39 @@ function renderLessonTabContent() {
     container.innerHTML = html;
   }
 }
+
+// Global text-to-speech audio player
+window.playAudioTranscript = function(btn, base64Text) {
+  if (!('speechSynthesis' in window)) {
+    alert('Audio playback is not supported in your browser.');
+    return;
+  }
+  
+  if (btn.innerText === 'Playing...') {
+    window.speechSynthesis.cancel();
+    btn.innerText = 'Play Audio Track';
+    return;
+  }
+  
+  try {
+    const text = decodeURIComponent(escape(atob(base64Text)));
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ja-JP';
+    
+    utterance.onend = () => {
+      btn.innerText = 'Play Audio Track';
+    };
+    utterance.onerror = () => {
+      btn.innerText = 'Play Audio Track';
+      alert('Error playing audio track.');
+    };
+    
+    window.speechSynthesis.speak(utterance);
+    btn.innerText = 'Playing...';
+  } catch (e) {
+    alert('Failed to parse audio track.');
+  }
+};
 
 function resetJlptProgress() {
   if (confirm('Are you sure you want to reset your drill progress for N' + _activeJlptLevel + '?')) {
@@ -7004,55 +7032,64 @@ let _mocTimeRemaining = 0;
 let _mocQuestions = [];
 
 function openMocTestModal() {
-  const data = JLPT_DATA[_activeJlptLevel];
-  let pool = [];
-  if (data && data.quizzes && data.quizzes.length > 0) {
-    pool = [...data.quizzes];
-  } else {
-    // Generate fallback mock questions if none exist to prevent crashes
-    for(let i=0; i<30; i++) {
-      pool.push({
-        q: 'Fallback Q' + (i+1) + ': What is the meaning of this sentence in N' + _activeJlptLevel + '?',
-        options: ['Option A', 'Option B', 'Option C', 'Option D'],
-        answer: Math.floor(Math.random() * 4),
-        explain: 'This is a simulated fallback question for N' + _activeJlptLevel + ' MOC Test.'
-      });
+  try {
+    const data = JLPT_DATA[_activeJlptLevel];
+    let pool = [];
+    if (data && data.quizzes && data.quizzes.length > 0) {
+      pool = [...data.quizzes];
+    } else {
+      // Generate fallback mock questions if none exist to prevent crashes
+      for(let i=0; i<30; i++) {
+        pool.push({
+          q: 'Fallback Q' + (i+1) + ': What is the meaning of this sentence in N' + _activeJlptLevel + '?',
+          options: ['Option A', 'Option B', 'Option C', 'Option D'],
+          answer: Math.floor(Math.random() * 4),
+          explain: 'This is a simulated fallback question for N' + _activeJlptLevel + ' MOC Test.'
+        });
+      }
     }
-  }
-  
-  // N5=90m, N4=115m, N3=140m, N2=155m, N1=170m (simplified simulated bounds)
-  const times = {5: 90, 4: 115, 3: 140, 2: 155, 1: 170};
-  _mocTimeRemaining = (times[_activeJlptLevel] || 90) * 60; 
-  
-  document.getElementById('moc-title').innerText = 'JLPT N' + _activeJlptLevel + ' MOC Test';
-  document.getElementById('moc-submit-btn').style.display = 'inline-block';
-  document.getElementById('moc-modal-overlay').classList.add('active');
-  
-  // Pick 15 random questions from the bank for the mock test
-  _mocQuestions = [];
-  for(let i = 0; i < 15 && pool.length > 0; i++) {
-    const rIdx = Math.floor(Math.random() * pool.length);
-    _mocQuestions.push(pool.splice(rIdx, 1)[0]);
-  }
-  
-  renderMocQuestions();
-  
-  clearInterval(_mocInterval);
-  updateMocTimerDisplay();
-  _mocInterval = setInterval(() => {
-    _mocTimeRemaining--;
+    
+    // N5=90m, N4=115m, N3=140m, N2=155m, N1=170m (simplified simulated bounds)
+    const times = {5: 90, 4: 115, 3: 140, 2: 155, 1: 170};
+    _mocTimeRemaining = (times[_activeJlptLevel] || 90) * 60; 
+    
+    document.getElementById('moc-title').innerText = 'JLPT N' + _activeJlptLevel + ' MOC Test';
+    document.getElementById('moc-submit-btn').style.display = 'inline-block';
+    const overlay = document.getElementById('moc-modal-overlay');
+    overlay.classList.add('active');
+    overlay.style.display = 'flex'; // Force display just in case CSS doesn't apply
+    
+    // Pick 15 random questions from the bank for the mock test
+    _mocQuestions = [];
+    for(let i = 0; i < 15 && pool.length > 0; i++) {
+      const rIdx = Math.floor(Math.random() * pool.length);
+      _mocQuestions.push(pool.splice(rIdx, 1)[0]);
+    }
+    
+    renderMocQuestions();
+    
+    clearInterval(_mocInterval);
     updateMocTimerDisplay();
-    if (_mocTimeRemaining <= 0) {
-      clearInterval(_mocInterval);
-      alert("Time is up! Auto-submitting the test.");
-      submitMocTest();
-    }
-  }, 1000);
+    _mocInterval = setInterval(() => {
+      _mocTimeRemaining--;
+      updateMocTimerDisplay();
+      if (_mocTimeRemaining <= 0) {
+        clearInterval(_mocInterval);
+        alert("Time is up! Auto-submitting the test.");
+        submitMocTest();
+      }
+    }, 1000);
+  } catch (e) {
+    alert("Error opening MOC test: " + e.message);
+    console.error(e);
+  }
 }
 
 function closeMocTestModal() {
   clearInterval(_mocInterval);
-  document.getElementById('moc-modal-overlay').classList.remove('active');
+  const overlay = document.getElementById('moc-modal-overlay');
+  overlay.classList.remove('active');
+  overlay.style.display = 'none';
 }
 
 function updateMocTimerDisplay() {
