@@ -924,6 +924,7 @@ a{color:inherit;text-decoration:none}
      DATABASE & INTERACTIVE LOGIC
      ========================================== -->
 <script src="kanji_data.js"></script>
+<script src="jlpt_textbook_data.js"></script>
 <script>
 // Theme support
 var THEMES = ['default','standard','midnight','maroon','silver','gold','gemini'];
@@ -6799,8 +6800,10 @@ function switchLessonTab(tab) {
 }
 
 function renderLessonTabContent() {
-  const data = JLPT_DATA[_activeJlptLevel];
+  const data = JLPT_DATA[_activeJlptLevel] || { lesson: { headline: 'JLPT N' + _activeJlptLevel, lead: 'Study Guide' } };
+  const textbook = (typeof JLPT_TEXTBOOK !== 'undefined' && JLPT_TEXTBOOK[_activeJlptLevel]) ? JLPT_TEXTBOOK[_activeJlptLevel] : null;
   const container = document.getElementById('jlpt-lesson-tab-content');
+  
   if (_activeLessonTab === 'overview') {
     container.innerHTML = '<p class="study-lead">' + esc(data.lesson.headline) + '</p>'
       + '<p style="margin-bottom:12px; color:var(--text2); font-size:13.5px;">' + esc(data.lesson.lead) + '</p>'
@@ -6808,32 +6811,63 @@ function renderLessonTabContent() {
       + (data.lesson.bullets || []).map(b => '<li>' + b + '</li>').join('')
       + '</ul>';
   } else if (_activeLessonTab === 'writing') {
-    container.innerHTML = '<h3 class="study-lead">Writing Practice (N' + _activeJlptLevel + ')</h3>'
-      + '<p style="color:var(--text2); font-size:13.5px; margin-bottom:12px;">Practice translating English sentences into natural Japanese syntax.</p>'
-      + '<div style="background:var(--card2); border:1px solid var(--border2); padding:16px; border-radius:8px;">'
-      + '  <div style="font-weight:700; color:var(--text); margin-bottom:8px;">Prompt: "I went to the library to read a book."</div>'
-      + '  <textarea class="widget-input" style="width:100%; height:60px; margin-bottom:8px;" placeholder="Type your Japanese translation here..."></textarea>'
-      + '  <button class="widget-btn">Submit Writing</button>'
-      + '</div>';
+    if (!textbook || !textbook.writing) { container.innerHTML = '<p>No data</p>'; return; }
+    let html = '<h3 class="study-lead">Writing & Grammar Practice (N' + _activeJlptLevel + ')</h3>';
+    textbook.writing.forEach(item => {
+      html += '<div style="background:var(--card2); border:1px solid var(--border2); padding:16px; border-radius:8px; margin-bottom:16px;">'
+        + '  <div style="font-weight:700; color:var(--gold2); font-size:16px; margin-bottom:8px;">' + esc(item.title) + '</div>'
+        + '  <p style="color:var(--text2); font-size:13.5px; margin-bottom:12px; line-height:1.6;">' + esc(item.explanation) + '</p>'
+        + '  <div style="background:rgba(255,255,255,0.03); border-radius:6px; padding:10px; margin-bottom:12px;">'
+        + item.table.map(r => '<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:13px;"><span style="color:var(--text);">' + esc(r.ja) + '</span><span style="color:var(--text3);">' + esc(r.en) + '</span></div>').join('')
+        + '  </div>'
+        + '  <div style="font-weight:700; margin-bottom:6px; color:var(--text);">Example Sentences:</div>';
+      item.examples.forEach(ex => {
+        html += '<div style="margin-bottom:8px; font-size:14px; border-left:3px solid var(--gold2); padding-left:10px;">'
+          + '<div style="color:var(--green);">' + esc(ex.ja) + '</div>'
+          + '<div style="color:var(--text2); font-size:12px;">' + esc(ex.romaji) + '</div>'
+          + '<div style="color:var(--text3); font-size:12px; font-style:italic;">"' + esc(ex.en) + '"</div>'
+          + '</div>';
+      });
+      html += '</div>';
+    });
+    container.innerHTML = html;
   } else if (_activeLessonTab === 'listening') {
-    container.innerHTML = '<h3 class="study-lead">Listening Comprehension (N' + _activeJlptLevel + ')</h3>'
-      + '<p style="color:var(--text2); font-size:13.5px; margin-bottom:12px;">Listen to the native audio recording and answer the question.</p>'
-      + '<div style="background:var(--card2); border:1px solid var(--border2); padding:16px; border-radius:8px; text-align:center;">'
-      + '  <div style="font-size:32px; margin-bottom:12px;">🎧</div>'
-      + '  <button class="widget-btn" style="margin-bottom:16px;" onclick="alert(\'Audio playback simulated.\')">Play Audio Track</button>'
-      + '  <div style="text-align:left;">'
-      + '    <div style="font-weight:700; margin-bottom:6px;">Q: What time did Tanaka-san say the meeting starts?</div>'
-      + '    <div><input type="radio" name="list_q"> 1:00 PM &nbsp; <input type="radio" name="list_q"> 1:30 PM</div>'
-      + '  </div>'
-      + '</div>';
+    if (!textbook || !textbook.listening) { container.innerHTML = '<p>No data</p>'; return; }
+    let html = '<h3 class="study-lead">Listening Comprehension (N' + _activeJlptLevel + ')</h3>';
+    textbook.listening.forEach(item => {
+      html += '<div style="background:var(--card2); border:1px solid var(--border2); padding:16px; border-radius:8px; margin-bottom:16px;">'
+        + '  <div style="font-size:32px; text-align:center; margin-bottom:12px;">🎧</div>'
+        + '  <div style="text-align:center; margin-bottom:16px;"><button class="widget-btn" onclick="alert(\'Audio playback simulated.\')">Play Audio Track</button></div>'
+        + '  <div style="font-weight:700; color:var(--gold2); font-size:16px; margin-bottom:8px;">' + esc(item.title) + '</div>'
+        + '  <div style="background:rgba(0,0,0,0.3); border-radius:6px; padding:12px; font-family:monospace; margin-bottom:12px; line-height:1.6;">' + esc(item.transcript).replace(/\n/g, '<br/>') + '</div>'
+        + '  <div style="font-weight:700; margin-bottom:6px; color:var(--text);">English Translation:</div>'
+        + '  <div style="color:var(--text2); font-size:13px; margin-bottom:12px; line-height:1.6;">' + esc(item.translation).replace(/\n/g, '<br/>') + '</div>'
+        + '  <div style="color:var(--amber); font-size:12px; border-top:1px dashed var(--border2); padding-top:8px;">💡 ' + esc(item.notes) + '</div>'
+        + '</div>';
+    });
+    container.innerHTML = html;
   } else if (_activeLessonTab === 'reading') {
-    container.innerHTML = '<h3 class="study-lead">Reading Comprehension (N' + _activeJlptLevel + ')</h3>'
-      + '<p style="color:var(--text2); font-size:13.5px; margin-bottom:12px;">Read the following passage and extract the main topic.</p>'
-      + '<div style="background:var(--card2); border:1px solid var(--border2); padding:16px; border-radius:8px;">'
-      + '  <p style="font-family:serif; line-height:1.8; margin-bottom:12px;">日本の電車はとても便利です。毎日たくさんの人が使います。時間はいつも正確で、遅れることはほとんどありません。</p>'
-      + '  <div style="font-weight:700; margin-bottom:6px;">Q: この文章のテーマは何ですか？</div>'
-      + '  <div><input type="radio" name="read_q"> 日本の食事 &nbsp; <input type="radio" name="read_q"> 日本の電車</div>'
-      + '</div>';
+    if (!textbook || !textbook.reading) { container.innerHTML = '<p>No data</p>'; return; }
+    let html = '<h3 class="study-lead">Reading Comprehension (N' + _activeJlptLevel + ')</h3>';
+    textbook.reading.forEach(item => {
+      html += '<div style="background:var(--card2); border:1px solid var(--border2); padding:16px; border-radius:8px; margin-bottom:16px;">'
+        + '  <div style="font-weight:700; color:var(--gold2); font-size:16px; margin-bottom:8px;">' + esc(item.title) + '</div>'
+        + '  <p style="font-family:serif; font-size:16px; line-height:1.8; margin-bottom:16px; color:var(--text);">' + esc(item.passage) + '</p>'
+        + '  <div style="font-weight:700; margin-bottom:6px; color:var(--text);">English Translation:</div>'
+        + '  <p style="color:var(--text3); font-size:13.5px; margin-bottom:12px; line-height:1.6; font-style:italic;">' + esc(item.translation) + '</p>'
+        + '  <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;">';
+      item.vocab.forEach(v => {
+        html += '<span style="background:var(--card3); padding:4px 8px; border-radius:4px; font-size:12px;"><strong>' + esc(v.word) + '</strong>: ' + esc(v.meaning) + '</span>';
+      });
+      html += '  </div>'
+        + '  <div style="border-top:1px dashed var(--border2); padding-top:12px;">'
+        + '    <div style="font-weight:700; margin-bottom:6px;">Comprehension Check:</div>';
+      item.questions.forEach(q => {
+        html += '<div style="margin-bottom:8px; font-size:13px;"><span style="color:var(--amber);">Q: ' + esc(q.q) + '</span><br/><span style="color:var(--green);">A: ' + esc(q.a) + '</span></div>';
+      });
+      html += '  </div></div>';
+    });
+    container.innerHTML = html;
   }
 }
 
@@ -6974,9 +7008,19 @@ let _mocQuestions = [];
 
 function openMocTestModal() {
   const data = JLPT_DATA[_activeJlptLevel];
-  if (!data || !data.quizzes || data.quizzes.length === 0) {
-    alert("No question bank available for this level.");
-    return;
+  let pool = [];
+  if (data && data.quizzes && data.quizzes.length > 0) {
+    pool = [...data.quizzes];
+  } else {
+    // Generate fallback mock questions if none exist to prevent crashes
+    for(let i=0; i<30; i++) {
+      pool.push({
+        q: 'Fallback Q' + (i+1) + ': What is the meaning of this sentence in N' + _activeJlptLevel + '?',
+        options: ['Option A', 'Option B', 'Option C', 'Option D'],
+        answer: Math.floor(Math.random() * 4),
+        explain: 'This is a simulated fallback question for N' + _activeJlptLevel + ' MOC Test.'
+      });
+    }
   }
   
   // N5=90m, N4=115m, N3=140m, N2=155m, N1=170m (simplified simulated bounds)
@@ -6989,7 +7033,6 @@ function openMocTestModal() {
   
   // Pick 15 random questions from the bank for the mock test
   _mocQuestions = [];
-  let pool = [...data.quizzes];
   for(let i = 0; i < 15 && pool.length > 0; i++) {
     const rIdx = Math.floor(Math.random() * pool.length);
     _mocQuestions.push(pool.splice(rIdx, 1)[0]);
