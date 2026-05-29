@@ -357,6 +357,41 @@
     }
     .photo-preview.visible { display: block; }
 
+    /* Focal-point + zoom editor (News Posts photo positioning) */
+    .focal-editor { margin-top: 8px; display: none; }
+    .focal-editor.visible { display: block; }
+    .focal-stage {
+      position: relative; width: 100%; height: 160px; border-radius: 8px;
+      overflow: hidden; border: 1px solid #1e3a5c; background: #0a1426;
+      cursor: grab; touch-action: none; user-select: none;
+    }
+    .focal-stage.dragging { cursor: grabbing; }
+    .focal-img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      object-position: 50% 50%; transform-origin: 50% 50%; transform: scale(1);
+      -webkit-user-drag: none; user-select: none; pointer-events: none;
+    }
+    .focal-handle {
+      position: absolute; left: 50%; top: 50%; width: 24px; height: 24px;
+      margin: -12px 0 0 -12px; border: 2px solid #fff; border-radius: 50%;
+      box-shadow: 0 0 0 2px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.55);
+      pointer-events: none; transition: box-shadow .15s;
+    }
+    .focal-handle::after {
+      content: ''; position: absolute; inset: 7px; border-radius: 50%;
+      background: rgba(47,111,237,.9);
+    }
+    .focal-controls { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+    .focal-controls label { font-size: 11px; color: #9fc3ee; font-weight: 700; white-space: nowrap; }
+    .focal-controls input[type=range] { flex: 1; accent-color: #2f6fed; height: 4px; }
+    .focal-zoomval { font-size: 11px; color: #5b78a0; min-width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
+    .focal-reset {
+      background: #122a4a; color: #9fc3ee; border: 1px solid #244a72;
+      border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer;
+    }
+    .focal-reset:hover { background: #16345a; }
+    .focal-hint { font-size: 10.5px; color: #5b78a0; margin-top: 5px; }
+
     /* Image upload controls (R2) */
     .upload-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
     .file-input { display: none; }
@@ -822,8 +857,20 @@
               <button type="button" class="btn-upload" id="cp-upload-btn" onclick="document.getElementById('cp-file').click()">⬆ Upload image</button>
               <span class="upload-hint">JPEG · PNG · WebP · GIF · max 8 MB</span>
             </div>
-            <img id="cp-photo-preview" class="photo-preview" src="" alt="Preview"
-                 onerror="this.classList.remove('visible')">
+            <div class="focal-editor" id="cp-focal-editor">
+              <div class="focal-stage" id="cp-focal-stage">
+                <img id="cp-photo-preview" class="focal-img" src="" alt="Preview"
+                     onerror="document.getElementById('cp-focal-editor').classList.remove('visible')">
+                <div class="focal-handle" id="cp-focal-handle"></div>
+              </div>
+              <div class="focal-controls">
+                <label for="cp-zoom">Zoom</label>
+                <input type="range" id="cp-zoom" min="1" max="4" step="0.05" value="1" oninput="setCpZoom(this.value)">
+                <span class="focal-zoomval" id="cp-zoomval">1.0×</span>
+                <button type="button" class="focal-reset" onclick="resetCpFocal()">Reset</button>
+              </div>
+              <div class="focal-hint">Drag the photo to reposition the focal point · use Zoom to crop closer. This is how it appears on the site.</div>
+            </div>
           </div>
 
           <label class="field-label" for="cp-days">Visible for (days)</label>
@@ -1300,6 +1347,7 @@ function showDashboard() {
 
 /* ── Init ──────────────────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function() {
+  initCpFocalDrag();
   var tok = getToken();
   if (tokenStillValid(tok)) {
     showDashboard();
@@ -1431,6 +1479,7 @@ async function handlePhotoUpload(inputEl, prefix) {
   try {
     var url = await uploadImageToR2(file);
     if (urlIn) urlIn.value = url;
+    if (prefix === 'cp') resetCpFocal();   // fresh image → reset framing
     if (cfg.preview) cfg.preview(url);
     if (cfg.status) cfg.status('ok', '✓ Image uploaded to media storage.');
   } catch (e) {
@@ -1778,6 +1827,10 @@ var cpEditId       = null;   // id of the post currently being edited (null = cr
 var stEditId       = null;
 var acEditId       = null;
 
+/* Photo framing state for the News Posts editor */
+var cpPhotoPos  = '50% 50%';
+var cpPhotoZoom = 1;
+
 var SECTION_LABELS = {
   trending:'🔥 Trending', global:'🌍 Global News', india:'🇮🇳 India News',
   stock:'📈 Stock News', malayalam:'🎭 Malayalam News',
@@ -1910,6 +1963,11 @@ function editContentItem(id) {
     if (d >= 1) days = Math.min(d, 365);
   }
   document.getElementById('cp-days').value = days;
+  // Load saved photo framing (focal point + zoom) before previewing
+  cpPhotoPos  = item.photo_pos || '50% 50%';
+  cpPhotoZoom = item.photo_zoom ? Math.min(Math.max(parseFloat(item.photo_zoom), 1), 4) : 1;
+  var zEl = document.getElementById('cp-zoom');
+  if (zEl) zEl.value = cpPhotoZoom;
   previewPhoto(item.photo || '');
   var banner = document.getElementById('cp-edit-banner');
   if (banner) banner.classList.add('visible');
@@ -1934,6 +1992,7 @@ function cancelContentEdit() {
   document.getElementById('cp-story').value   = '';
   document.getElementById('cp-photo').value   = '';
   document.getElementById('cp-days').value     = 30;
+  resetCpFocal();
   previewPhoto('');
   var banner = document.getElementById('cp-edit-banner');
   if (banner) banner.classList.remove('visible');
@@ -1983,7 +2042,11 @@ async function publishContent() {
           published_at: i.published_at || new Date().toISOString(),
           expires_at: expiresAt
         };
-        if (photo) o.photo = photo;
+        if (photo) {
+          o.photo = photo;
+          if (cpPhotoPos && cpPhotoPos !== '50% 50%') o.photo_pos = cpPhotoPos;
+          if (cpPhotoZoom && cpPhotoZoom !== 1)        o.photo_zoom = cpPhotoZoom;
+        }
         if (i.link_url) o.link_url = i.link_url;
         return o;
       });
@@ -2006,7 +2069,11 @@ async function publishContent() {
     } else {
       // ── CREATE MODE ────────────────────────────────────────────────────────
       var payload = { section: section, heading: heading, story: story, days: days };
-      if (photo) payload.photo = photo;
+      if (photo) {
+        payload.photo = photo;
+        if (cpPhotoPos && cpPhotoPos !== '50% 50%') payload.photo_pos = cpPhotoPos;
+        if (cpPhotoZoom && cpPhotoZoom !== 1)        payload.photo_zoom = cpPhotoZoom;
+      }
       var res  = await authFetch(WORKER + '/api/post-content', {
         method: 'POST',
         body:   JSON.stringify(payload),
@@ -2019,8 +2086,8 @@ async function publishContent() {
         document.getElementById('cp-heading').value = '';
         document.getElementById('cp-story').value   = '';
         document.getElementById('cp-photo').value   = '';
-        var prev = document.getElementById('cp-photo-preview');
-        if (prev) { prev.src = ''; prev.classList.remove('visible'); }
+        resetCpFocal();
+        previewPhoto('');
         await loadContent();
       } else {
         setCpFormStatus('err', data.message || 'Server error ' + res.status);
@@ -2034,17 +2101,75 @@ async function publishContent() {
   btn.textContent = cpEditId ? 'Update Post' : 'Publish Post';
 }
 
-/* ── Photo URL preview ──────────────────────────────────────────────────────── */
+/* ── Photo preview + focal-point / zoom editor ──────────────────────────────── */
 function previewPhoto(url) {
-  var prev = document.getElementById('cp-photo-preview');
-  if (!prev) return;
-  if (url && url.startsWith('http')) {
-    prev.src = url;
-    prev.classList.add('visible');
+  var img    = document.getElementById('cp-photo-preview');
+  var editor = document.getElementById('cp-focal-editor');
+  if (!img || !editor) return;
+  if (url && url.indexOf('http') === 0) {
+    img.src = url;
+    editor.classList.add('visible');
+    _applyCpFocal();
   } else {
-    prev.src = '';
-    prev.classList.remove('visible');
+    img.src = '';
+    editor.classList.remove('visible');
   }
+}
+
+/* Apply current focal point + zoom to the preview image and handle. */
+function _applyCpFocal() {
+  var img = document.getElementById('cp-photo-preview');
+  if (img) {
+    img.style.objectPosition  = cpPhotoPos;
+    img.style.transformOrigin = cpPhotoPos;
+    img.style.transform       = 'scale(' + cpPhotoZoom + ')';
+  }
+  var h = document.getElementById('cp-focal-handle');
+  if (h) {
+    var xy = cpPhotoPos.split(' ');
+    h.style.left = xy[0];
+    h.style.top  = xy[1] || xy[0];
+  }
+  var zv = document.getElementById('cp-zoomval');
+  if (zv) zv.textContent = cpPhotoZoom.toFixed(1) + '×';
+}
+
+function setCpZoom(v) {
+  cpPhotoZoom = Math.min(Math.max(parseFloat(v) || 1, 1), 4);
+  _applyCpFocal();
+}
+
+function resetCpFocal() {
+  cpPhotoPos  = '50% 50%';
+  cpPhotoZoom = 1;
+  var z = document.getElementById('cp-zoom');
+  if (z) z.value = 1;
+  _applyCpFocal();
+}
+
+/* Drag-to-reposition the focal point on the preview stage. */
+function initCpFocalDrag() {
+  var stage = document.getElementById('cp-focal-stage');
+  if (!stage || stage._focalBound) return;
+  stage._focalBound = true;
+  var dragging = false;
+  function setFromEvent(e) {
+    var rect = stage.getBoundingClientRect();
+    var cx = (e.touches ? e.touches[0].clientX : e.clientX);
+    var cy = (e.touches ? e.touches[0].clientY : e.clientY);
+    var x = Math.min(Math.max((cx - rect.left) / rect.width, 0), 1) * 100;
+    var y = Math.min(Math.max((cy - rect.top)  / rect.height, 0), 1) * 100;
+    cpPhotoPos = Math.round(x) + '% ' + Math.round(y) + '%';
+    _applyCpFocal();
+  }
+  stage.addEventListener('pointerdown', function(e) {
+    dragging = true; stage.classList.add('dragging');
+    try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+    setFromEvent(e); e.preventDefault();
+  });
+  stage.addEventListener('pointermove', function(e) { if (dragging) setFromEvent(e); });
+  stage.addEventListener('pointerup',   function() { dragging = false; stage.classList.remove('dragging'); });
+  stage.addEventListener('pointercancel', function() { dragging = false; stage.classList.remove('dragging'); });
 }
 
 /* ── Status helpers (content tab) ───────────────────────────────────────────── */

@@ -327,7 +327,7 @@ export default {
       const auth = await requireAuth(request, env);
       if (auth.error) return auth.error;
 
-      const { section, heading, story, photo, link_url, days } = body || {};
+      const { section, heading, story, photo, link_url, days, photo_pos, photo_zoom } = body || {};
       const VALID_SECTIONS = ['trending','global','india','stock','malayalam',
         'ml_trending','ml_movies','ml_music','ml_local','ml_science','ml_space',
         'ml_sports','ml_health','ml_food','ml_realestate','ml_career','ml_tech',
@@ -360,6 +360,8 @@ export default {
       const newItem = { id: String(Date.now()), section, heading: heading.trim().slice(0,200), story: story.trim().slice(0,2000), published_at: now.toISOString(), expires_at: expiresAt };
       if (photo && typeof photo === 'string' && photo.trim().startsWith('http')) newItem.photo = photo.trim().slice(0,500);
       if (link_url && typeof link_url === 'string' && link_url.trim().startsWith('http')) newItem.link_url = link_url.trim().slice(0,500);
+      if (photo_pos && typeof photo_pos === 'string') newItem.photo_pos = photo_pos.trim().slice(0,20);
+      if (photo_zoom && !isNaN(parseFloat(photo_zoom))) newItem.photo_zoom = Math.min(Math.max(parseFloat(photo_zoom), 1), 4);
       items.push(newItem);
 
       const put = { message: `feat(content): publish ${section} post`, content: btoa(unescape(encodeURIComponent(JSON.stringify(items, null, 2)))), branch: BRANCH };
@@ -394,7 +396,7 @@ export default {
         else if (r.status !== 404) return jsonError(502, `GitHub GET failed: ${r.status}`);
       } catch (e) { return jsonError(502, `GitHub GET error: ${e.message}`); }
 
-      const clean = items.map(i => { const o = { id: String(i.id||Date.now()), section: String(i.section||''), heading: String(i.heading||'').slice(0,200), story: String(i.story||'').slice(0,2000), published_at: i.published_at||new Date().toISOString(), expires_at: i.expires_at||'' }; if (i.photo) o.photo = String(i.photo).slice(0,500); if (i.link_url) o.link_url = String(i.link_url).slice(0,500); return o; });
+      const clean = items.map(i => { const o = { id: String(i.id||Date.now()), section: String(i.section||''), heading: String(i.heading||'').slice(0,200), story: String(i.story||'').slice(0,2000), published_at: i.published_at||new Date().toISOString(), expires_at: i.expires_at||'' }; if (i.photo) o.photo = String(i.photo).slice(0,500); if (i.link_url) o.link_url = String(i.link_url).slice(0,500); if (i.photo_pos) o.photo_pos = String(i.photo_pos).slice(0,20); if (i.photo_zoom && !isNaN(parseFloat(i.photo_zoom))) o.photo_zoom = Math.min(Math.max(parseFloat(i.photo_zoom), 1), 4); return o; });
       const put = { message: 'chore(content): update via console', content: btoa(unescape(encodeURIComponent(JSON.stringify(clean, null, 2)))), branch: BRANCH };
       if (sha) put.sha = sha;
       try {
