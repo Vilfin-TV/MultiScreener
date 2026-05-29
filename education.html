@@ -6507,31 +6507,32 @@ function selectKanjiCharacter(idx) {
 }
 
 function renderKanjiDetails(idx) {
-  const item = KANJI_DATA[idx];
+  const kanjiList = (window.KANJI_LEVEL_DATA && window.KANJI_LEVEL_DATA[_activeKanjiLevel]) ? window.KANJI_LEVEL_DATA[_activeKanjiLevel] : [];
+  const item = kanjiList[idx];
   if (!item) return;
   
   // Custom styled vector SVGs for Kanji mnemonic (Pictures)
   let kanjiSvgVisual = '';
-  if (item.char === '日') {
+  if (item.k === '日') {
     kanjiSvgVisual = `<svg width="100" height="100" viewBox="0 0 100 100" style="background:#060f1c; border-radius:6px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
       <circle cx="50" cy="50" r="22" fill="var(--amber)" opacity="0.85"/>
       <text x="50" y="54" font-size="8" fill="#fff" font-weight="700" text-anchor="middle">SUN / DAY</text>
     </svg>`;
-  } else if (item.char === '本') {
+  } else if (item.k === '本') {
     kanjiSvgVisual = `<svg width="100" height="100" viewBox="0 0 100 100" style="background:#060f1c; border-radius:6px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
       <rect x="35" y="25" width="30" height="42" rx="2" fill="var(--card4)" stroke="var(--border2)" stroke-width="2"/>
       <line x1="50" y1="25" x2="50" y2="67" stroke="#fff" stroke-width="1.5"/>
       <circle cx="50" cy="78" r="8" fill="var(--green)" opacity="0.8"/>
       <text x="50" y="81" font-size="7" fill="#fff" font-weight="700" text-anchor="middle">ORIGIN</text>
     </svg>`;
-  } else if (item.char === '人') {
+  } else if (item.k === '人') {
     kanjiSvgVisual = `<svg width="100" height="100" viewBox="0 0 100 100" style="background:#060f1c; border-radius:6px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
       <!-- Person icon -->
       <circle cx="50" cy="35" r="10" fill="var(--text3)"/>
       <path d="M35,75 L50,55 L65,75" stroke="var(--gold2)" stroke-width="4" stroke-linecap="round" fill="none"/>
       <line x1="50" y1="45" x2="50" y2="55" stroke="var(--gold2)" stroke-width="4" stroke-linecap="round"/>
     </svg>`;
-  } else if (item.char === '山') {
+  } else if (item.k === '山') {
     kanjiSvgVisual = `<svg width="100" height="100" viewBox="0 0 100 100" style="background:#060f1c; border-radius:6px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
       <path d="M 20 75 L 35 40 L 50 65 L 65 30 L 80 75 Z" fill="var(--card4)" stroke="var(--border2)" stroke-width="2"/>
       <polygon points="35,40 40,50 30,50" fill="#fff"/>
@@ -6548,28 +6549,20 @@ function renderKanjiDetails(idx) {
   }
 
   const detailsHtml = '<div class="kana-details-header">'
-    + '  <div class="kana-details-big" style="color:var(--gold2);">' + esc(item.char) + '</div>'
+    + '  <div class="kana-details-big" style="color:var(--gold2);">' + esc(item.k) + '</div>'
     + '  <div>'
     + '    <div class="kana-details-title">Stroke Count</div>'
-    + '    <div class="kana-details-val" style="font-size:20px; color:var(--text);">' + item.stroke + ' strokes</div>'
+    + '    <div class="kana-details-val" style="font-size:20px; color:var(--text);">' + esc(item.s) + '</div>'
     + '  </div>'
     + '</div>'
     + kanjiSvgVisual
     + '<div style="margin-bottom:12px;">'
     + '  <div class="kana-details-title">English Meaning</div>'
-    + '  <div class="kana-details-val" style="font-size:15px; color:var(--green); font-weight:700;">' + esc(item.meaning) + '</div>'
+    + '  <div class="kana-details-val" style="font-size:15px; color:var(--green); font-weight:700;">' + esc(item.m) + '</div>'
     + '</div>'
     + '<div style="margin-bottom:12px;">'
-    + '  <div class="kana-details-title">Onyomi Reading (Chinese)</div>'
-    + '  <div class="kana-details-val" style="font-family:monospace; font-size:12.5px;">' + esc(item.onyomi) + '</div>'
-    + '</div>'
-    + '<div style="margin-bottom:12px;">'
-    + '  <div class="kana-details-title">Kunyomi Reading (Japanese)</div>'
-    + '  <div class="kana-details-val" style="font-family:monospace; font-size:12.5px; color:var(--text2);">' + esc(item.kunyomi) + '</div>'
-    + '</div>'
-    + '<div>'
-    + '  <div class="kana-details-title">Standard Compound Examples</div>'
-    + '  <div class="kana-details-val" style="font-size:13px; color:var(--text2);">' + esc(item.compounds) + '</div>'
+    + '  <div class="kana-details-title">Onyomi / Kunyomi</div>'
+    + '  <div class="kana-details-val" style="font-family:monospace; font-size:12.5px;">' + esc(item.r) + '</div>'
     + '</div>';
     
   document.getElementById('kanji-details-box').innerHTML = detailsHtml;
@@ -6577,17 +6570,19 @@ function renderKanjiDetails(idx) {
 
 // Kanji Recall Game
 function loadKanjiGame() {
-  const rIdx = Math.floor(Math.random() * KANJI_DATA.length);
+  const kanjiList = (window.KANJI_LEVEL_DATA && window.KANJI_LEVEL_DATA[_activeKanjiLevel]) ? window.KANJI_LEVEL_DATA[_activeKanjiLevel] : [];
+  if (kanjiList.length === 0) return;
+  const rIdx = Math.floor(Math.random() * kanjiList.length);
   _kanjiQuestionIdx = rIdx;
   
-  const item = KANJI_DATA[rIdx];
-  document.getElementById('kanji-game-question').textContent = item.char;
+  const item = kanjiList[rIdx];
+  document.getElementById('kanji-game-question').textContent = item.k;
   
-  let options = [item.meaning];
+  let options = [item.m];
   while (options.length < 4) {
-    const randomItem = KANJI_DATA[Math.floor(Math.random() * KANJI_DATA.length)];
-    if (!options.includes(randomItem.meaning)) {
-      options.push(randomItem.meaning);
+    const randomItem = kanjiList[Math.floor(Math.random() * kanjiList.length)];
+    if (!options.includes(randomItem.m)) {
+      options.push(randomItem.m);
     }
   }
   
@@ -6601,8 +6596,10 @@ function loadKanjiGame() {
 }
 
 function selectKanjiOption(selectedMeaning) {
-  const item = KANJI_DATA[_kanjiQuestionIdx];
-  const correctMeaning = item.meaning;
+  const kanjiList = (window.KANJI_LEVEL_DATA && window.KANJI_LEVEL_DATA[_activeKanjiLevel]) ? window.KANJI_LEVEL_DATA[_activeKanjiLevel] : [];
+  const item = kanjiList[_kanjiQuestionIdx];
+  if (!item) return;
+  const correctMeaning = item.m;
   
   _kanjiScoreTotal++;
   const isCorrect = selectedMeaning === correctMeaning;
