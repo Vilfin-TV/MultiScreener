@@ -611,7 +611,31 @@ a{color:inherit;text-decoration:none}
   border-top:1px solid rgba(255,255,255,0.05);padding-top:16px;
   display:flex;justify-content:space-between;align-items:center;
   font-size:12px;color:var(--text3);flex-wrap:wrap;gap:12px;
+/* MOC Test Modal */
+.moc-modal-overlay {
+  display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.85); z-index:2000; justify-content:center; align-items:center;
+  backdrop-filter:blur(5px);
 }
+.moc-modal-overlay.active { display:flex; }
+.moc-modal-content {
+  background:var(--card); border:1px solid var(--border2); border-radius:12px;
+  width:90%; max-width:700px; max-height:90vh; overflow-y:auto;
+  box-shadow:0 10px 40px rgba(0,0,0,0.7); position:relative;
+}
+.moc-header {
+  padding:20px; border-bottom:1px solid var(--border); display:flex;
+  justify-content:space-between; align-items:center; position:sticky; top:0;
+  background:var(--card); z-index:10;
+}
+.moc-timer {
+  font-family:'Bebas Neue',sans-serif; font-size:24px; color:var(--red);
+  letter-spacing:2px; display:flex; align-items:center; gap:6px;
+}
+.moc-body { padding:20px; }
+.moc-footer { padding:20px; border-top:1px solid var(--border); text-align:right; }
+.moc-q-block { margin-bottom:24px; padding-bottom:24px; border-bottom:1px dashed var(--border2); }
+.moc-q-block:last-child { border-bottom:none; margin-bottom:0; padding-bottom:0; }
 </style>
 </head>
 <body>
@@ -761,8 +785,18 @@ a{color:inherit;text-decoration:none}
       </div>
       
       <!-- Kanji area -->
-      <div id="jp-kanji-list-area" class="kana-grid" style="grid-template-columns: repeat(5, 1fr);">
-        <!-- Dyn Kanji grid -->
+      <div id="jp-kanji-area-container">
+        <!-- Kanji Level Selector -->
+        <div class="class-selector-bar" id="kanji-level-selector" style="margin-bottom:12px;">
+          <button class="class-btn active" id="btn-kanji-5" onclick="switchKanjiLevel(5)">N5</button>
+          <button class="class-btn" id="btn-kanji-4" onclick="switchKanjiLevel(4)">N4</button>
+          <button class="class-btn" id="btn-kanji-3" onclick="switchKanjiLevel(3)">N3</button>
+          <button class="class-btn" id="btn-kanji-2" onclick="switchKanjiLevel(2)">N2</button>
+          <button class="class-btn" id="btn-kanji-1" onclick="switchKanjiLevel(1)">N1</button>
+        </div>
+        <div id="jp-kanji-list-area" class="kana-grid" style="grid-template-columns: repeat(5, 1fr);">
+          <!-- Dyn Kanji grid -->
+        </div>
       </div>
       
       <!-- Casual Phrases Area -->
@@ -823,7 +857,7 @@ a{color:inherit;text-decoration:none}
   <div class="footer-main">
     <div>
       <div class="footer-col-title">VilfinTV Academy</div>
-      <p class="footer-brand-desc">Interactive curriculum study, practical STEM tools, and robust Asian languages training in a premium Dhan-styled environment.</p>
+      <p class="footer-brand-desc">Interactive curriculum study, practical STEM tools, and robust Asian languages training.</p>
     </div>
     <div>
       <div class="footer-col-title">CBSE Hub</div>
@@ -856,13 +890,40 @@ a{color:inherit;text-decoration:none}
 
   <div class="footer-bottom">
     <p>&copy; 2026 VilfinTV Academy. NCERT &amp; JLPT curriculum resources updated in real time.</p>
-    <p>Premium Financial-Grade UI | Institutional-Grade Education Hub</p>
+    <p>Institutional-Grade Education Hub</p>
   </div>
 </footer>
 
 <!-- ══════════════════════════════════════════
+     JLPT MOC TEST MODAL
+     ========================================== -->
+<div class="moc-modal-overlay" id="moc-modal-overlay">
+  <div class="moc-modal-content">
+    <div class="moc-header">
+      <div>
+        <h2 class="section-headline" style="margin:0; border:none; padding:0;" id="moc-title">JLPT MOC Test</h2>
+        <div style="font-size:12px; color:var(--text3);">Real Exam Scenario simulation</div>
+      </div>
+      <div class="moc-timer" id="moc-timer-display">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        00:00
+      </div>
+    </div>
+    <div class="moc-body" id="moc-body-content">
+      <!-- Generated questions go here -->
+    </div>
+    <div class="moc-footer">
+      <button class="widget-btn" style="background:var(--card3); color:var(--text2); margin-right:12px;" onclick="closeMocTestModal()">Cancel</button>
+      <button class="widget-btn" id="moc-submit-btn" onclick="submitMocTest()">Submit Final Answers</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
      DATABASE & INTERACTIVE LOGIC
      ========================================== -->
+<script src="kanji_data.js"></script>
 <script>
 // Theme support
 var THEMES = ['default','standard','midnight','maroon','silver','gold','gemini'];
@@ -5988,6 +6049,38 @@ function renderCbseContent() {
   }
 }
 
+function renderKanjiDetails(idx) {
+  const kanjiList = (window.KANJI_LEVEL_DATA && window.KANJI_LEVEL_DATA[_activeKanjiLevel]) ? window.KANJI_LEVEL_DATA[_activeKanjiLevel] : [];
+  const item = kanjiList[idx];
+  if (!item) {
+    document.getElementById('kanji-details-box').innerHTML = '<div style="text-align:center; color:var(--text3);">No details available.</div>';
+    return;
+  }
+  
+  const kanjiChar = item.k || item.char || '';
+  const stroke = item.s || item.stroke || 'Unknown';
+  const meaning = item.m || item.meaning || '';
+  const romaji = item.r || item.onyomi || '';
+  
+  const detailsHtml = '<div class="kana-details-header">'
+    + '  <div class="kana-details-big" style="color:var(--gold2);">' + esc(kanjiChar) + '</div>'
+    + '  <div>'
+    + '    <div class="kana-details-title">Stroke Count</div>'
+    + '    <div class="kana-details-val" style="font-size:20px; color:var(--text);">' + esc(stroke) + '</div>'
+    + '  </div>'
+    + '</div>'
+    + '<div style="margin-bottom:12px;">'
+    + '  <div class="kana-details-title">English Meaning</div>'
+    + '  <div class="kana-details-val" style="font-size:15px; color:var(--green); font-weight:700;">' + esc(meaning) + '</div>'
+    + '</div>'
+    + '<div style="margin-bottom:12px;">'
+    + '  <div class="kana-details-title">Reading / Romaji</div>'
+    + '  <div class="kana-details-val" style="font-size:13px; color:var(--text2);">' + esc(romaji) + '</div>'
+    + '</div>';
+    
+  document.getElementById('kanji-details-box').innerHTML = detailsHtml;
+}
+
 // Math Interactive Widgets Generator
 function renderInteractiveWidget(type) {
   const container = document.getElementById('cbse-widget-card');
@@ -6327,13 +6420,27 @@ function toggleJpCasualArea(area) {
   
   if (area === 'kanji') {
     document.getElementById('btn-jp-kanji').classList.add('active');
-    document.getElementById('jp-kanji-list-area').style.display = 'grid';
+    document.getElementById('jp-kanji-area-container').style.display = 'block';
     document.getElementById('jp-casual-phrases-area').style.display = 'none';
   } else {
     document.getElementById('btn-jp-casual').classList.add('active');
-    document.getElementById('jp-kanji-list-area').style.display = 'none';
+    document.getElementById('jp-kanji-area-container').style.display = 'none';
     document.getElementById('jp-casual-phrases-area').style.display = 'block';
   }
+  renderKanjiHub();
+}
+
+var _activeKanjiLevel = 5;
+function switchKanjiLevel(level) {
+  _activeKanjiLevel = level;
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.getElementById('btn-kanji-' + i);
+    if (btn) btn.classList.remove('active');
+  }
+  const activeBtn = document.getElementById('btn-kanji-' + level);
+  if (activeBtn) activeBtn.classList.add('active');
+  
+  _selectedKanjiIdx = 0;
   renderKanjiHub();
 }
 
@@ -6343,11 +6450,14 @@ function renderKanjiHub() {
     const container = document.getElementById('jp-kanji-list-area');
     let gridHtml = '';
     
-    KANJI_DATA.forEach((item, idx) => {
+    // Fallback if data is missing
+    const kanjiList = (window.KANJI_LEVEL_DATA && window.KANJI_LEVEL_DATA[_activeKanjiLevel]) ? window.KANJI_LEVEL_DATA[_activeKanjiLevel] : [];
+    
+    kanjiList.forEach((item, idx) => {
       const isActiveClass = idx === _selectedKanjiIdx ? ' active' : '';
       gridHtml += '<div class="kana-card' + isActiveClass + '" onclick="selectKanjiCharacter(' + idx + ')">'
-        + '  <div class="kana-char" style="color:var(--gold2);">' + esc(item.char) + '</div>'
-        + '  <div class="kana-romaji" style="font-size:9.5px; opacity:0.8;">' + esc(item.meaning) + '</div>'
+        + '  <div class="kana-char" style="color:var(--gold2);">' + esc(item.k || item.char) + '</div>'
+        + '  <div class="kana-romaji" style="font-size:9.5px; opacity:0.8;">' + esc(item.m || item.meaning) + '</div>'
         + '</div>';
     });
     
@@ -6646,24 +6756,92 @@ function selectKanaRecallOption(selectedRomaji) {
 
 
 // RENDER JLPT CONTENT
+var _activeLessonTab = 'overview';
 function renderJlptContent() {
   const data = JLPT_DATA[_activeJlptLevel];
   if (!data) return;
   
-  // Render Study Guide Card
-  const lessonHtml = '<h2 class="section-headline">🇯🇵 JLPT Study Guide: ' + esc(data.lesson.headline) + '</h2>'
-    + '<p class="study-lead">' + esc(data.lesson.lead) + '</p>'
-    + '<ul class="study-bullets">'
-    + data.lesson.bullets.map(b => '<li>' + b + '</li>').join('')
-    + '</ul>'
-    + '<div style="margin-top:20px;padding:12px;background:rgba(255,255,255,0.03);border-radius:6px;border:1px dashed var(--border2);font-size:12px;color:var(--text3);text-align:center;">'
-    + '  Official JLPT Japanese Language Proficiency Test Curriculum (2026)'
+  // Render Study Guide Card with Tabs
+  const lessonHtml = '<h2 class="section-headline">🇯🇵 JLPT Study Guide (N' + _activeJlptLevel + ')</h2>'
+    + '<div class="class-selector-bar" style="margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border);">'
+    + '  <button class="class-btn ' + (_activeLessonTab === 'overview' ? 'active' : '') + '" onclick="switchLessonTab(\'overview\')">Overview</button>'
+    + '  <button class="class-btn ' + (_activeLessonTab === 'writing' ? 'active' : '') + '" onclick="switchLessonTab(\'writing\')">Writing</button>'
+    + '  <button class="class-btn ' + (_activeLessonTab === 'listening' ? 'active' : '') + '" onclick="switchLessonTab(\'listening\')">Listening</button>'
+    + '  <button class="class-btn ' + (_activeLessonTab === 'reading' ? 'active' : '') + '" onclick="switchLessonTab(\'reading\')">Reading</button>'
+    + '</div>'
+    + '<div id="jlpt-lesson-tab-content" style="min-height:180px;">'
     + '</div>';
     
   document.getElementById('jlpt-lesson-card').innerHTML = lessonHtml;
+  renderLessonTabContent();
   
   // Load Quiz Drill Card (Practice Simulator)
-  loadJlptQuiz(0);
+  // Retrieve saved progress from localStorage
+  let savedProgress = parseInt(localStorage.getItem('jlpt_progress_' + _activeJlptLevel)) || 0;
+  if (savedProgress >= data.quizzes.length) savedProgress = 0;
+  
+  const drillHeaderHtml = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">'
+    + '  <h2 class="section-headline" style="margin:0; border:none; padding:0;">📝 JLPT Practice Drills (N' + _activeJlptLevel + ')</h2>'
+    + '  <button class="widget-btn" style="background:var(--red); font-size:11px; padding:4px 10px;" onclick="resetJlptProgress()">Reset Session</button>'
+    + '</div>'
+    + '<div id="jlpt-quiz-container"></div>'
+    + '<div style="margin-top:24px; text-align:center; padding-top:16px; border-top:1px solid var(--border);">'
+    + '  <button class="hub-toggle-btn active" style="background:var(--gold2); border:none; box-shadow:0 0 12px var(--glow);" onclick="openMocTestModal()">🎯 Take N' + _activeJlptLevel + ' MOC Test</button>'
+    + '</div>';
+    
+  document.getElementById('jlpt-quiz-card').innerHTML = drillHeaderHtml;
+  loadJlptQuiz(savedProgress);
+}
+
+function switchLessonTab(tab) {
+  _activeLessonTab = tab;
+  renderJlptContent();
+}
+
+function renderLessonTabContent() {
+  const data = JLPT_DATA[_activeJlptLevel];
+  const container = document.getElementById('jlpt-lesson-tab-content');
+  if (_activeLessonTab === 'overview') {
+    container.innerHTML = '<p class="study-lead">' + esc(data.lesson.headline) + '</p>'
+      + '<p style="margin-bottom:12px; color:var(--text2); font-size:13.5px;">' + esc(data.lesson.lead) + '</p>'
+      + '<ul class="study-bullets">'
+      + (data.lesson.bullets || []).map(b => '<li>' + b + '</li>').join('')
+      + '</ul>';
+  } else if (_activeLessonTab === 'writing') {
+    container.innerHTML = '<h3 class="study-lead">Writing Practice (N' + _activeJlptLevel + ')</h3>'
+      + '<p style="color:var(--text2); font-size:13.5px; margin-bottom:12px;">Practice translating English sentences into natural Japanese syntax.</p>'
+      + '<div style="background:var(--card2); border:1px solid var(--border2); padding:16px; border-radius:8px;">'
+      + '  <div style="font-weight:700; color:var(--text); margin-bottom:8px;">Prompt: "I went to the library to read a book."</div>'
+      + '  <textarea class="widget-input" style="width:100%; height:60px; margin-bottom:8px;" placeholder="Type your Japanese translation here..."></textarea>'
+      + '  <button class="widget-btn">Submit Writing</button>'
+      + '</div>';
+  } else if (_activeLessonTab === 'listening') {
+    container.innerHTML = '<h3 class="study-lead">Listening Comprehension (N' + _activeJlptLevel + ')</h3>'
+      + '<p style="color:var(--text2); font-size:13.5px; margin-bottom:12px;">Listen to the native audio recording and answer the question.</p>'
+      + '<div style="background:var(--card2); border:1px solid var(--border2); padding:16px; border-radius:8px; text-align:center;">'
+      + '  <div style="font-size:32px; margin-bottom:12px;">🎧</div>'
+      + '  <button class="widget-btn" style="margin-bottom:16px;" onclick="alert(\'Audio playback simulated.\')">Play Audio Track</button>'
+      + '  <div style="text-align:left;">'
+      + '    <div style="font-weight:700; margin-bottom:6px;">Q: What time did Tanaka-san say the meeting starts?</div>'
+      + '    <div><input type="radio" name="list_q"> 1:00 PM &nbsp; <input type="radio" name="list_q"> 1:30 PM</div>'
+      + '  </div>'
+      + '</div>';
+  } else if (_activeLessonTab === 'reading') {
+    container.innerHTML = '<h3 class="study-lead">Reading Comprehension (N' + _activeJlptLevel + ')</h3>'
+      + '<p style="color:var(--text2); font-size:13.5px; margin-bottom:12px;">Read the following passage and extract the main topic.</p>'
+      + '<div style="background:var(--card2); border:1px solid var(--border2); padding:16px; border-radius:8px;">'
+      + '  <p style="font-family:serif; line-height:1.8; margin-bottom:12px;">日本の電車はとても便利です。毎日たくさんの人が使います。時間はいつも正確で、遅れることはほとんどありません。</p>'
+      + '  <div style="font-weight:700; margin-bottom:6px;">Q: この文章のテーマは何ですか？</div>'
+      + '  <div><input type="radio" name="read_q"> 日本の食事 &nbsp; <input type="radio" name="read_q"> 日本の電車</div>'
+      + '</div>';
+  }
+}
+
+function resetJlptProgress() {
+  if (confirm('Are you sure you want to reset your drill progress for N' + _activeJlptLevel + '?')) {
+    localStorage.removeItem('jlpt_progress_' + _activeJlptLevel);
+    loadJlptQuiz(0);
+  }
 }
 
 // Interactive JLPT Quiz Simulator
@@ -6672,23 +6850,26 @@ function loadJlptQuiz(qIdx) {
   const q = data.quizzes[qIdx];
   if (!q) return;
   
+  // Save progress
+  localStorage.setItem('jlpt_progress_' + _activeJlptLevel, qIdx);
+  
   const optionsHtml = q.options.map((opt, oIdx) => {
     return `<button class="option-btn" id="opt-btn-${oIdx}" onclick="selectJlptOption(${qIdx}, ${oIdx})">${esc(opt)}</button>`;
   }).join('');
   
   const nextBtnHtml = qIdx < data.quizzes.length - 1
     ? `<button class="widget-btn" style="margin-top:12px;background:var(--card3);" onclick="loadJlptQuiz(${qIdx + 1})">Next Question &rarr;</button>`
-    : `<button class="widget-btn" style="margin-top:12px;background:var(--card3);" onclick="loadJlptQuiz(0)">Restart Drills</button>`;
+    : `<button class="widget-btn" style="margin-top:12px;background:var(--card3);" onclick="resetJlptProgress()">Restart Drills</button>`;
     
-  const quizHtml = '<h2 class="section-headline">📝 JLPT Practice Drill (Q' + (qIdx + 1) + ')</h2>'
-    + '<div class="jlpt-quiz-card">'
+  const quizHtml = '<div class="jlpt-quiz-card" style="margin-top:0;">'
+    + '  <div style="font-size:12px; color:var(--text3); margin-bottom:8px; font-weight:700;">QUESTION ' + (qIdx + 1) + ' OF ' + data.quizzes.length + '</div>'
     + '  <div class="jlpt-q-text">' + esc(q.q) + '</div>'
     + '  <div class="jlpt-options">' + optionsHtml + '</div>'
     + '  <div class="jlpt-explanation" id="quiz-explain-box">' + esc(q.explain) + '</div>'
     + nextBtnHtml
     + '</div>';
     
-  document.getElementById('jlpt-quiz-card').innerHTML = quizHtml;
+  document.getElementById('jlpt-quiz-container').innerHTML = quizHtml;
 }
 
 function selectJlptOption(qIdx, optionIdx) {
@@ -6784,6 +6965,114 @@ document.addEventListener('DOMContentLoaded', function() {
   // Load admin notices
   _loadAcademyNotices();
 });
+// ══════════════════════════════════════════
+// JLPT MOC TEST LOGIC
+// ==========================================
+let _mocInterval = null;
+let _mocTimeRemaining = 0;
+let _mocQuestions = [];
+
+function openMocTestModal() {
+  const data = JLPT_DATA[_activeJlptLevel];
+  if (!data || !data.quizzes || data.quizzes.length === 0) {
+    alert("No question bank available for this level.");
+    return;
+  }
+  
+  // N5=90m, N4=115m, N3=140m, N2=155m, N1=170m (simplified simulated bounds)
+  const times = {5: 90, 4: 115, 3: 140, 2: 155, 1: 170};
+  _mocTimeRemaining = (times[_activeJlptLevel] || 90) * 60; 
+  
+  document.getElementById('moc-title').innerText = 'JLPT N' + _activeJlptLevel + ' MOC Test';
+  document.getElementById('moc-submit-btn').style.display = 'inline-block';
+  document.getElementById('moc-modal-overlay').classList.add('active');
+  
+  // Pick 15 random questions from the bank for the mock test
+  _mocQuestions = [];
+  let pool = [...data.quizzes];
+  for(let i = 0; i < 15 && pool.length > 0; i++) {
+    const rIdx = Math.floor(Math.random() * pool.length);
+    _mocQuestions.push(pool.splice(rIdx, 1)[0]);
+  }
+  
+  renderMocQuestions();
+  
+  clearInterval(_mocInterval);
+  updateMocTimerDisplay();
+  _mocInterval = setInterval(() => {
+    _mocTimeRemaining--;
+    updateMocTimerDisplay();
+    if (_mocTimeRemaining <= 0) {
+      clearInterval(_mocInterval);
+      alert("Time is up! Auto-submitting the test.");
+      submitMocTest();
+    }
+  }, 1000);
+}
+
+function closeMocTestModal() {
+  clearInterval(_mocInterval);
+  document.getElementById('moc-modal-overlay').classList.remove('active');
+}
+
+function updateMocTimerDisplay() {
+  const m = Math.floor(_mocTimeRemaining / 60).toString().padStart(2, '0');
+  const s = (_mocTimeRemaining % 60).toString().padStart(2, '0');
+  document.getElementById('moc-timer-display').innerHTML = 
+    `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${m}:${s}`;
+}
+
+function renderMocQuestions() {
+  const container = document.getElementById('moc-body-content');
+  let html = '';
+  _mocQuestions.forEach((q, idx) => {
+    html += '<div class="moc-q-block" id="moc-q-' + idx + '">'
+      + '  <div style="font-weight:700; margin-bottom:12px; color:var(--text);">' + (idx+1) + '. ' + esc(q.q) + '</div>'
+      + '  <div class="jlpt-options">';
+      
+    q.options.forEach((opt, oIdx) => {
+      html += '<label style="display:flex; align-items:center; gap:8px; cursor:pointer; background:var(--card2); padding:10px 14px; border-radius:6px; border:1px solid var(--border2);">'
+        + '  <input type="radio" name="moc_ans_' + idx + '" value="' + oIdx + '"> ' + esc(opt)
+        + '</label>';
+    });
+    
+    html += '  </div>'
+      + '  <div class="jlpt-explanation" id="moc-exp-' + idx + '" style="margin-top:12px;">' + esc(q.explain) + '</div>'
+      + '</div>';
+  });
+  container.innerHTML = html;
+}
+
+function submitMocTest() {
+  clearInterval(_mocInterval);
+  document.getElementById('moc-submit-btn').style.display = 'none';
+  
+  let score = 0;
+  _mocQuestions.forEach((q, idx) => {
+    const selected = document.querySelector('input[name="moc_ans_' + idx + '"]:checked');
+    const expBox = document.getElementById('moc-exp-' + idx);
+    const block = document.getElementById('moc-q-' + idx);
+    
+    expBox.style.display = 'block'; // Show explanations
+    
+    if (selected && parseInt(selected.value) === q.answer) {
+      score++;
+      block.style.borderLeft = '4px solid var(--green)';
+    } else {
+      block.style.borderLeft = '4px solid var(--red)';
+    }
+    
+    // Disable inputs
+    document.querySelectorAll('input[name="moc_ans_' + idx + '"]').forEach(inp => inp.disabled = true);
+  });
+  
+  const finalScoreHtml = '<div style="text-align:center; padding:20px; background:var(--card3); border-radius:8px; margin-bottom:24px; border:1px solid var(--border);">'
+    + '  <h3 style="color:var(--gold2); font-size:24px; margin-bottom:8px;">TEST COMPLETE</h3>'
+    + '  <div style="font-size:18px; color:var(--text);">Final Score: <strong>' + score + ' / ' + _mocQuestions.length + '</strong></div>'
+    + '</div>';
+    
+  document.getElementById('moc-body-content').insertAdjacentHTML('afterbegin', finalScoreHtml);
+}
 </script>
 
 </body>
