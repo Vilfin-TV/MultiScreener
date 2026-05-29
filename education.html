@@ -7051,55 +7051,31 @@ function openMocTestModal() {
       }
     }
     
-    // N5=90m, N4=115m, N3=140m, N2=155m, N1=170m (simplified simulated bounds)
-    const times = {5: 90, 4: 115, 3: 140, 2: 155, 1: 170};
-    _mocTimeRemaining = (times[_activeJlptLevel] || 90) * 60; 
-    
-    document.getElementById('moc-title').innerText = 'JLPT N' + _activeJlptLevel + ' MOC Test';
-    document.getElementById('moc-submit-btn').style.display = 'inline-block';
-    const overlay = document.getElementById('moc-modal-overlay');
-    overlay.classList.add('active');
-    overlay.style.setProperty('display', 'flex', 'important'); 
-    overlay.style.setProperty('opacity', '1', 'important');
-    overlay.style.setProperty('visibility', 'visible', 'important');
-    overlay.style.setProperty('z-index', '99999', 'important');
-    
     // Pick 15 random questions from the bank for the mock test
-    _mocQuestions = [];
+    let questions = [];
     for(let i = 0; i < 15 && pool.length > 0; i++) {
       const rIdx = Math.floor(Math.random() * pool.length);
-      _mocQuestions.push(pool.splice(rIdx, 1)[0]);
+      questions.push(pool.splice(rIdx, 1)[0]);
     }
     
-    renderMocQuestions();
+    const times = {5: 90, 4: 115, 3: 140, 2: 155, 1: 170};
+    const timeRemaining = (times[_activeJlptLevel] || 90) * 60; 
     
-    clearInterval(_mocInterval);
-    updateMocTimerDisplay();
-    _mocInterval = setInterval(() => {
-      _mocTimeRemaining--;
-      updateMocTimerDisplay();
-      if (_mocTimeRemaining <= 0) {
-        clearInterval(_mocInterval);
-        alert("Time is up! Auto-submitting the test.");
-        submitMocTest();
-      }
-    }, 1000);
+    // Save to local storage for the popup window to consume
+    const testPayload = {
+      level: _activeJlptLevel,
+      timeRemaining: timeRemaining,
+      questions: questions
+    };
+    
+    localStorage.setItem('moc_test_data', JSON.stringify(testPayload));
+    
+    // Open real popup window as requested
+    window.open('moc_test.html', 'JLPT_MOC_TEST', 'width=900,height=800,scrollbars=yes,resizable=yes');
+    
   } catch (e) {
-    alert("Error opening MOC test: " + e.message);
+    alert("Error initializing MOC test popup: " + e.message);
     console.error(e);
-    // Fallback visible error in case alert is blocked
-    const errDiv = document.createElement('div');
-    errDiv.style.position = 'fixed';
-    errDiv.style.top = '10px';
-    errDiv.style.left = '50%';
-    errDiv.style.transform = 'translateX(-50%)';
-    errDiv.style.background = 'red';
-    errDiv.style.color = 'white';
-    errDiv.style.padding = '20px';
-    errDiv.style.zIndex = '999999';
-    errDiv.innerText = 'CRITICAL MOC TEST ERROR: ' + e.message;
-    document.body.appendChild(errDiv);
-    setTimeout(() => errDiv.remove(), 10000);
   }
 }
 

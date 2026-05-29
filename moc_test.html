@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JLPT MOC Test</title>
+  <style>
+    :root {
+      --bg: #0a192f;
+      --card: #112240;
+      --text: #e2e8f0;
+      --gold: #fbbf24;
+      --blue: #38bdf8;
+      --green: #22c55e;
+      --red: #ef4444;
+      --border: rgba(255,255,255,0.1);
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0; padding: 20px;
+    }
+    .header {
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px;
+    }
+    .timer { font-size: 24px; font-weight: bold; color: var(--gold); }
+    .q-block { background: var(--card); padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border); }
+    .q-text { font-size: 18px; margin-bottom: 15px; font-weight: bold; }
+    .option { display: block; padding: 10px; background: rgba(255,255,255,0.05); margin-bottom: 8px; border-radius: 4px; cursor: pointer; }
+    .option:hover { background: rgba(255,255,255,0.1); }
+    .btn { background: var(--blue); color: #fff; border: none; padding: 12px 24px; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    .btn:hover { opacity: 0.9; }
+    .explain { display: none; margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.3); border-left: 4px solid var(--gold); }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1 id="test-title">JLPT MOC Test</h1>
+    <div class="timer" id="timer">00:00</div>
+  </div>
+  
+  <div id="quiz-container">Loading...</div>
+  
+  <div style="text-align:center; margin-top: 30px;">
+    <button class="btn" id="submit-btn" onclick="submitTest()" style="display:none;">Submit Final Answers</button>
+  </div>
+
+  <script>
+    let _questions = [];
+    let _interval = null;
+    let _timeRemaining = 0;
+    
+    function esc(s) {
+      if(!s) return '';
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    window.onload = function() {
+      try {
+        const rawData = localStorage.getItem('moc_test_data');
+        if (!rawData) {
+          document.getElementById('quiz-container').innerHTML = '<p>Error: No MOC test data found. Please start the test from the main dashboard.</p>';
+          return;
+        }
+        
+        const data = JSON.parse(rawData);
+        document.getElementById('test-title').innerText = 'JLPT N' + data.level + ' MOC Test';
+        _questions = data.questions;
+        _timeRemaining = data.timeRemaining;
+        
+        renderQuestions();
+        document.getElementById('submit-btn').style.display = 'inline-block';
+        
+        _interval = setInterval(() => {
+          _timeRemaining--;
+          let m = Math.floor(_timeRemaining / 60);
+          let s = _timeRemaining % 60;
+          document.getElementById('timer').innerText = (m < 10 ? '0'+m : m) + ':' + (s < 10 ? '0'+s : s);
+          
+          if (_timeRemaining <= 0) {
+            clearInterval(_interval);
+            alert("Time is up! Auto-submitting the test.");
+            submitTest();
+          }
+        }, 1000);
+      } catch (e) {
+        document.getElementById('quiz-container').innerHTML = '<p>Error initializing test: ' + e.message + '</p>';
+      }
+    };
+    
+    function renderQuestions() {
+      let html = '';
+      _questions.forEach((q, idx) => {
+        html += '<div class="q-block" id="q-' + idx + '">'
+          + '  <div class="q-text">' + (idx+1) + '. ' + esc(q.q) + '</div>';
+          
+        q.options.forEach((opt, oIdx) => {
+          html += '<label class="option">'
+            + '  <input type="radio" name="ans_' + idx + '" value="' + oIdx + '" style="margin-right:10px;">'
+            + '  ' + esc(opt)
+            + '</label>';
+        });
+        
+        html += '  <div class="explain" id="exp-' + idx + '">' + esc(q.explain) + '</div>'
+          + '</div>';
+      });
+      document.getElementById('quiz-container').innerHTML = html;
+    }
+    
+    function submitTest() {
+      clearInterval(_interval);
+      document.getElementById('submit-btn').style.display = 'none';
+      
+      let score = 0;
+      _questions.forEach((q, idx) => {
+        const selected = document.querySelector('input[name="ans_' + idx + '"]:checked');
+        const expBox = document.getElementById('exp-' + idx);
+        const block = document.getElementById('q-' + idx);
+        
+        expBox.style.display = 'block';
+        
+        if (selected && parseInt(selected.value) === q.answer) {
+          score++;
+          block.style.borderLeft = '4px solid var(--green)';
+        } else {
+          block.style.borderLeft = '4px solid var(--red)';
+        }
+        
+        document.querySelectorAll('input[name="ans_' + idx + '"]').forEach(inp => inp.disabled = true);
+      });
+      
+      const finalHtml = '<div style="text-align:center; padding:30px; background:rgba(255,255,255,0.1); border-radius:12px; margin-bottom:30px;">'
+        + '  <h2 style="color:var(--gold); margin:0 0 10px 0;">TEST COMPLETE</h2>'
+        + '  <div style="font-size:24px;">Final Score: <strong>' + score + ' / ' + _questions.length + '</strong></div>'
+        + '</div>';
+        
+      document.getElementById('quiz-container').insertAdjacentHTML('afterbegin', finalHtml);
+      window.scrollTo(0, 0);
+    }
+  </script>
+</body>
+</html>
