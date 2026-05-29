@@ -875,50 +875,45 @@ body{
   width:58px;height:46px;object-fit:cover;object-position:top center;border-radius:5px;flex-shrink:0;margin-top:2px;
 }
 .world-np-side-body{padding:0 0 0 9px;display:flex;flex-direction:column;gap:5px}
+/* Full headline — no clamp */
 .world-np-side-hl{
   font-size:12.5px;font-weight:700;color:var(--text);line-height:1.5;
-  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
 }
 .world-np-side-time{font-size:10px;color:var(--text3);padding-top:2px}
 
-/* Center hero — full-bleed image with gradient overlay (BBC/Reuters style) */
+/* Center hero — compact image block at top, headline + teaser below.
+   Image height is fixed so it never grows to match the side columns;
+   the body fills any remaining height, keeping dividers full length. */
 .world-np-center{
   grid-area:center;border-right:1px solid var(--border);
   position:relative;overflow:hidden;cursor:pointer;
-  min-height:150px;display:flex;flex-direction:column;
-  background:var(--dark3);
+  display:flex;flex-direction:column;
+  background:var(--card2);
   transition:filter .2s ease;
 }
-.world-np-center:hover{filter:brightness(1.1)}
-/* Image fills entire card */
+.world-np-center:hover{filter:brightness(1.06)}
+/* Fixed-height image block at the top */
 .world-np-hero-img{
-  position:absolute;inset:0;width:100%;height:100%;
+  position:relative;width:100%;height:190px;flex-shrink:0;
   object-fit:cover;object-position:center;display:block;
 }
-/* Dark gradient so white text is always readable */
-.world-np-hero-overlay{
-  position:absolute;inset:0;
-  background:linear-gradient(to top,rgba(0,0,0,.9) 0%,rgba(0,0,0,.55) 45%,rgba(0,0,0,.05) 100%);
-}
-/* Text sits at the bottom of the card */
+.world-np-hero-overlay{display:none}
+/* Text sits below the image on the card background, centred in any extra space */
 .world-np-hero-body{
-  position:relative;z-index:2;
-  padding:18px 20px 16px;
-  margin-top:auto;
-  display:flex;flex-direction:column;gap:7px;
+  position:relative;z-index:2;flex:1;
+  padding:14px 18px 16px;
+  display:flex;flex-direction:column;justify-content:center;gap:7px;
 }
-/* White headline on dark overlay */
 .world-np-hero-hl{
   font-family:'Playfair Display',Georgia,serif;
-  font-size:clamp(16px,2vw,21px);font-weight:700;
-  color:#fff;line-height:1.38;
-  text-shadow:0 1px 6px rgba(0,0,0,.6);
+  font-size:clamp(16px,2vw,20px);font-weight:700;
+  color:var(--text);line-height:1.38;
 }
 .world-np-hero-teaser{
-  font-size:12.5px;color:rgba(255,255,255,.8);line-height:1.6;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  font-size:12.5px;color:var(--text2);line-height:1.6;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
 }
-.world-np-hero-time{font-size:10.5px;color:rgba(255,255,255,.5);padding-top:2px}
+.world-np-hero-time{font-size:10.5px;color:var(--text3);padding-top:2px}
 
 /* Right: Latest list */
 .world-np-right{grid-area:right;display:flex;flex-direction:column}
@@ -932,9 +927,9 @@ body{
 }
 .world-np-latest-item:hover{background:var(--card2)}
 .world-np-latest-item:last-child{border-bottom:none}
+/* Full headline — no clamp */
 .world-np-latest-hl{
   font-size:11.5px;font-weight:600;color:var(--text);line-height:1.45;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
 }
 .world-np-latest-meta{display:flex;align-items:center;gap:4px;margin-top:2px}
 .world-np-latest-dot{font-size:8px;color:var(--burn2)}
@@ -3326,8 +3321,8 @@ function _buildNpLayout(items, getImg, getOnClick, timeFunc) {
 
   var hero      = items[0];
   var sides     = items.slice(1, 4);   /* 3 sidebar stories */
-  var latest    = items.slice(4, 8);   /* 4 latest stories  */
-  var gridItems = items.slice(8, 11);  /* 3 bottom-grid stories */
+  var latest    = items.slice(4, 9);   /* 5 latest stories  */
+  var gridItems = items.slice(9, 12);  /* 3 bottom-grid stories */
 
   var wrap = document.createElement('div');
   wrap.className = 'world-np-wrap';
