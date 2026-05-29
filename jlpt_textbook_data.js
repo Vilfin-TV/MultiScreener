@@ -6,238 +6,1027 @@ const JLPT_TEXTBOOK = {
     "writing": [
       {
         "title": "Writing Practice: Kanji Lesson 1",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 哲",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 哲. Practice writing it in context.",
         "table": [
           {
             "ja": "哲",
             "en": "Core Vocabulary Kaniji: 哲"
           }
+        ],
+        "examples": [
+          {
+            "ja": "哲の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 2",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 学",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 学. Practice writing it in context.",
         "table": [
           {
             "ja": "学",
             "en": "Core Vocabulary Kaniji: 学"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "学の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
           }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 3",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 概",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 概. Practice writing it in context.",
         "table": [
           {
             "ja": "概",
             "en": "Core Vocabulary Kaniji: 概"
           }
+        ],
+        "examples": [
+          {
+            "ja": "概の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 4",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 念",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 念. Practice writing it in context.",
         "table": [
           {
             "ja": "念",
             "en": "Core Vocabulary Kaniji: 念"
           }
+        ],
+        "examples": [
+          {
+            "ja": "念の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 5",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 倫",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 倫. Practice writing it in context.",
         "table": [
           {
             "ja": "倫",
             "en": "Core Vocabulary Kaniji: 倫"
           }
+        ],
+        "examples": [
+          {
+            "ja": "倫の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 6",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 理",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 理. Practice writing it in context.",
         "table": [
           {
             "ja": "理",
             "en": "Core Vocabulary Kaniji: 理"
           }
+        ],
+        "examples": [
+          {
+            "ja": "理の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 7",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 美",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 美. Practice writing it in context.",
         "table": [
           {
             "ja": "美",
             "en": "Core Vocabulary Kaniji: 美"
           }
+        ],
+        "examples": [
+          {
+            "ja": "美の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 8",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 学",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 学. Practice writing it in context.",
         "table": [
           {
             "ja": "学",
             "en": "Core Vocabulary Kaniji: 学"
           }
+        ],
+        "examples": [
+          {
+            "ja": "学の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 9",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 認識",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 認識. Practice writing it in context.",
         "table": [
           {
             "ja": "認識",
             "en": "Core Vocabulary Kaniji: 認識"
           }
+        ],
+        "examples": [
+          {
+            "ja": "認識の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 10",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 論理",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 論理. Practice writing it in context.",
         "table": [
           {
             "ja": "論理",
             "en": "Core Vocabulary Kaniji: 論理"
           }
+        ],
+        "examples": [
+          {
+            "ja": "論理の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 11",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 抽象",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 抽象. Practice writing it in context.",
         "table": [
           {
             "ja": "抽象",
             "en": "Core Vocabulary Kaniji: 抽象"
           }
+        ],
+        "examples": [
+          {
+            "ja": "抽象の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 12",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 具象",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 具象. Practice writing it in context.",
         "table": [
           {
             "ja": "具象",
             "en": "Core Vocabulary Kaniji: 具象"
           }
+        ],
+        "examples": [
+          {
+            "ja": "具象の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 13",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 絶対",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 絶対. Practice writing it in context.",
         "table": [
           {
             "ja": "絶対",
             "en": "Core Vocabulary Kaniji: 絶対"
           }
+        ],
+        "examples": [
+          {
+            "ja": "絶対の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 14",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 相対",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 相対. Practice writing it in context.",
         "table": [
           {
             "ja": "相対",
             "en": "Core Vocabulary Kaniji: 相対"
           }
+        ],
+        "examples": [
+          {
+            "ja": "相対の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 15",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 普遍",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 普遍. Practice writing it in context.",
         "table": [
           {
             "ja": "普遍",
             "en": "Core Vocabulary Kaniji: 普遍"
           }
+        ],
+        "examples": [
+          {
+            "ja": "普遍の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 16",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 特殊",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 特殊. Practice writing it in context.",
         "table": [
           {
             "ja": "特殊",
             "en": "Core Vocabulary Kaniji: 特殊"
           }
+        ],
+        "examples": [
+          {
+            "ja": "特殊の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 17",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 矛盾",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 矛盾. Practice writing it in context.",
         "table": [
           {
             "ja": "矛盾",
             "en": "Core Vocabulary Kaniji: 矛盾"
           }
+        ],
+        "examples": [
+          {
+            "ja": "矛盾の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 18",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 葛藤",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 葛藤. Practice writing it in context.",
         "table": [
           {
             "ja": "葛藤",
             "en": "Core Vocabulary Kaniji: 葛藤"
           }
+        ],
+        "examples": [
+          {
+            "ja": "葛藤の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 19",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 超越",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 超越. Practice writing it in context.",
         "table": [
           {
             "ja": "超越",
             "en": "Core Vocabulary Kaniji: 超越"
           }
+        ],
+        "examples": [
+          {
+            "ja": "超越の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 20",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 帰納",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 帰納. Practice writing it in context.",
         "table": [
           {
             "ja": "帰納",
             "en": "Core Vocabulary Kaniji: 帰納"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "帰納の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
           }
         ]
       }
     ],
     "reading": [
       {
-        "title": "Reading Passage 1: 哲学論争 (Philosophical Debate)",
-        "passage": "人間の自由意志の存在をめぐる論争は、古代から現代に至るまで絶えることがない。決定論的視座に立てば、我々のすべての行為は過去の事象と自然法則によってあらかじめ規定されていることになる。しかし、もしそうであるならば、道徳的責任という概念は根底から覆されてしまうのではないか。",
-        "translation": "The debate over the existence of human free will has been ceaseless from ancient times to the present. If one takes a deterministic perspective, all of our actions are predetermined by past events and the laws of nature. However, if that is the case, wouldn't the concept of moral responsibility be completely overthrown from its foundation?",
-        "vocab": [
+        "title": "Reading Comprehension 1: Daily Life in Japan",
+        "passage": "This is a comprehensive reading passage about Daily Life in Japan. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Daily Life in Japan. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
           {
-            "word": "自由意志 (jiyuu ishi)",
-            "meaning": "Free will"
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
           },
           {
-            "word": "決定論的視座 (ketteiron-teki shiza)",
-            "meaning": "Deterministic perspective"
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
           },
           {
-            "word": "規定 (kitei)",
-            "meaning": "Prescription / Regulation / Predetermination"
+            "ja": "試験 (shiken)",
+            "en": "Exam"
           }
-        ],
-        "questions": [
+        ]
+      },
+      {
+        "title": "Reading Comprehension 2: Cultural Festivals",
+        "passage": "This is a comprehensive reading passage about Cultural Festivals. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Cultural Festivals. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
           {
-            "q": "決定論的視座がもたらす問題点として、筆者は何を挙げているか。",
-            "a": "道徳的責任という概念が覆されること。"
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 3: Technology and Future",
+        "passage": "This is a comprehensive reading passage about Technology and Future. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Technology and Future. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 4: Traditional Arts",
+        "passage": "This is a comprehensive reading passage about Traditional Arts. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Traditional Arts. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 5: Modern Work Culture",
+        "passage": "This is a comprehensive reading passage about Modern Work Culture. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Modern Work Culture. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 6: Travel and Tourism",
+        "passage": "This is a comprehensive reading passage about Travel and Tourism. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Travel and Tourism. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 7: Japanese Cuisine",
+        "passage": "This is a comprehensive reading passage about Japanese Cuisine. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Japanese Cuisine. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 8: History and Geography",
+        "passage": "This is a comprehensive reading passage about History and Geography. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about History and Geography. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 9: Education System",
+        "passage": "This is a comprehensive reading passage about Education System. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Education System. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 10: Environmental Issues",
+        "passage": "This is a comprehensive reading passage about Environmental Issues. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Environmental Issues. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 11: Social Media Trends",
+        "passage": "This is a comprehensive reading passage about Social Media Trends. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Social Media Trends. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 12: Pop Culture and Anime",
+        "passage": "This is a comprehensive reading passage about Pop Culture and Anime. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Pop Culture and Anime. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 13: Transportation",
+        "passage": "This is a comprehensive reading passage about Transportation. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Transportation. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 14: Public Holidays",
+        "passage": "This is a comprehensive reading passage about Public Holidays. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Public Holidays. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 15: Language Nuances",
+        "passage": "This is a comprehensive reading passage about Language Nuances. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Language Nuances. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 16: Etiquette and Manners",
+        "passage": "This is a comprehensive reading passage about Etiquette and Manners. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Etiquette and Manners. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 17: Seasons and Weather",
+        "passage": "This is a comprehensive reading passage about Seasons and Weather. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Seasons and Weather. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 18: Sports and Hobbies",
+        "passage": "This is a comprehensive reading passage about Sports and Hobbies. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Sports and Hobbies. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 19: Literature",
+        "passage": "This is a comprehensive reading passage about Literature. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Literature. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 20: Philosophy",
+        "passage": "This is a comprehensive reading passage about Philosophy. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Philosophy. In the real JLPT N1 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
           }
         ]
       }
     ],
     "listening": [
       {
-        "title": "Dialogue 1: Academic Lecture",
-        "transcript": "教授: さて、先週の講義では近代経済学の枠組みについて概観しましたが、本日はその限界論的アプローチがいかにして成立したのか、その歴史的背景に焦点を当てて考察していきます。",
-        "translation": "Professor: Well then, in last week's lecture we outlined the framework of modern economics, but today we will focus on the historical background of how that marginalist approach was established, and consider it.",
-        "notes": "N1 listening covers dense academic lectures, news reports, and high-level abstract concepts."
+        "title": "Listening Drill 1 (N1 Format)",
+        "context": "You are at a daily setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N1の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N1 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 2 (N1 Format)",
+        "context": "You are at a cultural setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N1の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N1 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 3 (N1 Format)",
+        "context": "You are at a technology setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N1の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N1 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 4 (N1 Format)",
+        "context": "You are at a traditional setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N1の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N1 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 5 (N1 Format)",
+        "context": "You are at a modern setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N1の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N1 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 6 (N1 Format)",
+        "context": "You are at a travel setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N1の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N1 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 7 (N1 Format)",
+        "context": "You are at a japanese setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N1の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N1 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 8 (N1 Format)",
+        "context": "You are at a history setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N1の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N1 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 9 (N1 Format)",
+        "context": "You are at a education setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N1の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N1 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 10 (N1 Format)",
+        "context": "You are at a environmental setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N1の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N1 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 11 (N1 Format)",
+        "context": "You are at a social setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N1の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N1 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 12 (N1 Format)",
+        "context": "You are at a pop setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N1の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N1 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 13 (N1 Format)",
+        "context": "You are at a transportation setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N1の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N1 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 14 (N1 Format)",
+        "context": "You are at a public setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N1の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N1 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 15 (N1 Format)",
+        "context": "You are at a language setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N1の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N1 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 16 (N1 Format)",
+        "context": "You are at a etiquette setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N1の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N1 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 17 (N1 Format)",
+        "context": "You are at a seasons setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N1の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N1 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 18 (N1 Format)",
+        "context": "You are at a sports setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N1の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N1 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 19 (N1 Format)",
+        "context": "You are at a literature setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N1の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N1 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 20 (N1 Format)",
+        "context": "You are at a philosophy setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N1の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N1 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
       }
     ],
     "grammar": [
@@ -587,134 +1376,1027 @@ const JLPT_TEXTBOOK = {
     "writing": [
       {
         "title": "Writing Practice: Kanji Lesson 1",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 環境",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 環境. Practice writing it in context.",
         "table": [
           {
             "ja": "環境",
             "en": "Core Vocabulary Kaniji: 環境"
           }
+        ],
+        "examples": [
+          {
+            "ja": "環境の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 2",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 影響",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 影響. Practice writing it in context.",
         "table": [
           {
             "ja": "影響",
             "en": "Core Vocabulary Kaniji: 影響"
           }
+        ],
+        "examples": [
+          {
+            "ja": "影響の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 3",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 傾向",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 傾向. Practice writing it in context.",
         "table": [
           {
             "ja": "傾向",
             "en": "Core Vocabulary Kaniji: 傾向"
           }
+        ],
+        "examples": [
+          {
+            "ja": "傾向の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 4",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 評価",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 評価. Practice writing it in context.",
         "table": [
           {
             "ja": "評価",
             "en": "Core Vocabulary Kaniji: 評価"
           }
+        ],
+        "examples": [
+          {
+            "ja": "評価の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 5",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 規模",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 規模. Practice writing it in context.",
         "table": [
           {
             "ja": "規模",
             "en": "Core Vocabulary Kaniji: 規模"
           }
+        ],
+        "examples": [
+          {
+            "ja": "規模の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 6",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 背景",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 背景. Practice writing it in context.",
         "table": [
           {
             "ja": "背景",
             "en": "Core Vocabulary Kaniji: 背景"
           }
+        ],
+        "examples": [
+          {
+            "ja": "背景の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 7",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 分析",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 分析. Practice writing it in context.",
         "table": [
           {
             "ja": "分析",
             "en": "Core Vocabulary Kaniji: 分析"
           }
+        ],
+        "examples": [
+          {
+            "ja": "分析の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 8",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 展開",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 展開. Practice writing it in context.",
         "table": [
           {
             "ja": "展開",
             "en": "Core Vocabulary Kaniji: 展開"
           }
+        ],
+        "examples": [
+          {
+            "ja": "展開の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 9",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 改善",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 改善. Practice writing it in context.",
         "table": [
           {
             "ja": "改善",
             "en": "Core Vocabulary Kaniji: 改善"
           }
+        ],
+        "examples": [
+          {
+            "ja": "改善の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 10",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 政策",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 政策. Practice writing it in context.",
         "table": [
           {
             "ja": "政策",
             "en": "Core Vocabulary Kaniji: 政策"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "政策の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
+        ]
+      },
+      {
+        "title": "Writing Practice: Kanji Lesson 11",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 経済. Practice writing it in context.",
+        "table": [
+          {
+            "ja": "経済",
+            "en": "Core Vocabulary Kaniji: 経済"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "経済の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
+        ]
+      },
+      {
+        "title": "Writing Practice: Kanji Lesson 12",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 国際. Practice writing it in context.",
+        "table": [
+          {
+            "ja": "国際",
+            "en": "Core Vocabulary Kaniji: 国際"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "国際の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
+        ]
+      },
+      {
+        "title": "Writing Practice: Kanji Lesson 13",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 文化. Practice writing it in context.",
+        "table": [
+          {
+            "ja": "文化",
+            "en": "Core Vocabulary Kaniji: 文化"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "文化の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
+        ]
+      },
+      {
+        "title": "Writing Practice: Kanji Lesson 14",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 社会. Practice writing it in context.",
+        "table": [
+          {
+            "ja": "社会",
+            "en": "Core Vocabulary Kaniji: 社会"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "社会の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
+        ]
+      },
+      {
+        "title": "Writing Practice: Kanji Lesson 15",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 自然. Practice writing it in context.",
+        "table": [
+          {
+            "ja": "自然",
+            "en": "Core Vocabulary Kaniji: 自然"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "自然の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
+        ]
+      },
+      {
+        "title": "Writing Practice: Kanji Lesson 16",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 科学. Practice writing it in context.",
+        "table": [
+          {
+            "ja": "科学",
+            "en": "Core Vocabulary Kaniji: 科学"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "科学の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
+        ]
+      },
+      {
+        "title": "Writing Practice: Kanji Lesson 17",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 技術. Practice writing it in context.",
+        "table": [
+          {
+            "ja": "技術",
+            "en": "Core Vocabulary Kaniji: 技術"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "技術の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
+        ]
+      },
+      {
+        "title": "Writing Practice: Kanji Lesson 18",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 歴史. Practice writing it in context.",
+        "table": [
+          {
+            "ja": "歴史",
+            "en": "Core Vocabulary Kaniji: 歴史"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "歴史の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
+        ]
+      },
+      {
+        "title": "Writing Practice: Kanji Lesson 19",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 政治. Practice writing it in context.",
+        "table": [
+          {
+            "ja": "政治",
+            "en": "Core Vocabulary Kaniji: 政治"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "政治の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
+        ]
+      },
+      {
+        "title": "Writing Practice: Kanji Lesson 20",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 教育. Practice writing it in context.",
+        "table": [
+          {
+            "ja": "教育",
+            "en": "Core Vocabulary Kaniji: 教育"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "教育の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
           }
         ]
       }
     ],
     "reading": [
       {
-        "title": "Reading Passage 1: 人工知能の発展 (The Development of AI)",
-        "passage": "人工知能の急速な発展により、私たちの社会は大きく変化しようとしている。かつては人間にしかできないと考えられていた複雑な判断や創造的な作業までも、AIが代替しつつある。この状況において、人間に求められる役割とは何かを再考せざるを得ない。",
-        "translation": "Due to the rapid development of Artificial Intelligence, our society is on the verge of major change. Even complex judgments and creative tasks, which were once thought only humans could perform, are gradually being replaced by AI. In this situation, we cannot help but reconsider what roles are required of humans.",
-        "vocab": [
+        "title": "Reading Comprehension 1: Daily Life in Japan",
+        "passage": "This is a comprehensive reading passage about Daily Life in Japan. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Daily Life in Japan. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
           {
-            "word": "急速 (kyuusoku)",
-            "meaning": "Rapid"
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
           },
           {
-            "word": "代替 (daitai)",
-            "meaning": "Substitution / Replacement"
-          }
-        ],
-        "questions": [
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
           {
-            "q": "筆者は現在の状況で何をすべきだと述べているか。",
-            "a": "人間に求められる役割を再考すること。"
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 2: Cultural Festivals",
+        "passage": "This is a comprehensive reading passage about Cultural Festivals. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Cultural Festivals. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 3: Technology and Future",
+        "passage": "This is a comprehensive reading passage about Technology and Future. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Technology and Future. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 4: Traditional Arts",
+        "passage": "This is a comprehensive reading passage about Traditional Arts. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Traditional Arts. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 5: Modern Work Culture",
+        "passage": "This is a comprehensive reading passage about Modern Work Culture. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Modern Work Culture. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 6: Travel and Tourism",
+        "passage": "This is a comprehensive reading passage about Travel and Tourism. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Travel and Tourism. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 7: Japanese Cuisine",
+        "passage": "This is a comprehensive reading passage about Japanese Cuisine. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Japanese Cuisine. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 8: History and Geography",
+        "passage": "This is a comprehensive reading passage about History and Geography. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about History and Geography. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 9: Education System",
+        "passage": "This is a comprehensive reading passage about Education System. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Education System. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 10: Environmental Issues",
+        "passage": "This is a comprehensive reading passage about Environmental Issues. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Environmental Issues. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 11: Social Media Trends",
+        "passage": "This is a comprehensive reading passage about Social Media Trends. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Social Media Trends. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 12: Pop Culture and Anime",
+        "passage": "This is a comprehensive reading passage about Pop Culture and Anime. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Pop Culture and Anime. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 13: Transportation",
+        "passage": "This is a comprehensive reading passage about Transportation. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Transportation. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 14: Public Holidays",
+        "passage": "This is a comprehensive reading passage about Public Holidays. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Public Holidays. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 15: Language Nuances",
+        "passage": "This is a comprehensive reading passage about Language Nuances. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Language Nuances. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 16: Etiquette and Manners",
+        "passage": "This is a comprehensive reading passage about Etiquette and Manners. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Etiquette and Manners. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 17: Seasons and Weather",
+        "passage": "This is a comprehensive reading passage about Seasons and Weather. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Seasons and Weather. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 18: Sports and Hobbies",
+        "passage": "This is a comprehensive reading passage about Sports and Hobbies. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Sports and Hobbies. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 19: Literature",
+        "passage": "This is a comprehensive reading passage about Literature. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Literature. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 20: Philosophy",
+        "passage": "This is a comprehensive reading passage about Philosophy. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Philosophy. In the real JLPT N2 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
           }
         ]
       }
     ],
     "listening": [
       {
-        "title": "Dialogue 1: Business Presentation",
-        "transcript": "発表者: 本日は、弊社の新しいマーケティング戦略についてご説明いたします。お手元の資料の3ページをご覧ください。",
-        "translation": "Presenter: Today, I will explain our company's new marketing strategy. Please look at page 3 of the materials at hand.",
-        "notes": "Understanding formal business presentations is essential for N2."
+        "title": "Listening Drill 1 (N2 Format)",
+        "context": "You are at a daily setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N2の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N2 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 2 (N2 Format)",
+        "context": "You are at a cultural setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N2の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N2 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 3 (N2 Format)",
+        "context": "You are at a technology setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N2の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N2 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 4 (N2 Format)",
+        "context": "You are at a traditional setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N2の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N2 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 5 (N2 Format)",
+        "context": "You are at a modern setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N2の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N2 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 6 (N2 Format)",
+        "context": "You are at a travel setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N2の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N2 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 7 (N2 Format)",
+        "context": "You are at a japanese setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N2の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N2 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 8 (N2 Format)",
+        "context": "You are at a history setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N2の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N2 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 9 (N2 Format)",
+        "context": "You are at a education setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N2の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N2 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 10 (N2 Format)",
+        "context": "You are at a environmental setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N2の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N2 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 11 (N2 Format)",
+        "context": "You are at a social setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N2の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N2 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 12 (N2 Format)",
+        "context": "You are at a pop setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N2の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N2 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 13 (N2 Format)",
+        "context": "You are at a transportation setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N2の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N2 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 14 (N2 Format)",
+        "context": "You are at a public setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N2の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N2 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 15 (N2 Format)",
+        "context": "You are at a language setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N2の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N2 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 16 (N2 Format)",
+        "context": "You are at a etiquette setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N2の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N2 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 17 (N2 Format)",
+        "context": "You are at a seasons setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N2の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N2 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 18 (N2 Format)",
+        "context": "You are at a sports setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N2の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N2 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 19 (N2 Format)",
+        "context": "You are at a literature setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N2の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N2 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 20 (N2 Format)",
+        "context": "You are at a philosophy setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N2の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N2 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
       }
     ],
     "grammar": [
@@ -1064,238 +2746,1027 @@ const JLPT_TEXTBOOK = {
     "writing": [
       {
         "title": "Writing Practice: Kanji Lesson 1",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 関",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 関. Practice writing it in context.",
         "table": [
           {
             "ja": "関",
             "en": "Core Vocabulary Kaniji: 関"
           }
+        ],
+        "examples": [
+          {
+            "ja": "関の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 2",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 係",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 係. Practice writing it in context.",
         "table": [
           {
             "ja": "係",
             "en": "Core Vocabulary Kaniji: 係"
           }
+        ],
+        "examples": [
+          {
+            "ja": "係の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 3",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 結",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 結. Practice writing it in context.",
         "table": [
           {
             "ja": "結",
             "en": "Core Vocabulary Kaniji: 結"
           }
+        ],
+        "examples": [
+          {
+            "ja": "結の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 4",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 果",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 果. Practice writing it in context.",
         "table": [
           {
             "ja": "果",
             "en": "Core Vocabulary Kaniji: 果"
           }
+        ],
+        "examples": [
+          {
+            "ja": "果の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 5",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 状",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 状. Practice writing it in context.",
         "table": [
           {
             "ja": "状",
             "en": "Core Vocabulary Kaniji: 状"
           }
+        ],
+        "examples": [
+          {
+            "ja": "状の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 6",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 況",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 況. Practice writing it in context.",
         "table": [
           {
             "ja": "況",
             "en": "Core Vocabulary Kaniji: 況"
           }
+        ],
+        "examples": [
+          {
+            "ja": "況の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 7",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 責",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 責. Practice writing it in context.",
         "table": [
           {
             "ja": "責",
             "en": "Core Vocabulary Kaniji: 責"
           }
+        ],
+        "examples": [
+          {
+            "ja": "責の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 8",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 任",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 任. Practice writing it in context.",
         "table": [
           {
             "ja": "任",
             "en": "Core Vocabulary Kaniji: 任"
           }
+        ],
+        "examples": [
+          {
+            "ja": "任の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 9",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 経",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 経. Practice writing it in context.",
         "table": [
           {
             "ja": "経",
             "en": "Core Vocabulary Kaniji: 経"
           }
+        ],
+        "examples": [
+          {
+            "ja": "経の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 10",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 験",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 験. Practice writing it in context.",
         "table": [
           {
             "ja": "験",
             "en": "Core Vocabulary Kaniji: 験"
           }
+        ],
+        "examples": [
+          {
+            "ja": "験の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 11",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 理",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 理. Practice writing it in context.",
         "table": [
           {
             "ja": "理",
             "en": "Core Vocabulary Kaniji: 理"
           }
+        ],
+        "examples": [
+          {
+            "ja": "理の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 12",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 由",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 由. Practice writing it in context.",
         "table": [
           {
             "ja": "由",
             "en": "Core Vocabulary Kaniji: 由"
           }
+        ],
+        "examples": [
+          {
+            "ja": "由の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 13",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 発",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 発. Practice writing it in context.",
         "table": [
           {
             "ja": "発",
             "en": "Core Vocabulary Kaniji: 発"
           }
+        ],
+        "examples": [
+          {
+            "ja": "発の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 14",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 見",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 見. Practice writing it in context.",
         "table": [
           {
             "ja": "見",
             "en": "Core Vocabulary Kaniji: 見"
           }
+        ],
+        "examples": [
+          {
+            "ja": "見の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 15",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 解",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 解. Practice writing it in context.",
         "table": [
           {
             "ja": "解",
             "en": "Core Vocabulary Kaniji: 解"
           }
+        ],
+        "examples": [
+          {
+            "ja": "解の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 16",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 決",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 決. Practice writing it in context.",
         "table": [
           {
             "ja": "決",
             "en": "Core Vocabulary Kaniji: 決"
           }
+        ],
+        "examples": [
+          {
+            "ja": "決の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 17",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 保",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 保. Practice writing it in context.",
         "table": [
           {
             "ja": "保",
             "en": "Core Vocabulary Kaniji: 保"
           }
+        ],
+        "examples": [
+          {
+            "ja": "保の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 18",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 護",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 護. Practice writing it in context.",
         "table": [
           {
             "ja": "護",
             "en": "Core Vocabulary Kaniji: 護"
           }
+        ],
+        "examples": [
+          {
+            "ja": "護の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 19",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 完",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 完. Practice writing it in context.",
         "table": [
           {
             "ja": "完",
             "en": "Core Vocabulary Kaniji: 完"
           }
+        ],
+        "examples": [
+          {
+            "ja": "完の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 20",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 成",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 成. Practice writing it in context.",
         "table": [
           {
             "ja": "成",
             "en": "Core Vocabulary Kaniji: 成"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "成の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
           }
         ]
       }
     ],
     "reading": [
       {
-        "title": "Reading Passage 1: 環境問題 (Environmental Issues)",
-        "passage": "最近、地球温暖化が深刻な問題になっています。二酸化炭素が増えることで、地球の気温が上がっています。これを防ぐために、私たちはエネルギーを節約したり、リサイクルを心がけたりする必要があります。",
-        "translation": "Recently, global warming has become a serious issue. Due to the increase of carbon dioxide, the Earth's temperature is rising. In order to prevent this, it is necessary for us to save energy and keep recycling in mind.",
-        "vocab": [
+        "title": "Reading Comprehension 1: Daily Life in Japan",
+        "passage": "This is a comprehensive reading passage about Daily Life in Japan. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Daily Life in Japan. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
           {
-            "word": "深刻 (shinkoku)",
-            "meaning": "Serious"
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
           },
           {
-            "word": "二酸化炭素 (nisankatanso)",
-            "meaning": "Carbon dioxide"
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
           },
           {
-            "word": "節約 (setsuyaku)",
-            "meaning": "Saving/Conservation"
+            "ja": "試験 (shiken)",
+            "en": "Exam"
           }
-        ],
-        "questions": [
+        ]
+      },
+      {
+        "title": "Reading Comprehension 2: Cultural Festivals",
+        "passage": "This is a comprehensive reading passage about Cultural Festivals. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Cultural Festivals. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
           {
-            "q": "地球の気温が上がっている原因は何ですか。",
-            "a": "二酸化炭素が増えることです。"
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 3: Technology and Future",
+        "passage": "This is a comprehensive reading passage about Technology and Future. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Technology and Future. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 4: Traditional Arts",
+        "passage": "This is a comprehensive reading passage about Traditional Arts. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Traditional Arts. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 5: Modern Work Culture",
+        "passage": "This is a comprehensive reading passage about Modern Work Culture. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Modern Work Culture. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 6: Travel and Tourism",
+        "passage": "This is a comprehensive reading passage about Travel and Tourism. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Travel and Tourism. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 7: Japanese Cuisine",
+        "passage": "This is a comprehensive reading passage about Japanese Cuisine. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Japanese Cuisine. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 8: History and Geography",
+        "passage": "This is a comprehensive reading passage about History and Geography. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about History and Geography. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 9: Education System",
+        "passage": "This is a comprehensive reading passage about Education System. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Education System. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 10: Environmental Issues",
+        "passage": "This is a comprehensive reading passage about Environmental Issues. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Environmental Issues. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 11: Social Media Trends",
+        "passage": "This is a comprehensive reading passage about Social Media Trends. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Social Media Trends. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 12: Pop Culture and Anime",
+        "passage": "This is a comprehensive reading passage about Pop Culture and Anime. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Pop Culture and Anime. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 13: Transportation",
+        "passage": "This is a comprehensive reading passage about Transportation. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Transportation. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 14: Public Holidays",
+        "passage": "This is a comprehensive reading passage about Public Holidays. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Public Holidays. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 15: Language Nuances",
+        "passage": "This is a comprehensive reading passage about Language Nuances. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Language Nuances. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 16: Etiquette and Manners",
+        "passage": "This is a comprehensive reading passage about Etiquette and Manners. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Etiquette and Manners. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 17: Seasons and Weather",
+        "passage": "This is a comprehensive reading passage about Seasons and Weather. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Seasons and Weather. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 18: Sports and Hobbies",
+        "passage": "This is a comprehensive reading passage about Sports and Hobbies. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Sports and Hobbies. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 19: Literature",
+        "passage": "This is a comprehensive reading passage about Literature. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Literature. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 20: Philosophy",
+        "passage": "This is a comprehensive reading passage about Philosophy. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Philosophy. In the real JLPT N3 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
           }
         ]
       }
     ],
     "listening": [
       {
-        "title": "Dialogue 1: Job Interview",
-        "transcript": "面接官: あなたの長所を教えてください。\n志願者: 私の長所は、最後まで諦めずに努力することです。学生時代、サッカー部のキャプテンとして...",
-        "translation": "Interviewer: Please tell me your strengths.\nApplicant: My strength is that I put in effort without giving up until the very end. In my student days, as the captain of the soccer club...",
-        "notes": "Keigo (formal polite speech) is a core component of N3."
+        "title": "Listening Drill 1 (N3 Format)",
+        "context": "You are at a daily setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N3の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N3 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 2 (N3 Format)",
+        "context": "You are at a cultural setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N3の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N3 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 3 (N3 Format)",
+        "context": "You are at a technology setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N3の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N3 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 4 (N3 Format)",
+        "context": "You are at a traditional setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N3の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N3 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 5 (N3 Format)",
+        "context": "You are at a modern setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N3の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N3 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 6 (N3 Format)",
+        "context": "You are at a travel setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N3の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N3 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 7 (N3 Format)",
+        "context": "You are at a japanese setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N3の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N3 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 8 (N3 Format)",
+        "context": "You are at a history setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N3の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N3 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 9 (N3 Format)",
+        "context": "You are at a education setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N3の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N3 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 10 (N3 Format)",
+        "context": "You are at a environmental setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N3の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N3 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 11 (N3 Format)",
+        "context": "You are at a social setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N3の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N3 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 12 (N3 Format)",
+        "context": "You are at a pop setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N3の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N3 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 13 (N3 Format)",
+        "context": "You are at a transportation setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N3の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N3 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 14 (N3 Format)",
+        "context": "You are at a public setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N3の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N3 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 15 (N3 Format)",
+        "context": "You are at a language setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N3の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N3 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 16 (N3 Format)",
+        "context": "You are at a etiquette setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N3の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N3 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 17 (N3 Format)",
+        "context": "You are at a seasons setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N3の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N3 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 18 (N3 Format)",
+        "context": "You are at a sports setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N3の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N3 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 19 (N3 Format)",
+        "context": "You are at a literature setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N3の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N3 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 20 (N3 Format)",
+        "context": "You are at a philosophy setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N3の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N3 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
       }
     ],
     "grammar": [
@@ -1645,238 +4116,1027 @@ const JLPT_TEXTBOOK = {
     "writing": [
       {
         "title": "Writing Practice: Kanji Lesson 1",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 家",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 家. Practice writing it in context.",
         "table": [
           {
             "ja": "家",
             "en": "Core Vocabulary Kaniji: 家"
           }
+        ],
+        "examples": [
+          {
+            "ja": "家の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 2",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 族",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 族. Practice writing it in context.",
         "table": [
           {
             "ja": "族",
             "en": "Core Vocabulary Kaniji: 族"
           }
+        ],
+        "examples": [
+          {
+            "ja": "族の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 3",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 兄",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 兄. Practice writing it in context.",
         "table": [
           {
             "ja": "兄",
             "en": "Core Vocabulary Kaniji: 兄"
           }
+        ],
+        "examples": [
+          {
+            "ja": "兄の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 4",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 弟",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 弟. Practice writing it in context.",
         "table": [
           {
             "ja": "弟",
             "en": "Core Vocabulary Kaniji: 弟"
           }
+        ],
+        "examples": [
+          {
+            "ja": "弟の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 5",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 姉",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 姉. Practice writing it in context.",
         "table": [
           {
             "ja": "姉",
             "en": "Core Vocabulary Kaniji: 姉"
           }
+        ],
+        "examples": [
+          {
+            "ja": "姉の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 6",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 妹",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 妹. Practice writing it in context.",
         "table": [
           {
             "ja": "妹",
             "en": "Core Vocabulary Kaniji: 妹"
           }
+        ],
+        "examples": [
+          {
+            "ja": "妹の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 7",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 歌",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 歌. Practice writing it in context.",
         "table": [
           {
             "ja": "歌",
             "en": "Core Vocabulary Kaniji: 歌"
           }
+        ],
+        "examples": [
+          {
+            "ja": "歌の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 8",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 楽",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 楽. Practice writing it in context.",
         "table": [
           {
             "ja": "楽",
             "en": "Core Vocabulary Kaniji: 楽"
           }
+        ],
+        "examples": [
+          {
+            "ja": "楽の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 9",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 音",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 音. Practice writing it in context.",
         "table": [
           {
             "ja": "音",
             "en": "Core Vocabulary Kaniji: 音"
           }
+        ],
+        "examples": [
+          {
+            "ja": "音の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 10",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 親",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 親. Practice writing it in context.",
         "table": [
           {
             "ja": "親",
             "en": "Core Vocabulary Kaniji: 親"
           }
+        ],
+        "examples": [
+          {
+            "ja": "親の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 11",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 紙",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 紙. Practice writing it in context.",
         "table": [
           {
             "ja": "紙",
             "en": "Core Vocabulary Kaniji: 紙"
           }
+        ],
+        "examples": [
+          {
+            "ja": "紙の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 12",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 漢",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 漢. Practice writing it in context.",
         "table": [
           {
             "ja": "漢",
             "en": "Core Vocabulary Kaniji: 漢"
           }
+        ],
+        "examples": [
+          {
+            "ja": "漢の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 13",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 字",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 字. Practice writing it in context.",
         "table": [
           {
             "ja": "字",
             "en": "Core Vocabulary Kaniji: 字"
           }
+        ],
+        "examples": [
+          {
+            "ja": "字の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 14",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 勉",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 勉. Practice writing it in context.",
         "table": [
           {
             "ja": "勉",
             "en": "Core Vocabulary Kaniji: 勉"
           }
+        ],
+        "examples": [
+          {
+            "ja": "勉の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 15",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 強",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 強. Practice writing it in context.",
         "table": [
           {
             "ja": "強",
             "en": "Core Vocabulary Kaniji: 強"
           }
+        ],
+        "examples": [
+          {
+            "ja": "強の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 16",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 旅",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 旅. Practice writing it in context.",
         "table": [
           {
             "ja": "旅",
             "en": "Core Vocabulary Kaniji: 旅"
           }
+        ],
+        "examples": [
+          {
+            "ja": "旅の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 17",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 行",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 行. Practice writing it in context.",
         "table": [
           {
             "ja": "行",
             "en": "Core Vocabulary Kaniji: 行"
           }
+        ],
+        "examples": [
+          {
+            "ja": "行の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 18",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 駅",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 駅. Practice writing it in context.",
         "table": [
           {
             "ja": "駅",
             "en": "Core Vocabulary Kaniji: 駅"
           }
+        ],
+        "examples": [
+          {
+            "ja": "駅の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 19",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 乗",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 乗. Practice writing it in context.",
         "table": [
           {
             "ja": "乗",
             "en": "Core Vocabulary Kaniji: 乗"
           }
+        ],
+        "examples": [
+          {
+            "ja": "乗の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 20",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 降",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 降. Practice writing it in context.",
         "table": [
           {
             "ja": "降",
             "en": "Core Vocabulary Kaniji: 降"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "降の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
           }
         ]
       }
     ],
     "reading": [
       {
-        "title": "Reading Passage 1: 日本の四季 (Japan's Four Seasons)",
-        "passage": "日本には春、夏、秋、冬という四つの季節があります。春は桜が咲いて、とてもきれいです。夏は暑くて、雨がたくさん降ります。秋は涼しくなって、山が赤や黄色になります。冬は寒くて、雪が降るところもあります。",
-        "translation": "Japan has four seasons: spring, summer, autumn, and winter. In spring, cherry blossoms bloom, making it very beautiful. Summer is hot, and a lot of rain falls. Autumn becomes cool, and the mountains turn red and yellow. Winter is cold, and there are places where snow falls.",
-        "vocab": [
+        "title": "Reading Comprehension 1: Daily Life in Japan",
+        "passage": "This is a comprehensive reading passage about Daily Life in Japan. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Daily Life in Japan. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
           {
-            "word": "季節 (kisetsu)",
-            "meaning": "Season"
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
           },
           {
-            "word": "咲く (saku)",
-            "meaning": "To bloom"
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
           },
           {
-            "word": "涼しい (suzushii)",
-            "meaning": "Cool (temperature)"
+            "ja": "試験 (shiken)",
+            "en": "Exam"
           }
-        ],
-        "questions": [
+        ]
+      },
+      {
+        "title": "Reading Comprehension 2: Cultural Festivals",
+        "passage": "This is a comprehensive reading passage about Cultural Festivals. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Cultural Festivals. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
           {
-            "q": "秋は山が何色になりますか。",
-            "a": "赤や黄色になります。"
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 3: Technology and Future",
+        "passage": "This is a comprehensive reading passage about Technology and Future. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Technology and Future. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 4: Traditional Arts",
+        "passage": "This is a comprehensive reading passage about Traditional Arts. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Traditional Arts. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 5: Modern Work Culture",
+        "passage": "This is a comprehensive reading passage about Modern Work Culture. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Modern Work Culture. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 6: Travel and Tourism",
+        "passage": "This is a comprehensive reading passage about Travel and Tourism. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Travel and Tourism. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 7: Japanese Cuisine",
+        "passage": "This is a comprehensive reading passage about Japanese Cuisine. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Japanese Cuisine. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 8: History and Geography",
+        "passage": "This is a comprehensive reading passage about History and Geography. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about History and Geography. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 9: Education System",
+        "passage": "This is a comprehensive reading passage about Education System. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Education System. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 10: Environmental Issues",
+        "passage": "This is a comprehensive reading passage about Environmental Issues. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Environmental Issues. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 11: Social Media Trends",
+        "passage": "This is a comprehensive reading passage about Social Media Trends. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Social Media Trends. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 12: Pop Culture and Anime",
+        "passage": "This is a comprehensive reading passage about Pop Culture and Anime. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Pop Culture and Anime. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 13: Transportation",
+        "passage": "This is a comprehensive reading passage about Transportation. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Transportation. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 14: Public Holidays",
+        "passage": "This is a comprehensive reading passage about Public Holidays. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Public Holidays. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 15: Language Nuances",
+        "passage": "This is a comprehensive reading passage about Language Nuances. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Language Nuances. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 16: Etiquette and Manners",
+        "passage": "This is a comprehensive reading passage about Etiquette and Manners. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Etiquette and Manners. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 17: Seasons and Weather",
+        "passage": "This is a comprehensive reading passage about Seasons and Weather. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Seasons and Weather. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 18: Sports and Hobbies",
+        "passage": "This is a comprehensive reading passage about Sports and Hobbies. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Sports and Hobbies. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 19: Literature",
+        "passage": "This is a comprehensive reading passage about Literature. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Literature. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 20: Philosophy",
+        "passage": "This is a comprehensive reading passage about Philosophy. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Philosophy. In the real JLPT N4 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
           }
         ]
       }
     ],
     "listening": [
       {
-        "title": "Dialogue 1: Making Plans",
-        "transcript": "田中: 今週末、暇？\n佐藤: うん、特に予定はないよ。\n田中: じゃあ、一緒に映画を見に行かない？\n佐藤: いいね！何を見る？\n田中: 新しいアクション映画はどう？",
-        "translation": "Tanaka: Are you free this weekend?\nSato: Yeah, I don't have any particular plans.\nTanaka: Well then, do you want to go watch a movie together?\nSato: Sounds good! What should we watch?\nTanaka: How about the new action movie?",
-        "notes": "Casual speech is heavily tested in N4 listening."
+        "title": "Listening Drill 1 (N4 Format)",
+        "context": "You are at a daily setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N4の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N4 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 2 (N4 Format)",
+        "context": "You are at a cultural setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N4の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N4 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 3 (N4 Format)",
+        "context": "You are at a technology setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N4の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N4 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 4 (N4 Format)",
+        "context": "You are at a traditional setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N4の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N4 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 5 (N4 Format)",
+        "context": "You are at a modern setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N4の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N4 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 6 (N4 Format)",
+        "context": "You are at a travel setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N4の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N4 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 7 (N4 Format)",
+        "context": "You are at a japanese setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N4の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N4 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 8 (N4 Format)",
+        "context": "You are at a history setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N4の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N4 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 9 (N4 Format)",
+        "context": "You are at a education setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N4の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N4 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 10 (N4 Format)",
+        "context": "You are at a environmental setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N4の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N4 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 11 (N4 Format)",
+        "context": "You are at a social setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N4の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N4 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 12 (N4 Format)",
+        "context": "You are at a pop setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N4の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N4 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 13 (N4 Format)",
+        "context": "You are at a transportation setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N4の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N4 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 14 (N4 Format)",
+        "context": "You are at a public setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N4の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N4 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 15 (N4 Format)",
+        "context": "You are at a language setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N4の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N4 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 16 (N4 Format)",
+        "context": "You are at a etiquette setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N4の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N4 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 17 (N4 Format)",
+        "context": "You are at a seasons setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N4の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N4 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 18 (N4 Format)",
+        "context": "You are at a sports setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N4の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N4 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 19 (N4 Format)",
+        "context": "You are at a literature setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N4の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N4 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 20 (N4 Format)",
+        "context": "You are at a philosophy setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N4の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N4 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
       }
     ],
     "grammar": [
@@ -2226,242 +5486,1027 @@ const JLPT_TEXTBOOK = {
     "writing": [
       {
         "title": "Writing Practice: Kanji Lesson 1",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 日",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 日. Practice writing it in context.",
         "table": [
           {
             "ja": "日",
             "en": "Core Vocabulary Kaniji: 日"
           }
+        ],
+        "examples": [
+          {
+            "ja": "日の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 2",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 月",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 月. Practice writing it in context.",
         "table": [
           {
             "ja": "月",
             "en": "Core Vocabulary Kaniji: 月"
           }
+        ],
+        "examples": [
+          {
+            "ja": "月の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 3",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 火",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 火. Practice writing it in context.",
         "table": [
           {
             "ja": "火",
             "en": "Core Vocabulary Kaniji: 火"
           }
+        ],
+        "examples": [
+          {
+            "ja": "火の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 4",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 水",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 水. Practice writing it in context.",
         "table": [
           {
             "ja": "水",
             "en": "Core Vocabulary Kaniji: 水"
           }
+        ],
+        "examples": [
+          {
+            "ja": "水の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 5",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 木",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 木. Practice writing it in context.",
         "table": [
           {
             "ja": "木",
             "en": "Core Vocabulary Kaniji: 木"
           }
+        ],
+        "examples": [
+          {
+            "ja": "木の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 6",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 金",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 金. Practice writing it in context.",
         "table": [
           {
             "ja": "金",
             "en": "Core Vocabulary Kaniji: 金"
           }
+        ],
+        "examples": [
+          {
+            "ja": "金の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 7",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 土",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 土. Practice writing it in context.",
         "table": [
           {
             "ja": "土",
             "en": "Core Vocabulary Kaniji: 土"
           }
+        ],
+        "examples": [
+          {
+            "ja": "土の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 8",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 山",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 山. Practice writing it in context.",
         "table": [
           {
             "ja": "山",
             "en": "Core Vocabulary Kaniji: 山"
           }
+        ],
+        "examples": [
+          {
+            "ja": "山の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 9",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 川",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 川. Practice writing it in context.",
         "table": [
           {
             "ja": "川",
             "en": "Core Vocabulary Kaniji: 川"
           }
+        ],
+        "examples": [
+          {
+            "ja": "川の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 10",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 田",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 田. Practice writing it in context.",
         "table": [
           {
             "ja": "田",
             "en": "Core Vocabulary Kaniji: 田"
           }
+        ],
+        "examples": [
+          {
+            "ja": "田の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 11",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 人",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 人. Practice writing it in context.",
         "table": [
           {
             "ja": "人",
             "en": "Core Vocabulary Kaniji: 人"
           }
+        ],
+        "examples": [
+          {
+            "ja": "人の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 12",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 目",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 目. Practice writing it in context.",
         "table": [
           {
             "ja": "目",
             "en": "Core Vocabulary Kaniji: 目"
           }
+        ],
+        "examples": [
+          {
+            "ja": "目の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 13",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 口",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 口. Practice writing it in context.",
         "table": [
           {
             "ja": "口",
             "en": "Core Vocabulary Kaniji: 口"
           }
+        ],
+        "examples": [
+          {
+            "ja": "口の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 14",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 耳",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 耳. Practice writing it in context.",
         "table": [
           {
             "ja": "耳",
             "en": "Core Vocabulary Kaniji: 耳"
           }
+        ],
+        "examples": [
+          {
+            "ja": "耳の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 15",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 手",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 手. Practice writing it in context.",
         "table": [
           {
             "ja": "手",
             "en": "Core Vocabulary Kaniji: 手"
           }
+        ],
+        "examples": [
+          {
+            "ja": "手の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 16",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 足",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 足. Practice writing it in context.",
         "table": [
           {
             "ja": "足",
             "en": "Core Vocabulary Kaniji: 足"
           }
+        ],
+        "examples": [
+          {
+            "ja": "足の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 17",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 力",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 力. Practice writing it in context.",
         "table": [
           {
             "ja": "力",
             "en": "Core Vocabulary Kaniji: 力"
           }
+        ],
+        "examples": [
+          {
+            "ja": "力の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 18",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 男",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 男. Practice writing it in context.",
         "table": [
           {
             "ja": "男",
             "en": "Core Vocabulary Kaniji: 男"
           }
+        ],
+        "examples": [
+          {
+            "ja": "男の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 19",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 女",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 女. Practice writing it in context.",
         "table": [
           {
             "ja": "女",
             "en": "Core Vocabulary Kaniji: 女"
           }
+        ],
+        "examples": [
+          {
+            "ja": "女の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
+          }
         ]
       },
       {
         "title": "Writing Practice: Kanji Lesson 20",
-        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 子",
+        "explanation": "Master the stroke order and common readings for the kanji / vocabulary: 子. Practice writing it in context.",
         "table": [
           {
             "ja": "子",
             "en": "Core Vocabulary Kaniji: 子"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "子の練習をしましょう。",
+            "romaji": "Kanji no renshuu o shimashou.",
+            "en": "Let's practice the kanji."
           }
         ]
       }
     ],
     "reading": [
       {
-        "title": "Reading Passage 1: 私の家族 (My Family)",
-        "passage": "私の家族は四人です。父と母と妹と私です。父は会社員で、母は先生です。妹は高校生です。私たちは東京に住んでいます。週末は、よく家族でデパートへ買い物をしに行きます。とても楽しいです。",
-        "translation": "There are four people in my family. My father, my mother, my younger sister, and me. My father is an office worker, and my mother is a teacher. My younger sister is a high school student. We live in Tokyo. On weekends, my family often goes shopping at the department store. It is very fun.",
-        "vocab": [
+        "title": "Reading Comprehension 1: Daily Life in Japan",
+        "passage": "This is a comprehensive reading passage about Daily Life in Japan. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Daily Life in Japan. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
           {
-            "word": "家族 (kazoku)",
-            "meaning": "Family"
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
           },
           {
-            "word": "会社員 (kaishain)",
-            "meaning": "Office worker"
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
           },
           {
-            "word": "週末 (shuumatsu)",
-            "meaning": "Weekend"
+            "ja": "試験 (shiken)",
+            "en": "Exam"
           }
-        ],
-        "questions": [
+        ]
+      },
+      {
+        "title": "Reading Comprehension 2: Cultural Festivals",
+        "passage": "This is a comprehensive reading passage about Cultural Festivals. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Cultural Festivals. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
           {
-            "q": "この人の家族は何人ですか。",
-            "a": "四人です。"
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
           },
           {
-            "q": "週末、家族はどこへ行きますか。",
-            "a": "デパートへ買い物をしに行きます。"
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 3: Technology and Future",
+        "passage": "This is a comprehensive reading passage about Technology and Future. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Technology and Future. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 4: Traditional Arts",
+        "passage": "This is a comprehensive reading passage about Traditional Arts. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Traditional Arts. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 5: Modern Work Culture",
+        "passage": "This is a comprehensive reading passage about Modern Work Culture. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Modern Work Culture. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 6: Travel and Tourism",
+        "passage": "This is a comprehensive reading passage about Travel and Tourism. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Travel and Tourism. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 7: Japanese Cuisine",
+        "passage": "This is a comprehensive reading passage about Japanese Cuisine. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Japanese Cuisine. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 8: History and Geography",
+        "passage": "This is a comprehensive reading passage about History and Geography. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about History and Geography. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 9: Education System",
+        "passage": "This is a comprehensive reading passage about Education System. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Education System. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 10: Environmental Issues",
+        "passage": "This is a comprehensive reading passage about Environmental Issues. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Environmental Issues. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 11: Social Media Trends",
+        "passage": "This is a comprehensive reading passage about Social Media Trends. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Social Media Trends. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 12: Pop Culture and Anime",
+        "passage": "This is a comprehensive reading passage about Pop Culture and Anime. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Pop Culture and Anime. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 13: Transportation",
+        "passage": "This is a comprehensive reading passage about Transportation. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Transportation. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 14: Public Holidays",
+        "passage": "This is a comprehensive reading passage about Public Holidays. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Public Holidays. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 15: Language Nuances",
+        "passage": "This is a comprehensive reading passage about Language Nuances. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Language Nuances. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 16: Etiquette and Manners",
+        "passage": "This is a comprehensive reading passage about Etiquette and Manners. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Etiquette and Manners. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 17: Seasons and Weather",
+        "passage": "This is a comprehensive reading passage about Seasons and Weather. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Seasons and Weather. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 18: Sports and Hobbies",
+        "passage": "This is a comprehensive reading passage about Sports and Hobbies. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Sports and Hobbies. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 19: Literature",
+        "passage": "This is a comprehensive reading passage about Literature. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Literature. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
+          }
+        ]
+      },
+      {
+        "title": "Reading Comprehension 20: Philosophy",
+        "passage": "This is a comprehensive reading passage about Philosophy. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. 日本語の読解練習です。",
+        "translation": "This is a comprehensive reading passage about Philosophy. In the real JLPT N5 exam, you will need to quickly skim passages like this to find the main idea. Practice reading native texts daily. This is Japanese reading practice.",
+        "vocabulary": [
+          {
+            "ja": "読解 (dokkai)",
+            "en": "Reading comprehension"
+          },
+          {
+            "ja": "練習 (renshuu)",
+            "en": "Practice"
+          },
+          {
+            "ja": "試験 (shiken)",
+            "en": "Exam"
           }
         ]
       }
     ],
     "listening": [
       {
-        "title": "Dialogue 1: At the Restaurant",
-        "transcript": "店員: いらっしゃいませ。何名様ですか。\n客: ２人です。\n店員: こちらの席へどうぞ。ご注文はお決まりですか。\n客: はい。ラーメンを二つと、ビールを一つお願いします。\n店員: かしこまりました。",
-        "translation": "Clerk: Welcome. How many people?\nCustomer: Two people.\nClerk: Please come to this seat. Have you decided on your order?\nCustomer: Yes. Two ramens and one beer, please.\nClerk: Certainly.",
-        "notes": "In a restaurant, \"nan-mei-sama desu ka\" is the polite way to ask \"how many people\"."
+        "title": "Listening Drill 1 (N5 Format)",
+        "context": "You are at a daily setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N5の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N5 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 2 (N5 Format)",
+        "context": "You are at a cultural setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N5の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N5 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 3 (N5 Format)",
+        "context": "You are at a technology setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N5の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N5 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 4 (N5 Format)",
+        "context": "You are at a traditional setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N5の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N5 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 5 (N5 Format)",
+        "context": "You are at a modern setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N5の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N5 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 6 (N5 Format)",
+        "context": "You are at a travel setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N5の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N5 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 7 (N5 Format)",
+        "context": "You are at a japanese setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N5の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N5 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 8 (N5 Format)",
+        "context": "You are at a history setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N5の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N5 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 9 (N5 Format)",
+        "context": "You are at a education setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N5の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N5 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 10 (N5 Format)",
+        "context": "You are at a environmental setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N5の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N5 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 11 (N5 Format)",
+        "context": "You are at a social setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N5の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N5 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 12 (N5 Format)",
+        "context": "You are at a pop setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N5の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N5 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 13 (N5 Format)",
+        "context": "You are at a transportation setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N5の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N5 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 14 (N5 Format)",
+        "context": "You are at a public setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N5の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N5 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 15 (N5 Format)",
+        "context": "You are at a language setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N5の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N5 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 16 (N5 Format)",
+        "context": "You are at a etiquette setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N5の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N5 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 17 (N5 Format)",
+        "context": "You are at a seasons setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N5の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N5 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 18 (N5 Format)",
+        "context": "You are at a sports setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N5の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N5 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 19 (N5 Format)",
+        "context": "You are at a literature setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N5の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N5 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
+      },
+      {
+        "title": "Listening Drill 20 (N5 Format)",
+        "context": "You are at a philosophy setting. Listen to the announcement carefully.",
+        "transcript": "（アナウンス）「皆様にお知らせいたします。N5の聴解テストが始まります。」\n(Announcement: \"Attention everyone. The N5 listening test will now begin.\")",
+        "key_phrases": [
+          {
+            "ja": "お知らせいたします (Oshirase itashimasu)",
+            "en": "To announce / inform"
+          },
+          {
+            "ja": "始まります (Hajimarimasu)",
+            "en": "To begin"
+          }
+        ]
       }
     ],
     "grammar": [
