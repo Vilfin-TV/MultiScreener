@@ -963,7 +963,7 @@ function switchHub(hub) {
     document.getElementById('toggle-jlpt').classList.add('active');
     document.getElementById('cbse-container').style.display = 'none';
     document.getElementById('jlpt-container').style.display = 'block';
-    renderJlptContent();
+    switchJlptLevel(_activeJlptLevel);
   }
 }
 
@@ -987,12 +987,26 @@ function switchSubject(sub) {
 }
 
 // JLPT navigation selectors
-function switchJlptLevel(lvl) {
+async function switchJlptLevel(lvl) {
   _activeJlptLevel = lvl;
   document.querySelectorAll('.jlpt-container .class-btn').forEach(btn => {
     btn.classList.remove('active');
     if (parseInt(btn.getAttribute('data-jlpt')) === lvl) btn.classList.add('active');
   });
+
+  if (!JLPT_DATA[lvl]) {
+    document.getElementById('jlpt-lesson-card').innerHTML = '<p style="text-align:center; padding:20px; font-size:18px; color:var(--gold);">Loading N' + lvl + ' data...</p>';
+    try {
+      const res = await fetch('jlpt_n' + lvl + '.json');
+      if (!res.ok) throw new Error('Network response was not ok');
+      JLPT_DATA[lvl] = await res.json();
+    } catch (e) {
+      console.error('Error fetching JLPT data:', e);
+      document.getElementById('jlpt-lesson-card').innerHTML = '<p style="text-align:center; padding:20px; color:var(--red);">Error loading N' + lvl + ' data. Please try again.</p>';
+      return;
+    }
+  }
+
   renderJlptContent();
 }
 
