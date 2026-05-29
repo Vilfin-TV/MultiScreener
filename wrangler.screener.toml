@@ -24,3 +24,11 @@ workers_dev = true
 [[r2_buckets]]
 binding = "MEDIA"
 bucket_name = "vilfintv-media"
+
+# Story illustrations bucket. Uploaded by .github/workflows/upload_story_images.yml
+# and served (read-only) through the same /r2/<key> route as a fallback after MEDIA.
+# MANUAL ONE-TIME STEP: create this bucket before the first deploy with this config:
+#   npx wrangler r2 bucket create vilfintv-story
+[[r2_buckets]]
+binding = "STORY"
+bucket_name = "vilfintv-story"

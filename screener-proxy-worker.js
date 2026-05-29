@@ -613,12 +613,14 @@ export default {
 
     // ── /r2/<key>  GET — serve an image stored in R2 (public, cached) ─────────
     if (pathname.startsWith('/r2/')) {
-      if (!env || !env.MEDIA) return jsonError(503, 'Image storage not configured.');
+      if (!env || (!env.MEDIA && !env.STORY)) return jsonError(503, 'Image storage not configured.');
       let key;
       try { key = decodeURIComponent(pathname.slice(4)); } catch (_) { key = pathname.slice(4); }
       if (!key || !key.startsWith('media/')) return jsonError(400, 'Invalid image key.');
       try {
-        const obj = await env.MEDIA.get(key);
+        // Serve from the primary media bucket, then fall back to the story bucket.
+        let obj = env.MEDIA ? await env.MEDIA.get(key) : null;
+        if (!obj && env.STORY) obj = await env.STORY.get(key);
         if (!obj) return jsonError(404, 'Image not found.');
         const headers = new Headers(CORS);
         headers.set('Content-Type', (obj.httpMetadata && obj.httpMetadata.contentType) || 'application/octet-stream');

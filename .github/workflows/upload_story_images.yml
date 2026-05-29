@@ -1,0 +1,58 @@
+name: Upload Story Images to R2
+
+# Auto-uploads every image under kids/** to the Cloudflare R2 bucket
+# "vilfintv-story" with the key prefix "media/" so the screener-proxy Worker
+# can serve them at https://screener-proxy.vilfintv.workers.dev/r2/media/<path>.
+#
+# Requires repository secrets (already present):
+#   CLOUDFLARE_API_TOKEN   — MUST include "Workers R2 Storage: Edit" permission
+#   CLOUDFLARE_ACCOUNT_ID
+#
+# Prereq: the bucket must exist  ->  npx wrangler r2 bucket create vilfintv-story
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'kids/**'
+      - '.github/workflows/upload_story_images.yml'
+  workflow_dispatch:
+
+jobs:
+  upload:
+    name: Push story illustrations to R2
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install wrangler
+        run: npm install -g wrangler@3
+
+      - name: Upload images to R2 (bucket vilfintv-story)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob globstar
+          count=0
+          for f in kids/**/*; do
+            [ -f "$f" ] || continue
+            case "$f" in
+              *.svg)  ct="image/svg+xml" ;;
+              *.png)  ct="image/png" ;;
+              *.webp) ct="image/webp" ;;
+              *.gif)  ct="image/gif" ;;
+              *.jpg|*.jpeg) ct="image/jpeg" ;;
+              *) echo "skip (not an image): $f"; continue ;;
+            esac
+            key="media/$f"
+            echo "Uploading $f  ->  vilfintv-story/$key  ($ct)"
+            wrangler r2 object put "vilfintv-story/$key" --file "$f" --content-type "$ct" --remote
+            count=$((count+1))
+          done
+          echo "Uploaded $count image(s) to R2 bucket vilfintv-story."
