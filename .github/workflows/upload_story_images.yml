@@ -52,7 +52,7 @@ jobs:
             esac
             key="media/$f"
             echo "Uploading $f  ->  vilfintv-story/$key  ($ct)"
-            wrangler r2 object put "vilfintv-story/$key" --file "$f" --content-type "$ct" --remote
+            wrangler r2 object put "vilfintv-story/$key" --file "$f" --content-type "$ct"
             count=$((count+1))
           done
           echo "Uploaded $count image(s) to R2 bucket vilfintv-story."
