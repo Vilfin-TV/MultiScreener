@@ -1,8 +1,8 @@
 name: Upload Story Images to R2
 
-# Auto-uploads every image under kids/** to the Cloudflare R2 bucket
-# "vilfintv-story" with the key prefix "media/" so the screener-proxy Worker
-# can serve them at https://screener-proxy.vilfintv.workers.dev/r2/media/<path>.
+# Auto-uploads every image under kids/** and stories/** to the Cloudflare R2
+# bucket "vilfintv-story" with the key prefix "media/" so the screener-proxy
+# Worker serves them at https://screener-proxy.vilfintv.workers.dev/r2/media/<path>.
 #
 # Requires repository secrets (already present):
 #   CLOUDFLARE_API_TOKEN   — MUST include "Workers R2 Storage: Edit" permission
@@ -15,6 +15,7 @@ on:
     branches: [main]
     paths:
       - 'kids/**'
+      - 'stories/**'
       - '.github/workflows/upload_story_images.yml'
   workflow_dispatch:
 
@@ -40,7 +41,7 @@ jobs:
           set -euo pipefail
           shopt -s nullglob globstar
           count=0
-          for f in kids/**/*; do
+          for f in kids/**/* stories/**/*; do
             [ -f "$f" ] || continue
             case "$f" in
               *.svg)  ct="image/svg+xml" ;;

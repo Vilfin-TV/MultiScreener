@@ -15,6 +15,27 @@
 - **Static Integration:** Configure the frontend website to read ONLY from the local `data.json` file.
 - **CRITICAL SECURITY CONSTRAINT:** NEVER hardcode, import, or expose the `WORKER_URL` directly into any frontend HTML, CSS, or client-side JavaScript. The URL is strictly for backend build scripts and must remain 100% hidden from the final public GitHub Pages deployment.
 
+## Story Illustrations & R2 (`vilfintv-story`) — Automatic, Zero Manual Upload
+The `story.html` Stories hub must use **original, Claude-designed cover art** for every story — NEVER stock photos (no Unsplash/picsum in story covers). Art is generated as code (SVG), version-controlled, auto-uploaded to R2, and served via the Worker. This pipeline is fully automatic — no manual uploads from the user, ever.
+
+**Asset layout (committed to the repo):**
+- Per-story cover: `stories/<genre>/<slug>.svg` (800×520, framed title plate, genre-appropriate motif). `<slug>` = lowercased title before the `—`, non-alphanumerics → `-`, max 40 chars.
+- Full per-page illustrated stories: `kids/<story-slug>/header.svg` + `pageN.svg` (e.g. `kids/pip-star/`).
+- Brand fallback cover: `stories/_default.svg`.
+
+**Generation tooling (the "design agent"):**
+- `scripts/gen_story_covers.py` — emits all cover SVGs from a per-story spec (palette + motif + title). Add a new entry to `SPECS` to create a new cover, then run it.
+- `scripts/wire_story_covers.py` — rewrites `story.html`: gives every story a top-level `mediaUrl` cover, replaces any inline image `src` with the cover, makes the hero card use `mediaUrl`, and guarantees zero stock-photo URLs remain.
+
+**R2 storage & serving:**
+- Bucket **`vilfintv-story`** (binding `STORY` in `wrangler.screener.toml`). The Worker `/r2/<key>` route serves from `MEDIA` then falls back to `STORY`.
+- GitHub Action **`.github/workflows/upload_story_images.yml`** auto-uploads everything under `kids/**` and `stories/**` to `vilfintv-story` under the `media/` key prefix on every push (and `workflow_dispatch`), using `CLOUDFLARE_API_TOKEN` (needs *Workers R2 Storage: Edit*) + `CLOUDFLARE_ACCOUNT_ID`.
+- Public URL pattern: `https://screener-proxy.vilfintv.workers.dev/r2/media/stories/<genre>/<slug>.svg`.
+
+**Referencing rule in `story.html`:** every story image `src` (and the story object's `mediaUrl`) points at the **R2 URL**, with the committed local SVG as the `onerror` fallback (`data-local` on the hero/prepend `<img>`), so a story is never broken even before R2 propagates.
+
+**To add a future story (fully automatic):** add the story to `STORY_DATA.<genre>`, add its cover spec to `scripts/gen_story_covers.py` and run it (or hand-author `stories/<genre>/<slug>.svg`), run `scripts/wire_story_covers.py`, then commit + push — the Action uploads the art to R2 and GitHub Pages goes live. No manual R2 upload step.
+
 ## Image & Attribution Standards
 
 ### Fallback Images
