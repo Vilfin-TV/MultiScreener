@@ -615,12 +615,20 @@ body{
 /* ═══════════════════════════════════════════════════
    HEADLINE CARDS GRID
 ═══════════════════════════════════════════════════ */
+/* Masonry (multi-column) so cards of differing heights pack tightly with no
+   empty gaps — featured photo card and short text cards flow together. */
 .news-cards-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
-  gap:16px;
+  column-width:260px;
+  column-gap:16px;
 }
-@media(max-width:600px){.news-cards-grid{grid-template-columns:1fr}}
+.news-cards-grid > *{
+  break-inside:avoid;
+  -webkit-column-break-inside:avoid;
+  page-break-inside:avoid;
+  margin:0 0 16px;
+  width:100%;
+}
+@media(max-width:600px){.news-cards-grid{column-width:auto;column-count:1}}
 
 .news-card{
   background:var(--card);border:1px solid var(--border2);
