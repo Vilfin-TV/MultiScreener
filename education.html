@@ -7051,44 +7051,55 @@ function openMocTestModal() {
     let basePool = [];
     if (data && data.quizzes && data.quizzes.length > 0) {
       basePool = [...data.quizzes];
+    } else {
+      // Fallback if absolutely empty
+      basePool = [{
+        q: 'No real questions available in the database for N' + _activeJlptLevel + '.',
+        options: ['Update Database', 'Update Database', 'Update Database', 'Update Database'],
+        answer: 0,
+        explain: 'Please add real questions to JLPT_DATA.'
+      }];
     }
-    
-    // Generate a massive pool of 300+ simulated questions mixed with real ones
-    let massivePool = [...basePool];
-    for(let i=0; i<300; i++) {
-      massivePool.push({
-        q: 'Simulated Exam Question ' + (i+1) + ': What is the appropriate usage for this N' + _activeJlptLevel + ' concept?',
-        options: ['Random Option 1', 'Random Option 2', 'Random Option 3', 'Random Option 4'],
-        answer: Math.floor(Math.random() * 4),
-        explain: 'This is an auto-generated placeholder explanation for N' + _activeJlptLevel + ' simulated test question.'
-      });
-    }
-    
-    // Shuffle the massive pool so questions are completely random every time
-    massivePool.sort(() => Math.random() - 0.5);
     
     // Define exact exam blueprint based on real JLPT structure
     let blueprint = [];
+    let totalNeeded = 0;
     if (_activeJlptLevel <= 2) {
       blueprint = [
         { title: 'Language Knowledge & Reading', count: 105 },
         { title: 'Listening', count: 35 }
       ];
+      totalNeeded = 140;
     } else if (_activeJlptLevel === 3) {
       blueprint = [
         { title: 'Language Knowledge (Vocabulary)', count: 33 },
         { title: 'Language Knowledge (Grammar) & Reading', count: 37 },
         { title: 'Listening', count: 30 }
       ];
+      totalNeeded = 100;
     } else {
       blueprint = [
         { title: 'Language Knowledge (Vocabulary)', count: 23 },
         { title: 'Language Knowledge (Grammar) & Reading', count: 48 },
         { title: 'Listening', count: 30 }
       ];
+      totalNeeded = 101;
     }
     
-    // Populate sections with random questions
+    // Create a pool strictly from real questions. 
+    // If we have enough, just shuffle them. If not, sample with replacement.
+    let massivePool = [];
+    if (basePool.length >= totalNeeded) {
+      massivePool = [...basePool];
+      massivePool.sort(() => Math.random() - 0.5);
+    } else {
+      for (let i = 0; i < totalNeeded; i++) {
+        const rIdx = Math.floor(Math.random() * basePool.length);
+        massivePool.push(basePool[rIdx]);
+      }
+    }
+    
+    // Populate sections
     let generatedSections = [];
     blueprint.forEach(sec => {
       let secQuestions = [];
@@ -7102,7 +7113,7 @@ function openMocTestModal() {
     });
     
     const times = {5: 90, 4: 115, 3: 140, 2: 155, 1: 170};
-    const timeRemaining = (times[_activeJlptLevel] || 90) * 60; 
+    const timeRemaining = (times[_activeJlptLevel] || 90) * 60;  
     
     const testPayload = {
       level: _activeJlptLevel,
