@@ -3109,7 +3109,16 @@ function _renderCustomPosts(sectionId, container) {
       + '</div>';
     block.appendChild(card);
   });
-  container.insertBefore(block, container.firstChild);
+  // Insert the featured block immediately AFTER the section header so the post
+  // appears INSIDE its section (e.g. under "India News"), not above the heading.
+  var header = container.querySelector('.news-section-header');
+  if (header && header.nextSibling) {
+    container.insertBefore(block, header.nextSibling);
+  } else if (header) {
+    container.appendChild(block);
+  } else {
+    container.insertBefore(block, container.firstChild);
+  }
 }
 
 function openCustomPost(id) {

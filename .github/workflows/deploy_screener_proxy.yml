@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'screener-proxy-worker.js'
+      - 'wrangler.screener.toml'
   workflow_dispatch:
 
 jobs:
@@ -19,4 +20,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy screener-proxy-worker.js --name screener-proxy --compatibility-date 2024-12-01
+          # Deploys via wrangler.screener.toml so the R2 (MEDIA) binding is applied.
+          command: deploy --config wrangler.screener.toml

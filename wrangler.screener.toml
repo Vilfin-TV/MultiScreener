@@ -1,0 +1,26 @@
+# Cloudflare Worker config for the VilfinTV screener-proxy (console backend).
+#
+# Auto-deploys via .github/workflows/deploy_screener_proxy.yml on every push to
+# main that touches screener-proxy-worker.js or this file.
+# Manual deploy: `npx wrangler deploy --config wrangler.screener.toml`.
+#
+# Secrets (set in Cloudflare dashboard or via `wrangler secret put`):
+#   ADMIN_USERNAME, LINK_CONSOLE_PASSWORD, JWT_SECRET  — console login
+#   GITHUB_TOKEN                                        — commits to content/links/config
+#   YOUTUBE_API_KEY                                     — live/search lookups
+#   FORMSPREE_FORM_ID                                   — feedback form
+#
+# R2 bucket binding (MEDIA) powers image upload/serve/delete:
+#   POST /api/upload-image   GET /r2/<key>   POST /api/delete-image
+# MANUAL ONE-TIME STEP: create the bucket before the first deploy with this config:
+#   npx wrangler r2 bucket create vilfintv-media
+#   (or Cloudflare dashboard → R2 → Create bucket → name: vilfintv-media)
+
+name = "screener-proxy"
+main = "screener-proxy-worker.js"
+compatibility_date = "2024-12-01"
+workers_dev = true
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "vilfintv-media"

@@ -357,6 +357,32 @@
     }
     .photo-preview.visible { display: block; }
 
+    /* Image upload controls (R2) */
+    .upload-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+    .file-input { display: none; }
+    .btn-upload {
+      background: #122a4a; color: #9fc3ee; border: 1px solid #244a72;
+      border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 700;
+      cursor: pointer; font-family: inherit; white-space: nowrap;
+      transition: background .15s, border-color .15s;
+    }
+    .btn-upload:hover:not(:disabled) { background: #163a63; border-color: #3b82f6; color: #dceaff; }
+    .btn-upload:disabled { opacity: .5; cursor: not-allowed; }
+    .upload-hint { font-size: 10.5px; color: #5b78a0; }
+    .btn-cancel-edit {
+      width: 100%; margin-top: 8px; background: transparent; color: #93a8c4;
+      border: 1px solid #244a72; border-radius: 10px; padding: 10px;
+      font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit;
+      transition: background .15s, color .15s;
+    }
+    .btn-cancel-edit:hover { background: #122a4a; color: #dceaff; }
+    .edit-mode-banner {
+      background: rgba(59,130,246,.12); border: 1px solid #2f5d92;
+      color: #9fc3ee; border-radius: 8px; padding: 8px 12px; font-size: 11.5px;
+      font-weight: 600; margin-bottom: 12px; display: none;
+    }
+    .edit-mode-banner.visible { display: block; }
+
     /* Content panel (right) */
     .content-panel-right { padding: 22px 24px; display: flex; flex-direction: column; }
     .content-panel-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
@@ -372,6 +398,8 @@
       overflow: hidden; transition: opacity .2s, transform .2s;
     }
     .ci-item.is-deleting { opacity: 0; transform: translateX(12px); }
+    .ci-item.is-editing { border-color: #2f6fed; box-shadow: 0 0 0 1px #2f6fed, 0 0 18px rgba(47,111,237,.25); }
+    .ci-main:hover { background: rgba(47,111,237,.06); }
     .ci-main { display: flex; gap: 10px; padding: 10px 12px; }
     .ci-photo {
       width: 54px; height: 54px; border-radius: 7px; object-fit: cover;
@@ -683,14 +711,8 @@
 
     <!-- Tab bar -->
     <div class="console-tabs">
-      <div class="c-tab active" data-tab="links" onclick="switchTab('links')">
-        <span class="c-tab-icon">🔗</span> Links
-      </div>
-      <div class="c-tab" data-tab="content" onclick="switchTab('content')">
-        <span class="c-tab-icon">📝</span> Content Posts
-      </div>
-      <div class="c-tab" data-tab="homepage" onclick="switchTab('homepage')">
-        <span class="c-tab-icon">🏠</span> Home Page
+      <div class="c-tab active" data-tab="content" onclick="switchTab('content')">
+        <span class="c-tab-icon">📝</span> News Posts
       </div>
       <div class="c-tab" data-tab="stories" onclick="switchTab('stories')">
         <span class="c-tab-icon">📖</span> Stories
@@ -698,10 +720,16 @@
       <div class="c-tab" data-tab="academy" onclick="switchTab('academy')">
         <span class="c-tab-icon">🎓</span> Academy
       </div>
+      <div class="c-tab" data-tab="links" onclick="switchTab('links')">
+        <span class="c-tab-icon">🔗</span> Links
+      </div>
+      <div class="c-tab" data-tab="homepage" onclick="switchTab('homepage')">
+        <span class="c-tab-icon">🏠</span> Home Page
+      </div>
     </div>
 
     <!-- ══ LINKS TAB ══ -->
-    <div class="c-panel active" id="tab-links">
+    <div class="c-panel" id="tab-links">
       <div class="console-body">
 
         <!-- Left: Post new link -->
@@ -746,11 +774,12 @@
     </div><!-- /tab-links -->
 
     <!-- ══ CONTENT POSTS TAB ══ -->
-    <div class="c-panel" id="tab-content">
+    <div class="c-panel active" id="tab-content">
       <div class="content-body">
 
         <!-- Left: Publish new post -->
         <div class="content-form-panel">
+          <div class="edit-mode-banner" id="cp-edit-banner">✏️ Editing post — change the fields and click Update.</div>
           <label class="field-label" for="cp-section">News Section</label>
           <select id="cp-section">
             <option value="">— Select a section —</option>
@@ -784,10 +813,15 @@
           <label class="field-label" for="cp-story">Full Story</label>
           <textarea id="cp-story" placeholder="Write the full story here. Be detailed — readers will see the complete text…" maxlength="2000" rows="6" spellcheck="true"></textarea>
 
-          <label class="field-label" for="cp-photo">Photo URL <span style="opacity:.4;font-weight:400">(optional)</span></label>
+          <label class="field-label" for="cp-photo">Photo <span style="opacity:.4;font-weight:400">(optional — paste a URL or upload)</span></label>
           <div class="photo-preview-wrap">
-            <input type="url" id="cp-photo" placeholder="https://example.com/image.jpg"
+            <input type="url" id="cp-photo" placeholder="https://… or upload below"
                    autocomplete="off" oninput="previewPhoto(this.value)">
+            <div class="upload-row">
+              <input type="file" id="cp-file" class="file-input" accept="image/*" onchange="handlePhotoUpload(this,'cp')">
+              <button type="button" class="btn-upload" id="cp-upload-btn" onclick="document.getElementById('cp-file').click()">⬆ Upload image</button>
+              <span class="upload-hint">JPEG · PNG · WebP · GIF · max 8 MB</span>
+            </div>
             <img id="cp-photo-preview" class="photo-preview" src="" alt="Preview"
                  onerror="this.classList.remove('visible')">
           </div>
@@ -796,6 +830,7 @@
           <input type="number" id="cp-days" placeholder="30" min="1" max="365" value="30">
 
           <button class="btn-primary" id="cp-publish-btn" onclick="publishContent()">Publish Post</button>
+          <button class="btn-cancel-edit" id="cp-cancel-btn" style="display:none" onclick="cancelContentEdit()">Cancel edit</button>
           <div class="form-status" id="cp-form-status"></div>
         </div>
 
@@ -1089,6 +1124,7 @@
 
         <!-- Left: Pin a story -->
         <div class="content-form-panel">
+          <div class="edit-mode-banner" id="st-edit-banner">✏️ Editing story — change the fields and click Update.</div>
           <label class="field-label" for="st-category">Story Category</label>
           <select id="st-category">
             <option value="">— Select a category —</option>
@@ -1109,10 +1145,15 @@
           <label class="field-label" for="st-story">Description / Teaser</label>
           <textarea id="st-story" placeholder="Write a short teaser or full description for this pinned story…" maxlength="2000" rows="5" spellcheck="true"></textarea>
 
-          <label class="field-label" for="st-photo">Thumbnail URL <span style="opacity:.4;font-weight:400">(required)</span></label>
+          <label class="field-label" for="st-photo">Thumbnail <span style="opacity:.4;font-weight:400">(required — paste a URL or upload)</span></label>
           <div class="photo-preview-wrap">
-            <input type="url" id="st-photo" placeholder="https://example.com/image.jpg"
+            <input type="url" id="st-photo" placeholder="https://… or upload below"
                    autocomplete="off" oninput="previewStoryPhoto(this.value)">
+            <div class="upload-row">
+              <input type="file" id="st-file" class="file-input" accept="image/*" onchange="handlePhotoUpload(this,'st')">
+              <button type="button" class="btn-upload" id="st-upload-btn" onclick="document.getElementById('st-file').click()">⬆ Upload image</button>
+              <span class="upload-hint">JPEG · PNG · WebP · GIF · max 8 MB</span>
+            </div>
             <img id="st-photo-preview" class="photo-preview" src="" alt="Preview"
                  onerror="this.classList.remove('visible')">
           </div>
@@ -1125,6 +1166,7 @@
           <input type="number" id="st-days" placeholder="14" min="1" max="365" value="14">
 
           <button class="btn-primary" id="st-publish-btn" onclick="publishStory()">📌 Pin Story</button>
+          <button class="btn-cancel-edit" id="st-cancel-btn" style="display:none" onclick="cancelStoryEdit()">Cancel edit</button>
           <div class="form-status" id="st-form-status"></div>
         </div>
 
@@ -1149,6 +1191,7 @@
 
         <!-- Left: Publish a notice -->
         <div class="content-form-panel">
+          <div class="edit-mode-banner" id="ac-edit-banner">✏️ Editing notice — change the fields and click Update.</div>
           <label class="field-label" for="ac-type">Notice Type</label>
           <select id="ac-type">
             <option value="academy_notice">📢 General Notice / Announcement</option>
@@ -1163,10 +1206,15 @@
           <label class="field-label" for="ac-story">Notice Body</label>
           <textarea id="ac-story" placeholder="Full text of the notice. E.g. Exam schedule update, new content available, important announcement…" maxlength="2000" rows="6" spellcheck="true"></textarea>
 
-          <label class="field-label" for="ac-photo">Banner Image URL <span style="opacity:.4;font-weight:400">(optional)</span></label>
+          <label class="field-label" for="ac-photo">Banner Image <span style="opacity:.4;font-weight:400">(optional — paste a URL or upload)</span></label>
           <div class="photo-preview-wrap">
-            <input type="url" id="ac-photo" placeholder="https://example.com/banner.jpg"
+            <input type="url" id="ac-photo" placeholder="https://… or upload below"
                    autocomplete="off" oninput="previewAcademyPhoto(this.value)">
+            <div class="upload-row">
+              <input type="file" id="ac-file" class="file-input" accept="image/*" onchange="handlePhotoUpload(this,'ac')">
+              <button type="button" class="btn-upload" id="ac-upload-btn" onclick="document.getElementById('ac-file').click()">⬆ Upload image</button>
+              <span class="upload-hint">JPEG · PNG · WebP · GIF · max 8 MB</span>
+            </div>
             <img id="ac-photo-preview" class="photo-preview" src="" alt="Preview"
                  onerror="this.classList.remove('visible')">
           </div>
@@ -1175,6 +1223,7 @@
           <input type="number" id="ac-days" placeholder="7" min="1" max="90" value="7">
 
           <button class="btn-primary" id="ac-publish-btn" onclick="publishAcademy()">📢 Publish Notice</button>
+          <button class="btn-cancel-edit" id="ac-cancel-btn" style="display:none" onclick="cancelAcademyEdit()">Cancel edit</button>
           <div class="form-status" id="ac-form-status"></div>
         </div>
 
@@ -1254,7 +1303,7 @@ document.addEventListener('DOMContentLoaded', function() {
   var tok = getToken();
   if (tokenStillValid(tok)) {
     showDashboard();
-    loadLinks();
+    loadContent();
   } else {
     clearToken();
     showLogin();
@@ -1297,7 +1346,7 @@ async function doLogin() {
       setToken(data.token);
       document.getElementById('login-pass').value = '';
       showDashboard();
-      loadLinks();
+      loadContent();
     } else {
       setLoginErr(data.message || 'Invalid credentials.');
       document.getElementById('login-pass').value = '';
@@ -1337,6 +1386,59 @@ async function authFetch(url, options) {
     throw new Error('SESSION_EXPIRED');
   }
   return res;
+}
+
+/* ── R2 image helpers (upload / delete via the Worker) ─────────────────────── */
+function isR2Url(u) { return typeof u === 'string' && u.indexOf('/r2/media/') !== -1; }
+
+async function uploadImageToR2(file) {
+  var tok = getToken();
+  if (!tok) { showLogin('Your session has expired. Please sign in again.'); throw new Error('SESSION_EXPIRED'); }
+  var fd = new FormData();
+  fd.append('file', file);
+  var res = await fetch(WORKER + '/api/upload-image', {
+    method:  'POST',
+    headers: { 'Authorization': 'Bearer ' + tok },   // do NOT set Content-Type — browser adds the multipart boundary
+    body:    fd,
+  });
+  if (res.status === 401) { clearToken(); showLogin('Your session has expired. Please sign in again.'); throw new Error('SESSION_EXPIRED'); }
+  var data = await res.json().catch(function() { return {}; });
+  if (!res.ok || !data.ok || !data.url) throw new Error(data.message || ('Upload failed (HTTP ' + res.status + ')'));
+  return data.url;
+}
+
+async function deleteImageFromR2(url) {
+  if (!isR2Url(url)) return;                  // only delete images we host on R2
+  try {
+    await authFetch(WORKER + '/api/delete-image', { method: 'POST', body: JSON.stringify({ url: url }) });
+  } catch (e) { /* non-fatal — an orphaned object is harmless and can be purged later */ }
+}
+
+/* Shared file-input handler for all three managers (prefix = cp | st | ac). */
+var _UPLOAD_MAP = {
+  cp: { status: setCpFormStatus, preview: previewPhoto },
+  st: { status: setStFormStatus, preview: previewStoryPhoto },
+  ac: { status: setAcFormStatus, preview: previewAcademyPhoto },
+};
+async function handlePhotoUpload(inputEl, prefix) {
+  var file = inputEl.files && inputEl.files[0];
+  if (!file) return;
+  var cfg   = _UPLOAD_MAP[prefix] || {};
+  var urlIn = document.getElementById(prefix + '-photo');
+  var btn   = document.getElementById(prefix + '-upload-btn');
+  if (cfg.status) cfg.status('', 'Uploading image…');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Uploading…'; }
+  try {
+    var url = await uploadImageToR2(file);
+    if (urlIn) urlIn.value = url;
+    if (cfg.preview) cfg.preview(url);
+    if (cfg.status) cfg.status('ok', '✓ Image uploaded to media storage.');
+  } catch (e) {
+    if (e.message !== 'SESSION_EXPIRED' && cfg.status) cfg.status('err', 'Upload failed: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '⬆ Upload image'; }
+    inputEl.value = '';   // allow re-selecting the same file
+  }
 }
 
 /* ── State ─────────────────────────────────────────────────────────────────── */
@@ -1659,6 +1761,7 @@ function switchTab(name) {
   document.querySelectorAll('.c-panel').forEach(function(p) {
     p.classList.toggle('active', p.id === 'tab-' + name);
   });
+  if (name === 'links')    loadLinks();
   if (name === 'content')  loadContent();
   if (name === 'homepage') loadConfig();
   if (name === 'stories')  loadStoriesContent();
@@ -1671,6 +1774,9 @@ function switchTab(name) {
 var CONTENT_URL    = 'https://vilfintv.com/content.json';
 var contentState   = [];
 var _contentLoaded = false;
+var cpEditId       = null;   // id of the post currently being edited (null = create mode)
+var stEditId       = null;
+var acEditId       = null;
 
 var SECTION_LABELS = {
   trending:'🔥 Trending', global:'🌍 Global News', india:'🇮🇳 India News',
@@ -1740,7 +1846,7 @@ function buildContentItem(item) {
     : '<div class="ci-photo">📰</div>';
 
   el.innerHTML =
-    '<div class="ci-main">'
+    '<div class="ci-main" style="cursor:pointer" title="Click to edit" onclick="editContentItem(\'' + esc(item.id) + '\')">'
       + photoHtml
       + '<div class="ci-body">'
         + '<span class="ci-section-badge">' + esc(sectionLabel) + '</span>'
@@ -1752,7 +1858,8 @@ function buildContentItem(item) {
         + '</div>'
       + '</div>'
       + '<div class="ci-actions">'
-        + '<button class="act-btn danger" title="Delete post" onclick="deleteContentItem(\'' + esc(item.id) + '\',this)">✕</button>'
+        + '<button class="act-btn" title="Edit post" onclick="event.stopPropagation();editContentItem(\'' + esc(item.id) + '\')">✏️</button>'
+        + '<button class="act-btn danger" title="Delete post" onclick="event.stopPropagation();deleteContentItem(\'' + esc(item.id) + '\',this)">✕</button>'
       + '</div>'
     + '</div>';
 
@@ -1763,6 +1870,7 @@ function buildContentItem(item) {
 async function deleteContentItem(id, btn) {
   var el = btn.closest('.ci-item');
   if (el) el.classList.add('is-deleting');
+  var removed  = contentState.filter(function(i) { return i.id === id; })[0] || null;
   var newItems = contentState.filter(function(i) { return i.id !== id; });
   setCiStatus('', '');
   try {
@@ -1774,6 +1882,8 @@ async function deleteContentItem(id, btn) {
     if (res.ok && data.ok) {
       contentState = newItems;
       renderContent();
+      if (cpEditId === id) cancelContentEdit();
+      if (removed && removed.photo) deleteImageFromR2(removed.photo);
     } else {
       if (el) el.classList.remove('is-deleting');
       setCiStatus('err', data.message || 'Server error ' + res.status);
@@ -1782,6 +1892,57 @@ async function deleteContentItem(id, btn) {
     if (el) el.classList.remove('is-deleting');
     if (e.message !== 'SESSION_EXPIRED') setCiStatus('err', 'Network error: ' + e.message);
   }
+}
+
+/* ── Begin editing a content item ───────────────────────────────────────────── */
+function editContentItem(id) {
+  var item = contentState.filter(function(i) { return i.id === id; })[0];
+  if (!item) return;
+  cpEditId = id;
+  document.getElementById('cp-section').value = item.section || '';
+  document.getElementById('cp-heading').value = item.heading || '';
+  document.getElementById('cp-story').value   = item.story   || '';
+  document.getElementById('cp-photo').value   = item.photo   || '';
+  // Days left until expiry (defaults to 30 if none)
+  var days = 30;
+  if (item.expires_at) {
+    var d = Math.ceil((new Date(item.expires_at) - new Date()) / 86400000);
+    if (d >= 1) days = Math.min(d, 365);
+  }
+  document.getElementById('cp-days').value = days;
+  previewPhoto(item.photo || '');
+  var banner = document.getElementById('cp-edit-banner');
+  if (banner) banner.classList.add('visible');
+  var cancel = document.getElementById('cp-cancel-btn');
+  if (cancel) cancel.style.display = '';
+  var pub = document.getElementById('cp-publish-btn');
+  if (pub) pub.textContent = 'Update Post';
+  setCpFormStatus('', '');
+  // highlight the row being edited
+  document.querySelectorAll('.ci-item').forEach(function(r) {
+    r.classList.toggle('is-editing', r.dataset.cid === id);
+  });
+  var form = document.getElementById('cp-section');
+  if (form && form.scrollIntoView) form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/* ── Cancel content edit (back to create mode) ──────────────────────────────── */
+function cancelContentEdit() {
+  cpEditId = null;
+  document.getElementById('cp-section').value = '';
+  document.getElementById('cp-heading').value = '';
+  document.getElementById('cp-story').value   = '';
+  document.getElementById('cp-photo').value   = '';
+  document.getElementById('cp-days').value     = 30;
+  previewPhoto('');
+  var banner = document.getElementById('cp-edit-banner');
+  if (banner) banner.classList.remove('visible');
+  var cancel = document.getElementById('cp-cancel-btn');
+  if (cancel) cancel.style.display = 'none';
+  var pub = document.getElementById('cp-publish-btn');
+  if (pub) pub.textContent = 'Publish Post';
+  setCpFormStatus('', '');
+  document.querySelectorAll('.ci-item.is-editing').forEach(function(r) { r.classList.remove('is-editing'); });
 }
 
 /* ── Publish new content ────────────────────────────────────────────────────── */
@@ -1804,38 +1965,73 @@ async function publishContent() {
   }
 
   btn.disabled    = true;
-  btn.textContent = 'Publishing…';
-
-  var payload = { section: section, heading: heading, story: story, days: days };
-  if (photo) payload.photo = photo;
+  btn.textContent = cpEditId ? 'Updating…' : 'Publishing…';
 
   try {
-    var res  = await authFetch(WORKER + '/api/post-content', {
-      method: 'POST',
-      body:   JSON.stringify(payload),
-    });
-    var data = await res.json();
-    if (res.ok && data.ok) {
-      setCpFormStatus('ok', '✓ Published! Visible until '
-        + new Date(data.expires_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}));
-      // Clear form
-      document.getElementById('cp-section').value = '';
-      document.getElementById('cp-heading').value = '';
-      document.getElementById('cp-story').value   = '';
-      document.getElementById('cp-photo').value   = '';
-      var prev = document.getElementById('cp-photo-preview');
-      if (prev) { prev.src = ''; prev.classList.remove('visible'); }
-      // Refresh list
-      await loadContent();
+    if (cpEditId) {
+      // ── EDIT MODE — rebuild the items array, replacing the edited post ──────
+      var oldItem  = contentState.filter(function(i) { return i.id === cpEditId; })[0] || {};
+      var oldPhoto = oldItem.photo || '';
+      var expiresAt = new Date(Date.now() + days * 86400000).toISOString();
+      var newItems = contentState.map(function(i) {
+        if (i.id !== cpEditId) return i;
+        var o = {
+          id: i.id,
+          section: section,
+          heading: heading,
+          story: story,
+          published_at: i.published_at || new Date().toISOString(),
+          expires_at: expiresAt
+        };
+        if (photo) o.photo = photo;
+        if (i.link_url) o.link_url = i.link_url;
+        return o;
+      });
+      var res  = await authFetch(WORKER + '/api/update-content', {
+        method: 'POST',
+        body:   JSON.stringify({ items: newItems }),
+      });
+      var data = await res.json();
+      if (res.ok && data.ok) {
+        // Old R2 photo no longer referenced → remove from bucket
+        if (oldPhoto && oldPhoto !== photo) deleteImageFromR2(oldPhoto);
+        contentState = newItems;
+        cancelContentEdit();
+        renderContent();
+        setCpFormStatus('ok', '✓ Post updated. Visible until '
+          + new Date(expiresAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}));
+      } else {
+        setCpFormStatus('err', data.message || 'Server error ' + res.status);
+      }
     } else {
-      setCpFormStatus('err', data.message || 'Server error ' + res.status);
+      // ── CREATE MODE ────────────────────────────────────────────────────────
+      var payload = { section: section, heading: heading, story: story, days: days };
+      if (photo) payload.photo = photo;
+      var res  = await authFetch(WORKER + '/api/post-content', {
+        method: 'POST',
+        body:   JSON.stringify(payload),
+      });
+      var data = await res.json();
+      if (res.ok && data.ok) {
+        setCpFormStatus('ok', '✓ Published! Visible until '
+          + new Date(data.expires_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}));
+        document.getElementById('cp-section').value = '';
+        document.getElementById('cp-heading').value = '';
+        document.getElementById('cp-story').value   = '';
+        document.getElementById('cp-photo').value   = '';
+        var prev = document.getElementById('cp-photo-preview');
+        if (prev) { prev.src = ''; prev.classList.remove('visible'); }
+        await loadContent();
+      } else {
+        setCpFormStatus('err', data.message || 'Server error ' + res.status);
+      }
     }
   } catch(e) {
     if (e.message !== 'SESSION_EXPIRED') setCpFormStatus('err', 'Network error: ' + e.message);
   }
 
   btn.disabled    = false;
-  btn.textContent = 'Publish Post';
+  btn.textContent = cpEditId ? 'Update Post' : 'Publish Post';
 }
 
 /* ── Photo URL preview ──────────────────────────────────────────────────────── */
@@ -2911,7 +3107,7 @@ function renderStoriesList() {
     var label = SECTION_LABELS[item.section] || item.section;
     var expAt = item.expires_at ? new Date(item.expires_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—';
     el.innerHTML =
-      '<div class="ci-main">'
+      '<div class="ci-main" style="cursor:pointer" title="Click to edit" onclick="editStoryItem(\'' + esc(item.id) + '\')">'
         + '<div class="ci-photo">'
           + (item.photo
               ? '<img src="' + esc(item.photo) + '" alt="Thumb" onerror="this.parentNode.innerHTML=\'📖\'">'
@@ -2922,11 +3118,12 @@ function renderStoriesList() {
           + '<div class="ci-heading">' + esc(item.heading || '') + '</div>'
           + '<div class="ci-snippet">' + esc((item.story || '').slice(0,80)) + '</div>'
           + '<div class="ci-meta">Expires: ' + esc(expAt)
-            + (item.link_url ? ' · <a href="' + esc(item.link_url) + '" target="_blank" style="color:#60a5fa;">link↗</a>' : '')
+            + (item.link_url ? ' · <a href="' + esc(item.link_url) + '" target="_blank" style="color:#60a5fa;" onclick="event.stopPropagation();">link↗</a>' : '')
           + '</div>'
         + '</div>'
         + '<div class="ci-actions">'
-          + '<button class="act-btn danger" title="Unpin" onclick="deleteStoryItem(\'' + esc(item.id) + '\',this)">✕</button>'
+          + '<button class="act-btn" title="Edit story" onclick="event.stopPropagation();editStoryItem(\'' + esc(item.id) + '\')">✏️</button>'
+          + '<button class="act-btn danger" title="Unpin" onclick="event.stopPropagation();deleteStoryItem(\'' + esc(item.id) + '\',this)">✕</button>'
         + '</div>'
       + '</div>';
     listEl.appendChild(el);
@@ -2947,31 +3144,112 @@ async function publishStory() {
   if (!heading) return setStFormStatus('err', 'Story title is required.');
   if (!photo)   return setStFormStatus('err', 'Thumbnail URL is required for stories.');
 
-  btn.disabled = true; btn.textContent = '⏳ Pinning…';
-
-  var payload = { section: section, heading: heading, story: story || heading, photo: photo, days: days };
-  if (link) payload.link_url = link;
+  btn.disabled = true; btn.textContent = stEditId ? '⏳ Updating…' : '⏳ Pinning…';
 
   try {
-    var res  = await authFetch(WORKER + '/api/post-content', { method: 'POST', body: JSON.stringify(payload) });
-    var data = await res.json();
-    if (res.ok && data.ok) {
-      setStFormStatus('ok', '✓ Story pinned until ' + new Date(data.expires_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}));
-      document.getElementById('st-category').value = '';
-      document.getElementById('st-heading').value  = '';
-      document.getElementById('st-story').value    = '';
-      document.getElementById('st-photo').value    = '';
-      document.getElementById('st-link').value     = '';
-      var prev = document.getElementById('st-photo-preview');
-      if (prev) { prev.src = ''; prev.classList.remove('visible'); }
-      await loadStoriesContent();
+    if (stEditId) {
+      // ── EDIT MODE ──────────────────────────────────────────────────────────
+      var resp0 = await fetch(CONTENT_URL + '?_=' + Date.now());
+      var all0  = await resp0.json();
+      if (!Array.isArray(all0)) all0 = [];
+      var oldItem  = all0.filter(function(i) { return i.id === stEditId; })[0] || {};
+      var oldPhoto = oldItem.photo || '';
+      var expiresAt = new Date(Date.now() + days * 86400000).toISOString();
+      var newItems = all0.map(function(i) {
+        if (i.id !== stEditId) return i;
+        var o = {
+          id: i.id, section: section, heading: heading,
+          story: story || heading, photo: photo,
+          published_at: i.published_at || new Date().toISOString(),
+          expires_at: expiresAt
+        };
+        if (link) o.link_url = link;
+        return o;
+      });
+      var res  = await authFetch(WORKER + '/api/update-content', { method: 'POST', body: JSON.stringify({ items: newItems }) });
+      var data = await res.json();
+      if (res.ok && data.ok) {
+        if (oldPhoto && oldPhoto !== photo) deleteImageFromR2(oldPhoto);
+        setStFormStatus('ok', '✓ Story updated, pinned until ' + new Date(expiresAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}));
+        cancelStoryEdit();
+        await loadStoriesContent();
+      } else {
+        setStFormStatus('err', data.message || 'Server error ' + res.status);
+      }
     } else {
-      setStFormStatus('err', data.message || 'Server error ' + res.status);
+      // ── CREATE MODE ────────────────────────────────────────────────────────
+      var payload = { section: section, heading: heading, story: story || heading, photo: photo, days: days };
+      if (link) payload.link_url = link;
+      var res  = await authFetch(WORKER + '/api/post-content', { method: 'POST', body: JSON.stringify(payload) });
+      var data = await res.json();
+      if (res.ok && data.ok) {
+        setStFormStatus('ok', '✓ Story pinned until ' + new Date(data.expires_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}));
+        document.getElementById('st-category').value = '';
+        document.getElementById('st-heading').value  = '';
+        document.getElementById('st-story').value    = '';
+        document.getElementById('st-photo').value    = '';
+        document.getElementById('st-link').value     = '';
+        var prev = document.getElementById('st-photo-preview');
+        if (prev) { prev.src = ''; prev.classList.remove('visible'); }
+        await loadStoriesContent();
+      } else {
+        setStFormStatus('err', data.message || 'Server error ' + res.status);
+      }
     }
   } catch(e) {
     if (e.message !== 'SESSION_EXPIRED') setStFormStatus('err', 'Network error: ' + e.message);
   }
-  btn.disabled = false; btn.textContent = '📌 Pin Story';
+  btn.disabled = false; btn.textContent = stEditId ? '✓ Update Story' : '📌 Pin Story';
+}
+
+/* ── Begin editing a pinned story ───────────────────────────────────────────── */
+function editStoryItem(id) {
+  var item = _storiesState.filter(function(i) { return i.id === id; })[0];
+  if (!item) return;
+  stEditId = id;
+  document.getElementById('st-category').value = item.section  || '';
+  document.getElementById('st-heading').value  = item.heading  || '';
+  document.getElementById('st-story').value    = item.story    || '';
+  document.getElementById('st-photo').value    = item.photo    || '';
+  document.getElementById('st-link').value     = item.link_url || '';
+  var days = 14;
+  if (item.expires_at) {
+    var d = Math.ceil((new Date(item.expires_at) - new Date()) / 86400000);
+    if (d >= 1) days = Math.min(d, 365);
+  }
+  document.getElementById('st-days').value = days;
+  previewStoryPhoto(item.photo || '');
+  var banner = document.getElementById('st-edit-banner');
+  if (banner) banner.classList.add('visible');
+  var cancel = document.getElementById('st-cancel-btn');
+  if (cancel) cancel.style.display = '';
+  var pub = document.getElementById('st-publish-btn');
+  if (pub) pub.textContent = '✓ Update Story';
+  setStFormStatus('', '');
+  document.querySelectorAll('#stories-list .ci-item').forEach(function(r) {
+    r.classList.toggle('is-editing', r.dataset.cid === id);
+  });
+  var form = document.getElementById('st-category');
+  if (form && form.scrollIntoView) form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function cancelStoryEdit() {
+  stEditId = null;
+  document.getElementById('st-category').value = '';
+  document.getElementById('st-heading').value  = '';
+  document.getElementById('st-story').value     = '';
+  document.getElementById('st-photo').value     = '';
+  document.getElementById('st-link').value       = '';
+  document.getElementById('st-days').value        = 14;
+  previewStoryPhoto('');
+  var banner = document.getElementById('st-edit-banner');
+  if (banner) banner.classList.remove('visible');
+  var cancel = document.getElementById('st-cancel-btn');
+  if (cancel) cancel.style.display = 'none';
+  var pub = document.getElementById('st-publish-btn');
+  if (pub) pub.textContent = '📌 Pin Story';
+  setStFormStatus('', '');
+  document.querySelectorAll('#stories-list .ci-item.is-editing').forEach(function(r) { r.classList.remove('is-editing'); });
 }
 
 async function deleteStoryItem(id, btn) {
@@ -2982,10 +3260,13 @@ async function deleteStoryItem(id, btn) {
     var resp = await fetch(CONTENT_URL + '?_=' + Date.now());
     var all  = await resp.json();
     if (!Array.isArray(all)) all = [];
+    var removed  = all.filter(function(i) { return i.id === id; })[0] || null;
     var filtered = all.filter(function(i) { return i.id !== id; });
     var res  = await authFetch(WORKER + '/api/update-content', { method: 'POST', body: JSON.stringify({ items: filtered }) });
     var data = await res.json();
     if (res.ok && data.ok) {
+      if (stEditId === id) cancelStoryEdit();
+      if (removed && removed.photo) deleteImageFromR2(removed.photo);
       await loadStoriesContent();
     } else {
       if (item) item.classList.remove('is-deleting');
@@ -3059,7 +3340,7 @@ function renderAcademyList() {
     var label = SECTION_LABELS[item.section] || item.section;
     var expAt = item.expires_at ? new Date(item.expires_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—';
     el.innerHTML =
-      '<div class="ci-main">'
+      '<div class="ci-main" style="cursor:pointer" title="Click to edit" onclick="editAcademyItem(\'' + esc(item.id) + '\')">'
         + '<div class="ci-photo">'
           + (item.photo
               ? '<img src="' + esc(item.photo) + '" alt="Banner" onerror="this.parentNode.innerHTML=\'📢\'">'
@@ -3073,7 +3354,8 @@ function renderAcademyList() {
           + '<div class="ci-meta">Expires: ' + esc(expAt) + '</div>'
         + '</div>'
         + '<div class="ci-actions">'
-          + '<button class="act-btn danger" title="Delete" onclick="deleteAcademyItem(\'' + esc(item.id) + '\',this)">✕</button>'
+          + '<button class="act-btn" title="Edit notice" onclick="event.stopPropagation();editAcademyItem(\'' + esc(item.id) + '\')">✏️</button>'
+          + '<button class="act-btn danger" title="Delete" onclick="event.stopPropagation();deleteAcademyItem(\'' + esc(item.id) + '\',this)">✕</button>'
         + '</div>'
       + '</div>';
     listEl.appendChild(el);
@@ -3092,30 +3374,108 @@ async function publishAcademy() {
   if (!heading) return setAcFormStatus('err', 'Headline is required.');
   if (!story)   return setAcFormStatus('err', 'Notice body is required.');
 
-  btn.disabled = true; btn.textContent = '⏳ Publishing…';
-
-  var payload = { section: section, heading: heading, story: story, days: days };
-  if (photo) payload.photo = photo;
+  btn.disabled = true; btn.textContent = acEditId ? '⏳ Updating…' : '⏳ Publishing…';
 
   try {
-    var res  = await authFetch(WORKER + '/api/post-content', { method: 'POST', body: JSON.stringify(payload) });
-    var data = await res.json();
-    if (res.ok && data.ok) {
-      setAcFormStatus('ok', '✓ Notice published until ' + new Date(data.expires_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}));
-      document.getElementById('ac-type').value    = 'academy_notice';
-      document.getElementById('ac-heading').value = '';
-      document.getElementById('ac-story').value   = '';
-      document.getElementById('ac-photo').value   = '';
-      var prev = document.getElementById('ac-photo-preview');
-      if (prev) { prev.src = ''; prev.classList.remove('visible'); }
-      await loadAcademyContent();
+    if (acEditId) {
+      // ── EDIT MODE ──────────────────────────────────────────────────────────
+      var resp0 = await fetch(CONTENT_URL + '?_=' + Date.now());
+      var all0  = await resp0.json();
+      if (!Array.isArray(all0)) all0 = [];
+      var oldItem  = all0.filter(function(i) { return i.id === acEditId; })[0] || {};
+      var oldPhoto = oldItem.photo || '';
+      var expiresAt = new Date(Date.now() + days * 86400000).toISOString();
+      var newItems = all0.map(function(i) {
+        if (i.id !== acEditId) return i;
+        var o = {
+          id: i.id, section: section, heading: heading, story: story,
+          published_at: i.published_at || new Date().toISOString(),
+          expires_at: expiresAt
+        };
+        if (photo) o.photo = photo;
+        return o;
+      });
+      var res  = await authFetch(WORKER + '/api/update-content', { method: 'POST', body: JSON.stringify({ items: newItems }) });
+      var data = await res.json();
+      if (res.ok && data.ok) {
+        if (oldPhoto && oldPhoto !== photo) deleteImageFromR2(oldPhoto);
+        setAcFormStatus('ok', '✓ Notice updated until ' + new Date(expiresAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}));
+        cancelAcademyEdit();
+        await loadAcademyContent();
+      } else {
+        setAcFormStatus('err', data.message || 'Server error ' + res.status);
+      }
     } else {
-      setAcFormStatus('err', data.message || 'Server error ' + res.status);
+      // ── CREATE MODE ────────────────────────────────────────────────────────
+      var payload = { section: section, heading: heading, story: story, days: days };
+      if (photo) payload.photo = photo;
+      var res  = await authFetch(WORKER + '/api/post-content', { method: 'POST', body: JSON.stringify(payload) });
+      var data = await res.json();
+      if (res.ok && data.ok) {
+        setAcFormStatus('ok', '✓ Notice published until ' + new Date(data.expires_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}));
+        document.getElementById('ac-type').value    = 'academy_notice';
+        document.getElementById('ac-heading').value = '';
+        document.getElementById('ac-story').value   = '';
+        document.getElementById('ac-photo').value   = '';
+        var prev = document.getElementById('ac-photo-preview');
+        if (prev) { prev.src = ''; prev.classList.remove('visible'); }
+        await loadAcademyContent();
+      } else {
+        setAcFormStatus('err', data.message || 'Server error ' + res.status);
+      }
     }
   } catch(e) {
     if (e.message !== 'SESSION_EXPIRED') setAcFormStatus('err', 'Network error: ' + e.message);
   }
-  btn.disabled = false; btn.textContent = '📢 Publish Notice';
+  btn.disabled = false; btn.textContent = acEditId ? '✓ Update Notice' : '📢 Publish Notice';
+}
+
+/* ── Begin editing an academy notice ────────────────────────────────────────── */
+function editAcademyItem(id) {
+  var item = _academyState.filter(function(i) { return i.id === id; })[0];
+  if (!item) return;
+  acEditId = id;
+  document.getElementById('ac-type').value    = item.section || 'academy_notice';
+  document.getElementById('ac-heading').value = item.heading || '';
+  document.getElementById('ac-story').value   = item.story   || '';
+  document.getElementById('ac-photo').value   = item.photo   || '';
+  var days = 7;
+  if (item.expires_at) {
+    var d = Math.ceil((new Date(item.expires_at) - new Date()) / 86400000);
+    if (d >= 1) days = Math.min(d, 90);
+  }
+  document.getElementById('ac-days').value = days;
+  previewAcademyPhoto(item.photo || '');
+  var banner = document.getElementById('ac-edit-banner');
+  if (banner) banner.classList.add('visible');
+  var cancel = document.getElementById('ac-cancel-btn');
+  if (cancel) cancel.style.display = '';
+  var pub = document.getElementById('ac-publish-btn');
+  if (pub) pub.textContent = '✓ Update Notice';
+  setAcFormStatus('', '');
+  document.querySelectorAll('#academy-list .ci-item').forEach(function(r) {
+    r.classList.toggle('is-editing', r.dataset.cid === id);
+  });
+  var form = document.getElementById('ac-type');
+  if (form && form.scrollIntoView) form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function cancelAcademyEdit() {
+  acEditId = null;
+  document.getElementById('ac-type').value    = 'academy_notice';
+  document.getElementById('ac-heading').value = '';
+  document.getElementById('ac-story').value   = '';
+  document.getElementById('ac-photo').value   = '';
+  document.getElementById('ac-days').value     = 7;
+  previewAcademyPhoto('');
+  var banner = document.getElementById('ac-edit-banner');
+  if (banner) banner.classList.remove('visible');
+  var cancel = document.getElementById('ac-cancel-btn');
+  if (cancel) cancel.style.display = 'none';
+  var pub = document.getElementById('ac-publish-btn');
+  if (pub) pub.textContent = '📢 Publish Notice';
+  setAcFormStatus('', '');
+  document.querySelectorAll('#academy-list .ci-item.is-editing').forEach(function(r) { r.classList.remove('is-editing'); });
 }
 
 async function deleteAcademyItem(id, btn) {
@@ -3125,10 +3485,13 @@ async function deleteAcademyItem(id, btn) {
     var resp = await fetch(CONTENT_URL + '?_=' + Date.now());
     var all  = await resp.json();
     if (!Array.isArray(all)) all = [];
+    var removed  = all.filter(function(i) { return i.id === id; })[0] || null;
     var filtered = all.filter(function(i) { return i.id !== id; });
     var res  = await authFetch(WORKER + '/api/update-content', { method: 'POST', body: JSON.stringify({ items: filtered }) });
     var data = await res.json();
     if (res.ok && data.ok) {
+      if (acEditId === id) cancelAcademyEdit();
+      if (removed && removed.photo) deleteImageFromR2(removed.photo);
       await loadAcademyContent();
     } else {
       if (item) item.classList.remove('is-deleting');

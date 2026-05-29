@@ -394,7 +394,7 @@ export default {
         else if (r.status !== 404) return jsonError(502, `GitHub GET failed: ${r.status}`);
       } catch (e) { return jsonError(502, `GitHub GET error: ${e.message}`); }
 
-      const clean = items.map(i => { const o = { id: String(i.id||Date.now()), section: String(i.section||''), heading: String(i.heading||'').slice(0,200), story: String(i.story||'').slice(0,2000), published_at: i.published_at||new Date().toISOString(), expires_at: i.expires_at||'' }; if (i.photo) o.photo = String(i.photo).slice(0,500); return o; });
+      const clean = items.map(i => { const o = { id: String(i.id||Date.now()), section: String(i.section||''), heading: String(i.heading||'').slice(0,200), story: String(i.story||'').slice(0,2000), published_at: i.published_at||new Date().toISOString(), expires_at: i.expires_at||'' }; if (i.photo) o.photo = String(i.photo).slice(0,500); if (i.link_url) o.link_url = String(i.link_url).slice(0,500); return o; });
       const put = { message: 'chore(content): update via console', content: btoa(unescape(encodeURIComponent(JSON.stringify(clean, null, 2)))), branch: BRANCH };
       if (sha) put.sha = sha;
       try {
@@ -516,9 +516,116 @@ export default {
       return new Response(JSON.stringify({ ok: true, message: 'Config updated.' }), { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
     }
 
+    // ── /api/upload-image  POST — store an image in R2, return a public URL ────
+    // Accepts multipart/form-data (field "file") OR JSON { dataUrl, filename }.
+    // Auth required. The returned URL is served back through this Worker at
+    // /r2/<key> — no public bucket or custom domain needed.
+    if (pathname === '/api/upload-image') {
+      if (request.method !== 'POST') return jsonError(405, 'Use POST.');
+      const auth = await requireAuth(request, env);
+      if (auth.error) return auth.error;
+      if (!env || !env.MEDIA) return jsonError(503, 'Image storage not configured. Bind an R2 bucket as MEDIA in the Worker.');
+
+      const MAX_BYTES = 8 * 1024 * 1024; // 8 MB cap
+      let bytes = null, contentType = '', origName = '';
+      try {
+        const ct = request.headers.get('Content-Type') || '';
+        if (ct.includes('multipart/form-data')) {
+          const form = await request.formData();
+          const file = form.get('file');
+          if (!file || typeof file === 'string') return jsonError(400, 'No file field in form data.');
+          contentType = file.type || '';
+          origName = file.name || '';
+          bytes = new Uint8Array(await file.arrayBuffer());
+        } else {
+          const body = await request.json();
+          const dataUrl = String(body.dataUrl || '');
+          origName = String(body.filename || '');
+          const m = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+          if (!m) return jsonError(400, 'dataUrl must be a base64 data URI.');
+          contentType = m[1];
+          const bin = atob(m[2]);
+          bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+        }
+      } catch (e) {
+        return jsonError(400, `Could not read image: ${e.message}`);
+      }
+
+      if (!bytes || !bytes.length) return jsonError(400, 'Empty image.');
+      if (bytes.length > MAX_BYTES) return jsonError(413, 'Image too large (max 8 MB).');
+      if (!/^image\/(jpeg|png|gif|webp|avif|svg\+xml)$/i.test(contentType)) {
+        return jsonError(415, 'Unsupported image type. Use JPEG, PNG, GIF, WebP, AVIF or SVG.');
+      }
+
+      const extMap = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/webp': 'webp', 'image/avif': 'avif', 'image/svg+xml': 'svg' };
+      let ext = extMap[contentType.toLowerCase()] || '';
+      if (!ext && origName.includes('.')) ext = origName.split('.').pop().toLowerCase().slice(0, 5);
+      const rand = Math.random().toString(36).slice(2, 10);
+      const ym = new Date().toISOString().slice(0, 7); // YYYY-MM
+      const key = `media/${ym}/${Date.now()}-${rand}${ext ? '.' + ext : ''}`;
+
+      try {
+        await env.MEDIA.put(key, bytes, { httpMetadata: { contentType } });
+      } catch (e) {
+        return jsonError(502, `R2 upload failed: ${e.message}`);
+      }
+
+      const url = `${new URL(request.url).origin}/r2/${key}`;
+      return new Response(JSON.stringify({ ok: true, key, url }), {
+        status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // ── /api/delete-image  POST — remove an object from R2 ────────────────────
+    // Accepts JSON { key } or { url } (any /r2/<key> URL served by this Worker).
+    if (pathname === '/api/delete-image') {
+      if (request.method !== 'POST') return jsonError(405, 'Use POST.');
+      const auth = await requireAuth(request, env);
+      if (auth.error) return auth.error;
+      if (!env || !env.MEDIA) return jsonError(503, 'Image storage not configured.');
+
+      let body;
+      try { body = await request.json(); } catch (_) { return jsonError(400, 'Invalid JSON.'); }
+      let key = String(body.key || '').trim();
+      if (!key && body.url) {
+        const u = String(body.url);
+        const i = u.indexOf('/r2/');
+        if (i !== -1) { try { key = decodeURIComponent(u.slice(i + 4)); } catch (_) { key = u.slice(i + 4); } }
+      }
+      if (!key || !key.startsWith('media/')) return jsonError(400, 'Invalid or missing R2 key.');
+
+      try {
+        await env.MEDIA.delete(key);
+      } catch (e) {
+        return jsonError(502, `R2 delete failed: ${e.message}`);
+      }
+      return new Response(JSON.stringify({ ok: true, key }), {
+        status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
+      });
+    }
+
     // ── Only allow GET for all other routes ──────────────────────────────────
     if (request.method !== 'GET') {
       return jsonError(405, 'Method not allowed. Use GET.');
+    }
+
+    // ── /r2/<key>  GET — serve an image stored in R2 (public, cached) ─────────
+    if (pathname.startsWith('/r2/')) {
+      if (!env || !env.MEDIA) return jsonError(503, 'Image storage not configured.');
+      let key;
+      try { key = decodeURIComponent(pathname.slice(4)); } catch (_) { key = pathname.slice(4); }
+      if (!key || !key.startsWith('media/')) return jsonError(400, 'Invalid image key.');
+      try {
+        const obj = await env.MEDIA.get(key);
+        if (!obj) return jsonError(404, 'Image not found.');
+        const headers = new Headers(CORS);
+        headers.set('Content-Type', (obj.httpMetadata && obj.httpMetadata.contentType) || 'application/octet-stream');
+        headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+        if (obj.httpEtag) headers.set('ETag', obj.httpEtag);
+        return new Response(obj.body, { status: 200, headers });
+      } catch (e) {
+        return jsonError(502, `R2 read failed: ${e.message}`);
+      }
     }
 
     // ── /youtube-live?cid=CHANNEL_ID ─────────────────────────────────────────
