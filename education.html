@@ -6884,9 +6884,11 @@ window.playAudioTranscript = function(btn, base64Text) {
     utterance.onend = () => {
       btn.innerText = 'Play Audio Track';
     };
-    utterance.onerror = () => {
+    utterance.onerror = (event) => {
       btn.innerText = 'Play Audio Track';
-      alert('Error playing audio track.');
+      if (event.error !== 'canceled' && event.error !== 'interrupted') {
+        alert('Error playing audio track: ' + event.error);
+      }
     };
     
     window.speechSynthesis.speak(utterance);
@@ -7057,7 +7059,10 @@ function openMocTestModal() {
     document.getElementById('moc-submit-btn').style.display = 'inline-block';
     const overlay = document.getElementById('moc-modal-overlay');
     overlay.classList.add('active');
-    overlay.style.display = 'flex'; // Force display just in case CSS doesn't apply
+    overlay.style.setProperty('display', 'flex', 'important'); 
+    overlay.style.setProperty('opacity', '1', 'important');
+    overlay.style.setProperty('visibility', 'visible', 'important');
+    overlay.style.setProperty('z-index', '99999', 'important');
     
     // Pick 15 random questions from the bank for the mock test
     _mocQuestions = [];
@@ -7082,6 +7087,19 @@ function openMocTestModal() {
   } catch (e) {
     alert("Error opening MOC test: " + e.message);
     console.error(e);
+    // Fallback visible error in case alert is blocked
+    const errDiv = document.createElement('div');
+    errDiv.style.position = 'fixed';
+    errDiv.style.top = '10px';
+    errDiv.style.left = '50%';
+    errDiv.style.transform = 'translateX(-50%)';
+    errDiv.style.background = 'red';
+    errDiv.style.color = 'white';
+    errDiv.style.padding = '20px';
+    errDiv.style.zIndex = '999999';
+    errDiv.innerText = 'CRITICAL MOC TEST ERROR: ' + e.message;
+    document.body.appendChild(errDiv);
+    setTimeout(() => errDiv.remove(), 10000);
   }
 }
 
