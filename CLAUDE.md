@@ -20,12 +20,13 @@ The `story.html` Stories hub must use **original, Claude-designed cover art** fo
 
 **Asset layout (committed to the repo):**
 - Per-story cover: `stories/<genre>/<slug>.svg` (800×520, framed title plate, genre-appropriate motif). `<slug>` = lowercased title before the `—`, non-alphanumerics → `-`, max 40 chars.
-- Full per-page illustrated stories: `kids/<story-slug>/header.svg` + `pageN.svg` (e.g. `kids/pip-star/`).
+- Full per-page illustrated stories: `kids/<story-slug>/header.svg` + `pageN.svg` (e.g. `kids/pip-star/`), or `stories/kids/<slug>/pageN.svg` for the 8 Kids stories (one illustration interleaved before each paragraph).
 - Brand fallback cover: `stories/_default.svg`.
 
 **Generation tooling (the "design agent"):**
 - `scripts/gen_story_covers.py` — emits all cover SVGs from a per-story spec (palette + motif + title). Add a new entry to `SPECS` to create a new cover, then run it.
 - `scripts/wire_story_covers.py` — rewrites `story.html`: gives every story a top-level `mediaUrl` cover, replaces any inline image `src` with the cover, makes the hero card use `mediaUrl`, and guarantees zero stock-photo URLs remain.
+- `scripts/gen_kids_pages.py` + `scripts/wire_kids_pages.py` — generate per-page picture-book illustrations for the Kids stories and interleave one before each paragraph in the `kids` reading level.
 
 **R2 storage & serving:**
 - Bucket **`vilfintv-story`** (binding `STORY` in `wrangler.screener.toml`). The Worker `/r2/<key>` route serves from `MEDIA` then falls back to `STORY`.
