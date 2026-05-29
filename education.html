@@ -7040,7 +7040,6 @@ function openMocTestModal() {
     if (data && data.quizzes && data.quizzes.length > 0) {
       pool = [...data.quizzes];
     } else {
-      // Generate fallback mock questions if none exist to prevent crashes
       for(let i=0; i<30; i++) {
         pool.push({
           q: 'Fallback Q' + (i+1) + ': What is the meaning of this sentence in N' + _activeJlptLevel + '?',
@@ -7051,7 +7050,6 @@ function openMocTestModal() {
       }
     }
     
-    // Pick 15 random questions from the bank for the mock test
     let questions = [];
     for(let i = 0; i < 15 && pool.length > 0; i++) {
       const rIdx = Math.floor(Math.random() * pool.length);
@@ -7061,7 +7059,6 @@ function openMocTestModal() {
     const times = {5: 90, 4: 115, 3: 140, 2: 155, 1: 170};
     const timeRemaining = (times[_activeJlptLevel] || 90) * 60; 
     
-    // Save to local storage for the popup window to consume
     const testPayload = {
       level: _activeJlptLevel,
       timeRemaining: timeRemaining,
@@ -7070,8 +7067,32 @@ function openMocTestModal() {
     
     localStorage.setItem('moc_test_data', JSON.stringify(testPayload));
     
-    // Open real popup window as requested
-    window.open('moc_test.html', 'JLPT_MOC_TEST', 'width=900,height=800,scrollbars=yes,resizable=yes');
+    // Try to open native popup
+    const popup = window.open('moc_test.html', 'JLPT_MOC_TEST', 'width=900,height=800,scrollbars=yes,resizable=yes');
+    
+    if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+      // Popup was blocked
+      const warning = document.createElement('div');
+      warning.style.position = 'fixed';
+      warning.style.top = '20px';
+      warning.style.left = '50%';
+      warning.style.transform = 'translateX(-50%)';
+      warning.style.background = 'var(--red)';
+      warning.style.color = '#fff';
+      warning.style.padding = '15px 25px';
+      warning.style.borderRadius = '8px';
+      warning.style.zIndex = '999999';
+      warning.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+      warning.style.fontWeight = 'bold';
+      warning.innerHTML = '⚠️ POPUP BLOCKED!<br/><br/>Your browser blocked the MOC Test popup window. Please allow popups for VilfinTV, or <a href="moc_test.html" target="_blank" style="color:var(--gold2); text-decoration:underline;">Click Here to manually open the test</a>.<br/><br/><small style="opacity:0.8">(Click anywhere on this red box to dismiss)</small>';
+      warning.onclick = (e) => {
+        if(e.target.tagName !== 'A') warning.remove();
+      };
+      document.body.appendChild(warning);
+      
+      // Auto-remove after 10s
+      setTimeout(() => { if(document.body.contains(warning)) warning.remove(); }, 10000);
+    }
     
   } catch (e) {
     alert("Error initializing MOC test popup: " + e.message);
