@@ -1,0 +1,63 @@
+name: Sync IPTV Playlists to Cloudflare KV
+
+# ---------------------------------------------------------------------------
+# Pushes M3U playlists into the Cloudflare KV namespace used by worker.js,
+# under the keys `jio_playlist` and `airtel_playlist`.
+#
+# SCOPE NOTE
+# ---------------------------------------------------------------------------
+# This workflow syncs playlists that YOU supply and are entitled to serve
+# (a URL you control, a committed playlist file, or a self-hosted endpoint).
+# It does NOT authenticate to Jio/Airtel mobile endpoints to harvest their
+# authorized stream links — that step is intentionally omitted. Provide your
+# own playlist sources via the secrets/inputs below.
+#
+# Required GitHub repository secrets:
+#   CLOUDFLARE_API_TOKEN   - token with "Workers KV Storage: Edit"
+#   CLOUDFLARE_ACCOUNT_ID  - your Cloudflare account id
+#   IPTV_KV_NAMESPACE_ID   - the KV namespace id bound as IPTV_PLAYLIST_KV
+#   JIO_PLAYLIST_URL       - a playlist source URL you control (optional)
+#   AIRTEL_PLAYLIST_URL    - a playlist source URL you control (optional)
+#
+# Tokens and raw playlists are never written back into git history.
+# ---------------------------------------------------------------------------
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"   # every 6 hours
+  workflow_dispatch:
+    inputs:
+      providers:
+        description: "Comma-separated providers to sync (default: jio,airtel)"
+        required: false
+        default: "jio,airtel"
+
+concurrency:
+  group: iptv-playlist-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install --no-cache-dir requests
+
+      - name: Build and upload playlists to Cloudflare KV
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          IPTV_KV_NAMESPACE_ID: ${{ secrets.IPTV_KV_NAMESPACE_ID }}
+          JIO_PLAYLIST_URL: ${{ secrets.JIO_PLAYLIST_URL }}
+          AIRTEL_PLAYLIST_URL: ${{ secrets.AIRTEL_PLAYLIST_URL }}
+          PROVIDERS: ${{ github.event.inputs.providers || 'jio,airtel' }}
+        run: python scripts/sync_playlists.py

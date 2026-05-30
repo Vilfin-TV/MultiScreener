@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live TV Geo Concepts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#030b1b;
+      --panel:#08152d;
+      --panel2:#0b1e3c;
+      --line:#1a3a68;
+      --text:#e6efff;
+      --muted:#90a8c8;
+      --accent:#5a8dff;
+      --accent2:#9f63ff;
+      --chip:#102b50;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'DM Sans',sans-serif;background:radial-gradient(circle at 15% -10%,#15356b 0,#08152d 42%,#020817 100%);color:var(--text);padding:18px}
+    .wrap{max-width:1500px;margin:0 auto}
+    .h1{font-size:28px;font-weight:800;margin:0 0 6px}
+    .sub{margin:0 0 16px;color:#a5bddc;font-size:14px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(320px,1fr));gap:16px}
+    .card{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:linear-gradient(170deg,#081730,#050f22 70%);box-shadow:0 16px 32px rgba(0,0,0,.35)}
+    .head{padding:10px 12px;border-bottom:1px solid #19355c;display:flex;justify-content:space-between;align-items:center}
+    .k{font-size:11px;color:#84a4d2;font-weight:700;letter-spacing:.7px;text-transform:uppercase}
+    .n{font-size:15px;font-weight:800}
+
+    .panel{height:640px;display:flex;flex-direction:column;padding:10px;gap:8px}
+    .top{display:flex;gap:7px}
+    .input,.btn,.sel{border:1px solid #245086;background:#0b2144;color:#dce9ff;border-radius:10px;padding:9px 11px;font-size:12px}
+    .input{flex:1}
+    .btn{font-weight:700}
+    .geo{flex:1;min-height:0;display:grid;grid-template-columns:38% 62%;gap:8px}
+    .left,.right{min-height:0;border:1px solid #17345a;border-radius:12px;background:#071428;padding:8px}
+    .title{font-size:13px;font-weight:800;margin:0 0 8px}
+    .search{width:100%;padding:8px 10px;border-radius:8px;border:1px solid #1f4778;background:#0c1f3c;color:#d8e6ff;font-size:11px;margin-bottom:8px}
+    .list{overflow:auto;height:100%}
+    .country,.state{padding:8px 9px;border-radius:8px;border:1px solid #18365e;background:#0a1a33;margin-bottom:6px;font-size:12px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+    .country.active,.state.active{background:linear-gradient(90deg,#8e57e8,#6d86ff);border-color:transparent;color:#fff}
+    .statewrap{display:flex;gap:6px;margin-bottom:8px;overflow:auto}
+    .state{margin-bottom:0;white-space:nowrap;font-size:11px;padding:7px 9px}
+    .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .ch{border:1px solid #214871;background:#081b36;border-radius:10px;padding:8px}
+    .logo{height:58px;border-radius:7px;background:#f7f7f7;color:#1d2a43;display:grid;place-items:center;font-weight:800;font-size:24px;margin-bottom:8px}
+    .cn{font-size:12px;font-weight:800;line-height:1.25}
+    .cm{font-size:10px;color:#8fa7c7;margin-top:2px}
+
+    .v2 .geo{grid-template-columns:34% 31% 35%}
+    .v2 .left,.v2 .mid,.v2 .right{min-height:0;border:1px solid #17345a;border-radius:12px;background:#071428;padding:8px}
+    .v2 .mid{overflow:auto}
+    .v2 .right .cards{grid-template-columns:1fr}
+
+    .v3 .panel{background:radial-gradient(circle at top right,#16386b 0,#07152d 40%,#030b1b 100%)}
+    .v3 .left,.v3 .right{background:rgba(9,24,46,.72);backdrop-filter:blur(8px);border-color:#2f5d96}
+    .v3 .country,.v3 .state,.v3 .ch{border-color:#346198;background:rgba(13,35,66,.72)}
+    .v3 .logo{background:linear-gradient(160deg,#ffffff,#d8e4f8)}
+
+    .v4 .geo{display:flex;flex-direction:column}
+    .v4 .left,.v4 .right{height:auto}
+    .v4 .left{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .v4 .left .block{border:1px solid #1d426f;border-radius:10px;background:#081931;padding:8px}
+    .v4 .country{font-size:11px;padding:7px}
+    .v4 .right .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+    @media (max-width:1024px){.grid{grid-template-columns:1fr}.panel{height:720px}}
+    @media (max-width:640px){
+      body{padding:10px}
+      .panel{height:760px}
+      .geo{grid-template-columns:1fr}
+      .right .cards{grid-template-columns:1fr 1fr}
+      .logo{height:52px}
+      .v2 .geo{grid-template-columns:1fr}
+      .v2 .mid{max-height:130px}
+      .v4 .right .cards{grid-template-columns:1fr 1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 class="h1">Live TV Geo-Navigation Concepts</h1>
+    <p class="sub">Focused on fast Country ? State ? Channels flow for panel and mobile.</p>
+
+    <div class="grid">
+      <section class="card v1">
+        <div class="head"><div><div class="k">Concept 1</div><div class="n">Split Directory</div></div></div>
+        <div class="panel">
+          <div class="top"><input class="input" placeholder="Search channel or region"><button class="btn">Default</button></div>
+          <div class="geo">
+            <div class="left"><div class="title">Country</div><input class="search" placeholder="Search country"><div class="list"><div class="country active">Australia</div><div class="country">India</div><div class="country">United States</div><div class="country">United Kingdom</div><div class="country">Canada</div><div class="country">UAE</div></div></div>
+            <div class="right"><div class="title">Channels</div><div class="statewrap"><div class="state active">All States</div><div class="state">NSW</div><div class="state">VIC</div><div class="state">QLD</div></div><div class="cards"><div class="ch"><div class="logo">10</div><div class="cn">10 Bold Sydney</div><div class="cm">News</div></div><div class="ch"><div class="logo">10P</div><div class="cn">10 Peach Sydney</div><div class="cm">Entertainment</div></div><div class="ch"><div class="logo">3AW</div><div class="cn">3AW</div><div class="cm">Talk</div></div><div class="ch"><div class="logo">6PR</div><div class="cn">6PR Perth</div><div class="cm">Talk</div></div></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card v2">
+        <div class="head"><div><div class="k">Concept 2</div><div class="n">Three-Column Pro</div></div></div>
+        <div class="panel">
+          <div class="top"><input class="input" placeholder="Search"><button class="btn">Play</button></div>
+          <div class="geo">
+            <div class="left"><div class="title">Country</div><input class="search" placeholder="Country"><div class="list"><div class="country active">India</div><div class="country">Australia</div><div class="country">Japan</div><div class="country">Germany</div></div></div>
+            <div class="mid"><div class="title">State</div><div class="state active">All India</div><div class="state">Maharashtra</div><div class="state">Tamil Nadu</div><div class="state">Telangana</div><div class="state">Kerala</div><div class="state">Karnataka</div></div>
+            <div class="right"><div class="title">Channels</div><input class="search" placeholder="Search channel"><div class="cards"><div class="ch"><div class="logo">ND</div><div class="cn">NDTV 24x7</div></div><div class="ch"><div class="logo">AT</div><div class="cn">Aaj Tak</div></div><div class="ch"><div class="logo">ABP</div><div class="cn">ABP News</div></div></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card v3">
+        <div class="head"><div><div class="k">Concept 3</div><div class="n">Glass Matrix</div></div></div>
+        <div class="panel">
+          <div class="top"><select class="sel"><option>Country: India</option></select><button class="btn">Filters</button><button class="btn">Default</button></div>
+          <div class="geo">
+            <div class="left"><div class="title">Region Browser</div><input class="search" placeholder="Country or state"><div class="list"><div class="country active">India</div><div class="country">Maharashtra</div><div class="country">Tamil Nadu</div><div class="country">Andhra Pradesh</div><div class="country">Kerala</div></div></div>
+            <div class="right"><div class="title">Channels</div><div class="statewrap"><div class="state active">News</div><div class="state">Sports</div><div class="state">Movies</div><div class="state">Kids</div></div><div class="cards"><div class="ch"><div class="logo">TV9</div><div class="cn">TV9 Bharatvarsh</div><div class="cm">Hindi</div></div><div class="ch"><div class="logo">CN</div><div class="cn">CNN-News18</div><div class="cm">English</div></div><div class="ch"><div class="logo">IN</div><div class="cn">India Today</div><div class="cm">English</div></div><div class="ch"><div class="logo">SUN</div><div class="cn">Sun News</div><div class="cm">Tamil</div></div></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card v4">
+        <div class="head"><div><div class="k">Concept 4</div><div class="n">Mobile Geo Stack</div></div></div>
+        <div class="panel">
+          <div class="top"><input class="input" placeholder="Search channel"><button class="btn">Play</button></div>
+          <div class="geo">
+            <div class="left">
+              <div class="block"><div class="title">Country</div><div class="country active">India</div><div class="country">Australia</div><div class="country">USA</div></div>
+              <div class="block"><div class="title">State</div><div class="country active">All India</div><div class="country">Tamil Nadu</div><div class="country">Maharashtra</div></div>
+            </div>
+            <div class="right"><div class="title">Channels</div><div class="cards"><div class="ch"><div class="logo">W</div><div class="cn">WION</div></div><div class="ch"><div class="logo">RP</div><div class="cn">Republic World</div></div><div class="ch"><div class="logo">ZN</div><div class="cn">Zee News</div></div><div class="ch"><div class="logo">AS</div><div class="cn">Asianet News</div></div></div></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

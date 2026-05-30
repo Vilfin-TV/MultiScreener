@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex,nofollow" />
+<title>Private IPTV Console</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
+<style>
+  :root {
+    --bg: #0f0f12;
+    --surface: #16161e;
+    --surface-2: #1f1f2e;
+    --surface-3: #262638;
+    --accent: #7c4dff;
+    --accent-2: #9b7bff;
+    --accent-soft: rgba(124, 77, 255, 0.16);
+    --text: #f4f4f8;
+    --text-dim: #a7a7bd;
+    --text-faint: #6b6b85;
+    --border: rgba(255, 255, 255, 0.07);
+    --border-strong: rgba(255, 255, 255, 0.14);
+    --danger: #ff5470;
+    --ok: #4ddb8a;
+    --hd: #4ddb8a;
+    --sd: #ffb454;
+    --radius: 14px;
+    --radius-sm: 10px;
+    --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+    --t-fast: 0.16s ease;
+    --t-med: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(124, 77, 255, 0.12), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(124, 77, 255, 0.08), transparent 55%),
+      var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  input, select { font-family: inherit; }
+  a { color: var(--accent-2); }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: #34344a; }
+
+  /* ---------- Screen transitions ---------- */
+  .screen {
+    display: none;
+    animation: fadeUp var(--t-med);
+    min-height: 100vh;
+  }
+  .screen.active { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---------- Shared brand ---------- */
+  .brand {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-weight: 800; letter-spacing: 0.3px; font-size: 18px;
+  }
+  .brand .logo-dot {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent), #4d7dff);
+    display: grid; place-items: center; box-shadow: 0 6px 18px var(--accent-soft);
+  }
+  .brand .logo-dot svg { width: 18px; height: 18px; }
+
+  /* ================= LOGIN ================= */
+  #login-screen { display: none; place-items: center; }
+  #login-screen.active { display: grid; }
+
+  .login-card {
+    width: min(92vw, 400px);
+    background: linear-gradient(180deg, var(--surface-2), var(--surface));
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 38px 34px 32px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(8px);
+  }
+  .login-card .brand { margin-bottom: 6px; }
+  .login-sub { color: var(--text-dim); font-size: 13.5px; margin: 14px 0 26px; line-height: 1.5; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 7px; letter-spacing: 0.4px; text-transform: uppercase; }
+  .field input {
+    width: 100%; padding: 13px 14px; background: var(--bg);
+    border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    color: var(--text); font-size: 14.5px; transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  }
+  .field input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+  .btn-primary {
+    width: 100%; padding: 13px; border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, var(--accent), #6b3dff);
+    color: #fff; font-weight: 700; font-size: 14.5px; letter-spacing: 0.3px;
+    transition: transform var(--t-fast), box-shadow var(--t-fast), opacity var(--t-fast);
+    box-shadow: 0 10px 26px rgba(124, 77, 255, 0.32);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(124, 77, 255, 0.42); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  .form-msg { font-size: 13px; margin-top: 14px; min-height: 18px; text-align: center; }
+  .form-msg.err { color: var(--danger); }
+  .form-msg.ok { color: var(--ok); }
+
+  /* ================= PROVIDER ================= */
+  .topbar {
+    position: sticky; top: 0; z-index: 40;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px clamp(16px, 4vw, 40px);
+    background: rgba(15, 15, 18, 0.82);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar-actions { display: flex; align-items: center; gap: 10px; }
+  .ghost-btn {
+    padding: 9px 16px; border-radius: 10px; font-size: 13px; font-weight: 600;
+    border: 1px solid var(--border-strong); color: var(--text-dim);
+    transition: var(--t-fast);
+  }
+  .ghost-btn:hover { color: var(--text); border-color: var(--accent); background: var(--accent-soft); }
+
+  .provider-wrap { max-width: 1000px; margin: 0 auto; padding: clamp(30px, 7vw, 70px) 20px; }
+  .provider-wrap h1 { font-size: clamp(24px, 4vw, 34px); font-weight: 800; }
+  .provider-wrap p.lead { color: var(--text-dim); margin-top: 10px; font-size: 15px; }
+
+  .provider-grid {
+    margin-top: 42px; display: grid; gap: 22px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+  .provider-card {
+    position: relative; overflow: hidden;
+    background: linear-gradient(170deg, var(--surface-2), var(--surface));
+    border: 1px solid var(--border); border-radius: 20px;
+    padding: 30px 28px; text-align: left;
+    transition: transform var(--t-med), border-color var(--t-med), box-shadow var(--t-med);
+  }
+  .provider-card::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(400px 200px at 100% 0%, var(--glow, rgba(124,77,255,0.18)), transparent 70%);
+    opacity: 0; transition: opacity var(--t-med);
+  }
+  .provider-card:hover { transform: translateY(-6px); border-color: var(--border-strong); box-shadow: var(--shadow); }
+  .provider-card:hover::after { opacity: 1; }
+  .provider-badge {
+    width: 58px; height: 58px; border-radius: 16px; display: grid; place-items: center;
+    font-weight: 800; font-size: 22px; color: #fff; margin-bottom: 20px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.3);
+  }
+  .provider-card h3 { font-size: 20px; font-weight: 700; }
+  .provider-card .pc-sub { color: var(--text-dim); font-size: 13.5px; margin-top: 6px; }
+  .provider-card .pc-go { margin-top: 20px; font-size: 13px; font-weight: 700; color: var(--accent-2); display: inline-flex; align-items: center; gap: 6px; }
+  .pc-jio .provider-badge { background: linear-gradient(135deg, #1a73e8, #0b3d91); }
+  .pc-jio { --glow: rgba(26,115,232,0.22); }
+  .pc-airtel .provider-badge { background: linear-gradient(135deg, #ff2e2e, #b30000); }
+  .pc-airtel { --glow: rgba(255,46,46,0.2); }
+
+  /* ================= PLAYER / DASHBOARD ================= */
+  .dash { max-width: 1500px; margin: 0 auto; padding: clamp(14px, 3vw, 26px) clamp(14px, 3vw, 32px) 60px; }
+
+  /* Player panel (collapsible) */
+  .player-panel {
+    display: grid; grid-template-columns: 1.7fr 1fr; gap: 20px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 18px; padding: 16px; margin-bottom: 24px;
+    max-height: 0; opacity: 0; overflow: hidden; padding-top: 0; padding-bottom: 0;
+    transition: max-height var(--t-med), opacity var(--t-med), padding var(--t-med);
+  }
+  .player-panel.show { max-height: 900px; opacity: 1; padding-top: 16px; padding-bottom: 16px; }
+
+  .video-shell { position: relative; background: #000; border-radius: 14px; overflow: hidden; aspect-ratio: 16 / 9; }
+  .video-shell video { width: 100%; height: 100%; object-fit: contain; background: #000; display: block; }
+  .video-loading {
+    position: absolute; inset: 0; display: none; place-items: center;
+    background: rgba(0,0,0,0.5); color: var(--text-dim); font-size: 13px; z-index: 3;
+  }
+  .video-loading.show { display: grid; }
+  .spinner {
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.15); border-top-color: var(--accent);
+    animation: spin 0.8s linear infinite; margin-bottom: 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .video-loading .vl-inner { display: grid; place-items: center; }
+
+  /* Custom controls */
+  .controls {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px 12px;
+    background: linear-gradient(to top, rgba(0,0,0,0.82), rgba(0,0,0,0));
+    transition: opacity var(--t-fast);
+  }
+  .ctrl-btn {
+    width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center;
+    color: #fff; transition: background var(--t-fast), transform var(--t-fast);
+  }
+  .ctrl-btn:hover { background: rgba(255,255,255,0.14); }
+  .ctrl-btn:active { transform: scale(0.92); }
+  .ctrl-btn svg { width: 20px; height: 20px; }
+  .ctrl-btn.play svg { width: 24px; height: 24px; }
+  .vol-group { display: flex; align-items: center; gap: 8px; }
+  .vol-slider {
+    -webkit-appearance: none; appearance: none; width: 92px; height: 4px; border-radius: 4px;
+    background: rgba(255,255,255,0.25); cursor: pointer; outline: none;
+  }
+  .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .vol-slider::-moz-range-thumb { width: 14px; height: 14px; border: none; border-radius: 50%; background: var(--accent); }
+  .ctrl-spacer { flex: 1; }
+  .now-live {
+    display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700;
+    color: #fff; padding: 5px 10px; border-radius: 8px; background: rgba(255,255,255,0.1);
+  }
+  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 0 rgba(255,84,112,0.6); animation: pulse 1.6s infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255,84,112,0.5); } 70% { box-shadow: 0 0 0 8px rgba(255,84,112,0); } 100% { box-shadow: 0 0 0 0 rgba(255,84,112,0); } }
+
+  /* Now playing side info */
+  .now-info { display: flex; flex-direction: column; }
+  .now-info .ni-head { display: flex; align-items: center; gap: 14px; padding: 6px 4px 16px; border-bottom: 1px solid var(--border); }
+  .now-info .ni-logo { width: 56px; height: 56px; border-radius: 50%; background: var(--surface-3); object-fit: cover; flex-shrink: 0; border: 1px solid var(--border-strong); }
+  .now-info .ni-name { font-size: 18px; font-weight: 700; }
+  .now-info .ni-cat { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+  .ni-meta { margin-top: 16px; display: grid; gap: 10px; font-size: 13px; }
+  .ni-meta .row { display: flex; justify-content: space-between; color: var(--text-dim); }
+  .ni-meta .row b { color: var(--text); font-weight: 600; }
+  .ni-hint { margin-top: auto; padding-top: 14px; font-size: 12px; color: var(--text-faint); line-height: 1.5; }
+
+  /* Filter bar */
+  .filterbar {
+    display: grid; gap: 12px; margin-bottom: 22px;
+    grid-template-columns: minmax(200px, 1.6fr) repeat(2, minmax(140px, 1fr)) auto;
+    align-items: center;
+  }
+  .search-wrap { position: relative; }
+  .search-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-faint); pointer-events: none; }
+  .search-wrap input {
+    width: 100%; padding: 12px 14px 12px 42px; background: var(--surface);
+    border: 1px solid var(--border-strong); border-radius: 11px; color: var(--text); font-size: 14px;
+    transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  }
+  .search-wrap input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .sel {
+    padding: 12px 36px 12px 14px; background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a7a7bd' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 13px center;
+    border: 1px solid var(--border-strong); border-radius: 11px; color: var(--text);
+    font-size: 14px; appearance: none; cursor: pointer; transition: border-color var(--t-fast);
+  }
+  .sel:focus { outline: none; border-color: var(--accent); }
+  .count-pill { font-size: 12.5px; color: var(--text-dim); white-space: nowrap; justify-self: end; }
+  .count-pill b { color: var(--text); }
+
+  /* Channel grid */
+  .channel-grid {
+    display: grid; gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+  .ch-card {
+    position: relative; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 12px 14px; text-align: center;
+    transition: transform var(--t-fast), border-color var(--t-fast), background var(--t-fast);
+    animation: cardIn var(--t-med) backwards;
+  }
+  @keyframes cardIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+  .ch-card:hover { transform: translateY(-4px); border-color: var(--accent); background: var(--surface-2); }
+  .ch-card.playing { border-color: var(--accent); background: var(--accent-soft); }
+  .qbadge {
+    position: absolute; top: 9px; right: 9px; font-size: 10px; font-weight: 800;
+    padding: 3px 7px; border-radius: 6px; letter-spacing: 0.5px; color: #06121e;
+  }
+  .qbadge.HD { background: var(--hd); }
+  .qbadge.SD { background: var(--sd); }
+  .ch-logo {
+    width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 12px;
+    background: var(--surface-3); object-fit: cover; border: 1px solid var(--border-strong);
+    display: block;
+  }
+  .ch-name { font-size: 13px; font-weight: 600; line-height: 1.35; color: var(--text);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 35px; }
+  .ch-cat { font-size: 11px; color: var(--text-faint); margin-top: 4px; }
+
+  .empty-state { text-align: center; padding: 70px 20px; color: var(--text-faint); }
+  .empty-state svg { width: 46px; height: 46px; margin-bottom: 14px; opacity: 0.5; }
+
+  /* Toast */
+  .toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(20px);
+    background: var(--surface-3); color: var(--text); padding: 12px 20px; border-radius: 12px;
+    font-size: 13.5px; border: 1px solid var(--border-strong); box-shadow: var(--shadow);
+    opacity: 0; pointer-events: none; transition: var(--t-med); z-index: 90; max-width: 90vw;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.err { border-color: var(--danger); }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .player-panel { grid-template-columns: 1fr; }
+    .player-panel.show { max-height: 1400px; }
+    .now-info { display: none; }
+    .now-info.mobile-show { display: flex; }
+  }
+  @media (max-width: 620px) {
+    .filterbar { grid-template-columns: 1fr 1fr; }
+    .search-wrap { grid-column: 1 / -1; }
+    .count-pill { grid-column: 1 / -1; justify-self: start; }
+    .channel-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+    .ch-logo { width: 54px; height: 54px; }
+    .vol-slider { width: 64px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<section id="login-screen" class="screen active">
+  <form class="login-card" id="login-form" autocomplete="off">
+    <div class="brand">
+      <span class="logo-dot">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </span>
+      IPTV Console
+    </div>
+    <p class="login-sub">Private streaming dashboard. Sign in with your console credentials to continue.</p>
+
+    <div class="field">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" required autocomplete="username" placeholder="Enter username" />
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter password" />
+    </div>
+
+    <button type="submit" class="btn-primary" id="login-btn">Sign In</button>
+    <div class="form-msg" id="login-msg"></div>
+  </form>
+</section>
+
+<!-- ============ PROVIDER SCREEN ============ -->
+<section id="provider-screen" class="screen">
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo-dot">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </span>
+      IPTV Console
+    </div>
+    <div class="topbar-actions">
+      <button class="ghost-btn" data-logout>Sign out</button>
+    </div>
+  </header>
+
+  <div class="provider-wrap">
+    <h1>Choose a provider</h1>
+    <p class="lead">Select a source to load its channel lineup.</p>
+
+    <div class="provider-grid">
+      <button class="provider-card pc-jio" data-provider="jio">
+        <div class="provider-badge">J</div>
+        <h3>Jio IPTV</h3>
+        <div class="pc-sub">Load the Jio channel lineup</div>
+        <span class="pc-go">Open lineup
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </span>
+      </button>
+
+      <button class="provider-card pc-airtel" data-provider="airtel">
+        <div class="provider-badge">A</div>
+        <h3>Airtel IPTV</h3>
+        <div class="pc-sub">Load the Airtel channel lineup</div>
+        <span class="pc-go">Open lineup
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PLAYER / DASHBOARD SCREEN ============ -->
+<section id="player-screen" class="screen">
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo-dot">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </span>
+      <span id="dash-provider-name">IPTV Console</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="ghost-btn" data-back>Providers</button>
+      <button class="ghost-btn" data-logout>Sign out</button>
+    </div>
+  </header>
+
+  <div class="dash">
+    <!-- Player panel -->
+    <div class="player-panel" id="player-panel">
+      <div class="video-shell" id="video-shell">
+        <video id="video" playsinline></video>
+        <div class="video-loading" id="video-loading">
+          <div class="vl-inner"><div class="spinner"></div><span>Loading stream…</span></div>
+        </div>
+        <div class="controls" id="controls">
+          <button class="ctrl-btn" id="btn-prev" title="Previous channel" aria-label="Previous channel">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM9.5 12l8.5 6V6z"/></svg>
+          </button>
+          <button class="ctrl-btn play" id="btn-play" title="Play / Pause" aria-label="Play or pause">
+            <svg id="icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <svg id="icon-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+          </button>
+          <button class="ctrl-btn" id="btn-next" title="Next channel" aria-label="Next channel">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg>
+          </button>
+          <div class="vol-group">
+            <button class="ctrl-btn" id="btn-mute" title="Mute" aria-label="Mute">
+              <svg id="icon-vol" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>
+              <svg id="icon-mute" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M3 9v6h4l5 5V4L7 9zm13.7-1.3-1.4 1.4L17 11l-1.7 1.9 1.4 1.4L18.4 12l1.7 1.7 1.4-1.4L19.8 10.6 21.5 8.7l-1.4-1.4L18.4 9z"/></svg>
+            </button>
+            <input type="range" class="vol-slider" id="vol-slider" min="0" max="1" step="0.01" value="1" aria-label="Volume" />
+          </div>
+          <div class="ctrl-spacer"></div>
+          <span class="now-live"><span class="live-dot"></span>LIVE</span>
+          <button class="ctrl-btn" id="btn-fs" title="Fullscreen" aria-label="Fullscreen">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7zM5 10h2V7h3V5H5zm12 7h-3v2h5v-5h-2zM14 5v2h3v3h2V5z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <aside class="now-info" id="now-info">
+        <div class="ni-head">
+          <img class="ni-logo" id="ni-logo" alt="" />
+          <div>
+            <div class="ni-name" id="ni-name">—</div>
+            <div class="ni-cat" id="ni-cat"></div>
+          </div>
+        </div>
+        <div class="ni-meta">
+          <div class="row"><span>Quality</span><b id="ni-quality">—</b></div>
+          <div class="row"><span>Category</span><b id="ni-category">—</b></div>
+          <div class="row"><span>Language</span><b id="ni-language">—</b></div>
+          <div class="row"><span>Position</span><b id="ni-position">—</b></div>
+        </div>
+        <div class="ni-hint">Use the Previous / Next controls to skip through the currently filtered list.</div>
+      </aside>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filterbar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search" placeholder="Search channels…" autocomplete="off" />
+      </div>
+      <select class="sel" id="filter-category"><option value="">All Categories</option></select>
+      <select class="sel" id="filter-language"><option value="">All Languages</option></select>
+      <span class="count-pill"><b id="ch-count">0</b> channels</span>
+    </div>
+
+    <!-- Channel grid -->
+    <div class="channel-grid" id="channel-grid"></div>
+    <div class="empty-state" id="empty-state" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
+      <div>No channels match your filters.</div>
+    </div>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Config & state ---------------- */
+  var API = {
+    login: "/api/login",
+    playlist: function (p) { return "/api/playlist?provider=" + encodeURIComponent(p); },
+    stream: function (url, token) {
+      return "/api/stream?token=" + encodeURIComponent(token) + "&url=" + encodeURIComponent(url);
+    }
+  };
+  var TOKEN_KEY = "iptv_token";
+
+  var state = {
+    token: sessionStorage.getItem(TOKEN_KEY) || null,
+    provider: null,
+    channels: [],     // full list for provider
+    filtered: [],     // current filtered view
+    currentIndex: -1, // index into filtered
+    hls: null
+  };
+
+  /* ---------------- DOM helpers ---------------- */
+  var $ = function (id) { return document.getElementById(id); };
+  function show(screenId) {
+    ["login-screen", "provider-screen", "player-screen"].forEach(function (s) {
+      $(s).classList.toggle("active", s === screenId);
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  var toastTimer;
+  function toast(msg, isErr) {
+    var t = $("toast");
+    t.textContent = msg;
+    t.classList.toggle("err", !!isErr);
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove("show"); }, 3200);
+  }
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  /* ---------------- Auth ---------------- */
+  $("login-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var btn = $("login-btn"), msg = $("login-msg");
+    var username = $("username").value.trim();
+    var password = $("password").value;
+    if (!username || !password) { msg.className = "form-msg err"; msg.textContent = "Enter username and password."; return; }
+
+    btn.disabled = true; btn.textContent = "Signing in…";
+    msg.className = "form-msg"; msg.textContent = "";
+
+    fetch(API.login, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: username, password: password })
+    })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (res) {
+        if (!res.ok || !res.d.token) {
+          throw new Error(res.d && res.d.error ? res.d.error : "Invalid credentials");
+        }
+        state.token = res.d.token;
+        sessionStorage.setItem(TOKEN_KEY, state.token);
+        msg.className = "form-msg ok"; msg.textContent = "Welcome back.";
+        $("password").value = "";
+        setTimeout(function () { show("provider-screen"); }, 350);
+      })
+      .catch(function (err) {
+        msg.className = "form-msg err";
+        msg.textContent = err.message || "Sign in failed.";
+      })
+      .finally(function () { btn.disabled = false; btn.textContent = "Sign In"; });
+  });
+
+  function logout() {
+    stopPlayback();
+    state.token = null;
+    state.channels = []; state.filtered = []; state.currentIndex = -1;
+    sessionStorage.removeItem(TOKEN_KEY);
+    show("login-screen");
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("[data-logout]"), function (b) {
+    b.addEventListener("click", logout);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-back]"), function (b) {
+    b.addEventListener("click", function () { stopPlayback(); show("provider-screen"); });
+  });
+
+  /* ---------------- Provider selection ---------------- */
+  Array.prototype.forEach.call(document.querySelectorAll(".provider-card"), function (card) {
+    card.addEventListener("click", function () { loadProvider(card.getAttribute("data-provider")); });
+  });
+
+  function loadProvider(provider) {
+    if (!state.token) { logout(); return; }
+    state.provider = provider;
+    $("dash-provider-name").textContent = (provider === "jio" ? "Jio IPTV" : provider === "airtel" ? "Airtel IPTV" : "IPTV Console");
+    show("player-screen");
+    $("channel-grid").innerHTML = "";
+    $("empty-state").style.display = "none";
+    $("ch-count").textContent = "…";
+
+    fetch(API.playlist(provider), { headers: { "Authorization": "Bearer " + state.token } })
+      .then(function (r) {
+        if (r.status === 401) { throw new Error("AUTH"); }
+        return r.json().then(function (d) { return { ok: r.ok, d: d }; });
+      })
+      .then(function (res) {
+        if (!res.ok) { throw new Error(res.d && res.d.error ? res.d.error : "Failed to load playlist"); }
+        var list = Array.isArray(res.d) ? res.d : (res.d.channels || []);
+        state.channels = list.map(normalizeChannel);
+        buildFilterOptions();
+        applyFilters();
+        if (!state.channels.length) toast("Playlist is empty for this provider.");
+      })
+      .catch(function (err) {
+        if (err.message === "AUTH") { toast("Session expired. Please sign in again.", true); logout(); return; }
+        toast(err.message || "Could not load channels.", true);
+        $("ch-count").textContent = "0";
+        renderGrid();
+      });
+  }
+
+  function normalizeChannel(c) {
+    var q = (c.quality || "").toString().toUpperCase();
+    if (q !== "HD" && q !== "SD") {
+      q = /\bHD\b|FHD|1080|720/i.test((c.name || "") + " " + (c.url || "")) ? "HD" : "SD";
+    }
+    return {
+      name: c.name || "Unknown channel",
+      logo: c.logo || "",
+      category: c.category || "General",
+      language: c.language || c.lang || "—",
+      url: c.url || "",
+      quality: q
+    };
+  }
+
+  /* ---------------- Filters ---------------- */
+  function buildFilterOptions() {
+    var cats = {}, langs = {};
+    state.channels.forEach(function (c) {
+      if (c.category) cats[c.category] = true;
+      if (c.language && c.language !== "—") langs[c.language] = true;
+    });
+    fillSelect($("filter-category"), Object.keys(cats).sort(), "All Categories");
+    fillSelect($("filter-language"), Object.keys(langs).sort(), "All Languages");
+  }
+  function fillSelect(sel, values, allLabel) {
+    sel.innerHTML = '<option value="">' + allLabel + "</option>";
+    values.forEach(function (v) {
+      var o = document.createElement("option");
+      o.value = v; o.textContent = v;
+      sel.appendChild(o);
+    });
+  }
+
+  function applyFilters() {
+    var q = $("search").value.trim().toLowerCase();
+    var cat = $("filter-category").value;
+    var lang = $("filter-language").value;
+    state.filtered = state.channels.filter(function (c) {
+      if (cat && c.category !== cat) return false;
+      if (lang && c.language !== lang) return false;
+      if (q && c.name.toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    });
+    renderGrid();
+  }
+
+  var searchTimer;
+  $("search").addEventListener("input", function () {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(applyFilters, 120);
+  });
+  $("filter-category").addEventListener("change", applyFilters);
+  $("filter-language").addEventListener("change", applyFilters);
+
+  /* ---------------- Grid render ---------------- */
+  function renderGrid() {
+    var grid = $("channel-grid");
+    var empty = $("empty-state");
+    $("ch-count").textContent = state.filtered.length;
+
+    if (!state.filtered.length) {
+      grid.innerHTML = "";
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+
+    var html = state.filtered.map(function (c, i) {
+      var playing = (state.currentChannel && c.url === state.currentChannel.url) ? " playing" : "";
+      var logo = c.logo
+        ? '<img class="ch-logo" loading="lazy" src="' + escapeHtml(c.logo) + '" alt="" onerror="this.style.visibility=\'hidden\'" />'
+        : '<div class="ch-logo"></div>';
+      return '' +
+        '<button class="ch-card' + playing + '" data-idx="' + i + '" style="animation-delay:' + Math.min(i * 12, 360) + 'ms">' +
+          '<span class="qbadge ' + c.quality + '">' + c.quality + '</span>' +
+          logo +
+          '<div class="ch-name">' + escapeHtml(c.name) + '</div>' +
+          '<div class="ch-cat">' + escapeHtml(c.category) + '</div>' +
+        '</button>';
+    }).join("");
+    grid.innerHTML = html;
+
+    Array.prototype.forEach.call(grid.querySelectorAll(".ch-card"), function (card) {
+      card.addEventListener("click", function () {
+        playIndex(parseInt(card.getAttribute("data-idx"), 10));
+      });
+    });
+  }
+
+  /* ---------------- Playback ---------------- */
+  var video = $("video");
+
+  function playIndex(idx) {
+    if (idx < 0 || idx >= state.filtered.length) return;
+    state.currentIndex = idx;
+    var ch = state.filtered[idx];
+    state.currentChannel = ch;
+    openPlayer(ch);
+    renderGrid(); // refresh "playing" highlight
+  }
+
+  function openPlayer(ch) {
+    $("player-panel").classList.add("show");
+    $("now-info").classList.add("mobile-show");
+    // Side info
+    $("ni-name").textContent = ch.name;
+    $("ni-cat").textContent = ch.category + (ch.language && ch.language !== "—" ? " · " + ch.language : "");
+    $("ni-quality").textContent = ch.quality;
+    $("ni-category").textContent = ch.category;
+    $("ni-language").textContent = ch.language;
+    $("ni-position").textContent = (state.currentIndex + 1) + " / " + state.filtered.length;
+    var nl = $("ni-logo");
+    if (ch.logo) { nl.src = ch.logo; nl.style.visibility = "visible"; } else { nl.style.visibility = "hidden"; }
+
+    loadStream(ch.url);
+    $("player-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function loadStream(rawUrl) {
+    if (!rawUrl) { toast("This channel has no stream URL.", true); return; }
+    var src = API.stream(rawUrl, state.token || "");
+    setLoading(true);
+    stopHls();
+
+    if (window.Hls && window.Hls.isSupported()) {
+      var hls = new window.Hls({ maxBufferLength: 30, lowLatencyMode: true });
+      state.hls = hls;
+      hls.loadSource(src);
+      hls.attachMedia(video);
+      hls.on(window.Hls.Events.MANIFEST_PARSED, function () { tryPlay(); });
+      hls.on(window.Hls.Events.ERROR, function (evt, data) {
+        if (data && data.fatal) {
+          setLoading(false);
+          toast("Stream error: " + (data.details || "playback failed"), true);
+          try { hls.destroy(); } catch (e) {}
+        }
+      });
+    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = src;
+      video.addEventListener("loadedmetadata", tryPlay, { once: true });
+    } else {
+      setLoading(false);
+      toast("HLS is not supported in this browser.", true);
+    }
+  }
+
+  function tryPlay() {
+    setLoading(false);
+    var p = video.play();
+    if (p && p.catch) { p.catch(function () { setPlayIcon(false); }); }
+  }
+  function setLoading(on) { $("video-loading").classList.toggle("show", on); }
+
+  function stopHls() {
+    if (state.hls) { try { state.hls.destroy(); } catch (e) {} state.hls = null; }
+  }
+  function stopPlayback() {
+    stopHls();
+    try { video.pause(); video.removeAttribute("src"); video.load(); } catch (e) {}
+    $("player-panel").classList.remove("show");
+    state.currentChannel = null;
+  }
+
+  /* ---------------- Custom controls ---------------- */
+  function setPlayIcon(playing) {
+    $("icon-play").style.display = playing ? "none" : "block";
+    $("icon-pause").style.display = playing ? "block" : "none";
+  }
+  video.addEventListener("play", function () { setPlayIcon(true); });
+  video.addEventListener("pause", function () { setPlayIcon(false); });
+  video.addEventListener("waiting", function () { setLoading(true); });
+  video.addEventListener("playing", function () { setLoading(false); });
+
+  $("btn-play").addEventListener("click", function () {
+    if (video.paused) { video.play().catch(function () {}); } else { video.pause(); }
+  });
+  $("btn-prev").addEventListener("click", function () {
+    if (state.currentIndex > 0) playIndex(state.currentIndex - 1);
+    else toast("Already at the first channel.");
+  });
+  $("btn-next").addEventListener("click", function () {
+    if (state.currentIndex < state.filtered.length - 1) playIndex(state.currentIndex + 1);
+    else toast("Already at the last channel.");
+  });
+
+  var lastVol = 1;
+  $("vol-slider").addEventListener("input", function () {
+    video.volume = parseFloat(this.value);
+    video.muted = video.volume === 0;
+    updateMuteIcon();
+  });
+  $("btn-mute").addEventListener("click", function () {
+    if (video.muted || video.volume === 0) {
+      video.muted = false;
+      video.volume = lastVol > 0 ? lastVol : 1;
+      $("vol-slider").value = video.volume;
+    } else {
+      lastVol = video.volume;
+      video.muted = true;
+      $("vol-slider").value = 0;
+    }
+    updateMuteIcon();
+  });
+  function updateMuteIcon() {
+    var muted = video.muted || video.volume === 0;
+    $("icon-vol").style.display = muted ? "none" : "block";
+    $("icon-mute").style.display = muted ? "block" : "none";
+  }
+
+  $("btn-fs").addEventListener("click", function () {
+    var shell = $("video-shell");
+    if (!document.fullscreenElement) {
+      (shell.requestFullscreen || shell.webkitRequestFullscreen || function () {
+        if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+      }).call(shell);
+    } else {
+      (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    }
+  });
+
+  // Keyboard shortcuts when player is open
+  document.addEventListener("keydown", function (e) {
+    if (!$("player-screen").classList.contains("active")) return;
+    if (/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
+    if (e.key === " " || e.key === "k") { e.preventDefault(); $("btn-play").click(); }
+    else if (e.key === "ArrowRight" || e.key === "n") { $("btn-next").click(); }
+    else if (e.key === "ArrowLeft" || e.key === "p") { $("btn-prev").click(); }
+    else if (e.key === "m") { $("btn-mute").click(); }
+    else if (e.key === "f") { $("btn-fs").click(); }
+  });
+
+  /* ---------------- Boot ---------------- */
+  if (state.token) { show("provider-screen"); } else { show("login-screen"); }
+})();
+</script>
+</body>
+</html>

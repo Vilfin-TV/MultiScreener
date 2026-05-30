@@ -1,0 +1,33 @@
+# wrangler config for the Private IPTV Console worker (worker.js)
+#
+# Deploy:   wrangler deploy --config wrangler.iptv.toml
+# Secrets:  wrangler secret put IPTV_SECRET_USER  --config wrangler.iptv.toml
+#           wrangler secret put IPTV_SECRET_PASS  --config wrangler.iptv.toml
+#           wrangler secret put IPTV_TOKEN_SECRET --config wrangler.iptv.toml
+#
+# Create the KV namespace and paste its id below:
+#           wrangler kv namespace create IPTV_PLAYLIST_KV --config wrangler.iptv.toml
+
+name = "page-iptv"
+main = "iptv-worker.js"
+compatibility_date = "2024-11-01"
+
+# --- Static assets -----------------------------------------------------------
+# iptv.html is deployed from ./public as a Workers static asset.
+#   - GET /iptv.html  -> served directly by the asset layer
+#   - GET /           -> falls through to worker.js, which serves /iptv.html
+#                        via the ASSETS binding (see serveHtml() in worker.js)
+#   - GET /api/*      -> no matching asset, so worker.js handles it
+# Only public, client-safe files live in ./public â€” worker.js, scripts, and
+# secrets stay outside it and are never uploaded.
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+# Bind the KV namespace that holds "{provider}_playlist" values.
+[[kv_namespaces]]
+binding = "IPTV_PLAYLIST_KV"
+id = "25437ace56a442c69fb435cd97ae51cc"
+
+# IPTV_SECRET_USER / IPTV_SECRET_PASS / IPTV_TOKEN_SECRET are set via
+# `wrangler secret put` â€” never commit them here.

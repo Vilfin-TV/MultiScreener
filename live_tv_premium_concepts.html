@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live TV Premium Concepts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#020817;
+      --navy:#06142a;
+      --panel:#081a33;
+      --panel-2:#0a1f3f;
+      --line:#1b3b66;
+      --line-soft:#143157;
+      --text:#e7eefb;
+      --muted:#8da7ca;
+      --accent:#2f6bff;
+      --accent-2:#19b8ff;
+      --ok:#22c55e;
+      --gold:#f6c453;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:'DM Sans',sans-serif;
+      background:radial-gradient(circle at 18% -4%,#163467 0%,#07162f 42%,#020817 100%);
+      color:var(--text);
+      min-height:100vh;
+      padding:20px;
+    }
+    .wrap{max-width:1500px;margin:0 auto}
+    .title{font-size:30px;font-weight:800;letter-spacing:.2px;margin:0 0 8px}
+    .sub{margin:0 0 18px;color:#a7bddc;font-size:14px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(290px,1fr));gap:18px}
+    .card{border:1px solid var(--line);border-radius:18px;background:linear-gradient(165deg,#07152b,#050f22 65%);box-shadow:0 18px 38px rgba(0,0,0,.4);overflow:hidden}
+    .card-h{padding:12px 14px;border-bottom:1px solid var(--line-soft);display:flex;justify-content:space-between;align-items:center}
+    .badge{font-size:11px;font-weight:700;letter-spacing:.6px;color:#82a4d4;text-transform:uppercase}
+    .name{font-size:15px;font-weight:800}
+
+    .panel{padding:10px;height:640px;display:flex;flex-direction:column;gap:8px}
+    .row{display:flex;gap:8px}
+    .btn,.input,.select,.chip,.item{border:1px solid transparent}
+    .input,.select{background:#091c37;color:#dbe8ff;border-color:#1c3d69;border-radius:10px;padding:10px 12px;font-size:12px}
+    .input{flex:1}
+    .btn{background:#123667;color:#e7f0ff;border-color:#24508a;border-radius:10px;padding:10px 12px;font-weight:700;font-size:12px}
+    .chips{display:flex;gap:6px;overflow:auto;padding-bottom:2px}
+    .chip{white-space:nowrap;padding:8px 11px;border-radius:999px;background:#0b2242;border-color:#214979;color:#d2e6ff;font-size:11px;font-weight:700}
+    .list{flex:1;min-height:0;overflow:auto;padding-right:4px}
+    .item{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:10px;padding:10px 9px;border-radius:11px;border-color:#15335b;background:#07172f;margin-bottom:8px}
+    .num{height:26px;width:26px;border-radius:8px;display:grid;place-items:center;font-size:11px;font-weight:800;background:#2a5dff;color:white}
+    .nm{font-weight:700;font-size:14px}
+    .meta{font-size:10px;color:#87a2c7;margin-top:2px}
+    .tag{font-size:10px;padding:5px 7px;border-radius:999px;background:#0e2a50;border:1px solid #275285;color:#a9c7ef;font-weight:700}
+
+    .v2 .panel{background:linear-gradient(180deg,#061428 0%,#020b19 100%)}
+    .v2 .input,.v2 .select{border-radius:6px;background:#081931}
+    .v2 .btn{border-radius:6px;background:#1650cf}
+    .v2 .chip{background:#0c1e37;border-color:#2a5c98;border-radius:8px}
+    .v2 .item{border-radius:6px;background:#061325;border-color:#1a365d}
+
+    .v3 .panel{background:radial-gradient(circle at top right,#13315e 0%,#06152c 34%,#040c1b 100%)}
+    .v3 .input,.v3 .select{background:rgba(10,30,58,.8);backdrop-filter:blur(8px);border-color:#335f9b;border-radius:12px}
+    .v3 .btn{background:linear-gradient(135deg,#2c63ff,#1497ff);border:none;border-radius:12px}
+    .v3 .chip{background:rgba(17,53,98,.75);border-color:#3b72b8}
+    .v3 .item{background:linear-gradient(140deg,#0a223f,#06162d);border-color:#2a4d79;border-radius:14px;box-shadow:0 8px 18px rgba(0,0,0,.24)}
+
+    .v4 .panel{background:#040d1d}
+    .v4 .row.top{display:grid;grid-template-columns:1fr auto auto;gap:6px}
+    .v4 .select{grid-column:1 / 2}
+    .v4 .chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;overflow:visible}
+    .v4 .chip{text-align:center;border-radius:10px;padding:9px 8px}
+    .v4 .item{grid-template-columns:28px 1fr;background:#051124;border-color:#1a3a64;border-radius:10px}
+    .v4 .tag{display:none}
+
+    @media (max-width:1000px){
+      .grid{grid-template-columns:1fr}
+      .panel{height:560px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 class="title">Live TV Premium Concepts</h1>
+    <p class="sub">Institutional navy UX aligned for VilfinTV. Each concept keeps fast country, state, channel, and category discovery.</p>
+
+    <div class="grid">
+      <section class="card v1">
+        <div class="card-h"><div><div class="badge">Concept 1</div><div class="name">Command Deck</div></div><div class="tag">Desktop-first</div></div>
+        <div class="panel">
+          <div class="row top"><select class="select"><option>All Countries</option></select><button class="btn">Default</button></div>
+          <div class="row"><input class="input" placeholder="Search channels, state, category"/><button class="btn">Play</button></div>
+          <div class="chips"><button class="chip">Favorites</button><button class="chip">India HD</button><button class="chip">IN All India</button><button class="chip">News</button><button class="chip">Sports</button><button class="chip">Movies</button></div>
+          <div class="list">
+            <div class="item"><div class="num">1</div><div><div class="nm">WION</div><div class="meta">IN · English · News</div></div><div class="tag">Live</div></div>
+            <div class="item"><div class="num">2</div><div><div class="nm">NDTV 24x7</div><div class="meta">IN · English · News</div></div><div class="tag">Live</div></div>
+            <div class="item"><div class="num">3</div><div><div class="nm">Republic World</div><div class="meta">IN · English · News</div></div><div class="tag">Live</div></div>
+            <div class="item"><div class="num">4</div><div><div class="nm">Aaj Tak</div><div class="meta">IN · Hindi · News</div></div><div class="tag">Live</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card v2">
+        <div class="card-h"><div><div class="badge">Concept 2</div><div class="name">Exchange Terminal</div></div><div class="tag">Dense + Fast</div></div>
+        <div class="panel">
+          <div class="row top"><select class="select"><option>All Countries</option></select><button class="btn">Default</button></div>
+          <div class="row"><input class="input" placeholder="Search channels, state, category"/><button class="btn">Play</button></div>
+          <div class="chips"><button class="chip">Favorites</button><button class="chip">India HD</button><button class="chip">Hindi</button><button class="chip">Tamil</button><button class="chip">Business</button><button class="chip">World</button></div>
+          <div class="list">
+            <div class="item"><div class="num">1</div><div><div class="nm">Bloomberg TV</div><div class="meta">US · English · Business</div></div><div class="tag">Live</div></div>
+            <div class="item"><div class="num">2</div><div><div class="nm">CNBC TV18</div><div class="meta">IN · English · Business</div></div><div class="tag">Live</div></div>
+            <div class="item"><div class="num">3</div><div><div class="nm">Times Now</div><div class="meta">IN · English · News</div></div><div class="tag">Live</div></div>
+            <div class="item"><div class="num">4</div><div><div class="nm">India Today</div><div class="meta">IN · English · News</div></div><div class="tag">Live</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card v3">
+        <div class="card-h"><div><div class="badge">Concept 3</div><div class="name">Glass Ledger</div></div><div class="tag">Premium Visual</div></div>
+        <div class="panel">
+          <div class="row top"><select class="select"><option>All Countries</option></select><button class="btn">Default</button></div>
+          <div class="row"><input class="input" placeholder="Search channels, state, category"/><button class="btn">Play</button></div>
+          <div class="chips"><button class="chip">Favorites</button><button class="chip">India HD</button><button class="chip">All India</button><button class="chip">Cricket</button><button class="chip">Movies</button><button class="chip">Kids</button></div>
+          <div class="list">
+            <div class="item"><div class="num">1</div><div><div class="nm">Zee News</div><div class="meta">IN · Hindi · News</div></div><div class="tag">Live</div></div>
+            <div class="item"><div class="num">2</div><div><div class="nm">ABP Ananda</div><div class="meta">IN · Bengali · News</div></div><div class="tag">Live</div></div>
+            <div class="item"><div class="num">3</div><div><div class="nm">Asianet News</div><div class="meta">IN · Malayalam · News</div></div><div class="tag">Live</div></div>
+            <div class="item"><div class="num">4</div><div><div class="nm">9X Tashan</div><div class="meta">IN · Punjabi · Music</div></div><div class="tag">Live</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card v4">
+        <div class="card-h"><div><div class="badge">Concept 4</div><div class="name">Mobile Ops Grid</div></div><div class="tag">Mobile-first</div></div>
+        <div class="panel">
+          <div class="row top"><select class="select"><option>All Countries</option></select><button class="btn">Default</button><button class="btn">States</button></div>
+          <div class="row"><input class="input" placeholder="Search channels, state, category"/><button class="btn">Play</button></div>
+          <div class="chips"><button class="chip">Favorites</button><button class="chip">India HD</button><button class="chip">All India</button><button class="chip">Hindi</button><button class="chip">English</button><button class="chip">Sports</button></div>
+          <div class="list">
+            <div class="item"><div class="num">1</div><div><div class="nm">TV9 Bharatvarsh</div><div class="meta">IN · Hindi</div></div></div>
+            <div class="item"><div class="num">2</div><div><div class="nm">CNN-News18</div><div class="meta">IN · English</div></div></div>
+            <div class="item"><div class="num">3</div><div><div class="nm">Sun News</div><div class="meta">IN · Tamil</div></div></div>
+            <div class="item"><div class="num">4</div><div><div class="nm">ABN Andhra Jyoti</div><div class="meta">IN · Telugu</div></div></div>
+            <div class="item"><div class="num">5</div><div><div class="nm">Zee 24 Taas</div><div class="meta">IN · Marathi</div></div></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>
