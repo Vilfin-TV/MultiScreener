@@ -485,11 +485,12 @@
   "use strict";
 
   /* ---------------- Config & state ---------------- */
+  var WORKER = "https://page-iptv.vilfintv.workers.dev";
   var API = {
-    login: "/api/login",
-    playlist: function (p) { return "/api/playlist?provider=" + encodeURIComponent(p); },
+    login: WORKER + "/api/login",
+    playlist: function (p) { return WORKER + "/api/playlist?provider=" + encodeURIComponent(p); },
     stream: function (url, token) {
-      return "/api/stream?token=" + encodeURIComponent(token) + "&url=" + encodeURIComponent(url);
+      return WORKER + "/api/stream?token=" + encodeURIComponent(token) + "&url=" + encodeURIComponent(url);
     }
   };
   var TOKEN_KEY = "iptv_token";
