@@ -1,0 +1,23 @@
+name: Deploy IPTV Worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'iptv-worker.js'
+      - 'wrangler.iptv.toml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy iptv-worker.js to Cloudflare
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy with Wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config wrangler.iptv.toml
