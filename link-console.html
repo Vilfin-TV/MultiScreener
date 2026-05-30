@@ -3693,6 +3693,16 @@ var IPTV_PANEL_HTML =
           '</select>' +
         '</div>' +
       '</div>' +
+      '<div style="margin-top:16px;display:flex;gap:18px;flex-wrap:wrap;">' +
+        '<div style="flex:1;min-width:250px">' +
+          '<label style="display:block;font-size:12px;color:#b9b9cc;margin-bottom:6px">Jio Playlist URL (optional)</label>' +
+          '<input id="iptv-jio-url" type="url" placeholder="https://..." style="width:100%;padding:11px 12px;background:#0f0f12;border:1px solid rgba(255,255,255,.16);border-radius:9px;color:#fff;font-size:14px;box-sizing:border-box">' +
+        '</div>' +
+        '<div style="flex:1;min-width:250px">' +
+          '<label style="display:block;font-size:12px;color:#b9b9cc;margin-bottom:6px">Airtel Playlist URL (optional)</label>' +
+          '<input id="iptv-airtel-url" type="url" placeholder="https://..." style="width:100%;padding:11px 12px;background:#0f0f12;border:1px solid rgba(255,255,255,.16);border-radius:9px;color:#fff;font-size:14px;box-sizing:border-box">' +
+        '</div>' +
+      '</div>' +
       '<div style="margin-top:16px;display:flex;gap:24px;flex-wrap:wrap">' +
         '<label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:#f4f4f8"><input id="iptv-jio-enabled" type="checkbox" checked> Enable Jio</label>' +
         '<label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;color:#f4f4f8"><input id="iptv-airtel-enabled" type="checkbox" checked> Enable Airtel</label>' +
@@ -3782,6 +3792,8 @@ async function _iptvLoadConfig() {
     document.getElementById('iptv-default-provider').value = (s.defaultProvider === 'airtel') ? 'airtel' : 'jio';
     document.getElementById('iptv-jio-enabled').checked    = !(s.providers && s.providers.jio    && s.providers.jio.enabled    === false);
     document.getElementById('iptv-airtel-enabled').checked = !(s.providers && s.providers.airtel && s.providers.airtel.enabled === false);
+    document.getElementById('iptv-jio-url').value    = (s.providers && s.providers.jio    && s.providers.jio.url) || '';
+    document.getElementById('iptv-airtel-url').value = (s.providers && s.providers.airtel && s.providers.airtel.url) || '';
   } catch (e) {
     st.style.display = 'block';
     st.innerHTML = '<span style="color:#ff6b6b">Could not load: ' + esc(e.message) + '</span>';
@@ -3831,8 +3843,8 @@ async function saveIptvSettings() {
     sessionHours: parseInt(document.getElementById('iptv-session-hours').value, 10) || 8,
     defaultProvider: document.getElementById('iptv-default-provider').value,
     providers: {
-      jio:    { enabled: document.getElementById('iptv-jio-enabled').checked },
-      airtel: { enabled: document.getElementById('iptv-airtel-enabled').checked }
+      jio:    { enabled: document.getElementById('iptv-jio-enabled').checked, url: document.getElementById('iptv-jio-url').value.trim() },
+      airtel: { enabled: document.getElementById('iptv-airtel-enabled').checked, url: document.getElementById('iptv-airtel-url').value.trim() }
     }
   }};
   var btn = document.getElementById('iptv-settings-save'); btn.disabled = true; var t = btn.textContent; btn.textContent = 'Saving...';

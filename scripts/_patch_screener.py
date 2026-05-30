@@ -117,8 +117,8 @@ ROUTES = r"""
         sessionHours: Math.max(1, Math.min(168, parseInt(s.sessionHours, 10) || 8)),
         defaultProvider: (s.defaultProvider === 'airtel') ? 'airtel' : 'jio',
         providers: {
-          jio:    { enabled: s.providers && s.providers.jio    ? !!s.providers.jio.enabled    : true },
-          airtel: { enabled: s.providers && s.providers.airtel ? !!s.providers.airtel.enabled : true },
+          jio:    { enabled: s.providers && s.providers.jio    ? !!s.providers.jio.enabled    : true, url: s.providers && s.providers.jio ? (s.providers.jio.url || '').toString().trim() : '' },
+          airtel: { enabled: s.providers && s.providers.airtel ? !!s.providers.airtel.enabled : true, url: s.providers && s.providers.airtel ? (s.providers.airtel.url || '').toString().trim() : '' },
         },
         updatedAt: new Date().toISOString(),
       };
@@ -133,7 +133,7 @@ HELPERS = r"""/* ── IPTV credential management (login id/password + settings
 const IPTV_DEFAULT_SETTINGS = {
   sessionHours: 8,
   defaultProvider: 'jio',
-  providers: { jio: { enabled: true }, airtel: { enabled: true } },
+  providers: { jio: { enabled: true, url: "" }, airtel: { enabled: true, url: "" } },
 };
 function _iptvJson(obj) {
   return new Response(JSON.stringify(obj), { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });

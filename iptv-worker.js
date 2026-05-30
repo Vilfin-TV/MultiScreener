@@ -44,7 +44,7 @@ const DEFAULT_SESSION_HOURS = 8;
 const IPTV_DEFAULT_SETTINGS = {
   sessionHours: DEFAULT_SESSION_HOURS,
   defaultProvider: "jio",
-  providers: { jio: { enabled: true }, airtel: { enabled: true } },
+  providers: { jio: { enabled: true, url: "" }, airtel: { enabled: true, url: "" } },
 };
 
 const CORS_HEADERS = {
@@ -160,8 +160,8 @@ async function loadSettings(env) {
       sessionHours: Math.max(1, Math.min(168, parseInt(s.sessionHours, 10) || DEFAULT_SESSION_HOURS)),
       defaultProvider: s.defaultProvider === "airtel" ? "airtel" : "jio",
       providers: {
-        jio: { enabled: s.providers && s.providers.jio ? !!s.providers.jio.enabled : true },
-        airtel: { enabled: s.providers && s.providers.airtel ? !!s.providers.airtel.enabled : true },
+        jio: { enabled: s.providers && s.providers.jio ? !!s.providers.jio.enabled : true, url: s.providers && s.providers.jio ? (s.providers.jio.url || "") : "" },
+        airtel: { enabled: s.providers && s.providers.airtel ? !!s.providers.airtel.enabled : true, url: s.providers && s.providers.airtel ? (s.providers.airtel.url || "") : "" },
       },
     };
   } catch (e) {
@@ -306,7 +306,21 @@ async function handlePlaylist(request, env, url) {
 
   if (!env.IPTV_PLAYLIST_KV) return json({ error: "Playlist store not configured" }, 503);
 
-  const raw = await env.IPTV_PLAYLIST_KV.get(provider + "_playlist");
+  let raw = "";
+  const customUrl = settings.providers[provider] && settings.providers[provider].url;
+  if (customUrl) {
+    try {
+      const resp = await fetch(customUrl, { headers: { "User-Agent": "IPTVConsole/1.0" } });
+      if (resp.ok) raw = await resp.text();
+    } catch (e) {
+      console.warn("Failed to fetch custom URL for " + provider + ": " + e);
+    }
+  }
+
+  if (!raw) {
+    raw = await env.IPTV_PLAYLIST_KV.get(provider + "_playlist");
+  }
+  
   if (!raw) return json({ error: "No playlist found for provider" }, 404);
 
   const channels = parseM3U(raw);
