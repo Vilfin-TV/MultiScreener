@@ -1026,7 +1026,7 @@ a{color:inherit;text-decoration:none}
      DATABASE & INTERACTIVE LOGIC
      ========================================== -->
 <script src="kanji_data.js"></script>
-<script src="jlpt_textbook_data.js?v=1780105332589"></script>
+<script src="jlpt_textbook_data.js?v=1780211801720"></script>
 <script>
 // Theme support
 var THEMES = ['default','standard','midnight','maroon','silver','gold','gemini'];
@@ -2388,7 +2388,7 @@ function renderLessonTabContent() {
     html += '<div style="background:var(--card2); border:1px solid var(--border2); padding:16px; border-radius:8px; margin-bottom:16px;">';
     
 
-    if (_activeLessonTab === 'writing') {
+    if (_activeLessonTab === 'writing_practice') {
       const langs = {
         'ja': 'Japanese', 'en': 'English', 'hi': 'Hindi', 'ml': 'Malayalam', 
         'ta': 'Tamil', 'te': 'Telugu', 'kn': 'Kannada', 'bn': 'Bengali', 
@@ -2400,9 +2400,9 @@ function renderLessonTabContent() {
       html += '<div class="trans-widget">'
         + '<div style="font-weight:700; color:var(--gold2); font-size:18px; margin-bottom:12px;">🌟 Intelligent Translator Writing Pad</div>'
         + '<div class="trans-controls">'
-        + '  <select id="trans-in-lang" class="trans-select" onchange="doTranslation()">' + optionsHtml.replace('value="en"', 'value="en" selected') + '</select>'
+        + '  <select id="trans-in-lang" class="trans-select" onchange="handleLangChange(\'in\')">' + optionsHtml.replace('value="en"', 'value="en" selected') + '</select>'
         + '  <button class="trans-swap-btn" onclick="swapTranslationLangs()">⇄ Swap</button>'
-        + '  <select id="trans-out-lang" class="trans-select" onchange="doTranslation()">' + optionsHtml.replace('value="ja"', 'value="ja" selected') + '</select>'
+        + '  <select id="trans-out-lang" class="trans-select" onchange="handleLangChange(\'out\')">' + optionsHtml.replace('value="ja"', 'value="ja" selected') + '</select>'
         + '</div>'
         + '<div class="trans-body">'
         + '  <div class="trans-box">'
@@ -2858,7 +2858,75 @@ function submitMocTest() {
     
   document.getElementById('moc-body-content').insertAdjacentHTML('afterbegin', finalScoreHtml);
 }
-</script>
+
+// --- TRANSLATOR LOGIC ---
+let _transTimeout;
+
+function handleLangChange(type) {
+  const inLang = document.getElementById('trans-in-lang');
+  const outLang = document.getElementById('trans-out-lang');
+  
+  if (inLang.value === outLang.value) {
+    if (type === 'in') {
+      outLang.value = (inLang.value === 'en') ? 'ja' : 'en';
+    } else {
+      inLang.value = (outLang.value === 'en') ? 'ja' : 'en';
+    }
+  }
+  doTranslation();
+}
+
+function doTranslation() {
+  const text = document.getElementById('trans-input').value;
+  if (!text.trim()) { document.getElementById('trans-output').innerText = 'Translation will appear here...'; return; }
+  const inLang = document.getElementById('trans-in-lang').value;
+  const outLang = document.getElementById('trans-out-lang').value;
+  clearTimeout(_transTimeout);
+  document.getElementById('trans-output').innerText = 'Translating...';
+  _transTimeout = setTimeout(() => {
+    fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=' + inLang + '&tl=' + outLang + '&dt=t&q=' + encodeURIComponent(text))
+      .then(r => r.json()).then(d => {
+        let result = '';
+        if(d && d[0]) d[0].forEach(p => { if(p[0]) result += p[0]; });
+        document.getElementById('trans-output').innerText = result || 'Translation failed.';
+      }).catch(e => { document.getElementById('trans-output').innerText = 'Error: ' + e.message; });
+  }, 500);
+}
+function swapTranslationLangs() {
+  const i = document.getElementById('trans-in-lang');
+  const o = document.getElementById('trans-out-lang');
+  const tmp = i.value; i.value = o.value; o.value = tmp;
+  doTranslation();
+}
+function startTranslationVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('Voice recording is not supported in this browser.'); return; }
+  const rec = new SR();
+  rec.lang = document.getElementById('trans-in-lang').value;
+  rec.interimResults = true;
+  const input = document.getElementById('trans-input');
+  const btn = document.getElementById('trans-voice-btn');
+  const originalText = btn.innerHTML;
+  rec.onresult = (e) => {
+    let final = '';
+    for(let i=0; i < e.results.length; i++) final += e.results[i][0].transcript;
+    input.value = final;
+    doTranslation();
+  };
+  rec.onstart = () => { btn.innerHTML = '🔴 Listening...'; btn.style.color = 'var(--red)'; btn.style.borderColor = 'var(--red)'; };
+  rec.onend = () => { btn.innerHTML = originalText; btn.style.color = ''; btn.style.borderColor = ''; };
+  rec.start();
+}
+function playTranslationAudio() {
+  const text = document.getElementById('trans-output').innerText;
+  if (!text || text.includes('Translating')) return;
+  if (!('speechSynthesis' in window)) { alert('Audio not supported.'); return; }
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = document.getElementById('trans-out-lang').value;
+  window.speechSynthesis.speak(u);
+}
+// --- END TRANSLATOR LOGIC ---
+\n</script>
 
 </body>
 </html>
