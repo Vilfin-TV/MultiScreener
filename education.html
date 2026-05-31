@@ -2419,6 +2419,7 @@ function renderLessonTabContent() {
         + '    <textarea id="trans-input" class="trans-input" placeholder="Type or dictate text here..." oninput="doTranslation()" style="width:100%; height:320px; background:transparent; color:var(--text); border:none; padding:16px; font-size:18px; resize:none; outline:none; font-family:inherit; box-sizing:border-box;"></textarea>'
         + '    <div class="trans-actions">'
         + '      <label class="trans-action-btn" style="cursor:pointer; margin-right:8px;">📁 Upload File <input type="file" style="display:none;" onchange="handleTransFileUpload(event)" accept=".txt,.js,.json,.html,.md,.csv,.jpg,.jpeg,.png,.docx"></label>'
+        + '      <button class="trans-action-btn" style="margin-right:8px;" onclick="openCameraModal()">📷 Camera</button>'
         + '      <button id="trans-voice-btn" class="trans-action-btn" onclick="startTranslationVoice()">🎤 Voice Record</button>'
         + '    </div>'
         + '  </div>'
@@ -3017,8 +3018,93 @@ function copyTranslation() {
     alert('Failed to copy text: ' + err);
   });
 }
+let currentCameraStream = null;
+
+async function openCameraModal() {
+  const modal = document.getElementById('camera-modal');
+  const video = document.getElementById('camera-video');
+  modal.style.display = 'flex';
+  
+  try {
+    currentCameraStream = await navigator.mediaDevices.getUserMedia({ 
+      video: { facingMode: 'environment' }, 
+      audio: false 
+    });
+    video.srcObject = currentCameraStream;
+  } catch (err) {
+    alert('Failed to access camera: ' + err.message);
+    closeCameraModal();
+  }
+}
+
+function closeCameraModal() {
+  const modal = document.getElementById('camera-modal');
+  modal.style.display = 'none';
+  if (currentCameraStream) {
+    currentCameraStream.getTracks().forEach(t => t.stop());
+    currentCameraStream = null;
+  }
+}
+
+async function snapCameraPhoto() {
+  const video = document.getElementById('camera-video');
+  const canvas = document.getElementById('camera-canvas');
+  const context = canvas.getContext('2d');
+  
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  
+  closeCameraModal();
+  
+  const inputEl = document.getElementById('trans-input');
+  inputEl.value = 'Scanning camera photo with AI (this may take a few seconds)...';
+  
+  canvas.toBlob(async (blob) => {
+    try {
+      const lang = document.getElementById('trans-in-lang').value;
+      const tessLangMap = {
+        'en': 'eng', 'ja': 'jpn', 'hi': 'hin', 'ml': 'mal', 'ta': 'tam', 'te': 'tel', 'kn': 'kan',
+        'bn': 'ben', 'mr': 'mar', 'gu': 'guj', 'pa': 'pan', 'ur': 'urd', 'ne': 'nep',
+        'zh-CN': 'chi_sim', 'ko': 'kor', 'vi': 'vie', 'th': 'tha', 'tl': 'tgl', 'id': 'ind',
+        'fr': 'fra', 'es': 'spa', 'it': 'ita', 'nl': 'nld', 'el': 'ell', 'ru': 'rus',
+        'pl': 'pol', 'uk': 'ukr', 'ar': 'ara', 'af': 'afr', 'sw': 'swa', 'la': 'lat',
+        'su': 'sun', 'mn': 'mon', 'ku': 'kur'
+      };
+      const tLang = tessLangMap[lang] || 'eng';
+      
+      const loadScript = (url) => new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${url}"]`)) return resolve();
+        const s = document.createElement('script'); s.src = url; s.onload = resolve; s.onerror = reject; document.head.appendChild(s);
+      });
+      
+      await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+      const worker = await Tesseract.createWorker(tLang);
+      const ret = await worker.recognize(blob);
+      await worker.terminate();
+      inputEl.value = ret.data.text;
+      doTranslation();
+    } catch(err) {
+      console.error(err);
+      inputEl.value = 'Error reading photo: ' + err.message;
+    }
+  }, 'image/jpeg');
+}
 // --- END TRANSLATOR LOGIC ---
 </script>
+
+<!-- Camera Modal -->
+<div id="camera-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(10,25,47,0.95); z-index:9999; flex-direction:column; align-items:center; justify-content:center;">
+  <div style="width:100%; max-width:600px; padding:20px; text-align:center;">
+    <h3 style="color:var(--gold2); margin-top:0; margin-bottom:16px;">📸 Live Camera Translator</h3>
+    <video id="camera-video" autoplay playsinline style="width:100%; max-height:60vh; background:#000; border:2px solid var(--border2); border-radius:12px; margin-bottom:24px; box-shadow:0 10px 30px rgba(0,0,0,0.5);"></video>
+    <canvas id="camera-canvas" style="display:none;"></canvas>
+    <div style="display:flex; gap:16px; justify-content:center;">
+      <button class="widget-btn" style="background:var(--red); padding:12px 24px; font-size:16px;" onclick="closeCameraModal()">Cancel</button>
+      <button class="widget-btn" style="background:var(--blue); padding:12px 24px; font-size:16px;" onclick="snapCameraPhoto()">📸 Snap & Translate</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
