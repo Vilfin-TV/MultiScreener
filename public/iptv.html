@@ -4,964 +4,817 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex,nofollow" />
-<title>Private IPTV Console</title>
+<title>VilfinTV IPTV</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" />
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
 <style>
-  :root {
-    --bg: #0f0f12;
-    --surface: #16161e;
-    --surface-2: #1f1f2e;
-    --surface-3: #262638;
-    --accent: #7c4dff;
-    --accent-2: #9b7bff;
-    --accent-soft: rgba(124, 77, 255, 0.16);
-    --text: #f4f4f8;
-    --text-dim: #a7a7bd;
-    --text-faint: #6b6b85;
-    --border: rgba(255, 255, 255, 0.07);
-    --border-strong: rgba(255, 255, 255, 0.14);
-    --danger: #ff5470;
-    --ok: #4ddb8a;
-    --hd: #4ddb8a;
-    --sd: #ffb454;
-    --radius: 14px;
-    --radius-sm: 10px;
-    --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
-    --t-fast: 0.16s ease;
-    --t-med: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  :root{
+    --bg:#0a0e17; --bg2:#0f0f12; --surface:#14141d; --surface-2:#1b1b27; --surface-3:#23232f;
+    --accent:#7c4dff; --accent-2:#9b7bff; --accent-soft:rgba(124,77,255,.16);
+    --gold:#ffb454; --text:#f4f4f8; --text-dim:#a7a7bd; --text-faint:#6b6b85;
+    --border:rgba(255,255,255,.07); --border-strong:rgba(255,255,255,.14);
+    --danger:#ff5470; --ok:#4ddb8a; --hd:#4ddb8a; --sd:#ffb454;
+    --radius:14px; --radius-sm:10px; --shadow:0 18px 50px rgba(0,0,0,.45);
+    --t-fast:.16s ease; --t-med:.28s cubic-bezier(.4,0,.2,1);
+    --panel-w:300px;
   }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%,rgba(124,77,255,.12),transparent 60%),
+               radial-gradient(900px 500px at -10% 110%,rgba(124,77,255,.08),transparent 55%),var(--bg);
+    color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  }
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,select{font-family:inherit}
+  a{color:var(--accent-2)}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:8px}
+  ::-webkit-scrollbar-thumb:hover{background:#34344a}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  .screen{display:none;animation:fadeUp var(--t-med);min-height:100vh}
+  .screen.active{display:block}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 
-  html, body { height: 100%; }
+  .brand{display:inline-flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.3px;font-size:18px}
+  .brand .logo-dot{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--accent),#4d7dff);
+    display:grid;place-items:center;box-shadow:0 6px 18px var(--accent-soft)}
+  .brand .logo-dot svg{width:18px;height:18px}
 
-  body {
-    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
-    background:
-      radial-gradient(1200px 600px at 80% -10%, rgba(124, 77, 255, 0.12), transparent 60%),
-      radial-gradient(900px 500px at -10% 110%, rgba(124, 77, 255, 0.08), transparent 55%),
-      var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
-  }
+  /* ===== LOGIN ===== */
+  #login-screen{display:none;place-items:center}
+  #login-screen.active{display:grid}
+  .login-card{width:min(92vw,400px);background:linear-gradient(180deg,var(--surface-2),var(--surface));
+    border:1px solid var(--border);border-radius:20px;padding:38px 34px 32px;box-shadow:var(--shadow)}
+  .login-card .brand{margin-bottom:6px}
+  .login-sub{color:var(--text-dim);font-size:13.5px;margin:14px 0 26px;line-height:1.5}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:7px;letter-spacing:.4px;text-transform:uppercase}
+  .field input{width:100%;padding:13px 14px;background:var(--bg);border:1px solid var(--border-strong);
+    border-radius:var(--radius-sm);color:var(--text);font-size:14.5px;transition:border-color var(--t-fast),box-shadow var(--t-fast)}
+  .field input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .btn-primary{width:100%;padding:13px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--accent),#6b3dff);
+    color:#fff;font-weight:700;font-size:14.5px;letter-spacing:.3px;box-shadow:0 10px 26px rgba(124,77,255,.32);
+    transition:transform var(--t-fast),box-shadow var(--t-fast),opacity var(--t-fast)}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 14px 30px rgba(124,77,255,.42)}
+  .btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
+  .form-msg{font-size:13px;margin-top:14px;min-height:18px;text-align:center}
+  .form-msg.err{color:var(--danger)} .form-msg.ok{color:var(--ok)}
 
-  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
-  input, select { font-family: inherit; }
-  a { color: var(--accent-2); }
+  /* ===== TOP BAR ===== */
+  .topbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+    gap:12px;padding:12px clamp(12px,3vw,28px);background:rgba(10,14,23,.86);backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--border)}
+  .topbar-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .ghost-btn{padding:9px 14px;border-radius:10px;font-size:13px;font-weight:600;border:1px solid var(--border-strong);
+    color:var(--text-dim);transition:var(--t-fast);white-space:nowrap}
+  .ghost-btn:hover{color:var(--text);border-color:var(--accent);background:var(--accent-soft)}
+  .icon-btn{width:40px;height:40px;border-radius:10px;border:1px solid var(--border-strong);color:var(--text-dim);
+    display:grid;place-items:center;transition:var(--t-fast)}
+  .icon-btn:hover{color:var(--text);border-color:var(--accent);background:var(--accent-soft)}
+  .icon-btn svg{width:19px;height:19px}
+  .menu-toggle{display:none}
 
-  ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 8px; }
-  ::-webkit-scrollbar-thumb:hover { background: #34344a; }
+  /* ===== PROVIDER ===== */
+  .provider-wrap{max-width:1000px;margin:0 auto;padding:clamp(30px,7vw,70px) 20px}
+  .provider-wrap h1{font-size:clamp(24px,4vw,34px);font-weight:800}
+  .provider-wrap p.lead{color:var(--text-dim);margin-top:10px;font-size:15px}
+  .provider-grid{margin-top:42px;display:grid;gap:22px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .provider-card{position:relative;overflow:hidden;background:linear-gradient(170deg,var(--surface-2),var(--surface));
+    border:1px solid var(--border);border-radius:20px;padding:28px 26px;text-align:left;
+    transition:transform var(--t-med),border-color var(--t-med),box-shadow var(--t-med)}
+  .provider-card::after{content:"";position:absolute;inset:0;
+    background:radial-gradient(400px 200px at 100% 0%,var(--glow,rgba(124,77,255,.18)),transparent 70%);opacity:0;transition:opacity var(--t-med)}
+  .provider-card:hover{transform:translateY(-6px);border-color:var(--border-strong);box-shadow:var(--shadow)}
+  .provider-card:hover::after{opacity:1}
+  .provider-badge{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-weight:800;
+    font-size:22px;color:#fff;margin-bottom:18px;box-shadow:0 10px 24px rgba(0,0,0,.3)}
+  .provider-card h3{font-size:19px;font-weight:700}
+  .provider-card .pc-sub{color:var(--text-dim);font-size:13px;margin-top:6px}
+  .provider-card .pc-go{margin-top:18px;font-size:13px;font-weight:700;color:var(--accent-2);display:inline-flex;align-items:center;gap:6px}
+  .pc-jio .provider-badge{background:linear-gradient(135deg,#1a73e8,#0b3d91)} .pc-jio{--glow:rgba(26,115,232,.22)}
+  .pc-airtel .provider-badge{background:linear-gradient(135deg,#ff2e2e,#b30000)} .pc-airtel{--glow:rgba(255,46,46,.2)}
+  .pc-free .provider-badge{background:linear-gradient(135deg,#21c45d,#0f8a3c)} .pc-free{--glow:rgba(33,196,93,.22)}
+  .pc-pro .provider-badge{background:linear-gradient(135deg,#f59e0b,#b45309)} .pc-pro{--glow:rgba(245,158,11,.22)}
+  .pc-custom .provider-badge{background:linear-gradient(135deg,#7c4dff,#4d2bb8)} .pc-custom{--glow:rgba(124,77,255,.24)}
 
-  /* ---------- Screen transitions ---------- */
-  .screen {
-    display: none;
-    animation: fadeUp var(--t-med);
-    min-height: 100vh;
-  }
-  .screen.active { display: block; }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(14px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+  /* ===== PLAYER LAYOUT ===== */
+  .layout{display:grid;grid-template-columns:var(--panel-w) 1fr;gap:0;min-height:calc(100vh - 65px)}
 
-  /* ---------- Shared brand ---------- */
-  .brand {
-    display: inline-flex; align-items: center; gap: 10px;
-    font-weight: 800; letter-spacing: 0.3px; font-size: 18px;
-  }
-  .brand .logo-dot {
-    width: 30px; height: 30px; border-radius: 9px;
-    background: linear-gradient(135deg, var(--accent), #4d7dff);
-    display: grid; place-items: center; box-shadow: 0 6px 18px var(--accent-soft);
-  }
-  .brand .logo-dot svg { width: 18px; height: 18px; }
+  /* Left filter rail */
+  .rail{border-right:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;
+    max-height:calc(100vh - 65px);position:sticky;top:65px}
+  .rail-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .rail-head h3{font-size:13px;letter-spacing:.6px;text-transform:uppercase;color:var(--text-dim)}
+  .rail-reset{font-size:12px;color:var(--accent-2);font-weight:600}
+  .facets{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;flex:1;min-height:0}
+  .facet{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--border)}
+  .facet:last-child{border-right:none}
+  .facet-title{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-faint);
+    padding:10px 10px 6px}
+  .facet-search{margin:0 8px 8px;padding:7px 9px;background:var(--bg);border:1px solid var(--border-strong);
+    border-radius:8px;color:var(--text);font-size:12px;width:calc(100% - 16px)}
+  .facet-search:focus{outline:none;border-color:var(--accent)}
+  .facet-list{overflow-y:auto;flex:1;padding:0 4px 8px}
+  .facet-item{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:7px 8px;border-radius:7px;
+    font-size:12.5px;color:var(--text-dim);cursor:pointer;transition:background var(--t-fast),color var(--t-fast)}
+  .facet-item:hover{background:var(--surface-2);color:var(--text)}
+  .facet-item.active{background:var(--accent-soft);color:var(--text);font-weight:600}
+  .facet-item .fi-count{font-size:10.5px;color:var(--text-faint);background:var(--surface-3);padding:1px 6px;border-radius:8px;flex-shrink:0}
+  .facet-item.active .fi-count{background:var(--accent);color:#fff}
+  .fi-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-  /* ================= LOGIN ================= */
-  #login-screen { display: none; place-items: center; }
-  #login-screen.active { display: grid; }
+  /* Main content */
+  .main{display:flex;flex-direction:column;min-width:0;padding:0 clamp(12px,2.5vw,26px) 40px}
 
-  .login-card {
-    width: min(92vw, 400px);
-    background: linear-gradient(180deg, var(--surface-2), var(--surface));
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 38px 34px 32px;
-    box-shadow: var(--shadow);
-    backdrop-filter: blur(8px);
-  }
-  .login-card .brand { margin-bottom: 6px; }
-  .login-sub { color: var(--text-dim); font-size: 13.5px; margin: 14px 0 26px; line-height: 1.5; }
-  .field { margin-bottom: 16px; }
-  .field label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 7px; letter-spacing: 0.4px; text-transform: uppercase; }
-  .field input {
-    width: 100%; padding: 13px 14px; background: var(--bg);
-    border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
-    color: var(--text); font-size: 14.5px; transition: border-color var(--t-fast), box-shadow var(--t-fast);
-  }
-  .field input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  /* Player panel */
+  .player-panel{display:grid;grid-template-columns:1.7fr 1fr;gap:18px;background:var(--surface);
+    border:1px solid var(--border);border-radius:16px;padding:0;margin:18px 0 0;max-height:0;opacity:0;overflow:hidden;
+    transition:max-height var(--t-med),opacity var(--t-med),padding var(--t-med),margin var(--t-med)}
+  .player-panel.show{max-height:1000px;opacity:1;padding:16px;margin:18px 0 22px}
+  .video-shell{position:relative;background:#000;border-radius:14px;overflow:hidden;aspect-ratio:16/9}
+  .video-shell video{width:100%;height:100%;object-fit:contain;background:#000;display:block}
+  .video-loading{position:absolute;inset:0;display:none;place-items:center;background:rgba(0,0,0,.5);color:var(--text-dim);font-size:13px;z-index:3}
+  .video-loading.show{display:grid}
+  .spinner{width:34px;height:34px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:var(--accent);
+    animation:spin .8s linear infinite;margin-bottom:12px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .video-loading .vl-inner{display:grid;place-items:center}
+  .controls{position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;align-items:center;gap:8px;
+    padding:14px 12px 10px;background:linear-gradient(to top,rgba(0,0,0,.82),rgba(0,0,0,0));flex-wrap:wrap}
+  .ctrl-btn{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:#fff;transition:background var(--t-fast),transform var(--t-fast)}
+  .ctrl-btn:hover{background:rgba(255,255,255,.14)} .ctrl-btn:active{transform:scale(.92)}
+  .ctrl-btn svg{width:20px;height:20px} .ctrl-btn.play svg{width:24px;height:24px}
+  .vol-group{display:flex;align-items:center;gap:8px}
+  .vol-slider{-webkit-appearance:none;appearance:none;width:84px;height:4px;border-radius:4px;background:rgba(255,255,255,.25);cursor:pointer;outline:none}
+  .vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+  .vol-slider::-moz-range-thumb{width:14px;height:14px;border:none;border-radius:50%;background:var(--accent)}
+  .ctrl-spacer{flex:1}
+  .now-live{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:#fff;padding:5px 10px;border-radius:8px;background:rgba(255,255,255,.1)}
+  .live-dot{width:8px;height:8px;border-radius:50%;background:var(--danger);animation:pulse 1.6s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,84,112,.5)}70%{box-shadow:0 0 0 8px rgba(255,84,112,0)}100%{box-shadow:0 0 0 0 rgba(255,84,112,0)}}
+  .now-info{display:flex;flex-direction:column}
+  .ni-head{display:flex;align-items:center;gap:14px;padding:6px 4px 16px;border-bottom:1px solid var(--border)}
+  .ni-logo{width:54px;height:54px;border-radius:50%;background:var(--surface-3);object-fit:cover;flex-shrink:0;border:1px solid var(--border-strong)}
+  .ni-name{font-size:17px;font-weight:700}
+  .ni-cat{font-size:13px;color:var(--text-dim);margin-top:4px}
+  .ni-meta{margin-top:14px;display:grid;gap:9px;font-size:13px}
+  .ni-meta .row{display:flex;justify-content:space-between;color:var(--text-dim)}
+  .ni-meta .row b{color:var(--text);font-weight:600}
+  .ni-epg{margin-top:14px;font-size:13px}
+  .ni-hint{margin-top:auto;padding-top:14px;font-size:12px;color:var(--text-faint);line-height:1.5}
 
-  .btn-primary {
-    width: 100%; padding: 13px; border-radius: var(--radius-sm);
-    background: linear-gradient(135deg, var(--accent), #6b3dff);
-    color: #fff; font-weight: 700; font-size: 14.5px; letter-spacing: 0.3px;
-    transition: transform var(--t-fast), box-shadow var(--t-fast), opacity var(--t-fast);
-    box-shadow: 0 10px 26px rgba(124, 77, 255, 0.32);
-  }
-  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(124, 77, 255, 0.42); }
-  .btn-primary:active { transform: translateY(0); }
-  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  /* Toolbar above grid */
+  .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:18px 0 14px}
+  .search-wrap{position:relative;flex:1;min-width:180px}
+  .search-wrap svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--text-faint);pointer-events:none}
+  .search-wrap input{width:100%;padding:11px 13px 11px 40px;background:var(--surface);border:1px solid var(--border-strong);
+    border-radius:11px;color:var(--text);font-size:14px;transition:border-color var(--t-fast),box-shadow var(--t-fast)}
+  .search-wrap input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .chip{padding:9px 14px;border-radius:10px;font-size:13px;font-weight:600;border:1px solid var(--border-strong);color:var(--text-dim);transition:var(--t-fast);white-space:nowrap}
+  .chip:hover{color:var(--text);border-color:var(--accent)}
+  .chip.active{background:var(--accent-soft);border-color:var(--accent);color:var(--text)}
+  .chip .star{color:var(--gold)}
+  .count-pill{font-size:12.5px;color:var(--text-dim);white-space:nowrap}
+  .count-pill b{color:var(--text)}
 
-  .form-msg { font-size: 13px; margin-top: 14px; min-height: 18px; text-align: center; }
-  .form-msg.err { color: var(--danger); }
-  .form-msg.ok { color: var(--ok); }
-
-  /* ================= PROVIDER ================= */
-  .topbar {
-    position: sticky; top: 0; z-index: 40;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 16px clamp(16px, 4vw, 40px);
-    background: rgba(15, 15, 18, 0.82);
-    backdrop-filter: blur(14px);
-    border-bottom: 1px solid var(--border);
-  }
-  .topbar-actions { display: flex; align-items: center; gap: 10px; }
-  .ghost-btn {
-    padding: 9px 16px; border-radius: 10px; font-size: 13px; font-weight: 600;
-    border: 1px solid var(--border-strong); color: var(--text-dim);
-    transition: var(--t-fast);
-  }
-  .ghost-btn:hover { color: var(--text); border-color: var(--accent); background: var(--accent-soft); }
-
-  .provider-wrap { max-width: 1000px; margin: 0 auto; padding: clamp(30px, 7vw, 70px) 20px; }
-  .provider-wrap h1 { font-size: clamp(24px, 4vw, 34px); font-weight: 800; }
-  .provider-wrap p.lead { color: var(--text-dim); margin-top: 10px; font-size: 15px; }
-
-  .provider-grid {
-    margin-top: 42px; display: grid; gap: 22px;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  }
-  .provider-card {
-    position: relative; overflow: hidden;
-    background: linear-gradient(170deg, var(--surface-2), var(--surface));
-    border: 1px solid var(--border); border-radius: 20px;
-    padding: 30px 28px; text-align: left;
-    transition: transform var(--t-med), border-color var(--t-med), box-shadow var(--t-med);
-  }
-  .provider-card::after {
-    content: ""; position: absolute; inset: 0;
-    background: radial-gradient(400px 200px at 100% 0%, var(--glow, rgba(124,77,255,0.18)), transparent 70%);
-    opacity: 0; transition: opacity var(--t-med);
-  }
-  .provider-card:hover { transform: translateY(-6px); border-color: var(--border-strong); box-shadow: var(--shadow); }
-  .provider-card:hover::after { opacity: 1; }
-  .provider-badge {
-    width: 58px; height: 58px; border-radius: 16px; display: grid; place-items: center;
-    font-weight: 800; font-size: 22px; color: #fff; margin-bottom: 20px;
-    box-shadow: 0 10px 24px rgba(0,0,0,0.3);
-  }
-  .provider-card h3 { font-size: 20px; font-weight: 700; }
-  .provider-card .pc-sub { color: var(--text-dim); font-size: 13.5px; margin-top: 6px; }
-  .provider-card .pc-go { margin-top: 20px; font-size: 13px; font-weight: 700; color: var(--accent-2); display: inline-flex; align-items: center; gap: 6px; }
-  .pc-jio .provider-badge { background: linear-gradient(135deg, #1a73e8, #0b3d91); }
-  .pc-jio { --glow: rgba(26,115,232,0.22); }
-  .pc-airtel .provider-badge { background: linear-gradient(135deg, #ff2e2e, #b30000); }
-  .pc-airtel { --glow: rgba(255,46,46,0.2); }
-  .pc-free .provider-badge { background: linear-gradient(135deg, #21c45d, #0f8a3c); }
-  .pc-free { --glow: rgba(33,196,93,0.22); }
-  .pc-pro .provider-badge { background: linear-gradient(135deg, #f59e0b, #b45309); }
-  .pc-pro { --glow: rgba(245,158,11,0.22); }
-  .pc-custom .provider-badge { background: linear-gradient(135deg, #7c4dff, #4d2bb8); }
-  .pc-custom { --glow: rgba(124,77,255,0.24); }
-
-  /* ================= FOOTER ================= */
-  .site-footer {
-    margin-top: 60px; border-top: 1px solid var(--border);
-    background: rgba(10,10,14,0.6); padding: 40px clamp(16px,4vw,40px) 24px;
-  }
-  .sf-grid {
-    max-width: 1200px; margin: 0 auto; display: grid; gap: 28px;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  }
-  .sf-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 14px; }
-  .sf-about { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
-  .sf-links { list-style: none; display: flex; flex-direction: column; gap: 9px; }
-  .sf-links a { font-size: 13px; color: var(--text-dim); text-decoration: none; transition: color var(--t-fast); }
-  .sf-links a:hover { color: var(--text); }
-  .sf-bottom {
-    max-width: 1200px; margin: 28px auto 0; padding-top: 18px;
-    border-top: 1px solid var(--border); font-size: 12px; color: var(--text-faint); text-align: center;
-  }
-
-  /* ================= PLAYER / DASHBOARD ================= */
-  .dash { max-width: 1500px; margin: 0 auto; padding: clamp(14px, 3vw, 26px) clamp(14px, 3vw, 32px) 60px; }
-
-  /* Player panel (collapsible) */
-  .player-panel {
-    display: grid; grid-template-columns: 1.7fr 1fr; gap: 20px;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 18px; padding: 16px; margin-bottom: 24px;
-    max-height: 0; opacity: 0; overflow: hidden; padding-top: 0; padding-bottom: 0;
-    transition: max-height var(--t-med), opacity var(--t-med), padding var(--t-med);
-  }
-  .player-panel.show { max-height: 900px; opacity: 1; padding-top: 16px; padding-bottom: 16px; }
-
-  .video-shell { position: relative; background: #000; border-radius: 14px; overflow: hidden; aspect-ratio: 16 / 9; }
-  .video-shell video { width: 100%; height: 100%; object-fit: contain; background: #000; display: block; }
-  .video-loading {
-    position: absolute; inset: 0; display: none; place-items: center;
-    background: rgba(0,0,0,0.5); color: var(--text-dim); font-size: 13px; z-index: 3;
-  }
-  .video-loading.show { display: grid; }
-  .spinner {
-    width: 34px; height: 34px; border-radius: 50%;
-    border: 3px solid rgba(255,255,255,0.15); border-top-color: var(--accent);
-    animation: spin 0.8s linear infinite; margin-bottom: 12px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .video-loading .vl-inner { display: grid; place-items: center; }
-
-  /* Custom controls */
-  .controls {
-    position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
-    display: flex; align-items: center; gap: 12px;
-    padding: 14px 16px 12px;
-    background: linear-gradient(to top, rgba(0,0,0,0.82), rgba(0,0,0,0));
-    transition: opacity var(--t-fast);
-  }
-  .ctrl-btn {
-    width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center;
-    color: #fff; transition: background var(--t-fast), transform var(--t-fast);
-  }
-  .ctrl-btn:hover { background: rgba(255,255,255,0.14); }
-  .ctrl-btn:active { transform: scale(0.92); }
-  .ctrl-btn svg { width: 20px; height: 20px; }
-  .ctrl-btn.play svg { width: 24px; height: 24px; }
-  .vol-group { display: flex; align-items: center; gap: 8px; }
-  .vol-slider {
-    -webkit-appearance: none; appearance: none; width: 92px; height: 4px; border-radius: 4px;
-    background: rgba(255,255,255,0.25); cursor: pointer; outline: none;
-  }
-  .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
-  .vol-slider::-moz-range-thumb { width: 14px; height: 14px; border: none; border-radius: 50%; background: var(--accent); }
-  .ctrl-spacer { flex: 1; }
-  .now-live {
-    display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700;
-    color: #fff; padding: 5px 10px; border-radius: 8px; background: rgba(255,255,255,0.1);
-  }
-  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 0 rgba(255,84,112,0.6); animation: pulse 1.6s infinite; }
-  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255,84,112,0.5); } 70% { box-shadow: 0 0 0 8px rgba(255,84,112,0); } 100% { box-shadow: 0 0 0 0 rgba(255,84,112,0); } }
-
-  /* Now playing side info */
-  .now-info { display: flex; flex-direction: column; }
-  .now-info .ni-head { display: flex; align-items: center; gap: 14px; padding: 6px 4px 16px; border-bottom: 1px solid var(--border); }
-  .now-info .ni-logo { width: 56px; height: 56px; border-radius: 50%; background: var(--surface-3); object-fit: cover; flex-shrink: 0; border: 1px solid var(--border-strong); }
-  .now-info .ni-name { font-size: 18px; font-weight: 700; }
-  .now-info .ni-cat { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
-  .ni-meta { margin-top: 16px; display: grid; gap: 10px; font-size: 13px; }
-  .ni-meta .row { display: flex; justify-content: space-between; color: var(--text-dim); }
-  .ni-meta .row b { color: var(--text); font-weight: 600; }
-  .ni-hint { margin-top: auto; padding-top: 14px; font-size: 12px; color: var(--text-faint); line-height: 1.5; }
-
-  /* Filter bar */
-  .filterbar {
-    display: grid; gap: 12px; margin-bottom: 22px;
-    grid-template-columns: minmax(200px, 1.6fr) repeat(2, minmax(140px, 1fr)) auto;
-    align-items: center;
-  }
-  .search-wrap { position: relative; }
-  .search-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-faint); pointer-events: none; }
-  .search-wrap input {
-    width: 100%; padding: 12px 14px 12px 42px; background: var(--surface);
-    border: 1px solid var(--border-strong); border-radius: 11px; color: var(--text); font-size: 14px;
-    transition: border-color var(--t-fast), box-shadow var(--t-fast);
-  }
-  .search-wrap input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .sel {
-    padding: 12px 36px 12px 14px; background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a7a7bd' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 13px center;
-    border: 1px solid var(--border-strong); border-radius: 11px; color: var(--text);
-    font-size: 14px; appearance: none; cursor: pointer; transition: border-color var(--t-fast);
-  }
-  .sel:focus { outline: none; border-color: var(--accent); }
-  .count-pill { font-size: 12.5px; color: var(--text-dim); white-space: nowrap; justify-self: end; }
-  .count-pill b { color: var(--text); }
+  /* Active filter tags */
+  .active-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 10px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border-strong);color:var(--text-dim)}
+  .tag b{color:var(--text)} .tag .x{cursor:pointer;color:var(--text-faint);font-weight:700}
+  .tag .x:hover{color:var(--danger)}
 
   /* Channel grid */
-  .channel-grid {
-    display: grid; gap: 14px;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  }
-  .ch-card {
-    position: relative; background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 18px 12px 14px; text-align: center;
-    transition: transform var(--t-fast), border-color var(--t-fast), background var(--t-fast);
-    animation: cardIn var(--t-med) backwards;
-  }
-  @keyframes cardIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
-  .ch-card:hover { transform: translateY(-4px); border-color: var(--accent); background: var(--surface-2); }
-  .ch-card.playing { border-color: var(--accent); background: var(--accent-soft); }
-  .qbadge {
-    position: absolute; top: 9px; right: 9px; font-size: 10px; font-weight: 800;
-    padding: 3px 7px; border-radius: 6px; letter-spacing: 0.5px; color: #06121e;
-  }
-  .qbadge.HD { background: var(--hd); }
-  .qbadge.SD { background: var(--sd); }
-  .ch-logo {
-    width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 12px;
-    background: var(--surface-3); object-fit: cover; border: 1px solid var(--border-strong);
-    display: block;
-  }
-  .ch-name { font-size: 13px; font-weight: 600; line-height: 1.35; color: var(--text);
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 35px; }
-  .ch-cat { font-size: 11px; color: var(--text-faint); margin-top: 4px; }
+  .channel-grid{display:grid;gap:13px;grid-template-columns:repeat(auto-fill,minmax(146px,1fr))}
+  .ch-card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px 12px 13px;text-align:center;transition:transform var(--t-fast),border-color var(--t-fast),background var(--t-fast)}
+  .ch-card:hover{transform:translateY(-4px);border-color:var(--accent);background:var(--surface-2)}
+  .ch-card.playing{border-color:var(--accent);background:var(--accent-soft)}
+  .ch-num{position:absolute;top:8px;left:8px;font-size:10px;font-weight:800;color:var(--text-faint);background:var(--surface-3);padding:2px 6px;border-radius:6px}
+  .qbadge{position:absolute;top:8px;right:8px;font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;letter-spacing:.5px;color:#06121e}
+  .qbadge.HD{background:var(--hd)} .qbadge.SD{background:var(--sd)}
+  .fav-btn{position:absolute;bottom:8px;right:8px;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;color:var(--text-faint);transition:var(--t-fast)}
+  .fav-btn:hover{background:var(--surface-3);color:var(--gold)}
+  .fav-btn.on{color:var(--gold)}
+  .fav-btn svg{width:16px;height:16px}
+  .ch-logo{width:60px;height:60px;border-radius:50%;margin:6px auto 12px;background:var(--surface-3);object-fit:cover;border:1px solid var(--border-strong);display:block}
+  .ch-name{font-size:13px;font-weight:600;line-height:1.35;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:35px;cursor:pointer}
+  .ch-cat{font-size:11px;color:var(--text-faint);margin-top:4px}
 
-  .empty-state { text-align: center; padding: 70px 20px; color: var(--text-faint); }
-  .empty-state svg { width: 46px; height: 46px; margin-bottom: 14px; opacity: 0.5; }
+  .load-more{margin:22px auto 0;display:block;padding:11px 26px;border-radius:11px;border:1px solid var(--border-strong);color:var(--text);font-weight:600;font-size:14px;transition:var(--t-fast)}
+  .load-more:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .empty-state{text-align:center;padding:64px 20px;color:var(--text-faint)}
+  .empty-state svg{width:46px;height:46px;margin-bottom:14px;opacity:.5}
+  .empty-state h3{color:var(--text-dim);font-size:16px;margin-bottom:8px}
+
+  /* Remote modal */
+  .modal-back{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:80;display:none;place-items:center}
+  .modal-back.show{display:grid}
+  .remote{width:min(90vw,300px);background:linear-gradient(180deg,var(--surface-2),var(--surface));border:1px solid var(--border-strong);
+    border-radius:20px;padding:22px;box-shadow:var(--shadow)}
+  .remote h3{font-size:14px;text-align:center;color:var(--text-dim);margin-bottom:12px;letter-spacing:.5px}
+  .remote-display{font-size:34px;font-weight:800;text-align:center;letter-spacing:4px;background:var(--bg);border:1px solid var(--border-strong);
+    border-radius:12px;padding:14px;margin-bottom:8px;min-height:62px;color:var(--accent-2)}
+  .remote-name{font-size:12px;text-align:center;color:var(--text-faint);min-height:16px;margin-bottom:14px}
+  .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .key{padding:16px 0;border-radius:12px;background:var(--surface-3);font-size:20px;font-weight:700;color:var(--text);transition:var(--t-fast)}
+  .key:hover{background:var(--accent);color:#fff}
+  .key.k-act{background:var(--accent-soft);color:var(--accent-2);font-size:14px;font-weight:600}
+  .key.k-go{background:linear-gradient(135deg,var(--accent),#6b3dff);color:#fff}
 
   /* Toast */
-  .toast {
-    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(20px);
-    background: var(--surface-3); color: var(--text); padding: 12px 20px; border-radius: 12px;
-    font-size: 13.5px; border: 1px solid var(--border-strong); box-shadow: var(--shadow);
-    opacity: 0; pointer-events: none; transition: var(--t-med); z-index: 90; max-width: 90vw;
-  }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .toast.err { border-color: var(--danger); }
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--surface-3);color:var(--text);
+    padding:12px 20px;border-radius:12px;font-size:13.5px;border:1px solid var(--border-strong);box-shadow:var(--shadow);
+    opacity:0;pointer-events:none;transition:var(--t-med);z-index:90;max-width:90vw}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.err{border-color:var(--danger)}
 
-  /* Responsive */
-  @media (max-width: 900px) {
-    .player-panel { grid-template-columns: 1fr; }
-    .player-panel.show { max-height: 1400px; }
-    .now-info { display: none; }
-    .now-info.mobile-show { display: flex; }
+  /* Footer */
+  .site-footer{margin-top:30px;border-top:1px solid var(--border);background:rgba(10,10,14,.6);padding:36px clamp(16px,4vw,40px) 22px}
+  .sf-grid{max-width:1200px;margin:0 auto;display:grid;gap:26px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+  .sf-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:13px}
+  .sf-about{font-size:13px;color:var(--text-dim);line-height:1.6}
+  .sf-links{list-style:none;display:flex;flex-direction:column;gap:8px}
+  .sf-links a{font-size:13px;color:var(--text-dim);text-decoration:none;transition:color var(--t-fast)}
+  .sf-links a:hover{color:var(--text)}
+  .sf-bottom{max-width:1200px;margin:26px auto 0;padding-top:16px;border-top:1px solid var(--border);font-size:12px;color:var(--text-faint);text-align:center}
+
+  .rail-backdrop{display:none}
+
+  /* ===== Responsive ===== */
+  @media (max-width:1080px){ .player-panel{grid-template-columns:1fr} .player-panel.show{max-height:1500px} }
+  @media (max-width:860px){
+    :root{--panel-w:84vw}
+    .menu-toggle{display:grid}
+    .layout{grid-template-columns:1fr}
+    .rail{position:fixed;top:0;left:0;height:100vh;max-height:100vh;width:var(--panel-w);z-index:70;
+      transform:translateX(-100%);transition:transform var(--t-med)}
+    .rail.open{transform:translateX(0)}
+    .rail-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:65;display:none}
+    .rail-backdrop.show{display:block}
+    .now-info{display:none}
+    .now-info.mobile-show{display:flex}
   }
-  @media (max-width: 620px) {
-    .filterbar { grid-template-columns: 1fr 1fr; }
-    .search-wrap { grid-column: 1 / -1; }
-    .count-pill { grid-column: 1 / -1; justify-self: start; }
-    .channel-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
-    .ch-logo { width: 54px; height: 54px; }
-    .vol-slider { width: 64px; }
+  @media (max-width:560px){
+    .channel-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+    .ch-logo{width:50px;height:50px}
+    .vol-slider{width:60px}
+    .facets{grid-template-columns:1fr 1fr 1fr}
+    .facet-title{font-size:10px}
   }
 </style>
 </head>
 <body>
 
-<!-- ============ LOGIN SCREEN ============ -->
+<!-- ============ LOGIN ============ -->
 <section id="login-screen" class="screen active">
   <form class="login-card" id="login-form" autocomplete="off">
-    <div class="brand">
-      <span class="logo-dot">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      </span>
-      VilfinTV IPTV login
-    </div>
+    <div class="brand"><span class="logo-dot"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>VilfinTV IPTV login</div>
     <p class="login-sub">Private streaming dashboard. Sign in with your console credentials to continue.</p>
-
-    <div class="field">
-      <label for="username">Username</label>
-      <input type="text" id="username" name="username" required autocomplete="username" placeholder="Enter username" />
-    </div>
-    <div class="field">
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter password" />
-    </div>
-
+    <div class="field"><label for="username">Username</label><input type="text" id="username" name="username" required autocomplete="username" placeholder="Enter username"/></div>
+    <div class="field"><label for="password">Password</label><input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter password"/></div>
     <button type="submit" class="btn-primary" id="login-btn">Sign In</button>
     <div class="form-msg" id="login-msg"></div>
   </form>
 </section>
 
-<!-- ============ PROVIDER SCREEN ============ -->
+<!-- ============ PROVIDER ============ -->
 <section id="provider-screen" class="screen">
   <header class="topbar">
-    <div class="brand">
-      <span class="logo-dot">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      </span>
-      VilfinTV IPTV
-    </div>
-    <div class="topbar-actions">
-      <button class="ghost-btn" data-logout>Sign out</button>
-    </div>
+    <div class="brand"><span class="logo-dot"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>VilfinTV IPTV</div>
+    <div class="topbar-actions"><button class="ghost-btn" data-logout>Sign out</button></div>
   </header>
-
   <div class="provider-wrap">
     <h1>Choose a provider</h1>
     <p class="lead">Select a source to load its channel lineup.</p>
-
     <div class="provider-grid">
-      <button class="provider-card pc-jio" data-provider="jio">
-        <div class="provider-badge">J</div>
-        <h3>Jio IPTV</h3>
-        <div class="pc-sub">Load the Jio channel lineup</div>
-        <span class="pc-go">Open lineup
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </span>
-      </button>
-
-      <button class="provider-card pc-airtel" data-provider="airtel">
-        <div class="provider-badge">A</div>
-        <h3>Airtel IPTV</h3>
-        <div class="pc-sub">Load the Airtel channel lineup</div>
-        <span class="pc-go">Open lineup
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </span>
-      </button>
-
-      <button class="provider-card pc-free" data-provider="free">
-        <div class="provider-badge">F</div>
-        <h3>Free IPTV</h3>
-        <div class="pc-sub">Open-source channels from iptv-org</div>
-        <span class="pc-go">Open lineup
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </span>
-      </button>
-
-      <button class="provider-card pc-pro" data-provider="pro">
-        <div class="provider-badge">P</div>
-        <h3>IPTV Pro</h3>
-        <div class="pc-sub">Curated premium channel lineup</div>
-        <span class="pc-go">Open lineup
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </span>
-      </button>
-
-      <button class="provider-card pc-custom" data-provider="custom">
-        <div class="provider-badge">C</div>
-        <h3>Custom</h3>
-        <div class="pc-sub">Your own playlist URL from settings</div>
-        <span class="pc-go">Open lineup
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </span>
-      </button>
+      <button class="provider-card pc-jio" data-provider="jio"><div class="provider-badge">J</div><h3>Jio IPTV</h3><div class="pc-sub">Load the Jio channel lineup</div><span class="pc-go">Open lineup →</span></button>
+      <button class="provider-card pc-airtel" data-provider="airtel"><div class="provider-badge">A</div><h3>Airtel IPTV</h3><div class="pc-sub">Load the Airtel channel lineup</div><span class="pc-go">Open lineup →</span></button>
+      <button class="provider-card pc-free" data-provider="free"><div class="provider-badge">F</div><h3>Free IPTV</h3><div class="pc-sub">Open-source channels from iptv-org</div><span class="pc-go">Open lineup →</span></button>
+      <button class="provider-card pc-pro" data-provider="pro"><div class="provider-badge">P</div><h3>IPTV Pro</h3><div class="pc-sub">Curated premium channel lineup</div><span class="pc-go">Open lineup →</span></button>
+      <button class="provider-card pc-custom" data-provider="custom"><div class="provider-badge">C</div><h3>Custom</h3><div class="pc-sub">Your own playlist URL from settings</div><span class="pc-go">Open lineup →</span></button>
     </div>
   </div>
 </section>
 
-<!-- ============ PLAYER / DASHBOARD SCREEN ============ -->
+<!-- ============ PLAYER ============ -->
 <section id="player-screen" class="screen">
   <header class="topbar">
-    <div class="brand">
-      <span class="logo-dot">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      </span>
-      <span id="dash-provider-name">IPTV Console</span>
+    <div class="brand" style="gap:8px">
+      <button class="icon-btn menu-toggle" id="menu-toggle" title="Filters" aria-label="Filters">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="logo-dot"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></span>
+      <span id="dash-provider-name">VilfinTV IPTV</span>
     </div>
     <div class="topbar-actions">
+      <button class="icon-btn" id="btn-remote" title="Channel remote" aria-label="Channel remote">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="4"/><circle cx="12" cy="7" r="1.4" fill="currentColor"/><line x1="9" y1="12" x2="9" y2="12"/><line x1="12" y1="12" x2="12" y2="12"/><line x1="15" y1="12" x2="15" y2="12"/></svg>
+      </button>
       <button class="ghost-btn" data-back>Providers</button>
       <button class="ghost-btn" data-logout>Sign out</button>
     </div>
   </header>
 
-  <div class="dash">
-    <!-- Player panel -->
-    <div class="player-panel" id="player-panel">
-      <div class="video-shell" id="video-shell">
-        <video id="video" playsinline></video>
-        <div class="video-loading" id="video-loading">
-          <div class="vl-inner"><div class="spinner"></div><span>Loading stream…</span></div>
+  <div class="layout">
+    <!-- Left filter rail (3 facets) -->
+    <aside class="rail" id="rail">
+      <div class="rail-head"><h3>Filters</h3><button class="rail-reset" id="rail-reset">Reset</button></div>
+      <div class="facets">
+        <div class="facet">
+          <div class="facet-title">Country</div>
+          <input class="facet-search" id="facet-search-country" placeholder="Search…" autocomplete="off">
+          <div class="facet-list" id="facet-country"></div>
         </div>
-        <div class="controls" id="controls">
-          <button class="ctrl-btn" id="btn-prev" title="Previous channel" aria-label="Previous channel">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM9.5 12l8.5 6V6z"/></svg>
-          </button>
-          <button class="ctrl-btn play" id="btn-play" title="Play / Pause" aria-label="Play or pause">
-            <svg id="icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-            <svg id="icon-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
-          </button>
-          <button class="ctrl-btn" id="btn-next" title="Next channel" aria-label="Next channel">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg>
-          </button>
-          <div class="vol-group">
-            <button class="ctrl-btn" id="btn-mute" title="Mute" aria-label="Mute">
-              <svg id="icon-vol" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>
-              <svg id="icon-mute" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M3 9v6h4l5 5V4L7 9zm13.7-1.3-1.4 1.4L17 11l-1.7 1.9 1.4 1.4L18.4 12l1.7 1.7 1.4-1.4L19.8 10.6 21.5 8.7l-1.4-1.4L18.4 9z"/></svg>
-            </button>
-            <input type="range" class="vol-slider" id="vol-slider" min="0" max="1" step="0.01" value="1" aria-label="Volume" />
-          </div>
-          <div class="ctrl-spacer"></div>
-          <span class="now-live"><span class="live-dot"></span>LIVE</span>
-          <button class="ctrl-btn" id="btn-fs" title="Fullscreen" aria-label="Fullscreen">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7zM5 10h2V7h3V5H5zm12 7h-3v2h5v-5h-2zM14 5v2h3v3h2V5z"/></svg>
-          </button>
+        <div class="facet">
+          <div class="facet-title">Category</div>
+          <input class="facet-search" id="facet-search-category" placeholder="Search…" autocomplete="off">
+          <div class="facet-list" id="facet-category"></div>
+        </div>
+        <div class="facet">
+          <div class="facet-title">Language</div>
+          <input class="facet-search" id="facet-search-language" placeholder="Search…" autocomplete="off">
+          <div class="facet-list" id="facet-language"></div>
         </div>
       </div>
+    </aside>
+    <div class="rail-backdrop" id="rail-backdrop"></div>
 
-      <aside class="now-info" id="now-info">
-        <div class="ni-head">
-          <img class="ni-logo" id="ni-logo" alt="" />
-          <div>
-            <div class="ni-name" id="ni-name">—</div>
-            <div class="ni-cat" id="ni-cat"></div>
+    <!-- Main -->
+    <div class="main">
+      <!-- Player -->
+      <div class="player-panel" id="player-panel">
+        <div class="video-shell" id="video-shell">
+          <video id="video" playsinline></video>
+          <div class="video-loading" id="video-loading"><div class="vl-inner"><div class="spinner"></div><span>Loading stream…</span></div></div>
+          <div class="controls" id="controls">
+            <button class="ctrl-btn" id="btn-prev" title="Previous"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM9.5 12l8.5 6V6z"/></svg></button>
+            <button class="ctrl-btn play" id="btn-play" title="Play/Pause"><svg id="icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg id="icon-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button>
+            <button class="ctrl-btn" id="btn-next" title="Next"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg></button>
+            <div class="vol-group">
+              <button class="ctrl-btn" id="btn-mute" title="Mute"><svg id="icon-vol" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9z"/></svg><svg id="icon-mute" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M3 9v6h4l5 5V4L7 9zm13.7-1.3-1.4 1.4L17 11l-1.7 1.9 1.4 1.4L18.4 12l1.7 1.7 1.4-1.4L19.8 10.6 21.5 8.7l-1.4-1.4L18.4 9z"/></svg></button>
+              <input type="range" class="vol-slider" id="vol-slider" min="0" max="1" step="0.01" value="1" aria-label="Volume"/>
+            </div>
+            <div class="ctrl-spacer"></div>
+            <span class="now-live"><span class="live-dot"></span>LIVE</span>
+            <button class="ctrl-btn" id="btn-pip" title="Picture in Picture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="12" y="10" width="7" height="6" rx="1" fill="currentColor" stroke="none"/></svg></button>
+            <button class="ctrl-btn" id="btn-fs" title="Fullscreen"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7zM5 10h2V7h3V5H5zm12 7h-3v2h5v-5h-2zM14 5v2h3v3h2V5z"/></svg></button>
           </div>
         </div>
-        <div class="ni-meta">
-          <div class="row"><span>Quality</span><b id="ni-quality">—</b></div>
-          <div class="row"><span>Category</span><b id="ni-category">—</b></div>
-          <div class="row"><span>Language</span><b id="ni-language">—</b></div>
-          <div class="row"><span>Position</span><b id="ni-position">—</b></div>
-        </div>
-        <div class="ni-epg" id="ni-epg" style="margin-top:16px;font-size:13px"></div>
-        <div class="ni-hint">Use the Previous / Next controls to skip through the currently filtered list.</div>
-      </aside>
-    </div>
-
-    <!-- Filter bar -->
-    <div class="filterbar">
-      <div class="search-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="search" placeholder="Search channels…" autocomplete="off" />
+        <aside class="now-info" id="now-info">
+          <div class="ni-head"><img class="ni-logo" id="ni-logo" alt=""/><div><div class="ni-name" id="ni-name">—</div><div class="ni-cat" id="ni-cat"></div></div></div>
+          <div class="ni-meta">
+            <div class="row"><span>Channel #</span><b id="ni-number">—</b></div>
+            <div class="row"><span>Quality</span><b id="ni-quality">—</b></div>
+            <div class="row"><span>Category</span><b id="ni-category">—</b></div>
+            <div class="row"><span>Language</span><b id="ni-language">—</b></div>
+          </div>
+          <div class="ni-epg" id="ni-epg"></div>
+          <div class="ni-hint">Use Prev / Next or the remote (channel number) to switch channels.</div>
+        </aside>
       </div>
-      <select class="sel" id="filter-category"><option value="">All Categories</option></select>
-      <select class="sel" id="filter-language"><option value="">All Languages</option></select>
-      <span class="count-pill"><b id="ch-count">0</b> channels</span>
-    </div>
 
-    <!-- Channel grid -->
-    <div class="channel-grid" id="channel-grid"></div>
-    <div class="empty-state" id="empty-state" style="display:none">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
-      <div>No channels match your filters.</div>
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="search" placeholder="Search channels…" autocomplete="off"/>
+        </div>
+        <button class="chip" id="chip-fav"><span class="star">★</span> Favorites</button>
+        <span class="count-pill"><b id="ch-count">0</b> channels</span>
+      </div>
+      <div class="active-tags" id="active-tags"></div>
+
+      <!-- Grid -->
+      <div class="channel-grid" id="channel-grid"></div>
+      <button class="load-more" id="load-more" style="display:none">Load more</button>
+
+      <!-- States -->
+      <div class="empty-state" id="prompt-state" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+        <h3>Pick a filter to start</h3>
+        <div>Choose a <b>Country</b>, <b>Category</b> or <b>Language</b> on the left, search, or open ★ Favorites — channels load only after you select, so the page stays fast.</div>
+      </div>
+      <div class="empty-state" id="empty-state" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
+        <div>No channels match your filters.</div>
+      </div>
     </div>
   </div>
-</section>
 
-<!-- ============ FOOTER (matches vilfintv.com) ============ -->
-<footer class="site-footer">
-  <div class="sf-grid">
-    <div class="sf-col">
-      <div class="sf-title">VilfinTV MultiScreener</div>
-      <p class="sf-about">Your premium all-in-one platform for real-time financial screening, live global news, stories, TV channels, sports scores, radio and market status.</p>
-    </div>
-    <div class="sf-col">
-      <div class="sf-title">Platform Features</div>
-      <ul class="sf-links">
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="sf-grid">
+      <div class="sf-col"><div class="sf-title">VilfinTV MultiScreener</div><p class="sf-about">Your premium all-in-one platform for real-time financial screening, live global news, stories, TV channels, sports scores, radio and market status.</p></div>
+      <div class="sf-col"><div class="sf-title">Platform Features</div><ul class="sf-links">
         <li><a href="https://vilfintv.com/">🤖 AI Screener</a></li>
         <li><a href="https://vilfintv.com/news.html">📺 VilfinTV News</a></li>
         <li><a href="https://vilfintv.com/story.html">📖 VilfinTV Stories</a></li>
         <li><a href="https://vilfintv.com/education.html">🎓 VilfinTV Academy</a></li>
         <li><a href="https://vilfintv.com/iptv.html">📡 VilfinTV IPTV</a></li>
-      </ul>
-    </div>
-    <div class="sf-col">
-      <div class="sf-title">Legal &amp; Support</div>
-      <ul class="sf-links">
+      </ul></div>
+      <div class="sf-col"><div class="sf-title">Legal &amp; Support</div><ul class="sf-links">
         <li><a href="https://vilfintv.com/">Home</a></li>
         <li><a href="https://vilfintv.com/blog_intelligence_hub.html">📰 Blog Intelligence Hub</a></li>
-      </ul>
+      </ul></div>
+      <div class="sf-col"><div class="sf-title">Connect</div><p class="sf-about">VilfinTV — private streaming console. Access is limited to authorised viewers.</p></div>
     </div>
-    <div class="sf-col">
-      <div class="sf-title">Connect</div>
-      <p class="sf-about">VilfinTV — private streaming console. Access is limited to authorised viewers.</p>
-    </div>
+    <div class="sf-bottom">© <span id="sf-year"></span> VilfinTV. All rights reserved.</div>
+  </footer>
+</section>
+
+<!-- Remote modal -->
+<div class="modal-back" id="remote-modal">
+  <div class="remote">
+    <h3>ENTER CHANNEL NUMBER</h3>
+    <div class="remote-display" id="remote-display">—</div>
+    <div class="remote-name" id="remote-name"></div>
+    <div class="keypad" id="keypad"></div>
   </div>
-  <div class="sf-bottom">© <span id="sf-year"></span> VilfinTV. All rights reserved.</div>
-</footer>
+</div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-(function () {
+(function(){
   "use strict";
 
-  /* ---------------- Footer year ---------------- */
-  var _yr = document.getElementById("sf-year");
-  if (_yr) _yr.textContent = new Date().getFullYear();
+  var _yr=document.getElementById("sf-year"); if(_yr) _yr.textContent=new Date().getFullYear();
 
-  /* ---------------- Config & state ---------------- */
-  var WORKER = "https://page-iptv.vilfintv.workers.dev";
-  var API = {
-    login: WORKER + "/api/login",
-    playlist: function (p) { return WORKER + "/api/playlist?provider=" + encodeURIComponent(p); },
-    stream: function (url, token) {
-      return WORKER + "/api/stream?token=" + encodeURIComponent(token) + "&url=" + encodeURIComponent(url);
-    },
-    epg: function (provider, channel) {
-      return WORKER + "/api/epg?provider=" + encodeURIComponent(provider) + "&channel=" + encodeURIComponent(channel);
-    }
+  var WORKER="https://page-iptv.vilfintv.workers.dev";
+  var API={
+    login:WORKER+"/api/login",
+    playlist:function(p){return WORKER+"/api/playlist?provider="+encodeURIComponent(p);},
+    stream:function(u,t){return WORKER+"/api/stream?token="+encodeURIComponent(t)+"&url="+encodeURIComponent(u);},
+    epg:function(p,c){return WORKER+"/api/epg?provider="+encodeURIComponent(p)+"&channel="+encodeURIComponent(c);}
   };
-  var TOKEN_KEY = "iptv_token";
+  var TOKEN_KEY="iptv_token", FAV_KEY="iptv_favs", PREF_KEY="iptv_prefs", PAGE=120;
 
-  var state = {
-    token: sessionStorage.getItem(TOKEN_KEY) || null,
-    provider: null,
-    channels: [],     // full list for provider
-    filtered: [],     // current filtered view
-    currentIndex: -1, // index into filtered
-    hls: null
+  var state={
+    token:sessionStorage.getItem(TOKEN_KEY)||null,
+    provider:null, channels:[], filtered:[], currentChannel:null, currentIndex:-1,
+    hls:null, renderCount:PAGE,
+    favs:loadFavs(), prefs:loadPrefs(),
+    filter:{country:"",category:"",language:"",search:"",favOnly:false}
   };
 
-  /* ---------------- DOM helpers ---------------- */
-  var $ = function (id) { return document.getElementById(id); };
-  function show(screenId) {
-    ["login-screen", "provider-screen", "player-screen"].forEach(function (s) {
-      $(s).classList.toggle("active", s === screenId);
-    });
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-  var toastTimer;
-  function toast(msg, isErr) {
-    var t = $("toast");
-    t.textContent = msg;
-    t.classList.toggle("err", !!isErr);
-    t.classList.add("show");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { t.classList.remove("show"); }, 3200);
-  }
-  function escapeHtml(s) {
-    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
-    });
-  }
+  /* country code → name + flag */
+  var CC={us:"🇺🇸 United States",uk:"🇬🇧 United Kingdom",gb:"🇬🇧 United Kingdom",in:"🇮🇳 India",ca:"🇨🇦 Canada",
+    au:"🇦🇺 Australia",jp:"🇯🇵 Japan",kr:"🇰🇷 South Korea",cn:"🇨🇳 China",de:"🇩🇪 Germany",fr:"🇫🇷 France",
+    es:"🇪🇸 Spain",it:"🇮🇹 Italy",br:"🇧🇷 Brazil",mx:"🇲🇽 Mexico",ru:"🇷🇺 Russia",ae:"🇦🇪 UAE",sa:"🇸🇦 Saudi Arabia",
+    pk:"🇵🇰 Pakistan",bd:"🇧🇩 Bangladesh",lk:"🇱🇰 Sri Lanka",np:"🇳🇵 Nepal",sg:"🇸🇬 Singapore",my:"🇲🇾 Malaysia",
+    id:"🇮🇩 Indonesia",th:"🇹🇭 Thailand",ph:"🇵🇭 Philippines",vn:"🇻🇳 Vietnam",tr:"🇹🇷 Turkey",eg:"🇪🇬 Egypt",
+    za:"🇿🇦 South Africa",ng:"🇳🇬 Nigeria",ke:"🇰🇪 Kenya",nl:"🇳🇱 Netherlands",se:"🇸🇪 Sweden",no:"🇳🇴 Norway",
+    pl:"🇵🇱 Poland",pt:"🇵🇹 Portugal",gr:"🇬🇷 Greece",ie:"🇮🇪 Ireland",nz:"🇳🇿 New Zealand",ar:"🇦🇷 Argentina",
+    cl:"🇨🇱 Chile",co:"🇨🇴 Colombia",qa:"🇶🇦 Qatar",il:"🇮🇱 Israel",ir:"🇮🇷 Iran",ua:"🇺🇦 Ukraine"};
 
-  /* ---------------- Auth ---------------- */
-  $("login-form").addEventListener("submit", function (e) {
+  var $=function(id){return document.getElementById(id);};
+  function show(s){["login-screen","provider-screen","player-screen"].forEach(function(x){$(x).classList.toggle("active",x===s);});window.scrollTo({top:0,behavior:"smooth"});}
+  var toastT;
+  function toast(m,e){var t=$("toast");t.textContent=m;t.classList.toggle("err",!!e);t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("show");},3000);}
+  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+  function loadFavs(){try{return new Set(JSON.parse(localStorage.getItem(FAV_KEY)||"[]"));}catch(e){return new Set();}}
+  function saveFavs(){try{localStorage.setItem(FAV_KEY,JSON.stringify(Array.from(state.favs)));}catch(e){}}
+  function loadPrefs(){try{return JSON.parse(localStorage.getItem(PREF_KEY)||"{}")||{};}catch(e){return {};}}
+  function savePrefs(){try{localStorage.setItem(PREF_KEY,JSON.stringify(state.prefs));}catch(e){}}
+  function favKey(c){return (c.id||"")+"|"+c.url;}
+
+  /* ---------- Auth ---------- */
+  $("login-form").addEventListener("submit",function(e){
     e.preventDefault();
-    var btn = $("login-btn"), msg = $("login-msg");
-    var username = $("username").value.trim();
-    var password = $("password").value;
-    if (!username || !password) { msg.className = "form-msg err"; msg.textContent = "Enter username and password."; return; }
-
-    btn.disabled = true; btn.textContent = "Signing in…";
-    msg.className = "form-msg"; msg.textContent = "";
-
-    fetch(API.login, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: username, password: password })
-    })
-      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
-      .then(function (res) {
-        if (!res.ok || !res.d.token) {
-          throw new Error(res.d && res.d.error ? res.d.error : "Invalid credentials");
-        }
-        state.token = res.d.token;
-        sessionStorage.setItem(TOKEN_KEY, state.token);
-        msg.className = "form-msg ok"; msg.textContent = "Welcome back.";
-        $("password").value = "";
-        setTimeout(function () { show("provider-screen"); }, 350);
+    var btn=$("login-btn"),msg=$("login-msg");
+    var u=$("username").value.trim(),p=$("password").value;
+    if(!u||!p){msg.className="form-msg err";msg.textContent="Enter username and password.";return;}
+    btn.disabled=true;btn.textContent="Signing in…";msg.className="form-msg";msg.textContent="";
+    fetch(API.login,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u,password:p})})
+      .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d};});})
+      .then(function(res){
+        if(!res.ok||!res.d.token)throw new Error(res.d&&res.d.error?res.d.error:"Invalid credentials");
+        state.token=res.d.token;sessionStorage.setItem(TOKEN_KEY,state.token);
+        msg.className="form-msg ok";msg.textContent="Welcome back.";$("password").value="";
+        setTimeout(function(){show("provider-screen");},300);
       })
-      .catch(function (err) {
-        msg.className = "form-msg err";
-        msg.textContent = err.message || "Sign in failed.";
-      })
-      .finally(function () { btn.disabled = false; btn.textContent = "Sign In"; });
+      .catch(function(err){msg.className="form-msg err";msg.textContent=err.message||"Sign in failed.";})
+      .finally(function(){btn.disabled=false;btn.textContent="Sign In";});
   });
+  function logout(){stopPlayback();state.token=null;state.channels=[];state.filtered=[];sessionStorage.removeItem(TOKEN_KEY);show("login-screen");}
+  Array.prototype.forEach.call(document.querySelectorAll("[data-logout]"),function(b){b.addEventListener("click",logout);});
+  Array.prototype.forEach.call(document.querySelectorAll("[data-back]"),function(b){b.addEventListener("click",function(){stopPlayback();show("provider-screen");});});
 
-  function logout() {
-    stopPlayback();
-    state.token = null;
-    state.channels = []; state.filtered = []; state.currentIndex = -1;
-    sessionStorage.removeItem(TOKEN_KEY);
-    show("login-screen");
-  }
-  Array.prototype.forEach.call(document.querySelectorAll("[data-logout]"), function (b) {
-    b.addEventListener("click", logout);
-  });
-  Array.prototype.forEach.call(document.querySelectorAll("[data-back]"), function (b) {
-    b.addEventListener("click", function () { stopPlayback(); show("provider-screen"); });
-  });
+  /* ---------- Provider ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll(".provider-card"),function(card){card.addEventListener("click",function(){loadProvider(card.getAttribute("data-provider"));});});
 
-  /* ---------------- Provider selection ---------------- */
-  Array.prototype.forEach.call(document.querySelectorAll(".provider-card"), function (card) {
-    card.addEventListener("click", function () { loadProvider(card.getAttribute("data-provider")); });
-  });
-
-  function loadProvider(provider) {
-    if (!state.token) { logout(); return; }
-    state.provider = provider;
-    var PROVIDER_LABELS = { jio: "Jio IPTV", airtel: "Airtel IPTV", free: "Free IPTV", pro: "IPTV Pro", custom: "Custom" };
-    $("dash-provider-name").textContent = PROVIDER_LABELS[provider] || "VilfinTV IPTV";
+  function loadProvider(provider){
+    if(!state.token){logout();return;}
+    state.provider=provider;
+    var L={jio:"Jio IPTV",airtel:"Airtel IPTV",free:"Free IPTV",pro:"IPTV Pro",custom:"Custom"};
+    $("dash-provider-name").textContent=L[provider]||"VilfinTV IPTV";
     show("player-screen");
-    $("channel-grid").innerHTML = "";
-    $("empty-state").style.display = "none";
-    $("ch-count").textContent = "…";
+    state.channels=[];state.filtered=[];state.currentChannel=null;state.currentIndex=-1;
+    state.filter={country:"",category:"",language:"",search:"",favOnly:false};
+    $("channel-grid").innerHTML="";$("ch-count").textContent="…";
+    $("prompt-state").style.display="none";$("empty-state").style.display="none";
+    ["facet-country","facet-category","facet-language"].forEach(function(id){$(id).innerHTML='<div style="padding:10px;color:var(--text-faint);font-size:12px">Loading…</div>';});
 
-    fetch(API.playlist(provider), { headers: { "Authorization": "Bearer " + state.token } })
-      .then(function (r) {
-        if (r.status === 401) { throw new Error("AUTH"); }
-        return r.json().then(function (d) { return { ok: r.ok, d: d }; });
+    fetch(API.playlist(provider),{headers:{"Authorization":"Bearer "+state.token}})
+      .then(function(r){if(r.status===401)throw new Error("AUTH");return r.json().then(function(d){return{ok:r.ok,d:d};});})
+      .then(function(res){
+        if(!res.ok)throw new Error(res.d&&res.d.error?res.d.error:"Failed to load playlist");
+        var list=Array.isArray(res.d)?res.d:(res.d.channels||[]);
+        state.channels=list.map(normalizeChannel);
+        buildFacets();
+        applyDefaults();
+        toast(state.channels.length.toLocaleString()+" channels available — pick a filter to view.");
       })
-      .then(function (res) {
-        if (!res.ok) { throw new Error(res.d && res.d.error ? res.d.error : "Failed to load playlist"); }
-        var list = Array.isArray(res.d) ? res.d : (res.d.channels || []);
-        state.channels = list.map(normalizeChannel);
-        buildFilterOptions();
-        applyFilters();
-        if (!state.channels.length) toast("Playlist is empty for this provider.");
-      })
-      .catch(function (err) {
-        if (err.message === "AUTH") { toast("Session expired. Please sign in again.", true); logout(); return; }
-        toast(err.message || "Could not load channels.", true);
-        $("ch-count").textContent = "0";
-        renderGrid();
+      .catch(function(err){
+        if(err.message==="AUTH"){toast("Session expired. Sign in again.",true);logout();return;}
+        toast(err.message||"Could not load channels.",true);
+        $("ch-count").textContent="0";
+        ["facet-country","facet-category","facet-language"].forEach(function(id){$(id).innerHTML="";});
       });
   }
 
-  function normalizeChannel(c) {
-    var q = (c.quality || "").toString().toUpperCase();
-    if (q !== "HD" && q !== "SD") {
-      q = /\bHD\b|FHD|1080|720/i.test((c.name || "") + " " + (c.url || "")) ? "HD" : "SD";
+  function normalizeChannel(c){
+    var q=(c.quality||"").toString().toUpperCase();
+    if(q!=="HD"&&q!=="SD")q=/\bHD\b|FHD|1080|720/i.test((c.name||"")+" "+(c.url||""))?"HD":"SD";
+    var country=countryOf(c);
+    return{name:c.name||"Unknown channel",id:c.id||"",logo:c.logo||"",category:c.category||"General",
+      language:(c.language||c.lang||"").trim()||"—",country:country,url:c.url||"",quality:q};
+  }
+  function countryOf(c){
+    var id=(c.id||"");var m=id.match(/\.([a-zA-Z]{2})$/);
+    if(m){var cc=m[1].toLowerCase();return CC[cc]||(cc.toUpperCase());}
+    // try matching group/category against known country names
+    var hay=((c.category||"")+" "+(c.name||"")).toLowerCase();
+    for(var k in CC){var nm=CC[k].replace(/^[^\sa-zA-Z]+\s*/,"").toLowerCase();if(nm.length>3&&hay.indexOf(nm)!==-1)return CC[k];}
+    return "🌐 Other";
+  }
+
+  /* ---------- Facets ---------- */
+  function tally(field){
+    var m={};
+    state.channels.forEach(function(c){var v=c[field];if(!v||v==="—")return;m[v]=(m[v]||0)+1;});
+    return Object.keys(m).map(function(k){return{key:k,count:m[k]};}).sort(function(a,b){return b.count-a.count||a.key.localeCompare(b.key);});
+  }
+  function buildFacets(){
+    renderFacet("country",tally("country"));
+    renderFacet("category",tally("category"));
+    renderFacet("language",tally("language"));
+  }
+  function renderFacet(kind,items,q){
+    var host=$("facet-"+kind);
+    var filterTxt=(q||"").toLowerCase();
+    var shown=filterTxt?items.filter(function(i){return i.key.toLowerCase().indexOf(filterTxt)!==-1;}):items;
+    if(!shown.length){host.innerHTML='<div style="padding:10px;color:var(--text-faint);font-size:12px">None</div>';return;}
+    host.innerHTML=shown.slice(0,400).map(function(i){
+      var active=state.filter[kind]===i.key?" active":"";
+      return '<div class="facet-item'+active+'" data-kind="'+kind+'" data-key="'+esc(i.key)+'"><span class="fi-name">'+esc(i.key)+'</span><span class="fi-count">'+i.count+'</span></div>';
+    }).join("");
+    Array.prototype.forEach.call(host.querySelectorAll(".facet-item"),function(el){
+      el.addEventListener("click",function(){
+        var k=el.getAttribute("data-kind"),v=el.getAttribute("data-key");
+        state.filter[k]=(state.filter[k]===v)?"":v;       // toggle
+        state.prefs[k]=state.filter[k]; savePrefs();        // remember as default
+        buildFacets(); applyFilters(); closeRailMobile();
+      });
+    });
+  }
+  ["country","category","language"].forEach(function(kind){
+    $("facet-search-"+kind).addEventListener("input",function(){renderFacet(kind,tally(kind),this.value);});
+  });
+  $("rail-reset").addEventListener("click",function(){
+    state.filter={country:"",category:"",language:"",search:"",favOnly:false};
+    state.prefs={}; savePrefs();
+    $("search").value="";$("chip-fav").classList.remove("active");
+    buildFacets(); applyFilters();
+  });
+
+  function applyDefaults(){
+    var p=state.prefs||{};
+    if(p.country) state.filter.country=p.country;
+    if(p.category) state.filter.category=p.category;
+    if(p.language) state.filter.language=p.language;
+    buildFacets();
+    if(state.filter.country||state.filter.category||state.filter.language){ applyFilters(); }
+    else { // nothing selected → fast prompt, no mass render
+      state.filtered=[]; $("channel-grid").innerHTML=""; $("empty-state").style.display="none";
+      $("prompt-state").style.display="block"; $("load-more").style.display="none";
+      $("ch-count").textContent=state.channels.length.toLocaleString(); renderTags();
     }
-    return {
-      name: c.name || "Unknown channel",
-      id: c.id || "",
-      logo: c.logo || "",
-      category: c.category || "General",
-      language: c.language || c.lang || "—",
-      url: c.url || "",
-      quality: q
-    };
   }
 
-  /* ---------------- Filters ---------------- */
-  function buildFilterOptions() {
-    var cats = {}, langs = {};
-    state.channels.forEach(function (c) {
-      if (c.category) cats[c.category] = true;
-      if (c.language && c.language !== "—") langs[c.language] = true;
-    });
-    fillSelect($("filter-category"), Object.keys(cats).sort(), "All Categories");
-    fillSelect($("filter-language"), Object.keys(langs).sort(), "All Languages");
-  }
-  function fillSelect(sel, values, allLabel) {
-    sel.innerHTML = '<option value="">' + allLabel + "</option>";
-    values.forEach(function (v) {
-      var o = document.createElement("option");
-      o.value = v; o.textContent = v;
-      sel.appendChild(o);
-    });
-  }
-
-  function applyFilters() {
-    var q = $("search").value.trim().toLowerCase();
-    var cat = $("filter-category").value;
-    var lang = $("filter-language").value;
-    state.filtered = state.channels.filter(function (c) {
-      if (cat && c.category !== cat) return false;
-      if (lang && c.language !== lang) return false;
-      if (q && c.name.toLowerCase().indexOf(q) === -1) return false;
+  /* ---------- Filtering ---------- */
+  function hasAnyFilter(){var f=state.filter;return !!(f.country||f.category||f.language||f.search||f.favOnly);}
+  function applyFilters(){
+    var f=state.filter, q=f.search.toLowerCase();
+    if(!hasAnyFilter()){
+      state.filtered=[];$("channel-grid").innerHTML="";$("empty-state").style.display="none";
+      $("prompt-state").style.display="block";$("load-more").style.display="none";
+      $("ch-count").textContent=state.channels.length.toLocaleString();renderTags();return;
+    }
+    $("prompt-state").style.display="none";
+    state.filtered=state.channels.filter(function(c){
+      if(f.favOnly&&!state.favs.has(favKey(c)))return false;
+      if(f.country&&c.country!==f.country)return false;
+      if(f.category&&c.category!==f.category)return false;
+      if(f.language&&c.language!==f.language)return false;
+      if(q&&c.name.toLowerCase().indexOf(q)===-1)return false;
       return true;
     });
-    renderGrid();
+    state.renderCount=PAGE;
+    renderGrid();renderTags();
   }
-
   var searchTimer;
-  $("search").addEventListener("input", function () {
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(applyFilters, 120);
-  });
-  $("filter-category").addEventListener("change", applyFilters);
-  $("filter-language").addEventListener("change", applyFilters);
+  $("search").addEventListener("input",function(){clearTimeout(searchTimer);var v=this.value;searchTimer=setTimeout(function(){state.filter.search=v.trim();applyFilters();},160);});
+  $("chip-fav").addEventListener("click",function(){state.filter.favOnly=!state.filter.favOnly;this.classList.toggle("active",state.filter.favOnly);applyFilters();});
 
-  /* ---------------- Grid render ---------------- */
-  function renderGrid() {
-    var grid = $("channel-grid");
-    var empty = $("empty-state");
-    $("ch-count").textContent = state.filtered.length;
-
-    if (!state.filtered.length) {
-      grid.innerHTML = "";
-      empty.style.display = "block";
-      return;
-    }
-    empty.style.display = "none";
-
-    var html = state.filtered.map(function (c, i) {
-      var playing = (state.currentChannel && c.url === state.currentChannel.url) ? " playing" : "";
-      var logo = c.logo
-        ? '<img class="ch-logo" loading="lazy" src="' + escapeHtml(c.logo) + '" alt="" onerror="this.style.visibility=\'hidden\'" />'
-        : '<div class="ch-logo"></div>';
-      return '' +
-        '<button class="ch-card' + playing + '" data-idx="' + i + '" style="animation-delay:' + Math.min(i * 12, 360) + 'ms">' +
-          '<span class="qbadge ' + c.quality + '">' + c.quality + '</span>' +
-          logo +
-          '<div class="ch-name">' + escapeHtml(c.name) + '</div>' +
-          '<div class="ch-cat">' + escapeHtml(c.category) + '</div>' +
-        '</button>';
-    }).join("");
-    grid.innerHTML = html;
-
-    Array.prototype.forEach.call(grid.querySelectorAll(".ch-card"), function (card) {
-      card.addEventListener("click", function () {
-        playIndex(parseInt(card.getAttribute("data-idx"), 10));
+  function renderTags(){
+    var f=state.filter,tags=[];
+    function tag(label,kind){return '<span class="tag"><b>'+esc(label)+'</b><span class="x" data-clear="'+kind+'">✕</span></span>';}
+    if(f.favOnly)tags.push('<span class="tag"><b>★ Favorites</b><span class="x" data-clear="favOnly">✕</span></span>');
+    if(f.country)tags.push(tag(f.country,"country"));
+    if(f.category)tags.push(tag(f.category,"category"));
+    if(f.language)tags.push(tag(f.language,"language"));
+    if(f.search)tags.push(tag('“'+f.search+'”',"search"));
+    var host=$("active-tags");host.innerHTML=tags.join("");
+    Array.prototype.forEach.call(host.querySelectorAll(".x"),function(x){
+      x.addEventListener("click",function(){
+        var k=x.getAttribute("data-clear");
+        if(k==="favOnly"){state.filter.favOnly=false;$("chip-fav").classList.remove("active");}
+        else{state.filter[k]="";if(k==="search")$("search").value="";if(state.prefs[k]){delete state.prefs[k];savePrefs();}}
+        buildFacets();applyFilters();
       });
     });
   }
 
-  /* ---------------- Playback ---------------- */
-  var video = $("video");
+  /* ---------- Grid ---------- */
+  function renderGrid(){
+    var grid=$("channel-grid"),empty=$("empty-state");
+    $("ch-count").textContent=state.filtered.length.toLocaleString();
+    if(!state.filtered.length){grid.innerHTML="";empty.style.display="block";$("load-more").style.display="none";return;}
+    empty.style.display="none";
+    var slice=state.filtered.slice(0,state.renderCount);
+    grid.innerHTML=slice.map(function(c,i){
+      var playing=(state.currentChannel&&favKey(c)===favKey(state.currentChannel))?" playing":"";
+      var on=state.favs.has(favKey(c))?" on":"";
+      var logo=c.logo?'<img class="ch-logo" loading="lazy" src="'+esc(c.logo)+'" alt="" onerror="this.style.visibility=\'hidden\'"/>':'<div class="ch-logo"></div>';
+      return '<div class="ch-card'+playing+'" data-idx="'+i+'">'+
+        '<span class="ch-num">#'+(i+1)+'</span>'+
+        '<span class="qbadge '+c.quality+'">'+c.quality+'</span>'+
+        '<button class="fav-btn'+on+'" data-fav="'+i+'" title="Favorite"><svg viewBox="0 0 24 24" fill="'+(on?'currentColor':'none')+'" stroke="currentColor" stroke-width="2"><polygon points="12 2 15 9 22 9.3 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.3 9 9"/></svg></button>'+
+        logo+
+        '<div class="ch-name" data-play="'+i+'">'+esc(c.name)+'</div>'+
+        '<div class="ch-cat">'+esc(c.country)+' · '+esc(c.category)+'</div>'+
+      '</div>';
+    }).join("");
+    $("load-more").style.display=state.filtered.length>state.renderCount?"block":"none";
+    Array.prototype.forEach.call(grid.querySelectorAll("[data-play]"),function(el){el.addEventListener("click",function(){playIndex(parseInt(el.getAttribute("data-play"),10));});});
+    Array.prototype.forEach.call(grid.querySelectorAll(".ch-logo"),function(el){el.addEventListener("click",function(){var card=el.closest(".ch-card");playIndex(parseInt(card.getAttribute("data-idx"),10));});});
+    Array.prototype.forEach.call(grid.querySelectorAll("[data-fav]"),function(el){el.addEventListener("click",function(ev){ev.stopPropagation();toggleFav(parseInt(el.getAttribute("data-fav"),10),el);});});
+  }
+  $("load-more").addEventListener("click",function(){state.renderCount+=PAGE;renderGrid();});
 
-  function playIndex(idx) {
-    if (idx < 0 || idx >= state.filtered.length) return;
-    state.currentIndex = idx;
-    var ch = state.filtered[idx];
-    state.currentChannel = ch;
-    openPlayer(ch);
-    renderGrid(); // refresh "playing" highlight
+  function toggleFav(idx,btn){
+    var c=state.filtered[idx];if(!c)return;var k=favKey(c);
+    if(state.favs.has(k)){state.favs.delete(k);btn.classList.remove("on");btn.querySelector("svg").setAttribute("fill","none");}
+    else{state.favs.add(k);btn.classList.add("on");btn.querySelector("svg").setAttribute("fill","currentColor");toast("Added to favorites");}
+    saveFavs();
+    if(state.filter.favOnly)applyFilters();
   }
 
-  function openPlayer(ch) {
-    $("player-panel").classList.add("show");
-    $("now-info").classList.add("mobile-show");
-    // Side info
-    $("ni-name").textContent = ch.name;
-    $("ni-cat").textContent = ch.category + (ch.language && ch.language !== "—" ? " · " + ch.language : "");
-    $("ni-quality").textContent = ch.quality;
-    $("ni-category").textContent = ch.category;
-    $("ni-language").textContent = ch.language;
-    $("ni-position").textContent = (state.currentIndex + 1) + " / " + state.filtered.length;
-    var nl = $("ni-logo");
-    if (ch.logo) { nl.src = ch.logo; nl.style.visibility = "visible"; } else { nl.style.visibility = "hidden"; }
-
-    loadEpg(ch);
-    loadStream(ch.url);
-    $("player-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+  /* ---------- Playback ---------- */
+  var video=$("video");
+  function playIndex(idx){
+    if(idx<0||idx>=state.filtered.length)return;
+    state.currentIndex=idx;var ch=state.filtered[idx];state.currentChannel=ch;
+    openPlayer(ch,idx);renderGrid();
   }
-
-  function loadEpg(ch) {
-    var el = $("ni-epg");
-    if (!el) return;
-    el.innerHTML = "";
-    if (!ch.id || !state.token) return;
-    el.innerHTML = '<div style="color:var(--text-faint)">Loading guide…</div>';
-    fetch(API.epg(state.provider, ch.id), { headers: { "Authorization": "Bearer " + state.token } })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) {
-        if (!d || (!d.now && !d.next)) { el.innerHTML = ""; return; }
-        var fmt = function (p) {
-          if (!p) return "";
-          var t = p.startMs ? new Date(p.startMs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
-          return '<div style="margin-bottom:6px"><span style="color:var(--text-faint)">' + t + '</span> ' + escapeHtml(p.title) + '</div>';
-        };
-        var html = "";
-        if (d.now) html += '<div style="color:var(--accent-2);font-weight:700;margin-bottom:6px">NOW</div>' + fmt(d.now);
-        if (d.next) html += '<div style="color:var(--text-faint);font-weight:700;margin:10px 0 6px">NEXT</div>' + fmt(d.next);
-        el.innerHTML = html;
-      })
-      .catch(function () { el.innerHTML = ""; });
+  function openPlayer(ch,idx){
+    $("player-panel").classList.add("show");$("now-info").classList.add("mobile-show");
+    $("ni-name").textContent=ch.name;
+    $("ni-cat").textContent=ch.country+" · "+ch.category;
+    $("ni-number").textContent="#"+(idx+1)+" of "+state.filtered.length;
+    $("ni-quality").textContent=ch.quality;$("ni-category").textContent=ch.category;$("ni-language").textContent=ch.language;
+    var nl=$("ni-logo");if(ch.logo){nl.src=ch.logo;nl.style.visibility="visible";}else{nl.style.visibility="hidden";}
+    loadEpg(ch);loadStream(ch.url);
+    $("player-panel").scrollIntoView({behavior:"smooth",block:"start"});
   }
+  function loadEpg(ch){
+    var el=$("ni-epg");if(!el)return;el.innerHTML="";
+    if(!ch.id||!state.token)return;
+    el.innerHTML='<div style="color:var(--text-faint)">Loading guide…</div>';
+    fetch(API.epg(state.provider,ch.id),{headers:{"Authorization":"Bearer "+state.token}})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(d){
+        if(!d||(!d.now&&!d.next)){el.innerHTML="";return;}
+        var fmt=function(p){if(!p)return"";var t=p.startMs?new Date(p.startMs).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"";return '<div style="margin-bottom:6px"><span style="color:var(--text-faint)">'+t+'</span> '+esc(p.title)+'</div>';};
+        var h="";if(d.now)h+='<div style="color:var(--accent-2);font-weight:700;margin-bottom:6px">NOW</div>'+fmt(d.now);
+        if(d.next)h+='<div style="color:var(--text-faint);font-weight:700;margin:10px 0 6px">NEXT</div>'+fmt(d.next);
+        el.innerHTML=h;
+      }).catch(function(){el.innerHTML="";});
+  }
+  function loadStream(raw){
+    if(!raw){toast("This channel has no stream URL.",true);return;}
+    var src=API.stream(raw,state.token||"");setLoading(true);stopHls();
+    if(window.Hls&&window.Hls.isSupported()){
+      var hls=new window.Hls({maxBufferLength:30,lowLatencyMode:true});state.hls=hls;
+      hls.loadSource(src);hls.attachMedia(video);
+      hls.on(window.Hls.Events.MANIFEST_PARSED,function(){tryPlay();});
+      hls.on(window.Hls.Events.ERROR,function(evt,data){if(data&&data.fatal){setLoading(false);toast("Stream error: "+(data.details||"playback failed"),true);try{hls.destroy();}catch(e){}}});
+    }else if(video.canPlayType("application/vnd.apple.mpegurl")){video.src=src;video.addEventListener("loadedmetadata",tryPlay,{once:true});}
+    else{setLoading(false);toast("HLS not supported in this browser.",true);}
+  }
+  function tryPlay(){setLoading(false);var p=video.play();if(p&&p.catch)p.catch(function(){setPlayIcon(false);});}
+  function setLoading(on){$("video-loading").classList.toggle("show",on);}
+  function stopHls(){if(state.hls){try{state.hls.destroy();}catch(e){}state.hls=null;}}
+  function stopPlayback(){stopHls();try{video.pause();video.removeAttribute("src");video.load();}catch(e){}$("player-panel").classList.remove("show");state.currentChannel=null;}
 
-  function loadStream(rawUrl) {
-    if (!rawUrl) { toast("This channel has no stream URL.", true); return; }
-    var src = API.stream(rawUrl, state.token || "");
-    setLoading(true);
-    stopHls();
+  function setPlayIcon(p){$("icon-play").style.display=p?"none":"block";$("icon-pause").style.display=p?"block":"none";}
+  video.addEventListener("play",function(){setPlayIcon(true);});
+  video.addEventListener("pause",function(){setPlayIcon(false);});
+  video.addEventListener("waiting",function(){setLoading(true);});
+  video.addEventListener("playing",function(){setLoading(false);});
+  $("btn-play").addEventListener("click",function(){if(video.paused)video.play().catch(function(){});else video.pause();});
+  $("btn-prev").addEventListener("click",function(){if(state.currentIndex>0)playIndex(state.currentIndex-1);else toast("Already at the first channel.");});
+  $("btn-next").addEventListener("click",function(){if(state.currentIndex<state.filtered.length-1)playIndex(state.currentIndex+1);else toast("Already at the last channel.");});
+  var lastVol=1;
+  $("vol-slider").addEventListener("input",function(){video.volume=parseFloat(this.value);video.muted=video.volume===0;updateMute();});
+  $("btn-mute").addEventListener("click",function(){if(video.muted||video.volume===0){video.muted=false;video.volume=lastVol>0?lastVol:1;$("vol-slider").value=video.volume;}else{lastVol=video.volume;video.muted=true;$("vol-slider").value=0;}updateMute();});
+  function updateMute(){var m=video.muted||video.volume===0;$("icon-vol").style.display=m?"none":"block";$("icon-mute").style.display=m?"block":"none";}
+  $("btn-fs").addEventListener("click",function(){var s=$("video-shell");if(!document.fullscreenElement){(s.requestFullscreen||s.webkitRequestFullscreen||function(){if(video.webkitEnterFullscreen)video.webkitEnterFullscreen();}).call(s);}else{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}});
+  $("btn-pip").addEventListener("click",function(){
+    try{
+      if(document.pictureInPictureElement){document.exitPictureInPicture();}
+      else if(video.requestPictureInPicture){video.requestPictureInPicture();}
+      else if(video.webkitSupportsPresentationMode){video.webkitSetPresentationMode("picture-in-picture");}
+      else toast("Picture-in-Picture not supported here.",true);
+    }catch(e){toast("Start playback before PiP.",true);}
+  });
 
-    if (window.Hls && window.Hls.isSupported()) {
-      var hls = new window.Hls({ maxBufferLength: 30, lowLatencyMode: true });
-      state.hls = hls;
-      hls.loadSource(src);
-      hls.attachMedia(video);
-      hls.on(window.Hls.Events.MANIFEST_PARSED, function () { tryPlay(); });
-      hls.on(window.Hls.Events.ERROR, function (evt, data) {
-        if (data && data.fatal) {
-          setLoading(false);
-          toast("Stream error: " + (data.details || "playback failed"), true);
-          try { hls.destroy(); } catch (e) {}
-        }
-      });
-    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = src;
-      video.addEventListener("loadedmetadata", tryPlay, { once: true });
-    } else {
-      setLoading(false);
-      toast("HLS is not supported in this browser.", true);
+  /* ---------- Remote keypad ---------- */
+  var remoteBuf="";
+  (function buildKeypad(){
+    var keys=["1","2","3","4","5","6","7","8","9","CLR","0","GO"];
+    $("keypad").innerHTML=keys.map(function(k){
+      var cls=k==="GO"?"key k-go":(k==="CLR"?"key k-act":"key");
+      return '<button class="'+cls+'" data-k="'+k+'">'+k+'</button>';
+    }).join("");
+    Array.prototype.forEach.call($("keypad").querySelectorAll(".key"),function(b){b.addEventListener("click",function(){remoteKey(b.getAttribute("data-k"));});});
+  })();
+  function remoteKey(k){
+    if(k==="CLR"){remoteBuf="";}
+    else if(k==="GO"){remoteGo();return;}
+    else if(remoteBuf.length<5){remoteBuf+=k;}
+    updateRemote();
+  }
+  function updateRemote(){
+    $("remote-display").textContent=remoteBuf||"—";
+    var n=parseInt(remoteBuf,10);
+    var nm="";
+    if(n>=1&&n<=state.filtered.length){nm=state.filtered[n-1].name;}
+    else if(remoteBuf){nm="No channel "+remoteBuf+(state.filtered.length?" (1–"+state.filtered.length+")":" — pick a filter first");}
+    $("remote-name").textContent=nm;
+  }
+  function remoteGo(){
+    var n=parseInt(remoteBuf,10);
+    if(n>=1&&n<=state.filtered.length){closeRemote();playIndex(n-1);}
+    else toast(state.filtered.length?("Enter 1–"+state.filtered.length):"Pick a filter first to number channels.",true);
+  }
+  function openRemote(){remoteBuf="";updateRemote();$("remote-modal").classList.add("show");}
+  function closeRemote(){$("remote-modal").classList.remove("show");}
+  $("btn-remote").addEventListener("click",openRemote);
+  $("remote-modal").addEventListener("click",function(e){if(e.target===$("remote-modal"))closeRemote();});
+
+  /* ---------- Mobile rail ---------- */
+  function openRail(){$("rail").classList.add("open");$("rail-backdrop").classList.add("show");}
+  function closeRailMobile(){if(window.innerWidth<=860){$("rail").classList.remove("open");$("rail-backdrop").classList.remove("show");}}
+  $("menu-toggle").addEventListener("click",function(){$("rail").classList.contains("open")?closeRailMobile():openRail();});
+  $("rail-backdrop").addEventListener("click",closeRailMobile);
+
+  /* ---------- Keyboard ---------- */
+  document.addEventListener("keydown",function(e){
+    if(!$("player-screen").classList.contains("active"))return;
+    if($("remote-modal").classList.contains("show")){
+      if(/^[0-9]$/.test(e.key))remoteKey(e.key);
+      else if(e.key==="Enter")remoteGo();
+      else if(e.key==="Backspace"){remoteBuf=remoteBuf.slice(0,-1);updateRemote();}
+      else if(e.key==="Escape")closeRemote();
+      return;
     }
-  }
-
-  function tryPlay() {
-    setLoading(false);
-    var p = video.play();
-    if (p && p.catch) { p.catch(function () { setPlayIcon(false); }); }
-  }
-  function setLoading(on) { $("video-loading").classList.toggle("show", on); }
-
-  function stopHls() {
-    if (state.hls) { try { state.hls.destroy(); } catch (e) {} state.hls = null; }
-  }
-  function stopPlayback() {
-    stopHls();
-    try { video.pause(); video.removeAttribute("src"); video.load(); } catch (e) {}
-    $("player-panel").classList.remove("show");
-    state.currentChannel = null;
-  }
-
-  /* ---------------- Custom controls ---------------- */
-  function setPlayIcon(playing) {
-    $("icon-play").style.display = playing ? "none" : "block";
-    $("icon-pause").style.display = playing ? "block" : "none";
-  }
-  video.addEventListener("play", function () { setPlayIcon(true); });
-  video.addEventListener("pause", function () { setPlayIcon(false); });
-  video.addEventListener("waiting", function () { setLoading(true); });
-  video.addEventListener("playing", function () { setLoading(false); });
-
-  $("btn-play").addEventListener("click", function () {
-    if (video.paused) { video.play().catch(function () {}); } else { video.pause(); }
-  });
-  $("btn-prev").addEventListener("click", function () {
-    if (state.currentIndex > 0) playIndex(state.currentIndex - 1);
-    else toast("Already at the first channel.");
-  });
-  $("btn-next").addEventListener("click", function () {
-    if (state.currentIndex < state.filtered.length - 1) playIndex(state.currentIndex + 1);
-    else toast("Already at the last channel.");
+    if(/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName))return;
+    if(e.key===" "||e.key==="k"){e.preventDefault();$("btn-play").click();}
+    else if(e.key==="ArrowRight"||e.key==="n")$("btn-next").click();
+    else if(e.key==="ArrowLeft"||e.key==="p")$("btn-prev").click();
+    else if(e.key==="m")$("btn-mute").click();
+    else if(e.key==="f")$("btn-fs").click();
+    else if(e.key==="i")$("btn-pip").click();
+    else if(/^[0-9]$/.test(e.key))openRemote();
   });
 
-  var lastVol = 1;
-  $("vol-slider").addEventListener("input", function () {
-    video.volume = parseFloat(this.value);
-    video.muted = video.volume === 0;
-    updateMuteIcon();
-  });
-  $("btn-mute").addEventListener("click", function () {
-    if (video.muted || video.volume === 0) {
-      video.muted = false;
-      video.volume = lastVol > 0 ? lastVol : 1;
-      $("vol-slider").value = video.volume;
-    } else {
-      lastVol = video.volume;
-      video.muted = true;
-      $("vol-slider").value = 0;
-    }
-    updateMuteIcon();
-  });
-  function updateMuteIcon() {
-    var muted = video.muted || video.volume === 0;
-    $("icon-vol").style.display = muted ? "none" : "block";
-    $("icon-mute").style.display = muted ? "block" : "none";
-  }
-
-  $("btn-fs").addEventListener("click", function () {
-    var shell = $("video-shell");
-    if (!document.fullscreenElement) {
-      (shell.requestFullscreen || shell.webkitRequestFullscreen || function () {
-        if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
-      }).call(shell);
-    } else {
-      (document.exitFullscreen || document.webkitExitFullscreen).call(document);
-    }
-  });
-
-  // Keyboard shortcuts when player is open
-  document.addEventListener("keydown", function (e) {
-    if (!$("player-screen").classList.contains("active")) return;
-    if (/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
-    if (e.key === " " || e.key === "k") { e.preventDefault(); $("btn-play").click(); }
-    else if (e.key === "ArrowRight" || e.key === "n") { $("btn-next").click(); }
-    else if (e.key === "ArrowLeft" || e.key === "p") { $("btn-prev").click(); }
-    else if (e.key === "m") { $("btn-mute").click(); }
-    else if (e.key === "f") { $("btn-fs").click(); }
-  });
-
-  /* ---------------- Boot ---------------- */
-  if (state.token) { show("provider-screen"); } else { show("login-screen"); }
+  /* ---------- Boot ---------- */
+  if(state.token)show("provider-screen");else show("login-screen");
 })();
 </script>
 </body>
