@@ -2466,13 +2466,27 @@ function renderLessonTabContent() {
           + '</div>';
       });
     } else if (_activeLessonTab === 'listening') {
-      html += '<div style="font-size:32px; text-align:center; margin-bottom:12px;">🎧</div>'
-        + '<div style="text-align:center; margin-bottom:16px;"><button class="widget-btn" onclick="playAudioTranscript(this, \'' + btoa(unescape(encodeURIComponent(item.transcript))) + '\')">Play Audio Track</button></div>'
-        + '<div style="font-weight:700; color:var(--gold2); font-size:16px; margin-bottom:8px;">' + esc(item.title) + '</div>'
-        + '<div style="background:rgba(0,0,0,0.3); border-radius:6px; padding:12px; font-family:monospace; margin-bottom:12px; line-height:1.6;">' + esc(item.transcript).replace(/\n/g, '<br/>') + '</div>'
-        + (item.translation ? ('<div style="font-weight:700; margin-bottom:6px; color:var(--text);">English Translation:</div>'
-        + '<div style="color:var(--text2); font-size:15px; margin-bottom:12px; line-height:1.6;">' + esc(item.translation).replace(/\n/g, '<br/>') + '</div>') : '')
-        + (item.notes ? ('<div style="color:var(--amber); font-size:16px; border-top:1px dashed var(--border2); padding-top:8px;">💡 ' + esc(item.notes) + '</div>') : '');
+      html += '<div style="font-size:32px; text-align:center; margin-bottom:12px;">🎧</div>';
+      
+      if (item.audioDrills) {
+        html += '<div style="font-weight:700; color:var(--gold2); font-size:18px; margin-bottom:12px;">' + esc(item.title) + '</div>'
+             + '<div style="color:var(--text3); margin-bottom:20px;">' + esc(item.context) + '</div>'
+             + '<div style="display:flex; flex-direction:column; gap:16px;">';
+        item.audioDrills.forEach((drill, idx) => {
+          html += '<div style="background:rgba(0,0,0,0.4); padding:16px; border-radius:8px; border:1px solid var(--border2);">'
+               + '  <div style="font-weight:bold; font-size:16px; margin-bottom:12px; color:var(--blue);">' + (idx+1) + '. ' + esc(drill.name) + '</div>'
+               + '  <audio controls style="width:100%;"><source src="' + esc(drill.file) + '" type="audio/mpeg">Your browser does not support the audio element.</audio>'
+               + '</div>';
+        });
+        html += '</div>';
+      } else {
+        html += '<div style="text-align:center; margin-bottom:16px;"><button class="widget-btn" onclick="playAudioTranscript(this, \'' + btoa(unescape(encodeURIComponent(item.transcript))) + '\')">Play Audio Track</button></div>'
+             + '<div style="font-weight:700; color:var(--gold2); font-size:16px; margin-bottom:8px;">' + esc(item.title) + '</div>'
+             + '<div style="background:rgba(0,0,0,0.3); border-radius:6px; padding:12px; font-family:monospace; margin-bottom:12px; line-height:1.6;">' + esc(item.transcript).replace(/\n/g, '<br/>') + '</div>'
+             + (item.translation ? ('<div style="font-weight:700; margin-bottom:6px; color:var(--text);">English Translation:</div>'
+             + '<div style="color:var(--text2); font-size:15px; margin-bottom:12px; line-height:1.6;">' + esc(item.translation).replace(/\n/g, '<br/>') + '</div>') : '')
+             + (item.notes ? ('<div style="color:var(--amber); font-size:16px; border-top:1px dashed var(--border2); padding-top:8px;">💡 ' + esc(item.notes) + '</div>') : '');
+      }
     } else if (_activeLessonTab === 'reading') {
       html += '<div style="font-weight:700; color:var(--gold2); font-size:16px; margin-bottom:8px;">' + esc(item.title) + '</div>'
         + '<p style="font-family:serif; font-size:16px; line-height:1.8; margin-bottom:16px; color:var(--text);">' + esc(item.passage) + '</p>'
