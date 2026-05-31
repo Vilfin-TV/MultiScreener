@@ -1,40 +1,43 @@
-# IPTV + Console Work — TODO
+# IPTV + Console Work — Status
 
-Tracking the 11-item batch. Status: ✅ done · 🟡 in progress · ⬜ not started
+✅ done & pushed · ⚠️ needs your action · ⬜ todo
 
-## Phase 0 — unblock visibility
-- ✅ Fix IPTV console panel contrast (light text). Pushed `1103e3e` → live. Needs hard-refresh.
+## Done & pushed to origin/main (latest 2f6f5f9)
+- ✅ (1) Homepage "VilfinTV IPTV" link in News & Media menu + Platform Features footer.
+- ✅ (1) iptv.html: site footer matching vilfintv.com.
+- ✅ (2) iptv.html login heading → "VilfinTV IPTV login".
+- ✅ (3) Provider screen: Free IPTV, IPTV Pro, Custom cards (+ Jio/Airtel).
+- ✅ (4) link-console IPTV → Playback settings: per-provider Playlist URL + EPG URL
+        inputs for all 5 providers (dynamic rows).
+- ✅ (5) Worker fetches+parses M3U from configured URL (30-min KV cache); screener
+        /api/iptv/settings persists 5 providers incl. epg.
+- ✅ (6) Defaults: Free = iptv-org index.m3u (EPG in.xml); Pro = Free-TV playlist.
+- ✅ (7) /api/epg backend (on-demand XMLTV now/next, 60-min cache) + iptv.html
+        NOW/NEXT guide display for channels with tvg-id.
 
-## Phase 1 — iptv.html self-contained
-- ⬜ (2) Rename login heading "IPTV Console" → "VilfinTV IPTV login".
-- ⬜ (3) After login, add 3 provider cards: **Free IPTV**, **IPTV Pro**, **Custom** (under "Choose a provider").
-- ⬜ (1b) Add the same footer as vilfintv.com homepage to iptv.html.
+## ⚠️ REQUIRED — redeploy both workers (only you can; needs CLOUDFLARE auth)
+    npx wrangler deploy --config wrangler.iptv.toml
+    npx wrangler deploy --config wrangler.screener.toml
+HTML is already on GitHub Pages. Free/Pro/Custom playback, URL settings, and EPG
+go live only after this redeploy.
 
-## Phase 2 — homepage integration (needs index.html)
-- ⬜ (1a) Add iptv.html to homepage **Top menu → News & Media** and **footer → Platform Features**, label "VilfinTV IPTV" with a styled icon.
+## Remaining
+- ⬜ (8) link-console News → Full story: PDF/PPT/Word/txt upload → format into
+        news.html. NOT STARTED. Needs your decision on parsing approach (below).
+- ⬜ (9) Live preview validation — after redeploy, exercise login→playlist→stream→EPG.
+- ⬜ (10) Mobile pass (console rows + iptv footer are responsive by construction;
+        visual check pending).
+- ⬜ (11) Final post-validate.
 
-## Phase 3 — playlist sources (console + worker)
-- ⬜ (4) link-console IPTV → Playback settings: add per-provider **playlist URL** inputs.
-  (worker already supports `providers.{name}.url` per recent edits — verify + finish console UI.)
-- ⬜ (5) Backend: when an M3U URL is set, /api/playlist fetches+parses it (KV cache).
-- ⬜ (6) Pre-fill **Free IPTV** = https://iptv-org.github.io/iptv/index.m3u, EPG = https://github.com/iptv-org/epg
-       **Free-TV** = https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8
-- ⬜ EPG support (XMLTV) — LARGER feature; program-guide parse + UI. Flag for its own pass.
+## Decision needed for #8 (doc upload)
+Cloudflare Workers have NO native unzip or PDF parser. Honest options:
+  A. In-browser parse in link-console using pdf.js + mammoth (docx) + JSZip (pptx)
+     + plain txt. Reliable on GitHub Pages, no worker limits. (Recommended.)
+  B. Worker-side: must bundle libraries; .docx/.pptx/.pdf are heavy/fragile in a
+     Worker. Higher risk of failure.
+Earlier you picked worker-side; I recommend reconsidering A for reliability.
 
-## Phase 4 — testing
-- ⬜ (7) Verify both playlists load in iptv.html (iptv-org index.m3u, Free-TV playlist.m3u8) + EPG.
+Also confirm: how should the parsed document map to a news post in news.html?
+(title = filename? first heading? and which content.json section/tab?)
 
-## Phase 5 — news document upload (needs news.html + backend)
-- ⬜ (8) link-console News → Full story: upload button (PDF/PPT/Word/txt) → parse → format → news.html.
-       LARGER feature: needs document text extraction. Decide client-lib vs worker parse.
-
-## Phase 6 — finish
-- ⬜ (10) Mobile responsiveness pass on console + iptv.html.
-- ⬜ (9) Pre-validate in preview panel.
-- ⬜ (11) Commit + post-validate.
-
-## Notes / decisions needed
-- EPG (#6/#7): full electronic program guide is a big addition. Confirm whether you want
-  just the playlists working now, with EPG as a follow-up.
-- Doc upload (#8): PDF/PPT/Word text extraction — confirm approach (in-browser libraries
-  like pdf.js/mammoth/JSZip, vs. a worker-side parser).
+## Cleanup later: scripts/_patch_*.py, *.bak
