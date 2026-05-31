@@ -1,4 +1,7 @@
-// AUTO-GENERATED JLPT TEXTBOOK DATABASE\n// This file contains comprehensive Minna no Nihongo style textbook lessons.\n\nconst JLPT_TEXTBOOK = {
+// AUTO-GENERATED JLPT TEXTBOOK DATABASE
+// This file contains comprehensive Minna no Nihongo style textbook lessons.
+
+const JLPT_TEXTBOOK = {
   "1": { "writing_practice": [{ "title": "Translation Writing Pad" }],
     "writing": [
       {
@@ -8999,4 +9002,4 @@
       }
     ]
   }
-};\n
+};;
