@@ -849,6 +849,11 @@
                  maxlength="200" autocomplete="off" spellcheck="true">
 
           <label class="field-label" for="cp-story">Full Story</label>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+            <input type="file" id="cp-doc-file" style="display:none" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" onchange="handleDocUpload(this)">
+            <button type="button" class="btn-upload" onclick="document.getElementById('cp-doc-file').click()">📄 Import from document (PDF · Word · PPT · txt)</button>
+            <span id="cp-doc-status" style="font-size:12px;color:#b9b9cc"></span>
+          </div>
           <textarea id="cp-story" placeholder="Write the full story here. Be detailed — readers will see the complete text…" maxlength="2000" rows="6" spellcheck="true"></textarea>
 
           <label class="field-label" for="cp-photo">Photo <span style="opacity:.4;font-weight:400">(optional — paste a URL or upload)</span></label>
@@ -3649,6 +3654,118 @@ function setAcStatus(t, m) {
   if (!e) return;
   e.className = 'ci-status' + (t ? ' ' + t : '');
   e.textContent = m;
+}
+
+/* ── News: import Full Story from a document (PDF/Word/PPT/txt) ──────────────
+   Parses in-browser (no server) and fills the Headline + Full Story fields for
+   review before publishing. Libraries are loaded on demand from jsDelivr. */
+function _docStatus(msg, isErr) {
+  var el = document.getElementById('cp-doc-status');
+  if (el) { el.textContent = msg; el.style.color = isErr ? '#ff8888' : '#b9b9cc'; }
+}
+function _loadScript(src) {
+  return new Promise(function (resolve, reject) {
+    if (document.querySelector('script[data-src="' + src + '"]')) return resolve();
+    var s = document.createElement('script');
+    s.src = src; s.async = true; s.setAttribute('data-src', src);
+    s.onload = function () { resolve(); };
+    s.onerror = function () { reject(new Error('Failed to load ' + src)); };
+    document.head.appendChild(s);
+  });
+}
+function _cleanText(t) {
+  return String(t || '')
+    .replace(/\r/g, '')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim();
+}
+function _applyDocText(filename, text) {
+  text = _cleanText(text);
+  if (!text) { _docStatus('No readable text found in the document.', true); return; }
+  var heading = document.getElementById('cp-heading');
+  var story = document.getElementById('cp-story');
+  // First non-empty line → headline (if empty); rest → story.
+  var lines = text.split('\n').filter(function (l) { return l.trim(); });
+  var firstLine = lines.length ? lines[0].trim() : '';
+  if (heading && !heading.value.trim() && firstLine) {
+    heading.value = firstLine.slice(0, 200);
+  }
+  if (story) {
+    var max = parseInt(story.getAttribute('maxlength'), 10) || 2000;
+    var body = text;
+    if (body.length > max) body = body.slice(0, max);
+    story.value = body;
+    story.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  var extra = text.length > 2000 ? ' (trimmed to 2000 chars to fit the field)' : '';
+  _docStatus('Imported "' + filename + '" — review and edit before publishing.' + extra, false);
+}
+
+async function handleDocUpload(input) {
+  var file = input.files && input.files[0];
+  input.value = ''; // allow re-selecting the same file later
+  if (!file) return;
+  var name = file.name;
+  var ext = (name.split('.').pop() || '').toLowerCase();
+  _docStatus('Reading "' + name + '"…', false);
+  try {
+    if (ext === 'txt') {
+      _applyDocText(name, await file.text());
+    } else if (ext === 'pdf') {
+      _docStatus('Loading PDF reader…', false);
+      await _loadScript('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js');
+      var pdfjsLib = window['pdfjsLib'];
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+      var buf = await file.arrayBuffer();
+      var pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      var out = '';
+      var pages = Math.min(pdf.numPages, 50);
+      for (var p = 1; p <= pages; p++) {
+        var page = await pdf.getPage(p);
+        var tc = await page.getTextContent();
+        out += tc.items.map(function (it) { return it.str; }).join(' ') + '\n\n';
+      }
+      _applyDocText(name, out);
+    } else if (ext === 'docx') {
+      _docStatus('Loading Word reader…', false);
+      await _loadScript('https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js');
+      var ab = await file.arrayBuffer();
+      var res = await window.mammoth.extractRawText({ arrayBuffer: ab });
+      _applyDocText(name, res && res.value);
+    } else if (ext === 'pptx') {
+      _docStatus('Loading PPT reader…', false);
+      await _loadScript('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js');
+      var zipAb = await file.arrayBuffer();
+      var zip = await window.JSZip.loadAsync(zipAb);
+      var slideNames = Object.keys(zip.files)
+        .filter(function (n) { return /^ppt\/slides\/slide\d+\.xml$/.test(n); })
+        .sort(function (a, b) {
+          var na = parseInt(a.match(/slide(\d+)/)[1], 10);
+          var nb = parseInt(b.match(/slide(\d+)/)[1], 10);
+          return na - nb;
+        });
+      var all = '';
+      for (var i = 0; i < slideNames.length; i++) {
+        var xml = await zip.files[slideNames[i]].async('string');
+        var texts = xml.match(/<a:t>([\s\S]*?)<\/a:t>/g) || [];
+        var slideText = texts.map(function (t) {
+          return t.replace(/<\/?a:t>/g, '')
+                  .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+                  .replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&apos;/g, "'");
+        }).join(' ');
+        if (slideText.trim()) all += slideText.trim() + '\n\n';
+      }
+      _applyDocText(name, all);
+    } else if (ext === 'doc' || ext === 'ppt') {
+      _docStatus('Legacy .' + ext + ' is not supported — please save as .' + (ext === 'doc' ? 'docx' : 'pptx') + ' or PDF.', true);
+    } else {
+      _docStatus('Unsupported file type: .' + ext, true);
+    }
+  } catch (e) {
+    _docStatus('Could not read document: ' + (e && e.message ? e.message : e), true);
+  }
 }
 </script>
 <!-- IPTV management (added by scripts/_patch_console.py) -->
