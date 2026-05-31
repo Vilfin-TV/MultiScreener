@@ -506,6 +506,7 @@
           <div class="row"><span>Language</span><b id="ni-language">—</b></div>
           <div class="row"><span>Position</span><b id="ni-position">—</b></div>
         </div>
+        <div class="ni-epg" id="ni-epg" style="margin-top:16px;font-size:13px"></div>
         <div class="ni-hint">Use the Previous / Next controls to skip through the currently filtered list.</div>
       </aside>
     </div>
@@ -579,6 +580,9 @@
     playlist: function (p) { return WORKER + "/api/playlist?provider=" + encodeURIComponent(p); },
     stream: function (url, token) {
       return WORKER + "/api/stream?token=" + encodeURIComponent(token) + "&url=" + encodeURIComponent(url);
+    },
+    epg: function (provider, channel) {
+      return WORKER + "/api/epg?provider=" + encodeURIComponent(provider) + "&channel=" + encodeURIComponent(channel);
     }
   };
   var TOKEN_KEY = "iptv_token";
@@ -706,6 +710,7 @@
     }
     return {
       name: c.name || "Unknown channel",
+      id: c.id || "",
       logo: c.logo || "",
       category: c.category || "General",
       language: c.language || c.lang || "—",
@@ -814,8 +819,32 @@
     var nl = $("ni-logo");
     if (ch.logo) { nl.src = ch.logo; nl.style.visibility = "visible"; } else { nl.style.visibility = "hidden"; }
 
+    loadEpg(ch);
     loadStream(ch.url);
     $("player-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function loadEpg(ch) {
+    var el = $("ni-epg");
+    if (!el) return;
+    el.innerHTML = "";
+    if (!ch.id || !state.token) return;
+    el.innerHTML = '<div style="color:var(--text-faint)">Loading guide…</div>';
+    fetch(API.epg(state.provider, ch.id), { headers: { "Authorization": "Bearer " + state.token } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || (!d.now && !d.next)) { el.innerHTML = ""; return; }
+        var fmt = function (p) {
+          if (!p) return "";
+          var t = p.startMs ? new Date(p.startMs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+          return '<div style="margin-bottom:6px"><span style="color:var(--text-faint)">' + t + '</span> ' + escapeHtml(p.title) + '</div>';
+        };
+        var html = "";
+        if (d.now) html += '<div style="color:var(--accent-2);font-weight:700;margin-bottom:6px">NOW</div>' + fmt(d.now);
+        if (d.next) html += '<div style="color:var(--text-faint);font-weight:700;margin:10px 0 6px">NEXT</div>' + fmt(d.next);
+        el.innerHTML = html;
+      })
+      .catch(function () { el.innerHTML = ""; });
   }
 
   function loadStream(rawUrl) {

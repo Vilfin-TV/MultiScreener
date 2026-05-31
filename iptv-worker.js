@@ -513,6 +513,7 @@ function parseM3U(raw) {
     if (line.startsWith("#EXTINF")) {
       cur = {
         name: extractTitle(line),
+        id: attr(line, "tvg-id") || "",
         logo: attr(line, "tvg-logo") || attr(line, "logo") || "",
         category: attr(line, "group-title") || "General",
         language: attr(line, "tvg-language") || attr(line, "language") || "",
