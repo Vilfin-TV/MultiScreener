@@ -2500,12 +2500,10 @@ function renderLessonTabContent() {
     if (_activeLessonTab !== 'writing_practice') {
       html += '<div style="display:flex; justify-content:space-between; margin-bottom:16px;">'
         + '<button class="widget-btn" style="background:var(--card3);" onclick="prevLessonPage(\'' + _activeLessonTab + '\')" ' + (pageIdx === 0 ? 'disabled style="opacity:0.5;background:var(--card3);"' : '') + '>⬅ Prev Page</button>'
-        + '<button class="widget-btn" style="background:var(--blue);" onclick="nextLessonPage(\'' + _activeLessonTab + '\')" ' + (pageIdx >= arr.length - 1 ? 'disabled style="opacity:0.5;background:var(--blue);"' : '') + '>Next Page ➡</button>'
+        + '<button class="widget-btn" style="background:var(--blue);" onclick="nextLessonPage(\\\'' + _activeLessonTab + '\\\')" ' + (pageIdx >= arr.length - 1 ? 'disabled style="opacity:0.5;background:var(--blue);"' : '') + '>Next Page ➡</button>'
         + '</div>';
-    }" onclick="prevLessonPage(\'' + _activeLessonTab + '\')" ' + (pageIdx === 0 ? 'disabled style="opacity:0.5;background:var(--card3);"' : '') + '>⬅ Prev Page</button>'
-      + '<button class="widget-btn" style="background:var(--blue);" onclick="nextLessonPage(\'' + _activeLessonTab + '\')" ' + (pageIdx >= arr.length - 1 ? 'disabled style="opacity:0.5;background:var(--blue);"' : '') + '>Next Page ➡</button>'
-      + '</div>';
-      
+    }
+
     // MOC Test Button
     html += '<div style="margin-top:24px; text-align:center; padding-top:16px; border-top:1px solid var(--border);">'
       + '<button class="hub-toggle-btn active" style="background:var(--gold2); border:none; box-shadow:0 0 12px var(--glow);" onclick="openMocTestModal()">🎯 Take N' + _activeJlptLevel + ' MOC Test</button>'
