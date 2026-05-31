@@ -4093,12 +4093,12 @@ const JLPT_TEXTBOOK = {
         "title": "🎧 Essential Business Vocabulary Drills",
         "context": "Listen to the 6 essential business vocabulary drills. Each word is repeated 3 times slowly for study.",
         "audioDrills": [
-          { "name": "Greetings & Phrases", "file": "audio_category_1.mp3" },
-          { "name": "Core Business Nouns", "file": "audio_category_2.mp3" },
-          { "name": "Essential Verbs", "file": "audio_category_3.mp3" },
-          { "name": "Time & Scheduling", "file": "audio_category_4.mp3" },
-          { "name": "Daily Life & Commuting", "file": "audio_category_5.mp3" },
-          { "name": "Common Adjectives", "file": "audio_category_6.mp3" }
+          { "name": "Greetings & Phrases", "file": "audio_category_1_v3.mp3" },
+          { "name": "Core Business Nouns", "file": "audio_category_2_v3.mp3" },
+          { "name": "Essential Verbs", "file": "audio_category_3_v3.mp3" },
+          { "name": "Time & Scheduling", "file": "audio_category_4_v3.mp3" },
+          { "name": "Daily Life & Commuting", "file": "audio_category_5_v3.mp3" },
+          { "name": "Common Adjectives", "file": "audio_category_6_v3.mp3" }
         ]
       },
       {
