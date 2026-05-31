@@ -216,13 +216,20 @@ export default {
       let body;
       try { body = await request.json(); } catch (_) { return jsonError(400, 'Invalid JSON body.'); }
       const s = body.settings || body || {};
+      const IPTV_PROV = ['jio', 'airtel', 'free', 'pro', 'custom'];
+      const providers = {};
+      for (const p of IPTV_PROV) {
+        const sp = (s.providers && s.providers[p]) || {};
+        providers[p] = {
+          enabled: sp.enabled === undefined ? true : !!sp.enabled,
+          url: (sp.url || '').toString().trim(),
+          epg: (sp.epg || '').toString().trim(),
+        };
+      }
       const settings = {
         sessionHours: Math.max(1, Math.min(168, parseInt(s.sessionHours, 10) || 8)),
-        defaultProvider: (s.defaultProvider === 'airtel') ? 'airtel' : 'jio',
-        providers: {
-          jio:    { enabled: s.providers && s.providers.jio    ? !!s.providers.jio.enabled    : true, url: s.providers && s.providers.jio ? (s.providers.jio.url || '').toString().trim() : '' },
-          airtel: { enabled: s.providers && s.providers.airtel ? !!s.providers.airtel.enabled : true, url: s.providers && s.providers.airtel ? (s.providers.airtel.url || '').toString().trim() : '' },
-        },
+        defaultProvider: IPTV_PROV.indexOf(s.defaultProvider) !== -1 ? s.defaultProvider : 'free',
+        providers: providers,
         updatedAt: new Date().toISOString(),
       };
       await env.IPTV_KV.put('iptv_settings', JSON.stringify(settings));
@@ -944,8 +951,14 @@ async function _hmacKey(secret, usage) {
       bound to the page-iptv worker as IPTV_PLAYLIST_KV. ── */
 const IPTV_DEFAULT_SETTINGS = {
   sessionHours: 8,
-  defaultProvider: 'jio',
-  providers: { jio: { enabled: true, url: "" }, airtel: { enabled: true, url: "" } },
+  defaultProvider: 'free',
+  providers: {
+    jio:    { enabled: true, url: "", epg: "" },
+    airtel: { enabled: true, url: "", epg: "" },
+    free:   { enabled: true, url: "https://iptv-org.github.io/iptv/index.m3u", epg: "https://iptv-org.github.io/epg/guides/in.xml" },
+    pro:    { enabled: true, url: "https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8", epg: "" },
+    custom: { enabled: true, url: "", epg: "" },
+  },
 };
 function _iptvJson(obj) {
   return new Response(JSON.stringify(obj), { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });

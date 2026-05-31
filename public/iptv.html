@@ -178,6 +178,25 @@
   .pc-custom .provider-badge { background: linear-gradient(135deg, #7c4dff, #4d2bb8); }
   .pc-custom { --glow: rgba(124,77,255,0.24); }
 
+  /* ================= FOOTER ================= */
+  .site-footer {
+    margin-top: 60px; border-top: 1px solid var(--border);
+    background: rgba(10,10,14,0.6); padding: 40px clamp(16px,4vw,40px) 24px;
+  }
+  .sf-grid {
+    max-width: 1200px; margin: 0 auto; display: grid; gap: 28px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+  .sf-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 14px; }
+  .sf-about { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+  .sf-links { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  .sf-links a { font-size: 13px; color: var(--text-dim); text-decoration: none; transition: color var(--t-fast); }
+  .sf-links a:hover { color: var(--text); }
+  .sf-bottom {
+    max-width: 1200px; margin: 28px auto 0; padding-top: 18px;
+    border-top: 1px solid var(--border); font-size: 12px; color: var(--text-faint); text-align: center;
+  }
+
   /* ================= PLAYER / DASHBOARD ================= */
   .dash { max-width: 1500px; margin: 0 auto; padding: clamp(14px, 3vw, 26px) clamp(14px, 3vw, 32px) 60px; }
 
@@ -511,11 +530,47 @@
   </div>
 </section>
 
+<!-- ============ FOOTER (matches vilfintv.com) ============ -->
+<footer class="site-footer">
+  <div class="sf-grid">
+    <div class="sf-col">
+      <div class="sf-title">VilfinTV MultiScreener</div>
+      <p class="sf-about">Your premium all-in-one platform for real-time financial screening, live global news, stories, TV channels, sports scores, radio and market status.</p>
+    </div>
+    <div class="sf-col">
+      <div class="sf-title">Platform Features</div>
+      <ul class="sf-links">
+        <li><a href="https://vilfintv.com/">🤖 AI Screener</a></li>
+        <li><a href="https://vilfintv.com/news.html">📺 VilfinTV News</a></li>
+        <li><a href="https://vilfintv.com/story.html">📖 VilfinTV Stories</a></li>
+        <li><a href="https://vilfintv.com/education.html">🎓 VilfinTV Academy</a></li>
+        <li><a href="https://vilfintv.com/iptv.html">📡 VilfinTV IPTV</a></li>
+      </ul>
+    </div>
+    <div class="sf-col">
+      <div class="sf-title">Legal &amp; Support</div>
+      <ul class="sf-links">
+        <li><a href="https://vilfintv.com/">Home</a></li>
+        <li><a href="https://vilfintv.com/blog_intelligence_hub.html">📰 Blog Intelligence Hub</a></li>
+      </ul>
+    </div>
+    <div class="sf-col">
+      <div class="sf-title">Connect</div>
+      <p class="sf-about">VilfinTV — private streaming console. Access is limited to authorised viewers.</p>
+    </div>
+  </div>
+  <div class="sf-bottom">© <span id="sf-year"></span> VilfinTV. All rights reserved.</div>
+</footer>
+
 <div class="toast" id="toast"></div>
 
 <script>
 (function () {
   "use strict";
+
+  /* ---------------- Footer year ---------------- */
+  var _yr = document.getElementById("sf-year");
+  if (_yr) _yr.textContent = new Date().getFullYear();
 
   /* ---------------- Config & state ---------------- */
   var WORKER = "https://page-iptv.vilfintv.workers.dev";
