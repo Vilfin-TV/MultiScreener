@@ -2398,8 +2398,12 @@ function renderLessonTabContent() {
       const langs = {
         'ja': 'Japanese', 'en': 'English', 'hi': 'Hindi', 'ml': 'Malayalam', 
         'ta': 'Tamil', 'te': 'Telugu', 'kn': 'Kannada', 'bn': 'Bengali', 
-        'zh-CN': 'Chinese', 'fr': 'French', 'es': 'Spanish', 'ar': 'Arabic', 
-        'mr': 'Marathi', 'gu': 'Gujarati', 'la': 'Latin'
+        'mr': 'Marathi', 'gu': 'Gujarati', 'pa': 'Punjabi', 'ur': 'Urdu', 'ne': 'Nepali',
+        'zh-CN': 'Chinese', 'ko': 'Korean', 'vi': 'Vietnamese', 'th': 'Thai', 'tl': 'Filipino', 
+        'id': 'Indonesian', 'mn': 'Mongolian', 'su': 'Sundanese',
+        'fr': 'French', 'es': 'Spanish', 'it': 'Italian', 'nl': 'Dutch', 
+        'el': 'Greek', 'ru': 'Russian', 'pl': 'Polish', 'uk': 'Ukrainian', 
+        'ar': 'Arabic', 'ku': 'Kurdish', 'af': 'Afrikaans', 'sw': 'Swahili', 'la': 'Latin'
       };
       let optionsHtml = '';
       for(let k in langs) optionsHtml += '<option value="' + k + '">' + langs[k] + '</option>';
@@ -2928,10 +2932,22 @@ function startTranslationVoice() {
 function playTranslationAudio() {
   const text = document.getElementById('trans-output').innerText;
   if (!text || text.includes('Translating')) return;
-  if (!('speechSynthesis' in window)) { alert('Audio not supported.'); return; }
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = document.getElementById('trans-out-lang').value;
-  window.speechSynthesis.speak(u);
+  const lang = document.getElementById('trans-out-lang').value;
+  
+  try {
+    const url = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=' + lang + '&q=' + encodeURIComponent(text.substring(0, 200));
+    const audio = new Audio(url);
+    audio.play().catch(e => {
+      if ('speechSynthesis' in window) {
+        const u = new SpeechSynthesisUtterance(text);
+        const ttsLangMap = { 'hi': 'hi-IN', 'ml': 'ml-IN', 'ta': 'ta-IN', 'te': 'te-IN', 'kn': 'kn-IN', 'bn': 'bn-IN', 'mr': 'mr-IN', 'gu': 'gu-IN', 'pa': 'pa-IN', 'ur': 'ur-PK' };
+        u.lang = ttsLangMap[lang] || lang;
+        window.speechSynthesis.speak(u);
+      }
+    });
+  } catch(e) {
+    console.error(e);
+  }
 }
 // --- END TRANSLATOR LOGIC ---
 </script>
