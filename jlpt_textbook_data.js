@@ -1,5 +1,5 @@
 // AUTO-GENERATED JLPT TEXTBOOK DATABASE\n// This file contains comprehensive Minna no Nihongo style textbook lessons.\n\nconst JLPT_TEXTBOOK = {
-  "1": {
+  "1": { "writing_practice": [{ "title": "Translation Writing Pad" }],
     "writing": [
       {
         "title": "Writing Practice: Kanji Lesson 1",
@@ -1799,7 +1799,7 @@
       }
     ]
   },
-  "2": {
+  "2": { "writing_practice": [{ "title": "Translation Writing Pad" }],
     "writing": [
       {
         "title": "Writing Practice: Kanji Lesson 1",
@@ -3599,7 +3599,7 @@
       }
     ]
   },
-  "3": {
+  "3": { "writing_practice": [{ "title": "Translation Writing Pad" }],
     "writing": [
       {
         "title": "Writing Practice: Kanji Lesson 1",
@@ -5399,7 +5399,7 @@
       }
     ]
   },
-  "4": {
+  "4": { "writing_practice": [{ "title": "Translation Writing Pad" }],
     "writing": [
       {
         "title": "Writing Practice: Kanji Lesson 1",
@@ -7199,7 +7199,7 @@
       }
     ]
   },
-  "5": {
+  "5": { "writing_practice": [{ "title": "Translation Writing Pad" }],
     "writing": [
       {
         "title": "Writing Practice: Kanji Lesson 1",
