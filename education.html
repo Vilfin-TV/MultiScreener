@@ -2960,45 +2960,51 @@ async function handleTransFileUpload(e) {
   const inputEl = document.getElementById('trans-input');
   const ext = file.name.split('.').pop().toLowerCase();
   
-  const loadScript = (url) => new Promise(resolve => {
+  const loadScript = (url) => new Promise((resolve, reject) => {
     if (document.querySelector(`script[src="${url}"]`)) return resolve();
-    const s = document.createElement('script'); s.src = url; s.onload = resolve; document.head.appendChild(s);
+    const s = document.createElement('script'); s.src = url; s.onload = resolve; s.onerror = reject; document.head.appendChild(s);
   });
 
-  if (['jpg', 'jpeg', 'png'].includes(ext)) {
-    inputEl.value = 'Scanning image with AI (this may take a few seconds)...';
-    const lang = document.getElementById('trans-in-lang').value;
-    const tessLangMap = {
-      'en': 'eng', 'ja': 'jpn', 'hi': 'hin', 'ml': 'mal', 'ta': 'tam', 'te': 'tel', 'kn': 'kan',
-      'bn': 'ben', 'mr': 'mar', 'gu': 'guj', 'pa': 'pan', 'ur': 'urd', 'ne': 'nep',
-      'zh-CN': 'chi_sim', 'ko': 'kor', 'vi': 'vie', 'th': 'tha', 'tl': 'tgl', 'id': 'ind',
-      'fr': 'fra', 'es': 'spa', 'it': 'ita', 'nl': 'nld', 'el': 'ell', 'ru': 'rus',
-      'pl': 'pol', 'uk': 'ukr', 'ar': 'ara', 'af': 'afr', 'sw': 'swa', 'la': 'lat'
-    };
-    const tLang = tessLangMap[lang] || 'eng';
-    
-    await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
-    const worker = await Tesseract.createWorker(tLang);
-    const ret = await worker.recognize(file);
-    await worker.terminate();
-    inputEl.value = ret.data.text;
-    doTranslation();
-    
-  } else if (ext === 'docx') {
-    inputEl.value = 'Reading Word document...';
-    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js');
-    const arrayBuffer = await file.arrayBuffer();
-    const result = await mammoth.extractRawText({ arrayBuffer });
-    inputEl.value = result.value;
-    doTranslation();
-    
-  } else {
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      inputEl.value = evt.target.result;
+  try {
+    if (['jpg', 'jpeg', 'png'].includes(ext)) {
+      inputEl.value = 'Scanning image with AI (this may take a few seconds)...';
+      const lang = document.getElementById('trans-in-lang').value;
+      const tessLangMap = {
+        'en': 'eng', 'ja': 'jpn', 'hi': 'hin', 'ml': 'mal', 'ta': 'tam', 'te': 'tel', 'kn': 'kan',
+        'bn': 'ben', 'mr': 'mar', 'gu': 'guj', 'pa': 'pan', 'ur': 'urd', 'ne': 'nep',
+        'zh-CN': 'chi_sim', 'ko': 'kor', 'vi': 'vie', 'th': 'tha', 'tl': 'tgl', 'id': 'ind',
+        'fr': 'fra', 'es': 'spa', 'it': 'ita', 'nl': 'nld', 'el': 'ell', 'ru': 'rus',
+        'pl': 'pol', 'uk': 'ukr', 'ar': 'ara', 'af': 'afr', 'sw': 'swa', 'la': 'lat',
+        'su': 'sun', 'mn': 'mon', 'ku': 'kur'
+      };
+      const tLang = tessLangMap[lang] || 'eng';
+      
+      await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+      const worker = await Tesseract.createWorker(tLang);
+      const ret = await worker.recognize(file);
+      await worker.terminate();
+      inputEl.value = ret.data.text;
       doTranslation();
-    };
-    reader.readAsText(file);
+      
+    } else if (ext === 'docx') {
+      inputEl.value = 'Reading Word document...';
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js');
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      inputEl.value = result.value;
+      doTranslation();
+      
+    } else {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        inputEl.value = evt.target.result;
+        doTranslation();
+      };
+      reader.readAsText(file);
+    }
+  } catch (err) {
+    console.error(err);
+    inputEl.value = 'Error reading file: ' + err.message;
   }
 }
 
