@@ -2342,6 +2342,12 @@ function renderJlptContent() {
     
   document.getElementById('jlpt-quiz-card').innerHTML = drillHeaderHtml;
   loadJlptQuiz(savedProgress);
+  
+  if (_activeLessonTab === 'overview') {
+    document.getElementById('jlpt-quiz-card').style.display = 'block';
+  } else {
+    document.getElementById('jlpt-quiz-card').style.display = 'none';
+  }
 }
 
 function switchLessonTab(tab) {
@@ -2405,14 +2411,14 @@ function renderLessonTabContent() {
         + '  <select id="trans-out-lang" class="trans-select" onchange="handleLangChange(\'out\')">' + optionsHtml.replace('value="ja"', 'value="ja" selected') + '</select>'
         + '</div>'
         + '<div class="trans-body">'
-        + '  <div class="trans-box">'
-        + '    <textarea id="trans-input" class="trans-input" placeholder="Type or dictate text here..." oninput="doTranslation()"></textarea>'
+        + '  <div class="trans-box" style="margin-bottom:12px;">'
+        + '    <textarea id="trans-input" class="trans-input" placeholder="Type or dictate text here..." oninput="doTranslation()" style="width:100%; height:320px; background:transparent; color:var(--text); border:none; padding:16px; font-size:18px; resize:none; outline:none; font-family:inherit; box-sizing:border-box;"></textarea>'
         + '    <div class="trans-actions">'
         + '      <button id="trans-voice-btn" class="trans-action-btn" onclick="startTranslationVoice()">🎤 Voice Record</button>'
         + '    </div>'
         + '  </div>'
         + '  <div class="trans-box">'
-        + '    <div id="trans-output" class="trans-output">Translation will appear here...</div>'
+        + '    <div id="trans-output" class="trans-output" style="width:100%; height:320px; padding:16px; font-size:18px; color:var(--text2); overflow-y:auto; box-sizing:border-box;">Translation will appear here...</div>'
         + '    <div class="trans-actions">'
         + '      <button class="trans-action-btn" onclick="playTranslationAudio()">🔊 Play Audio</button>'
         + '    </div>'
@@ -2500,7 +2506,7 @@ function renderLessonTabContent() {
     if (_activeLessonTab !== 'writing_practice') {
       html += '<div style="display:flex; justify-content:space-between; margin-bottom:16px;">'
         + '<button class="widget-btn" style="background:var(--card3);" onclick="prevLessonPage(\'' + _activeLessonTab + '\')" ' + (pageIdx === 0 ? 'disabled style="opacity:0.5;background:var(--card3);"' : '') + '>⬅ Prev Page</button>'
-        + '<button class="widget-btn" style="background:var(--blue);" onclick="nextLessonPage(\\\'' + _activeLessonTab + '\\\')" ' + (pageIdx >= arr.length - 1 ? 'disabled style="opacity:0.5;background:var(--blue);"' : '') + '>Next Page ➡</button>'
+        + '<button class="widget-btn" style="background:var(--blue);" onclick="nextLessonPage(\'' + _activeLessonTab + '\')" ' + (pageIdx >= arr.length - 1 ? 'disabled style="opacity:0.5;background:var(--blue);"' : '') + '>Next Page ➡</button>'
         + '</div>';
     }
 
