@@ -171,6 +171,12 @@
   .pc-jio { --glow: rgba(26,115,232,0.22); }
   .pc-airtel .provider-badge { background: linear-gradient(135deg, #ff2e2e, #b30000); }
   .pc-airtel { --glow: rgba(255,46,46,0.2); }
+  .pc-free .provider-badge { background: linear-gradient(135deg, #21c45d, #0f8a3c); }
+  .pc-free { --glow: rgba(33,196,93,0.22); }
+  .pc-pro .provider-badge { background: linear-gradient(135deg, #f59e0b, #b45309); }
+  .pc-pro { --glow: rgba(245,158,11,0.22); }
+  .pc-custom .provider-badge { background: linear-gradient(135deg, #7c4dff, #4d2bb8); }
+  .pc-custom { --glow: rgba(124,77,255,0.24); }
 
   /* ================= PLAYER / DASHBOARD ================= */
   .dash { max-width: 1500px; margin: 0 auto; padding: clamp(14px, 3vw, 26px) clamp(14px, 3vw, 32px) 60px; }
@@ -333,7 +339,7 @@
       <span class="logo-dot">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
       </span>
-      IPTV Console
+      VilfinTV IPTV login
     </div>
     <p class="login-sub">Private streaming dashboard. Sign in with your console credentials to continue.</p>
 
@@ -358,7 +364,7 @@
       <span class="logo-dot">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
       </span>
-      IPTV Console
+      VilfinTV IPTV
     </div>
     <div class="topbar-actions">
       <button class="ghost-btn" data-logout>Sign out</button>
@@ -383,6 +389,33 @@
         <div class="provider-badge">A</div>
         <h3>Airtel IPTV</h3>
         <div class="pc-sub">Load the Airtel channel lineup</div>
+        <span class="pc-go">Open lineup
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </span>
+      </button>
+
+      <button class="provider-card pc-free" data-provider="free">
+        <div class="provider-badge">F</div>
+        <h3>Free IPTV</h3>
+        <div class="pc-sub">Open-source channels from iptv-org</div>
+        <span class="pc-go">Open lineup
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </span>
+      </button>
+
+      <button class="provider-card pc-pro" data-provider="pro">
+        <div class="provider-badge">P</div>
+        <h3>IPTV Pro</h3>
+        <div class="pc-sub">Curated premium channel lineup</div>
+        <span class="pc-go">Open lineup
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </span>
+      </button>
+
+      <button class="provider-card pc-custom" data-provider="custom">
+        <div class="provider-badge">C</div>
+        <h3>Custom</h3>
+        <div class="pc-sub">Your own playlist URL from settings</div>
         <span class="pc-go">Open lineup
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </span>
@@ -583,7 +616,8 @@
   function loadProvider(provider) {
     if (!state.token) { logout(); return; }
     state.provider = provider;
-    $("dash-provider-name").textContent = (provider === "jio" ? "Jio IPTV" : provider === "airtel" ? "Airtel IPTV" : "IPTV Console");
+    var PROVIDER_LABELS = { jio: "Jio IPTV", airtel: "Airtel IPTV", free: "Free IPTV", pro: "IPTV Pro", custom: "Custom" };
+    $("dash-provider-name").textContent = PROVIDER_LABELS[provider] || "VilfinTV IPTV";
     show("player-screen");
     $("channel-grid").innerHTML = "";
     $("empty-state").style.display = "none";

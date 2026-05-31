@@ -41,11 +41,33 @@
 
 const DEFAULT_SESSION_HOURS = 8;
 
+// All providers the console understands. free/pro ship with working open-source
+// defaults; jio/airtel/custom are URL-driven (set in the admin console).
+const IPTV_PROVIDERS = ["jio", "airtel", "free", "pro", "custom"];
+
+const IPTV_PROVIDER_DEFAULTS = {
+  jio:    { enabled: true, url: "", epg: "" },
+  airtel: { enabled: true, url: "", epg: "" },
+  free:   { enabled: true, url: "https://iptv-org.github.io/iptv/index.m3u", epg: "https://iptv-org.github.io/epg/guides/in.xml" },
+  pro:    { enabled: true, url: "https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8", epg: "" },
+  custom: { enabled: true, url: "", epg: "" },
+};
+
+function defaultProviders() {
+  const out = {};
+  for (const p of IPTV_PROVIDERS) out[p] = { ...IPTV_PROVIDER_DEFAULTS[p] };
+  return out;
+}
+
 const IPTV_DEFAULT_SETTINGS = {
   sessionHours: DEFAULT_SESSION_HOURS,
-  defaultProvider: "jio",
-  providers: { jio: { enabled: true, url: "" }, airtel: { enabled: true, url: "" } },
+  defaultProvider: "free",
+  providers: defaultProviders(),
 };
+
+// Cache TTL (seconds) for fetched remote playlists / EPG, to stay within limits.
+const PLAYLIST_CACHE_TTL = 1800; // 30 min
+const EPG_CACHE_TTL = 3600;      // 60 min
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -76,6 +98,9 @@ export default {
       }
       if (request.method === "GET" && pathname === "/api/playlist") {
         return handlePlaylist(request, env, url);
+      }
+      if (request.method === "GET" && pathname === "/api/epg") {
+        return handleEpg(request, env, url);
       }
       if (request.method === "GET" && pathname === "/api/stream") {
         return handleStream(request, env, url);
@@ -151,21 +176,31 @@ function safeEqual(a, b) {
 
 async function loadSettings(env) {
   const kv = env.IPTV_PLAYLIST_KV;
-  if (!kv) return { ...IPTV_DEFAULT_SETTINGS };
+  const base = { sessionHours: DEFAULT_SESSION_HOURS, defaultProvider: "free", providers: defaultProviders() };
+  if (!kv) return base;
   const raw = await kv.get("iptv_settings");
-  if (!raw) return { ...IPTV_DEFAULT_SETTINGS };
+  if (!raw) return base;
   try {
     const s = JSON.parse(raw);
+    const providers = defaultProviders();
+    for (const p of IPTV_PROVIDERS) {
+      const saved = s.providers && s.providers[p];
+      if (saved) {
+        providers[p] = {
+          enabled: saved.enabled === undefined ? providers[p].enabled : !!saved.enabled,
+          // A saved (even empty) url overrides the built-in default so admins can clear it.
+          url: saved.url !== undefined ? String(saved.url || "").trim() : providers[p].url,
+          epg: saved.epg !== undefined ? String(saved.epg || "").trim() : providers[p].epg,
+        };
+      }
+    }
     return {
       sessionHours: Math.max(1, Math.min(168, parseInt(s.sessionHours, 10) || DEFAULT_SESSION_HOURS)),
-      defaultProvider: s.defaultProvider === "airtel" ? "airtel" : "jio",
-      providers: {
-        jio: { enabled: s.providers && s.providers.jio ? !!s.providers.jio.enabled : true, url: s.providers && s.providers.jio ? (s.providers.jio.url || "") : "" },
-        airtel: { enabled: s.providers && s.providers.airtel ? !!s.providers.airtel.enabled : true, url: s.providers && s.providers.airtel ? (s.providers.airtel.url || "") : "" },
-      },
+      defaultProvider: IPTV_PROVIDERS.indexOf(s.defaultProvider) !== -1 ? s.defaultProvider : "free",
+      providers,
     };
   } catch (e) {
-    return { ...IPTV_DEFAULT_SETTINGS };
+    return base;
   }
 }
 
@@ -296,35 +331,93 @@ async function handlePlaylist(request, env, url) {
   if (!auth) return json({ error: "Unauthorized" }, 401);
 
   const provider = (url.searchParams.get("provider") || "").toLowerCase();
-  if (!/^[a-z0-9_-]{1,32}$/.test(provider)) return json({ error: "Invalid provider" }, 400);
+  if (IPTV_PROVIDERS.indexOf(provider) === -1) return json({ error: "Invalid provider" }, 400);
 
-  // Respect the per-provider enable toggle from settings.
   const settings = await loadSettings(env);
-  if (settings.providers[provider] && settings.providers[provider].enabled === false) {
-    return json({ error: "Provider is disabled" }, 403);
-  }
+  const pconf = settings.providers[provider] || {};
+  if (pconf.enabled === false) return json({ error: "Provider is disabled" }, 403);
 
-  if (!env.IPTV_PLAYLIST_KV) return json({ error: "Playlist store not configured" }, 503);
+  const kv = env.IPTV_PLAYLIST_KV;
+  if (!kv) return json({ error: "Playlist store not configured" }, 503);
 
   let raw = "";
-  const customUrl = settings.providers[provider] && settings.providers[provider].url;
-  if (customUrl) {
-    try {
-      const resp = await fetch(customUrl, { headers: { "User-Agent": "IPTVConsole/1.0" } });
-      if (resp.ok) raw = await resp.text();
-    } catch (e) {
-      console.warn("Failed to fetch custom URL for " + provider + ": " + e);
+  const srcUrl = (pconf.url || "").trim();
+
+  // 1) Remote URL (with short-lived KV cache to respect Worker limits).
+  if (srcUrl) {
+    const cacheKey = "cache_playlist_" + provider;
+    raw = (await kv.get(cacheKey)) || "";
+    if (!raw) {
+      try {
+        const resp = await fetch(srcUrl, { headers: { "User-Agent": "Mozilla/5.0 (compatible; IPTVConsole/1.0)" }, redirect: "follow" });
+        if (resp.ok) {
+          raw = await resp.text();
+          if (raw && raw.length < 24 * 1024 * 1024) {
+            try { await kv.put(cacheKey, raw, { expirationTtl: PLAYLIST_CACHE_TTL }); } catch (e) {}
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to fetch playlist URL for " + provider + ": " + e);
+      }
     }
   }
 
+  // 2) Fall back to the synced KV playlist ({provider}_playlist).
+  if (!raw) raw = (await kv.get(provider + "_playlist")) || "";
+
   if (!raw) {
-    raw = await env.IPTV_PLAYLIST_KV.get(provider + "_playlist");
+    return json({ error: srcUrl ? "Could not load playlist from the configured URL." : "No playlist configured for this provider." }, 404);
   }
-  
-  if (!raw) return json({ error: "No playlist found for provider" }, 404);
 
   const channels = parseM3U(raw);
-  return json({ provider, count: channels.length, channels });
+  return json({ provider, count: channels.length, epg: (pconf.epg || ""), channels });
+}
+
+/**
+ * EPG (XMLTV) program lookup for a single channel, on demand with caching.
+ * GET /api/epg?provider=<p>&channel=<tvg-id>
+ * Returns { now, next, programs:[{start,stop,title,desc}] } — never the whole guide.
+ */
+async function handleEpg(request, env, url) {
+  const auth = await requireAuth(request, env, url);
+  if (!auth) return json({ error: "Unauthorized" }, 401);
+
+  const provider = (url.searchParams.get("provider") || "").toLowerCase();
+  const channel = (url.searchParams.get("channel") || "").trim();
+  if (IPTV_PROVIDERS.indexOf(provider) === -1) return json({ error: "Invalid provider" }, 400);
+  if (!channel) return json({ error: "Missing channel id" }, 400);
+
+  const settings = await loadSettings(env);
+  const epgUrl = ((settings.providers[provider] || {}).epg || "").trim();
+  if (!epgUrl) return json({ programs: [], now: null, next: null, note: "No EPG configured" });
+
+  const kv = env.IPTV_PLAYLIST_KV;
+  const cacheKey = "cache_epg_" + provider;
+  let xml = kv ? (await kv.get(cacheKey)) || "" : "";
+  if (!xml) {
+    try {
+      const resp = await fetch(epgUrl, { headers: { "User-Agent": "Mozilla/5.0 (compatible; IPTVConsole/1.0)" }, redirect: "follow" });
+      if (resp.ok) {
+        xml = await resp.text();
+        if (kv && xml && xml.length < 24 * 1024 * 1024) {
+          try { await kv.put(cacheKey, xml, { expirationTtl: EPG_CACHE_TTL }); } catch (e) {}
+        }
+      }
+    } catch (e) {
+      return json({ programs: [], now: null, next: null, error: "EPG fetch failed" });
+    }
+  }
+  if (!xml) return json({ programs: [], now: null, next: null, error: "EPG unavailable" });
+
+  const programs = parseEpgForChannel(xml, channel);
+  const nowMs = Date.now();
+  let now = null, next = null;
+  for (let i = 0; i < programs.length; i++) {
+    const p = programs[i];
+    if (p.startMs <= nowMs && nowMs < p.stopMs) { now = p; next = programs[i + 1] || null; break; }
+    if (p.startMs > nowMs) { next = p; break; }
+  }
+  return json({ channel, count: programs.length, now, next, programs: programs.slice(0, 12) });
 }
 
 /**
@@ -448,4 +541,64 @@ function guessQuality(line) {
   const hay = line.toLowerCase();
   if (/\bfhd\b|\bhd\b|1080|720|high/.test(hay)) return "HD";
   return "SD";
+}
+
+/* ----------------------------- EPG (XMLTV) parser ----------------------------- */
+
+/** Parse "20240131123000 +0000" / "20240131123000" into epoch ms. */
+function parseXmltvTime(s) {
+  if (!s) return NaN;
+  const m = s.match(/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})?\s*([+-]\d{4})?/);
+  if (!m) return NaN;
+  const [, y, mo, d, h, mi, se, tz] = m;
+  let iso = `${y}-${mo}-${d}T${h}:${mi}:${se || "00"}`;
+  if (tz) iso += tz.slice(0, 3) + ":" + tz.slice(3);
+  else iso += "Z";
+  const t = Date.parse(iso);
+  return isNaN(t) ? NaN : t;
+}
+
+function _xmlUnescape(s) {
+  return String(s == null ? "" : s)
+    .replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+    .replace(/&amp;/g, "&");
+}
+
+/**
+ * Extract <programme channel="ID"> entries for one channel from XMLTV text.
+ * Streaming-ish regex scan (no full DOM) to stay light in the Worker.
+ */
+function parseEpgForChannel(xml, channelId) {
+  const out = [];
+  if (!xml || !channelId) return out;
+  // Match each <programme ...>...</programme> block.
+  const re = /<programme\b([^>]*)>([\s\S]*?)<\/programme>/g;
+  const idLc = channelId.toLowerCase();
+  let m;
+  let scanned = 0;
+  while ((m = re.exec(xml)) !== null) {
+    if (++scanned > 200000) break; // hard safety cap
+    const attrs = m[1];
+    const chMatch = attrs.match(/channel="([^"]*)"/i);
+    if (!chMatch || chMatch[1].toLowerCase() !== idLc) continue;
+    const startMatch = attrs.match(/start="([^"]*)"/i);
+    const stopMatch = attrs.match(/stop="([^"]*)"/i);
+    const startMs = parseXmltvTime(startMatch ? startMatch[1] : "");
+    const stopMs = parseXmltvTime(stopMatch ? stopMatch[1] : "");
+    const inner = m[2];
+    const titleM = inner.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    const descM = inner.match(/<desc[^>]*>([\s\S]*?)<\/desc>/i);
+    out.push({
+      startMs: startMs || 0,
+      stopMs: stopMs || 0,
+      start: startMatch ? startMatch[1] : "",
+      stop: stopMatch ? stopMatch[1] : "",
+      title: _xmlUnescape(titleM ? titleM[1].trim() : "Untitled"),
+      desc: _xmlUnescape(descM ? descM[1].trim() : ""),
+    });
+    if (out.length > 400) break;
+  }
+  out.sort((a, b) => a.startMs - b.startMs);
+  return out;
 }
