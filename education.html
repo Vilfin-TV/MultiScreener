@@ -2399,7 +2399,7 @@ function renderLessonTabContent() {
         'ja': 'Japanese', 'en': 'English', 'hi': 'Hindi', 'ml': 'Malayalam', 
         'ta': 'Tamil', 'te': 'Telugu', 'kn': 'Kannada', 'bn': 'Bengali', 
         'mr': 'Marathi', 'gu': 'Gujarati', 'pa': 'Punjabi', 'ur': 'Urdu', 'ne': 'Nepali',
-        'zh-CN': 'Chinese', 'ko': 'Korean', 'vi': 'Vietnamese', 'th': 'Thai', 'tl': 'Filipino', 
+        'zh-CN': 'Chinese', 'ko': 'Korean', 'vi': 'Vietnamese', 'th': 'Thai', 'tl': 'Filipino (Philippines)', 
         'id': 'Indonesian', 'mn': 'Mongolian', 'su': 'Sundanese',
         'fr': 'French', 'es': 'Spanish', 'it': 'Italian', 'nl': 'Dutch', 
         'el': 'Greek', 'ru': 'Russian', 'pl': 'Polish', 'uk': 'Ukrainian', 
@@ -2418,12 +2418,14 @@ function renderLessonTabContent() {
         + '  <div class="trans-box" style="margin-bottom:12px;">'
         + '    <textarea id="trans-input" class="trans-input" placeholder="Type or dictate text here..." oninput="doTranslation()" style="width:100%; height:320px; background:transparent; color:var(--text); border:none; padding:16px; font-size:18px; resize:none; outline:none; font-family:inherit; box-sizing:border-box;"></textarea>'
         + '    <div class="trans-actions">'
+        + '      <label class="trans-action-btn" style="cursor:pointer; margin-right:8px;">📁 Upload Text <input type="file" style="display:none;" onchange="handleTransFileUpload(event)" accept=".txt,.js,.json,.html,.md,.csv"></label>'
         + '      <button id="trans-voice-btn" class="trans-action-btn" onclick="startTranslationVoice()">🎤 Voice Record</button>'
         + '    </div>'
         + '  </div>'
         + '  <div class="trans-box">'
         + '    <div id="trans-output" class="trans-output" style="width:100%; height:320px; padding:16px; font-size:18px; color:var(--text2); overflow-y:auto; box-sizing:border-box;">Translation will appear here...</div>'
         + '    <div class="trans-actions">'
+        + '      <button class="trans-action-btn" style="margin-right:8px;" onclick="copyTranslation()">📋 Copy</button>'
         + '      <button class="trans-action-btn" onclick="playTranslationAudio()">🔊 Play Audio</button>'
         + '    </div>'
         + '  </div>'
@@ -2935,7 +2937,7 @@ function playTranslationAudio() {
   const lang = document.getElementById('trans-out-lang').value;
   
   try {
-    const url = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=' + lang + '&q=' + encodeURIComponent(text.substring(0, 200));
+    const url = 'https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=' + lang + '&q=' + encodeURIComponent(text.substring(0, 200));
     const audio = new Audio(url);
     audio.play().catch(e => {
       if ('speechSynthesis' in window) {
@@ -2948,6 +2950,27 @@ function playTranslationAudio() {
   } catch(e) {
     console.error(e);
   }
+}
+
+function handleTransFileUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    document.getElementById('trans-input').value = evt.target.result;
+    doTranslation();
+  };
+  reader.readAsText(file);
+}
+
+function copyTranslation() {
+  const text = document.getElementById('trans-output').innerText;
+  if (!text || text.includes('Translating')) return;
+  navigator.clipboard.writeText(text).then(() => {
+    alert('Translation copied to clipboard!');
+  }).catch(err => {
+    alert('Failed to copy text: ' + err);
+  });
 }
 // --- END TRANSLATOR LOGIC ---
 </script>
