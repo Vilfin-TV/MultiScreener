@@ -119,7 +119,13 @@ def main() -> None:
         synced += 1
 
     if synced == 0:
-        fail("No playlists were synced. Provide a source URL or committed file for at least one provider.")
+        # Not an error: jio/airtel have no source configured, and free/pro are
+        # fetched directly by the worker (no KV sync needed). Exit cleanly so the
+        # scheduled run stays green instead of emailing a failure every 6 hours.
+        print("::notice::No playlist sources configured for "
+              f"{', '.join(PROVIDERS)} — nothing to sync. "
+              "Set {PROVIDER}_PLAYLIST_URL secrets or add playlists/{provider}.m3u to enable.")
+        return
     print(f"Done. Synced {synced}/{len(PROVIDERS)} provider(s).")
 
 

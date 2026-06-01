@@ -48,7 +48,7 @@ const IPTV_PROVIDERS = ["jio", "airtel", "free", "pro", "custom"];
 const IPTV_PROVIDER_DEFAULTS = {
   jio:    { enabled: true, url: "", epg: "" },
   airtel: { enabled: true, url: "", epg: "" },
-  free:   { enabled: true, url: "https://iptv-org.github.io/iptv/index.m3u", epg: "" },
+  free:   { enabled: true, url: "https://iptv-org.github.io/iptv/index.m3u", epg: "https://epg.pw/xmltv/epg_IN.xml" },
   pro:    { enabled: true, url: "https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8", epg: "" },
   custom: { enabled: true, url: "", epg: "" },
 };
