@@ -17,6 +17,21 @@
 </script>
 <style>
 /* ==========================================================================
+   2026 POLISH LAYER (theme-aware, additive — uses existing --vars, no colour
+   overrides, no logic change). Smoother motion, refined focus + scrollbars.
+   ========================================================================== */
+*{-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+button,a,.card,.tab,input,select{transition:background-color .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease,transform .16s ease}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--burn2,#3b82f6);outline-offset:2px;border-radius:8px}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2,#1e3a5c);border-radius:8px}
+::-webkit-scrollbar-thumb:hover{background:var(--burn,#2563eb)}
+img{-webkit-user-drag:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+/* ==========================================================================
    THEME VARIABLES & STYLING
    ========================================================================== */
 :root{
