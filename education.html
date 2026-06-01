@@ -3250,37 +3250,61 @@ function parseCharacterProfiles() {
     if (name.includes('/')) name = name.split('/')[1].trim();
     
     const desc = match[2].toLowerCase();
-    let profile = { pitch: 1.0, rate: 1.0 };
+    let profile = { lang: 'ja-JP', pitch: 1.0, rate: 1.0, isForeign: false };
     
     // Gender Heuristics
     if (desc.includes('daughter') || desc.includes('wife') || desc.includes(' he ') || desc.includes(' his ') || desc.includes('male') || desc.includes(' man ') || name === 'ラヴィ' || name === 'マイク' || name === 'ケン') {
-      profile.pitch = 0.7; // Deeper male voice
+      profile.pitch = 0.6; // Deeper male voice
     } else if (desc.includes('she') || desc.includes('her') || desc.includes('woman') || desc.includes('female') || name === 'リン' || name === 'エマ' || name === 'さくら') {
-      profile.pitch = 1.3; // Higher female voice
+      profile.pitch = 1.4; // Higher female voice
     }
     
-    // Country / Speed Heuristics
+    // Country / Accent Heuristics
+    // To achieve genuine accents, we change the TTS engine language and feed it Romaji!
     if (desc.includes('india')) {
-      profile.rate = 0.85; // slightly slower, deliberate
+      profile.lang = 'hi-IN'; // Hindi engine reading Romaji gives a perfect Indian accent
+      profile.rate = 0.9;
+      profile.isForeign = true;
     } else if (desc.includes('america') || desc.includes('usa') || desc.includes('uk')) {
-      profile.rate = 1.05; // slightly faster, peppy
-    } else if (desc.includes('china') || desc.includes('taiwan')) {
-      profile.rate = 1.15; // fast, high cadence
-    } else {
+      profile.lang = 'en-US'; // American English engine
       profile.rate = 1.0;
+      profile.isForeign = true;
+    } else if (desc.includes('china') || desc.includes('taiwan')) {
+      profile.lang = 'zh-CN'; // Chinese engine
+      profile.rate = 1.05;
+      profile.isForeign = true;
+    } else {
+      profile.lang = 'ja-JP';
     }
     
     _characterProfiles[name] = profile;
   }
 }
 
-function playConversation() {
+// Fetches the Romaji pronunciation from Google Translate API (No API Key Required)
+async function getRomaji(kanjiText) {
+  try {
+    const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=ja&tl=en&dt=rm&q=' + encodeURIComponent(kanjiText);
+    const res = await fetch(url);
+    const json = await res.json();
+    // Google returns: [[[null,null,null,"Romaji string"]],...]
+    if (json && json[0] && json[0][0] && json[0][0][3]) {
+      return json[0][0][3];
+    }
+  } catch (err) {
+    console.error("Romaji fetch failed", err);
+  }
+  return null;
+}
+
+async function playConversation() {
   const btn = document.getElementById('btn-play-conversation');
   if (_ttsActive) {
     stopConversation();
     return;
   }
   
+  if (btn) btn.innerHTML = '⏳ Loading Accents...';
   parseCharacterProfiles();
   _ttsQueue = [];
   
@@ -3304,14 +3328,24 @@ function playConversation() {
       
       dialogueText = dialogueText.trim();
       if (dialogueText.length > 0) {
-        _ttsQueue.push({ character: charName, text: dialogueText });
+        _ttsQueue.push({ character: charName, kanjiText: dialogueText, romajiText: null });
       }
     }
   }
   
   if (_ttsQueue.length === 0) {
     alert("No conversation lines found on this page!");
+    if (btn) btn.innerHTML = '▶ Play Conversation';
     return;
+  }
+  
+  // Pre-fetch Romaji for foreign characters
+  for (let i = 0; i < _ttsQueue.length; i++) {
+    const line = _ttsQueue[i];
+    const profile = _characterProfiles[line.character] || { isForeign: false };
+    if (profile.isForeign) {
+      line.romajiText = await getRomaji(line.kanjiText);
+    }
   }
   
   _ttsActive = true;
@@ -3327,12 +3361,36 @@ function playNextLine() {
   }
   
   const line = _ttsQueue[_ttsIndex];
-  const profile = _characterProfiles[line.character] || { pitch: 1.0, rate: 1.0 };
+  const profile = _characterProfiles[line.character] || { lang: 'ja-JP', pitch: 1.0, rate: 1.0, isForeign: false };
   
-  const msg = new SpeechSynthesisUtterance(line.text);
-  msg.lang = 'ja-JP';
+  // If the character is foreign, we feed the browser TTS engine the Romaji.
+  // This FORCES the browser to read it in their native accent (Indian, American, etc.)!
+  // If we fed it Kanji, the English/Hindi engines would stay silent.
+  let textToSpeak = line.kanjiText;
+  if (profile.isForeign && line.romajiText) {
+    textToSpeak = line.romajiText;
+  }
+  
+  const msg = new SpeechSynthesisUtterance(textToSpeak);
+  msg.lang = profile.lang;
   msg.pitch = profile.pitch;
   msg.rate = profile.rate;
+  
+  // Try to explicitly find a matching voice to ensure the gender/accent is applied if possible
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length > 0) {
+    let selectedVoice = voices.find(v => v.lang === profile.lang);
+    if (profile.pitch < 1.0) { // Male preference
+      let maleVoice = voices.find(v => v.lang === profile.lang && (v.name.toLowerCase().includes('male') || v.name.includes('Ichiro') || v.name.includes('David') || v.name.includes('Rishi')));
+      if (maleVoice) selectedVoice = maleVoice;
+    } else { // Female preference
+      let femaleVoice = voices.find(v => v.lang === profile.lang && (v.name.toLowerCase().includes('female') || v.name.includes('Ayumi') || v.name.includes('Zira') || v.name.includes('Lekha')));
+      if (femaleVoice) selectedVoice = femaleVoice;
+    }
+    if (selectedVoice) {
+      msg.voice = selectedVoice;
+    }
+  }
   
   msg.onend = function() {
     _ttsIndex++;
