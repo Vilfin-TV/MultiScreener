@@ -951,7 +951,10 @@ a{color:inherit;text-decoration:none}
       
       <div id="dict-pagination" style="display:flex; justify-content:space-between; margin-top:24px; align-items:center;">
         <button class="widget-btn" id="dict-prev-btn" style="background:var(--card3);" onclick="prevDictPage()">⬅ Prev Page</button>
-        <div id="dict-page-indicator" style="color:var(--text2); font-weight:bold;">Page 1</div>
+        <div id="dict-page-indicator-container" style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+          <div id="dict-page-indicator" style="color:var(--text2); font-weight:bold;">Page 1</div>
+          <button id="dict-play-page-btn" class="widget-btn" style="background:var(--green); border:none; padding:8px 16px; font-size:14px; box-shadow:0 0 10px rgba(0,255,100,0.2);" onclick="playDictPage()">▶ Play Page Words</button>
+        </div>
         <button class="widget-btn" id="dict-next-btn" style="background:var(--blue);" onclick="nextDictPage()">Next Page ➡</button>
       </div>
     </div>
@@ -1953,6 +1956,8 @@ var _recallScoreTotal = 0;
 
 // Switch Japanese sub-areas
 function switchJpSubHub(area) {
+  if (typeof stopConversation === 'function') stopConversation();
+  if (typeof stopDictPage === 'function') stopDictPage();
   _activeJpSubHub = area;
   document.getElementById('sub-hub-chart').classList.remove('active');
   document.getElementById('sub-hub-kanji').classList.remove('active');
@@ -3444,16 +3449,11 @@ function renderDictionary() {
     html = '<div style="color:var(--text2); text-align:center; padding:40px;">No matching vocabulary found.</div>';
   } else {
     for (let item of pageItems) {
-      // Clean string for onclick
-      const safeJa = item.ja.replace(/'/g, "\\'").replace(/"/g, '&quot;');
       html += '<div class="dict-card">'
         + '  <div>'
         + '    <div class="dict-ja-text">' + item.ja + '</div>'
         + '    <div class="dict-en-text">' + item.en + '</div>'
         + '  </div>'
-        + '  <button class="widget-btn" style="background:var(--green); border-radius:50%; width:48px; height:48px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,255,100,0.2);" onclick="playDictWord(\'' + safeJa + '\')">'
-        + '    <span style="font-size:20px; margin-left:4px;">▶</span>'
-        + '  </button>'
         + '</div>';
     }
   }
@@ -3485,11 +3485,13 @@ function renderDictionary() {
 }
 
 function searchDictionary() {
+  if (typeof stopDictPage === 'function') stopDictPage();
   _dictPageIdx = 0; 
   renderDictionary();
 }
 
 function nextDictPage() {
+  if (typeof stopDictPage === 'function') stopDictPage();
   const totalPages = Math.ceil(_dictFilteredData.length / _dictItemsPerPage);
   if (_dictPageIdx < totalPages - 1) {
     _dictPageIdx++;
@@ -3499,6 +3501,7 @@ function nextDictPage() {
 }
 
 function prevDictPage() {
+  if (typeof stopDictPage === 'function') stopDictPage();
   if (_dictPageIdx > 0) {
     _dictPageIdx--;
     renderDictionary();
@@ -3506,21 +3509,82 @@ function prevDictPage() {
   }
 }
 
-function playDictWord(word) {
+let _dictTtsActive = false;
+let _dictTtsQueue = [];
+let _dictTtsIndex = 0;
+
+function stopDictPage() {
+  _dictTtsActive = false;
   window.speechSynthesis.cancel();
-  
-  const msg = new SpeechSynthesisUtterance(word);
-  msg.lang = 'ja-JP';
-  msg.rate = 0.9;
-  
-  window.speechSynthesis.getVoices();
-  const voices = window.speechSynthesis.getVoices();
-  const jaVoices = voices.filter(v => v.lang.includes('ja'));
-  if (jaVoices.length > 0) {
-    const femaleVoice = jaVoices.find(v => v.name.toLowerCase().includes('female') || v.name.includes('Ayumi') || v.name.includes('Kyoko') || v.name.includes('Google'));
-    if (femaleVoice) msg.voice = femaleVoice;
-    else msg.voice = jaVoices[0];
+  const btn = document.getElementById('dict-play-page-btn');
+  if (btn) btn.innerHTML = '▶ Play Page Words';
+}
+
+function playDictPage() {
+  if (_dictTtsActive) {
+    stopDictPage();
+    return;
   }
+  
+  const start = _dictPageIdx * _dictItemsPerPage;
+  const end = start + _dictItemsPerPage;
+  const pageItems = _dictFilteredData.slice(start, end);
+  
+  if (pageItems.length === 0) return;
+  
+  _dictTtsQueue = [];
+  for (let item of pageItems) {
+    _dictTtsQueue.push({ text: item.ja, lang: 'ja-JP', rate: 0.9, isEn: false });
+    _dictTtsQueue.push({ text: item.en, lang: 'en-US', rate: 1.0, isEn: true });
+  }
+  
+  _dictTtsActive = true;
+  _dictTtsIndex = 0;
+  
+  const btn = document.getElementById('dict-play-page-btn');
+  if (btn) btn.innerHTML = '⏸ Stop Reading';
+  
+  // Ensure voices are loaded
+  window.speechSynthesis.getVoices();
+  playNextDictItem();
+}
+
+function playNextDictItem() {
+  if (!_dictTtsActive || _dictTtsIndex >= _dictTtsQueue.length) {
+    stopDictPage();
+    return;
+  }
+  
+  const item = _dictTtsQueue[_dictTtsIndex];
+  const msg = new SpeechSynthesisUtterance(item.text);
+  msg.lang = item.lang;
+  msg.rate = item.rate;
+  
+  const voices = window.speechSynthesis.getVoices();
+  if (item.isEn) {
+    const enVoices = voices.filter(v => v.lang.startsWith('en'));
+    if (enVoices.length > 0) msg.voice = enVoices[0];
+  } else {
+    const jaVoices = voices.filter(v => v.lang.includes('ja'));
+    if (jaVoices.length > 0) {
+      const femaleVoice = jaVoices.find(v => v.name.toLowerCase().includes('female') || v.name.includes('Ayumi') || v.name.includes('Kyoko') || v.name.includes('Google'));
+      if (femaleVoice) msg.voice = femaleVoice;
+      else msg.voice = jaVoices[0];
+    }
+  }
+  
+  msg.onend = function() {
+    _dictTtsIndex++;
+    // Longer pause after English translation to separate words cleanly
+    const pauseTime = item.isEn ? 800 : 300; 
+    setTimeout(playNextDictItem, pauseTime);
+  };
+  
+  msg.onerror = function() {
+    console.error("Dict TTS Error");
+    _dictTtsIndex++;
+    playNextDictItem();
+  };
   
   window.speechSynthesis.speak(msg);
 }
