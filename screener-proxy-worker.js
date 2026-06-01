@@ -125,15 +125,106 @@ export default {
       if (!env.ADMIN_USERNAME || !env.LINK_CONSOLE_PASSWORD || !env.JWT_SECRET) {
         return jsonError(503, 'Auth not configured. Set ADMIN_USERNAME, LINK_CONSOLE_PASSWORD and JWT_SECRET in Worker environment.');
       }
-      if (!username || !password || username !== env.ADMIN_USERNAME || password !== env.LINK_CONSOLE_PASSWORD) {
-        return jsonError(401, 'Invalid credentials.');
-      }
       const now = Math.floor(Date.now() / 1000);
-      const token = await signJWT({ sub: username, iat: now, exp: now + 86400 }, env.JWT_SECRET);
-      return new Response(
-        JSON.stringify({ ok: true, token }),
-        { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } }
-      );
+      // 1) Admin via environment credentials → full access.
+      if (username && password && username === env.ADMIN_USERNAME && password === env.LINK_CONSOLE_PASSWORD) {
+        const token = await signJWT({ sub: username, role: 'admin', perms: null, iat: now, exp: now + 86400 }, env.JWT_SECRET);
+        return _rbacJson({ ok: true, token, role: 'admin', username: username });
+      }
+      // 2) Operator/Auditor via KV accounts.
+      if (username && password && env.IPTV_KV) {
+        const op = await _opGet(env, username);
+        if (op && op.hash) {
+          if (op.disabled) return jsonError(403, 'This account is disabled. Contact the administrator.');
+          const h = await _iptvHashPassword(password, op.salt, op.iterations);
+          if (h.hash === op.hash) {
+            const token = await signJWT({ sub: username, role: op.role || 'operator', perms: op.perms || {}, iat: now, exp: now + 86400 }, env.JWT_SECRET);
+            return _rbacJson({ ok: true, token, role: op.role || 'operator', username: username, perms: op.perms || {} });
+          }
+        }
+      }
+      return jsonError(401, 'Invalid credentials.');
+    }
+
+    // ── /api/me  GET — return the caller's role + permissions ─────────────────
+    if (pathname === '/api/me') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      const p = auth.payload || {};
+      return _rbacJson({ ok: true, username: p.sub, role: p.role || 'operator', perms: (p.role === 'admin' ? null : (p.perms || {})) });
+    }
+
+    // ── /api/operators  GET — list operator accounts (admin only) ─────────────
+    if (pathname === '/api/operators' && request.method === 'GET') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Account store not configured (IPTV_KV).');
+      const all = await _opAll(env);
+      const list = Object.values(all).map(function(o){ return { username:o.username, role:o.role, perms:o.perms||{}, disabled:!!o.disabled, updatedAt:o.updatedAt }; });
+      return _rbacJson({ ok:true, operators:list });
+    }
+
+    // ── /api/operators/save  POST — create/update operator (admin only) ───────
+    if (pathname === '/api/operators/save' && request.method === 'POST') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Account store not configured (IPTV_KV).');
+      let b; try { b = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      const uname = (b.username||'').toString().trim();
+      if (!uname || uname.length > 64) return jsonError(400, 'Username is required (max 64 chars).');
+      if (uname === env.ADMIN_USERNAME) return jsonError(400, 'That name is reserved for the admin.');
+      const role = ['operator','auditor','admin'].indexOf(b.role) !== -1 ? b.role : 'operator';
+      const perms = (b.perms && typeof b.perms === 'object') ? b.perms : {};
+      const all = await _opAll(env);
+      const existing = all[uname] || {};
+      let salt = existing.salt, hash = existing.hash, iterations = existing.iterations;
+      if (b.password) {
+        if (b.password.length < 6) return jsonError(400, 'Password must be at least 6 characters.');
+        const h = await _iptvHashPassword(b.password); salt = h.salt; hash = h.hash; iterations = h.iterations;
+      }
+      if (!hash) return jsonError(400, 'A password is required for a new account.');
+      all[uname] = { username:uname, role:role, perms:perms, salt:salt, hash:hash, iterations:iterations,
+        disabled: !!b.disabled, updatedAt: new Date().toISOString() };
+      await env.IPTV_KV.put('console_operators', JSON.stringify(all));
+      return _rbacJson({ ok:true, saved:true, username:uname });
+    }
+
+    // ── /api/operators/delete  POST — remove operator (admin only) ────────────
+    if (pathname === '/api/operators/delete' && request.method === 'POST') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Account store not configured (IPTV_KV).');
+      let b; try { b = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      const uname = (b.username||'').toString().trim();
+      const all = await _opAll(env);
+      if (all[uname]) { delete all[uname]; await env.IPTV_KV.put('console_operators', JSON.stringify(all)); }
+      return _rbacJson({ ok:true, deleted:true, username:uname });
+    }
+
+    // ── /api/admin/profile  GET/POST — admin display profile (admin only) ─────
+    if (pathname === '/api/admin/profile') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Store not configured (IPTV_KV).');
+      if (request.method === 'GET') {
+        let prof = {}; try { const r = await env.IPTV_KV.get('console_admin_profile'); prof = r ? JSON.parse(r) : {}; } catch(e){}
+        return _rbacJson({ ok:true, profile: prof, username: auth.payload.sub });
+      }
+      if (request.method === 'POST') {
+        let b; try { b = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+        const prof = { displayName:(b.displayName||'').toString().slice(0,80), org:(b.org||'').toString().slice(0,80),
+          email:(b.email||'').toString().slice(0,120), timezone:(b.timezone||'').toString().slice(0,60), updatedAt:new Date().toISOString() };
+        await env.IPTV_KV.put('console_admin_profile', JSON.stringify(prof));
+        return _rbacJson({ ok:true, saved:true, profile:prof });
+      }
+      return jsonError(405, 'Use GET or POST.');
+    }
+
+    // ── /api/status-report  GET — multi-source site status (admin only) ───────
+    if (pathname === '/api/status-report' && request.method === 'GET') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      const report = await buildStatusReport(env);
+      return _rbacJson({ ok:true, report });
     }
 
     // ── /api/iptv/config  GET — current IPTV login id + settings (auth) ───────
@@ -976,6 +1067,93 @@ async function _iptvHashPassword(password, saltHex, iterations) {
   const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
   const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: salt, iterations: iter, hash: 'SHA-256' }, km, 256);
   return { salt: _iptvHexFromBytes(salt), hash: _iptvHexFromBytes(new Uint8Array(bits)), iterations: iter };
+}
+
+/* ── Console RBAC + status report helpers ── */
+function _rbacJson(obj){ return new Response(JSON.stringify(obj), { status:200, headers:{ ...CORS, 'Content-Type':'application/json' } }); }
+async function _opAll(env){
+  if (!env.IPTV_KV) return {};
+  try { const r = await env.IPTV_KV.get('console_operators'); return r ? JSON.parse(r) : {}; } catch(e){ return {}; }
+}
+async function _opGet(env, username){ const all = await _opAll(env); return all[username] || null; }
+
+const STATUS_PAGES = [
+  'https://vilfintv.com/','https://vilfintv.com/iptv.html','https://vilfintv.com/news.html',
+  'https://vilfintv.com/story.html','https://vilfintv.com/education.html','https://vilfintv.com/link-console.html',
+  'https://vilfintv.com/content.json'
+];
+const GH_OWNER = 'Vilfin-TV', GH_REPO = 'MultiScreener';
+
+async function _fetchJson(url, headers){
+  try { const r = await fetch(url, { headers: headers||{} }); const t = await r.text();
+    let j=null; try{ j=JSON.parse(t); }catch(e){}
+    return { ok:r.ok, status:r.status, json:j, text:t }; } catch(e){ return { ok:false, status:0, error:String(e&&e.message||e) }; }
+}
+
+async function buildStatusReport(env){
+  const out = { generatedAt:new Date().toISOString(), pages:[], github:null, cloudflare:null, summary:{} };
+
+  // 1) Page uptime checks
+  const pageChecks = await Promise.all(STATUS_PAGES.map(async function(u){
+    const t0 = Date.now();
+    try { const r = await fetch(u, { method:'GET', cf:{ cacheTtl:0 } });
+      return { url:u, status:r.status, ok:r.ok, ms: Date.now()-t0 }; }
+    catch(e){ return { url:u, status:0, ok:false, ms: Date.now()-t0, error:String(e&&e.message||e) }; }
+  }));
+  out.pages = pageChecks;
+
+  // 2) GitHub: repo info, workflows, security alerts
+  if (env.GITHUB_TOKEN){
+    const H = { 'Authorization':'token '+env.GITHUB_TOKEN, 'Accept':'application/vnd.github+json', 'User-Agent':'vilfintv-status' };
+    const base = 'https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO;
+    const repo = await _fetchJson(base, H);
+    const runs = await _fetchJson(base+'/actions/runs?per_page=12', H);
+    const dependabot = await _fetchJson(base+'/dependabot/alerts?state=open&per_page=50', H);
+    const codescan = await _fetchJson(base+'/code-scanning/alerts?state=open&per_page=50', H);
+    const gh = { configured:true };
+    if (repo.json){ gh.sizeKB = repo.json.size; gh.private = repo.json.private; gh.pushedAt = repo.json.pushed_at; gh.defaultBranch = repo.json.default_branch; }
+    if (runs.json && runs.json.workflow_runs){
+      gh.workflows = runs.json.workflow_runs.slice(0,12).map(function(w){ return { name:w.name, status:w.status, conclusion:w.conclusion, event:w.event, at:w.created_at, url:w.html_url }; });
+      gh.failedWorkflows = gh.workflows.filter(function(w){ return w.conclusion && w.conclusion!=='success' && w.conclusion!=='skipped' && w.conclusion!=='neutral'; }).length;
+    }
+    gh.dependabotOpen = (dependabot.json && Array.isArray(dependabot.json)) ? dependabot.json.length : (dependabot.status===403?'no-access':'n/a');
+    gh.codeScanningOpen = (codescan.json && Array.isArray(codescan.json)) ? codescan.json.length : (codescan.status===403||codescan.status===404?'not-enabled':'n/a');
+    if (dependabot.json && Array.isArray(dependabot.json)){
+      gh.dependabotBySeverity = dependabot.json.reduce(function(a,x){ var s=(x.security_advisory&&x.security_advisory.severity)||'unknown'; a[s]=(a[s]||0)+1; return a; }, {});
+    }
+    out.github = gh;
+  } else { out.github = { configured:false, note:'GITHUB_TOKEN not set on the worker.' }; }
+
+  // 3) Cloudflare: account security + storage (needs CLOUDFLARE_API_TOKEN [+ optional ACCOUNT_ID])
+  if (env.CLOUDFLARE_API_TOKEN){
+    const H = { 'Authorization':'Bearer '+env.CLOUDFLARE_API_TOKEN, 'Content-Type':'application/json' };
+    const cf = { configured:true };
+    const verify = await _fetchJson('https://api.cloudflare.com/client/v4/user/tokens/verify', H);
+    cf.tokenValid = !!(verify.json && verify.json.success);
+    let accountId = env.CLOUDFLARE_ACCOUNT_ID || '';
+    if (!accountId){ const accts = await _fetchJson('https://api.cloudflare.com/client/v4/accounts', H);
+      if (accts.json && accts.json.result && accts.json.result[0]) accountId = accts.json.result[0].id; }
+    cf.accountId = accountId ? (accountId.slice(0,6)+'…') : null;
+    if (accountId){
+      const ab = 'https://api.cloudflare.com/client/v4/accounts/'+accountId;
+      const kv = await _fetchJson(ab+'/storage/kv/namespaces?per_page=50', H);
+      if (kv.json && kv.json.result) cf.kvNamespaces = kv.json.result.map(function(n){ return n.title; });
+      const r2 = await _fetchJson(ab+'/r2/buckets', H);
+      if (r2.json && r2.json.result && r2.json.result.buckets) cf.r2Buckets = r2.json.result.buckets.map(function(b){ return b.name; });
+      else if (r2.status===403) cf.r2Buckets = 'no-access';
+    }
+    out.cloudflare = cf;
+  } else { out.cloudflare = { configured:false, note:'Add CLOUDFLARE_API_TOKEN (read-only) to the worker to include Cloudflare security & storage.' }; }
+
+  // 4) Summary
+  const down = out.pages.filter(function(p){ return !p.ok; }).length;
+  out.summary = {
+    pagesTotal: out.pages.length, pagesDown: down,
+    githubFailedWorkflows: out.github && out.github.failedWorkflows || 0,
+    githubDependabotOpen: out.github ? out.github.dependabotOpen : 'n/a',
+    status: (down===0 && (!(out.github&&out.github.failedWorkflows))) ? 'healthy' : (down>0 ? 'attention' : 'warnings')
+  };
+  return out;
 }
 
 async function signJWT(payload, secret) {
