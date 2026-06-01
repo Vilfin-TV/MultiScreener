@@ -4207,7 +4207,7 @@ const JLPT_TEXTBOOK = {
     "grammar": [
       {
         "title": "1. Basic Sentence Structure (The Copula)",
-        "explanation": "These are the building blocks for saying \"A is B\" and conjugating nouns.",
+        "explanation": "These are the building blocks for saying \"A is B\" and conjugating nouns. The copula establishes identity or state.",
         "table": [
           {
             "ja": "です / だ",
@@ -4225,81 +4225,87 @@ const JLPT_TEXTBOOK = {
             "ja": "ではありませんでした / じゃなかったです",
             "en": "Was not / Were not (Past negative)"
           }
+        ],
+        "examples": [
+          {
+            "ja": "私は学生です。",
+            "romaji": "Watashi wa gakusei desu.",
+            "en": "I am a student."
+          },
+          {
+            "ja": "昨日は休みでした。",
+            "romaji": "Kinou wa yasumi deshita.",
+            "en": "Yesterday was a day off."
+          },
+          {
+            "ja": "あれは犬じゃありません。",
+            "romaji": "Are wa inu ja arimasen.",
+            "en": "That is not a dog."
+          }
         ]
       },
       {
         "title": "2. Particles (助詞 - Joshi)",
-        "explanation": "Particles are the glue of Japanese grammar. You will need to know exactly how they connect words to show their role in a sentence.",
+        "explanation": "Particles are the glue of Japanese grammar. They attach to the end of nouns to define their grammatical role in the sentence.",
         "table": [
           {
             "ja": "は (wa)",
-            "en": "Topic marker - \"As for me...\""
+            "en": "Topic marker"
           },
           {
             "ja": "が (ga)",
-            "en": "Subject marker / But - \"The dog is barking.\" / \"I like it, but...\""
+            "en": "Subject marker"
           },
           {
             "ja": "を (o)",
-            "en": "Direct object marker - \"I eat an apple.\""
+            "en": "Direct object marker"
           },
           {
             "ja": "に (ni)",
-            "en": "Time, destination, location of existence - \"At 7:00\", \"To Tokyo\", \"In the room\""
+            "en": "Time, destination, location of existence"
           },
           {
             "ja": "へ (e)",
-            "en": "Direction of movement - \"Heading towards school\""
+            "en": "Direction of movement"
           },
           {
             "ja": "で (de)",
-            "en": "Location of action, means, tool - \"Study at the library\", \"Eat with chopsticks\""
+            "en": "Location of action, means, tool"
           },
           {
             "ja": "の (no)",
-            "en": "Possession, noun modifier - \"My book\", \"The teacher's desk\""
+            "en": "Possession, noun modifier"
           },
           {
             "ja": "と (to)",
-            "en": "And (exhaustive list), With - \"Apples and oranges\", \"Go with a friend\""
+            "en": "And (exhaustive list), With"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "りんごを食べます。",
+            "romaji": "Ringo o tabemasu.",
+            "en": "I eat an apple. (を = Direct Object)"
           },
           {
-            "ja": "や (ya)",
-            "en": "And (incomplete list) - \"Apples, oranges, etc.\""
+            "ja": "図書館で勉強します。",
+            "romaji": "Toshokan de benkyou shimasu.",
+            "en": "I study at the library. (で = Location of Action)"
           },
           {
-            "ja": "も (mo)",
-            "en": "Also, too - \"I am also a student.\""
-          },
-          {
-            "ja": "か (ka)",
-            "en": "Question marker, Or - \"Is it? / Apple or orange\""
-          },
-          {
-            "ja": "から (kara)",
-            "en": "From (starting point), Because - \"From Tokyo\", \"Because I'm tired\""
-          },
-          {
-            "ja": "まで (made)",
-            "en": "Until, up to - \"Until 5:00\""
-          },
-          {
-            "ja": "ね (ne)",
-            "en": "Confirmation / Agreement - \"It's hot today, isn't it?\""
-          },
-          {
-            "ja": "よ (yo)",
-            "en": "Emphasis / New information - \"It's actually raining, you know.\""
+            "ja": "これは私の本です。",
+            "romaji": "Kore wa watashi no hon desu.",
+            "en": "This is my book. (の = Possession)"
           }
         ]
       },
       {
         "title": "3. Demonstratives (Ko-So-A-Do Words)",
-        "explanation": "You need to know how to point things out based on their distance from the speaker and the listener.",
+        "explanation": "Demonstratives point things out based on distance: 'Ko' (near speaker), 'So' (near listener), 'A' (far from both), and 'Do' (question word).",
         "table": [
           {
             "ja": "これ / それ / あれ / どれ",
-            "en": "Things (Standalone pronouns: This / That / That over there / Which)"
+            "en": "Things (Standalone pronouns)"
           },
           {
             "ja": "この / その / あの / どの",
@@ -4308,130 +4314,150 @@ const JLPT_TEXTBOOK = {
           {
             "ja": "ここ / そこ / あそこ / どこ",
             "en": "Places / Locations"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "これは何ですか。",
+            "romaji": "Kore wa nan desu ka.",
+            "en": "What is this? (Near speaker)"
           },
           {
-            "ja": "こちら / そちら / あちら / どちら",
-            "en": "Directions / Polite versions of above"
+            "ja": "そのかばんは高いです。",
+            "romaji": "Sono kaban wa takai desu.",
+            "en": "That bag is expensive. (Near listener)"
+          },
+          {
+            "ja": "トイレはどこですか。",
+            "romaji": "Toire wa doko desu ka.",
+            "en": "Where is the bathroom?"
           }
         ]
       },
       {
         "title": "4. Adjectives (形容詞 - Keiyoushi)",
-        "explanation": "You must be able to conjugate both types of adjectives into present, past, negative, and past-negative forms.",
+        "explanation": "Japanese has two types of adjectives: い-adjectives (which conjugate themselves) and な-adjectives (which act like nouns and require the copula).",
         "table": [
           {
-            "ja": "い-Adjectives (i-adjectives)",
-            "en": "Conjugate by dropping the final \"い\" (e.g., 高い -> 高くない)."
+            "ja": "い-Adjectives",
+            "en": "Drop the final \"い\" to conjugate (e.g., 高い -> 高くない)."
           },
           {
-            "ja": "な-Adjectives (na-adjectives)",
-            "en": "Conjugate just like nouns using です/じゃない (e.g., 静かです -> 静かじゃないです)."
+            "ja": "な-Adjectives",
+            "en": "Conjugate using です/じゃない (e.g., 静かです -> 静かじゃないです)."
           },
           {
-            "ja": "Joining Adjectives",
-            "en": "Connecting two or more adjectives together (e.g., ～くて for i-adjectives; ～で for na-adjectives)."
+            "ja": "Joining",
+            "en": "Use ～くて for i-adjectives; ～で for na-adjectives."
+          }
+        ],
+        "examples": [
+          {
+            "ja": "このテストは難しくないです。",
+            "romaji": "Kono tesuto wa muzukashikunai desu.",
+            "en": "This test is not difficult. (i-adj negative)"
           },
           {
-            "ja": "Adverbs",
-            "en": "Turning adjectives into adverbs (e.g., 早い -> 早く, 静か -> 静かに)."
+            "ja": "彼女は親切で、きれいです。",
+            "romaji": "Kanojo wa shinsetsu de, kirei desu.",
+            "en": "She is kind and beautiful. (na-adj joining)"
+          },
+          {
+            "ja": "早く起きました。",
+            "romaji": "Hayaku okimashita.",
+            "en": "I woke up early. (Adverb form)"
           }
         ]
       },
       {
         "title": "5. Verb Conjugations",
-        "explanation": "For N5, you do not need to know every verb form, but you must completely master these foundational forms.",
+        "explanation": "Verbs are the core of Japanese sentences. In N5, mastering polite (ます) and basic casual forms is essential.",
         "table": [
           {
-            "ja": "Dictionary Form",
-            "en": "The casual, present/future tense (e.g., 食べる, 行く)."
-          },
-          {
             "ja": "ます Form",
-            "en": "The polite present/future (e.g., 食べます, 行きます)."
+            "en": "Polite present/future (e.g., 食べます, 行きます)."
           },
           {
             "ja": "ません Form",
-            "en": "The polite negative (e.g., 食べません)."
+            "en": "Polite negative (e.g., 食べません)."
           },
           {
             "ja": "ました Form",
-            "en": "The polite past tense (e.g., 食べました)."
-          },
-          {
-            "ja": "ませんでした Form",
-            "en": "The polite past negative (e.g., 食べませんでした)."
+            "en": "Polite past tense (e.g., 食べました)."
           },
           {
             "ja": "て (Te) Form",
-            "en": "Used to connect verbs, make requests, and show ongoing actions (e.g., 食べて)."
+            "en": "Used to connect verbs and make requests (e.g., 食べて)."
           },
           {
             "ja": "ない (Nai) Form",
-            "en": "The casual negative, primarily used for \"Please don't...\" at this level (e.g., 食べない)."
+            "en": "Casual negative (e.g., 食べない)."
+          }
+        ],
+        "examples": [
+          {
+            "ja": "毎日コーヒーを飲みます。",
+            "romaji": "Mainichi koohii o nomimasu.",
+            "en": "I drink coffee every day."
+          },
+          {
+            "ja": "昨日は行きませんでした。",
+            "romaji": "Kinou wa ikimasen deshita.",
+            "en": "I did not go yesterday."
+          },
+          {
+            "ja": "ドアを開けてください。",
+            "romaji": "Doa o akete kudasai.",
+            "en": "Please open the door. (Te-form request)"
           }
         ]
       },
       {
         "title": "6. Essential Grammar Patterns",
-        "explanation": "These are the most common sentence structures that will appear on the reading and listening sections.",
+        "explanation": "These foundational sentence structures are heavily tested in the N5 reading and listening sections.",
         "table": [
           {
             "ja": "～があります / ～がいます",
-            "en": "There is / I have (for non-living / living things)."
-          },
-          {
-            "ja": "～がすきです / きらいです",
-            "en": "To like / To dislike."
-          },
-          {
-            "ja": "～がじょうずです / へたです",
-            "en": "To be good at / To be bad at."
+            "en": "There is (Inanimate) / There is (Animate)"
           },
           {
             "ja": "～たいです / ～がほしいです",
-            "en": "Want to do (verb) / Want (a noun/object)."
+            "en": "Want to do / Want (an object)"
           },
           {
             "ja": "～ています",
-            "en": "Ongoing action (I am eating) or current state (I am married)."
-          },
-          {
-            "ja": "～にいきます",
-            "en": "To go in order to do something (e.g., 食べにいきます = Go to eat)."
+            "en": "Ongoing action or state"
           },
           {
             "ja": "～てください / ～ないでください",
-            "en": "Please do... / Please don't do..."
+            "en": "Please do / Please don't do"
           },
           {
-            "ja": "～ましょう / ～ませんか",
-            "en": "Let's... / Won't you...? (Inviting someone)."
+            "ja": "AはBより～",
+            "en": "A is more ~ than B"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "部屋に猫がいます。",
+            "romaji": "Heya ni neko ga imasu.",
+            "en": "There is a cat in the room."
           },
           {
-            "ja": "～てもいいです / ～てはいけません",
-            "en": "You may... (Permission) / You must not... (Prohibition)."
+            "ja": "私は日本へ行きたいです。",
+            "romaji": "Watashi wa nihon e ikitai desu.",
+            "en": "I want to go to Japan."
           },
           {
-            "ja": "～てから / ～のまえに",
-            "en": "After doing... / Before doing..."
-          },
-          {
-            "ja": "まだ～ていません / もう",
-            "en": "Have not done ~ yet / Already, Anymore."
-          },
-          {
-            "ja": "AはBより～ / AとBとどちらが～",
-            "en": "A is more ~ than B / Which is more ~, A or B?"
-          },
-          {
-            "ja": "～のほうが～ / ～のなかで、一番～",
-            "en": "~ is the more... / The most ~ within a category."
+            "ja": "今、本を読んでいます。",
+            "romaji": "Ima, hon o yonde imasu.",
+            "en": "I am reading a book right now."
           }
         ]
       },
       {
         "title": "7. Common Conjunctions",
-        "explanation": "Words that link your sentences together smoothly.",
+        "explanation": "These are essential for connecting sentences to create natural, flowing Japanese.",
         "table": [
           {
             "ja": "そして",
@@ -4449,287 +4475,518 @@ const JLPT_TEXTBOOK = {
             "ja": "だから",
             "en": "Therefore / So."
           }
+        ],
+        "examples": [
+          {
+            "ja": "東京に行きました。そして、買い物をしました。",
+            "romaji": "Toukyou ni ikimashita. Soshite, kaimono o shimashita.",
+            "en": "I went to Tokyo. And then, I did some shopping."
+          },
+          {
+            "ja": "この車は古いですが、とても速いです。",
+            "romaji": "Kono kuruma wa furui desu ga, totemo hayai desu.",
+            "en": "This car is old, but it is very fast."
+          }
         ]
       },
       {
         "title": "8. Indefinite Pronouns (Question Word + か / も)",
-        "explanation": "By attaching particles to question words (Who, What, Where), you change them into words like \"someone\" or \"nowhere.\"",
+        "explanation": "Attaching か changes a question word into 'some-' (e.g. Someone). Attaching も changes it into 'no-' or 'every-'.",
         "table": [
           {
-            "ja": "なにか / なにも + Negative",
+            "ja": "なにか / なにも + Neg",
             "en": "Something / Nothing"
           },
           {
-            "ja": "だれか / だれも + Negative",
+            "ja": "だれか / だれも + Neg",
             "en": "Someone / No one"
           },
           {
-            "ja": "どこか / どこも + Negative",
+            "ja": "どこか / どこも + Neg",
             "en": "Somewhere / Nowhere"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "なにか飲みませんか。",
+            "romaji": "Nanika nomimasen ka.",
+            "en": "Would you like something to drink?"
           },
           {
-            "ja": "いつか / いつも",
-            "en": "Sometime / Always"
+            "ja": "教室にだれもいません。",
+            "romaji": "Kyoushitsu ni daremo imasen.",
+            "en": "There is no one in the classroom."
           }
         ]
       },
       {
         "title": "9. Adverbs of Frequency and Degree",
-        "explanation": "These adverbs tell you how often or how much an action happens. Notice that some of these strictly require a negative verb to work correctly.",
+        "explanation": "Use these words to describe how often you do things. Note that 'あまり' and 'ぜんぜん' always take a negative verb.",
         "table": [
           {
-            "ja": "いつも / たいてい",
-            "en": "Always / Usually."
+            "ja": "いつも / よく",
+            "en": "Always / Often"
           },
           {
-            "ja": "よく / ときどき",
-            "en": "Often, Well / Sometimes."
+            "ja": "ときどき",
+            "en": "Sometimes"
           },
           {
-            "ja": "あまり + Neg / ぜんぜん + Neg",
-            "en": "Not very often / Not at all (Never)."
+            "ja": "あまり + Neg",
+            "en": "Not very often"
           },
           {
-            "ja": "とても / たいへん",
-            "en": "Very."
+            "ja": "ぜんぜん + Neg",
+            "en": "Not at all (Never)"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "私はよく映画を見ます。",
+            "romaji": "Watashi wa yoku eiga o mimasu.",
+            "en": "I often watch movies."
           },
           {
-            "ja": "たくさん / すこし / ちょっと",
-            "en": "A lot (quantity) / A little."
+            "ja": "肉をあまり食べません。",
+            "romaji": "Niku o amari tabemasen.",
+            "en": "I don't eat meat very often."
+          },
+          {
+            "ja": "ぜんぜんわかりません。",
+            "romaji": "Zenzen wakarimasen.",
+            "en": "I don't understand at all."
           }
         ]
       },
       {
         "title": "10. Expressing Change (To Become)",
-        "explanation": "When you want to say something \"becomes\" a certain way (like \"it became cold\" or \"I became a doctor\"), you use the verb なる (naru).",
+        "explanation": "The verb なる (naru) means 'to become'. It conjugates differently depending on the word before it.",
         "table": [
           {
-            "ja": "い-Adjectives (Drop 'い' + く + なる)",
-            "en": "寒い (Cold) -> 寒くなる (To become cold)."
+            "ja": "Adj (Drop い) + くなる",
+            "en": "To become (i-adjective state)"
           },
           {
-            "ja": "な-Adjectives (Keep word + に + なる)",
-            "en": "元気 (Healthy) -> 元気になる (To become healthy)."
+            "ja": "Adj (な) / Noun + になる",
+            "en": "To become (na-adj/noun state)"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "だんだん寒くなりました。",
+            "romaji": "Dandan samuku narimashita.",
+            "en": "It gradually became cold."
           },
           {
-            "ja": "Nouns (Noun + に + なる)",
-            "en": "先生 (Teacher) -> 先生になる (To become a teacher)."
+            "ja": "来年、大学生になります。",
+            "romaji": "Rainen, daigakusei ni narimasu.",
+            "en": "I will become a university student next year."
           }
         ]
       },
       {
         "title": "11. Turning Verbs into Nouns (Nominalization)",
-        "explanation": "If you want to say \"I like reading\" or \"Watching movies is fun,\" you cannot just attach a verb to the particle は or が. You have to turn the verb into a noun first using こと (koto) or の (no).",
+        "explanation": "You cannot attach particles (wa, ga, o) directly to a verb. You must turn the verb into a noun first using こと (koto) or の (no).",
         "table": [
           {
             "ja": "Dict Verb + こと / の",
-            "en": "食べることがすきです (I like eating)."
+            "en": "Nominalizes the verb (e.g. 'eating', 'reading')"
           },
           {
             "ja": "Dict Verb + ことができます",
-            "en": "Ability (Can do): 日本語を話すことができます (I can speak Japanese)."
+            "en": "Expresses ability (Can do...)"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "音楽を聞くのが好きです。",
+            "romaji": "Ongaku o kiku no ga suki desu.",
+            "en": "I like listening to music."
+          },
+          {
+            "ja": "漢字を書くことができます。",
+            "romaji": "Kanji o kaku koto ga dekimasu.",
+            "en": "I can write kanji."
           }
         ]
       },
       {
         "title": "12. Giving and Receiving (Basic)",
-        "explanation": "Japanese uses different verbs depending on the direction of the gift-giving.",
+        "explanation": "In N5, you must master the fundamental verbs for giving (to others) and receiving (from others).",
         "table": [
           {
             "ja": "あげる (Ageru)",
-            "en": "To give (From me to someone else). 私は友達に本をあげました。"
+            "en": "To give (From me to someone else)"
           },
           {
             "ja": "もらう (Morau)",
-            "en": "To receive (From someone else to me). 私は友達に本をもらいました。"
+            "en": "To receive (From someone else to me)"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "母に花をあげました。",
+            "romaji": "Haha ni hana o agemashita.",
+            "en": "I gave flowers to my mother."
+          },
+          {
+            "ja": "友達にプレゼントをもらいました。",
+            "romaji": "Tomodachi ni purezento o moraimashita.",
+            "en": "I received a present from my friend."
           }
         ]
       },
       {
         "title": "13. Limits and Approximations",
-        "explanation": "These are incredibly common particles and suffixes used to talk about time, amounts, and restrictions.",
+        "explanation": "Crucial particles for expressing \"only,\" \"around,\" or \"approximately.\"",
         "table": [
           {
             "ja": "～だけ",
-            "en": "Only / Just (e.g., 水だけ = Only water)."
+            "en": "Only / Just (Positive nuance)"
           },
           {
-            "ja": "～しか + Negative verb",
-            "en": "Nothing but / Only (e.g., 水しか飲みません = I drink nothing but water)."
+            "ja": "～しか + Neg",
+            "en": "Nothing but / Only (Negative/Exclusive nuance)"
           },
           {
-            "ja": "～ごろ",
-            "en": "Around / About (Used for points in time like \"around 3:00\")."
+            "ja": "～ごろ / ぐらい",
+            "en": "Around (Time) / Approximately (Amount)"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "日曜日だけ休みます。",
+            "romaji": "Nichiyoubi dake yasumimasu.",
+            "en": "I rest only on Sundays."
           },
           {
-            "ja": "～くらい / ぐらい",
-            "en": "About / Approximately (Used for durations or amounts like \"about 3 hours\")."
+            "ja": "千円しかありません。",
+            "romaji": "Sen en shika arimasen.",
+            "en": "I have nothing but 1000 yen. (I only have 1000 yen)"
+          },
+          {
+            "ja": "３時ごろに行きます。",
+            "romaji": "San ji goro ni ikimasu.",
+            "en": "I will go around 3 o'clock."
           }
         ]
       },
       {
         "title": "14. Expressing Experiences",
-        "explanation": "When you want to say you \"have done\" something in the past, you must use this specific structure.",
+        "explanation": "Use the Ta-form (past tense) plus 'koto ga arimasu' to talk about things you have experienced in your life.",
         "table": [
           {
-            "ja": "Verb (た / Ta-form) + ことがあります",
-            "en": "Have done (verb). 日本へ行ったことがあります。(I have been to Japan.)"
+            "ja": "Verb (た Form) + ことがあります",
+            "en": "Have done ~"
+          },
+          {
+            "ja": "Verb (た Form) + ことがありません",
+            "en": "Have never done ~"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "日本へ行ったことがあります。",
+            "romaji": "Nihon e itta koto ga arimasu.",
+            "en": "I have been to Japan."
+          },
+          {
+            "ja": "すしを食べたことがありません。",
+            "romaji": "Sushi o tabeta koto ga arimasen.",
+            "en": "I have never eaten sushi."
           }
         ]
       },
       {
         "title": "15. Listing Representative Actions (～たり、～たり)",
-        "explanation": "The ～たり form is used to list a few examples of actions in no particular order, implying you might have done other things too.",
+        "explanation": "Unlike the Te-form (which implies chronological order), Tari-form is used to list a few examples of actions in no particular order.",
         "table": [
           {
-            "ja": "Verb (た) + り、Verb (た) + りします",
-            "en": "Do things like A and B. 週末は本を読んだり、映画を見たりします。"
+            "ja": "Verb (た)り、Verb (た)りします",
+            "en": "Do things like A and B (among other things)."
+          }
+        ],
+        "examples": [
+          {
+            "ja": "週末は本を読んだり、映画を見たりします。",
+            "romaji": "Shuumatsu wa hon o yondari, eiga o mitari shimasu.",
+            "en": "On weekends, I do things like read books and watch movies."
+          },
+          {
+            "ja": "昨日は買い物をしたり、掃除をしたりしました。",
+            "romaji": "Kinou wa kaimono o shitari, souji o shitari shimashita.",
+            "en": "Yesterday I did things like shopping and cleaning."
           }
         ]
       },
       {
         "title": "16. Plans and Intentions",
-        "explanation": "These structures are crucial for talking about the future, your schedules, and what you intend to do.",
+        "explanation": "Use these structures to talk about your schedules and what you intend to do in the future.",
         "table": [
           {
             "ja": "～つもりです",
-            "en": "I intend to... / I plan to... (e.g., 明日、勉強するつもりです。)"
+            "en": "I intend to / I plan to (Personal intention)"
           },
           {
             "ja": "～よていです",
-            "en": "It is scheduled... / The plan is... (More formal and concrete than つもり)."
+            "en": "It is scheduled / The plan is (Official or concrete schedule)"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "明日、勉強するつもりです。",
+            "romaji": "Ashita, benkyou suru tsumori desu.",
+            "en": "I intend to study tomorrow."
+          },
+          {
+            "ja": "来週、出張のよていです。",
+            "romaji": "Raishuu, shucchou no yotei desu.",
+            "en": "I have a scheduled business trip next week."
           }
         ]
       },
       {
         "title": "17. Connecting Clauses with Reasons",
-        "explanation": "You learned から as a particle meaning \"from,\" but it also acts as a conjunction meaning \"because.\"",
+        "explanation": "Use から or ので to express 'because'. ので sounds softer and more objective.",
         "table": [
           {
-            "ja": "Clause A + から、Clause B",
-            "en": "Because A, B. (Subjective reasons: 忙しいから、行きません。)"
+            "ja": "～から",
+            "en": "Because (Often used for subjective reasons)"
           },
           {
-            "ja": "Clause A + ので、Clause B",
-            "en": "Because A, B. (More objective, polite: 雨が降っているので、家にいます。)"
+            "ja": "～ので",
+            "en": "Because (Objective, polite, softer)"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "忙しいから、行きません。",
+            "romaji": "Isogashii kara, ikimasen.",
+            "en": "Because I am busy, I will not go."
+          },
+          {
+            "ja": "雨が降っているので、家にいます。",
+            "romaji": "Ame ga futte iru node, ie ni imasu.",
+            "en": "Since it is raining, I am staying home."
           }
         ]
       },
       {
         "title": "18. Opinions and Quotations",
-        "explanation": "To say \"I think that...\" or to quote what someone else said, you use the particle と (to) right after a casual-form phrase.",
+        "explanation": "Use the particle と (to) after a casual-form phrase to quote what someone said or what you think.",
         "table": [
           {
             "ja": "～と思います",
-            "en": "I think that... (明日は雨が降ると思います。)"
+            "en": "I think that..."
           },
           {
             "ja": "～と言いました",
-            "en": "Said that... (田中さんは明日行くと言いました。)"
+            "en": "Said that..."
+          }
+        ],
+        "examples": [
+          {
+            "ja": "明日は雨が降ると思います。",
+            "romaji": "Ashita wa ame ga furu to omoimasu.",
+            "en": "I think that it will rain tomorrow."
+          },
+          {
+            "ja": "田中さんは明日行くと言いました。",
+            "romaji": "Tanaka-san wa ashita iku to iimashita.",
+            "en": "Tanaka-san said that he will go tomorrow."
           }
         ]
       },
       {
-        "title": "19. \"How to\" do something (～かた)",
-        "explanation": "You can easily turn a verb into a noun that describes the \"method\" or \"way of doing\" that action by swapping the \"ます\" for \"かた\" (方).",
+        "title": "19. 'How to' do something (～かた)",
+        "explanation": "Turn a verb into a noun describing the 'method' by swapping the 'ます' stem for 'かた' (方).",
         "table": [
           {
             "ja": "Verb (ます stem) + かた",
-            "en": "How to... (e.g., 読みます -> 読みかた: How to read)"
+            "en": "How to / The way of doing..."
+          }
+        ],
+        "examples": [
+          {
+            "ja": "この漢字の読みかたがわかりません。",
+            "romaji": "Kono kanji no yomikata ga wakarimasen.",
+            "en": "I don't know how to read this kanji."
+          },
+          {
+            "ja": "おいしいケーキの作りかたを教えてください。",
+            "romaji": "Oishii keeki no tsukurikata o oshiete kudasai.",
+            "en": "Please teach me how to make a delicious cake."
           }
         ]
       },
       {
         "title": "20. Politeness Prefixes (お and ご)",
-        "explanation": "Japanese attaches prefixes to certain nouns to show respect.",
+        "explanation": "Prefixes attached to nouns to show respect, especially for things belonging to someone else.",
         "table": [
           {
             "ja": "お (o-)",
-            "en": "Usually attached to words of Japanese origin. お金 (money), お茶 (tea)"
+            "en": "Used with words of Japanese origin (e.g. お金, お茶)"
           },
           {
             "ja": "ご (go-)",
-            "en": "Usually attached to words of Chinese origin. ご家族 (family), ご両親 (parents)."
+            "en": "Used with words of Chinese origin (e.g. ご家族, ご両親)"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "お茶を飲みますか。",
+            "romaji": "Ocha o nomimasu ka.",
+            "en": "Would you like some tea?"
+          },
+          {
+            "ja": "ご家族はお元気ですか。",
+            "romaji": "Gokazoku wa ogenki desu ka.",
+            "en": "Is your family doing well?"
           }
         ]
       },
       {
         "title": "21. Essential Counters (助数詞)",
-        "explanation": "You must attach a specific counter to the number depending on the shape or type of object.",
+        "explanation": "In Japanese, you must attach a specific counter to a number depending on the object's shape or type.",
         "table": [
           {
-            "ja": "～つ (tsu)",
-            "en": "General counter for things without a specific shape (一つ hitotsu, 二つ futatsu)."
+            "ja": "～つ (tsu) / ～人 (nin)",
+            "en": "General items / People"
           },
           {
-            "ja": "～人 (nin/ri)",
-            "en": "People (一人 hitori, 二人 futari, 三人 sannin)."
+            "ja": "～枚 (mai) / ～本 (hon)",
+            "en": "Flat objects / Cylindrical objects"
           },
           {
-            "ja": "～枚 (mai)",
-            "en": "Flat, thin objects like paper, shirts, or plates."
+            "ja": "～匹 (hiki) / ～冊 (satsu)",
+            "en": "Small animals / Bound books"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "りんごを三つ買いました。",
+            "romaji": "Ringo o mittsu kaimashita.",
+            "en": "I bought three apples."
           },
           {
-            "ja": "～本 (hon/pon/bon)",
-            "en": "Long, cylindrical objects like pens, bottles, or umbrellas."
+            "ja": "紙を二枚ください。",
+            "romaji": "Kami o nimai kudasai.",
+            "en": "Please give me two sheets of paper."
           },
           {
-            "ja": "～匹 (hiki/piki/biki)",
-            "en": "Small animals like cats, dogs, or fish."
-          },
-          {
-            "ja": "～冊 (satsu)",
-            "en": "Bound objects like books or magazines."
+            "ja": "犬が一匹います。",
+            "romaji": "Inu ga ippiki imasu.",
+            "en": "There is one dog."
           }
         ]
       },
       {
         "title": "22. Guessing and Confirmation (～でしょう)",
-        "explanation": "This is used when you are making a guess, expressing probability, or asking someone to agree with you.",
+        "explanation": "Used when making a guess, expressing probability, or asking someone to agree with you.",
         "table": [
           {
             "ja": "Casual form + でしょう / だろう",
-            "en": "Probably... / ...Right? (e.g., この映画はおもしろいでしょう？)"
+            "en": "Probably... / ...Right?"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "明日は雨が降るでしょう。",
+            "romaji": "Ashita wa ame ga furu deshou.",
+            "en": "It will probably rain tomorrow."
+          },
+          {
+            "ja": "この映画はおもしろいでしょう？",
+            "romaji": "Kono eiga wa omoshiroi deshou?",
+            "en": "This movie is interesting, isn't it?"
           }
         ]
       },
       {
-        "title": "23. Doing Something \"Too Much\" (～すぎる)",
-        "explanation": "When an action or a state is excessive, you use this suffix.",
+        "title": "23. Doing Something 'Too Much' (～すぎる)",
+        "explanation": "When an action or a state is excessive, attach this suffix. It conjugates exactly like a Group 2 verb.",
         "table": [
           {
             "ja": "Verb (ます stem) / Adj (drop い/な) + すぎる",
-            "en": "Too much... (e.g., 食べます -> 食べすぎる: To eat too much)"
+            "en": "To do ~ too much / Too ~"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "きのう、お酒を飲みすぎました。",
+            "romaji": "Kinou, osake o nomisugimashita.",
+            "en": "I drank too much alcohol yesterday."
+          },
+          {
+            "ja": "このかばんは高すぎます。",
+            "romaji": "Kono kaban wa takasugimasu.",
+            "en": "This bag is too expensive."
           }
         ]
       },
       {
         "title": "24. Simultaneous Actions (～ながら)",
-        "explanation": "When you are doing two things at the exact same time, you use this pattern.",
+        "explanation": "Used when doing two things at the exact same time. The main action always comes at the end.",
         "table": [
           {
             "ja": "Verb (ます stem) + ながら",
-            "en": "While doing ~ (e.g., 音楽を聞きながら、勉強します。)"
+            "en": "While doing ~"
+          }
+        ],
+        "examples": [
+          {
+            "ja": "音楽を聞きながら、勉強します。",
+            "romaji": "Ongaku o kikinagara, benkyou shimasu.",
+            "en": "I study while listening to music."
+          },
+          {
+            "ja": "歩きながら、電話をしないでください。",
+            "romaji": "Arukinagara, denwa o shinaide kudasai.",
+            "en": "Please do not talk on the phone while walking."
           }
         ]
       },
       {
         "title": "25. Making a Decision (～にする)",
-        "explanation": "If you change 'naru' to 'ni suru', it means 'to decide on' or 'to choose'.",
+        "explanation": "Meaning 'to decide on' or 'to choose', this is heavily used when ordering food or making plans.",
         "table": [
           {
             "ja": "Noun + にします",
-            "en": "I decide on / I will have... (e.g., 私 は カレー にします。)"
+            "en": "I decide on / I will have..."
+          }
+        ],
+        "examples": [
+          {
+            "ja": "私はカレーにします。",
+            "romaji": "Watashi wa karee ni shimasu.",
+            "en": "I will have the curry. (Ordering at a restaurant)"
+          },
+          {
+            "ja": "会議は金曜日にします。",
+            "romaji": "Kaigi wa kinyoubi ni shimasu.",
+            "en": "Let's make the meeting on Friday."
           }
         ]
       },
       {
         "title": "26. Joining Nouns (～で)",
-        "explanation": "You can join two sentences that end in nouns by replacing \"です\" with \"で\".",
+        "explanation": "To join two sentences that end in nouns, replace the first 'です' (desu) with 'で' (de).",
         "table": [
           {
             "ja": "Noun A + で、Noun B + です",
-            "en": "A is [Noun A], and [Noun B]. (e.g., 兄 は 医者 で、妹 は 学生 です。)"
+            "en": "A is [Noun A], and [Noun B]."
+          }
+        ],
+        "examples": [
+          {
+            "ja": "兄は医者で、妹は学生です。",
+            "romaji": "Ani wa isha de, imouto wa gakusei desu.",
+            "en": "My older brother is a doctor, and my younger sister is a student."
+          },
+          {
+            "ja": "ここは図書館で、あそこは学校です。",
+            "romaji": "Koko wa toshokan de, asoko wa gakkou desu.",
+            "en": "Here is the library, and over there is the school."
           }
         ]
       }
