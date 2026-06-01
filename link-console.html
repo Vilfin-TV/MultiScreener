@@ -764,6 +764,12 @@
       <div class="c-tab" data-tab="iptv" onclick="switchTab('iptv')">
         <span class="c-tab-ico">📺</span> IPTV
       </div>
+      <div class="c-tab admin-only" data-tab="report" onclick="switchTab('report')">
+        <span class="c-tab-ico">📊</span> Report
+      </div>
+      <div class="c-tab admin-only" data-tab="settings" onclick="switchTab('settings')">
+        <span class="c-tab-ico">⚙️</span> Settings
+      </div>
     </div>
 
     <!-- ══ LINKS TAB ══ -->
@@ -1349,8 +1355,39 @@ function showDashboard() {
   var p = decodePayload(getToken());
   if (p && p.sub) {
     var el = document.getElementById('session-user');
-    if (el) el.textContent = p.sub;
+    if (el) el.textContent = p.sub + (p.role && p.role !== 'admin' ? ' · ' + p.role : '');
   }
+  applyRBAC(p || {});
+}
+
+/* ── RBAC: gate tabs by role + per-tab permissions ───────────────────────────
+   payload.role: admin | operator | auditor
+   payload.perms: { <tab>: { view:bool, edit:bool } }  (null/absent for admin = all) */
+var RBAC = { role:'admin', perms:null };
+function rbacCan(tab, action){
+  if (RBAC.role === 'admin') return true;
+  var pc = RBAC.perms && RBAC.perms[tab];
+  if (!pc) return false;
+  return action === 'edit' ? !!pc.edit : !!pc.view;
+}
+function applyRBAC(payload){
+  RBAC.role  = payload.role || 'admin';
+  RBAC.perms = (RBAC.role === 'admin') ? null : (payload.perms || {});
+  var isAdmin = RBAC.role === 'admin';
+  // admin-only tabs (Report, Settings)
+  document.querySelectorAll('.c-tab.admin-only').forEach(function(t){ t.style.display = isAdmin ? '' : 'none'; });
+  // per-tab visibility for operators/auditors
+  document.querySelectorAll('.c-tab[data-tab]').forEach(function(t){
+    var tab = t.dataset.tab;
+    if (t.classList.contains('admin-only')) return;
+    t.style.display = rbacCan(tab, 'view') ? '' : 'none';
+  });
+  // auditors / no-edit operators: disable editing inside content panels
+  var readOnly = (RBAC.role === 'auditor');
+  document.body.classList.toggle('rbac-readonly', readOnly && !isAdmin);
+  // open the first allowed tab
+  var firstVisible = Array.prototype.filter.call(document.querySelectorAll('.c-tab[data-tab]'), function(t){ return t.style.display !== 'none'; })[0];
+  if (firstVisible) switchTab(firstVisible.dataset.tab);
 }
 
 /* ── Init ──────────────────────────────────────────────────────────────────── */
@@ -1359,7 +1396,6 @@ document.addEventListener('DOMContentLoaded', function() {
   var tok = getToken();
   if (tokenStillValid(tok)) {
     showDashboard();
-    loadContent();
   } else {
     clearToken();
     showLogin();
@@ -1402,7 +1438,6 @@ async function doLogin() {
       setToken(data.token);
       document.getElementById('login-pass').value = '';
       showDashboard();
-      loadContent();
     } else {
       setLoginErr(data.message || 'Invalid credentials.');
       document.getElementById('login-pass').value = '';
@@ -1824,6 +1859,8 @@ function switchTab(name) {
   if (name === 'stories')  loadStoriesContent();
   if (name === 'academy')  loadAcademyContent();
   if (name === 'iptv')     loadIptv();
+  if (name === 'report')   loadReport();
+  if (name === 'settings') loadSettings();
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -4009,6 +4046,237 @@ async function saveIptvSettings() {
   } finally {
     btn.disabled = false; btn.textContent = t;
   }
+}
+</script>
+
+<!-- ── Report + Settings (RBAC) module ─────────────────────────────────────── -->
+<style>
+  body.rbac-readonly .c-panel button.btn-primary,
+  body.rbac-readonly .c-panel .btn-upload,
+  body.rbac-readonly .c-panel textarea,
+  body.rbac-readonly .c-panel input:not(.col-search):not(#search),
+  body.rbac-readonly .c-panel select { opacity:.6; pointer-events:none; }
+  .rb-wrap{max-width:1000px}
+  .rb-cards{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-bottom:20px}
+  .rb-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.10);border-radius:12px;padding:16px}
+  .rb-card .rb-k{font-size:12px;color:#b9b9cc;margin-bottom:8px;letter-spacing:.4px;text-transform:uppercase}
+  .rb-card .rb-v{font-size:26px;font-weight:800;color:#fff}
+  .rb-card .rb-sub{font-size:12px;color:#8a8a9e;margin-top:4px}
+  .rb-pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px}
+  .rb-ok{background:rgba(77,219,138,.16);color:#4ddb8a} .rb-warn{background:rgba(255,180,84,.16);color:#ffb454} .rb-bad{background:rgba(255,84,112,.16);color:#ff8888}
+  .rb-sec{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.10);border-radius:12px;padding:16px;margin-bottom:16px}
+  .rb-sec h3{font-size:14px;color:#fff;margin:0 0 12px}
+  .rb-row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px;color:#cfcfe0}
+  .rb-row:last-child{border-bottom:none}
+  .rb-row b{color:#fff;font-weight:600}
+  .perm-grid{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+  .perm-grid th,.perm-grid td{padding:7px 8px;text-align:left;border-bottom:1px solid rgba(255,255,255,.06)}
+  .perm-grid th{color:#b9b9cc;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+  .perm-grid td.c{text-align:center}
+  .op-tbl{width:100%;border-collapse:collapse;font-size:13px}
+  .op-tbl th,.op-tbl td{padding:9px 8px;text-align:left;border-bottom:1px solid rgba(255,255,255,.07)}
+  .op-tbl th{color:#b9b9cc;font-size:11px;text-transform:uppercase}
+  .op-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:7px;background:rgba(124,77,255,.18);color:#b388ff}
+  .op-badge.auditor{background:rgba(255,180,84,.16);color:#ffb454}
+  .op-act{padding:5px 10px;border-radius:7px;font-size:12px;border:1px solid rgba(255,255,255,.16);color:#cfcfe0;margin-left:6px}
+  .op-act:hover{border-color:#7c4dff;color:#fff}
+  .op-act.del{color:#ff8888;border-color:rgba(255,77,77,.3)}
+  .rb-inp{width:100%;padding:10px 12px;background:#0f0f12;border:1px solid rgba(255,255,255,.16);border-radius:9px;color:#fff;font-size:14px;box-sizing:border-box;margin-bottom:10px}
+  .rb-lbl{display:block;font-size:12px;color:#b9b9cc;margin-bottom:5px}
+  .rb-btn{padding:11px 20px;background:linear-gradient(135deg,#7c4dff,#6b3dff);color:#fff;border:none;border-radius:9px;font-weight:600;font-size:14px;cursor:pointer}
+  .rb-btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.16);color:#cfcfe0}
+  .rb-msg{font-size:13px;margin-top:8px;min-height:16px}
+</style>
+<script>
+var RBAC_TABS=[
+  {id:'content',label:'News Posts'},{id:'stories',label:'Stories'},{id:'academy',label:'Academy'},
+  {id:'links',label:'Links'},{id:'homepage',label:'Home Page'},{id:'iptv',label:'IPTV'}
+];
+
+function _rbBuildPanel(id,html){
+  if(document.getElementById('tab-'+id))return document.getElementById('tab-'+id);
+  var host=document.getElementById('tab-content');
+  var d=document.createElement('div');d.className='c-panel';d.id='tab-'+id;d.innerHTML=html;
+  host.parentNode.appendChild(d);return d;
+}
+
+/* ── REPORT ─────────────────────────────────────────────────────────────── */
+function loadReport(){
+  _rbBuildPanel('report','<div class="rb-wrap"><h2 style="margin:0 0 6px">📊 Site Status &amp; Security Report</h2>'+
+    '<p style="opacity:.7;margin:0 0 16px;font-size:14px">Live status across your web pages, GitHub repository &amp; Cloudflare. <button class="rb-btn" id="rb-refresh" style="padding:7px 14px;font-size:13px;margin-left:8px">↻ Refresh</button></p>'+
+    '<div id="rb-body"><div style="opacity:.6">Loading…</div></div></div>');
+  document.querySelectorAll('.c-panel').forEach(function(p){p.classList.toggle('active',p.id==='tab-report');});
+  var rf=document.getElementById('rb-refresh'); if(rf) rf.addEventListener('click',_rbFetch);
+  _rbFetch();
+}
+async function _rbFetch(){
+  var body=document.getElementById('rb-body'); if(!body)return; body.innerHTML='<div style="opacity:.6">Running checks…</div>';
+  try{
+    var res=await authFetch(WORKER+'/api/status-report',{method:'GET'});
+    var data=await res.json();
+    if(!res.ok||!data.ok)throw new Error(data.error||data.message||('HTTP '+res.status));
+    body.innerHTML=_rbRender(data.report);
+  }catch(e){ body.innerHTML='<div style="color:#ff8888">Could not load report: '+esc(e.message)+'</div>'; }
+}
+function _rbPill(s){var c=s==='healthy'?'rb-ok':(s==='attention'?'rb-bad':'rb-warn');return '<span class="rb-pill '+c+'">'+esc(s)+'</span>';}
+function _rbRender(r){
+  var s=r.summary||{};
+  var h='<div class="rb-cards">'+
+    '<div class="rb-card"><div class="rb-k">Overall</div><div class="rb-v">'+_rbPill(s.status||'n/a')+'</div><div class="rb-sub">generated '+esc(new Date(r.generatedAt).toLocaleString())+'</div></div>'+
+    '<div class="rb-card"><div class="rb-k">Pages</div><div class="rb-v">'+(s.pagesTotal-s.pagesDown)+'/'+s.pagesTotal+'</div><div class="rb-sub">'+(s.pagesDown?(s.pagesDown+' down'):'all online')+'</div></div>'+
+    '<div class="rb-card"><div class="rb-k">CI workflows failing</div><div class="rb-v">'+(s.githubFailedWorkflows||0)+'</div><div class="rb-sub">recent runs</div></div>'+
+    '<div class="rb-card"><div class="rb-k">Dependabot alerts</div><div class="rb-v">'+esc(String(s.githubDependabotOpen))+'</div><div class="rb-sub">open security alerts</div></div>'+
+  '</div>';
+  // pages
+  h+='<div class="rb-sec"><h3>🌐 Page uptime</h3>';
+  (r.pages||[]).forEach(function(p){
+    var ok=p.ok?'<span class="rb-pill rb-ok">'+p.status+'</span>':'<span class="rb-pill rb-bad">'+(p.status||'ERR')+'</span>';
+    h+='<div class="rb-row"><span>'+esc(p.url)+'</span><b>'+ok+' &nbsp;'+(p.ms||0)+'ms</b></div>';
+  });
+  h+='</div>';
+  // github
+  var g=r.github||{};
+  h+='<div class="rb-sec"><h3>🐙 GitHub</h3>';
+  if(g.configured===false){h+='<div class="rb-row"><span>Status</span><b>'+esc(g.note||'not configured')+'</b></div>';}
+  else{
+    h+='<div class="rb-row"><span>Repo size</span><b>'+((g.sizeKB||0)/1024).toFixed(1)+' MB</b></div>';
+    h+='<div class="rb-row"><span>Visibility</span><b>'+(g.private?'private':'public')+'</b></div>';
+    h+='<div class="rb-row"><span>Last push</span><b>'+esc(g.pushedAt?new Date(g.pushedAt).toLocaleString():'—')+'</b></div>';
+    h+='<div class="rb-row"><span>Dependabot open</span><b>'+esc(String(g.dependabotOpen))+(g.dependabotBySeverity?(' ('+Object.keys(g.dependabotBySeverity).map(function(k){return k+':'+g.dependabotBySeverity[k];}).join(', ')+')'):'')+'</b></div>';
+    h+='<div class="rb-row"><span>Code scanning open</span><b>'+esc(String(g.codeScanningOpen))+'</b></div>';
+    if(g.workflows){g.workflows.slice(0,8).forEach(function(w){
+      var c=w.conclusion==='success'?'rb-ok':(w.conclusion?'rb-bad':'rb-warn');
+      h+='<div class="rb-row"><span>'+esc(w.name)+' <span style="opacity:.5">('+esc(w.event)+')</span></span><b><span class="rb-pill '+c+'">'+esc(w.conclusion||w.status)+'</span></b></div>';
+    });}
+  }
+  h+='</div>';
+  // cloudflare
+  var c=r.cloudflare||{};
+  h+='<div class="rb-sec"><h3>☁️ Cloudflare</h3>';
+  if(c.configured===false){h+='<div class="rb-row"><span>Status</span><b>'+esc(c.note||'not configured')+'</b></div>';}
+  else{
+    h+='<div class="rb-row"><span>Token valid</span><b>'+(c.tokenValid?'<span class="rb-pill rb-ok">yes</span>':'<span class="rb-pill rb-bad">no</span>')+'</b></div>';
+    if(c.accountId)h+='<div class="rb-row"><span>Account</span><b>'+esc(c.accountId)+'</b></div>';
+    if(c.kvNamespaces)h+='<div class="rb-row"><span>KV namespaces</span><b>'+esc([].concat(c.kvNamespaces).join(', '))+'</b></div>';
+    if(c.r2Buckets)h+='<div class="rb-row"><span>R2 buckets</span><b>'+esc([].concat(c.r2Buckets).join(', '))+'</b></div>';
+  }
+  h+='</div>';
+  return h;
+}
+
+/* ── SETTINGS (admin profile + operator accounts) ───────────────────────── */
+function loadSettings(){
+  _rbBuildPanel('settings','<div class="rb-wrap">'+
+    '<h2 style="margin:0 0 16px">⚙️ Admin Settings</h2>'+
+    '<div class="rb-sec"><h3>Admin profile</h3>'+
+      '<label class="rb-lbl">Display name</label><input class="rb-inp" id="ap-name" placeholder="e.g. Filmon Joseph">'+
+      '<label class="rb-lbl">Organisation</label><input class="rb-inp" id="ap-org" placeholder="VilfinTV">'+
+      '<label class="rb-lbl">Contact email</label><input class="rb-inp" id="ap-email" placeholder="you@example.com">'+
+      '<label class="rb-lbl">Timezone</label><input class="rb-inp" id="ap-tz" placeholder="Asia/Tokyo">'+
+      '<button class="rb-btn" id="ap-save">Save profile</button><div class="rb-msg" id="ap-msg"></div>'+
+      '<p style="font-size:12px;color:#8a8a9e;margin-top:12px">Your admin sign-in username &amp; password are managed as Cloudflare Worker secrets (ADMIN_USERNAME / LINK_CONSOLE_PASSWORD) — change them with <code>wrangler secret put</code> for security.</p>'+
+    '</div>'+
+    '<div class="rb-sec"><h3>Operator accounts</h3>'+
+      '<div id="op-list"><div style="opacity:.6">Loading…</div></div>'+
+      '<hr style="border:none;border-top:1px solid rgba(255,255,255,.08);margin:16px 0">'+
+      '<h3 id="op-form-title" style="font-size:13px">Add / update an account</h3>'+
+      '<div style="display:flex;gap:10px;flex-wrap:wrap">'+
+        '<div style="flex:1;min-width:200px"><label class="rb-lbl">Username</label><input class="rb-inp" id="op-user" autocomplete="off"></div>'+
+        '<div style="flex:1;min-width:200px"><label class="rb-lbl">Password <span style="opacity:.5">(blank = keep)</span></label><input class="rb-inp" id="op-pass" type="password" autocomplete="new-password"></div>'+
+        '<div style="min-width:160px"><label class="rb-lbl">Role</label><select class="rb-inp" id="op-role"><option value="operator">Operator (view + edit)</option><option value="auditor">Auditor (read-only)</option></select></div>'+
+      '</div>'+
+      '<label class="rb-lbl" style="margin-top:6px">Tab permissions</label>'+
+      '<table class="perm-grid"><thead><tr><th>Tab</th><th class="c">View</th><th class="c">Edit</th></tr></thead><tbody id="op-perms"></tbody></table>'+
+      '<div style="margin-top:14px;display:flex;gap:10px"><button class="rb-btn" id="op-save">Save account</button><button class="rb-btn ghost" id="op-clear">Clear form</button></div>'+
+      '<div class="rb-msg" id="op-msg"></div>'+
+    '</div>'+
+  '</div>');
+  document.querySelectorAll('.c-panel').forEach(function(p){p.classList.toggle('active',p.id==='tab-settings');});
+  _rbPermRows();
+  document.getElementById('ap-save').addEventListener('click',_apSave);
+  document.getElementById('op-save').addEventListener('click',_opSave);
+  document.getElementById('op-clear').addEventListener('click',function(){_opFill(null);});
+  document.getElementById('op-role').addEventListener('change',_opRolePreset);
+  _apLoad(); _opLoad();
+}
+function _rbPermRows(){
+  var tb=document.getElementById('op-perms'); if(!tb)return;
+  tb.innerHTML=RBAC_TABS.map(function(t){
+    return '<tr><td>'+esc(t.label)+'</td><td class="c"><input type="checkbox" data-pv="'+t.id+'"></td><td class="c"><input type="checkbox" data-pe="'+t.id+'"></td></tr>';
+  }).join('');
+}
+function _opRolePreset(){
+  // auditor → uncheck all edit boxes
+  if(document.getElementById('op-role').value==='auditor'){
+    document.querySelectorAll('[data-pe]').forEach(function(c){c.checked=false;});
+  }
+}
+async function _apLoad(){
+  try{var res=await authFetch(WORKER+'/api/admin/profile',{method:'GET'});var d=await res.json();
+    if(d.ok&&d.profile){var p=d.profile;document.getElementById('ap-name').value=p.displayName||'';document.getElementById('ap-org').value=p.org||'';document.getElementById('ap-email').value=p.email||'';document.getElementById('ap-tz').value=p.timezone||'';}
+  }catch(e){}
+}
+async function _apSave(){
+  var msg=document.getElementById('ap-msg');msg.textContent='';
+  var payload={displayName:document.getElementById('ap-name').value,org:document.getElementById('ap-org').value,email:document.getElementById('ap-email').value,timezone:document.getElementById('ap-tz').value};
+  try{var res=await authFetch(WORKER+'/api/admin/profile',{method:'POST',body:JSON.stringify(payload)});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    msg.innerHTML='<span style="color:#4ddb8a">Profile saved.</span>';
+  }catch(e){msg.innerHTML='<span style="color:#ff8888">'+esc(e.message)+'</span>';}
+}
+async function _opLoad(){
+  var host=document.getElementById('op-list');if(!host)return;
+  try{var res=await authFetch(WORKER+'/api/operators',{method:'GET'});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    if(!d.operators.length){host.innerHTML='<div style="opacity:.6;font-size:13px">No operator accounts yet. Add one below.</div>';return;}
+    host.innerHTML='<table class="op-tbl"><thead><tr><th>User</th><th>Role</th><th>Tabs</th><th>Status</th><th></th></tr></thead><tbody>'+
+      d.operators.map(function(o){
+        var tabs=Object.keys(o.perms||{}).filter(function(k){return o.perms[k]&&o.perms[k].view;}).join(', ')||'—';
+        return '<tr><td><b>'+esc(o.username)+'</b></td><td><span class="op-badge '+(o.role==='auditor'?'auditor':'')+'">'+esc(o.role)+'</span></td>'+
+          '<td style="font-size:12px;color:#9a9ab0">'+esc(tabs)+'</td><td>'+(o.disabled?'<span style="color:#ff8888">disabled</span>':'<span style="color:#4ddb8a">active</span>')+'</td>'+
+          '<td style="text-align:right;white-space:nowrap"><button class="op-act" data-edit="'+esc(o.username)+'">Edit</button><button class="op-act del" data-del="'+esc(o.username)+'">Delete</button></td></tr>';
+      }).join('')+'</tbody></table>';
+    window._opCache={}; d.operators.forEach(function(o){window._opCache[o.username]=o;});
+    host.querySelectorAll('[data-edit]').forEach(function(b){b.addEventListener('click',function(){_opFill(window._opCache[b.getAttribute('data-edit')]);});});
+    host.querySelectorAll('[data-del]').forEach(function(b){b.addEventListener('click',function(){_opDelete(b.getAttribute('data-del'));});});
+  }catch(e){host.innerHTML='<div style="color:#ff8888">'+esc(e.message)+'</div>';}
+}
+function _opFill(o){
+  document.getElementById('op-user').value=o?o.username:'';
+  document.getElementById('op-pass').value='';
+  document.getElementById('op-role').value=o?(o.role==='auditor'?'auditor':'operator'):'operator';
+  document.getElementById('op-form-title').textContent=o?('Update “'+o.username+'”'):'Add / update an account';
+  var perms=(o&&o.perms)||{};
+  document.querySelectorAll('[data-pv]').forEach(function(c){c.checked=!!(perms[c.getAttribute('data-pv')]&&perms[c.getAttribute('data-pv')].view);});
+  document.querySelectorAll('[data-pe]').forEach(function(c){c.checked=!!(perms[c.getAttribute('data-pe')]&&perms[c.getAttribute('data-pe')].edit);});
+  document.getElementById('op-msg').textContent='';
+}
+function _opCollectPerms(){
+  var perms={};
+  RBAC_TABS.forEach(function(t){
+    var v=document.querySelector('[data-pv="'+t.id+'"]').checked;
+    var e=document.querySelector('[data-pe="'+t.id+'"]').checked;
+    if(v||e)perms[t.id]={view:v||e,edit:e};
+  });
+  return perms;
+}
+async function _opSave(){
+  var msg=document.getElementById('op-msg');msg.textContent='';
+  var payload={username:document.getElementById('op-user').value.trim(),password:document.getElementById('op-pass').value,
+    role:document.getElementById('op-role').value,perms:_opCollectPerms()};
+  if(!payload.username){msg.innerHTML='<span style="color:#ff8888">Enter a username.</span>';return;}
+  try{var res=await authFetch(WORKER+'/api/operators/save',{method:'POST',body:JSON.stringify(payload)});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    msg.innerHTML='<span style="color:#4ddb8a">Saved “'+esc(payload.username)+'”.</span>';
+    _opFill(null);_opLoad();
+  }catch(e){msg.innerHTML='<span style="color:#ff8888">'+esc(e.message)+'</span>';}
+}
+async function _opDelete(u){
+  if(!confirm('Delete operator account “'+u+'”?'))return;
+  try{var res=await authFetch(WORKER+'/api/operators/delete',{method:'POST',body:JSON.stringify({username:u})});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    _opLoad();
+  }catch(e){alert('Delete failed: '+e.message);}
 }
 </script>
 
