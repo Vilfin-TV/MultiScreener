@@ -4093,12 +4093,30 @@ const JLPT_TEXTBOOK = {
         "title": "🎧 Essential Business Vocabulary Drills",
         "context": "Listen to the 6 essential business vocabulary drills. Each word is repeated 3 times slowly for study.",
         "audioDrills": [
-          { "name": "Greetings & Phrases", "file": "audio_category_1_v3.mp3" },
-          { "name": "Core Business Nouns", "file": "audio_category_2_v3.mp3" },
-          { "name": "Essential Verbs", "file": "audio_category_3_v3.mp3" },
-          { "name": "Time & Scheduling", "file": "audio_category_4_v3.mp3" },
-          { "name": "Daily Life & Commuting", "file": "audio_category_5_v3.mp3" },
-          { "name": "Common Adjectives", "file": "audio_category_6_v3.mp3" }
+          {
+            "name": "Greetings & Phrases",
+            "file": "audio_category_1_v3.mp3"
+          },
+          {
+            "name": "Core Business Nouns",
+            "file": "audio_category_2_v3.mp3"
+          },
+          {
+            "name": "Essential Verbs",
+            "file": "audio_category_3_v3.mp3"
+          },
+          {
+            "name": "Time & Scheduling",
+            "file": "audio_category_4_v3.mp3"
+          },
+          {
+            "name": "Daily Life & Commuting",
+            "file": "audio_category_5_v3.mp3"
+          },
+          {
+            "name": "Common Adjectives",
+            "file": "audio_category_6_v3.mp3"
+          }
         ]
       },
       {
@@ -4188,342 +4206,530 @@ const JLPT_TEXTBOOK = {
     ],
     "grammar": [
       {
-        "title": "Grammar Lesson 1: The Particle は (wa)",
-        "explanation": "Marks the topic of a sentence. (Structure: Noun + は)",
+        "title": "1. Basic Sentence Structure (The Copula)",
+        "explanation": "These are the building blocks for saying \"A is B\" and conjugating nouns.",
         "table": [
           {
-            "ja": "Noun + は",
-            "en": "Marks the topic of a sentence."
-          }
-        ],
-        "examples": [
+            "ja": "です / だ",
+            "en": "To be (Am / Is / Are)"
+          },
           {
-            "ja": "わたしは学生です。",
-            "romaji": "Watashi wa gakusei desu.",
-            "en": "I am a student."
+            "ja": "ではありません / じゃないです",
+            "en": "Is not (Negative)"
+          },
+          {
+            "ja": "でした / だった",
+            "en": "Was / Were (Past tense)"
+          },
+          {
+            "ja": "ではありませんでした / じゃなかったです",
+            "en": "Was not / Were not (Past negative)"
           }
         ]
       },
       {
-        "title": "Grammar Lesson 2: The Particle が (ga)",
-        "explanation": "Marks the subject of a sentence, or introduces new information. (Structure: Noun + が)",
+        "title": "2. Particles (助詞 - Joshi)",
+        "explanation": "Particles are the glue of Japanese grammar. You will need to know exactly how they connect words to show their role in a sentence.",
         "table": [
           {
-            "ja": "Noun + が",
-            "en": "Marks the subject of a sentence, or introduces new information."
-          }
-        ],
-        "examples": [
+            "ja": "は (wa)",
+            "en": "Topic marker - \"As for me...\""
+          },
           {
-            "ja": "雨が降っています。",
-            "romaji": "Ame ga futte imasu.",
-            "en": "It is raining."
+            "ja": "が (ga)",
+            "en": "Subject marker / But - \"The dog is barking.\" / \"I like it, but...\""
+          },
+          {
+            "ja": "を (o)",
+            "en": "Direct object marker - \"I eat an apple.\""
+          },
+          {
+            "ja": "に (ni)",
+            "en": "Time, destination, location of existence - \"At 7:00\", \"To Tokyo\", \"In the room\""
+          },
+          {
+            "ja": "へ (e)",
+            "en": "Direction of movement - \"Heading towards school\""
+          },
+          {
+            "ja": "で (de)",
+            "en": "Location of action, means, tool - \"Study at the library\", \"Eat with chopsticks\""
+          },
+          {
+            "ja": "の (no)",
+            "en": "Possession, noun modifier - \"My book\", \"The teacher's desk\""
+          },
+          {
+            "ja": "と (to)",
+            "en": "And (exhaustive list), With - \"Apples and oranges\", \"Go with a friend\""
+          },
+          {
+            "ja": "や (ya)",
+            "en": "And (incomplete list) - \"Apples, oranges, etc.\""
+          },
+          {
+            "ja": "も (mo)",
+            "en": "Also, too - \"I am also a student.\""
+          },
+          {
+            "ja": "か (ka)",
+            "en": "Question marker, Or - \"Is it? / Apple or orange\""
+          },
+          {
+            "ja": "から (kara)",
+            "en": "From (starting point), Because - \"From Tokyo\", \"Because I'm tired\""
+          },
+          {
+            "ja": "まで (made)",
+            "en": "Until, up to - \"Until 5:00\""
+          },
+          {
+            "ja": "ね (ne)",
+            "en": "Confirmation / Agreement - \"It's hot today, isn't it?\""
+          },
+          {
+            "ja": "よ (yo)",
+            "en": "Emphasis / New information - \"It's actually raining, you know.\""
           }
         ]
       },
       {
-        "title": "Grammar Lesson 3: The Particle を (o)",
-        "explanation": "Marks the direct object of an action. (Structure: Noun + を + Verb)",
+        "title": "3. Demonstratives (Ko-So-A-Do Words)",
+        "explanation": "You need to know how to point things out based on their distance from the speaker and the listener.",
         "table": [
           {
-            "ja": "Noun + を + Verb",
-            "en": "Marks the direct object of an action."
-          }
-        ],
-        "examples": [
+            "ja": "これ / それ / あれ / どれ",
+            "en": "Things (Standalone pronouns: This / That / That over there / Which)"
+          },
           {
-            "ja": "りんごを食べます。",
-            "romaji": "Ringo o tabemasu.",
-            "en": "I eat an apple."
+            "ja": "この / その / あの / どの",
+            "en": "Things (Must attach to a noun: kono hon)"
+          },
+          {
+            "ja": "ここ / そこ / あそこ / どこ",
+            "en": "Places / Locations"
+          },
+          {
+            "ja": "こちら / そちら / あちら / どちら",
+            "en": "Directions / Polite versions of above"
           }
         ]
       },
       {
-        "title": "Grammar Lesson 4: The Particle に (ni) - Time",
-        "explanation": "Indicates the specific time an action takes place. (Structure: Time + に)",
+        "title": "4. Adjectives (形容詞 - Keiyoushi)",
+        "explanation": "You must be able to conjugate both types of adjectives into present, past, negative, and past-negative forms.",
         "table": [
           {
-            "ja": "Time + に",
-            "en": "Indicates the specific time an action takes place."
-          }
-        ],
-        "examples": [
+            "ja": "い-Adjectives (i-adjectives)",
+            "en": "Conjugate by dropping the final \"い\" (e.g., 高い -> 高くない)."
+          },
           {
-            "ja": "7時に起きます。",
-            "romaji": "Shichiji ni okimasu.",
-            "en": "I wake up at 7."
+            "ja": "な-Adjectives (na-adjectives)",
+            "en": "Conjugate just like nouns using です/じゃない (e.g., 静かです -> 静かじゃないです)."
+          },
+          {
+            "ja": "Joining Adjectives",
+            "en": "Connecting two or more adjectives together (e.g., ～くて for i-adjectives; ～で for na-adjectives)."
+          },
+          {
+            "ja": "Adverbs",
+            "en": "Turning adjectives into adverbs (e.g., 早い -> 早く, 静か -> 静かに)."
           }
         ]
       },
       {
-        "title": "Grammar Lesson 5: The Particle に (ni) - Destination",
-        "explanation": "Indicates the destination or target of an action. (Structure: Place + に)",
+        "title": "5. Verb Conjugations",
+        "explanation": "For N5, you do not need to know every verb form, but you must completely master these foundational forms.",
         "table": [
           {
-            "ja": "Place + に",
-            "en": "Indicates the destination or target of an action."
-          }
-        ],
-        "examples": [
+            "ja": "Dictionary Form",
+            "en": "The casual, present/future tense (e.g., 食べる, 行く)."
+          },
           {
-            "ja": "学校に行きます。",
-            "romaji": "Gakkou ni ikimasu.",
-            "en": "I go to school."
+            "ja": "ます Form",
+            "en": "The polite present/future (e.g., 食べます, 行きます)."
+          },
+          {
+            "ja": "ません Form",
+            "en": "The polite negative (e.g., 食べません)."
+          },
+          {
+            "ja": "ました Form",
+            "en": "The polite past tense (e.g., 食べました)."
+          },
+          {
+            "ja": "ませんでした Form",
+            "en": "The polite past negative (e.g., 食べませんでした)."
+          },
+          {
+            "ja": "て (Te) Form",
+            "en": "Used to connect verbs, make requests, and show ongoing actions (e.g., 食べて)."
+          },
+          {
+            "ja": "ない (Nai) Form",
+            "en": "The casual negative, primarily used for \"Please don't...\" at this level (e.g., 食べない)."
           }
         ]
       },
       {
-        "title": "Grammar Lesson 6: The Particle で (de) - Location",
-        "explanation": "Indicates the location where an action occurs. (Structure: Place + で + Action)",
+        "title": "6. Essential Grammar Patterns",
+        "explanation": "These are the most common sentence structures that will appear on the reading and listening sections.",
         "table": [
           {
-            "ja": "Place + で + Action",
-            "en": "Indicates the location where an action occurs."
-          }
-        ],
-        "examples": [
+            "ja": "～があります / ～がいます",
+            "en": "There is / I have (for non-living / living things)."
+          },
           {
-            "ja": "レストランで食べます。",
-            "romaji": "Resutoran de tabemasu.",
-            "en": "I eat at a restaurant."
+            "ja": "～がすきです / きらいです",
+            "en": "To like / To dislike."
+          },
+          {
+            "ja": "～がじょうずです / へたです",
+            "en": "To be good at / To be bad at."
+          },
+          {
+            "ja": "～たいです / ～がほしいです",
+            "en": "Want to do (verb) / Want (a noun/object)."
+          },
+          {
+            "ja": "～ています",
+            "en": "Ongoing action (I am eating) or current state (I am married)."
+          },
+          {
+            "ja": "～にいきます",
+            "en": "To go in order to do something (e.g., 食べにいきます = Go to eat)."
+          },
+          {
+            "ja": "～てください / ～ないでください",
+            "en": "Please do... / Please don't do..."
+          },
+          {
+            "ja": "～ましょう / ～ませんか",
+            "en": "Let's... / Won't you...? (Inviting someone)."
+          },
+          {
+            "ja": "～てもいいです / ～てはいけません",
+            "en": "You may... (Permission) / You must not... (Prohibition)."
+          },
+          {
+            "ja": "～てから / ～のまえに",
+            "en": "After doing... / Before doing..."
+          },
+          {
+            "ja": "まだ～ていません / もう",
+            "en": "Have not done ~ yet / Already, Anymore."
+          },
+          {
+            "ja": "AはBより～ / AとBとどちらが～",
+            "en": "A is more ~ than B / Which is more ~, A or B?"
+          },
+          {
+            "ja": "～のほうが～ / ～のなかで、一番～",
+            "en": "~ is the more... / The most ~ within a category."
           }
         ]
       },
       {
-        "title": "Grammar Lesson 7: The Particle で (de) - Means",
-        "explanation": "Indicates the means or method used to do something. (Structure: Tool/Transport + で)",
+        "title": "7. Common Conjunctions",
+        "explanation": "Words that link your sentences together smoothly.",
         "table": [
           {
-            "ja": "Tool/Transport + で",
-            "en": "Indicates the means or method used to do something."
-          }
-        ],
-        "examples": [
+            "ja": "そして",
+            "en": "And / And then."
+          },
           {
-            "ja": "バスで帰ります。",
-            "romaji": "Basu de kaerimasu.",
-            "en": "I return by bus."
+            "ja": "それから",
+            "en": "After that."
+          },
+          {
+            "ja": "でも / しかし",
+            "en": "But / However."
+          },
+          {
+            "ja": "だから",
+            "en": "Therefore / So."
           }
         ]
       },
       {
-        "title": "Grammar Lesson 8: The Particle と (to)",
-        "explanation": "Means \"and\" (when listing exhaustive nouns) or \"with\". (Structure: Noun1 + と + Noun2)",
+        "title": "8. Indefinite Pronouns (Question Word + か / も)",
+        "explanation": "By attaching particles to question words (Who, What, Where), you change them into words like \"someone\" or \"nowhere.\"",
         "table": [
           {
-            "ja": "Noun1 + と + Noun2",
-            "en": "Means \"and\" (when listing exhaustive nouns) or \"with\"."
-          }
-        ],
-        "examples": [
+            "ja": "なにか / なにも + Negative",
+            "en": "Something / Nothing"
+          },
           {
-            "ja": "犬と猫が好きです。",
-            "romaji": "Inu to neko ga suki desu.",
-            "en": "I like dogs and cats."
+            "ja": "だれか / だれも + Negative",
+            "en": "Someone / No one"
+          },
+          {
+            "ja": "どこか / どこも + Negative",
+            "en": "Somewhere / Nowhere"
+          },
+          {
+            "ja": "いつか / いつも",
+            "en": "Sometime / Always"
           }
         ]
       },
       {
-        "title": "Grammar Lesson 9: The Particle も (mo)",
-        "explanation": "Means \"also\" or \"too\", replacing wa/ga/o. (Structure: Noun + も)",
+        "title": "9. Adverbs of Frequency and Degree",
+        "explanation": "These adverbs tell you how often or how much an action happens. Notice that some of these strictly require a negative verb to work correctly.",
         "table": [
           {
-            "ja": "Noun + も",
-            "en": "Means \"also\" or \"too\", replacing wa/ga/o."
-          }
-        ],
-        "examples": [
+            "ja": "いつも / たいてい",
+            "en": "Always / Usually."
+          },
           {
-            "ja": "私も学生です。",
-            "romaji": "Watashi mo gakusei desu.",
-            "en": "I am also a student."
+            "ja": "よく / ときどき",
+            "en": "Often, Well / Sometimes."
+          },
+          {
+            "ja": "あまり + Neg / ぜんぜん + Neg",
+            "en": "Not very often / Not at all (Never)."
+          },
+          {
+            "ja": "とても / たいへん",
+            "en": "Very."
+          },
+          {
+            "ja": "たくさん / すこし / ちょっと",
+            "en": "A lot (quantity) / A little."
           }
         ]
       },
       {
-        "title": "Grammar Lesson 10: Verb: ~ます (masu)",
-        "explanation": "Formal/polite non-past affirmative verb ending. (Structure: Verb stem + ます)",
+        "title": "10. Expressing Change (To Become)",
+        "explanation": "When you want to say something \"becomes\" a certain way (like \"it became cold\" or \"I became a doctor\"), you use the verb なる (naru).",
         "table": [
           {
-            "ja": "Verb stem + ます",
-            "en": "Formal/polite non-past affirmative verb ending."
-          }
-        ],
-        "examples": [
+            "ja": "い-Adjectives (Drop 'い' + く + なる)",
+            "en": "寒い (Cold) -> 寒くなる (To become cold)."
+          },
           {
-            "ja": "毎日走ります。",
-            "romaji": "Mainichi hashirimasu.",
-            "en": "I run every day."
+            "ja": "な-Adjectives (Keep word + に + なる)",
+            "en": "元気 (Healthy) -> 元気になる (To become healthy)."
+          },
+          {
+            "ja": "Nouns (Noun + に + なる)",
+            "en": "先生 (Teacher) -> 先生になる (To become a teacher)."
           }
         ]
       },
       {
-        "title": "Grammar Lesson 11: Verb: ~ません (masen)",
-        "explanation": "Formal non-past negative verb ending. (Structure: Verb stem + ません)",
+        "title": "11. Turning Verbs into Nouns (Nominalization)",
+        "explanation": "If you want to say \"I like reading\" or \"Watching movies is fun,\" you cannot just attach a verb to the particle は or が. You have to turn the verb into a noun first using こと (koto) or の (no).",
         "table": [
           {
-            "ja": "Verb stem + ません",
-            "en": "Formal non-past negative verb ending."
-          }
-        ],
-        "examples": [
+            "ja": "Dict Verb + こと / の",
+            "en": "食べることがすきです (I like eating)."
+          },
           {
-            "ja": "肉は食べません。",
-            "romaji": "Niku wa tabemasen.",
-            "en": "I do not eat meat."
+            "ja": "Dict Verb + ことができます",
+            "en": "Ability (Can do): 日本語を話すことができます (I can speak Japanese)."
           }
         ]
       },
       {
-        "title": "Grammar Lesson 12: Verb: ~ました (mashita)",
-        "explanation": "Formal past affirmative verb ending. (Structure: Verb stem + ました)",
+        "title": "12. Giving and Receiving (Basic)",
+        "explanation": "Japanese uses different verbs depending on the direction of the gift-giving.",
         "table": [
           {
-            "ja": "Verb stem + ました",
-            "en": "Formal past affirmative verb ending."
-          }
-        ],
-        "examples": [
+            "ja": "あげる (Ageru)",
+            "en": "To give (From me to someone else). 私は友達に本をあげました。"
+          },
           {
-            "ja": "映画を見ました。",
-            "romaji": "Eiga o mimashita.",
-            "en": "I watched a movie."
+            "ja": "もらう (Morau)",
+            "en": "To receive (From someone else to me). 私は友達に本をもらいました。"
           }
         ]
       },
       {
-        "title": "Grammar Lesson 13: Verb: ~ませんでした (masen deshita)",
-        "explanation": "Formal past negative verb ending. (Structure: Verb stem + ませんでした)",
+        "title": "13. Limits and Approximations",
+        "explanation": "These are incredibly common particles and suffixes used to talk about time, amounts, and restrictions.",
         "table": [
           {
-            "ja": "Verb stem + ませんでした",
-            "en": "Formal past negative verb ending."
-          }
-        ],
-        "examples": [
+            "ja": "～だけ",
+            "en": "Only / Just (e.g., 水だけ = Only water)."
+          },
           {
-            "ja": "昨日は勉強しませんでした。",
-            "romaji": "Kinou wa benkyou shimasen deshita.",
-            "en": "I didn't study yesterday."
+            "ja": "～しか + Negative verb",
+            "en": "Nothing but / Only (e.g., 水しか飲みません = I drink nothing but water)."
+          },
+          {
+            "ja": "～ごろ",
+            "en": "Around / About (Used for points in time like \"around 3:00\")."
+          },
+          {
+            "ja": "～くらい / ぐらい",
+            "en": "About / Approximately (Used for durations or amounts like \"about 3 hours\")."
           }
         ]
       },
       {
-        "title": "Grammar Lesson 14: Adjectives: ~いです (i-desu)",
-        "explanation": "Polite form for i-adjectives. (Structure: i-Adj + です)",
+        "title": "14. Expressing Experiences",
+        "explanation": "When you want to say you \"have done\" something in the past, you must use this specific structure.",
         "table": [
           {
-            "ja": "i-Adj + です",
-            "en": "Polite form for i-adjectives."
-          }
-        ],
-        "examples": [
-          {
-            "ja": "今日は暑いです。",
-            "romaji": "Kyou wa atsui desu.",
-            "en": "It is hot today."
+            "ja": "Verb (た / Ta-form) + ことがあります",
+            "en": "Have done (verb). 日本へ行ったことがあります。(I have been to Japan.)"
           }
         ]
       },
       {
-        "title": "Grammar Lesson 15: Adjectives: ~くないです (kunai desu)",
-        "explanation": "Negative polite form for i-adjectives. (Structure: i-Adj stem + くないです)",
+        "title": "15. Listing Representative Actions (～たり、～たり)",
+        "explanation": "The ～たり form is used to list a few examples of actions in no particular order, implying you might have done other things too.",
         "table": [
           {
-            "ja": "i-Adj stem + くないです",
-            "en": "Negative polite form for i-adjectives."
-          }
-        ],
-        "examples": [
-          {
-            "ja": "この本は高くないです。",
-            "romaji": "Kono hon wa takakunai desu.",
-            "en": "This book is not expensive."
+            "ja": "Verb (た) + り、Verb (た) + りします",
+            "en": "Do things like A and B. 週末は本を読んだり、映画を見たりします。"
           }
         ]
       },
       {
-        "title": "Grammar Lesson 16: Noun modifying Noun",
-        "explanation": "Using the particle の to link two nouns. (Structure: Noun1 + の + Noun2)",
+        "title": "16. Plans and Intentions",
+        "explanation": "These structures are crucial for talking about the future, your schedules, and what you intend to do.",
         "table": [
           {
-            "ja": "Noun1 + の + Noun2",
-            "en": "Using the particle の to link two nouns."
-          }
-        ],
-        "examples": [
+            "ja": "～つもりです",
+            "en": "I intend to... / I plan to... (e.g., 明日、勉強するつもりです。)"
+          },
           {
-            "ja": "私のペン",
-            "romaji": "Watashi no pen",
-            "en": "My pen"
+            "ja": "～よていです",
+            "en": "It is scheduled... / The plan is... (More formal and concrete than つもり)."
           }
         ]
       },
       {
-        "title": "Grammar Lesson 17: Existence: あります (arimasu)",
-        "explanation": "Used to state the existence of inanimate objects or plants. (Structure: Noun + が + あります)",
+        "title": "17. Connecting Clauses with Reasons",
+        "explanation": "You learned から as a particle meaning \"from,\" but it also acts as a conjunction meaning \"because.\"",
         "table": [
           {
-            "ja": "Noun + が + あります",
-            "en": "Used to state the existence of inanimate objects or plants."
-          }
-        ],
-        "examples": [
+            "ja": "Clause A + から、Clause B",
+            "en": "Because A, B. (Subjective reasons: 忙しいから、行きません。)"
+          },
           {
-            "ja": "机の上に本があります。",
-            "romaji": "Tsukue no ue ni hon ga arimasu.",
-            "en": "There is a book on the desk."
+            "ja": "Clause A + ので、Clause B",
+            "en": "Because A, B. (More objective, polite: 雨が降っているので、家にいます。)"
           }
         ]
       },
       {
-        "title": "Grammar Lesson 18: Existence: います (imasu)",
-        "explanation": "Used to state the existence of animate beings. (Structure: Noun + が + います)",
+        "title": "18. Opinions and Quotations",
+        "explanation": "To say \"I think that...\" or to quote what someone else said, you use the particle と (to) right after a casual-form phrase.",
         "table": [
           {
-            "ja": "Noun + が + います",
-            "en": "Used to state the existence of animate beings."
-          }
-        ],
-        "examples": [
+            "ja": "～と思います",
+            "en": "I think that... (明日は雨が降ると思います。)"
+          },
           {
-            "ja": "公園に犬がいます。",
-            "romaji": "Kouen ni inu ga imasu.",
-            "en": "There is a dog in the park."
+            "ja": "～と言いました",
+            "en": "Said that... (田中さんは明日行くと言いました。)"
           }
         ]
       },
       {
-        "title": "Grammar Lesson 19: Desire: ~たい (tai)",
-        "explanation": "Expresses the speaker's desire to do something. (Structure: Verb stem + たい)",
+        "title": "19. \"How to\" do something (～かた)",
+        "explanation": "You can easily turn a verb into a noun that describes the \"method\" or \"way of doing\" that action by swapping the \"ます\" for \"かた\" (方).",
         "table": [
           {
-            "ja": "Verb stem + たい",
-            "en": "Expresses the speaker's desire to do something."
-          }
-        ],
-        "examples": [
-          {
-            "ja": "日本に行きたいです。",
-            "romaji": "Nihon ni ikitai desu.",
-            "en": "I want to go to Japan."
+            "ja": "Verb (ます stem) + かた",
+            "en": "How to... (e.g., 読みます -> 読みかた: How to read)"
           }
         ]
       },
       {
-        "title": "Grammar Lesson 20: Invitation: ~ましょう (mashou)",
-        "explanation": "Polite invitation or suggestion (\"let's...\"). (Structure: Verb stem + ましょう)",
+        "title": "20. Politeness Prefixes (お and ご)",
+        "explanation": "Japanese attaches prefixes to certain nouns to show respect.",
         "table": [
           {
-            "ja": "Verb stem + ましょう",
-            "en": "Polite invitation or suggestion (\"let's...\")."
-          }
-        ],
-        "examples": [
+            "ja": "お (o-)",
+            "en": "Usually attached to words of Japanese origin. お金 (money), お茶 (tea)"
+          },
           {
-            "ja": "一緒に食べましょう。",
-            "romaji": "Issho ni tabemashou.",
-            "en": "Let's eat together."
+            "ja": "ご (go-)",
+            "en": "Usually attached to words of Chinese origin. ご家族 (family), ご両親 (parents)."
+          }
+        ]
+      },
+      {
+        "title": "21. Essential Counters (助数詞)",
+        "explanation": "You must attach a specific counter to the number depending on the shape or type of object.",
+        "table": [
+          {
+            "ja": "～つ (tsu)",
+            "en": "General counter for things without a specific shape (一つ hitotsu, 二つ futatsu)."
+          },
+          {
+            "ja": "～人 (nin/ri)",
+            "en": "People (一人 hitori, 二人 futari, 三人 sannin)."
+          },
+          {
+            "ja": "～枚 (mai)",
+            "en": "Flat, thin objects like paper, shirts, or plates."
+          },
+          {
+            "ja": "～本 (hon/pon/bon)",
+            "en": "Long, cylindrical objects like pens, bottles, or umbrellas."
+          },
+          {
+            "ja": "～匹 (hiki/piki/biki)",
+            "en": "Small animals like cats, dogs, or fish."
+          },
+          {
+            "ja": "～冊 (satsu)",
+            "en": "Bound objects like books or magazines."
+          }
+        ]
+      },
+      {
+        "title": "22. Guessing and Confirmation (～でしょう)",
+        "explanation": "This is used when you are making a guess, expressing probability, or asking someone to agree with you.",
+        "table": [
+          {
+            "ja": "Casual form + でしょう / だろう",
+            "en": "Probably... / ...Right? (e.g., この映画はおもしろいでしょう？)"
+          }
+        ]
+      },
+      {
+        "title": "23. Doing Something \"Too Much\" (～すぎる)",
+        "explanation": "When an action or a state is excessive, you use this suffix.",
+        "table": [
+          {
+            "ja": "Verb (ます stem) / Adj (drop い/な) + すぎる",
+            "en": "Too much... (e.g., 食べます -> 食べすぎる: To eat too much)"
+          }
+        ]
+      },
+      {
+        "title": "24. Simultaneous Actions (～ながら)",
+        "explanation": "When you are doing two things at the exact same time, you use this pattern.",
+        "table": [
+          {
+            "ja": "Verb (ます stem) + ながら",
+            "en": "While doing ~ (e.g., 音楽を聞きながら、勉強します。)"
+          }
+        ]
+      },
+      {
+        "title": "25. Making a Decision (～にする)",
+        "explanation": "If you change 'naru' to 'ni suru', it means 'to decide on' or 'to choose'.",
+        "table": [
+          {
+            "ja": "Noun + にします",
+            "en": "I decide on / I will have... (e.g., 私 は カレー にします。)"
+          }
+        ]
+      },
+      {
+        "title": "26. Joining Nouns (～で)",
+        "explanation": "You can join two sentences that end in nouns by replacing \"です\" with \"で\".",
+        "table": [
+          {
+            "ja": "Noun A + で、Noun B + です",
+            "en": "A is [Noun A], and [Noun B]. (e.g., 兄 は 医者 で、妹 は 学生 です。)"
           }
         ]
       }
