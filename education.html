@@ -2290,6 +2290,7 @@ var _activeLessonTab = 'overview';
 var _lessonPageIndexes = { writing: 0, writing_practice: 0, grammar: 0, listening: 0, reading: 0, conversation: 0 };
 
 function nextLessonPage(tab) {
+  if (typeof stopConversation === 'function') stopConversation();
   const data = (typeof JLPT_TEXTBOOK !== 'undefined' && JLPT_TEXTBOOK[_activeJlptLevel]) ? JLPT_TEXTBOOK[_activeJlptLevel] : null;
   if (!data || !data[tab]) return;
   if (_lessonPageIndexes[tab] < data[tab].length - 1) {
@@ -2299,6 +2300,7 @@ function nextLessonPage(tab) {
 }
 
 function prevLessonPage(tab) {
+  if (typeof stopConversation === 'function') stopConversation();
   if (_lessonPageIndexes[tab] > 0) {
     _lessonPageIndexes[tab]--;
     renderLessonTabContent();
@@ -2351,6 +2353,7 @@ function renderJlptContent() {
 }
 
 function switchLessonTab(tab) {
+  if (typeof stopConversation === 'function') stopConversation();
   _activeLessonTab = tab;
   renderJlptContent();
 }
@@ -2525,10 +2528,16 @@ function renderLessonTabContent() {
     
     // Pagination Controls
     if (_activeLessonTab !== 'writing_practice') {
-      html += '<div style="display:flex; justify-content:space-between; margin-bottom:16px;">'
-        + '<button class="widget-btn" style="background:var(--card3);" onclick="prevLessonPage(\'' + _activeLessonTab + '\')" ' + (pageIdx === 0 ? 'disabled style="opacity:0.5;background:var(--card3);"' : '') + '>⬅ Prev Page</button>'
-        + '<button class="widget-btn" style="background:var(--blue);" onclick="nextLessonPage(\'' + _activeLessonTab + '\')" ' + (pageIdx >= arr.length - 1 ? 'disabled style="opacity:0.5;background:var(--blue);"' : '') + '>Next Page ➡</button>'
+      let pageHtml = '<div style="display:flex; justify-content:space-between; margin-bottom:16px;">'
+        + '<button class="widget-btn" style="background:var(--card3);" onclick="prevLessonPage(\'' + _activeLessonTab + '\')" ' + (pageIdx === 0 ? 'disabled style="opacity:0.5;background:var(--card3);"' : '') + '>⬅ Prev Page</button>';
+        
+      if (_activeLessonTab === 'conversation') {
+        pageHtml += '<button id="btn-play-conversation" class="widget-btn" style="background:var(--green); border:none;" onclick="playConversation()">▶ Play Conversation</button>';
+      }
+        
+      pageHtml += '<button class="widget-btn" style="background:var(--blue);" onclick="nextLessonPage(\'' + _activeLessonTab + '\')" ' + (pageIdx >= arr.length - 1 ? 'disabled style="opacity:0.5;background:var(--blue);"' : '') + '>Next Page ➡</button>'
         + '</div>';
+      html += pageHtml;
     }
 
     // MOC Test Button
@@ -3201,6 +3210,145 @@ async function runLiveTranslateLoop() {
   }
 }
 // --- END TRANSLATOR LOGIC ---
+
+// --- CONVERSATION TTS LOGIC ---
+let _ttsActive = false;
+let _ttsQueue = [];
+let _ttsIndex = 0;
+let _characterProfiles = {};
+
+function stopConversation() {
+  _ttsActive = false;
+  window.speechSynthesis.cancel();
+  const btn = document.getElementById('btn-play-conversation');
+  if (btn) btn.innerHTML = '▶ Play Conversation';
+}
+
+function parseCharacterProfiles() {
+  _characterProfiles = {};
+  const container = document.getElementById('jlpt-lesson-tab-content');
+  if (!container) return;
+  
+  const strongTags = container.querySelectorAll('strong');
+  let charBlock = null;
+  for (let i = 0; i < strongTags.length; i++) {
+    if (strongTags[i].innerText.includes('登場人物') || strongTags[i].innerText.includes('Characters')) {
+      charBlock = strongTags[i].parentNode;
+      break;
+    }
+  }
+  if (!charBlock) return;
+  
+  const htmlStr = charBlock.innerHTML;
+  const regex = /<strong[^>]*>([^<]+)<\/strong>(.*?)<br>/g;
+  let match;
+  while ((match = regex.exec(htmlStr)) !== null) {
+    let rawName = match[1].trim(); 
+    if (rawName.includes('登場人物')) continue;
+    
+    let name = rawName.split('(')[0].replace(':', '').trim();
+    if (name.includes('/')) name = name.split('/')[1].trim();
+    
+    const desc = match[2].toLowerCase();
+    let profile = { pitch: 1.0, rate: 1.0 };
+    
+    // Gender Heuristics
+    if (desc.includes('daughter') || desc.includes('wife') || desc.includes(' he ') || desc.includes(' his ') || desc.includes('male') || desc.includes(' man ') || name === 'ラヴィ' || name === 'マイク' || name === 'ケン') {
+      profile.pitch = 0.7; // Deeper male voice
+    } else if (desc.includes('she') || desc.includes('her') || desc.includes('woman') || desc.includes('female') || name === 'リン' || name === 'エマ' || name === 'さくら') {
+      profile.pitch = 1.3; // Higher female voice
+    }
+    
+    // Country / Speed Heuristics
+    if (desc.includes('india')) {
+      profile.rate = 0.85; // slightly slower, deliberate
+    } else if (desc.includes('america') || desc.includes('usa') || desc.includes('uk')) {
+      profile.rate = 1.05; // slightly faster, peppy
+    } else if (desc.includes('china') || desc.includes('taiwan')) {
+      profile.rate = 1.15; // fast, high cadence
+    } else {
+      profile.rate = 1.0;
+    }
+    
+    _characterProfiles[name] = profile;
+  }
+}
+
+function playConversation() {
+  const btn = document.getElementById('btn-play-conversation');
+  if (_ttsActive) {
+    stopConversation();
+    return;
+  }
+  
+  parseCharacterProfiles();
+  _ttsQueue = [];
+  
+  const container = document.getElementById('jlpt-lesson-tab-content');
+  const lines = container.querySelectorAll('strong');
+  
+  for (let i = 0; i < lines.length; i++) {
+    const text = lines[i].innerText.trim();
+    if (text.endsWith(':')) {
+      let charName = text.substring(0, text.length - 1).trim();
+      let dialogueNode = lines[i].nextSibling;
+      let dialogueText = '';
+      
+      while (dialogueNode) {
+        if (dialogueNode.nodeName === 'BR' || dialogueNode.nodeName === 'SPAN' || dialogueNode.nodeName === 'STRONG' || dialogueNode.nodeName === 'DIV') {
+          break;
+        }
+        dialogueText += dialogueNode.textContent;
+        dialogueNode = dialogueNode.nextSibling;
+      }
+      
+      dialogueText = dialogueText.trim();
+      if (dialogueText.length > 0) {
+        _ttsQueue.push({ character: charName, text: dialogueText });
+      }
+    }
+  }
+  
+  if (_ttsQueue.length === 0) {
+    alert("No conversation lines found on this page!");
+    return;
+  }
+  
+  _ttsActive = true;
+  _ttsIndex = 0;
+  if (btn) btn.innerHTML = '⏸ Stop Conversation';
+  playNextLine();
+}
+
+function playNextLine() {
+  if (!_ttsActive || _ttsIndex >= _ttsQueue.length) {
+    stopConversation();
+    return;
+  }
+  
+  const line = _ttsQueue[_ttsIndex];
+  const profile = _characterProfiles[line.character] || { pitch: 1.0, rate: 1.0 };
+  
+  const msg = new SpeechSynthesisUtterance(line.text);
+  msg.lang = 'ja-JP';
+  msg.pitch = profile.pitch;
+  msg.rate = profile.rate;
+  
+  msg.onend = function() {
+    _ttsIndex++;
+    // Small natural pause between speakers
+    setTimeout(playNextLine, 600);
+  };
+  
+  msg.onerror = function(e) {
+    console.error("TTS Error:", e);
+    _ttsIndex++;
+    playNextLine();
+  };
+  
+  window.speechSynthesis.speak(msg);
+}
+// --- END CONVERSATION TTS LOGIC ---
 </script>
 
 <!-- Camera Modal -->
