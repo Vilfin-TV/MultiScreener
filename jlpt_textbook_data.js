@@ -4560,3 +4560,487 @@ const JLPT_TEXTBOOK = {
     ]
   }
 };
+
+
+const DICTIONARY_DATA = [
+  {
+    "ja": "おはようございます",
+    "en": "Good morning"
+  },
+  {
+    "ja": "お疲れ様です",
+    "en": "Good work today"
+  },
+  {
+    "ja": "お世話になっております",
+    "en": "Thank you for your continued support"
+  },
+  {
+    "ja": "よろしくお願いします",
+    "en": "I look forward to working with you"
+  },
+  {
+    "ja": "申し訳ございません",
+    "en": "I am very sorry"
+  },
+  {
+    "ja": "ありがとうございます",
+    "en": "Thank you"
+  },
+  {
+    "ja": "失礼いたします",
+    "en": "Excuse me"
+  },
+  {
+    "ja": "かしこまりました",
+    "en": "Certainly"
+  },
+  {
+    "ja": "承知いたしました",
+    "en": "Understood"
+  },
+  {
+    "ja": "少々お待ちください",
+    "en": "Please wait a moment"
+  },
+  {
+    "ja": "お待たせいたしました",
+    "en": "Sorry to keep you waiting"
+  },
+  {
+    "ja": "確認いたします",
+    "en": "I will check"
+  },
+  {
+    "ja": "ご対応ありがとうございます",
+    "en": "Thank you for your response"
+  },
+  {
+    "ja": "お手数をおかけします",
+    "en": "Sorry to trouble you"
+  },
+  {
+    "ja": "恐れ入りますが",
+    "en": "Excuse me, but"
+  },
+  {
+    "ja": "会社",
+    "en": "Company"
+  },
+  {
+    "ja": "仕事",
+    "en": "Work"
+  },
+  {
+    "ja": "会議",
+    "en": "Meeting"
+  },
+  {
+    "ja": "名刺",
+    "en": "Business card"
+  },
+  {
+    "ja": "書類",
+    "en": "Document"
+  },
+  {
+    "ja": "資料",
+    "en": "Materials"
+  },
+  {
+    "ja": "企画",
+    "en": "Project plan"
+  },
+  {
+    "ja": "報告",
+    "en": "Report"
+  },
+  {
+    "ja": "連絡",
+    "en": "Contact"
+  },
+  {
+    "ja": "相談",
+    "en": "Discussion"
+  },
+  {
+    "ja": "上司",
+    "en": "Boss"
+  },
+  {
+    "ja": "部下",
+    "en": "Subordinate"
+  },
+  {
+    "ja": "同僚",
+    "en": "Colleague"
+  },
+  {
+    "ja": "お客様",
+    "en": "Customer"
+  },
+  {
+    "ja": "取引先",
+    "en": "Business partner"
+  },
+  {
+    "ja": "電話",
+    "en": "Telephone"
+  },
+  {
+    "ja": "メール",
+    "en": "Email"
+  },
+  {
+    "ja": "パソコン",
+    "en": "PC"
+  },
+  {
+    "ja": "予定",
+    "en": "Schedule"
+  },
+  {
+    "ja": "納期",
+    "en": "Deadline"
+  },
+  {
+    "ja": "見積もり",
+    "en": "Estimate"
+  },
+  {
+    "ja": "契約",
+    "en": "Contract"
+  },
+  {
+    "ja": "営業",
+    "en": "Sales"
+  },
+  {
+    "ja": "人事",
+    "en": "Human Resources"
+  },
+  {
+    "ja": "経理",
+    "en": "Accounting"
+  },
+  {
+    "ja": "します",
+    "en": "To do"
+  },
+  {
+    "ja": "行きます",
+    "en": "To go"
+  },
+  {
+    "ja": "来ます",
+    "en": "To come"
+  },
+  {
+    "ja": "帰ります",
+    "en": "To return home"
+  },
+  {
+    "ja": "見ます",
+    "en": "To see"
+  },
+  {
+    "ja": "聞きます",
+    "en": "To listen"
+  },
+  {
+    "ja": "話します",
+    "en": "To speak"
+  },
+  {
+    "ja": "読みます",
+    "en": "To read"
+  },
+  {
+    "ja": "書きます",
+    "en": "To write"
+  },
+  {
+    "ja": "食べます",
+    "en": "To eat"
+  },
+  {
+    "ja": "飲みます",
+    "en": "To drink"
+  },
+  {
+    "ja": "買います",
+    "en": "To buy"
+  },
+  {
+    "ja": "使います",
+    "en": "To use"
+  },
+  {
+    "ja": "作ります",
+    "en": "To make"
+  },
+  {
+    "ja": "考えます",
+    "en": "To think"
+  },
+  {
+    "ja": "教えます",
+    "en": "To teach"
+  },
+  {
+    "ja": "調べます",
+    "en": "To look up"
+  },
+  {
+    "ja": "送ります",
+    "en": "To send"
+  },
+  {
+    "ja": "もらいます",
+    "en": "To receive"
+  },
+  {
+    "ja": "待ちます",
+    "en": "To wait"
+  },
+  {
+    "ja": "今日",
+    "en": "Today"
+  },
+  {
+    "ja": "明日",
+    "en": "Tomorrow"
+  },
+  {
+    "ja": "昨日",
+    "en": "Yesterday"
+  },
+  {
+    "ja": "今週",
+    "en": "This week"
+  },
+  {
+    "ja": "来週",
+    "en": "Next week"
+  },
+  {
+    "ja": "先週",
+    "en": "Last week"
+  },
+  {
+    "ja": "今年",
+    "en": "This year"
+  },
+  {
+    "ja": "来年",
+    "en": "Next year"
+  },
+  {
+    "ja": "時間",
+    "en": "Time"
+  },
+  {
+    "ja": "分",
+    "en": "Minute"
+  },
+  {
+    "ja": "半",
+    "en": "Half past"
+  },
+  {
+    "ja": "午前",
+    "en": "AM"
+  },
+  {
+    "ja": "午後",
+    "en": "PM"
+  },
+  {
+    "ja": "平日",
+    "en": "Weekday"
+  },
+  {
+    "ja": "週末",
+    "en": "Weekend"
+  },
+  {
+    "ja": "月曜日",
+    "en": "Monday"
+  },
+  {
+    "ja": "火曜日",
+    "en": "Tuesday"
+  },
+  {
+    "ja": "水曜日",
+    "en": "Wednesday"
+  },
+  {
+    "ja": "木曜日",
+    "en": "Thursday"
+  },
+  {
+    "ja": "金曜日",
+    "en": "Friday"
+  },
+  {
+    "ja": "電車",
+    "en": "Train"
+  },
+  {
+    "ja": "駅",
+    "en": "Station"
+  },
+  {
+    "ja": "切符",
+    "en": "Ticket"
+  },
+  {
+    "ja": "定期券",
+    "en": "Commuter pass"
+  },
+  {
+    "ja": "家",
+    "en": "Home"
+  },
+  {
+    "ja": "店",
+    "en": "Shop"
+  },
+  {
+    "ja": "コンビニ",
+    "en": "Convenience store"
+  },
+  {
+    "ja": "スーパー",
+    "en": "Supermarket"
+  },
+  {
+    "ja": "買い物",
+    "en": "Shopping"
+  },
+  {
+    "ja": "お金",
+    "en": "Money"
+  },
+  {
+    "ja": "現金",
+    "en": "Cash"
+  },
+  {
+    "ja": "クレジットカード",
+    "en": "Credit card"
+  },
+  {
+    "ja": "領収書",
+    "en": "Receipt"
+  },
+  {
+    "ja": "レシート",
+    "en": "Casual receipt"
+  },
+  {
+    "ja": "水",
+    "en": "Water"
+  },
+  {
+    "ja": "ご飯",
+    "en": "Meal"
+  },
+  {
+    "ja": "病院",
+    "en": "Hospital"
+  },
+  {
+    "ja": "薬",
+    "en": "Medicine"
+  },
+  {
+    "ja": "右",
+    "en": "Right"
+  },
+  {
+    "ja": "左",
+    "en": "Left"
+  },
+  {
+    "ja": "高い",
+    "en": "Expensive"
+  },
+  {
+    "ja": "安い",
+    "en": "Cheap"
+  },
+  {
+    "ja": "新しい",
+    "en": "New"
+  },
+  {
+    "ja": "古い",
+    "en": "Old"
+  },
+  {
+    "ja": "良い",
+    "en": "Good"
+  },
+  {
+    "ja": "悪い",
+    "en": "Bad"
+  },
+  {
+    "ja": "大きい",
+    "en": "Big"
+  },
+  {
+    "ja": "小さい",
+    "en": "Small"
+  },
+  {
+    "ja": "難しい",
+    "en": "Difficult"
+  },
+  {
+    "ja": "簡単",
+    "en": "Easy"
+  },
+  {
+    "ja": "忙しい",
+    "en": "Busy"
+  },
+  {
+    "ja": "早い",
+    "en": "Early"
+  },
+  {
+    "ja": "遅い",
+    "en": "Late"
+  },
+  {
+    "ja": "美味しい",
+    "en": "Delicious"
+  },
+  {
+    "ja": "暑い",
+    "en": "Hot weather"
+  },
+  {
+    "ja": "寒い",
+    "en": "Cold weather"
+  },
+  {
+    "ja": "便利",
+    "en": "Convenient"
+  },
+  {
+    "ja": "不便",
+    "en": "Inconvenient"
+  },
+  {
+    "ja": "大丈夫",
+    "en": "Okay"
+  },
+  {
+    "ja": "本当",
+    "en": "True"
+  }
+];
