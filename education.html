@@ -2461,7 +2461,8 @@ function renderLessonTabContent() {
         + '    <div class="trans-actions">'
         + '      <label class="trans-action-btn" style="cursor:pointer; margin-right:8px;">📁 Upload File <input type="file" style="display:none;" onchange="handleTransFileUpload(event)" accept=".txt,.js,.json,.html,.md,.csv,.jpg,.jpeg,.png,.docx"></label>'
         + '      <button class="trans-action-btn" style="margin-right:8px;" onclick="openCameraModal()">📷 Camera</button>'
-        + '      <button id="trans-voice-btn" class="trans-action-btn" onclick="startTranslationVoice()">🎤 Voice Record</button>'
+        + '      <button id="trans-voice-btn" class="trans-action-btn" style="margin-right:8px;" onclick="startTranslationVoice()">🎤 Voice Record</button>'
+        + '      <button class="trans-action-btn" style="color:var(--red);" onclick="clearTranslationInput()">🗑️ Clear</button>'
         + '    </div>'
         + '  </div>'
         + '  <div class="trans-box">'
@@ -3660,6 +3661,14 @@ function playNextDictItem() {
   window.speechSynthesis.speak(msg);
 }
 // --- END JAP-ENG DICTIONARY LOGIC ---
+
+function clearTranslationInput() {
+  const input = document.getElementById('trans-input');
+  if (input) {
+    input.value = '';
+    doTranslation(); // Clear the output block
+  }
+}
 </script>
 
 <!-- Camera Modal -->
