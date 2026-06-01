@@ -114,6 +114,13 @@
   .dim-btn svg{width:14px;height:14px}
   .dim-btn:hover{color:var(--text)}
   .dim-btn.active{background:var(--accent-soft);border-color:var(--accent);color:var(--text)}
+  .hide-col{width:24px;height:24px;border-radius:7px;color:var(--text-faint);font-size:13px;display:grid;place-items:center;flex-shrink:0;transition:var(--t-fast)}
+  .hide-col:hover{background:var(--surface-3);color:var(--danger)}
+  .col-reveal{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:46px;border-right:1px solid var(--border);background:var(--surface);color:var(--text-dim);transition:var(--t-fast)}
+  .col-reveal:hover{background:var(--surface-2);color:var(--text)}
+  .col-reveal .rv-ico{font-size:18px}
+  .col-reveal .rv-txt{writing-mode:vertical-rl;transform:rotate(180deg);font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:700}
+  .mini-link{color:var(--accent-2);font-weight:600;font-size:12.5px;text-decoration:underline;cursor:pointer}
 
   .col-search{margin:10px;padding:9px 11px;background:var(--bg);border:1px solid var(--border-strong);border-radius:9px;color:var(--text);font-size:13px}
   .col-search:focus{outline:none;border-color:var(--accent)}
@@ -313,15 +320,24 @@
         <div class="list" id="dim-list"></div>
       </div>
 
-      <!-- FILTER 2: Language -->
+      <!-- FILTER 2: Language / Favorites toggle (hideable) -->
       <div class="col" id="col-lang">
         <div class="col-head">
-          <span class="ch-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M9 3v2m1.5 0c0 4-3 8-6.5 9M5 9c0 3 4 5 7 5"/><path d="M13 19l4-9 4 9M14.5 16h5"/></svg></span>
-          <h3>Language</h3>
+          <span class="ch-ico" id="lang2-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M9 3v2m1.5 0c0 4-3 8-6.5 9M5 9c0 3 4 5 7 5"/><path d="M13 19l4-9 4 9M14.5 16h5"/></svg></span>
+          <h3 id="lang2-title">Language</h3>
+          <button class="hide-col" id="lang2-hide" title="Hide this panel" aria-label="Hide panel">✕</button>
+        </div>
+        <div class="dim-toggle" style="border-top:1px solid var(--border)">
+          <button class="dim-btn active" id="m2-language" data-mode="language"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M9 3v2m1.5 0c0 4-3 8-6.5 9M5 9c0 3 4 5 7 5"/><path d="M13 19l4-9 4 9M14.5 16h5"/></svg>Language</button>
+          <button class="dim-btn" id="m2-favorites" data-mode="favorites"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15 9 22 9.3 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.3 9 9"/></svg>Favorites</button>
         </div>
         <input class="col-search" id="lang-search" placeholder="Search…" autocomplete="off">
         <div class="list" id="lang-list"></div>
       </div>
+      <!-- collapsed strip to re-show the hidden panel -->
+      <button class="col-reveal" id="lang2-reveal" style="display:none" title="Show Language / Favorites panel">
+        <span class="rv-ico">🗣️</span><span class="rv-txt">Language / Favorites</span>
+      </button>
     </div>
     <div class="rail-backdrop" id="rail-backdrop"></div>
 
@@ -432,7 +448,7 @@
     token:sessionStorage.getItem(TOKEN_KEY)||null,
     provider:null, channels:[], filtered:[], currentChannel:null, currentIndex:-1,
     hls:null, renderCount:PAGE, favs:loadFavs(), prefs:loadPrefs(),
-    dim:"country",
+    dim:"country", mode2:"language", langHidden:false,
     filter:{country:"",category:"",language:"",search:"",favOnly:false}
   };
 
@@ -559,16 +575,71 @@
     }).join("");
     bindOpts(host);
   }
+  function langCount(){return tally("language").length;}
   function renderLangList(q){
     var host=$("lang-list");
+    if(state.mode2==="favorites"){renderFavList(q);return;}
     var items=tally("language"), f=(q||"").toLowerCase();
     var shown=f?items.filter(function(i){return i.key.toLowerCase().indexOf(f)!==-1;}):items;
-    if(!shown.length){host.innerHTML='<div class="col-empty">None</div>';return;}
+    if(!shown.length){
+      var hasFav=state.favs.size>0;
+      host.innerHTML='<div class="col-empty">No language data in this playlist.'+
+        (hasFav?'<br><br><button class="mini-link" id="lang-gofav">★ Switch to Favorites</button>':'')+'</div>';
+      var gf=$("lang-gofav"); if(gf) gf.addEventListener("click",function(){setMode2("favorites");});
+      return;
+    }
     host.innerHTML=shown.slice(0,500).map(function(i){
       var active=state.filter.language===i.key?" active":"";
       return '<div class="opt'+active+'" data-kind="language" data-key="'+esc(i.key)+'"><span class="o-ico">'+LANG_ICON+'</span><span class="o-name">'+esc(i.key)+'</span><span class="o-count">'+i.count+'</span></div>';
     }).join("");
     bindOpts(host);
+  }
+  function renderFavList(q){
+    var host=$("lang-list");
+    var favCh=state.channels.filter(function(c){return state.favs.has(favKey(c));});
+    var f=(q||"").toLowerCase();
+    if(f)favCh=favCh.filter(function(c){return c.name.toLowerCase().indexOf(f)!==-1;});
+    if(!favCh.length){host.innerHTML='<div class="col-empty"><div class="big">★</div>No favorites yet.<br>Tap the ☆ on any channel to add it here.</div>';return;}
+    host.innerHTML=favCh.slice(0,500).map(function(c){
+      return '<div class="opt" data-favurl="'+esc(favKey(c))+'"><span class="o-ico">'+(c.logo?'<img src="'+esc(c.logo)+'" style="width:100%;height:100%;border-radius:6px;object-fit:cover" onerror="this.outerHTML=\'📺\'"/>':'📺')+'</span><span class="o-name">'+esc(c.name)+'</span><span class="star on" style="font-size:13px">★</span></div>';
+    }).join("");
+    Array.prototype.forEach.call(host.querySelectorAll(".opt"),function(el){
+      el.addEventListener("click",function(){
+        var key=el.getAttribute("data-favurl");
+        var idx=state.filtered.findIndex(function(c){return favKey(c)===key;});
+        if(idx>=0){playIndex(idx);closeRailMobile();return;}
+        // not in current filtered view → play directly from full list
+        var ch=state.channels.filter(function(c){return favKey(c)===key;})[0];
+        if(ch){state.filtered=[ch];state.currentIndex=0;state.currentChannel=ch;renderList();openPlayer(ch,0);closeRailMobile();}
+      });
+    });
+  }
+  function setMode2(mode){
+    state.mode2=mode; state.prefs.mode2=mode; savePrefs();
+    $("m2-language").classList.toggle("active",mode==="language");
+    $("m2-favorites").classList.toggle("active",mode==="favorites");
+    $("lang2-title").textContent=(mode==="favorites"?"Favorites":"Language");
+    $("lang2-ico").innerHTML=(mode==="favorites"
+      ?'<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15 9 22 9.3 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.3 9 9"/></svg>'
+      :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M9 3v2m1.5 0c0 4-3 8-6.5 9M5 9c0 3 4 5 7 5"/><path d="M13 19l4-9 4 9M14.5 16h5"/></svg>');
+    $("lang-search").placeholder=(mode==="favorites"?"Search favorites…":"Search language…");
+    renderLangList($("lang-search").value);
+  }
+  $("m2-language").addEventListener("click",function(){setMode2("language");});
+  $("m2-favorites").addEventListener("click",function(){setMode2("favorites");});
+  $("lang2-hide").addEventListener("click",function(){hideLang2(true);});
+  $("lang2-reveal").addEventListener("click",function(){hideLang2(false);});
+  function hideLang2(hidden){
+    state.langHidden=hidden; state.prefs.langHidden=hidden; savePrefs();
+    $("col-lang").style.display=hidden?"none":"";
+    $("lang2-reveal").style.display=hidden?"":"none";
+    // shrink the 2nd grid track to a thin strip when collapsed (desktop only)
+    var lay=document.querySelector(".layout");
+    if(lay&&window.innerWidth>1000){
+      lay.style.gridTemplateColumns=hidden
+        ? "var(--col1) 46px var(--col3) 1fr"
+        : "";
+    }
   }
   function bindOpts(host){
     Array.prototype.forEach.call(host.querySelectorAll(".opt"),function(el){
@@ -602,7 +673,13 @@
     $("dim-country").classList.toggle("active",state.dim==="country");
     $("dim-category").classList.toggle("active",state.dim==="category");
     $("dim-search").placeholder=(state.dim==="country"?"Search country…":"Search category…");
-    renderDimList("");renderLangList("");
+    // Panel-2 mode: respect saved pref, else auto-pick Favorites when the
+    // playlist carries no language data (so the panel is never just "None").
+    var savedMode=p.mode2;
+    if(savedMode!=="language"&&savedMode!=="favorites"){savedMode=(langCount()===0)?"favorites":"language";}
+    hideLang2(!!p.langHidden);
+    setMode2(savedMode);
+    renderDimList("");
     if(hasAnyFilter()){applyFilters();}
     else{state.filtered=[];$("channel-list").innerHTML="";$("empty-state").style.display="none";
       $("prompt-state").style.display="block";$("load-more").style.display="none";
@@ -684,7 +761,9 @@
     var c=state.filtered[idx];if(!c)return;var k=favKey(c);
     if(state.favs.has(k)){state.favs.delete(k);el.classList.remove("on");el.textContent="☆";}
     else{state.favs.add(k);el.classList.add("on");el.textContent="★";toast("Added to favorites");}
-    saveFavs();if(state.filter.favOnly)applyFilters();
+    saveFavs();
+    if(state.filter.favOnly)applyFilters();
+    if(state.mode2==="favorites"&&!state.langHidden)renderFavList($("lang-search").value);
   }
 
   /* ---------- Playback ---------- */
