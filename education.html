@@ -394,6 +394,7 @@ a{color:inherit;text-decoration:none}
   display: grid;
   grid-template-columns: 1.6fr 1fr;
   gap: 20px;
+  align-items: start;
 }
 @media(max-width: 850px) {
   .kana-layout { grid-template-columns: 1fr; }
@@ -898,6 +899,20 @@ a{color:inherit;text-decoration:none}
         <div class="kana-game-char" id="kana-game-question">あ</div>
         <p class="study-lead" style="font-size:16px; margin-bottom:8px; text-align:center;">Identify the correct romaji syllable sound:</p>
         <div class="jlpt-options" id="kana-game-options" style="margin-bottom:0;">
+        </div>
+      </div>
+      
+      <!-- Academy YouTube Panel -->
+      <div class="kana-game-box" style="margin-top:20px; padding:0; overflow:hidden; border:1px solid var(--border2);">
+        <div class="kana-score-row" style="padding:12px 16px; border-bottom:1px solid var(--border2); margin-bottom:0;">
+          <span id="academy-video-header">LANGUAGE ACADEMY VIDEOS</span>
+        </div>
+        <iframe id="academy-video-iframe" 
+                style="width:100%; aspect-ratio:16/9; border:none; display:block; background:#000;" 
+                allow="autoplay; encrypted-media; picture-in-picture" 
+                allowfullscreen></iframe>
+        <div id="academy-video-list" style="max-height:240px; overflow-y:auto; background:var(--card); scrollbar-width:thin;">
+          <!-- Dynamically populated by JS -->
         </div>
       </div>
     </div>
@@ -3684,6 +3699,74 @@ function clearTranslationInput() {
     doTranslation(); // Clear the output block
   }
 }
+
+// --- ACADEMY VIDEO LOGIC ---
+let _academyHiragana = [];
+let _academyKatakana = [];
+
+async function fetchAcademyVideos() {
+  try {
+    // For testing/fallback as requested by user
+    _academyHiragana = [{ id: '6p9Il_j0zjc', title: 'Hiragana Lesson' }];
+    _academyKatakana = [{ id: 's6DKRgtVLGA', title: 'Katakana Lesson' }];
+    
+    const res = await fetch('https://vilfintv.com/config.json?t=' + Date.now());
+    if (res.ok) {
+      const data = await res.json();
+      if (data.academy_hiragana) _academyHiragana = data.academy_hiragana;
+      if (data.academy_katakana) _academyKatakana = data.academy_katakana;
+    }
+  } catch (e) {
+    console.error('Failed to load Academy videos:', e);
+  }
+  renderAcademyVideoList();
+}
+
+function renderAcademyVideoList() {
+  const listContainer = document.getElementById('academy-video-list');
+  const iframe = document.getElementById('academy-video-iframe');
+  if (!listContainer || !iframe) return;
+  
+  const videos = _activeKanaType === 'hiragana' ? _academyHiragana : _academyKatakana;
+  
+  if (!videos || videos.length === 0) {
+    listContainer.innerHTML = '<div style="padding:16px; color:var(--text3); text-align:center; font-size:12px;">No videos added yet. Add them in the Console.</div>';
+    iframe.src = '';
+    return;
+  }
+  
+  // Set the first video as default if none is playing
+  const currentVideoId = iframe.src.match(/embed\/([^?]+)/);
+  if (!currentVideoId || !videos.find(v => v.id === currentVideoId[1])) {
+    playAcademyVideo(videos[0].id);
+  }
+  
+  let html = '';
+  videos.forEach(v => {
+    html += '<div class="bl-row" style="padding:10px 16px; border-bottom:1px solid var(--border2); cursor:pointer;" onclick="playAcademyVideo(\\'' + v.id + '\\')">'
+          + '  <div class="bl-name" style="font-size:13px;">' + esc(v.title || v.name || 'Academy Video') + '</div>'
+          + '</div>';
+  });
+  listContainer.innerHTML = html;
+}
+
+function playAcademyVideo(id) {
+  const iframe = document.getElementById('academy-video-iframe');
+  if (iframe) {
+    iframe.src = 'https://www.youtube.com/embed/' + id + '?autoplay=1&rel=0';
+  }
+}
+
+// Hook into existing toggle function
+const originalToggleKanaType = toggleKanaType;
+toggleKanaType = function(type) {
+  originalToggleKanaType(type);
+  renderAcademyVideoList();
+};
+
+// Auto-fetch on load
+setTimeout(fetchAcademyVideos, 500);
+
 </script>
 
 <!-- Camera Modal -->

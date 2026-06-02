@@ -1427,64 +1427,129 @@
 
     <!-- ══ ACADEMY TAB ══ -->
     <div class="c-panel" id="tab-academy">
-      <div class="content-body">
-
-        <!-- Left: Publish a notice -->
-        <div class="content-form-panel">
-          <div class="edit-mode-banner" id="ac-edit-banner">✏️ Editing notice — change the fields and click Update.</div>
-          <label class="field-label" for="ac-type">Notice Type</label>
-          <select id="ac-type">
-            <option value="academy_notice">📢 General Notice / Announcement</option>
-            <option value="academy_cbse">📗 CBSE Update</option>
-            <option value="academy_jlpt">🇯🇵 JLPT Update</option>
-          </select>
-
-          <label class="field-label" for="ac-heading">Headline / Title</label>
-          <input type="text" id="ac-heading" placeholder="Enter notice headline…"
-                 maxlength="200" autocomplete="off" spellcheck="true">
-
-          <label class="field-label" for="ac-story">Notice Body</label>
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
-            <input type="file" id="ac-doc-file" style="display:none" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" data-status="ac-doc-status" data-heading="ac-heading" data-body="ac-story" onchange="handleDocUpload(this)">
-            <button type="button" class="btn-upload" onclick="document.getElementById('ac-doc-file').click()">📄 Import from document (PDF · Word · PPT · txt)</button>
-            <span id="ac-doc-status" style="font-size:12px;color:#b9b9cc"></span>
-          </div>
-          <textarea id="ac-story" placeholder="Full text of the notice. E.g. Exam schedule update, new content available, important announcement…" maxlength="2000" rows="6" spellcheck="true"></textarea>
-
-          <label class="field-label" for="ac-photo">Banner Image <span style="opacity:.4;font-weight:400">(optional — paste a URL or upload)</span></label>
-          <div class="photo-preview-wrap">
-            <input type="url" id="ac-photo" placeholder="https://… or upload below"
-                   autocomplete="off" oninput="previewAcademyPhoto(this.value)">
-            <div class="upload-row">
-              <input type="file" id="ac-file" class="file-input" accept="image/*" onchange="handlePhotoUpload(this,'ac')">
-              <button type="button" class="btn-upload" id="ac-upload-btn" onclick="document.getElementById('ac-file').click()">⬆ Upload image</button>
-              <span class="upload-hint">JPEG · PNG · WebP · GIF · max 8 MB</span>
-            </div>
-            <img id="ac-photo-preview" class="photo-preview" src="" alt="Preview"
-                 onerror="this.classList.remove('visible')">
-          </div>
-
-          <label class="field-label" for="ac-days">Visible for (days)</label>
-          <input type="number" id="ac-days" placeholder="7" min="1" max="90" value="7">
-
-          <button class="btn-primary" id="ac-publish-btn" onclick="publishAcademy()">📢 Publish Notice</button>
-          <button class="btn-cancel-edit" id="ac-cancel-btn" style="display:none" onclick="cancelAcademyEdit()">Cancel edit</button>
-          <div class="form-status" id="ac-form-status"></div>
-        </div>
-
-        <!-- Right: Published notices manager -->
-        <div class="content-panel-right">
-          <div class="content-panel-hdr">
-            <div class="content-panel-title">Published Notices</div>
-            <span class="count-badge" id="ac-count-badge">—</span>
-          </div>
-          <div class="content-list" id="academy-list">
-            <div class="empty-note">Loading…</div>
-          </div>
-          <div class="ci-status" id="ac-status"></div>
-        </div>
-
+      
+      <!-- Sub-tab bar -->
+      <div class="hp-subtabs">
+        <div class="ac-stab hp-stab active" data-stab="notices" onclick="switchAcademyTab('notices')">📢 Notices</div>
+        <div class="ac-stab hp-stab" data-stab="hiragana" onclick="switchAcademyTab('hiragana')">🇯🇵 Hiragana Videos</div>
+        <div class="ac-stab hp-stab" data-stab="katakana" onclick="switchAcademyTab('katakana')">🇯🇵 Katakana Videos</div>
       </div>
+      
+      <!-- Toolbar -->
+      <div class="hp-toolbar">
+        <div class="hp-dirty-badge ac-dirty-badge" id="ac-dirty-badge">Unsaved Changes</div>
+        <div class="hp-save-status" id="ac-save-status"></div>
+        <button class="hp-save-btn" id="ac-save-btn" onclick="saveConfig()" disabled>💾 Save to Site</button>
+      </div>
+
+      <!-- Notices Panel (Existing Academy Content) -->
+      <div class="ac-spanel hp-spanel active" id="ac-notices">
+        <div class="content-body">
+          <!-- Left: Publish a notice -->
+          <div class="content-form-panel">
+            <div class="edit-mode-banner" id="ac-edit-banner">✏️ Editing notice — change the fields and click Update.</div>
+            <label class="field-label" for="ac-type">Notice Type</label>
+            <select id="ac-type">
+              <option value="academy_notice">📢 General Notice / Announcement</option>
+              <option value="academy_cbse">📗 CBSE Update</option>
+              <option value="academy_jlpt">🇯🇵 JLPT Update</option>
+            </select>
+
+            <label class="field-label" for="ac-heading">Headline / Title</label>
+            <input type="text" id="ac-heading" placeholder="Enter notice headline…"
+                   maxlength="200" autocomplete="off" spellcheck="true">
+
+            <label class="field-label" for="ac-story">Notice Body</label>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+              <input type="file" id="ac-doc-file" style="display:none" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" data-status="ac-doc-status" data-heading="ac-heading" data-body="ac-story" onchange="handleDocUpload(this)">
+              <button type="button" class="btn-upload" onclick="document.getElementById('ac-doc-file').click()">📄 Import from document (PDF · Word · PPT · txt)</button>
+              <span id="ac-doc-status" style="font-size:12px;color:#b9b9cc"></span>
+            </div>
+            <textarea id="ac-story" placeholder="Full text of the notice. E.g. Exam schedule update, new content available, important announcement…" maxlength="2000" rows="6" spellcheck="true"></textarea>
+
+            <label class="field-label" for="ac-photo">Banner Image <span style="opacity:.4;font-weight:400">(optional — paste a URL or upload)</span></label>
+            <div class="photo-preview-wrap">
+              <input type="url" id="ac-photo" placeholder="https://… or upload below"
+                     autocomplete="off" oninput="previewAcademyPhoto(this.value)">
+              <div class="upload-row">
+                <input type="file" id="ac-file" class="file-input" accept="image/*" onchange="handlePhotoUpload(this,'ac')">
+                <button type="button" class="btn-upload" id="ac-upload-btn" onclick="document.getElementById('ac-file').click()">⬆ Upload image</button>
+                <span class="upload-hint">JPEG · PNG · WebP · GIF · max 8 MB</span>
+              </div>
+              <img id="ac-photo-preview" class="photo-preview" src="" alt="Preview"
+                   onerror="this.classList.remove('visible')">
+            </div>
+
+            <label class="field-label" for="ac-days">Visible for (days)</label>
+            <input type="number" id="ac-days" placeholder="7" min="1" max="90" value="7">
+
+            <button class="btn-primary" id="ac-publish-btn" onclick="publishAcademy()">📢 Publish Notice</button>
+            <button class="btn-cancel-edit" id="ac-cancel-btn" style="display:none" onclick="cancelAcademyEdit()">Cancel edit</button>
+            <div class="form-status" id="ac-form-status"></div>
+          </div>
+
+          <!-- Right: Published notices manager -->
+          <div class="content-panel-right">
+            <div class="content-panel-hdr">
+              <div class="content-panel-title">Published Notices</div>
+              <span class="count-badge" id="ac-count-badge">—</span>
+            </div>
+            <div class="content-list" id="academy-list">
+              <div class="empty-note">Loading…</div>
+            </div>
+            <div class="ci-status" id="ac-status"></div>
+          </div>
+        </div>
+      </div><!-- /ac-notices -->
+
+      <!-- Hiragana Videos Panel -->
+      <div class="ac-spanel hp-spanel" id="ac-hiragana">
+        <div class="hp-body">
+          <div class="hp-form-panel">
+            <label class="field-label" for="hira-id">YouTube Video ID</label>
+            <input type="text" id="hira-id" placeholder="e.g. dQw4w9WgXcQ" autocomplete="off" spellcheck="false">
+            <label class="field-label" for="hira-title">Video Title</label>
+            <input type="text" id="hira-title" placeholder="e.g. Learn Hiragana Basic Vowels" autocomplete="off" spellcheck="false">
+            <button class="btn-primary" onclick="addAcademyVideo('hiragana')">Add Hiragana Video</button>
+            <div class="form-status" id="hira-status"></div>
+          </div>
+          <div class="hp-list-panel">
+            <div class="hp-section-hdr">
+              <div class="hp-section-title">Hiragana Video Playlist</div>
+              <div class="hp-section-count" id="hira-count">0</div>
+            </div>
+            <div class="hp-section-divider"></div>
+            <div class="hp-list" id="hira-video-list">
+              <div class="empty-note">No videos added.</div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /ac-hiragana -->
+
+      <!-- Katakana Videos Panel -->
+      <div class="ac-spanel hp-spanel" id="ac-katakana">
+        <div class="hp-body">
+          <div class="hp-form-panel">
+            <label class="field-label" for="kata-id">YouTube Video ID</label>
+            <input type="text" id="kata-id" placeholder="e.g. dQw4w9WgXcQ" autocomplete="off" spellcheck="false">
+            <label class="field-label" for="kata-title">Video Title</label>
+            <input type="text" id="kata-title" placeholder="e.g. Learn Katakana Words" autocomplete="off" spellcheck="false">
+            <button class="btn-primary" onclick="addAcademyVideo('katakana')">Add Katakana Video</button>
+            <div class="form-status" id="kata-status"></div>
+          </div>
+          <div class="hp-list-panel">
+            <div class="hp-section-hdr">
+              <div class="hp-section-title">Katakana Video Playlist</div>
+              <div class="hp-section-count" id="kata-count">0</div>
+            </div>
+            <div class="hp-section-divider"></div>
+            <div class="hp-list" id="kata-video-list">
+              <div class="empty-note">No videos added.</div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /ac-katakana -->
+
     </div><!-- /tab-academy -->
 
   </div><!-- /console -->
@@ -2523,24 +2588,26 @@ async function loadConfig() {
   renderTickerList();
   renderTickerMobileList();
   renderMarketsGroups();
+  renderAcademyVideos();
 }
 
 /* ── Dirty state ────────────────────────────────────────────────────────────── */
 function setHpDirty(dirty) {
   _hpDirty = dirty;
-  var badge = document.getElementById('hp-dirty-badge');
-  var btn   = document.getElementById('hp-save-btn');
-  if (badge) badge.style.display = dirty ? 'block' : 'none';
-  if (btn)   btn.disabled = !dirty;
+  var badges = [document.getElementById('hp-dirty-badge'), document.getElementById('ac-dirty-badge')];
+  var btns   = [document.getElementById('hp-save-btn'), document.getElementById('ac-save-btn')];
+  badges.forEach(b => { if(b) b.style.display = dirty ? 'block' : 'none'; });
+  btns.forEach(b => { if(b) b.disabled = !dirty; });
   if (!dirty) setHpSaveStatus('', '');
 }
 function markHpDirty() { setHpDirty(true); }
 
 /* ── Save config ────────────────────────────────────────────────────────────── */
 async function saveConfig() {
-  var btn = document.getElementById('hp-save-btn');
-  btn.disabled    = true;
-  btn.textContent = '⏳ Saving…';
+  var btns = [document.getElementById('hp-save-btn'), document.getElementById('ac-save-btn')];
+  btns.forEach(b => {
+    if(b) { b.disabled = true; b.textContent = '⏳ Saving…'; }
+  });
   setHpSaveStatus('', '');
   try {
     var res  = await authFetch(WORKER + '/api/update-config', {
@@ -2551,25 +2618,30 @@ async function saveConfig() {
     if (res.ok && data.ok) {
       setHpDirty(false);
       setHpSaveStatus('ok', '✓ Saved! Changes are live on the site.');
-      btn.textContent = '💾 Save to Site';
+      btns.forEach(b => { if(b) b.textContent = '💾 Save to Site'; });
     } else {
       setHpSaveStatus('err', data.message || 'Server error ' + res.status);
-      btn.disabled    = false;
-      btn.textContent = '💾 Save to Site';
+      btns.forEach(b => {
+        if(b) { b.disabled = false; b.textContent = '💾 Save to Site'; }
+      });
     }
   } catch(e) {
     if (e.message !== 'SESSION_EXPIRED') {
       setHpSaveStatus('err', 'Network error: ' + e.message);
     }
-    btn.disabled    = false;
-    btn.textContent = '💾 Save to Site';
+    btns.forEach(b => {
+      if(b) { b.disabled = false; b.textContent = '💾 Save to Site'; }
+    });
   }
 }
 function setHpSaveStatus(t, m) {
-  var e = document.getElementById('hp-save-status');
-  if (!e) return;
-  e.className = 'hp-save-status' + (t ? ' ' + t : '');
-  e.textContent = m;
+  var statuses = [document.getElementById('hp-save-status'), document.getElementById('ac-save-status')];
+  statuses.forEach(e => {
+    if (e) {
+      e.className = 'hp-save-status' + (t ? ' ' + t : '');
+      e.textContent = m;
+    }
+  });
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -2970,6 +3042,71 @@ function addYtChannel() {
   setHpFieldStatus('yt-form-status', 'ok', '✓ Channel added — click Save to Site to publish.');
 }
 
+/* ── Academy Videos Manager (Hiragana & Katakana) ─────────────────────────── */
+function renderAcademyVideos() {
+  ['hiragana', 'katakana'].forEach(function(type) {
+    var arr = type === 'hiragana' ? configState.academy_hiragana : configState.academy_katakana;
+    var listEl  = document.getElementById(type === 'hiragana' ? 'hira-video-list' : 'kata-video-list');
+    var countEl = document.getElementById(type === 'hiragana' ? 'hira-count' : 'kata-count');
+    if (!listEl) return;
+    
+    if (countEl) countEl.textContent = arr.length;
+    
+    if (!arr.length) {
+      listEl.innerHTML = '<div class="empty-note">No videos added yet.</div>';
+      return;
+    }
+    
+    var html = '';
+    arr.forEach(function(vid, i) {
+      var icon = '🇯🇵';
+      html += '<div class="hp-item">'
+            + '  <div class="hp-item-icon">' + icon + '</div>'
+            + '  <div class="hp-item-body">'
+            + '    <div class="hp-item-title">' + esc(vid.title) + '</div>'
+            + '    <div class="hp-item-sub">ID: ' + esc(vid.id) + '</div>'
+            + '  </div>'
+            + '  <div class="hp-item-actions">'
+            + '    <button class="act-btn danger" onclick="removeAcademyVideo(\\'' + type + '\\', ' + i + ')" title="Remove">🗑️</button>'
+            + '  </div>'
+            + '</div>';
+    });
+    listEl.innerHTML = html;
+  });
+}
+
+function addAcademyVideo(type) {
+  var idEl = document.getElementById(type === 'hiragana' ? 'hira-id' : 'kata-id');
+  var titleEl = document.getElementById(type === 'hiragana' ? 'hira-title' : 'kata-title');
+  var statusId = type === 'hiragana' ? 'hira-status' : 'kata-status';
+  
+  var vidId = (idEl.value || '').trim();
+  var vidTitle = (titleEl.value || '').trim();
+  
+  if (!vidId) {
+    setHpFieldStatus(statusId, 'err', 'YouTube Video ID is required.');
+    return;
+  }
+  
+  var arr = type === 'hiragana' ? configState.academy_hiragana : configState.academy_katakana;
+  arr.push({ id: vidId, title: vidTitle || 'Academy Video' });
+  
+  idEl.value = '';
+  titleEl.value = '';
+  setHpFieldStatus(statusId, 'ok', '✓ Video added — click Save to Site to publish.');
+  markHpDirty();
+  renderAcademyVideos();
+}
+
+function removeAcademyVideo(type, idx) {
+  if (!confirm('Remove this ' + type + ' video?')) return;
+  var arr = type === 'hiragana' ? configState.academy_hiragana : configState.academy_katakana;
+  arr.splice(idx, 1);
+  markHpDirty();
+  renderAcademyVideos();
+}
+
+/* ── Custom YT Links ────────────────────────────────────────────────────────── */
 function renderYtList() {
   var listEl = document.getElementById('yt-list');
   var count  = document.getElementById('yt-count');
