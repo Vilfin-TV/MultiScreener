@@ -2626,7 +2626,7 @@ window.playAudioTranscript = function(btn, base64Text) {
   }
   
   if (btn.innerText === 'Playing...') {
-    window.speechSynthesis.cancel();
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
     btn.innerText = 'Play Audio Track';
     return;
   }
@@ -3288,7 +3288,7 @@ let _characterProfiles = {};
 
 function stopConversation() {
   _ttsActive = false;
-  window.speechSynthesis.cancel();
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
   const btn = document.getElementById('btn-play-conversation');
   if (btn) btn.innerHTML = '▶ Play Conversation';
 }
@@ -3617,7 +3617,7 @@ let _dictTtsIndex = 0;
 
 function stopDictPage() {
   _dictTtsActive = false;
-  window.speechSynthesis.cancel();
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
   const btn = document.getElementById('dict-play-page-btn');
   if (btn) btn.innerHTML = '▶ Play Page Words';
 }
@@ -3749,7 +3749,7 @@ function clearTranslationInput() {
       videos.forEach(v => {
         let titleEscaped = v.title || v.name || 'Academy Video';
         if (typeof esc === 'function') titleEscaped = esc(titleEscaped);
-        html += '<div class="bl-row" style="padding:10px 16px; border-bottom:1px solid var(--border2); cursor:pointer;" onclick="playAcademyVideo(\\'' + v.id + '\\')">'
+        html += '<div class="bl-row" style="padding:10px 16px; border-bottom:1px solid var(--border2); cursor:pointer;" onclick="playAcademyVideo(\'' + v.id + '\')">'
               + '  <div class="bl-name" style="font-size:13px;">' + titleEscaped + '</div>'
               + '</div>';
       });
