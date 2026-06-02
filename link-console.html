@@ -96,20 +96,26 @@
     ══════════════════════════════════ */
     #dashboard-view { width: 100%; }
 
-    /* ── Console tabs ── */
+    /* ── Console tabs (swipeable strip) ── */
     .console-tabs {
-      display: flex; gap: 0; border-bottom: 1px solid #162d4a;
+      display: flex; gap: 2px; border-bottom: 1px solid #162d4a;
       background: rgba(0,0,0,.2);
+      overflow-x: auto; flex-wrap: nowrap; scrollbar-width: thin;
+      -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity;
     }
+    .console-tabs::-webkit-scrollbar { height: 4px; }
+    .console-tabs::-webkit-scrollbar-thumb { background: #1e3a5c; border-radius: 4px; }
     .c-tab {
-      padding: 13px 22px; font-size: 11.5px; font-weight: 700;
-      letter-spacing: .4px; color: #4d6a8a; cursor: pointer;
+      flex: 0 0 auto; white-space: nowrap; scroll-snap-align: start;
+      padding: 13px 18px; font-size: 11.5px; font-weight: 700;
+      letter-spacing: .4px; color: #6c86a6; cursor: pointer;
       border-bottom: 2px solid transparent; margin-bottom: -1px;
-      transition: color .15s, border-color .15s; display: flex; align-items: center; gap: 7px;
+      transition: color .15s, border-color .15s, background .15s;
+      display: inline-flex; align-items: center; gap: 7px; line-height: 1;
     }
-    .c-tab:hover { color: #8ea8c8; }
-    .c-tab.active { color: #e2eeff; border-bottom-color: #3b82f6; }
-    .c-tab-icon { font-size: 14px; }
+    .c-tab:hover { color: #8ea8c8; background: rgba(255,255,255,.03); }
+    .c-tab.active { color: #e2eeff; border-bottom-color: #3b82f6; background: rgba(59,130,246,.08); }
+    .c-tab-icon, .c-tab-ico { font-size: 14px; line-height: 1; display: inline-block; }
     .c-panel { display: none; }
     .c-panel.active { display: block; }
 
@@ -680,11 +686,20 @@
     .ticker-mode-badge.custom   { border-color: rgba(99,102,241,.3); color: #818cf8; background: rgba(99,102,241,.08); }
 
     /* ── Mobile ── */
+    @media (max-width: 860px) {
+      /* tab bar: sticky swipeable strip with a fade hint at the right edge */
+      .console-tabs { position: sticky; top: 0; z-index: 20; background: #0a1830; }
+      .c-tab { padding: 12px 15px; }
+    }
     @media (max-width: 640px) {
-      body { padding: 16px 10px 48px; }
-      .brand { margin-bottom: 16px; }
-      .console-hdr { padding: 16px 18px; }
+      body { padding: 12px 8px 48px; }
+      .brand { margin-bottom: 12px; }
+      .console-hdr { padding: 14px 14px; gap: 10px; }
+      .console-icon { width: 34px; height: 34px; font-size: 16px; }
+      .console-title { font-size: 15px; }
+      .console-sub { display: none; }
       .session-user { display: none; }
+      .btn-logout { padding: 8px 12px; font-size: 12px; }
       .console-body { grid-template-columns: 1fr; }
       .content-body { grid-template-columns: 1fr; }
       .content-form-panel { border-right: none; border-bottom: 1px solid #162d4a; }
@@ -694,6 +709,16 @@
       .hp-body { grid-template-columns: 1fr; }
       .hp-form-panel { border-right: none; border-bottom: 1px solid #162d4a; }
       .bl-edit-grid { grid-template-columns: 1fr; }
+      /* report + settings: single column, fluid cards/tables */
+      .rb-cards { grid-template-columns: 1fr 1fr; }
+      .rb-wrap { max-width: 100%; }
+      .perm-grid, .op-tbl { font-size: 12px; }
+      .op-tbl th:nth-child(3), .op-tbl td:nth-child(3) { display: none; }
+      .rb-row { flex-wrap: wrap; gap: 2px; }
+    }
+    @media (max-width: 420px) {
+      .rb-cards { grid-template-columns: 1fr; }
+      .c-tab { font-size: 11px; padding: 11px 13px; }
     }
   </style>
 </head>
