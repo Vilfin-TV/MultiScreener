@@ -3701,71 +3701,88 @@ function clearTranslationInput() {
 }
 
 // --- ACADEMY VIDEO LOGIC ---
-let _academyHiragana = [];
-let _academyKatakana = [];
+(function() {
+  let _academyHiragana = [];
+  let _academyKatakana = [];
 
-async function fetchAcademyVideos() {
-  try {
-    // For testing/fallback as requested by user
-    _academyHiragana = [{ id: '6p9Il_j0zjc', title: 'Hiragana Lesson' }];
-    _academyKatakana = [{ id: 's6DKRgtVLGA', title: 'Katakana Lesson' }];
-    
-    const res = await fetch('https://vilfintv.com/config.json?t=' + Date.now());
-    if (res.ok) {
-      const data = await res.json();
-      if (data.academy_hiragana) _academyHiragana = data.academy_hiragana;
-      if (data.academy_katakana) _academyKatakana = data.academy_katakana;
+  window.fetchAcademyVideos = async function() {
+    try {
+      _academyHiragana = [{ id: '6p9Il_j0zjc', title: 'Hiragana Lesson' }];
+      _academyKatakana = [{ id: 's6DKRgtVLGA', title: 'Katakana Lesson' }];
+      
+      const res = await fetch('https://vilfintv.com/config.json?t=' + Date.now());
+      if (res.ok) {
+        const data = await res.json();
+        if (data.academy_hiragana) _academyHiragana = data.academy_hiragana;
+        if (data.academy_katakana) _academyKatakana = data.academy_katakana;
+      }
+    } catch (e) {
+      console.error('Failed to load Academy videos:', e);
     }
-  } catch (e) {
-    console.error('Failed to load Academy videos:', e);
-  }
-  renderAcademyVideoList();
-}
+    window.renderAcademyVideoList();
+  };
 
-function renderAcademyVideoList() {
-  const listContainer = document.getElementById('academy-video-list');
-  const iframe = document.getElementById('academy-video-iframe');
-  if (!listContainer || !iframe) return;
-  
-  const videos = _activeKanaType === 'hiragana' ? _academyHiragana : _academyKatakana;
-  
-  if (!videos || videos.length === 0) {
-    listContainer.innerHTML = '<div style="padding:16px; color:var(--text3); text-align:center; font-size:12px;">No videos added yet. Add them in the Console.</div>';
-    iframe.src = '';
-    return;
-  }
-  
-  // Set the first video as default if none is playing
-  const currentVideoId = iframe.src.match(/embed\/([^?]+)/);
-  if (!currentVideoId || !videos.find(v => v.id === currentVideoId[1])) {
-    playAcademyVideo(videos[0].id);
-  }
-  
-  let html = '';
-  videos.forEach(v => {
-    html += '<div class="bl-row" style="padding:10px 16px; border-bottom:1px solid var(--border2); cursor:pointer;" onclick="playAcademyVideo(\\'' + v.id + '\\')">'
-          + '  <div class="bl-name" style="font-size:13px;">' + esc(v.title || v.name || 'Academy Video') + '</div>'
-          + '</div>';
-  });
-  listContainer.innerHTML = html;
-}
+  window.renderAcademyVideoList = function() {
+    try {
+      const listContainer = document.getElementById('academy-video-list');
+      const iframe = document.getElementById('academy-video-iframe');
+      if (!listContainer || !iframe) return;
+      
+      const kanaType = typeof _activeKanaType !== 'undefined' ? _activeKanaType : 'hiragana';
+      const videos = kanaType === 'hiragana' ? _academyHiragana : _academyKatakana;
+      
+      if (!videos || videos.length === 0) {
+        listContainer.innerHTML = '<div style="padding:16px; color:var(--text3); text-align:center; font-size:12px;">No videos added yet. Add them in the Console.</div>';
+        iframe.src = '';
+        return;
+      }
+      
+      const src = iframe.src || '';
+      const currentMatch = src.match(/embed\/([^?]+)/);
+      const currentId = currentMatch ? currentMatch[1] : null;
+      
+      if (!currentId || !videos.find(v => v.id === currentId)) {
+        window.playAcademyVideo(videos[0].id);
+      }
+      
+      let html = '';
+      videos.forEach(v => {
+        let titleEscaped = v.title || v.name || 'Academy Video';
+        if (typeof esc === 'function') titleEscaped = esc(titleEscaped);
+        html += '<div class="bl-row" style="padding:10px 16px; border-bottom:1px solid var(--border2); cursor:pointer;" onclick="playAcademyVideo(\\'' + v.id + '\\')">'
+              + '  <div class="bl-name" style="font-size:13px;">' + titleEscaped + '</div>'
+              + '</div>';
+      });
+      listContainer.innerHTML = html;
+    } catch(err) {
+      console.error('renderAcademyVideoList error', err);
+    }
+  };
 
-function playAcademyVideo(id) {
-  const iframe = document.getElementById('academy-video-iframe');
-  if (iframe) {
-    iframe.src = 'https://www.youtube.com/embed/' + id + '?autoplay=1&rel=0';
+  window.playAcademyVideo = function(id) {
+    const iframe = document.getElementById('academy-video-iframe');
+    if (iframe) {
+      iframe.src = 'https://www.youtube.com/embed/' + id + '?autoplay=1&rel=0';
+    }
+  };
+
+  // Safe hook
+  if (typeof window.toggleKanaType === 'function') {
+    const originalToggle = window.toggleKanaType;
+    window.toggleKanaType = function(type) {
+      try { originalToggle(type); } catch(e) { console.error(e); }
+      window.renderAcademyVideoList();
+    };
+  } else if (typeof toggleKanaType === 'function') {
+    const originalToggle = toggleKanaType;
+    toggleKanaType = function(type) {
+      try { originalToggle(type); } catch(e) { console.error(e); }
+      window.renderAcademyVideoList();
+    };
   }
-}
 
-// Hook into existing toggle function
-const originalToggleKanaType = toggleKanaType;
-toggleKanaType = function(type) {
-  originalToggleKanaType(type);
-  renderAcademyVideoList();
-};
-
-// Auto-fetch on load
-setTimeout(fetchAcademyVideos, 500);
+  setTimeout(window.fetchAcademyVideos, 500);
+})();
 
 </script>
 
