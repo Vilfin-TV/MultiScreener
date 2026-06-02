@@ -1093,11 +1093,18 @@ async function _fetchJson(url, headers){
 async function buildStatusReport(env){
   const out = { generatedAt:new Date().toISOString(), pages:[], github:null, cloudflare:null, summary:{} };
 
-  // 1) Page uptime checks
+  // 1) Page uptime checks (with size, content-type, cache + cf-cache info)
   const pageChecks = await Promise.all(STATUS_PAGES.map(async function(u){
     const t0 = Date.now();
     try { const r = await fetch(u, { method:'GET', cf:{ cacheTtl:0 } });
-      return { url:u, status:r.status, ok:r.ok, ms: Date.now()-t0 }; }
+      const buf = await r.arrayBuffer();
+      return { url:u, status:r.status, ok:r.ok, ms: Date.now()-t0,
+        bytes: buf.byteLength,
+        type: (r.headers.get('content-type')||'').split(';')[0],
+        server: r.headers.get('server')||'',
+        cache: r.headers.get('cache-control')||'',
+        cfCache: r.headers.get('cf-cache-status')||'',
+        lastModified: r.headers.get('last-modified')||'' }; }
     catch(e){ return { url:u, status:0, ok:false, ms: Date.now()-t0, error:String(e&&e.message||e) }; }
   }));
   out.pages = pageChecks;
@@ -1124,33 +1131,91 @@ async function buildStatusReport(env){
     out.github = gh;
   } else { out.github = { configured:false, note:'GITHUB_TOKEN not set on the worker.' }; }
 
-  // 3) Cloudflare: account security + storage (needs CLOUDFLARE_API_TOKEN [+ optional ACCOUNT_ID])
+  // 3) Cloudflare: security, storage (space), workers, zones/SSL, web analytics
   if (env.CLOUDFLARE_API_TOKEN){
     const H = { 'Authorization':'Bearer '+env.CLOUDFLARE_API_TOKEN, 'Content-Type':'application/json' };
     const cf = { configured:true };
     const verify = await _fetchJson('https://api.cloudflare.com/client/v4/user/tokens/verify', H);
     cf.tokenValid = !!(verify.json && verify.json.success);
+    if (verify.json && verify.json.result && verify.json.result.expires_on) cf.tokenExpires = verify.json.result.expires_on;
     let accountId = env.CLOUDFLARE_ACCOUNT_ID || '';
     if (!accountId){ const accts = await _fetchJson('https://api.cloudflare.com/client/v4/accounts', H);
-      if (accts.json && accts.json.result && accts.json.result[0]) accountId = accts.json.result[0].id; }
-    cf.accountId = accountId ? (accountId.slice(0,6)+'…') : null;
+      if (accts.json && accts.json.result && accts.json.result[0]){ accountId = accts.json.result[0].id; cf.accountName = accts.json.result[0].name; } }
+    cf.accountId = accountId ? (accountId.slice(0,8)+'…') : null;
+
     if (accountId){
       const ab = 'https://api.cloudflare.com/client/v4/accounts/'+accountId;
-      const kv = await _fetchJson(ab+'/storage/kv/namespaces?per_page=50', H);
-      if (kv.json && kv.json.result) cf.kvNamespaces = kv.json.result.map(function(n){ return n.title; });
+
+      // KV namespaces + per-namespace key counts (storage footprint signal)
+      const kv = await _fetchJson(ab+'/storage/kv/namespaces?per_page=100', H);
+      if (kv.json && kv.json.result){
+        cf.kv = [];
+        for (const ns of kv.json.result){
+          let keys = 'n/a';
+          const kr = await _fetchJson(ab+'/storage/kv/namespaces/'+ns.id+'/keys?limit=1000', H);
+          if (kr.json && Array.isArray(kr.json.result)) keys = kr.json.result.length + (kr.json.result_info && kr.json.result_info.cursor ? '+' : '');
+          cf.kv.push({ title:ns.title, keys:keys });
+        }
+      } else if (kv.status===403){ cf.kv = 'no-access'; }
+
+      // R2 buckets + size/object usage per bucket
       const r2 = await _fetchJson(ab+'/r2/buckets', H);
-      if (r2.json && r2.json.result && r2.json.result.buckets) cf.r2Buckets = r2.json.result.buckets.map(function(b){ return b.name; });
-      else if (r2.status===403) cf.r2Buckets = 'no-access';
+      if (r2.json && r2.json.result && r2.json.result.buckets){
+        cf.r2 = [];
+        for (const b of r2.json.result.buckets){
+          const usage = await _fetchJson(ab+'/r2/buckets/'+encodeURIComponent(b.name)+'/usage', H);
+          let sizeBytes=null, objects=null;
+          if (usage.json && usage.json.result){ sizeBytes = usage.json.result.payloadSize!=null?usage.json.result.payloadSize:usage.json.result.metadataSize; objects = usage.json.result.objectCount; }
+          cf.r2.push({ name:b.name, sizeBytes:sizeBytes, objects:objects });
+        }
+        cf.r2TotalBytes = cf.r2.reduce(function(a,x){ return a + (x.sizeBytes||0); }, 0);
+      } else if (r2.status===403){ cf.r2 = 'no-access'; }
+
+      // Workers scripts deployed
+      const ws = await _fetchJson(ab+'/workers/scripts', H);
+      if (ws.json && Array.isArray(ws.json.result)) cf.workers = ws.json.result.map(function(s){ return s.id; });
+      else if (ws.status===403) cf.workers = 'no-access';
     }
+
+    // Zones: SSL mode, status, security level, plan, + Web Analytics availability
+    const zones = await _fetchJson('https://api.cloudflare.com/client/v4/zones?per_page=50', H);
+    if (zones.json && Array.isArray(zones.json.result) && zones.json.result.length){
+      cf.zones = [];
+      for (const z of zones.json.result){
+        const zb = 'https://api.cloudflare.com/client/v4/zones/'+z.id;
+        const ssl = await _fetchJson(zb+'/settings/ssl', H);
+        const sec = await _fetchJson(zb+'/settings/security_level', H);
+        cf.zones.push({ name:z.name, status:z.status, plan:(z.plan&&z.plan.name)||'',
+          ssl:(ssl.json&&ssl.json.result&&ssl.json.result.value)||'n/a',
+          securityLevel:(sec.json&&sec.json.result&&sec.json.result.value)||'n/a' });
+      }
+    } else if (zones.status===403){ cf.zones = 'no-access (add Zone:Read to the token to show SSL/DNS/analytics)'; }
+    else { cf.zones = 'none (vilfintv.com is not proxied through Cloudflare on this account)'; }
+
+    // Web Analytics (visitor counts) — only if the zone is on Cloudflare with analytics
+    if (accountId && Array.isArray(cf.zones) && cf.zones.length){
+      const since = new Date(Date.now()-7*86400000).toISOString();
+      const gql = { query: '{ viewer { accounts(filter:{accountTag:"'+accountId+'"}) { rumPageloadEventsAdaptiveGroups(limit:20, filter:{datetime_geq:"'+since+'"}, orderBy:[count_DESC]) { count dimensions { requestPath } } } } }' };
+      const an = await fetch('https://api.cloudflare.com/client/v4/graphql', { method:'POST', headers:H, body:JSON.stringify(gql) });
+      try { const aj = await an.json();
+        const grp = aj && aj.data && aj.data.viewer && aj.data.viewer.accounts && aj.data.viewer.accounts[0] && aj.data.viewer.accounts[0].rumPageloadEventsAdaptiveGroups;
+        if (grp && grp.length){ cf.analytics = { rangeDays:7, topPages: grp.map(function(g){ return { path:g.dimensions.requestPath, views:g.count }; }) }; cf.analytics.totalViews = grp.reduce(function(a,g){ return a+g.count; },0); }
+        else { cf.analytics = { note:'No Web Analytics data. Enable Cloudflare Web Analytics for vilfintv.com (free) — needs the site proxied through Cloudflare, and Account Analytics:Read on the token.' }; }
+      } catch(e){ cf.analytics = { note:'Web Analytics unavailable (needs Account Analytics:Read + Cloudflare-proxied site).' }; }
+    } else { cf.analytics = { note:'Visitor analytics require vilfintv.com to be served through Cloudflare (it currently resolves to GitHub Pages). Enable Cloudflare Web Analytics to collect per-page visits.' }; }
+
     out.cloudflare = cf;
-  } else { out.cloudflare = { configured:false, note:'Add CLOUDFLARE_API_TOKEN (read-only) to the worker to include Cloudflare security & storage.' }; }
+  } else { out.cloudflare = { configured:false, note:'Add CLOUDFLARE_API_TOKEN (read-only) to the worker to include Cloudflare security, storage & analytics.' }; }
 
   // 4) Summary
   const down = out.pages.filter(function(p){ return !p.ok; }).length;
+  const totalBytes = out.pages.reduce(function(a,p){ return a + (p.bytes||0); }, 0);
   out.summary = {
-    pagesTotal: out.pages.length, pagesDown: down,
+    pagesTotal: out.pages.length, pagesDown: down, pagesTotalBytes: totalBytes,
+    avgLatencyMs: Math.round(out.pages.reduce(function(a,p){ return a+(p.ms||0); },0) / (out.pages.length||1)),
     githubFailedWorkflows: out.github && out.github.failedWorkflows || 0,
     githubDependabotOpen: out.github ? out.github.dependabotOpen : 'n/a',
+    r2TotalBytes: (out.cloudflare && out.cloudflare.r2TotalBytes) || 0,
     status: (down===0 && (!(out.github&&out.github.failedWorkflows))) ? 'healthy' : (down>0 ? 'attention' : 'warnings')
   };
   return out;

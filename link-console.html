@@ -4081,7 +4081,11 @@ async function saveIptvSettings() {
   .op-act{padding:5px 10px;border-radius:7px;font-size:12px;border:1px solid rgba(255,255,255,.16);color:#cfcfe0;margin-left:6px}
   .op-act:hover{border-color:#7c4dff;color:#fff}
   .op-act.del{color:#ff8888;border-color:rgba(255,77,77,.3)}
-  .rb-inp{width:100%;padding:10px 12px;background:#0f0f12;border:1px solid rgba(255,255,255,.16);border-radius:9px;color:#fff;font-size:14px;box-sizing:border-box;margin-bottom:10px}
+  .c-panel input.rb-inp, .c-panel select.rb-inp, .c-panel textarea.rb-inp{width:100%;padding:10px 12px;background:#0f0f12;border:1px solid rgba(255,255,255,.16);border-radius:9px;color:#ffffff !important;font-size:14px;box-sizing:border-box;margin-bottom:10px;-webkit-text-fill-color:#ffffff}
+  .c-panel input.rb-inp::placeholder{color:#7b8aa3 !important;-webkit-text-fill-color:#7b8aa3}
+  .c-panel input.rb-inp:focus{border-color:#7c4dff;box-shadow:0 0 0 3px rgba(124,77,255,.18)}
+  .c-panel input.rb-inp:-webkit-autofill,.c-panel input.rb-inp:-webkit-autofill:focus{-webkit-text-fill-color:#ffffff;caret-color:#fff;-webkit-box-shadow:0 0 0 1000px #0f0f12 inset;transition:background-color 9999s}
+  .c-panel select.rb-inp option{background:#0f0f12;color:#fff}
   .rb-lbl{display:block;font-size:12px;color:#b9b9cc;margin-bottom:5px}
   .rb-btn{padding:11px 20px;background:linear-gradient(135deg,#7c4dff,#6b3dff);color:#fff;border:none;border-radius:9px;font-weight:600;font-size:14px;cursor:pointer}
   .rb-btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.16);color:#cfcfe0}
@@ -4119,46 +4123,77 @@ async function _rbFetch(){
   }catch(e){ body.innerHTML='<div style="color:#ff8888">Could not load report: '+esc(e.message)+'</div>'; }
 }
 function _rbPill(s){var c=s==='healthy'?'rb-ok':(s==='attention'?'rb-bad':'rb-warn');return '<span class="rb-pill '+c+'">'+esc(s)+'</span>';}
+function _rbBytes(n){if(n==null)return '—';if(n<1024)return n+' B';if(n<1048576)return (n/1024).toFixed(1)+' KB';if(n<1073741824)return (n/1048576).toFixed(2)+' MB';return (n/1073741824).toFixed(2)+' GB';}
+function _rbRow(k,v){return '<div class="rb-row"><span>'+k+'</span><b>'+v+'</b></div>';}
 function _rbRender(r){
   var s=r.summary||{};
   var h='<div class="rb-cards">'+
     '<div class="rb-card"><div class="rb-k">Overall</div><div class="rb-v">'+_rbPill(s.status||'n/a')+'</div><div class="rb-sub">generated '+esc(new Date(r.generatedAt).toLocaleString())+'</div></div>'+
-    '<div class="rb-card"><div class="rb-k">Pages</div><div class="rb-v">'+(s.pagesTotal-s.pagesDown)+'/'+s.pagesTotal+'</div><div class="rb-sub">'+(s.pagesDown?(s.pagesDown+' down'):'all online')+'</div></div>'+
-    '<div class="rb-card"><div class="rb-k">CI workflows failing</div><div class="rb-v">'+(s.githubFailedWorkflows||0)+'</div><div class="rb-sub">recent runs</div></div>'+
-    '<div class="rb-card"><div class="rb-k">Dependabot alerts</div><div class="rb-v">'+esc(String(s.githubDependabotOpen))+'</div><div class="rb-sub">open security alerts</div></div>'+
+    '<div class="rb-card"><div class="rb-k">Pages online</div><div class="rb-v">'+(s.pagesTotal-s.pagesDown)+'/'+s.pagesTotal+'</div><div class="rb-sub">'+(s.pagesDown?(s.pagesDown+' down'):'all online')+' · avg '+(s.avgLatencyMs||0)+'ms</div></div>'+
+    '<div class="rb-card"><div class="rb-k">CI failing</div><div class="rb-v">'+(s.githubFailedWorkflows||0)+'</div><div class="rb-sub">recent runs</div></div>'+
+    '<div class="rb-card"><div class="rb-k">Security alerts</div><div class="rb-v">'+esc(String(s.githubDependabotOpen))+'</div><div class="rb-sub">Dependabot open</div></div>'+
+    '<div class="rb-card"><div class="rb-k">R2 storage used</div><div class="rb-v">'+_rbBytes(s.r2TotalBytes||0)+'</div><div class="rb-sub">across buckets</div></div>'+
+    '<div class="rb-card"><div class="rb-k">Pages weight</div><div class="rb-v">'+_rbBytes(s.pagesTotalBytes||0)+'</div><div class="rb-sub">total HTML/JSON</div></div>'+
   '</div>';
+
   // pages
-  h+='<div class="rb-sec"><h3>🌐 Page uptime</h3>';
+  h+='<div class="rb-sec"><h3>🌐 Pages — uptime &amp; size</h3>';
   (r.pages||[]).forEach(function(p){
     var ok=p.ok?'<span class="rb-pill rb-ok">'+p.status+'</span>':'<span class="rb-pill rb-bad">'+(p.status||'ERR')+'</span>';
-    h+='<div class="rb-row"><span>'+esc(p.url)+'</span><b>'+ok+' &nbsp;'+(p.ms||0)+'ms</b></div>';
+    var meta=p.ok?(' · '+_rbBytes(p.bytes)+(p.type?(' · '+esc(p.type)):'')+(p.cfCache?(' · cf:'+esc(p.cfCache)):'')):'';
+    h+=_rbRow(esc(p.url.replace('https://vilfintv.com','')||'/'), ok+' &nbsp;'+(p.ms||0)+'ms'+meta);
   });
   h+='</div>';
+
   // github
   var g=r.github||{};
-  h+='<div class="rb-sec"><h3>🐙 GitHub</h3>';
-  if(g.configured===false){h+='<div class="rb-row"><span>Status</span><b>'+esc(g.note||'not configured')+'</b></div>';}
+  h+='<div class="rb-sec"><h3>🐙 GitHub repository</h3>';
+  if(g.configured===false){h+=_rbRow('Status',esc(g.note||'not configured'));}
   else{
-    h+='<div class="rb-row"><span>Repo size</span><b>'+((g.sizeKB||0)/1024).toFixed(1)+' MB</b></div>';
-    h+='<div class="rb-row"><span>Visibility</span><b>'+(g.private?'private':'public')+'</b></div>';
-    h+='<div class="rb-row"><span>Last push</span><b>'+esc(g.pushedAt?new Date(g.pushedAt).toLocaleString():'—')+'</b></div>';
-    h+='<div class="rb-row"><span>Dependabot open</span><b>'+esc(String(g.dependabotOpen))+(g.dependabotBySeverity?(' ('+Object.keys(g.dependabotBySeverity).map(function(k){return k+':'+g.dependabotBySeverity[k];}).join(', ')+')'):'')+'</b></div>';
-    h+='<div class="rb-row"><span>Code scanning open</span><b>'+esc(String(g.codeScanningOpen))+'</b></div>';
+    h+=_rbRow('Repo size',((g.sizeKB||0)/1024).toFixed(1)+' MB');
+    h+=_rbRow('Visibility',(g.private?'private':'public')+(g.defaultBranch?(' · '+esc(g.defaultBranch)):''));
+    h+=_rbRow('Last push',esc(g.pushedAt?new Date(g.pushedAt).toLocaleString():'—'));
+    var depColor=(typeof g.dependabotOpen==='number'&&g.dependabotOpen>0)?'rb-bad':'rb-ok';
+    h+=_rbRow('Dependabot alerts','<span class="rb-pill '+depColor+'">'+esc(String(g.dependabotOpen))+'</span>'+(g.dependabotBySeverity?(' '+Object.keys(g.dependabotBySeverity).map(function(k){return esc(k)+':'+g.dependabotBySeverity[k];}).join(', ')):''));
+    h+=_rbRow('Code scanning',esc(String(g.codeScanningOpen)));
     if(g.workflows){g.workflows.slice(0,8).forEach(function(w){
       var c=w.conclusion==='success'?'rb-ok':(w.conclusion?'rb-bad':'rb-warn');
-      h+='<div class="rb-row"><span>'+esc(w.name)+' <span style="opacity:.5">('+esc(w.event)+')</span></span><b><span class="rb-pill '+c+'">'+esc(w.conclusion||w.status)+'</span></b></div>';
+      h+=_rbRow(esc(w.name)+' <span style="opacity:.5">('+esc(w.event)+')</span>','<span class="rb-pill '+c+'">'+esc(w.conclusion||w.status)+'</span>');
     });}
   }
   h+='</div>';
+
   // cloudflare
   var c=r.cloudflare||{};
-  h+='<div class="rb-sec"><h3>☁️ Cloudflare</h3>';
-  if(c.configured===false){h+='<div class="rb-row"><span>Status</span><b>'+esc(c.note||'not configured')+'</b></div>';}
+  h+='<div class="rb-sec"><h3>☁️ Cloudflare — security &amp; storage</h3>';
+  if(c.configured===false){h+=_rbRow('Status',esc(c.note||'not configured'));}
   else{
-    h+='<div class="rb-row"><span>Token valid</span><b>'+(c.tokenValid?'<span class="rb-pill rb-ok">yes</span>':'<span class="rb-pill rb-bad">no</span>')+'</b></div>';
-    if(c.accountId)h+='<div class="rb-row"><span>Account</span><b>'+esc(c.accountId)+'</b></div>';
-    if(c.kvNamespaces)h+='<div class="rb-row"><span>KV namespaces</span><b>'+esc([].concat(c.kvNamespaces).join(', '))+'</b></div>';
-    if(c.r2Buckets)h+='<div class="rb-row"><span>R2 buckets</span><b>'+esc([].concat(c.r2Buckets).join(', '))+'</b></div>';
+    h+=_rbRow('API token',(c.tokenValid?'<span class="rb-pill rb-ok">valid</span>':'<span class="rb-pill rb-bad">invalid</span>')+(c.tokenExpires?(' · expires '+esc(new Date(c.tokenExpires).toLocaleDateString())):' · no expiry'));
+    if(c.accountName)h+=_rbRow('Account',esc(c.accountName)+(c.accountId?(' ('+esc(c.accountId)+')'):''));
+    if(c.workers&&c.workers.length)h+=_rbRow('Workers deployed',esc([].concat(c.workers).join(', ')));
+    // KV
+    if(Array.isArray(c.kv)){c.kv.forEach(function(n){h+=_rbRow('KV · '+esc(n.title),esc(String(n.keys))+' keys');});}
+    else if(c.kv){h+=_rbRow('KV namespaces',esc(String(c.kv)));}
+    // R2 with sizes
+    if(Array.isArray(c.r2)){c.r2.forEach(function(b){h+=_rbRow('R2 · '+esc(b.name),_rbBytes(b.sizeBytes)+(b.objects!=null?(' · '+b.objects+' objects'):''));});
+      h+=_rbRow('R2 total','<b>'+_rbBytes(c.r2TotalBytes||0)+'</b>');}
+    else if(c.r2){h+=_rbRow('R2 buckets',esc(String(c.r2)));}
+    // zones / SSL
+    if(Array.isArray(c.zones)){c.zones.forEach(function(z){
+      var zc=z.status==='active'?'rb-ok':'rb-warn';
+      h+=_rbRow('Zone · '+esc(z.name),'<span class="rb-pill '+zc+'">'+esc(z.status)+'</span> · SSL:'+esc(z.ssl)+' · sec:'+esc(z.securityLevel)+(z.plan?(' · '+esc(z.plan)):''));});}
+    else if(c.zones){h+=_rbRow('Zones',esc(String(c.zones)));}
+  }
+  h+='</div>';
+
+  // visitor analytics
+  h+='<div class="rb-sec"><h3>👥 Visitor analytics (per page, last 7 days)</h3>';
+  var a=c.analytics;
+  if(a&&a.topPages&&a.topPages.length){
+    h+=_rbRow('Total page views','<b>'+a.totalViews.toLocaleString()+'</b>');
+    a.topPages.forEach(function(p){h+=_rbRow(esc(p.path),p.views.toLocaleString()+' views');});
+  } else {
+    h+='<div class="rb-row"><span style="color:#9a9ab0">'+esc((a&&a.note)||'No analytics source configured.')+'</span><b></b></div>';
   }
   h+='</div>';
   return h;
@@ -4211,9 +4246,16 @@ function _opRolePreset(){
     document.querySelectorAll('[data-pe]').forEach(function(c){c.checked=false;});
   }
 }
+function _detectTZ(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch(e){return '';}}
 async function _apLoad(){
+  // pre-fill timezone from the browser so it's never blank
+  var tzEl=document.getElementById('ap-tz'); if(tzEl&&!tzEl.value) tzEl.value=_detectTZ();
   try{var res=await authFetch(WORKER+'/api/admin/profile',{method:'GET'});var d=await res.json();
-    if(d.ok&&d.profile){var p=d.profile;document.getElementById('ap-name').value=p.displayName||'';document.getElementById('ap-org').value=p.org||'';document.getElementById('ap-email').value=p.email||'';document.getElementById('ap-tz').value=p.timezone||'';}
+    if(d.ok&&d.profile){var p=d.profile;
+      document.getElementById('ap-name').value=p.displayName||'';
+      document.getElementById('ap-org').value=p.org||'';
+      document.getElementById('ap-email').value=p.email||'';
+      document.getElementById('ap-tz').value=p.timezone||_detectTZ();}
   }catch(e){}
 }
 async function _apSave(){
