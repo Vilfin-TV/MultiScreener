@@ -119,6 +119,33 @@
     .c-panel { display: none; }
     .c-panel.active { display: block; }
 
+    /* ── Global field readability (all tabs) ──────────────────────────────────
+       Guarantees visible text in every input/select/textarea regardless of which
+       panel/container it lives in. Fixes dark-on-dark text on Stories/Academy/
+       Links/etc. */
+    #dashboard-view input[type="text"],
+    #dashboard-view input[type="url"],
+    #dashboard-view input[type="number"],
+    #dashboard-view input[type="password"],
+    #dashboard-view input[type="email"],
+    #dashboard-view input[type="search"],
+    #dashboard-view input:not([type]),
+    #dashboard-view select,
+    #dashboard-view textarea {
+      color: #e8f1ff !important;
+      -webkit-text-fill-color: #e8f1ff;
+      caret-color: #3b82f6;
+    }
+    #dashboard-view input::placeholder,
+    #dashboard-view textarea::placeholder { color: #4d6a8a !important; -webkit-text-fill-color: #4d6a8a; }
+    #dashboard-view select option { color: #e8f1ff; background: #0e1f3b; }
+    #dashboard-view input:-webkit-autofill,
+    #dashboard-view input:-webkit-autofill:focus {
+      -webkit-text-fill-color: #e8f1ff;
+      -webkit-box-shadow: 0 0 0 1000px #0e1f3b inset;
+      transition: background-color 9999s;
+    }
+
     /* Console card */
     .console {
       width: 100%; max-width: 940px; margin: 0 auto;
@@ -812,6 +839,11 @@
                  maxlength="80" autocomplete="off" spellcheck="false">
 
           <label class="field-label" for="lnk-desc">Description <span style="opacity:.4;font-weight:400">(optional)</span></label>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+            <input type="file" id="lnk-doc-file" style="display:none" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" data-status="lnk-doc-status" data-heading="lnk-name" data-body="lnk-desc" onchange="handleDocUpload(this)">
+            <button type="button" class="btn-upload" onclick="document.getElementById('lnk-doc-file').click()">📄 Import from document</button>
+            <span id="lnk-doc-status" style="font-size:12px;color:#b9b9cc"></span>
+          </div>
           <input type="text" id="lnk-desc" placeholder="One-line summary shown to readers"
                  maxlength="160" autocomplete="off" spellcheck="false">
 
@@ -881,7 +913,7 @@
 
           <label class="field-label" for="cp-story">Full Story</label>
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
-            <input type="file" id="cp-doc-file" style="display:none" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" onchange="handleDocUpload(this)">
+            <input type="file" id="cp-doc-file" style="display:none" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" data-status="cp-doc-status" data-heading="cp-heading" data-body="cp-story" onchange="handleDocUpload(this)">
             <button type="button" class="btn-upload" onclick="document.getElementById('cp-doc-file').click()">📄 Import from document (PDF · Word · PPT · txt)</button>
             <span id="cp-doc-status" style="font-size:12px;color:#b9b9cc"></span>
           </div>
@@ -1229,6 +1261,11 @@
                  maxlength="200" autocomplete="off" spellcheck="true">
 
           <label class="field-label" for="st-story">Description / Teaser</label>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+            <input type="file" id="st-doc-file" style="display:none" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" data-status="st-doc-status" data-heading="st-heading" data-body="st-story" onchange="handleDocUpload(this)">
+            <button type="button" class="btn-upload" onclick="document.getElementById('st-doc-file').click()">📄 Import from document (PDF · Word · PPT · txt)</button>
+            <span id="st-doc-status" style="font-size:12px;color:#b9b9cc"></span>
+          </div>
           <textarea id="st-story" placeholder="Write a short teaser or full description for this pinned story…" maxlength="2000" rows="5" spellcheck="true"></textarea>
 
           <label class="field-label" for="st-photo">Thumbnail <span style="opacity:.4;font-weight:400">(required — paste a URL or upload)</span></label>
@@ -1290,6 +1327,11 @@
                  maxlength="200" autocomplete="off" spellcheck="true">
 
           <label class="field-label" for="ac-story">Notice Body</label>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+            <input type="file" id="ac-doc-file" style="display:none" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" data-status="ac-doc-status" data-heading="ac-heading" data-body="ac-story" onchange="handleDocUpload(this)">
+            <button type="button" class="btn-upload" onclick="document.getElementById('ac-doc-file').click()">📄 Import from document (PDF · Word · PPT · txt)</button>
+            <span id="ac-doc-status" style="font-size:12px;color:#b9b9cc"></span>
+          </div>
           <textarea id="ac-story" placeholder="Full text of the notice. E.g. Exam schedule update, new content available, important announcement…" maxlength="2000" rows="6" spellcheck="true"></textarea>
 
           <label class="field-label" for="ac-photo">Banner Image <span style="opacity:.4;font-weight:400">(optional — paste a URL or upload)</span></label>
@@ -3721,8 +3763,10 @@ function setAcStatus(t, m) {
 /* ── News: import Full Story from a document (PDF/Word/PPT/txt) ──────────────
    Parses in-browser (no server) and fills the Headline + Full Story fields for
    review before publishing. Libraries are loaded on demand from jsDelivr. */
+/* current import target — set per-field when an import button is clicked */
+var _docTarget = { status:'cp-doc-status', heading:'cp-heading', body:'cp-story' };
 function _docStatus(msg, isErr) {
-  var el = document.getElementById('cp-doc-status');
+  var el = document.getElementById(_docTarget.status);
   if (el) { el.textContent = msg; el.style.color = isErr ? '#ff8888' : '#b9b9cc'; }
 }
 function _loadScript(src) {
@@ -3746,9 +3790,9 @@ function _cleanText(t) {
 function _applyDocText(filename, text) {
   text = _cleanText(text);
   if (!text) { _docStatus('No readable text found in the document.', true); return; }
-  var heading = document.getElementById('cp-heading');
-  var story = document.getElementById('cp-story');
-  // First non-empty line → headline (if empty); rest → story.
+  var heading = _docTarget.heading ? document.getElementById(_docTarget.heading) : null;
+  var story = document.getElementById(_docTarget.body);
+  // First non-empty line → headline/title (if empty); rest → body.
   var lines = text.split('\n').filter(function (l) { return l.trim(); });
   var firstLine = lines.length ? lines[0].trim() : '';
   if (heading && !heading.value.trim() && firstLine) {
@@ -3757,15 +3801,24 @@ function _applyDocText(filename, text) {
   if (story) {
     var max = parseInt(story.getAttribute('maxlength'), 10) || 2000;
     var body = text;
-    if (body.length > max) body = body.slice(0, max);
+    var trimmed = body.length > max;
+    if (trimmed) body = body.slice(0, max);
     story.value = body;
     story.dispatchEvent(new Event('input', { bubbles: true }));
+    var extra = trimmed ? (' (trimmed to ' + max + ' chars to fit the field)') : '';
+    _docStatus('Imported "' + filename + '" — review and edit before publishing.' + extra, false);
+  } else {
+    _docStatus('Imported, but no target field found.', true);
   }
-  var extra = text.length > 2000 ? ' (trimmed to 2000 chars to fit the field)' : '';
-  _docStatus('Imported "' + filename + '" — review and edit before publishing.' + extra, false);
 }
 
 async function handleDocUpload(input) {
+  // pick up the target fields for whichever tab this input belongs to
+  _docTarget = {
+    status: input.getAttribute('data-status') || 'cp-doc-status',
+    heading: input.getAttribute('data-heading') || '',
+    body: input.getAttribute('data-body') || 'cp-story'
+  };
   var file = input.files && input.files[0];
   input.value = ''; // allow re-selecting the same file later
   if (!file) return;
