@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Link Console — VilfinTV</title>
+  <script>
+    /* Theme bootstrap — shares the homepage's viltv_theme setting */
+    (function(){
+      var t = localStorage.getItem('viltv_theme') || 'midnight';
+      if (t === 'default' || t === 'black') t = 'midnight';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -747,6 +755,104 @@
       .rb-cards { grid-template-columns: 1fr; }
       .c-tab { font-size: 11px; padding: 11px 13px; }
     }
+    /* ════════════════════════════════════════════════════════════════════════
+       THEME LAYER — matches the homepage themes (shared viltv_theme setting).
+       Variables drive every console surface; an override block recolours the
+       hardcoded panels and forces readable text in all tabs/themes.
+       ════════════════════════════════════════════════════════════════════════ */
+    :root, [data-theme="midnight"]{
+      --tp-page:#030810; --tp-glow:rgba(37,99,235,.18);
+      --tp-surface:#0a1830; --tp-surface2:#0e1f3b; --tp-surface3:#122344;
+      --tp-border:#162d4a; --tp-border2:#1e3a5c;
+      --tp-text:#e2eeff; --tp-text2:#8ea8c8; --tp-text3:#687a94;
+      --tp-accent:#2563eb; --tp-accent2:#3b82f6; --tp-on-accent:#ffffff;
+    }
+    [data-theme="standard"]{ /* light */
+      --tp-page:#eef2f8; --tp-glow:rgba(37,99,235,.10);
+      --tp-surface:#ffffff; --tp-surface2:#f5f8fc; --tp-surface3:#eaf0f8;
+      --tp-border:#d7e0ec; --tp-border2:#c3d0e2;
+      --tp-text:#0f1f33; --tp-text2:#3a4a60; --tp-text3:#67788f;
+      --tp-accent:#1d4ed8; --tp-accent2:#2563eb; --tp-on-accent:#ffffff;
+    }
+    [data-theme="maroon"]{
+      --tp-page:#160606; --tp-glow:rgba(190,50,50,.16);
+      --tp-surface:#231010; --tp-surface2:#2d1414; --tp-surface3:#3a1a1a;
+      --tp-border:#3d1d1d; --tp-border2:#522828;
+      --tp-text:#f6e6e6; --tp-text2:#c8a0a0; --tp-text3:#9a7070;
+      --tp-accent:#b3261e; --tp-accent2:#e0443a; --tp-on-accent:#ffffff;
+    }
+    [data-theme="silver"]{
+      --tp-page:#1c1c1f; --tp-glow:rgba(160,160,170,.12);
+      --tp-surface:#27272b; --tp-surface2:#303035; --tp-surface3:#3a3a40;
+      --tp-border:#3a3a40; --tp-border2:#48484f;
+      --tp-text:#f0f0f3; --tp-text2:#b8b8c0; --tp-text3:#8a8a92;
+      --tp-accent:#5b6470; --tp-accent2:#7c8794; --tp-on-accent:#ffffff;
+    }
+    [data-theme="gold"]{
+      --tp-page:#161200; --tp-glow:rgba(212,160,23,.16);
+      --tp-surface:#231d00; --tp-surface2:#2d2500; --tp-surface3:#3a3000;
+      --tp-border:#3d3300; --tp-border2:#524500;
+      --tp-text:#fdf3d6; --tp-text2:#cbb87a; --tp-text3:#9a8a4d;
+      --tp-accent:#caa017; --tp-accent2:#e8c14a; --tp-on-accent:#161200;
+    }
+    [data-theme="gemini"]{
+      --tp-page:#131314; --tp-glow:rgba(138,180,248,.12);
+      --tp-surface:#1e1f20; --tp-surface2:#26282a; --tp-surface3:#303134;
+      --tp-border:#3c4043; --tp-border2:#4a4e51;
+      --tp-text:#e3e3e3; --tp-text2:#9aa0a6; --tp-text3:#7a8085;
+      --tp-accent:#8ab4f8; --tp-accent2:#aecbfa; --tp-on-accent:#131314;
+    }
+    [data-theme="news-reader"]{
+      --tp-page:#f4f4f4; --tp-glow:rgba(216,25,33,.08);
+      --tp-surface:#ffffff; --tp-surface2:#f7f7f7; --tp-surface3:#eeeeee;
+      --tp-border:#dcdcdc; --tp-border2:#cccccc;
+      --tp-text:#111111; --tp-text2:#444444; --tp-text3:#6b6b6b;
+      --tp-accent:#d81921; --tp-accent2:#e8434a; --tp-on-accent:#ffffff;
+    }
+
+    /* ── Consume the variables on every surface ── */
+    body{ background:var(--tp-page) !important;
+      background-image:radial-gradient(ellipse 80% 50% at 50% -10%, var(--tp-glow), transparent) !important; }
+    .brand-name{ color:var(--tp-text2); }
+    .login-card,.console{ background:var(--tp-surface); border-color:var(--tp-border); }
+    .login-title{ color:var(--tp-text); } .login-sub{ color:var(--tp-text3); }
+    .console-hdr{ background:var(--tp-surface2); border-color:var(--tp-border) !important; }
+    .console-title{ color:var(--tp-text) !important; } .console-sub{ color:var(--tp-text3) !important; }
+    .console-tabs{ background:rgba(0,0,0,.12); border-color:var(--tp-border) !important; }
+    .c-tab{ color:var(--tp-text3); }
+    .c-tab:hover{ color:var(--tp-text2); }
+    .c-tab.active{ color:var(--tp-text) !important; border-bottom-color:var(--tp-accent2) !important; background:color-mix(in srgb, var(--tp-accent2) 10%, transparent); }
+    .form-panel,.content-form-panel,.hp-form-panel{ border-color:var(--tp-border) !important; }
+    .field-label{ color:var(--tp-text2) !important; }
+    /* every text-bearing element readable across tabs */
+    #dashboard-view, #dashboard-view .console-sub, #dashboard-view label,
+    #dashboard-view p, #dashboard-view span, #dashboard-view td, #dashboard-view th,
+    #dashboard-view h1, #dashboard-view h2, #dashboard-view h3, #dashboard-view li,
+    #dashboard-view .bl-meta { color:var(--tp-text); }
+    #dashboard-view .field-label, #dashboard-view .console-sub { color:var(--tp-text2); }
+    /* form fields */
+    #dashboard-view input[type="text"], #dashboard-view input[type="url"],
+    #dashboard-view input[type="number"], #dashboard-view input[type="password"],
+    #dashboard-view input[type="email"], #dashboard-view input[type="search"],
+    #dashboard-view input:not([type]), #dashboard-view select, #dashboard-view textarea{
+      background:var(--tp-surface2) !important; border:1px solid var(--tp-border2) !important;
+      color:var(--tp-text) !important; -webkit-text-fill-color:var(--tp-text) !important;
+    }
+    #dashboard-view input::placeholder, #dashboard-view textarea::placeholder{
+      color:var(--tp-text3) !important; -webkit-text-fill-color:var(--tp-text3) !important; opacity:1;
+    }
+    #dashboard-view select option{ background:var(--tp-surface2); color:var(--tp-text); }
+    /* report / settings cards + tables follow the theme too */
+    .rb-card,.rb-sec{ background:color-mix(in srgb,var(--tp-text) 4%,transparent); border-color:var(--tp-border) !important; }
+    .rb-card .rb-v,.rb-sec h3,.rb-row b{ color:var(--tp-text) !important; }
+    .rb-card .rb-k,.rb-card .rb-sub,.rb-row,.rb-lbl,.perm-grid th,.op-tbl th{ color:var(--tp-text2) !important; }
+    .perm-grid td,.op-tbl td{ color:var(--tp-text) !important; border-color:var(--tp-border) !important; }
+    .rb-btn{ background:linear-gradient(135deg,var(--tp-accent),var(--tp-accent2)); color:var(--tp-on-accent); }
+    /* theme picker */
+    .theme-pick{ display:flex; align-items:center; gap:6px; }
+    .theme-pick select{ background:var(--tp-surface2); color:var(--tp-text); border:1px solid var(--tp-border2);
+      border-radius:8px; padding:7px 9px; font-size:12px; font-weight:600; }
+
   </style>
 </head>
 <body>
@@ -791,6 +897,17 @@
         <div class="console-sub">Manage links and publish content to your news feed.</div>
       </div>
       <div class="session-info">
+        <span class="theme-pick">
+          <select id="theme-select" title="Theme" onchange="setConsoleTheme(this.value)">
+            <option value="midnight">🌙 Midnight</option>
+            <option value="standard">☀️ Light</option>
+            <option value="maroon">🍷 Maroon</option>
+            <option value="silver">⚪ Silver</option>
+            <option value="gold">🥇 Gold</option>
+            <option value="gemini">💎 Gemini</option>
+            <option value="news-reader">📰 News</option>
+          </select>
+        </span>
         <span class="session-user" id="session-user"></span>
         <button class="btn-logout" id="logout-btn">Sign out</button>
       </div>
@@ -1416,9 +1533,24 @@ function showLogin(errorMsg) {
   setTimeout(function() { document.getElementById('login-user').focus(); }, 60);
 }
 
+function setConsoleTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  try { localStorage.setItem('viltv_theme', t); } catch(e){}
+}
+(function _initConsoleTheme(){
+  var t = (function(){ try{ return localStorage.getItem('viltv_theme'); }catch(e){ return null; } })() || 'midnight';
+  if (t === 'default' || t === 'black') t = 'midnight';
+  document.documentElement.setAttribute('data-theme', t);
+  document.addEventListener('DOMContentLoaded', function(){
+    var sel = document.getElementById('theme-select'); if (sel) sel.value = t;
+  });
+})();
+
 function showDashboard() {
   loginView.style.display = 'none';
   dashView.style.display  = '';
+  var _ts = document.getElementById('theme-select');
+  if (_ts) { try { _ts.value = localStorage.getItem('viltv_theme') || 'midnight'; } catch(e){} }
   var p = decodePayload(getToken());
   if (p && p.sub) {
     var el = document.getElementById('session-user');
