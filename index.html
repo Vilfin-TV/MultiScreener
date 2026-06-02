@@ -1446,6 +1446,9 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lns-timer{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);background:var(--card);border:1px solid var(--border);border-radius:6px;padding:4px 10px}
 .lns-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;align-items:start}
 @media(max-width:700px){.lns-grid{grid-template-columns:1fr}}
+/* Ultrawide / large monitors: add columns so cards stay readable instead of stretching */
+@media(min-width:1500px){.lns-grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:2100px){.lns-grid{grid-template-columns:repeat(4,1fr)}}
 .lnb{background:var(--card);border:1px solid var(--border2);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
 .lnb-header{display:flex;align-items:center;gap:7px;padding:8px 12px;background:var(--lnb-color,var(--burn));position:relative}
 .lnb-flag{font-size:14px}
@@ -9008,6 +9011,8 @@ function rbSwitchPanel(panel) {
   const def = _RB_PANELS[panel] || _RB_PANELS.ai;
   const title = document.getElementById('rb-panel-title');
   const clear = document.getElementById('rb-clear-btn');
+  // Leaving the video panel → release the screen wake lock
+  if (panel !== 'video' && typeof _wakeRelease === 'function') _wakeRelease();
   // Hide every panel + deactivate every tab
   Object.values(_RB_PANELS).forEach(p => {
     const el = document.getElementById(p.panelId);
@@ -13370,7 +13375,41 @@ function _ytGetFrame() {
   }
   return f;
 }
-function _ytSetSrc(src) { var f = _ytGetFrame(); if (f) { f.src = src; _ytSyncState(); } }
+/* ── Screen Wake Lock: keep the screen awake while a YouTube video is playing ──
+   Prevents the OS screensaver/display-sleep from stopping playback. Auto
+   re-acquires when the tab regains focus (the lock is released by the browser
+   on tab blur/minimise). Released when the video is cleared/stopped. */
+var _wakeLock = null, _wakeWanted = false;
+async function _wakeAcquire() {
+  _wakeWanted = true;
+  try {
+    if ('wakeLock' in navigator && document.visibilityState === 'visible') {
+      if (_wakeLock) return;
+      _wakeLock = await navigator.wakeLock.request('screen');
+      _wakeLock.addEventListener('release', function () { _wakeLock = null; });
+    }
+  } catch (e) { _wakeLock = null; /* user/OS denied — nothing else we can do */ }
+}
+async function _wakeRelease() {
+  _wakeWanted = false;
+  try { if (_wakeLock) { await _wakeLock.release(); } } catch (e) {}
+  _wakeLock = null;
+}
+document.addEventListener('visibilitychange', function () {
+  if (document.visibilityState === 'visible' && _wakeWanted && !_wakeLock) _wakeAcquire();
+});
+
+function _ytSetSrc(src) {
+  var f = _ytGetFrame();
+  if (f) {
+    f.src = src;
+    _ytSyncState();
+    // acquire the wake lock for a real video; release for blank/empty
+    var s = String(src || '');
+    if (s && s.indexOf('youtube.com') !== -1 && s.indexOf('about:blank') === -1) _wakeAcquire();
+    else _wakeRelease();
+  }
+}
 
 // ── Channel info (now shown in now-playing only) ──
 function ytUpdateInfo(ch) { /* ch-info removed — info shown in yt-now-playing */ }
