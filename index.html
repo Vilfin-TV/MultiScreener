@@ -13431,28 +13431,61 @@ function _ytGetFrame() {
   }
   return f;
 }
-/* ── Screen Wake Lock: keep the screen awake while a YouTube video is playing ──
-   Prevents the OS screensaver/display-sleep from stopping playback. Auto
-   re-acquires when the tab regains focus (the lock is released by the browser
-   on tab blur/minimise). Released when the video is cleared/stopped. */
-var _wakeLock = null, _wakeWanted = false;
+/* ── Keep the screen awake while a YouTube video is playing ───────────────────
+   Two layers so it works across phones, not just modern Chrome:
+   1) Screen Wake Lock API  → Android Chrome, iOS Safari 16.4+
+   2) Silent looping <video> → fallback for older iPhones / browsers without the
+      Wake Lock API; a tiny muted clip kept playing tells the OS the page is
+      actively presenting media, so the display/screensaver won't sleep.
+   Auto re-acquires on tab refocus; both layers stop when the video clears. */
+var _wakeLock = null, _wakeWanted = false, _wakeVideo = null;
+
+/* tiny base64 MP4 (a few black frames) — no network needed */
+var _WAKE_MP4 = 'data:video/mp4;base64,AAAAHGZ0eXBpc29tAAACAGlzb21pc28ybXA0MQAAAAhmcmVlAAAC721kYXQAAAGzABAHAAABthADAowdbb9/AAAC6W1vb3YAAABsbXZoZAAAAAAAAAAAAAAAAAAAA+gAAAAAAAEAAAEAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAACAAAB6HRyYWsAAABcdGtoZAAAAAMAAAAAAAAAAAAAAAEAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAEAAAAAAAAAAAAAAAJYAAAB9AAAAAAAJGVkdHMAAAAcZWxzdAAAAAAAAAABAAAB9AAAAAAAAQAAAAABYG1kaWEAAAAgbWRoZAAAAAAAAAAAAAAAAAAArEAAAAQAVcQAAAAAAC1oZGxyAAAAAAAAAAB2aWRlAAAAAAAAAAAAAAAAVmlkZW9IYW5kbGVyAAAAAQttaW5mAAAAFHZtaGQAAAABAAAAAAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAADLc3RibAAAAGdzdHNkAAAAAAAAAAEAAABXYXZjMQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAABAAEAASAAAAEgAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYP//AAAAFXN0dHMAAAAAAAAAAQAAAAEAAAQAAAAAFHN0c3MAAAAAAAAAAQAAAAEAAAAcc3RzYwAAAAAAAAABAAAAAQAAAAEAAAABAAAAFHN0c3oAAAAAAAAAuwAAAAEAAAAUc3RjbwAAAAAAAAABAAAAMAAAAGJ1ZHRhAAAAWm1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNTguNzYuMTAw';
+
+function _wakeVideoStart() {
+  try {
+    if (!_wakeVideo) {
+      _wakeVideo = document.createElement('video');
+      _wakeVideo.setAttribute('playsinline', ''); _wakeVideo.playsInline = true;
+      _wakeVideo.muted = true; _wakeVideo.defaultMuted = true; _wakeVideo.loop = true;
+      _wakeVideo.setAttribute('webkit-playsinline', '');
+      _wakeVideo.style.cssText = 'position:fixed;width:2px;height:2px;opacity:0.01;pointer-events:none;bottom:0;right:0;z-index:-1';
+      _wakeVideo.src = _WAKE_MP4;
+      document.body.appendChild(_wakeVideo);
+    }
+    var p = _wakeVideo.play(); if (p && p.catch) p.catch(function(){});
+  } catch (e) {}
+}
+function _wakeVideoStop() {
+  try { if (_wakeVideo) { _wakeVideo.pause(); } } catch (e) {}
+}
+
 async function _wakeAcquire() {
   _wakeWanted = true;
+  var got = false;
   try {
     if ('wakeLock' in navigator && document.visibilityState === 'visible') {
-      if (_wakeLock) return;
-      _wakeLock = await navigator.wakeLock.request('screen');
-      _wakeLock.addEventListener('release', function () { _wakeLock = null; });
+      if (!_wakeLock) {
+        _wakeLock = await navigator.wakeLock.request('screen');
+        _wakeLock.addEventListener('release', function () { _wakeLock = null; });
+      }
+      got = !!_wakeLock;
     }
-  } catch (e) { _wakeLock = null; /* user/OS denied — nothing else we can do */ }
+  } catch (e) { _wakeLock = null; }
+  // fallback layer (also runs alongside on iOS where the API is flaky)
+  _wakeVideoStart();
 }
 async function _wakeRelease() {
   _wakeWanted = false;
   try { if (_wakeLock) { await _wakeLock.release(); } } catch (e) {}
   _wakeLock = null;
+  _wakeVideoStop();
 }
 document.addEventListener('visibilitychange', function () {
-  if (document.visibilityState === 'visible' && _wakeWanted && !_wakeLock) _wakeAcquire();
+  if (document.visibilityState === 'visible' && _wakeWanted) {
+    if (!_wakeLock) _wakeAcquire(); else _wakeVideoStart();
+  }
 });
 
 function _ytSetSrc(src) {
