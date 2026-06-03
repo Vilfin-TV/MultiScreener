@@ -3673,6 +3673,7 @@ var AcademyVideos = (function() {
   };
   var players = {};                 // scope ('kana'|'kanji') -> YT.Player
   var current = { kana: 0, kanji: 0 };
+  var errCount = { kana: 0, kanji: 0 };  // consecutive unplayable-video skips
   var apiReady = false;
   var pending = [];
 
@@ -3730,9 +3731,33 @@ var AcademyVideos = (function() {
             if (slider) { slider.value = v; slider.style.setProperty('--vol', v + '%'); }
             updateMuteIcon(scope);
           } catch (err) {}
+        },
+        'onStateChange': function(e) {
+          // A video actually started — clear the unplayable-skip counter.
+          if (e && e.data === 1) errCount[scope] = 0;
+        },
+        'onError': function(e) {
+          // 100 = removed/private, 101/150 = embedding disabled by owner, 2 = bad id.
+          var code = e && e.data;
+          if (code === 100 || code === 101 || code === 150 || code === 2) skipUnplayable(scope);
         }
       }
     });
+  }
+
+  // When a video can't be embedded/played, move to the next entry so the panel
+  // never sits on a blank "Video unavailable" frame. Stops once every entry tried.
+  function skipUnplayable(scope) {
+    var list = listFor(scope);
+    if (!list.length) return;
+    errCount[scope] = (errCount[scope] || 0) + 1;
+    var nowEl = el(scope, 'now');
+    if (errCount[scope] >= list.length) {
+      if (nowEl) nowEl.textContent = '⚠ Restricted on this site — tap a title or use Watch on YouTube';
+      return;
+    }
+    current[scope] = (current[scope] + 1) % list.length;
+    render(scope); // cues the next entry (no autoplay)
   }
 
   function updateMuteIcon(scope) {
@@ -3778,6 +3803,7 @@ var AcademyVideos = (function() {
   function play(scope, i) {
     var list = listFor(scope);
     if (!list.length) return;
+    errCount[scope] = 0;  // explicit user choice resets the skip guard
     current[scope] = ((i % list.length) + list.length) % list.length;
     ensurePlayer(scope, list[current[scope]], true);  // user click → autoplay
     render(scope);
