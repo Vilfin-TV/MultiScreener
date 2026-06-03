@@ -306,6 +306,22 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
   font-weight: 700; color: var(--text3); margin-bottom: 10px;
 }
 
+/* Academy video panel — mirrors index.html YouTube Live styling & controls */
+.acad-video-ratio { width:100%; padding-top:56.25%; position:relative; background:#000; overflow:hidden; }
+.acad-player, .acad-video-ratio iframe { position:absolute; top:0; left:0; width:100%; height:100%; border:0; }
+.acad-controls { display:flex; align-items:center; gap:5px; padding:6px 10px; background:#050a14; border-bottom:1px solid #0e1e36; flex-wrap:nowrap; overflow:hidden; }
+.acad-ctrl-btn { width:28px; height:28px; border:1px solid #1a2f4e; border-radius:6px; background:#0a1628; color:#93c5fd; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .15s; padding:0; }
+.acad-ctrl-btn:hover { background:#1d4ed8; border-color:#2563eb; color:#fff; }
+.acad-ctrl-btn:active { transform:scale(.92); }
+.acad-vol { -webkit-appearance:none; appearance:none; height:4px; flex:1; min-width:40px; max-width:90px; background:linear-gradient(to right,#2563eb 0%,#2563eb var(--vol,100%),#1a2f4e var(--vol,100%),#1a2f4e 100%); border-radius:99px; cursor:pointer; outline:none; border:none; }
+.acad-vol::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:12px; height:12px; border-radius:50%; background:#60a5fa; border:2px solid #1d4ed8; cursor:pointer; }
+.acad-now { font-size:10px; color:#cbd5e1; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding-left:4px; font-weight:600; }
+.acad-list { max-height:200px; overflow-y:auto; background:var(--bg); border-bottom-left-radius:8px; border-bottom-right-radius:8px; }
+.acad-row { padding:10px 16px; border-bottom:1px solid var(--border2); cursor:pointer; font-size:13px; color:var(--text2); }
+.acad-row:hover { background:var(--card); }
+.acad-row.active { color:var(--gold2); font-weight:700; border-left:3px solid var(--gold2); }
+.acad-empty { padding:16px; color:var(--text3); text-align:center; font-size:12px; }
+
 .jlpt-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
 @media(max-width:500px){ .jlpt-options{grid-template-columns:1fr} }
 
@@ -678,8 +694,8 @@ t3);flex-wrap:wrap;gap:12px;
                 <span id="kana-game-title">HIRAGANA SOUND RECALL GAME</span>
                 <span id="kana-score-display">SCORE: 0 / 0</span>
               </div>
-              <div class="kana-game-char" id="kana-game-question">あ</div>
-              <p class="study-lead" style="font-size:16px; margin-bottom:8px; text-align:center;">Identify the correct romaji syllable sound:</p>
+              <div class="kana-game-char" id="kana-game-question">あさ</div>
+              <p class="study-lead" style="font-size:16px; margin-bottom:8px; text-align:center;">Read the full word above and pick its correct romaji reading:</p>
               <div class="jlpt-options" id="kana-game-options" style="margin-bottom:0;">
               </div>
             </div>
@@ -689,23 +705,22 @@ t3);flex-wrap:wrap;gap:12px;
               <div style="text-align:center; color:var(--text3);">Click any Character card on the left to inspect its stroke notes, pronunciation, example vocabulary, and custom visual cues!</div>
             </div>
             
-            <!-- Academy YouTube Panel -->
+            <!-- Academy YouTube Panel (matches index.html YouTube Live style & controls) -->
             <div class="kana-game-box" style="margin-top:20px; padding:0; overflow:hidden; border:1px solid var(--border);">
               <div class="kana-score-row" style="padding:12px 16px; border-bottom:1px solid var(--border); margin-bottom:0; background:var(--card);">
                 <span id="academy-video-header" style="font-weight:bold; color:var(--text); text-transform:uppercase; font-size:12px;">LANGUAGE ACADEMY VIDEOS</span>
               </div>
-              <iframe id="academy-video-iframe" src="https://www.youtube.com/embed/s8ZtdgZ7Pms?rel=0&controls=1"
-                      style="width:100%; aspect-ratio:16/9; border:none; display:block; background:#000;" 
-                      allow="encrypted-media; picture-in-picture" 
-                      allowfullscreen></iframe>
-              <div id="academy-video-controls" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:var(--card); border-bottom:1px solid var(--border);">
-                <button class="option-btn" style="width:auto; padding:6px 12px; font-size:13px; margin:0; border-radius:4px; border:1px solid var(--border); background:var(--bg); cursor:pointer;" onclick="playPrevAcademyVideo()">&#9664; Back</button>
-                <div style="font-size:12px; color:var(--text3);">Controls & Volume are inside video</div>
-                <button class="option-btn" style="width:auto; padding:6px 12px; font-size:13px; margin:0; border-radius:4px; border:1px solid var(--border); background:var(--bg); cursor:pointer;" onclick="playNextAcademyVideo()">Next &#9654;</button>
+              <div class="acad-video-ratio">
+                <div id="academy-kana-player" class="acad-player"></div>
               </div>
-              <div id="academy-video-title" style="padding:12px 16px; background:var(--bg); color:var(--text2); font-size:14px; font-weight:500; border-bottom-left-radius:8px; border-bottom-right-radius:8px; text-align:center;">
-                Katakana Lesson
+              <div class="acad-controls" id="academy-kana-controls">
+                <button class="acad-ctrl-btn" id="academy-kana-mute" onclick="AcademyVideos.toggleMute('kana')" title="Mute / Unmute">&#x1F507;</button>
+                <input class="acad-vol" id="academy-kana-vol" type="range" min="0" max="100" value="100" oninput="AcademyVideos.setVolume('kana', this.value)" title="Volume" style="--vol:100%">
+                <button class="acad-ctrl-btn" onclick="AcademyVideos.prev('kana')" title="Previous video">&#x23EE;</button>
+                <button class="acad-ctrl-btn" onclick="AcademyVideos.next('kana')" title="Next video">&#x23ED;</button>
+                <span class="acad-now" id="academy-kana-now"></span>
               </div>
+              <div id="academy-kana-list" class="acad-list"></div>
             </div>
           </div>
         </div>
@@ -734,6 +749,24 @@ t3);flex-wrap:wrap;gap:12px;
               <div class="kana-score-row"><span>KANJI RECALL</span><span id="kanji-score-display">SCORE: 0 / 0</span></div>
               <div class="kana-char" id="kanji-game-question" style="text-align:center; margin:16px 0;">日</div>
               <div id="kanji-game-options"></div>
+            </div>
+
+            <!-- Academy YouTube Panel — Kanji learning videos -->
+            <div class="kana-game-box" style="margin-top:20px; padding:0; overflow:hidden; border:1px solid var(--border);">
+              <div class="kana-score-row" style="padding:12px 16px; border-bottom:1px solid var(--border); margin-bottom:0; background:var(--card);">
+                <span style="font-weight:bold; color:var(--text); text-transform:uppercase; font-size:12px;">LANGUAGE ACADEMY VIDEOS — KANJI</span>
+              </div>
+              <div class="acad-video-ratio">
+                <div id="academy-kanji-player" class="acad-player"></div>
+              </div>
+              <div class="acad-controls" id="academy-kanji-controls">
+                <button class="acad-ctrl-btn" id="academy-kanji-mute" onclick="AcademyVideos.toggleMute('kanji')" title="Mute / Unmute">&#x1F507;</button>
+                <input class="acad-vol" id="academy-kanji-vol" type="range" min="0" max="100" value="100" oninput="AcademyVideos.setVolume('kanji', this.value)" title="Volume" style="--vol:100%">
+                <button class="acad-ctrl-btn" onclick="AcademyVideos.prev('kanji')" title="Previous video">&#x23EE;</button>
+                <button class="acad-ctrl-btn" onclick="AcademyVideos.next('kanji')" title="Next video">&#x23ED;</button>
+                <span class="acad-now" id="academy-kanji-now"></span>
+              </div>
+              <div id="academy-kanji-list" class="acad-list"></div>
             </div>
           </div>
         </div>
@@ -1766,26 +1799,30 @@ function getKanaSvgVisual(romaji, wordStr) {
   } else if (r === 'neko' || r === 'ne') {
     return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;"><polygon points="40,50 30,30 55,45" fill="var(--amber)"/><polygon points="80,50 90,30 65,45" fill="var(--amber)"/><circle cx="60" cy="65" r="25" fill="var(--card4)" stroke="var(--border2)" stroke-width="2"/><circle cx="50" cy="60" r="3" fill="#fff"/><circle cx="70" cy="60" r="3" fill="#fff"/><line x1="30" y1="65" x2="45" y2="65" stroke="var(--text3)" stroke-width="1.5"/><line x1="90" y1="65" x2="75" y2="65" stroke="var(--text3)" stroke-width="1.5"/><polygon points="58,66 62,66 60,69" fill="var(--red)"/><text x="60" y="105" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">NEKO (CAT)</text></svg>`;
   } else {
-    // REAL CLOUDFLARE PHOTO
+    // Pexels image (auto-fetched via GitHub Action) — primary source
     const imgUrl = `${CF_R2_URL}/kana/${r}.jpg`;
-    
-    // Determine fallback text
+
+    // Determine the example label (the meaning) for the designed fallback
     let subText = "EXAMPLE";
     if (wordStr) {
       const match = wordStr.match(/^([^\(]+)\s*\((.+?)\)$/);
       if (match) {
         const parts = match[2].split('-');
-        if (parts.length > 1) {
-            subText = parts[1].trim().toUpperCase();
-        } else {
-            subText = match[2].trim().toUpperCase(); 
-        }
+        subText = (parts.length > 1 ? parts[1] : match[2]).replace(/\*.*$/, '').trim().toUpperCase();
       }
     }
-    
-    const fallbackSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid #1a2b4c; display:block; margin:0 auto 12px;"><circle cx="60" cy="50" r="38" fill="#112240" stroke="#1a2b4c" stroke-width="1"/><text x="60" y="60" font-size="10" fill="#8892b0" font-weight="bold" text-anchor="middle">Loading Image...</text><text x="60" y="106" font-size="9" fill="#8892b0" font-weight="700" text-anchor="middle" letter-spacing="0.5">${subText}</text></svg>`;
+    // Trim very long labels so they fit the card
+    if (subText.length > 16) subText = subText.slice(0, 15) + '…';
+
+    // Original Claude-designed SVG illustration — shown when the photo is missing
+    // (deterministic accent colour per syllable so each card feels distinct)
+    const palette = ['#38bdf8','#fbbf24','#22c55e','#f472b6','#a78bfa','#fb923c','#2dd4bf','#f87171'];
+    let h = 0; for (let ci = 0; ci < r.length; ci++) h = (h * 31 + r.charCodeAt(ci)) >>> 0;
+    const accent = palette[h % palette.length];
+    const rUpper = r.toUpperCase();
+    const fallbackSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="110" height="110" viewBox="0 0 120 120" style="display:block; margin:0 auto 12px;"><defs><linearGradient id="g${r}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0e1f3b"/><stop offset="1" stop-color="#060f1c"/></linearGradient></defs><rect x="0" y="0" width="120" height="120" rx="10" fill="url(#g${r})" stroke="#1a2b4c"/><circle cx="60" cy="50" r="30" fill="none" stroke="${accent}" stroke-width="2" opacity="0.55"/><circle cx="60" cy="50" r="20" fill="${accent}" opacity="0.16"/><text x="60" y="58" font-family="Segoe UI, sans-serif" font-size="22" fill="${accent}" font-weight="800" text-anchor="middle">${rUpper}</text><rect x="14" y="88" width="92" height="22" rx="6" fill="#0a1628" stroke="#1a2b4c"/><text x="60" y="103" font-family="Segoe UI, sans-serif" font-size="9" fill="#cbd5e1" font-weight="700" text-anchor="middle" letter-spacing="0.5">${subText}</text></svg>`;
     const encodedFallback = encodeURIComponent(fallbackSvg);
-    
+
     return `<img src="${imgUrl}" alt="${subText}" style="width:110px; height:110px; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px; object-fit:cover; background:#060f1c;" onerror="this.onerror=null; this.outerHTML=decodeURIComponent('${encodedFallback}');" />`;
   }
 }
@@ -2126,46 +2163,137 @@ function renderKanaDetails(idx) {
   document.getElementById('kana-details-box').innerHTML = detailsHtml;
 }
 
-// Setup character recall game
-function loadKanaRecallDrill() {
-  // Select a random character index
-  const rIdx = Math.floor(Math.random() * KANA_DATA.length);
-  _recallQuestionIdx = rIdx;
-  
-  const item = KANA_DATA[rIdx];
-  const char = _activeKanaType === 'hiragana' ? item.h : item.k;
-  document.getElementById('kana-game-question').textContent = char;
-  
-  // Generate 4 multiple choice options (including correct answer)
-  let options = [item.r];
-  while (options.length < 4) {
-    const randomItem = KANA_DATA[Math.floor(Math.random() * KANA_DATA.length)];
-    if (!options.includes(randomItem.r)) {
-      options.push(randomItem.r);
+// ── Romaji → Kana conversion (powers the full-word recall game) ──
+const _ROMAJI_KANA = {
+  'kya':'きゃ','kyu':'きゅ','kyo':'きょ','sha':'しゃ','shu':'しゅ','sho':'しょ',
+  'cha':'ちゃ','chu':'ちゅ','cho':'ちょ','nya':'にゃ','nyu':'にゅ','nyo':'にょ',
+  'hya':'ひゃ','hyu':'ひゅ','hyo':'ひょ','mya':'みゃ','myu':'みゅ','myo':'みょ',
+  'rya':'りゃ','ryu':'りゅ','ryo':'りょ','gya':'ぎゃ','gyu':'ぎゅ','gyo':'ぎょ',
+  'ja':'じゃ','ju':'じゅ','jo':'じょ','bya':'びゃ','byu':'びゅ','byo':'びょ',
+  'pya':'ぴゃ','pyu':'ぴゅ','pyo':'ぴょ',
+  'shi':'し','chi':'ち','tsu':'つ',
+  'ka':'か','ki':'き','ku':'く','ke':'け','ko':'こ',
+  'sa':'さ','su':'す','se':'せ','so':'そ',
+  'ta':'た','te':'て','to':'と',
+  'na':'な','ni':'に','nu':'ぬ','ne':'ね','no':'の',
+  'ha':'は','hi':'ひ','fu':'ふ','he':'へ','ho':'ほ',
+  'ma':'ま','mi':'み','mu':'む','me':'め','mo':'も',
+  'ya':'や','yu':'ゆ','yo':'よ',
+  'ra':'ら','ri':'り','ru':'る','re':'れ','ro':'ろ',
+  'wa':'わ','wo':'を',
+  'ga':'が','gi':'ぎ','gu':'ぐ','ge':'げ','go':'ご',
+  'za':'ざ','ji':'じ','zu':'ず','ze':'ぜ','zo':'ぞ',
+  'da':'だ','de':'で','do':'ど',
+  'ba':'ば','bi':'び','bu':'ぶ','be':'べ','bo':'ぼ',
+  'pa':'ぱ','pi':'ぴ','pu':'ぷ','pe':'ぺ','po':'ぽ',
+  'a':'あ','i':'い','u':'う','e':'え','o':'お','n':'ん'
+};
+function romajiWordToHiragana(romaji) {
+  const s = (romaji || '').toLowerCase().replace(/[^a-z]/g, '');
+  let out = '', i = 0;
+  while (i < s.length) {
+    const c = s[i];
+    const isVowel = 'aeiou'.indexOf(c) >= 0;
+    // 'tch' → small tsu + chi
+    if (c === 't' && s[i+1] === 'c' && s[i+2] === 'h') { out += 'っ'; i++; continue; }
+    // doubled consonant → small tsu
+    if (!isVowel && c !== 'n' && s[i+1] === c) { out += 'っ'; i++; continue; }
+    // syllabic n (not followed by a vowel or y)
+    if (c === 'n') {
+      const nx = s[i+1];
+      if (nx === undefined || 'aeiouy'.indexOf(nx) < 0) { out += 'ん'; i++; continue; }
     }
+    let matched = false;
+    for (let len = 3; len >= 1; len--) {
+      const chunk = s.substr(i, len);
+      if (_ROMAJI_KANA[chunk]) { out += _ROMAJI_KANA[chunk]; i += len; matched = true; break; }
+    }
+    if (!matched) { out += s[i]; i++; }
   }
-  
-  // Shuffle options
+  return out;
+}
+function hiraganaToKatakana(hira) {
+  let out = '';
+  for (const ch of hira) {
+    const code = ch.charCodeAt(0);
+    out += (code >= 0x3041 && code <= 0x3096) ? String.fromCharCode(code + 0x60) : ch;
+  }
+  return out;
+}
+
+// Build a word bank (full kana words + romaji + meaning) from KANA_DATA examples
+let _kanaWordBank = null;
+function getKanaWordBank() {
+  if (_kanaWordBank) return _kanaWordBank;
+  _kanaWordBank = [];
+  KANA_DATA.forEach(item => {
+    if (!item.word) return;
+    const m = item.word.match(/\(([a-zA-Z']+)\s*-\s*([^)]+)\)/);
+    if (!m) return;
+    const romaji = m[1].toLowerCase();
+    const meaning = m[2].replace(/\*.*$/, '').trim();
+    const hira = romajiWordToHiragana(romaji);
+    if (!romaji || !hira) return;
+    _kanaWordBank.push({ romaji: romaji, meaning: meaning, hira: hira, kata: hiraganaToKatakana(hira) });
+  });
+  return _kanaWordBank;
+}
+
+// Setup full-word recall game (show a full kana word, pick its romaji reading)
+function loadKanaRecallDrill() {
+  const bank = getKanaWordBank();
+  if (!bank.length) return;
+  const isHira = _activeKanaType === 'hiragana';
+
+  const rIdx = Math.floor(Math.random() * bank.length);
+  _recallQuestionIdx = rIdx;
+  const item = bank[rIdx];
+  const wordKana = isHira ? item.hira : item.kata;
+
+  const qEl = document.getElementById('kana-game-question');
+  if (qEl) {
+    qEl.style.fontSize = wordKana.length > 4 ? '34px' : '44px';
+    qEl.innerHTML = esc(wordKana)
+      + '<div style="font-size:13px; color:var(--text3); font-weight:600; margin-top:6px;">Meaning: ' + esc(item.meaning) + '</div>';
+  }
+
+  // Generate 4 multiple choice options (full-word romaji readings)
+  let options = [item.romaji];
+  let guard = 0;
+  while (options.length < 4 && options.length < bank.length && guard++ < 200) {
+    const r = bank[Math.floor(Math.random() * bank.length)].romaji;
+    if (!options.includes(r)) options.push(r);
+  }
   options.sort(() => Math.random() - 0.5);
-  
+
   const optionsHtml = options.map(opt => {
     return '<button class="option-btn" style="padding:10px 12px; font-size:15px;" onclick="selectKanaRecallOption(\'' + esc(opt) + '\')">' + esc(opt) + '</button>';
   }).join('');
-  
+
   document.getElementById('kana-game-options').innerHTML = optionsHtml;
 }
 
-// Select recall game option
+// Select recall game option (scores tracked separately per script)
 function selectKanaRecallOption(selectedRomaji) {
-  const item = KANA_DATA[_recallQuestionIdx];
-  const correctRomaji = item.r;
-  
-  _recallScoreTotal++;
-  const isCorrect = selectedRomaji === correctRomaji;
-  if (isCorrect) _recallScoreCorrect++;
-  
-  document.getElementById('kana-score-display').textContent = 'SCORE: ' + _recallScoreCorrect + ' / ' + _recallScoreTotal;
-  
+  const bank = getKanaWordBank();
+  const item = bank[_recallQuestionIdx];
+  if (!item) return;
+  const correctRomaji = item.romaji;
+  const isHira = _activeKanaType === 'hiragana';
+
+  if (isHira) {
+    _hiraScoreTotal++;
+    if (selectedRomaji === correctRomaji) _hiraScoreCorrect++;
+  } else {
+    _kataScoreTotal++;
+    if (selectedRomaji === correctRomaji) _kataScoreCorrect++;
+  }
+  const scoreText = isHira
+    ? (_hiraScoreCorrect + ' / ' + _hiraScoreTotal)
+    : (_kataScoreCorrect + ' / ' + _kataScoreTotal);
+  const scoreEl = document.getElementById('kana-score-display');
+  if (scoreEl) scoreEl.textContent = 'SCORE: ' + scoreText;
+
   // Highlight correctness
   document.querySelectorAll('#kana-game-options .option-btn').forEach(btn => {
     btn.disabled = true;
@@ -2175,9 +2303,9 @@ function selectKanaRecallOption(selectedRomaji) {
       btn.classList.add('incorrect');
     }
   });
-  
-  // Load next question automatically after 1.2s
-  setTimeout(loadKanaRecallDrill, 1300);
+
+  // Load next question automatically
+  setTimeout(loadKanaRecallDrill, 1400);
 }
 
 
@@ -2608,6 +2736,14 @@ document.addEventListener('DOMContentLoaded', function() {
   try { loadKanjiGame(); } catch(e){ console.error(e); }
   // Load admin notices
   try { _loadAcademyNotices(); } catch(e){}
+  // Returning from the MOC test? Re-open the JLPT level the user was studying.
+  try {
+    var _jp = new URLSearchParams(window.location.search).get('jlpt');
+    if (_jp && typeof openJlpt === 'function') {
+      var _lvl = parseInt(_jp, 10);
+      if (_lvl >= 1 && _lvl <= 5) openJlpt(_lvl);
+    }
+  } catch(e){ console.error(e); }
 });
 // ══════════════════════════════════════════
 // JLPT MOC TEST LOGIC
@@ -3528,117 +3664,167 @@ function clearTranslationInput() {
   }
 }
 
-// --- ACADEMY VIDEO LOGIC ---
-(function() {
-  var _academyHiragana = [];
-  var _academyKatakana = [];
+// --- ACADEMY VIDEO LOGIC (YouTube IFrame API — mirrors index.html Live player) ---
+var AcademyVideos = (function() {
+  var data = {
+    hiragana: [{ id: '6p9Il_j0zjc', title: 'Hiragana Lesson' }],
+    katakana: [{ id: 's6DKRgtVLGA', title: 'Katakana Lesson' }],
+    kanji:    [{ id: 'h_eJqfFkb1w', title: 'Kanji Lesson' }]
+  };
+  var players = {};                 // scope ('kana'|'kanji') -> YT.Player
+  var current = { kana: 0, kanji: 0 };
+  var apiReady = false;
+  var pending = [];
 
-  window.fetchAcademyVideos = async function() {
+  function activeKanaType() {
+    return (typeof _activeKanaType !== 'undefined' ? _activeKanaType : 'hiragana');
+  }
+  // Resolve a panel scope to its current video list
+  function listFor(scope) {
+    if (scope === 'kanji') return data.kanji || [];
+    return (activeKanaType() === 'hiragana' ? data.hiragana : data.katakana) || [];
+  }
+  function el(scope, suffix) { return document.getElementById('academy-' + scope + '-' + suffix); }
+
+  /* ── YouTube IFrame API bootstrap ── */
+  function loadApi() {
+    if (window.YT && window.YT.Player) { apiReady = true; return; }
+    if (document.getElementById('yt-iframe-api-academy')) return;
+    var tag = document.createElement('script');
+    tag.id = 'yt-iframe-api-academy';
+    tag.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(tag);
+  }
+  var _prevYTReady = window.onYouTubeIframeAPIReady;
+  window.onYouTubeIframeAPIReady = function() {
+    if (typeof _prevYTReady === 'function') { try { _prevYTReady(); } catch (e) {} }
+    apiReady = true;
+    var q = pending.slice(); pending = [];
+    q.forEach(function(fn) { try { fn(); } catch (e) { console.error(e); } });
+  };
+
+  function ensurePlayer(scope, videoId, autoplay) {
+    var hostId = 'academy-' + scope + '-player';
+    if (!document.getElementById(hostId)) return;
+    if (!apiReady) { pending.push(function() { ensurePlayer(scope, videoId, autoplay); }); loadApi(); return; }
+    if (players[scope]) {
+      if (videoId) {
+        if (autoplay) players[scope].loadVideoById(videoId);
+        else players[scope].cueVideoById(videoId);
+      }
+      return;
+    }
+    players[scope] = new YT.Player(hostId, {
+      videoId: videoId || '',
+      playerVars: { rel: 0, modestbranding: 1, playsinline: 1 },
+      events: {
+        'onReady': function(e) {
+          try {
+            var v = e.target.getVolume();
+            var slider = el(scope, 'vol');
+            if (slider) { slider.value = v; slider.style.setProperty('--vol', v + '%'); }
+            updateMuteIcon(scope);
+          } catch (err) {}
+        }
+      }
+    });
+  }
+
+  function updateMuteIcon(scope) {
+    var btn = el(scope, 'mute');
+    var p = players[scope];
+    if (!btn || !p || !p.isMuted) return;
+    btn.innerHTML = p.isMuted() ? '🔇' : '🔊';
+  }
+
+  /* ── Rendering ── */
+  function render(scope) {
+    var list = listFor(scope);
+    var listEl = el(scope, 'list');
+    var nowEl  = el(scope, 'now');
+    var controls = el(scope, 'controls');
+    if (!listEl) return;
+
+    if (!list.length) {
+      listEl.innerHTML = '<div class="acad-empty">No videos added yet. Add them in the VilfinTV Console.</div>';
+      if (nowEl) nowEl.textContent = '';
+      if (controls) controls.style.display = 'none';
+      return;
+    }
+    if (controls) controls.style.display = 'flex';
+
+    if (current[scope] >= list.length) current[scope] = 0;
+    var idx = current[scope];
+
+    var html = '';
+    list.forEach(function(v, i) {
+      var title = v.title || v.name || 'Academy Video';
+      html += '<div class="acad-row' + (i === idx ? ' active' : '') + '" onclick="AcademyVideos.play(\'' + scope + '\', ' + i + ')">' + esc(title) + '</div>';
+    });
+    listEl.innerHTML = html;
+    if (nowEl) nowEl.textContent = '▶ ' + (list[idx].title || list[idx].name || 'Academy Video');
+
+    // Cue (no autoplay) the current video into the player
+    ensurePlayer(scope, list[idx].id, false);
+  }
+
+  /* ── Public controls ── */
+  function play(scope, i) {
+    var list = listFor(scope);
+    if (!list.length) return;
+    current[scope] = ((i % list.length) + list.length) % list.length;
+    ensurePlayer(scope, list[current[scope]].id, true);  // user click → autoplay
+    render(scope);
+  }
+  function next(scope) { var l = listFor(scope); if (l.length) play(scope, current[scope] + 1); }
+  function prev(scope) { var l = listFor(scope); if (l.length) play(scope, current[scope] - 1); }
+  function toggleMute(scope) {
+    var p = players[scope]; if (!p || !p.isMuted) return;
+    if (p.isMuted()) p.unMute(); else p.mute();
+    updateMuteIcon(scope);
+  }
+  function setVolume(scope, val) {
+    var p = players[scope];
+    var slider = el(scope, 'vol');
+    if (slider) slider.style.setProperty('--vol', val + '%');
+    if (!p || !p.setVolume) return;
+    p.setVolume(parseInt(val, 10));
+    if (parseInt(val, 10) > 0 && p.isMuted && p.isMuted()) { p.unMute(); updateMuteIcon(scope); }
+  }
+
+  /* ── Config load ── */
+  async function fetchVideos() {
     try {
-      _academyHiragana = [{ id: '6p9Il_j0zjc', title: 'Hiragana Lesson' }];
-      _academyKatakana = [{ id: 's6DKRgtVLGA', title: 'Katakana Lesson' }];
-      
-      const res = await fetch('https://vilfintv.com/config.json?t=' + Date.now());
+      var res = await fetch('https://vilfintv.com/config.json?t=' + Date.now());
       if (res.ok) {
-        const data = await res.json();
-        if (data.academy_hiragana) _academyHiragana = data.academy_hiragana;
-        if (data.academy_katakana) _academyKatakana = data.academy_katakana;
+        var cfg = await res.json();
+        if (Array.isArray(cfg.academy_hiragana) && cfg.academy_hiragana.length) data.hiragana = cfg.academy_hiragana;
+        if (Array.isArray(cfg.academy_katakana) && cfg.academy_katakana.length) data.katakana = cfg.academy_katakana;
+        if (Array.isArray(cfg.academy_kanji)    && cfg.academy_kanji.length)    data.kanji    = cfg.academy_kanji;
       }
     } catch (e) {
       console.error('Failed to load Academy videos:', e);
     }
-    window.renderAcademyVideoList();
-  };
+    render('kana');
+    render('kanji');
+  }
 
-  window.renderAcademyVideoList = function() {
-    try {
-      const listContainer = document.getElementById('academy-video-list');
-      const iframe = document.getElementById('academy-video-iframe');
-      if (!listContainer || !iframe) return;
-      
-      const kanaType = typeof _activeKanaType !== 'undefined' ? _activeKanaType : 'hiragana';
-      const videos = kanaType === 'hiragana' ? _academyHiragana : _academyKatakana;
-      
-      if (!videos || videos.length === 0) {
-        listContainer.innerHTML = '<div style="padding:16px; color:var(--text3); text-align:center; font-size:12px;">No videos added yet. Add them in the Console.</div>';
-        iframe.src = '';
-        return;
-      }
-      
-      const src = iframe.src || '';
-      const currentMatch = src.match(/embed\/([^?]+)/);
-      const currentId = currentMatch ? currentMatch[1] : null;
-      
-      if (!currentId || !videos.find(v => v.id === currentId)) {
-        window.playAcademyVideo(videos[0].id);
-      }
-      
-      let html = '';
-      videos.forEach(v => {
-        let titleEscaped = v.title || v.name || 'Academy Video';
-        if (typeof esc === 'function') titleEscaped = esc(titleEscaped);
-        html += '<div class="bl-row" style="padding:10px 16px; border-bottom:1px solid var(--border2); cursor:pointer;" onclick="playAcademyVideo(\'' + v.id + '\')">'
-              + '  <div class="bl-name" style="font-size:13px;">' + titleEscaped + '</div>'
-              + '</div>';
-      });
-      listContainer.innerHTML = html;
-    } catch(err) {
-      console.error('renderAcademyVideoList error', err);
-    }
-  };
-
-  window.playAcademyVideo = function(id) {
-    const iframe = document.getElementById('academy-video-iframe');
-    if (iframe) {
-      // Removed autoplay=1, explicitly added controls=1 so the native volume/mute bar is visible.
-      iframe.src = 'https://www.youtube.com/embed/' + id + '?rel=0&controls=1';
-    }
-  };
-
-  window.playNextAcademyVideo = function() {
-    const kanaType = typeof _activeKanaType !== 'undefined' ? _activeKanaType : 'hiragana';
-    const videos = kanaType === 'hiragana' ? _academyHiragana : _academyKatakana;
-    if (!videos || !videos.length) return;
-    const iframe = document.getElementById('academy-video-iframe');
-    const src = iframe ? iframe.src : '';
-    const match = src.match(/embed\/([^?]+)/);
-    const curId = match ? match[1] : null;
-    let idx = videos.findIndex(v => v.id === curId);
-    if (idx === -1 || idx === videos.length - 1) idx = 0;
-    else idx++;
-    window.playAcademyVideo(videos[idx].id);
-  };
-
-  window.playPrevAcademyVideo = function() {
-    const kanaType = typeof _activeKanaType !== 'undefined' ? _activeKanaType : 'hiragana';
-    const videos = kanaType === 'hiragana' ? _academyHiragana : _academyKatakana;
-    if (!videos || !videos.length) return;
-    const iframe = document.getElementById('academy-video-iframe');
-    const src = iframe ? iframe.src : '';
-    const match = src.match(/embed\/([^?]+)/);
-    const curId = match ? match[1] : null;
-    let idx = videos.findIndex(v => v.id === curId);
-    if (idx === -1 || idx === 0) idx = videos.length - 1;
-    else idx--;
-    window.playAcademyVideo(videos[idx].id);
-  };
-
-  // Safe hook
-  if (typeof window.toggleKanaType === 'function') {
-    const originalToggle = window.toggleKanaType;
+  // Re-render the kana panel whenever the Hiragana/Katakana toggle changes
+  function hookToggle() {
+    var orig = window.toggleKanaType || (typeof toggleKanaType === 'function' ? toggleKanaType : null);
+    if (typeof orig !== 'function') return;
     window.toggleKanaType = function(type) {
-      try { originalToggle(type); } catch(e) { console.error(e); }
-      window.renderAcademyVideoList();
-    };
-  } else if (typeof toggleKanaType === 'function') {
-    const originalToggle = toggleKanaType;
-    toggleKanaType = function(type) {
-      try { originalToggle(type); } catch(e) { console.error(e); }
-      window.renderAcademyVideoList();
+      try { orig(type); } catch (e) { console.error(e); }
+      current.kana = 0;
+      render('kana');
     };
   }
 
-  setTimeout(window.fetchAcademyVideos, 500);
+  // boot
+  hookToggle();
+  setTimeout(fetchVideos, 400);
+
+  return { play: play, next: next, prev: prev, toggleMute: toggleMute, setVolume: setVolume, render: render, _data: data };
 })();
 
 

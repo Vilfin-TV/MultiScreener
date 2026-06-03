@@ -38,8 +38,8 @@
 </head>
 <body>
   <div class="header">
-    <h1 id="test-title" style="font-size:22px;">JLPT MOC Test</h1>
-    <button onclick="window.location.assign('education.html')" style="background:var(--red); color:#fff; border:none; padding:8px 12px; border-radius:4px; font-weight:bold; cursor:pointer;">Exit</button>
+    <button onclick="backToEducation()" style="background:#0a1628; color:#93c5fd; border:1px solid #1a2f4e; padding:8px 14px; border-radius:6px; font-weight:bold; cursor:pointer;">&#x2190; Back to Drills</button>
+    <h1 id="test-title" style="font-size:22px;flex:1;text-align:center;">JLPT MOC Test</h1>
     <div class="timer" id="timer" style="font-size:18px;">00:00</div>
   </div>
   
@@ -54,7 +54,13 @@
     let _interval = null;
     let _timeRemaining = 0;
     let _totalQuestions = 0;
-    
+    let _level = 5;
+
+    function backToEducation() {
+      clearInterval(_interval);
+      window.location.assign('education.html?jlpt=' + _level);
+    }
+
     function esc(s) {
       if(!s) return '';
       return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -69,6 +75,7 @@
         }
         
         const data = JSON.parse(rawData);
+        _level = data.level;
         document.getElementById('test-title').innerText = 'JLPT N' + data.level + ' MOC Test';
         _sections = data.sections;
         _timeRemaining = data.timeRemaining;
@@ -124,7 +131,7 @@
     function submitTest() {
       clearInterval(_interval);
       document.getElementById('submit-btn').style.display = 'none';
-      document.getElementById('quiz-container').insertAdjacentHTML('afterend', '<div style="text-align:center;margin-top:20px;"><button onclick="window.location.assign(\'education.html\')" class="btn" style="background:var(--green);">Return to Study Guide</button></div>');
+      document.getElementById('quiz-container').insertAdjacentHTML('afterend', '<div style="text-align:center;margin-top:20px;"><button onclick="backToEducation()" class="btn" style="background:var(--green);">&#x2190; Back to Study Guide</button></div>');
       
       let score = 0;
       let globalIdx = 0;

@@ -1433,6 +1433,7 @@
         <div class="ac-stab hp-stab active" data-stab="notices" onclick="switchAcademyTab('notices')">📢 Notices</div>
         <div class="ac-stab hp-stab" data-stab="hiragana" onclick="switchAcademyTab('hiragana')">🇯🇵 Hiragana Videos</div>
         <div class="ac-stab hp-stab" data-stab="katakana" onclick="switchAcademyTab('katakana')">🇯🇵 Katakana Videos</div>
+        <div class="ac-stab hp-stab" data-stab="kanji" onclick="switchAcademyTab('kanji')">🈂️ Kanji Videos</div>
       </div>
       
       <!-- Toolbar -->
@@ -1549,6 +1550,30 @@
           </div>
         </div>
       </div><!-- /ac-katakana -->
+
+      <!-- Kanji Videos Panel -->
+      <div class="ac-spanel hp-spanel" id="ac-kanji">
+        <div class="hp-body">
+          <div class="hp-form-panel">
+            <label class="field-label" for="kanji-id">YouTube Video ID</label>
+            <input type="text" id="kanji-id" placeholder="e.g. dQw4w9WgXcQ" autocomplete="off" spellcheck="false">
+            <label class="field-label" for="kanji-title">Video Title</label>
+            <input type="text" id="kanji-title" placeholder="e.g. Learn Essential N5 Kanji" autocomplete="off" spellcheck="false">
+            <button class="btn-primary" onclick="addAcademyVideo('kanji')">Add Kanji Video</button>
+            <div class="form-status" id="kanji-status"></div>
+          </div>
+          <div class="hp-list-panel">
+            <div class="hp-section-hdr">
+              <div class="hp-section-title">Kanji Video Playlist</div>
+              <div class="hp-section-count" id="kanji-count">0</div>
+            </div>
+            <div class="hp-section-divider"></div>
+            <div class="hp-list" id="kanji-video-list">
+              <div class="empty-note">No videos added.</div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /ac-kanji -->
 
     </div><!-- /tab-academy -->
 
@@ -2503,7 +2528,8 @@ var configState  = {
   youtube_overrides: {}, youtube_channels: [],
   news_overrides:    {}, news_channels:    [],
   ticker_symbols:    [], ticker_symbols_mobile: [],
-  markets_groups:    []
+  markets_groups:    [],
+  academy_hiragana:  [], academy_katakana: [], academy_kanji: []
 };
 var _builtinData   = null;
 var _configLoaded  = false;
@@ -2562,6 +2588,9 @@ async function loadConfig() {
         configState.ticker_symbols       = Array.isArray(data.ticker_symbols)        ? data.ticker_symbols        : [];
         configState.ticker_symbols_mobile= Array.isArray(data.ticker_symbols_mobile) ? data.ticker_symbols_mobile : [];
         configState.markets_groups       = Array.isArray(data.markets_groups)        ? data.markets_groups        : [];
+        configState.academy_hiragana     = Array.isArray(data.academy_hiragana)      ? data.academy_hiragana      : [];
+        configState.academy_katakana     = Array.isArray(data.academy_katakana)      ? data.academy_katakana      : [];
+        configState.academy_kanji        = Array.isArray(data.academy_kanji)         ? data.academy_kanji         : [];
       }
     } else {
       setHpSaveStatus('err', 'config.json not found — starting fresh.');
@@ -3042,32 +3071,48 @@ function addYtChannel() {
   setHpFieldStatus('yt-form-status', 'ok', '✓ Channel added — click Save to Site to publish.');
 }
 
-/* ── Academy Videos Manager (Hiragana & Katakana) ─────────────────────────── */
+/* ── Academy sub-tab switching (Notices / Hiragana / Katakana / Kanji) ─────── */
+function switchAcademyTab(name) {
+  document.querySelectorAll('.ac-stab').forEach(function(t) {
+    t.classList.toggle('active', t.dataset.stab === name);
+  });
+  document.querySelectorAll('.ac-spanel').forEach(function(p) {
+    p.classList.toggle('active', p.id === 'ac-' + name);
+  });
+}
+
+/* ── Academy Videos Manager (Hiragana / Katakana / Kanji) ─────────────────── */
+var _ACADEMY_TYPES = {
+  hiragana: { arr: 'academy_hiragana', list: 'hira-video-list',  count: 'hira-count',  id: 'hira-id',  title: 'hira-title',  status: 'hira-status',  icon: '🇯🇵' },
+  katakana: { arr: 'academy_katakana', list: 'kata-video-list',  count: 'kata-count',  id: 'kata-id',  title: 'kata-title',  status: 'kata-status',  icon: '🇯🇵' },
+  kanji:    { arr: 'academy_kanji',    list: 'kanji-video-list', count: 'kanji-count', id: 'kanji-id', title: 'kanji-title', status: 'kanji-status', icon: '🈂️' }
+};
+
 function renderAcademyVideos() {
-  ['hiragana', 'katakana'].forEach(function(type) {
-    var arr = type === 'hiragana' ? configState.academy_hiragana : configState.academy_katakana;
-    var listEl  = document.getElementById(type === 'hiragana' ? 'hira-video-list' : 'kata-video-list');
-    var countEl = document.getElementById(type === 'hiragana' ? 'hira-count' : 'kata-count');
+  Object.keys(_ACADEMY_TYPES).forEach(function(type) {
+    var cfg = _ACADEMY_TYPES[type];
+    var arr = configState[cfg.arr] || (configState[cfg.arr] = []);
+    var listEl  = document.getElementById(cfg.list);
+    var countEl = document.getElementById(cfg.count);
     if (!listEl) return;
-    
+
     if (countEl) countEl.textContent = arr.length;
-    
+
     if (!arr.length) {
       listEl.innerHTML = '<div class="empty-note">No videos added yet.</div>';
       return;
     }
-    
+
     var html = '';
     arr.forEach(function(vid, i) {
-      var icon = '🇯🇵';
       html += '<div class="hp-item">'
-            + '  <div class="hp-item-icon">' + icon + '</div>'
+            + '  <div class="hp-item-icon">' + cfg.icon + '</div>'
             + '  <div class="hp-item-body">'
             + '    <div class="hp-item-title">' + esc(vid.title) + '</div>'
             + '    <div class="hp-item-sub">ID: ' + esc(vid.id) + '</div>'
             + '  </div>'
             + '  <div class="hp-item-actions">'
-            + '    <button class="act-btn danger" onclick="removeAcademyVideo(\\'' + type + '\\', ' + i + ')" title="Remove">🗑️</button>'
+            + '    <button class="act-btn danger" onclick="removeAcademyVideo(\'' + type + '\', ' + i + ')" title="Remove">🗑️</button>'
             + '  </div>'
             + '</div>';
     });
@@ -3076,31 +3121,34 @@ function renderAcademyVideos() {
 }
 
 function addAcademyVideo(type) {
-  var idEl = document.getElementById(type === 'hiragana' ? 'hira-id' : 'kata-id');
-  var titleEl = document.getElementById(type === 'hiragana' ? 'hira-title' : 'kata-title');
-  var statusId = type === 'hiragana' ? 'hira-status' : 'kata-status';
-  
+  var cfg = _ACADEMY_TYPES[type];
+  if (!cfg) return;
+  var idEl = document.getElementById(cfg.id);
+  var titleEl = document.getElementById(cfg.title);
+
   var vidId = (idEl.value || '').trim();
   var vidTitle = (titleEl.value || '').trim();
-  
+
   if (!vidId) {
-    setHpFieldStatus(statusId, 'err', 'YouTube Video ID is required.');
+    setHpFieldStatus(cfg.status, 'err', 'YouTube Video ID is required.');
     return;
   }
-  
-  var arr = type === 'hiragana' ? configState.academy_hiragana : configState.academy_katakana;
+
+  var arr = configState[cfg.arr] || (configState[cfg.arr] = []);
   arr.push({ id: vidId, title: vidTitle || 'Academy Video' });
-  
+
   idEl.value = '';
   titleEl.value = '';
-  setHpFieldStatus(statusId, 'ok', '✓ Video added — click Save to Site to publish.');
+  setHpFieldStatus(cfg.status, 'ok', '✓ Video added — click Save to Site to publish.');
   markHpDirty();
   renderAcademyVideos();
 }
 
 function removeAcademyVideo(type, idx) {
+  var cfg = _ACADEMY_TYPES[type];
+  if (!cfg) return;
   if (!confirm('Remove this ' + type + ' video?')) return;
-  var arr = type === 'hiragana' ? configState.academy_hiragana : configState.academy_katakana;
+  var arr = configState[cfg.arr] || [];
   arr.splice(idx, 1);
   markHpDirty();
   renderAcademyVideos();
