@@ -3711,8 +3711,10 @@ var AcademyVideos = (function() {
     var vid = (entry && entry.id) ? String(entry.id) : '';
     if (players[scope]) {
       var p = players[scope];
-      if (pl) { autoplay ? p.loadPlaylist({ listType: 'playlist', list: pl }) : p.cuePlaylist({ listType: 'playlist', list: pl }); }
-      else if (vid) { autoplay ? p.loadVideoById(vid) : p.cueVideoById(vid); }
+      try {
+        if (pl) { if (typeof p.loadPlaylist === 'function') { autoplay ? p.loadPlaylist({ listType: 'playlist', list: pl }) : p.cuePlaylist({ listType: 'playlist', list: pl }); } }
+        else if (vid) { if (typeof p.loadVideoById === 'function') { autoplay ? p.loadVideoById(vid) : p.cueVideoById(vid); } }
+      } catch (e) { /* player not ready yet — ignore */ }
       return;
     }
     var vars = { rel: 0, modestbranding: 1, playsinline: 1 };
@@ -3780,8 +3782,18 @@ var AcademyVideos = (function() {
     ensurePlayer(scope, list[current[scope]], true);  // user click → autoplay
     render(scope);
   }
-  function next(scope) { var l = listFor(scope); if (l.length) play(scope, current[scope] + 1); }
-  function prev(scope) { var l = listFor(scope); if (l.length) play(scope, current[scope] - 1); }
+  function next(scope) {
+    var l = listFor(scope); if (!l.length) return;
+    var cur = l[current[scope]], p = players[scope];
+    if (cur && cur.playlist && p && p.nextVideo) { try { p.nextVideo(); return; } catch (e) {} }
+    play(scope, current[scope] + 1);
+  }
+  function prev(scope) {
+    var l = listFor(scope); if (!l.length) return;
+    var cur = l[current[scope]], p = players[scope];
+    if (cur && cur.playlist && p && p.previousVideo) { try { p.previousVideo(); return; } catch (e) {} }
+    play(scope, current[scope] - 1);
+  }
   function toggleMute(scope) {
     var p = players[scope]; if (!p || !p.isMuted) return;
     if (p.isMuted()) p.unMute(); else p.mute();

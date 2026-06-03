@@ -679,6 +679,18 @@ export default {
         }))
         .filter(g => g.name);
 
+      // ── Academy video playlists (Hiragana / Katakana / Kanji) ──────────────
+      const cleanAcademy = (arr) => (Array.isArray(arr) ? arr : [])
+        .map(v => {
+          const o = {
+            id:    String((v && v.id)    || '').trim().slice(0, 40),
+            title: String((v && v.title) || '').trim().slice(0, 120),
+          };
+          if (v && v.playlist) o.playlist = String(v.playlist).trim().slice(0, 60);
+          return o;
+        })
+        .filter(v => v.id || v.playlist);
+
       const cleanConfig = {
         youtube_overrides:     cleanYTOv,
         youtube_channels:      cleanYT,
@@ -687,6 +699,9 @@ export default {
         ticker_symbols:        cleanTicker,
         ticker_symbols_mobile: cleanTickerMobile,
         markets_groups:        cleanMkts,
+        academy_hiragana:      cleanAcademy(config.academy_hiragana),
+        academy_katakana:      cleanAcademy(config.academy_katakana),
+        academy_kanji:         cleanAcademy(config.academy_kanji),
       };
 
       const REPO = 'Vilfin-TV/MultiScreener', FILE_PATH = 'config.json', BRANCH = 'main';
