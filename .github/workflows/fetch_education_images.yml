@@ -1,0 +1,44 @@
+name: Fetch Education Images (Pexels)
+
+on:
+  workflow_dispatch:  # Allows you to trigger it manually from GitHub Actions tab
+
+jobs:
+  fetch_images:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: |
+          npm install pexels node-fetch
+
+      - name: Run Auto-Fetch Script
+        env:
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: |
+          node scripts/auto_fetch_images.js
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add images/
+          # Only commit and push if there are actual changes
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: auto-fetch new mnemonic images from Pexels"
+            git push
+          else
+            echo "No new images to commit."
+          fi

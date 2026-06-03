@@ -61,3 +61,7 @@ The `VilfinTV Screener Config` Google Sheet must have:
 - **LiveTV** worksheet: Columns `Label | VideoId | ChannelId | Status | LastChecked`
 - **Tickers** worksheet: Columns `Symbol | Exchange | Status`
 
+
+
+## Education Site Assets
+- **Photos:** Going forward, all education site free photos (mnemonics, kanji, etc.) are fetched automatically from Pexels via the scripts/auto_fetch_images.js script. Do NOT hardcode manual images if an automated fetch via the Pexels API is possible. The PEXELS_API_KEY is provided via GitHub Secrets.
