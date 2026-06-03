@@ -1,325 +1,767 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="white">
+<html lang="en" data-theme="midnight">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>VilfinTV Academy | Education</title>
-<meta name="description" content="VilfinTV Academy — Premium Interactive Learning Hubs."/>
+<title>VilfinTV Academy | CBSE 1-10 & JLPT Hub</title>
+<meta name="description" content="VilfinTV Academy — Premium Interactive CBSE Classes 1-10 and Japanese JLPT N5-N1 learning hubs."/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<script>
+  (function(){
+    var t = localStorage.getItem('viltv_theme') || 'black';
+    if (t === 'standard') { t = 'midnight'; }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
 <style>
+/* ==========================================================================
+   2026 POLISH LAYER (theme-aware, additive — uses existing --vars, no colour
+   overrides, no logic change). Smoother motion, refined focus + scrollbars.
+   ========================================================================== */
+*{-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+button,a,.card,.tab,input,select{transition:background-color .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease,transform .16s ease}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--burn2,#3b82f6);outline-offset:2px;border-radius:8px}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2,#1e3a5c);border-radius:8px}
+::-webkit-scrollbar-thumb:hover{background:var(--burn,#2563eb)}
+img{-webkit-user-drag:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 
-:root {
-  --bg: #ffffff;
-  --text: #21242c;
-  --text2: #3b3e46;
-  --border: #e2e2e2;
-  --card: #f7f7f8;
-  --card-hover: #ebf2ff;
-  --blue: #1865f2;
-  --green: #14bf96;
-  --footer-bg: #21242c;
-  --footer-text: #a4a7b0;
+/* ==========================================================================
+   THEME VARIABLES & STYLING
+   ========================================================================== */
+:root{
+  --burn:#2563eb;--burn2:#3b82f6;--burn3:#93c5fd;
+  --gold:#1e3a8a;--gold2:#38bdf8;
+  --green:#10b981;--red:#ef4444;--amber:#f59e0b;
+  --dark:#060f1c;--dark2:#0a1830;--dark3:#0e1f3b;--dark4:#162d4f;
+  --card:#0a1830;--card2:#0e1f3b;--card3:#122344;--card4:#1a3050;
+  --text:#e2eeff;--text2:#8ea8c8;--text3:#687a94;
+  --border:#162d4a;--border2:#1e3a5c;
+  --page-bg:#030810;
+  --glow:rgba(37,99,235,.35);
+  --radius:12px;
+}
+[data-theme="standard"]{
+  --gold2:#1d4ed8;--burn3:#1d4ed8;
+  --dark:#f0f4f9;--dark2:#e8edf5;--dark3:#dde3ed;--dark4:#ccd6e3;
+  --card:#ffffff;--card2:#f5f8fc;--card3:#edf2f9;--card4:#e4ebf5;
+  --text:#0f172a;--text2:#374151;--text3:#6b7280;
+  --border:#dde3ed;--border2:#c8d3e0;
+  --page-bg:#f0f4f9;
+}
+[data-theme="midnight"]{
+  --burn:#2563eb;--burn2:#3b82f6;--burn3:#60a5fa;
+  --dark:#060f1c;--dark2:#0a1830;--dark3:#0c1e38;--dark4:#162d4f;
+  --card:#0a1830;--card2:#0c1e38;--card3:#0f2444;--card4:#1a355e;
+  --text:#e2eeff;--text2:#94a3b8;--text3:#64748b;
+  --border:#0f2444;--border2:#1a355e;
+  --page-bg:#030712;
+}
+[data-theme="maroon"]{
+  --burn:#8b0000;--burn2:#a30000;--burn3:#ff7f7f;
+  --dark:#150505;--dark2:#250a0a;--dark3:#300f0f;--dark4:#451414;
+  --card:#250a0a;--card2:#300f0f;--card3:#3a1414;--card4:#501b1b;
+  --text:#ffe2e2;--text2:#c89494;--text3:#946464;
+  --border:#3a1414;--border2:#501b1b;
+  --page-bg:#0a0202;
+}
+[data-theme="silver"]{
+  --burn:#1f2937;--burn2:#374151;--burn3:#9ca3af;
+  --dark:#f3f4f6;--dark2:#e5e7eb;--dark3:#d1d5db;--dark4:#9ca3af;
+  --card:#ffffff;--card2:#f9fafb;--card3:#f3f4f6;--card4:#e5e7eb;
+  --text:#111827;--text2:#4b5563;--text3:#9ca3af;
+  --border:#e5e7eb;--border2:#d1d5db;
+  --page-bg:#f3f4f6;
+}
+[data-theme="gold"]{
+  --burn:#b8860b;--burn2:#ffd700;--burn3:#fff8dc;
+  --dark:#141108;--dark2:#201b0e;--dark3:#2a2414;--dark4:#3e351d;
+  --card:#201b0e;--card2:#2a2414;--card3:#352d19;--card4:#493f24;
+  --text:#fffae8;--text2:#c8b387;--text3:#948464;
+  --border:#352d19;--border2:#493f24;
+  --page-bg:#0a0804;
+}
+[data-theme="gemini"]{
+  --burn:#6a1b9a;--burn2:#ad1457;--burn3:#f48fb1;
+  --dark:#09061c;--dark2:#130b30;--dark3:#180f3d;--dark4:#2c1b69;
+  --card:#130b30;--card2:#180f3d;--card3:#1e144a;--card4:#2a1c66;
+  --text:#f5e2ff;--text2:#bca8c8;--text3:#8c7894;
+  --border:#1e144a;--border2:#2a1c66;
+  --page-bg:#050310;
 }
 
-[data-theme="midnight"] {
-  --bg: #0a192f;
-  --text: #e6f1ff;
-  --text2: #8892b0;
-  --border: #233554;
-  --card: #112240;
-  --card-hover: #1e3a6a;
-  --blue: #3b82f6;
-  --green: #14bf96;
-  --footer-bg: #020c1b;
-  --footer-text: #8892b0;
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background-color:var(--page-bg);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  font-size:15px;line-height:1.6;
+  padding-bottom:60px;
 }
+a{color:inherit;text-decoration:none}
 
-
-[data-theme="default"] {
-  --bg: #030810;
-  --text: #e2eeff;
-  --text2: #8ea8c8;
-  --border: #162d4a;
-  --card: #0a1830;
-  --card-hover: #162d4a;
-  --blue: #2563eb;
-  --green: #10b981;
-  --footer-bg: #060f1c;
-  --footer-text: #8ea8c8;
-}
-[data-theme="standard"] {
-  --bg: #f0f4f9;
-  --text: #0f172a;
-  --text2: #374151;
-  --border: #dde3ed;
-  --card: #ffffff;
-  --card-hover: #edf2f9;
-  --blue: #1d4ed8;
-  --green: #10b981;
-  --footer-bg: #e8edf5;
-  --footer-text: #6b7280;
-}
-[data-theme="maroon"] {
-  --bg: #0a0202;
-  --text: #ffe2e2;
-  --text2: #c89494;
-  --border: #3a1414;
-  --card: #250a0a;
-  --card-hover: #3a1414;
-  --blue: #ff7f7f;
-  --green: #10b981;
-  --footer-bg: #150505;
-  --footer-text: #c89494;
-}
-[data-theme="silver"] {
-  --bg: #f3f4f6;
-  --text: #111827;
-  --text2: #4b5563;
-  --border: #e5e7eb;
-  --card: #ffffff;
-  --card-hover: #f3f4f6;
-  --blue: #374151;
-  --green: #10b981;
-  --footer-bg: #e5e7eb;
-  --footer-text: #4b5563;
-}
-[data-theme="gold"] {
-  --bg: #0a0804;
-  --text: #fffae8;
-  --text2: #c8b387;
-  --border: #352d19;
-  --card: #201b0e;
-  --card-hover: #352d19;
-  --blue: #ffd700;
-  --green: #10b981;
-  --footer-bg: #141108;
-  --footer-text: #c8b387;
-}
-[data-theme="gemini"] {
-  --bg: #050310;
-  --text: #f5e2ff;
-  --text2: #bca8c8;
-  --border: #1e144a;
-  --card: #130b30;
-  --card-hover: #1e144a;
-  --blue: #f48fb1;
-  --green: #10b981;
-  --footer-bg: #09061c;
-  --footer-text: #bca8c8;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: 'Inter', 'DM Sans', sans-serif;
-  background-color: var(--bg);
-  color: var(--text);
-  line-height: 1.5;
-  padding-bottom: 60px;
-  transition: background-color 0.3s, color 0.3s;
-}
-a { color: inherit; text-decoration: none; transition: color 0.2s ease; }
-button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
-
-/* Top Navbar */
+/* Header Navbar */
 .top-menubar {
-  position: sticky; top: 0; z-index: 1000;
-  height: 60px; background-color: var(--bg);
-  border-bottom: 1px solid var(--border);
-  transition: background-color 0.3s, border-color 0.3s;
+  position: sticky;top:0;z-index:1000;
+  height:54px;background-color:var(--dark,#060f1c);
+  border-bottom:1px solid var(--border,#162d4a);
+  box-shadow:0 2px 10px rgba(0,0,0,0.5);
 }
 .nav-inner {
-  max-width: 1200px; margin: 0 auto; height: 100%;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 20px;
+  max-width:1200px;margin:0 auto;height:100%;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;
 }
-.nav-brand-group { display: flex; align-items: center; gap: 24px; }
+.nav-brand-group {
+  display:flex;align-items:center;
+}
+.nav-home-link {
+  display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);
+  color:var(--text);font-size:16px;font-weight:600;
+  padding:6px 12px;border-radius:6px;
+  transition:all 0.2s ease;
+}
+.nav-home-link:hover {
+  background:var(--burn);border-color:var(--burn2);
+}
 .nav-brand {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 20px; font-weight: 700; color: var(--green);
+  display:flex;align-items:center;gap:8px;
 }
-.nav-links {
-  display: flex; align-items: center; gap: 16px; font-weight: 600; color: var(--text2); font-size: 15px;
+.brand-dot {
+  width:8px;height:8px;border-radius:50%;background-color:var(--burn2);
 }
-.nav-links a:hover { color: var(--green); }
+.brand-name {
+  font-family:'Bebas Neue',sans-serif;font-size:22px;
+  letter-spacing:1.5px;color:var(--text);
+}
+.brand-story-tag {
+  color:var(--burn2);
+}
+.story-nav-right {
+  display:flex;align-items:center;gap:12px;
+}
 .story-theme-btn {
-  background: transparent; border: none; font-size: 22px; cursor: pointer;
-  padding: 4px; border-radius: 4px; transition: background 0.2s;
+  background:none;border:none;font-size:18px;cursor:pointer;
+  transition:transform 0.2s ease;
 }
-.story-theme-btn:hover { background: var(--card); }
-
-/* Hero Section */
-.hero-section {
-  max-width: 1200px; margin: 48px auto; padding: 0 20px;
-  display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;
-}
-@media(max-width: 900px) {
-  .hero-section { grid-template-columns: 1fr; text-align: center; }
-}
-.hero-title {
-  font-size: 42px; font-weight: 700; color: var(--text); margin-bottom: 16px; line-height: 1.1;
-  font-family: 'Playfair Display', serif;
-}
-.hero-subtitle {
-  font-size: 18px; color: var(--text2); margin-bottom: 32px;
+.story-theme-btn:hover {
+  transform:scale(1.15);
 }
 
-/* Subjects Grid Section */
-.subjects-section {
-  background-color: var(--card);
-  padding: 48px 20px; border-top: 1px solid var(--border);
-  transition: background-color 0.3s, border-color 0.3s;
+/* Page Hero */
+.story-page-hero {
+  background:linear-gradient(180deg, var(--dark2,#0a1830) 0%, var(--page-bg) 100%);
+  padding:48px 20px 32px;
+  text-align:center;border-bottom:1px solid var(--border);
 }
-.subjects-inner {
-  max-width: 1200px; margin: 0 auto;
+.story-page-hero-inner {
+  max-width:800px;margin:0 auto;
 }
-.subjects-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px;
+.story-page-title {
+  font-family:'Playfair Display',serif;font-size:38px;
+  font-weight:800;color:var(--text);margin-bottom:8px;
 }
-.subject-card {
-  display: flex; flex-direction: column;
-}
-.subject-header {
-  display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
-  padding-bottom: 8px; border-bottom: 2px solid var(--border);
-}
-.subject-icon {
-  width: 32px; height: 32px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; color: white; flex-shrink: 0;
-}
-.subject-title {
-  font-size: 18px; font-weight: 700; color: var(--text);
-}
-.subject-links {
-  display: flex; flex-direction: column; gap: 12px;
-}
-.subject-links a {
-  font-size: 15px; color: var(--blue); font-weight: 600;
-  display: flex; justify-content: space-between; align-items: center;
-}
-.subject-links a:hover {
-  text-decoration: underline;
+.story-page-subtitle {
+  color:var(--text2);font-size:15px;max-width:600px;margin:0 auto 16px;
 }
 
-/* Colors for Subject Icons */
-.icon-social { background: #d92916; }
-.icon-econ { background: #e07d10; }
-.icon-math-hs { background: #db4d8b; }
-.icon-math-pk { background: #ff9200; }
-.icon-language { background: #9059ff; }
-.icon-life { background: #00a699; }
-.icon-science { background: var(--green); }
-.icon-cs { background: var(--blue); }
-
-/* Lesson View Container */
-.lesson-view-container {
-  display: none; max-width: 1200px; margin: 40px auto; padding: 0 20px;
+/* Hub Toggle Tabs */
+.hub-toggle-bar {
+  display:flex;justify-content:center;gap:12px;margin:24px 0;
 }
-.back-btn {
-  background: transparent; border: 1px solid var(--blue); color: var(--blue);
-  font-weight: 600; padding: 8px 16px; border-radius: 4px; margin-bottom: 24px;
+.hub-toggle-btn {
+  background:var(--card2);border:1px solid var(--border2);
+  color:var(--text2);font-size:16px;font-weight:700;
+  padding:10px 24px;border-radius:24px;cursor:pointer;
+  transition:all 0.2s ease;
 }
-.back-btn:hover { background: var(--blue); color: white; }
-.lesson-content-wrapper {
-  background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 32px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+.hub-toggle-btn.active {
+  background:var(--burn);border-color:var(--burn2);color:#fff;
+  box-shadow:0 0 16px var(--glow);
 }
 
-/* Reused Classes */
-.subject-tab-bar { display: none; }
+/* Academy notice banner */
+.academy-notice-banner {
+  max-width:1100px; margin:0 auto 24px; padding:0 20px;
+  display:none;
+}
+.academy-notice-banner.visible { display:block; }
+.academy-notice-card {
+  background:linear-gradient(135deg,rgba(37,99,235,.12),rgba(99,102,241,.08));
+  border:1px solid rgba(99,102,241,.3); border-radius:14px;
+  padding:16px 20px; display:flex; gap:14px; align-items:flex-start;
+  animation:fadeUp .4s ease;
+}
+.academy-notice-icon {
+  font-size:24px; flex-shrink:0; margin-top:2px;
+}
+.academy-notice-body { flex:1; min-width:0; }
+.academy-notice-tag {
+  display:inline-block; font-size:8.5px; font-weight:800; letter-spacing:.8px;
+  text-transform:uppercase; padding:2px 8px; border-radius:10px;
+  background:rgba(99,102,241,.15); color:#818cf8;
+  border:1px solid rgba(99,102,241,.25); margin-bottom:6px;
+}
+.academy-notice-headline {
+  font-size:16px; font-weight:800; color:#e2eeff; margin-bottom:4px;
+}
+.academy-notice-text {
+  font-size:16px; color:#8ea8c8; line-height:1.6;
+}
+.academy-notice-dismiss {
+  background:transparent; border:none; color:#4d6a8a;
+  cursor:pointer; font-size:16px; padding:0; flex-shrink:0;
+  transition:color .15s;
+}
+.academy-notice-dismiss:hover { color:#e2eeff; }
+
+/* CBSE Portal Layout */
+.cbse-container, .jlpt-container {
+  max-width:1100px;margin:0 auto;padding:0 20px;
+}
 .class-selector-bar {
-  display: flex; overflow-x: auto; gap: 8px; padding-bottom: 12px;
-  scrollbar-width: thin; scrollbar-color: var(--border) transparent; margin-bottom: 16px;
+  display:flex;overflow-x:auto;gap:8px;padding-bottom:12px;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+.class-selector-bar::-webkit-scrollbar {
+  height:4px;
+}
+.class-selector-bar::-webkit-scrollbar-thumb {
+  background:var(--border);border-radius:2px;
 }
 .class-btn {
-  flex-shrink: 0; background: var(--card); border: 1px solid var(--border);
-  color: var(--text2); font-size: 14px; font-weight: 600;
-  padding: 8px 16px; border-radius: 20px; cursor: pointer;
-  transition: all 0.2s ease;
+  flex-shrink:0;background:var(--card2);border:1px solid var(--border);
+  color:var(--text2);font-size:16px;font-weight:700;
+  padding:8px 16px;border-radius:20px;cursor:pointer;
+  transition:all 0.2s ease;
 }
 .class-btn.active {
-  background: var(--blue); border-color: var(--blue); color: #fff;
+  background:var(--burn);border-color:var(--burn2);color:#fff;
 }
-.study-lead { font-size: 18px; font-weight: 700; color: var(--blue); margin-bottom: 12px; }
-.study-bullets { margin-left: 20px; margin-bottom: 16px; }
-.study-bullets li { margin-bottom: 8px; }
-.qa-item { border-bottom: 1px solid var(--border); padding: 12px 0; }
-.qa-question { font-weight: 600; cursor: pointer; color: var(--text); }
-.qa-answer { display: none; margin-top: 8px; color: var(--text2); border-left: 3px solid var(--green); padding-left: 12px; }
-.qa-item.active .qa-answer { display: block; }
-.section-headline { font-size: 24px; font-weight: 700; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-.option-btn { border: 1px solid var(--border); padding: 10px; border-radius: 4px; background: var(--bg); margin-bottom: 8px; display: block; width: 100%; text-align: left; color: var(--text); }
-.option-btn:hover { background: var(--card); }
-.option-btn.correct { background: rgba(20,191,150,0.15) !important; border-color: var(--green) !important; color: var(--text) !important; }
-.option-btn.incorrect { background: rgba(217,41,22,0.15) !important; border-color: #d92916 !important; color: var(--text) !important; }
 
-/* JLPT specifics */
-.sub-hub-bar { display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 12px; overflow-x: auto; }
-.sub-hub-btn { background: var(--card); border: 1px solid var(--border); padding: 8px 16px; border-radius: 16px; font-weight: 600; font-size: 14px; color: var(--text2); }
-.sub-hub-btn.active { background: var(--blue); color: white; border-color: var(--blue); }
-.kana-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-.kana-card { border: 1px solid var(--border); border-radius: 8px; text-align: center; padding: 12px; cursor: pointer; background: var(--bg); }
-.kana-card:hover { border-color: var(--blue); }
-.kana-card.active { background: var(--card-hover); border-color: var(--blue); }
-.kana-char { font-size: 24px; font-weight: 700; }
-.kana-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
-@media(max-width:800px){ .kana-layout { grid-template-columns: 1fr; } }
-.kana-details-box { border: 1px solid var(--border); padding: 20px; border-radius: 8px; background: var(--bg); }
+.subject-tab-bar {
+  display:flex;gap:6px;margin:16px 0;border-bottom:1px solid var(--border);
+  padding-bottom:1px;
+}
+.subject-btn {
+  background:none;border:none;color:var(--text2);
+  font-size:16px;font-weight:600;padding:10px 18px;
+  cursor:pointer;position:relative;transition:color 0.2s ease;
+}
+.subject-btn:hover {
+  color:var(--text);
+}
+.subject-btn.active {
+  color:var(--burn2);
+}
+.subject-btn.active::after {
+  content:'';position:absolute;bottom:0;left:0;right:0;
+  height:2.5px;background-color:var(--burn2);
+}
 
-/* Footer Styles */
-.story-footer { margin-top: 60px; background: var(--footer-bg); padding: 48px 20px 20px; color: #fff; }
-.footer-main { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1.5fr 1.5fr; gap: 40px; }
-@media(max-width: 900px) { .footer-main { grid-template-columns: 1fr 1fr; } }
-@media(max-width: 500px) { .footer-main { grid-template-columns: 1fr; } }
-.footer-col-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1.5px; margin-bottom: 16px; color: #fff; }
-.footer-brand-desc { color: var(--footer-text); font-size: 15px; max-width: 280px; }
-.footer-links { list-style: none; padding: 0; }
-.footer-links li { margin-bottom: 10px; }
-.footer-links a { color: var(--footer-text); font-size: 15px; transition: color 0.2s; }
-.footer-links a:hover { color: #fff; }
-.footer-bottom { max-width: 1200px; margin: 32px auto 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--footer-text); flex-wrap: wrap; gap: 12px; }
+/* Learning Content Cards */
+.edu-content-layout {
+  display:flex;flex-direction:column;gap:20px;
+}
+@media(max-width:800px){
+  .edu-content-layout{flex-direction:column}
+}
+.lesson-card, .qa-card, .widget-card {
+  background:var(--card);border:1px solid var(--border2);
+  border-radius:12px;padding:24px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.2);
+}
+.section-headline {
+  font-family:'Playfair Display',serif;font-size:22px;
+  font-weight:700;color:var(--text);margin-bottom:16px;
+  border-bottom:1px solid var(--border);padding-bottom:8px;
+}
 
+/* CBSE Study Lesson styles */
+.study-lead {
+  font-size:16px;font-weight:500;color:var(--burn3);
+  margin-bottom:14px;
+}
+.study-bullets {
+  margin-left:20px;margin-bottom:16px;
+}
+.study-bullets li {
+  margin-bottom:10px;
+}
+
+/* Model Q&A Toggles */
+.qa-item {
+  border-bottom:1px solid var(--border);padding:14px 0;
+}
+.qa-item:last-child {
+  border-bottom:none;
+}
+.qa-question {
+  font-weight:700;color:var(--text);cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;font-size:16px;
+}
+.qa-question:hover {
+  color:var(--burn2);
+}
+.qa-toggle-icon {
+  font-size:16px;transition:transform 0.2s ease;
+}
+.qa-item.active .qa-toggle-icon {
+  transform:rotate(90deg);
+}
+.qa-answer {
+  display:none;margin-top:10px;padding:12px 14px;
+  background:rgba(255,255,255,0.03);border-left:3px solid var(--burn2);
+  border-radius:0 8px 8px 0;color:var(--text2);font-size:16px;
+}
+.qa-item.active .qa-answer {
+  display:block;
+}
+
+/* Math Widgets */
+.math-widget-container {
+  background:var(--dark);border:1px solid var(--border);
+  border-radius:8px;padding:16px;margin-top:16px;
+}
+.widget-title {
+  font-size:15px;font-weight:700;color:var(--gold2);
+  text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;
+}
+.widget-row {
+  display:flex;gap:12px;align-items:center;margin-bottom:12px;
+}
+.widget-input {
+  background:var(--card2);border:1px solid var(--border2);
+  color:var(--text);font-family:inherit;padding:6px 12px;
+  border-radius:6px;width:80px;outline:none;
+}
+.widget-input:focus {
+  border-color:var(--burn2);
+}
+.widget-btn {
+  background:var(--burn);border:none;color:#fff;
+  font-weight:600;padding:6px 14px;border-radius:6px;
+  cursor:pointer;transition:background 0.2s ease;
+}
+.widget-btn:hover {
+  background:var(--burn2);
+}
+.widget-canvas-area {
+  display:flex;justify-content:center;margin-top:16px;
+  min-height:160px;
+}
+
+/* Sub-navigation Hub Bar */
+.sub-hub-bar {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+.sub-hub-btn {
+  background: var(--card2);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sub-hub-btn.active {
+  background: var(--gold);
+  border-color: var(--gold2);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+}
+
+/* Kana Interactive Layout */
+.kana-layout {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media(max-width: 850px) {
+  .kana-layout { grid-template-columns: 1fr; }
+}
+.kana-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-width: thin;
+}
+.kana-grid::-webkit-scrollbar { width: 4px; }
+.kana-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.kana-card {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.kana-card:hover {
+  background: var(--card2);
+  border-color: var(--gold2);
+  transform: translateY(-1px);
+}
+.kana-card.active {
+  border-color: var(--burn2);
+  background: rgba(37,99,235,0.08);
+}
+.kana-char {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.kana-romaji {
+  font-size: 11px;
+  color: var(--text2);
+  font-family: monospace;
+  text-transform: uppercase;
+}
+
+.kana-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.kana-details-box {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 20px;
+  min-height: 230px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
 .kana-details-header {
-  display: flex; justify-content: space-around; align-items: center;
-  margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
 }
 .kana-details-big {
-  font-size: 60px; font-weight: 800; color: var(--blue);
+  font-size: 60px;
+  font-weight: 800;
+  color: var(--gold2);
 }
 .kana-details-title {
-  font-size: 13px; color: var(--text3); text-transform: uppercase; margin-bottom: 2px;
+  font-size: 13px;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin-bottom: 2px;
 }
 .kana-details-val {
-  font-size: 16px; font-weight: 700; color: var(--text);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
 }
+
+/* Kana Recall Game */
 .kana-game-box {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 12px; padding: 20px; margin-top: 20px;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 20px;
 }
 .kana-game-char {
-  font-size: 48px; font-weight: 800; color: var(--text); text-align: center;
-  margin: 10px 0; background: rgba(0,0,0,0.15); border-radius: 8px; padding: 10px 0;
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--text);
+  text-align: center;
+  margin: 10px 0;
+  background: var(--dark);
+  border-radius: 8px;
+  padding: 10px 0;
 }
 .kana-score-row {
-  display: flex; justify-content: space-between; font-size: 12px;
-  font-weight: 700; color: var(--text3); margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text3);
+  margin-bottom: 10px;
 }
 
-.jlpt-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-@media(max-width:500px){ .jlpt-options{grid-template-columns:1fr} }
+/* JLPT Pagination Row */
+.quiz-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.quiz-nav-btn {
+  background: var(--card3);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.quiz-nav-btn:hover:not(:disabled) {
+  background: var(--burn);
+  color: #fff;
+}
+.quiz-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
 
-.jlpt-options .option-btn {
-  margin-bottom: 0;
-  border-radius: 8px;
-  background: var(--bg);
-  border: 1px solid var(--border);
+
+/* JLPT Simulator Card Options */
+.jlpt-quiz-card {
+  margin-top:16px;
+}
+.jlpt-q-text {
+  font-size:16px;font-weight:700;color:var(--text);margin-bottom:16px;
+}
+.jlpt-options {
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;
+}
+@media(max-width:500px){
+  .jlpt-options{grid-template-columns:1fr}
+}
+.option-btn {
+  background:var(--card2);border:1px solid var(--border2);
+  color:var(--text2);padding:12px 14px;border-radius:8px;
+  text-align:left;font-weight:600;cursor:pointer;
+  transition:all 0.2s ease;
+}
+.option-btn:hover {
+  background:var(--card3);border-color:var(--border);color:var(--text);
+}
+.option-btn.correct {
+  background:rgba(16, 185, 129, 0.15)!important;
+  border-color:var(--green)!important;color:#fff!important;
+}
+.option-btn.incorrect {
+  background:rgba(239, 68, 68, 0.15)!important;
+  border-color:var(--red)!important;color:#fff!important;
+}
+.jlpt-explanation {
+  display:none;padding:12px;background:rgba(255,255,255,0.03);
+  border-left:3px solid var(--amber);border-radius:0 8px 8px 0;
+  font-size:15px;color:var(--text2);line-height:1.6;
+}
+
+/* Footer */
+.story-footer {
+  margin-top:80px;background:var(--dark,#060f1c);
+  border-top:1px solid var(--border);padding:48px 20px 20px;
+}
+.footer-main {
+  max-width:1200px;margin:0 auto;
+  display:grid;grid-template-columns:2fr 1fr 1.5fr 1.5fr;gap:40px;
+}
+@media(max-width:900px){
+  .footer-main{grid-template-columns:1fr 1fr}
+}
+@media(max-width:500px){
+  .footer-main{grid-template-columns:1fr}
+}
+.footer-col-title {
+  font-family:'Bebas Neue',sans-serif;font-size:20px;
+  letter-spacing:1.5px;color:var(--text);margin-bottom:16px;
+}
+.footer-brand-desc {
+  color:var(--text2);font-size:16px;max-width:280px;
+}
+.footer-links {
+  list-style:none;
+}
+.footer-links li {
+  margin-bottom:10px;
+}
+.footer-links a {
+  color:var(--text2);font-size:16px;transition:color 0.2s ease;
+}
+.footer-links a:hover {
+  color:var(--text);
+}
+.footer-social {
+  display:flex;flex-direction:column;gap:10px;
+}
+.footer-social a {
+  display:flex;align-items:center;gap:8px;color:var(--text2);
+  font-size:15px;
+}
+.footer-social a:hover {
+  color:var(--text);
+}
+.footer-social-icon {
+  width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.05);
+  display:flex;align-items:center;justify-content:center;
+}
+.footer-bottom {
+  max-width:1200px;margin:32px auto 0;
+  border-top:1px solid rgba(255,255,255,0.05);padding-top:16px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:16px;color:var(--text3);flex-wrap:wrap;gap:12px;
+/* MOC Test Modal */
+.moc-modal-overlay {
+  display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.85); z-index:2000; justify-content:center; align-items:center;
+  backdrop-filter:blur(5px);
+}
+.moc-modal-overlay.active { display:flex; }
+.moc-modal-content {
+  background:var(--card); border:1px solid var(--border2); border-radius:12px;
+  width:90%; max-width:700px; max-height:90vh; overflow-y:auto;
+  box-shadow:0 10px 40px rgba(0,0,0,0.7); position:relative;
+}
+.moc-header {
+  padding:20px; border-bottom:1px solid var(--border); display:flex;
+  justify-content:space-between; align-items:center; position:sticky; top:0;
+  background:var(--card); z-index:10;
+}
+.moc-timer {
+  font-family:'Bebas Neue',sans-serif; font-size:24px; color:var(--red);
+  letter-spacing:2px; display:flex; align-items:center; gap:6px;
+}
+.moc-body { padding:20px; }
+.moc-footer { padding:20px; border-top:1px solid var(--border); text-align:right; }
+.moc-q-block { margin-bottom:24px; padding-bottom:24px; border-bottom:1px dashed var(--border2); }
+.moc-q-block:last-child { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+
+/* Translation Widget Styles */
+.trans-widget {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+.trans-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.trans-select {
+  flex: 1;
+  min-width: 120px;
+  background: var(--card);
   color: var(--text);
-  font-weight: 600;
-  text-align: left;
+  border: 1px solid var(--border);
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
 }
-.jlpt-options .option-btn:hover {
-  background: var(--card-hover);
+.trans-swap-btn {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.trans-swap-btn:hover { opacity: 0.8; }
+.trans-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media(max-width: 768px) {
+  .trans-body { grid-template-columns: 1fr; }
+}
+.trans-box {
+  background: var(--card2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.trans-input {
+  width: 100%;
+  height: 280px;
+  background: transparent;
+  color: var(--text);
+  border: none;
+  padding: 16px;
+  font-size: 16px;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.trans-output {
+  width: 100%;
+  height: 280px;
+  padding: 16px;
+  font-size: 16px;
+  color: var(--text2);
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+.trans-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.2);
+  border-top: 1px solid var(--border2);
+}
+.trans-action-btn {
+  background: transparent;
+  color: var(--gold2);
+  border: 1px solid var(--gold2);
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.trans-action-btn:hover {
+  background: var(--gold2);
+  color: var(--bg);
+}
+
+.dict-ja-text { font-size: 24px; font-weight:bold; color:var(--gold2); }
+.dict-en-text { font-size: 18px; color:var(--text); margin-top:4px; }
+.dict-card { background:var(--card3); padding:16px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; border:1px solid var(--border); transition:0.3s; }
+.dict-card:hover { border-color:var(--gold2); box-shadow:0 0 10px rgba(255,215,0,0.1); }
+
+@media(max-width: 768px) {
+  .dict-ja-text { font-size: 28px !important; }
+  .dict-en-text { font-size: 16px !important; }
 }
 
 /* --- INJECTED CSS FROM BACKUP --- */
@@ -465,282 +907,209 @@ t3);flex-wrap:wrap;gap:12px;
 </head>
 <body>
 
-<!-- Top Navigation -->
-<nav class="top-menubar">
+<!-- ══════════════════════════════════════════
+     TOP NAVIGATION BAR
+     ========================================== -->
+<nav class="top-menubar" id="top-menubar">
   <div class="nav-inner">
     <div class="nav-brand-group">
-      <div class="nav-brand">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-        VilfinTV Academy
-      </div>
-      <div class="nav-links">
-        <a href="index.html">Home</a>
-        <a href="news.html">News</a>
-        <a href="story.html">Stories</a>
-        <a href="blog_intelligence_hub.html">Blog</a>
+      <a href="index.html" class="nav-home-link" title="Back to MultiScreener Dashboard" style="margin-right:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Dashboard
+      </a>
+      <a href="news.html" class="nav-home-link" title="News" style="margin-right:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10l4 4v12a2 2 0 0 1-2 2z"/><path d="M12 11h3"/><path d="M12 15h3"/><path d="M9 11h.01"/><path d="M9 15h.01"/></svg>
+        News
+      </a>
+      <a href="story.html" class="nav-home-link" title="Stories">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20M4 19.5V3.5A2.5 2.5 0 0 1 6.5 1H20v20H6.5A2.5 2.5 0 0 1 4 19.5z"/></svg>
+        Stories
+      </a>
+      <div class="nav-brand" style="margin-left:12px">
+        <span class="brand-dot"></span>
+        <span class="brand-name">VilfinTV <span class="brand-story-tag">ACADEMY</span></span>
       </div>
     </div>
-    <div style="display: flex; align-items: center; gap: 16px;">
+    <div class="story-nav-right">
       <button class="story-theme-btn" onclick="cycleTheme()" title="Change theme">&#x1F3A8;</button>
-      <div style="font-size: 14px; color: var(--text2); font-weight: 500;">
-        Already have a VilfinTV account? <a href="#" style="color:var(--blue); font-weight: 600; margin-left: 4px;">Log in</a>
-      </div>
     </div>
   </div>
 </nav>
 
-<!-- Hero Section -->
-<div class="hero-section" id="hero-section" style="grid-template-columns: 1fr 1fr; align-items: center;">
-  <div>
-    <h1 class="hero-title">Unlock Brilliance with VilfinTV Academy.</h1>
-    <p class="hero-subtitle" style="font-size: 18px; margin-bottom: 24px; color: #3b3e46; max-width: 480px;">Accelerate your learning through interactive curriculum, immersive practice drills, and premium educational tools built for success.</p>
-  </div>
-  <div style="display: flex; justify-content: center;">
-    <img src="academy_hero.png" alt="Students learning joyfully" style="max-width: 100%; height: auto; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);" />
-  </div>
-</div>
-
-<!-- Subjects Grid Section -->
-<div class="subjects-section" id="subjects-section">
-  <div class="subjects-inner">
-    <div class="subjects-grid">
-      
-      <!-- Math: Pre-K - 8th grade -->
-      <div class="subject-card">
-        <div class="subject-header">
-          <div class="subject-icon icon-math-pk">1</div>
-          <div class="subject-title">Math: Pre-K - 8th grade</div>
-        </div>
-        <div class="subject-links">
-          <a href="#" onclick="openCbseLesson('math', 1); return false;">Class 1 Math</a>
-          <a href="#" onclick="openCbseLesson('math', 2); return false;">Class 2 Math</a>
-          <a href="#" onclick="openCbseLesson('math', 3); return false;">Class 3 Math</a>
-          <a href="#" onclick="openCbseLesson('math', 4); return false;">Class 4 Math</a>
-          <a href="#" onclick="openCbseLesson('math', 5); return false;">Class 5 Math</a>
-          <a href="#" onclick="openCbseLesson('math', 6); return false;">Class 6 Math</a>
-          <a href="#" onclick="openCbseLesson('math', 7); return false;">Class 7 Math</a>
-          <a href="#" onclick="openCbseLesson('math', 8); return false;">Class 8 Math</a>
-        </div>
-      </div>
-
-      <!-- Math: High school & College -->
-      <div class="subject-card">
-        <div class="subject-header">
-          <div class="subject-icon icon-math-hs">Σ</div>
-          <div class="subject-title">Math: High school & College</div>
-        </div>
-        <div class="subject-links">
-          <a href="#" onclick="openCbseLesson('math', 9); return false;">Class 9 Math</a>
-          <a href="#" onclick="openCbseLesson('math', 10); return false;">Class 10 Math</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">High School Geometry</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Calculus</a>
-        </div>
-      </div>
-
-      <!-- Science -->
-      <div class="subject-card">
-        <div class="subject-header">
-          <div class="subject-icon icon-science">🔬</div>
-          <div class="subject-title">Science</div>
-        </div>
-        <div class="subject-links">
-          <a href="#" onclick="openCbseLesson('science', 3); return false;">Class 3 Science</a>
-          <a href="#" onclick="openCbseLesson('science', 4); return false;">Class 4 Science</a>
-          <a href="#" onclick="openCbseLesson('science', 5); return false;">Class 5 Science</a>
-          <a href="#" onclick="openCbseLesson('science', 6); return false;">Class 6 Science</a>
-          <a href="#" onclick="openCbseLesson('science', 7); return false;">Class 7 Science</a>
-          <a href="#" onclick="openCbseLesson('science', 8); return false;">Class 8 Science</a>
-          <a href="#" onclick="openCbseLesson('science', 9); return false;">Class 9 Science</a>
-          <a href="#" onclick="openCbseLesson('science', 10); return false;">Class 10 Science</a>
-        </div>
-      </div>
-
-      <!-- Social Studies -->
-      <div class="subject-card">
-        <div class="subject-header">
-          <div class="subject-icon icon-social">🌍</div>
-          <div class="subject-title">Social Studies</div>
-        </div>
-        <div class="subject-links">
-          <a href="#" onclick="openCbseLesson('social', 5); return false;">Class 5 Social Science</a>
-          <a href="#" onclick="openCbseLesson('social', 6); return false;">Class 6 Social Science</a>
-          <a href="#" onclick="openCbseLesson('social', 7); return false;">Class 7 Social Science</a>
-          <a href="#" onclick="openCbseLesson('social', 8); return false;">Class 8 Social Science</a>
-          <a href="#" onclick="openCbseLesson('social', 9); return false;">Class 9 Social Science</a>
-          <a href="#" onclick="openCbseLesson('social', 10); return false;">Class 10 Social Science</a>
-        </div>
-      </div>
-
-      <!-- Language -->
-      <div class="subject-card">
-        <div class="subject-header">
-          <div class="subject-icon icon-language">Aあ</div>
-          <div class="subject-title">Language</div>
-        </div>
-        <div class="subject-links">
-          <a href="#" onclick="openJlpt(5); return false;">Japanese</a>
-          <a href="#" onclick="openCbseLesson('english', 10); return false;">English</a>
-          <a href="#" onclick="openCbseLesson('hindi', 10); return false;">Hindi</a>
-          <a href="#" onclick="alert('Coming Soon'); return false;">Malayalam</a>
-          <a href="#" onclick="alert('Coming Soon'); return false;">French</a>
-          <a href="#" onclick="alert('Coming Soon'); return false;">Chinese</a>
-          <a href="#" onclick="alert('Coming Soon'); return false;">Spanish</a>
-        </div>
-      </div>
-
-      <!-- Economics -->
-      <div class="subject-card">
-        <div class="subject-header">
-          <div class="subject-icon icon-econ">📈</div>
-          <div class="subject-title">Economics</div>
-        </div>
-        <div class="subject-links">
-          <a href="#" onclick="return false; alert('Coming Soon');">Microeconomics</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Macroeconomics</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Finance and capital markets</a>
-        </div>
-      </div>
-
-      <!-- Life Skills -->
-      <div class="subject-card">
-        <div class="subject-header">
-          <div class="subject-icon icon-life">🌱</div>
-          <div class="subject-title">Life Skills</div>
-        </div>
-        <div class="subject-links">
-          <a href="#" onclick="return false; alert('Coming Soon');">Financial Literacy</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Career Development</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Growth Mindset</a>
-        </div>
-      </div>
-
-      <!-- Computer Science -->
-      <div class="subject-card">
-        <div class="subject-header">
-          <div class="subject-icon icon-cs">💻</div>
-          <div class="subject-title">Computer Science</div>
-        </div>
-        <div class="subject-links">
-          <a href="#" onclick="return false; alert('Coming Soon');">Programming Basics</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Web Development</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Information Theory</a>
-        </div>
-      </div>
-
+<!-- ══════════════════════════════════════════
+     PAGE HERO & COMPREHENSION LEVEL SELECTOR
+     ========================================== -->
+<div class="story-page-hero">
+  <div class="story-page-hero-inner">
+    <h1 class="story-page-title">Interactive Learning Portal</h1>
+    <p class="story-page-subtitle">Premium education resource library. Dive into NCERT-aligned CBSE study notes, dynamic math exercises, and a robust Japanese JLPT training engine.</p>
+    
+    <div class="hub-toggle-bar">
+      <button class="hub-toggle-btn active" id="toggle-cbse" onclick="switchHub('cbse')">🏫 CBSE Classes 1-10 Hub</button>
+      <button class="hub-toggle-btn" id="toggle-jlpt" onclick="switchHub('jlpt')">🇯🇵 Japanese JLPT N5-N1 Hub</button>
     </div>
   </div>
 </div>
 
 <!-- ══════════════════════════════════════════
-     DYNAMIC LESSON VIEW
+     ACADEMY NOTICE BANNER (admin-managed)
      ========================================== -->
-<div class="lesson-view-container" id="lesson-view-container">
-  <button class="back-btn" onclick="closeLessonView()">
-    <svg style="vertical-align: middle; margin-right: 4px;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-    Back to Subjects
-  </button>
-  
-  <div class="lesson-content-wrapper" id="lesson-content-wrapper">
-    <!-- Dynamic CBSE/JLPT content goes here -->
-    
-    <!-- We will inject the existing cbse-container or jlpt-container content structure inside here dynamically -->
-    
-    <div id="cbse-content-area" style="display:none;">
-      <h2 id="cbse-header-title" style="margin-bottom: 24px; font-size: 28px;">CBSE Lesson</h2>
-      <div class="lesson-card" id="cbse-lesson-card"></div>
-      <div style="margin-top: 24px;">
-        <div class="qa-card" id="cbse-qa-card"></div>
-        <div class="widget-card" id="cbse-widget-card" style="display:none;"></div>
+<div class="academy-notice-banner" id="academy-notice-banner"></div>
+
+<!-- ══════════════════════════════════════════
+     CBSE CONTAINER
+     ========================================== -->
+<div class="cbse-container" id="cbse-container">
+  <!-- Class Selector -->
+  <div class="class-selector-bar">
+    <button class="class-btn" data-class="1" onclick="switchClass(1)">Class 1</button>
+    <button class="class-btn" data-class="2" onclick="switchClass(2)">Class 2</button>
+    <button class="class-btn" data-class="3" onclick="switchClass(3)">Class 3</button>
+    <button class="class-btn" data-class="4" onclick="switchClass(4)">Class 4</button>
+    <button class="class-btn" data-class="5" onclick="switchClass(5)">Class 5</button>
+    <button class="class-btn" data-class="6" onclick="switchClass(6)">Class 6</button>
+    <button class="class-btn" data-class="7" onclick="switchClass(7)">Class 7</button>
+    <button class="class-btn" data-class="8" onclick="switchClass(8)">Class 8</button>
+    <button class="class-btn" data-class="9" onclick="switchClass(9)">Class 9</button>
+    <button class="class-btn active" data-class="10" onclick="switchClass(10)">Class 10</button>
+  </div>
+
+  <!-- Subject Selector -->
+  <div class="subject-tab-bar">
+    <button class="subject-btn active" data-sub="math" onclick="switchSubject('math')">Mathematics</button>
+    <button class="subject-btn" data-sub="science" onclick="switchSubject('science')">Science</button>
+    <button class="subject-btn" data-sub="hindi" onclick="switchSubject('hindi')">Hindi</button>
+    <button class="subject-btn" data-sub="social" onclick="switchSubject('social')">Social Science</button>
+    <button class="subject-btn" data-sub="english" onclick="switchSubject('english')">English</button>
+  </div>
+
+  <!-- CBSE Hub Main Layout -->
+  <div class="edu-content-layout">
+    <!-- Lesson Column -->
+    <div class="lesson-card" id="cbse-lesson-card">
+    </div>
+
+    <!-- Right Column (Q&A and Interactive Widget) -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+      <!-- Interactive Widget Card -->
+      <div class="widget-card" id="cbse-widget-card" style="display:none;">
+      </div>
+
+      <!-- Q&A Card -->
+      <div class="qa-card" id="cbse-qa-card">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     JLPT CONTAINER (HIDDEN BY DEFAULT)
+     ========================================== -->
+<div class="jlpt-container" id="jlpt-container" style="display:none;">
+  <!-- Japanese Sub-Hub Selector -->
+  <div class="sub-hub-bar">
+    <button class="sub-hub-btn active" id="sub-hub-chart" onclick="switchJpSubHub('chart')">📙 Hiragana & Katakana Hub</button>
+    <button class="sub-hub-btn" id="sub-hub-kanji" onclick="switchJpSubHub('kanji')">🎌 Kanji & Casual Japanese</button>
+    <button class="sub-hub-btn" id="sub-hub-levels" onclick="switchJpSubHub('levels')">📝 JLPT Exam Center</button>
+    <button class="sub-hub-btn" id="sub-hub-dict" onclick="switchJpSubHub('dict')">📖 JAP-ENG Dictionary</button>
+  </div>
+
+  <!-- KANA INTERACTIVE CHART SECTION -->
+  <div id="jp-kana-section" class="kana-layout">
+    <div>
+      <div class="sub-hub-bar" style="border-bottom:none; margin-bottom:12px; padding-bottom:0;">
+        <button class="class-btn active" id="btn-kana-hira" onclick="toggleKanaType('hiragana')">Hiragana (Phonetics)</button>
+        <button class="class-btn" id="btn-kana-kata" onclick="toggleKanaType('katakana')">Katakana (Foreign Words)</button>
+      </div>
+      <div class="kana-grid" id="kana-grid-area">
       </div>
     </div>
     
-    <div id="jlpt-content-area" style="display:none;">
-      <h2 id="jlpt-header-title" style="margin-bottom: 24px; font-size: 28px;">JLPT Hub</h2>
-      <div class="jlpt-container" id="jlpt-container" style="display:block;">
-        <div class="sub-hub-bar">
-          <button class="sub-hub-btn active" id="sub-hub-chart" onclick="switchJpSubHub('chart')">Hiragana & Katakana Hub</button>
-          <button class="sub-hub-btn" id="sub-hub-kanji" onclick="switchJpSubHub('kanji')">Kanji & Casual Japanese</button>
-          <button class="sub-hub-btn" id="sub-hub-levels" onclick="switchJpSubHub('levels')">JLPT Exam Center</button>
-          <button class="sub-hub-btn" id="sub-hub-dict" onclick="switchJpSubHub('dict')">Dictionary</button>
+    <div class="kana-sidebar">
+      <div class="kana-details-box" id="kana-details-box">
+        <div style="text-align:center; color:var(--text3);">Click any Character card on the left to inspect its stroke notes, pronunciation, example vocabulary, and custom visual cues!</div>
+      </div>
+      
+      <!-- Recall Game -->
+      <div class="kana-game-box">
+        <div class="kana-score-row">
+          <span>KANA SOUND RECALL GAME</span>
+          <span id="kana-score-display">SCORE: 0 / 0</span>
         </div>
-
-        <div id="jp-kana-section" class="kana-layout">
-          <div>
-            <div class="sub-hub-bar" style="border-bottom:none; margin-bottom:12px; padding-bottom:0;">
-              <button class="sub-hub-btn active" id="btn-kana-hira" onclick="toggleKanaType('hiragana')">Hiragana</button>
-              <button class="sub-hub-btn" id="btn-kana-kata" onclick="toggleKanaType('katakana')">Katakana</button>
-            </div>
-            <div class="kana-grid" id="kana-grid-area"></div>
-            
-            <!-- Recall Game Moved Under Left Column Grid -->
-            <div class="kana-game-box" style="margin-top: 24px;">
-              <div class="kana-score-row">
-                <span id="kana-game-title">HIRAGANA SOUND RECALL GAME</span>
-                <span id="kana-score-display">SCORE: 0 / 0</span>
-              </div>
-              <div class="kana-game-char" id="kana-game-question">あ</div>
-              <p class="study-lead" style="font-size:16px; margin-bottom:8px; text-align:center;">Identify the correct romaji syllable sound:</p>
-              <div class="jlpt-options" id="kana-game-options" style="margin-bottom:0;">
-              </div>
-            </div>
-          </div>
-          <div class="kana-sidebar">
-            <div class="kana-details-box" id="kana-details-box">
-              <div style="text-align:center; color:var(--text3);">Click any Character card on the left to inspect its stroke notes, pronunciation, example vocabulary, and custom visual cues!</div>
-            </div>
-            
-            <!-- Academy YouTube Panel -->
-            <div class="kana-game-box" style="margin-top:20px; padding:0; overflow:hidden; border:1px solid var(--border);">
-              <div class="kana-score-row" style="padding:12px 16px; border-bottom:1px solid var(--border); margin-bottom:0;">
-                <span id="academy-video-header">LANGUAGE ACADEMY VIDEOS</span>
-              </div>
-              <iframe id="academy-video-iframe" 
-                      style="width:100%; aspect-ratio:16/9; border:none; display:block; background:#000;" 
-                      allow="encrypted-media; picture-in-picture" 
-                      allowfullscreen></iframe>
-              <div id="academy-video-controls" style="display:flex; justify-content:space-between; align-items:center; padding:8px 16px; background:var(--card); border-bottom:1px solid var(--border);">
-                <button class="option-btn" style="width:auto; padding:6px 12px; font-size:13px; margin:0; border-radius:4px;" onclick="playPrevAcademyVideo()">&#9664; Back</button>
-                <div style="font-size:12px; color:var(--text3);">Controls & Volume are inside video</div>
-                <button class="option-btn" style="width:auto; padding:6px 12px; font-size:13px; margin:0; border-radius:4px;" onclick="playNextAcademyVideo()">Next &#9654;</button>
-              </div>
-              <div id="academy-video-list" style="max-height:240px; overflow-y:auto; background:var(--card); scrollbar-width:thin;">
-                <!-- Dynamically populated by JS -->
-              </div>
-            </div>
-          </div>
+        <div class="kana-game-char" id="kana-game-question">あ</div>
+        <p class="study-lead" style="font-size:16px; margin-bottom:8px; text-align:center;">Identify the correct romaji syllable sound:</p>
+        <div class="jlpt-options" id="kana-game-options" style="margin-bottom:0;">
         </div>
-
-        <div id="jp-kanji-casual-section" class="kana-layout" style="display:none;">
-          <div>
-            <div class="sub-hub-bar" style="border-bottom:none; margin-bottom:12px; padding-bottom:0;">
-              <button class="sub-hub-btn active" id="btn-jp-kanji" onclick="toggleJpCasualArea('kanji')">Kanji Database</button>
-              <button class="sub-hub-btn" id="btn-jp-casual" onclick="toggleJpCasualArea('casual')">Casual Phrases</button>
-            </div>
-            <div id="jp-kanji-area-container">
-              <div class="sub-hub-bar" style="border-bottom:none; margin-bottom:12px; padding-bottom:0;">
-                <button class="sub-hub-btn" id="btn-kanji-5" onclick="switchKanjiLevel(5)">N5</button>
-                <button class="sub-hub-btn" id="btn-kanji-4" onclick="switchKanjiLevel(4)">N4</button>
-                <button class="sub-hub-btn" id="btn-kanji-3" onclick="switchKanjiLevel(3)">N3</button>
-                <button class="sub-hub-btn" id="btn-kanji-2" onclick="switchKanjiLevel(2)">N2</button>
-                <button class="sub-hub-btn" id="btn-kanji-1" onclick="switchKanjiLevel(1)">N1</button>
-              </div>
-              <div class="kana-grid" id="jp-kanji-list-area"></div>
-            </div>
-            <div id="jp-casual-phrases-area" style="display:none;"></div>
-          </div>
-          <div class="kana-sidebar" id="kanji-sidebar-wrapper">
-            <div class="kana-details-box" id="kanji-details-box">Click a Kanji</div>
-            <div class="kana-game-box" id="kanji-game-box">
-              <div class="kana-score-row"><span>KANJI RECALL</span><span id="kanji-score-display">SCORE: 0 / 0</span></div>
-              <div class="kana-char" id="kanji-game-question" style="text-align:center; margin:16px 0;">日</div>
-              <div id="kanji-game-options"></div>
-            </div>
-          </div>
+      </div>
+      
+      <!-- Academy YouTube Panel -->
+      <div class="kana-game-box" style="margin-top:20px; padding:0; overflow:hidden; border:1px solid var(--border2);">
+        <div class="kana-score-row" style="padding:12px 16px; border-bottom:1px solid var(--border2); margin-bottom:0;">
+          <span id="academy-video-header">LANGUAGE ACADEMY VIDEOS</span>
         </div>
+        <iframe id="academy-video-iframe" 
+                style="width:100%; aspect-ratio:16/9; border:none; display:block; background:#000;" 
+                allow="autoplay; encrypted-media; picture-in-picture" 
+                allowfullscreen></iframe>
+        <div id="academy-video-list" style="max-height:240px; overflow-y:auto; background:var(--card); scrollbar-width:thin;">
+          <!-- Dynamically populated by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
 
-        
+  <!-- KANJI & CASUAL JAPANESE HUB (NEW!) -->
+  <div id="jp-kanji-casual-section" class="kana-layout" style="display:none;">
+    <div>
+      <div class="sub-hub-bar" style="border-bottom:none; margin-bottom:12px; padding-bottom:0;">
+        <button class="class-btn active" id="btn-jp-kanji" onclick="toggleJpCasualArea('kanji')">Essential Kanji List</button>
+        <button class="class-btn" id="btn-jp-casual" onclick="toggleJpCasualArea('casual')">Casual & Slang Phrases</button>
+      </div>
+      
+      <!-- Kanji area -->
+      <div id="jp-kanji-area-container">
+        <!-- Kanji Level Selector -->
+        <div class="class-selector-bar" id="kanji-level-selector" style="margin-bottom:12px;">
+          <button class="class-btn active" id="btn-kanji-5" onclick="switchKanjiLevel(5)">N5</button>
+          <button class="class-btn" id="btn-kanji-4" onclick="switchKanjiLevel(4)">N4</button>
+          <button class="class-btn" id="btn-kanji-3" onclick="switchKanjiLevel(3)">N3</button>
+          <button class="class-btn" id="btn-kanji-2" onclick="switchKanjiLevel(2)">N2</button>
+          <button class="class-btn" id="btn-kanji-1" onclick="switchKanjiLevel(1)">N1</button>
+        </div>
+        <div id="jp-kanji-list-area" class="kana-grid" style="grid-template-columns: repeat(5, 1fr);">
+          <!-- Dyn Kanji grid -->
+        </div>
+      </div>
+      
+      <!-- Casual Phrases Area -->
+      <div id="jp-casual-phrases-area" style="display:none; max-height:520px; overflow-y:auto; padding-right:6px; scrollbar-width:thin;">
+        <!-- Dyn phrases cards -->
+      </div>
+    </div>
+    
+    <div class="kana-sidebar">
+      <!-- Kanji details panel -->
+      <div class="kana-details-box" id="kanji-details-box">
+        <div style="text-align:center; color:var(--text3);">Click any Kanji character card on the left to inspect its stroke guidelines, readings, meanings, and compounds!</div>
+      </div>
+      
+      <!-- Kanji Game -->
+      <div class="kana-game-box">
+        <div class="kana-score-row">
+          <span>KANJI MATCHING DRILL</span>
+          <span id="kanji-score-display">SCORE: 0 / 0</span>
+        </div>
+        <div class="kana-game-char" id="kanji-game-question" style="color:var(--gold2);">日</div>
+        <p class="study-lead" style="font-size:16px; margin-bottom:8px; text-align:center;">Identify the correct English meaning of this Kanji:</p>
+        <div class="jlpt-options" id="kanji-game-options" style="margin-bottom:0;">
+          <!-- Dyn option buttons -->
+        </div>
+      </div>
+    </div>
+  </div>
 
-<div id="jp-dict-section" style="display:none; max-width:800px; margin:0 auto; padding-top:20px;">
+  <!-- JAP-ENG DICTIONARY SECTION -->
+  <div id="jp-dict-section" style="display:none; max-width:800px; margin:0 auto; padding-top:20px;">
     <div style="background:var(--card2); padding:24px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.5); border:1px solid var(--border);">
       <h2 class="section-headline" style="margin-top:0;">📖 Master JAP-ENG Dictionary</h2>
       <div style="margin-bottom:20px;">
@@ -788,7 +1157,6 @@ t3);flex-wrap:wrap;gap:12px;
 <!-- ══════════════════════════════════════════
      FOOTER
      ========================================== -->
-
 <footer class="story-footer">
   <div class="footer-main">
     <div>
@@ -798,19 +1166,19 @@ t3);flex-wrap:wrap;gap:12px;
     <div>
       <div class="footer-col-title">CBSE Hub</div>
       <ul class="footer-links">
-        <li><a href="#" onclick="openCbseLesson('math', 10); return false;">Class 10 CBSE Notes</a></li>
-        <li><a href="#" onclick="openCbseLesson('math', 9); return false;">Class 9 CBSE Notes</a></li>
-        <li><a href="#" onclick="openCbseLesson('math', 8); return false;">Class 8 CBSE Notes</a></li>
-        <li><a href="#" onclick="openCbseLesson('math', 7); return false;">Class 7 CBSE Notes</a></li>
+        <li><a href="#" onclick="switchHub('cbse');switchClass(10);return false;">Class 10 CBSE Notes</a></li>
+        <li><a href="#" onclick="switchHub('cbse');switchClass(9);return false;">Class 9 CBSE Notes</a></li>
+        <li><a href="#" onclick="switchHub('cbse');switchClass(8);return false;">Class 8 CBSE Notes</a></li>
+        <li><a href="#" onclick="switchHub('cbse');switchClass(7);return false;">Class 7 CBSE Notes</a></li>
       </ul>
     </div>
     <div>
       <div class="footer-col-title">Japanese Hub</div>
       <ul class="footer-links">
-        <li><a href="#" onclick="openJlpt(5); return false;">JLPT N5 vocabulary</a></li>
-        <li><a href="#" onclick="openJlpt(4); return false;">JLPT N4 Kanji Drills</a></li>
-        <li><a href="#" onclick="openJlpt(3); return false;">JLPT N3 Formal Polite</a></li>
-        <li><a href="#" onclick="openJlpt(1); return false;">JLPT N1 Classical particles</a></li>
+        <li><a href="#" onclick="switchHub('jlpt');switchJlptLevel(5);return false;">JLPT N5 vocabulary</a></li>
+        <li><a href="#" onclick="switchHub('jlpt');switchJlptLevel(4);return false;">JLPT N4 Kanji Drills</a></li>
+        <li><a href="#" onclick="switchHub('jlpt');switchJlptLevel(3);return false;">JLPT N3 Formal Polite</a></li>
+        <li><a href="#" onclick="switchHub('jlpt');switchJlptLevel(1);return false;">JLPT N1 Classical particles</a></li>
       </ul>
     </div>
     <div>
@@ -829,65 +1197,36 @@ t3);flex-wrap:wrap;gap:12px;
     <p>Institutional-Grade Education Hub</p>
   </div>
 </footer>
-<!-- Navigation Logic -->
-<script>
-function openCbseLesson(subject, classNum) {
-  document.getElementById('hero-section').style.display = 'none';
-  document.getElementById('subjects-section').style.display = 'none';
-  document.getElementById('lesson-view-container').style.display = 'block';
-  
-  document.getElementById('jlpt-content-area').style.display = 'none';
-  document.getElementById('cbse-content-area').style.display = 'block';
-  
-  const cCont = document.getElementById('cbse-container');
-  if (cCont) cCont.style.display = 'block';
-  
-  _activeHub = 'cbse';
-  _activeSubject = subject;
-  _activeClass = classNum;
-  
-  // Format Title
-  const subName = subject.charAt(0).toUpperCase() + subject.slice(1);
-  document.getElementById('cbse-header-title').innerText = "Class " + classNum + " " + subName;
-  
-  // Reuse existing render functions
-  if (typeof renderCbseContent === 'function') {
-    renderCbseContent();
-  }
-}
 
-function openJlpt(level) {
-  document.getElementById('hero-section').style.display = 'none';
-  document.getElementById('subjects-section').style.display = 'none';
-  document.getElementById('lesson-view-container').style.display = 'block';
-  
-  document.getElementById('cbse-content-area').style.display = 'none';
-  document.getElementById('jlpt-content-area').style.display = 'block';
-  
-  const jCont = document.getElementById('jlpt-container');
-  if (jCont) jCont.style.display = 'block';
-  
-  _activeHub = 'jlpt';
-  _activeJlptLevel = level;
-  document.getElementById('jlpt-header-title').innerText = "Japanese JLPT learning";
-  
-  // Activate JLPT section components
-  if (typeof switchJlptLevel === 'function') {
-    switchJlptLevel(level);
-  }
-  // Make sure to show the levels tab by default for a specific level
-  if (typeof switchJpSubHub === 'function') {
-    switchJpSubHub('levels');
-  }
-}
+<!-- ══════════════════════════════════════════
+     JLPT MOC TEST MODAL
+     ========================================== -->
+<div class="moc-modal-overlay" id="moc-modal-overlay">
+  <div class="moc-modal-content">
+    <div class="moc-header">
+      <div>
+        <h2 class="section-headline" style="margin:0; border:none; padding:0;" id="moc-title">JLPT MOC Test</h2>
+        <div style="font-size:16px; color:var(--text3);">Real Exam Scenario simulation</div>
+      </div>
+      <div class="moc-timer" id="moc-timer-display">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        00:00
+      </div>
+    </div>
+    <div class="moc-body" id="moc-body-content">
+      <!-- Generated questions go here -->
+    </div>
+    <div class="moc-footer">
+      <button class="widget-btn" style="background:var(--card3); color:var(--text2); margin-right:12px;" onclick="closeMocTestModal()">Cancel</button>
+      <button class="widget-btn" id="moc-submit-btn" onclick="submitMocTest()">Submit Final Answers</button>
+    </div>
+  </div>
+</div>
 
-function closeLessonView() {
-  document.getElementById('lesson-view-container').style.display = 'none';
-  document.getElementById('hero-section').style.display = 'grid';
-  document.getElementById('subjects-section').style.display = 'block';
-}
-</script>
 
+<!-- ══════════════════════════════════════════
+     DATABASE & INTERACTIVE LOGIC
+     ========================================== -->
 
 <!-- INJECTED MODALS -->
 <div class="moc-modal-overlay" id="moc-modal-overlay">
@@ -929,20 +1268,12 @@ function setTheme(t) {
   localStorage.setItem('viltv_theme', t);
 }
 
-var THEMES = ['white', 'default', 'standard', 'midnight', 'maroon', 'silver', 'gold', 'gemini'];
 function cycleTheme() {
-  var cur = document.documentElement.getAttribute('data-theme') || 'white';
+  var cur = localStorage.getItem('viltv_theme') || 'midnight';
   var idx = THEMES.indexOf(cur);
-  if (idx === -1) idx = 0;
   var next = THEMES[(idx + 1) % THEMES.length];
-  document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem('viltv_theme', next);
+  setTheme(next);
 }
-
-// Set initial theme
-var savedTheme = localStorage.getItem('viltv_theme') || 'white';
-document.documentElement.setAttribute('data-theme', savedTheme);
-
 
 // Active States
 var _activeHub = 'cbse';
@@ -953,26 +1284,19 @@ var _activeJlptLevel = 5;
 // Toggle CBSE vs JLPT Hubs
 function switchHub(hub) {
   _activeHub = hub;
-  const tCbse = document.getElementById('toggle-cbse');
-  const tJlpt = document.getElementById('toggle-jlpt');
-  
-  if (tCbse) tCbse.classList.remove('active');
-  if (tJlpt) tJlpt.classList.remove('active');
+  document.getElementById('toggle-cbse').classList.remove('active');
+  document.getElementById('toggle-jlpt').classList.remove('active');
   
   if (hub === 'cbse') {
-    if (tCbse) tCbse.classList.add('active');
-    const cCont = document.getElementById('cbse-container');
-    if (cCont) cCont.style.display = 'block';
-    const jCont = document.getElementById('jlpt-container');
-    if (jCont) jCont.style.display = 'none';
-    if (typeof renderCbseContent === 'function') renderCbseContent();
+    document.getElementById('toggle-cbse').classList.add('active');
+    document.getElementById('cbse-container').style.display = 'block';
+    document.getElementById('jlpt-container').style.display = 'none';
+    renderCbseContent();
   } else {
-    if (tJlpt) tJlpt.classList.add('active');
-    const cCont = document.getElementById('cbse-container');
-    if (cCont) cCont.style.display = 'none';
-    const jCont = document.getElementById('jlpt-container');
-    if (jCont) jCont.style.display = 'block';
-    if (typeof switchJlptLevel === 'function') switchJlptLevel(_activeJlptLevel);
+    document.getElementById('toggle-jlpt').classList.add('active');
+    document.getElementById('cbse-container').style.display = 'none';
+    document.getElementById('jlpt-container').style.display = 'block';
+    switchJlptLevel(_activeJlptLevel);
   }
 }
 
@@ -1507,14 +1831,7 @@ function renderKanjiDetails(idx) {
   const meaning = item.m || item.meaning || '';
   const romaji = item.r || item.onyomi || '';
   
-  const imgUrl = `${CF_R2_URL}/kanji/${kanjiChar}.jpg`;
-  const fallbackSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid #1a2b4c; display:block; margin:0 auto 12px;"><circle cx="60" cy="50" r="38" fill="#112240" stroke="#1a2b4c" stroke-width="1"/><text x="60" y="60" font-size="10" fill="#8892b0" font-weight="bold" text-anchor="middle">Loading Image...</text></svg>`;
-  const encodedFallback = encodeURIComponent(fallbackSvg);
-
-  const detailsHtml = '<div style="margin-bottom:12px;">'
-    + `<img src="${imgUrl}" alt="${meaning}" style="width:110px; height:110px; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px; object-fit:cover; background:#060f1c;" onerror="this.onerror=null; this.outerHTML=decodeURIComponent('${encodedFallback}');" />`
-    + '</div>'
-    + '<div class="kana-details-header">'
+  const detailsHtml = '<div class="kana-details-header">'
     + '  <div class="kana-details-big" style="color:var(--gold2);">' + esc(kanjiChar) + '</div>'
     + '  <div>'
     + '    <div class="kana-details-title">Stroke Count</div>'
@@ -1744,61 +2061,97 @@ var _kanjiScoreCorrect = 0;
 var _kanjiScoreTotal = 0;
 
 // Get dynamic SVG visuals for character memory cues (Pictures)
-// Setup local images directory mapping
-const CF_R2_URL = 'images';
-
-function getKanaSvgVisual(romaji, wordStr) {
+function getKanaSvgVisual(romaji) {
   const r = romaji.toLowerCase();
   
-  // Custom drawn graphics kept intact
   if (r === 'a') {
-    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;"><circle cx="60" cy="70" r="28" fill="var(--amber)" opacity="0.8"/><line x1="15" y1="75" x2="105" y2="75" stroke="#fff" stroke-width="3"/><path d="M 25 85 Q 45 75 65 85 T 105 85" stroke="var(--gold2)" stroke-width="2" fill="none"/><path d="M 15 95 Q 35 85 55 95 T 105 95" stroke="var(--burn2)" stroke-width="2" fill="none"/><text x="60" y="32" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">ASA (SUNRISE)</text></svg>`;
+    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
+      <circle cx="60" cy="70" r="28" fill="var(--amber)" opacity="0.8"/>
+      <line x1="15" y1="75" x2="105" y2="75" stroke="#fff" stroke-width="3"/>
+      <path d="M 25 85 Q 45 75 65 85 T 105 85" stroke="var(--gold2)" stroke-width="2" fill="none"/>
+      <path d="M 15 95 Q 35 85 55 95 T 105 95" stroke="var(--burn2)" stroke-width="2" fill="none"/>
+      <text x="60" y="32" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">ASA (SUNRISE)</text>
+    </svg>`;
   } else if (r === 'i') {
-    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;"><polygon points="35,45 20,70 45,60" fill="var(--text3)"/><polygon points="85,45 100,70 75,60" fill="var(--text3)"/><circle cx="60" cy="70" r="25" fill="var(--card4)" stroke="var(--border2)" stroke-width="2"/><circle cx="50" cy="65" r="3" fill="#fff"/><circle cx="70" cy="65" r="3" fill="#fff"/><polygon points="57,72 63,72 60,76" fill="var(--red)"/><path d="M 57 80 Q 60 83 63 80" stroke="var(--text)" stroke-width="1.5" fill="none"/><text x="60" y="32" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">INU (DOG)</text></svg>`;
+    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
+      <polygon points="35,45 20,70 45,60" fill="var(--text3)"/>
+      <polygon points="85,45 100,70 75,60" fill="var(--text3)"/>
+      <circle cx="60" cy="70" r="25" fill="var(--card4)" stroke="var(--border2)" stroke-width="2"/>
+      <circle cx="50" cy="65" r="3" fill="#fff"/>
+      <circle cx="70" cy="65" r="3" fill="#fff"/>
+      <polygon points="57,72 63,72 60,76" fill="var(--red)"/>
+      <path d="M 57 80 Q 60 83 63 80" stroke="var(--text)" stroke-width="1.5" fill="none"/>
+      <text x="60" y="32" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">INU (DOG)</text>
+    </svg>`;
   } else if (r === 'u') {
-    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;"><path d="M15,50 C45,30 75,70 105,50" stroke="var(--gold2)" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M10,75 C40,55 70,95 110,75" stroke="var(--burn2)" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M40,75 L80,75 L90,65 L30,65 Z" fill="var(--text2)"/><line x1="60" y1="65" x2="60" y2="45" stroke="#fff" stroke-width="2"/><polygon points="60,45 75,52 60,60" fill="var(--red)"/><text x="60" y="32" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">UMI (SEA)</text></svg>`;
+    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
+      <path d="M15,50 C45,30 75,70 105,50" stroke="var(--gold2)" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <path d="M10,75 C40,55 70,95 110,75" stroke="var(--burn2)" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <path d="M40,75 L80,75 L90,65 L30,65 Z" fill="var(--text2)"/>
+      <line x1="60" y1="65" x2="60" y2="45" stroke="#fff" stroke-width="2"/>
+      <polygon points="60,45 75,52 60,60" fill="var(--red)"/>
+      <text x="60" y="32" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">UMI (SEA)</text>
+    </svg>`;
   } else if (r === 'e') {
-    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;"><line x1="20" y1="80" x2="100" y2="80" stroke="var(--border2)" stroke-width="4"/><line x1="20" y1="90" x2="100" y2="90" stroke="var(--border2)" stroke-width="4"/><line x1="30" y1="75" x2="30" y2="95" stroke="var(--text3)" stroke-width="2"/><line x1="50" y1="75" x2="50" y2="95" stroke="var(--text3)" stroke-width="2"/><line x1="70" y1="75" x2="70" y2="95" stroke="var(--text3)" stroke-width="2"/><rect x="40" y="45" width="40" height="20" rx="3" fill="var(--card3)" stroke="var(--green)" stroke-width="1.5"/><text x="60" y="58" font-size="8" fill="#fff" font-weight="700" text-anchor="middle">EKI</text><line x1="60" y1="65" x2="60" y2="75" stroke="#fff" stroke-width="2"/><text x="60" y="32" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">EKI (STATION)</text></svg>`;
+    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
+      <line x1="20" y1="80" x2="100" y2="80" stroke="var(--border2)" stroke-width="4"/>
+      <line x1="20" y1="90" x2="100" y2="90" stroke="var(--border2)" stroke-width="4"/>
+      <line x1="30" y1="75" x2="30" y2="95" stroke="var(--text3)" stroke-width="2"/>
+      <line x1="50" y1="75" x2="50" y2="95" stroke="var(--text3)" stroke-width="2"/>
+      <line x1="70" y1="75" x2="70" y2="95" stroke="var(--text3)" stroke-width="2"/>
+      <rect x="40" y="45" width="40" height="20" rx="3" fill="var(--card3)" stroke="var(--green)" stroke-width="1.5"/>
+      <text x="60" y="58" font-size="8" fill="#fff" font-weight="700" text-anchor="middle">EKI</text>
+      <line x1="60" y1="65" x2="60" y2="75" stroke="#fff" stroke-width="2"/>
+      <text x="60" y="32" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">EKI (STATION)</text>
+    </svg>`;
   } else if (r === 'o') {
-    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;"><path d="M 50 45 Q 45 35 50 25" stroke="var(--text3)" stroke-width="2" fill="none"/><path d="M 60 45 Q 55 35 60 25" stroke="var(--text3)" stroke-width="2" fill="none"/><rect x="40" y="48" width="40" height="40" rx="6" fill="var(--card4)" stroke="var(--border2)" stroke-width="2"/><rect x="43" y="52" width="34" height="10" rx="2" fill="var(--green)" opacity="0.7"/><text x="60" y="72" font-size="9" fill="var(--text2)" font-weight="700" text-anchor="middle">TEA</text><text x="60" y="106" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">OCHA (TEA)</text></svg>`;
+    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
+      <path d="M 50 45 Q 45 35 50 25" stroke="var(--text3)" stroke-width="2" fill="none"/>
+      <path d="M 60 45 Q 55 35 60 25" stroke="var(--text3)" stroke-width="2" fill="none"/>
+      <rect x="40" y="48" width="40" height="40" rx="6" fill="var(--card4)" stroke="var(--border2)" stroke-width="2"/>
+      <rect x="43" y="52" width="34" height="10" rx="2" fill="var(--green)" opacity="0.7"/>
+      <text x="60" y="72" font-size="9" fill="var(--text2)" font-weight="700" text-anchor="middle">TEA</text>
+      <text x="60" y="106" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">OCHA (TEA)</text>
+    </svg>`;
   } else if (r === 'ka') {
-    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;"><path d="M30,65 C30,40 90,40 90,65 Z" fill="var(--red)" opacity="0.8" stroke="#fff" stroke-width="1.5"/><line x1="60" y1="65" x2="60" y2="85" stroke="#fff" stroke-width="2"/><path d="M60,85 Q65,90 70,85" stroke="#fff" stroke-width="2" fill="none"/><text x="60" y="32" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">KASA (UMBRELLA)</text></svg>`;
+    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
+      <path d="M30,65 C30,40 90,40 90,65 Z" fill="var(--red)" opacity="0.8" stroke="#fff" stroke-width="1.5"/>
+      <line x1="60" y1="65" x2="60" y2="85" stroke="#fff" stroke-width="2"/>
+      <path d="M60,85 Q65,90 70,85" stroke="#fff" stroke-width="2" fill="none"/>
+      <text x="60" y="32" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">KASA (UMBRELLA)</text>
+    </svg>`;
   } else if (r === 'neko' || r === 'ne') {
-    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;"><polygon points="40,50 30,30 55,45" fill="var(--amber)"/><polygon points="80,50 90,30 65,45" fill="var(--amber)"/><circle cx="60" cy="65" r="25" fill="var(--card4)" stroke="var(--border2)" stroke-width="2"/><circle cx="50" cy="60" r="3" fill="#fff"/><circle cx="70" cy="60" r="3" fill="#fff"/><line x1="30" y1="65" x2="45" y2="65" stroke="var(--text3)" stroke-width="1.5"/><line x1="90" y1="65" x2="75" y2="65" stroke="var(--text3)" stroke-width="1.5"/><polygon points="58,66 62,66 60,69" fill="var(--red)"/><text x="60" y="105" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">NEKO (CAT)</text></svg>`;
+    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
+      <polygon points="40,50 30,30 55,45" fill="var(--amber)"/>
+      <polygon points="80,50 90,30 65,45" fill="var(--amber)"/>
+      <circle cx="60" cy="65" r="25" fill="var(--card4)" stroke="var(--border2)" stroke-width="2"/>
+      <circle cx="50" cy="60" r="3" fill="#fff"/>
+      <circle cx="70" cy="60" r="3" fill="#fff"/>
+      <line x1="30" y1="65" x2="45" y2="65" stroke="var(--text3)" stroke-width="1.5"/>
+      <line x1="90" y1="65" x2="75" y2="65" stroke="var(--text3)" stroke-width="1.5"/>
+      <polygon points="58,66 62,66 60,69" fill="var(--red)"/>
+      <text x="60" y="105" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">NEKO (CAT)</text>
+    </svg>`;
   } else {
-    // REAL CLOUDFLARE PHOTO
-    const imgUrl = `${CF_R2_URL}/kana/${r}.jpg`;
-    
-    // Determine fallback text
-    let subText = "EXAMPLE";
-    if (wordStr) {
-      const match = wordStr.match(/^([^\(]+)\s*\((.+?)\)$/);
-      if (match) {
-        const parts = match[2].split('-');
-        if (parts.length > 1) {
-            subText = parts[1].trim().toUpperCase();
-        } else {
-            subText = match[2].trim().toUpperCase(); 
-        }
-      }
-    }
-    
-    const fallbackSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid #1a2b4c; display:block; margin:0 auto 12px;"><circle cx="60" cy="50" r="38" fill="#112240" stroke="#1a2b4c" stroke-width="1"/><text x="60" y="60" font-size="10" fill="#8892b0" font-weight="bold" text-anchor="middle">Loading Image...</text><text x="60" y="106" font-size="9" fill="#8892b0" font-weight="700" text-anchor="middle" letter-spacing="0.5">${subText}</text></svg>`;
-    const encodedFallback = encodeURIComponent(fallbackSvg);
-    
-    return `<img src="${imgUrl}" alt="${subText}" style="width:110px; height:110px; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px; object-fit:cover; background:#060f1c;" onerror="this.onerror=null; this.outerHTML=decodeURIComponent('${encodedFallback}');" />`;
+    // Default lovely visual blossom for generic syllables
+    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
+      <circle cx="60" cy="52" r="12" fill="var(--red)" opacity="0.3"/>
+      <circle cx="48" cy="65" r="12" fill="var(--red)" opacity="0.3"/>
+      <circle cx="72" cy="65" r="12" fill="var(--red)" opacity="0.3"/>
+      <circle cx="60" cy="68" r="6" fill="var(--amber)"/>
+      <text x="60" y="32" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">SAKURA (FLOWER)</text>
+    </svg>`;
   }
 }
+
 var _activeKanaType = 'hiragana'; // 'hiragana' or 'katakana'
 var _selectedKanaIdx = 0;
 var _activeJlptQuizIdx = 0; // index from 0 to 5
 
 // Recall Game State
 var _recallQuestionIdx = 0;
-var _hiraScoreCorrect = 0;
-var _hiraScoreTotal = 0;
-var _kataScoreCorrect = 0;
-var _kataScoreTotal = 0;
+var _recallScoreCorrect = 0;
+var _recallScoreTotal = 0;
 
 // Switch Japanese sub-areas
 function switchJpSubHub(area) {
@@ -2043,24 +2396,12 @@ function toggleKanaType(type) {
   document.getElementById('btn-kana-hira').classList.remove('active');
   document.getElementById('btn-kana-kata').classList.remove('active');
   
-  const titleEl = document.getElementById('kana-game-title');
   if (type === 'hiragana') {
     document.getElementById('btn-kana-hira').classList.add('active');
-    if (titleEl) titleEl.innerText = 'HIRAGANA SOUND RECALL GAME';
-    const scoreEl = document.getElementById('kana-score-display');
-    if (scoreEl) scoreEl.textContent = 'SCORE: ' + _hiraScoreCorrect + ' / ' + _hiraScoreTotal;
   } else {
     document.getElementById('btn-kana-kata').classList.add('active');
-    if (titleEl) titleEl.innerText = 'KATAKANA SOUND RECALL GAME';
-    const scoreEl = document.getElementById('kana-score-display');
-    if (scoreEl) scoreEl.textContent = 'SCORE: ' + _kataScoreCorrect + ' / ' + _kataScoreTotal;
   }
   renderKanaChart();
-  
-  // Refresh the game so it immediately shows the correct alphabet character
-  if (typeof loadKanaRecallDrill === 'function') {
-    loadKanaRecallDrill();
-  }
 }
 
 // Render the 46 Kana Grid cards
@@ -2100,7 +2441,7 @@ function renderKanaDetails(idx) {
   const typeLabel = _activeKanaType === 'hiragana' ? 'Hiragana Phonetic' : 'Katakana Foreign';
   
   // Custom styled vector SVG mnemonic picture!
-  const svgVisual = getKanaSvgVisual(item.r, item.word);
+  const svgVisual = getKanaSvgVisual(item.r);
   
   const detailsHtml = '<div class="kana-details-header">'
     + '  <div class="kana-details-big">' + esc(char) + '</div>'
@@ -2601,13 +2942,13 @@ function _escHtml(s) {
 
 // Initialize Hub
 document.addEventListener('DOMContentLoaded', function() {
-  try { setTheme(localStorage.getItem('viltv_theme') || 'midnight'); } catch(e){}
-  try { switchHub('cbse'); } catch(e){}
+  setTheme(localStorage.getItem('viltv_theme') || 'midnight');
+  switchHub('cbse');
   // Initialize recall game
-  try { loadKanaRecallDrill(); } catch(e){ console.error(e); }
-  try { loadKanjiGame(); } catch(e){ console.error(e); }
+  loadKanaRecallDrill();
+  loadKanjiGame();
   // Load admin notices
-  try { _loadAcademyNotices(); } catch(e){}
+  _loadAcademyNotices();
 });
 // ══════════════════════════════════════════
 // JLPT MOC TEST LOGIC
@@ -2793,11 +3134,6 @@ function submitMocTest() {
     
   document.getElementById('moc-body-content').insertAdjacentHTML('afterbegin', finalScoreHtml);
 }
-
-
-
-
-
 
 // --- TRANSLATOR LOGIC ---
 let _transTimeout;
@@ -3595,37 +3931,8 @@ function clearTranslationInput() {
   window.playAcademyVideo = function(id) {
     const iframe = document.getElementById('academy-video-iframe');
     if (iframe) {
-      // Removed autoplay=1, explicitly added controls=1 so the native volume/mute bar is visible.
-      iframe.src = 'https://www.youtube.com/embed/' + id + '?rel=0&controls=1';
+      iframe.src = 'https://www.youtube.com/embed/' + id + '?autoplay=1&rel=0';
     }
-  };
-
-  window.playNextAcademyVideo = function() {
-    const kanaType = typeof _activeKanaType !== 'undefined' ? _activeKanaType : 'hiragana';
-    const videos = kanaType === 'hiragana' ? _academyHiragana : _academyKatakana;
-    if (!videos || !videos.length) return;
-    const iframe = document.getElementById('academy-video-iframe');
-    const src = iframe ? iframe.src : '';
-    const match = src.match(/embed\/([^?]+)/);
-    const curId = match ? match[1] : null;
-    let idx = videos.findIndex(v => v.id === curId);
-    if (idx === -1 || idx === videos.length - 1) idx = 0;
-    else idx++;
-    window.playAcademyVideo(videos[idx].id);
-  };
-
-  window.playPrevAcademyVideo = function() {
-    const kanaType = typeof _activeKanaType !== 'undefined' ? _activeKanaType : 'hiragana';
-    const videos = kanaType === 'hiragana' ? _academyHiragana : _academyKatakana;
-    if (!videos || !videos.length) return;
-    const iframe = document.getElementById('academy-video-iframe');
-    const src = iframe ? iframe.src : '';
-    const match = src.match(/embed\/([^?]+)/);
-    const curId = match ? match[1] : null;
-    let idx = videos.findIndex(v => v.id === curId);
-    if (idx === -1 || idx === 0) idx = videos.length - 1;
-    else idx--;
-    window.playAcademyVideo(videos[idx].id);
   };
 
   // Safe hook
@@ -3643,27 +3950,10 @@ function clearTranslationInput() {
     };
   }
 
-  setTimeout(window.fetchAcademyVideos, 500);
+  
 })();
 
 
-
-
-let _currentKanjiVideoIdx = 0;
-function playNextKanjiVideo() {
-  const kanjiVideos = [{id:'nO1N02B7HKE', title:'Kanji Mastery Ep 1'}, {id:'RkQ7pE9A13I', title:'Daily Casual Japanese'}, {id:'tE1cE3xO_o4', title:'Kanji Memory Tricks'}];
-  _currentKanjiVideoIdx++;
-  if (_currentKanjiVideoIdx >= kanjiVideos.length) _currentKanjiVideoIdx = 0;
-  const iframe = document.getElementById('kanji-video-iframe');
-  if (iframe) iframe.src = 'https://www.youtube.com/embed/' + kanjiVideos[_currentKanjiVideoIdx].id + '?rel=0&controls=1';
-}
-function playPrevKanjiVideo() {
-  const kanjiVideos = [{id:'nO1N02B7HKE', title:'Kanji Mastery Ep 1'}, {id:'RkQ7pE9A13I', title:'Daily Casual Japanese'}, {id:'tE1cE3xO_o4', title:'Kanji Memory Tricks'}];
-  _currentKanjiVideoIdx--;
-  if (_currentKanjiVideoIdx < 0) _currentKanjiVideoIdx = kanjiVideos.length - 1;
-  const iframe = document.getElementById('kanji-video-iframe');
-  if (iframe) iframe.src = 'https://www.youtube.com/embed/' + kanjiVideos[_currentKanjiVideoIdx].id + '?rel=0&controls=1';
-}
 
 // --- TRANSLATOR LOGIC ---
 let _transDebounce = null; let _transAudio = null; let _transVoiceActive = false; let _transVoiceRecog = null;

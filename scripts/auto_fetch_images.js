@@ -37,7 +37,7 @@ async function searchAndDownloadImage(keyword, relativePath) {
     }
     const photoUrl = res.photos[0].src.medium;
     const imgRes = await fetch(photoUrl);
-    const buffer = await imgRes.buffer();
+    const arrayBuf = await imgRes.arrayBuffer(); const buffer = Buffer.from(arrayBuf);
     ensureDirectoryExists(absolutePath);
     fs.writeFileSync(absolutePath, buffer);
     console.log(`[SAVED] Saved to: ${relativePath}`);
