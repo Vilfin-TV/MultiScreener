@@ -1507,8 +1507,8 @@
       <div class="ac-spanel hp-spanel" id="ac-hiragana">
         <div class="hp-body">
           <div class="hp-form-panel">
-            <label class="field-label" for="hira-id">YouTube Video ID</label>
-            <input type="text" id="hira-id" placeholder="e.g. dQw4w9WgXcQ" autocomplete="off" spellcheck="false">
+            <label class="field-label" for="hira-id">YouTube video or playlist — paste link or ID</label>
+            <input type="text" id="hira-id" placeholder="video link/ID or playlist link (…?list=PL…)" autocomplete="off" spellcheck="false">
             <label class="field-label" for="hira-title">Video Title</label>
             <input type="text" id="hira-title" placeholder="e.g. Learn Hiragana Basic Vowels" autocomplete="off" spellcheck="false">
             <button class="btn-primary" onclick="addAcademyVideo('hiragana')">Add Hiragana Video</button>
@@ -1531,8 +1531,8 @@
       <div class="ac-spanel hp-spanel" id="ac-katakana">
         <div class="hp-body">
           <div class="hp-form-panel">
-            <label class="field-label" for="kata-id">YouTube Video ID</label>
-            <input type="text" id="kata-id" placeholder="e.g. dQw4w9WgXcQ" autocomplete="off" spellcheck="false">
+            <label class="field-label" for="kata-id">YouTube video or playlist — paste link or ID</label>
+            <input type="text" id="kata-id" placeholder="video link/ID or playlist link (…?list=PL…)" autocomplete="off" spellcheck="false">
             <label class="field-label" for="kata-title">Video Title</label>
             <input type="text" id="kata-title" placeholder="e.g. Learn Katakana Words" autocomplete="off" spellcheck="false">
             <button class="btn-primary" onclick="addAcademyVideo('katakana')">Add Katakana Video</button>
@@ -1555,8 +1555,8 @@
       <div class="ac-spanel hp-spanel" id="ac-kanji">
         <div class="hp-body">
           <div class="hp-form-panel">
-            <label class="field-label" for="kanji-id">YouTube Video ID</label>
-            <input type="text" id="kanji-id" placeholder="e.g. dQw4w9WgXcQ" autocomplete="off" spellcheck="false">
+            <label class="field-label" for="kanji-id">YouTube video or playlist — paste link or ID</label>
+            <input type="text" id="kanji-id" placeholder="video link/ID or playlist link (…?list=PL…)" autocomplete="off" spellcheck="false">
             <label class="field-label" for="kanji-title">Video Title</label>
             <input type="text" id="kanji-title" placeholder="e.g. Learn Essential N5 Kanji" autocomplete="off" spellcheck="false">
             <button class="btn-primary" onclick="addAcademyVideo('kanji')">Add Kanji Video</button>
@@ -3109,7 +3109,7 @@ function renderAcademyVideos() {
             + '  <div class="hp-item-icon">' + cfg.icon + '</div>'
             + '  <div class="hp-item-body">'
             + '    <div class="hp-item-title">' + esc(vid.title) + '</div>'
-            + '    <div class="hp-item-sub">ID: ' + esc(vid.id) + '</div>'
+            + '    <div class="hp-item-sub">' + (vid.playlist ? ('▶ Playlist: ' + esc(vid.playlist)) : ('ID: ' + esc(vid.id))) + '</div>'
             + '  </div>'
             + '  <div class="hp-item-actions">'
             + '    <button class="act-btn danger" onclick="removeAcademyVideo(\'' + type + '\', ' + i + ')" title="Remove">🗑️</button>'
@@ -3120,26 +3120,51 @@ function renderAcademyVideos() {
   });
 }
 
+// Accepts a raw video ID, a watch/youtu.be/embed/shorts URL, a playlist URL,
+// or a raw playlist ID (PL…/OL…/UU…). Returns { id, playlist }.
+function _parseYouTubeInput(raw) {
+  var s = (raw || '').trim();
+  var out = { id: '', playlist: '' };
+  if (!s) return out;
+  var pl = s.match(/[?&]list=([A-Za-z0-9_-]+)/);
+  if (pl) out.playlist = pl[1];
+  var v = s.match(/[?&]v=([A-Za-z0-9_-]{11})/);
+  if (v) out.id = v[1];
+  if (!out.id) { var m = s.match(/(?:youtu\.be\/|\/embed\/|\/shorts\/|\/v\/)([A-Za-z0-9_-]{11})/); if (m) out.id = m[1]; }
+  if (!out.playlist && /^(PL|OL|UU|FL|RD|LL)[A-Za-z0-9_-]{8,}$/.test(s)) out.playlist = s;
+  if (!out.id && !out.playlist && /^[A-Za-z0-9_-]{11}$/.test(s)) out.id = s;
+  if (!out.id && !out.playlist && !/[\/?=.&]/.test(s)) out.id = s; // last-resort: bare token
+  return out;
+}
+
 function addAcademyVideo(type) {
   var cfg = _ACADEMY_TYPES[type];
   if (!cfg) return;
   var idEl = document.getElementById(cfg.id);
   var titleEl = document.getElementById(cfg.title);
 
-  var vidId = (idEl.value || '').trim();
+  var raw = (idEl.value || '').trim();
   var vidTitle = (titleEl.value || '').trim();
 
-  if (!vidId) {
-    setHpFieldStatus(cfg.status, 'err', 'YouTube Video ID is required.');
+  if (!raw) {
+    setHpFieldStatus(cfg.status, 'err', 'Paste a YouTube video or playlist link / ID.');
+    return;
+  }
+  var p = _parseYouTubeInput(raw);
+  if (!p.id && !p.playlist) {
+    setHpFieldStatus(cfg.status, 'err', 'Could not read a video ID or playlist ID from that input.');
     return;
   }
 
+  var entry = { id: p.id, title: vidTitle || (p.playlist ? 'Academy Playlist' : 'Academy Video') };
+  if (p.playlist) entry.playlist = p.playlist;
+
   var arr = configState[cfg.arr] || (configState[cfg.arr] = []);
-  arr.push({ id: vidId, title: vidTitle || 'Academy Video' });
+  arr.push(entry);
 
   idEl.value = '';
   titleEl.value = '';
-  setHpFieldStatus(cfg.status, 'ok', '✓ Video added — click Save to Site to publish.');
+  setHpFieldStatus(cfg.status, 'ok', '✓ ' + (p.playlist ? 'Playlist' : 'Video') + ' added — click Save to Site to publish.');
   markHpDirty();
   renderAcademyVideos();
 }
@@ -3859,6 +3884,11 @@ var _academyState  = [];
 var _academyLoaded = false;
 
 async function loadAcademyContent() {
+  // Ensure the Hiragana/Katakana/Kanji video playlists (from config.json) are
+  // loaded and shown — they live in config.json, not content.json.
+  if (!_configLoaded) { try { await loadConfig(); } catch(e) {} }
+  else { try { renderAcademyVideos(); } catch(e) {} }
+
   var listEl = document.getElementById('academy-list');
   if (listEl) listEl.innerHTML = '<div class="empty-note">Loading…</div>';
   _academyLoaded = false;

@@ -3703,20 +3703,23 @@ var AcademyVideos = (function() {
     q.forEach(function(fn) { try { fn(); } catch (e) { console.error(e); } });
   };
 
-  function ensurePlayer(scope, videoId, autoplay) {
+  function ensurePlayer(scope, entry, autoplay) {
     var hostId = 'academy-' + scope + '-player';
     if (!document.getElementById(hostId)) return;
-    if (!apiReady) { pending.push(function() { ensurePlayer(scope, videoId, autoplay); }); loadApi(); return; }
+    if (!apiReady) { pending.push(function() { ensurePlayer(scope, entry, autoplay); }); loadApi(); return; }
+    var pl  = (entry && entry.playlist) ? String(entry.playlist) : '';
+    var vid = (entry && entry.id) ? String(entry.id) : '';
     if (players[scope]) {
-      if (videoId) {
-        if (autoplay) players[scope].loadVideoById(videoId);
-        else players[scope].cueVideoById(videoId);
-      }
+      var p = players[scope];
+      if (pl) { autoplay ? p.loadPlaylist({ listType: 'playlist', list: pl }) : p.cuePlaylist({ listType: 'playlist', list: pl }); }
+      else if (vid) { autoplay ? p.loadVideoById(vid) : p.cueVideoById(vid); }
       return;
     }
+    var vars = { rel: 0, modestbranding: 1, playsinline: 1 };
+    if (pl) { vars.listType = 'playlist'; vars.list = pl; }
     players[scope] = new YT.Player(hostId, {
-      videoId: videoId || '',
-      playerVars: { rel: 0, modestbranding: 1, playsinline: 1 },
+      videoId: pl ? undefined : (vid || ''),
+      playerVars: vars,
       events: {
         'onReady': function(e) {
           try {
@@ -3759,13 +3762,14 @@ var AcademyVideos = (function() {
     var html = '';
     list.forEach(function(v, i) {
       var title = v.title || v.name || 'Academy Video';
-      html += '<div class="acad-row' + (i === idx ? ' active' : '') + '" onclick="AcademyVideos.play(\'' + scope + '\', ' + i + ')">' + esc(title) + '</div>';
+      var tag = v.playlist ? ' <span style="font-size:9px;opacity:.7;">▶ playlist</span>' : '';
+      html += '<div class="acad-row' + (i === idx ? ' active' : '') + '" onclick="AcademyVideos.play(\'' + scope + '\', ' + i + ')">' + esc(title) + tag + '</div>';
     });
     listEl.innerHTML = html;
     if (nowEl) nowEl.textContent = '▶ ' + (list[idx].title || list[idx].name || 'Academy Video');
 
-    // Cue (no autoplay) the current video into the player
-    ensurePlayer(scope, list[idx].id, false);
+    // Cue (no autoplay) the current entry (video or playlist) into the player
+    ensurePlayer(scope, list[idx], false);
   }
 
   /* ── Public controls ── */
@@ -3773,7 +3777,7 @@ var AcademyVideos = (function() {
     var list = listFor(scope);
     if (!list.length) return;
     current[scope] = ((i % list.length) + list.length) % list.length;
-    ensurePlayer(scope, list[current[scope]].id, true);  // user click → autoplay
+    ensurePlayer(scope, list[current[scope]], true);  // user click → autoplay
     render(scope);
   }
   function next(scope) { var l = listFor(scope); if (l.length) play(scope, current[scope] + 1); }
