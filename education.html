@@ -3674,6 +3674,7 @@ var AcademyVideos = (function() {
   var players = {};                 // scope ('kana'|'kanji') -> YT.Player
   var current = { kana: 0, kanji: 0 };
   var errCount = { kana: 0, kanji: 0 };  // consecutive unplayable-video skips
+  var pendingPlaylist = {};              // playlist to cue once a freshly-created player is ready
   var apiReady = false;
   var pending = [];
 
@@ -3718,11 +3719,12 @@ var AcademyVideos = (function() {
       } catch (e) { /* player not ready yet — ignore */ }
       return;
     }
-    var vars = { rel: 0, modestbranding: 1, playsinline: 1 };
-    if (pl) { vars.listType = 'playlist'; vars.list = pl; }
+    // Create the player with a concrete videoId (never `undefined` — that yields a
+    // blank src/black frame). A playlist is cued via the API once onReady fires.
+    pendingPlaylist[scope] = pl;
     players[scope] = new YT.Player(hostId, {
-      videoId: pl ? undefined : (vid || ''),
-      playerVars: vars,
+      videoId: vid || '',
+      playerVars: { rel: 0, modestbranding: 1, playsinline: 1 },
       events: {
         'onReady': function(e) {
           try {
@@ -3730,6 +3732,11 @@ var AcademyVideos = (function() {
             var slider = el(scope, 'vol');
             if (slider) { slider.value = v; slider.style.setProperty('--vol', v + '%'); }
             updateMuteIcon(scope);
+            if (pendingPlaylist[scope]) {
+              if (autoplay) e.target.loadPlaylist({ listType: 'playlist', list: pendingPlaylist[scope] });
+              else e.target.cuePlaylist({ listType: 'playlist', list: pendingPlaylist[scope] });
+              pendingPlaylist[scope] = '';
+            }
           } catch (err) {}
         },
         'onStateChange': function(e) {
