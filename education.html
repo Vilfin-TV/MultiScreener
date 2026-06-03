@@ -3719,11 +3719,12 @@ var AcademyVideos = (function() {
       } catch (e) { /* player not ready yet — ignore */ }
       return;
     }
-    // Create the player with a concrete videoId (never `undefined` — that yields a
-    // blank src/black frame). A playlist is cued via the API once onReady fires.
+    // Build options carefully: only set videoId when we actually have one.
+    // Passing videoId:'' throws "Invalid video id"; passing videoId:undefined +
+    // a list playerVar yields a blank black frame. So for playlists we create a
+    // bare player and cue the playlist via the API once onReady fires.
     pendingPlaylist[scope] = pl;
-    players[scope] = new YT.Player(hostId, {
-      videoId: vid || '',
+    var opts = {
       playerVars: { rel: 0, modestbranding: 1, playsinline: 1 },
       events: {
         'onReady': function(e) {
@@ -3736,6 +3737,8 @@ var AcademyVideos = (function() {
               if (autoplay) e.target.loadPlaylist({ listType: 'playlist', list: pendingPlaylist[scope] });
               else e.target.cuePlaylist({ listType: 'playlist', list: pendingPlaylist[scope] });
               pendingPlaylist[scope] = '';
+            } else if (vid) {
+              if (autoplay) e.target.loadVideoById(vid); else e.target.cueVideoById(vid);
             }
           } catch (err) {}
         },
@@ -3749,7 +3752,9 @@ var AcademyVideos = (function() {
           if (code === 100 || code === 101 || code === 150 || code === 2) skipUnplayable(scope);
         }
       }
-    });
+    };
+    if (vid) opts.videoId = vid;   // only set when present (avoids "Invalid video id")
+    players[scope] = new YT.Player(hostId, opts);
   }
 
   // When a video can't be embedded/played, move to the next entry so the panel
