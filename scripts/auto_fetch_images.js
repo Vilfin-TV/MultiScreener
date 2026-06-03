@@ -2,7 +2,7 @@ require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') }
 const fs = require('fs');
 const path = require('path');
 const { createClient } = require('pexels');
-const fetch = require('node-fetch');
+// const fetch = require('node-fetch');
 const vm = require('vm');
 
 const PEXELS_KEY = process.env.PEXELS_API_KEY;
@@ -121,6 +121,7 @@ async function run() {
   if (fetchedCount === 0) {
     // If we didn't fetch anything (e.g. they all exist), ensure images directory exists so git add doesn't fail
     ensureDirectoryExists(path.resolve(__dirname, '../images/.keep'));
+    fs.writeFileSync(path.resolve(__dirname, '../images/.keep'), '');
   }
   
   console.log("=== Automation Complete ===");
