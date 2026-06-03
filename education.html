@@ -3858,6 +3858,7 @@ var AcademyVideos = (function() {
     window.toggleKanaType = function(type) {
       try { orig(type); } catch (e) { console.error(e); }
       current.kana = 0;
+      errCount.kana = 0;   // start the unplayable-skip guard fresh for the new script
       render('kana');
     };
   }
