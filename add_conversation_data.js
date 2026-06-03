@@ -5,7 +5,7 @@ let js = fs.readFileSync('jlpt_textbook_data.js', 'utf8');
 const conversationPages = [
   {
     title: "Trip to Odaiba: Characters & Scene 1 (The Weekend Plan)",
-    image: "https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1677640686995-08260ab6d435?auto=format&fit=crop&w=800&q=80",
     passage: `
 <div style="margin-bottom:16px;">
   <strong>登場人物 (Characters)</strong><br>
@@ -40,7 +40,7 @@ const conversationPages = [
   },
   {
     title: "Trip to Odaiba: Scene 2 (Conversation on the Train)",
-    image: "https://images.unsplash.com/photo-1542051841857-5f90071e7989?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1674530493752-719b5514a7f2?auto=format&fit=crop&w=800&q=80",
     passage: `
 <div style="background:var(--bg); padding:16px; border-radius:8px; border-left:4px solid var(--blue);">
   <strong>Setting:</strong> Saturday morning. The three friends are on the train heading to Odaiba.<br><br>
@@ -76,7 +76,7 @@ const conversationPages = [
   },
   {
     title: "Trip to Odaiba: Scene 3 (Arriving in Odaiba)",
-    image: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1561279629-78600d1156b2?auto=format&fit=crop&w=800&q=80",
     passage: `
 <div style="background:var(--bg); padding:16px; border-radius:8px; border-left:4px solid var(--blue);">
   <strong>Setting:</strong> Getting off the train at Odaiba. The weather is sunny and clear.<br><br>
@@ -109,7 +109,7 @@ const conversationPages = [
   },
   {
     title: "Trip to Odaiba: Scene 4 (The Journey Home)",
-    image: "https://images.unsplash.com/photo-1494548162494-384bba4ab999?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1576919283626-9927b112eb9f?auto=format&fit=crop&w=800&q=80",
     passage: `
 <div style="background:var(--bg); padding:16px; border-radius:8px; border-left:4px solid var(--blue);">
   <strong>Setting:</strong> Late afternoon, watching the sunset by the water before heading back.<br><br>
