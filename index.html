@@ -1441,19 +1441,17 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 /* ── LIVE NEWS GRID — between nav tabs and panels ── */
 .live-news-section{background:var(--dark2);padding:14px 16px 16px;border-bottom:2px solid var(--burn2);flex-shrink:0}
 .lns-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.lns-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--gold2);display:flex;align-items:center;gap:8px}
+.lns-title{font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:2px;color:var(--gold2);display:flex;align-items:center;gap:8px}
 .lns-title::before{content:'📡';font-size:14px}
 .lns-timer{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);background:var(--card);border:1px solid var(--border);border-radius:6px;padding:4px 10px}
-.lns-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;align-items:start}
-@media(max-width:700px){.lns-grid{grid-template-columns:1fr}}
-/* Ultrawide / large monitors: add columns so cards stay readable instead of stretching */
-@media(min-width:1500px){.lns-grid{grid-template-columns:repeat(3,1fr)}}
-@media(min-width:2100px){.lns-grid{grid-template-columns:repeat(4,1fr)}}
+/* Always 2 Live-News boxes per row on tablet/desktop (iPad → 34" monitors); single column on phones */
+.lns-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;align-items:start}
+@media(max-width:760px){.lns-grid{grid-template-columns:1fr}}
 .lnb{background:var(--card);border:1px solid var(--border2);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
 .lnb-header{display:flex;align-items:center;gap:7px;padding:8px 12px;background:var(--lnb-color,var(--burn));position:relative}
 .lnb-flag{font-size:14px}
-.lnb-label{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1px;color:#fff;flex:1}
-.lnb-live{font-size:8px;font-weight:700;background:rgba(255,255,255,.2);color:#fff;padding:2px 5px;border-radius:3px;letter-spacing:.5px;animation:livePulse 2s ease-in-out infinite}
+.lnb-label{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:#fff;flex:1}
+.lnb-live{font-size:9px;font-weight:700;background:rgba(255,255,255,.2);color:#fff;padding:2px 6px;border-radius:3px;letter-spacing:.5px;animation:livePulse 2s ease-in-out infinite}
 /* lnb-header ALWAYS sits on a coloured/dark background — lock heading text to white regardless of theme */
 .lnb-header .lnb-label{color:#ffffff!important}
 .lnb-header .lnb-live{color:#ffffff!important;background:rgba(255,255,255,.2)!important}
@@ -1463,9 +1461,9 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-item{display:flex;flex-direction:column;padding:6px 10px;border-radius:6px;text-decoration:none;transition:background .15s;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04)}
 .lnb-item:hover{background:rgba(255,255,255,.05)}
 .lnb-item:last-child{border-bottom:none}
-.lnb-text{font-size:11.5px;color:var(--text2);line-height:1.45;font-weight:400}
+.lnb-text{font-size:13.5px;color:var(--text2);line-height:1.5;font-weight:400}
 .lnb-item:hover .lnb-text{color:var(--gold2)}
-.lnb-time{font-size:9.5px;color:var(--text3);margin-top:2px;font-family:'JetBrains Mono',monospace}
+.lnb-time{font-size:11px;color:var(--text3);margin-top:3px;font-family:'JetBrains Mono',monospace}
 .lnb-loading{padding:16px 10px;font-size:11px;color:var(--text3);text-align:center;animation:livePulse 1.5s ease-in-out infinite}
 .lnb-error{padding:12px 10px;font-size:11px;color:var(--red);text-align:center}
 .lnb-stale{padding:5px 10px;font-size:10px;color:var(--text3);text-align:center;border-top:1px solid var(--border)}
@@ -1480,7 +1478,7 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 
 /* ── LIVE NEWS — newspaper layout: hero left + headline list right ── */
 /* CSS Grid guarantees both columns are always exactly the same height */
-.lnb-card-grid{padding:0;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;height:580px}
+.lnb-card-grid{padding:0;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;height:610px}
 .lnb-card-grid .lnb-loading,.lnb-card-grid .lnb-error,.lnb-card-grid .lnb-stale{padding:16px;text-align:center;font-size:11px;grid-column:1/-1}
 /* Hero card — left column, stretches to match right column height automatically */
 .lnb-hero-card{display:flex;flex-direction:column;border-right:1px solid var(--border);min-width:0;overflow:hidden}
@@ -1490,32 +1488,34 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-hero-no-img{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:36px;opacity:.4}
 .lnb-hero-body{padding:9px 12px 8px;display:flex;flex-direction:column;gap:4px;border-top:2px solid var(--burn2);cursor:pointer;transition:background .15s}
 .lnb-hero-body:hover{background:rgba(255,255,255,.04)}
-.lnb-hero-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.lnb-hero-title{font-size:15px;font-weight:700;color:var(--text);line-height:1.42;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .lnb-hero-body:hover .lnb-hero-title{color:var(--gold2)}
-.lnb-hero-snippet{font-size:11px;color:var(--text3);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:1px}
-.lnb-hero-time{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;padding-top:2px}
+.lnb-hero-snippet{font-size:12.5px;color:var(--text3);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px}
+.lnb-hero-time{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;padding-top:3px}
 /* Sub-stories inside hero column — fill empty space below main story */
 .lnb-hero-subs{display:flex;flex-direction:column;flex:1;border-top:1px solid var(--border);overflow:hidden}
 /* flex:1 on each sub so they equally share remaining hero height */
 .lnb-hero-sub{flex:1;padding:6px 12px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .15s;display:flex;flex-direction:column;gap:2px;justify-content:center;overflow:hidden;min-height:0}
 .lnb-hero-sub:hover{background:rgba(255,255,255,.05)}
 .lnb-hero-sub:last-child{border-bottom:none}
-.lnb-hero-sub-title{font-size:11px;font-weight:600;color:var(--text2);line-height:1.38;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lnb-hero-sub-title{font-size:12.5px;font-weight:600;color:var(--text2);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .lnb-hero-sub:hover .lnb-hero-sub-title{color:var(--gold2)}
-.lnb-hero-sub-desc{font-size:10px;color:var(--text3);line-height:1.4;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;margin-top:1px}
-.lnb-hero-sub-time{font-size:8.5px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:1px}
+.lnb-hero-sub-desc{font-size:11px;color:var(--text3);line-height:1.4;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px}
+.lnb-hero-sub-time{font-size:9.5px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:2px}
 /* Right column — vertical list, full headlines + descriptions */
 .lnb-right-col{display:flex;flex-direction:column;overflow:hidden;min-width:0}
 .lnb-list-item{flex:1;display:flex;align-items:center;gap:8px;padding:5px 10px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;overflow:hidden;min-height:0}
 .lnb-list-item:hover{background:rgba(255,255,255,.05)}
 .lnb-list-item:last-child{border-bottom:none}
 .lnb-list-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;overflow:hidden}
-.lnb-list-category{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--lnb-color,var(--burn3));line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lnb-list-title{font-size:11px;font-weight:600;color:var(--text);line-height:1.38;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lnb-list-category{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--lnb-color,var(--burn3));line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lnb-list-title{font-size:12.5px;font-weight:600;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .lnb-list-item:hover .lnb-list-title{color:var(--gold2)}
-.lnb-list-time{font-size:8.5px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:1px}
-.lnb-list-thumb{width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--card3);border:2px solid var(--border2)}
-@media(max-width:700px){.lnb-card-grid{grid-template-columns:1fr;height:auto}.lnb-hero-card{border-right:none;border-bottom:1px solid var(--border)}.lnb-hero-img-wrap{padding-top:48%}.lnb-list-thumb{width:40px;height:40px}}
+.lnb-list-time{font-size:9.5px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:2px}
+.lnb-list-thumb{width:48px;height:48px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--card3);border:2px solid var(--border2)}
+/* Tablet/iPad & narrow boxes: stack the hero over the headline list so two-per-row boxes never crowd or overlap text */
+@media(max-width:1100px){.lnb-card-grid{grid-template-columns:1fr;height:auto}.lnb-hero-card{border-right:none;border-bottom:1px solid var(--border)}.lnb-hero-img-wrap{padding-top:42%}.lnb-list-thumb{width:44px;height:44px}}
+@media(max-width:700px){.lnb-hero-img-wrap{padding-top:48%}.lnb-list-thumb{width:40px;height:40px}}
 
 /* ── Calendar strips — thin visible scrollbar so users know they can scroll ── */
 #cal-country-strip,#cal-region-strip{
@@ -3447,7 +3447,6 @@ footer{
 
   .layout{height:auto;min-height:calc(100vh - 44px);overflow:visible}
   .main-content{overflow-y:visible;height:auto}
-  .lns-grid{grid-template-columns:1fr!important}
   .left-menu-overlay{z-index:800}
   .left-menu-header{padding:14px 16px;gap:10px}
   .left-menu-body{padding:20px 16px 60px}
