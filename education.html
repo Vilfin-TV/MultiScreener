@@ -2735,6 +2735,23 @@ function submitMocTest() {
   document.getElementById('moc-body-content').insertAdjacentHTML('afterbegin', finalScoreHtml);
 }
 
+
+var _currentKanjiVideoIdx = 0;
+function playNextKanjiVideo() {
+  const kanjiVideos = [{id:'nO1N02B7HKE', title:'Kanji Mastery Ep 1'}, {id:'RkQ7pE9A13I', title:'Daily Casual Japanese'}, {id:'tE1cE3xO_o4', title:'Kanji Memory Tricks'}];
+  _currentKanjiVideoIdx++;
+  if (_currentKanjiVideoIdx >= kanjiVideos.length) _currentKanjiVideoIdx = 0;
+  const iframe = document.getElementById('kanji-video-iframe');
+  if (iframe) iframe.src = 'https://www.youtube.com/embed/' + kanjiVideos[_currentKanjiVideoIdx].id + '?rel=0&controls=1';
+}
+function playPrevKanjiVideo() {
+  const kanjiVideos = [{id:'nO1N02B7HKE', title:'Kanji Mastery Ep 1'}, {id:'RkQ7pE9A13I', title:'Daily Casual Japanese'}, {id:'tE1cE3xO_o4', title:'Kanji Memory Tricks'}];
+  _currentKanjiVideoIdx--;
+  if (_currentKanjiVideoIdx < 0) _currentKanjiVideoIdx = kanjiVideos.length - 1;
+  const iframe = document.getElementById('kanji-video-iframe');
+  if (iframe) iframe.src = 'https://www.youtube.com/embed/' + kanjiVideos[_currentKanjiVideoIdx].id + '?rel=0&controls=1';
+}
+
 // --- TRANSLATOR LOGIC ---
 let _transTimeout;
 
@@ -5567,6 +5584,23 @@ function submitMocTest() {
   document.getElementById('moc-body-content').insertAdjacentHTML('afterbegin', finalScoreHtml);
 }
 
+
+var _currentKanjiVideoIdx = 0;
+function playNextKanjiVideo() {
+  const kanjiVideos = [{id:'nO1N02B7HKE', title:'Kanji Mastery Ep 1'}, {id:'RkQ7pE9A13I', title:'Daily Casual Japanese'}, {id:'tE1cE3xO_o4', title:'Kanji Memory Tricks'}];
+  _currentKanjiVideoIdx++;
+  if (_currentKanjiVideoIdx >= kanjiVideos.length) _currentKanjiVideoIdx = 0;
+  const iframe = document.getElementById('kanji-video-iframe');
+  if (iframe) iframe.src = 'https://www.youtube.com/embed/' + kanjiVideos[_currentKanjiVideoIdx].id + '?rel=0&controls=1';
+}
+function playPrevKanjiVideo() {
+  const kanjiVideos = [{id:'nO1N02B7HKE', title:'Kanji Mastery Ep 1'}, {id:'RkQ7pE9A13I', title:'Daily Casual Japanese'}, {id:'tE1cE3xO_o4', title:'Kanji Memory Tricks'}];
+  _currentKanjiVideoIdx--;
+  if (_currentKanjiVideoIdx < 0) _currentKanjiVideoIdx = kanjiVideos.length - 1;
+  const iframe = document.getElementById('kanji-video-iframe');
+  if (iframe) iframe.src = 'https://www.youtube.com/embed/' + kanjiVideos[_currentKanjiVideoIdx].id + '?rel=0&controls=1';
+}
+
 // --- TRANSLATOR LOGIC ---
 let _transTimeout;
 
@@ -6415,6 +6449,23 @@ function clearTranslationInput() {
 })();
 
 
+
+
+var _currentKanjiVideoIdx = 0;
+function playNextKanjiVideo() {
+  const kanjiVideos = [{id:'nO1N02B7HKE', title:'Kanji Mastery Ep 1'}, {id:'RkQ7pE9A13I', title:'Daily Casual Japanese'}, {id:'tE1cE3xO_o4', title:'Kanji Memory Tricks'}];
+  _currentKanjiVideoIdx++;
+  if (_currentKanjiVideoIdx >= kanjiVideos.length) _currentKanjiVideoIdx = 0;
+  const iframe = document.getElementById('kanji-video-iframe');
+  if (iframe) iframe.src = 'https://www.youtube.com/embed/' + kanjiVideos[_currentKanjiVideoIdx].id + '?rel=0&controls=1';
+}
+function playPrevKanjiVideo() {
+  const kanjiVideos = [{id:'nO1N02B7HKE', title:'Kanji Mastery Ep 1'}, {id:'RkQ7pE9A13I', title:'Daily Casual Japanese'}, {id:'tE1cE3xO_o4', title:'Kanji Memory Tricks'}];
+  _currentKanjiVideoIdx--;
+  if (_currentKanjiVideoIdx < 0) _currentKanjiVideoIdx = kanjiVideos.length - 1;
+  const iframe = document.getElementById('kanji-video-iframe');
+  if (iframe) iframe.src = 'https://www.youtube.com/embed/' + kanjiVideos[_currentKanjiVideoIdx].id + '?rel=0&controls=1';
+}
 
 // --- TRANSLATOR LOGIC ---
 let _transDebounce = null;
