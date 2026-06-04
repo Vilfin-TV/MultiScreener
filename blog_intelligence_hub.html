@@ -3633,6 +3633,7 @@ function renderNfoBoard() {
 }
 
 let _topMfFeed = null;
+let _topMfFunds = null;
 let _topMfLoaded = false;
 
 async function loadTopMfData() {
@@ -3642,6 +3643,10 @@ async function loadTopMfData() {
     const r = await fetch('data/top_mutual_funds.json?v=' + Math.floor(Date.now() / 60000), { cache: 'no-cache' });
     if (r.ok) _topMfFeed = await r.json();
   } catch (_) {}
+  try {
+    const r = await fetch('https://vilfintv.com/config.json?t=' + Date.now());
+    if (r.ok) { const cfg = await r.json(); _topMfFunds = Array.isArray(cfg.top_mutual_funds) ? cfg.top_mutual_funds : []; }
+  } catch (_) {}
   renderTopMfBoard();
 }
 
@@ -3650,23 +3655,37 @@ function renderTopMfBoard() {
   if (!grid) return;
   if (!_topMfLoaded) { loadTopMfData(); return; }
 
-  const regionsData = (_topMfFeed && _topMfFeed.regions) || {};
+  const feedCats = (_topMfFeed && _topMfFeed.countries) || {};
+  const funds = Array.isArray(_topMfFunds) ? _topMfFunds : [];
   
   grid.innerHTML = NFO_COUNTRIES.map(co => {
-    const funds = regionsData[co.key] || [];
-    const count = funds.length;
+    // Filter structured funds: keep only those for this country and rank <= 5
+    const myFunds = funds
+      .filter(f => _nfoCountryKey(f.country) === co.key)
+      .filter(f => parseInt(f.rank || 0, 10) > 0 && parseInt(f.rank || 0, 10) <= 5)
+      .sort((a, b) => parseInt(a.rank || 99, 10) - parseInt(b.rank || 99, 10));
 
-    const cards = funds.map((f, i) => {
-      const badge = `<span class="nfo-status open">Rank #${i + 1}</span>`;
-      const meta = `${f.return_1y}% 1Y Return`;
+    const news = (feedCats[co.key] || []).slice(0, 10);
+    const count = myFunds.length + news.length;
+
+    const cards = myFunds.map(f => {
+      const badge = `<span class="nfo-status open">Rank #${f.rank}</span>`;
+      const meta = `${f.return_1y || '--'} 1Y Return`;
       return `<div class="nfo-card">
-        <div class="nfo-card-name">${nfoEsc(f.name || f.symbol)}</div>
-        <div class="nfo-card-meta">${nfoEsc(f.symbol)}</div>
+        <div class="nfo-card-name">${nfoEsc(f.name)}</div>
+        <div class="nfo-card-meta">${nfoEsc(f.fund_house || f.symbol)}</div>
         <div class="nfo-card-dates">${badge}<span>${meta}</span></div>
       </div>`;
     }).join('');
 
-    const body = cards ? cards : `<div class="nfo-empty">No data available.</div>`;
+    const newsItems = news.map(n => `<div class="nfo-news-item">
+        <a class="nfo-news-title" href="${nfoEsc(n.url || '#')}" target="_blank" rel="noopener noreferrer">${nfoEsc(n.title || '')}</a>
+        <div class="nfo-news-meta">${nfoEsc(n.source || '')}${n.date ? ' · ' + nfoEsc(n.date) : ''}</div>
+      </div>`).join('');
+
+    const body = (cards || newsItems)
+      ? `${cards}${news.length ? `<div class="nfo-news-label">Latest top funds news</div>${newsItems}` : ''}`
+      : `<div class="nfo-empty">No top funds or news currently available.</div>`;
 
     return `<div class="nfo-col">
       <div class="nfo-col-head"><span class="nfo-col-flag">${co.flag}</span><span class="nfo-col-name">${co.label}</span><span class="nfo-col-count">${count}</span></div>
