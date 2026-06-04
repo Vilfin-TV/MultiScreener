@@ -38,13 +38,17 @@ jobs:
         run: python scripts/update_top_mutual_funds.py
         continue-on-error: true
 
+      - name: Fetch Top ETFs and rebuild top_etfs.json
+        run: python scripts/update_top_etf_feed.py
+        continue-on-error: true
+
       - name: Commit blog_feed.json (with rebase-and-retry)
         run: |
           git config --global user.name  "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global pull.rebase true
 
-          git add data/blog_feed.json data/nfo_feed.json data/top_mutual_funds.json
+          git add data/blog_feed.json data/nfo_feed.json data/top_mutual_funds.json data/top_etfs.json
           if git diff --staged --quiet; then
             echo "ℹ️  No changes to feed JSON — skipping commit."
             exit 0

@@ -750,6 +750,21 @@ html[data-theme="gemini"]{
         </div>
       </div>
 
+      <!-- Top 5 ETFs Board — shown only when ETF tab is active -->
+      <div id="topEtfBoardSection" style="display:none;">
+        <div class="nfo-board" style="margin-bottom:24px;">
+          <div class="nfo-board-head">
+            <div class="nfo-board-title">🏆 Top 5 ETFs — Weekly</div>
+            <span class="ipo-live-badge"><span class="ipo-live-dot"></span>Auto-updated</span>
+          </div>
+          <div class="nfo-board-sub">Top 5 performing ETFs by 1-year return across the US, Japan and India. ETFs falling below top 5 are removed automatically.</div>
+          <div class="nfo-grid" id="topEtfGrid">
+            <div class="nfo-empty">Loading top ETFs…</div>
+          </div>
+          <div class="nfo-board-footer">Performance data is fetched from live market sources and updated daily. Rankings are based on 1-year returns.</div>
+        </div>
+      </div>
+
       <div class="briefings-wrap">
         <div class="briefings-title">Current Briefings</div>
         <div class="briefings-sub">Latest linked updates from newsrooms, exchanges, regulators and platform sites.</div>
@@ -3694,6 +3709,68 @@ function renderTopMfBoard() {
   }).join('');
 }
 
+let _topEtfFeed = null;
+let _topEtfFunds = null;
+let _topEtfLoaded = false;
+
+async function loadTopEtfData() {
+  if (_topEtfLoaded) return;
+  _topEtfLoaded = true;
+  try {
+    const r = await fetch('data/top_etfs.json?v=' + Math.floor(Date.now() / 60000), { cache: 'no-cache' });
+    if (r.ok) _topEtfFeed = await r.json();
+  } catch (_) {}
+  try {
+    const r = await fetch('https://vilfintv.com/config.json?t=' + Date.now());
+    if (r.ok) { const cfg = await r.json(); _topEtfFunds = Array.isArray(cfg.top_etfs) ? cfg.top_etfs : []; }
+  } catch (_) {}
+  renderTopEtfBoard();
+}
+
+function renderTopEtfBoard() {
+  const grid = document.getElementById('topEtfGrid');
+  if (!grid) return;
+  if (!_topEtfLoaded) { loadTopEtfData(); return; }
+
+  const feedCats = (_topEtfFeed && _topEtfFeed.countries) || {};
+  const funds = Array.isArray(_topEtfFunds) ? _topEtfFunds : [];
+  
+  grid.innerHTML = NFO_COUNTRIES.map(co => {
+    // Filter structured funds: keep only those for this country and rank <= 5
+    const myFunds = funds
+      .filter(f => _nfoCountryKey(f.country) === co.key)
+      .filter(f => parseInt(f.rank || 0, 10) > 0 && parseInt(f.rank || 0, 10) <= 5)
+      .sort((a, b) => parseInt(a.rank || 99, 10) - parseInt(b.rank || 99, 10));
+
+    const news = (feedCats[co.key] || []).slice(0, 10);
+    const count = myFunds.length + news.length;
+
+    const cards = myFunds.map(f => {
+      const badge = `<span class="nfo-status open">Rank #${f.rank}</span>`;
+      const meta = `${f.return_1y || '--'} 1Y Return`;
+      return `<div class="nfo-card">
+        <div class="nfo-card-name">${nfoEsc(f.name)}</div>
+        <div class="nfo-card-meta">${nfoEsc(f.fund_house || f.symbol)}</div>
+        <div class="nfo-card-dates">${badge}<span>${meta}</span></div>
+      </div>`;
+    }).join('');
+
+    const newsItems = news.map(n => `<div class="nfo-news-item">
+        <a class="nfo-news-title" href="${nfoEsc(n.url || '#')}" target="_blank" rel="noopener noreferrer">${nfoEsc(n.title || '')}</a>
+        <div class="nfo-news-meta">${nfoEsc(n.source || '')}${n.date ? ' · ' + nfoEsc(n.date) : ''}</div>
+      </div>`).join('');
+
+    const body = (cards || newsItems)
+      ? `${cards}${news.length ? `<div class="nfo-news-label">Latest top ETFs news</div>${newsItems}` : ''}`
+      : `<div class="nfo-empty">No top ETFs or news currently available.</div>`;
+
+    return `<div class="nfo-col">
+      <div class="nfo-col-head"><span class="nfo-col-flag">${co.flag}</span><span class="nfo-col-name">${co.label}</span><span class="nfo-col-count">${count}</span></div>
+      ${body}
+    </div>`;
+  }).join('');
+}
+
 function renderPage() {
   // Toggle NFO live board (US · Japan · India) visibility
   const nfoSec = document.getElementById('nfoBoardSection');
@@ -3708,6 +3785,13 @@ function renderPage() {
     const showMf = activeTab === 'mutual_funds';
     mfSec.style.display = showMf ? 'block' : 'none';
     if (showMf) renderTopMfBoard();
+  }
+  // Toggle Top ETF live board
+  const etfSec = document.getElementById('topEtfBoardSection');
+  if (etfSec) {
+    const showEtf = activeTab === 'etf';
+    etfSec.style.display = showEtf ? 'block' : 'none';
+    if (showEtf) renderTopEtfBoard();
   }
   // Toggle IPO live widget visibility
   const ipoSec = document.getElementById('ipoWidgetSection');
