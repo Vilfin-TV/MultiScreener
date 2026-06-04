@@ -691,6 +691,19 @@ export default {
         })
         .filter(v => v.id || v.playlist);
 
+      // ── NFO offerings (New Fund Offerings board: US / Japan / India) ───────
+      const cleanNfo = (Array.isArray(config.nfo_offerings) ? config.nfo_offerings : [])
+        .map(o => ({
+          name:       String((o && o.name)       || '').trim().slice(0, 140),
+          country:    String((o && o.country)    || '').trim().toLowerCase().slice(0, 16),
+          fund_house: String((o && o.fund_house) || '').trim().slice(0, 80),
+          type:       String((o && o.type)       || '').trim().slice(0, 60),
+          open_date:  String((o && o.open_date)  || '').trim().slice(0, 24),
+          close_date: String((o && o.close_date) || '').trim().slice(0, 24),
+          url:        String((o && o.url)        || '').trim().slice(0, 300),
+        }))
+        .filter(o => o.name && o.country);
+
       const cleanConfig = {
         youtube_overrides:     cleanYTOv,
         youtube_channels:      cleanYT,
@@ -702,6 +715,7 @@ export default {
         academy_hiragana:      cleanAcademy(config.academy_hiragana),
         academy_katakana:      cleanAcademy(config.academy_katakana),
         academy_kanji:         cleanAcademy(config.academy_kanji),
+        nfo_offerings:         cleanNfo,
       };
 
       const REPO = 'Vilfin-TV/MultiScreener', FILE_PATH = 'config.json', BRANCH = 'main';

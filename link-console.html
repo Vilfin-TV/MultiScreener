@@ -1094,6 +1094,7 @@
         <div class="hp-stab"        data-stab="news"   onclick="switchHomeTab('news')">📡 Live News</div>
         <div class="hp-stab"        data-stab="ticker" onclick="switchHomeTab('ticker')">📈 Ticker Symbols</div>
         <div class="hp-stab"        data-stab="markets" onclick="switchHomeTab('markets')">📊 Markets Watchlist</div>
+        <div class="hp-stab"        data-stab="nfo"     onclick="switchHomeTab('nfo')">🆕 NFO Offerings</div>
       </div>
 
       <!-- Toolbar -->
@@ -1349,6 +1350,52 @@
           <div style="padding:20px;text-align:center;color:#2d4a6a;font-size:12px;">Loading…</div>
         </div>
 
+      </div>
+
+      <!-- ── NFO Offerings (New Fund Offerings board on the Blog Hub) ── -->
+      <div class="hp-spanel" id="hp-nfo" style="padding:18px 22px;">
+        <div class="hp-section-hdr">
+          <div class="hp-section-title">🆕 New Fund Offerings (US · Japan · India)</div>
+        </div>
+        <p style="font-size:11px;color:#4d6a8a;margin-bottom:14px;line-height:1.5;">
+          Add open / upcoming fund offers shown on the Blog Intelligence Hub → <strong>NFO</strong> tab.
+          Each offer is <strong style="color:#818cf8;">removed automatically the day after its close date</strong>.
+          (Fund-offer news is auto-fetched separately each day.)
+        </p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;">
+          <div style="flex:2;min-width:180px;">
+            <label class="field-label" for="nfo-name">Fund / Scheme Name</label>
+            <input type="text" id="nfo-name" maxlength="140" placeholder="e.g. ABC Nifty Next 50 Index Fund" autocomplete="off" style="background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:12.5px;padding:7px 11px;outline:none;width:100%;font-family:inherit;">
+          </div>
+          <div style="flex:1;min-width:120px;">
+            <label class="field-label" for="nfo-country">Country</label>
+            <select id="nfo-country" style="background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:12.5px;padding:7px 11px;outline:none;width:100%;font-family:inherit;">
+              <option value="us">🇺🇸 United States</option>
+              <option value="japan">🇯🇵 Japan</option>
+              <option value="india" selected>🇮🇳 India</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;">
+          <div style="flex:1;min-width:130px;"><label class="field-label" for="nfo-house">Fund House <span style="opacity:.5">(optional)</span></label>
+            <input type="text" id="nfo-house" maxlength="80" placeholder="e.g. ABC Mutual Fund" autocomplete="off" style="background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:12.5px;padding:7px 11px;outline:none;width:100%;font-family:inherit;"></div>
+          <div style="flex:1;min-width:120px;"><label class="field-label" for="nfo-type">Type <span style="opacity:.5">(optional)</span></label>
+            <input type="text" id="nfo-type" maxlength="60" placeholder="e.g. Index Fund / ETF" autocomplete="off" style="background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:12.5px;padding:7px 11px;outline:none;width:100%;font-family:inherit;"></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px;">
+          <div style="flex:1;min-width:120px;"><label class="field-label" for="nfo-open">Open Date</label>
+            <input type="date" id="nfo-open" style="background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:12.5px;padding:6px 10px;outline:none;width:100%;font-family:inherit;"></div>
+          <div style="flex:1;min-width:120px;"><label class="field-label" for="nfo-close">Close Date</label>
+            <input type="date" id="nfo-close" style="background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:12.5px;padding:6px 10px;outline:none;width:100%;font-family:inherit;"></div>
+          <div style="flex:2;min-width:160px;"><label class="field-label" for="nfo-url">Reference URL <span style="opacity:.5">(optional)</span></label>
+            <input type="url" id="nfo-url" maxlength="300" placeholder="https://…" autocomplete="off" style="background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:12.5px;padding:7px 11px;outline:none;width:100%;font-family:inherit;"></div>
+        </div>
+        <button class="hp-save-btn" style="padding:8px 16px;font-size:12.5px;" onclick="addNfoOffering()">+ Add NFO</button>
+        <div class="form-status" id="nfo-form-status" style="margin:8px 0 4px;"></div>
+
+        <div class="hp-section-divider" style="margin:14px 0;"></div>
+        <div class="hp-section-hdr"><div class="hp-section-title" style="font-size:12.5px;">Saved Offerings <span class="hp-section-count" id="nfo-count">0</span></div></div>
+        <div id="nfo-list"><div style="padding:14px;text-align:center;color:#2d4a6a;font-size:12px;">No offerings added.</div></div>
       </div>
 
     </div><!-- /tab-homepage -->
@@ -2529,7 +2576,8 @@ var configState  = {
   news_overrides:    {}, news_channels:    [],
   ticker_symbols:    [], ticker_symbols_mobile: [],
   markets_groups:    [],
-  academy_hiragana:  [], academy_katakana: [], academy_kanji: []
+  academy_hiragana:  [], academy_katakana: [], academy_kanji: [],
+  nfo_offerings:     []
 };
 var _builtinData   = null;
 var _configLoaded  = false;
@@ -2591,6 +2639,7 @@ async function loadConfig() {
         configState.academy_hiragana     = Array.isArray(data.academy_hiragana)      ? data.academy_hiragana      : [];
         configState.academy_katakana     = Array.isArray(data.academy_katakana)      ? data.academy_katakana      : [];
         configState.academy_kanji        = Array.isArray(data.academy_kanji)         ? data.academy_kanji         : [];
+        configState.nfo_offerings         = Array.isArray(data.nfo_offerings)         ? data.nfo_offerings         : [];
       }
     } else {
       setHpSaveStatus('err', 'config.json not found — starting fresh.');
@@ -2618,6 +2667,7 @@ async function loadConfig() {
   renderTickerMobileList();
   renderMarketsGroups();
   renderAcademyVideos();
+  renderNfoOfferings();
 }
 
 /* ── Dirty state ────────────────────────────────────────────────────────────── */
@@ -3177,6 +3227,60 @@ function removeAcademyVideo(type, idx) {
   arr.splice(idx, 1);
   markHpDirty();
   renderAcademyVideos();
+}
+
+/* ── NFO Offerings Manager (Blog Hub → NFO board: US · Japan · India) ──────── */
+var _NFO_FLAG = { us: '🇺🇸', japan: '🇯🇵', india: '🇮🇳' };
+function renderNfoOfferings() {
+  var arr = configState.nfo_offerings || (configState.nfo_offerings = []);
+  var listEl = document.getElementById('nfo-list');
+  var countEl = document.getElementById('nfo-count');
+  if (countEl) countEl.textContent = arr.length;
+  if (!listEl) return;
+  if (!arr.length) {
+    listEl.innerHTML = '<div style="padding:14px;text-align:center;color:#2d4a6a;font-size:12px;">No offerings added.</div>';
+    return;
+  }
+  var today = new Date(); today.setHours(0, 0, 0, 0);
+  listEl.innerHTML = arr.map(function (o, i) {
+    var flag = _NFO_FLAG[(o.country || '').toLowerCase()] || '🌐';
+    var closed = false;
+    if (o.close_date) { var cd = new Date(o.close_date); if (!isNaN(cd.getTime()) && cd < today) closed = true; }
+    var dates = (o.open_date || o.close_date) ? (esc(o.open_date || '—') + ' → ' + esc(o.close_date || '—')) : 'No dates set';
+    var sub = [o.fund_house, o.type].filter(Boolean).map(esc).join(' · ');
+    return '<div class="hp-item">'
+      + '  <div class="hp-item-icon">' + flag + '</div>'
+      + '  <div class="hp-item-body">'
+      + '    <div class="hp-item-title">' + esc(o.name) + (closed ? ' <span style="color:#f87171;font-size:10px;font-weight:700;">(closed — will be hidden)</span>' : '') + '</div>'
+      + '    <div class="hp-item-sub">' + (sub ? sub + ' · ' : '') + dates + '</div>'
+      + '  </div>'
+      + '  <div class="hp-item-actions"><button class="act-btn danger" onclick="removeNfoOffering(' + i + ')" title="Remove">🗑️</button></div>'
+      + '</div>';
+  }).join('');
+}
+function addNfoOffering() {
+  var g = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  var name = g('nfo-name'), country = g('nfo-country');
+  if (!name) { setHpFieldStatus('nfo-form-status', 'err', 'Fund / scheme name is required.'); return; }
+  if (!country) { setHpFieldStatus('nfo-form-status', 'err', 'Please select a country.'); return; }
+  var open = g('nfo-open'), close = g('nfo-close');
+  if (open && close && new Date(close) < new Date(open)) {
+    setHpFieldStatus('nfo-form-status', 'err', 'Close date cannot be before the open date.'); return;
+  }
+  (configState.nfo_offerings || (configState.nfo_offerings = [])).push({
+    name: name, country: country, fund_house: g('nfo-house'), type: g('nfo-type'),
+    open_date: open, close_date: close, url: g('nfo-url'),
+  });
+  ['nfo-name', 'nfo-house', 'nfo-type', 'nfo-open', 'nfo-close', 'nfo-url'].forEach(function (id) { var el = document.getElementById(id); if (el) el.value = ''; });
+  setHpFieldStatus('nfo-form-status', 'ok', '✓ NFO added — click Save to Site to publish.');
+  markHpDirty();
+  renderNfoOfferings();
+}
+function removeNfoOffering(idx) {
+  if (!confirm('Remove this NFO offering?')) return;
+  (configState.nfo_offerings || []).splice(idx, 1);
+  markHpDirty();
+  renderNfoOfferings();
 }
 
 /* ── Custom YT Links ────────────────────────────────────────────────────────── */

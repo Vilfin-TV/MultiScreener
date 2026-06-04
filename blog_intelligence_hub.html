@@ -170,6 +170,37 @@ a{text-decoration:none;color:inherit}
   border:1px solid var(--border2);font-size:11px;font-weight:700;color:#dbeafe
 }
 
+/* ── NFO Live Board (US · Japan · India) ── */
+#nfoBoardSection{margin-bottom:24px}
+.nfo-board{background:linear-gradient(135deg,#0d1e38 0%,#0a1628 100%);border:1px solid #1e3a5f;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.45);padding:18px 20px 16px}
+.nfo-board-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.nfo-board-title{font-size:16px;font-weight:700;color:#e2e8f0;letter-spacing:.3px}
+.nfo-board-sub{font-size:12px;color:#64748b;margin:4px 0 14px;letter-spacing:.2px}
+.nfo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start}
+.nfo-col{background:rgba(255,255,255,.02);border:1px solid #16314f;border-radius:12px;padding:12px;min-width:0}
+.nfo-col-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #16314f}
+.nfo-col-flag{font-size:18px}
+.nfo-col-name{font-size:13px;font-weight:700;color:#dbeafe;flex:1;margin-left:8px}
+.nfo-col-count{font-size:11px;font-weight:700;color:#93c5fd;background:rgba(59,130,246,.15);border-radius:999px;padding:2px 9px}
+.nfo-card{background:rgba(13,30,56,.7);border:1px solid #1e3a5f;border-radius:9px;padding:10px 11px;margin-bottom:9px}
+.nfo-card-name{font-size:13px;font-weight:700;color:#f1f5f9;line-height:1.35}
+.nfo-card-meta{font-size:11px;color:#7c93b3;margin-top:3px}
+.nfo-card-dates{font-size:11px;color:#94a3b8;margin-top:5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.nfo-status{font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;white-space:nowrap}
+.nfo-status.open{background:rgba(34,197,94,.15);color:#22c55e;border:1px solid rgba(34,197,94,.3)}
+.nfo-status.soon{background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.3)}
+.nfo-card-link{display:inline-block;margin-top:6px;font-size:11px;font-weight:600;color:#60a5fa;text-decoration:none}
+.nfo-card-link:hover{text-decoration:underline}
+.nfo-news-label{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#4d6a8a;margin:10px 0 6px}
+.nfo-news-item{padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.nfo-news-item:last-child{border-bottom:none}
+.nfo-news-title{font-size:12px;color:#cbd5e1;text-decoration:none;line-height:1.4;display:block}
+.nfo-news-title:hover{color:#93c5fd}
+.nfo-news-meta{font-size:10px;color:#5b7497;margin-top:2px}
+.nfo-empty{font-size:11.5px;color:#5b7497;padding:6px 2px;font-style:italic}
+.nfo-board-footer{font-size:11px;color:#475569;margin-top:12px;padding-top:10px;border-top:1px solid #16314f;line-height:1.5}
+@media(max-width:760px){.nfo-grid{grid-template-columns:1fr}}
+
 /* ── IPO Live Widget Panel ── */
 #ipoWidgetSection{margin-bottom:24px}
 .ipo-widget-panel{background:linear-gradient(135deg,#0d1e38 0%,#0a1628 100%);border:1px solid #1e3a5f;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.45)}
@@ -686,6 +717,21 @@ html[data-theme="gemini"]{
             <a href="https://trendlyne.com/ipo-allotment-status/" target="_blank" rel="noopener noreferrer">Trendlyne</a>
             &nbsp;·&nbsp; Data refreshed continuously
           </div>
+        </div>
+      </div>
+
+      <!-- NFO Live Board — shown only when NFO tab is active -->
+      <div id="nfoBoardSection" style="display:none;">
+        <div class="nfo-board">
+          <div class="nfo-board-head">
+            <div class="nfo-board-title">🆕 New Fund Offerings — Live</div>
+            <span class="ipo-live-badge"><span class="ipo-live-dot"></span>Auto-updated</span>
+          </div>
+          <div class="nfo-board-sub">Open &amp; upcoming fund offers across the US, Japan and India. Closed offers are removed automatically.</div>
+          <div class="nfo-grid" id="nfoGrid">
+            <div class="nfo-empty">Loading new fund offerings…</div>
+          </div>
+          <div class="nfo-board-footer">Structured offers (with open/close dates) are curated in the VilfinTV Console &amp; stored in the backend; fund-offer news is auto-refreshed daily from public sources.</div>
         </div>
       </div>
 
@@ -3479,7 +3525,106 @@ function ensureTlWidget() {
   document.body.appendChild(s);
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// NFO LIVE BOARD — New Fund Offerings for US · Japan · India
+//   • Structured offers (name/open/close) come from the Console → config.json
+//     (the backend). Each offer is auto-removed the day after its close date.
+//   • Fund-offer NEWS is auto-refreshed daily into data/nfo_feed.json.
+// ═══════════════════════════════════════════════════════════════════
+const NFO_COUNTRIES = [
+  { key: 'us',    flag: '🇺🇸', label: 'United States' },
+  { key: 'japan', flag: '🇯🇵', label: 'Japan' },
+  { key: 'india', flag: '🇮🇳', label: 'India' },
+];
+let _nfoFeed = null;     // auto news (data/nfo_feed.json)
+let _nfoOffers = null;   // structured offers (config.json → nfo_offerings)
+let _nfoLoaded = false;
+
+function nfoEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function _nfoCountryKey(c) {
+  c = (c || '').toString().toLowerCase().trim();
+  if (['us', 'usa', 'united states', 'u.s.', 'america'].includes(c)) return 'us';
+  if (['japan', 'jp', 'jpn'].includes(c)) return 'japan';
+  if (['india', 'in', 'ind', 'bharat'].includes(c)) return 'india';
+  return c;
+}
+function _nfoDate(s) { if (!s) return null; const d = new Date(s); return isNaN(d.getTime()) ? null : d; }
+function _nfoFmt(s) { const d = _nfoDate(s); return d ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : (s || ''); }
+
+async function loadNfoData() {
+  if (_nfoLoaded) return;
+  _nfoLoaded = true;
+  try {
+    const r = await fetch('data/nfo_feed.json?v=' + Math.floor(Date.now() / 60000), { cache: 'no-cache' });
+    if (r.ok) _nfoFeed = await r.json();
+  } catch (_) {}
+  try {
+    const r = await fetch('https://vilfintv.com/config.json?t=' + Date.now());
+    if (r.ok) { const cfg = await r.json(); _nfoOffers = Array.isArray(cfg.nfo_offerings) ? cfg.nfo_offerings : []; }
+  } catch (_) {}
+  renderNfoBoard();
+}
+
+function renderNfoBoard() {
+  const grid = document.getElementById('nfoGrid');
+  if (!grid) return;
+  if (!_nfoLoaded) { loadNfoData(); return; }
+
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const feedCats = (_nfoFeed && _nfoFeed.countries) || {};
+  const offers = Array.isArray(_nfoOffers) ? _nfoOffers : [];
+
+  grid.innerHTML = NFO_COUNTRIES.map(co => {
+    // Structured offers for this country — drop any whose close date has passed
+    const myOffers = offers
+      .filter(o => _nfoCountryKey(o.country) === co.key)
+      .filter(o => { const cd = _nfoDate(o.close_date || o.close); return !cd || cd >= today; })
+      .sort((a, b) => (_nfoDate(a.close_date || a.close) || today) - (_nfoDate(b.close_date || b.close) || today));
+
+    const news = (feedCats[co.key] || []).slice(0, 10);
+    const count = myOffers.length + news.length;
+
+    const offerCards = myOffers.map(o => {
+      const open = _nfoDate(o.open_date || o.open), close = _nfoDate(o.close_date || o.close);
+      let badge;
+      if (open && open > today) badge = `<span class="nfo-status soon">Opens ${_nfoFmt(o.open_date || o.open)}</span>`;
+      else if (close) badge = `<span class="nfo-status open">Open · closes ${_nfoFmt(o.close_date || o.close)}</span>`;
+      else badge = `<span class="nfo-status open">Open</span>`;
+      const meta = [o.fund_house, o.type].filter(Boolean).map(nfoEsc).join(' · ');
+      const dateLine = (open || close) ? `<span>${open ? _nfoFmt(o.open_date || o.open) : '—'} → ${close ? _nfoFmt(o.close_date || o.close) : '—'}</span>` : '';
+      const link = o.url ? `<a class="nfo-card-link" href="${nfoEsc(o.url)}" target="_blank" rel="noopener noreferrer">Details →</a>` : '';
+      return `<div class="nfo-card">
+        <div class="nfo-card-name">${nfoEsc(o.name || 'New Fund Offer')}</div>
+        ${meta ? `<div class="nfo-card-meta">${meta}</div>` : ''}
+        <div class="nfo-card-dates">${badge}${dateLine}</div>
+        ${link}
+      </div>`;
+    }).join('');
+
+    const newsItems = news.map(n => `<div class="nfo-news-item">
+        <a class="nfo-news-title" href="${nfoEsc(n.url || '#')}" target="_blank" rel="noopener noreferrer">${nfoEsc(n.title || '')}</a>
+        <div class="nfo-news-meta">${nfoEsc(n.source || '')}${n.date ? ' · ' + nfoEsc(n.date) : ''}</div>
+      </div>`).join('');
+
+    const body = (offerCards || newsItems)
+      ? `${offerCards}${news.length ? `<div class="nfo-news-label">Latest fund-offer news</div>${newsItems}` : ''}`
+      : `<div class="nfo-empty">No current offerings.</div>`;
+
+    return `<div class="nfo-col">
+      <div class="nfo-col-head"><span class="nfo-col-flag">${co.flag}</span><span class="nfo-col-name">${co.label}</span><span class="nfo-col-count">${count}</span></div>
+      ${body}
+    </div>`;
+  }).join('');
+}
+
 function renderPage() {
+  // Toggle NFO live board (US · Japan · India) visibility
+  const nfoSec = document.getElementById('nfoBoardSection');
+  if (nfoSec) {
+    const showNfo = activeTab === 'nfo';
+    nfoSec.style.display = showNfo ? 'block' : 'none';
+    if (showNfo) renderNfoBoard();
+  }
   // Toggle IPO live widget visibility
   const ipoSec = document.getElementById('ipoWidgetSection');
   if (ipoSec) {
