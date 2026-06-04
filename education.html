@@ -1859,6 +1859,62 @@ function getKanaSvgVisual(romaji, wordStr) {
     + `<text x="60" y="107" font-family="Segoe UI, Roboto, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle" letter-spacing="0.4">${label}</text>`
     + `</svg>`;
 }
+
+// Keyword → emoji for Kanji mnemonics (matched against the English meaning).
+// Ordered specific → general; first hit wins. Falls back to the kanji glyph.
+const KANJI_EMOJI_KEYWORDS = [
+  ['sun','☀️'],['moon','🌙'],['star','⭐'],['sky','🌌'],['heaven','🌌'],['rain','🌧️'],['snow','❄️'],
+  ['cloud','☁️'],['wind','🌬️'],['thunder','⚡'],['electric','⚡'],['light','💡'],
+  ['ocean','🌊'],['sea','🌊'],['water','💧'],['river','🏞️'],['lake','🏞️'],['fire','🔥'],
+  ['mountain','⛰️'],['forest','🌲'],['bamboo','🎋'],['tree','🌳'],['wood','🪵'],['grass','🌿'],['flower','🌸'],['rice','🌾'],['plant','🌱'],
+  ['gold','🥇'],['silver','🥈'],['iron','🔩'],['metal','🔩'],['stone','🪨'],['rock','🪨'],['soil','🟫'],['earth','🌍'],['sand','🏖️'],['jewel','💎'],
+  ['dog','🐕'],['cat','🐱'],['bird','🐦'],['fish','🐟'],['horse','🐴'],['cow','🐄'],['sheep','🐑'],['pig','🐖'],['insect','🐛'],['bug','🐛'],['dragon','🐉'],['tiger','🐯'],['shell','🐚'],['animal','🐾'],
+  ['father','👨'],['mother','👩'],['baby','👶'],['child','🧒'],['woman','👩'],['female','👩'],['man','👨'],['male','👨'],['king','👑'],['friend','👫'],['family','👪'],['teacher','🧑‍🏫'],['student','🎓'],['doctor','🩺'],['people','👥'],['person','🧑'],['self','🙋'],['name','🏷️'],
+  ['mouth','👄'],['eye','👁️'],['ear','👂'],['hand','✋'],['foot','🦶'],['heart','❤️'],['mind','🧠'],['body','🧍'],['blood','🩸'],['tooth','🦷'],['face','😊'],['bone','🦴'],['hair','💇'],
+  ['book','📖'],['letter','✉️'],['language','🗣️'],['word','💬'],['speak','💬'],['say','💬'],['read','📖'],['write','✍️'],['paper','📄'],['study','📚'],['learn','📚'],['school','🏫'],['question','❓'],['music','🎵'],['picture','🖼️'],['map','🗺️'],['story','📜'],
+  ['money','💰'],['buy','🛒'],['sell','🏷️'],['shop','🏬'],['store','🏬'],['market','🏪'],['rich','💰'],['price','🏷️'],['work','🛠️'],['company','🏢'],['business','💼'],
+  ['eat','🍚'],['meal','🍱'],['food','🍱'],['drink','🥤'],['tea','🍵'],['alcohol','🍶'],['sake','🍶'],['wine','🍷'],['meat','🍖'],['vegetable','🥬'],['fruit','🍎'],['egg','🥚'],['milk','🥛'],['salt','🧂'],['bread','🍞'],['noodle','🍜'],
+  ['train','🚆'],['car','🚗'],['vehicle','🚗'],['bicycle','🚲'],['boat','⛵'],['ship','🚢'],['airplane','✈️'],['plane','✈️'],['road','🛣️'],['bridge','🌉'],['station','🚉'],['travel','🧳'],
+  ['home','🏠'],['house','🏠'],['room','🛏️'],['door','🚪'],['gate','⛩️'],['window','🪟'],['building','🏢'],['temple','⛩️'],['shrine','⛩️'],['castle','🏯'],['hospital','🏥'],['city','🏙️'],['town','🏘️'],['village','🏘️'],['country','🗾'],['nation','🗾'],['capital','🏛️'],['world','🌏'],
+  ['hour','🕐'],['minute','⏱️'],['clock','🕐'],['time','⏰'],['week','🗓️'],['month','🗓️'],['year','📅'],['day','📆'],['spring','🌸'],['summer','🏖️'],['autumn','🍁'],['winter','⛄'],['morning','🌅'],['night','🌙'],['noon','🌞'],['new','🆕'],['old','🧓'],
+  ['large','🐘'],['big','🐘'],['small','🐜'],['little','🐜'],['long','📏'],['short','📐'],['tall','🗼'],['high','🗼'],['strong','💪'],['weak','🤒'],['fast','⚡'],['slow','🐢'],['heavy','🏋️'],['deep','🕳️'],['round','⭕'],
+  ['white','⬜'],['black','⬛'],['red','🟥'],['blue','🟦'],['green','🟩'],['yellow','🟨'],['color','🎨'],
+  ['above','⬆️'],['up','⬆️'],['below','⬇️'],['down','⬇️'],['left','👈'],['right','👉'],['north','🧭'],['south','🧭'],['east','🧭'],['west','🧭'],['center','🎯'],['middle','🎯'],['inside','📥'],['outside','📤'],['direction','🧭'],
+  ['walk','🚶'],['run','🏃'],['stand','🧍'],['sit','🪑'],['stop','🛑'],['go','🚶'],['come','🚶'],['enter','📥'],['exit','🚪'],['rest','😴'],['sleep','😴'],['life','🌱'],['live','🏠'],['die','💀'],['death','💀'],['born','👶'],['meet','🤝'],['see','👀'],['look','👀'],['hear','👂'],['listen','👂'],['think','🤔'],['know','💡'],['love','❤️'],['like','👍'],['laugh','😂'],['cry','😢'],['happy','😄'],['angry','😠'],
+  ['war','⚔️'],['fight','🥊'],['army','🪖'],['power','💪'],['strength','💪'],['sword','🗡️'],['peace','🕊️'],['safe','🛡️'],['danger','⚠️'],
+  ['hot','🔥'],['cold','🥶'],['warm','♨️'],['dry','🏜️'],['wet','💦'],['clean','🧼'],['beautiful','✨'],
+  ['ten thousand','🔢'],['thousand','🔢'],['hundred','💯'],['number','🔢'],['count','🧮'],
+  ['one','1️⃣'],['two','2️⃣'],['three','3️⃣'],['four','4️⃣'],['five','5️⃣'],['six','6️⃣'],['seven','7️⃣'],['eight','8️⃣'],['nine','9️⃣'],['ten','🔟']
+];
+function getKanjiEmojiVisual(kanjiChar, meaning) {
+  const mean = (meaning || '').toLowerCase();
+  let emoji = '';
+  for (let i = 0; i < KANJI_EMOJI_KEYWORDS.length; i++) {
+    if (mean.indexOf(KANJI_EMOJI_KEYWORDS[i][0]) !== -1) { emoji = KANJI_EMOJI_KEYWORDS[i][1]; break; }
+  }
+  const pairs = [
+    ['#38bdf8','#1d4ed8'], ['#fbbf24','#d97706'], ['#34d399','#059669'], ['#f472b6','#db2777'],
+    ['#a78bfa','#7c3aed'], ['#fb923c','#ea580c'], ['#2dd4bf','#0d9488'], ['#f87171','#dc2626']
+  ];
+  const key = (kanjiChar || mean) || 'x';
+  let h = 0; for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  const c = pairs[h % pairs.length];
+  const gid = 'kjg_' + h;
+  let label = (meaning || '').split(',')[0].replace(/[<>&]/g, '').trim().toUpperCase();
+  if (label.length > 16) label = label.slice(0, 15) + '…';
+  // emoji when the meaning matches a keyword, otherwise the kanji glyph itself
+  const center = emoji
+    ? `<text x="60" y="67" font-size="44" text-anchor="middle">${emoji}</text>`
+    : `<text x="60" y="70" font-family="serif" font-size="50" font-weight="700" fill="#ffffff" text-anchor="middle">${esc(kanjiChar)}</text>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="112" height="112" style="display:block; margin:0 auto 12px; border-radius:12px; box-shadow:0 4px 14px rgba(0,0,0,0.25);">`
+    + `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></linearGradient></defs>`
+    + `<rect width="120" height="120" rx="12" fill="url(#${gid})"/>`
+    + `<circle cx="60" cy="50" r="33" fill="#ffffff" fill-opacity="0.22"/>`
+    + center
+    + `<rect x="8" y="92" width="104" height="22" rx="8" fill="#000000" fill-opacity="0.32"/>`
+    + `<text x="60" y="107" font-family="Segoe UI, Roboto, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff" text-anchor="middle" letter-spacing="0.4">${label}</text>`
+    + `</svg>`;
+}
 var _activeKanaType = 'hiragana'; // 'hiragana' or 'katakana'
 var _selectedKanaIdx = 0;
 var _activeJlptQuizIdx = 0; // index from 0 to 5
@@ -2002,37 +2058,8 @@ function renderKanjiDetails(idx) {
   const item = kanjiList[idx];
   if (!item) return;
   
-  // Custom styled vector SVGs for Kanji mnemonic (Pictures)
-  let kanjiSvgVisual = '';
-  if (item.k === '日') {
-    kanjiSvgVisual = `<svg width="100" height="100" viewBox="0 0 100 100" style="background:#060f1c; border-radius:6px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
-      <circle cx="50" cy="50" r="22" fill="var(--amber)" opacity="0.85"/>
-      <text x="50" y="54" font-size="8" fill="#fff" font-weight="700" text-anchor="middle">SUN / DAY</text>
-    </svg>`;
-  } else if (item.k === '本') {
-    kanjiSvgVisual = `<svg width="100" height="100" viewBox="0 0 100 100" style="background:#060f1c; border-radius:6px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
-      <rect x="35" y="25" width="30" height="42" rx="2" fill="var(--card4)" stroke="var(--border2)" stroke-width="2"/>
-      <line x1="50" y1="25" x2="50" y2="67" stroke="#fff" stroke-width="1.5"/>
-      <circle cx="50" cy="78" r="8" fill="var(--green)" opacity="0.8"/>
-      <text x="50" y="81" font-size="7" fill="#fff" font-weight="700" text-anchor="middle">ORIGIN</text>
-    </svg>`;
-  } else if (item.k === '人') {
-    kanjiSvgVisual = `<svg width="100" height="100" viewBox="0 0 100 100" style="background:#060f1c; border-radius:6px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
-      <!-- Person icon -->
-      <circle cx="50" cy="35" r="10" fill="var(--text3)"/>
-      <path d="M35,75 L50,55 L65,75" stroke="var(--gold2)" stroke-width="4" stroke-linecap="round" fill="none"/>
-      <line x1="50" y1="45" x2="50" y2="55" stroke="var(--gold2)" stroke-width="4" stroke-linecap="round"/>
-    </svg>`;
-  } else if (item.k === '山') {
-    kanjiSvgVisual = `<svg width="100" height="100" viewBox="0 0 100 100" style="background:#060f1c; border-radius:6px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
-      <path d="M 20 75 L 35 40 L 50 65 L 65 30 L 80 75 Z" fill="var(--card4)" stroke="var(--border2)" stroke-width="2"/>
-      <polygon points="35,40 40,50 30,50" fill="#fff"/>
-      <polygon points="65,30 70,40 60,40" fill="#fff"/>
-    </svg>`;
-  } else {
-    // No visual for generic kanji to prevent misleading placeholder
-    kanjiSvgVisual = '';
-  }
+  // Colourful emoji mnemonic card (matches the Hiragana/Katakana cards)
+  const kanjiSvgVisual = getKanjiEmojiVisual(item.k, item.m);
 
   const detailsHtml = '<div class="kana-details-header">'
     + '  <div class="kana-details-big" style="color:var(--gold2);">' + esc(item.k) + '</div>'
