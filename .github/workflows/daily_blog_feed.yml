@@ -34,12 +34,8 @@ jobs:
         run: python scripts/update_nfo_feed.py
         continue-on-error: true
 
-      - name: Fetch Top Mutual Funds and rebuild top_mutual_funds.json
-        run: python scripts/update_top_mutual_funds.py
-        continue-on-error: true
-
-      - name: Fetch Top ETFs and rebuild top_etfs.json
-        run: python scripts/update_top_etf_feed.py
+      - name: Fetch and Calculate Top 5 Mutual Funds and ETFs
+        run: python scripts/update_top_funds_calc.py
         continue-on-error: true
 
       - name: Commit blog_feed.json (with rebase-and-retry)

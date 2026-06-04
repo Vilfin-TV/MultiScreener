@@ -3648,7 +3648,6 @@ function renderNfoBoard() {
 }
 
 let _topMfFeed = null;
-let _topMfFunds = null;
 let _topMfLoaded = false;
 
 async function loadTopMfData() {
@@ -3657,10 +3656,6 @@ async function loadTopMfData() {
   try {
     const r = await fetch('data/top_mutual_funds.json?v=' + Math.floor(Date.now() / 60000), { cache: 'no-cache' });
     if (r.ok) _topMfFeed = await r.json();
-  } catch (_) {}
-  try {
-    const r = await fetch('https://vilfintv.com/config.json?t=' + Date.now());
-    if (r.ok) { const cfg = await r.json(); _topMfFunds = Array.isArray(cfg.top_mutual_funds) ? cfg.top_mutual_funds : []; }
   } catch (_) {}
   renderTopMfBoard();
 }
@@ -3671,14 +3666,11 @@ function renderTopMfBoard() {
   if (!_topMfLoaded) { loadTopMfData(); return; }
 
   const feedCats = (_topMfFeed && _topMfFeed.countries) || {};
-  const funds = Array.isArray(_topMfFunds) ? _topMfFunds : [];
+  const fundsMap = (_topMfFeed && _topMfFeed.funds) || {};
   
   grid.innerHTML = NFO_COUNTRIES.map(co => {
-    // Filter structured funds: keep only those for this country and rank <= 5
-    const myFunds = funds
-      .filter(f => _nfoCountryKey(f.country) === co.key)
-      .filter(f => parseInt(f.rank || 0, 10) > 0 && parseInt(f.rank || 0, 10) <= 5)
-      .sort((a, b) => parseInt(a.rank || 99, 10) - parseInt(b.rank || 99, 10));
+    // Read auto-calculated Top 5 funds for this country
+    const myFunds = fundsMap[co.key] || [];
 
     const news = (feedCats[co.key] || []).slice(0, 10);
     const count = myFunds.length + news.length;
@@ -3710,7 +3702,6 @@ function renderTopMfBoard() {
 }
 
 let _topEtfFeed = null;
-let _topEtfFunds = null;
 let _topEtfLoaded = false;
 
 async function loadTopEtfData() {
@@ -3719,10 +3710,6 @@ async function loadTopEtfData() {
   try {
     const r = await fetch('data/top_etfs.json?v=' + Math.floor(Date.now() / 60000), { cache: 'no-cache' });
     if (r.ok) _topEtfFeed = await r.json();
-  } catch (_) {}
-  try {
-    const r = await fetch('https://vilfintv.com/config.json?t=' + Date.now());
-    if (r.ok) { const cfg = await r.json(); _topEtfFunds = Array.isArray(cfg.top_etfs) ? cfg.top_etfs : []; }
   } catch (_) {}
   renderTopEtfBoard();
 }
@@ -3733,14 +3720,11 @@ function renderTopEtfBoard() {
   if (!_topEtfLoaded) { loadTopEtfData(); return; }
 
   const feedCats = (_topEtfFeed && _topEtfFeed.countries) || {};
-  const funds = Array.isArray(_topEtfFunds) ? _topEtfFunds : [];
+  const fundsMap = (_topEtfFeed && _topEtfFeed.funds) || {};
   
   grid.innerHTML = NFO_COUNTRIES.map(co => {
-    // Filter structured funds: keep only those for this country and rank <= 5
-    const myFunds = funds
-      .filter(f => _nfoCountryKey(f.country) === co.key)
-      .filter(f => parseInt(f.rank || 0, 10) > 0 && parseInt(f.rank || 0, 10) <= 5)
-      .sort((a, b) => parseInt(a.rank || 99, 10) - parseInt(b.rank || 99, 10));
+    // Read auto-calculated Top 5 ETFs for this country
+    const myFunds = fundsMap[co.key] || [];
 
     const news = (feedCats[co.key] || []).slice(0, 10);
     const count = myFunds.length + news.length;
