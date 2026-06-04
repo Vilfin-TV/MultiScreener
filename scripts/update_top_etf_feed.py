@@ -69,9 +69,9 @@ COUNTRY_FEEDS: dict[str, list[dict[str, str]]] = {
     ],
     "india": [
         {"url": "https://www.moneycontrol.com/rss/mfnews.xml", "source": "Moneycontrol MF"},
-        _gn("top performing ETFs India 2026", "in"),
-        _gn("best ETFs index funds returns India", "in"),
-        _gn("ETF performance India market", "in"),
+        _gn("Nifty ETF OR Sensex ETF OR CPSE ETF OR Bharat 22 ETF", "in"),
+        _gn("Nippon India ETF OR SBI ETF OR ICICI Prudential ETF", "in"),
+        _gn("NSE BSE domestic ETF returns performance", "in"),
     ],
 }
 
