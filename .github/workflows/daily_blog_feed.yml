@@ -25,7 +25,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install --upgrade pip requests
+        run: pip install --upgrade pip requests yfinance
 
       - name: Fetch RSS and rebuild blog_feed.json
         run: python scripts/update_blog_feed.py
@@ -34,13 +34,17 @@ jobs:
         run: python scripts/update_nfo_feed.py
         continue-on-error: true
 
+      - name: Fetch Top Mutual Funds and rebuild top_mutual_funds.json
+        run: python scripts/update_top_mutual_funds.py
+        continue-on-error: true
+
       - name: Commit blog_feed.json (with rebase-and-retry)
         run: |
           git config --global user.name  "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global pull.rebase true
 
-          git add data/blog_feed.json data/nfo_feed.json
+          git add data/blog_feed.json data/nfo_feed.json data/top_mutual_funds.json
           if git diff --staged --quiet; then
             echo "ℹ️  No changes to feed JSON — skipping commit."
             exit 0

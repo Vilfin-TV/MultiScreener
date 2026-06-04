@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <script>(function(){var t=localStorage.getItem('viltv_theme');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>
@@ -732,6 +732,21 @@ html[data-theme="gemini"]{
             <div class="nfo-empty">Loading new fund offerings…</div>
           </div>
           <div class="nfo-board-footer">Structured offers (with open/close dates) are curated in the VilfinTV Console &amp; stored in the backend; fund-offer news is auto-refreshed daily from public sources.</div>
+        </div>
+      </div>
+
+      <!-- Top 5 Mutual Funds Board — shown only when Mutual Funds tab is active -->
+      <div id="topMfBoardSection" style="display:none;">
+        <div class="nfo-board" style="margin-bottom:24px;">
+          <div class="nfo-board-head">
+            <div class="nfo-board-title">🏆 Top 5 Mutual Funds — Weekly</div>
+            <span class="ipo-live-badge"><span class="ipo-live-dot"></span>Auto-updated</span>
+          </div>
+          <div class="nfo-board-sub">Top 5 performing funds and ETFs by 1-year return across the US, Japan and India. Funds falling below top 5 are removed automatically.</div>
+          <div class="nfo-grid" id="topMfGrid">
+            <div class="nfo-empty">Loading top mutual funds…</div>
+          </div>
+          <div class="nfo-board-footer">Performance data is fetched from live market sources and updated daily. Rankings are based on 1-year returns.</div>
         </div>
       </div>
 
@@ -3617,6 +3632,49 @@ function renderNfoBoard() {
   }).join('');
 }
 
+let _topMfFeed = null;
+let _topMfLoaded = false;
+
+async function loadTopMfData() {
+  if (_topMfLoaded) return;
+  _topMfLoaded = true;
+  try {
+    const r = await fetch('data/top_mutual_funds.json?v=' + Math.floor(Date.now() / 60000), { cache: 'no-cache' });
+    if (r.ok) _topMfFeed = await r.json();
+  } catch (_) {}
+  renderTopMfBoard();
+}
+
+function renderTopMfBoard() {
+  const grid = document.getElementById('topMfGrid');
+  if (!grid) return;
+  if (!_topMfLoaded) { loadTopMfData(); return; }
+
+  const regionsData = (_topMfFeed && _topMfFeed.regions) || {};
+  
+  grid.innerHTML = NFO_COUNTRIES.map(co => {
+    const funds = regionsData[co.key] || [];
+    const count = funds.length;
+
+    const cards = funds.map((f, i) => {
+      const badge = `<span class="nfo-status open">Rank #${i + 1}</span>`;
+      const meta = `${f.return_1y}% 1Y Return`;
+      return `<div class="nfo-card">
+        <div class="nfo-card-name">${nfoEsc(f.name || f.symbol)}</div>
+        <div class="nfo-card-meta">${nfoEsc(f.symbol)}</div>
+        <div class="nfo-card-dates">${badge}<span>${meta}</span></div>
+      </div>`;
+    }).join('');
+
+    const body = cards ? cards : `<div class="nfo-empty">No data available.</div>`;
+
+    return `<div class="nfo-col">
+      <div class="nfo-col-head"><span class="nfo-col-flag">${co.flag}</span><span class="nfo-col-name">${co.label}</span><span class="nfo-col-count">${count}</span></div>
+      ${body}
+    </div>`;
+  }).join('');
+}
+
 function renderPage() {
   // Toggle NFO live board (US · Japan · India) visibility
   const nfoSec = document.getElementById('nfoBoardSection');
@@ -3624,6 +3682,13 @@ function renderPage() {
     const showNfo = activeTab === 'nfo';
     nfoSec.style.display = showNfo ? 'block' : 'none';
     if (showNfo) renderNfoBoard();
+  }
+  // Toggle Top MF live board
+  const mfSec = document.getElementById('topMfBoardSection');
+  if (mfSec) {
+    const showMf = activeTab === 'mutual_funds';
+    mfSec.style.display = showMf ? 'block' : 'none';
+    if (showMf) renderTopMfBoard();
   }
   // Toggle IPO live widget visibility
   const ipoSec = document.getElementById('ipoWidgetSection');
