@@ -791,6 +791,19 @@ body{
 .story-body p{margin-bottom:16px;color:var(--text)}
 .story-body strong{color:var(--text);font-weight:600}
 
+/* Quill output formatting */
+.story-body img{max-width:100%;height:auto;border-radius:8px;margin:16px 0;display:block;}
+.story-body ul, .story-body ol{margin-bottom:16px;padding-left:24px;}
+.story-body li{margin-bottom:6px;color:var(--text);}
+.story-body h1{font-size:24px;font-weight:700;margin:24px 0 16px;color:var(--text);font-family:'Playfair Display',Georgia,serif;}
+.story-body h2{font-size:20px;font-weight:700;margin:20px 0 12px;color:var(--text);font-family:'Playfair Display',Georgia,serif;}
+.story-body h3{font-size:18px;font-weight:700;margin:16px 0 10px;color:var(--text);font-family:'Playfair Display',Georgia,serif;}
+.story-body a{color:var(--burn2,#3b82f6);text-decoration:none;}
+.story-body a:hover{text-decoration:underline;}
+.story-body .ql-align-center{text-align:center;}
+.story-body .ql-align-right{text-align:right;}
+.story-body .ql-align-justify{text-align:justify;}
+
 /* ── Axios Smart Brevity article format ───────── */
 .story-body .story-lead{
   font-size:17px;line-height:1.8;margin-bottom:20px;color:var(--text);
@@ -3180,14 +3193,20 @@ function openCustomPost(id) {
   if (post.photo) {
     var _mPos = post.photo_pos || '50% 50%';
     var _mZoom = post.photo_zoom ? Math.min(Math.max(parseFloat(post.photo_zoom), 1), 4) : 1;
-    html += '<div style="width:100%;max-height:280px;height:280px;border-radius:10px;margin-bottom:18px;overflow:hidden">'
-      + '<img src="' + escAttr(post.photo) + '" style="width:100%;height:100%;object-fit:cover;display:block;object-position:' + escAttr(_mPos) + ';transform:scale(' + _mZoom + ');transform-origin:' + escAttr(_mPos) + '" alt="" loading="lazy">'
+    // Removed fixed 280px height constraint so images fully show. 
+    html += '<div style="width:100%;border-radius:10px;margin-bottom:18px;overflow:hidden">'
+      + '<img src="' + escAttr(post.photo) + '" style="width:100%;height:auto;display:block;object-position:' + escAttr(_mPos) + ';transform:scale(' + _mZoom + ');transform-origin:' + escAttr(_mPos) + '" alt="" loading="lazy">'
       + '</div>';
   }
 
-  var paras = (post.story || '').split(/\n\n+/).filter(Boolean);
+  var storyContent = post.story || '';
+  // Only escape and wrap in <p> if there are no HTML tags at all (legacy format)
+  if (storyContent && !/<[a-zA-Z]/.test(storyContent)) {
+    var paras = storyContent.split(/\n\n+/).filter(Boolean);
+    storyContent = paras.map(function(p) { return '<p>' + esc(p) + '</p>'; }).join('');
+  }
   html += '<div class="story-body">'
-    + paras.map(function(p) { return '<p>' + esc(p) + '</p>'; }).join('')
+    + storyContent
     + '</div>';
 
   html += '<div class="story-modal-disclaimer">Editorial feature curated and fact-checked by the VilfinTV newsroom across multiple public sources.</div>';
