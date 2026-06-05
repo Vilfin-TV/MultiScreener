@@ -2366,14 +2366,16 @@ function buildContentItem(item) {
     ? '<div class="ci-photo"><img src="' + esc(item.photo) + '" alt="" onerror="this.parentNode.innerHTML=\'📰\'"></div>'
     : '<div class="ci-photo">📰</div>';
 
-  el.innerHTML =
-    '<div class="ci-main" style="cursor:pointer" title="Click to edit" onclick="editContentItem(\'' + esc(item.id) + '\')">'
-      + photoHtml
-      + '<div class="ci-body">'
-        + '<span class="ci-section-badge">' + esc(sectionLabel) + '</span>'
-        + '<div class="ci-heading">' + esc(item.heading) + '</div>'
-        + '<div class="ci-snippet">' + esc((item.story || '').slice(0, 80)) + '…</div>'
-        + '<div class="ci-meta">'
+        var textTeaser = (item.story || '').replace(/<[^>]*>?/gm, '').trim();
+        var snippetHtml = '<div class="ci-snippet">' + esc(textTeaser.slice(0, 80)) + (textTeaser.length > 80 ? '…' : '') + '</div>';
+        el.innerHTML =
+          '<div class="ci-main" style="cursor:pointer" title="Click to edit" onclick="editContentItem(\'' + esc(item.id) + '\')">'
+            + photoHtml
+            + '<div class="ci-body">'
+              + '<span class="ci-section-badge">' + esc(sectionLabel) + '</span>'
+              + '<div class="ci-heading">' + esc(item.heading) + '</div>'
+              + snippetHtml
+              + '<div class="ci-meta">'
           + (item.published_at ? new Date(item.published_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '')
           + (expText ? ' · <span style="color:' + expColor + '">' + expText + '</span>' : '')
         + '</div>'

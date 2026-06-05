@@ -3130,12 +3130,14 @@ function _renderCustomPosts(sectionId, container) {
     var pubDate = post.published_at
       ? new Date(post.published_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})
       : '';
+    var textTeaser = (post.story || '').replace(/<[^>]*>?/gm, '').trim();
+    if (textTeaser.length > 150) textTeaser = textTeaser.slice(0, 150) + '...';
     card.innerHTML =
       photoHtml
       + '<div class="cp-body">'
         + '<span class="cp-badge">✦ Featured</span>'
         + '<div class="cp-heading">' + esc(post.heading) + '</div>'
-        + '<div class="cp-story">' + esc(post.story) + '</div>'
+        + '<div class="cp-story">' + esc(textTeaser) + '</div>'
         + '<div class="cp-meta">' + (pubDate ? 'Published ' + pubDate : '') + ' · VilfinTV Staff</div>'
         + '<div class="cp-readmore" onclick="event.stopPropagation();openCustomPost(' + JSON.stringify(post.id) + ')">Read Full Story ↗</div>'
       + '</div>';
