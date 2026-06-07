@@ -20,7 +20,11 @@ jobs:
         with:
           node-version: '20'
       - name: Fetch world news headlines
-        run: node scripts/build_world.js
+        run: |
+
+          npm install
+
+          node scripts/build_world.js
       - name: Commit if changed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

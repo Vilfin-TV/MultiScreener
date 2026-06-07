@@ -23,7 +23,11 @@ jobs:
         env:
           GOOGLE_AI_API_KEY: ${{ secrets.GEMINI_API_KEY_2 }}
           GROQ_API_KEY: ${{ secrets.GROC_API }}
-        run: node scripts/build_news.js
+        run: |
+
+          npm install
+
+          node scripts/build_news.js
       - name: Commit if changed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

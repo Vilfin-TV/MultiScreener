@@ -23,7 +23,11 @@ jobs:
           node-version: '20'
 
       - name: Fetch market data
-        run: node scripts/build_market_sentiment.js
+        run: |
+
+          npm install
+
+          node scripts/build_market_sentiment.js
 
       - name: Commit if changed
         run: |

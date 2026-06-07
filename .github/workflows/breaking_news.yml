@@ -22,7 +22,11 @@ jobs:
       - name: Generate breaking news
         env:
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
-        run: node scripts/build_breaking_news.js
+        run: |
+
+          npm install
+
+          node scripts/build_breaking_news.js
       - name: Commit if changed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
