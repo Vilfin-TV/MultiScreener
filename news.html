@@ -236,11 +236,10 @@ body{
 .nav-brand{
   display:flex;align-items:center;gap:8px;
 }
-.brand-dot{
-  width:10px;height:10px;border-radius:50%;
-  background:linear-gradient(135deg,#3b82f6,#38bdf8);
-  box-shadow:0 0 8px rgba(59,130,246,.6);
+.brand-icon{
+  width:24px;height:24px;
   flex-shrink:0;
+  filter:drop-shadow(0 0 6px rgba(59,130,246,.4));
 }
 .brand-name{
   font-family:'Bebas Neue',sans-serif;font-size:18px;
@@ -1806,7 +1805,20 @@ footer.news-footer{
         Blog
       </a>
       <div class="nav-brand">
-        <span class="brand-dot"></span>
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none">
+          <defs>
+            <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#3b82f6" />
+              <stop offset="100%" stop-color="#38bdf8" />
+            </linearGradient>
+            <linearGradient id="brandFill" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.15"/>
+              <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.15"/>
+            </linearGradient>
+          </defs>
+          <rect x="2" y="5" width="20" height="14" rx="3" stroke="url(#brandGrad)" stroke-width="2" fill="url(#brandFill)"/>
+          <polygon points="10,9 15,12 10,15" fill="url(#brandGrad)"/>
+        </svg>
         <span class="brand-name">VilfinTV <span class="brand-news-tag">NEWS</span></span>
       </div>
     </div>
