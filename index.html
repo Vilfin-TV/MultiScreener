@@ -15668,7 +15668,7 @@ function renderItems(listEl, items) {
   const layouts = ['hero-list', 'masonry', 'manorama', 'magazine'];
   let hash = 0;
   for(let i=0; i<listEl.id.length; i++) hash += listEl.id.charCodeAt(i);
-  const layout = layouts[hash % layouts.length];
+  let layout = layouts[hash % layouts.length];
   
   const hasAnyImg = all.some(item => _d(item).imgSrc);
   if (!hasAnyImg && (layout === 'manorama' || layout === 'hero-list')) {
@@ -15712,7 +15712,7 @@ function renderItems(listEl, items) {
           <div class="lnb-list-title">${d.safeTitle}</div>
           ${d.timeStr ? `<div class="lnb-list-time">${d.timeStr}</div>` : ''}
         </div>
-        ${d.imgSrc ? `<img class="lnb-list-thumb" style="width:40px;height:40px;border-radius:6px;object-position:center 25%;" src="${escHtml(d.imgSrc)}" alt="" loading="lazy" onerror="this.style.opacity=0">` : ''}
+        ${d.imgSrc ? `<img class="lnb-list-thumb" style="width:60px;height:60px;border-radius:6px;object-position:center 25%;" src="${escHtml(d.imgSrc)}" alt="" loading="lazy" onerror="this.style.opacity=0">` : ''}
       </div>`;
     }).join('');
 
@@ -15725,7 +15725,7 @@ function renderItems(listEl, items) {
     });
     html = cols.map(col => `<div class="masonry-col">${col.map(d => `
       <div class="masonry-card" ${_ca(d)}>
-        ${d.imgSrc ? `<img class="masonry-img" style="height:120px;object-position:center 25%;" src="${escHtml(d.imgSrc)}" loading="lazy" alt="">` : ''}
+        ${d.imgSrc ? `<img class="masonry-img" style="height:140px;object-position:center 25%;" src="${escHtml(d.imgSrc)}" loading="lazy" alt="">` : ''}
         <div class="masonry-body">
           <div class="masonry-title">${d.safeTitle}</div>
           <div class="masonry-desc">${escHtml(d.snippet)}</div>
@@ -15758,7 +15758,7 @@ function renderItems(listEl, items) {
       const d = _d(item);
       return `
         <div class="mano-sub" ${_ca(d)}>
-          ${d.imgSrc ? `<img src="${escHtml(d.imgSrc)}" style="height:80px;object-position:center 25%;" loading="lazy" alt="">` : ''}
+          ${d.imgSrc ? `<img src="${escHtml(d.imgSrc)}" style="height:90px;object-position:center 25%;" loading="lazy" alt="">` : ''}
           <div class="mano-sub-body">
             <div class="mano-sub-title">${d.safeTitle}</div>
           </div>
@@ -15780,7 +15780,7 @@ function renderItems(listEl, items) {
       const d = _d(item);
       return `
         <div class="mag-card" ${_ca(d)}>
-          ${d.imgSrc ? `<img class="mag-img" style="height:100px;object-position:center 25%;" src="${escHtml(d.imgSrc)}" loading="lazy" alt="">` : ''}
+          ${d.imgSrc ? `<img class="mag-img" style="height:130px;object-position:center 25%;" src="${escHtml(d.imgSrc)}" loading="lazy" alt="">` : ''}
           <div class="mag-body">
             <div class="mag-title">${d.safeTitle}</div>
             <div class="mag-desc" style="font-size:11px;">${escHtml(d.snippet)}</div>
