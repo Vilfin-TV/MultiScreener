@@ -15674,10 +15674,10 @@ function renderItems(listEl, items) {
   let html = '';
 
   if (layout === 'hero-list') {
-    const h = _d(all[0]);
+    let heroIdx = all.findIndex(item => _d(item).imgSrc); if (heroIdx === -1) heroIdx = 0; const h = _d(all[heroIdx]); const subItems = all.filter((_, i) => i !== heroIdx);
     const wrapBg = h.imgSrc ? `background-image:url('${escHtml(h.imgSrc)}');background-size:cover;background-position:top center` : 'background:var(--card3)';
 
-    const subHtml = all.slice(1, 4).map(item => {
+    const subHtml = subItems.slice(0, 3).map(item => {
       const d = _d(item);
       return `<div class="lnb-hero-sub" ${_ca(d)}>
         <div class="lnb-hero-sub-title">${d.safeTitle}</div>
@@ -15698,7 +15698,7 @@ function renderItems(listEl, items) {
       ${subHtml ? `<div class="lnb-hero-subs">${subHtml}</div>` : ''}
     </div>`;
 
-    const listHtml = all.slice(4, 12).map(item => {
+    const listHtml = subItems.slice(3, 11).map(item => {
       const d = _d(item);
       const catLabel = d.category || d.source || '';
       return `<div class="lnb-list-item" ${_ca(d)}>
@@ -15707,7 +15707,7 @@ function renderItems(listEl, items) {
           <div class="lnb-list-title">${d.safeTitle}</div>
           ${d.timeStr ? `<div class="lnb-list-time">${d.timeStr}</div>` : ''}
         </div>
-        ${d.imgSrc ? `<img class="lnb-list-thumb" style="width:40px;height:40px;border-radius:6px;object-position:top;" src="${escHtml(d.imgSrc)}" alt="" loading="lazy" onerror="this.style.opacity=0">` : ''}
+        ${d.imgSrc ? `<img class="lnb-list-thumb" style="width:40px;height:40px;border-radius:6px;object-position:center 25%;" src="${escHtml(d.imgSrc)}" alt="" loading="lazy" onerror="this.style.opacity=0">` : ''}
       </div>`;
     }).join('');
 
@@ -15720,7 +15720,7 @@ function renderItems(listEl, items) {
     });
     html = cols.map(col => `<div class="masonry-col">${col.map(d => `
       <div class="masonry-card" ${_ca(d)}>
-        ${d.imgSrc ? `<img class="masonry-img" style="height:120px;object-position:top;" src="${escHtml(d.imgSrc)}" loading="lazy" alt="">` : ''}
+        ${d.imgSrc ? `<img class="masonry-img" style="height:120px;object-position:center 25%;" src="${escHtml(d.imgSrc)}" loading="lazy" alt="">` : ''}
         <div class="masonry-body">
           <div class="masonry-title">${d.safeTitle}</div>
           <div class="masonry-desc">${escHtml(d.snippet)}</div>
@@ -15730,10 +15730,11 @@ function renderItems(listEl, items) {
     `).join('')}</div>`).join('');
 
   } else if (layout === 'manorama') {
-    const h = _d(all[0]);
+    let heroIdx = all.findIndex(item => _d(item).imgSrc); if (heroIdx === -1) heroIdx = 0;
+    const h = _d(all[heroIdx]); const subItems = all.filter((_, i) => i !== heroIdx);
     const heroHtml = `
-      <div class="mano-hero" ${_ca(h)} style="${!h.imgSrc ? 'min-height:auto;' : ''}">
-        ${h.imgSrc ? `<img src="${escHtml(h.imgSrc)}" loading="lazy" style="object-position:top;" alt="">
+      <div class="mano-hero" ${_ca(h)} style="${!h.imgSrc ? 'min-height:auto;' : 'aspect-ratio:4/3;'}">
+        ${h.imgSrc ? `<img src="${escHtml(h.imgSrc)}" loading="lazy" style="object-position:center 25%;" alt="">
         <div class="mano-hero-grad">
           <div class="mano-hero-title" style="font-size:18px;">${h.safeTitle}</div>
           <div class="mano-hero-desc" style="font-size:12px;">${escHtml(h.snippet)}</div>
@@ -15743,18 +15744,18 @@ function renderItems(listEl, items) {
         </div>`}
       </div>`;
     
-    const subHtml = all.slice(1, 12).map(item => {
+    const subHtml = subItems.slice(0, 11).map(item => {
       const d = _d(item);
       return `
         <div class="mano-sub" ${_ca(d)}>
-          ${d.imgSrc ? `<img src="${escHtml(d.imgSrc)}" style="height:80px;object-position:top;" loading="lazy" alt="">` : ''}
+          ${d.imgSrc ? `<img src="${escHtml(d.imgSrc)}" style="height:80px;object-position:center 25%;" loading="lazy" alt="">` : ''}
           <div class="mano-sub-body">
             <div class="mano-sub-title">${d.safeTitle}</div>
           </div>
         </div>`;
     }).join('');
 
-    html = `<div class="mano-left">${heroHtml}</div><div class="mano-right">${subHtml}</div>`;
+    html = `<div class="mano-left" style="align-self:start;position:sticky;top:20px;">${heroHtml}</div><div class="mano-right">${subHtml}</div>`;
 
   } else {
     // magazine
@@ -15762,7 +15763,7 @@ function renderItems(listEl, items) {
       const d = _d(item);
       return `
         <div class="mag-card" ${_ca(d)}>
-          ${d.imgSrc ? `<img class="mag-img" style="height:100px;object-position:top;" src="${escHtml(d.imgSrc)}" loading="lazy" alt="">` : ''}
+          ${d.imgSrc ? `<img class="mag-img" style="height:100px;object-position:center 25%;" src="${escHtml(d.imgSrc)}" loading="lazy" alt="">` : ''}
           <div class="mag-body">
             <div class="mag-title">${d.safeTitle}</div>
             <div class="mag-desc" style="font-size:11px;">${escHtml(d.snippet)}</div>
