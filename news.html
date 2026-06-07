@@ -1206,6 +1206,8 @@ body{
 .share-btn-sm:hover{opacity:.85}
 .share-wa{background:#25D366}
 .share-tw{background:#000;border:1px solid #333}
+.share-fb{background:#1877F2}
+.share-copy{background:var(--border2);color:var(--text)}
 
 /* ═══════════════════════════════════════════════════
    LEGAL DISCLAIMER BANNER
@@ -2350,6 +2352,24 @@ function openSourceLink(btn) {
 /* ═══════════════════════════════════════════════════
    MODAL: OPEN STORY
 ═══════════════════════════════════════════════════ */
+function copyToClipboard(text) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function() {
+      alert('Link copied to clipboard!');
+    }).catch(function() {
+      alert('Failed to copy link. Please manually copy the URL.');
+    });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    alert('Link copied to clipboard!');
+  }
+}
+
 function openStory(item, meta) {
   var overlay = document.getElementById('story-modal-overlay');
   var body = document.getElementById('story-modal-body');
@@ -2395,11 +2415,15 @@ function openStory(item, meta) {
 
   // Share buttons
   var shareText = encodeURIComponent(item.headline || 'Read this story on VilfinTV News');
-  var shareUrl = encodeURIComponent('https://vilfintv.com/news.html');
+  var storyIdSlug = (item.headline || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  var rawShareUrl = 'https://vilfintv.com/news.html?story=' + encodeURIComponent(storyIdSlug);
+  var shareUrl = encodeURIComponent(rawShareUrl);
   storyHtml += '<div class="story-modal-share">'
     + '<span class="story-modal-share-label">Share:</span>'
     + '<a class="share-btn-sm share-wa" href="https://api.whatsapp.com/send?text=' + shareText + '%20' + shareUrl + '" target="_blank" rel="noopener">WhatsApp</a>'
+    + '<a class="share-btn-sm share-fb" href="https://www.facebook.com/sharer/sharer.php?u=' + shareUrl + '" target="_blank" rel="noopener">Facebook</a>'
     + '<a class="share-btn-sm share-tw" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank" rel="noopener">X (Twitter)</a>'
+    + '<button class="share-btn-sm share-copy" onclick="copyToClipboard(\'' + rawShareUrl + '\')">Copy Link</button>'
     + '</div>';
 
   body.innerHTML = storyHtml;
@@ -3514,11 +3538,15 @@ function openCustomPost(id) {
   }
 
   var shareText = encodeURIComponent(post.heading || 'Read this story on VilfinTV News');
-  var shareUrl  = encodeURIComponent('https://vilfintv.com/news.html');
+  var storyIdSlug = post.id || (post.heading || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  var rawShareUrl = 'https://vilfintv.com/news.html?story=' + encodeURIComponent(storyIdSlug);
+  var shareUrl = encodeURIComponent(rawShareUrl);
   html += '<div class="story-modal-share">'
     + '<span class="story-modal-share-label">Share:</span>'
     + '<a class="share-btn-sm share-wa" href="https://api.whatsapp.com/send?text=' + shareText + '%20' + shareUrl + '" target="_blank" rel="noopener">WhatsApp</a>'
+    + '<a class="share-btn-sm share-fb" href="https://www.facebook.com/sharer/sharer.php?u=' + shareUrl + '" target="_blank" rel="noopener">Facebook</a>'
     + '<a class="share-btn-sm share-tw" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank" rel="noopener">X (Twitter)</a>'
+    + '<button class="share-btn-sm share-copy" onclick="copyToClipboard(\'' + rawShareUrl + '\')">Copy Link</button>'
     + '</div>';
 
   body.innerHTML = html;
@@ -3596,7 +3624,27 @@ async function loadNewsPage() {
   });
 
   // World News + External Links — load sequentially so External Links appends last
-  loadWorldSection(container).then(function() { loadExternalLinksSection(container); });
+  loadWorldSection(container).then(function() {
+    loadExternalLinksSection(container).then(function() {
+      var urlParams = new URLSearchParams(window.location.search);
+      var qStory = urlParams.get('story');
+      if (qStory) {
+        var found = window._storyCache.find(function(d) {
+          var sId = (d.item.headline || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+          return sId === qStory;
+        });
+        if (found) {
+          openStory(found.item, found.meta);
+        } else if (window._customContent) {
+          var foundCust = window._customContent.find(function(p) {
+            var sId = (p.heading || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            return p.id === qStory || sId === qStory;
+          });
+          if (foundCust) openCustomPost(foundCust.id);
+        }
+      }
+    });
+  });
 
   // Update meta chips
   if (data && data.generated) {
