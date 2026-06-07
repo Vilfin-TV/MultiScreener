@@ -1791,14 +1791,26 @@ var cpQuill = null;
 function toggleCpFullscreen() {
   var container = document.getElementById('cp-story-container');
   var btn = document.getElementById('cp-fullscreen-btn');
+  
   if (container.classList.contains('fullscreen-editor')) {
     container.classList.remove('fullscreen-editor');
     btn.innerHTML = '⛶ Full Screen';
     document.body.style.overflow = '';
+    // Move back to original place
+    var placeholder = document.getElementById('cp-story-placeholder');
+    if (placeholder && placeholder.parentNode) {
+      placeholder.parentNode.insertBefore(container, placeholder);
+      placeholder.parentNode.removeChild(placeholder);
+    }
   } else {
     container.classList.add('fullscreen-editor');
     btn.innerHTML = '🗗 Exit Full Screen';
     document.body.style.overflow = 'hidden';
+    // Create placeholder and move container to body to avoid stacking context
+    var placeholder = document.createElement('div');
+    placeholder.id = 'cp-story-placeholder';
+    container.parentNode.insertBefore(placeholder, container);
+    document.body.appendChild(container);
   }
 }
 
