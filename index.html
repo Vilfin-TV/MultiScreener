@@ -1445,7 +1445,7 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lns-title::before{content:'📡';font-size:14px}
 .lns-timer{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);background:var(--card);border:1px solid var(--border);border-radius:6px;padding:4px 10px}
 /* Always 2 Live-News boxes per row on tablet/desktop (iPad → 34" monitors); single column on phones */
-.lns-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;align-items:start}
+.lns-grid{display:grid;grid-template-columns:1fr;gap:24px;align-items:start}
 @media(max-width:760px){.lns-grid{grid-template-columns:1fr}}
 .lnb{background:var(--card);border:1px solid var(--border2);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
 .lnb-header{display:flex;align-items:center;gap:7px;padding:8px 12px;background:var(--lnb-color,var(--burn));position:relative}
@@ -1479,6 +1479,56 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 /* ── LIVE NEWS — newspaper layout: hero left + headline list right ── */
 /* CSS Grid guarantees both columns are always exactly the same height */
 .lnb-card-grid{padding:0;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;height:610px}
+
+/* Layout Base */
+.layout-card-grid { padding:0; overflow:hidden; min-height: 400px; border-bottom-left-radius:10px; border-bottom-right-radius:10px; }
+
+/* ── Layout 1: Hero List (classic) ── */
+.layout-hero-list { display:grid; grid-template-columns:1.5fr 1fr; height: 500px; }
+@media(max-width:900px){ .layout-hero-list { grid-template-columns:1fr; height:auto; } }
+
+/* ── Layout 2: Masonry / 3 Columns ── */
+.layout-masonry { padding:16px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; background:var(--card); }
+.masonry-col { display:flex; flex-direction:column; gap:16px; }
+.masonry-card { background:var(--card2); border-radius:8px; overflow:hidden; display:flex; flex-direction:column; cursor:pointer; transition:transform 0.2s; border:1px solid var(--border); }
+.masonry-card:hover { transform:translateY(-2px); border-color:var(--gold2); }
+.masonry-img { width:100%; height:160px; object-fit:cover; }
+.masonry-body { padding:12px; }
+.masonry-title { font-size:14px; font-weight:700; color:var(--text); line-height:1.4; margin-bottom:6px; }
+.masonry-desc { font-size:12px; color:var(--text3); line-height:1.5; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.masonry-time { font-size:10px; color:var(--text3); font-family:'JetBrains Mono',monospace; margin-top:8px; }
+@media(max-width:900px){ .layout-masonry { grid-template-columns:1fr 1fr; } }
+@media(max-width:600px){ .layout-masonry { grid-template-columns:1fr; } }
+
+/* ── Layout 3: Manorama (1 large, 4 small grid) ── */
+.layout-manorama { padding:16px; display:grid; grid-template-columns:1.5fr 1fr; gap:16px; background:var(--card); }
+.mano-left { display:flex; flex-direction:column; gap:12px; }
+.mano-hero { flex:1; position:relative; border-radius:8px; overflow:hidden; cursor:pointer; min-height: 300px; border:1px solid var(--border); }
+.mano-hero img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:transform 0.3s; }
+.mano-hero:hover img { transform:scale(1.05); }
+.mano-hero-grad { position:absolute; inset:0; background:linear-gradient(0deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 60%, transparent 100%); display:flex; flex-direction:column; justify-content:flex-end; padding:20px; }
+.mano-hero-title { font-size:22px; font-weight:700; color:#fff; line-height:1.3; text-shadow:0 2px 4px rgba(0,0,0,0.8); margin-bottom:8px; }
+.mano-hero-desc { font-size:14px; color:#ddd; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; text-shadow:0 1px 2px rgba(0,0,0,0.8); }
+.mano-right { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:12px; }
+.mano-sub { background:var(--card2); border-radius:8px; overflow:hidden; display:flex; flex-direction:column; cursor:pointer; border:1px solid var(--border); }
+.mano-sub:hover { border-color:var(--gold2); }
+.mano-sub img { width:100%; height:100px; object-fit:cover; }
+.mano-sub-body { padding:10px; display:flex; flex-direction:column; flex:1; }
+.mano-sub-title { font-size:13px; font-weight:600; color:var(--text); line-height:1.4; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+@media(max-width:900px){ .layout-manorama { grid-template-columns:1fr; } .mano-right { grid-template-columns:1fr 1fr; } }
+@media(max-width:600px){ .mano-right { grid-template-columns:1fr; } }
+
+/* ── Layout 4: Magazine Row ── */
+.layout-magazine { padding:16px; display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; background:var(--card); }
+.mag-card { background:var(--card2); border-radius:8px; overflow:hidden; display:flex; flex-direction:column; cursor:pointer; border:1px solid var(--border); }
+.mag-card:hover { border-color:var(--gold2); }
+.mag-img { width:100%; height:140px; object-fit:cover; }
+.mag-body { padding:12px; display:flex; flex-direction:column; flex:1; }
+.mag-title { font-size:14px; font-weight:700; color:var(--text); line-height:1.4; margin-bottom:6px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.mag-desc { font-size:12px; color:var(--text3); line-height:1.4; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; margin-bottom:8px; flex:1; }
+@media(max-width:1000px){ .layout-magazine { grid-template-columns:repeat(2, 1fr); } }
+@media(max-width:600px){ .layout-magazine { grid-template-columns:1fr; } }
+
 .lnb-card-grid .lnb-loading,.lnb-card-grid .lnb-error,.lnb-card-grid .lnb-stale{padding:16px;text-align:center;font-size:11px;grid-column:1/-1}
 /* Hero card — left column, stretches to match right column height automatically */
 .lnb-hero-card{display:flex;flex-direction:column;border-right:1px solid var(--border);min-width:0;overflow:hidden}
@@ -15550,10 +15600,10 @@ function _cleanNewsTitle(title) {
   return t || title;
 }
 
+
 function renderItems(listEl, items) {
   const channelGroup = listEl.dataset.group || '';
   const fallbackImg  = _LNB_FALLBACKS[channelGroup] || _LNB_FALLBACK_DEFAULT;
-  // hero=0, sub-stories=1-2, right-list=3-13 (up to 11 items)
   const all = items.slice(0, 16);
   if (!all.length) return;
 
@@ -15581,53 +15631,124 @@ function renderItems(listEl, items) {
   function _thumbFallback(title) {
     let h = 0;
     for (let i = 0; i < title.length; i++) { h = Math.imul(31, h) + title.charCodeAt(i) | 0; }
-    return `https://picsum.photos/seed/lnbt${Math.abs(h) % 8999 + 1000}/80/80`;
+    return `https://picsum.photos/seed/lnbt${Math.abs(h) % 8999 + 1000}/500/280`;
   }
 
-  // ── Hero (item 0) ────────────────────────────────────────────────
-  const h = _d(all[0]);
-  const heroSrc = h.imgSrc || fallbackImg;
-  const wrapBg  = `background-image:url('${escHtml(fallbackImg)}');background-size:cover;background-position:center`;
+  // Determine dynamic layout based on channel ID
+  const layouts = ['hero-list', 'masonry', 'manorama', 'magazine'];
+  let hash = 0;
+  for(let i=0; i<listEl.id.length; i++) hash += listEl.id.charCodeAt(i);
+  // Force specific layouts for demonstration or use hash
+  const layout = layouts[hash % layouts.length];
+  
+  listEl.className = 'layout-card-grid layout-' + layout;
+  let html = '';
 
-  // ── Sub-stories (items 1-4) fill the empty space in hero column ──
-  const subHtml = all.slice(1, 5).map(item => {
-    const d = _d(item);
-    return `<div class="lnb-hero-sub" ${_ca(d)}>
-      <div class="lnb-hero-sub-title">${d.safeTitle}</div>
-      ${d.snippet ? `<div class="lnb-hero-sub-desc">${escHtml(d.snippet)}</div>` : ''}
-      ${d.timeStr ? `<div class="lnb-hero-sub-time">${d.timeStr}</div>` : ''}
-    </div>`;
-  }).join('');
+  if (layout === 'hero-list') {
+    // ── Layout 1: Hero List (classic) ──
+    const h = _d(all[0]);
+    const heroSrc = h.imgSrc || fallbackImg;
+    const wrapBg  = `background-image:url('${escHtml(fallbackImg)}');background-size:cover;background-position:center`;
 
-  const heroHtml = `<div class="lnb-hero-card">
-    <div class="lnb-hero-img-wrap" style="${wrapBg}">
-      <img class="lnb-hero-img" src="${escHtml(heroSrc)}" alt="" loading="lazy" onerror="this.onerror=null;this.style.display='none'">
-    </div>
-    <div class="lnb-hero-body" ${_ca(h)}>
-      <div class="lnb-hero-title">${h.safeTitle}</div>
-      ${h.snippet ? `<div class="lnb-hero-snippet">${escHtml(h.snippet)}</div>` : ''}
-      ${h.timeStr ? `<div class="lnb-hero-time">${h.timeStr}</div>` : ''}
-    </div>
-    ${subHtml ? `<div class="lnb-hero-subs">${subHtml}</div>` : ''}
-  </div>`;
+    const subHtml = all.slice(1, 5).map(item => {
+      const d = _d(item);
+      return `<div class="lnb-hero-sub" ${_ca(d)}>
+        <div class="lnb-hero-sub-title">${d.safeTitle}</div>
+        ${d.snippet ? `<div class="lnb-hero-sub-desc">${escHtml(d.snippet)}</div>` : ''}
+        ${d.timeStr ? `<div class="lnb-hero-sub-time">${d.timeStr}</div>` : ''}
+      </div>`;
+    }).join('');
 
-  // ── Right list (items 5-13, 8 items) — full headline + time ──────
-  const listHtml = all.slice(5, 13).map(item => {
-    const d = _d(item);
-    const catLabel = d.category || d.source || '';
-    const thumbSrc = d.imgSrc || _thumbFallback(d.title);
-    return `<div class="lnb-list-item" ${_ca(d)}>
-      <div class="lnb-list-body">
-        ${catLabel ? `<div class="lnb-list-category">${escHtml(catLabel.slice(0, 30))}</div>` : ''}
-        <div class="lnb-list-title">${d.safeTitle}</div>
-        ${d.timeStr ? `<div class="lnb-list-time">${d.timeStr}</div>` : ''}
+    const heroHtml = `<div class="lnb-hero-card">
+      <div class="lnb-hero-img-wrap" style="${wrapBg}">
+        <img class="lnb-hero-img" src="${escHtml(heroSrc)}" alt="" loading="lazy" onerror="this.onerror=null;this.style.display='none'">
       </div>
-      <img class="lnb-list-thumb" src="${escHtml(thumbSrc)}" alt="" loading="lazy" onerror="this.style.opacity=0">
+      <div class="lnb-hero-body" ${_ca(h)}>
+        <div class="lnb-hero-title">${h.safeTitle}</div>
+        ${h.snippet ? `<div class="lnb-hero-snippet">${escHtml(h.snippet)}</div>` : ''}
+        ${h.timeStr ? `<div class="lnb-hero-time">${h.timeStr}</div>` : ''}
+      </div>
+      ${subHtml ? `<div class="lnb-hero-subs">${subHtml}</div>` : ''}
     </div>`;
-  }).join('');
 
-  listEl.innerHTML = heroHtml + `<div class="lnb-right-col">${listHtml}</div>`;
+    const listHtml = all.slice(5, 13).map(item => {
+      const d = _d(item);
+      const catLabel = d.category || d.source || '';
+      const thumbSrc = d.imgSrc || _thumbFallback(d.title);
+      return `<div class="lnb-list-item" ${_ca(d)}>
+        <div class="lnb-list-body">
+          ${catLabel ? `<div class="lnb-list-category">${escHtml(catLabel.slice(0, 30))}</div>` : ''}
+          <div class="lnb-list-title">${d.safeTitle}</div>
+          ${d.timeStr ? `<div class="lnb-list-time">${d.timeStr}</div>` : ''}
+        </div>
+        <img class="lnb-list-thumb" src="${escHtml(thumbSrc)}" alt="" loading="lazy" onerror="this.style.opacity=0">
+      </div>`;
+    }).join('');
+
+    html = heroHtml + `<div class="lnb-right-col">${listHtml}</div>`;
+
+  } else if (layout === 'masonry') {
+    // ── Layout 2: Masonry ──
+    const cols = [[], [], []];
+    all.slice(0, 12).forEach((item, i) => {
+      cols[i % 3].push(_d(item));
+    });
+    html = cols.map(col => `<div class="masonry-col">${col.map(d => `
+      <div class="masonry-card" ${_ca(d)}>
+        <img class="masonry-img" src="${escHtml(d.imgSrc || _thumbFallback(d.title))}" loading="lazy" alt="">
+        <div class="masonry-body">
+          <div class="masonry-title">${d.safeTitle}</div>
+          <div class="masonry-desc">${escHtml(d.snippet)}</div>
+          ${d.timeStr ? `<div class="masonry-time">${d.timeStr}</div>` : ''}
+        </div>
+      </div>
+    `).join('')}</div>`).join('');
+
+  } else if (layout === 'manorama') {
+    // ── Layout 3: Manorama ──
+    const h = _d(all[0]);
+    const heroHtml = `
+      <div class="mano-hero" ${_ca(h)}>
+        <img src="${escHtml(h.imgSrc || fallbackImg)}" loading="lazy" alt="">
+        <div class="mano-hero-grad">
+          <div class="mano-hero-title">${h.safeTitle}</div>
+          <div class="mano-hero-desc">${escHtml(h.snippet)}</div>
+        </div>
+      </div>`;
+    
+    const subHtml = all.slice(1, 5).map(item => {
+      const d = _d(item);
+      return `
+        <div class="mano-sub" ${_ca(d)}>
+          <img src="${escHtml(d.imgSrc || _thumbFallback(d.title))}" loading="lazy" alt="">
+          <div class="mano-sub-body">
+            <div class="mano-sub-title">${d.safeTitle}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    html = `<div class="mano-left">${heroHtml}</div><div class="mano-right">${subHtml}</div>`;
+
+  } else {
+    // ── Layout 4: Magazine Row ──
+    const magItems = all.slice(0, 4).map(item => {
+      const d = _d(item);
+      return `
+        <div class="mag-card" ${_ca(d)}>
+          <img class="mag-img" src="${escHtml(d.imgSrc || _thumbFallback(d.title))}" loading="lazy" alt="">
+          <div class="mag-body">
+            <div class="mag-title">${d.safeTitle}</div>
+            <div class="mag-desc">${escHtml(d.snippet)}</div>
+            ${d.timeStr ? `<div class="masonry-time">${d.timeStr}</div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+    html = magItems;
+  }
+
+  listEl.innerHTML = html;
 }
+
 
 function _parseXmlItems(xmlStr) {
   const xml = new DOMParser().parseFromString(xmlStr, 'text/xml');
@@ -15695,79 +15816,20 @@ function _parseXmlItems(xmlStr) {
   }).filter(i => i.title);
 }
 
+
 async function fetchFeed(src, _unused, usedFallback) {
   const listEl = document.getElementById('lnbl-' + src.id);
   if (!listEl) return;
-  const targetUrl = src.url || src.originalUrl;
-  if (!targetUrl) {
-    listEl.innerHTML = '<div class="lnb-error">Feed unavailable.</div>';
+  
+  if (liveNewsCache && liveNewsCache[src.id] && liveNewsCache[src.id].length) {
+    renderItems(listEl, liveNewsCache[src.id]);
     return;
   }
-
-  // Add cache-buster so proxies don't serve stale 304s
-  const bust = (targetUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
-  const fetchUrl = targetUrl + bust;
-
-  // ── 1. Try each proxy in the chain sequentially ─────────────────────────
-  for (const proxy of _PROXY_CHAIN) {
-    if (proxy.name === 'worker' && Date.now() < _workerProxyDownUntil) continue;
-    try {
-      const proxyUrl = proxy.build(fetchUrl);
-      const res = await fetch(proxyUrl, { cache: 'no-store', signal: AbortSignal.timeout(proxy.timeout || 10000) });
-      if (proxy.name === 'worker' && res.status >= 500) {
-        _workerProxyDownUntil = Date.now() + 5 * 60 * 1000;
-      }
-      if (!res.ok) continue;
-      const items = await proxy.extract(res);
-      if (items && items.length) {
-        try { sessionStorage.setItem(_FEED_CACHE_KEY(src.id), JSON.stringify({ items, ts: Date.now() })); } catch(_) {}
-        renderItems(listEl, items);
-        return;
-      }
-    } catch(_) { /* try next proxy */ }
-  }
-
-  // ── 2. Direct fetch — works for CORS-enabled feeds (BBC, CNBC, NHK…) ────
-  try {
-    const r = await fetch(targetUrl, { signal: AbortSignal.timeout(8000) });
-    if (r.ok) {
-      const xml = await r.text();
-      const items = _parseXmlItems(xml);
-      if (items.length) {
-        try { sessionStorage.setItem(_FEED_CACHE_KEY(src.id), JSON.stringify({ items, ts: Date.now() })); } catch(_) {}
-        renderItems(listEl, items);
-        return;
-      }
-    }
-  } catch(_) {}
-
-  // ── 3. Try Google News search as fallback URL (for direct-feed sources) ──
-  if (!usedFallback) {
-    const fallbackUrl = getNewsFallbackUrl(src);
-    if (fallbackUrl && fallbackUrl !== targetUrl) {
-      fetchFeed({ ...src, originalUrl: src.originalUrl || src.url, url: fallbackUrl }, 0, true);
-      return;
-    }
-  }
-
-  // ── 4. All proxies failed — show stale cache with age indicator ──────────
-  try {
-    const cached = JSON.parse(sessionStorage.getItem(_FEED_CACHE_KEY(src.id)));
-    if (cached && cached.items && cached.items.length) {
-      renderItems(listEl, cached.items);
-      const ageMin = Math.round((Date.now() - (cached.ts || 0)) / 60000);
-      const staleEl = document.createElement('div');
-      staleEl.className = 'lnb-stale';
-      staleEl.innerHTML = `⚠️ Cached${ageMin > 0 ? ' &middot; ' + ageMin + 'm ago' : ''} <button class="lnb-retry" onclick="window._feedRetry('${src.id}')">↺ Refresh</button>`;
-      listEl.appendChild(staleEl);
-      return;
-    }
-  } catch(_) {}
-
-  // ── 5. Complete failure — show error with direct link + retry button ─────
-  const directUrl = src.originalUrl || src.url || '#';
-  listEl.innerHTML = `<div class="lnb-error">Feed unavailable &mdash; <a href="${escHtml(directUrl)}" target="_blank" style="color:var(--gold2)">Open directly</a> &nbsp;<button class="lnb-retry" onclick="window._feedRetry('${escHtml(src.id)}')">↺ Retry</button></div>`;
+  
+  // Fallback: If not in cache, show error
+  listEl.innerHTML = `<div class="lnb-error">Waiting for backend sync... <br><br> <a href="${escHtml(src.url)}" target="_blank" style="color:var(--gold2)">Open Feed Directly</a></div>`;
 }
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // NEWS SETTINGS MODAL
