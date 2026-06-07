@@ -15628,7 +15628,7 @@ function _cleanNewsTitle(title) {
 function renderItems(listEl, items) {
   if (!listEl || !Array.isArray(items)) return;
   const channelGroup = listEl.dataset.group || '';
-  const all = items.slice(0, 12); // UP TO 12 ITEMS
+  const all = items.slice(0, 15); // UP TO 15 ITEMS
   if (!all.length) return;
 
   function _decode(str) {
@@ -15670,6 +15670,11 @@ function renderItems(listEl, items) {
   for(let i=0; i<listEl.id.length; i++) hash += listEl.id.charCodeAt(i);
   const layout = layouts[hash % layouts.length];
   
+  const hasAnyImg = all.some(item => _d(item).imgSrc);
+  if (!hasAnyImg && (layout === 'manorama' || layout === 'hero-list')) {
+    layout = 'masonry';
+  }
+  
   listEl.className = 'layout-card-grid layout-' + layout;
   let html = '';
 
@@ -15698,7 +15703,7 @@ function renderItems(listEl, items) {
       ${subHtml ? `<div class="lnb-hero-subs">${subHtml}</div>` : ''}
     </div>`;
 
-    const listHtml = subItems.slice(3, 11).map(item => {
+    const listHtml = subItems.slice(3, 15).map(item => {
       const d = _d(item);
       const catLabel = d.category || d.source || '';
       return `<div class="lnb-list-item" ${_ca(d)}>
@@ -15715,7 +15720,7 @@ function renderItems(listEl, items) {
 
   } else if (layout === 'masonry') {
     const cols = [[], [], []];
-    all.slice(0, 12).forEach((item, i) => {
+    all.slice(0, Math.floor(all.length/3)*3).forEach((item, i) => {
       cols[i % 3].push(_d(item));
     });
     html = cols.map(col => `<div class="masonry-col">${col.map(d => `
@@ -15732,8 +15737,13 @@ function renderItems(listEl, items) {
   } else if (layout === 'manorama') {
     let heroIdx = all.findIndex(item => _d(item).imgSrc); if (heroIdx === -1) heroIdx = 0;
     const h = _d(all[heroIdx]); const subItems = all.filter((_, i) => i !== heroIdx);
+    
+    const rightCount = Math.min(10, Math.floor(subItems.length / 2) * 2);
+    const rightItems = subItems.slice(0, rightCount);
+    const leftItems = subItems.slice(rightCount);
+
     const heroHtml = `
-      <div class="mano-hero" ${_ca(h)} style="${!h.imgSrc ? 'min-height:auto;' : 'aspect-ratio:4/3;'}">
+      <div class="mano-hero" ${_ca(h)} style="${!h.imgSrc ? 'min-height:auto;' : 'aspect-ratio:4/3;margin-bottom:16px;'}">
         ${h.imgSrc ? `<img src="${escHtml(h.imgSrc)}" loading="lazy" style="object-position:center 25%;" alt="">
         <div class="mano-hero-grad">
           <div class="mano-hero-title" style="font-size:18px;">${h.safeTitle}</div>
@@ -15744,7 +15754,7 @@ function renderItems(listEl, items) {
         </div>`}
       </div>`;
     
-    const subHtml = subItems.slice(0, 11).map(item => {
+    const renderManoSub = item => {
       const d = _d(item);
       return `
         <div class="mano-sub" ${_ca(d)}>
@@ -15753,13 +15763,20 @@ function renderItems(listEl, items) {
             <div class="mano-sub-title">${d.safeTitle}</div>
           </div>
         </div>`;
-    }).join('');
+    };
 
-    html = `<div class="mano-left" style="align-self:start;position:sticky;top:20px;">${heroHtml}</div><div class="mano-right">${subHtml}</div>`;
+    const rightHtml = rightItems.map(renderManoSub).join('');
+    const leftSubHtml = leftItems.map(renderManoSub).join('');
+
+    html = `<div class="mano-left" style="display:flex;flex-direction:column;">
+      ${heroHtml}
+      ${leftSubHtml ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">${leftSubHtml}</div>` : ''}
+    </div>
+    <div class="mano-right">${rightHtml}</div>`;
 
   } else {
     // magazine
-    const magItems = all.slice(0, 12).map(item => {
+    const magItems = all.slice(0, Math.floor(all.length/4)*4).map(item => {
       const d = _d(item);
       return `
         <div class="mag-card" ${_ca(d)}>
