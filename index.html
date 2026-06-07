@@ -15626,6 +15626,7 @@ function _cleanNewsTitle(title) {
 
 
 function renderItems(listEl, items) {
+  if (!listEl || !Array.isArray(items)) return;
   const channelGroup = listEl.dataset.group || '';
   const all = items.slice(0, 12); // UP TO 12 ITEMS
   if (!all.length) return;
