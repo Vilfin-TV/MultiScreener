@@ -1627,6 +1627,43 @@ footer.news-footer{
   border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;
 }
 .nmw-gm-apply-btn:hover{opacity:.88}
+/* ═══════════════════════════════════════════════════
+   SECTION TOGGLE BUTTON
+═══════════════════════════════════════════════════ */
+.news-section-toggle {
+  margin-left: 10px;
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+.news-section-toggle:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--text);
+  border-color: var(--text3);
+}
+.news-section-toggle svg {
+  width: 14px; height: 14px;
+  fill: currentColor;
+  transition: transform 0.3s ease;
+}
+.news-section-content {
+  transition: opacity 0.3s ease;
+}
+.collapsed .news-section-content {
+  display: none;
+}
+.collapsed .news-section-toggle svg {
+  transform: rotate(180deg);
+}
 </style>
 </head>
 <body>
@@ -1799,10 +1836,12 @@ footer.news-footer{
   <div style="border-top:1px solid rgba(147,197,253,.15)">
     <div class="footer-bottom">
       <p class="footer-legal-text">
-        VilfinTV News is an AI-assisted aggregation service. All content is created from publicly available RSS feeds.
+        VilfinTV News is an automated market assistant and aggregation service. All content is generated via intelligent search algorithms and publicly available feeds.
         Content does not reproduce source articles verbatim. VilfinTV does not claim ownership of original reporting.
-        Stories are for informational purposes only. Not affiliated with any regulatory authority.
+        Stories, headlines, and summaries are compiled automatically and are for informational purposes only.
+        Not affiliated with any regulatory authority.
       </p>
+      <div style="margin: 8px 0; text-align: center;"><a href="legal.html" style="color: var(--text3); font-size: 11px; text-decoration: underline;">Legal & Copyright Disclosure</a></div>
       <p class="footer-copyright">© 2026 VilfinTV. All rights reserved.</p>
     </div>
   </div>
@@ -1812,6 +1851,18 @@ footer.news-footer{
 /* ═══════════════════════════════════════════════════
    THEME MANAGEMENT
 ═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════
+   SECTION TOGGLE
+═══════════════════════════════════════════════════ */
+function toggleNewsSection(btn) {
+  var section = btn.closest('.news-section') || btn.closest('.world-news-wrap') || btn.closest('.ext-links-wrap');
+  if (section) {
+    section.classList.toggle('collapsed');
+    var isExpanded = !section.classList.contains('collapsed');
+    btn.setAttribute('aria-expanded', isExpanded.toString());
+  }
+}
+
 const THEMES = ['black','midnight','maroon','silver','gold','gemini','news-reader','standard'];
 
 function setNewsTheme() {
@@ -1977,53 +2028,56 @@ function renderSection(sectionId, sectionData, meta) {
     + '<span class="news-section-icon">' + meta.icon + '</span>'
     + '<span class="news-section-name">' + meta.label + '</span>'
     + '<span class="news-section-badge">' + count + ' stories</span>'
+    + '<button class="news-section-toggle" onclick="toggleNewsSection(this)" aria-expanded="true" aria-label="Toggle section"><svg viewBox="0 0 24 24"><path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14l-6-6z"/></svg></button>'
     + '</div>';
 
+  var contentHtml = '';
   if (items.length === 0) {
-    section.innerHTML += '<div class="news-placeholder">'
+    contentHtml += '<div class="news-placeholder">'
       + '<div class="news-placeholder-icon">' + meta.icon + '</div>'
       + '<div class="news-placeholder-text">Stories will be available shortly.</div>'
       + '<div class="news-placeholder-sub">Our editors refresh this section regularly — check back soon.</div>'
       + '</div>';
-    return section;
+  } else {
+    // Hero card — first item (uses cache index, no JSON in onclick)
+    var hero = items[0];
+    var heroIdx = _cacheStory(hero, meta);
+    var heroHtml = '<div class="news-hero-card" onclick="openStoryIdx(' + heroIdx + ')" role="button" tabindex="0" aria-label="' + esc(hero.headline) + '">'
+      + '<img class="news-hero-img" src="' + escAttr(heroImage) + '" alt="" loading="lazy"'
+      + ' data-fallback="' + escAttr(meta.image) + '"'
+      + ' onerror="if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}else{this.style.display=\'none\';}">'
+      + '<div class="news-hero-gradient"></div>'
+      + '<div class="news-hero-body">'
+      + '<div class="news-hero-headline">' + esc(hero.headline) + '</div>'
+      + '<div class="news-hero-meta">'
+      + '<span class="news-hero-time">' + timeAgo(hero.publishedAt) + '</span>'
+      + '<span class="news-hero-read">Read full story</span>'
+      + '</div>'
+      + '</div>'
+      + '</div>';
+    contentHtml += heroHtml;
+
+    // Grid cards — remaining items
+    var gridItems = items.slice(1);
+    if (gridItems.length > 0) {
+      var gridHtml = '<div class="news-cards-grid">';
+      gridItems.forEach(function(item) {
+        var cardIdx = _cacheStory(item, meta);
+        gridHtml += '<div class="news-card" onclick="openStoryIdx(' + cardIdx + ')" role="button" tabindex="0" aria-label="' + esc(item.headline) + '">'
+          + '<div class="news-card-headline">' + esc(item.headline) + '</div>'
+          + '<div class="news-card-teaser">' + esc(item.teaser || '') + '</div>'
+          + '<div class="news-card-footer">'
+          + '<span class="news-card-time">' + timeAgo(item.publishedAt) + '</span>'
+          + '<span class="news-card-read">Read →</span>'
+          + '</div>'
+          + '</div>';
+      });
+      gridHtml += '</div>';
+      contentHtml += gridHtml;
+    }
   }
 
-  // Hero card — first item (uses cache index, no JSON in onclick)
-  var hero = items[0];
-  var heroIdx = _cacheStory(hero, meta);
-  var heroHtml = '<div class="news-hero-card" onclick="openStoryIdx(' + heroIdx + ')" role="button" tabindex="0" aria-label="' + esc(hero.headline) + '">'
-    + '<img class="news-hero-img" src="' + escAttr(heroImage) + '" alt="" loading="lazy"'
-    + ' data-fallback="' + escAttr(meta.image) + '"'
-    + ' onerror="if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}else{this.style.display=\'none\';}">'
-    + '<div class="news-hero-gradient"></div>'
-    + '<div class="news-hero-body">'
-    + '<div class="news-hero-headline">' + esc(hero.headline) + '</div>'
-    + '<div class="news-hero-meta">'
-    + '<span class="news-hero-time">' + timeAgo(hero.publishedAt) + '</span>'
-    + '<span class="news-hero-read">Read full story</span>'
-    + '</div>'
-    + '</div>'
-    + '</div>';
-  section.innerHTML += heroHtml;
-
-  // Grid cards — remaining items
-  var gridItems = items.slice(1);
-  if (gridItems.length > 0) {
-    var gridHtml = '<div class="news-cards-grid">';
-    gridItems.forEach(function(item) {
-      var cardIdx = _cacheStory(item, meta);
-      gridHtml += '<div class="news-card" onclick="openStoryIdx(' + cardIdx + ')" role="button" tabindex="0" aria-label="' + esc(item.headline) + '">'
-        + '<div class="news-card-headline">' + esc(item.headline) + '</div>'
-        + '<div class="news-card-teaser">' + esc(item.teaser || '') + '</div>'
-        + '<div class="news-card-footer">'
-        + '<span class="news-card-time">' + timeAgo(item.publishedAt) + '</span>'
-        + '<span class="news-card-read">Read →</span>'
-        + '</div>'
-        + '</div>';
-    });
-    gridHtml += '</div>';
-    section.innerHTML += gridHtml;
-  }
+  section.innerHTML += '<div class="news-section-content">' + contentHtml + '</div>';
 
   return section;
 }
@@ -3489,8 +3543,12 @@ function renderWorldSection(data, container) {
   sh.className = 'news-section-header';
   sh.innerHTML = '<span class="news-section-icon">🌐</span>'
     + '<span class="news-section-name">World News</span>'
-    + '<span class="news-section-badge">' + (data && data.regions ? data.regions.length : 0) + ' regions</span>';
+    + '<span class="news-section-badge">' + (data && data.regions ? data.regions.length : 0) + ' regions</span>'
+    + '<button class="news-section-toggle" onclick="toggleNewsSection(this)" aria-expanded="true" aria-label="Toggle section"><svg viewBox="0 0 24 24"><path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14l-6-6z"/></svg></button>';
   wrap.appendChild(sh);
+
+  var contentWrap = document.createElement('div');
+  contentWrap.className = 'news-section-content';
 
   if (!data || !data.regions || data.regions.length === 0) {
     var emp = document.createElement('div');
@@ -3498,7 +3556,8 @@ function renderWorldSection(data, container) {
     emp.innerHTML = '<div class="news-placeholder-icon">🌐</div>'
       + '<div class="news-placeholder-text">World headlines loading…</div>'
       + '<div class="news-placeholder-sub">Headlines from 25+ countries refresh every 3 hours.</div>';
-    wrap.appendChild(emp);
+    contentWrap.appendChild(emp);
+    wrap.appendChild(contentWrap);
     container.appendChild(wrap);
     return;
   }
@@ -3544,9 +3603,10 @@ function renderWorldSection(data, container) {
       _wTimeAgo
     ));
 
-    wrap.appendChild(block);
+    contentWrap.appendChild(block);
   });
 
+  wrap.appendChild(contentWrap);
   container.appendChild(wrap);
 }
 
@@ -3574,8 +3634,12 @@ function renderExternalLinksSection(links, container) {
   sh.className = 'news-section-header';
   sh.innerHTML = '<span class="news-section-icon">🔗</span>'
     + '<span class="news-section-name">External News</span>'
-    + '<span class="news-section-badge">' + links.length + ' link' + (links.length !== 1 ? 's' : '') + '</span>';
+    + '<span class="news-section-badge">' + links.length + ' link' + (links.length !== 1 ? 's' : '') + '</span>'
+    + '<button class="news-section-toggle" onclick="toggleNewsSection(this)" aria-expanded="true" aria-label="Toggle section"><svg viewBox="0 0 24 24"><path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14l-6-6z"/></svg></button>';
   wrap.appendChild(sh);
+  
+  var contentWrap = document.createElement('div');
+  contentWrap.className = 'news-section-content';
 
   var grid = document.createElement('div');
   grid.className = 'ext-links-grid';
@@ -3613,7 +3677,8 @@ function renderExternalLinksSection(links, container) {
     grid.appendChild(card);
   });
 
-  wrap.appendChild(grid);
+  contentWrap.appendChild(grid);
+  wrap.appendChild(contentWrap);
   container.appendChild(wrap);
 }
 
