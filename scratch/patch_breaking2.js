@@ -1,8 +1,10 @@
 const fs = require('fs');
+
+const content = `const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const http = require('http');
-const { DOMParser } = require('@xmldom/xmldom');
+const { DOMParser } = require('xmldom');
 
 const DATA_FILE = path.join(__dirname, '../data/breaking_news.json');
 const CACHE_FILE = path.join(__dirname, '../data/pexels_cache.json');
@@ -81,7 +83,7 @@ async function fetchPexels(query) {
   if (!PEXELS_API_KEY || pexelsCallsThisRun >= MAX_PEXELS_CALLS) return null;
   
   pexelsCallsThisRun++;
-  console.log(`[Pexels] Fetching image for: ${query}`);
+  console.log(\`[Pexels] Fetching image for: \${query}\`);
   
   return new Promise((resolve) => {
     const opts = {
@@ -125,7 +127,7 @@ async function getFallbackImage(title) {
   }
   let h = 0;
   for (let i = 0; i < title.length; i++) { h = Math.imul(31, h) + title.charCodeAt(i) | 0; }
-  return `https://picsum.photos/seed/lnbt${Math.abs(h) % 8999 + 1000}/500/280`;
+  return \`https://picsum.photos/seed/lnbt\${Math.abs(h) % 8999 + 1000}/500/280\`;
 }
 
 function fetchRss(url) {
@@ -165,14 +167,14 @@ function parseXmlItems(xmlStr) {
         const guidEl = item.getElementsByTagName('guid')[0];
         if (guidEl) link = guidEl.textContent || '';
       }
-      link = link.replace(/^<!\[CDATA\[|\]\]>$/g, '').trim() || '#';
+      link = link.replace(/^<!\\[CDATA\\[|\\]\\]>$/g, '').trim() || '#';
 
       let image = '';
       const mc = item.getElementsByTagName('media:content')[0] || item.getElementsByTagName('media:thumbnail')[0];
       if (mc) image = mc.getAttribute('url') || '';
       if (!image) {
         const enc = item.getElementsByTagName('enclosure')[0];
-        if (enc && /^image\//i.test(enc.getAttribute('type') || '')) image = enc.getAttribute('url') || '';
+        if (enc && /^image\\//i.test(enc.getAttribute('type') || '')) image = enc.getAttribute('url') || '';
       }
       if (!image) {
         const descRaw = (item.getElementsByTagName('description')[0] || item.getElementsByTagName('summary')[0] || {}).textContent || '';
@@ -184,7 +186,7 @@ function parseXmlItems(xmlStr) {
       const title = (item.getElementsByTagName('title')[0] || {}).textContent || '';
       
       const descRaw = (item.getElementsByTagName('description')[0] || item.getElementsByTagName('content:encoded')[0] || item.getElementsByTagName('summary')[0] || {}).textContent || '';
-      const snippet = descRaw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 300);
+      const snippet = descRaw.replace(/<[^>]+>/g, ' ').replace(/\\s+/g, ' ').trim().substring(0, 300);
 
       // We need to parse publisher info from description/title if applicable
       let publisher = '';
@@ -192,7 +194,7 @@ function parseXmlItems(xmlStr) {
       if (sourceEl) publisher = sourceEl.textContent || '';
 
       return {
-        title: title.replace(/^<!\[CDATA\[|\]\]>$/g, '').trim(),
+        title: title.replace(/^<!\\[CDATA\\[|\\]\\]>$/g, '').trim(),
         link: link,
         pubDate: pubDate,
         description: snippet,
@@ -213,11 +215,11 @@ async function run() {
   for (const [continent, regions] of Object.entries(FEEDS)) {
     outputData[continent] = {};
     for (const [regionName, url] of Object.entries(regions)) {
-      console.log(`Fetching: ${continent} -> ${regionName} - ${url}`);
+      console.log(\`Fetching: \${continent} -> \${regionName} - \${url}\`);
       
       let xml = await fetchRss(url);
       if (!xml || !xml.includes('<title>')) {
-        const pUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+        const pUrl = \`https://api.allorigins.win/get?url=\${encodeURIComponent(url)}\`;
         const pRes = await fetchRss(pUrl);
         try {
           const j = JSON.parse(pRes);
@@ -226,7 +228,7 @@ async function run() {
       }
       
       let items = parseXmlItems(xml);
-      console.log(`  -> Parsed ${items.length} items`);
+      console.log(\`  -> Parsed \${items.length} items\`);
       
       // Process images for top 5 items per region to save Pexels credits
       for (let i = 0; i < Math.min(items.length, 5); i++) {
@@ -256,3 +258,7 @@ async function run() {
 }
 
 run().catch(console.error);
+`;
+
+fs.writeFileSync('scripts/build_breaking_news.js', content);
+console.log('Rewrote build_breaking_news.js');
