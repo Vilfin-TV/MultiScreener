@@ -10,30 +10,64 @@ const PEXELS_API_KEY = process.env.PEXELS_API_KEY;
 
 // ── TWO-TIER FEEDS ──
 const FEEDS = {
-  "North America": {
-    "US": "https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml"
-  },
-  "Europe": {
-    "Europe": "https://feeds.bbci.co.uk/news/world/europe/rss.xml"
+  "India": {
+    "National": "https://timesofindia.indiatimes.com/rssfeedstopstories.cms",
+    "Kerala": "https://www.thehindu.com/news/national/kerala/feeder/default.rss",
+    "Tamil Nadu": "https://timesofindia.indiatimes.com/rssfeeds/2950623.cms",
+    "Karnataka": "https://timesofindia.indiatimes.com/rssfeeds/-2128833038.cms",
+    "Maharashtra": "https://timesofindia.indiatimes.com/rssfeeds/-2128838597.cms",
+    "Delhi": "https://timesofindia.indiatimes.com/rssfeeds/-2128839598.cms",
+    "Gujarat": "https://news.google.com/rss/search?q=gujarat+news&hl=en-IN&gl=IN&ceid=IN:en",
+    "West Bengal": "https://news.google.com/rss/search?q=west+bengal+news&hl=en-IN&gl=IN&ceid=IN:en",
+    "Uttar Pradesh": "https://news.google.com/rss/search?q=uttar+pradesh+news&hl=en-IN&gl=IN&ceid=IN:en",
+    "Punjab": "https://news.google.com/rss/search?q=punjab+news&hl=en-IN&gl=IN&ceid=IN:en",
+    "Rajasthan": "https://news.google.com/rss/search?q=rajasthan+news&hl=en-IN&gl=IN&ceid=IN:en",
+    "Bihar": "https://news.google.com/rss/search?q=bihar+news&hl=en-IN&gl=IN&ceid=IN:en"
   },
   "Asia": {
     "Asia General": "https://feeds.bbci.co.uk/news/world/asia/rss.xml",
     "Japan": "https://japantoday.com/feed",
-    "India National": "https://timesofindia.indiatimes.com/rssfeedstopstories.cms",
-    "Kerala": "https://www.thehindu.com/news/national/kerala/feeder/default.rss",
-    "Tamil Nadu": "https://timesofindia.indiatimes.com/rssfeeds/2950623.cms",
-    "Karnataka": "https://timesofindia.indiatimes.com/rssfeeds/-2128833038.cms",
-    "Mumbai": "https://timesofindia.indiatimes.com/rssfeeds/-2128838597.cms",
-    "Delhi": "https://timesofindia.indiatimes.com/rssfeeds/-2128839598.cms"
+    "China": "https://news.google.com/rss/search?q=china+news+english&hl=en&gl=US&ceid=US:en",
+    "Singapore": "https://news.google.com/rss/search?q=singapore+news&hl=en-SG&gl=SG&ceid=SG:en",
+    "Thailand": "https://news.google.com/rss/search?q=thailand+news&hl=en&gl=US&ceid=US:en",
+    "Vietnam": "https://news.google.com/rss/search?q=vietnam+news+english&hl=en&gl=US&ceid=US:en",
+    "Malaysia": "https://news.google.com/rss/search?q=malaysia+news&hl=en-MY&gl=MY&ceid=MY:en",
+    "Taiwan": "https://news.google.com/rss/search?q=taiwan+news+english&hl=en&gl=US&ceid=US:en",
+    "Bangladesh": "https://www.thedailystar.net/frontpage/rss.xml",
+    "Sri Lanka": "https://news.google.com/rss/search?q=sri+lanka+news&hl=en&gl=US&ceid=US:en",
+    "Afghanistan": "https://news.google.com/rss/search?q=afghanistan+news&hl=en&gl=US&ceid=US:en"
+  },
+  "North America": {
+    "US": "https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml",
+    "Canada": "https://www.cbc.ca/webfeed/rss/rss-canada",
+    "Mexico": "https://news.google.com/rss/search?q=mexico+news+english&hl=en&gl=US&ceid=US:en"
+  },
+  "Europe": {
+    "Europe General": "https://feeds.bbci.co.uk/news/world/europe/rss.xml",
+    "UK": "https://feeds.bbci.co.uk/news/uk/rss.xml",
+    "France": "https://www.france24.com/en/rss",
+    "Germany": "https://rss.dw.com/rdf/rss-en-all",
+    "Italy": "https://news.google.com/rss/search?q=italy+news+english&hl=en&gl=US&ceid=US:en",
+    "Spain": "https://news.google.com/rss/search?q=spain+news+english&hl=en&gl=US&ceid=US:en",
+    "Russia": "https://www.themoscowtimes.com/rss/news",
+    "Ukraine": "https://kyivindependent.com/rss/"
   },
   "Middle East": {
-    "Middle East": "https://feeds.bbci.co.uk/news/world/middle_east/rss.xml"
+    "Middle East General": "https://feeds.bbci.co.uk/news/world/middle_east/rss.xml",
+    "UAE": "https://www.khaleejtimes.com/rss",
+    "Saudi Arabia": "https://www.arabnews.com/rss.xml",
+    "Israel": "https://www.jpost.com/rss/rssfeedsfrontpage.aspx",
+    "Qatar": "https://www.aljazeera.com/xml/rss/all.xml",
+    "Iran": "https://www.tehrantimes.com/rss"
   },
   "Australia": {
-    "Australia": "https://www.abc.net.au/news/feed/51120/rss.xml"
+    "Australia": "https://www.abc.net.au/news/feed/51120/rss.xml",
+    "New Zealand": "https://news.google.com/rss/search?q=new+zealand+news&hl=en-NZ&gl=NZ&ceid=NZ:en"
   },
   "Africa": {
-    "Africa": "https://feeds.bbci.co.uk/news/world/africa/rss.xml"
+    "Africa": "https://feeds.bbci.co.uk/news/world/africa/rss.xml",
+    "South Africa": "https://news.google.com/rss/search?q=south+africa+news&hl=en-ZA&gl=ZA&ceid=ZA:en",
+    "Nigeria": "https://news.google.com/rss/search?q=nigeria+news&hl=en-NG&gl=NG&ceid=NG:en"
   }
 };
 
