@@ -8,18 +8,18 @@ const url   = require('url');
 
 const REQUEST_TIMEOUT_MS = 22000;
 
-// Use direct publisher RSS feeds that usually include images via <media:content> or embedded <img>
+// Use direct publisher RSS feeds for requested regions that include images
 const FEEDS = [
-  { url: 'https://feeds.bbci.co.uk/news/world/rss.xml', name: 'BBC World' },
-  { url: 'https://www.aljazeera.com/xml/rss/all.xml', name: 'Al Jazeera' },
-  { url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml', name: 'NYT World' },
-  { url: 'https://www.dw.com/rss/rss.xml', name: 'DW News' },
-  { url: 'https://www.thehindu.com/feeder/default.rss', name: 'The Hindu' },
-  { url: 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms', name: 'Times of India' },
-  { url: 'https://indianexpress.com/feed/', name: 'Indian Express' },
-  { url: 'https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml', name: 'Hindustan Times' },
-  { url: 'https://www.livemint.com/rss/news', name: 'Mint' },
-  { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', name: 'BBC Business' }
+  { url: 'https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml', name: 'US' },
+  { url: 'https://feeds.bbci.co.uk/news/world/europe/rss.xml', name: 'Europe' },
+  { url: 'https://japantoday.com/feed', name: 'Japan' },
+  { url: 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms', name: 'India' },
+  { url: 'https://www.thehindu.com/news/national/kerala/feeder/default.rss', name: 'Kerala' },
+  { url: 'https://timesofindia.indiatimes.com/rssfeeds/2950623.cms', name: 'Tamil Nadu' },
+  { url: 'https://timesofindia.indiatimes.com/rssfeeds/-2128838597.cms', name: 'Mumbai' },
+  { url: 'https://timesofindia.indiatimes.com/rssfeeds/-2128839598.cms', name: 'Delhi' },
+  { url: 'https://feeds.bbci.co.uk/news/world/asia/rss.xml', name: 'Asia' },
+  { url: 'https://feeds.bbci.co.uk/news/world/middle_east/rss.xml', name: 'Middle East' }
 ];
 
 function httpsGet(rawUrl, options) {
