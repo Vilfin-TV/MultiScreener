@@ -3638,7 +3638,7 @@ async function loadNewsPage() {
         } else if (window._customContent) {
           var foundCust = window._customContent.find(function(p) {
             var sId = (p.heading || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-            return p.id === qStory || sId === qStory;
+            return String(p.id) === qStory || sId === qStory;
           });
           if (foundCust) openCustomPost(foundCust.id);
         }
