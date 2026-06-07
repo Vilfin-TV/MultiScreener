@@ -221,11 +221,7 @@ async function run() {
     console.log(`  -> Parsed ${items.length} items`);
     
     // Process images
-    for (let i = 0; i < Math.min(items.length, 10); i++) {
-      if (!items[i].image) {
-        items[i].image = await getFallbackImage(items[i].title);
-      }
-    }
+    
     
     liveNewsData[src.id] = items;
   }
