@@ -3579,6 +3579,49 @@ async function loadNewsPage() {
 
   _newsData = data; // store globally for category tab switching
 
+  // Look for the deep link IMMEDIATELY
+  var urlParams = new URLSearchParams(window.location.search);
+  var qStory = urlParams.get('story');
+  if (qStory) {
+    var foundCust = null;
+    if (window._customContent) {
+      foundCust = window._customContent.find(function(p) {
+        var sId = (p.heading || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        return String(p.id) === qStory || sId === qStory;
+      });
+    }
+    
+    if (foundCust) {
+      openCustomPost(foundCust.id);
+    } else {
+      // Search raw news data, even if not yet rendered to the DOM
+      var foundItem = null;
+      var foundMeta = null;
+      if (window._newsData && window._newsData.sections) {
+        var sKeys = Object.keys(window._newsData.sections);
+        for (var i = 0; i < sKeys.length; i++) {
+          var sid = sKeys[i];
+          var sec = window._newsData.sections[sid];
+          if (sec && sec.items) {
+            for (var j = 0; j < sec.items.length; j++) {
+              var itm = sec.items[j];
+              var itmSlug = (itm.headline || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+              if (itmSlug === qStory) {
+                foundItem = itm;
+                foundMeta = typeof SECTION_META !== 'undefined' ? SECTION_META[sid] : { label: 'News', accent: '#3b82f6' };
+                break;
+              }
+            }
+          }
+          if (foundItem) break;
+        }
+      }
+      if (foundItem) {
+        openStory(foundItem, foundMeta);
+      }
+    }
+  }
+
   container.innerHTML = '';
   var totalStories = 0;
 
@@ -3626,23 +3669,7 @@ async function loadNewsPage() {
   // World News + External Links — load sequentially so External Links appends last
   loadWorldSection(container).then(function() {
     loadExternalLinksSection(container).then(function() {
-      var urlParams = new URLSearchParams(window.location.search);
-      var qStory = urlParams.get('story');
-      if (qStory) {
-        var found = window._storyCache.find(function(d) {
-          var sId = (d.item.headline || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-          return sId === qStory;
-        });
-        if (found) {
-          openStory(found.item, found.meta);
-        } else if (window._customContent) {
-          var foundCust = window._customContent.find(function(p) {
-            var sId = (p.heading || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-            return String(p.id) === qStory || sId === qStory;
-          });
-          if (foundCust) openCustomPost(foundCust.id);
-        }
-      }
+
     });
   });
 
