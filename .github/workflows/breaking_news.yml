@@ -20,6 +20,8 @@ jobs:
         with:
           node-version: '20'
       - name: Generate breaking news
+        env:
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: node scripts/build_breaking_news.js
       - name: Commit if changed
         env:

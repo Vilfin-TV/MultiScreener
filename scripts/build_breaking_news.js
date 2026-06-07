@@ -1,200 +1,262 @@
-'use strict';
-
+const fs = require('fs');
+const path = require('path');
 const https = require('https');
-const http  = require('http');
-const fs    = require('fs');
-const path  = require('path');
-const url   = require('url');
+const http = require('http');
+const { DOMParser } = require('@xmldom/xmldom');
 
-const REQUEST_TIMEOUT_MS = 22000;
-
+const PEXELS_API_KEY = process.env.PEXELS_API_KEY;
+const DATA_FILE = path.join(__dirname, '../data/breaking_news.json');
+const CACHE_FILE = path.join(__dirname, '../data/pexels_cache.json');
 // Use direct publisher RSS feeds for requested regions that include images
 const FEEDS = [
-  { url: 'https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml', name: 'US' },
-  { url: 'https://feeds.bbci.co.uk/news/world/europe/rss.xml', name: 'Europe' },
-  { url: 'https://japantoday.com/feed', name: 'Japan' },
-  { url: 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms', name: 'India' },
-  { url: 'https://www.thehindu.com/news/national/kerala/feeder/default.rss', name: 'Kerala' },
-  { url: 'https://timesofindia.indiatimes.com/rssfeeds/2950623.cms', name: 'Tamil Nadu' },
-  { url: 'https://timesofindia.indiatimes.com/rssfeeds/-2128838597.cms', name: 'Mumbai' },
-  { url: 'https://timesofindia.indiatimes.com/rssfeeds/-2128839598.cms', name: 'Delhi' },
-  { url: 'https://feeds.bbci.co.uk/news/world/asia/rss.xml', name: 'Asia' },
-  { url: 'https://feeds.bbci.co.uk/news/world/middle_east/rss.xml', name: 'Middle East' }
+  { url: 'https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml', name: 'US', id: 'us' },
+  { url: 'https://feeds.bbci.co.uk/news/world/europe/rss.xml', name: 'Europe', id: 'eu' },
+  { url: 'https://japantoday.com/feed', name: 'Japan', id: 'jp' },
+  { url: 'https://timesofindia.indiatimes.com/rssfeedstopstories.cms', name: 'India', id: 'in' },
+  { url: 'https://www.thehindu.com/news/national/kerala/feeder/default.rss', name: 'Kerala', id: 'kl' },
+  { url: 'https://timesofindia.indiatimes.com/rssfeeds/2950623.cms', name: 'Tamil Nadu', id: 'tn' },
+  { url: 'https://timesofindia.indiatimes.com/rssfeeds/-2128838597.cms', name: 'Mumbai', id: 'mh' },
+  { url: 'https://timesofindia.indiatimes.com/rssfeeds/-2128839598.cms', name: 'Delhi', id: 'dl' },
+  { url: 'https://feeds.bbci.co.uk/news/world/asia/rss.xml', name: 'Asia', id: 'as' },
+  { url: 'https://feeds.bbci.co.uk/news/world/middle_east/rss.xml', name: 'Middle East', id: 'me' }
 ];
 
-function httpsGet(rawUrl, options) {
-  return new Promise(function(resolve, reject) {
-    options = options || {};
-    var parsedUrl = url.parse(rawUrl);
-    var transport = parsedUrl.protocol === 'https:' ? https : http;
+// Create data dir if not exists
+if (!fs.existsSync(path.dirname(DATA_FILE))) {
+  fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
+}
 
-    var reqOptions = {
-      hostname: parsedUrl.hostname,
-      port:     parsedUrl.port || (parsedUrl.protocol === 'https:' ? 443 : 80),
-      path:     parsedUrl.path || '/',
-      method:   options.method || 'GET',
-      headers:  Object.assign({
-        'User-Agent':      'Mozilla/5.0 (compatible; VilfinNewsBot/3.0; +https://vilfintv.com/bot)',
-        'Accept':          'application/rss+xml, application/xml, text/xml, application/atom+xml, */*;q=0.9'
-      }, options.headers || {})
+// Load Pexels Cache
+let pexelsCache = {};
+if (fs.existsSync(CACHE_FILE)) {
+  try {
+    pexelsCache = JSON.parse(fs.readFileSync(CACHE_FILE, 'utf8'));
+  } catch(e){}
+}
+let pexelsCallsThisRun = 0;
+const MAX_PEXELS_CALLS = 10; // Keep well under 200/hr limit
+
+// ── Pexels Logic ──
+const KEYWORD_MAP = {
+  'modi': 'Narendra Modi',
+  'trump': 'Donald Trump',
+  'satheesan': 'VD Satheesan',
+  'pinarayi': 'Pinarayi Vijayan',
+  'rahul gandhi': 'Rahul Gandhi',
+  'biden': 'Joe Biden',
+  'market': 'Stock Market',
+  'sensex': 'Stock Market',
+  'nifty': 'Stock Market',
+  'stocks': 'Stock Market',
+  'cricket': 'Cricket Match',
+  'football': 'Football Match',
+  'israel': 'Israel conflict',
+  'gaza': 'Gaza conflict',
+  'ukraine': 'Ukraine war',
+  'russia': 'Russia',
+  'china': 'China Beijing',
+  'tech': 'Technology AI',
+  'ai': 'Artificial Intelligence',
+  'gold': 'Gold bars',
+  'crypto': 'Cryptocurrency Bitcoin',
+  'bitcoin': 'Bitcoin',
+  'kerala': 'Kerala nature'
+};
+
+async function fetchPexels(query) {
+  if (pexelsCache[query]) return pexelsCache[query];
+  if (!PEXELS_API_KEY || pexelsCallsThisRun >= MAX_PEXELS_CALLS) return null;
+  
+  pexelsCallsThisRun++;
+  console.log(`[Pexels] Fetching image for: ${query}`);
+  
+  return new Promise((resolve) => {
+    const opts = {
+      hostname: 'api.pexels.com',
+      path: '/v1/search?query=' + encodeURIComponent(query) + '&per_page=1&orientation=landscape',
+      headers: { 'Authorization': PEXELS_API_KEY }
     };
-
-    var req = transport.request(reqOptions, function(res) {
-      if ([301,302,303,307,308].includes(res.statusCode) && res.headers.location) {
-        var hops = (options._redirects || 0) + 1;
-        if (hops > 5) { reject(new Error('Too many redirects')); res.resume(); return; }
-        res.resume();
-        var loc = res.headers.location;
-        if (loc.startsWith('//')) loc = parsedUrl.protocol + loc;
-        else if (loc.startsWith('/')) loc = parsedUrl.protocol + '//' + parsedUrl.host + loc;
-        else if (!/^https?:\/\//i.test(loc)) loc = parsedUrl.protocol + '//' + parsedUrl.host + (parsedUrl.pathname || '/').replace(/[^/]*$/, '') + loc;
-        
-        httpsGet(loc, Object.assign({}, options, { _redirects: hops, method: 'GET', body: undefined }))
-          .then(resolve).catch(reject);
-        return;
-      }
-      if (res.statusCode && res.statusCode >= 400) {
-        res.resume();
-        reject(new Error('HTTP ' + res.statusCode + ' for ' + rawUrl));
-        return;
-      }
-      var chunks = [];
-      res.on('data', function(c) { chunks.push(c); });
-      res.on('end',  function()  { resolve(Buffer.concat(chunks).toString('utf8')); });
-      res.on('error', reject);
-    });
-
-    req.setTimeout(REQUEST_TIMEOUT_MS, function() {
-      req.destroy(new Error('Request timeout: ' + rawUrl));
-    });
-
-    if (options.body) req.write(options.body);
-    req.on('error', reject);
-    req.end();
+    https.get(opts, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const j = JSON.parse(data);
+          if (j.photos && j.photos.length > 0) {
+            const url = j.photos[0].src.large;
+            pexelsCache[query] = url;
+            resolve(url);
+          } else {
+            pexelsCache[query] = 'NONE'; // Cache misses so we don't spam
+            resolve(null);
+          }
+        } catch(e) { resolve(null); }
+      });
+    }).on('error', () => resolve(null));
   });
 }
 
-function extractTagValue(block, tag) {
-  var cdRe = new RegExp('<' + tag + '[^>]*>\\s*<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>\\s*<\\/' + tag + '>', 'i');
-  var plRe = new RegExp('<' + tag + '[^>]*>([\\s\\S]*?)<\\/' + tag + '>', 'i');
-  var m = cdRe.exec(block) || plRe.exec(block);
-  return m ? m[1].trim() : '';
-}
-
-function decodeEntities(str) {
-  return str
-    .replace(/&amp;/g,  '&').replace(/&lt;/g,  '<').replace(/&gt;/g,  '>')
-    .replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&#x([0-9a-fA-F]+);/g, function(_, h){ return String.fromCharCode(parseInt(h, 16)); })
-    .replace(/&#(\d+);/g,           function(_, n){ return String.fromCharCode(parseInt(n, 10)); });
-}
-
-function cleanHeadline(title) {
-  if (!title) return '';
-  var cleaned = title.replace(/\s+[-–—|]\s+[A-Za-z][A-Za-z0-9 &\.\-\']{1,59}$/, '').replace(/^[A-Za-z][A-Za-z0-9 ]{2,30}:\s+/, '').trim();
-  return cleaned.length >= 5 ? cleaned : title.trim();
-}
-
-function extractItemImage(block) {
-  var m = block.match(/<media:content[^>]+url=["']([^"'\s]+)["'][^>]*>/i);
-  if (m && /\.(jpg|jpeg|png|webp|gif)/i.test(m[1])) return m[1];
-
-  m = block.match(/<media:thumbnail[^>]+url=["']([^"'\s]+)["']/i);
-  if (m) return m[1];
-
-  m = block.match(/<enclosure[^>]+type=["']image\/[^"']+["'][^>]*url=["']([^"'\s]+)["']/i)
-   || block.match(/<enclosure[^>]+url=["']([^"'\s]+)["'][^>]*type=["']image\/[^"']+["']/i);
-  if (m) return m[1];
-
-  var rawContent = extractTagValue(block, 'content:encoded') || extractTagValue(block, 'content') || extractTagValue(block, 'description');
-  var decoded = decodeEntities(rawContent);
-  m = decoded.match(/<img[^>]+src=["']([^"'\s]+)["']/i);
-  if (m && /^https?:\/\//i.test(m[1])) return m[1];
-
-  return null;
-}
-
-function parseRSS(xml) {
-  if (!xml) return [];
-  var items = [];
-  var blockRe = /<item[\s>]([\s\S]*?)<\/item>/gi;
-  var m; var found = false;
-  while ((m = blockRe.exec(xml)) !== null) { found = true; processBlock(m[1], items); }
-  if (!found) {
-    var entryRe = /<entry[\s>]([\s\S]*?)<\/entry>/gi;
-    while ((m = entryRe.exec(xml)) !== null) { processBlock(m[1], items); }
+async function getFallbackImage(title) {
+  const tl = title.toLowerCase();
+  
+  // 1. Dictionary match
+  for (const [key, searchQ] of Object.entries(KEYWORD_MAP)) {
+    if (tl.includes(key)) {
+      const img = await fetchPexels(searchQ);
+      if (img && img !== 'NONE') return img;
+    }
   }
-  return items;
-}
-
-function processBlock(block, items) {
-  var rawTitle = decodeEntities(extractTagValue(block, 'title').replace(/<[^>]+>/g, ''));
-  var title = cleanHeadline(rawTitle);
-  if (!title || title.length < 5) return;
-
-  var link = extractTagValue(block, 'link') || extractTagValue(block, 'guid');
-  if (!link) {
-    var am = block.match(/<link[^>]+href=["']([^"']+)["']/i);
-    if (am) link = am[1];
+  
+  // 2. Generic Pexels search using first 2 capitalized words
+  const matches = title.match(/[A-Z][a-z]+/g);
+  if (matches && matches.length >= 2) {
+    const q = matches.slice(0,2).join(' ');
+    const img = await fetchPexels(q);
+    if (img && img !== 'NONE') return img;
   }
-
-  var description = decodeEntities(
-    extractTagValue(block, 'description') || extractTagValue(block, 'summary') || extractTagValue(block, 'content')
-  ).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 300);
-
-  var pubDate = extractTagValue(block, 'pubDate') || extractTagValue(block, 'published') || extractTagValue(block, 'updated');
-  var publishedAt = pubDate ? new Date(pubDate).getTime() : Date.now();
-
-  var imageUrl = extractItemImage(block);
-
-  // Requirement: Skip items without images.
-  if (!imageUrl) return;
-
-  items.push({ title, link: link || '', description, publishedAt, imageUrl });
+  
+  // 3. Fallback to generic Picsum seed
+  let h = 0;
+  for (let i = 0; i < title.length; i++) { h = Math.imul(31, h) + title.charCodeAt(i) | 0; }
+  return `https://picsum.photos/seed/lnbt${Math.abs(h) % 8999 + 1000}/500/280`;
 }
 
-async function fetchFeed(feedObj) {
+// ── RSS Fetching ──
+function fetchRss(url) {
+  return new Promise((resolve) => {
+    const client = url.startsWith('https') ? https : http;
+    const req = client.get(url, { timeout: 10000, headers: {'User-Agent': 'VilfinTV-Builder/1.0'} }, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        let loc = res.headers.location;
+        if (loc.startsWith('/')) {
+          const u = new URL(url);
+          loc = u.protocol + '//' + u.host + loc;
+        }
+        return resolve(fetchRss(loc));
+      }
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => resolve(data));
+    }).on('error', () => resolve(''));
+    req.on('timeout', () => { req.destroy(); resolve(''); });
+  });
+}
+
+function parseXmlItems(xmlStr) {
   try {
-    var xml = await httpsGet(feedObj.url);
-    var items = parseRSS(xml);
-    return items;
-  } catch (e) {
-    console.warn(`Feed failed: ${feedObj.name} - ${e.message}`);
+    const xml = new DOMParser().parseFromString(xmlStr, 'text/xml');
+    const nodes = Array.from(xml.getElementsByTagName('item'));
+    const entries = Array.from(xml.getElementsByTagName('entry'));
+    const all = nodes.length ? nodes : entries;
+    
+    return all.slice(0, 16).map(item => {
+      let link = '';
+      const linkEl = item.getElementsByTagName('link')[0];
+      if (linkEl) {
+        link = linkEl.getAttribute('href') || linkEl.textContent || '';
+      }
+      if (!link) {
+        const guidEl = item.getElementsByTagName('guid')[0];
+        if (guidEl) link = guidEl.textContent || '';
+      }
+      link = link.replace(/^<!\[CDATA\[|\]\]>$/g, '').trim() || '#';
+
+      let image = '';
+      const mc = item.getElementsByTagName('media:content')[0] || item.getElementsByTagName('media:thumbnail')[0];
+      if (mc) image = mc.getAttribute('url') || '';
+      if (!image) {
+        const enc = item.getElementsByTagName('enclosure')[0];
+        if (enc && /^image\//i.test(enc.getAttribute('type') || '')) image = enc.getAttribute('url') || '';
+      }
+      if (!image) {
+        const descRaw = (item.getElementsByTagName('description')[0] || item.getElementsByTagName('summary')[0] || {}).textContent || '';
+        const m = descRaw.match(/<img[^>]+src="([^">]+)"/);
+        if (m) image = m[1];
+      }
+
+      const pubDate = (item.getElementsByTagName('pubDate')[0] || item.getElementsByTagName('published')[0] || {}).textContent || '';
+      const title = (item.getElementsByTagName('title')[0] || {}).textContent || '';
+      
+      const descRaw = (item.getElementsByTagName('description')[0] || item.getElementsByTagName('content:encoded')[0] || item.getElementsByTagName('summary')[0] || {}).textContent || '';
+      const snippet = descRaw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 300);
+
+      return {
+        title: title.replace(/^<!\[CDATA\[|\]\]>$/g, '').trim(),
+        link: link,
+        pubDate: pubDate,
+        description: snippet,
+        image: image
+      };
+    }).filter(i => i.title);
+  } catch(e) {
     return [];
   }
 }
 
-async function main() {
+async function run() {
+  console.log('Starting Live News Build...');
+  
+  const sources = FEEDS;
+  
   let allItems = [];
-  
-  // Fetch all feeds in parallel
-  const results = await Promise.all(FEEDS.map(f => fetchFeed(f)));
-  
-  for (let feedItems of results) {
-    allItems.push(...feedItems);
-  }
 
-  // Deduplicate by title
+  // Process sequentially to respect limits
+  for (const src of sources) {
+    console.log(`Fetching: ${src.id} (${src.label}) - ${src.url}`);
+    
+    // We can use the allorigins proxy if direct fails, but node fetch is usually okay.
+    // For Google News, direct fetch works.
+    let xml = await fetchRss(src.url);
+    if (!xml || !xml.includes('<title>')) {
+      // Fallback to allorigins if blocked
+      const pUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(src.url)}`;
+      const pRes = await fetchRss(pUrl);
+      try {
+        const j = JSON.parse(pRes);
+        xml = j.contents || '';
+      } catch(e){}
+    }
+    
+    const items = parseXmlItems(xml);
+    console.log(`  -> Parsed ${items.length} items`);
+    
+    // Process images
+    for (let i = 0; i < Math.min(items.length, 10); i++) {
+      if (!items[i].image) {
+        items[i].image = await getFallbackImage(items[i].title);
+      }
+    }
+    
+    allItems.push(...items.filter(i => i.image));
+  }
+  
+  
+  // Deduplicate
   const seen = new Set();
   const uniqueItems = [];
   for (let item of allItems) {
     const key = item.title.toLowerCase().replace(/[^a-z0-9]/g, '');
     if (!seen.has(key)) {
       seen.add(key);
-      uniqueItems.push(item);
+      uniqueItems.push({
+        title: item.title,
+        link: item.link,
+        description: item.description,
+        publishedAt: item.pubDate ? new Date(item.pubDate).getTime() : Date.now(),
+        imageUrl: item.image
+      });
     }
   }
 
   // Sort by newest
   uniqueItems.sort((a, b) => b.publishedAt - a.publishedAt);
-  
-  // We only need top 15-20 for the UI
   const finalItems = uniqueItems.slice(0, 20);
 
-  const outPath = path.join(__dirname, '..', 'data', 'breaking_news.json');
-  fs.writeFileSync(outPath, JSON.stringify(finalItems, null, 2));
-  console.log(`Saved ${finalItems.length} breaking news items to ${outPath}`);
+  // Save output
+  fs.writeFileSync(DATA_FILE, JSON.stringify(finalItems, null, 2));
+  fs.writeFileSync(CACHE_FILE, JSON.stringify(pexelsCache, null, 2));
+  console.log('Build complete! Data saved to data/breaking_news.json');
+
 }
 
-main().catch(console.error);
+run().catch(console.error);

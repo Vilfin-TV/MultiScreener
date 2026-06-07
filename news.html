@@ -2159,9 +2159,10 @@ function renderBreakingNews(items) {
              '<div style="display:flex;align-items:center;gap:12px">' +
              '<div class="news-section-name" style="color: #ef4444;">🚨 Breaking News</div>' +
              '</div>' +
+             '<button class="news-section-toggle" onclick="toggleNewsSection(this)" aria-expanded="true" aria-label="Toggle section"><svg viewBox="0 0 24 24"><path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14l-6-6z"/></svg></button>' +
              '</div>';
 
-  html += '<div class="breaking-news-grid">';
+  html += '<div class="news-section-content"><div class="breaking-news-grid">';
 
   // Hero
   html += '<a href="' + escAttr(heroItem.link) + '" target="_blank" rel="noopener" class="bn-hero">' +
