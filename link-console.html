@@ -1092,7 +1092,7 @@
               <div style="display:flex;align-items:center;gap:10px">
                 <input type="file" id="cp-doc-file" style="display:none" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" data-status="cp-doc-status" data-heading="cp-heading" data-body="cp-story" onchange="handleDocUpload(this)">
                 <button type="button" class="btn-upload" onclick="document.getElementById('cp-doc-file').click()">📄 Import from document</button>
-                <button type="button" class="btn-outline" id="cp-ai-btn" onclick="formatStoryWithAI()" style="padding:4px 8px;font-size:12px;border-color:#8b5cf6;color:#a78bfa;">✨ Format with AI</button>
+                <button type="button" class="btn-outline" id="cp-ai-btn" onclick="formatStoryWithAI('cpQuill', 'cp-ai-btn', 'cp-story')" style="padding:4px 8px;font-size:12px;border-color:#8b5cf6;color:#a78bfa;">✨ Format with AI</button>
                 <span id="cp-doc-status" style="font-size:12px;color:#b9b9cc"></span>
               </div>
               <div style="display:flex;align-items:center;gap:10px">
@@ -1492,12 +1492,22 @@
                  maxlength="200" autocomplete="off" spellcheck="true">
 
           <label class="field-label" for="st-story">Description / Teaser</label>
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
-            <input type="file" id="st-doc-file" style="display:none" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" data-status="st-doc-status" data-heading="st-heading" data-body="st-story" onchange="handleDocUpload(this)">
-            <button type="button" class="btn-upload" onclick="document.getElementById('st-doc-file').click()">📄 Import from document (PDF · Word · PPT · txt)</button>
-            <span id="st-doc-status" style="font-size:12px;color:#b9b9cc"></span>
+          <div id="st-story-container" style="margin-bottom:16px;">
+            <div id="st-editor-toolbar-custom" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;justify-content:space-between;padding-top:4px;">
+              <div style="display:flex;align-items:center;gap:10px">
+                <input type="file" id="st-doc-file" style="display:none" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" data-status="st-doc-status" data-heading="st-heading" data-body="st-story" onchange="handleDocUpload(this)">
+                <button type="button" class="btn-upload" onclick="document.getElementById('st-doc-file').click()">📄 Import from document</button>
+                <button type="button" class="btn-outline" id="st-ai-btn" onclick="formatStoryWithAI('stQuill', 'st-ai-btn', 'st-story')" style="padding:4px 8px;font-size:12px;border-color:#8b5cf6;color:#a78bfa;">✨ Format with AI</button>
+                <span id="st-doc-status" style="font-size:12px;color:#b9b9cc"></span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <button type="button" class="btn-primary" id="st-publish-fs-btn" onclick="document.getElementById('st-publish-btn').click()" style="display:none;padding:4px 12px;font-size:12px;">Pin Story</button>
+                <button type="button" class="btn-outline" id="st-fullscreen-btn" onclick="toggleStFullscreen()" style="padding:4px 8px;font-size:12px">⛶ Full Screen</button>
+              </div>
+            </div>
+            <div id="st-story-editor"></div>
           </div>
-          <textarea id="st-story" placeholder="Write a short teaser or full description for this pinned story…" maxlength="2000" rows="5" spellcheck="true"></textarea>
+          <input type="hidden" id="st-story">
 
           <label class="field-label" for="st-photo">Thumbnail <span style="opacity:.4;font-weight:400">(required — paste a URL or upload)</span></label>
           <div class="photo-preview-wrap">
@@ -1795,6 +1805,7 @@ function applyRBAC(payload){
 
 /* ── Quill Editor Init ─────────────────────────────────────────────────────── */
 var cpQuill = null;
+var stQuill = null;
 
 function toggleCpFullscreen() {
   var container = document.getElementById('cp-story-container');
@@ -1827,15 +1838,47 @@ function toggleCpFullscreen() {
   }
 }
 
-async function formatStoryWithAI() {
-  if (!cpQuill) return;
-  var text = cpQuill.getText().trim();
+function toggleStFullscreen() {
+  var container = document.getElementById('st-story-container');
+  var btn = document.getElementById('st-fullscreen-btn');
+  var pubBtn = document.getElementById('st-publish-fs-btn');
+  
+  if (container.classList.contains('fullscreen-editor')) {
+    container.classList.remove('fullscreen-editor');
+    btn.innerHTML = '⛶ Full Screen';
+    document.body.style.overflow = '';
+    if (pubBtn) pubBtn.style.display = 'none';
+    
+    // Move back to original place
+    var placeholder = document.getElementById('st-story-placeholder');
+    if (placeholder && placeholder.parentNode) {
+      placeholder.parentNode.insertBefore(container, placeholder);
+      placeholder.parentNode.removeChild(placeholder);
+    }
+  } else {
+    container.classList.add('fullscreen-editor');
+    btn.innerHTML = '🗗 Exit Full Screen';
+    document.body.style.overflow = 'hidden';
+    if (pubBtn) pubBtn.style.display = 'inline-block';
+    
+    // Create placeholder and move container to body to avoid stacking context
+    var placeholder = document.createElement('div');
+    placeholder.id = 'st-story-placeholder';
+    container.parentNode.insertBefore(placeholder, container);
+    document.body.appendChild(container);
+  }
+}
+
+async function formatStoryWithAI(quillVarName, btnId, hiddenFieldId) {
+  var q = window[quillVarName];
+  if (!q) return;
+  var text = q.getText().trim();
   if (!text || text.length < 20) {
     alert("Please paste the plain text story in the editor first before formatting.");
     return;
   }
   
-  var btn = document.getElementById('cp-ai-btn');
+  var btn = document.getElementById(btnId);
   var originalHtml = btn.innerHTML;
   btn.innerHTML = '⏳ Formatting...';
   btn.disabled = true;
@@ -1848,10 +1891,10 @@ async function formatStoryWithAI() {
     });
     const data = await res.json();
     if (res.ok && data.html) {
-      cpQuill.root.innerHTML = data.html;
+      q.root.innerHTML = data.html;
       // Also update the hidden body field if it exists
-      if (document.getElementById('cp-story')) {
-        document.getElementById('cp-story').value = data.html;
+      if (document.getElementById(hiddenFieldId)) {
+        document.getElementById(hiddenFieldId).value = data.html;
       }
     } else {
       alert("AI Formatting failed: " + (data.error || "Unknown error"));
@@ -1906,6 +1949,53 @@ function initQuill() {
           }
         }
       }
+    });
+  }
+
+  if (document.getElementById('st-story-editor')) {
+    stQuill = new Quill('#st-story-editor', {
+      theme: 'snow',
+      placeholder: 'Write a short teaser or full description for this pinned story…',
+      modules: {
+        toolbar: {
+          container: [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'align': [] }],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            ['link', 'image', 'video'],
+            ['clean']
+          ],
+          handlers: {
+            image: function() {
+              var input = document.createElement('input');
+              input.setAttribute('type', 'file');
+              input.setAttribute('accept', 'image/*');
+              input.click();
+              input.onchange = async function() {
+                var file = input.files[0];
+                if (file) {
+                  var range = stQuill.getSelection(true);
+                  stQuill.insertText(range.index, 'Uploading image...', 'user');
+                  try {
+                    var url = await uploadImageToR2(file);
+                    stQuill.deleteText(range.index, 18);
+                    stQuill.insertEmbed(range.index, 'image', url);
+                    stQuill.setSelection(range.index + 1);
+                  } catch (e) {
+                    stQuill.deleteText(range.index, 18);
+                    alert('Image upload failed: ' + e.message);
+                  }
+                }
+              };
+            }
+          }
+        }
+      }
+    });
+    stQuill.on('text-change', function() {
+      document.getElementById('st-story').value = stQuill.root.innerHTML;
     });
   }
 }
@@ -3994,7 +4084,7 @@ function renderStoriesList() {
         + '<div class="ci-body">'
           + '<span class="ci-section-badge">' + esc(label) + '</span>'
           + '<div class="ci-heading">' + esc(item.heading || '') + '</div>'
-          + '<div class="ci-snippet">' + esc((item.story || '').slice(0,80)) + '</div>'
+          + '<div class="ci-snippet">' + esc((item.story || '').replace(/<[^>]*>?/gm, '').trim().slice(0,80)) + '</div>'
           + '<div class="ci-meta">Expires: ' + esc(expAt)
             + (item.link_url ? ' · <a href="' + esc(item.link_url) + '" target="_blank" style="color:#60a5fa;" onclick="event.stopPropagation();">link↗</a>' : '')
           + '</div>'
@@ -4011,7 +4101,7 @@ function renderStoriesList() {
 async function publishStory() {
   var section  = document.getElementById('st-category').value.trim();
   var heading  = document.getElementById('st-heading').value.trim();
-  var story    = document.getElementById('st-story').value.trim();
+  var story    = stQuill ? stQuill.root.innerHTML.trim() : document.getElementById('st-story').value.trim();
   var photo    = document.getElementById('st-photo').value.trim();
   var link     = document.getElementById('st-link').value.trim();
   var days     = parseInt(document.getElementById('st-days').value, 10) || 14;
@@ -4064,6 +4154,7 @@ async function publishStory() {
         setStFormStatus('ok', '✓ Story pinned until ' + new Date(data.expires_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}));
         document.getElementById('st-category').value = '';
         document.getElementById('st-heading').value  = '';
+        if (stQuill) stQuill.root.innerHTML = '';
         document.getElementById('st-story').value    = '';
         document.getElementById('st-photo').value    = '';
         document.getElementById('st-link').value     = '';
@@ -4087,7 +4178,8 @@ function editStoryItem(id) {
   stEditId = id;
   document.getElementById('st-category').value = item.section  || '';
   document.getElementById('st-heading').value  = item.heading  || '';
-  document.getElementById('st-story').value    = item.story    || '';
+  if (stQuill) stQuill.clipboard.dangerouslyPasteHTML(item.story || '');
+  else document.getElementById('st-story').value = item.story || '';
   document.getElementById('st-photo').value    = item.photo    || '';
   document.getElementById('st-link').value     = item.link_url || '';
   var days = 14;
