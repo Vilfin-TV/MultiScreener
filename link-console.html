@@ -1090,6 +1090,7 @@
             <div style="display:flex;align-items:center;gap:10px">
               <input type="file" id="cp-doc-file" style="display:none" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" data-status="cp-doc-status" data-heading="cp-heading" data-body="cp-story" onchange="handleDocUpload(this)">
               <button type="button" class="btn-upload" onclick="document.getElementById('cp-doc-file').click()">📄 Import from document</button>
+              <button type="button" class="btn-outline" id="cp-ai-btn" onclick="formatStoryWithAI()" style="padding:4px 8px;font-size:12px;border-color:#8b5cf6;color:#a78bfa;">✨ Format with AI</button>
               <span id="cp-doc-status" style="font-size:12px;color:#b9b9cc"></span>
             </div>
             <button type="button" class="btn-outline" id="cp-fullscreen-btn" onclick="toggleCpFullscreen()" style="padding:4px 8px;font-size:12px">⛶ Full Screen</button>
@@ -1814,6 +1815,43 @@ function toggleCpFullscreen() {
     placeholder.id = 'cp-story-placeholder';
     container.parentNode.insertBefore(placeholder, container);
     document.body.appendChild(container);
+  }
+}
+
+async function formatStoryWithAI() {
+  if (!cpQuill) return;
+  var text = cpQuill.getText().trim();
+  if (!text || text.length < 20) {
+    alert("Please paste the plain text story in the editor first before formatting.");
+    return;
+  }
+  
+  var btn = document.getElementById('cp-ai-btn');
+  var originalHtml = btn.innerHTML;
+  btn.innerHTML = '⏳ Formatting...';
+  btn.disabled = true;
+  
+  try {
+    const res = await fetch('https://x9-k2-p30-worker.vilfintv.workers.dev/format-story', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: text })
+    });
+    const data = await res.json();
+    if (res.ok && data.html) {
+      cpQuill.root.innerHTML = data.html;
+      // Also update the hidden body field if it exists
+      if (document.getElementById('cp-story')) {
+        document.getElementById('cp-story').value = data.html;
+      }
+    } else {
+      alert("AI Formatting failed: " + (data.error || "Unknown error"));
+    }
+  } catch (e) {
+    alert("Error connecting to AI: " + e.message);
+  } finally {
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
   }
 }
 
