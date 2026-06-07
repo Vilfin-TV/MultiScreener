@@ -3623,6 +3623,32 @@ function _wTimeAgo(iso) {
   return Math.floor(h / 24) + 'd ago';
 }
 
+function lnbCardOpen(el) {
+  var title = el.dataset.title || '';
+  var desc  = decodeURIComponent(el.dataset.snippet || '');
+  var url   = el.dataset.url || '#';
+  var source = el.dataset.source || '';
+  
+  var overlay = document.getElementById('world-modal-overlay');
+  var pillEl  = document.getElementById('world-modal-source-pill');
+  var headEl  = document.getElementById('world-modal-headline');
+  var teasEl  = document.getElementById('world-modal-teaser');
+  var readBtn = document.getElementById('world-modal-read-btn');
+  var timeEl  = document.getElementById('world-modal-time');
+
+  pillEl.style.background = '#ef4444'; // Breaking news red
+  pillEl.innerHTML = esc(source || 'Breaking News');
+  headEl.textContent  = title;
+  teasEl.textContent  = desc || 'No summary available.';
+  readBtn.href        = url;
+  timeEl.textContent  = 'Just now';
+
+  if (overlay) {
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
 function openWorldStory(idx) {
   var item = _worldStoryCache[idx];
   if (!item) return;
