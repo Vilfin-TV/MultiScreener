@@ -57,7 +57,7 @@ jobs:
               exit 0
             fi
             echo "⚠️  Push rejected. Pulling and retrying..."
-            git pull --rebase origin main || git rebase --abort
+            git pull --rebase --autostash origin main || git rebase --abort
             sleep 5
           done
           echo "❌  All 3 push attempts failed."
