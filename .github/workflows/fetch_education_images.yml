@@ -38,7 +38,8 @@ jobs:
           # Only commit and push if there are actual changes
           if ! git diff --staged --quiet; then
             git commit -m "chore: auto-fetch new mnemonic images from Pexels"
-            git push
+            git pull --rebase --autostash origin main
+            git push origin main
           else
             echo "No new images to commit."
           fi

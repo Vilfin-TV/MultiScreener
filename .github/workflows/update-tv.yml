@@ -46,6 +46,7 @@ jobs:
           else
             git add streams.json
             git commit -m "chore: refresh live TV stream IDs [skip ci]"
-            git push
+            git pull --rebase --autostash origin main
+            git push origin main
             echo "streams.json committed and pushed."
           fi

@@ -36,4 +36,5 @@ jobs:
         git add data/live_news.json
         git add data/pexels_cache.json || true
         git commit -m "Auto-update live news & pexels cache [skip ci]" || echo "No changes to commit"
-        git push
+        git pull --rebase --autostash origin main
+        git push origin main
