@@ -17,7 +17,7 @@
 <script>
   // Apply saved colour theme before first paint
   (function(){
-    var t = localStorage.getItem('viltv_theme') || 'black';
+    var t = localStorage.getItem('viltv_theme') || 'news-reader';
     if (t === 'standard') { t = 'midnight'; localStorage.setItem('viltv_theme','midnight'); }
     document.documentElement.setAttribute('data-theme', t);
   })();
@@ -1993,7 +1993,7 @@ function toggleNewsSection(btn) {
 const THEMES = ['black','midnight','maroon','silver','gold','gemini','news-reader','standard'];
 
 function setNewsTheme() {
-  var t = localStorage.getItem('viltv_theme') || 'black';
+  var t = localStorage.getItem('viltv_theme') || 'news-reader';
   if (t === 'standard') { t = 'midnight'; }
   document.documentElement.setAttribute('data-theme', t);
 }
