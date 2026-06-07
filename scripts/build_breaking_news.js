@@ -232,6 +232,17 @@ function parseXmlItems(xmlStr) {
         if (m) image = m[1];
       }
 
+      // Upscale images for better clarity
+      if (image) {
+        if (image.includes('ichef.bbci.co.uk') && image.includes('/standard/')) {
+          image = image.replace(/\/standard\/\d+\//, '/standard/1024/');
+        } else if (image.includes('googleusercontent') || image.includes('gstatic')) {
+          image = image.replace(/-w\d+-h\d+-c/g, '-w1024-h576-c').replace(/=s\d+-/g, '=s1024-');
+        } else if (image.includes('toiimg.com') && image.includes('imgsize-')) {
+          image = image.replace(/,imgsize-\d+/, '');
+        }
+      }
+
       const pubDate = (item.getElementsByTagName('pubDate')[0] || item.getElementsByTagName('published')[0] || {}).textContent || '';
       const title = (item.getElementsByTagName('title')[0] || {}).textContent || '';
       
