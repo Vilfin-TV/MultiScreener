@@ -1086,16 +1086,19 @@
                  maxlength="200" autocomplete="off" spellcheck="true">
 
           <label class="field-label" for="cp-story">Full Story</label>
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;justify-content:space-between;">
-            <div style="display:flex;align-items:center;gap:10px">
-              <input type="file" id="cp-doc-file" style="display:none" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" data-status="cp-doc-status" data-heading="cp-heading" data-body="cp-story" onchange="handleDocUpload(this)">
-              <button type="button" class="btn-upload" onclick="document.getElementById('cp-doc-file').click()">📄 Import from document</button>
-              <button type="button" class="btn-outline" id="cp-ai-btn" onclick="formatStoryWithAI()" style="padding:4px 8px;font-size:12px;border-color:#8b5cf6;color:#a78bfa;">✨ Format with AI</button>
-              <span id="cp-doc-status" style="font-size:12px;color:#b9b9cc"></span>
-            </div>
-            <button type="button" class="btn-outline" id="cp-fullscreen-btn" onclick="toggleCpFullscreen()" style="padding:4px 8px;font-size:12px">⛶ Full Screen</button>
-          </div>
           <div id="cp-story-container" style="margin-bottom:16px;">
+            <div id="cp-editor-toolbar-custom" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;justify-content:space-between;padding-top:4px;">
+              <div style="display:flex;align-items:center;gap:10px">
+                <input type="file" id="cp-doc-file" style="display:none" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" data-status="cp-doc-status" data-heading="cp-heading" data-body="cp-story" onchange="handleDocUpload(this)">
+                <button type="button" class="btn-upload" onclick="document.getElementById('cp-doc-file').click()">📄 Import from document</button>
+                <button type="button" class="btn-outline" id="cp-ai-btn" onclick="formatStoryWithAI()" style="padding:4px 8px;font-size:12px;border-color:#8b5cf6;color:#a78bfa;">✨ Format with AI</button>
+                <span id="cp-doc-status" style="font-size:12px;color:#b9b9cc"></span>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <button type="button" class="btn-primary" id="cp-publish-fs-btn" onclick="document.getElementById('cp-publish-btn').click()" style="display:none;padding:4px 12px;font-size:12px;">Publish / Update</button>
+                <button type="button" class="btn-outline" id="cp-fullscreen-btn" onclick="toggleCpFullscreen()" style="padding:4px 8px;font-size:12px">⛶ Full Screen</button>
+              </div>
+            </div>
             <div id="cp-story-editor"></div>
           </div>
 
@@ -1795,11 +1798,14 @@ var cpQuill = null;
 function toggleCpFullscreen() {
   var container = document.getElementById('cp-story-container');
   var btn = document.getElementById('cp-fullscreen-btn');
+  var pubBtn = document.getElementById('cp-publish-fs-btn');
   
   if (container.classList.contains('fullscreen-editor')) {
     container.classList.remove('fullscreen-editor');
     btn.innerHTML = '⛶ Full Screen';
     document.body.style.overflow = '';
+    if (pubBtn) pubBtn.style.display = 'none';
+    
     // Move back to original place
     var placeholder = document.getElementById('cp-story-placeholder');
     if (placeholder && placeholder.parentNode) {
@@ -1810,6 +1816,8 @@ function toggleCpFullscreen() {
     container.classList.add('fullscreen-editor');
     btn.innerHTML = '🗗 Exit Full Screen';
     document.body.style.overflow = 'hidden';
+    if (pubBtn) pubBtn.style.display = 'inline-block';
+    
     // Create placeholder and move container to body to avoid stacking context
     var placeholder = document.createElement('div');
     placeholder.id = 'cp-story-placeholder';
