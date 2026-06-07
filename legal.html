@@ -1,0 +1,3716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="description" content="VilfinTV News — AI-assisted news aggregation across Trending, Global, India, Stock, and Malayalam sections."/>
+<meta property="og:title" content="VilfinTV News"/>
+<meta property="og:description" content="Real-time news aggregation: Trending, Global, India, Stock, Malayalam."/>
+<meta property="og:url" content="https://vilfintv.com/news.html"/>
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="VilfinTV"/>
+<link rel="icon" href="data:,">
+<title>VilfinTV News | Live News Aggregator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=Noto+Sans+Malayalam:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<script>
+  // Apply saved colour theme before first paint
+  (function(){
+    var t = localStorage.getItem('viltv_theme') || 'black';
+    if (t === 'standard') { t = 'midnight'; localStorage.setItem('viltv_theme','midnight'); }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+<style>
+/* ═══════════════════════════════════════════════════
+   THEME VARIABLES — all themes from index.html
+═══════════════════════════════════════════════════ */
+:root{
+  --burn:#2563eb;--burn2:#3b82f6;--burn3:#93c5fd;
+  --gold:#1e3a8a;--gold2:#38bdf8;
+  --green:#10b981;--red:#ef4444;--amber:#f59e0b;
+  --dark:#060f1c;--dark2:#0a1830;--dark3:#0e1f3b;--dark4:#162d4f;
+  --card:#0a1830;--card2:#0e1f3b;--card3:#122344;--card4:#1a3050;
+  --text:#e2eeff;--text2:#8ea8c8;--text3:#687a94;
+  --border:#162d4a;--border2:#1e3a5c;
+  --page-bg:#030810;
+  --glow:rgba(37,99,235,.35);
+  --radius:12px;
+  --nav-bg:#040913;--nav-text:#f1f5f9;--nav-border:#0c1e38;
+}
+[data-theme="standard"]{
+  --gold2:#1d4ed8;--burn3:#1d4ed8;
+  --dark:#f0f4f9;--dark2:#e8edf5;--dark3:#dde3ed;--dark4:#ccd6e3;
+  --card:#ffffff;--card2:#f5f8fc;--card3:#edf2f9;--card4:#e4ebf5;
+  --text:#0f172a;--text2:#374151;--text3:#6b7280;
+  --border:#dde3ed;--border2:#c8d3e0;
+  --page-bg:#f0f4f9;
+  --nav-bg:#ffffff;--nav-text:#0f172a;--nav-border:#dde3ed;
+}
+[data-theme="midnight"]{
+  --dark:#0b0e14;--dark2:#161b22;--dark3:#1c2433;--dark4:#21262d;
+  --card:#161b22;--card2:#1c2433;--card3:#21262d;--card4:#2d333b;
+  --text:#e6edf3;--text2:#adbac7;--text3:#636e7b;
+  --border:#30363d;--border2:#444c56;
+  --page-bg:#0b0e14;
+  --nav-bg:#161b22;--nav-text:#e6edf3;--nav-border:#30363d;
+  --glow:rgba(88,166,255,.2);
+  --burn:#2563eb;--burn2:#3b82f6;--burn3:#58a6ff;
+  --gold:#1e3a8a;--gold2:#58a6ff;
+}
+[data-theme="maroon"]{
+  --dark:#1a0a0a;--dark2:#2d1111;--dark3:#3d1a1a;--dark4:#4d2222;
+  --card:#2d1111;--card2:#3d1a1a;--card3:#4d2222;--card4:#5d2a2a;
+  --text:#f5e6e6;--text2:#c9a8a8;--text3:#8a6a6a;
+  --border:#3d1a1a;--border2:#5d2a2a;
+  --page-bg:#1a0a0a;
+  --glow:rgba(220,20,60,.25);
+  --burn:#8b0000;--burn2:#b22222;--burn3:#dc143c;
+  --gold:#8b0000;--gold2:#dc143c;
+}
+[data-theme="silver"]{
+  --dark:#f5f5f7;--dark2:#e8e8ed;--dark3:#dcdce0;--dark4:#cfcfd4;
+  --card:#ffffff;--card2:#f8f8fa;--card3:#e8e8ed;--card4:#dcdce0;
+  --text:#1d1d1f;--text2:#515154;--text3:#8e8e93;
+  --border:#dcdce0;--border2:#c7c7cc;
+  --page-bg:#f5f5f7;
+  --glow:rgba(0,102,204,.18);
+  --burn:#0066cc;--burn2:#4099ff;--burn3:#73b9ff;
+  --gold:#0066cc;--gold2:#4099ff;
+}
+[data-theme="gold"]{
+  --dark:#1a1500;--dark2:#2d2200;--dark3:#3d3000;--dark4:#4d3e00;
+  --card:#2d2200;--card2:#3d3000;--card3:#4d3e00;--card4:#5d4e00;
+  --text:#fff8e6;--text2:#d4c08a;--text3:#9e8b50;
+  --border:#3d3000;--border2:#5d4e00;
+  --page-bg:#1a1500;
+  --glow:rgba(212,175,55,.3);
+  --burn:#b8860b;--burn2:#d4af37;--burn3:#f5d060;
+  --gold:#b8860b;--gold2:#d4af37;
+}
+html[data-theme="gemini"]{
+  --burn:#4285f4;--burn2:#9b72cb;--burn3:#d96570;
+  --gold:#f8bc24;--gold2:#f8bc24;
+  --green:#34a853;--red:#ea4335;--amber:#fbbc04;
+  --dark:#1e1f20;--dark2:#282a2c;--dark3:#313335;--dark4:#3c4043;
+  --card:#1e1f20;--card2:#282a2c;--card3:#313335;--card4:#3c4043;
+  --text:#e3e3e3;--text2:#9aa0a6;--text3:#7a8186;
+  --border:#3c4043;--border2:#4a4e52;
+  --page-bg:#131314;
+  --nav-bg:#1e1f20;--nav-text:#e3e3e3;--nav-border:#3c4043;
+}
+html[data-theme="news-reader"]{
+  --burn:#d81921;--burn2:#e8333a;--burn3:#f04148;
+  --gold:#d81921;--gold2:#b31118;
+  --green:#1a7f37;--red:#d81921;--amber:#c27900;
+  --dark:#f5f7f8;--dark2:#ebeef0;--dark3:#dde1e4;--dark4:#cdd2d6;
+  --card:#ffffff;--card2:#f5f7f8;--card3:#ebeef0;--card4:#dde1e4;
+  --text:#111111;--text2:#444444;--text3:#777777;
+  --border:#e5e7e8;--border2:#d0d4d7;
+  --page-bg:#ffffff;
+  --nav-bg:#111111;--nav-text:#ffffff;--nav-border:#333333;
+}
+
+/* ═══════════════════════════════════════════════════
+   THEME-SPECIFIC NAV OVERRIDES
+═══════════════════════════════════════════════════ */
+[data-theme="standard"] .top-menubar{background:linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 55%,#2563eb 100%);border-bottom-color:#93c5fd}
+[data-theme="midnight"] .top-menubar{background:var(--dark2);border-bottom-color:var(--border)}
+[data-theme="maroon"] .top-menubar{background:linear-gradient(135deg,#1a0a0a,#2d1111)}
+[data-theme="silver"] .top-menubar{background:linear-gradient(135deg,#2d2d30,#48484a);border-bottom-color:var(--border)}
+[data-theme="gold"] .top-menubar{background:linear-gradient(135deg,#1a1500,#2d2200);border-bottom-color:var(--border)}
+[data-theme="gemini"] .top-menubar{background:#1e1f20!important;border-bottom:1px solid #3c4043!important}
+[data-theme="news-reader"] .top-menubar{background:#111111!important;border-bottom:3px solid #d81921!important}
+
+/* ═══════════════════════════════════════════════════
+   NEWS-READER THEME — CONTRAST & VISIBILITY FIXES
+   Light background (#fff / #f5f7f8) requires dark-on-
+   light text corrections for components that have
+   hardcoded dark backgrounds or white-transparent fills.
+═══════════════════════════════════════════════════ */
+/* Story body: sub-bullet background invisible on white */
+[data-theme="news-reader"] .story-body .story-sub-bullets li{
+  background:rgba(0,0,0,.04);border-left-color:rgba(100,116,139,.3);
+}
+[data-theme="news-reader"] .story-body .story-bullets li{
+  background:rgba(216,25,33,.06);
+}
+[data-theme="news-reader"] .story-body .story-zoom{
+  background:rgba(99,102,241,.06);color:#222;
+}
+/* AI badge — ensure lavender text is readable on white */
+[data-theme="news-reader"] .story-modal-ai-badge{
+  background:rgba(99,102,241,.1);border-color:rgba(99,102,241,.3);
+  color:#4338ca;
+}
+/* Market Intelligence: screener bar had hardcoded dark navy */
+[data-theme="news-reader"] .nmw-screener-bar{
+  background:#f0f2f5;border-bottom-color:#d0d4d7;
+}
+[data-theme="news-reader"] .nmw-screener-select{
+  background:#fff;color:#111;border-color:#c8cdd2;
+}
+/* nmw-header accent line override */
+[data-theme="news-reader"] .nmw-header{border-bottom-color:#e5e7e8}
+[data-theme="news-reader"] .nmw-header::after{background:#d81921}
+/* nmw tab strip */
+[data-theme="news-reader"] .nmw-tabs{background:#f0f2f5;border-bottom-color:#d0d4d7}
+[data-theme="news-reader"] .nmw-tab{color:#444;border-color:#c8cdd2}
+[data-theme="news-reader"] .nmw-tab:hover:not(.active){background:#fff;border-color:#bbb;color:#111}
+/* Story modal header */
+[data-theme="news-reader"] .story-modal-header{background:#f0f2f5;border-bottom-color:#d0d4d7}
+[data-theme="news-reader"] .story-modal-close{color:#444}
+[data-theme="news-reader"] .story-modal-close:hover{background:rgba(0,0,0,.07);color:#111}
+/* World section sticky header transparent-bg fix */
+[data-theme="news-reader"] .world-section-hdr{background:#fff}
+/* news-section header badge text */
+[data-theme="news-reader"] .news-section-badge{background:rgba(0,0,0,.07);color:#444}
+/* ML category tab bar */
+[data-theme="news-reader"] .ml-cat-tabs{background:#f0f2f5;border-bottom-color:#d0d4d7}
+[data-theme="news-reader"] .ml-cat-tab{color:#555}
+[data-theme="news-reader"] .ml-cat-tab.active{color:#d81921;border-bottom-color:#d81921;background:rgba(216,25,33,.06)}
+/* ML card source colour */
+[data-theme="news-reader"] .ml-cat-item-src{color:#d81921}
+/* Legal disclaimer banner */
+[data-theme="news-reader"] .news-legal-banner{background:#fdf0f0;border-color:#f5c0c0;border-left-color:#d81921}
+[data-theme="news-reader"] .news-legal-banner-title{color:#8a0010}
+[data-theme="news-reader"] .news-legal-banner-text{color:#555}
+/* World modal text */
+[data-theme="news-reader"] .world-modal-teaser{color:#333}
+
+/* ═══════════════════════════════════════════════════
+   THEME-SPECIFIC FOOTER OVERRIDES
+═══════════════════════════════════════════════════ */
+[data-theme="standard"] footer{background:linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 55%,#2563eb 100%);border-top-color:#93c5fd;color:#f8fafc}
+[data-theme="midnight"] footer{background:var(--dark2);border-top-color:var(--border);color:var(--text)}
+[data-theme="maroon"] footer{background:linear-gradient(135deg,#1a0a0a,#2d1111);border-top-color:var(--border)}
+[data-theme="silver"] footer{background:linear-gradient(135deg,#2d2d30,#48484a);border-top-color:var(--border)}
+[data-theme="gold"] footer{background:linear-gradient(135deg,#1a1500,#2d2200);border-top-color:var(--border)}
+[data-theme="gemini"] footer{background:#1e1f20!important;border-top:1px solid #3c4043!important;color:#9aa0a6!important}
+[data-theme="news-reader"] footer{background:#111111!important;border-top:3px solid #d81921!important;color:#aaaaaa!important}
+
+/* ═══════════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--page-bg);color:var(--text);
+  min-height:100vh;overflow-x:hidden;
+  transition:background-color .5s ease,color .5s ease;
+}
+
+/* ═══════════════════════════════════════════════════
+   TOP NAV BAR
+═══════════════════════════════════════════════════ */
+.top-menubar{
+  position:sticky;top:0;z-index:1000;
+  background:linear-gradient(135deg,#0c1b4d 0%,#0f2d6e 35%,#1d4ed8 75%,#2563eb 100%);
+  border-bottom:1px solid rgba(147,197,253,.35);
+  height:52px;padding:0;
+  box-shadow:0 1px 0 rgba(37,99,235,.15),0 4px 24px rgba(0,0,0,.5);
+  flex-shrink:0;
+}
+.nav-inner{
+  max-width:1400px;margin:0 auto;
+  display:flex;align-items:center;height:100%;
+  padding:0 16px;gap:0;
+}
+.nav-brand-group{
+  display:flex;align-items:center;gap:0;
+  border-right:1px solid rgba(255,255,255,.12);
+  padding-right:16px;margin-right:4px;height:100%;
+  flex-shrink:0;
+}
+.nav-home-link{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:8px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  color:rgba(255,255,255,.9);text-decoration:none;
+  font-size:12px;font-weight:600;letter-spacing:.3px;
+  transition:all .15s;flex-shrink:0;margin-right:12px;
+}
+.nav-home-link:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff}
+.nav-brand{
+  display:flex;align-items:center;gap:8px;
+}
+.brand-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:linear-gradient(135deg,#3b82f6,#38bdf8);
+  box-shadow:0 0 8px rgba(59,130,246,.6);
+  flex-shrink:0;
+}
+.brand-name{
+  font-family:'Bebas Neue',sans-serif;font-size:18px;
+  letter-spacing:2px;color:#e2eeff;white-space:nowrap;
+}
+.brand-news-tag{
+  display:inline-block;
+  background:var(--red,#ef4444);
+  color:#fff;font-size:10px;font-weight:700;
+  letter-spacing:1.5px;padding:1px 6px;border-radius:4px;
+  margin-left:6px;vertical-align:middle;font-family:'DM Sans',sans-serif;
+}
+.news-nav-links{
+  display:flex;align-items:center;gap:2px;
+  flex:1;overflow-x:auto;height:100%;
+  scrollbar-width:none;
+}
+.news-nav-links::-webkit-scrollbar{display:none}
+.news-nav-link{
+  display:flex;align-items:center;
+  padding:0 14px;height:100%;
+  color:rgba(255,255,255,.7);text-decoration:none;
+  font-size:13px;font-weight:600;letter-spacing:.3px;
+  transition:all .15s;white-space:nowrap;border-right:1px solid rgba(255,255,255,.06);
+}
+.news-nav-link:hover{background:rgba(255,255,255,.07);color:#fff}
+.news-nav-right{
+  display:flex;align-items:center;gap:8px;
+  padding:0 12px;border-left:1px solid rgba(255,255,255,.1);
+  height:100%;flex-shrink:0;
+}
+.news-theme-btn{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  border-radius:8px;color:#fff;font-size:16px;cursor:pointer;
+  width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;padding:0;
+}
+.news-theme-btn:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.3)}
+.news-live-badge{
+  background:#ef4444;color:#fff;
+  font-size:10px;font-weight:700;letter-spacing:1.5px;
+  padding:3px 8px;border-radius:20px;
+  animation:livePulse 2s ease-in-out infinite;
+}
+@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.7}}
+
+/* Mobile nav — two-row layout */
+@media(max-width:700px){
+  .news-nav-links{display:none}
+  .brand-name{font-size:15px}
+  /* Nav must auto-size to accommodate second row */
+  .top-menubar{height:auto}
+  /* Allow nav to wrap to two rows */
+  .nav-inner{flex-wrap:wrap;height:auto;padding:0 10px 8px;gap:0}
+  /* Row 1: brand + right side — 46px tall */
+  .nav-brand-group{height:46px;padding-right:10px}
+  .nav-home-link{padding:5px 10px;font-size:11px}
+  .news-nav-right{height:46px}
+  /* Row 2: search input spans full width */
+  .news-search-wrap{
+    order:10;
+    flex:0 0 100%;max-width:none;
+    padding:0;
+  }
+  .news-search-input{font-size:13px;padding:8px 34px 8px 34px}
+  /* Section anchors clear the taller nav */
+  .news-section{scroll-margin-top:106px}
+}
+
+/* ═══════════════════════════════════════════════════
+   PAGE HERO
+═══════════════════════════════════════════════════ */
+.news-page-hero{
+  background:linear-gradient(135deg,var(--dark2),var(--dark3));
+  border-bottom:1px solid var(--border);
+  padding:28px 32px 20px;
+  position:relative;overflow:hidden;
+}
+.news-page-hero::before{
+  content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+  background:repeating-linear-gradient(90deg,transparent,transparent 80px,rgba(37,99,235,.03) 80px,rgba(37,99,235,.03) 81px);
+  pointer-events:none;
+}
+.news-page-hero-inner{max-width:1400px;margin:0 auto;position:relative;z-index:1}
+.news-page-title{
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:clamp(24px,4vw,42px);font-weight:800;
+  color:var(--text);line-height:1.15;margin-bottom:8px;
+}
+.news-page-subtitle{
+  font-size:14px;color:var(--text3);line-height:1.6;
+  max-width:600px;
+}
+.news-page-meta{
+  display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap;
+}
+.news-page-meta-chip{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.06);border:1px solid var(--border2);
+  border-radius:20px;padding:5px 12px;font-size:11px;
+  color:var(--text3);letter-spacing:.3px;
+}
+.news-page-meta-chip span{color:var(--text2);font-weight:600}
+
+/* ═══════════════════════════════════════════════════
+   MAIN LAYOUT
+═══════════════════════════════════════════════════ */
+.news-page-body{
+  max-width:1400px;margin:0 auto;
+  padding:32px 24px 60px;
+}
+@media(max-width:768px){.news-page-body{padding:20px 12px 48px}}
+
+/* ═══════════════════════════════════════════════════
+   SECTION WRAPPER
+═══════════════════════════════════════════════════ */
+.news-section{
+  margin-bottom:56px;
+  scroll-margin-top:68px;
+}
+
+/* Section header bar */
+.news-section-header{
+  display:flex;align-items:center;gap:10px;
+  padding-bottom:12px;margin-bottom:20px;
+  border-bottom:2px solid var(--border);
+  position:relative;
+}
+.news-section-header::after{
+  content:'';position:absolute;bottom:-2px;left:0;
+  width:60px;height:2px;
+  background:var(--section-accent,var(--burn2));
+  border-radius:2px;
+}
+.news-section-icon{font-size:22px;line-height:1}
+.news-section-name{
+  font-family:'Bebas Neue',sans-serif;font-size:20px;
+  letter-spacing:2.5px;color:var(--text);
+}
+.news-section-badge{
+  margin-left:auto;
+  background:var(--section-accent,var(--burn2));
+  color:#fff;font-size:10px;font-weight:700;
+  padding:3px 10px;border-radius:20px;letter-spacing:.5px;
+}
+
+/* Per-section accent colours */
+.news-section-trending{--section-accent:#ef4444}
+.news-section-global{--section-accent:#3b82f6}
+.news-section-india{--section-accent:#f97316}
+.news-section-stock{--section-accent:#10b981}
+.news-section-malayalam{--section-accent:#8b5cf6}
+/* Malayalam Edition sub-category accent colours */
+.news-section-ml-movies  {--section-accent:#f59e0b}
+.news-section-ml-music   {--section-accent:#ec4899}
+.news-section-ml-local   {--section-accent:#06b6d4}
+.news-section-ml-science {--section-accent:#6366f1}
+.news-section-ml-space   {--section-accent:#1e3a8a}
+.news-section-ml-sports  {--section-accent:#16a34a}
+.news-section-ml-health  {--section-accent:#0ea5e9}
+.news-section-ml-food    {--section-accent:#84cc16}
+.news-section-ml-real    {--section-accent:#d97706}
+.news-section-ml-career  {--section-accent:#7c3aed}
+.news-section-ml-tech    {--section-accent:#2563eb}
+
+/* ═══════════════════════════════════════════════════
+   MALAYALAM EDITION — Category tabs block
+═══════════════════════════════════════════════════ */
+/* ── Malayalam Edition — Manorama-style card layout ── */
+.ml-cat-block{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;margin:0 0 32px;overflow:hidden;
+}
+.ml-cat-header{
+  display:flex;align-items:center;gap:10px;
+  padding:16px 20px 14px;border-bottom:1px solid var(--border);
+}
+.ml-cat-title{
+  font-family:'Playfair Display',serif;font-size:18px;
+  font-weight:700;color:var(--text);
+}
+.ml-cat-subtitle{
+  font-size:11.5px;color:var(--text3);margin-left:auto;
+  white-space:nowrap;
+}
+.ml-cat-tabs{
+  display:flex;flex-wrap:wrap;gap:0;overflow-x:auto;scrollbar-width:none;
+  background:var(--dark2);border-bottom:1px solid var(--border);padding:0;
+}
+.ml-cat-tabs::-webkit-scrollbar{display:none}
+.ml-cat-tab{
+  padding:9px 14px;font-size:11.5px;font-weight:600;
+  color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;
+  transition:color .15s,border-color .15s,background .15s;
+  white-space:nowrap;user-select:none;letter-spacing:.2px;flex-shrink:0;
+}
+.ml-cat-tab:hover{color:var(--text);}
+.ml-cat-tab.active{
+  color:var(--burn2);border-bottom-color:var(--burn2);
+  background:rgba(37,99,235,.07);
+}
+.ml-cat-content{padding:16px;min-height:220px;}
+
+/* Card grid — 3 cols desktop, 2 cols tablet, 1 col mobile */
+.ml-card-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  align-items:start;
+}
+@media(max-width:900px){.ml-card-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:540px){.ml-card-grid{grid-template-columns:1fr;gap:12px}}
+
+.ml-news-card{
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;cursor:pointer;
+  display:flex;flex-direction:column;
+  transition:transform .18s,box-shadow .18s,border-color .18s;
+}
+.ml-news-card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 6px 24px rgba(0,0,0,.25);
+  border-color:var(--burn3);
+}
+.ml-news-card-img-wrap{
+  position:relative;width:100%;padding-top:26%;/* thumbnail 3.8:1 — keeps text readable */
+  overflow:hidden;flex-shrink:0;background:var(--card3);
+}
+.ml-news-card-img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;transition:transform .35s ease;
+}
+.ml-news-card:hover .ml-news-card-img{transform:scale(1.04)}
+.ml-news-card-body{
+  padding:12px 14px 14px;display:flex;flex-direction:column;
+  flex:1;gap:8px;
+}
+.ml-news-card-cat{
+  display:inline-block;font-size:9px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;
+  padding:2px 8px;border-radius:4px;
+  background:var(--section-accent,var(--burn2));
+  color:#fff;align-self:flex-start;
+}
+.ml-news-card-hl{
+  font-family:'Noto Sans Malayalam','DM Sans',sans-serif;
+  font-size:13.5px;font-weight:700;color:var(--text);
+  line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;
+}
+.ml-news-card-meta{
+  font-size:11px;color:var(--text3);
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  margin-top:auto;padding-top:4px;
+  border-top:1px solid var(--border);
+}
+.ml-news-card-src{font-weight:700;color:var(--burn3);}
+
+/* Hero card — first item, full-width */
+.ml-hero-card{
+  grid-column:1 / -1;
+  display:flex;flex-direction:row;gap:0;
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;cursor:pointer;
+  min-height:140px;
+  transition:transform .18s,box-shadow .18s,border-color .18s;
+}
+.ml-hero-card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3);border-color:var(--burn3)}
+.ml-hero-img-wrap{
+  position:relative;width:42%;flex-shrink:0;overflow:hidden;
+  background:var(--card3);
+}
+.ml-hero-img{width:100%;height:100%;object-fit:cover;transition:transform .35s ease}
+.ml-hero-card:hover .ml-hero-img{transform:scale(1.04)}
+.ml-hero-body{
+  flex:1;padding:20px 22px;display:flex;flex-direction:column;gap:10px;
+}
+.ml-hero-cat{
+  display:inline-block;font-size:9px;font-weight:700;
+  letter-spacing:1.2px;text-transform:uppercase;
+  padding:3px 10px;border-radius:4px;
+  background:var(--section-accent,var(--burn2));color:#fff;align-self:flex-start;
+}
+.ml-hero-hl{
+  font-family:'Noto Sans Malayalam','Playfair Display',serif;
+  font-size:17px;font-weight:700;color:var(--text);
+  line-height:1.45;
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;
+}
+.ml-hero-teaser{
+  font-size:13px;color:var(--text2);line-height:1.65;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.ml-hero-meta{
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;color:var(--text3);margin-top:auto;
+  padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap;
+}
+.ml-hero-src{font-weight:700;color:var(--burn3);}
+@media(max-width:600px){
+  .ml-hero-card{flex-direction:column}
+  .ml-hero-img-wrap{width:100%;height:130px}
+  .ml-hero-body{padding:12px 14px}
+  .ml-hero-hl{font-size:14px}
+}
+
+.ml-cat-empty{padding:40px 24px;text-align:center;color:var(--text3);}
+.ml-cat-empty-icon{font-size:30px;margin-bottom:8px;}
+.ml-cat-empty-text{font-size:13px;line-height:1.6;}
+@media(max-width:600px){
+  .ml-cat-tab{font-size:11px;padding:8px 10px;}
+  .ml-cat-content{padding:12px;}
+  .ml-cat-header{padding:12px 14px 11px;}
+  .ml-cat-title{font-size:16px;}
+}
+
+/* ═══════════════════════════════════════════════════
+   FEATURED HERO CARD
+═══════════════════════════════════════════════════ */
+.news-hero-card{
+  position:relative;overflow:hidden;
+  border-radius:14px;margin-bottom:20px;
+  cursor:pointer;min-height:320px;
+  display:flex;align-items:flex-end;
+  background:var(--card2);
+  border:1px solid var(--border2);
+  box-shadow:0 4px 24px rgba(0,0,0,.3);
+  transition:transform .2s ease,box-shadow .2s ease;
+}
+.news-hero-card:hover{transform:translateY(-2px);box-shadow:0 8px 40px rgba(0,0,0,.45)}
+.news-hero-img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;border-radius:14px;
+  transition:transform .4s ease;
+}
+.news-hero-card:hover .news-hero-img{transform:scale(1.03)}
+.news-hero-gradient{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,.9) 0%,rgba(0,0,0,.55) 50%,rgba(0,0,0,.1) 100%);
+  border-radius:14px;
+}
+.news-hero-body{
+  position:relative;z-index:2;
+  padding:28px 28px 24px;width:100%;
+}
+.news-source-badge{
+  display:inline-block;
+  background:var(--section-accent,var(--burn2));
+  color:#fff;font-size:10px;font-weight:700;
+  letter-spacing:1px;padding:3px 10px;border-radius:4px;
+  margin-bottom:10px;text-transform:uppercase;
+}
+.news-hero-headline{
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:clamp(18px,2.5vw,28px);font-weight:700;
+  color:#fff;line-height:1.3;margin-bottom:10px;
+  text-shadow:0 2px 8px rgba(0,0,0,.5);
+}
+.news-hero-meta{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.news-hero-time{
+  font-size:12px;color:rgba(255,255,255,.65);
+}
+.news-hero-read{
+  font-size:12px;color:rgba(255,255,255,.9);font-weight:600;
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+  border-radius:20px;padding:4px 14px;transition:all .15s;cursor:pointer;
+}
+.news-hero-read:hover{background:rgba(255,255,255,.25);color:#fff}
+
+/* ═══════════════════════════════════════════════════
+   HEADLINE CARDS GRID
+═══════════════════════════════════════════════════ */
+/* Masonry (multi-column) so cards of differing heights pack tightly with no
+   empty gaps — featured photo card and short text cards flow together. */
+.news-cards-grid{
+  column-width:260px;
+  column-gap:16px;
+}
+.news-cards-grid > *{
+  break-inside:avoid;
+  -webkit-column-break-inside:avoid;
+  page-break-inside:avoid;
+  margin:0 0 16px;
+  width:100%;
+}
+@media(max-width:600px){.news-cards-grid{column-width:auto;column-count:1}}
+
+.news-card{
+  background:var(--card);border:1px solid var(--border2);
+  border-radius:12px;padding:18px;
+  cursor:pointer;transition:all .18s;
+  display:flex;flex-direction:column;gap:10px;
+  position:relative;overflow:hidden;
+}
+.news-card::before{
+  content:'';position:absolute;top:0;left:0;
+  width:3px;height:100%;
+  background:var(--section-accent,var(--burn2));
+  opacity:0;transition:opacity .18s;
+}
+.news-card:hover{
+  background:var(--card2);border-color:var(--section-accent,var(--burn2));
+  transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.2);
+}
+.news-card:hover::before{opacity:1}
+
+.news-card-source{
+  display:inline-block;
+  background:var(--section-accent,var(--burn2));
+  color:#fff;font-size:9px;font-weight:700;
+  letter-spacing:1px;padding:2px 8px;border-radius:4px;
+  text-transform:uppercase;align-self:flex-start;
+}
+.news-card-headline{
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:15px;font-weight:700;color:var(--text);
+  line-height:1.4;
+}
+.news-card-teaser{
+  font-size:13px;color:var(--text3);line-height:1.6;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.news-card-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:auto;padding-top:4px;
+}
+.news-card-time{font-size:11px;color:var(--text3)}
+.news-card-read{
+  font-size:12px;font-weight:700;
+  color:var(--section-accent,var(--burn2));
+  text-decoration:none;
+  display:flex;align-items:center;gap:4px;
+  transition:gap .15s;
+}
+.news-card-read:hover{gap:8px}
+
+/* Malayalam font */
+.news-section-malayalam .news-card-headline,
+.news-section-malayalam .news-hero-headline{
+  font-family:'Noto Sans Malayalam','DM Sans',sans-serif;
+}
+
+/* ═══════════════════════════════════════════════════
+   PLACEHOLDER / EMPTY STATE
+═══════════════════════════════════════════════════ */
+.news-placeholder{
+  background:var(--card2);border:1px dashed var(--border2);
+  border-radius:12px;padding:48px 32px;text-align:center;
+  min-height:200px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:12px;
+}
+.news-placeholder-icon{font-size:40px;opacity:.4}
+.news-placeholder-text{
+  font-size:15px;color:var(--text3);line-height:1.6;
+  max-width:320px;
+}
+.news-placeholder-sub{font-size:12px;color:var(--text3);opacity:.7}
+
+/* ═══════════════════════════════════════════════════
+   FULL STORY MODAL
+═══════════════════════════════════════════════════ */
+.story-modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.82);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  z-index:9999;
+  align-items:flex-end;justify-content:center;
+}
+.story-modal-overlay.active{display:flex}
+
+.story-modal{
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:20px 20px 0 0;
+  width:100%;max-width:760px;
+  /* Mobile: 90% of screen height so content is visible */
+  height:90vh;
+  display:flex;flex-direction:column;
+  box-shadow:0 -8px 64px rgba(0,0,0,.6);
+  animation:modalSlideUp .3s cubic-bezier(.32,.72,0,1) both;
+  overflow:hidden;
+}
+@media(min-width:800px){
+  .story-modal-overlay{align-items:center}
+  .story-modal{border-radius:18px;height:auto;max-height:88vh}
+}
+@keyframes modalSlideUp{
+  from{transform:translateY(60px);opacity:0}
+  to{transform:translateY(0);opacity:1}
+}
+
+.story-modal-header{
+  padding:16px 20px 14px;
+  background:var(--dark2);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.story-modal-drag{
+  width:36px;height:4px;border-radius:2px;
+  background:var(--border2);margin:0 auto 14px;cursor:pointer;
+}
+.story-modal-section-pill{
+  padding:4px 12px;border-radius:20px;
+  font-size:10px;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;color:#fff;
+}
+.story-modal-close{
+  background:none;border:none;cursor:pointer;
+  color:var(--text3);font-size:22px;line-height:1;
+  padding:2px 6px;border-radius:6px;
+  transition:all .15s;
+}
+.story-modal-close:hover{background:rgba(255,255,255,.08);color:var(--text)}
+
+.story-modal-body{
+  padding:24px 28px 32px;
+  overflow-y:auto;flex:1;min-height:0;
+  background:var(--card);
+  scrollbar-width:thin;scrollbar-color:var(--border2) transparent;
+}
+.story-modal-body::-webkit-scrollbar{width:5px}
+.story-modal-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+@media(max-width:600px){.story-modal-body{padding:18px 16px 24px}}
+
+.story-modal-headline{
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:clamp(18px,3.5vw,26px);font-weight:700;
+  color:var(--text);line-height:1.35;margin-bottom:14px;
+}
+.story-modal-meta{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  font-size:12px;color:var(--text2);margin-bottom:20px;
+  padding-bottom:14px;border-bottom:1px solid var(--border);
+}
+.story-modal-meta-sep{opacity:.4}
+.story-modal-ai-badge{
+  background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);
+  color:#818cf8;font-size:10px;font-weight:600;
+  padding:2px 8px;border-radius:4px;letter-spacing:.3px;
+}
+.story-body{
+  font-size:16px;color:var(--text);line-height:1.9;
+  margin-bottom:24px;
+}
+.story-body p{margin-bottom:16px;color:var(--text)}
+.story-body strong{color:var(--text);font-weight:600}
+
+/* Quill output formatting */
+.story-body img{max-width:100%;height:auto;border-radius:8px;margin:16px 0;display:block;}
+.story-body ul, .story-body ol{margin-bottom:16px;padding-left:24px;}
+.story-body li{margin-bottom:6px;color:var(--text);}
+.story-body h1{font-size:24px;font-weight:700;margin:24px 0 16px;color:var(--text);font-family:'Playfair Display',Georgia,serif;}
+.story-body h2{font-size:20px;font-weight:700;margin:20px 0 12px;color:var(--text);font-family:'Playfair Display',Georgia,serif;}
+.story-body h3{font-size:18px;font-weight:700;margin:16px 0 10px;color:var(--text);font-family:'Playfair Display',Georgia,serif;}
+.story-body a{color:var(--burn2,#3b82f6);text-decoration:none;}
+.story-body a:hover{text-decoration:underline;}
+.story-body .ql-align-center{text-align:center;}
+.story-body .ql-align-right{text-align:right;}
+.story-body .ql-align-justify{text-align:justify;}
+
+/* ── Axios Smart Brevity article format ───────── */
+.story-body .story-lead{
+  font-size:17px;line-height:1.8;margin-bottom:20px;color:var(--text);
+}
+.story-body .story-bullets{
+  list-style:none;padding:0;margin:0 0 18px 0;
+}
+.story-body .story-bullets li{
+  padding:13px 16px;
+  background:rgba(37,99,235,.07);
+  border-left:3px solid var(--burn,#2563eb);
+  border-radius:0 8px 8px 0;
+  font-size:15px;line-height:1.75;color:var(--text);
+}
+.story-body .story-zoom{
+  font-size:15px;line-height:1.75;margin-bottom:20px;
+  padding:13px 16px;
+  background:rgba(99,102,241,.07);
+  border-left:3px solid #6366f1;border-radius:0 8px 8px 0;
+  color:var(--text2,var(--text));font-style:italic;
+}
+.story-body .story-section-item{
+  font-size:15.5px;line-height:1.75;margin-bottom:6px;color:var(--text);
+}
+.story-body .story-section-emoji{
+  font-size:18px;vertical-align:middle;margin-right:2px;font-style:normal;
+}
+.story-body .story-sub-bullets{
+  list-style:none;padding:0 0 0 26px;margin:0 0 20px 0;
+}
+.story-body .story-sub-bullets li{
+  padding:9px 12px;
+  background:rgba(255,255,255,.03);
+  border-left:2px solid rgba(148,163,184,.3);
+  border-radius:0 6px 6px 0;
+  font-size:14.5px;line-height:1.75;color:var(--text2,var(--text));
+}
+@media(prefers-color-scheme:light){
+  .story-body .story-bullets li{background:rgba(37,99,235,.06)}
+  .story-body .story-zoom{background:rgba(99,102,241,.06)}
+  .story-body .story-sub-bullets li{background:rgba(0,0,0,.03);border-color:rgba(100,116,139,.25)}
+}
+
+/* ═══════════════════════════════════════════════
+   WORLD NEWS + MALAYALAM — Newspaper Layout
+═══════════════════════════════════════════════ */
+.world-news-wrap{padding:0 0 40px 0}
+
+/* Region block */
+.world-region-block{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;margin-bottom:20px;
+}
+/* Subtle accent divider — no channel name, just flag + line */
+.world-region-divider{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 14px;background:var(--dark2);
+  border-bottom:1px solid var(--border);
+}
+.world-region-flag{font-size:18px;flex-shrink:0;line-height:1}
+.world-region-accent-bar{flex:1;height:2px;border-radius:2px;opacity:.55}
+.world-region-badge{
+  font-size:9.5px;color:var(--text3);
+  background:rgba(255,255,255,.06);padding:2px 8px;border-radius:20px;flex-shrink:0;
+}
+
+/* ── Newspaper 3-panel top row ── */
+/* DOM order: center → left → right (hero first for mobile) */
+.world-np-top{
+  display:grid;
+  grid-template-columns:245px 1fr 205px;
+  grid-template-areas:"left center right";
+  gap:0;border-bottom:1px solid var(--border);
+}
+
+/* Left sidebar */
+.world-np-left{
+  grid-area:left;border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+}
+.world-np-side-card{
+  display:flex;gap:0;padding:12px 13px;
+  border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .15s;
+  align-items:flex-start;
+}
+.world-np-side-card:hover{background:var(--card2)}
+.world-np-side-card:last-child{border-bottom:none;flex:1}
+.world-np-side-img{
+  width:58px;height:46px;object-fit:cover;object-position:top center;border-radius:5px;flex-shrink:0;margin-top:2px;
+}
+.world-np-side-body{padding:0 0 0 9px;display:flex;flex-direction:column;gap:5px}
+/* Full headline — no clamp */
+.world-np-side-hl{
+  font-size:12.5px;font-weight:700;color:var(--text);line-height:1.5;
+}
+.world-np-side-time{font-size:10px;color:var(--text3);padding-top:2px}
+
+/* Center hero — compact image block at top, headline + teaser below.
+   Image height is fixed so it never grows to match the side columns;
+   the body fills any remaining height, keeping dividers full length. */
+.world-np-center{
+  grid-area:center;border-right:1px solid var(--border);
+  position:relative;overflow:hidden;cursor:pointer;
+  display:flex;flex-direction:column;
+  background:var(--card2);
+  transition:filter .2s ease;
+}
+.world-np-center:hover{filter:brightness(1.06)}
+/* Fixed-height image block at the top */
+.world-np-hero-img{
+  position:relative;width:100%;height:190px;flex-shrink:0;
+  object-fit:cover;object-position:center;display:block;
+}
+.world-np-hero-overlay{display:none}
+/* Text sits below the image on the card background, centred in any extra space */
+.world-np-hero-body{
+  position:relative;z-index:2;flex:1;
+  padding:14px 18px 16px;
+  display:flex;flex-direction:column;justify-content:center;gap:7px;
+}
+.world-np-hero-hl{
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:clamp(16px,2vw,20px);font-weight:700;
+  color:var(--text);line-height:1.38;
+}
+.world-np-hero-teaser{
+  font-size:12.5px;color:var(--text2);line-height:1.6;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.world-np-hero-time{font-size:10.5px;color:var(--text3);padding-top:2px}
+
+/* Right: Latest list */
+.world-np-right{grid-area:right;display:flex;flex-direction:column}
+.world-np-latest-hdr{
+  font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--text3);padding:10px 14px 8px;border-bottom:1px solid var(--border);
+}
+.world-np-latest-item{
+  padding:7px 12px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .15s;display:flex;flex-direction:column;gap:2px;
+}
+.world-np-latest-item:hover{background:var(--card2)}
+.world-np-latest-item:last-child{border-bottom:none}
+/* Full headline — no clamp */
+.world-np-latest-hl{
+  font-size:11.5px;font-weight:600;color:var(--text);line-height:1.45;
+}
+.world-np-latest-meta{display:flex;align-items:center;gap:4px;margin-top:2px}
+.world-np-latest-dot{font-size:8px;color:var(--burn2)}
+.world-np-latest-time{font-size:10px;color:var(--text3)}
+
+/* Bottom 3-col grid */
+.world-np-bottom{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:0;
+  border-top:1px solid var(--border);
+}
+.world-np-grid-card{
+  border-right:1px solid var(--border);display:flex;flex-direction:column;
+  cursor:pointer;transition:background .15s;overflow:hidden;
+}
+.world-np-grid-card:last-child{border-right:none}
+.world-np-grid-card:hover{background:var(--card2)}
+.world-np-grid-img{width:100%;height:120px;object-fit:cover;object-position:top center;display:block;flex-shrink:0}
+.world-np-grid-body{padding:12px 14px;display:flex;flex-direction:column;gap:5px;flex:1}
+.world-np-grid-hl{
+  font-size:13px;font-weight:700;color:var(--text);line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.world-np-grid-teaser{
+  font-size:11.5px;color:var(--text2);line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.world-np-grid-time{font-size:10px;color:var(--text3);margin-top:auto}
+
+.world-empty{padding:32px 20px;text-align:center;color:var(--text3);font-size:13px}
+
+/* Responsive */
+@media(max-width:900px){
+  .world-np-top{
+    grid-template-columns:1fr 1fr;
+    grid-template-areas:"center center" "left left";
+  }
+  .world-np-right{display:none}
+  .world-np-center{border-right:none}
+  .world-np-left{
+    border-right:none;border-top:1px solid var(--border);
+    flex-direction:row;
+  }
+  .world-np-side-card{flex:1;border-bottom:none;border-right:1px solid var(--border)}
+  .world-np-side-card:last-child{border-right:none}
+}
+@media(max-width:600px){
+  .world-np-top{
+    grid-template-columns:1fr;
+    grid-template-areas:"center" "left";
+  }
+  .world-np-left{flex-direction:column;border-top:1px solid var(--border)}
+  .world-np-center{min-height:140px}
+  .world-np-side-card{border-right:none;border-bottom:1px solid var(--border)}
+  .world-np-side-card:last-child{border-bottom:none}
+  .world-np-bottom{grid-template-columns:1fr}
+  .world-np-grid-card{border-right:none;border-bottom:1px solid var(--border)}
+  .world-np-grid-card:last-child{border-bottom:none}
+  .world-np-grid-img{height:145px}
+}
+
+/* World popup modal */
+.world-modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.72);
+  z-index:10100;
+  display:none;align-items:center;justify-content:center;
+  padding:16px;
+}
+.world-modal-overlay.active{display:flex}
+.world-modal{
+  background:var(--card);
+  border-radius:16px;border:1px solid var(--border2);
+  max-width:560px;width:100%;
+  max-height:88vh;display:flex;flex-direction:column;
+  box-shadow:0 24px 80px rgba(0,0,0,.65);
+  overflow:hidden;
+}
+.world-modal-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px;border-bottom:1px solid var(--border);
+  gap:10px;
+}
+.world-modal-source-pill{
+  display:flex;align-items:center;gap:7px;
+  font-size:12px;font-weight:700;color:#fff;
+  padding:4px 12px;border-radius:20px;
+}
+.world-modal-source-flag{font-size:16px}
+.world-modal-close{
+  background:rgba(255,255,255,.07);border:none;cursor:pointer;
+  border-radius:8px;color:var(--text);font-size:18px;
+  width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+  transition:background .15s;flex-shrink:0;font-family:inherit;
+}
+.world-modal-close:hover{background:rgba(255,255,255,.15)}
+.world-modal-body{
+  padding:20px 24px;overflow-y:auto;flex:1;
+}
+.world-modal-body::-webkit-scrollbar{width:4px}
+.world-modal-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.world-modal-headline{
+  font-size:20px;line-height:1.5;font-weight:700;
+  color:var(--text);margin-bottom:14px;
+  font-family:'Playfair Display',Georgia,serif;
+}
+.world-modal-teaser{
+  font-size:15px;line-height:1.8;color:var(--text2);
+}
+.world-modal-ftr{
+  padding:14px 24px;border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.world-modal-read-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:9px 20px;border-radius:8px;
+  background:linear-gradient(135deg,var(--burn,#2563eb),var(--burn2,#1d4ed8));
+  color:#fff;text-decoration:none;font-size:13px;font-weight:700;
+  transition:all .15s;border:none;cursor:pointer;font-family:inherit;
+}
+.world-modal-read-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(37,99,235,.4)}
+.world-modal-time{font-size:12px;color:var(--text3)}
+@media(max-width:600px){
+  .world-modal-headline{font-size:17px}
+  .world-modal-body{padding:16px 18px}
+  .world-modal-ftr{padding:12px 18px}
+}
+
+/* ═══════════════════════════════════════════════
+   EXTERNAL LINKS SECTION
+═══════════════════════════════════════════════ */
+.ext-links-wrap{padding:0 0 40px 0}
+.ext-links-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:14px;
+}
+.ext-link-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:16px 18px;
+  display:flex;align-items:center;gap:14px;
+  transition:background .15s,border-color .15s;
+  text-decoration:none;
+}
+.ext-link-card:hover{background:var(--card2);border-color:var(--burn2)}
+.ext-link-favicon{
+  width:40px;height:40px;border-radius:9px;flex-shrink:0;
+  background:var(--dark3);display:flex;align-items:center;justify-content:center;
+  font-size:20px;overflow:hidden;
+}
+.ext-link-favicon img{width:100%;height:100%;object-fit:cover;border-radius:9px}
+.ext-link-body{flex:1;min-width:0}
+.ext-link-host{
+  font-size:13.5px;font-weight:700;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;
+}
+.ext-link-url{
+  font-size:11px;color:var(--text3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ext-link-desc{
+  font-size:11.5px;color:var(--text3);line-height:1.45;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.ext-link-expires{
+  font-size:10px;color:var(--text3);background:rgba(255,255,255,.05);
+  border-radius:20px;padding:2px 8px;margin-top:5px;display:inline-block;
+}
+.ext-link-btn{
+  flex-shrink:0;background:var(--burn2);color:#fff;
+  border:none;border-radius:8px;padding:7px 14px;
+  font-size:12px;font-weight:700;cursor:pointer;
+  transition:opacity .15s;white-space:nowrap;
+}
+.ext-link-btn:hover{opacity:.85}
+
+/* ── Custom Content Posts — featured cards shown at top of each section ── */
+/* Featured posts now sit BELOW the hero, boxed inside the section card grid —
+   same vertical box style as the regular news cards. */
+.custom-posts-block{display:contents}
+.custom-post-card{
+  display:flex;flex-direction:column;gap:0;border-radius:12px;overflow:hidden;
+  background:var(--card);border:1px solid var(--border2);
+  transition:border-color .18s,transform .18s,box-shadow .18s;
+  position:relative;cursor:pointer;
+}
+.custom-post-card:hover{border-color:var(--burn2);transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.2)}
+.cp-badge{
+  display:inline-block;align-self:flex-start;
+  background:var(--burn2);color:#fff;font-size:8px;font-weight:800;
+  text-transform:uppercase;letter-spacing:1px;padding:2px 8px;border-radius:10px;margin-bottom:2px;
+}
+.cp-photo-wrap{
+  width:100%;height:150px;flex-shrink:0;position:relative;overflow:hidden;background:var(--card3);
+}
+.cp-photo{width:100%;height:100%;object-fit:cover;display:block}
+.cp-no-photo{
+  width:100%;height:150px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:40px;opacity:.3;background:var(--card3);
+}
+.cp-body{padding:14px 16px 16px;flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+.cp-heading{
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:15px;font-weight:700;color:var(--text);line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.cp-story{
+  font-size:13px;color:var(--text3);line-height:1.6;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.cp-meta{font-size:10px;color:var(--text3);margin-top:2px;font-family:'JetBrains Mono',monospace}
+.cp-readmore{
+  display:inline-flex;align-items:center;gap:5px;margin-top:auto;
+  font-size:11px;font-weight:700;color:var(--burn3);cursor:pointer;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:6px;padding:4px 10px;width:fit-content;transition:background .15s;
+}
+.cp-readmore:hover{background:rgba(255,255,255,.08)}
+@media(max-width:640px){
+  .cp-photo-wrap{height:160px}
+  .cp-no-photo{height:80px}
+}
+
+.story-modal-disclaimer{
+  background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);
+  border-radius:8px;padding:12px 16px;margin-bottom:20px;
+  font-size:12px;color:var(--text3);line-height:1.7;
+  display:flex;gap:8px;align-items:flex-start;
+}
+.story-modal-disclaimer::before{content:'ℹ️';flex-shrink:0;font-size:14px}
+
+.story-modal-source-link{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 18px;
+  background:linear-gradient(135deg,var(--burn),var(--burn2));
+  border-radius:8px;color:#fff;text-decoration:none;
+  font-size:13px;font-weight:700;
+  transition:all .15s;margin-bottom:20px;
+  border:none;cursor:pointer;font-family:inherit;
+}
+.story-modal-source-link:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(37,99,235,.4)}
+
+.story-modal-share{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding-top:16px;border-top:1px solid var(--border);
+}
+.story-modal-share-label{font-size:12px;color:var(--text3);font-weight:600;flex-shrink:0}
+.share-btn-sm{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:20px;
+  font-size:12px;font-weight:700;color:#fff;
+  text-decoration:none;border:none;cursor:pointer;
+  transition:opacity .15s;
+}
+.share-btn-sm:hover{opacity:.85}
+.share-wa{background:#25D366}
+.share-tw{background:#000;border:1px solid #333}
+
+/* ═══════════════════════════════════════════════════
+   LEGAL DISCLAIMER BANNER
+═══════════════════════════════════════════════════ */
+.news-legal-banner{
+  background:var(--card2);border:1px solid var(--border);
+  border-left:3px solid var(--text3);
+  border-radius:10px;padding:20px 24px;
+  margin:0 24px 40px;
+  max-width:1400px;margin-left:auto;margin-right:auto;
+}
+@media(max-width:768px){.news-legal-banner{margin:0 12px 32px}}
+.news-legal-banner-title{
+  font-size:11px;font-weight:700;color:var(--text3);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;
+}
+.news-legal-banner-text{
+  font-size:12px;color:var(--text3);line-height:1.8;
+}
+.news-legal-banner-text a{color:var(--burn2);text-decoration:none}
+.news-legal-banner-text a:hover{text-decoration:underline}
+
+/* ═══════════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════════ */
+footer.news-footer{
+  background:linear-gradient(135deg,#0c1b4d 0%,#0f2d6e 35%,#1d4ed8 75%,#2563eb 100%);
+  color:rgba(248,250,252,.8);
+  font-size:14px;line-height:1.7;
+  border-top:1px solid rgba(147,197,253,.35);
+}
+.footer-main{
+  max-width:1280px;margin:0 auto;
+  padding:48px 32px 36px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:32px;
+}
+@media(max-width:900px){.footer-main{grid-template-columns:repeat(2,1fr);gap:24px;padding:36px 20px 28px}}
+@media(max-width:500px){.footer-main{grid-template-columns:1fr;gap:20px;padding:28px 16px 20px}}
+
+.footer-col-title{
+  font-size:13px;font-weight:700;color:#fff;
+  letter-spacing:.6px;text-transform:uppercase;margin-bottom:14px;
+}
+.footer-brand-desc{font-size:13px;color:rgba(248,250,252,.65);line-height:1.75}
+.footer-links{list-style:none;display:flex;flex-direction:column;gap:9px}
+.footer-links a{
+  color:rgba(248,250,252,.8);text-decoration:none;font-size:13px;
+  transition:color .18s;display:inline-flex;align-items:center;gap:6px;
+}
+.footer-links a:hover{color:#fff}
+.footer-social a{
+  display:inline-flex;align-items:center;gap:10px;
+  color:rgba(248,250,252,.8);text-decoration:none;font-size:13px;
+  padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.2);
+  transition:background .18s,color .18s,border-color .18s;
+  width:100%;box-sizing:border-box;margin-bottom:8px;
+}
+.footer-social a:hover{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4)}
+.footer-social-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.footer-bottom{
+  border-top:1px solid rgba(147,197,253,.25);
+  padding:20px 32px;max-width:1200px;margin:0 auto;
+}
+.footer-legal-text{
+  font-size:11px;color:rgba(248,250,252,.65);
+  line-height:1.8;text-align:center;margin-bottom:12px;
+}
+.footer-legal-text strong{color:rgba(248,250,252,.8);font-weight:600}
+.footer-copyright{
+  font-size:11px;color:rgba(248,250,252,.45);
+  text-align:center;letter-spacing:.3px;
+}
+.share-btn{
+  padding:8px 15px;color:#fff!important;text-decoration:none;border-radius:5px;
+  font-size:13px;font-weight:700;cursor:pointer;border:none;transition:opacity .2s;
+  display:inline-flex;align-items:center;justify-content:center;
+}
+.share-btn:hover{opacity:.8}
+
+/* ═══════════════════════════════════════════════════
+   LOADING SKELETON
+═══════════════════════════════════════════════════ */
+@keyframes shimmer{
+  0%{background-position:-400px 0}
+  100%{background-position:400px 0}
+}
+.skeleton{
+  background:linear-gradient(90deg,var(--card2) 25%,var(--card3) 50%,var(--card2) 75%);
+  background-size:800px 100%;
+  animation:shimmer 1.5s infinite;
+  border-radius:6px;
+}
+
+/* ═══════════════════════════════════════════════════
+   SEARCH BOX — nav integrated
+═══════════════════════════════════════════════════ */
+.news-search-wrap{
+  flex:1;display:flex;align-items:center;
+  padding:0 12px;min-width:0;max-width:320px;
+}
+.news-search-box{
+  position:relative;display:flex;align-items:center;width:100%;
+}
+.news-search-icon-svg{
+  position:absolute;left:10px;
+  color:rgba(255,255,255,.45);pointer-events:none;flex-shrink:0;
+}
+.news-search-input{
+  width:100%;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:22px;
+  padding:7px 34px 7px 32px;
+  color:#fff;font-size:13px;
+  font-family:'DM Sans',-apple-system,sans-serif;
+  outline:none;
+  transition:background .2s,border-color .2s,box-shadow .2s;
+  letter-spacing:.2px;
+}
+.news-search-input::placeholder{color:rgba(255,255,255,.38)}
+.news-search-input:focus{
+  background:rgba(255,255,255,.13);
+  border-color:rgba(147,197,253,.55);
+  box-shadow:0 0 0 3px rgba(59,130,246,.18);
+}
+.news-search-clear{
+  position:absolute;right:9px;
+  background:none;border:none;cursor:pointer;
+  color:rgba(255,255,255,.45);font-size:13px;
+  padding:2px 4px;border-radius:4px;line-height:1;
+  transition:color .15s;display:none;
+}
+.news-search-clear:hover{color:#fff}
+/* Mobile: search takes full available space */
+@media(max-width:700px){
+  .news-search-wrap{max-width:none;flex:1;padding:0 8px}
+}
+
+/* Search results banner — inline flow (search input stays in sticky nav) */
+.search-results-bar{
+  background:rgba(37,99,235,.1);
+  border-bottom:1px solid rgba(37,99,235,.2);
+  padding:9px 24px;
+  display:none;align-items:center;justify-content:space-between;
+  font-size:13px;color:var(--text2);gap:12px;
+}
+.search-results-count{color:var(--burn3);font-weight:700}
+.search-clear-btn{
+  background:none;border:1px solid var(--border2);
+  border-radius:6px;padding:3px 10px;
+  color:var(--text3);font-size:12px;cursor:pointer;
+  transition:all .15s;flex-shrink:0;
+}
+.search-clear-btn:hover{border-color:var(--burn2);color:var(--text)}
+/* Hide sections with no search matches */
+.search-active .news-section{display:none}
+.search-active .news-section.has-match{display:block}
+
+/* ═══════════════════════════════════════════════════
+   SMOOTH TRANSITIONS
+═══════════════════════════════════════════════════ */
+.top-menubar,.news-card,.news-hero-card,footer{
+  transition:background-color .5s ease,color .5s ease,border-color .5s ease;
+}
+
+/* ═══════════════════════════════════════════════════
+   MOBILE POLISH
+═══════════════════════════════════════════════════ */
+@media(max-width:600px){
+  /* Hero card — shorter on mobile so headline stays visible */
+  .news-hero-card{min-height:220px}
+  .news-hero-body{padding:18px 16px 16px}
+  .news-hero-headline{font-size:17px!important}
+
+  /* Section header */
+  .news-section-header{margin-bottom:14px}
+  .news-section-name{font-size:16px;letter-spacing:1.5px}
+
+  /* Legal banner */
+  .news-legal-banner{margin:0 12px 24px;padding:14px 16px}
+
+  /* Footer: single column on phones */
+  .footer-main{grid-template-columns:1fr!important;gap:20px!important;padding:28px 16px 20px!important}
+  .footer-bottom{padding:14px 16px}
+
+  /* Page hero tighter */
+  .news-page-hero{padding:18px 16px 14px}
+  .news-page-title{font-size:26px}
+  .news-page-subtitle{font-size:13px}
+  .news-page-meta{gap:8px;margin-top:12px}
+  .news-page-meta-chip{font-size:11px;padding:4px 10px}
+
+  /* Modal drag pill larger tap target */
+  .story-modal-drag{width:44px;height:5px;margin-bottom:0}
+  .story-modal-header{padding:14px 16px 12px}
+  .story-modal-close{font-size:20px}
+  .story-modal-headline{font-size:18px!important}
+
+  /* Share buttons wrap nicely */
+  .story-modal-share{gap:6px}
+  .share-btn-sm{font-size:11px;padding:6px 12px}
+  .story-modal-source-link{font-size:12px;padding:7px 14px}
+
+  /* World News — mobile optimised */
+  .world-region-card{border-radius:10px;margin-bottom:12px}
+  .world-region-header{padding:10px 13px;gap:8px}
+  .world-region-flag{font-size:17px}
+  .world-region-name{font-size:12.5px}
+  .world-region-lang{font-size:9.5px;padding:2px 6px}
+  .world-region-badge{font-size:9.5px}
+  .world-item{padding:10px 13px;gap:8px}
+  .world-item-headline{font-size:13px;-webkit-line-clamp:3}
+  .world-item-source{font-size:10px}
+  .world-item-time{font-size:10px}
+  /* World popup modal mobile */
+  .world-modal{max-height:92vh}
+  .world-modal-headline{font-size:16px}
+  .world-modal-teaser{font-size:14px;line-height:1.7}
+  .world-modal-read-btn{padding:8px 16px;font-size:12px}
+
+  /* Section header badge wrapping */
+  .news-section-header{flex-wrap:wrap;row-gap:6px}
+  .news-section-badge{font-size:9px;padding:2px 8px}
+
+  /* News cards — tighter on mobile */
+  .news-card{padding:14px;border-radius:10px}
+  .news-card-headline{font-size:14px}
+  .news-card-teaser{font-size:12px}
+  .news-card-source{font-size:8.5px}
+  .news-card-time{font-size:10px}
+
+  /* Placeholder text size */
+  .news-placeholder{padding:32px 20px;min-height:160px}
+  .news-placeholder-icon{font-size:32px}
+  .news-placeholder-text{font-size:14px}
+}
+
+/* ═══════════════════════════════════════════════════
+   MARKET INTELLIGENCE WIDGET BLOCK
+═══════════════════════════════════════════════════ */
+.nmw-block{
+  margin-bottom:56px;
+  border-radius:14px;
+  overflow:hidden;
+  border:1px solid var(--border2);
+  box-shadow:0 4px 24px rgba(0,0,0,.25);
+}
+.nmw-header{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 20px;
+  background:var(--card2);
+  border-bottom:2px solid #0d2e1f;
+  position:relative;
+}
+.nmw-header::after{
+  content:'';position:absolute;bottom:-2px;left:0;
+  width:72px;height:2px;
+  background:#10b981;border-radius:2px;
+}
+.nmw-header-icon{font-size:20px;line-height:1}
+.nmw-header-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:18px;letter-spacing:2.5px;color:var(--text);
+}
+.nmw-header-badge{
+  margin-left:auto;
+  background:rgba(16,185,129,.15);
+  border:1px solid rgba(16,185,129,.4);
+  color:#34d399;font-size:10px;font-weight:700;
+  padding:3px 10px;border-radius:20px;letter-spacing:.6px;
+  display:flex;align-items:center;gap:5px;
+}
+.nmw-live-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:#10b981;flex-shrink:0;
+  animation:nmwPulse 2s ease-in-out infinite;
+}
+@keyframes nmwPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.nmw-tabs{
+  display:flex;flex-wrap:wrap;
+  gap:4px;padding:8px 12px;
+  background:var(--dark2);
+  border-bottom:1px solid var(--border);
+  scrollbar-width:none;
+  user-select:none;
+}
+.nmw-tabs::-webkit-scrollbar{display:none}
+.nmw-tab{
+  flex-shrink:0;padding:5px 11px;
+  border:1px solid var(--border2);border-radius:8px;
+  background:transparent;color:var(--text3);
+  font-size:11.5px;font-weight:700;cursor:pointer;
+  letter-spacing:.3px;white-space:nowrap;
+  transition:all .15s;
+}
+.nmw-tab.active{
+  background:rgba(16,185,129,.14);
+  border-color:rgba(16,185,129,.5);color:#34d399;
+}
+.nmw-tab:hover:not(.active){
+  background:var(--card2);border-color:var(--border);color:var(--text2);
+}
+.nmw-area{
+  height:700px;background:var(--dark);
+  position:relative;overflow:hidden;
+}
+.nmw-wrap{
+  position:absolute;inset:0;
+  flex-direction:column;
+}
+/* ── Screener market-selector bar ── */
+.nmw-screener-bar{
+  flex-shrink:0;display:flex;align-items:center;gap:8px;
+  padding:6px 10px;background:#060f1c;border-bottom:1px solid var(--border)
+}
+.nmw-screener-select{
+  flex:1;max-width:300px;background:var(--card);border:1px solid var(--border2);
+  color:var(--text);border-radius:7px;padding:5px 9px;
+  font-size:12px;font-weight:600;cursor:pointer;outline:none;
+  -webkit-appearance:none;appearance:none
+}
+.nmw-screener-select:focus{border-color:var(--burn2)}
+.nmw-screener-tv{flex:1;position:relative;overflow:hidden;min-height:0}
+@media(max-width:768px){
+  .nmw-area{height:500px}
+  .nmw-tab{font-size:11px;padding:5px 9px}
+  .nmw-screener-select{max-width:100%}
+  .nmw-tabs{gap:3px;padding:7px 10px}
+}
+@media(max-width:480px){
+  .nmw-area{height:460px}
+  .nmw-tab{font-size:10.5px;padding:4px 8px;letter-spacing:0;border-radius:6px}
+  .nmw-tabs{gap:3px;padding:6px 8px}
+  .nmw-block{border-radius:10px}
+}
+
+/* ── Global Markets: edit overlay ── */
+.nmw-gm-edit-btn{
+  position:absolute;top:8px;right:8px;z-index:10;
+  background:rgba(6,15,28,.88);
+  border:1px solid var(--border2);
+  color:var(--text2);border-radius:6px;
+  padding:4px 10px;font-size:11px;cursor:pointer;
+  transition:all .15s;white-space:nowrap;
+  font-family:inherit;font-weight:600;letter-spacing:.3px;
+}
+.nmw-gm-edit-btn:hover{background:var(--card2);color:var(--text);border-color:var(--burn2)}
+.nmw-gm-editor{
+  position:absolute;right:0;top:0;bottom:0;
+  width:270px;max-width:88%;
+  background:var(--card);
+  border-left:1px solid var(--border2);
+  z-index:20;display:flex;flex-direction:column;
+  overflow:hidden;
+  animation:nmwGMSlide .2s ease-out;
+}
+@keyframes nmwGMSlide{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.nmw-gm-editor-hd{
+  padding:10px 12px;background:var(--dark2);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.nmw-gm-etabs{
+  display:flex;gap:4px;padding:8px 10px;
+  background:var(--dark2);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.nmw-gm-etab{
+  flex:1;padding:4px 8px;border-radius:5px;font-size:10px;font-weight:700;
+  background:transparent;border:1px solid var(--border);
+  color:var(--text2);cursor:pointer;transition:all .15s;font-family:inherit;
+  white-space:nowrap;
+}
+.nmw-gm-etab.active{background:var(--burn);border-color:var(--burn);color:#fff}
+.nmw-gm-sym-list{flex:1;overflow-y:auto;padding:8px 10px;min-height:0;
+  scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.nmw-gm-sym-list::-webkit-scrollbar{width:4px}
+.nmw-gm-sym-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.nmw-gm-sym-row{
+  display:flex;align-items:center;gap:5px;
+  padding:5px 7px;border-radius:6px;margin-bottom:3px;
+  background:var(--card2);border:1px solid var(--border);
+}
+.nmw-gm-sym-name{font-size:9px;font-weight:800;color:var(--gold2);flex-shrink:0;letter-spacing:.3px}
+.nmw-gm-sym-label{font-size:11px;color:var(--text2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nmw-gm-sym-del{
+  background:none;border:none;color:var(--text3);cursor:pointer;
+  font-size:13px;flex-shrink:0;padding:0 2px;line-height:1;
+  transition:color .15s;font-family:inherit;
+}
+.nmw-gm-sym-del:hover{color:#ef4444}
+.nmw-gm-add-row{
+  display:flex;flex-direction:column;gap:5px;padding:8px 10px;
+  border-top:1px solid var(--border);background:var(--dark2);flex-shrink:0;
+}
+.nmw-gm-inp{
+  width:100%;background:var(--card);border:1px solid var(--border2);
+  color:var(--text);border-radius:5px;padding:5px 8px;
+  font-size:11px;font-family:inherit;box-sizing:border-box;outline:none;
+}
+.nmw-gm-inp:focus{border-color:var(--burn2)}
+.nmw-gm-inp::placeholder{color:var(--text3)}
+.nmw-gm-add-btn{
+  padding:5px 10px;background:var(--burn);border:none;color:#fff;
+  border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;
+  font-family:inherit;transition:opacity .15s;
+}
+.nmw-gm-add-btn:hover{opacity:.85}
+.nmw-gm-editor-ft{
+  display:flex;gap:6px;padding:8px 10px;
+  background:var(--dark2);border-top:1px solid var(--border);flex-shrink:0;
+}
+.nmw-gm-reset-btn{
+  flex:1;padding:6px;background:transparent;border:1px solid var(--border2);
+  color:var(--text2);border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;
+}
+.nmw-gm-apply-btn{
+  flex:1;padding:6px;background:var(--green);border:none;color:#fff;
+  border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;
+}
+.nmw-gm-apply-btn:hover{opacity:.88}
+/* ═══════════════════════════════════════════════════
+   SECTION TOGGLE BUTTON
+═══════════════════════════════════════════════════ */
+.news-section-toggle {
+  margin-left: 10px;
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+.news-section-toggle:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--text);
+  border-color: var(--text3);
+}
+.news-section-toggle svg {
+  width: 14px; height: 14px;
+  fill: currentColor;
+  transition: transform 0.3s ease;
+}
+.news-section-content {
+  transition: opacity 0.3s ease;
+}
+.collapsed .news-section-content {
+  display: none;
+}
+.collapsed .news-section-toggle svg {
+  transform: rotate(180deg);
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     TOP NAVIGATION BAR
+══════════════════════════════════════════ -->
+<nav class="top-menubar" id="top-menubar">
+  <div class="nav-inner">
+    <div class="nav-brand-group">
+      <a href="index.html" class="nav-home-link" title="Go to MultiScreener" style="margin-right:6px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Multiscreener
+      </a>
+      <a href="news.html" class="nav-home-link" title="Reload News home">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home
+      </a>
+      <a href="story.html" class="nav-home-link" title="Stories">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Stories
+      </a>
+      <a href="blog_intelligence_hub.html" class="nav-home-link" title="Blog">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+        Blog
+      </a>
+      <div class="nav-brand">
+        <span class="brand-dot"></span>
+        <span class="brand-name">VilfinTV <span class="brand-news-tag">NEWS</span></span>
+      </div>
+    </div>
+    <div class="news-nav-links" id="news-nav-links">
+      <a class="news-nav-link" href="#trending">🔥 Trending</a>
+      <a class="news-nav-link" href="#global">🌍 Global</a>
+      <a class="news-nav-link" href="#india">🇮🇳 India</a>
+      <a class="news-nav-link" href="#stock">📈 Stock</a>
+      <a class="news-nav-link" href="#malayalam">🎭 Malayalam</a>
+      <a class="news-nav-link" href="#world">🌐 World</a>
+    </div>
+    <!-- SEARCH BOX -->
+    <div class="news-search-wrap">
+      <div class="news-search-box">
+        <svg class="news-search-icon-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" class="news-search-input" id="news-search-input"
+               placeholder="Search stories…" autocomplete="off" spellcheck="false"
+               aria-label="Search news stories"/>
+        <button class="news-search-clear" id="news-search-clear" onclick="clearSearch()" title="Clear search" aria-label="Clear search">✕</button>
+      </div>
+    </div>
+
+    <div class="news-nav-right">
+      <button class="news-theme-btn" onclick="cycleTheme()" title="Change theme">🎨</button>
+      <span class="news-live-badge">LIVE</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════
+     SEARCH RESULTS BANNER (shown when query active)
+══════════════════════════════════════════ -->
+<div class="search-results-bar" id="search-results-bar" role="status" aria-live="polite">
+  <span id="search-results-text"></span>
+  <button class="search-clear-btn" onclick="clearSearch()">Clear</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE HERO
+══════════════════════════════════════════ -->
+<div class="news-page-hero">
+  <div class="news-page-hero-inner">
+    <h1 class="news-page-title">Today's Intelligence</h1>
+    <p class="news-page-subtitle">Curated global news coverage — Trending, World Affairs, Indian Markets &amp; Malayalam stories.</p>
+    <div class="news-page-meta">
+      <div class="news-page-meta-chip">Last updated: <span id="last-updated-time">—</span></div>
+      <div class="news-page-meta-chip">Stories: <span id="total-story-count">—</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MAIN NEWS BODY
+══════════════════════════════════════════ -->
+
+<div class="news-page-body" style="max-width: 800px; margin: 0 auto; padding: 40px 24px; min-height: 50vh;">
+  <h1 style="font-family:'Playfair Display',serif;font-size:32px;color:var(--text);margin-bottom:24px;">Legal & Copyright Disclosure</h1>
+  <div style="font-size:16px;line-height:1.8;color:var(--text2);">
+    <h2 style="font-size:20px;color:var(--text);margin:24px 0 12px;font-family:'Playfair Display',serif;">1. Automated Market Assistant</h2>
+    <p style="margin-bottom:16px;">VilfinTV News operates as an automated market assistant and aggregation service. The headlines, summaries, and categorized stories presented on this platform are generated via intelligent search algorithms and automated processing of publicly available RSS feeds and data sources.</p>
+    
+    <h2 style="font-size:20px;color:var(--text);margin:24px 0 12px;font-family:'Playfair Display',serif;">2. Informational Purposes Only</h2>
+    <p style="margin-bottom:16px;">All content is provided for informational and educational purposes only. It does not constitute financial, investment, legal, or professional advice. VilfinTV is not affiliated with any financial regulatory authority. Users should verify critical market data and news with primary sources or licensed financial advisors before making any investment decisions.</p>
+
+    <h2 style="font-size:20px;color:var(--text);margin:24px 0 12px;font-family:'Playfair Display',serif;">3. Copyright & Intellectual Property</h2>
+    <p style="margin-bottom:16px;">VilfinTV does not claim ownership of the original reporting or the raw facts underlying the news events. Our intelligent algorithms synthesize available public data to provide structured, thematic summaries without reproducing source articles verbatim. Any trademarks, logos, and brand names referenced on this platform are the property of their respective owners and are used solely for identification purposes.</p>
+
+    <h2 style="font-size:20px;color:var(--text);margin:24px 0 12px;font-family:'Playfair Display',serif;">4. Disclaimer of Liability</h2>
+    <p style="margin-bottom:16px;">While we strive to ensure the accuracy and timeliness of our automated summaries, VilfinTV makes no warranties or representations regarding the completeness or reliability of the information. We shall not be held liable for any errors, omissions, or delays in this information or any losses, injuries, or damages arising from its display or use.</p>
+  </div>
+</div>
+<!-- ══════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════ -->
+<footer class="news-footer">
+  <div class="footer-main">
+    <div>
+      <div class="footer-col-title">VilfinTV News</div>
+      <p class="footer-brand-desc">AI-assisted global news aggregation. Trending stories, market intelligence, regional coverage, and Malayalam news.</p>
+    </div>
+    <div>
+      <div class="footer-col-title">Sections</div>
+      <ul class="footer-links">
+        <li><a href="#trending">🔥 Trending Now</a></li>
+        <li><a href="#global">🌍 Global News</a></li>
+        <li><a href="#india">🇮🇳 India News</a></li>
+        <li><a href="#stock">📈 Stock News</a></li>
+        <li><a href="#malayalam">🎭 Malayalam News</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">VilfinTV Platform</div>
+      <ul class="footer-links">
+        <li><a href="index.html">📊 MultiScreener Dashboard</a></li>
+        <li><a href="blog_intelligence_hub.html" target="_blank">📰 Blog Intelligence Hub</a></li>
+        <li><a href="user_manual.html" target="_blank">📖 User Manual</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Connect With Us</div>
+      <div class="footer-social">
+        <a href="https://x.com/vilfing" target="_blank" rel="noopener">
+          <span class="footer-social-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#94a3b8"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.73-8.835L1.254 2.25H8.08l4.261 5.636 5.903-5.636zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </span>
+          @vilfing on X (Twitter)
+        </a>
+        <a href="https://www.facebook.com/share/19s3NRNKwv/?mibextid=wwXIfr" target="_blank" rel="noopener">
+          <span class="footer-social-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#94a3b8"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </span>
+          Facebook Page
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:20px 32px 12px;text-align:center;border-top:1px solid rgba(147,197,253,.15)">
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+      <a href="https://api.whatsapp.com/send?text=Check%20out%20VilfinTV%20News%3A%20https%3A%2F%2Fvilfintv.com%2Fnews.html" target="_blank" rel="noopener" class="share-btn" style="background:#25D366">WhatsApp</a>
+      <a href="https://twitter.com/intent/tweet?text=Live+news+aggregator+by+VilfinTV&url=https%3A%2F%2Fvilfintv.com%2Fnews.html" target="_blank" rel="noopener" class="share-btn" style="background:#000;border:1px solid #333">X (Twitter)</a>
+      <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fvilfintv.com%2Fnews.html" target="_blank" rel="noopener" class="share-btn" style="background:#1877F2">Facebook</a>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid rgba(147,197,253,.15)">
+    <div class="footer-bottom">
+      <p class="footer-legal-text">
+        VilfinTV News is an automated market assistant and aggregation service. All content is generated via intelligent search algorithms and publicly available feeds.
+        Content does not reproduce source articles verbatim. VilfinTV does not claim ownership of original reporting.
+        Stories, headlines, and summaries are compiled automatically and are for informational purposes only.
+        Not affiliated with any regulatory authority.
+      </p>
+      <div style="margin: 8px 0; text-align: center;"><a href="legal.html" style="color: var(--text3); font-size: 11px; text-decoration: underline;">Legal & Copyright Disclosure</a></div>
+      <p class="footer-copyright">© 2026 VilfinTV. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   THEME MANAGEMENT
+═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════
+   SECTION TOGGLE
+═══════════════════════════════════════════════════ */
+function toggleNewsSection(btn) {
+  var section = btn.closest('.news-section') || btn.closest('.world-news-wrap') || btn.closest('.ext-links-wrap');
+  if (section) {
+    section.classList.toggle('collapsed');
+    var isExpanded = !section.classList.contains('collapsed');
+    btn.setAttribute('aria-expanded', isExpanded.toString());
+  }
+}
+
+const THEMES = ['black','midnight','maroon','silver','gold','gemini','news-reader','standard'];
+
+function setNewsTheme() {
+  var t = localStorage.getItem('viltv_theme') || 'black';
+  if (t === 'standard') { t = 'midnight'; }
+  document.documentElement.setAttribute('data-theme', t);
+}
+
+function setTheme(t) {
+  if (t === 'standard') t = 'midnight';
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('viltv_theme', t);
+}
+
+function cycleTheme() {
+  var cur = localStorage.getItem('viltv_theme') || 'black';
+  var idx = THEMES.indexOf(cur);
+  var next = THEMES[(idx + 1) % THEMES.length];
+  setTheme(next);
+}
+
+// Apply on load
+setNewsTheme();
+
+/* ═══════════════════════════════════════════════════
+   SECTION METADATA
+═══════════════════════════════════════════════════ */
+const SECTION_META = {
+  trending: {
+    id: 'trending',
+    label: 'Trending Now',
+    icon: '🔥',
+    accent: '#ef4444',
+    cssClass: 'news-section-trending',
+    image: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80'
+  },
+  global: {
+    id: 'global',
+    label: 'Global News',
+    icon: '🌍',
+    accent: '#3b82f6',
+    cssClass: 'news-section-global',
+    image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&q=80'
+  },
+  india: {
+    id: 'india',
+    label: 'India News',
+    icon: '🇮🇳',
+    accent: '#f97316',
+    cssClass: 'news-section-india',
+    image: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=1200&q=80'
+  },
+  stock: {
+    id: 'stock',
+    label: 'Stock News',
+    icon: '📈',
+    accent: '#10b981',
+    cssClass: 'news-section-stock',
+    image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&q=80'
+  },
+  malayalam: {
+    id: 'malayalam',
+    label: 'Malayalam News',
+    icon: '🎭',
+    accent: '#8b5cf6',
+    cssClass: 'news-section-malayalam',
+    image: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=1200&q=80'
+  },
+  // ── Malayalam Edition sub-categories ──────────────────────────────────────
+  ml_trending:  { id:'ml_trending',  label:'Top Trending Kerala', icon:'🔥', accent:'#ef4444', cssClass:'news-section-trending',  image:'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80' },
+  ml_movies:    { id:'ml_movies',    label:'Movie News',          icon:'🎬', accent:'#f59e0b', cssClass:'news-section-ml-movies',  image:'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&q=80' },
+  ml_music:     { id:'ml_music',     label:'Music News',          icon:'🎵', accent:'#ec4899', cssClass:'news-section-ml-music',   image:'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1200&q=80' },
+  ml_local:     { id:'ml_local',     label:'Local News',          icon:'📍', accent:'#06b6d4', cssClass:'news-section-ml-local',   image:'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1200&q=80' },
+  ml_science:   { id:'ml_science',   label:'Science News',        icon:'🔬', accent:'#6366f1', cssClass:'news-section-ml-science', image:'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=1200&q=80' },
+  ml_space:     { id:'ml_space',     label:'Space News',          icon:'🚀', accent:'#1e3a8a', cssClass:'news-section-ml-space',   image:'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1200&q=80' },
+  ml_sports:    { id:'ml_sports',    label:'Sports News',         icon:'🏏', accent:'#16a34a', cssClass:'news-section-ml-sports',  image:'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80' },
+  ml_health:    { id:'ml_health',    label:'Health & Lifestyle',  icon:'🏥', accent:'#0ea5e9', cssClass:'news-section-ml-health',  image:'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=1200&q=80' },
+  ml_food:      { id:'ml_food',      label:'Food & Agriculture',  icon:'🌾', accent:'#84cc16', cssClass:'news-section-ml-food',    image:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&q=80' },
+  ml_realestate:{ id:'ml_realestate',label:'Home & Real Estate',  icon:'🏠', accent:'#d97706', cssClass:'news-section-ml-real',    image:'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=80' },
+  ml_career:    { id:'ml_career',    label:'Career & Jobs',       icon:'💼', accent:'#7c3aed', cssClass:'news-section-ml-career',  image:'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1200&q=80' },
+  ml_tech:      { id:'ml_tech',      label:'Technology News',     icon:'💻', accent:'#2563eb', cssClass:'news-section-ml-tech',    image:'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80' }
+};
+
+/* ═══════════════════════════════════════════════════
+   MALAYALAM EDITION — 12 category tab definitions
+═══════════════════════════════════════════════════ */
+var ML_CATEGORIES = [
+  { id:'ml_trending',   label:'🔥 Trending Kerala' },
+  { id:'ml_movies',     label:'🎬 Movies' },
+  { id:'ml_music',      label:'🎵 Music' },
+  { id:'ml_local',      label:'📍 Local' },
+  { id:'ml_science',    label:'🔬 Science' },
+  { id:'ml_space',      label:'🚀 Space' },
+  { id:'ml_sports',     label:'🏏 Sports' },
+  { id:'ml_health',     label:'🏥 Health' },
+  { id:'ml_food',       label:'🌾 Food & Agri' },
+  { id:'ml_realestate', label:'🏠 Real Estate' },
+  { id:'ml_career',     label:'💼 Career' },
+  { id:'ml_tech',       label:'💻 Tech' }
+];
+
+var _newsData = null; // stores fetched data for category switching without re-fetch
+
+/* ═══════════════════════════════════════════════════
+   UTILITY: TIME AGO
+═══════════════════════════════════════════════════ */
+function timeAgo(isoStr) {
+  if (!isoStr) return '—';
+  var diff = Date.now() - new Date(isoStr).getTime();
+  var mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return mins + 'm ago';
+  var hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  var days = Math.floor(hrs / 24);
+  return days + 'd ago';
+}
+
+/* ═══════════════════════════════════════════════════
+   FILTER: REMOVE EXPIRED ITEMS
+═══════════════════════════════════════════════════ */
+function isItemValid(item) {
+  if (!item || !item.publishedAt) return false;
+  // Robustly filter ALL backend placeholder items – never show on the frontend
+  if (!item.headline) return false;
+  var hl = item.headline.trim().toLowerCase();
+  if (hl.startsWith('content updating') || hl === 'placeholder' || hl === 'loading...') return false;
+  var age = Date.now() - new Date(item.publishedAt).getTime();
+  return age < 48 * 60 * 60 * 1000; // 48 hours
+}
+
+/* ═══════════════════════════════════════════════════
+   STORY CACHE — avoids embedding JSON in onclick attrs
+   (inline JSON breaks on any headline containing quotes)
+═══════════════════════════════════════════════════ */
+window._SC = [];  // [{item, meta}, …]
+
+function _cacheStory(item, meta) {
+  var idx = window._SC.length;
+  window._SC.push({ item: item, meta: meta });
+  return idx;
+}
+
+function openStoryIdx(idx) {
+  var d = window._SC[idx];
+  if (d) openStory(d.item, d.meta);
+}
+
+/* ═══════════════════════════════════════════════════
+   RENDER: SECTION
+═══════════════════════════════════════════════════ */
+function renderSection(sectionId, sectionData, meta) {
+  var items = (sectionData && sectionData.items) ? sectionData.items.filter(isItemValid) : [];
+  var heroImage = (sectionData && sectionData.image) ? sectionData.image : meta.image;
+
+  var section = document.createElement('div');
+  section.className = 'news-section ' + meta.cssClass;
+  section.id = sectionId;
+
+  // Section header
+  var count = items.length;
+  section.innerHTML = '<div class="news-section-header">'
+    + '<span class="news-section-icon">' + meta.icon + '</span>'
+    + '<span class="news-section-name">' + meta.label + '</span>'
+    + '<span class="news-section-badge">' + count + ' stories</span>'
+    + '<button class="news-section-toggle" onclick="toggleNewsSection(this)" aria-expanded="true" aria-label="Toggle section"><svg viewBox="0 0 24 24"><path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14l-6-6z"/></svg></button>'
+    + '</div>';
+
+  var contentHtml = '';
+  if (items.length === 0) {
+    contentHtml += '<div class="news-placeholder">'
+      + '<div class="news-placeholder-icon">' + meta.icon + '</div>'
+      + '<div class="news-placeholder-text">Stories will be available shortly.</div>'
+      + '<div class="news-placeholder-sub">Our editors refresh this section regularly — check back soon.</div>'
+      + '</div>';
+  } else {
+    // Hero card — first item (uses cache index, no JSON in onclick)
+    var hero = items[0];
+    var heroIdx = _cacheStory(hero, meta);
+    var heroHtml = '<div class="news-hero-card" onclick="openStoryIdx(' + heroIdx + ')" role="button" tabindex="0" aria-label="' + esc(hero.headline) + '">'
+      + '<img class="news-hero-img" src="' + escAttr(heroImage) + '" alt="" loading="lazy"'
+      + ' data-fallback="' + escAttr(meta.image) + '"'
+      + ' onerror="if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}else{this.style.display=\'none\';}">'
+      + '<div class="news-hero-gradient"></div>'
+      + '<div class="news-hero-body">'
+      + '<div class="news-hero-headline">' + esc(hero.headline) + '</div>'
+      + '<div class="news-hero-meta">'
+      + '<span class="news-hero-time">' + timeAgo(hero.publishedAt) + '</span>'
+      + '<span class="news-hero-read">Read full story</span>'
+      + '</div>'
+      + '</div>'
+      + '</div>';
+    contentHtml += heroHtml;
+
+    // Grid cards — remaining items
+    var gridItems = items.slice(1);
+    if (gridItems.length > 0) {
+      var gridHtml = '<div class="news-cards-grid">';
+      gridItems.forEach(function(item) {
+        var cardIdx = _cacheStory(item, meta);
+        gridHtml += '<div class="news-card" onclick="openStoryIdx(' + cardIdx + ')" role="button" tabindex="0" aria-label="' + esc(item.headline) + '">'
+          + '<div class="news-card-headline">' + esc(item.headline) + '</div>'
+          + '<div class="news-card-teaser">' + esc(item.teaser || '') + '</div>'
+          + '<div class="news-card-footer">'
+          + '<span class="news-card-time">' + timeAgo(item.publishedAt) + '</span>'
+          + '<span class="news-card-read">Read →</span>'
+          + '</div>'
+          + '</div>';
+      });
+      gridHtml += '</div>';
+      contentHtml += gridHtml;
+    }
+  }
+
+  section.innerHTML += '<div class="news-section-content">' + contentHtml + '</div>';
+
+  return section;
+}
+
+/* ═══════════════════════════════════════════════════
+   MODAL: OPEN EXTERNAL LINK — hybrid mobile/desktop
+   Mobile (≤768px): new tab; Desktop: centred popup
+═══════════════════════════════════════════════════ */
+function openSourceLink(btn) {
+  var href = btn && btn.getAttribute ? btn.getAttribute('data-href') : null;
+  if (!href) return;
+  if (window.innerWidth <= 768) {
+    // Mobile — standard new tab, strip opener for security
+    var w = window.open(href, '_blank');
+    if (w) { try { w.opener = null; } catch(_) {} }
+  } else {
+    // Desktop — centred popup
+    var W = 600, H = 700;
+    var left = Math.max(0, Math.round(((window.screen.availWidth  || screen.width)  - W) / 2));
+    var top  = Math.max(0, Math.round(((window.screen.availHeight || screen.height) - H) / 2));
+    window.open(
+      href, '_blank',
+      'width=' + W + ',height=' + H +
+      ',left=' + left + ',top=' + top +
+      ',toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes'
+    );
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   MODAL: OPEN STORY
+═══════════════════════════════════════════════════ */
+function openStory(item, meta) {
+  var overlay = document.getElementById('story-modal-overlay');
+  var body = document.getElementById('story-modal-body');
+  var pill = document.getElementById('story-section-pill');
+
+  // Set section pill
+  pill.textContent = (meta.icon || '') + ' ' + (meta.label || 'Story');
+  pill.style.background = meta.accent || '#3b82f6';
+
+  // Build story content
+  var storyHtml = '<h2 class="story-modal-headline" id="story-modal-headline">' + esc(item.headline) + '</h2>';
+
+  var badgeLabel = item.aiGenerated === false
+    ? 'Source report'
+    : 'AI-written article';
+  storyHtml += '<div class="story-modal-meta">'
+    + '<span>' + formatDate(item.publishedAt) + '</span>'
+    + '<span class="story-modal-meta-sep">·</span>'
+    + '<span class="story-modal-ai-badge">' + badgeLabel + '</span>'
+    + '</div>';
+
+  // Story body — item.story is already HTML (may contain classed <p> tags)
+  var storyContent = item.story || item.teaser || '';
+  // Only wrap as plain text if there are NO HTML tags at all in the content
+  if (storyContent && !/<[a-zA-Z]/.test(storyContent)) {
+    storyContent = storyContent.split('\n').filter(function(l){ return l.trim(); })
+      .map(function(l){ return '<p>' + esc(l) + '</p>'; }).join('');
+  }
+  storyHtml += '<div class="story-body">' + (storyContent || '<p>Full story unavailable.</p>') + '</div>';
+
+  // Disclaimer
+  var disclaimerText = item.aiGenerated === false
+    ? 'Source report. Headlines and summaries are directly from the original news source.'
+    : 'AI-written news article. Facts cross-checked across multiple public sources. Content is independently composed — not verbatim reproduction of original reporting.';
+  storyHtml += '<div class="story-modal-disclaimer">' + disclaimerText + '</div>';
+
+  // Source link — hybrid: mobile=new tab, desktop=centered popup
+  if (item.sourceUrl) {
+    storyHtml += '<button class="story-modal-source-link" data-href="' + escAttr(item.sourceUrl) + '" onclick="openSourceLink(this)">'
+      + 'Read Full Story ↗'
+      + '</button>';
+  }
+
+  // Share buttons
+  var shareText = encodeURIComponent(item.headline || 'Read this story on VilfinTV News');
+  var shareUrl = encodeURIComponent('https://vilfintv.com/news.html');
+  storyHtml += '<div class="story-modal-share">'
+    + '<span class="story-modal-share-label">Share:</span>'
+    + '<a class="share-btn-sm share-wa" href="https://api.whatsapp.com/send?text=' + shareText + '%20' + shareUrl + '" target="_blank" rel="noopener">WhatsApp</a>'
+    + '<a class="share-btn-sm share-tw" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank" rel="noopener">X (Twitter)</a>'
+    + '</div>';
+
+  body.innerHTML = storyHtml;
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+/* ═══════════════════════════════════════════════════
+   MODAL: CLOSE STORY
+═══════════════════════════════════════════════════ */
+function closeStory() {
+  document.getElementById('story-modal-overlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('story-modal-overlay')) {
+    closeStory();
+  }
+}
+
+// Keyboard: Escape closes story or clears search; '/' and Ctrl+K focus search
+document.addEventListener('keydown', function(e) {
+  var searchInput = document.getElementById('news-search-input');
+  if (e.key === 'Escape') {
+    if (document.getElementById('story-modal-overlay').classList.contains('active')) {
+      closeStory(); return;
+    }
+    if (searchInput && searchInput.value) { clearSearch(); return; }
+  }
+  // '/' or Ctrl+K → focus search
+  if ((e.key === '/' || (e.ctrlKey && e.key === 'k')) && document.activeElement !== searchInput) {
+    e.preventDefault();
+    if (searchInput) { searchInput.focus(); searchInput.select(); }
+  }
+});
+
+/* ═══════════════════════════════════════════════════
+   SEARCH — real-time filter across all sections
+═══════════════════════════════════════════════════ */
+(function() {
+  var searchInput  = document.getElementById('news-search-input');
+  var searchClear  = document.getElementById('news-search-clear');
+  var resultsBar   = document.getElementById('search-results-bar');
+  var resultsText  = document.getElementById('search-results-text');
+
+  function doSearch(q) {
+    q = (q || '').trim().toLowerCase();
+    var sections = document.querySelectorAll('.news-section');
+
+    if (!q) {
+      // ── Clear state ──────────────────────────────────
+      document.documentElement.classList.remove('search-active');
+      sections.forEach(function(sec) {
+        sec.classList.remove('has-match');
+        sec.querySelectorAll('.news-hero-card,.news-card').forEach(function(c) {
+          c.style.display = '';
+        });
+      });
+      resultsBar.style.display = 'none';
+      searchClear.style.display = 'none';
+      return;
+    }
+
+    // ── Active search ────────────────────────────────
+    searchClear.style.display = '';
+    document.documentElement.classList.add('search-active');
+
+    var totalFound = 0;
+    sections.forEach(function(sec) {
+      var cards = sec.querySelectorAll('.news-hero-card,.news-card');
+      var matched = 0;
+      cards.forEach(function(card) {
+        // Match against aria-label (headline) + visible text (teaser)
+        var haystack = (card.getAttribute('aria-label') || '').toLowerCase()
+          + ' ' + (card.innerText || '').toLowerCase();
+        if (haystack.includes(q)) {
+          card.style.display = '';
+          matched++;
+          totalFound++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+      if (matched > 0) {
+        sec.classList.add('has-match');
+      } else {
+        sec.classList.remove('has-match');
+      }
+    });
+
+    // ── Results banner ───────────────────────────────
+    resultsBar.style.display = 'flex';
+    if (totalFound === 0) {
+      resultsText.innerHTML = 'No stories found for <strong>&ldquo;' + esc(q) + '&rdquo;</strong>';
+    } else {
+      resultsText.innerHTML = '<span class="search-results-count">' + totalFound + '</span>&nbsp;'
+        + (totalFound === 1 ? 'story' : 'stories') + ' matched &ldquo;<strong>' + esc(q) + '</strong>&rdquo;';
+    }
+  }
+
+  // Expose clearSearch globally (used by button onclick and Escape handler)
+  window.clearSearch = function() {
+    searchInput.value = '';
+    doSearch('');
+    searchInput.focus();
+  };
+
+  // Live filter on every keystroke
+  searchInput.addEventListener('input', function() { doSearch(this.value); });
+
+  // Also trigger on Enter
+  searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { doSearch(this.value); e.preventDefault(); }
+  });
+})();
+
+/* ═══════════════════════════════════════════════════
+   FORMAT DATE
+═══════════════════════════════════════════════════ */
+function formatDate(isoStr) {
+  if (!isoStr) return '—';
+  try {
+    var d = new Date(isoStr);
+    return d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  } catch(e) { return '—'; }
+}
+
+/* ═══════════════════════════════════════════════════
+   ESCAPE HELPERS
+═══════════════════════════════════════════════════ */
+function esc(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+function escAttr(str) {
+  if (!str) return '';
+  return String(str).replace(/"/g,'&quot;');
+}
+
+/* ═══════════════════════════════════════════════════
+   MARKET INTELLIGENCE WIDGETS — injected below Stock News
+═══════════════════════════════════════════════════ */
+var _NMW_CONFIGS = {
+  topstories: {
+    label:'📰 Top Stories',
+    src:'https://s3.tradingview.com/external-embedding/embed-widget-timeline.js',
+    cfg:{ feedMode:'all_symbols', isTransparent:false, displayMode:'regular',
+          width:'100%', height:'100%', colorTheme:'dark', locale:'en' }
+  },
+  heatmap: {
+    label:'🔥 Stock Heatmap',
+    src:'https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js',
+    cfg:{ exchanges:[], dataSource:'SPX500', grouping:'sector',
+          blockSize:'market_cap_basic', blockColor:'change', locale:'en',
+          colorTheme:'dark', hasTopBar:true, isDataSetEnabled:true,
+          isZoomEnabled:true, hasSymbolTooltip:true, isMonoSize:false,
+          width:'100%', height:'100%' }
+  },
+  etf: {
+    label:'📊 ETF Heatmap',
+    src:'https://s3.tradingview.com/external-embedding/embed-widget-etf-heatmap.js',
+    cfg:{ dataSource:'AllUSEtf', blockSize:'aum', blockColor:'change',
+          grouping:'asset_class', locale:'en', colorTheme:'dark',
+          hasTopBar:true, isDataSetEnabled:true, isZoomEnabled:true,
+          hasSymbolTooltip:true, isMonoSize:false, width:'100%', height:'100%' }
+  },
+  crypto: {
+    label:'🪙 Crypto Heatmap',
+    src:'https://s3.tradingview.com/external-embedding/embed-widget-crypto-coins-heatmap.js',
+    cfg:{ dataSource:'Crypto', blockSize:'market_cap_calc', blockColor:'change',
+          locale:'en', colorTheme:'dark', hasTopBar:true, isDataSetEnabled:true,
+          isZoomEnabled:true, hasSymbolTooltip:true, isMonoSize:false,
+          width:'100%', height:'100%' }
+  },
+  fxrates: {
+    label:'💱 Forex Rates',
+    src:'https://s3.tradingview.com/external-embedding/embed-widget-forex-cross-rates.js',
+    cfg:{ width:'100%', height:'100%', isTransparent:false, colorTheme:'dark',
+          locale:'en', backgroundColor:'#060f1c',
+          currencies:['EUR','USD','JPY','GBP','CHF','AUD','CAD','NZD','CNY','INR'] }
+  },
+  fxheat: {
+    label:'🌡 Forex Heatmap',
+    src:'https://s3.tradingview.com/external-embedding/embed-widget-forex-heat-map.js',
+    cfg:{ width:'100%', height:'100%', isTransparent:false, colorTheme:'dark',
+          locale:'en', backgroundColor:'#060f1c',
+          currencies:['EUR','USD','JPY','GBP','CHF','AUD','CAD','NZD','CNY','INR'] }
+  },
+  calendar: {
+    label:'📅 Economic Calendar',
+    src:'https://s3.tradingview.com/external-embedding/embed-widget-events.js',
+    cfg:{ width:'100%', height:'100%', colorTheme:'dark', isTransparent:false,
+          locale:'en', importanceFilter:'-1,0,1',
+          countryFilter:'ar,au,br,ca,cn,de,fr,gb,id,in,jp,kr,mx,ru,sa,tr,us,za' }
+  },
+  screener: {
+    label:'🔍 Stock Screener',
+    _custom: true
+  },
+  globalmarkets: {
+    label:'🌍 Global Markets',
+    src:'https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js',
+    cfg:{
+      colorTheme:'dark', dateRange:'1D', showChart:true, locale:'en',
+      width:'100%', height:'100%', isTransparent:false,
+      showSymbolLogo:true, showFloatingTooltip:false,
+      plotLineColorGrowing:'rgba(41,98,255,1)', plotLineColorFalling:'rgba(41,98,255,1)',
+      gridLineColor:'rgba(42,46,57,0)', scaleFontColor:'rgba(209,212,220,1)',
+      belowLineFillColorGrowing:'rgba(41,98,255,.12)', belowLineFillColorFalling:'rgba(41,98,255,.12)',
+      belowLineFillColorGrowingBottom:'rgba(41,98,255,0)', belowLineFillColorFallingBottom:'rgba(41,98,255,0)',
+      symbolActiveColor:'rgba(41,98,255,.12)',
+      tabs:[
+        { title:'Indices', symbols:[
+          {s:'BSE:SENSEX',d:'SENSEX'},{s:'TVC:NIFTY',d:'NIFTY 50'},
+          {s:'BSE:BANK',d:'Bank Nifty'},
+          {s:'CAPITALCOM:US100',d:'Nasdaq 100'},{s:'OANDA:SPX500USD',d:'S&P 500'},
+          {s:'OANDA:US30USD',d:'Dow Jones'},{s:'INDEX:NKY',d:'Nikkei 225'},
+          {s:'HSI:HSI',d:'Hang Seng'},{s:'XETR:DAX',d:'DAX'},
+          {s:'OANDA:UK100GBP',d:'FTSE 100'}
+        ]},
+        { title:'Global Stocks', symbols:[
+          {s:'NASDAQ:AAPL',d:'Apple'},{s:'NASDAQ:MSFT',d:'Microsoft'},
+          {s:'NASDAQ:NVDA',d:'NVIDIA'},{s:'NASDAQ:TSLA',d:'Tesla'},
+          {s:'BSE:RELIANCE',d:'Reliance'},{s:'BSE:TCS',d:'TCS'},
+          {s:'BSE:HDFCBANK',d:'HDFC Bank'},{s:'BSE:INFY',d:'Infosys'}
+        ]},
+        { title:'Commodities', symbols:[
+          {s:'TVC:GOLD',d:'Gold'},{s:'TVC:SILVER',d:'Silver'},
+          {s:'NYMEX:CL1!',d:'Crude Oil WTI'},{s:'TVC:UKOIL',d:'Brent Oil'},
+          {s:'CAPITALCOM:COPPER',d:'Copper'},{s:'CAPITALCOM:NATURALGAS',d:'Natural Gas'}
+        ]},
+        { title:'Bonds', symbols:[
+          {s:'US10Y',d:'US 10Y'},{s:'IN10Y',d:'India 10Y'},
+          {s:'US02Y',d:'US 2Y'},{s:'DE10Y',d:'Germany 10Y'}
+        ]},
+        { title:'Forex', symbols:[
+          {s:'FX:USDINR',d:'USD/INR'},{s:'FX:EURUSD',d:'EUR/USD'},
+          {s:'FX:GBPUSD',d:'GBP/USD'},{s:'FX:USDJPY',d:'USD/JPY'},
+          {s:'FX:AUDUSD',d:'AUD/USD'}
+        ]}
+      ]
+    }
+  },
+  marketquotes: {
+    label:'📋 Market Quotes',
+    _custom: true
+  }
+};
+
+/* ═══════════════════════════════════════════════════
+   GLOBAL MARKETS — custom injection + symbol editor
+═══════════════════════════════════════════════════ */
+var _NMW_GM_LS = 'nmw_globalmarkets_tabs';
+var _NMW_GM_DEFAULT_TABS = [
+  { title:'Indices', symbols:[
+    {s:'BSE:SENSEX',d:'SENSEX'},{s:'TVC:NIFTY',d:'NIFTY 50'},
+    {s:'BSE:BANK',d:'Bank Nifty'},
+    {s:'CAPITALCOM:US100',d:'Nasdaq 100'},{s:'OANDA:SPX500USD',d:'S&P 500'},
+    {s:'OANDA:US30USD',d:'Dow Jones'},{s:'INDEX:NKY',d:'Nikkei 225'},
+    {s:'HSI:HSI',d:'Hang Seng'},{s:'XETR:DAX',d:'DAX'},
+    {s:'OANDA:UK100GBP',d:'FTSE 100'}
+  ]},
+  { title:'Global Stocks', symbols:[
+    {s:'NASDAQ:AAPL',d:'Apple'},{s:'NASDAQ:MSFT',d:'Microsoft'},
+    {s:'NASDAQ:NVDA',d:'NVIDIA'},{s:'NASDAQ:TSLA',d:'Tesla'},
+    {s:'BSE:RELIANCE',d:'Reliance'},{s:'BSE:TCS',d:'TCS'},
+    {s:'BSE:HDFCBANK',d:'HDFC Bank'},{s:'BSE:INFY',d:'Infosys'},
+    {s:'TSE:7203',d:'Toyota'},{s:'TSE:6758',d:'Sony'}
+  ]},
+  { title:'Commodities', symbols:[
+    {s:'TVC:GOLD',d:'Gold'},{s:'TVC:SILVER',d:'Silver'},
+    {s:'NYMEX:CL1!',d:'Crude Oil WTI'},{s:'TVC:UKOIL',d:'Brent Oil'},
+    {s:'CAPITALCOM:COPPER',d:'Copper'},{s:'CAPITALCOM:NATURALGAS',d:'Natural Gas'},
+    {s:'CAPITALCOM:ALUMINUM',d:'Aluminium'}
+  ]},
+  { title:'Bonds', symbols:[
+    {s:'US10Y',d:'US 10Y'},{s:'IN10Y',d:'India 10Y'},
+    {s:'US02Y',d:'US 2Y'},{s:'DE10Y',d:'Germany 10Y'}
+  ]},
+  { title:'Forex', symbols:[
+    {s:'FX:USDINR',d:'USD/INR'},{s:'FX:EURUSD',d:'EUR/USD'},
+    {s:'FX:GBPUSD',d:'GBP/USD'},{s:'FX:USDJPY',d:'USD/JPY'},
+    {s:'FX:AUDUSD',d:'AUD/USD'}
+  ]}
+];
+var _nmwGMEditState = { tabs: null, activeTabIdx: 0 };
+
+function _nmwGMGetTabs() {
+  try {
+    var s = localStorage.getItem(_NMW_GM_LS);
+    if (s) { var t = JSON.parse(s); if (Array.isArray(t) && t.length) return t; }
+  } catch(_) {}
+  return JSON.parse(JSON.stringify(_NMW_GM_DEFAULT_TABS));
+}
+
+function _nmwInjectGMWidget(container, tabs) {
+  container.innerHTML = '';
+  var cfg = {
+    colorTheme:'dark', dateRange:'1D', showChart:true, locale:'en',
+    width:'100%', height:'100%', isTransparent:false,
+    showSymbolLogo:true, showFloatingTooltip:false,
+    plotLineColorGrowing:'rgba(41,98,255,1)', plotLineColorFalling:'rgba(41,98,255,1)',
+    gridLineColor:'rgba(42,46,57,0)', scaleFontColor:'rgba(209,212,220,1)',
+    belowLineFillColorGrowing:'rgba(41,98,255,.12)', belowLineFillColorFalling:'rgba(41,98,255,.12)',
+    belowLineFillColorGrowingBottom:'rgba(41,98,255,0)', belowLineFillColorFallingBottom:'rgba(41,98,255,0)',
+    symbolActiveColor:'rgba(41,98,255,.12)',
+    tabs: tabs
+  };
+  var tv = document.createElement('div');
+  tv.className = 'tradingview-widget-container';
+  tv.style.cssText = 'height:100%;width:100%;max-width:860px;margin:0 auto;display:flex;flex-direction:column';
+  var wdg = document.createElement('div');
+  wdg.className = 'tradingview-widget-container__widget';
+  wdg.style.cssText = 'flex:1;min-height:0;width:100%';
+  tv.appendChild(wdg);
+  var cr = document.createElement('div');
+  cr.className = 'tradingview-widget-copyright';
+  cr.style.cssText = 'flex-shrink:0;padding:3px 6px;text-align:center;background:#030810';
+  cr.innerHTML = '<a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank" style="color:#334155;font-size:9px;text-decoration:none">Track all markets on TradingView</a>';
+  tv.appendChild(cr);
+  container.appendChild(tv);
+  var sc = document.createElement('script');
+  sc.type = 'text/javascript';
+  sc.src = 'https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js';
+  sc.async = true;
+  sc.textContent = JSON.stringify(cfg);
+  tv.appendChild(sc);
+}
+
+function _nmwInjectGlobalMarkets(wrapId) {
+  var wrap = document.getElementById(wrapId);
+  if (!wrap || wrap.dataset.nmwLoaded) return;
+  wrap.dataset.nmwLoaded = '1';
+  // NOTE: do NOT override position — the CSS .nmw-wrap has position:absolute;inset:0
+  // which gives correct dimensions. We only need flex-direction:column (already in CSS).
+
+  // TV widget container (fills remaining space, flex:1 within the absolute wrap)
+  var tvWrap = document.createElement('div');
+  tvWrap.id = 'nmw-gm-tv';
+  tvWrap.style.cssText = 'position:absolute;inset:0;overflow:hidden;display:flex;flex-direction:column';
+  wrap.appendChild(tvWrap);
+
+  // Edit button (top-right overlay, z-index above TV widget)
+  var editBtn = document.createElement('button');
+  editBtn.className = 'nmw-gm-edit-btn';
+  editBtn.innerHTML = '⚙️ Edit Symbols';
+  editBtn.title = 'Customise tracked symbols';
+  editBtn.onclick = function() { _nmwOpenGMEditor(); };
+  wrap.appendChild(editBtn);
+
+  _nmwInjectGMWidget(tvWrap, _nmwGMGetTabs());
+}
+
+/* ── Global Markets Editor ── */
+function _nmwGMEditorHTML() {
+  var tabs = _nmwGMEditState.tabs;
+  var ai   = _nmwGMEditState.activeTabIdx;
+  var tabBtns = tabs.map(function(t, i) {
+    return '<button class="nmw-gm-etab' + (i === ai ? ' active' : '') + '" onclick="_nmwGMSetTab(' + i + ')">' + t.title + '</button>';
+  }).join('');
+  var symbols = (tabs[ai] && tabs[ai].symbols) ? tabs[ai].symbols : [];
+  var symRows = symbols.length ? symbols.map(function(sym, si) {
+    return '<div class="nmw-gm-sym-row">'
+      + '<span class="nmw-gm-sym-name">' + sym.s + '</span>'
+      + '<span class="nmw-gm-sym-label">' + sym.d + '</span>'
+      + '<button class="nmw-gm-sym-del" onclick="_nmwGMDel(' + si + ')" title="Remove">✕</button>'
+      + '</div>';
+  }).join('')
+  : '<div style="color:var(--text3);font-size:12px;padding:8px 4px">No symbols — add one below.</div>';
+
+  return '<div class="nmw-gm-editor-hd">'
+    + '<span style="font-weight:700;font-size:13px;color:var(--text)">Edit Symbols</span>'
+    + '<button onclick="var e=document.getElementById(\'nmw-gm-editor\');if(e)e.remove();" '
+    + 'style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;line-height:1;font-family:inherit">✕</button>'
+    + '</div>'
+    + '<div class="nmw-gm-etabs">' + tabBtns + '</div>'
+    + '<div class="nmw-gm-sym-list">' + symRows + '</div>'
+    + '<div class="nmw-gm-add-row">'
+    + '<input class="nmw-gm-inp" id="nmw-gm-inp-sym" placeholder="TV Symbol (e.g. NSE:NIFTY50)" />'
+    + '<input class="nmw-gm-inp" id="nmw-gm-inp-lbl" placeholder="Label (e.g. Nifty 50)" />'
+    + '<button class="nmw-gm-add-btn" onclick="_nmwGMAdd()">+ Add Symbol</button>'
+    + '</div>'
+    + '<div class="nmw-gm-editor-ft">'
+    + '<button class="nmw-gm-reset-btn" onclick="_nmwGMReset()">Reset Defaults</button>'
+    + '<button class="nmw-gm-apply-btn" onclick="_nmwGMApply()">✓ Apply & Save</button>'
+    + '</div>';
+}
+
+function _nmwOpenGMEditor() {
+  var existing = document.getElementById('nmw-gm-editor');
+  if (existing) { existing.remove(); return; } // toggle off
+  _nmwGMEditState.tabs = JSON.parse(JSON.stringify(_nmwGMGetTabs()));
+  _nmwGMEditState.activeTabIdx = 0;
+  var ed = document.createElement('div');
+  ed.id = 'nmw-gm-editor';
+  ed.className = 'nmw-gm-editor';
+  ed.innerHTML = _nmwGMEditorHTML();
+  var wrap = document.getElementById('nmw-wrap-globalmarkets');
+  if (wrap) wrap.appendChild(ed);
+}
+
+function _nmwGMSetTab(idx) {
+  _nmwGMEditState.activeTabIdx = idx;
+  var ed = document.getElementById('nmw-gm-editor');
+  if (ed) ed.innerHTML = _nmwGMEditorHTML();
+}
+
+function _nmwGMDel(si) {
+  var ai = _nmwGMEditState.activeTabIdx;
+  _nmwGMEditState.tabs[ai].symbols.splice(si, 1);
+  _nmwGMSetTab(ai);
+}
+
+function _nmwGMAdd() {
+  var symEl = document.getElementById('nmw-gm-inp-sym');
+  var lblEl = document.getElementById('nmw-gm-inp-lbl');
+  var sym = symEl ? symEl.value.trim().toUpperCase() : '';
+  var lbl = lblEl ? lblEl.value.trim() : '';
+  if (!sym) {
+    if (symEl) { symEl.style.borderColor = '#ef4444'; setTimeout(function(){ symEl.style.borderColor = ''; }, 1500); }
+    return;
+  }
+  if (!lbl) lbl = sym.indexOf(':') >= 0 ? sym.split(':')[1] : sym;
+  var ai = _nmwGMEditState.activeTabIdx;
+  _nmwGMEditState.tabs[ai].symbols.push({ s: sym, d: lbl });
+  if (symEl) symEl.value = '';
+  if (lblEl) lblEl.value = '';
+  _nmwGMSetTab(ai);
+}
+
+function _nmwGMReset() {
+  if (!confirm('Reset Global Markets to default symbols?')) return;
+  _nmwGMEditState.tabs = JSON.parse(JSON.stringify(_NMW_GM_DEFAULT_TABS));
+  _nmwGMSetTab(0);
+}
+
+function _nmwGMApply() {
+  try { localStorage.setItem(_NMW_GM_LS, JSON.stringify(_nmwGMEditState.tabs)); } catch(_) {}
+  var ed = document.getElementById('nmw-gm-editor');
+  if (ed) ed.remove();
+  // Re-inject widget with updated symbols
+  var tvWrap = document.getElementById('nmw-gm-tv');
+  if (tvWrap) _nmwInjectGMWidget(tvWrap, _nmwGMGetTabs());
+}
+
+/* ═══════════════════════════════════════════════════
+   MARKET QUOTES — custom injection + symbol editor
+═══════════════════════════════════════════════════ */
+var _NMW_MQ_LS = 'nmw_mq_groups';
+var _NMW_MQ_DEFAULT_GROUPS = [
+  { name:'Indices', originalName:'Indices', symbols:[
+    {name:'BSE:SENSEX',       displayName:'SENSEX'},
+    {name:'TVC:NIFTY',        displayName:'NIFTY 50'},
+    {name:'BSE:BANK',         displayName:'Bank Nifty'},
+    {name:'OANDA:SPX500USD',  displayName:'S&P 500'},
+    {name:'CAPITALCOM:US100', displayName:'Nasdaq 100'},
+    {name:'OANDA:US30USD',    displayName:'Dow Jones'},
+    {name:'INDEX:NKY',        displayName:'Nikkei 225'},
+    {name:'HSI:HSI',          displayName:'Hang Seng'},
+    {name:'XETR:DAX',         displayName:'DAX'},
+    {name:'OANDA:UK100GBP',   displayName:'FTSE 100'}
+  ]},
+  { name:'Commodities', originalName:'Commodities', symbols:[
+    {name:'TVC:GOLD',              displayName:'Gold'},
+    {name:'TVC:SILVER',            displayName:'Silver'},
+    {name:'NYMEX:CL1!',            displayName:'Crude Oil WTI'},
+    {name:'TVC:UKOIL',             displayName:'Brent Oil'},
+    {name:'CAPITALCOM:COPPER',     displayName:'Copper'},
+    {name:'CAPITALCOM:NATURALGAS', displayName:'Natural Gas'}
+  ]},
+  { name:'Forex', originalName:'Forex', symbols:[
+    {name:'FX:USDINR', displayName:'USD/INR'},
+    {name:'FX:EURUSD', displayName:'EUR/USD'},
+    {name:'FX:GBPUSD', displayName:'GBP/USD'},
+    {name:'FX:USDJPY', displayName:'USD/JPY'},
+    {name:'FX:AUDUSD', displayName:'AUD/USD'},
+    {name:'FX:USDCNY', displayName:'USD/CNY'}
+  ]},
+  { name:'Global Stocks', originalName:'Global Stocks', symbols:[
+    {name:'NASDAQ:AAPL',  displayName:'Apple'},
+    {name:'NASDAQ:MSFT',  displayName:'Microsoft'},
+    {name:'NASDAQ:NVDA',  displayName:'NVIDIA'},
+    {name:'NASDAQ:TSLA',  displayName:'Tesla'},
+    {name:'BSE:RELIANCE', displayName:'Reliance'},
+    {name:'BSE:TCS',      displayName:'TCS'},
+    {name:'BSE:HDFCBANK', displayName:'HDFC Bank'},
+    {name:'BSE:INFY',     displayName:'Infosys'}
+  ]}
+];
+var _nmwMQEditState = { groups: null, activeGroupIdx: 0 };
+
+function _nmwMQGetGroups() {
+  try {
+    var s = localStorage.getItem(_NMW_MQ_LS);
+    if (s) { var g = JSON.parse(s); if (Array.isArray(g) && g.length) return g; }
+  } catch(_) {}
+  return JSON.parse(JSON.stringify(_NMW_MQ_DEFAULT_GROUPS));
+}
+
+function _nmwInjectMQWidget(container, groups) {
+  container.innerHTML = '';
+  var cfg = {
+    width:'100%', height:'100%', colorTheme:'dark', isTransparent:false,
+    locale:'en', showSymbolLogo:true,
+    symbolsGroups: groups
+  };
+  var tv = document.createElement('div');
+  tv.className = 'tradingview-widget-container';
+  tv.style.cssText = 'height:100%;width:100%;max-width:880px;margin:0 auto;display:flex;flex-direction:column';
+  var wdg = document.createElement('div');
+  wdg.className = 'tradingview-widget-container__widget';
+  wdg.style.cssText = 'flex:1;min-height:0;width:100%';
+  tv.appendChild(wdg);
+  var cr = document.createElement('div');
+  cr.className = 'tradingview-widget-copyright';
+  cr.style.cssText = 'flex-shrink:0;padding:3px 6px;text-align:center;background:#030810';
+  cr.innerHTML = '<a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank" style="color:#334155;font-size:9px;text-decoration:none">Track all markets on TradingView</a>';
+  tv.appendChild(cr);
+  container.appendChild(tv);
+  var sc = document.createElement('script');
+  sc.type = 'text/javascript';
+  sc.src = 'https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js';
+  sc.async = true;
+  sc.textContent = JSON.stringify(cfg);
+  tv.appendChild(sc);
+}
+
+function _nmwInjectMarketQuotes(wrapId) {
+  var wrap = document.getElementById(wrapId);
+  if (!wrap || wrap.dataset.nmwLoaded) return;
+  wrap.dataset.nmwLoaded = '1';
+  var tvWrap = document.createElement('div');
+  tvWrap.id = 'nmw-mq-tv';
+  tvWrap.style.cssText = 'position:absolute;inset:0;overflow:hidden;display:flex;flex-direction:column';
+  wrap.appendChild(tvWrap);
+  var editBtn = document.createElement('button');
+  editBtn.className = 'nmw-gm-edit-btn';
+  editBtn.innerHTML = '⚙️ Edit Markets';
+  editBtn.title = 'Customise tracked markets & symbols';
+  editBtn.onclick = function() { _nmwOpenMQEditor(); };
+  wrap.appendChild(editBtn);
+  _nmwInjectMQWidget(tvWrap, _nmwMQGetGroups());
+}
+
+function _nmwMQEditorHTML() {
+  var groups = _nmwMQEditState.groups;
+  var ai = _nmwMQEditState.activeGroupIdx;
+  var grpBtns = groups.map(function(g, i) {
+    return '<button class="nmw-gm-etab' + (i === ai ? ' active' : '') + '" onclick="_nmwMQSetGroup(' + i + ')">' + _escAttr(g.name) + '</button>';
+  }).join('');
+  var symbols = (groups[ai] && groups[ai].symbols) ? groups[ai].symbols : [];
+  var symRows = symbols.length ? symbols.map(function(sym, si) {
+    return '<div class="nmw-gm-sym-row">'
+      + '<span class="nmw-gm-sym-name">' + _escAttr(sym.name) + '</span>'
+      + '<span class="nmw-gm-sym-label">' + _escAttr(sym.displayName) + '</span>'
+      + '<button class="nmw-gm-sym-del" onclick="_nmwMQDel(' + si + ')" title="Remove">✕</button>'
+      + '</div>';
+  }).join('')
+  : '<div style="color:var(--text3);font-size:12px;padding:8px 4px">No symbols — add one below.</div>';
+  var grpName = groups[ai] ? _escAttr(groups[ai].name) : '';
+  var delGrpBtn = groups.length > 1
+    ? '<button class="nmw-gm-sym-del" onclick="_nmwMQDelGroup(' + ai + ')" title="Delete this group" style="font-size:11px;color:#ef4444">🗑 Del</button>'
+    : '';
+  return '<div class="nmw-gm-editor-hd">'
+    + '<span style="font-weight:700;font-size:13px;color:var(--text)">⚙️ Edit Markets</span>'
+    + '<button onclick="var e=document.getElementById(\'nmw-mq-editor\');if(e)e.remove();" '
+    + 'style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;line-height:1;font-family:inherit">✕</button>'
+    + '</div>'
+    + '<div class="nmw-gm-etabs" style="flex-wrap:wrap;row-gap:4px">'
+    + grpBtns
+    + '<button class="nmw-gm-etab" onclick="_nmwMQPromptGroup()" style="background:rgba(37,99,235,.12);border-color:var(--burn2);color:var(--burn3)">+ Group</button>'
+    + '</div>'
+    + '<div class="nmw-gm-sym-list">' + symRows + '</div>'
+    + '<div class="nmw-gm-add-row">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">'
+    + '<span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Add to: ' + grpName + '</span>'
+    + delGrpBtn
+    + '</div>'
+    + '<input class="nmw-gm-inp" id="nmw-mq-inp-sym" placeholder="TV Symbol (e.g. BSE:SENSEX)" />'
+    + '<input class="nmw-gm-inp" id="nmw-mq-inp-lbl" placeholder="Display Name (e.g. SENSEX)" />'
+    + '<button class="nmw-gm-add-btn" onclick="_nmwMQAdd()">+ Add Symbol</button>'
+    + '</div>'
+    + '<div class="nmw-gm-editor-ft">'
+    + '<button class="nmw-gm-reset-btn" onclick="_nmwMQReset()">Reset Defaults</button>'
+    + '<button class="nmw-gm-apply-btn" onclick="_nmwMQApply()">✓ Apply & Save</button>'
+    + '</div>';
+}
+
+function _escAttr(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function _nmwOpenMQEditor() {
+  var existing = document.getElementById('nmw-mq-editor');
+  if (existing) { existing.remove(); return; }
+  _nmwMQEditState.groups = JSON.parse(JSON.stringify(_nmwMQGetGroups()));
+  _nmwMQEditState.activeGroupIdx = 0;
+  var ed = document.createElement('div');
+  ed.id = 'nmw-mq-editor';
+  ed.className = 'nmw-gm-editor';
+  ed.innerHTML = _nmwMQEditorHTML();
+  var wrap = document.getElementById('nmw-wrap-marketquotes');
+  if (wrap) wrap.appendChild(ed);
+}
+
+function _nmwMQSetGroup(idx) {
+  _nmwMQEditState.activeGroupIdx = idx;
+  var ed = document.getElementById('nmw-mq-editor');
+  if (ed) ed.innerHTML = _nmwMQEditorHTML();
+}
+
+function _nmwMQDel(si) {
+  var ai = _nmwMQEditState.activeGroupIdx;
+  _nmwMQEditState.groups[ai].symbols.splice(si, 1);
+  _nmwMQSetGroup(ai);
+}
+
+function _nmwMQDelGroup(gi) {
+  if (_nmwMQEditState.groups.length <= 1) return;
+  if (!confirm('Remove group "' + _nmwMQEditState.groups[gi].name + '"?')) return;
+  _nmwMQEditState.groups.splice(gi, 1);
+  _nmwMQEditState.activeGroupIdx = Math.max(0, _nmwMQEditState.activeGroupIdx - 1);
+  var ed = document.getElementById('nmw-mq-editor');
+  if (ed) ed.innerHTML = _nmwMQEditorHTML();
+}
+
+function _nmwMQPromptGroup() {
+  var name = prompt('New group name:');
+  if (!name || !name.trim()) return;
+  _nmwMQEditState.groups.push({ name: name.trim(), originalName: name.trim(), symbols: [] });
+  _nmwMQEditState.activeGroupIdx = _nmwMQEditState.groups.length - 1;
+  var ed = document.getElementById('nmw-mq-editor');
+  if (ed) ed.innerHTML = _nmwMQEditorHTML();
+}
+
+function _nmwMQAdd() {
+  var symEl = document.getElementById('nmw-mq-inp-sym');
+  var lblEl = document.getElementById('nmw-mq-inp-lbl');
+  var sym = symEl ? symEl.value.trim().toUpperCase() : '';
+  var lbl = lblEl ? lblEl.value.trim() : '';
+  if (!sym) {
+    if (symEl) { symEl.style.borderColor = '#ef4444'; setTimeout(function(){ symEl.style.borderColor = ''; }, 1500); }
+    return;
+  }
+  if (!lbl) lbl = sym.indexOf(':') >= 0 ? sym.split(':')[1] : sym;
+  var ai = _nmwMQEditState.activeGroupIdx;
+  _nmwMQEditState.groups[ai].symbols.push({ name: sym, displayName: lbl });
+  if (symEl) symEl.value = '';
+  if (lblEl) lblEl.value = '';
+  _nmwMQSetGroup(ai);
+}
+
+function _nmwMQReset() {
+  if (!confirm('Reset Market Quotes to default symbols?')) return;
+  _nmwMQEditState.groups = JSON.parse(JSON.stringify(_NMW_MQ_DEFAULT_GROUPS));
+  _nmwMQEditState.activeGroupIdx = 0;
+  var ed = document.getElementById('nmw-mq-editor');
+  if (ed) ed.innerHTML = _nmwMQEditorHTML();
+}
+
+function _nmwMQApply() {
+  try { localStorage.setItem(_NMW_MQ_LS, JSON.stringify(_nmwMQEditState.groups)); } catch(_) {}
+  var ed = document.getElementById('nmw-mq-editor');
+  if (ed) ed.remove();
+  var tvWrap = document.getElementById('nmw-mq-tv');
+  if (tvWrap) _nmwInjectMQWidget(tvWrap, _nmwMQGetGroups());
+}
+
+function _nmwInject(wrapId, src, cfg) {
+  var wrap = document.getElementById(wrapId);
+  if (!wrap || wrap.dataset.nmwLoaded) return;
+  wrap.dataset.nmwLoaded = '1';
+  var tv = document.createElement('div');
+  tv.className = 'tradingview-widget-container';
+  tv.style.cssText = 'height:100%;width:100%;display:flex;flex-direction:column';
+  var wdg = document.createElement('div');
+  wdg.className = 'tradingview-widget-container__widget';
+  wdg.style.cssText = 'flex:1;min-height:0;width:100%';
+  tv.appendChild(wdg);
+  var cr = document.createElement('div');
+  cr.className = 'tradingview-widget-copyright';
+  cr.style.cssText = 'flex-shrink:0;padding:3px 6px;text-align:center;background:#030810';
+  cr.innerHTML = '<a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank" style="color:#334155;font-size:9px;text-decoration:none">Track all markets on TradingView</a>';
+  tv.appendChild(cr);
+  wrap.appendChild(tv);
+  var sc = document.createElement('script');
+  sc.type = 'text/javascript';
+  sc.src = src;
+  sc.async = true;
+  sc.textContent = JSON.stringify(cfg);
+  tv.appendChild(sc);
+}
+
+var _nmwCurrentKey = null;
+
+function nmwSwitch(key, btnEl) {
+  // Deactivate all tab buttons
+  var tabs = document.querySelectorAll('.nmw-tab');
+  tabs.forEach(function(b) { b.classList.remove('active'); });
+  if (btnEl) btnEl.classList.add('active');
+  // Hide/show wrap divs
+  Object.keys(_NMW_CONFIGS).forEach(function(k) {
+    var w = document.getElementById('nmw-wrap-' + k);
+    if (w) w.style.display = (k === key) ? 'flex' : 'none';
+  });
+  _nmwCurrentKey = key;
+  var c = _NMW_CONFIGS[key];
+  if (!c) return;
+  if (c._custom && key === 'screener') {
+    _nmwInjectScreener('nmw-wrap-screener');
+  } else if (key === 'globalmarkets') {
+    _nmwInjectGlobalMarkets('nmw-wrap-globalmarkets');
+  } else if (key === 'marketquotes') {
+    _nmwInjectMarketQuotes('nmw-wrap-marketquotes');
+  } else if (!c._custom) {
+    _nmwInject('nmw-wrap-' + key, c.src, c.cfg);
+  }
+}
+
+function buildMarketWidgetsBlock() {
+  var keys = Object.keys(_NMW_CONFIGS);
+  var block = document.createElement('div');
+  block.className = 'nmw-block';
+
+  // Header
+  block.innerHTML = '<div class="nmw-header">'
+    + '<span class="nmw-header-icon">📊</span>'
+    + '<span class="nmw-header-title">Market Intelligence</span>'
+    + '<span class="nmw-header-badge"><span class="nmw-live-dot"></span>Live Data</span>'
+    + '</div>';
+
+  // Tab bar
+  var tabBar = document.createElement('div');
+  tabBar.className = 'nmw-tabs';
+  tabBar.id = 'nmw-tab-bar';
+  keys.forEach(function(k, i) {
+    var btn = document.createElement('button');
+    btn.className = 'nmw-tab' + (i === 0 ? ' active' : '');
+    btn.id = 'nmw-tab-' + k;
+    btn.textContent = _NMW_CONFIGS[k].label;
+    btn.onclick = (function(key, b){ return function(){ nmwSwitch(key, b); }; })(k, btn);
+    tabBar.appendChild(btn);
+  });
+  block.appendChild(tabBar);
+
+  // Widget area
+  var area = document.createElement('div');
+  area.className = 'nmw-area';
+  keys.forEach(function(k, i) {
+    var wrap = document.createElement('div');
+    wrap.className = 'nmw-wrap';
+    wrap.id = 'nmw-wrap-' + k;
+    wrap.style.display = (i === 0) ? 'flex' : 'none';
+    area.appendChild(wrap);
+  });
+  block.appendChild(area);
+
+  return block;
+}
+
+/* ═══════════════════════════════════════════════════
+   SCREENER — market list + injection helpers
+═══════════════════════════════════════════════════ */
+var _NMW_SCREENER_MARKETS = [
+  { value:'america',      label:'🇺🇸 USA (NYSE / NASDAQ)' },
+  { value:'india',        label:'🇮🇳 India (BSE / NSE)' },
+  { value:'uk',           label:'🇬🇧 UK (LSE)' },
+  { value:'germany',      label:'🇩🇪 Germany (XETR)' },
+  { value:'france',       label:'🇫🇷 France' },
+  { value:'japan',        label:'🇯🇵 Japan (TSE)' },
+  { value:'australia',    label:'🇦🇺 Australia (ASX)' },
+  { value:'canada',       label:'🇨🇦 Canada (TSX)' },
+  { value:'brazil',       label:'🇧🇷 Brazil (BOVESPA)' },
+  { value:'hongkong',     label:'🇭🇰 Hong Kong (HKEX)' },
+  { value:'korea',        label:'🇰🇷 South Korea (KRX)' },
+  { value:'taiwan',       label:'🇹🇼 Taiwan (TWSE)' },
+  { value:'italy',        label:'🇮🇹 Italy (MIL)' },
+  { value:'spain',        label:'🇪🇸 Spain (BME)' },
+  { value:'singapore',    label:'🇸🇬 Singapore (SGX)' },
+  { value:'malaysia',     label:'🇲🇾 Malaysia (MYX)' },
+  { value:'indonesia',    label:'🇮🇩 Indonesia (IDX)' },
+  { value:'thailand',     label:'🇹🇭 Thailand (SET)' },
+  { value:'vietnam',      label:'🇻🇳 Vietnam (HNX)' },
+  { value:'philippines',  label:'🇵🇭 Philippines (PSE)' },
+  { value:'mexico',       label:'🇲🇽 Mexico (BMV)' },
+  { value:'turkey',       label:'🇹🇷 Turkey (BIST)' },
+  { value:'saudi_arabia', label:'🇸🇦 Saudi Arabia (TADAWUL)' },
+  { value:'uae',          label:'🇦🇪 UAE (DFM / ADX)' },
+  { value:'russia',       label:'🇷🇺 Russia (MOEX)' },
+  { value:'sweden',       label:'🇸🇪 Sweden (NASDAQ OMX)' },
+  { value:'switzerland',  label:'🇨🇭 Switzerland (SIX)' },
+  { value:'netherlands',  label:'🇳🇱 Netherlands (AEX)' },
+  { value:'norway',       label:'🇳🇴 Norway (OSE)' },
+  { value:'poland',       label:'🇵🇱 Poland (WSE)' },
+  { value:'israel',       label:'🇮🇱 Israel (TASE)' },
+  { value:'egypt',        label:'🇪🇬 Egypt (EGX)' },
+  { value:'pakistan',     label:'🇵🇰 Pakistan (PSX)' },
+  { value:'denmark',      label:'🇩🇰 Denmark (NASDAQ OMX)' },
+  { value:'finland',      label:'🇫🇮 Finland (NASDAQ OMX)' },
+  { value:'greece',       label:'🇬🇷 Greece (ATHEX)' },
+  { value:'portugal',     label:'🇵🇹 Portugal (EURONEXT)' },
+  { value:'new_zealand',  label:'🇳🇿 New Zealand (NZX)' },
+  { value:'colombia',     label:'🇨🇴 Colombia (BVC)' },
+  { value:'chile',        label:'🇨🇱 Chile (BCS)' },
+  { value:'argentina',    label:'🇦🇷 Argentina (BYMA)' },
+];
+
+function _nmwInjectScreener(wrapId) {
+  var wrap = document.getElementById(wrapId);
+  if (!wrap || wrap.dataset.nmwLoaded) return;
+  wrap.dataset.nmwLoaded = '1';
+  wrap.style.flexDirection = 'column';
+
+  var savedMkt = (function(){
+    try { return localStorage.getItem('nmw_screener_market') || 'india'; } catch(_){ return 'india'; }
+  })();
+
+  // ── Market selector bar ──
+  var bar = document.createElement('div');
+  bar.className = 'nmw-screener-bar';
+
+  var lbl = document.createElement('span');
+  lbl.style.cssText = 'font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.5px;white-space:nowrap';
+  lbl.textContent = '📊 Market:';
+  bar.appendChild(lbl);
+
+  var sel = document.createElement('select');
+  sel.className = 'nmw-screener-select';
+  _NMW_SCREENER_MARKETS.forEach(function(m) {
+    var opt = document.createElement('option');
+    opt.value = m.value; opt.textContent = m.label;
+    if (m.value === savedMkt) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.onchange = function() {
+    var mkt = this.value;
+    try { localStorage.setItem('nmw_screener_market', mkt); } catch(_){}
+    var tvFrame = wrap.querySelector('.nmw-screener-tv');
+    if (tvFrame) { tvFrame.innerHTML = ''; _nmwInjectScreenerWidget(tvFrame, mkt); }
+  };
+  bar.appendChild(sel);
+  wrap.appendChild(bar);
+
+  // ── Widget frame ──
+  var tvFrame = document.createElement('div');
+  tvFrame.className = 'nmw-screener-tv';
+  wrap.appendChild(tvFrame);
+  _nmwInjectScreenerWidget(tvFrame, savedMkt);
+}
+
+function _nmwInjectScreenerWidget(container, market) {
+  var tv = document.createElement('div');
+  tv.className = 'tradingview-widget-container';
+  tv.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column';
+  var wdg = document.createElement('div');
+  wdg.className = 'tradingview-widget-container__widget';
+  wdg.style.cssText = 'flex:1;min-height:0;width:100%';
+  tv.appendChild(wdg);
+  container.appendChild(tv);
+  var sc = document.createElement('script');
+  sc.type = 'text/javascript';
+  sc.src = 'https://s3.tradingview.com/external-embedding/embed-widget-screener.js';
+  sc.async = true;
+  sc.textContent = JSON.stringify({
+    width:'100%', height:'100%', defaultColumn:'overview',
+    defaultScreen:'general', market:market, showToolbar:true,
+    colorTheme:'dark', locale:'en', isTransparent:false
+  });
+  tv.appendChild(sc);
+}
+
+/* ═══════════════════════════════════════════════════
+   MALAYALAM EDITION — Build category block
+═══════════════════════════════════════════════════ */
+function buildMalayalamCategoriesBlock(data) {
+  var wrap = document.createElement('div');
+  wrap.className = 'ml-cat-block';
+  wrap.id = 'ml-categories-block';
+
+  // Header
+  var hdr = document.createElement('div');
+  hdr.className = 'ml-cat-header';
+  hdr.innerHTML = '<span style="font-size:22px">📰</span>'
+    + '<span class="ml-cat-title">മലയാളം എഡിഷൻ</span>'
+    + '<span class="ml-cat-subtitle">12 Categories · Malayalam</span>';
+  wrap.appendChild(hdr);
+
+  // Tab bar
+  var tabBar = document.createElement('div');
+  tabBar.className = 'ml-cat-tabs';
+  tabBar.id = 'ml-cat-tabs';
+  ML_CATEGORIES.forEach(function(cat, i) {
+    var tab = document.createElement('div');
+    tab.className = 'ml-cat-tab' + (i === 0 ? ' active' : '');
+    tab.textContent = cat.label;
+    tab.setAttribute('data-catid', cat.id);
+    tab.onclick = (function(id){ return function(){ _showMlCategory(id); }; })(cat.id);
+    tabBar.appendChild(tab);
+  });
+  wrap.appendChild(tabBar);
+
+  // Content area
+  var content = document.createElement('div');
+  content.className = 'ml-cat-content';
+  content.id = 'ml-cat-content';
+  wrap.appendChild(content);
+
+  return wrap;
+}
+
+/* Per-category image pools — 4 unique Unsplash photos per category, rotated by article index */
+var _ML_IMG_POOLS = {
+  ml_trending:   ['https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=700&q=70','https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=700&q=70','https://images.unsplash.com/photo-1495020689067-958852a7765e?w=700&q=70','https://images.unsplash.com/photo-1453738773917-9c3eff1db985?w=700&q=70'],
+  ml_movies:     ['https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=700&q=70','https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=700&q=70','https://images.unsplash.com/photo-1485846234645-a62644f84728?w=700&q=70','https://images.unsplash.com/photo-1524712245354-2c4e5e7121c3?w=700&q=70'],
+  ml_music:      ['https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=700&q=70','https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=700&q=70','https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=700&q=70','https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=700&q=70'],
+  ml_local:      ['https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=700&q=70','https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=700&q=70','https://images.unsplash.com/photo-1563536313-be6fc5d4b0d5?w=700&q=70','https://images.unsplash.com/photo-1468611083934-17bd02c3b08d?w=700&q=70'],
+  ml_science:    ['https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=700&q=70','https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=700&q=70','https://images.unsplash.com/photo-1576319155264-99536e0be1ee?w=700&q=70','https://images.unsplash.com/photo-1530026186672-2cd00ffc50d8?w=700&q=70'],
+  ml_space:      ['https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=700&q=70','https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=700&q=70','https://images.unsplash.com/photo-1614730321220-6af8c57b2c5c?w=700&q=70','https://images.unsplash.com/photo-1614726365952-510103b1bdb8?w=700&q=70'],
+  ml_sports:     ['https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=700&q=70','https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=700&q=70','https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=700&q=70','https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=700&q=70'],
+  ml_health:     ['https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=700&q=70','https://images.unsplash.com/photo-1631549916768-4119b4220fd2?w=700&q=70','https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=700&q=70','https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=700&q=70'],
+  ml_food:       ['https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=700&q=70','https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=700&q=70','https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=700&q=70','https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=700&q=70'],
+  ml_realestate: ['https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=700&q=70','https://images.unsplash.com/photo-1448630360428-65456885c650?w=700&q=70','https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=700&q=70','https://images.unsplash.com/photo-1560520653-9e0e4c89eb11?w=700&q=70'],
+  ml_career:     ['https://images.unsplash.com/photo-1521791136064-7986c2920216?w=700&q=70','https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=700&q=70','https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=700&q=70','https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=700&q=70'],
+  ml_tech:       ['https://images.unsplash.com/photo-1518770660439-4636190af475?w=700&q=70','https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=700&q=70','https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=700&q=70','https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=700&q=70']
+};
+
+function _showMlCategory(catId, data) {
+  // Activate correct tab
+  var tabBar = document.getElementById('ml-cat-tabs');
+  if (tabBar) {
+    Array.prototype.forEach.call(tabBar.querySelectorAll('.ml-cat-tab'), function(t) {
+      t.classList.toggle('active', t.getAttribute('data-catid') === catId);
+    });
+  }
+
+  var content = document.getElementById('ml-cat-content');
+  if (!content) return;
+
+  var src = data || _newsData;
+
+  // Try specific sub-category first; fall back to main malayalam section
+  var catSection = src && src.sections && (src.sections[catId] || src.sections['malayalam']);
+  var items = (catSection && catSection.items)
+    ? catSection.items.filter(function(item) {
+        if (!item || !item.publishedAt || !item.headline) return false;
+        var hl = item.headline.trim().toLowerCase();
+        if (hl.startsWith('content updating') || hl === 'placeholder' || hl === 'loading...') return false;
+        if (hl.length < 18) return false;
+        if (/^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d{1,2}$/.test(hl)) return false;
+        return Date.now() - new Date(item.publishedAt).getTime() < 7 * 24 * 60 * 60 * 1000;
+      })
+    : [];
+
+  var catMeta = SECTION_META[catId] || {};
+  var imgPool = _ML_IMG_POOLS[catId] || _ML_IMG_POOLS['ml_trending'];
+
+  if (items.length === 0) {
+    content.innerHTML = '<div class="ml-cat-empty">'
+      + '<div class="ml-cat-empty-icon">' + (catMeta.icon || '📰') + '</div>'
+      + '<div class="ml-cat-empty-text">Latest stories loading — check back shortly.</div>'
+      + '</div>';
+    return;
+  }
+
+  /* Pre-cache all items so onclick closures get stable indices */
+  var storyIndices = items.map(function(item) { return _cacheStory(item, catMeta); });
+
+  content.innerHTML = '';
+  content.appendChild(_buildNpLayout(
+    items,
+    function(item) { return item.image || _wCardImgUrl(item.headline || ''); },
+    function(item, i) {
+      var idx = storyIndices[items.indexOf(item)];
+      return (function(si){ return function(){ openStoryIdx(si); }; })(idx);
+    },
+    timeAgo
+  ));
+}
+
+/* ═══════════════════════════════════════════════════
+   LOAD NEWS PAGE
+═══════════════════════════════════════════════════ */
+/* ── Custom content posts (from content.json) ─────────────────────────────── */
+window._customContent = [];
+
+async function _loadCustomContent() {
+  try {
+    var resp = await fetch('content.json?_=' + Date.now());
+    if (!resp.ok) return;
+    var data = await resp.json();
+    var now  = new Date();
+    window._customContent = Array.isArray(data)
+      ? data.filter(function(i) { return i && (!i.expires_at || new Date(i.expires_at) > now); })
+      : [];
+  } catch(e) { /* silently ignore — content.json is optional */ }
+}
+
+function _renderCustomPosts(sectionId, container) {
+  var posts = window._customContent.filter(function(p) { return p.section === sectionId; });
+  if (!posts.length) return;
+  var block = document.createElement('div');
+  block.className = 'custom-posts-block';
+  posts.forEach(function(post) {
+    var card = document.createElement('div');
+    card.className = 'custom-post-card';
+    card.setAttribute('role','button');
+    card.setAttribute('tabindex','0');
+    card.onclick = (function(pid){ return function(){ openCustomPost(pid); }; })(post.id);
+    card.onkeydown = (function(pid){ return function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openCustomPost(pid); } }; })(post.id);
+    var _cpPos = post.photo_pos || '50% 50%';
+    var _cpZoom = post.photo_zoom ? Math.min(Math.max(parseFloat(post.photo_zoom), 1), 4) : 1;
+    var _cpImgStyle = 'object-position:' + _cpPos + ';transform:scale(' + _cpZoom + ');transform-origin:' + _cpPos;
+    var photoHtml = post.photo
+      ? '<div class="cp-photo-wrap"><img class="cp-photo" src="' + escAttr(post.photo) + '" style="' + escAttr(_cpImgStyle) + '" alt="" loading="lazy" onerror="this.parentNode.innerHTML=\'<div class=cp-no-photo>📰</div>\'"></div>'
+      : '<div class="cp-no-photo">📰</div>';
+    var pubDate = post.published_at
+      ? new Date(post.published_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})
+      : '';
+    var textTeaser = (post.story || '').replace(/<[^>]*>?/gm, '').trim();
+    if (textTeaser.length > 150) textTeaser = textTeaser.slice(0, 150) + '...';
+    card.innerHTML =
+      photoHtml
+      + '<div class="cp-body">'
+        + '<span class="cp-badge">✦ Featured</span>'
+        + '<div class="cp-heading">' + esc(post.heading) + '</div>'
+        + '<div class="cp-story">' + esc(textTeaser) + '</div>'
+        + '<div class="cp-meta">' + (pubDate ? 'Published ' + pubDate : '') + ' · VilfinTV Staff</div>'
+        + '<div class="cp-readmore" onclick="event.stopPropagation();openCustomPost(' + JSON.stringify(post.id) + ')">Read Full Story ↗</div>'
+      + '</div>';
+    block.appendChild(card);
+  });
+  // Place featured cards BELOW the hero (big picture), boxed inside the section's
+  // card grid so they sit alongside the regular news cards.
+  var grid = container.querySelector('.news-cards-grid');
+  if (grid) {
+    var cards = Array.prototype.slice.call(block.children);
+    for (var i = cards.length - 1; i >= 0; i--) {
+      grid.insertBefore(cards[i], grid.firstChild);
+    }
+  } else {
+    // No grid (section had only a hero or nothing) — fall back to placing the
+    // block just after the hero, else after the header.
+    var hero = container.querySelector('.news-hero-card');
+    if (hero && hero.nextSibling) {
+      container.insertBefore(block, hero.nextSibling);
+    } else if (hero) {
+      container.appendChild(block);
+    } else {
+      var header = container.querySelector('.news-section-header');
+      if (header && header.nextSibling) container.insertBefore(block, header.nextSibling);
+      else if (header) container.appendChild(block);
+      else container.insertBefore(block, container.firstChild);
+    }
+  }
+}
+
+function openCustomPost(id) {
+  var post = window._customContent.find(function(p) { return p.id === id; });
+  if (!post) return;
+  var overlay = document.getElementById('story-modal-overlay');
+  var body    = document.getElementById('story-modal-body');
+  var pill    = document.getElementById('story-section-pill');
+  if (!overlay || !body) return;
+
+  if (pill) {
+    pill.textContent = '✦ Featured';
+    pill.style.background = '#6366f1';
+  }
+
+  var pubDate = post.published_at
+    ? new Date(post.published_at).toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})
+    : '';
+
+  var html = '<h2 class="story-modal-headline" id="story-modal-headline">' + esc(post.heading) + '</h2>'
+    + '<div class="story-modal-meta">'
+      + '<span>' + (pubDate || '') + '</span>'
+      + '<span class="story-modal-meta-sep">·</span>'
+      + '<span class="story-modal-ai-badge" style="background:rgba(99,102,241,.15);color:#818cf8">VilfinTV Staff</span>'
+    + '</div>';
+
+  if (post.photo) {
+    var _mPos = post.photo_pos || '50% 50%';
+    var _mZoom = post.photo_zoom ? Math.min(Math.max(parseFloat(post.photo_zoom), 1), 4) : 1;
+    // Removed fixed 280px height constraint so images fully show. 
+    html += '<div style="width:100%;border-radius:10px;margin-bottom:18px;overflow:hidden">'
+      + '<img src="' + escAttr(post.photo) + '" style="width:100%;height:auto;display:block;object-position:' + escAttr(_mPos) + ';transform:scale(' + _mZoom + ');transform-origin:' + escAttr(_mPos) + '" alt="" loading="lazy">'
+      + '</div>';
+  }
+
+  var storyContent = post.story || '';
+  // Only escape and wrap in <p> if there are no HTML tags at all (legacy format)
+  if (storyContent && !/<[a-zA-Z]/.test(storyContent)) {
+    var paras = storyContent.split(/\n\n+/).filter(Boolean);
+    storyContent = paras.map(function(p) { return '<p>' + esc(p) + '</p>'; }).join('');
+  }
+  html += '<div class="story-body">'
+    + storyContent
+    + '</div>';
+
+  html += '<div class="story-modal-disclaimer">Editorial feature curated and fact-checked by the VilfinTV newsroom across multiple public sources.</div>';
+
+  if (post.link_url) {
+    html += '<button class="story-modal-source-link" data-href="' + escAttr(post.link_url) + '" onclick="openSourceLink(this)">Read Full Story ↗</button>';
+  }
+
+  var shareText = encodeURIComponent(post.heading || 'Read this story on VilfinTV News');
+  var shareUrl  = encodeURIComponent('https://vilfintv.com/news.html');
+  html += '<div class="story-modal-share">'
+    + '<span class="story-modal-share-label">Share:</span>'
+    + '<a class="share-btn-sm share-wa" href="https://api.whatsapp.com/send?text=' + shareText + '%20' + shareUrl + '" target="_blank" rel="noopener">WhatsApp</a>'
+    + '<a class="share-btn-sm share-tw" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank" rel="noopener">X (Twitter)</a>'
+    + '</div>';
+
+  body.innerHTML = html;
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+async function loadNewsPage() {
+  window._SC = [];  // reset story cache on each load
+  var container = document.getElementById('sections-container');
+
+  // Show loading skeleton
+  container.innerHTML = '<div style="padding:48px;text-align:center;color:var(--text3)">'
+    + '<div style="font-size:32px;margin-bottom:12px">📡</div>'
+    + '<div style="font-size:15px">Loading latest intelligence…</div>'
+    + '</div>';
+
+  // Load custom content.json in parallel with news.json
+  var data = null;
+  try {
+    var results = await Promise.all([
+      fetch('data/news.json?_=' + Date.now()).catch(function() { return null; }),
+      _loadCustomContent()
+    ]);
+    var newsResp = results[0];
+    if (newsResp && newsResp.ok) data = await newsResp.json();
+  } catch (e) {
+    console.warn('News data unavailable:', e.message);
+  }
+
+  _newsData = data; // store globally for category tab switching
+
+  container.innerHTML = '';
+  var totalStories = 0;
+
+  var sectionOrder = ['trending', 'global', 'india', 'stock', 'malayalam'];
+  sectionOrder.forEach(function(sid) {
+    var meta = SECTION_META[sid];
+    var sectionData = (data && data.sections && data.sections[sid]) ? data.sections[sid] : null;
+    var el = renderSection(sid, sectionData, meta);
+    // Inject custom content posts at top of each section
+    _renderCustomPosts(sid, el);
+    container.appendChild(el);
+    if (sectionData && sectionData.items) {
+      totalStories += sectionData.items.filter(isItemValid).length;
+    }
+    // Inject Market Intelligence widget block directly below Stock News
+    if (sid === 'stock') {
+      var mktBlock = buildMarketWidgetsBlock();
+      container.appendChild(mktBlock);
+      setTimeout(function() {
+        nmwSwitch('topstories', document.getElementById('nmw-tab-topstories'));
+      }, 150);
+    }
+    // Inject Malayalam Edition categories block directly below Malayalam News
+    if (sid === 'malayalam') {
+      var mlBlock = buildMalayalamCategoriesBlock(data);
+      container.appendChild(mlBlock);
+      // Render first tab NOW — after the block is in the DOM so getElementById works
+      _showMlCategory(ML_CATEGORIES[0].id, data);
+    }
+  });
+
+  // World News + External Links — load sequentially so External Links appends last
+  loadWorldSection(container).then(function() { loadExternalLinksSection(container); });
+
+  // Update meta chips
+  if (data && data.generated) {
+    document.getElementById('last-updated-time').textContent = timeAgo(data.generated);
+  } else {
+    document.getElementById('last-updated-time').textContent = 'Pending update';
+  }
+  document.getElementById('total-story-count').textContent = totalStories || '—';
+}
+
+/* ═══════════════════════════════════════════════════
+   WORLD NEWS — load, render, popup
+═══════════════════════════════════════════════════ */
+var _worldStoryCache = [];
+
+function _wTimeAgo(iso) {
+  if (!iso) return '';
+  var diff = Date.now() - new Date(iso).getTime();
+  var m = Math.floor(diff / 60000);
+  if (m < 1)  return 'just now';
+  if (m < 60) return m + 'm ago';
+  var h = Math.floor(m / 60);
+  if (h < 24) return h + 'h ago';
+  return Math.floor(h / 24) + 'd ago';
+}
+
+function openWorldStory(idx) {
+  var item = _worldStoryCache[idx];
+  if (!item) return;
+  var overlay = document.getElementById('world-modal-overlay');
+  var pillEl  = document.getElementById('world-modal-source-pill');
+  var headEl  = document.getElementById('world-modal-headline');
+  var teasEl  = document.getElementById('world-modal-teaser');
+  var readBtn = document.getElementById('world-modal-read-btn');
+  var timeEl  = document.getElementById('world-modal-time');
+
+  pillEl.style.background = item._accent || '#3b82f6';
+  pillEl.innerHTML = '<span class="world-modal-source-flag">' + (item._flag || '') + '</span>'
+    + esc(item.source || '');
+  headEl.textContent  = item.headline || '';
+  teasEl.textContent  = item.teaser   || 'No summary available.';
+  readBtn.href        = item.url      || '#';
+  timeEl.textContent  = _wTimeAgo(item.publishedAt);
+
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeWorldStory() {
+  var overlay = document.getElementById('world-modal-overlay');
+  if (overlay) { overlay.classList.remove('active'); document.body.style.overflow = ''; }
+}
+
+/* Generate a deterministic picsum image URL per headline (unique per article, fast CDN) */
+// Decode any residual HTML/XML entities stored in world.json before display
+function _wDecodeHtml(s) {
+  if (!s || s.indexOf('&') === -1) return s || '';
+  var d = document.createElement('div');
+  d.innerHTML = s;
+  return d.textContent || d.innerText || s;
+}
+
+function _wCardImgUrl(headline) {
+  var s = 0;
+  for (var i = 0; i < (headline || '').length; i++) { s = ((s << 5) - s + (headline || '').charCodeAt(i)) | 0; }
+  return 'https://picsum.photos/seed/' + (Math.abs(s) || 42) + '/480/270';
+}
+
+/* Build the newspaper 3-panel layout for a list of story items.
+   Used by both World News regions and Malayalam Edition categories. */
+function _buildNpLayout(items, getImg, getOnClick, timeFunc) {
+  /* Deduplicate images within this layout — if a URL repeats, swap in a
+     picsum image seeded by the headline so every card looks distinct. */
+  var _usedImgs = {};
+  function _uniqueImg(item, i) {
+    var url = getImg(item, i);
+    var fb  = _wCardImgUrl(item.headline || '');
+    if (!url || _usedImgs[url]) return fb;
+    _usedImgs[url] = true;
+    return url;
+  }
+
+  var hero      = items[0];
+  var sides     = items.slice(1, 4);   /* 3 sidebar stories */
+  var latest    = items.slice(4, 9);   /* 5 latest stories  */
+  var gridItems = items.slice(9, 12);  /* 3 bottom-grid stories */
+
+  var wrap = document.createElement('div');
+  wrap.className = 'world-np-wrap';
+
+  /* ── Top 3-panel row ── */
+  var top = document.createElement('div');
+  top.className = 'world-np-top';
+
+  /* Center hero — added first in DOM for mobile focus */
+  if (hero) {
+    var heroImg = _uniqueImg(hero, 0);
+    var heroHl  = esc(_wDecodeHtml(hero.headline || ''));
+    var heroTe  = hero.teaser ? esc(_wDecodeHtml(hero.teaser)) : '';
+    var heroEl  = document.createElement('div');
+    heroEl.className = 'world-np-center';
+    heroEl.setAttribute('role','button');heroEl.setAttribute('tabindex','0');
+    heroEl.onclick = getOnClick(hero, 0);
+    heroEl.onkeydown = (function(fn){ return function(e){ if(e.key==='Enter'||e.key===' ')fn(); }; })(heroEl.onclick);
+    heroEl.innerHTML =
+      '<img class="world-np-hero-img" src="' + escAttr(heroImg) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+      + '<div class="world-np-hero-overlay"></div>'
+      + '<div class="world-np-hero-body">'
+      + '<div class="world-np-hero-hl">' + heroHl + '</div>'
+      + (heroTe ? '<div class="world-np-hero-teaser">' + heroTe + '</div>' : '')
+      + '<div class="world-np-hero-time">' + timeFunc(hero.publishedAt) + '</div>'
+      + '</div>';
+    top.appendChild(heroEl);
+  }
+
+  /* Left sidebar — 2 compact image+text cards */
+  if (sides.length) {
+    var leftEl = document.createElement('div');
+    leftEl.className = 'world-np-left';
+    sides.forEach(function(item, si) {
+      var sImg = _uniqueImg(item, si + 1);
+      var sHl  = esc(_wDecodeHtml(item.headline || ''));
+      var card = document.createElement('div');
+      card.className = 'world-np-side-card';
+      card.setAttribute('role','button');card.setAttribute('tabindex','0');
+      card.onclick = getOnClick(item, si + 1);
+      card.onkeydown = (function(fn){ return function(e){ if(e.key==='Enter'||e.key===' ')fn(); }; })(card.onclick);
+      card.innerHTML =
+        '<img class="world-np-side-img" src="' + escAttr(sImg) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+        + '<div class="world-np-side-body">'
+        + '<div class="world-np-side-hl">' + sHl + '</div>'
+        + '<span class="world-np-side-time">' + timeFunc(item.publishedAt) + '</span>'
+        + '</div>';
+      leftEl.appendChild(card);
+    });
+    top.appendChild(leftEl);
+  }
+
+  /* Right — Latest text list */
+  if (latest.length) {
+    var rightEl = document.createElement('div');
+    rightEl.className = 'world-np-right';
+    rightEl.innerHTML = '<div class="world-np-latest-hdr">Latest</div>';
+    latest.forEach(function(item, li) {
+      var lHl = esc(_wDecodeHtml(item.headline || ''));
+      var lEl = document.createElement('div');
+      lEl.className = 'world-np-latest-item';
+      lEl.setAttribute('role','button');lEl.setAttribute('tabindex','0');
+      lEl.onclick = getOnClick(item, li + 3);
+      lEl.onkeydown = (function(fn){ return function(e){ if(e.key==='Enter'||e.key===' ')fn(); }; })(lEl.onclick);
+      lEl.innerHTML =
+        '<div class="world-np-latest-hl">' + lHl + '</div>'
+        + '<div class="world-np-latest-meta">'
+        + '<span class="world-np-latest-dot">●</span>'
+        + '<span class="world-np-latest-time">' + timeFunc(item.publishedAt) + '</span>'
+        + '</div>';
+      rightEl.appendChild(lEl);
+    });
+    top.appendChild(rightEl);
+  }
+
+  wrap.appendChild(top);
+
+  /* Bottom 3-col image grid */
+  if (gridItems.length) {
+    var btm = document.createElement('div');
+    btm.className = 'world-np-bottom';
+    gridItems.forEach(function(item, gi) {
+      var gImg = _uniqueImg(item, gi + 8);
+      var gHl  = esc(_wDecodeHtml(item.headline || ''));
+      var gTe  = item.teaser ? esc(_wDecodeHtml(item.teaser)) : '';
+      if (gTe.length > 110) gTe = gTe.slice(0, gTe.lastIndexOf(' ', 110)) + '…';
+      var gc = document.createElement('div');
+      gc.className = 'world-np-grid-card';
+      gc.setAttribute('role','button');gc.setAttribute('tabindex','0');
+      gc.onclick = getOnClick(item, gi + 8);
+      gc.onkeydown = (function(fn){ return function(e){ if(e.key==='Enter'||e.key===' ')fn(); }; })(gc.onclick);
+      gc.innerHTML =
+        '<img class="world-np-grid-img" src="' + escAttr(gImg) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+        + '<div class="world-np-grid-body">'
+        + '<div class="world-np-grid-hl">' + gHl + '</div>'
+        + (gTe ? '<div class="world-np-grid-teaser">' + gTe + '</div>' : '')
+        + '<div class="world-np-grid-time">' + timeFunc(item.publishedAt) + '</div>'
+        + '</div>';
+      btm.appendChild(gc);
+    });
+    wrap.appendChild(btm);
+  }
+
+  return wrap;
+}
+
+function renderWorldSection(data, container) {
+  var wrap = document.createElement('div');
+  wrap.id = 'world';
+  wrap.className = 'world-news-wrap';
+
+  var sh = document.createElement('div');
+  sh.className = 'news-section-header';
+  sh.innerHTML = '<span class="news-section-icon">🌐</span>'
+    + '<span class="news-section-name">World News</span>'
+    + '<span class="news-section-badge">' + (data && data.regions ? data.regions.length : 0) + ' regions</span>'
+    + '<button class="news-section-toggle" onclick="toggleNewsSection(this)" aria-expanded="true" aria-label="Toggle section"><svg viewBox="0 0 24 24"><path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14l-6-6z"/></svg></button>';
+  wrap.appendChild(sh);
+
+  var contentWrap = document.createElement('div');
+  contentWrap.className = 'news-section-content';
+
+  if (!data || !data.regions || data.regions.length === 0) {
+    var emp = document.createElement('div');
+    emp.className = 'news-placeholder';
+    emp.innerHTML = '<div class="news-placeholder-icon">🌐</div>'
+      + '<div class="news-placeholder-text">World headlines loading…</div>'
+      + '<div class="news-placeholder-sub">Headlines from 25+ countries refresh every 3 hours.</div>';
+    contentWrap.appendChild(emp);
+    wrap.appendChild(contentWrap);
+    container.appendChild(wrap);
+    return;
+  }
+
+  data.regions.forEach(function(region) {
+    /* Strip items with no real headline (date-only strings, blanks, very short text) */
+    var items = (region.items || []).filter(function(item) {
+      if (!item || !item.headline) return false;
+      var hl = item.headline.trim();
+      if (hl.length < 18) return false;                                          // too short / date-only
+      if (/^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}$/i.test(hl)) return false;
+      if (/^(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d/i.test(hl) && hl.length < 25) return false;
+      return true;
+    });
+    if (!items.length) return;
+    var accent = region.accent || '#3b82f6';
+
+    /* Store all items in the cache and return their indices */
+    var cacheBase = _worldStoryCache.length;
+    items.forEach(function(item) {
+      _worldStoryCache.push(Object.assign({}, item, { _flag: region.flag, _accent: accent }));
+    });
+
+    var block = document.createElement('div');
+    block.className = 'world-region-block';
+
+    /* Subtle divider: flag emoji + accent line (no channel/source name) */
+    var divider = document.createElement('div');
+    divider.className = 'world-region-divider';
+    divider.innerHTML = '<span class="world-region-flag">' + (region.flag || '') + '</span>'
+      + '<span class="world-region-accent-bar" style="background:' + accent + '"></span>'
+      + '<span class="world-region-badge">' + items.length + ' stories</span>';
+    block.appendChild(divider);
+
+    /* Newspaper layout */
+    block.appendChild(_buildNpLayout(
+      items,
+      function(item) { return item.image || _wCardImgUrl(item.headline || ''); },
+      function(item, localIdx) {
+        var cIdx = cacheBase + items.indexOf(item);
+        return (function(i){ return function(){ openWorldStory(i); }; })(cIdx);
+      },
+      _wTimeAgo
+    ));
+
+    contentWrap.appendChild(block);
+  });
+
+  wrap.appendChild(contentWrap);
+  container.appendChild(wrap);
+}
+
+async function loadWorldSection(container) {
+  var data = null;
+  try {
+    var resp = await fetch('data/world.json?_=' + Date.now());
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    data = await resp.json();
+  } catch(e) {
+    console.warn('World data unavailable:', e.message);
+  }
+  renderWorldSection(data, container);
+}
+
+/* ═══════════════════════════════════════════════════
+   EXTERNAL LINKS — load links.json, filter expired, render
+═══════════════════════════════════════════════════ */
+function renderExternalLinksSection(links, container) {
+  var wrap = document.createElement('div');
+  wrap.id = 'ext-links';
+  wrap.className = 'ext-links-wrap';
+
+  var sh = document.createElement('div');
+  sh.className = 'news-section-header';
+  sh.innerHTML = '<span class="news-section-icon">🔗</span>'
+    + '<span class="news-section-name">External News</span>'
+    + '<span class="news-section-badge">' + links.length + ' link' + (links.length !== 1 ? 's' : '') + '</span>'
+    + '<button class="news-section-toggle" onclick="toggleNewsSection(this)" aria-expanded="true" aria-label="Toggle section"><svg viewBox="0 0 24 24"><path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14l-6-6z"/></svg></button>';
+  wrap.appendChild(sh);
+  
+  var contentWrap = document.createElement('div');
+  contentWrap.className = 'news-section-content';
+
+  var grid = document.createElement('div');
+  grid.className = 'ext-links-grid';
+
+  links.forEach(function(link) {
+    var host = '';
+    try { host = new URL(link.url).hostname.replace(/^www\./, ''); } catch(e) { host = link.url; }
+
+    var displayName = (link.name && link.name.trim()) ? link.name.trim() : host;
+    var displayDesc = (link.description && link.description.trim()) ? link.description.trim() : '';
+
+    var daysLeft = '';
+    if (link.expires_at) {
+      var diff = Math.ceil((new Date(link.expires_at) - Date.now()) / 86400000);
+      daysLeft = diff <= 1 ? 'Expires today' : diff + ' days left';
+    }
+
+    var card = document.createElement('a');
+    card.className = 'ext-link-card';
+    card.href = link.url;
+    card.target = '_blank';
+    card.rel = 'noopener noreferrer';
+
+    var faviconUrl = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(host) + '&sz=64';
+
+    card.innerHTML =
+      '<div class="ext-link-favicon"><img src="' + faviconUrl + '" alt="" onerror="this.parentNode.innerHTML=\'🔗\'"></div>'
+      + '<div class="ext-link-body">'
+        + '<div class="ext-link-host">' + displayName + '</div>'
+        + (displayDesc ? '<div class="ext-link-desc">' + displayDesc + '</div>' : '<div class="ext-link-url">' + host + '</div>')
+        + (daysLeft ? '<span class="ext-link-expires">⏱ ' + daysLeft + '</span>' : '')
+      + '</div>'
+      + '<span class="ext-link-btn">Visit ↗</span>';
+
+    grid.appendChild(card);
+  });
+
+  contentWrap.appendChild(grid);
+  wrap.appendChild(contentWrap);
+  container.appendChild(wrap);
+}
+
+async function loadExternalLinksSection(container) {
+  var now = new Date();
+  try {
+    var resp = await fetch('links.json?_=' + Date.now());
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var all = await resp.json();
+    if (!Array.isArray(all)) return;
+    var active = all.filter(function(l) {
+      return l && l.url && (!l.expires_at || new Date(l.expires_at) > now);
+    });
+    if (active.length === 0) return;
+    renderExternalLinksSection(active, container);
+  } catch(e) {
+    console.warn('External links unavailable:', e.message);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function() {
+  loadNewsPage();
+  // Auto-refresh all RSS news content every 15 minutes
+  setInterval(function() { loadNewsPage(); }, 15 * 60 * 1000);
+});
+</script>
+
+<!-- World News popup modal -->
+<div class="world-modal-overlay" id="world-modal-overlay" onclick="if(event.target===this)closeWorldStory()">
+  <div class="world-modal" id="world-modal">
+    <div class="world-modal-hdr">
+      <span class="world-modal-source-pill" id="world-modal-source-pill">Source</span>
+      <button class="world-modal-close" onclick="closeWorldStory()" title="Close">✕</button>
+    </div>
+    <div class="world-modal-body">
+      <h2 class="world-modal-headline" id="world-modal-headline"></h2>
+      <p class="world-modal-teaser" id="world-modal-teaser"></p>
+    </div>
+    <div class="world-modal-ftr">
+      <a class="world-modal-read-btn" id="world-modal-read-btn" href="#" target="_blank" rel="noopener noreferrer">
+        Read Full Story ↗
+      </a>
+      <span class="world-modal-time" id="world-modal-time"></span>
+    </div>
+  </div>
+</div>
+</body>
+</html>
