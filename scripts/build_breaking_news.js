@@ -16,7 +16,7 @@ const FEEDS = {
     "Tamil Nadu": "https://timesofindia.indiatimes.com/rssfeeds/2950623.cms",
     "Karnataka": "https://timesofindia.indiatimes.com/rssfeeds/-2128833038.cms",
     "Maharashtra": "https://timesofindia.indiatimes.com/rssfeeds/-2128838597.cms",
-    "Delhi": "https://timesofindia.indiatimes.com/rssfeeds/-2128839598.cms",
+    "Delhi": "https://news.google.com/rss/search?q=delhi+news&hl=en-IN&gl=IN&ceid=IN:en",
     "Gujarat": "https://news.google.com/rss/search?q=gujarat+news&hl=en-IN&gl=IN&ceid=IN:en",
     "West Bengal": "https://news.google.com/rss/search?q=west+bengal+news&hl=en-IN&gl=IN&ceid=IN:en",
     "Uttar Pradesh": "https://news.google.com/rss/search?q=uttar+pradesh+news&hl=en-IN&gl=IN&ceid=IN:en",
@@ -42,6 +42,13 @@ const FEEDS = {
     "Canada": "https://www.cbc.ca/webfeed/rss/rss-canada",
     "Mexico": "https://news.google.com/rss/search?q=mexico+news+english&hl=en&gl=US&ceid=US:en"
   },
+  "South America": {
+    "Brazil": "https://news.google.com/rss/search?q=brazil+news+english&hl=en&gl=US&ceid=US:en",
+    "Argentina": "https://news.google.com/rss/search?q=argentina+news+english&hl=en&gl=US&ceid=US:en",
+    "Colombia": "https://news.google.com/rss/search?q=colombia+news+english&hl=en&gl=US&ceid=US:en",
+    "Chile": "https://news.google.com/rss/search?q=chile+news+english&hl=en&gl=US&ceid=US:en",
+    "Peru": "https://news.google.com/rss/search?q=peru+news+english&hl=en&gl=US&ceid=US:en"
+  },
   "Europe": {
     "Europe General": "https://feeds.bbci.co.uk/news/world/europe/rss.xml",
     "UK": "https://feeds.bbci.co.uk/news/uk/rss.xml",
@@ -49,6 +56,11 @@ const FEEDS = {
     "Germany": "https://rss.dw.com/rdf/rss-en-all",
     "Italy": "https://news.google.com/rss/search?q=italy+news+english&hl=en&gl=US&ceid=US:en",
     "Spain": "https://news.google.com/rss/search?q=spain+news+english&hl=en&gl=US&ceid=US:en",
+    "Netherlands": "https://news.google.com/rss/search?q=netherlands+news+english&hl=en&gl=US&ceid=US:en",
+    "Switzerland": "https://news.google.com/rss/search?q=switzerland+news+english&hl=en&gl=US&ceid=US:en",
+    "Sweden": "https://news.google.com/rss/search?q=sweden+news+english&hl=en&gl=US&ceid=US:en",
+    "Poland": "https://news.google.com/rss/search?q=poland+news+english&hl=en&gl=US&ceid=US:en",
+    "Ireland": "https://news.google.com/rss/search?q=ireland+news&hl=en-IE&gl=IE&ceid=IE:en",
     "Russia": "https://www.themoscowtimes.com/rss/news",
     "Ukraine": "https://kyivindependent.com/rss/"
   },
@@ -58,6 +70,9 @@ const FEEDS = {
     "Saudi Arabia": "https://www.arabnews.com/rss.xml",
     "Israel": "https://www.jpost.com/rss/rssfeedsfrontpage.aspx",
     "Qatar": "https://www.aljazeera.com/xml/rss/all.xml",
+    "Egypt": "https://news.google.com/rss/search?q=egypt+news+english&hl=en&gl=US&ceid=US:en",
+    "Turkey": "https://news.google.com/rss/search?q=turkey+news+english&hl=en&gl=US&ceid=US:en",
+    "Lebanon": "https://news.google.com/rss/search?q=lebanon+news+english&hl=en&gl=US&ceid=US:en",
     "Iran": "https://www.tehrantimes.com/rss"
   },
   "Australia": {
@@ -67,7 +82,10 @@ const FEEDS = {
   "Africa": {
     "Africa": "https://feeds.bbci.co.uk/news/world/africa/rss.xml",
     "South Africa": "https://news.google.com/rss/search?q=south+africa+news&hl=en-ZA&gl=ZA&ceid=ZA:en",
-    "Nigeria": "https://news.google.com/rss/search?q=nigeria+news&hl=en-NG&gl=NG&ceid=NG:en"
+    "Nigeria": "https://news.google.com/rss/search?q=nigeria+news&hl=en-NG&gl=NG&ceid=NG:en",
+    "Kenya": "https://news.google.com/rss/search?q=kenya+news&hl=en-KE&gl=KE&ceid=KE:en",
+    "Ghana": "https://news.google.com/rss/search?q=ghana+news&hl=en-GH&gl=GH&ceid=GH:en",
+    "Morocco": "https://news.google.com/rss/search?q=morocco+news+english&hl=en&gl=US&ceid=US:en"
   }
 };
 
