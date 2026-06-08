@@ -1114,62 +1114,61 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
 </footer>
 <!-- Navigation Logic -->
 <script>
+function _hideAllLessonAreas() {
+  document.getElementById('cbse-content-area').style.display = 'none';
+  document.getElementById('jlpt-content-area').style.display = 'none';
+  document.getElementById('finance-content-area').style.display = 'none';
+}
+
 function openCbseLesson(subject, classNum) {
   document.getElementById('hero-section').style.display = 'none';
   document.getElementById('subjects-section').style.display = 'none';
   document.getElementById('lesson-view-container').style.display = 'block';
 
-  document.getElementById('jlpt-content-area').style.display = 'none';
-  document.getElementById('finance-content-area').style.display = 'none';
+  _hideAllLessonAreas();
   document.getElementById('cbse-content-area').style.display = 'block';
-  
+
   const cCont = document.getElementById('cbse-container');
   if (cCont) cCont.style.display = 'block';
-  
+
   _activeHub = 'cbse';
   _activeSubject = subject;
   _activeClass = classNum;
-  
-  // Format Title
+
   const subName = subject.charAt(0).toUpperCase() + subject.slice(1);
-  document.getElementById('cbse-header-title').innerText = "Class " + classNum + " " + subName;
-  
-  // Reuse existing render functions
-  if (typeof renderCbseContent === 'function') {
-    renderCbseContent();
-  }
+  document.getElementById('cbse-header-title').innerText = 'Class ' + classNum + ' ' + subName;
+
+  if (typeof renderCbseContent === 'function') renderCbseContent();
+
+  try { history.replaceState(null, '', '?subject=' + encodeURIComponent(subject) + '&class=' + classNum); } catch(e){}
 }
 
 function openJlpt(level) {
   document.getElementById('hero-section').style.display = 'none';
   document.getElementById('subjects-section').style.display = 'none';
   document.getElementById('lesson-view-container').style.display = 'block';
-  
-  document.getElementById('cbse-content-area').style.display = 'none';
-  document.getElementById('finance-content-area').style.display = 'none';
+
+  _hideAllLessonAreas();
   document.getElementById('jlpt-content-area').style.display = 'block';
 
   const jCont = document.getElementById('jlpt-container');
   if (jCont) jCont.style.display = 'block';
-  
+
   _activeHub = 'jlpt';
   _activeJlptLevel = level;
-  document.getElementById('jlpt-header-title').innerText = "Japanese JLPT learning";
-  
-  // Activate JLPT section components
-  if (typeof switchJlptLevel === 'function') {
-    switchJlptLevel(level);
-  }
-  // Make sure to show the levels tab by default for a specific level
-  if (typeof switchJpSubHub === 'function') {
-    switchJpSubHub('levels');
-  }
+  document.getElementById('jlpt-header-title').innerText = 'Japanese JLPT learning';
+
+  if (typeof switchJlptLevel === 'function') switchJlptLevel(level);
+  if (typeof switchJpSubHub === 'function') switchJpSubHub('levels');
+
+  try { history.replaceState(null, '', '?jlpt=' + level); } catch(e){}
 }
 
 function closeLessonView() {
   document.getElementById('lesson-view-container').style.display = 'none';
   document.getElementById('hero-section').style.display = 'grid';
   document.getElementById('subjects-section').style.display = 'block';
+  try { history.replaceState(null, '', location.pathname); } catch(e){}
 }
 
 let _activeFinanceIdx = 0;
@@ -1178,14 +1177,14 @@ function openFinanceLesson() {
   document.getElementById('hero-section').style.display = 'none';
   document.getElementById('subjects-section').style.display = 'none';
   document.getElementById('lesson-view-container').style.display = 'block';
-  document.getElementById('cbse-content-area').style.display = 'none';
-  document.getElementById('jlpt-content-area').style.display = 'none';
+  _hideAllLessonAreas();
   document.getElementById('finance-content-area').style.display = 'block';
   _activeHub = 'finance';
   _activeFinanceIdx = 0;
   if (typeof renderFinanceTOC === 'function') renderFinanceTOC();
   if (typeof renderFinanceLesson === 'function') renderFinanceLesson(0);
   document.getElementById('lesson-view-container').scrollTop = 0;
+  try { history.replaceState(null, '', '?subject=finance'); } catch(e){}
 }
 </script>
 
