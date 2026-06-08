@@ -166,28 +166,32 @@ ${body.text}`;
       
       // 1. Try Free Version (Pollinations)
       try {
-        const pollRes = await fetchWithTimeout('https://text.pollinations.ai/openai', {
+        const pollRes = await fetchWithTimeout('https://text.pollinations.ai/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            model: 'openai-large',
+            model: 'mistral',
             messages: [{ role: 'user', content: prompt }],
             stream: false, private: true
           })
         }, 30000);
         if (pollRes.ok) {
-          const pollData = await pollRes.json();
-          html = pollData?.choices?.[0]?.message?.content?.trim() || '';
+          const raw = await pollRes.text();
+          try {
+             const pd = JSON.parse(raw);
+             html = pd?.choices?.[0]?.message?.content || pd?.text || raw;
+          } catch(e) { html = raw; }
+          html = html.trim();
         }
       } catch (e) { /* ignore and fallback */ }
 
       // 2. Fallback to Gemini (via GitHub Secret)
-      if (!html) {
+      if (!html || html.length < 50) {
         const apiKey = env.GEMINI_API_KEY || env.Gemini_API_KEY_1;
         if (!apiKey) return jsonError(503, 'AI format failed and no fallback API key configured.');
         
         try {
-          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${apiKey}`;
           const resG = await fetchWithTimeout(geminiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -224,28 +228,32 @@ ${body.text}`;
 
       // 1. Try Free Version (Pollinations)
       try {
-        const pollRes = await fetchWithTimeout('https://text.pollinations.ai/openai', {
+        const pollRes = await fetchWithTimeout('https://text.pollinations.ai/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            model: 'openai-large',
+            model: 'mistral',
             messages: [{ role: 'user', content: promptStr }],
             stream: false, private: true
           })
         }, 15000);
         if (pollRes.ok) {
-          const pollData = await pollRes.json();
-          generatedPrompt = pollData?.choices?.[0]?.message?.content?.trim() || '';
+          const raw = await pollRes.text();
+          try {
+             const pd = JSON.parse(raw);
+             generatedPrompt = pd?.choices?.[0]?.message?.content || pd?.text || raw;
+          } catch(e) { generatedPrompt = raw; }
+          generatedPrompt = generatedPrompt.trim();
         }
       } catch (e) { /* ignore and fallback */ }
 
       // 2. Fallback to Gemini
-      if (!generatedPrompt) {
+      if (!generatedPrompt || generatedPrompt.length < 10) {
         const apiKey = env.GEMINI_API_KEY || env.Gemini_API_KEY_1;
         if (!apiKey) return jsonError(503, 'AI prompt generation failed and no fallback API key configured.');
         
         try {
-          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${apiKey}`;
           const resG = await fetchWithTimeout(geminiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
