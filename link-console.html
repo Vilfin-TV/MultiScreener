@@ -1982,9 +1982,8 @@ async function generateAIPhoto(prefix) {
   btn.disabled = true;
   
   try {
-    const res = await fetch(WORKER + '/api/generate-photo', {
+    const res = await authFetch(WORKER + '/api/generate-photo', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('op_token') },
       body: JSON.stringify({ heading: hdg, text: txt })
     });
     
