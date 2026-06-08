@@ -4101,9 +4101,43 @@ function triggerColoringDownload(dataUrl) {
 /* ==========================================================================
    INIT
    ========================================================================== */
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
   buildTabBar();
   syncPageLevelSelector(_activeLevel);
+
+  try {
+    var res = await fetch('content.json?t=' + Date.now());
+    if (res.ok) {
+      var data = await res.json();
+      if (Array.isArray(data)) {
+        data.forEach(function(post) {
+          if (post.section && post.section.startsWith('story_')) {
+            var cat = post.section.replace('story_', '');
+            if (!STORY_DATA[cat]) STORY_DATA[cat] = [];
+            var textTeaser = (post.story || '').replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').trim();
+            if (textTeaser.length > 150) textTeaser = textTeaser.slice(0, 150) + '...';
+            
+            // Strip inline styles to prevent copy-pasted 'display:none' from hiding text
+            var safeStory = (post.story || '').replace(/ (style|class)="[^"]*"/gi, '').replace(/ (style|class)='[^']*'/gi, '');
+            
+            STORY_DATA[cat].unshift({
+              id: post.id,
+              headline: post.heading || 'Untitled',
+              teaser: textTeaser,
+              source: 'VilfinTV Editor',
+              publishedAt: post.publishedAt || new Date().toISOString(),
+              mediaUrl: post.photo,
+              body: safeStory,
+              levels: null // fallback to body
+            });
+          }
+        });
+      }
+    }
+  } catch(e) {
+    console.warn("Could not load dynamic stories:", e);
+  }
+
   switchTab('ai'); // Default to AI stories on launch
 });
 </script>

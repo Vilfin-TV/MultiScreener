@@ -248,7 +248,7 @@ ${body.text}`;
       }
       
       // 2. Fallback to Gemini for keyword extraction
-      if ((!generatedKeywords || generatedKeywords.length > 50) && apiKey) {
+      if (!generatedKeywords && apiKey) {
         try {
            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
            const resG = await fetchWithTimeout(geminiUrl, {
@@ -263,7 +263,7 @@ ${body.text}`;
         } catch (e) {}
       }
       
-      if (!generatedKeywords || generatedKeywords.length > 50) generatedKeywords = 'finance business';
+      if (!generatedKeywords) generatedKeywords = 'finance business';
       
       // 3. Try Gemini Imagen 3 for Image Generation
       let imgBuffer = null;
