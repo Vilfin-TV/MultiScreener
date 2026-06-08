@@ -191,7 +191,7 @@ ${body.text}`;
         if (!apiKey) return jsonError(503, 'AI format failed and no fallback API key configured.');
         
         try {
-          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${apiKey}`;
+          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
           const resG = await fetchWithTimeout(geminiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -253,7 +253,7 @@ ${body.text}`;
         if (!apiKey) return jsonError(503, 'AI prompt generation failed and no fallback API key configured.');
         
         try {
-          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${apiKey}`;
+          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
           const resG = await fetchWithTimeout(geminiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
