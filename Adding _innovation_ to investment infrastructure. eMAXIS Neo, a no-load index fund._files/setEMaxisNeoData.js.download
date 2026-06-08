@@ -1,0 +1,28 @@
+import {getEMAXISNeoFund} from './getEMaxisNeoData.js';
+import {getEMaxisNeoNews} from './getEMaxisNeoNews.js';
+import {getEMaxisNeoSalesCompany} from './getEMaxisNeoSalesCompany.js';
+
+(async () => {
+    'use strict';
+
+    try {
+        const eMAXISNeoFundData = await getEMAXISNeoFund();
+
+        if (eMAXISNeoFundData.result.status === 200) {
+            // NEWS取得
+            const newsRootElement = document.querySelector('.js-get-eMAXIS-news');
+
+            if (newsRootElement) {
+                await getEMaxisNeoNews(newsRootElement, eMAXISNeoFundData.datasets.api00001tmCmFndSearchDetailOutDto);
+            }
+        }
+
+        const salesCompanyRootElement = document.querySelector('.js-sales-company');
+
+        if (salesCompanyRootElement) {
+            await getEMaxisNeoSalesCompany(salesCompanyRootElement);
+        }
+    } catch (err) {
+        console.log(err);
+    }
+})();

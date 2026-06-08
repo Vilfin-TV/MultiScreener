@@ -1967,6 +1967,10 @@ async function formatStoryWithAI(quillVarName, btnId, hiddenFieldId) {
 
 async function generateAIPhoto(prefix) {
   var hdg = document.getElementById(prefix + '-heading').value.trim();
+  var txt = '';
+  if (prefix === 'cp' && typeof cpQuill !== 'undefined') txt = cpQuill.getText().trim();
+  if (prefix === 'st' && typeof stQuill !== 'undefined') txt = stQuill.getText().trim();
+  
   if (!hdg) {
     alert("Please enter a heading before autocreating a graphic.");
     return;
@@ -1978,44 +1982,25 @@ async function generateAIPhoto(prefix) {
   btn.disabled = true;
   
   try {
-    const promptTheme = hdg.substring(0, 100);
-    const query = encodeURIComponent(`high quality professional editorial illustration of ${promptTheme}, finance business clean minimalist style, no text`);
-    const pollUrl = `https://image.pollinations.ai/prompt/${query}?width=1280&height=720&nologo=true`;
-    
-    // Use native Image object to bypass fetch/CORS blocks
-    const finalBlob = await new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      
-      const timeout = setTimeout(() => {
-        reject(new Error("Image generation timed out after 15 seconds. Please try again."));
-      }, 15000);
-      
-      img.onload = () => {
-        clearTimeout(timeout);
-        const canvas = document.createElement('canvas');
-        canvas.width = 1280;
-        canvas.height = 720;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, 1280, 720);
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error("Failed to convert image to blob"));
-        }, 'image/jpeg', 0.9);
-      };
-      
-      img.onerror = () => {
-        clearTimeout(timeout);
-        reject(new Error("Network rejected the image request. Pollinations AI might be overloaded."));
-      };
-      
-      img.src = pollUrl;
+    const res = await fetch(WORKER_URL + '/api/generate-photo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('op_token') },
+      body: JSON.stringify({ heading: hdg, text: txt })
     });
     
-    // Convert to file and upload
-    const file = new File([finalBlob], `ai-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
-    const fakeInput = { files: [file], value: 'fake' };
-    await handlePhotoUpload(fakeInput, prefix);
+    if (!res.ok) {
+      let err = await res.text();
+      try { err = JSON.parse(err).error; } catch(e){}
+      throw new Error(err);
+    }
+    
+    const data = await res.json();
+    if (!data.url) throw new Error("No URL returned from backend server.");
+    
+    var urlField = document.getElementById(prefix + '-photo');
+    urlField.value = data.url;
+    if (prefix === 'cp') previewPhoto(data.url);
+    if (prefix === 'st') previewStoryPhoto(data.url);
     
   } catch (e) {
     alert("AI Photo Gen failed: " + e.message);

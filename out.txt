@@ -1,0 +1,16 @@
+function switchJpSubHub(area) {
+  if (typeof stopConversation === 'function') stopConversation();
+  if (typeof stopDictPage === 'function') stopDictPage();
+  _activeJpSubHub = area;
+  document.getElementById('sub-hub-chart').classList.remove('active');
+  document.getElementById('sub-hub-kanji').classList.remove('active');
+  document.getElementById('sub-hub-levels').classList.remove('active');
+  document.getElementById('sub-hub-dict').classList.remove('active');
+  
+  document.getElementById('jp-kana-section').style.display = 'none';
+  document.getElementById('jp-kanji-casual-section').style.display = 'none';
+  document.getElementById('jp-levels-section').style.display = 'none';
+  document.getElementById('jp-dict-section').style.display = 'none';
+  
+  if (area === 'chart') {
+    document.get

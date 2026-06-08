@@ -1,0 +1,46 @@
+$(function () {
+	// SP 初期メニュー表示処理
+	var crtScr = $(document).scrollTop();
+	var tgtScr = $("#indexfund").offset().top - $(window).height();
+
+	if (crtScr >= tgtScr) {
+		$(".f_nav").addClass("scrollOpen");
+		$(".f_nav").show();
+	} else if (crtScr <= tgtScr) {
+		$(".f_nav").addClass("scrollClose");
+		$(".f_nav").hide();
+	}
+
+	// SP scroll位置によるメニュー表示処理
+	$(window).on('scroll',function () {
+		if (!$(".f_nav").hasClass("clicked")) {
+			crtScr = $(document).scrollTop();
+			tgtScr = $("#indexfund").offset().top - $(window).height();
+
+			if (crtScr >= tgtScr && !$(".f_nav").hasClass("scrollOpen")) {
+				$(".f_nav").addClass("scrollOpen");
+				$(".f_nav").removeClass("scrollClose");
+				$(".f_nav").slideToggle(300);
+			}
+
+			if (crtScr <= tgtScr && !$(".f_nav").hasClass("scrollClose")) {
+				$(".f_nav").addClass("scrollClose");
+				$(".f_nav").removeClass("scrollOpen");
+				$(".f_nav").slideToggle(300);
+			}
+
+		}
+	});
+
+	// SP close処理
+	$(".btnBar").on("click", function () {
+		if (!$("f_nav").hasClass("clicked")) {
+			$(".f_nav").slideToggle(300);
+			$(".f_nava").addClass("clicked");
+		}
+	});
+		// PC Lineバナーclose処理
+		$(".LineCloseBtn").on("click", function () {
+			$(".line").hide();
+		});
+});

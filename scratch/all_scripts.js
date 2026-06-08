@@ -1,0 +1,15261 @@
+
+  // Silently rewrite legacy GitHub Pages path
+  (function(){
+    var p = window.location.pathname;
+    if(p.indexOf('/MultiScreener') !== -1){
+      history.replaceState(null,'','/');
+    }
+  })();
+
+
+  // Apply saved colour theme before first paint to avoid flash
+  (function(){
+    var t = localStorage.getItem('viltv_theme') || 'black';
+    if (t === 'standard') { t = 'midnight'; localStorage.setItem('viltv_theme','midnight'); }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+
+
+// ── STATE ──────────────────────────────────────────────────────────
+const answers = {
+  assetType:'', market:'', bondType:'', commSub:'', commSubDigital:'', currOther:'',
+  assetName:'', resident:'', residentSub:'', horizon:'',
+  amountCurrency:'', amountSymbol:'', amount:'', isDigital: false, digitalType:''
+};
+let generatedQuery = '';
+let renderedHtml = '';
+
+// ═══════════════════════════════════════════════════════════════════
+// TOP MENU BAR
+// ═══════════════════════════════════════════════════════════════════
+function toggleMenu(id) {
+  const item = document.getElementById('tmenu-' + id);
+  const wasOpen = item.classList.contains('open');
+  closeAllMenus();
+  if (!wasOpen) {
+    const dd = item.querySelector('.tmenu-dropdown');
+    // Mobile: dropdown renders inline (CSS overrides position). Clear any
+    // previous desktop pixel offsets so it stays inside the mobile panel.
+    if (window.innerWidth <= 900) {
+      dd.style.left = '';
+      dd.style.top  = '';
+    } else {
+      const btn  = item.querySelector('.tmenu-btn');
+      const rect = btn.getBoundingClientRect();
+      const vw   = window.innerWidth;
+      const ddW  = dd.offsetWidth || 220; // actual rendered width or min-width fallback
+      // Align left edge with the button, but clamp so it never clips the right edge
+      let left = rect.left;
+      if (left + ddW > vw - 8) left = vw - ddW - 8;
+      if (left < 0) left = 0;
+      dd.style.left = left + 'px';
+      dd.style.top  = rect.bottom + 'px';
+    }
+    item.classList.add('open');
+  }
+}
+function closeAllMenus() {
+  document.querySelectorAll('.tmenu-item.open').forEach(el => el.classList.remove('open'));
+}
+
+// ── Submenu positioning — position:fixed, calculated on mouseenter ──────────
+// Uses capture-phase listener so coordinates are set BEFORE CSS :hover renders
+// the submenu. Falls back to right-side if flipping left would also overflow.
+(function () {
+  function _tmenuPositionSub(hasSubEl) {
+    var sub = hasSubEl.querySelector(':scope > .dd-submenu');
+    if (!sub) return;
+    var r   = hasSubEl.getBoundingClientRect();
+    var vw  = window.innerWidth;
+    var vh  = window.innerHeight;
+    var sw  = 270;  // safe over-estimate of min-width:260px
+    var sh  = 420;  // reasonable height cap for all known sub-menus
+    // Try right of parent; flip left if it would overflow
+    var left = r.right + 2;
+    if (left + sw > vw - 8) left = r.left - sw - 2;
+    if (left < 4)            left = 4;
+    // Clamp top so the bottom of submenu stays on-screen
+    var top = r.top;
+    if (top + sh > vh - 8) top = Math.max(4, vh - sh - 8);
+    sub.style.left = left + 'px';
+    sub.style.top  = top  + 'px';
+  }
+  document.addEventListener('mouseenter', function (e) {
+    var item = e.target && e.target.closest && e.target.closest('.dd-has-sub');
+    if (!item) return;
+    // Only act when inside an open dropdown or sub-menu
+    if (!item.closest('.tmenu-item.open')) return;
+    _tmenuPositionSub(item);
+  }, true);
+}());
+
+function closeMobileMenu() {
+  const items = document.querySelector('.top-menu-items');
+  const btn   = document.getElementById('mobile-menu-btn');
+  if (!items) return;
+  if (items.classList.contains('mobile-open')) {
+    items.classList.remove('mobile-open');
+    document.body.classList.remove('mobile-menu-open');
+    document.body.style.top = '';
+    if (typeof _savedBodyScroll === 'number') window.scrollTo(0, _savedBodyScroll);
+    items.querySelectorAll('.dd-has-sub.sub-open').forEach(el => el.classList.remove('sub-open'));
+    items.querySelectorAll('.tmenu-item.open').forEach(el => el.classList.remove('open'));
+  }
+  if (btn) { btn.classList.remove('active'); btn.textContent = '☰'; }
+}
+
+// Position submenus correctly when hovering (since they're position:fixed)
+document.addEventListener('mouseover', function(e) {
+  const sub = e.target.closest('.dd-has-sub');
+  if (!sub) return;
+  const submenu = sub.querySelector('.dd-submenu');
+  if (!submenu) return;
+  const rect = sub.getBoundingClientRect();
+  submenu.style.left = rect.right + 'px';
+  submenu.style.top = rect.top + 'px';
+});
+// Close menus when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.tmenu-item') && !e.target.closest('#mobile-menu-btn')) {
+    closeAllMenus();
+    // Also close mobile menu if clicking outside it
+    if (!e.target.closest('.top-menu-items') && !e.target.closest('#mobile-menu-btn')) {
+      closeMobileMenu();
+    }
+  }
+});
+
+// Mobile menu toggle — also scroll-locks the background so iOS doesn't
+// rubber-band scroll the page underneath the open drawer.
+let _savedBodyScroll = 0;
+function toggleMobileMenu() {
+  const items = document.querySelector('.top-menu-items');
+  const btn   = document.getElementById('mobile-menu-btn');
+  if (!items) return;
+  const willOpen = !items.classList.contains('mobile-open');
+  if (willOpen) {
+    _savedBodyScroll = window.scrollY || document.documentElement.scrollTop || 0;
+    document.body.classList.add('mobile-menu-open');
+    document.body.style.top = '-' + _savedBodyScroll + 'px';
+    items.classList.add('mobile-open');
+  } else {
+    items.classList.remove('mobile-open');
+    document.body.classList.remove('mobile-menu-open');
+    document.body.style.top = '';
+    window.scrollTo(0, _savedBodyScroll);
+    // Reset any expanded submenu state so next open starts fresh
+    items.querySelectorAll('.dd-has-sub.sub-open').forEach(el => el.classList.remove('sub-open'));
+    items.querySelectorAll('.tmenu-item.open').forEach(el => el.classList.remove('open'));
+  }
+  if (btn) {
+    btn.classList.toggle('active', willOpen);
+    btn.textContent = willOpen ? '✕' : '☰';
+  }
+}
+
+// Touch/click support: toggle submenus on tap for mobile
+document.addEventListener('click', function(e) {
+  const hasSub = e.target.closest('.dd-has-sub');
+  if (!hasSub) return;
+  // If clicking a direct link inside the submenu, let it navigate
+  if (e.target.closest('a.news-link') || e.target.closest('a.dd-item')) return;
+  // On mobile (menu items stacked), toggle sub-open
+  const mobileOpen = document.querySelector('.top-menu-items.mobile-open');
+  if (!mobileOpen) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const submenu = hasSub.querySelector('.dd-submenu');
+  if (!submenu) return;
+  // Close siblings
+  hasSub.parentElement.querySelectorAll('.dd-has-sub.sub-open').forEach(s => {
+    if (s !== hasSub) s.classList.remove('sub-open');
+  });
+  hasSub.classList.toggle('sub-open');
+});
+
+// Exit app
+function closeApp() {
+  if (confirm('Close VilfinTV Multiscreener?')) window.close();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SYMBOL AUTOCOMPLETE — pre-loaded on idle; instant search across 17K symbols
+// Performance: pre-loads 2 MB JSON once, builds a normalised cache for fast
+// case-insensitive scoring, caches recent query results for repeat keystrokes.
+// ═══════════════════════════════════════════════════════════════════════════
+const AC = {
+  data:    null,   // null = not yet loaded | [] = loaded (possibly empty)
+  cache:   null,   // [{sym,name,symL,nameL,exch,type}, ...] — pre-lowercased
+  loading: false,
+  timer:   null,
+  activeIdx: -1,
+  qCache:  Object.create(null), // query → results memo (max 24 keys)
+
+  SYMBOLS_URL: 'data/master_symbols.json',
+  MAX_RESULTS: 12,
+  DEBOUNCE_MS: 120,             // tighter — feels snappier
+  EARLY_TERMINATE: 80,          // stop scanning once we have this many score>=3 hits
+};
+
+async function acLoad() {
+  if (AC.data !== null || AC.loading) return AC.data;
+  AC.loading = true;
+  try {
+    const t0 = performance.now();
+    const r = await fetch(AC.SYMBOLS_URL, { cache: 'force-cache' });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    AC.data = await r.json();
+    // Build pre-lowercased cache so each query doesn't re-toLowerCase 17K strings
+    AC.cache = AC.data.map(it => ({
+      sym:   it.symbol,
+      name:  it.name,
+      exch:  it.exchange,
+      type:  it.type,
+      symL:  (it.symbol || '').toLowerCase(),
+      nameL: (it.name   || '').toLowerCase(),
+    }));
+    console.log(`[AC] Loaded ${AC.data.length.toLocaleString()} symbols in ${(performance.now()-t0).toFixed(0)}ms`);
+  } catch (e) {
+    console.warn('[AC] Could not load master_symbols.json:', e.message);
+    AC.data = []; AC.cache = [];
+  } finally {
+    AC.loading = false;
+  }
+  return AC.data;
+}
+
+// Pre-load on browser-idle so by the time the user types, data is ready.
+(function acPreload() {
+  const start = () => acLoad();
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(start, { timeout: 2500 });
+  } else {
+    setTimeout(start, 1500);
+  }
+})();
+
+function acSearch(query) {
+  clearTimeout(AC.timer);
+  const q = (query || '').trim();
+  if (q.length < 2) { acClose(); return; }
+
+  // If still loading, show spinner and re-render once data arrives
+  if (AC.data === null) {
+    const dd = document.getElementById('ac-dropdown');
+    if (dd) { dd.innerHTML = '<div class="ac-loading">⏳ Indexing 17K symbols…</div>'; dd.style.display = 'block'; }
+    acLoad().then(() => {
+      if (q === (document.getElementById('asset-name')?.value || '').trim()) acRender(q);
+    });
+    return;
+  }
+
+  AC.timer = setTimeout(() => acRender(q), AC.DEBOUNCE_MS);
+}
+
+function acRender(q) {
+  const dd = document.getElementById('ac-dropdown');
+  if (!dd) return;
+  if (!AC.cache || AC.cache.length === 0) { dd.style.display = 'none'; return; }
+
+  const ql = q.toLowerCase();
+  // Per-query memoization — re-typing the same prefix is instant
+  let results = AC.qCache[ql];
+  if (!results) {
+    const t0 = performance.now();
+    const high = []; // score 3-4 (starts-with)
+    const mid  = []; // score 2 (name starts-with)
+    const low  = []; // score 1 (contains)
+    for (const it of AC.cache) {
+      const symL = it.symL, nameL = it.nameL;
+      if (symL === ql)              { high.push({ s:4, it }); }
+      else if (symL.startsWith(ql)) { high.push({ s:3, it }); }
+      else if (nameL.startsWith(ql)){ mid.push ({ s:2, it }); }
+      else if (symL.includes(ql) || nameL.includes(ql)) { low.push({ s:1, it }); }
+      // Early termination: if we already have plenty of high-score hits,
+      // skip the rest — the result list only shows the top 12 anyway.
+      if (high.length >= AC.EARLY_TERMINATE) break;
+    }
+    high.sort((a,b)=> b.s - a.s || a.it.sym.localeCompare(b.it.sym));
+    mid.sort ((a,b)=> a.it.sym.localeCompare(b.it.sym));
+    low.sort ((a,b)=> a.it.sym.localeCompare(b.it.sym));
+    const merged = high.concat(mid).concat(low).slice(0, AC.MAX_RESULTS);
+    results = merged.map(x => ({ symbol:x.it.sym, name:x.it.name, exchange:x.it.exch, type:x.it.type }));
+    // Memoize (cap at 24 keys to avoid memory bloat)
+    const keys = Object.keys(AC.qCache);
+    if (keys.length >= 24) delete AC.qCache[keys[0]];
+    AC.qCache[ql] = results;
+    if (typeof console !== 'undefined' && console.debug) {
+      console.debug(`[AC] '${q}' → ${results.length} hits in ${(performance.now()-t0).toFixed(1)}ms`);
+    }
+  }
+
+  AC.activeIdx = -1;
+
+  if (results.length === 0) {
+    dd.innerHTML = '<div class="ac-empty">No matches found</div>';
+    dd.style.display = 'block';
+    return;
+  }
+
+  const typeClass = { Stock: 'ac-type-stock', ETF: 'ac-type-etf', Fund: 'ac-type-fund' };
+
+  dd.innerHTML = results.map((r, i) => `
+    <div class="ac-item" data-idx="${i}" data-name="${escHtml(r.name)}" data-symbol="${escHtml(r.symbol)}"
+         onmousedown="acSelect('${escHtml(r.name)}','${escHtml(r.symbol)}')"
+         onmouseover="acHover(${i})">
+      <span class="ac-sym">${escHtml(r.symbol)}</span>
+      <span class="ac-name">${escHtml(r.name)}</span>
+      <span class="ac-exch">${escHtml(r.exchange)}</span>
+      <span class="ac-type-badge ${typeClass[r.type] || 'ac-type-stock'}">${escHtml(r.type)}</span>
+    </div>`).join('');
+
+  dd.style.display = 'block';
+}
+
+function acSelect(name, symbol) {
+  const inp = document.getElementById('asset-name');
+  if (!inp) return;
+  // Populate with "Name (SYMBOL)" for clarity in the AI prompt
+  inp.value = `${name} (${symbol})`;
+  inp.dispatchEvent(new Event('input', { bubbles: true }));
+  answers.assetName = inp.value;
+  updateSummary();
+  showDownstream(true);
+  acClose();
+}
+
+function acHover(idx) {
+  AC.activeIdx = idx;
+  document.querySelectorAll('#ac-dropdown .ac-item').forEach((el, i) => {
+    el.classList.toggle('ac-active', i === idx);
+  });
+}
+
+function acKeyNav(e) {
+  const dd = document.getElementById('ac-dropdown');
+  if (!dd || dd.style.display === 'none') return;
+  const items = dd.querySelectorAll('.ac-item');
+  if (!items.length) return;
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    AC.activeIdx = Math.min(AC.activeIdx + 1, items.length - 1);
+    acHover(AC.activeIdx);
+    items[AC.activeIdx]?.scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    AC.activeIdx = Math.max(AC.activeIdx - 1, 0);
+    acHover(AC.activeIdx);
+    items[AC.activeIdx]?.scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'Enter' && AC.activeIdx >= 0) {
+    e.preventDefault();
+    const el = items[AC.activeIdx];
+    if (el) acSelect(el.dataset.name, el.dataset.symbol);
+  } else if (e.key === 'Escape') {
+    acClose();
+  }
+}
+
+function acClose() {
+  const dd = document.getElementById('ac-dropdown');
+  if (dd) dd.style.display = 'none';
+  AC.activeIdx = -1;
+}
+
+// Close when clicking outside the autocomplete wrap
+document.addEventListener('click', e => {
+  if (!e.target.closest('#ac-wrap')) acClose();
+});
+
+function setTheme(t) {
+  if (t === 'standard') t = 'midnight';
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('viltv_theme', t);
+  // Sync old swatch active states
+  document.querySelectorAll('.theme-swatch').forEach(function(s) {
+    s.classList.toggle('active', s.getAttribute('data-theme') === t);
+  });
+  // Sync new theme-list-item active state (shows ✓ checkmark)
+  document.querySelectorAll('.theme-list-item').forEach(function(s) {
+    s.classList.toggle('active-theme', s.getAttribute('data-theme') === t);
+  });
+  // Re-render markets widget with the correct colorTheme for the new theme
+  _mktsWidgetDirty = true;
+  setTimeout(mktsInitWidget, 80);
+}
+// Apply active states on page load
+(function(){
+  var ct = localStorage.getItem('viltv_theme') || 'black';
+  if (ct === 'standard') ct = 'midnight';
+  document.querySelectorAll('.theme-swatch').forEach(function(s) {
+    s.classList.toggle('active', s.getAttribute('data-theme') === ct);
+  });
+  document.querySelectorAll('.theme-list-item').forEach(function(s) {
+    s.classList.toggle('active-theme', s.getAttribute('data-theme') === ct);
+  });
+})();
+
+// ── MOBILE BOTTOM BAR MINIMIZE / RESTORE ──────────────────────────
+function mobileBarMinimize() {
+  const bar = document.getElementById('mobile-rb-bar');
+  const restore = document.getElementById('mobile-rb-restore');
+  if (bar) bar.classList.add('minimized');
+  if (restore) restore.classList.add('visible');
+  // add padding so content isn't hidden under nothing
+  document.querySelector('.main-content')?.style.setProperty('padding-bottom','0');
+}
+function mobileBarRestore() {
+  const bar = document.getElementById('mobile-rb-bar');
+  const restore = document.getElementById('mobile-rb-restore');
+  if (bar) bar.classList.remove('minimized');
+  if (restore) restore.classList.remove('visible');
+  document.querySelector('.main-content')?.style.setProperty('padding-bottom','62px');
+}
+
+// ── WIDGET EXPAND / RESTORE (PC) ─────────────────────────────────
+let _rbExpanded = false;
+let _rbExpandedOriginal = null;
+function rbToggleExpand() {
+  if (_rbExpanded) {
+    rbRestoreExpand();
+  } else {
+    rbDoExpand();
+  }
+}
+function rbDoExpand() {
+  const overlay  = document.getElementById('widget-expand-overlay');
+  const content  = document.getElementById('widget-expand-content');
+  const titleEl  = document.getElementById('widget-expand-title');
+  const expandBtn= document.getElementById('rb-expand-btn');
+  if (!overlay || !content) return;
+
+  // Find the currently active panel by checking display state directly
+  const allPanels = document.querySelectorAll('[id^="rb-panel-"]');
+  let activePanel = null;
+  for (var i = 0; i < allPanels.length; i++) {
+    if (allPanels[i].style.display !== 'none' && allPanels[i].style.display !== '') {
+      activePanel = allPanels[i]; break;
+    }
+  }
+  if (!activePanel) activePanel = document.getElementById('rb-panel-ai');
+  if (!activePanel) return;
+
+  // Force the panel to fill the overlay flex content area
+  activePanel.style.display = 'flex';
+  activePanel.style.flex = '1';
+  activePanel.style.minHeight = '0';
+  activePanel.style.width = '100%';
+  activePanel.style.overflow = 'hidden';
+
+  // Fix any already-injected TradingView containers: height:100% doesn't reliably
+  // resolve in a flex chain — switch to flex:1 so they fill their parent properly
+  activePanel.querySelectorAll('.tradingview-widget-container').forEach(function(tc) {
+    tc.style.height = '';
+    tc.style.flex = '1';
+    tc.style.minHeight = '0';
+  });
+
+  // Capture original parent so we can restore later
+  _rbExpandedOriginal = { parent: activePanel.parentNode, next: activePanel.nextSibling, el: activePanel };
+
+  const titleBar = document.getElementById('rb-panel-title');
+  if (titleEl && titleBar) titleEl.textContent = titleBar.textContent.trim();
+
+  // Physically move the active panel into the overlay
+  content.innerHTML = '';
+  content.appendChild(activePanel);
+
+  overlay.classList.add('active');
+  if (expandBtn) expandBtn.textContent = '⛶ Restore';
+  _rbExpanded = true;
+  document.body.style.overflow = 'hidden';
+
+  // ── Per-panel reinit at expanded size ──────────────────────────────
+  // Markets: completely re-render the TradingView widget at new dimensions
+  if (activePanel.id === 'rb-panel-markets') {
+    _mktsWidgetDirty = true;
+    setTimeout(mktsInitWidget, 80);
+  }
+  // Stocks: clear & reinject the currently active sub-tab widget
+  if (activePanel.id === 'rb-panel-stocks') {
+    setTimeout(_stkReinit, 80);
+  }
+
+  // Escape key closes the overlay
+  document._rbExpandEscHandler = function(e) { if (e.key === 'Escape') rbRestoreExpand(); };
+  document.addEventListener('keydown', document._rbExpandEscHandler);
+}
+function rbRestoreExpand() {
+  const overlay  = document.getElementById('widget-expand-overlay');
+  const content  = document.getElementById('widget-expand-content');
+  const expandBtn= document.getElementById('rb-expand-btn');
+
+  // Remove Escape handler
+  if (document._rbExpandEscHandler) {
+    document.removeEventListener('keydown', document._rbExpandEscHandler);
+    document._rbExpandEscHandler = null;
+  }
+
+  // Move the panel back to its original location
+  if (_rbExpandedOriginal && _rbExpandedOriginal.el && _rbExpandedOriginal.parent) {
+    var el = _rbExpandedOriginal.el;
+    // Restore panel styles to sidebar defaults
+    el.style.display = 'flex';
+    el.style.flex = '1';
+    el.style.minHeight = '0';
+    el.style.width = '';
+    el.style.overflow = 'hidden';
+    // Restore TradingView container sizing for sidebar
+    el.querySelectorAll('.tradingview-widget-container').forEach(function(tc) {
+      tc.style.height = '';
+      tc.style.flex = '1';
+      tc.style.minHeight = '0';
+    });
+    if (_rbExpandedOriginal.next) {
+      _rbExpandedOriginal.parent.insertBefore(el, _rbExpandedOriginal.next);
+    } else {
+      _rbExpandedOriginal.parent.appendChild(el);
+    }
+    // Stocks: reinject at sidebar size after restore
+    if (el.id === 'rb-panel-stocks') {
+      setTimeout(_stkReinit, 80);
+    }
+    // Markets: re-render at sidebar size
+    if (el.id === 'rb-panel-markets') {
+      _mktsWidgetDirty = true;
+      setTimeout(mktsInitWidget, 80);
+    }
+  }
+  if (content) content.innerHTML = '';
+  if (overlay) overlay.classList.remove('active');
+  if (expandBtn) expandBtn.textContent = '⛶ Expand';
+  _rbExpanded = false;
+  _rbExpandedOriginal = null;
+  document.body.style.overflow = '';
+}
+function rbCollapseExpand(e) {
+  if (e.target === document.getElementById('widget-expand-overlay')) rbRestoreExpand();
+}
+
+// ── RSS NEWS MODAL ────────────────────────────────────────────────
+function rssModalOpen(title, snippet, url, source) { openNewsModal(title, url, snippet, source); }
+function showNewsModalFallback(title, snippet, url, source) { openNewsModal(title, url, snippet, source); }
+function showNewsModal(title, snippet, url, source) { openNewsModal(title, url, snippet, source); }
+// Safe click handler for live-news cards — reads from data attributes to avoid quote-escaping issues
+function lnbCardOpen(el) {
+  var title   = el.dataset.title   || '';
+  var snippet = el.dataset.snippet ? decodeURIComponent(el.dataset.snippet) : '';
+  var url     = el.dataset.url     || '#';
+  var source  = el.dataset.source  || '';
+  rssModalOpen(title, snippet, url, source);
+}
+
+function openNewsModal(title, url, snippet, sourceName) {
+  var overlay    = document.getElementById('rss-modal-overlay');
+  var titleEl    = document.getElementById('newsModalTitle');
+  var contentDiv = document.getElementById('newsModalContent');
+  var srcEl      = document.getElementById('rss-modal-src');
+  var readBtn    = document.getElementById('newsModalReadMore');
+  var nm         = document.getElementById('newsModal');
+
+  if (!overlay) return;
+
+  if (titleEl) titleEl.textContent = title || 'News Story';
+
+  if (contentDiv) {
+    var clean = snippet ? snippet.replace(/\u2026\s*\[Read more[^\]]*\]/g, '').replace(/<[^>]+>/g, '').trim() : '';
+    if (clean) {
+      contentDiv.innerHTML = clean;
+    } else {
+      contentDiv.innerHTML = 'Click "Read Full Story" below to view the complete article on the publisher\'s website.';
+    }
+  }
+
+  if (srcEl) srcEl.textContent = sourceName ? '\uD83D\uDDE0 Source: ' + sourceName : '';
+
+  if (readBtn) {
+    if (url && url !== '#' && url.length > 5) {
+      readBtn.href = url;
+      readBtn.target = '_blank';
+      readBtn.style.display = '';
+    } else {
+      readBtn.style.display = 'none';
+    }
+  }
+
+  overlay.classList.add('active');
+  overlay.style.display = 'flex';
+  if (nm) nm.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function rssModalClose(e) {
+  if (e && e.target !== document.getElementById('rss-modal-overlay') && e.type !== 'click') return;
+  if (e && e.currentTarget && e.target !== e.currentTarget) return;
+  var overlay = document.getElementById('rss-modal-overlay');
+  if (overlay) { overlay.classList.remove('active'); overlay.style.display = 'none'; }
+  var nm = document.getElementById('newsModal');
+  if (nm) { nm.classList.remove('active'); nm.style.display = 'none'; }
+  document.body.style.overflow = '';
+}
+
+// ── YouTube Music playlist IDs (used by musicLoadPreset) ────────
+const _YT_MUSIC_PLAYLISTS = {'today-top':'PLOHoVaTp8R7dWeCQrKfh7a1a_Gu6KvfWP','bollywood':'PLedC6ZKrrIHikOi1oTaCfCYyjd47WX8cn','hindi':'PLCU2AKdwPmvpuHDVrlI5ObzhOElwuMWOV','punjabi':'PLFFyMei_d85U5RQdXjRQ5F012qr4vSmSa','malayalam':'PL4QNnZJr8sRPEJPqe7jZnsLPTBu1E3nIY','tamil':'PLHuHXHyLu7BHc0i8V_I9UalAFR6AYjZmK','telugu':'PLD8J0-dKvBidefj33rjDcspaDIh_9MKUB','jpop':'PLFgkCLPmldRTXFkl-MkdRkEuWoOjsD3H7','jrock':'PLFgkCLPmldRTXFkl-MkdRkEuWoOjsD3H7','kpop':'PLOHoVaTp8R7ccrQM3EpCTVDdwHhXrJhXS','krock':'PLcvXAP5YjHfPOtn6w7bguUvJnjlLXHrVR','cpop':'PLXbxeYTIWy424BMD-F6ycYA8tIsyFR6G9','lofi':'PL6NdkXsPL07IOu1AZ2Y2lGNYfjDStyT6O','chill':'PLl8UV_vtRB9puqG8ffVo2N56m8C4hf3K9','workout':'PLnfcpZm6el8gpyIi4gP-vk5kQ4J9NY55e','meditation':'PLQ_PIlf6OzqIeQygYMd8DccQ3XnJlSGcG'};
+
+// ── YOUTUBE MUSIC PLAYER — visible embed only ──────────────────
+let _musicCurrentId = null;
+function musicPlayYT(playlistId, name) {
+  _musicCurrentId = playlistId;
+  var vidWrap = document.getElementById('music-video-wrap');
+  var vidIfr  = document.getElementById('music-video-iframe');
+  if (vidWrap && vidIfr) {
+    // Detect single video ID (short, no PL/RD/OL prefix) vs playlist ID
+    var isSingle = playlistId && playlistId.length <= 20 && !playlistId.startsWith('PL') && !playlistId.startsWith('RD') && !playlistId.startsWith('OL') && !playlistId.startsWith('@');
+    var muteParam = _musicMuted ? '&mute=1' : '';
+    if (isSingle) {
+      vidIfr.src = 'https://www.youtube.com/embed/' + encodeURIComponent(playlistId) +
+                   '?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1' + muteParam;
+    } else if (playlistId.startsWith('@') || playlistId.startsWith('UC')) {
+      vidIfr.src = 'https://www.youtube.com/embed/live_stream?channel=' + encodeURIComponent(playlistId) +
+                   '&autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1' + muteParam;
+    } else {
+      vidIfr.src = 'https://www.youtube.com/embed/videoseries?list=' + encodeURIComponent(playlistId) +
+                   '&autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1' + muteParam;
+    }
+    vidWrap.style.display = 'block';
+  }
+  var now = document.getElementById('music-now');
+  if (now) now.textContent = name || 'Playing…';
+  var btnPlay  = document.getElementById('musicPlay');
+  var btnPause = document.getElementById('musicPause');
+  if (btnPlay) btnPlay.style.display = 'none';
+  if (btnPause) btnPause.style.display = 'inline-block';
+  _ytMediaSession(name || 'Music', 'VilfinTV Music');
+}
+
+function musicStop() {
+  var vidWrap = document.getElementById('music-video-wrap');
+  var vidIfr  = document.getElementById('music-video-iframe');
+  if (vidWrap) vidWrap.style.display = 'none';
+  if (vidIfr) vidIfr.src = '';
+  var btnPlay  = document.getElementById('musicPlay');
+  var btnPause = document.getElementById('musicPause');
+  if (btnPlay) btnPlay.style.display = 'inline-block';
+  if (btnPause) btnPause.style.display = 'none';
+  _musicCurrentId = null;
+  var now = document.getElementById('music-now');
+  if (now) now.textContent = '—';
+}
+function musicSetVolume(val) {
+  _musicVolume = parseInt(val) || 80;
+  if (_musicMuted && _musicVolume > 0) _musicMuted = false;
+  var btn = document.getElementById('music-mute-btn');
+  if (btn) btn.textContent = _musicMuted ? '🔇' : '🔊';
+  var slider = document.getElementById('music-vol');
+  if (slider) { slider.value = _musicVolume; slider.style.setProperty('--vol', _musicVolume + '%'); }
+  // postMessage to visible iframe
+  var ifr = document.getElementById('music-video-iframe');
+  if (ifr && ifr.contentWindow) try { ifr.contentWindow.postMessage('{"event":"command","func":"setVolume","args":['+_musicVolume+']}','*'); } catch(e){}
+}
+function musicToggleMute() {
+  _musicMuted = !_musicMuted;
+  var btn = document.getElementById('music-mute-btn');
+  if (btn) btn.textContent = _musicMuted ? '🔇' : '🔊';
+  // Reload iframe with updated mute param to apply immediately
+  if (_musicCurrentId) musicPlayYT(_musicCurrentId, document.getElementById('music-now')?.textContent || '');
+}
+// Play/pause toggle for the visible embed
+function musicTogglePlay() {
+  var ifr = document.getElementById('music-video-iframe');
+  if (!ifr) return;
+  try {
+    ifr.contentWindow.postMessage('{"event":"command","func":"' + (ifr.src ? 'pauseVideo' : 'playVideo') + '","args":""}', '*');
+  } catch(e) {}
+}
+function musicStop() {
+  var vidWrap = document.getElementById('music-video-wrap');
+  var vidIfr  = document.getElementById('music-video-iframe');
+  if (vidWrap) vidWrap.style.display = 'none';
+  if (vidIfr) vidIfr.src = '';
+  var btnPlay  = document.getElementById('musicPlay');
+  var btnPause = document.getElementById('musicPause');
+  if (btnPlay) btnPlay.style.display = 'inline-block';
+  if (btnPause) btnPause.style.display = 'none';
+  _musicCurrentId = null;
+  var now = document.getElementById('music-now');
+  if (now) now.textContent = '—';
+}
+
+// ── NAVIGATOR.MEDIA SESSION API ───────────────────────────────────
+function _ytMediaSession(title, artist) {
+  if (!('mediaSession' in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title:  title  || 'VilfinTV Music',
+    artist: artist || 'VilfinTV',
+    album:  'Multi-Asset Screener',
+    artwork: [
+      { src: 'https://vilfin-tv.github.io/MultiScreener/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ]
+  });
+}
+function _radioMediaSession(stationName) {
+  if (!('mediaSession' in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title:  stationName || 'Live Radio',
+    artist: 'VilfinTV Radio',
+    album:  'Global Radio Streams',
+    artwork: [
+      { src: 'https://vilfin-tv.github.io/MultiScreener/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ]
+  });
+  navigator.mediaSession.setActionHandler('play',  () => { document.getElementById('radio-audio')?.play(); });
+  navigator.mediaSession.setActionHandler('pause', () => { document.getElementById('radio-audio')?.pause(); });
+  navigator.mediaSession.setActionHandler('stop',  () => radioStop());
+}
+
+function openLiveTVSettings() {
+  const m = document.createElement('div');
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center';
+  m.innerHTML = `
+    <div style="background:var(--card2);border:1px solid var(--border2);border-radius:14px;padding:32px 36px;max-width:420px;width:90%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.5)">
+      <div style="font-size:36px;margin-bottom:14px">📺</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--gold2);margin-bottom:10px">YOUTUBE LIVE SETTINGS</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.75;margin-bottom:24px">YouTube Live channel customisation — choose your preferred channels and regions — is coming in the next update.</div>
+      <button onclick="this.closest('div[style]').remove()" style="background:var(--burn2);color:#fff;border:none;border-radius:8px;padding:10px 28px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.3px">Close</button>
+    </div>`;
+  document.body.appendChild(m);
+  m.addEventListener('click', e => { if (e.target === m) m.remove(); });
+}
+
+// ── RIGHT BAR TABS ──────────────────────────────────────────────────
+let rbActiveTab = 'overview';
+function switchRBTab(tabId) {
+  document.querySelectorAll('.rb-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.rb-frame').forEach(f => f.classList.remove('active'));
+  const btn = document.getElementById('rbtab-' + tabId);
+  const frame = document.getElementById('rbframe-' + tabId);
+  if (btn) btn.classList.add('active');
+  if (frame) frame.classList.add('active');
+  rbActiveTab = tabId;
+}
+
+// ── AI SERVICES — localStorage keys ─────────────────────────────────
+const CF_KEY             = 'viltv_cf_worker_url';
+const SVC_WORKER_PROVIDER= 'viltv_worker_provider';   // preferred provider for the Worker
+const SVC_GEMINI_KEY     = 'viltv_gemini_key';
+const SVC_GEMINI_LBL     = 'viltv_gemini_label';
+const SVC_OPENAI_KEY     = 'viltv_openai_key';
+const SVC_OPENAI_LBL     = 'viltv_openai_label';
+const SVC_API3_KEY       = 'viltv_api3_key';
+const SVC_API3_LBL       = 'viltv_api3_label';
+const SVC_API3_URL       = 'viltv_api3_url';
+const SVC_API3_MODEL     = 'viltv_api3_model';
+
+function getConfiguredWorkerUrl() {
+  return (
+    window._cfWorkerUrl ||
+    localStorage.getItem(CF_KEY) ||
+    ''
+  ).replace(/\/+$/, '');
+}
+
+// ── Load saved settings on startup ───────────────────────────────────
+function cfLoadSaved() {
+  const worker = getConfiguredWorkerUrl();
+  if (worker) { window._cfWorkerUrl = worker; }
+  _svcRefreshStatus();
+}
+
+// ── Connect Services Modal ────────────────────────────────────────────
+function openServicesModal() {
+  closeAllMenus();
+  // Populate fields from localStorage
+  const workerEl = document.getElementById('cf-url-input');
+  if (workerEl) workerEl.value = getConfiguredWorkerUrl();
+  const providerEl = document.getElementById('svc-worker-provider');
+  if (providerEl) providerEl.value = localStorage.getItem(SVC_WORKER_PROVIDER) || '';
+  const geminiEl = document.getElementById('svc-gemini-key');
+  const geminiLbl= document.getElementById('svc-gemini-label');
+  if (geminiEl)  geminiEl.value = localStorage.getItem(SVC_GEMINI_KEY) ? '••••••••••••' : '';
+  if (geminiLbl) geminiLbl.value= localStorage.getItem(SVC_GEMINI_LBL) || '';
+  const openaiEl = document.getElementById('svc-openai-key');
+  const openaiLbl= document.getElementById('svc-openai-label');
+  if (openaiEl)  openaiEl.value = localStorage.getItem(SVC_OPENAI_KEY) ? '••••••••••••' : '';
+  if (openaiLbl) openaiLbl.value= localStorage.getItem(SVC_OPENAI_LBL) || '';
+  const api3El  = document.getElementById('svc-api3-key');
+  const api3Lbl = document.getElementById('svc-api3-label');
+  const api3Url = document.getElementById('svc-api3-url');
+  const api3Mod = document.getElementById('svc-api3-model');
+  if (api3El)   api3El.value  = localStorage.getItem(SVC_API3_KEY)   ? '••••••••••••' : '';
+  if (api3Lbl)  api3Lbl.value = localStorage.getItem(SVC_API3_LBL)   || '';
+  if (api3Url)  api3Url.value = localStorage.getItem(SVC_API3_URL)   || '';
+  if (api3Mod)  api3Mod.value = localStorage.getItem(SVC_API3_MODEL) || '';
+  // Show saved badges
+  const _badge = (id, key) => { const b=document.getElementById(id); if(b) b.textContent=localStorage.getItem(key)?'✓ Saved':''; };
+  _badge('svc-gemini-saved-badge', SVC_GEMINI_KEY);
+  _badge('svc-openai-saved-badge', SVC_OPENAI_KEY);
+  _badge('svc-api3-saved-badge',   SVC_API3_KEY);
+  document.getElementById('cf-status-msg').textContent = '';
+  document.getElementById('cf-modal-overlay').classList.add('show');
+}
+
+function svcTab(id, btn) {
+  document.querySelectorAll('.svc-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.svc-tab-btn').forEach(b => b.classList.remove('active'));
+  const panel = document.getElementById('svc-panel-' + id);
+  if (panel) panel.classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+async function svcSave() {
+  const msg = document.getElementById('cf-status-msg');
+  msg.textContent = '⏳ Saving…';
+
+  // Coworker URL + preferred provider
+  const workerEl = document.getElementById('cf-url-input');
+  const workerUrl = (workerEl?.value || '').trim().replace(/\/+$/, '');
+  if (workerUrl) {
+    localStorage.setItem(CF_KEY, workerUrl);
+    window._cfWorkerUrl = workerUrl;
+  } else {
+    localStorage.removeItem(CF_KEY);
+    window._cfWorkerUrl = null;
+  }
+  const providerEl = document.getElementById('svc-worker-provider');
+  const providerVal = (providerEl?.value || '').trim();
+  if (providerVal) localStorage.setItem(SVC_WORKER_PROVIDER, providerVal);
+  else localStorage.removeItem(SVC_WORKER_PROVIDER);
+
+  // Gemini key — only save if user entered a real value (not the masked placeholder)
+  const geminiKeyEl = document.getElementById('svc-gemini-key');
+  const geminiKey = (geminiKeyEl?.value || '').trim();
+  if (geminiKey && !geminiKey.startsWith('••')) {
+    localStorage.setItem(SVC_GEMINI_KEY, geminiKey);
+  }
+  const geminiLbl = (document.getElementById('svc-gemini-label')?.value || '').trim();
+  if (geminiLbl) localStorage.setItem(SVC_GEMINI_LBL, geminiLbl);
+
+  // OpenAI key
+  const openaiKeyEl = document.getElementById('svc-openai-key');
+  const openaiKey = (openaiKeyEl?.value || '').trim();
+  if (openaiKey && !openaiKey.startsWith('••')) {
+    localStorage.setItem(SVC_OPENAI_KEY, openaiKey);
+  }
+  const openaiLbl = (document.getElementById('svc-openai-label')?.value || '').trim();
+  if (openaiLbl) localStorage.setItem(SVC_OPENAI_LBL, openaiLbl);
+
+  // Custom API 3
+  const api3KeyEl = document.getElementById('svc-api3-key');
+  const api3Key = (api3KeyEl?.value || '').trim();
+  if (api3Key && !api3Key.startsWith('••')) {
+    localStorage.setItem(SVC_API3_KEY, api3Key);
+  }
+  const api3Lbl = (document.getElementById('svc-api3-label')?.value || '').trim();
+  if (api3Lbl) localStorage.setItem(SVC_API3_LBL, api3Lbl);
+  const api3Url = (document.getElementById('svc-api3-url')?.value || '').trim().replace(/\/+$/, '');
+  if (api3Url) localStorage.setItem(SVC_API3_URL, api3Url);
+  const api3Model = (document.getElementById('svc-api3-model')?.value || '').trim();
+  if (api3Model) localStorage.setItem(SVC_API3_MODEL, api3Model);
+
+  _svcRefreshStatus();
+  msg.textContent = '✅ All settings saved!';
+  setTimeout(() => {
+    cfCloseModal();
+    if (window._pendingAutoSend) { window._pendingAutoSend = false; autoSendToGemini(); }
+  }, 1200);
+}
+
+function disconnectAllServices(fromModal) {
+  if (!fromModal && !confirm('Clear all saved API keys and connection settings?')) return;
+  [CF_KEY, SVC_WORKER_PROVIDER, SVC_GEMINI_KEY, SVC_GEMINI_LBL, SVC_OPENAI_KEY, SVC_OPENAI_LBL,
+   SVC_API3_KEY, SVC_API3_LBL, SVC_API3_URL, SVC_API3_MODEL].forEach(k => localStorage.removeItem(k));
+  window._cfWorkerUrl = null;
+  _svcRefreshStatus();
+  if (fromModal) {
+    const msg = document.getElementById('cf-status-msg');
+    if (msg) msg.textContent = '🗑 All keys cleared.';
+    // Clear input fields in modal
+    ['cf-url-input','svc-gemini-key','svc-gemini-label','svc-openai-key','svc-openai-label',
+     'svc-api3-key','svc-api3-label','svc-api3-url','svc-api3-model'].forEach(id => {
+      // Also reset provider dropdown
+      const pd = document.getElementById('svc-worker-provider'); if (pd) pd.value = '';
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    ['svc-gemini-saved-badge','svc-openai-saved-badge','svc-api3-saved-badge'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.textContent = '';
+    });
+  }
+}
+
+function _svcRefreshStatus() {
+  const hasWorker = !!(window._cfWorkerUrl || localStorage.getItem(CF_KEY));
+  const hasGemini = !!localStorage.getItem(SVC_GEMINI_KEY);
+  const hasOpenAI = !!localStorage.getItem(SVC_OPENAI_KEY);
+  const hasApi3   = !!(localStorage.getItem(SVC_API3_KEY) && localStorage.getItem(SVC_API3_URL));
+  const anyConnected = hasWorker || hasGemini || hasOpenAI || hasApi3;
+
+  const dot  = document.getElementById('cf-dot');
+  const label= document.getElementById('cf-label');
+  const discItem = document.getElementById('svc-disconnect-item');
+  const oldDiscItem = document.getElementById('cf-disconnect-item');
+
+  if (dot) dot.className = anyConnected ? 'cf-dot connected' : 'cf-dot';
+  if (label) {
+    const parts = [];
+    if (hasWorker) parts.push('Worker');
+    if (hasGemini) parts.push('Gemini');
+    if (hasOpenAI) parts.push('OpenAI');
+    if (hasApi3)   parts.push('API3');
+    label.textContent = parts.length ? parts.join('+') : 'Not Connected';
+  }
+  if (discItem) discItem.style.display = anyConnected ? '' : 'none';
+  if (oldDiscItem) oldDiscItem.style.display = anyConnected ? '' : 'none';
+  rbUpdateAiStatus(anyConnected);
+}
+
+function cfConnect() { openServicesModal(); }
+function cfCloseModal() {
+  document.getElementById('cf-modal-overlay').classList.remove('show');
+  window._pendingAutoSend = false;
+}
+function cfModalOverlayClick(e) {
+  if (e.target === document.getElementById('cf-modal-overlay')) cfCloseModal();
+}
+async function cfDoConnect() { await svcSave(); }
+function cfDisconnect() { disconnectAllServices(false); }
+
+function setCFConnected(url) {
+  if (url) { window._cfWorkerUrl = url; localStorage.setItem(CF_KEY, url); }
+  _svcRefreshStatus();
+}
+function setCFDisconnected() {
+  window._cfWorkerUrl = null;
+  localStorage.removeItem(CF_KEY);
+  _svcRefreshStatus();
+}
+
+// ── Direct API helpers (keys stay in localStorage, go directly to official endpoints) ──
+async function _callGeminiDirect(prompt, model) {
+  const key = localStorage.getItem(SVC_GEMINI_KEY);
+  if (!key) throw new Error('No Gemini API key');
+  const m = model || 'gemini-2.0-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`;
+  const res = await fetch(url, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ contents:[{parts:[{text:prompt}]}], generationConfig:{maxOutputTokens:4096} }),
+    signal: AbortSignal.timeout(45000)
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  if (!text) throw new Error('Empty response from Gemini');
+  return text;
+}
+
+async function _callOpenAIDirect(prompt, model) {
+  const key = localStorage.getItem(SVC_OPENAI_KEY);
+  if (!key) throw new Error('No OpenAI API key');
+  const m = model || 'gpt-4o-mini';
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body: JSON.stringify({ model:m, messages:[{role:'user',content:prompt}], max_tokens:4096 }),
+    signal: AbortSignal.timeout(45000)
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  const text = data.choices?.[0]?.message?.content || '';
+  if (!text) throw new Error('Empty response from OpenAI');
+  return text;
+}
+
+async function _callAPI3Direct(prompt, model) {
+  const key  = localStorage.getItem(SVC_API3_KEY);
+  const base = localStorage.getItem(SVC_API3_URL);
+  if (!key || !base) throw new Error('No custom API configured');
+  const m = model || localStorage.getItem(SVC_API3_MODEL) || 'llama-3.3-70b-versatile';
+  const res = await fetch(base.replace(/\/+$/,'') + '/v1/chat/completions', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body: JSON.stringify({ model:m, messages:[{role:'user',content:prompt}], max_tokens:4096 }),
+    signal: AbortSignal.timeout(45000)
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  const text = data.choices?.[0]?.message?.content || '';
+  if (!text) throw new Error('Empty response from custom API');
+  return text;
+}
+
+// ── AI Load Balancer: Worker → Gemini → OpenAI → API3 → prompt user ──
+// ═══════════════════════════════════════════════════════════════════
+// FREE AI QUERY — Pollinations.ai → DuckDuckGo → Wikipedia → Search links
+// No API key required. Works automatically out-of-the-box.
+// ═══════════════════════════════════════════════════════════════════
+async function _aiFreeQuery(prompt, onChunk, onDone, onError) {
+  const sysPrompt = 'You are a professional financial Market Assistant. Provide concise, accurate, research-grade analysis on global markets, equities, ETFs, commodities, crypto and macro themes. Cite key figures and dates. Today is ' + new Date().toDateString() + '.';
+
+  // Helper: reject SSE / error strings, accept real text
+  function _isGoodText(t) {
+    return t && t.length > 20 && !t.startsWith('data:') && !/^(\{|error|<!)/i.test(t);
+  }
+
+  // ── Strategy 1: Pollinations.ai OpenAI-compatible endpoint (JSON response) ──
+  try {
+    const res = await fetch('https://text.pollinations.ai/openai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'openai-large',
+        messages: [
+          { role: 'system', content: sysPrompt },
+          { role: 'user',   content: prompt }
+        ],
+        stream: false,
+        private: true
+      }),
+      signal: AbortSignal.timeout(60000)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const text = (data?.choices?.[0]?.message?.content || '').trim();
+      if (text && text.length > 20) { onChunk && onChunk(text); onDone && onDone(text); return; }
+    }
+  } catch(e) { /* fall through */ }
+
+  // ── Strategy 2: Pollinations.ai GET (plain text, short system prompt to avoid 414) ──
+  try {
+    const shortSys = 'Concise financial AI. Today: ' + new Date().toDateString();
+    const url = 'https://text.pollinations.ai/' + encodeURIComponent(prompt.slice(0, 400)) +
+                '?model=mistral&nologo=true&system=' + encodeURIComponent(shortSys);
+    const res = await fetch(url, { signal: AbortSignal.timeout(45000) });
+    if (res.ok) {
+      const text = (await res.text()).trim();
+      if (_isGoodText(text)) { onChunk && onChunk(text); onDone && onDone(text); return; }
+    }
+  } catch(e) { /* fall through */ }
+
+  // ── Strategy 3: Pollinations.ai POST plain endpoint (stream:false, handles JSON or text) ──
+  try {
+    const res = await fetch('https://text.pollinations.ai/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [
+          { role: 'system', content: sysPrompt },
+          { role: 'user',   content: prompt }
+        ],
+        model: 'mistral',
+        stream: false,
+        private: true
+      }),
+      signal: AbortSignal.timeout(45000)
+    });
+    if (res.ok) {
+      const raw = (await res.text()).trim();
+      // Extract from JSON if needed (some endpoints wrap response)
+      let text = raw;
+      if (raw.startsWith('{')) {
+        try { const d = JSON.parse(raw); text = d?.choices?.[0]?.message?.content || d?.text || raw; } catch {}
+      }
+      if (_isGoodText(text)) { onChunk && onChunk(text); onDone && onDone(text); return; }
+    }
+  } catch(e) { /* fall through */ }
+
+  // ── Strategy 4: DuckDuckGo Instant Answer (facts / definitions) ──
+  try {
+    const ddgUrl = 'https://api.duckduckgo.com/?q=' + encodeURIComponent(prompt) + '&format=json&no_html=1&skip_disambig=1';
+    const res = await fetch(ddgUrl, { signal: AbortSignal.timeout(15000) });
+    if (res.ok) {
+      const data = await res.json();
+      const parts = [];
+      if (data.Heading)      parts.push('📌 ' + data.Heading);
+      if (data.AbstractText) parts.push(data.AbstractText);
+      if (data.Answer)       parts.push('Answer: ' + data.Answer);
+      if (data.Definition)   parts.push('Definition: ' + data.Definition);
+      if (Array.isArray(data.RelatedTopics) && data.RelatedTopics.length) {
+        parts.push('\nRelated:');
+        data.RelatedTopics.slice(0, 6).forEach(t => {
+          const tx = (t && t.Text) ? t.Text : '';
+          if (tx) parts.push('• ' + tx);
+        });
+      }
+      if (parts.length > 1) {
+        const text = parts.join('\n') + '\n\n— Source: DuckDuckGo';
+        onChunk && onChunk(text); onDone && onDone(text); return;
+      }
+    }
+  } catch(e) { /* fall through */ }
+
+  // ── Strategy 5: Wikipedia summary ──
+  try {
+    const sRes = await fetch('https://en.wikipedia.org/w/api.php?action=opensearch&search=' +
+                             encodeURIComponent(prompt) + '&limit=1&format=json&origin=*',
+                             { signal: AbortSignal.timeout(15000) });
+    if (sRes.ok) {
+      const sData = await sRes.json();
+      const title = Array.isArray(sData) && sData[1] && sData[1][0];
+      if (title) {
+        const wRes = await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' +
+                                 encodeURIComponent(title),
+                                 { signal: AbortSignal.timeout(15000) });
+        if (wRes.ok) {
+          const w = await wRes.json();
+          if (w.extract) {
+            const link = (w.content_urls && w.content_urls.desktop && w.content_urls.desktop.page) || '';
+            const text = '📚 ' + (w.title || title) + '\n\n' + w.extract +
+                         (link ? '\n\nRead more: ' + link : '') + '\n\n— Source: Wikipedia';
+            onChunk && onChunk(text); onDone && onDone(text); return;
+          }
+        }
+      }
+    }
+  } catch(e) { /* fall through */ }
+
+  // ── Strategy 6: Useful search links — but NEVER encode the full research prompt ──
+  // Extract a short, human-readable search term from the prompt so URLs stay clean.
+  const _shortQuery = (function() {
+    // Try JSON "asset" field first (new prompt format)
+    let m = prompt.match(/"asset"\s*:\s*"([^"]{2,80})"/i);
+    if (m) return m[1].trim();
+    // Try "Asset Name : VALUE" plain-text field
+    m = prompt.match(/Asset Name\s*[:\|]\s*([^\n\r\|]{2,80})/i);
+    if (m) return m[1].trim();
+    // Try "Asset : VALUE"
+    m = prompt.match(/Asset\s*[:\|]\s*([^\n\r\|]{2,80})/i);
+    if (m) return m[1].trim();
+    // Last resort — first meaningful line of the prompt, trimmed
+    const firstLine = prompt.split(/[\n\r]+/)
+      .map(l => l.trim())
+      .find(l => l.length > 3 && !/^[━═\-#*\s]/.test(l));
+    return (firstLine || 'market analysis').slice(0, 80);
+  })();
+  const q  = encodeURIComponent(_shortQuery);
+  const fb = "⚠️ Live AI sources are temporarily unavailable.\n\n" +
+             "Use these direct research links for: " + _shortQuery + "\n\n" +
+             "🔎 Google: https://www.google.com/search?q=" + q + "\n" +
+             "🦆 DuckDuckGo: https://duckduckgo.com/?q=" + q + "\n" +
+             "📰 Google News: https://news.google.com/search?q=" + q + "\n" +
+             "📊 TradingView: https://www.tradingview.com/symbols/?query=" + q + "\n" +
+             "📈 Moneycontrol: https://www.moneycontrol.com/india/stockpricequote/search.php?search_str=" + q;
+  onChunk && onChunk(fb); onDone && onDone(fb);
+}
+
+// ── Markdown → safe HTML converter ─────────────────────────────────────────
+function _mdToHtml(md) {
+  if (!md) return '';
+
+  // 1. HTML-escape raw input to prevent XSS
+  let s = md
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // 2. Fenced code blocks (``` ... ```)
+  s = s.replace(/```[\w]*\n?([\s\S]*?)```/g,
+    '<pre class="rb-md-pre"><code>$1</code></pre>');
+
+  // 3. Process line-by-line for structure (headers, lists, HR, blockquote)
+  const lines = s.split('\n');
+  const out   = [];
+  let inList = false, listTag = '';
+
+  const closeList = () => { if (inList) { out.push('</' + listTag + '>'); inList = false; listTag = ''; } };
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    const trimmed = raw.trim();
+
+    // Skip lines inside code blocks (already wrapped above)
+    // Ordered list
+    if (/^\d+\.\s/.test(raw)) {
+      if (!inList || listTag !== 'ol') { closeList(); out.push('<ol class="rb-md-ol">'); inList = true; listTag = 'ol'; }
+      out.push('<li>' + raw.replace(/^\d+\.\s/, '') + '</li>'); continue;
+    }
+    // Unordered list
+    if (/^[-*]\s/.test(raw)) {
+      if (!inList || listTag !== 'ul') { closeList(); out.push('<ul class="rb-md-ul">'); inList = true; listTag = 'ul'; }
+      out.push('<li>' + raw.replace(/^[-*]\s/, '') + '</li>'); continue;
+    }
+    closeList();
+
+    if (/^#{4}\s/.test(raw)) { out.push('<h4 class="rb-md-h4">' + raw.replace(/^#{4}\s/, '') + '</h4>'); continue; }
+    if (/^#{3}\s/.test(raw)) { out.push('<h3 class="rb-md-h3">' + raw.replace(/^#{3}\s/, '') + '</h3>'); continue; }
+    if (/^#{2}\s/.test(raw)) { out.push('<h2 class="rb-md-h2">' + raw.replace(/^#{2}\s/, '') + '</h2>'); continue; }
+    if (/^#\s/.test(raw))   { out.push('<h2 class="rb-md-h2">' + raw.replace(/^#\s/, '')   + '</h2>'); continue; }
+    if (/^---+$/.test(trimmed)) { out.push('<hr class="rb-md-hr">'); continue; }
+    if (/^>\s/.test(raw)) { out.push('<blockquote class="rb-md-quote">' + raw.replace(/^>\s/, '') + '</blockquote>'); continue; }
+    if (trimmed === '') { out.push('<br>'); continue; }
+    out.push('<p class="rb-md-p">' + raw + '</p>');
+  }
+  closeList();
+
+  // 4. Inline formatting on the assembled HTML
+  let result = out.join('');
+  result = result
+    .replace(/\*\*\*([^*\n]+?)\*\*\*/g, '<strong class="rb-md-strong"><em class="rb-md-em">$1</em></strong>')
+    .replace(/\*\*([^*\n]+?)\*\*/g,     '<strong class="rb-md-strong">$1</strong>')
+    .replace(/__([^_\n]+?)__/g,          '<strong class="rb-md-strong">$1</strong>')
+    .replace(/\*([^*\n]+?)\*/g,          '<em class="rb-md-em">$1</em>')
+    .replace(/_([^_\n]+?)_/g,            '<em class="rb-md-em">$1</em>')
+    .replace(/`([^`\n]+?)`/g,            '<code class="rb-md-code">$1</code>');
+
+  return result;
+}
+
+// ── Cloudflare Worker proxy query ────────────────────────────────────────────
+async function _aiWorkerQuery(prompt, onChunk, onDone, onError) {
+  // Only uses a URL the USER has personally entered in the Settings panel.
+  // The system WORKER_URL is never stored here — it lives in .env / GitHub Secrets only.
+  const workerUrl = (localStorage.getItem(CF_KEY) || '').replace(/\/+$/, '');
+  const provider  = localStorage.getItem(SVC_WORKER_PROVIDER) || '';
+
+  if (!workerUrl) throw new Error('No worker URL configured');
+
+  const res = await fetch(workerUrl + '/query', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, provider }),
+    signal: AbortSignal.timeout(60000)
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => res.status);
+    throw new Error('Worker ' + res.status + ': ' + errText);
+  }
+
+  // Support both streaming (SSE) and JSON responses from the worker
+  const contentType = res.headers.get('content-type') || '';
+  if (contentType.includes('text/event-stream') && res.body) {
+    const reader = res.body.getReader();
+    const dec    = new TextDecoder();
+    let buf = '', accumulated = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop() || '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') { onDone && onDone(accumulated); return; }
+        let evt; try { evt = JSON.parse(raw); } catch { continue; }
+        if (evt.error) throw new Error(evt.error);
+        if (evt.chunk) { accumulated += evt.chunk; onChunk && onChunk(accumulated); }
+        if (evt.result || evt.done) { const t = evt.result || accumulated; onDone && onDone(t); return; }
+      }
+    }
+    if (accumulated) { onDone && onDone(accumulated); return; }
+    throw new Error('Empty stream');
+  }
+
+  // JSON response
+  const data   = await res.json();
+  const text   = data.result || data.answer || data.response || data.text || '';
+  if (!text)   throw new Error('Empty response from worker');
+  onChunk && onChunk(text);
+  onDone  && onDone(text);
+}
+
+async function _aiLoadBalancedQuery(prompt, model, onChunk, onDone, onError) {
+  const workerUrl = (window._cfWorkerUrl || localStorage.getItem(CF_KEY) || '').replace(/\/+$/,'');
+
+  // 1. Try Coworker — sends provider preference so Worker routes to the right API
+  if (workerUrl) {
+    try {
+      const m        = model || localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
+      const provider = localStorage.getItem(SVC_WORKER_PROVIDER) || '';
+      const payload  = JSON.stringify({ prompt, model: m, provider, use_search: true });
+
+      // Try streaming endpoint first
+      const res = await fetch(workerUrl + '/query-stream', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: payload, signal: AbortSignal.timeout(90000),
+      });
+      if (res.ok && res.body) {
+        const reader = res.body.getReader(); const dec = new TextDecoder();
+        let buf='', accumulated='';
+        while(true) {
+          const {done,value} = await reader.read(); if(done) break;
+          buf += dec.decode(value,{stream:true});
+          const lines=buf.split('\n'); buf=lines.pop()||'';
+          for(const line of lines) {
+            if(!line.startsWith('data: ')) continue;
+            let evt; try{evt=JSON.parse(line.slice(6));}catch{continue;}
+            if(evt.error) throw new Error(evt.error);
+            if(evt.chunk){accumulated+=evt.chunk; onChunk&&onChunk(accumulated);}
+            if(evt.done){onDone&&onDone(accumulated); return;}
+          }
+        }
+        if(accumulated.length>30){onDone&&onDone(accumulated); return;}
+      }
+      // Stream empty — try non-stream endpoints
+      for(const ep of ['/query','/ask','/chat','/generate']){
+        try{
+          const r=await fetch(workerUrl+ep,{method:'POST',headers:{'Content-Type':'application/json'},
+            body:payload, signal:AbortSignal.timeout(60000)});
+          if(!r.ok&&r.status===404) continue;
+          const txt=await r.text(); let d; try{d=JSON.parse(txt);}catch{d={result:txt};}
+          if(d.error) continue;
+          const text=d.result||d.answer||d.response||d.text||txt||'';
+          if(text){onChunk&&onChunk(text); onDone&&onDone(text); return;}
+        }catch(e){if(e.name==='AbortError')throw e;}
+      }
+    } catch(e) { if(e.name==='AbortError') throw e; /* fall through */ }
+  }
+
+  // 2. Try Gemini direct
+  if (localStorage.getItem(SVC_GEMINI_KEY)) {
+    try {
+      const text = await _callGeminiDirect(prompt, model);
+      onChunk&&onChunk(text); onDone&&onDone(text); return;
+    } catch(e) { /* fall through */ }
+  }
+
+  // 3. Try OpenAI direct
+  if (localStorage.getItem(SVC_OPENAI_KEY)) {
+    try {
+      const text = await _callOpenAIDirect(prompt, model);
+      onChunk&&onChunk(text); onDone&&onDone(text); return;
+    } catch(e) { /* fall through */ }
+  }
+
+  // 4. Try Custom API
+  if (localStorage.getItem(SVC_API3_KEY) && localStorage.getItem(SVC_API3_URL)) {
+    try {
+      const text = await _callAPI3Direct(prompt, model);
+      onChunk&&onChunk(text); onDone&&onDone(text); return;
+    } catch(e) { /* fall through */ }
+  }
+
+  // 5. Nothing connected — use the FREE automatic stack (no API key needed)
+  return _aiFreeQuery(prompt, onChunk, onDone, onError);
+}
+
+// ── AI QUERY modal ───────────────────────────────────────────────────
+function cfAIQuery() {
+  closeAllMenus();
+  document.getElementById('ai-query-input').value = '';
+  document.getElementById('ai-query-status').textContent = '';
+  document.getElementById('ai-query-result').style.display = 'none';
+  document.getElementById('ai-query-overlay').classList.add('show');
+}
+function aiQueryClose() { document.getElementById('ai-query-overlay').classList.remove('show'); }
+
+async function aiQuerySend() {
+  const q = document.getElementById('ai-query-input').value.trim();
+  if (!q) { document.getElementById('ai-query-status').textContent = '⚠️ Please enter a question.'; return; }
+  const status = document.getElementById('ai-query-status');
+  const result = document.getElementById('ai-query-result');
+  status.textContent = '⏳ Processing…';
+  result.style.display = 'none';
+  const model = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
+  try {
+    await _aiLoadBalancedQuery(q, model,
+      null,
+      (text) => { result.textContent = text; result.style.display = 'block'; status.textContent = '✅ Response received!'; },
+      (err)  => { status.textContent = '⚠️ ' + err.message; }
+    );
+  } catch(err) {
+    status.textContent = '⚠️ ' + (err.message || 'Request failed.');
+  }
+}
+
+// Generate query then immediately auto-send to Gemini
+async function generateAndSendToGemini() {
+  const btn = document.getElementById('gen-auto-btn');
+  const origText = btn ? btn.innerHTML : '';
+  if (btn) { btn.innerHTML = '⏳ Generating…'; btn.disabled = true; btn.style.opacity = '0.7'; }
+  try {
+    const generated = generateQuery(true);
+    if (!generated) return;
+    // Jump to Result tab immediately — show branded progress bar there
+    switchMain(2);
+    _vilfinProgressShow();
+    await new Promise(r => setTimeout(r, 150));
+    await autoSendToGemini();
+  } finally {
+    if (btn) { btn.innerHTML = origText; btn.disabled = false; btn.style.opacity = ''; }
+  }
+}
+
+// Auto-send the generated research query to Gemini and show output
+window._streamAbort = null;
+window._streamPartial = '';
+
+async function autoSendToGemini() {
+  const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY) || '';
+  const finalUrl  = workerUrl.replace(/\/+$/, '');
+
+  // Require a configured AI service for the Gamma report
+  const hasAny = !!(finalUrl || localStorage.getItem(SVC_GEMINI_KEY) || localStorage.getItem(SVC_OPENAI_KEY) ||
+    (localStorage.getItem(SVC_API3_KEY) && localStorage.getItem(SVC_API3_URL)));
+  if (!hasAny) {
+    if (confirm('⚠️ Please configure your AI connection in Settings first.\n\nOpen Settings now?')) {
+      openServicesModal();
+    }
+    return;
+  }
+
+  const queryEl = document.getElementById('copy-content');
+  const queryText = generatedQuery || queryEl?.innerText?.trim() || queryEl?.textContent?.trim();
+  if (!queryText || queryText.includes('No query generated yet')) {
+    alert('⚠️ Please fill the Input Form and click Generate AI Query first.');
+    return;
+  }
+
+  // Cancel any in-flight query
+  if (window._streamAbort) { window._streamAbort.abort(); }
+  window._streamAbort = new AbortController();
+  window._streamPartial = '';
+
+  // Elements kept invisible — only VilfinTV progress bar shown to user
+  const statusEl = document.getElementById('auto-gemini-status');
+  const resultEl = document.getElementById('auto-gemini-result');
+  const copyBtn  = document.getElementById('auto-gemini-copy');
+  const renderBtn= document.getElementById('auto-gemini-render');
+
+  _aiProgressStart();
+  _vilfinProgressUpdate(5, '🔍 Searching for data…');
+
+  const pasteArea = document.getElementById('paste-area');
+  if (pasteArea) pasteArea.value = '';
+
+  const selectedModel = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
+
+  async function tryStream(partialSoFar, attempt) {
+    const provider = localStorage.getItem(SVC_WORKER_PROVIDER) || '';
+    const body = { prompt: queryText, use_search: true, model: selectedModel, provider };
+    if (partialSoFar) body.partial = partialSoFar;
+
+    let res;
+    try {
+      res = await fetch(finalUrl + '/query-stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: window._streamAbort.signal
+      });
+    } catch(e) {
+      if (e.name === 'AbortError') { statusEl.textContent = '⏹ Query cancelled.'; _aiProgressStop(); return; }
+      // Stream connection failed — fall back to /query
+      return fallbackQuery(partialSoFar);
+    }
+
+    if (!res.ok || !res.body) return fallbackQuery(partialSoFar);
+
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() || '';
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const raw = line.slice(6).trim();
+          if (!raw) continue;
+          let evt;
+          try { evt = JSON.parse(raw); } catch { continue; }
+          if (evt.error) throw new Error(evt.error);
+          if (evt.status === 'start') {
+            _aiProgressSet(25, 'Generating…', 'ps3');
+            _vilfinProgressUpdate(25, '🤖 Generating your report…');
+          }
+          if (evt.chunk) {
+            window._streamPartial += evt.chunk;
+            const chars = window._streamPartial.length;
+            const pct = Math.min(90, 25 + Math.floor(chars / 80));
+            _aiProgressSet(pct, `Generating… ${chars.toLocaleString()} chars`, 'ps3');
+            _vilfinProgressUpdate(pct, `✍️ Writing report… ${chars.toLocaleString()} characters`);
+            resultEl.textContent = window._streamPartial;
+            resultEl.style.display = 'block';
+          }
+          if (evt.done) {
+            handleGeminiResult(window._streamPartial);
+            return;
+          }
+        }
+      }
+      // Stream closed without done event
+      if (window._streamPartial.length > 50) {
+        handleGeminiResult(window._streamPartial);
+      } else {
+        return fallbackQuery('');
+      }
+    } catch(e) {
+      if (e.name === 'AbortError') { statusEl.textContent = '⏹ Query cancelled.'; _aiProgressStop(); return; }
+      // Retry with partial if we have content
+      if (attempt < 1 && window._streamPartial.length > 100) {
+        _aiProgressSet(65, '⚠️ Resuming from partial…', 'ps3');
+        statusEl.textContent = `⚠️ Connection dropped at ${window._streamPartial.length.toLocaleString()} chars — resuming…`;
+        await new Promise(r => setTimeout(r, 2000));
+        return tryStream(window._streamPartial, attempt + 1);
+      }
+      return fallbackQuery(window._streamPartial);
+    }
+  }
+
+  async function fallbackQuery(partialSoFar) {
+    _aiProgressSet(35, 'Processing…', 'ps3');
+    _vilfinProgressUpdate(35, '🔄 Processing your request…');
+
+    // ── Try Worker endpoints ───────────────────────────────────────────────────
+    let workerPromptTooLong = false;
+    if (finalUrl) {
+      const endpoints = ['/query', '/ask', '/chat', '/generate'];
+      for (const ep of endpoints) {
+        try {
+          const body = { prompt: queryText, model: selectedModel, use_search: true };
+          if (partialSoFar) body.partial = partialSoFar;
+          const res = await fetch(finalUrl + ep, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body), signal: AbortSignal.timeout(120000)
+          });
+          if (!res.ok && res.status === 404) continue;
+          const rawText = await res.text();
+          let data; try { data = JSON.parse(rawText); } catch(_) { data = { result: rawText }; }
+          const errMsg = data.error ? (typeof data.error === 'string' ? data.error : (data.error.message || JSON.stringify(data.error))) : null;
+          if (errMsg) {
+            // "Prompt too long" means the Worker has an old character limit (< 32 000).
+            // Break immediately — retrying other endpoints won't help, they use the same limit.
+            if (/prompt too long/i.test(errMsg)) {
+              workerPromptTooLong = true;
+              break;
+            }
+            continue;
+          }
+          _aiProgressSet(88, 'Receiving…', 'ps4');
+          _vilfinProgressUpdate(88, '📥 Almost done…');
+          const answer = data.result || data.answer || data.response || data.text || data.content || rawText;
+          if (answer) { handleGeminiResult(answer); return; }
+        } catch(e) {
+          if (e.name === 'AbortError') { _aiProgressStop(); return; }
+        }
+      }
+    }
+
+    // ── Try direct API keys (Gemini / OpenAI / Custom) ────────────────────────
+    // Only bother if the Worker didn't fail on prompt length — if it did, these
+    // use the same large prompt and local keys aren't configured anyway.
+    if (!workerPromptTooLong) {
+      _aiProgressSet(50, 'Trying direct API…', 'ps3');
+      _vilfinProgressUpdate(50, '🔄 Trying direct AI connections…');
+      const directCallers = [
+        ['Gemini',     () => _callGeminiDirect(queryText, selectedModel)],
+        ['OpenAI',     () => _callOpenAIDirect(queryText, selectedModel)],
+        ['Custom API', () => _callAPI3Direct(queryText, selectedModel)],
+      ];
+      for (const [name, caller] of directCallers) {
+        try {
+          _vilfinProgressUpdate(60, `🤖 Querying ${name}…`);
+          const text = await caller();
+          if (text) { handleGeminiResult(text); return; }
+        } catch(e) { /* try next */ }
+      }
+    }
+
+    // ── Last resort: free AI stack (Pollinations → DuckDuckGo → Wikipedia) ────
+    if (workerPromptTooLong) {
+      _vilfinProgressUpdate(55,
+        '⚠️ Worker limit hit — your Worker needs to be updated (see below). ' +
+        'Trying free AI as backup…'
+      );
+    } else {
+      _vilfinProgressUpdate(70, '🌐 Searching intelligence sources…');
+    }
+    try {
+      await _aiFreeQuery(
+        queryText,
+        (chunk) => { /* chunks not used here — we wait for full result */ },
+        (fullText) => {
+          // Detect the fallback search-links text from _aiFreeQuery Strategy 6.
+          // Do NOT route it through buildReport() — show a clean error instead.
+          if (!fullText || /^⚠️ Live AI sources are temporarily unavailable/i.test(fullText)) {
+            _aiProgressStop();
+            // Give a specific message when the root cause is a Worker prompt-length limit.
+            if (workerPromptTooLong) {
+              _vilfinProgressError(
+                'Your Cloudflare Worker is rejecting the research prompt (too long). ' +
+                'Please copy the updated <strong>worker.js</strong> from the repo and ' +
+                'redeploy it in the <a href="https://dash.cloudflare.com" target="_blank" ' +
+                'style="color:var(--burn2)">Cloudflare Dashboard</a>. ' +
+                'Until then, use the <strong>Copy AI Query</strong> tab to paste into Gemini manually.'
+              );
+            } else {
+              _vilfinProgressError(
+                'All AI sources are temporarily unreachable. ' +
+                'Your Worker is connected — please try again in a moment, ' +
+                'or use the <strong>Copy AI Query</strong> tab to paste into Gemini manually.'
+              );
+            }
+            return;
+          }
+          handleGeminiResult(fullText);
+        },
+        (err) => {
+          _aiProgressStop();
+          _vilfinProgressError(
+            workerPromptTooLong
+              ? 'Worker rejected the prompt (too long). Redeploy the updated worker.js from the repo.'
+              : '⚠️ All AI sources failed. Please check your internet connection.'
+          );
+        }
+      );
+    } catch(e) {
+      _aiProgressStop();
+      _vilfinProgressError(
+        workerPromptTooLong
+          ? 'Worker rejected the prompt (too long). Redeploy the updated worker.js from the repo.'
+          : '⚠️ All AI sources failed. Please check your internet connection.'
+      );
+    }
+  }
+
+  function handleGeminiResult(answer) {
+    // Pre-clean the raw AI response: strip markdown fences so that
+    // ```json...``` wrappers never land in the textarea as raw text.
+    // We keep the ORIGINAL answer for HTML detection, but store the
+    // cleaned version so renderOutput() receives a parseable string.
+    const _cleanedAnswer = (typeof stripMarkdownFences === 'function')
+      ? stripMarkdownFences(answer)
+      : answer.replace(/^```(?:json|html)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+
+    if (pasteArea) pasteArea.value = _cleanedAnswer;
+    if (answer.includes('<!DOCTYPE') || answer.includes('<html')) {
+      window._autoGeminiHTML = answer;
+    }
+    _aiProgressSet(95, 'Rendering…', 'ps5');
+    _vilfinProgressUpdate(95, '📊 Rendering your report…');
+    // Already on Result tab (switched at generateAndSendToGemini call)
+    setTimeout(() => {
+      renderOutput();
+      const eh = document.getElementById('btn-export-html');
+      const ep = document.getElementById('btn-export-pdf');
+      const cr = document.getElementById('clear-result-btn');
+      if (eh) eh.style.display = '';
+      if (ep) ep.style.display = '';
+      if (cr) cr.style.display = '';
+      _aiProgressSet(100, 'Done!', 'ps5');
+      _vilfinProgressUpdate(100, '✅ Your report is ready!');
+      setTimeout(() => { _aiProgressStop(); _vilfinProgressHide(); }, 1800);
+    }, 300);
+  }
+
+  await tryStream('', 0);
+}
+
+// ── PROGRESS BAR HELPERS ──
+let _aiProgTimer = null, _aiProgElapsed = null, _aiProgSecs = 0;
+
+function _aiProgressStart() {
+  const bar = document.getElementById('ai-progress-bar');
+  if (bar) bar.style.display = 'block';
+  _aiProgSecs = 0;
+  clearInterval(_aiProgElapsed);
+  _aiProgElapsed = setInterval(() => {
+    _aiProgSecs++;
+    const el = document.getElementById('ai-elapsed');
+    if (el) el.textContent = _aiProgSecs + 's';
+  }, 1000);
+  // Reset step labels
+  ['ps1','ps2','ps3','ps4','ps5'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.color = 'var(--text3)';
+  });
+}
+
+function _aiProgressSet(pct, stage, activeStep) {
+  const fill = document.getElementById('ai-progress-fill');
+  const pctEl = document.getElementById('ai-progress-pct');
+  const stageEl = document.getElementById('ai-progress-stage');
+  if (fill) fill.style.width = pct + '%';
+  if (pctEl) pctEl.textContent = pct + '%';
+  if (stageEl) stageEl.textContent = stage;
+  if (activeStep) {
+    const el = document.getElementById(activeStep);
+    if (el) el.style.color = '#16a34a';
+  }
+}
+
+function _aiProgressSim(from, to, durationSec) {
+  clearInterval(_aiProgTimer);
+  let current = from;
+  const steps = durationSec;
+  const total = to - from;
+  _aiProgTimer = setInterval(() => {
+    if (current < to) {
+      const remaining = to - current;
+      const increment = Math.max(0.1, remaining * 0.04);
+      current = Math.min(to, current + increment);
+      const fill = document.getElementById('ai-progress-fill');
+      const pctEl = document.getElementById('ai-progress-pct');
+      if (fill) fill.style.width = Math.round(current) + '%';
+      if (pctEl) pctEl.textContent = Math.round(current) + '%';
+    }
+  }, 1000);
+}
+
+function _aiProgressStopSim() {
+  clearInterval(_aiProgTimer);
+}
+
+function _aiProgressStop() {
+  clearInterval(_aiProgTimer);
+  clearInterval(_aiProgElapsed);
+  const bar = document.getElementById('ai-progress-bar');
+  if (bar) setTimeout(() => { bar.style.display = 'none'; }, 1000);
+}
+
+// ── VilfinTV branded progress bar (shown in Result tab) ──────────
+function _vilfinProgressShow() {
+  const vp = document.getElementById('viltv-progress');
+  const fill = document.getElementById('viltv-prog-fill');
+  const pct  = document.getElementById('viltv-prog-pct');
+  const text = document.getElementById('viltv-prog-text');
+  if (vp) vp.style.display = 'block';
+  if (fill) fill.style.width = '5%';
+  if (pct)  pct.textContent = '5%';
+  if (text) text.textContent = 'Starting up…';
+}
+function _vilfinProgressUpdate(pct, msg) {
+  const fill = document.getElementById('viltv-prog-fill');
+  const pctEl = document.getElementById('viltv-prog-pct');
+  const text  = document.getElementById('viltv-prog-text');
+  if (fill) fill.style.width = pct + '%';
+  if (pctEl) pctEl.textContent = pct + '%';
+  if (text && msg) text.textContent = msg;
+}
+function _vilfinProgressHide() {
+  const vp = document.getElementById('viltv-progress');
+  if (vp) { vp.style.opacity = '0'; vp.style.transition = 'opacity .5s'; setTimeout(() => { vp.style.display = 'none'; vp.style.opacity = ''; vp.style.transition = ''; }, 500); }
+}
+function _vilfinProgressError(msg) {
+  const vp   = document.getElementById('viltv-progress');
+  const text = document.getElementById('viltv-prog-text');
+  const fill = document.getElementById('viltv-prog-fill');
+  const icon = document.getElementById('viltv-prog-icon');
+  if (fill) { fill.style.background = '#ef4444'; fill.style.width = '100%'; }
+  if (text) text.innerHTML = `❌ <strong>Error:</strong> ${msg} — <a href="https://dash.cloudflare.com" target="_blank" style="color:var(--burn2)">Check AI service logs →</a>`;
+  if (icon) { icon.textContent = '⚠️'; icon.style.animation = 'none'; }
+  setTimeout(_vilfinProgressHide, 6000);
+}
+
+function autoGeminiCopy() {
+  const text = document.getElementById('auto-gemini-result').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    document.getElementById('auto-gemini-status').textContent = '✅ Copied to clipboard!';
+    // Auto-paste into Paste & Render tab
+    const pasteArea = document.getElementById('paste-area');
+    if (pasteArea) pasteArea.value = text;
+  });
+}
+
+function autoGeminiRender() {
+  const html = window._autoGeminiHTML || '';
+  if (!html) return;
+  const pasteArea = document.getElementById('paste-area');
+  if (pasteArea) pasteArea.value = html;
+  // Switch to Paste & Render tab and render
+  switchMain(2);
+  setTimeout(renderOutput, 300);
+}
+
+// ── AI QUICK-CHIP POOL (random 8 shown, auto-refresh every 10 min) ──
+const _chipPool = [
+  // Stocks — India
+  {l:'📈 Nifty 50 today',q:'NIFTY 50 live price and market outlook today'},
+  {l:'📊 Sensex analysis',q:'BSE Sensex movement and analysis this week'},
+  {l:'🏆 BSE Top Gainers',q:'Top 5 BSE gainers today with reasons'},
+  {l:'📉 BSE Losers',q:'Top 5 BSE losers today with analysis'},
+  {l:'🏦 Bank Nifty',q:'Bank Nifty trend and key levels today'},
+  {l:'💎 Mid-cap gems',q:'Best midcap stocks India to watch this week'},
+  {l:'📦 IT sector India',q:'Indian IT sector outlook — TCS, Infosys, Wipro analysis'},
+  {l:'🏭 PSU stocks',q:'Top PSU stocks performance and outlook India'},
+  // Stocks — Global
+  {l:'🇺🇸 S&P 500 today',q:'S&P 500 live price and US market outlook today'},
+  {l:'🇺🇸 Dow Jones',q:'Dow Jones Industrial Average and US economic update today'},
+  {l:'🇯🇵 Nikkei outlook',q:'Nikkei 225 today and Japan market analysis'},
+  {l:'🇨🇳 Hang Seng',q:'Hang Seng Index live and China market sentiment today'},
+  {l:'🇰🇷 KOSPI today',q:'South Korea KOSPI index and market update today'},
+  {l:'🇧🇷 BOVESPA',q:'Brazil BOVESPA emerging market outlook today'},
+  {l:'🤖 AI stocks global',q:'Top AI stocks globally — NVIDIA, Google, Microsoft outlook 2026'},
+  // Commodities
+  {l:'🥇 Gold price',q:'Gold price analysis and forecast today — MCX and international'},
+  {l:'🛢️ Crude Oil',q:'Brent crude oil price and outlook today'},
+  {l:'⚡ Natural Gas',q:'Natural gas futures price and trend today'},
+  {l:'🥈 Silver MCX',q:'Silver price MCX and international forecast today'},
+  {l:'🔶 Copper',q:'Copper commodity price and global demand outlook today'},
+  {l:'🏗️ Steel & Metals',q:'Steel and metal commodity prices India and global today'},
+  // Forex
+  {l:'💱 USD/INR',q:'USD to INR exchange rate today and short-term forecast'},
+  {l:'💴 JPY/INR',q:'Japanese Yen to Indian Rupee rate and outlook'},
+  {l:'💶 EUR/USD',q:'EUR/USD forex rate and technical analysis today'},
+  {l:'🇦🇺 AUD/USD',q:'AUD/USD forex rate and Reserve Bank Australia outlook'},
+  {l:'💷 GBP/INR',q:'British Pound to INR rate and UK market impact'},
+  // Crypto
+  {l:'₿ Bitcoin now',q:'Bitcoin price today and crypto market sentiment'},
+  {l:'🔷 Ethereum',q:'Ethereum price and DeFi market outlook this week'},
+  {l:'🪙 Crypto trends',q:'Top trending cryptocurrencies and altcoin movers today'},
+  // Mutual Funds & ETF
+  {l:'💰 Best MFs India',q:'Best mutual funds to invest in India 2026 — top SIP picks'},
+  {l:'📦 Top ETFs India',q:'Best ETFs to invest in India currently — Nifty, IT, Gold ETFs'},
+  {l:'🌍 Global ETFs',q:'Top global ETFs for Indian investors 2026 — VOO, QQQ, VT'},
+  {l:'📈 ELSS tax funds',q:'Best ELSS tax-saving mutual funds India 2026'},
+  // IPO
+  {l:'🆕 Upcoming IPOs',q:'Upcoming IPOs in India this month 2026 with GMP'},
+  {l:'🔥 IPO subscription',q:'Latest IPO subscription status and grey market premium today India'},
+  // Insurance & NPS
+  {l:'🛡️ Term insurance',q:'Best term life insurance plans in India 2026 comparison'},
+  {l:'🏥 Health cover',q:'Best health insurance plans India 2026 — top family floater plans'},
+  {l:'📋 NPS returns',q:'NPS National Pension Scheme returns and best fund manager 2026'},
+  {l:'🏛️ Govt bonds',q:'India government bond yields and RBI monetary policy outlook'},
+  // Sentiment & Forecast
+  {l:'🔮 Market forecast',q:'Stock market forecast for next week India — technical and fundamental'},
+  {l:'😊 Sentiment now',q:'Current market sentiment — Fear & Greed index and FII/DII data'},
+  {l:'📰 Trending stocks',q:'Most trending stocks in India today with social media sentiment'},
+  {l:'🌍 VIX fear index',q:'CBOE VIX volatility index today and what it signals for markets'},
+  // Political & News
+  {l:'🗳️ India politics',q:'Latest India political news and market impact 2026'},
+  {l:'🗳️ US elections',q:'US political developments and impact on global markets 2026'},
+  {l:'🗳️ Japan elections',q:'Japan election news and Nikkei market impact 2026'},
+  {l:'🌏 Geopolitical risk',q:'Top geopolitical risks affecting global markets now'},
+  // Economy
+  {l:'📊 India GDP',q:'India GDP growth rate and economic outlook 2026'},
+  {l:'💵 US Fed rates',q:'US Federal Reserve interest rate decision and market impact'},
+  {l:'📈 India inflation',q:'India CPI inflation and RBI rate outlook 2026'},
+  {l:'🏦 RBI policy',q:'RBI monetary policy latest and impact on Indian stock market'},
+  // Tech & New Products
+  {l:'🚀 Product launches',q:'Major new product launches affecting stocks this week globally'},
+  {l:'🤖 AI industry news',q:'Latest AI industry news — ChatGPT, Gemini, Claude updates and stocks'},
+  {l:'📱 Tech sector',q:'Global technology sector outlook and top tech stocks to watch'},
+  // Gainers / Losers
+  {l:'🏆 Global Gainers',q:'Top gaining stocks globally today — US, India, Asia'},
+  {l:'📉 Global Losers',q:'Biggest losing stocks globally today with analysis'},
+  {l:'⚡ 52-week highs',q:'Stocks hitting 52-week highs in India today'},
+];
+
+function _renderRandomChips() {
+  const el = document.getElementById('rb-quick-chips');
+  if (!el) return;
+  const shuffled = [..._chipPool].sort(() => Math.random() - 0.5).slice(0, 8);
+
+  // Use data-q + addEventListener so the query string never gets mangled
+  // by HTML attribute double-quote parsing (which broke the old onclick approach)
+  el.innerHTML = shuffled.map(c =>
+    `<button class="rb-chip" data-q="${c.q.replace(/"/g, '&quot;')}">${c.l}</button>`
+  ).join('');
+
+  el.querySelectorAll('.rb-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const query = btn.dataset.q;
+      if (!query) return;
+      const inp = document.getElementById('rb-ai-input');
+      if (inp) inp.value = query;
+      rbAiSend();
+    });
+  });
+}
+
+// ── Live TV: channel list embedded in YT_CHANNELS (see YouTube section below) ───────
+async function fetchAndPopulateStreams() {
+  // Build the channel select from the embedded YT_CHANNELS array
+  ytBuildSelect();
+  // Default for new users: Bloomberg Television (ch 78).
+  // If a user has saved their own startup channel in localStorage, keep it.
+  _ytCurrentChNo = 78;
+  try {
+    var savedNo = parseInt(localStorage.getItem('viltv_default_chno') || '', 10);
+    if (savedNo >= 1 && savedNo <= YT_CHANNELS.length) _ytCurrentChNo = savedNo;
+  } catch(e) {}
+  var defSel = document.getElementById('yt-channel-select');
+  if (defSel) {
+    for (var j = 0; j < defSel.options.length; j++) {
+      if (parseInt(defSel.options[j].value, 10) === _ytCurrentChNo) { defSel.selectedIndex = j; break; }
+    }
+  }
+  var chk = document.getElementById('yt-default-ch-chk');
+  if (chk) chk.checked = (_ytCurrentChNo !== 78);
+  if (YT_CHANNELS[_ytCurrentChNo - 1]) ytUpdateInfo(YT_CHANNELS[_ytCurrentChNo - 1]);
+  setTimeout(function() { ytSwitchToChannel(_ytCurrentChNo); }, 300);
+}
+// Init on load
+// ── Load pre-built market context from data.json ─────────────────────────
+// data.json is generated at build-time by build.js using the secret WORKER_URL.
+// The Worker URL is NEVER present in this file or any other frontend asset.
+async function loadMarketSnapshot() {
+  try {
+    const bust = new Date().toISOString().slice(0, 10); // YYYY-MM-DD cache-bust
+    const res  = await fetch('./data.json?v=' + bust, { cache: 'no-cache' });
+    if (!res.ok) return;
+    const snap = await res.json();
+    if (snap && snap.briefing && snap.briefing.length > 30) {
+      window._marketContext = snap.briefing;
+      // Surface the briefing date in the status bar (no URL, no key exposed)
+      const date = snap.generated
+        ? new Date(snap.generated).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+        : '';
+      const statusEl = document.getElementById('rb-ai-status');
+      if (statusEl && date) statusEl.textContent = 'Market data: ' + date;
+    }
+  } catch { /* silent — fallback to query-only mode */ }
+}
+
+// ── MARKET SENTIMENT WIDGET ──────────────────────────────────────
+const _MKTS_SENT_MARKETS = [
+  {country:'US',        flag:'🇺🇸', index:'S&P 500',    symbol:'^GSPC'},
+  {country:'India',     flag:'🇮🇳', index:'NIFTY 50',   symbol:'^NSEI'},
+  {country:'Japan',     flag:'🇯🇵', index:'Nikkei 225', symbol:'^N225'},
+  {country:'Europe',    flag:'🇪🇺', index:'STOXX 50',   symbol:'^STOXX50E'},
+  {country:'China',     flag:'🇨🇳', index:'SSE Comp.',  symbol:'000001.SS'},
+  {country:'Korea',     flag:'🇰🇷', index:'KOSPI',      symbol:'^KS11'},
+  {country:'Brazil',    flag:'🇧🇷', index:'IBOVESPA',   symbol:'^BVSP'},
+  {country:'Australia', flag:'🇦🇺', index:'ASX 200',    symbol:'^AXJO'},
+  {country:'Taiwan',    flag:'🇹🇼', index:'TWII',       symbol:'^TWII'},
+];
+const _MKTS_SENT_ZONE_CFG = {
+  'extreme-fear': {color:'#16a34a', label:'Extreme Fear zone'},
+  'fear':         {color:'#ca8a04', label:'Fear zone'},
+  'neutral':      {color:'#9ca3af', label:'Neutral zone'},
+  'greed':        {color:'#ea580c', label:'Greed zone'},
+  'extreme-greed':{color:'#dc2626', label:'Extreme Greed zone'},
+};
+const _MKTS_SENT_DESCS = {
+  'extreme-fear': 'Investors are in extreme panic. Markets are deeply oversold — historically a potential buying opportunity.',
+  'fear':         'Markets are cautious. Risk appetite is subdued and investors are defensive.',
+  'neutral':      'Sentiment is balanced. Neither fear nor greed is dominating the market.',
+  'greed':        'Optimism is building. Investors are confident and markets are trending positively.',
+  'extreme-greed':'Markets may be overheated. Caution is advised — a correction could be near.',
+};
+let _mktSentData = null, _mktSentIdx = 0, _mktSentPanelOpen = false, _mktSentSelectedDay = null;
+
+function _mktSentZone(chg) {
+  if (chg > 1.5)  return {zone:'Extreme Greed', cls:'extreme-greed'};
+  if (chg > 0.5)  return {zone:'Greed',         cls:'greed'};
+  if (chg > -0.5) return {zone:'Neutral',       cls:'neutral'};
+  if (chg > -1.5) return {zone:'Fear',          cls:'fear'};
+  return           {zone:'Extreme Fear',        cls:'extreme-fear'};
+}
+function _mktSentScore(chg) { return Math.max(0, Math.min(100, (chg + 3) / 6 * 100)); }
+
+function _mktSentArcPath(cx, cy, R, r, a1, a2) {
+  function pt(deg, rad) {
+    const a = deg * Math.PI / 180;
+    return [+(cx + rad * Math.cos(a)).toFixed(2), +(cy - rad * Math.sin(a)).toFixed(2)];
+  }
+  const [x1,y1]=pt(a1,R),[x2,y2]=pt(a2,R),[x3,y3]=pt(a2,r),[x4,y4]=pt(a1,r);
+  return `M${x1},${y1} A${R},${R} 0 0,0 ${x2},${y2} L${x3},${y3} A${r},${r} 0 0,1 ${x4},${y4}Z`;
+}
+
+function _mktSentMiniGaugeSVG(score, zoneCls) {
+  const cx=16,cy=15,R=12,r=7,g=1.5;
+  const colors=['#16a34a','#ca8a04','#9ca3af','#ea580c','#dc2626'];
+  const active=Math.min(4,Math.floor(score/20));
+  let s='';
+  for(let i=0;i<5;i++){
+    const a1=180-i*36,a2=180-(i+1)*36;
+    s+=`<path d="${_mktSentArcPath(cx,cy,R,r,a1-g,a2+g)}" fill="${colors[i]}" opacity="${i===active?1:.2}"/>`;
+  }
+  const na=180-(score/100)*180, nr=na*Math.PI/180;
+  const tx=+(cx+(R-2)*Math.cos(nr)).toFixed(1), ty=+(cy-(R-2)*Math.sin(nr)).toFixed(1);
+  const col=colors[active];
+  return `<svg width="32" height="18" viewBox="0 0 32 18" style="display:block">${s}<line x1="${cx}" y1="${cy}" x2="${tx}" y2="${ty}" stroke="${col}" stroke-width="1.8" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="2" fill="${col}"/></svg>`;
+}
+
+function _mktSentFullGaugeSVG(score, zoneCls) {
+  const cx=140,cy=115,R=90,r=66,g=1.5,W=280,H=135;
+  const colors=['#16a34a','#ca8a04','#9ca3af','#ea580c','#dc2626'];
+  const labels=['EXTREME\nFEAR','FEAR','NEUTRAL','GREED','EXTREME\nGREED'];
+  const active=Math.min(4,Math.floor(score/20));
+  let segs='';
+  for(let i=0;i<5;i++){
+    const a1=180-i*36,a2=180-(i+1)*36;
+    segs+=`<path d="${_mktSentArcPath(cx,cy,R,r,a1-g,a2+g)}" fill="${colors[i]}" opacity="${i===active?1:.18}"/>`;
+  }
+  // Zone label on active arc midpoint
+  const midA=(180-active*36-18)*Math.PI/180;
+  const lx=+(cx+(R+10)*Math.cos(midA)).toFixed(1), ly=+(cy-(R+10)*Math.sin(midA)).toFixed(1);
+  const na=180-(score/100)*180, nr=na*Math.PI/180;
+  const tx=+(cx+(R-6)*Math.cos(nr)).toFixed(1), ty=+(cy-(R-6)*Math.sin(nr)).toFixed(1);
+  const col=colors[active];
+  const scoreStr=score.toFixed(1);
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+    ${segs}
+    <text x="${lx}" y="${ly}" text-anchor="middle" fill="${col}" font-size="8" font-weight="700" font-family="DM Sans,sans-serif" opacity="0.9">${labels[active].replace('\n',' ')}</text>
+    <line x1="${cx}" y1="${cy}" x2="${tx}" y2="${ty}" stroke="${col}" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="6" fill="${col}"/>
+    <circle cx="${cx}" cy="${cy}" r="3" fill="rgba(0,0,0,.4)"/>
+    <text x="${cx}" y="${cy+20}" text-anchor="middle" fill="${col}" font-size="26" font-weight="700" font-family="DM Sans,sans-serif">${scoreStr}</text>
+  </svg>`;
+}
+
+// ── Bug-fix: use LOCAL date parts so UTC-offset timezones don't shift the date ──
+// toISOString() returns UTC which can be ±1 calendar day from the user's local date.
+function _mktSentLocalDateStr(d) {
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+
+function _mktSentWeekDates() {
+  // Returns the last 5 weekdays (Mon–Fri) ending on TODAY — never future dates.
+  // Walks backwards from today collecting weekdays, then reverses to
+  // chronological order (oldest → newest, left → right in the UI).
+  // Works across week boundaries: Tuesday shows Wed–Fri (last week) + Mon–Tue.
+  const now      = new Date();
+  const todayStr = _mktSentLocalDateStr(now);
+  const DAY_LABELS = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const days = [];
+  // Start from today and step back one calendar day at a time
+  let d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  while (days.length < 5) {
+    const dow = d.getDay(); // 0=Sun … 6=Sat
+    if (dow >= 1 && dow <= 5) {          // Mon–Fri only
+      days.unshift({                     // prepend → result is oldest-first
+        date:     _mktSentLocalDateStr(d),
+        label:    DAY_LABELS[dow],
+        isToday:  _mktSentLocalDateStr(d) === todayStr,
+        isFuture: false                  // we never include future dates
+      });
+    }
+    // Step one day back (local calendar arithmetic)
+    d = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1);
+  }
+  return days;
+}
+
+function _mktSentClkSVG(zoneCls, isToday, isFuture) {
+  if (isFuture) {
+    return `<svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="10" fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.1)" stroke-width="1.5"/><circle cx="11" cy="11" r="1.3" fill="rgba(255,255,255,.12)"/><line x1="11" y1="11" x2="11" y2="5.5" stroke="rgba(255,255,255,.12)" stroke-width="1.5" stroke-linecap="round"/><line x1="11" y1="11" x2="15.5" y2="11" stroke="rgba(255,255,255,.12)" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+  }
+  const c = (_MKTS_SENT_ZONE_CFG[zoneCls]||{color:'#9ca3af'}).color;
+  const bg = isToday ? c + '44' : c + '22';
+  const sw = isToday ? '2' : '1.5';
+  return `<svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="10" fill="${bg}" stroke="${c}" stroke-width="${sw}"/><circle cx="11" cy="11" r="1.3" fill="${c}"/><line x1="11" y1="11" x2="11" y2="5.5" stroke="${c}" stroke-width="${sw}" stroke-linecap="round"/><line x1="11" y1="11" x2="15.5" y2="11" stroke="${c}" stroke-width="${sw}" stroke-linecap="round"/></svg>`;
+}
+
+async function _mktSentFetchLive() {
+  // Per-symbol chart API — try query1 first, fallback to query2.
+  // range=10d gives the previous-week Friday as the base so Monday's zone
+  // can be computed (range=5d would use Monday as base, losing MON colour).
+  const YF_HOSTS = ['query1.finance.yahoo.com', 'query2.finance.yahoo.com'];
+  try {
+    const fetched = await Promise.all(_MKTS_SENT_MARKETS.map(async m => {
+      const ctrl = new AbortController();
+      const tid  = setTimeout(() => ctrl.abort(), 10000);
+      for (const host of YF_HOSTS) {
+        try {
+          const r = await fetch(
+            `https://${host}/v8/finance/chart/${encodeURIComponent(m.symbol)}?interval=1d&range=10d`,
+            { signal: ctrl.signal, headers: { 'Accept': 'application/json' } }
+          );
+          if (!r.ok) continue;
+          const j      = await r.json();
+          const result = j?.chart?.result?.[0];
+          const meta   = result?.meta;
+          if (!meta) continue;
+          clearTimeout(tid);
+          const price = meta.regularMarketPrice || 0;
+          const prev  = meta.previousClose || meta.chartPreviousClose || price;
+          const chg   = meta.regularMarketChangePercent || (prev ? (price - prev) / prev * 100 : 0);
+          const z     = _mktSentZone(chg);
+
+          // ── Backfill Mon–Fri history from 10-day daily closes ─────────────
+          const timestamps = result?.timestamp                       || [];
+          const closes     = result?.indicators?.quote?.[0]?.close  || [];
+          for (let i = 1; i < timestamps.length; i++) {
+            const c  = closes[i];
+            const cp = closes[i - 1];
+            if (c == null || cp == null || cp === 0) continue;
+            const dayDate = new Date(timestamps[i] * 1000);
+            const dayStr  = _mktSentLocalDateStr(dayDate);
+            const dayChg  = (c - cp) / cp * 100;
+            _mktSentSaveHistForDate(m.country, dayStr, _mktSentZone(dayChg).cls);
+          }
+          // ── Live zone for today (most accurate) ───────────────────────────
+          _mktSentSaveHistForDate(m.country, _mktSentLocalDateStr(new Date()), z.cls);
+
+          return {...m, price, change: chg, zone: z.zone, zoneCls: z.cls};
+        } catch(e) { if (e.name === 'AbortError') break; }
+      }
+      clearTimeout(tid);
+      return null;
+    }));
+    const hits = fetched.filter(Boolean).length;
+    if (hits < 4) return null; // require at least 4 out of 9
+    return _MKTS_SENT_MARKETS.map((m, i) =>
+      fetched[i] || {...m, price: 0, change: 0, zone: 'Neutral', zoneCls: 'neutral'}
+    );
+  } catch { return null; }
+}
+var _mktSentSnapshotTime = null; // "HH:MM" of last snapshot, shown in badge
+
+async function _mktSentFetchSnapshot() {
+  try {
+    const r = await fetch('data/market_sentiment.json?t=' + Date.now(), {cache:'no-cache'});
+    if (!r.ok) return null;
+    const j = await r.json();
+    if (!j.markets || !j.markets.length) return null;
+
+    // ── Store readable update time for badge (e.g. "14:35") ───────────────
+    if (j.updated) {
+      const upd = new Date(j.updated);
+      _mktSentSnapshotTime = upd.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      // Save under LOCAL date (for same-timezone users) AND UTC date (for east-of-UTC users
+      // where midnight has passed locally but the snapshot is dated the previous UTC day)
+      const snapshotDateLocal = _mktSentLocalDateStr(upd);
+      const snapshotDateUTC   = upd.toISOString().slice(0, 10);
+      j.markets.forEach(m => {
+        const z = _mktSentZone(m.change || 0);
+        _mktSentSaveHistForDate(m.country, snapshotDateLocal, z.cls);
+        if (snapshotDateUTC !== snapshotDateLocal) {
+          _mktSentSaveHistForDate(m.country, snapshotDateUTC, z.cls);
+        }
+      });
+    }
+
+    // ── If snapshot includes weekly history, hydrate localStorage ─────────
+    // The build script may include a `history` array of {date, markets[]} objects.
+    if (Array.isArray(j.history)) {
+      j.history.forEach(day => {
+        if (!day.date || !Array.isArray(day.markets)) return;
+        day.markets.forEach(m => {
+          const z = _mktSentZone(m.change || 0);
+          _mktSentSaveHistForDate(m.country, day.date, m.zoneCls || z.cls);
+        });
+      });
+    }
+
+    return j.markets.map(m => { const z = _mktSentZone(m.change || 0); return {...m, zone: z.zone, zoneCls: z.cls}; });
+  } catch { return null; }
+}
+function _mktSentLoadCached() {
+  try {
+    const raw = localStorage.getItem('mkt_sent_last');
+    if (!raw) return null;
+    const d = JSON.parse(raw);
+    if (!d.markets) return null;
+    return d.markets.map(m => { const z = _mktSentZone(m.change || 0); return {...m, zone: z.zone, zoneCls: z.cls}; });
+  } catch { return null; }
+}
+function _mktSentSaveLast(data) { try { localStorage.setItem('mkt_sent_last', JSON.stringify({ts: Date.now(), markets: data})); } catch {} }
+// Saves a zone for an ARBITRARY date (used by the 5-day backfill above)
+function _mktSentSaveHistForDate(country, dateStr, zoneCls) {
+  try {
+    const key = 'mkt_sent_h_' + country;
+    let h = JSON.parse(localStorage.getItem(key) || '[]');
+    h = h.filter(x => x.d !== dateStr);
+    h.push({d: dateStr, z: zoneCls});
+    if (h.length > 14) h = h.slice(-14);  // keep 2 weeks so current-week days aren't evicted by today's entry
+    localStorage.setItem(key, JSON.stringify(h));
+  } catch {}
+}
+// Saves today's zone (delegates to the generic helper, using LOCAL date)
+function _mktSentSaveHist(country, zoneCls) {
+  _mktSentSaveHistForDate(country, _mktSentLocalDateStr(new Date()), zoneCls);
+}
+function _mktSentGetHist(country) { try { return JSON.parse(localStorage.getItem('mkt_sent_h_'+country)||'[]'); } catch { return []; } }
+
+function _mktSentRenderMain(idx) {
+  if (!_mktSentData) return;
+  const m = _mktSentData[idx];
+  if (!m) return;
+  const score = _mktSentScore(m.change);
+  const zoneLbl = (_MKTS_SENT_ZONE_CFG[m.zoneCls]||{label: m.zone + ' zone'}).label;
+  const gaugeSVG = _mktSentMiniGaugeSVG(score, m.zoneCls);
+  // Mini gauge — desktop + mobile
+  ['mkt-sent-gauge-mini','mkt-sent-mb-gauge'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.innerHTML = gaugeSVG;
+  });
+  // Country text — desktop + mobile (flag emoji omitted — renders as 2-letter code on Windows)
+  ['mkt-sent-country','mkt-sent-mb-country'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.textContent = m.country;
+  });
+  // Zone label — desktop + mobile
+  ['mkt-sent-zone','mkt-sent-mb-zone'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.className = 'mkt-sent-zone ' + m.zoneCls; el.textContent = zoneLbl; }
+  });
+  // History clocks — Mon–Fri in order, colored by saved zone per day
+  const hist = _mktSentGetHist(m.country);
+  const weekDates = _mktSentWeekDates();
+  let html = '';
+  for (const wd of weekDates) {
+    const h = hist.find(x => x.d === wd.date);
+    // Today with no saved record yet uses the live zone; past with no record → neutral dimmed
+    const cls = h ? h.z : (wd.isToday ? m.zoneCls : 'neutral');
+    html += `<div class="mkt-sent-clk-wrap"><div class="mkt-sent-clk">${_mktSentClkSVG(cls, wd.isToday, wd.isFuture)}</div><span class="mkt-sent-clk-lbl${wd.isToday ? ' today' : ''}">${wd.label}</span></div>`;
+  }
+  ['mkt-sent-hist','mkt-sent-mb-days'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.innerHTML = html;
+  });
+}
+
+function _mktSentRenderPanel() {
+  if (!_mktSentData) return;
+  const weekDates = _mktSentWeekDates();
+  // On weekdays: todayStr = today's date. On weekends: fall back to the most
+  // recent Friday (last entry in the list) so the gauge still shows live data.
+  const todayStr = weekDates.find(w => w.isToday)?.date
+    || weekDates[weekDates.length - 1]?.date
+    || _mktSentLocalDateStr(new Date());
+  const activeDay = _mktSentSelectedDay || todayStr;
+  const isLiveDay = activeDay === todayStr;
+
+  // Day picker
+  const dpEl = document.getElementById('mkt-sent-day-picker');
+  if (dpEl) {
+    dpEl.innerHTML = weekDates.map(wd =>
+      `<button class="mkt-sent-day-btn${wd.date===activeDay?' active':''}"${wd.isFuture?' disabled':''} onclick="event.stopPropagation();_mktSentDaySelect('${wd.date}')">${wd.label}</button>`
+    ).join('');
+  }
+
+  const m = _mktSentData[_mktSentIdx];
+  if (!m) return;
+  const score = _mktSentScore(m.change);
+  const ctryEl = document.getElementById('mkt-sent-panel-ctry');
+  if (ctryEl) ctryEl.textContent = m.country;
+
+  const gfEl = document.getElementById('mkt-sent-gauge-full');
+  if (gfEl) gfEl.innerHTML = isLiveDay ? _mktSentFullGaugeSVG(score, m.zoneCls) : '';
+
+  const descEl = document.getElementById('mkt-sent-panel-desc');
+  if (descEl) descEl.textContent = isLiveDay
+    ? (_MKTS_SENT_DESCS[m.zoneCls] || '')
+    : 'Historical sentiment — tap a market row for details.';
+
+  // Country → ISO code map for clean panel row labels (no flag emoji, consistent on all OS)
+  const _CC = {US:'US',India:'IN',Japan:'JP',Europe:'EU',China:'CN',Korea:'KR',Brazil:'BR',Australia:'AU',Taiwan:'TW'};
+  const rowsEl = document.getElementById('mkt-sent-rows');
+  if (rowsEl) {
+    if (isLiveDay) {
+      rowsEl.innerHTML = _mktSentData.map(r => {
+        const sgn=r.change>0?'+':'', chgCls=r.change>0.1?'pos':r.change<-0.1?'neg':'flat';
+        const iso = _CC[r.country] || r.country.slice(0,2).toUpperCase();
+        return `<div class="mkt-sent-row"><span class="mkt-sent-row-cc">${iso}</span><div class="mkt-sent-row-info"><div class="mkt-sent-row-country">${r.country}</div><div class="mkt-sent-row-idx">${r.index}</div></div><span class="mkt-sent-row-chg ${chgCls}">${sgn}${r.change.toFixed(2)}%</span><span class="mkt-sent-row-zone ${r.zoneCls}">${r.zone}</span></div>`;
+      }).join('');
+    } else {
+      const rows = _MKTS_SENT_MARKETS.map(mk => {
+        const hist = _mktSentGetHist(mk.country);
+        const rec = hist.find(x => x.d === activeDay);
+        if (!rec) return '';
+        const zoneLbl = (_MKTS_SENT_ZONE_CFG[rec.z]||{}).label || rec.z;
+        const iso = _CC[mk.country] || mk.country.slice(0,2).toUpperCase();
+        return `<div class="mkt-sent-row"><span class="mkt-sent-row-cc">${iso}</span><div class="mkt-sent-row-info"><div class="mkt-sent-row-country">${mk.country}</div><div class="mkt-sent-row-idx">${mk.index}</div></div><span class="mkt-sent-row-zone ${rec.z}">${zoneLbl}</span></div>`;
+      }).join('');
+      rowsEl.innerHTML = rows || '<div class="mkt-sent-pf" style="padding:14px">No data cached for this day yet.</div>';
+    }
+  }
+
+  const ts=(()=>{try{return JSON.parse(localStorage.getItem('mkt_sent_last')||'{}').ts||0;}catch{return 0;}})();
+  const ago=ts?Math.round((Date.now()-ts)/60000):0;
+  const pf=document.getElementById('mkt-sent-pf');
+  if(pf) pf.textContent=isLiveDay?(ago>0?'Updated '+ago+' min ago · Refreshes every 10 min':'Market Intelligence'):'Historical view · '+activeDay;
+}
+
+function _mktSentDaySelect(dateStr) {
+  const weekDates = _mktSentWeekDates();
+  const wd = weekDates.find(w => w.date === dateStr);
+  if (!wd || wd.isFuture) return;
+  _mktSentSelectedDay = wd.isToday ? null : dateStr;
+  _mktSentRenderPanel();
+}
+
+function _mktSentSetBadge(type) {
+  let lbl, cls;
+  if (type === 'live') {
+    lbl = 'Live'; cls = 'live';
+  } else if (type === 'delayed') {
+    lbl = 'Snapshot'; cls = 'delayed';
+  } else {
+    lbl = 'Cached'; cls = 'cached';
+  }
+  ['mkt-sent-badge','mkt-sent-mb-badge'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'mkt-sent-badge ' + cls;
+    el.textContent = lbl;
+  });
+}
+
+function mktSentToggle(e) {
+  if (e) e.stopPropagation();
+  const panel = document.getElementById('mkt-sent-panel');
+  if (!panel) return;
+  _mktSentPanelOpen = !_mktSentPanelOpen;
+  if (_mktSentPanelOpen) {
+    _mktSentRenderPanel();
+    panel.style.display = 'block';
+    if (window.innerWidth <= 680) {
+      // Mobile — bottom sheet
+      Object.assign(panel.style, {
+        position:'fixed', bottom:'0', left:'0', right:'0', top:'auto',
+        transform:'none', width:'100%', maxWidth:'none',
+        borderRadius:'16px 16px 0 0', maxHeight:'80vh', overflowY:'auto', zIndex:'9999'
+      });
+    } else {
+      // Desktop — float below the widget
+      const widget = document.getElementById('mkt-sent-widget');
+      let topPx = 56, leftPx = 8;
+      if (widget) {
+        const r = widget.getBoundingClientRect();
+        topPx = Math.round(r.bottom + 6);
+        leftPx = Math.round(Math.max(8, r.left + r.width / 2 - 200));
+      }
+      Object.assign(panel.style, {
+        position:'fixed', top:topPx+'px', left:leftPx+'px',
+        bottom:'auto', right:'auto', transform:'none',
+        width:'400px', maxWidth:'none', borderRadius:'12px',
+        maxHeight:'90vh', overflowY:'auto', zIndex:'9999'
+      });
+    }
+  } else {
+    panel.style.display = 'none';
+    _mktSentSelectedDay = null;
+  }
+}
+
+function _mktSentApply(data, src) {
+  _mktSentData = data; _mktSentSaveLast(data);
+  // Save today's zone for every country so Mon–Fri clocks are accurate regardless of which market is displayed
+  data.forEach(m => { if (m.zoneCls) _mktSentSaveHist(m.country, m.zoneCls); });
+  _mktSentSetBadge(src); _mktSentRenderMain(_mktSentIdx);
+  if (_mktSentPanelOpen) _mktSentRenderPanel();
+}
+
+async function _mktSentRefresh() {
+  // Tier 2 first — snapshot JSON is always available and fast
+  let data = await _mktSentFetchSnapshot(); let src = 'delayed';
+  // Tier 3 — localStorage cache if JSON unreachable
+  if (!data) { data = _mktSentLoadCached(); src = 'cached'; }
+  // Baseline — all neutral so widget never shows blank
+  if (!data) { data = _MKTS_SENT_MARKETS.map(m=>({...m,price:0,change:0,zone:'Neutral',zoneCls:'neutral'})); src = 'cached'; }
+  _mktSentApply(data, src);
+
+  // Tier 1 — try live chart API in background; upgrade display if it succeeds
+  _mktSentFetchLive().then(live => {
+    if (live) _mktSentApply(live, 'live');
+  }).catch(() => {});
+}
+
+function mktSentInit() {
+  _mktSentRefresh();
+  setInterval(()=>{
+    if(!_mktSentData) return;
+    _mktSentIdx=(_mktSentIdx+1)%_mktSentData.length;
+    if(_mktSentData[_mktSentIdx]) _mktSentSaveHist(_mktSentData[_mktSentIdx].country,_mktSentData[_mktSentIdx].zoneCls);
+    _mktSentRenderMain(_mktSentIdx);
+    if(_mktSentPanelOpen) _mktSentRenderPanel();
+  },60000);
+  setInterval(_mktSentRefresh,10*60*1000);
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#mkt-sent-widget') &&
+        !e.target.closest('#mkt-sent-mobile-bar') &&
+        !e.target.closest('#mkt-sent-panel')) {
+      const p = document.getElementById('mkt-sent-panel');
+      if (p) { p.style.display = 'none'; _mktSentPanelOpen = false; }
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  try { cfLoadSaved(); } catch(e) { console.error('cfLoadSaved failed:', e); }
+  try { loadMarketSnapshot(); } catch(e) { console.error('loadMarketSnapshot failed:', e); }
+  try { fetchAndPopulateStreams(); } catch(e) { console.error('fetchAndPopulateStreams failed:', e); }
+  try { initLiveNews(); } catch(e) { console.error('initLiveNews failed:', e); }
+  try { initLiveClock(); } catch(e) { console.error('initLiveClock failed:', e); }
+  try { initRbResize(); } catch(e) { console.error('initRbResize failed:', e); }
+  try { initSidePanelLinks(); } catch(e) { console.error('initSidePanelLinks failed:', e); }
+  try { _renderRandomChips(); } catch(e) { console.error('_renderRandomChips failed:', e); }
+  try { setInterval(_renderRandomChips, 10 * 60 * 1000); } catch(e) { console.error('chip interval failed:', e); }
+  try { setTimeout(ytRestoreSettings, 200); } catch(e) { console.error('ytRestoreSettings failed:', e); }
+  try { mktSentInit(); } catch(e) { console.error('mktSentInit failed:', e); }
+});
+
+// ── SHARE BUTTONS LOGIC — runs after DOM ready ──────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  var shareData = {
+    title: 'VilfinTV | Multi-Asset Screener & Media',
+    text: 'Check out VilfinTV: Screeners, Market trade links, Live News, Live TV, Radio etc.',
+    url: 'https://vilfintv.com'
+  };
+
+  var copyBtn = document.getElementById('shareCopyBtn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async function() {
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        var orig = copyBtn.textContent;
+        copyBtn.textContent = 'Copied!';
+        setTimeout(function() { copyBtn.textContent = orig; }, 2000);
+      } catch(err) {
+        console.error('Clipboard failed:', err);
+      }
+    });
+  }
+
+  var nativeBtn = document.getElementById('shareNativeBtn');
+  if (nativeBtn) {
+    if (!navigator.share) {
+      nativeBtn.style.display = 'none';
+    } else {
+      nativeBtn.addEventListener('click', async function() {
+        try { await navigator.share(shareData); } catch(err) {}
+      });
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// SIDE PANEL LINK HANDLER — close panel then open link
+// ═══════════════════════════════════════════════════════════════════
+function initSidePanelLinks() {
+  const overlay = document.getElementById('left-menu-overlay');
+  if (!overlay) return;
+  overlay.addEventListener('click', function(e) {
+    const link = e.target.closest('a[href]');
+    if (!link) return;
+    const href = link.getAttribute('href');
+    if (!href || href.startsWith('#')) return;
+    e.preventDefault();
+    // Flash button to confirm click
+    const orig = link.textContent;
+    link.textContent = '↗ Opening…';
+    link.style.opacity = '0.7';
+    closeSidePanel();
+    setTimeout(() => {
+      window.open(href, '_blank', 'noopener,noreferrer');
+      link.textContent = orig;
+      link.style.opacity = '';
+    }, 280);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DRAG-RESIZE RIGHT BAR
+// ═══════════════════════════════════════════════════════════════════
+function initRbResize() {
+  const handle = document.getElementById('rb-resize-handle');
+  const rightBar = document.getElementById('right-bar');
+  if (!handle || !rightBar) return;
+  const MIN_W = 240, MAX_W = 600;
+  let startX = 0, startW = 0, dragging = false;
+
+  handle.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    handle.setPointerCapture(e.pointerId);
+    dragging = true;
+    startX = e.clientX;
+    startW = rightBar.getBoundingClientRect().width;
+    handle.classList.add('dragging');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  });
+
+  handle.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const delta = startX - e.clientX;
+    const newW = Math.max(MIN_W, Math.min(MAX_W, startW + delta));
+    rightBar.style.width = newW + 'px';
+  });
+
+  handle.addEventListener('pointerup', () => {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove('dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  });
+
+  handle.addEventListener('pointercancel', () => {
+    dragging = false;
+    handle.classList.remove('dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+// RIGHT-BAR AI SIDEBAR
+// ════════════════════════════════════════════════════════════════
+let _rbStreamAbort  = null;
+let _rbMsgCount     = 0;
+
+// Conversation history — [{role:'user'|'assistant', content:'...'}]
+// Maintained across follow-up questions; reset on Clear.
+let _rbChatHistory  = [];
+
+function rbAiAppendMessage(text, role) {
+  const container = document.getElementById('rb-ai-messages');
+  if (!container) return;
+  const avatarEmoji = role === 'user' ? '👤' : '🤖';
+  const div = document.createElement('div');
+  div.className = 'rb-msg ' + (role === 'user' ? 'rb-msg-user' : 'rb-msg-bot');
+  div.innerHTML = '<div class="rb-msg-avatar">' + avatarEmoji + '</div>'
+    + '<div class="rb-msg-bubble" id="rb-msg-' + (++_rbMsgCount) + '">'
+    + (role === 'user' ? escHtml(text) : text)
+    + '</div>';
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return 'rb-msg-' + _rbMsgCount;
+}
+
+function escHtml(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function rbAiClear() {
+  const c = document.getElementById('rb-ai-messages');
+  if (!c) return;
+  if (_rbStreamAbort) { _rbStreamAbort.abort(); _rbStreamAbort = null; }
+  c.innerHTML = '';
+  _rbChatHistory = []; // reset conversation memory
+  rbAiAppendMessage('Chat cleared. Ask me anything about markets!', 'bot');
+}
+
+// ── Right-bar panel switcher (AI / YT Live / IPTV / Radio / Music / Podcast / Settings) ─
+const _RB_PANELS = {
+  ai:       { panelId:'rb-panel-ai',       tabId:'rbtab-ai',       title:'🤖 AI ASSISTANT', clear:true },
+  video:    { panelId:'rb-panel-video',    tabId:'rbtab-video',    title:'▶️ YOUTUBE LIVE' },
+  iptv:     { panelId:'rb-panel-iptv',     tabId:'rbtab-iptv',     title:'📡 LIVE TV',  init:'_iptvInitDone',  initFn:'iptvInit' },
+  radio:    { panelId:'rb-panel-radio',    tabId:'rbtab-radio',    title:'📻 GLOBAL RADIO', init:'_radioInitDone', initFn:'radioInit' },
+  premium:  { panelId:'rb-panel-premium',  tabId:'rbtab-premium',  title:'🎙 PREMIUM RADIO', init:'_prInitDone',   initFn:'prInit' },
+  sports:   { panelId:'rb-panel-sports',   tabId:'rbtab-sports',   title:'🏆 SPORTS',        init:'_swInitDone',   initFn:'swInit' },
+  music:    { panelId:'rb-panel-music',    tabId:'rbtab-music',    title:'🎵 YOUTUBE MUSIC',   init:'_musicInitDone',  initFn:'musicLoadDefault' },
+  movies:   { panelId:'rb-panel-movies',   tabId:'rbtab-movies',   title:'🎬 MOVIES',  init:'_moviesInitDone', initFn:'moviesLoadDefault' },
+  podcast:  { panelId:'rb-panel-podcast',  tabId:'rbtab-podcast',  title:'🎙 PODCAST', init:'_podcastInitDone',initFn:'podcastLoadCurated' },
+  calendar:   { panelId:'rb-panel-calendar',   tabId:'rbtab-calendar',   title:'📅 CALENDAR',    init:'_calendarInitDone',   initFn:'calendarInit' },
+  notes:      { panelId:'rb-panel-notes',      tabId:'rbtab-notes',      title:'📝 NOTES',       init:'_notesInitDone',      initFn:'notesInit' },
+  calc:       { panelId:'rb-panel-calc',       tabId:'rbtab-calc',       title:'🧮 CALCULATOR',  init:'_calcInitDone',       initFn:'calcInit' },
+  worldclock: { panelId:'rb-panel-worldclock', tabId:'rbtab-worldclock', title:'🌍 WORLD CLOCK', init:'_worldclockInitDone', initFn:'worldclockInit' },
+  weather:    { panelId:'rb-panel-weather',    tabId:'rbtab-weather',    title:'🌤 WEATHER',     init:'_weatherInitDone',    initFn:'weatherInit' },
+  markets:  { panelId:'rb-panel-markets',  tabId:'rbtab-markets',  title:'📈 GLOBAL MARKETS' },
+  stocks:   { panelId:'rb-panel-stocks',   tabId:'rbtab-stocks',   title:'📊 STOCK TOOLS', init:'_stocksInitDone', initFn:'stocksInit' },
+  settings: { panelId:'rb-panel-settings', tabId:'rbtab-settings', title:'⚙️ WIDGET SETTINGS' },
+};
+
+function rbSwitchPanel(panel) {
+  const def = _RB_PANELS[panel] || _RB_PANELS.ai;
+  const title = document.getElementById('rb-panel-title');
+  const clear = document.getElementById('rb-clear-btn');
+  // Leaving the video panel → release the screen wake lock
+  if (panel !== 'video' && typeof _wakeRelease === 'function') _wakeRelease();
+  // Hide every panel + deactivate every tab
+  Object.values(_RB_PANELS).forEach(p => {
+    const el = document.getElementById(p.panelId);
+    if (el) el.style.display = 'none';
+    const tab = document.getElementById(p.tabId);
+    if (tab) tab.classList.remove('active');
+  });
+  // Show requested panel + activate its tab
+  const el = document.getElementById(def.panelId);
+  if (el) el.style.display = 'flex';
+  const tab = document.getElementById(def.tabId);
+  if (tab) tab.classList.add('active');
+  if (title) {
+    const parts = def.title.split(' ');
+    const icon = parts.shift();
+    title.innerHTML = '<span style="font-size:16px">' + icon + '</span><span>' + parts.join(' ') + '</span>';
+  }
+  if (clear) clear.style.display = def.clear ? 'block' : 'none';
+  rbTabsSyncArrows();
+  // Lazy-init heavy panels on first open
+  if (def.init && !window[def.init]) {
+    window[def.init] = true;
+    try { window[def.initFn] && window[def.initFn](); } catch (e) { console.warn('panel init failed:', e); }
+  }
+  // Auto-stop YouTube when navigating away from the video panel
+  if (panel !== 'video') {
+    try {
+      const ytIframe = document.querySelector('#rb-panel-video iframe[src*="youtube"]');
+      if (ytIframe && ytIframe.contentWindow) {
+        ytIframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+      }
+    } catch(_) {}
+    // Also stop Premium Radio audio when switching away
+    if (panel !== 'premium') {
+      try { prStop && prStop(); } catch(_) {}
+    }
+  }
+  // Remember last-active tab so the next page-load lands here (unless user has set a default)
+  try { localStorage.setItem('viltv_widget_last_tab', panel); } catch(_) {}
+  // Refresh settings panel UI when user opens it
+  if (panel === 'settings') widgetRenderSettings();
+  // Lazy-init Markets widget on first open; reinit if symbols were changed
+  if (panel === 'markets') mktsInitWidget();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MARKETS WIDGET — dynamic TradingView init + localStorage customisation
+// ═══════════════════════════════════════════════════════════════════════
+var _MKTS_LS_KEY = 'viltv_markets_custom';
+var _mktsWidgetDirty = true; // force first render
+
+var _MKTS_DEFAULT_GROUPS = [
+  { name: '🌎 Americas', symbols: [
+    { name: 'OANDA:SPX500USD',  displayName: 'S&P 500' },
+    { name: 'CAPITALCOM:US100', displayName: 'Nasdaq 100' },
+    { name: 'OANDA:US30USD',    displayName: 'Dow Jones' },
+    { name: 'BMFBOVESPA:IBOV',  displayName: 'Brazil Bovespa' },
+    { name: 'TSX:TSX',          displayName: 'Canada TSX' }
+  ]},
+  { name: '🇪🇺 Europe', symbols: [
+    { name: 'XETR:DAX',        displayName: 'Germany DAX' },
+    { name: 'OANDA:UK100GBP',  displayName: 'UK FTSE 100' },
+    { name: 'CAPITALCOM:EU50', displayName: 'Euro Stoxx 50' },
+    { name: 'BME:IBC',         displayName: 'Spain IBEX 35' },
+    { name: 'SIX:SMI',         displayName: 'Switzerland SMI' }
+  ]},
+  { name: '🌏 Asia-Pacific', symbols: [
+    { name: 'INDEX:NKY',   displayName: 'Japan Nikkei 225' },
+    { name: 'HSI:HSI',     displayName: 'Hong Kong Hang Seng' },
+    { name: 'SSE:000001',  displayName: 'China Shanghai' },
+    { name: 'SZSE:399001', displayName: 'China Shenzhen' },
+    { name: 'ASX:XJO',     displayName: 'Australia ASX 200' }
+  ]},
+  { name: '🇮🇳 India — BSE', symbols: [
+    { name: 'BSE:SENSEX', displayName: 'BSE Sensex' },
+    { name: 'BSE:MID150', displayName: 'Midcap 150' },
+    { name: 'BSE:BSE500', displayName: 'BSE 500' },
+    { name: 'BSE:SNSX50', displayName: 'BSE 50' },
+    { name: 'BSE:AUTO',   displayName: 'BSE Auto' },
+    { name: 'BSE:METAL',  displayName: 'BSE Metal' },
+    { name: 'BSE:BANK',   displayName: 'BSE Bank' },
+    { name: 'BSE:IT',     displayName: 'BSE IT' }
+  ]}
+];
+
+function mktsGetGroups() {
+  try {
+    var raw = localStorage.getItem(_MKTS_LS_KEY);
+    if (raw) { var g = JSON.parse(raw); if (Array.isArray(g) && g.length) return g; }
+  } catch (_) {}
+  return JSON.parse(JSON.stringify(_MKTS_DEFAULT_GROUPS));
+}
+
+function _mktsIsLightTheme() {
+  // news-reader is the only theme with a white right-bar background
+  return document.documentElement.getAttribute('data-theme') === 'news-reader';
+}
+function mktsInitWidget() {
+  if (!_mktsWidgetDirty) return;
+  _mktsWidgetDirty = false;
+  var inner = document.getElementById('mkts-widget-inner');
+  if (!inner) return;
+  inner.innerHTML = '';
+
+  var groups = mktsGetGroups();
+  var cfg = {
+    width: '100%', height: '100%',
+    showSymbolLogo: true,
+    isTransparent: false,
+    colorTheme: _mktsIsLightTheme() ? 'light' : 'dark',
+    locale: 'en',
+    symbolsGroups: groups
+  };
+
+  var wrap = document.createElement('div');
+  wrap.className = 'tradingview-widget-container';
+  wrap.style.cssText = 'height:100%;width:100%';
+
+  var widget = document.createElement('div');
+  widget.className = 'tradingview-widget-container__widget';
+  widget.style.cssText = 'height:calc(100% - 32px);width:100%';
+
+  var copy = document.createElement('div');
+  copy.className = 'tradingview-widget-copyright';
+  copy.innerHTML = '<a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a>';
+
+  var s = document.createElement('script');
+  s.type = 'text/javascript';
+  s.async = true;
+  s.src = 'https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js';
+  s.textContent = JSON.stringify(cfg);
+
+  wrap.appendChild(widget);
+  wrap.appendChild(copy);
+  wrap.appendChild(s);
+  inner.appendChild(wrap);
+}
+
+// ── Editor state (in-memory while modal is open) ──
+var _mktsEditorGroups = [];
+
+function openMarketsEditor() {
+  _mktsEditorGroups = JSON.parse(JSON.stringify(mktsGetGroups()));
+  mktsRenderEditor();
+  var ov = document.getElementById('mkts-editor-overlay');
+  if (ov) { ov.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+}
+function closeMarketsEditor() {
+  var ov = document.getElementById('mkts-editor-overlay');
+  if (ov) { ov.style.display = 'none'; document.body.style.overflow = ''; }
+}
+function mktsSaveAndClose() {
+  try { localStorage.setItem(_MKTS_LS_KEY, JSON.stringify(_mktsEditorGroups)); } catch (_) {}
+  _mktsWidgetDirty = true;
+  mktsInitWidget();
+  closeMarketsEditor();
+}
+function mktsResetDefaults() {
+  if (!confirm('Reset to the default global markets list?')) return;
+  _mktsEditorGroups = JSON.parse(JSON.stringify(_MKTS_DEFAULT_GROUPS));
+  mktsRenderEditor();
+}
+
+function mktsAddGroup() {
+  var inp = document.getElementById('mkts-new-group');
+  var name = (inp ? inp.value.trim() : '');
+  if (!name) { if (inp) { inp.focus(); inp.style.borderColor = '#ef4444'; setTimeout(function(){ inp.style.borderColor = 'var(--border2)'; }, 1200); } return; }
+  _mktsEditorGroups.push({ name: name, symbols: [] });
+  if (inp) inp.value = '';
+  mktsRenderEditor();
+}
+function mktsRemoveGroup(gi) {
+  if (!confirm('Remove group "' + _mktsEditorGroups[gi].name + '" and all its symbols?')) return;
+  _mktsEditorGroups.splice(gi, 1);
+  mktsRenderEditor();
+}
+function mktsAddSymbol(gi) {
+  var symEl = document.getElementById('mkts-sym-' + gi);
+  var lblEl = document.getElementById('mkts-lbl-' + gi);
+  var sym = symEl ? symEl.value.trim().toUpperCase() : '';
+  var lbl = lblEl ? lblEl.value.trim() : '';
+  if (!sym) { if (symEl) { symEl.focus(); symEl.style.borderColor = '#ef4444'; setTimeout(function(){ symEl.style.borderColor = 'var(--border2)'; }, 1200); } return; }
+  if (!lbl) lbl = sym;
+  _mktsEditorGroups[gi].symbols.push({ name: sym, displayName: lbl });
+  if (symEl) symEl.value = '';
+  if (lblEl) lblEl.value = '';
+  mktsRenderEditor();
+}
+function mktsRemoveSymbol(gi, si) {
+  _mktsEditorGroups[gi].symbols.splice(si, 1);
+  mktsRenderEditor();
+}
+
+function mktsRenderEditor() {
+  var body = document.getElementById('mkts-editor-body');
+  if (!body) return;
+  var html = '';
+  _mktsEditorGroups.forEach(function(grp, gi) {
+    html += '<div style="margin-bottom:16px;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden">';
+    // Group header
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--dark2);border-bottom:1px solid var(--border)">';
+    html += '<span style="font-size:12px;font-weight:700;color:var(--text2)">' + mktsEsc(grp.name) + '</span>';
+    html += '<button onclick="mktsRemoveGroup(' + gi + ')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:13px;padding:0 4px" title="Remove group">✕</button>';
+    html += '</div>';
+    // Symbols list
+    if (grp.symbols.length) {
+      html += '<div style="padding:6px 10px">';
+      grp.symbols.forEach(function(sym, si) {
+        html += '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border)">';
+        html += '<span style="flex:1;font-size:11px;font-family:monospace;color:var(--burn3)">' + mktsEsc(sym.name) + '</span>';
+        html += '<span style="flex:1;font-size:11px;color:var(--text2)">' + mktsEsc(sym.displayName) + '</span>';
+        html += '<button onclick="mktsRemoveSymbol(' + gi + ',' + si + ')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:0 4px;flex-shrink:0" title="Remove" onmouseover="this.style.color=\'#ef4444\'" onmouseout="this.style.color=\'var(--text3)\'">✕</button>';
+        html += '</div>';
+      });
+      html += '</div>';
+    } else {
+      html += '<div style="padding:8px 10px;font-size:11px;color:var(--text3);font-style:italic">No symbols yet — add one below</div>';
+    }
+    // Add symbol — search bar + popular picks
+    html += '<div style="padding:8px 10px 4px;background:var(--card2);border-top:1px solid var(--border)">';
+    html += '<div style="font-size:9px;font-weight:700;letter-spacing:.8px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">🔍 Search & Add Symbol</div>';
+    html += '<input id="mkts-search-' + gi + '" type="text" placeholder="Search Nasdaq, Gold, Apple, VIX…" ' +
+      'oninput="mktsFilterPopular(' + gi + ',this.value)" onfocus="mktsFilterPopular(' + gi + ',this.value)" ' +
+      'style="width:100%;box-sizing:border-box;background:var(--card);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:6px 10px;font-size:11px;outline:none;margin-bottom:5px" ' +
+      'onfocus2="this.style.borderColor=\'var(--burn2)\'" onblur="this.style.borderColor=\'var(--border2)\'">';
+    html += '<div id="mkts-results-' + gi + '" style="display:flex;flex-wrap:wrap;gap:4px;max-height:96px;overflow-y:auto;margin-bottom:6px">';
+    html += '<span style="font-size:10px;color:var(--text3);padding:2px 0">Click a symbol above to pick, or type to filter — or enter manually below</span>';
+    html += '</div>';
+    html += '<div style="display:flex;gap:6px">';
+    html += '<input id="mkts-sym-' + gi + '" type="text" placeholder="EXCHANGE:SYMBOL" onkeydown="if(event.key===\'Enter\')mktsAddSymbol(' + gi + ')" style="flex:1.5;background:var(--card);border:1px solid var(--border2);border-radius:5px;color:var(--text);padding:5px 8px;font-size:11px;font-family:monospace;outline:none" onfocus="this.style.borderColor=\'var(--burn2)\'" onblur="this.style.borderColor=\'var(--border2)\'">';
+    html += '<input id="mkts-lbl-' + gi + '" type="text" placeholder="Display Name" onkeydown="if(event.key===\'Enter\')mktsAddSymbol(' + gi + ')" style="flex:1;background:var(--card);border:1px solid var(--border2);border-radius:5px;color:var(--text);padding:5px 8px;font-size:11px;outline:none" onfocus="this.style.borderColor=\'var(--burn2)\'" onblur="this.style.borderColor=\'var(--border2)\'">';
+    html += '<button onclick="mktsAddSymbol(' + gi + ')" style="background:var(--burn);border:none;color:#fff;border-radius:5px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">+ Add</button>';
+    html += '</div></div>';
+    html += '</div>';
+  });
+  if (!_mktsEditorGroups.length) {
+    html = '<div style="padding:24px;text-align:center;color:var(--text3);font-size:12px">No groups yet. Add one below.</div>';
+  }
+  body.innerHTML = html;
+}
+
+function mktsEsc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Popular symbol catalogue for quick-pick search ──
+var _MKTS_POPULAR = [
+  {sym:'OANDA:SPX500USD',  name:'S&P 500',             grp:'🌎 Americas'},
+  {sym:'CAPITALCOM:US100', name:'Nasdaq 100',           grp:'🌎 Americas'},
+  {sym:'OANDA:US30USD',    name:'Dow Jones',            grp:'🌎 Americas'},
+  {sym:'CBOE:VIX',         name:'VIX Fear Index',       grp:'🌎 Americas'},
+  {sym:'CAPITALCOM:US2000',name:'Russell 2000',         grp:'🌎 Americas'},
+  {sym:'BMFBOVESPA:IBOV',  name:'Brazil Bovespa',       grp:'🌎 Americas'},
+  {sym:'TSX:TSX',          name:'Canada TSX',           grp:'🌎 Americas'},
+  {sym:'XETR:DAX',         name:'Germany DAX',          grp:'🇪🇺 Europe'},
+  {sym:'OANDA:UK100GBP',   name:'UK FTSE 100',          grp:'🇪🇺 Europe'},
+  {sym:'EURONEXT:FCHI',    name:'France CAC 40',        grp:'🇪🇺 Europe'},
+  {sym:'CAPITALCOM:EU50',  name:'Euro Stoxx 50',        grp:'🇪🇺 Europe'},
+  {sym:'EURONEXT:AEX',     name:'Netherlands AEX',      grp:'🇪🇺 Europe'},
+  {sym:'BME:IBC',          name:'Spain IBEX 35',        grp:'🇪🇺 Europe'},
+  {sym:'SIX:SMI',          name:'Switzerland SMI',      grp:'🇪🇺 Europe'},
+  {sym:'OMX:OMXS30',       name:'Sweden OMX 30',        grp:'🇪🇺 Europe'},
+  {sym:'EURONEXT:BEL20',   name:'Belgium BEL 20',       grp:'🇪🇺 Europe'},
+  {sym:'INDEX:NKY',        name:'Japan Nikkei 225',     grp:'🌏 Asia-Pacific'},
+  {sym:'HSI:HSI',          name:'Hong Kong Hang Seng',  grp:'🌏 Asia-Pacific'},
+  {sym:'SSE:000001',       name:'China Shanghai',       grp:'🌏 Asia-Pacific'},
+  {sym:'SZSE:399001',      name:'China Shenzhen',       grp:'🌏 Asia-Pacific'},
+  {sym:'ASX:XJO',          name:'Australia ASX 200',    grp:'🌏 Asia-Pacific'},
+  {sym:'KRX:KOSPI',        name:'South Korea KOSPI',    grp:'🌏 Asia-Pacific'},
+  {sym:'SGX:STI',          name:'Singapore STI',        grp:'🌏 Asia-Pacific'},
+  {sym:'BSE:SENSEX',       name:'BSE Sensex',           grp:'🇮🇳 India'},
+  {sym:'TVC:NIFTY',        name:'Nifty 50',             grp:'🇮🇳 India'},
+  {sym:'BSE:MID150',       name:'BSE Midcap 150',       grp:'🇮🇳 India'},
+  {sym:'BSE:BSE500',       name:'BSE 500',              grp:'🇮🇳 India'},
+  {sym:'BSE:SNSX50',       name:'BSE 50 (Sensex 50)',   grp:'🇮🇳 India'},
+  {sym:'BSE:BANK',         name:'BSE Bank',             grp:'🇮🇳 India'},
+  {sym:'BSE:IT',           name:'BSE IT',               grp:'🇮🇳 India'},
+  {sym:'BSE:AUTO',         name:'BSE Auto',             grp:'🇮🇳 India'},
+  {sym:'BSE:METAL',        name:'BSE Metal',            grp:'🇮🇳 India'},
+  {sym:'BSE:MIDCAP',       name:'BSE Midcap',           grp:'🇮🇳 India'},
+  {sym:'BSE:SMLCAP',       name:'BSE Smallcap',         grp:'🇮🇳 India'},
+  {sym:'NSE:NIFTYIT',      name:'Nifty IT',             grp:'🇮🇳 India'},
+  {sym:'NSE:CNXPHARMA',    name:'Nifty Pharma',         grp:'🇮🇳 India'},
+  {sym:'BINANCE:BTCUSDT',  name:'Bitcoin BTC/USDT',     grp:'₿ Crypto'},
+  {sym:'BINANCE:ETHUSDT',  name:'Ethereum ETH/USDT',    grp:'₿ Crypto'},
+  {sym:'BINANCE:BNBUSDT',  name:'BNB/USDT',             grp:'₿ Crypto'},
+  {sym:'BINANCE:SOLUSDT',  name:'Solana SOL/USDT',      grp:'₿ Crypto'},
+  {sym:'BINANCE:XRPUSDT',  name:'XRP/USDT',             grp:'₿ Crypto'},
+  {sym:'OANDA:EURUSD',     name:'EUR/USD',              grp:'💱 Forex'},
+  {sym:'OANDA:GBPUSD',     name:'GBP/USD',              grp:'💱 Forex'},
+  {sym:'OANDA:USDJPY',     name:'USD/JPY',              grp:'💱 Forex'},
+  {sym:'OANDA:USDCHF',     name:'USD/CHF',              grp:'💱 Forex'},
+  {sym:'OANDA:AUDUSD',     name:'AUD/USD',              grp:'💱 Forex'},
+  {sym:'OANDA:XAUUSD',     name:'Gold XAU/USD',         grp:'🪙 Commodities'},
+  {sym:'OANDA:XAGUSD',     name:'Silver XAG/USD',       grp:'🪙 Commodities'},
+  {sym:'NYMEX:CL1!',       name:'Crude Oil WTI',        grp:'🪙 Commodities'},
+  {sym:'NYMEX:NG1!',       name:'Natural Gas',          grp:'🪙 Commodities'},
+  {sym:'CBOT:ZW1!',        name:'Wheat',                grp:'🪙 Commodities'},
+  {sym:'NASDAQ:AAPL',      name:'Apple',                grp:'🇺🇸 US Stocks'},
+  {sym:'NASDAQ:MSFT',      name:'Microsoft',            grp:'🇺🇸 US Stocks'},
+  {sym:'NASDAQ:GOOGL',     name:'Alphabet (Google)',    grp:'🇺🇸 US Stocks'},
+  {sym:'NASDAQ:AMZN',      name:'Amazon',               grp:'🇺🇸 US Stocks'},
+  {sym:'NASDAQ:NVDA',      name:'NVIDIA',               grp:'🇺🇸 US Stocks'},
+  {sym:'NASDAQ:TSLA',      name:'Tesla',                grp:'🇺🇸 US Stocks'},
+  {sym:'NYSE:META',        name:'Meta Platforms',       grp:'🇺🇸 US Stocks'},
+  {sym:'NYSE:BRK.B',       name:'Berkshire Hathaway',   grp:'🇺🇸 US Stocks'},
+  {sym:'NSE:RELIANCE',     name:'Reliance Industries',  grp:'🇮🇳 India Stocks'},
+  {sym:'NSE:INFY',         name:'Infosys',              grp:'🇮🇳 India Stocks'},
+  {sym:'NSE:TCS',          name:'TCS',                  grp:'🇮🇳 India Stocks'},
+  {sym:'NSE:HDFCBANK',     name:'HDFC Bank',            grp:'🇮🇳 India Stocks'},
+  {sym:'NSE:WIPRO',        name:'Wipro',                grp:'🇮🇳 India Stocks'},
+  {sym:'NSE:ICICIBANK',    name:'ICICI Bank',           grp:'🇮🇳 India Stocks'},
+  {sym:'NSE:BAJFINANCE',   name:'Bajaj Finance',        grp:'🇮🇳 India Stocks'},
+];
+
+function mktsFilterPopular(gi, q) {
+  var el = document.getElementById('mkts-results-' + gi);
+  if (!el) return;
+  var lq = (q || '').toLowerCase().trim();
+  var list = lq
+    ? _MKTS_POPULAR.filter(function(s) {
+        return s.sym.toLowerCase().indexOf(lq) !== -1 ||
+               s.name.toLowerCase().indexOf(lq) !== -1 ||
+               s.grp.toLowerCase().indexOf(lq) !== -1;
+      })
+    : _MKTS_POPULAR;
+  list = list.slice(0, 18);
+  if (!list.length) { el.innerHTML = '<span style="font-size:10px;color:var(--text3)">No matches — enter EXCHANGE:SYMBOL manually below</span>'; return; }
+  el.innerHTML = list.map(function(s) {
+    var safeS = s.sym.replace(/'/g,"\\'"); var safeN = s.name.replace(/'/g,"\\'");
+    return '<button onclick="mktsPickSymbol(' + gi + ',\'' + safeS + '\',\'' + safeN + '\')" title="' + mktsEsc(s.grp) + '" ' +
+      'style="display:inline-flex;flex-direction:column;align-items:flex-start;padding:4px 7px;border-radius:6px;border:1px solid var(--border);background:var(--card);cursor:pointer;transition:all .15s;gap:1px" ' +
+      'onmouseover="this.style.borderColor=\'var(--burn2)\';this.style.background=\'var(--card2)\'" ' +
+      'onmouseout="this.style.borderColor=\'var(--border)\';this.style.background=\'var(--card)\'">' +
+      '<span style="font-size:9px;font-family:monospace;color:var(--burn3);font-weight:600">' + mktsEsc(s.sym) + '</span>' +
+      '<span style="font-size:9px;color:var(--text2)">' + mktsEsc(s.name) + '</span>' +
+      '</button>';
+  }).join('');
+}
+
+function mktsPickSymbol(gi, sym, name) {
+  // Check for duplicates
+  var grp = _mktsEditorGroups[gi];
+  if (grp && grp.symbols.some(function(s) { return s.name === sym; })) {
+    // Already added — flash the existing row
+    var rows = document.querySelectorAll('#mkts-editor-body .sf-flash');
+    // Brief toast instead of silent ignore
+    var res = document.getElementById('mkts-results-' + gi);
+    if (res) {
+      var orig = res.innerHTML;
+      res.innerHTML = '<span style="font-size:10px;color:#f97316;font-weight:700">⚠ ' + sym + ' is already in this group</span>';
+      setTimeout(function() { res.innerHTML = orig; }, 1500);
+    }
+    return;
+  }
+  // One-click add — immediately push to group
+  if (grp) grp.symbols.push({ name: sym, displayName: name });
+  // Auto-save to localStorage so the pick is persisted even before user clicks Save
+  try { localStorage.setItem(_MKTS_LS_KEY, JSON.stringify(_mktsEditorGroups)); } catch(_) {}
+  _mktsWidgetDirty = true;
+  mktsRenderEditor();
+  // Clear search box so user can search next symbol
+  var srch = document.getElementById('mkts-search-' + gi);
+  if (srch) { srch.value = ''; mktsFilterPopular(gi, ''); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// STOCKS PANEL — TradingView widget sub-tabs (lazy-loaded per sub-tab)
+// ═══════════════════════════════════════════════════════════════════════
+var _STK_CURRENT = 'news';
+
+/* Inject a TradingView widget into a container div (once per container) */
+function _stkInjectWidget(wrapId, scriptSrc, config) {
+  var wrap = document.getElementById(wrapId);
+  if (!wrap || wrap.dataset.stkLoaded) return;
+  wrap.dataset.stkLoaded = '1';
+  wrap.style.flexDirection = 'column';
+
+  // Build container
+  var tvContainer = document.createElement('div');
+  tvContainer.className = 'tradingview-widget-container';
+  tvContainer.style.cssText = 'flex:1;width:100%;display:flex;flex-direction:column;min-height:0';
+
+  var tvWidget = document.createElement('div');
+  tvWidget.className = 'tradingview-widget-container__widget';
+  tvWidget.style.cssText = 'flex:1;min-height:0;width:100%';
+  tvContainer.appendChild(tvWidget);
+
+  var tvCopyright = document.createElement('div');
+  tvCopyright.className = 'tradingview-widget-copyright';
+  tvCopyright.style.cssText = 'flex-shrink:0;padding:3px 6px;font-size:10px;text-align:center;background:#05080e';
+  tvCopyright.innerHTML = '<a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank" style="color:#475569;text-decoration:none;font-size:9px">Track all markets on TradingView</a>';
+  tvContainer.appendChild(tvCopyright);
+
+  // Append to wrapper FIRST so script finds the container
+  wrap.appendChild(tvContainer);
+
+  // Inject script — TradingView reads its own textContent for the JSON config
+  var sc = document.createElement('script');
+  sc.type = 'text/javascript';
+  sc.src = scriptSrc;
+  sc.async = true;
+  sc.textContent = JSON.stringify(config);
+  tvContainer.appendChild(sc);
+}
+
+var _STK_CONFIGS = {
+  news: {
+    src: 'https://s3.tradingview.com/external-embedding/embed-widget-timeline.js',
+    cfg: { feedMode:'all_symbols', isTransparent:false, displayMode:'regular',
+           width:'100%', height:'100%', colorTheme:'dark', locale:'en' }
+  },
+  ecomap: {
+    src: 'https://s3.tradingview.com/external-embedding/embed-widget-crypto-coins-heatmap.js',
+    cfg: { dataSource:'Crypto', blockSize:'market_cap_calc', blockColor:'change',
+           locale:'en', colorTheme:'dark', hasTopBar:true, isDataSetEnabled:true,
+           isZoomEnabled:true, hasSymbolTooltip:true, isMonoSize:false,
+           width:'100%', height:'100%' }
+  },
+  heatmap: {
+    src: 'https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js',
+    cfg: { exchanges:[], dataSource:'SPX500', grouping:'sector',
+           blockSize:'market_cap_basic', blockColor:'change', locale:'en',
+           colorTheme:'dark', hasTopBar:true, isDataSetEnabled:true,
+           isZoomEnabled:true, hasSymbolTooltip:true, isMonoSize:false,
+           width:'100%', height:'100%' }
+  },
+  etf: {
+    src: 'https://s3.tradingview.com/external-embedding/embed-widget-etf-heatmap.js',
+    cfg: { dataSource:'AllUSEtf', blockSize:'aum', blockColor:'change',
+           grouping:'asset_class', locale:'en', colorTheme:'dark',
+           hasTopBar:true, isDataSetEnabled:true, isZoomEnabled:true,
+           hasSymbolTooltip:true, isMonoSize:false, width:'100%', height:'100%' }
+  },
+  fxrates: {
+    src: 'https://s3.tradingview.com/external-embedding/embed-widget-forex-cross-rates.js',
+    cfg: { width:'100%', height:'100%', isTransparent:false, colorTheme:'dark',
+           locale:'en', backgroundColor:'#05080e',
+           currencies:['EUR','USD','JPY','GBP','CHF','AUD','CAD','NZD','CNY','INR'] }
+  },
+  fxheat: {
+    src: 'https://s3.tradingview.com/external-embedding/embed-widget-forex-heat-map.js',
+    cfg: { width:'100%', height:'100%', isTransparent:false, colorTheme:'dark',
+           locale:'en', backgroundColor:'#05080e',
+           currencies:['EUR','USD','JPY','GBP','CHF','AUD','CAD','NZD','CNY','INR'] }
+  },
+  calendar: {
+    src: 'https://s3.tradingview.com/external-embedding/embed-widget-events.js',
+    cfg: { width:'100%', height:'100%', colorTheme:'dark', isTransparent:false,
+           locale:'en', importanceFilter:'-1,0,1',
+           countryFilter:'ar,au,br,ca,cn,de,fr,gb,id,in,jp,kr,mx,ru,sa,tr,us,za' }
+  }
+};
+
+function stocksInit() {
+  // Load the first sub-tab (news) on panel open
+  stkSwitch('news', document.getElementById('stk-tab-news'));
+}
+
+function stkSwitch(key, btnEl) {
+  // Deactivate all sub-tab buttons
+  var bar = document.getElementById('stk-sub-bar');
+  if (bar) bar.querySelectorAll('.stk-sub-tab').forEach(function(b) { b.classList.remove('active'); });
+  if (btnEl) btnEl.classList.add('active');
+
+  // Hide all wrap divs, show the selected one
+  ['news','ecomap','heatmap','etf','fxrates','fxheat','calendar'].forEach(function(k) {
+    var w = document.getElementById('stk-wrap-' + k);
+    if (w) w.style.display = (k === key) ? 'flex' : 'none';
+  });
+
+  _STK_CURRENT = key;
+
+  // Lazy-inject the widget if not yet loaded
+  var cfg = _STK_CONFIGS[key];
+  if (cfg) _stkInjectWidget('stk-wrap-' + key, cfg.src, cfg.cfg);
+}
+
+/* Force-reinject the active stocks sub-tab widget (used when expand/restore changes container size) */
+function _stkReinit() {
+  var key = _STK_CURRENT || 'news';
+  var wrap = document.getElementById('stk-wrap-' + key);
+  if (!wrap) return;
+  // Clear previous widget and loaded flag so it re-injects at the new container size
+  wrap.innerHTML = '';
+  delete wrap.dataset.stkLoaded;
+  var cfg = _STK_CONFIGS[key];
+  if (cfg) _stkInjectWidget('stk-wrap-' + key, cfg.src, cfg.cfg);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// WIDGET SETTINGS — default tab + visible-tab toggles, persisted in localStorage
+// ═══════════════════════════════════════════════════════════════════════
+const _WIDGET_TAB_LABELS = {
+  ai:'🤖 AI Chat', video:'▶️ YouTube Live', iptv:'📡 Live TV',
+  radio:'📻 Radio', premium:'🎙 Premium Radio', sports:'🏆 Sports',
+  music:'🎵 YouTube Music', movies:'🎬 Movies', podcast:'🎙 Podcast',
+  calendar:'📅 Calendar', notes:'📝 Notes', calc:'🧮 Calculator', worldclock:'🌍 World Clock', weather:'🌤 Weather',
+  markets:'📈 Global Markets', stocks:'📊 Stock Tools',
+};
+const _WIDGET_DEFAULT_ORDER = ['ai','video','iptv','radio','premium','sports','music','movies','podcast','calendar','notes','calc','worldclock','weather','markets','stocks'];
+function widgetGetSettings() {
+  let s = {};
+  try { s = JSON.parse(localStorage.getItem('viltv_widget_settings') || '{}'); } catch(_) {}
+  if (!s.defaultTab) s.defaultTab = 'video';
+  if (!s.visible || typeof s.visible !== 'object') s.visible = {};
+  for (const key of Object.keys(_WIDGET_TAB_LABELS)) {
+    if (s.visible[key] === undefined) s.visible[key] = true;
+  }
+  // Ensure order array exists and contains all known tabs
+  if (!Array.isArray(s.order) || s.order.length === 0) {
+    s.order = [..._WIDGET_DEFAULT_ORDER];
+  } else {
+    // Add any new tabs not in saved order
+    for (const key of _WIDGET_DEFAULT_ORDER) {
+      if (!s.order.includes(key)) s.order.push(key);
+    }
+    // Remove stale keys
+    s.order = s.order.filter(k => _WIDGET_TAB_LABELS[k]);
+  }
+  return s;
+}
+function widgetSaveSettings(s) {
+  try { localStorage.setItem('viltv_widget_settings', JSON.stringify(s)); } catch(_) {}
+}
+function widgetSetDefaultTab(tab) {
+  const s = widgetGetSettings();
+  s.defaultTab = tab;
+  widgetSaveSettings(s);
+  const status = document.getElementById('widget-default-status');
+  if (status) status.textContent = 'Currently: ' + (_WIDGET_TAB_LABELS[tab] || tab);
+}
+function widgetToggleTab(tab, visible) {
+  const s = widgetGetSettings();
+  s.visible[tab] = !!visible;
+  widgetSaveSettings(s);
+  widgetApplyVisibility();
+}
+function widgetMoveTab(key, dir) {
+  const s = widgetGetSettings();
+  const idx = s.order.indexOf(key);
+  if (idx < 0) return;
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= s.order.length) return;
+  // Swap
+  [s.order[idx], s.order[newIdx]] = [s.order[newIdx], s.order[idx]];
+  widgetSaveSettings(s);
+  widgetApplyVisibility();
+  widgetRenderSettings();
+}
+function widgetApplyVisibility() {
+  const s = widgetGetSettings();
+  const strip = document.getElementById('rb-tabs');
+  if (!strip) return;
+  // Apply tab order — move each rbtab-* to end of strip in specified order
+  s.order.forEach(key => {
+    const tab = document.getElementById('rbtab-' + key);
+    if (tab) {
+      tab.style.display = (s.visible[key] === false) ? 'none' : '';
+      strip.appendChild(tab); // re-append in order (DOM move)
+    }
+  });
+}
+function widgetResetSettings() {
+  try { localStorage.removeItem('viltv_widget_settings'); } catch(_) {}
+  widgetApplyVisibility();
+  widgetRenderSettings();
+}
+function widgetRenderSettings() {
+  const s = widgetGetSettings();
+  const sel = document.getElementById('widget-default-tab');
+  if (sel) sel.value = s.defaultTab;
+  const status = document.getElementById('widget-default-status');
+  if (status) status.textContent = 'Currently: ' + (_WIDGET_TAB_LABELS[s.defaultTab] || s.defaultTab);
+  const wrap = document.getElementById('widget-tab-toggles');
+  if (!wrap) return;
+  wrap.innerHTML = s.order.map((key, i) => {
+    const label = _WIDGET_TAB_LABELS[key] || key;
+    const checked = s.visible[key] !== false;
+    const isFirst = i === 0;
+    const isLast = i === s.order.length - 1;
+    return `<div class="widget-tab-row">
+      <input type="checkbox" ${checked ? 'checked' : ''} onchange="widgetToggleTab('${key}', this.checked)"
+             style="width:16px;height:16px;accent-color:#3b82f6;cursor:pointer;flex-shrink:0"/>
+      <span class="widget-tab-label">${label}</span>
+      <button class="widget-reorder-btn" onclick="widgetMoveTab('${key}',-1)" ${isFirst ? 'disabled' : ''} title="Move up">▲</button>
+      <button class="widget-reorder-btn" onclick="widgetMoveTab('${key}',1)" ${isLast ? 'disabled' : ''} title="Move down">▼</button>
+    </div>`;
+  }).join('');
+}
+// Apply visibility on load + open default tab on first page-load
+function widgetInitOnLoad() {
+  widgetApplyVisibility();
+  rbTabsSyncArrows();
+  const tabStrip = document.getElementById('rb-tabs');
+  if (tabStrip && !tabStrip.dataset.arrowBound) {
+    tabStrip.addEventListener('scroll', rbTabsSyncArrows, { passive: true });
+    window.addEventListener('resize', rbTabsSyncArrows);
+    tabStrip.dataset.arrowBound = '1';
+    // Mouse drag-scroll for rb-tabs (desktop UX)
+    (function() {
+      var down = false, sx = 0, sl = 0;
+      tabStrip.style.cursor = 'grab';
+      tabStrip.addEventListener('mousedown', function(e) {
+        if (e.button !== 0) return;
+        down = true; sx = e.clientX; sl = tabStrip.scrollLeft;
+        tabStrip.style.cursor = 'grabbing';
+        tabStrip.style.userSelect = 'none';
+        e.preventDefault();
+      }, { passive: false });
+      document.addEventListener('mousemove', function(e) {
+        if (!down) return;
+        tabStrip.scrollLeft = sl - (e.clientX - sx);
+        rbTabsSyncArrows();
+      });
+      document.addEventListener('mouseup', function() {
+        if (!down) return;
+        down = false;
+        tabStrip.style.cursor = 'grab';
+        tabStrip.style.userSelect = '';
+      });
+    })();
+  }
+  const s = widgetGetSettings();
+  const last = (() => { try { return localStorage.getItem('viltv_widget_last_tab') || ''; } catch(_) { return ''; } })();
+  // 'ai' was the old built-in default; treat it the same as "nothing saved" so first-time
+  // visitors land on YouTube Live instead. Explicit user choices are preserved.
+  const effectiveDefault = (s.defaultTab && s.defaultTab !== 'ai') ? s.defaultTab : 'video';
+  const target = last || effectiveDefault;
+  if (s.visible[target] !== false) {
+    setTimeout(() => rbSwitchPanel(target), 100);
+  }
+  // Init drag-to-scroll for all preset strips
+  _initPresetDragScroll();
+}
+window.addEventListener('DOMContentLoaded', widgetInitOnLoad);
+
+// ═══════════════════════════════════════════════════════════════════════
+// PRESET STRIP — drag-to-scroll (mouse drag on desktop)
+// ═══════════════════════════════════════════════════════════════════════
+function _initPresetDragScroll() {
+  document.querySelectorAll('.panel-preset-strip, .stk-sub-bar, .pr-cat-bar').forEach(function(el) {
+    if (el.dataset.dragBound) return;
+    el.dataset.dragBound = '1';
+    var isDown = false, startX = 0, scrollLeft = 0, moved = false;
+    el.addEventListener('mousedown', function(e) {
+      if (e.button !== 0) return;
+      isDown = true; moved = false;
+      startX = e.pageX - el.getBoundingClientRect().left;
+      scrollLeft = el.scrollLeft;
+      el.classList.add('drag-scroll');
+    });
+    window.addEventListener('mouseup', function() {
+      isDown = false;
+      el.classList.remove('drag-scroll');
+    });
+    el.addEventListener('mousemove', function(e) {
+      if (!isDown) return;
+      e.preventDefault();
+      var x = e.pageX - el.getBoundingClientRect().left;
+      var walk = (x - startX) * 1.8;
+      if (Math.abs(walk) > 4) moved = true;
+      el.scrollLeft = scrollLeft - walk;
+    });
+    // Prevent click firing on drag-end
+    el.addEventListener('click', function(e) {
+      if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; }
+    }, true);
+    // Wheel → horizontal scroll (only when strip actually overflows)
+    el.addEventListener('wheel', function(e) {
+      if (el.scrollWidth <= el.clientWidth) return; // nothing to scroll, pass through
+      if (e.deltaY !== 0) { e.preventDefault(); el.scrollLeft += e.deltaY * 1.5; }
+    }, { passive: false });
+    // ── Touch support: horizontal swipe scrolls the strip, not the page ──────
+    // Buttons inside have touch-action:manipulation which competes with pan-x.
+    // We resolve the intent ourselves: if gesture is mostly horizontal → scroll strip.
+    var touchStartX = 0, touchStartY = 0, touchStartSL = 0, touchIsHoriz = null, touchScrolled = false;
+    el.addEventListener('touchstart', function(e) {
+      if (e.touches.length !== 1) return;
+      touchStartX  = e.touches[0].clientX;
+      touchStartY  = e.touches[0].clientY;
+      touchStartSL = el.scrollLeft;
+      touchIsHoriz = null;
+      touchScrolled = false;
+    }, { passive: true });
+    el.addEventListener('touchmove', function(e) {
+      if (e.touches.length !== 1) return;
+      var dx = e.touches[0].clientX - touchStartX;
+      var dy = e.touches[0].clientY - touchStartY;
+      // Determine intent on first significant movement (>4px)
+      if (touchIsHoriz === null && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
+        touchIsHoriz = Math.abs(dx) > Math.abs(dy);
+      }
+      if (touchIsHoriz) {
+        e.preventDefault();           // block vertical page scroll
+        el.scrollLeft = touchStartSL - dx;
+        touchScrolled = true;
+      }
+    }, { passive: false });           // must be non-passive to allow preventDefault
+    el.addEventListener('touchend', function(e) {
+      if (touchScrolled) e.preventDefault(); // suppress tap-after-scroll click
+      touchIsHoriz = null; touchScrolled = false;
+    }, { passive: false });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PANEL OMNISEARCH — shared modal for Radio / Movies / Podcast
+// ═══════════════════════════════════════════════════════════════════════
+var _panelOmniMode = '';   // 'radio' | 'movies' | 'podcast'
+var _panelOmniTimer = null;
+
+const _PANEL_OMNI_CONFIG = {
+  radio: {
+    icon: '📻', placeholder: 'Search 30,000+ radio stations…',
+    loadingText: 'Searching radio stations…',
+    presets: [
+      {label:'🇮🇳 Top India', key:'top-india'}, {label:'🎬 Bollywood', key:'bollywood'},
+      {label:'🪕 Hindi', key:'hindi'}, {label:'🌿 Malayalam', key:'malayalam'},
+      {label:'🇦🇪 UAE Malayalam', key:'uae-malayalam'}, {label:'🛢️ Gulf NRI', key:'gulf-nri'},
+      {label:'🎵 Tamil', key:'tamil'}, {label:'🎤 Telugu', key:'telugu'},
+      {label:'🎶 Kannada', key:'kannada'}, {label:'🟡 Punjabi', key:'punjabi'},
+      {label:'🇺🇸 Top US', key:'top-us'}, {label:'🇬🇧 Top UK', key:'top-uk'},
+      {label:'🇯🇵 Japan', key:'top-japan'}, {label:'📰 News', key:'news'},
+      {label:'🌿 Chill', key:'chill'}
+    ]
+  },
+  movies: {
+    icon: '🎬', placeholder: 'Search free public-domain movies…',
+    loadingText: 'Searching Internet Archive…',
+    presets: [
+      {label:'🎭 Classics', key:'classics'}, {label:'💥 Action', key:'action'},
+      {label:'😂 Comedy', key:'comedy'}, {label:'👻 Horror', key:'horror'},
+      {label:'🚀 Sci-Fi', key:'scifi'}, {label:'🎨 Animation', key:'animation'},
+      {label:'🎭 Drama', key:'drama'}, {label:'🤠 Western', key:'western'},
+      {label:'📽 Documentary', key:'documentary'}, {label:'🎬 Silent Era', key:'silent'},
+      {label:'🕵 Film Noir', key:'noir'}, {label:'🎬 Bollywood', key:'bollywood'},
+      {label:'🎬 Malayalam', key:'malayalam'}, {label:'🎬 Tamil', key:'tamil'},
+      {label:'🎬 Telugu', key:'telugu'}, {label:'🎬 Indian Cinema', key:'indiancinema'},
+      {label:'🔪 Thriller (US)', key:'thriller'}, {label:'🎬 Hindi', key:'hindi'},
+      {label:'🇲🇽 Mexico', key:'mexico'}, {label:'🇰🇷 Korea', key:'korea'}
+    ]
+  },
+  podcast: {
+    icon: '🎙', placeholder: 'Search podcasts on iTunes…',
+    loadingText: 'Searching iTunes podcasts…',
+    presets: [
+      {label:'⭐ Curated', key:null}, {label:'💼 Business', key:'Business'},
+      {label:'💻 Technology', key:'Technology'}, {label:'📰 News', key:'News'},
+      {label:'📚 Education', key:'Education'}, {label:'❤️ Health', key:'Health'},
+      {label:'😂 Comedy', key:'Comedy'}, {label:'⚽ Sports', key:'Sports'},
+      {label:'🌍 Society', key:'Society'}
+    ]
+  },
+  iptv: {
+    icon: '📡', placeholder: 'Search live TV channels…',
+    loadingText: 'Searching channels…',
+    presets: [
+      {label:'⭐ Favorites', key:'favorites'}, {label:'✨ India HD', key:'curated-india'},
+      {label:'🇮🇳 All India', key:'all-india'}, {label:'🪕 Hindi', key:'hindi'},
+      {label:'🌿 Malayalam', key:'malayalam'}, {label:'🎵 Tamil', key:'tamil'},
+      {label:'🎤 Telugu', key:'telugu'}, {label:'🎶 Kannada', key:'kannada'},
+      {label:'📰 News', key:'news'}, {label:'🎬 Movies', key:'movies'},
+      {label:'🏆 All Sports', key:'sports'}, {label:'🏏 Cricket', key:'cricket'},
+      {label:'🇯🇵 Japan', key:'japan'}, {label:'🌍 World', key:'world'}
+    ]
+  }
+};
+
+function panelOmniOpen(mode) {
+  _panelOmniMode = mode;
+  const cfg = _PANEL_OMNI_CONFIG[mode];
+  if (!cfg) return;
+  const modal = document.getElementById('panel-omni-modal');
+  const input = document.getElementById('panel-omni-input');
+  const icon  = document.getElementById('panel-omni-icon');
+  if (!modal || !input) return;
+  // Set header
+  if (icon) icon.textContent = cfg.icon;
+  input.placeholder = cfg.placeholder;
+  input.value = '';
+  // Render presets in body
+  _panelOmniRenderPresets(mode, cfg);
+  // Show modal
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => input.focus(), 80);
+}
+function panelOmniClose() {
+  const modal = document.getElementById('panel-omni-modal');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+  clearTimeout(_panelOmniTimer);
+}
+function _panelOmniRenderPresets(mode, cfg) {
+  const presetsEl  = document.getElementById('panel-omni-presets');
+  const resultsEl  = document.getElementById('panel-omni-results');
+  const loadingEl  = document.getElementById('panel-omni-loading');
+  const emptyEl    = document.getElementById('panel-omni-empty');
+  if (resultsEl)  resultsEl.innerHTML  = '';
+  if (loadingEl)  loadingEl.style.display = 'none';
+  if (emptyEl)    emptyEl.style.display   = 'none';
+  if (!presetsEl) return;
+  presetsEl.innerHTML = `<div class="panel-omni-sec">Quick Select</div>` +
+    cfg.presets.map(p => `
+      <div class="panel-omni-row" onclick="_panelOmniPresetClick('${mode}','${p.key || '__curated__'}','${p.label}')">
+        <div class="panel-omni-icon">${p.label.split(' ')[0]}</div>
+        <div class="panel-omni-meta">
+          <div class="panel-omni-name">${p.label}</div>
+          <div class="panel-omni-desc">${mode==='radio'?'Radio stations':mode==='podcast'?'Podcast category':mode==='iptv'?'Live TV channels':'Movies category'}</div>
+        </div>
+        <div class="panel-omni-tag">${mode.toUpperCase()}</div>
+      </div>`).join('');
+}
+function _panelOmniPresetClick(mode, key, label) {
+  panelOmniClose();
+  if (mode === 'radio') {
+    radioLoadPreset(key);
+    const trg = document.getElementById('radio-omni-trigger');
+    if (trg) trg.textContent = label;
+  } else if (mode === 'movies') {
+    moviesLoadPreset(key);
+    const trg = document.getElementById('movies-omni-trigger');
+    if (trg) trg.textContent = label;
+  } else if (mode === 'podcast') {
+    if (key === '__curated__') podcastLoadCurated();
+    else podcastLoadCategory(key);
+    const trg = document.getElementById('podcast-omni-trigger');
+    if (trg) trg.textContent = label;
+  } else if (mode === 'iptv') {
+    iptvLoadPreset(key);
+    const trg = document.getElementById('iptv-omni-trigger');
+    if (trg) trg.textContent = label;
+  }
+}
+function panelOmniInput(value) {
+  clearTimeout(_panelOmniTimer);
+  const q = (value || '').trim();
+  const presetsEl = document.getElementById('panel-omni-presets');
+  const loadingEl = document.getElementById('panel-omni-loading');
+  const loadingTxt= document.getElementById('panel-omni-loading-text');
+  const emptyEl   = document.getElementById('panel-omni-empty');
+  const resultsEl = document.getElementById('panel-omni-results');
+  if (!q) {
+    _panelOmniRenderPresets(_panelOmniMode, _PANEL_OMNI_CONFIG[_panelOmniMode]);
+    return;
+  }
+  if (presetsEl)  presetsEl.innerHTML = '';
+  if (resultsEl)  resultsEl.innerHTML = '';
+  if (emptyEl)    emptyEl.style.display = 'none';
+  if (loadingEl && loadingTxt) {
+    loadingTxt.textContent = _PANEL_OMNI_CONFIG[_panelOmniMode]?.loadingText || 'Searching…';
+    loadingEl.style.display = 'block';
+  }
+  _panelOmniTimer = setTimeout(async () => {
+    try {
+      let html = '';
+      if (_panelOmniMode === 'radio') {
+        const r = await fetch('https://de1.api.radio-browser.info/json/stations/search?name=' + encodeURIComponent(q) + '&limit=20&hidebroken=true&order=clickcount&reverse=true', { signal: AbortSignal.timeout(6000) });
+        const data = await r.json();
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (!data.length) { if (emptyEl) emptyEl.style.display = 'block'; return; }
+        html = `<div class="panel-omni-sec">Radio Stations — "${q}"</div>` +
+          data.map(st => `<div class="panel-omni-row" onclick="_panelOmniRadioPlay(${JSON.stringify({url:st.url_resolved||st.url,name:st.name,country:st.country,codec:st.codec})})">
+            <div class="panel-omni-icon" style="background:linear-gradient(135deg,#1d4ed8,#1e3a5f)">📻</div>
+            <div class="panel-omni-meta">
+              <div class="panel-omni-name">${_esc(st.name)}</div>
+              <div class="panel-omni-desc">${_esc(st.country)} · ${_esc(st.language||'')} · ${_esc(st.codec||'')}</div>
+            </div>
+            <div class="panel-omni-tag">${st.clickcount>0 ? '▶ '+st.clickcount : ''}</div>
+          </div>`).join('');
+      } else if (_panelOmniMode === 'movies') {
+        const r = await fetch('https://archive.org/advancedsearch.php?q=' + encodeURIComponent(q + ' AND mediatype:movies') + '&fl=identifier,title,year,subject&rows=20&output=json&sort=downloads+desc', { signal: AbortSignal.timeout(7000) });
+        const data = await r.json();
+        if (loadingEl) loadingEl.style.display = 'none';
+        const docs = (data.response && data.response.docs) || [];
+        if (!docs.length) { if (emptyEl) emptyEl.style.display = 'block'; return; }
+        html = `<div class="panel-omni-sec">Movies — "${q}"</div>` +
+          docs.map(doc => `<div class="panel-omni-row" onclick="_panelOmniMoviePlay('${_esc(doc.identifier)}','${_esc(doc.title||doc.identifier)}')">
+            <div class="panel-omni-icon" style="background:linear-gradient(135deg,#7c2d12,#1e3a5f)">🎬</div>
+            <div class="panel-omni-meta">
+              <div class="panel-omni-name">${_esc(doc.title||doc.identifier)}</div>
+              <div class="panel-omni-desc">${doc.year||''} · archive.org</div>
+            </div>
+            <div class="panel-omni-tag">FILM</div>
+          </div>`).join('');
+      } else if (_panelOmniMode === 'podcast') {
+        const r = await fetch('https://itunes.apple.com/search?media=podcast&term=' + encodeURIComponent(q) + '&limit=20', { signal: AbortSignal.timeout(7000) });
+        const data = await r.json();
+        if (loadingEl) loadingEl.style.display = 'none';
+        const results = (data.results || []);
+        if (!results.length) { if (emptyEl) emptyEl.style.display = 'block'; return; }
+        html = `<div class="panel-omni-sec">Podcasts — "${q}"</div>` +
+          results.map(p => `<div class="panel-omni-row" onclick="_panelOmniPodcastPlay(${JSON.stringify({feedUrl:p.feedUrl,name:p.trackName,thumb:p.artworkUrl60})})">
+            <div class="panel-omni-icon" style="background:linear-gradient(135deg,#581c87,#1e3a5f)">${p.artworkUrl60?'<img src="'+p.artworkUrl60+'" style="width:34px;height:34px;border-radius:7px;object-fit:cover">':'🎙'}</div>
+            <div class="panel-omni-meta">
+              <div class="panel-omni-name">${_esc(p.trackName)}</div>
+              <div class="panel-omni-desc">${_esc(p.artistName||'')} · ${p.trackCount||0} episodes</div>
+            </div>
+            <div class="panel-omni-tag">PODCAST</div>
+          </div>`).join('');
+      } else if (_panelOmniMode === 'iptv') {
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (!_iptvAllChannels || !_iptvAllChannels.length) {
+          if (emptyEl) { emptyEl.style.display = 'block'; emptyEl.textContent = 'Load a channel preset first, then search.'; }
+          return;
+        }
+        const ql = q.toLowerCase();
+        const filtered = _iptvAllChannels.filter(c => c.name.toLowerCase().includes(ql)).slice(0, 40);
+        if (!filtered.length) { if (emptyEl) emptyEl.style.display = 'block'; return; }
+        html = `<div class="panel-omni-sec">Live TV — "${q}"</div>` +
+          filtered.map(c => `<div class="panel-omni-row" onclick="_panelOmniIptvPlay(${JSON.stringify({url:c.url,id:c.id,name:c.name})})">
+            <div class="panel-omni-icon" style="background:linear-gradient(135deg,#064e3b,#1e3a5f)">${c.logo?'<img src="'+_esc(c.logo)+'" style="width:34px;height:34px;border-radius:7px;object-fit:contain;background:#000" onerror="this.style.display=\'none\'">':'📡'}</div>
+            <div class="panel-omni-meta">
+              <div class="panel-omni-name">${_esc(c.name)}</div>
+              <div class="panel-omni-desc">${_esc(c.country||'')}${c.language?' · '+_esc(c.language):''}${c.categories&&c.categories[0]?' · '+_esc(c.categories[0]):''}</div>
+            </div>
+            <div class="panel-omni-tag">TV</div>
+          </div>`).join('');
+      }
+      if (resultsEl) resultsEl.innerHTML = html;
+    } catch(e) {
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (emptyEl) { emptyEl.style.display = 'block'; emptyEl.textContent = 'Search failed. Check connection.'; }
+    }
+  }, 420);
+}
+function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function _panelOmniRadioPlay(st) {
+  panelOmniClose();
+  // Play directly via radio audio
+  const audio = document.getElementById('radio-audio');
+  const nowEl = document.getElementById('radio-now-playing');
+  const dot   = document.getElementById('radio-dot');
+  const btn   = document.getElementById('radio-play-btn');
+  const trg   = document.getElementById('radio-omni-trigger');
+  if (!audio) return;
+  audio.src = st.url; audio.muted = _radioMuted; audio.play().catch(()=>{});
+  if (nowEl) nowEl.textContent = st.name;
+  if (dot) { dot.className = 'radio-status-dot playing'; }
+  if (btn) { btn.textContent = '⏸'; btn.disabled = false; }
+  if (trg) trg.textContent = st.name;
+}
+function _panelOmniMoviePlay(id, title) {
+  panelOmniClose();
+  const wrap  = document.getElementById('movies-player-wrap');
+  const frame = document.getElementById('movies-player-iframe');
+  const nowEl = document.getElementById('movies-now');
+  const trg   = document.getElementById('movies-omni-trigger');
+  if (!frame) return;
+  frame.src = 'https://archive.org/embed/' + id + '?autoplay=1';
+  if (wrap) wrap.style.display = 'block';
+  if (nowEl) nowEl.textContent = title;
+  if (trg) trg.textContent = title;
+}
+function _panelOmniPodcastPlay(p) {
+  panelOmniClose();
+  if (!p.feedUrl) return;
+  // Trigger podcast load with this feed (reuse existing podcastPlayFeed if present)
+  const trg = document.getElementById('podcast-omni-trigger');
+  if (trg) trg.textContent = p.name;
+  podcastPlayFromFeed(p.feedUrl, p.name, p.thumb);
+}
+// Stub if not yet defined
+if (typeof podcastPlayFromFeed !== 'function') {
+  window.podcastPlayFromFeed = function(feedUrl, name) {
+    // Fall back to loading the feed in the podcast list
+    if (typeof podcastLoadFeed === 'function') podcastLoadFeed(feedUrl, name);
+  };
+}
+function _panelOmniIptvPlay(ch) {
+  panelOmniClose();
+  iptvPlay(ch.url, ch.id, ch.name);
+  const trg = document.getElementById('iptv-omni-trigger');
+  if (trg) trg.textContent = ch.name;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// OMNISEARCH — unified channel + YouTube search
+// ═══════════════════════════════════════════════════════════════════════
+var _ytFavorites  = JSON.parse(localStorage.getItem('yt_favorites') || '[]');
+var _omniTimer    = null;
+var _omniSearchQ  = '';
+
+// ── Shared helpers ───────────────────────────────────────────────────
+function _escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function _decodeYtStr(s) {
+  return String(s||'')
+    .replace(/\\u0026/g,'&').replace(/\\u003c/g,'<').replace(/\\u003e/g,'>')
+    .replace(/\\u0027/g,"'").replace(/\\n/g,' ')
+    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+}
+
+// ── Country flag lookup ───────────────────────────────────────────────
+var _omniFlags = {
+  'India':'🇮🇳','International':'🌐','United States':'🇺🇸',
+  'United Kingdom':'🇬🇧','Japan':'🇯🇵','South Korea':'🇰🇷',
+  'Germany':'🇩🇪','France':'🇫🇷','Singapore':'🇸🇬','China':'🇨🇳',
+  'Qatar':'🇶🇦','Turkey':'🇹🇷','Bangladesh':'🇧🇩','Canada':'🇨🇦'
+};
+
+// ── Modal open/close ─────────────────────────────────────────────────
+function ytOmniOpen() {
+  var modal = document.getElementById('yt-omni-modal');
+  var minp  = document.getElementById('yt-omni-modal-input');
+  var sinp  = document.getElementById('yt-omni-input');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  var q = sinp ? sinp.value.trim() : '';
+  if (minp) { minp.value = q; setTimeout(function(){ minp.focus(); minp.select(); }, 60); }
+  _omniRenderChannels(q);
+  if (q.length >= 2 && !q.startsWith('http')) _omniYtSearch(q);
+}
+
+function ytOmniClose() {
+  var modal = document.getElementById('yt-omni-modal');
+  if (modal) modal.style.display = 'none';
+  clearTimeout(_omniTimer);
+}
+
+// ── Sidebar bar input handlers ───────────────────────────────────────
+function ytOmniInput(q) {
+  var clr = document.getElementById('yt-omni-clear');
+  if (clr) clr.style.display = q.trim() ? '' : 'none';
+  ytRenderChannelList(q);
+}
+
+function ytOmniClear() {
+  var inp = document.getElementById('yt-omni-input');
+  if (inp) { inp.value = ''; inp.focus(); }
+  var clr = document.getElementById('yt-omni-clear');
+  if (clr) clr.style.display = 'none';
+  ytRenderChannelList('');
+}
+
+function ytOmniBarKeydown(e) {
+  if (e.key === 'Enter') {
+    var q = (document.getElementById('yt-omni-input')?.value||'').trim();
+    if (q) { ytOmniOpen(); ytOmniExecute(q); }
+    else   ytOmniOpen();
+  } else if (e.key === 'Escape') {
+    ytOmniClose();
+  }
+}
+
+// ── Modal input handlers ─────────────────────────────────────────────
+function ytOmniModalInput(q) {
+  var sinp = document.getElementById('yt-omni-input');
+  if (sinp) sinp.value = q;
+  var clr = document.getElementById('yt-omni-clear');
+  if (clr) clr.style.display = q.trim() ? '' : 'none';
+  _omniRenderChannels(q);
+  clearTimeout(_omniTimer);
+  if (q.trim().length >= 2 && !q.startsWith('http')) {
+    _omniTimer = setTimeout(function(){ _omniYtSearch(q); }, 450);
+  } else {
+    var ytDiv = document.getElementById('yt-omni-yt-results');
+    if (ytDiv) ytDiv.innerHTML = '';
+    var loading = document.getElementById('yt-omni-loading');
+    if (loading) loading.style.display = 'none';
+  }
+}
+
+function ytOmniModalKeydown(e) {
+  if (e.key === 'Escape') ytOmniClose();
+  if (e.key === 'Enter') {
+    var q = (document.getElementById('yt-omni-modal-input')?.value||'').trim();
+    if (q) ytOmniExecute(q);
+  }
+}
+
+// ── Execute: resolve query and act ───────────────────────────────────
+function ytOmniExecute(q) {
+  if (!q) return;
+  var id = ytExtractVideoId(q);
+  if (id) { ytOmniClose(); ytSwitchChannel(id); return; }
+  var n = parseInt(q, 10);
+  if (!isNaN(n) && String(n) === q.trim() && n >= 1 && n <= YT_CHANNELS.length) {
+    ytOmniClose(); ytSwitchToChannel(n); return;
+  }
+  var matches = _omniLocalSearch(q);
+  if (matches.length === 1) { ytOmniClose(); ytSwitchToChannel(matches[0].no); return; }
+  _omniYtSearch(q); // already in modal, just search
+}
+
+// ── Pick handlers ────────────────────────────────────────────────────
+function ytOmniPickChannel(no) {
+  ytOmniClose();
+  if (typeof rbSwitchPanel === 'function') rbSwitchPanel('video');
+  ytSwitchToChannel(no);
+}
+
+function ytOmniPickYt(id, type) {
+  ytOmniClose();
+  var np = document.getElementById('yt-now-playing');
+  if (type === 'playlist') {
+    if (np) np.textContent = '▶ Playlist';
+    _ytSetSrc('https://www.youtube.com/embed/videoseries?list=' + id +
+              '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
+  } else {
+    if (np) np.textContent = '▶ YouTube';
+    ytSwitchChannel(id);
+  }
+}
+
+// ── Local channel search ─────────────────────────────────────────────
+function _omniLocalSearch(q) {
+  if (!q) return [];
+  var lq = q.toLowerCase();
+  return YT_CHANNELS.filter(function(ch) {
+    return (ch.name     && ch.name.toLowerCase().includes(lq)) ||
+           (ch.country  && ch.country.toLowerCase().includes(lq)) ||
+           (ch.category && ch.category.toLowerCase().includes(lq)) ||
+           (ch.lang     && ch.lang.toLowerCase().includes(lq));
+  });
+}
+
+function _omniRenderChannels(q) {
+  var container = document.getElementById('yt-omni-channels');
+  if (!container) return;
+  var lq = (q||'').trim();
+
+  if (!lq) {
+    // No query: show favorites pinned at top, then all channels
+    var favChannels = _ytFavorites.map(function(key) {
+      return YT_CHANNELS.find(function(c){ return c.cid===key||c.v1===key||c.no===key; });
+    }).filter(Boolean);
+    var html = '';
+    if (favChannels.length) {
+      html += '<div class="yt-omni-section-hdr">⭐ Your Favorites</div>';
+      html += favChannels.map(_omniChRow).join('');
+    }
+    html += '<div class="yt-omni-section-hdr">All ' + YT_CHANNELS.length + ' Live Channels</div>';
+    html += YT_CHANNELS.map(_omniChRow).join('');
+    container.innerHTML = html;
+    return;
+  }
+
+  var matches = _omniLocalSearch(lq);
+  if (!matches.length) {
+    container.innerHTML = '<div class="yt-omni-status">No channels match &ldquo;' + _escHtml(lq) + '&rdquo;</div>';
+    return;
+  }
+  var hdr = '<div class="yt-omni-section-hdr">Live Channels — ' +
+    matches.length + ' match' + (matches.length !== 1 ? 'es' : '') + '</div>';
+  container.innerHTML = hdr + matches.map(_omniChRow).join('');
+}
+
+function _omniChRow(ch) {
+  var flag = _omniFlags[ch.country] || '🌍';
+  var cat  = ch.category ? ('<span style="font-size:9px;padding:1px 6px;border-radius:10px;background:#0f1d35;color:#60a5fa;flex-shrink:0;border:1px solid #1e3a5f">' + _escHtml(ch.category) + '</span>') : '';
+  return '<div class="yt-omni-ch-row" onclick="ytOmniPickChannel(' + ch.no + ')">' +
+    '<span style="font-size:10px;color:#2563eb;font-weight:800;min-width:30px;flex-shrink:0">Ch&nbsp;' + ch.no + '</span>' +
+    '<span style="font-size:14px;flex-shrink:0">' + flag + '</span>' +
+    '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;color:#e2e8f0;font-weight:600">' + _escHtml(ch.name) + '</span>' +
+    cat + '</div>';
+}
+
+// ── YouTube search via CORS proxy (API first, HTML scrape fallback) ──
+function _omniYtSearch(q) {
+  var ytDiv   = document.getElementById('yt-omni-yt-results');
+  var loading = document.getElementById('yt-omni-loading');
+  var empty   = document.getElementById('yt-omni-empty');
+  if (!ytDiv) return;
+  if (loading) loading.style.display = '';
+  if (empty)   empty.style.display = 'none';
+  ytDiv.innerHTML = '';
+  _omniSearchQ = q;
+
+  // Try the structured YouTube Search API endpoint first (requires YOUTUBE_API_KEY in worker)
+  fetch(WORKER_PROXY_URL + '/youtube-search?q=' + encodeURIComponent(q), {
+    signal: AbortSignal.timeout(8000)
+  })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (_omniSearchQ !== q) return;
+      if (d.items && d.items.length) {
+        if (loading) loading.style.display = 'none';
+        _omniRenderYtResults(d.items, q);
+        return;
+      }
+      // API key not set or returned no items — fall back to HTML scraping
+      return _omniYtSearchScrape(q);
+    })
+    .catch(function(){ return _omniYtSearchScrape(q); });
+}
+
+function _omniYtSearchScrape(q) {
+  var ytDiv   = document.getElementById('yt-omni-yt-results');
+  var loading = document.getElementById('yt-omni-loading');
+  var empty   = document.getElementById('yt-omni-empty');
+
+  fetch(WORKER_PROXY_URL + '/?url=' + encodeURIComponent(
+    'https://www.youtube.com/results?search_query=' + encodeURIComponent(q)
+  ), { signal: AbortSignal.timeout(14000) })
+    .then(function(r){ return r.text(); })
+    .then(function(html){
+      if (_omniSearchQ !== q) return;
+      if (loading) loading.style.display = 'none';
+      var results = _omniParseYtHtml(html);
+      if (!results.length) { if (empty) empty.style.display = ''; return; }
+      _omniRenderYtResults(results, q);
+    })
+    .catch(function(){
+      if (loading) loading.style.display = 'none';
+      if (ytDiv) ytDiv.innerHTML =
+        '<div class="yt-omni-status" style="color:#ef4444">Search failed — paste a direct YouTube URL instead.</div>';
+    });
+}
+
+function _omniParseYtHtml(html) {
+  var results = [], seen = {};
+  // Videos
+  var re = /"videoId":"([a-zA-Z0-9_-]{11})"/g, m;
+  while ((m = re.exec(html)) !== null && results.length < 15) {
+    var id = m[1];
+    if (seen[id]) continue;
+    seen[id] = true;
+    var chunk  = html.slice(m.index, m.index + 500);
+    var titleM = chunk.match(/"text":"([^"]{5,120})"/);
+    var title  = titleM ? _decodeYtStr(titleM[1]) : 'YouTube Video';
+    if (/^https?:/.test(title) || title.length < 4) title = 'YouTube Video';
+    results.push({ id: id, title: title, type: 'video' });
+  }
+  // Playlists
+  var repl = /"playlistId":"(PL[a-zA-Z0-9_-]{16,})"/g;
+  while ((m = repl.exec(html)) !== null && results.length < 18) {
+    var pid = m[1];
+    if (seen[pid]) continue;
+    seen[pid] = true;
+    var chunk2 = html.slice(m.index, m.index + 400);
+    var tm2    = chunk2.match(/"text":"([^"]{5,100})"/);
+    results.push({ id: pid, title: tm2 ? _decodeYtStr(tm2[1]) : 'Playlist', type: 'playlist' });
+  }
+  return results;
+}
+
+function _omniRenderYtResults(results, q) {
+  var ytDiv = document.getElementById('yt-omni-yt-results');
+  if (!ytDiv) return;
+  var hdr = '<div class="yt-omni-section-hdr">YouTube — ' + results.length +
+    ' results for &ldquo;' + _escHtml((q||'').slice(0,40)) + '&rdquo;</div>';
+  var rows = results.map(function(r) {
+    // Prefer API-provided thumbnail; fall back to YouTube CDN URL for videos
+    var thumbSrc = r.thumb ||
+      (r.type !== 'playlist' ? 'https://img.youtube.com/vi/' + r.id + '/mqdefault.jpg' : '');
+    var thumbHtml = thumbSrc
+      ? '<img class="yt-omni-thumb" src="' + _escHtml(thumbSrc) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+      : '<div class="yt-omni-thumb" style="display:flex;align-items:center;justify-content:center;color:#334155;font-size:20px">&#x1F4CB;</div>';
+    var typeIcon  = r.type === 'playlist' ? '&#x1F4CB;' : '&#x25BA;';
+    var typeColor = r.type === 'playlist' ? '#fbbf24' : '#60a5fa';
+    var meta = '<span style="color:' + typeColor + '">' + typeIcon + '</span> ' +
+      (r.type === 'playlist' ? 'Playlist' : 'Video') +
+      (r.channel ? ' &middot; <span style="color:#94a3b8">' + _escHtml(r.channel) + '</span>' : '');
+    return '<div class="yt-omni-vid-row" onclick="ytOmniPickYt(\'' + r.id + '\',\'' + r.type + '\')">' +
+      thumbHtml +
+      '<div class="yt-omni-vid-info">' +
+        '<div class="yt-omni-vid-title">' + _escHtml(r.title) + '</div>' +
+        '<div class="yt-omni-vid-meta">' + meta + '</div>' +
+      '</div></div>';
+  }).join('');
+  ytDiv.innerHTML = hdr + rows;
+}
+
+// ── Favorites ─────────────────────────────────────────────────────────
+function ytToggleFav() {
+  var ch = YT_CHANNELS[_ytCurrentChNo - 1];
+  if (!ch) return;
+  var key = ch.cid || ch.v1 || ch.no;
+  var idx = _ytFavorites.indexOf(key);
+  if (idx > -1) _ytFavorites.splice(idx, 1);
+  else _ytFavorites.push(key);
+  localStorage.setItem('yt_favorites', JSON.stringify(_ytFavorites));
+  ytSyncFavBtn();
+}
+
+function ytSyncFavBtn() {
+  var ch    = YT_CHANNELS[_ytCurrentChNo - 1];
+  var key   = ch ? (ch.cid || ch.v1 || ch.no) : '';
+  var isFav = _ytFavorites.indexOf(key) > -1;
+  ['yt-fav-btn','yt-fav-ctrl-btn'].forEach(function(id) {
+    var b = document.getElementById(id);
+    if (b) b.textContent = isFav ? '★' : '☆';
+  });
+}
+
+function ytShowFavorites() {
+  // Open Omnisearch modal showing favorites
+  var sinp = document.getElementById('yt-omni-input');
+  if (sinp) sinp.value = '';
+  ytOmniOpen();
+}
+
+// Sync fav button on every channel switch
+ytSwitchToChannel = (function(orig) {
+  return function(no) { orig(no); ytSyncFavBtn(); ytSyncChannelListActive(); };
+})(ytSwitchToChannel);
+
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.yt-list-item');
+  if (!btn) return;
+  var no = parseInt(btn.getAttribute('data-no') || '', 10);
+  if (no >= 1 && no <= YT_CHANNELS.length) ytSwitchToChannel(no);
+});
+
+// Close modal on backdrop click or Escape
+document.addEventListener('click', function(e) {
+  var modal = document.getElementById('yt-omni-modal');
+  if (modal && e.target === modal) ytOmniClose();
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    var modal = document.getElementById('yt-omni-modal');
+    if (modal && modal.style.display !== 'none') ytOmniClose();
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// CUSTOM YOUTUBE URL PLAYER
+// ═══════════════════════════════════════════════════════════════════════
+function ytExtractVideoId(url) {
+  if (!url) return null;
+  url = url.trim();
+  let m;
+  // watch?v=XXXXXXXXXXX
+  m = url.match(/[?&]v=([A-Za-z0-9_-]{11})/);
+  if (m) return m[1];
+  // youtu.be/XXXXXXXXXXX
+  m = url.match(/youtu\.be\/([A-Za-z0-9_-]{11})/);
+  if (m) return m[1];
+  // youtube.com/embed/XXXXXXXXXXX
+  m = url.match(/youtube\.com\/embed\/([A-Za-z0-9_-]{11})/);
+  if (m) return m[1];
+  // youtube.com/live/XXXXXXXXXXX
+  m = url.match(/youtube\.com\/live\/([A-Za-z0-9_-]{11})/);
+  if (m) return m[1];
+  // youtube.com/shorts/XXXXXXXXXXX
+  m = url.match(/youtube\.com\/shorts\/([A-Za-z0-9_-]{11})/);
+  if (m) return m[1];
+  // Bare 11-char video ID
+  if (/^[A-Za-z0-9_-]{11}$/.test(url)) return url;
+  return null;
+}
+
+function ytPlayCustomUrl() {
+  // Input is now the Omnisearch bar — delegate to it
+  var inp = document.getElementById('yt-omni-input');
+  var url = inp ? inp.value.trim() : '';
+  if (!url) { ytOmniOpen(); return; }
+  var id = ytExtractVideoId(url);
+  if (id) { ytSwitchChannel(id); return; }
+  ytOmniExecute(url);
+}
+
+// ── Legacy stubs — search replaced by Omnisearch modal above ─────────
+function ytSearchSuggest(q) { /* no-op: replaced by Omnisearch */ }
+var _ytSearchTimer = null;
+
+// ytSearchPlay / ytCustomSearchPlay — delegated to Omnisearch modal
+function ytSearchPlay(q) {
+  if (q) { var mi = document.getElementById('yt-omni-modal-input'); if (mi) { mi.value = q; ytOmniModalInput(q); } }
+  ytOmniOpen();
+}
+function ytCustomSearchPlay(vid) { ytOmniPickYt(vid, 'video'); }
+function escJs(s) { return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\'"); }
+
+// ═══════════════════════════════════════════════════════════════════════
+// PREMIUM RADIO ENGINE — Radio India Featured (radiosindia.com iframe)
+// ═══════════════════════════════════════════════════════════════════════
+function prInit() { /* panel is ready on first open — nothing to pre-load */ }
+
+function prLoadPlayer() {
+  const iframe = document.getElementById('pr-iframe');
+  if (!iframe) return;
+  if (!iframe.src && iframe.dataset.src) iframe.src = iframe.dataset.src;
+  iframe.style.display = 'block';
+}
+
+function prTogglePlayer() {
+  const body    = document.getElementById('pr-body');
+  const chevron = document.getElementById('pr-chevron');
+  if (!body) return;
+  const collapsed = body.classList.toggle('collapsed');
+  body.style.maxHeight = collapsed ? '0' : '';
+  if (chevron) chevron.style.transform = collapsed ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+
+// No-op stub kept so rbSwitchPanel auto-stop call doesn't throw
+function prStop() {}
+function prSyncPlayBtn() {}
+function prTogglePlay() {}
+
+// ═══════════════════════════════════════════════════════════════════════
+// SPORTS WIDGET — LIVE / TODAY / PAST tabs, static JSON backend
+// Data written every 5 min by GitHub Actions (scripts/build_sports.js)
+// ═══════════════════════════════════════════════════════════════════════
+var _sfCurrentSport = 'football';
+var _sfCurrentComp  = 'all';
+var _sfCurrentTab   = 'live';   // 'live' | 'today' | 'past'
+var _sfRefreshTimer = null;
+var _sfFetching     = false;
+var _sfCurrentData  = null;     // { live, today, yesterday, liveCount }
+
+function swInit() {
+  sfLoadScores(_sfCurrentSport);
+  if (_sfRefreshTimer) clearInterval(_sfRefreshTimer);
+  _sfRefreshTimer = setInterval(function() { sfLoadScores(_sfCurrentSport); }, 5 * 60 * 1000);
+}
+
+// ── Sport selector ────────────────────────────────────────────────────
+function sfSwitchSport(sport, btn) {
+  _sfCurrentSport = sport;
+  _sfCurrentComp  = 'all';
+  _sfCurrentData  = null;
+  document.querySelectorAll('.sf-sport-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  var compBar = document.getElementById('sf-comp-bar');
+  if (compBar) {
+    compBar.classList.toggle('visible', sport === 'cricket');
+    compBar.querySelectorAll('.sf-comp-btn').forEach(function(b) { b.classList.remove('active'); });
+    var firstBtn = compBar.querySelector('.sf-comp-btn');
+    if (firstBtn) firstBtn.classList.add('active');
+  }
+  sfLoadScores(sport);
+}
+
+// ── Time-bucket tab switch (LIVE / TODAY / PAST) ─────────────────────
+function sfSwitchTab(tab, btn) {
+  _sfCurrentTab  = tab;
+  _sfCurrentComp = 'all';
+  document.querySelectorAll('.sf-tab-btn').forEach(function(b) {
+    b.classList.remove('active', 'live-active');
+  });
+  if (btn) {
+    var liveCount = _sfCurrentData ? (_sfCurrentData.liveCount || 0) : 0;
+    btn.classList.add(tab === 'live' && liveCount > 0 ? 'live-active' : 'active');
+  }
+  // Reset comp filter
+  var compBar = document.getElementById('sf-comp-bar');
+  if (compBar) {
+    compBar.querySelectorAll('.sf-comp-btn').forEach(function(b) { b.classList.remove('active'); });
+    var firstBtn = compBar.querySelector('.sf-comp-btn');
+    if (firstBtn) firstBtn.classList.add('active');
+  }
+  sfRenderTab();
+}
+
+// ── Cricket competition sub-filter ────────────────────────────────────
+function sfFilterComp(comp, btn) {
+  _sfCurrentComp = comp;
+  document.querySelectorAll('.sf-comp-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  _sfApplyCompFilter(comp);
+}
+
+function _sfApplyCompFilter(comp) {
+  document.querySelectorAll('#sf-scores-content .sf-card').forEach(function(c) {
+    var cComp = c.dataset.comp || 'other';
+    c.style.display = (comp === 'all' || cComp === comp) ? '' : 'none';
+  });
+  document.querySelectorAll('#sf-scores-content .sf-section-hdr').forEach(function(hdr) {
+    var sib    = hdr.nextElementSibling;
+    var hasVis = false;
+    while (sib && !sib.classList.contains('sf-section-hdr')) {
+      if (sib.classList.contains('sf-card') && sib.style.display !== 'none') hasVis = true;
+      sib = sib.nextElementSibling;
+    }
+    hdr.style.display = hasVis ? '' : 'none';
+  });
+}
+
+function sfRefreshNow() { sfLoadScores(_sfCurrentSport); }
+
+// ── Classify cricket league → filter key ────────────────────────────
+function _sfCompKey(league) {
+  var l = (league || '').toLowerCase();
+  if (l.includes('ipl') || l.includes('indian premier'))                      return 'ipl';
+  if (l.includes('test'))                                                      return 'test';
+  if (l.includes('t20 international') || l.includes('t20i') ||
+      l.includes('twenty20 int'))                                              return 't20i';
+  if (l.includes('one day') || l.includes(' odi') || l.includes('one-day'))   return 'odi';
+  if (l.includes('t20') || l.includes('bbl') || l.includes('psl') ||
+      l.includes('cpl') || l.includes('sa20') || l.includes('hundred') ||
+      l.includes('super smash'))                                               return 'other';
+  return 'other';
+}
+
+// ── Render a single match card ───────────────────────────────────────
+function _sfCard(league, home, away, hScore, aScore, statusText, isLive, isFinished) {
+  var compKey  = _sfCompKey(league);
+  var hasScore = hScore != null && hScore !== '' && aScore != null && aScore !== '';
+  var hNum     = parseFloat(hScore);
+  var aNum     = parseFloat(aScore);
+  var hWin     = isFinished && hasScore && hNum > aNum;
+  var aWin     = isFinished && hasScore && aNum > hNum;
+  var hLead    = isLive    && hasScore && hNum > aNum;
+  var aLead    = isLive    && hasScore && aNum > hNum;
+  var scoreStr = hasScore ? hScore + ' – ' + aScore : 'vs';
+  return '<div class="sf-card" data-comp="' + compKey + '" data-live="' + (isLive ? '1' : '0') + '">' +
+    '<div class="sf-card-league">' + _sfEsc(league) + '</div>' +
+    '<div class="sf-card-teams">' +
+      '<span class="sf-card-team' + (hWin || hLead ? ' winning' : '') + '">' + _sfEsc(home) + '</span>' +
+      '<span class="sf-card-score">' + scoreStr + '</span>' +
+      '<span class="sf-card-team right' + (aWin || aLead ? ' winning' : '') + '">' + _sfEsc(away) + '</span>' +
+    '</div>' +
+    '<div class="sf-card-status' + (isLive ? ' live' : '') + '">' +
+      (isLive ? '<span class="sf-live-dot"></span>' : '') +
+      _sfEsc(statusText) +
+    '</div>' +
+  '</div>';
+}
+
+function _sfEsc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Build HTML from an array of league groups ─────────────────────────
+function _sfRenderGroups(groups) {
+  var html = '';
+  (groups || []).forEach(function(league) {
+    if (!league.events || !league.events.length) return;
+    html += '<div class="sf-section-hdr">' + _sfEsc(league.name) + '</div>';
+    league.events.forEach(function(ev) {
+      html += _sfCard(
+        league.name, ev.home, ev.away,
+        ev.homeScore != null ? String(ev.homeScore) : '',
+        ev.awayScore != null ? String(ev.awayScore) : '',
+        ev.status || '', ev.isLive, ev.isFinished
+      );
+    });
+  });
+  return html;
+}
+
+// ── Render active tab from cached data ───────────────────────────────
+function sfRenderTab() {
+  var content = document.getElementById('sf-scores-content');
+  if (!content) return;
+  if (!_sfCurrentData) {
+    content.innerHTML = '<div class="sf-no-data"><div class="sf-spinner" style="margin:0 auto 10px"></div>Loading…</div>';
+    return;
+  }
+  var dataKey = _sfCurrentTab === 'past' ? 'yesterday' : _sfCurrentTab;
+  var groups  = _sfCurrentData[dataKey] || [];
+  var html    = _sfRenderGroups(groups);
+
+  if (!html) {
+    var empty = {
+      live:  '&#x1F534;<br>No live matches right now.<br>Try <b>TODAY</b> or <b>PAST</b> for recent results.',
+      today: '&#x1F4C5;<br>No matches recorded for today yet.<br>See <b>PAST</b> for yesterday’s results.',
+      past:  '&#x1F4CB;<br>No results available from yesterday.',
+    };
+    content.innerHTML = '<div class="sf-no-data">' + (empty[_sfCurrentTab] || 'No data.') + '</div>';
+  } else {
+    content.innerHTML = html;
+    if (_sfCurrentSport === 'cricket' && _sfCurrentComp !== 'all') {
+      _sfApplyCompFilter(_sfCurrentComp);
+    }
+  }
+}
+
+// ── Main load: fetch static JSON, pick best tab, render ──────────────
+async function sfLoadScores(sport) {
+  if (_sfFetching) return;
+  _sfFetching = true;
+  var content = document.getElementById('sf-scores-content');
+  var btn     = document.getElementById('sf-refresh-btn');
+  var upd     = document.getElementById('sf-updated');
+  if (content) content.innerHTML = '<div class="sf-no-data"><div class="sf-spinner" style="margin:0 auto 10px"></div>Loading…</div>';
+  if (btn) btn.classList.add('spinning');
+
+  try {
+    var res = await fetch('data/sports.json?v=' + Date.now(),
+      { signal: AbortSignal.timeout(10000), cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var j = await res.json();
+
+    var sportData = (j.sports && j.sports[sport]) ||
+                    { live: [], today: [], yesterday: [], liveCount: 0 };
+    _sfCurrentData = sportData;
+
+    // Live count badge
+    var liveCount = sportData.liveCount || 0;
+    var liveCnt   = document.getElementById('sf-live-count');
+    if (liveCnt) {
+      liveCnt.textContent    = liveCount;
+      liveCnt.style.display  = liveCount > 0 ? '' : 'none';
+    }
+
+    // Auto-select best tab: live > today > past
+    var todayHasData = (sportData.today || []).some(function(g) { return g.events && g.events.length > 0; });
+    var bestTab = liveCount > 0 ? 'live' : todayHasData ? 'today' : 'past';
+    _sfCurrentTab = bestTab;
+
+    // Update tab button styles
+    document.querySelectorAll('.sf-tab-btn').forEach(function(b) {
+      b.classList.remove('active', 'live-active');
+    });
+    var tabEl = document.getElementById('sf-tab-' + bestTab);
+    if (tabEl) tabEl.classList.add(bestTab === 'live' && liveCount > 0 ? 'live-active' : 'active');
+
+    // Freshness timestamp
+    if (upd && j.generated) {
+      var diffMin = Math.round((Date.now() - new Date(j.generated).getTime()) / 60000);
+      upd.textContent = diffMin < 1  ? 'Just updated' :
+                        diffMin < 60 ? diffMin + ' min ago' :
+                        new Date(j.generated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    sfRenderTab();
+
+  } catch(e) {
+    console.warn('sfLoadScores:', e.message);
+    if (content)
+      content.innerHTML = '<div class="sf-no-data">&#x26A0;&#xFE0F;<br>Could not load scores.<br>Tap &#x21BA; to retry.</div>';
+  }
+
+  _sfFetching = false;
+  if (btn) btn.classList.remove('spinning');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// GLOBAL RADIO ENGINE
+// ═══════════════════════════════════════════════════════════════════════
+var _radioData       = null;   // parsed radio_stations.json
+var _radioCurrentUrl = null;
+var _radioCurrentId  = null;
+var _radioPlaying    = false;
+
+// ── Load JSON from public/data/radio_stations.json ──────────────────
+async function radioInit() {
+  rpRestoreStyle('radio');
+  // Try to restore default station from localStorage
+  try {
+    const saved = JSON.parse(localStorage.getItem('radio_default_station') || 'null');
+    if (saved && saved.url) {
+      _radioCurrentUrl = saved.url;
+      _radioCurrentId  = saved.id;
+      const np = document.getElementById('radio-now-playing');
+      if (np) np.textContent = saved.name || 'Default Station';
+    }
+  } catch(_) {}
+
+  // Restore volume
+  try {
+    const vol = localStorage.getItem('radio_volume');
+    if (vol !== null) {
+      const slider = document.getElementById('radio-vol');
+      if (slider) { slider.value = vol; radioSetVolume(vol); }
+    }
+  } catch(_) {}
+
+  // Select the default-station category in the dropdown if known
+  try {
+    const saved = JSON.parse(localStorage.getItem('radio_default_station') || 'null');
+    if (saved && saved.categoryId) {
+      const sel = document.getElementById('radio-region-select');
+      if (sel) sel.value = saved.categoryId;
+    }
+  } catch(_) {}
+
+  // Load the default preset — Top India by default. Public Radio Browser API
+  // streams 30K+ stations in real-time; no static JSON needed any more.
+  radioLoadPreset('top-india');
+
+  // ── Wire audio element events for reliable UI state sync ────────────
+  // These fire regardless of how playback started/stopped, ensuring the
+  // play button icon always matches the actual audio element state.
+  const _audio = document.getElementById('radio-audio');
+  if (_audio && !_audio._vilfinEventsWired) {
+    _audio._vilfinEventsWired = true;
+
+    _audio.addEventListener('play', () => {
+      _radioPlaying = true;
+      const btn = document.getElementById('radio-play-btn');
+      if (btn) { btn.textContent = '⏸'; btn.disabled = false; }
+      const dot = document.getElementById('radio-dot');
+      if (dot) { dot.style.background = '#22c55e'; dot.classList.add('playing'); }
+      prSyncPlayBtn(true);
+    });
+
+    _audio.addEventListener('playing', () => {
+      // Fires when buffering ends and audio actually flows — clear any stall watchdog
+      if (window._radioStallTimer) { clearTimeout(window._radioStallTimer); window._radioStallTimer = null; }
+      _radioPlaying = true;
+      const btn = document.getElementById('radio-play-btn');
+      if (btn) { btn.textContent = '⏸'; btn.disabled = false; }
+      const dot = document.getElementById('radio-dot');
+      if (dot) { dot.style.background = '#22c55e'; dot.classList.add('playing'); }
+      prSyncPlayBtn(true);
+    });
+
+    _audio.addEventListener('pause', () => {
+      _radioPlaying = false;
+      if (window._radioStallTimer) { clearTimeout(window._radioStallTimer); window._radioStallTimer = null; }
+      const btn = document.getElementById('radio-play-btn');
+      if (btn) btn.textContent = '▶';
+      const dot = document.getElementById('radio-dot');
+      if (dot) { dot.style.background = '#334155'; dot.classList.remove('playing'); }
+      prSyncPlayBtn(false);
+    });
+
+    _audio.addEventListener('waiting', () => {
+      // Buffering — show hourglass; start an 8 s stall watchdog
+      const btn = document.getElementById('radio-play-btn');
+      if (btn && _radioPlaying) btn.textContent = '⏳';
+      if (window._radioStallTimer) clearTimeout(window._radioStallTimer);
+      window._radioStallTimer = setTimeout(() => {
+        if (_radioPlaying && _audio.paused) radioOnError();
+      }, 8000);
+    });
+
+    _audio.addEventListener('stalled', () => {
+      // Stream stalled — show hourglass and start 10 s timeout
+      const btn = document.getElementById('radio-play-btn');
+      if (btn && _radioPlaying) btn.textContent = '⏳';
+      if (window._radioStallTimer) clearTimeout(window._radioStallTimer);
+      window._radioStallTimer = setTimeout(() => {
+        if (_radioPlaying) radioOnError();
+      }, 10000);
+    });
+
+    _audio.addEventListener('error', () => {
+      // Suppress while HLS is attached — HLS reports its own errors and the
+      // <audio> element fires spurious errors during blob-URL transitions.
+      if (_radioHls) return;
+      // Only treat as error if there's an actual MediaError code
+      if (_audio.error && _audio.error.code) radioOnError();
+    });
+    _audio.addEventListener('ended', () => {
+      if (_radioHls) return;
+      radioOnError();
+    });
+  }
+
+  // Auto-play the pinned default after stations render
+  setTimeout(radioAutoPlayDefault, 300);
+}
+
+// ── Render stations for chosen category ─────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+// RADIO BROWSER API — free, open, 30K+ stations, no auth required
+// https://api.radio-browser.info — community-curated worldwide directory
+// ═══════════════════════════════════════════════════════════════════
+const _RADIO_API_HOSTS = [
+  'https://de1.api.radio-browser.info',
+  'https://nl1.api.radio-browser.info',
+  'https://at1.api.radio-browser.info',
+];
+let _radioActiveHost = _RADIO_API_HOSTS[0];
+
+async function _rbFetch(path) {
+  // Try mirrors in order if one fails — gives 99.9% reliability
+  for (let i = 0; i < _RADIO_API_HOSTS.length; i++) {
+    const host = _RADIO_API_HOSTS[(_RADIO_API_HOSTS.indexOf(_radioActiveHost) + i) % _RADIO_API_HOSTS.length];
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 6000);
+      const res = await fetch(host + path, {
+        headers: { 'User-Agent': 'VilfinTV-MultiScreener/1.0' },
+        signal: ctrl.signal,
+      });
+      clearTimeout(timer);
+      if (res.ok) {
+        _radioActiveHost = host;
+        return await res.json();
+      }
+    } catch (_) { /* try next mirror */ }
+  }
+  return null;
+}
+
+const _RADIO_PRESETS = {
+  'top-india':  { path: '/json/stations/bycountry/India?limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Top India' },
+  'bollywood':  { path: '/json/stations/search?tag=bollywood&limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Bollywood' },
+  'hindi':      { path: '/json/stations/search?language=hindi&limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Hindi' },
+  // Use bytag rather than language= — radio-browser's tag index covers more
+  // diaspora-popular channels (AIR Kochi, Real FM, Club FM India, etc.) which
+  // are the same stations UAE/Qatar Malayalis stream most.
+  'malayalam':  { path: '/json/stations/bytag/malayalam?limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Malayalam' },
+  // UAE Malayalam: explicit name searches for HIT 96.7, Club FM 99.6,
+  // Radio Keralam, Gold FM, Home FM — the most-listened Dubai/Sharjah
+  // Malayalam stations among the UAE diaspora. Multi-source preset merges
+  // results from each name query so any indexed entry surfaces.
+  'uae-malayalam': { path: 'MULTI', label: 'UAE Malayalam', sources: [
+    '/json/stations/byname/hit%2096?limit=10&hidebroken=true',
+    '/json/stations/byname/club%20fm?limit=15&hidebroken=true&order=clickcount&reverse=true',
+    '/json/stations/byname/club%20fm%2099?limit=10&hidebroken=true',
+    '/json/stations/byname/keralam?limit=10&hidebroken=true&order=clickcount&reverse=true',
+    '/json/stations/byname/gold%20fm?limit=10&hidebroken=true',
+    '/json/stations/byname/home%20fm?limit=10&hidebroken=true',
+    '/json/stations/byname/asianet?limit=10&hidebroken=true',
+    // Plus Malayalam tag for fallback coverage if specific names aren't indexed
+    '/json/stations/bytag/malayalam?limit=20&hidebroken=true&order=clickcount&reverse=true',
+  ], filter: 'uae-malayalam' },
+  // Gulf NRI mix: special multi-source preset (handled in radioLoadPreset).
+  'gulf-nri':   { path: 'MULTI', label: 'Gulf NRI', sources: [
+    '/json/stations/bytag/malayalam?limit=30&hidebroken=true&order=clickcount&reverse=true',
+    '/json/stations/bytag/hindi?limit=30&hidebroken=true&order=clickcount&reverse=true',
+    '/json/stations/bytag/bollywood?limit=20&hidebroken=true&order=clickcount&reverse=true',
+    '/json/stations/bytag/tamil?limit=15&hidebroken=true&order=clickcount&reverse=true',
+  ] },
+  'tamil':      { path: '/json/stations/search?language=tamil&limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Tamil' },
+  'telugu':     { path: '/json/stations/search?language=telugu&limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Telugu' },
+  'kannada':    { path: '/json/stations/search?language=kannada&limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Kannada' },
+  'punjabi':    { path: '/json/stations/search?language=punjabi&limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Punjabi' },
+  'top-us':     { path: '/json/stations/bycountry/The%20United%20States%20Of%20America?limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Top US' },
+  'top-uk':     { path: '/json/stations/bycountry/The%20United%20Kingdom?limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Top UK' },
+  'top-japan':  { path: '/json/stations/bycountry/Japan?limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Japan' },
+  'news':       { path: '/json/stations/bytag/news?limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'News' },
+  'chill':      { path: '/json/stations/bytag/chillout?limit=80&hidebroken=true&order=clickcount&reverse=true', label: 'Chill' },
+};
+
+function _radioRenderStations(stations) {
+  const list = document.getElementById('radio-station-list');
+  if (!list) return;
+  if (!stations || !stations.length) {
+    list.innerHTML = '<div class="radio-no-data">No stations match. Try a different search or preset.</div>';
+    return;
+  }
+  // De-dupe by stationuuid + filter blank URLs
+  const seen = new Set();
+  const cleaned = stations.filter(s => {
+    if (!s.url_resolved && !s.url) return false;
+    const id = s.stationuuid || s.url_resolved || s.url;
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  }).slice(0, 60); // cap at 60 per render to keep DOM light
+
+  let defaultId = null;
+  try { defaultId = JSON.parse(localStorage.getItem('radio_default_station') || 'null')?.id; } catch(_) {}
+
+  list.innerHTML = cleaned.map(s => {
+    const id     = s.stationuuid || s.changeuuid || (s.url_resolved || s.url);
+    const name   = s.name || 'Unknown station';
+    const url    = s.url_resolved || s.url;
+    const genre  = (s.tags || '').split(',').slice(0, 2).join(', ').replace(/^,/, '').trim() || (s.language || '');
+    const country= s.country || s.countrycode || '';
+    const bitrate= s.bitrate ? s.bitrate + ' kbps' : '';
+    const tagline= [country, bitrate, genre].filter(Boolean).join(' · ');
+    const icon   = radioGenreIcon(genre + ' ' + name);
+    const isActive = id === _radioCurrentId;
+    return `
+      <div class="radio-station-item${isActive ? ' active' : ''}"
+           id="rsi-${_esc(id)}"
+           onclick='radioPlay(${JSON.stringify(url)}, ${JSON.stringify(id)}, ${JSON.stringify(name)}, "rb")'>
+        <span style="font-size:14px;flex-shrink:0">${icon}</span>
+        <div class="radio-station-meta">
+          <span class="radio-station-name" title="${_esc(name)}">${_esc(name)}</span>
+          ${tagline ? `<span class="radio-station-tag">${_esc(tagline)}</span>` : ''}
+        </div>
+        <button class="radio-default-btn${id === defaultId ? ' pinned' : ''}"
+                onclick='event.stopPropagation();radioSetDefault(${JSON.stringify(id)}, ${JSON.stringify(name)}, ${JSON.stringify(url)}, "rb")'
+                title="Set as default">${id === defaultId ? '📌' : '☆'}</button>
+      </div>`;
+  }).join('');
+
+  const playBtn = document.getElementById('radio-play-btn');
+  if (playBtn) playBtn.disabled = false;
+}
+
+async function radioLoadPreset(presetKey) {
+  const list = document.getElementById('radio-station-list');
+  if (list) list.innerHTML = '<div class="radio-no-data">⏳ Loading stations…</div>';
+
+  // Mark active preset button
+  document.querySelectorAll('.radio-preset-btn').forEach(b => b.classList.remove('active'));
+  const allBtns = document.querySelectorAll('.radio-preset-btn');
+  allBtns.forEach(b => {
+    if (b.textContent.toLowerCase().includes((_RADIO_PRESETS[presetKey]?.label || '').toLowerCase()))
+      b.classList.add('active');
+  });
+
+  const preset = _RADIO_PRESETS[presetKey];
+  if (!preset) return;
+
+  let stations;
+  if (preset.path === 'MULTI' && Array.isArray(preset.sources)) {
+    // Fetch multiple endpoints in parallel and de-dupe by stationuuid
+    const arrays = await Promise.all(preset.sources.map(p => _rbFetch(p).catch(() => null)));
+    const seen = new Set();
+    stations = [];
+    for (const arr of arrays) {
+      if (!Array.isArray(arr)) continue;
+      for (const s of arr) {
+        const id = s.stationuuid || s.url_resolved;
+        if (id && !seen.has(id)) { seen.add(id); stations.push(s); }
+      }
+    }
+    // Optional post-filter (used by uae-malayalam to keep only relevant matches)
+    if (preset.filter === 'uae-malayalam') {
+      const RX_INCLUDE = /(hit\s*96|club\s*fm|keralam|gold\s*fm|home\s*fm|asianet|malayalam|kochi|kozhikode|kerala)/i;
+      const RX_EXCLUDE = /(albania|kosov|greece|ireland|serbia|german|austria|czech|tirana|dublin)/i;
+      stations = stations.filter(s => {
+        const blob = (s.name || '') + ' ' + (s.country || '') + ' ' + (s.language || '') + ' ' + (s.tags || '');
+        return RX_INCLUDE.test(blob) && !RX_EXCLUDE.test(blob);
+      });
+    }
+    // Re-sort merged list by clickcount (popularity) so top NRI picks float up
+    stations.sort((a, b) => (b.clickcount || 0) - (a.clickcount || 0));
+  } else {
+    stations = await _rbFetch(preset.path);
+  }
+
+  if (!stations) {
+    if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Could not reach Radio Browser API. Please retry.</div>';
+    return;
+  }
+  _radioLastResults = stations;
+  _radioRenderStations(stations);
+}
+
+let _radioSearchTimer = null;
+let _radioLastResults = [];
+function radioOnSearchInput(value) {
+  clearTimeout(_radioSearchTimer);
+  const q = (value || '').trim();
+  if (!q) return; // empty: do nothing (keep current preset list)
+  _radioSearchTimer = setTimeout(async () => {
+    const list = document.getElementById('radio-station-list');
+    if (list) list.innerHTML = '<div class="radio-no-data">🔍 Searching…</div>';
+    document.querySelectorAll('.radio-preset-btn').forEach(b => b.classList.remove('active'));
+    const path = '/json/stations/byname/' + encodeURIComponent(q) + '?limit=60&hidebroken=true&order=clickcount&reverse=true';
+    const stations = await _rbFetch(path);
+    if (!stations) {
+      if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Search failed. Try a preset.</div>';
+      return;
+    }
+    _radioLastResults = stations;
+    _radioRenderStations(stations);
+  }, 350);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// LIVE TV (IPTV) — free-to-air HLS streams via iptv-org curated lists
+// All streams are HTTPS m3u8, CORS-permissive, verified by iptv-org community.
+// Loaded lazily on first open of the Live TV tab.
+// ═══════════════════════════════════════════════════════════════════
+const IPTV_API = 'https://iptv-org.github.io/api';
+let _iptvHls = null;
+let _iptvAllChannels = null;   // cached merged channel + stream list
+let _iptvLastResults = [];
+let _iptvMuted = true;         // starts muted; preserved across channel changes
+
+async function iptvInit() {
+  // Apply saved layout style immediately (before async fetch completes)
+  _iptvRestoreStyle();
+  // Fetch catalog once on first panel open. Cache in memory only (data is updated daily by iptv-org).
+  if (_iptvAllChannels) { _iptvBuildGeoNav(); iptvLoadPreset('all-india'); return; }
+  const list = document.getElementById('iptv-list');
+  if (list) list.innerHTML = '<div class="radio-no-data">⏳ Loading channel directory…</div>';
+  try {
+    const [streamsRes, channelsRes] = await Promise.all([
+      fetch(IPTV_API + '/streams.json',  { cache: 'force-cache' }),
+      fetch(IPTV_API + '/channels.json', { cache: 'force-cache' }),
+    ]);
+    if (!streamsRes.ok || !channelsRes.ok) throw new Error('directory fetch failed');
+    const streams  = await streamsRes.json();
+    const channels = await channelsRes.json();
+    // Index channels by id
+    const chanById = Object.create(null);
+    for (const c of channels) chanById[c.id] = c;
+    // Merge: keep only HTTPS streams with a known channel id, AND de-dupe so
+    // each channel appears at most once. iptv-org often lists 2-3 stream
+    // mirrors per channel — duplicates broke next/prev because findIndex by
+    // channel id always returned the FIRST occurrence.
+    const seen = new Set();
+    _iptvAllChannels = [];
+    for (const s of streams) {
+      if (!s.url || !/^https:/.test(s.url)) continue;
+      // Skip .m3u playlist index files — browsers can only play .m3u8 HLS streams
+      if (/\.m3u$/i.test(s.url) && !/\.m3u8$/i.test(s.url)) continue;
+      if (!s.channel || !chanById[s.channel]) continue;
+      if (seen.has(s.channel)) continue;            // skip duplicates
+      seen.add(s.channel);
+      const c = chanById[s.channel];
+      if (c.is_nsfw) continue;
+      _iptvAllChannels.push({
+        id:         s.channel,
+        name:       c.name || s.channel,
+        url:        s.url,
+        country:    c.country || '',
+        language:   (c.languages && c.languages[0]) || '',
+        languages:  c.languages || [],
+        categories: c.categories || [],
+        logo:       c.logo || '',
+        isNsfw:     false,
+      });
+    }
+    console.log(`[IPTV] Loaded ${_iptvAllChannels.length} unique channels (deduped)`);
+    // Restore saved layout style
+    _iptvRestoreStyle();
+    // If user has set a default preset/country, load that. Otherwise All India.
+    if (!iptvLoadUserDefault()) iptvLoadPreset('all-india');
+    // Build geo-nav country list (for Split/Three-Column styles)
+    _iptvBuildGeoNav();
+  } catch (e) {
+    console.warn('[IPTV] catalog fetch failed:', e);
+    if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Could not reach iptv-org directory. Please retry.</div>';
+  }
+}
+
+// IPTV preset filters. iptv-org's language field is sparse for India channels,
+// so we fall back to channel-name regex matching. Filters can combine country,
+// language code (when present), category, AND name regex.
+const _IPTV_PRESETS = {
+  // ── Special: favorites + curated India (handled in iptvLoadPreset) ─────
+  'favorites':     { favorites: true },
+  'curated-india': { curated: 'india' },
+  // ── Indian languages ───────────────────────────────────────────────────
+  'all-india': { country: 'IN' },
+  'hindi':     { country: 'IN', name: /\b(aaj\s*tak|zee\s*hind|abp\s*news|india\s*tv|ndtv\s*india|republic\s*bharat|news18\s*india|tv9\s*bharatvarsh|good\s*news|times\s*now\s*navbharat|hindi\b|bharat\s*samachar|janta\s*tv|sansad|dd\s*news|dd\s*national)\b/i },
+  'malayalam': { country: 'IN', name: /\b(asianet|manorama|mathrubhumi|mazhavil|surya|kairali|amrita|reporter|media\s*one|jeevan|24\s*news|goodness|jai\s*hind\s*malayalam|kappa|kaumudi|safari|news18\s*kerala|janam|swasthya|malayalam|kerala)\b/i },
+  'tamil':     { country: 'IN', name: /\b(sun\s*tv|vijay\s*tv|star\s*vijay|polimer|kalaignar|raj\s*tv|captain|puthiya\s*thalaimurai|thanthi|news\s*7\s*tamil|j\s*movies|peppers|news18\s*tamil|jaya\s*tv|tamil)\b/i },
+  'telugu':    { country: 'IN', name: /\b(etv\s|tv5|tv9\s*telugu|sakshi|abn\s*andhra|10tv|t\s*news|ntv\s*telugu|raj\s*news|hmtv|mahaa|v6|i\s*news|maa\s*tv|gemini|telugu)\b/i },
+  'kannada':   { country: 'IN', name: /\b(suvarna|public\s*tv|tv9\s*kannada|asianet\s*suvarna|power\s*tv|news18\s*kannada|udaya|udaya\s*news|kannada)\b/i },
+  'marathi':   { country: 'IN', name: /\b(abp\s*majha|saam\s*marathi|tv9\s*marathi|zee\s*marathi|star\s*pravah|news18\s*lokmat|ibn\s*lokmat|jai\s*maharashtra|sahyadri|colors\s*marathi|marathi)\b/i },
+  'punjabi':   { country: 'IN', name: /\b(ptc\s*news|ptc\s*punjabi|abp\s*sanjha|zee\s*punjabi|news18\s*punjab|day\s*&\s*night|chardikla|9x\s*tashan|punjab|punjabi)\b/i },
+  'bengali':   { country: 'IN', name: /\b(abp\s*ananda|zee\s*bangla|star\s*jalsha|news18\s*bangla|kolkata\s*tv|24\s*ghanta|akash\s*aath|news\s*time\s*bangla|tara\s*muzik|bengali|bangla)\b/i },
+  'odia':      { country: 'IN', name: /\b(otv\b|kalinga\s*tv|news18\s*odia|kanak\s*news|tarang|sidharth\s*tv|prarthana|odisha|odia)\b/i },
+  'assamese':  { country: 'IN', name: /\b(dy365|news18\s*assam|pratidin\s*time|prag\s*news|protidin|gnn|hayagrib|rongali|assamese|assam)\b/i },
+  // ── Categories (use iptv-org's category field + name regex fallback) ───
+  'news':          { category: 'news' },
+  'movies':        { category: 'movies' },
+  'entertainment': { category: 'entertainment' },
+  'music':         { category: 'music' },
+  'food':          { name: /\b(food|cooking|chef|recipe|kitchen|tlc\b|fyi)\b/i },
+  'lifestyle':     { category: 'lifestyle' },
+  'fashion':       { name: /\b(fashion|style|fashion\s*tv|ftv|e!\s*entertainment)\b/i },
+  'travel':        { name: /\b(travel|discovery|nat\s*geo|lonely\s*planet|world|trvl)\b/i },
+  'spiritual':     { name: /\b(aastha|sanskar|peace|gospel|god\s*tv|spiritual|bhakti|catholic|trinity|ewtn|gospel|kalingatv\s*divine|nikitha\s*tv\s*divine)\b/i },
+  'nature':        { name: /\b(nat\s*geo|national\s*geographic|discovery|earth|nature|planet\s*earth|love\s*nature|smithsonian|history\s*channel)\b/i },
+  'wild':          { name: /\b(wild|animal\s*planet|nat\s*geo\s*wild|animals|safari|jungle)\b/i },
+  'kids':          { category: 'kids' },
+  // ── Sports ────────────────────────────────────────────────────────────
+  'sports':    { category: 'sports' },
+  'cricket':   { name: /\b(cricket|star\s*sports|sony\s*sports|sky\s*sports\s*cricket|willow\s*cricket|fancode|jio\s*hotstar|ipl\b|iplt20|mumbai\s*indians|csk\b|royal\s*challengers|kkr\b|delhi\s*capitals|rajasthan\s*royals|sunrisers|punjab\s*kings|lucknow\s*super|gujarat\s*titans|icc\b|bcci\b|dd\s*sports|ptv\s*sports|ten\s*cricket|espn\s*cric|supersport\s*cricket|fox\s*cricket)\b/i, category: 'sports' },
+  'football':  { name: /\b(football|soccer|sky\s*sports\s*football|premier\s*league|la\s*liga|bundesliga|serie\s*a|champions\s*league|fifa|mls\b|copa)\b/i },
+  'rugby':     { name: /\b(rugby|six\s*nations|world\s*rugby|rugby\s*pass|super\s*rugby)\b/i },
+  'baseball':  { name: /\b(baseball|mlb\b|major\s*league\s*baseball|yankees|dodgers|red\s*sox)\b/i },
+  'tennis':    { name: /\b(tennis|atp|wta|wimbledon|us\s*open|australian\s*open|french\s*open|tennis\s*channel)\b/i },
+  'swimming':  { name: /\b(swim|swimming|aquatic|olympic|olympics|fina|world\s*aquatics)\b/i },
+  // ── Countries ─────────────────────────────────────────────────────────
+  'japan':     { country: 'JP' },
+  'china':     { country: 'CN' },
+  'world':     { name: /\b(bbc\s*world|cnn|al\s*jazeera|france\s*24|dw\b|euronews|sky\s*news|cna\b|nhk\s*world|cgtn|tvn|tv5\s*monde|africa\s*news|africanews)\b/i },
+};
+
+// User-selected country override — applied to all presets that don't lock country
+let _iptvUserCountry = (() => { try { return localStorage.getItem('viltv_iptv_country') || ''; } catch(_) { return ''; } })();
+
+function iptvOnCountryChange(code) {
+  _iptvUserCountry = code || '';
+  try { localStorage.setItem('viltv_iptv_country', _iptvUserCountry); } catch(_) {}
+  // Re-apply current preset
+  const active = document.querySelector('.iptv-preset.active');
+  const m = active && (active.getAttribute('onclick') || '').match(/iptvLoadPreset\('([^']+)'\)/);
+  if (m) iptvLoadPreset(m[1]);
+}
+
+function iptvSetDefault() {
+  const active = document.querySelector('.iptv-preset.active');
+  const m = active && (active.getAttribute('onclick') || '').match(/iptvLoadPreset\('([^']+)'\)/);
+  const presetKey = m ? m[1] : 'all-india';
+  try {
+    localStorage.setItem('viltv_iptv_default', JSON.stringify({
+      preset: presetKey,
+      country: _iptvUserCountry,
+    }));
+    const btn = document.querySelector('button[onclick="iptvSetDefault()"]');
+    if (btn) {
+      const orig = btn.textContent;
+      btn.textContent = '✓ Saved';
+      setTimeout(() => { btn.textContent = orig; }, 1500);
+    }
+  } catch(_) {}
+}
+
+// ── Favorites — channels the user starred. Stored as set of station IDs. ──
+function _iptvFavoritesSet() {
+  try { return new Set(JSON.parse(localStorage.getItem('viltv_iptv_favorites') || '[]')); }
+  catch(_) { return new Set(); }
+}
+function _iptvSaveFavorites(set) {
+  try { localStorage.setItem('viltv_iptv_favorites', JSON.stringify([...set])); } catch(_) {}
+}
+function iptvToggleFav() {
+  if (!_iptvCurrentChannel) return;
+  const favs = _iptvFavoritesSet();
+  if (favs.has(_iptvCurrentChannel.id)) favs.delete(_iptvCurrentChannel.id);
+  else favs.add(_iptvCurrentChannel.id);
+  _iptvSaveFavorites(favs);
+  const btn = document.getElementById('iptv-fav-btn');
+  if (btn) btn.textContent = favs.has(_iptvCurrentChannel.id) ? '★' : '☆';
+}
+
+function iptvLoadPreset(key) {
+  if (!_iptvAllChannels) { iptvInit(); return; }
+  const filter = _IPTV_PRESETS[key] || {};
+  // Mark active button
+  document.querySelectorAll('.iptv-preset').forEach(b => {
+    b.classList.remove('active');
+    if (b.getAttribute('onclick')?.includes("'" + key + "'")) b.classList.add('active');
+  });
+
+  let results;
+  if (filter.curated === 'india') {
+    // Curated direct-stream India channels (verified m3u8, no iptv-org dependency)
+    results = _IPTV_CURATED_INDIA.slice();
+    _iptvLastResults = results;
+    _iptvRender(results);
+    return;
+  }
+  if (filter.favorites) {
+    const favs = _iptvFavoritesSet();
+    // Search favorites in BOTH iptv-org catalog AND curated direct streams
+    const allPool = (_iptvAllChannels || []).concat(_IPTV_CURATED_INDIA);
+    results = allPool.filter(c => favs.has(c.id));
+  } else {
+    results = _iptvAllChannels.filter(c => {
+      // User country override applies UNLESS the preset locks a specific country
+      if (!filter.country && _iptvUserCountry && c.country !== _iptvUserCountry) return false;
+      if (filter.country  && c.country  !== filter.country)  return false;
+      if (filter.language && !c.languages.includes(filter.language)) return false;
+      if (filter.category && !c.categories.includes(filter.category)) return false;
+      if (filter.name     && !filter.name.test(c.name)) return false;
+      return true;
+    });
+  }
+  // Sort: primary by category (news first), secondary by name
+  results.sort((a, b) => {
+    const aN = a.categories.includes('news') ? 0 : 1;
+    const bN = b.categories.includes('news') ? 0 : 1;
+    return aN - bN || a.name.localeCompare(b.name);
+  });
+  results = results.slice(0, 250);
+  _iptvLastResults = results;
+  _iptvRender(results);
+}
+
+// Restore user's saved default preset on first init
+function iptvLoadUserDefault() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('viltv_iptv_default') || 'null');
+    if (saved && saved.preset) {
+      if (saved.country) {
+        _iptvUserCountry = saved.country;
+        const sel = document.getElementById('iptv-country');
+        if (sel) sel.value = saved.country;
+      }
+      iptvLoadPreset(saved.preset);
+      return true;
+    }
+  } catch(_) {}
+  return false;
+}
+
+function _iptvRender(results) {
+  const list = document.getElementById('iptv-list');
+  if (!list) return;
+  // Update channel count badge
+  const cnt = document.getElementById('iptv-ch-count');
+  if (cnt) cnt.textContent = results.length + (_iptvAllChannels && _iptvAllChannels.length > results.length ? '/' + _iptvAllChannels.length.toLocaleString() : '') + ' ch';
+  if (!results.length) {
+    list.innerHTML = '<div class="radio-no-data">No channels match this filter.</div>';
+    return;
+  }
+  const favs = _iptvFavoritesSet();
+  list.innerHTML = results.map(c => {
+    const lang = (c.languages || []).slice(0, 2).join(', ').toUpperCase();
+    const tags = [c.country, lang].filter(Boolean).join(' · ');
+    const initial = (c.name || '?')[0].toUpperCase();
+    const isFav = favs.has(c.id);
+    const isActive = _iptvCurrentChannel && _iptvCurrentChannel.id === c.id;
+    return `
+      <div class="radio-station-item${isActive ? ' active' : ''}" data-iptv-id="${_esc(c.id)}"
+           onclick='iptvPlay(${JSON.stringify(c.url)}, ${JSON.stringify(c.id)}, ${JSON.stringify(c.name)})'>
+        <span class="iptv-ch-logo" style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:linear-gradient(135deg,#1d4ed8,#7c3aed);color:#fff;font-size:11px;font-weight:700;flex-shrink:0">${_esc(initial)}</span>
+        <div class="radio-station-meta">
+          <span class="radio-station-name" title="${_esc(c.name)}">${_esc(c.name)}</span>
+          ${tags ? '<span class="radio-station-tag">' + _esc(tags) + '</span>' : ''}
+        </div>
+        <span style="font-size:13px;flex-shrink:0;color:${isFav ? '#fbbf24' : '#506480'}" title="${isFav ? 'Favorited' : ''}">${isFav ? '★' : ''}</span>
+      </div>`;
+  }).join('');
+}
+
+let _iptvSearchTimer = null;
+function iptvOnSearch(value) {
+  clearTimeout(_iptvSearchTimer);
+  const q = (value || '').trim().toLowerCase();
+  if (!q) { _iptvRender(_iptvLastResults); return; }
+  _iptvSearchTimer = setTimeout(() => {
+    if (!_iptvAllChannels) return;
+    const filtered = _iptvAllChannels
+      .filter(c => c.name.toLowerCase().includes(q))
+      .slice(0, 100);
+    _iptvRender(filtered);
+  }, 200);
+}
+
+// Track currently-playing channel for next/prev/favorite
+let _iptvCurrentChannel = null;
+let _iptvCurrentIndex = -1;
+
+function iptvPlay(url, id, name) {
+  const video = document.getElementById('iptv-player');
+  const wrap  = document.getElementById('iptv-player-wrap');
+  const nowEl = document.getElementById('iptv-now');
+  const favBtn = document.getElementById('iptv-fav-btn');
+  const ctrlBar = document.getElementById('iptv-ctrl-bar');
+  if (!video) return;
+
+  if (_iptvHls) { try { _iptvHls.destroy(); } catch(_){} _iptvHls = null; }
+  if (wrap) wrap.style.display = 'block';
+  if (ctrlBar) ctrlBar.style.display = 'flex';
+  if (nowEl) nowEl.textContent = name || 'Live TV';
+  // Collapse top-fold, show now-playing bar
+  const panel = document.getElementById('rb-panel-iptv');
+  if (panel) panel.classList.add('iptv-playing');
+  const nowBar = document.getElementById('iptv-now-bar');
+  const nowBarLabel = document.getElementById('iptv-now-bar-label');
+  if (nowBar) nowBar.style.display = 'flex';
+  if (nowBarLabel) nowBarLabel.textContent = name || 'Live TV';
+  video.muted = _iptvMuted;
+
+  // Track current channel (for prev/next/fav)
+  _iptvCurrentChannel = { id, name, url };
+  _iptvCurrentIndex = _iptvLastResults.findIndex(c => c.id === id);
+
+  // Update favorite-button icon
+  if (favBtn) {
+    const favs = _iptvFavoritesSet();
+    favBtn.textContent = favs.has(id) ? '★' : '☆';
+  }
+
+  // Restore saved volume
+  try {
+    const saved = parseFloat(localStorage.getItem('viltv_iptv_volume') || '0.8');
+    if (!isNaN(saved)) {
+      video.volume = Math.min(1, Math.max(0, saved));
+      const slider = document.getElementById('iptv-vol');
+      if (slider) slider.value = Math.round(video.volume * 100);
+    }
+  } catch(_) {}
+
+  // Highlight active item in list
+  document.querySelectorAll('#iptv-list .radio-station-item').forEach(el => el.classList.remove('active'));
+  const li = document.querySelector('#iptv-list .radio-station-item[data-iptv-id="' + CSS.escape(id) + '"]');
+  if (li) li.classList.add('active');
+
+  const httpsUrl = url.replace(/^http:\/\//i, 'https://');
+  const isHls = /\.m3u8/i.test(httpsUrl);
+  console.log(`[IPTV] play ${name} → ${httpsUrl} (HLS=${isHls})`);
+
+  if (isHls && typeof Hls !== 'undefined' && Hls.isSupported()) {
+    _iptvHls = new Hls({ maxBufferLength: 20, lowLatencyMode: true, enableWorker: true });
+    _iptvHls.loadSource(httpsUrl);
+    _iptvHls.attachMedia(video);
+    // Play immediately (within user gesture), HLS will start when buffer is ready
+    video.play().catch(e => console.warn('[IPTV] initial play rejected:', e));
+    _iptvHls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(e => console.warn('[IPTV] manifest play rejected:', e)));
+    _iptvHls.on(Hls.Events.ERROR, (ev, data) => {
+      if (data.fatal) {
+        console.warn('[IPTV] HLS fatal:', data.type, data.details);
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) _iptvHls.startLoad();
+        else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) _iptvHls.recoverMediaError();
+        else { iptvOnError(name); }
+      }
+    });
+  } else if (isHls && video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = httpsUrl; video.play().catch(() => iptvOnError(name));
+  } else {
+    video.src = httpsUrl; video.play().catch(() => iptvOnError(name));
+  }
+}
+
+function iptvOnError(name) {
+  const nowEl = document.getElementById('iptv-now');
+  if (nowEl) nowEl.textContent = '⚠️ ' + (name || 'Channel') + ' offline — try Next';
+}
+
+function iptvStop() {
+  if (_iptvHls) { try { _iptvHls.destroy(); } catch(_){} _iptvHls = null; }
+  const video = document.getElementById('iptv-player');
+  const wrap  = document.getElementById('iptv-player-wrap');
+  const ctrlBar = document.getElementById('iptv-ctrl-bar');
+  if (video) { try { video.pause(); video.removeAttribute('src'); video.load(); } catch(_){} }
+  if (wrap) wrap.style.display = 'none';
+  if (ctrlBar) ctrlBar.style.display = 'none';
+  _iptvCurrentChannel = null;
+  _iptvCurrentIndex = -1;
+  // Restore top-fold
+  const panel = document.getElementById('rb-panel-iptv');
+  if (panel) panel.classList.remove('iptv-playing');
+  const nowBar = document.getElementById('iptv-now-bar');
+  if (nowBar) nowBar.style.display = 'none';
+}
+// Show search (unfold top controls while keeping video playing)
+function iptvShowSearch() {
+  const panel = document.getElementById('rb-panel-iptv');
+  if (panel) panel.classList.toggle('iptv-playing');
+  const fold = document.getElementById('iptv-top-fold');
+  if (fold) fold.style.display = fold.style.display === 'none' ? '' : 'none';
+}
+
+// ── Transport controls ──────────────────────────────────────────────────
+function iptvNext() {
+  if (!_iptvLastResults.length) return;
+  // Re-locate current channel each time (covers case where the list was
+  // re-rendered or current is a custom-URL channel not in the list).
+  let i = -1;
+  if (_iptvCurrentChannel) {
+    i = _iptvLastResults.findIndex(c =>
+      c.id === _iptvCurrentChannel.id || c.url === _iptvCurrentChannel.url);
+  }
+  if (i < 0) i = _iptvCurrentIndex;       // last-known index
+  i = (i + 1) % _iptvLastResults.length;
+  if (i < 0) i = 0;
+  _iptvCurrentIndex = i;
+  const c = _iptvLastResults[i];
+  if (c) iptvPlay(c.url, c.id, c.name);
+}
+function iptvPrev() {
+  if (!_iptvLastResults.length) return;
+  let i = -1;
+  if (_iptvCurrentChannel) {
+    i = _iptvLastResults.findIndex(c =>
+      c.id === _iptvCurrentChannel.id || c.url === _iptvCurrentChannel.url);
+  }
+  if (i < 0) i = _iptvCurrentIndex;
+  i = i - 1;
+  if (i < 0) i = _iptvLastResults.length - 1;
+  _iptvCurrentIndex = i;
+  const c = _iptvLastResults[i];
+  if (c) iptvPlay(c.url, c.id, c.name);
+}
+function iptvSetVolume(val) {
+  const v = Math.min(100, Math.max(0, Number(val) || 0)) / 100;
+  const video = document.getElementById('iptv-player');
+  if (video) video.volume = v;
+  try { localStorage.setItem('viltv_iptv_volume', String(v)); } catch(_) {}
+  // Reflect mute state via icon
+  const btn = document.getElementById('iptv-mute-btn');
+  if (btn) btn.textContent = v === 0 ? '🔇' : (v < 0.4 ? '🔉' : '🔊');
+}
+function iptvToggleMute() {
+  const video = document.getElementById('iptv-player');
+  if (!video) return;
+  _iptvMuted = !_iptvMuted;
+  video.muted = _iptvMuted;
+  const btn = document.getElementById('iptv-mute-btn');
+  if (btn) btn.textContent = _iptvMuted ? '🔇' : '🔊';
+}
+async function iptvTogglePip() {
+  const video = document.getElementById('iptv-player');
+  if (!video) return;
+  try {
+    if (document.pictureInPictureElement) {
+      await document.exitPictureInPicture();
+    } else if (video.requestPictureInPicture) {
+      await video.requestPictureInPicture();
+    } else {
+      console.warn('[IPTV] Picture-in-Picture not supported on this browser');
+    }
+  } catch (e) { console.warn('[IPTV] PiP failed:', e); }
+}
+function iptvVolUp() {
+  const sl = document.getElementById('iptv-vol');
+  if (!sl) return;
+  sl.value = Math.min(100, Number(sl.value || 80) + 10);
+  iptvSetVolume(sl.value);
+}
+function iptvVolDown() {
+  const sl = document.getElementById('iptv-vol');
+  if (!sl) return;
+  sl.value = Math.max(0, Number(sl.value || 80) - 10);
+  iptvSetVolume(sl.value);
+}
+function iptvFullscreen() {
+  const video = document.getElementById('iptv-player');
+  if (!video) return;
+  try {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (video.requestFullscreen) video.requestFullscreen();
+    else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
+  } catch (e) { console.warn('[IPTV] Fullscreen failed:', e); }
+}
+function iptvPlayCustomUrl() {
+  const inp = document.getElementById('iptv-custom-url');
+  const url = (inp && inp.value || '').trim();
+  if (!url) return;
+
+  // If user pasted a .m3u playlist, fetch it and extract the first .m3u8 stream
+  if (/\.m3u$/i.test(url) && !/\.m3u8$/i.test(url)) {
+    fetch(url).then(r => r.text()).then(text => {
+      const lines = text.split(/\r?\n/);
+      let found = null;
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('#') || !trimmed) continue;
+        if (/\.m3u8/i.test(trimmed) || /^https?:\/\//.test(trimmed)) {
+          found = trimmed; break;
+        }
+      }
+      if (found) {
+        iptvPlay(found, 'custom-' + Date.now(), 'Custom Stream (from playlist)');
+        if (inp) inp.value = found;
+      } else {
+        const nowEl = document.getElementById('iptv-now');
+        if (nowEl) nowEl.textContent = '⚠️ No .m3u8 stream found in playlist';
+      }
+    }).catch(() => {
+      const nowEl = document.getElementById('iptv-now');
+      if (nowEl) nowEl.textContent = '⚠️ Failed to fetch playlist';
+    });
+    return;
+  }
+
+  iptvPlay(url, 'custom-' + Date.now(), 'Custom Stream');
+  if (inp) inp.value = '';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// LIVE TV — 5-Style Layout + Geo-Navigation
+// ═══════════════════════════════════════════════════════════════════
+const _IPTV_STYLE_NAMES = { 1:'Classic', 2:'Split Dir', 3:'3-Column', 4:'Card Grid', 5:'Compact' };
+let _iptvStyle = 1;
+
+function _iptvRestoreStyle() {
+  try { const s = parseInt(localStorage.getItem('viltv_iptv_style')); if (s >= 1 && s <= 5) _iptvStyle = s; } catch(_) {}
+  _iptvApplyStyle(_iptvStyle, false);
+}
+
+function iptvToggleSettings() {
+  const sp = document.getElementById('iptv-settings-panel');
+  const gb = document.getElementById('iptv-gear-btn');
+  if (!sp) return;
+  const isOpen = sp.classList.toggle('open');
+  if (gb) gb.classList.toggle('active', isOpen);
+}
+function iptvCloseSettings() {
+  const sp = document.getElementById('iptv-settings-panel');
+  const gb = document.getElementById('iptv-gear-btn');
+  if (sp) sp.classList.remove('open');
+  if (gb) gb.classList.remove('active');
+}
+
+function iptvSetStyle(n) {
+  _iptvStyle = n;
+  try { localStorage.setItem('viltv_iptv_style', n); } catch(_) {}
+  _iptvApplyStyle(n, true);
+  iptvCloseSettings();
+}
+
+function _iptvApplyStyle(n, rerender) {
+  const panel = document.getElementById('rb-panel-iptv');
+  if (!panel) return;
+  for (let i = 1; i <= 5; i++) panel.classList.remove('iptv-s' + i);
+  panel.classList.add('iptv-s' + n);
+  // Update button states
+  document.querySelectorAll('.iptv-style-btn').forEach(b => b.classList.toggle('active', +b.dataset.style === n));
+  // Update style badge
+  const badge = document.getElementById('iptv-style-badge');
+  if (badge) badge.textContent = _IPTV_STYLE_NAMES[n] || 'Classic';
+  // Geo-nav: build if switching to a geo style and channels are loaded
+  if ((n === 2 || n === 3) && _iptvAllChannels) _iptvBuildGeoNav();
+  if (rerender) _iptvRender(_iptvLastResults);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RADIO / MUSIC / MOVIES / PODCAST — Shared 5-Style Layout System
+// ═══════════════════════════════════════════════════════════════════
+const _RP_STYLE_NAMES = { 1:'Classic', 2:'Split Dir', 3:'3-Column', 4:'Card Grid', 5:'Compact' };
+
+const _RP_CONFIG = {
+  radio: {
+    panelId:'rb-panel-radio', presetStripId:'radio-presets',
+    geoNavId:'radio-geo-nav', geoItemsId:'radio-geo-items',
+    badgeId:'radio-style-badge', gearId:'radio-gear-btn',
+    settingsPanelId:'radio-settings-panel', storageKey:'viltv_radio_style',
+    sidebar:[
+      {name:'🇮🇳 Top India',     fn:"radioLoadPreset('top-india')"},
+      {name:'🎬 Bollywood',      fn:"radioLoadPreset('bollywood')"},
+      {name:'🪕 Hindi',          fn:"radioLoadPreset('hindi')"},
+      {name:'🌿 Malayalam',      fn:"radioLoadPreset('malayalam')"},
+      {name:'🇦🇪 UAE Malayalam', fn:"radioLoadPreset('uae-malayalam')"},
+      {name:'🛢 Gulf NRI',       fn:"radioLoadPreset('gulf-nri')"},
+      {name:'🎵 Tamil',          fn:"radioLoadPreset('tamil')"},
+      {name:'🎤 Telugu',         fn:"radioLoadPreset('telugu')"},
+      {name:'🎶 Kannada',        fn:"radioLoadPreset('kannada')"},
+      {name:'🟡 Punjabi',        fn:"radioLoadPreset('punjabi')"},
+      {name:'🇺🇸 Top US',        fn:"radioLoadPreset('top-us')"},
+      {name:'🇬🇧 Top UK',        fn:"radioLoadPreset('top-uk')"},
+      {name:'🇯🇵 Japan',         fn:"radioLoadPreset('top-japan')"},
+      {name:'📰 News',           fn:"radioLoadPreset('news')"},
+      {name:'🌿 Chill',          fn:"radioLoadPreset('chill')"},
+    ],
+  },
+  movies: {
+    panelId:'rb-panel-movies', presetStripId:'movies-preset-strip',
+    geoNavId:'movies-geo-nav', geoItemsId:'movies-geo-items',
+    badgeId:'movies-style-badge', gearId:'movies-gear-btn',
+    settingsPanelId:'movies-settings-panel', storageKey:'viltv_movies_style',
+    sidebar:[
+      {name:'🎭 Classics',      fn:"moviesLoadPreset('classics')"},
+      {name:'💥 Action',        fn:"moviesLoadPreset('action')"},
+      {name:'😂 Comedy',        fn:"moviesLoadPreset('comedy')"},
+      {name:'👻 Horror',        fn:"moviesLoadPreset('horror')"},
+      {name:'🚀 Sci-Fi',        fn:"moviesLoadPreset('scifi')"},
+      {name:'🎨 Animation',     fn:"moviesLoadPreset('animation')"},
+      {name:'🎭 Drama',         fn:"moviesLoadPreset('drama')"},
+      {name:'🤠 Western',       fn:"moviesLoadPreset('western')"},
+      {name:'📽 Documentary',   fn:"moviesLoadPreset('documentary')"},
+      {name:'⏱ Shorts',        fn:"moviesLoadPreset('shorts')"},
+      {name:'🎬 Silent Era',    fn:"moviesLoadPreset('silent')"},
+      {name:'🕵 Film Noir',     fn:"moviesLoadPreset('noir')"},
+      {name:'🎬 Bollywood',     fn:"moviesLoadPreset('bollywood')"},
+      {name:'🎬 Malayalam',     fn:"moviesLoadPreset('malayalam')"},
+      {name:'🎬 Tamil',         fn:"moviesLoadPreset('tamil')"},
+      {name:'🎬 Telugu',        fn:"moviesLoadPreset('telugu')"},
+      {name:'🎬 Indian Cinema', fn:"moviesLoadPreset('indiancinema')"},
+      {name:'🔪 Thriller',      fn:"moviesLoadPreset('thriller')"},
+      {name:'🎬 Hindi',         fn:"moviesLoadPreset('hindi')"},
+      {name:'🇲🇽 Mexico',       fn:"moviesLoadPreset('mexico')"},
+      {name:'🇰🇷 Korea',        fn:"moviesLoadPreset('korea')"},
+    ],
+  },
+  podcast: {
+    panelId:'rb-panel-podcast', presetStripId:'podcast-preset-strip',
+    geoNavId:'podcast-geo-nav', geoItemsId:'podcast-geo-items',
+    badgeId:'podcast-style-badge', gearId:'podcast-gear-btn',
+    settingsPanelId:'podcast-settings-panel', storageKey:'viltv_podcast_style',
+    sidebar:[
+      {name:'⭐ Curated',     fn:'podcastLoadCurated()'},
+      {name:'💼 Business',    fn:"podcastLoadCategory('Business')"},
+      {name:'💻 Technology',  fn:"podcastLoadCategory('Technology')"},
+      {name:'📰 News',        fn:"podcastLoadCategory('News')"},
+      {name:'📚 Education',   fn:"podcastLoadCategory('Education')"},
+      {name:'❤️ Health',      fn:"podcastLoadCategory('Health')"},
+      {name:'😂 Comedy',      fn:"podcastLoadCategory('Comedy')"},
+      {name:'⚽ Sports',      fn:"podcastLoadCategory('Sports')"},
+      {name:'🌍 Society',     fn:"podcastLoadCategory('Society')"},
+    ],
+  },
+  music: {
+    panelId:'rb-panel-music', presetStripId:'music-preset-strip',
+    geoNavId:'music-geo-nav', geoItemsId:'music-geo-items',
+    badgeId:'music-style-badge', gearId:'music-gear-btn',
+    settingsPanelId:'music-settings-panel', storageKey:'viltv_music_style',
+    sidebar:[
+      {name:"🔥 Today's Top", fn:"musicLoadPreset('today-top')"},
+      {name:'🎬 Bollywood',   fn:"musicLoadPreset('bollywood')"},
+      {name:'🪕 Hindi',       fn:"musicLoadPreset('hindi')"},
+      {name:'🟡 Punjabi',     fn:"musicLoadPreset('punjabi')"},
+      {name:'🌿 Malayalam',   fn:"musicLoadPreset('malayalam')"},
+      {name:'🎵 Tamil',       fn:"musicLoadPreset('tamil')"},
+      {name:'🎤 Telugu',      fn:"musicLoadPreset('telugu')"},
+      {name:'🎤 J-pop',       fn:"musicLoadPreset('jpop')"},
+      {name:'🎸 J-rock',      fn:"musicLoadPreset('jrock')"},
+      {name:'🎤 K-pop',       fn:"musicLoadPreset('kpop')"},
+      {name:'🎸 K-rock',      fn:"musicLoadPreset('krock')"},
+      {name:'🎤 C-pop',       fn:"musicLoadPreset('cpop')"},
+      {name:'🌙 Lo-fi',       fn:"musicLoadPreset('lofi')"},
+      {name:'🌿 Chill',       fn:"musicLoadPreset('chill')"},
+      {name:'💪 Workout',     fn:"musicLoadPreset('workout')"},
+      {name:'🎵 Pop',         fn:"musicLoadPreset('pop')"},
+      {name:'🎸 Rock',        fn:"musicLoadPreset('rock')"},
+      {name:'🎻 Classical',   fn:"musicLoadPreset('classical')"},
+      {name:'🎺 Jazz',        fn:"musicLoadPreset('jazz')"},
+      {name:'🕉 Devotional',  fn:"musicLoadPreset('devotional')"},
+      {name:'🧘 Meditation',  fn:"musicLoadPreset('meditation')"},
+    ],
+  },
+};
+
+const _rpStyles = { radio:1, movies:1, podcast:1, music:1 };
+
+function rpToggleSettings(key) {
+  const cfg = _RP_CONFIG[key]; if (!cfg) return;
+  const sp = document.getElementById(cfg.settingsPanelId);
+  const gb = document.getElementById(cfg.gearId);
+  if (!sp) return;
+  const isOpen = sp.classList.toggle('open');
+  if (gb) gb.classList.toggle('active', isOpen);
+}
+
+function rpSetStyle(key, n) {
+  _rpStyles[key] = n;
+  const cfg = _RP_CONFIG[key]; if (!cfg) return;
+  try { localStorage.setItem(cfg.storageKey, n); } catch(_) {}
+  const sp = document.getElementById(cfg.settingsPanelId);
+  const gb = document.getElementById(cfg.gearId);
+  if (sp) sp.classList.remove('open');
+  if (gb) gb.classList.remove('active');
+  rpApplyStyle(key, n);
+}
+
+function rpApplyStyle(key, n) {
+  const cfg = _RP_CONFIG[key]; if (!cfg) return;
+  const panel = document.getElementById(cfg.panelId); if (!panel) return;
+  for (let i = 1; i <= 5; i++) panel.classList.remove('rp-s' + i);
+  panel.classList.add('rp-s' + n);
+  document.querySelectorAll('[data-rpanel="' + key + '"]').forEach(b =>
+    b.classList.toggle('active', +b.dataset.style === n));
+  const badge = document.getElementById(cfg.badgeId);
+  if (badge) badge.textContent = _RP_STYLE_NAMES[n] || 'Classic';
+  if (n === 2 || n === 3) rpBuildSidebar(key);
+}
+
+function rpBuildSidebar(key) {
+  const cfg = _RP_CONFIG[key]; if (!cfg) return;
+  const items = document.getElementById(cfg.geoItemsId); if (!items) return;
+  items.innerHTML = cfg.sidebar.map(s =>
+    `<div class="iptv-geo-item" onclick="${s.fn}">
+       <span class="iptv-geo-name">${s.name}</span>
+     </div>`
+  ).join('');
+}
+
+function rpRestoreStyle(key) {
+  const cfg = _RP_CONFIG[key]; if (!cfg) return;
+  let n = 1;
+  try { const s = parseInt(localStorage.getItem(cfg.storageKey)); if (s >= 1 && s <= 5) n = s; } catch(_) {}
+  _rpStyles[key] = n;
+  rpApplyStyle(key, n);
+}
+
+// ── Geo-Navigation ──────────────────────────────────────────────────────────
+const _COUNTRY_NAMES = {
+  'IN':'🇮🇳 India','US':'🇺🇸 United States','GB':'🇬🇧 UK','AU':'🇦🇺 Australia',
+  'CA':'🇨🇦 Canada','DE':'🇩🇪 Germany','FR':'🇫🇷 France','JP':'🇯🇵 Japan',
+  'CN':'🇨🇳 China','AE':'🇦🇪 UAE','SA':'🇸🇦 Saudi Arabia','QA':'🇶🇦 Qatar',
+  'SG':'🇸🇬 Singapore','MY':'🇲🇾 Malaysia','BR':'🇧🇷 Brazil','ES':'🇪🇸 Spain',
+  'IT':'🇮🇹 Italy','MX':'🇲🇽 Mexico','NL':'🇳🇱 Netherlands','TR':'🇹🇷 Turkey',
+  'PK':'🇵🇰 Pakistan','BD':'🇧🇩 Bangladesh','LK':'🇱🇰 Sri Lanka','NP':'🇳🇵 Nepal',
+  'NG':'🇳🇬 Nigeria','ZA':'🇿🇦 S.Africa','EG':'🇪🇬 Egypt','RU':'🇷🇺 Russia',
+  'KR':'🇰🇷 S.Korea','TH':'🇹🇭 Thailand','ID':'🇮🇩 Indonesia','PH':'🇵🇭 Philippines',
+  'VN':'🇻🇳 Vietnam','AR':'🇦🇷 Argentina','CL':'🇨🇱 Chile','CO':'🇨🇴 Colombia',
+  'PT':'🇵🇹 Portugal','SE':'🇸🇪 Sweden','NO':'🇳🇴 Norway','DK':'🇩🇰 Denmark',
+  'FI':'🇫🇮 Finland','PL':'🇵🇱 Poland','RO':'🇷🇴 Romania','GR':'🇬🇷 Greece',
+  'UA':'🇺🇦 Ukraine','AT':'🇦🇹 Austria','CH':'🇨🇭 Switzerland','BE':'🇧🇪 Belgium',
+  'CZ':'🇨🇿 Czech Rep','HU':'🇭🇺 Hungary','IL':'🇮🇱 Israel','IR':'🇮🇷 Iran',
+  'IQ':'🇮🇶 Iraq','KW':'🇰🇼 Kuwait','OM':'🇴🇲 Oman','BH':'🇧🇭 Bahrain',
+  'MA':'🇲🇦 Morocco','DZ':'🇩🇿 Algeria','TN':'🇹🇳 Tunisia','LB':'🇱🇧 Lebanon',
+  'KE':'🇰🇪 Kenya','GH':'🇬🇭 Ghana','ET':'🇪🇹 Ethiopia','TZ':'🇹🇿 Tanzania',
+};
+
+// India language states — use BOTH language code AND name-regex (iptv-org lang metadata is sparse)
+const _INDIA_STATES = [
+  { key:'all', name:'🇮🇳 All India',  lang:null, regex:null },
+  { key:'hin', name:'🪕 Hindi',       lang:'hin', regex:/aaj\s*tak|zee\s*(news|hind)|abp\s*news|india\s*tv|ndtv|republic\s*bharat|news18\s*india|tv9\s*bharatvarsh|navbharat|lifeok|good\s*news|times\s*now\s*navbharat|dd\s*news|dd\s*national|sansad|india\s*news|bharat\s*samachar|janta\s*tv|hindi/i },
+  { key:'mal', name:'🌿 Malayalam',   lang:'mal', regex:/asianet|manorama|mathrubhumi|mazhavil|surya\s*tv|kairali|amrita\s*tv|reporter|media\s*one|jeevan|kappa|kaumudi|safari|news18\s*kerala|janam\s*tv|goodness\s*tv|24\s*news|malayalam|kerala/i },
+  { key:'tam', name:'🎵 Tamil',       lang:'tam', regex:/sun\s*tv|vijay\s*tv|star\s*vijay|polimer|kalaignar|raj\s*tv|captain|puthiya\s*thalaimurai|thanthi|news\s*7\s*tamil|j\s*movies|peppers\s*tv|news18\s*tamil|jaya\s*tv|tamil/i },
+  { key:'tel', name:'🎤 Telugu',      lang:'tel', regex:/etv\b|tv5\s*news|tv9\s*telugu|sakshi\s*tv|abn\s*andhra|10\s*tv|t\s*news|ntv\s*telugu|raj\s*news|hmtv|mahaa|v6\s*news|i\s*news|maa\s*tv|gemini\s*tv|telugu/i },
+  { key:'kan', name:'🎶 Kannada',     lang:'kan', regex:/suvarna|public\s*tv|tv9\s*kannada|asianet\s*suvarna|power\s*tv|news18\s*kannada|udaya\s*tv|udaya\s*news|colors\s*kannada|kannada/i },
+  { key:'mar', name:'🟠 Marathi',     lang:'mar', regex:/abp\s*majha|saam\s*marathi|tv9\s*marathi|zee\s*marathi|star\s*pravah|news18\s*lokmat|ibn\s*lokmat|jai\s*maharashtra|sahyadri|colors\s*marathi|marathi/i },
+  { key:'pan', name:'🟡 Punjabi',     lang:'pan', regex:/ptc\s*(news|punjabi)|abp\s*sanjha|zee\s*punjabi|news18\s*punjab|day\s*&\s*night|chardikla|9x\s*tashan|punjab|punjabi/i },
+  { key:'ben', name:'🟢 Bengali',     lang:'ben', regex:/abp\s*ananda|zee\s*bangla|star\s*jalsha|news18\s*bangla|kolkata\s*tv|24\s*ghanta|akash\s*aath|news\s*time\s*bangla|tara\s*muzik|bengali|bangla/i },
+  { key:'guj', name:'🟣 Gujarati',    lang:'guj', regex:/abp\s*asmita|zee\s*24\s*kalak|sandesh\s*tv|tv9\s*gujarat|news18\s*gujarat|vtv\s*gujarati|gujarati/i },
+  { key:'ori', name:'🌅 Odia',        lang:'ori', regex:/otv\b|kalinga\s*tv|news18\s*odia|kanak\s*news|tarang\s*tv|sidharth\s*tv|prarthana|odisha|odia/i },
+  { key:'asm', name:'🌄 Assamese',    lang:'asm', regex:/dy365|news18\s*assam|pratidin\s*time|prag\s*news|protidin|gnn\s*news|rongali|assamese|assam/i },
+  { key:'urd', name:'📖 Urdu',        lang:'urd', regex:/urdu\s*1|samaa\s*tv|ary\s*(news|digital)|geo\s*news|dawn\s*news|hum\s*tv|express\s*news|bol\s*news|urdu/i },
+];
+const _INDIA_STATE_MAP = Object.fromEntries(_INDIA_STATES.map(s => [s.key, s]));
+
+// Generic category filter for all non-India countries
+const _GEO_CATEGORIES = [
+  { key:'cat-all',   name:'All Channels',    cat:null },
+  { key:'cat-news',  name:'📰 News',          cat:'news' },
+  { key:'cat-sport', name:'🏆 Sports',        cat:'sports' },
+  { key:'cat-ent',   name:'🎭 Entertainment', cat:'entertainment' },
+  { key:'cat-movie', name:'🎬 Movies',        cat:'movies' },
+  { key:'cat-music', name:'🎵 Music',         cat:'music' },
+  { key:'cat-kids',  name:'🧸 Kids',          cat:'kids' },
+];
+
+let _iptvGeoCountry = 'IN';
+let _iptvGeoState   = null;
+let _iptvGeoCountryData = [];
+
+function _iptvBuildGeoNav() {
+  if (!_iptvAllChannels) return;
+  const countMap = {};
+  for (const c of _iptvAllChannels) {
+    if (!c.country) continue;
+    countMap[c.country] = (countMap[c.country] || 0) + 1;
+  }
+  _iptvGeoCountryData = Object.entries(countMap)
+    .sort((a, b) => b[1] - a[1])
+    .map(([code, count]) => ({ code, count, name: _COUNTRY_NAMES[code] || ('🌐 ' + code) }));
+
+  const list = document.getElementById('iptv-geo-countries');
+  if (!list) return;
+  list.innerHTML = _iptvGeoCountryData.map(c =>
+    `<div class="iptv-geo-item" data-geo-code="${_esc(c.code)}" onclick="iptvGeoSelectCountry('${_esc(c.code)}')">
+      <span class="iptv-geo-name">${c.name}</span>
+      <span class="iptv-geo-cnt">${c.count}</span>
+    </div>`
+  ).join('');
+
+  const cnt = document.getElementById('iptv-ch-count');
+  if (cnt) cnt.textContent = _iptvAllChannels.length.toLocaleString() + ' ch';
+
+  iptvGeoSelectCountry(_iptvGeoCountry || 'IN', false);
+}
+
+function iptvGeoFilterCountries(q) {
+  const term = (q || '').toLowerCase();
+  document.querySelectorAll('#iptv-geo-countries .iptv-geo-item').forEach(el => {
+    const nameEl = el.querySelector('.iptv-geo-name');
+    el.style.display = nameEl && nameEl.textContent.toLowerCase().includes(term) ? '' : 'none';
+  });
+}
+
+function iptvGeoSelectCountry(code, render) {
+  if (render === undefined) render = true;
+  _iptvGeoCountry = code;
+  _iptvGeoState = null;
+
+  // Highlight active country
+  document.querySelectorAll('#iptv-geo-countries .iptv-geo-item').forEach(el =>
+    el.classList.toggle('active', el.dataset.geoCode === code));
+  const activeEl = document.querySelector('#iptv-geo-countries .iptv-geo-item.active');
+  if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
+
+  const stateCol  = document.getElementById('iptv-geo-states-col');
+  const stateList = document.getElementById('iptv-geo-states');
+  const stateTitle = stateCol && stateCol.querySelector('.iptv-geo-col-title');
+
+  if (code === 'IN') {
+    // India: show language states with count (lang-code + name-regex combined)
+    if (stateCol) stateCol.classList.add('iptv-state-active');
+    if (stateTitle) stateTitle.textContent = 'Language';
+    if (stateList && _iptvAllChannels) {
+      const inCh = _iptvAllChannels.filter(c => c.country === 'IN');
+      stateList.innerHTML = _INDIA_STATES.map(s => {
+        let cnt;
+        if (!s.lang && !s.regex) {
+          cnt = inCh.length;
+        } else {
+          cnt = inCh.filter(c =>
+            (s.lang && c.languages.includes(s.lang)) ||
+            (s.regex && s.regex.test(c.name))
+          ).length;
+        }
+        return `<div class="iptv-geo-item" data-geo-state="${s.key}" onclick="iptvGeoSelectState('${s.key}')">
+          <span class="iptv-geo-name">${s.name}</span>
+          <span class="iptv-geo-cnt">${cnt}</span>
+        </div>`;
+      }).join('');
+    }
+    if (render) iptvGeoSelectState('all');
+  } else {
+    // Other countries: show generic categories
+    if (stateCol) stateCol.classList.add('iptv-state-active');
+    if (stateTitle) stateTitle.textContent = 'Category';
+    if (stateList && _iptvAllChannels) {
+      const coCh = _iptvAllChannels.filter(c => c.country === code);
+      stateList.innerHTML = _GEO_CATEGORIES.map(s => {
+        const cnt = s.cat ? coCh.filter(c => c.categories.includes(s.cat)).length : coCh.length;
+        return `<div class="iptv-geo-item" data-geo-state="${s.key}" onclick="iptvGeoSelectCategory('${s.key}','${_esc(code)}')">
+          <span class="iptv-geo-name">${s.name}</span>
+          <span class="iptv-geo-cnt">${cnt}</span>
+        </div>`;
+      }).join('');
+    }
+    if (render) iptvGeoSelectCategory('cat-all', code);
+  }
+}
+
+function iptvGeoSelectState(key) {
+  _iptvGeoState = key;
+  document.querySelectorAll('#iptv-geo-states .iptv-geo-item').forEach(el =>
+    el.classList.toggle('active', el.dataset.geoState === key));
+  const activeEl = document.querySelector('#iptv-geo-states .iptv-geo-item.active');
+  if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
+  if (!_iptvAllChannels) return;
+
+  const s = _INDIA_STATE_MAP[key];
+  let results = _iptvAllChannels.filter(c => c.country === 'IN');
+  if (s && (s.lang || s.regex)) {
+    results = results.filter(c =>
+      (s.lang && c.languages.includes(s.lang)) ||
+      (s.regex && s.regex.test(c.name))
+    );
+  }
+  results = results.sort((a, b) => {
+    const aN = a.categories.includes('news') ? 0 : 1;
+    const bN = b.categories.includes('news') ? 0 : 1;
+    return aN - bN || a.name.localeCompare(b.name);
+  }).slice(0, 300);
+  _iptvLastResults = results;
+  _iptvRender(results);
+}
+
+function iptvGeoSelectCategory(key, country) {
+  _iptvGeoState = key;
+  document.querySelectorAll('#iptv-geo-states .iptv-geo-item').forEach(el =>
+    el.classList.toggle('active', el.dataset.geoState === key));
+  const activeEl = document.querySelector('#iptv-geo-states .iptv-geo-item.active');
+  if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
+  if (!_iptvAllChannels) return;
+
+  const catDef = _GEO_CATEGORIES.find(c => c.key === key);
+  let results = _iptvAllChannels.filter(c => c.country === country);
+  if (catDef && catDef.cat) results = results.filter(c => c.categories.includes(catDef.cat));
+  results = results.sort((a, b) => a.name.localeCompare(b.name)).slice(0, 300);
+  _iptvLastResults = results;
+  _iptvRender(results);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// CURATED DIRECT STREAMS — verified India m3u8 (no proxy needed)
+// Loaded on demand alongside iptv-org catalog when user picks 'curated-india'
+// ═══════════════════════════════════════════════════════════════════
+const _IPTV_CURATED_INDIA = [
+  { id:'cur-aajtak',    name:'Aaj Tak',           url:'https://feeds.intoday.in/aajtak/api/aajtakhd/master.m3u8',                       country:'IN', languages:['hin'], categories:['news'] },
+  { id:'cur-abpnews',   name:'ABP News',          url:'https://d2l4ar6y3mrs4k.cloudfront.net/live-streaming/abpnews-livetv/master.m3u8',  country:'IN', languages:['hin'], categories:['news'] },
+  { id:'cur-abpananda', name:'ABP Ananda',        url:'https://d2l4ar6y3mrs4k.cloudfront.net/live-streaming/ananda-livetv/master.m3u8',   country:'IN', languages:['ben'], categories:['news'] },
+  { id:'cur-abpasmita', name:'ABP Asmita',        url:'https://d2l4ar6y3mrs4k.cloudfront.net/live-streaming/asmita-livetv/master.m3u8',   country:'IN', languages:['guj'], categories:['news'] },
+  { id:'cur-abpganga',  name:'ABP Ganga',         url:'https://d2l4ar6y3mrs4k.cloudfront.net/live-streaming/ganga-livetv/master.m3u8',    country:'IN', languages:['hin'], categories:['news'] },
+  { id:'cur-aastha',    name:'Aastha TV',         url:'https://aasthaott.akamaized.net/110923/smil:aasthatv.smil/index.m3u8',             country:'IN', languages:['hin'], categories:['religious'] },
+  { id:'cur-aasthab',   name:'Aastha Bhajan',     url:'https://aasthaott.akamaized.net/110923/smil:bhajan.smil/playlist.m3u8',            country:'IN', languages:['hin'], categories:['religious'] },
+  { id:'cur-aasthat',   name:'Aastha Tamil',      url:'https://aasthaott.akamaized.net/110923/smil:aasthatamil.smil/playlist.m3u8',       country:'IN', languages:['tam'], categories:['religious'] },
+  { id:'cur-aasthate',  name:'Aastha Telugu',     url:'https://aasthaott.akamaized.net/110923/smil:aasthatelugu.smil/playlist.m3u8',      country:'IN', languages:['tel'], categories:['religious'] },
+  { id:'cur-aasthag',   name:'Aastha Gujarati',   url:'https://aasthaott.akamaized.net/110923/smil:aasthagujrati.smil/playlist.m3u8',     country:'IN', languages:['guj'], categories:['religious'] },
+  { id:'cur-aasthak',   name:'Aastha Kannada',    url:'https://aasthaott.akamaized.net/110923/smil:aasthakannada.smil/playlist.m3u8',     country:'IN', languages:['kan'], categories:['religious'] },
+  { id:'cur-9xjhakaas', name:'9X Jhakaas',        url:'https://9xjio.wiseplayout.com/9X_Jhakaas/master.m3u8',                              country:'IN', languages:['hin'], categories:['music'] },
+  { id:'cur-9xtashan',  name:'9X Tashan',         url:'https://9xjio.wiseplayout.com/9X_Tashan/master.m3u8',                               country:'IN', languages:['pan'], categories:['music'] },
+  { id:'cur-7smusic',   name:'7S Music',          url:'https://mumt03.tangotv.in/7SMUSIC/index.m3u8',                                      country:'IN', languages:['hin'], categories:['music'] },
+  { id:'cur-asianet',   name:'Asianet News',      url:'https://vidcdn.vidgyor.com/asianet-origin/liveabr/playlist.m3u8',                   country:'IN', languages:['mal'], categories:['news'] },
+  { id:'cur-amrita',    name:'Amrita TV',         url:'https://dr1zhpsuem5f4.cloudfront.net/master.m3u8',                                  country:'IN', languages:['mal'], categories:['entertainment'] },
+  { id:'cur-adipoli',   name:'Adipoli',           url:'https://live.hungama.com/linear/adipoli/playlist.m3u8',                             country:'IN', languages:['mal'], categories:['movies'] },
+];
+
+// ═══════════════════════════════════════════════════════════════════
+// MUSIC ENGINE — YouTube IFrame API audio player (no auth required)
+// 21 tabs × 6 playlists each = 126 curated YouTube Music playlists
+// Audio plays through a hidden YT IFrame API player (audio-only mode).
+// ═══════════════════════════════════════════════════════════════════
+const _MUSIC_PLAYLISTS = {
+  'today-top': [
+    { name:'Global Top 50',           sid:'PLOHoVaTp8R7dWeCQrKfh7a1a_Gu6KvfWP', desc:'YT Music · Global Hits' },
+    { name:'Top 100 India',           sid:'PL3-sRm8xAzY999ARkg8XztLMO-IikrsQw', desc:'YT Music · India Top' },
+    { name:'Top Hits 2026',           sid:'fUpUI_Dpu0E', desc:'YT Music · 2026 Hits' },
+    { name:'Hotlist Mix',             sid:'RDCLAK5uy_mKvpDvxVYcv9FUYjPdOX-kedyZwBYTSKw', desc:'YT Music · Hot Mix' },
+    { name:'Latest Releases',         sid:'OLAK5uy_lmOTw8-xNuyKmv_MfzNikSq4V0JHnWi5U', desc:'YT Music · New Music' },
+  ],
+  'bollywood': [
+    { name:'Bollywood Hot Hits',      sid:'RDATfiYm9sbHl3b29k', desc:'YT Music · Hot Mix' },
+    { name:'Bollywood Top 50',        sid:'PLedC6ZKrrIHikOi1oTaCfCYyjd47WX8cn', desc:'YT Music · Bollywood' },
+    { name:'Latest Bollywood',        sid:'OLAK5uy_nMcccWPlHS3iaFlMIzIkALy0NaBfcDRf8', desc:'YT Music · New Hits' },
+    { name:'Bollywood Romance',       sid:'OLAK5uy_mQSwphJSo-OCoczITRlpI1daNlmYGhSmg', desc:'YT Music · Romantic' },
+    { name:'Bollywood Dance Mix',     sid:'RDCLAK5uy_kjNBBWqyQ_Cy14B0P4xrcKgd39CRjXXKk', desc:'YT Music · Dance' },
+  ],
+  'hindi': [
+    { name:'Hindi Superhits',         sid:'OLAK5uy_kTY2WWRRF87SASuErTsZ__UUuEu6pMGgM', desc:'YT Music · Superhits' },
+    { name:'Hindi Love Songs',        sid:'OLAK5uy_myjjBjApK7V3L4NH7JomeLU5yq19iiC20', desc:'YT Music · Romantic' },
+    { name:'Hindi Chartbusters',      sid:'PLCU2AKdwPmvpuHDVrlI5ObzhOElwuMWOV', desc:'YT Music · Charts' },
+    { name:'Hindi Evergreen',         sid:'PL--o-tfjAs5J7M5M5obyQPpmFnPi1a_Ev', desc:'YT Music · Evergreen' },
+    { name:'Arijit Singh Top Songs',  sid:'@official_arijitsingh', desc:'YT Music · Arijit Singh' },
+    { name:'Shreya Ghoshal Best',     sid:'@shreyaghoshalofficial', desc:'YT Music · Shreya Ghoshal' },
+  ],
+  'punjabi': [
+    { name:'Karan Aujla Hits',        sid:'@karanaujlaofficial', desc:'YT Music · Karan Aujla' },
+    { name:'Diljit Dosanjh Top',      sid:'@diljitdosanjh', desc:'YT Music · Diljit' },
+    { name:'Punjabi Party Mix',       sid:'RDCLAK5uy_nvOP2zYXgysTuhzHxjDja5-tEyp_k93SQ', desc:'YT Music · Party' },
+    { name:'Punjabi Love Songs',      sid:'RDCLAK5uy_k5OicslPLzEMgpcyeTgam0J1rvvt0h6Ys', desc:'YT Music · Romantic' },
+    { name:'Punjabi Latest 2026',     sid:'PLFFyMei_d85U5RQdXjRQ5F012qr4vSmSa', desc:'YT Music · New Hits' },
+  ],
+  'malayalam': [
+    { name:'Malayalam Hit Songs',     sid:'PL4QNnZJr8sRPEJPqe7jZnsLPTBu1E3nIY', desc:'YT Music · Hot Hits' },
+    { name:'MG Sreekumar Best',       sid:'@mgsreekumarofficial', desc:'YT Music · MG Sreekumar' },
+    { name:'Malayalam Melodies',      sid:'OLAK5uy_lQzjN2lS2NJzla3VEyd50JXcxnaaT0hQQ', desc:'YT Music · Melodies' },
+    { name:'Malayalam Romance',       sid:'OLAK5uy_mUHKES47aXElA-5DIQKYh0rNjLgaBWX1o', desc:'YT Music · Romantic' },
+    { name:'Malayalam Folk Mix',      sid:'RDCLAK5uy_ni3DKCDd5NFCj0izGpHPVtc-bavbg2WVY', desc:'YT Music · Folk' },
+    { name:'Malayalam Trending',      sid:'PL_rXc1ssylNcaVl9tZ8Lq9YWfdF_SYN8e', desc:'YT Music · Trending' },
+  ],
+  'tamil': [
+    { name:'Tamil Hit Songs',         sid:'PLHuHXHyLu7BHc0i8V_I9UalAFR6AYjZmK', desc:'YT Music · Top Hits' },
+    { name:'Tamil Love Songs',        sid:'PLHuHXHyLu7BEeCtCZsLke-o5_fUqLADYk', desc:'YT Music · Romantic' },
+    { name:'AR Rahman Collection',    sid:'RDCLAK5uy_kK9A4jidvadHw-EFO4CndFMNE0QRmLLRs', desc:'YT Music · AR Rahman' },
+    { name:'Tamil Melodies',          sid:'RDCLAK5uy_kdksr6U0N1-Obw-6sv68h4qg_EtKJnx5k', desc:'YT Music · Melodies' },
+    { name:'Anirudh Top Hits',        sid:'OLAK5uy_milDtPpD_lOxmnYjeUy4hhPbhcNCxo6OM', desc:'YT Music · Anirudh' },
+    { name:'Tamil Latest 2026',       sid:'Q0Hj3BXcb3M', desc:'YT Music · 2026 Hits' },
+  ],
+  'telugu': [
+    { name:'Telugu Superhits',        sid:'ZY5rK7R_nmk', desc:'YT Music · Superhits' },
+    { name:'Tollywood Hits',          sid:'PLD8J0-dKvBidefj33rjDcspaDIh_9MKUB', desc:'YT Music · Tollywood' },
+    { name:'Telugu Love Melodies',    sid:'OLAK5uy_kSaVZ8GhCKontiqsrHa4rv1scjAzbsZwI', desc:'YT Music · Romantic' },
+    { name:'Telugu Latest Songs',     sid:'PLD8J0-dKvBidefj33rjDcspaDIh_9MKUB', desc:'YT Music · New Hits' },
+  ],
+  'jpop': [
+    { name:'J-Pop Hot Hits',          sid:'RDCLAK5uy_lRj2PxRYIUGDG0p0KjsQ62d2lLYLfgXAw', desc:'YT Music · Hot Hits' },
+    { name:'J-Pop Chill Mix',         sid:'RDCLAK5uy_lwbizuU3lWX-XkvD8tvEd8phxcIneMvwc', desc:'YT Music · Chill' },
+    { name:'YOASOBI Essentials',      sid:'@ayase_yoasobi', desc:'YT Music · YOASOBI' },
+    { name:'J-Pop Latest',            sid:'RDCLAK5uy_lfFKSX_d4HoVD0Wqk63D6DtLFk7klXAd8', desc:'YT Music · New Hits' },
+  ],
+  'jrock': [
+    { name:'J-Rock Essentials',       sid:'@jayrock7377', desc:'YT Music · J-Rock' },
+    { name:'ONE OK ROCK Best',        sid:'@oneokrock', desc:'YT Music · ONE OK ROCK' },
+    { name:'J-Rock Anthems',          sid:'PLFgkCLPmldRTXFkl-MkdRkEuWoOjsD3H7', desc:'YT Music · Anthems' },
+  ],
+  'kpop': [
+    { name:'K-Pop Hotlist',           sid:'RDCLAK5uy_kLzCY4h1nP5QbyO19tiTwqkrkfoxPdSRo', desc:'YT Music · Hotlist' },
+    { name:'K-Pop Global Hits',       sid:'RDCLAK5uy_mQnC7q6sK82AjQTN1zxjGAFfdd67K_ddc', desc:'YT Music · Global Hits' },
+    { name:'K-Pop Dance Mix',         sid:'RDCLAK5uy_kWmaONW-ni4bGVHI-DnXi2wEv9fICbgEc', desc:'YT Music · Dance' },
+    { name:'K-Pop New Releases',      sid:'PLOHoVaTp8R7ccrQM3EpCTVDdwHhXrJhXS', desc:'YT Music · New Hits' },
+    { name:'BTS Top Songs',           sid:'@bts', desc:'YT Music · BTS' },
+  ],
+  'krock': [
+    { name:'K-Rock Essentials',       sid:'@kdashrock', desc:'YT Music · K-Rock' },
+    { name:'K-Rock Anthems',          sid:'PLcvXAP5YjHfPOtn6w7bguUvJnjlLXHrVR', desc:'YT Music · Anthems' },
+    { name:'K-Rock New Wave',         sid:'OLAK5uy_kWhwWg5HrLtVpb6oyrP14CsC4LynUewkc', desc:'YT Music · New Wave' },
+    { name:'K-Rock Mix',              sid:'RDCLAK5uy_lUE1Bl9Pg1XYo_mtYjYPAOIfePiL1HsQU', desc:'YT Music · Mix' },
+  ],
+  'cpop': [
+    { name:'C-Pop Hits',              sid:'4YMFTk04ils', desc:'YT Music · C-Pop Hits' },
+    { name:'Mandopop Top',            sid:'sKJV8xyy9Xg', desc:'YT Music · Mandopop' },
+    { name:'C-Pop New Songs',         sid:'PLXbxeYTIWy424BMD-F6ycYA8tIsyFR6G9', desc:'YT Music · New Hits' },
+    { name:'C-Pop Mix',               sid:'OLAK5uy_m2exTIjXuPUB6Vs_ShUITeO0bftmFh6Xo', desc:'YT Music · Mix' },
+  ],
+  'lofi': [
+    { name:'Lo-Fi Beats',             sid:'OLAK5uy_kGKUUK935CEIE4PvQvLhbAJ2axCEVada8', desc:'YT Music · Lo-Fi' },
+    { name:'Lo-Fi Girl Radio',        sid:'@lofigirl', desc:'YT Music · 24/7 Radio' },
+    { name:'Lo-Fi Focus',             sid:'OLAK5uy_ktsm5nMP5gmNvzM5bHFyooy29DyDNM_fI', desc:'YT Music · Focus' },
+  ],
+  'chill': [
+    { name:'Chill Vibes',             sid:'hssbOjl7z_4', desc:'YT Music · Chill' },
+    { name:'Chill Mix 2026',          sid:'RDCLAK5uy_n2MRgJm8KVbRLo9wpqSGGX8CQ8rLCRsWg', desc:'YT Music · Chill Mix' },
+    { name:'Acoustic Chill',          sid:'OLAK5uy_mQXVjd55HOtaTIwU3L58mG9mv3-S6yUvc', desc:'YT Music · Acoustic' },
+    { name:'Relaxing Music',          sid:'PLl8UV_vtRB9puqG8ffVo2N56m8C4hf3K9', desc:'YT Music · Relax' },
+  ],
+  'workout': [
+    { name:'Gym Motivation',          sid:'PLnfcpZm6el8gpyIi4gP-vk5kQ4J9NY55e', desc:'YT Music · Gym' },
+    { name:'Workout Mix',             sid:'PLu0ocO48LFms5WsI1ipaeanxqRjn2fC_5', desc:'YT Music · Workout' },
+    { name:'Workout Beats',           sid:'PL-QvSRz8uhNGYmSIKDF57Ak5SAXQ6TKvl', desc:'YT Music · Beats' },
+    { name:'Pump Up Mix',             sid:'RDCLAK5uy_mcd5hbKGTuwPRREfC4-0foufnfjx90hrg', desc:'YT Music · Pump Up' },
+    { name:'HIIT Cardio',             sid:'ld8nm6rcOm0', desc:'YT Music · Cardio' },
+    { name:'Workout Power',           sid:'RDCLAK5uy_k8jOtApFm8GvDPerBiJwOLRi7f1jVI9WE', desc:'YT Music · Power' },
+  ],
+  'meditation': [
+    { name:'Sleep Music',             sid:'PLQ_PIlf6OzqIeQygYMd8DccQ3XnJlSGcG', desc:'YT Music · Sleep' },
+    { name:'Deep Sleep',              sid:'PLQkQfzsIUwRabZ5NAFLL3byvBTksna6p_', desc:'YT Music · Deep Sleep' },
+    { name:'Sleep Sounds',            sid:'PLo2ZIWlO1BLQzTio3MbS2gyIZkJFxokCp', desc:'YT Music · Sounds' },
+    { name:'Relax & Sleep',           sid:'yGi1MePEN-k', desc:'YT Music · Relax' },
+  ],
+};
+let _musicCurrentSid = null;
+function musicLoadPreset(key) {
+  document.querySelectorAll('.music-preset').forEach(b => {
+    b.classList.remove('active');
+    if (b.getAttribute('onclick')?.includes("'" + key + "'")) b.classList.add('active');
+  });
+  const list = document.getElementById('music-list');
+  if (!list) return;
+  const playlists = _MUSIC_PLAYLISTS[key] || _MUSIC_PLAYLISTS['today-top'];
+  const ytId = _YT_MUSIC_PLAYLISTS[key] || _YT_MUSIC_PLAYLISTS['today-top'];
+  list.innerHTML = playlists.map(p => {
+    return '<div class="radio-station-item" data-playlist="' + _esc(p.sid) + '" data-playlist-id="' + _esc(p.sid) + '" onclick=\'musicPlayYT(' + JSON.stringify(p.sid) + ',' + JSON.stringify(p.name) + ')\'>'
+      + '<span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:6px;background:linear-gradient(135deg,#ff0000,#cc0000);color:#fff;font-size:16px;font-weight:800;flex-shrink:0">▶</span>'
+      + '<div class="radio-station-meta"><span class="radio-station-name" title="' + _esc(p.name) + '">' + _esc(p.name) + '</span>'
+      + '<span class="radio-station-tag">' + _esc(p.desc || 'YouTube Music') + '</span>'
+      + '</div></div>';
+  }).join('');
+}
+/* musicPlay / musicStop / musicPlayYT defined above in the YT IFrame block */
+let _musicVolume = 80;
+let _musicMuted = true;
+let _musicFavorites = JSON.parse(localStorage.getItem('music-favorites') || '[]');
+// musicSetVolume, musicVolUp, musicVolDown, musicToggleMute, musicTogglePlay defined above
+function musicToggleFav() {
+  if (!_musicCurrentSid) return;
+  const idx = _musicFavorites.indexOf(_musicCurrentSid);
+  if (idx > -1) _musicFavorites.splice(idx, 1);
+  else _musicFavorites.push(_musicCurrentSid);
+  localStorage.setItem('music-favorites', JSON.stringify(_musicFavorites));
+  const btn = document.getElementById('music-fav-btn');
+  if (btn) btn.textContent = idx > -1 ? '☆' : '★';
+}
+function musicTogglePip() {
+  // YouTube IFrame API audio player — PIP not applicable for audio-only
+  const ifr = document.getElementById('music-player-iframe');
+  if (!ifr) return;
+  if (document.pictureInPictureEnabled) {
+    if (document.pictureInPictureElement) document.exitPictureInPicture();
+    else ifr.requestPictureInPicture?.();
+  }
+}
+function musicPrev() {
+  const btns = document.querySelectorAll('.music-preset.active');
+  const allBtns = document.querySelectorAll('.music-preset');
+  if (btns.length === 0 || allBtns.length === 0) return;
+  const idx = Array.from(allBtns).indexOf(btns[0]);
+  const newBtn = allBtns[idx === 0 ? allBtns.length - 1 : idx - 1];
+  if (newBtn) newBtn.click();
+}
+function musicNext() {
+  const btns = document.querySelectorAll('.music-preset.active');
+  const allBtns = document.querySelectorAll('.music-preset');
+  if (btns.length === 0 || allBtns.length === 0) return;
+  const idx = Array.from(allBtns).indexOf(btns[0]);
+  const newBtn = allBtns[(idx + 1) % allBtns.length];
+  if (newBtn) newBtn.click();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MUSIC OMNISEARCH
+// ═══════════════════════════════════════════════════════════════════
+var _musicOmniTimer = null;
+
+function musicOmniOpen() {
+  var modal = document.getElementById('music-omni-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  setTimeout(function() {
+    var inp = document.getElementById('music-omni-input');
+    if (inp) { inp.value = ''; inp.focus(); }
+    _musicOmniRenderLocal('');
+    var ytEl = document.getElementById('music-omni-yt-results');
+    var loading = document.getElementById('music-omni-loading');
+    if (ytEl) ytEl.innerHTML = '';
+    if (loading) loading.style.display = 'none';
+  }, 50);
+  document.addEventListener('keydown', _musicOmniEscHandler);
+}
+function musicOmniClose() {
+  var modal = document.getElementById('music-omni-modal');
+  if (modal) modal.style.display = 'none';
+  clearTimeout(_musicOmniTimer);
+  document.removeEventListener('keydown', _musicOmniEscHandler);
+}
+function _musicOmniEscHandler(e) { if (e.key === 'Escape') musicOmniClose(); }
+
+function musicOmniInput(val) {
+  clearTimeout(_musicOmniTimer);
+  _musicOmniRenderLocal(val);
+  var q = (val || '').trim();
+  var ytEl = document.getElementById('music-omni-yt-results');
+  var loading = document.getElementById('music-omni-loading');
+  if (q.length > 2) {
+    if (loading) loading.style.display = 'block';
+    if (ytEl) ytEl.innerHTML = '';
+    _musicOmniTimer = setTimeout(function() { _musicOmniYtSearch(q); }, 500);
+  } else {
+    if (loading) loading.style.display = 'none';
+    if (ytEl) ytEl.innerHTML = '';
+  }
+}
+
+function _musicAllPlaylists() {
+  var labels = {
+    'today-top':'Today\'s Top','bollywood':'Bollywood','hindi':'Hindi',
+    'punjabi':'Punjabi','malayalam':'Malayalam','tamil':'Tamil',
+    'telugu':'Telugu','jpop':'J-Pop','jrock':'J-Rock','kpop':'K-Pop',
+    'krock':'K-Rock','cpop':'C-Pop','lofi':'Lo-Fi','chill':'Chill',
+    'workout':'Workout','meditation':'Meditation'
+  };
+  var all = [];
+  Object.keys(_MUSIC_PLAYLISTS).forEach(function(key) {
+    (_MUSIC_PLAYLISTS[key] || []).forEach(function(p) {
+      all.push({ sid: p.sid, name: p.name, desc: p.desc, genre: key, genreLabel: labels[key] || key });
+    });
+  });
+  return all;
+}
+
+function _musicOmniRowHtml(p) {
+  return '<div class="music-omni-row" onclick=\'musicOmniPick(' + JSON.stringify(p.sid) + ',' + JSON.stringify(p.name) + ')\'>'
+    + '<div class="music-omni-icon">&#9654;</div>'
+    + '<div class="music-omni-meta">'
+    + '<div class="music-omni-name">' + _esc(p.name) + '</div>'
+    + '<div class="music-omni-desc">' + _esc(p.desc || 'YouTube Music') + '</div>'
+    + '</div>'
+    + '<span class="music-omni-genre-tag">' + _esc(p.genreLabel || '') + '</span>'
+    + '</div>';
+}
+
+function _musicOmniRenderLocal(q) {
+  var container = document.getElementById('music-omni-playlists');
+  var emptyEl   = document.getElementById('music-omni-empty');
+  if (!container) return;
+  var all = _musicAllPlaylists();
+  var lq  = (q || '').trim().toLowerCase();
+
+  if (!lq) {
+    var html = '';
+    var favs = (_musicFavorites || []).map(function(sid) {
+      return all.find(function(p) { return p.sid === sid; });
+    }).filter(Boolean);
+    if (favs.length) {
+      html += '<div class="music-omni-sec">&#11088; Your Favourites</div>';
+      html += favs.map(_musicOmniRowHtml).join('');
+    }
+    var genreOrder = ['today-top','bollywood','hindi','punjabi','malayalam','tamil','telugu','jpop','jrock','kpop','krock','cpop','lofi','chill','workout','meditation'];
+    genreOrder.forEach(function(key) {
+      var items = all.filter(function(p) { return p.genre === key; });
+      if (!items.length) return;
+      html += '<div class="music-omni-sec">&#127925; ' + _esc(items[0].genreLabel || key) + '</div>';
+      html += items.map(_musicOmniRowHtml).join('');
+    });
+    container.innerHTML = html;
+    if (emptyEl) emptyEl.style.display = 'none';
+    return;
+  }
+
+  var matches = all.filter(function(p) {
+    return (p.name      && p.name.toLowerCase().includes(lq))  ||
+           (p.desc      && p.desc.toLowerCase().includes(lq))  ||
+           (p.genreLabel && p.genreLabel.toLowerCase().includes(lq));
+  });
+  if (!matches.length) {
+    container.innerHTML = '';
+    if (emptyEl) emptyEl.style.display = lq.length > 2 ? 'none' : 'block';
+    return;
+  }
+  if (emptyEl) emptyEl.style.display = 'none';
+  container.innerHTML = '<div class="music-omni-sec">Matching Playlists</div>' + matches.map(_musicOmniRowHtml).join('');
+}
+
+function _musicOmniYtSearch(q) {
+  var loading = document.getElementById('music-omni-loading');
+  var ytEl    = document.getElementById('music-omni-yt-results');
+  fetch(WORKER_PROXY_URL + '/youtube-search?q=' + encodeURIComponent(q + ' music'), { signal: AbortSignal.timeout(8000) })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (loading) loading.style.display = 'none';
+      var items = (d.items || []).filter(function(i) { return i.id; });
+      if (!items.length || !ytEl) return;
+      var html = '<div class="music-omni-sec">YouTube Music Results</div>';
+      html += items.map(function(it) {
+        var thumb = it.thumb || ('https://img.youtube.com/vi/' + it.id + '/mqdefault.jpg');
+        return '<div class="music-omni-yt-row" onclick=\'musicOmniPickYt(' + JSON.stringify(it.id) + ',' + JSON.stringify(it.type) + ',' + JSON.stringify(it.title) + ')\'>'
+          + '<img class="music-omni-thumb" src="' + _esc(thumb) + '" onerror="this.style.display=\'none\'" loading="lazy" alt="">'
+          + '<div class="music-omni-meta">'
+          + '<div class="music-omni-name">' + _esc(it.title) + '</div>'
+          + '<div class="music-omni-desc">' + _esc(it.channel || '') + (it.type === 'playlist' ? ' &middot; Playlist' : ' &middot; Video') + '</div>'
+          + '</div></div>';
+      }).join('');
+      ytEl.innerHTML = html;
+    })
+    .catch(function() { if (loading) loading.style.display = 'none'; });
+}
+
+function musicOmniPick(sid, name) {
+  musicOmniClose();
+  var trigger = document.getElementById('music-omni-trigger');
+  if (trigger) trigger.textContent = name;
+  musicPlayYT(sid, name);
+}
+function musicOmniPickYt(id, type, title) {
+  musicOmniClose();
+  var trigger = document.getElementById('music-omni-trigger');
+  if (trigger) trigger.textContent = title;
+  musicPlayYT(id, title);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MOVIES ENGINE — Internet Archive free public-domain films
+// archive.org provides /advancedsearch.php JSON API for queries and
+// /embed/IDENTIFIER for an iframe-able streaming player.
+// ═══════════════════════════════════════════════════════════════════
+const ARCHIVE_API = 'https://archive.org/advancedsearch.php';
+const _MOVIES_QUERIES = {
+  // Curated category → archive.org search query (their advanced syntax)
+  'classics':    'collection:(feature_films) AND mediatype:(movies) AND year:[1920 TO 1965]',
+  'action':      'collection:(feature_films) AND mediatype:(movies) AND (action OR adventure) AND year:[2000 TO 2025]',
+  'comedy':      'collection:(feature_films) AND mediatype:(movies) AND (comedy OR slapstick) AND year:[2000 TO 2025]',
+  'horror':      'collection:(feature_films) AND mediatype:(movies) AND (horror OR thriller) AND year:[2000 TO 2025]',
+  'scifi':       'collection:(feature_films) AND mediatype:(movies) AND (science fiction OR sci-fi) AND year:[2000 TO 2025]',
+  'animation':   'collection:(feature_films) AND mediatype:(movies) AND (animation OR cartoon) AND year:[2000 TO 2025]',
+  'drama':       'collection:(feature_films) AND mediatype:(movies) AND drama AND year:[2000 TO 2025]',
+  'western':     'collection:(feature_films) AND mediatype:(movies) AND western AND year:[2000 TO 2025]',
+  'documentary': 'collection:(opensource_movies) AND mediatype:(movies) AND documentary AND year:[2015 TO 2025]',
+  'shorts':      'collection:(short_films) AND mediatype:(movies) AND year:[2015 TO 2025]',
+  'silent':      'collection:(silent_films) AND mediatype:(movies)',
+  'noir':        'collection:(film_noir) AND mediatype:(movies)',
+  'bollywood':   'mediatype:(movies) AND (subject:"bollywood" OR subject:"hindi films" OR subject:"hindi cinema") AND year:[2020 TO 2025]',
+  'malayalam':   'mediatype:(movies) AND (subject:"malayalam" OR subject:"malayalam cinema" OR subject:"malayalam films" OR subject:"malayalam comedy" OR subject:"malayalam drama") AND year:[2020 TO 2025]',
+  'tamil':       'mediatype:(movies) AND (subject:"tamil" OR subject:"tamil cinema" OR subject:"tamil films") AND year:[2020 TO 2025]',
+  'telugu':      'mediatype:(movies) AND (subject:"telugu" OR subject:"telugu cinema" OR subject:"telugu films") AND year:[2020 TO 2025]',
+  'indiancinema': 'mediatype:(movies) AND (subject:"indian cinema" OR subject:"bollywood" OR subject:"tamil" OR subject:"telugu" OR subject:"malayalam") AND year:[2015 TO 2025]',
+  'thriller':     'collection:(feature_films) AND mediatype:(movies) AND subject:(thriller) AND language:(english) AND year:[2000 TO 2025]',
+  'hindi':        'mediatype:(movies) AND (subject:"hindi films" OR subject:"hindi movies" OR subject:"hindi cinema" OR language:"hindi") AND year:[2018 TO 2025]',
+  'mexico':       'mediatype:(movies) AND (subject:"mexican cinema" OR subject:"mexican films" OR subject:"mexico" OR subject:"cine mexicano") AND year:[2010 TO 2025]',
+  'korea':        'mediatype:(movies) AND (subject:"korean cinema" OR subject:"korean films" OR subject:"south korea" OR language:"korean") AND year:[2010 TO 2025]',
+};
+let _moviesLastResults = [];
+let _moviesCurrentId = null;
+async function moviesLoadPreset(key) {
+  document.querySelectorAll('.movies-preset').forEach(b => {
+    b.classList.remove('active');
+    if (b.getAttribute('onclick')?.includes("'" + key + "'")) b.classList.add('active');
+  });
+  const list = document.getElementById('movies-list');
+  if (list) list.innerHTML = '<div class="radio-no-data">⏳ Loading films from archive.org…</div>';
+  const q = _MOVIES_QUERIES[key] || _MOVIES_QUERIES['classics'];
+  const url = ARCHIVE_API + '?q=' + encodeURIComponent(q)
+    + '&fl[]=identifier&fl[]=title&fl[]=year&fl[]=creator&fl[]=runtime'
+    + '&sort[]=downloads+desc&rows=40&page=1&output=json';
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const docs = (data.response && data.response.docs) || [];
+    _moviesLastResults = docs;
+    _moviesRender(docs);
+  } catch (e) {
+    if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Could not reach archive.org.</div>';
+  }
+}
+function _moviesRender(docs) {
+  const list = document.getElementById('movies-list');
+  if (!list) return;
+  if (!docs.length) { list.innerHTML = '<div class="radio-no-data">No films found in this category.</div>'; return; }
+  list.innerHTML = docs.map(d => {
+    const id = d.identifier;
+    const title = d.title || id;
+    const meta = [d.year, d.creator, d.runtime].filter(Boolean).join(' · ');
+    return '<div class="radio-station-item" onclick=\'moviesPlay(' + JSON.stringify(id) + ',' + JSON.stringify(title) + ')\'>'
+      + '<span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:6px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:16px;font-weight:800;flex-shrink:0">🎬</span>'
+      + '<div class="radio-station-meta"><span class="radio-station-name" title="' + _esc(title) + '">' + _esc(title) + '</span>'
+      + (meta ? '<span class="radio-station-tag">' + _esc(meta) + '</span>' : '')
+      + '</div></div>';
+  }).join('');
+}
+let _moviesSearchTimer = null;
+function moviesOnSearch(q) {
+  clearTimeout(_moviesSearchTimer);
+  q = (q || '').trim();
+  if (!q) { _moviesRender(_moviesLastResults); return; }
+  _moviesSearchTimer = setTimeout(async () => {
+    document.querySelectorAll('.movies-preset').forEach(b => b.classList.remove('active'));
+    const list = document.getElementById('movies-list');
+    if (list) list.innerHTML = '<div class="radio-no-data">🔍 Searching archive.org…</div>';
+    const url = ARCHIVE_API
+      + '?q=' + encodeURIComponent('mediatype:(movies) AND (' + q + ')')
+      + '&fl[]=identifier&fl[]=title&fl[]=year&fl[]=creator&sort[]=downloads+desc&rows=40&output=json';
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      const docs = (data.response && data.response.docs) || [];
+      _moviesLastResults = docs;
+      _moviesRender(docs);
+    } catch (e) { if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Search failed.</div>'; }
+  }, 350);
+}
+function moviesPlay(identifier, title) {
+  const wrap = document.getElementById('movies-player-wrap');
+  const ifr  = document.getElementById('movies-player-iframe');
+  const now  = document.getElementById('movies-now');
+  if (!ifr) return;
+  _moviesCurrentId = identifier;
+  ifr.src = 'https://archive.org/embed/' + encodeURIComponent(identifier);
+  if (wrap) wrap.style.display = 'block';
+  if (now) now.textContent = title || 'Now Playing';
+}
+function moviesStop() {
+  const ifr = document.getElementById('movies-player-iframe');
+  const wrap = document.getElementById('movies-player-wrap');
+  if (ifr) ifr.src = '';
+  if (wrap) wrap.style.display = 'none';
+  _moviesCurrentId = null;
+}
+function moviesOpenInArchive() {
+  if (_moviesCurrentId) window.open('https://archive.org/details/' + encodeURIComponent(_moviesCurrentId), '_blank');
+}
+let _moviesVolume = 80;
+let _moviesMuted = false;
+let _moviesFavorites = JSON.parse(localStorage.getItem('movies-favorites') || '[]');
+function moviesSetVolume(val) {
+  _moviesVolume = parseInt(val) || 80;
+  const ifr = document.getElementById('movies-player-iframe');
+  if (ifr) {
+    try { ifr.style.opacity = _moviesVolume / 100; } catch(_) {}
+  }
+}
+function moviesVolUp() {
+  const vol = Math.min(100, _moviesVolume + 10);
+  moviesSetVolume(vol);
+  document.getElementById('movies-vol').value = vol;
+}
+function moviesVolDown() {
+  const vol = Math.max(0, _moviesVolume - 10);
+  moviesSetVolume(vol);
+  document.getElementById('movies-vol').value = vol;
+}
+function moviesToggleMute() {
+  _moviesMuted = !_moviesMuted;
+  const btn = document.getElementById('movies-mute-btn');
+  if (btn) btn.textContent = _moviesMuted ? '🔇' : '🔊';
+}
+function moviesToggleFav() {
+  if (!_moviesCurrentId) return;
+  const idx = _moviesFavorites.indexOf(_moviesCurrentId);
+  if (idx > -1) _moviesFavorites.splice(idx, 1);
+  else _moviesFavorites.push(_moviesCurrentId);
+  localStorage.setItem('movies-favorites', JSON.stringify(_moviesFavorites));
+  const btn = document.getElementById('movies-fav-btn');
+  if (btn) btn.textContent = idx > -1 ? '☆' : '★';
+}
+function moviesTogglePip() {
+  const ifr = document.getElementById('movies-player-iframe');
+  if (ifr && document.pictureInPictureEnabled) {
+    if (document.pictureInPictureElement) document.exitPictureInPicture();
+    else ifr.requestPictureInPicture?.();
+  }
+}
+function moviesPrev() {
+  const items = document.querySelectorAll('.radio-station-item');
+  const current = Array.from(items).findIndex(el => el.style.opacity === '0.6' || el.style.background?.includes('rgba'));
+  if (items.length === 0) return;
+  const idx = current > 0 ? current - 1 : items.length - 1;
+  items[idx].click?.();
+}
+function moviesNext() {
+  const items = document.querySelectorAll('.radio-station-item');
+  const current = Array.from(items).findIndex(el => el.style.opacity === '0.6' || el.style.background?.includes('rgba'));
+  if (items.length === 0) return;
+  const idx = (current + 1) % items.length;
+  items[idx].click?.();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PODCAST ENGINE — iTunes Search API (free, no auth, CORS-permissive)
+// Returns podcast metadata; we use feedUrl to pull episode list via RSS proxy.
+// ═══════════════════════════════════════════════════════════════════
+const ITUNES_SEARCH = 'https://itunes.apple.com/search';
+let _podcastCurrentUrl = null;
+const _PODCAST_CURATED = [
+  // Business / Markets
+  { name:'Bloomberg Daybreak Asia',  feedUrl:'https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/2bb84a8f-4e21-4b6a-a4d3-ae210140cad7/c1b9e8b0-1e3a-4c1e-8d7e-ae210140cb2c/podcast.rss', category:'Business', icon:'💼' },
+  { name:'The Daily (NYT)',          feedUrl:'https://feeds.simplecast.com/54nAGcIl', category:'News', icon:'📰' },
+  { name:'Planet Money (NPR)',       feedUrl:'https://feeds.npr.org/510289/podcast.xml', category:'Business', icon:'💰' },
+  { name:'How I Built This',         feedUrl:'https://feeds.npr.org/510313/podcast.xml', category:'Business', icon:'🚀' },
+  { name:'Marketplace',              feedUrl:'https://www.marketplace.org/feed/podcast/marketplace', category:'Business', icon:'📊' },
+  // Technology
+  { name:'a16z Podcast',             feedUrl:'https://feeds.simplecast.com/JGE3yC0V', category:'Technology', icon:'💻' },
+  { name:'Lex Fridman Podcast',      feedUrl:'https://lexfridman.com/feed/podcast/', category:'Technology', icon:'🤖' },
+  { name:'TWiT — This Week in Tech', feedUrl:'https://feeds.twit.tv/twit.xml', category:'Technology', icon:'📡' },
+  { name:'Hard Fork (NYT)',          feedUrl:'https://feeds.simplecast.com/l2i9YnTd', category:'Technology', icon:'🔧' },
+  // Education
+  { name:'Stuff You Should Know',    feedUrl:'https://feeds.megaphone.fm/stuffyoushouldknow', category:'Education', icon:'📚' },
+  { name:'TED Talks Daily',          feedUrl:'https://feeds.feedburner.com/TEDTalks_audio', category:'Education', icon:'🎓' },
+  // News
+  { name:'BBC Global News',          feedUrl:'https://podcasts.files.bbci.co.uk/p02nq0gn.rss', category:'News', icon:'🌍' },
+  { name:'Up First (NPR)',           feedUrl:'https://feeds.npr.org/510318/podcast.xml', category:'News', icon:'☀️' },
+  // Health
+  { name:'The Peter Attia Drive',    feedUrl:'https://peterattiadrive.libsyn.com/rss', category:'Health', icon:'❤️' },
+  { name:'Huberman Lab',             feedUrl:'https://feeds.megaphone.fm/hubermanlab', category:'Health', icon:'🧠' },
+  // Sports
+  { name:'The Bill Simmons Podcast', feedUrl:'https://rss.art19.com/the-bill-simmons-podcast', category:'Sports', icon:'🏀' },
+  { name:'The Cricket Podcast',      feedUrl:'https://thecricketpodcast.libsyn.com/rss', category:'Sports', icon:'🏏' },
+  // Comedy
+  { name:'SmartLess',                feedUrl:'https://rss.art19.com/smartless', category:'Comedy', icon:'😂' },
+  { name:'Conan O’Brien Needs A Friend', feedUrl:'https://feeds.simplecast.com/dHoohVNH', category:'Comedy', icon:'😆' },
+  // Society
+  { name:'This American Life',       feedUrl:'http://feed.thisamericanlife.org/talpodcast', category:'Society', icon:'🌐' },
+  { name:'Radiolab',                 feedUrl:'https://feeds.simplecast.com/EmVW7VGp', category:'Society', icon:'🔬' },
+];
+async function podcastLoadCurated() {
+  rpRestoreStyle('podcast');
+  document.querySelectorAll('.podcast-preset').forEach(b => {
+    b.classList.remove('active');
+    if (b.getAttribute('onclick')?.includes('podcastLoadCurated')) b.classList.add('active');
+  });
+  _podcastRender(_PODCAST_CURATED.map(p => ({ name: p.name, feedUrl: p.feedUrl, artistName: p.category, artworkUrl60: '', icon: p.icon })));
+}
+async function podcastLoadCategory(category) {
+  document.querySelectorAll('.podcast-preset').forEach(b => {
+    b.classList.remove('active');
+    if (b.getAttribute('onclick')?.includes("'" + category + "'")) b.classList.add('active');
+  });
+  const list = document.getElementById('podcast-list');
+  if (list) list.innerHTML = '<div class="radio-no-data">⏳ Searching iTunes…</div>';
+  try {
+    const res = await fetch(ITUNES_SEARCH + '?media=podcast&entity=podcast&limit=40&term=' + encodeURIComponent(category));
+    const data = await res.json();
+    _podcastRender(data.results || []);
+  } catch (e) {
+    if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Could not reach iTunes.</div>';
+  }
+}
+let _podcastSearchTimer = null;
+function podcastOnSearch(q) {
+  clearTimeout(_podcastSearchTimer);
+  q = (q || '').trim();
+  if (!q) { podcastLoadCurated(); return; }
+  _podcastSearchTimer = setTimeout(async () => {
+    document.querySelectorAll('.podcast-preset').forEach(b => b.classList.remove('active'));
+    const list = document.getElementById('podcast-list');
+    if (list) list.innerHTML = '<div class="radio-no-data">🔍 Searching…</div>';
+    try {
+      const res = await fetch(ITUNES_SEARCH + '?media=podcast&entity=podcast&limit=40&term=' + encodeURIComponent(q));
+      const data = await res.json();
+      _podcastRender(data.results || []);
+    } catch (e) { if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Search failed.</div>'; }
+  }, 300);
+}
+function _podcastRender(results) {
+  const list = document.getElementById('podcast-list');
+  if (!list) return;
+  if (!results.length) { list.innerHTML = '<div class="radio-no-data">No podcasts found.</div>'; return; }
+  list.innerHTML = results.map(p => {
+    const name = p.collectionName || p.name || 'Unknown podcast';
+    const author = p.artistName || '';
+    const feed = p.feedUrl || '';
+    const art = p.artworkUrl60 || '';
+    const icon = p.icon || '';
+    return '<div class="radio-station-item" onclick=\'podcastOpen(' + JSON.stringify(feed) + ',' + JSON.stringify(name) + ')\'>'
+      + (art ? '<img src="' + _esc(art) + '" style="width:34px;height:34px;border-radius:6px;flex-shrink:0;object-fit:cover" alt=""/>'
+            : '<span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:6px;background:#a855f7;color:#fff;font-size:18px;flex-shrink:0">' + (icon || '🎙') + '</span>')
+      + '<div class="radio-station-meta"><span class="radio-station-name" title="' + _esc(name) + '">' + _esc(name) + '</span>'
+      + (author ? '<span class="radio-station-tag">' + _esc(author) + '</span>' : '')
+      + '</div></div>';
+  }).join('');
+}
+async function podcastOpen(feedUrl, name) {
+  if (!feedUrl) return;
+  const list = document.getElementById('podcast-list');
+  const np = document.getElementById('podcast-now-playing');
+  if (np) np.textContent = '⏳ Loading episodes…';
+  try {
+    const res = await fetch(`${WORKER_PROXY_URL}/?url=${encodeURIComponent(feedUrl)}`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(12000)
+    });
+    if (!res.ok) throw new Error('Feed fetch failed');
+    const xmlText = await res.text();
+    const xml = new DOMParser().parseFromString(xmlText, 'text/xml');
+    const items = Array.from(xml.querySelectorAll('item, entry')).slice(0, 25).map(item => {
+      const enclosure = item.querySelector('enclosure');
+      const media = item.querySelector('media\\:content, content');
+      return {
+        title: item.querySelector('title')?.textContent?.trim() || 'Episode',
+        pubDate: item.querySelector('pubDate')?.textContent?.trim() || item.querySelector('published')?.textContent?.trim() || '',
+        audioUrl:
+          enclosure?.getAttribute('url') ||
+          media?.getAttribute('url') ||
+          item.querySelector('link')?.getAttribute('href') ||
+          ''
+      };
+    }).filter(i => i.audioUrl);
+    if (!items.length) throw new Error('No episodes');
+    if (list) {
+      list.innerHTML = '<button onclick="podcastLoadCurated()" style="background:#0e1f3b;border:1px solid #1e3a5c;color:#bccbe0;padding:7px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;margin:8px 10px">⟵ Back to podcasts</button>'
+        + items.map(ep => {
+          const audio = ep.audioUrl || '';
+          if (!audio) return '';
+          const ttl = ep.title || 'Episode';
+          const date = ep.pubDate ? new Date(ep.pubDate).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) : '';
+          return '<div class="radio-station-item" onclick=\'podcastPlay(' + JSON.stringify(audio) + ',' + JSON.stringify(ttl) + ')\'>'
+            + '<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:#a855f7;color:#fff;font-size:11px;flex-shrink:0">▶</span>'
+            + '<div class="radio-station-meta"><span class="radio-station-name" title="' + _esc(ttl) + '">' + _esc(ttl) + '</span>'
+            + (date ? '<span class="radio-station-tag">' + _esc(date) + '</span>' : '')
+            + '</div></div>';
+        }).join('');
+    }
+    if (np) np.textContent = name || 'Pick an episode';
+  } catch (e) {
+    if (np) np.textContent = '⚠️ Could not load episodes';
+    if (list) list.innerHTML += '<div class="radio-no-data">⚠️ Feed unavailable. Try another podcast.</div>';
+  }
+}
+function podcastPlay(url, title) {
+  const audio = document.getElementById('podcast-audio');
+  if (!audio) return;
+  audio.muted = _podcastMuted;
+  audio.style.display = 'block';
+  audio.src = url;
+  audio.play().catch(()=>{ const np = document.getElementById('podcast-now-playing'); if (np) np.textContent = '⚠️ Play failed'; });
+  _podcastCurrentUrl = url;
+  const np = document.getElementById('podcast-now-playing');
+  if (np) np.textContent = title || 'Playing…';
+  const dot = document.getElementById('podcast-dot');
+  if (dot) dot.style.background = '#22c55e';
+  const btn = document.getElementById('podcast-play-btn');
+  if (btn) { btn.disabled = false; btn.textContent = '⏸'; }
+}
+function podcastTogglePlay() {
+  const audio = document.getElementById('podcast-audio');
+  if (!audio) return;
+  if (!_podcastCurrentUrl) {
+    const first = document.querySelector('#podcast-list .radio-station-item');
+    if (first) first.click();
+    return;
+  }
+  if (audio.paused) audio.play();
+  else audio.pause();
+}
+function podcastSetVolume(v) {
+  const a = document.getElementById('podcast-audio');
+  if (a) a.volume = Math.max(0, Math.min(100, Number(v))) / 100;
+}
+let _podcastVolume = 75;
+let _podcastMuted = true;
+let _podcastFavorites = JSON.parse(localStorage.getItem('podcast-favorites') || '[]');
+function podcastVolUp() {
+  const vol = Math.min(100, _podcastVolume + 10);
+  podcastSetVolume(vol);
+  document.getElementById('podcast-vol').value = vol;
+  _podcastVolume = vol;
+}
+function podcastVolDown() {
+  const vol = Math.max(0, _podcastVolume - 10);
+  podcastSetVolume(vol);
+  document.getElementById('podcast-vol').value = vol;
+  _podcastVolume = vol;
+}
+function podcastToggleMute() {
+  _podcastMuted = !_podcastMuted;
+  const audio = document.getElementById('podcast-audio');
+  if (audio) audio.muted = _podcastMuted;
+  const btn = document.getElementById('podcast-mute-btn');
+  if (btn) btn.textContent = _podcastMuted ? '🔇' : '🔊';
+}
+function podcastToggleFav() {
+  const np = document.getElementById('podcast-now-playing');
+  const podcast = np?.textContent || '';
+  if (!podcast) return;
+  const idx = _podcastFavorites.indexOf(podcast);
+  if (idx > -1) _podcastFavorites.splice(idx, 1);
+  else _podcastFavorites.push(podcast);
+  localStorage.setItem('podcast-favorites', JSON.stringify(_podcastFavorites));
+  const btn = document.getElementById('podcast-fav-btn');
+  if (btn) btn.textContent = idx > -1 ? '☆' : '★';
+}
+function podcastTogglePip() {
+  const audio = document.getElementById('podcast-audio');
+  if (audio && audio.paused === false) {
+    alert('Picture-in-Picture for audio: Minimize this window to listen in background');
+  }
+}
+function podcastPrev() {
+  const items = document.querySelectorAll('.radio-station-item');
+  const current = Array.from(items).findIndex(el => el.style.opacity === '0.6' || el.style.background?.includes('rgba'));
+  if (items.length === 0) return;
+  const idx = current > 0 ? current - 1 : items.length - 1;
+  items[idx].click?.();
+}
+function podcastNext() {
+  const items = document.querySelectorAll('.radio-station-item');
+  const current = Array.from(items).findIndex(el => el.style.opacity === '0.6' || el.style.background?.includes('rgba'));
+  if (items.length === 0) return;
+  const idx = (current + 1) % items.length;
+  items[idx].click?.();
+}
+function podcastStop() {
+  const audio = document.getElementById('podcast-audio');
+  if (audio) { audio.pause(); audio.src = ''; }
+  const btn = document.getElementById('podcast-play-btn');
+  if (btn) btn.textContent = '▶';
+  const dot = document.getElementById('podcast-dot');
+  if (dot) dot.style.background = '#9ca3af';
+  const np = document.getElementById('podcast-now-playing');
+  if (np) np.textContent = 'Select a podcast to play';
+}
+
+function musicLoadDefault()  { rpRestoreStyle('music');  musicLoadPreset('today-top'); }
+function moviesLoadDefault() { rpRestoreStyle('movies'); moviesLoadPreset('classics'); }
+
+// ═══════════════════════════════════════════════════════════════════
+// RB-TABS scroll arrow nav
+// ═══════════════════════════════════════════════════════════════════
+function rbTabsSyncArrows() {
+  const wrap = document.getElementById('rb-tabs');
+  const prev = document.getElementById('rb-tabs-prev');
+  const next = document.getElementById('rb-tabs-next');
+  if (!wrap || !prev || !next) return;
+  const maxScroll = Math.max(0, wrap.scrollWidth - wrap.clientWidth);
+  const left = Math.max(0, wrap.scrollLeft);
+  prev.disabled = left <= 4;
+  next.disabled = left >= (maxScroll - 4);
+}
+
+function rbTabsScroll(dir) {
+  const wrap = document.getElementById('rb-tabs');
+  if (!wrap) return;
+  wrap.scrollBy({ left: dir * 140, behavior: 'smooth' });
+  window.setTimeout(rbTabsSyncArrows, 220);
+}
+
+// Backwards-compat shim — old code paths still call radioLoadCategory()
+function radioLoadCategory(catId) {
+  // Map old category IDs to new presets
+  const map = {
+    'india-hindi':'hindi','india-malayalam':'malayalam','india-tamil':'tamil',
+    'india-telugu':'telugu','india-kannada':'kannada','india-punjabi':'punjabi',
+    'india-bollywood':'bollywood','us':'top-us','japan':'top-japan','europe':'top-uk',
+  };
+  radioLoadPreset(map[catId] || 'top-india');
+}
+
+function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function radioGenreIcon(genre) {
+  const g = (genre || '').toLowerCase();
+  if (g.includes('news') || g.includes('talk'))   return '📰';
+  if (g.includes('classical') || g.includes('jazz'))return '🎻';
+  if (g.includes('bollywood')|| g.includes('filmi'))return '🎬';
+  if (g.includes('pop') || g.includes('hit'))      return '🎵';
+  if (g.includes('rock'))                           return '🎸';
+  if (g.includes('chill') || g.includes('lofi'))   return '🌿';
+  if (g.includes('sport'))                          return '🏅';
+  if (g.includes('public') || g.includes('national'))return '📡';
+  return '🎙';
+}
+
+// ── HLS instance tracker (one at a time) ─────────────────────────────
+var _radioHls = null;
+
+// ── Play a station ───────────────────────────────────────────────────
+function radioPlay(url, id, name, catId) {
+  const audio = document.getElementById('radio-audio');
+  if (!audio) return;
+
+  // ── Enforce HTTPS — prevent mixed-content blocks on GitHub Pages ──
+  url = url.replace(/^http:\/\//i, 'https://');
+
+  // Destroy any previous HLS instance
+  if (_radioHls) { try { _radioHls.destroy(); } catch(_){} _radioHls = null; }
+  // Clear any pending stall timeout
+  if (window._radioStallTimer) { clearTimeout(window._radioStallTimer); window._radioStallTimer = null; }
+
+  // Highlight active item in list
+  document.querySelectorAll('.radio-station-item').forEach(el => el.classList.remove('active'));
+  const item = document.getElementById('rsi-' + id);
+  if (item) item.classList.add('active');
+
+  _radioCurrentUrl = url;
+  _radioCurrentId  = id;
+
+  const np = document.getElementById('radio-now-playing');
+  if (np) np.textContent = name || 'Playing…';
+  _radioMediaSession(name);
+
+  const dot = document.getElementById('radio-dot');
+  if (dot) { dot.style.background = '#fbbf24'; dot.classList.remove('playing'); }
+
+  const vol = document.getElementById('radio-vol');
+  const volume = vol ? Number(vol.value) / 100 : 0.75;
+  audio.volume = volume;
+
+  // Case-insensitive HLS detection
+  const isHLS = /\.m3u8/i.test(url);
+  console.log(`[Radio] play url=${url} isHLS=${isHLS} Hls=${typeof Hls!=='undefined'} hlsSupported=${typeof Hls!=='undefined'&&Hls.isSupported()}`);
+
+  if (isHLS && typeof Hls !== 'undefined' && Hls.isSupported()) {
+    // ── HLS stream via hls.js (Chrome / Firefox / Edge) ───────────
+    audio.pause();
+    _radioHls = new Hls({
+      maxBufferLength: 10,
+      maxMaxBufferLength: 20,
+      lowLatencyMode: true,
+      enableWorker: true,
+    });
+    _radioHls.loadSource(url);
+    _radioHls.attachMedia(audio);
+    _radioHls.on(Hls.Events.MANIFEST_PARSED, () => {
+      console.log('[Radio] HLS manifest parsed, calling audio.play()');
+      audio.muted = _radioMuted;
+      audio.play().then(() => console.log('[Radio] HLS audio.play() resolved'))
+        .catch(err => {
+          console.warn('[Radio] HLS play REJECTED:', err && err.name, err && err.message);
+          radioOnError();
+        });
+    });
+    _radioHls.on(Hls.Events.ERROR, (event, data) => {
+      console.warn(`[Radio] HLS event=${data.type} details=${data.details} fatal=${data.fatal}`);
+      if (data.fatal) {
+        switch (data.type) {
+          case Hls.ErrorTypes.NETWORK_ERROR:
+            console.warn('[Radio] HLS network error, attempting recovery…');
+            _radioHls.startLoad();
+            break;
+          case Hls.ErrorTypes.MEDIA_ERROR:
+            console.warn('[Radio] HLS media error, attempting recovery…');
+            _radioHls.recoverMediaError();
+            break;
+          default:
+            radioOnError();
+        }
+      }
+    });
+  } else if (isHLS && audio.canPlayType('application/vnd.apple.mpegurl')) {
+    // ── Native HLS (Safari) ────────────────────────────────────────
+    console.log('[Radio] Using native HLS (Safari)');
+    audio.muted = _radioMuted;
+    audio.src = url;
+    audio.load();
+    audio.play().catch(err => {
+      console.warn('[Radio] Native HLS play rejected:', err && err.message);
+      radioOnError();
+    });
+  } else {
+    // ── Direct MP3 / AAC stream ────────────────────────────────────
+    audio.muted = _radioMuted;
+    audio.pause();
+    audio.src = url;
+    audio.load();
+    audio.play().catch(error => {
+      console.warn('[Radio] Play rejected:', error && error.message ? error.message : error);
+      _radioPlaying = false;
+      radioOnError();
+    });
+  }
+}
+
+// ── Toggle play / pause ──────────────────────────────────────────────
+// Uses audio.paused (the actual audio element state) rather than the
+// _radioPlaying flag so the button always reflects reality, even if the
+// stream stalled or errored without triggering onerror.
+function radioTogglePlay() {
+  const audio = document.getElementById('radio-audio');
+  if (!audio) return;
+
+  // If nothing is selected yet, auto-play the first station in the current category.
+  // Call radioPlay() DIRECTLY (not via synthetic .click()) so the user-gesture
+  // chain stays intact — important for Chrome's autoplay policy.
+  if (!_radioCurrentUrl) {
+    const firstItem = document.querySelector('.radio-station-item');
+    if (firstItem) {
+      const onclickAttr = firstItem.getAttribute('onclick') || '';
+      // Inline handler is: radioPlay("url","id","name","catId")
+      const m = onclickAttr.match(/radioPlay\(\s*("(?:[^"\\]|\\.)*")\s*,\s*("(?:[^"\\]|\\.)*")\s*,\s*("(?:[^"\\]|\\.)*")\s*,\s*("(?:[^"\\]|\\.)*")\s*\)/);
+      if (m) {
+        try {
+          const url   = JSON.parse(m[1]);
+          const id    = JSON.parse(m[2]);
+          const name  = JSON.parse(m[3]);
+          const catId = JSON.parse(m[4]);
+          radioPlay(url, id, name, catId);
+          return;
+        } catch (e) { console.warn('[Radio] auto-play parse failed:', e); }
+      }
+      // Fallback to synthetic click if parsing failed
+      firstItem.click();
+    }
+    return;
+  }
+
+  if (!audio.paused) {
+    // ── Currently playing → pause ──────────────────────────────────
+    audio.pause();
+    // UI updated by the 'pause' event listener below
+  } else {
+    // ── Currently paused → resume or reload stream ─────────────────
+    const srcIsBlank = !audio.src || audio.src === '' || audio.src === window.location.href;
+    const notLoaded  = audio.readyState === HTMLMediaElement.HAVE_NOTHING;
+    const isHLS      = /\.m3u8/i.test(_radioCurrentUrl);
+
+    // If src is missing OR this is an HLS stream that needs hls.js setup,
+    // redo full radioPlay() so HLS attaches correctly.
+    if (srcIsBlank || notLoaded || (isHLS && !_radioHls)) {
+      const np = document.getElementById('radio-now-playing');
+      const name = (np && np.textContent && !np.textContent.startsWith('⚠')) ? np.textContent : 'Station';
+      radioPlay(_radioCurrentUrl, _radioCurrentId, name, '');
+      return;
+    }
+
+    audio.play().catch(error => {
+      console.warn('[Radio] Resume failed:', error && error.message ? error.message : error);
+      _radioPlaying = false;
+      radioOnError();
+    });
+  }
+}
+
+function radioSetVolume(val) {
+  const audio = document.getElementById('radio-audio');
+  if (audio) audio.volume = Number(val) / 100;
+  try { localStorage.setItem('radio_volume', val); } catch(_) {}
+}
+let _radioVolume = 75;
+let _radioMuted = true;
+let _radioFavorites = JSON.parse(localStorage.getItem('radio-favorites') || '[]');
+function radioVolUp() {
+  const vol = Math.min(100, _radioVolume + 10);
+  radioSetVolume(vol);
+  document.getElementById('radio-vol').value = vol;
+  _radioVolume = vol;
+}
+function radioVolDown() {
+  const vol = Math.max(0, _radioVolume - 10);
+  radioSetVolume(vol);
+  document.getElementById('radio-vol').value = vol;
+  _radioVolume = vol;
+}
+function radioToggleMute() {
+  _radioMuted = !_radioMuted;
+  const audio = document.getElementById('radio-audio');
+  if (audio) audio.muted = _radioMuted;
+  const btn = document.getElementById('radio-mute-btn');
+  if (btn) btn.textContent = _radioMuted ? '🔇' : '🔊';
+}
+function radioToggleFav() {
+  const np = document.getElementById('radio-now-playing');
+  const station = np?.textContent || '';
+  if (!station) return;
+  const idx = _radioFavorites.indexOf(station);
+  if (idx > -1) _radioFavorites.splice(idx, 1);
+  else _radioFavorites.push(station);
+  localStorage.setItem('radio-favorites', JSON.stringify(_radioFavorites));
+  const btn = document.getElementById('radio-fav-btn');
+  if (btn) btn.textContent = idx > -1 ? '☆' : '★';
+}
+function radioTogglePip() {
+  const audio = document.getElementById('radio-audio');
+  if (audio && audio.paused === false) {
+    alert('Picture-in-Picture for audio: Minimize this window to listen in background');
+  }
+}
+function radioToggleIndiaPlayer() {
+  const body = document.getElementById('radio-india-body');
+  const chevron = document.getElementById('radio-india-chevron');
+  if (!body) return;
+  const isCollapsed = body.classList.toggle('collapsed');
+  body.style.maxHeight = isCollapsed ? '0' : '250px';
+  if (chevron) chevron.style.transform = isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+function radioLoadIndiaPlayer() {
+  const iframe = document.getElementById('radio-india-iframe');
+  const placeholder = document.getElementById('radio-india-placeholder');
+  if (!iframe || !placeholder) return;
+  if (!iframe.src && iframe.dataset.src) iframe.src = iframe.dataset.src;
+  placeholder.style.display = 'none';
+  iframe.style.display = 'block';
+}
+function radioPrev() {
+  if (!_radioLastResults.length) return;
+  const cur = _radioLastResults.findIndex(s => (s.stationuuid || s.url_resolved || s.url) === _radioCurrentId);
+  const idx = cur > 0 ? cur - 1 : _radioLastResults.length - 1;
+  const s = _radioLastResults[idx];
+  if (s) radioPlay(s.url_resolved || s.url, s.stationuuid || s.url_resolved || s.url, s.name, 'rb');
+}
+function radioNext() {
+  if (!_radioLastResults.length) return;
+  const cur = _radioLastResults.findIndex(s => (s.stationuuid || s.url_resolved || s.url) === _radioCurrentId);
+  const idx = (cur + 1) % _radioLastResults.length;
+  const s = _radioLastResults[idx];
+  if (s) radioPlay(s.url_resolved || s.url, s.stationuuid || s.url_resolved || s.url, s.name, 'rb');
+}
+function radioStop() {
+  _radioPlaying = false;
+  const audio = document.getElementById('radio-audio');
+  if (audio) { audio.pause(); audio.src = ''; }
+  if (window._radioStallTimer) { clearTimeout(window._radioStallTimer); window._radioStallTimer = null; }
+  if (_radioHls) { try { _radioHls.destroy(); } catch(_){} _radioHls = null; }
+  const btn = document.getElementById('radio-play-btn');
+  if (btn) btn.textContent = '▶';
+  const dot = document.getElementById('radio-dot');
+  if (dot) { dot.style.background = '#9ca3af'; dot.classList.remove('playing'); }
+  const np = document.getElementById('radio-now-playing');
+  if (np) np.textContent = 'Select a station to play';
+}
+
+// ── Error / ended handlers ───────────────────────────────────────────
+function radioOnError() {
+  _radioPlaying = false;
+  if (window._radioStallTimer) { clearTimeout(window._radioStallTimer); window._radioStallTimer = null; }
+  if (_radioHls) { try { _radioHls.destroy(); } catch(_){} _radioHls = null; }
+  const btn = document.getElementById('radio-play-btn');
+  if (btn) btn.textContent = '▶';
+  const dot = document.getElementById('radio-dot');
+  if (dot) { dot.style.background = '#ef4444'; dot.classList.remove('playing'); }
+  const np = document.getElementById('radio-now-playing');
+  if (np) np.textContent = '⚠️ Stream Offline — Try another';
+}
+function radioOnEnded() { radioOnError(); } // live streams shouldn't end; treat as error
+
+// ── Set / unset default station ──────────────────────────────────────
+function radioSetDefault(id, name, url, catId) {
+  let current = null;
+  try { current = JSON.parse(localStorage.getItem('radio_default_station') || 'null'); } catch(_) {}
+
+  const isCurrentDefault = current && current.id === id;
+
+  if (isCurrentDefault) {
+    // Un-pin
+    try { localStorage.removeItem('radio_default_station'); } catch(_) {}
+    const btn = document.getElementById('rdb-' + id);
+    if (btn) { btn.textContent = '☆'; btn.classList.remove('pinned'); }
+  } else {
+    // Pin new default — remove old pin styling first
+    if (current) {
+      const oldBtn = document.getElementById('rdb-' + current.id);
+      if (oldBtn) { oldBtn.textContent = '☆'; oldBtn.classList.remove('pinned'); }
+    }
+    try {
+      localStorage.setItem('radio_default_station', JSON.stringify({ id, name, url, categoryId: catId }));
+    } catch(_) {}
+    const btn = document.getElementById('rdb-' + id);
+    if (btn) { btn.textContent = '📌'; btn.classList.add('pinned'); }
+  }
+}
+
+// ── Auto-play default station on first panel open ────────────────────
+function radioAutoPlayDefault() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('radio_default_station') || 'null');
+    if (saved && saved.url && saved.id) {
+      // Switch region dropdown to the saved category
+      const sel = document.getElementById('radio-region-select');
+      if (sel && saved.categoryId) sel.value = saved.categoryId;
+      radioPlay(saved.url, saved.id, saved.name || 'Default Station', saved.categoryId || '');
+    }
+  } catch(_) {}
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// YOUTUBE LIVE — 176-CHANNEL DATA & HYBRID FALLBACK PLAYER
+// ═══════════════════════════════════════════════════════════════════════
+var YT_CHANNELS = [
+  {no:1,  name:'WION',                     country:'India',          category:'National News', lang:'English',    cid:'UC_gUM8rL-Lrg6O3adPW9K1g', v1:'lmZRiDMK3OU',  v2:'_KnLD1uPF90'},
+  {no:2,  name:'NDTV 24x7',                country:'India',          category:'National News', lang:'English',    cid:'UCZFMm1mMw0F81Z37aaEzTUA', v1:'y4vvJJNF1ro',  v2:'N-ZthvsWswU'},
+  {no:3,  name:'India Today',              country:'India',          category:'National News', lang:'English',    cid:'UCYPvAwZP8pZhSMW8qs7cVCw', v1:'eJDNOOA2U9s',  v2:'NbK5e5luLhs'},
+  {no:4,  name:'Republic World',           country:'India',          category:'National News', lang:'English',    cid:'UCwqusr8YDwM-3mEYTDeJHzw', v1:'Xi3heFyY2-4',  v2:'fzlIR8I657g'},
+  {no:5,  name:'CNN-News18',               country:'India',          category:'National News', lang:'English',    cid:'UCef1-8eOpJgud7szVPlZQAQ', v1:'4yivvIX7Umo',  v2:'EU8EF3doHuI'},
+  {no:6,  name:'Times Now',                country:'India',          category:'National News', lang:'English',    cid:'UC6RJ7-PaXg6TIH2BzZfTV7w', v1:'YGYsW7BjIHQ',  v2:'hvblBGBVLfk'},
+  {no:7,  name:'NDTV Profit',              country:'India',          category:'Business News', lang:'English',    cid:'UC3uJIdRFTGgLWrUziaHbzrg', v1:'7q7nbRd0720',  v2:'-aEMD8Uxbzw'},
+  {no:8,  name:'CNBC-TV18',               country:'India',          category:'Business News', lang:'English',    cid:'UCmRbHAgG2k2vDUvb3xsEunQ', v1:'zJgSPs2SodE',  v2:'l7hhOVZwmG4'},
+  {no:9,  name:'Aaj Tak',                 country:'India',          category:'National News', lang:'Hindi',      cid:'UCt4t-jeY85JegMlZ-E5UWtA', v1:'PNxDir65frc',  v2:'2D90PCpYI5o'},
+  {no:10, name:'India TV',                country:'India',          category:'National News', lang:'Hindi',      cid:'UCttspZesZIDEwwpVIgoZtWQ', v1:'e1FIApIafWE',  v2:'KrC2OnD5qwA'},
+  {no:11, name:'NDTV India',              country:'India',          category:'National News', lang:'Hindi',      cid:'UC9CYT9gSNLevX5ey2_6CK0Q', v1:'4jOOCvOzoDg',  v2:'1vWmrxP_-iY'},
+  {no:12, name:'NDTV Profit Hindi',       country:'India',          category:'National News', lang:'Hindi',      cid:'UCiThge5Gve5Syt299i2bsxA', v1:'46KgZ9oKqok',  v2:'EN-N1xhtBqU'},
+  {no:13, name:'Zee News',                country:'India',          category:'National News', lang:'Hindi',      cid:'UCIvaYmXn910QMdemBG3v1pQ', v1:'tohGF06LhKs',  v2:''},
+  {no:14, name:'Republic Bharat',         country:'India',          category:'National News', lang:'Hindi',      cid:'UC7wXt18f2iA3EDXeqAVuKng', v1:'l-9m8oPfeP4',  v2:'r8qBN7U2PhY'},
+  {no:15, name:'ABP News',                country:'India',          category:'National News', lang:'Hindi',      cid:'UCRWFSbif-RFENbBrSiez1DA', v1:'eB7AgvXN1gM',  v2:'aC4hOvf1Ipg'},
+  {no:16, name:'News18 India',            country:'India',          category:'National News', lang:'Hindi',      cid:'UCPP3etACgdUWvizcES1dJ8Q', v1:'Io-G_aiF8HA',  v2:'WmLXBhxpImU'},
+  {no:17, name:'TV9 Bharatvarsh',         country:'India',          category:'National News', lang:'Hindi',      cid:'UCOutOIcn_oho8pyVN3Ng-Og', v1:'z6XItxZ9y3Y',  v2:'Q23McoqfcsU'},
+  {no:18, name:'Times Now Navbharat',     country:'India',          category:'National News', lang:'Hindi',      cid:'UCMk9Tdc-d1BIcAFaSppiVkw', v1:'SvzT96M3Ky4',  v2:'a9iMYyju1gY'},
+  {no:19, name:'Polimer News',            country:'India',          category:'State News',    lang:'Tamil',      cid:'UC8Z-VjXBtDJTvq6aqkIskPg', v1:'_hAlDQOPkgE',  v2:'J3jFKoGu9zE'},
+  {no:20, name:'Puthiya Thalaimurai',     country:'India',          category:'State News',    lang:'Tamil',      cid:'UCmyKnNRH0wH-r8I-ceP-dsg', v1:'PMOhxFY_niM',  v2:'0oOj5H2RY0E'},
+  {no:21, name:'Sun News',                country:'India',          category:'State News',    lang:'Tamil',      cid:'UCYlh4lH762HvHt6mmiecyWQ', v1:'-Nd-TKxsz0A',  v2:''},
+  {no:22, name:'Thanthi TV',              country:'India',          category:'State News',    lang:'Tamil',      cid:'UC-JFyL0zDFOsPMpuWu39rPA', v1:'QEDkZXh2wOU',  v2:'70SpCnFmcVY'},
+  {no:23, name:'News18 Tamil Nadu',       country:'India',          category:'State News',    lang:'Tamil',      cid:'UCat88i6_rELqI_prwvjspRA', v1:'gTutqN96xUU',  v2:'gDjCpKiO34A'},
+  {no:24, name:'TV9 Telugu',              country:'India',          category:'State News',    lang:'Telugu',     cid:'UCPXTXMecYqnRKNdqdVOGSFg', v1:'AsStUAN-x0Q',  v2:''},
+  {no:25, name:'NTV Telugu',              country:'India',          category:'State News',    lang:'Telugu',     cid:'UCumtYpCY26F6Jr3satUgMvA', v1:'L0RktSIM980',  v2:''},
+  {no:26, name:'V6 News',                 country:'India',          category:'State News',    lang:'Telugu',     cid:'UCDCMjD1XIAsCZsYHNMGVcog', v1:'xcIJHj14k10',  v2:'c1VUlgreqEg'},
+  {no:27, name:'TV5 News',                country:'India',          category:'State News',    lang:'Telugu',     cid:'UCAR3h_9fLV82N2FH4cE4RKw', v1:'WXZYnp6iFng',  v2:'AuC8xUYORdI'},
+  {no:28, name:'ABN Telugu',              country:'India',          category:'State News',    lang:'Telugu',     cid:'UC_2irx_BQR7RsBKmUV9fePQ', v1:'IjonUPWbuzE',  v2:'3cMVbjj4TYs'},
+  {no:29, name:'Sakshi TV',               country:'India',          category:'State News',    lang:'Telugu',     cid:'UCQ_FATLW83q-4xJ2fsi8qAw', v1:'qJTF0weerDM',  v2:'ocy5UgWokKQ'},
+  {no:30, name:'News18 Telugu',           country:'India',          category:'State News',    lang:'Telugu',     cid:'UC-PPlFHLfi4wcFOe6DrReCQ', v1:'4yivvIX7Umo',  v2:'EU8EF3doHuI'},
+  {no:31, name:'10TV News Telugu',        country:'India',          category:'State News',    lang:'Telugu',     cid:'UCfymZbh17_3T_UhgjkQ9fRQ', v1:'4CATY20YXW4',  v2:'fIgZmNA22Ow'},
+  {no:32, name:'Asianet News',            country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCf8w5m0YsRa8MHQ5bwSGmbw', v1:'s0LLVQeMmtU',  v2:''},
+  {no:33, name:'24 News',                 country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCup3etEdjyF1L3sRbU-rKLw', v1:'1wECsnGZcfc',  v2:''},
+  {no:34, name:'Mathrubhumi News',        country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCwXrBBZnIh2ER4lal6WbAHw', v1:'YGEgelAiUf0',  v2:''},
+  {no:35, name:'Manorama News',           country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCP0uG-mcMImgKnJz-VjJZmQ', v1:'8dc1R2A2aWM',  v2:'tgBTspqA5nY'},
+  {no:36, name:'MediaOne TV',             country:'India',          category:'State News',    lang:'Malayalam',  cid:'UC-f7r46JhYv78q5pGrO6ivA', v1:'-8d8-c0yvyU',  v2:''},
+  {no:37, name:'Kairali News',            country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCnEvxaWfVL91XIYuyQRO5QA', v1:'yiiqRHY1Bl8',  v2:''},
+  {no:38, name:'Janam TV',                country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCNVkxRPqsBNejO6B9thG9Xw', v1:'yFtYg2Bw-oo',  v2:''},
+  {no:39, name:'Kerala Vision News 24x7', country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCuo69XR8nCP4Ss8ko_5Xbuw', v1:'LPZu-vGxMUg',  v2:''},
+  {no:40, name:'BIGTV 24x7',             country:'India',          category:'State News',    lang:'Malayalam',  cid:'UClFe5TPbW1MVrOPpbNHTDoQ', v1:'HRvY9DoJ_qI',  v2:''},
+  {no:41, name:'REPORTER LIVE',           country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCFx1nseXKTc1Culiu3neeSQ', v1:'',             v2:''},
+  {no:42, name:'News18 Kerala',           country:'India',          category:'State News',    lang:'Malayalam',  cid:'UC-mMi78WJST4N5o8_i1FoXw', v1:'',             v2:''},
+  {no:43, name:'Jaihind News',            country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCDM528eqIJElfflkvfT-MuQ', v1:'',             v2:''},
+  {no:44, name:'Kaumudy TV',              country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCSVALYUGVruJ4I2RjhiudSQ', v1:'',             v2:''},
+  {no:45, name:'POWERVISION TV',          country:'India',          category:'Religious',     lang:'Malayalam',  cid:'UCzxfpzSF7mz8j7bNIXyZWmA', v1:'',             v2:''},
+  {no:46, name:'Shalom TV Live',          country:'India',          category:'Religious',     lang:'Malayalam',  cid:'UCw0zgXgBT81prKkU9YwwD8g', v1:'',             v2:''},
+  {no:47, name:'Goodness Online',         country:'India',          category:'Religious',     lang:'Malayalam',  cid:'UC1qaqWyxs3QK-4ljZMuSxSA', v1:'',             v2:''},
+  {no:48, name:'24 Hours Songs (Mal)',     country:'India',          category:'Music',         lang:'Malayalam',  cid:'',                         v1:'FLuVUl29qlM',  v2:''},
+  {no:49, name:'123Musix Jukebox (Mal)',   country:'India',          category:'Music',         lang:'Malayalam',  cid:'',                         v1:'dFN5l5k3fME',  v2:''},
+  {no:50, name:'Malayali Mix (Chillstep)', country:'India',          category:'Music',         lang:'Malayalam',  cid:'',                         v1:'gK8GVzqPnzQ',  v2:''},
+  {no:51, name:'ONE8 NICK (Mal Lofi)',     country:'India',          category:'Music',         lang:'Malayalam',  cid:'',                         v1:'R_Y9jn99lwQ',  v2:''},
+  {no:52, name:'123Musix Relax (Mal)',     country:'India',          category:'Music',         lang:'Malayalam',  cid:'',                         v1:'bA7HvJsCAiI',  v2:''},
+  {no:53, name:'Saregama Malayalam',       country:'India',          category:'Music',         lang:'Malayalam',  cid:'',                         v1:'u9tYgAK-V_c',  v2:''},
+  {no:54, name:'Zee Malayalam',            country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCka4WcizWM0WMKF-bMiYzWQ', v1:'TTWRjim1-Is',  v2:''},
+  {no:55, name:'Real News Malayalam',      country:'India',          category:'State News',    lang:'Malayalam',  cid:'UC3KDIAXauHYxSiML_TpEF_A', v1:'-y52uVr7ads',  v2:''},
+  {no:56, name:'Amrita News Live',         country:'India',          category:'State News',    lang:'Malayalam',  cid:'UC3OuQHDTc6TcA0O_Hq83BMg', v1:'4Ng7A95vHT0',  v2:''},
+  {no:57, name:'News Malayalam 24x7 Live', country:'India',          category:'State News',    lang:'Malayalam',  cid:'UCXp6JTdq7-WwBK09S7SzmxQ', v1:'P9MITjM250c',  v2:''},
+  {no:58, name:'TV9 Kannada',             country:'India',          category:'State News',    lang:'Kannada',    cid:'UC8dnBi4WUErqYQHZ4PfsLTg', v1:'IuqTrRUogTU',  v2:'j3vvIdTtveQ'},
+  {no:59, name:'Public TV',               country:'India',          category:'State News',    lang:'Kannada',    cid:'UCl-OodciBGZ0k8K8rBZGe4w', v1:'',             v2:''},
+  {no:60, name:'Asianet Suvarna News',    country:'India',          category:'State News',    lang:'Kannada',    cid:'UCjElJyiXmQXnWmceQ1JyKrA', v1:'',             v2:''},
+  {no:61, name:'News18 Kannada',          country:'India',          category:'State News',    lang:'Kannada',    cid:'UCa-vioGhe2btBcZneaPonKA', v1:'',             v2:''},
+  {no:62, name:'Btv News Kannada',        country:'India',          category:'State News',    lang:'Kannada',    cid:'UC55LzMuR6ZeSpJMNCAfzb8w', v1:'',             v2:''},
+  {no:63, name:'Dighvijay News 24x7',     country:'India',          category:'State News',    lang:'Kannada',    cid:'UCXiuoyBQfNm0nlDEiy4lXLg', v1:'',             v2:''},
+  {no:64, name:'OTV (Odisha TV)',          country:'India',          category:'State News',    lang:'Odia',       cid:'UCCgLMMp4lv7fSD2sBz1Ai6Q', v1:'',             v2:''},
+  {no:65, name:'ABP Majha',               country:'India',          category:'State News',    lang:'Marathi',    cid:'UCH7nv1A9xIrAifZJNvt7cgA', v1:'',             v2:''},
+  {no:66, name:'News18 Lokmat',           country:'India',          category:'State News',    lang:'Marathi',    cid:'UCrcpw88HvKJ0skdsHniCJtQ', v1:'',             v2:''},
+  {no:67, name:'ABP Ananda',              country:'India',          category:'State News',    lang:'Bengali',    cid:'UCv3rFzn-GHGtqzXiaq3sWNg', v1:'',             v2:''},
+  {no:68, name:'Prudent Media Goa',       country:'India',          category:'State News',    lang:'Konkani',    cid:'UCJb1MeQClvGeSMeBSVLKnDQ', v1:'',             v2:''},
+  {no:69, name:'Goa 365 TV',              country:'India',          category:'State News',    lang:'Konkani',    cid:'UCDFOkbaN9IuV6tjO8Aqo1ww', v1:'',             v2:''},
+  {no:70, name:'In Goa 24x7',             country:'India',          category:'State News',    lang:'Konkani',    cid:'UCE9AZSYybiCWNYKr9gbY1lA', v1:'',             v2:''},
+  {no:71, name:'SOMOY TV',                country:'Bangladesh',     category:'News',          lang:'Bengali',    cid:'UCxHoBXkY88Tb8z1Ssj6CWsQ', v1:'ABnvuDjicEE',  v2:''},
+  {no:72, name:'Jamuna TV',               country:'Bangladesh',     category:'News',          lang:'Bengali',    cid:'UCN6sm8iHiPd0cnoUardDAnw', v1:'DpRyTXZ8Wj8',  v2:''},
+  {no:73, name:'Hiru TV 24x7',            country:'Sri Lanka',      category:'News',          lang:'Sinhala',    cid:'UC2sO_F_Ky4LIAUtSJYXqBDA', v1:'p-OvM8hxx4s',  v2:''},
+  {no:74, name:'Al Jazeera English',      country:'Qatar',          category:'National News', lang:'English',    cid:'UCNye-wNBqNL5ZzHSJj3l8Bg', v1:'gCNeDWCI0vo',  v2:''},
+  {no:75, name:'Sky News',                country:'United Kingdom', category:'National News', lang:'English',    cid:'UCoMdktPbSTixAyNGwb-UYkQ', v1:'YDvsBbKfLPA',  v2:''},
+  {no:76, name:'DW News',                 country:'Germany',        category:'National News', lang:'English',    cid:'UCknLrEdhRCp1aegoMqRaCZg', v1:'LuKwFajn37U',  v2:''},
+  {no:77, name:'France 24 English',       country:'France',         category:'National News', lang:'English',    cid:'UCQfwfsi5VrQ8yKZ-UWmAEFg', v1:'Ap-UM1O9RBU',  v2:''},
+  {no:78, name:'Bloomberg Television',    country:'United States',  category:'National News', lang:'English',    cid:'UCIALMKvObZNtJ6AmdCLP7Lg', v1:'iEpJwprxDdk',  v2:''},
+  {no:79, name:'CNA (Channel NewsAsia)',  country:'Singapore',      category:'National News', lang:'English',    cid:'UC83jt4dlz1Gjl58fzQrrKZg', v1:'XWq5kBlakcQ',  v2:''},
+  {no:80, name:'NHK WORLD-JAPAN',         country:'Japan',          category:'National News', lang:'English',    cid:'UCSPEjw8F2nQDtmUKPFNF7_A', v1:'f0lYkdA-Gtw',  v2:''},
+  {no:81, name:'TRT World',               country:'Turkey',         category:'National News', lang:'English',    cid:'UC7fWeaHhqgM4Ry-RMpM2YYw', v1:'0T3jv70ypu4',  v2:''},
+  {no:82, name:'ABC News',                country:'United States',  category:'National News', lang:'English',    cid:'UCBi2mrWuNuyYy4gbM6fU18Q', v1:'3MT3lPGqUsA',  v2:''},
+  {no:83, name:'NBC News',                country:'United States',  category:'National News', lang:'English',    cid:'UCeY0bbntWzzVIaj2z3QigXg', v1:'yDDev_X0tQk',  v2:''},
+  {no:84, name:'CBS News',                country:'United States',  category:'National News', lang:'English',    cid:'UCIZKodCUL1srk0gP8elt5bA', v1:'pBToEXlbdm4',  v2:''},
+  {no:85, name:'Fox News',                country:'United States',  category:'National News', lang:'English',    cid:'UCXIJgqnII2ZOINSWNOGFThA', v1:'FrfkabccVFo',  v2:''},
+  {no:86, name:'LiveNOW from FOX',        country:'United States',  category:'National News', lang:'English',    cid:'UCJg9wBPyKMNA5sRDnvzmkdg', v1:'C96oohpWBGw',  v2:''},
+  {no:87, name:'Euronews',                country:'France',         category:'National News', lang:'English',    cid:'UCSrZ3UV4jOidv8ppoVuvW9Q', v1:'4mu5Ccj74W8',  v2:''},
+  {no:88, name:'Arirang TV',              country:'South Korea',    category:'National News', lang:'Korean',     cid:'UC-PHIZjV-oX8H7zD1cCN2NQ', v1:'trrPwbBZaLg',  v2:''},
+  {no:89, name:'CGTN',                    country:'China',          category:'National News', lang:'English',    cid:'UCgrNz-aDmcr2uuto8_DL2jg', v1:'R79Yrpkn1Bk',  v2:'iUt4CkuPz3g'},
+  {no:90, name:'United Nations',          country:'International',  category:'National News', lang:'English',    cid:'UC5O114-PQNYkurlTg6hekZw', v1:'',             v2:''},
+  {no:91, name:'CNN Indonesia',           country:'Indonesia',      category:'National News', lang:'Indonesian', cid:'UCKII0Ml9S5wneKbHswmUrIQ', v1:'',             v2:''},
+  {no:92, name:'tvOneNews',               country:'Indonesia',      category:'National News', lang:'Indonesian', cid:'UCER4rvDnRBPr_ncYW4UCZjg', v1:'',             v2:''},
+  {no:93, name:'Good Life Radio (Chill)', country:'International',  category:'Music',         lang:'English',    cid:'',                         v1:'jNgP6d9HraI',  v2:''},
+  {no:94, name:'Radio Hits (Pop)',         country:'International',  category:'Music',         lang:'English',    cid:'',                         v1:'b-bK2Vn3D38',  v2:''},
+  {no:95, name:'Radio Mix (70s/80s)',      country:'International',  category:'Music',         lang:'English',    cid:'',                         v1:'WnCfvAMM9eY',  v2:''},
+  {no:96, name:'Rock FM (Classic Rock)',   country:'International',  category:'Music',         lang:'English',    cid:'',                         v1:'Nt27aBceerI',  v2:''},
+  {no:97, name:'Deep House Hits',         country:'International',  category:'Music',         lang:'English',    cid:'',                         v1:'cnVPm1dGQJc',  v2:''},
+  {no:98, name:'Radio Mix (Pop 2025)',     country:'International',  category:'Music',         lang:'English',    cid:'',                         v1:'yU35Z4qxCXE',  v2:''},
+  {no:99, name:'Monstercat Silk',         country:'Canada',         category:'Music',         lang:'English',    cid:'',                         v1:'WsDyRAPFBC8',  v2:''},
+  {no:100,name:'Cafe Music BGM (Jazz)',    country:'Japan',          category:'Music',         lang:'English',    cid:'UCJhjE7wbdYAae1G25m0tHAA', v1:'KnDqAq9YfME',  v2:''},
+  {no:101,name:'Cafe Music (Smooth Jazz)', country:'Japan',          category:'Music',         lang:'English',    cid:'',                         v1:'SORD03t7nlo',  v2:''},
+  {no:102,name:'Aditya Music (Telugu)',    country:'India',          category:'Music',         lang:'Telugu',     cid:'UCNApqoVYJbYSrni4YsbXzyQ', v1:'GSVU3mRb0MQ',  v2:''},
+  {no:103,name:'Star Music India (Tamil)', country:'India',          category:'Music',         lang:'Tamil',      cid:'',                         v1:'Yb8kSxx9z9M',  v2:''},
+  {no:104,name:'Tamil Music Lofi',         country:'India',          category:'Music',         lang:'Tamil',      cid:'',                         v1:'GIbmuVTaTWw',  v2:''},
+  {no:105,name:'Thamizh Lofi Nights',      country:'India',          category:'Music',         lang:'Tamil',      cid:'',                         v1:'PHdBLGDNa1s',  v2:''},
+  {no:106,name:'Shalom World Prayer',     country:'India',          category:'Religious',     lang:'English',    cid:'UCIFjeNtkyUCoxoPOxXkarTA', v1:'',             v2:''},
+  {no:107,name:'NEWS (NTV News)',          country:'Mongolia',       category:'National News', lang:'Mongolian',  cid:'UCuTAXTexrhetbOe3zgskJBQ', v1:'U_mRxHRuNvo',  v2:''},
+  {no:108,name:'Star Music X Lyrically',  country:'India',          category:'Music',         lang:'Tamil',      cid:'UCH-KAVLGvwDg7Ul7XdX2bOA', v1:'',             v2:''},
+  {no:109,name:'TBS NEWS DIG',            country:'Japan',          category:'News',          lang:'Japanese',   cid:'UC6AG81pAkf6Lbi_1VC5NmPA', v1:'',             v2:''},
+  {no:110,name:'YTN',                     country:'South Korea',    category:'News',          lang:'Korean',     cid:'UChlgI3UHCOnwUGzWzbJ3H5w', v1:'',             v2:''},
+  {no:111,name:'Thairath News',           country:'Thailand',       category:'News',          lang:'Thai',       cid:'UCrFDdD-EE05N7gjwZho2wqw', v1:'',             v2:''},
+  {no:112,name:'TVBS NEWS',               country:'Taiwan',         category:'News',          lang:'Chinese',    cid:'UC5nwNW4KdC0SzrhF9BXEYOQ', v1:'',             v2:''},
+  {no:113,name:'VTV24',                   country:'Vietnam',        category:'News',          lang:'Vietnamese', cid:'UCabsTV34JwALXKGMqHpvUiA', v1:'',             v2:''},
+  {no:114,name:'Eagle News',              country:'Philippines',    category:'News',          lang:'Filipino',   cid:'UCPoVy9RE7OvlX8AkksLHsyA', v1:'',             v2:''},
+  {no:115,name:'CNA',                     country:'Singapore',      category:'News',          lang:'English',    cid:'UC83jt4dlz1Gjl58fzQrrKZg', v1:'',             v2:''},
+  {no:116,name:'Astro AWANI',             country:'Malaysia',       category:'News',          lang:'Malay',      cid:'UC5dYmq91e5_g54krpO06NJw', v1:'',             v2:''},
+  {no:117,name:'AlArabiya',               country:'Global',         category:'News',          lang:'Arabic',     cid:'UCahpxixMCwoANAftn6IxkTg', v1:'',             v2:''},
+  {no:118,name:'SKAI.gr',                 country:'Greece',         category:'News',          lang:'Greek',      cid:'UCmHgxU394HiIAsN1fMegqzw', v1:'',             v2:''},
+  {no:119,name:'Sky TG24',                country:'Italy',          category:'News',          lang:'Italian',    cid:'UCz6E3lF72mb6uoJ-mOlNo2A', v1:'',             v2:''},
+  {no:120,name:'SRF',                     country:'Switzerland',    category:'News',          lang:'German',     cid:'UCVuR4hBxX3zWY_xUCZeIc3A', v1:'',             v2:''},
+  {no:121,name:'Zee 24 Ghanta',           country:'India',          category:'State News',    lang:'Bengali',    cid:'UCdF5Q5QVbYstYrTfpgUl0ZA', v1:'',             v2:''},
+  {no:122,name:'ABP Ananda',              country:'India',          category:'State News',    lang:'Bengali',    cid:'UCv3rFzn-GHGtqzXiaq3sWNg', v1:'',             v2:''},
+  {no:123,name:'News Live',               country:'India',          category:'State News',    lang:'Assamese',   cid:'UCrQHRYuJG8jmpUVALIC9Gkw', v1:'',             v2:''},
+  {no:124,name:'Pratidin Time',           country:'India',          category:'State News',    lang:'Assamese',   cid:'UC1JkYCOb4wKvdWreGQ0CR9g', v1:'',             v2:''},
+  {no:125,name:'News18 Assam/NE',         country:'India',          category:'State News',    lang:'Assamese',   cid:'UCAjBd-r8JWfnRjfhg23nqLQ', v1:'',             v2:''},
+  {no:126,name:'Zee 24 Taas',             country:'India',          category:'State News',    lang:'Marathi',    cid:'UCVbsFo8aCgvIRIO9RYwsQMA', v1:'',             v2:''},
+  {no:127,name:'ABP Majha',               country:'India',          category:'State News',    lang:'Marathi',    cid:'UCH7nv1A9xIrAifZJNvt7cgA', v1:'',             v2:''},
+  {no:128,name:'PTC NEWS',                country:'India',          category:'State News',    lang:'Punjabi',    cid:'UCQLEbraENUGWh6p1Rv664rQ', v1:'',             v2:''},
+  {no:129,name:'News18 Punjab',           country:'India',          category:'State News',    lang:'Punjabi',    cid:'UC-crZTQNRzZgzyighTKF0nQ', v1:'',             v2:''},
+  {no:130,name:'Kanak News',              country:'India',          category:'State News',    lang:'Odia',       cid:'UC90RW5ZmBBqp4r2QIQxfACA', v1:'',             v2:''},
+  {no:131,name:'TV9 Gujarati',            country:'India',          category:'State News',    lang:'Gujarati',   cid:'UCeJWZgSMlzqYEDytDnvzHnw', v1:'',             v2:''},
+  {no:132,name:'News18 Bihar Jharkhand',  country:'India',          category:'State News',    lang:'Hindi',      cid:'UC531MlZA5LUbeGwEN_zcppw', v1:'',             v2:''},
+  {no:133,name:'ABP Ganga',               country:'India',          category:'State News',    lang:'Hindi',      cid:'UCUGwnDFBHY52YhgVjn-Tvww', v1:'',             v2:''},
+  {no:134,name:'News18 UP Uttarakhand',   country:'India',          category:'State News',    lang:'Hindi',      cid:'UCafYgzpyw7aIUYOLjjADu7w', v1:'',             v2:''},
+  {no:135,name:'Zee Delhi-NCR Haryana',   country:'India',          category:'State News',    lang:'Hindi',      cid:'UCG6L5cIg2XZvXVksq5B9edw', v1:'',             v2:''},
+  {no:136,name:'IBC24',                   country:'India',          category:'State News',    lang:'Hindi',      cid:'UCBc13XYipnBIBE3Ff8QaaGg', v1:'',             v2:''},
+  {no:137,name:'The Sikkim Chronicle',    country:'India',          category:'State News',    lang:'English',    cid:'UCcwlzxkvBYAVRfo7gSBC61g', v1:'',             v2:''},
+  {no:138,name:'Gulistan News',           country:'India',          category:'State News',    lang:'Urdu',       cid:'UCk7rHVFVs1Uf_dDOPKc2l0Q', v1:'',             v2:''},
+  {no:139,name:'News18 J&K',             country:'India',          category:'State News',    lang:'Urdu',       cid:'UCRcye_z41WXpW5JalQm8wJw', v1:'',             v2:''},
+  {no:140,name:'cricket.com.au',          country:'Australia',      category:'Sports',        lang:'English',    cid:'UCkBY0aHJP9BwjZLDYxAQrKg', v1:'ThqHtJOfCK0',  v2:''},
+  {no:141,name:'Afghanistan Cricket Board',country:'Afghanistan',   category:'Sports',        lang:'English',    cid:'UCdFZnFf0nGeync5_gLJvcfg', v1:'Fm1yvw3XZAw',  v2:''},
+  {no:142,name:'Sports TV',               country:'International',  category:'Sports',        lang:'English',    cid:'UCmHCyBKDCQk5GwJB3NvTbdw', v1:'4YX5Jj2ZHQU',  v2:''},
+  {no:143,name:'Pakistan Cricket',        country:'Pakistan',       category:'Sports',        lang:'English',    cid:'UCiWrjBhlICf_L_RK5y6Vrxw', v1:'GdxLpCCFl-Y',  v2:''},
+  // ── Fitness & Wellness ─────────────────────────────────────────────────────
+  {no:144,name:'Samurai Matcha Morning Radio', country:'Japan',         category:'Fitness & Wellness', lang:'English', cid:'', v1:'UVwKbfYlJUM', v2:''},
+  {no:145,name:'Phoenix Mountain Tai Chi',     country:'International', category:'Fitness & Wellness', lang:'English', cid:'', v1:'cEvSqHZIj8w', v2:''},
+  {no:146,name:'Tai Chi for Beginners',        country:'International', category:'Fitness & Wellness', lang:'English', cid:'', v1:'zhe6OL31oek', v2:''},
+  {no:147,name:'10 Min Chair Workout',         country:'International', category:'Fitness & Wellness', lang:'English', cid:'', v1:'wbbCqU0dBe4', v2:''},
+  {no:148,name:'Fix Belly Fat 14 Days',        country:'International', category:'Fitness & Wellness', lang:'English', cid:'', v1:'G8q5JuhvrOw', v2:''},
+  // Entertainment / Movies
+  {no:149,name:'Warner Bros. Entertainment',   country:'International', category:'Entertainment',    lang:'English', cid:'UCgKkNPU2Ib7_TcyAl8M2S-w', v1:'G43NInZfoPE',  v2:''},
+  {no:150,name:'Warner Bros. Harry Potter',    country:'International', category:'Entertainment',    lang:'English', cid:'UCgKkNPU2Ib7_TcyAl8M2S-w', v1:'WVwP298MU7I',  v2:''},
+  {no:151,name:'Warner Bros. Rewind',          country:'International', category:'Entertainment',    lang:'English', cid:'UCsQQo8qb62ikp9kc954V7eQ', v1:'igcstjLsLsA',  v2:''},
+  {no:152,name:'ClipZone: High Octane',        country:'International', category:'Entertainment',    lang:'English', cid:'UCwXgxPwky2cyU7iNXeV75LA', v1:'XghNs0Cx6JQ',  v2:''},
+  // Kids
+  {no:153,name:'Disney Channel',               country:'International', category:'Kids',             lang:'English', cid:'UCktaw9L-f65LzUUdjmCFkbQ', v1:'s1Ylmj87gXY',  v2:'dt6dEz1rDzo'},
+  {no:154,name:'Disney Channel Animation',     country:'International', category:'Kids',             lang:'English', cid:'UCw7SNYrYei7F5ttQO3o-rpA', v1:'_HviSyC7zSU',  v2:''},
+  {no:155,name:'Disney Kids',                  country:'International', category:'Kids',             lang:'English', cid:'UC7Gf2tZ8coTX2ckTPgn62iQ', v1:'F4Tnje7wi-o',  v2:''},
+  {no:156,name:'Disney Jr.',                   country:'International', category:'Kids',             lang:'English', cid:'UCNcdbMyA59zE-Vk668bKWOg', v1:'yzKTO-6KWHU',  v2:''},
+  {no:157,name:'Peppa Pig',                    country:'International', category:'Kids',             lang:'English', cid:'UCAOtE1V7Ots4DjM8JLlrYgg', v1:'arEbprCTn4M',  v2:''},
+  {no:158,name:'Bluey',                        country:'International', category:'Kids',             lang:'English', cid:'UCVzLLZkDuFGAE2BGdBuBNBg', v1:'RHUauMcYlX0',  v2:''},
+  {no:159,name:'Boomerang UK',                 country:'UK',            category:'Kids',             lang:'English', cid:'UCmst562fALOY2cKb4IFgqEg', v1:'rEKifG2XUZg',  v2:''},
+  {no:160,name:'Avatar: The Last Airbender',   country:'International', category:'Kids',             lang:'English', cid:'UC5UxQbRoUOSlDfE6PXpIz0g', v1:'0IGLf-hQTwI',  v2:''},
+  // News & Documentary
+  {no:161,name:'Arise News Live',              country:'Nigeria',       category:'News',             lang:'English', cid:'UCyEJX-kSj0kOOCS7Qlq2G7g', v1:'TJ5V8KRSu9Y',  v2:''},
+  {no:162,name:'Ultimate Nature Documentaries',country:'International', category:'Documentary',      lang:'English', cid:'UCSmi9AQVgpfy-iP8omwd7vA', v1:'yyvzht3NFpE',  v2:''},
+  // Indian Movies / Entertainment
+  {no:163,name:'Movie Mela',                   country:'India',         category:'Movies',           lang:'Hindi',   cid:'', v1:'ZJa2xH5tlMA',  v2:''},
+  {no:164,name:'TRP Entertainments',           country:'India',         category:'Entertainment',    lang:'Hindi',   cid:'', v1:'ofI2JVD0UQk',  v2:''},
+  {no:165,name:'Speed Audio & Video',          country:'India',         category:'Movies',           lang:'Hindi',   cid:'', v1:'f6aOMUH2Pqg',  v2:''},
+  {no:166,name:'Eros Universe South',          country:'India',         category:'Movies',           lang:'Tamil',   cid:'', v1:'asffbk9CSI8',  v2:''},
+  {no:167,name:'M0VIES',                       country:'International', category:'Movies',           lang:'English', cid:'', v1:'HuhHimUtULw',  v2:''},
+  {no:168,name:'Spot Movie Time',              country:'International', category:'Movies',           lang:'English', cid:'', v1:'ST1FPNmv6aM',  v2:''},
+  // India - Malayalam / Tamil
+  {no:169,name:'hello kerala',                 country:'India',         category:'Entertainment',    lang:'Malayalam',cid:'', v1:'n3tinLxq1LI',  v2:''},
+  {no:170,name:'TVNXT Malayalam',              country:'India',         category:'Entertainment',    lang:'Malayalam',cid:'', v1:'yjaFvFuQ-QM',  v2:''},
+  {no:171,name:'Vijay Antony',                 country:'India',         category:'Music',            lang:'Tamil',   cid:'', v1:'71GL-33HKzw',  v2:''},
+  {no:172,name:'One Sports',                  country:'Philippines',   category:'Sports',           lang:'English', cid:'UCXDG9ue-emCN8Ad3h7lERqQ', v1:'WjGOI6TsfDk', v2:''},
+  {no:173,name:'Mega Moments',               country:'International', category:'Entertainment',    lang:'English', cid:'UCRCtHfhs75s0s2syuMAzXtg', v1:'L0VqY0s7-5k', v2:''},
+  {no:174,name:'Marvel HQ',                  country:'International', category:'Kids',             lang:'English', cid:'UCxwitsUVNzwS5XBSC5UQV8Q', v1:'YbQwgoMoztA', v2:''},
+  {no:175,name:'The Amazing World of Gumball',country:'International', category:'Kids',             lang:'English', cid:'UCoBpC9J2EcbAMprw7YjC93A', v1:'nIyaCRNwxhU', v2:''},
+  {no:176,name:'Mr Bean World',               country:'International', category:'Entertainment',    lang:'English', cid:'UCzoFjzSkbrDD1GHsz2YNLig', v1:'kRL8tyCl1lQ', v2:''},
+];
+
+// ═══════════════════════════════════════════════════════════════════════
+// CONFIG.JSON — Dynamic config: custom YouTube / News channels + Ticker
+// ═══════════════════════════════════════════════════════════════════════
+
+/** Default symbols for the desktop ticker tape. */
+var _TICKER_DESKTOP_DEFAULTS = [
+  {proName:'BSE:SENSEX',title:'Sensex'},{proName:'BSE:BANK',title:'Bank Nifty'},
+  {proName:'OANDA:SPX500USD',title:'S&P 500'},{proName:'OANDA:NAS100USD',title:'Nasdaq 100'},
+  {proName:'OANDA:US30USD',title:'Dow Jones'},{proName:'INDEX:NKY',title:'Nikkei 225'},
+  {proName:'NASDAQ:QQQ',title:'Nasdaq 100'},{proName:'FX:EURUSD',title:'EUR/USD'},
+  {proName:'FX:AUDUSD',title:'AUD/USD'},{proName:'FX:USDINR',title:'USD/INR'},
+  {proName:'FX:USDJPY',title:'USD/JPY'},{proName:'FX:EURJPY',title:'EUR/JPY'},
+  {proName:'BITSTAMP:BTCUSD',title:'Bitcoin'},{proName:'BITSTAMP:ETHUSD',title:'Ethereum'},
+  {proName:'TVC:GOLD',title:'Gold'},{proName:'TVC:SILVER',title:'Silver'},
+  {proName:'TVC:USOIL',title:'US Oil'},{proName:'NASDAQ:NVDA',title:'NVIDIA'},
+  {proName:'NASDAQ:AAPL',title:'Apple'},{proName:'NASDAQ:MSFT',title:'Microsoft'},
+  {proName:'NASDAQ:TSLA',title:'Tesla'},{proName:'NASDAQ:GOOGL',title:'Google'},
+  {proName:'NASDAQ:AMZN',title:'Amazon'},{proName:'BSE:RELIANCE',title:'Reliance'},
+  {proName:'BSE:TCS',title:'TCS'},{proName:'BSE:HDFCBANK',title:'HDFC Bank'},
+  {proName:'BSE:ICICIBANK',title:'ICICI Bank'},{proName:'BSE:INFY',title:'Infosys'},
+  {proName:'BSE:SBIN',title:'SBI'},{proName:'BSE:LT',title:'L&T'},
+  {proName:'BSE:BHARTIARTL',title:'Bharti Airtel'}
+];
+
+/** Default symbols for the mobile ticker tape (shorter list). */
+var _TICKER_MOBILE_DEFAULTS = [
+  {proName:'BSE:SENSEX',title:'Sensex'},{proName:'BSE:BANK',title:'Bank Nifty'},
+  {proName:'OANDA:SPX500USD',title:'S&P 500'},{proName:'OANDA:NAS100USD',title:'Nasdaq 100'},
+  {proName:'OANDA:US30USD',title:'Dow Jones'},{proName:'INDEX:NKY',title:'Nikkei'},
+  {proName:'FX:USDINR',title:'USD/INR'},{proName:'OANDA:USDJPY',title:'USD/JPY'},
+  {proName:'BITSTAMP:BTCUSD',title:'Bitcoin'},{proName:'TVC:UKOIL',title:'Brent Crude'},
+  {proName:'NASDAQ:NVDA',title:'NVIDIA'},{proName:'NYSE:SHV',title:'USD 3M'},
+  {proName:'BSE:RELIANCE',title:'Reliance'},{proName:'BSE:TCS',title:'TCS'},
+  {proName:'BSE:HDFCBANK',title:'HDFC Bank'},{proName:'BSE:ICICIBANK',title:'ICICI Bank'},
+  {proName:'BSE:INFY',title:'Infosys'},{proName:'BSE:SBIN',title:'SBI'},
+  {proName:'BSE:LT',title:'L&T'},{proName:'BSE:BHARTIARTL',title:'Airtel'}
+];
+
+/** Initialise a single TradingView ticker-tape widget dynamically. */
+function _initTicker(containerId, baseSymbols, customSymbols, transparent) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  // Prepend custom symbols before the defaults
+  var allSymbols = (Array.isArray(customSymbols) ? customSymbols : []).concat(baseSymbols);
+  var widget = el.querySelector('.tradingview-widget-container__widget');
+  if (!widget) { widget = document.createElement('div'); widget.className = 'tradingview-widget-container__widget'; el.appendChild(widget); }
+  var s = document.createElement('script');
+  s.type  = 'text/javascript';
+  s.src   = 'https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js';
+  s.async = true;
+  s.textContent = JSON.stringify({
+    symbols: allSymbols,
+    showSymbolLogo: true,
+    isTransparent: transparent ? true : false,
+    displayMode: 'adaptive',
+    colorTheme: 'dark',
+    locale: 'en'
+  });
+  el.appendChild(s);
+}
+
+/** Initialise both desktop and mobile tickers (used as a quick-init with defaults). */
+function _initTickers(customSymbols) {
+  _initTicker('tv-desktop-container', _TICKER_DESKTOP_DEFAULTS, Array.isArray(customSymbols) ? customSymbols : [], false);
+  _initTicker('tv-mobile-container',  _TICKER_MOBILE_DEFAULTS,  Array.isArray(customSymbols) ? customSymbols : [], true);
+}
+
+/** Fetch config.json, apply overrides to built-in arrays, init tickers. */
+async function _loadPageConfig() {
+  try {
+    var r = await fetch('/config.json?_=' + Date.now());
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var cfg = await r.json();
+    if (!cfg || typeof cfg !== 'object' || Array.isArray(cfg)) throw new Error('bad format');
+
+    // ── Apply YouTube channel overrides (patch built-in entries) ─────────────
+    if (cfg.youtube_overrides && typeof cfg.youtube_overrides === 'object') {
+      YT_CHANNELS.forEach(function(ch) {
+        var patch = cfg.youtube_overrides[String(ch.no)];
+        if (patch) {
+          if (patch.name !== undefined) ch.name = patch.name;
+          if (patch.cid  !== undefined) ch.cid  = patch.cid;
+          if (patch.v1   !== undefined) ch.v1   = patch.v1;
+          if (patch.v2   !== undefined) ch.v2   = patch.v2;
+        }
+      });
+    }
+
+    // ── Prepend custom YouTube channels (appear first in picker) ─────────────
+    if (Array.isArray(cfg.youtube_channels) && cfg.youtube_channels.length) {
+      var ytSlot = YT_CHANNELS.length + 1;
+      var customYT = cfg.youtube_channels.map(function(ch, i) {
+        return { no: ytSlot + i, name: ch.name || 'Custom Channel',
+          country: ch.country || 'Custom', category: ch.category || 'Custom',
+          lang: ch.lang || 'English', cid: ch.cid || '', v1: ch.v1 || '', v2: ch.v2 || '' };
+      });
+      for (var i = customYT.length - 1; i >= 0; i--) YT_CHANNELS.unshift(customYT[i]);
+    }
+
+    // ── Apply news source overrides ───────────────────────────────────────────
+    if (cfg.news_overrides && typeof cfg.news_overrides === 'object') {
+      NEWS_SOURCES.forEach(function(src) {
+        var patch = cfg.news_overrides[src.id];
+        if (patch) {
+          if (patch.label !== undefined) src.label = patch.label;
+          if (patch.url   !== undefined) src.url   = patch.url;
+          if (patch.color !== undefined) src.color = patch.color;
+        }
+      });
+    }
+
+    // ── Append custom news channels ───────────────────────────────────────────
+    if (Array.isArray(cfg.news_channels) && cfg.news_channels.length) {
+      var existingIds = {};
+      NEWS_SOURCES.forEach(function(s) { existingIds[s.id] = true; });
+      cfg.news_channels.forEach(function(ch) {
+        if (ch.id && !existingIds[ch.id]) { NEWS_SOURCES.push(ch); existingIds[ch.id] = true; }
+      });
+    }
+
+    // ── Init tickers (full override if set, else defaults) ────────────────────
+    var desktopSyms = (cfg.ticker_symbols        && cfg.ticker_symbols.length)        ? cfg.ticker_symbols        : null;
+    var mobileSyms  = (cfg.ticker_symbols_mobile && cfg.ticker_symbols_mobile.length) ? cfg.ticker_symbols_mobile : null;
+    _initTicker('tv-desktop-container', desktopSyms ? [] : _TICKER_DESKTOP_DEFAULTS, desktopSyms || [], false);
+    _initTicker('tv-mobile-container',  mobileSyms  ? [] : _TICKER_MOBILE_DEFAULTS,  mobileSyms  || [], true);
+
+    // ── Apply admin-configured markets watchlist groups ───────────────────────
+    if (Array.isArray(cfg.markets_groups) && cfg.markets_groups.length) {
+      _MKTS_DEFAULT_GROUPS = cfg.markets_groups;
+      _mktsWidgetDirty = true;
+    }
+
+  } catch(e) {
+    // Silent fail — init tickers with built-in defaults
+    _initTicker('tv-desktop-container', _TICKER_DESKTOP_DEFAULTS, [], false);
+    _initTicker('tv-mobile-container',  _TICKER_MOBILE_DEFAULTS,  [], true);
+  }
+}
+
+// Kick off config load + ticker init as soon as DOM is ready
+document.addEventListener('DOMContentLoaded', function() { _loadPageConfig(); });
+
+var _ytCurrentChNo   = 78;   // Bloomberg Television default (1-based index)
+var _ytFallbackStage = 0;    // 1=channelId, 2=videoId1, 3=videoId2
+var _ytApiReady      = false;
+var _ytPlayer        = null; // YT IFrame API instance (optional)
+var isGlobalMuted    = true;
+var _ytMuted         = true;
+var _ytVolume        = 60;
+var _ytStage1Timer   = null; // auto-advance if live_stream?channel= fails silently
+
+// ── Post-message helpers for the YouTube iframe ──────────────────
+function _ytPostMessage(cmd, val) {
+  var iframe = document.querySelector('#yt-player iframe');
+  if (!iframe || !iframe.contentWindow) return;
+  try {
+    var msg = { event: 'command', func: cmd };
+    if (val !== undefined) msg.args = [val];
+    iframe.contentWindow.postMessage(JSON.stringify(msg), '*');
+  } catch(e) {}
+}
+function _ytSyncState() {
+  if (!isGlobalMuted) {
+    // YouTube iframe loads muted by default; after load, unmute and set volume
+    setTimeout(function() { _ytPostMessage('unMute'); _ytPostMessage('setVolume', _ytVolume); }, 800);
+    setTimeout(function() { _ytPostMessage('unMute'); _ytPostMessage('setVolume', _ytVolume); }, 2000);
+  }
+}
+
+// Global startup default for all users
+(function() {
+  _ytCurrentChNo = 78;
+  try {
+    var savedNo = parseInt(localStorage.getItem('viltv_default_chno') || '', 10);
+    if (savedNo >= 1 && savedNo <= YT_CHANNELS.length) _ytCurrentChNo = savedNo;
+  } catch(e) {}
+})();
+
+// ── Build <select> from YT_CHANNELS data ─────────────────────────────────
+function ytBuildSelect() {
+  var sel = document.getElementById('yt-channel-select');
+  if (!sel) return;
+  var html = '', lastKey = '';
+  for (var i = 0; i < YT_CHANNELS.length; i++) {
+    var ch = YT_CHANNELS[i];
+    var key = ch.country + '|' + ch.category + '|' + ch.lang;
+    if (key !== lastKey) {
+      if (lastKey) html += '</optgroup>';
+      html += '<optgroup label="' + _ytGroupLabel(ch) + '">';
+      lastKey = key;
+    }
+    var sel2 = (ch.no === _ytCurrentChNo) ? ' selected' : '';
+    html += '<option value="' + ch.no + '"' + sel2 + '>[' + ch.no + '] ' +
+            ch.name.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</option>';
+  }
+  if (lastKey) html += '</optgroup>';
+  sel.innerHTML = html;
+  ytRenderChannelList('');
+}
+
+function ytRenderChannelList(query) {
+  var list = document.getElementById('yt-channel-list');
+  if (!list) return;
+  var q = (query || '').trim().toLowerCase();
+  var rows = YT_CHANNELS.filter(function(ch) {
+    if (!q) return true;
+    return (ch.name && ch.name.toLowerCase().includes(q)) ||
+           (ch.country && ch.country.toLowerCase().includes(q)) ||
+           (ch.category && ch.category.toLowerCase().includes(q)) ||
+           (ch.lang && ch.lang.toLowerCase().includes(q)) ||
+           String(ch.no) === q;
+  }).map(function(ch) {
+    var active = ch.no === _ytCurrentChNo;
+    return '<button class="yt-list-item' + (active ? ' active' : '') + '" data-no="' + ch.no + '">' +
+      '<span class="yt-list-no">[' + ch.no + ']</span>' +
+      '<span class="yt-list-name">' + (ch.name || '') + '</span>' +
+      '<span class="yt-list-meta">' + (ch.lang || '') + '</span>' +
+    '</button>';
+  }).join('');
+  list.innerHTML = rows || '<div style="padding:10px;color:#4f6588;font-size:11px;text-align:center">No channels found</div>';
+}
+
+function ytSyncChannelListActive() {
+  var list = document.getElementById('yt-channel-list');
+  if (!list) return;
+  list.querySelectorAll('.yt-list-item').forEach(function(el) {
+    var no = parseInt(el.getAttribute('data-no') || '', 10);
+    if (no === _ytCurrentChNo) el.classList.add('active');
+    else el.classList.remove('active');
+  });
+}
+
+function _ytGroupLabel(ch) {
+  var flags = {
+    'India':'🇮🇳','International':'🌐','United States':'🇺🇸',
+    'United Kingdom':'🇬🇧','Japan':'🇯🇵','South Korea':'🇰🇷',
+    'Germany':'🇩🇪','France':'🇫🇷','Singapore':'🇸🇬',
+    'China':'🇨🇳','Qatar':'🇶🇦','Turkey':'🇹🇷',
+    'Bangladesh':'🇧🇩','Sri Lanka':'🇱🇰','Indonesia':'🇮🇩',
+    'Canada':'🇨🇦','Mongolia':'🇲🇳','Thailand':'🇹🇭',
+    'Taiwan':'🇹🇼','Vietnam':'🇻🇳','Philippines':'🇵🇭',
+    'Malaysia':'🇲🇾','Global':'🌍','Greece':'🇬🇷',
+    'Italy':'🇮🇹','Switzerland':'🇨🇭'
+  };
+  var flag = flags[ch.country] || '🌍';
+  var lang = ch.lang ? ' (' + ch.lang + ')' : '';
+  return flag + ' ' + ch.country + ' — ' + ch.category + lang;
+}
+
+// ── Player frame helper ──────────────────────────────────────────────────────
+function _ytGetFrame() {
+  var host = document.getElementById('yt-player');
+  if (!host) return null;
+  if (host.tagName === 'IFRAME') return host;
+  var f = host.querySelector('iframe');
+  if (!f) {
+    f = document.createElement('iframe');
+    f.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:0';
+    f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen; web-share';
+    f.referrerPolicy = 'strict-origin-when-cross-origin';
+    host.appendChild(f);
+  }
+  return f;
+}
+/* ── Keep the screen awake while a YouTube video is playing ───────────────────
+   Two layers so it works across phones, not just modern Chrome:
+   1) Screen Wake Lock API  → Android Chrome, iOS Safari 16.4+
+   2) Silent looping <video> → fallback for older iPhones / browsers without the
+      Wake Lock API; a tiny muted clip kept playing tells the OS the page is
+      actively presenting media, so the display/screensaver won't sleep.
+   Auto re-acquires on tab refocus; both layers stop when the video clears. */
+var _wakeLock = null, _wakeWanted = false, _wakeVideo = null;
+
+/* tiny base64 MP4 (a few black frames) — no network needed */
+var _WAKE_MP4 = 'data:video/mp4;base64,AAAAHGZ0eXBpc29tAAACAGlzb21pc28ybXA0MQAAAAhmcmVlAAAC721kYXQAAAGzABAHAAABthADAowdbb9/AAAC6W1vb3YAAABsbXZoZAAAAAAAAAAAAAAAAAAAA+gAAAAAAAEAAAEAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAACAAAB6HRyYWsAAABcdGtoZAAAAAMAAAAAAAAAAAAAAAEAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAEAAAAAAAAAAAAAAAJYAAAB9AAAAAAAJGVkdHMAAAAcZWxzdAAAAAAAAAABAAAB9AAAAAAAAQAAAAABYG1kaWEAAAAgbWRoZAAAAAAAAAAAAAAAAAAArEAAAAQAVcQAAAAAAC1oZGxyAAAAAAAAAAB2aWRlAAAAAAAAAAAAAAAAVmlkZW9IYW5kbGVyAAAAAQttaW5mAAAAFHZtaGQAAAABAAAAAAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAADLc3RibAAAAGdzdHNkAAAAAAAAAAEAAABXYXZjMQAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAABAAEAASAAAAEgAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYP//AAAAFXN0dHMAAAAAAAAAAQAAAAEAAAQAAAAAFHN0c3MAAAAAAAAAAQAAAAEAAAAcc3RzYwAAAAAAAAABAAAAAQAAAAEAAAABAAAAFHN0c3oAAAAAAAAAuwAAAAEAAAAUc3RjbwAAAAAAAAABAAAAMAAAAGJ1ZHRhAAAAWm1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNTguNzYuMTAw';
+
+function _wakeVideoStart() {
+  try {
+    if (!_wakeVideo) {
+      _wakeVideo = document.createElement('video');
+      _wakeVideo.setAttribute('playsinline', ''); _wakeVideo.playsInline = true;
+      _wakeVideo.muted = true; _wakeVideo.defaultMuted = true; _wakeVideo.loop = true;
+      _wakeVideo.setAttribute('webkit-playsinline', '');
+      _wakeVideo.style.cssText = 'position:fixed;width:2px;height:2px;opacity:0.01;pointer-events:none;bottom:0;right:0;z-index:-1';
+      _wakeVideo.src = _WAKE_MP4;
+      document.body.appendChild(_wakeVideo);
+    }
+    var p = _wakeVideo.play(); if (p && p.catch) p.catch(function(){});
+  } catch (e) {}
+}
+function _wakeVideoStop() {
+  try { if (_wakeVideo) { _wakeVideo.pause(); } } catch (e) {}
+}
+
+async function _wakeAcquire() {
+  _wakeWanted = true;
+  var got = false;
+  try {
+    if ('wakeLock' in navigator && document.visibilityState === 'visible') {
+      if (!_wakeLock) {
+        _wakeLock = await navigator.wakeLock.request('screen');
+        _wakeLock.addEventListener('release', function () { _wakeLock = null; });
+      }
+      got = !!_wakeLock;
+    }
+  } catch (e) { _wakeLock = null; }
+  // fallback layer (also runs alongside on iOS where the API is flaky)
+  _wakeVideoStart();
+}
+async function _wakeRelease() {
+  _wakeWanted = false;
+  try { if (_wakeLock) { await _wakeLock.release(); } } catch (e) {}
+  _wakeLock = null;
+  _wakeVideoStop();
+}
+document.addEventListener('visibilitychange', function () {
+  if (document.visibilityState === 'visible' && _wakeWanted) {
+    if (!_wakeLock) _wakeAcquire(); else _wakeVideoStart();
+  }
+});
+
+function _ytSetSrc(src) {
+  var f = _ytGetFrame();
+  if (f) {
+    f.src = src;
+    _ytSyncState();
+    // acquire the wake lock for a real video; release for blank/empty
+    var s = String(src || '');
+    if (s && s.indexOf('youtube.com') !== -1 && s.indexOf('about:blank') === -1) _wakeAcquire();
+    else _wakeRelease();
+  }
+}
+
+// ── Channel info (now shown in now-playing only) ──
+function ytUpdateInfo(ch) { /* ch-info removed — info shown in yt-now-playing */ }
+
+// ── Switch to channel by number ─────────────────────────────────────────────
+function ytSwitchToChannel(no) {
+  if (!no || no < 1 || no > YT_CHANNELS.length) return;
+  var ch = YT_CHANNELS[no - 1];
+  if (!ch) return;
+  clearTimeout(_ytStage1Timer);
+  _ytStage1Timer   = null;
+  _ytCurrentChNo   = no;
+  _ytFallbackStage = 1;
+  ytHideGeoError();
+  ytUpdateInfo(ch);
+  // Sync dropdown
+  var sel = document.getElementById('yt-channel-select');
+  if (sel) {
+    for (var i = 0; i < sel.options.length; i++) {
+      if (parseInt(sel.options[i].value, 10) === no) { sel.selectedIndex = i; break; }
+    }
+  }
+  // Sync now-playing label
+  var np = document.getElementById('yt-now-playing');
+  if (np) np.textContent = '[' + ch.no + '] ' + ch.name;
+  // Persist if checkbox is on
+  try {
+    var chk = document.getElementById('yt-default-ch-chk');
+    if (chk && chk.checked) localStorage.setItem('viltv_default_chno', String(no));
+  } catch(e) {}
+  _ytTryCurrentStage();
+}
+
+// Backward compat: accept channel number OR legacy channelId/videoId string
+function ytSwitchChannel(val) {
+  if (!val) return;
+  var n = parseInt(val, 10);
+  if (!isNaN(n) && String(n) === String(val).trim() && n >= 1 && n <= YT_CHANNELS.length) {
+    ytSwitchToChannel(n); return;
+  }
+  for (var i = 0; i < YT_CHANNELS.length; i++) {
+    var ch = YT_CHANNELS[i];
+    if (ch.cid === val || ch.v1 === val || ch.v2 === val) { ytSwitchToChannel(ch.no); return; }
+  }
+  // Direct play (custom URL / unknown ID)
+  var isChId = typeof val === 'string' && val.startsWith('UC');
+  _ytSetSrc(isChId
+    ? 'https://www.youtube.com/embed/live_stream?channel=' + val + '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1'
+    : 'https://www.youtube.com/embed/' + val + '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
+}
+
+// ── Live-stream videoId cache (localStorage, 4-hour TTL) ─────────────────────
+var _YT_CACHE_KEY = 'viltv_live_cache';
+var _YT_CACHE_TTL = 4 * 60 * 60 * 1000; // 4 hours in ms
+
+function _ytCacheGet(cid) {
+  try {
+    var store = JSON.parse(localStorage.getItem(_YT_CACHE_KEY) || '{}');
+    var entry = store[cid];
+    if (entry && entry.videoId && (Date.now() - entry.ts) < _YT_CACHE_TTL) return entry.videoId;
+  } catch(e) {}
+  return null;
+}
+function _ytCacheSet(cid, videoId) {
+  try {
+    var store = JSON.parse(localStorage.getItem(_YT_CACHE_KEY) || '{}');
+    store[cid] = { videoId: videoId, ts: Date.now() };
+    localStorage.setItem(_YT_CACHE_KEY, JSON.stringify(store));
+  } catch(e) {}
+}
+
+// ── 4-step hybrid fallback chain ─────────────────────────────────────────────
+// Stage 1: Check localStorage cache (4h TTL) → instant play, no API call needed.
+//          Cache miss: load live_stream?channel= immediately, call API in parallel.
+//          API hit → save to cache + upgrade embed. Confirmed offline → uploads playlist.
+// Stage 2: stored v1 video ID  — manual "Try next source" fallback
+// Stage 3: stored v2 video ID  — second manual fallback
+// Stage 4: uploads playlist    — always works; uses UU prefix of channelId
+function _ytTryCurrentStage() {
+  var ch = YT_CHANNELS[_ytCurrentChNo - 1];
+  if (!ch) { ytShowGeoError(); return; }
+  // Skip stages with no data
+  while (_ytFallbackStage <= 4) {
+    if (_ytFallbackStage === 1 && ch.cid) break;
+    if (_ytFallbackStage === 2 && ch.v1)  break;
+    if (_ytFallbackStage === 3 && ch.v2)  break;
+    if (_ytFallbackStage === 4 && ch.cid) break;
+    _ytFallbackStage++;
+  }
+  if (_ytFallbackStage > 4) { ytShowGeoError(); return; }
+  clearTimeout(_ytStage1Timer);
+  _ytStage1Timer = null;
+
+  // Stage 1: cache-first, then live_stream?channel= + parallel API upgrade
+  if (_ytFallbackStage === 1) {
+    var capturedNo = _ytCurrentChNo;
+    var cid        = ch.cid;
+    var cachedId   = _ytCacheGet(cid);
+
+    if (cachedId) {
+      // Cache hit — play instantly, zero API calls until cache expires (4h TTL)
+      _ytSetSrc('https://www.youtube.com/embed/' + cachedId +
+        '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
+      return;
+    }
+
+    // Cache miss — load live_stream?channel= immediately so there's no blank wait
+    _ytSetSrc('https://www.youtube.com/embed/live_stream?channel=' + cid +
+      '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
+    // Auto-advance to uploads playlist after 20s if live_stream embed fails silently
+    _ytStage1Timer = setTimeout(function() {
+      if (_ytCurrentChNo === capturedNo && _ytFallbackStage === 1) {
+        _ytFallbackStage = 4; _ytTryCurrentStage();
+      }
+    }, 20000);
+    // Call API in parallel — on success: save to cache + upgrade embed
+    fetch(WORKER_PROXY_URL + '/youtube-live?cid=' + encodeURIComponent(cid))
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (_ytCurrentChNo !== capturedNo || _ytFallbackStage !== 1) return;
+        if (d.live && d.videoId) {
+          clearTimeout(_ytStage1Timer); _ytStage1Timer = null;
+          _ytCacheSet(cid, d.videoId); // save for next time — instant play
+          _ytSetSrc('https://www.youtube.com/embed/' + d.videoId +
+            '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
+        } else if (!d.live && d.reason !== 'API key not configured') {
+          clearTimeout(_ytStage1Timer); _ytStage1Timer = null;
+          _ytFallbackStage = 4; _ytTryCurrentStage();
+        }
+      })
+      .catch(function() { /* API failed — live_stream?channel= + 20s timer already running */ });
+    return; // async — don't fall through
+  }
+
+  var src = '';
+  if (_ytFallbackStage === 2)
+    src = 'https://www.youtube.com/embed/' + ch.v1 +
+          '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
+  else if (_ytFallbackStage === 3)
+    src = 'https://www.youtube.com/embed/' + ch.v2 +
+          '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
+  else
+    src = 'https://www.youtube.com/embed/videoseries?list=UU' + ch.cid.slice(2) +
+          '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
+  _ytSetSrc(src);
+}
+
+// Manual fallback — called by "Try next source" button in the error bar
+function ytAdvanceFallback() { _ytFallbackStage++; if (_ytFallbackStage > 4) _ytFallbackStage = 1; _ytTryCurrentStage(); }
+
+// ── Channel number quick-jump ────────────────────────────────────────────────
+function ytPlayByNumber() {
+  var inp = document.getElementById('yt-ch-num');
+  if (!inp) return;
+  var no = parseInt(inp.value, 10);
+  if (no >= 1 && no <= YT_CHANNELS.length) {
+    ytSwitchToChannel(no);
+    inp.value = '';
+  } else {
+    inp.style.borderColor = '#dc2626';
+    setTimeout(function() { inp.style.borderColor = '#1e3a5f'; }, 900);
+  }
+}
+
+// ── Channel name search / filter ─────────────────────────────────────────────
+var _ytSearchResults = [];
+
+function ytOnChannelSearch(query) {
+  try {
+    var panel = document.getElementById('yt-search-results');
+    var clearBtn = document.getElementById('yt-ch-search-clear');
+    var q = (query || '').trim().toLowerCase();
+
+    if (!q) {
+      _ytSearchResults = [];
+      if (panel) panel.style.display = 'none';
+      if (clearBtn) clearBtn.style.display = 'none';
+      ytBuildSelect(); // restore full dropdown
+      return;
+    }
+
+    if (clearBtn) clearBtn.style.display = '';
+
+    var matches = YT_CHANNELS.filter(function(ch) {
+      return (ch.name     && ch.name.toLowerCase().includes(q)) ||
+             (ch.country  && ch.country.toLowerCase().includes(q)) ||
+             (ch.category && ch.category.toLowerCase().includes(q)) ||
+             (ch.lang     && ch.lang.toLowerCase().includes(q));
+    });
+    _ytSearchResults = matches;
+
+    if (!panel) return;
+
+    if (!matches.length) {
+      panel.style.display = 'block';
+      panel.innerHTML =
+        '<div style="padding:10px 12px;font-size:11px;color:#475569;text-align:center">No channels found for "<b style="color:#94a3b8">' +
+        q.replace(/</g,'&lt;') + '</b>"</div>';
+      return;
+    }
+
+    // Build clickable result rows
+    var rows = matches.map(function(ch) {
+      var tag = ch.category || '';
+      var lang = ch.lang ? ' · ' + ch.lang : '';
+      return '<div onclick="ytPickSearchResult(' + ch.no + ')" ' +
+        'style="display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;border-bottom:1px solid #0a1628;transition:background .1s" ' +
+        'onmouseover="this.style.background=\'#0d1f3c\'" onmouseout="this.style.background=\'\'">' +
+        '<span style="font-size:10px;color:#1d4ed8;font-weight:700;flex-shrink:0;min-width:28px">Ch ' + ch.no + '</span>' +
+        '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:#e2e8f0;font-weight:600">' + ch.name + '</span>' +
+        '<span style="font-size:9.5px;color:#475569;white-space:nowrap;flex-shrink:0">' + tag + lang + '</span>' +
+        '<button style="flex-shrink:0;padding:3px 9px;background:#1d4ed8;color:#fff;border:none;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer">&#x25BA;</button>' +
+        '</div>';
+    }).join('');
+
+    panel.innerHTML =
+      '<div style="padding:5px 12px 4px;font-size:9.5px;color:#334155;letter-spacing:.4px;font-weight:700;background:#060c18;border-bottom:1px solid #0a1628">' +
+      matches.length + ' channel' + (matches.length > 1 ? 's' : '') + ' found — click to play</div>' +
+      rows;
+    panel.style.display = 'block';
+  } catch(e) {
+    console.error('[ytOnChannelSearch] error:', e);
+  }
+}
+
+function ytPickSearchResult(no) {
+  ytSwitchToChannel(no);
+  ytClearChannelSearch();
+}
+
+function ytClearChannelSearch() {
+  var inp = document.getElementById('yt-ch-search');
+  if (inp) inp.value = '';
+  ytOnChannelSearch('');
+}
+
+function ytOnChannelSearchEnter() {
+  try {
+    if (_ytSearchResults.length) {
+      ytPickSearchResult(_ytSearchResults[0].no);
+    }
+  } catch(e) {
+    console.error('[ytOnChannelSearchEnter] error:', e);
+  }
+}
+
+// ── Error overlay ────────────────────────────────────────────────────────────
+function ytShowGeoError() {
+  var bar  = document.getElementById('yt-fallback-bar');
+  var hint = document.getElementById('yt-geo-hint');
+  var link = document.getElementById('yt-open-link');
+  var ch   = YT_CHANNELS[_ytCurrentChNo - 1];
+  if (bar)  bar.style.display = 'flex';
+  if (hint) hint.textContent = '⚠️ Stream unavailable';
+  if (link && ch) {
+    link.href = ch.cid
+      ? 'https://www.youtube.com/channel/' + ch.cid
+      : (ch.v1 ? 'https://www.youtube.com/watch?v=' + ch.v1 : '#');
+    link.textContent = '► Open in YouTube';
+  }
+}
+function ytHideGeoError() {
+  var bar = document.getElementById('yt-fallback-bar');
+  if (bar) bar.style.display = 'none';
+}
+
+// ── Default channel persistence ──────────────────────────────────────────────
+function ytToggleDefaultChannel() {
+  var chk = document.getElementById('yt-default-ch-chk');
+  if (chk && chk.checked) {
+    try { localStorage.setItem('viltv_default_chno', String(_ytCurrentChNo)); } catch(e) {}
+  } else {
+    try { localStorage.removeItem('viltv_default_chno'); } catch(e) {}
+  }
+}
+
+// ── YouTube IFrame API (error detection + optional API player) ───────────────
+function _isValidYoutubeVideoId(id) {
+  return typeof id === 'string' && /^[a-zA-Z0-9_-]{11}$/.test(id.trim());
+}
+
+// YT IFrame API script is NOT loaded — we use direct iframe injection instead.
+// Loading it caused YT.Player to manage the iframe and fire duplicate onError events
+// via both ytOnPlayerError AND the postMessage listener, causing rapid stage-advance
+// (visible as constant reloading on mobile). Direct injection + postMessage is sufficient.
+// YT IFrame API ready — handled by onYouTubeIframeAPIReady above
+function ytOnPlayerError(event) { /* stub — errors handled via postMessage listener */ }
+
+// postMessage auto-advance removed — enablejsapi was causing YouTube to fire
+// duplicate error events, making the iframe reload 2-3 times per channel switch
+// (visible as "blinking" on PC and full-page blink on mobile).
+// Fallback is now manual: use the dropdown or ⏮/⏭ buttons.
+
+// ── YouTube Live Panel Settings ───────────────────────────────────────────────
+var _ytLayout = 1;
+var _ytShowDefaultBar = true;
+var _ytShowCtrlBar = true;
+
+function ytToggleSettings() {
+  var sp = document.getElementById('yt-settings-panel');
+  var gb = document.getElementById('yt-gear-btn');
+  if (!sp) return;
+  var open = sp.style.display === 'none' || sp.style.display === '';
+  sp.style.display = open ? 'flex' : 'none';
+  if (gb) { gb.style.background = open ? '#1d4ed8' : ''; gb.style.color = open ? '#fff' : ''; }
+}
+
+function ytSetLayout(n) {
+  _ytLayout = n;
+  try { localStorage.setItem('viltv_yt_layout', n); } catch(_) {}
+  var wrap = document.querySelector('#yt-video-wrapper > div');
+  var ytw  = document.getElementById('yt-video-wrapper');
+  if (n === 4) {
+    // Fill panel — remove padding-top trick, let the flex box fill height
+    if (wrap) { wrap.style.paddingTop = '0'; wrap.style.height = '100%'; }
+    if (ytw)  { ytw.style.flex = '1'; ytw.style.minHeight = '0'; }
+  } else {
+    var pts = ['56.25%', '38%', '75%'];
+    if (wrap) { wrap.style.paddingTop = pts[n-1] || '56.25%'; wrap.style.height = ''; }
+    if (ytw)  { ytw.style.flex = ''; ytw.style.minHeight = ''; }
+  }
+  [1,2,3,4].forEach(function(i) {
+    var b = document.getElementById('yt-layout-btn-' + i);
+    if (b) b.classList.toggle('active', i === n);
+  });
+}
+
+function ytToggleDefaultBar() {
+  var chk = document.getElementById('yt-opt-defbar');
+  var bar = document.querySelector('#rb-panel-video > div[style*="yt-default-ch-chk"]');
+  // find the default-channel persistence bar by its checkbox
+  var bars = document.querySelectorAll('#rb-panel-video > div');
+  bars.forEach(function(d) { if (d.querySelector('#yt-default-ch-chk')) { d.style.display = (chk && !chk.checked) ? 'none' : ''; } });
+  try { localStorage.setItem('viltv_yt_defbar', chk ? (chk.checked ? '1' : '0') : '1'); } catch(_) {}
+}
+
+function ytToggleCtrlBar() {
+  var chk = document.getElementById('yt-opt-ctrlbar');
+  var bars = document.querySelectorAll('#rb-panel-video > div');
+  bars.forEach(function(d) { if (d.querySelector('#yt-mute-btn')) { d.style.display = (chk && !chk.checked) ? 'none' : ''; } });
+  try { localStorage.setItem('viltv_yt_ctrlbar', chk ? (chk.checked ? '1' : '0') : '1'); } catch(_) {}
+}
+
+function ytRestoreSettings() {
+  try {
+    var n = parseInt(localStorage.getItem('viltv_yt_layout')) || 1;
+    if (n >= 1 && n <= 4) ytSetLayout(n);
+    var def = localStorage.getItem('viltv_yt_defbar');
+    if (def === '0') { var c = document.getElementById('yt-opt-defbar'); if (c) { c.checked = false; ytToggleDefaultBar(); } }
+    var ctrl = localStorage.getItem('viltv_yt_ctrlbar');
+    if (ctrl === '0') { var c2 = document.getElementById('yt-opt-ctrlbar'); if (c2) { c2.checked = false; ytToggleCtrlBar(); } }
+  } catch(_) {}
+}
+
+// ── Video Controls ───────────────────────────────────────────────────────────
+function ytToggleMute() {
+  isGlobalMuted = !isGlobalMuted;
+  _ytMuted = isGlobalMuted;
+  if (isGlobalMuted) {
+    _ytPostMessage('mute');
+  } else {
+    _ytPostMessage('unMute');
+    _ytPostMessage('setVolume', _ytVolume);
+  }
+  var btn = document.getElementById('yt-mute-btn');
+  if (btn) btn.textContent = isGlobalMuted ? '🔇' : '🔊';
+}
+
+function ytSetVolume(val) {
+  _ytVolume = Number(val);
+  var slider = document.getElementById('yt-vol-slider');
+  if (slider) slider.style.setProperty('--vol', _ytVolume + '%');
+  _ytPostMessage('setVolume', _ytVolume);
+  if (_ytVolume > 0 && isGlobalMuted)    { isGlobalMuted = false; _ytMuted = false; _ytPostMessage('unMute'); }
+  if (_ytVolume === 0 && !isGlobalMuted)  { isGlobalMuted = true;  _ytMuted = true;  _ytPostMessage('mute'); }
+  var btn = document.getElementById('yt-mute-btn');
+  if (btn) btn.textContent = (isGlobalMuted || _ytVolume === 0) ? '🔇' : '🔊';
+}
+
+function ytNextChannel() {
+  var n = _ytCurrentChNo + 1;
+  if (n > YT_CHANNELS.length) n = 1;
+  ytSwitchToChannel(n);
+}
+function ytPrevChannel() {
+  var n = _ytCurrentChNo - 1;
+  if (n < 1) n = YT_CHANNELS.length;
+  ytSwitchToChannel(n);
+}
+
+// ── PIP — detached popup window ──────────────────────────────────────────────────
+var _ytPipActive     = false;
+var _ytPipPopup      = null;
+var _ytPipCheckTimer = null;
+
+function ytTogglePIP() {
+  if (_ytPipActive) { ytExitPIP(); return; }
+  var ch = YT_CHANNELS[_ytCurrentChNo - 1] || {};
+  var embedSrc = ch.cid
+    ? 'https://www.youtube.com/embed/live_stream?channel=' + ch.cid +
+      '&autoplay=1&mute=0&controls=1&rel=0&modestbranding=1'
+    : (ch.v1
+      ? 'https://www.youtube.com/embed/' + ch.v1 +
+        '?autoplay=1&mute=0&controls=1&rel=0&modestbranding=1'
+      : '');
+  var chanLabel = ch.name || 'YouTube Live';
+  var pw=640, ph=400;
+  var sl=window.screen.availLeft||0, st=window.screen.availTop||0;
+  var sw=window.screen.availWidth||screen.width, sh=window.screen.availHeight||screen.height;
+  var popup = window.open('', 'viltv_pip_window',
+    'width='+pw+',height='+ph+',left='+(sl+sw-pw-20)+',top='+(st+sh-ph-60)+
+    ',resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no');
+  if (!popup || popup.closed) {
+    alert('⚠️ Pop-up blocked!\n\nPlease allow pop-ups for this site in your browser settings, then try again.');
+    return;
+  }
+  _ytPipActive = true; _ytPipPopup = popup;
+  var clJson = JSON.stringify(_ytPipBuildChannelList());
+  var pipHtml = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>' +
+    '<title>' + chanLabel + ' — VilfinTV PIP</title>' +
+    '<style>*{margin:0;padding:0;box-sizing:border-box}' +
+    'html,body{width:100%;height:100%;background:#000;display:flex;flex-direction:column;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}' +
+    '#hdr{background:#050a14;padding:5px 10px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #1d4ed8;flex-shrink:0;-webkit-app-region:drag;user-select:none}' +
+    '#title{color:#60a5fa;font-size:11px;font-weight:700;letter-spacing:.4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%}' +
+    '#btns{display:flex;gap:5px;flex-shrink:0;-webkit-app-region:no-drag}' +
+    'button{padding:4px 10px;border:none;border-radius:5px;cursor:pointer;font-size:11px;font-weight:700;background:rgba(255,255,255,.12);color:#fff;transition:background .15s}' +
+    'button:hover{background:rgba(255,255,255,.28)}' +
+    '#close-btn{background:#dc2626}#close-btn:hover{background:#b91c1c}' +
+    '#wrap{flex:1;position:relative}iframe{position:absolute;inset:0;width:100%;height:100%;border:none}' +
+    '</style></head><body>' +
+    '<div id="hdr"><span id="title">⧉ ' + chanLabel + '</span>' +
+    '<div id="btns">' +
+    '<button id="prev-btn" title="Previous">◄</button>' +
+    '<button id="next-btn" title="Next">►</button>' +
+    '<button id="close-btn" onclick="window.close()">✕ Close</button>' +
+    '</div></div>' +
+    '<div id="wrap"><iframe id="yt-frame" src="' + embedSrc + '" allow="autoplay; fullscreen"></iframe></div>' +
+    '<script>' +
+    'var channels=' + clJson + ';' +
+    'var idx=' + (_ytCurrentChNo - 1) + ';' +
+    'function switchTo(i){' +
+      'idx=(i+channels.length)%channels.length;' +
+      'var c=channels[idx];' +
+      'var src=c.cid' +
+        '?"https://www.youtube.com/embed/live_stream?channel="+c.cid+"&autoplay=1&mute=0&controls=1&rel=0&modestbranding=1"' +
+        ':"https://www.youtube.com/embed/"+c.v1+"?autoplay=1&mute=0&controls=1&rel=0&modestbranding=1";' +
+      'document.getElementById("yt-frame").src=src;' +
+      'document.getElementById("title").textContent="⧉ "+c.name;' +
+    '}' +
+    'document.getElementById("prev-btn").onclick=function(){switchTo(idx-1);};' +
+    'document.getElementById("next-btn").onclick=function(){switchTo(idx+1);};' +
+    '<\/script></body></html>';
+  popup.document.open(); popup.document.write(pipHtml); popup.document.close();
+  var btn = document.getElementById('yt-pip-btn');
+  if (btn) { btn.title='Close PIP Window'; btn.style.color='#fbbf24'; }
+  _ytPipCheckTimer = setInterval(function() { if (popup.closed) _pipPopupClosed(); }, 800);
+}
+
+function _ytPipBuildChannelList() {
+  return YT_CHANNELS.filter(function(ch) { return ch.cid || ch.v1; }).map(function(ch) {
+    return { no:ch.no, name:ch.name, cid:ch.cid||'', v1:ch.v1||'' };
+  });
+}
+
+function _pipPopupClosed() {
+  clearInterval(_ytPipCheckTimer);
+  _ytPipActive = false; _ytPipPopup = null;
+  var btn = document.getElementById('yt-pip-btn');
+  if (btn) { btn.title='Picture in Picture'; btn.style.color=''; }
+}
+
+function ytExitPIP() {
+  if (_ytPipPopup && !_ytPipPopup.closed) _ytPipPopup.close();
+  _pipPopupClosed();
+}
+
+function ytPIPResize() {}
+function ytPIPNextChannel() {
+  if (_ytPipPopup && !_ytPipPopup.closed) {
+    try { _ytPipPopup.document.getElementById('next-btn').click(); } catch(_) {}
+  }
+}
+function ytPIPPrevChannel() {
+  if (_ytPipPopup && !_ytPipPopup.closed) {
+    try { _ytPipPopup.document.getElementById('prev-btn').click(); } catch(_) {}
+  }
+}
+
+
+async function ytSelectAudio() {
+  // Try native browser selectAudioOutput (Chrome/Edge with permission)
+  if (navigator.mediaDevices?.selectAudioOutput) {
+    try {
+      const device = await navigator.mediaDevices.selectAudioOutput();
+      // Apply to any accessible audio/video elements
+      document.querySelectorAll('audio,video').forEach(el => { if (el.setSinkId) el.setSinkId(device.deviceId).catch(()=>{}); });
+      const btn = document.getElementById('yt-audio-btn');
+      if (btn) { btn.style.color='#22c55e'; setTimeout(()=>btn.style.color='',3000); }
+      return;
+    } catch(e) { if (e.name==='NotAllowedError') return; }
+  }
+  // Enumerate devices and show custom picker
+  if (navigator.mediaDevices?.enumerateDevices) {
+    try {
+      await navigator.mediaDevices.getUserMedia({audio:true}).catch(()=>{});
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const speakers = devices.filter(d => d.kind === 'audiooutput');
+      if (speakers.length > 1) { _ytShowAudioPicker(speakers); return; }
+    } catch(_) {}
+  }
+  _ytAudioFallback();
+}
+
+function _ytShowAudioPicker(devices) {
+  // Remove existing picker
+  document.getElementById('yt-audio-picker')?.remove();
+  const btn = document.getElementById('yt-audio-btn');
+  const rect = btn?.getBoundingClientRect() || {bottom:200,left:200};
+  const picker = document.createElement('div');
+  picker.id = 'yt-audio-picker';
+  Object.assign(picker.style, {
+    position:'fixed', bottom:(window.innerHeight-rect.top+4)+'px', left:rect.left+'px',
+    background:'#0d1d35', border:'1px solid #1e3a5f', borderRadius:'8px',
+    padding:'6px 0', zIndex:'99999', minWidth:'200px',
+    boxShadow:'0 8px 24px rgba(0,0,0,.8)', fontSize:'12px', color:'#e2e8f0'
+  });
+  picker.innerHTML = '<div style="padding:6px 12px 4px;font-size:10px;font-weight:700;color:#60a5fa;letter-spacing:.5px">🔈 SELECT OUTPUT</div>' +
+    devices.map((d,i) => `<button onclick="_ytApplyAudio('${d.deviceId}',this)" style="display:block;width:100%;padding:8px 12px;background:none;border:none;color:#e2e8f0;text-align:left;cursor:pointer;font-size:11px;transition:background .1s" onmouseover="this.style.background='rgba(29,78,216,.3)'" onmouseout="this.style.background='none'">${d.label||'Speaker '+(i+1)}</button>`).join('');
+  document.body.appendChild(picker);
+  setTimeout(() => document.addEventListener('click', ()=>picker.remove(), {once:true}), 100);
+}
+
+function _ytApplyAudio(deviceId, el) {
+  document.querySelectorAll('audio,video').forEach(m => { if (m.setSinkId) m.setSinkId(deviceId).catch(()=>{}); });
+  document.getElementById('yt-audio-picker')?.remove();
+  const btn = document.getElementById('yt-audio-btn');
+  if (btn) { btn.style.color='#22c55e'; setTimeout(()=>btn.style.color='',3000); }
+}
+
+function _ytAudioFallback() {
+  alert('Audio output:\n\nTo change output device:\n• Chrome/Edge: Click the speaker icon in browser address bar → Audio\n• Or use Windows/Mac system sound settings to set default output.\n\nNote: YouTube iframe audio cannot be redirected directly by the browser API on all platforms.');
+}
+
+// ── LIVE / PAST SCORES ──────────────────────────────────────────────
+let _currentScoreSport = 'cricket';
+let _currentScoreMode  = 'live'; // 'live' | 'past'
+let _scoreRefreshTimer = null;
+
+function switchScoreMainTab(mode) {
+  _currentScoreMode = mode;
+  const liveBtn = document.getElementById('smt-live');
+  const pastBtn = document.getElementById('smt-past');
+  if (liveBtn) {
+    liveBtn.style.borderBottomColor = mode==='live' ? '#1d4ed8' : 'transparent';
+    liveBtn.style.background = mode==='live' ? 'rgba(29,78,216,.12)' : 'transparent';
+    liveBtn.style.color = mode==='live' ? '#60a5fa' : '#475569';
+  }
+  if (pastBtn) {
+    pastBtn.style.borderBottomColor = mode==='past' ? '#1d4ed8' : 'transparent';
+    pastBtn.style.background = mode==='past' ? 'rgba(29,78,216,.12)' : 'transparent';
+    pastBtn.style.color = mode==='past' ? '#60a5fa' : '#475569';
+  }
+  if (mode === 'live') fetchLiveScores(_currentScoreSport);
+  else fetchPastScores(_currentScoreSport);
+}
+
+function switchScoreSport(sport) {
+  _currentScoreSport = sport;
+  ['cricket','football','rugby','tennis','baseball'].forEach(s => {
+    const btn = document.getElementById('ssb-' + s);
+    if (btn) btn.classList.toggle('active', s === sport);
+  });
+  if (_currentScoreMode === 'live') fetchLiveScores(sport);
+  else fetchPastScores(sport);
+}
+
+// ─── CRICKET SCORES ENGINE v2 ─────────────────────────────────────────────────
+// Priority order: IPL → International (ICC/Test/ODI/T20I) → BPL → Other leagues
+// Data sources (free, no API key):
+//   1. ESPN public API — IPL dedicated endpoint (highest priority)
+//   2. ESPN public API — General cricket + WC endpoints
+//   3. TheSportsDB (by date) — globally accessible, CORS-free
+//   4. TheSportsDB IPL league direct feed (league ID 4725)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Priority score: lower = shown first
+function _cricPriority(leagueName) {
+  const n = (leagueName || '').toLowerCase();
+  if (n.includes('ipl') || n.includes('indian premier'))  return 0;
+  if (n.includes('wc') || n.includes('world cup') || n.includes('champions trophy') || n.includes('icc')) return 1;
+  if (n.includes('test') || n.includes('t20i') || n.includes('odi') || n.includes('bilateral') || /\btour\b/.test(n) || n.includes('international')) return 1;
+  if (n.includes('bpl') || n.includes('bangladesh premier')) return 2;
+  if (n.includes('wpl') || n.includes('women') || n.includes("women's premier")) return 3;
+  if (n.includes('big bash') || n.includes('bbl'))        return 4;
+  if (n.includes('cpl') || n.includes('caribbean'))       return 4;
+  if (n.includes('sa20') || n.includes('sa 20'))          return 4;
+  if (n.includes('t20') || n.includes('twenty20'))        return 5;
+  if (n.includes('psl'))                                   return 6;
+  if (n.includes('county') || n.includes('ranji') || n.includes('domestic')) return 7;
+  return 8;
+}
+
+// Classify match format → returns {label, col, bg}
+function _cricMatchType(name) {
+  const n = (name || '').toLowerCase();
+  if (n.includes('ipl') || n.includes('indian premier'))                     return {label:'IPL 🏆',  col:'#f97316',bg:'rgba(249,115,22,.22)'};
+  if (n.includes('wc') || n.includes('world cup') || n.includes('champions trophy')) return {label:'ICC 🌍',col:'#fbbf24',bg:'rgba(251,191,36,.18)'};
+  if (n.includes('test match') || n.includes('test championship') || n.includes(' test ') || n.endsWith(' test')) return {label:'TEST',    col:'#a78bfa',bg:'rgba(167,139,250,.14)'};
+  if (n.includes('t20i') || (n.includes('t20') && (n.includes('intl')||n.includes('international')))) return {label:'T20I',col:'#38bdf8',bg:'rgba(56,189,248,.13)'};
+  if (n.includes('bpl') || n.includes('bangladesh premier'))                 return {label:'BPL',     col:'#34d399',bg:'rgba(52,211,153,.15)'};
+  if (n.includes('wpl') || n.includes("women's premier"))                    return {label:'WPL',     col:'#f472b6',bg:'rgba(244,114,182,.15)'};
+  if (n.includes('t20') || n.includes('twenty20') || n.includes('twenty-20'))return {label:'T20',     col:'#34d399',bg:'rgba(52,211,153,.13)'};
+  if (n.includes('odi') || n.includes('one day') || n.includes('one-day'))   return {label:'ODI',     col:'#60a5fa',bg:'rgba(96,165,250,.13)'};
+  if (n.includes('hundred'))                                                  return {label:'100-BALL',col:'#f472b6',bg:'rgba(244,114,182,.13)'};
+  if (n.includes('big bash') || n.includes('bbl'))                           return {label:'BBL',     col:'#fbbf24',bg:'rgba(251,191,36,.13)'};
+  if (n.includes('psl'))                                                      return {label:'PSL',     col:'#94a3b8',bg:'rgba(148,163,184,.1)'};
+  if (n.includes('sa20') || n.includes('sa 20'))                             return {label:'SA20',    col:'#f87171',bg:'rgba(248,113,113,.13)'};
+  if (n.includes('cpl') || n.includes('caribbean'))                          return {label:'CPL',     col:'#fb923c',bg:'rgba(251,146,60,.13)'};
+  if (n.includes('county') || n.includes('ranji') || n.includes('duleep') || n.includes('domestic')) return {label:'DOM',col:'#94a3b8',bg:'rgba(148,163,184,.1)'};
+  return {label:"INT'L", col:'#64748b', bg:'rgba(100,116,139,.1)'};
+}
+
+// ─── Google-style IPL / cricket scorecard card ────────────────────────────────
+// Renders a clean white floating card mimicking the Google Search IPL widget.
+// Each team gets its own row with score. Live matches show a red pulse dot.
+function _cricCard({title, league, status, isLive, isFinal, homeTeam, awayTeam,
+                    homeScore, awayScore, homeWickets, awayWickets,
+                    homeOvers, awayOvers, venue, result, timeStr, isPast,
+                    crr, rrr, toss, batting}) {
+  const e = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const mt  = _cricMatchType(league || title);
+
+  // ── Format a score string in cricket style: "207/6 (20.0)" ──────────────
+  function fmtScore(runs, wkts, ovs) {
+    if (runs === '' || runs === null || runs === undefined) return '';
+    let s = String(runs);
+    if (wkts !== undefined && wkts !== null && wkts !== '') s += '/' + wkts;
+    if (ovs)  s += ' (' + ovs + ')';
+    return s;
+  }
+
+  const hScore = fmtScore(homeScore, homeWickets, homeOvers) || (homeScore !== '' ? String(homeScore||'') : '');
+  const aScore = fmtScore(awayScore, awayWickets, awayOvers) || (awayScore !== '' ? String(awayScore||'') : '');
+  const hasSc  = hScore || aScore;
+
+  // Which team is currently batting (bold blue)
+  const hBat = batting === 'home'  || (!batting && isLive && hasSc && !hScore.includes('('));
+  const aBat = batting === 'away'  || (!batting && isLive && hasSc && !aScore.includes('('));
+
+  // Win detection for completed matches
+  const hNum = parseInt(homeScore) || 0;
+  const aNum = parseInt(awayScore) || 0;
+  const winH = isFinal && hNum > 0 && hNum > aNum;
+  const winA = isFinal && aNum > 0 && aNum > hNum;
+
+  // Badge style: IPL gets special orange pill
+  const isIPL   = mt.label.includes('IPL');
+  const badgeCls = isIPL ? 'sc-badge ipl-badge-style' : 'sc-badge';
+  const badgeSty = isIPL ? '' : `color:${mt.col};background:${mt.bg}`;
+
+  // Status line
+  const liveClass = isLive ? ' live-status' : '';
+  let statLine = '';
+  if (isLive) {
+    statLine = `<span class="score-live-dot"></span><span>LIVE</span>`;
+    if (status && status.length > 3) statLine += `<span style="color:#5f6368;font-weight:400"> · ${e(status.slice(0,52))}</span>`;
+    if (crr)  statLine += `<span style="color:#5f6368;font-weight:400"> · CRR ${e(crr)}</span>`;
+    if (rrr)  statLine += `<span style="color:#1a73e8;font-weight:600"> | RRR ${e(rrr)}</span>`;
+  } else if (isFinal && result) {
+    statLine = `🏆 <span>${e(String(result).slice(0,60))}</span>`;
+  } else if (isFinal) {
+    statLine = `✅ <span>${e(status.slice(0,60))}</span>`;
+  } else {
+    statLine = `<span>${e(status.slice(0,52))}</span>`;
+    if (toss) statLine += `<span style="color:#9aa0a6"> · 🪙 ${e(String(toss).slice(0,40))}</span>`;
+  }
+
+  // Location/time footer
+  const locPart = venue
+    ? `<span class="sc-venue">📍 ${e(String(venue).slice(0,38))}</span>`
+    : timeStr
+      ? `<span class="sc-venue">🕐 ${e(timeStr)}</span>`
+      : '';
+
+  return `<div class="sc-card">
+  <div class="sc-head">
+    <span class="${badgeCls}"${badgeSty ? ` style="${badgeSty}"` : ''}>${mt.label}</span>
+    <span class="sc-comp">${e((league||title).slice(0,50))}</span>
+  </div>
+  <div class="sc-teams">
+    <span class="sc-team${winH?' sc-win':hBat?' batting':''}">${e(homeTeam)}</span>
+    <span class="sc-score${hBat?' batting':winH?' sc-win':''}">${hasSc ? e(hScore||'–') : '<span class="sc-vs">vs</span>'}</span>
+    <span class="sc-team${winA?' sc-win':aBat?' batting':''}">${e(awayTeam)}</span>
+    <span class="sc-score${aBat?' batting':winA?' sc-win':''}">${hasSc ? e(aScore||'–') : ''}</span>
+  </div>
+  <div class="sc-foot">
+    <span class="sc-status${liveClass}">${statLine}</span>
+    ${locPart}
+  </div>
+</div>`;
+}
+
+// TheSportsDB: fetch events for a given date
+async function _fetchSportsDB(dateStr) {
+  try {
+    const res = await fetch(`https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${dateStr}&s=Cricket`,
+      {cache:'no-store', signal: AbortSignal.timeout(9000)});
+    if (!res.ok) return [];
+    return (await res.json()).events || [];
+  } catch { return []; }
+}
+
+// Render TheSportsDB events → HTML cards
+function _renderSDB(events, isPast) {
+  return events.slice(0,12).map(ev => {
+    const raw = ev.strStatus || 'Scheduled';
+    const isLive  = /live|innings|over/i.test(raw);
+    const isFinal = /finish|won|draw|result|abandon|decided/i.test(raw);
+    let timeStr = '';
+    try { if (ev.strTimestamp) timeStr = new Date(ev.strTimestamp+'Z').toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}); } catch {}
+    return _cricCard({
+      title: ev.strEvent || 'Cricket Match',
+      league: ev.strLeague || '',
+      status: raw, isLive, isFinal,
+      homeTeam: ev.strHomeTeam || '?', awayTeam: ev.strAwayTeam || '?',
+      homeScore: ev.intHomeScore ?? '', awayScore: ev.intAwayScore ?? '',
+      venue: ev.strVenue, result: ev.strResult, timeStr, isPast,
+    });
+  }).join('');
+}
+
+// Render ESPN-format events → HTML cards
+function _renderESPN(events, isPast) {
+  return events.slice(0,12).flatMap(ev => {
+    return (ev.competitions||[ev]).map(comp => {
+      const comps = comp.competitors || [];
+      if (!comps.length) return '';
+      const state  = (comp.status?.type?.state||'').toLowerCase();
+      const isLive  = state === 'in';
+      const isFinal = state === 'post';
+      const status  = comp.status?.type?.shortDetail || comp.status?.type?.description || (isLive?'Live':'Scheduled');
+      const h = comps.find(c=>c.homeAway==='home')||comps[0];
+      const a = comps.find(c=>c.homeAway==='away')||comps[1];
+      return _cricCard({
+        title: ev.name || '', league: ev.name || '',
+        status, isLive, isFinal,
+        homeTeam: h?.team?.abbreviation||h?.team?.shortDisplayName||'?',
+        awayTeam: a?.team?.abbreviation||a?.team?.shortDisplayName||'?',
+        homeScore: h?.score??'', awayScore: a?.score??'',
+        venue: comp.venue?.fullName, result: null, timeStr: '', isPast,
+      });
+    });
+  }).filter(Boolean).join('');
+}
+
+// Stamp the "updated" time in the scores header
+function _stampScoreTime() {
+  const ts = document.getElementById('scores-updated');
+  if (ts) ts.textContent = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ESPNcricinfo live RSS fallback (helps surface international matches when
+// scoreboard endpoints are delayed or sparse).
+async function _fetchCricinfoLiveItems() {
+  const target = 'https://www.espncricinfo.com/rss/livescores.xml';
+  const proxies = [
+    `${WORKER_PROXY_URL}/?url=${encodeURIComponent(target)}`,
+    `https://api.allorigins.win/get?url=${encodeURIComponent(target)}`,
+    `https://corsproxy.io/?url=${encodeURIComponent(target)}`
+  ];
+  for (const u of proxies) {
+    try {
+      const r = await fetch(u, { cache: 'no-store', signal: AbortSignal.timeout(7000) });
+      if (!r.ok) continue;
+      let xml = await r.text();
+      if (u.includes('allorigins.win')) {
+        try { xml = JSON.parse(xml).contents || ''; } catch(_) {}
+      }
+      if (!xml) continue;
+      const doc = new DOMParser().parseFromString(xml, 'text/xml');
+      const items = Array.from(doc.querySelectorAll('item')).slice(0, 20).map(it => ({
+        title: (it.querySelector('title')?.textContent || '').trim(),
+        link:  (it.querySelector('link')?.textContent || '').trim(),
+        pub:   (it.querySelector('pubDate')?.textContent || '').trim()
+      })).filter(it => it.title && it.link);
+      if (items.length) return items;
+    } catch(_) {}
+  }
+  return [];
+}
+
+let _espnWorkerDownUntil = 0;
+
+// Route ESPN requests through multiple CORS-safe proxies.
+// We avoid hammering the Worker when it is returning 5xx.
+async function _fetchEspnJson(path, timeoutMs) {
+  const url = 'https://site.api.espn.com' + path;
+  const pool = [
+    {
+      name: 'allorigins',
+      build: u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
+    },
+    {
+      name: 'corsproxy',
+      build: u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`
+    },
+    {
+      name: 'worker',
+      build: u => `${WORKER_PROXY_URL}/?url=${encodeURIComponent(u)}`
+    }
+  ];
+
+  for (const p of pool) {
+    if (p.name === 'worker' && Date.now() < _espnWorkerDownUntil) continue;
+    try {
+      const res = await fetch(p.build(url), {
+        cache: 'no-store',
+        signal: AbortSignal.timeout(timeoutMs || 7000)
+      });
+      if (p.name === 'worker' && res.status >= 500) {
+        _espnWorkerDownUntil = Date.now() + 5 * 60 * 1000;
+      }
+      if (!res.ok) continue;
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        if (json) return json;
+      } catch(_) {}
+    } catch(_) {}
+  }
+  return null;
+}
+
+// ─── fetchLiveScores ──────────────────────────────────────────────────────────
+async function fetchLiveScores(sport) {
+  const box = document.getElementById('live-scores-content');
+  if (!box) return;
+  box.innerHTML = '<div class="score-no-data">Loading…</div>';
+
+  // ── Cricket: Google-style IPL-first feed ─────────────────────────────────────
+  // Priority: IPL (0) → International/ICC (1) → BPL/WPL/BBL (2–4) → T20 leagues (5)
+  // PSL (priority 6) is EXCLUDED from output unless it is the absolute only source.
+  // Data sources (all free, no API key):
+  //   1. Worker /cricket endpoint (enriched, pre-filtered) — if Worker is configured
+  //   2. ESPN IPL dedicated endpoints (most reliable for live IPL data)
+  //   3. ESPN General cricket, ICC WC, WPL, BPL endpoints
+  //   4. TheSportsDB (by date) — global fallback
+  if (sport === 'cricket') {
+    const seen     = new Set();
+    let allCards   = [];
+
+    // ── Helper: parse ESPN event → card object ──────────────────────────────
+    function espnEvToCard(ev) {
+      const cards = [];
+      (ev.competitions || [ev]).forEach(comp => {
+        const comps  = comp.competitors || [];
+        if (!comps.length) return;
+        const state   = (comp.status?.type?.state || '').toLowerCase();
+        const isLive  = state === 'in';
+        const isFinal = state === 'post';
+        const status  = comp.status?.type?.shortDetail || comp.status?.type?.description || (isLive ? 'Live' : 'Scheduled');
+        const h  = comps.find(c => c.homeAway === 'home') || comps[0];
+        const a  = comps.find(c => c.homeAway === 'away') || comps[1];
+        const league = ev.name || ev.shortName || '';
+        const pri = _cricPriority(league);
+        cards.push({
+          priority: pri,
+          isLive,
+          isPSL: pri === 6,
+          html: _cricCard({
+            title: league, league, status, isLive, isFinal,
+            homeTeam:  h?.team?.abbreviation || h?.team?.shortDisplayName || '?',
+            awayTeam:  a?.team?.abbreviation || a?.team?.shortDisplayName || '?',
+            homeScore: h?.score ?? '',
+            awayScore: a?.score ?? '',
+            venue: comp.venue?.fullName,
+            result: null, timeStr: '', isPast: false,
+          })
+        });
+      });
+      return cards;
+    }
+
+    // ── Helper: parse TheSportsDB event → card object ───────────────────────
+    function sdbEvToCard(ev) {
+      const raw    = ev.strStatus || 'Scheduled';
+      const isLive = /live|innings|over/i.test(raw);
+      const isFinal= /finish|won|draw|result|abandon/i.test(raw);
+      const pri    = _cricPriority(ev.strLeague || '');
+      let timeStr  = '';
+      try { if (ev.strTimestamp) timeStr = new Date(ev.strTimestamp+'Z').toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}); } catch(_){}
+      return {
+        priority: pri,
+        isLive,
+        isPSL: pri === 6,
+        html: _cricCard({
+          title: ev.strEvent || 'Cricket', league: ev.strLeague || '',
+          status: raw, isLive, isFinal,
+          homeTeam: ev.strHomeTeam || '?', awayTeam: ev.strAwayTeam || '?',
+          homeScore: ev.intHomeScore ?? '', awayScore: ev.intAwayScore ?? '',
+          venue: ev.strVenue, result: ev.strResult, timeStr, isPast: false,
+        })
+      };
+    }
+
+    // ── Step 1: Try Worker /cricket endpoint (returns pre-filtered JSON) ────
+    const workerUrl = (window._cfWorkerUrl || localStorage.getItem('viltv_cf_worker_url') || '').replace(/\/+$/,'').replace(/^http:/,'https:');
+    if (workerUrl) {
+      try {
+        const wRes = await fetch(workerUrl + '/cricket', {
+          cache:'no-store', signal: AbortSignal.timeout(8000)
+        });
+        if (wRes.ok) {
+          const wData = await wRes.json();
+          if (Array.isArray(wData.matches) && wData.matches.length) {
+            // Worker returns pre-built card objects — render directly
+            wData.matches.forEach(m => {
+              allCards.push({
+                priority: m.priority ?? _cricPriority(m.league || ''),
+                isLive: m.isLive || false,
+                isPSL: (m.priority ?? _cricPriority(m.league || '')) >= 6,
+                html: _cricCard({
+                  title: m.league || m.title || 'Cricket', league: m.league || '',
+                  status: m.status || 'Scheduled',
+                  isLive: m.isLive || false,
+                  isFinal: m.isFinal || false,
+                  homeTeam: m.homeTeam || '?', awayTeam: m.awayTeam || '?',
+                  homeScore: m.homeScore || '', awayScore: m.awayScore || '',
+                  venue: m.venue, result: m.result, timeStr: m.timeStr || '',
+                  crr: m.crr, rrr: m.rrr, toss: m.toss, batting: m.batting,
+                  isPast: false,
+                })
+});
+
+              seen.add(m.id || m.title);
+            });
+          }
+        }
+      } catch { /* non-fatal — fall through to ESPN */ }
+    }
+
+    // ── Step 2: ESPN cricket scorepanel via Cloudflare Worker proxy ────────────
+    const today = new Date().toISOString().slice(0, 10);
+    // Fetch scorepanel + general cricket feeds via proxy + SportsDB in parallel
+    const [sdbResult, espnResult, espnGenResult, espnIntlResult] = await Promise.allSettled([
+      _fetchSportsDB(today),
+      _fetchEspnJson('/apis/site/v2/sports/cricket/scorepanel', 8000),
+      _fetchEspnJson('/apis/site/v2/sports/cricket/scoreboard', 7000),
+      _fetchEspnJson('/apis/site/v2/sports/cricket/28/scoreboard', 7000),
+    ]);
+
+    // Helper: push ESPN result avoiding duplicates
+    function pushEspnResult(result) {
+      if (result.status !== 'fulfilled' || !result.value) return;
+      const d = result.value;
+      const events = d.events || d.competitions || d.scoreboard ||
+        d?.sports?.flatMap(s => s.leagues || []).flatMap(l => l.events || []) || [];
+      events.forEach(ev => {
+        const key = ev.id || ev.uid || (ev.name + ev.date);
+        if (seen.has(key)) return;
+        seen.add(key);
+        espnEvToCard(ev).forEach(c => allCards.push(c));
+      });
+    }
+
+    // ESPN scorepanel + general + international → cards
+    [espnResult, espnGenResult, espnIntlResult].forEach(pushEspnResult);
+
+    // TheSportsDB events → cards
+    if (sdbResult.status === 'fulfilled' && sdbResult.value?.length) {
+      sdbResult.value.forEach(ev => {
+        const key = ev.idEvent || ev.strEvent;
+        if (seen.has(key)) return;
+        seen.add(key);
+        allCards.push(sdbEvToCard(ev));
+      });
+    }
+
+    if (allCards.length) {
+      // ── Sort: Live first → Priority (IPL=0 beats INT=1 beats PSL=6) ──────
+      allCards.sort((a, b) =>
+        (b.isLive ? 1 : 0) - (a.isLive ? 1 : 0) || a.priority - b.priority
+      );
+
+      // ── Strict PSL filter: exclude PSL unless it's the only source ────────
+      const nonPSL = allCards.filter(c => !c.isPSL);
+      const display = nonPSL.length > 0 ? nonPSL : allCards; // PSL-only fallback
+
+      box.innerHTML = display.slice(0, 12).map(c => c.html).join('');
+      _stampScoreTime();
+      return;
+    }
+
+    // ── Step 3: ESPNcricinfo live RSS fallback (international coverage) ──────
+    const ciItems = await _fetchCricinfoLiveItems();
+    if (ciItems.length) {
+      box.innerHTML = ciItems.slice(0, 12).map(it => {
+        const t = (it.title || 'Live Match').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const l = (it.link || '#').replace(/"/g, '&quot;');
+        return `<div class="score-card">
+          <div style="font-size:9px;color:#f97316;margin-bottom:3px;letter-spacing:.3px">ESPNcricinfo Live</div>
+          <div class="score-card-match">${t}</div>
+          <div class="score-card-status" style="color:#22c55e"><span class="score-live-dot"></span>Live / Recent</div>
+          <div style="margin-top:8px"><a href="${l}" target="_blank" rel="noopener" style="font-size:10px;color:#60a5fa;text-decoration:none">Open scorecard ↗</a></div>
+        </div>`;
+      }).join('');
+      _stampScoreTime();
+      return;
+    }
+
+    box.innerHTML = '<div class="score-no-data" style="color:#5f6368">No cricket matches found today.<br/><span style="font-size:9px">IPL &amp; International matches appear here during match time.</span></div>';
+    return;
+  }
+
+  // ── Non-cricket sports (Football / Rugby / Tennis / Baseball) ────────────────
+  const rawUrls = {
+    football: [
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/esp.1/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/ger.1/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/scoreboard'
+    ],
+    rugby: [
+      'https://site.api.espn.com/apis/site/v2/sports/rugby/267979/scoreboard', // Super Rugby
+      'https://site.api.espn.com/apis/site/v2/sports/rugby/270557/scoreboard', // Premiership
+      'https://site.api.espn.com/apis/site/v2/sports/rugby/289234/scoreboard', // Top 14
+      'https://site.api.espn.com/apis/site/v2/sports/rugby/180659/scoreboard', // Int'l
+    ],
+    tennis: [
+      'https://site.api.espn.com/apis/site/v2/sports/tennis/atp/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/tennis/wta/scoreboard'
+    ],
+    baseball: ['https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard']
+  };
+
+  const urls = rawUrls[sport] || [];
+  let data = null;
+  for (const url of urls) {
+    try {
+      const path = new URL(url).pathname;
+      const d = await _fetchEspnJson(path, 6000);
+      if (d && (d.events || d.competitions || []).length) { data = d; break; }
+    } catch(_) {}
+  }
+
+  // Rugby fallback: TheSportsDB (free, no key) when ESPN league IDs yield nothing
+  if (!data && sport === 'rugby') {
+    try {
+      const rugRes = await fetch(
+        `https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${new Date().toISOString().slice(0,10)}&s=Rugby+Union`,
+        { cache:'no-store', signal: AbortSignal.timeout(8000) }
+      );
+      if (rugRes.ok) {
+        const rugJson = await rugRes.json();
+        const evs = rugJson.events || [];
+        if (evs.length) {
+          box.innerHTML = evs.slice(0, 12).map(ev => {
+            const raw = ev.strStatus || 'Scheduled';
+            const isLive = /live|playing|progress/i.test(raw);
+            const hScore = ev.intHomeScore != null ? ev.intHomeScore : '';
+            const aScore = ev.intAwayScore != null ? ev.intAwayScore : '';
+            const statusColor = isLive ? '#22c55e' : '#38bdf8';
+            const league = ev.strLeague ? `<div style="font-size:9px;color:#f97316;margin-bottom:3px;letter-spacing:.3px">${ev.strLeague}</div>` : '';
+            const teams = `<div class="score-card-teams"><span class="score-team-name">${ev.strHomeTeam||'?'}</span><span class="score-result">${hScore!==''&&aScore!=='' ? hScore+' – '+aScore : '–'}</span><span class="score-team-name" style="text-align:right">${ev.strAwayTeam||'?'}</span></div>`;
+            const venue = ev.strVenue ? `<div class="score-venue">📍 ${ev.strVenue}</div>` : '';
+            return `<div class="score-card">${league}<div class="score-card-match">${ev.strEvent||'Rugby Match'}</div><div class="score-card-status" style="color:${statusColor}">${isLive?'<span class="score-live-dot"></span>':''}${raw}</div>${teams}${venue}</div>`;
+          }).join('');
+          _stampScoreTime();
+          return;
+        }
+      }
+    } catch(_) {}
+  }
+
+  if (!data) {
+    const label = {football:'⚽ Football', rugby:'🏉 Rugby', tennis:'🎾 Tennis', baseball:'⚾ Baseball'}[sport] || sport;
+    box.innerHTML = `<div class="score-no-data">${label} scores unavailable.<br/><span style="font-size:9px;color:#334155">No live matches or API not reachable.</span></div>`;
+    return;
+  }
+
+  try {
+    const events = data.events || data.competitions || [];
+    if (!events.length) {
+      box.innerHTML = '<div class="score-no-data">No live matches right now.<br/>Check back during match time.</div>';
+      return;
+    }
+    let html = '';
+    for (const ev of events.slice(0, 12)) {
+      const comps = ev.competitions || [ev];
+      for (const comp of comps) {
+        const competitors = comp.competitors || [];
+        const status = comp.status?.type?.shortDetail || comp.status?.type?.description || 'Scheduled';
+        const isLive = (comp.status?.type?.state || '').toLowerCase() === 'in';
+        const statusColor = isLive ? '#22c55e' : (status.toLowerCase().includes('final') ? '#ef4444' : '#38bdf8');
+        let teams = '', venue = '';
+        if (competitors.length >= 2) {
+          const h = competitors.find(c => c.homeAway === 'home') || competitors[0];
+          const a = competitors.find(c => c.homeAway === 'away') || competitors[1];
+          const hName = h.team?.abbreviation || h.team?.shortDisplayName || h.team?.displayName || '?';
+          const aName = a.team?.abbreviation || a.team?.shortDisplayName || a.team?.displayName || '?';
+          const hScore = h.score !== undefined ? h.score : '';
+          const aScore = a.score !== undefined ? a.score : '';
+          teams = `<div class="score-card-teams"><span class="score-team-name">${hName}</span><span class="score-result">${hScore} – ${aScore}</span><span class="score-team-name" style="text-align:right">${aName}</span></div>`;
+        }
+        if (comp.venue?.fullName) venue = `<div class="score-venue">📍 ${comp.venue.fullName}</div>`;
+        html += `<div class="score-card"><div class="score-card-match">${ev.name || ev.shortName || ''}</div><div class="score-card-status" style="color:${statusColor}">${isLive ? '<span class="score-live-dot"></span>' : ''}${status}</div>${teams}${venue}</div>`;
+      }
+    }
+    box.innerHTML = html || '<div class="score-no-data">No matches available.</div>';
+    _stampScoreTime();
+  } catch(e) {
+    box.innerHTML = '<div class="score-no-data">Error parsing scores.</div>';
+  }
+}
+
+async function fetchPastScores(sport) {
+  const box = document.getElementById('live-scores-content');
+  if (!box) return;
+  box.innerHTML = '<div class="score-no-data">Loading past results…</div>';
+
+  // ── Cricket past: parallel multi-source, priority-sorted ──────────────────
+  if (sport === 'cricket') {
+    const today = new Date();
+    const dateStrs = Array.from({length: 5}, (_, i) => {
+      const d = new Date(today); d.setDate(today.getDate() - i);
+      return d.toISOString().slice(0, 10);
+    });
+    const espnEndpoints = [
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/ipl/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/28/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/bpl/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/cricket/wc/scoreboard',
+    ];
+
+    const [sdbResults, ...espnResults] = await Promise.allSettled([
+      Promise.all(dateStrs.map(d => _fetchSportsDB(d))),
+      ...espnEndpoints.map(url =>
+        _fetchEspnJson(new URL(url).pathname, 7000)
+      )
+    ]);
+
+    const seen = new Set();
+    let allCards = [];
+
+    // ESPN completed matches
+    espnResults.forEach(result => {
+      if (result.status !== 'fulfilled' || !result.value) return;
+      const evs = result.value.events || result.value.competitions || [];
+      evs.forEach(ev => {
+        const key = ev.id || ev.uid || ev.name;
+        if (seen.has(key)) return;
+        seen.add(key);
+        (ev.competitions || [ev]).forEach(comp => {
+          const state = (comp.status?.type?.state || '').toLowerCase();
+          if (state !== 'post') return; // past results only
+          const h = (comp.competitors || []).find(c => c.homeAway === 'home') || (comp.competitors || [])[0];
+          const a = (comp.competitors || []).find(c => c.homeAway === 'away') || (comp.competitors || [])[1];
+          if (!h || !a) return;
+          const league = ev.name || '';
+          const status = comp.status?.type?.shortDetail || 'Final';
+          allCards.push({
+            priority: _cricPriority(league),
+            html: _cricCard({
+              title: league, league, status,
+              isLive: false, isFinal: true,
+              homeTeam: h?.team?.shortDisplayName || h?.team?.abbreviation || '?',
+              awayTeam: a?.team?.shortDisplayName || a?.team?.abbreviation || '?',
+              homeScore: h?.score ?? '', awayScore: a?.score ?? '',
+              venue: comp.venue?.fullName, result: null, timeStr: '', isPast: true,
+            })
+          });
+        });
+      });
+    });
+
+    // TheSportsDB finished matches
+    if (sdbResults.status === 'fulfilled') {
+      const allEvs = sdbResults.value.flat();
+      allEvs.forEach(ev => {
+        const key = ev.idEvent || ev.strEvent;
+        if (seen.has(key)) return;
+        const s = (ev.strStatus || '').toLowerCase();
+        const isFin = s.includes('finish') || s.includes('won') || s.includes('draw') || s.includes('result');
+        if (!isFin) return;
+        seen.add(key);
+        let timeStr = '';
+        try { if (ev.strTimestamp) timeStr = new Date(ev.strTimestamp+'Z').toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}); } catch(_){}
+        allCards.push({
+          priority: _cricPriority(ev.strLeague || ''),
+          html: _cricCard({
+            title: ev.strEvent || 'Cricket', league: ev.strLeague || '',
+            status: ev.strStatus || 'Final', isLive: false, isFinal: true,
+            homeTeam: ev.strHomeTeam || '?', awayTeam: ev.strAwayTeam || '?',
+            homeScore: ev.intHomeScore ?? '', awayScore: ev.intAwayScore ?? '',
+            venue: ev.strVenue, result: ev.strResult, timeStr, isPast: true,
+          })
+        });
+      });
+    }
+
+    if (allCards.length) {
+      allCards.sort((a, b) => a.priority - b.priority);
+      box.innerHTML = allCards.slice(0, 14).map(c => c.html).join('');
+      _stampScoreTime();
+      return;
+    }
+
+    box.innerHTML = '<div class="score-no-data">No recent results found.<br/><span style="font-size:9px;color:#334155">IPL, International &amp; BPL results appear here after matches complete.</span></div>';
+    return;
+  }
+
+  // ── Non-cricket sports (Football / Rugby / Tennis / Baseball) ────────────────
+  const pastEndpoints = {
+    football: [
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/esp.1/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/ger.1/scoreboard'
+    ],
+    rugby: [
+      'https://site.api.espn.com/apis/site/v2/sports/rugby/267979/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/rugby/270557/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/rugby/289234/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/rugby/180659/scoreboard',
+    ],
+    tennis: [
+      'https://site.api.espn.com/apis/site/v2/sports/tennis/atp/scoreboard',
+      'https://site.api.espn.com/apis/site/v2/sports/tennis/wta/scoreboard'
+    ],
+    baseball: ['https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard']
+  };
+
+  const urls = pastEndpoints[sport] || [];
+  let allEvents = [];
+  for (const url of urls) {
+    try {
+      const d = await _fetchEspnJson(new URL(url).pathname, 6000);
+      if (d) {
+        allEvents = allEvents.concat(d.events || d.competitions || []);
+        if (allEvents.length >= 6) break;
+      }
+    } catch(_) {}
+  }
+
+  const completed = allEvents.filter(ev => {
+    const comp = (ev.competitions || [ev])[0];
+    return (comp?.status?.type?.state || '').toLowerCase() === 'post';
+  });
+  const toShow = (completed.length ? completed : allEvents).slice(0, 12);
+
+  if (!toShow.length && sport === 'rugby') {
+    // TheSportsDB fallback for past rugby — scan last 3 days
+    try {
+      const rugCards = [];
+      const dates = Array.from({length:3}, (_,i) => {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        return d.toISOString().slice(0,10);
+      });
+      for (const dateStr of dates) {
+        const rr = await fetch(
+          `https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d=${dateStr}&s=Rugby+Union`,
+          { cache:'no-store', signal: AbortSignal.timeout(8000) }
+        );
+        if (!rr.ok) continue;
+        const rj = await rr.json();
+        (rj.events || []).forEach(ev => {
+          if (!/finish|won|draw|result|decided/i.test(ev.strStatus || '')) return;
+          const hScore = ev.intHomeScore != null ? ev.intHomeScore : '–';
+          const aScore = ev.intAwayScore != null ? ev.intAwayScore : '–';
+          const winner = Number(hScore) > Number(aScore) ? 'home' : Number(aScore) > Number(hScore) ? 'away' : '';
+          const league = ev.strLeague ? `<div style="font-size:9px;color:#f97316;margin-bottom:3px;letter-spacing:.3px">${ev.strLeague}</div>` : '';
+          const teams = `<div class="score-card-teams"><span class="score-team-name" style="${winner==='home'?'color:#60a5fa;font-weight:700':''}">${ev.strHomeTeam||'?'}</span><span class="score-result">${hScore} – ${aScore}</span><span class="score-team-name" style="text-align:right;${winner==='away'?'color:#60a5fa;font-weight:700':''}">${ev.strAwayTeam||'?'}</span></div>`;
+          const venue = ev.strVenue ? `<div class="score-venue">📍 ${ev.strVenue}</div>` : '';
+          rugCards.push(`<div class="score-card">${league}<div class="score-card-match">${ev.strEvent||'Rugby Match'}</div><div class="score-card-status" style="color:#94a3b8">✅ ${ev.strStatus||'Final'}</div>${teams}${venue}</div>`);
+        });
+        if (rugCards.length >= 6) break;
+      }
+      if (rugCards.length) {
+        box.innerHTML = rugCards.slice(0,12).join('');
+        _stampScoreTime();
+        return;
+      }
+    } catch(_) {}
+  }
+
+  if (!toShow.length) {
+    box.innerHTML = `<div class="score-no-data">No past results available yet.<br/><span style="font-size:9px;color:#1e3a5f">Results appear after matches complete.</span></div>`;
+    return;
+  }
+
+  let html = '';
+  for (const ev of toShow) {
+    const comps = ev.competitions || [ev];
+    for (const comp of comps) {
+      const competitors = comp.competitors || [];
+      const status = comp.status?.type?.shortDetail || comp.status?.type?.description || 'Final';
+      let teams = '', venue = '';
+      if (competitors.length >= 2) {
+        const h = competitors.find(c => c.homeAway === 'home') || competitors[0];
+        const a = competitors.find(c => c.homeAway === 'away') || competitors[1];
+        const hName = h.team?.abbreviation || h.team?.shortDisplayName || '?';
+        const aName = a.team?.abbreviation || a.team?.shortDisplayName || '?';
+        const hScore = h.score !== undefined ? h.score : '–';
+        const aScore = a.score !== undefined ? a.score : '–';
+        const winner = Number(hScore) > Number(aScore) ? 'home' : (Number(aScore) > Number(hScore) ? 'away' : '');
+        teams = `<div class="score-card-teams"><span class="score-team-name" style="${winner==='home'?'color:#60a5fa;font-weight:700':''}">${hName}</span><span class="score-result">${hScore} – ${aScore}</span><span class="score-team-name" style="text-align:right;${winner==='away'?'color:#60a5fa;font-weight:700':''}">${aName}</span></div>`;
+      }
+      if (comp.venue?.fullName) venue = `<div class="score-venue">📍 ${comp.venue.fullName}</div>`;
+      html += `<div class="score-card"><div class="score-card-match">${ev.name || ev.shortName || ''}</div><div class="score-card-status" style="color:#94a3b8">✅ ${status}</div>${teams}${venue}</div>`;
+    }
+  }
+  box.innerHTML = html || '<div class="score-no-data">No completed results found.</div>';
+  _stampScoreTime();
+}
+
+function _initLiveScores() {
+  fetchLiveScores('cricket');
+  if (_scoreRefreshTimer) clearInterval(_scoreRefreshTimer);
+  _scoreRefreshTimer = setInterval(() => {
+    if (_currentScoreMode === 'live') fetchLiveScores(_currentScoreSport);
+    else fetchPastScores(_currentScoreSport);
+  }, 60000);
+}
+
+// ── MOBILE RIGHT-BAR DRAWER ─────────────────────────────────────────
+// panel key → mobile button id suffix
+const _MOB_BTN_MAP = {
+  ai:'ai', video:'tv', iptv:'iptv', radio:'radio',
+  premium:'premium', sports:'sports',
+  music:'music', movies:'movies', podcast:'podcast',
+  calendar:'calendar', notes:'notes', calc:'calc', worldclock:'worldclock', weather:'weather',
+  settings:'settings'
+};
+function openMobileRightBar(panel) {
+  rbSwitchPanel(panel);
+  const rb      = document.getElementById('right-bar');
+  const overlay = document.getElementById('mobile-rb-overlay');
+  if (rb)      rb.classList.add('mobile-open');
+  if (overlay) overlay.style.display = 'block';
+  document.body.classList.add('rb-mobile-active');
+  document.body.style.overflow = 'hidden';
+  // Highlight the tapped tab, clear all others
+  Object.entries(_MOB_BTN_MAP).forEach(([key, suffix]) => {
+    const btn = document.getElementById('mobile-' + suffix + '-btn');
+    if (btn) btn.classList.toggle('active', key === panel);
+  });
+}
+
+function closeMobileRightBar() {
+  const rb      = document.getElementById('right-bar');
+  const overlay = document.getElementById('mobile-rb-overlay');
+  if (rb)      rb.classList.remove('mobile-open');
+  if (overlay) overlay.style.display = 'none';
+  document.body.classList.remove('rb-mobile-active');
+  document.body.style.overflow = '';
+  Object.values(_MOB_BTN_MAP).forEach(suffix => {
+    document.getElementById('mobile-' + suffix + '-btn')?.classList.remove('active');
+  });
+}
+
+
+function rbAiChip(text) {
+  // Programmatic chip trigger — also called externally if needed
+  const inp = document.getElementById('rb-ai-input');
+  if (inp) inp.value = text;
+  rbAiSend();
+}
+
+async function rbAiSend() {
+  const input   = document.getElementById('rb-ai-input');
+  const sendBtn = document.getElementById('rb-ai-send-btn');
+  const statusEl = document.getElementById('rb-ai-status');
+  const typingEl = document.getElementById('rb-typing');
+  const typingTxt = document.getElementById('rb-typing-text');
+  const q = input?.value?.trim();
+  if (!q) return;
+
+  if (_rbStreamAbort) { _rbStreamAbort.abort(); }
+  _rbStreamAbort = new AbortController();
+
+  rbAiAppendMessage(q, 'user');
+  input.value = '';
+  input.style.height = '';
+  if (sendBtn) sendBtn.disabled = true;
+
+  // ── Show "Analysing Market Data…" loading state ──
+  if (typingTxt) typingTxt.textContent = 'Analysing Market Data…';
+  if (typingEl)  typingEl.style.display = 'block';
+  if (statusEl)  statusEl.textContent   = '⏳ Fetching live intelligence…';
+
+  const msgId = rbAiAppendMessage('', 'bot');
+  const msgEl = document.getElementById(msgId);
+  const msgsEl = document.getElementById('rb-ai-messages');
+
+  // ── Helper: render Markdown into the bot bubble ──
+  const renderMd = (text) => {
+    if (!msgEl) return;
+    msgEl.innerHTML = _mdToHtml(text);
+    if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
+  };
+
+  // ── Helper: show plain error ──
+  const showErr = (msg) => {
+    if (msgEl) msgEl.innerHTML =
+      '<span style="color:#f87171">⚠️ ' + escHtml(msg || 'Temporary error — please retry.') + '</span>';
+    if (statusEl) statusEl.textContent = '⚠️ Retry';
+  };
+
+  try {
+    // ─── Augment query with pre-built market context from data.json ────────
+    const contextPrefix = window._marketContext
+      ? '**[Market Context — ' + new Date().toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) + ']**\n'
+        + window._marketContext + '\n\n---\n\n'
+      : '';
+
+    // ─── Build conversation-aware messages array ───────────────────────────
+    // Include the full chat history so the AI retains context across
+    // follow-up questions. The history is stored as [{role, content}] and
+    // is sent as-is to backends that support OpenAI-format messages arrays
+    // (Worker, OpenAI, Custom API). For single-prompt backends (Gemini,
+    // Pollinations) we flatten history into the prompt string.
+    _rbChatHistory.push({ role: 'user', content: q });
+
+    // Build the full messages array: inject system context, then history
+    const messagesForBackend = [
+      ..._rbChatHistory   // includes the just-pushed user message
+    ];
+
+    // Flatten history into a single string for single-prompt backends
+    const historyStr = _rbChatHistory.length > 1
+      ? _rbChatHistory.slice(0, -1).map(m =>
+          (m.role === 'user' ? 'User' : 'Assistant') + ': ' + m.content
+        ).join('\n') + '\n\n'
+      : '';
+    const augmented = contextPrefix + historyStr + q;
+
+    // ─── Route: user's own configured services → free AI fallback ─────────
+    const hasWorker = !!(window._cfWorkerUrl || localStorage.getItem(CF_KEY));
+    const hasGemini = !!localStorage.getItem(SVC_GEMINI_KEY);
+    const hasOpenAI = !!localStorage.getItem(SVC_OPENAI_KEY);
+    const hasApi3   = !!(localStorage.getItem(SVC_API3_KEY) && localStorage.getItem(SVC_API3_URL));
+    const hasPaid   = hasWorker || hasGemini || hasOpenAI || hasApi3;
+
+    // ── If nothing is configured, show a one-time prompt to connect services ─
+    if (!hasPaid) {
+      if (typingEl) typingEl.style.display = 'none';
+      if (sendBtn)  sendBtn.disabled = false;
+      if (msgEl) msgEl.innerHTML =
+        '<div style="background:rgba(30,58,95,.35);border:1px solid rgba(56,93,154,.55);border-radius:9px;padding:14px 16px;font-size:12px;color:#94a3b8;line-height:1.7">'
+        + '<div style="color:#f1f5f9;font-weight:700;font-size:13px;margin-bottom:6px">🔗 Connect Your AI Service</div>'
+        + 'To use Market Assistant, please configure your AI connection in Settings.<br/>'
+        + '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">'
+        + '<button onclick="openServicesModal()" style="background:var(--burn2,#e65c00);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.3px">⚙️ Open Settings</button>'
+        + '<button onclick="this.closest(\'div\').closest(\'div\').outerHTML=\'\';" style="background:transparent;color:#475569;border:1px solid #334155;border-radius:6px;padding:6px 12px;font-size:11px;cursor:pointer">Continue with Free AI</button>'
+        + '<a href="user-setup-guide.html" target="_blank" style="display:inline-flex;align-items:center;color:var(--burn2,#e65c00);font-size:11px;font-weight:600;text-decoration:none;padding:6px 0">📖 Setup Guide</a>'
+        + '</div></div>';
+      if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
+      // Remove the message we just pushed since we're not actually sending it
+      _rbChatHistory.pop();
+      return;
+    }
+
+    const model = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
+
+    // ── Track final response text for history ──────────────────────────────
+    let _finalResponseText = '';
+
+    await _aiLoadBalancedQueryWithHistory(augmented, messagesForBackend, model,
+      (partial) => {
+        if (typingEl) typingEl.style.display = 'none';
+        renderMd(partial);
+        _finalResponseText = partial;
+      },
+      (final) => {
+        if (typingEl) typingEl.style.display = 'none';
+        renderMd(final);
+        _finalResponseText = final;
+        if (statusEl) statusEl.textContent = '✅ Analysis complete';
+        // Save assistant reply to history for follow-up context
+        _rbChatHistory.push({ role: 'assistant', content: _mdStrip(final) });
+        // Keep history bounded (max 20 exchanges = 40 entries) to avoid
+        // overflowing the backend's context window
+        if (_rbChatHistory.length > 40) _rbChatHistory = _rbChatHistory.slice(-40);
+      },
+      (err) => {
+        showErr(err && err.message ? err.message : 'Service temporarily unavailable.');
+        // Remove the failed user message from history so next retry is clean
+        if (_rbChatHistory.length && _rbChatHistory[_rbChatHistory.length - 1].role === 'user') {
+          _rbChatHistory.pop();
+        }
+      }
+    );
+
+  } catch(e) {
+    if (e.name !== 'AbortError') showErr(e.message || 'Connection error.');
+    // Roll back the user message push on unexpected errors
+    if (_rbChatHistory.length && _rbChatHistory[_rbChatHistory.length - 1].role === 'user') {
+      _rbChatHistory.pop();
+    }
+  } finally {
+    if (sendBtn) sendBtn.disabled = false;
+    if (typingEl) typingEl.style.display = 'none';
+    if (msgsEl) msgsEl.scrollTop = msgsEl.scrollHeight;
+  }
+}
+
+// ── Strip Markdown for clean history storage (no HTML/symbols in history) ──
+function _mdStrip(md) {
+  return (md || '')
+    .replace(/!\[.*?\]\(.*?\)/g, '')            // images
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')   // links → label only
+    .replace(/#{1,6}\s+/g, '')                  // headers
+    .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')   // bold/italic
+    .replace(/`{1,3}[^`]*`{1,3}/g, '')          // code
+    .replace(/^\s*[-*+]\s+/gm, '')              // bullets
+    .replace(/^\s*\d+\.\s+/gm, '')              // numbered lists
+    .replace(/\n{3,}/g, '\n\n')                 // collapse whitespace
+    .trim()
+    .slice(0, 800); // keep history entries concise to save token budget
+}
+
+// ── History-aware AI balancer ────────────────────────────────────────
+// Wraps _aiLoadBalancedQuery but passes the messages array to backends
+// that support it natively (Worker, OpenAI, CustomAPI).
+// Falls back gracefully to single-prompt mode for others.
+async function _aiLoadBalancedQueryWithHistory(promptStr, messages, model, onChunk, onDone, onError) {
+  const workerUrl = (window._cfWorkerUrl || localStorage.getItem(CF_KEY) || '').replace(/\/+$/,'');
+
+  // 1. Worker — send full messages array in payload
+  if (workerUrl) {
+    try {
+      const provider = localStorage.getItem(SVC_WORKER_PROVIDER) || '';
+      const payload  = JSON.stringify({
+        prompt:    promptStr,          // flat fallback (legacy)
+        messages:  messages,           // structured history array
+        model, provider, use_search: true,
+      });
+
+      // Try streaming first
+      const res = await fetch(workerUrl + '/query-stream', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: payload, signal: AbortSignal.timeout(90000),
+      });
+      if (res.ok && res.body) {
+        const reader = res.body.getReader(); const dec = new TextDecoder();
+        let buf='', accumulated='';
+        while(true) {
+          const {done,value} = await reader.read(); if(done) break;
+          buf += dec.decode(value,{stream:true});
+          const lines=buf.split('\n'); buf=lines.pop()||'';
+          for(const line of lines) {
+            if(!line.startsWith('data: ')) continue;
+            let evt; try{evt=JSON.parse(line.slice(6));}catch{continue;}
+            if(evt.error) throw new Error(evt.error);
+            if(evt.chunk){accumulated+=evt.chunk; onChunk&&onChunk(accumulated);}
+            if(evt.done){onDone&&onDone(accumulated); return;}
+          }
+        }
+        if(accumulated.length>30){onDone&&onDone(accumulated); return;}
+      }
+      // Non-stream fallback
+      for(const ep of ['/query','/ask','/chat','/generate']){
+        try{
+          const r=await fetch(workerUrl+ep,{method:'POST',headers:{'Content-Type':'application/json'},
+            body:payload, signal:AbortSignal.timeout(60000)});
+          if(!r.ok&&r.status===404) continue;
+          const txt=await r.text(); let d; try{d=JSON.parse(txt);}catch{d={result:txt};}
+          if(d.error) continue;
+          const text=d.result||d.answer||d.response||d.text||txt||'';
+          if(text){onChunk&&onChunk(text); onDone&&onDone(text); return;}
+        }catch(e){if(e.name==='AbortError')throw e;}
+      }
+    } catch(e) { if(e.name==='AbortError') throw e; }
+  }
+
+  // 2–5. Fall through to standard _aiLoadBalancedQuery (uses flat prompt with embedded history)
+  return _aiLoadBalancedQuery(promptStr, model, onChunk, onDone, onError);
+}
+
+// Update sidebar status dot — free stack always available, no key required
+function rbUpdateAiStatus(connected) {
+  const dot = document.getElementById('rb-ai-dot');
+  const status = document.getElementById('rb-ai-status');
+  const label = document.getElementById('rb-ai-model-label');
+  // Free AI+search stack is always on; show green unless user explicitly disconnects
+  if (dot) dot.style.background = 'var(--green)';
+  if (status) status.textContent = connected ? 'Market Intelligence active — type your question' : 'Market Intelligence ready — type your question';
+  if (label) label.textContent = '';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// LIVE CLOCK
+// ═══════════════════════════════════════════════════════════════════
+function initLiveClock() {
+  function tick() {
+    const el = document.getElementById('live-clock');
+    if (!el) return;
+    const now = new Date();
+    const d = now.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+    const t = now.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true});
+    el.textContent = d + '  ' + t;
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// LIVE NEWS GRID — 35 feeds, settings-selectable 10 shown at a time
+// ═══════════════════════════════════════════════════════════════════
+
+function buildGoogleNewsSearchFeed(query, lang) {
+  const localeMap = {
+    'Malayalam': { hl:'ml', gl:'IN', ceid:'IN:ml' },
+    'Hindi':     { hl:'hi', gl:'IN', ceid:'IN:hi' },
+    'Tamil':     { hl:'ta', gl:'IN', ceid:'IN:ta' },
+    'Kannada':   { hl:'kn', gl:'IN', ceid:'IN:kn' },
+    'Telugu':    { hl:'te', gl:'IN', ceid:'IN:te' },
+    'Marathi':   { hl:'mr', gl:'IN', ceid:'IN:mr' },
+    'Bengali':   { hl:'bn', gl:'IN', ceid:'IN:bn' },
+    'English':   { hl:'en-IN', gl:'IN', ceid:'IN:en' },
+  };
+  const loc = localeMap[lang] || localeMap.English;
+  return 'https://news.google.com/rss/search?q=' + encodeURIComponent(query) +
+    '&hl=' + loc.hl + '&gl=' + loc.gl + '&ceid=' + loc.ceid;
+}
+
+function getNewsFallbackUrl(src) {
+  if (!src || !src.url || src.url.includes('news.google.com/rss/')) return '';
+  const query = (src.fallbackQuery || src.label || '')
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/[^A-Za-z0-9\u00C0-\u024F\u0370-\u1FFF\u2C00-\uD7FF\s&-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!query) return '';
+  return buildGoogleNewsSearchFeed(query, src.lang);
+}
+
+const NEWS_SOURCES = [
+  // ── US / Americas ────────────────────────────────────────────────
+  { id:'us1',    flag:'🇺🇸', label:'CNBC Top News',        lang:'English',  group:'🇺🇸 US & Americas', color:'#b5120e', url:'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114' },
+  { id:'us2',    flag:'🇺🇸', label:'MarketWatch',          lang:'English',  group:'🇺🇸 US & Americas', color:'#b52828', url:'https://feeds.marketwatch.com/marketwatch/topstories/' },
+  { id:'us3',    flag:'🇺🇸', label:'Yahoo Finance',        lang:'English',  group:'🇺🇸 US & Americas', color:'#6b11a1', url:'https://finance.yahoo.com/news/rssindex' },
+  { id:'us4',    flag:'🇺🇸', label:'Fox Business',         lang:'English',  group:'🇺🇸 US & Americas', color:'#003580', url:'https://feeds.foxnews.com/foxbusiness/latest' },
+  { id:'us5',    flag:'🇺🇸', label:'Reuters Business',     lang:'English',  group:'🇺🇸 US & Americas', color:'#d05000', url:'https://feeds.reuters.com/reuters/businessNews' },
+  { id:'us6',    flag:'🇺🇸', label:'Reuters Top News',     lang:'English',  group:'🇺🇸 US & Americas', color:'#c04000', url:'https://feeds.reuters.com/reuters/topNews' },
+  { id:'us7',    flag:'🇺🇸', label:'Axios',                lang:'English',  group:'🇺🇸 US & Americas', color:'#5e35b1', url:'https://api.axios.com/feed/', fallbackQuery:'axios news' },
+  { id:'ca1',    flag:'🇨🇦', label:'CBC Business',         lang:'English',  group:'🇺🇸 US & Americas', color:'#c8102e', url:'https://rss.cbc.ca/lineup/business.xml' },
+  { id:'latam1', flag:'🌎',  label:'MercoPress (LatAm)',   lang:'English',  group:'🇺🇸 US & Americas', color:'#1a6e3e', url:'https://en.mercopress.com/rss' },
+  // ── India — English ──────────────────────────────────────────────
+  { id:'india1', flag:'🇮🇳', label:'ET Markets',           lang:'English',  group:'🇮🇳 India (English)', color:'#e8540f', url:'https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms' },
+  { id:'india2', flag:'🇮🇳', label:'Moneycontrol',         lang:'English',  group:'🇮🇳 India (English)', color:'#c94200', url:'https://www.moneycontrol.com/rss/MCtopnews.xml' },
+  { id:'india3', flag:'🇮🇳', label:'Mint Markets',         lang:'English',  group:'🇮🇳 India (English)', color:'#d45000', url:'https://www.livemint.com/rss/markets' },
+  { id:'india4', flag:'🇮🇳', label:'NDTV Profit',          lang:'English',  group:'🇮🇳 India (English)', color:'#b03c00', url:'https://feeds.feedburner.com/ndtvprofit-latest' },
+  { id:'india5', flag:'🇮🇳', label:'Hindustan Times',       lang:'English',  group:'🇮🇳 India (English)', color:'#1a5276', url:'https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml', fallbackQuery:'hindustan times india' },
+  { id:'india6', flag:'🇮🇳', label:'The Hindu',             lang:'English',  group:'🇮🇳 India (English)', color:'#0e4b6e', url:'https://www.thehindu.com/news/national/feeder/default.rss', fallbackQuery:'the hindu news' },
+  { id:'india7', flag:'🇮🇳', label:'OnManorama (English)',    lang:'English',  group:'🇮🇳 India (English)', color:'#2e86c1', url:'https://www.onmanorama.com/news.feeds.onmrss.xml', fallbackQuery:'onmanorama english' },
+  // ── India — Hindi ────────────────────────────────────────────────
+  { id:'hindi1', flag:'🇮🇳', label:'NDTV India (हिंदी)',   lang:'Hindi',    group:'🇮🇳 India (Hindi)',   color:'#a52c00', url:'https://news.google.com/rss/search?q=ndtv+india&hl=hi&gl=IN&ceid=IN:hi' },
+  { id:'hindi2', flag:'🇮🇳', label:'Aaj Tak',              lang:'Hindi',    group:'🇮🇳 India (Hindi)',   color:'#7b1a1a', url:'https://news.google.com/rss/search?q=aaj+tak&hl=hi&gl=IN&ceid=IN:hi' },
+  { id:'hindi3', flag:'🇮🇳', label:'India TV (हिंदी)',     lang:'Hindi',    group:'🇮🇳 India (Hindi)',   color:'#6b2a00', url:'https://news.google.com/rss/search?q=india+tv+hindi&hl=hi&gl=IN&ceid=IN:hi' },
+  // ── India — Malayalam ────────────────────────────────────────────
+  { id:'malay1', flag:'🇮🇳', label:'Mathrubhumi',          lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#1a5276', url:'https://news.google.com/rss/search?q=mathrubhumi+news&hl=ml&gl=IN&ceid=IN:ml', fallbackQuery:'mathrubhumi malayalam news' },
+  { id:'malay2', flag:'🇮🇳', label:'Manorama Online',       lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#154360', url:'https://news.google.com/rss/search?q=manorama+online&hl=ml&gl=IN&ceid=IN:ml', fallbackQuery:'manorama online malayalam' },
+  { id:'malay3', flag:'🇮🇳', label:'Deepika Malayalam',     lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#1f618d', url:'https://news.google.com/rss/search?q=deepika+news&hl=ml&gl=IN&ceid=IN:ml', fallbackQuery:'deepika malayalam news' },
+  { id:'malay4', flag:'🇮🇳', label:'Marunadan Malayali',    lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#21618c', url:'https://news.google.com/rss/search?q=marunadan+malayali&hl=ml&gl=IN&ceid=IN:ml' },
+  { id:'malay5', flag:'🇮🇳', label:'Manorama Online (Malayalam)', lang:'Malayalam',group:'🇮🇳 India (Malayalam)',color:'#2471a3', url:'https://news.google.com/rss/search?q=manorama+malayalam&hl=ml&gl=IN&ceid=IN:ml', fallbackQuery:'manorama malayalam news' },
+  // ── India — Tamil ────────────────────────────────────────────────
+  { id:'tamil1', flag:'🇮🇳', label:'Daily Thanthi',        lang:'Tamil',    group:'🇮🇳 India (Tamil)',   color:'#6e2f2f', url:'https://news.google.com/rss/search?q=daily+thanthi&hl=ta&gl=IN&ceid=IN:ta' },
+  { id:'tamil2', flag:'🇮🇳', label:'Dinamalar',            lang:'Tamil',    group:'🇮🇳 India (Tamil)',   color:'#5d4037', url:'https://news.google.com/rss/search?q=dinamalar&hl=ta&gl=IN&ceid=IN:ta' },
+  { id:'tamil3', flag:'🇮🇳', label:'Hindu Tamil',          lang:'Tamil',    group:'🇮🇳 India (Tamil)',   color:'#4a235a', url:'https://news.google.com/rss/search?q=hindutamil+news&hl=ta&gl=IN&ceid=IN:ta', fallbackQuery:'hindu tamil news' },
+  { id:'tamil4', flag:'🇮🇳', label:'Dinakaran',            lang:'Tamil',    group:'🇮🇳 India (Tamil)',   color:'#3e1f62', url:'https://news.google.com/rss/search?q=dinakaran+tamil+news&hl=ta&gl=IN&ceid=IN:ta', fallbackQuery:'dinakaran tamil' },
+  { id:'tamil5', flag:'🇮🇳', label:'Maalai Malar',         lang:'Tamil',    group:'🇮🇳 India (Tamil)',   color:'#5c2475', url:'https://news.google.com/rss/search?q=maalaimalar+news&hl=ta&gl=IN&ceid=IN:ta', fallbackQuery:'maalaimalar news' },
+  // ── India — Kannada ──────────────────────────────────────────────
+  { id:'kann1',  flag:'🇮🇳', label:'Prajavani',            lang:'Kannada',  group:'🇮🇳 India (Kannada)', color:'#4a235a', url:'https://news.google.com/rss/search?q=prajavani&hl=kn&gl=IN&ceid=IN:kn' },
+  { id:'kann2',  flag:'🇮🇳', label:'Vijaya Karnataka',     lang:'Kannada',  group:'🇮🇳 India (Kannada)', color:'#3d1a78', url:'https://news.google.com/rss/search?q=vijaya+karnataka&hl=kn&gl=IN&ceid=IN:kn' },
+  // ── India — Telugu ───────────────────────────────────────────────
+  { id:'telug1', flag:'🇮🇳', label:'Sakshi',               lang:'Telugu',   group:'🇮🇳 India (Telugu)',  color:'#1a5c3a', url:'https://news.google.com/rss/search?q=sakshi+telugu&hl=te&gl=IN&ceid=IN:te' },
+  { id:'telug2', flag:'🇮🇳', label:'Eenadu',               lang:'Telugu',   group:'🇮🇳 India (Telugu)',  color:'#2e7d32', url:'https://news.google.com/rss/search?q=eenadu&hl=te&gl=IN&ceid=IN:te' },
+  // ── India — Marathi ──────────────────────────────────────────────
+  { id:'marat1', flag:'🇮🇳', label:'Maharashtra Times',    lang:'Marathi',  group:'🇮🇳 India (Marathi)', color:'#e65100', url:'https://news.google.com/rss/search?q=maharashtra+times&hl=mr&gl=IN&ceid=IN:mr' },
+  { id:'marat2', flag:'🇮🇳', label:'Loksatta',             lang:'Marathi',  group:'🇮🇳 India (Marathi)', color:'#bf360c', url:'https://news.google.com/rss/search?q=loksatta&hl=mr&gl=IN&ceid=IN:mr' },
+  // ── India — Bengali ──────────────────────────────────────────────
+  { id:'beng1',  flag:'🇮🇳', label:'Anandabazar Patrika',  lang:'Bengali',  group:'🇮🇳 India (Bengali)', color:'#01579b', url:'https://news.google.com/rss/search?q=anandabazar+patrika&hl=bn&gl=IN&ceid=IN:bn' },
+  { id:'beng2',  flag:'🇮🇳', label:'ABP Ananda',           lang:'Bengali',  group:'🇮🇳 India (Bengali)', color:'#0277bd', url:'https://news.google.com/rss/search?q=abp+ananda&hl=bn&gl=IN&ceid=IN:bn' },
+  // ── Japan ────────────────────────────────────────────────────────
+  { id:'japan1', flag:'🇯🇵', label:'NHK World',            lang:'English',  group:'🇯🇵 Japan',           color:'#c0392b', url:'https://www3.nhk.or.jp/rss/news/cat5.xml' },
+  { id:'japan2', flag:'🇯🇵', label:'Japan Times',          lang:'English',  group:'🇯🇵 Japan',           color:'#922b21', url:'https://www.japantimes.co.jp/feed/' },
+  // ── Asia Pacific ─────────────────────────────────────────────────
+  { id:'china1', flag:'🇨🇳', label:'CGTN Business',        lang:'English',  group:'🌏 Asia Pacific',     color:'#c62828', url:'https://www.cgtn.com/subscribe/rss/section/business.xml' },
+  { id:'korea1', flag:'🇰🇷', label:'Korea Times',          lang:'English',  group:'🌏 Asia Pacific',     color:'#1a237e', url:'https://www.koreatimes.co.kr/www/rss/rss.aspx' },
+  { id:'thai1',  flag:'🇹🇭', label:'Bangkok Post',         lang:'English',  group:'🌏 Asia Pacific',     color:'#1b5e20', url:'https://www.bangkokpost.com/rss/data/business.xml' },
+  { id:'viet1',  flag:'🇻🇳', label:'VIR Vietnam',          lang:'English',  group:'🌏 Asia Pacific',     color:'#b71c1c', url:'https://vir.com.vn/rss' },
+  // ── United Kingdom ────────────────────────────────────────────────
+  { id:'uk1',    flag:'🇬🇧', label:'Sky News UK',          lang:'English',  group:'🇬🇧 United Kingdom',  color:'#0033a0', url:'https://feeds.skynews.com/feeds/rss/home.xml' },
+  { id:'uk2',    flag:'🇬🇧', label:'BBC World News',       lang:'English',  group:'🇬🇧 United Kingdom',  color:'#1d4ed8', url:'https://feeds.bbci.co.uk/news/rss.xml' },
+  // ── Europe & Middle East ─────────────────────────────────────────
+  { id:'eu1',    flag:'🌍',  label:'BBC Business',         lang:'English',  group:'🌍 Europe & Middle East', color:'#1d4ed8', url:'https://feeds.bbci.co.uk/news/business/rss.xml' },
+  { id:'eu2',    flag:'🌍',  label:'Euronews Business',    lang:'English',  group:'🌍 Europe & Middle East', color:'#0d47a1', url:'https://www.euronews.com/rss?level=theme&name=business' },
+  { id:'mid1',   flag:'🌍',  label:'Al Jazeera',           lang:'English',  group:'🌍 Europe & Middle East', color:'#1a6b3e', url:'https://www.aljazeera.com/xml/rss/all.xml' },
+  // ── Global ───────────────────────────────────────────────────────
+  { id:'global', flag:'🌐',  label:'Google Finance News',  lang:'English',  group:'🌐 Global',           color:'#0d6b3e', url:'https://news.google.com/rss/search?q=finance+markets+stocks&hl=en-IN&gl=IN&ceid=IN:en' },
+  // ── Japan (Japanese) ──────────────────────────────────────────────────────
+  { id:'jp3',    flag:'🇯🇵', label:'TBS News (日本語)',       lang:'Japanese', group:'🇯🇵 Japan',           color:'#c0392b', url:'https://news.google.com/rss/search?q=TBS+news&hl=ja&gl=JP&ceid=JP:ja' },
+  { id:'jp4',    flag:'🇯🇵', label:'Asahi News (朝日新聞)',   lang:'Japanese', group:'🇯🇵 Japan',           color:'#d32f2f', url:'https://news.google.com/rss/search?q=asahi+news&hl=ja&gl=JP&ceid=JP:ja' },
+  { id:'jp5',    flag:'🇯🇵', label:'Bloomberg Japan (日本語)',lang:'Japanese', group:'🇯🇵 Japan',           color:'#1a237e', url:'https://news.google.com/rss/search?q=bloomberg+japan&hl=ja&gl=JP&ceid=JP:ja' },
+  // ── Korea (Korean) ────────────────────────────────────────────────────────
+  { id:'kr1',    flag:'🇰🇷', label:'YTN News (한국)',        lang:'Korean',   group:'🇰🇷 South Korea',     color:'#1976d2', url:'https://news.google.com/rss/search?q=YTN+news&hl=ko&gl=KR&ceid=KR:ko' },
+  { id:'kr2',    flag:'🇰🇷', label:'MBC News (한국)',        lang:'Korean',   group:'🇰🇷 South Korea',     color:'#0d47a1', url:'https://news.google.com/rss/search?q=MBC+news&hl=ko&gl=KR&ceid=KR:ko' },
+  // ── China ──────────────────────────────────────────────────────────────────
+  { id:'cn1',    flag:'🇨🇳', label:'CCTV News (中文)',       lang:'Chinese',  group:'🇨🇳 China',           color:'#c41c3b', url:'https://news.google.com/rss/search?q=CCTV+news&hl=zh-Hans&gl=CN&ceid=CN:zh-Hans' },
+  { id:'cn2',    flag:'🇨🇳', label:'China Daily (中文)',     lang:'Chinese',  group:'🇨🇳 China',           color:'#e63946', url:'https://www.chinadaily.com.cn/rss/world_rss.xml' },
+  // ── Mexico ─────────────────────────────────────────────────────────────────
+  { id:'mexico1', flag:'🇲🇽', label:'Excélsior (Español)',   lang:'Spanish',  group:'🇲🇽 Mexico',          color:'#ff6b35', url:'https://news.google.com/rss/search?q=excelsior+mexico&hl=es&gl=MX&ceid=MX:es' },
+  { id:'mexico2', flag:'🇲🇽', label:'Reforma (Español)',     lang:'Spanish',  group:'🇲🇽 Mexico',          color:'#f77f00', url:'https://news.google.com/rss/search?q=reforma+mexico&hl=es&gl=MX&ceid=MX:es' },
+  // ── Canada ─────────────────────────────────────────────────────────────────
+  { id:'canada1', flag:'🇨🇦', label:'CTV News',             lang:'English',  group:'🇨🇦 Canada',          color:'#c1121f', url:'https://www.ctvnews.ca/rss/ctvnews-ca-top-stories-public-rss-1.822009' },
+  { id:'canada2', flag:'🇨🇦', label:'Global News',          lang:'English',  group:'🇨🇦 Canada',          color:'#a4161a', url:'https://globalnews.ca/feed/' },
+  { id:'canada3', flag:'🇨🇦', label:'CBC News Canada',      lang:'English',  group:'🇨🇦 Canada',          color:'#8b0000', url:'https://rss.cbc.ca/lineup/topstories.xml' },
+  // ── Switzerland ────────────────────────────────────────────────────────────
+  { id:'swiss1', flag:'🇨🇭', label:'SRF News (Deutsch)',    lang:'German',   group:'🇨🇭 Switzerland',     color:'#c41c3b', url:'https://news.google.com/rss/search?q=SRF+news&hl=de&gl=CH&ceid=CH:de' },
+  { id:'swiss2', flag:'🇨🇭', label:'RTS News (Français)',   lang:'French',   group:'🇨🇭 Switzerland',     color:'#e63946', url:'https://news.google.com/rss/search?q=RTS+news&hl=fr&gl=CH&ceid=CH:fr' },
+  // ── Australia ──────────────────────────────────────────────────────────────
+  { id:'aus1', flag:'🇦🇺', label:'ABC News Australia',     lang:'English',  group:'🇦🇺 Australia',       color:'#003d82', url:'https://www.abc.net.au/news/feed/51120/rss.xml' },
+  { id:'aus2', flag:'🇦🇺', label:'Sky News Australia',     lang:'English',  group:'🇦🇺 Australia',       color:'#004687', url:'https://www.skynews.com.au/rss.xml', fallbackQuery:'sky news australia' },
+  { id:'aus3', flag:'🇦🇺', label:'Nine News',              lang:'English',  group:'🇦🇺 Australia',       color:'#1a4380', url:'https://news.google.com/rss/search?q=nine+news+australia&hl=en&gl=AU&ceid=AU:en' },
+  // ── New Zealand ────────────────────────────────────────────────────────────
+  { id:'nz1', flag:'🇳🇿', label:'RNZ News',                lang:'English',  group:'🇳🇿 New Zealand',     color:'#d1495a', url:'https://news.google.com/rss/search?q=RNZ+news&hl=en&gl=NZ&ceid=NZ:en' },
+  { id:'nz2', flag:'🇳🇿', label:'TVNZ News',               lang:'English',  group:'🇳🇿 New Zealand',     color:'#a02a46', url:'https://news.google.com/rss/search?q=TVNZ+news&hl=en&gl=NZ&ceid=NZ:en' },
+  // ── Bangladesh ─────────────────────────────────────────────────────────────
+  { id:'bang1', flag:'🇧🇩', label:'Dhaka Tribune',          lang:'English',  group:'🇧🇩 Bangladesh',      color:'#006a4e', url:'https://www.dhakatribune.com/feed' },
+  { id:'bang2', flag:'🇧🇩', label:'bdnews24 (বাংলা)',       lang:'Bengali',  group:'🇧🇩 Bangladesh',      color:'#00562e', url:'https://bangla.bdnews24.com/feed/' },
+  { id:'bang3', flag:'🇧🇩', label:'The Daily Star',         lang:'English',  group:'🇧🇩 Bangladesh',      color:'#004e35', url:'https://www.thedailystar.net/frontpage/rss.xml' },
+  // ── Thailand ───────────────────────────────────────────────────────────────
+  { id:'th1',   flag:'🇹🇭', label:'Thai PBS (ไทย)',         lang:'Thai',     group:'🇹🇭 Thailand',       color:'#e02d3b', url:'https://news.google.com/rss/search?q=thaipbs+news&hl=th&gl=TH&ceid=TH:th' },
+  { id:'th2',   flag:'🇹🇭', label:'Thai News (ไทย)',        lang:'Thai',     group:'🇹🇭 Thailand',       color:'#c41c3b', url:'https://news.google.com/rss/search?q=thai+news&hl=th&gl=TH&ceid=TH:th' },
+  // ── UAE (United Arab Emirates) ─────────────────────────────────────────────
+  { id:'uae1', flag:'🇦🇪', label:'Khaleej Times',           lang:'English',  group:'🇦🇪 UAE',             color:'#c41c3b', url:'https://news.google.com/rss/search?q=khaleej+times&hl=en&gl=AE&ceid=AE:en' },
+  { id:'uae2', flag:'🇦🇪', label:'Emirates News (العربية)', lang:'Arabic',   group:'🇦🇪 UAE',             color:'#a02a46', url:'https://news.google.com/rss/search?q=emirates+news&hl=ar&gl=AE&ceid=AE:ar' },
+  // ── Brazil ─────────────────────────────────────────────────────────────────
+  { id:'brazil1', flag:'🇧🇷', label:'G1 News (Português)',   lang:'Portuguese', group:'🇧🇷 Brazil',          color:'#009c3b', url:'https://news.google.com/rss/search?q=G1+news&hl=pt&gl=BR&ceid=BR:pt-BR' },
+  { id:'brazil2', flag:'🇧🇷', label:'O Globo (Português)',   lang:'Portuguese', group:'🇧🇷 Brazil',          color:'#00a550', url:'https://news.google.com/rss/search?q=o+globo&hl=pt&gl=BR&ceid=BR:pt-BR' },
+  // ── Argentina ──────────────────────────────────────────────────────────────
+  { id:'arg1', flag:'🇦🇷', label:'Clarín (Español)',        lang:'Spanish',  group:'🇦🇷 Argentina',       color:'#74acdf', url:'https://news.google.com/rss/search?q=clarin+argentina&hl=es&gl=AR&ceid=AR:es' },
+  { id:'arg2', flag:'🇦🇷', label:'La Nación (Español)',     lang:'Spanish',  group:'🇦🇷 Argentina',       color:'#5a9fd4', url:'https://news.google.com/rss/search?q=la+nacion+argentina&hl=es&gl=AR&ceid=AR:es' },
+  // ── France ─────────────────────────────────────────────────────────────────
+  { id:'france1', flag:'🇫🇷', label:'France24 (Français)',   lang:'French',   group:'🇫🇷 France',          color:'#002395', url:'https://www.france24.com/en/rss' },
+  { id:'france2', flag:'🇫🇷', label:'Le Monde (Français)',   lang:'French',   group:'🇫🇷 France',          color:'#1e3a8a', url:'https://news.google.com/rss/search?q=le+monde&hl=fr&gl=FR&ceid=FR:fr' },
+  // ── Russia ─────────────────────────────────────────────────────────────────
+  { id:'russia1', flag:'🇷🇺', label:'TASS News (Русский)',   lang:'Russian',  group:'🇷🇺 Russia',          color:'#d52b1e', url:'https://news.google.com/rss/search?q=TASS+news&hl=ru&gl=RU&ceid=RU:ru' },
+  { id:'russia2', flag:'🇷🇺', label:'Interfax (Русский)',    lang:'Russian',  group:'🇷🇺 Russia',          color:'#b81c1c', url:'https://news.google.com/rss/search?q=interfax+russia&hl=ru&gl=RU&ceid=RU:ru' },
+  // ── South Africa ───────────────────────────────────────────────────────────
+  { id:'sa1', flag:'🇿🇦', label:'News24',                  lang:'English',  group:'🇿🇦 South Africa',    color:'#d32f2f', url:'https://www.news24.com/rss' },
+  { id:'sa2', flag:'🇿🇦', label:'eNews Channel (English)',  lang:'English',  group:'🇿🇦 South Africa',    color:'#b71c1c', url:'https://news.google.com/rss/search?q=enews+south+africa&hl=en&gl=ZA&ceid=ZA:en' },
+  // ── Taiwan ─────────────────────────────────────────────────────────────────
+  { id:'taiwan1', flag:'🇹🇼', label:'CNA Taiwan (中文)',     lang:'Chinese',  group:'🇹🇼 Taiwan',          color:'#de2910', url:'https://news.google.com/rss/search?q=CNA+taiwan&hl=zh-Hant&gl=TW&ceid=TW:zh-Hant' },
+  { id:'taiwan2', flag:'🇹🇼', label:'TVBS News (中文)',      lang:'Chinese',  group:'🇹🇼 Taiwan',          color:'#cc0000', url:'https://news.google.com/rss/search?q=TVBS+news&hl=zh-Hant&gl=TW&ceid=TW:zh-Hant' },
+  // ── Gujarat (India) ────────────────────────────────────────────────────────
+  { id:'guj1', flag:'🇮🇳', label:'Divya Bhaskar (ગુજરાતી)',   lang:'Gujarati', group:'🇮🇳 India (Gujarati)', color:'#ff6f00', url:'https://news.google.com/rss/search?q=divya+bhaskar&hl=gu&gl=IN&ceid=IN:gu' },
+  { id:'guj2', flag:'🇮🇳', label:'Sandesh (ગુજરાતી)',       lang:'Gujarati', group:'🇮🇳 India (Gujarati)', color:'#fb8500', url:'https://news.google.com/rss/search?q=sandesh+gujarati&hl=gu&gl=IN&ceid=IN:gu' },
+  // ── India — Additional ─────────────────────────────────────────────
+  { id:'india8', flag:'🇮🇳', label:'ANI News',              lang:'English',  group:'🇮🇳 India (English)', color:'#1565c0', url:'https://news.google.com/rss/search?q=ANI+news+india&hl=en-IN&gl=IN&ceid=IN:en', fallbackQuery:'ANI india news' },
+  // ── Nigeria ────────────────────────────────────────────────────────
+  { id:'ng1', flag:'🇳🇬', label:'Punch Nigeria',           lang:'English',  group:'🇳🇬 Nigeria',         color:'#d32f2f', url:'https://news.google.com/rss/search?q=punch+newspaper+nigeria&hl=en&gl=NG&ceid=NG:en' },
+  { id:'ng2', flag:'🇳🇬', label:'Daily Post Nigeria',      lang:'English',  group:'🇳🇬 Nigeria',         color:'#c62828', url:'https://news.google.com/rss/search?q=daily+post+nigeria&hl=en&gl=NG&ceid=NG:en' },
+  { id:'ng3', flag:'🇳🇬', label:'Sahara Reporters',        lang:'English',  group:'🇳🇬 Nigeria',         color:'#b71c1c', url:'https://news.google.com/rss/search?q=sahara+reporters+nigeria&hl=en&gl=NG&ceid=NG:en' },
+  { id:'ng4', flag:'🇳🇬', label:'Vanguard Nigeria',        lang:'English',  group:'🇳🇬 Nigeria',         color:'#e53935', url:'https://news.google.com/rss/search?q=vanguard+newspaper+nigeria&hl=en&gl=NG&ceid=NG:en' },
+  // ── Nepal ──────────────────────────────────────────────────────────
+  { id:'nep1', flag:'🇳🇵', label:'Nepal News',             lang:'English',  group:'🇳🇵 Nepal',           color:'#003893', url:'https://news.google.com/rss/search?q=nepal+news&hl=en&gl=NP&ceid=NP:en' },
+  { id:'nep2', flag:'🇳🇵', label:'Online Khabar (English)', lang:'English', group:'🇳🇵 Nepal',           color:'#dc143c', url:'https://news.google.com/rss/search?q=online+khabar+nepal&hl=en&gl=NP&ceid=NP:en' },
+  { id:'nep3', flag:'🇳🇵', label:'eKantipur (नेपाली)',     lang:'Nepali',   group:'🇳🇵 Nepal',           color:'#1e40af', url:'https://news.google.com/rss/search?q=ekantipur&hl=ne&gl=NP&ceid=NP:ne' },
+  // ── Bangladesh — Additional ──────────────────────────────────────────
+  { id:'bd3', flag:'🇧🇩', label:'The Daily Star',          lang:'English',  group:'🇧🇩 Bangladesh',      color:'#006a4e', url:'https://www.thedailystar.net/frontpage/rss.xml', fallbackQuery:'daily star bangladesh' },
+  { id:'bd4', flag:'🇧🇩', label:'News24 Bangladesh',       lang:'Bengali',  group:'🇧🇩 Bangladesh',      color:'#009688', url:'https://news.google.com/rss/search?q=news24+bangladesh&hl=bn&gl=BD&ceid=BD:bn' },
+  { id:'bd5', flag:'🇧🇩', label:'BD Pratidin (বাংলা)',     lang:'Bengali',  group:'🇧🇩 Bangladesh',      color:'#00796b', url:'https://news.google.com/rss/search?q=bd+pratidin&hl=bn&gl=BD&ceid=BD:bn' },
+  // ── Canada — Additional ──────────────────────────────────────────────
+  { id:'ca3', flag:'🇨🇦', label:'CBC News Canada',         lang:'English',  group:'🇨🇦 Canada',          color:'#c41230', url:'https://www.cbc.ca/webfeed/rss/rss-canada' },
+  { id:'ca4', flag:'🇨🇦', label:'CTV News',                lang:'English',  group:'🇨🇦 Canada',          color:'#b22222', url:'https://news.google.com/rss/search?q=CTV+news+canada&hl=en&gl=CA&ceid=CA:en' },
+  // ── Australia — Additional ───────────────────────────────────────────
+  { id:'au3', flag:'🇦🇺', label:'News.com.au',             lang:'English',  group:'🇦🇺 Australia',       color:'#d32f2f', url:'https://www.news.com.au/content-feeds/latest-news-rss/', fallbackQuery:'news.com.au australia' },
+  { id:'au4', flag:'🇦🇺', label:'9News Australia',         lang:'English',  group:'🇦🇺 Australia',       color:'#1565c0', url:'https://news.google.com/rss/search?q=9news+australia&hl=en&gl=AU&ceid=AU:en' },
+  { id:'au5', flag:'🇦🇺', label:'Sky News Australia',      lang:'English',  group:'🇦🇺 Australia',       color:'#0d47a1', url:'https://news.google.com/rss/search?q=sky+news+australia&hl=en&gl=AU&ceid=AU:en' },
+  // ── UK — Additional ──────────────────────────────────────────────────
+  { id:'uk3', flag:'🇬🇧', label:'Sky News UK',             lang:'English',  group:'🇬🇧 United Kingdom',   color:'#0072bc', url:'https://news.google.com/rss/search?q=sky+news+uk&hl=en&gl=GB&ceid=GB:en' },
+  // ── US — Additional ──────────────────────────────────────────────────
+  { id:'us7', flag:'🇺🇸', label:'Axios',                   lang:'English',  group:'🇺🇸 US & Americas',    color:'#0077c8', url:'https://www.axios.com/feeds/rss/index.xml', fallbackQuery:'axios news' },
+  { id:'us8', flag:'🇺🇸', label:'Reuters',                 lang:'English',  group:'🇺🇸 US & Americas',    color:'#ff8000', url:'https://news.google.com/rss/search?q=reuters+news&hl=en&gl=US&ceid=US:en' },
+  { id:'us9', flag:'🇺🇸', label:'Bloomberg',               lang:'English',  group:'🇺🇸 US & Americas',    color:'#472a91', url:'https://news.google.com/rss/search?q=bloomberg+news&hl=en&gl=US&ceid=US:en' },
+  // ── Japan — Additional ───────────────────────────────────────────────
+  { id:'jp4', flag:'🇯🇵', label:'Bloomberg Japan (日本語)',  lang:'Japanese', group:'🇯🇵 Japan',           color:'#1a1a2e', url:'https://news.google.com/rss/search?q=bloomberg+japan&hl=ja&gl=JP&ceid=JP:ja' },
+  // ── Philippines ──────────────────────────────────────────────────────
+  { id:'ph1', flag:'🇵🇭', label:'Manila Standard',          lang:'English',  group:'🇵🇭 Philippines',     color:'#1565c0', url:'https://news.google.com/rss/search?q=manila+standard&hl=en&gl=PH&ceid=PH:en', fallbackQuery:'manila standard philippines' },
+  { id:'ph2', flag:'🇵🇭', label:'Philippine Daily Inquirer', lang:'English', group:'🇵🇭 Philippines',     color:'#c62828', url:'https://news.google.com/rss/search?q=philippine+inquirer&hl=en&gl=PH&ceid=PH:en', fallbackQuery:'inquirer philippines' },
+  { id:'ph3', flag:'🇵🇭', label:'PhilStar',                 lang:'English',  group:'🇵🇭 Philippines',     color:'#1a237e', url:'https://news.google.com/rss/search?q=philstar+news&hl=en&gl=PH&ceid=PH:en', fallbackQuery:'philstar philippines' },
+  { id:'ph4', flag:'🇵🇭', label:'Manila Times',             lang:'English',  group:'🇵🇭 Philippines',     color:'#0d47a1', url:'https://news.google.com/rss/search?q=manila+times+news&hl=en&gl=PH&ceid=PH:en', fallbackQuery:'manila times' },
+  // ── Singapore ─────────────────────────────────────────────────────────
+  { id:'sg1', flag:'🇸🇬', label:'Straits Times',            lang:'English',  group:'🇸🇬 Singapore',       color:'#c41c3b', url:'https://news.google.com/rss/search?q=straits+times+singapore&hl=en&gl=SG&ceid=SG:en', fallbackQuery:'straits times singapore' },
+  { id:'sg2', flag:'🇸🇬', label:'Business Times SG',        lang:'English',  group:'🇸🇬 Singapore',       color:'#8b0000', url:'https://news.google.com/rss/search?q=business+times+singapore&hl=en&gl=SG&ceid=SG:en', fallbackQuery:'business times singapore' },
+  { id:'sg3', flag:'🇸🇬', label:'Zaobao (联合早报)',         lang:'Chinese',  group:'🇸🇬 Singapore',       color:'#7b1a1a', url:'https://news.google.com/rss/search?q=zaobao+singapore&hl=zh-Hans&gl=SG&ceid=SG:zh-Hans', fallbackQuery:'zaobao singapore' },
+  { id:'sg4', flag:'🇸🇬', label:'Tamil Murasu',             lang:'Tamil',    group:'🇸🇬 Singapore',       color:'#d32f2f', url:'https://news.google.com/rss/search?q=tamil+murasu+singapore&hl=ta&gl=SG&ceid=SG:ta', fallbackQuery:'tamil murasu singapore' },
+  // ── Malaysia ──────────────────────────────────────────────────────────
+  { id:'my1', flag:'🇲🇾', label:'Berita Harian (Melayu)',   lang:'Malay',    group:'🇲🇾 Malaysia',         color:'#cc0000', url:'https://news.google.com/rss/search?q=berita+harian+malaysia&hl=ms&gl=MY&ceid=MY:ms', fallbackQuery:'berita harian malaysia' },
+  { id:'my2', flag:'🇲🇾', label:'Free Malaysia Today',      lang:'English',  group:'🇲🇾 Malaysia',         color:'#b71c1c', url:'https://news.google.com/rss/search?q=free+malaysia+today&hl=en&gl=MY&ceid=MY:en', fallbackQuery:'free malaysia today news' },
+  // ── Sri Lanka ─────────────────────────────────────────────────────────
+  { id:'lk1', flag:'🇱🇰', label:'Daily Mirror LK',          lang:'English',  group:'🇱🇰 Sri Lanka',        color:'#8b1a1a', url:'https://news.google.com/rss/search?q=daily+mirror+sri+lanka&hl=en&gl=LK&ceid=LK:en', fallbackQuery:'daily mirror sri lanka' },
+  { id:'lk2', flag:'🇱🇰', label:'The Times (Sri Lanka)',    lang:'English',  group:'🇱🇰 Sri Lanka',        color:'#7b1c3b', url:'https://news.google.com/rss/search?q=times+sri+lanka+news&hl=en&gl=LK&ceid=LK:en', fallbackQuery:'times sri lanka' },
+  { id:'lk3', flag:'🇱🇰', label:'Daily News LK',            lang:'English',  group:'🇱🇰 Sri Lanka',        color:'#6b2d1a', url:'https://news.google.com/rss/search?q=daily+news+sri+lanka&hl=en&gl=LK&ceid=LK:en', fallbackQuery:'daily news sri lanka' },
+];
+
+// ── Source lookup registry (keyed by id for retry/cache logic) ───────────────
+const _NEWS_SOURCE_MAP = Object.fromEntries(NEWS_SOURCES.map(s => [s.id, s]));
+
+// Default 10 feed IDs shown on first visit
+const NEWS_DEFAULT_IDS = ['us1','us2','india1','india2','india3','india4','japan1','eu1']; // 8 defaults, customizable via settings
+const NEWS_MAX = 8;
+const NEWS_IDS_KEY   = 'viltv_news_ids';   // JSON array of selected feed IDs
+const NEWS_ORDER_KEY = 'viltv_news_order';  // JSON array defining display order
+
+// ── CORS proxy chain — tries multiple public proxies in sequence ──────────────
+const WORKER_PROXY_URL = 'https://screener-proxy.vilfintv.workers.dev';
+let _workerProxyDownUntil = 0;
+
+// Convert rss2json.com item format → internal item format
+function _rss2jsonToItem(it) {
+  // rss2json exposes thumbnail as it.thumbnail or first enclosure
+  const image = it.thumbnail || it.enclosure?.link || '';
+  return {
+    title: it.title || '',
+    link: it.link || it.guid || '#',
+    pubDate: it.pubDate || '',
+    description: it.description || it.content || '',
+    source: it.author || '',
+    image: image,
+  };
+}
+
+// Ordered proxy pool — tried in sequence until one returns valid RSS items
+const _PROXY_CHAIN = [
+  // 1. Our own Cloudflare Worker (primary — fastest, no rate limits)
+  {
+    name: 'worker',
+    build: url => `${WORKER_PROXY_URL}/?url=${encodeURIComponent(url)}`,
+    extract: async r => { const t = await r.text(); return _parseXmlItems(t); },
+    timeout: 12000,
+  },
+  // 2. allorigins.win — free open CORS proxy, returns JSON wrapper
+  {
+    name: 'allorigins',
+    build: url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+    extract: async r => { const j = await r.json(); return _parseXmlItems(j.contents || ''); },
+    timeout: 10000,
+  },
+  // 3. rss2json.com — cloud RSS-to-JSON converter, different infrastructure
+  {
+    name: 'rss2json',
+    build: url => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`,
+    extract: async r => { const j = await r.json(); return j.status === 'ok' ? j.items.map(_rss2jsonToItem) : []; },
+    timeout: 9000,
+  },
+  // 4. corsproxy.io — another free CORS proxy, different CDN
+  {
+    name: 'corsproxy',
+    build: url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+    extract: async r => { const t = await r.text(); return _parseXmlItems(t); },
+    timeout: 9000,
+  },
+];
+
+const _FEED_CACHE_KEY = id => 'viltv_ncache_' + id;
+
+// Global retry handler — onclick in error/stale cards calls this
+window._feedRetry = function(id) {
+  const s = _NEWS_SOURCE_MAP[id];
+  const listEl = document.getElementById('lnbl-' + id);
+  if (s && listEl) {
+    listEl.innerHTML = '<div class="lnb-loading">Retrying…</div>';
+    fetchFeed(s, 0, false);
+  }
+};
+
+// ── Active feed helpers ──────────────────────────────────────────────────────
+function _loadActiveIds() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(NEWS_IDS_KEY));
+    if (Array.isArray(saved) && saved.length) return saved.slice(0, NEWS_MAX);
+  } catch(_) {}
+  return NEWS_DEFAULT_IDS.slice(0, NEWS_MAX);
+}
+
+function getActiveFeeds() {
+  const ids = _loadActiveIds();
+  const map = Object.fromEntries(NEWS_SOURCES.map(s => [s.id, s]));
+  return ids.map(id => map[id]).filter(Boolean);
+}
+
+// ── Core news functions ──────────────────────────────────────────────────────
+let lnsTimer;
+
+// ── Bulletproof event delegation — attached after DOM ready ──
+(function _newsDelegate() {
+  if (!document.body) { setTimeout(_newsDelegate, 10); return; }
+  document.body.addEventListener('click', function(e) {
+    // Skip clicks inside the news modal or its children
+    if (e.target.closest('.rss-modal-overlay') || e.target.closest('#newsModal')) return;
+    var el = e.target.closest('.lnb-item');
+    if (!el) return;
+    e.preventDefault();
+    // If the inline onclick already showed the modal, don't overwrite it
+    var overlay = document.getElementById('rss-modal-overlay');
+    if (overlay && overlay.classList.contains('active')) return;
+    // Extract strictly from data attributes
+    var trueUrl = el.getAttribute('data-true-url') || '#';
+    var title   = el.getAttribute('data-title') || 'News Story';
+    var snippet = decodeURIComponent(el.getAttribute('data-modal-content') || el.getAttribute('data-desc') || '');
+    var source  = el.getAttribute('data-source') || '';
+    openNewsModal(title, trueUrl, snippet, source);
+  });
+})();
+
+function initLiveNews() {
+  renderNewsBoxes();
+  fetchAllNews();
+  lnsTimer = setInterval(fetchAllNews, 600000);
+}
+
+// Unique picsum fallback images per channel group — seeded for determinism, no duplicates.
+// Using picsum.photos (stable CDN, never removes seeded images) instead of Unsplash photo IDs
+// which can be taken down when photographers delete their accounts.
+const _LNB_FALLBACKS = {
+  '🇺🇸 US & Americas':        'https://picsum.photos/seed/lnb-usamericas/500/280',
+  '🇮🇳 India (English)':      'https://picsum.photos/seed/lnb-indiaen/500/280',
+  '🇮🇳 India (Hindi)':        'https://picsum.photos/seed/lnb-indiahi/500/280',
+  '🇮🇳 India (Malayalam)':    'https://picsum.photos/seed/lnb-indiaml/500/280',
+  '🇮🇳 India (Tamil)':        'https://picsum.photos/seed/lnb-indiata/500/280',
+  '🇮🇳 India (Kannada)':      'https://picsum.photos/seed/lnb-indiakn/500/280',
+  '🇮🇳 India (Telugu)':       'https://picsum.photos/seed/lnb-indiate/500/280',
+  '🇮🇳 India (Marathi)':      'https://picsum.photos/seed/lnb-indiamr/500/280',
+  '🇮🇳 India (Bengali)':      'https://picsum.photos/seed/lnb-indiabn/500/280',
+  '🇮🇳 India (Gujarati)':     'https://picsum.photos/seed/lnb-indiagu/500/280',
+  '🇯🇵 Japan':                'https://picsum.photos/seed/lnb-japannews/500/280',
+  '🌏 Asia Pacific':           'https://picsum.photos/seed/lnb-asiapac/500/280',
+  '🌍 Europe & Middle East':   'https://picsum.photos/seed/lnb-europeme/500/280',
+  '🌐 Global':                 'https://picsum.photos/seed/lnb-globalnews/500/280',
+  '🇨🇳 China':                'https://picsum.photos/seed/lnb-chinanews/500/280',
+  '🇰🇷 South Korea':           'https://picsum.photos/seed/lnb-koreasnews/500/280',
+  '🇲🇽 Mexico':               'https://picsum.photos/seed/lnb-mexiconews/500/280',
+  '🇨🇦 Canada':               'https://picsum.photos/seed/lnb-canadanews/500/280',
+  '🇨🇭 Switzerland':           'https://picsum.photos/seed/lnb-swissnews/500/280',
+  '🇦🇺 Australia':             'https://picsum.photos/seed/lnb-australianews/500/280',
+  '🇳🇿 New Zealand':           'https://picsum.photos/seed/lnb-nzealandnews/500/280',
+  '🇧🇩 Bangladesh':            'https://picsum.photos/seed/lnb-bangladeshnews/500/280',
+  '🇬🇧 United Kingdom':       'https://picsum.photos/seed/lnb-uknews/500/280',
+  '🇹🇭 Thailand':             'https://picsum.photos/seed/lnb-thailandnews/500/280',
+  '🇺🇦 Ukraine':              'https://picsum.photos/seed/lnb-ukrainenews/500/280',
+  '🇫🇷 France':               'https://picsum.photos/seed/lnb-francenews/500/280',
+  '🇷🇺 Russia':               'https://picsum.photos/seed/lnb-russianews/500/280',
+  '🇿🇦 South Africa':         'https://picsum.photos/seed/lnb-safricanews/500/280',
+  '🇳🇬 Nigeria':              'https://picsum.photos/seed/lnb-nigerianews/500/280',
+  '🇳🇵 Nepal':                'https://picsum.photos/seed/lnb-nepalnews/500/280',
+  '🇦🇪 UAE':                  'https://picsum.photos/seed/lnb-uaenews/500/280',
+  '🇧🇷 Brazil':               'https://picsum.photos/seed/lnb-brazilnews/500/280',
+  '🇦🇷 Argentina':            'https://picsum.photos/seed/lnb-argentinanews/500/280',
+  '🇹🇼 Taiwan':               'https://picsum.photos/seed/lnb-taiwannews/500/280',
+  '🇵🇭 Philippines':          'https://picsum.photos/seed/lnb-philippines/500/280',
+  '🇸🇬 Singapore':            'https://picsum.photos/seed/lnb-singapore/500/280',
+  '🇲🇾 Malaysia':             'https://picsum.photos/seed/lnb-malaysia/500/280',
+  '🇱🇰 Sri Lanka':            'https://picsum.photos/seed/lnb-srilanka/500/280',
+};
+const _LNB_FALLBACK_DEFAULT = 'https://picsum.photos/seed/lnb-worlddefault/500/280';
+
+// Map channel group → news.html anchor section
+function _lnbMoreHash(group) {
+  if (!group) return '#trending';
+  if (group.includes('Malayalam')) return '#malayalam';
+  if (group.includes('Global') || group.includes('🌐')) return '#global';
+  // Region groups → global
+  const globalGroups = ['Japan','Korea','China','Europe','Middle East','Asia','UK','United Kingdom',
+    'Australia','New Zealand','Brazil','Argentina','France','Russia','South Africa',
+    'Nigeria','Nepal','UAE','Taiwan','Thailand','Bangladesh','Switzerland','Mexico',
+    'Philippines','Singapore','Malaysia','Sri Lanka'];
+  if (globalGroups.some(r => group.includes(r))) return '#global';
+  // India (non-Malayalam), US, Canada, English → trending
+  return '#trending';
+}
+
+function renderNewsBoxes() {
+  const grid = document.getElementById('lns-grid');
+  if (!grid) return;
+  const feeds = getActiveFeeds();
+  grid.innerHTML = feeds.map(s => {
+    const moreHash = _lnbMoreHash(s.group || '');
+    const moreUrl  = 'https://vilfintv.com/news.html' + moreHash;
+    return `<div class="lnb" id="lnb-${s.id}" style="--lnb-color:${s.color}">
+      <div class="lnb-header">
+        <span class="lnb-flag">${s.flag}</span>
+        <span class="lnb-label">${s.label}</span>
+        <span class="lnb-live">LIVE</span>
+      </div>
+      <div class="lnb-card-grid" id="lnbl-${s.id}" data-color="${escHtml(s.color)}" data-flag="${s.flag}" data-group="${escHtml(s.group||'')}"><div class="lnb-loading">Loading…</div></div>
+      <div class="lnb-more-footer">
+        <a href="${moreUrl}" class="lnb-more-btn" target="_blank" rel="noopener">
+          More Stories
+          <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5h6M5.5 2.5 8 5l-2.5 2.5"/></svg>
+        </a>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+let liveNewsCache = null;
+
+async function fetchAllNews() {
+  const activeFeeds = getActiveFeeds();
+  activeFeeds.forEach(s => {
+    const listEl = document.getElementById('lnbl-' + s.id);
+    if (listEl) listEl.innerHTML = '<div class="lnb-loading">Loading LIVE data...</div>';
+  });
+
+  try {
+    const res = await fetch('data/live_news.json?_t=' + Date.now(), { cache: 'no-store' });
+    if (res.ok) {
+      liveNewsCache = await res.json();
+    }
+  } catch(e) {
+    console.error("Failed to load backend live news cache", e);
+  }
+
+  activeFeeds.forEach(s => fetchFeed(s, 0));
+}
+
+// ── Universal copyright-safe RSS content sanitizer ───────────────
+function _sanitizeRssContent(raw, maxLen) {
+  if (!raw) return '';
+  maxLen = maxLen || 400;
+  // Parse through temp DOM to strip all media/scripts
+  var div = document.createElement('div');
+  div.innerHTML = raw;
+  // Strip unsafe tags
+  div.querySelectorAll('img,iframe,script,style,figure,object,picture,audio,video,svg,canvas,form,input,button').forEach(function(el) { el.remove(); });
+  var text = div.textContent || div.innerText || '';
+  text = text.replace(/\s+/g, ' ').trim();
+  if (!text) return '';
+  // Copyright-safe truncation at word boundary
+  if (text.length > maxLen) {
+    var cut = text.slice(0, maxLen);
+    var lastSpace = cut.lastIndexOf(' ');
+    if (lastSpace > maxLen * 0.7) cut = cut.slice(0, lastSpace);
+    return cut + '\u2026 [Read more on the publisher\'s site]';
+  }
+  return text;
+}
+
+/**
+ * Strip trailing " - Source Name" suffix appended by Google News RSS aggregation.
+ * Also strips " | Site Branding | Tagline" pipe-based suffixes.
+ * Preserves legitimate dashes inside headlines (e.g. "2024-25 budget").
+ */
+function _cleanNewsTitle(title) {
+  var t = (title || '').trim();
+  // Strip " | Site Brand | Tagline" pipe suffixes (keep content before first pipe)
+  var pipe = t.indexOf(' | ');
+  if (pipe > 15) t = t.slice(0, pipe).trim();
+  // Strip trailing " - Publication Name" (1–4 capitalized words, ≤ 40 chars total)
+  // Uses anchored match to only touch the very last attribution suffix
+  var m = t.match(/^([\s\S]+?)\s+[-–—]\s+([A-Z][\w.]{1,19}(?:\s+[A-Z][\w.]{0,19}){0,2})$/);
+  if (m && m[2].length <= 40 && m[1].length >= 8) t = m[1].trim();
+  return t || title;
+}
+
+
+function renderItems(listEl, items) {
+  if (!listEl || !Array.isArray(items)) return;
+  const channelGroup = listEl.dataset.group || '';
+  const all = items.slice(0, 15); // UP TO 15 ITEMS
+  if (!all.length) return;
+
+  function _decode(str) {
+    if (!str) return '';
+    return str.replace(/&amp;/g, '&')
+              .replace(/&lt;/g, '<')
+              .replace(/&gt;/g, '>')
+              .replace(/&quot;/g, '"')
+              .replace(/&#39;/g, "'")
+              .replace(/&#039;/g, "'")
+              .replace(/&nbsp;/g, ' ')
+              .replace(/\uFFFD/g, ''); // Remove mojibake replacement characters
+  }
+
+  function _d(item) {
+    const title   = _decode(_cleanNewsTitle(typeof item === 'string' ? item : (item.title || '')));
+    const link    = item.link || item.url || '#';
+    const rawDesc = _decode(item.description || item.summary || item.content || '');
+    const snippet = _sanitizeRssContent(rawDesc, 200);
+    const source  = item.source || item.feed || '';
+    const pub     = item.pubDate || item.published || '';
+    return {
+      title, snippet, source,
+      imgSrc:   item.image || item.imageUrl || '',
+      category: item.category || '',
+      timeStr:  pub ? new Date(pub).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}) : '',
+      safeTitle:  escHtml(title),
+      safeUrl:    escHtml(link),
+      safeSrc:    escHtml(source),
+      encSnippet: encodeURIComponent(snippet),
+    };
+  }
+  function _ca(d) {
+    return `role="button" tabindex="0" data-title="${d.safeTitle}" data-snippet="${d.encSnippet}" data-url="${d.safeUrl}" data-source="${d.safeSrc}" onclick="lnbCardOpen(this)" onkeydown="if(event.key==='Enter')lnbCardOpen(this)"`;
+  }
+
+  const layouts = ['hero-list', 'masonry', 'manorama', 'magazine'];
+  let hash = 0;
+  for(let i=0; i<listEl.id.length; i++) hash += listEl.id.charCodeAt(i);
+  const layout = layouts[hash % layouts.length];
+  
+  const hasAnyImg = all.some(item => _d(item).imgSrc);
+  if (!hasAnyImg && (layout === 'manorama' || layout === 'hero-list')) {
+    layout = 'masonry';
+  }
+  
+  listEl.className = 'layout-card-grid layout-' + layout;
+  let html = '';
+
+  if (layout === 'hero-list') {
+    let heroIdx = all.findIndex(item => _d(item).imgSrc); if (heroIdx === -1) heroIdx = 0; const h = _d(all[heroIdx]); const subItems = all.filter((_, i) => i !== heroIdx);
+    const wrapBg = h.imgSrc ? `background-image:url('${escHtml(h.imgSrc)}');background-size:cover;background-position:top center` : 'background:var(--card3)';
+
+    const subHtml = subItems.slice(0, 3).map(item => {
+      const d = _d(item);
+      return `<div class="lnb-hero-sub" ${_ca(d)}>
+        <div class="lnb-hero-sub-title">${d.safeTitle}</div>
+        ${d.snippet ? `<div class="lnb-hero-sub-desc">${escHtml(d.snippet)}</div>` : ''}
+        ${d.timeStr ? `<div class="lnb-hero-sub-time">${d.timeStr}</div>` : ''}
+      </div>`;
+    }).join('');
+
+    const heroHtml = `<div class="lnb-hero-card">
+      ${h.imgSrc ? `<div class="lnb-hero-img-wrap" style="${wrapBg}">
+        <img class="lnb-hero-img" src="${escHtml(h.imgSrc)}" alt="" loading="lazy" onerror="this.onerror=null;this.style.display='none'">
+      </div>` : ''}
+      <div class="lnb-hero-body" ${_ca(h)}>
+        <div class="lnb-hero-title">${h.safeTitle}</div>
+        ${h.snippet ? `<div class="lnb-hero-snippet">${escHtml(h.snippet)}</div>` : ''}
+        ${h.timeStr ? `<div class="lnb-hero-time">${h.timeStr}</div>` : ''}
+      </div>
+      ${subHtml ? `<div class="lnb-hero-subs">${subHtml}</div>` : ''}
+    </div>`;
+
+    const listHtml = subItems.slice(3, 15).map(item => {
+      const d = _d(item);
+      const catLabel = d.category || d.source || '';
+      return `<div class="lnb-list-item" ${_ca(d)}>
+        <div class="lnb-list-body">
+          ${catLabel ? `<div class="lnb-list-category">${escHtml(catLabel.slice(0, 30))}</div>` : ''}
+          <div class="lnb-list-title">${d.safeTitle}</div>
+          ${d.timeStr ? `<div class="lnb-list-time">${d.timeStr}</div>` : ''}
+        </div>
+        ${d.imgSrc ? `<img class="lnb-list-thumb" style="width:40px;height:40px;border-radius:6px;object-position:center 25%;" src="${escHtml(d.imgSrc)}" alt="" loading="lazy" onerror="this.style.opacity=0">` : ''}
+      </div>`;
+    }).join('');
+
+    html = heroHtml + `<div class="lnb-right-col">${listHtml}</div>`;
+
+  } else if (layout === 'masonry') {
+    const cols = [[], [], []];
+    all.slice(0, Math.floor(all.length/3)*3).forEach((item, i) => {
+      cols[i % 3].push(_d(item));
+    });
+    html = cols.map(col => `<div class="masonry-col">${col.map(d => `
+      <div class="masonry-card" ${_ca(d)}>
+        ${d.imgSrc ? `<img class="masonry-img" style="height:120px;object-position:center 25%;" src="${escHtml(d.imgSrc)}" loading="lazy" alt="">` : ''}
+        <div class="masonry-body">
+          <div class="masonry-title">${d.safeTitle}</div>
+          <div class="masonry-desc">${escHtml(d.snippet)}</div>
+          ${d.timeStr ? `<div class="masonry-time">${d.timeStr}</div>` : ''}
+        </div>
+      </div>
+    `).join('')}</div>`).join('');
+
+  } else if (layout === 'manorama') {
+    let heroIdx = all.findIndex(item => _d(item).imgSrc); if (heroIdx === -1) heroIdx = 0;
+    const h = _d(all[heroIdx]); const subItems = all.filter((_, i) => i !== heroIdx);
+    
+    const rightCount = Math.min(10, Math.floor(subItems.length / 2) * 2);
+    const rightItems = subItems.slice(0, rightCount);
+    const leftItems = subItems.slice(rightCount);
+
+    const heroHtml = `
+      <div class="mano-hero" ${_ca(h)} style="${!h.imgSrc ? 'min-height:auto;' : 'aspect-ratio:4/3;margin-bottom:16px;'}">
+        ${h.imgSrc ? `<img src="${escHtml(h.imgSrc)}" loading="lazy" style="object-position:center 25%;" alt="">
+        <div class="mano-hero-grad">
+          <div class="mano-hero-title" style="font-size:18px;">${h.safeTitle}</div>
+          <div class="mano-hero-desc" style="font-size:12px;">${escHtml(h.snippet)}</div>
+        </div>` : `<div style="padding:20px;background:var(--card3);height:100%;display:flex;flex-direction:column;justify-content:center;">
+          <div class="mano-hero-title" style="color:var(--text);font-size:18px;margin-bottom:10px;">${h.safeTitle}</div>
+          <div class="mano-hero-desc" style="color:var(--text3);font-size:12px;">${escHtml(h.snippet)}</div>
+        </div>`}
+      </div>`;
+    
+    const renderManoSub = item => {
+      const d = _d(item);
+      return `
+        <div class="mano-sub" ${_ca(d)}>
+          ${d.imgSrc ? `<img src="${escHtml(d.imgSrc)}" style="height:80px;object-position:center 25%;" loading="lazy" alt="">` : ''}
+          <div class="mano-sub-body">
+            <div class="mano-sub-title">${d.safeTitle}</div>
+          </div>
+        </div>`;
+    };
+
+    const rightHtml = rightItems.map(renderManoSub).join('');
+    const leftSubHtml = leftItems.map(renderManoSub).join('');
+
+    html = `<div class="mano-left" style="display:flex;flex-direction:column;">
+      ${heroHtml}
+      ${leftSubHtml ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">${leftSubHtml}</div>` : ''}
+    </div>
+    <div class="mano-right">${rightHtml}</div>`;
+
+  } else {
+    // magazine
+    const magItems = all.slice(0, Math.floor(all.length/4)*4).map(item => {
+      const d = _d(item);
+      return `
+        <div class="mag-card" ${_ca(d)}>
+          ${d.imgSrc ? `<img class="mag-img" style="height:100px;object-position:center 25%;" src="${escHtml(d.imgSrc)}" loading="lazy" alt="">` : ''}
+          <div class="mag-body">
+            <div class="mag-title">${d.safeTitle}</div>
+            <div class="mag-desc" style="font-size:11px;">${escHtml(d.snippet)}</div>
+            ${d.timeStr ? `<div class="masonry-time">${d.timeStr}</div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+    html = magItems;
+  }
+
+  listEl.innerHTML = html;
+}
+
+function _parseXmlItems(xmlStr) {
+  const xml = new DOMParser().parseFromString(xmlStr, 'text/xml');
+  const nodes = Array.from(xml.querySelectorAll('item, entry')).slice(0, 16);
+  return nodes.map(item => {
+    // Extract link: try <link href="...">, then <link>text</link>, then <guid>, then <enclosure url="...">
+    const linkEl = item.querySelector('link');
+    let link = linkEl?.getAttribute('href') || '';
+    if (!link) link = linkEl?.textContent?.trim() || '';
+    if (!link) {
+      const guidEl = item.querySelector('guid');
+      link = guidEl?.textContent?.trim() || '';
+    }
+    if (!link) {
+      const encEl = item.querySelector('enclosure');
+      link = encEl?.getAttribute('url') || '';
+    }
+    if (!link) link = '#';
+    // Clean up CDATA-wrapped or Google News redirect links
+    link = link.replace(/^<!\[CDATA\[|\]\]>$/g, '').trim();
+    // Extract source name
+    const srcEl = item.querySelector('source');
+    const source = srcEl?.textContent?.trim() || srcEl?.innerHTML?.trim() || '';
+    // Extract image — try media:content, media:thumbnail, enclosure, then first <img> in description
+    let image = '';
+    try {
+      const mc = item.querySelector('content') || item.querySelector('thumbnail');
+      if (mc) image = mc.getAttribute('url') || '';
+      if (!image) {
+        const enc = item.querySelector('enclosure');
+        if (enc && /^image\//i.test(enc.getAttribute('type') || '')) image = enc.getAttribute('url') || '';
+      }
+      if (!image) {
+        const descRaw =
+          item.querySelector('description')?.textContent ||
+          item.querySelector('encoded')?.textContent ||
+          item.querySelector('summary')?.textContent || '';
+        if (descRaw) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = descRaw;
+          const firstImg = tmp.querySelector('img');
+          if (firstImg) image = firstImg.getAttribute('src') || '';
+        }
+      }
+    } catch(_) {}
+    return {
+      title: item.querySelector('title')?.textContent?.trim() || '',
+      link: link,
+      pubDate:
+        item.querySelector('pubDate')?.textContent?.trim() ||
+        item.querySelector('published')?.textContent?.trim() ||
+        item.querySelector('updated')?.textContent?.trim() ||
+        '',
+      description:
+        item.querySelector('description')?.textContent?.trim() ||
+        item.querySelector('content\\:encoded')?.textContent?.trim() ||
+        item.querySelector('encoded')?.textContent?.trim() ||
+        item.querySelector('summary')?.textContent?.trim() ||
+        item.querySelector('content')?.textContent?.trim() ||
+        '',
+      source: source,
+      image: image,
+      category: Array.from(item.querySelectorAll('category')).map(el => el.textContent?.trim()).filter(Boolean).join(' · ').slice(0, 40),
+    };
+  }).filter(i => i.title);
+}
+
+
+async function fetchFeed(src, _unused, usedFallback) {
+  const listEl = document.getElementById('lnbl-' + src.id);
+  if (!listEl) return;
+  
+  // ── HYBRID: 1. Try pre-built JSON cache ──────────────────────
+  if (liveNewsCache && liveNewsCache[src.id] && liveNewsCache[src.id].length) {
+    renderItems(listEl, liveNewsCache[src.id]);
+    return;
+  }
+
+  // ── HYBRID: 2. Fallback to proxy fetch if backend cache failed or empty ──
+  const targetUrl = src.url || src.originalUrl;
+  if (!targetUrl) {
+    listEl.innerHTML = '<div class="lnb-error">Feed unavailable.</div>';
+    return;
+  }
+
+  const bust = (targetUrl.includes('?') ? '&' : '?') + '_t=' + Date.now();
+  const fetchUrl = targetUrl + bust;
+
+  for (const proxy of _PROXY_CHAIN) {
+    if (proxy.name === 'worker' && Date.now() < _workerProxyDownUntil) continue;
+    try {
+      const proxyUrl = proxy.build(fetchUrl);
+      const res = await fetch(proxyUrl, { cache: 'no-store', signal: AbortSignal.timeout(proxy.timeout || 10000) });
+      if (proxy.name === 'worker' && res.status >= 500) {
+        _workerProxyDownUntil = Date.now() + 5 * 60 * 1000;
+      }
+      if (!res.ok) continue;
+      const items = await proxy.extract(res);
+      if (items && items.length) {
+        try { sessionStorage.setItem(_FEED_CACHE_KEY(src.id), JSON.stringify({ items, ts: Date.now() })); } catch(_) {}
+        renderItems(listEl, items);
+        return;
+      }
+    } catch(_) { }
+  }
+
+  try {
+    const r = await fetch(targetUrl, { signal: AbortSignal.timeout(8000) });
+    if (r.ok) {
+      const xml = await r.text();
+      const items = _parseXmlItems(xml);
+      if (items.length) {
+        try { sessionStorage.setItem(_FEED_CACHE_KEY(src.id), JSON.stringify({ items, ts: Date.now() })); } catch(_) {}
+        renderItems(listEl, items);
+        return;
+      }
+    }
+  } catch(_) {}
+
+  if (!usedFallback) {
+    const fallbackUrl = getNewsFallbackUrl(src);
+    if (fallbackUrl && fallbackUrl !== targetUrl) {
+      fetchFeed({ ...src, originalUrl: src.originalUrl || src.url, url: fallbackUrl }, 0, true);
+      return;
+    }
+  }
+
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(_FEED_CACHE_KEY(src.id)));
+    if (cached && cached.items && cached.items.length) {
+      renderItems(listEl, cached.items);
+      const ageMin = Math.round((Date.now() - (cached.ts || 0)) / 60000);
+      const staleEl = document.createElement('div');
+      staleEl.className = 'lnb-stale';
+      staleEl.innerHTML = `⚠️ Cached${ageMin > 0 ? ' &middot; ' + ageMin + 'm ago' : ''} <button class="lnb-retry" onclick="window._feedRetry('${src.id}')">↺ Refresh</button>`;
+      listEl.appendChild(staleEl);
+      return;
+    }
+  } catch(_) {}
+
+  const directUrl = src.originalUrl || src.url || '#';
+  listEl.innerHTML = `<div class="lnb-error">Feed unavailable &mdash; <a href="${escHtml(directUrl)}" target="_blank" style="color:var(--gold2)">Open directly</a> &nbsp;<button class="lnb-retry" onclick="window._feedRetry('${escHtml(src.id)}')">↺ Retry</button></div>`;
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NEWS SETTINGS MODAL
+// ═══════════════════════════════════════════════════════════════════════════
+
+let _nsmSelected = []; // working copy while modal is open
+
+function openNewsSettings() {
+  _nsmSelected = _loadActiveIds();
+  _nsmRenderSelectPane();
+  _nsmRenderOrderPane();
+  _nsmSyncCount();
+  // Start on Select tab
+  nsmSwitchTab('select', document.getElementById('nsm-tab-select'));
+  document.getElementById('nsm-overlay').classList.add('show');
+}
+
+function closeNewsSettings() {
+  document.getElementById('nsm-overlay').classList.remove('show');
+}
+
+function nsmSwitchTab(tab, btn) {
+  document.querySelectorAll('.nsm-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nsm-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('nsm-pane-' + tab).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (tab === 'order') _nsmRenderOrderPane();
+}
+
+function _nsmSyncCount() {
+  const n = _nsmSelected.length;
+  const el  = document.getElementById('nsm-count');
+  const el2 = document.getElementById('nsm-footer-count');
+  const txt = n + ' / ' + NEWS_MAX + ' selected';
+  if (el)  el.textContent  = txt;
+  if (el2) el2.textContent = txt;
+}
+
+function _nsmRenderSelectPane() {
+  const container = document.getElementById('nsm-feed-list');
+  if (!container) return;
+
+  // Group feeds
+  const groups = [];
+  const seen = new Set();
+  NEWS_SOURCES.forEach(s => {
+    if (!seen.has(s.group)) { seen.add(s.group); groups.push(s.group); }
+  });
+
+  let html = '';
+  groups.forEach(group => {
+    html += `<div class="nsm-group-title">${group}</div>`;
+    NEWS_SOURCES.filter(s => s.group === group).forEach(s => {
+      const checked  = _nsmSelected.includes(s.id);
+      const atLimit  = _nsmSelected.length >= NEWS_MAX && !checked;
+      html += `<div class="nsm-feed-row${checked ? ' selected' : ''}${atLimit ? ' disabled' : ''}" onclick="nsmToggleFeed('${s.id}')" id="nsm-row-${s.id}">
+        <input type="checkbox" class="nsm-cb" ${checked ? 'checked' : ''} ${atLimit ? 'disabled' : ''} onclick="event.stopPropagation();nsmToggleFeed('${s.id}')" id="nsm-cb-${s.id}">
+        <span class="nsm-feed-flag">${s.flag}</span>
+        <span class="nsm-feed-name">${s.label}</span>
+        <span class="nsm-feed-lang">${s.lang}</span>
+      </div>`;
+    });
+  });
+  container.innerHTML = html;
+}
+
+function nsmToggleFeed(id) {
+  const idx = _nsmSelected.indexOf(id);
+  if (idx === -1) {
+    if (_nsmSelected.length >= NEWS_MAX) return; // at limit
+    _nsmSelected.push(id);
+  } else {
+    _nsmSelected.splice(idx, 1);
+  }
+  _nsmRenderSelectPane();
+  _nsmSyncCount();
+}
+
+function _nsmRenderOrderPane() {
+  const list = document.getElementById('nsm-order-list');
+  if (!list) return;
+  const map = Object.fromEntries(NEWS_SOURCES.map(s => [s.id, s]));
+  list.innerHTML = _nsmSelected.map((id, i) => {
+    const s = map[id];
+    if (!s) return '';
+    return `<li class="nsm-order-item" id="nsm-ord-${id}">
+      <span class="nsm-order-num">${i+1}</span>
+      <span class="nsm-order-flag">${s.flag}</span>
+      <span class="nsm-order-name">${s.label}</span>
+      <div class="nsm-order-btns">
+        <button class="nsm-ord-btn" ${i===0?'disabled':''} onclick="nsmMove('${id}',-1)" title="Move up">▲</button>
+        <button class="nsm-ord-btn" ${i===_nsmSelected.length-1?'disabled':''} onclick="nsmMove('${id}',+1)" title="Move down">▼</button>
+      </div>
+    </li>`;
+  }).join('');
+}
+
+function nsmMove(id, dir) {
+  const idx = _nsmSelected.indexOf(id);
+  if (idx === -1) return;
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= _nsmSelected.length) return;
+  [_nsmSelected[idx], _nsmSelected[newIdx]] = [_nsmSelected[newIdx], _nsmSelected[idx]];
+  _nsmRenderOrderPane();
+}
+
+function nsmReset() {
+  _nsmSelected = NEWS_DEFAULT_IDS.slice(0, NEWS_MAX);
+  _nsmRenderSelectPane();
+  _nsmRenderOrderPane();
+  _nsmSyncCount();
+}
+
+function saveNewsSettings() {
+  if (_nsmSelected.length === 0) {
+    alert('Please select at least 1 feed.');
+    return;
+  }
+  localStorage.setItem(NEWS_IDS_KEY, JSON.stringify(_nsmSelected));
+  closeNewsSettings();
+  // Re-render grid with new selection
+  renderNewsBoxes();
+  fetchAllNews();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SIDEBAR
+// ═══════════════════════════════════════════════════════════════════
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+const SIDE_CONTENT = {
+  downloads: {
+    title: '⬇️ Asset Data Downloads',
+    html: `
+      <div class="referral-note">📂 Download official lists of stocks, ETFs, and funds directly from exchanges and platforms.</div>
+      <div class="sp-section">
+        <div class="sp-section-title">India — NSE / BSE</div>
+        <div class="sp-asset-dl">
+          <div class="sp-dl-item"><span class="sp-dl-name">NSE — All Equity Symbols</span><a class="sp-dl-btn" href="https://www.nseindia.com/regulations/listing-compliance/nse-market-capitalisation-all-companies" target="_blank">Open</a></div>
+          <div class="sp-dl-item"><span class="sp-dl-name">NSE — ETF List</span><a class="sp-dl-btn" href="https://www.nseindia.com/products-services/etf-list" target="_blank">Open</a></div>
+          <div class="sp-dl-item"><span class="sp-dl-name">BSE — Listed Companies</span><a class="sp-dl-btn" href="https://www.bseindia.com/corporates/List_Scrips.html" target="_blank">Open</a></div>
+          <div class="sp-dl-item"><span class="sp-dl-name">AMFI — Mutual Fund NAV Data</span><a class="sp-dl-btn" href="https://www.amfiindia.com/spages/NAVAll.txt" target="_blank">Download</a></div>
+        </div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">US — NYSE / NASDAQ</div>
+        <div class="sp-asset-dl">
+          <div class="sp-dl-item"><span class="sp-dl-name">NASDAQ — Screener (All)</span><a class="sp-dl-btn" href="https://www.nasdaq.com/market-activity/stocks/screener" target="_blank">Open</a></div>
+          <div class="sp-dl-item"><span class="sp-dl-name">ETF Database — Full ETF List</span><a class="sp-dl-btn" href="https://etfdb.com/screener/" target="_blank">Open</a></div>
+          <div class="sp-dl-item"><span class="sp-dl-name">SEC EDGAR — Mutual Funds</span><a class="sp-dl-btn" href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&type=N-1A&dateb=&owner=include&count=40" target="_blank">Open</a></div>
+        </div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">Japan — JPX / TSE</div>
+        <div class="sp-asset-dl">
+          <div class="sp-dl-item"><span class="sp-dl-name">JPX — Listed Stock CSV</span><a class="sp-dl-btn" href="https://www.jpx.co.jp/markets/statistics-equities/misc/01.html" target="_blank">Open</a></div>
+          <div class="sp-dl-item"><span class="sp-dl-name">JPX — ETF / ETV List</span><a class="sp-dl-btn" href="https://www.jpx.co.jp/equities/products/etfs/index.html" target="_blank">Open</a></div>
+          <div class="sp-dl-item"><span class="sp-dl-name">NISA Eligible List (PayPay)</span><a class="sp-dl-btn" href="https://www.paypay-securities.co.jp/nisa/" target="_blank">Open</a></div>
+        </div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">Bonds (India)</div>
+        <div class="sp-asset-dl">
+          <div class="sp-dl-item"><span class="sp-dl-name">IndiaBonds — Bond List</span><a class="sp-dl-btn" href="https://www.indiabonds.com" target="_blank">Open</a></div>
+          <div class="sp-dl-item"><span class="sp-dl-name">GoldenPi — Bond Platform</span><a class="sp-dl-btn" href="https://goldenpi.com" target="_blank">Open</a></div>
+          <div class="sp-dl-item"><span class="sp-dl-name">Wint Wealth</span><a class="sp-dl-btn" href="https://www.wintwealth.com" target="_blank">Open</a></div>
+        </div>
+      </div>`
+  },
+  brokers: {
+    title: '🏦 Best Brokers & Apps',
+    html: `
+      <div class="referral-note">🎁 Using the referral links below benefits you (discounts, coins, or cashback) at no extra cost. Thank you for supporting this tool!</div>
+      <div class="sp-section">
+        <div class="sp-section-title">📊 Mutual Funds (India)</div>
+        <div class="sp-broker-card">
+          <div class="sp-broker-name">🪙 Kuvera — Free Direct MF Platform</div>
+          <div class="sp-broker-desc">India's first free Direct Mutual Fund portal. No commission, no hidden charges. Join with code <strong>1T6BH</strong> and get 100 Coins.</div>
+          <a class="sp-broker-btn" href="https://kuvera.in/s/wsapp?referral=1T6BH" target="_blank">Join Kuvera →</a>
+        </div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">📈 Stock Brokers</div>
+        <div class="sp-broker-card">
+          <div class="sp-broker-name">🟢 Zerodha (NRI &amp; Resident)</div>
+          <div class="sp-broker-desc">Open a free demat account. Invest in stocks, derivatives, mutual funds, ETFs, bonds, IPOs, and more.</div>
+          <a class="sp-broker-btn" href="https://zerodha.com/open-account?c=XKQ288" target="_blank">Open Zerodha Account →</a>
+        </div>
+        <div class="sp-broker-card">
+          <div class="sp-broker-name">🔥 Dhan (Resident Only)</div>
+          <div class="sp-broker-desc">Fast order execution, powerful charts. 🔥 1 Crore MTF funding | 2500 Price Alerts | Instant Pledge Margin. Smooth experience for active traders.</div>
+          <a class="sp-broker-btn" href="https://join.dhan.co/?invite=VFZJN04428" target="_blank">Open Dhan Account →</a>
+        </div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">🏦 Bonds (India)</div>
+        <div class="sp-broker-card">
+          <div class="sp-broker-name">📜 IndiaBonds</div>
+          <div class="sp-broker-desc">Start your bond investment journey with India's leading bond platform.</div>
+          <a class="sp-broker-btn" href="https://www.indiabonds.com/referral/CiY7ZAAt" target="_blank">Join IndiaBonds →</a>
+        </div>
+        <div class="sp-broker-card">
+          <div class="sp-broker-name">🥇 GoldenPi</div>
+          <div class="sp-broker-desc">Buy bonds online — corporate, government, and tax-free bonds.</div>
+          <a class="sp-broker-btn" href="https://goldenpi.com/sign-up?referrer=SRVL1503290" target="_blank">Join GoldenPi →</a>
+        </div>
+        <div class="sp-broker-card">
+          <div class="sp-broker-name">💎 Wint Wealth — Fixed-Income Bonds</div>
+          <div class="sp-broker-desc">Invest in curated corporate bonds, asset-backed securities, and high-yield fixed income instruments. Use my referral link to get started.</div>
+          <a class="sp-broker-btn" href="https://www.wintwealth.com/bonds/referral/invite?referralCode=3AC7AF" target="_blank">Join Wint Wealth →</a>
+        </div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">🌐 Global Trading Platforms</div>
+        <div class="sp-broker-card">
+          <div class="sp-broker-name">🌐 Interactive Brokers — Global Markets</div>
+          <div class="sp-broker-desc">Trade stocks, options, futures, forex, bonds and funds globally. Ideal for NRIs and international investors — access US, Japan, Europe, and 150+ markets.</div>
+          <a class="sp-broker-btn" href="https://www.interactivebrokers.co.jp/en/accounts/what-you-need-jp.php" target="_blank">Open IBKR Account →</a>
+          <a class="sp-broker-btn" href="https://www.interactivebrokers.co.jp/sso/Login?deepLinkTo=/" target="_blank" style="background:linear-gradient(135deg,#0f2d6e,#1d4ed8)">Login to IBKR →</a>
+        </div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">💰 Digital Gold, Silver &amp; UPI</div>
+        <div class="sp-broker-card">
+          <div class="sp-broker-name">📱 Navi UPI</div>
+          <div class="sp-broker-desc">Earn Navi coins with every payment. Instant transfers, smooth UPI experience. Win rewards up to ₹100 with every payment!</div>
+          <a class="sp-broker-btn" href="https://m.navi.com/X7g9gpUzoKb" target="_blank">Download Navi →</a>
+        </div>
+        <div class="sp-broker-card">
+          <div class="sp-broker-name">📲 PhonePe</div>
+          <div class="sp-broker-desc">Buy Digital Gold, Digital Silver, UPI payments, Mutual Funds all in one app.</div>
+          <a class="sp-broker-btn" href="https://phon.pe/772mkuqo" target="_blank">Join PhonePe →</a>
+        </div>
+      </div>`
+  },
+  remittance: {
+    title: '💸 Money Remittance',
+    html: `
+      <div class="referral-note">🎁 Sign up using these referral links to get special rates or bonuses on your first transfer!</div>
+      <div class="sp-section">
+        <div class="sp-section-title">International Transfer Apps</div>
+        <div class="sp-broker-card">
+          <div class="sp-broker-name">🌍 Revolut</div>
+          <div class="sp-broker-desc">Join 70+ million users who love Revolut. Multi-currency accounts, great exchange rates, instant transfers.</div>
+          <a class="sp-broker-btn" href="https://revolut.com/referral/?referral-code=vilfingeorge!APR1-26-AR-JP-H1&geo-redirect" target="_blank">Join Revolut →</a>
+        </div>
+        <div class="sp-broker-card">
+          <div class="sp-broker-name">⚡ Instarem</div>
+          <div class="sp-broker-desc">Send your first transfer at a special rate. Super easy, fast, and great rates for overseas transfers. Referral Code: <strong>cWkMb3</strong></div>
+          <a class="sp-broker-btn" href="https://referral-link.onelink.me/gbf1/a43c48ca?deep_link_sub1=referral&deep_link_value=cWkMb3" target="_blank">Join Instarem →</a>
+        </div>
+        <div class="sp-broker-card">
+          <div class="sp-broker-name">💚 Wise (TransferWise)</div>
+          <div class="sp-broker-desc">The real mid-market exchange rate. Low fees, fast transfers to 80+ countries.</div>
+          <a class="sp-broker-btn" href="https://wise.com/invite/ihpc/vilfinm" target="_blank">Join Wise →</a>
+        </div>
+      </div>`
+  },
+
+  // ── NEW LEFT SIDEBAR ENTRIES ──────────────────────────────────
+  lifeins: {
+    title: '🛡️ Life Insurance',
+    html: `
+      <div class="referral-note">🛡️ Life insurance protects your family's financial future. Term insurance is the most cost-effective option. Review coverage every 5 years or after major life events.</div>
+      <div class="sp-section">
+        <div class="sp-section-title">Key Points</div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>Coverage Rule:</strong> Buy at least 10–15× your annual income as sum assured. Add any outstanding loans to this.</div></div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>Term Insurance</strong> is pure protection — cheapest premiums, maximum coverage. Choose a policy till age 65–70.</div></div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>Avoid ULIP/Endowment</strong> for investment — they mix insurance and investment with high charges. Keep insurance and investment separate.</div></div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>NRI Tip:</strong> NRIs can buy Indian term plans. Check country-of-residence restrictions. Japan residents should check JIA (Japan Insurance Association) approved plans.</div></div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">🇮🇳 India — Best Term Insurance</div>
+        <div class="info-card"><div class="info-card-title">LIC e-Term Plan</div><div class="info-card-text">Government-backed. High claim settlement ratio (~99%). Trusted by millions. Good for NRIs too.</div><a class="info-link-btn" href="https://www.licindia.in/Products/Insurance-Plan/LIC-s-eTerm" target="_blank">Visit LIC →</a></div>
+        <div class="info-card"><div class="info-card-title">HDFC Life Click2Protect</div><div class="info-card-text">Comprehensive term plan with return of premium option. CSR ~99.5%. Multiple coverage options.</div><a class="info-link-btn" href="https://www.hdfclife.com/term-insurance-plans/click-2-protect-life" target="_blank">HDFC Life →</a></div>
+        <div class="info-card"><div class="info-card-title">Max Life Smart Term</div><div class="info-card-text">High CSR, critical illness riders available, competitive premiums for younger buyers.</div><a class="info-link-btn" href="https://www.maxlifeinsurance.com/term-insurance-plans" target="_blank">Max Life →</a></div>
+        <div class="info-card"><div class="info-card-title">ICICI Pru iProtect Smart</div><div class="info-card-text">Flexible coverage options including critical illness and accident disability add-ons.</div><a class="info-link-btn" href="https://www.iciciprulife.com/term-life-insurance/iprotect-smart.html" target="_blank">ICICI Pru →</a></div>
+        <div class="info-card"><div class="info-card-title">Compare on PolicyBazaar</div><div class="info-card-text">Compare all term insurance plans, premiums and features in one place.</div><a class="info-link-btn" href="https://www.policybazaar.com/life-insurance/term-insurance/" target="_blank">Compare →</a></div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">🇯🇵 Japan — Life Insurance</div>
+        <div class="info-card"><div class="info-card-title">Japan Life Insurance Association</div><div class="info-card-text">Official industry body. Find licensed insurers, check company ratings, understand your rights as a policyholder.</div><a class="info-link-btn" href="https://www.seiho.or.jp/english/" target="_blank">JIA →</a></div>
+        <div class="info-card"><div class="info-card-title">Sony Life (ソニー生命)</div><div class="info-card-text">Popular term (定期保険) and whole life plans. English support available.</div><a class="info-link-btn" href="https://www.sonylife.co.jp" target="_blank">Sony Life →</a></div>
+        <div class="info-card"><div class="info-card-title">Lifenet Insurance (ライフネット生命)</div><div class="info-card-text">100% online, low-cost term insurance in Japan. Best for younger buyers and digital-first users.</div><a class="info-link-btn" href="https://www.lifenet-seimei.co.jp" target="_blank">Lifenet →</a></div>
+        <div class="info-card"><div class="info-card-title">Nippon Life (日本生命)</div><div class="info-card-text">Japan's largest life insurer. Wide range of products including riders for NRIs staying in Japan.</div><a class="info-link-btn" href="https://www.nissay.co.jp" target="_blank">Nippon Life →</a></div>
+      </div>`
+  },
+
+  healthins: {
+    title: '🏥 Health Insurance',
+    html: `
+      <div class="referral-note">🏥 Medical inflation is 12–15% per year. A good health plan protects your savings from being wiped out by hospital bills. Buy early — premiums are lower when young and healthy.</div>
+      <div class="sp-section">
+        <div class="sp-section-title">Key Points</div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>Coverage:</strong> Individual ₹5–10L minimum; family floater ₹15–25L recommended. Top-up plans for extra coverage at low cost.</div></div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>Cashless Network:</strong> Choose an insurer with a wide cashless hospital network in your city.</div></div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>NRI Tip:</strong> If visiting India frequently, consider a plan with India + international coverage. Japan residents are covered under Japan's National Health Insurance (国民健康保険).</div></div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>Pre-existing diseases</strong> have a waiting period of 2–4 years. Buy early, before any health condition develops.</div></div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">🇮🇳 India — Best Health Insurance</div>
+        <div class="info-card"><div class="info-card-title">Star Health Insurance</div><div class="info-card-text">India's largest standalone health insurer. Wide hospital network, direct claim settlement.</div><a class="info-link-btn" href="https://www.starhealth.in" target="_blank">Star Health →</a></div>
+        <div class="info-card"><div class="info-card-title">Niva Bupa (formerly Max Bupa)</div><div class="info-card-text">Premium health plans with no claim bonus, restore benefits, and wide hospital network.</div><a class="info-link-btn" href="https://www.nivabupa.com" target="_blank">Niva Bupa →</a></div>
+        <div class="info-card"><div class="info-card-title">Care Health Insurance</div><div class="info-card-text">Comprehensive family floater plans at competitive premiums. Good for NRI families.</div><a class="info-link-btn" href="https://www.careinsurance.com" target="_blank">Care Health →</a></div>
+        <div class="info-card"><div class="info-card-title">Arogya Sanjeevani (Govt Standard)</div><div class="info-card-text">IRDAI-standardised plan. Simple, affordable, available from all insurers. Good entry-level option.</div><a class="info-link-btn" href="https://www.irdai.gov.in/ADMINCMS/cms/Uploadedfiles/ArogyaSanjeevani_18June2020.pdf" target="_blank">IRDAI →</a></div>
+        <div class="info-card"><div class="info-card-title">Compare on PolicyBazaar</div><div class="info-card-text">Compare all health insurance plans by premium, features, network hospitals.</div><a class="info-link-btn" href="https://www.policybazaar.com/health-insurance/" target="_blank">Compare →</a></div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">🇯🇵 Japan — Health Coverage</div>
+        <div class="info-card"><div class="info-card-title">National Health Insurance (国民健康保険)</div><div class="info-card-text">All residents must enroll. Covers 70% of medical costs. Register at your local city/ward office (市役所) within 14 days of arrival.</div><a class="info-link-btn" href="https://www.mhlw.go.jp/english/policy/health-medical/health-insurance/index.html" target="_blank">MHLW →</a></div>
+        <div class="info-card"><div class="info-card-title">Employee Health Insurance (健康保険)</div><div class="info-card-text">If employed in Japan, your employer enrols you. Even better coverage than NHI. Covers family members too.</div><a class="info-link-btn" href="https://www.kyoukaikenpo.or.jp/g3/" target="_blank">KYOKAI →</a></div>
+        <div class="info-card"><div class="info-card-title">Global Health Insurance (for travel)</div><div class="info-card-text">For NRIs in Japan visiting India, consider international travel/health plans for coverage abroad.</div><a class="info-link-btn" href="https://www.cigna.co.jp/en/" target="_blank">Cigna Japan →</a></div>
+      </div>`
+  },
+
+  nrefd: {
+    title: '🏛️ NRE Fixed Deposits',
+    html: `
+      <div class="referral-note">🏛️ NRE FDs offer tax-free interest in India and are fully repatriable. One of the safest investment options for NRIs. Interest is taxable in your country of residence (e.g., Japan).</div>
+      <div class="sp-section">
+        <div class="sp-section-title">Key Points</div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>Tax-Free in India:</strong> NRE FD interest is exempt from Indian income tax under FEMA. No TDS deducted.</div></div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>Fully Repatriable:</strong> Both principal and interest can be freely sent back abroad without RBI approval.</div></div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>Currency Risk:</strong> Deposited in INR. If INR depreciates vs JPY/USD, your effective return in home currency reduces.</div></div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>DICGC Insured:</strong> Up to ₹5 lakh per bank is insured under DICGC (Deposit Insurance). Spread across multiple banks for higher deposits.</div></div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>Japan residents:</strong> Declare NRE FD interest in Japanese tax returns. DTAA (Double Taxation Avoidance Agreement) between India and Japan may reduce tax liability.</div></div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">🎁 Referral — Open Axis Bank Salary Account</div>
+        <div class="sp-broker-card">
+          <div class="sp-broker-name">🏦 Axis Bank Digital Salary Account</div>
+          <div class="sp-broker-desc">Open a <strong>zero-balance salary account</strong> digitally in 3 easy steps and get an <strong>Amazon voucher worth ₹250</strong>. Exclusive benefits: 25% cashback on Flipkart &amp; Ajio, up to 20% cashback on 50+ brands via GRAB DEALS. 100% digital process — no branch visit needed.</div>
+          <a class="sp-broker-btn" href="https://axmobile.axis.bank.in/refernearn/services/refer/bf7c6ce179b84ef0a766759bd153739c" target="_blank">Open Axis Salary Account →</a>
+        </div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">Top Banks for NRE FD (High Rates)</div>
+        <div class="info-card"><div class="info-card-title">SBI NRE Fixed Deposit</div><div class="info-card-text">India's largest bank. Highest trust factor. NRE rates ~7–7.5% p.a. (1–3 year). Apply online via SBI YONO.</div><a class="info-link-btn" href="https://www.sbi.co.in/web/nri/deposits/nre-term-deposit" target="_blank">SBI NRE →</a></div>
+        <div class="info-card"><div class="info-card-title">HDFC Bank NRE FD</div><div class="info-card-text">Premium banking experience. NRE FD rates ~7–7.25% p.a. Easy online account opening from abroad.</div><a class="info-link-btn" href="https://www.hdfcbank.com/personal/nri-banking/deposits/nre-fixed-deposit" target="_blank">HDFC NRE →</a></div>
+        <div class="info-card"><div class="info-card-title">ICICI Bank NRE FD</div><div class="info-card-text">Wide global presence. NRE rates competitive. Good for NRIs with existing ICICI relationship. iMobile app available.</div><a class="info-link-btn" href="https://www.icicibank.com/nri-banking/deposits/nre-fixed-deposit.page" target="_blank">ICICI NRE →</a></div>
+        <div class="info-card"><div class="info-card-title">DCB Bank NRE FD</div><div class="info-card-text">Higher rates among private banks ~8–8.5% p.a. DICGC insured. Good for rate-seekers.</div><a class="info-link-btn" href="https://www.dcbbank.com/personal/deposits/nre-deposits" target="_blank">DCB Bank →</a></div>
+        <div class="info-card"><div class="info-card-title">Utkarsh Small Finance Bank</div><div class="info-card-text">Among highest NRE FD rates ~8.5–9% p.a. DICGC insured. Good for those comfortable with small finance banks.</div><a class="info-link-btn" href="https://www.utkarsh.bank/nre-fixed-deposit" target="_blank">Utkarsh →</a></div>
+        <div class="info-card"><div class="info-card-title">Compare NRE FD Rates</div><div class="info-card-text">Real-time NRE FD rate comparison across all banks.</div><a class="info-link-btn" href="https://www.bankbazaar.com/fixed-deposit/nre-fixed-deposit-rates.html" target="_blank">BankBazaar →</a><a class="info-link-btn" href="https://www.paisabazaar.com/fixed-deposit/nre-fd-rates/" target="_blank">PaisaBazaar →</a></div>
+      </div>`
+  },
+
+  tax: {
+    title: '📑 Tax Filing Guide',
+    html: `
+      <div class="referral-note">📑 Filing taxes correctly protects you from penalties and enables treaty benefits. NRIs must file in both countries if they meet thresholds. DTAA prevents double taxation.</div>
+      <div class="sp-section">
+        <div class="sp-section-title">🇮🇳 India Tax Filing</div>
+        <div class="sp-step"><div class="sp-step-num">1</div><div class="sp-step-text"><strong>Who must file:</strong> Taxable income > ₹2.5L basic exemption (₹3L for 60+). NRIs must file if they have India-sourced income (rent, capital gains, FD interest from NRO/FCNR).</div></div>
+        <div class="sp-step"><div class="sp-step-num">2</div><div class="sp-step-text"><strong>NRE FD Interest:</strong> Tax-free in India. No need to include in Indian ITR.</div></div>
+        <div class="sp-step"><div class="sp-step-num">3</div><div class="sp-step-text"><strong>Capital Gains (Stocks/MF):</strong> STCG 20% (equity, held <1Y), LTCG 12.5% (equity >1Y above ₹1.25L). Debt: as per income slab.</div></div>
+        <div class="sp-step"><div class="sp-step-num">4</div><div class="sp-step-text"><strong>Deadline:</strong> ITR filing deadline — 31 July (non-audit cases). Use ITR-2 or ITR-3 for NRIs with capital gains.</div></div>
+        <div class="info-card"><div class="info-card-title">Income Tax India — Official Portal</div><div class="info-card-text">File ITR online, check refund status, download Form 26AS.</div><a class="info-link-btn" href="https://www.incometax.gov.in" target="_blank">IT Portal →</a></div>
+        <div class="info-card"><div class="info-card-title">ClearTax — Easiest ITR Filing</div><div class="info-card-text">India's #1 tax filing platform. NRI-specific guidance, CA assistance available online.</div><a class="info-link-btn" href="https://cleartax.in/s/pricing/" target="_blank">ClearTax →</a></div>
+        <div class="info-card"><div class="info-card-title">TaxBuddy</div><div class="info-card-text">AI-powered ITR filing with NRI expertise. Auto-import from 26AS, capital gains auto-calculation.</div><a class="info-link-btn" href="https://www.taxbuddy.com" target="_blank">TaxBuddy →</a></div>
+        <div class="info-card"><div class="info-card-title">Quicko</div><div class="info-card-text">Import trades directly from Zerodha/Groww, compute STCG/LTCG automatically. File in minutes.</div><a class="info-link-btn" href="https://quicko.com" target="_blank">Quicko →</a></div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">🇯🇵 Japan Tax Filing (確定申告)</div>
+        <div class="sp-step"><div class="sp-step-num">1</div><div class="sp-step-text"><strong>Who must file:</strong> If you have income from multiple sources, overseas income, or are self-employed. Employees with salary only usually don't need to file separately.</div></div>
+        <div class="sp-step"><div class="sp-step-num">2</div><div class="sp-step-text"><strong>Overseas Income:</strong> Japan taxes worldwide income for residents. NRE FD interest, Indian stocks gains, rental income from India must be declared.</div></div>
+        <div class="sp-step"><div class="sp-step-num">3</div><div class="sp-step-text"><strong>DTAA India-Japan:</strong> India-Japan tax treaty prevents double taxation. Foreign tax credit can be claimed in Japan for taxes paid in India.</div></div>
+        <div class="sp-step"><div class="sp-step-num">4</div><div class="sp-step-text"><strong>Deadline:</strong> 確定申告 (Kakutei Shinkoku) — 16 Feb to 15 Mar every year for the previous calendar year.</div></div>
+        <div class="info-card"><div class="info-card-title">National Tax Agency Japan (国税庁)</div><div class="info-card-text">Official Japanese tax authority. E-Tax online filing, English guidance available.</div><a class="info-link-btn" href="https://www.nta.go.jp/english/" target="_blank">NTA Japan →</a></div>
+        <div class="info-card"><div class="info-card-title">e-Tax Japan Online Filing</div><div class="info-card-text">File your Japan tax return online. Requires My Number Card and card reader or smartphone.</div><a class="info-link-btn" href="https://www.e-tax.nta.go.jp" target="_blank">e-Tax →</a></div>
+        <div class="info-card"><div class="info-card-title">Freee (フリー) — Accounting Software</div><div class="info-card-text">Popular in Japan for self-employed and freelancers. Handles 確定申告 with some English support.</div><a class="info-link-btn" href="https://www.freee.co.jp" target="_blank">Freee →</a></div>
+        <div class="info-card"><div class="info-card-title">ClearTax Global (for India-Japan DTAA)</div><div class="info-card-text">Guidance on India-Japan DTAA, foreign tax credits and NRI obligations in both countries.</div><a class="info-link-btn" href="https://cleartax.in/s/dtaa-india-japan" target="_blank">DTAA Guide →</a></div>
+      </div>`
+  },
+
+  loans: {
+    title: '💳 Loans Guide',
+    html: `
+      <div class="referral-note">💳 Compare rates before borrowing. Always check processing fees, prepayment charges, and total cost of credit — not just the interest rate.</div>
+      <div class="sp-section">
+        <div class="sp-section-title">🥇 Gold Loan</div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text">Gold loans are instant, low-interest (8–14% p.a.), no credit score needed. LTV up to 75% of gold value. Interest only on used amount. Ideal for short-term needs.</div></div>
+        <div class="info-card"><div class="info-card-title">Muthoot Finance</div><div class="info-card-text">India's largest gold loan company. Instant disbursal, 4,500+ branches. Interest from ~10% p.a.</div><a class="info-link-btn" href="https://www.muthootfinance.com/gold-loan" target="_blank">Muthoot →</a></div>
+        <div class="info-card"><div class="info-card-title">Manappuram Finance</div><div class="info-card-text">Flexible gold loan products. Online gold loan available. Competitive rates ~9–13% p.a.</div><a class="info-link-btn" href="https://www.manappuram.com/gold-loan.html" target="_blank">Manappuram →</a></div>
+        <div class="info-card"><div class="info-card-title">SBI Gold Loan</div><div class="info-card-text">Lowest rate gold loan from a public sector bank. From ~7.5% p.a. Requires SBI account.</div><a class="info-link-btn" href="https://www.sbi.co.in/web/personal-banking/loans/gold-loan" target="_blank">SBI Gold →</a></div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">🏠 Home Loan</div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text">NRIs can take home loans in India for purchase/construction. Repayment from NRE/NRO account. In Japan, home loans (住宅ローン) are available at very low rates (~0.5–1.5% p.a.).</div></div>
+        <div class="info-card"><div class="info-card-title">SBI Home Loan (India)</div><div class="info-card-text">Lowest rates from ~8.5% p.a. for salaried. NRI home loans available. Best for first-time buyers.</div><a class="info-link-btn" href="https://www.sbi.co.in/web/personal-banking/loans/home-loans" target="_blank">SBI Home →</a></div>
+        <div class="info-card"><div class="info-card-title">HDFC Home Loan (India)</div><div class="info-card-text">Dedicated NRI home loan product. Dedicated relationship manager. Rates from ~8.75% p.a.</div><a class="info-link-btn" href="https://www.hdfc.com/housing-loan-for-nri" target="_blank">HDFC NRI →</a></div>
+        <div class="info-card"><div class="info-card-title">Housing.com — Compare India</div><div class="info-card-text">Compare home loan rates from 15+ lenders including NRI-specific products.</div><a class="info-link-btn" href="https://housing.com/homeloan" target="_blank">Compare →</a></div>
+        <div class="info-card"><div class="info-card-title">住宅ローン (Japan Housing Loan)</div><div class="info-card-text">FLAT35 — Japan Housing Finance Agency offers fixed-rate long-term mortgages ~1.5–2% p.a. for Japan residents.</div><a class="info-link-btn" href="https://www.flat35.com/loan/flat35/index.html" target="_blank">FLAT35 →</a></div>
+        <div class="info-card"><div class="info-card-title">住信SBIネット銀行 (Japan)</div><div class="info-card-text">Online bank offering very competitive variable home loan rates in Japan from ~0.3% p.a.</div><a class="info-link-btn" href="https://www.netbk.co.jp/contents/lineup/homeloan/" target="_blank">SBI Japan →</a></div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">🚗 Car Loan</div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text">New car loans: 8–11% p.a. in India. Used car loans: 13–16% p.a. Japan: Dealer financing or bank loans ~2–4% p.a. Always compare total EMI, not just interest rate.</div></div>
+        <div class="info-card"><div class="info-card-title">HDFC Bank Car Loan (India)</div><div class="info-card-text">Instant approval, 100% on-road price financing. Rates from ~8.75% p.a. for new cars.</div><a class="info-link-btn" href="https://www.hdfcbank.com/personal/borrow/popular-loans/new-car-loan" target="_blank">HDFC Car →</a></div>
+        <div class="info-card"><div class="info-card-title">SBI Car Loan (India)</div><div class="info-card-text">Lowest rate car loan from a public sector bank from ~8.65% p.a. Up to 7-year tenure.</div><a class="info-link-btn" href="https://www.sbi.co.in/web/personal-banking/loans/auto-loans" target="_blank">SBI Car →</a></div>
+        <div class="info-card"><div class="info-card-title">BankBazaar Car Loan Compare</div><div class="info-card-text">Compare car loan rates from 15+ banks and NBFCs in India instantly.</div><a class="info-link-btn" href="https://www.bankbazaar.com/car-loan.html" target="_blank">Compare →</a></div>
+        <div class="info-card"><div class="info-card-title">オリコ / Orico (Japan Auto Loan)</div><div class="info-card-text">Popular auto loan finance company in Japan. Works with most car dealers. English support limited.</div><a class="info-link-btn" href="https://www.orico.co.jp/loan/auto/" target="_blank">Orico →</a></div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">👤 Personal Loan</div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text">Personal loans are unsecured — highest rates (11–24% p.a. India, 4–18% Japan). Use only for urgent short-term needs. Always compare APR including all fees.</div></div>
+        <div class="info-card"><div class="info-card-title">MoneyTap / KreditBee (India)</div><div class="info-card-text">Instant personal loans via app. Good for smaller amounts. Rates ~13–24% p.a.</div><a class="info-link-btn" href="https://www.moneytap.com" target="_blank">MoneyTap →</a><a class="info-link-btn" href="https://kreditbee.in" target="_blank">KreditBee →</a></div>
+        <div class="info-card"><div class="info-card-title">SBI Personal Loan (India)</div><div class="info-card-text">Lowest personal loan rate among public banks. From ~11% p.a. for salaried employees.</div><a class="info-link-btn" href="https://www.sbi.co.in/web/personal-banking/loans/personal-loans" target="_blank">SBI PL →</a></div>
+        <div class="info-card"><div class="info-card-title">アコム / ACOM (Japan)</div><div class="info-card-text">Consumer credit company in Japan. Personal loans for residents. First 30 days interest free. Rates ~3–18% p.a.</div><a class="info-link-btn" href="https://www.acom.co.jp" target="_blank">ACOM →</a></div>
+        <div class="info-card"><div class="info-card-title">プロミス / Promise (Japan)</div><div class="info-card-text">Subsidiary of SMBC. Competitive personal loans in Japan. Online application, quick approval.</div><a class="info-link-btn" href="https://cyber.promise.co.jp" target="_blank">Promise →</a></div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">🎓 Education Loan</div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text">Education loans cover tuition, living expenses, travel. Government banks offer lower rates (8–10% India). Japan offers scholarship loans via JASSO at very low interest.</div></div>
+        <div class="info-card"><div class="info-card-title">SBI Student Loan (India)</div><div class="info-card-text">Up to ₹1.5 Cr for studies abroad. Rate from ~10.5% p.a. Interest subsidy for meritorious students.</div><a class="info-link-btn" href="https://www.sbi.co.in/web/personal-banking/loans/education-loans/scholar-loan-scheme" target="_blank">SBI Edu →</a></div>
+        <div class="info-card"><div class="info-card-title">HDFC Credila Education Loan</div><div class="info-card-text">Specialised education loan for India and abroad studies. No collateral up to certain limits.</div><a class="info-link-btn" href="https://www.hdfccredila.com" target="_blank">Credila →</a></div>
+        <div class="info-card"><div class="info-card-title">Vidya Lakshmi Portal (India)</div><div class="info-card-text">Government portal to apply to multiple banks for education loans simultaneously. Also check for scholarships.</div><a class="info-link-btn" href="https://www.vidyalakshmi.co.in" target="_blank">Vidya Lakshmi →</a></div>
+        <div class="info-card"><div class="info-card-title">JASSO Scholarship Loan (Japan)</div><div class="info-card-text">Japan Student Services Organisation. Very low interest (0.1–3% p.a.) scholarship-type loans for students in Japan.</div><a class="info-link-btn" href="https://www.jasso.or.jp/en/index.html" target="_blank">JASSO →</a></div>
+      </div>`
+  },
+
+  creditcard: {
+    title: '🃏 Credit Cards',
+    html: `
+      <div class="referral-note">🃏 Choose a card that matches your spending pattern — travel, cashback, shopping, or fuel. Always pay the full bill before due date to avoid 36–42% p.a. interest charges.</div>
+      <div class="sp-section">
+        <div class="sp-section-title">Key Points Before You Apply</div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>Annual Fee:</strong> Many premium cards waive the annual fee if you spend above a threshold. Check the fee-waiver spend limit.</div></div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>Reward Rate:</strong> Compare cashback % or reward points per ₹100/¥100 spent. Check redemption value — some points are worth much less than face value.</div></div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>NRI/Foreign Use:</strong> Check foreign transaction fee (usually 1.5–3.5%). For Japan spends, prefer cards with zero forex markup.</div></div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>CIBIL Score:</strong> Applying for multiple cards at once lowers your credit score. Apply for one at a time and space applications 6 months apart.</div></div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">🇮🇳 India — Best Credit Cards</div>
+        <div class="info-card">
+          <div class="info-card-title">HDFC Regalia Gold — Best Overall</div>
+          <div class="info-card-text">4 reward points per ₹150 spent. Airport lounge access (India + international). Annual fee ₹2,500 (waived on ₹4L spend). 5% cashback on Swiggy, BigBasket, Nykaa. Currently one of India's most popular premium cards.</div>
+          <a class="info-link-btn" href="https://www.hdfcbank.com/personal/pay/cards/credit-cards/regalia-gold-credit-card" target="_blank">Apply HDFC Regalia →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">SBI SimplyCLICK — Best for Online Shopping</div>
+          <div class="info-card-text">10X rewards on Amazon, Flipkart, BookMyShow, Cleartrip. Annual fee ₹499 (waived on ₹1L spend). Great entry-level card for online shoppers.</div>
+          <a class="info-link-btn" href="https://www.sbicard.com/en/personal/credit-cards/rewards/simplyclick-sbi-card.page" target="_blank">Apply SBI Click →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">Axis Bank Atlas — Best for Travel</div>
+          <div class="info-card-text">Earn EDGE Miles redeemable for flights and hotel bookings. Unlimited lounge access at select airports. Annual fee ₹5,000. Best card for frequent flyers.</div>
+          <a class="info-link-btn" href="https://www.axisbank.com/retail/cards/credit-card/atlas-credit-card" target="_blank">Apply Axis Atlas →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">ICICI Amazon Pay — Best Cashback</div>
+          <div class="info-card-text">5% cashback on Amazon for Prime members, 2% on bill payments. Zero annual fee. Instant approval for existing ICICI customers. Best cashback card for Amazon heavy users.</div>
+          <a class="info-link-btn" href="https://www.icicibank.com/personal-banking/cards/consumer-credit-card/amazon-pay-icici-bank-credit-card" target="_blank">Apply Amazon Pay →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">Tata Neu HDFC — Best for Tata Ecosystem</div>
+          <div class="info-card-text">5% NeuCoins on BigBasket, Croma, Air India, 1mg. Valuable if you shop in Tata brands. Annual fee ₹499. NeuCoins = 1 NeuCoin = ₹1.</div>
+          <a class="info-link-btn" href="https://www.hdfcbank.com/personal/pay/cards/credit-cards/tata-neu-plus-hdfc-bank-credit-card" target="_blank">Apply Tata Neu →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">Compare All India Cards</div>
+          <div class="info-card-text">Side-by-side comparison of 200+ credit cards by rewards, fees, eligibility, and benefits.</div>
+          <a class="info-link-btn" href="https://www.bankbazaar.com/credit-card.html" target="_blank">BankBazaar →</a>
+          <a class="info-link-btn" href="https://www.paisabazaar.com/credit-card/" target="_blank">PaisaBazaar →</a>
+        </div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">🇯🇵 Japan — Best Credit Cards</div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text">Japan credit cards earn <strong>ポイント (points)</strong> redeemable for cashback, airline miles, or shopping. JCB and Visa are widest accepted. Compare on <a href="https://www.kakaku.com/card/" target="_blank" style="color:var(--gold2)">Kakaku.com →</a></div></div>
+        <div class="info-card" style="border-color:rgba(188,0,0,.4);background:linear-gradient(135deg,rgba(188,0,0,.07),var(--card))">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <div class="info-card-title" style="margin-bottom:0">楽天カード / Rakuten Card — Most Popular</div>
+            <span style="background:#c00;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;letter-spacing:.5px;flex-shrink:0">🎁 REFERRAL</span>
+          </div>
+          <div class="info-card-text">1% base cashback (1 point per ¥100). Up to 15% on Rakuten Ichiba shopping. Zero annual fee. Accepted at 200M+ merchants via Visa/Mastercard. Best for Rakuten ecosystem users. Currently Japan's #1 card by memberships.</div>
+          <div style="background:rgba(188,0,0,.1);border:1px solid rgba(188,0,0,.25);border-radius:8px;padding:10px 12px;margin:10px 0;font-size:12px;color:var(--text2);line-height:1.6">
+            🎁 <strong style="color:#ff6b6b">Free Referral Offer:</strong> Apply via the link below to get <strong>bonus Rakuten Points</strong> on your first card approval — at no extra cost. Supports this tool!
+          </div>
+          <a class="info-link-btn" href="https://r10.to/hgNQtG" target="_blank" rel="noopener" style="background:linear-gradient(135deg,#c00,#e00);box-shadow:0 3px 12px rgba(192,0,0,.35)">🎁 Apply via Referral →</a>
+          <a class="info-link-btn" href="https://card.rakuten.co.jp" target="_blank" rel="noopener" style="background:var(--card2);border:1px solid var(--border2);color:var(--text2)">公式サイト →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">PayPayカード — Best for PayPay Users</div>
+          <div class="info-card-text">1.5% cashback on all purchases (highest base rate). Extra cashback at PayPay merchants. Zero annual fee. Integrates with PayPay app. Ideal if you use PayPay for daily payments.</div>
+          <a class="info-link-btn" href="https://www.paypay-card.co.jp/service/card/flow/" target="_blank">PayPayカード →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">三井住友カード (NL) — Best No-Fee Cashback</div>
+          <div class="info-card-text">0.5–7% cashback. Special 7% at 7-Eleven and McDonald's via Vpass app. Zero annual fee. Visa contactless. One of the best everyday cards in Japan.</div>
+          <a class="info-link-btn" href="https://www.smbc-card.com/nyukai/card/smbc-card-nl.jsp" target="_blank">三井住友NL →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">JAL カード — Best for Miles (JAL)</div>
+          <div class="info-card-text">Earn JAL miles on every purchase. 1 mile per ¥200 (shopping), 1 per ¥100 (JAL flights). Annual fee ¥2,200. Best for India-Japan travel via JAL routes.</div>
+          <a class="info-link-btn" href="https://www.jal.co.jp/jalcard/" target="_blank">JALカード →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">ANA カード — Best for Miles (ANA)</div>
+          <div class="info-card-text">Earn ANA miles. Bonus miles on ANA flights. Visa/Mastercard accepted worldwide. Annual fee ¥2,200. Good for frequent ANA flyers (Tokyo–Mumbai/Delhi routes).</div>
+          <a class="info-link-btn" href="https://www.ana.co.jp/ja/jp/amc/anacard/" target="_blank">ANAカード →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">エポスカード — Best for Foreign Nationals</div>
+          <div class="info-card-text">Easy approval even for foreigners with short Japan residence history. Zero annual fee. Points redeemable for cashback. Marui department store discounts. Widely recommended for new Japan residents.</div>
+          <a class="info-link-btn" href="https://www.eposcard.co.jp" target="_blank">エポスカード →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">Compare All Japan Cards — Kakaku</div>
+          <div class="info-card-text">Japan's largest price/product comparison site. Compare credit cards by cashback rate, annual fee, benefits and foreign national eligibility.</div>
+          <a class="info-link-btn" href="https://kakaku.com/card/" target="_blank">カカク.com →</a>
+        </div>
+      </div>`
+  },
+
+  simcard: {
+    title: '📱 SIM Cards',
+    html: `
+      <div class="referral-note">📱 MVNOs (Mobile Virtual Network Operators) use the same towers as major carriers at 30–70% lower cost. Best for data-heavy users. Check coverage in your area before switching.</div>
+      <div class="sp-section">
+        <div class="sp-section-title">Key Points</div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>eSIM:</strong> If your phone supports eSIM, you can activate a SIM without visiting a store — ideal for NRIs arriving in Japan or India.</div></div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>MVNO vs MNO:</strong> MNOs (docomo, SoftBank, au, Airtel, Jio) have best coverage. MVNOs (IIJmio, Mineo, Ahamo, BSNL) use MNO networks at lower prices.</div></div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>For NRIs:</strong> Keep an Indian number active with a low-cost plan (₹179–299/yr) for UPI, banking OTPs. Get a local Japan number for daily use.</div></div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">🇮🇳 India — Best SIM Plans</div>
+        <div class="info-card">
+          <div class="info-card-title">Jio — Best Value & Coverage</div>
+          <div class="info-card-text">Widest 4G/5G network in India. Plans from ₹179/28 days (2GB/day + unlimited calls). Best ₹299 plan: 2GB/day, 28 days. True 5G in major cities. Best overall value for India. NRIs can port existing number.</div>
+          <a class="info-link-btn" href="https://www.jio.com/jionet/selfcare/prepaid-recharge" target="_blank">Jio Plans →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">Airtel — Best Network Quality</div>
+          <div class="info-card-text">Premium network quality, 5G rollout ahead of Jio in several cities. Plans from ₹179/28 days. ₹299 plan: 2GB/day + Wynk Music, Apollo 24/7 benefits. Best for those who need reliable connectivity.</div>
+          <a class="info-link-btn" href="https://www.airtel.in/recharge-online" target="_blank">Airtel Plans →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">BSNL — Best for Remote Areas</div>
+          <div class="info-card-text">Government operator. Best rural/remote coverage via its own + roaming agreements. Plans from ₹107/30 days. Validity recharge ₹97/yr to keep number alive. Recommended as secondary NRI number.</div>
+          <a class="info-link-btn" href="https://bsnl.in/prepaid-plans.php" target="_blank">BSNL Plans →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">Vi (Vodafone Idea) — Budget Option</div>
+          <div class="info-card-text">Competitive rates. Plans from ₹179. Weekend data rollover on select plans. Network quality improving in urban areas. Vi Movies & TV subscription included in some plans.</div>
+          <a class="info-link-btn" href="https://www.myvi.in/prepaid/recharge-plans" target="_blank">Vi Plans →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">Compare India Recharge Plans</div>
+          <div class="info-card-text">Real-time comparison of all operator plans by price, data, validity.</div>
+          <a class="info-link-btn" href="https://www.smartprix.com/telecom/plans" target="_blank">Smartprix →</a>
+          <a class="info-link-btn" href="https://www.techradar.com/best/best-prepaid-plans-india" target="_blank">TechRadar →</a>
+        </div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">🇯🇵 Japan — Best SIM Cards & MVNOs</div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text">Japan requires identity verification (My Number / passport) for all SIM registrations. Most MVNOs run on docomo's network (best coverage). Compare on <a href="https://kakaku.com/mobile/" target="_blank" style="color:var(--gold2)">Kakaku.com →</a></div></div>
+        <div class="info-card">
+          <div class="info-card-title">ahamo (docomo) — Best Value on Docomo</div>
+          <div class="info-card-text">¥2,970/mo for 20GB + unlimited calls (5 min). Runs on docomo's network (widest coverage in Japan). eSIM available. Supports overseas roaming in 90+ countries at no extra charge (82GB limit). Best overall for new Japan residents.</div>
+          <a class="info-link-btn" href="https://ahamo.com" target="_blank">ahamo →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">楽天モバイル / Rakuten Mobile — Cheapest</div>
+          <div class="info-card-text">¥1,078/mo for 3GB, ¥2,178/mo for 20GB, ¥3,278/mo for unlimited. Free unlimited data within Rakuten network areas. Unlimited calls via Rakuten Link app. eSIM available. Best budget option but weaker coverage in rural areas.</div>
+          <a class="info-link-btn" href="https://network.mobile.rakuten.co.jp" target="_blank">楽天モバイル →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">IIJmio — Best MVNO Value</div>
+          <div class="info-card-text">¥850/mo for 2GB (Voice), ¥990/mo for 5GB. Runs on docomo + au networks. Dual SIM eSIM support. Popular among budget-conscious users. Japan's oldest and most trusted MVNO. English support available.</div>
+          <a class="info-link-btn" href="https://www.iijmio.jp" target="_blank">IIJmio →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">mineo (マイネオ) — Most Flexible MVNO</div>
+          <div class="info-card-text">¥1,298/mo for 1GB up to ¥2,178/mo for 20GB. Choose docomo, au, or SoftBank network. Free data sharing between users (Mine Pack). English website available. Suits those who want network choice.</div>
+          <a class="info-link-btn" href="https://mineo.jp" target="_blank">mineo →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">LINEMO (SoftBank) — Best for LINE Users</div>
+          <div class="info-card-text">¥990/mo for 3GB (LINE data free), ¥2,728/mo for 20GB. No LINE data counted. Runs on SoftBank network. eSIM available. Best if you rely on LINE for messaging and calls.</div>
+          <a class="info-link-btn" href="https://www.linemo.jp" target="_blank">LINEMO →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">povo2.0 (au) — Pay-as-you-Go</div>
+          <div class="info-card-text">Base plan ¥0/mo (180-day validity if no topup). Add data topups: ¥390/1GB, ¥2,700/20GB/30days. eSIM supported. Best for occasional Japan visits or as a backup SIM.</div>
+          <a class="info-link-btn" href="https://povo.jp" target="_blank">povo2.0 →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">日本通信 SIM (NTT Communications)</div>
+          <div class="info-card-text">¥290/mo for 1GB + 70 min calls. ¥1,390/mo for 10GB + 70 min. One of the cheapest voice SIMs in Japan. Runs on docomo network. Good English support for foreigners.</div>
+          <a class="info-link-btn" href="https://www.nihontsushin.com/service/sim.html" target="_blank">日本通信 SIM →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">Compare Japan SIM Plans</div>
+          <div class="info-card-text">Side-by-side MVNO comparison with monthly cost, data, calls, network and foreigner-friendliness ratings.</div>
+          <a class="info-link-btn" href="https://kakaku.com/mobile/" target="_blank">Kakaku SIM →</a>
+          <a class="info-link-btn" href="https://www.kakuyasu-sim.jp" target="_blank">格安SIM比較 →</a>
+        </div>
+      </div>`
+  },
+
+  internet: {
+    title: '🌐 Internet Plans',
+    html: `
+      <div class="referral-note">🌐 Home fibre broadband is essential for remote work and streaming. Japan has some of the world's fastest and cheapest fibre. India's fibre market is rapidly growing with Jio and Airtel leading.</div>
+      <div class="sp-section">
+        <div class="sp-section-title">Key Points</div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>Fibre vs Cable:</strong> Always prefer fibre optic (FTTH) over cable or ADSL. Fibre gives symmetric upload/download speeds — critical for video calls and uploads.</div></div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>Router:</strong> ISP-provided routers are often basic. Consider buying your own Wi-Fi 6 router for better range and speed in large homes.</div></div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text"><strong>Bundle Discounts:</strong> In Japan, bundling your mobile (ahamo/Rakuten) and home internet (Hikari) from the same provider gives ¥1,100/mo discount. In India, JioFibre + Jio SIM bundles save money.</div></div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">🇮🇳 India — Best Home Broadband</div>
+        <div class="info-card">
+          <div class="info-card-title">JioFibre — Best Value Fibre</div>
+          <div class="info-card-text">Plans from ₹399/mo (30 Mbps, unlimited data). ₹999/mo plan: 150 Mbps symmetrical. ₹1,499/mo: 300 Mbps + OTT (Netflix, Prime, Disney+). Currently offering 3 months free on annual plans. Available in 3,000+ cities. Fastest rollout in India.</div>
+          <a class="info-link-btn" href="https://www.jio.com/fiber" target="_blank">JioFibre Plans →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">Airtel Xstream Fibre — Best Reliability</div>
+          <div class="info-card-text">Plans from ₹499/mo (40 Mbps). ₹999/mo: 200 Mbps + free Airtel Xstream Box (set-top). ₹1,499/mo: 400 Mbps + Netflix + Prime. Best network stability and customer support. Available in 600+ cities.</div>
+          <a class="info-link-btn" href="https://www.airtel.in/airtel-xstream-fiber" target="_blank">Airtel Xstream →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">BSNL Bharat Fibre (FTTH)</div>
+          <div class="info-card-text">Government provider. Plans from ₹449/mo (30 Mbps). ₹749/mo: 100 Mbps. Best for rural/semi-urban areas where private ISPs don't reach. Slower customer service but widest geographic reach.</div>
+          <a class="info-link-btn" href="https://bsnl.in/openwave/UI/BSNL_FTTH/ftth_plans.php" target="_blank">BSNL Fibre →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">ACT Fibernet — Best in South India</div>
+          <div class="info-card-text">Available in Bangalore, Chennai, Hyderabad, Pune. Plans from ₹499/mo (75 Mbps). Up to 1 Gbps plans available. Known for low latency and gaming-grade speeds in South Indian cities.</div>
+          <a class="info-link-btn" href="https://www.actcorp.in/broadband-plans" target="_blank">ACT Fibernet →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">Compare India Broadband Plans</div>
+          <div class="info-card-text">Enter your pincode to compare available ISPs and best plans in your area.</div>
+          <a class="info-link-btn" href="https://www.broadbandsearch.in" target="_blank">Broadband Search →</a>
+          <a class="info-link-btn" href="https://www.trai.gov.in/consumers" target="_blank">TRAI Speed →</a>
+        </div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">🇯🇵 Japan — Best Home Internet (光 / Hikari)</div>
+        <div class="sp-step"><div class="sp-step-num">💡</div><div class="sp-step-text">Japan's fibre is called <strong>光 (Hikari)</strong>. NTT's フレッツ光 (Flets Hikari) infrastructure is used by most ISPs. You sign up with an ISP (プロバイダ) that resells Hikari at bundled rates. Compare on <a href="https://kakaku.com/bb/" target="_blank" style="color:var(--gold2)">Kakaku.com →</a></div></div>
+        <div class="info-card">
+          <div class="info-card-title">ドコモ光 / Docomo Hikari — Best Bundle with Ahamo</div>
+          <div class="info-card-text">~¥4,400/mo (1 Gbps FTTH). Bundle with ahamo/docomo mobile for ¥1,100/mo discount. Widest ISP availability across Japan. Fast installation. Best for docomo/ahamo mobile users. English support via docomo shops.</div>
+          <a class="info-link-btn" href="https://www.nttdocomo.co.jp/hikari/" target="_blank">ドコモ光 →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">SoftBank 光 — Best Bundle with SoftBank/LINEMO</div>
+          <div class="info-card-text">~¥4,180/mo (1 Gbps). ¥1,100/mo discount when bundled with SoftBank or LINEMO mobile. Available nationwide via NTT Flets infrastructure. Good customer support including chat in English.</div>
+          <a class="info-link-btn" href="https://www.softbank.jp/hikari/" target="_blank">SoftBank光 →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">楽天ひかり / Rakuten Hikari — Cheapest Option</div>
+          <div class="info-card-text">~¥4,180/mo (1 Gbps). 1 year FREE for new Rakuten Mobile users (huge saving). Bundle discount with Rakuten Mobile. Best for Rakuten Mobile users. Limited to NTT coverage areas.</div>
+          <a class="info-link-btn" href="https://hikari.rakuten.co.jp" target="_blank">楽天ひかり →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">NURO 光 — Fastest Speed in Japan</div>
+          <div class="info-card-text">~¥2,090/mo (first year) then ~¥5,200/mo for 2 Gbps (their own network, not NTT). Consistently fastest ISP in Ookla Japan speed rankings. Available in Tokyo, Osaka, Kanagawa, Saitama, Chiba, Aichi, Fukuoka. Best for power users and gamers.</div>
+          <a class="info-link-btn" href="https://www.nuro.jp" target="_blank">NURO光 →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">AU ひかり / au Hikari — Best for au Users</div>
+          <div class="info-card-text">~¥4,180/mo (1 Gbps). ¥1,100/mo off with au or UQ Mobile. Own fibre network in major areas (not NTT), giving faster speeds in Kanto and Kansai regions. Good gaming performance.</div>
+          <a class="info-link-btn" href="https://www.au.com/internet/hikari/" target="_blank">au ひかり →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">WiMAX +5G — Best No-Contract Portable</div>
+          <div class="info-card-text">Pocket Wi-Fi / home router using au's 5G/4G LTE network. No fibre installation needed — perfect for renters or those who move frequently. ~¥4,268/mo unlimited. Speeds vary by location.</div>
+          <a class="info-link-btn" href="https://www.uqwimax.jp/wimax/" target="_blank">WiMAX →</a>
+        </div>
+        <div class="info-card">
+          <div class="info-card-title">Compare Japan Hikari Plans</div>
+          <div class="info-card-text">Japan's best internet plan comparison. Filter by area, speed, budget, and mobile bundle discount.</div>
+          <a class="info-link-btn" href="https://kakaku.com/bb/" target="_blank">Kakaku 光比較 →</a>
+          <a class="info-link-btn" href="https://www.myjcom.jp/compare/" target="_blank">JCOM Compare →</a>
+        </div>
+      </div>`
+  }
+};
+
+let _savedScrollMain = 0;
+let _savedScrollWin = 0;
+
+function openSidePanel(key) {
+  const content = SIDE_CONTENT[key];
+  if (!content) return;
+  const overlay = document.getElementById('left-menu-overlay');
+  if (overlay.classList.contains('show') && overlay.dataset.key === key) {
+    closeSidePanel();
+    return;
+  }
+  overlay.dataset.key = key;
+  // Collapse sidebar so it doesn't cover panel content
+  const sidebar = document.querySelector('.sidebar');
+  if (sidebar) sidebar.classList.remove('open');
+  // Save ALL scroll positions before opening overlay
+  const mc = document.querySelector('.main-content');
+  _savedScrollMain = mc ? mc.scrollTop : 0;
+  _savedScrollWin = window.scrollY || document.documentElement.scrollTop || 0;
+  document.getElementById('left-menu-title').textContent = content.title;
+  document.getElementById('left-menu-body').innerHTML = content.html;
+  // Scroll window to top so the sticky menubar stays visible above the overlay
+  window.scrollTo(0, 0);
+  overlay.classList.add('show');
+  overlay.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSidePanel() {
+  const overlay = document.getElementById('left-menu-overlay');
+  overlay.classList.remove('show');
+  document.body.style.overflow = '';
+  // Restore scroll positions — use requestAnimationFrame to ensure DOM has updated
+  requestAnimationFrame(() => {
+    const mc = document.querySelector('.main-content');
+    if (mc) mc.scrollTop = _savedScrollMain;
+    window.scrollTo(0, _savedScrollWin);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RIGHT SIDEBAR — Calculators
+// ═══════════════════════════════════════════════════════════════════
+// ── TradingView Panel Controls ──────────────────────────────────────
+let tvPanelOpen = false;
+let tvActiveTab = 'overview';
+
+function toggleTVPanel() {
+  const panel = document.getElementById('tv-panel');
+  const btn   = document.getElementById('tv-sidebar-btn');
+  tvPanelOpen = !tvPanelOpen;
+  panel.classList.toggle('open', tvPanelOpen);
+  // Highlight the sidebar button when panel is open
+  if (btn) btn.classList.toggle('active-menu', tvPanelOpen);
+  // Push main content on wide screens
+  const main = document.querySelector('.main-content');
+  if (main) {
+    if (tvPanelOpen) {
+      main.style.marginRight = (window.innerWidth > 1100) ? '434px' : '0';
+    } else {
+      main.style.marginRight = '';
+    }
+  }
+  // Load the active widget iframe if not yet initialised
+  if (tvPanelOpen) {
+    initTVWidget(tvActiveTab);
+  }
+}
+
+function switchTVTab(tabId) {
+  // Update tab button states
+  document.querySelectorAll('.tv-tab-btn').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.getElementById('tvtab-' + tabId);
+  if (activeBtn) activeBtn.classList.add('active');
+  // Switch visible frame
+  document.querySelectorAll('.tv-widget-frame').forEach(f => f.classList.remove('active'));
+  const frame = document.getElementById('tvframe-' + tabId);
+  if (frame) frame.classList.add('active');
+  tvActiveTab = tabId;
+}
+
+function initTVWidget(tabId) {
+  // TradingView widgets auto-initialise from the <script> tags on load
+  // Nothing extra needed — widgets load when the div becomes visible
+}
+
+// Close TV panel on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && tvPanelOpen) toggleTVPanel();
+});
+
+function toggleRightSidebar() {
+  document.getElementById('sidebar-right').classList.toggle('open');
+}
+
+var _savedScrollCalc = 0;
+function openCalc(id) {
+  // Save current scroll, then scroll to top so the sticky menubar stays visible
+  _savedScrollCalc = window.scrollY || document.documentElement.scrollTop || 0;
+  window.scrollTo(0, 0);
+  document.getElementById('calc-'+id).classList.add('show');
+  document.body.style.overflow='hidden';
+  if (id==='sip') calcSIP();
+  else if (id==='lumpsum') calcLS();
+  else if (id==='siplumpsum') calcSL();
+  else if (id==='allocation') calcAlloc();
+  else if (id==='compare') updateCompareQuery();
+}
+
+function closeCalc(id) {
+  document.getElementById('calc-'+id).classList.remove('show');
+  document.body.style.overflow='';
+  // Restore previous scroll position
+  requestAnimationFrame(() => window.scrollTo(0, _savedScrollCalc));
+}
+
+// ── DONUT CHART DRAWING ──────────────────────────────────────────
+function drawDonut(canvasId, legendId, segments) {
+  // segments = [{label, value, color}]
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2, R = Math.min(W,H)/2 - 10, r = R*0.55;
+  ctx.clearRect(0,0,W,H);
+  const total = segments.reduce((s,x)=>s+x.value,0);
+  if (!total) return;
+  let angle = -Math.PI/2;
+  segments.forEach(seg => {
+    const slice = (seg.value/total)*2*Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,R,angle,angle+slice);
+    ctx.closePath();
+    ctx.fillStyle = seg.color;
+    ctx.fill();
+    angle += slice;
+  });
+  // Hole
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,0,2*Math.PI);
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fill();
+  // Centre text
+  ctx.fillStyle = '#ffd166';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = 'bold 11px DM Sans,sans-serif';
+  ctx.fillText('Breakdown', cx, cy);
+  // Legend
+  const legendEl = document.getElementById(legendId);
+  if (legendEl) {
+    legendEl.innerHTML = segments.map(s=>
+      `<div class="donut-leg-item"><div class="donut-leg-dot" style="background:${s.color}"></div><span>${s.label}: <strong style="color:#ffd166">${s.pct}%</strong></span></div>`
+    ).join('');
+  }
+}
+
+// ── FORMAT NUMBERS ───────────────────────────────────────────────
+function fmt(n, sym) {
+  if (!isFinite(n)||n<0) n=0;
+  if (n>=1e7) return sym+(n/1e7).toFixed(2)+' Cr';
+  if (n>=1e5) return sym+(n/1e5).toFixed(2)+' L';
+  return sym+Math.round(n).toLocaleString('en-IN');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SIP CALCULATOR
+// ═══════════════════════════════════════════════════════════════════
+function calcSIP() {
+  const sym      = document.getElementById('sip-currency').value;
+  const monthly  = parseFloat(document.getElementById('sip-amount').value)||0;
+  const rate     = parseFloat(document.getElementById('sip-rate').value)||12;
+  const years    = parseInt(document.getElementById('sip-years').value)||10;
+  const stepup   = parseFloat(document.getElementById('sip-stepup').value)||0;
+  const inflation= parseFloat(document.getElementById('sip-inflation').value)||6;
+  const r = rate/100/12;
+  const inf = inflation/100;
+
+  let totalInvested=0, totalValue=0, curMonthly=monthly;
+  const rows=[];
+  for(let y=1;y<=years;y++){
+    const n=12;
+    for(let m=1;m<=n;m++){
+      totalInvested += curMonthly;
+      totalValue = totalValue*(1+r) + curMonthly;
+    }
+    if(stepup>0) curMonthly = curMonthly*(1+stepup/100);
+    const realValue = totalValue/Math.pow(1+inf,y);
+    rows.push({y,monthly:curMonthly/( stepup>0?(1+stepup/100):1),invested:totalInvested,value:totalValue,gain:totalValue-totalInvested,real:realValue});
+  }
+  const gain = totalValue - totalInvested;
+  const realVal = totalValue/Math.pow(1+inf,years);
+  const xirr = totalInvested>0 ? ((Math.pow(totalValue/totalInvested,1/years)-1)*100).toFixed(2) : 0;
+
+  document.getElementById('sip-results').innerHTML = [
+    {lbl:'Total Invested',val:fmt(totalInvested,sym),sub:'Your contributions'},
+    {lbl:'Est. Returns',val:fmt(gain,sym),sub:`@${rate}% p.a.`},
+    {lbl:'Total Corpus',val:fmt(totalValue,sym),sub:'Maturity value'},
+    {lbl:'Real Value',val:fmt(realVal,sym),sub:`Inflation-adj @${inflation}%`},
+    {lbl:'Approx CAGR',val:xirr+'%',sub:'Annual growth rate'},
+    {lbl:'Period',val:years+' Years',sub:stepup>0?`Step-up ${stepup}%/yr`:'Fixed SIP'},
+  ].map(s=>`<div class="calc-stat"><div class="calc-stat-lbl">${s.lbl}</div><div class="calc-stat-val">${s.val}</div><div class="calc-stat-sub">${s.sub}</div></div>`).join('');
+
+  const COLORS=['#e8540f','#ffd166','#22c55e','#3b82f6'];
+  drawDonut('sip-donut','sip-legend',[
+    {label:'Invested',value:totalInvested,color:COLORS[0],pct:Math.round(totalInvested/totalValue*100)},
+    {label:'Returns',value:gain,color:COLORS[1],pct:Math.round(gain/totalValue*100)},
+  ]);
+
+  document.getElementById('sip-table-body').innerHTML = rows.map(r=>
+    `<tr><td>${r.y}</td><td>${fmt(r.monthly,sym)}/mo</td><td>${fmt(r.invested,sym)}</td><td style="color:#ffd166;font-weight:700">${fmt(r.value,sym)}</td><td style="color:#22c55e">${fmt(r.gain,sym)}</td><td style="color:#888">${fmt(r.real,sym)}</td></tr>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// LUMPSUM CALCULATOR
+// ═══════════════════════════════════════════════════════════════════
+function calcLS() {
+  const sym      = document.getElementById('ls-currency').value;
+  const principal= parseFloat(document.getElementById('ls-amount').value)||0;
+  const rate     = parseFloat(document.getElementById('ls-rate').value)||12;
+  const years    = parseInt(document.getElementById('ls-years').value)||10;
+  const tax      = parseFloat(document.getElementById('ls-tax').value)||10;
+  const inflation= parseFloat(document.getElementById('ls-inflation').value)||6;
+  const inf = inflation/100;
+
+  const maturity   = principal * Math.pow(1+rate/100, years);
+  const gain       = maturity - principal;
+  const taxAmt     = gain * tax/100;
+  const postTax    = maturity - taxAmt;
+  const realVal    = postTax / Math.pow(1+inf, years);
+  const cagr       = (Math.pow(maturity/principal, 1/years)-1)*100;
+
+  document.getElementById('ls-results').innerHTML = [
+    {lbl:'Principal',val:fmt(principal,sym),sub:'Your investment'},
+    {lbl:'Total Returns',val:fmt(gain,sym),sub:`@${rate}% p.a. CAGR`},
+    {lbl:'Tax on Gains',val:fmt(taxAmt,sym),sub:`@${tax}% tax rate`},
+    {lbl:'Post-Tax Value',val:fmt(postTax,sym),sub:'Maturity value'},
+    {lbl:'Real Value',val:fmt(realVal,sym),sub:`Inflation-adj @${inflation}%`},
+    {lbl:'CAGR',val:cagr.toFixed(2)+'%',sub:`Over ${years} years`},
+  ].map(s=>`<div class="calc-stat"><div class="calc-stat-lbl">${s.lbl}</div><div class="calc-stat-val">${s.val}</div><div class="calc-stat-sub">${s.sub}</div></div>`).join('');
+
+  drawDonut('ls-donut','ls-legend',[
+    {label:'Principal',value:principal,color:'#e8540f',pct:Math.round(principal/maturity*100)},
+    {label:'Gain',value:gain*(1-tax/100),color:'#22c55e',pct:Math.round(gain*(1-tax/100)/maturity*100)},
+    {label:'Tax',value:taxAmt,color:'#ef4444',pct:Math.round(taxAmt/maturity*100)},
+  ]);
+
+  const rows=[];
+  for(let y=1;y<=years;y++){
+    const val = principal*Math.pow(1+rate/100,y);
+    const g   = val-principal;
+    const pt  = val - g*tax/100;
+    const rv  = pt/Math.pow(1+inf,y);
+    rows.push({y,val,g,pt,rv});
+  }
+  document.getElementById('ls-table-body').innerHTML = rows.map(r=>
+    `<tr><td>${r.y}</td><td style="color:#ffd166;font-weight:700">${fmt(r.val,sym)}</td><td style="color:#22c55e">${fmt(r.g,sym)}</td><td>${fmt(r.pt,sym)}</td><td style="color:#888">${fmt(r.rv,sym)}</td></tr>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SIP + LUMPSUM COMBINED CALCULATOR
+// ═══════════════════════════════════════════════════════════════════
+function calcSL() {
+  const sym      = document.getElementById('sl-currency').value;
+  const lumpsum  = parseFloat(document.getElementById('sl-lumpsum').value)||0;
+  const monthly  = parseFloat(document.getElementById('sl-sip').value)||0;
+  const rate     = parseFloat(document.getElementById('sl-rate').value)||12;
+  const years    = parseInt(document.getElementById('sl-years').value)||10;
+  const stepup   = parseFloat(document.getElementById('sl-stepup').value)||0;
+  const inflation= parseFloat(document.getElementById('sl-inflation').value)||6;
+  const r = rate/100/12, inf = inflation/100;
+
+  let sipValue=0, sipInvested=0, curMonthly=monthly;
+  const lsValue = lumpsum * Math.pow(1+rate/100, years);
+  const rows=[];
+
+  for(let y=1;y<=years;y++){
+    for(let m=1;m<=12;m++){
+      sipInvested += curMonthly;
+      sipValue = sipValue*(1+r) + curMonthly;
+    }
+    if(stepup>0) curMonthly *= (1+stepup/100);
+    const lsY = lumpsum*Math.pow(1+rate/100,y);
+    const combined = lsY + sipValue;
+    rows.push({y, monthly:monthly, invested:lumpsum+sipInvested, lsY, sipY:sipValue, combined, gain:combined-lumpsum-sipInvested});
+  }
+
+  const totalInvested = lumpsum + sipInvested;
+  const totalValue = lsValue + sipValue;
+  const gain = totalValue - totalInvested;
+  const realVal = totalValue/Math.pow(1+inf,years);
+
+  document.getElementById('sl-results').innerHTML = [
+    {lbl:'Total Invested',val:fmt(totalInvested,sym),sub:'Lumpsum + SIP'},
+    {lbl:'Est. Returns',val:fmt(gain,sym),sub:`@${rate}% p.a.`},
+    {lbl:'Total Corpus',val:fmt(totalValue,sym),sub:'Combined maturity'},
+    {lbl:'Lumpsum Value',val:fmt(lsValue,sym),sub:'Initial investment growth'},
+    {lbl:'SIP Value',val:fmt(sipValue,sym),sub:'Monthly SIP growth'},
+    {lbl:'Real Value',val:fmt(realVal,sym),sub:`Inflation adj @${inflation}%`},
+  ].map(s=>`<div class="calc-stat"><div class="calc-stat-lbl">${s.lbl}</div><div class="calc-stat-val">${s.val}</div><div class="calc-stat-sub">${s.sub}</div></div>`).join('');
+
+  drawDonut('sl-donut','sl-legend',[
+    {label:'Lumpsum Principal',value:lumpsum,color:'#c0390b',pct:Math.round(lumpsum/totalValue*100)},
+    {label:'SIP Invested',value:sipInvested,color:'#e8540f',pct:Math.round(sipInvested/totalValue*100)},
+    {label:'Lumpsum Gains',value:lsValue-lumpsum,color:'#ffd166',pct:Math.round((lsValue-lumpsum)/totalValue*100)},
+    {label:'SIP Gains',value:sipValue-sipInvested,color:'#22c55e',pct:Math.round((sipValue-sipInvested)/totalValue*100)},
+  ]);
+
+  document.getElementById('sl-table-body').innerHTML = rows.map(r=>
+    `<tr><td>${r.y}</td><td>${fmt(r.monthly,sym)}/mo</td><td>${fmt(r.invested,sym)}</td><td>${fmt(r.lsY,sym)}</td><td>${fmt(r.sipY,sym)}</td><td style="color:#ffd166;font-weight:700">${fmt(r.combined,sym)}</td><td style="color:#22c55e">${fmt(r.gain,sym)}</td></tr>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ASSET ALLOCATION CALCULATOR — Fully rewritten
+// ═══════════════════════════════════════════════════════════════════
+function calcAlloc() {
+  const sym     = document.getElementById('al-currency').value;
+  const age     = parseInt(document.getElementById('al-age').value) || 30;
+  const wealth  = parseFloat(document.getElementById('al-wealth').value) || 0;
+  const invest  = parseFloat(document.getElementById('al-invest').value) || 0;
+  const risk    = document.getElementById('al-risk').value;
+  const horizon = document.getElementById('al-horizon').value;
+  const dep     = document.getElementById('al-dependent').value;
+
+  // ── Currency multiplier (all base rates in INR) ─────────────────
+  const CUR_MULT = {'₹':1,'¥':1.8,'$':0.012,'€':0.011,'£':0.0095,'S$':0.016};
+  const cx = CUR_MULT[sym] || 1;
+
+  // ══════════════════════════════════════════════════════════════
+  // STEP 1: REALISTIC INSURANCE PREMIUMS (age-based, not % of invest)
+  // These are REAL annual cost estimates, not portfolio allocation %.
+  // If invest < premium → flag as unaffordable, still show requirement.
+  // ══════════════════════════════════════════════════════════════
+
+  // Health Insurance annual premium (family floater, INR base):
+  // Age 20-30: ₹8k-12k | Age 31-40: ₹12k-20k | Age 41-50: ₹20k-35k
+  // Age 51-60: ₹35k-60k | Age 60+: ₹60k-1.2L+ (if insurable)
+  const HEALTH_BASE_INR =
+    age <= 30 ? 10000 :
+    age <= 40 ? 16000 :
+    age <= 50 ? 27000 :
+    age <= 55 ? 45000 :
+    age <= 60 ? 70000 : 110000;
+
+  // Add family loading if dependents
+  const healthFamilyMult = dep === 'family' ? 1.6 : dep === 'retired' ? 1.2 : 1.0;
+  const healthInsAmt = Math.round(HEALTH_BASE_INR * healthFamilyMult * cx);
+
+  // Life Insurance annual term premium (INR base, ₹1 Cr sum assured, non-smoker):
+  // Age 20-30: ₹8k-12k | Age 31-40: ₹12k-22k | Age 41-50: ₹22k-45k
+  // Age 51-60: ₹45k-90k | Age 60+: Term plans often not available / very expensive
+  const LIFE_BASE_INR =
+    age <= 30 ? 9000  :
+    age <= 40 ? 16000 :
+    age <= 50 ? 32000 :
+    age <= 55 ? 60000 :
+    age <= 60 ? 85000 : 0; // 60+ term plans not recommended
+
+  const lifeInsAmt = dep === 'retired' || age > 60
+    ? 0  // at retirement, term insurance is not needed / available
+    : Math.round(LIFE_BASE_INR * cx);
+
+  // ── Insurance affordability check ──────────────────────────────
+  const totalInsAmt  = healthInsAmt + lifeInsAmt;
+  const canAffordIns = invest >= totalInsAmt;
+  // Investable after mandatory insurance premium
+  const investAfterIns = Math.max(invest - totalInsAmt, 0);
+
+  // ══════════════════════════════════════════════════════════════
+  // STEP 2: EQUITY % based on age + risk + horizon + life stage
+  // Use investAfterIns as the base for all % calculations
+  // ══════════════════════════════════════════════════════════════
+  let baseEq = 110 - age;
+
+  if (risk === 'aggressive') baseEq += 10;
+  if (risk === 'conservative') baseEq -= 15;
+  if (horizon === 'long')  baseEq += 5;
+  if (horizon === 'short') baseEq -= 15;
+  if (dep === 'retired')   baseEq -= 20; // retired: much lower equity
+  if (dep === 'single')    baseEq += 5;
+
+  // Hard clamps by life stage
+  const EQ_CLAMP = {
+    aggressive:   { min: 15, max: 85 },
+    balanced:     { min: 10, max: 75 },
+    conservative: { min: 5,  max: 55 },
+  };
+  const clamp = EQ_CLAMP[risk];
+  // Extra constraint: age 55+ cap equity regardless of risk
+  const ageMaxEq = age >= 60 ? 30 : age >= 55 ? 45 : age >= 50 ? 60 : 85;
+  baseEq = Math.min(Math.max(baseEq, clamp.min), Math.min(clamp.max, ageMaxEq));
+
+  // ── MF always > Stocks (MF is the core) ────────────────────────
+  const EQUITY_RATIOS = {
+    aggressive:   { mf: 0.55, stocks: 0.33, hybrid: 0.12 },
+    balanced:     { mf: 0.60, stocks: 0.27, hybrid: 0.13 },
+    conservative: { mf: 0.65, stocks: 0.15, hybrid: 0.20 },
+  };
+  const eqR      = EQUITY_RATIOS[risk];
+  const eqMF     = Math.round(baseEq * eqR.mf);
+  const eqStocks = Math.round(baseEq * eqR.stocks);
+  const eqHybrid = baseEq - eqMF - eqStocks;
+  const rem      = 100 - baseEq; // non-equity investable pool
+
+  // ── Non-equity allocations (of investable pool only) ───────────
+  // Conservative at retirement: heavy bonds + liquid, minimal reit
+  const NONQ = {
+    aggressive:   { bond:0.14, gold:0.09, silver:0.04, reit:0.14, nrefd:0.10, cash:0.09 },
+    balanced:     { bond:0.25, gold:0.11, silver:0.04, reit:0.10, nrefd:0.12, cash:0.08 },
+    conservative: { bond:0.38, gold:0.14, silver:0.02, reit:0.05, nrefd:0.22, cash:0.09 },
+  };
+  const nq   = NONQ[risk];
+  let bond   = Math.round(rem * nq.bond);
+  let gold   = Math.round(rem * nq.gold);
+  let silver = Math.round(rem * nq.silver);
+  let reit   = Math.round(rem * nq.reit);
+  let nrefd  = Math.round(rem * nq.nrefd);
+  let cash   = Math.max(0, rem - bond - gold - silver - reit - nrefd);
+
+  // Retirement profile: shift equity freed-up → bonds + liquid
+  if (dep === 'retired') {
+    bond  = Math.round(rem * 0.42);
+    nrefd = Math.round(rem * 0.28);
+    gold  = Math.round(rem * 0.12);
+    silver= Math.round(rem * 0.02);
+    reit  = Math.round(rem * 0.04);
+    cash  = Math.max(0, rem - bond - nrefd - gold - silver - reit);
+  }
+  if (horizon === 'short') { bond += 5; reit = Math.max(reit-3,0); silver = Math.max(silver-2,0); }
+  if (dep === 'family')    { nrefd = Math.round(nrefd * 1.15); }
+
+  // ══════════════════════════════════════════════════════════════
+  // STEP 3: BUILD ALLOCS — amounts from investAfterIns, not invest
+  // Insurance shown separately as fixed annual cost, not %
+  // ══════════════════════════════════════════════════════════════
+  const allocs = [
+    { name:'Equity Mutual Funds (Core)',  pct:eqMF,      color:'#e8540f', method:'SIP (monthly)',   why:'MF is the core growth engine — professional management, diversification, ELSS tax benefit' },
+    { name:'Equity Stocks (Satellite)',   pct:eqStocks,  color:'#ff7235', method:'Lumpsum / STP',  why:'Direct stock alpha — 8–12 quality large+midcap stocks; review quarterly' },
+    { name:'Hybrid / Debt MF',            pct:eqHybrid,  color:'#f5a623', method:'SIP',            why:'Volatility buffer — multi-asset & equity savings funds reduce drawdown' },
+    { name:'Bonds / Debt',                pct:bond,      color:'#3b82f6', method:'Lumpsum',        why:'Stable income + capital protection; ladder across 1Y/3Y/5Y durations' },
+    { name:'Gold',                        pct:gold,      color:'#ffd166', method:'SIP (Gold ETF)', why:'Inflation hedge + crisis buffer; Gold ETF or Sovereign Gold Bond preferred' },
+    { name:'Silver',                      pct:silver,    color:'#9ca3af', method:'SIP (Silver ETF)','why':'Industrial demand + precious metals diversification' },
+    { name:'REITs & InvITs',              pct:reit,      color:'#8b5cf6', method:'Lumpsum / SIP', why:'Real estate income without ownership; 8–9% yield + appreciation' },
+    { name:'NRE FD / Liquid Fund',        pct:nrefd+cash,color:'#22c55e', method:'Lumpsum',       why:'Emergency fund (6M expenses) + tax-free NRI returns; keep fully accessible' },
+  ].filter(a => a.pct > 0);
+
+  // Normalise investable allocs to 100% of investable pool
+  const totalPct = allocs.reduce((s,a) => s+a.pct, 0);
+  allocs.forEach(a => a.pct = Math.round(a.pct / totalPct * 100));
+  const diff = 100 - allocs.reduce((s,a)=>s+a.pct,0);
+  if (diff && allocs.length) allocs[0].pct += diff;
+
+  // ── Wealth snapshot ─────────────────────────────────────────────
+  const retireYrs = Math.max(60 - age, 0);
+  const insAffordTag = canAffordIns
+    ? `<span style="color:#22c55e;font-size:10px">✅ Affordable from this investment</span>`
+    : `<span style="color:#ef4444;font-size:10px">⚠️ Premium exceeds investment — pay from savings/income</span>`;
+
+  document.getElementById('al-summary-stats').innerHTML = [
+    {lbl:'Current Wealth',        val:fmt(wealth,sym),        sub:'Total existing assets'},
+    {lbl:'Fresh Investment',      val:fmt(invest,sym),        sub:'New money to deploy'},
+    {lbl:'After Insurance Cost',  val:fmt(investAfterIns,sym),sub:'Available to invest'},
+    {lbl:'Age',                   val:age+' yrs',             sub:retireYrs>0?`${retireYrs} yrs to retirement`:'At / past retirement'},
+    {lbl:'Risk Profile',          val:risk.charAt(0).toUpperCase()+risk.slice(1), sub:horizon+' horizon'},
+  ].map(s=>`<div class="calc-stat"><div class="calc-stat-lbl">${s.lbl}</div><div class="calc-stat-val" style="font-size:16px">${s.val}</div><div class="calc-stat-sub">${s.sub}</div></div>`).join('');
+
+  // ── Insurance panel — shown as fixed real annual cost ──────────
+  const insHtml = `
+  <div style="background:linear-gradient(135deg,rgba(239,68,68,.06),rgba(236,72,153,.04));border:1px solid rgba(239,68,68,.2);border-radius:12px;padding:18px;margin-bottom:18px">
+    <div style="font-size:12px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px">🛡️ Annual Insurance Premiums — Real Fixed Cost (not % of portfolio)</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:12px">
+      ${lifeInsAmt > 0 ? `
+      <div class="calc-stat" style="border-color:rgba(239,68,68,.3)">
+        <div class="calc-stat-lbl">Life Insurance (Term ₹1Cr)</div>
+        <div class="calc-stat-val" style="font-size:20px;color:#ef4444">${fmt(lifeInsAmt,sym)}/yr</div>
+        <div class="calc-stat-sub">Age ${age} est. annual premium</div>
+      </div>` : `
+      <div class="calc-stat" style="border-color:rgba(107,114,128,.3)">
+        <div class="calc-stat-lbl">Life Insurance</div>
+        <div class="calc-stat-val" style="font-size:14px;color:#888">Not Required</div>
+        <div class="calc-stat-sub">At/near retirement — term plan not recommended</div>
+      </div>`}
+      <div class="calc-stat" style="border-color:rgba(236,72,153,.3)">
+        <div class="calc-stat-lbl">Health Insurance ${dep==='family'?'(Family Floater)':dep==='retired'?'(Senior)':'(Individual)'}</div>
+        <div class="calc-stat-val" style="font-size:20px;color:#ec4899">${fmt(healthInsAmt,sym)}/yr</div>
+        <div class="calc-stat-sub">Age ${age} realistic annual premium</div>
+      </div>
+      <div class="calc-stat" style="border-color:rgba(245,158,11,.3)">
+        <div class="calc-stat-lbl">Total Insurance Cost</div>
+        <div class="calc-stat-val" style="font-size:20px;color:#f59e0b">${fmt(totalInsAmt,sym)}/yr</div>
+        <div class="calc-stat-sub">${insAffordTag}</div>
+      </div>
+      <div class="calc-stat" style="border-color:rgba(34,197,94,.3)">
+        <div class="calc-stat-lbl">Net Investable Amount</div>
+        <div class="calc-stat-val" style="font-size:20px;color:#22c55e">${fmt(investAfterIns,sym)}</div>
+        <div class="calc-stat-sub">After insurance; all % below are of this amount</div>
+      </div>
+    </div>
+    <p style="font-size:11px;color:#888;line-height:1.6">
+      💡 <strong>Insurance is a fixed annual expense, not a portfolio allocation %.</strong>
+      The ${Math.round(totalInsAmt/Math.max(invest,1)*100)}% figure shown above (₹${fmt(totalInsAmt,sym).replace(sym,'')} of ₹${fmt(invest,sym).replace(sym,'')}) 
+      reflects the real cost at age ${age}.
+      ${age > 60 ? ' At age 60+, focus health insurance premium on senior citizen health plans (₹60k–1.2L/yr). Check PMJAY for government coverage.' : ''}
+      ${!canAffordIns ? ' ⚠️ Your investment amount is less than the annual insurance premium. Buy insurance from your regular income/savings — never skip it for investment.' : ''}
+      Pay premiums from income/savings first, then invest the remaining amount below.
+    </p>
+  </div>`;
+
+  // Inject insurance panel before the table
+  const tableWrapper = document.getElementById('al-table-body').closest('div[style]') || document.getElementById('al-table-body').parentElement;
+  const insContainer = document.getElementById('al-ins-panel');
+  if (insContainer) insContainer.innerHTML = insHtml;
+
+  // ── Donut — investable assets only (insurance excluded) ─────────
+  drawDonut('al-donut', 'al-legend', allocs.map(a => ({
+    label: a.name, value: a.pct, color: a.color, pct: a.pct
+  })));
+
+  // ── Main allocation table — amounts from investAfterIns ─────────
+  document.getElementById('al-table-body').innerHTML = allocs.map(a =>
+    `<tr>
+      <td><strong style="color:var(--gold2)">${a.name}</strong></td>
+      <td><span style="font-family:'JetBrains Mono',monospace;color:#ffd166;font-size:15px;font-weight:700">${a.pct}%</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;color:#b0a898">${fmt(investAfterIns*a.pct/100,sym)}</td>
+      <td><span style="background:rgba(232,84,15,.18);color:var(--burn3);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap">${a.method}</span></td>
+      <td style="font-size:11px;color:#888">${a.why}</td>
+    </tr>`
+  ).join('');
+
+  // ── Equity sub-breakdown ────────────────────────────────────────
+  const EQ_MF_SUBS = {
+    aggressive:   [
+      {sub:'Large Cap Fund',   pct:30, method:'SIP',          rat:'Stable core — Nifty 50 quality; lower volatility within equity'},
+      {sub:'Mid Cap Fund',     pct:30, method:'SIP',          rat:'Higher growth; 3–5Y horizon; review semi-annually'},
+      {sub:'Small Cap Fund',   pct:20, method:'SIP (small)',  rat:'High risk-reward; 5Y+ only; SIP averages volatility'},
+      {sub:'Global / Intl MF', pct:20, method:'SIP',          rat:'USD diversification; reduces India-specific risk'},
+    ],
+    balanced:     [
+      {sub:'Large Cap Fund',   pct:40, method:'SIP',          rat:'Portfolio backbone — proven large companies with strong fundamentals'},
+      {sub:'Mid Cap Fund',     pct:25, method:'SIP',          rat:'Growth balance; good for 3–7Y horizon'},
+      {sub:'Small Cap Fund',   pct:15, method:'SIP (small)',  rat:'Limited; only if 5Y+ horizon; cap monthly SIP strictly'},
+      {sub:'Global / Intl MF', pct:20, method:'SIP',          rat:'Geographic diversification; INR depreciation hedge'},
+    ],
+    conservative: [
+      {sub:'Large Cap Fund',   pct:60, method:'SIP',          rat:'Maximum in safest equity — blue-chips with dividend history'},
+      {sub:'Mid Cap Fund',     pct:20, method:'SIP',          rat:'Modest growth; only CRISIL 5-star funds'},
+      {sub:'Small Cap Fund',   pct:5,  method:'SIP (minimal)','rat':'Minimal; only very long-term portion'},
+      {sub:'Global / Intl MF', pct:15, method:'SIP',          rat:'Stability when Indian market corrects'},
+    ],
+  };
+  const EQ_ST_SUBS = {
+    aggressive:   [
+      {sub:'Large Cap Stocks', pct:45, method:'Lumpsum / Buy on dip',     rat:'5–6 high-conviction large-caps; core holding 2Y+'},
+      {sub:'Mid Cap Stocks',   pct:35, method:'STP from debt',            rat:'3–4 quality mid-caps; entry on corrections only'},
+      {sub:'Small Cap Stocks', pct:20, method:'Stagger over 3M',          rat:'2–3 stocks max; strict stop-loss at -15%'},
+    ],
+    balanced:     [
+      {sub:'Large Cap Stocks', pct:65, method:'Lumpsum / Buy on dip',     rat:'7–8 quality large-caps across sectors; hold 3Y+'},
+      {sub:'Mid Cap Stocks',   pct:30, method:'STP from debt',            rat:'2–3 quality mid-caps; no momentum chasing'},
+      {sub:'Small Cap Stocks', pct:5,  method:'Stagger / SIP',            rat:'1 stock max; only strong fundamentals'},
+    ],
+    conservative: [
+      {sub:'Large Cap Stocks', pct:90, method:'Lumpsum on dips',          rat:'8–10 blue-chip dividend stocks; hold for income'},
+      {sub:'Mid Cap Stocks',   pct:10, method:'STP from liquid fund',     rat:'1 stock only; strict exit at -12%'},
+      {sub:'Small Cap Stocks', pct:0,  method:'Avoid',                    rat:'Not suitable'},
+    ],
+  };
+
+  const eqMFAmt = investAfterIns * eqMF / 100;
+  const eqStAmt = investAfterIns * eqStocks / 100;
+  document.getElementById('al-equity-body').innerHTML = [
+    ...EQ_MF_SUBS[risk].map(s =>
+      `<tr>
+        <td style="color:var(--burn3);font-weight:600">Equity MF</td>
+        <td><strong style="color:var(--gold2)">${s.sub}</strong></td>
+        <td><span style="font-family:'JetBrains Mono',monospace;color:#ffd166;font-weight:700">${s.pct}%</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;color:#b0a898">${fmt(eqMFAmt*s.pct/100,sym)}</td>
+        <td><span style="background:rgba(232,84,15,.15);color:var(--burn3);padding:2px 7px;border-radius:8px;font-size:11px">${s.method}</span></td>
+        <td style="font-size:11px;color:#888">${s.rat}</td>
+      </tr>`),
+    ...EQ_ST_SUBS[risk].filter(s=>s.pct>0).map(s =>
+      `<tr>
+        <td style="color:#ff7235;font-weight:600">Direct Stocks</td>
+        <td><strong style="color:var(--gold2)">${s.sub}</strong></td>
+        <td><span style="font-family:'JetBrains Mono',monospace;color:#ffd166;font-weight:700">${s.pct}%</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;color:#b0a898">${fmt(eqStAmt*s.pct/100,sym)}</td>
+        <td><span style="background:rgba(232,84,15,.15);color:var(--burn3);padding:2px 7px;border-radius:8px;font-size:11px">${s.method}</span></td>
+        <td style="font-size:11px;color:#888">${s.rat}</td>
+      </tr>`)
+  ].join('');
+
+  // ── Debt sub-breakdown ──────────────────────────────────────────
+  const DEBT_SUBS = {
+    aggressive:   [
+      {sub:'Medium Term Debt Fund', pct:30, method:'Lumpsum / STP',  rat:'3–4Y; better post-tax than FD; ride falling rate cycle'},
+      {sub:'Multi Asset Fund',      pct:30, method:'SIP',            rat:'Auto-rebalancing across equity/debt/gold'},
+      {sub:'Arbitrage Fund',        pct:25, method:'Lumpsum',        rat:'Equity-taxed, debt-risk; park money 3–6M'},
+      {sub:'Money Market Fund',     pct:15, method:'Lumpsum',        rat:'Highest liquidity; T+1 redemption; emergency portion'},
+    ],
+    balanced:     [
+      {sub:'Medium Term Debt Fund', pct:30, method:'Lumpsum / STP',  rat:'Core debt; predictable returns; low credit risk'},
+      {sub:'Multi Asset Fund',      pct:25, method:'SIP',            rat:'One-fund balance; equity+debt+gold in one'},
+      {sub:'Equity Savings Fund',   pct:20, method:'SIP',            rat:'Tax-efficient low-volatility equity via hedging'},
+      {sub:'Arbitrage Fund',        pct:15, method:'Lumpsum',        rat:'Better post-tax than liquid FD; highly liquid'},
+      {sub:'Money Market Fund',     pct:10, method:'Lumpsum',        rat:'Emergency buffer; instant liquidity'},
+    ],
+    conservative: [
+      {sub:'Medium Term Debt Fund', pct:35, method:'Lumpsum / STP',  rat:'Primary wealth preserver — AAA-rated papers only'},
+      {sub:'Multi Asset Fund',      pct:20, method:'SIP',            rat:'Built-in gold and bond allocation; low volatility'},
+      {sub:'Equity Savings Fund',   pct:20, method:'SIP',            rat:'Low-risk equity via arbitrage + derivatives hedge'},
+      {sub:'Money Market Fund',     pct:15, method:'Lumpsum',        rat:'9–12 months emergency buffer; instant withdrawal'},
+      {sub:'Arbitrage Fund',        pct:10, method:'Lumpsum',        rat:'Better than FD post-tax; equity tax treatment'},
+    ],
+  };
+  const debtAmt = investAfterIns * (eqHybrid + bond) / 100;
+  document.getElementById('al-debt-body').innerHTML = DEBT_SUBS[risk].map(s =>
+    `<tr>
+      <td style="color:#3b82f6;font-weight:600">Debt / Hybrid MF</td>
+      <td><strong style="color:var(--gold2)">${s.sub}</strong></td>
+      <td><span style="font-family:'JetBrains Mono',monospace;color:#ffd166;font-weight:700">${s.pct}%</span></td>
+      <td style="font-family:'JetBrains Mono',monospace;color:#b0a898">${fmt(debtAmt*s.pct/100,sym)}</td>
+      <td><span style="background:rgba(59,130,246,.15);color:#60a5fa;padding:2px 7px;border-radius:8px;font-size:11px">${s.method}</span></td>
+      <td style="font-size:11px;color:#888">${s.rat}</td>
+    </tr>`
+  ).join('');
+
+  // ── Investment method notes ─────────────────────────────────────
+  const methods = [
+    {icon:'📅',name:'SIP (Systematic Investment Plan)',   note:'Best for: Equity MF, Hybrid MF, Gold ETF, Silver ETF. Invest a fixed amount monthly regardless of market level. Rupee-cost averaging removes timing risk. Ideal for all market conditions.'},
+    {icon:'💰',name:'Lumpsum',                            note:'Best for: Bonds, NRE FD, Liquid Funds. Deploy when market PE is low (below 20 for Nifty). Avoid lumpsum in equity at market peaks. Park lumpsum in liquid fund first, then use STP.'},
+    {icon:'🔄',name:'STP (Systematic Transfer Plan)',     note:'Best for: Moving Liquid/Debt → Equity. Park lumpsum in liquid fund, transfer ₹X/week to equity MF over 6–12 months. Much safer than direct lumpsum into volatile equity.'},
+    {icon:'📈',name:'SIP with Step-Up',                  note:'Best for: Young investors. Increase SIP by 10–15%/year. A ₹10,000 SIP stepped up 10%/yr becomes ₹67,275/mo in 20 years — compounding on compounding.'},
+    {icon:'🎯',name:'Buy on Dip',                        note:'Best for: Direct stocks, Large-cap ETFs. Keep 10–15% in liquid fund to deploy during 8–15% market corrections. Only for experienced investors with conviction.'},
+    {icon:'📋',name:'Annual Rebalancing',                note:'Rebalance to target allocation once a year. If equity grew from 60% → 70%, sell 10% and shift to bonds/gold. Forces sell-high buy-low discipline automatically.'},
+  ];
+  document.getElementById('al-method-notes').innerHTML = methods.map(m =>
+    `<div style="display:flex;gap:14px;padding:14px;background:var(--dark3);border-radius:10px;margin-bottom:10px;border:1px solid var(--border)">
+      <div style="font-size:24px;flex-shrink:0">${m.icon}</div>
+      <div><div style="font-weight:700;color:var(--gold2);margin-bottom:4px;font-size:13px">${m.name}</div>
+      <div style="font-size:12px;color:var(--text3);line-height:1.7">${m.note}</div></div>
+    </div>`
+  ).join('');
+
+  // ── Summary note ────────────────────────────────────────────────
+  const insNote = lifeInsAmt === 0
+    ? `Life insurance not needed at age ${age}+.`
+    : `Life insurance ~${fmt(lifeInsAmt,sym)}/yr + Health ~${fmt(healthInsAmt,sym)}/yr = ${fmt(totalInsAmt,sym)}/yr fixed cost.`;
+  document.getElementById('al-note').innerHTML = `
+    ⚠️ <strong>Profile: ${risk.charAt(0).toUpperCase()+risk.slice(1)} | Age: ${age} | 
+    ${dep==='family'?'With Dependents':dep==='retired'?'Near Retirement':'Single'} | 
+    ${horizon==='long'?'Long-term (7Y+)':horizon==='medium'?'Medium-term (3–7Y)':'Short-term (<3Y)'}.</strong>
+    Equity capped at ${baseEq}% (age-adjusted). ${insNote}
+    All allocation % above apply to <strong>${fmt(investAfterIns,sym)}</strong> (after insurance).
+    Insurance premiums are real annual costs — pay from regular income, not portfolio %.
+    Rebalance annually. Consult a SEBI-registered advisor for personalised advice.`;
+}
+// ═══════════════════════════════════════════════════════════════════
+// COMPARE MUTUAL FUNDS & ETF TOOL
+// ═══════════════════════════════════════════════════════════════════
+let compareHtml = '';
+
+function getFunds(prefix) {
+  return [1,2,3,4,5]
+    .map(i => document.getElementById(`cmp-${prefix}${i}`)?.value?.trim())
+    .filter(Boolean);
+}
+
+function updateCompareQuery() {
+  const groupA   = getFunds('a');
+  const groupB   = getFunds('b');
+  const resident = document.getElementById('cmp-resident').value;
+  const horizon  = document.getElementById('cmp-horizon').value;
+  const today    = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+
+  if (groupA.length === 0 && groupB.length === 0) {
+    document.getElementById('cmp-query-box').textContent = 'Fill in fund names above to generate the query.';
+    return;
+  }
+
+  const allFunds = [...groupA.map((f,i)=>`Group A-${i+1}: ${f}`), ...groupB.map((f,i)=>`Group B-${i+1}: ${f}`)];
+
+  const query = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MULTI ASSET SCREENER — FUND COMPARISON QUERY v8.0
+Generated: ${today} | Tool: Vilfin George
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ROLE: You are a professional mutual fund & ETF research analyst.
+Research ALL funds listed below and output a COMPLETE single-file self-contained HTML comparison report.
+
+INVESTOR PROFILE:
+  Resident Status  : ${resident}
+  Investment Horizon: ${horizon}
+  Report Date      : ${today}
+
+FUNDS TO COMPARE:
+${allFunds.map(f => '  '+f).join('\n')}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DATA SOURCES: AMFI, NSE, BSE, Morningstar, Value Research, CRISIL,
+Tickertape, Screener.in, Moneycontrol, ET Markets, Trendlyne, Yahoo Finance.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+HTML REPORT DESIGN REQUIREMENTS:
+• Fonts: Bebas Neue + DM Sans + JetBrains Mono (Google Fonts)
+• Background: #f4f0eb warm cream, white cards, burnt-orange (#c0390b/#e8540f) accents
+• Header: linear-gradient(135deg,#1a0800,#c0390b,#e8540f,#ff7235) — dark gradient
+• Header title: "Fund Comparison Report" — Bebas Neue, white, letter-spacing 3px
+• Sub-header: list all fund names being compared
+• Dark identity bar (#1a1a1a) with: funds count | investor type | date | horizon
+• Sticky scrollable tab bar: dark #242424 background, gold #ffd166 active underline
+• White cards: border-radius 12px, border #e8e0d8, subtle shadow
+• Card section titles: Bebas Neue with 4px burnt-orange left bar
+• KPI grid: auto-fill columns, cream #f9f7f4 cards, uppercase labels
+• Tables: burnt-orange thead gradient, hover rows
+• Badges: green=buy/positive, red=sell/avoid, amber=hold/neutral, blue=info
+• Footer: dark #1a1a1a, gold "Site Owner: Vilfin George", full SEBI disclaimer
+• Footer: "Generated: ${today} | Multi Asset Screener v8.0 | Vilfin George"
+• All CSS and JS inline — fully self-contained single file
+• Mobile responsive
+• Tab fade-up animation
+
+SEBI DISCLAIMER (include in footer):
+"This comparison report is for educational and informational purposes only. It does not constitute investment advice, a solicitation, or an offer to buy or sell any securities. Vilfin George is not a SEBI-registered investment advisor. All data is sourced from publicly available information. Mutual fund investments are subject to market risks. Past performance is not indicative of future results. Please read all scheme-related documents carefully before investing. Consult your financial advisor before making any investment decision."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPARISON REPORT — 6 TABS REQUIRED:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TAB 1 — OVERVIEW & IDENTITY
+For each fund: Full Name | AMC | Category | Sub-Category | Fund Type (Open/Close/Interval) |
+Benchmark | Fund Manager | Manager Tenure | ISIN (Regular + Direct) | Launch Date |
+TER Regular % | TER Direct % | Exit Load | Lock-in | Min SIP | Min Lumpsum |
+AUM (Cr) | AUM Trend (Growing/Shrinking) | AMFI Risk Rating | Suitable For
+
+Summary verdict box: which fund is best for what investor type.
+
+TAB 2 — PERFORMANCE COMPARISON
+Side-by-side returns table for ALL funds:
+Period: 1M | 3M | 6M | 1Y | 2Y | 3Y | 5Y | 7Y | 10Y | Since Inception
+For each: Fund return % | Benchmark return % | vs Category Avg | CRISIL Rank | VR Rating
+Rolling returns (3Y rolling, 5Y rolling) | Max Drawdown % | Recovery period
+Best Quarter | Worst Quarter | Consistency Score
+Performance verdict: Rank funds 1st to last with reasoning.
+
+TAB 3 — RISK & QUALITY METRICS
+For each fund: Sharpe Ratio | Sortino Ratio | Alpha | Beta | Standard Deviation |
+R-squared | Treynor Ratio | Calmar Ratio | Information Ratio
+Max drawdown % | Drawdown recovery months | Volatility band (Low/Medium/High)
+Quality checklist for each fund (12 items — Yes/No/Partial):
+Beats benchmark 3Y | Beats category 3Y | Low TER | Manager tenure >3Y |
+AUM growing | Positive net flows 3M | Sharpe >1 | Low max drawdown |
+CRISIL 4-star+ | Consistent top-quartile | No SEBI violations | Fund house credibility
+
+TAB 4 — PORTFOLIO & HOLDINGS
+For each fund: Top 10 Holdings (Stock/Security | Sector | Weight%) |
+Sector Allocation (top 5 sectors per fund) | Portfolio Overlap % between all funds |
+Unique holdings | Portfolio Concentration (top 10 weight %) |
+Portfolio P/E | Portfolio P/B | Average Market Cap Tilt |
+Portfolio turnover ratio | Number of holdings
+If ETF: Underlying index | Tracking error | Tracking difference
+
+TAB 5 — TAX & COST ANALYSIS
+For resident: ${resident} | Horizon: ${horizon}
+For each fund:
+  STCG rate + holding period | LTCG rate + holding period | Indexation benefit
+  TER drag on 10Y returns (show compounding impact of TER difference)
+  Exit load impact for this horizon | Stamp duty | STT if applicable
+  Tax-efficient entry: Direct vs Regular (cost difference over 10Y)
+  Best account to hold: Regular taxable | NRE account | NISA (Japan)
+  Net post-tax return estimate for this horizon
+
+TAB 6 — FINAL VERDICT & RECOMMENDATION
+Overall ranking table: Fund Name | Overall Score /100 | Risk Score | Return Score | Quality Score | Cost Score | Verdict Badge
+Composite scoring breakdown per fund (show as horizontal score bars):
+  Performance (30pts) | Risk Management (25pts) | Cost Efficiency (20pts) | Fund Quality (15pts) | Manager Track Record (10pts)
+Best pick for: SIP investor | Lumpsum investor | Short-term | Long-term | Conservative | Aggressive
+Side-by-side comparison summary: 3 key strengths and 1 weakness per fund
+Final recommendation with reasoning (3–4 sentences per fund)
+Investment strategy for this specific portfolio combination
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OUTPUT FORMAT:
+• Output COMPLETE HTML starting with <!DOCTYPE html>
+• No markdown code fences — pure HTML only
+• All CSS and JS embedded inline
+• Do NOT truncate any section — fill every tab with real live data
+• If data unavailable → "No Data Available"
+• Begin output now.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+
+  document.getElementById('cmp-query-box').textContent = query;
+}
+
+function copyCompareQuery() {
+  const text = document.getElementById('cmp-query-box').textContent;
+  if (!text || text === 'Fill in fund names above to generate the query.') {
+    alert('Please enter fund names above to generate the comparison query first.');
+    return;
+  }
+  _copyText(text, 'cmp-copy-btn', '📋 Copy Query');
+}
+
+function renderCompare() {
+  const html = document.getElementById('cmp-paste-area').value.trim();
+  if (!html) { alert('Please paste the HTML output from Claude AI first.'); return; }
+  compareHtml = html;
+  const container = document.getElementById('cmp-rendered');
+  container.innerHTML = '';
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'width:100%;border:none;border-radius:12px;min-height:80vh;display:block';
+  container.appendChild(iframe);
+  const doc = iframe.contentDocument || iframe.contentWindow.document;
+  doc.open(); doc.write(html); doc.close();
+  const resize = () => { try { const h=iframe.contentWindow.document.documentElement.scrollHeight; if(h>400) iframe.style.height=(h+40)+'px'; } catch(e){} };
+  iframe.onload = resize; setTimeout(resize,500); setTimeout(resize,1500);
+  document.getElementById('cmp-export-btn').style.display = 'flex';
+}
+
+function downloadCompare() {
+  if (!compareHtml) return;
+  const blob = new Blob([compareHtml], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `fund_comparison_${new Date().toISOString().slice(0,10)}.html`;
+  a.click();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MAIN TAB SWITCH
+// ═══════════════════════════════════════════════════════════════════
+function switchMain(idx, btn) {
+  document.querySelectorAll('.panel').forEach((p,i) => p.classList.toggle('active', i === idx));
+  document.querySelectorAll('.main-tab').forEach(b => b.classList.remove('active'));
+  if (btn) {
+    btn.classList.add('active');
+  } else {
+    const tId = idx === 0 ? 'main-tab-0' : 'main-tab-2';
+    const t = document.getElementById(tId);
+    if (t) t.classList.add('active');
+  }
+  if (idx === 1) refreshCopyPanel();
+  // Auto-scroll the active panel into view (past the live news section)
+  const panelIds = ['panel-input', 'panel-copy', 'panel-paste'];
+  const activePanel = document.getElementById(panelIds[idx]);
+  if (activePanel) {
+    setTimeout(() => {
+      activePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 60);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// OPTION SELECT
+// ═══════════════════════════════════════════════════════════════════
+function selectOpt(el, group) {
+  const q = el.dataset.q;
+  el.closest('.option-grid').querySelectorAll('.opt').forEach(o => {
+    if (o.dataset.q === q) o.classList.remove('selected');
+  });
+  el.classList.add('selected');
+  const val = el.dataset.val;
+  if (group === 'q1') { answers.assetType = val; onQ1Change(val); }
+  else if (group === 'q2') { answers.market = val; onQ2Change(val); }
+  else if (group === 'q2b') { answers.bondType = val; }
+  else if (group === 'q2c') { answers.commSub = val; }
+  else if (group === 'q2d') { answers.commSubDigital = val; }
+  else if (group === 'q3') { answers.resident = val; }
+  else if (group === 'q3b') { answers.residentSub = val; }
+  else if (group === 'q4') { answers.horizon = val; }
+  else if (group === 'q5c') { answers.amountCurrency = val; }
+  updateSummary();
+  checkShowNext();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Q1 CHANGE
+// ═══════════════════════════════════════════════════════════════════
+function onQ1Change(val) {
+  ['q2-stock','q2-etf','q2-mf','q2-bond','q2-commodity','q2-currency'].forEach(id => {
+    document.getElementById(id).classList.remove('visible');
+  });
+  answers.market=''; answers.bondType=''; answers.commSub=''; answers.commSubDigital='';
+  answers.assetName=''; answers.amountCurrency=''; answers.amountSymbol=''; answers.amount='';
+  answers.isDigital=false; answers.digitalType='';
+  document.getElementById('asset-name').value = '';
+  document.getElementById('invest-amount').value = '';
+  document.getElementById('q5-amount-sub').classList.remove('visible');
+  document.querySelectorAll('[data-q="5c"]').forEach(o => o.classList.remove('selected'));
+  ['comm-energy','comm-metals','comm-grains','comm-softs','comm-livestock','comm-env'].forEach(id => {
+    document.getElementById(id).classList.remove('visible');
+  });
+  document.getElementById('q2-bond-type').classList.remove('visible');
+  document.getElementById('curr-other').classList.remove('visible');
+  hideDigitalSub();
+
+  const map = {'Stock':'q2-stock','ETF':'q2-etf','Mutual Fund':'q2-mf','Bond':'q2-bond','Commodity':'q2-commodity','Currency':'q2-currency'};
+  if (map[val]) document.getElementById(map[val]).classList.add('visible');
+
+  // Update asset name label and placeholder based on asset type
+  updateAssetNameUI(val, '');
+
+  showDownstream(val === 'Currency');
+}
+
+// Q2 CHANGE — update asset name placeholder when market is selected
+function onQ2Change(val) {
+  updateAssetNameUI(answers.assetType, val);
+}
+
+function updateAssetNameUI(assetType, market) {
+  const lbl = document.getElementById('asset-name-label');
+  const ph = document.getElementById('asset-name-placeholder');
+  const input = document.getElementById('asset-name');
+  const placeholders = {
+    'Stock': { label: 'Stock Name', text: 'e.g. Reliance Industries Ltd | Apple Inc | Toyota Motor', note: '💡 Enter the full official company name or ticker symbol.' },
+    'ETF': { label: 'ETF Name', text: 'e.g. Nippon India Nifty 50 ETF | SPDR S&P 500 ETF Trust (SPY)', note: '💡 Enter the full ETF name or ticker. For Japan: e.g. TOPIX ETF (1306).' },
+    'Mutual Fund': { label: 'Mutual Fund Name', text: 'e.g. HDFC Top 100 Fund | Mirae Asset Large Cap Fund', note: '💡 Enter the full scheme name. If it is an ETF Fund of Fund, the AI will also pull underlying ETF list.' },
+    'Bond': { label: 'Bond Name / Issuer', text: 'e.g. Tata Capital NCD 9.5% 2027 | US Treasury 10Y | SBI Bond', note: '💡 Enter the bond name, issuer, and approximate tenor if known.' },
+    'Commodity': { label: 'Commodity Name', text: 'Auto-filled from Q1b/Q1c selection', note: '💡 Confirm the commodity selected above is correct.' },
+  };
+  const info = placeholders[assetType];
+  if (info) {
+    if (lbl) lbl.textContent = info.label;
+    if (input) input.placeholder = info.text;
+    if (ph) ph.innerHTML = `<span style="font-size:11px;color:var(--text3)">${info.note}</span>`;
+  }
+  // For commodity, auto-fill name from selection
+  if (assetType === 'Commodity' && answers.commSub) {
+    if (input) { input.value = answers.commSubDigital || answers.commSub; answers.assetName = input.value; }
+  }
+}
+
+function showDownstream(show) {
+  ['q3-block','q4-block','q5-block','gen-wrap'].forEach(id => {
+    document.getElementById(id).style.display = show ? 'block' : 'none';
+  });
+}
+
+function checkShowNext() {
+  const t = answers.assetType;
+  if (!t) return;
+  if (t === 'Currency') {
+    if (answers.market) showDownstream(true);
+    return;
+  }
+  if (answers.market) {
+    document.getElementById('q-name-block').style.display = 'block';
+    if (answers.assetName || document.getElementById('q3-block').style.display === 'block') {
+      showDownstream(true);
+    }
+    document.getElementById('asset-name').oninput = function() {
+      answers.assetName = this.value;
+      updateSummary();
+      if (this.value.length > 1) showDownstream(true);
+    };
+  }
+  // Auto-fill commodity name
+  if (t === 'Commodity' && answers.commSub) {
+    const input = document.getElementById('asset-name');
+    const autoVal = answers.commSubDigital || answers.commSub;
+    if (input && !input.value) { input.value = autoVal; answers.assetName = autoVal; }
+  }
+}
+
+function showBondSub() {
+  document.getElementById('q2-bond-type').classList.add('visible');
+}
+function hideBondSub() {
+  document.getElementById('q2-bond-type').classList.remove('visible');
+  answers.bondType = '';
+}
+
+function showCommSub(type) {
+  ['comm-energy','comm-metals','comm-grains','comm-softs','comm-livestock','comm-env'].forEach(id => {
+    document.getElementById(id).classList.remove('visible');
+  });
+  answers.commSub = ''; answers.commSubDigital = '';
+  document.querySelectorAll('[data-q="2c"]').forEach(o => o.classList.remove('selected'));
+  document.querySelectorAll('[data-q="2d"]').forEach(o => o.classList.remove('selected'));
+  hideDigitalSub();
+  document.getElementById('comm-'+type).classList.add('visible');
+}
+
+function showDigitalSub(metal) {
+  document.getElementById('digital-sub-gold').classList.remove('visible');
+  document.getElementById('digital-sub-silver').classList.remove('visible');
+  document.querySelectorAll('[data-q="2d"]').forEach(o => o.classList.remove('selected'));
+  answers.isDigital = false; answers.digitalType = '';
+  document.getElementById('dg-note').style.display = 'none';
+  document.getElementById('ds-note').style.display = 'none';
+  document.getElementById('digital-sub-'+metal).classList.add('visible');
+}
+function hideDigitalSub() {
+  document.getElementById('digital-sub-gold').classList.remove('visible');
+  document.getElementById('digital-sub-silver').classList.remove('visible');
+  document.getElementById('dg-note').style.display = 'none';
+  document.getElementById('ds-note').style.display = 'none';
+  answers.isDigital = false; answers.digitalType = '';
+}
+function setDigitalMode(isDigital, type) {
+  answers.isDigital = isDigital;
+  answers.digitalType = isDigital ? type : '';
+  answers.commSubDigital = isDigital ? type : '';
+  // Show info note
+  document.getElementById('dg-note').style.display = (isDigital && type === 'Digital Gold') ? 'block' : 'none';
+  document.getElementById('ds-note').style.display = (isDigital && type === 'Digital Silver') ? 'block' : 'none';
+  // Auto-fill asset name
+  if (isDigital) {
+    const input = document.getElementById('asset-name');
+    if (input) { input.value = type; answers.assetName = type; }
+    updateSummary();
+    showDownstream(true);
+  }
+}
+
+function showQ3Sub(type) {
+  document.getElementById('q3-nri').classList.remove('visible');
+  document.getElementById('q3-japan').classList.remove('visible');
+  answers.residentSub = '';
+  document.querySelectorAll('[data-q="3b"]').forEach(o => o.classList.remove('selected'));
+  if (type === 'nri') document.getElementById('q3-nri').classList.add('visible');
+  if (type === 'japan') document.getElementById('q3-japan').classList.add('visible');
+}
+
+function showCurrOther() {
+  document.getElementById('curr-other').classList.add('visible');
+}
+
+function showAmountInput(el) {
+  const sym = el.dataset.sym;
+  answers.amountSymbol = sym;
+  answers.amountCurrency = el.dataset.val;
+  document.getElementById('q5-sym-badge').textContent = sym;
+  document.getElementById('invest-amount').placeholder = el.dataset.ph;
+  document.getElementById('q5-amount-label').textContent = `Enter Amount in ${el.dataset.val} (${sym})`;
+  document.getElementById('invest-amount').value = '';
+  answers.amount = '';
+  document.getElementById('q5-amount-sub').classList.add('visible');
+  updateSummary();
+}
+
+function onAmountInput(el) {
+  const raw = el.value.trim();
+  answers.amount = raw ? answers.amountSymbol + raw : '';
+  updateSummary();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SUMMARY
+// ═══════════════════════════════════════════════════════════════════
+function updateSummary() {
+  const chips = [];
+  if (answers.assetType) chips.push(`<div class="summary-chip"><strong>Asset:</strong> ${answers.assetType}</div>`);
+  if (answers.market) chips.push(`<div class="summary-chip"><strong>Market:</strong> ${answers.market}</div>`);
+  if (answers.bondType) chips.push(`<div class="summary-chip"><strong>Bond Type:</strong> ${answers.bondType}</div>`);
+  if (answers.commSub) chips.push(`<div class="summary-chip"><strong>Commodity:</strong> ${answers.commSub}</div>`);
+  if (answers.digitalType) chips.push(`<div class="summary-chip"><strong>Format:</strong> ${answers.digitalType}</div>`);
+  if (answers.assetType === 'Currency' && answers.market === 'Other' && answers.currOther)
+    chips.push(`<div class="summary-chip"><strong>Currency:</strong> ${answers.currOther}</div>`);
+  if (answers.assetName) chips.push(`<div class="summary-chip"><strong>Name:</strong> ${answers.assetName}</div>`);
+  if (answers.resident) chips.push(`<div class="summary-chip"><strong>Status:</strong> ${answers.resident}</div>`);
+  if (answers.residentSub) chips.push(`<div class="summary-chip"><strong>Account:</strong> ${answers.residentSub}</div>`);
+  if (answers.horizon) chips.push(`<div class="summary-chip"><strong>Horizon:</strong> ${answers.horizon}</div>`);
+  if (answers.amount) chips.push(`<div class="summary-chip"><strong>Amount:</strong> ${answers.amount}</div>`);
+
+  const card = document.getElementById('summary-card');
+  const grid = document.getElementById('summary-grid');
+  if (chips.length > 0) { grid.innerHTML = chips.join(''); card.classList.add('visible'); }
+  else card.classList.remove('visible');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// GENERATE QUERY
+// ═══════════════════════════════════════════════════════════════════
+function generateQuery(skipTabSwitch) {
+  let valid = true;
+  ['v-q1','v-name','v-q3','v-q4'].forEach(id => document.getElementById(id).classList.remove('show'));
+
+  if (!answers.assetType) { document.getElementById('v-q1').classList.add('show'); valid = false; }
+  if (!answers.market) { valid = false; }
+  if (answers.assetType !== 'Currency' && !answers.assetName.trim()) { document.getElementById('v-name').classList.add('show'); valid = false; }
+  if (!answers.resident) { document.getElementById('v-q3').classList.add('show'); valid = false; }
+  if (!answers.horizon) { document.getElementById('v-q4').classList.add('show'); valid = false; }
+  if (!valid) return false;
+
+  const today = new Date().toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
+  let residentFull = answers.resident;
+  if (answers.residentSub) residentFull += ` — ${answers.residentSub}`;
+  let assetLabel = answers.assetType === 'Currency' ? (answers.market === 'Other' ? answers.currOther||'Other Currency' : answers.market) : answers.assetName;
+  let marketLabel = answers.market;
+  if (answers.bondType) marketLabel += ` (${answers.bondType})`;
+  if (answers.commSub) marketLabel += ` — ${answers.commSub}`;
+  if (answers.digitalType) marketLabel += ` — ${answers.digitalType}`;
+
+  generatedQuery = buildQuery(assetLabel, marketLabel, residentFull, answers.horizon, answers.amount, answers.assetType, answers.isDigital, answers.digitalType, today, answers.commSub);
+  refreshCopyPanel();
+  // AI Report tab removed — no panel switch on query generation; user stays on Input Form
+  return true;
+}
+
+// Called by the "⚡ Generate Query (manual copy)" button —
+// generates the prompt AND immediately copies it, showing feedback on the same button.
+function generateAndCopy() {
+  if (!generateQuery()) return;          // validation failed — stop here
+  _copyText(generatedQuery, 'gen-copy-btn', '⚡ Generate Query (manual copy)');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// BUILD QUERY — Data only (fast). HTML is built by THIS tool.
+// ═══════════════════════════════════════════════════════════════════
+function buildQuery(asset, market, resident, horizon, amount, assetType, isDigital, digitalType, today, commSub) {
+  const refs = {
+    'Stock':       `Zerodha (NRI & Resident): https://zerodha.com/open-account?c=XKQ288\nDhan (Resident only): https://join.dhan.co/?invite=VFZJN04428`,
+    'ETF':         `Zerodha (NRI & Resident): https://zerodha.com/open-account?c=XKQ288\nDhan (Resident only): https://join.dhan.co/?invite=VFZJN04428`,
+    'Mutual Fund': `Kuvera (Free Direct MF, Code 1T6BH - 100 coins): https://kuvera.in/s/wsapp?referral=1T6BH\nZerodha: https://zerodha.com/open-account?c=XKQ288\nDhan: https://join.dhan.co/?invite=VFZJN04428\nPhonePe: https://phon.pe/772mkuqo\nNavi UPI: https://m.navi.com/X7g9gpUzoKb`,
+    'Bond':        `IndiaBonds: https://www.indiabonds.com/referral/CiY7ZAAt\nGoldenPi: https://goldenpi.com/sign-up?referrer=SRVL1503290\nZerodha (listed bonds): https://zerodha.com/open-account?c=XKQ288`,
+    'Commodity':   `Zerodha (commodity F&O): https://zerodha.com/open-account?c=XKQ288\nDhan: https://join.dhan.co/?invite=VFZJN04428\nPhonePe (Digital Gold/Silver): https://phon.pe/772mkuqo\nNavi UPI: https://m.navi.com/X7g9gpUzoKb`,
+    'Currency':    `Revolut: https://revolut.com/referral/?referral-code=vilfingeorge!APR1-26-AR-JP-H1&geo-redirect\nInstarem (Code cWkMb3): https://referral-link.onelink.me/gbf1/a43c48ca?deep_link_sub1=referral&deep_link_value=cWkMb3\nWise: https://wise.com/invite/ihpc/vilfinm`
+  };
+  const refBlock = refs[assetType] || '';
+
+  return `REPORT REQUEST — VilfinTV Global Market Intelligence
+Asset Type        : ${assetType}${isDigital ? ` — ${digitalType}` : ''}
+Asset Name        : ${asset}
+Market / Category : ${market}
+Resident Status   : ${resident}
+Investment Horizon: ${horizon}
+${amount ? `Investment Amount  : ${amount}` : ''}
+Data Date         : ${today}
+${refBlock ? `\nReferral Links (include in Final Verdict tab):\n${refBlock}` : ''}
+
+OUTPUT FORMAT — STRICT JSON REQUIRED`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// COPY PANEL
+// ═══════════════════════════════════════════════════════════════════
+function refreshCopyPanel() {
+  const el = document.getElementById('copy-content');
+  if (!generatedQuery) {
+    el.innerHTML = `<div class="no-query-msg"><div class="icon">⚙️</div><p>No query generated yet.<br/>Go to the <strong>Input Form</strong> tab and click <strong>Generate AI Query</strong>.</p></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="prompt-box" id="prompt-text">${escapeHtml(generatedQuery)}</div>`;
+}
+
+function copyQuery() {
+  if (!generatedQuery) {
+    alert('No query generated yet. Please fill the Input Form and click Generate AI Query first.');
+    return;
+  }
+  _copyText(generatedQuery, 'copy-btn', '📋 Copy Full Query');
+}
+
+// ── Universal copy helper — works on file:///, http, https ───────
+function _copyText(text, btnId, resetLabel) {
+  const btn = document.getElementById(btnId);
+  const markCopied = () => {
+    if (btn) { btn.classList.add('copied'); btn.innerHTML = '✅ Copied!'; }
+    setTimeout(() => { if(btn){ btn.classList.remove('copied'); btn.innerHTML = resetLabel; } }, 2500);
+  };
+  const markFailed = () => {
+    // Last resort: show a select-all dialog
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;top:10%;left:5%;width:90%;height:70vh;z-index:9999;font-family:monospace;font-size:11px;padding:10px;border:3px solid #c0390b;border-radius:8px;background:#1a1a1a;color:#f0ede8;resize:none';
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9998';
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '✕ Close (after copying)';
+    closeBtn.style.cssText = 'position:fixed;top:calc(10% - 40px);right:5%;z-index:10000;padding:8px 18px;background:#c0390b;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700;font-size:13px';
+    const hint = document.createElement('div');
+    hint.textContent = '⚠️ Auto-copy blocked on local file. Press Ctrl+A then Ctrl+C to copy all text below:';
+    hint.style.cssText = 'position:fixed;top:calc(10% - 44px);left:5%;z-index:10000;color:#ffd166;font-size:13px;font-weight:600;font-family:DM Sans,sans-serif';
+    document.body.append(overlay, ta, hint, closeBtn);
+    ta.focus(); ta.select();
+    const cleanup = () => { overlay.remove(); ta.remove(); hint.remove(); closeBtn.remove(); };
+    overlay.onclick = cleanup;
+    closeBtn.onclick = cleanup;
+  };
+
+  // Method 1: Modern Clipboard API (works on HTTPS / localhost)
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(markCopied).catch(() => {
+      // Method 2: execCommand (works on file:///)
+      _execCommandCopy(text, markCopied, markFailed);
+    });
+  } else {
+    // Method 2: execCommand (works on file:///)
+    _execCommandCopy(text, markCopied, markFailed);
+  }
+}
+
+function _execCommandCopy(text, onSuccess, onFail) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (ok) onSuccess(); else onFail();
+  } catch(e) { onFail(); }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PASTE & RENDER — parses "Field: Value" data → full styled HTML report
+// ═══════════════════════════════════════════════════════════════════
+// ─── Toast helper ─────────────────────────────────────────────────
+function showPasteToast(msg, type) {
+  const t = document.getElementById('paste-toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.style.background = type === 'error' ? '#c0390b' : type === 'warn' ? '#b45309' : '#166534';
+  t.style.color = '#fff';
+  t.style.display = 'block';
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity='0'; setTimeout(()=>{ t.style.display='none'; },300); }, 3500);
+}
+
+// ─── Convert AI JSON response → ## TAB text for buildReport() ─────
+function jsonToTabText(obj) {
+  if (!obj || !Array.isArray(obj.tabs)) return null;
+  let out = '';
+  obj.tabs.forEach(tab => {
+    out += `\n## TAB ${tab.id || ''}: ${tab.name || 'Tab'}\n`;
+    if (tab.fields && typeof tab.fields === 'object') {
+      Object.entries(tab.fields).forEach(([k, v]) => {
+        out += `${k}: ${v}\n`;
+      });
+    }
+    if (Array.isArray(tab.subsections)) {
+      tab.subsections.forEach(sub => {
+        if (sub.title) out += `### ${sub.title}\n`;
+        if (sub.fields && typeof sub.fields === 'object') {
+          Object.entries(sub.fields).forEach(([k, v]) => {
+            out += `${k}: ${v}\n`;
+          });
+        }
+      });
+    }
+  });
+  return out.trim();
+}
+
+// ─── Direct JSON → ScanX HTML Renderer ────────────────────────────
+// Bypasses jsonToTabText() + buildReport() entirely.
+// Takes the parsed {tabs:[...]} object and returns a complete ScanX-styled
+// HTML document with navigation pills, KPI cards, and highlight boxes.
+// NO raw JSON syntax (quotes, braces, brackets) ever appears in the UI.
+function renderJsonReport(parsed) {
+  const assetName = (answers && answers.assetName) || (answers && answers.market) || 'Asset';
+  const assetType = (answers && answers.assetType) || '';
+  const market    = (answers && answers.market) || '';
+  const resident  = (answers && answers.resident) || '';
+  const horizon   = (answers && answers.horizon) || '';
+  const today     = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  const emojiMap  = {'Stock':'🏢','ETF':'📊','Mutual Fund':'🪙','Bond':'📜','Commodity':'⚙️','Currency':'💱'};
+  const emoji     = emojiMap[assetType] || '📈';
+
+  // ── Escape HTML special chars ────────────────────────────────────
+  const esc = s => String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  // ── Flatten any value cleanly — no [object Object], no raw JSON ─
+  function flatVal(v) {
+    if (v === null || v === undefined) return '—';
+    if (Array.isArray(v)) return v.map(x => flatVal(x)).join(', ');
+    if (typeof v === 'object') {
+      return Object.entries(v).map(([k,vv]) => `${k}: ${flatVal(vv)}`).join(' | ');
+    }
+    const s = String(v).trim();
+    return s || '—';
+  }
+
+  // ── Badge classifier ─────────────────────────────────────────────
+  const badgeCls = v => {
+    const t = v.toLowerCase();
+    if (/^(not applicable|n\/a|not available|nil|na$)/i.test(t.trim())) return 'badge-blue';
+    if (/strong buy|buy|bullish|positive|pass|low risk|good|excellent|above|growing|increasing|healthy|eligible|yes|rising|outperform/i.test(t)) return 'badge-green';
+    if (/strong sell|sell|bearish|negative|fail|high risk|poor|below|concern|no$|falling|underperform|reduce/i.test(t)) return 'badge-red';
+    if (/hold|neutral|accumulate|moderate|medium|average|mixed|partial|caution|stable|watch/i.test(t)) return 'badge-amber';
+    return 'badge-blue';
+  };
+  const isBadgeVal = v => {
+    if (/^(not applicable|n\/a|not available|nil)$/i.test(v.trim())) return false;
+    return v.length < 55 &&
+      /\b(strong buy|buy|sell|hold|accumulate|reduce|bullish|bearish|neutral|positive|negative|low|medium|high|excellent|good|average|poor|pass|fail|yes|no|partial|eligible|listed|unlisted|rising|falling|stable|outperform|underperform)\b/i.test(v);
+  };
+  const isLong = v => v.length > 100;
+  const isNDA  = v => /^(no data available|not available|n\/a|nil|none|not applicable)$/i.test(v.trim());
+
+  // ── Linkify URLs → styled ref buttons ───────────────────────────
+  const linkify = s => s.replace(/(https?:\/\/[^\s<>"'\)\]]+)/g, url => {
+    const label = url.replace(/^https?:\/\/(www\.)?/,'').split(/[\/?#]/)[0];
+    return '<a href="'+url+'" target="_blank" rel="noopener" class="ref-btn">'+esc(label)+'</a>';
+  });
+
+  // ── Render a fields object as KPI grid + highlight boxes ─────────
+  function renderFields(fields) {
+    if (!fields || typeof fields !== 'object') return '';
+    const entries = Object.entries(fields);
+    if (!entries.length) return '';
+    let kpiHtml = '', highlightHtml = '';
+    entries.forEach(([k, rawV]) => {
+      const v = flatVal(rawV);
+      if (!v || v === '—' || isNDA(v)) return;
+      if (isLong(v)) {
+        highlightHtml += `<div class="highlight-box"><div class="highlight-label">${esc(k)}</div><div class="highlight-text">${linkify(esc(v))}</div></div>`;
+      } else if (isBadgeVal(v)) {
+        kpiHtml += `<div class="kpi"><div class="kpi-lbl">${esc(k)}</div><div class="kpi-val"><span class="badge ${badgeCls(v)}">${esc(v)}</span></div></div>`;
+      } else {
+        kpiHtml += `<div class="kpi"><div class="kpi-lbl">${esc(k)}</div><div class="kpi-val sm">${linkify(esc(v))}</div></div>`;
+      }
+    });
+    if (!kpiHtml && !highlightHtml) return '';
+    return (kpiHtml ? `<div class="kpi-grid">${kpiHtml}</div>` : '') + highlightHtml;
+  }
+
+  // ── Build tab pills and panels ───────────────────────────────────
+  const tabs = parsed.tabs || [];
+  let tabBtns = '', panels = '';
+
+  tabs.forEach((tab, idx) => {
+    const active  = idx === 0;
+    const tabNum  = String(idx + 1).padStart(2, '0');
+    const tabName = tab.name || `Tab ${tabNum}`;
+    tabBtns += `<button class="tab-btn${active?' active':''}" onclick="showTab(${idx},this)">${tabNum} ${esc(tabName)}</button>`;
+
+    let panelHtml = '';
+    // Main tab fields card
+    if (tab.fields && typeof tab.fields === 'object' && Object.keys(tab.fields).length) {
+      const content = renderFields(tab.fields);
+      if (content) panelHtml += `<div class="card"><div class="card-title">${esc(tabName)}</div>${content}</div>`;
+    }
+    // Sub-section cards
+    if (Array.isArray(tab.subsections)) {
+      tab.subsections.forEach(sub => {
+        if (!sub) return;
+        const subContent = renderFields(sub.fields);
+        if (!subContent) return;
+        const subTitle = sub.title || tabName;
+        panelHtml += `<div class="card"><div class="card-title">${esc(subTitle)}</div>${subContent}</div>`;
+      });
+    }
+    if (!panelHtml) {
+      panelHtml = `<div class="card"><div class="card-title">${esc(tabName)}</div><p class="muted text-sm">No data available for this tab.</p></div>`;
+    }
+    panels += `<div class="panel${active?' active':''}" id="p${idx}">${panelHtml}</div>`;
+  });
+
+  // ── Identity bar ─────────────────────────────────────────────────
+  const idBar = [
+    {lbl:'Asset',   val:assetName},
+    {lbl:'Type',    val:assetType+(market?' — '+market:'')},
+    {lbl:'Status',  val:resident},
+    {lbl:'Horizon', val:horizon},
+    {lbl:'Date',    val:today}
+  ].filter(i=>i.val).map(i=>
+    `<div class="id-item"><div class="lbl">${esc(i.lbl)}</div><div class="val">${esc(i.val)}</div></div>`
+  ).join('');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>${esc(assetName)} — Research Report | Vilfin George</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --accent:#0052FF;--accent2:#1d4ed8;--accent3:#3b82f6;--accent-light:#eff6ff;
+  --green:#16a34a;--green2:#15803d;--red:#dc2626;--red2:#b91c1c;
+  --amber:#d97706;--amber2:#b45309;
+  --dark:#0f172a;--card:#ffffff;--card2:#f8fafc;
+  --text:#0f172a;--text2:#374151;--text3:#6b7280;--muted:#9ca3af;
+  --border:#e2e8f0;--border2:#cbd5e1;
+  --radius:10px;--radius-sm:6px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f1f5f9;color:var(--text);min-height:100vh}
+.site-header{background:linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 60%,#2563eb 100%);padding:28px 24px 24px;text-align:center;position:relative;overflow:hidden}
+.site-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:rgba(255,255,255,.2)}
+.site-header h1{font-family:'DM Sans',sans-serif;font-size:clamp(20px,3.5vw,34px);color:#fff;font-weight:800;letter-spacing:-0.5px;position:relative;z-index:1;line-height:1.1}
+.site-header .sub{color:rgba(255,255,255,.65);font-size:11px;margin-top:5px;position:relative;z-index:1;letter-spacing:1px;text-transform:uppercase}
+.asset-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 18px;margin-top:14px;color:#fff;font-size:12px;font-weight:600;position:relative;z-index:1}
+.asset-badge .market-tag{background:rgba(255,255,255,.2);color:#fff;border-radius:999px;padding:2px 10px;font-size:11px;font-weight:700}
+.id-bar{background:#ffffff;padding:14px 24px;display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:center;border-bottom:1px solid var(--border)}
+.id-item{text-align:center}
+.id-item .lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;font-weight:600}
+.id-item .val{font-size:13px;font-weight:700;color:var(--dark);word-break:break-word}
+.tab-wrapper{background:#ffffff;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.tab-scroll{display:flex;overflow-x:auto;scrollbar-width:none;padding:8px 16px;gap:6px}
+.tab-scroll::-webkit-scrollbar{display:none}
+.tab-btn{flex-shrink:0;height:36px;padding:0 16px;border:1px solid var(--border);background:var(--card2);color:var(--text3);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border-radius:999px;white-space:nowrap;transition:all .15s;letter-spacing:.2px}
+.tab-btn:hover{border-color:var(--accent3);color:var(--accent2);background:var(--accent-light)}
+.tab-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(0,82,255,.22)}
+.panels{max-width:1200px;margin:0 auto;padding:24px 20px 56px}
+.panel{display:none;animation:fadeUp .22s ease}
+.panel.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.card{background:var(--card);border-radius:var(--radius);padding:20px 24px;margin-bottom:16px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.card:hover{box-shadow:var(--shadow-md);border-color:var(--border2)}
+.card-title{font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--accent2);margin-bottom:16px;display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--border);text-transform:uppercase}
+.card-title::before{content:'';width:3px;height:14px;background:var(--accent);border-radius:2px;flex-shrink:0}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:var(--card2);border-radius:var(--radius-sm);padding:12px 14px;border:1px solid var(--border);overflow:hidden;word-break:break-word;transition:all .15s}
+.kpi:hover{border-color:var(--accent3);background:var(--accent-light)}
+.kpi-lbl{font-size:9.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;line-height:1.3;font-weight:600;white-space:normal;word-break:break-word}
+.kpi-val{font-size:13px;font-weight:700;color:var(--text);word-break:break-word;overflow-wrap:anywhere;line-height:1.4;white-space:normal}
+.kpi-val.sm{font-size:12px;font-weight:500;line-height:1.5;word-break:break-word;overflow-wrap:anywhere;white-space:normal}
+.badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.2px;white-space:normal;word-break:break-word;max-width:100%}
+.badge-green{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
+.badge-red{background:#fee2e2;color:#b91c1c;border:1px solid #fecaca}
+.badge-amber{background:#fef3c7;color:#b45309;border:1px solid #fde68a}
+.badge-blue{background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe}
+.highlight-box{margin:8px 0;padding:12px 16px;background:var(--card2);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:0 var(--radius-sm) var(--radius-sm) 0}
+.highlight-label{font-size:9.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.highlight-text{font-size:13px;color:var(--text2);line-height:1.65;word-break:break-word;overflow-wrap:anywhere}
+.ref-btn{display:inline-flex;align-items:center;gap:3px;background:var(--accent-light);color:var(--accent2);border:1px solid #bfdbfe;border-radius:4px;padding:1px 7px;font-size:11px;font-weight:600;text-decoration:none;transition:all .15s;margin:2px}
+.ref-btn:hover{background:var(--accent);color:#fff}
+.muted{color:var(--muted)}
+.text-sm{font-size:12px}
+</style>
+<script>
+function showTab(i,btn){
+  document.querySelectorAll('.panel').forEach((p,j)=>p.classList.toggle('active',j===i));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  btn.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+}
+<\/script>
+</head>
+<body>
+<div class="site-header">
+  <h1>${emoji} ${esc(assetName)}</h1>
+  <div class="sub">Intelligent Market Research — VilfinTV</div>
+  ${assetType ? `<div class="asset-badge"><span>${esc(assetType)}</span>${market ? `<span class="market-tag">${esc(market)}</span>` : ''}</div>` : ''}
+</div>
+${idBar ? `<div class="id-bar">${idBar}</div>` : ''}
+<div class="tab-wrapper"><div class="tab-scroll">${tabBtns}</div></div>
+<div class="panels">${panels}</div>
+</body>
+</html>`;
+}
+
+// ─── Strip markdown fences (defensive pre-processor) ───────────────
+// Aggressively removes ```json / ```html / ``` wrappers and surrounding
+// whitespace. Safe to call on any string — returns the cleaned text.
+function stripMarkdownFences(text) {
+  if (!text) return text;
+  let t = text.trim();
+
+  // Remove a leading ```json or ```html or ``` fence line
+  t = t.replace(/^```(?:json|html|javascript|js|text|markdown)?\s*/i, '');
+
+  // Remove a trailing ``` fence (possibly with trailing whitespace/newlines)
+  t = t.replace(/\s*```\s*$/, '');
+
+  // If there are STILL embedded fences (e.g. AI wrapped in double block),
+  // strip all remaining ``` sequences so JSON.parse doesn't choke
+  // (only strip the fence markers, not any content between them)
+  t = t.replace(/^```(?:json|html|javascript|js|text|markdown)?\s*/gim, '');
+  t = t.replace(/```\s*$/gim, '');
+
+  return t.trim();
+}
+
+// ─── Extract content from markdown code blocks ─────────────────────
+function extractFromCodeBlock(text) {
+  if (!text) return null;
+
+  // ── Try closed ```json...``` block (lazy — prefers shortest match) ──
+  const jsonMatchClosed = text.match(/```json\s*([\s\S]*?)```/i);
+  if (jsonMatchClosed) return { content: jsonMatchClosed[1].trim(), type: 'json' };
+
+  // ── Try closed ```html...``` block ──
+  const htmlMatchClosed = text.match(/```html\s*([\s\S]*?)```/i);
+  if (htmlMatchClosed) return { content: htmlMatchClosed[1].trim(), type: 'html' };
+
+  // ── Try any closed ``` block ──
+  const anyMatchClosed = text.match(/```\w*\s*([\s\S]*?)```/i);
+  if (anyMatchClosed) return { content: anyMatchClosed[1].trim(), type: 'unknown' };
+
+  // ── FALLBACK: handle UNCLOSED fences (AI streaming cutoff / truncation) ──
+  // If the block opens with ```json but has no closing ```, grab everything after.
+  const jsonMatchOpen = text.match(/```json\s*([\s\S]+)/i);
+  if (jsonMatchOpen) {
+    const inner = jsonMatchOpen[1].trim();
+    // Sanity check — must start with { or [ to be treated as JSON
+    if (inner.startsWith('{') || inner.startsWith('[')) {
+      return { content: inner, type: 'json' };
+    }
+  }
+
+  const htmlMatchOpen = text.match(/```html\s*([\s\S]+)/i);
+  if (htmlMatchOpen) return { content: htmlMatchOpen[1].trim(), type: 'html' };
+
+  // ── LAST RESORT: try direct JSON parse of stripped text ──
+  const stripped = stripMarkdownFences(text);
+  if ((stripped.startsWith('{') || stripped.startsWith('[')) && stripped.length > 10) {
+    return { content: stripped, type: 'json' };
+  }
+
+  return null;
+}
+
+// ─── One-click Paste from Clipboard ───────────────────────────────
+async function pasteFromClipboard() {
+  const btn = document.getElementById('paste-clip-btn');
+  if (!navigator.clipboard || !navigator.clipboard.readText) {
+    showPasteToast('⚠️ Clipboard API not available — please paste manually (Ctrl+V)', 'warn');
+    return;
+  }
+  try {
+    if (btn) { btn.textContent = '⏳ Reading…'; btn.disabled = true; }
+    const text = await navigator.clipboard.readText();
+    if (!text || !text.trim()) {
+      showPasteToast('⚠️ Clipboard is empty', 'warn');
+      return;
+    }
+
+    // Strip fences before any extraction attempt
+    const extracted = extractFromCodeBlock(text);
+
+    if (extracted && (extracted.type === 'json' || extracted.type === 'unknown')) {
+      // Try to parse JSON and convert to tab text
+      try {
+        const parsed  = JSON.parse(extracted.content);
+        const tabText = jsonToTabText(parsed);
+        if (tabText) {
+          document.getElementById('paste-area').value = tabText;
+          showPasteToast('✅ JSON extracted and converted — click 🔍 Render', 'ok');
+        } else {
+          // Fallback: put raw JSON in textarea
+          document.getElementById('paste-area').value = extracted.content;
+          showPasteToast('⚠️ JSON parsed but structure unexpected — rendering raw', 'warn');
+          renderOutput();
+        }
+      } catch (jsonErr) {
+        // JSON parse failed — still store cleaned content so buildReport can try
+        document.getElementById('paste-area').value = extracted.content || stripMarkdownFences(text);
+        showPasteToast('⚠️ JSON parse error — pasted cleaned text, click 🔍 Render', 'warn');
+      }
+    } else if (extracted && extracted.type === 'html') {
+      document.getElementById('paste-area').value = extracted.content;
+      showPasteToast('✅ HTML extracted from code block — click 🔍 Render', 'ok');
+    } else if (text.includes('## TAB') || /^.+:\s*.+/m.test(text)) {
+      // Plain Field: Value or ## TAB text — use directly
+      document.getElementById('paste-area').value = text;
+      showPasteToast('✅ Data pasted — click 🔍 Render', 'ok');
+    } else {
+      // Unknown format — strip fences and paste cleaned text
+      document.getElementById('paste-area').value = stripMarkdownFences(text);
+      showPasteToast('⚠️ Format unrecognised — pasted cleaned text, click 🔍 Render to attempt render', 'warn');
+    }
+  } catch (err) {
+    showPasteToast('❌ Clipboard access denied — please paste manually (Ctrl+V)', 'error');
+  } finally {
+    if (btn) { btn.textContent = '📋 Paste from Clipboard'; btn.disabled = false; }
+  }
+}
+
+function renderOutput() {
+  let raw = document.getElementById('paste-area').value.trim();
+  if (!raw) { alert('Please paste the AI data output first.'); return; }
+
+  // ── STAGE 0: Defensive fence stripping ──────────────────────────────────────
+  // Strip markdown fences BEFORE any parsing attempt so that
+  // ``` json ``` wrappers never reach buildReport() as literal text.
+  // This fires for both the API auto-generate flow AND the manual Paste flow.
+  const _preCleaned = stripMarkdownFences(raw);
+
+  // ── STAGE 1: Auto-detect JSON responses ─────────────────────────────────────
+  // Try extractFromCodeBlock on the ORIGINAL raw text first (handles well-formed
+  // closed blocks), then fall back to direct parse of the cleaned text.
+  const _extracted = extractFromCodeBlock(raw);
+  const _jsonCandidate = (_extracted && _extracted.type === 'json')
+    ? _extracted.content
+    : ((_preCleaned.startsWith('{') || _preCleaned.startsWith('[')) ? _preCleaned : null);
+
+  // ── STAGE 2: If we have a JSON candidate, try direct renderJsonReport() ─────────
+  // This completely bypasses jsonToTabText() + buildReport(), preventing any
+  // raw JSON syntax (quotes, braces, brackets) from appearing in the rendered UI.
+  if (_jsonCandidate) {
+    try {
+      const _parsed = JSON.parse(_jsonCandidate);
+      if (_parsed.tabs && Array.isArray(_parsed.tabs) && _parsed.tabs.length > 0) {
+        // ✅ Direct JSON → ScanX HTML — no intermediate text conversion
+        renderedHtml = renderJsonReport(_parsed);
+        const _c = document.getElementById('rendered-output');
+        _c.innerHTML = '';
+        const _if = document.createElement('iframe');
+        _if.style.cssText = 'width:100%;border:none;border-radius:12px;min-height:85vh;display:block';
+        _c.appendChild(_if);
+        const _d = _if.contentDocument || _if.contentWindow.document;
+        _d.open(); _d.write(renderedHtml); _d.close();
+        const _rz = () => { try { const h = _if.contentWindow.document.documentElement.scrollHeight; if(h>400) _if.style.height=(h+40)+'px'; } catch(e){} };
+        _if.onload = _rz; setTimeout(_rz,500); setTimeout(_rz,1500);
+        const _eh = document.getElementById('btn-export-html');
+        const _ep = document.getElementById('btn-export-pdf');
+        const _cr = document.getElementById('clear-result-btn');
+        if (_eh) _eh.style.display = '';
+        if (_ep) _ep.style.display = '';
+        if (_cr) _cr.style.display = '';
+        return; // DONE — skip jsonToTabText() + buildReport()
+      }
+      // Fallback: non-tabs JSON — convert via jsonToTabText then buildReport
+      const _tabText = jsonToTabText(_parsed);
+      if (_tabText && _tabText.length > 10) {
+        raw = _tabText;
+        document.getElementById('paste-area').value = raw;
+      }
+    } catch(_e) { /* malformed JSON — fall through to buildReport */ }
+  }
+
+  renderedHtml = buildReport(raw);
+  const container = document.getElementById('rendered-output');
+  container.innerHTML = '';
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'width:100%;border:none;border-radius:12px;min-height:85vh;display:block';
+  container.appendChild(iframe);
+  const doc = iframe.contentDocument || iframe.contentWindow.document;
+  doc.open(); doc.write(renderedHtml); doc.close();
+  const resize = () => { try { const h = iframe.contentWindow.document.documentElement.scrollHeight; if(h>400) iframe.style.height=(h+40)+'px'; } catch(e){} };
+  iframe.onload = resize; setTimeout(resize,500); setTimeout(resize,1500);
+  const _eh = document.getElementById('btn-export-html');
+  const _ep = document.getElementById('btn-export-pdf');
+  const _cr = document.getElementById('clear-result-btn');
+  if (_eh) _eh.style.display = '';
+  if (_ep) _ep.style.display = '';
+  if (_cr) _cr.style.display = '';
+}
+
+// ─── REPORT BUILDER ────────────────────────────────────────────────
+function buildReport(raw) {
+  const assetName = answers.assetName || answers.market || 'Asset';
+  const assetType = answers.assetType || '';
+  const market    = answers.market || '';
+  const resident  = answers.resident || '';
+  const horizon   = answers.horizon || '';
+  const today     = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  const emojiMap  = {'Stock':'🏢','ETF':'📊','Mutual Fund':'🪙','Bond':'📜','Commodity':'⚙️','Currency':'💱'};
+  const emoji     = emojiMap[assetType] || '📈';
+
+  // ── Escape & helpers ─────────────────────────────────────────────
+  const esc = s => String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // ── linkify — styled ref buttons for URLs ────────────────────────
+  const linkify = s => s.replace(/(https?:\/\/[^\s<>"'\)\]]+)/g, url => {
+    let label = url.replace(/^https?:\/\/(www\.)?/,'').split(/[\/?#]/)[0];
+    if (url.includes('kuvera'))   label = '\uD83D\uDFE2 Kuvera';
+    else if (url.includes('zerodha')) label = '\uD83D\uDD35 Zerodha';
+    else if (url.includes('dhan'))    label = '\uD83D\uDFE0 Dhan';
+    else if (url.includes('phon.pe')||url.includes('phonepe')) label = '\uD83D\uDFE3 PhonePe';
+    else if (url.includes('navi'))    label = '\uD83D\uDD34 Navi UPI';
+    return '<a href="'+url+'" target="_blank" rel="noopener" class="ref-btn">'+label+'</a>';
+  });
+
+
+  // ── Core helpers (badge, NDA, long-text, KV parser, tab splitter) ─
+  const badgeCls = v => {
+    const t = v.toLowerCase();
+    // Never badge Not Applicable / N/A as red
+    if(/^(not applicable|n\/a|not available|nil|not applicable|na$)/i.test(t.trim())) return 'badge-blue';
+    if(/strong buy|buy|bullish|positive|pass|low risk|good|excellent|above|growing|increasing|healthy|green|eligible|yes|rising|outperform/i.test(t)) return 'badge-green';
+    if(/strong sell|sell|bearish|negative|fail|high risk|poor|below|concern|no sebi|no$|falling|underperform/i.test(t)) return 'badge-red';
+    if(/hold|neutral|accumulate|moderate|medium|average|mixed|partial|caution|stable|watch/i.test(t)) return 'badge-amber';
+    if(/reduce/i.test(t)) return 'badge-red';
+    return 'badge-blue';
+  };
+  const isBadgeVal = v => {
+    if(/^(not applicable|n\/a|not available|nil)$/i.test(v.trim())) return false;
+    return v.length < 55 &&
+      /\b(strong buy|buy|sell|hold|accumulate|reduce|bullish|bearish|neutral|positive|negative|low|medium|high|excellent|good|average|poor|pass|fail|yes|no|partial|contango|backwardation|eligible|listed|unlisted|rising|falling|stable|cheap|fair|expensive|outperform|underperform)\b/i.test(v);
+  };
+  const maSignal = v => /buy/i.test(v)?'ma-buy':/sell/i.test(v)?'ma-sell':'ma-neutral';
+  const isNDA = v => {
+    const t=v.trim().toLowerCase();
+    if(t==='no data available'||t==='not available'||t==='n/a'||t==='nil'||t==='none') return true;
+    if(t.startsWith('no data available')) return true;
+    // "Not Applicable" is NDA; but "Not rated" / "Not ranked" / "Unrated" should show as values
+    if(t==='not applicable') return true;
+    if(t.startsWith('not applicable (')) return true;
+    return false;
+  };
+  const isLong = v => v.length > 110;
+  const KV_RE = /^(.{2,120}?)\s*:\s*(.+)$/;
+  const firstTabIdx = raw.search(/^##\s*TAB\s*\d+/im);
+  const cleanRaw = firstTabIdx > 0 ? raw.slice(firstTabIdx) : raw;
+  const tabSections = cleanRaw.split(/(?=^##\s*TAB\s*\d+)/im).filter(s => s.trim());
+  function parseTab(sec) {
+    const lines = sec.split('\n');
+    const heading = lines[0];
+    const tm = heading.match(/^##\s*TAB\s*\d+[:\-\u2013\u2014\s]+(.+)/i);
+    const title = tm ? tm[1].trim() : heading.replace(/^#+\s*/,'').trim();
+    const body = lines.slice(1);
+    const subs = []; let curTitle=null, curLines=[];
+    body.forEach(l => { const sm=l.match(/^###\s*(.+)/); if(sm){subs.push({title:curTitle,lines:[...curLines]});curTitle=sm[1].trim();curLines=[];}else curLines.push(l); });
+    subs.push({title:curTitle,lines:curLines}); return {title,subs};
+  }
+  function renderNDA(ndaKeys) {
+    if(!ndaKeys.length) return '';
+    return '<div class="nda-box"><span class="nda-label">\u2139\uFE0F Not available ('+ndaKeys.length+' fields)</span>'+ndaKeys.map(k=>'<span class="nda-tag">'+esc(k)+'</span>').join('')+'</div>';
+  }
+
+  // ── Holdings table ────────────────────────────────────────────────
+  function renderHoldingsTable(holdKvs, sectorKvs) {
+    let h = '';
+    if (holdKvs.length) {
+      const trs = holdKvs.map(([k,v]) => {
+        const p=v.split('|').map(s=>s.trim());
+        const name=p[0]||'\u2014', sector=p[1]||'\u2014', wt=p[2]||'\u2014';
+        const ret=(!isNDA(p[3]||'')&&p[3])?p[3]:'\u2014';
+        const chg=(!isNDA(p[4]||'')&&p[4])?p[4]:'\u2014';
+        const chgCls=/new/i.test(chg)?'badge-green':/reduced|decrease/i.test(chg)?'badge-amber':/exit|remove/i.test(chg)?'badge-red':'';
+        const wtNum=parseFloat(wt)||0;
+        const wtCol=wtNum>=5?'var(--red2)':wtNum>=3?'var(--burn)':wtNum>=2?'var(--amber2)':'var(--text)';
+        return '<tr>'
+          +'<td class="mono muted" style="font-size:11px;white-space:nowrap">'+esc(k)+'</td>'
+          +'<td class="fw6">'+esc(name)+'</td>'
+          +'<td class="text-sm muted">'+esc(sector)+'</td>'
+          +'<td class="mono fw7" style="color:'+wtCol+'">'+esc(wt)+'</td>'
+          +'<td class="mono">'+(ret!=='\u2014'?esc(ret):'<span class="muted">\u2014</span>')+'</td>'
+          +'<td>'+(chgCls?'<span class="badge '+chgCls+'" style="font-size:10px">'+esc(chg)+'</span>':'<span class="muted text-xs">'+esc(chg)+'</span>')+'</td>'
+          +'</tr>';
+      }).join('');
+      h += '<div class="tbl-wrap" style="margin-bottom:18px"><table>'
+        +'<thead><tr><th style="width:65px">Rank</th><th>Holding / Security</th><th>Sector</th>'
+        +'<th>Weight %</th><th>1Y Return</th><th>Change</th></tr></thead>'
+        +'<tbody>'+trs+'</tbody></table></div>';
+    }
+    if (sectorKvs.length) {
+      h += '<div style="margin-top:4px">';
+      h += '<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.9px;margin-bottom:12px">Sector Allocation</div>';
+      h += '<div style="display:flex;flex-wrap:wrap;gap:10px">';
+      sectorKvs.forEach(([k,v]) => {
+        const p=v.split('|').map(s=>s.trim());
+        const name=p[0]||v, alloc=p[1]||'', sent=p[2]||'';
+        const sc=/bullish/i.test(sent)?'badge-green':/bearish/i.test(sent)?'badge-red':'badge-amber';
+        const bdc=/bullish/i.test(sent)?'rgba(34,197,94,.08)':/bearish/i.test(sent)?'rgba(239,68,68,.08)':'rgba(245,158,11,.08)';
+        h += '<div style="background:'+bdc+';border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 16px;min-width:150px">'
+          +'<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">'+esc(name)+'</div>'
+          +'<div style="display:flex;align-items:center;gap:8px">'
+          +'<span class="mono fw7" style="color:var(--burn);font-size:17px">'+esc(alloc)+'</span>'
+          +(sent?'<span class="badge '+sc+'" style="font-size:9px">'+esc(sent)+'</span>':'')
+          +'</div></div>';
+      });
+      h += '</div></div>';
+    }
+    return h;
+  }
+
+  // ── Risk cards renderer ───────────────────────────────────────────
+  function renderRiskCards(riskKvs) {
+    const risks = {};
+    riskKvs.forEach(([k,v]) => {
+      const nm=k.match(/risk\s*(\d+)\s*name/i), lv=k.match(/risk\s*(\d+)\s*level/i);
+      if (nm) {
+        const n=nm[1]; if(!risks[n]) risks[n]={name:'',level:''};
+        if(v.includes('|')){const parts=v.split('|');risks[n].name=parts[0].trim();const lp=parts.find(p=>/level/i.test(p));if(lp)risks[n].level=lp.replace(/.*level\s*:\s*/i,'').trim();}
+        else risks[n].name=v;
+      }
+      if (lv) { const n=lv[1]; if(!risks[n])risks[n]={name:'',level:''}; risks[n].level=v; }
+    });
+    const nums=Object.keys(risks).sort();
+    if(!nums.length) return '';
+    return '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:14px">'
+      +nums.map(n=>{
+        const {name,level}=risks[n]; if(!name) return '';
+        const lb=/high/i.test(level)?'badge-red':/medium/i.test(level)?'badge-amber':'badge-green';
+        return '<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:13px">'
+          +'<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Risk '+n+'</div>'
+          +'<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;line-height:1.3">'+esc(name)+'</div>'
+          +(level?'<span class="badge '+lb+'" style="font-size:10px">'+esc(level)+'</span>':'')
+          +'</div>';
+      }).join('')+'</div>';
+  }
+
+  // ── Verdict section renderer ──────────────────────────────────────
+  function renderVerdictSection(kvs, ndaKeys2) {
+    const get = key => { const f=kvs.find(([k])=>k.toLowerCase().includes(key.toLowerCase())); return f&&!isNDA(f[1])?f[1]:''; };
+    const verdict  = get('final verdict badge')||get('verdict badge');
+    const aiRec    = get('ai recommendation');
+    const summary  = get('one-line summary');
+    const stv=get('short term verdict'), mtv=get('medium term verdict'), ltv=get('long term verdict'), vltv=get('very long term verdict');
+    const fund30=get('fundamentals /30'), val25=get('valuation /25'), tech20=get('technicals /20'), mgmt15=get('management /15'), sect10=get('sector /10'), total=get('total /100');
+    const sipzone=get('sip/buy zone'), stopnav=get('exit/stop'), t6m=get('6m target'), u6m=get('6m upside'), t12m=get('12m target'), u12m=get('12m upside'), t3y=get('3y target'), u3y=get('3y upside');
+    const bestway=get('best way'), cons=get('conservative alloc'), mod=get('moderate alloc'), aggr=get('aggressive alloc');
+
+    const isPositive=/strong buy|buy|outperform/i.test(verdict);
+    const isNeg=/sell|avoid|underperform/i.test(verdict);
+    const isHold=/hold|neutral|accumulate/i.test(verdict);
+
+    const scoreBar=(lbl,score,max)=>{
+      const num=parseFloat(score)||0, pct=Math.round(num/max*100);
+      const cls=pct>=70?'high':pct>=45?'mid':'low';
+      const col=pct>=70?'var(--green2)':pct>=45?'var(--amber2)':'var(--red2)';
+      return '<div class="score-bar-row">'
+        +'<div class="sb-top"><span class="sb-lbl">'+lbl+'</span>'
+        +'<span class="sb-val" style="color:'+col+'">'+(score||'—')+'/'+max+'</span></div>'
+        +'<div class="sb-track"><div class="sb-fill '+cls+'" style="width:'+pct+'%"></div></div></div>';
+    };
+
+    let h='';
+
+    // Verdict banner
+    if(verdict){
+      h+='<div class="verdict-banner">'
+        +'<div class="verdict-badge-text">'+esc(verdict)+'</div>'
+        +(summary?'<div class="verdict-summary">'+esc(summary)+'</div>':'')
+        +'</div>';
+    } else if(summary){
+      h+='<div class="highlight-box" style="margin-bottom:18px"><div class="highlight-label">Summary</div>'
+        +'<div class="highlight-text" style="font-size:14px;font-weight:600">'+esc(summary)+'</div></div>';
+    }
+
+    // AI Recommendation badge
+    if(aiRec){
+      const rec=aiRec.trim();
+      const isSB=/strong\s*buy/i.test(rec), isBuy=/^buy$/i.test(rec)||/\bbuy\b/i.test(rec)&&!/strong/i.test(rec)&&!/sell/i.test(rec);
+      const isSell=/^sell$/i.test(rec)||/\bsell\b/i.test(rec)&&!/strong/i.test(rec)&&!/buy/i.test(rec);
+      const isSS=/strong\s*sell/i.test(rec);
+      const col=isSB?'#15803d':isBuy?'#16a34a':isSell?'#dc2626':isSS?'#991b1b':'#d97706';
+      const bg=isSB?'rgba(21,128,61,.15)':isBuy?'rgba(22,163,74,.12)':isSell?'rgba(220,38,38,.12)':isSS?'rgba(153,27,27,.18)':'rgba(217,119,6,.12)';
+      const bdr=isSB?'rgba(21,128,61,.4)':isBuy?'rgba(22,163,74,.35)':isSell?'rgba(220,38,38,.35)':isSS?'rgba(153,27,27,.45)':'rgba(217,119,6,.35)';
+      h+='<div style="display:flex;align-items:center;gap:12px;background:'+bg+';border:1px solid '+bdr+';border-radius:12px;padding:14px 18px;margin-bottom:16px">'
+        +'<div style="flex-shrink:0;font-size:20px">'+(isSB||isBuy?'🤖📈':isSS||isSell?'🤖📉':'🤖⚖️')+'</div>'
+        +'<div>'
+        +'<div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px">AI Recommendation (Data-Driven)</div>'
+        +'<div style="font-size:17px;font-weight:800;color:'+col+';letter-spacing:.5px">'+esc(rec.replace(/\s*—.*$/s,'').replace(/^\[|\]$/g,'').trim())+'</div>'
+        +'<div style="font-size:11px;color:#666;margin-top:3px">Computed from all tabs — not from any analyst firm or external rating</div>'
+        +'</div>'
+        +'</div>';
+    }
+
+    // Composite score strip
+    if(fund30||val25||tech20||mgmt15||sect10||total){
+      h+='<div class="score-composite">';
+      [[fund30,30,'Fundamentals'],[val25,25,'Valuation'],[tech20,20,'Technicals'],[mgmt15,15,'Management'],[sect10,10,'Sector'],[total,100,'Total']].forEach(([s,mx,lbl],i,arr)=>{
+        const num=parseFloat(s)||0;
+        const col=num/mx>=0.7?'var(--green2)':num/mx>=0.45?'var(--amber2)':'var(--red2)';
+        h+='<div class="score-seg"><div class="s-val" style="color:'+col+'">'+(s||'—')+'</div>'
+          +'<div class="s-lbl">'+lbl+'</div><div class="s-max">/'+mx+'</div></div>';
+        if(i<arr.length-1) h+='<div class="score-divider"></div>';
+      });
+      h+='</div>';
+    }
+
+    // Score bars + Horizon verdicts grid
+    const hasScores=fund30||val25||tech20||mgmt15||sect10;
+    const hasHorizon=stv||mtv||ltv||vltv;
+    if(hasScores||hasHorizon){
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">';
+      if(hasScores){
+        h+='<div class="card" style="margin-bottom:0"><div class="card-title">Score Breakdown</div>'
+          +scoreBar('Fundamentals',fund30,30)+scoreBar('Valuation',val25,25)
+          +scoreBar('Technicals',tech20,20)+scoreBar('Management',mgmt15,15)+scoreBar('Sector',sect10,10)
+          +'</div>';
+      }
+      if(hasHorizon){
+        h+='<div class="card" style="margin-bottom:0"><div class="card-title">Horizon Verdicts</div>';
+        h+='<div class="horizon-grid" style="grid-template-columns:1fr">';
+        [['Short Term',stv],['Medium Term',mtv],['Long Term',ltv],['Very Long Term',vltv]].filter(([,v])=>v).forEach(([lbl,val])=>{
+          const col=/positive|buy|very positive/i.test(val)?'var(--green2)':/negative|sell|avoid/i.test(val)?'var(--red2)':/neutral/i.test(val)?'var(--amber2)':'var(--blue2)';
+          h+='<div class="horizon-card"><div class="h-period">'+lbl+'</div>'
+            +'<div class="h-verdict" style="color:'+col+'">'+esc(val)+'</div></div>';
+        });
+        h+='</div></div>';
+      }
+      h+='</div>';
+    }
+
+    // Price targets
+    const targetDefs=[
+      [sipzone,'SIP / Buy Zone','sip'],[stopnav,'Exit / Stop Loss','stop'],
+      [t6m,'6M Target','t6m'],[u6m,'6M Upside %','t6m'],
+      [t12m,'12M Target','t12m'],[u12m,'12M Upside %','t12m'],
+      [t3y,'3Y Target','t3y'],[u3y,'3Y Upside %','t3y']
+    ].filter(([v])=>v);
+    if(targetDefs.length){
+      h+='<div class="target-grid" style="margin-bottom:20px">';
+      targetDefs.forEach(([v,lbl,cls])=>{
+        const isUp=/upside|%/i.test(lbl);
+        h+='<div class="target-card '+cls+'">'
+          +'<div class="t-lbl">'+lbl+'</div>'
+          +'<div class="'+(isUp?'t-up" style="font-size:16px;font-weight:700':'t-val"')+'">'+esc(v)+'</div>'
+          +'</div>';
+      });
+      h+='</div>';
+    }
+
+    // Best way to invest
+    if(bestway) h+='<div class="highlight-box" style="margin-bottom:16px">'
+      +'<div class="highlight-label">Best Way to Invest</div>'
+      +'<div class="highlight-text">'+esc(bestway)+'</div></div>';
+
+    // Allocation
+    const allocDefs=[[cons,'Conservative'],[mod,'Moderate'],[aggr,'Aggressive']].filter(([v])=>v);
+    if(allocDefs.length){
+      h+='<div class="alloc-grid" style="margin-bottom:20px">';
+      allocDefs.forEach(([v,lbl])=>{
+        h+='<div class="alloc-card"><div class="a-lbl">'+lbl+' Portfolio</div>'
+          +'<div class="a-val">'+esc(v)+'</div></div>';
+      });
+      h+='</div>';
+    }
+
+    // Referral links using new v6 ref-section class
+    const refKvs=kvs.filter(([,v])=>v.includes('http'));
+    if(refKvs.length){
+      h+='<div class="ref-section"><div class="ref-title">🔗 Open Account / Start Investing</div><div class="ref-btns">';
+      refKvs.forEach(([k,v])=>{
+        const um=v.match(/(https?:\/\/[^\s]+)/); if(!um) return;
+        h+='<a href="'+um[1]+'" target="_blank" rel="noopener" class="ref-btn">'+esc(k)+'</a>';
+      });
+      h+='</div></div>';
+    }
+    return h;
+  }
+
+
+  // ── parseMAEntry ───────────────────────────────────────────────
+  function parseMAEntry(k, v) {
+    if (v.includes('|')) {
+      const parts = v.split('|').map(p=>p.trim());
+      const main = parts[0].replace(/^[^:]+:\s*/,'').trim()||parts[0];
+      const pctP = parts.find(p=>/from|%/.test(p));
+      const sigP = parts.find(p=>/signal/i.test(p));
+      return {period:k, val:main, pct:pctP?pctP.replace(/^[^:]+:\s*/,'').trim():'', sig:sigP?sigP.replace(/^[^:]+:\s*/,'').trim():''};
+    }
+    return {period:k, val:v, pct:'', sig:''};
+  }
+
+  // ── MA Table ─────────────────────────────────────────────────────
+  function renderMATable(maKvs) {
+    const allNDA = maKvs.every(([,v])=>isNDA(v.split('|')[0].trim()));
+    if(allNDA) return '<div class="info-box">Moving average data not available for this asset type. For mutual funds, NAV-based MAs are not published on standard platforms.</div>';
+    const periods=[];
+    let i=0;
+    while(i<maKvs.length){
+      const [k,v]=maKvs[i];
+      if(v.includes('|')){const e=parseMAEntry(k,v);if(!isNDA(e.val))periods.push(e);i++;}
+      else{const val=v,pct=maKvs[i+1]?maKvs[i+1][1]:'',sig=maKvs[i+2]?maKvs[i+2][1]:'';if(!isNDA(val))periods.push({period:k,val,pct,sig});i+=3;}
+    }
+    if(!periods.length) return '<div class="info-box">No moving average data available.</div>';
+    const rows=periods.map(({period,val,pct,sig})=>'<tr><td class="fw6">'+esc(period)+'</td><td class="mono fw7">'+esc(val)+'</td><td class="mono">'+esc(pct||'\u2014')+'</td><td>'+(sig&&!isNDA(sig)?'<span class="ma-signal '+maSignal(sig)+'">'+esc(sig)+'</span>':'<span style="color:#aaa">\u2014</span>')+'</td></tr>').join('');
+    return '<div class="tbl-wrap"><table><thead><tr><th>Period</th><th>Value</th><th>% from Price</th><th>Signal</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  }
+
+  // ── News card ─────────────────────────────────────────────────────
+  function renderNewsCard(k, v) {
+    if(isNDA(v)) return '';
+    const parts=v.split('|').map(p=>p.replace(/^\s*[\w\s]+\s*\u2014\s*/,'').trim());
+    const [date,headline,impact,...rest]=parts;
+    const detail=rest.join(' | ').trim();
+    if(!headline&&parts.length<2){
+      return '<div class="news-item"><div class="news-dot neutral"></div><div><div class="news-headline">'+esc(v)+'</div></div></div>';
+    }
+    const dotCls=/positive/i.test(impact||'')?'positive':/negative/i.test(impact||'')?'negative':'neutral';
+    const bCls=/positive/i.test(impact||'')?'badge-green':/negative/i.test(impact||'')?'badge-red':'badge-amber';
+    return '<div class="news-item">'
+      +'<div class="news-dot '+dotCls+'"></div>'
+      +'<div style="flex:1">'
+      +(date&&!isNDA(date)?'<div class="news-date">'+esc(date)+(impact&&impact!==headline&&!isNDA(impact)?' &bull; <span class="badge '+bCls+'" style="font-size:9px;padding:1px 7px">'+esc(impact)+'</span>':'')+'</div>':'')
+      +'<div class="news-headline">'+esc(headline||v)+'</div>'
+      +(detail&&!isNDA(detail)?'<div class="news-detail" style="margin-top:3px">'+esc(detail)+'</div>':'')
+      +'</div></div>';
+  }
+
+  // ── Broker / research table v7 ─────────────────────────────────────
+  function renderBrokerTable(rows) {
+    // Strip common label prefixes like "Target NAV:", "Upside %:", "Date:", "Rating:" from values
+    const stripLabel = s => s.replace(/^\s*(target\s*(nav|price|nav)?|upside\s*%?|date|rating|rank|score)[:\s\u2014\-]*/i,'').trim();
+    const valid=rows.filter(([,v])=>{const f=v.split('|')[0].trim();return f.length>1;});
+    if(!valid.length) return '';
+    const trs=valid.map(([,v])=>{
+      const p=v.split('|').map(s=>stripLabel(s));
+      // p[0]=name, p[1]=rating, p[2]=target, p[3]=upside, p[4]=date
+      const hasRating=p[1]&&!isNDA(p[1])&&p[1]!=='\u2014';
+      const rc=/buy|positive|strong|accumulate/i.test(p[1]||'')?'badge-green':/sell|avoid|negative/i.test(p[1]||'')?'badge-red':'badge-amber';
+      const tgt=p[2]&&!isNDA(p[2])?p[2]:'\u2014';
+      const ups=p[3]&&!isNDA(p[3])?p[3]:'\u2014';
+      const dt=p[4]&&!isNDA(p[4])?p[4]:'\u2014';
+      return '<tr>'
+        +'<td class="fw6" style="min-width:120px">'+esc(p[0]||'\u2014')+'</td>'
+        +'<td>'+(hasRating?'<span class="badge '+rc+'">'+esc(p[1])+'</span>':'<span class="muted">\u2014</span>')+'</td>'
+        +'<td class="mono accent fw7" style="white-space:nowrap">'+esc(tgt)+'</td>'
+        +'<td class="green-text fw6" style="white-space:nowrap">'+esc(ups)+'</td>'
+        +'<td class="muted text-xs" style="white-space:nowrap">'+esc(dt)+'</td></tr>';
+    }).join('');
+    return '<div class="tbl-wrap" style="margin-bottom:14px"><table style="table-layout:auto">'
+      +'<thead><tr><th>Research House</th><th>Rating</th><th>Target NAV</th><th>Upside</th><th>Date</th></tr></thead>'
+      +'<tbody>'+trs+'</tbody></table></div>';
+  }
+
+  // ── Peer / fund comparison table ─────────────────────────────────
+  // ── Peer table v7 — fixed overflow + rating badges ─────────────────
+  function renderPeerTable(rows) {
+    const valid=rows.filter(([,v])=>{const f=v.split('|')[0].trim();return !isNDA(f)&&f.length>1;});
+    if(!valid.length) return '';
+    const hdrs=['Fund / Company','NAV','AUM','1Y Return','3Y CAGR','TER','Sharpe','D/E','Rating'];
+    const trs=valid.map(([,v])=>{
+      const p=v.split('|').map(s=>s.replace(/^\s*[\w\s]+[\u2014\-]\s*/,'').trim());
+      const name=p[0]||'\u2014';
+      const ratingRaw=p[8]||'';
+      const rCls=/buy|strong buy|outperform/i.test(ratingRaw)?'rating-buy':/sell|underperform|avoid/i.test(ratingRaw)?'rating-sell':'rating-hold';
+      const rHtml=ratingRaw&&!isNDA(ratingRaw)?'<span class="'+rCls+'">'+esc(ratingRaw)+'</span>':'<span class="muted">\u2014</span>';
+      return '<tr>'
+        +'<td class="peer-fund-name">'+esc(name)+'</td>'
+        +p.slice(1,8).map(c=>'<td class="text-sm mono" style="white-space:nowrap">'+esc(c&&!isNDA(c)?c:'\u2014')+'</td>').join('')
+        +'<td>'+rHtml+'</td></tr>';
+    }).join('');
+    return '<div class="tbl-wrap" style="margin-bottom:14px"><table style="table-layout:fixed;width:100%">'
+      +'<colgroup><col style="width:26%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"></colgroup>'
+      +'<thead><tr>'+hdrs.map(h=>'<th style="font-size:11px">'+h+'</th>').join('')+'</tr></thead>'
+      +'<tbody>'+trs+'</tbody></table></div>';
+  }
+
+  // ── Social media section ──────────────────────────────────────────
+  const SOCIAL_CFG={
+    twitter:{icon:'𝕏',color:'#000',bg:'rgba(0,0,0,.05)'},
+    reddit:{icon:'🔴',color:'#ff4500',bg:'rgba(255,69,0,.05)'},
+    stocktwit:{icon:'📊',color:'#40a3ff',bg:'rgba(64,163,255,.05)'},
+    youtube:{icon:'▶',color:'#ff0000',bg:'rgba(255,0,0,.05)'},
+    google:{icon:'🔍',color:'#4285f4',bg:'rgba(66,133,244,.05)'},
+    influenc:{icon:'⭐',color:'#f59e0b',bg:'rgba(245,158,11,.05)'},
+    overall:{icon:'🌐',color:'#8b5cf6',bg:'rgba(139,92,246,.05)'},
+    trending:{icon:'🔥',color:'#e8540f',bg:'rgba(232,84,15,.05)'},
+  };
+  function getSocialCfg(k){
+    const kl=k.toLowerCase();
+    for(const[key,cfg]of Object.entries(SOCIAL_CFG)){if(kl.includes(key))return cfg;}
+    return{icon:'📱',color:'#555',bg:'rgba(85,85,85,.05)'};
+  }
+  function renderSocial(socialKvs){
+    const valid=socialKvs.filter(([,v])=>!isNDA(v));
+    if(!valid.length) return '';
+    const cards=valid.map(([k,v])=>{
+      const cfg=getSocialCfg(k);
+      const badge=isBadgeVal(v)?'<span class="badge '+badgeCls(v)+'">'+esc(v)+'</span>':'<span class="mono fw7" style="font-size:13px;color:var(--text)">'+esc(v)+'</span>';
+      return '<div class="social-card" style="background:'+cfg.bg+';border:1px solid '+cfg.color+'22">'
+        +'<div class="social-label" style="color:'+cfg.color+'">'+cfg.icon+' '+esc(k)+'</div>'
+        +'<div>'+badge+'</div></div>';
+    }).join('');
+    return '<div class="social-box"><div class="social-title">📱 Social Media Signals — Positive Trends</div>'
+      +'<div class="social-grid">'+cards+'</div></div>';
+  }
+
+  // ── Trending stocks renderer ──────────────────────────────────────
+  function renderTrendingStocks(trendKvs) {
+    const valid=trendKvs.filter(([,v])=>!isNDA(v)&&v.includes('|'));
+    if(!valid.length) return '';
+    const cards=valid.map(([k,v])=>{
+      const p=v.split('|').map(s=>s.trim());
+      const name=p[0]||'', ticker=p[1]||'', platform=p[2]||'', why=p[3]||'', scoreStr=p[4]||'0';
+      const score=Math.min(100,Math.max(0,parseInt(scoreStr)||0));
+      const barColor=score>=70?'var(--green2)':score>=50?'var(--amber2)':'var(--red2)';
+      return '<div class="trending-card">'
+        +'<div class="trending-stock-name">'+esc(name)+'</div>'
+        +(ticker&&!isNDA(ticker)?'<div class="trending-ticker">'+esc(ticker)+'</div>':'')
+        +(platform&&!isNDA(platform)?'<div style="font-size:10px;color:var(--text3);margin-bottom:4px">📍 '+esc(platform)+'</div>':'')
+        +(why&&!isNDA(why)?'<div class="trending-why">'+esc(why)+'</div>':'')
+        +'<div class="trending-score">'
+        +'<div class="trending-score-bar"><div class="trending-score-fill" style="width:'+score+'%;background:'+barColor+'"></div></div>'
+        +'<div class="trending-score-val">'+score+'</div>'
+        +'</div></div>';
+    }).join('');
+    return '<div class="trending-box"><div class="trending-title">🔥 Trending on Social Media — Positive Signals</div>'
+      +'<div class="trending-grid">'+cards+'</div></div>';
+  }
+
+
+  // ── Strong Buy renderer ──────────────────────────────────────────
+  function renderStrongBuy(sbKvs) {
+    const valid = sbKvs.filter(([,v]) => !isNDA(v) && v.includes('|'));
+    if (!valid.length) return '';
+    const cards = valid.map(([k,v]) => {
+      const p = v.split('|').map(s => s.trim());
+      const name = p[0]||'—', ticker = p[1]||'—', why = p[2]||'—';
+      const target = p[3] && !isNDA(p[3]) ? p[3] : '—';
+      const upside = p[4] && !isNDA(p[4]) ? p[4] : '—';
+      const catalyst = p[5] && !isNDA(p[5]) ? p[5] : '—';
+      return '<div class="strong-buy-card">'
+        + '<div class="sb-name">' + esc(name) + '</div>'
+        + (ticker !== '—' ? '<div class="sb-ticker">' + esc(ticker) + '</div>' : '')
+        + '<div class="sb-why">' + esc(why) + '</div>'
+        + '<div class="sb-meta">'
+        + (target !== '—' ? '<span class="sb-target">🎯 ' + esc(target) + '</span>' : '')
+        + (upside !== '—' ? '<span class="sb-upside">▲ ' + esc(upside) + '</span>' : '')
+        + '</div>'
+        + (catalyst !== '—' ? '<div style="font-size:10px;color:var(--text3);margin-top:5px;word-break:break-word">⚡ ' + esc(catalyst) + '</div>' : '')
+        + '</div>';
+    }).join('');
+    return '<div class="strong-buy-box">'
+      + '<div class="strong-buy-title">💚 Strong Buy Picks — Current Market Conditions</div>'
+      + '<div class="strong-buy-grid">' + cards + '</div></div>';
+  }
+
+  // ── Market Condition gauge renderer ──────────────────────────────
+  function renderMarketCondition(mcKvs) {
+    if (!mcKvs.length) return '';
+    const get = key => { const f = mcKvs.find(([k]) => k.toLowerCase().includes(key.toLowerCase())); return f && !isNDA(f[1]) ? f[1] : ''; };
+    const sentiment = get('market sentiment gauge') || get('sentiment gauge') || get('market sentiment');
+    const score = parseFloat(get('market sentiment score') || get('sentiment score') || '50') || 50;
+    const vix = get('vix') || get('volatility index');
+    const indiavix = get('india vix');
+    const rsi = get('rsi market') || get('market rsi') || get('rsi market (broad');
+    const position = get('52w high/low') || get('52w');
+    const breadth = get('market breadth');
+    const institutional = get('institutional activity');
+    const phase = get('current market phase') || get('market phase');
+    const action = get('best action') || get('best action in current');
+
+    const sentLower = sentiment.toLowerCase();
+    const gaugeClass = sentLower.includes('extreme fear') ? 'extreme-fear'
+      : sentLower.includes('extreme greed') ? 'extreme-greed'
+      : sentLower.includes('fear') ? 'fear'
+      : sentLower.includes('greed') ? 'greed' : 'neutral';
+    const scorePct = Math.min(100, Math.max(0, score));
+    
+    const details = [
+      ['VIX / Volatility', vix], ['India VIX', indiavix], ['Market RSI', rsi],
+      ['52W Position', position], ['Market Breadth', breadth], ['Institutional Flow', institutional],
+      ['Market Phase', phase]
+    ].filter(([,v]) => v);
+
+    let h = '<div class="market-condition-box">'
+      + '<div class="mc-title">📊 Market Condition — ' + (sentiment ? esc(sentiment) : 'Gauge') + '</div>';
+    
+    if (sentiment) {
+      h += '<div class="mc-gauge-row">'
+        + '<div class="mc-gauge-label ' + gaugeClass + '">' + esc(sentiment.toUpperCase()) + '</div>'
+        + '<div class="mc-score-track"><div class="mc-score-marker" style="left:' + scorePct + '%"></div></div>'
+        + '<div class="mc-score-val">' + Math.round(scorePct) + '</div>'
+        + '</div>';
+    }
+    
+    if (action) {
+      const actionCls = /buy|sip|accumulate/i.test(action) ? 'badge-green'
+        : /avoid|reduce|sell/i.test(action) ? 'badge-red' : 'badge-amber';
+      h += '<div style="margin-bottom:12px"><span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px">Best Action Now: </span>'
+        + '<span class="badge ' + actionCls + '" style="font-size:12px;font-weight:700">' + esc(action) + '</span></div>';
+    }
+
+    if (details.length) {
+      h += '<div class="mc-details">';
+      details.forEach(([lbl, val]) => {
+        h += '<div class="mc-detail"><div class="mc-detail-lbl">' + lbl + '</div><div class="mc-detail-val">' + esc(val) + '</div></div>';
+      });
+      h += '</div>';
+    }
+    h += '</div>';
+    return h;
+  }
+
+  function renderLines(lines, tabTitle) {
+    const kvs=[],ndaKeys=[],newsKvs=[],brokerKvs=[],peerKvs=[],maKvs=[],socialKvs=[],
+          holdKvs=[],sectorKvs=[],riskKvs=[],verdictKvs=[],trendKvs=[],redFlagKvs=[],kraKvs=[],rollingKvs=[],sbKvs=[],mcKvs=[],bullets=[],paras=[];
+    let inBullet=false,bulletBuf=[],inSocial=false,inTrend=false,inRedFlag=false,inSbuy=false,inNewsSub='';
+    const isVerdictTab = /verdict/i.test(tabTitle||'');
+    const isHoldingsTab = /holding/i.test(tabTitle||'');
+    const isRiskTab = /risk/i.test(tabTitle||'');
+
+    lines.forEach(rawLine => {
+      const l = rawLine.trim();
+      if (!l) { if(inBullet){bullets.push([...bulletBuf]);bulletBuf=[];inBullet=false;} inSocial=false; inTrend=false; inRedFlag=false; inSbuy=false; return; }
+      if (/^[\u2501\u2550\u2500\-=*#\s]{4,}$/.test(l)) return;
+      if (/^[\u2022\-\*]\s/.test(l)) { inBullet=true; bulletBuf.push(l.replace(/^[\u2022\-\*]\s*/,'')); return; }
+      if (inBullet) { bullets.push([...bulletBuf]); bulletBuf=[]; inBullet=false; }
+      if (/social media trending/i.test(l) && !l.includes(':')) { inSocial=true; return; }
+      if (/trending stocks on social media|top trending.*country|top social media trends/i.test(l) && !l.includes(':')) { inTrend=true; return; }
+      if (/red flag holdings|red flag/i.test(l) && !l.includes(':')) { inRedFlag=true; return; }
+      if (/strong\s*buy.*right now|strong\s*buy.*picks|strong buy stocks/i.test(l) && !l.includes(':')) { inSbuy=true; return; }
+      if (/market condition for this asset/i.test(l) && !l.includes(':')) { return; } // section header only
+      if (/sub-section\s*[abc]/i.test(l)) { inSocial=false; inTrend=false; kvs.push(['__NEWS_SUB__', l.replace(/^.*sub-section\s*/i,'').trim()]); return; }
+      if (/trending stocks on social media/i.test(l) && !l.includes(':')) { inTrend=true; return; }
+
+      const km = l.match(KV_RE);
+      if (km) {
+        const k = km[1].trim(), v = km[2].trim();
+
+        // Specialist routing
+        if (/^news\s*\d+$/i.test(k))                               { newsKvs.push([k,v]);   return; }
+        if (/^(broker|research\s*house)\s*\d+$/i.test(k))          { brokerKvs.push([k,v]); return; }
+        if (/^peer\s*\d+$/i.test(k))                               { peerKvs.push([k,v]);   return; }
+        if (/^rank\s*\d+$/i.test(k))                               { holdKvs.push([k,v]);   return; }
+        if (/^sector\s*\d+$/i.test(k))                             { sectorKvs.push([k,v]); return; }
+        if (/risk\s*\d+\s*(name|level)/i.test(k))                  { riskKvs.push([k,v]);   return; }
+        if (/\d+[-\s]?d(ay)?\s*(EMA|SMA)/i.test(k) ||
+            /^(overall\s*MA\s*verdict|golden.*cross|death.*cross|last\s*trading\s*day)/i.test(k)) {
+          maKvs.push([k,v]); return;
+        }
+        if (inSocial || /^(twitter|x mentions|reddit|stocktwit|youtube|influenc|buzz|trending topic|positive narrative|google trends)/i.test(k)) {
+          inSocial=true; socialKvs.push([k,v]); return;
+        if (inTrend || /^trending\s*stock\s*\d+$/i.test(k)) { inTrend=true; trendKvs.push([k,v]); return; }
+        if (inRedFlag || /^red\s*flag\s*\d+$/i.test(k)) { inRedFlag=true; redFlagKvs.push([k,v]); return; }
+        if (inSbuy || /^strong\s*buy\s*\d+$/i.test(k)) { inSbuy=true; sbKvs.push([k,v]); return; }
+        if (/^(market\s*sentiment|market\s*condition|vix|india\s*vix|rsi\s*market|52w\s*high\/low|market\s*breadth|institutional\s*activity|current\s*market\s*phase|best\s*action)/i.test(k)) { mcKvs.push([k,v]); return; }
+        if (/^(kra\s*details|kra|sebi\s*reg|ama\s*cin|trustee|custodian|registrar|rta|auditor)/i.test(k)) { kraKvs.push([k,v]); return; }
+        if (/^(rolling\s*return|since\s*inception\s*rolling|\d+y\s*rolling|last\s*quarter\s*rolling)/i.test(k)) { rollingKvs.push([k,v]); return; }
+        if (/^(direct\s*fund\s*page|company\s*website|amc\s*website\s*url|fund\s*page\s*url|issuer\s*website)/i.test(k) && v.includes('http')) { kvs.push(['__DIRECT_LINK__', v]); return; }
+        if (/not\s*applicable/i.test(v)) { kvs.push([k, '__NA__']); return; }
+        }
+        // Verdict tab — collect all KVs for the verdict renderer
+        if (isVerdictTab)                                           { verdictKvs.push([k,v]); if(isNDA(v)){ndaKeys.push(k);} return; }
+
+        if (isNDA(v)) { ndaKeys.push(k); return; }
+        kvs.push([k,v]);
+      } else {
+        if (/social media trending/i.test(l)) { inSocial=true; return; }
+        if (/^output.*no red flag|^no red flag|no further red flag/i.test(l)) { redFlagKvs.push(['__NO_RED_FLAG__', l]); return; }
+        if (inRedFlag && l.includes('|')) { redFlagKvs.push(['Red Flag extra', l]); return; }
+        paras.push(l);
+      }
+    });
+    if (inBullet&&bulletBuf.length) bullets.push([...bulletBuf]);
+
+    let h = '';
+
+    // Rolling returns table
+    if (rollingKvs.length) {
+      h += '<div class="tbl-wrap" style="margin-bottom:14px"><table class="rolling-table"><thead><tr><th>Period</th><th>Fund (Direct)</th><th>Benchmark</th><th>Category Avg</th></tr></thead><tbody>';
+      rollingKvs.forEach(([k,v]) => {
+        const parts=v.split('|').map(s=>s.trim());
+        const period=k.replace(/rolling\s*%?:?$/i,'').trim()||k;
+        const fd=parts[0]||'\u2014', bm=parts[1]||'\u2014', cat=parts[2]||'\u2014';
+        const isNew=/new fund|insufficient/i.test(fd);
+        h += '<tr><td class="fw6">'+esc(period)+'</td>'
+          +(isNew?'<td colspan="3" class="muted text-sm" style="font-style:italic">'+esc(fd)+'</td>'
+          :'<td class="mono">'+esc(fd)+'</td><td class="mono muted">'+esc(bm)+'</td><td class="mono muted">'+esc(cat)+'</td>')
+          +'</tr>';
+      });
+      h += '</tbody></table></div>';
+    }
+
+    // KRA details box
+    if (kraKvs.length) {
+      h += '<div class="kra-box"><div class="kra-title">KRA / Regulatory Details</div><div class="kra-grid">';
+      kraKvs.forEach(([k,v]) => {
+        if(isNDA(v)) return;
+        // Split pipe-separated KRA fields
+        if(v.includes('|')){
+          const labels=['SEBI Reg No','AMC CIN','AMC Type','Trustee Co','Custodian','RTA','Auditor'];
+          v.split('|').forEach((val,i)=>{
+            if(!val.trim()||isNDA(val.trim())) return;
+            h+='<div class="kra-item"><span class="kra-lbl">'+(labels[i]||'Detail '+(i+1))+'</span><span class="kra-val">'+esc(val.trim())+'</span></div>';
+          });
+        } else {
+          h+='<div class="kra-item"><span class="kra-lbl">'+esc(k)+'</span><span class="kra-val">'+esc(v)+'</span></div>';
+        }
+      });
+      h += '</div></div>';
+    }
+
+    // Red flag holdings
+    if (redFlagKvs.length) {
+      const hasActualFlags=redFlagKvs.some(([,v])=>!isNDA(v)&&!/no red flag/i.test(v));
+      if(hasActualFlags){
+        h += '<div class="red-flag-box"><div class="red-flag-title">🚩 Red Flag Holdings</div>';
+        redFlagKvs.filter(([,v])=>!isNDA(v)&&!/no red flag/i.test(v)).forEach(([k,v])=>{
+          const p=v.split('|').map(s=>s.trim());
+          h += '<div class="red-flag-item"><div class="red-flag-dot"></div><div>'
+            +'<span class="red-flag-name">'+esc(p[0]||v)+'</span>'
+            +(p[1]?'<span class="badge badge-red" style="font-size:9px;margin-right:6px">'+esc(p[1])+'</span>':'')
+            +'<span class="red-flag-detail">'+(p.slice(2).join(' — ')||'')+'</span>'
+            +'</div></div>';
+        });
+        h += '</div>';
+      } else {
+        h += '<div class="red-flag-box" style="background:rgba(34,197,94,.04);border-color:rgba(34,197,94,.2)">'
+          +'<div class="no-red-flag">✅ No red flags identified in current holdings</div></div>';
+      }
+    }
+
+    // News section sub-headers
+    if (newsKvs.length) {
+      h += '<div class="news-sub-header">📰 News & Events</div>';
+      newsKvs.forEach(([k,v]) => { const c=renderNewsCard(k,v); if(c) h+=c; });
+    }
+
+
+    // Holdings table (Rank + Sector rows)
+    if (holdKvs.length || sectorKvs.length) h += renderHoldingsTable(holdKvs, sectorKvs);
+
+    // Risk cards
+    if (riskKvs.length) h += renderRiskCards(riskKvs);
+
+    // Verdict section
+    if (isVerdictTab && verdictKvs.length) { h += renderVerdictSection(verdictKvs, ndaKeys); return h; }
+
+    // News cards — handled above in sub-section rendering
+    // newsKvs.forEach(([k,v]) => { const c=renderNewsCard(k,v); if(c) h+=c; });
+
+    // Broker / research table
+    if (brokerKvs.length) { const t=renderBrokerTable(brokerKvs); if(t) h+=t; }
+
+    // Peer / fund table
+    if (peerKvs.length) { const t=renderPeerTable(peerKvs); if(t) h+=t; }
+
+    // MA table
+    if (maKvs.length) h += renderMATable(maKvs);
+
+    // Social
+    if (socialKvs.length) { h += '<div class="news-sub-header">📱 Social Media Signals — This Asset</div>'; const s=renderSocial(socialKvs); if(s) h+=s; }
+    if (trendKvs.length) { h += '<div class="news-sub-header">🔥 Top Trending — Same Asset Class &amp; Country</div>'; const t=renderTrendingStocks(trendKvs); if(t) h+=t; }
+    if (sbKvs.length) { const s=renderStrongBuy(sbKvs); if(s) h+=s; }
+    if (mcKvs.length) { const m=renderMarketCondition(mcKvs); if(m) h+=m; }
+
+    // KPI grid — short values vs long paragraph values
+    if (kvs.length) {
+
+    // Handle direct link buttons + clean special keys
+    const directLinks=kvs.filter(([k])=>k==='__DIRECT_LINK__');
+    const filteredKvs=kvs.filter(([k,v])=>k!=='__DIRECT_LINK__'&&v!=='__NA__'&&k!=='__NEWS_SUB__');
+
+    if(directLinks.length){
+      directLinks.forEach(([,url])=>{
+        const cleanUrl=url.match(/(https?:\/\/[^\s]+)/)?.[0]||url;
+        h+='<a href="'+cleanUrl+'" target="_blank" rel="noopener" class="direct-link">🔗 Open Direct Fund / Company Page</a>';
+      });
+      h+='<div style="height:10px"></div>';
+    }
+
+      const kpiItems  = filteredKvs.filter(([,v]) => !isLong(v));
+      const paraItems = filteredKvs.filter(([,v]) => isLong(v));
+      const checkCount = kpiItems.filter(([,v]) => /^(yes|no|partial)$/i.test(v)).length;
+      const isChecklist = checkCount >= 3 && checkCount > kpiItems.length * 0.45;
+
+      if (isChecklist) {
+        const checks = kpiItems.filter(([,v]) => /^(yes|no|partial)$/i.test(v));
+        const others = kpiItems.filter(([,v]) => !/^(yes|no|partial)$/i.test(v));
+        if (others.length) {
+          h += '<div class="kpi-grid">';
+          others.forEach(([k,v]) => {
+            h += isBadgeVal(v)
+              ? `<div class="kpi"><div class="kpi-lbl">${esc(k)}</div><div class="kpi-val"><span class="badge ${badgeCls(v)}">${esc(v)}</span></div></div>`
+              : `<div class="kpi"><div class="kpi-lbl">${esc(k)}</div><div class="kpi-val sm">${linkify(esc(v))}</div></div>`;
+          });
+          h += '</div>';
+        }
+        h += '<div class="checklist">';
+        checks.forEach(([k,v]) => {
+          const icon = /^yes$/i.test(v)?'✅':/^no$/i.test(v)?'❌':'⚠️';
+          h += `<div class="check-item"><span class="check-icon">${icon}</span><span>${esc(k)}</span></div>`;
+        });
+        h += '</div>';
+      } else {
+        h += '<div class="kpi-grid">';
+        kpiItems.forEach(([k,v]) => {
+          h += isBadgeVal(v)
+            ? `<div class="kpi"><div class="kpi-lbl">${esc(k)}</div><div class="kpi-val"><span class="badge ${badgeCls(v)}">${esc(v)}</span></div></div>`
+            : `<div class="kpi"><div class="kpi-lbl">${esc(k)}</div><div class="kpi-val sm">${linkify(esc(v))}</div></div>`;
+        });
+        h += '</div>';
+      }
+      paraItems.forEach(([k,v]) => {
+        h += `<div class="highlight-box"><div class="highlight-label">${esc(k)}</div><div class="highlight-text">${linkify(esc(v))}</div></div>`;
+      });
+    }
+
+    if (bullets.length) {
+      bullets.forEach(group => {
+        h += '<ul class="data-list">';
+        group.forEach(item => { h += `<li>${linkify(esc(item))}</li>`; });
+        h += '</ul>';
+      });
+    }
+    paras.forEach(p => { h += `<p class="data-para">${linkify(esc(p))}</p>`; });
+    if (ndaKeys.length && !isVerdictTab) h += renderNDA(ndaKeys);
+    return h;
+  }
+
+  // ── Assemble tabs ────────────────────────────────────────────────
+  let tabBtns = '', panels = '';
+  if (tabSections.length === 0) {
+    tabBtns = `<button class="tab-btn active" onclick="showTab(0,this)">01 Research Data</button>`;
+    panels  = `<div class="panel active" id="p0"><div class="card"><div class="card-title">Research Data</div>${renderLines(raw.split('\n'))}</div></div>`;
+  } else {
+    tabSections.forEach((sec, idx) => {
+      const {title, subs} = parseTab(sec);
+      const active = idx === 0;
+      tabBtns += `<button class="tab-btn${active?' active':''}" onclick="showTab(${idx},this)">${String(idx+1).padStart(2,'0')} ${esc(title)}</button>`;
+      let panelHtml = '';
+      subs.forEach(sub => {
+        const content = renderLines(sub.lines, sub.title||title);
+        if (!content) return;
+        panelHtml += `<div class="card"><div class="card-title">${esc(sub.title||title)}</div>${content}</div>`;
+      });
+      if (!panelHtml) panelHtml = `<div class="card"><div class="card-title">${esc(title)}</div><p class="muted text-sm">No data available for this tab.</p></div>`;
+      panels += `<div class="panel${active?' active':''}" id="p${idx}">${panelHtml}</div>`;
+    });
+  }
+
+  // ── Identity bar ─────────────────────────────────────────────────
+  const idBar = [
+    {lbl:'Asset',   val:assetName},
+    {lbl:'Type',    val:assetType+(market?' \u2014 '+market:'')},
+    {lbl:'Status',  val:resident},
+    {lbl:'Horizon', val:horizon},
+    {lbl:'Date',    val:today}
+  ].filter(i=>i.val).map(i=>
+    `<div class="id-item"><div class="lbl">${esc(i.lbl)}</div><div class="val">${esc(i.val)}</div></div>`
+  ).join('');
+
+  // ── FULL HTML OUTPUT v8.0 ────────────────────────────────────────
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>${esc(assetName)} — Research Report | Vilfin George</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+/* ══ ScanX-Inspired Report Theme ══ */
+:root{
+  --accent:#0052FF;--accent2:#1d4ed8;--accent3:#3b82f6;--accent-light:#eff6ff;
+  --green:#16a34a;--green2:#15803d;
+  --red:#dc2626;--red2:#b91c1c;
+  --amber:#d97706;--amber2:#b45309;
+  --blue:#2563eb;--blue2:#1d4ed8;
+  --dark:#0f172a;--dark2:#1e293b;
+  --card:#ffffff;--card2:#f8fafc;--card3:#f1f5f9;
+  --text:#0f172a;--text2:#374151;--text3:#6b7280;--muted:#9ca3af;
+  --border:#e2e8f0;--border2:#cbd5e1;
+  --radius:10px;--radius-sm:6px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08);
+  --tab-h:44px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f1f5f9;color:var(--text);min-height:100vh;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+/* ── GLOBAL OVERFLOW FIX ── */
+.kpi{overflow:hidden}
+.kpi-lbl{white-space:normal;word-break:break-word;line-height:1.3}
+.kpi-val{font-size:12px;font-weight:700;color:var(--text);word-break:break-word;overflow-wrap:anywhere;white-space:normal;line-height:1.45;hyphens:auto;font-family:'DM Sans',sans-serif}
+.kpi-val.sm{font-size:11.5px;font-family:'DM Sans',sans-serif;font-weight:500;line-height:1.55;word-break:break-word;overflow-wrap:anywhere;white-space:normal}
+.badge{white-space:normal;word-break:break-word;max-width:100%;display:inline-block;line-height:1.4}
+.check-item{word-break:break-word;overflow-wrap:anywhere;align-items:flex-start;font-size:12px;line-height:1.5}
+.nda-tag{white-space:normal;word-break:break-word;max-width:200px}
+.highlight-text{word-break:break-word;overflow-wrap:anywhere}
+tbody td{word-break:break-word;overflow-wrap:anywhere;white-space:normal;max-width:260px}
+.peer-fund-name{max-width:220px;word-break:break-word;overflow-wrap:anywhere;white-space:normal;font-size:12px;line-height:1.4}
+.kpi-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+
+/* ── HEADER — ScanX Blue ── */
+.site-header{background:linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 60%,#2563eb 100%);padding:28px 24px 24px;text-align:center;position:relative;overflow:hidden}
+.site-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:rgba(255,255,255,.2)}
+.site-header h1{font-family:'DM Sans',sans-serif;font-size:clamp(20px,3.5vw,36px);color:#fff;font-weight:800;letter-spacing:-0.5px;position:relative;z-index:1;line-height:1.1}
+.site-header .sub{color:rgba(255,255,255,.65);font-size:11px;margin-top:5px;position:relative;z-index:1;letter-spacing:1px;text-transform:uppercase}
+.asset-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 18px;margin-top:14px;color:#fff;font-size:12px;font-weight:600;position:relative;z-index:1}
+.asset-badge .market-tag{background:rgba(255,255,255,.2);color:#fff;border-radius:999px;padding:2px 10px;font-size:11px;font-weight:700}
+/* ── ID BAR ── */
+.id-bar{background:#ffffff;padding:14px 24px;display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:center;border-bottom:1px solid var(--border)}
+.id-item{text-align:center}
+.id-item .lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;font-weight:600}
+.id-item .val{font-size:13px;font-weight:700;color:var(--dark);font-family:'DM Sans',sans-serif;word-break:break-word}
+/* ── TAB BAR — ScanX pill style ── */
+.tab-wrapper{background:#ffffff;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.tab-scroll{display:flex;overflow-x:auto;scrollbar-width:none;padding:8px 16px;gap:6px}
+.tab-scroll::-webkit-scrollbar{display:none}
+.tab-btn{flex-shrink:0;height:36px;padding:0 16px;border:1px solid var(--border);background:var(--card2);color:var(--text3);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border-radius:999px;white-space:nowrap;transition:all .15s;letter-spacing:.2px}
+.tab-btn:hover{border-color:var(--accent3);color:var(--accent2);background:var(--accent-light)}
+.tab-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(0,82,255,.22)}
+/* ── PANELS ── */
+.panels{max-width:1200px;margin:0 auto;padding:24px 20px 56px}
+.panel{display:none;animation:fadeUp .22s ease}
+.panel.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+/* ── CARDS ── */
+.card{background:var(--card);border-radius:var(--radius);padding:20px 24px;margin-bottom:16px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.card:hover{box-shadow:var(--shadow-md);border-color:var(--border2)}
+.card-title{font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--accent2);margin-bottom:16px;display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--border);text-transform:uppercase}
+.card-title::before{content:'';width:3px;height:14px;background:var(--accent);border-radius:2px;flex-shrink:0}
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:var(--card2);border-radius:var(--radius-sm);padding:12px 14px;border:1px solid var(--border);transition:all .15s;overflow:hidden;word-break:break-word}
+.kpi:hover{border-color:var(--accent3);background:var(--accent-light)}
+.kpi-lbl{font-size:9.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;line-height:1.3;font-weight:600}
+.kpi-val{font-size:13px;font-weight:700;color:var(--text);word-break:break-word;overflow-wrap:anywhere;line-height:1.4;hyphens:auto;white-space:normal;font-family:'DM Sans',sans-serif}
+.kpi-val.sm{font-size:12px;font-weight:500;line-height:1.5;word-break:break-word;overflow-wrap:anywhere;white-space:normal}
+/* ── BADGES ── */
+.badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.2px}
+.badge-green{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
+.badge-red{background:#fee2e2;color:#b91c1c;border:1px solid #fecaca}
+.badge-amber{background:#fef3c7;color:#b45309;border:1px solid #fde68a}
+.badge-blue{background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe}
+.badge-burn{background:var(--accent-light);color:var(--accent2);border:1px solid #bfdbfe}
+/* ── TABLES ── */
+.tbl-wrap{overflow-x:auto;border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:14px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:#f8fafc}
+thead th{color:var(--text2);padding:10px 14px;text-align:left;font-weight:700;white-space:nowrap;font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;border-bottom:2px solid var(--accent)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:hover{background:var(--accent-light)}
+tbody td{padding:10px 14px;color:var(--text);vertical-align:middle;line-height:1.5;word-break:break-word;overflow-wrap:anywhere;max-width:280px}
+tbody tr:last-child{border-bottom:none}
+.fw6{font-weight:600}.fw7{font-weight:700}.mono{font-family:'JetBrains Mono',monospace}.nowrap{white-space:nowrap}.wrap-cell{white-space:normal!important;word-break:break-word;overflow-wrap:anywhere}
+.text-sm{font-size:12px}.text-xs{font-size:11px}
+.accent{color:var(--accent2);font-weight:700;font-family:'JetBrains Mono',monospace}
+.green-text{color:var(--green2);font-weight:600}
+.red-text{color:var(--red2);font-weight:600}
+.muted{color:var(--muted)}
+/* ── MA SIGNALS ── */
+.ma-signal{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px}
+.ma-buy{background:#dcfce7;color:#15803d}
+.ma-sell{background:#fee2e2;color:#b91c1c}
+.ma-neutral{background:#fef3c7;color:#b45309}
+/* ── CHECKLIST ── */
+.checklist{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin:10px 0}
+.check-item{display:flex;align-items:center;gap:10px;font-size:12px;padding:8px 12px;background:var(--card2);border-radius:var(--radius-sm);border:1px solid var(--border);transition:border-color .15s}
+.check-item:hover{border-color:var(--accent3)}
+.check-icon{font-size:14px;flex-shrink:0}
+/* ── NEWS CARDS ── */
+.news-item{padding:12px 0;border-bottom:1px solid var(--border);display:flex;gap:12px}
+.news-item:last-child{border-bottom:none}
+.news-item .news-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.news-dot.positive{background:var(--green)}
+.news-dot.negative{background:var(--red)}
+.news-dot.neutral{background:var(--amber)}
+.news-date{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:3px}
+.news-headline{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;line-height:1.4}
+.news-detail{font-size:12px;color:var(--text2);line-height:1.5}
+/* ── HIGHLIGHT BOXES (long text) ── */
+.highlight-box{margin:8px 0;padding:12px 16px;background:var(--card2);border-left:3px solid var(--accent);border-radius:0 var(--radius-sm) var(--radius-sm) 0;border:1px solid var(--border);border-left-width:3px}
+.highlight-label{font-size:9.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.highlight-text{font-size:13px;color:var(--text2);line-height:1.65}
+/* ── SOCIAL MEDIA ── */
+.social-box{background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin:12px 0}
+.social-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+.social-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.social-card{border-radius:var(--radius-sm);padding:10px 12px}
+.social-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;display:flex;align-items:center;gap:4px}
+/* ── TRENDING STOCKS ── */
+.trending-box{background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin:12px 0}
+.trending-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+.trending-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.trending-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;transition:all .15s}
+.trending-card:hover{border-color:var(--accent3);box-shadow:var(--shadow)}
+.trending-stock-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px}
+.trending-ticker{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent2);font-weight:600;margin-bottom:5px}
+.trending-why{font-size:11px;color:var(--text3);line-height:1.4;margin-bottom:6px}
+.trending-score{display:flex;align-items:center;gap:6px}
+.trending-score-bar{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.trending-score-fill{height:100%;border-radius:2px}
+.trending-score-val{font-size:10px;font-weight:700;color:var(--text3);min-width:22px;text-align:right}
+/* ── NDA BOX ── */
+.nda-box{margin-top:12px;padding:10px 14px;background:var(--card2);border:1px solid var(--border);border-radius:var(--radius-sm);display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.nda-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-right:4px;flex-shrink:0}
+.nda-tag{font-size:10px;color:var(--text3);background:var(--card3);border:1px solid var(--border);border-radius:999px;padding:2px 9px}
+/* ── INFO BOX ── */
+.info-box{font-size:12px;color:#0369a1;background:#f0f9ff;border:1px solid #bae6fd;border-radius:var(--radius-sm);padding:12px 16px;margin:10px 0;line-height:1.6}
+/* ── VERDICT ── */
+.verdict-banner{background:linear-gradient(135deg,#1e3a8a,var(--accent2));border-radius:var(--radius);padding:28px;color:#fff;text-align:center;margin-bottom:20px}
+.verdict-badge-text{font-size:clamp(24px,4vw,40px);font-weight:900;letter-spacing:2px;color:#fff}
+.verdict-summary{font-size:13px;color:rgba(255,255,255,.85);line-height:1.6;margin-top:10px;max-width:700px;margin-left:auto;margin-right:auto}
+.score-composite{display:flex;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow)}
+.score-seg{flex:1;text-align:center;padding:16px 10px;border-right:1px solid var(--border)}
+.score-seg:last-child{border-right:none}
+.score-seg .s-val{font-size:28px;font-weight:800;line-height:1}
+.score-seg .s-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-top:4px}
+.score-seg .s-max{font-size:10px;color:var(--muted)}
+/* ── SCORE BARS ── */
+.score-bar-row{margin-bottom:10px}
+.score-bar-row .sb-top{display:flex;justify-content:space-between;margin-bottom:4px}
+.score-bar-row .sb-lbl{font-size:12px;color:var(--text2);font-weight:500}
+.score-bar-row .sb-val{font-size:12px;font-weight:700}
+.score-bar-row .sb-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.score-bar-row .sb-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.sb-fill.high{background:var(--green)}
+.sb-fill.mid{background:var(--amber)}
+.sb-fill.low{background:var(--red)}
+/* ── TARGET CARDS ── */
+.target-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px;margin-bottom:16px}
+.target-card{background:var(--card2);border-radius:var(--radius-sm);padding:14px;text-align:center;border:1px solid var(--border);position:relative;overflow:hidden}
+.target-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.target-card.sip::before{background:var(--green)}
+.target-card.stop::before{background:var(--red)}
+.target-card.t6m::before,.target-card.t12m::before,.target-card.t3y::before{background:var(--accent)}
+.target-card .t-lbl{font-size:9.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:7px;font-weight:600}
+.target-card .t-val{font-size:16px;font-weight:700;color:var(--accent2)}
+.target-card .t-up{font-size:14px;font-weight:700;color:var(--green2)}
+/* ── HORIZON VERDICT CARDS ── */
+.horizon-grid{display:grid;gap:8px;margin-bottom:16px}
+.horizon-card{background:var(--card2);border-radius:var(--radius-sm);padding:12px 16px;border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.horizon-card .h-period{font-size:11px;font-weight:600;color:var(--text3)}
+.horizon-card .h-verdict{font-size:13px;font-weight:700}
+/* ── ALLOC CARDS ── */
+.alloc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.alloc-card{background:var(--card2);border-radius:var(--radius-sm);padding:14px;border:1px solid var(--border);text-align:center}
+.alloc-card .a-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:7px;font-weight:600}
+.alloc-card .a-val{font-size:22px;font-weight:800;color:var(--accent2)}
+/* ── REFERRAL BUTTONS ── */
+.ref-section{background:var(--accent-light);border:1px solid #bfdbfe;border-radius:var(--radius);padding:16px 20px;margin-top:16px}
+.ref-title{font-size:10px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+.ref-btns{display:flex;flex-wrap:wrap;gap:8px}
+a.ref-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--accent);color:#fff;border-radius:999px;font-size:12px;font-weight:600;text-decoration:none;transition:all .15s;white-space:nowrap}
+a.ref-btn:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,82,255,.25);color:#fff}
+a{color:var(--accent2);font-weight:600}
+a:hover{color:var(--accent)}
+/* ── DATA UTILS ── */
+ul.data-list{list-style:none;padding:0;margin:10px 0}
+ul.data-list li{font-size:12.5px;color:var(--text2);padding:7px 12px;border-bottom:1px solid var(--border);line-height:1.5;display:flex;align-items:flex-start;gap:8px}
+ul.data-list li::before{content:'›';color:var(--accent3);font-weight:700;flex-shrink:0}
+ul.data-list li:last-child{border-bottom:none}
+.data-para{font-size:13px;color:var(--text2);line-height:1.6;margin:6px 0;padding:8px 12px;background:var(--card2);border-radius:var(--radius-sm)}
+.divider{height:1px;background:var(--border);margin:14px 0}
+/* ── FOOTER ── */
+footer{max-width:1200px;margin:0 auto;padding:24px 20px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
+footer .owner{font-size:13px;font-weight:700;color:var(--text)}
+footer .disc{font-size:10.5px;color:var(--text3);line-height:1.6}
+footer .gen{font-size:10px;color:var(--muted)}
+/* ── DIRECT FUND LINK ── */
+a.direct-link{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--accent-light);border:1px solid var(--accent3);color:var(--accent2);border-radius:var(--radius-sm);font-size:12px;font-weight:600;text-decoration:none;transition:all .15s;margin-bottom:10px}
+a.direct-link:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+/* ── RED FLAGS ── */
+.red-flag-box{background:#fff5f5;border:1px solid #fecaca;border-radius:var(--radius-sm);padding:14px;margin:10px 0}
+.red-flag-title{font-size:10px;font-weight:700;color:#b91c1c;text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px}
+.red-flag-item{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid #fee2e2;align-items:flex-start}
+.red-flag-item:last-child{border-bottom:none}
+.red-flag-dot{width:6px;height:6px;background:#b91c1c;border-radius:50%;flex-shrink:0;margin-top:5px}
+.red-flag-name{font-weight:700;font-size:12px;color:#b91c1c;margin-right:6px;white-space:nowrap}
+.red-flag-detail{font-size:12px;color:var(--text2);line-height:1.4;word-break:break-word}
+.no-red-flag{font-size:12px;color:var(--green2);font-weight:600}
+/* ── KRA BOX ── */
+.kra-box{background:var(--card2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin:10px 0}
+.kra-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.kra-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.kra-item{display:flex;flex-direction:column;gap:2px}
+.kra-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.kra-val{font-size:12px;color:var(--text);font-weight:500;word-break:break-word}
+/* ── NEWS SUB-SECTIONS ── */
+.news-sub-header{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin:14px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+/* ── ROLLING RETURNS TABLE ── */
+.rolling-table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}
+.rolling-table th{background:#f8fafc;color:var(--text2);padding:8px 12px;text-align:left;font-size:10px;font-weight:700;border-bottom:2px solid var(--accent);text-transform:uppercase;letter-spacing:.4px}
+.rolling-table td{padding:8px 12px;border-bottom:1px solid var(--border);word-break:break-word}
+.rolling-table tr:hover td{background:var(--accent-light)}
+.rolling-table tr:last-child td{border-bottom:none}
+/* ── PEER TABLE ── */
+.peer-fund-name{max-width:220px;word-break:break-word;overflow-wrap:anywhere;white-space:normal;font-weight:600;font-size:12.5px;line-height:1.4}
+/* ── RATING BADGES in peer table ── */
+.rating-buy{background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600;white-space:nowrap}
+.rating-sell{background:#fee2e2;color:#b91c1c;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600;white-space:nowrap}
+.rating-hold{background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600;white-space:nowrap}
+.na-tag{font-size:11px;color:var(--muted);font-style:italic}
+/* ── STRONG BUY SECTION ── */
+.strong-buy-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius);padding:14px;margin:12px 0}
+.strong-buy-title{font-size:10px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px}
+.strong-buy-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.strong-buy-card{background:#fff;border:1px solid #bbf7d0;border-radius:var(--radius-sm);padding:12px;border-top:2px solid #16a34a}
+.sb-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;word-break:break-word}
+.sb-ticker{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--accent2);font-weight:700;margin-bottom:5px}
+.sb-why{font-size:11px;color:var(--text3);line-height:1.4;margin-bottom:6px;word-break:break-word}
+.sb-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sb-target{font-size:10px;background:#dbeafe;color:#1d4ed8;padding:2px 7px;border-radius:999px;font-weight:600}
+.sb-upside{font-size:10px;background:#dcfce7;color:#15803d;padding:2px 7px;border-radius:999px;font-weight:600}
+/* ── MARKET CONDITION ── */
+.market-condition-box{background:var(--card2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin:12px 0}
+.mc-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.mc-gauge-row{display:flex;align-items:center;gap:14px;margin-bottom:12px;flex-wrap:wrap}
+.mc-gauge-label{font-size:18px;font-weight:800;letter-spacing:1px;word-break:break-word}
+.mc-gauge-label.extreme-fear{color:#b91c1c}
+.mc-gauge-label.fear{color:#ea580c}
+.mc-gauge-label.neutral{color:#b45309}
+.mc-gauge-label.greed{color:#65a30d}
+.mc-gauge-label.extreme-greed{color:#15803d}
+.mc-score-track{flex:1;min-width:120px;height:8px;background:linear-gradient(90deg,#dc2626 0%,#f97316 25%,#f59e0b 50%,#84cc16 75%,#16a34a 100%);border-radius:4px;position:relative}
+.mc-score-marker{position:absolute;top:-4px;width:3px;height:16px;background:var(--dark);border-radius:2px;transform:translateX(-50%)}
+.mc-score-val{font-size:22px;font-weight:800;color:var(--text)}
+.mc-details{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:8px}
+.mc-detail{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px}
+.mc-detail-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.mc-detail-val{font-size:12px;font-weight:600;color:var(--text);line-height:1.4}
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .checklist{grid-template-columns:1fr}
+  .social-grid,.trending-grid{grid-template-columns:repeat(2,1fr)}
+  .alloc-grid{grid-template-columns:1fr}
+  .id-bar{gap:14px}
+  table{font-size:12px}
+  thead th{padding:8px 10px}
+  tbody td{padding:8px 10px}
+  .panels{padding:14px 12px 36px}
+}
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;box-sizing:border-box!important}
+  @page{size:A4;margin:12mm}
+  body{background:#fff!important;color:#111!important;font-size:10pt;line-height:1.5}
+  .tab-wrapper{display:none!important}
+  .panel{display:block!important;animation:none!important}
+  .tab-panel-section{page-break-before:always;break-before:page}
+  .tab-panel-section:first-child{page-break-before:avoid;break-before:avoid}
+  .card{break-inside:avoid;box-shadow:none!important;border:1px solid #e2e8f0!important;margin-bottom:8pt}
+  .kpi-grid>*{break-inside:avoid}
+  .strong-buy-card{break-inside:avoid}
+  .tbl-wrap{overflow:visible!important}
+  table{min-width:0!important;font-size:9pt;width:100%!important;border-collapse:collapse}
+  thead th{padding:6px 8px!important;font-size:8pt!important;background:#f1f5f9!important;color:#111!important;border-bottom:2px solid #2563eb!important}
+  tbody td{padding:5px 8px!important;font-size:9pt!important;border-bottom:1px solid #e2e8f0!important}
+  thead{display:table-header-group}
+  .kpi-grid{grid-template-columns:repeat(4,1fr)!important;gap:6pt!important}
+  .kpi{padding:8pt!important}
+  .kpi-lbl{font-size:7pt!important}
+  .kpi-val{font-size:10pt!important}
+  .checklist{grid-template-columns:repeat(3,1fr)!important}
+  .section-title,.tab-header{break-after:avoid;page-break-after:avoid}
+  footer{break-inside:avoid;border-top:1px solid #e2e8f0;padding-top:8pt;font-size:8pt;color:#666}
+  a{color:#1d4ed8!important;text-decoration:underline!important}
+  a[href^="http"]::after{content:" [" attr(href) "]";font-size:7pt;color:#666;word-break:break-all;display:inline}
+  a.ref-btn{background:#dbeafe!important;color:#1d4ed8!important;border:1px solid #bfdbfe!important;box-shadow:none!important;padding:3pt 8pt!important}
+  a.ref-btn::after{content:" [" attr(href) "]";font-size:7pt;color:#666;word-break:break-all;display:block;margin-top:2pt}
+  /* Hide decorative elements */
+  .verdict-banner::before,.site-header::before{display:none!important}
+  /* Page numbers */
+  .site-header{padding:12pt 0!important;margin-bottom:12pt}
+  h1{font-size:18pt!important}
+}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <h1>${esc(assetName)}</h1>
+  <div class="sub">Research Report &mdash; Multi Asset Screener v8.0 &bull; Vilfin George</div>
+  <div class="asset-badge">${emoji} ${esc(assetType.toUpperCase())} <span class="market-tag">${esc(market)}</span></div>
+</header>
+<div class="id-bar">${idBar}</div>
+<div class="tab-wrapper"><div class="tab-scroll">${tabBtns}</div></div>
+<div class="panels">${panels}</div>
+<footer>
+  <span class="owner">Vilfin George</span>
+  <div class="disc">SEBI Disclaimer: This report is for educational and informational purposes only and does not constitute investment advice, a solicitation, or an offer to buy or sell any securities. Vilfin George is not a SEBI-registered investment advisor. All data sourced from publicly available information. Investments are subject to market risks. Past performance is not indicative of future results. Please consult your financial advisor before investing.</div>
+  <div class="gen">Generated: ${today} &bull; Multi Asset Screener v8.0 &bull; Vilfin George</div>
+</footer>
+<script>
+function showTab(idx,btn){
+  document.querySelectorAll('.panel').forEach((p,i)=>p.classList.toggle('active',i===idx));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  btn.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+  document.querySelectorAll('.panel').forEach((p,i)=>{const t=document.querySelectorAll('.tab-btn')[i];if(t)p.dataset.title=t.textContent.trim();});
+}
+window.addEventListener('load',()=>document.querySelectorAll('.panel').forEach((p,i)=>{const t=document.querySelectorAll('.tab-btn')[i];if(t)p.dataset.title=t.textContent.trim();}));
+<\/script>
+</body></html>`;
+
+
+}
+
+function downloadOutput() {
+  if (!renderedHtml) { alert('Nothing to download — render a report first.'); return; }
+  const blob = new Blob([renderedHtml], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const safeName = (answers.assetName||answers.market||'report').replace(/[^a-z0-9]/gi,'_').toLowerCase();
+  a.download = `multi_asset_screener_${safeName}_${new Date().toISOString().slice(0,10)}.html`;
+  a.click();
+}
+
+function exportPDF() {
+  if (!renderedHtml) { alert('Nothing to export — render a report first.'); return; }
+  // Open in new window for clean PDF export with proper page breaks and working hyperlinks
+  const w = window.open('', '_blank');
+  if (!w) { alert('Pop-up blocked. Please allow pop-ups and try again.'); return; }
+  // Inject print-trigger script and improved print styles into the report
+  const printHtml = renderedHtml.replace('</body>', `
+<script>
+// Auto-trigger print dialog after page loads
+window.addEventListener('load', function() {
+  // Add page-break class to each tab section
+  document.querySelectorAll('.tab-panel-section, .card.tab-card, [data-tab]').forEach(function(el, i) {
+    if (i > 0) el.style.pageBreakBefore = 'always';
+  });
+  setTimeout(function() { window.print(); }, 800);
+});
+</scr` + `ipt></body>`);
+  w.document.open();
+  w.document.write(printHtml);
+  w.document.close();
+}
+
+function clearPaste() {
+  document.getElementById('paste-area').value = '';
+  document.getElementById('rendered-output').innerHTML = `
+    <div class="render-placeholder">
+      <div class="icon">📊</div>
+      <h3>Report Will Appear Here</h3>
+      <p>Paste the AI data above and click <strong>Render Report</strong>.</p>
+    </div>`;
+  renderedHtml = '';
+  const _eh2 = document.getElementById('btn-export-html');
+  const _ep2 = document.getElementById('btn-export-pdf');
+  const _cr2 = document.getElementById('clear-result-btn');
+  if (_eh2) _eh2.style.display = 'none';
+  if (_ep2) _ep2.style.display = 'none';
+  if (_cr2) _cr2.style.display = 'none';
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeSidePanel(); });
+
+// ════════════════════════════════════════════════════════════════
+// LOSSLESS JSON ENGINE
+// ════════════════════════════════════════════════════════════════
+let _ljsonRaw = '';
+
+function buildLosslessJsonPrompt() {
+  const queryEl = document.getElementById('copy-content');
+  const baseQuery = generatedQuery || queryEl?.innerText?.trim() || queryEl?.textContent?.trim() || '';
+  if (!baseQuery || baseQuery.includes('No query generated yet')) return null;
+
+  return `${baseQuery}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OUTPUT FORMAT — STRICT LOSSLESS JSON ONLY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Return a SINGLE valid JSON object. No markdown. No prose. No code fences.
+Every data field MUST use this exact wrapper schema:
+
+{
+  "value": "<actual data>",
+  "source": "<source website or API>",
+  "as_of": "<DD-MMM-YYYY>",
+  "confidence": "High|Medium|Low",
+  "status": "Confirmed|Unavailable|Verify",
+  "freshness": "REAL_TIME|LATEST_AVAILABLE|LAST_SETTLEMENT"
+}
+
+TOP-LEVEL STRUCTURE:
+{
+  "report_meta": {
+    "asset_name": { ...field schema... },
+    "asset_type": { ...field schema... },
+    "generated_at": { ...field schema... },
+    "data_as_of": { ...field schema... }
+  },
+  "tabs": {
+    "OVERVIEW": {
+      "section_title": "Company Overview",
+      "fields": {
+        "Full Name": { ...field schema... },
+        "Ticker": { ...field schema... },
+        "Exchange": { ...field schema... },
+        "Sector": { ...field schema... },
+        "Industry": { ...field schema... },
+        "Market Cap": { ...field schema... },
+        "Founded": { ...field schema... },
+        "Headquarters": { ...field schema... }
+      }
+    },
+    "LIVE_DATA": {
+      "section_title": "Live Market Data",
+      "fields": {
+        "CMP": { ...field schema... },
+        "52W High": { ...field schema... },
+        "52W Low": { ...field schema... },
+        "Volume": { ...field schema... },
+        "Beta": { ...field schema... }
+      }
+    },
+    "VALUATION": {
+      "section_title": "Valuation Metrics",
+      "fields": { ... }
+    },
+    "FINANCIALS": {
+      "section_title": "Financial Performance",
+      "fields": { ... }
+    },
+    "VERDICT": {
+      "section_title": "AI Verdict",
+      "fields": {
+        "Overall Score": { ...field schema... },
+        "AI Recommendation": { "value": "Strong Buy|Buy|Hold|Sell|Strong Sell", ...field schema... },
+        "Risk Level": { ...field schema... },
+        "Entry Strategy": { ...field schema... },
+        "Target Price 12M": { ...field schema... }
+      }
+    }
+  }
+}
+
+RULES:
+- status "Unavailable" is a LAST RESORT. Exhaust official sources, aggregators, and market platforms first.
+- Freshness for stocks: REAL_TIME during market hours, LATEST_AVAILABLE at close.
+- Freshness for MFs: LATEST_AVAILABLE (T-1 or T-2 NAV is valid).
+- Do NOT add any text outside the JSON object.
+- Begin output with { and end with }`;
+}
+
+async function sendLosslessJson() {
+  const workerUrl = window._cfWorkerUrl || localStorage.getItem(CF_KEY) || '';
+
+  const prompt = buildLosslessJsonPrompt();
+  if (!prompt) { alert('⚠️ Generate AI Query first.'); return; }
+
+  const panel = document.getElementById('ljson-panel');
+  const content = document.getElementById('ljson-content');
+  panel.style.display = 'block';
+  content.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3)"><div style="font-size:24px;margin-bottom:8px">⏳</div><div style="font-size:13px">Generating detailed report…</div></div>';
+
+  // Stay on Input Form while lossless JSON streams — switchMain(2) fires on completion
+
+  _aiProgressStart();
+  _aiProgressSet(5, '🔌 Connecting…', 'ps1');
+
+  const finalUrl = workerUrl.replace(/\/+$/, '');
+  const model = localStorage.getItem('viltv_ai_model') || 'gemini-2.0-flash';
+  let rawJson = '';
+
+  if (window._streamAbort) window._streamAbort.abort();
+  window._streamAbort = new AbortController();
+
+  try {
+    _aiProgressSet(25, '🤖 Generating JSON…', 'ps3');
+
+    // Use load-balanced AI (Coworker → Gemini → OpenAI → Custom → Free — works without any API key)
+    await new Promise((resolve, reject) => {
+      _aiLoadBalancedQuery(
+        prompt,
+        model,
+        (chunk) => { rawJson += chunk; },
+        (full)  => { if (full) rawJson = full; _aiProgressSet(90, '📥 Parsing JSON…', 'ps4'); resolve(); },
+        (err)   => reject(new Error(err || 'AI generation failed'))
+      );
+    });
+
+    // Clean up JSON (remove markdown fences if any)
+    rawJson = rawJson.trim().replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
+    // Safety net: strip any leftover __AI__placeholder__AI__ strings even if the
+    // worker's mergeAiInsights didn't catch them (older deployed worker version).
+    rawJson = rawJson.replace(/"__AI__\w+__AI__"/g, '"No Data Available"');
+    // Safety net: correct USD→INR for India-Stock when older worker shipped wrong currency
+    if (answers.market && /india/i.test(String(answers.market))) {
+      rawJson = rawJson.replace(/"Currency":\s*"USD"/g, '"Currency":"INR"');
+    } else if (answers.market && /japan/i.test(String(answers.market))) {
+      rawJson = rawJson.replace(/"Currency":\s*"USD"/g, '"Currency":"JPY"');
+    }
+    _ljsonRaw = rawJson;
+
+    let parsed;
+    try { parsed = JSON.parse(rawJson); }
+    catch(e) {
+      content.innerHTML = '<div style="padding:16px;color:var(--red);font-size:12px">❌ JSON parse error: ' + e.message
+        + '<br><br><pre style="font-size:10px;white-space:pre-wrap;word-break:break-all;color:var(--text3);max-height:200px;overflow-y:auto">' + rawJson.slice(0,2000) + '</pre></div>';
+      _aiProgressStop(); return;
+    }
+
+    _aiProgressSet(100, '✅ Done!', 'ps5');
+    content.innerHTML = renderLjson(parsed);
+    setTimeout(_aiProgressStop, 1500);
+
+    // Jump to Report Output (panel 2) to show the rendered Lossless JSON result
+    switchMain(2);
+
+  } catch(e) {
+    _aiProgressStop();
+    if (e.name !== 'AbortError')
+      content.innerHTML = '<div style="padding:16px;color:var(--red);font-size:12px">❌ ' + (e.message || 'Request failed') + '</div>';
+  }
+}
+
+function renderLjson(data) {
+  const meta = data.report_meta || {};
+  const tabs = data.tabs || {};
+
+  function fieldVal(f) {
+    if (!f || typeof f !== 'object') return { val: String(f||'—'), source:'', asOf:'', conf:'', status:'', freshness:'' };
+    return { val: f.value||'—', source: f.source||'', asOf: f.as_of||'', conf: f.confidence||'', status: f.status||'', freshness: f.freshness||'' };
+  }
+  function confBadge(c) {
+    if (!c) return '';
+    const cls = /high/i.test(c)?'conf-high':/low/i.test(c)?'conf-low':'conf-med';
+    return `<span class="lj-badge ${cls}">${c}</span>`;
+  }
+  function statusBadge(s) {
+    if (!s) return '';
+    const cls = /confirmed/i.test(s)?'status-ok':/unavail/i.test(s)?'status-na':'status-warn';
+    return `<span class="lj-badge ${cls}">${s}</span>`;
+  }
+  function renderFields(fields) {
+    if (!fields || typeof fields !== 'object') return '';
+    return '<div class="lj-grid">'
+      + Object.entries(fields).map(([name, f]) => {
+          const {val, source, asOf, conf, status, freshness} = fieldVal(f);
+          return `<div class="lj-field">
+            <div class="lj-field-name">${name}</div>
+            <div class="lj-field-value">${val}</div>
+            <div class="lj-field-meta">${confBadge(conf)}${statusBadge(status)}${freshness?`<span class="lj-badge status-na">${freshness}</span>`:''}</div>
+            ${(source||asOf)?`<div class="lj-source">${source}${asOf?' · '+asOf:''}</div>`:''}
+          </div>`;
+        }).join('')
+      + '</div>';
+  }
+
+  const assetName = fieldVal(meta.asset_name).val;
+  const assetType = fieldVal(meta.asset_type).val;
+  const genAt = fieldVal(meta.generated_at).val;
+
+  const tabKeys = Object.keys(tabs);
+  const tabButtons = tabKeys.map((k,i) => `<button class="ljson-tab${i===0?' active':''}" onclick="switchLjTab('ljtab-${i}')">${tabs[k].section_title||k}</button>`).join('');
+  const tabPanels = tabKeys.map((k,i) => `<div class="ljson-panel${i===0?' active':''}" id="ljtab-${i}">
+    <div class="lj-section"><div class="lj-section-title">${tabs[k].section_title||k}</div>${renderFields(tabs[k].fields)}</div>
+  </div>`).join('');
+
+  return `<div class="ljson-wrap">
+    <div class="ljson-header">
+      <h2>${assetName} — Research Report</h2>
+      <div class="lj-meta">${assetType} · Generated ${genAt} · Lossless JSON v2</div>
+    </div>
+    <div class="ljson-tabs">${tabButtons}</div>
+    ${tabPanels}
+  </div>`;
+}
+
+function switchLjTab(id) {
+  document.querySelectorAll('.ljson-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ljson-tab').forEach(b => b.classList.remove('active'));
+  const panel = document.getElementById(id);
+  if (panel) panel.classList.add('active');
+  // find and activate the button
+  document.querySelectorAll('.ljson-tab').forEach((b,i) => {
+    if (id === 'ljtab-' + i) b.classList.add('active');
+  });
+}
+
+function exportLjsonHtml() {
+  const content = document.getElementById('ljson-content');
+  if (!content) return;
+  const style = [...document.styleSheets].map(s => {
+    try { return [...s.cssRules].map(r => r.cssText).join('\n'); } catch { return ''; }
+  }).join('\n');
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Research Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>body{background:#0f0f0f;color:#f0ede8;font-family:'DM Sans',sans-serif}:root{${getComputedStyle(document.documentElement).cssText}}${style}</style>
+</head><body>${content.innerHTML}</body></html>`;
+  const blob = new Blob([html], { type: 'text/html' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'research-report.html'; a.click();
+}
+
+function exportLjsonPdf() {
+  const content = document.getElementById('ljson-content');
+  if (!content) return;
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Research Report</title>
+<style>
+  body{font-family:Arial,sans-serif;background:#fff;color:#111;margin:20px}
+  .ljson-header{background:#c0390b;color:#fff;padding:14px 18px;border-radius:8px;margin-bottom:14px}
+  .ljson-tabs{display:none}
+  .ljson-panel{display:block!important}
+  .lj-field{border:1px solid #ddd;border-radius:6px;padding:8px;margin-bottom:6px;display:inline-block;width:200px;vertical-align:top;margin-right:6px}
+  .lj-field-name{font-size:9px;color:#666;text-transform:uppercase}
+  .lj-field-value{font-size:13px;font-weight:600;color:#111}
+  .lj-badge{font-size:8px;padding:1px 6px;border-radius:10px;border:1px solid #ccc}
+  .lj-source{font-size:9px;color:#888}
+  h2{color:#fff}
+  @media print{body{margin:0}}
+</style></head><body>${content.innerHTML}<script>window.print();window.close();<\/script></body></html>`);
+  w.document.close();
+}
+
+function copyLjsonRaw() {
+  if (!_ljsonRaw) return;
+  navigator.clipboard.writeText(_ljsonRaw).then(() => {
+    const btn = event.target; btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = '📋 JSON', 2000);
+  });
+}
+
+// ── Toggle paste section ──────────────────────────────────────────
+function togglePasteSection() {
+  const sec = document.getElementById('paste-collapse-section');
+  const btn = document.getElementById('paste-toggle-btn');
+  if (!sec) return;
+  const visible = sec.style.display !== 'none';
+  sec.style.display = visible ? 'none' : 'block';
+  btn.classList.toggle('active', !visible);
+}
+
+// ── Clear result panel ────────────────────────────────────────────
+function clearResult() {
+  const pa = document.getElementById('paste-area');
+  if (pa) pa.value = '';
+  const ro = document.getElementById('rendered-output');
+  if (ro) ro.innerHTML = `<div class="render-placeholder"><div class="icon">📊</div><h3>Report Will Appear Here</h3><p>Fill the <strong>Input Form</strong> and click <strong>🚀 Generate Report</strong>.</p></div>`;
+  document.getElementById('btn-export-html').style.display = 'none';
+  document.getElementById('btn-export-pdf').style.display = 'none';
+  document.getElementById('clear-result-btn').style.display = 'none';
+  window._autoGeminiHTML = '';
+  _ljsonRaw = '';
+}
+
+// ── Gamma AI Report — AI-generated visual presentation ───────────
+async function generateGammaReport() {
+  // Gather data sources (prefer structured JSON, then paste, then raw query)
+  const pasteVal  = document.getElementById('paste-area')?.value?.trim() || '';
+  const ljsonData = _ljsonRaw || '';
+  const baseQuery = generatedQuery || '';
+  if (!pasteVal && !ljsonData && !baseQuery) {
+    alert('⚠️ Please Generate Report first, then click ✨ Gamma Style.');
+    return;
+  }
+
+  const ticker    = answers.assetName || answers.market || document.getElementById('ticker-input')?.value?.trim() || 'Asset';
+  const assetType = answers.assetType || 'Investment';
+
+  // Build a compact data digest for the AI prompt
+  let dataDigest = '';
+  if (ljsonData) {
+    try {
+      const p = JSON.parse(ljsonData);
+      dataDigest = JSON.stringify(p, null, 2).substring(0, 12000);
+    } catch { dataDigest = ljsonData.substring(0, 12000); }
+  } else if (pasteVal) {
+    dataDigest = pasteVal.substring(0, 12000);
+  } else {
+    dataDigest = baseQuery.substring(0, 6000);
+  }
+
+  // Switch to Result tab + show progress
+  switchMain(2);
+  const gmBtn = document.getElementById('gamma-btn');
+  const statusPanel = document.getElementById('gamma-status-panel');
+  const statusText = document.getElementById('gamma-status-text');
+  const container = document.getElementById('rendered-output');
+  if (gmBtn) { gmBtn.disabled = true; gmBtn.textContent = '⏳ Generating…'; }
+  if (statusPanel) statusPanel.style.display = 'block';
+  container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:200px;color:#8b5cf6;font-size:13px;gap:10px"><span style="animation:gammaSpin 1.5s linear infinite;display:inline-block;font-size:24px">✨</span> VilfinTV AI is extracting tear-sheet data…</div>';
+
+  // ── PROMPT: ask for JSON ONLY (no HTML). Frontend renders the slides. ──
+  const prompt = `You are a senior equity-research analyst at Goldman Sachs.
+Extract the key data from the report below into a STRICT JSON object that the
+VilfinTV frontend will render into a Bloomberg-grade tear-sheet presentation.
+
+ASSET: ${ticker}
+TYPE:  ${assetType}
+
+REPORT DATA:
+${dataDigest}
+
+═══════════════════════════════════════════════════════════════
+RETURN ONLY THIS JSON SHAPE (start with { end with } — no markdown fences):
+═══════════════════════════════════════════════════════════════
+{
+  "asset": "Full company / asset name",
+  "ticker": "Symbol (e.g. RELIANCE.NS)",
+  "type": "Stock / ETF / MF / etc.",
+  "country": "India / US / Japan / ...",
+  "currency": "₹ / $ / ¥ / £ / €",
+  "verdict": "BUY | HOLD | SELL | ACCUMULATE | REDUCE | STRONG BUY",
+  "verdictReason": "One sentence (max 18 words) on why this verdict.",
+  "asOf": "DD MMM YYYY",
+  "tagline": "One-sentence elevator pitch on the company.",
+
+  "kpis": {
+    "Current Price":    {"value": "₹...", "trend": "pos|neg|neu"},
+    "Market Cap":       {"value": "₹... Cr", "trend": "neu"},
+    "P/E (TTM)":        {"value": "..", "trend": "neu"},
+    "P/B":              {"value": "..", "trend": "neu"},
+    "ROE":              {"value": "..%", "trend": "pos"},
+    "Dividend Yield":   {"value": "..%", "trend": "neu"},
+    "52W High":         {"value": "₹...", "trend": "neu"},
+    "52W Low":          {"value": "₹...", "trend": "neu"}
+  },
+
+  "returns": [
+    {"label": "1M",  "value": 0.0},
+    {"label": "3M",  "value": 0.0},
+    {"label": "6M",  "value": 0.0},
+    {"label": "1Y",  "value": 0.0},
+    {"label": "3Y",  "value": 0.0},
+    {"label": "5Y",  "value": 0.0}
+  ],
+
+  "ownership": {
+    "Promoter":      0.0,
+    "Institutional": 0.0,
+    "FII":           0.0,
+    "DII":           0.0,
+    "Public":        0.0
+  },
+
+  "peers": [
+    {"name": "Peer 1", "pe": 0.0, "pb": 0.0, "roe": 0.0, "mcap": "₹...", "verdict": "BUY|HOLD|SELL"},
+    {"name": "Peer 2", "pe": 0.0, "pb": 0.0, "roe": 0.0, "mcap": "₹...", "verdict": "BUY|HOLD|SELL"},
+    {"name": "Peer 3", "pe": 0.0, "pb": 0.0, "roe": 0.0, "mcap": "₹...", "verdict": "BUY|HOLD|SELL"}
+  ],
+
+  "financials": [
+    {"year": "FY24", "revenue": 0, "ebitda": 0, "pat": 0},
+    {"year": "FY25", "revenue": 0, "ebitda": 0, "pat": 0}
+  ],
+
+  "tailwinds": ["Tailwind 1 — one line.", "Tailwind 2 — one line.", "Tailwind 3 — one line."],
+  "headwinds": ["Headwind 1 — one line.", "Headwind 2 — one line.", "Headwind 3 — one line."],
+
+  "risks": [
+    {"name": "Risk 1", "level": "Low|Medium|High", "note": "One line."},
+    {"name": "Risk 2", "level": "Low|Medium|High", "note": "One line."},
+    {"name": "Risk 3", "level": "Low|Medium|High", "note": "One line."}
+  ],
+
+  "news": [
+    {"date": "DD MMM", "headline": "...", "source": "...", "sentiment": "pos|neg|neu"},
+    {"date": "DD MMM", "headline": "...", "source": "...", "sentiment": "pos|neg|neu"},
+    {"date": "DD MMM", "headline": "...", "source": "...", "sentiment": "pos|neg|neu"}
+  ],
+
+  "targets": {"6M": "₹...", "12M": "₹...", "3Y": "₹..."},
+  "allocation": {"Conservative": 0.0, "Moderate": 0.0, "Aggressive": 0.0},
+  "tax": {"STCG": "...", "LTCG": "...", "FEMA": "...", "Notes": "..."},
+  "thesis": "2-sentence investment thesis.",
+  "bestAction": "SIP | Lumpsum | Buy on Dip — one-sentence reason."
+}
+
+RULES:
+• Use ONLY values present in the report data. Missing → "N/A" (string) or 0 (number).
+• NEVER invent peer names, returns, or holdings.
+• Numeric fields (returns, ownership, financials, allocation) must be numbers — not strings.
+• Currency-prefixed string fields (KPIs, prices, targets, mcap) include the currency symbol.
+• Skip the markdown fence — start with { end with } only.`;
+
+  let aiJson = null;
+  try {
+    if (statusText) statusText.textContent = '🔌 Asking AI for tear-sheet data…';
+    let raw = '';
+    await new Promise((resolve, reject) => {
+      _aiLoadBalancedQuery(
+        prompt,
+        'gemini-2.0-flash',
+        (chunk) => { raw += chunk;
+          if (statusText) statusText.textContent = `✍️ Receiving data… ${raw.length.toLocaleString()} chars`; },
+        (full)  => { if (full) raw = full; resolve(); },
+        (err)   => reject(new Error(err || 'AI generation failed'))
+      );
+    });
+    // Strip markdown fences and isolate the {...} body
+    raw = raw.trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```\s*$/i,'').trim();
+    const i = raw.indexOf('{'), j = raw.lastIndexOf('}');
+    if (i < 0 || j < 0) throw new Error('AI did not return JSON.');
+    aiJson = JSON.parse(raw.slice(i, j + 1));
+  } catch (e) {
+    container.innerHTML = `<div style="padding:30px;text-align:center">
+      <div style="font-size:32px;margin-bottom:12px">❌</div>
+      <div style="color:#f87171;font-weight:700;margin-bottom:8px">Gamma report failed</div>
+      <div style="color:#94a3b8;font-size:12px">${e.message}</div>
+    </div>`;
+    if (gmBtn) { gmBtn.disabled = false; gmBtn.textContent = '✨ Gamma Style'; }
+    if (statusPanel) statusPanel.style.display = 'none';
+    return;
+  }
+
+  if (statusText) statusText.textContent = '🎨 Rendering Bloomberg tear-sheet…';
+
+  // ── BUILD THE HTML CLIENT-SIDE — 100% deterministic, no AI markup ──
+  const html = _gammaBuildHtml(aiJson, ticker, assetType);
+
+  // Auto-download
+  if (statusText) statusText.textContent = '📥 Saving file…';
+  const fname = `VilfinTV_Gamma_${(answers.assetName || ticker).replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.html`;
+  const blob = new Blob([html], { type: 'text/html' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = fname; a.style.display = 'none';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 2000);
+
+  container.innerHTML = `<div style="padding:28px;text-align:center;background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(168,85,247,.05));border-radius:12px;border:1px solid rgba(124,58,237,.2)">
+    <div style="font-size:36px;margin-bottom:10px">✅</div>
+    <div style="font-weight:700;color:#c4b5fd;margin-bottom:6px;font-size:14px">Gamma Style Report Downloaded!</div>
+    <div style="color:#64748b;font-size:12px">File: <code style="color:#a78bfa">${fname}</code></div>
+    <div style="color:#64748b;font-size:11px;margin-top:10px;line-height:1.6">
+      Charts are rendered via Chart.js · Open in any browser to view the tear sheet.<br>
+      <button onclick="window.open(URL.createObjectURL(new Blob([atob('${btoa(unescape(encodeURIComponent(html))).slice(0,0)}'+''], {type:'text/html'})))" style="display:none">preview</button>
+    </div>
+  </div>`;
+
+  if (gmBtn) { gmBtn.disabled = false; gmBtn.textContent = '✨ Gamma Style'; }
+  if (statusPanel) statusPanel.style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// GAMMA HTML TEMPLATE — Bloomberg-grade tear sheet via Reveal.js + Chart.js
+// Pure deterministic rendering — no AI markup interpretation.
+// ═══════════════════════════════════════════════════════════════════
+function _gammaBuildHtml(d, ticker, assetType) {
+  const _esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const _num = (v) => (typeof v === 'number' && isFinite(v)) ? v : 0;
+  const _trendCls = (t) => ({'pos':'pos','neg':'neg','neu':'neu'}[t] || '');
+  const _verdictBadge = (v) => {
+    const x = String(v||'').toUpperCase();
+    if (x.includes('STRONG BUY')) return 'badge-strong-buy';
+    if (x.includes('BUY') || x.includes('ACCUMULATE')) return 'badge-buy';
+    if (x.includes('SELL') || x.includes('REDUCE')) return 'badge-sell';
+    return 'badge-hold';
+  };
+
+  const asset    = d.asset    || ticker;
+  const sym      = d.ticker   || ticker;
+  const country  = d.country  || '';
+  const cur      = d.currency || '';
+  const asOf     = d.asOf     || new Date().toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'});
+  const verdict  = d.verdict  || 'HOLD';
+  const verdictReason = d.verdictReason || '';
+  const tagline  = d.tagline  || '';
+  const kpis     = d.kpis     || {};
+  const returns  = Array.isArray(d.returns) ? d.returns : [];
+  const ownership= d.ownership || {};
+  const peers    = Array.isArray(d.peers) ? d.peers : [];
+  const fins     = Array.isArray(d.financials) ? d.financials : [];
+  const tailwinds= Array.isArray(d.tailwinds) ? d.tailwinds : [];
+  const headwinds= Array.isArray(d.headwinds) ? d.headwinds : [];
+  const risks    = Array.isArray(d.risks) ? d.risks : [];
+  const news     = Array.isArray(d.news) ? d.news : [];
+  const targets  = d.targets  || {};
+  const alloc    = d.allocation || {};
+  const tax      = d.tax || {};
+  const thesis   = d.thesis || '';
+  const bestAction = d.bestAction || '';
+
+  const kpiCards = Object.entries(kpis).map(([k,v]) => {
+    const val = (typeof v === 'object') ? v.value : v;
+    const trend = (typeof v === 'object') ? v.trend : 'neu';
+    return `<div class="kpi"><div class="kpi-lbl">${_esc(k)}</div><div class="kpi-val ${_trendCls(trend)}">${_esc(val ?? 'N/A')}</div></div>`;
+  }).join('');
+
+  const peersTable = peers.length ? `
+    <table>
+      <thead><tr><th>Peer</th><th>P/E</th><th>P/B</th><th>ROE</th><th>Mkt Cap</th><th>Verdict</th></tr></thead>
+      <tbody>${peers.map(p => `
+        <tr>
+          <td><strong>${_esc(p.name)}</strong></td>
+          <td class="num">${_esc(_num(p.pe).toFixed(1))}</td>
+          <td class="num">${_esc(_num(p.pb).toFixed(1))}</td>
+          <td class="num">${_esc(_num(p.roe).toFixed(1))}%</td>
+          <td class="num">${_esc(p.mcap || '—')}</td>
+          <td><span class="badge ${_verdictBadge(p.verdict)}" style="font-size:10px;padding:2px 10px">${_esc(p.verdict || '—')}</span></td>
+        </tr>`).join('')}</tbody>
+    </table>` : '<p class="muted">Peer data not available in source report.</p>';
+
+  const newsList = news.length ? news.slice(0,8).map(n => `
+    <div class="news-row">
+      <span class="news-date">${_esc(n.date || '')}</span>
+      <span class="news-head">${_esc(n.headline || '')}</span>
+      <span class="news-src">${_esc(n.source || '')}</span>
+      <span class="dot ${_trendCls(n.sentiment)}"></span>
+    </div>`).join('') : '<p class="muted">No news items in source report.</p>';
+
+  const risksList = risks.length ? risks.map(r => `
+    <div class="risk-row">
+      <div class="risk-name">${_esc(r.name || 'Risk')}</div>
+      <div class="risk-lvl risk-${(r.level||'').toLowerCase()}">${_esc(r.level || 'N/A')}</div>
+      <div class="risk-note">${_esc(r.note || '')}</div>
+    </div>`).join('') : '<p class="muted">No risk factors in source report.</p>';
+
+  // Chart data JSON — embedded in script tag
+  const chartData = {
+    returns:   returns.map(r => ({ label: String(r.label||''), value: _num(r.value) })),
+    ownership: Object.entries(ownership).map(([k,v]) => ({ label: k, value: _num(v) })),
+    financials: fins.map(f => ({ year: String(f.year||''), revenue: _num(f.revenue), ebitda: _num(f.ebitda), pat: _num(f.pat) })),
+    peerPE:    peers.map(p => ({ name: String(p.name||''), pe: _num(p.pe) })),
+    allocation: Object.entries(alloc).map(([k,v]) => ({ label: k, value: _num(v) })),
+  };
+
+  const TEMPLATE = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${_esc(asset)} — Tear Sheet · VilfinTV</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#030814; --panel:#0a1830; --panel2:#0e1f3b; --border:#1e3a5c;
+  --text:#e2eeff; --text2:#8ea8c8; --text3:#506480;
+  --accent:#3b82f6; --accent2:#60a5fa; --accent3:#93c5fd;
+  --green:#10b981; --red:#ef4444; --amber:#f59e0b; --gold:#fbbf24;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:'Inter',sans-serif;color:var(--text)}
+.reveal{background:var(--bg)}
+.reveal section{text-align:left;padding:40px 60px;height:100%;box-sizing:border-box;display:flex;flex-direction:column}
+.reveal h1,.reveal h2{font-family:'Inter';font-weight:900;letter-spacing:-0.5px;margin:0;color:var(--text)}
+.num,.kpi-val{font-family:'JetBrains Mono',monospace;font-feature-settings:'tnum'}
+.muted{color:var(--text3);font-size:13px;font-style:italic}
+.pos{color:var(--green) !important}.neg{color:var(--red) !important}.neu{color:var(--gold) !important}
+
+.slide-header{display:flex;align-items:center;gap:14px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.slide-num-pill{font-family:'JetBrains Mono';font-size:11px;font-weight:700;color:var(--accent2);background:rgba(59,130,246,.12);padding:4px 12px;border-radius:6px;border:1px solid rgba(59,130,246,.3)}
+.slide-title{font-size:30px;font-weight:900;color:var(--text);letter-spacing:-0.5px;flex:1}
+
+.footer-bar{position:absolute;bottom:18px;left:60px;right:60px;display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:'JetBrains Mono';letter-spacing:.5px;text-transform:uppercase}
+
+.cover{justify-content:center;align-items:center;text-align:center;background:radial-gradient(circle at 50% 30%,rgba(59,130,246,.18),transparent 50%)}
+.cover .asset-name{font-size:64px;font-weight:900;letter-spacing:-1.5px;line-height:1;margin-bottom:14px}
+.cover .asset-sym{font-family:'JetBrains Mono';font-size:18px;color:var(--accent2);margin-bottom:8px;letter-spacing:1px}
+.cover .asset-tag{color:var(--text2);font-size:14px;max-width:680px;margin:8px auto 30px;line-height:1.6}
+.cover .pill-row{display:flex;gap:10px;justify-content:center;margin-bottom:30px;flex-wrap:wrap}
+.cover .pill{padding:7px 18px;background:rgba(59,130,246,.08);border:1px solid var(--border);border-radius:999px;font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.5px;text-transform:uppercase}
+.cover .as-of{color:var(--text3);font-size:12px;margin-top:14px;letter-spacing:1px;text-transform:uppercase}
+.cover .institutional{color:var(--text3);font-size:11px;margin-top:6px;letter-spacing:2px;text-transform:uppercase;font-weight:600}
+
+.badge{display:inline-block;padding:10px 30px;border-radius:999px;font-weight:900;font-size:22px;letter-spacing:1.5px;text-transform:uppercase}
+.badge-strong-buy{background:rgba(16,185,129,.18);color:var(--green);border:2px solid var(--green);box-shadow:0 0 24px rgba(16,185,129,.3)}
+.badge-buy{background:rgba(16,185,129,.14);color:var(--green);border:2px solid var(--green)}
+.badge-hold{background:rgba(245,158,11,.14);color:var(--amber);border:2px solid var(--amber)}
+.badge-sell{background:rgba(239,68,68,.14);color:var(--red);border:2px solid var(--red)}
+.verdict-reason{color:var(--text2);font-size:13px;margin-top:12px;font-style:italic}
+
+.two-col{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;flex:1;min-height:0}
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.kpi{background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.kpi-lbl{font-size:9.5px;font-weight:700;letter-spacing:1.2px;color:var(--text3);text-transform:uppercase;margin-bottom:6px}
+.kpi-val{font-size:20px;font-weight:700;color:var(--accent2);line-height:1.1}
+.chart-wrap{position:relative;height:100%;min-height:280px;background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:12px;padding:16px}
+.chart-wrap canvas{width:100%!important;height:100%!important}
+
+.card{background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-top:18px}
+.card h3{font-size:13px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{background:var(--panel2);padding:10px 14px;text-align:left;font-weight:700;color:var(--accent2);font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;border-bottom:1px solid var(--accent)}
+td{padding:9px 14px;border-bottom:1px solid var(--border);color:var(--text)}
+tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+
+.tw-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;flex:1}
+.tw-col{background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:12px;padding:18px}
+.tw-col h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
+.tw-col.tw-pos h3{color:var(--green)}.tw-col.tw-neg h3{color:var(--red)}
+.tw-col li{margin-bottom:10px;font-size:13px;color:var(--text2);line-height:1.6;list-style:none;padding-left:18px;position:relative}
+.tw-col.tw-pos li::before{content:'▲';position:absolute;left:0;color:var(--green);font-size:11px;top:3px}
+.tw-col.tw-neg li::before{content:'▼';position:absolute;left:0;color:var(--red);font-size:11px;top:3px}
+
+.news-row{display:grid;grid-template-columns:80px 1fr 120px 14px;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);align-items:center}
+.news-row:last-child{border-bottom:none}
+.news-date{font-family:'JetBrains Mono';font-size:11px;color:var(--text3)}
+.news-head{font-size:13px;color:var(--text);line-height:1.5}
+.news-src{font-size:10.5px;color:var(--accent2);text-align:right;text-transform:uppercase;letter-spacing:.5px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--text3)}
+.dot.pos{background:var(--green);box-shadow:0 0 8px rgba(16,185,129,.6)}
+.dot.neg{background:var(--red);box-shadow:0 0 8px rgba(239,68,68,.6)}
+.dot.neu{background:var(--gold);box-shadow:0 0 8px rgba(251,191,36,.6)}
+
+.risk-row{display:grid;grid-template-columns:160px 90px 1fr;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);align-items:center}
+.risk-row:last-child{border-bottom:none}
+.risk-name{font-weight:700;color:var(--text);font-size:13px}
+.risk-lvl{padding:4px 12px;border-radius:6px;font-size:10.5px;font-weight:700;text-transform:uppercase;text-align:center;letter-spacing:.5px}
+.risk-low{background:rgba(16,185,129,.14);color:var(--green);border:1px solid var(--green)}
+.risk-medium{background:rgba(245,158,11,.14);color:var(--amber);border:1px solid var(--amber)}
+.risk-high{background:rgba(239,68,68,.14);color:var(--red);border:1px solid var(--red)}
+.risk-note{color:var(--text2);font-size:12.5px;line-height:1.5}
+
+.target-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:24px}
+.target-card{background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}
+.target-card .horizon{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;font-weight:700;margin-bottom:8px}
+.target-card .price{font-family:'JetBrains Mono';font-size:28px;font-weight:700;color:var(--accent2)}
+
+.alloc-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+.alloc-cell{background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+.alloc-cell .lbl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-weight:700}
+.alloc-cell .val{font-family:'JetBrains Mono';font-size:24px;font-weight:700;color:var(--accent2);margin-top:6px}
+
+.thesis-block{background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:10px;padding:18px 22px;margin-top:20px;font-size:14px;color:var(--text);line-height:1.7;font-style:italic}
+.action-block{background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(59,130,246,.03));border:1px solid rgba(59,130,246,.4);border-radius:10px;padding:18px 22px;margin-top:14px;font-size:14px;color:var(--text);line-height:1.6}
+.action-block strong{color:var(--accent2);text-transform:uppercase;letter-spacing:.8px;font-size:11px;display:block;margin-bottom:6px}
+
+.tax-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:20px}
+.tax-cell{background:linear-gradient(135deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:10px;padding:14px 18px}
+.tax-cell .lbl{font-size:10.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-weight:700;margin-bottom:6px}
+.tax-cell .val{font-size:14px;color:var(--text);line-height:1.5}
+
+@media print{
+  body{background:#fff !important;color:#000 !important}
+  .reveal{background:#fff !important}
+  .reveal section{padding:24px 32px;page-break-after:always}
+  .pos,.neg,.neu{color:#000 !important}
+}
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+  <!-- Slide 1: Cover -->
+  <section class="cover">
+    <div class="asset-sym">${_esc(sym)}${country?' · '+_esc(country):''}</div>
+    <h1 class="asset-name">${_esc(asset)}</h1>
+    <div class="institutional">Institutional Equity Research</div>
+    <div class="asset-tag">${_esc(tagline)}</div>
+    <div class="pill-row">
+      <span class="pill">${_esc(d.type || assetType)}</span>
+      ${cur?'<span class="pill">'+_esc(cur)+'</span>':''}
+      ${asOf?'<span class="pill">'+_esc(asOf)+'</span>':''}
+    </div>
+    <div class="badge ${_verdictBadge(verdict)}">${_esc(verdict)}</div>
+    ${verdictReason?'<div class="verdict-reason">'+_esc(verdictReason)+'</div>':''}
+    <div class="footer-bar"><span>VilfinTV MultiScreener</span><span>${_esc(asOf)}</span></div>
+  </section>
+
+  <!-- Slide 2: KPI snapshot + Returns chart -->
+  <section>
+    <div class="slide-header">
+      <span class="slide-num-pill">02 / 07</span>
+      <h2 class="slide-title">Snapshot &amp; Returns</h2>
+    </div>
+    <div class="two-col">
+      <div class="chart-wrap"><canvas id="cReturns"></canvas></div>
+      <div class="kpi-grid">${kpiCards || '<p class="muted">No KPI data.</p>'}</div>
+    </div>
+    <div class="footer-bar"><span>${_esc(sym)} · ${_esc(d.type || assetType)} · VilfinTV</span><span>02 / 07</span></div>
+  </section>
+
+  <!-- Slide 3: Tailwinds vs Headwinds -->
+  <section>
+    <div class="slide-header">
+      <span class="slide-num-pill">03 / 07</span>
+      <h2 class="slide-title">Tailwinds &amp; Headwinds</h2>
+    </div>
+    <div class="tw-grid">
+      <div class="tw-col tw-pos">
+        <h3>Tailwinds</h3>
+        <ul>${(tailwinds.length?tailwinds:['Not provided in source.']).map(t=>'<li>'+_esc(t)+'</li>').join('')}</ul>
+      </div>
+      <div class="tw-col tw-neg">
+        <h3>Headwinds</h3>
+        <ul>${(headwinds.length?headwinds:['Not provided in source.']).map(t=>'<li>'+_esc(t)+'</li>').join('')}</ul>
+      </div>
+    </div>
+    <div class="footer-bar"><span>${_esc(sym)} · VilfinTV</span><span>03 / 07</span></div>
+  </section>
+
+  <!-- Slide 4: Financials chart + Ownership donut -->
+  <section>
+    <div class="slide-header">
+      <span class="slide-num-pill">04 / 07</span>
+      <h2 class="slide-title">Financials &amp; Ownership</h2>
+    </div>
+    <div class="two-col">
+      <div class="chart-wrap"><canvas id="cFinancials"></canvas></div>
+      <div class="chart-wrap"><canvas id="cOwnership"></canvas></div>
+    </div>
+    <div class="footer-bar"><span>${_esc(sym)} · VilfinTV</span><span>04 / 07</span></div>
+  </section>
+
+  <!-- Slide 5: Peer comparison -->
+  <section>
+    <div class="slide-header">
+      <span class="slide-num-pill">05 / 07</span>
+      <h2 class="slide-title">Peer Comparison</h2>
+    </div>
+    <div class="two-col">
+      <div class="chart-wrap"><canvas id="cPeerPE"></canvas></div>
+      <div class="card" style="margin-top:0">${peersTable}</div>
+    </div>
+    <div class="footer-bar"><span>${_esc(sym)} · VilfinTV</span><span>05 / 07</span></div>
+  </section>
+
+  <!-- Slide 6: News + Risk -->
+  <section>
+    <div class="slide-header">
+      <span class="slide-num-pill">06 / 07</span>
+      <h2 class="slide-title">News Pulse &amp; Risk Map</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:1.3fr .9fr;gap:18px;flex:1">
+      <div class="card" style="margin-top:0;overflow-y:auto">
+        <h3>Recent News</h3>${newsList}
+      </div>
+      <div class="card" style="margin-top:0;overflow-y:auto">
+        <h3>Risk Factors</h3>${risksList}
+      </div>
+    </div>
+    <div class="footer-bar"><span>${_esc(sym)} · VilfinTV</span><span>06 / 07</span></div>
+  </section>
+
+  <!-- Slide 7: Final verdict + targets + allocation + tax -->
+  <section>
+    <div class="slide-header">
+      <span class="slide-num-pill">07 / 07</span>
+      <h2 class="slide-title">Final Verdict &amp; Action Plan</h2>
+    </div>
+    <div style="text-align:center;margin-bottom:8px">
+      <div class="badge ${_verdictBadge(verdict)}">${_esc(verdict)}</div>
+    </div>
+    <div class="target-grid">
+      <div class="target-card"><div class="horizon">6-month target</div><div class="price">${_esc(targets['6M']||'—')}</div></div>
+      <div class="target-card"><div class="horizon">12-month target</div><div class="price">${_esc(targets['12M']||'—')}</div></div>
+      <div class="target-card"><div class="horizon">3-year target</div><div class="price">${_esc(targets['3Y']||'—')}</div></div>
+    </div>
+    <div class="alloc-bar">
+      <div class="alloc-cell"><div class="lbl">Conservative</div><div class="val">${_num(alloc.Conservative).toFixed(0)}%</div></div>
+      <div class="alloc-cell"><div class="lbl">Moderate</div><div class="val">${_num(alloc.Moderate).toFixed(0)}%</div></div>
+      <div class="alloc-cell"><div class="lbl">Aggressive</div><div class="val">${_num(alloc.Aggressive).toFixed(0)}%</div></div>
+    </div>
+    ${thesis?'<div class="thesis-block">'+_esc(thesis)+'</div>':''}
+    ${bestAction?'<div class="action-block"><strong>Best Action</strong>'+_esc(bestAction)+'</div>':''}
+    ${(tax.STCG||tax.LTCG||tax.Notes)?`<div class="tax-grid">
+      ${tax.STCG?'<div class="tax-cell"><div class="lbl">STCG</div><div class="val">'+_esc(tax.STCG)+'</div></div>':''}
+      ${tax.LTCG?'<div class="tax-cell"><div class="lbl">LTCG</div><div class="val">'+_esc(tax.LTCG)+'</div></div>':''}
+      ${tax.FEMA?'<div class="tax-cell"><div class="lbl">FEMA / NRI</div><div class="val">'+_esc(tax.FEMA)+'</div></div>':''}
+      ${tax.Notes?'<div class="tax-cell"><div class="lbl">Notes</div><div class="val">'+_esc(tax.Notes)+'</div></div>':''}
+    </div>`:''}
+    <div class="footer-bar"><span>${_esc(sym)} · VilfinTV · ${_esc(asOf)}</span><span>07 / 07</span></div>
+  </section>
+
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"><\/script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"><\/script>
+<script>
+(function(){
+  const D = ${JSON.stringify(chartData)};
+  if (typeof Chart === 'undefined') { setTimeout(arguments.callee, 200); return; }
+  Chart.defaults.color = '#8ea8c8';
+  Chart.defaults.borderColor = '#1e3a5c';
+  Chart.defaults.font.family = "'Inter',sans-serif";
+
+  // Returns waterfall
+  if (D.returns.length) {
+    new Chart(document.getElementById('cReturns'), {
+      type:'bar',
+      data:{
+        labels: D.returns.map(r=>r.label),
+        datasets:[{ data: D.returns.map(r=>r.value),
+          backgroundColor: D.returns.map(r=>r.value>=0?'rgba(16,185,129,.85)':'rgba(239,68,68,.85)'),
+          borderColor:    D.returns.map(r=>r.value>=0?'#10b981':'#ef4444'),
+          borderWidth:1, borderRadius:6 }]
+      },
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, title:{display:true,text:'Returns by horizon (%)',color:'#60a5fa',font:{weight:'700',size:12}}, tooltip:{callbacks:{label:(c)=>c.parsed.y.toFixed(2)+'%'}} },
+        scales:{ y:{ticks:{callback:(v)=>v+'%'},grid:{color:'rgba(30,58,92,.3)'}}, x:{grid:{display:false}} }
+      }
+    });
+  }
+  // Ownership doughnut
+  if (D.ownership.length) {
+    new Chart(document.getElementById('cOwnership'), {
+      type:'doughnut',
+      data:{ labels: D.ownership.map(o=>o.label),
+        datasets:[{ data: D.ownership.map(o=>o.value),
+          backgroundColor:['#3b82f6','#60a5fa','#93c5fd','#fbbf24','#10b981','#a855f7'], borderWidth:0 }]
+      },
+      options:{ responsive:true, maintainAspectRatio:false, cutout:'62%',
+        plugins:{ legend:{position:'right',labels:{boxWidth:10,font:{size:11}}}, title:{display:true,text:'Ownership pattern (%)',color:'#60a5fa',font:{weight:'700',size:12}} }
+      }
+    });
+  }
+  // Financials grouped bar
+  if (D.financials.length) {
+    new Chart(document.getElementById('cFinancials'), {
+      type:'bar',
+      data:{ labels: D.financials.map(f=>f.year),
+        datasets:[
+          { label:'Revenue', data: D.financials.map(f=>f.revenue), backgroundColor:'rgba(59,130,246,.85)', borderRadius:5 },
+          { label:'EBITDA',  data: D.financials.map(f=>f.ebitda),  backgroundColor:'rgba(96,165,250,.85)', borderRadius:5 },
+          { label:'PAT',     data: D.financials.map(f=>f.pat),     backgroundColor:'rgba(16,185,129,.85)', borderRadius:5 }
+        ]
+      },
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{position:'top',labels:{boxWidth:10,font:{size:11}}}, title:{display:true,text:'Financials trend',color:'#60a5fa',font:{weight:'700',size:12}} },
+        scales:{ y:{grid:{color:'rgba(30,58,92,.3)'}}, x:{grid:{display:false}} }
+      }
+    });
+  }
+  // Peer P/E horizontal bar
+  if (D.peerPE.length) {
+    new Chart(document.getElementById('cPeerPE'), {
+      type:'bar',
+      data:{ labels: D.peerPE.map(p=>p.name),
+        datasets:[{ data: D.peerPE.map(p=>p.pe),
+          backgroundColor:'rgba(59,130,246,.85)', borderColor:'#60a5fa', borderWidth:1, borderRadius:5 }]
+      },
+      options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, title:{display:true,text:'Peer P/E ratios',color:'#60a5fa',font:{weight:'700',size:12}} },
+        scales:{ x:{grid:{color:'rgba(30,58,92,.3)'}}, y:{grid:{display:false}} }
+      }
+    });
+  }
+
+  Reveal.initialize({hash:true,transition:'slide',controls:true,progress:true,center:false,width:1280,height:780,margin:0.04});
+})();
+<\/script>
+</body>
+</html>`;
+
+  return TEMPLATE;
+}
+
+// ── Mobile keyboard handler — keeps focused input visible above OS keyboard
+//    via three layers: (1) kb-open class on body so CSS expands drawer to
+//    100dvh, (2) scrollIntoView on the focused element after a short delay
+//    (browser needs time to resize viewport), (3) visualViewport listener
+//    as fallback for Android where focus events alone aren't reliable.
+(function() {
+  function isMobile() { return window.innerWidth <= 768; }
+  function isFormEl(el) {
+    if (!el) return false;
+    const t = el.tagName;
+    return t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT';
+  }
+  // Returns true if `el` (or any ancestor up to body) has position:fixed.
+  // scrollIntoView on elements inside fixed parents is unreliable (the page
+  // body scrolls behind the fixed element), so we skip in that case — the
+  // fixed parent itself sits above the keyboard via CSS dvh sizing.
+  function hasFixedAncestor(el) {
+    while (el && el !== document.body) {
+      const cs = window.getComputedStyle(el);
+      if (cs && (cs.position === 'fixed' || cs.position === 'sticky')) return true;
+      el = el.parentElement;
+    }
+    return false;
+  }
+  function bringIntoView(el) {
+    if (!el || !el.scrollIntoView) return;
+    if (hasFixedAncestor(el)) return; // fixed parents handle their own layout
+    // Wait for keyboard animation + viewport resize before scrolling.
+    setTimeout(() => {
+      try {
+        el.scrollIntoView({ behavior:'smooth', block:'center', inline:'nearest' });
+      } catch(_) { try { el.scrollIntoView(); } catch(__){} }
+    }, 280);
+  }
+  function onFocusIn(e) {
+    if (!isFormEl(e.target) || !isMobile()) return;
+    document.body.classList.add('kb-open');
+    bringIntoView(e.target);
+  }
+  function onFocusOut(e) {
+    if (!isFormEl(e.target)) return;
+    setTimeout(() => {
+      if (!isFormEl(document.activeElement)) {
+        document.body.classList.remove('kb-open');
+      }
+    }, 120);
+  }
+  document.addEventListener('focusin',  onFocusIn,  true);
+  document.addEventListener('focusout', onFocusOut, true);
+
+  // visualViewport: just toggle kb-open class; do NOT call scrollIntoView
+  // here (the focusin handler already did the right thing on user gesture
+  // and a second auto-scroll causes 'jumping' on Android).
+  if (window.visualViewport) {
+    let initialH = window.visualViewport.height;
+    window.visualViewport.addEventListener('resize', () => {
+      if (!isMobile()) return;
+      const cur = window.visualViewport.height;
+      if (cur > initialH) initialH = cur;
+      const shrunk = (initialH - cur) / initialH > 0.2;
+      document.body.classList.toggle('kb-open', shrunk);
+    });
+  }
+})();
+
+// ══════════════════════════════════════════════════════════════════════
+// CALENDAR WIDGET  — v2: accurate 2026 holidays + proper scroll
+// ══════════════════════════════════════════════════════════════════════
+(function() {
+  const LS_KEY = 'viltv_calendar_events';
+  let _calYear, _calMonth, _calCountry = 'IN', _calRegion = null;
+  let _calSelectedDate = null, _calEventColor = '#60a5fa';
+  let _calFirstDay = 0;           // 0 = Sunday, 1 = Monday
+  let _calShowHolidayLabels = true;
+  let _calHighlightWeekends = true;
+
+  function _calRestoreSettings() {
+    try {
+      var fd = localStorage.getItem('viltv_cal_firstday');
+      if (fd === '1') { _calFirstDay = 1; var b0 = document.getElementById('cal-fday-0'); var b1 = document.getElementById('cal-fday-1'); if (b0) b0.classList.remove('active'); if (b1) b1.classList.add('active'); }
+      var sl = localStorage.getItem('viltv_cal_showlabels');
+      if (sl === '0') { _calShowHolidayLabels = false; var c = document.getElementById('cal-opt-labels'); if (c) c.checked = false; }
+      var hw = localStorage.getItem('viltv_cal_weekends');
+      if (hw === '0') { _calHighlightWeekends = false; var c2 = document.getElementById('cal-opt-weekends'); if (c2) c2.checked = false; }
+      // Restore last-used country
+      var cc = localStorage.getItem('viltv_cal_country');
+      if (cc) {
+        _calCountry = cc;
+        document.querySelectorAll('.cal-country-btn').forEach(function(b) {
+          b.classList.toggle('active', (b.getAttribute('onclick') || '').includes("'"+cc+"'"));
+        });
+      }
+      // Restore last-used region
+      var rr = localStorage.getItem('viltv_cal_region');
+      if (rr && rr !== 'null') _calRegion = rr;
+    } catch(_) {}
+  }
+
+  window.calToggleSettings = function() {
+    var sp = document.getElementById('cal-settings-panel');
+    var gb = document.getElementById('cal-gear-btn');
+    if (!sp) return;
+    var open = !sp.classList.contains('open');
+    sp.classList.toggle('open', open);
+    if (gb) gb.classList.toggle('active', open);
+  };
+
+  window.calSetFirstDay = function(d) {
+    _calFirstDay = d;
+    try { localStorage.setItem('viltv_cal_firstday', d); } catch(_) {}
+    document.getElementById('cal-fday-0').classList.toggle('active', d === 0);
+    document.getElementById('cal-fday-1').classList.toggle('active', d === 1);
+    calRender();
+  };
+
+  window.calToggleHolidayLabels = function() {
+    var c = document.getElementById('cal-opt-labels');
+    _calShowHolidayLabels = c ? c.checked : true;
+    try { localStorage.setItem('viltv_cal_showlabels', _calShowHolidayLabels ? '1' : '0'); } catch(_) {}
+    calRender();
+  };
+
+  window.calToggleWeekends = function() {
+    var c = document.getElementById('cal-opt-weekends');
+    _calHighlightWeekends = c ? c.checked : true;
+    try { localStorage.setItem('viltv_cal_weekends', _calHighlightWeekends ? '1' : '0'); } catch(_) {}
+    calRender();
+  };
+
+  /* ── Holiday data ──────────────────────────────────────────────────
+     Keys are YYYY-MM-DD for year-specific dates (lunar/Islamic/Easter)
+     and *-MM-DD for fixed annual dates.  _calGetHoliday() checks the
+     exact date first, then falls back to the fixed MM-DD form.
+  ── */
+  const _CAL_HOLIDAYS = {
+    IN: {
+      national: {
+        // Fixed annual
+        '*-01-01':'New Year\'s Day',
+        '*-01-14':'Makar Sankranti / Lohri',
+        '*-01-26':'Republic Day',
+        '*-04-14':'Dr. Ambedkar Jayanti',
+        '*-05-01':'Labour Day',
+        '*-08-15':'Independence Day',
+        '*-10-02':'Gandhi Jayanti',
+        '*-11-14':'Children\'s Day',
+        '*-12-25':'Christmas',
+        // 2026 lunar/Islamic dates (approximate)
+        '2026-02-26':'Maha Shivratri',
+        '2026-03-13':'Holi',
+        '2026-03-29':'Gudi Padwa / Ugadi',
+        '2026-03-31':'Eid ul-Fitr',
+        '2026-04-03':'Good Friday',
+        '2026-04-06':'Ram Navami',
+        '2026-04-10':'Mahavir Jayanti',
+        '2026-05-23':'Buddha Purnima',
+        '2026-06-08':'Eid ul-Adha / Bakrid',
+        '2026-07-27':'Muharram',
+        '2026-08-22':'Ganesh Chaturthi',
+        '2026-09-04':'Onam (Thiruonam)',
+        '2026-09-16':'Milad un-Nabi',
+        '2026-10-04':'Dussehra / Vijaya Dashami',
+        '2026-10-20':'Diwali / Lakshmi Puja',
+        '2026-10-22':'Govardhan Puja',
+        '2026-10-23':'Bhai Dooj',
+        '2026-11-05':'Guru Nanak Jayanti',
+        // 2025 fallback
+        '2025-03-14':'Holi',
+        '2025-03-30':'Ram Navami',
+        '2025-03-31':'Eid ul-Fitr',
+        '2025-04-02':'Good Friday',
+        '2025-04-18':'Mahavir Jayanti',
+        '2025-05-12':'Buddha Purnima',
+        '2025-06-07':'Eid ul-Adha',
+        '2025-07-06':'Muharram',
+        '2025-08-16':'Janmashtami',
+        '2025-08-27':'Ganesh Chaturthi',
+        '2025-09-05':'Milad un-Nabi',
+        '2025-10-02':'Dussehra',
+        '2025-10-20':'Diwali',
+        '2025-11-05':'Guru Nanak Jayanti',
+      },
+      states: {
+        MH: {
+          '*-05-01':'Maharashtra Day',
+          '*-04-14':'Dr. Ambedkar Jayanti',
+          '2026-06-26':'Ashadhi Ekadashi',
+          '2025-07-02':'Ashadhi Ekadashi',
+        },
+        DL: {
+          '*-01-26':'Delhi Republic Day Parade',
+          '*-10-31':'Sardar Patel Jayanti',
+        },
+        KA: {
+          '*-11-01':'Karnataka Rajyotsava',
+          '*-04-14':'Ugadi / Ambedkar Jayanti',
+        },
+        TN: {
+          '*-01-14':'Pongal / Tamil New Year',
+          '*-04-14':'Tamil New Year (Vishu)',
+          '*-06-05':'Teacher\'s Day (Tamil Nadu)',
+        },
+        WB: {
+          '*-05-09':'Rabindra Jayanti',
+          '2026-10-04':'Maha Navami / Durga Puja',
+          '2025-10-02':'Maha Navami / Durga Puja',
+        },
+        GJ: {
+          '*-01-14':'Uttarayan',
+          '*-05-01':'Gujarat Day',
+        },
+        KL: {
+          '2026-09-04':'Onam (Thiruonam)',
+          '2025-09-05':'Onam (Thiruonam)',
+          '*-11-01':'Kerala Piravi',
+        },
+        AP: { '*-11-01':'AP Formation Day' },
+        UP: { '*-11-09':'UP Foundation Day' },
+        RJ: { '*-03-30':'Rajasthan Day' },
+        PB: {
+          '*-03-13':'Holla Mohalla',
+          '2026-11-05':'Guru Nanak Jayanti',
+          '2025-11-05':'Guru Nanak Jayanti',
+        },
+        HR: { '*-11-01':'Haryana Day' },
+        BR: { '*-03-22':'Bihar Day' },
+        OD: { '*-04-01':'Odisha Day' },
+        AS: { '*-04-15':'Bohag Bihu' },
+      }
+    },
+    US: {
+      national: {
+        '*-01-01':'New Year\'s Day',
+        '*-06-19':'Juneteenth',
+        '*-07-04':'Independence Day',
+        '*-11-11':'Veterans Day',
+        '*-12-25':'Christmas Day',
+        // 2026 moveable holidays
+        '2026-01-19':'Martin Luther King Jr. Day',
+        '2026-02-16':'Presidents\' Day',
+        '2026-04-03':'Good Friday',
+        '2026-05-25':'Memorial Day',
+        '2026-09-07':'Labor Day',
+        '2026-10-12':'Columbus Day',
+        '2026-11-26':'Thanksgiving Day',
+        // 2025 moveable
+        '2025-01-20':'Martin Luther King Jr. Day',
+        '2025-02-17':'Presidents\' Day',
+        '2025-04-18':'Good Friday',
+        '2025-05-26':'Memorial Day',
+        '2025-09-01':'Labor Day',
+        '2025-10-13':'Columbus Day',
+        '2025-11-27':'Thanksgiving Day',
+      },
+      states: {
+        CA: { '*-03-31':'Cesar Chavez Day' },
+        TX: { '*-03-02':'Texas Independence Day', '*-04-21':'San Jacinto Day', '*-06-19':'Emancipation Day' },
+        NY: { '*-02-12':'Lincoln\'s Birthday', '*-05-06':'Election Day (NY)' },
+        FL: { '*-04-26':'Confederate Memorial Day' },
+        WA: { '*-11-11':'Veterans Day (WA)' },
+        IL: { '2026-03-02':'Casimir Pulaski Day', '2025-03-03':'Casimir Pulaski Day' },
+        MA: { '*-04-21':'Patriots\' Day (approx)' },
+        HI: { '*-08-21':'Statehood Day', '*-03-26':'Prince Kuhio Day' },
+        AK: { '*-10-18':'Alaska Day', '*-03-30':'Seward\'s Day (approx)' },
+      }
+    },
+    GB: {
+      national: {
+        '*-01-01':'New Year\'s Day',
+        '*-12-25':'Christmas Day',
+        '*-12-26':'Boxing Day',
+        // 2026 dates
+        '2026-04-03':'Good Friday',
+        '2026-04-06':'Easter Monday',
+        '2026-05-04':'Early May Bank Holiday',
+        '2026-05-25':'Spring Bank Holiday',
+        '2026-08-31':'Summer Bank Holiday',
+        // 2025 dates
+        '2025-04-18':'Good Friday',
+        '2025-04-21':'Easter Monday',
+        '2025-05-05':'Early May Bank Holiday',
+        '2025-05-26':'Spring Bank Holiday',
+        '2025-08-25':'Summer Bank Holiday',
+      },
+      states: {
+        SCO: {
+          '*-01-02':'2nd January (Scotland)',
+          '2026-04-03':'Good Friday (Scotland)',
+          '2026-11-30':'St Andrew\'s Day',
+          '2025-11-30':'St Andrew\'s Day',
+        },
+        WAL: { '*-03-01':'St David\'s Day' },
+        NIR: { '*-03-17':'St Patrick\'s Day', '*-07-12':'Orangemen\'s Day' },
+      }
+    },
+    AE: {
+      national: {
+        '*-01-01':'New Year\'s Day',
+        '*-12-02':'UAE National Day',
+        '*-12-03':'Commemoration Day',
+        // 2026 Islamic dates (approximate)
+        '2026-03-30':'Arafat Day (Eid Al Adha eve)',
+        '2026-03-31':'Eid Al Fitr Day 1',
+        '2026-04-01':'Eid Al Fitr Day 2',
+        '2026-04-02':'Eid Al Fitr Day 3',
+        '2026-06-07':'Arafat Day',
+        '2026-06-08':'Eid Al Adha Day 1',
+        '2026-06-09':'Eid Al Adha Day 2',
+        '2026-06-10':'Eid Al Adha Day 3',
+        '2026-06-26':'Islamic New Year (Muharram 1)',
+        '2026-09-15':'Prophet\'s Birthday (Mawlid)',
+        // 2025 Islamic dates
+        '2025-03-30':'Eid Al Fitr Day 1',
+        '2025-06-06':'Eid Al Adha Day 1',
+        '2025-06-27':'Islamic New Year',
+        '2025-09-05':'Prophet\'s Birthday',
+      },
+      states: {}
+    },
+    JP: {
+      national: {
+        '*-01-01':'New Year\'s Day (Ganjitsu)',
+        '*-02-11':'National Foundation Day',
+        '*-02-23':'Emperor\'s Birthday',
+        '*-04-29':'Showa Day',
+        '*-05-03':'Constitution Memorial Day',
+        '*-05-04':'Greenery Day',
+        '*-05-05':'Children\'s Day',
+        '*-08-11':'Mountain Day',
+        '*-11-03':'Culture Day',
+        '*-11-23':'Labour Thanksgiving Day',
+        // Moveable (2026)
+        '2026-01-12':'Coming of Age Day',
+        '2026-03-20':'Vernal Equinox',
+        '2026-07-20':'Marine Day',
+        '2026-09-21':'Respect for the Aged Day',
+        '2026-09-23':'Autumnal Equinox',
+        '2026-10-12':'Sports Day',
+        // 2025
+        '2025-01-13':'Coming of Age Day',
+        '2025-03-20':'Vernal Equinox',
+        '2025-07-21':'Marine Day',
+        '2025-09-15':'Respect for the Aged Day',
+        '2025-09-23':'Autumnal Equinox',
+        '2025-10-13':'Sports Day',
+      },
+      states: {}
+    },
+    AU: {
+      national: {
+        '*-01-01':'New Year\'s Day',
+        '*-01-26':'Australia Day',
+        '*-04-25':'ANZAC Day',
+        '*-12-25':'Christmas Day',
+        '*-12-26':'Boxing Day',
+        // 2026 Easter
+        '2026-04-03':'Good Friday',
+        '2026-04-04':'Easter Saturday',
+        '2026-04-06':'Easter Monday',
+        '2025-04-18':'Good Friday',
+        '2025-04-19':'Easter Saturday',
+        '2025-04-21':'Easter Monday',
+      },
+      states: {
+        NSW: {
+          '2026-06-08':'Queen\'s Birthday (NSW)',
+          '2025-06-09':'Queen\'s Birthday (NSW)',
+          '*-08-04':'Bank Holiday (NSW)',
+        },
+        VIC: {
+          '2026-11-03':'Melbourne Cup Day',
+          '2025-11-04':'Melbourne Cup Day',
+          '2026-06-08':'Queen\'s Birthday (VIC)',
+        },
+        QLD: {
+          '2026-05-04':'Labour Day (QLD)',
+          '2025-05-05':'Labour Day (QLD)',
+          '2026-08-12':'Royal Queensland Show (Brisbane)',
+        },
+        WA: {
+          '2026-03-02':'Labour Day (WA)',
+          '2025-03-03':'Labour Day (WA)',
+          '2026-09-28':'Queen\'s Birthday (WA)',
+        },
+        SA: {
+          '2026-06-08':'Queen\'s Birthday (SA)',
+          '2026-10-05':'Labour Day (SA)',
+        },
+        TAS: {
+          '2026-02-09':'Royal Hobart Regatta',
+          '*-03-10':'Eight Hours Day (TAS)',
+        },
+      }
+    },
+    SG: {
+      national: {
+        '*-01-01':'New Year\'s Day',
+        '*-05-01':'Labour Day',
+        '*-08-09':'National Day',
+        '*-12-25':'Christmas Day',
+        '2026-03-31':'Eid ul-Fitr (Hari Raya Puasa)',
+        '2026-04-03':'Good Friday',
+        '2026-05-23':'Vesak Day',
+        '2026-06-08':'Hari Raya Haji',
+        '2026-10-20':'Deepavali',
+        '2025-03-31':'Eid ul-Fitr',
+        '2025-04-18':'Good Friday',
+        '2025-05-12':'Vesak Day',
+        '2025-06-07':'Hari Raya Haji',
+        '2025-10-20':'Deepavali',
+        // Chinese New Year (varies)
+        '2026-02-17':'Chinese New Year Day 1',
+        '2026-02-18':'Chinese New Year Day 2',
+        '2025-01-29':'Chinese New Year Day 1',
+        '2025-01-30':'Chinese New Year Day 2',
+      },
+      states: {}
+    },
+    DE: {
+      national: {
+        '*-01-01':'New Year\'s Day',
+        '*-05-01':'Labour Day',
+        '*-10-03':'German Unity Day',
+        '*-12-25':'Christmas Day',
+        '*-12-26':'2nd Day of Christmas',
+        '2026-04-03':'Good Friday',
+        '2026-04-06':'Easter Monday',
+        '2026-05-14':'Ascension Day',
+        '2026-05-25':'Whit Monday',
+        '2025-04-18':'Good Friday',
+        '2025-04-21':'Easter Monday',
+        '2025-05-29':'Ascension Day',
+        '2025-06-09':'Whit Monday',
+      },
+      states: {}
+    },
+  };
+
+  const _CAL_REGIONS = {
+    IN: [
+      {code:'MH',label:'🏙 Maharashtra'},{code:'DL',label:'🗺 Delhi'},
+      {code:'KA',label:'🌿 Karnataka'},{code:'TN',label:'🎵 Tamil Nadu'},
+      {code:'WB',label:'🐅 West Bengal'},{code:'GJ',label:'🦁 Gujarat'},
+      {code:'KL',label:'🌴 Kerala'},{code:'AP',label:'🌾 Andhra Pradesh'},
+      {code:'UP',label:'🏯 Uttar Pradesh'},{code:'RJ',label:'🏜 Rajasthan'},
+      {code:'PB',label:'🌾 Punjab'},{code:'HR',label:'🌻 Haryana'},
+      {code:'BR',label:'🏔 Bihar'},{code:'OD',label:'🌊 Odisha'},
+      {code:'AS',label:'🍃 Assam'},
+    ],
+    US: [
+      {code:'CA',label:'🌴 California'},{code:'TX',label:'🤠 Texas'},
+      {code:'NY',label:'🗽 New York'},{code:'FL',label:'☀️ Florida'},
+      {code:'WA',label:'🌲 Washington'},{code:'IL',label:'🏙 Illinois'},
+      {code:'MA',label:'🦞 Massachusetts'},{code:'HI',label:'🌺 Hawaii'},
+      {code:'AK',label:'🐻 Alaska'},
+    ],
+    GB: [
+      {code:'SCO',label:'🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland'},{code:'WAL',label:'🏴󠁧󠁢󠁷󠁬󠁳󠁿 Wales'},
+      {code:'NIR',label:'🇬🇧 N. Ireland'},
+    ],
+    AE: [], JP: [],
+    AU: [
+      {code:'NSW',label:'🦘 New South Wales'},{code:'VIC',label:'🏏 Victoria'},
+      {code:'QLD',label:'☀️ Queensland'},{code:'WA',label:'🌊 W. Australia'},
+      {code:'SA',label:'🍷 S. Australia'},{code:'TAS',label:'🌿 Tasmania'},
+    ],
+    SG: [], DE: [],
+  };
+
+  function _calLoadEvents() {
+    try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch(_) { return []; }
+  }
+  function _calSaveEvents(arr) {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(arr)); } catch(_) {}
+  }
+
+  /* Returns {label, type:'national'|'regional'} for a date, checking both
+     exact YYYY-MM-DD and wildcard *-MM-DD keys. Shows both national + regional
+     when they coincide on the same day. */
+  function _calGetHoliday(dateStr) {
+    const h = _CAL_HOLIDAYS[_calCountry] || {};
+    const md = '*-' + dateStr.slice(5); // '*-MM-DD'
+
+    // National: check exact date first, then wildcard
+    const natExact = h.national && h.national[dateStr];
+    const natFixed = h.national && h.national[md];
+    const national = natExact || natFixed || null;
+
+    // Regional: same
+    let regional = null;
+    if (_calRegion && h.states && h.states[_calRegion]) {
+      const s = h.states[_calRegion];
+      regional = s[dateStr] || s[md] || null;
+    }
+
+    if (national && regional) return {label: national + ' · ' + regional, type:'national'};
+    if (national) return {label: national, type:'national'};
+    if (regional) return {label: regional, type:'regional'};
+    return null;
+  }
+
+  function _calDateStr(y, m, d) {
+    return y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+  }
+
+  window.calendarInit = function() {
+    const now = new Date();
+    _calYear = now.getFullYear();
+    _calMonth = now.getMonth();
+    _calRestoreSettings();
+    calRenderRegions();
+    // Re-apply saved region active state after buttons are created
+    if (_calRegion) {
+      document.querySelectorAll('.cal-region-btn').forEach(function(b) {
+        var oc = b.getAttribute('onclick') || '';
+        b.classList.toggle('active', oc.includes("'"+_calRegion+"'"));
+      });
+    }
+    calRender();
+  };
+
+  window.calSetCountry = function(code) {
+    _calCountry = code;
+    _calRegion = null;
+    try { localStorage.setItem('viltv_cal_country', code); localStorage.removeItem('viltv_cal_region'); } catch(_) {}
+    document.querySelectorAll('.cal-country-btn').forEach(b =>
+      b.classList.toggle('active', b.getAttribute('onclick').includes("'"+code+"'"))
+    );
+    calRenderRegions();
+    calRender();
+  };
+
+  window.calRenderRegions = function() {
+    const strip = document.getElementById('cal-region-strip');
+    if (!strip) return;
+    const regions = _CAL_REGIONS[_calCountry] || [];
+    if (!regions.length) { strip.style.display = 'none'; return; }
+    strip.style.display = '';
+    strip.innerHTML =
+      '<button class="radio-preset-btn cal-region-btn active" onclick="calSetRegion(null)">All</button>' +
+      regions.map(r =>
+        `<button class="radio-preset-btn cal-region-btn" onclick="calSetRegion('${r.code}')">${r.label}</button>`
+      ).join('');
+    // Re-init drag scroll for the now-populated strip
+    if (typeof _initPresetDragScroll === 'function') _initPresetDragScroll();
+  };
+
+  window.calSetRegion = function(code) {
+    _calRegion = code;
+    try { localStorage.setItem('viltv_cal_region', code === null ? 'null' : code); } catch(_) {}
+    document.querySelectorAll('.cal-region-btn').forEach(b => {
+      const oc = b.getAttribute('onclick');
+      b.classList.toggle('active', code === null ? oc.includes('null') : oc.includes("'"+code+"'"));
+    });
+    calRender();
+  };
+
+  window.calNavPrev = function() { _calMonth--; if (_calMonth<0){_calMonth=11;_calYear--;} calRender(); };
+  window.calNavNext = function() { _calMonth++; if (_calMonth>11){_calMonth=0;_calYear++;} calRender(); };
+  window.calGoToday  = function() { const n=new Date(); _calYear=n.getFullYear(); _calMonth=n.getMonth(); calRender(); };
+
+  window.calRender = function() {
+    const lbl = document.getElementById('cal-month-label');
+    if (lbl) lbl.textContent = new Date(_calYear, _calMonth, 1)
+      .toLocaleString('default',{month:'long', year:'numeric'});
+    const grid = document.getElementById('cal-grid');
+    if (!grid) return;
+
+    // Update day-of-week header to match first-day setting
+    const dayNames = _calFirstDay === 1
+      ? ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+      : ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const hdrEl = document.querySelector('.cal-header-row');
+    if (hdrEl) hdrEl.innerHTML = dayNames.map(d=>`<span>${d}</span>`).join('');
+
+    const events    = _calLoadEvents();
+    const rawFirst  = new Date(_calYear, _calMonth, 1).getDay(); // 0=Sun
+    // Shift so the grid column matches the selected first day (0=Sun or 1=Mon)
+    const firstDay  = (_calFirstDay === 1) ? (rawFirst + 6) % 7 : rawFirst;
+    const daysInMon = new Date(_calYear, _calMonth+1, 0).getDate();
+    const today     = new Date();
+    const prevDays  = new Date(_calYear, _calMonth, 0).getDate();
+    const showLabels = _calShowHolidayLabels !== false;
+    const hlWeekends = _calHighlightWeekends !== false;
+
+    let html = '';
+    // leading blanks (prev month tail)
+    for (let i = firstDay-1; i >= 0; i--)
+      html += `<div class="cal-cell cal-other-month"><span class="cal-cell-date">${prevDays-i}</span></div>`;
+    // current month days
+    for (let d = 1; d <= daysInMon; d++) {
+      const ds = _calDateStr(_calYear, _calMonth, d);
+      const dow = new Date(_calYear, _calMonth, d).getDay(); // 0=Sun,6=Sat
+      const isWeekend = (dow === 0 || dow === 6);
+      const isToday = today.getFullYear()===_calYear && today.getMonth()===_calMonth && today.getDate()===d;
+      const isSel   = _calSelectedDate === ds;
+      const holiday = _calGetHoliday(ds);
+      const dayEvts = events.filter(e => e.date === ds);
+      let cls = 'cal-cell';
+      if (isToday) cls += ' cal-today';
+      if (isSel)   cls += ' cal-selected';
+      if (hlWeekends && isWeekend) cls += ' cal-weekend';
+      if (holiday && holiday.type==='national') cls += ' cal-holiday-nat';
+      if (holiday && holiday.type==='regional') cls += ' cal-holiday-reg';
+      let inner = `<span class="cal-cell-date">${d}</span>`;
+      if (showLabels && holiday) inner += `<span class="cal-holiday-label${holiday.type==='regional'?' regional':''}">${holiday.label}</span>`;
+      if (dayEvts.length)
+        inner += '<div class="cal-dots-row">' +
+          dayEvts.map(e=>`<span class="cal-event-dot" style="background:${e.color||'#60a5fa'}" title="${e.title}"></span>`).join('') +
+          '</div>';
+      html += `<div class="${cls}" onclick="calSelectDate('${ds}')">${inner}</div>`;
+    }
+    // trailing blanks
+    const total = firstDay + daysInMon;
+    const trail = total % 7 === 0 ? 0 : 7 - (total % 7);
+    for (let i = 1; i <= trail; i++)
+      html += `<div class="cal-cell cal-other-month"><span class="cal-cell-date">${i}</span></div>`;
+    grid.innerHTML = html;
+  };
+
+  window.calSelectDate = function(ds) {
+    _calSelectedDate = ds;
+    calRender();
+    const form  = document.getElementById('cal-event-form');
+    const title = document.getElementById('cal-event-form-title');
+    if (form) {
+      const d = new Date(ds + 'T00:00:00');
+      const label = d.toLocaleDateString('default',{weekday:'short',month:'short',day:'numeric'});
+      if (title) title.textContent = 'Add Event — ' + label;
+      const inp = document.getElementById('cal-event-input');
+      if (inp) inp.value = '';
+      form.style.display = 'block';
+    }
+  };
+
+  window.calPickColor = function(btn) {
+    document.querySelectorAll('.cal-color-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    _calEventColor = btn.getAttribute('data-color');
+  };
+
+  window.calSaveEvent = function() {
+    const inp   = document.getElementById('cal-event-input');
+    const title = inp ? inp.value.trim() : '';
+    if (!title || !_calSelectedDate) return;
+    const events = _calLoadEvents();
+    events.push({id: Date.now(), date: _calSelectedDate, title, color: _calEventColor});
+    _calSaveEvents(events);
+    calRender();
+    calCloseForm();
+  };
+
+  window.calCloseForm = function() {
+    const form = document.getElementById('cal-event-form');
+    if (form) form.style.display = 'none';
+    _calSelectedDate = null;
+    calRender();
+  };
+})();
+
+// ══════════════════════════════════════════════════════════════════════
+// NOTES WIDGET
+// ══════════════════════════════════════════════════════════════════════
+(function() {
+  const LS_KEY = 'viltv_notes';
+  let _notesCat = 'all', _notesEditId = null, _notesEditColor = '#1e3a5c';
+  const _CAT_LABELS = {work:'💼 Work', ideas:'💡 Ideas', personal:'🏠 Personal', health:'❤️ Health'};
+
+  function _notesLoad() {
+    try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch(_) { return []; }
+  }
+  function _notesSave(arr) {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(arr)); } catch(_) {}
+  }
+
+  window.notesInit = function() { notesRender(); };
+
+  window.notesSetCat = function(cat) {
+    _notesCat = cat;
+    document.querySelectorAll('.notes-cat-btn').forEach(b => {
+      const oc = b.getAttribute('onclick');
+      b.classList.toggle('active', oc.includes("'"+cat+"'"));
+    });
+    notesRender();
+  };
+
+  window.notesRender = function() {
+    const grid = document.getElementById('notes-grid');
+    if (!grid) return;
+    const search = (document.getElementById('notes-search') || {}).value || '';
+    let notes = _notesLoad();
+    // filter by category
+    if (_notesCat === 'pinned') notes = notes.filter(n => n.pinned);
+    else if (_notesCat !== 'all') notes = notes.filter(n => n.category === _notesCat);
+    // filter by search
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      notes = notes.filter(n => (n.title||'').toLowerCase().includes(q) || (n.body||'').toLowerCase().includes(q));
+    }
+    // Sort pinned first then by ts desc
+    notes.sort((a,b) => (b.pinned?1:0)-(a.pinned?1:0) || (b.ts||0)-(a.ts||0));
+    if (!notes.length) {
+      grid.innerHTML = '<div class="notes-empty">No notes yet.<br>Tap <strong>+ New</strong> to create one.</div>';
+      return;
+    }
+    grid.innerHTML = notes.map(n => {
+      const preview = (n.body||'').replace(/\n/g,' ').slice(0,80);
+      const date = n.ts ? new Date(n.ts).toLocaleDateString('default',{month:'short',day:'numeric'}) : '';
+      const catLabel = _CAT_LABELS[n.category] || n.category || '';
+      return `<div class="note-card" style="background:${n.color||'#080e1a'}" onclick="notesOpenEdit('${n.id}')">
+        ${n.pinned ? '<span class="note-pin-icon">📌</span>' : ''}
+        <button class="note-delete-btn" onclick="event.stopPropagation();notesDelete('${n.id}')" title="Delete">✕</button>
+        <div class="note-card-title" style="margin-top:${n.pinned?'14px':'0'}">${_esc(n.title||'Untitled')}</div>
+        <div class="note-card-preview">${_esc(preview)}</div>
+        <div class="note-card-footer">
+          <span class="note-cat-badge">${catLabel}</span>
+          <span class="note-date">${date}</span>
+        </div>
+      </div>`;
+    }).join('');
+  };
+
+  function _esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  window.notesNewNote = function() {
+    _notesEditId = null;
+    _notesEditColor = '#1e3a5c';
+    const t = document.getElementById('notes-edit-title');
+    const b = document.getElementById('notes-edit-body');
+    const c = document.getElementById('notes-edit-cat');
+    const p = document.getElementById('notes-edit-pin');
+    if (t) t.value = '';
+    if (b) b.value = '';
+    if (c) c.value = 'work';
+    if (p) p.checked = false;
+    document.querySelectorAll('.notes-color-btn').forEach((btn,i) => btn.classList.toggle('active', i===0));
+    const ov = document.getElementById('notes-overlay');
+    if (ov) ov.style.display = 'flex';
+  };
+
+  window.notesOpenEdit = function(id) {
+    const notes = _notesLoad();
+    const n = notes.find(x => String(x.id) === String(id));
+    if (!n) return;
+    _notesEditId = id;
+    _notesEditColor = n.color || '#1e3a5c';
+    const t = document.getElementById('notes-edit-title');
+    const b = document.getElementById('notes-edit-body');
+    const c = document.getElementById('notes-edit-cat');
+    const p = document.getElementById('notes-edit-pin');
+    if (t) t.value = n.title || '';
+    if (b) b.value = n.body || '';
+    if (c) c.value = n.category || 'work';
+    if (p) p.checked = !!n.pinned;
+    document.querySelectorAll('.notes-color-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-color') === _notesEditColor);
+    });
+    const ov = document.getElementById('notes-overlay');
+    if (ov) ov.style.display = 'flex';
+  };
+
+  window.notesPickColor = function(btn) {
+    document.querySelectorAll('.notes-color-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    _notesEditColor = btn.getAttribute('data-color');
+  };
+
+  window.notesSaveEdit = function() {
+    const title = (document.getElementById('notes-edit-title') || {}).value || '';
+    const body  = (document.getElementById('notes-edit-body') || {}).value || '';
+    const category = (document.getElementById('notes-edit-cat') || {}).value || 'work';
+    const pinned = !!(document.getElementById('notes-edit-pin') || {}).checked;
+    let notes = _notesLoad();
+    if (_notesEditId) {
+      notes = notes.map(n => String(n.id) === String(_notesEditId) ? {...n, title, body, category, pinned, color:_notesEditColor, ts:Date.now()} : n);
+    } else {
+      notes.unshift({id: Date.now(), title, body, category, pinned, color:_notesEditColor, ts:Date.now()});
+    }
+    _notesSave(notes);
+    notesCancelEdit();
+    notesRender();
+  };
+
+  window.notesCancelEdit = function() {
+    const ov = document.getElementById('notes-overlay');
+    if (ov) ov.style.display = 'none';
+    _notesEditId = null;
+  };
+
+  window.notesDelete = function(id) {
+    let notes = _notesLoad();
+    notes = notes.filter(n => String(n.id) !== String(id));
+    _notesSave(notes);
+    notesRender();
+  };
+})();
+
+// ══════════════════════════════════════════════════════════════════════
+// CALCULATOR WIDGET
+// ══════════════════════════════════════════════════════════════════════
+(function() {
+  let _calcExpr = '', _calcMode = 'basic', _calcHistOpen = false;
+  const _calcHistory = [];
+
+  function _calcDisplay() {
+    const exprEl = document.getElementById('calc-expr');
+    const resEl  = document.getElementById('calc-result');
+    if (exprEl) exprEl.textContent = _calcExpr;
+    if (resEl) {
+      if (_calcExpr) {
+        try {
+          const val = _calcEval(_calcExpr);
+          resEl.textContent = isFinite(val) ? _calcFmt(val) : 'Error';
+        } catch(_) { resEl.textContent = _calcExpr ? '…' : '0'; }
+      } else { resEl.textContent = '0'; }
+    }
+  }
+
+  function _calcFmt(n) {
+    if (Math.abs(n) > 1e15 || (Math.abs(n) < 1e-10 && n !== 0)) return n.toExponential(6);
+    const s = String(parseFloat(n.toPrecision(12)));
+    return s;
+  }
+
+  function _calcEval(expr) {
+    const s = expr
+      .replace(/÷/g, '/')
+      .replace(/×/g, '*')
+      .replace(/−/g, '-')
+      .replace(/π/g, String(Math.PI))
+      .replace(/e(?![0-9])/g, String(Math.E))
+      .replace(/%/g, '/100');
+    // eslint-disable-next-line no-new-func
+    return Function('"use strict"; return (' + s + ')')();
+  }
+
+  window.calcInit = function() {
+    document.addEventListener('keydown', function(e) {
+      if (document.getElementById('rb-panel-calc') && document.getElementById('rb-panel-calc').style.display !== 'none') {
+        if (e.key >= '0' && e.key <= '9') calcInsert(e.key);
+        else if (e.key === '+') calcInsert('+');
+        else if (e.key === '-') calcInsert('−');
+        else if (e.key === '*') calcInsert('×');
+        else if (e.key === '/') { e.preventDefault(); calcInsert('÷'); }
+        else if (e.key === '.') calcInsert('.');
+        else if (e.key === 'Enter' || e.key === '=') calcEquals();
+        else if (e.key === 'Escape') calcClear();
+        else if (e.key === 'Backspace') calcBackspace();
+        else if (e.key === '(') calcInsert('(');
+        else if (e.key === ')') calcInsert(')');
+        else if (e.key === '%') calcInsert('%');
+      }
+    });
+    _calcDisplay();
+  };
+
+  window.calcInsert = function(ch) { _calcExpr += ch; _calcDisplay(); };
+  window.calcClear = function() { _calcExpr = ''; _calcDisplay(); };
+  window.calcBackspace = function() { _calcExpr = _calcExpr.slice(0,-1); _calcDisplay(); };
+  window.calcToggleSign = function() {
+    if (!_calcExpr) return;
+    if (_calcExpr.startsWith('-(')) {
+      _calcExpr = _calcExpr.slice(2, -1);
+    } else {
+      _calcExpr = '-(' + _calcExpr + ')';
+    }
+    _calcDisplay();
+  };
+
+  window.calcFn = function(fn) {
+    if (!_calcExpr) return;
+    const ops = {sin:'Math.sin(', cos:'Math.cos(', tan:'Math.tan(', log:'Math.log10(', sqrt:'Math.sqrt('};
+    if (fn === 'sq') { _calcExpr = '(' + _calcExpr + ')**2'; }
+    else if (ops[fn]) { _calcExpr = ops[fn] + _calcExpr + ')'; }
+    _calcDisplay();
+  };
+
+  window.calcEquals = function() {
+    if (!_calcExpr) return;
+    try {
+      const val = _calcEval(_calcExpr);
+      const result = isFinite(val) ? _calcFmt(val) : 'Error';
+      _calcHistory.unshift({expr: _calcExpr, val: result});
+      if (_calcHistory.length > 10) _calcHistory.pop();
+      _calcRenderHistory();
+      const exprEl = document.getElementById('calc-expr');
+      if (exprEl) exprEl.textContent = _calcExpr + ' =';
+      _calcExpr = result === 'Error' ? '' : result;
+      _calcDisplay();
+      if (exprEl) exprEl.textContent = (exprEl.textContent || '').split('=')[0].trim() + ' =';
+    } catch(_) {
+      const resEl = document.getElementById('calc-result');
+      if (resEl) resEl.textContent = 'Error';
+    }
+  };
+
+  window.calcSetMode = function(mode) {
+    _calcMode = mode;
+    document.getElementById('calc-mode-basic').classList.toggle('active', mode==='basic');
+    document.getElementById('calc-mode-sci').classList.toggle('active', mode==='sci');
+    const row = document.getElementById('calc-sci-row');
+    if (row) row.classList.toggle('visible', mode==='sci');
+  };
+
+  window.calcToggleHistory = function() {
+    _calcHistOpen = !_calcHistOpen;
+    const list = document.getElementById('calc-history-list');
+    const arrow = document.getElementById('calc-history-arrow');
+    if (list) list.classList.toggle('open', _calcHistOpen);
+    if (arrow) arrow.textContent = _calcHistOpen ? '▲' : '▼';
+  };
+
+  function _calcRenderHistory() {
+    const list = document.getElementById('calc-history-list');
+    if (!list) return;
+    if (!_calcHistory.length) { list.innerHTML = '<div style="font-size:10px;color:#475569;padding:4px 6px">No history yet</div>'; return; }
+    list.innerHTML = _calcHistory.map(h =>
+      `<div class="calc-history-item" onclick="calcInsert('${h.val.replace(/'/g,"\\'")}')">
+        <span class="calc-history-expr">${h.expr}</span>
+        <span class="calc-history-val">${h.val}</span>
+      </div>`
+    ).join('');
+  }
+})();
+
+// ══════════════════════════════════════════════════════════════════════
+// WORLD CLOCK WIDGET
+// ══════════════════════════════════════════════════════════════════════
+(function() {
+  const LS_KEY = 'viltv_worldclock_cities';
+  let _wcTimer = null, _wcSearchTimer = null;
+
+  const _WC_DEFAULTS = [
+    {city:'Mumbai',     country:'India',     timezone:'Asia/Kolkata',       flag:'🇮🇳'},
+    {city:'New York',   country:'USA',       timezone:'America/New_York',   flag:'🇺🇸'},
+    {city:'London',     country:'UK',        timezone:'Europe/London',      flag:'🇬🇧'},
+    {city:'Dubai',      country:'UAE',       timezone:'Asia/Dubai',         flag:'🇦🇪'},
+    {city:'Tokyo',      country:'Japan',     timezone:'Asia/Tokyo',         flag:'🇯🇵'},
+    {city:'Sydney',     country:'Australia', timezone:'Australia/Sydney',   flag:'🇦🇺'},
+  ];
+
+  const _WC_BULK = {
+    IN: [{city:'Mumbai',country:'India',timezone:'Asia/Kolkata',flag:'🇮🇳'},{city:'Delhi',country:'India',timezone:'Asia/Kolkata',flag:'🇮🇳'},{city:'Bangalore',country:'India',timezone:'Asia/Kolkata',flag:'🇮🇳'}],
+    US: [{city:'New York',country:'USA',timezone:'America/New_York',flag:'🇺🇸'},{city:'Los Angeles',country:'USA',timezone:'America/Los_Angeles',flag:'🇺🇸'},{city:'Chicago',country:'USA',timezone:'America/Chicago',flag:'🇺🇸'}],
+    GB: [{city:'London',country:'UK',timezone:'Europe/London',flag:'🇬🇧'},{city:'Edinburgh',country:'UK',timezone:'Europe/London',flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿'}],
+    AE: [{city:'Dubai',country:'UAE',timezone:'Asia/Dubai',flag:'🇦🇪'},{city:'Abu Dhabi',country:'UAE',timezone:'Asia/Dubai',flag:'🇦🇪'}],
+    JP: [{city:'Tokyo',country:'Japan',timezone:'Asia/Tokyo',flag:'🇯🇵'},{city:'Osaka',country:'Japan',timezone:'Asia/Tokyo',flag:'🇯🇵'}],
+    SG: [{city:'Singapore',country:'Singapore',timezone:'Asia/Singapore',flag:'🇸🇬'}],
+    AU: [{city:'Sydney',country:'Australia',timezone:'Australia/Sydney',flag:'🇦🇺'},{city:'Melbourne',country:'Australia',timezone:'Australia/Melbourne',flag:'🇦🇺'}],
+    DE: [{city:'Berlin',country:'Germany',timezone:'Europe/Berlin',flag:'🇩🇪'},{city:'Munich',country:'Germany',timezone:'Europe/Berlin',flag:'🇩🇪'}],
+    FR: [{city:'Paris',country:'France',timezone:'Europe/Paris',flag:'🇫🇷'}],
+  };
+
+  function _wcLoad() {
+    try { const d = JSON.parse(localStorage.getItem(LS_KEY)); return Array.isArray(d) ? d : null; } catch(_) { return null; }
+  }
+  function _wcSave(arr) { try { localStorage.setItem(LS_KEY, JSON.stringify(arr)); } catch(_) {} }
+
+  function _wcGetTime(tz) {
+    return new Intl.DateTimeFormat('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:tz}).format(new Date());
+  }
+  function _wcGetDate(tz) {
+    return new Intl.DateTimeFormat('en-GB', {weekday:'short',month:'short',day:'numeric',timeZone:tz}).format(new Date());
+  }
+  function _wcGetOffset(tz) {
+    const d = new Date();
+    const local = d.getTime();
+    const utcMs = local + d.getTimezoneOffset()*60000;
+    const tzStr = new Intl.DateTimeFormat('en-US',{timeZone:tz,timeZoneName:'short'}).formatToParts(d).find(p=>p.type==='timeZoneName');
+    return tzStr ? tzStr.value : '';
+  }
+
+  window.worldclockInit = function() {
+    let cities = _wcLoad();
+    if (!cities) { cities = _WC_DEFAULTS; _wcSave(cities); }
+    _wcRender(cities);
+    if (_wcTimer) clearInterval(_wcTimer);
+    _wcTimer = setInterval(() => {
+      const cities = _wcLoad() || _WC_DEFAULTS;
+      document.querySelectorAll('.wc-card').forEach((card, i) => {
+        const c = cities[i];
+        if (!c) return;
+        const timeEl = card.querySelector('.wc-card-time');
+        const dateEl = card.querySelector('.wc-card-date');
+        if (timeEl) timeEl.textContent = _wcGetTime(c.timezone);
+        if (dateEl) dateEl.textContent = _wcGetDate(c.timezone);
+      });
+      // Update local time bar
+      const local = document.getElementById('wc-local-time');
+      if (local) {
+        const now = new Date();
+        local.textContent = now.toLocaleTimeString() + ' — ' + now.toLocaleDateString('default',{weekday:'short',month:'short',day:'numeric'});
+      }
+    }, 1000);
+    // init local time
+    const local = document.getElementById('wc-local-time');
+    if (local) {
+      const now = new Date();
+      local.textContent = now.toLocaleTimeString() + ' — ' + now.toLocaleDateString('default',{weekday:'short',month:'short',day:'numeric'});
+    }
+  };
+
+  function _wcRender(cities) {
+    const container = document.getElementById('wc-cards-container');
+    if (!container) return;
+    if (!cities || !cities.length) {
+      container.innerHTML = '<div class="radio-no-data">No cities added. Use + Add City.</div>';
+      return;
+    }
+    container.innerHTML = cities.map((c, i) =>
+      `<div class="wc-card">
+        <div class="wc-card-flag">${c.flag || '🌐'}</div>
+        <div class="wc-card-info">
+          <div class="wc-card-city">${c.city}</div>
+          <div class="wc-card-country">${c.country}</div>
+          <div class="wc-card-utc">${_wcGetOffset(c.timezone)}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="wc-card-time">${_wcGetTime(c.timezone)}</div>
+          <div class="wc-card-date">${_wcGetDate(c.timezone)}</div>
+        </div>
+        <button class="wc-remove-btn" onclick="wcRemove(${i})" title="Remove">✕</button>
+      </div>`
+    ).join('');
+  }
+
+  window.wcRemove = function(i) {
+    let cities = _wcLoad() || [];
+    cities.splice(i, 1);
+    _wcSave(cities);
+    _wcRender(cities);
+  };
+
+  window.wcBulkAdd = function(country) {
+    let cities = _wcLoad() || [];
+    const toAdd = _WC_BULK[country] || [];
+    toAdd.forEach(c => {
+      if (!cities.find(x => x.city === c.city)) cities.push(c);
+    });
+    _wcSave(cities);
+    _wcRender(cities);
+  };
+
+  window.wcOpenAddModal = function() {
+    const m = document.getElementById('wc-add-modal');
+    if (m) { m.style.display = 'flex'; const inp = document.getElementById('wc-search-input'); if (inp) { inp.value = ''; inp.focus(); } }
+    document.getElementById('wc-search-results').innerHTML = '';
+  };
+  window.wcCloseAddModal = function() {
+    const m = document.getElementById('wc-add-modal');
+    if (m) m.style.display = 'none';
+  };
+
+  window.wcSearchCity = function(q) {
+    clearTimeout(_wcSearchTimer);
+    const res = document.getElementById('wc-search-results');
+    if (!q || q.length < 2) { if (res) res.innerHTML = ''; return; }
+    if (res) res.innerHTML = '<div class="wc-result-item">Searching…</div>';
+    _wcSearchTimer = setTimeout(async () => {
+      try {
+        const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=6&q=' + encodeURIComponent(q);
+        const data = await fetch(url, {headers:{'Accept-Language':'en'}}).then(r=>r.json());
+        if (!res) return;
+        if (!data.length) { res.innerHTML = '<div class="wc-result-item">No results</div>'; return; }
+        res.innerHTML = data.map(item => {
+          const parts = (item.display_name||'').split(',');
+          const city = parts[0].trim();
+          const country = parts[parts.length-1].trim();
+          const lat = parseFloat(item.lat), lon = parseFloat(item.lon);
+          return `<div class="wc-result-item" onclick="wcAddFromNominatim('${city.replace(/'/g,"\\'")}','${country.replace(/'/g,"\\'")}',${lat},${lon})">
+            <div>${city}</div>
+            <div class="wc-result-tz">${item.display_name}</div>
+          </div>`;
+        }).join('');
+      } catch(e) {
+        if (res) res.innerHTML = '<div class="wc-result-item">Search failed</div>';
+      }
+    }, 500);
+  };
+
+  window.wcAddFromNominatim = async function(city, country, lat, lon) {
+    try {
+      const tzUrl = `https://timeapi.io/api/timezone/coordinate?latitude=${lat}&longitude=${lon}`;
+      let tz = 'UTC';
+      try {
+        const tzData = await fetch(tzUrl).then(r=>r.json());
+        tz = tzData.timeZone || 'UTC';
+      } catch(_) {
+        // Fallback: estimate timezone from longitude
+        const offset = Math.round(lon / 15);
+        tz = 'Etc/GMT' + (offset >= 0 ? '-' + offset : '+' + Math.abs(offset));
+      }
+      const flag = _wcCountryToFlag(country);
+      let cities = _wcLoad() || [];
+      if (!cities.find(c => c.city === city)) {
+        cities.push({city, country, timezone: tz, flag});
+        _wcSave(cities);
+        _wcRender(cities);
+      }
+      wcCloseAddModal();
+    } catch(e) {
+      console.warn('wcAddFromNominatim error:', e);
+    }
+  };
+
+  function _wcCountryToFlag(country) {
+    const map = {'India':'🇮🇳','United States':'🇺🇸','United Kingdom':'🇬🇧','UAE':'🇦🇪','Japan':'🇯🇵','Australia':'🇦🇺','Germany':'🇩🇪','France':'🇫🇷','Singapore':'🇸🇬','China':'🇨🇳','Brazil':'🇧🇷','Canada':'🇨🇦'};
+    for (const [k,v] of Object.entries(map)) { if (country.toLowerCase().includes(k.toLowerCase())) return v; }
+    return '🌐';
+  }
+})();
+
+// ══════════════════════════════════════════════════════════════════════
+// WEATHER WIDGET
+// ══════════════════════════════════════════════════════════════════════
+(function() {
+  const LS_KEY      = 'viltv_weather_saved';
+  const LS_LAST_KEY = 'viltv_weather_last_city';
+  let _weatherCountry = null;
+
+  const _WMO_ICONS = {
+    0:'☀️',1:'🌤',2:'⛅',3:'☁️',
+    45:'🌫',48:'🌫',
+    51:'🌦',53:'🌦',55:'🌧',
+    61:'🌧',63:'🌧',65:'🌧',
+    71:'🌨',73:'🌨',75:'❄️',
+    80:'🌦',81:'🌧',82:'⛈',
+    85:'🌨',86:'❄️',
+    95:'⛈',96:'⛈',99:'⛈',
+  };
+  const _WMO_DESC = {
+    0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',
+    45:'Fog',48:'Icy fog',
+    51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',
+    61:'Light rain',63:'Rain',65:'Heavy rain',
+    71:'Light snow',73:'Snow',75:'Heavy snow',
+    80:'Showers',81:'Rain showers',82:'Violent showers',
+    85:'Snow showers',86:'Heavy snow showers',
+    95:'Thunderstorm',96:'Thunderstorm+hail',99:'Severe thunderstorm',
+  };
+
+  const _WEATHER_STATES = {
+    IN: ['Mumbai','Delhi','Bangalore','Hyderabad','Chennai','Kolkata','Jaipur','Ahmedabad','Pune','Surat'],
+    US: ['New York','Los Angeles','Chicago','Houston','Phoenix','Philadelphia','San Antonio','San Diego','Dallas','Seattle'],
+    GB: ['London','Birmingham','Manchester','Glasgow','Liverpool','Leeds','Sheffield','Edinburgh','Bristol','Cardiff'],
+    AE: ['Dubai','Abu Dhabi','Sharjah','Ajman','Ras al-Khaimah'],
+    JP: ['Tokyo','Osaka','Yokohama','Nagoya','Sapporo','Fukuoka','Kyoto','Kobe','Hiroshima'],
+    AU: ['Sydney','Melbourne','Brisbane','Perth','Adelaide','Canberra','Darwin','Hobart'],
+    DE: ['Berlin','Hamburg','Munich','Cologne','Frankfurt','Stuttgart','Düsseldorf'],
+  };
+
+  function _weatherLoadSaved() {
+    try { const d = JSON.parse(localStorage.getItem(LS_KEY)); return Array.isArray(d) ? d : []; } catch(_) { return []; }
+  }
+  function _weatherSaveSaved(arr) { try { localStorage.setItem(LS_KEY, JSON.stringify(arr)); } catch(_) {} }
+
+  window.weatherInit = function() {
+    _weatherRenderSaved();
+    // Auto-load last viewed city on panel open
+    try {
+      var last = JSON.parse(localStorage.getItem(LS_LAST_KEY));
+      if (last && last.city && last.lat && last.lon) {
+        _weatherFetchAndRender(last.city, last.country || '', last.lat, last.lon);
+      }
+    } catch(_) {}
+  };
+
+  window.weatherSetCountry = function(code) {
+    _weatherCountry = code;
+    document.querySelectorAll('.weather-country-btn').forEach(b => {
+      b.classList.toggle('active', b.getAttribute('onclick').includes("'"+code+"'"));
+    });
+    const stateWrap = document.getElementById('weather-state-strip-wrap');
+    const stateStrip = document.getElementById('weather-state-strip');
+    const states = _WEATHER_STATES[code] || [];
+    if (states.length && stateStrip) {
+      stateStrip.innerHTML = states.map(s => `<button class="radio-preset-btn" onclick="weatherSearchCity('${s.replace(/'/g,"\\'")}','${code}')">${s}</button>`).join('');
+      if (stateWrap) stateWrap.style.display = '';
+    } else {
+      if (stateWrap) stateWrap.style.display = 'none';
+    }
+  };
+
+  window.weatherSearch = async function() {
+    const inp = document.getElementById('weather-search-input');
+    const q = inp ? inp.value.trim() : '';
+    if (!q) return;
+    await weatherSearchCity(q, null);
+  };
+
+  window.weatherSearchCity = async function(city, country) {
+    _weatherShowStatus('Searching…');
+    try {
+      const qc = city + (country ? ', ' + country : '');
+      const geoUrl = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(qc);
+      const geo = await fetch(geoUrl, {headers:{'Accept-Language':'en'}}).then(r=>r.json());
+      if (!geo || !geo.length) { _weatherShowStatus('City not found. Try a different name.'); return; }
+      const lat = parseFloat(geo[0].lat), lon = parseFloat(geo[0].lon);
+      const parts = (geo[0].display_name||'').split(',');
+      const cityName = parts[0].trim();
+      const countryName = parts[parts.length-1].trim();
+      await _weatherFetchAndRender(cityName, countryName, lat, lon);
+    } catch(e) {
+      _weatherShowStatus('Failed to load weather. Please try again.');
+    }
+  };
+
+  window.weatherGeolocate = function() {
+    if (!navigator.geolocation) { _weatherShowStatus('Geolocation not supported.'); return; }
+    _weatherShowStatus('Getting your location…');
+    navigator.geolocation.getCurrentPosition(async pos => {
+      const lat = pos.coords.latitude, lon = pos.coords.longitude;
+      try {
+        const revUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+        const rev = await fetch(revUrl, {headers:{'Accept-Language':'en'}}).then(r=>r.json());
+        const city = rev.address.city || rev.address.town || rev.address.village || 'My Location';
+        const country = rev.address.country || '';
+        await _weatherFetchAndRender(city, country, lat, lon);
+      } catch(_) { await _weatherFetchAndRender('My Location','',lat,lon); }
+    }, () => _weatherShowStatus('Location access denied.'));
+  };
+
+  async function _weatherFetchAndRender(city, country, lat, lon) {
+    _weatherShowStatus('Loading weather data…');
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=7`;
+      const data = await fetch(url).then(r=>r.json());
+      const c = data.current || {};
+      const d = data.daily || {};
+      const wcode = c.weather_code || 0;
+      const icon = _WMO_ICONS[wcode] || '🌡';
+      const desc = _WMO_DESC[wcode] || 'Unknown';
+      const temp = Math.round(c.temperature_2m || 0);
+      const feels = Math.round(c.apparent_temperature || 0);
+      const hum = Math.round(c.relative_humidity_2m || 0);
+      const wind = Math.round(c.wind_speed_10m || 0);
+      const uv = Math.round(c.uv_index || 0);
+
+      const empty = document.getElementById('weather-empty');
+      if (empty) empty.style.display = 'none';
+
+      // Persist last-viewed city for auto-load on next panel open
+      try { localStorage.setItem(LS_LAST_KEY, JSON.stringify({city, country, lat, lon})); } catch(_) {}
+
+      const card = document.getElementById('weather-current-card');
+      if (card) {
+        card.style.display = 'block';
+        card.innerHTML = `
+          <div class="weather-city-name">${city}</div>
+          <div class="weather-country">${country}</div>
+          <div class="weather-main-row">
+            <div class="weather-icon-big">${icon}</div>
+            <div>
+              <div class="weather-temp">${temp}°C</div>
+              <div class="weather-condition">${desc}</div>
+            </div>
+          </div>
+          <div class="weather-stats">
+            <div class="weather-stat"><span class="weather-stat-label">Feels Like</span><span class="weather-stat-val">${feels}°C</span></div>
+            <div class="weather-stat"><span class="weather-stat-label">Humidity</span><span class="weather-stat-val">${hum}%</span></div>
+            <div class="weather-stat"><span class="weather-stat-label">Wind</span><span class="weather-stat-val">${wind} km/h</span></div>
+            <div class="weather-stat"><span class="weather-stat-label">UV Index</span><span class="weather-stat-val">${uv}</span></div>
+          </div>
+          <button onclick="weatherSaveLocation('${city.replace(/'/g,"\\'")}','${country.replace(/'/g,"\\'")}',${lat},${lon})" style="margin-top:10px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.3);color:#60a5fa;padding:5px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">📌 Save Location</button>
+        `;
+      }
+
+      // 7-day forecast
+      const forecast = document.getElementById('weather-forecast-strip');
+      if (forecast && d.time) {
+        forecast.style.display = 'flex';
+        const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        forecast.innerHTML = d.time.map((t,i) => {
+          const dt = new Date(t + 'T12:00:00');
+          const dayName = i===0 ? 'Today' : days[dt.getDay()];
+          const fc_icon = _WMO_ICONS[d.weather_code[i]] || '🌡';
+          const max = Math.round(d.temperature_2m_max[i]);
+          const min = Math.round(d.temperature_2m_min[i]);
+          return `<div class="weather-fc-card">
+            <div class="weather-fc-day">${dayName}</div>
+            <div class="weather-fc-icon">${fc_icon}</div>
+            <div class="weather-fc-max">${max}°</div>
+            <div class="weather-fc-min">${min}°</div>
+          </div>`;
+        }).join('');
+      }
+    } catch(e) {
+      _weatherShowStatus('Weather data unavailable. Please try again.');
+    }
+  }
+
+  function _weatherShowStatus(msg) {
+    const empty = document.getElementById('weather-empty');
+    const card = document.getElementById('weather-current-card');
+    const fc = document.getElementById('weather-forecast-strip');
+    if (card) card.style.display = 'none';
+    if (fc) fc.style.display = 'none';
+    if (empty) { empty.style.display = 'block'; empty.textContent = msg; }
+  }
+
+  window.weatherSaveLocation = function(city, country, lat, lon) {
+    let saved = _weatherLoadSaved();
+    if (saved.find(s => s.city === city)) return;
+    if (saved.length >= 5) saved.shift();
+    saved.push({city, country, lat, lon});
+    _weatherSaveSaved(saved);
+    _weatherRenderSaved();
+  };
+
+  function _weatherRenderSaved() {
+    const strip = document.getElementById('weather-saved-strip');
+    if (!strip) return;
+    const saved = _weatherLoadSaved();
+    if (!saved.length) { strip.innerHTML = ''; return; }
+    strip.innerHTML = saved.map(s =>
+      `<button class="weather-saved-pill" onclick="weatherSearchCity('${s.city.replace(/'/g,"\\'")}','${s.country.replace(/'/g,"\\'")}')">
+        ${s.city}
+        <span class="weather-saved-pill-x" onclick="event.stopPropagation();weatherRemoveSaved('${s.city.replace(/'/g,"\\'")}')">✕</span>
+      </button>`
+    ).join('');
+  }
+
+  window.weatherRemoveSaved = function(city) {
+    let saved = _weatherLoadSaved();
+    saved = saved.filter(s => s.city !== city);
+    _weatherSaveSaved(saved);
+    _weatherRenderSaved();
+  };
+})();
+
+
+/* ═══════════════════════════════════════════════════════════
+   FEEDBACK MODAL — Logic
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+  var _fbType   = 'bug';
+  var _fbRating = 0;
+
+  function initChips(groupId) {
+    var chips = document.querySelectorAll('#' + groupId + ' .fb-chip');
+    chips.forEach(function(c){
+      c.addEventListener('click', function(){
+        chips.forEach(function(x){ x.classList.remove('active'); });
+        c.classList.add('active');
+      });
+    });
+  }
+  initChips('fb-bug-severity');
+  initChips('fb-feat-priority');
+  initChips('fb-fb-recommend');
+
+  window.fbStarHover = function(v){
+    document.querySelectorAll('#fb-stars .fb-star').forEach(function(s){
+      s.classList.toggle('lit', v > 0 ? parseInt(s.dataset.v) <= v : parseInt(s.dataset.v) <= _fbRating);
+    });
+  };
+  window.fbStarPick = function(v){ _fbRating = v; fbStarHover(v); };
+
+  window.openFeedbackModal = function(type){
+    _fbType = type; _fbRating = 0;
+    document.querySelectorAll('#fb-stars .fb-star').forEach(function(s){ s.classList.remove('lit'); });
+    var cfg = {
+      bug:      {icon:'🐞', cls:'fb-icon-bug',     title:'Report a Bug',      sub:'Help us identify and fix issues on vilfintv.com',   lbl:'Send Bug Report'},
+      feature:  {icon:'💡', cls:'fb-icon-feature',  title:'Request a Feature', sub:'Tell us what you would like to see added',           lbl:'Send Request'},
+      feedback: {icon:'💬', cls:'fb-icon-feedback', title:'Share Feedback',    sub:'Your thoughts help us improve the platform',         lbl:'Send Feedback'}
+    };
+    var c = cfg[type] || cfg.bug;
+    var ic = document.getElementById('fb-icon');
+    ic.textContent = c.icon; ic.className = 'fb-icon ' + c.cls;
+    document.getElementById('fb-title').textContent    = c.title;
+    document.getElementById('fb-subtitle').textContent = c.sub;
+    document.getElementById('fb-send-label').textContent = c.lbl;
+    ['bug','feature','feedback'].forEach(function(t){
+      document.getElementById('fb-body-' + t).style.display = (t === type) ? 'block' : 'none';
+    });
+    var ov = document.getElementById('fb-overlay');
+    ov.style.display = 'flex';
+    requestAnimationFrame(function(){ ov.classList.add('show'); });
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeFeedbackModal = function(){
+    var ov = document.getElementById('fb-overlay');
+    ov.classList.remove('show');
+    setTimeout(function(){ ov.style.display = 'none'; }, 280);
+    document.body.style.overflow = '';
+  };
+
+  function getChip(id){ var a = document.querySelector('#'+id+' .fb-chip.active'); return a ? a.dataset.val : ''; }
+
+  function buildAIQuery(type, f){
+    var ts    = new Date().toISOString();
+    var theme = (localStorage.getItem('viltv_theme') || 'default').toUpperCase();
+    var ua    = navigator.userAgent;
+    if (type === 'bug') {
+      return ['# Bug Report — vilfintv.com','**Submitted:** '+ts,'**Theme:** '+theme,'',
+        '## Issue Details','| Field | Value |','|-------|-------|',
+        '| Page / Feature | '+(f.page||'N/A')+' |','| Severity | '+(f.severity||'Medium')+' |',
+        '| Device | '+(f.device||'Unknown')+' |','| Browser | '+(f.browser||'Unknown')+' |','',
+        '## What Went Wrong',f.desc||'(not provided)','',
+        '## Expected Behaviour',f.expected||'(not provided)','',
+        '## Additional Context',f.extra||'(none)','',
+        '---','## 🤖 AI Fix Query (Claude / Copilot / VS Code)','```',
+        'You are reviewing a bug report for vilfintv.com (GitHub Pages, static HTML/CSS/JS).',
+        'The user reports the following issue on the "'+( f.page||'unknown')+'" page/feature:','',
+        'PROBLEM: '+(f.desc||'').replace(/\n/g,' '),
+        'EXPECTED: '+(f.expected||'').replace(/\n/g,' '),
+        'SEVERITY: '+(f.severity||'Medium'),
+        'DEVICE: '+(f.device||'')+' / '+(f.browser||''),'',
+        'Please investigate the relevant code in the repository, identify the root cause,',
+        'and provide a specific fix with the file name, line reference, and corrected code.',
+        '```','','**User Agent:** `'+ua+'`'].join('\n');
+    }
+    if (type === 'feature') {
+      return ['# Feature Request — vilfintv.com','**Submitted:** '+ts,'**Theme:** '+theme,'',
+        '## Request Details','| Field | Value |','|-------|-------|',
+        '| Area | '+(f.area||'N/A')+' |','| Priority | '+(f.priority||'Nice to have')+' |','',
+        '## Feature Description',f.desc||'(not provided)','',
+        '## Use Case / Why Needed',f.why||'(not provided)','',
+        '## References / Examples',f.ref||'(none)','',
+        '---','## 🤖 AI Implementation Query (Claude / Copilot / VS Code)','```',
+        'You are helping implement a new feature for vilfintv.com (GitHub Pages, static HTML/CSS/JS).',
+        'Feature area: "'+( f.area||'unknown')+'"','',
+        'FEATURE: '+(f.desc||'').replace(/\n/g,' '),
+        'USE CASE: '+(f.why||'').replace(/\n/g,' '),
+        'PRIORITY: '+(f.priority||'Nice to have'),'',
+        'Please suggest an implementation plan: which files to modify, the approach,',
+        'and provide the key code changes. Keep within static HTML/CSS/JS constraints.',
+        '```'].join('\n');
+    }
+    var stars = '★'.repeat(_fbRating)+'☆'.repeat(5-_fbRating);
+    return ['# User Feedback — vilfintv.com','**Submitted:** '+ts,'**Theme:** '+theme,'',
+      '## Summary','| Field | Value |','|-------|-------|',
+      '| Rating | '+stars+' ('+_fbRating+'/5) |',
+      '| Would Recommend | '+(f.recommend||'N/A')+' |','',
+      '## What They Like',f.like||'(not provided)','',
+      '## What Can Be Improved',f.improve||'(not provided)','',
+      '## Additional Comments',f.other||'(none)','',
+      '---','## 🤖 Improvement Query (Claude / Copilot / VS Code)','```',
+      'You are reviewing user feedback for vilfintv.com. Rating: '+_fbRating+'/5.','',
+      'LIKES: '+(f.like||'').replace(/\n/g,' '),
+      'IMPROVE: '+(f.improve||'').replace(/\n/g,' '),'',
+      'Suggest the top 3 actionable improvements for the codebase.',
+      '```'].join('\n');
+  }
+
+  function collectFields(type){
+    if (type==='bug') return {
+      page:f('fb-bug-page'), desc:f('fb-bug-desc'), expected:f('fb-bug-expected'),
+      severity:getChip('fb-bug-severity'), device:f('fb-bug-device'), browser:f('fb-bug-browser'), extra:f('fb-bug-extra')
+    };
+    if (type==='feature') return {
+      area:f('fb-feat-area'), desc:f('fb-feat-desc'), why:f('fb-feat-why'),
+      priority:getChip('fb-feat-priority'), ref:f('fb-feat-ref')
+    };
+    return { rating:_fbRating, like:f('fb-fb-like'), improve:f('fb-fb-improve'),
+             recommend:getChip('fb-fb-recommend'), other:f('fb-fb-other') };
+  }
+  function f(id){ var el=document.getElementById(id); return el ? el.value : ''; }
+
+  function validate(type, fields){
+    if (type==='bug'){
+      if (!fields.page) return 'Please select the affected page or feature.';
+      if (!fields.desc || fields.desc.trim().length < 10) return 'Please describe the bug (at least 10 characters).';
+    }
+    if (type==='feature'){
+      if (!fields.area) return 'Please select the area for the feature.';
+      if (!fields.desc || fields.desc.trim().length < 10) return 'Please describe the feature (at least 10 characters).';
+    }
+    if (type==='feedback' && !_fbRating) return 'Please select a star rating.';
+    return null;
+  }
+
+  function showToast(msg, cls){
+    var t = document.getElementById('fb-toast');
+    t.textContent = msg; t.className = 'fb-toast ' + (cls||'');
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 4500);
+  }
+
+  window.submitFeedback = function(){
+    var type   = _fbType;
+    var fields = collectFields(type);
+    var err    = validate(type, fields);
+    if (err){ showToast('⚠ '+err,'error'); return; }
+
+    var btn = document.getElementById('fb-send-btn');
+    var sp  = document.getElementById('fb-spinner');
+    var lbl = document.getElementById('fb-send-label');
+    btn.disabled=true; sp.style.display='block'; lbl.textContent='Sending…';
+
+    var labels  = {bug:'Bug Report', feature:'Feature Request', feedback:'User Feedback'};
+    var subject = '[VilfinTV '+( labels[type]||type)+'] '+new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+    var aiQuery = buildAIQuery(type, fields);
+
+    fetch('https://screener-proxy.vilfintv.workers.dev/feedback', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({type:type, subject:subject, body:aiQuery})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      btn.disabled=false; sp.style.display='none';
+      if (data && data.ok){
+        lbl.textContent='✓ Sent!';
+        showToast('✅ Thank you! Your '+(labels[type]||'report')+' has been received.','success');
+        setTimeout(function(){
+          closeFeedbackModal();
+          var defaults={bug:'Send Bug Report',feature:'Send Request',feedback:'Send Feedback'};
+          lbl.textContent = defaults[type]||'Send Report';
+        },1800);
+      } else {
+        lbl.textContent='Send Report';
+        showToast('❌ '+(data&&data.message||'Failed to send. Please try again.'),'error');
+      }
+    })
+    .catch(function(){
+      btn.disabled=false; sp.style.display='none'; lbl.textContent='Send Report';
+      showToast('❌ Network error. Please check your connection.','error');
+    });
+  };
+
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeFeedbackModal(); });
+})();

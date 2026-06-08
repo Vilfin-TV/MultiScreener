@@ -1,0 +1,3344 @@
+
+// Theme support
+var THEMES = ['default','standard','midnight','maroon','silver','gold','gemini'];
+
+function setTheme(t) {
+  if (t === 'standard') t = 'midnight';
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('viltv_theme', t);
+}
+
+var THEMES = ['white', 'default', 'standard', 'midnight', 'maroon', 'silver', 'gold', 'gemini'];
+function cycleTheme() {
+  var cur = document.documentElement.getAttribute('data-theme') || 'white';
+  var idx = THEMES.indexOf(cur);
+  if (idx === -1) idx = 0;
+  var next = THEMES[(idx + 1) % THEMES.length];
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('viltv_theme', next);
+}
+
+// Set initial theme
+var savedTheme = localStorage.getItem('viltv_theme') || 'white';
+document.documentElement.setAttribute('data-theme', savedTheme);
+
+
+// Active States
+var _activeHub = 'cbse';
+var _activeClass = 10;
+var _activeSubject = 'math';
+var _activeJlptLevel = 5;
+
+// Toggle CBSE vs JLPT Hubs
+function switchHub(hub) {
+  _activeHub = hub;
+  const tCbse = document.getElementById('toggle-cbse');
+  const tJlpt = document.getElementById('toggle-jlpt');
+  
+  if (tCbse) tCbse.classList.remove('active');
+  if (tJlpt) tJlpt.classList.remove('active');
+  
+  if (hub === 'cbse') {
+    if (tCbse) tCbse.classList.add('active');
+    const cCont = document.getElementById('cbse-container');
+    if (cCont) cCont.style.display = 'block';
+    const jCont = document.getElementById('jlpt-container');
+    if (jCont) jCont.style.display = 'none';
+    if (typeof renderCbseContent === 'function') renderCbseContent();
+  } else {
+    if (tJlpt) tJlpt.classList.add('active');
+    const cCont = document.getElementById('cbse-container');
+    if (cCont) cCont.style.display = 'none';
+    const jCont = document.getElementById('jlpt-container');
+    if (jCont) jCont.style.display = 'block';
+    if (typeof switchJlptLevel === 'function') switchJlptLevel(_activeJlptLevel);
+  }
+}
+
+// CBSE navigation selectors
+function switchClass(clsNum) {
+  _activeClass = clsNum;
+  document.querySelectorAll('.cbse-container .class-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (parseInt(btn.getAttribute('data-class')) === clsNum) btn.classList.add('active');
+  });
+  renderCbseContent();
+}
+
+function switchSubject(sub) {
+  _activeSubject = sub;
+  document.querySelectorAll('.subject-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.getAttribute('data-sub') === sub) btn.classList.add('active');
+  });
+  renderCbseContent();
+}
+
+// JLPT navigation selectors
+async function switchJlptLevel(lvl) {
+  _activeJlptLevel = lvl;
+  document.querySelectorAll('.jlpt-container .class-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (parseInt(btn.getAttribute('data-jlpt')) === lvl) btn.classList.add('active');
+  });
+
+  if (!JLPT_DATA[lvl]) {
+    document.getElementById('jlpt-lesson-card').innerHTML = '<p style="text-align:center; padding:20px; font-size:18px; color:var(--gold);">Loading N' + lvl + ' data...</p>';
+    try {
+      const res = await fetch('jlpt_n' + lvl + '.json');
+      if (!res.ok) throw new Error('Network response was not ok');
+      JLPT_DATA[lvl] = await res.json();
+    } catch (e) {
+      console.error('Error fetching JLPT data:', e);
+      document.getElementById('jlpt-lesson-card').innerHTML = '<p style="text-align:center; padding:20px; color:var(--red);">Error loading N' + lvl + ' data. Please try again.</p>';
+      return;
+    }
+  }
+
+  renderJlptContent();
+}
+
+// Toggle Q&A Panels
+function toggleQa(index) {
+  var item = document.getElementById('qa-item-' + index);
+  if (item) item.classList.toggle('active');
+}
+
+// Escaping
+function esc(str) {
+  if (!str) return '';
+  var div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+
+// CBSE DATABASE (Grade 1 to 10 Study material)
+const CBSE_DATA = {
+  1: {
+    math: {
+      lesson: {
+        headline: 'Shapes and Space — Shapes Around Us',
+        lead: 'Learning to identify simple shapes (Circles, Squares, Triangles) and understand size concepts (Big vs Small).',
+        bullets: [
+          '<strong>Circles:</strong> Round shapes like a ball, a coin, or a delicious chapati.',
+          '<strong>Squares:</strong> Box shapes with four equal sides, like a chessboard or window pane.',
+          '<strong>Triangles:</strong> Three-sided shapes with three corners, like a slice of delicious pizza.'
+        ]
+      },
+      qa: [
+        { q: 'How many corners does a circle have?', a: 'A circle has zero (0) corners! It is perfectly round.' },
+        { q: 'Give one example of a real-life triangle shape.', a: 'A pizza slice, a clothing hanger, or a traffic hazard sign!' }
+      ],
+      widget: 'fractionPie' // Uses simple fractions pie to see parts of shapes
+    },
+    science: {
+      lesson: {
+        headline: 'Living Things around Us — Animals and Plants',
+        lead: 'Exploring differences between living things (that grow, breathe, and move) and non-living things.',
+        bullets: [
+          '<strong>Animals:</strong> Living creatures like dogs, cats, and birds that move around to search for food.',
+          '<strong>Plants:</strong> Living green trees and flowers that grow in the soil and make their own food using sunlight.',
+          '<strong>Non-Living Objects:</strong> Toys, rocks, and chairs that do not grow, eat, or breathe.'
+        ]
+      },
+      qa: [
+        { q: 'Is a toy car a living thing?', a: 'No, a toy car is a non-living thing because it does not breathe, grow, or eat food.' },
+        { q: 'What do green plants need to grow healthy?', a: 'Plants need clean water, soil, fresh air, and bright sunlight to grow.' }
+      ]
+    },
+    hindi: {
+      lesson: {
+        headline: 'वर्णमाला ज्ञान — स्वर और व्यंजन',
+        lead: 'हिन्दी वर्णमाला के आधारभूत अक्षरों (अ, आ, इ, ई) और उनके उच्चारण का ज्ञान।',
+        bullets: [
+          '<strong>स्वर (Vowels):</strong> अ (अनार), आ (आम), इ (इमली), ई (ईख)। स्वर ध्वनि स्वतंत्र रूप से बोली जाती है।',
+          '<strong>व्यंजन (Consonants):</strong> क (कबूतर), ख (खरगोश), ग (गमला), घ (घड़ी)। व्यंजन स्वरों की सहायता से बोले जाते हैं।'
+        ]
+      },
+      qa: [
+        { q: 'अक्षर \'अ\' से शुरू होने वाले दो शब्द बताइए।', a: 'अनार, अमरूद, अदरक।' },
+        { q: 'हिन्दी भाषा में मुख्य रूप से कितने स्वर होते हैं?', a: 'हिन्दी वर्णमाला में मुख्य रूप से 11 स्वर होते हैं।' }
+      ]
+    },
+    social: {
+      lesson: {
+        headline: 'My Family and Neighbours — Staying Together',
+        lead: 'Understanding relations in a family and the importance of helping neighbours.',
+        bullets: [
+          '<strong>Nuclear Family:</strong> A small family with parents and children living together happily.',
+          '<strong>Joint Family:</strong> A large family with grandparents, uncles, aunts, and cousins sharing a home.',
+          '<strong>Neighbours:</strong> People who live next to our home. They help us in times of need and celebrate festivals together.'
+        ]
+      },
+      qa: [
+        { q: 'What is a joint family?', a: 'A joint family is a large family where grandparents, parents, children, uncles, aunts, and cousins live together in the same house.' },
+        { q: 'How should we treat our neighbours?', a: 'We should treat our neighbours with respect, help them when they need it, and speak politely.' }
+      ]
+    },
+    english: {
+      lesson: {
+        headline: 'A-B-C Phonics and Action Words',
+        lead: 'Learning letter sounds and describing everyday action verbs (running, jumping, sleeping).',
+        bullets: [
+          '<strong>Phonics sounds:</strong> The letter A says "ah" (Apple). The letter B says "buh" (Ball).',
+          '<strong>Action Words:</strong> Verbs describe things we do, like <em>Run</em>, <em>Jump</em>, <em>Eat</em>, and <em>Read</em>.',
+          '<strong>Vowels:</strong> A, E, I, O, U are five special letters that help us build word sounds.'
+        ]
+      },
+      qa: [
+        { q: 'What are the five English vowel letters?', a: 'The five English vowels are: A, E, I, O, and U.' },
+        { q: 'Identify the action word in: "The happy boy jumps high."', a: 'The action word is "jumps" because it describes what the boy is doing!' }
+      ]
+    }
+  },
+  5: {
+    math: {
+      lesson: {
+        headline: 'Parts and Wholes — Introduction to Fractions',
+        lead: 'Understanding fractions as equal parts of a whole shape, comparing fractions, and finding equivalent fractions.',
+        bullets: [
+          '<strong>Numerator:</strong> The top number showing how many equal parts we are talking about.',
+          '<strong>Denominator:</strong> The bottom number showing the total number of equal parts the whole is split into.',
+          '<strong>Proper Fractions:</strong> Fractions where the numerator is smaller than the denominator (e.g., 3/4, 1/2).'
+        ]
+      },
+      qa: [
+        { q: 'What fraction of a pizza is left if you eat 3 out of 8 equal slices?', a: 'Since 3 slices are eaten, 5 slices remain. The fraction of pizza left is 5/8.' },
+        { q: 'Are 2/4 and 3/6 equivalent fractions?', a: 'Yes! Both simplify to exactly 1/2, making them equivalent fractions.' }
+      ],
+      widget: 'fractionPie'
+    },
+    science: {
+      lesson: {
+        headline: 'Every Drop Counts — Properties of Water',
+        lead: 'Analyzing water states, density (floating vs sinking), and the absolute necessity of water conservation.',
+        bullets: [
+          '<strong>Buoyancy:</strong> Objects float if they are less dense than water, and sink if they are more dense.',
+          '<strong>Solubility:</strong> Water is a universal solvent because it dissolves sugar, salt, and gas molecules.',
+          '<strong>Water Conservation:</strong> Techniques like rainwater harvesting help conserve clean freshwater reserves.'
+        ]
+      },
+      qa: [
+        { q: 'Why does an empty plastic bottle float on water while an iron nail sinks?', a: 'An empty bottle floats because its average density (including the air inside) is lower than that of water. An iron nail sinks because iron is denser than water.' },
+        { q: 'Describe Rainwater Harvesting briefly.', a: 'It is the simple method of collecting rainwater from rooftops and storing it in underground tanks for future agricultural or household use.' }
+      ]
+    },
+    hindi: {
+      lesson: {
+        headline: 'संज्ञा और उसके भेद — व्याकरण',
+        lead: 'किसी व्यक्ति, वस्तु, स्थान या भाव के नाम को संज्ञा कहते हैं। संज्ञा के पाँच भेदों का अध्ययन।',
+        bullets: [
+          '<strong>व्यक्तिवाचक संज्ञा (Proper Noun):</strong> विशेष नाम जैसे - राम, दिल्ली, हिमालय।',
+          '<strong>जातिवाचक संज्ञा (Common Noun):</strong> पूरी जाति का बोध जैसे - नदी, लड़का, पर्वत।',
+          '<strong>भाववाचक संज्ञा (Abstract Noun):</strong> मन के भाव जैसे - मिठास, बुढ़ापा, ईमानदारी।'
+        ]
+      },
+      qa: [
+        { q: '\'ईमानदारी सर्वोत्तम नीति है\' वाक्य में संज्ञा पहचानिए।', a: '\'ईमानदारी\' भाववाचक संज्ञा है और \'नीति\' जातिवाचक संज्ञा है।' },
+        { q: 'संज्ञा के मुख्य तीन भेद कौन-कौन से हैं?', a: 'व्यक्तिवाचक संज्ञा, जातिवाचक संज्ञा, और भाववाचक संज्ञा।' }
+      ]
+    },
+    social: {
+      lesson: {
+        headline: 'Our Earth — Latitude, Longitude and Time Zones',
+        lead: 'Understanding imaginary lines on the globe and how they establish geographical coordinates.',
+        bullets: [
+          '<strong>Latitudes:</strong> Horizontal lines parallel to the Equator (0&deg;) measuring distances North and South.',
+          '<strong>Longitudes:</strong> Vertical lines connecting the North and South Poles, measuring East and West of the Prime Meridian (0&deg;).',
+          '<strong>Greenwich Mean Time (GMT):</strong> The baseline time zone situated at longitude 0&deg;.'
+        ]
+      },
+      qa: [
+        { q: 'What is the Equator?', a: 'The Equator is the imaginary latitude line at 0 degrees that divides the Earth into the Northern and Southern Hemispheres.' },
+        { q: 'Why do we have different time zones?', a: 'Because the Earth rotates on its axis, different parts of the world receive sunlight at different times. Time zones keep time synchronized with local daylight.' }
+      ]
+    },
+    english: {
+      lesson: {
+        headline: 'Nouns, Pronouns, and Subject-Verb Agreement',
+        lead: 'Correct usage of pronouns and making singular subjects agree with singular verbs.',
+        bullets: [
+          '<strong>Pronouns:</strong> Words like <em>He</em>, <em>She</em>, <em>They</em> that replace nouns to prevent repetition.',
+          '<strong>Subject-Verb Agreement:</strong> Singular subjects take singular verbs (e.g., "The cat sleep<strong>s</strong>"), and plural subjects take plural verbs ("The cats sleep").'
+        ]
+      },
+      qa: [
+        { q: 'Correct this sentence: "The boys runs to the playground."', a: 'Correction: "The boys run to the playground." (Since "boys" is plural, the verb "run" must also be plural).' },
+        { q: 'Replace the underlined word with a pronoun: "<u>Rani</u> is studying for the exam."', a: 'Correction: "She is studying for the exam."' }
+      ]
+    }
+  },
+  8: {
+    math: {
+      lesson: {
+        headline: 'Linear Equations in One Variable',
+        lead: 'Solving equations of the form Ax + B = C, where the variable power is exactly 1.',
+        bullets: [
+          '<strong>Variable:</strong> An unknown number, usually represented by letters like $x$ or $y$.',
+          '<strong>Balancing Principle:</strong> Whatever mathematical operation you perform on the left side of the equation (LHS), you must also perform on the right side (RHS).',
+          '<strong>Transposition:</strong> Moving terms from one side of the equals sign to the other reverses their sign (+ becomes -, * becomes /).'
+        ]
+      },
+      qa: [
+        { q: 'Solve the equation: 3x + 12 = 27', a: 'Step 1: Subtract 12 from both sides: 3x = 15. \nStep 2: Divide both sides by 3: x = 5.' },
+        { q: 'What is a linear equation in one variable?', a: 'An algebraic equation containing a single variable raised to the power of 1, e.g., 2x + 7 = 15.' }
+      ],
+      widget: 'balancer'
+    },
+    science: {
+      lesson: {
+        headline: 'Force and Pressure — Mechanics of Motion',
+        lead: 'Understanding push/pull dynamics, frictional forces, and pressure exerted by fluids.',
+        bullets: [
+          '<strong>Force:</strong> A push or pull acting upon an object resulting from its interaction with another object (measured in Newtons).',
+          '<strong>Friction:</strong> The resistive force that opposes relative motion between two sliding surfaces in contact.',
+          '<strong>Pressure:</strong> The force applied perpendicular to the surface of an object per unit area ($P = F / A$, measured in Pascals).'
+        ]
+      },
+      qa: [
+        { q: 'Why do school bags have wide shoulder straps?', a: 'Wide straps increase the surface area in contact with the shoulder. Since Pressure = Force / Area, increasing the area reduces the pressure on the shoulder, making it easier to carry.' },
+        { q: 'Name two types of non-contact forces.', a: 'Gravitational force and Magnetic force!' }
+      ]
+    },
+    hindi: {
+      lesson: {
+        headline: 'संधि और उसके प्रकार — व्याकरण',
+        lead: 'दो वर्णों के पास आने पर होने वाले पारस्परिक मेल या विकार को संधि कहते हैं। संधि के तीन मुख्य प्रकार।',
+        bullets: [
+          '<strong>स्वर संधि (Vowel Joining):</strong> दो स्वरों के मेल से होने वाला परिवर्तन जैसे - विद्या + आलय = विद्यालय।',
+          '<strong>व्यंजन संधि (Consonant Joining):</strong> व्यंजन का व्यंजन या स्वर से मेल जैसे - जगत् + ईश = जगदीश।',
+          '<strong>विसर्ग संधि (Visarg Joining):</strong> विसर्ग का स्वर या व्यंजन से मेल जैसे - मनः + हर = मनोहर।'
+        ]
+      },
+      qa: [
+        { q: '\'सूर्योदय\' का संधि विच्छेद कीजिए।', a: '\'सूर्य + उदय\' = सूर्योदय (यह गुण स्वर संधि है)।' },
+        { q: 'संधि और समास में क्या अंतर है?', a: 'संधि दो वर्णों का मेल है, जबकि समास दो शब्दों का मेल है।' }
+      ]
+    },
+    social: {
+      lesson: {
+        headline: 'The Indian Constitution — Key Features',
+        lead: 'Analyzing the preamble, fundamental rights, and federal structure of India\'s democratic system.',
+        bullets: [
+          '<strong>Preamble:</strong> The introductory statement highlighting core sovereign, socialist, secular, and democratic values.',
+          '<strong>Fundamental Rights:</strong> Legal protections guaranteed to all citizens (Part III of the Constitution), such as Right to Equality.',
+          '<strong>Federalism:</strong> The dual government system dividing legislative power between the Central Union and regional State assemblies.'
+        ]
+      },
+      qa: [
+        { q: 'Who is known as the Father of the Indian Constitution?', a: 'Dr. B.R. Ambedkar, who served as the Chairman of the Drafting Committee.' },
+        { q: 'What is the significance of the Secularism feature?', a: 'Secularism means that the State does not have an official state religion; it treats all religions equally and guarantees freedom of belief to all citizens.' }
+      ]
+    },
+    english: {
+      lesson: {
+        headline: 'Active vs Passive Voice & Modal Auxiliaries',
+        lead: 'Changing active sentences to passive voice and understanding modal verbs (must, should, can).',
+        bullets: [
+          '<strong>Active Voice:</strong> The subject performs the action (e.g., "The dog chased the cat").',
+          '<strong>Passive Voice:</strong> The subject receives the action ("The cat was chased by the dog").',
+          '<strong>Modal Verbs:</strong> Auxiliary verbs expressing ability (can), advice (should), or obligation (must).'
+        ]
+      },
+      qa: [
+        { q: 'Change this sentence to passive voice: "Meera wrote a beautiful poem."', a: 'Passive Voice: "A beautiful poem was written by Meera."' },
+        { q: 'Use an appropriate modal verb of strong obligation in: "We ___ follow the traffic laws."', a: 'We <strong>must</strong> follow the traffic laws.' }
+      ]
+    }
+  },
+  10: {
+    math: {
+      lesson: {
+        headline: 'Coordinate Geometry — Coordinate Distance Formula',
+        lead: 'Analyzing geometric distance between two coordinate pairs on a standard Cartesian plane.',
+        bullets: [
+          '<strong>Cartesian Coordinates:</strong> Positions on a grid mapped by an X-axis (horizontal) and Y-axis (vertical), written as (x, y).',
+          '<strong>Distance Formula:</strong> Derived from the Pythagorean theorem: $d = \\sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}$.',
+          '<strong>Midpoint Formula:</strong> Finds the average coordinates of the line segment: $M = \\left(\\frac{x_1 + x_2}{2}, \\frac{y_1 + y_2}{2}\\right)$.'
+        ]
+      },
+      qa: [
+        { q: 'Find the distance between the coordinate points A(1, 2) and B(4, 6).', a: 'Step 1: Calculate coordinate differences: (4 - 1) = 3 and (6 - 2) = 4. \nStep 2: Apply formula: d = sqrt(3^2 + 4^2) = sqrt(9 + 16) = sqrt(25) = 5 units.' },
+        { q: 'What is the coordinates of the midpoint between P(2, 8) and Q(6, 12)?', a: 'Midpoint X = (2 + 6)/2 = 4. Midpoint Y = (8 + 12)/2 = 10. The midpoint is M(4, 10).' }
+      ],
+      widget: 'geometrySolver'
+    },
+    science: {
+      lesson: {
+        headline: 'Chemical Reactions and Equations — Stoichiometry',
+        lead: 'Balancing chemical equations, identifying redox reactions, and categorizing displacement processes.',
+        bullets: [
+          '<strong>Law of Conservation of Mass:</strong> Matter can neither be created nor destroyed. An equation must contain equal atoms of each element on both sides.',
+          '<strong>Redox Reaction:</strong> Simultaneous oxidation (gain of oxygen/loss of electrons) and reduction (loss of oxygen/gain of electrons).',
+          '<strong>Exothermic Reaction:</strong> Chemical reactions that release heat energy to the environment (e.g., combustion).'
+        ]
+      },
+      qa: [
+        { q: 'Balance this equation: H2 + O2 &rarr; H2O', a: 'Balanced Equation: 2H2 + O2 &rarr; 2H2O (4 Hydrogen and 2 Oxygen atoms on both sides).' },
+        { q: 'What is a Displacement Reaction?', a: 'A reaction where a highly reactive metal displaces a less reactive metal from its salt solution, e.g., Fe + CuSO4 &rarr; FeSO4 + Cu.' }
+      ]
+    },
+    hindi: {
+      lesson: {
+        headline: 'समास और उसके भेद — व्याकरण',
+        lead: 'परस्पर संबंध रखने वाले दो या दो से अधिक शब्दों के मेल से बने नए सार्थक शब्द को समास कहते हैं। छह मुख्य भेदों का अध्ययन।',
+        bullets: [
+          '<strong>अव्ययीभाव समास:</strong> पहला पद प्रधान और अव्यय हो, जैसे - यथाशक्ति (शक्ति के अनुसार)।',
+          '<strong>तत्पुरुष समास:</strong> उत्तर पद प्रधान हो और कारक चिह्नों का लोप हो, जैसे - राजपुत्र (राजा का पुत्र)।',
+          '<strong>द्वंद्व समास:</strong> दोनों पद प्रधान हों और बीच में \'और\' का लोप हो, जैसे - माता-पिता (माता और पिता)।'
+        ]
+      },
+      qa: [
+        { q: '\'नीलकंठ\' में कौन सा समास है?', a: '\'नीलकंठ\' (नीला है कंठ जिसका अर्थात् शिव) में बहुब्रीहि समास है।' },
+        { q: '\'चौराहा\' शब्द का समास विग्रह कीजिए और समास का नाम बताइए।', a: 'विग्रह: चार राहों का समूह। समास: द्विगु समास (पहला पद संख्यावाचक होने के कारण)।' }
+      ]
+    },
+    social: {
+      lesson: {
+        headline: 'Nationalism in India — Civil Disobedience Movement',
+        lead: 'Analyzing Mahatma Gandhi\'s Satyagraha, the Salt March (1930), and the struggle against British colonial salt monopoly.',
+        bullets: [
+          '<strong>Salt Satyagraha:</strong> On March 12, 1930, Gandhi marched 240 miles from Sabarmati to Dandi to manufacture salt, breaking colonial laws.',
+          '<strong>Non-Cooperation (1920):</strong> A massive protest aiming to boycott British institutions, goods, and tax systems.',
+          '<strong>Poona Pact (1932):</strong> An agreement granting reserved legislative assembly seats to depressed classes.'
+        ]
+      },
+      qa: [
+        { q: 'Why did Gandhi choose Salt as a symbol of protest in 1930?', a: 'Because salt was a basic daily necessity consumed equally by the rich and the poor, making the British tax on salt a universal grievance that united all classes.' },
+        { q: 'What happened during the Jallianwala Bagh Massacre (1919)?', a: 'General Dyer ordered British troops to open fire on a peaceful public gathering in Amritsar, killing hundreds of innocent citizens.' }
+      ]
+    },
+    english: {
+      lesson: {
+        headline: 'Reported Speech & Subject-Verb-Concord',
+        lead: 'Converting direct quotes into indirect reported speech, altering tenses and pronouns correctly.',
+        bullets: [
+          '<strong>Direct Speech:</strong> Quoting the exact words (e.g., He said, "I am studying").',
+          '<strong>Reported Speech:</strong> Conveying the message indirectly (He said that he was studying).',
+          '<strong>Concord Rules:</strong> Collective nouns take singular verbs when acting as a single unit ("The jury <strong>is</strong> unanimous").'
+        ]
+      },
+      qa: [
+        { q: 'Convert to indirect speech: The teacher said, "Water boils at 100 degrees Celsius."', a: 'Reported Speech: The teacher said that water boils at 100 degrees Celsius. (Note: Universal truths do not change tense in reported speech).' },
+        { q: 'Identify correct verb: "Bread and butter ___ my favorite breakfast." (is/are)', a: 'The correct verb is <strong>is</strong> because bread and butter represents a single unified meal.' }
+      ]
+    }
+  }
+};
+
+// Fill in other classes with fallback duplicates of neighboring classes so there are no empty gaps!
+for (let c = 1; c <= 10; c++) {
+  if (!CBSE_DATA[c]) {
+    // Map intermediate grades to their closest complete dataset
+    if (c < 5) CBSE_DATA[c] = JSON.parse(JSON.stringify(CBSE_DATA[1]));
+    else if (c < 8) CBSE_DATA[c] = JSON.parse(JSON.stringify(CBSE_DATA[5]));
+    else CBSE_DATA[c] = JSON.parse(JSON.stringify(CBSE_DATA[8]));
+  }
+}
+
+// JAPANESE KANA DATA DATABASE (Seion basic 46 characters)
+const KANA_DATA = [
+  { h: 'あ', k: 'ア', r: 'a', stroke: '3 strokes. Curved vertical, horizontal bar, looping curl.', word: '朝 (asa - morning)' },
+  { h: 'い', k: 'イ', r: 'i', stroke: '2 strokes. Parallel curved vertical strokes, left side longer.', word: '犬 (inu - dog)' },
+  { h: 'う', k: 'ウ', r: 'u', stroke: '2 strokes. Short top slash, large sweeping open hook below.', word: '海 (umi - sea)' },
+  { h: 'え', k: 'エ', r: 'e', stroke: '2 strokes. Short top tick, linked zigzag Z-like lower line.', word: '駅 (eki - station)' },
+  { h: 'お', k: 'オ', r: 'o', stroke: '3 strokes. Horizontal line, vertical loop, top right dot.', word: 'お茶 (ocha - green tea)' },
+  
+  { h: 'か', k: 'カ', r: 'ka', stroke: '3 strokes. Curved hook, long sweeping vertical slash, tick.', word: '傘 (kasa - umbrella)' },
+  { h: 'き', k: 'キ', r: 'ki', stroke: '4 strokes. Parallel horizontal lines, vertical stroke, bottom curl.', word: '切符 (kippu - ticket)' },
+  { h: 'く', k: 'ク', r: 'ku', stroke: '1 stroke. Single sharp sideways chevron pointing left.', word: '薬 (kusuri - medicine)' },
+  { h: 'け', k: 'ケ', r: 'ke', stroke: '3 strokes. Left vertical bar, horizontal cross, right vertical hook.', word: '携帯 (keitai - phone)' },
+  { h: 'こ', k: 'コ', r: 'ko', stroke: '2 strokes. Upper horizontal curve, lower flat base line.', word: '言葉 (kotoba - word)' },
+  
+  { h: 'さ', k: 'サ', r: 'sa', stroke: '3 strokes. Horizontal bar, slash downwards, looping bottom curve.', word: '魚 (sakana - fish)' },
+  { h: 'し', k: 'シ', r: 'shi', stroke: '1 stroke. Vertical line looping up into a hook (like fishhook).', word: '食堂 (shokudou - canteen)' },
+  { h: 'す', k: 'ス', r: 'su', stroke: '2 strokes. Horizontal bar, looping vertical line with tail.', word: '寿司 (sushi - sushi)' },
+  { h: 'せ', k: 'セ', r: 'se', stroke: '3 strokes. Long horizontal, short hook, curved right vertical.', word: '先生 (sensei - teacher)' },
+  { h: 'そ', k: 'ソ', r: 'so', stroke: '1 stroke. Continuous Z-like zigzag flowing into a C-curve.', word: '空 (sora - sky)' },
+  
+  { h: 'た', k: 'タ', r: 'ta', stroke: '4 strokes. Cross lines on left, two short horizontal lines on right.', word: '卵 (tamago - egg)' },
+  { h: 'ち', k: 'チ', r: 'chi', stroke: '2 strokes. Horizontal line, vertical line looping down.', word: '地下鉄 (chikatetsu - subway)' },
+  { h: 'つ', k: 'ツ', r: 'tsu', stroke: '1 stroke. Horizontal stroke curving down into a hook.', word: '机 (tsukue - desk)' },
+  { h: 'て', k: 'テ', r: 'te', stroke: '1 stroke. Flat horizontal line dropping into a semi-circle.', word: '手紙 (tegami - letter)' },
+  { h: 'と', k: 'ト', r: 'to', stroke: '2 strokes. Short downward slash connecting to an open curve.', word: '友達 (tomodachi - friend)' },
+  
+  { h: 'な', k: 'ナ', r: 'na', stroke: '4 strokes. Cross lines on left, short loop, dot on top right.', word: '夏 (natsu - summer)' },
+  { h: 'に', k: 'ニ', r: 'ni', stroke: '3 strokes. Left vertical line, two short parallel bars on right.', word: '肉 (niku - meat)' },
+  { h: 'ぬ', k: 'ヌ', r: 'nu', stroke: '2 strokes. Intertwined vertical slashes ending in a tight loop.', word: 'ぬいぐるみ (nuigurumi - plush)' },
+  { h: 'ね', k: 'ネ', r: 'ne', stroke: '2 strokes. Vertical bar, looping complex vertical with looped tail.', word: '猫 (neko - cat)' },
+  { h: 'の', k: 'ノ', r: 'no', stroke: '1 stroke. A single continuous circular loop curving out.', word: '飲み物 (nomimono - drink)' },
+  
+  { h: 'は', k: 'ハ', r: 'ha', stroke: '3 strokes. Left vertical line, horizontal bar, looped vertical.', word: '花 (hana - flower)' },
+  { h: 'ひ', k: 'ヒ', r: 'hi', stroke: '1 stroke. Large curved loop (resembles an open smile).', word: '飛行機 (hikouki - airplane)' },
+  { h: 'ふ', k: 'フ', r: 'fu', stroke: '4 strokes. Center loop, left dot, right dot, bottom stroke.', word: '船 (fune - ship)' },
+  { h: 'へ', k: 'ヘ', r: 'he', stroke: '1 stroke. Simple upward wedge and longer downward slope.', word: '部屋 (heya - room)' },
+  { h: 'ほ', k: 'ホ', r: 'ho', stroke: '4 strokes. Left vertical, two horizontal lines, looped vertical.', word: '本 (hon - book)' },
+  
+  { h: 'ま', k: 'マ', r: 'ma', stroke: '3 strokes. Two horizontal lines, vertical line with looped tail.', word: '窓 (mado - window)' },
+  { h: 'み', k: 'ミ', r: 'mi', stroke: '2 strokes. Downward looping vertical, crossed by downward slash.', word: '水 (mizu - water)' },
+  { h: 'む', k: 'ム', r: 'mu', stroke: '3 strokes. Horizontal, looping vertical hook, top right tick.', word: '虫 (mushi - insect)' },
+  { h: 'め', k: 'メ', r: 'me', stroke: '2 strokes. Downward slash crossed by curved loop (no tail loop).', word: '眼鏡 (megane - glasses)' },
+  { h: 'も', k: 'モ', r: 'mo', stroke: '3 strokes. Fishing hook shape crossed by two horizontal lines.', word: '森 (mori - forest)' },
+  
+  { h: 'や', k: 'ヤ', r: 'ya', stroke: '3 strokes. Hook curve, slash across, small tick next to hook.', word: '山 (yama - mountain)' },
+  { h: 'ゆ', k: 'ユ', r: 'yu', stroke: '2 strokes. Open loop, vertical stroke crossing the tail.', word: '雪 (yuki - snow)' },
+  { h: 'よ', k: 'ヨ', r: 'yo', stroke: '2 strokes. Horizontal line, vertical line with loop on right.', word: '夜 (yoru - night)' },
+  
+  { h: 'ら', k: 'ラ', r: 'ra', stroke: '2 strokes. Top slash, vertical loop line below.', word: '来週 (raishuu - next week)' },
+  { h: 'り', k: 'リ', r: 'ri', stroke: '2 strokes. Short left vertical, long right vertical hook.', word: '料理 (ryouri - cooking)' },
+  { h: 'る', k: 'ル', r: 'ru', stroke: '1 stroke. Z-like horizontal line flowing into a looped bottom tail.', word: '留守 (rusu - absence)' },
+  { h: 'れ', k: 'レ', r: 're', stroke: '2 strokes. Left vertical, vertical looping with outward curve.', word: '冷蔵庫 (reizouko - fridge)' },
+  { h: 'ろ', k: 'ロ', r: 'ro', stroke: '1 stroke. Exactly like "ru" but without the closed loop tail.', word: '六 (roku - six)' },
+  
+  { h: 'わ', k: 'ワ', r: 'wa', stroke: '2 strokes. Left vertical, vertical loop with wide open right.', word: '私 (watashi - I / me)' },
+  { h: 'を', k: 'ヲ', r: 'wo', stroke: '3 strokes. Two horizontal lines, hooked vertical cross line.', word: '音楽 (ongaku - music *used as object particle)' },
+  { h: 'ん', k: 'ン', r: 'n', stroke: '1 stroke. Downward stroke shifting into a looping wave up.', word: '日本語 (nihongo - Japanese)' }
+];
+
+// JAPANESE KANJI DATA (10 essential characters)
+const KANJI_DATA = [
+  { char: '日', stroke: 4, meaning: 'Sun, Day', onyomi: 'NICHI, JITSU', kunyomi: 'hi, ka', compounds: '日本 (Nihon - Japan), 今日 (kyou - today)' },
+  { char: '本', stroke: 5, meaning: 'Book, Origin', onyomi: 'HON', kunyomi: 'moto', compounds: '日本語 (Nihongo - Japanese), 本棚 (hondana - bookshelf)' },
+  { char: '人', stroke: 2, meaning: 'Person, Human', onyomi: 'JIN, NIN', kunyomi: 'hito', compounds: '日本人 (Nihonjin - Japanese person), 三人 (sannin - 3 people)' },
+  { char: '水', stroke: 4, meaning: 'Water', onyomi: 'SUI', kunyomi: 'mizu', compounds: '水曜日 (suiyoubi - Wednesday), 水道 (suidou - water supply)' },
+  { char: '木', stroke: 4, meaning: 'Tree, Wood', onyomi: 'MOKU, BOKU', kunyomi: 'ki', compounds: '木曜日 (mokuyoubi - Thursday), 大木 (taiboku - large tree)' },
+  { char: '山', stroke: 3, meaning: 'Mountain', onyomi: 'SAN', kunyomi: 'yama', compounds: '富士山 (Fujisan - Mt Fuji), 山登り (yamanobori - mountain climbing)' },
+  { char: '川', stroke: 3, meaning: 'River', onyomi: 'SEN', kunyomi: 'kawa', compounds: '川下り (kawakudari - river rafting), 小川 (ogawa - brook/creek)' },
+  { char: '学', stroke: 8, meaning: 'Study, Learn', onyomi: 'GAKU', kunyomi: 'mana-bu', compounds: '学校 (gakkou - school), 学生 (gakusei - student)' },
+  { char: '生', stroke: 5, meaning: 'Life, Birth, Genuine', onyomi: 'SEI, SHOU', kunyomi: 'i-kiru, u-mareru, nama', compounds: '先生 (sensei - teacher), 生卵 (namatamago - raw egg)' },
+  { char: '国', stroke: 8, meaning: 'Country, Nation', onyomi: 'KOKU', kunyomi: 'kuni', compounds: '外国人 (gaikokujin - foreigner), 国土 (kokudo - national land)' }
+];
+
+// JAPANESE CASUAL CONVERSATION & SLANG DATABASE (Daily casual using words)
+const CASUAL_DATA = {
+  greetings: [
+    { phrase: 'お疲れ様です', romaji: 'Otsukaresama desu', meaning: 'Thank you for your hard work!', example: 'Commonly said to colleagues at work or when finishing tasks.' },
+    { phrase: 'よろしくお願いします', romaji: 'Yoroshiku onegaishimasu', meaning: 'Please treat me well / Let\'s work together.', example: 'Said when introducing oneself or asking for a favor.' },
+    { phrase: 'いただきます', romaji: 'Itadakimasu', meaning: 'I humbly receive this food.', example: 'Said before eating a meal, expressing gratitude for the food.' }
+  ],
+  slang: [
+    { phrase: 'めっちゃ', romaji: 'meccha', meaning: 'Super / Very (extremely)', example: 'めっちゃ美味しい！ (Meccha oishii! - Super delicious!)' },
+    { phrase: 'すげー / やばい', romaji: 'sugee / yabai', meaning: 'Awesome! / Crazy! (multifunctional)', example: 'Used widely in daily life to react to shock or extreme events.' },
+    { phrase: 'マジで', romaji: 'maji de', meaning: 'Seriously? / For real?', example: 'マジで？知らなかった！ (Maji de? Shiranakatta! - Seriously? I didn\'t know!)' }
+  ],
+  travel: [
+    { phrase: 'すみません、これをください', romaji: 'Sumimasen, kore o kudasai', meaning: 'Excuse me, this one please.', example: 'Perfect phrase for ordering food or buying items in a shop.' },
+    { phrase: '英語が話せますか', romaji: 'Eigo ga hanasemasu ka?', meaning: 'Can you speak English?', example: 'Used when seeking English speaking staff in hotels or stations.' },
+    { phrase: 'トイレはどこですか', romaji: 'Toire wa doko desu ka?', meaning: 'Where is the restroom?', example: 'A crucial survival phrase for any traveler in Japan.' }
+  ]
+};
+
+let JLPT_DATA = {};
+
+// RENDER CBSE CONTENT
+function renderCbseContent() {
+  const clsData = CBSE_DATA[_activeClass];
+  const subData = clsData[_activeSubject];
+  
+  if (!subData) return;
+  
+  // Render Study Lesson card
+  const lessonHtml = '<h2 class="section-headline">📖 Study Lesson: ' + esc(subData.lesson.headline) + '</h2>'
+    + '<p class="study-lead">' + esc(subData.lesson.lead) + '</p>'
+    + '<ul class="study-bullets">'
+    + subData.lesson.bullets.map(b => '<li>' + b + '</li>').join('')
+    + '</ul>'
+    + '<div style="margin-top:20px;padding:12px;background:rgba(255,255,255,0.03);border-radius:6px;border:1px dashed var(--border2);font-size:16px;color:var(--text3);text-align:center;">'
+    + '  CBSE National Curriculum NCERT Syllabus (Updated 2026)'
+    + '</div>';
+    
+  document.getElementById('cbse-lesson-card').innerHTML = lessonHtml;
+  
+  // Render Q&A Card
+  const qaHtml = '<h2 class="section-headline">❓ Practice Questions</h2>'
+    + subData.qa.map((item, idx) => {
+        return '<div class="qa-item" id="qa-item-' + idx + '">'
+          + '  <div class="qa-question" onclick="toggleQa(' + idx + ')">'
+          + '    <span>Q' + (idx+1) + ': ' + esc(item.q) + '</span>'
+          + '    <span class="qa-toggle-icon">&rarr;</span>'
+          + '  </div>'
+          + '  <div class="qa-answer">' + esc(item.a).replace(/\n/g, '<br/>') + '</div>'
+          + '</div>';
+      }).join('');
+      
+  document.getElementById('cbse-qa-card').innerHTML = qaHtml;
+  
+  // Render Interactive Widget if present
+  const widgetCard = document.getElementById('cbse-widget-card');
+  if (subData.widget) {
+    widgetCard.style.display = 'block';
+    renderInteractiveWidget(subData.widget);
+  } else {
+    widgetCard.style.display = 'none';
+  }
+}
+
+function renderKanjiDetails(idx) {
+  const kanjiList = (window.KANJI_LEVEL_DATA && window.KANJI_LEVEL_DATA[_activeKanjiLevel]) ? window.KANJI_LEVEL_DATA[_activeKanjiLevel] : [];
+  const item = kanjiList[idx];
+  if (!item) {
+    document.getElementById('kanji-details-box').innerHTML = '<div style="text-align:center; color:var(--text3);">No details available.</div>';
+    return;
+  }
+  
+  const kanjiChar = item.k || item.char || '';
+  const stroke = item.s || item.stroke || 'Unknown';
+  const meaning = item.m || item.meaning || '';
+  const romaji = item.r || item.onyomi || '';
+  
+  const imgUrl = `${CF_R2_URL}/kanji/${kanjiChar}.jpg`;
+  const fallbackSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid #1a2b4c; display:block; margin:0 auto 12px;"><circle cx="60" cy="50" r="38" fill="#112240" stroke="#1a2b4c" stroke-width="1"/><text x="60" y="60" font-size="10" fill="#8892b0" font-weight="bold" text-anchor="middle">Loading Image...</text></svg>`;
+  const encodedFallback = encodeURIComponent(fallbackSvg);
+
+  const detailsHtml = '<div style="margin-bottom:12px;">'
+    + `<img src="${imgUrl}" alt="${meaning}" style="width:110px; height:110px; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px; object-fit:cover; background:#060f1c;" onerror="this.onerror=null; this.outerHTML=decodeURIComponent('${encodedFallback}');" />`
+    + '</div>'
+    + '<div class="kana-details-header">'
+    + '  <div class="kana-details-big" style="color:var(--gold2);">' + esc(kanjiChar) + '</div>'
+    + '  <div>'
+    + '    <div class="kana-details-title">Stroke Count</div>'
+    + '    <div class="kana-details-val" style="font-size:20px; color:var(--text);">' + esc(stroke) + '</div>'
+    + '  </div>'
+    + '</div>'
+    + '<div style="margin-bottom:12px;">'
+    + '  <div class="kana-details-title">English Meaning</div>'
+    + '  <div class="kana-details-val" style="font-size:15px; color:var(--green); font-weight:700;">' + esc(meaning) + '</div>'
+    + '</div>'
+    + '<div style="margin-bottom:12px;">'
+    + '  <div class="kana-details-title">Reading / Romaji</div>'
+    + '  <div class="kana-details-val" style="font-size:15px; color:var(--text2);">' + esc(romaji) + '</div>'
+    + '</div>';
+    
+  document.getElementById('kanji-details-box').innerHTML = detailsHtml;
+}
+
+// Math Interactive Widgets Generator
+function renderInteractiveWidget(type) {
+  const container = document.getElementById('cbse-widget-card');
+  if (type === 'fractionPie') {
+    container.innerHTML = '<h2 class="section-headline">🧮 Math Practical: Fractions Pie Circle</h2>'
+      + '<p class="study-lead" style="font-size:15px;margin-bottom:12px;">Type a fraction (e.g. 3/8 or 1/4) to see the SVG slice shade automatically!</p>'
+      + '<div class="math-widget-container">'
+      + '  <div class="widget-row">'
+      + '    <span>Numerator:</span>'
+      + '    <input type="number" id="frac-num" class="widget-input" value="3" min="1" max="12"/>'
+      + '    <span>Denominator:</span>'
+      + '    <input type="number" id="frac-den" class="widget-input" value="8" min="1" max="12"/>'
+      + '    <button class="widget-btn" onclick="drawFractionPie()">Update Visual</button>'
+      + '  </div>'
+      + '  <div class="widget-canvas-area" id="pie-canvas-area">'
+      + '  </div>'
+      + '</div>';
+    drawFractionPie();
+  } else if (type === 'balancer') {
+    container.innerHTML = '<h2 class="section-headline">🧮 Math Practical: Linear Equation Balancer</h2>'
+      + '<p class="study-lead" style="font-size:15px;margin-bottom:12px;">Solve Ax + B = C. Adjust sliding inputs to balance the scale!</p>'
+      + '<div class="math-widget-container">'
+      + '  <div class="widget-row">'
+      + '    <span>A:</span>'
+      + '    <input type="range" id="bal-a" min="1" max="5" value="2" oninput="drawBalanceScale()"/>'
+      + '    <span id="lbl-bal-a" style="width:20px;">2</span>'
+      + '    <span>B:</span>'
+      + '    <input type="range" id="bal-b" min="-10" max="10" value="4" oninput="drawBalanceScale()"/>'
+      + '    <span id="lbl-bal-b" style="width:20px;">4</span>'
+      + '  </div>'
+      + '  <div class="widget-row">'
+      + '    <span>C:</span>'
+      + '    <input type="range" id="bal-c" min="0" max="25" value="10" oninput="drawBalanceScale()"/>'
+      + '    <span id="lbl-bal-c" style="width:20px;">10</span>'
+      + '  </div>'
+      + '  <div style="font-size:16px;color:var(--gold2);margin-bottom:8px;font-weight:700;">Equation: <span id="eq-text">2x + 4 = 10</span> &rarr; Solution: x = <span id="eq-sol">3</span></div>'
+      + '  <div class="widget-canvas-area" id="balance-canvas-area">'
+      + '  </div>'
+      + '</div>';
+    drawBalanceScale();
+  } else if (type === 'geometrySolver') {
+    container.innerHTML = '<h2 class="section-headline">🧮 Math Practical: Geometry Distance Solver</h2>'
+      + '<p class="study-lead" style="font-size:15px;margin-bottom:12px;">Type Cartesian coordinates (X, Y) to calculate exact line distance step-by-step.</p>'
+      + '<div class="math-widget-container">'
+      + '  <div class="widget-row">'
+      + '    <span>Point 1 (x1, y1):</span>'
+      + '    <input type="number" id="geo-x1" class="widget-input" value="1" style="width:50px;"/>'
+      + '    <input type="number" id="geo-y1" class="widget-input" value="2" style="width:50px;"/>'
+      + '  </div>'
+      + '  <div class="widget-row">'
+      + '    <span>Point 2 (x2, y2):</span>'
+      + '    <input type="number" id="geo-x2" class="widget-input" value="4" style="width:50px;"/>'
+      + '    <input type="number" id="geo-y2" class="widget-input" value="6" style="width:50px;"/>'
+      + '    <button class="widget-btn" onclick="drawGeometryGraph()">Solve &amp; Graph</button>'
+      + '  </div>'
+      + '  <div style="font-size:16px;color:var(--gold2);margin-bottom:8px;font-weight:700;line-height:1.5;" id="geo-steps-text">Distance = sqrt((4-1)^2 + (6-2)^2) = sqrt(25) = 5</div>'
+      + '  <div class="widget-canvas-area" id="geometry-canvas-area">'
+      + '  </div>'
+      + '</div>';
+    drawGeometryGraph();
+  }
+}
+
+// 1. Fractions Pie Visualizer
+function drawFractionPie() {
+  const num = Math.max(1, parseInt(document.getElementById('frac-num').value) || 1);
+  const den = Math.max(num, parseInt(document.getElementById('frac-den').value) || num);
+  
+  const pct = num / den;
+  const radius = 60;
+  const cx = 80;
+  const cy = 80;
+  
+  // Calculate SVG arc coordinates
+  const angle = pct * 360;
+  const rad = (angle - 90) * Math.PI / 180;
+  const x = cx + radius * Math.cos(rad);
+  const y = cy + radius * Math.sin(rad);
+  
+  const largeArc = angle > 180 ? 1 : 0;
+  
+  // Draw full pie SVG
+  let dPath = '';
+  if (pct >= 0.999) {
+    dPath = `M ${cx} ${cy} m -${radius} 0 a ${radius} ${radius} 0 1 0 ${radius*2} 0 a ${radius} ${radius} 0 1 0 -${radius*2} 0`;
+  } else {
+    dPath = `M ${cx} ${cy} L ${cx} ${cy - radius} A ${radius} ${radius} 0 ${largeArc} 1 ${x} ${y} Z`;
+  }
+  
+  let linePaths = '';
+  for (let i = 0; i < den; i++) {
+    const a = (i * 360 / den - 90) * Math.PI / 180;
+    const lx = cx + radius * Math.cos(a);
+    const ly = cy + radius * Math.sin(a);
+    linePaths += `<line x1="${cx}" y1="${cy}" x2="${lx}" y2="${ly}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>`;
+  }
+  
+  const svgHtml = `<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="${cx}" cy="${cy}" r="${radius}" fill="rgba(255,255,255,0.04)" stroke="var(--border2)" stroke-width="2"/>
+    <path d="${dPath}" fill="var(--burn2)" opacity="0.85" stroke="#fff" stroke-width="1"/>
+    ${linePaths}
+    <circle cx="${cx}" cy="${cy}" r="4" fill="#fff"/>
+  </svg>`;
+  
+  document.getElementById('pie-canvas-area').innerHTML = svgHtml;
+}
+
+// 2. Equation Balance scale Solver
+function drawBalanceScale() {
+  const a = parseInt(document.getElementById('bal-a').value);
+  const b = parseInt(document.getElementById('bal-b').value);
+  const c = Math.max(0, parseInt(document.getElementById('bal-c').value));
+  
+  document.getElementById('lbl-bal-a').textContent = a;
+  document.getElementById('lbl-bal-b').textContent = b;
+  document.getElementById('lbl-bal-c').textContent = c;
+  
+  document.getElementById('eq-text').textContent = `${a}x ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)} = ${c}`;
+  const sol = (c - b) / a;
+  document.getElementById('eq-sol').textContent = Number.isInteger(sol) ? sol : sol.toFixed(2);
+  
+  // Balance Scale SVG Animation
+  const isBalanced = sol === 3; // Let's base scale tilt on weight difference
+  const weightDiff = (a * 3 + b) - c; // ideal x = 3
+  const tilt = Math.max(-15, Math.min(15, weightDiff * 1.5));
+  
+  const scaleSvg = `<svg width="220" height="160" viewBox="0 0 220 160" fill="none" xmlns="http://www.w3.org/2000/svg" style="transition: transform 0.3s ease;">
+    <!-- Base -->
+    <path d="M 40 140 L 180 140 L 150 150 L 70 150 Z" fill="var(--border2)" stroke="rgba(255,255,255,0.1)"/>
+    <line x1="110" y1="60" x2="110" y2="140" stroke="var(--border2)" stroke-width="6"/>
+    
+    <!-- Rotating Beam -->
+    <g style="transform: rotate(${tilt}deg); transform-origin: 110px 60px; transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);">
+      <line x1="40" y1="60" x2="180" y2="60" stroke="var(--text2)" stroke-width="4"/>
+      <circle cx="110" cy="60" r="6" fill="#fff"/>
+      
+      <!-- Left Pan -->
+      <line x1="40" y1="60" x2="25" y2="100" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+      <line x1="40" y1="60" x2="55" y2="100" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+      <path d="M 15 100 L 65 100 Q 40 115 15 100 Z" fill="var(--burn)" stroke="#fff" stroke-width="1"/>
+      <text x="25" y="94" fill="#fff" font-size="10" font-weight="700">${a}x + (${b})</text>
+      
+      <!-- Right Pan -->
+      <line x1="180" y1="60" x2="165" y2="100" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+      <line x1="180" y1="60" x2="195" y2="100" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+      <path d="M 155 100 L 205 100 Q 180 115 155 100 Z" fill="var(--burn2)" stroke="#fff" stroke-width="1"/>
+      <text x="175" y="94" fill="#fff" font-size="10" font-weight="700">${c}</text>
+    </g>
+  </svg>`;
+  
+  document.getElementById('balance-canvas-area').innerHTML = scaleSvg;
+}
+
+// 3. Geometry Coordinate distance Solver
+function drawGeometryGraph() {
+  const x1 = parseInt(document.getElementById('geo-x1').value) || 0;
+  const y1 = parseInt(document.getElementById('geo-y1').value) || 0;
+  const x2 = parseInt(document.getElementById('geo-x2').value) || 0;
+  const y2 = parseInt(document.getElementById('geo-y2').value) || 0;
+  
+  const xDiff = x2 - x1;
+  const yDiff = y2 - y1;
+  const distSq = xDiff*xDiff + yDiff*yDiff;
+  const dist = Math.sqrt(distSq);
+  
+  const stepsHtml = `Coordinate differences: &Delta;x = ${x2} - ${x1} = ${xDiff}, &Delta;y = ${y2} - ${y1} = ${yDiff} <br/>`
+    + `Distance Formula: d = &radic;[(${xDiff})&sup2; + (${yDiff})&sup2;] = &radic;[${xDiff*xDiff} + ${yDiff*yDiff}] = &radic;${distSq} = <strong>${dist.toFixed(2)} units</strong>`;
+    
+  document.getElementById('geo-steps-text').innerHTML = stepsHtml;
+  
+  // Draw Coordinate Plane Grid Graph
+  const gridMax = 10;
+  const offset = 80;
+  const scale = 6;
+  const cx1 = offset + x1 * scale;
+  const cy1 = offset - y1 * scale;
+  const cx2 = offset + x2 * scale;
+  const cy2 = offset - y2 * scale;
+  
+  const graphSvg = `<svg width="180" height="180" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Grid -->
+    <rect width="160" height="160" fill="rgba(255,255,255,0.03)" rx="8" stroke="var(--border2)"/>
+    <line x1="80" y1="0" x2="80" y2="160" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+    <line x1="0" y1="80" x2="160" y2="80" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+    
+    <!-- Coordinate Line Segment -->
+    <line x1="${cx1}" y1="${cy1}" x2="${cx2}" y2="${cy2}" stroke="var(--burn2)" stroke-width="2.5"/>
+    
+    <!-- Points -->
+    <circle cx="${cx1}" cy="${cy1}" r="4" fill="var(--green)" stroke="#fff" stroke-width="1"/>
+    <circle cx="${cx2}" cy="${cy2}" r="4" fill="var(--red)" stroke="#fff" stroke-width="1"/>
+    
+    <!-- Labels -->
+    <text x="${cx1 + 6}" y="${cy1 - 4}" fill="#fff" font-size="8" font-weight="700">A(${x1},${y1})</text>
+    <text x="${cx2 + 6}" y="${cy2 - 4}" fill="#fff" font-size="8" font-weight="700">B(${x2},${y2})</text>
+  </svg>`;
+  
+  document.getElementById('geometry-canvas-area').innerHTML = graphSvg;
+}
+
+// STATE FOR JAPANESE PORTAL
+var _activeJpSubHub = 'chart'; // 'chart', 'kanji' or 'levels'
+var _activeJpCasualArea = 'kanji'; // 'kanji' or 'casual'
+var _selectedKanjiIdx = 0;
+
+// Kanji Game State
+var _kanjiQuestionIdx = 0;
+var _kanjiScoreCorrect = 0;
+var _kanjiScoreTotal = 0;
+
+// Get dynamic SVG visuals for character memory cues (Pictures)
+// Setup local images directory mapping
+const CF_R2_URL = 'images';
+
+function getKanaSvgVisual(romaji, wordStr) {
+  const r = romaji.toLowerCase();
+  
+  // Custom drawn graphics kept intact
+  if (r === 'a') {
+    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;"><circle cx="60" cy="70" r="28" fill="var(--amber)" opacity="0.8"/><line x1="15" y1="75" x2="105" y2="75" stroke="#fff" stroke-width="3"/><path d="M 25 85 Q 45 75 65 85 T 105 85" stroke="var(--gold2)" stroke-width="2" fill="none"/><path d="M 15 95 Q 35 85 55 95 T 105 95" stroke="var(--burn2)" stroke-width="2" fill="none"/><text x="60" y="32" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">ASA (SUNRISE)</text></svg>`;
+  } else if (r === 'i') {
+    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;"><polygon points="35,45 20,70 45,60" fill="var(--text3)"/><polygon points="85,45 100,70 75,60" fill="var(--text3)"/><circle cx="60" cy="70" r="25" fill="var(--card4)" stroke="var(--border2)" stroke-width="2"/><circle cx="50" cy="65" r="3" fill="#fff"/><circle cx="70" cy="65" r="3" fill="#fff"/><polygon points="57,72 63,72 60,76" fill="var(--red)"/><path d="M 57 80 Q 60 83 63 80" stroke="var(--text)" stroke-width="1.5" fill="none"/><text x="60" y="32" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">INU (DOG)</text></svg>`;
+  } else if (r === 'u') {
+    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;"><path d="M15,50 C45,30 75,70 105,50" stroke="var(--gold2)" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M10,75 C40,55 70,95 110,75" stroke="var(--burn2)" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M40,75 L80,75 L90,65 L30,65 Z" fill="var(--text2)"/><line x1="60" y1="65" x2="60" y2="45" stroke="#fff" stroke-width="2"/><polygon points="60,45 75,52 60,60" fill="var(--red)"/><text x="60" y="32" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">UMI (SEA)</text></svg>`;
+  } else if (r === 'e') {
+    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;"><line x1="20" y1="80" x2="100" y2="80" stroke="var(--border2)" stroke-width="4"/><line x1="20" y1="90" x2="100" y2="90" stroke="var(--border2)" stroke-width="4"/><line x1="30" y1="75" x2="30" y2="95" stroke="var(--text3)" stroke-width="2"/><line x1="50" y1="75" x2="50" y2="95" stroke="var(--text3)" stroke-width="2"/><line x1="70" y1="75" x2="70" y2="95" stroke="var(--text3)" stroke-width="2"/><rect x="40" y="45" width="40" height="20" rx="3" fill="var(--card3)" stroke="var(--green)" stroke-width="1.5"/><text x="60" y="58" font-size="8" fill="#fff" font-weight="700" text-anchor="middle">EKI</text><line x1="60" y1="65" x2="60" y2="75" stroke="#fff" stroke-width="2"/><text x="60" y="32" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">EKI (STATION)</text></svg>`;
+  } else if (r === 'o') {
+    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;"><path d="M 50 45 Q 45 35 50 25" stroke="var(--text3)" stroke-width="2" fill="none"/><path d="M 60 45 Q 55 35 60 25" stroke="var(--text3)" stroke-width="2" fill="none"/><rect x="40" y="48" width="40" height="40" rx="6" fill="var(--card4)" stroke="var(--border2)" stroke-width="2"/><rect x="43" y="52" width="34" height="10" rx="2" fill="var(--green)" opacity="0.7"/><text x="60" y="72" font-size="9" fill="var(--text2)" font-weight="700" text-anchor="middle">TEA</text><text x="60" y="106" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">OCHA (TEA)</text></svg>`;
+  } else if (r === 'ka') {
+    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;"><path d="M30,65 C30,40 90,40 90,65 Z" fill="var(--red)" opacity="0.8" stroke="#fff" stroke-width="1.5"/><line x1="60" y1="65" x2="60" y2="85" stroke="#fff" stroke-width="2"/><path d="M60,85 Q65,90 70,85" stroke="#fff" stroke-width="2" fill="none"/><text x="60" y="32" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">KASA (UMBRELLA)</text></svg>`;
+  } else if (r === 'neko' || r === 'ne') {
+    return `<svg width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px;"><polygon points="40,50 30,30 55,45" fill="var(--amber)"/><polygon points="80,50 90,30 65,45" fill="var(--amber)"/><circle cx="60" cy="65" r="25" fill="var(--card4)" stroke="var(--border2)" stroke-width="2"/><circle cx="50" cy="60" r="3" fill="#fff"/><circle cx="70" cy="60" r="3" fill="#fff"/><line x1="30" y1="65" x2="45" y2="65" stroke="var(--text3)" stroke-width="1.5"/><line x1="90" y1="65" x2="75" y2="65" stroke="var(--text3)" stroke-width="1.5"/><polygon points="58,66 62,66 60,69" fill="var(--red)"/><text x="60" y="105" font-size="10" fill="var(--text2)" font-weight="700" text-anchor="middle" letter-spacing="1">NEKO (CAT)</text></svg>`;
+  } else {
+    // REAL CLOUDFLARE PHOTO
+    const imgUrl = `${CF_R2_URL}/kana/${r}.jpg`;
+    
+    // Determine fallback text
+    let subText = "EXAMPLE";
+    if (wordStr) {
+      const match = wordStr.match(/^([^\(]+)\s*\((.+?)\)$/);
+      if (match) {
+        const parts = match[2].split('-');
+        if (parts.length > 1) {
+            subText = parts[1].trim().toUpperCase();
+        } else {
+            subText = match[2].trim().toUpperCase(); 
+        }
+      }
+    }
+    
+    const fallbackSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="110" height="110" viewBox="0 0 120 120" style="background:#060f1c; border-radius:8px; border:1px solid #1a2b4c; display:block; margin:0 auto 12px;"><circle cx="60" cy="50" r="38" fill="#112240" stroke="#1a2b4c" stroke-width="1"/><text x="60" y="60" font-size="10" fill="#8892b0" font-weight="bold" text-anchor="middle">Loading Image...</text><text x="60" y="106" font-size="9" fill="#8892b0" font-weight="700" text-anchor="middle" letter-spacing="0.5">${subText}</text></svg>`;
+    const encodedFallback = encodeURIComponent(fallbackSvg);
+    
+    return `<img src="${imgUrl}" alt="${subText}" style="width:110px; height:110px; border-radius:8px; border:1px solid var(--border2); display:block; margin:0 auto 12px; object-fit:cover; background:#060f1c;" onerror="this.onerror=null; this.outerHTML=decodeURIComponent('${encodedFallback}');" />`;
+  }
+}
+var _activeKanaType = 'hiragana'; // 'hiragana' or 'katakana'
+var _selectedKanaIdx = 0;
+var _activeJlptQuizIdx = 0; // index from 0 to 5
+
+// Recall Game State
+var _recallQuestionIdx = 0;
+var _hiraScoreCorrect = 0;
+var _hiraScoreTotal = 0;
+var _kataScoreCorrect = 0;
+var _kataScoreTotal = 0;
+
+// Switch Japanese sub-areas
+function switchJpSubHub(area) {
+  if (typeof stopConversation === 'function') stopConversation();
+  if (typeof stopDictPage === 'function') stopDictPage();
+  _activeJpSubHub = area;
+  document.getElementById('sub-hub-chart').classList.remove('active');
+  document.getElementById('sub-hub-kanji').classList.remove('active');
+  document.getElementById('sub-hub-levels').classList.remove('active');
+  document.getElementById('sub-hub-dict').classList.remove('active');
+  
+  document.getElementById('jp-kana-section').style.display = 'none';
+  document.getElementById('jp-kanji-casual-section').style.display = 'none';
+  document.getElementById('jp-levels-section').style.display = 'none';
+  document.getElementById('jp-dict-section').style.display = 'none';
+  
+  if (area === 'chart') {
+    document.getElementById('sub-hub-chart').classList.add('active');
+    document.getElementById('jp-kana-section').style.display = 'grid';
+    renderKanaChart();
+  } else if (area === 'kanji') {
+    document.getElementById('sub-hub-kanji').classList.add('active');
+    document.getElementById('jp-kanji-casual-section').style.display = 'grid';
+    renderKanjiHub();
+  } else if (area === 'dict') {
+    document.getElementById('sub-hub-dict').classList.add('active');
+    document.getElementById('jp-dict-section').style.display = 'block';
+    renderDictionary();
+  } else {
+    document.getElementById('sub-hub-levels').classList.add('active');
+    document.getElementById('jp-levels-section').style.display = 'block';
+    renderJlptContent();
+  }
+}
+
+// Toggle Kanji vs Casual phrases area
+function toggleJpCasualArea(area) {
+  _activeJpCasualArea = area;
+  document.getElementById('btn-jp-kanji').classList.remove('active');
+  document.getElementById('btn-jp-casual').classList.remove('active');
+  
+  if (area === 'kanji') {
+    document.getElementById('btn-jp-kanji').classList.add('active');
+    document.getElementById('jp-kanji-area-container').style.display = 'block';
+    document.getElementById('jp-casual-phrases-area').style.display = 'none';
+  } else {
+    document.getElementById('btn-jp-casual').classList.add('active');
+    document.getElementById('jp-kanji-area-container').style.display = 'none';
+    document.getElementById('jp-casual-phrases-area').style.display = 'block';
+  }
+  renderKanjiHub();
+}
+
+var _activeKanjiLevel = 5;
+function switchKanjiLevel(level) {
+  _activeKanjiLevel = level;
+  for (let i = 1; i <= 5; i++) {
+    const btn = document.getElementById('btn-kanji-' + i);
+    if (btn) btn.classList.remove('active');
+  }
+  const activeBtn = document.getElementById('btn-kanji-' + level);
+  if (activeBtn) activeBtn.classList.add('active');
+  
+  _selectedKanjiIdx = 0;
+  renderKanjiHub();
+}
+
+// Render Kanji List or Conversational Phrases
+function renderKanjiHub() {
+  if (_activeJpCasualArea === 'kanji') {
+    const container = document.getElementById('jp-kanji-list-area');
+    let gridHtml = '';
+    
+    // Fallback if data is missing
+    const kanjiList = (window.KANJI_LEVEL_DATA && window.KANJI_LEVEL_DATA[_activeKanjiLevel]) ? window.KANJI_LEVEL_DATA[_activeKanjiLevel] : [];
+    
+    kanjiList.forEach((item, idx) => {
+      const isActiveClass = idx === _selectedKanjiIdx ? ' active' : '';
+      gridHtml += '<div class="kana-card' + isActiveClass + '" onclick="selectKanjiCharacter(' + idx + ')">'
+        + '  <div class="kana-char" style="color:var(--gold2);">' + esc(item.k || item.char) + '</div>'
+        + '  <div class="kana-romaji" style="font-size:9.5px; opacity:0.8;">' + esc(item.m || item.meaning) + '</div>'
+        + '</div>';
+    });
+    
+    container.innerHTML = gridHtml;
+    renderKanjiDetails(_selectedKanjiIdx);
+  } else {
+    // Render Conversational Phrase Grid
+    const container = document.getElementById('jp-casual-phrases-area');
+    let phrasesHtml = '';
+    
+    for (const key in CASUAL_DATA) {
+      const list = CASUAL_DATA[key];
+      const title = key === 'greetings' ? '🎌 ESSENTIAL GREETINGS' : key === 'slang' ? '🔥 DAILY CASUAL SLANG' : '🗺️ TRAVEL SURVIVAL PHRASES';
+      
+      phrasesHtml += '<div style="margin-bottom:16px;">'
+        + '  <h3 class="study-lead" style="font-size:16px; margin-bottom:8px; border-bottom:1px solid var(--border); padding-bottom:4px;">' + title + '</h3>';
+        
+      list.forEach(item => {
+        phrasesHtml += '<div class="lesson-card" style="padding:14px; margin-bottom:8px; background:var(--card2); border:1px solid var(--border);">'
+          + '  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">'
+          + '    <span style="font-size:16px; font-weight:700; color:var(--text);">' + esc(item.phrase) + '</span>'
+          + '    <span style="font-size:15px; font-weight:700; color:var(--gold2); font-family:monospace; text-transform:uppercase;">' + esc(item.romaji) + '</span>'
+          + '  </div>'
+          + '  <div style="font-size:15px; font-weight:600; color:var(--green); margin-bottom:4px;">' + esc(item.meaning) + '</div>'
+          + '  <div style="font-size:16px; color:var(--text2); font-style:italic;">' + esc(item.example) + '</div>'
+          + '</div>';
+      });
+      
+      phrasesHtml += '</div>';
+    }
+    
+    container.innerHTML = phrasesHtml;
+  }
+  
+  // Make sure the Kanji Game stays loaded!
+  loadKanjiGame();
+}
+
+function selectKanjiCharacter(idx) {
+  _selectedKanjiIdx = idx;
+  document.querySelectorAll('#jp-kanji-list-area .kana-card').forEach((card, i) => {
+    card.classList.remove('active');
+    if (i === idx) card.classList.add('active');
+  });
+  renderKanjiDetails(idx);
+}
+
+function renderKanjiDetails(idx) {
+  const kanjiList = (window.KANJI_LEVEL_DATA && window.KANJI_LEVEL_DATA[_activeKanjiLevel]) ? window.KANJI_LEVEL_DATA[_activeKanjiLevel] : [];
+  const item = kanjiList[idx];
+  if (!item) return;
+  
+  // Custom styled vector SVGs for Kanji mnemonic (Pictures)
+  let kanjiSvgVisual = '';
+  if (item.k === '日') {
+    kanjiSvgVisual = `<svg width="100" height="100" viewBox="0 0 100 100" style="background:#060f1c; border-radius:6px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
+      <circle cx="50" cy="50" r="22" fill="var(--amber)" opacity="0.85"/>
+      <text x="50" y="54" font-size="8" fill="#fff" font-weight="700" text-anchor="middle">SUN / DAY</text>
+    </svg>`;
+  } else if (item.k === '本') {
+    kanjiSvgVisual = `<svg width="100" height="100" viewBox="0 0 100 100" style="background:#060f1c; border-radius:6px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
+      <rect x="35" y="25" width="30" height="42" rx="2" fill="var(--card4)" stroke="var(--border2)" stroke-width="2"/>
+      <line x1="50" y1="25" x2="50" y2="67" stroke="#fff" stroke-width="1.5"/>
+      <circle cx="50" cy="78" r="8" fill="var(--green)" opacity="0.8"/>
+      <text x="50" y="81" font-size="7" fill="#fff" font-weight="700" text-anchor="middle">ORIGIN</text>
+    </svg>`;
+  } else if (item.k === '人') {
+    kanjiSvgVisual = `<svg width="100" height="100" viewBox="0 0 100 100" style="background:#060f1c; border-radius:6px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
+      <!-- Person icon -->
+      <circle cx="50" cy="35" r="10" fill="var(--text3)"/>
+      <path d="M35,75 L50,55 L65,75" stroke="var(--gold2)" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <line x1="50" y1="45" x2="50" y2="55" stroke="var(--gold2)" stroke-width="4" stroke-linecap="round"/>
+    </svg>`;
+  } else if (item.k === '山') {
+    kanjiSvgVisual = `<svg width="100" height="100" viewBox="0 0 100 100" style="background:#060f1c; border-radius:6px; border:1px solid var(--border2); display:block; margin:0 auto 12px;">
+      <path d="M 20 75 L 35 40 L 50 65 L 65 30 L 80 75 Z" fill="var(--card4)" stroke="var(--border2)" stroke-width="2"/>
+      <polygon points="35,40 40,50 30,50" fill="#fff"/>
+      <polygon points="65,30 70,40 60,40" fill="#fff"/>
+    </svg>`;
+  } else {
+    // No visual for generic kanji to prevent misleading placeholder
+    kanjiSvgVisual = '';
+  }
+
+  const detailsHtml = '<div class="kana-details-header">'
+    + '  <div class="kana-details-big" style="color:var(--gold2);">' + esc(item.k) + '</div>'
+    + '  <div>'
+    + '    <div class="kana-details-title">Stroke Count</div>'
+    + '    <div class="kana-details-val" style="font-size:20px; color:var(--text);">' + esc(item.s) + '</div>'
+    + '  </div>'
+    + '</div>'
+    + kanjiSvgVisual
+    + '<div style="margin-bottom:12px;">'
+    + '  <div class="kana-details-title">English Meaning</div>'
+    + '  <div class="kana-details-val" style="font-size:15px; color:var(--green); font-weight:700;">' + esc(item.m) + '</div>'
+    + '</div>'
+    + '<div style="margin-bottom:12px;">'
+    + '  <div class="kana-details-title">Onyomi / Kunyomi</div>'
+    + '  <div class="kana-details-val" style="font-family:monospace; font-size:12.5px;">' + esc(item.r) + '</div>'
+    + '</div>';
+    
+  document.getElementById('kanji-details-box').innerHTML = detailsHtml;
+}
+
+// Kanji Recall Game
+function loadKanjiGame() {
+  const kanjiList = (window.KANJI_LEVEL_DATA && window.KANJI_LEVEL_DATA[_activeKanjiLevel]) ? window.KANJI_LEVEL_DATA[_activeKanjiLevel] : [];
+  if (kanjiList.length === 0) return;
+  const rIdx = Math.floor(Math.random() * kanjiList.length);
+  _kanjiQuestionIdx = rIdx;
+  
+  const item = kanjiList[rIdx];
+  document.getElementById('kanji-game-question').textContent = item.k;
+  
+  let options = [item.m];
+  while (options.length < 4) {
+    const randomItem = kanjiList[Math.floor(Math.random() * kanjiList.length)];
+    if (!options.includes(randomItem.m)) {
+      options.push(randomItem.m);
+    }
+  }
+  
+  options.sort(() => Math.random() - 0.5);
+  
+  const optionsHtml = options.map(opt => {
+    return '<button class="option-btn" style="padding:10px 12px; font-size:15px;" onclick="selectKanjiOption(\'' + esc(opt) + '\')">' + esc(opt) + '</button>';
+  }).join('');
+  
+  document.getElementById('kanji-game-options').innerHTML = optionsHtml;
+}
+
+function selectKanjiOption(selectedMeaning) {
+  const kanjiList = (window.KANJI_LEVEL_DATA && window.KANJI_LEVEL_DATA[_activeKanjiLevel]) ? window.KANJI_LEVEL_DATA[_activeKanjiLevel] : [];
+  const item = kanjiList[_kanjiQuestionIdx];
+  if (!item) return;
+  const correctMeaning = item.m;
+  
+  _kanjiScoreTotal++;
+  const isCorrect = selectedMeaning === correctMeaning;
+  if (isCorrect) _kanjiScoreCorrect++;
+  
+  document.getElementById('kanji-score-display').textContent = 'SCORE: ' + _kanjiScoreCorrect + ' / ' + _kanjiScoreTotal;
+  
+  document.querySelectorAll('#kanji-game-options .option-btn').forEach(btn => {
+    btn.disabled = true;
+    if (btn.textContent === correctMeaning) {
+      btn.classList.add('correct');
+    } else if (btn.textContent === selectedMeaning) {
+      btn.classList.add('incorrect');
+    }
+  });
+  
+  setTimeout(loadKanjiGame, 1300);
+}
+
+
+
+// Toggle Hiragana vs Katakana
+function toggleKanaType(type) {
+  _activeKanaType = type;
+  document.getElementById('btn-kana-hira').classList.remove('active');
+  document.getElementById('btn-kana-kata').classList.remove('active');
+  
+  const titleEl = document.getElementById('kana-game-title');
+  if (type === 'hiragana') {
+    document.getElementById('btn-kana-hira').classList.add('active');
+    if (titleEl) titleEl.innerText = 'HIRAGANA SOUND RECALL GAME';
+    const scoreEl = document.getElementById('kana-score-display');
+    if (scoreEl) scoreEl.textContent = 'SCORE: ' + _hiraScoreCorrect + ' / ' + _hiraScoreTotal;
+  } else {
+    document.getElementById('btn-kana-kata').classList.add('active');
+    if (titleEl) titleEl.innerText = 'KATAKANA SOUND RECALL GAME';
+    const scoreEl = document.getElementById('kana-score-display');
+    if (scoreEl) scoreEl.textContent = 'SCORE: ' + _kataScoreCorrect + ' / ' + _kataScoreTotal;
+  }
+  renderKanaChart();
+  
+  // Refresh the game so it immediately shows the correct alphabet character
+  if (typeof loadKanaRecallDrill === 'function') {
+    loadKanaRecallDrill();
+  }
+}
+
+// Render the 46 Kana Grid cards
+function renderKanaChart() {
+  const container = document.getElementById('kana-grid-area');
+  let gridHtml = '';
+  
+  KANA_DATA.forEach((item, idx) => {
+    const char = _activeKanaType === 'hiragana' ? item.h : item.k;
+    const isActiveClass = idx === _selectedKanaIdx ? ' active' : '';
+    gridHtml += '<div class="kana-card' + isActiveClass + '" onclick="selectKanaCharacter(' + idx + ')">'
+      + '  <div class="kana-char">' + esc(char) + '</div>'
+      + '  <div class="kana-romaji">' + esc(item.r) + '</div>'
+      + '</div>';
+  });
+  
+  container.innerHTML = gridHtml;
+  renderKanaDetails(_selectedKanaIdx);
+}
+
+// Select a character to show details
+function selectKanaCharacter(idx) {
+  _selectedKanaIdx = idx;
+  document.querySelectorAll('.kana-grid .kana-card').forEach((card, i) => {
+    card.classList.remove('active');
+    if (i === idx) card.classList.add('active');
+  });
+  renderKanaDetails(idx);
+}
+
+// Render side details panel
+function renderKanaDetails(idx) {
+  const item = KANA_DATA[idx];
+  if (!item) return;
+  
+  const char = _activeKanaType === 'hiragana' ? item.h : item.k;
+  const typeLabel = _activeKanaType === 'hiragana' ? 'Hiragana Phonetic' : 'Katakana Foreign';
+  
+  // Custom styled vector SVG mnemonic picture!
+  const svgVisual = getKanaSvgVisual(item.r, item.word);
+  
+  const detailsHtml = '<div class="kana-details-header">'
+    + '  <div class="kana-details-big">' + esc(char) + '</div>'
+    + '  <div>'
+    + '    <div class="kana-details-title">Syllable sound</div>'
+    + '    <div class="kana-details-val" style="font-size:22px; text-transform:uppercase; color:var(--gold2);">' + esc(item.r) + '</div>'
+    + '  </div>'
+    + '</div>'
+    + svgVisual
+    + '<div style="margin-bottom:12px;">'
+    + '  <div class="kana-details-title">Alphabet Type</div>'
+    + '  <div class="kana-details-val" style="font-size:16px;">' + typeLabel + ' script</div>'
+    + '</div>'
+    + '<div style="margin-bottom:12px;">'
+    + '  <div class="kana-details-title">Stroke Guidelines</div>'
+    + '  <div class="kana-details-val" style="font-weight:400; font-size:12.5px; color:var(--text2);">' + esc(item.stroke) + '</div>'
+    + '</div>'
+    + '<div>'
+    + '  <div class="kana-details-title">Mnemonic Vocabulary Example</div>'
+    + '  <div class="kana-details-val" style="color:var(--green); font-size:16px; font-weight:700;">' + esc(item.word) + '</div>'
+    + '</div>';
+    
+  document.getElementById('kana-details-box').innerHTML = detailsHtml;
+}
+
+// Setup character recall game
+function loadKanaRecallDrill() {
+  // Select a random character index
+  const rIdx = Math.floor(Math.random() * KANA_DATA.length);
+  _recallQuestionIdx = rIdx;
+  
+  const item = KANA_DATA[rIdx];
+  const char = _activeKanaType === 'hiragana' ? item.h : item.k;
+  document.getElementById('kana-game-question').textContent = char;
+  
+  // Generate 4 multiple choice options (including correct answer)
+  let options = [item.r];
+  while (options.length < 4) {
+    const randomItem = KANA_DATA[Math.floor(Math.random() * KANA_DATA.length)];
+    if (!options.includes(randomItem.r)) {
+      options.push(randomItem.r);
+    }
+  }
+  
+  // Shuffle options
+  options.sort(() => Math.random() - 0.5);
+  
+  const optionsHtml = options.map(opt => {
+    return '<button class="option-btn" style="padding:10px 12px; font-size:15px;" onclick="selectKanaRecallOption(\'' + esc(opt) + '\')">' + esc(opt) + '</button>';
+  }).join('');
+  
+  document.getElementById('kana-game-options').innerHTML = optionsHtml;
+}
+
+// Select recall game option
+function selectKanaRecallOption(selectedRomaji) {
+  const item = KANA_DATA[_recallQuestionIdx];
+  const correctRomaji = item.r;
+  
+  _recallScoreTotal++;
+  const isCorrect = selectedRomaji === correctRomaji;
+  if (isCorrect) _recallScoreCorrect++;
+  
+  document.getElementById('kana-score-display').textContent = 'SCORE: ' + _recallScoreCorrect + ' / ' + _recallScoreTotal;
+  
+  // Highlight correctness
+  document.querySelectorAll('#kana-game-options .option-btn').forEach(btn => {
+    btn.disabled = true;
+    if (btn.textContent === correctRomaji) {
+      btn.classList.add('correct');
+    } else if (btn.textContent === selectedRomaji) {
+      btn.classList.add('incorrect');
+    }
+  });
+  
+  // Load next question automatically after 1.2s
+  setTimeout(loadKanaRecallDrill, 1300);
+}
+
+
+// RENDER JLPT CONTENT
+var _activeLessonTab = 'overview';
+var _lessonPageIndexes = { writing: 0, writing_practice: 0, grammar: 0, listening: 0, reading: 0, conversation: 0 };
+
+function nextLessonPage(tab) {
+  if (typeof stopConversation === 'function') stopConversation();
+  const data = (typeof JLPT_TEXTBOOK !== 'undefined' && JLPT_TEXTBOOK[_activeJlptLevel]) ? JLPT_TEXTBOOK[_activeJlptLevel] : null;
+  if (!data || !data[tab]) return;
+  if (_lessonPageIndexes[tab] < data[tab].length - 1) {
+    _lessonPageIndexes[tab]++;
+    renderLessonTabContent();
+  }
+}
+
+function prevLessonPage(tab) {
+  if (typeof stopConversation === 'function') stopConversation();
+  if (_lessonPageIndexes[tab] > 0) {
+    _lessonPageIndexes[tab]--;
+    renderLessonTabContent();
+  }
+}
+
+function renderJlptContent() {
+  const data = JLPT_DATA[_activeJlptLevel];
+  if (!data) return;
+  
+  // Render Study Guide Card with Tabs
+  const lessonHtml = '<h2 class="section-headline">🇯🇵 JLPT Study Guide (N' + _activeJlptLevel + ')</h2>'
+    + '<div class="class-selector-bar" style="margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border);">'
+    + '  <button class="class-btn ' + (_activeLessonTab === 'overview' ? 'active' : '') + '" onclick="switchLessonTab(\'overview\')">Overview</button>'
+    + '  <button class="class-btn ' + (_activeLessonTab === 'writing' ? 'active' : '') + '" onclick="switchLessonTab(\'writing\')">Writing</button>'
+    + '  <button class="class-btn ' + (_activeLessonTab === 'writing_practice' ? 'active' : '') + '" onclick="switchLessonTab(\'writing_practice\')">Writing Practice</button>'
+    + '  <button class="class-btn ' + (_activeLessonTab === 'grammar' ? 'active' : '') + '" onclick="switchLessonTab(\'grammar\')">Grammar</button>'
+    + '  <button class="class-btn ' + (_activeLessonTab === 'listening' ? 'active' : '') + '" onclick="switchLessonTab(\'listening\')">Listening</button>'
+    + '  <button class="class-btn ' + (_activeLessonTab === 'reading' ? 'active' : '') + '" onclick="switchLessonTab(\'reading\')">Reading</button>'
+    + '  <button class="class-btn ' + (_activeLessonTab === 'conversation' ? 'active' : '') + '" onclick="switchLessonTab(\'conversation\')">Conversation</button>'
+    + '</div>'
+    + '<div id="jlpt-lesson-tab-content" style="min-height:180px;">'
+    + '</div>';
+    
+  document.getElementById('jlpt-lesson-card').innerHTML = lessonHtml;
+  renderLessonTabContent();
+  
+  // Load Quiz Drill Card (Practice Simulator)
+  // Retrieve saved progress from localStorage
+  let savedProgress = parseInt(localStorage.getItem('jlpt_progress_' + _activeJlptLevel)) || 0;
+  if (savedProgress >= data.quizzes.length) savedProgress = 0;
+  
+  const drillHeaderHtml = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">'
+    + '  <h2 class="section-headline" style="margin:0; border:none; padding:0;">📝 JLPT Practice Drills (N' + _activeJlptLevel + ')</h2>'
+    + '  <button class="widget-btn" style="background:var(--red); font-size:15px; padding:4px 10px;" onclick="resetJlptProgress()">Reset Session</button>'
+    + '</div>'
+    + '<div id="jlpt-quiz-container"></div>'
+    + '<div style="margin-top:24px; text-align:center; padding-top:16px; border-top:1px solid var(--border);">'
+    + '  <button class="hub-toggle-btn active" style="background:var(--gold2); border:none; box-shadow:0 0 12px var(--glow);" onclick="openMocTestModal()">🎯 Take N' + _activeJlptLevel + ' MOC Test</button>'
+    + '</div>';
+    
+  document.getElementById('jlpt-quiz-card').innerHTML = drillHeaderHtml;
+  loadJlptQuiz(savedProgress);
+  
+  if (_activeLessonTab === 'overview') {
+    document.getElementById('jlpt-quiz-card').style.display = 'block';
+  } else {
+    document.getElementById('jlpt-quiz-card').style.display = 'none';
+  }
+}
+
+function switchLessonTab(tab) {
+  if (typeof stopConversation === 'function') stopConversation();
+  _activeLessonTab = tab;
+  renderJlptContent();
+}
+
+function renderLessonTabContent() {
+  const data = JLPT_DATA[_activeJlptLevel] || { lesson: { headline: 'JLPT N' + _activeJlptLevel, lead: 'Study Guide' } };
+  const textbook = (typeof JLPT_TEXTBOOK !== 'undefined' && JLPT_TEXTBOOK[_activeJlptLevel]) ? JLPT_TEXTBOOK[_activeJlptLevel] : null;
+  const container = document.getElementById('jlpt-lesson-tab-content');
+  
+  if (_activeLessonTab === 'overview') {
+    container.innerHTML = '<p class="study-lead">' + esc(data.lesson.headline) + '</p>'
+      + '<p style="margin-bottom:12px; color:var(--text2); font-size:16px;">' + esc(data.lesson.lead) + '</p>'
+      + '<ul class="study-bullets">'
+      + (data.lesson.bullets || []).map(b => '<li>' + b + '</li>').join('')
+      + '</ul>';
+  } else {
+    // Shared pagination logic for writing, grammar, listening, reading
+    if (!textbook || !textbook[_activeLessonTab] || textbook[_activeLessonTab].length === 0) { 
+      container.innerHTML = '<p>No data</p>'; 
+      return; 
+    }
+    
+    const arr = textbook[_activeLessonTab];
+    let pageIdx = _lessonPageIndexes[_activeLessonTab] || 0;
+    if (pageIdx >= arr.length) { pageIdx = 0; _lessonPageIndexes[_activeLessonTab] = 0; }
+    
+    const item = arr[pageIdx];
+    
+    let html = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">';
+    
+    if (_activeLessonTab === 'writing') html += '<h3 class="study-lead" style="margin:0;">Writing & Kanji (N' + _activeJlptLevel + ')</h3>';
+    else if (_activeLessonTab === 'writing_practice') html += '<h3 class="study-lead" style="margin:0;">Writing Practice (N' + _activeJlptLevel + ')</h3>';
+    else if (_activeLessonTab === 'grammar') html += '<h3 class="study-lead" style="margin:0;">Grammar Structures (N' + _activeJlptLevel + ')</h3>';
+    else if (_activeLessonTab === 'listening') html += '<h3 class="study-lead" style="margin:0;">Listening Comprehension (N' + _activeJlptLevel + ')</h3>';
+    else if (_activeLessonTab === 'reading') html += '<h3 class="study-lead" style="margin:0;">Reading Comprehension (N' + _activeJlptLevel + ')</h3>';
+    else if (_activeLessonTab === 'conversation') html += '<h3 class="study-lead" style="margin:0;">Conversation Practice (N' + _activeJlptLevel + ')</h3>';
+    
+    html += '<div style="font-size:15px; color:var(--text3); background:var(--card3); padding:4px 10px; border-radius:12px;">Page ' + (pageIdx+1) + ' of ' + arr.length + '</div>'
+         + '</div>';
+         
+    html += '<div style="background:var(--card2); border:1px solid var(--border2); padding:16px; border-radius:8px; margin-bottom:16px;">';
+    
+
+    if (_activeLessonTab === 'writing_practice') {
+      const langs = {
+        'ja': 'Japanese', 'en': 'English', 'hi': 'Hindi', 'ml': 'Malayalam', 
+        'ta': 'Tamil', 'te': 'Telugu', 'kn': 'Kannada', 'bn': 'Bengali', 
+        'mr': 'Marathi', 'gu': 'Gujarati', 'pa': 'Punjabi', 'ur': 'Urdu', 'ne': 'Nepali',
+        'zh-CN': 'Chinese', 'ko': 'Korean', 'vi': 'Vietnamese', 'th': 'Thai', 'tl': 'Filipino (Philippines)', 
+        'id': 'Indonesian', 'mn': 'Mongolian', 'su': 'Sundanese',
+        'fr': 'French', 'es': 'Spanish', 'it': 'Italian', 'nl': 'Dutch', 
+        'el': 'Greek', 'ru': 'Russian', 'pl': 'Polish', 'uk': 'Ukrainian', 
+        'ar': 'Arabic', 'ku': 'Kurdish', 'af': 'Afrikaans', 'sw': 'Swahili', 'la': 'Latin'
+      };
+      let optionsHtml = '';
+      for(let k in langs) optionsHtml += '<option value="' + k + '">' + langs[k] + '</option>';
+      html += '<div class="trans-widget">'
+        + '<div style="font-weight:700; color:var(--gold2); font-size:18px; margin-bottom:12px;">🌟 Intelligent Translator Writing Pad</div>'
+        + '<div class="trans-controls">'
+        + '  <select id="trans-in-lang" class="trans-select" onchange="handleLangChange(\'in\')">' + optionsHtml.replace('value="en"', 'value="en" selected') + '</select>'
+        + '  <button class="trans-swap-btn" onclick="swapTranslationLangs()">⇄ Swap</button>'
+        + '  <select id="trans-out-lang" class="trans-select" onchange="handleLangChange(\'out\')">' + optionsHtml.replace('value="ja"', 'value="ja" selected') + '</select>'
+        + '</div>'
+        + '<div class="trans-body">'
+        + '  <div class="trans-box" style="margin-bottom:12px;">'
+        + '    <textarea id="trans-input" class="trans-input" placeholder="Type or dictate text here..." oninput="doTranslation()" style="width:100%; height:320px; background:transparent; color:var(--text); border:none; padding:16px; font-size:18px; resize:none; outline:none; font-family:inherit; box-sizing:border-box;"></textarea>'
+        + '    <div class="trans-actions">'
+        + '      <label class="trans-action-btn" style="cursor:pointer; margin-right:8px;">📁 Upload File <input type="file" style="display:none;" onchange="handleTransFileUpload(event)" accept=".txt,.js,.json,.html,.md,.csv,.jpg,.jpeg,.png,.docx"></label>'
+        + '      <button class="trans-action-btn" style="margin-right:8px;" onclick="openCameraModal()">📷 Camera</button>'
+        + '      <button id="trans-voice-btn" class="trans-action-btn" style="margin-right:8px;" onclick="startTranslationVoice()">🎤 Voice Record</button>'
+        + '      <button class="trans-action-btn" style="color:var(--red);" onclick="clearTranslationInput()">🗑️ Clear</button>'
+        + '    </div>'
+        + '  </div>'
+        + '  <div class="trans-box">'
+        + '    <div id="trans-output" class="trans-output" style="width:100%; height:320px; padding:16px; font-size:18px; color:var(--text2); overflow-y:auto; box-sizing:border-box;">Translation will appear here...</div>'
+        + '    <div class="trans-actions">'
+        + '      <button class="trans-action-btn" style="margin-right:8px;" onclick="copyTranslation()">📋 Copy</button>'
+        + '      <button class="trans-action-btn" onclick="playTranslationAudio()">🔊 Play Audio</button>'
+        + '    </div>'
+        + '  </div>'
+        + '</div>'
+        + '</div>';
+    }
+
+    if (_activeLessonTab === 'writing' && item) {
+      html += '<div style="font-weight:700; color:var(--gold2); font-size:16px; margin-bottom:8px;">' + esc(item.title) + '</div>'
+
+        + '<p style="color:var(--text2); font-size:16px; margin-bottom:12px; line-height:1.6;">' + esc(item.explanation) + '</p>'
+        + '<div style="background:rgba(255,255,255,0.03); border-radius:6px; padding:10px; margin-bottom:12px;">'
+        + (item.table||[]).map(r => '<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:15px;"><span style="color:var(--text);">' + esc(r.ja) + '</span><span style="color:var(--text3);">' + esc(r.en) + '</span></div>').join('')
+        + '</div>';
+        if (item.examples && item.examples.length > 0) {
+          html += '<div style="font-weight:700; margin-bottom:6px; color:var(--text);">Example Sentences:</div>';
+          item.examples.forEach(ex => {
+            html += '<div style="margin-bottom:8px; font-size:16px; border-left:3px solid var(--gold2); padding-left:10px;">'
+              + '<div style="color:var(--green);">' + esc(ex.ja) + '</div>'
+              + '<div style="color:var(--text2); font-size:16px;">' + esc(ex.romaji) + '</div>'
+              + '<div style="color:var(--text3); font-size:16px; font-style:italic;">"' + esc(ex.en) + '"</div>'
+              + '</div>';
+          });
+        }
+    } else if (_activeLessonTab === 'grammar') {
+      html += '<div style="font-weight:700; color:var(--gold2); font-size:16px; margin-bottom:8px;">' + esc(item.title) + '</div>'
+        + '<p style="color:var(--text2); font-size:16px; margin-bottom:12px; line-height:1.6;">' + esc(item.explanation) + '</p>'
+        + '<div style="background:rgba(255,255,255,0.03); border-radius:6px; padding:10px; margin-bottom:12px;">'
+        + (item.table || []).map(r => '<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:15px;"><span style="color:var(--text);">' + esc(r.ja) + '</span><span style="color:var(--text3);">' + esc(r.en) + '</span></div>').join('')
+        + '</div>'
+        + '<div style="font-weight:700; margin-bottom:6px; color:var(--text);">Example Sentences:</div>';
+      (item.examples || []).forEach(ex => {
+        html += '<div style="background:var(--bg); border-left:3px solid var(--blue); padding:10px; margin-bottom:8px; border-radius:4px;">'
+          + '<div style="font-size:16px; margin-bottom:4px;">' + esc(ex.ja) + '</div>'
+          + '<div style="font-size:16px; color:var(--text3); margin-bottom:2px;">' + esc(ex.romaji) + '</div>'
+          + '<div style="font-size:16px; color:var(--text2);">' + esc(ex.en) + '</div>'
+          + '</div>';
+      });
+    } else if (_activeLessonTab === 'listening') {
+      html += '<div style="font-size:32px; text-align:center; margin-bottom:12px;">🎧</div>';
+      
+      if (item.audioDrills) {
+        html += '<div style="font-weight:700; color:var(--gold2); font-size:18px; margin-bottom:12px;">' + esc(item.title) + '</div>'
+             + '<div style="color:var(--text3); margin-bottom:20px;">' + esc(item.context) + '</div>'
+             + '<div style="display:flex; flex-direction:column; gap:16px;">';
+        item.audioDrills.forEach((drill, idx) => {
+          html += '<div style="background:rgba(0,0,0,0.4); padding:16px; border-radius:8px; border:1px solid var(--border2);">'
+               + '  <div style="font-weight:bold; font-size:16px; margin-bottom:12px; color:var(--blue);">' + (idx+1) + '. ' + esc(drill.name) + '</div>'
+               + '  <audio controls style="width:100%;"><source src="' + esc(drill.file) + '" type="audio/mpeg">Your browser does not support the audio element.</audio>'
+               + '</div>';
+        });
+        html += '</div>';
+      } else {
+        html += '<div style="text-align:center; margin-bottom:16px;"><button class="widget-btn" onclick="playAudioTranscript(this, \'' + btoa(unescape(encodeURIComponent(item.transcript))) + '\')">Play Audio Track</button></div>'
+             + '<div style="font-weight:700; color:var(--gold2); font-size:16px; margin-bottom:8px;">' + esc(item.title) + '</div>'
+             + '<div style="background:rgba(0,0,0,0.3); border-radius:6px; padding:12px; font-family:monospace; margin-bottom:12px; line-height:1.6;">' + esc(item.transcript).replace(/\n/g, '<br/>') + '</div>'
+             + (item.translation ? ('<div style="font-weight:700; margin-bottom:6px; color:var(--text);">English Translation:</div>'
+             + '<div style="color:var(--text2); font-size:15px; margin-bottom:12px; line-height:1.6;">' + esc(item.translation).replace(/\n/g, '<br/>') + '</div>') : '')
+             + (item.notes ? ('<div style="color:var(--amber); font-size:16px; border-top:1px dashed var(--border2); padding-top:8px;">💡 ' + esc(item.notes) + '</div>') : '');
+      }
+    } else if (_activeLessonTab === 'reading') {
+      html += '<div style="font-weight:700; color:var(--gold2); font-size:16px; margin-bottom:8px;">' + esc(item.title) + '</div>'
+        + '<p style="font-family:serif; font-size:16px; line-height:1.8; margin-bottom:16px; color:var(--text);">' + esc(item.passage) + '</p>'
+        + '<div style="font-weight:700; margin-bottom:6px; color:var(--text);">English Translation:</div>'
+        + '<p style="color:var(--text3); font-size:16px; margin-bottom:12px; line-height:1.6; font-style:italic;">' + esc(item.translation) + '</p>'
+        + '<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;">';
+      (item.vocabulary || item.vocab || []).forEach(v => {
+        let word = v.word || v.ja;
+        let meaning = v.meaning || v.en;
+        html += '<span style="background:var(--card3); padding:4px 8px; border-radius:4px; font-size:16px;"><strong>' + esc(word) + '</strong>: ' + esc(meaning) + '</span>';
+      });
+      html += '</div>';
+      
+      let questions = item.questions || item.comprehension || [];
+      if (questions.length > 0) {
+        html += '<div style="border-top:1px dashed var(--border2); padding-top:12px;">'
+          + '<div style="font-weight:700; margin-bottom:6px;">Comprehension Check:</div>';
+        questions.forEach(q => {
+          let qText = q.q || q.question;
+          let aText = q.a || q.answer;
+          html += '<div style="margin-bottom:8px; font-size:15px;"><span style="color:var(--amber);">Q: ' + esc(qText) + '</span><br/><span style="color:var(--green);">A: ' + esc(aText) + '</span></div>';
+        });
+        html += '</div>';
+      }
+    } else if (_activeLessonTab === 'conversation') {
+      html += '<div style="font-weight:700; color:var(--gold2); font-size:18px; margin-bottom:12px;">' + esc(item.title) + '</div>';
+      if (item.image) {
+        html += '<div style="margin-bottom:16px; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.3);">'
+          + '<img src="' + item.image + '" style="width:100%; height:auto; display:block;" alt="Conversation Scene" />'
+          + '</div>';
+      }
+      html += '<div style="color:var(--text); font-size:16px; line-height:1.6;">' + item.passage + '</div>';
+    }
+    
+    html += '</div>'; // close card
+    
+    // Pagination Controls
+    if (_activeLessonTab !== 'writing_practice') {
+      let pageHtml = '<div style="display:flex; justify-content:space-between; margin-bottom:16px;">'
+        + '<button class="widget-btn" style="background:var(--card3);" onclick="prevLessonPage(\'' + _activeLessonTab + '\')" ' + (pageIdx === 0 ? 'disabled style="opacity:0.5;background:var(--card3);"' : '') + '>⬅ Prev Page</button>';
+        
+      if (_activeLessonTab === 'conversation') {
+        pageHtml += '<button id="btn-play-conversation" class="widget-btn" style="background:var(--green); border:none;" onclick="playConversation()">▶ Play Conversation</button>';
+      }
+        
+      pageHtml += '<button class="widget-btn" style="background:var(--blue);" onclick="nextLessonPage(\'' + _activeLessonTab + '\')" ' + (pageIdx >= arr.length - 1 ? 'disabled style="opacity:0.5;background:var(--blue);"' : '') + '>Next Page ➡</button>'
+        + '</div>';
+      html += pageHtml;
+    }
+
+    // MOC Test Button
+    html += '<div style="margin-top:24px; text-align:center; padding-top:16px; border-top:1px solid var(--border);">'
+      + '<button class="hub-toggle-btn active" style="background:var(--gold2); border:none; box-shadow:0 0 12px var(--glow);" onclick="openMocTestModal()">🎯 Take N' + _activeJlptLevel + ' MOC Test</button>'
+      + '</div>';
+      
+    container.innerHTML = html;
+  }
+}
+
+// Global text-to-speech audio player
+window.playAudioTranscript = function(btn, base64Text) {
+  if (!('speechSynthesis' in window)) {
+    alert('Audio playback is not supported in your browser.');
+    return;
+  }
+  
+  if (btn.innerText === 'Playing...') {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    btn.innerText = 'Play Audio Track';
+    return;
+  }
+  
+  try {
+    const text = decodeURIComponent(escape(atob(base64Text)));
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ja-JP';
+    
+    utterance.onend = () => {
+      btn.innerText = 'Play Audio Track';
+    };
+    utterance.onerror = (event) => {
+      btn.innerText = 'Play Audio Track';
+      if (event.error !== 'canceled' && event.error !== 'interrupted') {
+        alert('Error playing audio track: ' + event.error);
+      }
+    };
+    
+    window.speechSynthesis.speak(utterance);
+    btn.innerText = 'Playing...';
+  } catch (e) {
+    alert('Failed to parse audio track.');
+  }
+};
+
+function resetJlptProgress() {
+  if (confirm('Are you sure you want to reset your drill progress for N' + _activeJlptLevel + '?')) {
+    localStorage.removeItem('jlpt_progress_' + _activeJlptLevel);
+    loadJlptQuiz(0);
+  }
+}
+
+// Interactive JLPT Quiz Simulator
+function loadJlptQuiz(qIdx) {
+  const data = JLPT_DATA[_activeJlptLevel];
+  const q = data.quizzes[qIdx];
+  if (!q) return;
+  
+  // Save progress
+  localStorage.setItem('jlpt_progress_' + _activeJlptLevel, qIdx);
+  
+  const optionsHtml = q.options.map((opt, oIdx) => {
+    return `<button class="option-btn" id="opt-btn-${oIdx}" onclick="selectJlptOption(${qIdx}, ${oIdx})">${esc(opt)}</button>`;
+  }).join('');
+  
+  const nextBtnHtml = qIdx < data.quizzes.length - 1
+    ? `<button class="widget-btn" style="margin-top:12px;background:var(--card3);" onclick="loadJlptQuiz(${qIdx + 1})">Next Question &rarr;</button>`
+    : `<button class="widget-btn" style="margin-top:12px;background:var(--card3);" onclick="resetJlptProgress()">Restart Drills</button>`;
+    
+  const quizHtml = '<div class="jlpt-quiz-card" style="margin-top:0;">'
+    + '  <div style="font-size:16px; color:var(--text3); margin-bottom:8px; font-weight:700;">QUESTION ' + (qIdx + 1) + ' OF ' + data.quizzes.length + '</div>'
+    + '  <div class="jlpt-q-text">' + esc(q.q) + '</div>'
+    + '  <div class="jlpt-options">' + optionsHtml + '</div>'
+    + '  <div class="jlpt-explanation" id="quiz-explain-box">' + esc(q.explain) + '</div>'
+    + nextBtnHtml
+    + '</div>';
+    
+  document.getElementById('jlpt-quiz-container').innerHTML = quizHtml;
+}
+
+function selectJlptOption(qIdx, optionIdx) {
+  const data = JLPT_DATA[_activeJlptLevel];
+  const q = data.quizzes[qIdx];
+  
+  // Highlight selected option
+  const correctIdx = q.answer;
+  
+  document.querySelectorAll('.jlpt-options .option-btn').forEach((btn, idx) => {
+    btn.disabled = true; // Disable further selections
+    if (idx === correctIdx) {
+      btn.classList.add('correct');
+    } else if (idx === optionIdx) {
+      btn.classList.add('incorrect');
+    }
+  });
+  
+  // Show explanation
+  document.getElementById('quiz-explain-box').style.display = 'block';
+}
+
+/* ==========================================================================
+   ACADEMY NOTICES — load admin notices from content.json and show banner
+   ========================================================================== */
+async function _loadAcademyNotices() {
+  try {
+    var resp = await fetch('https://vilfintv.com/content.json?_=' + Date.now());
+    if (!resp.ok) return;
+    var data = await resp.json();
+    if (!Array.isArray(data)) return;
+
+    var now     = new Date();
+    var notices = data.filter(function(item) {
+      return (item.section || '').startsWith('academy_')
+          && item.heading
+          && (!item.expires_at || new Date(item.expires_at) > now);
+    }).sort(function(a, b) {
+      return new Date(b.published_at) - new Date(a.published_at);
+    });
+
+    var bannerEl = document.getElementById('academy-notice-banner');
+    if (!bannerEl || !notices.length) return;
+
+    /* Show the most recent notice as the primary banner, list others below */
+    var html = '';
+    notices.forEach(function(notice, idx) {
+      var typeIcon = '📢';
+      if (notice.section === 'academy_cbse')  typeIcon = '📗';
+      if (notice.section === 'academy_jlpt')  typeIcon = '🇯🇵';
+      var typeLabel = notice.section === 'academy_cbse'  ? 'CBSE Update'
+                    : notice.section === 'academy_jlpt'  ? 'JLPT Update'
+                    : 'Announcement';
+      html += '<div class="academy-notice-card" id="anc-' + idx + '">'
+        + '<div class="academy-notice-icon">' + typeIcon + '</div>'
+        + '<div class="academy-notice-body">'
+          + '<div class="academy-notice-tag">' + typeLabel + '</div>'
+          + '<div class="academy-notice-headline">' + _escHtml(notice.heading) + '</div>'
+          + (notice.story ? '<div class="academy-notice-text">' + _escHtml(notice.story) + '</div>' : '')
+        + '</div>'
+        + '<button class="academy-notice-dismiss" title="Dismiss" onclick="dismissAcademyNotice(\'anc-' + idx + '\')">✕</button>'
+        + '</div>';
+    });
+    bannerEl.innerHTML = html;
+    bannerEl.classList.add('visible');
+  } catch(e) {
+    /* Silent — notices are a progressive enhancement */
+  }
+}
+
+function dismissAcademyNotice(id) {
+  var el = document.getElementById(id);
+  if (el) { el.style.opacity='0'; el.style.transform='translateY(-6px)'; el.style.transition='all .2s';
+    setTimeout(function() {
+      el.remove();
+      var banner = document.getElementById('academy-notice-banner');
+      if (banner && !banner.querySelector('.academy-notice-card')) banner.classList.remove('visible');
+    }, 200);
+  }
+}
+
+function _escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Initialize Hub
+document.addEventListener('DOMContentLoaded', function() {
+  try { setTheme(localStorage.getItem('viltv_theme') || 'midnight'); } catch(e){}
+  try { switchHub('cbse'); } catch(e){}
+  // Initialize recall game
+  try { loadKanaRecallDrill(); } catch(e){ console.error(e); }
+  try { loadKanjiGame(); } catch(e){ console.error(e); }
+  // Load admin notices
+  try { _loadAcademyNotices(); } catch(e){}
+});
+// ══════════════════════════════════════════
+// JLPT MOC TEST LOGIC
+// ==========================================
+let _mocInterval = null;
+let _mocTimeRemaining = 0;
+let _mocQuestions = [];
+
+function openMocTestModal() {
+  try {
+    const data = JLPT_DATA[_activeJlptLevel];
+    let basePool = [];
+    if (data && data.quizzes && data.quizzes.length > 0) {
+      basePool = [...data.quizzes];
+    } else {
+      // Fallback if absolutely empty
+      basePool = [{
+        q: 'No real questions available in the database for N' + _activeJlptLevel + '.',
+        options: ['Update Database', 'Update Database', 'Update Database', 'Update Database'],
+        answer: 0,
+        explain: 'Please add real questions to JLPT_DATA.'
+      }];
+    }
+    
+    // Define exact exam blueprint based on real JLPT structure
+    let blueprint = [];
+    let totalNeeded = 0;
+    if (_activeJlptLevel <= 2) {
+      blueprint = [
+        { title: 'Language Knowledge & Reading', count: 105 },
+        { title: 'Listening', count: 35 }
+      ];
+      totalNeeded = 140;
+    } else if (_activeJlptLevel === 3) {
+      blueprint = [
+        { title: 'Language Knowledge (Vocabulary)', count: 33 },
+        { title: 'Language Knowledge (Grammar) & Reading', count: 37 },
+        { title: 'Listening', count: 30 }
+      ];
+      totalNeeded = 100;
+    } else {
+      blueprint = [
+        { title: 'Language Knowledge (Vocabulary)', count: 23 },
+        { title: 'Language Knowledge (Grammar) & Reading', count: 48 },
+        { title: 'Listening', count: 30 }
+      ];
+      totalNeeded = 101;
+    }
+    
+    // Create a pool strictly from real questions. 
+    // If we have enough, just shuffle them. If not, sample with replacement.
+    let massivePool = [];
+    if (basePool.length >= totalNeeded) {
+      massivePool = [...basePool];
+      massivePool.sort(() => Math.random() - 0.5);
+    } else {
+      for (let i = 0; i < totalNeeded; i++) {
+        const rIdx = Math.floor(Math.random() * basePool.length);
+        massivePool.push(basePool[rIdx]);
+      }
+    }
+    
+    // Populate sections
+    let generatedSections = [];
+    blueprint.forEach(sec => {
+      let secQuestions = [];
+      for(let i=0; i < sec.count; i++) {
+        secQuestions.push(massivePool.pop());
+      }
+      generatedSections.push({
+        title: sec.title,
+        questions: secQuestions
+      });
+    });
+    
+    const times = {5: 90, 4: 115, 3: 140, 2: 155, 1: 170};
+    const timeRemaining = (times[_activeJlptLevel] || 90) * 60;  
+    
+    const testPayload = {
+      level: _activeJlptLevel,
+      timeRemaining: timeRemaining,
+      sections: generatedSections
+    };
+    
+    localStorage.setItem('moc_test_data', JSON.stringify(testPayload));
+    
+    // Try to open native popup
+    window.location.assign('moc_test.html');
+    const popup = true;
+    
+    if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+      // Popup was blocked
+      const warning = document.createElement('div');
+      warning.style.position = 'fixed';
+      warning.style.top = '20px';
+      warning.style.left = '50%';
+      warning.style.transform = 'translateX(-50%)';
+      warning.style.background = 'var(--red)';
+      warning.style.color = '#fff';
+      warning.style.padding = '15px 25px';
+      warning.style.borderRadius = '8px';
+      warning.style.zIndex = '999999';
+      warning.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+      warning.style.fontWeight = 'bold';
+      warning.innerHTML = '⚠️ POPUP BLOCKED!<br/><br/>Your browser blocked the MOC Test popup window. Please allow popups for VilfinTV, or <a href="moc_test.html" target="_blank" style="color:var(--gold2); text-decoration:underline;">Click Here to manually open the test</a>.<br/><br/><small style="opacity:0.8">(Click anywhere on this red box to dismiss)</small>';
+      warning.onclick = (e) => {
+        if(e.target.tagName !== 'A') warning.remove();
+      };
+      document.body.appendChild(warning);
+      
+      // Auto-remove after 10s
+      setTimeout(() => { if(document.body.contains(warning)) warning.remove(); }, 10000);
+    }
+    
+  } catch (e) {
+    alert("Error initializing MOC test popup: " + e.message);
+    console.error(e);
+  }
+}
+
+function closeMocTestModal() {
+  clearInterval(_mocInterval);
+  const overlay = document.getElementById('moc-modal-overlay');
+  overlay.classList.remove('active');
+  overlay.style.display = 'none';
+}
+
+function updateMocTimerDisplay() {
+  const m = Math.floor(_mocTimeRemaining / 60).toString().padStart(2, '0');
+  const s = (_mocTimeRemaining % 60).toString().padStart(2, '0');
+  document.getElementById('moc-timer-display').innerHTML = 
+    `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${m}:${s}`;
+}
+
+function renderMocQuestions() {
+  const container = document.getElementById('moc-body-content');
+  let html = '';
+  _mocQuestions.forEach((q, idx) => {
+    html += '<div class="moc-q-block" id="moc-q-' + idx + '">'
+      + '  <div style="font-weight:700; margin-bottom:12px; color:var(--text);">' + (idx+1) + '. ' + esc(q.q) + '</div>'
+      + '  <div class="jlpt-options">';
+      
+    q.options.forEach((opt, oIdx) => {
+      html += '<label style="display:flex; align-items:center; gap:8px; cursor:pointer; background:var(--card2); padding:10px 14px; border-radius:6px; border:1px solid var(--border2);">'
+        + '  <input type="radio" name="moc_ans_' + idx + '" value="' + oIdx + '"> ' + esc(opt)
+        + '</label>';
+    });
+    
+    html += '  </div>'
+      + '  <div class="jlpt-explanation" id="moc-exp-' + idx + '" style="margin-top:12px;">' + esc(q.explain) + '</div>'
+      + '</div>';
+  });
+  container.innerHTML = html;
+}
+
+function submitMocTest() {
+  clearInterval(_mocInterval);
+  document.getElementById('moc-submit-btn').style.display = 'none';
+  
+  let score = 0;
+  _mocQuestions.forEach((q, idx) => {
+    const selected = document.querySelector('input[name="moc_ans_' + idx + '"]:checked');
+    const expBox = document.getElementById('moc-exp-' + idx);
+    const block = document.getElementById('moc-q-' + idx);
+    
+    expBox.style.display = 'block'; // Show explanations
+    
+    if (selected && parseInt(selected.value) === q.answer) {
+      score++;
+      block.style.borderLeft = '4px solid var(--green)';
+    } else {
+      block.style.borderLeft = '4px solid var(--red)';
+    }
+    
+    // Disable inputs
+    document.querySelectorAll('input[name="moc_ans_' + idx + '"]').forEach(inp => inp.disabled = true);
+  });
+  
+  const finalScoreHtml = '<div style="text-align:center; padding:20px; background:var(--card3); border-radius:8px; margin-bottom:24px; border:1px solid var(--border);">'
+    + '  <h3 style="color:var(--gold2); font-size:24px; margin-bottom:8px;">TEST COMPLETE</h3>'
+    + '  <div style="font-size:18px; color:var(--text);">Final Score: <strong>' + score + ' / ' + _mocQuestions.length + '</strong></div>'
+    + '</div>';
+    
+  document.getElementById('moc-body-content').insertAdjacentHTML('afterbegin', finalScoreHtml);
+}
+
+// --- TRANSLATOR LOGIC ---
+let _transTimeout;
+
+function handleLangChange(type) {
+  const inLang = document.getElementById('trans-in-lang');
+  const outLang = document.getElementById('trans-out-lang');
+  
+  if (inLang.value === outLang.value) {
+    if (type === 'in') {
+      outLang.value = (inLang.value === 'en') ? 'ja' : 'en';
+    } else {
+      inLang.value = (outLang.value === 'en') ? 'ja' : 'en';
+    }
+  }
+  doTranslation();
+}
+
+function doTranslation() {
+  const text = document.getElementById('trans-input').value;
+  if (!text.trim()) { document.getElementById('trans-output').innerText = 'Translation will appear here...'; return; }
+  const inLang = document.getElementById('trans-in-lang').value;
+  const outLang = document.getElementById('trans-out-lang').value;
+  clearTimeout(_transTimeout);
+  document.getElementById('trans-output').innerText = 'Translating...';
+  _transTimeout = setTimeout(() => {
+    fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=' + inLang + '&tl=' + outLang + '&dt=t&q=' + encodeURIComponent(text))
+      .then(r => r.json()).then(d => {
+        let result = '';
+        if(d && d[0]) d[0].forEach(p => { if(p[0]) result += p[0]; });
+        document.getElementById('trans-output').innerText = result || 'Translation failed.';
+      }).catch(e => { document.getElementById('trans-output').innerText = 'Error: ' + e.message; });
+  }, 500);
+}
+function swapTranslationLangs() {
+  const i = document.getElementById('trans-in-lang');
+  const o = document.getElementById('trans-out-lang');
+  const tmp = i.value; i.value = o.value; o.value = tmp;
+  doTranslation();
+}
+function startTranslationVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('Voice recording is not supported in this browser.'); return; }
+  const rec = new SR();
+  rec.lang = document.getElementById('trans-in-lang').value;
+  rec.interimResults = true;
+  const input = document.getElementById('trans-input');
+  const btn = document.getElementById('trans-voice-btn');
+  const originalText = btn.innerHTML;
+  rec.onresult = (e) => {
+    let final = '';
+    for(let i=0; i < e.results.length; i++) final += e.results[i][0].transcript;
+    input.value = final;
+    doTranslation();
+  };
+  rec.onstart = () => { btn.innerHTML = '🔴 Listening...'; btn.style.color = 'var(--red)'; btn.style.borderColor = 'var(--red)'; };
+  rec.onend = () => { btn.innerHTML = originalText; btn.style.color = ''; btn.style.borderColor = ''; };
+  rec.start();
+}
+function playTranslationAudio() {
+  const text = document.getElementById('trans-output').innerText;
+  if (!text || text.includes('Translating')) return;
+  const lang = document.getElementById('trans-out-lang').value;
+  
+  try {
+    const url = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=' + lang + '&q=' + encodeURIComponent(text.substring(0, 200));
+    const audio = document.createElement('audio');
+    audio.referrerPolicy = 'no-referrer';
+    audio.src = url;
+    audio.play().catch(e => {
+      if ('speechSynthesis' in window) {
+        const u = new SpeechSynthesisUtterance(text);
+        const ttsLangMap = { 'hi': 'hi-IN', 'ml': 'ml-IN', 'ta': 'ta-IN', 'te': 'te-IN', 'kn': 'kn-IN', 'bn': 'bn-IN', 'mr': 'mr-IN', 'gu': 'gu-IN', 'pa': 'pa-IN', 'ur': 'ur-PK' };
+        u.lang = ttsLangMap[lang] || lang;
+        window.speechSynthesis.speak(u);
+      }
+    });
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+async function handleTransFileUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const inputEl = document.getElementById('trans-input');
+  const ext = file.name.split('.').pop().toLowerCase();
+  
+  const loadScript = (url) => new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${url}"]`)) return resolve();
+    const s = document.createElement('script'); s.src = url; s.onload = resolve; s.onerror = reject; document.head.appendChild(s);
+  });
+
+  try {
+    if (['jpg', 'jpeg', 'png'].includes(ext)) {
+      inputEl.value = 'Scanning image with AI (this may take a few seconds)...';
+      const lang = document.getElementById('trans-in-lang').value;
+      const tessLangMap = {
+        'en': 'eng', 'ja': 'jpn', 'hi': 'hin', 'ml': 'mal', 'ta': 'tam', 'te': 'tel', 'kn': 'kan',
+        'bn': 'ben', 'mr': 'mar', 'gu': 'guj', 'pa': 'pan', 'ur': 'urd', 'ne': 'nep',
+        'zh-CN': 'chi_sim', 'ko': 'kor', 'vi': 'vie', 'th': 'tha', 'tl': 'tgl', 'id': 'ind',
+        'fr': 'fra', 'es': 'spa', 'it': 'ita', 'nl': 'nld', 'el': 'ell', 'ru': 'rus',
+        'pl': 'pol', 'uk': 'ukr', 'ar': 'ara', 'af': 'afr', 'sw': 'swa', 'la': 'lat',
+        'su': 'sun', 'mn': 'mon', 'ku': 'kur'
+      };
+      const tLang = tessLangMap[lang] || 'eng';
+      
+      await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+      const worker = await Tesseract.createWorker(tLang);
+      const ret = await worker.recognize(file);
+      await worker.terminate();
+      inputEl.value = ret.data.text;
+      doTranslation();
+      
+    } else if (ext === 'docx') {
+      inputEl.value = 'Reading Word document...';
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js');
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      inputEl.value = result.value;
+      doTranslation();
+      
+    } else {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        inputEl.value = evt.target.result;
+        doTranslation();
+      };
+      reader.readAsText(file);
+    }
+  } catch (err) {
+    console.error(err);
+    inputEl.value = 'Error reading file: ' + err.message;
+  }
+}
+
+function copyTranslation() {
+  const text = document.getElementById('trans-output').innerText;
+  if (!text || text.includes('Translating')) return;
+  navigator.clipboard.writeText(text).then(() => {
+    alert('Translation copied to clipboard!');
+  }).catch(err => {
+    alert('Failed to copy text: ' + err);
+  });
+}
+let currentCameraStream = null;
+
+async function openCameraModal() {
+  const modal = document.getElementById('camera-modal');
+  const video = document.getElementById('camera-video');
+  modal.style.display = 'flex';
+  
+  try {
+    currentCameraStream = await navigator.mediaDevices.getUserMedia({ 
+      video: { facingMode: 'environment' }, 
+      audio: false 
+    });
+    video.srcObject = currentCameraStream;
+  } catch (err) {
+    alert('Failed to access camera: ' + err.message);
+    closeCameraModal();
+  }
+}
+
+function closeCameraModal() {
+  const modal = document.getElementById('camera-modal');
+  modal.style.display = 'none';
+  if (currentCameraStream) {
+    currentCameraStream.getTracks().forEach(t => t.stop());
+    currentCameraStream = null;
+  }
+  if (isLiveTranslating) toggleLiveTranslate();
+}
+
+async function snapCameraPhoto() {
+  const video = document.getElementById('camera-video');
+  const canvas = document.getElementById('camera-canvas');
+  const context = canvas.getContext('2d');
+  
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  
+  closeCameraModal();
+  
+  const inputEl = document.getElementById('trans-input');
+  inputEl.value = 'Scanning camera photo with AI (this may take a few seconds)...';
+  
+  canvas.toBlob(async (blob) => {
+    try {
+      const lang = document.getElementById('trans-in-lang').value;
+      const tessLangMap = {
+        'en': 'eng', 'ja': 'jpn', 'hi': 'hin', 'ml': 'mal', 'ta': 'tam', 'te': 'tel', 'kn': 'kan',
+        'bn': 'ben', 'mr': 'mar', 'gu': 'guj', 'pa': 'pan', 'ur': 'urd', 'ne': 'nep',
+        'zh-CN': 'chi_sim', 'ko': 'kor', 'vi': 'vie', 'th': 'tha', 'tl': 'tgl', 'id': 'ind',
+        'fr': 'fra', 'es': 'spa', 'it': 'ita', 'nl': 'nld', 'el': 'ell', 'ru': 'rus',
+        'pl': 'pol', 'uk': 'ukr', 'ar': 'ara', 'af': 'afr', 'sw': 'swa', 'la': 'lat',
+        'su': 'sun', 'mn': 'mon', 'ku': 'kur'
+      };
+      const tLang = tessLangMap[lang] || 'eng';
+      
+      const loadScript = (url) => new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${url}"]`)) return resolve();
+        const s = document.createElement('script'); s.src = url; s.onload = resolve; s.onerror = reject; document.head.appendChild(s);
+      });
+      
+      await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+      const worker = await Tesseract.createWorker(tLang);
+      const ret = await worker.recognize(blob);
+      await worker.terminate();
+      inputEl.value = ret.data.text;
+      doTranslation();
+    } catch(err) {
+      console.error(err);
+      inputEl.value = 'Error reading photo: ' + err.message;
+    }
+  }, 'image/jpeg');
+}
+
+let isLiveTranslating = false;
+let liveTranslateWorker = null;
+
+async function toggleLiveTranslate() {
+  const btn = document.getElementById('live-trans-btn');
+  const overlay = document.getElementById('live-trans-overlay');
+  
+  if (isLiveTranslating) {
+    isLiveTranslating = false;
+    btn.innerHTML = '🔄 Live Translate';
+    btn.style.background = 'var(--gold2)';
+    overlay.style.display = 'none';
+    if (liveTranslateWorker) {
+      await liveTranslateWorker.terminate();
+      liveTranslateWorker = null;
+    }
+    return;
+  }
+  
+  isLiveTranslating = true;
+  btn.innerHTML = '🛑 Stop Live';
+  btn.style.background = 'var(--red)';
+  overlay.style.display = 'block';
+  overlay.innerText = 'Initializing AI Engine...';
+  
+  try {
+    const lang = document.getElementById('trans-in-lang').value;
+    const tessLangMap = {
+      'en': 'eng', 'ja': 'jpn', 'hi': 'hin', 'ml': 'mal', 'ta': 'tam', 'te': 'tel', 'kn': 'kan',
+      'bn': 'ben', 'mr': 'mar', 'gu': 'guj', 'pa': 'pan', 'ur': 'urd', 'ne': 'nep',
+      'zh-CN': 'chi_sim', 'ko': 'kor', 'vi': 'vie', 'th': 'tha', 'tl': 'tgl', 'id': 'ind',
+      'fr': 'fra', 'es': 'spa', 'it': 'ita', 'nl': 'nld', 'el': 'ell', 'ru': 'rus',
+      'pl': 'pol', 'uk': 'ukr', 'ar': 'ara', 'af': 'afr', 'sw': 'swa', 'la': 'lat',
+      'su': 'sun', 'mn': 'mon', 'ku': 'kur'
+    };
+    const tLang = tessLangMap[lang] || 'eng';
+    
+    const loadScript = (url) => new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${url}"]`)) return resolve();
+      const s = document.createElement('script'); s.src = url; s.onload = resolve; s.onerror = reject; document.head.appendChild(s);
+    });
+    
+    await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+    liveTranslateWorker = await Tesseract.createWorker(tLang);
+    
+    runLiveTranslateLoop();
+  } catch (err) {
+    overlay.innerText = 'Error: ' + err.message;
+    isLiveTranslating = false;
+    btn.innerHTML = '🔄 Live Translate';
+    btn.style.background = 'var(--gold2)';
+  }
+}
+
+async function runLiveTranslateLoop() {
+  const video = document.getElementById('camera-video');
+  const canvas = document.getElementById('camera-canvas');
+  const context = canvas.getContext('2d');
+  const overlay = document.getElementById('live-trans-overlay');
+  
+  while (isLiveTranslating && currentCameraStream) {
+    try {
+      if (video.videoWidth === 0) {
+        await new Promise(r => setTimeout(r, 500));
+        continue;
+      }
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+      const ret = await liveTranslateWorker.recognize(blob);
+      const extractedText = ret.data.text.trim();
+      
+      if (extractedText.length > 2 && isLiveTranslating) {
+        const inLang = document.getElementById('trans-in-lang').value;
+        const outLang = document.getElementById('trans-out-lang').value;
+        const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=' + inLang + '&tl=' + outLang + '&dt=t&q=' + encodeURIComponent(extractedText);
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        let translated = '';
+        for (let i = 0; i < data[0].length; i++) {
+          translated += data[0][i][0];
+        }
+        if (isLiveTranslating) overlay.innerText = translated;
+      }
+    } catch(e) {
+      console.error('Live translate frame error:', e);
+    }
+    await new Promise(r => setTimeout(r, 500)); // Sleep briefly between frames
+  }
+}
+// --- END TRANSLATOR LOGIC ---
+
+// --- CONVERSATION TTS LOGIC ---
+let _ttsActive = false;
+let _ttsQueue = [];
+let _ttsIndex = 0;
+let _characterProfiles = {};
+
+function stopConversation() {
+  _ttsActive = false;
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  const btn = document.getElementById('btn-play-conversation');
+  if (btn) btn.innerHTML = '▶ Play Conversation';
+}
+
+function parseCharacterProfiles() {
+  _characterProfiles = {};
+  const container = document.getElementById('jlpt-lesson-tab-content');
+  if (!container) return;
+  
+  const strongTags = container.querySelectorAll('strong');
+  let charBlock = null;
+  for (let i = 0; i < strongTags.length; i++) {
+    if (strongTags[i].innerText.includes('登場人物') || strongTags[i].innerText.includes('Characters')) {
+      charBlock = strongTags[i].parentNode;
+      break;
+    }
+  }
+  
+  // Available Japanese voices
+  const voices = window.speechSynthesis.getVoices();
+  const jaVoices = voices.filter(v => v.lang.includes('ja'));
+  const maleVoices = jaVoices.filter(v => v.name.toLowerCase().match(/ichiro|otoya|keita|male|naoki|takumi/));
+  const femaleVoices = jaVoices.filter(v => !maleVoices.includes(v));
+  
+  let mCount = 0;
+  let fCount = 0;
+  const malePitches = [0.6, 0.4, 0.8, 0.5];
+  const femalePitches = [1.2, 1.4, 1.0, 1.5, 1.1];
+
+  if (!charBlock) return;
+  
+  const htmlStr = charBlock.innerHTML;
+  const regex = /<strong[^>]*>([^<]+)<\/strong>(.*?)<br>/g;
+  let match;
+  while ((match = regex.exec(htmlStr)) !== null) {
+    let rawName = match[1].trim(); 
+    if (rawName.includes('登場人物')) continue;
+    
+    let name = rawName.split('(')[0].replace(':', '').trim();
+    if (name.includes('/')) name = name.split('/')[1].trim();
+    
+    const desc = match[2].toLowerCase();
+    let profile = { isMale: false, voice: null, pitch: 1.0, rate: 1.0 };
+    
+    // Gender Detection
+    if (desc.includes('daughter') || desc.includes('wife') || desc.includes(' he ') || desc.includes(' his ') || desc.includes('male') || desc.includes(' man ') || name === 'ラヴィ' || name === 'マイク' || name === 'ケン' || name === 'アキラ' || name === 'タカシ') {
+      profile.isMale = true;
+      if (maleVoices.length > 0) {
+        profile.voice = maleVoices[mCount % maleVoices.length];
+        profile.pitch = 1.0; // Voice is already male, keep pitch natural
+      } else {
+        // Fallback: force male pitch on whatever voice we have
+        profile.voice = jaVoices.length > 0 ? jaVoices[0] : null;
+        profile.pitch = malePitches[mCount % malePitches.length];
+      }
+      mCount++;
+    } else {
+      profile.isMale = false;
+      if (femaleVoices.length > 0) {
+        // Try to assign a unique female voice if multiple exist
+        profile.voice = femaleVoices[fCount % femaleVoices.length];
+        profile.pitch = 1.0 + (fCount * 0.1); // Slight shift if we reuse the same voice
+      } else {
+        profile.voice = jaVoices.length > 0 ? jaVoices[0] : null;
+        profile.pitch = femalePitches[fCount % femalePitches.length];
+      }
+      fCount++;
+    }
+    
+    _characterProfiles[name] = profile;
+  }
+}
+
+function playConversation() {
+  const btn = document.getElementById('btn-play-conversation');
+  if (_ttsActive) {
+    stopConversation();
+    return;
+  }
+  
+  // Initialize voices (often required on first interaction)
+  window.speechSynthesis.getVoices();
+  
+  parseCharacterProfiles();
+  _ttsQueue = [];
+  
+  const container = document.getElementById('jlpt-lesson-tab-content');
+  const lines = container.querySelectorAll('strong');
+  
+  for (let i = 0; i < lines.length; i++) {
+    const text = lines[i].innerText.trim();
+    if (text.endsWith(':')) {
+      let charName = text.substring(0, text.length - 1).trim();
+      let dialogueNode = lines[i].nextSibling;
+      let dialogueText = '';
+      
+      while (dialogueNode) {
+        if (dialogueNode.nodeName === 'BR' || dialogueNode.nodeName === 'SPAN' || dialogueNode.nodeName === 'STRONG' || dialogueNode.nodeName === 'DIV') {
+          break;
+        }
+        dialogueText += dialogueNode.textContent;
+        dialogueNode = dialogueNode.nextSibling;
+      }
+      
+      dialogueText = dialogueText.trim();
+      if (dialogueText.length > 0) {
+        _ttsQueue.push({ character: charName, text: dialogueText });
+      }
+    }
+  }
+  
+  if (_ttsQueue.length === 0) {
+    alert("No conversation lines found on this page!");
+    return;
+  }
+  
+  _ttsActive = true;
+  _ttsIndex = 0;
+  if (btn) btn.innerHTML = '⏸ Stop Conversation';
+  playNextLine();
+}
+
+function playNextLine() {
+  if (!_ttsActive || _ttsIndex >= _ttsQueue.length) {
+    stopConversation();
+    return;
+  }
+  
+  const line = _ttsQueue[_ttsIndex];
+  const profile = _characterProfiles[line.character];
+  
+  const msg = new SpeechSynthesisUtterance(line.text);
+  msg.lang = 'ja-JP';
+  
+  if (profile) {
+    if (profile.voice) msg.voice = profile.voice;
+    msg.pitch = profile.pitch;
+    msg.rate = profile.rate;
+  } else {
+    // Fallback for unknown characters
+    msg.pitch = 1.0;
+    msg.rate = 1.0;
+  }
+  
+  msg.onend = function() {
+    _ttsIndex++;
+    // Small natural pause between speakers
+    setTimeout(playNextLine, 500);
+  };
+  
+  msg.onerror = function(e) {
+    console.error("TTS Error:", e);
+    _ttsIndex++;
+    playNextLine();
+  };
+  
+  window.speechSynthesis.speak(msg);
+}
+// --- END CONVERSATION TTS LOGIC ---
+
+// --- JAP-ENG DICTIONARY LOGIC ---
+let _dictPageIdx = 0;
+const _dictItemsPerPage = 10;
+let _dictFilteredData = [];
+
+let _isDictFetching = false;
+let _dictSearchTimer = null;
+
+async function executeLiveSearch() {
+  const searchInput = document.getElementById('dict-search-input');
+  const term = searchInput ? searchInput.value.trim().toLowerCase() : '';
+  
+  if (term === '') {
+    // Revert to local fallback
+    _dictFilteredData = typeof DICTIONARY_DATA !== 'undefined' ? DICTIONARY_DATA : [];
+    _isDictFetching = false;
+    _dictPageIdx = 0;
+    renderDictionary();
+    return;
+  }
+  
+  // Show searching UI
+  _isDictFetching = true;
+  const safeTerm = term.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  document.getElementById('dict-results-container').innerHTML = '<div style="color:var(--gold2); text-align:center; padding:40px; font-size:18px; font-weight:bold;">🔍 Searching complete Jisho Dictionary for "'+safeTerm+'"...</div>';
+  
+  try {
+    const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=';
+    const targetUrl = 'https://jisho.org/api/v1/search/words?keyword=' + encodeURIComponent(term);
+    
+    const response = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+    if (!response.ok) throw new Error('Proxy failed');
+    
+    const json = await response.json();
+    
+    if (json && json.data && json.data.length > 0) {
+      _dictFilteredData = json.data.map(item => {
+        const jaWord = (item.japanese[0] && item.japanese[0].word) ? item.japanese[0].word : ((item.japanese[0] && item.japanese[0].reading) ? item.japanese[0].reading : '');
+        const kana = (item.japanese[0] && item.japanese[0].word && item.japanese[0].reading) ? ` (${item.japanese[0].reading})` : '';
+        const enDefs = (item.senses[0] && item.senses[0].english_definitions) ? item.senses[0].english_definitions.join(', ') : '';
+        return {
+          ja: jaWord + kana,
+          en: enDefs
+        };
+      }).filter(item => item.ja !== '' && item.en !== '');
+    } else {
+      _dictFilteredData = [];
+    }
+  } catch (err) {
+    console.error("Jisho fetch error:", err);
+    // Fallback to local DB
+    if (typeof DICTIONARY_DATA !== 'undefined') {
+      _dictFilteredData = DICTIONARY_DATA.filter(item => 
+        item.ja.toLowerCase().includes(term) || item.en.toLowerCase().includes(term)
+      );
+    } else {
+      _dictFilteredData = [];
+    }
+  }
+  
+  _isDictFetching = false;
+  _dictPageIdx = 0;
+  renderDictionary();
+}
+
+function renderDictionary() {
+  if (_isDictFetching) return;
+  if (typeof DICTIONARY_DATA === 'undefined') return;
+  
+  // Initial unsearched state defaults to local data
+  if (_dictFilteredData.length === 0) {
+    const searchInput = document.getElementById('dict-search-input');
+    if (!searchInput || searchInput.value.trim() === '') {
+      _dictFilteredData = DICTIONARY_DATA;
+    }
+  }
+  
+  const totalPages = Math.ceil(_dictFilteredData.length / _dictItemsPerPage);
+  if (_dictPageIdx >= totalPages) _dictPageIdx = Math.max(0, totalPages - 1);
+  
+  const start = _dictPageIdx * _dictItemsPerPage;
+  const end = start + _dictItemsPerPage;
+  const pageItems = _dictFilteredData.slice(start, end);
+  
+  let html = '';
+  if (pageItems.length === 0) {
+    html = '<div style="color:var(--text2); text-align:center; padding:40px;">No matching vocabulary found.</div>';
+  } else {
+    for (let item of pageItems) {
+      html += '<div class="dict-card">'
+        + '  <div>'
+        + '    <div class="dict-ja-text">' + item.ja + '</div>'
+        + '    <div class="dict-en-text">' + item.en + '</div>'
+        + '  </div>'
+        + '</div>';
+    }
+  }
+  
+  document.getElementById('dict-results-container').innerHTML = html;
+  
+  // Pagination Update
+  const prevBtn = document.getElementById('dict-prev-btn');
+  const nextBtn = document.getElementById('dict-next-btn');
+  const indicator = document.getElementById('dict-page-indicator');
+  
+  if (indicator) indicator.innerHTML = 'Page ' + (_dictPageIdx + 1) + ' of ' + Math.max(1, totalPages);
+  
+  if (prevBtn) {
+    if (_dictPageIdx <= 0) {
+      prevBtn.disabled = true;
+      prevBtn.style.opacity = '0.5';
+    } else {
+      prevBtn.disabled = false;
+      prevBtn.style.opacity = '1';
+    }
+  }
+  
+  if (nextBtn) {
+    if (_dictPageIdx >= totalPages - 1) {
+      nextBtn.disabled = true;
+      nextBtn.style.opacity = '0.5';
+    } else {
+      nextBtn.disabled = false;
+      nextBtn.style.opacity = '1';
+    }
+  }
+}
+
+function searchDictionary(event) {
+  if (typeof stopDictPage === 'function') stopDictPage();
+  
+  // Instant search on Enter key
+  if (event && event.key === 'Enter') {
+    clearTimeout(_dictSearchTimer);
+    executeLiveSearch();
+    return;
+  }
+  
+  // Otherwise debounce 600ms
+  clearTimeout(_dictSearchTimer);
+  _dictSearchTimer = setTimeout(executeLiveSearch, 600);
+}
+
+function nextDictPage() {
+  if (typeof stopDictPage === 'function') stopDictPage();
+  const totalPages = Math.ceil(_dictFilteredData.length / _dictItemsPerPage);
+  if (_dictPageIdx < totalPages - 1) {
+    _dictPageIdx++;
+    renderDictionary();
+    document.getElementById('jp-dict-section').scrollIntoView({behavior: 'smooth', block: 'start'});
+  }
+}
+
+function prevDictPage() {
+  if (typeof stopDictPage === 'function') stopDictPage();
+  if (_dictPageIdx > 0) {
+    _dictPageIdx--;
+    renderDictionary();
+    document.getElementById('jp-dict-section').scrollIntoView({behavior: 'smooth', block: 'start'});
+  }
+}
+
+let _dictTtsActive = false;
+let _dictTtsQueue = [];
+let _dictTtsIndex = 0;
+
+function stopDictPage() {
+  _dictTtsActive = false;
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  const btn = document.getElementById('dict-play-page-btn');
+  if (btn) btn.innerHTML = '▶ Play Page Words';
+}
+
+function playDictPage() {
+  if (_dictTtsActive) {
+    stopDictPage();
+    return;
+  }
+  
+  const start = _dictPageIdx * _dictItemsPerPage;
+  const end = start + _dictItemsPerPage;
+  const pageItems = _dictFilteredData.slice(start, end);
+  
+  if (pageItems.length === 0) return;
+  
+  _dictTtsQueue = [];
+  for (let item of pageItems) {
+    _dictTtsQueue.push({ text: item.ja, lang: 'ja-JP', rate: 0.9, isEn: false });
+    _dictTtsQueue.push({ text: item.en, lang: 'en-US', rate: 1.0, isEn: true });
+  }
+  
+  _dictTtsActive = true;
+  _dictTtsIndex = 0;
+  
+  const btn = document.getElementById('dict-play-page-btn');
+  if (btn) btn.innerHTML = '⏸ Stop Reading';
+  
+  // Ensure voices are loaded
+  window.speechSynthesis.getVoices();
+  playNextDictItem();
+}
+
+function playNextDictItem() {
+  if (!_dictTtsActive || _dictTtsIndex >= _dictTtsQueue.length) {
+    stopDictPage();
+    return;
+  }
+  
+  const item = _dictTtsQueue[_dictTtsIndex];
+  const msg = new SpeechSynthesisUtterance(item.text);
+  msg.lang = item.lang;
+  msg.rate = item.rate;
+  
+  const voices = window.speechSynthesis.getVoices();
+  if (item.isEn) {
+    const enVoices = voices.filter(v => v.lang.startsWith('en'));
+    if (enVoices.length > 0) msg.voice = enVoices[0];
+  } else {
+    const jaVoices = voices.filter(v => v.lang.includes('ja'));
+    if (jaVoices.length > 0) {
+      const femaleVoice = jaVoices.find(v => v.name.toLowerCase().includes('female') || v.name.includes('Ayumi') || v.name.includes('Kyoko') || v.name.includes('Google'));
+      if (femaleVoice) msg.voice = femaleVoice;
+      else msg.voice = jaVoices[0];
+    }
+  }
+  
+  msg.onend = function() {
+    _dictTtsIndex++;
+    // Longer pause after English translation to separate words cleanly
+    const pauseTime = item.isEn ? 800 : 300; 
+    setTimeout(playNextDictItem, pauseTime);
+  };
+  
+  msg.onerror = function() {
+    console.error("Dict TTS Error");
+    _dictTtsIndex++;
+    playNextDictItem();
+  };
+  
+  window.speechSynthesis.speak(msg);
+}
+// --- END JAP-ENG DICTIONARY LOGIC ---
+
+function clearTranslationInput() {
+  const input = document.getElementById('trans-input');
+  if (input) {
+    input.value = '';
+    doTranslation(); // Clear the output block
+  }
+}
+
+// --- ACADEMY VIDEO LOGIC ---
+(function() {
+  let _academyHiragana = [];
+  let _academyKatakana = [];
+
+  window.fetchAcademyVideos = async function() {
+    try {
+      _academyHiragana = [{ id: '6p9Il_j0zjc', title: 'Hiragana Lesson' }];
+      _academyKatakana = [{ id: 's6DKRgtVLGA', title: 'Katakana Lesson' }];
+      
+      const res = await fetch('https://vilfintv.com/config.json?t=' + Date.now());
+      if (res.ok) {
+        const data = await res.json();
+        if (data.academy_hiragana) _academyHiragana = data.academy_hiragana;
+        if (data.academy_katakana) _academyKatakana = data.academy_katakana;
+      }
+    } catch (e) {
+      console.error('Failed to load Academy videos:', e);
+    }
+    window.renderAcademyVideoList();
+  };
+
+  window.renderAcademyVideoList = function() {
+    try {
+      const listContainer = document.getElementById('academy-video-list');
+      const iframe = document.getElementById('academy-video-iframe');
+      if (!listContainer || !iframe) return;
+      
+      const kanaType = typeof _activeKanaType !== 'undefined' ? _activeKanaType : 'hiragana';
+      const videos = kanaType === 'hiragana' ? _academyHiragana : _academyKatakana;
+      
+      if (!videos || videos.length === 0) {
+        listContainer.innerHTML = '<div style="padding:16px; color:var(--text3); text-align:center; font-size:12px;">No videos added yet. Add them in the Console.</div>';
+        iframe.src = '';
+        return;
+      }
+      
+      const src = iframe.src || '';
+      const currentMatch = src.match(/embed\/([^?]+)/);
+      const currentId = currentMatch ? currentMatch[1] : null;
+      
+      if (!currentId || !videos.find(v => v.id === currentId)) {
+        window.playAcademyVideo(videos[0].id);
+      }
+      
+      let html = '';
+      videos.forEach(v => {
+        let titleEscaped = v.title || v.name || 'Academy Video';
+        if (typeof esc === 'function') titleEscaped = esc(titleEscaped);
+        html += '<div class="bl-row" style="padding:10px 16px; border-bottom:1px solid var(--border2); cursor:pointer;" onclick="playAcademyVideo(\'' + v.id + '\')">'
+              + '  <div class="bl-name" style="font-size:13px;">' + titleEscaped + '</div>'
+              + '</div>';
+      });
+      listContainer.innerHTML = html;
+    } catch(err) {
+      console.error('renderAcademyVideoList error', err);
+    }
+  };
+
+  window.playAcademyVideo = function(id) {
+    const iframe = document.getElementById('academy-video-iframe');
+    if (iframe) {
+      // Removed autoplay=1, explicitly added controls=1 so the native volume/mute bar is visible.
+      iframe.src = 'https://www.youtube.com/embed/' + id + '?rel=0&controls=1';
+    }
+  };
+
+  window.playNextAcademyVideo = function() {
+    const kanaType = typeof _activeKanaType !== 'undefined' ? _activeKanaType : 'hiragana';
+    const videos = kanaType === 'hiragana' ? _academyHiragana : _academyKatakana;
+    if (!videos || !videos.length) return;
+    const iframe = document.getElementById('academy-video-iframe');
+    const src = iframe ? iframe.src : '';
+    const match = src.match(/embed\/([^?]+)/);
+    const curId = match ? match[1] : null;
+    let idx = videos.findIndex(v => v.id === curId);
+    if (idx === -1 || idx === videos.length - 1) idx = 0;
+    else idx++;
+    window.playAcademyVideo(videos[idx].id);
+  };
+
+  window.playPrevAcademyVideo = function() {
+    const kanaType = typeof _activeKanaType !== 'undefined' ? _activeKanaType : 'hiragana';
+    const videos = kanaType === 'hiragana' ? _academyHiragana : _academyKatakana;
+    if (!videos || !videos.length) return;
+    const iframe = document.getElementById('academy-video-iframe');
+    const src = iframe ? iframe.src : '';
+    const match = src.match(/embed\/([^?]+)/);
+    const curId = match ? match[1] : null;
+    let idx = videos.findIndex(v => v.id === curId);
+    if (idx === -1 || idx === 0) idx = videos.length - 1;
+    else idx--;
+    window.playAcademyVideo(videos[idx].id);
+  };
+
+  // Safe hook
+  if (typeof window.toggleKanaType === 'function') {
+    const originalToggle = window.toggleKanaType;
+    window.toggleKanaType = function(type) {
+      try { originalToggle(type); } catch(e) { console.error(e); }
+      window.renderAcademyVideoList();
+    };
+  } else if (typeof toggleKanaType === 'function') {
+    const originalToggle = toggleKanaType;
+    toggleKanaType = function(type) {
+      try { originalToggle(type); } catch(e) { console.error(e); }
+      window.renderAcademyVideoList();
+    };
+  }
+
+  setTimeout(window.fetchAcademyVideos, 500);
+})();
+
+
+
+// --- TRANSLATOR LOGIC ---
+let _transDebounce = null; let _transAudio = null; let _transVoiceActive = false; let _transVoiceRecog = null;
+let _dictResults = [];
+let _grammarTransDebounce = null; let _grammarTransAudio = null; let _grammarVoiceActive = false; let _grammarVoiceRecog = null;
+
+function switchLessonTab(tab) {
+  if (typeof stopConversation === 'function') stopConversation();
+  _activeLessonTab = tab;
+  renderJlptContent();
+}
+
+function renderLessonTabContent() {
+  const data = JLPT_DATA[_activeJlptLevel] || { lesson: { headline: 'JLPT N' + _activeJlptLevel, lead: 'Study Guide' } };
+  const textbook = (typeof JLPT_TEXTBOOK !== 'undefined' && JLPT_TEXTBOOK[_activeJlptLevel]) ? JLPT_TEXTBOOK[_activeJlptLevel] : null;
+  const container = document.getElementById('jlpt-lesson-tab-content');
+  
+  if (_activeLessonTab === 'overview') {
+    container.innerHTML = '<p class="study-lead">' + esc(data.lesson.headline) + '</p>'
+      + '<p style="margin-bottom:12px; color:var(--text2); font-size:16px;">' + esc(data.lesson.lead) + '</p>'
+      + '<ul class="study-bullets">'
+      + (data.lesson.bullets || []).map(b => '<li>' + b + '</li>').join('')
+      + '</ul>';
+  } else {
+    // Shared pagination logic for writing, grammar, listening, reading
+    if (!textbook || !textbook[_activeLessonTab] || textbook[_activeLessonTab].length === 0) { 
+      container.innerHTML = '<p>No data</p>'; 
+      return; 
+    }
+    
+    const arr = textbook[_activeLessonTab];
+    let pageIdx = _lessonPageIndexes[_activeLessonTab] || 0;
+    if (pageIdx >= arr.length) { pageIdx = 0; _lessonPageIndexes[_activeLessonTab] = 0; }
+    
+    const item = arr[pageIdx];
+    
+    let html = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">';
+    
+    if (_activeLessonTab === 'writing') html += '<h3 class="study-lead" style="margin:0;">Writing & Kanji (N' + _activeJlptLevel + ')</h3>';
+    else if (_activeLessonTab === 'writing_practice') html += '<h3 class="study-lead" style="margin:0;">Writing Practice (N' + _activeJlptLevel + ')</h3>';
+    else if (_activeLessonTab === 'grammar') html += '<h3 class="study-lead" style="margin:0;">Grammar Structures (N' + _activeJlptLevel + ')</h3>';
+    else if (_activeLessonTab === 'listening') html += '<h3 class="study-lead" style="margin:0;">Listening Comprehension (N' + _activeJlptLevel + ')</h3>';
+    else if (_activeLessonTab === 'reading') html += '<h3 class="study-lead" style="margin:0;">Reading Comprehension (N' + _activeJlptLevel + ')</h3>';
+    else if (_activeLessonTab === 'conversation') html += '<h3 class="study-lead" style="margin:0;">Conversation Practice (N' + _activeJlptLevel + ')</h3>';
+    
+    html += '<div style="font-size:15px; color:var(--text3); background:var(--card3); padding:4px 10px; border-radius:12px;">Page ' + (pageIdx+1) + ' of ' + arr.length + '</div>'
+         + '</div>';
+         
+    html += '<div style="background:var(--card2); border:1px solid var(--border2); padding:16px; border-radius:8px; margin-bottom:16px;">';
+    
+
+    if (_activeLessonTab === 'writing_practice') {
+      const langs = {
+        'ja': 'Japanese', 'en': 'English', 'hi': 'Hindi', 'ml': 'Malayalam', 
+        'ta': 'Tamil', 'te': 'Telugu', 'kn': 'Kannada', 'bn': 'Bengali', 
+        'mr': 'Marathi', 'gu': 'Gujarati', 'pa': 'Punjabi', 'ur': 'Urdu', 'ne': 'Nepali',
+        'zh-CN': 'Chinese', 'ko': 'Korean', 'vi': 'Vietnamese', 'th': 'Thai', 'tl': 'Filipino (Philippines)', 
+        'id': 'Indonesian', 'mn': 'Mongolian', 'su': 'Sundanese',
+        'fr': 'French', 'es': 'Spanish', 'it': 'Italian', 'nl': 'Dutch', 
+        'el': 'Greek', 'ru': 'Russian', 'pl': 'Polish', 'uk': 'Ukrainian', 
+        'ar': 'Arabic', 'ku': 'Kurdish', 'af': 'Afrikaans', 'sw': 'Swahili', 'la': 'Latin'
+      };
+      let optionsHtml = '';
+      for(let k in langs) optionsHtml += '<option value="' + k + '">' + langs[k] + '</option>';
+      html += '<div class="trans-widget">'
+        + '<div style="font-weight:700; color:var(--gold2); font-size:18px; margin-bottom:12px;">🌟 Intelligent Translator Writing Pad</div>'
+        + '<div class="trans-controls">'
+        + '  <select id="trans-in-lang" class="trans-select" onchange="handleLangChange(\'in\')">' + optionsHtml.replace('value="en"', 'value="en" selected') + '</select>'
+        + '  <button class="trans-swap-btn" onclick="swapTranslationLangs()">⇄ Swap</button>'
+        + '  <select id="trans-out-lang" class="trans-select" onchange="handleLangChange(\'out\')">' + optionsHtml.replace('value="ja"', 'value="ja" selected') + '</select>'
+        + '</div>'
+        + '<div class="trans-body">'
+        + '  <div class="trans-box" style="margin-bottom:12px;">'
+        + '    <textarea id="trans-input" class="trans-input" placeholder="Type or dictate text here..." oninput="doTranslation()" style="width:100%; height:320px; background:transparent; color:var(--text); border:none; padding:16px; font-size:18px; resize:none; outline:none; font-family:inherit; box-sizing:border-box;"></textarea>'
+        + '    <div class="trans-actions">'
+        + '      <label class="trans-action-btn" style="cursor:pointer; margin-right:8px;">📁 Upload File <input type="file" style="display:none;" onchange="handleTransFileUpload(event)" accept=".txt,.js,.json,.html,.md,.csv,.jpg,.jpeg,.png,.docx"></label>'
+        + '      <button class="trans-action-btn" style="margin-right:8px;" onclick="openCameraModal()">📷 Camera</button>'
+        + '      <button id="trans-voice-btn" class="trans-action-btn" style="margin-right:8px;" onclick="startTranslationVoice()">🎤 Voice Record</button>'
+        + '      <button class="trans-action-btn" style="color:var(--red);" onclick="clearTranslationInput()">🗑️ Clear</button>'
+        + '    </div>'
+        + '  </div>'
+        + '  <div class="trans-box">'
+        + '    <div id="trans-output" class="trans-output" style="width:100%; height:320px; padding:16px; font-size:18px; color:var(--text2); overflow-y:auto; box-sizing:border-box;">Translation will appear here...</div>'
+        + '    <div class="trans-actions">'
+        + '      <button class="trans-action-btn" style="margin-right:8px;" onclick="copyTranslation()">📋 Copy</button>'
+        + '      <button class="trans-action-btn" onclick="playTranslationAudio()">🔊 Play Audio</button>'
+        + '    </div>'
+        + '  </div>'
+        + '</div>'
+        + '</div>';
+    }
+
+    if (_activeLessonTab === 'writing' && item) {
+      html += '<div style="font-weight:700; color:var(--gold2); font-size:16px; margin-bottom:8px;">' + esc(item.title) + '</div>'
+
+        + '<p style="color:var(--text2); font-size:16px; margin-bottom:12px; line-height:1.6;">' + esc(item.explanation) + '</p>'
+        + '<div style="background:rgba(255,255,255,0.03); border-radius:6px; padding:10px; margin-bottom:12px;">'
+        + (item.table||[]).map(r => '<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:15px;"><span style="color:var(--text);">' + esc(r.ja) + '</span><span style="color:var(--text3);">' + esc(r.en) + '</span></div>').join('')
+        + '</div>';
+        if (item.examples && item.examples.length > 0) {
+          html += '<div style="font-weight:700; margin-bottom:6px; color:var(--text);">Example Sentences:</div>';
+          item.examples.forEach(ex => {
+            html += '<div style="margin-bottom:8px; font-size:16px; border-left:3px solid var(--gold2); padding-left:10px;">'
+              + '<div style="color:var(--green);">' + esc(ex.ja) + '</div>'
+              + '<div style="color:var(--text2); font-size:16px;">' + esc(ex.romaji) + '</div>'
+              + '<div style="color:var(--text3); font-size:16px; font-style:italic;">"' + esc(ex.en) + '"</div>'
+              + '</div>';
+          });
+        }
+    } else if (_activeLessonTab === 'grammar') {
+      html += '<div style="font-weight:700; color:var(--gold2); font-size:16px; margin-bottom:8px;">' + esc(item.title) + '</div>'
+        + '<p style="color:var(--text2); font-size:16px; margin-bottom:12px; line-height:1.6;">' + esc(item.explanation) + '</p>'
+        + '<div style="background:rgba(255,255,255,0.03); border-radius:6px; padding:10px; margin-bottom:12px;">'
+        + (item.table || []).map(r => '<div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:15px;"><span style="color:var(--text);">' + esc(r.ja) + '</span><span style="color:var(--text3);">' + esc(r.en) + '</span></div>').join('')
+        + '</div>'
+        + '<div style="font-weight:700; margin-bottom:6px; color:var(--text);">Example Sentences:</div>';
+      (item.examples || []).forEach(ex => {
+        html += '<div style="background:var(--bg); border-left:3px solid var(--blue); padding:10px; margin-bottom:8px; border-radius:4px;">'
+          + '<div style="font-size:16px; margin-bottom:4px;">' + esc(ex.ja) + '</div>'
+          + '<div style="font-size:16px; color:var(--text3); margin-bottom:2px;">' + esc(ex.romaji) + '</div>'
+          + '<div style="font-size:16px; color:var(--text2);">' + esc(ex.en) + '</div>'
+          + '</div>';
+      });
+    } else if (_activeLessonTab === 'listening') {
+      html += '<div style="font-size:32px; text-align:center; margin-bottom:12px;">🎧</div>';
+      
+      if (item.audioDrills) {
+        html += '<div style="font-weight:700; color:var(--gold2); font-size:18px; margin-bottom:12px;">' + esc(item.title) + '</div>'
+             + '<div style="color:var(--text3); margin-bottom:20px;">' + esc(item.context) + '</div>'
+             + '<div style="display:flex; flex-direction:column; gap:16px;">';
+        item.audioDrills.forEach((drill, idx) => {
+          html += '<div style="background:rgba(0,0,0,0.4); padding:16px; border-radius:8px; border:1px solid var(--border2);">'
+               + '  <div style="font-weight:bold; font-size:16px; margin-bottom:12px; color:var(--blue);">' + (idx+1) + '. ' + esc(drill.name) + '</div>'
+               + '  <audio controls style="width:100%;"><source src="' + esc(drill.file) + '" type="audio/mpeg">Your browser does not support the audio element.</audio>'
+               + '</div>';
+        });
+        html += '</div>';
+      } else {
+        html += '<div style="text-align:center; margin-bottom:16px;"><button class="widget-btn" onclick="playAudioTranscript(this, \'' + btoa(unescape(encodeURIComponent(item.transcript))) + '\')">Play Audio Track</button></div>'
+             + '<div style="font-weight:700; color:var(--gold2); font-size:16px; margin-bottom:8px;">' + esc(item.title) + '</div>'
+             + '<div style="background:rgba(0,0,0,0.3); border-radius:6px; padding:12px; font-family:monospace; margin-bottom:12px; line-height:1.6;">' + esc(item.transcript).replace(/\n/g, '<br/>') + '</div>'
+             + (item.translation ? ('<div style="font-weight:700; margin-bottom:6px; color:var(--text);">English Translation:</div>'
+             + '<div style="color:var(--text2); font-size:15px; margin-bottom:12px; line-height:1.6;">' + esc(item.translation).replace(/\n/g, '<br/>') + '</div>') : '')
+             + (item.notes ? ('<div style="color:var(--amber); font-size:16px; border-top:1px dashed var(--border2); padding-top:8px;">💡 ' + esc(item.notes) + '</div>') : '');
+      }
+    } else if (_activeLessonTab === 'reading') {
+      html += '<div style="font-weight:700; color:var(--gold2); font-size:16px; margin-bottom:8px;">' + esc(item.title) + '</div>'
+        + '<p style="font-family:serif; font-size:16px; line-height:1.8; margin-bottom:16px; color:var(--text);">' + esc(item.passage) + '</p>'
+        + '<div style="font-weight:700; margin-bottom:6px; color:var(--text);">English Translation:</div>'
+        + '<p style="color:var(--text3); font-size:16px; margin-bottom:12px; line-height:1.6; font-style:italic;">' + esc(item.translation) + '</p>'
+        + '<div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;">';
+      (item.vocabulary || item.vocab || []).forEach(v => {
+        let word = v.word || v.ja;
+        let meaning = v.meaning || v.en;
+        html += '<span style="background:var(--card3); padding:4px 8px; border-radius:4px; font-size:16px;"><strong>' + esc(word) + '</strong>: ' + esc(meaning) + '</span>';
+      });
+      html += '</div>';
+      
+      let questions = item.questions || item.comprehension || [];
+      if (questions.length > 0) {
+        html += '<div style="border-top:1px dashed var(--border2); padding-top:12px;">'
+          + '<div style="font-weight:700; margin-bottom:6px;">Comprehension Check:</div>';
+        questions.forEach(q => {
+          let qText = q.q || q.question;
+          let aText = q.a || q.answer;
+          html += '<div style="margin-bottom:8px; font-size:15px;"><span style="color:var(--amber);">Q: ' + esc(qText) + '</span><br/><span style="color:var(--green);">A: ' + esc(aText) + '</span></div>';
+        });
+        html += '</div>';
+      }
+    } else if (_activeLessonTab === 'conversation') {
+      html += '<div style="font-weight:700; color:var(--gold2); font-size:18px; margin-bottom:12px;">' + esc(item.title) + '</div>';
+      if (item.image) {
+        html += '<div style="margin-bottom:16px; border-radius:8px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.3);">'
+          + '<img src="' + item.image + '" style="width:100%; height:auto; display:block;" alt="Conversation Scene" />'
+          + '</div>';
+      }
+      html += '<div style="color:var(--text); font-size:16px; line-height:1.6;">' + item.passage + '</div>';
+    }
+    
+    html += '</div>'; // close card
+    
+    // Pagination Controls
+    if (_activeLessonTab !== 'writing_practice') {
+      let pageHtml = '<div style="display:flex; justify-content:space-between; margin-bottom:16px;">'
+        + '<button class="widget-btn" style="background:var(--card3);" onclick="prevLessonPage(\'' + _activeLessonTab + '\')" ' + (pageIdx === 0 ? 'disabled style="opacity:0.5;background:var(--card3);"' : '') + '>⬅ Prev Page</button>';
+        
+      if (_activeLessonTab === 'conversation') {
+        pageHtml += '<button id="btn-play-conversation" class="widget-btn" style="background:var(--green); border:none;" onclick="playConversation()">▶ Play Conversation</button>';
+      }
+        
+      pageHtml += '<button class="widget-btn" style="background:var(--blue);" onclick="nextLessonPage(\'' + _activeLessonTab + '\')" ' + (pageIdx >= arr.length - 1 ? 'disabled style="opacity:0.5;background:var(--blue);"' : '') + '>Next Page ➡</button>'
+        + '</div>';
+      html += pageHtml;
+    }
+
+    // MOC Test Button
+    html += '<div style="margin-top:24px; text-align:center; padding-top:16px; border-top:1px solid var(--border);">'
+      + '<button class="hub-toggle-btn active" style="background:var(--gold2); border:none; box-shadow:0 0 12px var(--glow);" onclick="openMocTestModal()">🎯 Take N' + _activeJlptLevel + ' MOC Test</button>'
+      + '</div>';
+      
+    container.innerHTML = html;
+  }
+}
+
+function renderJlptContent() {
+  const data = JLPT_DATA[_activeJlptLevel];
+  if (!data) return;
+  
+  // Render Study Guide Card with Tabs
+  const lessonHtml = '<h2 class="section-headline">🇯🇵 JLPT Study Guide (N' + _activeJlptLevel + ')</h2>'
+    + '<div class="class-selector-bar" style="margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border);">'
+    + '  <button class="class-btn ' + (_activeLessonTab === 'overview' ? 'active' : '') + '" onclick="switchLessonTab(\'overview\')">Overview</button>'
+    + '  <button class="class-btn ' + (_activeLessonTab === 'writing' ? 'active' : '') + '" onclick="switchLessonTab(\'writing\')">Writing</button>'
+    + '  <button class="class-btn ' + (_activeLessonTab === 'writing_practice' ? 'active' : '') + '" onclick="switchLessonTab(\'writing_practice\')">Writing Practice</button>'
+    + '  <button class="class-btn ' + (_activeLessonTab === 'grammar' ? 'active' : '') + '" onclick="switchLessonTab(\'grammar\')">Grammar</button>'
+    + '  <button class="class-btn ' + (_activeLessonTab === 'listening' ? 'active' : '') + '" onclick="switchLessonTab(\'listening\')">Listening</button>'
+    + '  <button class="class-btn ' + (_activeLessonTab === 'reading' ? 'active' : '') + '" onclick="switchLessonTab(\'reading\')">Reading</button>'
+    + '  <button class="class-btn ' + (_activeLessonTab === 'conversation' ? 'active' : '') + '" onclick="switchLessonTab(\'conversation\')">Conversation</button>'
+    + '</div>'
+    + '<div id="jlpt-lesson-tab-content" style="min-height:180px;">'
+    + '</div>';
+    
+  document.getElementById('jlpt-lesson-card').innerHTML = lessonHtml;
+  renderLessonTabContent();
+  
+  // Load Quiz Drill Card (Practice Simulator)
+  // Retrieve saved progress from localStorage
+  let savedProgress = parseInt(localStorage.getItem('jlpt_progress_' + _activeJlptLevel)) || 0;
+  if (savedProgress >= data.quizzes.length) savedProgress = 0;
+  
+  const drillHeaderHtml = '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">'
+    + '  <h2 class="section-headline" style="margin:0; border:none; padding:0;">📝 JLPT Practice Drills (N' + _activeJlptLevel + ')</h2>'
+    + '  <button class="widget-btn" style="background:var(--red); font-size:15px; padding:4px 10px;" onclick="resetJlptProgress()">Reset Session</button>'
+    + '</div>'
+    + '<div id="jlpt-quiz-container"></div>'
+    + '<div style="margin-top:24px; text-align:center; padding-top:16px; border-top:1px solid var(--border);">'
+    + '  <button class="hub-toggle-btn active" style="background:var(--gold2); border:none; box-shadow:0 0 12px var(--glow);" onclick="openMocTestModal()">🎯 Take N' + _activeJlptLevel + ' MOC Test</button>'
+    + '</div>';
+    
+  document.getElementById('jlpt-quiz-card').innerHTML = drillHeaderHtml;
+  loadJlptQuiz(savedProgress);
+  
+  if (_activeLessonTab === 'overview') {
+    document.getElementById('jlpt-quiz-card').style.display = 'block';
+  } else {
+    document.getElementById('jlpt-quiz-card').style.display = 'none';
+  }
+}
+
+function openMocTestModal() {
+  try {
+    const data = JLPT_DATA[_activeJlptLevel];
+    let basePool = [];
+    if (data && data.quizzes && data.quizzes.length > 0) {
+      basePool = [...data.quizzes];
+    } else {
+      // Fallback if absolutely empty
+      basePool = [{
+        q: 'No real questions available in the database for N' + _activeJlptLevel + '.',
+        options: ['Update Database', 'Update Database', 'Update Database', 'Update Database'],
+        answer: 0,
+        explain: 'Please add real questions to JLPT_DATA.'
+      }];
+    }
+    
+    // Define exact exam blueprint based on real JLPT structure
+    let blueprint = [];
+    let totalNeeded = 0;
+    if (_activeJlptLevel <= 2) {
+      blueprint = [
+        { title: 'Language Knowledge & Reading', count: 105 },
+        { title: 'Listening', count: 35 }
+      ];
+      totalNeeded = 140;
+    } else if (_activeJlptLevel === 3) {
+      blueprint = [
+        { title: 'Language Knowledge (Vocabulary)', count: 33 },
+        { title: 'Language Knowledge (Grammar) & Reading', count: 37 },
+        { title: 'Listening', count: 30 }
+      ];
+      totalNeeded = 100;
+    } else {
+      blueprint = [
+        { title: 'Language Knowledge (Vocabulary)', count: 23 },
+        { title: 'Language Knowledge (Grammar) & Reading', count: 48 },
+        { title: 'Listening', count: 30 }
+      ];
+      totalNeeded = 101;
+    }
+    
+    // Create a pool strictly from real questions. 
+    // If we have enough, just shuffle them. If not, sample with replacement.
+    let massivePool = [];
+    if (basePool.length >= totalNeeded) {
+      massivePool = [...basePool];
+      massivePool.sort(() => Math.random() - 0.5);
+    } else {
+      for (let i = 0; i < totalNeeded; i++) {
+        const rIdx = Math.floor(Math.random() * basePool.length);
+        massivePool.push(basePool[rIdx]);
+      }
+    }
+    
+    // Populate sections
+    let generatedSections = [];
+    blueprint.forEach(sec => {
+      let secQuestions = [];
+      for(let i=0; i < sec.count; i++) {
+        secQuestions.push(massivePool.pop());
+      }
+      generatedSections.push({
+        title: sec.title,
+        questions: secQuestions
+      });
+    });
+    
+    const times = {5: 90, 4: 115, 3: 140, 2: 155, 1: 170};
+    const timeRemaining = (times[_activeJlptLevel] || 90) * 60;  
+    
+    const testPayload = {
+      level: _activeJlptLevel,
+      timeRemaining: timeRemaining,
+      sections: generatedSections
+    };
+    
+    localStorage.setItem('moc_test_data', JSON.stringify(testPayload));
+    
+    // Try to open native popup
+    window.location.assign('moc_test.html');
+    const popup = true;
+    
+    if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+      // Popup was blocked
+      const warning = document.createElement('div');
+      warning.style.position = 'fixed';
+      warning.style.top = '20px';
+      warning.style.left = '50%';
+      warning.style.transform = 'translateX(-50%)';
+      warning.style.background = 'var(--red)';
+      warning.style.color = '#fff';
+      warning.style.padding = '15px 25px';
+      warning.style.borderRadius = '8px';
+      warning.style.zIndex = '999999';
+      warning.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+      warning.style.fontWeight = 'bold';
+      warning.innerHTML = '⚠️ POPUP BLOCKED!<br/><br/>Your browser blocked the MOC Test popup window. Please allow popups for VilfinTV, or <a href="moc_test.html" target="_blank" style="color:var(--gold2); text-decoration:underline;">Click Here to manually open the test</a>.<br/><br/><small style="opacity:0.8">(Click anywhere on this red box to dismiss)</small>';
+      warning.onclick = (e) => {
+        if(e.target.tagName !== 'A') warning.remove();
+      };
+      document.body.appendChild(warning);
+      
+      // Auto-remove after 10s
+      setTimeout(() => { if(document.body.contains(warning)) warning.remove(); }, 10000);
+    }
+    
+  } catch (e) {
+    alert("Error initializing MOC test popup: " + e.message);
+    console.error(e);
+  }
+}
+
+function closeMocTestModal() {
+  clearInterval(_mocInterval);
+  const overlay = document.getElementById('moc-modal-overlay');
+  overlay.classList.remove('active');
+  overlay.style.display = 'none';
+}
+
+function submitMocTest() {
+  clearInterval(_mocInterval);
+  document.getElementById('moc-submit-btn').style.display = 'none';
+  
+  let score = 0;
+  _mocQuestions.forEach((q, idx) => {
+    const selected = document.querySelector('input[name="moc_ans_' + idx + '"]:checked');
+    const expBox = document.getElementById('moc-exp-' + idx);
+    const block = document.getElementById('moc-q-' + idx);
+    
+    expBox.style.display = 'block'; // Show explanations
+    
+    if (selected && parseInt(selected.value) === q.answer) {
+      score++;
+      block.style.borderLeft = '4px solid var(--green)';
+    } else {
+      block.style.borderLeft = '4px solid var(--red)';
+    }
+    
+    // Disable inputs
+    document.querySelectorAll('input[name="moc_ans_' + idx + '"]').forEach(inp => inp.disabled = true);
+  });
+  
+  const finalScoreHtml = '<div style="text-align:center; padding:20px; background:var(--card3); border-radius:8px; margin-bottom:24px; border:1px solid var(--border);">'
+    + '  <h3 style="color:var(--gold2); font-size:24px; margin-bottom:8px;">TEST COMPLETE</h3>'
+    + '  <div style="font-size:18px; color:var(--text);">Final Score: <strong>' + score + ' / ' + _mocQuestions.length + '</strong></div>'
+    + '</div>';
+    
+  document.getElementById('moc-body-content').insertAdjacentHTML('afterbegin', finalScoreHtml);
+}
+
+function resetJlptProgress() {
+  if (confirm('Are you sure you want to reset your drill progress for N' + _activeJlptLevel + '?')) {
+    localStorage.removeItem('jlpt_progress_' + _activeJlptLevel);
+    loadJlptQuiz(0);
+  }
+}
+
+function loadJlptQuiz(qIdx) {
+  const data = JLPT_DATA[_activeJlptLevel];
+  const q = data.quizzes[qIdx];
+  if (!q) return;
+  
+  // Save progress
+  localStorage.setItem('jlpt_progress_' + _activeJlptLevel, qIdx);
+  
+  const optionsHtml = q.options.map((opt, oIdx) => {
+    return `<button class="option-btn" id="opt-btn-${oIdx}" onclick="selectJlptOption(${qIdx}, ${oIdx})">${esc(opt)}</button>`;
+  }).join('');
+  
+  const nextBtnHtml = qIdx < data.quizzes.length - 1
+    ? `<button class="widget-btn" style="margin-top:12px;background:var(--card3);" onclick="loadJlptQuiz(${qIdx + 1})">Next Question &rarr;</button>`
+    : `<button class="widget-btn" style="margin-top:12px;background:var(--card3);" onclick="resetJlptProgress()">Restart Drills</button>`;
+    
+  const quizHtml = '<div class="jlpt-quiz-card" style="margin-top:0;">'
+    + '  <div style="font-size:16px; color:var(--text3); margin-bottom:8px; font-weight:700;">QUESTION ' + (qIdx + 1) + ' OF ' + data.quizzes.length + '</div>'
+    + '  <div class="jlpt-q-text">' + esc(q.q) + '</div>'
+    + '  <div class="jlpt-options">' + optionsHtml + '</div>'
+    + '  <div class="jlpt-explanation" id="quiz-explain-box">' + esc(q.explain) + '</div>'
+    + nextBtnHtml
+    + '</div>';
+    
+  document.getElementById('jlpt-quiz-container').innerHTML = quizHtml;
+}
+
+function doTranslation() {
+  const text = document.getElementById('trans-input').value;
+  if (!text.trim()) { document.getElementById('trans-output').innerText = 'Translation will appear here...'; return; }
+  const inLang = document.getElementById('trans-in-lang').value;
+  const outLang = document.getElementById('trans-out-lang').value;
+  clearTimeout(_transTimeout);
+  document.getElementById('trans-output').innerText = 'Translating...';
+  _transTimeout = setTimeout(() => {
+    fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=' + inLang + '&tl=' + outLang + '&dt=t&q=' + encodeURIComponent(text))
+      .then(r => r.json()).then(d => {
+        let result = '';
+        if(d && d[0]) d[0].forEach(p => { if(p[0]) result += p[0]; });
+        document.getElementById('trans-output').innerText = result || 'Translation failed.';
+      }).catch(e => { document.getElementById('trans-output').innerText = 'Error: ' + e.message; });
+  }, 500);
+}
+
+function handleLangChange(type) {
+  const inLang = document.getElementById('trans-in-lang');
+  const outLang = document.getElementById('trans-out-lang');
+  
+  if (inLang.value === outLang.value) {
+    if (type === 'in') {
+      outLang.value = (inLang.value === 'en') ? 'ja' : 'en';
+    } else {
+      inLang.value = (outLang.value === 'en') ? 'ja' : 'en';
+    }
+  }
+  doTranslation();
+}
+
+function swapTranslationLangs() {
+  const i = document.getElementById('trans-in-lang');
+  const o = document.getElementById('trans-out-lang');
+  const tmp = i.value; i.value = o.value; o.value = tmp;
+  doTranslation();
+}
+
+function startTranslationVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('Voice recording is not supported in this browser.'); return; }
+  const rec = new SR();
+  rec.lang = document.getElementById('trans-in-lang').value;
+  rec.interimResults = true;
+  const input = document.getElementById('trans-input');
+  const btn = document.getElementById('trans-voice-btn');
+  const originalText = btn.innerHTML;
+  rec.onresult = (e) => {
+    let final = '';
+    for(let i=0; i < e.results.length; i++) final += e.results[i][0].transcript;
+    input.value = final;
+    doTranslation();
+  };
+  rec.onstart = () => { btn.innerHTML = '🔴 Listening...'; btn.style.color = 'var(--red)'; btn.style.borderColor = 'var(--red)'; };
+  rec.onend = () => { btn.innerHTML = originalText; btn.style.color = ''; btn.style.borderColor = ''; };
+  rec.start();
+}
+
+function clearTranslationInput() {
+  const input = document.getElementById('trans-input');
+  if (input) {
+    input.value = '';
+    doTranslation(); // Clear the output block
+  }
+}
+
+function copyTranslation() {
+  const text = document.getElementById('trans-output').innerText;
+  if (!text || text.includes('Translating')) return;
+  navigator.clipboard.writeText(text).then(() => {
+    alert('Translation copied to clipboard!');
+  }).catch(err => {
+    alert('Failed to copy text: ' + err);
+  });
+}
+
+function playTranslationAudio() {
+  const text = document.getElementById('trans-output').innerText;
+  if (!text || text.includes('Translating')) return;
+  const lang = document.getElementById('trans-out-lang').value;
+  
+  try {
+    const url = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=' + lang + '&q=' + encodeURIComponent(text.substring(0, 200));
+    const audio = document.createElement('audio');
+    audio.referrerPolicy = 'no-referrer';
+    audio.src = url;
+    audio.play().catch(e => {
+      if ('speechSynthesis' in window) {
+        const u = new SpeechSynthesisUtterance(text);
+        const ttsLangMap = { 'hi': 'hi-IN', 'ml': 'ml-IN', 'ta': 'ta-IN', 'te': 'te-IN', 'kn': 'kn-IN', 'bn': 'bn-IN', 'mr': 'mr-IN', 'gu': 'gu-IN', 'pa': 'pa-IN', 'ur': 'ur-PK' };
+        u.lang = ttsLangMap[lang] || lang;
+        window.speechSynthesis.speak(u);
+      }
+    });
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+async function openCameraModal() {
+  const modal = document.getElementById('camera-modal');
+  const video = document.getElementById('camera-video');
+  modal.style.display = 'flex';
+  
+  try {
+    currentCameraStream = await navigator.mediaDevices.getUserMedia({ 
+      video: { facingMode: 'environment' }, 
+      audio: false 
+    });
+    video.srcObject = currentCameraStream;
+  } catch (err) {
+    alert('Failed to access camera: ' + err.message);
+    closeCameraModal();
+  }
+}
+
+function closeCameraModal() {
+  const modal = document.getElementById('camera-modal');
+  modal.style.display = 'none';
+  if (currentCameraStream) {
+    currentCameraStream.getTracks().forEach(t => t.stop());
+    currentCameraStream = null;
+  }
+  if (isLiveTranslating) toggleLiveTranslate();
+}
+
+async function handleTransFileUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const inputEl = document.getElementById('trans-input');
+  const ext = file.name.split('.').pop().toLowerCase();
+  
+  const loadScript = (url) => new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${url}"]`)) return resolve();
+    const s = document.createElement('script'); s.src = url; s.onload = resolve; s.onerror = reject; document.head.appendChild(s);
+  });
+
+  try {
+    if (['jpg', 'jpeg', 'png'].includes(ext)) {
+      inputEl.value = 'Scanning image with AI (this may take a few seconds)...';
+      const lang = document.getElementById('trans-in-lang').value;
+      const tessLangMap = {
+        'en': 'eng', 'ja': 'jpn', 'hi': 'hin', 'ml': 'mal', 'ta': 'tam', 'te': 'tel', 'kn': 'kan',
+        'bn': 'ben', 'mr': 'mar', 'gu': 'guj', 'pa': 'pan', 'ur': 'urd', 'ne': 'nep',
+        'zh-CN': 'chi_sim', 'ko': 'kor', 'vi': 'vie', 'th': 'tha', 'tl': 'tgl', 'id': 'ind',
+        'fr': 'fra', 'es': 'spa', 'it': 'ita', 'nl': 'nld', 'el': 'ell', 'ru': 'rus',
+        'pl': 'pol', 'uk': 'ukr', 'ar': 'ara', 'af': 'afr', 'sw': 'swa', 'la': 'lat',
+        'su': 'sun', 'mn': 'mon', 'ku': 'kur'
+      };
+      const tLang = tessLangMap[lang] || 'eng';
+      
+      await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+      const worker = await Tesseract.createWorker(tLang);
+      const ret = await worker.recognize(file);
+      await worker.terminate();
+      inputEl.value = ret.data.text;
+      doTranslation();
+      
+    } else if (ext === 'docx') {
+      inputEl.value = 'Reading Word document...';
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js');
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      inputEl.value = result.value;
+      doTranslation();
+      
+    } else {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        inputEl.value = evt.target.result;
+        doTranslation();
+      };
+      reader.readAsText(file);
+    }
+  } catch (err) {
+    console.error(err);
+    inputEl.value = 'Error reading file: ' + err.message;
+  }
+}
+
+function stopConversation() {
+  _ttsActive = false;
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  const btn = document.getElementById('btn-play-conversation');
+  if (btn) btn.innerHTML = '▶ Play Conversation';
+}
+
+

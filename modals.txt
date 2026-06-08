@@ -1,0 +1,37 @@
+<!-- INJECTED MODALS -->
+<div class="moc-modal-overlay" id="moc-modal-overlay">
+  <div class="moc-modal-content">
+    <div class="moc-header">
+      <div>
+        <h2 class="section-headline" style="margin:0; border:none; padding:0;" id="moc-title">JLPT MOC Test</h2>
+        <div style="font-size:16px; color:var(--text3);">Real Exam Scenario simulation</div>
+      </div>
+      <div class="moc-timer" id="moc-timer-display">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        00:00
+      </div>
+    </div>
+    <div class="moc-body" id="moc-body-content">
+      <!-- Generated questions go here -->
+    </div>
+    <div class="moc-footer">
+      <button class="widget-btn" style="background:var(--card3); color:var(--text2); margin-right:12px;" onclick="closeMocTestModal()">Cancel</button>
+      <button class="widget-btn" id="moc-submit-btn" onclick="submitMocTest()">Submit Final Answers</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     DATABASE & INTERACTIVE LOGIC
+     ========================================== -->
+
+<script src="kanji_data.js"></script>
+<script src="jlpt_textbook_data.js?v=1780213198118"></script>
+<script>
+// Theme support
+var THEMES = ['default','standard','midnight','maroon','silver','gold','gemini'];
+
+function setTheme(t) {
+  if (t === 'standard') t = 'midnight';
+  document.documentEle

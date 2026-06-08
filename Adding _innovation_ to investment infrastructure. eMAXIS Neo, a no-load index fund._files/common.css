@@ -1,0 +1,1573 @@
+@charset "utf-8";
+
+/********************
+ ********************
+ *
+ *    共通パーツ
+ *
+ ********************
+ ********************/
+
+
+.eq-h5_player {
+	height: 100%;
+	width:100%;
+	background-color: #000;
+	position: relative;
+	font-family: "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", "メイリオ", Meiryo, Osaka, "ＭＳ Ｐゴシック", "MS PGothic", sans-serif;
+	-webkit-text-size-adjust: 100%;
+	cursor: default;
+	user-select: none;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none; 
+}
+
+.eq-h5_player .eq-video_cover{
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: contain;
+	-webkit-background-size: contain;
+	-moz-background-size: contain;
+	-ms-background-size: contain;
+	-o-background-size: contain;
+}
+
+.eq-h5_player .eq-caption_area{
+	width: 100%;
+	position: absolute;
+	touch-action: none;
+	text-align: center;
+	bottom: 70px;
+	z-index: 3;
+	transform: translate3d(0,0,0);
+  }
+  .eq-h5_player .eq-caption_text{
+	background: rgba(8, 8, 8, 0.75);
+	color: white;
+	border-radius: 2.66667px;
+	font-size: 15px;
+	color: rgb(255, 255, 255);
+	fill: rgb(255, 255, 255);
+  }
+
+/********************
+ *
+ *    .eq-h5_player footer CSS
+ *
+ ********************/
+.eq-h5_player .eq-header {
+	position: absolute;
+    top: 0px;
+    left: 0px;
+	width: 100%;
+	height: 38px;
+	/* background-color: rgba(0,0,0,0.7); */
+	background:  linear-gradient(top, rgba(0,0,0,0.7), rgba(0,0,0,0.0));
+	background:  -ms-linear-gradient(top, rgba(0,0,0,0.7), rgba(0,0,0,0.0));
+	background: -webkit-gradient(linear, left top, left bottom, from(rgba(0,0,0,0.7)), to(rgba(0,0,0,0)));
+	padding: 0 0 0 20px;
+	z-index: 3;
+	overflow: hidden;
+	transform: translate3d(0,0,0);
+}
+.eq-h5_player.eq-small .eq-header,
+.eq-h5_player.eq-small_mid .eq-header {
+	width: 100%;
+	height: 28px;
+	background:  linear-gradient(top, rgba(0,0,0,0.7), rgba(0,0,0,0.0));
+	background:  -ms-linear-gradient(top, rgba(0,0,0,0.7), rgba(0,0,0,0.0));
+	background: -webkit-gradient(linear, left top, left bottom, from(rgba(0,0,0,0.7)), to(rgba(0,0,0,0)));
+	padding: 0 0 0 8px;
+	z-index: 0;
+	overflow: hidden;
+}
+
+.eq-h5_player .eq-header > div {
+	font-size: 16px;
+	color: #fff;
+	line-height: 38px;
+	text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.eq-h5_player.eq-small .eq-header > div,
+.eq-h5_player.eq-small_mid .eq-header > div {
+	font-size: 12px;
+	color: #fff;
+	line-height: 29px;
+	text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+
+
+/********************
+ *
+ *    .eq-h5_player footer CSS
+ *
+ ********************/
+.eq-h5_player .eq-footer {
+	position: absolute;
+    bottom: 0px;
+    left: 0px;
+	width: 100%;
+	height: 56px;
+	/* min-width:  480px; */
+	padding: 8px 18px;
+	background-color: rgba(0,0,0,0.5);
+	z-index: 3;
+	height: 39px;
+	padding: 7.5px 5px;
+	transform: translate3d(0,0,0);
+}
+.eq-h5_player.eq-small .eq-footer,
+.eq-h5_player.eq-small_mid .eq-footer{
+	height: 36px;
+	padding: 6px 6px;
+}
+.eq-h5_player .eq-footer .eq-box-left  {
+	float: left;
+}
+.eq-h5_player .eq-footer .eq-box-right  {
+	float: right;
+}
+.eq-h5_player .eq-footer .eq-box-left > div > div {
+	display: block;
+	float: left;
+	margin-left: 10px;
+}
+.eq-h5_player .eq-footer .eq-box-right > div > div {
+	display: block;
+	float: left;
+	margin-left: 14px;
+	line-height: 25px;
+	margin-left: 7px;
+	line-height: 25px;
+}
+.eq-h5_player.eq-small .eq-footer .eq-box-right > div > div, 
+.eq-h5_player.eq-small_mid .eq-footer .eq-box-right > div > div {
+	display: block;
+	float: left;
+	margin-left: 4px;
+	line-height: 24px;
+}
+.eq-h5_player .eq-footer .eq-box-left > div > div:first-child,
+.eq-h5_player .eq-footer .eq-box-right > div > div:first-child {
+	margin: 0;
+}
+
+.eq-h5_player .eq-footer .eq-box-right .eq-time > div {
+	font-size: 15px;
+	color: #ccc;
+	line-height: 40px;
+	font-size: 12px;
+    color: #ccc;
+    line-height: 24px;
+    letter-spacing: -1px;
+}
+.eq-h5_player.eq-small .eq-footer .eq-box-right p,
+.eq-h5_player.eq-small_mid .eq-footer .eq-box-right p {
+	font-size: 12px;
+    color: #ccc;
+    line-height: 24px;
+    letter-spacing: -1px;
+}
+
+/* box-left */
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-play div {
+	display: block;
+	width: 40px;
+	height: 40px;
+	background-image: url("../images/parts-pc.png");
+	background-position: 0 0;
+	opacity: 0.9;
+	
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-pause div {
+	display: block;
+	width: 40px;
+	height: 40px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -360px 0;
+	opacity: 0.9;
+	
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-prev10 div {
+		display: block;
+		width: 40px;
+		height: 40px;
+		background-image: url("../images/parts-pc.png");
+		background-position: -40px 0;
+		opacity: 0.9;
+		text-align: center;
+	}
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-prev10 div span {
+	display: inline;
+	color: #FFF;
+	font-size: 16px;
+	position:  relative;
+	top: 9px;
+	/* left: 8px; */
+}
+
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-next10 div {
+	display: block;
+	width: 40px;
+	height: 40px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -80px 0;
+	opacity: 0.9;
+	text-align: center;
+}
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-next10 div span {
+	display: inline;
+	color: #FFF;
+	font-size: 16px;
+	position:  relative;
+	top: 9px;
+	/* left: 10px; */
+}
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-sound div {
+	display: block;
+	width: 40px;
+	height: 40px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -120px 0;
+	opacity: 0.9;
+
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+.eq-footer .eq-box-left div .eq-icon-sound_minimum div {
+	display: block;
+	width: 40px;
+	height: 40px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -508px 0;
+	opacity: 0.9;
+
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+.eq-footer .eq-box-left div .eq-icon-sound_middle div {
+	display: block;
+	width: 40px;
+	height: 40px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -548px 0;
+	opacity: 0.9;
+
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+.eq-footer .eq-box-left div .eq-icon-sound_max div {
+	display: block;
+	width: 40px;
+	height: 40px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -120px 0;
+	opacity: 0.9;
+
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+.eq-footer .eq-box-left div .eq-icon-sound_mute div {
+	display: block;
+	width: 40px;
+	height: 40px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -588px 0;
+	opacity: 0.9;
+
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-replay div {
+	display: block;
+	width: 40px;
+	height: 40px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -400px 0;
+	opacity: 0.9;
+	
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+
+/* box-right */
+.eq-h5_player .eq-footer .eq-box-right div .eq-icon-telop div {
+	display: block;
+	width: 40px;
+	height: 40px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -160px 0;
+	opacity: 0.9;
+}
+.eq-h5_player .eq-footer .eq-box-right div .eq-icon-telop div span {
+	color: #FFF;
+	font-size: 16px;
+	position:  relative;
+	top: 7px;
+	left: 12px;
+	float: left;
+}
+
+.eq-h5_player .eq-footer .eq-box-right div .eq-icon-resolution div {
+	display: block;
+	width: 40px;
+	height: 40px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -200px 0;
+	opacity: 0.9;
+}
+.eq-h5_player .eq-footer .eq-box-right div .eq-icon-resolution div span {
+	color: #FFF;
+	font-size: 14px;
+	position:  relative;
+	top: 7px;
+	right: 4px;
+	display: inline-block;
+	width: 100%;
+	text-align: right;
+}
+
+.eq-h5_player .eq-footer .eq-box-right div .eq-icon-speed div {
+	display: block;
+	width: 40px;
+	height: 40px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -240px 0;
+	opacity: 0.9;
+}
+.eq-h5_player .eq-footer .eq-box-right div .eq-icon-speed div span {
+	color: #FFF;
+	font-size: 14px;
+	position:  relative;
+	top: 8px;
+	right: 4px;
+	display: inline-block;
+	width: 100%;
+	text-align: right;
+}
+
+.eq-h5_player .eq-footer .eq-box-right div .eq-icon-fullscreen div {
+	display: block;
+	width: 40px;
+	height: 40px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -280px 0;
+	opacity: 0.9;
+	
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+.eq-h5_player .eq-footer .eq-box-right div .eq-icon-fullscreen-disable div {
+	display: block;
+    width: 40px;
+    height: 40px;
+    background-image: url(../images/parts-pc.png);
+    background-position: -320px -0px;
+    opacity: 0.9;
+    overflow: hidden;
+    text-indent: 100%;
+    white-space: nowrap;
+    transform: scale(0.75);
+    margin-top: -8px;
+	margin-left: -8px;
+	color: rgba(0,0,0,0);
+}
+
+/*small mid*/
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-play div,
+.eq-h5_player.eq-small .eq-footer .eq-box-left div .eq-icon-play div,
+.eq-h5_player.eq-small_mid .eq-footer .eq-box-left div .eq-icon-play div {
+	display: block;
+	width: 30px;
+	height: 24px;
+	background-image: url("../images/parts-pc.png");
+	background-position: 0 -1170px;
+	opacity: 0.9;
+	
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-pause div,
+.eq-h5_player.eq-small .eq-footer .eq-box-left div .eq-icon-pause div,
+.eq-h5_player.eq-small_mid .eq-footer .eq-box-left div .eq-icon-pause div {
+	display: block;
+	width: 30px;
+	height: 24px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -210px -1170px;
+	opacity: 0.9;
+	
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-prev10 div,
+.eq-h5_player .eq-small_mid .eq-footer .eq-box-left div .eq-icon-prev10 div {
+		
+		width: 30px;
+		height: 24px;
+		/* background-image: url("../images/parts-pc.png"); */
+		background-position: -400px -1170px;
+		opacity: 0.9;
+	}
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-prev10 div span,
+.eq-h5_player.eq-small_mid .eq-footer .eq-box-left div .eq-icon-prev10 div span {
+	
+	color: #FFF;
+	font-size: 12px;
+	position:  relative;
+	top: -2px;
+    line-height: 30px;
+	/* left: 6px; */
+}
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-next10 div ,
+.eq-h5_player.eq-small_mid .eq-footer .eq-box-left div .eq-icon-next10 div {
+	
+	width: 30px;
+	height: 24px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -430px -1170px;
+	opacity: 0.9;
+}
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-next10 div span,
+.eq-h5_player.eq-small_mid .eq-footer .eq-box-left div .eq-icon-next10 div span {
+	
+	color: #FFF;
+	font-size: 12px;
+	position:  relative;
+	top: -2px;
+    line-height: 30px;
+	/* left: 8px; */
+}
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-sound div,
+.eq-h5_player.eq-small .eq-footer .eq-box-left div .eq-icon-sound div,
+.eq-h5_player.eq-small_mid .eq-footer .eq-box-left div .eq-icon-sound div {
+	display: block;
+	width: 30px;
+	height: 24px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -30px -1170px;
+	opacity: 0.9;
+
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-sound_minimum div,
+.eq-h5_player.eq-small .eq-footer .eq-box-left div .eq-icon-sound_minimum div,
+.eq-h5_player.eq-small_mid .eq-footer .eq-box-left div .eq-icon-sound_minimum div {
+	display: block;
+	width: 30px;
+	height: 24px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -310px -1170px;
+	opacity: 0.9;
+
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-sound_middle div,
+.eq-h5_player.eq-small .eq-footer .eq-box-left div .eq-icon-sound_middle div,
+.eq-h5_player.eq-small_mid .eq-footer .eq-box-left div .eq-icon-sound_middle div {
+	display: block;
+	width: 30px;
+	height: 24px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -340px -1170px;
+	opacity: 0.9;
+
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-sound_max div,
+.eq-h5_player.eq-small .eq-footer .eq-box-left div .eq-icon-sound_max div,
+.eq-h5_player.eq-small_mid .eq-footer .eq-box-left div .eq-icon-sound_max div {
+	display: block;
+	width: 30px;
+	height: 24px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -30px -1170px;
+	opacity: 0.9;
+
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-sound_mute div,
+.eq-h5_player.eq-small .eq-footer .eq-box-left div .eq-icon-sound_mute div,
+.eq-h5_player.eq-small_mid .eq-footer .eq-box-left div .eq-icon-sound_mute div {
+	display: block;
+	width: 30px;
+	height: 24px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -370px -1170px;
+	opacity: 0.9;
+
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-replay div,
+.eq-h5_player.eq-small .eq-footer .eq-box-left div .eq-icon-replay div,
+.eq-h5_player.eq-small_mid .eq-footer .eq-box-left div .eq-icon-replay div {
+	display: block;
+	width: 30px;
+	height: 24px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -240px -1170px;
+	opacity: 0.9;
+	
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+
+
+
+/* box-right */
+.eq-h5_player .eq-footer .eq-box-right div .eq-icon-telop div,
+.eq-h5_player.eq-small .eq-footer .eq-box-right div .eq-icon-telop div,
+.eq-h5_player.eq-small_mid .eq-footer .eq-box-right div .eq-icon-telop div {
+	/* display: block;
+	width: 30px;
+	height: 24px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -60px -1170px;
+	opacity: 0.9; */
+	display: block;
+	border: 2px solid #FFFFFF;
+    margin: 1px 3px;
+    border-radius: 4px;
+    width: 24px;
+    height: 22px;
+	background-image: none;
+	opacity: 0.9; 
+}
+.eq-h5_player .eq-footer .eq-box-right div .eq-icon-telop div span,
+.eq-h5_player.eq-small .eq-footer .eq-box-right div .eq-icon-telop div span,
+.eq-h5_player.eq-small_mid .eq-footer .eq-box-right div .eq-icon-telop div span {
+	color: #FFF;
+	font-size: 12px;
+	line-height: 12px;
+	position:  relative;
+	top: 3px;
+    left: 4px;
+}
+.eq-h5_player .eq-footer .eq-box-right div .eq-icon-resolution div,
+.eq-h5_player.eq-small .eq-footer .eq-box-right div .eq-icon-resolution div,
+.eq-h5_player.eq-small_mid .eq-footer .eq-box-right div .eq-icon-resolution div {
+	display: block;
+	width: 30px;
+	height: 24px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -90px -1170px;
+	opacity: 0.9;
+}
+.eq-h5_player .eq-footer .eq-box-right div .eq-icon-resolution div span,
+.eq-h5_player.eq-small .eq-footer .eq-box-right div .eq-icon-resolution div span,
+.eq-h5_player.eq-small_mid .eq-footer .eq-box-right div .eq-icon-resolution div span {
+	color: #FFF;
+	font-size: 10px;
+	line-height: 10px;
+	position:  relative;
+	top: 8px;
+	right: 3px;
+	display: inline-block;
+	width: 100%;
+	text-align: right;
+}
+.eq-h5_player .eq-footer .eq-box-right div .eq-icon-speed div,
+.eq-h5_player.eq-small .eq-footer .eq-box-right div .eq-icon-speed div,
+.eq-h5_player.eq-small_mid .eq-footer .eq-box-right div .eq-icon-speed div {
+	display: block;
+	width: 30px;
+	height: 25px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -150px -1170px;
+	opacity: 0.9;
+}
+.eq-h5_player .eq-footer .eq-box-right div .eq-icon-speed div span,
+.eq-h5_player.eq-small .eq-footer .eq-box-right div .eq-icon-speed div span,
+.eq-h5_player.eq-small_mid .eq-footer .eq-box-right div .eq-icon-speed div span {
+	color: #FFF;
+	font-size: 10px;
+	line-height: 10px;
+	position:  relative;
+	top: 8px;
+	right: 3px;
+	display: inline-block;
+	width: 100%;
+	text-align: right;
+}
+.eq-h5_player .eq-footer .eq-box-right div .eq-icon-fullscreen div,
+.eq-h5_player.eq-small .eq-footer .eq-box-right div .eq-icon-fullscreen div,
+.eq-h5_player.eq-small_mid .eq-footer .eq-box-right div .eq-icon-fullscreen div {
+	display: block;
+	width: 30px;
+	height: 25px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -180px -1170px;
+	opacity: 0.9;
+	
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+/* .eq-h5_player footer .eq-box-right div .eq-icon-fullscreen-disable div {
+	display: block;
+	width: 30px;
+	height: 25px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -180px -1170px;
+	opacity: 0.9;
+	
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+} */
+/* box-left, box-right hover */
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-play div:hover,
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-pause div:hover,
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-prev10 div:hover,
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-next10 div:hover,
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-replay div:hover,
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-sound div:hover,
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-sound_max div:hover,
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-sound_middle div:hover,
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-sound_minimum div:hover,
+.eq-h5_player .eq-footer .eq-box-left div .eq-icon-sound_mute div:hover,
+.eq-h5_player .eq-footer .eq-box-right div .eq-icon-telop div:hover,
+.eq-h5_player .eq-footer .eq-box-right div .eq-icon-resolution div:hover,
+.eq-h5_player .eq-footer .eq-box-right div .eq-icon-speed div:hover,
+.eq-h5_player .eq-footer .eq-box-right div .eq-icon-fullscreen div:hover,
+.eq-h5_player .eq-footer .eq-box-right div .eq-icon-fullscreen-disable div:hover {
+	opacity: 1;
+}
+
+/* seekbar css */
+.eq-h5_player .eq-box-seekbar {
+	max-width: 2560px;
+	display: block;
+	position: absolute;
+	width:  100%;
+	height: 20px;
+	/* bottom:  56px; */
+	bottom: 39px;
+	left: 0;
+	z-index: 3;
+	cursor: pointer;
+	transform: translate3d(0,0,0);
+}
+.eq-h5_player .eq-seekbar-container{
+	width:  100%;
+	height: 20px;
+	padding-top: 18px;
+	/* background: -webkit-gradient(linear, left bottom, left top, from(rgba(0,0,0,0.7)), to(rgba(0,0,0,0)));
+	background:  -ms-linear-gradient(bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.0));
+	background: linear-gradient(bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.0)); */
+}
+.eq-box-seekbar .eq-seek_inner_bar_background{
+	display: block;
+	position: relative;
+	width:  100%;
+	height: 2px;
+	background-color: rgba(255,255,255,0.2);
+	opacity: 0.2;
+}
+.eq-box-seekbar .eq-seek_inner_bar_base {
+	display: block;
+	position: absolute;
+	width:  100%;
+	height: 3px;
+	top:17px;
+	background-color: rgba(0, 0, 0,0.7);
+}
+.eq-small_mid .eq-box-seekbar .eq-seek_inner_bar_base,
+.eq-small .eq-box-seekbar .eq-seek_inner_bar_base{
+	top:7px;
+}
+.eq-box-seekbar .eq-seek_inner_bar_loading {
+	display: block;
+	position: absolute;
+	width:  80%;
+	height: 2px;
+	top:18px;
+	background-color: rgba(255,255,255,0.4);
+}
+.eq-box-seekbar .eq-seek_inner_bar {
+	display: block;
+	position: absolute;
+	overflow: hidden;
+	width:  40%;
+	height: 2px;
+	top:18px;
+	background-color: #FFF;
+}
+.eq-small_mid .eq-box-seekbar .eq-seek_inner_bar_loading, 
+.eq-small .eq-box-seekbar .eq-seek_inner_bar_loading, 
+.eq-small_mid .eq-box-seekbar .eq-seek_inner_bar,
+.eq-small .eq-box-seekbar .eq-seek_inner_bar{
+	top:8px;
+}
+.eq-box-seekbar .eq-seek_pointer {
+	display: block;
+	position: absolute;
+	top: 2px;
+	left: 40%;
+	margin-left: -17px;
+	width: 34px;
+	height: 34px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -440px 0;
+}
+.eq-box-seekbar .eq-seek_pointer.eq-focus {
+	display: block;
+	position: absolute;
+	top: -1px;
+	left: 40%;
+	margin-left: -17px;
+	width: 34px;
+	height: 34px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -474px 0;
+}
+.eq-box-seekbar .eq-seek_pointer:hover {
+	background-position: -474px 0;
+}
+/*small_mid*/
+.eq-h5_player.eq-small .eq-box-seekbar,
+.eq-h5_player.eq-small_mid .eq-box-seekbar{
+	height: 10px;
+	bottom:  36px;
+}
+/* .eq-h5_player.eq-small_mid .eq-box-seekbar {
+	max-width: 2560px;
+	display: block;
+	position: absolute;
+	width:  100%;
+	height: 5px;
+	bottom:  34px;
+	left: 0;
+	z-index: 3;
+} */
+.eq-h5_player.eq-small .eq-seekbar-container,
+.eq-h5_player.eq-small_mid .eq-seekbar-container{
+	width:  100%;
+	height: 10px;
+	padding-top: 8px;
+}
+.eq-h5_player.eq-small .eq-box-seekbar .eq-seek_pointer,
+.eq-h5_player.eq-small_mid .eq-box-seekbar .eq-seek_pointer {
+	top: -1px;
+	margin-left: -10px;
+	width: 20px;
+	height: 20px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -270px -1170px;
+}
+.eq-h5_player.eq-small .eq-box-seekbar .eq-seek_pointer.eq-focus,
+.eq-h5_player.eq-small_mid .eq-box-seekbar .eq-seek_pointer.eq-focus {
+	top: -1px;
+	margin-left: -10px;
+	width: 20px;
+	height: 20px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -290px -1170px;
+}
+.eq-h5_player.eq-small .eq-box-seekbar .eq-seek_pointer:hover,
+.eq-h5_player.eq-small_mid .eq-box-seekbar .eq-seek_pointer:hover {
+	top: -1px;
+	margin-left: -10px;
+	width: 20px;
+	height: 20px;
+	background-position: -290px -1170px;
+}
+
+
+
+
+/********************
+ *
+ *    右上ボタン群
+ *
+ ********************/
+@media screen and (min-width: 0px) { /* 関連系非表示 */
+	.eq-sub-container {
+		display: none;
+	}
+}
+@media screen and (min-width: 480px) { /* 480px以上で表示 */
+	/* .eq-sub-container {
+		display: block;
+	} */
+}
+.eq-h5_player .eq-sub-container 	{
+	z-index: 4;
+}
+.eq-h5_player .eq-sub-container .eq-sub-container-box {
+	position: absolute;
+	top: 28px;
+	right: 10px;
+	z-index: 1;
+}
+.eq-small.eq-h5_player .eq-sub-container .eq-sub-container-box,
+.eq-small_mid.eq-h5_player .eq-sub-container .eq-sub-container-box {
+	top: 6px;
+	right: 6px;
+	z-index: 4;
+}
+.eq-h5_player .eq-sub-container .eq-sub-container-box .eq-btn-movies,
+.eq-h5_player .eq-sub-container .eq-sub-container-box .eq-btn-links,
+.eq-h5_player .eq-sub-container .eq-sub-container-box .eq-btn-share,
+.eq-h5_player .eq-sub-container .eq-sub-container-box .eq-btn-chapter {
+	display: block;
+	float: left;
+	width: 50px;
+	height: 50px;
+	/* width:49px;
+	height: 49px; */
+	margin-left: 10px;
+		
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+.eq-sub-container .eq-sub-container-box .eq-btn-movies div {
+	display: block;
+	width:50px;
+	height: 50px;
+	background-image: url("../images/parts-pc.png");
+	/* background-image: url("../images/parts-pc_19.png"); */
+	background-position: 0 -1425px;
+	opacity: 0.9;
+}
+.eq-sub-container .eq-sub-container-box .eq-btn-links div {
+	display: block;
+	width: 50px;
+	height: 50px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -50px -1425px;
+	opacity: 0.9;
+}
+.eq-sub-container .eq-sub-container-box .eq-btn-share div {
+	display: block;
+	width: 50px;
+	height: 50px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -100px -1425px;
+	opacity: 0.9;
+}
+.eq-sub-container .eq-sub-container-box .eq-btn-chapter div {
+	display: block;
+	width: 50px;
+	height: 50px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -150px -1425px;
+	opacity: 0.9;
+}
+.eq-fullscreen.eq-sub-container .eq-sub-container-box div {
+	width: 70px;
+	height: 70px;
+	margin-left: 10px;
+}
+.eq-fullscreen.eq-sub-container .eq-sub-container-box .eq-btn-movies div {
+	display: block;
+	width:70px;
+	height: 70px;
+	background-position: 0 -40px;
+}
+.eq-fullscreen.eq-sub-container .eq-sub-container-box .eq-btn-links div {
+	display: block;
+	width: 70px;
+	height: 70px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -70px -40px;
+}
+.eq-fullscreen.eq-sub-container .eq-sub-container-box .eq-btn-share div {
+	display: block;
+	width: 70px;
+	height: 70px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -140px -40px;
+}
+.eq-fullscreen.eq-sub-container .eq-sub-container-box .eq-btn-chapter div {
+	display: block;
+	width: 70px;
+	height: 70px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -210px -40px;
+}
+/*small_mid*/
+.eq-h5_player.eq-small .eq-sub-container .eq-sub-container-box div,
+.eq-h5_player.eq-small_mid .eq-sub-container .eq-sub-container-box div {
+	width:32px;
+	height: 32px;
+	margin-left: 2px;
+	z-index: 4;
+}
+
+.eq-h5_player.eq-small .eq-sub-container .eq-sub-container-box .eq-btn-movies div,
+.eq-h5_player.eq-small_mid .eq-sub-container .eq-sub-container-box .eq-btn-movies div {
+	display: block;
+	width:32px;
+	height: 32px;
+	background-image: url("../images/parts-pc.png");
+	background-position: 0 -1195px;
+	opacity: 0.9;
+}
+.eq-h5_player.eq-small .eq-sub-container .eq-sub-container-box .eq-btn-links div,
+.eq-h5_player.eq-small_mid .eq-sub-container .eq-sub-container-box .eq-btn-links div {
+	display: block;
+	width:32px;
+	height: 32px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -32px -1195px;
+	opacity: 0.9;
+}
+.eq-h5_player.eq-small .eq-sub-container .eq-sub-container-box .eq-btn-share div,
+.eq-h5_player.eq-small_mid .eq-sub-container .eq-sub-container-box .eq-btn-share div {
+	display: block;
+	width:32px;
+	height: 32px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -64px -1195px;
+	opacity: 0.9;
+}
+.eq-h5_player.eq-small .eq-sub-container .eq-sub-container-box .eq-btn-chapter div,
+.eq-h5_player.eq-small_mid .eq-sub-container .eq-sub-container-box .eq-btn-chapter div {
+	display: block;
+	width:32px;
+	height: 32px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -96px -1195px;
+	opacity: 0.9;
+}
+.eq-sub-container .eq-sub-container-box .eq-btn-movies div:hover,
+.eq-sub-container .eq-sub-container-box .eq-btn-links div:hover,
+.eq-sub-container .eq-sub-container-box .eq-btn-share div:hover,
+.eq-sub-container .eq-sub-container-box .eq-btn-chapter div:hover {
+	opacity: 1;
+}
+
+
+
+/********************
+ *
+ *    カーソル設定
+ *
+ ********************/
+.eq-h5_player .eq-footer .eq-box-left > div > div div,
+.eq-h5_player .eq-footer .eq-box-right > div > div div,
+.eq-box-seekbar .eq-seek_pointer,
+.eq-sub-container .eq-sub-container-box .eq-btn-movies,
+.eq-sub-container .eq-sub-container-box .eq-btn-links,
+.eq-sub-container .eq-sub-container-box .eq-btn-share,
+.eq-sub-container .eq-sub-container-box .eq-btn-chapter,
+.eq-h5_player .eq-chapter,
+.eq-btn-chapter-close {
+	cursor: pointer;
+}
+
+
+
+/********************
+ *
+ *  中心アイコンエリア
+ *
+ ********************/
+ .eq-h5_player .eq-area-center {
+	position: relative;
+	top: 50%;
+	-webkit-transform: translateY(-50%); /* Safari用 */
+	transform: translateY(-50%);
+	z-index: 3;
+}
+.eq-h5_player .eq-area-center div {
+	display: table;
+	margin: 0 auto;
+}
+
+.eq-h5_player .eq-area-center div div {
+	display: block;
+	float: left;
+	margin: 0 auto;
+}
+.eq-small.eq-area-center div div{
+	margin: 0 15px;
+}
+.eq-h5_player .eq-area-center div div:last-child {
+	margin: 0;
+}
+
+@media screen and (min-width: 720px) { /* マージン調整 */
+	/* .eq-area-center div div {
+		display: block;
+		float: left;
+		margin-right: 80px;
+	}
+	.eq-area-center div div:last-child {
+		margin: 0;
+	}  */
+}
+
+.eq-small.eq-area-center .eq-center-icon-loading div,
+.eq-h5_player.eq-small .eq-area-center .eq-center-icon-loading div {
+	width: 56px;
+	height: 56px;
+	background-position: -280px -1335px;
+}
+.eq-small.eq-area-center .eq-center-icon-play div,
+.eq-h5_player.eq-small .eq-area-center .eq-center-icon-play div {
+	width: 56px;
+	height: 56px;
+	background-position: -56px -1335px;
+}
+.eq-small.eq-area-center .eq-center-icon-pause div,
+.eq-h5_player.eq-small .eq-area-center .eq-center-icon-pause div {
+	width: 56px;
+	height: 56px;
+	background-position: -168px -1335px;
+}
+.eq-small.eq-area-center .eq-center-icon-replay div,
+.eq-h5_player.eq-small .eq-area-center .eq-center-icon-replay div {
+	width: 56px;
+	height: 56px;
+	background-position: -224px -1335px;
+}
+.eq-small.eq-area-center .eq-center-icon-prev10 div,
+.eq-h5_player.eq-small .eq-area-center .eq-center-icon-prev10 div {
+	width: 56px;
+	height: 56px;
+	background-position: -0px -1335px;
+}
+
+.eq-small.eq-area-center .eq-center-icon-next10 div,
+.eq-h5_player.eq-small .eq-area-center .eq-center-icon-next10 div {
+	width: 56px;
+	height: 56px;
+	background-position: -112px -1335px;
+}
+.eq-h5_player.eq-small .eq-area-center .eq-center-icon-prev10 div span,
+.eq-area-center.eq-small .eq-center-icon-prev10 div span,
+.eq-h5_player.eq-small .eq-area-center .eq-center-icon-next10 div span,
+.eq-area-center.eq-small .eq-center-icon-next10 div span{
+	color: #FFF;
+	position:  relative;
+	top: 19px;
+    /* left: 16px; */
+    font-size: 17px;
+	text-shadow: 1px 1px 15px rgba(0, 0, 0, 0.5);
+	line-height: 17px;
+}
+.eq-h5_player.eq-small_mid .eq-area-center .eq-center-icon-play div {
+	width: 42px;
+	height: 42px;
+	background-position: -43px -1226px;
+}
+.eq-h5_player.eq-small_mid .eq-area-center .eq-center-icon-pause div {
+	width: 42px;
+	height: 42px;
+	background-position: -127px -1226px;
+}
+.eq-h5_player.eq-small_mid .eq-area-center .eq-center-icon-replay div {
+	width: 42px;
+	height: 42px;
+	background-position: -169px -1226px;
+}
+.eq-h5_player.eq-small_mid .eq-area-center .eq-center-icon-prev10 div {
+	width: 42px;
+	height: 42px;
+	background-position: -0px -1226px;
+}
+.eq-h5_player.eq-small_mid .eq-area-center .eq-center-icon-next10 div {
+	width: 42px;
+	height: 42px;
+	background-position: -84px -1226px;
+}
+.eq-h5_player.eq-small_mid .eq-area-center .eq-center-icon-prev10 div span,
+.eq-h5_player.eq-small_mid .eq-area-center .eq-center-icon-next10 div span {
+	color: #FFF;
+	position:  relative;
+	top: 12px;
+    /* left: 10px; */
+	font-size: 17px;
+	line-height: 17px;
+	text-shadow: 1px 1px 15px rgba(0, 0, 0, 0.5);
+}
+.eq-h5_player.eq-small_mid .eq-area-center .eq-center-icon-loading div {
+	width: 42px;
+	height: 42px;
+	background-position: -211px -1226px;
+}
+
+.eq-area-center .eq-center-icon-play div {
+	display: block;
+	width: 110px;
+	height: 110px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -110px -110px;
+	opacity: 0.9;
+	cursor: pointer;
+	
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+.eq-area-center .eq-center-icon-pause div {
+	display: block;
+	width: 110px;
+	height: 110px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -325px -110px;
+	opacity: 0.9;
+	cursor: pointer;
+	
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+.eq-area-center .eq-center-icon-replay div {
+	display: block;
+	width: 110px;
+	height: 110px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -440px -110px;
+	opacity: 0.9;
+	cursor: pointer;
+	
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+.eq-area-center .eq-center-icon-loading div {
+	display: block;
+	width: 110px;
+	height: 110px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -550px -110px;
+	opacity: 0.9;
+	cursor: pointer;
+	
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+.eq-area-center .eq-center-icon-prev10 div {
+	display: block;
+	width: 110px;
+	height: 110px;
+	background-image: url("../images/parts-pc.png");
+	background-position: 0 -110px;
+	opacity: 0.9;
+	cursor: pointer;
+	text-align: center;
+}
+.eq-area-center .eq-center-icon-next10 div {
+	display: block;
+	width: 110px;
+	height: 110px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -220px -110px;
+	opacity: 0.9;
+	cursor: pointer;
+	text-align: center;
+}
+.eq-area-center .eq-center-icon-prev10 div span,
+.eq-area-center .eq-center-icon-next10 div span {
+	color: #FFF;
+	position:  relative;
+	top: 37px;
+    /* left: 30px; */
+	font-size: 36px;
+	text-shadow: 1px 1px 15px rgba(0, 0, 0, 0.5);
+	line-height: 36px;
+}
+
+.eq-fullscreen .eq-area-center .eq-center-icon-play div {
+	display: block;
+	width: 200px;
+	height: 200px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -200px -330px;
+	opacity: 0.9;
+	cursor: pointer;
+}
+.eq-fullscreen .eq-area-center .eq-center-icon-pause div {
+	display: block;
+	width: 200px;
+	height: 200px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -590px -330px;
+	opacity: 0.9;
+	cursor: pointer;
+}
+.eq-fullscreen .eq-area-center .eq-center-icon-replay div {
+	display: block;
+	width: 200px;
+	height: 200px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -800px -330px;
+	opacity: 0.9;
+	cursor: pointer;
+}
+.eq-fullscreen .eq-area-center .eq-center-icon-prev10 div {
+	display: block;
+	width: 200px;
+	height: 200px;
+	background-image: url("../images/parts-pc.png");
+	background-position: 0 -330px;
+	opacity: 0.9;
+	cursor: pointer;
+}
+.eq-fullscreen .eq-area-center .eq-center-icon-next10 div {
+	display: block;
+	width: 200px;
+	height: 200px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -400px -330px;
+	opacity: 0.9;
+	cursor: pointer;
+}
+.eq-fullscreen .eq-area-center .eq-center-icon-prev10 div span,
+.eq-fullscreen .eq-area-center .eq-center-icon-next10 div span {
+	color: #FFF;
+	position:  relative;
+	top: 70px;
+	/* left: 58px; */
+	font-size: 62px;
+	text-shadow: 1px 1px 15px rgba(0, 0, 0, 0.5);
+	line-height: 62px;
+}
+.eq-area-center .eq-center-icon-prev10 div:hover,
+.eq-area-center .eq-center-icon-play div:hover,
+.eq-area-center .eq-center-icon-pause div:hover,
+.eq-area-center .eq-center-icon-next10 div:hover,
+.eq-area-center .eq-center-icon-replay div:hover {
+	opacity: 1;
+}
+
+
+
+/****************************************
+ *
+ *  関連コンテンツ オーバーレイ 黒下敷き
+ *
+ ****************************************/
+/* 関連系非表示 */
+ /* @media screen and (min-width: 0px) { 
+	.eq-state-relation {
+		display: none;
+	}
+} */
+/* 480px以上で表示 */
+/* @media screen and (min-width: 480px) { 
+	
+} */
+.eq-h5_player .eq-state-relation,
+.eq-h5_player .eq-state-auth,
+.eq-h5_player .eq-state-error {
+	display: block;
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0,0,0,0.8);
+	padding: 0;
+	z-index: 4;
+}
+
+/* btn-close */
+.eq-h5_player .eq-btn-close {
+	display: block;
+	position: absolute;
+	top: 62px;
+	right: 30px;
+	width: 30px;
+	height: 30px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -300px -850px;
+	opacity: 0.9;
+	
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+.eq-small.eq-h5_player .eq-btn-close,
+.eq-small_mid.eq-h5_player .eq-btn-close {
+	top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    background-image: url(../images/parts-pc.png);
+    background-position: -276px -1226px;
+}
+
+
+.eq-h5_player .eq-btn-close:hover {
+	opacity: 1;
+}
+
+
+
+/********************
+ *
+ *    設定balloon
+ *
+ ********************/
+ .eq-h5_player .eq-balloon-base {
+	position: relative;
+	display: inline-block;
+	padding: 0;
+	width: auto;
+	min-width: 26px;
+	height: auto;
+	color: #FFF;
+	line-height: 30px;
+	background: #232323;
+	z-index: 0;
+	border-radius: 6px;
+}
+.eq-small.eq-h5_player .eq-balloon-base,
+.eq-small_mid.eq-h5_player .eq-balloon-base {
+	line-height: 13px;
+}
+.eq-balloon-seek .eq-balloon-base { /* シークバーのバルーンのみ例外処理 */
+	position: relative;
+	display: inline-block;
+	padding: 0;
+	width: auto;
+	height: auto;
+	color: #FFF;
+	line-height: 30px;
+	background: #232323;
+	z-index: 0;
+	border-radius: 3px;
+	min-width: 60px;
+	cursor: default;
+}
+.eq-small .eq-balloon-seek .eq-balloon-base,
+.eq-small_mid .eq-balloon-seek .eq-balloon-base { /* シークバーのバルーンのみ例外処理 */
+	position: relative;
+	display: inline-block;
+	padding: 0;
+	width: 62px;
+	height: auto;
+	color: #FFF;
+	background: #232323;
+	z-index: 0;
+	border-radius: 3px;
+	line-height: 21px;
+	min-width: 0px;
+}
+/* .eq-balloon-base:after {
+	content: "";
+	position: absolute;
+	bottom: -5px;
+	left: 50%;
+	margin-left: -5px;
+	display: block;
+	width: 0px;
+	height: 0px;
+	border-style: solid;
+	border-width: 5px 5px 0 5px;
+	border-color: #232323 transparent transparent transparent;
+
+} */
+.eq-balloon-base .eq-pin {
+	content: "";
+	position: absolute;
+	bottom: -5px;
+	right: 50%;
+	margin-right: -5px;
+	display: block;
+	width: 0px;
+	height: 0px;
+	border-style: solid;
+	border-width: 5px 5px 0 5px;
+	border-color: #232323 transparent transparent transparent;
+
+}
+.eq-balloon-base .eq-pin,
+.eq-small .eq-balloon-base .eq-pin,
+.eq-small_mid .eq-balloon-base .eq-pin {
+	content: "";
+	position: absolute;
+	bottom: -5px;
+	right: 50%;
+	margin-right: -5px;
+	display: block;
+	width: 0px;
+	height: 0px;
+	border-style: solid;
+	border-width: 5px 5px 0 5px;
+	border-color: #232323 transparent transparent transparent;
+
+}
+.eq-balloon-base .eq-pin-right {
+	content: "";
+	position: absolute;
+	bottom: -5px;
+	right: 38%;
+	margin-right: -5px;
+	display: block;
+	width: 0px;
+	height: 0px;
+	border-style: solid;
+	border-width: 5px 5px 0 5px;
+	border-color: #232323 transparent transparent transparent;
+
+}
+.eq-balloon-base .eq-pin-right,
+.eq-small .eq-balloon-base .eq-pin-right,
+.eq-small_mid .eq-balloon-base .eq-pin-right {
+	content: "";
+	position: absolute;
+	bottom: -5px;
+	right: 50%;
+	margin-right: -5px;
+	display: block;
+	width: 0px;
+	height: 0px;
+	border-style: solid;
+	border-width: 5px 5px 0 5px;
+	border-color: #232323 transparent transparent transparent;
+
+}
+.eq-h5_player .eq-unmuteBtn{
+	display: none;
+	position: absolute;
+	font-size: 15px;
+	color: #000000;
+	background-color: #FFF;
+	border: #000 solid 1px;
+	line-height: 20px;
+	padding: 5px;
+	height: 30px;
+	z-index: 3;
+	cursor: pointer;
+} 
+
+/* chapter */
+
+
+.eq-h5_player .eq-chapter-box {
+	display: block;
+	background-color: rgba(0, 0, 0, 0.8);
+	min-width: 240px;
+	width: 35%;
+	height: 100%;
+	position: absolute;
+	top: 0px;
+	right: 0px;
+	z-index: 5;
+}
+.eq-h5_player .eq-chapter-box>div:first-child {
+	width: 100%;
+	height: 30px;
+}
+.eq-h5_player .eq-chapter-box>div:last-child {
+	width: 100%;
+	height: calc(100% - 30px);
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+.eq-h5_player .eq-btn-chapter-close {
+	display: block;
+	position: absolute;
+	top: 0px;
+	right: 0px;
+	width: 30px;
+	height: 30px;
+	background-image: url("../images/parts-pc.png");
+	background-position: -300px -850px;
+	opacity: 0.9;
+	overflow: hidden;
+	text-indent: 100%;
+	white-space: nowrap;
+}
+
+.eq-h5_player .eq-chapter {
+	display: block;
+	color: white;
+	opacity: 0.7;
+}
+
+.eq-h5_player .eq-chapter > div:first-child{
+	margin: 10px;
+	display: flex;
+}
+
+.eq-h5_player .eq-chapter:hover {
+	background-color: rgba(10, 10, 10, 0.8);
+	opacity: 1.0;
+}
+
+.eq-h5_player .eq-chapter .eq-chapter-index {
+	display: inline-block;
+	line-height: 1.4em;
+	vertical-align: top;
+	margin-right: 10px;
+	width: 1em;
+	font-size: 0.93em;
+}
+.eq-h5_player .eq-chapter-box .eq-chapter .eq-chapter-text {
+	display: inline-block;
+	line-height: 1.4em;
+	vertical-align: top;
+	white-space: normal;
+	margin-right: 10px;
+	word-wrap: break-word;
+	width: 100%;
+	font-size: 0.93em;
+}
+.eq-h5_player .eq-chapter .eq-chapter-time {
+	display: inline-block;
+	line-height: 1.4em;
+	vertical-align: top;
+	white-space: normal;
+	word-wrap: break-word;
+}
+.eq-chapter-slideInRight.animated {
+	animation-duration: 0.2s;
+	animation-fill-mode: both;
+	animation-timing-function: linear;
+}
+
+@keyframes eq-chapter-slideInRight {
+	0% {
+		transform: translate3d(100%, 0, 0);
+		visibility: visible;
+	}
+	100% {
+		transform: translate3d(0, 0, 0);
+	}
+}
+
+.eq-chapter-slideInRight {
+	animation-name: eq-chapter-slideInRight;
+}

@@ -269,10 +269,29 @@ ${body.text}`;
 
       if (!generatedPrompt) return jsonError(502, 'AI prompt generation completely failed.');
 
-      return new Response(JSON.stringify({ ok: true, prompt: generatedPrompt }), { 
-        status: 200, 
-        headers: { ...CORS, 'Content-Type': 'application/json' } 
-      });
+      // 3. Fetch image from Pollinations IN THE WORKER
+      try {
+        const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(generatedPrompt + ", no text, pure illustration")}?width=1280&height=720&nologo=true`;
+        const imgRes = await fetchWithTimeout(pollUrl, { headers: { 'User-Agent': 'CloudflareWorker/1.0' } }, 20000);
+        if (!imgRes.ok) return jsonError(502, 'Failed to fetch generated image from AI service.');
+        
+        const imgBuffer = await imgRes.arrayBuffer();
+        if (imgBuffer.byteLength < 1000) return jsonError(502, 'Generated image was invalid or too small.');
+
+        const rand = Math.random().toString(36).slice(2, 10);
+        const ym = new Date().toISOString().slice(0, 7);
+        const key = `media/${ym}/ai-${Date.now()}-${rand}.jpg`;
+
+        await env.MEDIA.put(key, imgBuffer, { httpMetadata: { contentType: 'image/jpeg' } });
+        const url = `${new URL(request.url).origin}/r2/${key}`;
+
+        return new Response(JSON.stringify({ ok: true, prompt: generatedPrompt, url, key }), { 
+          status: 200, 
+          headers: { ...CORS, 'Content-Type': 'application/json' } 
+        });
+      } catch (e) {
+        return jsonError(500, 'Error downloading/saving image in worker: ' + e.message);
+      }
     }
 
     // ── /api/me  GET — return the caller's role + permissions ─────────────────
