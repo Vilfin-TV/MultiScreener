@@ -1214,8 +1214,18 @@ function openMicroLesson() {
   document.getElementById('micro-content-area').style.display = 'block';
   _activeHub = 'micro';
   _activeMicroIdx = 0;
-  if (typeof renderMicroTOC === 'function') renderMicroTOC();
-  if (typeof renderMicroLesson === 'function') renderMicroLesson(0);
+  try {
+    if (typeof renderMicroTOC === 'function') renderMicroTOC();
+    else throw new Error('renderMicroTOC not defined');
+  } catch(e) {
+    document.getElementById('mic-toc-list').innerHTML = '<div style="padding:12px;color:red;font-size:12px;">TOC error: ' + e.message + '</div>';
+  }
+  try {
+    if (typeof renderMicroLesson === 'function') renderMicroLesson(0);
+    else throw new Error('renderMicroLesson not defined — MICRO_LESSONS length: ' + (typeof MICRO_LESSONS !== 'undefined' ? MICRO_LESSONS.length : 'UNDEFINED'));
+  } catch(e) {
+    document.getElementById('mic-lesson-content').innerHTML = '<div style="padding:20px;color:red;background:#fff0f0;border-radius:8px;font-size:13px;"><strong>Debug error:</strong> ' + e.message + '</div>';
+  }
   document.getElementById('lesson-view-container').scrollTop = 0;
   try { history.replaceState(null, '', '?subject=microeconomics'); } catch(e){}
 }
