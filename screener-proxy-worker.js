@@ -183,6 +183,50 @@ ${body.text}`;
       }
     }
 
+    // ── /api/generate-photo POST — Generating a photo from text using AI ──────
+    if (pathname === '/api/generate-photo' && request.method === 'POST') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      let body;
+      try { body = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      if (!env.GEMINI_API_KEY) return jsonError(503, 'GEMINI_API_KEY not configured.');
+      if (!body.text || !body.heading) return jsonError(400, 'Missing heading or text.');
+
+      const promptStr = `You are an expert image prompt engineer. Based on the following news article heading and content, write a single concise highly detailed prompt (max 35 words) for a photorealistic image generator. Do NOT include any intro text, just the prompt itself. Make it realistic, cinematic, highly professional, and perfectly suited for a news thumbnail.\n\nHeading: ${body.heading}\n\nContent: ${body.text.substring(0, 1000)}`;
+
+      try {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.GEMINI_API_KEY}`;
+        const resG = await fetchWithTimeout(geminiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: promptStr }] }] })
+        }, 15000);
+        if (!resG.ok) return jsonError(502, 'AI prompt generation failed.');
+        const dataG = await resG.json();
+        const generatedPrompt = dataG.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+        if (!generatedPrompt) return jsonError(502, 'AI prompt generation failed.');
+
+        const encodedPrompt = encodeURIComponent(generatedPrompt);
+        const pollUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?model=flux-realism&width=1280&height=720&nologo=true`;
+        
+        const resI = await fetchWithTimeout(pollUrl, { method: 'GET' }, 30000);
+        if (!resI.ok) return jsonError(502, 'Image generation failed.');
+        
+        const arrayBuffer = await resI.arrayBuffer();
+        const cType = resI.headers.get('content-type') || 'image/jpeg';
+        
+        return new Response(arrayBuffer, { 
+          status: 200, 
+          headers: { 
+            ...CORS, 
+            'Content-Type': cType,
+            'X-Generated-Prompt': encodeURIComponent(generatedPrompt) 
+          } 
+        });
+      } catch (e) {
+        return jsonError(500, 'Error calling AI: ' + e.message);
+      }
+    }
+
     // ── /api/me  GET — return the caller's role + permissions ─────────────────
     if (pathname === '/api/me') {
       const auth = await requireAuth(request, env); if (auth.error) return auth.error;

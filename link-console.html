@@ -1110,6 +1110,7 @@
             <div class="upload-row">
               <input type="file" id="cp-file" class="file-input" accept="image/*" onchange="handlePhotoUpload(this,'cp')">
               <button type="button" class="btn-upload" id="cp-upload-btn" onclick="document.getElementById('cp-file').click()">⬆ Upload image</button>
+              <button type="button" class="btn-outline" id="cp-ai-photo-btn" onclick="generateAIPhoto('cp')" style="padding:4px 8px;font-size:12px;margin-left:8px;border-color:#38bdf8;color:#38bdf8;">✨ AI Photo Gen</button>
               <span class="upload-hint">JPEG · PNG · WebP · GIF · max 8 MB</span>
             </div>
             <div class="focal-editor" id="cp-focal-editor">
@@ -1516,6 +1517,7 @@
             <div class="upload-row">
               <input type="file" id="st-file" class="file-input" accept="image/*" onchange="handlePhotoUpload(this,'st')">
               <button type="button" class="btn-upload" id="st-upload-btn" onclick="document.getElementById('st-file').click()">⬆ Upload image</button>
+              <button type="button" class="btn-outline" id="st-ai-photo-btn" onclick="generateAIPhoto('st')" style="padding:4px 8px;font-size:12px;margin-left:8px;border-color:#38bdf8;color:#38bdf8;">✨ AI Photo Gen</button>
               <span class="upload-hint">JPEG · PNG · WebP · GIF · max 8 MB</span>
             </div>
             <img id="st-photo-preview" class="photo-preview" src="" alt="Preview"
@@ -1901,6 +1903,100 @@ async function formatStoryWithAI(quillVarName, btnId, hiddenFieldId) {
     }
   } catch (e) {
     alert("Error connecting to AI: " + e.message);
+  } finally {
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
+  }
+}
+
+async function generateAIPhoto(prefix) {
+  var q = prefix === 'cp' ? cpQuill : stQuill;
+  var hdg = document.getElementById(prefix + '-heading').value.trim();
+  var text = q.getText().trim();
+  
+  if (!hdg || text.length < 20) {
+    alert("Please enter a heading and story text before generating a photo.");
+    return;
+  }
+  
+  var btn = document.getElementById(prefix + '-ai-photo-btn');
+  var originalHtml = btn.innerHTML;
+  btn.innerHTML = '⏳ Generating...';
+  btn.disabled = true;
+  
+  try {
+    const res = await fetch('https://screener-proxy.vilfintv.workers.dev/api/generate-photo', {
+      method: 'POST',
+      headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ heading: hdg, text: text })
+    });
+    
+    if (!res.ok) {
+      let err = 'Unknown error';
+      try { const d = await res.json(); err = d.message || d.error || err; } catch(e){}
+      throw new Error(err);
+    }
+    
+    const blob = await res.blob();
+    const imgUrl = URL.createObjectURL(blob);
+    
+    // Draw onto canvas to add logo
+    const canvas = document.createElement('canvas');
+    canvas.width = 1280;
+    canvas.height = 720;
+    const ctx = canvas.getContext('2d');
+    
+    await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, 1280, 720);
+        
+        // Draw VilfinTV News watermark in bottom right
+        ctx.save();
+        ctx.fillStyle = 'rgba(10, 25, 47, 0.85)';
+        ctx.roundRect(1020, 640, 240, 50, 25);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(1055, 665, 12, 0, Math.PI*2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.ellipse(1055, 665, 5, 12, 0, 0, Math.PI*2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(1043, 665);
+        ctx.lineTo(1067, 665);
+        ctx.stroke();
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 20px "Inter", sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('VilfinTV News', 1080, 666);
+        ctx.restore();
+        
+        resolve();
+      };
+      img.onerror = () => reject(new Error('Failed to load generated image.'));
+      img.src = imgUrl;
+    });
+    
+    // Convert to file and upload
+    const finalBlob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.9));
+    const file = new File([finalBlob], `ai-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+    
+    // Fake an input element for handlePhotoUpload
+    const fakeInput = { files: [file], value: 'fake' };
+    await handlePhotoUpload(fakeInput, prefix);
+    
+  } catch (e) {
+    alert("AI Photo Gen failed: " + e.message);
   } finally {
     btn.innerHTML = originalHtml;
     btn.disabled = false;
