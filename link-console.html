@@ -1925,9 +1925,8 @@ async function generateAIPhoto(prefix) {
   btn.disabled = true;
   
   try {
-    const res = await fetch('https://screener-proxy.vilfintv.workers.dev/api/generate-photo', {
+    const res = await authFetch(WORKER + '/api/generate-photo', {
       method: 'POST',
-      headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ heading: hdg, text: text })
     });
     
