@@ -157,6 +157,7 @@ Format the following plain text story into professional HTML.
 Use <h3> for subtitles, <p> for paragraphs, <strong> for emphasis, and <ul>/<li> for lists if needed.
 DO NOT use <h1> or <h2>, as the main heading is handled separately.
 DO NOT wrap the response in markdown code blocks like \`\`\`html.
+CRITICAL: DO NOT summarize, shorten, or omit any content. You MUST format and return the ENTIRE story from beginning to end, no matter how long it is.
 Return ONLY raw HTML.
 
 Story:
@@ -172,7 +173,7 @@ ${body.text}`;
           body: JSON.stringify({
             model: 'mistral',
             messages: [{ role: 'user', content: prompt }],
-            stream: false, private: true
+            stream: false, private: true, max_tokens: 8192
           })
         }, 30000);
         if (pollRes.ok) {
@@ -197,7 +198,7 @@ ${body.text}`;
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { maxOutputTokens: 2500, temperature: 0.2 },
+              generationConfig: { maxOutputTokens: 8192, temperature: 0.2 },
             })
           }, 30000);
           
