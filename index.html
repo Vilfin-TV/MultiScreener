@@ -1539,8 +1539,8 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-card-grid .lnb-loading,.lnb-card-grid .lnb-error,.lnb-card-grid .lnb-stale{padding:16px;text-align:center;font-size:11px;grid-column:1/-1}
 /* Hero card — left column, stretches to match right column height automatically */
 .lnb-hero-card{display:flex;flex-direction:column;border-right:1px solid var(--border);min-width:0;overflow:hidden}
-.lnb-hero-img-wrap{position:relative;width:100%;padding-top:40%;overflow:hidden;flex-shrink:0;background:var(--card3)}
-.lnb-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top;transition:transform .3s ease}
+.lnb-hero-img-wrap{position:relative;width:100%;padding-top:30%;overflow:hidden;flex-shrink:0;background:var(--card3)}
+.lnb-hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;transition:transform .3s ease}
 .lnb-hero-card:hover .lnb-hero-img{transform:scale(1.03)}
 .lnb-hero-no-img{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:36px;opacity:.4}
 .lnb-hero-body{padding:9px 12px 8px;display:flex;flex-direction:column;gap:4px;border-top:2px solid var(--burn2);cursor:pointer;transition:background .15s}
@@ -1571,8 +1571,8 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-list-time{font-size:9.5px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:2px}
 .lnb-list-thumb{width:48px;height:48px;border-radius:50%;object-fit:cover;object-position:top;flex-shrink:0;background:var(--card3);border:2px solid var(--border2)}
 /* Tablet/iPad & narrow boxes: stack the hero over the headline list so two-per-row boxes never crowd or overlap text */
-@media(max-width:1100px){.lnb-card-grid{grid-template-columns:1fr;height:auto}.lnb-hero-card{border-right:none;border-bottom:1px solid var(--border)}.lnb-hero-img-wrap{padding-top:42%}.lnb-list-thumb{width:44px;height:44px}}
-@media(max-width:700px){.lnb-hero-img-wrap{padding-top:48%}.lnb-list-thumb{width:40px;height:40px}}
+@media(max-width:1100px){.lnb-card-grid{grid-template-columns:1fr;height:auto}.lnb-hero-card{border-right:none;border-bottom:1px solid var(--border)}.lnb-hero-img-wrap{padding-top:34%}.lnb-list-thumb{width:44px;height:44px}}
+@media(max-width:700px){.lnb-hero-img-wrap{padding-top:42%}.lnb-list-thumb{width:40px;height:40px}}
 
 /* ── Calendar strips — thin visible scrollbar so users know they can scroll ── */
 #cal-country-strip,#cal-region-strip{
@@ -15680,9 +15680,9 @@ function renderItems(listEl, items) {
 
   if (layout === 'hero-list') {
     let heroIdx = all.findIndex(item => _d(item).imgSrc); if (heroIdx === -1) heroIdx = 0; const h = _d(all[heroIdx]); const subItems = all.filter((_, i) => i !== heroIdx);
-    const wrapBg = h.imgSrc ? `background-image:url('${escHtml(h.imgSrc)}');background-size:cover;background-position:top center` : 'background:var(--card3)';
+    const wrapBg = h.imgSrc ? `background-image:url('${escHtml(h.imgSrc)}');background-size:cover;background-position:center` : 'background:var(--card3)';
 
-    const subHtml = subItems.slice(0, 5).map(item => {
+    const subHtml = subItems.slice(0, 6).map(item => {
       const d = _d(item);
       return `<div class="lnb-hero-sub" ${_ca(d)}>
         <div class="lnb-hero-sub-title">${d.safeTitle}</div>
@@ -15703,7 +15703,7 @@ function renderItems(listEl, items) {
       ${subHtml ? `<div class="lnb-hero-subs">${subHtml}</div>` : ''}
     </div>`;
 
-    const listHtml = subItems.slice(5, 15).map(item => {
+    const listHtml = subItems.slice(6, 16).map(item => {
       const d = _d(item);
       const catLabel = d.category || d.source || '';
       return `<div class="lnb-list-item" ${_ca(d)}>
