@@ -1999,10 +1999,59 @@ async function generateAIPhoto(prefix) {
     const data = await res.json();
     if (!data.url) throw new Error("No URL returned from backend server.");
     
+    // Draw the image to a canvas to add the VilfinTV watermark
+    const finalUrl = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1280;
+        canvas.height = 720;
+        const ctx = canvas.getContext('2d');
+        
+        // Draw the base image
+        ctx.drawImage(img, 0, 0, 1280, 720);
+        
+        // Add VilfinTV watermark to footer
+        ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+        ctx.fillRect(0, 670, 1280, 50); // semi-transparent background bar
+        
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 24px Inter, sans-serif";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.shadowColor = "rgba(0,0,0,0.8)";
+        ctx.shadowBlur = 4;
+        ctx.fillText("VilfinTV", 1250, 695);
+        
+        canvas.toBlob(async (blob) => {
+          if (!blob) return reject(new Error("Failed to process image blob."));
+          try {
+            // Upload the watermarked version
+            const file = new File([blob], `watermark-${Date.now()}.jpg`, { type: 'image/jpeg' });
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const upRes = await authFetch(WORKER + '/api/upload-image', {
+              method: 'POST',
+              body: formData
+            });
+            
+            if (!upRes.ok) throw new Error("Failed to upload watermarked photo");
+            const upData = await upRes.json();
+            resolve(upData.url);
+          } catch(e) { reject(e); }
+        }, 'image/jpeg', 0.92);
+      };
+      img.onerror = () => reject(new Error("Failed to load image for watermarking."));
+      img.src = data.url;
+    });
+    
     var urlField = document.getElementById(prefix + '-photo');
-    urlField.value = data.url;
-    if (prefix === 'cp') previewPhoto(data.url);
-    if (prefix === 'st') previewStoryPhoto(data.url);
+    urlField.value = finalUrl;
+    if (prefix === 'cp') previewPhoto(finalUrl);
+    if (prefix === 'st') previewStoryPhoto(finalUrl);
     
   } catch (e) {
     alert("AI Photo Gen failed: " + e.message);
