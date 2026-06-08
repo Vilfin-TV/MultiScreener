@@ -165,7 +165,7 @@ Story:
 ${body.text}`;
       
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
         const res = await fetchWithTimeout(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -206,7 +206,7 @@ ${body.text}`;
       const promptStr = `You are an expert image prompt engineer. Based on the following news article heading and content, write a single concise highly detailed prompt (max 35 words) for a photorealistic image generator. Do NOT include any intro text, just the prompt itself. Make it realistic, cinematic, highly professional, and perfectly suited for a news thumbnail.\n\nHeading: ${body.heading}\n\nContent: ${body.text.substring(0, 1000)}`;
 
       try {
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
         const resG = await fetchWithTimeout(geminiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
