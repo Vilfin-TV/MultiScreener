@@ -223,100 +223,70 @@ ${body.text}`;
       try { body = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
       if (!body.text || !body.heading) return jsonError(400, 'Missing heading or text.');
 
-      const promptStr = `You are an expert image prompt engineer. Based on the following news article heading and content, write a single concise highly detailed prompt (max 35 words) for a photorealistic image generator. Do NOT include any intro text, just the prompt itself. Make it realistic, cinematic, highly professional, and perfectly suited for a news thumbnail.\n\nHeading: ${body.heading}\n\nContent: ${body.text.substring(0, 1000)}`;
+      const promptStr = `You are an expert at finding stock photos. Based on the following news article heading, extract 1 or 2 simple, broad keywords (like 'finance', 'office', 'india business', 'currency', 'technology') that would be perfect for searching a stock photo library like Pexels. Return ONLY the keywords, separated by a space, nothing else.\n\nHeading: ${body.heading}`;
 
-      let generatedPrompt = '';
-
-      // 1. Try Free Version (Pollinations)
+      let generatedKeywords = '';
+      const apiKey = env.GEMINI_API_KEY || env.Gemini_API_KEY_1;
+      
+      if (!apiKey) return jsonError(503, 'AI keyword generation failed: No Gemini API key configured.');
+      
       try {
-        const pollRes = await fetchWithTimeout('https://text.pollinations.ai/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'mistral',
-            messages: [{ role: 'user', content: promptStr }],
-            stream: false, private: true
-          })
-        }, 15000);
-        if (pollRes.ok) {
-          const raw = await pollRes.text();
-          try {
-             const pd = JSON.parse(raw);
-             generatedPrompt = pd?.choices?.[0]?.message?.content || pd?.text || raw;
-          } catch(e) { generatedPrompt = raw; }
-          generatedPrompt = generatedPrompt.trim();
-        }
-      } catch (e) { /* ignore and fallback */ }
-
-      // 2. Fallback to Gemini
-      if (!generatedPrompt || generatedPrompt.length < 10) {
-        const apiKey = env.GEMINI_API_KEY || env.Gemini_API_KEY_1;
-        if (!apiKey) return jsonError(503, 'AI prompt generation failed and no fallback API key configured.');
-        
-        try {
-          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-          const resG = await fetchWithTimeout(geminiUrl, {
+         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+         const resG = await fetchWithTimeout(geminiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ contents: [{ parts: [{ text: promptStr }] }] })
-          }, 15000);
-          if (resG.ok) {
+         }, 15000);
+         if (resG.ok) {
             const dataG = await resG.json();
-            generatedPrompt = dataG.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-          }
-        } catch (e) { /* fallback failed */ }
-      }
-
-      if (!generatedPrompt) return jsonError(502, 'AI prompt generation completely failed.');
-
-      // 3. Fetch image from Gemini Imagen or Fallback IN THE WORKER
-      try {
-        const apiKey = env.GEMINI_API_KEY || env.Gemini_API_KEY_1;
-        let imgBuffer = null;
-        
-        if (apiKey) {
-           const imagenUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${apiKey}`;
-           const imgRes = await fetchWithTimeout(imagenUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                instances: [{ prompt: generatedPrompt + " , no text, pure illustration" }],
-                parameters: { sampleCount: 1, aspectRatio: "16:9" }
-              })
-           }, 25000);
-           
-           if (imgRes.ok) {
-              const imgData = await imgRes.json();
-              if (imgData.predictions && imgData.predictions[0] && imgData.predictions[0].bytesBase64Encoded) {
-                 const bin = atob(imgData.predictions[0].bytesBase64Encoded);
-                 imgBuffer = Uint8Array.from(bin, c => c.charCodeAt(0));
-              }
-           }
-        }
-        
-        // Fallback to pollinations if Gemini fails or lacks key
-        if (!imgBuffer) {
-           const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(generatedPrompt + ", no text, pure illustration")}?width=1280&height=720&nologo=true`;
-           const pollRes = await fetchWithTimeout(pollUrl, { headers: { 'User-Agent': 'CloudflareWorker/1.0' } }, 20000);
-           if (!pollRes.ok) return jsonError(502, 'Failed to fetch generated image from Gemini and Fallback AI.');
-           imgBuffer = await pollRes.arrayBuffer();
-        }
-
-        if (imgBuffer.byteLength < 1000) return jsonError(502, 'Generated image was invalid or too small.');
-
-        const rand = Math.random().toString(36).slice(2, 10);
-        const ym = new Date().toISOString().slice(0, 7);
-        const key = `media/${ym}/ai-${Date.now()}-${rand}.jpg`;
-
-        await env.MEDIA.put(key, imgBuffer, { httpMetadata: { contentType: 'image/jpeg' } });
-        const url = `${new URL(request.url).origin}/r2/${key}`;
-
-        return new Response(JSON.stringify({ ok: true, prompt: generatedPrompt, url, key }), { 
-          status: 200, 
-          headers: { ...CORS, 'Content-Type': 'application/json' } 
-        });
+            generatedKeywords = dataG.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+         }
       } catch (e) {
-        return jsonError(500, 'Error downloading/saving image in worker: ' + e.message);
+         return jsonError(502, 'Gemini AI failed to generate keywords: ' + e.message);
+      }
+      
+      if (!generatedKeywords) generatedKeywords = 'finance business';
+      
+      // 2. Search Pexels API
+      if (!env.PEXELS_API_KEY) return jsonError(503, 'PEXELS_API_KEY is not configured in the worker secrets.');
+      
+      try {
+         const pexelsUrl = `https://api.pexels.com/v1/search?query=${encodeURIComponent(generatedKeywords)}&per_page=1&orientation=landscape`;
+         const pRes = await fetchWithTimeout(pexelsUrl, {
+            headers: { 'Authorization': env.PEXELS_API_KEY }
+         }, 15000);
+         
+         if (!pRes.ok) return jsonError(502, `Pexels search failed: ${pRes.status} ${await pRes.text()}`);
+         
+         const pData = await pRes.json();
+         if (!pData.photos || pData.photos.length === 0) {
+             return jsonError(404, `No photos found on Pexels for keywords: ${generatedKeywords}`);
+         }
+         
+         const imgUrl = pData.photos[0].src.large2x || pData.photos[0].src.large;
+         
+         // 3. Download the actual image file
+         const imgRes = await fetchWithTimeout(imgUrl, { headers: { 'User-Agent': 'CloudflareWorker' } }, 20000);
+         if (!imgRes.ok) return jsonError(502, 'Failed to download the selected Pexels photo.');
+         
+         const imgBuffer = await imgRes.arrayBuffer();
+         if (imgBuffer.byteLength < 1000) return jsonError(502, 'Downloaded Pexels image was invalid.');
+         
+         // 4. Save to R2
+         const rand = Math.random().toString(36).slice(2, 10);
+         const ym = new Date().toISOString().slice(0, 7);
+         const key = `media/${ym}/stock-${Date.now()}-${rand}.jpg`;
+
+         await env.MEDIA.put(key, imgBuffer, { httpMetadata: { contentType: 'image/jpeg' } });
+         const url = `${new URL(request.url).origin}/r2/${key}`;
+
+         return new Response(JSON.stringify({ ok: true, prompt: generatedKeywords, url, key }), { 
+           status: 200, 
+           headers: { ...CORS, 'Content-Type': 'application/json' } 
+         });
+         
+      } catch (e) {
+         return jsonError(500, 'Error processing Pexels image: ' + e.message);
       }
     }
 
