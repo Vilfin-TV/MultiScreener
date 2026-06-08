@@ -150,7 +150,8 @@ export default {
     if (pathname === '/format-story' && request.method === 'POST') {
       let body;
       try { body = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
-      if (!env.GEMINI_API_KEY) return jsonError(503, 'GEMINI_API_KEY not configured.');
+      const apiKey = env.Gemini_API_KEY_1 || env.GEMINI_API_KEY;
+      if (!apiKey) return jsonError(503, 'GEMINI_API_KEY not configured.');
       if (!body.text) return jsonError(400, 'No text provided.');
       
       const prompt = `You are an expert editor for VilfinTV, a premium financial news platform.
@@ -164,8 +165,8 @@ Story:
 ${body.text}`;
       
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`;
-        const res = await fetch(url, {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+        const res = await fetchWithTimeout(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -188,13 +189,14 @@ ${body.text}`;
       const auth = await requireAuth(request, env); if (auth.error) return auth.error;
       let body;
       try { body = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
-      if (!env.GEMINI_API_KEY) return jsonError(503, 'GEMINI_API_KEY not configured.');
+      const apiKey = env.Gemini_API_KEY_1 || env.GEMINI_API_KEY;
+      if (!apiKey) return jsonError(503, 'GEMINI_API_KEY not configured.');
       if (!body.text || !body.heading) return jsonError(400, 'Missing heading or text.');
 
       const promptStr = `You are an expert image prompt engineer. Based on the following news article heading and content, write a single concise highly detailed prompt (max 35 words) for a photorealistic image generator. Do NOT include any intro text, just the prompt itself. Make it realistic, cinematic, highly professional, and perfectly suited for a news thumbnail.\n\nHeading: ${body.heading}\n\nContent: ${body.text.substring(0, 1000)}`;
 
       try {
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${env.GEMINI_API_KEY}`;
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
         const resG = await fetchWithTimeout(geminiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
