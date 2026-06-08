@@ -22,3 +22,7 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           # Deploys via wrangler.screener.toml so the R2 (MEDIA) binding is applied.
           command: deploy --config wrangler.screener.toml
+          secrets: |
+            GEMINI_API_KEY
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY_2 }}

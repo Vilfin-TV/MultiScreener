@@ -1897,7 +1897,7 @@ async function formatStoryWithAI(quillVarName, btnId, hiddenFieldId) {
         document.getElementById(hiddenFieldId).value = data.html;
       }
     } else {
-      alert("AI Formatting failed: " + (data.error || "Unknown error"));
+      alert("AI Formatting failed: " + (data.message || data.error || "Unknown error"));
     }
   } catch (e) {
     alert("Error connecting to AI: " + e.message);
