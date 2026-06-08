@@ -1997,9 +1997,12 @@ async function generateAIPhoto(prefix) {
     }
     
     const data = await res.json();
-    if (!data.url) throw new Error("No URL returned from backend server.");
     
-    // Draw the image to a canvas to add the VilfinTV watermark
+    // We use Pollinations AI via the frontend to bypass Cloudflare Worker bot-blocks
+    // The worker returned a highly optimized Groq/Gemini prompt for us to use!
+    const aiPrompt = data.prompt || hdg;
+    const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(aiPrompt)}?width=1280&height=720&nologo=true`;
+    
     const finalUrl = await new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = "anonymous";
@@ -2009,12 +2012,11 @@ async function generateAIPhoto(prefix) {
         canvas.height = 720;
         const ctx = canvas.getContext('2d');
         
-        // Draw the base image
         ctx.drawImage(img, 0, 0, 1280, 720);
         
-        // Add VilfinTV watermark to footer
+        // Add VilfinTV watermark
         ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
-        ctx.fillRect(0, 670, 1280, 50); // semi-transparent background bar
+        ctx.fillRect(0, 670, 1280, 50);
         
         ctx.fillStyle = "#ffffff";
         ctx.font = "bold 24px Inter, sans-serif";
@@ -2027,15 +2029,14 @@ async function generateAIPhoto(prefix) {
         canvas.toBlob(async (blob) => {
           if (!blob) return reject(new Error("Failed to process image blob."));
           try {
-            // Upload the watermarked version
-            const file = new File([blob], `watermark-${Date.now()}.jpg`, { type: 'image/jpeg' });
+            const file = new File([blob], `ai-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
             const finalR2Url = await uploadImageToR2(file);
             resolve(finalR2Url);
           } catch(e) { reject(e); }
         }, 'image/jpeg', 0.92);
       };
-      img.onerror = () => reject(new Error("Failed to load image for watermarking."));
-      img.src = data.url;
+      img.onerror = () => reject(new Error("AI Image generation failed or timed out. Please try again."));
+      img.src = pollUrl;
     });
     
     var urlField = document.getElementById(prefix + '-photo');

@@ -223,7 +223,7 @@ ${body.text}`;
       try { body = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
       if (!body.text || !body.heading) return jsonError(400, 'Missing heading or text.');
 
-      const promptStr = `You are an expert at finding stock photos. Based on the following news article heading, extract 1 or 2 simple, broad keywords (like 'finance', 'office', 'india business', 'currency', 'technology') that would be perfect for searching a stock photo library like Pexels. Return ONLY the keywords, separated by a space, nothing else.\n\nHeading: ${body.heading}`;
+      const promptStr = `You are an expert AI image prompt engineer. Based on this news article heading, write a highly descriptive, visual, 15-word prompt for an AI image generator to create a perfect thumbnail. It must conceptually combine the key subjects (e.g., NRI, India, Bonds) into a single cohesive scene. Do NOT include any intro text, just the prompt itself. Make it realistic, cinematic, and professional.\n\nHeading: ${body.heading}`;
 
       let generatedKeywords = '';
       const apiKey = env.GEMINI_API_KEY || env.Gemini_API_KEY_1;
@@ -236,7 +236,7 @@ ${body.text}`;
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${groqKey}` },
             body: JSON.stringify({
-              model: 'llama3-8b-8192',
+              model: 'llama-3.1-8b-instant',
               messages: [{ role: 'user', content: promptStr }]
             })
           }, 10000);
@@ -248,7 +248,7 @@ ${body.text}`;
       }
       
       // 2. Fallback to Gemini for keyword extraction
-      if ((!generatedKeywords || generatedKeywords.length > 50) && apiKey) {
+      if ((!generatedKeywords || generatedKeywords.length > 150) && apiKey) {
         try {
            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
            const resG = await fetchWithTimeout(geminiUrl, {
@@ -263,7 +263,14 @@ ${body.text}`;
         } catch (e) {}
       }
       
-      if (!generatedKeywords || generatedKeywords.length > 50) generatedKeywords = 'finance business';
+      if (!generatedKeywords || generatedKeywords.length > 200) generatedKeywords = 'professional indian finance business trading cinematic';
+      
+      // Just return the highly optimized prompt back to the frontend
+      // The frontend will use the browser to fetch Pollinations to bypass Cloudflare bot protections
+      return new Response(JSON.stringify({ ok: true, prompt: generatedKeywords, useFrontendAI: true }), { 
+        status: 200, 
+        headers: { ...CORS, 'Content-Type': 'application/json' } 
+      });
       
       // 3. Try Gemini Imagen 3 for Image Generation
       let imgBuffer = null;
