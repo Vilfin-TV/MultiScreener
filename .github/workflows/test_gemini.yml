@@ -1,0 +1,13 @@
+name: Test Gemini
+on: workflow_dispatch
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test Imagen
+        env:
+          KEY: ${{ secrets.GEMINI_API_KEY_2 }}
+        run: |
+          curl -s -X POST "https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=$KEY" \
+          -H "Content-Type: application/json" \
+          -d '{"instances": [{"prompt": "test photo"}], "parameters": {"sampleCount": 1}}'
