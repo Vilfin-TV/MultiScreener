@@ -269,13 +269,39 @@ ${body.text}`;
 
       if (!generatedPrompt) return jsonError(502, 'AI prompt generation completely failed.');
 
-      // 3. Fetch image from Pollinations IN THE WORKER
+      // 3. Fetch image from Gemini Imagen or Fallback IN THE WORKER
       try {
-        const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(generatedPrompt + ", no text, pure illustration")}?width=1280&height=720&nologo=true`;
-        const imgRes = await fetchWithTimeout(pollUrl, { headers: { 'User-Agent': 'CloudflareWorker/1.0' } }, 20000);
-        if (!imgRes.ok) return jsonError(502, 'Failed to fetch generated image from AI service.');
+        const apiKey = env.GEMINI_API_KEY || env.Gemini_API_KEY_1;
+        let imgBuffer = null;
         
-        const imgBuffer = await imgRes.arrayBuffer();
+        if (apiKey) {
+           const imagenUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${apiKey}`;
+           const imgRes = await fetchWithTimeout(imagenUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                instances: [{ prompt: generatedPrompt + " , no text, pure illustration" }],
+                parameters: { sampleCount: 1, aspectRatio: "16:9" }
+              })
+           }, 25000);
+           
+           if (imgRes.ok) {
+              const imgData = await imgRes.json();
+              if (imgData.predictions && imgData.predictions[0] && imgData.predictions[0].bytesBase64Encoded) {
+                 const bin = atob(imgData.predictions[0].bytesBase64Encoded);
+                 imgBuffer = Uint8Array.from(bin, c => c.charCodeAt(0));
+              }
+           }
+        }
+        
+        // Fallback to pollinations if Gemini fails or lacks key
+        if (!imgBuffer) {
+           const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(generatedPrompt + ", no text, pure illustration")}?width=1280&height=720&nologo=true`;
+           const pollRes = await fetchWithTimeout(pollUrl, { headers: { 'User-Agent': 'CloudflareWorker/1.0' } }, 20000);
+           if (!pollRes.ok) return jsonError(502, 'Failed to fetch generated image from Gemini and Fallback AI.');
+           imgBuffer = await pollRes.arrayBuffer();
+        }
+
         if (imgBuffer.byteLength < 1000) return jsonError(502, 'Generated image was invalid or too small.');
 
         const rand = Math.random().toString(36).slice(2, 10);

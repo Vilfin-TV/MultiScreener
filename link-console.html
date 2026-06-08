@@ -1990,7 +1990,10 @@ async function generateAIPhoto(prefix) {
     
     if (!res.ok) {
       let err = await res.text();
-      try { err = JSON.parse(err).error; } catch(e){}
+      try { 
+        let parsed = JSON.parse(err); 
+        err = parsed.message || parsed.error || err; 
+      } catch(e){}
       throw new Error(err);
     }
     
