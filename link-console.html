@@ -1993,24 +1993,54 @@ async function generateAIPhoto(prefix) {
     for(let i=0; i<1280; i+=80) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 720); ctx.stroke(); }
     for(let i=0; i<720; i+=80) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(1280, i); ctx.stroke(); }
     
-    // 3. Draw Accent Shapes
+    // 3. Load and Draw Image on Right Side
+    try {
+      const query = encodeURIComponent("3d illustration concept " + hdg.substring(0, 50) + " finance business dark theme");
+      const pollUrl = `https://image.pollinations.ai/prompt/${query}?width=640&height=720&nologo=true`;
+      
+      await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        const timeout = setTimeout(() => resolve(), 8000); // 8s timeout, continue without image if slow
+        
+        img.onload = () => {
+          clearTimeout(timeout);
+          // Draw image on right half
+          ctx.drawImage(img, 640, 0, 640, 720);
+          
+          // Blend gradient to seamlessly fade the image into the dark blue background
+          const blendGrd = ctx.createLinearGradient(600, 0, 850, 0);
+          blendGrd.addColorStop(0, '#0a192f');
+          blendGrd.addColorStop(1, 'rgba(10, 25, 47, 0)');
+          ctx.fillStyle = blendGrd;
+          ctx.fillRect(600, 0, 250, 720);
+          
+          // Darken the image slightly so white text is readable if it overlaps
+          ctx.fillStyle = 'rgba(10, 25, 47, 0.3)';
+          ctx.fillRect(640, 0, 640, 720);
+          
+          resolve();
+        };
+        img.onerror = () => { clearTimeout(timeout); resolve(); }; // If fails, just proceed with plain background
+        img.src = pollUrl;
+      });
+    } catch(e) {
+      console.log("Image illustration fetch skipped:", e);
+    }
+    
+    // 4. Draw Accent Shapes
     ctx.fillStyle = '#64ffda';
     ctx.fillRect(80, 0, 10, 120);
     
-    ctx.beginPath();
-    ctx.arc(1100, 150, 400, 0, 2*Math.PI);
-    ctx.fillStyle = 'rgba(100, 255, 218, 0.05)';
-    ctx.fill();
-    
-    // 4. Draw Title Text
+    // 5. Draw Title Text
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 64px sans-serif';
+    ctx.font = 'bold 60px "Segoe UI", Inter, sans-serif';
     ctx.textBaseline = 'top';
     
     const words = hdg.split(' ');
     let line = '';
     let y = 200;
-    const maxWidth = 900;
+    const maxWidth = 750; // Constrain text to left side so it doesn't overlap image too much
     
     for(let n = 0; n < words.length; n++) {
       let testLine = line + words[n] + ' ';
@@ -2025,15 +2055,22 @@ async function generateAIPhoto(prefix) {
     }
     ctx.fillText(line, 120, y);
     
-    // 5. Draw Subtitle / Tag
+    // 6. Draw Subtitle / Tag
     ctx.fillStyle = '#8892b0';
-    ctx.font = '32px sans-serif';
+    ctx.font = '32px "Segoe UI", Inter, sans-serif';
     ctx.fillText('VILFINTV EXCLUSIVE REPORT', 120, 130);
     
-    // 6. Draw Logo Text
+    // 7. Draw Logo
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 36px sans-serif';
+    ctx.font = 'bold 36px "Segoe UI", Inter, sans-serif';
     ctx.fillText('VilfinTV', 1100, 620);
+    
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(1100, 670);
+    ctx.lineTo(1230, 670);
+    ctx.stroke();
     
     // Convert to file and upload using existing handlePhotoUpload
     const finalBlob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.9));
