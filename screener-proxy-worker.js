@@ -1242,6 +1242,13 @@ function jsonError(status, message, extra = {}) {
     }
   );
 }
+/* ── UTF-8 Base64 Helpers ── */
+function _b64EncodeUnicode(str) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+function _b64DecodeUnicode(str) {
+  return decodeURIComponent(escape(atob(str)));
+}
 
 /* ── JWT (HS256) using Web Crypto API ── */
 function _b64urlEncode(data) {
