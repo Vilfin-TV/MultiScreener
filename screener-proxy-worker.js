@@ -165,7 +165,7 @@ Story:
 ${body.text}`;
       
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
         const res = await fetchWithTimeout(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -174,10 +174,20 @@ ${body.text}`;
             generationConfig: { maxOutputTokens: 2500, temperature: 0.2 },
           }),
         }, 30000);
-        if (!res.ok) return jsonError(502, 'AI generation failed.');
+        
+        if (!res.ok) {
+          let errText = 'AI generation failed.';
+          try {
+             const errData = await res.json();
+             errText = errData.error?.message || JSON.stringify(errData);
+          } catch(e) {}
+          return jsonError(502, 'AI API Error: ' + errText);
+        }
+        
         const data = await res.json();
         const html = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-        if (!html) return jsonError(502, 'AI generation failed.');
+        if (!html) return jsonError(502, 'AI returned empty response.');
+        
         return new Response(JSON.stringify({ ok: true, html }), { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
       } catch (e) {
         return jsonError(500, 'Error calling AI: ' + e.message);
