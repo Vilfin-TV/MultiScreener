@@ -1919,8 +1919,7 @@ function formatStoryStandard(quillVarName, hiddenFieldId) {
     }
   }
   
-  const delta = q.clipboard.convert({html: html});
-  q.setContents(delta, 'user');
+  q.root.innerHTML = html;
   document.getElementById(hiddenFieldId).value = html;
 }
 
