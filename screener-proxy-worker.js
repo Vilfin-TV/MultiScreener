@@ -146,12 +146,10 @@ export default {
       return jsonError(401, 'Invalid credentials.');
     }
 
-    // ── /format-story POST — Formatting raw text into HTML with Gemini ─────────
+    // ── /format-story POST — Formatting raw text into HTML ─────────
     if (pathname === '/format-story' && request.method === 'POST') {
       let body;
       try { body = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
-      const apiKey = env.Gemini_API_KEY_1 || env.GEMINI_API_KEY;
-      if (!apiKey) return jsonError(503, 'GEMINI_API_KEY not configured.');
       if (!body.text) return jsonError(400, 'No text provided.');
       
       const prompt = `You are an expert editor for VilfinTV, a premium financial news platform.
@@ -164,34 +162,53 @@ Return ONLY raw HTML.
 Story:
 ${body.text}`;
       
+      let html = '';
+      
+      // 1. Try Free Version (Pollinations)
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
-        const res = await fetchWithTimeout(url, {
+        const pollRes = await fetchWithTimeout('https://text.pollinations.ai/openai', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { maxOutputTokens: 2500, temperature: 0.2 },
-          }),
+            model: 'openai-large',
+            messages: [{ role: 'user', content: prompt }],
+            stream: false, private: true
+          })
         }, 30000);
-        
-        if (!res.ok) {
-          let errText = 'AI generation failed.';
-          try {
-             const errData = await res.json();
-             errText = errData.error?.message || JSON.stringify(errData);
-          } catch(e) {}
-          return jsonError(502, 'AI API Error: ' + errText);
+        if (pollRes.ok) {
+          const pollData = await pollRes.json();
+          html = pollData?.choices?.[0]?.message?.content?.trim() || '';
         }
+      } catch (e) { /* ignore and fallback */ }
+
+      // 2. Fallback to Gemini (via GitHub Secret)
+      if (!html) {
+        const apiKey = env.GEMINI_API_KEY || env.Gemini_API_KEY_1;
+        if (!apiKey) return jsonError(503, 'AI format failed and no fallback API key configured.');
         
-        const data = await res.json();
-        const html = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-        if (!html) return jsonError(502, 'AI returned empty response.');
-        
-        return new Response(JSON.stringify({ ok: true, html }), { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
-      } catch (e) {
-        return jsonError(500, 'Error calling AI: ' + e.message);
+        try {
+          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+          const resG = await fetchWithTimeout(geminiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { maxOutputTokens: 2500, temperature: 0.2 },
+            })
+          }, 30000);
+          
+          if (!resG.ok) {
+            let errText = 'AI generation failed.';
+            try { const errData = await resG.json(); errText = errData.error?.message || JSON.stringify(errData); } catch(e) {}
+            return jsonError(502, 'AI API Error: ' + errText);
+          }
+          const dataG = await resG.json();
+          html = dataG.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+        } catch (e) { return jsonError(500, 'Error calling fallback AI: ' + e.message); }
       }
+
+      if (!html) return jsonError(502, 'AI returned empty response.');
+      return new Response(JSON.stringify({ ok: true, html }), { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
     }
 
     // ── /api/generate-photo POST — Generating a photo from text using AI ──────
@@ -199,24 +216,51 @@ ${body.text}`;
       const auth = await requireAuth(request, env); if (auth.error) return auth.error;
       let body;
       try { body = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
-      const apiKey = env.Gemini_API_KEY_1 || env.GEMINI_API_KEY;
-      if (!apiKey) return jsonError(503, 'GEMINI_API_KEY not configured.');
       if (!body.text || !body.heading) return jsonError(400, 'Missing heading or text.');
 
       const promptStr = `You are an expert image prompt engineer. Based on the following news article heading and content, write a single concise highly detailed prompt (max 35 words) for a photorealistic image generator. Do NOT include any intro text, just the prompt itself. Make it realistic, cinematic, highly professional, and perfectly suited for a news thumbnail.\n\nHeading: ${body.heading}\n\nContent: ${body.text.substring(0, 1000)}`;
 
+      let generatedPrompt = '';
+
+      // 1. Try Free Version (Pollinations)
       try {
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
-        const resG = await fetchWithTimeout(geminiUrl, {
+        const pollRes = await fetchWithTimeout('https://text.pollinations.ai/openai', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: promptStr }] }] })
+          body: JSON.stringify({
+            model: 'openai-large',
+            messages: [{ role: 'user', content: promptStr }],
+            stream: false, private: true
+          })
         }, 15000);
-        if (!resG.ok) return jsonError(502, 'AI prompt generation failed.');
-        const dataG = await resG.json();
-        const generatedPrompt = dataG.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-        if (!generatedPrompt) return jsonError(502, 'AI prompt generation failed.');
+        if (pollRes.ok) {
+          const pollData = await pollRes.json();
+          generatedPrompt = pollData?.choices?.[0]?.message?.content?.trim() || '';
+        }
+      } catch (e) { /* ignore and fallback */ }
 
+      // 2. Fallback to Gemini
+      if (!generatedPrompt) {
+        const apiKey = env.GEMINI_API_KEY || env.Gemini_API_KEY_1;
+        if (!apiKey) return jsonError(503, 'AI prompt generation failed and no fallback API key configured.');
+        
+        try {
+          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+          const resG = await fetchWithTimeout(geminiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: promptStr }] }] })
+          }, 15000);
+          if (resG.ok) {
+            const dataG = await resG.json();
+            generatedPrompt = dataG.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+          }
+        } catch (e) { /* fallback failed */ }
+      }
+
+      if (!generatedPrompt) return jsonError(502, 'AI prompt generation completely failed.');
+
+      try {
         const encodedPrompt = encodeURIComponent(generatedPrompt);
         const pollUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?model=flux-realism&width=1280&height=720&nologo=true`;
         
@@ -235,7 +279,7 @@ ${body.text}`;
           } 
         });
       } catch (e) {
-        return jsonError(500, 'Error calling AI: ' + e.message);
+        return jsonError(500, 'Error fetching generated photo: ' + e.message);
       }
     }
 
