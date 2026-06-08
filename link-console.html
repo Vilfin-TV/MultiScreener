@@ -1982,10 +1982,35 @@ async function generateAIPhoto(prefix) {
     const query = encodeURIComponent(`high quality professional editorial illustration of ${promptTheme}, finance business clean minimalist style, no text`);
     const pollUrl = `https://image.pollinations.ai/prompt/${query}?width=1280&height=720&nologo=true`;
     
-    // Fetch the image directly as a blob
-    const response = await fetch(pollUrl);
-    if (!response.ok) throw new Error("Network response was not ok");
-    const finalBlob = await response.blob();
+    // Use native Image object to bypass fetch/CORS blocks
+    const finalBlob = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      
+      const timeout = setTimeout(() => {
+        reject(new Error("Image generation timed out after 15 seconds. Please try again."));
+      }, 15000);
+      
+      img.onload = () => {
+        clearTimeout(timeout);
+        const canvas = document.createElement('canvas');
+        canvas.width = 1280;
+        canvas.height = 720;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, 1280, 720);
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("Failed to convert image to blob"));
+        }, 'image/jpeg', 0.9);
+      };
+      
+      img.onerror = () => {
+        clearTimeout(timeout);
+        reject(new Error("Network rejected the image request. Pollinations AI might be overloaded."));
+      };
+      
+      img.src = pollUrl;
+    });
     
     // Convert to file and upload
     const file = new File([finalBlob], `ai-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
