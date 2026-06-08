@@ -146,6 +146,43 @@ export default {
       return jsonError(401, 'Invalid credentials.');
     }
 
+    // ── /format-story POST — Formatting raw text into HTML with Gemini ─────────
+    if (pathname === '/format-story' && request.method === 'POST') {
+      let body;
+      try { body = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      if (!env.GEMINI_API_KEY) return jsonError(503, 'GEMINI_API_KEY not configured.');
+      if (!body.text) return jsonError(400, 'No text provided.');
+      
+      const prompt = `You are an expert editor for VilfinTV, a premium financial news platform.
+Format the following plain text story into professional HTML.
+Use <h3> for subtitles, <p> for paragraphs, <strong> for emphasis, and <ul>/<li> for lists if needed.
+DO NOT use <h1> or <h2>, as the main heading is handled separately.
+DO NOT wrap the response in markdown code blocks like \`\`\`html.
+Return ONLY raw HTML.
+
+Story:
+${body.text}`;
+      
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${env.GEMINI_API_KEY}`;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { maxOutputTokens: 2500, temperature: 0.2 },
+          }),
+        });
+        if (!res.ok) return jsonError(502, 'AI generation failed.');
+        const data = await res.json();
+        const html = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+        if (!html) return jsonError(502, 'AI generation failed.');
+        return new Response(JSON.stringify({ ok: true, html }), { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
+      } catch (e) {
+        return jsonError(500, 'Error calling AI: ' + e.message);
+      }
+    }
+
     // ── /api/me  GET — return the caller's role + permissions ─────────────────
     if (pathname === '/api/me') {
       const auth = await requireAuth(request, env); if (auth.error) return auth.error;
