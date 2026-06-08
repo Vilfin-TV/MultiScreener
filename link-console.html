@@ -2288,6 +2288,24 @@ async function handlePhotoUpload(inputEl, prefix) {
   }
 }
 
+async function deleteCurrentPhoto(prefix) {
+  var cfg   = _UPLOAD_MAP[prefix] || {};
+  var urlIn = document.getElementById(prefix + '-photo');
+  if (!urlIn || !urlIn.value) return;
+  
+  var url = urlIn.value;
+  urlIn.value = '';
+  
+  // Clear the UI preview
+  if (cfg.preview) cfg.preview('');
+  if (cfg.status) cfg.status('ok', 'Photo cleared.');
+  
+  // Attempt to delete from backend if it's an R2 URL
+  if (isR2Url(url)) {
+    try { await deleteImageFromR2(url); } catch(e) {}
+  }
+}
+
 /* ── State ─────────────────────────────────────────────────────────────────── */
 var linksState    = [];
 var linksOriginal = [];
