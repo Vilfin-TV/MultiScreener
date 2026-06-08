@@ -560,6 +560,19 @@ const FACTORS = [
   {id:'mom_qual',     label:'Momentum & Quality',icon:'⚡'},
   {id:'div_growth',   label:'Dividend Growth', icon:'💸'},
   {id:'alpha',        label:'Alpha',           icon:'🎯'},
+  // ── screener.in strategy library (exact threshold sets) ──
+  {id:'qarp',              label:'QARP',                  icon:'🔷'},
+  {id:'garp',              label:'GARP Ultimate',         icon:'🧭'},
+  {id:'garp_peg',          label:'PEG GARP',              icon:'📐'},
+  {id:'qarp_real',         label:'Realistic QARP',        icon:'⚖️'},
+  {id:'best_value',        label:'Best Value',            icon:'🪙'},
+  {id:'momentum_trend',    label:'Momentum + Trend',      icon:'🔥'},
+  {id:'golden_cross',      label:'Golden Crossover',      icon:'✨'},
+  {id:'magic_formula',     label:'Magic Formula',         icon:'🧮'},
+  {id:'growth_stocks',     label:'Growth Stocks (G-Factor)',icon:'🌱'},
+  {id:'high_div',          label:'High Dividend Yield',   icon:'🤑'},
+  {id:'growth_no_dilution',label:'Growth · No Dilution',  icon:'🧬'},
+  {id:'coffee_can',        label:'Coffee Can',            icon:'☕'},
 ];
 
 const EXCHANGES = [
@@ -644,6 +657,80 @@ const DEFAULTS = {
     chartink:    {roe:'Latest Return on Equity > 20', pe:'Latest Price to Earning < 25', fcf:'Latest Free Cash Flow > 0'},
     finviz:      {cap:'cap_smallover', roe:'fa_roe_o20', pe:'fa_pe_u25', eps_growth:'fa_epsyoy_o20'},
     tradingview: {mc:'Market Cap > 100 Cr', roe:'ROE > 20%', pe:'P/E < 25', pg:'Profit Growth 5Y > 20%', fcf:'FCF > 0'},
+  },
+
+  // ── screener.in strategy library — screener_in values are EXACT; other platforms are approximate ──
+  qarp: {
+    screener_in: {roce:'Return on capital employed > 22', roe:'Return on equity > 18', de:'Debt to equity < 0.4', sales_5y:'Sales growth 5Years > 12', profit_5y:'Profit growth 5Years > 12', pe:'Price to earning < 25', peg:'Price to earning < Profit growth 3Years'},
+    chartink:    {roce:'Latest Return on capital employed > 22', roe:'Latest Return on equity > 18', de:'Latest Debt to equity < 0.4', sales_5y:'Latest Sales growth 5Years > 12', profit_5y:'Latest Profit growth 5Years > 12', pe:'Latest Price to Earning < 25'},
+    finviz:      {cap:'cap_midover', roe:'fa_roe_o18', de:'fa_debt_eq_u0.4', sales5y:'fa_sales5years_o12', eps5y:'fa_eps5years_o12', pe:'fa_pe_u25', peg:'fa_peg_u1'},
+    tradingview: {roce:'ROCE > 22%', roe:'ROE > 18%', de:'D/E < 0.4', sg5:'Sales Growth 5Y > 12%', pg5:'Profit Growth 5Y > 12%', pe:'P/E < 25', peg:'PEG < 1'},
+  },
+  garp: {
+    screener_in: {sales_5y:'Sales growth 5Years > 15', profit_5y:'Profit growth 5Years > 15', sales_3y:'Sales growth 3Years > 15', profit_3y:'Profit growth 3Years > 15', roce_min:'Return on capital employed > 25', roce_max:'Return on capital employed < 45', roe:'Return on equity > 20', de:'Debt to equity < 0.3', peg:'Price to earning < Profit growth 3Years', pe:'Price to earning < 20', market_cap:'Market capitalization > 5000', promoter:'Promoter holding > 55', sales_growth:'Sales growth > 10', profit_growth:'Profit growth > 12'},
+    chartink:    {sales_5y:'Latest Sales growth 5Years > 15', profit_5y:'Latest Profit growth 5Years > 15', sales_3y:'Latest Sales growth 3Years > 15', profit_3y:'Latest Profit growth 3Years > 15', roce:'Latest Return on capital employed > 25', roe:'Latest Return on equity > 20', de:'Latest Debt to equity < 0.3', pe:'Latest Price to Earning < 20', promoter:'Latest Promoter holding > 55'},
+    finviz:      {cap:'cap_midover', sales5y:'fa_sales5years_o15', eps5y:'fa_eps5years_o15', roe:'fa_roe_o20', de:'fa_debt_eq_u0.3', pe:'fa_pe_u20', peg:'fa_peg_u1'},
+    tradingview: {mc:'Market Cap > 5000 Cr', sg5:'Sales Growth 5Y > 15%', pg5:'Profit Growth 5Y > 15%', roce:'ROCE > 25%', roe:'ROE > 20%', de:'D/E < 0.3', pe:'P/E < 20', peg:'PEG < 1'},
+  },
+  garp_peg: {
+    screener_in: {sales_5y:'Sales growth 5Years > 15', profit_5y:'Profit growth 5Years > 15', roce:'Return on capital employed > 22', roe:'Return on equity > 18', de:'Debt to equity < 0.4', peg:'Price to earning < Profit growth 3Years', pe:'Price to earning < 25', market_cap:'Market capitalization > 3000', promoter:'Promoter holding > 50'},
+    chartink:    {sales_5y:'Latest Sales growth 5Years > 15', profit_5y:'Latest Profit growth 5Years > 15', roce:'Latest Return on capital employed > 22', roe:'Latest Return on equity > 18', de:'Latest Debt to equity < 0.4', pe:'Latest Price to Earning < 25', promoter:'Latest Promoter holding > 50'},
+    finviz:      {cap:'cap_midover', sales5y:'fa_sales5years_o15', eps5y:'fa_eps5years_o15', roe:'fa_roe_o18', de:'fa_debt_eq_u0.4', pe:'fa_pe_u25', peg:'fa_peg_u1'},
+    tradingview: {mc:'Market Cap > 3000 Cr', sg5:'Sales Growth 5Y > 15%', pg5:'Profit Growth 5Y > 15%', roce:'ROCE > 22%', roe:'ROE > 18%', de:'D/E < 0.4', pe:'P/E < 25', peg:'PEG < 1'},
+  },
+  qarp_real: {
+    screener_in: {sales_5y_min:'Sales growth 5Years > 12', sales_5y_max:'Sales growth 5Years < 30', profit_5y_min:'Profit growth 5Years > 12', profit_5y_max:'Profit growth 5Years < 35', sales_3y_min:'Sales growth 3Years > 12', sales_3y_max:'Sales growth 3Years < 30', profit_3y_min:'Profit growth 3Years > 12', profit_3y_max:'Profit growth 3Years < 35', roce_min:'Return on capital employed > 20', roce_max:'Return on capital employed < 50', roe:'Return on equity > 18', de:'Debt to equity < 0.5', pe:'Price to earning < 25', peg:'Price to earning < Profit growth 3Years', market_cap:'Market capitalization > 3000', promoter:'Promoter holding > 50', sales_growth:'Sales growth > 5', profit_growth:'Profit growth > 8'},
+    chartink:    {sales_5y:'Latest Sales growth 5Years > 12', profit_5y:'Latest Profit growth 5Years > 12', sales_3y:'Latest Sales growth 3Years > 12', profit_3y:'Latest Profit growth 3Years > 12', roce:'Latest Return on capital employed > 20', roe:'Latest Return on equity > 18', de:'Latest Debt to equity < 0.5', pe:'Latest Price to Earning < 25', promoter:'Latest Promoter holding > 50'},
+    finviz:      {cap:'cap_midover', sales5y:'fa_sales5years_o12', eps5y:'fa_eps5years_o12', roe:'fa_roe_o18', de:'fa_debt_eq_u0.5', pe:'fa_pe_u25', peg:'fa_peg_u1'},
+    tradingview: {mc:'Market Cap > 3000 Cr', sg5:'Sales Growth 5Y 12-30%', pg5:'Profit Growth 5Y 12-35%', roce:'ROCE 20-50%', roe:'ROE > 18%', de:'D/E < 0.5', pe:'P/E < 25', peg:'PEG < 1'},
+  },
+  best_value: {
+    screener_in: {pe:'Price to earning < 15', pb:'Price to book value < 2.5', roce:'Return on capital employed > 15', roe:'Return on equity > 15', de:'Debt to equity < 0.5', sales_5y:'Sales growth 5Years > 5', profit_5y:'Profit growth 5Years > 8', market_cap:'Market capitalization > 2000', promoter:'Promoter holding > 50'},
+    chartink:    {pe:'Latest Price to Earning < 15', pb:'Latest Price to Book Value < 2.5', roce:'Latest Return on capital employed > 15', roe:'Latest Return on equity > 15', de:'Latest Debt to equity < 0.5', promoter:'Latest Promoter holding > 50'},
+    finviz:      {cap:'cap_midover', pe:'fa_pe_u15', pb:'fa_pb_u2.5', roe:'fa_roe_o15', de:'fa_debt_eq_u0.5', sales5y:'fa_sales5years_o5', eps5y:'fa_eps5years_o8'},
+    tradingview: {mc:'Market Cap > 2000 Cr', pe:'P/E < 15', pb:'P/B < 2.5', roce:'ROCE > 15%', roe:'ROE > 15%', de:'D/E < 0.5'},
+  },
+  momentum_trend: {
+    screener_in: {profit_growth:'Profit growth > 25', sales_growth:'Sales growth > 15', profit_3y:'Profit growth 3Years > 15', sales_3y:'Sales growth 3Years > 12', roce:'Return on capital employed > 22', pe_min:'Price to earning > 25', pe_max:'Price to earning < 70', market_cap:'Market capitalization > 5000', de:'Debt to equity < 0.5', accel:'Profit growth > Profit growth 3Years'},
+    chartink:    {profit_growth:'Latest Profit growth > 25', sales_growth:'Latest Sales growth > 15', profit_3y:'Latest Profit growth 3Years > 15', sales_3y:'Latest Sales growth 3Years > 12', roce:'Latest Return on capital employed > 22', de:'Latest Debt to equity < 0.5', trend:'Latest Close > Latest SMA( close, 200 )'},
+    finviz:      {cap:'cap_midover', epsqoq:'fa_epsqoq_o25', salesqoq:'fa_salesqoq_o15', roce:'fa_roce_o22', pe:'fa_pe_o25', de:'fa_debt_eq_u0.5'},
+    tradingview: {mc:'Market Cap > 5000 Cr', pg:'Profit Growth > 25%', sg:'Sales Growth > 15%', roce:'ROCE > 22%', pe:'P/E 25-70', de:'D/E < 0.5'},
+  },
+  golden_cross: {
+    screener_in: {dma_cross:'DMA 50 > DMA 200', dma_prev:'DMA 50 previous day < DMA 200 previous day'},
+    chartink:    {dma_cross:'Latest SMA( close, 50 ) crossed above Latest SMA( close, 200 )', volume:'Latest Volume > 100000'},
+    finviz:      {sma:'ta_sma50_cross200a', avgvol:'sh_avgvol_o100'},
+    tradingview: {cross:'SMA(50) crosses above SMA(200)', vol:'Volume > 100000'},
+  },
+  magic_formula: {
+    screener_in: {roic:'Return on invested capital > 25', earnings_yield:'Earnings yield > 15', book_value:'Book value > 0', market_cap:'Market Capitalization > 15'},
+    chartink:    {roce:'Latest Return on capital employed > 25', earnings_yield:'Latest Earnings yield > 15', book_value:'Latest Book value > 0'},
+    finviz:      {cap:'cap_smallover', roi:'fa_roi_o25', pe:'fa_pe_u7', pb:'fa_pb_o0'},
+    tradingview: {roic:'ROIC > 25%', ey:'Earnings Yield > 15%', bv:'Book Value > 0', mc:'Market Cap > 15 Cr'},
+  },
+  growth_stocks: {
+    screener_in: {g_factor:'G Factor >= 7', market_cap:'Market Capitalization > 1'},
+    chartink:    {sales_3y:'Latest Sales growth 3Years > 15', profit_3y:'Latest Profit growth 3Years > 15', roe:'Latest Return on equity > 15'},
+    finviz:      {cap:'cap_smallover', salesqoq:'fa_salesqoq_o15', epsqoq:'fa_epsqoq_o15', roe:'fa_roe_o15'},
+    tradingview: {gf:'G-Factor >= 7 (proxy: high growth + quality)', mc:'Market Cap > 1 Cr'},
+  },
+  high_div: {
+    screener_in: {div_yield:'Dividend yield > 2', payout:'Dividend Payout < 100%', profit_combo:'( Profit growth 3Years > 10 OR Profit growth 5Years > 10 OR Profit growth 7Years > 10 )', avg_div:'Average 5years dividend > 0', div_growth:'Dividend last year > Average 5years dividend', pat:'Profit after tax > Net Profit last year * .8', min_div:'Dividend last year > .35'},
+    chartink:    {div_yield:'Latest Dividend yield > 2', payout:'Latest Dividend Payout < 100', profit_3y:'Latest Profit growth 3Years > 10'},
+    finviz:      {div:'fa_div_o2', payout:'fa_payoutratio_u100', eps3y:'fa_eps3years_o10'},
+    tradingview: {dy:'Div Yield > 2%', payout:'Payout < 100%', pg3:'Profit Growth 3Y > 10%', dg:'Div Last Year > 5Y Avg Div'},
+  },
+  growth_no_dilution: {
+    screener_in: {shares:'Number of equity shares <= Number of equity shares 10years back * 1.1', sales_10y:'Sales growth 10Years > 10%', avg_roce_10y:'Average return on capital employed 10Years > 10%', market_cap:'Market Capitalization > 100'},
+    chartink:    {sales_5y:'Latest Sales growth 5Years > 10', roce:'Latest Return on capital employed > 10'},
+    finviz:      {cap:'cap_smallover', sales5y:'fa_sales5years_o10', shares:'sh_outstanding_u50'},
+    tradingview: {dilution:'Shares Out <= 1.1× (10Y ago)', sg10:'Sales Growth 10Y > 10%', roce10:'Avg ROCE 10Y > 10%', mc:'Market Cap > 100 Cr'},
+  },
+  coffee_can: {
+    screener_in: {sales_growth:'Sales growth > 10%', sales_10y:'Sales growth 10Years > 10%', roe:'Return on equity > 15%', avg_roce_10y:'Average return on capital employed 10Years > 15%', market_cap:'Market Capitalization > 1000'},
+    chartink:    {sales_growth:'Latest Sales growth > 10', roe:'Latest Return on equity > 15', roce:'Latest Return on capital employed > 15'},
+    finviz:      {cap:'cap_midover', sales5y:'fa_sales5years_o10', roe:'fa_roe_o15', roce:'fa_roce_o15'},
+    tradingview: {sg:'Sales Growth > 10%', sg10:'Sales Growth 10Y > 10%', roe:'ROE > 15%', roce10:'Avg ROCE 10Y > 15%', mc:'Market Cap > 1000 Cr'},
   },
 };
 
