@@ -1092,6 +1092,7 @@
               <div style="display:flex;align-items:center;gap:10px">
                 <input type="file" id="cp-doc-file" style="display:none" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" data-status="cp-doc-status" data-heading="cp-heading" data-body="cp-story" onchange="handleDocUpload(this)">
                 <button type="button" class="btn-upload" onclick="document.getElementById('cp-doc-file').click()">📄 Import from document</button>
+                <button type="button" class="btn-outline" onclick="formatStoryStandard('cpQuill', 'cp-story')" style="padding:4px 8px;font-size:12px;margin-right:5px;" title="Format locally without AI">📝 Standard Format</button>
                 <button type="button" class="btn-outline" id="cp-ai-btn" onclick="formatStoryWithAI('cpQuill', 'cp-ai-btn', 'cp-story')" style="padding:4px 8px;font-size:12px;border-color:#8b5cf6;color:#a78bfa;">✨ Format with AI</button>
                 <span id="cp-doc-status" style="font-size:12px;color:#b9b9cc"></span>
               </div>
@@ -1498,6 +1499,7 @@
               <div style="display:flex;align-items:center;gap:10px">
                 <input type="file" id="st-doc-file" style="display:none" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt" data-status="st-doc-status" data-heading="st-heading" data-body="st-story" onchange="handleDocUpload(this)">
                 <button type="button" class="btn-upload" onclick="document.getElementById('st-doc-file').click()">📄 Import from document</button>
+                <button type="button" class="btn-outline" onclick="formatStoryStandard('stQuill', 'st-story')" style="padding:4px 8px;font-size:12px;margin-right:5px;" title="Format locally without AI">📝 Standard Format</button>
                 <button type="button" class="btn-outline" id="st-ai-btn" onclick="formatStoryWithAI('stQuill', 'st-ai-btn', 'st-story')" style="padding:4px 8px;font-size:12px;border-color:#8b5cf6;color:#a78bfa;">✨ Format with AI</button>
                 <span id="st-doc-status" style="font-size:12px;color:#b9b9cc"></span>
               </div>
@@ -1869,6 +1871,57 @@ function toggleStFullscreen() {
     container.parentNode.insertBefore(placeholder, container);
     document.body.appendChild(container);
   }
+}
+
+function formatStoryStandard(quillVarName, hiddenFieldId) {
+  var q = window[quillVarName];
+  if (!q) return;
+  var text = q.getText().trim();
+  if (!text || text.length < 20) {
+    alert("Please paste the plain text story in the editor first before formatting.");
+    return;
+  }
+  
+  var paragraphs = text.split(/\n\s*\n/);
+  var html = '';
+  
+  for (var i = 0; i < paragraphs.length; i++) {
+    var p = paragraphs[i].trim();
+    if (!p) continue;
+    
+    // Bold text handling (*text* or **text**)
+    p = p.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    p = p.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
+    
+    // Bullet lists handling (lines starting with - or *)
+    if (p.startsWith('- ') || p.startsWith('* ')) {
+      var lines = p.split('\n');
+      var listHtml = '<ul>';
+      for (var j = 0; j < lines.length; j++) {
+        var line = lines[j].trim();
+        if (line.startsWith('- ') || line.startsWith('* ')) {
+          listHtml += '<li>' + line.substring(2) + '</li>';
+        } else {
+          listHtml += '<li>' + line + '</li>';
+        }
+      }
+      listHtml += '</ul>';
+      html += listHtml;
+    } 
+    // Subheadings (short lines without sentence-ending punctuation)
+    else if (p.length < 80 && !/[.!?]$/.test(p) && p.indexOf('\n') === -1) {
+      html += '<h3>' + p + '</h3>';
+    } 
+    // Normal paragraphs
+    else {
+      p = p.replace(/\n/g, '<br>');
+      html += '<p>' + p + '</p>';
+    }
+  }
+  
+  const delta = q.clipboard.convert({html: html});
+  q.setContents(delta, 'user');
+  document.getElementById(hiddenFieldId).value = html;
 }
 
 async function formatStoryWithAI(quillVarName, btnId, hiddenFieldId) {
