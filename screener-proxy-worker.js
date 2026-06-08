@@ -569,7 +569,7 @@ ${body.text}`;
         if (ghGet.ok) {
           const fileData = await ghGet.json();
           sha = fileData.sha;
-          const decoded = atob(fileData.content.replace(/\n/g, ''));
+          const decoded = _b64DecodeUnicode(fileData.content.replace(/\n/g, ''));
           links = JSON.parse(decoded);
           if (!Array.isArray(links)) links = [];
         } else if (ghGet.status !== 404) {
@@ -592,7 +592,7 @@ ${body.text}`;
       // 3. PUT updated file back to GitHub
       const putPayload = {
         message: `feat(links): add ${new URL(url).hostname}`,
-        content: btoa(JSON.stringify(links, null, 2)),
+        content: _b64EncodeUnicode(JSON.stringify(links, null, 2)),
         branch:  BRANCH,
       };
       if (sha) putPayload.sha = sha;
@@ -682,7 +682,7 @@ ${body.text}`;
 
       const putPayload = {
         message: 'chore(links): update via management console',
-        content: btoa(JSON.stringify(cleanLinks, null, 2)),
+        content: _b64EncodeUnicode(JSON.stringify(cleanLinks, null, 2)),
         branch:  BRANCH,
       };
       if (sha) putPayload.sha = sha;
@@ -738,7 +738,7 @@ ${body.text}`;
       let sha = null, items = [];
       try {
         const r = await fetch(`${GH_API}?ref=${BRANCH}`, { headers: GH_H });
-        if (r.ok) { const d = await r.json(); sha = d.sha; items = JSON.parse(atob(d.content.replace(/\n/g,''))); if (!Array.isArray(items)) items = []; }
+        if (r.ok) { const d = await r.json(); sha = d.sha; items = JSON.parse(_b64DecodeUnicode(d.content.replace(/\n/g,''))); if (!Array.isArray(items)) items = []; }
         else if (r.status !== 404) return jsonError(502, `GitHub GET failed: ${r.status}`);
       } catch (e) { return jsonError(502, `GitHub GET error: ${e.message}`); }
 
@@ -752,7 +752,7 @@ ${body.text}`;
       if (photo_zoom && !isNaN(parseFloat(photo_zoom))) newItem.photo_zoom = Math.min(Math.max(parseFloat(photo_zoom), 1), 4);
       items.push(newItem);
 
-      const put = { message: `feat(content): publish ${section} post`, content: btoa(unescape(encodeURIComponent(JSON.stringify(items, null, 2)))), branch: BRANCH };
+      const put = { message: `feat(content): publish ${section} post`, content: _b64EncodeUnicode(JSON.stringify(items, null, 2)), branch: BRANCH };
       if (sha) put.sha = sha;
       try {
         const r = await fetch(GH_API, { method: 'PUT', headers: GH_H, body: JSON.stringify(put) });
@@ -785,7 +785,7 @@ ${body.text}`;
       } catch (e) { return jsonError(502, `GitHub GET error: ${e.message}`); }
 
       const clean = items.map(i => { const o = { id: String(i.id||Date.now()), section: String(i.section||''), heading: String(i.heading||'').slice(0,200), story: String(i.story||'').slice(0,500000), published_at: i.published_at||new Date().toISOString(), expires_at: i.expires_at||'' }; if (i.photo) o.photo = String(i.photo).slice(0,500); if (i.link_url) o.link_url = String(i.link_url).slice(0,500); if (i.photo_pos) o.photo_pos = String(i.photo_pos).slice(0,20); if (i.photo_zoom && !isNaN(parseFloat(i.photo_zoom))) o.photo_zoom = Math.min(Math.max(parseFloat(i.photo_zoom), 1), 4); return o; });
-      const put = { message: 'chore(content): update via console', content: btoa(unescape(encodeURIComponent(JSON.stringify(clean, null, 2)))), branch: BRANCH };
+      const put = { message: 'chore(content): update via console', content: _b64EncodeUnicode(JSON.stringify(clean, null, 2)), branch: BRANCH };
       if (sha) put.sha = sha;
       try {
         const r = await fetch(GH_API, { method: 'PUT', headers: GH_H, body: JSON.stringify(put) });
@@ -926,7 +926,7 @@ ${body.text}`;
         else if (r.status !== 404) return jsonError(502, `GitHub GET failed: ${r.status}`);
       } catch (e) { return jsonError(502, `GitHub GET error: ${e.message}`); }
 
-      const put = { message: 'chore(config): update via console', content: btoa(unescape(encodeURIComponent(JSON.stringify(cleanConfig, null, 2)))), branch: BRANCH };
+      const put = { message: 'chore(config): update via console', content: _b64EncodeUnicode(JSON.stringify(cleanConfig, null, 2)), branch: BRANCH };
       if (sha) put.sha = sha;
       try {
         const r = await fetch(GH_API, { method: 'PUT', headers: GH_H, body: JSON.stringify(put) });
