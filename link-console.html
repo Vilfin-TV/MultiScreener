@@ -2029,18 +2029,8 @@ async function generateAIPhoto(prefix) {
           try {
             // Upload the watermarked version
             const file = new File([blob], `watermark-${Date.now()}.jpg`, { type: 'image/jpeg' });
-            
-            const formData = new FormData();
-            formData.append('file', file);
-            
-            const upRes = await authFetch(WORKER + '/api/upload-image', {
-              method: 'POST',
-              body: formData
-            });
-            
-            if (!upRes.ok) throw new Error("Failed to upload watermarked photo");
-            const upData = await upRes.json();
-            resolve(upData.url);
+            const finalR2Url = await uploadImageToR2(file);
+            resolve(finalR2Url);
           } catch(e) { reject(e); }
         }, 'image/jpeg', 0.92);
       };
