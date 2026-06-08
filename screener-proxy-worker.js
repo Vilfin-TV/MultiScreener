@@ -173,7 +173,7 @@ ${body.text}`;
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: { maxOutputTokens: 2500, temperature: 0.2 },
           }),
-        });
+        }, 30000);
         if (!res.ok) return jsonError(502, 'AI generation failed.');
         const data = await res.json();
         const html = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
