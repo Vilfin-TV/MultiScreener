@@ -434,7 +434,7 @@
     .focal-hint { font-size: 10.5px; color: #5b78a0; margin-top: 5px; }
 
     /* Image upload controls (R2) */
-    .upload-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+    .upload-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
     .file-input { display: none; }
     .btn-upload {
       background: #122a4a; color: #9fc3ee; border: 1px solid #244a72;
@@ -470,36 +470,39 @@
     /* Content items */
     .content-list { display: flex; flex-direction: column; gap: 8px; flex: 1; }
     .ci-item {
-      background: #0e1f3b; border: 1px solid #1e3a5c; border-radius: 10px;
-      overflow: hidden; transition: opacity .2s, transform .2s;
+      background: var(--tp-surface2); border: 1px solid var(--tp-border); border-radius: 10px;
+      overflow: hidden; transition: opacity .2s, transform .2s, box-shadow .2s, border-color .2s;
     }
+    .ci-item:hover { border-color: var(--tp-border2); box-shadow: 0 3px 12px rgba(0,0,0,.12); }
     .ci-item.is-deleting { opacity: 0; transform: translateX(12px); }
-    .ci-item.is-editing { border-color: #2f6fed; box-shadow: 0 0 0 1px #2f6fed, 0 0 18px rgba(47,111,237,.25); }
-    .ci-main:hover { background: rgba(47,111,237,.06); }
-    .ci-main { display: flex; gap: 10px; padding: 10px 12px; }
+    .ci-item.is-editing { border-color: var(--tp-accent2); box-shadow: 0 0 0 1px var(--tp-accent2), 0 0 18px var(--tp-glow); }
+    .ci-main:hover { background: color-mix(in srgb, var(--tp-accent2) 7%, transparent); }
+    .ci-main { display: flex; gap: 11px; padding: 11px 13px; align-items: flex-start; }
     .ci-photo {
-      width: 54px; height: 54px; border-radius: 7px; object-fit: cover;
-      flex-shrink: 0; background: #162d4a; display: flex;
+      width: 56px; height: 56px; border-radius: 8px; object-fit: cover;
+      flex-shrink: 0; background: var(--tp-surface3); display: flex;
       align-items: center; justify-content: center; font-size: 20px;
       overflow: hidden;
     }
     .ci-photo img { width: 100%; height: 100%; object-fit: cover; }
     .ci-body { flex: 1; min-width: 0; }
-    .ci-section-badge {
+    #dashboard-view .ci-section-badge {
       display: inline-block; font-size: 8.5px; font-weight: 800;
       text-transform: uppercase; letter-spacing: .7px;
-      padding: 1px 7px; border-radius: 10px; margin-bottom: 4px;
-      background: rgba(99,102,241,.15); color: #818cf8; border: 1px solid rgba(99,102,241,.2);
+      padding: 2px 8px; border-radius: 999px; margin-bottom: 5px;
+      background: color-mix(in srgb, var(--tp-accent2) 15%, transparent);
+      color: var(--tp-accent2);
+      border: 1px solid color-mix(in srgb, var(--tp-accent2) 30%, transparent);
     }
-    .ci-heading {
-      font-size: 12px; font-weight: 700; color: #e2eeff;
-      display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+    #dashboard-view .ci-heading {
+      font-size: 13px; font-weight: 700; color: var(--tp-text); line-height: 1.35;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
     }
-    .ci-snippet {
-      font-size: 10.5px; color: #4d6a8a; margin-top: 2px;
-      display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+    #dashboard-view .ci-snippet {
+      font-size: 11px; color: var(--tp-text2); margin-top: 3px; line-height: 1.45;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
     }
-    .ci-meta { font-size: 9px; color: #3d5470; margin-top: 3px; font-family: monospace; }
+    #dashboard-view .ci-meta { font-size: 9.5px; color: var(--tp-text3); margin-top: 4px; font-family: monospace; letter-spacing: .2px; }
     .ci-actions { display: flex; align-items: center; gap: 3px; flex-shrink: 0; align-self: center; }
     .ci-status {
       margin-top: 10px; padding: 9px 12px; border-radius: 8px;
@@ -737,7 +740,13 @@
       .btn-logout { padding: 8px 12px; font-size: 12px; }
       .console-body { grid-template-columns: 1fr; }
       .content-body { grid-template-columns: 1fr; }
-      .content-form-panel { border-right: none; border-bottom: 1px solid #162d4a; }
+      /* Single-column grid items must be allowed to shrink — otherwise a
+         non-wrapping row (the editor's Import/Format button group) keeps its
+         min-content width, blows the column past the viewport, and gets clipped. */
+      .content-body > *, .console-body > *, .hp-body > * { min-width: 0; }
+      .content-form-panel { border-right: none; border-bottom: 1px solid var(--tp-border); padding: 20px 16px; }
+      .content-panel-right { padding: 18px 16px; }
+      #cp-editor-toolbar-custom > div, #st-editor-toolbar-custom > div { flex-wrap: wrap; }
       .form-panel { border-right: none; border-bottom: 1px solid #162d4a; padding: 20px 18px; }
       .links-panel { padding: 20px 18px; }
       .act-btn { width: 32px; height: 32px; font-size: 14px; }
