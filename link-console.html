@@ -1962,99 +1962,88 @@ async function formatStoryWithAI(quillVarName, btnId, hiddenFieldId) {
 }
 
 async function generateAIPhoto(prefix) {
-  var q = prefix === 'cp' ? cpQuill : stQuill;
   var hdg = document.getElementById(prefix + '-heading').value.trim();
-  var text = q.getText().trim();
   
-  if (!hdg || text.length < 20) {
-    alert("Please enter a heading and story text before generating a photo.");
+  if (!hdg) {
+    alert("Please enter a heading before generating a graphic.");
     return;
   }
   
   var btn = document.getElementById(prefix + '-ai-photo-btn');
   var originalHtml = btn.innerHTML;
-  btn.innerHTML = '⏳ Generating...';
+  btn.innerHTML = '⏳ Generating Graphic...';
   btn.disabled = true;
   
   try {
-    const res = await authFetch(WORKER + '/api/generate-photo', {
-      method: 'POST',
-      body: JSON.stringify({ heading: hdg, text: text })
-    });
-    
-    if (!res.ok) {
-      let err = 'Unknown error';
-      try { const d = await res.json(); err = d.message || d.error || err; } catch(e){}
-      throw new Error(err);
-    }
-    
-    const data = await res.json();
-    const encodedPrompt = encodeURIComponent(data.prompt);
-    const pollUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?model=flux-realism&width=1280&height=720&nologo=true`;
-    
-    const imgRes = await fetch(pollUrl);
-    if (!imgRes.ok) throw new Error("Failed to download generated image from AI service.");
-    
-    const blob = await imgRes.blob();
-    const imgUrl = URL.createObjectURL(blob);
-    
-    // Draw onto canvas to add logo
     const canvas = document.createElement('canvas');
     canvas.width = 1280;
     canvas.height = 720;
     const ctx = canvas.getContext('2d');
     
-    await new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        ctx.drawImage(img, 0, 0, 1280, 720);
-        
-        // Draw VilfinTV News watermark in bottom right
-        ctx.save();
-        ctx.fillStyle = 'rgba(10, 25, 47, 0.85)';
-        ctx.roundRect(1020, 640, 240, 50, 25);
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(1055, 665, 12, 0, Math.PI*2);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.ellipse(1055, 665, 5, 12, 0, 0, Math.PI*2);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(1043, 665);
-        ctx.lineTo(1067, 665);
-        ctx.stroke();
-        
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 20px "Inter", sans-serif';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('VilfinTV News', 1080, 666);
-        ctx.restore();
-        
-        resolve();
-      };
-      img.onerror = () => reject(new Error('Failed to load generated image.'));
-      img.src = imgUrl;
-    });
+    // 1. Draw Background (Deep Navy Blue)
+    const grd = ctx.createLinearGradient(0, 0, 1280, 720);
+    grd.addColorStop(0, '#0a192f');
+    grd.addColorStop(1, '#112240');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, 1280, 720);
     
-    // Convert to file and upload
+    // 2. Draw subtle grid
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+    ctx.lineWidth = 1;
+    for(let i=0; i<1280; i+=80) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 720); ctx.stroke(); }
+    for(let i=0; i<720; i+=80) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(1280, i); ctx.stroke(); }
+    
+    // 3. Draw Accent Shapes
+    ctx.fillStyle = '#64ffda';
+    ctx.fillRect(80, 0, 10, 120);
+    
+    ctx.beginPath();
+    ctx.arc(1100, 150, 400, 0, 2*Math.PI);
+    ctx.fillStyle = 'rgba(100, 255, 218, 0.05)';
+    ctx.fill();
+    
+    // 4. Draw Title Text
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 64px sans-serif';
+    ctx.textBaseline = 'top';
+    
+    const words = hdg.split(' ');
+    let line = '';
+    let y = 200;
+    const maxWidth = 900;
+    
+    for(let n = 0; n < words.length; n++) {
+      let testLine = line + words[n] + ' ';
+      let metrics = ctx.measureText(testLine);
+      if (metrics.width > maxWidth && n > 0) {
+        ctx.fillText(line, 120, y);
+        line = words[n] + ' ';
+        y += 80;
+      } else {
+        line = testLine;
+      }
+    }
+    ctx.fillText(line, 120, y);
+    
+    // 5. Draw Subtitle / Tag
+    ctx.fillStyle = '#8892b0';
+    ctx.font = '32px sans-serif';
+    ctx.fillText('VILFINTV EXCLUSIVE REPORT', 120, 130);
+    
+    // 6. Draw Logo Text
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 36px sans-serif';
+    ctx.fillText('VilfinTV', 1100, 620);
+    
+    // Convert to file and upload using existing handlePhotoUpload
     const finalBlob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.9));
-    const file = new File([finalBlob], `ai-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+    const file = new File([finalBlob], \`graphic-banner-\${Date.now()}.jpg\`, { type: 'image/jpeg' });
     
-    // Fake an input element for handlePhotoUpload
     const fakeInput = { files: [file], value: 'fake' };
     await handlePhotoUpload(fakeInput, prefix);
     
   } catch (e) {
-    alert("AI Photo Gen failed: " + e.message);
+    alert("Graphic Gen failed: " + e.message);
   } finally {
     btn.innerHTML = originalHtml;
     btn.disabled = false;
