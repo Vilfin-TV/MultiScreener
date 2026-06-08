@@ -1,0 +1,14 @@
+name: Test Groq
+on: workflow_dispatch
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test Groq
+        env:
+          KEY: ${{ secrets.GROC_API }}
+        run: |
+          curl -s -X POST "https://api.groq.com/openai/v1/chat/completions" \
+          -H "Authorization: Bearer $KEY" \
+          -H "Content-Type: application/json" \
+          -d '{"model": "llama3-8b-8192", "messages": [{"role": "user", "content": "You are an expert at finding stock photos. Based on the following news article heading, extract 1 or 2 simple, broad keywords (like finance, office, india business, currency, technology) that would be perfect for searching a stock photo library like Pexels. Return ONLY the keywords, separated by a space, nothing else.\n\nHeading: Why Indian Bonds Will NRI Tax..."}]}'
