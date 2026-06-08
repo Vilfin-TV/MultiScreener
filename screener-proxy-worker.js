@@ -227,52 +227,105 @@ ${body.text}`;
 
       let generatedKeywords = '';
       const apiKey = env.GEMINI_API_KEY || env.Gemini_API_KEY_1;
+      const groqKey = env.GROQ_API_KEY;
       
-      if (!apiKey) return jsonError(503, 'AI keyword generation failed: No Gemini API key configured.');
-      
-      try {
-         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-         const resG = await fetchWithTimeout(geminiUrl, {
+      // 1. Try Groq first for super fast keyword extraction
+      if (groqKey) {
+        try {
+          const resGroq = await fetchWithTimeout('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: promptStr }] }] })
-         }, 15000);
-         if (resG.ok) {
-            const dataG = await resG.json();
-            generatedKeywords = dataG.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-         }
-      } catch (e) {
-         return jsonError(502, 'Gemini AI failed to generate keywords: ' + e.message);
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${groqKey}` },
+            body: JSON.stringify({
+              model: 'llama3-8b-8192',
+              messages: [{ role: 'user', content: promptStr }]
+            })
+          }, 10000);
+          if (resGroq.ok) {
+            const dataGroq = await resGroq.json();
+            generatedKeywords = dataGroq.choices?.[0]?.message?.content?.trim() || '';
+          }
+        } catch(e) {}
       }
       
-      if (!generatedKeywords) generatedKeywords = 'finance business';
+      // 2. Fallback to Gemini for keyword extraction
+      if ((!generatedKeywords || generatedKeywords.length > 50) && apiKey) {
+        try {
+           const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+           const resG = await fetchWithTimeout(geminiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ contents: [{ parts: [{ text: promptStr }] }] })
+           }, 15000);
+           if (resG.ok) {
+              const dataG = await resG.json();
+              generatedKeywords = dataG.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+           }
+        } catch (e) {}
+      }
       
-      // 2. Search Pexels API
-      if (!env.PEXELS_API_KEY) return jsonError(503, 'PEXELS_API_KEY is not configured in the worker secrets.');
+      if (!generatedKeywords || generatedKeywords.length > 50) generatedKeywords = 'finance business';
       
-      try {
-         const pexelsUrl = `https://api.pexels.com/v1/search?query=${encodeURIComponent(generatedKeywords)}&per_page=1&orientation=landscape`;
-         const pRes = await fetchWithTimeout(pexelsUrl, {
-            headers: { 'Authorization': env.PEXELS_API_KEY }
-         }, 15000);
-         
-         if (!pRes.ok) return jsonError(502, `Pexels search failed: ${pRes.status} ${await pRes.text()}`);
-         
-         const pData = await pRes.json();
-         if (!pData.photos || pData.photos.length === 0) {
-             return jsonError(404, `No photos found on Pexels for keywords: ${generatedKeywords}`);
+      // 3. Try Gemini Imagen 3 for Image Generation
+      let imgBuffer = null;
+      let geminiError = '';
+      
+      if (apiKey) {
+         try {
+           const imagenUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${apiKey}`;
+           const imgRes = await fetchWithTimeout(imagenUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                instances: [{ prompt: generatedKeywords + " , high quality professional stock photo, no text" }],
+                parameters: { sampleCount: 1, aspectRatio: "16:9" }
+              })
+           }, 25000);
+           
+           if (imgRes.ok) {
+              const imgData = await imgRes.json();
+              if (imgData.predictions && imgData.predictions[0] && imgData.predictions[0].bytesBase64Encoded) {
+                 const bin = atob(imgData.predictions[0].bytesBase64Encoded);
+                 imgBuffer = Uint8Array.from(bin, c => c.charCodeAt(0));
+              } else {
+                 geminiError = 'Invalid response format from Gemini';
+              }
+           } else {
+              geminiError = `HTTP ${imgRes.status}`;
+           }
+         } catch(e) {
+           geminiError = e.message;
          }
-         
-         const imgUrl = pData.photos[0].src.large2x || pData.photos[0].src.large;
-         
-         // 3. Download the actual image file
-         const imgRes = await fetchWithTimeout(imgUrl, { headers: { 'User-Agent': 'CloudflareWorker' } }, 20000);
-         if (!imgRes.ok) return jsonError(502, 'Failed to download the selected Pexels photo.');
-         
-         const imgBuffer = await imgRes.arrayBuffer();
-         if (imgBuffer.byteLength < 1000) return jsonError(502, 'Downloaded Pexels image was invalid.');
-         
-         // 4. Save to R2
+      }
+      
+      // 4. Fallback to Pexels API
+      if (!imgBuffer) {
+        if (!env.PEXELS_API_KEY) return jsonError(503, `AI Photo Gen Failed: Gemini Imagen (${geminiError}) AND PEXELS_API_KEY is not configured.`);
+        
+        try {
+           const pexelsUrl = `https://api.pexels.com/v1/search?query=${encodeURIComponent(generatedKeywords)}&per_page=1&orientation=landscape`;
+           const pRes = await fetchWithTimeout(pexelsUrl, {
+              headers: { 'Authorization': env.PEXELS_API_KEY }
+           }, 15000);
+           
+           if (!pRes.ok) return jsonError(502, `Gemini (${geminiError}) | Pexels search failed: HTTP ${pRes.status}`);
+           
+           const pData = await pRes.json();
+           if (!pData.photos || pData.photos.length === 0) {
+               return jsonError(404, `No photos found on Pexels for keywords: ${generatedKeywords}`);
+           }
+           
+           const imgUrl = pData.photos[0].src.large2x || pData.photos[0].src.large;
+           const downRes = await fetchWithTimeout(imgUrl, { headers: { 'User-Agent': 'CloudflareWorker' } }, 20000);
+           if (!downRes.ok) return jsonError(502, 'Failed to download the selected Pexels photo.');
+           
+           imgBuffer = await downRes.arrayBuffer();
+        } catch (e) {
+           return jsonError(500, 'Error processing Pexels fallback: ' + e.message);
+        }
+      }
+      
+      // 5. Save to R2
+      try {
          const rand = Math.random().toString(36).slice(2, 10);
          const ym = new Date().toISOString().slice(0, 7);
          const key = `media/${ym}/stock-${Date.now()}-${rand}.jpg`;
@@ -286,7 +339,7 @@ ${body.text}`;
          });
          
       } catch (e) {
-         return jsonError(500, 'Error processing Pexels image: ' + e.message);
+         return jsonError(500, 'Error uploading image to R2: ' + e.message);
       }
     }
 
