@@ -2037,7 +2037,7 @@ async function generateAIPhoto(prefix) {
     
     // Convert to file and upload using existing handlePhotoUpload
     const finalBlob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.9));
-    const file = new File([finalBlob], \`graphic-banner-\${Date.now()}.jpg\`, { type: 'image/jpeg' });
+    const file = new File([finalBlob], `graphic-banner-${Date.now()}.jpg`, { type: 'image/jpeg' });
     
     const fakeInput = { files: [file], value: 'fake' };
     await handlePhotoUpload(fakeInput, prefix);
