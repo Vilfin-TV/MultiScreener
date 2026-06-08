@@ -1988,7 +1988,14 @@ async function generateAIPhoto(prefix) {
       throw new Error(err);
     }
     
-    const blob = await res.blob();
+    const data = await res.json();
+    const encodedPrompt = encodeURIComponent(data.prompt);
+    const pollUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?model=flux-realism&width=1280&height=720&nologo=true`;
+    
+    const imgRes = await fetch(pollUrl);
+    if (!imgRes.ok) throw new Error("Failed to download generated image from AI service.");
+    
+    const blob = await imgRes.blob();
     const imgUrl = URL.createObjectURL(blob);
     
     // Draw onto canvas to add logo

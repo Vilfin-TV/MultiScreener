@@ -269,27 +269,10 @@ ${body.text}`;
 
       if (!generatedPrompt) return jsonError(502, 'AI prompt generation completely failed.');
 
-      try {
-        const encodedPrompt = encodeURIComponent(generatedPrompt);
-        const pollUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?model=flux-realism&width=1280&height=720&nologo=true`;
-        
-        const resI = await fetchWithTimeout(pollUrl, { method: 'GET' }, 30000);
-        if (!resI.ok) return jsonError(502, 'Image generation failed.');
-        
-        const arrayBuffer = await resI.arrayBuffer();
-        const cType = resI.headers.get('content-type') || 'image/jpeg';
-        
-        return new Response(arrayBuffer, { 
-          status: 200, 
-          headers: { 
-            ...CORS, 
-            'Content-Type': cType,
-            'X-Generated-Prompt': encodeURIComponent(generatedPrompt) 
-          } 
-        });
-      } catch (e) {
-        return jsonError(500, 'Error fetching generated photo: ' + e.message);
-      }
+      return new Response(JSON.stringify({ ok: true, prompt: generatedPrompt }), { 
+        status: 200, 
+        headers: { ...CORS, 'Content-Type': 'application/json' } 
+      });
     }
 
     // ── /api/me  GET — return the caller's role + permissions ─────────────────
