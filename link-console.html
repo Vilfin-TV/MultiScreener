@@ -1978,100 +1978,22 @@ async function generateAIPhoto(prefix) {
   btn.disabled = true;
   
   try {
-    const canvas = document.createElement('canvas');
-    canvas.width = 1200;
-    canvas.height = 630;
-    const ctx = canvas.getContext('2d');
+    const promptTheme = hdg.substring(0, 100);
+    const query = encodeURIComponent(`high quality professional editorial illustration of ${promptTheme}, finance business clean minimalist style, no text`);
+    const pollUrl = `https://image.pollinations.ai/prompt/${query}?width=1280&height=720&nologo=true`;
     
-    // 1. Draw Background Gradient
-    const bgGrd = ctx.createLinearGradient(0, 0, 1200, 630);
-    bgGrd.addColorStop(0, '#1e293b'); // lighter dark blue on left
-    bgGrd.addColorStop(1, '#0f172a'); // darker blue on right
-    ctx.fillStyle = bgGrd;
-    ctx.fillRect(0, 0, 1200, 630);
-    
-    // 2. Load and Draw Image on Right Side
-    try {
-      const promptTheme = hdg.substring(0, 50);
-      const query = encodeURIComponent(`3d isometric minimalist vector illustration of ${promptTheme}, finance business graphic design, isolated on solid dark blue background`);
-      const pollUrl = `https://image.pollinations.ai/prompt/${query}?width=600&height=630&nologo=true`;
-      
-      await new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        const timeout = setTimeout(() => resolve(), 8000);
-        
-        img.onload = () => {
-          clearTimeout(timeout);
-          // Draw image on right half
-          ctx.drawImage(img, 600, 0, 600, 630);
-          
-          // Blend gradient to seamlessly fade the AI image's background
-          const blendGrd = ctx.createLinearGradient(500, 0, 800, 0);
-          blendGrd.addColorStop(0, '#1e293b');
-          blendGrd.addColorStop(1, 'rgba(15,23,42,0)');
-          ctx.fillStyle = blendGrd;
-          ctx.fillRect(500, 0, 300, 630);
-          
-          resolve();
-        };
-        img.onerror = () => { clearTimeout(timeout); resolve(); };
-        img.src = pollUrl;
-      });
-    } catch(e) {
-      console.log("Image illustration fetch skipped:", e);
-    }
-    
-    // 3. Accent/Tag at Top Left
-    ctx.fillStyle = '#f59e0b'; // Amber/Gold
-    ctx.font = 'bold 20px "Segoe UI", Inter, sans-serif';
-    ctx.textBaseline = 'top';
-    ctx.fillText('✦ VILFINTV GUIDE', 80, 100);
-    
-    // 4. Title Text
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 64px "Segoe UI", Inter, sans-serif';
-    
-    const words = hdg.split(' ');
-    let line = '';
-    let y = 150;
-    const maxWidth = 550; // constrain tightly to the left side
-    
-    for(let n = 0; n < words.length; n++) {
-      let testLine = line + words[n] + ' ';
-      let metrics = ctx.measureText(testLine);
-      if (metrics.width > maxWidth && n > 0) {
-        ctx.fillText(line, 80, y);
-        line = words[n] + ' ';
-        y += 75; // line height
-      } else {
-        line = testLine;
-      }
-    }
-    ctx.fillText(line, 80, y);
-    
-    // 5. Draw Logo & Subtitle Bottom Left
-    ctx.fillStyle = '#94a3b8'; // Slate 400
-    ctx.font = '18px "Segoe UI", Inter, sans-serif';
-    ctx.fillText('The Ultimate Guide ' + new Date().getFullYear(), 80, y + 60);
-    
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 28px "Segoe UI", Inter, sans-serif';
-    ctx.fillText('VilfinTV', 80, 530);
-    
-    // Tiny blue accent block next to logo
-    ctx.fillStyle = '#3b82f6';
-    ctx.fillRect(195, 534, 40, 20);
+    // Fetch the image directly as a blob
+    const response = await fetch(pollUrl);
+    if (!response.ok) throw new Error("Network response was not ok");
+    const finalBlob = await response.blob();
     
     // Convert to file and upload
-    const finalBlob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.9));
-    const file = new File([finalBlob], `graphic-banner-${Date.now()}.jpg`, { type: 'image/jpeg' });
-    
+    const file = new File([finalBlob], `ai-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
     const fakeInput = { files: [file], value: 'fake' };
     await handlePhotoUpload(fakeInput, prefix);
     
   } catch (e) {
-    alert("Graphic Gen failed: " + e.message);
+    alert("AI Photo Gen failed: " + e.message);
   } finally {
     btn.innerHTML = originalHtml;
     btn.disabled = false;
