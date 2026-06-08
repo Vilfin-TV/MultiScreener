@@ -248,7 +248,7 @@ ${body.text}`;
       }
       
       // 2. Fallback to Gemini for keyword extraction
-      if ((!generatedKeywords || generatedKeywords.length > 150) && apiKey) {
+      if ((!generatedKeywords || generatedKeywords.length > 50) && apiKey) {
         try {
            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
            const resG = await fetchWithTimeout(geminiUrl, {
@@ -263,14 +263,7 @@ ${body.text}`;
         } catch (e) {}
       }
       
-      if (!generatedKeywords || generatedKeywords.length > 200) generatedKeywords = 'professional indian finance business trading cinematic';
-      
-      // Just return the highly optimized prompt back to the frontend
-      // The frontend will use the browser to fetch Pollinations to bypass Cloudflare bot protections
-      return new Response(JSON.stringify({ ok: true, prompt: generatedKeywords, useFrontendAI: true }), { 
-        status: 200, 
-        headers: { ...CORS, 'Content-Type': 'application/json' } 
-      });
+      if (!generatedKeywords || generatedKeywords.length > 50) generatedKeywords = 'finance business';
       
       // 3. Try Gemini Imagen 3 for Image Generation
       let imgBuffer = null;
