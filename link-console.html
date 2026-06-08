@@ -1112,78 +1112,8 @@
               <input type="file" id="cp-file" class="file-input" accept="image/*" onchange="handlePhotoUpload(this,'cp')">
               <button type="button" class="btn-upload" id="cp-upload-btn" onclick="document.getElementById('cp-file').click()">⬆ Upload image</button>
               <button type="button" class="btn-outline" id="cp-del-photo-btn" onclick="deleteCurrentPhoto('cp')" style="padding:4px 8px;font-size:12px;margin-left:8px;border-color:#f43f5e;color:#f43f5e;display:none;">🗑 Delete</button>
-              <button type="button" class="btn-outline" id="cp-ai-photo-btn" onclick="toggleGraphicStudio('cp')" style="padding:4px 8px;font-size:12px;margin-left:8px;border-color:#38bdf8;color:#38bdf8;">🎨 Gen Graphic</button>
+              <button type="button" class="btn-outline" id="cp-ai-photo-btn" onclick="generateAIPhoto('cp')" style="padding:4px 8px;font-size:12px;margin-left:8px;border-color:#38bdf8;color:#38bdf8;">✨ AI Autocreate</button>
               <span class="upload-hint">JPEG · PNG · WebP · GIF · max 8 MB</span>
-            </div>
-            
-            <!-- Graphic Studio Inline Panel -->
-            <div id="cp-graphic-studio" class="graphic-studio-panel" style="display:none;background:#0f172a;border:1px solid #1e293b;border-radius:6px;padding:15px;margin-top:10px;">
-              <div style="font-weight:600;font-size:14px;color:#cbd5e1;margin-bottom:12px;">Graphic Studio Settings</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px;">
-                <div>
-                  <label class="field-label" style="font-size:11px;margin-bottom:4px;">Background Color</label>
-                  <input type="color" id="cp-gs-bgcolor" value="#0a192f" style="width:100%;height:32px;padding:0;border:none;border-radius:4px;cursor:pointer;">
-                </div>
-                <div>
-                  <label class="field-label" style="font-size:11px;margin-bottom:4px;">Text Color</label>
-                  <input type="color" id="cp-gs-txtcolor" value="#ffffff" style="width:100%;height:32px;padding:0;border:none;border-radius:4px;cursor:pointer;">
-                </div>
-              </div>
-              <div style="margin-bottom:15px;">
-                <label class="field-label" style="font-size:11px;margin-bottom:4px;">Background Illustration Theme</label>
-                <select id="cp-gs-theme" style="width:100%;height:32px;background:#1e293b;border:1px solid #334155;color:#f8fafc;border-radius:4px;font-size:13px;padding:0 8px;">
-                  <optgroup label="Auto (Based on Heading)">
-                    <option value="auto">Auto-detect from Heading</option>
-                  </optgroup>
-                  <optgroup label="Finance & Economy">
-                    <option value="stock market bull run trading charts green">Bull Market / Stocks</option>
-                    <option value="stock market bear crash trading charts red">Bear Market / Crash</option>
-                    <option value="gold coins shiny stacks wealth">Gold Coins & Wealth</option>
-                    <option value="global finance abstract technology network">Global Finance Tech</option>
-                    <option value="banking vault security safe">Banking & Security</option>
-                    <option value="indian rupee currency notes stacks">Indian Rupee Stacks</option>
-                    <option value="us dollar currency notes stacks">US Dollar Stacks</option>
-                    <option value="japanese yen currency notes stacks">Japanese Yen Stacks</option>
-                    <option value="euro currency notes stacks">Euro Stacks</option>
-                    <option value="real estate property investment buildings">Real Estate / Property</option>
-                    <option value="cryptocurrency bitcoin glowing digital">Cryptocurrency (Bitcoin)</option>
-                    <option value="credit cards digital payments">Credit Cards / Payments</option>
-                    <option value="tax forms calculator accounting">Tax & Accounting</option>
-                  </optgroup>
-                  <optgroup label="India & NRI">
-                    <option value="indian passport travel diaspora">Indian Passport & Travel</option>
-                    <option value="india map glowing abstract network">Digital India Map</option>
-                    <option value="indian flag colors abstract design">Indian Flag Abstract</option>
-                    <option value="mumbai skyline cityscape">Mumbai Skyline</option>
-                    <option value="traditional indian culture abstract">Indian Culture Elements</option>
-                  </optgroup>
-                  <optgroup label="Global Places">
-                    <option value="new york city skyline wall street">New York / Wall Street</option>
-                    <option value="tokyo skyline neon lights">Tokyo / Japan</option>
-                    <option value="london skyline big ben financial district">London / UK</option>
-                    <option value="dubai skyline burj khalifa">Dubai / UAE</option>
-                    <option value="singapore skyline marina bay">Singapore</option>
-                    <option value="sydney opera house skyline">Sydney / Australia</option>
-                  </optgroup>
-                  <optgroup label="Nature & Abstract">
-                    <option value="minimalist dark mountains landscape">Dark Mountains</option>
-                    <option value="abstract geometric shapes futuristic dark">Futuristic Geometry</option>
-                    <option value="dark galaxy space stars nebula">Deep Space / Nebula</option>
-                    <option value="clean minimalist dark gradient texture">Minimalist Texture</option>
-                    <option value="green forest aerial view dark moody">Moody Forest</option>
-                    <option value="ocean waves dark stormy water">Dark Ocean Waves</option>
-                    <option value="sunburst morning light hope abstract">Sunrise / Hope</option>
-                  </optgroup>
-                  <optgroup label="Miscellaneous">
-                    <option value="none">No Image (Solid Color Only)</option>
-                  </optgroup>
-                </select>
-              </div>
-              <div style="margin-bottom:20px;">
-                <label class="field-label" style="font-size:11px;margin-bottom:4px;display:flex;justify-content:space-between;"><span>Illustration Zoom</span> <span id="cp-gs-zoomval">1.0x</span></label>
-                <input type="range" id="cp-gs-zoom" min="0.5" max="3" step="0.1" value="1.0" oninput="document.getElementById('cp-gs-zoomval').textContent = parseFloat(this.value).toFixed(1) + 'x'" style="width:100%;">
-              </div>
-              <button type="button" class="btn-primary" id="cp-gs-render-btn" onclick="renderCustomGraphic('cp')" style="width:100%;padding:8px;font-size:13px;background:#38bdf8;color:#0f172a;font-weight:bold;">🖼 Render Graphic</button>
             </div>
 
             <div class="focal-editor" id="cp-focal-editor">
@@ -1592,78 +1522,8 @@
               <input type="file" id="st-file" class="file-input" accept="image/*" onchange="handlePhotoUpload(this,'st')">
               <button type="button" class="btn-upload" id="st-upload-btn" onclick="document.getElementById('st-file').click()">⬆ Upload image</button>
               <button type="button" class="btn-outline" id="st-del-photo-btn" onclick="deleteCurrentPhoto('st')" style="padding:4px 8px;font-size:12px;margin-left:8px;border-color:#f43f5e;color:#f43f5e;display:none;">🗑 Delete</button>
-              <button type="button" class="btn-outline" id="st-ai-photo-btn" onclick="toggleGraphicStudio('st')" style="padding:4px 8px;font-size:12px;margin-left:8px;border-color:#38bdf8;color:#38bdf8;">🎨 Gen Graphic</button>
+              <button type="button" class="btn-outline" id="st-ai-photo-btn" onclick="generateAIPhoto('st')" style="padding:4px 8px;font-size:12px;margin-left:8px;border-color:#38bdf8;color:#38bdf8;">✨ AI Autocreate</button>
               <span class="upload-hint">JPEG · PNG · WebP · GIF · max 8 MB</span>
-            </div>
-            
-            <!-- Graphic Studio Inline Panel -->
-            <div id="st-graphic-studio" class="graphic-studio-panel" style="display:none;background:#0f172a;border:1px solid #1e293b;border-radius:6px;padding:15px;margin-top:10px;">
-              <div style="font-weight:600;font-size:14px;color:#cbd5e1;margin-bottom:12px;">Graphic Studio Settings</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px;">
-                <div>
-                  <label class="field-label" style="font-size:11px;margin-bottom:4px;">Background Color</label>
-                  <input type="color" id="st-gs-bgcolor" value="#0a192f" style="width:100%;height:32px;padding:0;border:none;border-radius:4px;cursor:pointer;">
-                </div>
-                <div>
-                  <label class="field-label" style="font-size:11px;margin-bottom:4px;">Text Color</label>
-                  <input type="color" id="st-gs-txtcolor" value="#ffffff" style="width:100%;height:32px;padding:0;border:none;border-radius:4px;cursor:pointer;">
-                </div>
-              </div>
-              <div style="margin-bottom:15px;">
-                <label class="field-label" style="font-size:11px;margin-bottom:4px;">Background Illustration Theme</label>
-                <select id="st-gs-theme" style="width:100%;height:32px;background:#1e293b;border:1px solid #334155;color:#f8fafc;border-radius:4px;font-size:13px;padding:0 8px;">
-                  <optgroup label="Auto (Based on Heading)">
-                    <option value="auto">Auto-detect from Heading</option>
-                  </optgroup>
-                  <optgroup label="Finance & Economy">
-                    <option value="stock market bull run trading charts green">Bull Market / Stocks</option>
-                    <option value="stock market bear crash trading charts red">Bear Market / Crash</option>
-                    <option value="gold coins shiny stacks wealth">Gold Coins & Wealth</option>
-                    <option value="global finance abstract technology network">Global Finance Tech</option>
-                    <option value="banking vault security safe">Banking & Security</option>
-                    <option value="indian rupee currency notes stacks">Indian Rupee Stacks</option>
-                    <option value="us dollar currency notes stacks">US Dollar Stacks</option>
-                    <option value="japanese yen currency notes stacks">Japanese Yen Stacks</option>
-                    <option value="euro currency notes stacks">Euro Stacks</option>
-                    <option value="real estate property investment buildings">Real Estate / Property</option>
-                    <option value="cryptocurrency bitcoin glowing digital">Cryptocurrency (Bitcoin)</option>
-                    <option value="credit cards digital payments">Credit Cards / Payments</option>
-                    <option value="tax forms calculator accounting">Tax & Accounting</option>
-                  </optgroup>
-                  <optgroup label="India & NRI">
-                    <option value="indian passport travel diaspora">Indian Passport & Travel</option>
-                    <option value="india map glowing abstract network">Digital India Map</option>
-                    <option value="indian flag colors abstract design">Indian Flag Abstract</option>
-                    <option value="mumbai skyline cityscape">Mumbai Skyline</option>
-                    <option value="traditional indian culture abstract">Indian Culture Elements</option>
-                  </optgroup>
-                  <optgroup label="Global Places">
-                    <option value="new york city skyline wall street">New York / Wall Street</option>
-                    <option value="tokyo skyline neon lights">Tokyo / Japan</option>
-                    <option value="london skyline big ben financial district">London / UK</option>
-                    <option value="dubai skyline burj khalifa">Dubai / UAE</option>
-                    <option value="singapore skyline marina bay">Singapore</option>
-                    <option value="sydney opera house skyline">Sydney / Australia</option>
-                  </optgroup>
-                  <optgroup label="Nature & Abstract">
-                    <option value="minimalist dark mountains landscape">Dark Mountains</option>
-                    <option value="abstract geometric shapes futuristic dark">Futuristic Geometry</option>
-                    <option value="dark galaxy space stars nebula">Deep Space / Nebula</option>
-                    <option value="clean minimalist dark gradient texture">Minimalist Texture</option>
-                    <option value="green forest aerial view dark moody">Moody Forest</option>
-                    <option value="ocean waves dark stormy water">Dark Ocean Waves</option>
-                    <option value="sunburst morning light hope abstract">Sunrise / Hope</option>
-                  </optgroup>
-                  <optgroup label="Miscellaneous">
-                    <option value="none">No Image (Solid Color Only)</option>
-                  </optgroup>
-                </select>
-              </div>
-              <div style="margin-bottom:20px;">
-                <label class="field-label" style="font-size:11px;margin-bottom:4px;display:flex;justify-content:space-between;"><span>Illustration Zoom</span> <span id="st-gs-zoomval">1.0x</span></label>
-                <input type="range" id="st-gs-zoom" min="0.5" max="3" step="0.1" value="1.0" oninput="document.getElementById('st-gs-zoomval').textContent = parseFloat(this.value).toFixed(1) + 'x'" style="width:100%;">
-              </div>
-              <button type="button" class="btn-primary" id="st-gs-render-btn" onclick="renderCustomGraphic('st')" style="width:100%;padding:8px;font-size:13px;background:#38bdf8;color:#0f172a;font-weight:bold;">🖼 Render Graphic</button>
             </div>
 
             <img id="st-photo-preview" class="photo-preview" src="" alt="Preview"
@@ -2105,60 +1965,20 @@ async function formatStoryWithAI(quillVarName, btnId, hiddenFieldId) {
   }
 }
 
-function toggleGraphicStudio(prefix) {
-  var panel = document.getElementById(prefix + '-graphic-studio');
-  if (!panel) return;
-  if (panel.style.display === 'none') {
-    panel.style.display = 'block';
-  } else {
-    panel.style.display = 'none';
-  }
-}
-
-async function deleteCurrentPhoto(prefix) {
-  var urlField = document.getElementById(prefix + '-photo');
-  var url = urlField.value;
-  if (!url) return;
-  
-  var btn = document.getElementById(prefix + '-del-photo-btn');
-  if (url.includes('workers.dev') || url.includes('r2.dev')) {
-    var orig = btn.innerHTML;
-    btn.innerHTML = '⏳...';
-    btn.disabled = true;
-    try {
-      await deleteImageFromR2(url);
-      urlField.value = '';
-      if (prefix === 'cp') previewPhoto('');
-      if (prefix === 'st') previewStoryPhoto('');
-    } catch(e) {
-      alert("Failed to delete from R2: " + e.message);
-    } finally {
-      btn.innerHTML = orig;
-      btn.disabled = false;
-    }
-  } else {
-    urlField.value = '';
-    if (prefix === 'cp') previewPhoto('');
-    if (prefix === 'st') previewStoryPhoto('');
-  }
-}
-
-async function renderCustomGraphic(prefix) {
+async function generateAIPhoto(prefix) {
   var hdg = document.getElementById(prefix + '-heading').value.trim();
   if (!hdg) {
-    alert("Please enter a heading before generating a graphic.");
+    alert("Please enter a heading before autocreating a graphic.");
     return;
   }
   
-  var btn = document.getElementById(prefix + '-gs-render-btn');
+  var btn = document.getElementById(prefix + '-ai-photo-btn');
   var originalHtml = btn.innerHTML;
-  btn.innerHTML = '⏳ Rendering...';
+  btn.innerHTML = '⏳ Autocreating...';
   btn.disabled = true;
   
-  var bgColor = document.getElementById(prefix + '-gs-bgcolor').value || '#0a192f';
-  var txtColor = document.getElementById(prefix + '-gs-txtcolor').value || '#ffffff';
-  var theme = document.getElementById(prefix + '-gs-theme').value;
-  var zoom = parseFloat(document.getElementById(prefix + '-gs-zoom').value) || 1.0;
+  var bgColor = '#0a192f';
+  var txtColor = '#ffffff';
   
   try {
     const canvas = document.createElement('canvas');
@@ -2177,50 +1997,44 @@ async function renderCustomGraphic(prefix) {
     for(let i=0; i<720; i+=80) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(1280, i); ctx.stroke(); }
     
     // 3. Load and Draw Image on Right Side
-    if (theme !== 'none') {
-      try {
-        let promptTheme = theme;
-        if (theme === 'auto') {
-          promptTheme = hdg.substring(0, 50) + " finance business abstract";
-        }
-        const query = encodeURIComponent("3d illustration concept " + promptTheme + " dark theme");
-        const pollUrl = `https://image.pollinations.ai/prompt/${query}?width=1280&height=720&nologo=true`;
+    try {
+      const promptTheme = hdg.substring(0, 50) + " finance business abstract";
+      const query = encodeURIComponent("3d illustration concept " + promptTheme + " dark theme");
+      const pollUrl = `https://image.pollinations.ai/prompt/${query}?width=1280&height=720&nologo=true`;
+      
+      await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        const timeout = setTimeout(() => resolve(), 8000);
         
-        await new Promise((resolve, reject) => {
-          const img = new Image();
-          img.crossOrigin = "anonymous";
-          const timeout = setTimeout(() => resolve(), 8000);
+        img.onload = () => {
+          clearTimeout(timeout);
+          // Draw image on right half
+          const imgWidth = 640;
+          const imgHeight = 720;
+          const xOffset = 1280 - imgWidth;
+          const yOffset = 0;
           
-          img.onload = () => {
-            clearTimeout(timeout);
-            // Draw image on right half, scaled by zoom
-            const imgWidth = 640 * zoom;
-            const imgHeight = 720 * zoom;
-            // Center the zoom vertically and anchor to the right
-            const xOffset = 1280 - imgWidth;
-            const yOffset = (720 - imgHeight) / 2;
-            
-            ctx.drawImage(img, xOffset, yOffset, imgWidth, imgHeight);
-            
-            // Blend gradient to seamlessly fade the image
-            const blendGrd = ctx.createLinearGradient(550, 0, 850, 0);
-            blendGrd.addColorStop(0, bgColor);
-            blendGrd.addColorStop(1, 'rgba(0,0,0,0)'); // Transparent
-            ctx.fillStyle = blendGrd;
-            ctx.fillRect(550, 0, 300, 720);
-            
-            // Darken the image slightly so white text is readable
-            ctx.fillStyle = 'rgba(10, 25, 47, 0.2)';
-            ctx.fillRect(640, 0, 640, 720);
-            
-            resolve();
-          };
-          img.onerror = () => { clearTimeout(timeout); resolve(); };
-          img.src = pollUrl;
-        });
-      } catch(e) {
-        console.log("Image illustration fetch skipped:", e);
-      }
+          ctx.drawImage(img, xOffset, yOffset, imgWidth, imgHeight);
+          
+          // Blend gradient to seamlessly fade the image
+          const blendGrd = ctx.createLinearGradient(550, 0, 850, 0);
+          blendGrd.addColorStop(0, bgColor);
+          blendGrd.addColorStop(1, 'rgba(0,0,0,0)'); // Transparent
+          ctx.fillStyle = blendGrd;
+          ctx.fillRect(550, 0, 300, 720);
+          
+          // Darken the image slightly so white text is readable
+          ctx.fillStyle = 'rgba(10, 25, 47, 0.2)';
+          ctx.fillRect(640, 0, 640, 720);
+          
+          resolve();
+        };
+        img.onerror = () => { clearTimeout(timeout); resolve(); };
+        img.src = pollUrl;
+      });
+    } catch(e) {
+      console.log("Image illustration fetch skipped:", e);
     }
     
     // 4. Draw Accent Shapes
@@ -2273,9 +2087,6 @@ async function renderCustomGraphic(prefix) {
     
     const fakeInput = { files: [file], value: 'fake' };
     await handlePhotoUpload(fakeInput, prefix);
-    
-    // Close studio panel on success
-    toggleGraphicStudio(prefix);
     
   } catch (e) {
     alert("Graphic Gen failed: " + e.message);
