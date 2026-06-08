@@ -506,6 +506,209 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
   .class-btn { font-size: 13px; padding: 7px 13px; }
 }
 
+/* ═══════════════════════════════════════
+   FINANCE & CAPITAL MARKETS MODULE
+   ═══════════════════════════════════════ */
+.fin-layout {
+  display: grid;
+  grid-template-columns: 272px 1fr;
+  gap: 24px;
+  align-items: start;
+  min-height: 70vh;
+}
+.fin-toc {
+  position: sticky;
+  top: 80px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+.fin-toc::-webkit-scrollbar { width: 4px; }
+.fin-toc::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.fin-toc-header {
+  background: var(--blue);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 11px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.fin-toc-unit {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.1px;
+  color: var(--text3, #4a6080);
+  padding: 12px 16px 4px;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+.fin-toc-item {
+  padding: 9px 16px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text2);
+  border-left: 3px solid transparent;
+  transition: all 0.18s;
+  line-height: 1.35;
+}
+.fin-toc-item:hover { background: var(--card2,var(--card)); color: var(--text); }
+.fin-toc-item.active { background: var(--card2,var(--card)); color: var(--text); border-left-color: var(--blue); font-weight: 600; }
+.fin-main {
+  min-width: 0;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.fin-main::-webkit-scrollbar { width: 4px; }
+.fin-main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.fin-progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 24px; overflow: hidden; }
+.fin-progress-fill { height: 100%; background: linear-gradient(90deg, var(--blue), var(--green)); border-radius: 2px; transition: width 0.4s ease; }
+.fin-lesson-num {
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--blue);
+  margin-bottom: 6px;
+}
+.fin-lesson-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 16px;
+  line-height: 1.25;
+}
+.fin-lesson-lead {
+  font-size: 15.5px;
+  color: var(--text2);
+  line-height: 1.65;
+  margin-bottom: 28px;
+  padding: 16px 20px;
+  background: var(--card);
+  border-left: 4px solid var(--blue);
+  border-radius: 0 8px 8px 0;
+}
+.fin-section-title {
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.1px;
+  color: var(--blue);
+  margin: 28px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.fin-key-points { list-style: none; padding: 0; margin: 0; }
+.fin-key-points li {
+  padding: 10px 12px 10px 38px;
+  position: relative;
+  font-size: 14.5px;
+  color: var(--text);
+  line-height: 1.55;
+  margin-bottom: 6px;
+  background: var(--card);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.fin-key-points li::before {
+  content: "✓";
+  position: absolute;
+  left: 13px;
+  top: 10px;
+  color: var(--green);
+  font-weight: 800;
+  font-size: 13px;
+}
+.fin-analogy-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin: 24px 0;
+  border-left: 4px solid #f59e0b;
+}
+.fin-analogy-title {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.1px;
+  color: #f59e0b;
+  margin-bottom: 10px;
+}
+.fin-analogy-text { font-size: 14.5px; color: var(--text); line-height: 1.65; }
+.fin-qa-section { margin-top: 28px; }
+.fin-qa-item { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+.fin-qa-q {
+  padding: 13px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: var(--card);
+  transition: background 0.18s;
+  gap: 10px;
+}
+.fin-qa-q:hover { background: var(--card2, var(--card)); }
+.fin-qa-a {
+  display: none;
+  padding: 13px 16px;
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.65;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+.fin-qa-item.open .fin-qa-a { display: block; }
+.fin-qa-item.open .fin-qa-chevron { transform: rotate(180deg); }
+.fin-qa-chevron { width: 18px; height: 18px; flex-shrink: 0; transition: transform 0.2s; color: var(--text3, #5a7090); margin-top: 2px; }
+.fin-nav-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 0 8px;
+  margin-top: 28px;
+  border-top: 1px solid var(--border);
+  gap: 12px;
+}
+.fin-nav-btn {
+  padding: 10px 22px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+  min-width: 110px;
+}
+.fin-nav-btn:hover:not(:disabled) { background: var(--blue); color: #fff; border-color: var(--blue); }
+.fin-nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.fin-nav-btn.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+.fin-nav-btn.primary:hover:not(:disabled) { background: var(--green); border-color: var(--green); }
+@media (max-width: 900px) {
+  .fin-layout { grid-template-columns: 1fr; }
+  .fin-toc { position: static; max-height: 220px; }
+  .fin-main { max-height: none; padding-right: 0; }
+  .fin-lesson-title { font-size: 22px; }
+}
+@media (max-width: 600px) {
+  .fin-lesson-title { font-size: 19px; }
+  .fin-lesson-lead { font-size: 14.5px; padding: 14px 16px; }
+  .fin-nav-btn { min-width: 90px; padding: 9px 16px; font-size: 13px; }
+}
+
 </style>
 </head>
 <body>
@@ -643,7 +846,7 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
         <div class="subject-links">
           <a href="#" onclick="return false; alert('Coming Soon');">Microeconomics</a>
           <a href="#" onclick="return false; alert('Coming Soon');">Macroeconomics</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Finance and capital markets</a>
+          <a href="#" onclick="openFinanceLesson(); return false;">Finance and capital markets</a>
         </div>
       </div>
 
@@ -846,7 +1049,23 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
 
       </div>
     </div>
-    
+
+    <!-- ── FINANCE & CAPITAL MARKETS ── -->
+    <div id="finance-content-area" style="display:none;">
+      <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">📈 Finance &amp; Capital Markets</h2>
+      <p style="margin:0 0 20px; font-size:14px; color:var(--text2);">40-lesson course · Teaching-style · Simple language</p>
+      <div class="fin-layout">
+        <aside class="fin-toc" id="fin-toc">
+          <div class="fin-toc-header">📚 Course Outline</div>
+          <div class="fin-toc-list" id="fin-toc-list"></div>
+        </aside>
+        <div class="fin-main" id="fin-main">
+          <div class="fin-progress-bar"><div class="fin-progress-fill" id="fin-progress-fill" style="width:2.5%"></div></div>
+          <div id="fin-lesson-content"></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -949,6 +1168,22 @@ function closeLessonView() {
   document.getElementById('lesson-view-container').style.display = 'none';
   document.getElementById('hero-section').style.display = 'grid';
   document.getElementById('subjects-section').style.display = 'block';
+}
+
+let _activeFinanceIdx = 0;
+
+function openFinanceLesson() {
+  document.getElementById('hero-section').style.display = 'none';
+  document.getElementById('subjects-section').style.display = 'none';
+  document.getElementById('lesson-view-container').style.display = 'block';
+  document.getElementById('cbse-content-area').style.display = 'none';
+  document.getElementById('jlpt-content-area').style.display = 'none';
+  document.getElementById('finance-content-area').style.display = 'block';
+  _activeHub = 'finance';
+  _activeFinanceIdx = 0;
+  if (typeof renderFinanceTOC === 'function') renderFinanceTOC();
+  if (typeof renderFinanceLesson === 'function') renderFinanceLesson(0);
+  document.getElementById('lesson-view-container').scrollTop = 0;
 }
 </script>
 
@@ -1514,6 +1749,753 @@ const CASUAL_DATA = {
 };
 
 let JLPT_DATA = {};
+
+// ═══════════════════════════════════════
+// FINANCE & CAPITAL MARKETS — LESSON DATA
+// ═══════════════════════════════════════
+const FINANCE_LESSONS = [
+// ── UNIT 1: MONEY & BANKING ──────────────────────────────────────────────
+{ unit:'Unit 1 · Money & Banking', icon:'💵', title:'What is Money?',
+  lead:'Imagine you caught fish and your neighbor baked bread. You want bread but he does not want fish. Without money, you are stuck! Money solves this problem — it is a universally accepted medium that lets people exchange value easily without the awkward barter problem.',
+  points:[
+    '<strong>Barter system:</strong> Trading goods directly — limited by the "double coincidence of wants" problem.',
+    '<strong>3 Functions of Money:</strong> Medium of Exchange (used to buy/sell), Store of Value (saves purchasing power over time), Unit of Account (common measure of value).',
+    '<strong>Commodity money:</strong> Gold, silver, salt — items with intrinsic value that were historically used as money.',
+    '<strong>Fiat money:</strong> Modern notes and coins — value backed by government decree and public trust, not physical commodity.',
+    '<strong>Digital money:</strong> UPI, NEFT, RTGS, and cryptocurrencies — value transferred electronically in milliseconds.'
+  ],
+  analogy:'Money is like a universal language. Just as English lets people from different countries communicate, money lets people with completely different goods and skills trade with each other. Without it, a doctor could only see patients who happened to have something the doctor needed right now.',
+  qa:[
+    {q:'What is the "store of value" function of money?', a:'It means you can save money today and use it in the future. Unlike fish (which rots) or milk (which spoils), money holds its value over time, allowing you to preserve purchasing power for future use.'},
+    {q:'Why does paper money have value if it is just paper?', a:'Paper money (fiat money) has value because the government declares it legal tender and everyone in society agrees to accept it in exchange for goods and services. It is built on collective trust in the economic system and the government that issues it.'},
+    {q:'What is the main problem with the barter system?', a:'The "double coincidence of wants" — you need to find someone who wants exactly what you have AND has exactly what you want, at the same time. This is extremely inefficient in a complex modern economy with thousands of different goods and services.'}
+  ]
+},
+{ unit:'Unit 1 · Money & Banking', icon:'🏦', title:'How Banks Work',
+  lead:'Banks are the backbone of a modern economy. They take money from people who do not need it right now (savers) and lend it to people who need it (borrowers). This simple act — intermediation — creates the entire financial system and allows economies to grow.',
+  points:[
+    '<strong>Deposits:</strong> When you open a savings account, you are actually lending your money to the bank. The bank pays you interest (say 4%) for this loan.',
+    '<strong>Loans:</strong> Banks lend your deposit money to borrowers at a higher interest rate (say 12%). The spread (8%) is the bank\'s profit.',
+    '<strong>Fractional reserve banking:</strong> Banks keep only a fraction (say 10%) of deposits as cash reserves and lend out the rest.',
+    '<strong>Money multiplier:</strong> ₹100 deposited can create ₹900+ in new deposits through repeated lending cycles across the banking system.',
+    '<strong>Types of banks:</strong> Commercial banks (HDFC, SBI), Investment banks, Co-operative banks, and the Central Bank (RBI).'
+  ],
+  analogy:'A bank is like a matchmaker in a neighborhood. Your aunt has ₹10,000 she does not need this year. Your neighbor needs ₹10,000 to start a business. The bank connects them — paying your aunt 4% interest, charging your neighbor 12%, and keeping the 8% difference as its service fee.',
+  qa:[
+    {q:'If I deposit ₹1,000 in a bank, is that money physically sitting in a vault?', a:'No. Banks keep only a fraction (the Cash Reserve Ratio — currently 4% in India) with RBI and lend out the rest. Your ₹1,000 deposit might fund someone\'s home loan. Your money is "safe" because of regulatory requirements and deposit insurance (DICGC insures up to ₹5 lakh per depositor).'},
+    {q:'What is the repo rate and why does it matter to you?', a:'The repo rate is the rate at which RBI lends money to commercial banks. When RBI raises the repo rate, banks pay more to borrow from RBI, so they charge you more for home loans and car loans. When RBI cuts the repo rate, your EMIs can decrease. It is RBI\'s main lever for controlling inflation.'},
+    {q:'What happened during the 2008 global financial crisis?', a:'US banks gave too many risky home loans (subprime mortgages) to people who could not afford them. These loans were bundled into complex securities and sold globally. When borrowers defaulted en masse, the entire system collapsed. Lehman Brothers (a 158-year-old investment bank) went bankrupt. Governments spent trillions bailing out banks worldwide.'}
+  ]
+},
+{ unit:'Unit 1 · Money & Banking', icon:'🏛️', title:'The Central Bank — RBI & Fed',
+  lead:'Every country has a "bank of banks" — the Central Bank. In India it is the Reserve Bank of India (RBI, est. 1935). In the USA it is the Federal Reserve (the Fed). This institution controls the entire money supply, sets interest rates, and is the most powerful financial body in any country.',
+  points:[
+    '<strong>Currency issuance:</strong> Only the RBI can print Indian rupees. All currency notes carry the RBI Governor\'s signature.',
+    '<strong>Monetary policy:</strong> RBI sets the repo rate to control inflation (target: 4% ± 2%) and support economic growth.',
+    '<strong>Banker to banks:</strong> RBI gives emergency loans to commercial banks, sets reserve requirements (CRR, SLR).',
+    '<strong>Banker to government:</strong> Manages government accounts, lends to government via G-Secs, manages India\'s forex reserves.',
+    '<strong>Forex reserves:</strong> RBI holds $640+ billion in USD, gold, and other currencies as a national safety buffer against crises.'
+  ],
+  analogy:'The RBI is like the referee in a cricket match (the economy). It does not play the game, but it sets the rules, penalizes misconduct, and ensures the match stays fair. If batsmen (banks) start playing recklessly (lending too freely), the referee steps in with stricter rules to restore order.',
+  qa:[
+    {q:'What is Quantitative Easing (QE)?', a:'QE is when a central bank creates new digital money and uses it to buy government bonds from banks. This floods the banking system with cash, pushing interest rates down and encouraging lending. The US Fed did massive QE after the 2008 crisis and again in 2020 during COVID, expanding its balance sheet from $900 billion to $9 trillion.'},
+    {q:'What is the CRR (Cash Reserve Ratio)?', a:'CRR is the percentage of total bank deposits that must be kept as cash with the RBI — banks cannot lend this out. If CRR is 4% and a bank has ₹100 crore in deposits, ₹4 crore must sit with RBI. RBI uses CRR as a tool: raise CRR to reduce money supply (fight inflation), cut CRR to increase money supply (boost growth).'},
+    {q:'Can a central bank ever go bankrupt?', a:'A central bank that issues its own currency can technically never run out — it can always print more money. But printing too much causes hyperinflation (the currency loses value rapidly), as seen in Zimbabwe (2008) and Venezuela (2018). The risk is not bankruptcy but destroying the currency\'s purchasing power through excessive money creation.'}
+  ]
+},
+{ unit:'Unit 1 · Money & Banking', icon:'📉', title:'Inflation & Deflation',
+  lead:'A samosa that cost ₹2 in 2000 costs ₹15 today. That is inflation — the general, sustained rise in price levels over time. It silently erodes the purchasing power of your money every single year. Understanding inflation is critical to protecting your savings and making investment decisions.',
+  points:[
+    '<strong>CPI (Consumer Price Index):</strong> India\'s main inflation measure — tracks prices of a fixed basket of ~300 goods/services every month.',
+    '<strong>Moderate inflation (2–4%):</strong> Considered healthy — encourages spending and investment rather than hoarding cash.',
+    '<strong>Hyperinflation:</strong> Extreme price rises destroying economic confidence. Zimbabwe printed 100-trillion-dollar notes in 2008.',
+    '<strong>Deflation:</strong> Falling prices — sounds good but is dangerous. People delay purchases expecting lower prices, causing businesses to collapse.',
+    '<strong>Winners vs Losers:</strong> Borrowers benefit (repay with cheaper future money); savers/lenders lose (their money buys less when returned).'
+  ],
+  analogy:'Inflation is like a slow leak in your balloon of savings. Every year, the balloon shrinks a little. If your FD earns 6% but inflation is 6%, your "real return" is 0% — you are not getting richer, just running on a treadmill. To beat inflation, your investments must earn more than the inflation rate.',
+  qa:[
+    {q:'What causes inflation?', a:'Two main causes: (1) Demand-pull — too much money chasing too few goods (e.g., post-COVID stimulus created excess demand). (2) Cost-push — production costs rise and get passed to consumers (e.g., global oil price spike → costlier transport → everything becomes expensive). Government printing excess money causes a third type: monetary inflation.'},
+    {q:'What is the "real interest rate"?', a:'Real interest rate = Nominal rate − Inflation rate. If your FD earns 7% and inflation is 5%, your real return is only 2%. This is what actually matters for wealth creation — not the rate on the FD brochure. Equity historically provides 12–15% nominal returns in India, giving a real return of 6–9% above inflation.'},
+    {q:'Why is a little inflation actually good for the economy?', a:'Mild inflation signals a growing economy. It encourages people to spend and invest today rather than wait (since prices will be higher tomorrow). It also makes debt easier to repay over time (you repay with money that is worth slightly less). Deflation is far more dangerous — Japan\'s "Lost Decade" (1990s) was caused by persistent deflation that paralyzed consumer spending.'}
+  ]
+},
+{ unit:'Unit 1 · Money & Banking', icon:'📊', title:'Interest Rates Explained',
+  lead:'Interest is the "price of money." When you borrow, you pay interest. When you save, you earn interest. Understanding simple vs compound interest — and especially the magic of compounding — is one of the most powerful financial concepts you will ever learn.',
+  points:[
+    '<strong>Simple interest:</strong> I = P × R × T. ₹10,000 at 10% for 3 years = ₹3,000 interest total.',
+    '<strong>Compound interest:</strong> Interest earned on interest. Your gains reinvest and grow exponentially. Einstein called it the "8th wonder of the world."',
+    '<strong>Rule of 72:</strong> Divide 72 by your annual return rate to find how many years to double your money. At 9%: 72 ÷ 9 = 8 years to double.',
+    '<strong>EMI (Equated Monthly Installment):</strong> Fixed monthly payment on a loan covering both principal and interest. Early EMIs are mostly interest; later ones are mostly principal.',
+    '<strong>Interest rate risk:</strong> When market rates rise, existing bonds/FDs become less attractive. When rates fall, they become more valuable.'
+  ],
+  analogy:'Compound interest is like rolling a snowball down a mountain. It starts small and grows slowly, but as it rolls it picks up more snow — growing faster and faster. ₹1 lakh invested at 12% for 30 years becomes ₹29.9 lakh — almost 30x — without adding a single extra rupee. The secret is starting early and staying patient.',
+  qa:[
+    {q:'Show me the real power of compound interest with numbers.', a:'₹1 lakh at 12% annual return: Year 1 = ₹1.12L, Year 5 = ₹1.76L, Year 10 = ₹3.1L, Year 20 = ₹9.6L, Year 30 = ₹29.9L. Starting 10 years earlier than a friend who invests the same amount means your final corpus can be 2–3x larger. Time is the most powerful variable in compounding.'},
+    {q:'Why do banks charge higher interest on credit cards than home loans?', a:'Risk-based pricing. Home loans are secured — if you default, the bank seizes and sells your house (collateral). Credit card debt is unsecured — if you default, the bank gets nothing. Higher default risk demands higher interest to compensate. Home loan: ~8.5%, Personal loan: ~12–18%, Credit card: ~36–42% per annum.'},
+    {q:'What does "basis points" mean?', a:'One basis point (bps) = 0.01%. So 25 bps = 0.25%, 100 bps = 1%. This precise unit prevents confusion: if a rate is "raised by 25 bps," it goes from (say) 6.50% to 6.75%. This terminology is standard in financial news and central bank communications.'}
+  ]
+},
+// ── UNIT 2: FINANCIAL MARKETS ─────────────────────────────────────────────
+{ unit:'Unit 2 · Financial Markets', icon:'🏗️', title:'What is a Financial Market?',
+  lead:'Financial markets are the circulatory system of the economy — they move money from those who have it (savers) to those who need it (businesses, governments). Without them, savings would sit idle and good business ideas would never get funding. Every major economic development depends on efficient financial markets.',
+  points:[
+    '<strong>Primary market:</strong> Where new securities are first issued. Companies raise fresh capital through IPOs; governments issue new bonds. Investors give money to the issuer.',
+    '<strong>Secondary market:</strong> Where existing securities are traded between investors (stock exchanges). The company does NOT receive money here.',
+    '<strong>Money market:</strong> Short-term instruments (T-bills, commercial paper, call money) with maturities under 1 year. Low risk, low return.',
+    '<strong>Capital market:</strong> Long-term instruments (stocks, bonds with 1+ year maturity). Fund major long-term investments and business growth.',
+    '<strong>OTC (Over-the-Counter):</strong> Trades done directly between parties without a formal exchange. Most forex and many bond trades happen OTC.'
+  ],
+  analogy:'A primary market is like a car manufacturer selling a brand-new car to the first buyer. The secondary market is the used-car market where that buyer later sells to someone else. The manufacturer (issuer) only gets money from the first sale — just like a company only gets IPO proceeds, not profits from daily stock trading.',
+  qa:[
+    {q:'If I buy Reliance shares on NSE today, does Reliance get my money?', a:'No! When you buy existing shares in the secondary market (stock exchange), your money goes to the seller (another investor), not to Reliance. Reliance only received money when it first issued shares in its IPO decades ago. Daily stock trading is simply investors exchanging ownership among themselves.'},
+    {q:'What is SEBI\'s role in financial markets?', a:'SEBI (Securities and Exchange Board of India) is the market regulator. It protects investors from fraud, licenses and regulates stock exchanges, brokers, and mutual funds, mandates quarterly disclosures by listed companies, approves IPOs, and prosecutes insider trading. Without SEBI, markets would be chaotic and investor confidence would collapse.'},
+    {q:'What are derivatives markets?', a:'Derivatives are contracts whose value is derived from an underlying asset (stocks, indices, commodities, currencies). They include futures and options. NSE is actually one of the world\'s largest derivatives exchanges by contract volume — Nifty Bank Weekly options are among the most traded contracts globally. They are used for hedging risk or leveraged speculation.'}
+  ]
+},
+{ unit:'Unit 2 · Financial Markets', icon:'📈', title:'Stock Markets — NSE & BSE',
+  lead:'The stock market is where ownership stakes in companies are bought and sold publicly. In India, the two main exchanges are NSE (National Stock Exchange) and BSE (Bombay Stock Exchange). They provide liquidity, price discovery, and a regulated platform for millions of investors to participate in India\'s growth story.',
+  points:[
+    '<strong>NSE (est. 1992):</strong> India\'s largest exchange by trading volume. Home of the Nifty 50 index. Fully electronic from day one.',
+    '<strong>BSE (est. 1875):</strong> Asia\'s oldest exchange. Home of the Sensex (30 stocks). Lists 5,500+ companies — more than any other exchange.',
+    '<strong>Trading hours:</strong> Pre-open: 9:00–9:15 AM. Regular: 9:15 AM–3:30 PM IST, Monday to Friday.',
+    '<strong>T+1 settlement:</strong> Trades settle the next business day — shares and money arrive in your demat/bank account the next day.',
+    '<strong>Market participants:</strong> Retail investors, FIIs (foreign institutions), DIIs (domestic mutual funds, insurance), HNIs, algo traders.'
+  ],
+  analogy:'A stock exchange is a massive, electronic auction running continuously for 6 hours every weekday. Thousands of buyers and sellers simultaneously post their prices. NSE\'s matching engine processes over 6,000 orders per second, instantly pairing the highest willing buyer with the lowest willing seller. Speed, transparency, and trust are the pillars.',
+  qa:[
+    {q:'What is the difference between BSE and NSE for a retail investor?', a:'Practically, there is very little difference. Both list the same major companies (most large-caps are dual-listed). NSE has higher trading volume and liquidity. BSE has more total listed companies including small-caps. Most retail investors\' orders are routed to NSE by default due to its superior liquidity. The Nifty 50 (NSE) is the more widely followed benchmark.'},
+    {q:'What is a "circuit breaker" in the stock market?', a:'Circuit breakers halt trading temporarily when markets fall too sharply. India\'s index-level circuit breakers: 10% fall = 45-minute halt, 15% fall = 2-hour halt, 20% fall = market closed for the day. They prevent panic-driven selling cascades and give investors time to reassess. Individual stocks also have 5%, 10%, or 20% circuit limits depending on their category.'},
+    {q:'What is an "operator-driven" stock and why is it dangerous?', a:'Some small/micro-cap stocks are manipulated by "operators" — individuals or groups who artificially inflate prices through coordinated buying, creating fake volumes and misleading retail investors into buying. Once prices are pumped, operators dump their holdings, and retail investors are left with worthless stocks. SEBI actively prosecutes such manipulation — always verify trading volumes and fundamentals before investing in small-caps.'}
+  ]
+},
+{ unit:'Unit 2 · Financial Markets', icon:'📊', title:'Market Indices — Sensex & Nifty',
+  lead:'You do not need to track 5,000 stocks to know if "the market" went up or down. That is exactly why indices exist. The Sensex and Nifty 50 are carefully constructed baskets of representative stocks that act as the economy\'s thermometer — showing its overall health at a glance.',
+  points:[
+    '<strong>Sensex:</strong> 30 largest, most liquid BSE stocks. Base year 1978–79 = 100. Weighted by free-float market capitalization.',
+    '<strong>Nifty 50:</strong> 50 largest NSE stocks across 13 sectors. Base Nov 1995 = 1,000. India\'s most-traded and most-watched benchmark.',
+    '<strong>Free-float weighting:</strong> Only publicly tradeable shares count. Promoter-held shares (not available for trading) are excluded from the calculation.',
+    '<strong>Index rebalancing:</strong> Index committees review and replace stocks semi-annually to keep indices current and representative.',
+    '<strong>Global indices:</strong> Dow Jones (30 US stocks), S&P 500 (500 US stocks), FTSE 100 (UK), Nikkei 225 (Japan), Hang Seng (Hong Kong).'
+  ],
+  analogy:'An index is like a carefully selected sample survey. Instead of asking every person in India their opinion, you survey 1,000 representative people. The Nifty 50 is a representative sample of India\'s economy — 50 stocks spanning banking, IT, pharma, energy, FMCG, and other sectors, weighted by size.',
+  qa:[
+    {q:'If Nifty is at 24,000, what does that number actually mean?', a:'The number is a ratio relative to the base value. Nifty started at 1,000 in November 1995. At 24,000 today, the index has grown 24x in value. The absolute number is less important than the percentage change. "Nifty gained 1.5%" means the weighted market value of its 50-stock basket rose 1.5% from yesterday\'s close.'},
+    {q:'Why do Reliance and HDFC Bank move the Nifty more than smaller companies?', a:'Because indices are weighted by free-float market capitalization. Reliance with a ₹17 lakh crore market cap has ~9% weight in Nifty. A 1% move in Reliance shifts Nifty by ~0.09%. A company with 0.5% weight needs a 18% move to achieve the same impact. Larger companies dominate index movements.'},
+    {q:'What is the difference between Nifty 50 and Nifty Next 50?', a:'Nifty 50 tracks India\'s 50 largest companies (large-caps). Nifty Next 50 tracks companies ranked 51–100 by market cap — the "next tier" of large-caps. Together they form the Nifty 100. Companies move between indices: when a company grows enough it graduates from Nifty Next 50 into Nifty 50, and vice versa during rebalancing.'}
+  ]
+},
+{ unit:'Unit 2 · Financial Markets', icon:'🎢', title:'How Stock Prices Move',
+  lead:'Why does a stock gain 8% on a day when the company has not changed at all? Stock prices are real-time auctions driven by millions of humans making decisions based on information, expectations, emotions, and sometimes pure fear or greed. Understanding what moves prices helps you avoid costly mistakes.',
+  points:[
+    '<strong>Supply and demand:</strong> More buyers than sellers = price rises. More sellers than buyers = price falls. This dynamic plays out every millisecond.',
+    '<strong>Quarterly earnings:</strong> Results that beat analyst estimates push prices up; misses cause sharp declines — even for excellent companies.',
+    '<strong>News and events:</strong> Mergers, regulatory approvals, management changes, contracts won/lost — all create instant price reactions.',
+    '<strong>Macro factors:</strong> RBI rate decisions, inflation data, GDP numbers, global events (Fed policy, oil prices) affect the entire market.',
+    '<strong>Sentiment and cycles:</strong> Fear-greed cycle drives markets from rational to euphoric (bubble) to panicked (crash) and back.'
+  ],
+  analogy:'Stock prices are like crowd mood at a cricket stadium. When India is winning (bull market), everyone is euphoric — newcomers rush in, prices get bid up beyond fair value. When India starts losing (bear market), panic spreads — fans rush for exits, prices crash below fair value. The rational investor bets against the crowd at extremes.',
+  qa:[
+    {q:'What is the P/E ratio and what does it tell us?', a:'P/E (Price-to-Earnings) = Stock Price ÷ Earnings Per Share. It tells you how much investors pay for each ₹1 of annual profit. A P/E of 25 means investors pay ₹25 for ₹1 of earnings. Higher P/E = higher growth expectations (or overvaluation). Indian market typically trades at 20–25x. A stock with P/E 50 in a slow-growth sector is likely overvalued.'},
+    {q:'Why do stocks sometimes fall on good earnings news?', a:'"Buy the rumor, sell the news." If the market already anticipated strong results, the stock price rises before the announcement. When results confirm expectations, investors who bought in advance sell to take profits. The classic situation: company announces 40% profit growth; stock drops 5%. This happens because the market had already priced in 45% growth.'},
+    {q:'What is the "efficient market hypothesis"?', a:'EMH states that stock prices already reflect all available public information, making it impossible to consistently beat the market through analysis. In strong form EMH, even insider information is reflected. In practice, markets are mostly (but not perfectly) efficient — mispricings exist especially in smaller, less-followed stocks where analytical coverage is thin.'}
+  ]
+},
+{ unit:'Unit 2 · Financial Markets', icon:'🐂', title:'Bull & Bear Markets',
+  lead:'Bull and bear markets are the two great seasons of investing. Bulls charge forward and upward; bears swipe downward. Understanding where you are in the market cycle — and how to behave at each extreme — is the difference between building long-term wealth and making costly emotional mistakes.',
+  points:[
+    '<strong>Bull market:</strong> Sustained rise of 20%+ from recent lows. Driven by economic growth, optimism, low interest rates, rising earnings.',
+    '<strong>Bear market:</strong> Decline of 20%+ from recent highs. Triggered by recession fears, rising rates, credit crises, external shocks.',
+    '<strong>Corrections:</strong> A 10–20% decline within a broader bull market. Normal, healthy, and happens roughly every 1–2 years.',
+    '<strong>Market cycle:</strong> Accumulation → Markup (bull) → Distribution → Markdown (bear) → back to Accumulation.',
+    '<strong>Historical context:</strong> Sensex went from 1,000 (1990) to 75,000+ (2024) despite 8+ major bear markets, wars, and global crises in between.'
+  ],
+  analogy:'Markets are like ocean tides. Bull markets are the rising tide that lifts all boats (stocks). Bear markets are the receding tide. The key insight: the tide ALWAYS comes back in. Every single bear market in history has eventually been followed by new all-time highs. Long-term investors who survive the low tide benefit most from the next high tide.',
+  qa:[
+    {q:'How long do bull and bear markets typically last?', a:'Historically, bull markets are much longer. Average US bull market: ~5 years, gaining ~150%. Average bear market: ~1.4 years, declining ~35%. India\'s longest bull run (2003–2008) gave 600%+ returns. The shortest bear market in history was the COVID crash of 2020 — Nifty fell 38% in 6 weeks, then recovered to new highs within 6 months.'},
+    {q:'What should a new investor do during a bear market?', a:'Stay calm and do not panic-sell. Bear markets are the greatest wealth-building opportunities. Those who continued SIPs during the 2008 crash (Nifty fell 60%) and the 2020 COVID crash saw their investments triple and quadruple in the years that followed. The biggest long-term mistake is selling quality investments at depressed prices and "waiting for the market to stabilize" — by then, the recovery has already happened.'},
+    {q:'What is a "dead cat bounce"?', a:'A temporary recovery in a declining market, followed by renewed decline. The name comes from dark market humor — even a dead cat bounces if dropped from a height. It tricks investors into thinking the bear market is over. For example, after the 2008 Lehman shock, markets bounced 20% before falling another 30%. Identifying dead cat bounces vs genuine reversals requires patience and macro context.'}
+  ]
+},
+// ── UNIT 3: EQUITY INVESTING ──────────────────────────────────────────────
+{ unit:'Unit 3 · Equity Investing', icon:'🏢', title:'What is a Share?',
+  lead:'When you buy one share of a company, you become a part-owner of that company. That is remarkable — ordinary individuals can now co-own global businesses alongside institutional funds. Understanding what a share really represents — ownership, rights, and responsibilities — is the foundation of equity investing.',
+  points:[
+    '<strong>Equity ownership:</strong> Shareholders own a proportional piece of the company\'s assets, earnings, and future growth.',
+    '<strong>Dividends:</strong> Companies share profits with shareholders as cash payments. Not all companies pay dividends — growth companies reinvest profits.',
+    '<strong>Capital appreciation:</strong> The primary return from equity — the share price rising as the business grows and profits increase.',
+    '<strong>Voting rights:</strong> Shareholders vote on major decisions — board elections, mergers, major capital expenditure.',
+    '<strong>Limited liability:</strong> Your maximum loss is limited to your investment. You cannot be held personally liable for the company\'s debts.'
+  ],
+  analogy:'If you and 3 friends each invest ₹25,000 into a ₹1 lakh restaurant, you each own 25%. If the restaurant becomes a chain worth ₹10 lakhs, your share is now worth ₹2.5 lakhs — a 10x return. If it fails, you lose only your ₹25,000 (limited liability — creditors cannot come after your personal savings). That is equity ownership, scaled to millions of investors.',
+  qa:[
+    {q:'What is the difference between equity shares and preference shares?', a:'Equity (ordinary) shareholders have unlimited upside, voting rights, and are last in the payment queue during liquidation. Preference shareholders receive fixed dividends before equity holders and have priority in liquidation, but usually no voting rights. Preference shares are a hybrid between bonds (fixed income) and equity (part of shareholder equity on the balance sheet).'},
+    {q:'What happens to my shares if a company goes bankrupt?', a:'In bankruptcy proceedings, the order of payment is: employees → secured creditors → banks → bondholders → preference shareholders → equity shareholders. Equity shareholders are last in line and typically receive nothing in bankruptcy. This is why quality company selection — avoiding businesses with excessive debt or deteriorating fundamentals — is so important.'},
+    {q:'What is a stock split and why does it happen?', a:'A 2-for-1 stock split doubles your shares while halving the price per share — your total value stays identical. If you own 100 shares at ₹2,000, after a 2:1 split you own 200 shares at ₹1,000. Splits make shares more "affordable" for retail investors (a ₹2,000 share becomes a ₹1,000 share), increase liquidity, and are often interpreted as a positive signal from management.'}
+  ]
+},
+{ unit:'Unit 3 · Equity Investing', icon:'🚀', title:'IPO — Initial Public Offering',
+  lead:'An IPO is a company\'s debut on the public stock market. It is the day a private business opens its ownership to anyone with a demat account. For companies, it raises large capital. For investors, it is an opportunity — and a risk — to get in on an exciting business at the earliest public stage.',
+  points:[
+    '<strong>Pre-IPO process:</strong> Company hires investment banks to advise on valuation, pricing, regulatory compliance, and investor outreach (roadshows).',
+    '<strong>DRHP:</strong> Draft Red Herring Prospectus — a 500–800 page document filed with SEBI disclosing every material detail about the business, risks, and financials.',
+    '<strong>Book Building:</strong> Most IPOs discover their price through a bidding process — investors indicate demand at different price points within a band.',
+    '<strong>Subscription period:</strong> Investors apply for shares over 3 days. Oversubscription ratios of 50x–100x are common for popular IPOs.',
+    '<strong>Listing day:</strong> Shares begin trading — price rises above issue price (listing gain) or falls below (listing loss) based on demand.'
+  ],
+  analogy:'An IPO is like a popular restaurant that was "by invitation only" suddenly opening its doors to all. The founding chef (promoter) and early investors (VCs) had exclusive access before. Now anyone can eat there — but the menu price is set by how excited the crowd is on opening day. High buzz = premium pricing.',
+  qa:[
+    {q:'Why do companies do IPOs instead of just borrowing from banks?', a:'Bank loans must be repaid with interest, creating a constant cash drain. IPO capital is permanent equity — no repayment, no interest obligations. It also creates a market valuation, provides liquidity to early investors and founders who can sell shares, enhances brand visibility and credibility, and provides currency (company shares) for future acquisitions.'},
+    {q:'Why do some IPOs list at premium and others fall below issue price?', a:'Listing performance depends on: (1) Valuation — was it priced reasonably or aggressively? (2) Market sentiment — bull vs bear market. (3) Company quality and growth story. (4) Subscription level and retail interest. IPOs listed in euphoric bull markets sometimes fail when market turns. Zomato listed at 53% premium in 2021, then fell 65% within a year as market corrected.'},
+    {q:'What is the GMP (Grey Market Premium) for an IPO?', a:'GMP is an informal indicator of expected listing premium, based on unofficial trading of IPO shares before listing. A GMP of ₹50 on a ₹100 issue price suggests 50% listing gain expectation. However, GMP is completely unregulated, easily manipulated, and has been wrong many times. Treat it as market chatter, not investment research.'}
+  ]
+},
+{ unit:'Unit 3 · Equity Investing', icon:'📋', title:'Reading Financial Statements',
+  lead:'A company\'s financial statements are its report card. Every quarter, listed companies publish three key documents: the Balance Sheet, Income Statement (P&L), and Cash Flow Statement. Learning to read these unlocks the fundamental skill of understanding any business — the superpower of equity investing.',
+  points:[
+    '<strong>Balance Sheet:</strong> A snapshot of what the company owns (assets) and owes (liabilities) on a specific date. Assets = Liabilities + Shareholder Equity.',
+    '<strong>Income Statement (P&L):</strong> Revenue minus all costs = Net Profit. Shows operating performance over a period (quarter or year).',
+    '<strong>Cash Flow Statement:</strong> Tracks actual cash — Operating CF (day-to-day business), Investing CF (capex, acquisitions), Financing CF (loans, dividends).',
+    '<strong>EBITDA:</strong> Earnings Before Interest, Tax, Depreciation & Amortization — a key proxy for operating cash generation, used for business comparisons.',
+    '<strong>Depreciation:</strong> Non-cash expense — assets lose value on paper each year, reducing accounting profit but NOT actual cash outflow.'
+  ],
+  analogy:'Think of a company as a household. Balance Sheet = net worth statement (home value + savings minus loans). Income Statement = monthly salary vs. expenses. Cash Flow Statement = actual bank account showing real money moving in and out. You can look rich on paper (high profits on P&L) but be broke in reality (no cash in the bank).',
+  qa:[
+    {q:'Why can a profitable company still go bankrupt?', a:'Because profit does not equal cash. A company can show ₹100 crore net profit on its P&L while its actual bank account is empty — if customers have not paid their invoices yet (accounts receivable). This "working capital crisis" has killed many seemingly profitable businesses. Cash flow from operations is often more important than accounting profit.'},
+    {q:'What does "negative net worth" mean for a company?', a:'If total liabilities exceed total assets, the company has negative net worth (technically insolvent). This means creditors are owed more than the company is worth. It is a serious red flag but not always fatal — Reliance Industries had negative net worth in the early 1990s before becoming India\'s most valuable company. Context and future cash generation matter more than a single balance sheet snapshot.'},
+    {q:'What is the difference between revenue and profit?', a:'Revenue (topline) = total money earned from sales before any deductions. Profit (bottomline) = what remains after all costs, interest, and taxes. A company with ₹10,000 crore revenue but 1% profit margin earns only ₹100 crore net profit — very thin margins. Another with ₹2,000 crore revenue but 25% margins earns ₹500 crore. The second company is far more valuable despite lower revenue.'}
+  ]
+},
+{ unit:'Unit 3 · Equity Investing', icon:'🔢', title:'Key Financial Ratios',
+  lead:'Ratios translate raw financial numbers into meaningful, comparable metrics. They let you instantly compare a ₹500 crore company to a ₹50,000 crore one, or a company today to itself 5 years ago. Mastering the key ratios is like getting a financial X-ray of any business in seconds.',
+  points:[
+    '<strong>P/E Ratio:</strong> Price ÷ EPS. How much you pay for ₹1 of earnings. Context matters — a P/E of 30 is cheap for a 40%-growth company but expensive for a 5%-growth one.',
+    '<strong>P/B Ratio:</strong> Price ÷ Book Value per share. Below 1 means the stock trades below its net asset value (potential deep value). Above 5 is common for high-ROE quality businesses.',
+    '<strong>ROE (Return on Equity):</strong> Net Profit ÷ Shareholder Equity × 100. Measures how efficiently equity capital generates profit. Above 15% is healthy; above 20% is excellent.',
+    '<strong>ROCE:</strong> EBIT ÷ Capital Employed × 100. Measures returns on ALL capital (debt + equity). A purer measure of business quality than ROE.',
+    '<strong>Debt/Equity:</strong> Total Debt ÷ Equity. High D/E = more financial leverage and risk. What is "high" varies by industry (capital-intensive sectors tolerate more debt).'
+  ],
+  analogy:'Ratios are like vital signs at a doctor\'s visit. Heart rate, blood pressure, cholesterol — all ratios compared to healthy benchmarks. P/E is the stock\'s "blood pressure" — too high may signal dangerous speculation (or healthy growth). Always look at ratios together, not in isolation, just like a doctor examines multiple vitals.',
+  qa:[
+    {q:'Is a low P/E ratio always a good sign?', a:'Not necessarily. Low P/E can mean: (a) the stock is genuinely cheap — a value opportunity; or (b) the business is deteriorating and the market correctly prices in lower future earnings — a "value trap." PSU banks traded at P/E of 3–5x for years because investors correctly anticipated weak asset quality. Always pair P/E with earnings growth rate (the PEG ratio: P/E ÷ Growth Rate).'},
+    {q:'What is a good ROE and how can it be misleading?', a:'ROE above 15% is healthy, above 20% is excellent, above 25% is exceptional. But ROE can be inflated by debt — a company borrowing heavily to fund operations can show high ROE while the underlying business quality is poor. Always compare ROE with ROCE: if ROE is significantly higher than ROCE, the company is using debt to boost returns, which increases risk.'},
+    {q:'What is EV/EBITDA and why is it used instead of P/E?', a:'EV (Enterprise Value) = Market Cap + Net Debt. EV/EBITDA = EV ÷ EBITDA. Unlike P/E, it is unaffected by capital structure (debt levels) and accounting depreciation policies, making it better for comparing companies with different financing. A company with zero debt and one with ₹1,000 crore debt might have similar P/E but very different EV/EBITDA. Typical range: 8–15x for Indian mid-caps.'}
+  ]
+},
+{ unit:'Unit 3 · Equity Investing', icon:'🔮', title:'Valuation Methods',
+  lead:'How do you determine if a stock is worth ₹500 or ₹5,000? Valuation is the art and science of estimating what a business is truly worth — its "intrinsic value." By comparing intrinsic value to market price, investors identify bargains (undervalued stocks) and overpriced stocks to avoid.',
+  points:[
+    '<strong>DCF (Discounted Cash Flow):</strong> Project all future free cash flows, then discount them to today\'s value using a required rate of return. Theoretically the most rigorous method.',
+    '<strong>Relative valuation:</strong> Compare P/E, EV/EBITDA, P/B against industry peers and historical averages. Fast, practical, widely used.',
+    '<strong>Asset-based valuation:</strong> Net Asset Value (NAV) — useful for banks, holding companies, and real estate firms where assets are the primary value driver.',
+    '<strong>Gordon Growth Model:</strong> For dividend-paying companies: Value = Dividend ÷ (Required Return − Dividend Growth Rate).',
+    '<strong>Margin of safety:</strong> Buy at a significant discount to your intrinsic value estimate to protect against modeling errors. Benjamin Graham\'s core principle.'
+  ],
+  analogy:'Valuing a stock is like pricing a house. You look at comparable nearby sales (relative valuation), calculate the cost to build an identical house from scratch (asset-based), and estimate rental income potential (DCF). Combining three approaches gives you more confidence than relying on any single one.',
+  qa:[
+    {q:'What is DCF valuation in simple terms?', a:'DCF says: a business is worth the present value of all the cash it will ever generate. If a company will produce ₹100 crore of free cash flow each year for 10 years, growing at 8%, with a 12% discount rate, its DCF value is approximately ₹700–800 crore. Any project or stock should be bought only if the market price is below this intrinsic value estimate.'},
+    {q:'What discount rate should you use in a DCF model?', a:'Typically WACC (Weighted Average Cost of Capital) — the blended cost of equity and debt. For a stable Indian large-cap, WACC might be 10–12%. For a risky small-cap, 14–16%. Higher discount rates make future cash flows worth less today, resulting in a lower valuation. This is why small-caps with uncertain futures deserve more aggressive discounting.'},
+    {q:'Why do growth stocks deserve higher P/E ratios?', a:'A company growing earnings at 30% per year deserves a much higher P/E than one growing at 5%. The PEG ratio (P/E ÷ Growth Rate) normalizes for this. A company growing at 25% trading at P/E 25 has PEG = 1.0 — considered fairly valued. A company growing at 5% at P/E 25 has PEG = 5.0 — dangerously overvalued. Growth justifies premium pricing up to a point.'}
+  ]
+},
+// ── UNIT 4: DEBT & FIXED INCOME ──────────────────────────────────────────
+{ unit:'Unit 4 · Debt & Fixed Income', icon:'📜', title:'What is a Bond?',
+  lead:'When governments and large companies need more capital than banks can provide, they "issue bonds" — formal IOUs sold directly to investors. When you buy a government bond, you are literally lending money to India and earning regular interest in return. Bonds are the bedrock of institutional investment worldwide.',
+  points:[
+    '<strong>Bond basics:</strong> Issuer borrows money, promises periodic coupon payments (interest), and repays the face value (principal) at maturity.',
+    '<strong>Government bonds (G-Secs):</strong> Issued by Government of India, safest possible bonds (sovereign guarantee), managed by RBI.',
+    '<strong>Corporate bonds:</strong> Issued by companies. Higher yield than G-Secs to compensate for higher credit risk. Rated by CRISIL, ICRA, CARE.',
+    '<strong>Coupon rate:</strong> Annual interest rate on the bond. A ₹1,000 bond with 7% coupon pays ₹70/year (₹35 every six months).',
+    '<strong>Maturity:</strong> Date when principal is returned. Short-term T-bills (91, 182, 364 days) to long-term bonds (30+ year G-Secs).'
+  ],
+  analogy:'A bond is like a formal, documented loan between you and a large borrower. If NHAI needs ₹50,000 crore for highway construction, it cannot get that from one bank. Instead, it issues 5 crore bonds of ₹1,000 each to millions of investors. Each investor holds an IOU promising regular interest payments and return of ₹1,000 at maturity.',
+  qa:[
+    {q:'How is a bond different from a fixed deposit?', a:'Both are lending instruments. An FD is a contract between you and one bank — not tradeable. A bond is a marketable security — you can sell it to another investor on the exchange before maturity. FDs have deposit insurance (₹5 lakh), bonds do not. Corporate bonds typically offer higher yields than FDs for the same maturity because of this tradability and insurance difference.'},
+    {q:'What is bond yield and how is it calculated?', a:'Current Yield = Annual Coupon ÷ Current Market Price. If you buy a ₹1,000 bond with 7% coupon at ₹900 in the secondary market (because interest rates rose), your yield = ₹70 ÷ ₹900 = 7.78%. YTM (Yield to Maturity) is more comprehensive — it also accounts for the price appreciation from ₹900 back to ₹1,000 (face value) at maturity.'},
+    {q:'What is an inverted yield curve and why does it predict recessions?', a:'Normally, long-term bonds yield more than short-term (you are locked in longer = more uncertainty = higher compensation). An inverted curve is when short-term yields EXCEED long-term yields — suggesting the market expects rates to fall significantly (usually because a recession is coming). This has preceded every US recession in the last 50 years and is the most reliable leading economic indicator.'}
+  ]
+},
+{ unit:'Unit 4 · Debt & Fixed Income', icon:'⚖️', title:'Bond Prices & Interest Rates',
+  lead:'Here is one of the most counterintuitive but important concepts in finance: bond prices and interest rates move in OPPOSITE directions. When rates rise, bond prices fall. When rates fall, bond prices rise. This inverse relationship affects trillions of dollars of portfolios globally with every central bank decision.',
+  points:[
+    '<strong>The inverse relationship:</strong> If you hold a 6% bond and new bonds offer 8%, your bond is worth less — why pay full price for lower income?',
+    '<strong>Duration:</strong> Measures a bond\'s price sensitivity to interest rate changes. Duration 7 = a 1% rate rise causes the bond\'s price to fall approximately 7%.',
+    '<strong>Long vs short bonds:</strong> Long-duration bonds (30-year) are far more sensitive to rate changes than short-duration bonds (1-year T-bills).',
+    '<strong>Mark-to-market:</strong> Bond portfolios are valued at current market prices (not face value), so rising rates immediately show losses on balance sheets.',
+    '<strong>Yield spread:</strong> Difference between a corporate bond yield and comparable G-Sec yield. Wider spread = higher perceived credit risk.'
+  ],
+  analogy:'Imagine your parking spot earns ₹500/month rent. If market rents rise to ₹700/month, your spot suddenly seems less valuable — a buyer could get a new spot for ₹700 rent. The value of your spot must fall until its rental yield matches the market. That is exactly how bond pricing works in response to interest rate changes.',
+  qa:[
+    {q:'If I hold a bond until maturity, do interest rate movements affect me?', a:'Not in terms of final payout — you still receive all coupons and full face value at maturity, regardless of intermediate price swings. But economically, if rates rose, you are earning below-market rates on your locked-up capital (opportunity cost). The price impact only hurts you if you must sell before maturity. This is why "hold to maturity" is the typical strategy for conservative investors.'},
+    {q:'What is a zero-coupon bond?', a:'A zero-coupon bond pays no periodic interest. Instead, it is issued at a deep discount and redeems at face value. Buy a ₹1,000 zero-coupon 10-year bond for ₹567 today (at 6% discount rate). At maturity: you receive ₹1,000 — your implied return is 6% annually. Government Treasury Bills (91, 182, 364-day) are zero-coupon. Zero-coupon bonds have the highest duration and thus the highest interest rate sensitivity.'},
+    {q:'Why did Silicon Valley Bank (SVB) collapse in March 2023?', a:'SVB had invested heavily in long-duration US government bonds during 2020–21 when rates were near zero. When the Fed raised rates aggressively in 2022–23, SVB\'s bond portfolio lost market value dramatically. When depositors withdrew funds (triggered by a liquidity warning), SVB had to sell bonds at massive losses. This classic "bank run + duration mismatch" crisis showed that even "safe" government bonds carry severe interest rate risk.'}
+  ]
+},
+{ unit:'Unit 4 · Debt & Fixed Income', icon:'🎯', title:'Credit Ratings & Risk',
+  lead:'Not all borrowers are equally creditworthy. A AAA-rated company has a near-perfect history of repaying debt. A D-rated entity has already defaulted. Credit rating agencies — the financial world\'s report card issuers — assess the probability that a borrower will honor its obligations, helping investors price risk correctly.',
+  points:[
+    '<strong>Major agencies:</strong> Moody\'s, S&P, Fitch (global); CRISIL, ICRA, CARE (India — all partially owned by global majors).',
+    '<strong>Rating scale:</strong> AAA (highest quality) → AA → A → BBB (lowest investment grade) → BB → B → CCC → CC → C → D (default).',
+    '<strong>Investment grade:</strong> BBB and above. Most institutional investors (pension funds, insurance companies) can only hold investment-grade bonds by regulation.',
+    '<strong>High-yield bonds:</strong> BB and below. Also called "junk bonds." Offer higher yields (spreads of 300–700 bps over G-Secs) to compensate for higher default risk.',
+    '<strong>Credit spread:</strong> Extra yield demanded over a risk-free G-Sec. Spreads widen (bonds fall) during economic stress and tighten (bonds rise) during stability.'
+  ],
+  analogy:'Credit ratings are like your CIBIL credit score. CIBIL 800 (AAA) = excellent borrower, best loan rates. CIBIL 650 (BB) = risky borrower, banks charge more. CIBIL 550 (CCC) = very risky, most banks refuse. Rating agencies do the same analysis for corporations and governments — except their opinions move trillion-dollar markets.',
+  qa:[
+    {q:'Can a AAA-rated company default?', a:'Yes, though it is rare. IL&FS, India\'s largest infrastructure finance company, held high ratings right up to its 2018 default — a shocking scandal exposing conflicts of interest (rating agencies are paid by the companies they rate). Globally, Enron (AAA) and Lehman Brothers (AA-) collapsed within days of high ratings. Ratings are lagging indicators, not leading ones.'},
+    {q:'What is a "fallen angel"?', a:'A fallen angel is a bond that was investment-grade (BBB or above) and gets downgraded to high-yield (BB or below). This creates forced selling — pension funds and insurance companies are mandated to sell below-investment-grade bonds. The sudden selling often pushes prices far below fair value, creating buying opportunities for high-yield specialized investors.'},
+    {q:'What is the "credit default swap" (CDS)?', a:'A CDS is bond insurance. You pay periodic premiums; if the bond issuer defaults, the CDS seller compensates your loss. CDS spreads (the premium cost) widen when default risk rises — they are real-time market indicators of credit stress. In 2008, AIG sold hundreds of billions in CDS on mortgage securities without reserves to cover potential payouts — when mortgage bonds defaulted en masse, AIG nearly brought down the global financial system.'}
+  ]
+},
+// ── UNIT 5: MUTUAL FUNDS & ETFs ──────────────────────────────────────────
+{ unit:'Unit 5 · Mutual Funds & ETFs', icon:'🧺', title:'What is a Mutual Fund?',
+  lead:'Most individuals lack the time, knowledge, or capital to build a professionally managed, diversified portfolio. Mutual funds solve this perfectly — they pool money from thousands of investors and a professional fund manager deploys it in a diversified basket of stocks, bonds, or other assets on everyone\'s behalf.',
+  points:[
+    '<strong>NAV (Net Asset Value):</strong> The per-unit price of a mutual fund, calculated daily after markets close. NAV = Total Assets ÷ Total Units.',
+    '<strong>Diversification:</strong> A single fund can hold 50–80 stocks, providing instant diversification even with ₹500 monthly investment.',
+    '<strong>Professional management:</strong> Experienced fund managers and analyst teams research, select, and monitor the portfolio continuously.',
+    '<strong>Expense ratio:</strong> Annual fee charged as % of AUM. Active large-cap funds: ~1.0–1.5%. Passive index funds: 0.05–0.20%. This compounds significantly over decades.',
+    '<strong>SIP (Systematic Investment Plan):</strong> Automated monthly investment of a fixed amount. Builds discipline and averages out purchase price across market cycles.'
+  ],
+  analogy:'A mutual fund is like organizing a large group thali order at a restaurant. Instead of each person ordering individual dishes (expensive, potentially unbalanced), everyone pools money to order a complete, balanced thali. A professional chef (fund manager) selects the dishes. Each person gets a proportional share of the full meal — diversification at scale.',
+  qa:[
+    {q:'What is the difference between "Growth" and "IDCW" option in a mutual fund?', a:'In the Growth option, all profits are reinvested — your NAV grows through compounding. In the IDCW (Income Distribution cum Capital Withdrawal — formerly called Dividend) option, the fund periodically pays out returns from your NAV. For long-term wealth creation, Growth is almost always superior. IDCW distributions are actually withdrawals from your own investment, not additional income — many investors misunderstand this.'},
+    {q:'Is a mutual fund with the highest 1-year return the best choice?', a:'No. Short-term returns are highly misleading. A fund that returned 60% in a bull market may be taking excessive sector concentration risk that will hurt badly in a correction. Evaluate funds over full market cycles (5–10 years), compare Sharpe ratio (return per unit of risk), check consistency of performance vs benchmark, and look at portfolio diversification quality rather than just recent returns.'},
+    {q:'What is AUM and why does it matter?', a:'AUM (Assets Under Management) is the total market value of all investor money in the fund. A fund with ₹50,000 crore AUM manages an enormous portfolio. Very large AUM can hurt returns in small/mid-cap funds — the fund becomes too big to buy meaningful positions in smaller companies without moving their prices. For small/mid-cap funds, watch for AUM growth that could compromise the strategy.'}
+  ]
+},
+{ unit:'Unit 5 · Mutual Funds & ETFs', icon:'🗂️', title:'Types of Mutual Funds',
+  lead:'There is a mutual fund category for every investor profile and financial goal. Whether you want tax savings, steady income, aggressive growth, or international exposure — the right fund category exists. SEBI has defined precise categorization to help investors make informed choices.',
+  points:[
+    '<strong>Equity funds:</strong> Large-cap (top 100 companies — stable), Mid-cap (101–250 — growth), Small-cap (251+ — high risk/reward), Flexi-cap (manager picks freely), Thematic/sectoral (IT, pharma, infrastructure).',
+    '<strong>Debt funds:</strong> Liquid funds (up to 91-day instruments), Short duration, Corporate bond funds, Gilt funds (only G-Secs). Lower risk/return than equity.',
+    '<strong>Hybrid funds:</strong> Balanced Advantage (dynamic equity-debt mix based on market valuations), Aggressive Hybrid (65–80% equity), Conservative Hybrid (10–25% equity).',
+    '<strong>ELSS (Equity Linked Saving Scheme):</strong> Equity fund with 3-year lock-in qualifying for ₹1.5 lakh tax deduction under Section 80C.',
+    '<strong>Index funds and ETFs:</strong> Passively track an index (Nifty 50, Nifty Next 50, Gold) at ultra-low cost. No active management.'
+  ],
+  analogy:'Mutual fund types are like different vehicles for different journeys. Equity small-cap funds are sports bikes — fast and thrilling but bumpy. Debt liquid funds are comfortable city cars — slow but reliable. Balanced Advantage funds are all-terrain SUVs — handle various market conditions reasonably well. Choose based on your destination (goal) and stomach for a bumpy ride (risk tolerance).',
+  qa:[
+    {q:'What is the difference between Direct and Regular plan?', a:'Regular plans are bought through distributors/advisors who earn a commission (0.5–1.5% annually of your investment). Direct plans are bought directly from the fund house (or platforms like Zerodha Coin, Groww, MF Central) — no intermediary, so lower expense ratio. Over 20 years, the direct plan on a ₹10 lakh investment can result in ₹5–10 lakh more wealth due to lower costs compounding in your favor.'},
+    {q:'What is a Balanced Advantage Fund (BAF)?', a:'A BAF dynamically adjusts its equity and debt allocation based on market valuations. When markets are expensive (high P/E, P/B), it reduces equity exposure (sometimes to 30%) and increases debt. When markets are cheap, it increases equity (up to 80%). This automatic "buy low, reduce high" strategy helps reduce volatility and removes the behavioral mistake of panic-selling in downturns.'},
+    {q:'What are the tax implications of ELSS?', a:'ELSS gains after the 3-year lock-in are taxed as Long-Term Capital Gains (LTCG). Gains up to ₹1.25 lakh per year are tax-free; above that, a flat 12.5% tax applies (post-Budget 2024). The 80C deduction saves up to ₹46,800 in taxes (for the 30% tax slab) on a ₹1.5 lakh investment, making ELSS extremely tax-efficient for equity investors.'}
+  ]
+},
+{ unit:'Unit 5 · Mutual Funds & ETFs', icon:'📦', title:'ETFs & Index Funds',
+  lead:'Index funds and ETFs represent the most important investing innovation of the 20th century — the democratization of professional-grade, diversified investing at near-zero cost. Jack Bogle (Vanguard) proved that most active managers underperform simple index funds over the long term, after fees. The data has consistently vindicated him.',
+  points:[
+    '<strong>Index fund:</strong> Passively replicates an index (Nifty 50) by holding the same stocks in the same weights. No stock-picking, no manager discretion. Expense ratio as low as 0.05%.',
+    '<strong>ETF (Exchange Traded Fund):</strong> Same as an index fund but trades on the exchange like a stock — real-time pricing, need demat account, can be bought/sold intraday.',
+    '<strong>Active vs passive debate:</strong> SPIVA India reports show 80–90% of active large-cap funds underperform the Nifty 50 over 10 years after fees.',
+    '<strong>Compounding cost savings:</strong> 1% lower annual fee on ₹10 lakh over 30 years at 12% growth = ₹17 lakh more in your pocket from this single decision.',
+    '<strong>Popular Indian options:</strong> Nifty 50 Index Fund, Nifty Next 50 ETF, Nifty Midcap 150 Index Fund, Gold ETF, International Fund of Funds (US, Global).'
+  ],
+  analogy:'Buying a Nifty 50 index fund is like owning a tiny piece of India\'s 50 largest businesses. If India grows — and historically it always has — you grow. You need zero stock-picking ability. You pay almost nothing for this diversification. Warren Buffett himself recommends low-cost index funds for most investors in his annual letters.',
+  qa:[
+    {q:'If index funds are so superior, why do active funds still exist?', a:'Active funds can genuinely outperform in: (1) inefficient market segments (small-caps where information is sparse); (2) concentrated expertise (a fund with deep pharma research); (3) specific market periods (skilled managers adding value during corrections). Also, institutional inertia — advisors earn commissions on active funds. For large-cap exposure, index funds are almost universally superior to active in the long run.'},
+    {q:'What is the key difference between an ETF and a mutual fund index fund?', a:'Both track the same index with similar expense ratios. Key differences: ETFs trade at real-time market prices throughout the day (can trade at slight premiums/discounts to NAV); mutual fund units are bought/sold at end-of-day NAV. ETFs need a demat account; index mutual funds do not. For SIP investors, index mutual funds are simpler. For large lump-sum investors, ETFs may offer marginally better liquidity.'},
+    {q:'What is a Gold ETF and when should you buy it?', a:'A Gold ETF holds physical gold and tracks domestic gold prices. One unit ≈ 1 gram of gold. No physical storage, no making charges, full transparency. Gold historically has low/negative correlation with equities — when stocks fall sharply, gold often rises. Most financial planners recommend 5–10% gold allocation in a long-term portfolio for crisis protection and inflation hedging, not as a primary investment.'}
+  ]
+},
+// ── UNIT 6: RISK & PORTFOLIO THEORY ─────────────────────────────────────
+{ unit:'Unit 6 · Risk & Portfolio Theory', icon:'⚡', title:'Risk vs Return — The Trade-off',
+  lead:'There is no free lunch in investing. Higher potential returns always come with higher risk — this fundamental trade-off governs every investment decision in finance. Understanding the different types of risk you are exposed to, and whether you are adequately compensated for each, is the starting point of intelligent investing.',
+  points:[
+    '<strong>Risk-free rate:</strong> Return on government T-bills (considered riskless in domestic currency) — currently ~6.5% in India. Any investment must offer more than this to be worth taking.',
+    '<strong>Risk premium:</strong> Extra return demanded above the risk-free rate for taking equity risk. India\'s historical equity risk premium: ~5–6% above risk-free rate.',
+    '<strong>Systematic risk:</strong> Market-wide risk that affects all stocks (economic recessions, rate hikes, global crises). Cannot be diversified away.',
+    '<strong>Unsystematic risk:</strong> Company-specific risk (management fraud, product failure, regulatory issue). Can be diversified away by owning multiple stocks.',
+    '<strong>Volatility (Standard Deviation):</strong> Statistical measure of how much returns deviate from the average. Higher SD = greater uncertainty = higher risk.'
+  ],
+  analogy:'Risk-return trade-off is like the spice level at a restaurant. A mild dish is predictable — consistent, reliable, but rarely extraordinary. The extremely spicy dish might be sensational or unbearable. You accept "spice risk" for a potentially more intense experience. In investing, you accept volatility risk in exchange for the potential of superior returns.',
+  qa:[
+    {q:'What is the Sharpe Ratio and why does it matter?', a:'Sharpe Ratio = (Portfolio Return − Risk-Free Rate) ÷ Standard Deviation. It measures return earned per unit of risk taken. A fund returning 18% with SD of 20% has Sharpe = (18−6.5)/20 = 0.58. Another fund returning 14% with SD of 8% has Sharpe = (14−6.5)/8 = 0.94 — better return per unit of risk. Sharpe Ratio lets you compare funds that have very different volatility levels on equal footing.'},
+    {q:'Is a bank Fixed Deposit truly risk-free?', a:'FDs are very safe but not completely risk-free: (1) Credit risk — bank failure (DICGC insures only up to ₹5 lakh per depositor); (2) Inflation risk — a 6.5% FD barely beats 5% inflation; (3) Reinvestment risk — when the FD matures, new rates may be lower; (4) Tax risk — FD interest is fully taxable as income (up to 30% for high earners), making post-tax real returns often negative.'},
+    {q:'What is "liquidity risk"?', a:'Liquidity risk is the danger of not being able to sell an asset quickly at a fair price when you need the money. Real estate has high liquidity risk — you cannot sell a flat in 24 hours at fair value. Small-cap stocks with thin trading volumes have moderate liquidity risk — large sell orders move prices against you. T-bills, Nifty large-cap stocks, and liquid mutual funds have minimal liquidity risk.'}
+  ]
+},
+{ unit:'Unit 6 · Risk & Portfolio Theory', icon:'🧩', title:'Diversification — The Only Free Lunch',
+  lead:'If there is one principle every investor must internalize, it is this: diversification reduces portfolio risk without necessarily sacrificing returns. By combining assets that do not move perfectly together, you can get the same expected return with dramatically lower volatility. Nobel laureate Harry Markowitz called this "the only free lunch in investing."',
+  points:[
+    '<strong>Correlation:</strong> The key concept. Assets with correlation below 1.0 (not perfectly synchronized) reduce portfolio risk when combined. Negative correlation is the gold standard.',
+    '<strong>Within equities:</strong> Diversify across sectors (IT + Banking + Pharma + FMCG). A pharma stock often holds steady when IT crashes due to currency or tech market shifts.',
+    '<strong>Across asset classes:</strong> Equities + Bonds + Gold + Real Estate. Different assets respond differently to economic cycles — each has different risk drivers.',
+    '<strong>Geographical diversification:</strong> Indian + US + global equities. Different economies cycle at different times. US tech downturn may coincide with India\'s domestic consumption growth.',
+    '<strong>Diminishing returns to diversification:</strong> Most unsystematic risk is eliminated with 20–30 well-chosen stocks. Beyond that, adding stocks becomes mere index-replication at higher cost.'
+  ],
+  analogy:'Do not put all your eggs in one basket. Carry 10 eggs in 10 separate baskets. Drop one basket — lose one egg. Keep all 10 in one basket — drop it and lose everything. Diversification accepts that some "baskets" will always have problems, but ensures no single failure wipes you out completely.',
+  qa:[
+    {q:'Can you over-diversify a portfolio?', a:'Yes. Warren Buffett calls it "deworsification." Owning 100 stocks means your best ideas are diluted by mediocre ones. Research shows that 20–30 well-chosen stocks eliminate ~90% of unsystematic risk — adding more stocks beyond that provides negligible additional risk reduction while diluting your best investment ideas. Passive index funds work because of their low cost, not because owning 50 stocks is vastly better than owning 20 quality ones.'},
+    {q:'Does diversification protect against market crashes?', a:'Diversification within equities does NOT protect against systematic risk (market-wide crashes). In March 2020, the Nifty fell 38% in 6 weeks — owning 100 stocks instead of 10 did not help. Asset class diversification helps more: gold rose ~25% in 2020 while equities crashed. A portfolio with 60% equities + 30% bonds + 10% gold fell much less than a pure equity portfolio during the COVID crash.'},
+    {q:'What is the correlation between gold and equities?', a:'Historically, gold and equities have low or negative correlation, especially during crises. During the 2008 financial crisis, US equities fell 55% while gold rose 25%. During normal bull markets, gold often lags equities. This makes gold an excellent portfolio hedge — it helps most exactly when you need it most (during equity market crashes). Recommended allocation: 5–10% of portfolio.'}
+  ]
+},
+{ unit:'Unit 6 · Risk & Portfolio Theory', icon:'📐', title:'Modern Portfolio Theory',
+  lead:'In 1952, Harry Markowitz published a mathematical paper that forever changed how we think about investing. His Modern Portfolio Theory proved that portfolio risk is NOT the sum of individual risks — it depends critically on how assets interact. This insight gave birth to the entire science of portfolio construction and asset allocation.',
+  points:[
+    '<strong>Key insight:</strong> By combining assets that are not perfectly correlated, a portfolio\'s total risk can be lower than the weighted average risk of individual holdings.',
+    '<strong>Efficient Frontier:</strong> The set of portfolios offering the highest expected return for each level of risk (or lowest risk for each return level). Graphically, it is a curve.',
+    '<strong>Optimal portfolio:</strong> The single portfolio on the efficient frontier that maximizes return per unit of risk — the tangency portfolio with the highest Sharpe Ratio.',
+    '<strong>Expected return:</strong> Weighted average of individual asset expected returns (straightforward).',
+    '<strong>Portfolio variance:</strong> Determined by individual variances AND covariances between all pairs of assets — the magic of diversification lives here.'
+  ],
+  analogy:'Building a portfolio is like assembling a cricket team. Having 11 superstar batsmen does not make the best team. You need bowlers, fielders, and all-rounders whose skills complement rather than duplicate each other. MPT formalizes this — the best portfolio is not built from the best individual assets but from assets whose risk-return profiles complement each other.',
+  qa:[
+    {q:'What is the "efficient frontier" in practical terms?', a:'The efficient frontier is a curve of optimal risk-return combinations. Every portfolio ON the curve is "efficient" — you cannot get more return for the same risk. Portfolios BELOW the curve are inefficient — you are accepting more risk than necessary for the return you receive. In practice, identifying the efficient frontier requires estimates of future returns and correlations, which are uncertain — MPT is a framework, not a precise calculator.'},
+    {q:'Why does MPT break down during market crises?', a:'MPT assumes correlations are stable over time. During normal markets, equities in different sectors may have correlations of 0.3–0.5 — genuine diversification. But during a major crisis (2008, COVID), correlations spike toward 1.0 — almost all assets fall together as investors sell everything for cash. The diversification benefit disappears exactly when you need it most. This is called "correlation breakdown" and is a key limitation of MPT.'},
+    {q:'What is factor investing and how does it extend MPT?', a:'Factor investing identifies systematic characteristics (factors) that explain why certain groups of stocks consistently earn excess returns: Value (cheap stocks outperform expensive ones over time), Size (small-caps outperform large-caps), Momentum (recent winners continue outperforming), Quality (high-ROE, low-debt companies outperform), and Low Volatility (low-beta stocks risk-adjust better). Combining multiple uncorrelated factors provides equity-within-equity diversification.'}
+  ]
+},
+{ unit:'Unit 6 · Risk & Portfolio Theory', icon:'🎯', title:'CAPM — Capital Asset Pricing Model',
+  lead:'CAPM answers a fundamental question: given the risk an investment carries, what return should an investor rationally expect? Developed by William Sharpe (Nobel Prize 1990), CAPM is the standard model used by every investment bank for cost-of-equity estimates, project evaluation, and asset pricing.',
+  points:[
+    '<strong>CAPM formula:</strong> Expected Return = Risk-Free Rate + Beta × (Market Return − Risk-Free Rate).',
+    '<strong>Beta:</strong> Measures a stock\'s sensitivity to market moves. Beta 1.0 = moves with market. Beta 1.5 = rises 15% when market rises 10% (and falls 15% when market falls 10%).',
+    '<strong>Market Risk Premium (MRP):</strong> Expected market return minus risk-free rate. Historically 5–7% in India, reflecting equity\'s superior long-run return over bonds.',
+    '<strong>Alpha:</strong> Return ABOVE what CAPM predicts given the risk taken. A consistently positive alpha fund manager is genuinely creating value (rare).',
+    '<strong>Systematic vs idiosyncratic risk:</strong> CAPM says only systematic risk (beta) deserves compensation — unsystematic risk can be diversified away for free.'
+  ],
+  analogy:'Beta is like a company\'s amplifier dial. A stock with Beta 2.0 is set to 200% volume — when the market moves, it moves double. A Beta 0.5 stock is at 50% volume — calm and subdued. Defensive sectors (FMCG, pharma, utilities) have beta below 1. Cyclicals (metals, real estate, capital goods) have beta above 1.',
+  qa:[
+    {q:'What does a Beta of 0.7 mean for an investor?', a:'A Beta of 0.7 means the stock historically moves 70% of the market\'s movement. If Nifty falls 10%, this stock typically falls only 7%. If Nifty rises 15%, this stock typically rises 10.5%. Lower-beta stocks provide "downside protection" during bear markets but lag during bull markets. Pharma and FMCG stocks typically have beta below 1; they are "defensive" investments.'},
+    {q:'Why do value investors reject CAPM\'s definition of risk?', a:'Warren Buffett argues CAPM is irrelevant. He defines risk as "the probability of permanent capital loss," not as volatility (price swings). A wonderful business temporarily trading at a low price might have high volatility (high beta) but extremely low risk of permanent loss. A CAPM user would call it "risky"; Buffett would call it a gift. The entire value investing philosophy is built on this rejection of volatility as risk.'},
+    {q:'What is the Security Market Line (SML)?', a:'The SML is the graphical representation of CAPM — a straight line plotting expected return as a function of beta. Any stock plotted ABOVE the SML offers more return than its risk warrants — undervalued, buy signal. Stocks BELOW the SML are overvalued — selling is rational. This framework is used by analysts to compare a stock\'s expected return against the return its risk profile should deliver.'}
+  ]
+},
+{ unit:'Unit 6 · Risk & Portfolio Theory', icon:'📡', title:'Beta & Volatility — Measuring Risk',
+  lead:'Risk in quantitative finance is measured with mathematical precision. Volatility, standard deviation, and beta are the instruments fund managers, risk departments, and sophisticated investors use to quantify and control risk in their portfolios — turning the vague concept of "risky" into a measurable, manageable number.',
+  points:[
+    '<strong>Standard deviation (SD):</strong> Measures how spread out returns are around the average. A stock with SD of 30% has highly variable returns; SD of 8% is much more stable.',
+    '<strong>Annualized volatility:</strong> Expressed as annualized standard deviation of returns. Nifty 50 typically has 15–20% annualized volatility; individual stocks often 30–50%.',
+    '<strong>India VIX:</strong> NSE\'s Volatility Index measures expected Nifty 50 volatility over the next 30 days. VIX above 25 = high fear/uncertainty. VIX below 12 = market complacency.',
+    '<strong>Beta vs Standard Deviation:</strong> Beta measures only systematic (market-relative) risk; SD measures total risk including company-specific volatility. Both are needed for full risk assessment.',
+    '<strong>Maximum Drawdown:</strong> The largest peak-to-trough decline experienced by a portfolio. More intuitive than SD for understanding real-world "worst case" scenarios.'
+  ],
+  analogy:'Standard deviation is like measuring road roughness. A smooth highway (low SD) is predictable — your journey time is consistent. A mountain road (high SD) is unpredictable — you might arrive much earlier or much later than planned. Most investors discover their true risk tolerance not in calm bull markets, but during the first major market crash when they experience actual drawdowns.',
+  qa:[
+    {q:'What is India VIX and how do investors use it as a signal?', a:'India VIX (NSE Volatility Index) reflects the market\'s expectation of Nifty volatility over the next 30 days, derived from options pricing. VIX above 25–30 indicates high fear — historically this coincides with market bottoms and excellent buying opportunities. VIX spiked to 86 in March 2020 (COVID crash), just as Nifty was bottoming. Investors who bought when VIX was at extreme highs have historically been well rewarded.'},
+    {q:'What is maximum drawdown and why is it important?', a:'Maximum drawdown = the largest percentage loss from a portfolio\'s peak to its lowest subsequent point. If your portfolio went from ₹10 lakh to ₹5.5 lakh, the maximum drawdown is −45%. This metric matters because: (1) It shows what you actually experienced in real life; (2) Recovery is asymmetric — a 50% drawdown requires a 100% gain to recover; (3) Large drawdowns often trigger panic selling at the worst time. A good portfolio limits drawdowns even if it means slightly lower long-term returns.'},
+    {q:'Can you reduce portfolio volatility without sacrificing expected returns?', a:'Yes — through diversification and asset allocation. Adding assets with low or negative correlation (bonds, gold, international equities) to an equity portfolio reduces SD without proportionally reducing expected return. This is the core insight of Markowitz\'s efficient frontier — the best portfolios are not concentrated bets but diversified combinations where assets\' risks offset each other. Rebalancing (selling outperformers, buying underperformers) further systematically reduces volatility.'}
+  ]
+},
+// ── UNIT 7: DERIVATIVES ───────────────────────────────────────────────────
+{ unit:'Unit 7 · Derivatives', icon:'🔗', title:'What are Derivatives?',
+  lead:'Derivatives are financial contracts whose value is derived from an underlying asset — a stock, index, commodity, currency, or interest rate. They are simultaneously the most powerful tools for managing financial risk and the most dangerous instruments for undisciplined speculation. Used wisely, they are essential; misused, they are "financial weapons of mass destruction" (Buffett, 2003).',
+  points:[
+    '<strong>Main types:</strong> Futures (obligation to buy/sell), Options (right but not obligation), Forwards (customized futures, OTC), Swaps (exchange cash flows).',
+    '<strong>Underlying assets:</strong> Equity indices (Nifty, Bank Nifty), individual stocks, currencies (USD/INR), commodities (gold, crude oil, agricultural), interest rates.',
+    '<strong>Leverage:</strong> A small margin deposit (10–15% of contract value) controls a much larger notional position — amplifying both gains and losses proportionally.',
+    '<strong>Two uses:</strong> Hedging (reducing an existing risk), Speculation (taking on new risk for profit). Same instrument, opposite intentions.',
+    '<strong>Scale:</strong> India\'s NSE derivatives market is among the world\'s largest by contract volume — Nifty and Bank Nifty options trade in extraordinary volumes daily.'
+  ],
+  analogy:'A derivative is like betting on the outcome of a cricket match. The "underlying" is the match performance. A team sponsor might buy insurance (derivative) against their team losing (hedging). A gambler bets purely for profit (speculation). The same instrument — a futures contract on the outcome — serves opposite purposes for different participants.',
+  qa:[
+    {q:'What is the difference between hedging and speculation with derivatives?', a:'Hedging uses derivatives to OFFSET an existing risk. A jeweler holding ₹10 crore of gold inventory sells gold futures to lock in today\'s price, protecting against a gold price decline. Speculation uses derivatives to CREATE new risk. A trader with no gold holdings buys gold futures expecting prices to rise — purely a directional bet. The jeweler reduces risk; the speculator increases it. Both are necessary for market liquidity.'},
+    {q:'Why does Warren Buffett call derivatives "weapons of mass destruction"?', a:'The danger lies in leverage, opacity, and interconnectedness. In 2008, AIG had sold trillions in credit default swaps without adequate reserves. When the underlying mortgage bonds defaulted, AIG owed more than it could pay. The US government had to bail out AIG with $185 billion to prevent a global financial collapse. Derivatives amplify losses beyond the underlying asset\'s value — systemic risk is the concern.'},
+    {q:'What is "mark-to-market" (MTM) in derivatives trading?', a:'MTM means daily settlement of profits and losses based on closing market prices — you do not wait until the contract expires. If your Nifty futures position loses ₹50,000 in a session, that amount is debited from your account that evening (margin call). If you run out of margin and cannot top up, your broker forcibly closes the position. This prevents accumulation of large unrealized losses — a crucial risk management feature.'}
+  ]
+},
+{ unit:'Unit 7 · Derivatives', icon:'📅', title:'Futures Contracts',
+  lead:'A futures contract is a standardized, exchange-traded agreement to buy or sell a specific asset at a predetermined price on a future date. Unlike informal forward agreements, futures are standardized, centrally cleared, and marked to market daily — making them transparent, liquid, and systematically risk-managed.',
+  points:[
+    '<strong>Standardized contracts:</strong> Nifty 50 futures: lot size 25 units. Bank Nifty: 15 units. Gold (MCX): 100 grams. Crude oil: 100 barrels. You cannot customize terms — this standardization creates liquidity.',
+    '<strong>Expiry:</strong> Indian equity futures expire on the last Thursday of each month. Monthly + weekly expiries available for Nifty and Bank Nifty.',
+    '<strong>Long vs Short:</strong> Buy futures (long) = profit if price rises. Sell futures (short) = profit if price falls. Both directions equally accessible without owning the underlying.',
+    '<strong>Margin system:</strong> SPAN margin (approximately 10–15% of contract value) required as collateral. No full payment upfront — this is the leverage.',
+    '<strong>Cost of carry:</strong> Futures price > Spot price by approximately: Spot × (1 + risk-free rate × days to expiry / 365). This premium decreases toward zero at expiry.'
+  ],
+  analogy:'A mango farmer in April worries about June prices. He agrees with a juice company today: "I will sell you 10 tonnes of mangoes in June at ₹50/kg regardless of market price." In June, if prices crash to ₹30, the farmer is protected (sells at ₹50). If prices rise to ₹70, the juice company is protected (buys at ₹50). Both sides traded price certainty for the ability to plan — this is the fundamental utility of futures.',
+  qa:[
+    {q:'How do you short-sell using futures without owning the stock?', a:'In futures markets, you simply "sell" a futures contract. No stock ownership required. If Nifty is at 24,000 and you expect a correction, sell 1 Nifty futures contract (25 units × ₹24,000 = ₹6 lakh notional exposure, with perhaps ₹75,000 margin). If Nifty falls to 22,000, your profit = (24,000 − 22,000) × 25 = ₹50,000. Futures allow two-directional, leveraged bets on any market view.'},
+    {q:'What is "rollover" in futures and what does it signal?', a:'Since futures expire monthly, traders who want to maintain positions must "rollover" — close the near-month contract and open the next-month one simultaneously. Rollover percentage (how much open interest carries forward) and rollover cost (difference between near and far month prices) are tracked as sentiment indicators. High rollover with rising cost (futures in contango) signals bullish positioning; falling rollover signals position liquidation.'},
+    {q:'What is "open interest" (OI) in futures markets?', a:'Open Interest is the total number of outstanding derivative contracts that have not been settled. Rising OI + rising price = new long positions being built (bullish signal). Rising OI + falling price = new short positions (bearish signal). Falling OI + rising price = short covering (positions being closed, bullish but potentially unsustainable). OI analysis complements price and volume analysis for directional views.'}
+  ]
+},
+{ unit:'Unit 7 · Derivatives', icon:'🎫', title:'Options — Calls & Puts',
+  lead:'Options are perhaps the most elegant financial instruments ever created. Unlike futures (which create obligations), options give you the RIGHT — but never the obligation — to buy or sell. This asymmetry — pay a small premium, cap your maximum loss, keep unlimited upside — makes options uniquely powerful for both protection and profit.',
+  points:[
+    '<strong>Call option:</strong> Right to BUY at a fixed strike price before expiry. Profit when asset price rises above strike + premium paid.',
+    '<strong>Put option:</strong> Right to SELL at a fixed strike price before expiry. Profit when asset price falls below strike − premium paid.',
+    '<strong>Premium:</strong> The price you pay for the option. This is your absolute maximum loss as a buyer — no margin calls, no unlimited downside.',
+    '<strong>Strike price:</strong> The fixed price at which you can buy (call) or sell (put) the underlying asset if you exercise the option.',
+    '<strong>Moneyness:</strong> In-the-money (ITM) = exercise is immediately profitable. At-the-money (ATM) = strike ≈ current price. Out-of-the-money (OTM) = exercise is not immediately profitable.'
+  ],
+  analogy:'A call option is like paying ₹500 to reserve the right to buy a house at ₹50 lakh within 6 months. If the house price rises to ₹60 lakh, you exercise the option — buy at ₹50 lakh and gain ₹9.5 lakh net profit. If prices fall, you simply let the option expire — maximum loss is just ₹500. The option gives you unlimited upside with strictly limited downside.',
+  qa:[
+    {q:'What is the maximum loss for an option buyer?', a:'Exactly the premium paid — nothing more, regardless of how dramatically the market moves against you. If you buy a Nifty call option for ₹200 premium and Nifty crashes 2,000 points, you lose ₹200 × 25 (lot size) = ₹5,000. Compare this to futures: a 2,000-point Nifty fall on 1 futures lot means ₹50,000 loss. This defined, limited downside is the option buyer\'s primary advantage over futures.'},
+    {q:'What is implied volatility (IV) and why does it matter?', a:'Implied Volatility is the market\'s forward-looking expectation of how much the underlying will move, extracted from current option prices. High IV = options are expensive (more uncertainty = higher insurance cost). Before major events (Budget, RBI policy, earnings), IV rises sharply, inflating option premiums. Selling options when IV is high (and collecting the inflated premium) can be profitable if the anticipated volatility does not materialize.'},
+    {q:'What are the Greeks in options?', a:'Greeks quantify how option prices change with various factors: Delta (sensitivity to underlying price — a 0.5 delta option gains ₹0.50 for every ₹1 rise in stock), Theta (time decay — options lose value daily as expiry approaches), Vega (sensitivity to implied volatility changes), Gamma (rate of change of delta — accelerates near expiry), Rho (sensitivity to interest rates). For retail traders, Theta and Delta are most critical to understand.'}
+  ]
+},
+{ unit:'Unit 7 · Derivatives', icon:'🛡️', title:'Options Strategies',
+  lead:'The real power of options is in combining calls and puts to create strategies for every market view imaginable — bullish, bearish, neutral, high volatility, or range-bound. From simple to sophisticated, options strategies let you precisely define your risk and reward profile before entering a trade.',
+  points:[
+    '<strong>Covered Call:</strong> Own a stock, sell a call against it. Generates premium income. Caps upside but earns regular "rent" on your stock holdings.',
+    '<strong>Protective Put:</strong> Own a stock, buy a put on it. Portfolio insurance — limits downside loss to the put strike price regardless of how far the stock falls.',
+    '<strong>Bull Call Spread:</strong> Buy lower strike call, sell higher strike call. Reduces net premium cost but caps maximum profit at the spread width.',
+    '<strong>Straddle:</strong> Buy call AND put at the same strike. Profits when the stock moves significantly in either direction. Ideal strategy before major announcements.',
+    '<strong>Iron Condor:</strong> Sell both a call spread and a put spread simultaneously. Collects premium if the market stays within a defined range. High probability but capped upside.'
+  ],
+  analogy:'A covered call is like renting out your house while living in it. You still own the asset (house/stock) and collect regular rent (premium). But if the tenant exercises their purchase option at the agreed price, you must sell — your upside is capped. You traded maximum profit potential for reliable current income.',
+  qa:[
+    {q:'What is the risk of selling naked (uncovered) options?', a:'Selling a naked call means you sell the right to buy stock you do not own. If the stock surges, your loss is theoretically unlimited — you must buy at market price and sell at the strike price. Selling naked puts on individual stocks means enormous downside if the stock collapses. Always use defined-risk structures (spreads) unless you have specific hedging purposes and deep risk management experience.'},
+    {q:'What is theta decay and why does it destroy option buyers?', a:'Theta is the daily erosion of an option\'s value due to time passing. An ATM Nifty option with 30 days to expiry might have theta of ₹30/day — losing ₹30 in value every single day even if Nifty does not move. This is why buying OTM options hoping for a big move is statistically a losing strategy — time is always working against you. Option sellers collect this premium; option buyers pay it.'},
+    {q:'When is a straddle strategy appropriate?', a:'A straddle (buy ATM call + buy ATM put) profits when the underlying makes a large move in either direction. It is appropriate before known binary events: RBI rate decisions, quarterly earnings, Supreme Court verdicts, Budget announcements, FDA drug approvals. The risk is that the event produces a smaller move than the premium paid — if Nifty moves less than the total premium, the straddle loses money. IV is typically elevated before events, making straddles expensive.'}
+  ]
+},
+// ── UNIT 8: GLOBAL FINANCE ────────────────────────────────────────────────
+{ unit:'Unit 8 · Global Finance', icon:'🌍', title:'Foreign Exchange — How Currencies Work',
+  lead:'Every day, over $7 trillion worth of currencies are traded globally — making forex the largest financial market in the world, dwarfing stocks and bonds combined. From buying an iPhone assembled in China to sending remittances abroad, currency exchange rates touch every aspect of international economic life.',
+  points:[
+    '<strong>Exchange rate:</strong> The price of one currency in terms of another. USD/INR = 84 means 1 US Dollar costs 84 Indian Rupees.',
+    '<strong>Spot vs Forward rate:</strong> Spot = today\'s rate for immediate settlement. Forward = rate locked in today for a future date (hedging tool).',
+    '<strong>What drives rates:</strong> Interest rate differentials (higher rates attract capital → currency appreciates), inflation differences, trade balance, capital flows, geopolitical stability.',
+    '<strong>Appreciation vs Depreciation:</strong> Rupee "depreciates" when USD/INR goes from ₹75 to ₹85 (rupee buys fewer dollars). Good for IT exporters; bad for oil importers.',
+    '<strong>India\'s managed float:</strong> RBI intervenes to smooth excessive volatility but broadly allows market forces to determine the long-term direction of USD/INR.'
+  ],
+  analogy:'Exchange rates are like the international price tag on your currency. With ₹1 lakh at ₹84/$, you get $1,190 in the US. If the rupee weakens to ₹90/$, the same ₹1 lakh buys only $1,111 — your purchasing power abroad decreased by 7% even though you have the same rupees. Domestic inflation plus currency depreciation together erode your real global purchasing power.',
+  qa:[
+    {q:'Why does a weak rupee help IT companies like Infosys?', a:'IT companies like TCS, Infosys, and Wipro bill clients in USD (dollar revenue) but pay most costs in rupees (salaries, offices, utilities in India). When USD/INR moves from ₹75 to ₹85, each dollar of client billing converts to ₹10 more than before — a 13.3% boost to revenue in rupee terms with zero additional business effort. This is why IT stocks often rise when the rupee weakens.'},
+    {q:'What is Purchasing Power Parity (PPP)?', a:'PPP theory states that exchange rates should adjust so identical goods cost the same across countries. If a Big Mac costs $5 in the US and ₹250 in India (₹300 at ₹60/$), India\'s burger is "cheaper" on a PPP basis, suggesting the rupee is undervalued vs the dollar. The Economist\'s Big Mac Index tracks this. PPP is useful for long-run exchange rate analysis but markets often deviate from PPP for years.'},
+    {q:'What is currency hedging and who needs it?', a:'An Indian IT company expecting $10 million in revenues over the next 6 months can sell $10 million in forward contracts at today\'s rate (say ₹84/$) — locking in ₹84 crore revenue regardless of where the rupee moves. This "hedges" (eliminates) the currency risk. Conversely, a company importing oil that will pay in dollars might buy dollar forwards to protect against rupee depreciation. Hedging removes uncertainty; it does not guarantee profit.'}
+  ]
+},
+{ unit:'Unit 8 · Global Finance', icon:'🌐', title:'Balance of Payments',
+  lead:'The Balance of Payments (BoP) is the complete record of all economic transactions between a country and the rest of the world over a period. Think of it as India\'s national bank statement — every dollar flowing in and out is recorded. Understanding BoP helps explain why currencies move and why countries sometimes face sudden financial crises.',
+  points:[
+    '<strong>Current Account:</strong> Tracks goods trade (merchandise), services trade (IT exports), income (dividends, interest), and transfers (NRI remittances). India typically runs a deficit here.',
+    '<strong>Capital/Financial Account:</strong> Cross-border investment flows — FDI (long-term direct investment), FPI (foreign investors buying Indian stocks/bonds), external borrowing.',
+    '<strong>India\'s CAD:</strong> India imports more than it exports (especially crude oil, gold, electronics). CAD is typically −1 to −3% of GDP and must be financed by capital inflows.',
+    '<strong>Forex reserves:</strong> RBI\'s buffer stock of foreign currencies ($640+ billion) — used to smooth currency volatility and defend against sudden BoP stress.',
+    '<strong>Twin deficit risk:</strong> When fiscal deficit (government borrowing) + current account deficit both are large, currency and bond markets come under pressure simultaneously.'
+  ],
+  analogy:'BoP is like a household monthly statement. Current account = salary (₹1 lakh/month) vs spending (₹1.2 lakh/month) — spending more than earning (deficit). Financial account = parents send ₹25,000 (capital inflow) covering the gap. Forex reserves = savings account. If capital inflows stop and reserves run out, you have a crisis — exactly what happened to Sri Lanka in 2022.',
+  qa:[
+    {q:'Why does India always run a current account deficit?', a:'India\'s CAD is structural: we import ~85% of our crude oil needs (largest import), substantial gold (cultural demand), electronic goods, and capital equipment. Our exports are dominated by IT/software services, pharmaceuticals, gems and jewellery, and textiles. Oil price spikes widen the CAD dramatically. CAD typically worsens when global oil prices rise (as in 2022) and improves when they fall.'},
+    {q:'What is the difference between FDI and FPI?', a:'FDI (Foreign Direct Investment) is long-term strategic investment — a foreign company building a factory, acquiring majority stakes, or setting up operations in India. FPI (Foreign Portfolio Investment) is shorter-term financial investment — foreign funds buying Indian stocks and bonds. FDI is "sticky" and creates jobs. FPI is "hot money" — it flows in rapidly during risk-on periods and flows out just as rapidly during global risk-off events, creating currency volatility.'},
+    {q:'What is a BoP crisis and how do they happen?', a:'A BoP crisis occurs when a country cannot finance its current account deficit — forex reserves are depleted and no new capital is flowing in. The currency collapses. India faced this in 1991 (reserves fell to just 2 weeks of import cover; India pledged 67 tonnes of gold as collateral). The 1991 crisis forced India\'s economic liberalization. Sri Lanka\'s 2022 collapse was a textbook BoP crisis from unsustainable fiscal policies and forex reserve depletion.'}
+  ]
+},
+{ unit:'Unit 8 · Global Finance', icon:'📊', title:'GDP & Economic Growth',
+  lead:'GDP — Gross Domestic Product — is the single most important number in economics. It measures the total market value of all finished goods and services produced within a country\'s borders in a year. Understanding what GDP is, what drives it, and its limitations is fundamental to understanding why stock markets and interest rates move the way they do.',
+  points:[
+    '<strong>GDP formula:</strong> GDP = Consumption (C) + Investment (I) + Government Spending (G) + Net Exports (X − M).',
+    '<strong>Nominal vs Real GDP:</strong> Nominal GDP includes inflation effects. Real GDP strips out inflation (using the GDP deflator) to show true economic growth.',
+    '<strong>GDP growth targets:</strong> India aims for 7%+ real growth (among the fastest globally). China: ~5%. US: 2–3%. Developed economies grow slower from a higher base.',
+    '<strong>GDP per capita:</strong> GDP ÷ Population. India\'s is ~$2,500 vs US $80,000 — this gap represents the development opportunity and the long investment runway ahead.',
+    '<strong>Leading indicators:</strong> PMI (Purchasing Managers Index), GST collections, power consumption, auto sales — these move before GDP data and signal future growth direction.'
+  ],
+  analogy:'GDP is like the annual revenue of a country-as-a-company. If India\'s GDP grows from $3.0 trillion to $3.21 trillion (7% growth), the "country-company" produced 7% more value. This economic growth eventually flows into corporate earnings growth, which drives equity market returns. Countries with high sustainable GDP growth tend to have strong long-term stock market returns.',
+  qa:[
+    {q:'What is the difference between GDP and GNP?', a:'GDP counts all economic activity within India\'s borders, regardless of who owns the business. GNP counts all economic activity by Indian residents/companies, regardless of where it happens. A US company\'s Indian factory adds to India\'s GDP. Infosys\'s US operations add to India\'s GNP. For most analysis, GDP is the standard measure — GNP matters more for understanding remittance flows and multinational impacts.'},
+    {q:'Why does high GDP growth not automatically eliminate poverty?', a:'GDP growth does not guarantee equal distribution. India\'s growth has been concentrated in capital-intensive services (IT, finance) employing a small fraction of workers, while agriculture (45% of workforce) grows at 2–4%. Regional disparities, inadequate healthcare and education, and skill mismatches mean aggregate growth benefits accrue disproportionately to urban, educated populations. Inclusive growth requires deliberate policy interventions beyond GDP targets.'},
+    {q:'What is the PMI and how is it used?', a:'The Purchasing Managers Index surveys business managers on production levels, new orders, employment, delivery times, and inventories. A PMI above 50 = expansion (economy growing). Below 50 = contraction. PMI is released monthly — before GDP data — making it a valuable leading indicator. India\'s Manufacturing PMI has been consistently above 55 in 2023–24, signaling robust industrial expansion.'}
+  ]
+},
+{ unit:'Unit 8 · Global Finance', icon:'🏛️', title:'Fiscal Policy & Government Finance',
+  lead:'Governments have a powerful economic lever: fiscal policy — decisions about public spending and taxation. By adjusting these, governments can stimulate a slowing economy, cool an overheating one, and direct resources toward strategic priorities. Every Union Budget directly impacts corporate profitability, consumer spending, and investment climate.',
+  points:[
+    '<strong>Fiscal deficit:</strong> Government spending − Tax revenues. India\'s target: 3–4% of GDP (FRBM Act mandate). COVID pushed it to 9.5% of GDP in FY21.',
+    '<strong>Expansionary policy:</strong> Increase spending or cut taxes → boosts demand → more jobs → higher growth. Used during recessions (Keynesian stimulus).',
+    '<strong>Contractionary policy:</strong> Cut spending or raise taxes → reduces demand → controls inflation. Used when economy is overheating.',
+    '<strong>Multiplier effect:</strong> ₹1 of government infrastructure spending can generate ₹1.5–3 of economic activity as it circulates through the economy (wages spent at shops, shops ordering from factories, etc.).',
+    '<strong>Revenue vs Capital expenditure:</strong> Revenue spending (salaries, subsidies) has lower multiplier. Capital spending (roads, railways, defense manufacturing) has higher multiplier and creates lasting productive assets.'
+  ],
+  analogy:'Fiscal policy is like managing a household budget across seasons. In winter (recession), you spend more on heating and essential goods even if it means borrowing from your parents (fiscal deficit). In summer (boom/inflation), you cut back and save. The government does this at national scale — counter-cyclical spending to smooth out economic ups and downs.',
+  qa:[
+    {q:'Why does the Union Budget move stock markets so dramatically?', a:'The Budget sets tax rates (corporate tax changes directly impact earnings), sector allocation (massive railway/defense/infra budgets boost specific sectors), divestment plans (PSU rerating), changes to capital gains tax (direct investor impact), and signals the government\'s economic priorities. A single Budget line can re-rate an entire sector — the FY24 budget\'s ₹10 lakh crore capex plan triggered a multi-year rally in infrastructure, PSU, and defense stocks.'},
+    {q:'What is the difference between fiscal deficit and public debt?', a:'Fiscal deficit is the ANNUAL shortfall — how much more the government spends than it earns in taxes this year. Public debt is the ACCUMULATED total of all historical deficits — the total the government owes to bondholders. India\'s debt-to-GDP is ~84%. Deficits add to debt each year. High debt is sustainable if GDP grows faster than interest rates on debt — a favorable "r < g" scenario.'},
+    {q:'What is "crowding out" effect?', a:'When the government borrows heavily (issuing lots of G-Secs), it competes with private sector for available loanable funds. This can push interest rates up — making corporate borrowing more expensive and crowding out private investment. In a capital-constrained economy like India, large fiscal deficits can reduce private investment and slow long-run growth, offsetting the short-run stimulus benefit.'}
+  ]
+},
+// ── UNIT 9: ADVANCED TOPICS ───────────────────────────────────────────────
+{ unit:'Unit 9 · Advanced Topics', icon:'⚖️', title:'Financial Regulation — SEBI & RBI',
+  lead:'Financial markets without regulation would collapse into fraud and chaos. India has built a robust multi-regulator framework: SEBI for capital markets, RBI for banking and monetary policy, IRDAI for insurance, and PFRDA for pensions. Understanding who regulates what helps you know your rights and the protections available to you as an investor.',
+  points:[
+    '<strong>SEBI (est. 1992):</strong> Regulates stock exchanges, brokers, mutual funds, portfolio managers, listed companies, credit rating agencies, and foreign portfolio investors.',
+    '<strong>SEBI\'s investor protections:</strong> Mandatory corporate disclosures, IPO scrutiny, insider trading prosecution, broker segregation of client funds, investor grievance portal (SCORES).',
+    '<strong>RBI (est. 1935):</strong> Issues currency, sets monetary policy (repo rate), regulates banks, NBFCs, payment systems, and manages India\'s forex reserves.',
+    '<strong>IRDAI:</strong> Insurance Regulatory and Development Authority — licenses insurers, sets solvency norms, and mandates policyholder protections.',
+    '<strong>PFRDA:</strong> Pension Fund Regulatory and Development Authority — regulates the National Pension System (NPS) with low-cost investment options for retirement.'
+  ],
+  analogy:'SEBI is the traffic police of capital markets. Without traffic police, roads would be accidents and chaos. SEBI sets the rules (mandatory disclosures, circuit breakers), enforces them (fines and bans for manipulation), and ensures all participants — large institutions and small retail investors — operate on a level playing field.',
+  qa:[
+    {q:'What is insider trading and why is it illegal?', a:'Insider trading is using material, non-public information to trade securities. A company\'s CFO knows (before public announcement) that next quarter\'s profit will be terrible — if they secretly sell shares, that is insider trading. It is illegal because it gives an unfair advantage, destroys market integrity, and deters retail participation. SEBI can ban individuals from markets, impose financial penalties up to three times the profit made, and refer cases for criminal prosecution.'},
+    {q:'What are SEBI\'s key recent investor protection measures?', a:'T+1 settlement (shares and funds arrive next business day — faster than global standards), stricter F&O position limits for retail investors, mandatory nomination for demat accounts, direct payout of proceeds to investor bank accounts (bypassing broker — reducing fraud risk), enhanced disclosures for related-party transactions, and SCORES 2.0 grievance portal for faster complaint resolution.'},
+    {q:'What is the Basel III framework?', a:'Basel III is the global banking regulation framework setting minimum capital adequacy requirements. Indian banks must maintain minimum 11.5% Capital Adequacy Ratio (CAR). Systemically Important Banks (SBI, HDFC Bank, ICICI Bank) face higher requirements. These rules prevent banks from being excessively leveraged and interconnected — lessons learned from the 2008 global banking crisis when under-capitalized banks collapsed globally.'}
+  ]
+},
+{ unit:'Unit 9 · Advanced Topics', icon:'🧠', title:'Behavioral Finance',
+  lead:'Classical finance theory assumes investors are perfectly rational. Behavioral finance — pioneered by Nobel laureates Daniel Kahneman and Richard Thaler — proves otherwise. Humans are systematic biased decision-makers, not rational calculators. Understanding these biases is not just academic — it can save you from the most costly investing mistakes.',
+  points:[
+    '<strong>Overconfidence:</strong> Investors overestimate their ability to pick stocks and time markets. Studies show frequent traders underperform passive investors by 3–4% annually after costs.',
+    '<strong>Loss aversion:</strong> Losses feel psychologically 2x more painful than equivalent gains feel good (Kahneman & Tversky). Causes holding losers too long and selling winners too early.',
+    '<strong>Confirmation bias:</strong> Seeking information that confirms existing beliefs; dismissing contradicting evidence. Creates blind spots in investment thesis assessment.',
+    '<strong>Herd mentality:</strong> Following the crowd — buying at market peaks (when everyone is excited) and selling at market bottoms (when everyone is panicking). Exactly backward.',
+    '<strong>Recency bias:</strong> Overweighting recent events. Assuming the current bull market will last forever (or current crash is permanent). Historical perspective is the cure.'
+  ],
+  analogy:'Behavioral biases are like optical illusions in investing. Even after you know the two lines in a Muller-Lyer illusion are equal, your brain still sees one as longer. Similarly, even after learning about loss aversion, your stomach still drops when your portfolio is down 15% and you still feel the urge to sell. Knowledge helps, but cognitive biases are deeply wired.',
+  qa:[
+    {q:'How does loss aversion destroy investor returns?', a:'Investors feel pain of a ₹10,000 loss ~2x more intensely than pleasure from a ₹10,000 gain. This leads to: (1) Holding losing stocks indefinitely to avoid "realizing" the loss (making it "real"), hoping for recovery that may never come; (2) Selling winning stocks too early to "lock in" gains before they disappear. Mathematically: cut your losers quickly, let your winners run. Psychologically: this feels backward to most people.'},
+    {q:'What is the "disposition effect"?', a:'The systematic tendency to sell winning investments too quickly and hold losing investments too long — the exact opposite of rational behavior. Investors mentally frame their reference point as the purchase price. Selling a winner locks in a "win" (psychologically satisfying). Holding a loser avoids "locking in" a loss (psychologically less painful than admitting the mistake). This pattern consistently reduces returns and has been documented across markets worldwide.'},
+    {q:'How can investors overcome behavioral biases?', a:'Proven strategies: (1) Automate via SIP — remove the buy decision from emotional context; (2) Pre-commit to rebalancing rules (rebalance annually regardless of feelings); (3) Keep an investment journal — review past predictions to calibrate overconfidence; (4) Diversify broadly so no single position dominates portfolio and emotions; (5) Work with a fee-only financial advisor for accountability; (6) Impose a 24-hour cooling-off rule before any reactive trade during market panic.'}
+  ]
+},
+{ unit:'Unit 9 · Advanced Topics', icon:'⚙️', title:'WACC & Capital Structure',
+  lead:'When a company needs ₹1,000 crore for expansion, should it borrow (debt) or issue new shares (equity)? This capital structure decision determines the company\'s overall cost of financing — WACC (Weighted Average Cost of Capital). Every major corporate investment decision is evaluated against WACC — it is the minimum acceptable return hurdle rate.',
+  points:[
+    '<strong>WACC formula:</strong> WACC = (E/V × Re) + (D/V × Rd × (1 − Tax Rate). Where E = equity, D = debt, V = total capital, Re = cost of equity, Rd = cost of debt (pre-tax).',
+    '<strong>Cost of equity (Re):</strong> Return shareholders expect — estimated via CAPM: Risk-Free Rate + Beta × Market Risk Premium. Typically 12–16% for Indian companies.',
+    '<strong>Cost of debt (Rd):</strong> Interest rate on borrowings. Tax-deductible (hence the 1−Tax term) — makes debt effectively cheaper than its nominal rate.',
+    '<strong>Tax shield:</strong> Interest payments are deducted before calculating taxable profit. A company paying 10% interest effectively pays only 7% after-tax (at 30% tax rate). This makes debt cheaper than equity.',
+    '<strong>Optimal capital structure:</strong> The debt-equity mix that minimizes WACC and maximizes firm value — balances tax shield benefit of debt against financial distress costs of excessive leverage.'
+  ],
+  analogy:'WACC is like the blended interest rate on a mixed loan portfolio. If you borrow ₹5 lakh at 8% from a bank and ₹5 lakh at 14% expected return from investors, your blended cost = (8% + 14%) ÷ 2 = 11% (simplified). Every investment you make must return more than 11% or you are destroying wealth. WACC is the hurdle every project must clear.',
+  qa:[
+    {q:'Why can companies not simply use all-debt financing to maximize the tax shield?', a:'While debt provides a tax shield, increasing debt raises financial distress costs — the risk that the company cannot service its debt, leading to bankruptcy proceedings, asset fire-sales, and loss of customer/supplier confidence. Beyond an optimal level, both debt and equity become more expensive as risk rises. The Modigliani-Miller Theorem (with taxes and bankruptcy costs) shows the optimal capital structure balances these opposing forces.'},
+    {q:'What is the Modigliani-Miller Theorem?', a:'In a perfect market (no taxes, no transaction costs), M-M proposed that capital structure is irrelevant — a company\'s value is determined purely by its earning power, not how it is financed. In reality (with taxes), debt provides a tax shield that increases firm value — but is offset by bankruptcy costs at high leverage levels. Franco Modigliani and Merton Miller won Nobel Prizes for this framework, which established corporate finance as a rigorous discipline.'},
+    {q:'How does WACC relate to NPV analysis?', a:'NPV (Net Present Value) = sum of future cash flows discounted at WACC. If a new factory generates 15% return and WACC is 12%, NPV is positive — the project creates value. If a project returns 9% against 12% WACC, NPV is negative — it destroys shareholder value even if it generates absolute profits. Companies should only invest in positive-NPV projects — those returning above their WACC. This framework governs all rational capital allocation decisions.'}
+  ]
+},
+{ unit:'Unit 9 · Advanced Topics', icon:'💰', title:'Dividend Policy & Buybacks',
+  lead:'Should a company pay out profits as dividends or reinvest them for growth? Should it return capital via dividends or share buybacks? These dividend policy decisions have significant tax, signaling, and valuation implications — and the right answer depends entirely on the company\'s growth opportunities and its cost of capital.',
+  points:[
+    '<strong>Dividend payout ratio:</strong> Percentage of earnings distributed as dividends. High payout = income stock. Low payout = growth company reinvesting for expansion.',
+    '<strong>Dividend yield:</strong> Annual Dividend ÷ Share Price × 100. A ₹20 dividend on a ₹400 share = 5% yield.',
+    '<strong>Modigliani-Miller Dividend Irrelevance:</strong> In perfect markets, dividend policy does not affect firm value — investors can create their own dividends by selling shares. In the real world, taxes and signaling make policy matter.',
+    '<strong>Signaling theory:</strong> Dividends signal management confidence in sustainable earnings. Dividend cuts are severely punished by markets (immediate 10–20% price drops typically).',
+    '<strong>Share buybacks:</strong> Company repurchases own shares from open market — reduces shares outstanding, increases EPS for remaining shareholders, tax-efficient alternative to dividends.'
+  ],
+  analogy:'Dividend policy is like deciding whether to pay yourself a salary from your business or reinvest everything. If your business earns a 30% return on reinvested capital (spectacular), reinvest everything — dividends would be wasteful. But if your business earns only 8% on reinvestment while shareholders could earn 14% elsewhere, return the cash as dividends. Capital should flow to its highest use.',
+  qa:[
+    {q:'Why do companies do share buybacks instead of paying dividends?', a:'Buybacks are more flexible (no recurring obligation), signal management\'s belief the stock is undervalued, and can be more tax-efficient than dividends depending on the investor\'s tax bracket. Buybacks reduce outstanding shares, mechanically increasing EPS and returns per remaining share. However, the 2024 Union Budget increased buyback tax from 20% to the recipient\'s applicable dividend tax rate — reducing the buyback tax advantage in India.'},
+    {q:'What is a "dividend yield trap"?', a:'A very high dividend yield (say 10%+) is often a warning sign, not a value opportunity. The yield may be high because the stock price crashed due to business deterioration — and the dividend itself may soon be cut as profitability declines. Always verify dividend sustainability: look at the payout ratio (dividends ÷ earnings — should be under 60–70% for sustainability) and free cash flow coverage before chasing high-yield stocks.'},
+    {q:'What is the ex-dividend date and why does the stock price drop?', a:'Ex-dividend date is the cutoff — buy BEFORE this date to receive the declared dividend. On the ex-dividend date, the stock price theoretically drops by exactly the dividend amount (the value has been "extracted" from the company). Buying before ex-date to "capture" the dividend is not a profitable strategy — the price drop offsets the dividend received. Tax-exempt investors benefit slightly; taxable investors may actually be worse off due to dividend tax.'}
+  ]
+},
+{ unit:'Unit 9 · Advanced Topics', icon:'🦄', title:'Startup Funding & Venture Capital',
+  lead:'Most great companies start with someone\'s savings or a family loan. But to scale globally, they need specialized financing. Venture capital, private equity, and ultimately public markets form the funding escalator that takes an idea from a garage to a global corporation. Understanding this journey reveals where tomorrow\'s wealth is being created today.',
+  points:[
+    '<strong>Bootstrapping:</strong> Founders fund growth using own savings and revenue. Full control, no dilution, but limits scale and speed.',
+    '<strong>Angel investors:</strong> Wealthy individuals invest ₹25 lakh – ₹5 crore in early-stage startups for 10–25% equity. Often bring industry connections and mentorship.',
+    '<strong>Venture Capital (VC):</strong> Professional funds investing in high-growth startups across Series A (₹5–50 crore), B (₹50–500 crore), C (₹500 crore+) rounds. Take board seats and active roles.',
+    '<strong>Unicorn:</strong> A private startup valued at $1 billion+. India has 100+ unicorns — Zepto, PhonePe, CRED, Swiggy, Groww among them.',
+    '<strong>IPO exit:</strong> The ultimate liquidity event — VC/PE investors sell shares to the public, converting illiquid startup stakes into tradeable cash.'
+  ],
+  analogy:'Startup funding is like growing a tree. Seed stage: you plant a seed (bootstrapping). Early growth: a gardener waters it (angel investor). Sapling stage: a nursery provides structured care (VC Series A/B). Mature tree: it moves to a public garden where anyone can see and own part of it (IPO). Each stage requires different nurture and different investors willing to take stage-appropriate risk.',
+  qa:[
+    {q:'What is equity dilution and why do founders worry about it?', a:'Each funding round issues new shares to investors, reducing existing shareholders\' percentage ownership. If a founder owns 60% pre-Series A and raises ₹10 crore for 20% equity, the founder now owns 48% (diluted). While the founder has less percentage ownership, the company is worth more — if the business grows, the smaller percentage can be worth far more in absolute value. The danger is dilution without value creation — raising capital poorly.'},
+    {q:'How are unicorn valuations determined?', a:'Unicorn valuations are negotiated between startups and their investors — not market-determined. A "Zepto valued at $5 billion" means that in Zepto\'s last funding round, investors purchased shares implying a total company value of $5 billion. These are private market transactions, not liquid public market prices. When companies list (IPO), the "real" market valuation is tested — some unicorns list at premium, others list at discounts to their last private valuation.'},
+    {q:'Why do many VC-backed startups struggle to become profitable?', a:'VC investing is a "power law" game — VCs expect 80% of investments to fail but rely on 1–2 investments returning 50–100x. This incentivizes founders to "grow at all costs" — prioritizing user growth, GMV, and market share over profitability. During 2020–21 (cheap capital era), this worked. When interest rates rose in 2022–23 and capital became expensive, investors suddenly demanded profitability, causing mass layoffs and "startup winter" across India and globally.'}
+  ]
+},
+{ unit:'Unit 9 · Advanced Topics', icon:'₿', title:'Cryptocurrency & Digital Assets',
+  lead:'Bitcoin was born in 2009 as a radical experiment in decentralized digital money. By 2024, it is a $1+ trillion asset class that central banks, regulators, and institutional investors track seriously. Whether you view crypto as revolutionary financial infrastructure or speculative mania, financial literacy now requires understanding what it is, how it works, and its very real risks.',
+  points:[
+    '<strong>Blockchain:</strong> A decentralized, distributed, cryptographically secured ledger of transactions. No central authority needed — trust is mathematical, not institutional.',
+    '<strong>Bitcoin:</strong> First and largest cryptocurrency. Fixed maximum supply of 21 million coins. Often called "digital gold" — scarce, divisible, portable, globally transferable.',
+    '<strong>Ethereum:</strong> Programmable blockchain enabling "smart contracts" — self-executing code that powers DeFi (decentralized finance), NFTs, and Web3 applications.',
+    '<strong>Crypto risks:</strong> Extreme volatility (Bitcoin has fallen 80%+ four times in its history), regulatory uncertainty, exchange hacks and fraud, no intrinsic cash flow, environmental concerns.',
+    '<strong>India\'s tax regime:</strong> 30% flat tax on all crypto gains. 1% TDS on transactions. No offset of losses from one coin against gains of another — uniquely punitive rules.'
+  ],
+  analogy:'Bitcoin is like digital gold — mathematically scarce (only 21 million ever created), durable (cannot be destroyed), divisible (you can buy 0.00001 BTC), and globally portable (transfer anywhere in minutes). But unlike gold (5,000-year track record as store of value), Bitcoin is 15 years old. Is it revolutionary or a sophisticated speculation? Both views have credible arguments — size your allocation accordingly.',
+  qa:[
+    {q:'Is Bitcoin a currency, commodity, or investment asset?', a:'Bitcoin is all three depending on context — which is why regulation globally is inconsistent. As a currency: volatility makes it impractical for day-to-day transactions (a pizza that costs 1 BTC today could cost 0.1 BTC or 10 BTC tomorrow). As a commodity: India\'s government classifies it as a Virtual Digital Asset (VDA). As an investment: many hold it for long-term appreciation. El Salvador made it legal tender; China banned it. The regulatory divergence is itself a risk factor.'},
+    {q:'What is DeFi (Decentralized Finance)?', a:'DeFi uses blockchain smart contracts to replicate financial services — lending, borrowing, trading, derivatives — without banks or intermediaries. Protocols like Uniswap (trading), Compound and Aave (lending) execute automatically through code. DeFi offers financial services to the unbanked globally and operates 24/7. However: smart contract bugs have been exploited for billions in losses, extreme volatility, no regulatory protection, and complex technical risks make DeFi suitable only for sophisticated, risk-tolerant participants.'},
+    {q:'Why does India tax cryptocurrency so harshly at 30%?', a:'The 30% flat rate (equal to the highest personal income tax bracket) and 1% TDS reflect the government\'s stance: crypto gains are speculative income, not investment returns. The no-loss-offset rule (cannot set Bitcoin loss against Ethereum gain) is particularly harsh compared to equity taxation (10% LTCG above ₹1.25 lakh + indexation benefits). The government wants tax revenue without formally recognizing crypto as legal tender — a clear policy signal to treat crypto as a high-risk speculative instrument.'}
+  ]
+}
+];
+
+// ═══════════════════════════════════════
+// FINANCE MODULE — RENDER FUNCTIONS
+// ═══════════════════════════════════════
+function renderFinanceTOC() {
+  var list = document.getElementById('fin-toc-list');
+  if (!list) return;
+  var html = '';
+  var currentUnit = '';
+  FINANCE_LESSONS.forEach(function(lesson, i) {
+    if (lesson.unit !== currentUnit) {
+      currentUnit = lesson.unit;
+      html += '<div class="fin-toc-unit">' + esc(lesson.unit) + '</div>';
+    }
+    html += '<div class="fin-toc-item' + (i === _activeFinanceIdx ? ' active' : '') + '" onclick="renderFinanceLesson(' + i + ')" id="fin-toc-' + i + '">'
+          + '<span style="margin-right:7px;">' + lesson.icon + '</span>' + esc(lesson.title)
+          + '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function renderFinanceLesson(idx) {
+  if (idx < 0 || idx >= FINANCE_LESSONS.length) return;
+  _activeFinanceIdx = idx;
+  var lesson = FINANCE_LESSONS[idx];
+
+  // Update TOC active highlight
+  var tocItems = document.querySelectorAll('.fin-toc-item');
+  tocItems.forEach(function(el, i) { el.classList.toggle('active', i === idx); });
+
+  // Update progress bar
+  var pct = ((idx + 1) / FINANCE_LESSONS.length * 100).toFixed(1);
+  var pBar = document.getElementById('fin-progress-fill');
+  if (pBar) pBar.style.width = pct + '%';
+
+  // Build key points HTML
+  var pointsHtml = lesson.points.map(function(p) { return '<li>' + p + '</li>'; }).join('');
+
+  // Build Q&A HTML
+  var qaHtml = lesson.qa.map(function(item, qi) {
+    return '<div class="fin-qa-item" id="finqa-' + idx + '-' + qi + '">'
+         + '<div class="fin-qa-q" onclick="toggleFinQa(\'' + idx + '-' + qi + '\')">'
+         + '<span>Q' + (qi+1) + '. ' + esc(item.q) + '</span>'
+         + '<svg class="fin-qa-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>'
+         + '</div>'
+         + '<div class="fin-qa-a">' + esc(item.a) + '</div>'
+         + '</div>';
+  }).join('');
+
+  var prevDisabled = idx === 0 ? ' disabled' : '';
+  var nextDisabled = idx === FINANCE_LESSONS.length - 1 ? ' disabled' : '';
+
+  var html = '<div class="fin-lesson-header">'
+    + '<div class="fin-lesson-num">Lesson ' + (idx+1) + ' of ' + FINANCE_LESSONS.length + ' &nbsp;·&nbsp; ' + esc(lesson.unit) + '</div>'
+    + '<h2 class="fin-lesson-title">' + lesson.icon + ' ' + esc(lesson.title) + '</h2>'
+    + '<div class="fin-lesson-lead">' + lesson.lead + '</div>'
+    + '</div>'
+    + '<div class="fin-section-title">Key Concepts</div>'
+    + '<ul class="fin-key-points">' + pointsHtml + '</ul>'
+    + '<div class="fin-analogy-box">'
+    + '<div class="fin-analogy-title">💡 Real-World Analogy</div>'
+    + '<div class="fin-analogy-text">' + esc(lesson.analogy) + '</div>'
+    + '</div>'
+    + '<div class="fin-qa-section">'
+    + '<div class="fin-section-title">Practice Questions</div>'
+    + qaHtml
+    + '</div>'
+    + '<div class="fin-nav-row">'
+    + '<button class="fin-nav-btn"' + prevDisabled + ' onclick="renderFinanceLesson(' + (idx-1) + ')">&#8592; Previous</button>'
+    + '<span style="font-size:13px;color:var(--text3);">' + (idx+1) + ' / ' + FINANCE_LESSONS.length + '</span>'
+    + '<button class="fin-nav-btn primary"' + nextDisabled + ' onclick="renderFinanceLesson(' + (idx+1) + ')">Next &#8594;</button>'
+    + '</div>';
+
+  var container = document.getElementById('fin-lesson-content');
+  if (container) {
+    container.innerHTML = html;
+    // Scroll to top of main area and lesson container
+    var main = document.getElementById('fin-main');
+    if (main) main.scrollTop = 0;
+    var lv = document.getElementById('lesson-view-container');
+    if (lv) lv.scrollTop = 0;
+  }
+
+  // Scroll TOC active item into view
+  var activeToc = document.getElementById('fin-toc-' + idx);
+  if (activeToc) activeToc.scrollIntoView({ block: 'nearest' });
+}
+
+function toggleFinQa(id) {
+  var item = document.getElementById('finqa-' + id);
+  if (item) item.classList.toggle('open');
+}
 
 // RENDER CBSE CONTENT
 function renderCbseContent() {
