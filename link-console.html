@@ -1919,7 +1919,7 @@ function formatStoryStandard(quillVarName, hiddenFieldId) {
     }
   }
   
-  q.root.innerHTML = html;
+  q.clipboard.dangerouslyPasteHTML(html);
   document.getElementById(hiddenFieldId).value = html;
 }
 
