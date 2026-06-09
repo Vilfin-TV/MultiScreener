@@ -3417,7 +3417,11 @@ async function _loadCustomContent() {
     var data = await resp.json();
     var now  = new Date();
     window._customContent = Array.isArray(data)
-      ? data.filter(function(i) { return i && (!i.expires_at || new Date(i.expires_at) > now); })
+      ? data
+          .filter(function(i) { return i && (!i.expires_at || new Date(i.expires_at) > now); })
+          .sort(function(a, b) {
+            return new Date(b.published_at || 0) - new Date(a.published_at || 0);
+          })
       : [];
   } catch(e) { /* silently ignore — content.json is optional */ }
 }

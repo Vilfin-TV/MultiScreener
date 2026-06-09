@@ -2700,7 +2700,9 @@ function renderContent() {
   var listEl = document.getElementById('content-list');
   var badge  = document.getElementById('cp-count-badge');
   var now    = new Date();
-  var active = contentState.filter(function(i) { return !i.expires_at || new Date(i.expires_at) > now; });
+  var active = contentState
+    .filter(function(i) { return !i.expires_at || new Date(i.expires_at) > now; })
+    .sort(function(a, b) { return new Date(b.published_at || 0) - new Date(a.published_at || 0); });
   badge.textContent = active.length + ' post' + (active.length !== 1 ? 's' : '');
 
   if (!active.length) {
