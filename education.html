@@ -3174,6 +3174,7 @@ function renderMicroLesson(idx) {
 function toggleMicQa(id) {
   var item = document.getElementById('micqa-' + id);
   if (item) item.classList.toggle('open');
+}
 
 const MACRO_LESSONS = [
 { unit:'Unit 1 · Foundations of Macroeconomics', icon:'🌐', title:'What is Macroeconomics?',
@@ -3797,9 +3798,6 @@ function renderMacroLesson(idx) {
 function toggleMacQa(id) {
   var item = document.getElementById('macqa-' + id);
   if (item) item.classList.toggle('open');
-}
-
-
 }
 
 // RENDER CBSE CONTENT
@@ -5091,6 +5089,12 @@ document.addEventListener('DOMContentLoaded', function() {
       var _lvl = parseInt(_jp, 10);
       if (_lvl >= 1 && _lvl <= 5) openJlpt(_lvl);
     }
+  } catch(e){ console.error(e); }
+  try {
+    var _subj = new URLSearchParams(window.location.search).get('subject');
+    if (_subj === 'macroeconomics' && typeof openMacroLesson === 'function') openMacroLesson();
+    else if (_subj === 'microeconomics' && typeof openMicroLesson === 'function') openMicroLesson();
+    else if (_subj === 'finance' && typeof openFinanceLesson === 'function') openFinanceLesson();
   } catch(e){ console.error(e); }
 });
 // ══════════════════════════════════════════
