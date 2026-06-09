@@ -2874,7 +2874,7 @@ async function publishContent() {
           section: section,
           heading: heading,
           story: story,
-          published_at: i.published_at || new Date().toISOString(),
+          published_at: new Date().toISOString(),
           expires_at: expiresAt
         };
         if (photo) {
@@ -2894,12 +2894,14 @@ async function publishContent() {
         // Old R2 photo no longer referenced → remove from bucket
         if (oldPhoto && oldPhoto !== photo) deleteImageFromR2(oldPhoto);
         contentState = newItems;
+        var savedEditId = cpEditId;  // capture before cancelContentEdit() clears it
         cancelContentEdit();
         renderContent();
-        var storySlug = cpEditId || heading.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        var storySlug = savedEditId || heading.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
         var postLink = 'https://vilfintv.com/news.html?story=' + encodeURIComponent(storySlug);
-        setCpFormStatus('ok', '✓ Post updated. Visible until '
+        setCpFormStatus('ok', '✓ Post updated · Featured at top · Visible until '
           + new Date(expiresAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})
+          + '<br><small style="opacity:.7;font-size:11px;">Live on site within ~1 min</small>'
           + '<br><a href="' + postLink + '" target="_blank" style="display:inline-block;margin-top:10px;padding:8px 16px;background:#3b82f6;color:#fff;border-radius:6px;text-decoration:none;font-weight:600;letter-spacing:0.3px;">View Published Story ↗</a>');
       } else {
         setCpFormStatus('err', data.message || 'Server error ' + res.status);
