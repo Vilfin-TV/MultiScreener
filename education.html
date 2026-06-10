@@ -1148,7 +1148,7 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
         </div>
       </div>
     </div>
-\n    <!-- ── PROGRAMMING BASICS ── -->
+    <!-- ── PROGRAMMING BASICS ── -->
     <div id="programming-content-area" style="display:none;">
       <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">💻 Programming Basics</h2>
       <p style="margin:0 0 20px; font-size:14px; color:var(--text2);">31-lesson course · Teaching-style · Simple language</p>
@@ -1369,7 +1369,7 @@ function openInfoLesson(startIdx) {
   document.getElementById('lesson-view-container').scrollTop = 0;
   try { history.replaceState(null, '', '?subject=information-theory'); } catch(e){}
 }
-\nvar _activeProgrammingIdx = 0;
+var _activeProgrammingIdx = 0;
 function openProgrammingLesson(startIdx) {
   document.getElementById('hero-section').style.display = 'none';
   document.getElementById('subjects-section').style.display = 'none';
@@ -4979,6 +4979,1266 @@ var PROGRAMMING_LESSONS = [
     ]
   }
 ];
+
+
+var WEB_LESSONS = [
+  {
+    "unit": "Unit 1 \u00b7 The Internet & Browsers",
+    "icon": "\ud83c\udf0d",
+    "title": "How the Internet Works",
+    "lead": "Before writing code, a web developer must understand the medium. The internet is a global network of physical cables connecting computers. The Web is a service that runs on top of the internet, allowing documents to be linked via hyperlinks.",
+    "points": [
+      "<strong>Packets:</strong> Data sent across the internet is broken into small \"packets\" and routed individually before being reassembled at the destination.",
+      "<strong>IP Addresses & DNS:</strong> Every device has an IP address (like a phone number). The Domain Name System (DNS) translates human-readable URLs (vilfintv.com) into IP addresses (104.21.43.14).",
+      "<strong>ISPs and Routers:</strong> Internet Service Providers route your traffic through massive underwater fiber-optic cables to reach servers halfway across the globe."
+    ],
+    "analogy": "The Internet is the global highway system of asphalt and roads. The World Wide Web is the network of delivery trucks and specific businesses that use those roads to move goods (data) around.",
+    "qa": [
+      {
+        "q": "Is the \"Cloud\" literally in the sky?",
+        "a": "No. The cloud is just someone else's computer. When you save a photo to iCloud or AWS, it is stored on a massive hard drive in a heavily guarded, hyper-cooled warehouse somewhere in the world."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Internet & Browsers",
+    "icon": "\ud83d\udce1",
+    "title": "HTTP and the Client-Server Model",
+    "lead": "The Web operates on a strict conversation protocol: the Client (your browser) asks a question, and the Server (a computer hosting the website) gives an answer. This conversation happens via HTTP (HyperText Transfer Protocol).",
+    "points": [
+      "<strong>Requests & Responses:</strong> The client sends an HTTP Request (GET me this webpage). The server sends back an HTTP Response (Here is the HTML file, Status Code 200 OK).",
+      "<strong>Status Codes:</strong> 200 (Success), 301 (Redirected), 404 (Not Found - client error), 500 (Internal Server Error).",
+      "<strong>Statelessness:</strong> HTTP is stateless. The server forgets who you are the millisecond the response is sent. Cookies were invented to fix this."
+    ],
+    "analogy": "Ordering food at a restaurant: You (Client) read the menu and place an order (HTTP Request). The waiter takes it to the kitchen (Server). The kitchen prepares the meal and sends it back out (HTTP Response). The kitchen immediately forgets about you unless the waiter gives them a ticket with your table number (Cookie).",
+    "qa": [
+      {
+        "q": "What is HTTPS?",
+        "a": "The S stands for Secure. It means the HTTP conversation is encrypted. If a hacker intercepts your Wi-Fi signal, they see gibberish instead of your password."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Internet & Browsers",
+    "icon": "\ud83e\udded",
+    "title": "The Browser Engine",
+    "lead": "A web browser (Chrome, Safari, Firefox) is a massively complex piece of software. Its primary job is to take raw text code (HTML, CSS, JS) downloaded from a server and render it into the beautiful, interactive interfaces you see.",
+    "points": [
+      "<strong>Parsing:</strong> The browser reads HTML and constructs the DOM (Document Object Model) tree.",
+      "<strong>Rendering & Layout:</strong> The CSS Object Model (CSSOM) is built, determining where every pixel of every box should go on the screen.",
+      "<strong>Painting:</strong> The browser finally \"paints\" the pixels onto your monitor, refreshing at 60 frames per second."
+    ],
+    "analogy": "A browser is an automated theatrical director. The server sends it a script (HTML), costume designs (CSS), and stage directions (JS). The browser instantly reads them all, builds the set, dresses the actors, and starts the play in a fraction of a second.",
+    "qa": [
+      {
+        "q": "Why do websites look different in Safari vs Chrome?",
+        "a": "Because they use different \"Render Engines\" (WebKit for Safari, Blink for Chrome). While they follow the same global standards, they interpret edge cases and new CSS features slightly differently."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Internet & Browsers",
+    "icon": "\ud83c\udf6a",
+    "title": "Cookies, Storage, & State",
+    "lead": "Because HTTP is stateless, the web was originally amnesiac. You would log in, click a link, and immediately be logged out. Browsers introduced local storage mechanisms to remember users across multiple requests.",
+    "points": [
+      "<strong>Cookies:</strong> Small text files sent back and forth with every single HTTP request. Crucial for authentication and session tracking.",
+      "<strong>Local Storage:</strong> A larger database inside the browser (up to 5MB) that stays there even if you close the tab. It is NOT sent to the server automatically.",
+      "<strong>Session Storage:</strong> Like Local Storage, but it gets wiped clean the moment you close the browser tab."
+    ],
+    "analogy": "A cookie is a VIP wristband at a club. Every time you try to enter a new room (a new page), the bouncer (server) checks your wristband. Without it, you get thrown back to the login line.",
+    "qa": [
+      {
+        "q": "Why do websites always ask to accept cookies now?",
+        "a": "Due to privacy laws like GDPR in Europe. Because cookies can be used by advertisers (like Facebook or Google) to track you across completely different websites, laws now require explicit user consent."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 HTML & Semantic Web",
+    "icon": "\ud83c\udfd7\ufe0f",
+    "title": "The DOM (Document Object Model)",
+    "lead": "HTML is not just text; it represents a hierarchical tree of objects. The DOM is the browser's internal, living representation of that tree. JavaScript does not interact directly with your HTML file; it interacts with the DOM.",
+    "points": [
+      "<strong>Tree Structure:</strong> The `<html>` element is the root. It contains `<head>` and `<body>`. The body contains `<div>`s, which contain `<p>`s. It is a family tree of parents and children.",
+      "<strong>Nodes:</strong> Everything in the DOM is a Node\u2014elements, text, and even comments.",
+      "<strong>Dynamic Updates:</strong> When JavaScript changes the text of a button, it modifies the DOM Node, which triggers the browser to repaint that specific part of the screen."
+    ],
+    "analogy": "The DOM is a corporate org chart. The CEO is `<html>`. The VPs are `<head>` and `<body>`. The managers are `<div>`s, and the interns are the actual text. If you want to fire an intern, you don't burn down the building; you just navigate down the chart and remove them.",
+    "qa": [
+      {
+        "q": "Is the DOM exactly the same as my HTML source code?",
+        "a": "No! If your HTML has missing closing tags, the browser's parser will guess and fix them when creating the DOM. The DOM is the *corrected, living* version of your raw HTML."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 HTML & Semantic Web",
+    "icon": "\ud83d\udcdd",
+    "title": "Semantic HTML5",
+    "lead": "In the early 2000s, websites were built using generic `<div>` tags for everything. HTML5 introduced \"Semantic\" tags\u2014tags that describe their meaning to both the browser and the developer. This is crucial for accessibility and SEO.",
+    "points": [
+      "<strong>Tags with Meaning:</strong> `<header>`, `<footer>`, `<nav>`, `<article>`, `<section>`. They behave exactly like `<div>`s visually, but carry hidden metadata.",
+      "<strong>Accessibility (a11y):</strong> Screen readers used by blind users rely entirely on semantic tags to navigate the page. A `<button>` is readable; a clickable `<div>` is invisible to them.",
+      "<strong>SEO:</strong> Google's search bots use semantic tags to understand what part of your page is the main article vs. just sidebar navigation."
+    ],
+    "analogy": "Using only `<div>`s is like packing all your belongings into identical, unlabeled cardboard boxes. You can still move houses, but it is a nightmare to unpack. Semantic HTML is printing detailed labels (\"Kitchen Appliances\", \"Winter Clothes\") on every box.",
+    "qa": [
+      {
+        "q": "Does Semantic HTML affect how a page looks?",
+        "a": "By default, almost not at all. A `<section>` looks exactly like a `<div>`. The difference is entirely in the underlying data structure and meaning, not the visual presentation."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 HTML & Semantic Web",
+    "icon": "\ud83d\uddbc\ufe0f",
+    "title": "Forms and User Input",
+    "lead": "The Web shifted from Web 1.0 (read-only documents) to Web 2.0 (interactive applications) because of Forms. They are the primary mechanism for users to send data back to the server.",
+    "points": [
+      "<strong>Input Types:</strong> Text, password, email, radio buttons, checkboxes, date pickers. HTML5 handles basic validation automatically (e.g., rejecting an invalid email).",
+      "<strong>The Form Action:</strong> Traditionally, clicking submit triggers an HTTP POST request, causing a full page reload. Modern apps intercept this with JavaScript to send data in the background.",
+      "<strong>Accessibility:</strong> Every `<input>` must have an associated `<label>`. This allows clicking the text to focus the input, and tells screen readers what the box is for."
+    ],
+    "analogy": "A form is a standardized bureaucratic document. You cannot just write your name anywhere; you must write it in the specific box labeled \"First Name\" so the clerk (the server) knows exactly how to file it in the database.",
+    "qa": [
+      {
+        "q": "Why do developers hate building forms?",
+        "a": "Because forms are pure state management. You have to handle validation, error messages, loading spinners, network failures, and ensuring a user doesn't accidentally submit twice and double-charge their credit card."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 HTML & Semantic Web",
+    "icon": "\ud83d\udd0d",
+    "title": "SEO Fundamentals",
+    "lead": "Search Engine Optimization is the practice of structuring your HTML so that Google and Bing can easily index it and rank it highly in search results. It sits at the intersection of marketing and frontend development.",
+    "points": [
+      "<strong>Meta Tags:</strong> Hidden tags in the `<head>` that provide the title, description, and preview image used when sharing links on social media.",
+      "<strong>Heading Hierarchy:</strong> You should only have one `<h1>` per page. Sub-sections should be `<h2>`, and so on. Do not skip heading levels.",
+      "<strong>Core Web Vitals:</strong> Google explicitly ranks sites based on load speed, visual stability (layout shifts), and time-to-interactive."
+    ],
+    "analogy": "Building a great website with bad SEO is like building a multi-million dollar theme park in the middle of a desert, but forgetting to put up any highway signs or build a road. No one will ever find it.",
+    "qa": [
+      {
+        "q": "Does Google penalize Single Page Applications (React/Vue)?",
+        "a": "Historically, yes, because Google's bots read raw HTML and Javascript apps load empty until JS runs. Today, Google executes JS, but Server-Side Rendering (Next.js) is still vastly superior for SEO performance."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 CSS & Responsive Design",
+    "icon": "\ud83c\udfa8",
+    "title": "The CSS Box Model",
+    "lead": "The most critical concept in all of web design is the Box Model. Every single element on a web page, regardless of its shape, is technically a rectangular box. CSS controls the properties of these boxes.",
+    "points": [
+      "<strong>Content:</strong> The actual text or image inside the box.",
+      "<strong>Padding:</strong> The transparent space inside the box, between the content and the border.",
+      "<strong>Border:</strong> The line surrounding the padding and content.",
+      "<strong>Margin:</strong> The transparent space outside the box, pushing other boxes away."
+    ],
+    "analogy": "Imagine a framed painting. The canvas is the Content. The white matting inside the frame is the Padding. The wooden frame itself is the Border. The empty wall space you leave between this painting and the next one is the Margin.",
+    "qa": [
+      {
+        "q": "What does `box-sizing: border-box` do?",
+        "a": "By default, if you set a width to 100px and add 20px of padding, the box becomes 140px wide. `border-box` forces the padding to push inward, keeping the total width locked at 100px. It is a mandatory reset for modern development."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 CSS & Responsive Design",
+    "icon": "\ud83d\udccf",
+    "title": "Flexbox Layouts",
+    "lead": "For 15 years, developers used terrible hacks (tables, floats) to align elements on a page. Flexbox (Flexible Box Module) was introduced to solve 1D layout problems\u2014aligning items in a single row or a single column.",
+    "points": [
+      "<strong>The Container:</strong> You apply `display: flex` to a parent container, which immediately turns all its direct children into flexible items.",
+      "<strong>Main Axis & Cross Axis:</strong> You can align items along the primary direction (justify-content) and perpendicular to it (align-items).",
+      "<strong>Flexibility:</strong> Items can be instructed to grow to fill empty space, or shrink to avoid overflowing."
+    ],
+    "analogy": "Flexbox is like packing books onto a shelf. You can tell the shelf to distribute the books evenly, push them all to the right, or tell one specific encyclopedia to stretch and take up all the remaining empty space.",
+    "qa": [
+      {
+        "q": "How do I perfectly center a div?",
+        "a": "Before Flexbox, this was a legendary nightmare. Now, it takes three lines on the parent: `display: flex; justify-content: center; align-items: center;`."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 CSS & Responsive Design",
+    "icon": "\ud83d\udcd0",
+    "title": "CSS Grid Layouts",
+    "lead": "While Flexbox handles rows OR columns (1-Dimensional), CSS Grid was created to handle rows AND columns simultaneously (2-Dimensional). It allows developers to build complex, magazine-style layouts natively.",
+    "points": [
+      "<strong>Grid Tracks:</strong> You define exactly how many columns and rows you want, and how wide/tall they should be (e.g., `grid-template-columns: 1fr 2fr 1fr`).",
+      "<strong>Fractions (fr):</strong> A magical unit in Grid that represents a fraction of the available free space, removing the need to calculate percentages manually.",
+      "<strong>Placing Items:</strong> You can tell a specific child item to span across 3 columns and 2 rows, completely decoupling the visual layout from the HTML order."
+    ],
+    "analogy": "If Flexbox is stringing pearls on a necklace, CSS Grid is a chessboard. You define the size of the squares, and you can place your knight (a div) on exactly square D4, or tell the Queen to take up the entire top row.",
+    "qa": [
+      {
+        "q": "Should I use Flexbox or Grid?",
+        "a": "Both! Use Grid for the macro-layout of the entire page (Sidebar, Header, Main Content). Use Flexbox for the micro-layouts inside those components (aligning an icon next to text inside a button)."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 CSS & Responsive Design",
+    "icon": "\ud83d\udcf1",
+    "title": "Responsive Design (Media Queries)",
+    "lead": "In 2010, the iPhone forced the web to adapt. Instead of building a separate \"mobile website,\" Responsive Web Design (RWD) uses CSS to detect the screen size and reshape the exact same HTML to fit phones, tablets, and 4K monitors.",
+    "points": [
+      "<strong>Media Queries:</strong> CSS rules that only apply if a condition is met (e.g., `@media (max-width: 768px)` applies rules only on mobile screens).",
+      "<strong>Mobile-First Workflow:</strong> Best practice is to write CSS for mobile default, then use `min-width` queries to progressively enhance the layout for wider desktop screens.",
+      "<strong>Relative Units:</strong> Avoiding fixed pixels (px) in favor of percentages (%), viewport width (vw), or root ems (rem) ensures fluidity."
+    ],
+    "analogy": "Responsive design is like water pouring into different vessels. The HTML content is the water. The CSS acts as the physics, ensuring the water perfectly takes the shape of a tall skinny glass (mobile) or a wide shallow bowl (desktop).",
+    "qa": [
+      {
+        "q": "What is the viewport meta tag?",
+        "a": "A required HTML tag that tells mobile phones not to \"zoom out\" and show the desktop site tiny. It forces the phone to render the site at its true native width."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 CSS & Responsive Design",
+    "icon": "\ud83d\udc85",
+    "title": "Design Systems & Utility CSS",
+    "lead": "Writing raw CSS for large applications often devolves into a massive, conflicting mess of specificity wars. Modern teams adopt Design Systems\u2014strict rules for colors, spacing, and typography\u2014often implemented via Utility Frameworks like Tailwind CSS.",
+    "points": [
+      "<strong>Design Tokens:</strong> Variables for your brand (e.g., `--color-primary: #0a192f`). You never use hardcoded hex codes in the layout.",
+      "<strong>Utility Classes (Tailwind):</strong> Instead of writing custom CSS, you use predefined atomic classes in the HTML (e.g., `<div class=\"bg-blue-500 text-white p-4\">`).",
+      "<strong>Componentization:</strong> Encapsulating messy utility classes inside reusable components (like a React Button) keeps the codebase clean."
+    ],
+    "analogy": "Vanilla CSS is giving everyone a blank canvas and infinite paints. A Design System is a paint-by-numbers kit. Utility CSS (Tailwind) provides pre-mixed paint cups. It restricts creative chaos to ensure absolute consistency across massive teams.",
+    "qa": [
+      {
+        "q": "Why do some developers hate Tailwind?",
+        "a": "Because it makes HTML look incredibly cluttered with dozens of classes, which feels like a step backwards to the 1990s era of inline-styling. However, its productivity benefits usually outweigh the aesthetic complaints."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 JavaScript Fundamentals",
+    "icon": "\ud83d\udcdc",
+    "title": "The Event Loop",
+    "lead": "JavaScript is single-threaded, meaning it has only one \"call stack\" and can only do one thing at a time. Yet, it handles fetching data, rendering UI, and user clicks simultaneously without freezing. The secret is the Event Loop.",
+    "points": [
+      "<strong>The Call Stack:</strong> Where synchronous functions are executed. If a function is slow, it blocks the stack.",
+      "<strong>Web APIs & Task Queue:</strong> When you run `setTimeout` or `fetch`, JS hands the heavy lifting off to the Browser's background APIs. When finished, the callback is placed in the Task Queue.",
+      "<strong>The Loop:</strong> The Event Loop constantly checks: \"Is the Call Stack empty? If yes, take the first callback from the Task Queue and execute it.\""
+    ],
+    "analogy": "JS is a chef in a kitchen. The chef (Call Stack) can only chop one carrot at a time. When boiling water is needed, the chef puts a pot on the stove (Web API) and sets a timer. The chef goes back to chopping. When the timer rings (Task Queue), the chef waits to finish the current carrot, then checks the boiling water.",
+    "qa": [
+      {
+        "q": "What happens if I write an infinite while-loop in JS?",
+        "a": "The Call Stack never empties. The Event Loop gets permanently blocked. No clicks can be processed, no painting can occur, and the browser tab crashes completely."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 JavaScript Fundamentals",
+    "icon": "\ud83c\udfaf",
+    "title": "DOM Manipulation & Events",
+    "lead": "JavaScript comes alive when it interacts with the user. It does this by querying the DOM to find elements, attaching Event Listeners to them, and modifying the DOM in response.",
+    "points": [
+      "<strong>Querying:</strong> Functions like `document.querySelector(\".btn\")` allow JS to find specific HTML elements.",
+      "<strong>Event Listeners:</strong> `element.addEventListener(\"click\", doSomething)` tells the browser to execute a function when a specific interaction occurs.",
+      "<strong>Event Bubbling:</strong> When you click a button, the click event \"bubbles\" up the DOM tree, triggering listeners on the button's parent div, then the body, then the document."
+    ],
+    "analogy": "The DOM is a puppet. Querying is finding the specific string attached to the puppet's arm. Event Listeners are the trigger mechanism, and DOM manipulation is the programmer pulling the string to make the puppet wave.",
+    "qa": [
+      {
+        "q": "Is it bad to manipulate the DOM directly?",
+        "a": "In vanilla JS, it is the only way. But in large apps, direct DOM manipulation gets messy and slow. This is exactly why React was invented\u2014to abstract away manual DOM updates via the Virtual DOM."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 JavaScript Fundamentals",
+    "icon": "\ud83d\udce6",
+    "title": "Closures and Scope",
+    "lead": "Scope dictates where variables can be accessed. A Closure is one of JS's most powerful but misunderstood features: it is a function that \"remembers\" the variables in its outer scope, even after the outer function has finished executing.",
+    "points": [
+      "<strong>Lexical Scope:</strong> A function has access to variables defined in its parent scope. Inner functions can see out, outer functions cannot see in.",
+      "<strong>The Closure:</strong> If you return an inner function from an outer function, the inner function carries a \"backpack\" of the outer variables with it forever.",
+      "<strong>Data Privacy:</strong> Closures are traditionally used in JS to create private variables that cannot be altered from the outside."
+    ],
+    "analogy": "Imagine a factory (outer function) that manufactures a robot (inner function). Before the robot leaves the factory, it is given a secret code (outer variable). Even when the robot is operating miles away (returned and executed elsewhere), it still perfectly remembers the secret code from its birth factory.",
+    "qa": [
+      {
+        "q": "Are closures still used in modern React?",
+        "a": "Constantly! Every time you use the `useState` or `useEffect` hooks in React, you are relying heavily on closures to remember state between component renders."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 JavaScript Fundamentals",
+    "icon": "\u23f1\ufe0f",
+    "title": "Promises and Async/Await",
+    "lead": "In the early days of JS, handling asynchronous tasks resulted in \"Callback Hell\"\u2014deeply nested triangles of functions. Promises were introduced to flatten this out, and `async/await` made asynchronous code look perfectly synchronous.",
+    "points": [
+      "<strong>The Promise:</strong> An object representing the eventual completion (or failure) of an asynchronous operation. It has states: Pending, Resolved, or Rejected.",
+      "<strong>.then() and .catch():</strong> Chaining methods to handle the successful data or catch network errors.",
+      "<strong>Async / Await:</strong> Syntactic sugar over Promises. Marking a function `async` lets you use the `await` keyword, which pauses the function's execution until the Promise resolves."
+    ],
+    "analogy": "A Promise is a restaurant buzzer. You order food (make a fetch request) and get a buzzer. You go sit down and talk (do other tasks). When the buzzer flashes green (Resolved), you execute your `.then()` function and eat. If it flashes red (Rejected), you execute your `.catch()` and complain to the manager.",
+    "qa": [
+      {
+        "q": "Does `await` block the entire Event Loop?",
+        "a": "No! `await` only pauses the execution of its specific `async` function. The rest of the browser, UI, and other JS scripts continue running perfectly fine."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 JavaScript Fundamentals",
+    "icon": "\u2699\ufe0f",
+    "title": "ES6+ and Modern Syntax",
+    "lead": "In 2015, JavaScript underwent a massive update known as ES6 (ECMAScript 2015), introducing modern syntax that made the language much more powerful and expressive. It has been updated yearly ever since.",
+    "points": [
+      "<strong>Let & Const:</strong> Replacing the flawed `var`. `const` prevents variable reassignment, while `let` allows it. Both introduce block-scoping.",
+      "<strong>Arrow Functions `() => {}`:</strong> A shorter syntax for functions that also fixes historical quirks with the `this` keyword.",
+      "<strong>Destructuring & Spread `...`:</strong> Elegant syntax to extract data from Objects and Arrays, or to merge them together cleanly without mutating the originals."
+    ],
+    "analogy": "Before ES6, JavaScript was a capable but clunky old car. ES6 was a complete engine swap and dashboard redesign. It does exactly the same driving, but it is vastly more comfortable, safer, and requires fewer manual levers to operate.",
+    "qa": [
+      {
+        "q": "Do all browsers support ES6?",
+        "a": "Yes, all modern browsers natively support ES6+. For legacy browsers (like Internet Explorer 11), developers use tools like Babel to compile modern JS back into older, clunkier JS."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 5 \u00b7 Advanced Frontend",
+    "icon": "\u269b\ufe0f",
+    "title": "Thinking in React",
+    "lead": "React is a library developed by Facebook that fundamentally changed frontend architecture. Instead of manually updating the DOM, you define what the UI *should* look like based on the current data (state), and React figures out the DOM updates.",
+    "points": [
+      "<strong>Declarative UI:</strong> You do not write \"Find button, change text to Loading.\" You write a rule: \"If state === loading, button text is Loading.\" React handles the transition.",
+      "<strong>JSX:</strong> A syntax extension that allows writing HTML directly inside JavaScript files. It looks like HTML but compiles into JavaScript functions.",
+      "<strong>Component Tree:</strong> Apps are built by composing small, isolated components (Navbar, Sidebar, Feed) that pass data downwards via \"Props.\""
+    ],
+    "analogy": "Vanilla JS is like manually directing an orchestra: pointing to violins to get louder, then pointing to brass to start. React is giving the orchestra sheet music (state). As the sheet music changes, the orchestra automatically adjusts their playing to match the notes.",
+    "qa": [
+      {
+        "q": "Is JSX a violation of separating HTML and JS?",
+        "a": "React philosophy argues that UI logic and UI structure are inherently coupled. Separating them into different files is a separation of technologies, not concerns. JSX groups them by component concern."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 5 \u00b7 Advanced Frontend",
+    "icon": "\ud83e\udde0",
+    "title": "State Management",
+    "lead": "State is the data that changes over time in your application (is the user logged in? Is the modal open? What is in the shopping cart?). Managing state across hundreds of components is the hardest problem in frontend development.",
+    "points": [
+      "<strong>Local State:</strong> Data needed by only one component (e.g., is a specific dropdown menu open?). Handled via `useState`.",
+      "<strong>Global State:</strong> Data needed everywhere (e.g., user auth token). Handled via React Context, Redux, or Zustand.",
+      "<strong>Server State:</strong> Caching and synchronizing data from the backend database (handled by tools like React Query or Apollo)."
+    ],
+    "analogy": "Local state is your personal pocket (your wallet). Global state is the family bulletin board in the kitchen (everyone needs to see the grocery list). Server state is your bank account (the absolute truth is at the bank, you just have a cached copy on your phone app).",
+    "qa": [
+      {
+        "q": "Why did Redux lose popularity?",
+        "a": "Redux was the gold standard for years, but it required an enormous amount of boilerplate code. Modern tools like Zustand provide the exact same global state power with 10% of the code, and React Query eliminated the need to put Server State into Redux entirely."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 5 \u00b7 Advanced Frontend",
+    "icon": "\ud83d\ude80",
+    "title": "Performance & Web Vitals",
+    "lead": "Users abandon slow websites. Frontend performance optimization is about minimizing the time it takes for a user to see content (First Contentful Paint) and interact with it (Time to Interactive).",
+    "points": [
+      "<strong>Code Splitting:</strong> Instead of downloading a massive 5MB Javascript file, the bundler splits it. You only download the code needed for the specific page you are viewing.",
+      "<strong>Lazy Loading:</strong> Images and heavy components off-screen are not loaded until the user scrolls down to them.",
+      "<strong>Memoization:</strong> Caching expensive math calculations or preventing React components from re-rendering if their data hasn't changed."
+    ],
+    "analogy": "A bad website hands you the entire 1,000-page encyclopedia when you walk in the door, making you wait 10 minutes. An optimized website hands you just the Table of Contents instantly, and only fetches Chapter 4 when you actually request it.",
+    "qa": [
+      {
+        "q": "How do images affect performance?",
+        "a": "Massively. Unoptimized 4K images are the #1 cause of slow websites. Modern sites use WebP formats, strict sizing, and CDNs (Content Delivery Networks) to serve images from servers physically close to the user."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 5 \u00b7 Advanced Frontend",
+    "icon": "\ud83d\udd00",
+    "title": "Client vs. Server Rendering",
+    "lead": "Historically, servers generated HTML and sent it to the browser (SSR). Then, React shifted the paradigm to Client-Side Rendering (CSR)\u2014sending an empty HTML file and massive JS bundles to build the UI in the browser. Now, the pendulum has swung back.",
+    "points": [
+      "<strong>CSR (Client-Side Rendering):</strong> Great for complex dashboards behind a login. Terrible for initial load time and SEO.",
+      "<strong>SSR (Server-Side Rendering):</strong> The server executes the React code, generates HTML, and sends it. Extremely fast initial paint and perfect SEO.",
+      "<strong>SSG (Static Site Generation):</strong> Generating the HTML at build time (when deploying), not at request time. The fastest possible method, used for blogs and documentation."
+    ],
+    "analogy": "CSR is sending you a box of IKEA parts and a manual (Javascript); you build the chair yourself. SSR is the factory building the chair the moment you order it, and shipping it fully assembled. SSG is the factory pre-building 1,000 chairs and putting them in a warehouse, ready to ship instantly.",
+    "qa": [
+      {
+        "q": "Which one does Next.js use?",
+        "a": "Next.js is a meta-framework that allows you to seamlessly mix all three. You can statically generate your blog posts (SSG), server-render your store page (SSR), and client-render your highly interactive user dashboard (CSR), all in the same app."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 6 \u00b7 Backend & APIs",
+    "icon": "\ud83d\udfe2",
+    "title": "Node.js & The Backend Engine",
+    "lead": "For 20 years, JavaScript only existed inside the browser. In 2009, Node.js was created by extracting Chrome's V8 JavaScript engine and running it on servers. This allowed developers to write both frontend and backend in one language.",
+    "points": [
+      "<strong>Asynchronous I/O:</strong> Node is incredibly efficient at handling thousands of concurrent network connections (like chat apps) without using massive server memory.",
+      "<strong>The NPM Ecosystem:</strong> The Node Package Manager is the largest software registry in the world, providing millions of open-source libraries.",
+      "<strong>Express.js:</strong> The standard minimal framework used on top of Node to create web servers and route API requests."
+    ],
+    "analogy": "Node.js took the engine out of a racecar (Chrome) and put it into an industrial tractor (a Server). It kept the insane speed but repurposed it to haul heavy network traffic instead of painting pixels.",
+    "qa": [
+      {
+        "q": "Is Node good for everything?",
+        "a": "No. Node is terrible at CPU-intensive tasks (like rendering video or training AI models) because it is single-threaded. For heavy math, Python, Go, or Rust are superior."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 6 \u00b7 Backend & APIs",
+    "icon": "\ud83d\udeaa",
+    "title": "REST vs. GraphQL",
+    "lead": "APIs are the doors into a backend. For a decade, REST (Representational State Transfer) was the absolute standard. GraphQL, developed by Facebook, was introduced to solve the inefficiencies of REST in modern, data-heavy mobile apps.",
+    "points": [
+      "<strong>REST (Multiple Endpoints):</strong> You hit `/users/123` to get user info. You hit `/users/123/posts` to get their posts. This leads to \"Overfetching\" (getting data you don't need) or \"Underfetching\" (requiring multiple trips).",
+      "<strong>GraphQL (One Endpoint):</strong> The client sends a specific query to one endpoint (`/graphql`) asking exactly for what it wants (User Name + Post Titles), and the server returns exactly that shape. Nothing more, nothing less."
+    ],
+    "analogy": "REST is a set-menu restaurant. You order Meal #1, and you get a burger, fries, and a drink, even if you only wanted the burger. GraphQL is a massive buffet where you hand the chef a highly specific grocery list, and they assemble a custom plate with exactly what you asked for.",
+    "qa": [
+      {
+        "q": "Is GraphQL replacing REST?",
+        "a": "No. GraphQL is powerful but introduces immense complexity, caching difficulties, and security risks. REST remains the standard for 80% of internet APIs due to its simplicity, cacheability, and proven architecture."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 6 \u00b7 Backend & APIs",
+    "icon": "\ud83d\uddc4\ufe0f",
+    "title": "Databases & ORMs",
+    "lead": "The backend must talk to the database (PostgreSQL, MySQL). Writing raw SQL queries inside server code is messy and prone to security vulnerabilities. ORMs bridge the gap between Object-Oriented code and Relational databases.",
+    "points": [
+      "<strong>ORM (Object-Relational Mapper):</strong> Tools like Prisma or TypeORM. Instead of writing `SELECT * FROM users`, you write `db.user.findMany()`.",
+      "<strong>Migrations:</strong> As your app grows, you add new tables. Migrations are version-controlled scripts that safely upgrade your database schema without deleting production data.",
+      "<strong>Connection Pooling:</strong> A database can only handle a limited number of connections. The backend server manages a \"pool\" of connections, recycling them to handle massive traffic spikes."
+    ],
+    "analogy": "An ORM is a UN translator. The Backend speaks JavaScript. The Database speaks SQL. Instead of the backend struggling to learn broken SQL, the ORM sits between them, instantly translating elegant JavaScript methods into highly optimized SQL queries.",
+    "qa": [
+      {
+        "q": "What is SQL Injection?",
+        "a": "The most infamous database hack. If you paste user input directly into a raw SQL query, a hacker can type a malicious command into a login box and delete your entire database. ORMs automatically \"sanitize\" inputs to prevent this."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 6 \u00b7 Backend & APIs",
+    "icon": "\ud83d\udd11",
+    "title": "Authentication (JWT vs Sessions)",
+    "lead": "How does a server securely know who you are? Authentication is the process of verifying identity, and Authorization is verifying permissions. There are two dominant ways to handle stateful logins over stateless HTTP.",
+    "points": [
+      "<strong>Session/Cookies (Traditional):</strong> The server generates a random ID, saves it in the database, and gives it to the browser as a secure Cookie. Every request checks the database. Very secure, but hard to scale across multiple servers.",
+      "<strong>JWT (JSON Web Tokens):</strong> The server cryptographically signs a token containing the user ID and sends it to the client. The server does NOT save it. The client sends it back. Fast and highly scalable, but nearly impossible to securely log out/revoke before expiration."
+    ],
+    "analogy": "Sessions are a VIP list at the door. The bouncer checks his physical list (database) every time you enter. JWT is a cryptographically forged-proof VIP badge. The bouncer just looks at the badge and lets you in without checking any list. But if someone steals your badge, they have full access until it expires.",
+    "qa": [
+      {
+        "q": "What is OAuth?",
+        "a": "OAuth is the protocol used when you click \"Login with Google\" or \"Login with GitHub.\" It allows a third party to verify your identity without Google ever giving the app your actual password."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 6 \u00b7 Backend & APIs",
+    "icon": "\u26a1",
+    "title": "Edge Computing (Serverless)",
+    "lead": "Traditional servers sit in one physical location (e.g., Virginia). If a user in Tokyo requests data, it takes hundreds of milliseconds for light to travel through the ocean cables. Edge computing moves the backend code directly to the user.",
+    "points": [
+      "<strong>The Edge:</strong> Cloud providers (like Cloudflare or Vercel) distribute your backend functions across hundreds of data centers worldwide.",
+      "<strong>Zero Cold Starts:</strong> Edge functions use extremely lightweight isolates (like V8) instead of heavy containers, meaning they boot up in 1 millisecond rather than 2 seconds.",
+      "<strong>Trade-offs:</strong> Edge functions cannot run heavy Node.js libraries and cannot connect to traditional centralized databases efficiently without massive latency."
+    ],
+    "analogy": "A traditional server is one massive central post office. Everyone in the world must travel there. Edge computing is a network of thousands of tiny post office kiosks on every street corner. You get your request answered by the kiosk 2 miles away.",
+    "qa": [
+      {
+        "q": "How does VilfinTV use the Edge?",
+        "a": "VilfinTV uses Cloudflare Workers (Edge Functions) to fetch market data and handle routing. Because the code runs at the Edge, a user in India and a user in New York both experience instantaneous data fetching."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 7 \u00b7 Security, Hosting & Ops",
+    "icon": "\ud83d\udd12",
+    "title": "Web Security Fundamentals",
+    "lead": "The web is a hostile environment. If an application accepts user input, it will eventually be attacked. Frontend and Backend developers must adhere to strict security principles to protect user data and company infrastructure.",
+    "points": [
+      "<strong>XSS (Cross-Site Scripting):</strong> A hacker injects malicious JavaScript into a comment section. When other users view the comment, the script runs in their browser and steals their cookies. Mitigated by escaping all HTML output.",
+      "<strong>CSRF (Cross-Site Request Forgery):</strong> Tricking a logged-in user into unknowingly clicking a link that executes an action (like transferring funds) on a site where they are authenticated.",
+      "<strong>CORS (Cross-Origin Resource Sharing):</strong> A browser security feature that prevents a malicious website from making background API requests to your bank API. It ensures APIs only talk to approved frontend domains."
+    ],
+    "analogy": "XSS is slipping poisoned food into the buffet; anyone who eats it gets sick. CSRF is forging the signature of an executive on a transfer order while they are distracted. CORS is the bank teller refusing to talk to anyone not on the pre-approved vendor list.",
+    "qa": [
+      {
+        "q": "Does React prevent XSS?",
+        "a": "Mostly yes. By default, React \"escapes\" all text injected into JSX, turning `<script>alert(\"hack\")<\/script>` into harmless plain text. However, if you explicitly use `dangerouslySetInnerHTML`, you bypass this protection."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 7 \u00b7 Security, Hosting & Ops",
+    "icon": "\ud83d\udea2",
+    "title": "Deployment & CI/CD Pipelines",
+    "lead": "Getting code from a developer's laptop to a live production server used to involve manually dragging files via FTP. Today, deployment is a fully automated, heavily tested pipeline known as Continuous Integration / Continuous Deployment (CI/CD).",
+    "points": [
+      "<strong>The Pipeline:</strong> A developer pushes code to GitHub. A cloud service (GitHub Actions) intercepts it, builds the code, runs automated tests, and if everything passes, deploys it live.",
+      "<strong>Preview Environments:</strong> Modern platforms (like Vercel or Netlify) automatically generate a unique, live URL for every single Pull Request, allowing the team to test changes before merging to main.",
+      "<strong>Rollbacks:</strong> If a catastrophic bug makes it to production, automated pipelines allow a 1-click rollback to the exact state of the site 5 minutes prior."
+    ],
+    "analogy": "Manual deployment is carefully carrying a fragile glass sculpture across traffic. CI/CD is an automated pneumatic tube system. You drop the code in, it goes through quality-control lasers, and instantly arrives perfectly at the destination.",
+    "qa": [
+      {
+        "q": "What is \"Infrastructure as Code\" (IaC)?",
+        "a": "Writing configuration files (using tools like Terraform) to define your servers, databases, and networks. Instead of clicking buttons in the AWS dashboard, you write code, allowing your entire infrastructure to be version-controlled in Git."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 7 \u00b7 Security, Hosting & Ops",
+    "icon": "\ud83d\udce1",
+    "title": "Webhooks and Third-Party APIs",
+    "lead": "Modern applications rarely build everything from scratch. They glue together incredible third-party services. You use Stripe for payments, Twilio for SMS, and SendGrid for emails. Webhooks are how these services talk back to you.",
+    "points": [
+      "<strong>API Polling:</strong> The old way. Your server asks Stripe every 5 seconds: \"Did they pay yet? Did they pay yet?\" Terribly inefficient.",
+      "<strong>Webhooks:</strong> The modern way. You give Stripe a URL. When the payment succeeds, Stripe fires an HTTP POST request to your URL containing the receipt data. Your server waits passively.",
+      "<strong>Idempotency:</strong> Because network issues happen, Stripe might send the same webhook twice. Your webhook code must be \"idempotent\"\u2014meaning if it runs twice, it doesn't accidentally credit the user's account twice."
+    ],
+    "analogy": "Polling is calling your friend every 5 minutes asking \"Are you at the restaurant yet?\" A Webhook is saying \"Call me the second you arrive,\" and then going to sleep until your phone rings.",
+    "qa": [
+      {
+        "q": "How do you test Webhooks locally?",
+        "a": "Since your laptop is behind a router/firewall, external services like Stripe cannot reach it. Developers use tools like Ngrok to create a secure tunnel, exposing their local `localhost:3000` to a public URL."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 7 \u00b7 Security, Hosting & Ops",
+    "icon": "\ud83d\udcc8",
+    "title": "Monitoring & Observability",
+    "lead": "When a web application is live and serving a million users, things will break silently. If you only find out the checkout page is broken because users complain on Twitter, you have failed. Observability is the practice of instrumenting your code to see its internal state.",
+    "points": [
+      "<strong>Logging:</strong> Recording detailed text events of what the server is doing (e.g., \"User 45 failed login\"). Handled by tools like Datadog.",
+      "<strong>Error Tracking:</strong> Tools like Sentry catch crashes in real-time, grouping them and alerting developers on Slack with the exact line of code that caused the crash.",
+      "<strong>APM (Application Performance Monitoring):</strong> Tracking database query times and server latency to catch slow degradation before it becomes an outage."
+    ],
+    "analogy": "Deploying without observability is flying a commercial jet at night through a storm with no radar, altimeter, or fuel gauge. You only know you are crashing when you hit the mountain. Observability is the dashboard instrumentation.",
+    "qa": [
+      {
+        "q": "Can frontend apps have observability?",
+        "a": "Yes! Error trackers catch JavaScript exceptions happening inside the user's actual browser and report them back to headquarters, including the user's OS, browser version, and the sequence of clicks that led to the crash."
+      }
+    ]
+  }
+];
+
+var INFO_LESSONS = [
+  {
+    "unit": "Unit 1 \u00b7 Foundations of Information",
+    "icon": "\ud83d\udcdc",
+    "title": "What is Information?",
+    "lead": "Before Claude Shannon's 1948 paper, \"information\" was a vague, qualitative concept\u2014like meaning or knowledge. Shannon divorced information from meaning and defined it purely mathematically: Information is the resolution of uncertainty.",
+    "points": [
+      "<strong>The Shannon Paradigm:</strong> The semantic meaning of a message is irrelevant to the engineering problem of transmitting it. A love letter and a string of random characters take the exact same amount of bandwidth.",
+      "<strong>Bits:</strong> The fundamental unit of information. One bit is the amount of information gained when one of two equally likely outcomes occurs (like flipping a fair coin).",
+      "<strong>Surprise:</strong> If I tell you the sun rose this morning, you gain zero information (you were 100% certain). If I tell you a meteor hit the earth, you gain massive information. Information is mathematical surprise."
+    ],
+    "analogy": "Information is playing the game \"Guess Who?\". Asking \"Does your person have a nose?\" provides zero information because everyone has a nose. Asking \"Does your person have a blue hat?\" halves the board. The best questions (highest information) are those that eliminate 50% of the uncertainty.",
+    "qa": [
+      {
+        "q": "Did Claude Shannon invent the term \"Bit\"?",
+        "a": "Shannon popularized it, but it was coined by John Tukey (short for Binary Digit). Shannon's genius was proving that all information\u2014text, audio, video\u2014could be represented fundamentally as bits."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 Foundations of Information",
+    "icon": "\ud83c\udfb2",
+    "title": "Probability and Surprise",
+    "lead": "Information Theory is fundamentally a branch of applied probability. To measure how much information a message contains, we must first measure how probable the message was before it arrived.",
+    "points": [
+      "<strong>Inverse Relationship:</strong> High probability events carry low information. Low probability events carry high information.",
+      "<strong>Logarithmic Scale:</strong> Information is additive. If two independent coin flips each yield 1 bit of information, the total information is 2 bits. Since probabilities multiply (0.5 * 0.5 = 0.25), we use the logarithm base 2 to convert multiplication into addition.",
+      "<strong>The Formula:</strong> The information `I` of an event `x` is `I(x) = -log2(P(x))`."
+    ],
+    "analogy": "Imagine living in the Sahara Desert. A weather report predicting \"Sunny today\" contains almost zero information (probability = 99%). A weather report predicting \"Snowstorm today\" contains massive information (probability = 0.001%), fundamentally altering your behavior.",
+    "qa": [
+      {
+        "q": "Why base 2 logarithm?",
+        "a": "Because we are measuring in bits (binary: 0 or 1). If a dice had 10 sides and we wanted to measure in digits, we would use log base 10 (hartleys). Base 2 perfectly maps to computer architecture."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 Foundations of Information",
+    "icon": "\ud83d\udde3\ufe0f",
+    "title": "The Communication System",
+    "lead": "Shannon's magnum opus defined a universal model for all communication, whether it is a telegraph, a human speaking, or a deep space probe sending data back to Earth.",
+    "points": [
+      "<strong>Information Source:</strong> Produces a message (e.g., your brain generating a thought).",
+      "<strong>Transmitter:</strong> Encodes the message into a signal suitable for the channel (e.g., your vocal cords generating sound waves, or a modem generating radio waves).",
+      "<strong>Channel:</strong> The medium the signal travels through (e.g., air, copper wire, fiber optic cable).",
+      "<strong>Noise Source:</strong> Random interference that corrupts the signal in the channel.",
+      "<strong>Receiver & Destination:</strong> Decodes the signal back into the original message."
+    ],
+    "analogy": "You (Source) write a letter. You translate it into Morse Code (Transmitter). You flash it via flashlight across a lake (Channel). Fog rolling in is the (Noise). Your friend sees the flashes (Receiver), translates them back to English, and reads the letter (Destination).",
+    "qa": [
+      {
+        "q": "Does this apply to storing data?",
+        "a": "Yes! Storing data on a hard drive is just communicating a message to yourself in the future. The channel is time, and the noise is disk degradation."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 Foundations of Information",
+    "icon": "\ud83d\udcc9",
+    "title": "The Limits of Physics",
+    "lead": "Information is not just a mathematical abstraction; it is deeply tied to physics. The physical universe enforces strict boundaries on how much information can exist and how fast it can be processed.",
+    "points": [
+      "<strong>Landauer's Principle:</strong> Erasing one bit of information fundamentally requires dissipating a minimum amount of heat into the environment. Computation requires energy.",
+      "<strong>Bekenstein Bound:</strong> There is a maximum amount of information that can be stored within a given volume of space. If you exceed it, the mass collapses into a black hole.",
+      "<strong>Maxwell's Demon:</strong> A famous physics paradox solved by Information Theory, proving that the information required to sort hot and cold molecules equates exactly to the thermodynamic entropy generated."
+    ],
+    "analogy": "Information is physical. Just as you cannot compress a gallon of water into a thimble without breaking physics, you cannot store an infinite amount of data on a hard drive. The universe has a strict \"data limit\" per cubic inch.",
+    "qa": [
+      {
+        "q": "Is the universe a computer?",
+        "a": "The \"It from Bit\" hypothesis (Wheeler) suggests the universe is fundamentally built of information, and matter/energy are just emergent properties of that underlying informational structure."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Shannon Entropy & Measurement",
+    "icon": "\ud83c\udf2a\ufe0f",
+    "title": "Shannon Entropy (H)",
+    "lead": "While Information measures the surprise of a SINGLE event, Entropy measures the AVERAGE surprise of an entire source of events. It is the absolute cornerstone of the entire field.",
+    "points": [
+      "<strong>Uncertainty:</strong> Entropy quantifies the uncertainty of a random variable. A fair coin has an entropy of 1 bit. A rigged double-headed coin has an entropy of 0 bits (no uncertainty).",
+      "<strong>The Formula:</strong> `H(X) = - \u03a3 P(x) * log2(P(x))`. It is the weighted average of the information of all possible outcomes.",
+      "<strong>Maximum Entropy:</strong> Entropy is maximized when all outcomes are equally likely (maximum unpredictability)."
+    ],
+    "analogy": "Predicting a rigged roulette wheel where it always lands on Red has 0 entropy (boring, predictable). Predicting a perfectly fair roulette wheel has high entropy (chaotic, maximum uncertainty). Entropy is the mathematical measurement of chaos.",
+    "qa": [
+      {
+        "q": "Is Shannon Entropy related to Thermodynamic Entropy?",
+        "a": "Yes! John von Neumann famously told Shannon to call it \"Entropy\" because the equations are identical to Statistical Mechanics, and \"nobody knows what entropy really is, so in a debate you will always have the advantage.\""
+      }
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Shannon Entropy & Measurement",
+    "icon": "\ud83d\udd24",
+    "title": "Entropy of Language",
+    "lead": "Human language is highly predictable. Because of grammatical rules and vocabulary limitations, the English language has much lower entropy than a purely random string of letters.",
+    "points": [
+      "<strong>Redundancy:</strong> If you see \"Q\", the next letter is almost certainly \"U\". That means \"U\" carries almost zero information. English is roughly 50% redundant.",
+      "<strong>Markov Chains:</strong> We can model language by looking at the probability of the next letter given the previous N letters. The longer the context, the lower the entropy of the next letter.",
+      "<strong>Shannon's Game:</strong> Shannon tested human language entropy by having his wife guess the next letter in a book. Humans are incredibly good predictors, proving language has low entropy."
+    ],
+    "analogy": "Txtng w/o vwls is pssbl b/c nglsh s rdndnt. (Texting without vowels is possible because English is redundant). The vowels carried very little actual information, so stripping them out doesn't destroy the message.",
+    "qa": [
+      {
+        "q": "How does this relate to AI?",
+        "a": "Large Language Models (like ChatGPT) are essentially massive entropy-reduction engines. They predict the next word by calculating complex probabilities across billions of parameters, exactly as Shannon theorized."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Shannon Entropy & Measurement",
+    "icon": "\u2696\ufe0f",
+    "title": "Joint and Conditional Entropy",
+    "lead": "In the real world, variables are rarely independent. Knowing the value of one variable often reduces the uncertainty about another. This relationship is quantified by Joint and Conditional Entropy.",
+    "points": [
+      "<strong>Joint Entropy H(X,Y):</strong> The total uncertainty of two variables combined. Always less than or equal to the sum of their individual entropies.",
+      "<strong>Conditional Entropy H(X|Y):</strong> The remaining uncertainty in X, given that you already know Y.",
+      "<strong>Mathematical Link:</strong> `H(X,Y) = H(Y) + H(X|Y)`. The total uncertainty is the uncertainty of Y plus the remaining uncertainty of X given Y."
+    ],
+    "analogy": "Let X be \"It is raining\" and Y be \"People are holding umbrellas.\" If you are blindfolded in a room, you have high uncertainty about X. If you look out the window and see Y (umbrellas), your conditional uncertainty about X (raining) drops to near zero.",
+    "qa": [
+      {
+        "q": "Why does this matter?",
+        "a": "It is the foundation of Machine Learning. A neural network is trained to find variables (Y) that minimize the conditional entropy of the target variable (X) it is trying to predict."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Shannon Entropy & Measurement",
+    "icon": "\ud83e\udd1d",
+    "title": "Mutual Information",
+    "lead": "Mutual Information measures the amount of information that one variable contains about another. It is a more generalized and powerful version of correlation.",
+    "points": [
+      "<strong>Symmetry:</strong> The information X tells you about Y is exactly equal to the information Y tells you about X. `I(X;Y) = I(Y;X)`.",
+      "<strong>Reduction in Uncertainty:</strong> `I(X;Y) = H(X) - H(X|Y)`. It is the amount by which knowing Y reduces your uncertainty about X.",
+      "<strong>Beyond Linear:</strong> Unlike standard statistical correlation (which only measures linear relationships), Mutual Information captures ANY relationship, no matter how complex or non-linear."
+    ],
+    "analogy": "Mutual Information is the overlap in a Venn diagram. Circle X is what you know about the stock market. Circle Y is what you know about interest rates. The overlapping sliver is the Mutual Information\u2014the shared knowledge between the two domains.",
+    "qa": [
+      {
+        "q": "How is this used in biology?",
+        "a": "Geneticists use Mutual Information to find relationships between gene expressions. If two genes have high mutual information, they are likely part of the same regulatory network."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Shannon Entropy & Measurement",
+    "icon": "\ud83d\udccf",
+    "title": "Cross-Entropy and KL Divergence",
+    "lead": "When we build models (like AI) to predict the real world, we need a way to measure how \"wrong\" our model's probability distribution is compared to reality. Information Theory provides the exact ruler for this.",
+    "points": [
+      "<strong>Kullback-Leibler (KL) Divergence:</strong> The \"distance\" between two probability distributions. It measures the extra bits required to encode data if you use a flawed model instead of the true distribution.",
+      "<strong>Cross-Entropy:</strong> The total cost of using the flawed model. It equals the true entropy plus the KL divergence.",
+      "<strong>Machine Learning:</strong> Cross-Entropy Loss is the most common mathematical function used to train deep neural networks for classification."
+    ],
+    "analogy": "Imagine packing for a trip. The true distribution (Reality) is that it will be cold. Your flawed model (Belief) is that it will be hot. The KL Divergence is the massive penalty you pay (freezing, having to buy new coats) because your belief did not match reality.",
+    "qa": [
+      {
+        "q": "Is KL Divergence a true distance metric?",
+        "a": "Mathematically, no. Distance must be symmetric (distance from A to B equals B to A). KL Divergence is asymmetric. Using model B to predict reality A has a different cost than using model A to predict reality B."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Data Compression",
+    "icon": "\ud83d\udddc\ufe0f",
+    "title": "Source Coding Theorem",
+    "lead": "Shannon's First Theorem (The Source Coding Theorem) establishes the absolute mathematical limit of data compression. It proves that you cannot compress data smaller than its Entropy without losing information.",
+    "points": [
+      "<strong>The Limit:</strong> If a data source has an entropy of `H` bits per symbol, no algorithm in the universe can compress it to fewer than `H` bits per symbol on average.",
+      "<strong>Redundancy Removal:</strong> Compression algorithms work entirely by finding and removing redundancy (predictability) in the data.",
+      "<strong>Perfect Compression:</strong> A perfectly compressed file looks indistinguishable from pure, random noise, because all predictable patterns have been mathematically removed."
+    ],
+    "analogy": "Entropy is the raw, uncrushable diamond inside a block of coal. Compression algorithms are hammers breaking away the useless coal (redundancy). Once you are left with just the diamond (Entropy), no hammer can crush it smaller.",
+    "qa": [
+      {
+        "q": "Why can't we zip a zip file to make it smaller?",
+        "a": "Because the first zip algorithm already removed the redundancy. The resulting zip file has maximum entropy (it looks random). You cannot compress randomness."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Data Compression",
+    "icon": "\ud83c\udf33",
+    "title": "Huffman Coding",
+    "lead": "Invented by David Huffman in 1952 as a term paper assignment, Huffman Coding is the foundational algorithm for lossless data compression. It is still used today in MP3s, JPEGs, and ZIP files.",
+    "points": [
+      "<strong>Variable-Length Codes:</strong> Instead of every character taking 8 bits, Huffman assigns short codes (e.g., \"01\") to frequent characters (like \"E\") and long codes (e.g., \"11010\") to rare characters (like \"Z\").",
+      "<strong>The Binary Tree:</strong> The algorithm builds a bottom-up tree based on character frequencies. Following the branches from the root to the leaf generates the unique binary code.",
+      "<strong>Prefix Property:</strong> No code is a prefix of another. This allows the computer to decode a continuous stream of bits without needing spaces between them."
+    ],
+    "analogy": "Morse Code is an early, manual attempt at variable-length coding (E is one dot, Q is dash-dash-dot-dash). Huffman Coding is the mathematically perfect version of Morse Code, dynamically generated based on the exact statistics of the specific message.",
+    "qa": [
+      {
+        "q": "Did Huffman beat his professor?",
+        "a": "Yes. His professor, Robert Fano, had co-invented the Shannon-Fano coding method. Huffman's algorithm was proven to be mathematically optimal, beating his own professor's invention."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Data Compression",
+    "icon": "\ud83d\udcd6",
+    "title": "Dictionary Compression (LZ77)",
+    "lead": "While Huffman coding works on single characters, Dictionary algorithms look for repeating sequences of characters (words or phrases) and replace them with short pointers.",
+    "points": [
+      "<strong>Lempel-Ziv (1977):</strong> The algorithm slides a window over the text. When it sees a phrase it has seen before, it outputs a pointer saying \"Go back 50 characters and copy the next 8 characters.\"",
+      "<strong>Universal Compression:</strong> Unlike Huffman, which needs to calculate probabilities first, LZ algorithms learn the dictionary on the fly in a single pass.",
+      "<strong>The Foundation of ZIP:</strong> The famous \"Deflate\" algorithm (used in ZIP, GZIP, and PNG) combines LZ77 (to find phrases) followed by Huffman Coding (to compress the pointers)."
+    ],
+    "analogy": "Instead of writing \"The United States of America\" 500 times in an essay, you define it once as \"(USA)\" and just use the acronym. LZ77 does this automatically for any repeating sequence of bytes.",
+    "qa": [
+      {
+        "q": "Why does a text file of a million zeros compress to almost nothing?",
+        "a": "Because LZ77 simply outputs: \"Write a zero, then go back 1 space and copy it 999,999 times.\" A gigabyte of zeros becomes a few bytes of instructions."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Data Compression",
+    "icon": "\ud83d\udcc9",
+    "title": "Lossy vs Lossless Compression",
+    "lead": "When dealing with human perception (audio, video, images), we do not need mathematically perfect reproduction. We just need it to \"look\" or \"sound\" perfect to human biology. This allows for massive compression ratios.",
+    "points": [
+      "<strong>Lossless (ZIP, FLAC):</strong> Every single bit is perfectly restored upon decompression. Required for text documents and executable code.",
+      "<strong>Lossy (JPEG, MP3):</strong> Discards data that the human brain cannot perceive. Once discarded, that data is gone forever.",
+      "<strong>Psychoacoustics:</strong> MP3s analyze audio and literally delete quiet frequencies that are masked by louder adjacent frequencies, because the human ear cannot hear them anyway."
+    ],
+    "analogy": "Lossless compression is folding a shirt perfectly to fit in a suitcase; you unfold it and it is identical. Lossy compression is cutting the sleeves off the shirt; it takes up less space, and if you wear a jacket over it, no one knows, but the sleeves are gone forever.",
+    "qa": [
+      {
+        "q": "Why does uploading a photo to Instagram ruin the quality?",
+        "a": "Because Instagram applies aggressive Lossy compression (re-compressing a JPEG) to save massive amounts of server storage and bandwidth. Doing this multiple times introduces visible blocky artifacts."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Data Compression",
+    "icon": "\ud83c\udfa5",
+    "title": "Video Compression",
+    "lead": "Uncompressed 4K video requires transferring gigabytes of data per second. Streaming Netflix over standard Wi-Fi is a miracle of modern Information Theory and spatial/temporal compression.",
+    "points": [
+      "<strong>Spatial Compression (Intra-frame):</strong> Compressing a single frame like a JPEG. If half the screen is blue sky, don't send a million blue pixels; send \"draw a blue box.\"",
+      "<strong>Temporal Compression (Inter-frame):</strong> Most frames in a video are nearly identical to the previous frame. Video codecs only send the \"differences\" (motion vectors) between frames.",
+      "<strong>Keyframes (I-Frames):</strong> Every few seconds, a full, complete frame is sent to prevent errors from compounding and to allow the user to seek/scrub through the video."
+    ],
+    "analogy": "Instead of shipping you 60 full paintings per second (uncompressed video), I ship you one painting, and then for the next 59 frames, I just send you instructions on how to slightly move the characters' arms. It requires 1% of the shipping cost.",
+    "qa": [
+      {
+        "q": "Why does video get pixelated during fast action scenes?",
+        "a": "Fast action destroys temporal redundancy (every frame is completely different). The codec panics, runs out of bandwidth allocation, and has to aggressively drop spatial quality to keep up with the frame rate."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 Channel Capacity & Noise",
+    "icon": "\ud83c\udf09",
+    "title": "The Noisy-Channel Coding Theorem",
+    "lead": "Shannon's Second Theorem is widely considered one of the greatest intellectual achievements of the 20th century. It answers: How fast can we transmit data over a noisy channel with zero errors?",
+    "points": [
+      "<strong>The Intuition Before Shannon:</strong> Engineers believed that to reduce errors over a noisy wire, you had to slow down the transmission rate, eventually approaching zero to get perfect reliability.",
+      "<strong>The Revelation:</strong> Shannon proved this was false. For every communication channel, there is a strict speed limit called the \"Channel Capacity\" (C).",
+      "<strong>The Promise:</strong> As long as your transmission rate (R) is less than the Capacity (C), you can achieve mathematically ZERO errors by using clever error-correcting codes, without having to slow down to zero."
+    ],
+    "analogy": "Imagine a highway (channel) in a blizzard (noise). Engineers thought the only way to prevent crashes was to drive 1 mph. Shannon proved the highway has a strict speed limit (65mph). As long as you drive 64mph, you can avoid ALL crashes if you use highly advanced self-driving algorithms (error correction).",
+    "qa": [
+      {
+        "q": "Did Shannon provide the algorithm?",
+        "a": "No! Shannon proved the capacity existed mathematically, but he did not invent the specific codes to achieve it. It took engineers 50 years to finally invent codes (like Turbo Codes) that approach Shannon's limit."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 Channel Capacity & Noise",
+    "icon": "\ud83c\udf0a",
+    "title": "Bandwidth and the Shannon-Hartley Theorem",
+    "lead": "How do you actually calculate the Capacity of a physical wire or a wireless radio wave? The Shannon-Hartley theorem links the abstract math of information to the physical properties of the universe.",
+    "points": [
+      "<strong>The Equation:</strong> `C = B * log2(1 + S/N)`",
+      "<strong>Bandwidth (B):</strong> The width of the frequency range you are allowed to use (measured in Hertz). Double the bandwidth, double the capacity.",
+      "<strong>Signal-to-Noise Ratio (S/N):</strong> The power of your signal divided by the power of the background interference. Because of the logarithm, blasting massive power yields diminishing returns."
+    ],
+    "analogy": "Bandwidth is the number of lanes on a highway. Signal power is the brightness of your car's headlights. Noise is the density of the fog. To get more cars through, building more lanes (Bandwidth) is far more effective than just installing blindingly bright headlights (Signal Power).",
+    "qa": [
+      {
+        "q": "Why is 5G faster than 4G?",
+        "a": "5G utilizes extremely high-frequency millimeter waves, which provide massive swaths of unused Bandwidth (B). Because `C = B * log(...)`, drastically increasing B drastically increases the megabits per second."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 Channel Capacity & Noise",
+    "icon": "\ud83d\udcfb",
+    "title": "Modulation and Symbols",
+    "lead": "You cannot send a literal \"1\" or \"0\" through the air. You must alter a physical medium\u2014like radio waves or light\u2014to represent those bits. This is called Modulation.",
+    "points": [
+      "<strong>Amplitude Modulation (AM):</strong> Changing the height of the wave. Tall wave = 1, short wave = 0.",
+      "<strong>Frequency Modulation (FM):</strong> Changing the speed of the wave. Fast waves = 1, slow waves = 0.",
+      "<strong>QAM (Quadrature Amplitude Modulation):</strong> Modern Wi-Fi combines amplitude and phase shifts to send massive amounts of bits per single wave symbol. A 256-QAM symbol carries 8 bits of data simultaneously."
+    ],
+    "analogy": "Bits are the alphabet. Modulation is the physical ink and paper. Just as you can write in large letters (Amplitude), cursive (Phase), or different colors (Frequency), modems alter the physical properties of electromagnetic waves to \"write\" bits into the air.",
+    "qa": [
+      {
+        "q": "Why does my Wi-Fi slow down when I move away from the router?",
+        "a": "As distance increases, Signal drops. S/N drops. To keep errors near zero, the router dynamically switches from a dense modulation (256-QAM) to a simpler, slower one (like QPSK), reducing your megabits per second to stay under the Shannon limit."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 Channel Capacity & Noise",
+    "icon": "\ud83c\udf0c",
+    "title": "Deep Space Communication",
+    "lead": "The ultimate test of Information Theory is communicating with the Voyager spacecraft, billions of miles away, transmitting with a radio weaker than a refrigerator lightbulb.",
+    "points": [
+      "<strong>Extreme Noise:</strong> The signal arriving at Earth is a fraction of a billionth of a watt, drowned out by cosmic microwave background radiation (the Big Bang) and solar noise.",
+      "<strong>Coding over Speed:</strong> Voyager transmits at a brutally slow rate (160 bits per second). Because the rate (R) is so low, it stays under the Channel Capacity (C) despite the immense noise.",
+      "<strong>Deep Space Network:</strong> NASA uses massive 70-meter dish antennas spread across the globe to artificially boost the Signal-to-Noise ratio just enough to extract the mathematical codes."
+    ],
+    "analogy": "It is like standing in New York and whispering a secret to someone in Los Angeles during a hurricane. The only way it works is if you whisper very slowly, using a highly redundant secret language, while the listener uses an enormous hearing trumpet.",
+    "qa": [
+      {
+        "q": "What happens if a cosmic ray flips a bit during the 20-hour transmission?",
+        "a": "Voyager uses Reed-Solomon error correction codes. When the data arrives on Earth, the algorithms detect the flipped bit and mathematically calculate what it was supposed to be, perfectly restoring the image."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 5 \u00b7 Error Correction",
+    "icon": "\ud83d\udee1\ufe0f",
+    "title": "The Concept of Redundancy",
+    "lead": "The only way to combat noise is to add redundancy. If compression is the art of removing redundancy to save space, error correction is the art of strategically adding redundancy to protect data.",
+    "points": [
+      "<strong>Repetition Code:</strong> The simplest method. Instead of sending \"1\", send \"111\". If the receiver gets \"101\", they assume the 0 was an error and use majority-vote to decode it as \"1\".",
+      "<strong>The Inefficiency:</strong> Repetition is terrible. Sending everything 3 times reduces your speed by 66%. Shannon proved we can do vastly better than simple repetition.",
+      "<strong>Parity Bits:</strong> Adding a single extra bit to a block of data to ensure the total number of 1s is always even. It detects a single error, but cannot fix it."
+    ],
+    "analogy": "If you give someone your phone number over a bad phone connection, you do not just say it once. You say \"Five, Five, Five... yes, triple Five.\" You are adding verbal redundancy to error-correct the static on the line.",
+    "qa": [
+      {
+        "q": "Does my computer RAM use error correction?",
+        "a": "Standard consumer RAM does not. However, enterprise servers use ECC (Error-Correcting Code) RAM, which includes extra chips specifically to run parity checks and fix bit-flips caused by cosmic rays or heat."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 5 \u00b7 Error Correction",
+    "icon": "\ud83e\udde9",
+    "title": "Hamming Codes",
+    "lead": "Invented by Richard Hamming in 1950 after he got frustrated by punch-card computers crashing over single-bit errors. It was the first brilliant leap in mathematical error correction.",
+    "points": [
+      "<strong>Overlapping Parity:</strong> Hamming interweaved multiple parity bits into the data block. Each parity bit monitors a specific, overlapping subset of the data bits.",
+      "<strong>Self-Correcting:</strong> If a bit flips, multiple parity checks fail. By looking at exactly WHICH combination of parity checks failed, the algorithm mathematically pinpoints the exact location of the broken bit and flips it back.",
+      "<strong>Hamming Distance:</strong> The number of bits that must flip to turn one valid code into another. To correct 1 error, valid codes must be at least a Hamming Distance of 3 apart."
+    ],
+    "analogy": "Imagine a Venn diagram of 3 circles. You place data bits in the intersections and parity bits in the outer edges to ensure every circle equals an even number. If one bit flips, only specific circles turn \"odd\". The overlapping failure instantly points a giant arrow at the culprit.",
+    "qa": [
+      {
+        "q": "What happens if TWO bits flip in a basic Hamming Code?",
+        "a": "It fails catastrophically. It will detect the error, but it will guess the wrong location and actually flip a third, correct bit, making the data even worse."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 5 \u00b7 Error Correction",
+    "icon": "\ud83d\udcbf",
+    "title": "Reed-Solomon Codes",
+    "lead": "Invented in 1960, Reed-Solomon codes operate on bytes rather than individual bits. They are incredibly resilient against \"burst errors\" (where a whole chunk of data is destroyed at once).",
+    "points": [
+      "<strong>Polynomials:</strong> RS codes treat the data as coefficients of a complex mathematical polynomial. They then plot extra points on the graph of that polynomial as the redundancy.",
+      "<strong>Burst Resistance:</strong> If a physical scratch destroys 100 consecutive bits on a CD, RS codes can reconstruct the missing polynomial curve from the surviving points.",
+      "<strong>Ubiquity:</strong> This exact algorithm made CDs, DVDs, Blu-rays, QR codes, and deep space transmission possible."
+    ],
+    "analogy": "If I draw a straight line and give you 10 points on that line, and a dog eats 4 of the points, you can easily use a ruler to connect the remaining 6 points and perfectly redraw the missing ones. RS codes do this with wildly complex, multi-dimensional curves.",
+    "qa": [
+      {
+        "q": "Why do QR codes still work if they are ripped or covered up?",
+        "a": "QR codes use heavy Reed-Solomon error correction. A \"Level H\" QR code can have 30% of its physical pixels completely destroyed or covered by a logo, and a phone camera can perfectly reconstruct the URL."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 5 \u00b7 Error Correction",
+    "icon": "\ud83c\udfce\ufe0f",
+    "title": "Approaching the Shannon Limit",
+    "lead": "For decades, engineers chased the theoretical speed limit set by Shannon in 1948. In the 1990s, the invention of Turbo Codes and the rediscovery of LDPC codes finally pushed human technology to the absolute mathematical brink.",
+    "points": [
+      "<strong>Turbo Codes (1993):</strong> Uses two simple encoders and a random interleaver. The receiver passes probability estimates back and forth between two decoders in a loop until they agree. It revolutionized 3G/4G cellular networks.",
+      "<strong>LDPC Codes (1962/1996):</strong> Low-Density Parity-Check codes were invented by Robert Gallager in the 60s but were ignored because computers were too slow to run them. Rediscovered in the 90s, they are now the backbone of 5G and Wi-Fi.",
+      "<strong>The Brink:</strong> Modern 5G LDPC codes operate within fractions of a decibel of the Shannon Limit. We have fundamentally solved the problem of point-to-point communication."
+    ],
+    "analogy": "Turbo codes decode data like humans solving a crossword puzzle. You guess \"Across\", use that partial information to help solve \"Down\", and bounce back and forth, iteratively updating your confidence until the whole grid snaps into clarity.",
+    "qa": [
+      {
+        "q": "What happens when we hit the limit?",
+        "a": "We already have. To get faster internet now, we cannot write better mathematical codes. We are forced to alter the physics: adding more antennas (MIMO), using wider frequencies (Bandwidth), or moving routers closer (Edge computing)."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 6 \u00b7 Cryptography & Security",
+    "icon": "\ud83d\udd10",
+    "title": "Information Security and Secrecy",
+    "lead": "Shannon also laid the foundation for modern cryptography. If error correction is making data resilient to noise, cryptography is making data indistinguishable from noise to anyone without the key.",
+    "points": [
+      "<strong>Perfect Secrecy:</strong> Shannon mathematically proved that for a cipher to be unbreakable even by an infinitely powerful computer, the key must be completely random, never reused, and exactly as long as the message (The One-Time Pad).",
+      "<strong>Confusion and Diffusion:</strong> The two properties required for modern ciphers. Confusion makes the relationship between the key and ciphertext complex. Diffusion ensures flipping one bit of the plaintext changes 50% of the ciphertext.",
+      "<strong>Computational Security:</strong> Modern encryption (like AES) does not have Perfect Secrecy. It can be broken. However, it would take all the computers on Earth a trillion years to do so, making it practically secure."
+    ],
+    "analogy": "Error correction is putting your message inside a reinforced steel vault so an earthquake (noise) doesn't crush it. Cryptography is scrambling the message into alien symbols so that if a bank robber (hacker) steals the vault, the contents are useless to them.",
+    "qa": [
+      {
+        "q": "Is the Enigma machine unbreakable today?",
+        "a": "A modern laptop can crack standard WWII Enigma encryption in less than a second using brute-force analysis of letter frequencies."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 6 \u00b7 Cryptography & Security",
+    "icon": "\ud83d\udd11",
+    "title": "Public Key Cryptography (RSA)",
+    "lead": "The greatest problem in history was Key Distribution. How do two people across the world securely agree on a secret password without someone intercepting it? Asymmetric cryptography solved this seemingly impossible paradox.",
+    "points": [
+      "<strong>Two Keys:</strong> Every user generates a mathematically linked pair: a Public Key (given to the world) and a Private Key (never shared).",
+      "<strong>One-Way Function:</strong> If Alice locks a box with Bob's Public Key, the math prevents the Public Key from unlocking it. ONLY Bob's Private Key can unlock it.",
+      "<strong>Prime Factorization:</strong> RSA relies on the fact that multiplying two massive prime numbers is easy for a computer, but factoring the resulting giant number back into primes is virtually impossible."
+    ],
+    "analogy": "Symmetric encryption is a lockbox with one key. You have to mail a copy of the key to your friend, which is risky. Public Key encryption is sending your friend an open padlock. They snap it onto the box and mail it back. Anyone can intercept it, but only YOU have the key to open your own padlock.",
+    "qa": [
+      {
+        "q": "Will Quantum Computers break RSA?",
+        "a": "Yes. Shor's Algorithm proves that a sufficiently powerful quantum computer can factor large primes exponentially faster, breaking RSA instantly. The world is currently migrating to Post-Quantum Cryptography to prevent this."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 6 \u00b7 Cryptography & Security",
+    "icon": "#\ufe0f\u20e3",
+    "title": "Cryptographic Hashing",
+    "lead": "A hash function takes any amount of data (a password, a PDF, an entire video game) and mathematically crushes it into a fixed-length string of characters. It is the digital fingerprint of data.",
+    "points": [
+      "<strong>One-Way:</strong> You cannot reverse a hash. Knowing the hash gives absolutely zero information about the original file.",
+      "<strong>Deterministic but Chaotic:</strong> Hashing the exact same file always yields the exact same hash. But changing a single comma in a 500-page book completely changes the entire hash (The Avalanche Effect).",
+      "<strong>Use Cases:</strong> Storing passwords (databases store the hash, not the password). Verifying file integrity. Blockchain and Bitcoin mining."
+    ],
+    "analogy": "Hashing a file is like throwing a car into an industrial metal crusher and producing a 1-foot steel cube. Every Honda Civic produces the exact same cube. But you can never, ever un-crush the cube to get the car back.",
+    "qa": [
+      {
+        "q": "What is a Hash Collision?",
+        "a": "Because there are infinite files but finite hashes, mathematically two different files MUST eventually produce the same hash. However, with modern algorithms like SHA-256, the odds of finding a collision are astronomically close to zero."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 6 \u00b7 Cryptography & Security",
+    "icon": "\ud83d\udcdd",
+    "title": "Digital Signatures",
+    "lead": "If Public Key Cryptography allows anyone to send a secret to Bob, Digital Signatures run the math in reverse: allowing Bob to prove to the entire world that a message absolutely came from him.",
+    "points": [
+      "<strong>Reversing the Keys:</strong> If Bob encrypts a message with his PRIVATE key, it can only be decrypted by his PUBLIC key. If the public key works, the world knows Bob sent it.",
+      "<strong>Signing Hashes:</strong> Instead of encrypting the entire document, Bob hashes the document, encrypts the hash with his private key, and attaches it as a signature.",
+      "<strong>Non-Repudiation:</strong> Bob cannot deny sending the message, because no one else in the universe has his private key."
+    ],
+    "analogy": "A digital signature is a wax seal stamped with a one-of-a-kind ring. Anyone can look at the wax (public key verification) and confirm it matches the king's ring. But nobody else can forge the seal because only the king holds the physical ring (private key).",
+    "qa": [
+      {
+        "q": "Are digital signatures legally binding?",
+        "a": "In almost all modern jurisdictions, robust digital signatures (like DocuSign, which uses cryptographic principles underneath) hold the exact same legal weight as a wet-ink physical signature."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 7 \u00b7 Modern Applications",
+    "icon": "\ud83e\uddec",
+    "title": "DNA as Information Storage",
+    "lead": "Humanity produces more data than we have silicon to store it on. Scientists are looking to biology\u2014specifically DNA\u2014as the ultimate, ultra-dense information storage medium.",
+    "points": [
+      "<strong>Base-4 Code:</strong> Computers use binary (0, 1). DNA uses quaternary (A, C, G, T). Each nucleotide holds 2 bits of information.",
+      "<strong>Insane Density:</strong> A single gram of DNA can theoretically store 215 Petabytes (215 million Gigabytes) of data. All the world's data could fit in a shoebox.",
+      "<strong>Longevity:</strong> Hard drives degrade in 10 years. DNA recovered from woolly mammoths is readable after 10,000 years."
+    ],
+    "analogy": "We have spent 50 years trying to shrink hard drives, while nature perfected the ultimate microscopic hard drive 3 billion years ago. We are just learning how to write our own MP3s and JPEGs onto nature's hard drive.",
+    "qa": [
+      {
+        "q": "Can I buy a DNA hard drive?",
+        "a": "Not yet. The process of synthesizing (writing) and sequencing (reading) DNA is currently incredibly slow and expensive. It is strictly a research endeavor for deep archival storage."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 7 \u00b7 Modern Applications",
+    "icon": "\u269b\ufe0f",
+    "title": "Quantum Information (Qubits)",
+    "lead": "Information theory was built on classical physics. Quantum Information Theory rebuilds the foundation using the bizarre rules of quantum mechanics, leading to computing paradigms that break classical limits.",
+    "points": [
+      "<strong>Superposition:</strong> A classical bit is definitely 0 or 1. A Qubit (quantum bit) exists in a complex probability wave of BOTH 0 and 1 simultaneously until it is measured.",
+      "<strong>Entanglement:</strong> Two qubits can be mathematically linked across vast distances. Measuring one instantly dictates the state of the other, which Einstein called \"spooky action at a distance.\"",
+      "<strong>Quantum Supremacy:</strong> Certain mathematical problems (like prime factorization or molecular simulation) that would take the universe's lifespan on a supercomputer can be solved in minutes on a quantum computer."
+    ],
+    "analogy": "A classical bit is a coin on a table\u2014it is clearly Heads or Tails. A qubit is a coin spinning rapidly in the air. While it spins, it is a blur of both states. Quantum algorithms perform calculations on the blur itself.",
+    "qa": [
+      {
+        "q": "Will Quantum Computers make classical computers obsolete?",
+        "a": "No. Quantum computers are terrible at running word processors, browsing the web, or playing games. They are highly specialized co-processors for specific multi-dimensional math problems."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 7 \u00b7 Modern Applications",
+    "icon": "\ud83e\udde0",
+    "title": "Information Theory and AI",
+    "lead": "Modern Artificial Intelligence and Deep Learning are deeply rooted in the mathematics established by Claude Shannon. Neural networks are fundamentally information processing machines.",
+    "points": [
+      "<strong>Information Bottleneck:</strong> A theory suggesting that deep learning works by forcing data through a bottleneck, retaining only the Mutual Information relevant to the target, and mathematically compressing away the irrelevant noise.",
+      "<strong>Loss Functions:</strong> As mentioned, AI learns by minimizing Cross-Entropy, directly optimizing the model's probability distribution against reality.",
+      "<strong>Generative AI:</strong> Models like ChatGPT estimate the incredibly complex probability distribution of human language. They output the token with the highest predicted probability, effectively maximizing information coherence."
+    ],
+    "analogy": "Training an AI to recognize a dog is a compression problem. The AI takes a massive 4K image (millions of bits) and compresses it down into a single bit of information: 1 (Dog) or 0 (Not Dog). It learns to discard the grass, the sky, and the lighting as \"noise.\"",
+    "qa": [
+      {
+        "q": "Are AI models approaching the limits of Information Theory?",
+        "a": "Yes. AI scaling laws suggest we are hitting the limits of the data available on the internet. We have compressed almost all human text. The next frontier is generating synthetic data or moving to multimodal (video/audio) information."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 7 \u00b7 Modern Applications",
+    "icon": "\ud83d\udd2d",
+    "title": "The Holographic Principle",
+    "lead": "The ultimate intersection of information theory and fundamental physics lies at the edge of black holes. The Holographic Principle suggests that the entire 3D universe might just be a projection of 2D information.",
+    "points": [
+      "<strong>Black Hole Entropy:</strong> Stephen Hawking and Jacob Bekenstein proved that the information (entropy) swallowed by a black hole is proportional to its 2D surface area (the event horizon), not its 3D volume.",
+      "<strong>The Hologram:</strong> This implies that all the 3D information inside the black hole is perfectly encoded on its 2D boundary, exactly like a hologram.",
+      "<strong>Universal Application:</strong> Many theoretical physicists now believe this applies to the entire universe. Space and gravity may simply be emergent illusions created by the underlying quantum entanglement of fundamental information."
+    ],
+    "analogy": "When you look at a holographic credit card sticker, you see a 3D image, but the data is physically encoded on a flat 2D surface. Physics suggests the 3D reality we experience is just the \"hologram\" projected from a 2D informational surface at the edge of the universe.",
+    "qa": [
+      {
+        "q": "Does this mean we live in a simulation?",
+        "a": "Not necessarily a computer simulation built by aliens. It just means that \"Information\" might be a more fundamental building block of reality than matter, energy, or even space-time itself."
+      }
+    ]
+  }
+];
+
+
+// ═══════════════════════════════════════
+// WEB DEVELOPMENT & INFO THEORY — RENDER FUNCTIONS
+// ═══════════════════════════════════════
+function renderWebTOC() {
+  var list = document.getElementById('web-toc-list');
+  if (!list) return;
+  var html = '';
+  var currentUnit = '';
+  WEB_LESSONS.forEach(function(lesson, i) {
+    if (lesson.unit !== currentUnit) {
+      currentUnit = lesson.unit;
+      html += '<div class="fin-toc-unit">' + esc(lesson.unit) + '</div>';
+    }
+    html += '<div class="fin-toc-item' + (i === _activeWebIdx ? ' active' : '') + '" onclick="renderWebLesson(' + i + ')" id="web-toc-' + i + '">'
+          + '<span style="margin-right:7px;">' + lesson.icon + '</span>' + esc(lesson.title)
+          + '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function renderWebLesson(idx) {
+  _activeWebIdx = idx;
+  var lesson = WEB_LESSONS[idx];
+  if (!lesson) return;
+
+  var pct = ((idx + 1) / WEB_LESSONS.length) * 100;
+  var pfill = document.getElementById('web-progress-fill');
+  if (pfill) pfill.style.width = pct + '%';
+
+  renderWebTOC();
+  var act = document.getElementById('web-toc-' + idx);
+  if (act && act.scrollIntoView) {
+    act.scrollIntoView({ behavior:'smooth', block:'center' });
+  }
+
+  var html = '<div class="fin-lesson-num">LESSON ' + (idx+1) + ' OF ' + WEB_LESSONS.length + '</div>';
+  html += '<h1 class="fin-lesson-title">' + esc(lesson.title) + '</h1>';
+  if (lesson.lead) html += '<div class="fin-lesson-lead">' + lesson.lead + '</div>';
+
+  if (lesson.points && lesson.points.length > 0) {
+    html += '<div class="fin-section-title">Key Concepts</div><ul class="fin-key-points">';
+    lesson.points.forEach(function(pt) { html += '<li>' + pt + '</li>'; });
+    html += '</ul>';
+  }
+
+  if (lesson.analogy) {
+    html += '<div class="fin-analogy-box">'
+          + '<div class="fin-analogy-title">💡 The Intuition</div>'
+          + '<div class="fin-analogy-text">' + esc(lesson.analogy) + '</div>'
+          + '</div>';
+  }
+
+  if (lesson.qa && lesson.qa.length > 0) {
+    html += '<div class="fin-qa-section"><div class="fin-section-title">Common Questions</div>';
+    lesson.qa.forEach(function(item, qidx) {
+      var uniq = 'web-q-' + idx + '-' + qidx;
+      html += '<div class="fin-qa-item" id="' + uniq + '">'
+            + '<div class="fin-qa-q" onclick="document.getElementById(\'' + uniq + '\').classList.toggle(\'open\')">'
+            + '<span>' + esc(item.q) + '</span>'
+            + '<svg class="fin-qa-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>'
+            + '</div><div class="fin-qa-a">' + item.a + '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  var prevDisabled = (idx === 0) ? ' disabled' : '';
+  var nextDisabled = (idx === WEB_LESSONS.length - 1) ? ' disabled' : '';
+  html += '<div class="fin-nav-row">'
+        + '<button class="fin-nav-btn"' + prevDisabled + ' onclick="renderWebLesson(' + (idx-1) + ')">&#8592; Previous</button>'
+        + '<button class="fin-nav-btn primary"' + nextDisabled + ' onclick="renderWebLesson(' + (idx+1) + ')">Next &#8594;</button>'
+        + '</div>';
+
+  var contentDiv = document.getElementById('web-lesson-content');
+  if (contentDiv) contentDiv.innerHTML = html;
+  var mainDiv = document.getElementById('web-main');
+  if (mainDiv) mainDiv.scrollTop = 0;
+}
+
+function renderInfoTOC() {
+  var list = document.getElementById('info-toc-list');
+  if (!list) return;
+  var html = '';
+  var currentUnit = '';
+  INFO_LESSONS.forEach(function(lesson, i) {
+    if (lesson.unit !== currentUnit) {
+      currentUnit = lesson.unit;
+      html += '<div class="fin-toc-unit">' + esc(lesson.unit) + '</div>';
+    }
+    html += '<div class="fin-toc-item' + (i === _activeInfoIdx ? ' active' : '') + '" onclick="renderInfoLesson(' + i + ')" id="info-toc-' + i + '">'
+          + '<span style="margin-right:7px;">' + lesson.icon + '</span>' + esc(lesson.title)
+          + '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function renderInfoLesson(idx) {
+  _activeInfoIdx = idx;
+  var lesson = INFO_LESSONS[idx];
+  if (!lesson) return;
+
+  var pct = ((idx + 1) / INFO_LESSONS.length) * 100;
+  var pfill = document.getElementById('info-progress-fill');
+  if (pfill) pfill.style.width = pct + '%';
+
+  renderInfoTOC();
+  var act = document.getElementById('info-toc-' + idx);
+  if (act && act.scrollIntoView) {
+    act.scrollIntoView({ behavior:'smooth', block:'center' });
+  }
+
+  var html = '<div class="fin-lesson-num">LESSON ' + (idx+1) + ' OF ' + INFO_LESSONS.length + '</div>';
+  html += '<h1 class="fin-lesson-title">' + esc(lesson.title) + '</h1>';
+  if (lesson.lead) html += '<div class="fin-lesson-lead">' + lesson.lead + '</div>';
+
+  if (lesson.points && lesson.points.length > 0) {
+    html += '<div class="fin-section-title">Key Concepts</div><ul class="fin-key-points">';
+    lesson.points.forEach(function(pt) { html += '<li>' + pt + '</li>'; });
+    html += '</ul>';
+  }
+
+  if (lesson.analogy) {
+    html += '<div class="fin-analogy-box">'
+          + '<div class="fin-analogy-title">💡 The Intuition</div>'
+          + '<div class="fin-analogy-text">' + esc(lesson.analogy) + '</div>'
+          + '</div>';
+  }
+
+  if (lesson.qa && lesson.qa.length > 0) {
+    html += '<div class="fin-qa-section"><div class="fin-section-title">Common Questions</div>';
+    lesson.qa.forEach(function(item, qidx) {
+      var uniq = 'info-q-' + idx + '-' + qidx;
+      html += '<div class="fin-qa-item" id="' + uniq + '">'
+            + '<div class="fin-qa-q" onclick="document.getElementById(\'' + uniq + '\').classList.toggle(\'open\')">'
+            + '<span>' + esc(item.q) + '</span>'
+            + '<svg class="fin-qa-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>'
+            + '</div><div class="fin-qa-a">' + item.a + '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  var prevDisabled = (idx === 0) ? ' disabled' : '';
+  var nextDisabled = (idx === INFO_LESSONS.length - 1) ? ' disabled' : '';
+  html += '<div class="fin-nav-row">'
+        + '<button class="fin-nav-btn"' + prevDisabled + ' onclick="renderInfoLesson(' + (idx-1) + ')">&#8592; Previous</button>'
+        + '<button class="fin-nav-btn primary"' + nextDisabled + ' onclick="renderInfoLesson(' + (idx+1) + ')">Next &#8594;</button>'
+        + '</div>';
+
+  var contentDiv = document.getElementById('info-lesson-content');
+  if (contentDiv) contentDiv.innerHTML = html;
+  var mainDiv = document.getElementById('info-main');
+  if (mainDiv) mainDiv.scrollTop = 0;
+}
 
 
 // ═══════════════════════════════════════
