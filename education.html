@@ -872,8 +872,8 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
         </div>
         <div class="subject-links">
           <a href="#" onclick="openProgrammingLesson(0); return false;">Programming Basics</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Web Development</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Information Theory</a>
+          <a href="#" onclick="openWebLesson(0); return false;">Web Development</a>
+          <a href="#" onclick="openInfoLesson(0); return false;">Information Theory</a>
         </div>
       </div>
 
@@ -1116,7 +1116,39 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
     </div>
 
     
-    <!-- ── PROGRAMMING BASICS ── -->
+    
+    <!-- ── WEB DEVELOPMENT ── -->
+    <div id="web-content-area" style="display:none;">
+      <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">🌐 Web Development</h2>
+      <p style="margin:0 0 20px; font-size:14px; color:var(--text2);">31-lesson course · Teaching-style · Simple language</p>
+      <div class="fin-layout">
+        <aside class="fin-toc" id="web-toc">
+          <div class="fin-toc-header">📚 Course Outline</div>
+          <div class="fin-toc-list" id="web-toc-list"></div>
+        </aside>
+        <div class="fin-main" id="web-main">
+          <div class="fin-progress-bar"><div class="fin-progress-fill" id="web-progress-fill" style="width:3.2%"></div></div>
+          <div id="web-lesson-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── INFORMATION THEORY ── -->
+    <div id="info-content-area" style="display:none;">
+      <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">📡 Information Theory</h2>
+      <p style="margin:0 0 20px; font-size:14px; color:var(--text2);">28-lesson course · Teaching-style · Simple language</p>
+      <div class="fin-layout">
+        <aside class="fin-toc" id="info-toc">
+          <div class="fin-toc-header">📚 Course Outline</div>
+          <div class="fin-toc-list" id="info-toc-list"></div>
+        </aside>
+        <div class="fin-main" id="info-main">
+          <div class="fin-progress-bar"><div class="fin-progress-fill" id="info-progress-fill" style="width:3.5%"></div></div>
+          <div id="info-lesson-content"></div>
+        </div>
+      </div>
+    </div>
+\n    <!-- ── PROGRAMMING BASICS ── -->
     <div id="programming-content-area" style="display:none;">
       <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">💻 Programming Basics</h2>
       <p style="margin:0 0 20px; font-size:14px; color:var(--text2);">31-lesson course · Teaching-style · Simple language</p>
@@ -1203,7 +1235,7 @@ function _hideAllLessonAreas() {
   document.getElementById('micro-content-area').style.display = 'none';
   document.getElementById('macro-content-area').style.display = 'none';
   document.getElementById('ai-content-area').style.display = 'none';
-  document.getElementById('programming-content-area').style.display = 'none';
+  document.getElementById('programming-content-area').style.display = 'none';\n  document.getElementById('web-content-area').style.display = 'none';\n  document.getElementById('info-content-area').style.display = 'none';
 }
 
 function openCbseLesson(subject, classNum) {
@@ -1305,7 +1337,37 @@ function openMacroLesson() {
 }
 
 
-var _activeProgrammingIdx = 0;
+
+var _activeWebIdx = 0;
+function openWebLesson(startIdx) {
+  document.getElementById('hero-section').style.display = 'none';
+  document.getElementById('subjects-section').style.display = 'none';
+  document.getElementById('lesson-view-container').style.display = 'block';
+  _hideAllLessonAreas();
+  document.getElementById('web-content-area').style.display = 'block';
+  _activeHub = 'web';
+  _activeWebIdx = (typeof startIdx === 'number') ? startIdx : 0;
+  if (typeof renderWebTOC === 'function') renderWebTOC();
+  if (typeof renderWebLesson === 'function') renderWebLesson(_activeWebIdx);
+  document.getElementById('lesson-view-container').scrollTop = 0;
+  try { history.replaceState(null, '', '?subject=web-development'); } catch(e){}
+}
+
+var _activeInfoIdx = 0;
+function openInfoLesson(startIdx) {
+  document.getElementById('hero-section').style.display = 'none';
+  document.getElementById('subjects-section').style.display = 'none';
+  document.getElementById('lesson-view-container').style.display = 'block';
+  _hideAllLessonAreas();
+  document.getElementById('info-content-area').style.display = 'block';
+  _activeHub = 'info';
+  _activeInfoIdx = (typeof startIdx === 'number') ? startIdx : 0;
+  if (typeof renderInfoTOC === 'function') renderInfoTOC();
+  if (typeof renderInfoLesson === 'function') renderInfoLesson(_activeInfoIdx);
+  document.getElementById('lesson-view-container').scrollTop = 0;
+  try { history.replaceState(null, '', '?subject=information-theory'); } catch(e){}
+}
+\nvar _activeProgrammingIdx = 0;
 function openProgrammingLesson(startIdx) {
   document.getElementById('hero-section').style.display = 'none';
   document.getElementById('subjects-section').style.display = 'none';
@@ -6389,7 +6451,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (_subj === 'macroeconomics' && typeof openMacroLesson === 'function') openMacroLesson();
     else if (_subj === 'microeconomics' && typeof openMicroLesson === 'function') openMicroLesson();
     else if (_subj === 'finance' && typeof openFinanceLesson === 'function') openFinanceLesson();
-    else if (_subj === 'programming' && typeof openProgrammingLesson === 'function') openProgrammingLesson(0);
+    else if (_subj === 'web-development' && typeof openWebLesson === 'function') openWebLesson(0);\n    else if (_subj === 'information-theory' && typeof openInfoLesson === 'function') openInfoLesson(0);\n    else if (_subj === 'programming' && typeof openProgrammingLesson === 'function') openProgrammingLesson(0);
     else if (_subj === 'ai-robotics' && typeof openAiLesson === 'function') openAiLesson(0);
   } catch(e){ console.error(e); }
 });
