@@ -41,7 +41,7 @@ const BLOCKED_KEYWORDS = [
   'massacre', 'pogrom', 'beheading', 'ethnic cleansing'
 ];
 
-const MAX_ITEMS_PER_SECTION = 8;  // trending gets up to 8 stories for broad topic coverage
+const MAX_ITEMS_PER_SECTION = 16;  // up to 16 stories per section — section boxes scroll on the page
 const REQUEST_TIMEOUT_MS    = 22000;
 // First TWO entries per section are always fetched; rest are randomly sampled.
 // 7 feeds → 2 anchors + 5 random from a pool of 30+ for trending = per-cycle variety

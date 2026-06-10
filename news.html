@@ -636,6 +636,15 @@ body{
 }
 @media(max-width:600px){.news-cards-grid{column-width:auto;column-count:1}}
 
+/* ── Sliding bar on every story box: bounded height + visible scrollbar ── */
+.news-cards-grid,.bn-side-grid{max-height:640px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.bn-side-grid{max-height:480px}
+.news-cards-grid::-webkit-scrollbar,.bn-side-grid::-webkit-scrollbar,.world-np-right::-webkit-scrollbar{width:7px}
+.news-cards-grid::-webkit-scrollbar-track,.bn-side-grid::-webkit-scrollbar-track,.world-np-right::-webkit-scrollbar-track{background:transparent}
+.news-cards-grid::-webkit-scrollbar-thumb,.bn-side-grid::-webkit-scrollbar-thumb,.world-np-right::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.news-cards-grid::-webkit-scrollbar-thumb:hover,.bn-side-grid::-webkit-scrollbar-thumb:hover,.world-np-right::-webkit-scrollbar-thumb:hover{background:var(--burn2)}
+@media(max-width:600px){.news-cards-grid,.bn-side-grid{max-height:500px}}
+
 .news-card{
   background:var(--card);border:1px solid var(--border2);
   border-radius:12px;padding:18px;
@@ -943,7 +952,7 @@ body{
 .world-np-hero-time{font-size:10.5px;color:var(--text3);padding-top:2px}
 
 /* Right: Latest list */
-.world-np-right{grid-area:right;display:flex;flex-direction:column}
+.world-np-right{grid-area:right;display:flex;flex-direction:column;max-height:520px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
 .world-np-latest-hdr{
   font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
   color:var(--text3);padding:10px 14px 8px;border-bottom:1px solid var(--border);
@@ -1859,8 +1868,9 @@ footer.news-footer{
     </div>
     <p class="news-page-subtitle">Curated global news coverage — Breaking News, Trending, World Affairs, Indian Markets &amp; Malayalam stories.</p>
     <div class="news-page-meta">
-      <div class="news-page-meta-chip">Last updated: <span id="last-updated-time">—</span></div>
-      <div class="news-page-meta-chip">Stories: <span id="total-story-count">—</span></div>
+      <div class="news-page-meta-chip">📅 <span id="local-date">—</span></div>
+      <div class="news-page-meta-chip">🕒 <span id="local-time">—</span></div>
+      <div class="news-page-meta-chip" id="local-weather-chip"><span id="local-weather">—</span></div>
     </div>
   </div>
 </div>
@@ -2205,7 +2215,7 @@ function renderBreakingNews(data) {
   html += '<div class="breaking-news-grid" style="padding-top:16px; border-top:1px solid var(--border);">';
   if (items.length > 0) {
     var heroItem = items[0];
-    var sideItems = items.slice(1, 5);
+    var sideItems = items.slice(1, 13); // side column scrolls — show up to 12
 
     function _ca(item) {
         var encSnippet = item.description ? encodeURIComponent(item.description) : '';
@@ -3675,14 +3685,69 @@ async function loadNewsPage() {
     });
   });
 
-  // Update meta chips
-  if (data && data.generated) {
-    document.getElementById('last-updated-time').textContent = timeAgo(data.generated);
-  } else {
-    document.getElementById('last-updated-time').textContent = 'Pending update';
-  }
-  document.getElementById('total-story-count').textContent = totalStories || '—';
 }
+
+/* ═══════════════════════════════════════════════════
+   LOCAL DATE / TIME / WEATHER — hero meta chips
+═══════════════════════════════════════════════════ */
+function _localClockTick() {
+  var now = new Date();
+  var dEl = document.getElementById('local-date');
+  var tEl = document.getElementById('local-time');
+  if (dEl) dEl.textContent = now.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  if (tEl) tEl.textContent = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+/* WMO weather codes → icon + label */
+var _WMO_WEATHER = {
+  0:['☀️','Clear'],1:['🌤️','Mostly clear'],2:['⛅','Partly cloudy'],3:['☁️','Cloudy'],
+  45:['🌫️','Fog'],48:['🌫️','Fog'],
+  51:['🌦️','Light drizzle'],53:['🌦️','Drizzle'],55:['🌦️','Heavy drizzle'],
+  56:['🌧️','Freezing drizzle'],57:['🌧️','Freezing drizzle'],
+  61:['🌧️','Light rain'],63:['🌧️','Rain'],65:['🌧️','Heavy rain'],
+  66:['🌧️','Freezing rain'],67:['🌧️','Freezing rain'],
+  71:['🌨️','Light snow'],73:['🌨️','Snow'],75:['🌨️','Heavy snow'],77:['🌨️','Snow grains'],
+  80:['🌦️','Showers'],81:['🌦️','Showers'],82:['⛈️','Heavy showers'],
+  85:['🌨️','Snow showers'],86:['🌨️','Snow showers'],
+  95:['⛈️','Thunderstorm'],96:['⛈️','Thunderstorm'],99:['⛈️','Hailstorm']
+};
+
+async function _loadLocalWeather() {
+  var chip = document.getElementById('local-weather-chip');
+  var el   = document.getElementById('local-weather');
+  if (!chip || !el) return;
+  try {
+    var lat = null, lon = null, city = '';
+    // 1. Approximate location — silent, no permission prompt
+    try {
+      var geoRes = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(6000) });
+      if (geoRes.ok) {
+        var geo = await geoRes.json();
+        if (typeof geo.latitude === 'number') { lat = geo.latitude; lon = geo.longitude; city = geo.city || ''; }
+      }
+    } catch (_) {}
+    // 2. Fallback — browser geolocation (may prompt)
+    if (lat === null && navigator.geolocation) {
+      var pos = await new Promise(function(res, rej) {
+        navigator.geolocation.getCurrentPosition(res, rej, { timeout: 8000, maximumAge: 600000 });
+      });
+      lat = pos.coords.latitude; lon = pos.coords.longitude;
+    }
+    if (lat === null) throw new Error('no location');
+    var wxRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon
+      + '&current=temperature_2m,weather_code&timezone=auto', { signal: AbortSignal.timeout(8000) });
+    var wx = await wxRes.json();
+    var temp = Math.round(wx.current.temperature_2m);
+    var code = _WMO_WEATHER[wx.current.weather_code] || ['🌡️', ''];
+    el.textContent = code[0] + ' ' + temp + '°C' + (code[1] ? ' · ' + code[1] : '') + (city ? ' · ' + city : '');
+  } catch (e) {
+    chip.style.display = 'none'; // weather unavailable — hide chip gracefully
+  }
+}
+
+_localClockTick();
+setInterval(_localClockTick, 1000);
+_loadLocalWeather();
 
 /* ═══════════════════════════════════════════════════
    WORLD NEWS — load, render, popup
@@ -3783,9 +3848,9 @@ function _buildNpLayout(items, getImg, getOnClick, timeFunc) {
   }
 
   var hero      = items[0];
-  var sides     = items.slice(1, 4);   /* 3 sidebar stories */
-  var latest    = items.slice(4, 9);   /* 5 latest stories  */
-  var gridItems = items.slice(9, 12);  /* 3 bottom-grid stories */
+  var sides     = items.slice(1, 4);    /* 3 sidebar stories */
+  var latest    = items.slice(4, 12);   /* up to 8 latest stories — column scrolls */
+  var gridItems = items.slice(12, 18);  /* up to 6 bottom-grid stories */
 
   var wrap = document.createElement('div');
   wrap.className = 'world-np-wrap';

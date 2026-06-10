@@ -207,7 +207,7 @@ function parseXmlItems(xmlStr) {
     const entries = Array.from(xml.getElementsByTagName('entry'));
     const all = nodes.length ? nodes : entries;
     
-    return all.slice(0, 16).map(item => {
+    return all.slice(0, 30).map(item => {
       let link = '';
       const linkEl = item.getElementsByTagName('link')[0];
       if (linkEl) {
@@ -307,9 +307,9 @@ async function run() {
         source: item.source || regionName
       }));
       
-      // Sort and take top 8
+      // Sort and take top 16 — side column scrolls on the page
       items.sort((a, b) => b.publishedAt - a.publishedAt);
-      outputData[continent][regionName] = items.slice(0, 8);
+      outputData[continent][regionName] = items.slice(0, 16);
     }
   }
 

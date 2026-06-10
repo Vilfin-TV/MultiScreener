@@ -15,7 +15,7 @@ const path  = require('path');
 const url   = require('url');
 
 const REQUEST_TIMEOUT_MS = 18000;
-const MAX_PER_REGION     = 20;   // layout needs 13 (hero+3+6+3); keep extra buffer
+const MAX_PER_REGION     = 24;   // layout needs 18 (hero+3+8+6); keep extra buffer
 const EXPIRY_HOURS       = 3;    // world news refreshes more frequently
 
 /* ═══════════════════════════════════════════════════
