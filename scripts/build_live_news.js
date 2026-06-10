@@ -137,7 +137,7 @@ function parseXmlItems(xmlStr) {
     const entries = Array.from(xml.getElementsByTagName('entry'));
     const all = nodes.length ? nodes : entries;
     
-    return all.slice(0, 16).map(item => {
+    return all.slice(0, 30).map(item => {
       let link = '';
       const linkEl = item.getElementsByTagName('link')[0];
       if (linkEl) {

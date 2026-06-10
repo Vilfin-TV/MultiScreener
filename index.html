@@ -1544,6 +1544,14 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 @media(max-width:1000px){ .layout-magazine { grid-template-columns:repeat(2, 1fr); } }
 @media(max-width:600px){ .layout-magazine { grid-template-columns:1fr; } }
 
+/* ── Sliding bar for ALL channel layouts: bounded height + visible scrollbar ── */
+.layout-masonry,.layout-manorama,.layout-magazine{max-height:640px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.layout-masonry::-webkit-scrollbar,.layout-manorama::-webkit-scrollbar,.layout-magazine::-webkit-scrollbar{width:7px}
+.layout-masonry::-webkit-scrollbar-track,.layout-manorama::-webkit-scrollbar-track,.layout-magazine::-webkit-scrollbar-track{background:transparent}
+.layout-masonry::-webkit-scrollbar-thumb,.layout-manorama::-webkit-scrollbar-thumb,.layout-magazine::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.layout-masonry::-webkit-scrollbar-thumb:hover,.layout-manorama::-webkit-scrollbar-thumb:hover,.layout-magazine::-webkit-scrollbar-thumb:hover{background:var(--gold2)}
+@media(max-width:600px){.layout-masonry,.layout-manorama,.layout-magazine{max-height:500px}}
+
 .lnb-card-grid .lnb-loading,.lnb-card-grid .lnb-error,.lnb-card-grid .lnb-stale{padding:16px;text-align:center;font-size:11px;grid-column:1/-1}
 /* Hero card — left column; height:100% so it stretches to match the CSS-grid row height */
 .lnb-hero-card{display:flex;flex-direction:column;border-right:1px solid var(--border);min-width:0;overflow:hidden;height:100%}
@@ -1559,9 +1567,10 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-hero-snippet{font-size:12.5px;color:var(--text2);line-height:1.5;display:block;margin-top:1px}
 .lnb-hero-time{font-size:9.5px;color:var(--text3);font-family:'JetBrains Mono',monospace;padding-top:2px;letter-spacing:.3px}
 /* Sub-stories: scrollable, natural height per item — never squished or clipped */
-.lnb-hero-subs{display:flex;flex-direction:column;flex:1;border-top:1px solid var(--border);overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
-.lnb-hero-subs::-webkit-scrollbar{width:3px}
-.lnb-hero-subs::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.lnb-hero-subs{display:flex;flex-direction:column;flex:1;border-top:1px solid var(--border);overflow-y:auto;max-height:320px;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.lnb-hero-subs::-webkit-scrollbar{width:7px}
+.lnb-hero-subs::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.lnb-hero-subs::-webkit-scrollbar-thumb:hover{background:var(--gold2)}
 /* flex-shrink:0 prevents items from compressing; text wraps naturally */
 .lnb-hero-sub{flex-shrink:0;padding:9px 15px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;display:flex;flex-direction:column;gap:4px}
 .lnb-hero-sub:hover{background:rgba(255,255,255,.05)}
@@ -1571,9 +1580,10 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-hero-sub:hover .lnb-hero-sub-title{color:var(--gold2)}
 .lnb-hero-sub-time{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace}
 /* Right column — scrollable list; max-height drives the grid row height */
-.lnb-right-col{display:flex;flex-direction:column;overflow-y:auto;min-width:0;max-height:520px;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
-.lnb-right-col::-webkit-scrollbar{width:3px}
-.lnb-right-col::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.lnb-right-col{display:flex;flex-direction:column;overflow-y:auto;min-width:0;max-height:640px;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.lnb-right-col::-webkit-scrollbar{width:7px}
+.lnb-right-col::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.lnb-right-col::-webkit-scrollbar-thumb:hover{background:var(--gold2)}
 /* flex-shrink:0: list items keep natural height, not compressed by flex */
 .lnb-list-item{flex-shrink:0;display:flex;align-items:center;gap:11px;padding:9px 13px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;min-height:54px}
 .lnb-list-item:hover{background:rgba(255,255,255,.05)}
@@ -15667,7 +15677,7 @@ function _cleanNewsTitle(title) {
 function renderItems(listEl, items) {
   if (!listEl || !Array.isArray(items)) return;
   const channelGroup = listEl.dataset.group || '';
-  const all = items.slice(0, 15); // UP TO 15 ITEMS
+  const all = items.slice(0, 30); // UP TO 30 ITEMS — boxes scroll, so density is safe
   if (!all.length) return;
 
   function _decode(str) {
@@ -15721,8 +15731,8 @@ function renderItems(listEl, items) {
     let heroIdx = all.findIndex(item => _d(item).imgSrc); if (heroIdx === -1) heroIdx = 0; const h = _d(all[heroIdx]); const subItems = all.filter((_, i) => i !== heroIdx);
     const wrapBg = h.imgSrc ? `background-image:url('${escHtml(h.imgSrc)}');background-size:cover;background-position:center` : 'background:var(--card3)';
 
-    // 4 sub-stories in hero column (leaves room for natural text wrapping)
-    const subHtml = subItems.slice(0, 4).map(item => {
+    // 6 sub-stories in hero column (column scrolls, so extra depth is safe)
+    const subHtml = subItems.slice(0, 6).map(item => {
       const d = _d(item);
       const kicker = (d.category || d.source || '').slice(0, 30);
       return `<div class="lnb-hero-sub" ${_ca(d)}>
@@ -15746,8 +15756,8 @@ function renderItems(listEl, items) {
       ${subHtml ? `<div class="lnb-hero-subs">${subHtml}</div>` : ''}
     </div>`;
 
-    // Items 5-18 go to the scrollable right list (up to 14 headlines for density)
-    const listHtml = subItems.slice(4, 18).map(item => {
+    // All remaining items go to the scrollable right list (up to 23 headlines)
+    const listHtml = subItems.slice(6).map(item => {
       const d = _d(item);
       const catLabel = d.category || d.source || '';
       return `<div class="lnb-list-item" ${_ca(d)}>
@@ -15782,7 +15792,7 @@ function renderItems(listEl, items) {
     let heroIdx = all.findIndex(item => _d(item).imgSrc); if (heroIdx === -1) heroIdx = 0;
     const h = _d(all[heroIdx]); const subItems = all.filter((_, i) => i !== heroIdx);
     
-    const rightCount = Math.min(10, Math.floor(subItems.length / 2) * 2);
+    const rightCount = Math.min(14, Math.floor(subItems.length / 2) * 2);
     const rightItems = subItems.slice(0, rightCount);
     const leftItems = subItems.slice(rightCount);
 
@@ -15840,7 +15850,7 @@ function renderItems(listEl, items) {
 
 function _parseXmlItems(xmlStr) {
   const xml = new DOMParser().parseFromString(xmlStr, 'text/xml');
-  const nodes = Array.from(xml.querySelectorAll('item, entry')).slice(0, 16);
+  const nodes = Array.from(xml.querySelectorAll('item, entry')).slice(0, 30);
   return nodes.map(item => {
     // Extract link: try <link href="...">, then <link>text</link>, then <guid>, then <enclosure url="...">
     const linkEl = item.querySelector('link');
