@@ -871,7 +871,7 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
           <div class="subject-title">Computer Science</div>
         </div>
         <div class="subject-links">
-          <a href="#" onclick="return false; alert('Coming Soon');">Programming Basics</a>
+          <a href="#" onclick="openProgrammingLesson(0); return false;">Programming Basics</a>
           <a href="#" onclick="return false; alert('Coming Soon');">Web Development</a>
           <a href="#" onclick="return false; alert('Coming Soon');">Information Theory</a>
         </div>
@@ -1115,6 +1115,23 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
       </div>
     </div>
 
+    
+    <!-- ── PROGRAMMING BASICS ── -->
+    <div id="programming-content-area" style="display:none;">
+      <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">💻 Programming Basics</h2>
+      <p style="margin:0 0 20px; font-size:14px; color:var(--text2);">31-lesson course · Teaching-style · Simple language</p>
+      <div class="fin-layout">
+        <aside class="fin-toc" id="prog-toc">
+          <div class="fin-toc-header">📚 Course Outline</div>
+          <div class="fin-toc-list" id="prog-toc-list"></div>
+        </aside>
+        <div class="fin-main" id="prog-main">
+          <div class="fin-progress-bar"><div class="fin-progress-fill" id="prog-progress-fill" style="width:3.2%"></div></div>
+          <div id="prog-lesson-content"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── AI & ROBOTICS ── -->
     <div id="ai-content-area" style="display:none;">
       <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">🤖 AI &amp; Robotics</h2>
@@ -1186,6 +1203,7 @@ function _hideAllLessonAreas() {
   document.getElementById('micro-content-area').style.display = 'none';
   document.getElementById('macro-content-area').style.display = 'none';
   document.getElementById('ai-content-area').style.display = 'none';
+  document.getElementById('programming-content-area').style.display = 'none';
 }
 
 function openCbseLesson(subject, classNum) {
@@ -1284,6 +1302,22 @@ function openMacroLesson() {
   if (typeof renderMacroLesson === 'function') renderMacroLesson(0);
   document.getElementById('lesson-view-container').scrollTop = 0;
   try { history.replaceState(null, '', '?subject=macroeconomics'); } catch(e){}
+}
+
+
+var _activeProgrammingIdx = 0;
+function openProgrammingLesson(startIdx) {
+  document.getElementById('hero-section').style.display = 'none';
+  document.getElementById('subjects-section').style.display = 'none';
+  document.getElementById('lesson-view-container').style.display = 'block';
+  _hideAllLessonAreas();
+  document.getElementById('programming-content-area').style.display = 'block';
+  _activeHub = 'programming';
+  _activeProgrammingIdx = (typeof startIdx === 'number') ? startIdx : 0;
+  if (typeof renderProgrammingTOC === 'function') renderProgrammingTOC();
+  if (typeof renderProgrammingLesson === 'function') renderProgrammingLesson(_activeProgrammingIdx);
+  document.getElementById('lesson-view-container').scrollTop = 0;
+  try { history.replaceState(null, '', '?subject=programming'); } catch(e){}
 }
 
 var _activeAiIdx = 0;
@@ -4321,6 +4355,658 @@ const AI_LESSONS = [
 }
 ];
 
+var PROGRAMMING_LESSONS = [
+  {
+    "unit": "Unit 1 \u00b7 The Core Fundamentals",
+    "icon": "\ud83e\uddf1",
+    "title": "What is Computer Programming?",
+    "lead": "At its core, programming is the act of instructing a computer to perform a task. Unlike humans, computers have no intuition or common sense; they require explicit, step-by-step instructions. Programming languages act as a bridge, allowing humans to write logic in a readable format that is eventually translated into the binary (1s and 0s) that hardware understands.",
+    "points": [
+      "<strong>Algorithms:</strong> A sequence of well-defined instructions to solve a problem. Think of it as a highly specific recipe.",
+      "<strong>Syntax vs. Semantics:</strong> Syntax is the grammar of the language (e.g., a missing semicolon causes a syntax error). Semantics is the logic (e.g., subtracting instead of adding causes a semantic error).",
+      "<strong>Compilation vs. Interpretation:</strong> Compilers translate the entire program into machine code beforehand (like translating a book before reading). Interpreters translate line-by-line during execution (like a live translator)."
+    ],
+    "analogy": "Programming is like writing an extremely detailed manual for an enthusiastic but completely literal-minded robot. If you tell the robot to \"make a sandwich\" without explaining how to open the bread bag, it will crush the bag. You must break every action down to its atomic level.",
+    "qa": [
+      {
+        "q": "Do I need to be a math genius to program?",
+        "a": "No. While advanced fields like machine learning, cryptography, or game engine physics require heavy math, 90% of general web and application programming is about structural logic, problem-solving, and organization. If you can logically organise a multi-step project, you can program."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Core Fundamentals",
+    "icon": "\ud83e\uddee",
+    "title": "Variables and Data Types",
+    "lead": "A variable is a named container used to store data in memory so it can be referenced and manipulated by the program. Because computers treat different kinds of data differently (you can multiply numbers, but not text), programming languages classify data into distinct \"types\".",
+    "points": [
+      "<strong>Primitives:</strong> The basic building blocks. Integers (whole numbers), Floats (decimals), Booleans (true/false), and Strings (text).",
+      "<strong>Static vs. Dynamic Typing:</strong> Static typing (e.g., Java, C++) requires you to declare a variable's type upfront; dynamic typing (e.g., Python, JavaScript) figures it out at runtime.",
+      "<strong>Immutability:</strong> Some variables cannot be changed after they are created (constants). Using immutable data prevents accidental changes and makes code safer."
+    ],
+    "analogy": "Variables are like labelled storage boxes. The data type is the shape of the box. You cannot fit a liquid (a string) into a mesh basket (an integer). Static languages force you to label the box's type forever; dynamic languages let you swap the contents and change the label on the fly.",
+    "qa": [
+      {
+        "q": "Why are Strings called \"Strings\"?",
+        "a": "In early computing, text was simply viewed as a sequence\u2014or \"string\"\u2014of individual characters chained together. The name stuck, and today almost every language uses \"String\" to represent text."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Core Fundamentals",
+    "icon": "\ud83d\udd00",
+    "title": "Control Flow: If-Statements & Logic",
+    "lead": "A program that executes line 1 through 100 identically every time is rigid and useless. Control flow gives programs decision-making ability. By using conditional statements, a program can evaluate its current state and choose to execute different blocks of code.",
+    "points": [
+      "<strong>If / Else:</strong> The fundamental decision block. \"If this condition is true, do A; else, do B.\"",
+      "<strong>Boolean Logic:</strong> Combining conditions using AND, OR, and NOT. (e.g., IF user is logged in AND has premium account).",
+      "<strong>Switch / Match:</strong> A cleaner way to handle multiple possible values for a single variable, avoiding deep chains of if/else statements."
+    ],
+    "analogy": "Control flow is the railway switch of your code. As the train of execution moves down the track, a condition (like a boolean check) acts as the switch, determining whether the train goes left down track A or right down track B.",
+    "qa": [
+      {
+        "q": "What is a \"nested\" if statement, and why is it dangerous?",
+        "a": "Nesting is putting an if-statement inside another if-statement. While sometimes necessary, deep nesting creates \"spaghetti code\" that is incredibly hard for humans to read and maintain. Modern best practice favors \"early returns\" or \"guard clauses\" to keep code flat."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Core Fundamentals",
+    "icon": "\ud83d\udd04",
+    "title": "Loops and Iteration",
+    "lead": "Computers excel at doing repetitive tasks at blistering speeds without making mistakes. Loops are the construct that harness this power, allowing you to run the same block of code multiple times until a specific condition is met or a collection is fully processed.",
+    "points": [
+      "<strong>For Loops:</strong> Used when you know exactly how many times you want to iterate (e.g., doing something 10 times, or for every item in a list).",
+      "<strong>While Loops:</strong> Used when you want to loop until a condition becomes false (e.g., keep polling a server until a response arrives).",
+      "<strong>Infinite Loops:</strong> A common bug where the exit condition is never met, causing the program to run forever until the system crashes."
+    ],
+    "analogy": "A loop is like a circular race track. The program enters the track and keeps driving laps. A \"for loop\" means you decide upfront to drive 50 laps. A \"while loop\" means you keep driving until you run out of fuel. An infinite loop means someone locked your steering wheel and cut your fuel line gauge.",
+    "qa": [
+      {
+        "q": "How does this relate to data processing?",
+        "a": "Loops are how computers process massive datasets. If VilfinTV needs to process 5,000 market tickers, it does not write 5,000 lines of code. It writes one loop that processes a single ticker, and runs it 5,000 times in a fraction of a second."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Core Fundamentals",
+    "icon": "\ud83d\udce6",
+    "title": "Functions and Modularity",
+    "lead": "As programs grow, writing all code in one continuous sequence becomes unmanageable. Functions allow you to wrap a piece of code, give it a name, and reuse it. They take inputs (arguments), perform operations, and return an output. This is the foundation of modular, maintainable software.",
+    "points": [
+      "<strong>DRY Principle (Don't Repeat Yourself):</strong> If you find yourself pasting the same code twice, it should probably be extracted into a function.",
+      "<strong>Scope:</strong> Variables created inside a function generally cannot be seen outside of it. This prevents different parts of the program from accidentally overwriting each other's data.",
+      "<strong>Pure Functions:</strong> Functions that always return the same output for a given input and have no \"side effects\" (they don't modify variables outside their scope). Highly desirable for reliability."
+    ],
+    "analogy": "A function is like a vending machine. You don't need to know the mechanical engineering inside the machine. You just need to know the interface: insert coin (input), press button (call), and receive a soda (output/return).",
+    "qa": [
+      {
+        "q": "What is a \"callback\" function?",
+        "a": "A callback is simply a function passed as an input into another function, to be executed later. For example, \"Download this image, and when you are done, run this callback function to display it.\" It is vital for asynchronous programming."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Programming Paradigms",
+    "icon": "\ud83c\udfdb\ufe0f",
+    "title": "Object-Oriented Programming (OOP)",
+    "lead": "OOP is a paradigm that models software around real-world \"objects\" rather than just functions and logic. By grouping related data (attributes) and behaviors (methods) into a single entity (a class/object), developers can build large, complex systems that mimic human conceptualization.",
+    "points": [
+      "<strong>Encapsulation:</strong> Hiding the internal state of an object and requiring all interaction to occur through defined methods. Protects data integrity.",
+      "<strong>Inheritance:</strong> Creating new classes based on existing ones to promote code reuse (e.g., a \"Dog\" class inherits from an \"Animal\" class).",
+      "<strong>Polymorphism:</strong> The ability for different objects to respond to the same method call in their own specific way."
+    ],
+    "analogy": "Think of a car factory. The \"Class\" is the blueprint for a car. The \"Object\" is the actual physical car built from that blueprint. The car has properties (color: red, speed: 0) and methods (accelerate(), brake()). Encapsulation means the driver presses the pedal (method) without needing to manually adjust fuel injection (internal hidden data).",
+    "qa": [
+      {
+        "q": "Is OOP still relevant today?",
+        "a": "Yes, heavily. While functional programming has gained massive popularity for data and web logic, OOP remains the backbone of enterprise software (Java, C#), game engines (C++), and complex UI frameworks."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Programming Paradigms",
+    "icon": "\ud83e\uddea",
+    "title": "Functional Programming (FP)",
+    "lead": "Functional Programming treats computation as the evaluation of mathematical functions. It avoids changing-state and mutable data. While OOP focuses on nouns (objects), FP focuses on verbs (actions). This paradigm leads to highly predictable code that is easier to test and scale across multiple processors.",
+    "points": [
+      "<strong>Immutability:</strong> Once data is created, it cannot be changed. Instead of modifying an array, you create a new array with the changes applied.",
+      "<strong>First-Class Functions:</strong> Functions are treated like any other variable. They can be assigned, passed as arguments, and returned.",
+      "<strong>Higher-Order Functions:</strong> Map, Filter, and Reduce. These functions take other functions as arguments to transform collections of data elegantly without explicit loops."
+    ],
+    "analogy": "OOP is like an assembly line where a chassis rolls down and robotic arms bolt things onto it (mutating the chassis). FP is like a pipeline of magical 3D printers: the chassis goes into a machine, and instead of modifying it, the machine instantly prints a brand new, fully-bolted car on the other side, leaving the original untouched.",
+    "qa": [
+      {
+        "q": "Why has FP become so popular in web development?",
+        "a": "Because modern web apps have complex, unpredictable states (user clicks, network responses). Immutability makes it much easier to track what changed and when. Frameworks like React heavily utilize functional concepts."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Programming Paradigms",
+    "icon": "\ud83d\udce3",
+    "title": "Declarative vs. Imperative",
+    "lead": "Programming paradigms broadly fall into two cognitive models. Imperative programming tells the computer exactly HOW to do something step-by-step. Declarative programming tells the computer WHAT you want, and lets the underlying system figure out how to achieve it.",
+    "points": [
+      "<strong>Imperative (How):</strong> C, Java, Python. \"Create an empty list. Loop through these numbers. If the number is even, append it to the list.\"",
+      "<strong>Declarative (What):</strong> SQL, HTML, React. \"Give me all users where age > 18\" or \"Render a blue button here.\" You do not write the memory allocation or screen-painting loops.",
+      "<strong>The Trend:</strong> Modern high-level programming constantly moves towards declarative abstractions to improve developer productivity."
+    ],
+    "analogy": "Imperative is getting in a taxi and saying: \"Drive 400 meters, turn left, wait for the light, turn right, stop at the blue house.\" Declarative is getting in and saying: \"Take me to the airport.\" The driver (compiler/framework) handles the details.",
+    "qa": [
+      {
+        "q": "Is HTML a programming language?",
+        "a": "HTML is a \"Markup Language\" (a declarative language for defining structure), not a Turing-complete programming language because it cannot perform logic (if/else, loops). However, it is an essential language for writing web software."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Programming Paradigms",
+    "icon": "\u26a1",
+    "title": "Asynchronous Programming",
+    "lead": "Most code runs synchronously (one line executes, blocks the program until finished, then moves to the next). But what if you are downloading a 50MB file? Blocking the program means the UI freezes. Asynchronous programming allows tasks to run in the background while the main program continues.",
+    "points": [
+      "<strong>Threads / Concurrency:</strong> Running multiple tasks simultaneously on different CPU cores.",
+      "<strong>Event Loops (JavaScript):</strong> A single-threaded model that uses a queue to handle background tasks without freezing.",
+      "<strong>Promises and Async/Await:</strong> Modern constructs that make writing asynchronous code look and behave like synchronous code, avoiding \"callback hell.\""
+    ],
+    "analogy": "Synchronous cooking: You put bread in the toaster, stand perfectly still staring at it for 2 minutes, then when it pops, you start frying the egg. Asynchronous cooking: You put bread in the toaster (start task), instantly walk away to fry the egg, and an alarm rings (callback/promise resolved) when the toast is ready.",
+    "qa": [
+      {
+        "q": "Why is Async so critical for frontend development?",
+        "a": "Browsers typically run UI and JavaScript on a single thread. If you fetch data from an API synchronously, the entire browser tab locks up until the data arrives. Async keeps applications smooth and responsive."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Modern Web Ecosystem",
+    "icon": "\ud83c\udf10",
+    "title": "The Browser Triangle: HTML, CSS, JS",
+    "lead": "The World Wide Web is built on a trinity of foundational technologies. Regardless of the complex frameworks used to build a modern web app, every tool ultimately compiles down to these three languages because they are the only things a web browser inherently understands.",
+    "points": [
+      "<strong>HTML (Structure):</strong> The skeleton. It defines headings, paragraphs, links, and image containers. It represents the Document Object Model (DOM).",
+      "<strong>CSS (Presentation):</strong> The skin and clothing. It handles colors, layouts, typography, and responsive design (making sites work on mobile).",
+      "<strong>JavaScript (Behavior):</strong> The muscle and nervous system. It handles user interactions, fetches live data, and dynamically alters the HTML and CSS."
+    ],
+    "analogy": "Building a web page is like building a house. HTML is the concrete foundation and wooden framing (the structure). CSS is the paint, the carpet, and the interior design (the look). JavaScript is the electricity and plumbing\u2014making the lights turn on when you flick a switch.",
+    "qa": [
+      {
+        "q": "Why does VilfinTV rely on Vanilla CSS instead of Tailwind?",
+        "a": "Vanilla CSS provides maximum control, reduced build complexity, and cleaner HTML. While utility frameworks like Tailwind are popular for rapid prototyping, deeply custom, highly optimized institutional platforms often benefit from a well-architected semantic CSS system."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Modern Web Ecosystem",
+    "icon": "\u269b\ufe0f",
+    "title": "Frontend Frameworks (React, Vue, Next)",
+    "lead": "As websites evolved into complex \"Web Applications\" (like Gmail or Netflix), managing the DOM directly with JavaScript became unmaintainable. Frontend frameworks introduced component-based architecture and state management, revolutionising how UI is built.",
+    "points": [
+      "<strong>Components:</strong> Breaking the UI into small, reusable, isolated pieces (e.g., a \"Button\" component or a \"Navbar\" component).",
+      "<strong>Virtual DOM (React):</strong> Instead of updating the slow, real browser DOM, React updates a lightweight copy in memory, computes the difference (diffing), and patches the real DOM efficiently.",
+      "<strong>Meta-Frameworks (Next.js):</strong> Frameworks built on top of React that handle server-side rendering (SSR), routing, and API integration out-of-the-box."
+    ],
+    "analogy": "Writing raw Vanilla JS for a complex app is like hand-carving a wooden toy\u2014it is fine for small projects. Using React is like using LEGO blocks. You build small, perfect blocks (components) and snap them together to build incredibly complex structures that are easy to modify or rebuild.",
+    "qa": [
+      {
+        "q": "Do I need a framework for every project?",
+        "a": "No. The \"Modern Web\" suffers from framework fatigue. For a static blog or a simple landing page, raw HTML/CSS/JS is often faster and better. Frameworks shine when the UI has highly interactive, rapidly changing state."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Modern Web Ecosystem",
+    "icon": "\ud83d\udd0c",
+    "title": "Backend & RESTful APIs",
+    "lead": "The \"Frontend\" is what the user sees in the browser. The \"Backend\" is the server hidden away in a data center handling the heavy logic, security, and database connections. They communicate primarily through Application Programming Interfaces (APIs).",
+    "points": [
+      "<strong>RESTful Design:</strong> A standard architectural style using HTTP verbs (GET to read, POST to create, PUT to update, DELETE to remove).",
+      "<strong>Statelessness:</strong> Every API request must contain all information needed to process it. The server does not remember the previous request.",
+      "<strong>JSON (JavaScript Object Notation):</strong> The universal, human-readable data format used by almost all modern APIs to pass data between the frontend and backend."
+    ],
+    "analogy": "In a restaurant, the dining room is the Frontend, and the kitchen is the Backend. You (the user) cannot walk into the kitchen to grab food. The waiter is the API. You give an order (a POST request) to the waiter in a specific format (JSON). The waiter takes it to the kitchen, and returns with your food (the Response).",
+    "qa": [
+      {
+        "q": "How does VilfinTV fetch data?",
+        "a": "VilfinTV uses secure backend functions (like Cloudflare Workers) acting as APIs. The frontend makes asynchronous GET requests to these workers, which fetch data from protected sources (like Google Sheets), format it as JSON, and return it to the browser."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Modern Web Ecosystem",
+    "icon": "\ud83d\udee1\ufe0f",
+    "title": "TypeScript vs. JavaScript",
+    "lead": "JavaScript is a dynamically typed language, which makes it fast to write but prone to runtime errors (bugs that crash the app when the user is using it). TypeScript is a superset of JavaScript developed by Microsoft that adds optional static typing.",
+    "points": [
+      "<strong>Compile-Time Checking:</strong> TypeScript catches errors in the editor before the code is even run, acting like an automated spell-checker for logic.",
+      "<strong>Interfaces and Types:</strong> You can explicitly define the shape of data. If an API expects an object with an \"id\" and a \"title\", TypeScript enforces it.",
+      "<strong>Compilation:</strong> Browsers cannot read TypeScript. It must be compiled (transpiled) down into standard JavaScript before deployment."
+    ],
+    "analogy": "Writing JavaScript is like playing bowling with the bumpers down\u2014you have total freedom, but it is easy to throw a gutter ball (runtime crash). TypeScript puts the bumpers up. It restricts some freedom, but ensures your ball hits the pins.",
+    "qa": [
+      {
+        "q": "Is TypeScript replacing JavaScript?",
+        "a": "Effectively, yes, in the enterprise space. Almost all large-scale modern codebases and prominent open-source libraries are now written in TypeScript. However, because it compiles to JS, JS remains the actual runtime language."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Modern Web Ecosystem",
+    "icon": "\ud83d\udce1",
+    "title": "The Real-Time Web (WebSockets)",
+    "lead": "Traditional HTTP is request-response: the client asks, the server answers, and the connection closes. But modern apps (live chat, multiplayer games, live stock tickers) require the server to push data instantly without the client asking. WebSockets solve this.",
+    "points": [
+      "<strong>Persistent Connection:</strong> Unlike HTTP, a WebSocket connection stays open continuously, allowing bi-directional, low-latency communication.",
+      "<strong>Push Notifications:</strong> The server can \"push\" an event to the browser the millisecond it happens.",
+      "<strong>Use Cases:</strong> Financial trading platforms (like live screener feeds), collaborative documents (Google Docs), and IoT device monitoring."
+    ],
+    "analogy": "HTTP is like sending a letter through the postal service: you send it, wait days, and get a reply. WebSockets are like a telephone call: the line stays open, and both people can speak and listen to each other simultaneously in real-time.",
+    "qa": [
+      {
+        "q": "Why not use WebSockets for everything?",
+        "a": "WebSockets require maintaining an open connection on the server for every single user. If you have 1 million users, that is 1 million open ports eating server memory. HTTP is much cheaper and highly cacheable for static content."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 The Languages Landscape",
+    "icon": "\ud83d\udc0d",
+    "title": "Python: Data and AI",
+    "lead": "Python was created in 1991 with an emphasis on code readability and simplicity. Its \"batteries included\" philosophy and massive open-source community have made it the undisputed king of Data Science, Artificial Intelligence, and scientific computing.",
+    "points": [
+      "<strong>Readable Syntax:</strong> Uses whitespace/indentation instead of curly braces, making it look almost like executable English.",
+      "<strong>Data Ecosystem:</strong> Libraries like Pandas (data manipulation), NumPy (math), and PyTorch/TensorFlow (Machine Learning) are the industry standard.",
+      "<strong>Trade-off:</strong> Because it is an interpreted, dynamically typed language, it is much slower at execution time than compiled languages like C++ or Rust."
+    ],
+    "analogy": "Python is the Swiss Army knife of programming. It might not be the absolute best or fastest tool for building a hyper-specialized engine (C++), but it is incredibly versatile, easy to use, and almost always the right tool to reach for first when automating a task or analyzing data.",
+    "qa": [
+      {
+        "q": "Why is Python used for AI if it is slow?",
+        "a": "Python acts as the \"glue\" language. The heavy mathematical lifting in AI libraries (like PyTorch) is actually written in highly optimized C++ or CUDA (for GPUs). Python just provides a simple, elegant interface to trigger that fast code."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 The Languages Landscape",
+    "icon": "\u2699\ufe0f",
+    "title": "C++ & Rust: Systems & Performance",
+    "lead": "When performance, memory management, and hardware interaction are critical, developers turn to systems languages. They run close to the \"metal\" of the machine. C++ has dominated this space for decades, but Rust has recently emerged as a modern, safer alternative.",
+    "points": [
+      "<strong>Manual Memory Management (C++):</strong> The developer explicitly allocates and frees RAM. Unmatched speed, but easy to cause catastrophic crashes (memory leaks, segfaults).",
+      "<strong>Memory Safety (Rust):</strong> Rust uses a concept called \"Ownership\" checked by the compiler. It guarantees memory safety and thread safety without a garbage collector, eliminating entire classes of bugs.",
+      "<strong>Use Cases:</strong> Game engines (Unreal), operating systems, web browsers, and high-frequency financial trading algorithms."
+    ],
+    "analogy": "Programming in Python is like driving an automatic car with lane-assist. Programming in C++ is like driving a Formula 1 car with manual transmission and no seatbelts\u2014incredible speed, but one mistake is fatal. Rust is an F1 car where the pit crew refuses to let you start the engine unless your seatbelt is perfectly secured.",
+    "qa": [
+      {
+        "q": "Is Rust really rewriting the world?",
+        "a": "Slowly, yes. Major tech companies (Microsoft, Google, Meta) are aggressively adopting Rust for critical infrastructure because 70% of high-severity security vulnerabilities in historical codebases are memory safety issues caused by C/C++."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 The Languages Landscape",
+    "icon": "\ud83d\udc39",
+    "title": "Go (Golang): The Cloud Native",
+    "lead": "Developed internally at Google to solve their problems with large-scale network servers and compilation times. Go is statically typed, compiled, incredibly fast, and specifically designed for building scalable backend services and microservices.",
+    "points": [
+      "<strong>Simplicity:</strong> Go intentionally lacks many complex features (like inheritance) to keep the language simple and the codebase readable across massive teams.",
+      "<strong>Goroutines (Concurrency):</strong> Go makes concurrent programming (doing many things at once) trivially easy. You can spawn 100,000 goroutines using less memory than a few Java threads.",
+      "<strong>Cloud Dominance:</strong> Tools like Docker, Kubernetes, and Terraform are all written in Go. It is the language of modern cloud infrastructure."
+    ],
+    "analogy": "If C++ is a complex Swiss watch, Go is a reliable, industrial conveyor belt. It lacks the intricate features, but it excels at moving massive amounts of data concurrently across a warehouse (the cloud) with extreme efficiency.",
+    "qa": [
+      {
+        "q": "Should I learn Go or Node.js for backend?",
+        "a": "Node.js is great if you already know JavaScript and want a unified stack. Go is vastly superior for CPU-intensive tasks, massive concurrency, and highly scalable microservices architecture."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 The Languages Landscape",
+    "icon": "\ud83d\udcf1",
+    "title": "Swift & Kotlin: Mobile Native",
+    "lead": "To build applications that run natively on smartphones, developers use the languages officially supported by Apple and Google. These modern languages replaced older, clunkier predecessors (Objective-C and Java) to improve developer experience and safety.",
+    "points": [
+      "<strong>Swift (iOS):</strong> Developed by Apple. It is fast, safe, and powers iPhones, iPads, and Macs. Heavily utilizes Swift UI for declarative interfaces.",
+      "<strong>Kotlin (Android):</strong> Developed by JetBrains and adopted by Google. It interoperates perfectly with legacy Java code but offers modern features and null-safety.",
+      "<strong>Cross-Platform Alternatives:</strong> Frameworks like React Native and Flutter allow writing code once and deploying to both iOS and Android, sacrificing a tiny bit of performance for development speed."
+    ],
+    "analogy": "Swift and Kotlin are the official \"local dialects\" of iOS and Android. Speaking the local dialect (Native) ensures the fastest, most authentic interaction with the locals (the hardware features). Using React Native is like hiring a translator\u2014it works well, but there is a slight overhead.",
+    "qa": [
+      {
+        "q": "Why not use web apps instead of mobile apps?",
+        "a": "Web apps (PWAs) are great, but native apps have deeper hardware access (sensors, background processing, AR engines) and generally provide smoother, more responsive animations."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 The Languages Landscape",
+    "icon": "\u2615",
+    "title": "Java & C#: The Enterprise Giants",
+    "lead": "If you work at a bank, an insurance company, or a large multinational corporation, their core business logic is likely running on Java or C#. These are robust, object-oriented, strictly typed languages designed for large teams building massive, long-lasting systems.",
+    "points": [
+      "<strong>Write Once, Run Anywhere:</strong> Java compiles to bytecode that runs on the Java Virtual Machine (JVM), making it platform-independent.",
+      "<strong>C# and .NET:</strong> Microsoft's equivalent to Java. Heavily used in enterprise, but also dominates the gaming industry through the Unity game engine.",
+      "<strong>Ecosystem:</strong> Both have massive, mature ecosystems with libraries and frameworks (like Spring Boot for Java) that handle complex enterprise requirements like security and transactions."
+    ],
+    "analogy": "Java and C# are the cargo ships of programming. They take a while to set up and turn slowly, but they can carry massive amounts of business logic safely across the ocean for decades without sinking.",
+    "qa": [
+      {
+        "q": "Are Java and JavaScript related?",
+        "a": "No. They are completely unrelated languages. As the famous developer joke goes: \"Java is to JavaScript what Car is to Carpet.\" The name was a marketing ploy by Netscape in the 1990s to piggyback on Java's popularity."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 5 \u00b7 Developer Tooling & Git",
+    "icon": "\ud83d\uddc4\ufe0f",
+    "title": "Version Control (Git)",
+    "lead": "Without version control, developers collaborate by emailing zip files or naming files \"final_v3_REAL_final.js\". Git is a distributed version control system that tracks every single change to a codebase, allowing teams to collaborate safely, branch features, and roll back mistakes.",
+    "points": [
+      "<strong>Commits:</strong> A snapshot of the code at a specific point in time, accompanied by a message explaining what changed.",
+      "<strong>Branches:</strong> Parallel realities. You can create a \"feature\" branch to experiment without affecting the \"main\" production code.",
+      "<strong>Merging & Conflicts:</strong> Integrating branches. If two developers edit the exact same line of code, Git flags a \"merge conflict\" for a human to resolve manually."
+    ],
+    "analogy": "Git is like a video game save system with infinite slots and parallel universes. You can save before fighting a boss (commit). You can create an alternate timeline to try a different strategy (branch). If it fails, you can instantly reload your previous save without losing the main timeline.",
+    "qa": [
+      {
+        "q": "What is the difference between Git and GitHub?",
+        "a": "Git is the underlying command-line tool installed on your computer that tracks the code. GitHub is a commercial cloud hosting service (owned by Microsoft) where developers store their Git repositories to collaborate via the internet."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 5 \u00b7 Developer Tooling & Git",
+    "icon": "\ud83d\udcbb",
+    "title": "The Command Line Interface (CLI)",
+    "lead": "Graphical User Interfaces (GUIs) with mice and buttons are designed for general consumers. Developers primarily interact with computers using text via the terminal/CLI. It is faster, automatable, and the only way to interact with remote cloud servers.",
+    "points": [
+      "<strong>Navigation:</strong> Commands like \"cd\" (change directory) and \"ls\" (list files) to move around the filesystem.",
+      "<strong>Piping & Redirection:</strong> Taking the output of one command and instantly passing it as the input to another command (e.g., searching a log file for errors).",
+      "<strong>Shell Scripts:</strong> Writing a file containing a list of CLI commands to automate repetitive tasks."
+    ],
+    "analogy": "Using a GUI is like ordering at a restaurant from a picture menu by pointing. Using the CLI is like walking into the kitchen and speaking directly to the chef in their highly precise, specialized language. It requires learning the vocabulary, but it provides ultimate control.",
+    "qa": [
+      {
+        "q": "Why do hackers in movies always use black screens with green text?",
+        "a": "That is the CLI. Because servers do not have monitors or mice connected to them, administrators log into them remotely using text via protocols like SSH. The CLI uses negligible bandwidth and executes commands instantly."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 5 \u00b7 Developer Tooling & Git",
+    "icon": "\ud83e\udd16",
+    "title": "CI/CD (Continuous Integration / Delivery)",
+    "lead": "In the past, releasing software meant \"Deployment Day\"\u2014a terrifying weekend where teams prayed nothing broke. CI/CD automates the testing and deployment pipeline, allowing companies like Netflix and Amazon to safely release code thousands of times a day.",
+    "points": [
+      "<strong>Continuous Integration:</strong> Every time a developer commits code to GitHub, an automated server (like GitHub Actions) instantly compiles it and runs automated test suites.",
+      "<strong>Continuous Deployment:</strong> If all tests pass, the code is automatically deployed to the live production server without human intervention.",
+      "<strong>Benefits:</strong> Catching bugs within minutes of writing them, and releasing small, low-risk updates constantly."
+    ],
+    "analogy": "CI/CD is the automated quality control line in a factory. As soon as a worker bolts on a new part, sensors automatically test the part (CI). If it passes, the conveyor belt moves it directly to shipping (CD). If it fails, alarms sound and the belt stops before it reaches the customer.",
+    "qa": [
+      {
+        "q": "Does VilfinTV use CI/CD?",
+        "a": "Yes. Features like automated daily monitor scripts, market data fetching, and static site generation are often orchestrated through GitHub Actions, bridging the gap between a static host and dynamic data."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 5 \u00b7 Developer Tooling & Git",
+    "icon": "\ud83d\udc1e",
+    "title": "Debugging and Testing",
+    "lead": "Writing code is only 20% of programming. The other 80% is figuring out why the code is not working. Debugging is a methodical scientific process, and automated testing is how developers ensure fixed bugs never return.",
+    "points": [
+      "<strong>Unit Tests:</strong> Writing code to test your code. A unit test isolates a single function and verifies it returns the correct output for various inputs.",
+      "<strong>Breakpoints:</strong> Tools in an IDE that pause the execution of code at a specific line, allowing the developer to inspect the exact values of variables at that millisecond.",
+      "<strong>Rubber Duck Debugging:</strong> The proven practice of explaining your code line-by-line out loud to an inanimate object (like a rubber duck). The cognitive shift of verbalization often reveals the flaw."
+    ],
+    "analogy": "Debugging is like being a detective in a murder mystery where you are also the murderer. You must painstakingly trace the footprints (stack trace) backward from the crash site to find exactly which variable mutated incorrectly.",
+    "qa": [
+      {
+        "q": "What does \"Test-Driven Development (TDD)\" mean?",
+        "a": "It is a methodology where developers write the automated tests BEFORE they write the actual feature code. The test initially fails. They then write just enough code to make the test pass. It ensures high-quality, fully-tested codebases."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 6 \u00b7 Cloud, Data & Infrastructure",
+    "icon": "\ud83d\uddc2\ufe0f",
+    "title": "Databases: SQL vs. NoSQL",
+    "lead": "Variables live in temporary RAM and disappear when the program closes. Databases provide persistent, organized, and queryable storage on hard drives. The database landscape is divided into two primary philosophies.",
+    "points": [
+      "<strong>Relational (SQL):</strong> Postgres, MySQL. Data is stored in strict tables with columns and rows, like Excel. Tables relate to each other. Perfect for financial transactions and structured data.",
+      "<strong>Non-Relational (NoSQL):</strong> MongoDB, Redis. Data is stored as flexible JSON-like documents. A user document can have completely different fields from another. Excellent for rapid development and unstructured data.",
+      "<strong>ACID Properties:</strong> SQL databases guarantee ACID (Atomicity, Consistency, Isolation, Durability) so a bank transfer never deducts money without crediting the other account."
+    ],
+    "analogy": "SQL is like a highly organized filing cabinet where every form must have exact margins and required fields filled out. NoSQL is like a massive folder where you can drop in sticky notes, photos, and essays together\u2014messier, but much faster to throw things into.",
+    "qa": [
+      {
+        "q": "Which one should I learn first?",
+        "a": "SQL. Despite the hype around NoSQL in the 2010s, relational SQL databases remain the backbone of the global economy and are the most requested data skill in the industry."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 6 \u00b7 Cloud, Data & Infrastructure",
+    "icon": "\u2601\ufe0f",
+    "title": "Cloud Computing (AWS, GCP)",
+    "lead": "Historically, launching an app meant buying physical servers, renting a warehouse, and hiring security guards. Cloud computing revolutionized software by allowing developers to rent infinite computing power and storage over the internet by the second.",
+    "points": [
+      "<strong>IaaS, PaaS, SaaS:</strong> Infrastructure (renting virtual servers), Platform (Heroku/Vercel handles the servers, you just write code), Software (Gmail\u2014ready to use).",
+      "<strong>Serverless:</strong> A misleading name. Servers still exist, but the cloud provider dynamically manages the allocation. You write a function (e.g., AWS Lambda, Cloudflare Workers), and you only pay for the exact milliseconds it executes.",
+      "<strong>Scalability:</strong> The ability for a system to automatically boot up 100 extra servers if your app goes viral, and shut them down when traffic drops."
+    ],
+    "analogy": "Owning a server is like buying a house\u2014you pay a huge upfront cost and have to fix the plumbing yourself. The Cloud is like staying in a hotel\u2014you pay by the night, and someone else handles the electricity and security. Serverless is like an Uber\u2014you only pay precisely when the car is moving with you in it.",
+    "qa": [
+      {
+        "q": "What is \"Vendor Lock-in\"?",
+        "a": "The risk of building your software so heavily around AWS-specific or Google-specific tools that migrating to a cheaper competitor later becomes technically impossible without rewriting your entire application."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 6 \u00b7 Cloud, Data & Infrastructure",
+    "icon": "\ud83d\udc33",
+    "title": "Containers & Docker",
+    "lead": "The most common developer phrase is \"It works on my machine!\" Software often breaks when moved from a developer's Mac to a Linux production server because of slight differences in installed software. Containers solved this nightmare.",
+    "points": [
+      "<strong>Docker:</strong> A tool that packages code, libraries, and the exact operating system environment into a single standardized unit called a \"Container.\"",
+      "<strong>Isolation:</strong> Unlike heavy Virtual Machines (VMs) that simulate entire hardware systems, containers share the host machine's kernel but run in isolated processes, making them incredibly lightweight and fast.",
+      "<strong>Kubernetes:</strong> An orchestration system developed by Google. If you have 500 Docker containers running, Kubernetes acts as the conductor, restarting them if they crash and balancing the traffic load."
+    ],
+    "analogy": "Before standardized shipping containers, loading cargo ships was a nightmare of tetris-packing different sized barrels and boxes. Docker is the standardized steel shipping container. The cargo ship (server) does not care if the container holds bananas (Python) or electronics (Java); it just securely loads and runs the standardized box.",
+    "qa": [
+      {
+        "q": "Do frontend developers need to know Docker?",
+        "a": "Increasingly, yes. Modern full-stack development environments are often spun up locally using Docker Compose, allowing a developer to boot the frontend, backend, and database simultaneously with one command."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 6 \u00b7 Cloud, Data & Infrastructure",
+    "icon": "\ud83e\udde9",
+    "title": "Microservices Architecture",
+    "lead": "Traditionally, an application was built as a \"Monolith\"\u2014one massive codebase encompassing everything (users, billing, notifications). Microservices break the application down into dozens or hundreds of small, independent services that communicate via APIs.",
+    "points": [
+      "<strong>Independence:</strong> The Billing team can write their service in Go, while the AI team writes their service in Python. They communicate via REST APIs.",
+      "<strong>Resilience:</strong> If the Notification microservice crashes, the rest of the application (like Checkout) stays online.",
+      "<strong>Complexity Cost:</strong> Microservices introduce massive operational complexity. Tracing a bug across 5 different services communicating over a network is exponentially harder than debugging a monolith."
+    ],
+    "analogy": "A monolith is a one-man band playing the guitar, drums, and harmonica simultaneously. If he gets sick, the whole concert stops. Microservices are a symphony orchestra. Each musician (service) plays one instrument perfectly. If the oboe player gets sick, the orchestra keeps playing.",
+    "qa": [
+      {
+        "q": "Should startups build microservices?",
+        "a": "Usually no. The industry consensus is that you should start with a well-structured monolith. Microservices solve organizational scaling problems (when you have 500 engineers tripping over each other in one codebase). For a 5-person team, microservices are overkill."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 7 \u00b7 AI-Assisted Development",
+    "icon": "\ud83e\udde0",
+    "title": "The Shift to AI-Assisted Coding",
+    "lead": "The introduction of Large Language Models (LLMs) has fundamentally altered software engineering. Writing boilerplate code is no longer the primary bottleneck. The modern developer is transitioning from a \"code typist\" to a \"systems architect and code reviewer.\"",
+    "points": [
+      "<strong>Copilots:</strong> Tools embedded in the editor (GitHub Copilot, Cursor) that autocomplete entire functions, write unit tests, and explain legacy code.",
+      "<strong>Speed vs. Quality:</strong> AI vastly increases code generation speed, but introduces the risk of generating plausible-looking but deeply flawed or insecure code (hallucinations).",
+      "<strong>The New Bottleneck:</strong> Since generating code is cheap, the new bottleneck is strictly defining requirements, validating output, and maintaining architectural integrity."
+    ],
+    "analogy": "Programming with AI is like being promoted to Senior Architect, with an eager but inexperienced Junior Developer (the AI) assigned to you. The Junior works incredibly fast and types perfectly, but you must constantly review their work, check their logic, and ensure their pieces fit the master blueprint.",
+    "qa": [
+      {
+        "q": "Will AI replace software engineers?",
+        "a": "In the near term, AI will replace engineers who refuse to use AI. It automates coding, but \"software engineering\" is about solving complex, ambiguous human business problems\u2014a task that requires high-level context and judgment that current models lack."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 7 \u00b7 AI-Assisted Development",
+    "icon": "\ud83d\udde3\ufe0f",
+    "title": "Prompt Engineering for Code",
+    "lead": "Prompting an LLM for code generation is a distinct technical skill. A vague prompt yields generic, buggy code. A highly structured prompt leveraging context and constraints yields production-ready architecture.",
+    "points": [
+      "<strong>Context Provision:</strong> Models need context. Feeding the model your database schema, design system, and error logs before asking for a solution dramatically improves accuracy.",
+      "<strong>Few-Shot Prompting:</strong> Giving the AI one or two examples of exactly how you want the code formatted before asking it to generate the final code.",
+      "<strong>Iterative Refinement:</strong> Asking the AI to write the code, then asking it to review its own code for security flaws, then asking it to optimize for Big-O performance."
+    ],
+    "analogy": "Prompt engineering is like hiring a brilliant contractor who suffers from severe amnesia. Every time you speak to them, you must meticulously provide the blueprints, the building codes, and the history of the project, or they will start building a completely random house.",
+    "qa": [
+      {
+        "q": "Is prompt engineering a permanent job?",
+        "a": "Probably not as a standalone title. As models become smarter and agents can independently gather their own context, the need for humans to write \"magic phrases\" will diminish. It will just become a standard part of communication."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 7 \u00b7 AI-Assisted Development",
+    "icon": "\ud83d\udd75\ufe0f",
+    "title": "AI Agents in Software Engineering",
+    "lead": "We are moving beyond \"Copilots\" (which assist human typing) to \"Agents\" (which operate autonomously). A coding agent can be given a high-level GitHub Issue, independently read the codebase, write the code, run tests, debug errors, and submit a pull request.",
+    "points": [
+      "<strong>Tool Use:</strong> Agents are given access to terminal commands, web browsers, and code editors, allowing them to verify their own work rather than just generating text.",
+      "<strong>Devin / SWE-Agent:</strong> Early iterations of autonomous software engineers capable of solving complex, multi-file software engineering problems on their own.",
+      "<strong>Human-in-the-Loop:</strong> Currently, agents still require human oversight to approve architectural decisions and merge code, ensuring security and alignment."
+    ],
+    "analogy": "A Copilot is a highly advanced cruise control\u2014it keeps the car in the lane, but your hands are on the wheel. An AI Agent is a self-driving car. You give it the destination, and it turns the steering wheel, hits the brakes, and navigates traffic autonomously.",
+    "qa": [
+      {
+        "q": "How does an agent fix a bug?",
+        "a": "It reads the error, generates a hypothesis, writes a fix, runs the build command. If the build fails, it reads the new error, adjusts its hypothesis, and tries again. This loop continues until the build passes."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 7 \u00b7 AI-Assisted Development",
+    "icon": "\ud83d\udd2e",
+    "title": "The Future of Computer Science",
+    "lead": "As the mechanics of writing syntax are commoditized by AI, the discipline of Computer Science is shifting. The value is moving away from knowing how to balance a binary tree, toward systems thinking, data architecture, and human-computer interaction.",
+    "points": [
+      "<strong>English as a Programming Language:</strong> Natural language is becoming the highest-level programming abstraction. We compile English to Prompts to Code to Machine Code.",
+      "<strong>Verification Over Generation:</strong> The critical skill of the 2020s is reading and verifying complex code written by machines, understanding security vulnerabilities, and ensuring robustness.",
+      "<strong>The Persistence of Fundamentals:</strong> While AI writes the code, humans must still understand networking, latency, database normalization, and architecture to know if the AI is building a scalable system."
+    ],
+    "analogy": "Calculators commoditized long division, but they didn't eliminate mathematicians; they allowed mathematicians to focus on astrophysics and calculus. AI is commoditizing syntax, allowing software engineers to focus on inventing entirely new paradigms of human-computer infrastructure.",
+    "qa": [
+      {
+        "q": "Should students still learn to code?",
+        "a": "Absolutely. Just as an editor must know grammar to edit a book effectively, you must understand code to architect systems with AI. The people who build the future will be domain experts who use AI to write the code that solves their industry's biggest problems."
+      }
+    ]
+  }
+];
+
+
+// ═══════════════════════════════════════
+// PROGRAMMING BASICS — RENDER FUNCTIONS
+// ═══════════════════════════════════════
+function renderProgrammingTOC() {
+  var list = document.getElementById('prog-toc-list');
+  if (!list) return;
+  var html = '';
+  var currentUnit = '';
+  PROGRAMMING_LESSONS.forEach(function(lesson, i) {
+    if (lesson.unit !== currentUnit) {
+      currentUnit = lesson.unit;
+      html += '<div class="fin-toc-unit">' + esc(lesson.unit) + '</div>';
+    }
+    html += '<div class="fin-toc-item' + (i === _activeProgrammingIdx ? ' active' : '') + '" onclick="renderProgrammingLesson(' + i + ')" id="prog-toc-' + i + '">'
+          + '<span style="margin-right:7px;">' + lesson.icon + '</span>' + esc(lesson.title)
+          + '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function renderProgrammingLesson(idx) {
+  _activeProgrammingIdx = idx;
+  var lesson = PROGRAMMING_LESSONS[idx];
+  if (!lesson) return;
+
+  var pct = ((idx + 1) / PROGRAMMING_LESSONS.length) * 100;
+  var pfill = document.getElementById('prog-progress-fill');
+  if (pfill) pfill.style.width = pct + '%';
+
+  renderProgrammingTOC();
+  var act = document.getElementById('prog-toc-' + idx);
+  if (act && act.scrollIntoView) {
+    act.scrollIntoView({ behavior:'smooth', block:'center' });
+  }
+
+  var html = '<div class="fin-lesson-num">LESSON ' + (idx+1) + ' OF ' + PROGRAMMING_LESSONS.length + '</div>';
+  html += '<h1 class="fin-lesson-title">' + esc(lesson.title) + '</h1>';
+  
+  if (lesson.lead) {
+    html += '<div class="fin-lesson-lead">' + lesson.lead + '</div>';
+  }
+
+  if (lesson.points && lesson.points.length > 0) {
+    html += '<div class="fin-section-title">Key Concepts</div>';
+    html += '<ul class="fin-key-points">';
+    lesson.points.forEach(function(pt) {
+      html += '<li>' + pt + '</li>';
+    });
+    html += '</ul>';
+  }
+
+  if (lesson.analogy) {
+    html += '<div class="fin-analogy-box">'
+          + '<div class="fin-analogy-title">💡 The Intuition</div>'
+          + '<div class="fin-analogy-text">' + esc(lesson.analogy) + '</div>'
+          + '</div>';
+  }
+
+  if (lesson.qa && lesson.qa.length > 0) {
+    html += '<div class="fin-qa-section">';
+    html += '<div class="fin-section-title">Common Questions</div>';
+    lesson.qa.forEach(function(item, qidx) {
+      var uniq = 'prog-q-' + idx + '-' + qidx;
+      html += '<div class="fin-qa-item" id="' + uniq + '">'
+            + '<div class="fin-qa-q" onclick="document.getElementById(\'' + uniq + '\').classList.toggle(\'open\')">'
+            + '<span>' + esc(item.q) + '</span>'
+            + '<svg class="fin-qa-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>'
+            + '</div>'
+            + '<div class="fin-qa-a">' + item.a + '</div>'
+            + '</div>';
+    });
+    html += '</div>';
+  }
+
+  var prevDisabled = (idx === 0) ? ' disabled' : '';
+  var nextDisabled = (idx === PROGRAMMING_LESSONS.length - 1) ? ' disabled' : '';
+  
+  html += '<div class="fin-nav-row">'
+        + '<button class="fin-nav-btn"' + prevDisabled + ' onclick="renderProgrammingLesson(' + (idx-1) + ')">&#8592; Previous</button>'
+        + '<button class="fin-nav-btn primary"' + nextDisabled + ' onclick="renderProgrammingLesson(' + (idx+1) + ')">Next &#8594;</button>'
+        + '</div>';
+
+  var contentDiv = document.getElementById('prog-lesson-content');
+  if (contentDiv) contentDiv.innerHTML = html;
+  
+  var mainDiv = document.getElementById('prog-main');
+  if (mainDiv) mainDiv.scrollTop = 0;
+}
+
+
 // ═══════════════════════════════════════
 // AI & ROBOTICS — RENDER FUNCTIONS
 // ═══════════════════════════════════════
@@ -5703,6 +6389,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (_subj === 'macroeconomics' && typeof openMacroLesson === 'function') openMacroLesson();
     else if (_subj === 'microeconomics' && typeof openMicroLesson === 'function') openMicroLesson();
     else if (_subj === 'finance' && typeof openFinanceLesson === 'function') openFinanceLesson();
+    else if (_subj === 'programming' && typeof openProgrammingLesson === 'function') openProgrammingLesson(0);
     else if (_subj === 'ai-robotics' && typeof openAiLesson === 'function') openAiLesson(0);
   } catch(e){ console.error(e); }
 });
