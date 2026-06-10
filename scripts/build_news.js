@@ -1220,7 +1220,9 @@ function mergeItems(newItems, existingItems) {
     return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
   });
 
-  return combined.slice(0, 20); // cap at 20 per section
+  // Cap the rolling 48 h archive at 40 per section — matches the page's
+  // scrollable boxes. AI sections (16 new/run) accumulate to 40 across runs.
+  return combined.slice(0, 40);
 }
 
 /* ═══════════════════════════════════════════════════
