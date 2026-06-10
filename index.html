@@ -1503,7 +1503,7 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 @media(max-width:600px){ .layout-hero-list { grid-template-columns:1fr; } }
 
 /* ── Layout 2: Masonry / 3 Columns ── */
-.layout-masonry { padding:16px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; background:var(--card); }
+.layout-masonry { padding:18px 26px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; background:var(--card); }
 .masonry-col { display:flex; flex-direction:column; gap:16px; }
 .masonry-card { background:var(--card2); border-radius:8px; overflow:hidden; display:flex; flex-direction:column; cursor:pointer; transition:transform 0.2s; border:1px solid var(--border); }
 .masonry-card:hover { transform:translateY(-2px); border-color:var(--gold2); }
@@ -1516,14 +1516,17 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 @media(max-width:600px){ .layout-masonry { grid-template-columns:1fr; } }
 
 /* ── Layout 3: Manorama (1 large, 4 small grid) ── */
-.layout-manorama { padding:16px; display:grid; grid-template-columns:1.5fr 1fr; gap:16px; background:var(--card); }
+.layout-manorama { padding:18px 26px; display:grid; grid-template-columns:1.5fr 1fr; gap:20px; background:var(--card); }
 .mano-left { display:flex; flex-direction:column; gap:12px; }
-.mano-hero { flex:1; position:relative; border-radius:8px; overflow:hidden; cursor:pointer; min-height: 200px; border:1px solid var(--border); }
+/* flex:0 0 auto — hero keeps its own aspect-ratio size and never stretches
+   to fill the column height (which made the photo huge and over-cropped) */
+.mano-hero { flex:0 0 auto; position:relative; border-radius:8px; overflow:hidden; cursor:pointer; min-height: 200px; border:1px solid var(--border); }
 .mano-hero img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:top; transition:transform 0.3s; }
 .mano-hero:hover img { transform:scale(1.05); }
 .mano-hero-grad { position:absolute; inset:0; background:linear-gradient(0deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 60%, transparent 100%); display:flex; flex-direction:column; justify-content:flex-end; padding:20px; }
-.mano-hero-title { font-size:22px; font-weight:700; color:#fff; line-height:1.3; text-shadow:0 2px 4px rgba(0,0,0,0.8); margin-bottom:8px; }
-.mano-hero-desc { font-size:14px; color:#ddd; line-height:1.4; display:block; text-shadow:0 1px 2px rgba(0,0,0,0.8); }
+/* Clamp overlay text so the photo's subject stays visible behind it */
+.mano-hero-title { font-size:22px; font-weight:700; color:#fff; line-height:1.3; text-shadow:0 2px 4px rgba(0,0,0,0.8); margin-bottom:8px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.mano-hero-desc { font-size:14px; color:#ddd; line-height:1.4; text-shadow:0 1px 2px rgba(0,0,0,0.8); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .mano-right { display:grid; grid-template-columns:1fr 1fr; grid-auto-rows:min-content; gap:12px; }
 .mano-sub { background:var(--card2); border-radius:8px; overflow:hidden; display:flex; flex-direction:column; cursor:pointer; border:1px solid var(--border); }
 .mano-sub:hover { border-color:var(--gold2); }
@@ -1534,7 +1537,7 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 @media(max-width:600px){ .mano-right { grid-template-columns:1fr; } }
 
 /* ── Layout 4: Magazine Row ── */
-.layout-magazine { padding:16px; display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; background:var(--card); }
+.layout-magazine { padding:18px 26px; display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; background:var(--card); }
 .mag-card { background:var(--card2); border-radius:8px; overflow:hidden; display:flex; flex-direction:column; cursor:pointer; border:1px solid var(--border); }
 .mag-card:hover { border-color:var(--gold2); }
 .mag-img { width:100%; height:140px; object-fit:cover; object-position:top; }
@@ -15797,7 +15800,7 @@ function renderItems(listEl, items) {
     const leftItems = subItems.slice(rightCount);
 
     const heroHtml = `
-      <div class="mano-hero" ${_ca(h)} style="${!h.imgSrc ? 'min-height:auto;' : 'aspect-ratio:4/3;margin-bottom:16px;'}">
+      <div class="mano-hero" ${_ca(h)} style="${!h.imgSrc ? 'min-height:auto;' : 'aspect-ratio:16/9;max-height:320px;margin-bottom:16px;'}">
         ${h.imgSrc ? `<img src="${escHtml(h.imgSrc)}" loading="lazy" style="object-position:center 25%;" alt="">
         <div class="mano-hero-grad">
           <div class="mano-hero-title" style="font-size:18px;">${h.safeTitle}</div>
