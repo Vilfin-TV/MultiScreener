@@ -11,7 +11,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    # 16 AI stories/section x 3 sections at ~7 s each (Gemini free-tier pacing)
+    # + 13 RSS sections needs ~35 min; cron is every 5 h so no overlap risk
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
         with:
