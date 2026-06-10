@@ -2069,6 +2069,7 @@ const SECTION_META = {
   },
   // ── Malayalam Edition sub-categories ──────────────────────────────────────
   ml_trending:  { id:'ml_trending',  label:'Top Trending Kerala', icon:'🔥', accent:'#ef4444', cssClass:'news-section-trending',  image:'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80' },
+  ml_stock:     { id:'ml_stock',     label:'Stocks & Business',   icon:'📈', accent:'#059669', cssClass:'news-section-ml-stock',  image:'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=1200&q=80' },
   ml_movies:    { id:'ml_movies',    label:'Movie News',          icon:'🎬', accent:'#f59e0b', cssClass:'news-section-ml-movies',  image:'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&q=80' },
   ml_music:     { id:'ml_music',     label:'Music News',          icon:'🎵', accent:'#ec4899', cssClass:'news-section-ml-music',   image:'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1200&q=80' },
   ml_local:     { id:'ml_local',     label:'Local News',          icon:'📍', accent:'#06b6d4', cssClass:'news-section-ml-local',   image:'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1200&q=80' },
@@ -2087,6 +2088,7 @@ const SECTION_META = {
 ═══════════════════════════════════════════════════ */
 var ML_CATEGORIES = [
   { id:'ml_trending',   label:'🔥 Trending Kerala' },
+  { id:'ml_stock',      label:'📈 ഓഹരി & ബിസിനസ്' },
   { id:'ml_movies',     label:'🎬 Movies' },
   { id:'ml_music',      label:'🎵 Music' },
   { id:'ml_local',      label:'📍 Local' },
@@ -3322,7 +3324,7 @@ function buildMalayalamCategoriesBlock(data) {
   hdr.className = 'ml-cat-header';
   hdr.innerHTML = '<span style="font-size:22px">📰</span>'
     + '<span class="ml-cat-title">മലയാളം എഡിഷൻ</span>'
-    + '<span class="ml-cat-subtitle">12 Categories · Malayalam</span>'
+    + '<span class="ml-cat-subtitle">' + ML_CATEGORIES.length + ' Categories · Malayalam</span>'
     + '<button class="news-section-toggle" onclick="toggleNewsSection(this)" aria-expanded="true" aria-label="Toggle section"><svg viewBox="0 0 24 24"><path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14l-6-6z"/></svg></button>';
   wrap.appendChild(hdr);
 
@@ -3352,6 +3354,7 @@ function buildMalayalamCategoriesBlock(data) {
 /* Per-category image pools — 4 unique Unsplash photos per category, rotated by article index */
 var _ML_IMG_POOLS = {
   ml_trending:   ['https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=700&q=70','https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=700&q=70','https://images.unsplash.com/photo-1495020689067-958852a7765e?w=700&q=70','https://images.unsplash.com/photo-1453738773917-9c3eff1db985?w=700&q=70'],
+  ml_stock:      ['https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=700&q=70','https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=700&q=70','https://images.unsplash.com/photo-1579532537598-459ecdaf39cc?w=700&q=70','https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=700&q=70'],
   ml_movies:     ['https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=700&q=70','https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=700&q=70','https://images.unsplash.com/photo-1485846234645-a62644f84728?w=700&q=70','https://images.unsplash.com/photo-1524712245354-2c4e5e7121c3?w=700&q=70'],
   ml_music:      ['https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=700&q=70','https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=700&q=70','https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=700&q=70','https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=700&q=70'],
   ml_local:      ['https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=700&q=70','https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=700&q=70','https://images.unsplash.com/photo-1563536313-be6fc5d4b0d5?w=700&q=70','https://images.unsplash.com/photo-1468611083934-17bd02c3b08d?w=700&q=70'],
@@ -3881,7 +3884,7 @@ function _buildBnLayout(items, getImg, getOnClick, timeFunc, badgeText, accent) 
     grid.appendChild(hEl);
   }
 
-  var sideItems = items.slice(1, 17); // side column scrolls — up to 16 stories
+  var sideItems = items.slice(1, 41); // side column scrolls — up to 40 stories
   if (sideItems.length) {
     var side = document.createElement('div');
     side.className = 'bn-side-grid';

@@ -65,6 +65,7 @@ async function fetchPexels(query) {
       headers: { 'Authorization': PEXELS_API_KEY }
     };
     https.get(opts, (res) => {
+      res.setEncoding('utf8');
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
@@ -122,6 +123,7 @@ function fetchRss(url) {
         }
         return resolve(fetchRss(loc));
       }
+      res.setEncoding('utf8'); // stream-safe UTF-8 — never split multibyte chars across chunks
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => resolve(data));

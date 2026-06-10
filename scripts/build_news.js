@@ -41,7 +41,8 @@ const BLOCKED_KEYWORDS = [
   'massacre', 'pogrom', 'beheading', 'ethnic cleansing'
 ];
 
-const MAX_ITEMS_PER_SECTION = 16;  // up to 16 stories per section — section boxes scroll on the page
+const MAX_ITEMS_PER_SECTION = 16;  // AI sections (trending/global/india) — each story costs an LLM call
+const MAX_ITEMS_RSS_ONLY    = 40;  // RSS-only sections (stock/malayalam/ml_*) — no per-story AI cost
 const REQUEST_TIMEOUT_MS    = 22000;
 // First TWO entries per section are always fetched; rest are randomly sampled.
 // 7 feeds → 2 anchors + 5 random from a pool of 30+ for trending = per-cycle variety
@@ -206,6 +207,14 @@ const SOURCE_POOL = {
     { url: 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=IN',                   name: 'Google Trends IN' },
     { url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCbGkCBm7P6p3a7PGQRmMhsQ',        name: 'Asianet YT' },
   ],
+  ml_stock: [
+    { url: 'https://news.google.com/rss/search?q=site:dhanamonline.com&hl=ml&gl=IN&ceid=IN:ml',                 name: 'Dhanam Online' },
+    { url: 'https://news.google.com/rss/search?q=site:malayalam.economictimes.com&hl=ml&gl=IN&ceid=IN:ml',      name: 'ET Malayalam' },
+    { url: 'https://news.google.com/rss/search?q=site:manoramaonline.com/business&hl=ml&gl=IN&ceid=IN:ml',      name: 'Manorama Business' },
+    { url: 'https://news.google.com/rss/search?q=site:mathrubhumi.com/money&hl=ml&gl=IN&ceid=IN:ml',            name: 'Mathrubhumi Money' },
+    { url: 'https://news.google.com/rss/search?q=ഓഹരി+വിപണി+സെൻസെക്സ്+നിഫ്റ്റി&hl=ml&gl=IN&ceid=IN:ml',         name: 'Stock Market ML' },
+    { url: 'https://news.google.com/rss/search?q=ബിസിനസ്+നിക്ഷേപം+സ്വർണവില+kerala&hl=ml&gl=IN&ceid=IN:ml',      name: 'Business & Gold ML' },
+  ],
   ml_movies: [
     { url: 'https://news.google.com/rss/search?q=malayalam+cinema+film+movie&hl=ml&gl=IN&ceid=IN:ml',       name: 'Malayalam Cinema' },
     { url: 'https://news.google.com/rss/search?q=mollywood+new+movie+release+OTT&hl=ml&gl=IN&ceid=IN:ml',  name: 'Mollywood OTT' },
@@ -270,6 +279,7 @@ const SECTION_META = {
   malayalam:    { image: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=1200&q=80', label: '🎭 Malayalam News',    accent: '#8b5cf6' },
   // ── Malayalam Edition sub-categories ──────────────────────────────────────
   ml_trending:  { image: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80', label: 'Top Trending Kerala', accent: '#ef4444' },
+  ml_stock:     { image: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=1200&q=80', label: 'Stocks & Business',   accent: '#059669' },
   ml_movies:    { image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&q=80', label: 'Movie News',          accent: '#f59e0b' },
   ml_music:     { image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1200&q=80', label: 'Music News',          accent: '#ec4899' },
   ml_local:     { image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1200&q=80', label: 'Local News',          accent: '#06b6d4' },
@@ -1015,6 +1025,7 @@ var RSS_FALLBACK_IMAGES = {
   stock:        'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=70',
   malayalam:    'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800&q=70',
   ml_trending:  'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=70',
+  ml_stock:     'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&q=70',
   ml_movies:    'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&q=70',
   ml_music:     'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&q=70',
   ml_local:     'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=70',
@@ -1079,7 +1090,7 @@ async function buildSection(sectionId, feedPool, meta) {
   });
 
   console.log('  Items after dedup+filter:', deduped.length);
-  var selected = deduped.slice(0, MAX_ITEMS_PER_SECTION);
+  var selected = deduped.slice(0, isRssOnly ? MAX_ITEMS_RSS_ONLY : MAX_ITEMS_PER_SECTION);
 
   if (selected.length === 0) {
     console.warn('  No items for', sectionId, '— inserting placeholder');
