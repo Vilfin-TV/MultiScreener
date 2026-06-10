@@ -638,7 +638,7 @@ body{
 
 /* ── Sliding bar on every story box: bounded height + visible scrollbar ── */
 .news-cards-grid,.bn-side-grid{max-height:640px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
-.bn-side-grid{max-height:480px}
+.bn-side-grid{max-height:480px;overflow-x:hidden}
 .news-cards-grid::-webkit-scrollbar,.bn-side-grid::-webkit-scrollbar,.world-np-right::-webkit-scrollbar{width:7px}
 .news-cards-grid::-webkit-scrollbar-track,.bn-side-grid::-webkit-scrollbar-track,.world-np-right::-webkit-scrollbar-track{background:transparent}
 .news-cards-grid::-webkit-scrollbar-thumb,.bn-side-grid::-webkit-scrollbar-thumb,.world-np-right::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
@@ -1480,6 +1480,8 @@ footer.news-footer{
   display: flex;
   flex-direction: column;
   justify-content: center;
+  flex: 1;
+  min-width: 0; /* let long unbroken words (e.g. Malayalam) wrap instead of overflowing */
 }
 .bn-card-title {
   font-size: 15px;
@@ -1487,6 +1489,8 @@ footer.news-footer{
   color: var(--text);
   line-height: 1.4;
   margin-bottom: 6px;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 .bn-card-meta {
   font-size: 11px;
@@ -3403,14 +3407,16 @@ function _showMlCategory(catId, data) {
   var storyIndices = items.map(function(item) { return _cacheStory(item, catMeta); });
 
   content.innerHTML = '';
-  content.appendChild(_buildNpLayout(
+  content.appendChild(_buildBnLayout(
     items,
     function(item) { return item.image || _wCardImgUrl(item.headline || ''); },
     function(item, i) {
       var idx = storyIndices[items.indexOf(item)];
       return (function(si){ return function(){ openStoryIdx(si); }; })(idx);
     },
-    timeAgo
+    timeAgo,
+    catMeta.label || 'മലയാളം എഡിഷൻ',
+    catMeta.accent || '#0e7490'
   ));
 }
 
@@ -3833,6 +3839,71 @@ function _wCardImgUrl(headline) {
   return 'https://picsum.photos/seed/' + (Math.abs(s) || 42) + '/480/270';
 }
 
+/* Build a Breaking-News-style layout (large hero photo left + scrollable
+   side-card column right) for a list of story items. Reuses the Breaking
+   News CSS classes so photos, alignment and sizing are identical.
+   Used by World News regions and Malayalam Edition categories. */
+function _buildBnLayout(items, getImg, getOnClick, timeFunc, badgeText, accent) {
+  /* Deduplicate images within this layout — if a URL repeats, swap in a
+     picsum image seeded by the headline so every card looks distinct. */
+  var _usedImgs = {};
+  function _uniqueImg(item, i) {
+    var url = getImg(item, i);
+    var fb  = _wCardImgUrl(item.headline || '');
+    if (!url || _usedImgs[url]) return fb;
+    _usedImgs[url] = true;
+    return url;
+  }
+  function _wireCard(el, fn) {
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+    el.onclick = fn;
+    el.onkeydown = function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); } };
+  }
+
+  var grid = document.createElement('div');
+  grid.className = 'breaking-news-grid';
+
+  var hero = items[0];
+  if (hero) {
+    var hEl = document.createElement('div');
+    hEl.className = 'bn-hero';
+    _wireCard(hEl, getOnClick(hero, 0));
+    var hTe = hero.teaser ? esc(_wDecodeHtml(hero.teaser)) : '';
+    hEl.innerHTML =
+      '<img src="' + escAttr(_uniqueImg(hero, 0)) + '" alt="" loading="lazy"'
+      + ' onerror="this.onerror=null;this.src=\'' + escAttr(_wCardImgUrl(hero.headline || '')) + '\';">'
+      + '<div class="bn-hero-content">'
+      + (badgeText ? '<div class="bn-badge"' + (accent ? ' style="background:' + escAttr(accent) + '"' : '') + '>' + esc(badgeText) + '</div>' : '')
+      + '<div class="bn-hero-title">' + esc(_wDecodeHtml(hero.headline || '')) + '</div>'
+      + (hTe ? '<div class="bn-hero-desc">' + hTe + '</div>' : '')
+      + '</div>';
+    grid.appendChild(hEl);
+  }
+
+  var sideItems = items.slice(1, 17); // side column scrolls — up to 16 stories
+  if (sideItems.length) {
+    var side = document.createElement('div');
+    side.className = 'bn-side-grid';
+    sideItems.forEach(function(item, si) {
+      var card = document.createElement('div');
+      card.className = 'bn-card';
+      _wireCard(card, getOnClick(item, si + 1));
+      card.innerHTML =
+        '<img src="' + escAttr(_uniqueImg(item, si + 1)) + '" alt="" loading="lazy"'
+        + ' onerror="this.onerror=null;this.src=\'' + escAttr(_wCardImgUrl(item.headline || '')) + '\';">'
+        + '<div class="bn-card-content">'
+        + '<div class="bn-card-title">' + esc(_wDecodeHtml(item.headline || '')) + '</div>'
+        + '<div class="bn-card-meta">' + timeFunc(item.publishedAt) + '</div>'
+        + '</div>';
+      side.appendChild(card);
+    });
+    grid.appendChild(side);
+  }
+
+  return grid;
+}
+
 /* Build the newspaper 3-panel layout for a list of story items.
    Used by both World News regions and Malayalam Edition categories. */
 function _buildNpLayout(items, getImg, getOnClick, timeFunc) {
@@ -4015,15 +4086,17 @@ function renderWorldSection(data, container) {
       + '<span class="world-region-badge">' + items.length + ' stories</span>';
     block.appendChild(divider);
 
-    /* Newspaper layout */
-    block.appendChild(_buildNpLayout(
+    /* Breaking-News-style layout: hero photo + scrollable side cards */
+    block.appendChild(_buildBnLayout(
       items,
       function(item) { return item.image || _wCardImgUrl(item.headline || ''); },
       function(item, localIdx) {
         var cIdx = cacheBase + items.indexOf(item);
         return (function(i){ return function(){ openWorldStory(i); }; })(cIdx);
       },
-      _wTimeAgo
+      _wTimeAgo,
+      (region.flag ? region.flag + ' ' : '') + (region.name || 'World'),
+      accent
     ));
 
     contentWrap.appendChild(block);
