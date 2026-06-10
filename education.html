@@ -858,9 +858,9 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
           <div class="subject-title">Life Skills</div>
         </div>
         <div class="subject-links">
-          <a href="#" onclick="return false; alert('Coming Soon');">Financial Literacy</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Career Development</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Growth Mindset</a>
+          <a href="#" onclick="openFinlitLesson(0); return false;">Financial Literacy</a>
+          <a href="#" onclick="openCareerLesson(0); return false;">Career Development</a>
+          <a href="#" onclick="openGrowthLesson(0); return false;">Growth Mindset</a>
         </div>
       </div>
 
@@ -1148,6 +1148,55 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
         </div>
       </div>
     </div>
+    
+    <!-- ── FINANCIAL LITERACY ── -->
+    <div id="finlit-content-area" style="display:none;">
+      <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">🌱 Financial Literacy</h2>
+      <p style="margin:0 0 20px; font-size:14px; color:var(--text2);">31-lesson course · Practical Finance</p>
+      <div class="fin-layout">
+        <aside class="fin-toc" id="finlit-toc">
+          <div class="fin-toc-header">📚 Course Outline</div>
+          <div class="fin-toc-list" id="finlit-toc-list"></div>
+        </aside>
+        <div class="fin-main" id="finlit-main">
+          <div class="fin-progress-bar"><div class="fin-progress-fill" id="finlit-progress-fill" style="width:3.2%"></div></div>
+          <div id="finlit-lesson-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CAREER DEVELOPMENT ── -->
+    <div id="career-content-area" style="display:none;">
+      <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">👔 Career Development</h2>
+      <p style="margin:0 0 20px; font-size:14px; color:var(--text2);">31-lesson course · High-Value Strategies</p>
+      <div class="fin-layout">
+        <aside class="fin-toc" id="career-toc">
+          <div class="fin-toc-header">📚 Course Outline</div>
+          <div class="fin-toc-list" id="career-toc-list"></div>
+        </aside>
+        <div class="fin-main" id="career-main">
+          <div class="fin-progress-bar"><div class="fin-progress-fill" id="career-progress-fill" style="width:3.2%"></div></div>
+          <div id="career-lesson-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── GROWTH MINDSET ── -->
+    <div id="growth-content-area" style="display:none;">
+      <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">🧠 Growth Mindset</h2>
+      <p style="margin:0 0 20px; font-size:14px; color:var(--text2);">31-lesson course · Psychology & Optimization</p>
+      <div class="fin-layout">
+        <aside class="fin-toc" id="growth-toc">
+          <div class="fin-toc-header">📚 Course Outline</div>
+          <div class="fin-toc-list" id="growth-toc-list"></div>
+        </aside>
+        <div class="fin-main" id="growth-main">
+          <div class="fin-progress-bar"><div class="fin-progress-fill" id="growth-progress-fill" style="width:3.2%"></div></div>
+          <div id="growth-lesson-content"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── PROGRAMMING BASICS ── -->
     <div id="programming-content-area" style="display:none;">
       <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">💻 Programming Basics</h2>
@@ -1238,6 +1287,9 @@ function _hideAllLessonAreas() {
   document.getElementById('programming-content-area').style.display = 'none';
   document.getElementById('web-content-area').style.display = 'none';
   document.getElementById('info-content-area').style.display = 'none';
+  document.getElementById('finlit-content-area').style.display = 'none';
+  document.getElementById('career-content-area').style.display = 'none';
+  document.getElementById('growth-content-area').style.display = 'none';
 }
 
 function openCbseLesson(subject, classNum) {
@@ -1369,6 +1421,52 @@ function openInfoLesson(startIdx) {
   document.getElementById('lesson-view-container').scrollTop = 0;
   try { history.replaceState(null, '', '?subject=information-theory'); } catch(e){}
 }
+
+var _activeFinlitIdx = 0;
+function openFinlitLesson(startIdx) {
+  document.getElementById('hero-section').style.display = 'none';
+  document.getElementById('subjects-section').style.display = 'none';
+  document.getElementById('lesson-view-container').style.display = 'block';
+  _hideAllLessonAreas();
+  document.getElementById('finlit-content-area').style.display = 'block';
+  _activeHub = 'finlit';
+  _activeFinlitIdx = (typeof startIdx === 'number') ? startIdx : 0;
+  if (typeof renderFinlitTOC === 'function') renderFinlitTOC();
+  if (typeof renderFinlitLesson === 'function') renderFinlitLesson(_activeFinlitIdx);
+  document.getElementById('lesson-view-container').scrollTop = 0;
+  try { history.replaceState(null, '', '?subject=financial-literacy'); } catch(e){}
+}
+
+var _activeCareerIdx = 0;
+function openCareerLesson(startIdx) {
+  document.getElementById('hero-section').style.display = 'none';
+  document.getElementById('subjects-section').style.display = 'none';
+  document.getElementById('lesson-view-container').style.display = 'block';
+  _hideAllLessonAreas();
+  document.getElementById('career-content-area').style.display = 'block';
+  _activeHub = 'career';
+  _activeCareerIdx = (typeof startIdx === 'number') ? startIdx : 0;
+  if (typeof renderCareerTOC === 'function') renderCareerTOC();
+  if (typeof renderCareerLesson === 'function') renderCareerLesson(_activeCareerIdx);
+  document.getElementById('lesson-view-container').scrollTop = 0;
+  try { history.replaceState(null, '', '?subject=career-development'); } catch(e){}
+}
+
+var _activeGrowthIdx = 0;
+function openGrowthLesson(startIdx) {
+  document.getElementById('hero-section').style.display = 'none';
+  document.getElementById('subjects-section').style.display = 'none';
+  document.getElementById('lesson-view-container').style.display = 'block';
+  _hideAllLessonAreas();
+  document.getElementById('growth-content-area').style.display = 'block';
+  _activeHub = 'growth';
+  _activeGrowthIdx = (typeof startIdx === 'number') ? startIdx : 0;
+  if (typeof renderGrowthTOC === 'function') renderGrowthTOC();
+  if (typeof renderGrowthLesson === 'function') renderGrowthLesson(_activeGrowthIdx);
+  document.getElementById('lesson-view-container').scrollTop = 0;
+  try { history.replaceState(null, '', '?subject=growth-mindset'); } catch(e){}
+}
+
 var _activeProgrammingIdx = 0;
 function openProgrammingLesson(startIdx) {
   document.getElementById('hero-section').style.display = 'none';
@@ -6087,6 +6185,1349 @@ var INFO_LESSONS = [
 ];
 
 
+var FINLIT_LESSONS = [
+  {
+    "unit": "Unit 1 \u00b7 Money Fundamentals",
+    "icon": "\ud83d\udcb5",
+    "title": "What is Money?",
+    "lead": "Money is essentially a tool for exchanging value, measuring wealth, and storing purchasing power over time.",
+    "points": [
+      "Medium of Exchange: It solves the double coincidence of wants problem found in barter systems.",
+      "Unit of Account: It provides a common metric to value totally different goods.",
+      "Store of Value: It allows you to save the fruits of your labor today to spend tomorrow."
+    ],
+    "analogy": "Think of money as a battery for economic energy. You expend energy (work) to charge the battery (earn money), which you can later discharge (spend) whenever and wherever you need.",
+    "qa": [
+      {
+        "q": "Is wealth the same as money?",
+        "a": "No. Wealth is the accumulation of valuable assets (businesses, property, skills). Money is just the measuring stick and exchange tool for that wealth."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 Money Fundamentals",
+    "icon": "\ud83c\udfe6",
+    "title": "Fiat vs Hard Money",
+    "lead": "Understanding the difference between currency backed by a government decree and currency backed by a hard asset.",
+    "points": [
+      "Fiat Currency: Legal tender whose value is backed by the government that issued it (e.g., US Dollar, Euro).",
+      "Hard Money: Money that has intrinsic value or is backed by a physical commodity (e.g., Gold).",
+      "Inflation Risk: Fiat currencies are subject to inflation because central banks can print an unlimited supply."
+    ],
+    "qa": [
+      {
+        "q": "Why do governments use Fiat money?",
+        "a": "It gives central banks the flexibility to control the money supply to manage economic growth, employment, and stability."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 Money Fundamentals",
+    "icon": "\ud83d\udcc8",
+    "title": "The Silent Thief: Inflation",
+    "lead": "Inflation is the rate at which the general level of prices for goods and services is rising, eroding your purchasing power.",
+    "points": [
+      "Purchasing Power: If inflation is 3%, a $100 bill today will only buy $97 worth of goods next year.",
+      "Causes: Demand-pull (too much money chasing too few goods) and Cost-push (rising production costs).",
+      "Protection: Keeping money under a mattress guarantees a loss of value. You must invest in assets that outpace inflation."
+    ],
+    "qa": [
+      {
+        "q": "Is inflation always bad?",
+        "a": "Not necessarily. Central banks target a low, steady inflation rate (usually ~2%) to encourage consumption and economic growth rather than hoarding."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 Money Fundamentals",
+    "icon": "\ud83e\udded",
+    "title": "Your Net Worth",
+    "lead": "Net worth is the ultimate scorecard of your financial health. It is simply your total assets minus your total liabilities.",
+    "points": [
+      "Assets: Everything you own that has value (Cash, Investments, Real Estate, Vehicles).",
+      "Liabilities: Everything you owe to others (Mortgage, Student Loans, Credit Card Debt).",
+      "Calculation: Assets - Liabilities = Net Worth."
+    ],
+    "analogy": "Your income is your vehicle's speed, but your net worth is the distance you have actually traveled. High speed means nothing if you keep crashing (spending it all).",
+    "qa": [
+      {
+        "q": "Can my net worth be negative?",
+        "a": "Yes. It is common for recent graduates to have a negative net worth if their student loans exceed their savings and assets."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Budgeting & Cash Flow",
+    "icon": "\ud83d\udcca",
+    "title": "The 50/30/20 Rule",
+    "lead": "A simple and effective budgeting framework that splits your after-tax income into Needs, Wants, and Savings.",
+    "points": [
+      "50% Needs: Housing, groceries, utilities, minimum debt payments, and healthcare.",
+      "30% Wants: Dining out, entertainment, vacations, and hobbies.",
+      "20% Savings: Emergency fund, retirement accounts, and extra debt payments."
+    ],
+    "qa": [
+      {
+        "q": "What if my rent takes up 40% of my income?",
+        "a": "You may have to adjust the ratio (e.g., 60/20/20) by cutting back on wants, or consider ways to reduce housing costs or increase income."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Budgeting & Cash Flow",
+    "icon": "\ud83d\udcdd",
+    "title": "Zero-Based Budgeting",
+    "lead": "A proactive budgeting method where your income minus your expenses equals zero. Every single dollar is assigned a job.",
+    "points": [
+      "The Core Rule: If you earn $3,000 this month, you must give all $3,000 a specific purpose (spending, saving, investing).",
+      "Preventing Leakage: It stops money from sitting in your checking account and disappearing on impulsive purchases.",
+      "Tracking: Requires strict tracking of every expense to ensure you stay within your designated categories."
+    ],
+    "qa": [
+      {
+        "q": "Is this better than the 50/30/20 rule?",
+        "a": "It is more detailed and restrictive. It is excellent for people paying off heavy debt or struggling to control spending, whereas 50/30/20 is more relaxed."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Budgeting & Cash Flow",
+    "icon": "\ud83d\udee1\ufe0f",
+    "title": "The Emergency Fund",
+    "lead": "A dedicated savings account holding 3 to 6 months of living expenses, meant only for unexpected financial crises.",
+    "points": [
+      "Purpose: To prevent you from going into high-interest debt when your car breaks down, you have a medical emergency, or you lose your job.",
+      "Placement: Keep it in a High-Yield Savings Account (HYSA) where it earns interest but is fully liquid and accessible.",
+      "Size: A single person in a stable job might need 3 months. A freelancer with dependents should aim for 6+ months."
+    ],
+    "analogy": "An emergency fund is a financial shock absorber. When you hit a pothole in life, the shock absorber takes the hit so your financial engine doesn't break.",
+    "qa": [
+      {
+        "q": "Should I pay off debt or build an emergency fund first?",
+        "a": "Build a small \"starter\" emergency fund (e.g., $1,000) first to cover minor emergencies, then aggressively pay off high-interest debt, then build the full 3-6 month fund."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Budgeting & Cash Flow",
+    "icon": "\ud83d\udcc9",
+    "title": "Lifestyle Creep",
+    "lead": "The phenomenon where your discretionary spending increases as your income increases, keeping you trapped living paycheck to paycheck.",
+    "points": [
+      "The Trap: Getting a raise and immediately upgrading your car, apartment, and wardrobe.",
+      "The Result: Despite earning twice as much as you did five years ago, you save the exact same amount.",
+      "The Fix: \"Pay yourself first.\" When you get a raise, automate a large portion of it straight into investments before you can spend it."
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Debt & Credit",
+    "icon": "\ud83d\udcb3",
+    "title": "Good Debt vs Bad Debt",
+    "lead": "Not all debt is equal. Debt can be a tool to build wealth, or an anchor that destroys it.",
+    "points": [
+      "Good Debt: Borrowing money at a low interest rate to purchase assets that appreciate in value or generate income (e.g., Mortgages, Student Loans for high-ROI degrees).",
+      "Bad Debt: Borrowing money at a high interest rate to purchase depreciating liabilities (e.g., Credit Card debt for clothes, high-interest auto loans).",
+      "The Math: If an investment pays 8% and your loan costs 4%, you are leveraging debt positively. If a credit card costs 22%, you are burning wealth."
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Debt & Credit",
+    "icon": "\ud83d\udcb3",
+    "title": "How Credit Cards Work",
+    "lead": "A credit card is a short-term, unsecured loan from a bank. If used correctly, it is a powerful tool; if misused, it is a financial disaster.",
+    "points": [
+      "The Grace Period: If you pay your Statement Balance in full every single month, you pay $0 in interest.",
+      "Revolving Debt: If you only pay the \"Minimum Payment,\" the remaining balance rolls over to the next month and accrues massive compound interest.",
+      "Rewards: By paying in full, you can earn 1-5% cashback or travel points for free, effectively getting a discount on all purchases."
+    ],
+    "qa": [
+      {
+        "q": "Should I carry a small balance to build my credit score?",
+        "a": "Absolutely NOT. This is a persistent myth. Carrying a balance only costs you money. Paying your balance in full every month is the best way to build credit."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Debt & Credit",
+    "icon": "\ud83d\udd22",
+    "title": "Credit Scores (FICO)",
+    "lead": "Your credit score is a three-digit number (300-850) that tells lenders how likely you are to repay borrowed money.",
+    "points": [
+      "Payment History (35%): The most critical factor. Have you paid your bills on time?",
+      "Amounts Owed / Utilization (30%): How much of your available credit you are using. Keep this below 30% (ideally below 10%).",
+      "Length of Credit History (15%): How long your accounts have been open. Don't close your oldest credit card!",
+      "New Credit (10%) & Credit Mix (10%): Opening too many accounts at once lowers your score temporarily."
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Debt & Credit",
+    "icon": "\u2694\ufe0f",
+    "title": "Avalanche vs Snowball Methods",
+    "lead": "Two distinct mathematical and psychological strategies for aggressively paying off multiple debts.",
+    "points": [
+      "Avalanche Method: Pay the minimums on everything, and put all extra cash toward the debt with the HIGHEST interest rate. Mathematically, this saves the most money.",
+      "Snowball Method: Pay the minimums on everything, and put extra cash toward the SMALLEST balance. Once paid, roll that payment into the next smallest. This provides psychological \"quick wins\".",
+      "Conclusion: Choose Avalanche if you are highly disciplined and mathematically driven. Choose Snowball if you need motivation to keep going."
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Debt & Credit",
+    "icon": "\ud83d\udcb8",
+    "title": "Student Loans & Refinancing",
+    "lead": "Navigating the complex world of student debt, repayment plans, and deciding whether to refinance.",
+    "points": [
+      "Federal vs Private: Federal loans offer protections (income-driven repayment, forgiveness). Private loans do not.",
+      "Refinancing: Taking out a new private loan at a lower interest rate to pay off your old loans. You lose federal protections if you refinance federal loans.",
+      "Strategy: If you have high-interest private loans, refinance them. If you have federal loans and work in public service, pursue PSLF (Public Service Loan Forgiveness)."
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 The Math of Wealth",
+    "icon": "\u2744\ufe0f",
+    "title": "Compound Interest",
+    "lead": "Albert Einstein allegedly called compound interest the eighth wonder of the world. It is the core mathematical engine of wealth building.",
+    "points": [
+      "The Concept: You earn interest on your initial investment (principal) AND you earn interest on the interest you previously earned.",
+      "The Formula: $A = P(1 + r/n)^{nt}$. Time is the most powerful variable in this equation.",
+      "The Result: If you invest $500/month at 8% for 40 years, you will invest $240,000 of your own money, but your total balance will be over $1.7 million."
+    ],
+    "analogy": "Imagine a snowball rolling down a mountain. It starts small, but as it rolls, it picks up snow. The larger it gets, the more snow it picks up per revolution, until it becomes a massive avalanche.",
+    "qa": [
+      {
+        "q": "When is the best time to start investing?",
+        "a": "Yesterday. The second best time is today. Because time is exponential in the formula, starting at 20 vs 30 makes a multi-million dollar difference."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 The Math of Wealth",
+    "icon": "\u23f1\ufe0f",
+    "title": "The Rule of 72",
+    "lead": "A quick mental math shortcut to estimate how long it will take for your investment to double in value.",
+    "points": [
+      "The Rule: Divide the number 72 by your expected annual interest rate.",
+      "Example: If you expect a 7% annual return from the stock market, 72 / 7 = ~10.2. Your money will double every 10 years.",
+      "Example 2: If inflation is 6%, 72 / 6 = 12. Your money will lose half its purchasing power in 12 years."
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 The Math of Wealth",
+    "icon": "\ud83e\uddee",
+    "title": "Time Value of Money (TVM)",
+    "lead": "The financial principle that a dollar today is worth more than a dollar tomorrow due to its potential earning capacity.",
+    "points": [
+      "Opportunity Cost: If you receive $1,000 today, you can invest it at 8%. In one year, it is worth $1,080. Therefore, $1,000 today is mathematically superior to $1,000 next year.",
+      "Discounting: When calculating the value of a future payout (like a pension), you must \"discount\" it backwards to find its Present Value (PV).",
+      "The Lottery Dilemma: This is why taking the lump sum in a lottery is generally better than taking the 30-year annuity\u2014you can invest the lump sum immediately."
+    ]
+  },
+  {
+    "unit": "Unit 5 \u00b7 Investing Basics",
+    "icon": "\ud83d\udcc8",
+    "title": "Stocks & Equities",
+    "lead": "Buying a stock means buying a fractional ownership stake in a real, publicly traded company.",
+    "points": [
+      "Capital Appreciation: If the company grows its profits, the value of your share increases.",
+      "Dividends: Some companies distribute a portion of their cash profits directly to shareholders on a quarterly basis.",
+      "Volatility: In the short term, stock prices fluctuate wildly based on human emotion. In the long term, they follow the company's fundamental earnings."
+    ]
+  },
+  {
+    "unit": "Unit 5 \u00b7 Investing Basics",
+    "icon": "\ud83d\udcdc",
+    "title": "Bonds & Fixed Income",
+    "lead": "When you buy a bond, you are not buying ownership; you are acting as the bank and loaning money to a corporation or government.",
+    "points": [
+      "Coupon Rate: The bond pays you a fixed, regular interest payment (e.g., 4% a year).",
+      "Maturity: At the end of the bond's lifespan (e.g., 10 years), you receive your original principal back.",
+      "Risk Profile: Bonds are generally much safer and less volatile than stocks, but they offer lower historical returns."
+    ]
+  },
+  {
+    "unit": "Unit 5 \u00b7 Investing Basics",
+    "icon": "\ud83e\uddfa",
+    "title": "Mutual Funds & ETFs",
+    "lead": "Instead of trying to pick the winning horse, you buy the whole racetrack. Funds allow you to instantly diversify.",
+    "points": [
+      "Mutual Fund: A pool of money managed by professionals who buy a basket of stocks/bonds. They often have high fees (Expense Ratios).",
+      "ETF (Exchange Traded Fund): Similar to a mutual fund, but it trades on the stock market like a regular stock throughout the day.",
+      "Index Funds: A specific type of ETF/Mutual Fund that blindly tracks a market index (like the S&P 500) rather than paying a manager to pick stocks. They have ultra-low fees and outperform active managers over time."
+    ],
+    "qa": [
+      {
+        "q": "What is the S&P 500?",
+        "a": "An index tracking the performance of the 500 largest publicly traded companies in the United States. Buying an S&P 500 ETF means you own a tiny slice of all 500 companies."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 5 \u00b7 Investing Basics",
+    "icon": "\u2696\ufe0f",
+    "title": "Asset Allocation & Diversification",
+    "lead": "The strategy of dividing your investment portfolio across different asset categories (stocks, bonds, real estate) to balance risk and reward.",
+    "points": [
+      "Diversification: \"Don't put all your eggs in one basket.\" If you own 1 tech stock and it crashes, you lose everything. If you own an ETF with 10,000 global stocks, a single bankruptcy doesn't hurt you.",
+      "Asset Allocation: Your mix of stocks vs bonds based on your age. A 25-year-old might be 90% stocks / 10% bonds. A 65-year-old retiree might be 40% stocks / 60% bonds to preserve capital.",
+      "Rebalancing: Periodically selling your winners and buying your losers to maintain your desired allocation percentages."
+    ]
+  },
+  {
+    "unit": "Unit 5 \u00b7 Investing Basics",
+    "icon": "\ud83e\udd8d",
+    "title": "Dollar-Cost Averaging (DCA)",
+    "lead": "The practice of investing a fixed dollar amount on a regular schedule, regardless of what the stock market is doing.",
+    "points": [
+      "Removing Emotion: DCA prevents you from trying to \"time the market\" (waiting for the perfect bottom to buy, which is statistically impossible).",
+      "The Math: By investing $500 every month, you buy fewer shares when the market is high, and more shares when the market is low (on sale).",
+      "Execution: Automate your investments so the money leaves your checking account the day after you get paid."
+    ]
+  },
+  {
+    "unit": "Unit 6 \u00b7 Tax Advantaged Accounts",
+    "icon": "\ud83c\udfe2",
+    "title": "The 401(k) and Employer Match",
+    "lead": "A 401(k) is an employer-sponsored retirement account with massive tax benefits and often, free money.",
+    "points": [
+      "Pre-Tax Contributions: Money goes into the account before the government taxes your paycheck, lowering your taxable income for the year.",
+      "The Match: Many employers will match your contributions up to a certain percentage (e.g., 4%). This is a 100% instant return on your investment.",
+      "Tax-Deferred Growth: The investments grow tax-free for decades. You only pay taxes when you withdraw the money in retirement (after age 59.5)."
+    ],
+    "qa": [
+      {
+        "q": "Should I max out my 401(k)?",
+        "a": "You should AT LEAST contribute enough to get the full employer match. Never leave free money on the table."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 6 \u00b7 Tax Advantaged Accounts",
+    "icon": "\ud83d\udee1\ufe0f",
+    "title": "Traditional IRA vs Roth IRA",
+    "lead": "Individual Retirement Accounts (IRAs) are accounts you open on your own (outside of an employer). The choice is when you want to pay taxes.",
+    "points": [
+      "Traditional IRA: \"Tax me later.\" You get a tax deduction today, the money grows tax-free, and you pay income tax when you withdraw it in retirement.",
+      "Roth IRA: \"Tax me now.\" You contribute after-tax money today, the money grows tax-free, and your withdrawals in retirement are 100% completely tax-free.",
+      "The Decision: If you are young and in a low tax bracket, the Roth IRA is incredibly powerful because all decades of growth are tax-free."
+    ]
+  },
+  {
+    "unit": "Unit 6 \u00b7 Tax Advantaged Accounts",
+    "icon": "\ud83c\udfe5",
+    "title": "Health Savings Account (HSA)",
+    "lead": "The ultimate stealth retirement account. Designed for medical expenses, it offers an unparalleled triple-tax advantage.",
+    "points": [
+      "Triple Tax Advantage: 1. Contributions are tax-deductible. 2. Growth is tax-free. 3. Withdrawals for medical expenses are tax-free.",
+      "The Hack: You do not have to use the money for medical expenses immediately. You can pay out of pocket, let the HSA grow in the stock market for 30 years, and reimburse yourself later.",
+      "Requirement: You must be enrolled in a High Deductible Health Plan (HDHP) to contribute to an HSA."
+    ]
+  },
+  {
+    "unit": "Unit 6 \u00b7 Tax Advantaged Accounts",
+    "icon": "\ud83e\udea4",
+    "title": "The Capital Gains Tax",
+    "lead": "Understanding how the government taxes the profit you make when you sell an asset (stocks, crypto, real estate) in a standard brokerage account.",
+    "points": [
+      "Short-Term Capital Gains: If you hold an asset for less than 1 year, the profit is taxed at your standard ordinary income tax rate (which is very high).",
+      "Long-Term Capital Gains: If you hold an asset for more than 1 year, the profit is taxed at a much lower, preferential rate (0%, 15%, or 20%).",
+      "The Lesson: Day trading generates massive short-term tax bills. Long-term investing is highly tax-efficient."
+    ]
+  },
+  {
+    "unit": "Unit 7 \u00b7 Real Estate",
+    "icon": "\ud83c\udfe0",
+    "title": "Renting vs Buying",
+    "lead": "The societal myth is that \"renting is throwing money away.\" The financial reality is much more complex.",
+    "points": [
+      "Unrecoverable Costs of Renting: Your monthly rent payment.",
+      "Unrecoverable Costs of Buying: Property taxes, HOA fees, maintenance (1-2% of home value annually), closing costs, and mortgage interest.",
+      "The Rule: If your unrecoverable costs of buying are lower than the cost of renting an equivalent place, you should buy. Otherwise, rent and invest the difference in the stock market."
+    ]
+  },
+  {
+    "unit": "Unit 7 \u00b7 Real Estate",
+    "icon": "\ud83c\udfe6",
+    "title": "How Mortgages Work",
+    "lead": "A mortgage is a loan secured by real property. Understanding amortization is crucial to homeownership.",
+    "points": [
+      "Down Payment: The upfront cash you pay. If you pay less than 20%, you usually have to pay Private Mortgage Insurance (PMI).",
+      "Amortization: In the early years of a 30-year mortgage, the vast majority of your monthly payment goes toward Interest, not Principal.",
+      "Fixed vs Adjustable (ARM): Fixed rates lock in your interest rate for 30 years (safe). ARMs have variable rates that can spike if central banks raise rates (risky)."
+    ]
+  },
+  {
+    "unit": "Unit 7 \u00b7 Real Estate",
+    "icon": "\ud83e\uddf1",
+    "title": "Leverage in Real Estate",
+    "lead": "Real estate is unique because the bank allows you to buy an asset using mostly their money, magnifying your returns.",
+    "points": [
+      "The Math: You buy a $500,000 house with $100,000 down (20%). The house appreciates by 5% ($25,000).",
+      "The Return: Your house went up 5%, but your cash return on investment is 25% ($25k profit on $100k cash).",
+      "The Risk: Leverage magnifies losses just as violently. If the house drops 20%, your entire $100k equity is wiped out."
+    ]
+  },
+  {
+    "unit": "Unit 8 \u00b7 Advanced Strategy",
+    "icon": "\ud83e\udde0",
+    "title": "Behavioral Finance",
+    "lead": "Why smart people make terrible financial decisions. The intersection of psychology and money.",
+    "points": [
+      "Loss Aversion: The psychological pain of losing $100 is twice as intense as the joy of gaining $100, causing investors to panic sell at the bottom.",
+      "Anchoring: Fixating on a specific price (e.g., \"I bought the stock at $50, I won't sell until it goes back up to $50\").",
+      "Herd Mentality: Buying into bubbles (crypto, meme stocks) just because everyone else is doing it."
+    ]
+  },
+  {
+    "unit": "Unit 8 \u00b7 Advanced Strategy",
+    "icon": "\ud83e\uddef",
+    "title": "Insurance & Risk Transfer",
+    "lead": "Insurance is not an investment; it is a mechanism to transfer catastrophic financial risk from yourself to an institution.",
+    "points": [
+      "Health Insurance: Essential to prevent bankruptcy from an unexpected illness or accident.",
+      "Term Life Insurance: If anyone depends on your income (kids, spouse), you buy a cheap 20-year term policy. Avoid Whole Life insurance\u2014it mixes insurance with bad investments.",
+      "Umbrella Policy: Extra liability coverage to protect your high net worth from lawsuits."
+    ]
+  },
+  {
+    "unit": "Unit 8 \u00b7 Advanced Strategy",
+    "icon": "\ud83c\udfd6\ufe0f",
+    "title": "The FIRE Movement",
+    "lead": "Financial Independence, Retire Early (FIRE) is a lifestyle movement focused on extreme savings and investing to retire decades early.",
+    "points": [
+      "The 4% Rule: The Trinity Study found that if you withdraw 4% of your diversified portfolio annually, it should safely last 30+ years without running out.",
+      "The Target Number: To safely withdraw your living expenses, you need an invested portfolio equal to 25 times your annual expenses.",
+      "Example: If you need $40,000 a year to live, your FIRE Number is $1,000,000 ($40k * 25)."
+    ],
+    "analogy": "Reaching Financial Independence means your money now works harder than you do. Your investments generate enough dividends and growth to pay your salary forever."
+  },
+  {
+    "unit": "Unit 8 \u00b7 Advanced Strategy",
+    "icon": "\ud83d\udcdc",
+    "title": "Estate Planning Basics",
+    "lead": "Ensuring your wealth is transferred to your heirs efficiently, avoiding the lengthy and public probate process.",
+    "points": [
+      "Will: A legal document instructing how your assets should be distributed. (Subject to probate court).",
+      "Trust (Living Trust): A legal entity that holds your assets. It bypasses probate, keeping the transfer private and fast.",
+      "Beneficiaries: Always update the designated beneficiaries on your retirement accounts and life insurance, as these override your will."
+    ]
+  }
+];
+
+var CAREER_LESSONS = [
+  {
+    "unit": "Unit 1 \u00b7 The Modern Job Hunt",
+    "icon": "\ud83c\udfaf",
+    "title": "The Hidden Job Market",
+    "lead": "Up to 70% of jobs are never publicly listed on job boards. You must learn to access the hidden market.",
+    "points": [
+      "The Black Hole: Applying blindly to hundreds of LinkedIn \"Easy Apply\" postings is mathematically the worst way to get hired.",
+      "Internal Referrals: Companies heavily prefer to hire people recommended by current employees to reduce hiring risk.",
+      "Cold Outreach: Sending targeted, well-researched emails to hiring managers (not HR) yields vastly superior response rates."
+    ],
+    "qa": [
+      {
+        "q": "Is it annoying to cold message a manager on LinkedIn?",
+        "a": "If you send a generic template, yes. If you send a brief, personalized message showing genuine interest in their specific team's work, it is seen as highly proactive."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Modern Job Hunt",
+    "icon": "\ud83d\udcc4",
+    "title": "The 6-Second Resume",
+    "lead": "Recruiters spend an average of 6 seconds scanning a resume. Yours must be optimized for immediate impact.",
+    "points": [
+      "The Format: Use a clean, single-column, black-and-white format. ATS (Applicant Tracking Systems) cannot read complex graphic-design templates.",
+      "The Top Third: The top third of your resume is premium real estate. Put your strongest achievements there, not an \"Objective Statement\".",
+      "The XYZ Formula: Describe experience as \"Accomplished [X] as measured by [Y], by doing [Z]\" (e.g., Increased sales by 20% by implementing a new CRM)."
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Modern Job Hunt",
+    "icon": "\ud83e\udd16",
+    "title": "Beating the ATS (Applicant Tracking System)",
+    "lead": "Before a human sees your resume, a computer grades it. You must optimize for the algorithm.",
+    "points": [
+      "Keyword Matching: The ATS scans your resume for exact keywords found in the job description.",
+      "Contextual Matching: Don't just list \"Python\" in a skills section. Write \"Used Python to automate data entry\" so the system understands your proficiency.",
+      "Formatting Traps: Avoid tables, text boxes, and headers/footers. Keep it strictly standard text."
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Modern Job Hunt",
+    "icon": "\ud83c\udf10",
+    "title": "LinkedIn Optimization",
+    "lead": "Your LinkedIn profile is your passive resume. When optimized, recruiters will come to you.",
+    "points": [
+      "The Headline: Instead of \"Software Engineer at Google\", write \"Software Engineer | Building scalable cloud infrastructure | Ex-Amazon\".",
+      "The About Section: Tell a story. Who are you, what are your core competencies, and what are you passionate about building?",
+      "Endorsements & Recommendations: Social proof matters. Write a recommendation for a colleague, and they will likely write one back."
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 The Interview Process",
+    "icon": "\ud83e\udd1d",
+    "title": "The Recruiter Screen",
+    "lead": "The first call is a gatekeeper check to ensure you aren't a massive risk and that your salary expectations align.",
+    "points": [
+      "Their Goal: To verify your resume is accurate and that you have basic communication skills.",
+      "The Salary Question: Never give a single number. Give a range, or turn it around: \"Could you share the budgeted range for this role?\"",
+      "Enthusiasm: Tone of voice matters immensely on this 15-minute phone call."
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 The Interview Process",
+    "icon": "\u2b50",
+    "title": "The STAR Method",
+    "lead": "The absolute gold standard for answering behavioral interview questions (e.g., \"Tell me about a time you failed\").",
+    "points": [
+      "Situation: Briefly set the scene (e.g., \"We were two weeks away from launch...\").",
+      "Task: Explain your specific responsibility (e.g., \"...and I was in charge of the database migration\").",
+      "Action: Describe exactly what YOU did to solve the problem (e.g., \"I wrote a script to automate the transfer overnight...\").",
+      "Result: Share the quantifiable outcome (e.g., \"...saving the team 40 hours and launching on time\")."
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 The Interview Process",
+    "icon": "\ud83e\udde0",
+    "title": "Questions YOU Should Ask",
+    "lead": "An interview is a two-way street. Asking brilliant questions at the end proves your competence.",
+    "points": [
+      "Bad: \"What are the working hours?\" or \"When will I hear back?\"",
+      "Good: \"What is the biggest challenge the person in this role will face in the first 90 days?\"",
+      "Excellent: \"I saw the company recently acquired X. How does that change the roadmap for this specific team?\""
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 The Interview Process",
+    "icon": "\ud83c\udfad",
+    "title": "Body Language & Virtual Interviews",
+    "lead": "Non-verbal communication often speaks louder than your technical answers.",
+    "points": [
+      "Camera Angle: In a Zoom interview, put the camera exactly at eye level. Look directly INTO the lens when speaking, not at the screen.",
+      "Lighting: Ensure your face is well-lit from the front. Do not sit with a bright window behind you.",
+      "Posture: Sit upright, lean slightly forward to show engagement, and use hand gestures naturally."
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Negotiation & Value",
+    "icon": "\ud83d\udcb0",
+    "title": "The Psychology of Salary Negotiation",
+    "lead": "Most people lose tens of thousands of dollars because they are afraid to ask for more. You must unlearn this fear.",
+    "points": [
+      "The Anchor: The first number thrown out heavily anchors the rest of the negotiation. If forced, anchor high.",
+      "The Silence: After making a counter-offer, stop talking. Let the silence hang. People will often negotiate against themselves to break the awkwardness.",
+      "The Mindset: The company just spent thousands of dollars and months interviewing candidates. They want YOU. You have leverage."
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Negotiation & Value",
+    "icon": "\u2696\ufe0f",
+    "title": "Total Compensation (TC)",
+    "lead": "Base salary is only one lever. You must negotiate the entire compensation package.",
+    "points": [
+      "Equity/RSUs: In tech, stock grants can often equal or exceed your base salary.",
+      "Sign-On Bonuses: If they cannot budge on base salary due to HR bands, ask for a one-time signing bonus.",
+      "PTO & Flexibility: If the money is locked, negotiate for an extra week of vacation or guaranteed remote days."
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Negotiation & Value",
+    "icon": "\ud83d\udee1\ufe0f",
+    "title": "Handling Lowball Offers",
+    "lead": "How to professionally reject an insulting offer while keeping the door open for a better one.",
+    "points": [
+      "Don't Get Emotional: Stay polite. Say, \"I am incredibly excited about the team, but based on market data for my experience level, I was expecting something closer to X.\"",
+      "Bring Data: Print out Glassdoor, Levels.fyi, or industry salary surveys to prove your number is objective, not greedy.",
+      "The Walk-Away Power: You cannot negotiate effectively if you are not willing to walk away from a bad deal."
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 Workplace Dynamics",
+    "icon": "\ud83d\udc54",
+    "title": "Managing Up",
+    "lead": "Managing up means consciously working with your boss to obtain the best possible results for you, your boss, and the company.",
+    "points": [
+      "Learn Their Style: Does your boss prefer 5-page detailed emails or 3-bullet Slack messages? Adapt to their medium.",
+      "Bring Solutions: Never bring your boss a problem without also bringing two potential solutions.",
+      "Make Them Look Good: If you consistently make your manager's job easier, you become indispensable."
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 Workplace Dynamics",
+    "icon": "\ud83d\udde3\ufe0f",
+    "title": "Navigating Office Politics",
+    "lead": "Office politics are inevitable whenever humans compete for limited resources (promotions, budget). Ignore them at your peril.",
+    "points": [
+      "Map the Power: Understand who actually holds influence, which is often not the person with the highest title.",
+      "Build Alliances: Do favors for people outside your immediate team. When you need cross-functional help later, they will answer your call.",
+      "Stay Neutral: Avoid gossiping at all costs. It is a massive liability."
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 Workplace Dynamics",
+    "icon": "\ud83d\udcdd",
+    "title": "The Brag Document",
+    "lead": "If you do not track your own achievements, no one else will. Your manager will not remember what you did in January when performance reviews happen in December.",
+    "points": [
+      "The Habit: Every Friday, spend 10 minutes writing down exactly what you accomplished that week.",
+      "The Metrics: Include hard data (e.g., \"Fixed bug X which reduced server load by 5%\").",
+      "The Review: Hand this 5-page document to your manager during performance reviews to make giving you a promotion an absolute no-brainer."
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 Workplace Dynamics",
+    "icon": "\u23f1\ufe0f",
+    "title": "Deep Work vs Shallow Work",
+    "lead": "The modern office is designed for distraction. You must ruthlessly protect your time to produce actual value.",
+    "points": [
+      "Deep Work: Professional activities performed in a state of distraction-free concentration that push your cognitive capabilities to their limit.",
+      "Shallow Work: Non-cognitively demanding, logistical-style tasks (answering emails, attending status meetings).",
+      "The Strategy: Block off 2-hour chunks on your calendar, close Slack, and put your phone in another room. Do your Deep Work before noon."
+    ]
+  },
+  {
+    "unit": "Unit 5 \u00b7 Leadership & Growth",
+    "icon": "\ud83d\udc51",
+    "title": "Individual Contributor vs Manager",
+    "lead": "Moving into management is not a promotion; it is an entirely different career track with different required skills.",
+    "points": [
+      "IC Output: As an Individual Contributor, your value is determined by the code you write or the designs you create.",
+      "Manager Output: As a manager, your value is determined by the output of your team minus the cost of managing them.",
+      "The Trap: Being the best software engineer does not mean you will be a good engineering manager. Management requires high EQ, empathy, and administrative tolerance."
+    ]
+  },
+  {
+    "unit": "Unit 5 \u00b7 Leadership & Growth",
+    "icon": "\ud83c\udf31",
+    "title": "Mentorship vs Sponsorship",
+    "lead": "Mentors give advice. Sponsors give opportunities.",
+    "points": [
+      "Mentors: Someone who talks WITH you, advising you on how to handle difficult situations or learn new skills.",
+      "Sponsors: A senior leader who talks ABOUT you behind closed doors, advocating for your promotion when you aren't in the room.",
+      "Acquisition: You can ask someone to be a mentor. You cannot ask someone to be a sponsor; sponsors must be earned through exceptional performance."
+    ]
+  },
+  {
+    "unit": "Unit 5 \u00b7 Leadership & Growth",
+    "icon": "\ud83d\udeaa",
+    "title": "The Graceful Exit",
+    "lead": "How to quit your job without burning bridges, because industries are incredibly small.",
+    "points": [
+      "The Notice: Always give a standard two weeks notice. Do not slack off during those two weeks.",
+      "The Handoff: Write incredibly detailed documentation for your replacement. Leave the codebase/project cleaner than you found it.",
+      "The Exit Interview: Keep it professional. Do not use it as a therapy session to trash your terrible boss. HR works for the company, not for you."
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Modern Job Hunt",
+    "icon": "\ud83c\udfaf",
+    "title": "The Hidden Job Market",
+    "lead": "Up to 70% of jobs are never publicly listed on job boards. You must learn to access the hidden market.",
+    "points": [
+      "The Black Hole: Applying blindly to hundreds of LinkedIn \"Easy Apply\" postings is mathematically the worst way to get hired.",
+      "Internal Referrals: Companies heavily prefer to hire people recommended by current employees to reduce hiring risk.",
+      "Cold Outreach: Sending targeted, well-researched emails to hiring managers (not HR) yields vastly superior response rates."
+    ],
+    "qa": [
+      {
+        "q": "Is it annoying to cold message a manager on LinkedIn?",
+        "a": "If you send a generic template, yes. If you send a brief, personalized message showing genuine interest in their specific team's work, it is seen as highly proactive."
+      }
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Modern Job Hunt",
+    "icon": "\ud83d\udcc4",
+    "title": "The 6-Second Resume",
+    "lead": "Recruiters spend an average of 6 seconds scanning a resume. Yours must be optimized for immediate impact.",
+    "points": [
+      "The Format: Use a clean, single-column, black-and-white format. ATS (Applicant Tracking Systems) cannot read complex graphic-design templates.",
+      "The Top Third: The top third of your resume is premium real estate. Put your strongest achievements there, not an \"Objective Statement\".",
+      "The XYZ Formula: Describe experience as \"Accomplished [X] as measured by [Y], by doing [Z]\" (e.g., Increased sales by 20% by implementing a new CRM)."
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Modern Job Hunt",
+    "icon": "\ud83e\udd16",
+    "title": "Beating the ATS (Applicant Tracking System)",
+    "lead": "Before a human sees your resume, a computer grades it. You must optimize for the algorithm.",
+    "points": [
+      "Keyword Matching: The ATS scans your resume for exact keywords found in the job description.",
+      "Contextual Matching: Don't just list \"Python\" in a skills section. Write \"Used Python to automate data entry\" so the system understands your proficiency.",
+      "Formatting Traps: Avoid tables, text boxes, and headers/footers. Keep it strictly standard text."
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Modern Job Hunt",
+    "icon": "\ud83c\udf10",
+    "title": "LinkedIn Optimization",
+    "lead": "Your LinkedIn profile is your passive resume. When optimized, recruiters will come to you.",
+    "points": [
+      "The Headline: Instead of \"Software Engineer at Google\", write \"Software Engineer | Building scalable cloud infrastructure | Ex-Amazon\".",
+      "The About Section: Tell a story. Who are you, what are your core competencies, and what are you passionate about building?",
+      "Endorsements & Recommendations: Social proof matters. Write a recommendation for a colleague, and they will likely write one back."
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 The Interview Process",
+    "icon": "\ud83e\udd1d",
+    "title": "The Recruiter Screen",
+    "lead": "The first call is a gatekeeper check to ensure you aren't a massive risk and that your salary expectations align.",
+    "points": [
+      "Their Goal: To verify your resume is accurate and that you have basic communication skills.",
+      "The Salary Question: Never give a single number. Give a range, or turn it around: \"Could you share the budgeted range for this role?\"",
+      "Enthusiasm: Tone of voice matters immensely on this 15-minute phone call."
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 The Interview Process",
+    "icon": "\u2b50",
+    "title": "The STAR Method",
+    "lead": "The absolute gold standard for answering behavioral interview questions (e.g., \"Tell me about a time you failed\").",
+    "points": [
+      "Situation: Briefly set the scene (e.g., \"We were two weeks away from launch...\").",
+      "Task: Explain your specific responsibility (e.g., \"...and I was in charge of the database migration\").",
+      "Action: Describe exactly what YOU did to solve the problem (e.g., \"I wrote a script to automate the transfer overnight...\").",
+      "Result: Share the quantifiable outcome (e.g., \"...saving the team 40 hours and launching on time\")."
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 The Interview Process",
+    "icon": "\ud83e\udde0",
+    "title": "Questions YOU Should Ask",
+    "lead": "An interview is a two-way street. Asking brilliant questions at the end proves your competence.",
+    "points": [
+      "Bad: \"What are the working hours?\" or \"When will I hear back?\"",
+      "Good: \"What is the biggest challenge the person in this role will face in the first 90 days?\"",
+      "Excellent: \"I saw the company recently acquired X. How does that change the roadmap for this specific team?\""
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 The Interview Process",
+    "icon": "\ud83c\udfad",
+    "title": "Body Language & Virtual Interviews",
+    "lead": "Non-verbal communication often speaks louder than your technical answers.",
+    "points": [
+      "Camera Angle: In a Zoom interview, put the camera exactly at eye level. Look directly INTO the lens when speaking, not at the screen.",
+      "Lighting: Ensure your face is well-lit from the front. Do not sit with a bright window behind you.",
+      "Posture: Sit upright, lean slightly forward to show engagement, and use hand gestures naturally."
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Negotiation & Value",
+    "icon": "\ud83d\udcb0",
+    "title": "The Psychology of Salary Negotiation",
+    "lead": "Most people lose tens of thousands of dollars because they are afraid to ask for more. You must unlearn this fear.",
+    "points": [
+      "The Anchor: The first number thrown out heavily anchors the rest of the negotiation. If forced, anchor high.",
+      "The Silence: After making a counter-offer, stop talking. Let the silence hang. People will often negotiate against themselves to break the awkwardness.",
+      "The Mindset: The company just spent thousands of dollars and months interviewing candidates. They want YOU. You have leverage."
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Negotiation & Value",
+    "icon": "\u2696\ufe0f",
+    "title": "Total Compensation (TC)",
+    "lead": "Base salary is only one lever. You must negotiate the entire compensation package.",
+    "points": [
+      "Equity/RSUs: In tech, stock grants can often equal or exceed your base salary.",
+      "Sign-On Bonuses: If they cannot budge on base salary due to HR bands, ask for a one-time signing bonus.",
+      "PTO & Flexibility: If the money is locked, negotiate for an extra week of vacation or guaranteed remote days."
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Negotiation & Value",
+    "icon": "\ud83d\udee1\ufe0f",
+    "title": "Handling Lowball Offers",
+    "lead": "How to professionally reject an insulting offer while keeping the door open for a better one.",
+    "points": [
+      "Don't Get Emotional: Stay polite. Say, \"I am incredibly excited about the team, but based on market data for my experience level, I was expecting something closer to X.\"",
+      "Bring Data: Print out Glassdoor, Levels.fyi, or industry salary surveys to prove your number is objective, not greedy.",
+      "The Walk-Away Power: You cannot negotiate effectively if you are not willing to walk away from a bad deal."
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 Workplace Dynamics",
+    "icon": "\ud83d\udc54",
+    "title": "Managing Up",
+    "lead": "Managing up means consciously working with your boss to obtain the best possible results for you, your boss, and the company.",
+    "points": [
+      "Learn Their Style: Does your boss prefer 5-page detailed emails or 3-bullet Slack messages? Adapt to their medium.",
+      "Bring Solutions: Never bring your boss a problem without also bringing two potential solutions.",
+      "Make Them Look Good: If you consistently make your manager's job easier, you become indispensable."
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 Workplace Dynamics",
+    "icon": "\ud83d\udde3\ufe0f",
+    "title": "Navigating Office Politics",
+    "lead": "Office politics are inevitable whenever humans compete for limited resources (promotions, budget). Ignore them at your peril.",
+    "points": [
+      "Map the Power: Understand who actually holds influence, which is often not the person with the highest title.",
+      "Build Alliances: Do favors for people outside your immediate team. When you need cross-functional help later, they will answer your call.",
+      "Stay Neutral: Avoid gossiping at all costs. It is a massive liability."
+    ]
+  }
+];
+
+var GROWTH_LESSONS = [
+  {
+    "unit": "Unit 1 \u00b7 The Foundations of Mindset",
+    "icon": "\ud83e\udde0",
+    "title": "Fixed vs Growth Mindset",
+    "lead": "Dr. Carol Dweck's groundbreaking psychological framework that determines how humans respond to failure and challenge.",
+    "points": [
+      "Fixed Mindset: The belief that intelligence and talent are static traits you are born with. You either have it or you don't.",
+      "Growth Mindset: The belief that abilities can be developed through dedication and hard work. Brains and talent are just the starting point.",
+      "The Impact: People with a fixed mindset hide their flaws and avoid challenges to look smart. People with a growth mindset embrace failure as data to improve."
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Foundations of Mindset",
+    "icon": "\u26a1",
+    "title": "Neuroplasticity",
+    "lead": "The biological proof that a Growth Mindset is real. Your brain physically changes shape based on what you do.",
+    "points": [
+      "The Science: The brain forms new neural pathways when you learn something new. It strengthens existing pathways when you practice.",
+      "Use It or Lose It: Synaptic pruning eliminates weak or unused connections. If you stop doing math, you literally lose the neural hardware for it.",
+      "Age is Not a Barrier: While neuroplasticity is highest in childhood, the adult brain remains highly plastic and capable of massive rewiring until death."
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Foundations of Mindset",
+    "icon": "\ud83d\udde3\ufe0f",
+    "title": "The Power of \"Yet\"",
+    "lead": "A simple linguistic hack that fundamentally rewires your psychological reaction to a roadblock.",
+    "points": [
+      "The Trap: Saying \"I am not good at coding\" implies a permanent, fixed state.",
+      "The Shift: Saying \"I am not good at coding YET\" acknowledges your current state but opens the door to a future where you have mastered it.",
+      "Self-Talk: The internal monologue you run in your head dictates your reality. Changing your vocabulary changes your trajectory."
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Habit Architecture",
+    "icon": "\ud83e\uddf1",
+    "title": "Atomic Habits",
+    "lead": "Based on James Clear's research, massive changes are not the result of massive action, but of tiny 1% daily improvements.",
+    "points": [
+      "The 1% Rule: If you get 1% better every day for a year, you will be 37 times better by the time you are done.",
+      "Systems over Goals: Goals are about the results you want to achieve. Systems are about the processes that lead to those results. Winners and losers have the same goals.",
+      "Identity Shift: True behavior change is identity change. You aren't \"trying to read\", you are a \"reader\"."
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Habit Architecture",
+    "icon": "\ud83d\udd04",
+    "title": "The Habit Loop",
+    "lead": "The neurological loop at the core of every habit consists of four distinct phases.",
+    "points": [
+      "Cue: The trigger that initiates the behavior (e.g., your phone buzzes).",
+      "Craving: The motivational force or desire (e.g., wanting to know who texted you).",
+      "Response: The actual habit you perform (e.g., picking up the phone).",
+      "Reward: The end goal that satisfies the craving (e.g., reading the message and getting a dopamine hit)."
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Habit Architecture",
+    "icon": "\ud83d\udd17",
+    "title": "Habit Stacking",
+    "lead": "The best way to build a new habit is to attach it to an existing, strongly ingrained habit.",
+    "points": [
+      "The Formula: \"After [CURRENT HABIT], I will [NEW HABIT].\"",
+      "Example: \"After I pour my morning coffee, I will meditate for 1 minute.\"",
+      "Friction: Make good habits completely frictionless (put your running shoes by the bed) and bad habits highly friction-heavy (unplug your TV and put the remote in a drawer)."
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Resilience & Failure",
+    "icon": "\ud83d\udd25",
+    "title": "Antifragility",
+    "lead": "Nassim Taleb's concept that goes beyond resilience. Things that are antifragile actually get STRONGER when exposed to stress and chaos.",
+    "points": [
+      "Fragile: A glass cup. It breaks under stress.",
+      "Resilient: A plastic cup. It survives stress but remains exactly the same.",
+      "Antifragile: Human muscle. When exposed to the stress of lifting weights, it tears, heals, and grows larger and stronger than before.",
+      "Application: You must expose yourself to calculated failures (stress) to force your mind to adapt and grow."
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Resilience & Failure",
+    "icon": "\ud83c\udfad",
+    "title": "Imposter Syndrome",
+    "lead": "The overwhelming psychological fear that you are a fraud and that everyone is about to find out you don't belong.",
+    "points": [
+      "The Reality: Over 70% of high-achieving individuals experience imposter syndrome. It is a sign of self-awareness, not incompetence.",
+      "The Dunning-Kruger Effect: The opposite of imposter syndrome. Incompetent people wildly overestimate their skills because they are too ignorant to know what they don't know.",
+      "The Fix: Document your wins objectively. Recognize that feeling uncomfortable simply means you are operating at the edge of your growth zone."
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Resilience & Failure",
+    "icon": "\ud83e\uddd7",
+    "title": "The Obstacle Is The Way",
+    "lead": "The Stoic philosophy popularized by Marcus Aurelius: The impediment to action advances action.",
+    "points": [
+      "Reframing: Do not view a roadblock as something blocking your path. The roadblock IS the path.",
+      "Example: If you lose your job, it is not a disaster; it is an opportunity to aggressively pivot into an industry you actually care about.",
+      "Control: Focus 100% of your energy on what you can control (your reaction) and 0% on what you cannot (the external event)."
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 Productivity & Focus",
+    "icon": "\ud83c\udf45",
+    "title": "The Pomodoro Technique",
+    "lead": "A time management method developed to hack your brain's attention span and prevent burnout.",
+    "points": [
+      "The Execution: Work deeply for 25 minutes, then take a strict 5-minute break. Repeat 4 times, then take a 30-minute break.",
+      "The Psychology: The human brain cannot maintain intense focus for 4 hours straight. Frequent micro-breaks maintain a highly sustained average output.",
+      "The Rule: During the 25 minutes, zero distractions. If an impulse hits you to check Twitter, write it on a notepad and immediately return to work."
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 Productivity & Focus",
+    "icon": "\ud83c\udfaf",
+    "title": "The Eisenhower Matrix",
+    "lead": "A framework for deciding which tasks to do, delegate, schedule, or delete based on Urgency and Importance.",
+    "points": [
+      "Quadrant 1 (Urgent & Important): DO IT NOW. (e.g., Server is down, crying baby).",
+      "Quadrant 2 (Not Urgent & Important): SCHEDULE IT. This is where deep work, health, and wealth live. (e.g., Exercising, learning to code).",
+      "Quadrant 3 (Urgent & Not Important): DELEGATE IT. (e.g., Most emails, interruptions from coworkers).",
+      "Quadrant 4 (Not Urgent & Not Important): DELETE IT. (e.g., Doomscrolling social media)."
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 Productivity & Focus",
+    "icon": "\ud83d\udd0b",
+    "title": "Managing Energy, Not Time",
+    "lead": "Time management is a flawed concept. You have 24 hours, but if you have zero energy, those hours are worthless.",
+    "points": [
+      "Chronotypes: Are you a morning lark or a night owl? Schedule your most cognitively demanding tasks for your biological peak hours.",
+      "Physical Energy: Sleep, diet, and exercise are not \"breaks\" from work; they are the fundamental fuel that makes elite work possible.",
+      "Emotional Energy: Toxic environments and negative relationships drain your mental battery. Guard your emotional energy ruthlessly."
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Foundations of Mindset",
+    "icon": "\ud83e\udde0",
+    "title": "Fixed vs Growth Mindset",
+    "lead": "Dr. Carol Dweck's groundbreaking psychological framework that determines how humans respond to failure and challenge.",
+    "points": [
+      "Fixed Mindset: The belief that intelligence and talent are static traits you are born with. You either have it or you don't.",
+      "Growth Mindset: The belief that abilities can be developed through dedication and hard work. Brains and talent are just the starting point.",
+      "The Impact: People with a fixed mindset hide their flaws and avoid challenges to look smart. People with a growth mindset embrace failure as data to improve."
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Foundations of Mindset",
+    "icon": "\u26a1",
+    "title": "Neuroplasticity",
+    "lead": "The biological proof that a Growth Mindset is real. Your brain physically changes shape based on what you do.",
+    "points": [
+      "The Science: The brain forms new neural pathways when you learn something new. It strengthens existing pathways when you practice.",
+      "Use It or Lose It: Synaptic pruning eliminates weak or unused connections. If you stop doing math, you literally lose the neural hardware for it.",
+      "Age is Not a Barrier: While neuroplasticity is highest in childhood, the adult brain remains highly plastic and capable of massive rewiring until death."
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Foundations of Mindset",
+    "icon": "\ud83d\udde3\ufe0f",
+    "title": "The Power of \"Yet\"",
+    "lead": "A simple linguistic hack that fundamentally rewires your psychological reaction to a roadblock.",
+    "points": [
+      "The Trap: Saying \"I am not good at coding\" implies a permanent, fixed state.",
+      "The Shift: Saying \"I am not good at coding YET\" acknowledges your current state but opens the door to a future where you have mastered it.",
+      "Self-Talk: The internal monologue you run in your head dictates your reality. Changing your vocabulary changes your trajectory."
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Habit Architecture",
+    "icon": "\ud83e\uddf1",
+    "title": "Atomic Habits",
+    "lead": "Based on James Clear's research, massive changes are not the result of massive action, but of tiny 1% daily improvements.",
+    "points": [
+      "The 1% Rule: If you get 1% better every day for a year, you will be 37 times better by the time you are done.",
+      "Systems over Goals: Goals are about the results you want to achieve. Systems are about the processes that lead to those results. Winners and losers have the same goals.",
+      "Identity Shift: True behavior change is identity change. You aren't \"trying to read\", you are a \"reader\"."
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Habit Architecture",
+    "icon": "\ud83d\udd04",
+    "title": "The Habit Loop",
+    "lead": "The neurological loop at the core of every habit consists of four distinct phases.",
+    "points": [
+      "Cue: The trigger that initiates the behavior (e.g., your phone buzzes).",
+      "Craving: The motivational force or desire (e.g., wanting to know who texted you).",
+      "Response: The actual habit you perform (e.g., picking up the phone).",
+      "Reward: The end goal that satisfies the craving (e.g., reading the message and getting a dopamine hit)."
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Habit Architecture",
+    "icon": "\ud83d\udd17",
+    "title": "Habit Stacking",
+    "lead": "The best way to build a new habit is to attach it to an existing, strongly ingrained habit.",
+    "points": [
+      "The Formula: \"After [CURRENT HABIT], I will [NEW HABIT].\"",
+      "Example: \"After I pour my morning coffee, I will meditate for 1 minute.\"",
+      "Friction: Make good habits completely frictionless (put your running shoes by the bed) and bad habits highly friction-heavy (unplug your TV and put the remote in a drawer)."
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Resilience & Failure",
+    "icon": "\ud83d\udd25",
+    "title": "Antifragility",
+    "lead": "Nassim Taleb's concept that goes beyond resilience. Things that are antifragile actually get STRONGER when exposed to stress and chaos.",
+    "points": [
+      "Fragile: A glass cup. It breaks under stress.",
+      "Resilient: A plastic cup. It survives stress but remains exactly the same.",
+      "Antifragile: Human muscle. When exposed to the stress of lifting weights, it tears, heals, and grows larger and stronger than before.",
+      "Application: You must expose yourself to calculated failures (stress) to force your mind to adapt and grow."
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Resilience & Failure",
+    "icon": "\ud83c\udfad",
+    "title": "Imposter Syndrome",
+    "lead": "The overwhelming psychological fear that you are a fraud and that everyone is about to find out you don't belong.",
+    "points": [
+      "The Reality: Over 70% of high-achieving individuals experience imposter syndrome. It is a sign of self-awareness, not incompetence.",
+      "The Dunning-Kruger Effect: The opposite of imposter syndrome. Incompetent people wildly overestimate their skills because they are too ignorant to know what they don't know.",
+      "The Fix: Document your wins objectively. Recognize that feeling uncomfortable simply means you are operating at the edge of your growth zone."
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Resilience & Failure",
+    "icon": "\ud83e\uddd7",
+    "title": "The Obstacle Is The Way",
+    "lead": "The Stoic philosophy popularized by Marcus Aurelius: The impediment to action advances action.",
+    "points": [
+      "Reframing: Do not view a roadblock as something blocking your path. The roadblock IS the path.",
+      "Example: If you lose your job, it is not a disaster; it is an opportunity to aggressively pivot into an industry you actually care about.",
+      "Control: Focus 100% of your energy on what you can control (your reaction) and 0% on what you cannot (the external event)."
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 Productivity & Focus",
+    "icon": "\ud83c\udf45",
+    "title": "The Pomodoro Technique",
+    "lead": "A time management method developed to hack your brain's attention span and prevent burnout.",
+    "points": [
+      "The Execution: Work deeply for 25 minutes, then take a strict 5-minute break. Repeat 4 times, then take a 30-minute break.",
+      "The Psychology: The human brain cannot maintain intense focus for 4 hours straight. Frequent micro-breaks maintain a highly sustained average output.",
+      "The Rule: During the 25 minutes, zero distractions. If an impulse hits you to check Twitter, write it on a notepad and immediately return to work."
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 Productivity & Focus",
+    "icon": "\ud83c\udfaf",
+    "title": "The Eisenhower Matrix",
+    "lead": "A framework for deciding which tasks to do, delegate, schedule, or delete based on Urgency and Importance.",
+    "points": [
+      "Quadrant 1 (Urgent & Important): DO IT NOW. (e.g., Server is down, crying baby).",
+      "Quadrant 2 (Not Urgent & Important): SCHEDULE IT. This is where deep work, health, and wealth live. (e.g., Exercising, learning to code).",
+      "Quadrant 3 (Urgent & Not Important): DELEGATE IT. (e.g., Most emails, interruptions from coworkers).",
+      "Quadrant 4 (Not Urgent & Not Important): DELETE IT. (e.g., Doomscrolling social media)."
+    ]
+  },
+  {
+    "unit": "Unit 4 \u00b7 Productivity & Focus",
+    "icon": "\ud83d\udd0b",
+    "title": "Managing Energy, Not Time",
+    "lead": "Time management is a flawed concept. You have 24 hours, but if you have zero energy, those hours are worthless.",
+    "points": [
+      "Chronotypes: Are you a morning lark or a night owl? Schedule your most cognitively demanding tasks for your biological peak hours.",
+      "Physical Energy: Sleep, diet, and exercise are not \"breaks\" from work; they are the fundamental fuel that makes elite work possible.",
+      "Emotional Energy: Toxic environments and negative relationships drain your mental battery. Guard your emotional energy ruthlessly."
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Foundations of Mindset",
+    "icon": "\ud83e\udde0",
+    "title": "Fixed vs Growth Mindset",
+    "lead": "Dr. Carol Dweck's groundbreaking psychological framework that determines how humans respond to failure and challenge.",
+    "points": [
+      "Fixed Mindset: The belief that intelligence and talent are static traits you are born with. You either have it or you don't.",
+      "Growth Mindset: The belief that abilities can be developed through dedication and hard work. Brains and talent are just the starting point.",
+      "The Impact: People with a fixed mindset hide their flaws and avoid challenges to look smart. People with a growth mindset embrace failure as data to improve."
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Foundations of Mindset",
+    "icon": "\u26a1",
+    "title": "Neuroplasticity",
+    "lead": "The biological proof that a Growth Mindset is real. Your brain physically changes shape based on what you do.",
+    "points": [
+      "The Science: The brain forms new neural pathways when you learn something new. It strengthens existing pathways when you practice.",
+      "Use It or Lose It: Synaptic pruning eliminates weak or unused connections. If you stop doing math, you literally lose the neural hardware for it.",
+      "Age is Not a Barrier: While neuroplasticity is highest in childhood, the adult brain remains highly plastic and capable of massive rewiring until death."
+    ]
+  },
+  {
+    "unit": "Unit 1 \u00b7 The Foundations of Mindset",
+    "icon": "\ud83d\udde3\ufe0f",
+    "title": "The Power of \"Yet\"",
+    "lead": "A simple linguistic hack that fundamentally rewires your psychological reaction to a roadblock.",
+    "points": [
+      "The Trap: Saying \"I am not good at coding\" implies a permanent, fixed state.",
+      "The Shift: Saying \"I am not good at coding YET\" acknowledges your current state but opens the door to a future where you have mastered it.",
+      "Self-Talk: The internal monologue you run in your head dictates your reality. Changing your vocabulary changes your trajectory."
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Habit Architecture",
+    "icon": "\ud83e\uddf1",
+    "title": "Atomic Habits",
+    "lead": "Based on James Clear's research, massive changes are not the result of massive action, but of tiny 1% daily improvements.",
+    "points": [
+      "The 1% Rule: If you get 1% better every day for a year, you will be 37 times better by the time you are done.",
+      "Systems over Goals: Goals are about the results you want to achieve. Systems are about the processes that lead to those results. Winners and losers have the same goals.",
+      "Identity Shift: True behavior change is identity change. You aren't \"trying to read\", you are a \"reader\"."
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Habit Architecture",
+    "icon": "\ud83d\udd04",
+    "title": "The Habit Loop",
+    "lead": "The neurological loop at the core of every habit consists of four distinct phases.",
+    "points": [
+      "Cue: The trigger that initiates the behavior (e.g., your phone buzzes).",
+      "Craving: The motivational force or desire (e.g., wanting to know who texted you).",
+      "Response: The actual habit you perform (e.g., picking up the phone).",
+      "Reward: The end goal that satisfies the craving (e.g., reading the message and getting a dopamine hit)."
+    ]
+  },
+  {
+    "unit": "Unit 2 \u00b7 Habit Architecture",
+    "icon": "\ud83d\udd17",
+    "title": "Habit Stacking",
+    "lead": "The best way to build a new habit is to attach it to an existing, strongly ingrained habit.",
+    "points": [
+      "The Formula: \"After [CURRENT HABIT], I will [NEW HABIT].\"",
+      "Example: \"After I pour my morning coffee, I will meditate for 1 minute.\"",
+      "Friction: Make good habits completely frictionless (put your running shoes by the bed) and bad habits highly friction-heavy (unplug your TV and put the remote in a drawer)."
+    ]
+  },
+  {
+    "unit": "Unit 3 \u00b7 Resilience & Failure",
+    "icon": "\ud83d\udd25",
+    "title": "Antifragility",
+    "lead": "Nassim Taleb's concept that goes beyond resilience. Things that are antifragile actually get STRONGER when exposed to stress and chaos.",
+    "points": [
+      "Fragile: A glass cup. It breaks under stress.",
+      "Resilient: A plastic cup. It survives stress but remains exactly the same.",
+      "Antifragile: Human muscle. When exposed to the stress of lifting weights, it tears, heals, and grows larger and stronger than before.",
+      "Application: You must expose yourself to calculated failures (stress) to force your mind to adapt and grow."
+    ]
+  }
+];
+
+
+// ═══════════════════════════════════════
+// LIFE SKILLS — RENDER FUNCTIONS
+// ═══════════════════════════════════════
+
+// --- Financial Literacy ---
+function renderFinlitTOC() {
+  var list = document.getElementById('finlit-toc-list');
+  if (!list) return;
+  var html = '';
+  var currentUnit = '';
+  FINLIT_LESSONS.forEach(function(lesson, i) {
+    if (lesson.unit !== currentUnit) {
+      currentUnit = lesson.unit;
+      html += '<div class="fin-toc-unit">' + esc(lesson.unit) + '</div>';
+    }
+    html += '<div class="fin-toc-item' + (i === _activeFinlitIdx ? ' active' : '') + '" onclick="renderFinlitLesson(' + i + ')" id="finlit-toc-' + i + '">'
+          + '<span style="margin-right:7px;">' + lesson.icon + '</span>' + esc(lesson.title)
+          + '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function renderFinlitLesson(idx) {
+  _activeFinlitIdx = idx;
+  var lesson = FINLIT_LESSONS[idx];
+  if (!lesson) return;
+
+  var pct = ((idx + 1) / FINLIT_LESSONS.length) * 100;
+  var pfill = document.getElementById('finlit-progress-fill');
+  if (pfill) pfill.style.width = pct + '%';
+
+  renderFinlitTOC();
+  var act = document.getElementById('finlit-toc-' + idx);
+  if (act && act.scrollIntoView) act.scrollIntoView({ behavior:'smooth', block:'center' });
+
+  var html = '<div class="fin-lesson-num">LESSON ' + (idx+1) + ' OF ' + FINLIT_LESSONS.length + '</div>';
+  html += '<h1 class="fin-lesson-title">' + esc(lesson.title) + '</h1>';
+  if (lesson.lead) html += '<div class="fin-lesson-lead">' + lesson.lead + '</div>';
+
+  if (lesson.points && lesson.points.length > 0) {
+    html += '<div class="fin-section-title">Key Concepts</div><ul class="fin-key-points">';
+    lesson.points.forEach(function(pt) { html += '<li>' + pt + '</li>'; });
+    html += '</ul>';
+  }
+
+  if (lesson.analogy) {
+    html += '<div class="fin-analogy-box"><div class="fin-analogy-title">💡 The Intuition</div><div class="fin-analogy-text">' + esc(lesson.analogy) + '</div></div>';
+  }
+
+  if (lesson.qa && lesson.qa.length > 0) {
+    html += '<div class="fin-qa-section"><div class="fin-section-title">Common Questions</div>';
+    lesson.qa.forEach(function(item, qidx) {
+      var uniq = 'finlit-q-' + idx + '-' + qidx;
+      html += '<div class="fin-qa-item" id="' + uniq + '">'
+            + '<div class="fin-qa-q" onclick="document.getElementById(\'' + uniq + '\').classList.toggle(\'open\')">'
+            + '<span>' + esc(item.q) + '</span><svg class="fin-qa-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>'
+            + '</div><div class="fin-qa-a">' + item.a + '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  var prevDisabled = (idx === 0) ? ' disabled' : '';
+  var nextDisabled = (idx === FINLIT_LESSONS.length - 1) ? ' disabled' : '';
+  html += '<div class="fin-nav-row"><button class="fin-nav-btn"' + prevDisabled + ' onclick="renderFinlitLesson(' + (idx-1) + ')">&#8592; Previous</button><button class="fin-nav-btn primary"' + nextDisabled + ' onclick="renderFinlitLesson(' + (idx+1) + ')">Next &#8594;</button></div>';
+
+  var contentDiv = document.getElementById('finlit-lesson-content');
+  if (contentDiv) contentDiv.innerHTML = html;
+  var mainDiv = document.getElementById('finlit-main');
+  if (mainDiv) mainDiv.scrollTop = 0;
+}
+
+// --- Career Development ---
+function renderCareerTOC() {
+  var list = document.getElementById('career-toc-list');
+  if (!list) return;
+  var html = '';
+  var currentUnit = '';
+  CAREER_LESSONS.forEach(function(lesson, i) {
+    if (lesson.unit !== currentUnit) {
+      currentUnit = lesson.unit;
+      html += '<div class="fin-toc-unit">' + esc(lesson.unit) + '</div>';
+    }
+    html += '<div class="fin-toc-item' + (i === _activeCareerIdx ? ' active' : '') + '" onclick="renderCareerLesson(' + i + ')" id="career-toc-' + i + '">'
+          + '<span style="margin-right:7px;">' + lesson.icon + '</span>' + esc(lesson.title)
+          + '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function renderCareerLesson(idx) {
+  _activeCareerIdx = idx;
+  var lesson = CAREER_LESSONS[idx];
+  if (!lesson) return;
+
+  var pct = ((idx + 1) / CAREER_LESSONS.length) * 100;
+  var pfill = document.getElementById('career-progress-fill');
+  if (pfill) pfill.style.width = pct + '%';
+
+  renderCareerTOC();
+  var act = document.getElementById('career-toc-' + idx);
+  if (act && act.scrollIntoView) act.scrollIntoView({ behavior:'smooth', block:'center' });
+
+  var html = '<div class="fin-lesson-num">LESSON ' + (idx+1) + ' OF ' + CAREER_LESSONS.length + '</div>';
+  html += '<h1 class="fin-lesson-title">' + esc(lesson.title) + '</h1>';
+  if (lesson.lead) html += '<div class="fin-lesson-lead">' + lesson.lead + '</div>';
+
+  if (lesson.points && lesson.points.length > 0) {
+    html += '<div class="fin-section-title">Key Concepts</div><ul class="fin-key-points">';
+    lesson.points.forEach(function(pt) { html += '<li>' + pt + '</li>'; });
+    html += '</ul>';
+  }
+
+  if (lesson.analogy) {
+    html += '<div class="fin-analogy-box"><div class="fin-analogy-title">💡 The Intuition</div><div class="fin-analogy-text">' + esc(lesson.analogy) + '</div></div>';
+  }
+
+  if (lesson.qa && lesson.qa.length > 0) {
+    html += '<div class="fin-qa-section"><div class="fin-section-title">Common Questions</div>';
+    lesson.qa.forEach(function(item, qidx) {
+      var uniq = 'career-q-' + idx + '-' + qidx;
+      html += '<div class="fin-qa-item" id="' + uniq + '">'
+            + '<div class="fin-qa-q" onclick="document.getElementById(\'' + uniq + '\').classList.toggle(\'open\')">'
+            + '<span>' + esc(item.q) + '</span><svg class="fin-qa-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>'
+            + '</div><div class="fin-qa-a">' + item.a + '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  var prevDisabled = (idx === 0) ? ' disabled' : '';
+  var nextDisabled = (idx === CAREER_LESSONS.length - 1) ? ' disabled' : '';
+  html += '<div class="fin-nav-row"><button class="fin-nav-btn"' + prevDisabled + ' onclick="renderCareerLesson(' + (idx-1) + ')">&#8592; Previous</button><button class="fin-nav-btn primary"' + nextDisabled + ' onclick="renderCareerLesson(' + (idx+1) + ')">Next &#8594;</button></div>';
+
+  var contentDiv = document.getElementById('career-lesson-content');
+  if (contentDiv) contentDiv.innerHTML = html;
+  var mainDiv = document.getElementById('career-main');
+  if (mainDiv) mainDiv.scrollTop = 0;
+}
+
+// --- Growth Mindset ---
+function renderGrowthTOC() {
+  var list = document.getElementById('growth-toc-list');
+  if (!list) return;
+  var html = '';
+  var currentUnit = '';
+  GROWTH_LESSONS.forEach(function(lesson, i) {
+    if (lesson.unit !== currentUnit) {
+      currentUnit = lesson.unit;
+      html += '<div class="fin-toc-unit">' + esc(lesson.unit) + '</div>';
+    }
+    html += '<div class="fin-toc-item' + (i === _activeGrowthIdx ? ' active' : '') + '" onclick="renderGrowthLesson(' + i + ')" id="growth-toc-' + i + '">'
+          + '<span style="margin-right:7px;">' + lesson.icon + '</span>' + esc(lesson.title)
+          + '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function renderGrowthLesson(idx) {
+  _activeGrowthIdx = idx;
+  var lesson = GROWTH_LESSONS[idx];
+  if (!lesson) return;
+
+  var pct = ((idx + 1) / GROWTH_LESSONS.length) * 100;
+  var pfill = document.getElementById('growth-progress-fill');
+  if (pfill) pfill.style.width = pct + '%';
+
+  renderGrowthTOC();
+  var act = document.getElementById('growth-toc-' + idx);
+  if (act && act.scrollIntoView) act.scrollIntoView({ behavior:'smooth', block:'center' });
+
+  var html = '<div class="fin-lesson-num">LESSON ' + (idx+1) + ' OF ' + GROWTH_LESSONS.length + '</div>';
+  html += '<h1 class="fin-lesson-title">' + esc(lesson.title) + '</h1>';
+  if (lesson.lead) html += '<div class="fin-lesson-lead">' + lesson.lead + '</div>';
+
+  if (lesson.points && lesson.points.length > 0) {
+    html += '<div class="fin-section-title">Key Concepts</div><ul class="fin-key-points">';
+    lesson.points.forEach(function(pt) { html += '<li>' + pt + '</li>'; });
+    html += '</ul>';
+  }
+
+  if (lesson.analogy) {
+    html += '<div class="fin-analogy-box"><div class="fin-analogy-title">💡 The Intuition</div><div class="fin-analogy-text">' + esc(lesson.analogy) + '</div></div>';
+  }
+
+  if (lesson.qa && lesson.qa.length > 0) {
+    html += '<div class="fin-qa-section"><div class="fin-section-title">Common Questions</div>';
+    lesson.qa.forEach(function(item, qidx) {
+      var uniq = 'growth-q-' + idx + '-' + qidx;
+      html += '<div class="fin-qa-item" id="' + uniq + '">'
+            + '<div class="fin-qa-q" onclick="document.getElementById(\'' + uniq + '\').classList.toggle(\'open\')">'
+            + '<span>' + esc(item.q) + '</span><svg class="fin-qa-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>'
+            + '</div><div class="fin-qa-a">' + item.a + '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  var prevDisabled = (idx === 0) ? ' disabled' : '';
+  var nextDisabled = (idx === GROWTH_LESSONS.length - 1) ? ' disabled' : '';
+  html += '<div class="fin-nav-row"><button class="fin-nav-btn"' + prevDisabled + ' onclick="renderGrowthLesson(' + (idx-1) + ')">&#8592; Previous</button><button class="fin-nav-btn primary"' + nextDisabled + ' onclick="renderGrowthLesson(' + (idx+1) + ')">Next &#8594;</button></div>';
+
+  var contentDiv = document.getElementById('growth-lesson-content');
+  if (contentDiv) contentDiv.innerHTML = html;
+  var mainDiv = document.getElementById('growth-main');
+  if (mainDiv) mainDiv.scrollTop = 0;
+}
+
 // ═══════════════════════════════════════
 // WEB DEVELOPMENT & INFO THEORY — RENDER FUNCTIONS
 // ═══════════════════════════════════════
@@ -7715,6 +9156,9 @@ document.addEventListener('DOMContentLoaded', function() {
     else if (_subj === 'finance' && typeof openFinanceLesson === 'function') openFinanceLesson();
     else if (_subj === 'web-development' && typeof openWebLesson === 'function') openWebLesson(0);
     else if (_subj === 'information-theory' && typeof openInfoLesson === 'function') openInfoLesson(0);
+    else if (_subj === 'financial-literacy' && typeof openFinlitLesson === 'function') openFinlitLesson(0);
+    else if (_subj === 'career-development' && typeof openCareerLesson === 'function') openCareerLesson(0);
+    else if (_subj === 'growth-mindset' && typeof openGrowthLesson === 'function') openGrowthLesson(0);
     else if (_subj === 'programming' && typeof openProgrammingLesson === 'function') openProgrammingLesson(0);
     else if (_subj === 'ai-robotics' && typeof openAiLesson === 'function') openAiLesson(0);
   } catch(e){ console.error(e); }
