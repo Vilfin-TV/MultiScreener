@@ -3722,21 +3722,84 @@ var _WMO_WEATHER = {
   95:['⛈️','Thunderstorm'],96:['⛈️','Thunderstorm'],99:['⛈️','Hailstorm']
 };
 
-async function _loadLocalWeather() {
+var _WX_CACHE_KEY = 'vt_local_wx';
+
+/* Current weather with provider fallback: Open-Meteo, then MET Norway.
+   Returns { temp, icon, label } or throws. */
+async function _fetchWeather(lat, lon) {
+  // 1. Open-Meteo (WMO weather codes)
+  try {
+    var r = await fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon
+      + '&current=temperature_2m,weather_code&timezone=auto', { signal: AbortSignal.timeout(9000) });
+    if (r.ok) {
+      var j = await r.json();
+      if (j.current && typeof j.current.temperature_2m === 'number') {
+        var c = _WMO_WEATHER[j.current.weather_code] || ['🌡️', ''];
+        return { temp: Math.round(j.current.temperature_2m), icon: c[0], label: c[1] };
+      }
+    }
+  } catch (_) {}
+  // 2. MET Norway (symbol codes)
+  var r2 = await fetch('https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=' + lat + '&lon=' + lon,
+    { signal: AbortSignal.timeout(9000) });
+  if (!r2.ok) throw new Error('weather http ' + r2.status);
+  var j2 = await r2.json();
+  var ts = j2.properties && j2.properties.timeseries && j2.properties.timeseries[0];
+  if (!ts) throw new Error('no weather data');
+  var temp = ts.data.instant.details.air_temperature;
+  var summary = (ts.data.next_1_hours || ts.data.next_6_hours || {}).summary;
+  var sym = summary ? String(summary.symbol_code).split('_')[0] : '';
+  var icon = '🌡️', label = '';
+  if (/thunder/.test(sym))            { icon = '⛈️'; label = 'Thunderstorm'; }
+  else if (/snow|sleet/.test(sym))    { icon = '🌨️'; label = 'Snow'; }
+  else if (/heavyrain/.test(sym))     { icon = '🌧️'; label = 'Heavy rain'; }
+  else if (/showers/.test(sym))       { icon = '🌦️'; label = 'Showers'; }
+  else if (/rain|drizzle/.test(sym))  { icon = '🌧️'; label = 'Rain'; }
+  else if (sym === 'fog')             { icon = '🌫️'; label = 'Fog'; }
+  else if (sym === 'cloudy')          { icon = '☁️'; label = 'Cloudy'; }
+  else if (sym === 'partlycloudy')    { icon = '⛅'; label = 'Partly cloudy'; }
+  else if (sym === 'fair')            { icon = '🌤️'; label = 'Mostly clear'; }
+  else if (sym === 'clearsky')        { icon = '☀️'; label = 'Clear'; }
+  return { temp: Math.round(temp), icon: icon, label: label };
+}
+
+async function _loadLocalWeather(attempt) {
+  attempt = attempt || 0;
   var chip = document.getElementById('local-weather-chip');
   var el   = document.getElementById('local-weather');
   if (!chip || !el) return;
+
+  // Last good reading — shown instantly and kept on failure so the chip
+  // never disappears just because a free geo/weather API throttled once.
+  var cached = null;
+  try { cached = JSON.parse(localStorage.getItem(_WX_CACHE_KEY) || 'null'); } catch (_) {}
+  if (cached && cached.text && Date.now() - (cached.ts || 0) < 3 * 3600 * 1000) {
+    el.textContent = cached.text;
+    chip.style.display = '';
+  }
+
   try {
     var lat = null, lon = null, city = '';
-    // 1. Approximate location — silent, no permission prompt
-    try {
-      var geoRes = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(6000) });
-      if (geoRes.ok) {
-        var geo = await geoRes.json();
-        if (typeof geo.latitude === 'number') { lat = geo.latitude; lon = geo.longitude; city = geo.city || ''; }
+    // 1. Cached coordinates — location rarely changes between visits
+    if (cached && typeof cached.lat === 'number' && isFinite(cached.lat)) {
+      lat = cached.lat; lon = cached.lon; city = cached.city || '';
+    }
+    // 2. IP-based location — silent, no permission prompt, two providers
+    if (lat === null) {
+      var provs = [
+        { url: 'https://ipapi.co/json/',                pick: function(j){ return { la: j.latitude, lo: j.longitude, c: j.city || '' }; } },
+        { url: 'https://get.geojs.io/v1/ip/geo.json',   pick: function(j){ return { la: parseFloat(j.latitude), lo: parseFloat(j.longitude), c: j.city || '' }; } }
+      ];
+      for (var i = 0; i < provs.length && lat === null; i++) {
+        try {
+          var r = await fetch(provs[i].url, { signal: AbortSignal.timeout(6000) });
+          if (!r.ok) continue;
+          var g = provs[i].pick(await r.json());
+          if (g && typeof g.la === 'number' && isFinite(g.la)) { lat = g.la; lon = g.lo; city = g.c; }
+        } catch (_) {}
       }
-    } catch (_) {}
-    // 2. Fallback — browser geolocation (may prompt)
+    }
+    // 3. Browser geolocation (may prompt)
     if (lat === null && navigator.geolocation) {
       var pos = await new Promise(function(res, rej) {
         navigator.geolocation.getCurrentPosition(res, rej, { timeout: 8000, maximumAge: 600000 });
@@ -3744,20 +3807,29 @@ async function _loadLocalWeather() {
       lat = pos.coords.latitude; lon = pos.coords.longitude;
     }
     if (lat === null) throw new Error('no location');
-    var wxRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon
-      + '&current=temperature_2m,weather_code&timezone=auto', { signal: AbortSignal.timeout(8000) });
-    var wx = await wxRes.json();
-    var temp = Math.round(wx.current.temperature_2m);
-    var code = _WMO_WEATHER[wx.current.weather_code] || ['🌡️', ''];
-    el.textContent = code[0] + ' ' + temp + '°C' + (code[1] ? ' · ' + code[1] : '') + (city ? ' · ' + city : '');
+
+    var wx = await _fetchWeather(lat, lon);
+    var text = wx.icon + ' ' + wx.temp + '°C' + (wx.label ? ' · ' + wx.label : '') + (city ? ' · ' + city : '');
+    el.textContent = text;
+    chip.style.display = '';
+    try { localStorage.setItem(_WX_CACHE_KEY, JSON.stringify({ text: text, lat: lat, lon: lon, city: city, ts: Date.now() })); } catch (_) {}
   } catch (e) {
-    chip.style.display = 'none'; // weather unavailable — hide chip gracefully
+    if (cached && cached.text) {
+      el.textContent = cached.text; // stale but real — better than vanishing
+      chip.style.display = '';
+    } else if (attempt < 3) {
+      chip.style.display = 'none';
+      setTimeout(function(){ _loadLocalWeather(attempt + 1); }, 45000 * (attempt + 1));
+    } else {
+      chip.style.display = 'none';
+    }
   }
 }
 
 _localClockTick();
 setInterval(_localClockTick, 1000);
 _loadLocalWeather();
+setInterval(function(){ _loadLocalWeather(); }, 30 * 60 * 1000); // refresh every 30 min
 
 /* ═══════════════════════════════════════════════════
    WORLD NEWS — load, render, popup
