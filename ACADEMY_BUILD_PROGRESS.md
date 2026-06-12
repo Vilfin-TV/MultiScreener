@@ -18,8 +18,8 @@ Daily automated build of empty Academy topics in `education.html`.
 ## Topic queue (32 topics — build top to bottom, 2 per run)
 
 ### AI & Robotics (extend AI_LESSONS — hub already exists)
-- [ ] Natural Language Processing (NLP)
-- [ ] Computer Vision
+- [x] Natural Language Processing (NLP)
+- [x] Computer Vision
 - [ ] Reinforcement Learning
 - [ ] Generative AI & LLMs
 
@@ -71,3 +71,4 @@ Daily automated build of empty Academy topics in `education.html`.
 
 ## Run log
 <!-- append one line per run: date — topics built — validation result -->
+- 2026-06-12 — Natural Language Processing (NLP) + Computer Vision (AI_LESSONS units 7-8, idx 27 & 32) — jsdom pass, preview render pass, 0 console errors
