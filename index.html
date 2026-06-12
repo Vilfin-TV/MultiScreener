@@ -13295,9 +13295,9 @@ var YT_CHANNELS = [
   {no:175,name:'The Amazing World of Gumball',country:'International', category:'Kids',             lang:'English', cid:'UCoBpC9J2EcbAMprw7YjC93A', v1:'nIyaCRNwxhU', v2:''},
   {no:176,name:'Mr Bean World',               country:'International', category:'Entertainment',    lang:'English', cid:'UCzoFjzSkbrDD1GHsz2YNLig', v1:'kRL8tyCl1lQ', v2:''},
   // ── Sports ────────────────────────────────────────────────────────────
-  {no:177,name:'beIN SPORTS',               country:'International', category:'Sports',           lang:'English', cid:'UCJUCcJUeh0Cz2xyKwkw5Q1w', v1:'D0UMtQhPLPc', v2:''},
-  {no:178,name:'beIN SPORTS Asia',          country:'Asia',          category:'Sports',           lang:'English', cid:'UCYtNSrfGdXooZYu_hkq18_w', v1:'LhkDLFYE2Wc', v2:''},
-  {no:179,name:'beIN SPORTS USA',           country:'United States', category:'Sports',           lang:'English', cid:'UC0YatYmg5JRYzXJPxIdRd8g', v1:'xiC-ap5Hh6U', v2:''},
+  {no:177,name:'beIN SPORTS',               country:'International', category:'Sports',           lang:'English', cid:'UCJUCcJUeh0Cz2xyKwkw5Q1w', v1:'6HXMXOmtAH0', v2:''},
+  {no:178,name:'beIN SPORTS Asia',          country:'Asia',          category:'Sports',           lang:'English', cid:'UCYtNSrfGdXooZYu_hkq18_w', v1:'RRZTFyZT-us', v2:''},
+  {no:179,name:'beIN SPORTS USA',           country:'United States', category:'Sports',           lang:'English', cid:'UC0YatYmg5JRYzXJPxIdRd8g', v1:'QludraayXkw', v2:''},
   {no:180,name:'beIN SPORTS Türkiye',       country:'Turkey',        category:'Sports',           lang:'Turkish', cid:'UCPe9vNjHF1kEExT5kHwc7aw', v1:'i7UpPgxfZZ8', v2:''},
   {no:181,name:'FOX Soccer',               country:'United States', category:'Sports',           lang:'English', cid:'UCooTLkxcpnTNx6vfOovfBFA', v1:'o7PzDw99-yQ', v2:''},
   {no:182,name:'Telemundo Deportes',        country:'United States', category:'Sports',           lang:'Spanish', cid:'UCjZ7QPKb89R-4SxzBoceyOg', v1:'LqxemmR64G0', v2:''},
@@ -13747,10 +13747,12 @@ function _ytTryCurrentStage() {
     // Cache miss — load live_stream?channel= immediately so there's no blank wait
     _ytSetSrc('https://www.youtube.com/embed/live_stream?channel=' + cid +
       '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
-    // Auto-advance to uploads playlist after 20s if live_stream embed fails silently
+    // Auto-advance after 20s if live_stream embed fails silently — prefer the
+    // curated v1 video (verified embeddable) over the uploads playlist, whose
+    // latest video may be embed-blocked (common on sports channels like beIN)
     _ytStage1Timer = setTimeout(function() {
       if (_ytCurrentChNo === capturedNo && _ytFallbackStage === 1) {
-        _ytFallbackStage = 4; _ytTryCurrentStage();
+        _ytFallbackStage = ch.v1 ? 2 : 4; _ytTryCurrentStage();
       }
     }, 20000);
     // Call API in parallel — on success: save to cache + upgrade embed
@@ -13765,7 +13767,7 @@ function _ytTryCurrentStage() {
             '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
         } else if (!d.live && d.reason !== 'API key not configured') {
           clearTimeout(_ytStage1Timer); _ytStage1Timer = null;
-          _ytFallbackStage = 4; _ytTryCurrentStage();
+          _ytFallbackStage = ch.v1 ? 2 : 4; _ytTryCurrentStage();
         }
       })
       .catch(function() { /* API failed — live_stream?channel= + 20s timer already running */ });
