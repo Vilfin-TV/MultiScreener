@@ -769,16 +769,28 @@ body{
   border:1px solid var(--border2);
   border-radius:20px 20px 0 0;
   width:100%;max-width:760px;
-  /* Mobile: 90% of screen height so content is visible */
+  /* Mobile: 90% of the VISIBLE screen height. In-app browsers (WhatsApp,
+     Instagram, FB) have chrome bars that make 100vh taller than the visible
+     area, pushing the modal header/close button off-screen — so prefer the
+     JS-measured --app-vh, then dvh, with vh as the last fallback. */
   height:90vh;
+  height:calc(var(--app-vh, 1vh) * 90);
+  max-height:100%;
+  padding-bottom:env(safe-area-inset-bottom, 0);
   display:flex;flex-direction:column;
   box-shadow:0 -8px 64px rgba(0,0,0,.6);
   animation:modalSlideUp .3s cubic-bezier(.32,.72,0,1) both;
   overflow:hidden;
 }
+@supports(height:90dvh){
+  .story-modal{height:90dvh;max-height:100dvh}
+}
 @media(min-width:800px){
   .story-modal-overlay{align-items:center}
-  .story-modal{border-radius:18px;height:auto;max-height:88vh}
+  .story-modal{border-radius:18px;height:auto;max-height:88vh;max-height:calc(var(--app-vh, 1vh) * 88);padding-bottom:0}
+  @supports(height:88dvh){
+    .story-modal{max-height:88dvh}
+  }
 }
 @keyframes modalSlideUp{
   from{transform:translateY(60px);opacity:0}
@@ -4309,7 +4321,19 @@ async function loadExternalLinksSection(container) {
 /* ═══════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════ */
+// Measure the real visible viewport height (--app-vh). In-app browsers
+// (WhatsApp/Instagram/FB) report 100vh taller than the visible area, which
+// pushed the story modal header & close button off-screen on shared links.
+function _setAppVh() {
+  document.documentElement.style.setProperty('--app-vh', (window.innerHeight * 0.01) + 'px');
+}
+_setAppVh();
+window.addEventListener('resize', _setAppVh);
+window.addEventListener('orientationchange', _setAppVh);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', _setAppVh);
+
 document.addEventListener('DOMContentLoaded', function() {
+  _setAppVh();
   loadNewsPage();
   // Auto-refresh all RSS news content every 15 minutes
   setInterval(function() { loadNewsPage(); }, 15 * 60 * 1000);
