@@ -2022,19 +2022,10 @@ async function generateAIPhoto(prefix) {
         
         // Draw the base image
         ctx.drawImage(img, 0, 0, 1280, 720);
-        
-        // Add VilfinTV watermark to footer
-        ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
-        ctx.fillRect(0, 670, 1280, 50); // semi-transparent background bar
-        
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 24px Inter, sans-serif";
-        ctx.textAlign = "right";
-        ctx.textBaseline = "middle";
-        ctx.shadowColor = "rgba(0,0,0,0.8)";
-        ctx.shadowBlur = 4;
-        ctx.fillText("VilfinTV", 1250, 695);
-        
+
+        // Add VilfinTV watermark (official logo + wordmark) to footer
+        await drawVilfinWatermark(ctx, 1280, 720);
+
         canvas.toBlob(async (blob) => {
           if (!blob) return reject(new Error("Failed to process image blob."));
           try {
@@ -2056,6 +2047,104 @@ async function generateAIPhoto(prefix) {
     
   } catch (e) {
     alert("AI Photo Gen failed: " + e.message);
+  } finally {
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
+  }
+}
+
+// ── VilfinTV watermark (official channel logo + wordmark) ──
+var _wmLogoImg = null;
+function _wmLoadLogo() {
+  return new Promise(function (resolve) {
+    if (_wmLogoImg) return resolve(_wmLogoImg);
+    var im = new Image();
+    im.onload = function () { _wmLogoImg = im; resolve(im); };
+    im.onerror = function () { resolve(null); }; // fall back to text-only stamp
+    im.src = 'images/vilfintv-logo.jpg';
+  });
+}
+
+// Stamps a semi-transparent footer bar with the round logo + "VilfinTV"
+async function drawVilfinWatermark(ctx, w, h) {
+  var barH = Math.max(40, Math.round(h * 0.07));
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,0.6)";
+  ctx.fillRect(0, h - barH, w, barH);
+
+  var logo = await _wmLoadLogo();
+  var pad = Math.round(barH * 0.3);
+  var cy = h - barH / 2;
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold " + Math.round(barH * 0.48) + "px Inter, sans-serif";
+  ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
+  ctx.shadowColor = "rgba(0,0,0,0.8)";
+  ctx.shadowBlur = 4;
+
+  if (logo) {
+    var ls = Math.round(barH * 0.78);
+    var lx = w - pad - ls / 2;     // logo circle centre x
+    ctx.save();
+    ctx.shadowBlur = 0;
+    ctx.beginPath();
+    ctx.arc(lx, cy, ls / 2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(logo, lx - ls / 2, cy - ls / 2, ls, ls);
+    ctx.restore();
+    ctx.fillText("VilfinTV", lx - ls / 2 - pad * 0.7, cy);
+  } else {
+    ctx.fillText("VilfinTV", w - pad, cy);
+  }
+  ctx.restore();
+}
+
+// "Add Watermark" button — stamps the current photo URL and re-uploads to R2
+async function applyManualWatermark(prefix) {
+  var btn = document.getElementById(prefix + '-watermark-btn');
+  var urlField = document.getElementById(prefix + '-photo');
+  var src = (urlField && urlField.value || '').trim();
+  if (!src) { alert('Add a photo URL or upload an image first, then watermark it.'); return; }
+
+  var originalHtml = btn.innerHTML;
+  btn.innerHTML = '⏳ Watermarking…';
+  btn.disabled = true;
+  try {
+    var finalUrl = await new Promise(function (resolve, reject) {
+      var img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = async function () {
+        try {
+          var natW = img.naturalWidth || 1280;
+          var natH = img.naturalHeight || 720;
+          var w = Math.min(natW, 1600);
+          var h = Math.round(w * natH / natW);
+          var canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          await drawVilfinWatermark(ctx, w, h);
+          canvas.toBlob(async function (blob) {
+            if (!blob) return reject(new Error("Failed to process image."));
+            try {
+              var file = new File([blob], 'watermark-' + Date.now() + '.jpg', { type: 'image/jpeg' });
+              resolve(await uploadImageToR2(file));
+            } catch (e) { reject(e); }
+          }, 'image/jpeg', 0.92);
+        } catch (e) {
+          reject(new Error("This image host blocks editing (cross-origin). Upload the file with 'Upload image' first, then watermark."));
+        }
+      };
+      img.onerror = function () { reject(new Error("Could not load that image URL.")); };
+      img.src = src;
+    });
+
+    urlField.value = finalUrl;
+    if (prefix === 'cp' && typeof previewPhoto === 'function') previewPhoto(finalUrl);
+    if (prefix === 'st' && typeof previewStoryPhoto === 'function') previewStoryPhoto(finalUrl);
+  } catch (e) {
+    alert("Watermark failed: " + e.message);
   } finally {
     btn.innerHTML = originalHtml;
     btn.disabled = false;
