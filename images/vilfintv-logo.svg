@@ -10,18 +10,20 @@
       <stop offset="0.45" stop-color="#16294a"/>
       <stop offset="1" stop-color="#2c4d80"/>
     </linearGradient>
-    <linearGradient id="vtvRed" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="vtvRed" x1="170" y1="156" x2="254" y2="366" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#f43f5e"/>
-      <stop offset="1" stop-color="#be123c"/>
+      <stop offset="0.6" stop-color="#dc2626"/>
+      <stop offset="1" stop-color="#9f1239"/>
     </linearGradient>
-    <linearGradient id="vtvOrange" x1="0" y1="1" x2="1" y2="0">
-      <stop offset="0" stop-color="#ea580c"/>
+    <linearGradient id="vtvOrange" x1="254" y1="366" x2="398" y2="148" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#c2410c"/>
+      <stop offset="0.55" stop-color="#f97316"/>
       <stop offset="1" stop-color="#fbbf24"/>
     </linearGradient>
-    <linearGradient id="vtvDrop" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="vtvDrop" x1="110" y1="86" x2="162" y2="160" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#bae6fd"/>
-      <stop offset="0.5" stop-color="#38bdf8"/>
-      <stop offset="1" stop-color="#0284c7"/>
+      <stop offset="0.45" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#0369a1"/>
     </linearGradient>
   </defs>
 
@@ -35,14 +37,15 @@
   <!-- Top sheen -->
   <ellipse cx="256" cy="118" rx="160" ry="52" fill="#ffffff" opacity="0.05"/>
 
-  <!-- Blue droplet spark at the top of the V's left arm -->
-  <path d="M148 118 C178 132 196 156 190 182 C185 205 158 212 140 197 C122 182 124 152 148 118 Z" fill="url(#vtvDrop)"/>
-  <circle cx="165" cy="182" r="9" fill="#e0f2fe" opacity="0.75"/>
+  <!-- Blue droplet spark — slim comet tear, tip aimed down-right at the arm top -->
+  <path d="M162 160 C144 158 112 146 106 122 C100 98 118 80 140 84 C162 88 168 110 164 132 C162 144 162 152 162 160 Z" fill="url(#vtvDrop)"/>
+  <ellipse cx="120" cy="96" rx="10" ry="7" fill="#f0f9ff" opacity="0.9" transform="rotate(-28 120 96)"/>
 
-  <!-- V left arm (red) -->
-  <path d="M186 208 L262 348" stroke="url(#vtvRed)" stroke-width="54" stroke-linecap="round"/>
+  <!-- V left arm — tapered red ribbon slanting down-right, sharp fold at the base -->
+  <path d="M148 182 Q160 152 188 158 L298 308 L254 366 Z" fill="url(#vtvRed)"/>
+  <!-- fold shadow on the inner side of the vertex -->
+  <path d="M254 366 L298 308 L262 318 Z" fill="#881337" opacity="0.55"/>
 
-  <!-- V right arm rising into an arrow (orange) -->
-  <path d="M262 348 L344 232" stroke="url(#vtvOrange)" stroke-width="54" stroke-linecap="round"/>
-  <path d="M390 168 L385 250 L316 206 Z" fill="#fb923c"/>
+  <!-- V right arm — orange swoosh rising into an integrated barbed arrowhead -->
+  <path d="M254 366 L298 308 Q318 250 330 193 L311 178 L398 148 L389 240 L370 225 Q310 320 254 366 Z" fill="url(#vtvOrange)"/>
 </svg>
