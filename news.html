@@ -1306,6 +1306,27 @@ body{
 .share-fb{background:#1877F2}
 .share-copy{background:var(--border2);color:var(--text)}
 
+/* ── Facebook share chooser (Feed vs Story) ── */
+.fb-share-menu{
+  position:fixed;z-index:10050;
+  background:var(--card2,#0f1f3d);border:1px solid var(--border2);
+  border-radius:12px;padding:6px;min-width:232px;
+  box-shadow:0 14px 44px rgba(0,0,0,.55);
+  display:flex;flex-direction:column;gap:2px;
+  animation:fbMenuIn .14s ease both;
+}
+@keyframes fbMenuIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.fb-share-opt{
+  display:flex;align-items:center;gap:11px;text-align:left;width:100%;
+  background:none;border:none;cursor:pointer;color:var(--text);
+  padding:9px 10px;border-radius:8px;font-family:inherit;
+  transition:background .14s;
+}
+.fb-share-opt:hover{background:rgba(24,119,242,.16)}
+.fb-share-ic{font-size:18px;width:24px;text-align:center;flex-shrink:0}
+.fb-share-opt b{display:block;font-size:13px;font-weight:700;color:var(--text)}
+.fb-share-opt small{display:block;font-size:11px;color:var(--text3);margin-top:1px;font-weight:500}
+
 /* ═══════════════════════════════════════════════════
    LEGAL DISCLAIMER BANNER
 ═══════════════════════════════════════════════════ */
@@ -2466,6 +2487,86 @@ function copyToClipboard(text) {
   }
 }
 
+/* ═══════════════════════════════════════════════════
+   FACEBOOK SHARE — choose Feed (direct) or Story
+   Facebook has no web API to post directly to Stories, so "Story" opens the
+   device's native share sheet (mobile) where the user can pick Facebook → Story.
+   On desktop it explains the limitation and copies the link.
+═══════════════════════════════════════════════════ */
+function fbShareMenu(btn, ev) {
+  if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+  var existing = document.getElementById('_fbShareMenu');
+  _fbCloseMenu();
+  if (existing) return; // second click on the same button → toggle off
+
+  var url = (btn && btn.getAttribute('data-url')) || 'https://vilfintv.com/news.html';
+
+  var menu = document.createElement('div');
+  menu.className = 'fb-share-menu';
+  menu.id = '_fbShareMenu';
+  menu.innerHTML =
+      '<button type="button" class="fb-share-opt" data-act="feed">'
+    +   '<span class="fb-share-ic">📰</span><span><b>Share to Feed</b><small>Post to your timeline</small></span>'
+    + '</button>'
+    + '<button type="button" class="fb-share-opt" data-act="story">'
+    +   '<span class="fb-share-ic">✨</span><span><b>Share to Story</b><small>Open share sheet (mobile)</small></span>'
+    + '</button>';
+  document.body.appendChild(menu);
+
+  // Position above the button (fixed); flip below if it would clip off the top.
+  // Clamp into the viewport so it never lands off-screen on narrow widths.
+  var r = btn.getBoundingClientRect();
+  var mw = menu.offsetWidth, mh = menu.offsetHeight;
+  var maxLeft = Math.max(8, window.innerWidth - mw - 8);
+  var left = Math.max(8, Math.min(r.left, maxLeft));
+  var top = r.top - mh - 8;
+  if (top < 8) top = r.bottom + 8;                                   // flip below
+  top = Math.max(8, Math.min(top, window.innerHeight - mh - 8));     // keep on-screen
+  menu.style.left = left + 'px';
+  menu.style.top  = top + 'px';
+
+  menu.querySelector('[data-act="feed"]').onclick  = function(e){ e.stopPropagation(); _fbCloseMenu(); fbShareFeed(url); };
+  menu.querySelector('[data-act="story"]').onclick = function(e){ e.stopPropagation(); _fbCloseMenu(); fbShareStory(url); };
+
+  // Close on any outside click / Escape (registered after this click settles).
+  setTimeout(function(){
+    document.addEventListener('click', _fbCloseMenu, { once: true });
+    document.addEventListener('keydown', _fbEscClose);
+  }, 0);
+}
+
+function _fbCloseMenu() {
+  var m = document.getElementById('_fbShareMenu');
+  if (m && m.parentNode) m.parentNode.removeChild(m);
+  document.removeEventListener('keydown', _fbEscClose);
+}
+function _fbEscClose(e) { if (e.key === 'Escape') _fbCloseMenu(); }
+
+function fbShareFeed(url) {
+  var u = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url);
+  if (window.innerWidth <= 768) {
+    var w = window.open(u, '_blank'); if (w) { try { w.opener = null; } catch(_){} }
+  } else {
+    var W = 600, H = 620;
+    var left = Math.max(0, Math.round(((window.screen.availWidth  || screen.width)  - W) / 2));
+    var top  = Math.max(0, Math.round(((window.screen.availHeight || screen.height) - H) / 2));
+    window.open(u, '_blank', 'width=' + W + ',height=' + H + ',left=' + left + ',top=' + top + ',scrollbars=yes,resizable=yes');
+  }
+}
+
+function fbShareStory(url) {
+  var titleEl = document.getElementById('story-modal-headline');
+  var title   = titleEl ? titleEl.textContent.trim() : 'VilfinTV News';
+  if (navigator.share) {
+    // Mobile native share sheet — the user taps Facebook, then chooses Story.
+    navigator.share({ title: title, text: title, url: url }).catch(function(){});
+  } else {
+    // Desktop / unsupported — Stories can't be created from the web.
+    try { if (navigator.clipboard) navigator.clipboard.writeText(url); } catch(_){}
+    alert('Facebook Stories can be created only from the Facebook mobile app.\n\nThe story link has been copied — open the Facebook app on your phone, start a new Story, and paste it.');
+  }
+}
+
 function openStory(item, meta) {
   var overlay = document.getElementById('story-modal-overlay');
   var body = document.getElementById('story-modal-body');
@@ -2517,7 +2618,7 @@ function openStory(item, meta) {
   storyHtml += '<div class="story-modal-share">'
     + '<span class="story-modal-share-label">Share:</span>'
     + '<a class="share-btn-sm share-wa" href="https://api.whatsapp.com/send?text=' + shareText + '%20' + shareUrl + '" target="_blank" rel="noopener">WhatsApp</a>'
-    + '<a class="share-btn-sm share-fb" href="https://www.facebook.com/sharer/sharer.php?u=' + shareUrl + '" target="_blank" rel="noopener">Facebook</a>'
+    + '<button type="button" class="share-btn-sm share-fb" data-url="' + escAttr(rawShareUrl) + '" onclick="fbShareMenu(this, event)">Facebook</button>'
     + '<a class="share-btn-sm share-tw" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank" rel="noopener">X (Twitter)</a>'
     + '<button class="share-btn-sm share-copy" onclick="copyToClipboard(\'' + rawShareUrl + '\')">Copy Link</button>'
     + '</div>';
@@ -3666,7 +3767,7 @@ function openCustomPost(id) {
   html += '<div class="story-modal-share">'
     + '<span class="story-modal-share-label">Share:</span>'
     + '<a class="share-btn-sm share-wa" href="https://api.whatsapp.com/send?text=' + shareText + '%20' + shareUrl + '" target="_blank" rel="noopener">WhatsApp</a>'
-    + '<a class="share-btn-sm share-fb" href="https://www.facebook.com/sharer/sharer.php?u=' + shareUrl + '" target="_blank" rel="noopener">Facebook</a>'
+    + '<button type="button" class="share-btn-sm share-fb" data-url="' + escAttr(rawShareUrl) + '" onclick="fbShareMenu(this, event)">Facebook</button>'
     + '<a class="share-btn-sm share-tw" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank" rel="noopener">X (Twitter)</a>'
     + '<button class="share-btn-sm share-copy" onclick="copyToClipboard(\'' + rawShareUrl + '\')">Copy Link</button>'
     + '</div>';
