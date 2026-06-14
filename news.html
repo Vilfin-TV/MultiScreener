@@ -323,27 +323,28 @@ body{
 }
 @keyframes livePulse{0%,100%{opacity:1}50%{opacity:.7}}
 
-/* Mobile nav — two-row layout */
+/* Mobile nav — two-row layout: brand + controls on row 1, section tabs on row 2 */
 @media(max-width:700px){
-  .news-nav-links{display:none}
   .brand-name{font-size:15px}
   /* Nav must auto-size to accommodate second row */
   .top-menubar{height:auto}
   /* Allow nav to wrap to two rows */
-  .nav-inner{flex-wrap:wrap;height:auto;padding:0 10px 8px;gap:0}
-  /* Row 1: brand + right side — wraps instead of overflowing the viewport */
-  .nav-brand-group{height:auto;min-height:46px;padding-right:8px;flex-shrink:1;min-width:0;flex-wrap:wrap}
+  .nav-inner{flex-wrap:wrap;height:auto;padding:0 10px;gap:0}
+  /* Row 1: brand group (left) + right-side controls — never overflow viewport */
+  .nav-brand-group{height:auto;min-height:46px;padding-right:8px;flex:1 1 auto;min-width:0;flex-wrap:wrap;border-right:none}
   .nav-home-link{padding:5px 7px;font-size:11px;margin-right:6px}
-  .news-nav-right{height:46px}
-  /* Row 2: search input spans full width */
-  .news-search-wrap{
-    order:10;
-    flex:0 0 100%;max-width:none;
-    padding:0;
+  .news-nav-right{height:46px;margin-left:auto;flex-shrink:0}
+  /* Row 2: section tabs become a full-width horizontal scroll strip (no longer hidden) */
+  .news-nav-links{
+    display:flex;order:10;
+    flex:0 0 100%;max-width:100%;width:100%;
+    height:42px;margin-top:2px;
+    border-top:1px solid rgba(255,255,255,.12);
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
   }
-  .news-search-input{font-size:13px;padding:8px 34px 8px 34px}
-  /* Section anchors clear the taller nav */
-  .news-section{scroll-margin-top:106px}
+  .news-nav-link{padding:0 13px;font-size:12.5px;border-right-color:rgba(255,255,255,.1)}
+  /* Section anchors clear the taller two-row nav */
+  .news-section{scroll-margin-top:108px}
 }
 
 /* ═══════════════════════════════════════════════════
@@ -385,6 +386,61 @@ body{
   color:var(--text3);letter-spacing:.3px;
 }
 .news-page-meta-chip span{color:var(--text2);font-weight:600}
+/* Hero dismiss / close button */
+.news-hero-close{
+  position:absolute;top:12px;right:14px;z-index:3;
+  width:30px;height:30px;border-radius:50%;
+  background:rgba(255,255,255,.07);border:1px solid var(--border2);
+  color:var(--text3);font-size:14px;line-height:1;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,color .15s,border-color .15s;
+}
+.news-hero-close:hover{background:rgba(255,255,255,.16);color:var(--text);border-color:var(--text3)}
+
+/* ═══════════════════════════════════════════════════
+   SEARCH SECTION — relocated below the hero
+═══════════════════════════════════════════════════ */
+.news-search-section{
+  background:var(--dark2);
+  border-bottom:1px solid var(--border);
+}
+.news-search-inner{
+  max-width:760px;margin:0 auto;padding:16px 24px;
+}
+.news-search-section .news-search-box{
+  position:relative;display:flex;align-items:center;width:100%;
+}
+.news-search-section .news-search-icon-svg{
+  position:absolute;left:14px;color:var(--text3);pointer-events:none;
+}
+.news-search-section .news-search-input{
+  width:100%;
+  background:var(--card2);
+  border:1px solid var(--border2);
+  border-radius:12px;
+  padding:12px 42px 12px 42px;
+  color:var(--text);font-size:15px;
+  font-family:'DM Sans',-apple-system,sans-serif;
+  outline:none;letter-spacing:.2px;
+  transition:background .2s,border-color .2s,box-shadow .2s;
+}
+.news-search-section .news-search-input::placeholder{color:var(--text3)}
+.news-search-section .news-search-input:focus{
+  background:var(--card);
+  border-color:var(--burn2,#3b82f6);
+  box-shadow:0 0 0 3px rgba(59,130,246,.16);
+}
+.news-search-section .news-search-clear{
+  position:absolute;right:12px;
+  background:none;border:none;cursor:pointer;
+  color:var(--text3);font-size:15px;line-height:1;
+  padding:4px 6px;border-radius:6px;transition:color .15s;display:none;
+}
+.news-search-section .news-search-clear:hover{color:var(--text)}
+@media(max-width:768px){
+  .news-search-inner{padding:12px 14px}
+  .news-search-section .news-search-input{font-size:14px;padding:11px 40px 11px 40px}
+}
 
 /* ═══════════════════════════════════════════════════
    MAIN LAYOUT
@@ -1942,17 +1998,6 @@ footer.news-footer{
       <a class="news-nav-link" href="#malayalam">🎭 Malayalam</a>
       <a class="news-nav-link" href="#world">🌐 World</a>
     </div>
-    <!-- SEARCH BOX -->
-    <div class="news-search-wrap">
-      <div class="news-search-box">
-        <svg class="news-search-icon-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" class="news-search-input" id="news-search-input"
-               placeholder="Search stories…" autocomplete="off" spellcheck="false"
-               aria-label="Search news stories"/>
-        <button class="news-search-clear" id="news-search-clear" onclick="clearSearch()" title="Clear search" aria-label="Clear search">✕</button>
-      </div>
-    </div>
-
     <div class="news-nav-right">
       <button class="news-theme-btn" onclick="cycleTheme()" title="Change theme">🎨</button>
       <span class="news-live-badge">LIVE</span>
@@ -1961,28 +2006,41 @@ footer.news-footer{
 </nav>
 
 <!-- ══════════════════════════════════════════
-     SEARCH RESULTS BANNER (shown when query active)
-══════════════════════════════════════════ -->
-<div class="search-results-bar" id="search-results-bar" role="status" aria-live="polite">
-  <span id="search-results-text"></span>
-  <button class="search-clear-btn" onclick="clearSearch()">Clear</button>
-</div>
-
-<!-- ══════════════════════════════════════════
      PAGE HERO
 ══════════════════════════════════════════ -->
-<div class="news-page-hero">
+<div class="news-page-hero" id="news-page-hero">
+  <button class="news-hero-close" onclick="dismissNewsHero()" title="Hide this banner" aria-label="Hide banner">✕</button>
   <div class="news-page-hero-inner">
     <div class="news-page-titlewrap">
       <img class="news-page-logo" src="images/vilfintv-logo.jpg" width="58" height="58" alt="VilfinTV News logo" style="border-radius:50%">
       <h1 class="news-page-title">VilfinTV News</h1>
     </div>
-    <p class="news-page-subtitle">Curated global news coverage — Breaking News, Trending, World Affairs, Indian Markets &amp; Malayalam stories.</p>
+    <p class="news-page-subtitle">Your live intelligence briefing — Breaking News, Trending stories, Global &amp; World Affairs, India News, Stock &amp; Markets, Sports, Science, Technology, Space, Fashion, Movies and Malayalam coverage, refreshed around the clock.</p>
     <div class="news-page-meta">
       <div class="news-page-meta-chip">📅 <span id="local-date">—</span></div>
       <div class="news-page-meta-chip">🕒 <span id="local-time">—</span></div>
       <div class="news-page-meta-chip" id="local-weather-chip"><span id="local-weather">—</span></div>
     </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SEARCH SECTION (moved below hero)
+══════════════════════════════════════════ -->
+<div class="news-search-section">
+  <div class="news-search-inner">
+    <div class="news-search-box">
+      <svg class="news-search-icon-svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" class="news-search-input" id="news-search-input"
+             placeholder="Search all stories…" autocomplete="off" spellcheck="false"
+             aria-label="Search news stories"/>
+      <button class="news-search-clear" id="news-search-clear" onclick="clearSearch()" title="Clear search" aria-label="Clear search">✕</button>
+    </div>
+  </div>
+  <!-- Search results banner (shown when query active) -->
+  <div class="search-results-bar" id="search-results-bar" role="status" aria-live="polite">
+    <span id="search-results-text"></span>
+    <button class="search-clear-btn" onclick="clearSearch()">Clear</button>
   </div>
 </div>
 
@@ -2767,6 +2825,24 @@ document.addEventListener('keydown', function(e) {
   searchInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') { doSearch(this.value); e.preventDefault(); }
   });
+})();
+
+/* ═══════════════════════════════════════════════════
+   HERO DISMISS — close button hides the intro banner
+   (choice persisted so it stays hidden on return visits)
+═══════════════════════════════════════════════════ */
+function dismissNewsHero() {
+  var h = document.getElementById('news-page-hero');
+  if (h) h.style.display = 'none';
+  try { localStorage.setItem('vt_news_hero_hidden', '1'); } catch (e) {}
+}
+(function() {
+  try {
+    if (localStorage.getItem('vt_news_hero_hidden') === '1') {
+      var h = document.getElementById('news-page-hero');
+      if (h) h.style.display = 'none';
+    }
+  } catch (e) {}
 })();
 
 /* ═══════════════════════════════════════════════════
