@@ -446,6 +446,11 @@ body{
 .news-section-ml-real    {--section-accent:#d97706}
 .news-section-ml-career  {--section-accent:#7c3aed}
 .news-section-ml-tech    {--section-accent:#2563eb}
+/* English / Global Edition accent colours */
+.news-section-sports   {--section-accent:#16a34a}
+.news-section-science  {--section-accent:#6366f1}
+.news-section-fashion  {--section-accent:#db2777}
+.news-section-movies   {--section-accent:#f59e0b}
 
 /* ═══════════════════════════════════════════════════
    MALAYALAM EDITION — Category tabs block
@@ -2188,7 +2193,15 @@ const SECTION_META = {
   ml_food:      { id:'ml_food',      label:'Food & Agriculture',  icon:'🌾', accent:'#84cc16', cssClass:'news-section-ml-food',    image:'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&q=80' },
   ml_realestate:{ id:'ml_realestate',label:'Home & Real Estate',  icon:'🏠', accent:'#d97706', cssClass:'news-section-ml-real',    image:'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=80' },
   ml_career:    { id:'ml_career',    label:'Career & Jobs',       icon:'💼', accent:'#7c3aed', cssClass:'news-section-ml-career',  image:'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1200&q=80' },
-  ml_tech:      { id:'ml_tech',      label:'Technology News',     icon:'💻', accent:'#2563eb', cssClass:'news-section-ml-tech',    image:'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80' }
+  ml_tech:      { id:'ml_tech',      label:'Technology News',     icon:'💻', accent:'#2563eb', cssClass:'news-section-ml-tech',    image:'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80' },
+  // ── English / Global Edition standalone sessions ──────────────────────────
+  sports:         { id:'sports',         label:'All Major Sports Update', icon:'🏆', accent:'#16a34a', cssClass:'news-section-sports',  image:'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80' },
+  sports_cricket: { id:'sports_cricket', label:'Cricket',  icon:'🏏', accent:'#16a34a', cssClass:'news-section-sports', image:'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=1200&q=80' },
+  sports_football:{ id:'sports_football',label:'Football', icon:'⚽', accent:'#15803d', cssClass:'news-section-sports', image:'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=1200&q=80' },
+  sports_tennis:  { id:'sports_tennis',  label:'Tennis',   icon:'🎾', accent:'#65a30d', cssClass:'news-section-sports', image:'https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=1200&q=80' },
+  science:        { id:'science',        label:'Science News', icon:'🔬', accent:'#6366f1', cssClass:'news-section-science', image:'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=1200&q=80' },
+  fashion:        { id:'fashion',        label:'Fashion News', icon:'👗', accent:'#db2777', cssClass:'news-section-fashion', image:'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&q=80' },
+  movies:         { id:'movies',         label:'Movies News',  icon:'🎬', accent:'#f59e0b', cssClass:'news-section-movies',  image:'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&q=80' }
 };
 
 /* ═══════════════════════════════════════════════════
@@ -3628,6 +3641,144 @@ function _showMlCategory(catId, data) {
 }
 
 /* ═══════════════════════════════════════════════════
+   ENGLISH / GLOBAL EDITION — standalone live sessions
+   (Sports w/ tabs, Science, Fashion, Movies)
+   Each session mirrors the tech/space layout: header +
+   expand toggle, RSS-fed hero photo + vertically
+   scrollable image cards, RSS photo fetch per card.
+═══════════════════════════════════════════════════ */
+var SPORTS_CATEGORIES = [
+  { id:'sports',          label:'🏆 All Major Sports Update' },
+  { id:'sports_cricket',  label:'🏏 Cricket' },
+  { id:'sports_football', label:'⚽ Football' },
+  { id:'sports_tennis',   label:'🎾 Tennis' }
+];
+
+/* Per-session image pools — used as a fallback when an RSS item has no photo */
+var _EN_IMG_POOLS = {
+  sports:         ['https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=700&q=70','https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=700&q=70','https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=700&q=70','https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=700&q=70'],
+  sports_cricket: ['https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=700&q=70','https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=700&q=70','https://images.unsplash.com/photo-1593766827228-8737b4534aa6?w=700&q=70','https://images.unsplash.com/photo-1607734834519-d8576ae60ea6?w=700&q=70'],
+  sports_football:['https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=700&q=70','https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=700&q=70','https://images.unsplash.com/photo-1551958219-acbc608c6377?w=700&q=70','https://images.unsplash.com/photo-1517747614396-d21a78b850e8?w=700&q=70'],
+  sports_tennis:  ['https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=700&q=70','https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=700&q=70','https://images.unsplash.com/photo-1530915365347-e35b749a0381?w=700&q=70','https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=700&q=70'],
+  science:        ['https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=700&q=70','https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=700&q=70','https://images.unsplash.com/photo-1576319155264-99536e0be1ee?w=700&q=70','https://images.unsplash.com/photo-1530026186672-2cd00ffc50d8?w=700&q=70'],
+  fashion:        ['https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=700&q=70','https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=700&q=70','https://images.unsplash.com/photo-1483985988355-763728e1935b?w=700&q=70','https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=700&q=70'],
+  movies:         ['https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=700&q=70','https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=700&q=70','https://images.unsplash.com/photo-1485846234645-a62644f84728?w=700&q=70','https://images.unsplash.com/photo-1524712245354-2c4e5e7121c3?w=700&q=70']
+};
+
+/* Shared item renderer — filters fresh RSS items and paints the bn layout
+   (hero photo + scrollable image cards) into a content element. */
+function _renderEditionItems(content, catId, data) {
+  if (!content) return;
+  var src = data || _newsData;
+  var catSection = src && src.sections && src.sections[catId];
+  var items = (catSection && catSection.items)
+    ? catSection.items.filter(function(item) {
+        if (!item || !item.publishedAt || !item.headline) return false;
+        var hl = item.headline.trim().toLowerCase();
+        if (hl.startsWith('content updating') || hl === 'placeholder' || hl === 'loading...') return false;
+        if (hl.length < 18) return false;
+        return Date.now() - new Date(item.publishedAt).getTime() < 7 * 24 * 60 * 60 * 1000;
+      })
+    : [];
+
+  var catMeta = SECTION_META[catId] || {};
+  var imgPool = _EN_IMG_POOLS[catId] || _EN_IMG_POOLS['sports'];
+
+  if (items.length === 0) {
+    content.innerHTML = '<div class="ml-cat-empty">'
+      + '<div class="ml-cat-empty-icon">' + (catMeta.icon || '📰') + '</div>'
+      + '<div class="ml-cat-empty-text">Latest stories loading — check back shortly.</div>'
+      + '</div>';
+    return;
+  }
+
+  var storyIndices = items.map(function(item) { return _cacheStory(item, catMeta); });
+
+  content.innerHTML = '';
+  content.appendChild(_buildBnLayout(
+    items,
+    function(item, i) { return item.image || imgPool[i % imgPool.length] || _wCardImgUrl(item.headline || ''); },
+    function(item, i) {
+      var idx = storyIndices[items.indexOf(item)];
+      return (function(si){ return function(){ openStoryIdx(si); }; })(idx);
+    },
+    timeAgo,
+    catMeta.label || '',
+    catMeta.accent || '#3b82f6'
+  ));
+}
+
+/* Build the Sports session — tabbed (All Major Sports Update / Cricket /
+   Football / Tennis), matching the Malayalam Edition block structure. */
+function buildSportsBlock(data) {
+  var wrap = document.createElement('div');
+  wrap.className = 'ml-cat-block';
+  wrap.id = 'sports-block';
+
+  var hdr = document.createElement('div');
+  hdr.className = 'ml-cat-header';
+  hdr.innerHTML = '<span style="font-size:22px">🏆</span>'
+    + '<span class="ml-cat-title">Sports News</span>'
+    + '<span class="ml-cat-subtitle">' + SPORTS_CATEGORIES.length + ' Categories · Live</span>'
+    + '<button class="news-section-toggle" onclick="toggleNewsSection(this)" aria-expanded="true" aria-label="Toggle section"><svg viewBox="0 0 24 24"><path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14l-6-6z"/></svg></button>';
+  wrap.appendChild(hdr);
+
+  var tabBar = document.createElement('div');
+  tabBar.className = 'ml-cat-tabs';
+  tabBar.id = 'sports-cat-tabs';
+  SPORTS_CATEGORIES.forEach(function(cat, i) {
+    var tab = document.createElement('div');
+    tab.className = 'ml-cat-tab' + (i === 0 ? ' active' : '');
+    tab.textContent = cat.label;
+    tab.setAttribute('data-catid', cat.id);
+    tab.onclick = (function(id){ return function(){ _showSportsCategory(id); }; })(cat.id);
+    tabBar.appendChild(tab);
+  });
+  wrap.appendChild(tabBar);
+
+  var content = document.createElement('div');
+  content.className = 'ml-cat-content';
+  content.id = 'sports-cat-content';
+  wrap.appendChild(content);
+
+  return wrap;
+}
+
+function _showSportsCategory(catId, data) {
+  var tabBar = document.getElementById('sports-cat-tabs');
+  if (tabBar) {
+    Array.prototype.forEach.call(tabBar.querySelectorAll('.ml-cat-tab'), function(t) {
+      t.classList.toggle('active', t.getAttribute('data-catid') === catId);
+    });
+  }
+  _renderEditionItems(document.getElementById('sports-cat-content'), catId, data);
+}
+
+/* Build a single-feed standalone session (Science / Fashion / Movies). */
+function buildLiveSession(sectionId, data) {
+  var meta = SECTION_META[sectionId] || {};
+  var wrap = document.createElement('div');
+  wrap.className = 'ml-cat-block';
+  wrap.id = sectionId + '-block';
+
+  var hdr = document.createElement('div');
+  hdr.className = 'ml-cat-header';
+  hdr.innerHTML = '<span style="font-size:22px">' + (meta.icon || '📰') + '</span>'
+    + '<span class="ml-cat-title">' + (meta.label || 'News') + '</span>'
+    + '<span class="ml-cat-subtitle">Live · Updated regularly</span>'
+    + '<button class="news-section-toggle" onclick="toggleNewsSection(this)" aria-expanded="true" aria-label="Toggle section"><svg viewBox="0 0 24 24"><path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14l-6-6z"/></svg></button>';
+  wrap.appendChild(hdr);
+
+  var content = document.createElement('div');
+  content.className = 'ml-cat-content';
+  content.id = sectionId + '-cat-content';
+  wrap.appendChild(content);
+
+  _renderEditionItems(content, sectionId, data);
+  return wrap;
+}
+
+/* ═══════════════════════════════════════════════════
    LOAD NEWS PAGE
 ═══════════════════════════════════════════════════ */
 /* ── Custom content posts (from content.json) ─────────────────────────────── */
@@ -3887,6 +4038,19 @@ async function loadNewsPage() {
       container.appendChild(mlBlock);
       // Render first tab NOW — after the block is in the DOM so getElementById works
       _showMlCategory(ML_CATEGORIES[0].id, data);
+
+      // ── English / Global Edition sessions (after the Malayalam edition,
+      //    which carries the tech & space tabs) ──────────────────────────────
+      var sportsBlock = buildSportsBlock(data);
+      container.appendChild(sportsBlock);
+      _showSportsCategory(SPORTS_CATEGORIES[0].id, data);
+
+      ['science', 'fashion', 'movies'].forEach(function(enId) {
+        container.appendChild(buildLiveSession(enId, data));
+        if (data && data.sections && data.sections[enId] && data.sections[enId].items) {
+          totalStories += data.sections[enId].items.filter(isItemValid).length;
+        }
+      });
     }
   });
 

@@ -269,6 +269,67 @@ const SOURCE_POOL = {
     { url: 'https://news.google.com/rss/search?q=technology+smartphone+gadget+kerala+IT&hl=ml&gl=IN&ceid=IN:ml',    name: 'Kerala Tech' },
     { url: 'https://news.google.com/rss/search?q=mobile+phone+computer+app+tech+news+india&hl=ml&gl=IN&ceid=IN:ml', name: 'Tech News' },
   ],
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     ENGLISH / GLOBAL EDITION — standalone sessions (RSS-only, English language)
+     Sports (+ sub-categories), Science, Fashion, Movies.
+     Anchors at pos 0-1 always fetched; rest sampled each run for variety.
+  ═══════════════════════════════════════════════════════════════════════════ */
+  // ── Sports: All Major Sports Update (aggregate) ────────────────────────────
+  sports: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/SPORTS?hl=en-US&gl=US&ceid=US:en', name: 'Google Sports US' },
+    { url: 'https://news.google.com/rss/headlines/section/topic/SPORTS?hl=en-IN&gl=IN&ceid=IN:en', name: 'Google Sports India' },
+    { url: 'https://feeds.bbci.co.uk/sport/rss.xml',                                                name: 'BBC Sport' },
+    { url: 'https://www.espn.com/espn/rss/news',                                                    name: 'ESPN' },
+    { url: 'https://www.skysports.com/rss/12040',                                                   name: 'Sky Sports' },
+    { url: 'https://news.google.com/rss/search?q=cricket+football+tennis+olympics+NBA+F1+hockey&hl=en-US&gl=US&ceid=US:en', name: 'Multi-Sport' },
+    { url: 'https://news.google.com/rss/search?q=sports+IPL+world+cup+champions+league&hl=en-IN&gl=IN&ceid=IN:en', name: 'Sports India Search' },
+  ],
+  sports_cricket: [
+    { url: 'https://news.google.com/rss/search?q=cricket+IPL+ICC+test+ODI+T20+India&hl=en-IN&gl=IN&ceid=IN:en', name: 'Cricket India' },
+    { url: 'https://feeds.bbci.co.uk/sport/cricket/rss.xml',                                                    name: 'BBC Cricket' },
+    { url: 'https://www.espncricinfo.com/rss/content/story/feeds/0.xml',                                        name: 'ESPNcricinfo' },
+    { url: 'https://news.google.com/rss/search?q=cricket+ashes+world+cup+series&hl=en-US&gl=US&ceid=US:en',     name: 'Cricket Global' },
+  ],
+  sports_football: [
+    { url: 'https://feeds.bbci.co.uk/sport/football/rss.xml',                                                          name: 'BBC Football' },
+    { url: 'https://news.google.com/rss/search?q=football+soccer+premier+league+champions+league+FIFA&hl=en-US&gl=US&ceid=US:en', name: 'Football Global' },
+    { url: 'https://www.skysports.com/rss/11095',                                                                      name: 'Sky Sports Football' },
+    { url: 'https://news.google.com/rss/search?q=football+transfer+La+Liga+Serie+A+Bundesliga&hl=en-US&gl=US&ceid=US:en', name: 'Football Leagues' },
+  ],
+  sports_tennis: [
+    { url: 'https://feeds.bbci.co.uk/sport/tennis/rss.xml',                                                       name: 'BBC Tennis' },
+    { url: 'https://news.google.com/rss/search?q=tennis+ATP+WTA+Grand+Slam+Wimbledon+US+Open&hl=en-US&gl=US&ceid=US:en', name: 'Tennis Global' },
+    { url: 'https://news.google.com/rss/search?q=tennis+Djokovic+Alcaraz+Sinner+Swiatek&hl=en-US&gl=US&ceid=US:en', name: 'Tennis Players' },
+  ],
+  // ── Science ────────────────────────────────────────────────────────────────
+  science: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/SCIENCE?hl=en-US&gl=US&ceid=US:en', name: 'Google Science' },
+    { url: 'https://www.sciencedaily.com/rss/top/science.xml',                                       name: 'Science Daily' },
+    { url: 'https://www.newscientist.com/feed/home/',                                                name: 'New Scientist' },
+    { url: 'https://phys.org/rss-feed/',                                                             name: 'Phys.org' },
+    { url: 'https://www.nasa.gov/rss/dyn/breaking_news.rss',                                         name: 'NASA' },
+    { url: 'https://news.google.com/rss/search?q=science+research+discovery+physics+biology+space&hl=en-US&gl=US&ceid=US:en', name: 'Science Discovery' },
+    { url: 'https://news.google.com/rss/search?q=climate+environment+genetics+quantum+study&hl=en-US&gl=US&ceid=US:en', name: 'Science Topics' },
+  ],
+  // ── Fashion ────────────────────────────────────────────────────────────────
+  fashion: [
+    { url: 'https://news.google.com/rss/search?q=fashion+style+runway+designer+couture&hl=en-US&gl=US&ceid=US:en', name: 'Fashion Global' },
+    { url: 'https://www.vogue.com/feed/rss',                                                                       name: 'Vogue' },
+    { url: 'https://www.harpersbazaar.com/rss/all.xml/',                                                           name: "Harper's Bazaar" },
+    { url: 'https://www.elle.com/rss/all.xml/',                                                                    name: 'Elle' },
+    { url: 'https://news.google.com/rss/search?q=fashion+week+Paris+Milan+New+York+Met+Gala+trends&hl=en-US&gl=US&ceid=US:en', name: 'Fashion Week' },
+    { url: 'https://news.google.com/rss/search?q=fashion+India+Bollywood+designer+couture+style&hl=en-IN&gl=IN&ceid=IN:en', name: 'Fashion India' },
+  ],
+  // ── Movies ─────────────────────────────────────────────────────────────────
+  movies: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/ENTERTAINMENT?hl=en-US&gl=US&ceid=US:en', name: 'Google Entertainment' },
+    { url: 'https://variety.com/feed/',                                                                    name: 'Variety' },
+    { url: 'https://www.hollywoodreporter.com/feed/',                                                      name: 'Hollywood Reporter' },
+    { url: 'https://www.indiewire.com/feed/',                                                              name: 'IndieWire' },
+    { url: 'https://news.google.com/rss/search?q=movies+film+cinema+Hollywood+box+office+trailer+OTT&hl=en-US&gl=US&ceid=US:en', name: 'Movies Global' },
+    { url: 'https://news.google.com/rss/search?q=Bollywood+movie+film+release+box+office+India&hl=en-IN&gl=IN&ceid=IN:en', name: 'Bollywood' },
+  ],
 };
 
 const SECTION_META = {
@@ -291,6 +352,14 @@ const SECTION_META = {
   ml_realestate:{ image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&q=80', label: 'Home & Real Estate',  accent: '#d97706' },
   ml_career:    { image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1200&q=80', label: 'Career & Jobs',      accent: '#7c3aed' },
   ml_tech:      { image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80', label: 'Technology News',    accent: '#2563eb' },
+  // ── English / Global Edition ───────────────────────────────────────────────
+  sports:         { image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80', label: '🏆 All Major Sports Update', accent: '#16a34a' },
+  sports_cricket: { image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=1200&q=80', label: '🏏 Cricket',         accent: '#16a34a' },
+  sports_football:{ image: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=1200&q=80', label: '⚽ Football',        accent: '#15803d' },
+  sports_tennis:  { image: 'https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=1200&q=80', label: '🎾 Tennis',          accent: '#65a30d' },
+  science:        { image: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=1200&q=80', label: 'Science News',       accent: '#6366f1' },
+  fashion:        { image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&q=80', label: 'Fashion News',       accent: '#db2777' },
+  movies:         { image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&q=80', label: 'Movies News',        accent: '#f59e0b' },
 };
 
 /* ═══════════════════════════════════════════════════
@@ -1036,7 +1105,14 @@ var RSS_FALLBACK_IMAGES = {
   ml_food:      'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=70',
   ml_realestate:'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=70',
   ml_career:    'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800&q=70',
-  ml_tech:      'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=70'
+  ml_tech:      'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=70',
+  sports:         'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=70',
+  sports_cricket: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&q=70',
+  sports_football:'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=800&q=70',
+  sports_tennis:  'https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=800&q=70',
+  science:        'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=800&q=70',
+  fashion:        'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=70',
+  movies:         'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&q=70'
 };
 
 function rssStory(item, sectionId) {
@@ -1060,7 +1136,8 @@ function rssStory(item, sectionId) {
 ═══════════════════════════════════════════════════ */
 async function buildSection(sectionId, feedPool, meta) {
   console.log('\n[Section]', sectionId.toUpperCase());
-  var isRssOnly = (sectionId === 'stock' || sectionId === 'malayalam' || sectionId.startsWith('ml_'));
+  var isRssOnly = (sectionId === 'stock' || sectionId === 'malayalam' || sectionId.startsWith('ml_')
+    || sectionId.startsWith('sports') || sectionId === 'science' || sectionId === 'fashion' || sectionId === 'movies');
 
   // Always include first 2 anchored feeds + random extras
   var pool    = feedPool || [];
@@ -1250,7 +1327,22 @@ async function main() {
   }
 
   var output = { generated: new Date().toISOString(), sections: {} };
+
+  // Carry over any existing sections so a filtered run (ONLY_SECTIONS) never
+  // drops sections it didn't rebuild.
+  if (existingData && existingData.sections) {
+    output.sections = JSON.parse(JSON.stringify(existingData.sections));
+  }
+
   var sectionIds = Object.keys(SOURCE_POOL);
+
+  // Optional filter: ONLY_SECTIONS="sports,science" builds just those sections
+  // (merging into existing data). Useful for incremental / targeted rebuilds.
+  var onlyFilter = (process.env.ONLY_SECTIONS || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+  if (onlyFilter.length) {
+    sectionIds = sectionIds.filter(function(s){ return onlyFilter.includes(s); });
+    console.log('ONLY_SECTIONS filter active →', sectionIds.join(', '));
+  }
 
   for (var i = 0; i < sectionIds.length; i++) {
     var sid = sectionIds[i];
