@@ -276,14 +276,25 @@ const SOURCE_POOL = {
      Anchors at pos 0-1 always fetched; rest sampled each run for variety.
   ═══════════════════════════════════════════════════════════════════════════ */
   // ── Sports: All Major Sports Update (aggregate) ────────────────────────────
+  // Anchors (pos 0-1): one global + one fresh India publisher feed.
   sports: [
     { url: 'https://news.google.com/rss/headlines/section/topic/SPORTS?hl=en-US&gl=US&ceid=US:en', name: 'Google Sports US' },
+    { url: 'https://timesofindia.indiatimes.com/rssfeeds/4719148.cms',                                name: 'Times of India Sports' },
     { url: 'https://news.google.com/rss/headlines/section/topic/SPORTS?hl=en-IN&gl=IN&ceid=IN:en', name: 'Google Sports India' },
     { url: 'https://feeds.bbci.co.uk/sport/rss.xml',                                                name: 'BBC Sport' },
     { url: 'https://www.espn.com/espn/rss/news',                                                    name: 'ESPN' },
     { url: 'https://www.skysports.com/rss/12040',                                                   name: 'Sky Sports' },
     { url: 'https://news.google.com/rss/search?q=cricket+football+tennis+olympics+NBA+F1+hockey&hl=en-US&gl=US&ceid=US:en', name: 'Multi-Sport' },
-    { url: 'https://news.google.com/rss/search?q=sports+IPL+world+cup+champions+league&hl=en-IN&gl=IN&ceid=IN:en', name: 'Sports India Search' },
+    // ── India sports coverage ──────────────────────────────────────────────
+    { url: 'https://www.thehindu.com/sport/feeder/default.rss',                                       name: 'The Hindu Sport' },
+    { url: 'https://news.google.com/rss/search?q=India+kabaddi+hockey+badminton+wrestling+athletics+Pro+League&hl=en-IN&gl=IN&ceid=IN:en', name: 'India Multi-Sport' },
+    { url: 'https://news.google.com/rss/search?q=Indian+sports+Olympics+Commonwealth+Asian+Games+medal+Neeraj&hl=en-IN&gl=IN&ceid=IN:en', name: 'India Sports Events' },
+  ],
+  sports_baseball: [
+    { url: 'https://www.espn.com/espn/rss/mlb/news',                                                              name: 'ESPN MLB' },
+    { url: 'https://news.google.com/rss/search?q=baseball+MLB+World+Series+home+run+playoffs&hl=en-US&gl=US&ceid=US:en', name: 'Baseball Global' },
+    { url: 'https://www.cbssports.com/rss/headlines/mlb/',                                                        name: 'CBS Sports MLB' },
+    { url: 'https://news.google.com/rss/search?q=MLB+baseball+Dodgers+Yankees+pitcher+trade&hl=en-US&gl=US&ceid=US:en', name: 'MLB Teams' },
   ],
   sports_cricket: [
     { url: 'https://news.google.com/rss/search?q=cricket+IPL+ICC+test+ODI+T20+India&hl=en-IN&gl=IN&ceid=IN:en', name: 'Cricket India' },
@@ -313,22 +324,30 @@ const SOURCE_POOL = {
     { url: 'https://news.google.com/rss/search?q=climate+environment+genetics+quantum+study&hl=en-US&gl=US&ceid=US:en', name: 'Science Topics' },
   ],
   // ── Fashion ────────────────────────────────────────────────────────────────
+  // Anchors (pos 0-1) always fetched: one global + one India feed guarantees
+  // India coverage every run; the rest (incl. more India feeds) is sampled.
   fashion: [
     { url: 'https://news.google.com/rss/search?q=fashion+style+runway+designer+couture&hl=en-US&gl=US&ceid=US:en', name: 'Fashion Global' },
+    { url: 'https://timesofindia.indiatimes.com/rssfeeds/2886704.cms',                                             name: 'TOI Life & Style' },
+    { url: 'https://www.vogue.in/feed/rss',                                                                        name: 'Vogue India' },
     { url: 'https://www.vogue.com/feed/rss',                                                                       name: 'Vogue' },
     { url: 'https://www.harpersbazaar.com/rss/all.xml/',                                                           name: "Harper's Bazaar" },
     { url: 'https://www.elle.com/rss/all.xml/',                                                                    name: 'Elle' },
     { url: 'https://news.google.com/rss/search?q=fashion+week+Paris+Milan+New+York+Met+Gala+trends&hl=en-US&gl=US&ceid=US:en', name: 'Fashion Week' },
-    { url: 'https://news.google.com/rss/search?q=fashion+India+Bollywood+designer+couture+style&hl=en-IN&gl=IN&ceid=IN:en', name: 'Fashion India' },
+    { url: 'https://news.google.com/rss/search?q=India+fashion+Bollywood+saree+lehenga+style+celebrity&hl=en-IN&gl=IN&ceid=IN:en', name: 'India Fashion' },
   ],
   // ── Movies ─────────────────────────────────────────────────────────────────
+  // Anchors (pos 0-1): one global + one India feed → India coverage every run.
   movies: [
     { url: 'https://news.google.com/rss/headlines/section/topic/ENTERTAINMENT?hl=en-US&gl=US&ceid=US:en', name: 'Google Entertainment' },
+    { url: 'https://timesofindia.indiatimes.com/rssfeeds/1081479906.cms',                                 name: 'TOI Entertainment' },
+    { url: 'https://www.thehindu.com/entertainment/movies/feeder/default.rss',                            name: 'The Hindu Cinema' },
     { url: 'https://variety.com/feed/',                                                                    name: 'Variety' },
     { url: 'https://www.hollywoodreporter.com/feed/',                                                      name: 'Hollywood Reporter' },
     { url: 'https://www.indiewire.com/feed/',                                                              name: 'IndieWire' },
     { url: 'https://news.google.com/rss/search?q=movies+film+cinema+Hollywood+box+office+trailer+OTT&hl=en-US&gl=US&ceid=US:en', name: 'Movies Global' },
-    { url: 'https://news.google.com/rss/search?q=Bollywood+movie+film+release+box+office+India&hl=en-IN&gl=IN&ceid=IN:en', name: 'Bollywood' },
+    // ── India movie coverage ───────────────────────────────────────────────
+    { url: 'https://news.google.com/rss/search?q=Bollywood+Telugu+Tamil+Malayalam+movie+release+OTT+box+office&hl=en-IN&gl=IN&ceid=IN:en', name: 'India Cinema' },
   ],
 };
 
@@ -357,6 +376,7 @@ const SECTION_META = {
   sports_cricket: { image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=1200&q=80', label: '🏏 Cricket',         accent: '#16a34a' },
   sports_football:{ image: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=1200&q=80', label: '⚽ Football',        accent: '#15803d' },
   sports_tennis:  { image: 'https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=1200&q=80', label: '🎾 Tennis',          accent: '#65a30d' },
+  sports_baseball:{ image: 'https://images.unsplash.com/photo-1508344928928-7165b67de128?w=1200&q=80', label: '⚾ Baseball',        accent: '#0d9488' },
   science:        { image: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=1200&q=80', label: 'Science News',       accent: '#6366f1' },
   fashion:        { image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&q=80', label: 'Fashion News',       accent: '#db2777' },
   movies:         { image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&q=80', label: 'Movies News',        accent: '#f59e0b' },
@@ -1110,6 +1130,7 @@ var RSS_FALLBACK_IMAGES = {
   sports_cricket: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&q=70',
   sports_football:'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=800&q=70',
   sports_tennis:  'https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=800&q=70',
+  sports_baseball:'https://images.unsplash.com/photo-1508344928928-7165b67de128?w=800&q=70',
   science:        'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=800&q=70',
   fashion:        'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=70',
   movies:         'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&q=70'
@@ -1167,7 +1188,32 @@ async function buildSection(sectionId, feedPool, meta) {
   });
 
   console.log('  Items after dedup+filter:', deduped.length);
-  var selected = deduped.slice(0, isRssOnly ? MAX_ITEMS_RSS_ONLY : MAX_ITEMS_PER_SECTION);
+  var maxItems = isRssOnly ? MAX_ITEMS_RSS_ONLY : MAX_ITEMS_PER_SECTION;
+
+  // ── Per-feed cap — stop one high-volume feed (e.g. Sky Sports) from flooding
+  //    the date-sorted cutoff. Keeps source diversity so every feed (incl.
+  //    India feeds) is represented. Falls back to fill any remaining slots.
+  var perFeedCap = Math.max(6, Math.ceil(maxItems / Math.max(1, chosen.length)) + 3);
+  var selected = [];
+  var feedCount = {};
+  deduped.forEach(function(item) {
+    if (selected.length >= maxItems) return;
+    var src = item.sourceName || 'Source';
+    if ((feedCount[src] || 0) < perFeedCap) {
+      feedCount[src] = (feedCount[src] || 0) + 1;
+      selected.push(item);
+    }
+  });
+  // Backfill if the cap left us short (few feeds returned items)
+  if (selected.length < maxItems) {
+    var picked = new Set(selected);
+    for (var di = 0; di < deduped.length && selected.length < maxItems; di++) {
+      if (!picked.has(deduped[di])) selected.push(deduped[di]);
+    }
+  }
+  selected.sort(function(a, b) {
+    return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+  });
 
   if (selected.length === 0) {
     console.warn('  No items for', sectionId, '— inserting placeholder');
@@ -1297,9 +1343,31 @@ function mergeItems(newItems, existingItems) {
     return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
   });
 
+  // Per-source cap so one high-volume feed (e.g. Sky Sports) can't dominate the
+  // rolling archive — preserves source diversity (incl. India feeds) across the
+  // merge of new + existing items.
+  var PER_SOURCE_CAP = 10;
+  var capped = [];
+  var srcCount = {};
+  combined.forEach(function(item) {
+    if (capped.length >= 40) return;
+    var src = item.source || 'Source';
+    if ((srcCount[src] || 0) < PER_SOURCE_CAP) {
+      srcCount[src] = (srcCount[src] || 0) + 1;
+      capped.push(item);
+    }
+  });
+  // Backfill remaining slots if the cap left us short
+  if (capped.length < 40) {
+    var inSet = new Set(capped);
+    for (var ci = 0; ci < combined.length && capped.length < 40; ci++) {
+      if (!inSet.has(combined[ci])) capped.push(combined[ci]);
+    }
+  }
+
   // Cap the rolling 48 h archive at 40 per section — matches the page's
   // scrollable boxes. AI sections (16 new/run) accumulate to 40 across runs.
-  return combined.slice(0, 40);
+  return capped.slice(0, 40);
 }
 
 /* ═══════════════════════════════════════════════════
