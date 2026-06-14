@@ -1236,6 +1236,39 @@ body{
   .cp-no-photo{height:80px}
 }
 
+/* ── Featured session — a dedicated, scrollable block that sits BELOW the live
+   RSS news so the latest RSS-created stories always stay at the top of each
+   section (India / Stock / Malayalam). ── */
+.featured-session{
+  margin-top:24px;padding-top:18px;
+  border-top:1px solid var(--border);
+}
+.featured-session-head{
+  display:flex;align-items:center;gap:10px;margin-bottom:14px;
+}
+.featured-session-title{
+  font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--burn3);display:inline-flex;align-items:center;gap:6px;
+}
+.featured-session-count{
+  font-size:10px;font-weight:700;color:var(--text3);
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+  padding:2px 9px;border-radius:10px;
+}
+.featured-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+  gap:16px;align-items:stretch;
+  max-height:560px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;
+  scrollbar-width:thin;scrollbar-color:var(--border2) transparent;
+  padding-right:4px;
+}
+.featured-grid > *{margin:0;width:100%;min-width:0}
+.featured-grid::-webkit-scrollbar{width:7px}
+.featured-grid::-webkit-scrollbar-track{background:transparent}
+.featured-grid::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.featured-grid::-webkit-scrollbar-thumb:hover{background:var(--burn2)}
+@media(max-width:600px){.featured-grid{grid-template-columns:1fr;max-height:480px}}
+
 .story-modal-disclaimer{
   background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);
   border-radius:8px;padding:12px 16px;margin-bottom:20px;
@@ -2492,6 +2525,22 @@ function openStory(item, meta) {
   body.innerHTML = storyHtml;
   overlay.classList.add('active');
   document.body.style.overflow = 'hidden';
+  _resetStoryScroll(body);
+}
+
+/* Reset the modal scroll position to the top every time a story opens, so a
+   newly opened story never inherits the previous story's scroll offset
+   (mobile + desktop). */
+function _resetStoryScroll(body) {
+  var modal = document.getElementById('story-modal');
+  if (body) body.scrollTop = 0;
+  if (modal) modal.scrollTop = 0;
+  if (window.requestAnimationFrame) {
+    requestAnimationFrame(function() {
+      if (body) body.scrollTop = 0;
+      if (modal) modal.scrollTop = 0;
+    });
+  }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -3502,8 +3551,23 @@ async function _loadCustomContent() {
 function _renderCustomPosts(sectionId, container) {
   var posts = window._customContent.filter(function(p) { return p.section === sectionId; });
   if (!posts.length) return;
+
+  // Featured posts live in their own dedicated "session" placed BELOW the live
+  // RSS news, so the latest RSS-created stories always appear at the top of the
+  // section. The session has a bounded height + vertical scrollbar so every
+  // featured story is reachable.
+  var session = document.createElement('div');
+  session.className = 'featured-session';
+
+  var head = document.createElement('div');
+  head.className = 'featured-session-head';
+  head.innerHTML = '<span class="featured-session-title">✦ Featured</span>'
+    + '<span class="featured-session-count">' + posts.length + ' '
+    + (posts.length === 1 ? 'story' : 'stories') + '</span>';
+  session.appendChild(head);
+
   var block = document.createElement('div');
-  block.className = 'custom-posts-block';
+  block.className = 'featured-grid';
   posts.forEach(function(post) {
     var card = document.createElement('div');
     card.className = 'custom-post-card';
@@ -3533,29 +3597,12 @@ function _renderCustomPosts(sectionId, container) {
       + '</div>';
     block.appendChild(card);
   });
-  // Place featured cards BELOW the hero (big picture), boxed inside the section's
-  // card grid so they sit alongside the regular news cards.
-  var grid = container.querySelector('.news-cards-grid');
-  if (grid) {
-    var cards = Array.prototype.slice.call(block.children);
-    for (var i = cards.length - 1; i >= 0; i--) {
-      grid.insertBefore(cards[i], grid.firstChild);
-    }
-  } else {
-    // No grid (section had only a hero or nothing) — fall back to placing the
-    // block just after the hero, else after the header.
-    var hero = container.querySelector('.news-hero-card');
-    if (hero && hero.nextSibling) {
-      container.insertBefore(block, hero.nextSibling);
-    } else if (hero) {
-      container.appendChild(block);
-    } else {
-      var header = container.querySelector('.news-section-header');
-      if (header && header.nextSibling) container.insertBefore(block, header.nextSibling);
-      else if (header) container.appendChild(block);
-      else container.insertBefore(block, container.firstChild);
-    }
-  }
+  session.appendChild(block);
+
+  // Append the Featured session at the BOTTOM of the section content, after the
+  // live RSS hero + cards grid, so the newest RSS news stays at the top.
+  var content = container.querySelector('.news-section-content') || container;
+  content.appendChild(session);
 }
 
 function openCustomPost(id) {
@@ -3627,6 +3674,7 @@ function openCustomPost(id) {
   body.innerHTML = html;
   overlay.classList.add('active');
   document.body.style.overflow = 'hidden';
+  _resetStoryScroll(body);
 }
 
 async function loadNewsPage() {
