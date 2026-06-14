@@ -1786,30 +1786,6 @@ footer.news-footer{
       <h1 class="news-page-title">VilfinTV</h1>
     </div>
     <p class="news-page-subtitle">One platform for market screeners, live news, web stories, the learning Academy, live TV and market-intelligence widgets. This page is the single legal, copyright &amp; AI-content policy covering every part of vilfintv.com.</p>
-    <div class="news-page-meta">
-      <div class="news-page-meta-chip">Last updated: <span id="last-updated-time">—</span></div>
-      <div class="news-page-meta-chip">Stories: <span id="total-story-count">—</span></div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     SEARCH SECTION (moved below hero)
-══════════════════════════════════════════ -->
-<div class="news-search-section">
-  <div class="news-search-inner">
-    <div class="news-search-box">
-      <svg class="news-search-icon-svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" class="news-search-input" id="news-search-input"
-             placeholder="Search all stories…" autocomplete="off" spellcheck="false"
-             aria-label="Search news stories"/>
-      <button class="news-search-clear" id="news-search-clear" onclick="clearSearch()" title="Clear search" aria-label="Clear search">✕</button>
-    </div>
-  </div>
-  <!-- Search results banner (shown when query active) -->
-  <div class="search-results-bar" id="search-results-bar" role="status" aria-live="polite">
-    <span id="search-results-text"></span>
-    <button class="search-clear-btn" onclick="clearSearch()">Clear</button>
   </div>
 </div>
 
@@ -2298,6 +2274,9 @@ document.addEventListener('keydown', function(e) {
   var searchClear  = document.getElementById('news-search-clear');
   var resultsBar   = document.getElementById('search-results-bar');
   var resultsText  = document.getElementById('search-results-text');
+
+  // Legal page has no search box — bail out so nothing throws.
+  if (!searchInput) { window.clearSearch = function() {}; return; }
 
   function doSearch(q) {
     q = (q || '').trim().toLowerCase();
@@ -3454,13 +3433,11 @@ async function loadNewsPage() {
   // World News + External Links — load sequentially so External Links appends last
   loadWorldSection(container).then(function() { loadExternalLinksSection(container); });
 
-  // Update meta chips
-  if (data && data.generated) {
-    document.getElementById('last-updated-time').textContent = timeAgo(data.generated);
-  } else {
-    document.getElementById('last-updated-time').textContent = 'Pending update';
-  }
-  document.getElementById('total-story-count').textContent = totalStories || '—';
+  // Update meta chips (removed from the legal page — guard against absence)
+  var _lu = document.getElementById('last-updated-time');
+  if (_lu) _lu.textContent = (data && data.generated) ? timeAgo(data.generated) : 'Pending update';
+  var _tc = document.getElementById('total-story-count');
+  if (_tc) _tc.textContent = totalStories || '—';
 }
 
 /* ═══════════════════════════════════════════════════
