@@ -2194,6 +2194,7 @@ function initQuill() {
         }
       }
     });
+    _attachImagePasteDrop(cpQuill);
   }
 
   if (document.getElementById('st-story-editor')) {
@@ -2238,6 +2239,7 @@ function initQuill() {
         }
       }
     });
+    _attachImagePasteDrop(stQuill);
     stQuill.on('text-change', function() {
       document.getElementById('st-story').value = stQuill.root.innerHTML;
     });
@@ -2336,6 +2338,62 @@ async function authFetch(url, options) {
 
 /* ── R2 image helpers (upload / delete via the Worker) ─────────────────────── */
 function isR2Url(u) { return typeof u === 'string' && u.indexOf('/r2/media/') !== -1; }
+
+/* ── Paste / drag-drop images → upload to R2 instead of inlining base64 ──────
+   Pasting a screenshot or dragging a picture into a Quill editor normally
+   inlines it as a giant base64 data: URI (often >400KB). The story field is
+   capped at 500,000 chars, so one pasted image overflows the cap and the rest
+   of the post is truncated. These handlers intercept image paste/drop, upload
+   the file to R2, and insert a lightweight URL instead. */
+async function _insertR2Image(quill, file) {
+  if (!quill || !file) return;
+  var sel   = quill.getSelection(true);
+  var index = sel ? sel.index : quill.getLength();
+  var TXT   = 'Uploading image…';
+  quill.insertText(index, TXT, 'user');
+  try {
+    var url = await uploadImageToR2(file);
+    quill.deleteText(index, TXT.length);
+    quill.insertEmbed(index, 'image', url, 'user');
+    quill.setSelection(index + 1);
+  } catch (e) {
+    quill.deleteText(index, TXT.length);
+    if (e.message !== 'SESSION_EXPIRED') alert('Image upload failed: ' + e.message);
+  }
+}
+
+function _attachImagePasteDrop(quill) {
+  if (!quill || !quill.root) return;
+  quill.root.addEventListener('paste', function(e) {
+    var items = (e.clipboardData && e.clipboardData.items) ? e.clipboardData.items : [];
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].kind === 'file' && items[i].type && items[i].type.indexOf('image') === 0) {
+        e.preventDefault();
+        _insertR2Image(quill, items[i].getAsFile());
+        return;
+      }
+    }
+  });
+  quill.root.addEventListener('drop', function(e) {
+    var files = (e.dataTransfer && e.dataTransfer.files) ? e.dataTransfer.files : [];
+    if (files.length && files[0].type && files[0].type.indexOf('image') === 0) {
+      e.preventDefault();
+      _insertR2Image(quill, files[0]);
+    }
+  }, true);
+}
+
+/* Safety net: refuse to publish a story that still contains an inline base64
+   image (e.g. pasted from HTML where no file item was available). Returns true
+   if the story is safe to send. */
+function _guardNoBase64Image(story, statusFn) {
+  if (/<img[^>]+src=["']?\s*data:image\//i.test(story)) {
+    statusFn('err', 'A pasted/embedded image is stored inline and would be cut off (500KB story limit). '
+      + 'Please remove it and re-add the picture using the 🖼 image button in the toolbar (it uploads properly).');
+    return false;
+  }
+  return true;
+}
 
 async function uploadImageToR2(file) {
   var tok = getToken();
@@ -2946,6 +3004,7 @@ async function publishContent() {
   if (photo) {
     try { new URL(photo); } catch(e) { return setCpFormStatus('err', 'Invalid photo URL.'); }
   }
+  if (!_guardNoBase64Image(story, setCpFormStatus)) return;
 
   btn.disabled    = true;
   btn.textContent = cpEditId ? 'Updating…' : 'Publishing…';
@@ -4380,6 +4439,7 @@ async function publishStory() {
   if (!section) return setStFormStatus('err', 'Select a story category.');
   if (!heading) return setStFormStatus('err', 'Story title is required.');
   if (!photo)   return setStFormStatus('err', 'Thumbnail URL is required for stories.');
+  if (!_guardNoBase64Image(story, setStFormStatus)) return;
 
   btn.disabled = true; btn.textContent = stEditId ? '⏳ Updating…' : '⏳ Pinning…';
 
@@ -4623,6 +4683,7 @@ async function publishAcademy() {
   setAcFormStatus('', '');
   if (!heading) return setAcFormStatus('err', 'Headline is required.');
   if (!story)   return setAcFormStatus('err', 'Notice body is required.');
+  if (!_guardNoBase64Image(story, setAcFormStatus)) return;
 
   btn.disabled = true; btn.textContent = acEditId ? '⏳ Updating…' : '⏳ Publishing…';
 
