@@ -2000,9 +2000,9 @@ footer.news-footer{
 <div class="news-legal-banner">
   <div class="news-legal-banner-title">Editorial Disclosure</div>
   <p class="news-legal-banner-text">
-    VilfinTV News uses AI to write full-length news articles from publicly available RSS feeds. Each story is independently composed — not a verbatim copy of original reporting.
-    Facts are cross-checked across multiple sources. VilfinTV does not claim ownership of original source material.
-    Articles are for informational purposes only and do not constitute professional advice.
+    VilfinTV News publishes articles generated with the assistance of artificial intelligence from publicly available RSS feeds. Each story is independently composed — not a verbatim reproduction of original reporting — and core facts are cross-referenced across multiple public sources. VilfinTV claims no ownership of original source material.
+    Because AI-assisted content can occasionally contain inaccuracies or omit context, readers are encouraged to verify critical information independently. All content is provided "as is" for general informational purposes only and does not constitute professional, legal, medical, or financial advice. The publishers assume no liability for any decisions or actions taken based on this content.
+    <a href="legal.html" style="color:inherit;text-decoration:underline">Read our full Editorial &amp; AI Content Policy →</a>
   </p>
 </div>
 
@@ -2611,10 +2611,11 @@ function openStory(item, meta) {
   }
   storyHtml += '<div class="story-body">' + (storyContent || '<p>Full story unavailable.</p>') + '</div>';
 
-  // Disclaimer
+  // Disclaimer — rendered at display time, so it applies to every EXISTING and
+  // FUTURE story automatically (no disclaimer text is baked into stored data).
   var disclaimerText = item.aiGenerated === false
-    ? 'Source report. Headlines and summaries are directly from the original news source.'
-    : 'AI-written news article. Facts cross-checked across multiple public sources. Content is independently composed — not verbatim reproduction of original reporting.';
+    ? 'Disclaimer: This story is an automatically aggregated summary compiled from publicly available news feeds. Headlines and summaries derive from the original source and are not a verbatim reproduction of any proprietary reporting; VilfinTV claims no ownership of the original material. Aggregated content can occasionally be inaccurate, incomplete, or outdated, so readers are encouraged to verify critical information with the original source. This content is provided for general informational purposes only and does not constitute professional, legal, or financial advice.'
+    : 'Disclaimer: This article was generated with the assistance of artificial intelligence. While all core facts have been cross-referenced against multiple publicly available sources to ensure reliability, the text is independently composed and is not a verbatim reproduction of any original reporting. As AI technologies can occasionally produce inaccuracies or lack nuanced context, readers are encouraged to verify critical information independently. This content is provided for general informational purposes only and does not constitute professional, legal, or financial advice.';
   storyHtml += '<div class="story-modal-disclaimer">' + disclaimerText + '</div>';
 
   // Source link — hybrid: mobile=new tab, desktop=centered popup
@@ -3908,7 +3909,7 @@ function openCustomPost(id) {
     + storyContent
     + '</div>';
 
-  html += '<div class="story-modal-disclaimer">Editorial feature curated and fact-checked by the VilfinTV newsroom across multiple public sources.</div>';
+  html += '<div class="story-modal-disclaimer">Editorial &amp; Content Disclaimer: This featured story was drafted using advanced AI technologies. Our process involves synthesizing factual data from a variety of public sources to create an independently composed, original narrative. We strictly prohibit the verbatim reproduction of proprietary reporting. However, because AI algorithms can sometimes hallucinate or omit context, we cannot guarantee 100% accuracy or completeness. The information provided herein is for educational and informational purposes only. The publishers assume no liability for any actions taken based on this content.</div>';
 
   if (post.link_url) {
     html += '<button class="story-modal-source-link" data-href="' + escAttr(post.link_url) + '" onclick="openSourceLink(this)">Read Full Story ↗</button>';

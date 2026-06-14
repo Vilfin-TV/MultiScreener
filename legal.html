@@ -1786,6 +1786,15 @@ footer.news-footer{
       <h2 style="font-size:24px;color:var(--text);margin:0 0 12px;font-family:'Playfair Display',serif; border-bottom: 1px solid var(--border); padding-bottom: 8px;">5. Disclaimer of Liability</h2>
       <p style="margin-bottom:16px;">While we strive to ensure the accuracy and timeliness of our automated screeners and news summaries, VilfinTV makes no warranties or representations regarding the completeness, accuracy, or reliability of the information. We shall not be held liable for any errors, omissions, or delays in this information or any financial losses, injuries, or damages arising from its display or use.</p>
     </section>
+
+    <section>
+      <h2 style="font-size:24px;color:var(--text);margin:0 0 12px;font-family:'Playfair Display',serif; border-bottom: 1px solid var(--border); padding-bottom: 8px;">6. AI Generation &amp; Content Disclaimer</h2>
+      <p style="margin-bottom:16px;"><strong>AI Generation &amp; Editing Process:</strong> The articles, featured stories, and news summaries on this platform are generated with the assistance of artificial intelligence models from publicly available sources.</p>
+      <p style="margin-bottom:16px;"><strong>Originality &amp; Fair Use:</strong> We are committed to original composition. Factual information is aggregated and cross-referenced from multiple public domains, but the resulting text is a transformative work. It is strictly independently composed and never a verbatim replication of original journalistic reporting.</p>
+      <p style="margin-bottom:16px;"><strong>Accuracy &amp; Inherent Errors:</strong> While we strive for high editorial standards, AI-assisted content can occasionally contain inaccuracies, outdated information, or "hallucinations." Content is provided "as is," and we strongly encourage readers to independently verify facts before relying on them.</p>
+      <p style="margin-bottom:16px;"><strong>No Professional Advice:</strong> The news, featured stories, and data provided on this site are intended for general informational and entertainment purposes only. They do not constitute financial, legal, medical, or other professional advice.</p>
+      <p style="margin-bottom:16px;"><strong>Limitation of Liability:</strong> By using this site, you acknowledge that the publishers, owners, and operators of this platform shall not be held liable for any damages, losses, or decisions made based on the information presented.</p>
+    </section>
   </div>
 </div>
 <!-- ══════════════════════════════════════════
@@ -2149,10 +2158,11 @@ function openStory(item, meta) {
   }
   storyHtml += '<div class="story-body">' + (storyContent || '<p>Full story unavailable.</p>') + '</div>';
 
-  // Disclaimer
+  // Disclaimer — rendered at display time, so it applies to every EXISTING and
+  // FUTURE story automatically (no disclaimer text is baked into stored data).
   var disclaimerText = item.aiGenerated === false
-    ? 'Source report. Headlines and summaries are directly from the original news source.'
-    : 'AI-written news article. Facts cross-checked across multiple public sources. Content is independently composed — not verbatim reproduction of original reporting.';
+    ? 'Disclaimer: This story is an automatically aggregated summary compiled from publicly available news feeds. Headlines and summaries derive from the original source and are not a verbatim reproduction of any proprietary reporting; VilfinTV claims no ownership of the original material. Aggregated content can occasionally be inaccurate, incomplete, or outdated, so readers are encouraged to verify critical information with the original source. This content is provided for general informational purposes only and does not constitute professional, legal, or financial advice.'
+    : 'Disclaimer: This article was generated with the assistance of artificial intelligence. While all core facts have been cross-referenced against multiple publicly available sources to ensure reliability, the text is independently composed and is not a verbatim reproduction of any original reporting. As AI technologies can occasionally produce inaccuracies or lack nuanced context, readers are encouraged to verify critical information independently. This content is provided for general informational purposes only and does not constitute professional, legal, or financial advice.';
   storyHtml += '<div class="story-modal-disclaimer">' + disclaimerText + '</div>';
 
   // Source link — hybrid: mobile=new tab, desktop=centered popup
@@ -3274,7 +3284,7 @@ function openCustomPost(id) {
     + storyContent
     + '</div>';
 
-  html += '<div class="story-modal-disclaimer">Editorial feature curated and fact-checked by the VilfinTV newsroom across multiple public sources.</div>';
+  html += '<div class="story-modal-disclaimer">Editorial &amp; Content Disclaimer: This featured story was drafted using advanced AI technologies. Our process involves synthesizing factual data from a variety of public sources to create an independently composed, original narrative. We strictly prohibit the verbatim reproduction of proprietary reporting. However, because AI algorithms can sometimes hallucinate or omit context, we cannot guarantee 100% accuracy or completeness. The information provided herein is for educational and informational purposes only. The publishers assume no liability for any actions taken based on this content.</div>';
 
   if (post.link_url) {
     html += '<button class="story-modal-source-link" data-href="' + escAttr(post.link_url) + '" onclick="openSourceLink(this)">Read Full Story ↗</button>';
