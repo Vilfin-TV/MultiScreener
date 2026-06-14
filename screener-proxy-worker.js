@@ -727,6 +727,8 @@ ${body.text}`;
       if (!section || !VALID_SECTIONS.includes(section)) return jsonError(400, 'Invalid section.');
       if (!heading || typeof heading !== 'string' || !heading.trim()) return jsonError(400, 'heading is required.');
       if (!story   || typeof story   !== 'string' || !story.trim())   return jsonError(400, 'story is required.');
+      if (_hasInlineBase64Image(story)) return jsonError(413, 'Embedded image detected. Add pictures with the image button (or paste/drag) so they upload as links — pasting an image inline bloats the post and it gets cut off.');
+      if (story.trim().length > MAX_STORY) return jsonError(413, `Story is too large (${story.trim().length} chars; max ${MAX_STORY}). Use uploaded image URLs, not embedded images.`);
       const daysInt = parseInt(days);
       if (!daysInt || daysInt < 1 || daysInt > 365) return jsonError(400, 'days must be 1–365.');
       if (!env.GITHUB_TOKEN) return jsonError(503, 'GitHub not configured.');
@@ -745,7 +747,7 @@ ${body.text}`;
       const now = new Date();
       const expiresAt = new Date(now.getTime() + daysInt * 86400000).toISOString();
       items = items.filter(i => i && i.expires_at && new Date(i.expires_at) > now);
-      const newItem = { id: String(Date.now()), section, heading: heading.trim().slice(0,200), story: story.trim().slice(0,500000), published_at: now.toISOString(), expires_at: expiresAt };
+      const newItem = { id: String(Date.now()), section, heading: heading.trim().slice(0,200), story: story.trim().slice(0,MAX_STORY), published_at: now.toISOString(), expires_at: expiresAt };
       if (photo && typeof photo === 'string' && photo.trim().startsWith('http')) newItem.photo = photo.trim().slice(0,500);
       if (link_url && typeof link_url === 'string' && link_url.trim().startsWith('http')) newItem.link_url = link_url.trim().slice(0,500);
       if (photo_pos && typeof photo_pos === 'string') newItem.photo_pos = photo_pos.trim().slice(0,20);
@@ -784,7 +786,7 @@ ${body.text}`;
         else if (r.status !== 404) return jsonError(502, `GitHub GET failed: ${r.status}`);
       } catch (e) { return jsonError(502, `GitHub GET error: ${e.message}`); }
 
-      const clean = items.map(i => { const o = { id: String(i.id||Date.now()), section: String(i.section||''), heading: String(i.heading||'').slice(0,200), story: String(i.story||'').slice(0,500000), published_at: i.published_at||new Date().toISOString(), expires_at: i.expires_at||'' }; if (i.photo) o.photo = String(i.photo).slice(0,500); if (i.link_url) o.link_url = String(i.link_url).slice(0,500); if (i.photo_pos) o.photo_pos = String(i.photo_pos).slice(0,20); if (i.photo_zoom && !isNaN(parseFloat(i.photo_zoom))) o.photo_zoom = Math.min(Math.max(parseFloat(i.photo_zoom), 1), 4); return o; });
+      const clean = items.map(i => { const o = { id: String(i.id||Date.now()), section: String(i.section||''), heading: String(i.heading||'').slice(0,200), story: _sanitizeStory(i.story), published_at: i.published_at||new Date().toISOString(), expires_at: i.expires_at||'' }; if (i.photo) o.photo = String(i.photo).slice(0,500); if (i.link_url) o.link_url = String(i.link_url).slice(0,500); if (i.photo_pos) o.photo_pos = String(i.photo_pos).slice(0,20); if (i.photo_zoom && !isNaN(parseFloat(i.photo_zoom))) o.photo_zoom = Math.min(Math.max(parseFloat(i.photo_zoom), 1), 4); return o; });
       const put = { message: 'chore(content): update via console', content: _b64EncodeUnicode(JSON.stringify(clean, null, 2)), branch: BRANCH };
       if (sha) put.sha = sha;
       try {
@@ -1248,6 +1250,29 @@ function _b64EncodeUnicode(str) {
 }
 function _b64DecodeUnicode(str) {
   return decodeURIComponent(escape(atob(str)));
+}
+
+/* ── Story body limits ──────────────────────────────────────────────────────
+   Stories are long-form (10–20 "pages") and may carry many images. Images must
+   be stored as uploaded R2/HTTP URLs (~80 chars each), NOT inline base64 (one
+   pasted screenshot is ~400–600KB). With URL-based images even a very long
+   multi-page feature stays well under this cap. */
+const MAX_STORY = 2000000; // 2,000,000 chars (~2MB) — generous headroom for long features
+
+// Does the story contain an inline base64 <img>? (the thing that bloats + truncates)
+function _hasInlineBase64Image(s) {
+  return /<img\b[^>]*\bsrc\s*=\s*["']?\s*data:image\//i.test(String(s || ''));
+}
+
+// Clean a story for safe storage: strip inline base64 images (incl. a trailing
+// unterminated/truncated one) and cap at MAX_STORY. Used on the update path so a
+// pre-existing broken post can't lock the admin out of editing other posts.
+function _sanitizeStory(s, max = MAX_STORY) {
+  s = String(s || '');
+  s = s.replace(/<img\b[^>]*\bsrc\s*=\s*["']?\s*data:image\/[^>]*>/gi, '');   // complete tags
+  s = s.replace(/<img\b[^>]*\bsrc\s*=\s*["']?\s*data:image\/[\s\S]*$/i, '');  // trailing truncated tag
+  if (s.length > max) s = s.slice(0, max);
+  return s;
 }
 
 /* ── JWT (HS256) using Web Crypto API ── */
