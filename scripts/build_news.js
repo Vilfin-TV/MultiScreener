@@ -349,6 +349,65 @@ const SOURCE_POOL = {
     // ── India movie coverage ───────────────────────────────────────────────
     { url: 'https://news.google.com/rss/search?q=Bollywood+Telugu+Tamil+Malayalam+movie+release+OTT+box+office&hl=en-IN&gl=IN&ceid=IN:en', name: 'India Cinema' },
   ],
+  // ── Technology — AI, Robotics, Drones, Mobile, TV, Smart devices ───────────
+  // English-language sources across US, China, Japan, Korea & India.
+  tech: [
+    { url: 'https://news.google.com/rss/search?q=AI+artificial+intelligence+robot+drone+smartphone+smart+device&hl=en-US&gl=US&ceid=US:en', name: 'AI & Devices (US)' },
+    { url: 'https://news.google.com/rss/search?q=Asia+technology+China+Japan+Korea+India+AI+robot+electronics&hl=en&gl=US&ceid=US:en', name: 'Asia Tech' },
+    { url: 'https://www.theverge.com/rss/index.xml',                                                              name: 'The Verge' },
+    { url: 'https://techcrunch.com/feed/',                                                                        name: 'TechCrunch' },
+    { url: 'https://www.engadget.com/rss.xml',                                                                    name: 'Engadget' },
+    { url: 'https://news.google.com/rss/search?q=China+technology+AI+robot+drone+Huawei+Xiaomi+smartphone&hl=en&gl=US&ceid=US:en', name: 'China Tech' },
+    { url: 'https://news.google.com/rss/search?q=Japan+technology+robot+AI+Sony+electronics+gadget&hl=en&gl=US&ceid=US:en', name: 'Japan Tech' },
+    { url: 'https://news.google.com/rss/search?q=Korea+Samsung+LG+technology+smartphone+smart+TV+chip&hl=en&gl=US&ceid=US:en', name: 'Korea Tech' },
+    { url: 'https://news.google.com/rss/search?q=India+technology+smartphone+AI+gadget+startup+launch&hl=en-IN&gl=IN&ceid=IN:en', name: 'India Tech' },
+    { url: 'https://news.google.com/rss/search?q=smartphone+smart+home+smart+TV+wearable+gadget+launch+review&hl=en-US&gl=US&ceid=US:en', name: 'Mobile / Smart' },
+    { url: 'https://news.google.com/rss/search?q=robotics+humanoid+robot+drone+automation+chip+semiconductor&hl=en-US&gl=US&ceid=US:en', name: 'Robotics & Drones' },
+  ],
+  // ── Space — multi-country (NASA, ISRO, CNSA, JAXA, KARI, ESA) ───────────────
+  space: [
+    { url: 'https://news.google.com/rss/search?q=space+NASA+SpaceX+rocket+launch+satellite+mission&hl=en-US&gl=US&ceid=US:en', name: 'Space (US)' },
+    { url: 'https://news.google.com/rss/search?q=ISRO+India+space+mission+Chandrayaan+Gaganyaan+satellite&hl=en-IN&gl=IN&ceid=IN:en', name: 'ISRO India' },
+    { url: 'https://www.nasa.gov/rss/dyn/breaking_news.rss',                                                      name: 'NASA' },
+    { url: 'https://www.space.com/feeds/all',                                                                    name: 'Space.com' },
+    { url: 'https://news.google.com/rss/search?q=China+space+CNSA+Tiangong+lunar+Chang%27e+mission&hl=en&gl=US&ceid=US:en', name: 'China Space' },
+    { url: 'https://news.google.com/rss/search?q=Japan+JAXA+space+rocket+H3+lunar+mission&hl=en&gl=US&ceid=US:en', name: 'Japan JAXA' },
+    { url: 'https://news.google.com/rss/search?q=Korea+space+KARI+Nuri+rocket+satellite+launch&hl=en&gl=US&ceid=US:en', name: 'Korea Space' },
+    { url: 'https://news.google.com/rss/search?q=space+ESA+astronomy+telescope+exoplanet+galaxy+mission&hl=en-US&gl=US&ceid=US:en', name: 'ESA & Astronomy' },
+  ],
+  // ── Food & Agriculture — multi-country English (recency-bounded) ───────────
+  food: [
+    { url: 'https://news.google.com/rss/search?q=agriculture+farming+food+crop+harvest+when:7d&hl=en-US&gl=US&ceid=US:en', name: 'Agriculture (Global)' },
+    { url: 'https://news.google.com/rss/search?q=India+agriculture+farmer+crop+monsoon+MSP+food+when:7d&hl=en-IN&gl=IN&ceid=IN:en', name: 'India Agriculture' },
+    { url: 'https://agfundernews.com/feed',                                                                       name: 'AgFunder News' },
+    { url: 'https://news.google.com/rss/search?q=agritech+precision+farming+drone+food+technology+when:7d&hl=en-US&gl=US&ceid=US:en', name: 'AgriTech' },
+    { url: 'https://news.google.com/rss/search?q=China+agriculture+food+grain+farming+pork+when:7d&hl=en&gl=US&ceid=US:en', name: 'China Agriculture' },
+    { url: 'https://news.google.com/rss/search?q=Japan+Korea+agriculture+rice+food+seafood+when:7d&hl=en&gl=US&ceid=US:en', name: 'Japan/Korea Agri' },
+    { url: 'https://news.google.com/rss/search?q=food+industry+nutrition+supply+chain+price+when:7d&hl=en-US&gl=US&ceid=US:en', name: 'Food Industry' },
+    { url: 'https://news.google.com/rss/search?q=global+food+security+climate+agriculture+drought+when:7d&hl=en-US&gl=US&ceid=US:en', name: 'Food Security' },
+  ],
+  // ── Automobile — US, China, Japan, Korea, India English (fresh publishers) ──
+  automobile: [
+    { url: 'https://news.google.com/rss/search?q=car+auto+EV+electric+vehicle+launch+review+when:7d&hl=en-US&gl=US&ceid=US:en', name: 'Auto (Global)' },
+    { url: 'https://timesofindia.indiatimes.com/rssfeeds/74317216.cms',                                           name: 'TOI Auto (India)' },
+    { url: 'https://www.motor1.com/rss/news/all/',                                                                name: 'Motor1' },
+    { url: 'https://electrek.co/feed/',                                                                           name: 'Electrek (EV)' },
+    { url: 'https://www.carscoops.com/feed/',                                                                     name: 'CarScoops' },
+    { url: 'https://news.google.com/rss/search?q=China+EV+BYD+NIO+XPeng+electric+vehicle+when:7d&hl=en&gl=US&ceid=US:en', name: 'China Auto' },
+    { url: 'https://news.google.com/rss/search?q=Japan+Toyota+Honda+Nissan+car+hybrid+EV+when:7d&hl=en&gl=US&ceid=US:en', name: 'Japan Auto' },
+    { url: 'https://news.google.com/rss/search?q=Korea+Hyundai+Kia+Genesis+car+EV+when:7d&hl=en&gl=US&ceid=US:en', name: 'Korea Auto' },
+  ],
+  // ── Business — US, China, Japan, Korea, India English ──────────────────────
+  business: [
+    { url: 'https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-US&gl=US&ceid=US:en',            name: 'Business (US)' },
+    { url: 'https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-IN&gl=IN&ceid=IN:en',            name: 'India Business' },
+    { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html',                                             name: 'CNBC' },
+    { url: 'https://feeds.bbci.co.uk/news/business/rss.xml',                                                    name: 'BBC Business' },
+    { url: 'https://news.google.com/rss/search?q=China+economy+business+company+trade+yuan&hl=en&gl=US&ceid=US:en', name: 'China Business' },
+    { url: 'https://news.google.com/rss/search?q=Japan+economy+business+Nikkei+company+yen&hl=en&gl=US&ceid=US:en', name: 'Japan Business' },
+    { url: 'https://news.google.com/rss/search?q=Korea+economy+business+Samsung+chip+export+won&hl=en&gl=US&ceid=US:en', name: 'Korea Business' },
+    { url: 'https://news.google.com/rss/search?q=Asia+business+economy+companies+trade+markets+earnings&hl=en&gl=US&ceid=US:en', name: 'Asia Business' },
+  ],
 };
 
 const SECTION_META = {
@@ -380,6 +439,11 @@ const SECTION_META = {
   science:        { image: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=1200&q=80', label: 'Science News',       accent: '#6366f1' },
   fashion:        { image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&q=80', label: 'Fashion News',       accent: '#db2777' },
   movies:         { image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1200&q=80', label: 'Movies News',        accent: '#f59e0b' },
+  tech:           { image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80', label: 'Technology News',    accent: '#2563eb' },
+  space:          { image: 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1200&q=80', label: 'Space News',         accent: '#1e3a8a' },
+  food:           { image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200&q=80', label: 'Food & Agriculture', accent: '#65a30d' },
+  automobile:     { image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1200&q=80', label: 'Automobile News',    accent: '#dc2626' },
+  business:       { image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1200&q=80', label: 'Business News',      accent: '#0891b2' },
 };
 
 /* ═══════════════════════════════════════════════════
@@ -1133,7 +1197,12 @@ var RSS_FALLBACK_IMAGES = {
   sports_baseball:'https://images.unsplash.com/photo-1508344928928-7165b67de128?w=800&q=70',
   science:        'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=800&q=70',
   fashion:        'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=70',
-  movies:         'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&q=70'
+  movies:         'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&q=70',
+  tech:           'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=70',
+  space:          'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800&q=70',
+  food:           'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=70',
+  automobile:     'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&q=70',
+  business:       'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=70'
 };
 
 function rssStory(item, sectionId) {
@@ -1158,7 +1227,8 @@ function rssStory(item, sectionId) {
 async function buildSection(sectionId, feedPool, meta) {
   console.log('\n[Section]', sectionId.toUpperCase());
   var isRssOnly = (sectionId === 'stock' || sectionId === 'malayalam' || sectionId.startsWith('ml_')
-    || sectionId.startsWith('sports') || sectionId === 'science' || sectionId === 'fashion' || sectionId === 'movies');
+    || sectionId.startsWith('sports') || sectionId === 'science' || sectionId === 'fashion' || sectionId === 'movies'
+    || sectionId === 'tech' || sectionId === 'space' || sectionId === 'food' || sectionId === 'automobile' || sectionId === 'business');
 
   // Always include first 2 anchored feeds + random extras
   var pool    = feedPool || [];
