@@ -904,12 +904,12 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
           <a href="#" onclick="openFinlitLesson(0); return false;">Financial Literacy</a>
           <a href="#" onclick="openCareerLesson(0); return false;">Career Development</a>
           <a href="#" onclick="openGrowthLesson(0); return false;">Growth Mindset</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Public Speaking</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Negotiation Skills</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Emotional Intelligence</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Conflict Resolution</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Time Management</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Stress Management</a>
+          <a href="#" onclick="openLifeSkillLesson(0); return false;">Public Speaking</a>
+          <a href="#" onclick="openLifeSkillLesson(1); return false;">Negotiation Skills</a>
+          <a href="#" onclick="openLifeSkillLesson(2); return false;">Emotional Intelligence</a>
+          <a href="#" onclick="openLifeSkillLesson(3); return false;">Conflict Resolution</a>
+          <a href="#" onclick="openLifeSkillLesson(4); return false;">Time Management</a>
+          <a href="#" onclick="openLifeSkillLesson(5); return false;">Stress Management</a>
         </div>
       </div>
 
@@ -1484,6 +1484,22 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
       </div>
     </div>
 
+    <!-- ── LIFE SKILLS (Core) ── -->
+    <div id="lifeskills-content-area" style="display:none;">
+      <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">🌱 Life Skills</h2>
+      <p style="margin:0 0 20px; font-size:14px; color:var(--text2);">6-lesson course · Teaching-style · Simple language</p>
+      <div class="fin-layout">
+        <aside class="fin-toc" id="lsk-toc">
+          <div class="fin-toc-header">📚 Course Outline</div>
+          <div class="fin-toc-list" id="lsk-toc-list"></div>
+        </aside>
+        <div class="fin-main" id="lsk-main">
+          <div class="fin-progress-bar"><div class="fin-progress-fill" id="lsk-progress-fill" style="width:16%"></div></div>
+          <div id="lsk-lesson-content"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── COMPUTER SCIENCE (Core) ── -->
     <div id="cs-content-area" style="display:none;">
       <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">💻 Computer Science</h2>
@@ -1599,6 +1615,8 @@ function _hideAllLessonAreas() {
   if (_aero) _aero.style.display = 'none';
   var _cs = document.getElementById('cs-content-area');
   if (_cs) _cs.style.display = 'none';
+  var _lsk = document.getElementById('lifeskills-content-area');
+  if (_lsk) _lsk.style.display = 'none';
 }
 
 function openCbseLesson(subject, classNum) {
@@ -1831,6 +1849,20 @@ function openCsLesson(startIdx) {
   if (typeof renderCsLesson === 'function') renderCsLesson(_activeCsIdx);
   document.getElementById('lesson-view-container').scrollTop = 0;
   try { history.replaceState(null, '', '?subject=cs'); } catch(e){}
+}
+
+function openLifeSkillLesson(startIdx) {
+  document.getElementById('hero-section').style.display = 'none';
+  document.getElementById('subjects-section').style.display = 'none';
+  document.getElementById('lesson-view-container').style.display = 'block';
+  _hideAllLessonAreas();
+  document.getElementById('lifeskills-content-area').style.display = 'block';
+  _activeHub = 'lifeskills';
+  _activeLskIdx = (typeof startIdx === 'number') ? startIdx : 0;
+  if (typeof renderLskTOC === 'function') renderLskTOC();
+  if (typeof renderLskLesson === 'function') renderLskLesson(_activeLskIdx);
+  document.getElementById('lesson-view-container').scrollTop = 0;
+  try { history.replaceState(null, '', '?subject=lifeskills'); } catch(e){}
 }
 
 var _activeAiIdx = 0;
@@ -8981,6 +9013,180 @@ function renderCsLesson(idx) {
   var contentDiv = document.getElementById('cs-lesson-content');
   if (contentDiv) contentDiv.innerHTML = html;
   var mainDiv = document.getElementById('cs-main');
+  if (mainDiv) mainDiv.scrollTop = 0;
+}
+
+
+// ═══════════════════════════════════════
+// LIFE SKILLS (Core) — DATA + RENDER
+// ═══════════════════════════════════════
+var _activeLskIdx = 0;
+var LIFESKILLS_LESSONS = [
+  {
+    unit: "Unit 1 · Communication & Influence", icon: "🎤",
+    title: "Public Speaking",
+    lead: "Public speaking is the skill of delivering ideas clearly and confidently to an audience. It's learnable — built on preparation, structure and practice rather than natural talent.",
+    points: [
+      "<strong>Know your audience:</strong> tailor the message to what they actually care about.",
+      "<strong>Structure:</strong> a clear opening, a few key points, and a memorable close.",
+      "<strong>Delivery:</strong> pace, pauses, eye contact and body language carry as much as words.",
+      "<strong>Manage nerves:</strong> preparation and slow breathing turn anxiety into energy."
+    ],
+    analogy: "A good talk is like a guided tour — you tell people where you're going, walk them through the highlights, and remind them what they saw at the end.",
+    qa: [
+      { q: "How do I stop being nervous?", a: "You channel it rather than erase it — rehearse out loud, breathe slowly, and focus on serving the audience instead of judging yourself." },
+      { q: "What's the most important part of a speech?", a: "A clear structure and a strong opening — if people grasp where you're taking them, they'll happily follow." }
+    ]
+  },
+  {
+    unit: "Unit 1 · Communication & Influence", icon: "🤝",
+    title: "Negotiation Skills",
+    lead: "Negotiation is the process of reaching agreement when two sides want different things. Done well, it looks for outcomes where both sides gain — not just a winner and a loser.",
+    points: [
+      "<strong>Prepare:</strong> know your goal, your limits, and your BATNA (best alternative if there's no deal).",
+      "<strong>Interests vs positions:</strong> ask <em>why</em> someone wants something to unlock creative solutions.",
+      "<strong>Win-win:</strong> expand the pie before dividing it — trade things that cost you little but help them a lot.",
+      "<strong>Listen more than you talk:</strong> information is leverage."
+    ],
+    analogy: "Two children fight over an orange and split it in half — but one wanted the juice and the other the peel. Negotiation is finding that hidden win-win by asking 'why'.",
+    qa: [
+      { q: "What is a BATNA?", a: "Your Best Alternative To a Negotiated Agreement — what you'll do if no deal happens. A strong BATNA gives you confidence and leverage." },
+      { q: "Is negotiation about winning?", a: "The best negotiations create value for both sides; pure win-lose deals often damage the relationship and future cooperation." }
+    ]
+  },
+  {
+    unit: "Unit 1 · Communication & Influence", icon: "💗",
+    title: "Emotional Intelligence",
+    lead: "Emotional intelligence (EQ) is the ability to recognise and manage your own emotions and to understand and influence the emotions of others. It often predicts success better than raw IQ.",
+    points: [
+      "<strong>Self-awareness:</strong> noticing what you feel and why, in the moment.",
+      "<strong>Self-regulation:</strong> choosing your response instead of reacting impulsively.",
+      "<strong>Empathy:</strong> sensing and understanding what other people are feeling.",
+      "<strong>Social skill:</strong> using all of the above to build trust and work well with others."
+    ],
+    analogy: "EQ is like being the calm driver in heavy traffic — aware of your own frustration, reading the other drivers, and responding smoothly instead of erupting in road rage.",
+    qa: [
+      { q: "Can emotional intelligence be improved?", a: "Yes — unlike IQ, EQ grows with practice: pausing before reacting, naming your feelings, and actively listening." },
+      { q: "Why does EQ matter at work?", a: "Almost all work involves people; managing emotions and reading others builds trust, defuses conflict and makes collaboration far easier." }
+    ]
+  },
+  {
+    unit: "Unit 1 · Communication & Influence", icon: "⚖️",
+    title: "Conflict Resolution",
+    lead: "Conflict resolution is the skill of turning disagreements into solutions without damaging relationships. Conflict is normal — handled well, it can even strengthen a team.",
+    points: [
+      "<strong>Stay calm &amp; curious:</strong> separate the person from the problem.",
+      "<strong>Listen to understand:</strong> let each side feel genuinely heard before proposing fixes.",
+      "<strong>Find common ground:</strong> focus on shared goals, not on who is right.",
+      "<strong>Agree on action:</strong> end with a concrete, fair next step both sides accept."
+    ],
+    analogy: "Picture two people pushing on opposite sides of a door. Conflict resolution is stepping back together to notice it actually slides — a solution neither saw while pushing.",
+    qa: [
+      { q: "What's the first step in resolving conflict?", a: "Calm down and listen — understanding each side's real concern matters more than immediately deciding who is right." },
+      { q: "Is avoiding conflict a good strategy?", a: "Occasionally, but chronic avoidance lets problems fester; addressing issues early and respectfully usually prevents bigger blow-ups." }
+    ]
+  },
+  {
+    unit: "Unit 2 · Personal Effectiveness", icon: "⏳",
+    title: "Time Management",
+    lead: "Time management is using your hours intentionally to get important things done without burning out. It's less about doing more and more about doing what matters.",
+    points: [
+      "<strong>Prioritise:</strong> separate urgent from important (the Eisenhower matrix helps).",
+      "<strong>Plan:</strong> a short daily plan beats a vague, ever-growing to-do pile.",
+      "<strong>Focus blocks:</strong> protect uninterrupted time for deep work; batch the small tasks.",
+      "<strong>Beat procrastination:</strong> shrink a big task into a tiny, easy first step."
+    ],
+    analogy: "Fill a jar with the big rocks first, then pebbles, then sand. Put the big rocks (priorities) in first — otherwise trivial 'sand' fills the day and leaves no room.",
+    qa: [
+      { q: "What's the difference between urgent and important?", a: "Urgent demands attention now; important moves your real goals. Spending all day on urgent-but-unimportant tasks is a classic trap." },
+      { q: "How do I stop procrastinating?", a: "Make the first step laughably small — 'open the document and write one line' — and momentum usually carries you forward." }
+    ]
+  },
+  {
+    unit: "Unit 2 · Personal Effectiveness", icon: "🧘",
+    title: "Stress Management",
+    lead: "Stress management is the set of habits that keep pressure at a healthy level so it energises rather than overwhelms you. Some stress is useful; chronic stress harms health and judgment.",
+    points: [
+      "<strong>Spot triggers:</strong> notice what reliably winds you up, and your early warning signs.",
+      "<strong>Body first:</strong> sleep, exercise and breathing reset the nervous system.",
+      "<strong>Reframe:</strong> focus on what you can control and let go of what you can't.",
+      "<strong>Recover:</strong> breaks, hobbies and connection refill your energy."
+    ],
+    analogy: "Stress is like a guitar string — too loose and it won't play; too tight and it snaps. Management keeps the tension in the sweet spot where it makes music.",
+    qa: [
+      { q: "Is all stress bad?", a: "No — short bursts ('eustress') sharpen focus and performance. The harm comes from stress that is intense and never switches off." },
+      { q: "What's a fast way to calm down?", a: "Slow your breathing — a few deep, slow exhales signal your body that the threat has passed and lower the stress response." }
+    ]
+  }
+];
+
+function renderLskTOC() {
+  var list = document.getElementById('lsk-toc-list');
+  if (!list) return;
+  var html = '';
+  var currentUnit = '';
+  LIFESKILLS_LESSONS.forEach(function(lesson, i) {
+    if (lesson.unit !== currentUnit) {
+      currentUnit = lesson.unit;
+      html += '<div class="fin-toc-unit">' + esc(lesson.unit) + '</div>';
+    }
+    html += '<div class="fin-toc-item' + (i === _activeLskIdx ? ' active' : '') + '" onclick="renderLskLesson(' + i + ')" id="lsk-toc-' + i + '">'
+          + '<span style="margin-right:7px;">' + lesson.icon + '</span>' + esc(lesson.title)
+          + '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function renderLskLesson(idx) {
+  _activeLskIdx = idx;
+  var lesson = LIFESKILLS_LESSONS[idx];
+  if (!lesson) return;
+
+  var pct = ((idx + 1) / LIFESKILLS_LESSONS.length) * 100;
+  var pfill = document.getElementById('lsk-progress-fill');
+  if (pfill) pfill.style.width = pct + '%';
+
+  renderLskTOC();
+  var act = document.getElementById('lsk-toc-' + idx);
+  if (act && act.scrollIntoView) act.scrollIntoView({ behavior:'smooth', block:'center' });
+
+  var html = '<div class="fin-lesson-num">LESSON ' + (idx+1) + ' OF ' + LIFESKILLS_LESSONS.length + '</div>';
+  html += '<h1 class="fin-lesson-title">' + esc(lesson.title) + '</h1>';
+  if (lesson.lead) html += '<div class="fin-lesson-lead">' + lesson.lead + '</div>';
+
+  if (lesson.points && lesson.points.length > 0) {
+    html += '<div class="fin-section-title">Key Concepts</div><ul class="fin-key-points">';
+    lesson.points.forEach(function(pt) { html += '<li>' + pt + '</li>'; });
+    html += '</ul>';
+  }
+
+  if (lesson.analogy) {
+    html += '<div class="fin-analogy-box"><div class="fin-analogy-title">💡 The Intuition</div><div class="fin-analogy-text">' + esc(lesson.analogy) + '</div></div>';
+  }
+
+  if (lesson.qa && lesson.qa.length > 0) {
+    html += '<div class="fin-qa-section"><div class="fin-section-title">Common Questions</div>';
+    lesson.qa.forEach(function(item, qidx) {
+      var uniq = 'lsk-q-' + idx + '-' + qidx;
+      html += '<div class="fin-qa-item" id="' + uniq + '">'
+            + '<div class="fin-qa-q" onclick="document.getElementById(\'' + uniq + '\').classList.toggle(\'open\')">'
+            + '<span>' + esc(item.q) + '</span>'
+            + '<svg class="fin-qa-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>'
+            + '</div><div class="fin-qa-a">' + item.a + '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  var prevDisabled = (idx === 0) ? ' disabled' : '';
+  var nextDisabled = (idx === LIFESKILLS_LESSONS.length - 1) ? ' disabled' : '';
+  html += '<div class="fin-nav-row">'
+        + '<button class="fin-nav-btn"' + prevDisabled + ' onclick="renderLskLesson(' + (idx-1) + ')">&#8592; Previous</button>'
+        + '<button class="fin-nav-btn primary"' + nextDisabled + ' onclick="renderLskLesson(' + (idx+1) + ')">Next &#8594;</button>'
+        + '</div>';
+
+  var contentDiv = document.getElementById('lsk-lesson-content');
+  if (contentDiv) contentDiv.innerHTML = html;
+  var mainDiv = document.getElementById('lsk-main');
   if (mainDiv) mainDiv.scrollTop = 0;
 }
 
