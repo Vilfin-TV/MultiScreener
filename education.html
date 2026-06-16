@@ -964,16 +964,16 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
           <div class="subject-title">Emerging Technologies</div>
         </div>
         <div class="subject-links">
-          <a href="#" onclick="return false; alert('Coming Soon');">Cloud Computing</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Data Engineering</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Blockchain</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Cryptocurrency</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Internet of Things (IoT)</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Quantum Computing</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Augmented &amp; Virtual Reality (AR/VR)</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Edge Computing</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">5G &amp; Next-Gen Connectivity</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Autonomous Systems</a>
+          <a href="#" onclick="openEmergingLesson(0); return false;">Cloud Computing</a>
+          <a href="#" onclick="openEmergingLesson(2); return false;">Data Engineering</a>
+          <a href="#" onclick="openEmergingLesson(3); return false;">Blockchain</a>
+          <a href="#" onclick="openEmergingLesson(4); return false;">Cryptocurrency</a>
+          <a href="#" onclick="openEmergingLesson(5); return false;">Internet of Things (IoT)</a>
+          <a href="#" onclick="openEmergingLesson(7); return false;">Quantum Computing</a>
+          <a href="#" onclick="openEmergingLesson(8); return false;">Augmented &amp; Virtual Reality (AR/VR)</a>
+          <a href="#" onclick="openEmergingLesson(1); return false;">Edge Computing</a>
+          <a href="#" onclick="openEmergingLesson(6); return false;">5G &amp; Next-Gen Connectivity</a>
+          <a href="#" onclick="openEmergingLesson(9); return false;">Autonomous Systems</a>
         </div>
       </div>
 
@@ -1468,6 +1468,22 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
       </div>
     </div>
 
+    <!-- ── EMERGING TECHNOLOGIES ── -->
+    <div id="emerging-content-area" style="display:none;">
+      <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">🚀 Emerging Technologies</h2>
+      <p style="margin:0 0 20px; font-size:14px; color:var(--text2);">10-lesson course · Teaching-style · Simple language</p>
+      <div class="fin-layout">
+        <aside class="fin-toc" id="emrg-toc">
+          <div class="fin-toc-header">📚 Course Outline</div>
+          <div class="fin-toc-list" id="emrg-toc-list"></div>
+        </aside>
+        <div class="fin-main" id="emrg-main">
+          <div class="fin-progress-bar"><div class="fin-progress-fill" id="emrg-progress-fill" style="width:10%"></div></div>
+          <div id="emrg-lesson-content"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── AI & ROBOTICS ── -->
     <div id="ai-content-area" style="display:none;">
       <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">🤖 AI &amp; Robotics</h2>
@@ -1545,6 +1561,8 @@ function _hideAllLessonAreas() {
   document.getElementById('finlit-content-area').style.display = 'none';
   document.getElementById('career-content-area').style.display = 'none';
   document.getElementById('growth-content-area').style.display = 'none';
+  var _emrg = document.getElementById('emerging-content-area');
+  if (_emrg) _emrg.style.display = 'none';
 }
 
 function openCbseLesson(subject, classNum) {
@@ -1735,6 +1753,20 @@ function openProgrammingLesson(startIdx) {
   if (typeof renderProgrammingLesson === 'function') renderProgrammingLesson(_activeProgrammingIdx);
   document.getElementById('lesson-view-container').scrollTop = 0;
   try { history.replaceState(null, '', '?subject=programming'); } catch(e){}
+}
+
+function openEmergingLesson(startIdx) {
+  document.getElementById('hero-section').style.display = 'none';
+  document.getElementById('subjects-section').style.display = 'none';
+  document.getElementById('lesson-view-container').style.display = 'block';
+  _hideAllLessonAreas();
+  document.getElementById('emerging-content-area').style.display = 'block';
+  _activeHub = 'emerging';
+  _activeEmergingIdx = (typeof startIdx === 'number') ? startIdx : 0;
+  if (typeof renderEmergingTOC === 'function') renderEmergingTOC();
+  if (typeof renderEmergingLesson === 'function') renderEmergingLesson(_activeEmergingIdx);
+  document.getElementById('lesson-view-container').scrollTop = 0;
+  try { history.replaceState(null, '', '?subject=emerging'); } catch(e){}
 }
 
 var _activeAiIdx = 0;
@@ -8187,6 +8219,244 @@ function renderProgrammingLesson(idx) {
   if (contentDiv) contentDiv.innerHTML = html;
   
   var mainDiv = document.getElementById('prog-main');
+  if (mainDiv) mainDiv.scrollTop = 0;
+}
+
+
+// ═══════════════════════════════════════
+// EMERGING TECHNOLOGIES — DATA + RENDER
+// ═══════════════════════════════════════
+var _activeEmergingIdx = 0;
+var EMERGING_LESSONS = [
+  {
+    unit: "Unit 1 · Cloud & Data Infrastructure", icon: "🌩️",
+    title: "Cloud Computing",
+    lead: "Cloud computing means renting computing power — servers, storage, databases and software — over the internet instead of owning and running your own machines. Providers like AWS, Microsoft Azure and Google Cloud operate giant data centres and let you use exactly what you need, paying only for what you consume.",
+    points: [
+      "<strong>Service models:</strong> IaaS (raw servers &amp; storage), PaaS (a managed platform to run code), and SaaS (ready-to-use apps like Gmail).",
+      "<strong>Deployment:</strong> public cloud (shared), private cloud (dedicated), and hybrid (a mix of both).",
+      "<strong>Elasticity:</strong> capacity scales up during a traffic spike and back down afterwards, so you never over-buy hardware.",
+      "<strong>Pay-as-you-go:</strong> costs shift from a big upfront purchase (CapEx) to a metered monthly bill (OpEx)."
+    ],
+    analogy: "Think of electricity. You do not build a power plant in your basement — you plug into the grid and pay for the units you use. Cloud computing is the same idea for computing power.",
+    qa: [
+      { q: "Is the cloud just 'someone else's computer'?", a: "Essentially yes — but with automation, global reach, security and scaling that would be enormously expensive to build yourself." },
+      { q: "Why do companies move to the cloud?", a: "To avoid buying hardware, launch faster, scale instantly with demand, and only pay for what they actually use." }
+    ]
+  },
+  {
+    unit: "Unit 1 · Cloud & Data Infrastructure", icon: "📡",
+    title: "Edge Computing",
+    lead: "Edge computing processes data close to where it is created — on or near the device — instead of sending everything to a distant cloud data centre. This cuts the round-trip delay (latency) and reduces the amount of data that must travel across the network.",
+    points: [
+      "<strong>Low latency:</strong> decisions happen in milliseconds — vital for self-driving cars, robotics and AR.",
+      "<strong>Bandwidth saving:</strong> only useful results are sent to the cloud, not every raw sensor reading.",
+      "<strong>Resilience:</strong> devices keep working even when the internet connection drops.",
+      "<strong>Edge + cloud:</strong> the edge handles real-time work; the cloud handles heavy training, storage and analytics."
+    ],
+    analogy: "Your brain doesn't ask permission before pulling your hand off a hot stove — a reflex acts locally. Edge computing gives machines that same instant local reflex.",
+    qa: [
+      { q: "Does edge computing replace the cloud?", a: "No — they work together. The edge handles instant local decisions; the cloud handles big-picture storage, training and coordination." },
+      { q: "Where is it used?", a: "Smart cameras, factory sensors, autonomous vehicles, smart speakers and AR/VR headsets." }
+    ]
+  },
+  {
+    unit: "Unit 1 · Cloud & Data Infrastructure", icon: "🛢️",
+    title: "Data Engineering",
+    lead: "Data engineering is the craft of building reliable 'plumbing' that moves data from many sources into clean, organised stores that analysts and machine-learning models can use. Without it, raw data is scattered, messy and unusable.",
+    points: [
+      "<strong>Pipelines:</strong> automated flows that Extract, Transform and Load data (ETL / ELT).",
+      "<strong>Warehouses vs lakes:</strong> warehouses store clean, structured tables; lakes store raw data of any type cheaply.",
+      "<strong>Batch vs streaming:</strong> process data in scheduled chunks, or continuously in real time.",
+      "<strong>Quality &amp; governance:</strong> validation, lineage and access control so the data is trustworthy."
+    ],
+    analogy: "A data engineer is a water utility for a city: they build the reservoirs, pipes and treatment plants so clean water (data) reaches every tap (dashboard or model) on demand.",
+    qa: [
+      { q: "How is it different from data science?", a: "Engineers build and maintain the systems that deliver clean data; scientists analyse that data to find insights and build models." },
+      { q: "What is a data pipeline?", a: "An automated sequence that collects data, cleans and reshapes it, and loads it into a store on a schedule or in real time." }
+    ]
+  },
+  {
+    unit: "Unit 2 · Decentralized & Connected Systems", icon: "⛓️",
+    title: "Blockchain",
+    lead: "A blockchain is a shared digital ledger copied across many computers, where records are grouped into blocks and chained together with cryptography. Once written, a record is extremely hard to change — and no single party controls it.",
+    points: [
+      "<strong>Distributed:</strong> every participant holds a copy, so there is no single point of failure or control.",
+      "<strong>Immutable:</strong> each block is cryptographically linked to the previous one, so tampering is easily detected.",
+      "<strong>Consensus:</strong> the network agrees on the truth using rules like Proof of Work or Proof of Stake.",
+      "<strong>Smart contracts:</strong> self-executing code that runs automatically when agreed conditions are met."
+    ],
+    analogy: "Imagine a shared notebook that thousands of people each hold an identical copy of. To fake an entry you'd have to alter every copy at once — practically impossible. That tamper-resistance is the whole point.",
+    qa: [
+      { q: "Is blockchain only for cryptocurrency?", a: "No. It is also used for supply-chain tracking, digital identity, record-keeping and contracts — anywhere trust between parties is needed without a middleman." },
+      { q: "What makes it secure?", a: "Cryptographic linking of blocks plus distributed copies and consensus rules make altering history detectable and impractical." }
+    ]
+  },
+  {
+    unit: "Unit 2 · Decentralized & Connected Systems", icon: "🪙",
+    title: "Cryptocurrency",
+    lead: "Cryptocurrency is digital money that lives on a blockchain and is secured by cryptography rather than issued by a central bank. Transactions are verified by a decentralized network instead of a single trusted authority.",
+    points: [
+      "<strong>Decentralized:</strong> no central bank or government issues or controls it.",
+      "<strong>Wallets &amp; keys:</strong> a public key is your address; a private key proves ownership — lose it and the funds are gone.",
+      "<strong>Bitcoin vs altcoins:</strong> Bitcoin is digital 'gold'; others like Ethereum add programmable smart contracts.",
+      "<strong>Volatility &amp; risk:</strong> prices can swing sharply, and transactions are generally irreversible."
+    ],
+    analogy: "Think of physical cash: whoever holds it can spend it, and there's no bank in the middle. Crypto is cash for the internet — but your 'wallet' is protected by a secret key only you should know.",
+    qa: [
+      { q: "Is cryptocurrency the same as blockchain?", a: "No — blockchain is the underlying ledger technology; cryptocurrency is one application that runs on it." },
+      { q: "Why is it considered risky?", a: "Prices are highly volatile, transactions are irreversible, and losing your private key means losing access permanently. This is educational information, not financial advice." }
+    ]
+  },
+  {
+    unit: "Unit 2 · Decentralized & Connected Systems", icon: "🌐",
+    title: "Internet of Things (IoT)",
+    lead: "The Internet of Things is the network of everyday physical objects — thermostats, watches, cars, factory machines — fitted with sensors and connectivity so they can collect data and act on it. Billions of these devices now talk to each other and to the cloud.",
+    points: [
+      "<strong>Sense → send → act:</strong> a sensor reads the world, sends data over a network, and an action follows.",
+      "<strong>Connectivity:</strong> Wi-Fi, Bluetooth, cellular and low-power radios link devices to the internet.",
+      "<strong>Smart everything:</strong> homes, cities, farms, hospitals and factories use IoT to automate and optimise.",
+      "<strong>Security matters:</strong> millions of weakly-protected devices are a tempting target for attackers."
+    ],
+    analogy: "Imagine if every object in your home could whisper what it senses — the fridge noting it's low on milk, the door reporting it's unlocked. IoT gives ordinary things a voice and a connection.",
+    qa: [
+      { q: "What's a simple IoT example?", a: "A smart thermostat that senses room temperature, learns your routine, and adjusts heating automatically — all controllable from your phone." },
+      { q: "Why is IoT security a concern?", a: "Each connected device is a potential entry point; weak default passwords and rare updates make many of them easy to compromise." }
+    ]
+  },
+  {
+    unit: "Unit 2 · Decentralized & Connected Systems", icon: "📶",
+    title: "5G & Next-Gen Connectivity",
+    lead: "5G is the fifth generation of mobile networks, offering much faster speeds, far lower latency and the ability to connect a massive number of devices at once. It is the backbone that makes real-time IoT, AR and autonomous systems practical at scale.",
+    points: [
+      "<strong>Speed:</strong> multi-gigabit downloads — many times faster than 4G.",
+      "<strong>Ultra-low latency:</strong> near-instant response enables remote surgery, gaming and vehicle coordination.",
+      "<strong>Massive connectivity:</strong> supports huge numbers of devices per square kilometre for dense IoT.",
+      "<strong>Network slicing:</strong> one physical network is split into virtual 'lanes' tuned for different needs."
+    ],
+    analogy: "If 4G is a busy two-lane road, 5G is a multi-lane motorway with express lanes — more vehicles, far higher speed, and almost no waiting at the on-ramp.",
+    qa: [
+      { q: "Is 5G only about faster phones?", a: "No — its biggest impact is enabling low-latency, high-density use cases: smart factories, connected vehicles and real-time IoT." },
+      { q: "What comes after 5G?", a: "Research on 6G is already underway, aiming for even lower latency and tighter integration of sensing, AI and communication." }
+    ]
+  },
+  {
+    unit: "Unit 3 · Frontier Computing & Autonomy", icon: "⚛️",
+    title: "Quantum Computing",
+    lead: "Quantum computing uses the strange rules of quantum physics to process information in fundamentally new ways. Instead of bits that are strictly 0 or 1, it uses qubits that can represent many possibilities at once, letting certain problems be explored far faster.",
+    points: [
+      "<strong>Qubits:</strong> the basic unit — can exist in a blend of 0 and 1 at the same time (superposition).",
+      "<strong>Entanglement:</strong> qubits can be linked so that one instantly reflects the state of another.",
+      "<strong>Where it helps:</strong> drug discovery, materials science, optimisation and cryptography — not everyday tasks.",
+      "<strong>Still early:</strong> today's machines are fragile, error-prone and need extreme cooling."
+    ],
+    analogy: "A classical computer searching a maze tries one path at a time. A quantum computer can, in a sense, explore many paths at once — a profound advantage for a special class of problems.",
+    qa: [
+      { q: "Will quantum computers replace my laptop?", a: "No. They excel at a narrow set of hard problems; classical computers remain better and cheaper for everyday work." },
+      { q: "Why is it hard to build?", a: "Qubits are extremely sensitive to noise and heat, so they must be isolated and cooled to near absolute zero, and errors are difficult to correct." }
+    ]
+  },
+  {
+    unit: "Unit 3 · Frontier Computing & Autonomy", icon: "🕶️",
+    title: "Augmented & Virtual Reality (AR/VR)",
+    lead: "Virtual Reality (VR) immerses you in a fully computer-generated world, while Augmented Reality (AR) overlays digital content onto the real world you can still see. Together they reshape how we learn, work, play and collaborate.",
+    points: [
+      "<strong>VR:</strong> a headset replaces your view entirely with a simulated environment.",
+      "<strong>AR:</strong> digital objects are layered onto reality through a phone or transparent glasses.",
+      "<strong>Mixed Reality (MR):</strong> virtual objects interact with real surroundings in real time.",
+      "<strong>Uses:</strong> training, design, surgery rehearsal, education, remote collaboration and gaming."
+    ],
+    analogy: "VR is like stepping through a doorway into another world; AR is like having helpful sticky notes and holograms float over the real world in front of you.",
+    qa: [
+      { q: "What's the difference between AR and VR?", a: "VR replaces your reality with a virtual one; AR adds digital layers on top of the real world you can still see." },
+      { q: "Is it only for gaming?", a: "No — it's widely used for industrial training, medical practice, architecture, education and remote teamwork." }
+    ]
+  },
+  {
+    unit: "Unit 3 · Frontier Computing & Autonomy", icon: "🤖",
+    title: "Autonomous Systems",
+    lead: "Autonomous systems are machines that sense their environment, make decisions and act with little or no human control — from self-driving cars and delivery drones to warehouse robots. They combine sensors, AI and real-time computing to operate on their own.",
+    points: [
+      "<strong>Sense–plan–act loop:</strong> perceive surroundings, decide what to do, then carry it out — continuously.",
+      "<strong>Sensor fusion:</strong> cameras, radar, lidar and GPS are combined for a reliable picture of the world.",
+      "<strong>Levels of autonomy:</strong> from driver-assist features up to full self-operation with no human input.",
+      "<strong>Safety &amp; ethics:</strong> reliability, accountability and decision-making in edge cases are central challenges."
+    ],
+    analogy: "An autonomous system is like a careful human driver compressed into software: eyes (sensors), judgement (AI) and hands on the wheel (actuators) — all working together many times per second.",
+    qa: [
+      { q: "Are autonomous systems fully driverless today?", a: "Most operate at partial autonomy with human oversight; full, go-anywhere autonomy is still being proven and regulated." },
+      { q: "What technologies power them?", a: "A blend of sensors (camera, radar, lidar), AI models for perception and planning, and edge computing for instant decisions." }
+    ]
+  }
+];
+
+function renderEmergingTOC() {
+  var list = document.getElementById('emrg-toc-list');
+  if (!list) return;
+  var html = '';
+  var currentUnit = '';
+  EMERGING_LESSONS.forEach(function(lesson, i) {
+    if (lesson.unit !== currentUnit) {
+      currentUnit = lesson.unit;
+      html += '<div class="fin-toc-unit">' + esc(lesson.unit) + '</div>';
+    }
+    html += '<div class="fin-toc-item' + (i === _activeEmergingIdx ? ' active' : '') + '" onclick="renderEmergingLesson(' + i + ')" id="emrg-toc-' + i + '">'
+          + '<span style="margin-right:7px;">' + lesson.icon + '</span>' + esc(lesson.title)
+          + '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function renderEmergingLesson(idx) {
+  _activeEmergingIdx = idx;
+  var lesson = EMERGING_LESSONS[idx];
+  if (!lesson) return;
+
+  var pct = ((idx + 1) / EMERGING_LESSONS.length) * 100;
+  var pfill = document.getElementById('emrg-progress-fill');
+  if (pfill) pfill.style.width = pct + '%';
+
+  renderEmergingTOC();
+  var act = document.getElementById('emrg-toc-' + idx);
+  if (act && act.scrollIntoView) act.scrollIntoView({ behavior:'smooth', block:'center' });
+
+  var html = '<div class="fin-lesson-num">LESSON ' + (idx+1) + ' OF ' + EMERGING_LESSONS.length + '</div>';
+  html += '<h1 class="fin-lesson-title">' + esc(lesson.title) + '</h1>';
+  if (lesson.lead) html += '<div class="fin-lesson-lead">' + lesson.lead + '</div>';
+
+  if (lesson.points && lesson.points.length > 0) {
+    html += '<div class="fin-section-title">Key Concepts</div><ul class="fin-key-points">';
+    lesson.points.forEach(function(pt) { html += '<li>' + pt + '</li>'; });
+    html += '</ul>';
+  }
+
+  if (lesson.analogy) {
+    html += '<div class="fin-analogy-box"><div class="fin-analogy-title">💡 The Intuition</div><div class="fin-analogy-text">' + esc(lesson.analogy) + '</div></div>';
+  }
+
+  if (lesson.qa && lesson.qa.length > 0) {
+    html += '<div class="fin-qa-section"><div class="fin-section-title">Common Questions</div>';
+    lesson.qa.forEach(function(item, qidx) {
+      var uniq = 'emrg-q-' + idx + '-' + qidx;
+      html += '<div class="fin-qa-item" id="' + uniq + '">'
+            + '<div class="fin-qa-q" onclick="document.getElementById(\'' + uniq + '\').classList.toggle(\'open\')">'
+            + '<span>' + esc(item.q) + '</span>'
+            + '<svg class="fin-qa-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>'
+            + '</div><div class="fin-qa-a">' + item.a + '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  var prevDisabled = (idx === 0) ? ' disabled' : '';
+  var nextDisabled = (idx === EMERGING_LESSONS.length - 1) ? ' disabled' : '';
+  html += '<div class="fin-nav-row">'
+        + '<button class="fin-nav-btn"' + prevDisabled + ' onclick="renderEmergingLesson(' + (idx-1) + ')">&#8592; Previous</button>'
+        + '<button class="fin-nav-btn primary"' + nextDisabled + ' onclick="renderEmergingLesson(' + (idx+1) + ')">Next &#8594;</button>'
+        + '</div>';
+
+  var contentDiv = document.getElementById('emrg-lesson-content');
+  if (contentDiv) contentDiv.innerHTML = html;
+  var mainDiv = document.getElementById('emrg-main');
   if (mainDiv) mainDiv.scrollTop = 0;
 }
 
