@@ -398,48 +398,47 @@ body{
 .news-hero-close:hover{background:rgba(255,255,255,.16);color:var(--text);border-color:var(--text3)}
 
 /* ═══════════════════════════════════════════════════
-   SEARCH SECTION — relocated below the hero
+   HERO LAYOUT — title block (left) + compact search (right)
 ═══════════════════════════════════════════════════ */
-.news-search-section{
-  background:var(--dark2);
-  border-bottom:1px solid var(--border);
+.news-page-hero-inner{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:28px;
 }
-.news-search-inner{
-  max-width:760px;margin:0 auto;padding:16px 24px;
-}
-.news-search-section .news-search-box{
+.news-page-hero-main{flex:1;min-width:0}
+.news-hero-search{flex-shrink:0;width:300px;max-width:34%;margin-top:6px}
+.news-hero-search .news-search-box{
   position:relative;display:flex;align-items:center;width:100%;
 }
-.news-search-section .news-search-icon-svg{
-  position:absolute;left:14px;color:var(--text3);pointer-events:none;
+.news-hero-search .news-search-icon-svg{
+  position:absolute;left:12px;color:var(--text3);pointer-events:none;
 }
-.news-search-section .news-search-input{
+.news-hero-search .news-search-input{
   width:100%;
   background:var(--card2);
   border:1px solid var(--border2);
-  border-radius:12px;
-  padding:12px 42px 12px 42px;
-  color:var(--text);font-size:15px;
+  border-radius:10px;
+  padding:9px 34px 9px 36px;
+  color:var(--text);font-size:13.5px;
   font-family:'DM Sans',-apple-system,sans-serif;
   outline:none;letter-spacing:.2px;
   transition:background .2s,border-color .2s,box-shadow .2s;
 }
-.news-search-section .news-search-input::placeholder{color:var(--text3)}
-.news-search-section .news-search-input:focus{
+.news-hero-search .news-search-input::placeholder{color:var(--text3)}
+.news-hero-search .news-search-input:focus{
   background:var(--card);
   border-color:var(--burn2,#3b82f6);
   box-shadow:0 0 0 3px rgba(59,130,246,.16);
 }
-.news-search-section .news-search-clear{
-  position:absolute;right:12px;
+.news-hero-search .news-search-clear{
+  position:absolute;right:9px;
   background:none;border:none;cursor:pointer;
-  color:var(--text3);font-size:15px;line-height:1;
-  padding:4px 6px;border-radius:6px;transition:color .15s;display:none;
+  color:var(--text3);font-size:14px;line-height:1;
+  padding:3px 5px;border-radius:6px;transition:color .15s;display:none;
 }
-.news-search-section .news-search-clear:hover{color:var(--text)}
+.news-hero-search .news-search-clear:hover{color:var(--text)}
 @media(max-width:768px){
-  .news-search-inner{padding:12px 14px}
-  .news-search-section .news-search-input{font-size:14px;padding:11px 40px 11px 40px}
+  .news-page-hero-inner{flex-direction:column;gap:14px}
+  .news-hero-search{width:100%;max-width:none;margin-top:0}
+  .news-hero-search .news-search-input{font-size:14px;padding:11px 38px 11px 38px}
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2015,41 +2014,38 @@ footer.news-footer{
 </nav>
 
 <!-- ══════════════════════════════════════════
-     SEARCH SECTION (directly below the nav tab bar)
-══════════════════════════════════════════ -->
-<div class="news-search-section">
-  <div class="news-search-inner">
-    <div class="news-search-box">
-      <svg class="news-search-icon-svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" class="news-search-input" id="news-search-input"
-             placeholder="Search all stories…" autocomplete="off" spellcheck="false"
-             aria-label="Search news stories"/>
-      <button class="news-search-clear" id="news-search-clear" onclick="clearSearch()" title="Clear search" aria-label="Clear search">✕</button>
-    </div>
-  </div>
-  <!-- Search results banner (shown when query active) -->
-  <div class="search-results-bar" id="search-results-bar" role="status" aria-live="polite">
-    <span id="search-results-text"></span>
-    <button class="search-clear-btn" onclick="clearSearch()">Clear</button>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     PAGE HERO
+     PAGE HERO — title block (left) + compact search (right)
 ══════════════════════════════════════════ -->
 <div class="news-page-hero" id="news-page-hero">
   <div class="news-page-hero-inner">
-    <div class="news-page-titlewrap">
-      <img class="news-page-logo" src="images/vilfintv-logo.jpg" width="58" height="58" alt="VilfinTV News logo" style="border-radius:50%">
-      <h1 class="news-page-title">VilfinTV News</h1>
+    <div class="news-page-hero-main">
+      <div class="news-page-titlewrap">
+        <img class="news-page-logo" src="images/vilfintv-logo.jpg" width="58" height="58" alt="VilfinTV News logo" style="border-radius:50%">
+        <h1 class="news-page-title">VilfinTV News</h1>
+      </div>
+      <p class="news-page-subtitle">Your live intelligence briefing — Breaking News, Trending stories, Global &amp; World Affairs, India News, Stock &amp; Markets, Sports, Science, Technology, Space, Fashion, Movies and Malayalam coverage, refreshed around the clock.</p>
+      <div class="news-page-meta">
+        <div class="news-page-meta-chip">📅 <span id="local-date">—</span></div>
+        <div class="news-page-meta-chip">🕒 <span id="local-time">—</span></div>
+        <div class="news-page-meta-chip" id="local-weather-chip"><span id="local-weather">—</span></div>
+      </div>
     </div>
-    <p class="news-page-subtitle">Your live intelligence briefing — Breaking News, Trending stories, Global &amp; World Affairs, India News, Stock &amp; Markets, Sports, Science, Technology, Space, Fashion, Movies and Malayalam coverage, refreshed around the clock.</p>
-    <div class="news-page-meta">
-      <div class="news-page-meta-chip">📅 <span id="local-date">—</span></div>
-      <div class="news-page-meta-chip">🕒 <span id="local-time">—</span></div>
-      <div class="news-page-meta-chip" id="local-weather-chip"><span id="local-weather">—</span></div>
+    <div class="news-hero-search">
+      <div class="news-search-box">
+        <svg class="news-search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" class="news-search-input" id="news-search-input"
+               placeholder="Search stories…" autocomplete="off" spellcheck="false"
+               aria-label="Search news stories"/>
+        <button class="news-search-clear" id="news-search-clear" onclick="clearSearch()" title="Clear search" aria-label="Clear search">✕</button>
+      </div>
     </div>
   </div>
+</div>
+
+<!-- Search results banner (full-width, shown when a query is active) -->
+<div class="search-results-bar" id="search-results-bar" role="status" aria-live="polite">
+  <span id="search-results-text"></span>
+  <button class="search-clear-btn" onclick="clearSearch()">Clear</button>
 </div>
 
 <!-- ══════════════════════════════════════════
