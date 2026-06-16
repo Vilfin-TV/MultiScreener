@@ -923,15 +923,15 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
           <a href="#" onclick="openProgrammingLesson(0); return false;">Programming Basics</a>
           <a href="#" onclick="openWebLesson(0); return false;">Web Development</a>
           <a href="#" onclick="openInfoLesson(0); return false;">Information Theory</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Computer Hardware</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Operating System</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Database Management Systems</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Data Science</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Computer Graphics and Game Development</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Computer Network</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Cybersecurity</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Human-Computer Interaction (HCI)</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Software Engineering</a>
+          <a href="#" onclick="openCsLesson(0); return false;">Computer Hardware</a>
+          <a href="#" onclick="openCsLesson(1); return false;">Operating System</a>
+          <a href="#" onclick="openCsLesson(3); return false;">Database Management Systems</a>
+          <a href="#" onclick="openCsLesson(4); return false;">Data Science</a>
+          <a href="#" onclick="openCsLesson(7); return false;">Computer Graphics and Game Development</a>
+          <a href="#" onclick="openCsLesson(2); return false;">Computer Network</a>
+          <a href="#" onclick="openCsLesson(5); return false;">Cybersecurity</a>
+          <a href="#" onclick="openCsLesson(8); return false;">Human-Computer Interaction (HCI)</a>
+          <a href="#" onclick="openCsLesson(6); return false;">Software Engineering</a>
         </div>
       </div>
 
@@ -1484,6 +1484,22 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
       </div>
     </div>
 
+    <!-- ── COMPUTER SCIENCE (Core) ── -->
+    <div id="cs-content-area" style="display:none;">
+      <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">💻 Computer Science</h2>
+      <p style="margin:0 0 20px; font-size:14px; color:var(--text2);">9-lesson course · Teaching-style · Simple language</p>
+      <div class="fin-layout">
+        <aside class="fin-toc" id="cs-toc">
+          <div class="fin-toc-header">📚 Course Outline</div>
+          <div class="fin-toc-list" id="cs-toc-list"></div>
+        </aside>
+        <div class="fin-main" id="cs-main">
+          <div class="fin-progress-bar"><div class="fin-progress-fill" id="cs-progress-fill" style="width:11%"></div></div>
+          <div id="cs-lesson-content"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── AEROSPACE ENGINEERING ── -->
     <div id="aerospace-content-area" style="display:none;">
       <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">🛰️ Aerospace Engineering</h2>
@@ -1581,6 +1597,8 @@ function _hideAllLessonAreas() {
   if (_emrg) _emrg.style.display = 'none';
   var _aero = document.getElementById('aerospace-content-area');
   if (_aero) _aero.style.display = 'none';
+  var _cs = document.getElementById('cs-content-area');
+  if (_cs) _cs.style.display = 'none';
 }
 
 function openCbseLesson(subject, classNum) {
@@ -1799,6 +1817,20 @@ function openAerospaceLesson(startIdx) {
   if (typeof renderAerospaceLesson === 'function') renderAerospaceLesson(_activeAerospaceIdx);
   document.getElementById('lesson-view-container').scrollTop = 0;
   try { history.replaceState(null, '', '?subject=aerospace'); } catch(e){}
+}
+
+function openCsLesson(startIdx) {
+  document.getElementById('hero-section').style.display = 'none';
+  document.getElementById('subjects-section').style.display = 'none';
+  document.getElementById('lesson-view-container').style.display = 'block';
+  _hideAllLessonAreas();
+  document.getElementById('cs-content-area').style.display = 'block';
+  _activeHub = 'cs';
+  _activeCsIdx = (typeof startIdx === 'number') ? startIdx : 0;
+  if (typeof renderCsTOC === 'function') renderCsTOC();
+  if (typeof renderCsLesson === 'function') renderCsLesson(_activeCsIdx);
+  document.getElementById('lesson-view-container').scrollTop = 0;
+  try { history.replaceState(null, '', '?subject=cs'); } catch(e){}
 }
 
 var _activeAiIdx = 0;
@@ -8727,6 +8759,228 @@ function renderAerospaceLesson(idx) {
   var contentDiv = document.getElementById('aero-lesson-content');
   if (contentDiv) contentDiv.innerHTML = html;
   var mainDiv = document.getElementById('aero-main');
+  if (mainDiv) mainDiv.scrollTop = 0;
+}
+
+
+// ═══════════════════════════════════════
+// COMPUTER SCIENCE (Core) — DATA + RENDER
+// ═══════════════════════════════════════
+var _activeCsIdx = 0;
+var CS_LESSONS = [
+  {
+    unit: "Unit 1 · Systems & Infrastructure", icon: "🖥️",
+    title: "Computer Hardware",
+    lead: "Hardware is the physical machinery of a computer — the parts you can touch. A handful of core components work together to store, move and process information.",
+    points: [
+      "<strong>CPU:</strong> the processor — the 'brain' that executes instructions, billions per second.",
+      "<strong>RAM:</strong> fast, temporary memory holding the data a program is using right now.",
+      "<strong>Storage:</strong> SSDs and hard drives keep data permanently, even when powered off.",
+      "<strong>Motherboard &amp; buses:</strong> the board and wiring that connect every component together."
+    ],
+    analogy: "Think of an office: the CPU is the worker, RAM is the desk (small but fast), storage is the filing cabinet (large but slower), and the motherboard is the wiring tying them together.",
+    qa: [
+      { q: "What's the difference between RAM and storage?", a: "RAM is fast temporary working memory that's wiped when power is lost; storage (SSD/HDD) keeps data permanently." },
+      { q: "What does the CPU do?", a: "It fetches and executes instructions — performing the calculations and logic that run every piece of software." }
+    ]
+  },
+  {
+    unit: "Unit 1 · Systems & Infrastructure", icon: "🧩",
+    title: "Operating System",
+    lead: "An operating system (OS) is the master software that manages a computer's hardware and runs your programs. Windows, macOS, Linux and Android are all operating systems.",
+    points: [
+      "<strong>Resource manager:</strong> shares the CPU, memory and devices among many programs at once.",
+      "<strong>Process &amp; memory management:</strong> decides which program runs when, and allocates memory.",
+      "<strong>File system:</strong> organizes data into files and folders on storage.",
+      "<strong>Abstraction:</strong> gives apps a simple, consistent way to use complex hardware."
+    ],
+    analogy: "The OS is like a building manager — assigning rooms (memory), scheduling shared facilities (CPU), and handling the plumbing (hardware) so tenants (apps) don't have to.",
+    qa: [
+      { q: "Why do we need an operating system?", a: "It manages hardware and lets multiple programs share resources safely, so each app doesn't have to control the machine directly." },
+      { q: "Is Android an operating system?", a: "Yes — it's a Linux-based operating system designed for mobile devices." }
+    ]
+  },
+  {
+    unit: "Unit 1 · Systems & Infrastructure", icon: "🌐",
+    title: "Computer Networks",
+    lead: "A computer network connects devices so they can share data. The internet is the largest network of all — billions of devices following common rules called protocols.",
+    points: [
+      "<strong>Protocols:</strong> agreed languages like TCP/IP, HTTP and DNS let different devices communicate.",
+      "<strong>Packets:</strong> data is split into small packets, routed independently, then reassembled.",
+      "<strong>IP &amp; DNS:</strong> IP addresses locate devices; DNS turns names into those addresses.",
+      "<strong>LAN vs WAN:</strong> local networks (home/office) vs wide-area networks spanning the globe."
+    ],
+    analogy: "Sending data is like mailing a long letter as many numbered postcards — each finds its own route, and they're reassembled in order on arrival.",
+    qa: [
+      { q: "What is a protocol?", a: "An agreed set of rules for how devices format and exchange data, so different machines can understand each other." },
+      { q: "What does DNS do?", a: "It translates human-friendly names (like a website address) into the numeric IP addresses computers use to connect." }
+    ]
+  },
+  {
+    unit: "Unit 2 · Data & Intelligence", icon: "🗃️",
+    title: "Database Management Systems",
+    lead: "A database management system (DBMS) is software for storing, organizing and retrieving large amounts of data reliably. Almost every app — banking, shopping, social media — runs on one.",
+    points: [
+      "<strong>Structured storage:</strong> data is organized so it can be searched and updated efficiently.",
+      "<strong>SQL vs NoSQL:</strong> relational tables (SQL) vs flexible document / key-value stores (NoSQL).",
+      "<strong>Queries:</strong> a query language like SQL asks precise questions of the data.",
+      "<strong>ACID:</strong> transactions are reliable — Atomic, Consistent, Isolated and Durable."
+    ],
+    analogy: "A DBMS is a hyper-organized librarian: it files millions of records and can instantly find, update or cross-reference exactly what you ask for.",
+    qa: [
+      { q: "What's the difference between SQL and NoSQL?", a: "SQL databases use structured tables with strict schemas; NoSQL databases store flexible, schema-light data like documents or key-value pairs." },
+      { q: "What does ACID mean?", a: "A guarantee that transactions are Atomic, Consistent, Isolated and Durable — so data stays correct even if something fails mid-operation." }
+    ]
+  },
+  {
+    unit: "Unit 2 · Data & Intelligence", icon: "📊",
+    title: "Data Science",
+    lead: "Data science turns raw data into insight and predictions using statistics, programming and visualization. It's how organisations spot trends, understand customers and build models.",
+    points: [
+      "<strong>The pipeline:</strong> collect → clean → explore → model → communicate.",
+      "<strong>Statistics &amp; ML:</strong> find patterns and make predictions from data.",
+      "<strong>Tools:</strong> Python, R and SQL, with libraries like pandas and scikit-learn.",
+      "<strong>Visualization:</strong> charts and dashboards turn numbers into understanding."
+    ],
+    analogy: "A data scientist is a detective: gathering clues (data), clearing away the noise, spotting patterns, and presenting a convincing story of what happened and what's likely next.",
+    qa: [
+      { q: "How is data science different from data engineering?", a: "Engineers build the pipelines that deliver clean data; data scientists analyze that data to find insights and build predictive models." },
+      { q: "Do I need machine learning to do data science?", a: "Not always — much of the work is careful cleaning, statistics and visualization; ML is one powerful tool among several." }
+    ]
+  },
+  {
+    unit: "Unit 2 · Data & Intelligence", icon: "🔒",
+    title: "Cybersecurity",
+    lead: "Cybersecurity is the practice of protecting systems, networks and data from attack, theft and damage. As more of life moves online, it has become essential for everyone.",
+    points: [
+      "<strong>CIA triad:</strong> protect the Confidentiality, Integrity and Availability of information.",
+      "<strong>Common threats:</strong> malware, phishing, ransomware and data breaches.",
+      "<strong>Defenses:</strong> encryption, firewalls, multi-factor authentication and timely updates.",
+      "<strong>Human factor:</strong> people are often the weakest link — awareness is a key defense."
+    ],
+    analogy: "Securing a system is like protecting a house: locks and alarms (firewalls, encryption), checking IDs at the door (authentication), and not falling for a stranger's trick to be let in (phishing).",
+    qa: [
+      { q: "What is phishing?", a: "A trick where attackers pose as someone trustworthy to fool you into revealing passwords or clicking malicious links." },
+      { q: "What is multi-factor authentication?", a: "Requiring two or more proofs of identity (e.g., a password plus a phone code), so a stolen password alone isn't enough." }
+    ]
+  },
+  {
+    unit: "Unit 3 · Building Software & Experiences", icon: "🛠️",
+    title: "Software Engineering",
+    lead: "Software engineering is the disciplined process of designing, building, testing and maintaining software so it's reliable and can grow. It's programming plus the practices that make it work at scale.",
+    points: [
+      "<strong>Lifecycle (SDLC):</strong> plan → design → build → test → deploy → maintain.",
+      "<strong>Version control:</strong> tools like Git track every change and let teams work together.",
+      "<strong>Testing &amp; quality:</strong> automated tests catch bugs before users do.",
+      "<strong>Agile &amp; teamwork:</strong> iterative delivery, code review and collaboration."
+    ],
+    analogy: "Coding is laying bricks; software engineering is being the architect and site manager too — planning, coordinating the crew, and ensuring the building is safe and lasts.",
+    qa: [
+      { q: "Isn't software engineering just coding?", a: "Coding is part of it; engineering adds design, testing, collaboration, version control and maintenance to build reliable systems at scale." },
+      { q: "What is version control?", a: "A system (like Git) that records every change to code, lets many people work in parallel, and can roll back mistakes." }
+    ]
+  },
+  {
+    unit: "Unit 3 · Building Software & Experiences", icon: "🎮",
+    title: "Computer Graphics & Game Development",
+    lead: "Computer graphics is the science of creating images with computers; game development applies it — plus logic, physics and design — to build interactive experiences. Both power films, games and simulations.",
+    points: [
+      "<strong>Rendering:</strong> turning 3D models into 2D images, frame by frame.",
+      "<strong>Game loop:</strong> continuously read input → update the world → draw the screen.",
+      "<strong>Engines:</strong> tools like Unity and Unreal provide physics, graphics and audio out of the box.",
+      "<strong>Beyond games:</strong> graphics also drive film VFX, CAD, medical imaging and simulation."
+    ],
+    analogy: "A game engine is like a film studio in a box — it provides the cameras, lighting, physics and stage so creators can focus on the story and gameplay.",
+    qa: [
+      { q: "What is a game engine?", a: "Software that bundles graphics, physics, audio and tools so developers can build games without writing every system from scratch." },
+      { q: "What does 'rendering' mean?", a: "Converting a 3D scene into the 2D image you see on screen, calculating light, colour and perspective." }
+    ]
+  },
+  {
+    unit: "Unit 3 · Building Software & Experiences", icon: "🖱️",
+    title: "Human-Computer Interaction (HCI)",
+    lead: "Human-Computer Interaction studies how people use technology and how to design interfaces that are easy, efficient and pleasant. Good HCI is why some apps feel effortless.",
+    points: [
+      "<strong>Usability:</strong> how easily and reliably people can accomplish their goals.",
+      "<strong>UX vs UI:</strong> UX is the overall experience; UI is the visual and interactive surface.",
+      "<strong>User-centered design:</strong> research, prototype, test with real users, then repeat.",
+      "<strong>Accessibility:</strong> designing so people with diverse abilities can use technology."
+    ],
+    analogy: "HCI is like designing a doorway — a well-made one needs no instructions; you just know whether to push or pull. Great interfaces are equally obvious.",
+    qa: [
+      { q: "What's the difference between UX and UI?", a: "UI is the look and controls (buttons, layout); UX is the whole experience of using the product, including how it feels and flows." },
+      { q: "Why does accessibility matter?", a: "Designing for diverse abilities makes technology usable by everyone — and usually improves the experience for all users." }
+    ]
+  }
+];
+
+function renderCsTOC() {
+  var list = document.getElementById('cs-toc-list');
+  if (!list) return;
+  var html = '';
+  var currentUnit = '';
+  CS_LESSONS.forEach(function(lesson, i) {
+    if (lesson.unit !== currentUnit) {
+      currentUnit = lesson.unit;
+      html += '<div class="fin-toc-unit">' + esc(lesson.unit) + '</div>';
+    }
+    html += '<div class="fin-toc-item' + (i === _activeCsIdx ? ' active' : '') + '" onclick="renderCsLesson(' + i + ')" id="cs-toc-' + i + '">'
+          + '<span style="margin-right:7px;">' + lesson.icon + '</span>' + esc(lesson.title)
+          + '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function renderCsLesson(idx) {
+  _activeCsIdx = idx;
+  var lesson = CS_LESSONS[idx];
+  if (!lesson) return;
+
+  var pct = ((idx + 1) / CS_LESSONS.length) * 100;
+  var pfill = document.getElementById('cs-progress-fill');
+  if (pfill) pfill.style.width = pct + '%';
+
+  renderCsTOC();
+  var act = document.getElementById('cs-toc-' + idx);
+  if (act && act.scrollIntoView) act.scrollIntoView({ behavior:'smooth', block:'center' });
+
+  var html = '<div class="fin-lesson-num">LESSON ' + (idx+1) + ' OF ' + CS_LESSONS.length + '</div>';
+  html += '<h1 class="fin-lesson-title">' + esc(lesson.title) + '</h1>';
+  if (lesson.lead) html += '<div class="fin-lesson-lead">' + lesson.lead + '</div>';
+
+  if (lesson.points && lesson.points.length > 0) {
+    html += '<div class="fin-section-title">Key Concepts</div><ul class="fin-key-points">';
+    lesson.points.forEach(function(pt) { html += '<li>' + pt + '</li>'; });
+    html += '</ul>';
+  }
+
+  if (lesson.analogy) {
+    html += '<div class="fin-analogy-box"><div class="fin-analogy-title">💡 The Intuition</div><div class="fin-analogy-text">' + esc(lesson.analogy) + '</div></div>';
+  }
+
+  if (lesson.qa && lesson.qa.length > 0) {
+    html += '<div class="fin-qa-section"><div class="fin-section-title">Common Questions</div>';
+    lesson.qa.forEach(function(item, qidx) {
+      var uniq = 'cs-q-' + idx + '-' + qidx;
+      html += '<div class="fin-qa-item" id="' + uniq + '">'
+            + '<div class="fin-qa-q" onclick="document.getElementById(\'' + uniq + '\').classList.toggle(\'open\')">'
+            + '<span>' + esc(item.q) + '</span>'
+            + '<svg class="fin-qa-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>'
+            + '</div><div class="fin-qa-a">' + item.a + '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  var prevDisabled = (idx === 0) ? ' disabled' : '';
+  var nextDisabled = (idx === CS_LESSONS.length - 1) ? ' disabled' : '';
+  html += '<div class="fin-nav-row">'
+        + '<button class="fin-nav-btn"' + prevDisabled + ' onclick="renderCsLesson(' + (idx-1) + ')">&#8592; Previous</button>'
+        + '<button class="fin-nav-btn primary"' + nextDisabled + ' onclick="renderCsLesson(' + (idx+1) + ')">Next &#8594;</button>'
+        + '</div>';
+
+  var contentDiv = document.getElementById('cs-lesson-content');
+  if (contentDiv) contentDiv.innerHTML = html;
+  var mainDiv = document.getElementById('cs-main');
   if (mainDiv) mainDiv.scrollTop = 0;
 }
 
