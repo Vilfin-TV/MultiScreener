@@ -2015,26 +2015,7 @@ footer.news-footer{
 </nav>
 
 <!-- ══════════════════════════════════════════
-     PAGE HERO
-══════════════════════════════════════════ -->
-<div class="news-page-hero" id="news-page-hero">
-  <button class="news-hero-close" onclick="dismissNewsHero()" title="Hide this banner" aria-label="Hide banner">✕</button>
-  <div class="news-page-hero-inner">
-    <div class="news-page-titlewrap">
-      <img class="news-page-logo" src="images/vilfintv-logo.jpg" width="58" height="58" alt="VilfinTV News logo" style="border-radius:50%">
-      <h1 class="news-page-title">VilfinTV News</h1>
-    </div>
-    <p class="news-page-subtitle">Your live intelligence briefing — Breaking News, Trending stories, Global &amp; World Affairs, India News, Stock &amp; Markets, Sports, Science, Technology, Space, Fashion, Movies and Malayalam coverage, refreshed around the clock.</p>
-    <div class="news-page-meta">
-      <div class="news-page-meta-chip">📅 <span id="local-date">—</span></div>
-      <div class="news-page-meta-chip">🕒 <span id="local-time">—</span></div>
-      <div class="news-page-meta-chip" id="local-weather-chip"><span id="local-weather">—</span></div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     SEARCH SECTION (moved below hero)
+     SEARCH SECTION (directly below the nav tab bar)
 ══════════════════════════════════════════ -->
 <div class="news-search-section">
   <div class="news-search-inner">
@@ -2050,6 +2031,24 @@ footer.news-footer{
   <div class="search-results-bar" id="search-results-bar" role="status" aria-live="polite">
     <span id="search-results-text"></span>
     <button class="search-clear-btn" onclick="clearSearch()">Clear</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE HERO
+══════════════════════════════════════════ -->
+<div class="news-page-hero" id="news-page-hero">
+  <div class="news-page-hero-inner">
+    <div class="news-page-titlewrap">
+      <img class="news-page-logo" src="images/vilfintv-logo.jpg" width="58" height="58" alt="VilfinTV News logo" style="border-radius:50%">
+      <h1 class="news-page-title">VilfinTV News</h1>
+    </div>
+    <p class="news-page-subtitle">Your live intelligence briefing — Breaking News, Trending stories, Global &amp; World Affairs, India News, Stock &amp; Markets, Sports, Science, Technology, Space, Fashion, Movies and Malayalam coverage, refreshed around the clock.</p>
+    <div class="news-page-meta">
+      <div class="news-page-meta-chip">📅 <span id="local-date">—</span></div>
+      <div class="news-page-meta-chip">🕒 <span id="local-time">—</span></div>
+      <div class="news-page-meta-chip" id="local-weather-chip"><span id="local-weather">—</span></div>
+    </div>
   </div>
 </div>
 
@@ -2841,23 +2840,9 @@ document.addEventListener('keydown', function(e) {
   });
 })();
 
-/* ═══════════════════════════════════════════════════
-   HERO DISMISS — close button hides the intro banner
-   (choice persisted so it stays hidden on return visits)
-═══════════════════════════════════════════════════ */
-function dismissNewsHero() {
-  var h = document.getElementById('news-page-hero');
-  if (h) h.style.display = 'none';
-  try { localStorage.setItem('vt_news_hero_hidden', '1'); } catch (e) {}
-}
-(function() {
-  try {
-    if (localStorage.getItem('vt_news_hero_hidden') === '1') {
-      var h = document.getElementById('news-page-hero');
-      if (h) h.style.display = 'none';
-    }
-  } catch (e) {}
-})();
+/* Clear any stale hero-dismiss flag from the removed close button so the
+   intro banner always shows. */
+(function() { try { localStorage.removeItem('vt_news_hero_hidden'); } catch (e) {} })();
 
 /* ═══════════════════════════════════════════════════
    FORMAT DATE
