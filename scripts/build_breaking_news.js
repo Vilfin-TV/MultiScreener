@@ -25,17 +25,62 @@ const FEEDS = {
     "Bihar": "https://news.google.com/rss/search?q=bihar+news&hl=en-IN&gl=IN&ceid=IN:en"
   },
   "Asia": {
-    "Asia General": "https://feeds.bbci.co.uk/news/world/asia/rss.xml",
-    "Japan": "https://japantoday.com/feed",
-    "China": "https://news.google.com/rss/search?q=china+news+english&hl=en&gl=US&ceid=US:en",
-    "Singapore": "https://news.google.com/rss/search?q=singapore+news&hl=en-SG&gl=SG&ceid=SG:en",
-    "Thailand": "https://news.google.com/rss/search?q=thailand+news&hl=en&gl=US&ceid=US:en",
-    "Vietnam": "https://news.google.com/rss/search?q=vietnam+news+english&hl=en&gl=US&ceid=US:en",
-    "Malaysia": "https://news.google.com/rss/search?q=malaysia+news&hl=en-MY&gl=MY&ceid=MY:en",
-    "Taiwan": "https://news.google.com/rss/search?q=taiwan+news+english&hl=en&gl=US&ceid=US:en",
-    "Bangladesh": "https://www.thedailystar.net/frontpage/rss.xml",
-    "Sri Lanka": "https://news.google.com/rss/search?q=sri+lanka+news&hl=en&gl=US&ceid=US:en",
-    "Afghanistan": "https://news.google.com/rss/search?q=afghanistan+news&hl=en&gl=US&ceid=US:en"
+    "Asia General": [
+      "https://feeds.bbci.co.uk/news/world/asia/rss.xml",
+      "https://news.google.com/rss/search?q=Asia+news+when:2d&hl=en&gl=US&ceid=US:en"
+    ],
+    "Japan": [
+      "https://news.google.com/rss/search?q=Japan+news+when:3d&hl=en&gl=US&ceid=US:en",
+      "https://www.japantimes.co.jp/feed/",
+      "https://japantoday.com/feed",
+      "https://mainichi.jp/rss/etc/english_latest.rss"
+    ],
+    "China": [
+      "https://news.google.com/rss/search?q=China+news+when:3d&hl=en&gl=US&ceid=US:en",
+      "https://news.google.com/rss/search?q=China+English+news&hl=en&gl=US&ceid=US:en"
+    ],
+    "Singapore": [
+      "https://news.google.com/rss/search?q=Singapore+news+when:3d&hl=en-SG&gl=SG&ceid=SG:en",
+      "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml"
+    ],
+    "Thailand": [
+      "https://news.google.com/rss/search?q=Thailand+news+when:3d&hl=en&gl=US&ceid=US:en",
+      "https://www.bangkokpost.com/rss/data/topstories.xml"
+    ],
+    "Vietnam": [
+      "https://news.google.com/rss/search?q=Vietnam+news+when:3d&hl=en&gl=US&ceid=US:en",
+      "https://e.vnexpress.net/rss/news.rss"
+    ],
+    "Malaysia": [
+      "https://news.google.com/rss/search?q=Malaysia+news+when:3d&hl=en-MY&gl=MY&ceid=MY:en"
+    ],
+    "Taiwan": [
+      "https://news.google.com/rss/search?q=Taiwan+news+when:3d&hl=en&gl=US&ceid=US:en",
+      "https://focustaiwan.tw/rss/all"
+    ],
+    "Bangladesh": [
+      "https://www.thedailystar.net/frontpage/rss.xml",
+      "https://news.google.com/rss/search?q=Bangladesh+news+when:3d&hl=en&gl=US&ceid=US:en"
+    ],
+    "Sri Lanka": [
+      "https://news.google.com/rss/search?q=Sri+Lanka+news+when:3d&hl=en&gl=US&ceid=US:en"
+    ],
+    "Afghanistan": [
+      "https://news.google.com/rss/search?q=Afghanistan+news+when:3d&hl=en&gl=US&ceid=US:en"
+    ],
+    "South Korea": [
+      "https://news.google.com/rss/search?q=South+Korea+news+when:3d&hl=en&gl=US&ceid=US:en",
+      "https://www.koreaherald.com/rss/020000000000.xml"
+    ],
+    "Indonesia": [
+      "https://news.google.com/rss/search?q=Indonesia+news+when:3d&hl=en&gl=US&ceid=US:en"
+    ],
+    "Philippines": [
+      "https://news.google.com/rss/search?q=Philippines+news+when:3d&hl=en&gl=US&ceid=US:en"
+    ],
+    "Pakistan": [
+      "https://news.google.com/rss/search?q=Pakistan+news+when:3d&hl=en&gl=US&ceid=US:en"
+    ]
   },
   "North America": {
     "US": "https://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml",
@@ -277,29 +322,48 @@ async function run() {
 
   for (const [continent, regions] of Object.entries(FEEDS)) {
     outputData[continent] = {};
-    for (const [regionName, url] of Object.entries(regions)) {
-      console.log(`Fetching: ${continent} -> ${regionName} - ${url}`);
-      
-      let xml = await fetchRss(url);
-      if (!xml || !xml.includes('<title>')) {
-        const pUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-        const pRes = await fetchRss(pUrl);
-        try {
-          const j = JSON.parse(pRes);
-          xml = j.contents || '';
-        } catch(e){}
+    for (const [regionName, feedDef] of Object.entries(regions)) {
+      // A region may declare ONE feed (string) or MANY channels (array).
+      const urls = Array.isArray(feedDef) ? feedDef : [feedDef];
+      console.log(`Fetching: ${continent} -> ${regionName} (${urls.length} channel${urls.length > 1 ? 's' : ''})`);
+
+      let merged = [];
+      for (const url of urls) {
+        let xml = await fetchRss(url);
+        if (!xml || !xml.includes('<title>')) {
+          const pUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+          const pRes = await fetchRss(pUrl);
+          try {
+            const j = JSON.parse(pRes);
+            xml = j.contents || '';
+          } catch(e){}
+        }
+        const parsed = parseXmlItems(xml);
+        console.log(`   • ${parsed.length} items from ${url}`);
+        merged = merged.concat(parsed);
       }
-      
-      let items = parseXmlItems(xml);
-      console.log(`  -> Parsed ${items.length} items`);
-      
-      // Process images for top 5 items per region to save Pexels credits
-      for (let i = 0; i < Math.min(items.length, 5); i++) {
+
+      // De-duplicate across channels by normalized title
+      const seen = new Set();
+      let items = [];
+      for (const it of merged) {
+        const key = (it.title || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().slice(0, 80);
+        if (key && !seen.has(key)) { seen.add(key); items.push(it); }
+      }
+
+      // Freshest first, so the items that get images are the most recent ones
+      items.sort((a, b) => (b.pubDate ? new Date(b.pubDate).getTime() : 0) - (a.pubDate ? new Date(a.pubDate).getTime() : 0));
+      console.log(`  -> ${items.length} unique items`);
+
+      // Ensure images for up to 20 items. Pexels is budget-capped inside
+      // fetchPexels(); beyond that getFallbackImage() returns a free picsum
+      // image, so every processed item keeps an image (none get dropped).
+      for (let i = 0; i < Math.min(items.length, 20); i++) {
         if (!items[i].image) {
           items[i].image = await getFallbackImage(items[i].title);
         }
       }
-      
+
       items = items.filter(i => i.image).map(item => ({
         title: item.title,
         link: item.link,
@@ -308,10 +372,10 @@ async function run() {
         imageUrl: item.image,
         source: item.source || regionName
       }));
-      
-      // Sort and take top 16 — side column scrolls on the page
+
+      // Top 20 — side column scrolls on the page
       items.sort((a, b) => b.publishedAt - a.publishedAt);
-      outputData[continent][regionName] = items.slice(0, 16);
+      outputData[continent][regionName] = items.slice(0, 20);
     }
   }
 
