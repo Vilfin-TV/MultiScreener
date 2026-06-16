@@ -984,16 +984,16 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
           <div class="subject-title">Aerospace Engineering</div>
         </div>
         <div class="subject-links">
-          <a href="#" onclick="return false; alert('Coming Soon');">Aerodynamics</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Propulsion Systems</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Flight Mechanics</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Orbital Mechanics</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Spacecraft Design</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Avionics &amp; Control Systems</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Satellite Manufacturing</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Launch Industry</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Ground Support Systems</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Space Technology</a>
+          <a href="#" onclick="openAerospaceLesson(0); return false;">Aerodynamics</a>
+          <a href="#" onclick="openAerospaceLesson(1); return false;">Propulsion Systems</a>
+          <a href="#" onclick="openAerospaceLesson(2); return false;">Flight Mechanics</a>
+          <a href="#" onclick="openAerospaceLesson(3); return false;">Orbital Mechanics</a>
+          <a href="#" onclick="openAerospaceLesson(4); return false;">Spacecraft Design</a>
+          <a href="#" onclick="openAerospaceLesson(5); return false;">Avionics &amp; Control Systems</a>
+          <a href="#" onclick="openAerospaceLesson(7); return false;">Satellite Manufacturing</a>
+          <a href="#" onclick="openAerospaceLesson(6); return false;">Launch Industry</a>
+          <a href="#" onclick="openAerospaceLesson(8); return false;">Ground Support Systems</a>
+          <a href="#" onclick="openAerospaceLesson(9); return false;">Space Technology</a>
         </div>
       </div>
 
@@ -1484,6 +1484,22 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
       </div>
     </div>
 
+    <!-- ── AEROSPACE ENGINEERING ── -->
+    <div id="aerospace-content-area" style="display:none;">
+      <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">🛰️ Aerospace Engineering</h2>
+      <p style="margin:0 0 20px; font-size:14px; color:var(--text2);">10-lesson course · Teaching-style · Simple language</p>
+      <div class="fin-layout">
+        <aside class="fin-toc" id="aero-toc">
+          <div class="fin-toc-header">📚 Course Outline</div>
+          <div class="fin-toc-list" id="aero-toc-list"></div>
+        </aside>
+        <div class="fin-main" id="aero-main">
+          <div class="fin-progress-bar"><div class="fin-progress-fill" id="aero-progress-fill" style="width:10%"></div></div>
+          <div id="aero-lesson-content"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── AI & ROBOTICS ── -->
     <div id="ai-content-area" style="display:none;">
       <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">🤖 AI &amp; Robotics</h2>
@@ -1563,6 +1579,8 @@ function _hideAllLessonAreas() {
   document.getElementById('growth-content-area').style.display = 'none';
   var _emrg = document.getElementById('emerging-content-area');
   if (_emrg) _emrg.style.display = 'none';
+  var _aero = document.getElementById('aerospace-content-area');
+  if (_aero) _aero.style.display = 'none';
 }
 
 function openCbseLesson(subject, classNum) {
@@ -1767,6 +1785,20 @@ function openEmergingLesson(startIdx) {
   if (typeof renderEmergingLesson === 'function') renderEmergingLesson(_activeEmergingIdx);
   document.getElementById('lesson-view-container').scrollTop = 0;
   try { history.replaceState(null, '', '?subject=emerging'); } catch(e){}
+}
+
+function openAerospaceLesson(startIdx) {
+  document.getElementById('hero-section').style.display = 'none';
+  document.getElementById('subjects-section').style.display = 'none';
+  document.getElementById('lesson-view-container').style.display = 'block';
+  _hideAllLessonAreas();
+  document.getElementById('aerospace-content-area').style.display = 'block';
+  _activeHub = 'aerospace';
+  _activeAerospaceIdx = (typeof startIdx === 'number') ? startIdx : 0;
+  if (typeof renderAerospaceTOC === 'function') renderAerospaceTOC();
+  if (typeof renderAerospaceLesson === 'function') renderAerospaceLesson(_activeAerospaceIdx);
+  document.getElementById('lesson-view-container').scrollTop = 0;
+  try { history.replaceState(null, '', '?subject=aerospace'); } catch(e){}
 }
 
 var _activeAiIdx = 0;
@@ -8457,6 +8489,244 @@ function renderEmergingLesson(idx) {
   var contentDiv = document.getElementById('emrg-lesson-content');
   if (contentDiv) contentDiv.innerHTML = html;
   var mainDiv = document.getElementById('emrg-main');
+  if (mainDiv) mainDiv.scrollTop = 0;
+}
+
+
+// ═══════════════════════════════════════
+// AEROSPACE ENGINEERING — DATA + RENDER
+// ═══════════════════════════════════════
+var _activeAerospaceIdx = 0;
+var AEROSPACE_LESSONS = [
+  {
+    unit: "Unit 1 · Flight Fundamentals", icon: "✈️",
+    title: "Aerodynamics",
+    lead: "Aerodynamics is the study of how air moves around objects and the forces that result. For any aircraft, four forces are in constant balance: lift (up), weight (down), thrust (forward) and drag (backward).",
+    points: [
+      "<strong>Four forces:</strong> flight is the art of managing lift, weight, thrust and drag.",
+      "<strong>Lift:</strong> a curved wing (airfoil) speeds air over the top, lowering pressure and pushing the wing upward.",
+      "<strong>Drag:</strong> air resistance opposing motion — streamlining reduces it and saves fuel.",
+      "<strong>Angle of attack:</strong> tilt the wing too steeply and airflow separates, causing a stall."
+    ],
+    analogy: "Hold your flat hand out of a moving car window and tilt it up — you feel it pushed up and back at once. That push is lift and drag in action.",
+    qa: [
+      { q: "What actually makes a plane fly?", a: "Wings shaped to lower the air pressure on top generate lift, while engines provide thrust to keep air flowing fast over the wings." },
+      { q: "What is a stall?", a: "When the wing's angle to the air gets too steep, airflow detaches and lift collapses — it is about airflow, not the engine quitting." }
+    ]
+  },
+  {
+    unit: "Unit 1 · Flight Fundamentals", icon: "🚀",
+    title: "Propulsion Systems",
+    lead: "Propulsion produces thrust — the forward force that moves a vehicle. It relies on Newton's third law: push mass backward fast, and the vehicle is pushed forward.",
+    points: [
+      "<strong>Jet engines:</strong> draw in air, compress it, burn fuel and expel hot gas backward (turbofans power airliners).",
+      "<strong>Rocket engines:</strong> carry their own oxidizer, so they work even in the vacuum of space.",
+      "<strong>Specific impulse:</strong> a measure of how efficiently an engine turns propellant into thrust.",
+      "<strong>Electric / ion thrusters:</strong> produce tiny but extremely efficient thrust for long deep-space missions."
+    ],
+    analogy: "Let go of an inflated balloon — air rushing out the back shoots it forward. Every engine, jet or rocket, is a refined version of that reaction.",
+    qa: [
+      { q: "Why can't jet engines work in space?", a: "Jets need atmospheric oxygen to burn fuel; rockets carry their own oxidizer, so only rockets work in vacuum." },
+      { q: "What exactly is thrust?", a: "The forward reaction force created by throwing mass (hot exhaust) backward at high speed." }
+    ]
+  },
+  {
+    unit: "Unit 1 · Flight Fundamentals", icon: "🛩️",
+    title: "Flight Mechanics",
+    lead: "Flight mechanics studies how an aircraft moves and stays controllable — how it climbs, turns and remains stable. Motion is managed around three axes.",
+    points: [
+      "<strong>Three axes:</strong> pitch (nose up/down), roll (wings tilt) and yaw (nose left/right).",
+      "<strong>Control surfaces:</strong> elevators control pitch, ailerons control roll, the rudder controls yaw.",
+      "<strong>Stability:</strong> a well-designed aircraft naturally returns to level flight after a disturbance.",
+      "<strong>Trade-off:</strong> stability vs maneuverability — airliners are stable, fighters are agile."
+    ],
+    analogy: "A paper plane that's nose-heavy dives and tail-heavy stalls. Balancing it so it glides straight is flight mechanics in miniature.",
+    qa: [
+      { q: "What are the three axes of flight?", a: "Pitch, roll and yaw — controlled by the elevators, ailerons and rudder respectively." },
+      { q: "Why are airliners so stable?", a: "They're designed to self-correct and stay smooth for passenger comfort, trading away the sharp agility a fighter jet needs." }
+    ]
+  },
+  {
+    unit: "Unit 2 · Spaceflight & Orbits", icon: "🛰️",
+    title: "Orbital Mechanics",
+    lead: "Orbital mechanics explains how objects move in space under gravity. An orbit is really continuous free-fall: the object moves sideways so fast that it keeps 'missing' the planet as it falls.",
+    points: [
+      "<strong>Orbit = falling forever:</strong> enough sideways speed means you fall around the planet instead of into it.",
+      "<strong>Orbit types:</strong> Low Earth Orbit (LEO), geostationary (GEO, fixed over one spot), and others.",
+      "<strong>Delta-v:</strong> the change in velocity a maneuver needs — the 'currency' of space travel.",
+      "<strong>Hohmann transfer:</strong> an efficient two-burn path to move between orbits."
+    ],
+    analogy: "Newton's cannonball: fire it fast enough from a mountaintop and it never lands — it keeps falling around the Earth. That is an orbit.",
+    qa: [
+      { q: "Why don't satellites fall down?", a: "They are falling — but moving sideways fast enough to keep missing the Earth, which is a stable orbit." },
+      { q: "What is delta-v?", a: "The amount of velocity change a maneuver requires; missions are 'budgeted' in delta-v much like a fuel budget." }
+    ]
+  },
+  {
+    unit: "Unit 2 · Spaceflight & Orbits", icon: "🛸",
+    title: "Spacecraft Design",
+    lead: "Spacecraft design is engineering vehicles to survive and function in space — extreme temperatures, vacuum, radiation and the violence of launch. Every gram and watt counts.",
+    points: [
+      "<strong>Subsystems:</strong> power, thermal control, communications, propulsion, structure and the payload.",
+      "<strong>Mass budget:</strong> lighter means cheaper to launch, so designers fight for every kilogram.",
+      "<strong>Harsh environment:</strong> vacuum, ±200°C swings, radiation and micrometeoroids.",
+      "<strong>Redundancy:</strong> critical systems are duplicated because in-orbit repair is usually impossible."
+    ],
+    analogy: "A spacecraft is a self-sufficient camper van for the harshest desert imaginable — it carries its own power, heating, cooling and comms, with no roadside help.",
+    qa: [
+      { q: "Why is spacecraft mass so important?", a: "Launch cost scales with mass, so every kilogram saved cuts cost or frees room for more payload or fuel." },
+      { q: "Why so much redundancy?", a: "You can't send a repair crew to orbit, so vital systems are doubled up to survive a component failure." }
+    ]
+  },
+  {
+    unit: "Unit 2 · Spaceflight & Orbits", icon: "🎛️",
+    title: "Avionics & Control Systems",
+    lead: "Avionics are the electronic systems — computers, sensors, navigation and communication — that fly and monitor an aircraft or spacecraft. Modern vehicles are flown largely by software.",
+    points: [
+      "<strong>Sensors:</strong> GPS, gyroscopes, accelerometers and star trackers report position and orientation.",
+      "<strong>GNC:</strong> Guidance, Navigation &amp; Control — the loop that decides where to go and commands the controls.",
+      "<strong>Fly-by-wire:</strong> pilot inputs go to computers that move the surfaces, not direct mechanical cables.",
+      "<strong>Fault tolerance:</strong> avionics are radiation-hardened and built to keep working if a part fails."
+    ],
+    analogy: "Avionics are the vehicle's nervous system and brain — sensing the world, deciding what to do, and signalling the 'muscles' (engines and control surfaces).",
+    qa: [
+      { q: "What does 'fly-by-wire' mean?", a: "The pilot's controls send electronic signals to computers that move the control surfaces, instead of pulling mechanical cables." },
+      { q: "What is GNC?", a: "Guidance, Navigation and Control — the system that works out position, plans the path, and commands the vehicle to follow it." }
+    ]
+  },
+  {
+    unit: "Unit 2 · Spaceflight & Orbits", icon: "🏗️",
+    title: "Launch Industry",
+    lead: "The launch industry builds and operates the rockets that carry payloads to space. Reusable rockets and booming commercial demand have sharply lowered the cost of reaching orbit.",
+    points: [
+      "<strong>Launch vehicles:</strong> multi-stage rockets that shed empty stages to stay light as they climb.",
+      "<strong>Reusability:</strong> landing and reflying boosters (pioneered at scale by SpaceX) slashes cost per launch.",
+      "<strong>Payload classes:</strong> small-lift, medium, heavy and super-heavy vehicles for different missions.",
+      "<strong>New Space:</strong> private companies now compete alongside national agencies for launches."
+    ],
+    analogy: "Old rockets were like scrapping the plane after every flight. Reusable boosters work like airlines — land, refuel, fly again — which is why launch prices keep falling.",
+    qa: [
+      { q: "Why are rockets built in stages?", a: "Dropping empty fuel tanks removes dead weight, so the remaining engines can accelerate a much lighter vehicle to orbital speed." },
+      { q: "Why does reusability matter?", a: "Most of a rocket's cost is the hardware; reflying boosters spreads that cost over many launches, cutting the price dramatically." }
+    ]
+  },
+  {
+    unit: "Unit 3 · Satellites & Space Infrastructure", icon: "📡",
+    title: "Satellite Manufacturing",
+    lead: "Satellite manufacturing produces the spacecraft that orbit Earth for communications, navigation, imaging and science. The industry is shifting from a few large bespoke satellites to mass-produced small ones.",
+    points: [
+      "<strong>Functions:</strong> communications, GPS/navigation, Earth observation, weather and scientific research.",
+      "<strong>Big vs small:</strong> traditional large GEO satellites vs cheap, mass-produced small-sats and CubeSats.",
+      "<strong>Constellations:</strong> hundreds or thousands of small satellites working together (e.g., global internet).",
+      "<strong>Assembly &amp; test:</strong> clean rooms, vibration tests and thermal-vacuum chambers verify survival."
+    ],
+    analogy: "The field is moving from hand-built luxury cars (one giant satellite) to a production line of compact, identical units (a constellation) — cheaper and easier to replace.",
+    qa: [
+      { q: "What is a satellite constellation?", a: "A large group of coordinated satellites providing continuous coverage, such as global internet or navigation." },
+      { q: "What is a CubeSat?", a: "A small, standardized satellite built from 10 cm cube units — cheap to build and launch, popular for tech demos and education." }
+    ]
+  },
+  {
+    unit: "Unit 3 · Satellites & Space Infrastructure", icon: "📶",
+    title: "Ground Support Systems",
+    lead: "Ground support is everything on Earth that makes a space mission work — launch pads, mission control, tracking antennas and the networks that command spacecraft and receive their data.",
+    points: [
+      "<strong>Ground stations:</strong> antennas that send commands up and download data from satellites.",
+      "<strong>Mission control:</strong> the teams and software that monitor health and direct operations.",
+      "<strong>Telemetry:</strong> the continuous stream of status data a spacecraft sends back.",
+      "<strong>Launch infrastructure:</strong> pads, fuelling systems and range safety on the ground."
+    ],
+    analogy: "If a satellite is a kite, ground support is the person holding the string — steering it, listening to it, and reeling in everything it sends back.",
+    qa: [
+      { q: "What is telemetry?", a: "The continuous health and status data a spacecraft transmits to the ground so operators know how it is doing." },
+      { q: "What does mission control do?", a: "Monitors the vehicle, plans and uploads commands, and responds to anomalies throughout the mission." }
+    ]
+  },
+  {
+    unit: "Unit 3 · Satellites & Space Infrastructure", icon: "🌌",
+    title: "Space Technology",
+    lead: "Space technology spans the broader tools and frontiers of spaceflight — deep-space probes, space stations, and emerging ideas like in-orbit manufacturing — and drives countless everyday spin-offs.",
+    points: [
+      "<strong>Exploration:</strong> probes, rovers and crewed missions to the Moon, Mars and beyond.",
+      "<strong>Space stations:</strong> orbiting labs (like the ISS) for research in microgravity.",
+      "<strong>Frontiers:</strong> in-orbit servicing, space manufacturing, debris removal and lunar bases.",
+      "<strong>Spin-offs:</strong> GPS, weather forecasting, satellite internet and materials that began as space tech."
+    ],
+    analogy: "Space technology is both the expedition gear for a new frontier and the R&amp;D lab whose inventions quietly end up in your phone, car and weather app.",
+    qa: [
+      { q: "What are 'spin-offs'?", a: "Everyday technologies that originated from space research — GPS, weather satellites, water filters, memory foam and more." },
+      { q: "What's next in space tech?", a: "Reusable launch, lunar bases, in-orbit manufacturing and servicing, and active removal of orbital debris." }
+    ]
+  }
+];
+
+function renderAerospaceTOC() {
+  var list = document.getElementById('aero-toc-list');
+  if (!list) return;
+  var html = '';
+  var currentUnit = '';
+  AEROSPACE_LESSONS.forEach(function(lesson, i) {
+    if (lesson.unit !== currentUnit) {
+      currentUnit = lesson.unit;
+      html += '<div class="fin-toc-unit">' + esc(lesson.unit) + '</div>';
+    }
+    html += '<div class="fin-toc-item' + (i === _activeAerospaceIdx ? ' active' : '') + '" onclick="renderAerospaceLesson(' + i + ')" id="aero-toc-' + i + '">'
+          + '<span style="margin-right:7px;">' + lesson.icon + '</span>' + esc(lesson.title)
+          + '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function renderAerospaceLesson(idx) {
+  _activeAerospaceIdx = idx;
+  var lesson = AEROSPACE_LESSONS[idx];
+  if (!lesson) return;
+
+  var pct = ((idx + 1) / AEROSPACE_LESSONS.length) * 100;
+  var pfill = document.getElementById('aero-progress-fill');
+  if (pfill) pfill.style.width = pct + '%';
+
+  renderAerospaceTOC();
+  var act = document.getElementById('aero-toc-' + idx);
+  if (act && act.scrollIntoView) act.scrollIntoView({ behavior:'smooth', block:'center' });
+
+  var html = '<div class="fin-lesson-num">LESSON ' + (idx+1) + ' OF ' + AEROSPACE_LESSONS.length + '</div>';
+  html += '<h1 class="fin-lesson-title">' + esc(lesson.title) + '</h1>';
+  if (lesson.lead) html += '<div class="fin-lesson-lead">' + lesson.lead + '</div>';
+
+  if (lesson.points && lesson.points.length > 0) {
+    html += '<div class="fin-section-title">Key Concepts</div><ul class="fin-key-points">';
+    lesson.points.forEach(function(pt) { html += '<li>' + pt + '</li>'; });
+    html += '</ul>';
+  }
+
+  if (lesson.analogy) {
+    html += '<div class="fin-analogy-box"><div class="fin-analogy-title">💡 The Intuition</div><div class="fin-analogy-text">' + esc(lesson.analogy) + '</div></div>';
+  }
+
+  if (lesson.qa && lesson.qa.length > 0) {
+    html += '<div class="fin-qa-section"><div class="fin-section-title">Common Questions</div>';
+    lesson.qa.forEach(function(item, qidx) {
+      var uniq = 'aero-q-' + idx + '-' + qidx;
+      html += '<div class="fin-qa-item" id="' + uniq + '">'
+            + '<div class="fin-qa-q" onclick="document.getElementById(\'' + uniq + '\').classList.toggle(\'open\')">'
+            + '<span>' + esc(item.q) + '</span>'
+            + '<svg class="fin-qa-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>'
+            + '</div><div class="fin-qa-a">' + item.a + '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  var prevDisabled = (idx === 0) ? ' disabled' : '';
+  var nextDisabled = (idx === AEROSPACE_LESSONS.length - 1) ? ' disabled' : '';
+  html += '<div class="fin-nav-row">'
+        + '<button class="fin-nav-btn"' + prevDisabled + ' onclick="renderAerospaceLesson(' + (idx-1) + ')">&#8592; Previous</button>'
+        + '<button class="fin-nav-btn primary"' + nextDisabled + ' onclick="renderAerospaceLesson(' + (idx+1) + ')">Next &#8594;</button>'
+        + '</div>';
+
+  var contentDiv = document.getElementById('aero-lesson-content');
+  if (contentDiv) contentDiv.innerHTML = html;
+  var mainDiv = document.getElementById('aero-main');
   if (mainDiv) mainDiv.scrollTop = 0;
 }
 
