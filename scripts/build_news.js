@@ -408,6 +408,19 @@ const SOURCE_POOL = {
     { url: 'https://news.google.com/rss/search?q=Korea+economy+business+Samsung+chip+export+won&hl=en&gl=US&ceid=US:en', name: 'Korea Business' },
     { url: 'https://news.google.com/rss/search?q=Asia+business+economy+companies+trade+markets+earnings&hl=en&gl=US&ceid=US:en', name: 'Asia Business' },
   ],
+  // ── Home — Smart Homes, Appliances & Furniture (multi-country English) ──────
+  home: [
+    { url: 'https://news.google.com/rss/search?q=smart+home+appliances+furniture+interior+design+when:7d&hl=en-US&gl=US&ceid=US:en', name: 'Smart Home (Global)' },
+    { url: 'https://news.google.com/rss/search?q=India+home+appliance+smart+home+furniture+interior+when:7d&hl=en-IN&gl=IN&ceid=IN:en', name: 'India Home' },
+    { url: 'https://www.dezeen.com/feed/',                                                                        name: 'Dezeen (Design)' },
+    { url: 'https://news.google.com/rss/search?q=smart+home+Alexa+Google+Home+Matter+smart+device+when:7d&hl=en-US&gl=US&ceid=US:en', name: 'Smart Home Tech' },
+    { url: 'https://news.google.com/rss/search?q=home+appliances+refrigerator+washing+machine+air+conditioner+launch+when:7d&hl=en-US&gl=US&ceid=US:en', name: 'Appliances' },
+    { url: 'https://news.google.com/rss/search?q=Japan+home+appliance+Panasonic+Hitachi+smart+home+when:7d&hl=en&gl=US&ceid=US:en', name: 'Japan Home' },
+    { url: 'https://news.google.com/rss/search?q=Korea+Samsung+LG+home+appliance+smart+home+when:7d&hl=en&gl=US&ceid=US:en', name: 'Korea Home' },
+    { url: 'https://news.google.com/rss/search?q=China+smart+home+Xiaomi+Haier+Midea+appliance+when:7d&hl=en&gl=US&ceid=US:en', name: 'China Home' },
+    { url: 'https://news.google.com/rss/search?q=Europe+home+appliance+Bosch+Siemens+IKEA+furniture+when:7d&hl=en&gl=US&ceid=US:en', name: 'Europe Home' },
+    { url: 'https://news.google.com/rss/search?q=furniture+interior+design+home+decor+IKEA+living+when:7d&hl=en-US&gl=US&ceid=US:en', name: 'Furniture & Decor' },
+  ],
 };
 
 const SECTION_META = {
@@ -444,6 +457,7 @@ const SECTION_META = {
   food:           { image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200&q=80', label: 'Food & Agriculture', accent: '#65a30d' },
   automobile:     { image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1200&q=80', label: 'Automobile News',    accent: '#dc2626' },
   business:       { image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1200&q=80', label: 'Business News',      accent: '#0891b2' },
+  home:           { image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1200&q=80', label: 'Home & Smart Living', accent: '#0d9488' },
 };
 
 /* ═══════════════════════════════════════════════════
@@ -1202,7 +1216,8 @@ var RSS_FALLBACK_IMAGES = {
   space:          'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800&q=70',
   food:           'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=70',
   automobile:     'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&q=70',
-  business:       'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=70'
+  business:       'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=70',
+  home:           'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&q=70'
 };
 
 function rssStory(item, sectionId) {
@@ -1213,8 +1228,15 @@ function rssStory(item, sectionId) {
     : '<p>Full story available at the original source.</p>';
   var teaser = desc.slice(0, 140) || item.title.slice(0, 140);
   if (teaser.length >= 140) teaser = teaser.slice(0, 137) + '…';
-  // Use RSS-embedded image; fall back to section-themed Unsplash
-  var image = item.imageUrl || (sectionId ? (RSS_FALLBACK_IMAGES[sectionId] || null) : null);
+  // Stock: use ONLY the real RSS-embedded photo — no themed fallback, so a
+  // story without a source image simply shows no image. Other RSS sections
+  // keep the section-themed Unsplash fallback.
+  var image;
+  if (sectionId === 'stock') {
+    image = item.imageUrl || null;
+  } else {
+    image = item.imageUrl || (sectionId ? (RSS_FALLBACK_IMAGES[sectionId] || null) : null);
+  }
   return { html: html, teaser: teaser, image: image };
 }
 
@@ -1228,7 +1250,7 @@ async function buildSection(sectionId, feedPool, meta) {
   console.log('\n[Section]', sectionId.toUpperCase());
   var isRssOnly = (sectionId === 'stock' || sectionId === 'malayalam' || sectionId.startsWith('ml_')
     || sectionId.startsWith('sports') || sectionId === 'science' || sectionId === 'fashion' || sectionId === 'movies'
-    || sectionId === 'tech' || sectionId === 'space' || sectionId === 'food' || sectionId === 'automobile' || sectionId === 'business');
+    || sectionId === 'tech' || sectionId === 'space' || sectionId === 'food' || sectionId === 'automobile' || sectionId === 'business' || sectionId === 'home');
 
   // Always include first 2 anchored feeds + random extras
   var pool    = feedPool || [];

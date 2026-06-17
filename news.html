@@ -511,6 +511,7 @@ body{
 .news-section-food     {--section-accent:#65a30d}
 .news-section-auto     {--section-accent:#dc2626}
 .news-section-business {--section-accent:#0891b2}
+.news-section-home     {--section-accent:#0d9488}
 
 /* ═══════════════════════════════════════════════════
    MALAYALAM EDITION — Category tabs block
@@ -764,6 +765,15 @@ body{
   transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.2);
 }
 .news-card:hover::before{opacity:1}
+/* Optional story thumbnail (stock cards with a real RSS photo) */
+.news-card-img{
+  width:calc(100% + 36px);margin:-18px -18px 2px;
+  height:150px;object-fit:cover;display:block;background:var(--card2);
+}
+.news-card:hover .news-card-img{opacity:.95}
+@media(max-width:600px){
+  .news-card.has-img .news-card-img{width:calc(100% + 28px);margin:-14px -14px 2px;height:130px}
+}
 
 .news-card-source{
   display:inline-block;
@@ -2269,7 +2279,8 @@ const SECTION_META = {
   space:          { id:'space',          label:'Space News',         icon:'🚀', accent:'#1e3a8a', cssClass:'news-section-space',  image:'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1200&q=80' },
   food:           { id:'food',           label:'Food & Agriculture', icon:'🌾', accent:'#65a30d', cssClass:'news-section-food',   image:'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200&q=80' },
   automobile:     { id:'automobile',     label:'Automobile News',    icon:'🚗', accent:'#dc2626', cssClass:'news-section-auto',   image:'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1200&q=80' },
-  business:       { id:'business',       label:'Business News',      icon:'💼', accent:'#0891b2', cssClass:'news-section-business',image:'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1200&q=80' }
+  business:       { id:'business',       label:'Business News',      icon:'💼', accent:'#0891b2', cssClass:'news-section-business',image:'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1200&q=80' },
+  home:           { id:'home',           label:'Home & Smart Living',icon:'🏠', accent:'#0d9488', cssClass:'news-section-home',    image:'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1200&q=80' }
 };
 
 /* ═══════════════════════════════════════════════════
@@ -2482,8 +2493,10 @@ function renderSection(sectionId, sectionData, meta) {
     // Hero card — first item (uses cache index, no JSON in onclick)
     var hero = items[0];
     var heroIdx = _cacheStory(hero, meta);
+    // Stock: prefer the story's real RSS photo for the hero when present.
+    var heroSrc = (sectionId === 'stock' && hero.image) ? hero.image : heroImage;
     var heroHtml = '<div class="news-hero-card" onclick="openStoryIdx(' + heroIdx + ')" role="button" tabindex="0" aria-label="' + esc(hero.headline) + '">'
-      + '<img class="news-hero-img" src="' + escAttr(heroImage) + '" alt="" loading="lazy"'
+      + '<img class="news-hero-img" src="' + escAttr(heroSrc) + '" alt="" loading="lazy"'
       + ' data-fallback="' + escAttr(meta.image) + '"'
       + ' onerror="if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}else{this.style.display=\'none\';}">'
       + '<div class="news-hero-gradient"></div>'
@@ -2503,7 +2516,13 @@ function renderSection(sectionId, sectionData, meta) {
       var gridHtml = '<div class="news-cards-grid">';
       gridItems.forEach(function(item) {
         var cardIdx = _cacheStory(item, meta);
-        gridHtml += '<div class="news-card" onclick="openStoryIdx(' + cardIdx + ')" role="button" tabindex="0" aria-label="' + esc(item.headline) + '">'
+        // Stock: show the story's real RSS photo when the source provides one
+        // (no image otherwise — no themed fallback).
+        var cardImg = (sectionId === 'stock' && item.image)
+          ? '<img class="news-card-img" src="' + escAttr(item.image) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+          : '';
+        gridHtml += '<div class="news-card' + (cardImg ? ' has-img' : '') + '" onclick="openStoryIdx(' + cardIdx + ')" role="button" tabindex="0" aria-label="' + esc(item.headline) + '">'
+          + cardImg
           + '<div class="news-card-headline">' + esc(item.headline) + '</div>'
           + '<div class="news-card-teaser">' + esc(item.teaser || '') + '</div>'
           + '<div class="news-card-footer">'
@@ -3742,7 +3761,8 @@ var _EN_IMG_POOLS = {
   space:          ['https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=700&q=70','https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=700&q=70','https://images.unsplash.com/photo-1614730321220-6af8c57b2c5c?w=700&q=70','https://images.unsplash.com/photo-1614726365952-510103b1bdb8?w=700&q=70'],
   food:           ['https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=700&q=70','https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=700&q=70','https://images.unsplash.com/photo-1465379944081-7f47de8d74ac?w=700&q=70','https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=700&q=70'],
   automobile:     ['https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=700&q=70','https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=700&q=70','https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=700&q=70','https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=700&q=70'],
-  business:       ['https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=700&q=70','https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=700&q=70','https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=700&q=70','https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=700&q=70']
+  business:       ['https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=700&q=70','https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=700&q=70','https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=700&q=70','https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=700&q=70'],
+  home:           ['https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=700&q=70','https://images.unsplash.com/photo-1558002038-1055907df827?w=700&q=70','https://images.unsplash.com/photo-1567016432779-094069958ea5?w=700&q=70','https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=700&q=70']
 };
 
 /* Shared item renderer — filters fresh RSS items and paints the bn layout
@@ -4126,7 +4146,7 @@ async function loadNewsPage() {
       container.appendChild(sportsBlock);
       _showSportsCategory(SPORTS_CATEGORIES[0].id, data);
 
-      ['tech', 'space', 'science', 'fashion', 'movies', 'food', 'automobile', 'business'].forEach(function(enId) {
+      ['tech', 'space', 'science', 'fashion', 'movies', 'food', 'automobile', 'home', 'business'].forEach(function(enId) {
         container.appendChild(buildLiveSession(enId, data));
         if (data && data.sections && data.sections[enId] && data.sections[enId].items) {
           totalStories += data.sections[enId].items.filter(isItemValid).length;
