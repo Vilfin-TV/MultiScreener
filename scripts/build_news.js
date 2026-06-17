@@ -152,10 +152,12 @@ const SOURCE_POOL = {
   // ── stock ───────────────────────────────────────────────────────────────────
   // Anchors (pos 0-1) always included. Rest randomly sampled for variety.
   stock: [
-    // ── Anchors ─────────────────────────────────────────────────────────────
+    // ── Anchors (always fetched; NDTV Profit first so its attribution wins
+    //    de-duplication on stories also carried by other Indian-market feeds) ──
+    { url: 'https://news.google.com/rss/search?q=site:ndtvprofit.com+when:7d&hl=en-IN&gl=IN&ceid=IN:en', name: 'NDTV Profit' },
     { url: 'https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-IN&gl=IN&ceid=IN:en', name: 'Google Finance India' },
-    { url: 'https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-US&gl=US&ceid=US:en', name: 'Google Finance US' },
     // ── India Markets ────────────────────────────────────────────────────────
+    { url: 'https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-US&gl=US&ceid=US:en', name: 'Google Finance US' },
     { url: 'https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms',       name: 'ET Markets' },
     { url: 'https://www.livemint.com/rss/markets',                                       name: 'Mint Markets' },
     { url: 'https://economictimes.indiatimes.com/markets/stocks/rss.cms',                name: 'ET Stocks' },
