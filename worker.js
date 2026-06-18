@@ -26,12 +26,14 @@
  *
  *  Provider cascade (if no specific provider is requested):
  *    Groq (Llama 3.3 70B) → Gemini → OpenAI → DeepSeek → Pollinations (free)
+ *    Groq (Llama 3.3 70B) → Gemini → OpenRouter → DeepSeek → OpenAI → Pollinations (free)
  *
  * QUOTAS (approximate free tier):
  *  Groq:        6,000 req/day, 500,000 tokens/day
  *  Gemini:      1,500 req/day, 1 M tokens/day (Gemini 2.0 Flash)
  *  OpenAI:      Pay-per-use (gpt-4o-mini is cheapest)
  *  DeepSeek:    $0.14 / M input tokens
+ *  OpenRouter:  Various
  *  Pollinations: free, no key (emergency fallback only)
  */
 
@@ -51,12 +53,14 @@ const ALLOWED_ORIGINS = [
 const GROQ_ENDPOINT     = 'https://api.groq.com/openai/v1/chat/completions';
 const DEEPSEEK_ENDPOINT = 'https://api.deepseek.com/chat/completions';
 const OPENAI_ENDPOINT   = 'https://api.openai.com/v1/chat/completions';
+const OPENROUTER_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
 const GEMINI_BASE       = 'https://generativelanguage.googleapis.com/v1beta/models/';
 
 // ─── Models ───────────────────────────────────────────────────────────────────
 const GROQ_MODEL     = 'llama-3.3-70b-versatile';
 const DEEPSEEK_MODEL = 'deepseek-chat';
 const OPENAI_MODEL   = 'gpt-4o-mini';
+const OPENROUTER_MODEL = 'google/gemini-2.0-flash-001';
 const GEMINI_MODEL   = 'gemini-2.0-flash';
 
 // ─── Generation config ────────────────────────────────────────────────────────
@@ -727,6 +731,34 @@ async function callOpenAI(messages, env, maxTokens) {
   } catch (e) { console.warn('OpenAI fetch failed:', e.message); return null; }
 }
 
+/** OpenRouter — (OpenAI-compatible) */
+async function callOpenRouter(messages, env, maxTokens) {
+  if (!env.OPENROUTER_API_KEY) return null;
+  try {
+    const res = await fetch(OPENROUTER_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${env.OPENROUTER_API_KEY}`,
+        'HTTP-Referer':  'https://vilfintv.com', // Required by OpenRouter
+        'X-Title':       'VilfinTV AI Assistant', // Optional, but good practice
+      },
+      body: JSON.stringify({
+        model:       OPENROUTER_MODEL,
+        messages,
+        max_tokens:  maxTokens || MAX_TOKENS,
+        temperature: TEMPERATURE,
+        stream:      false,
+      }),
+      signal: AbortSignal.timeout(30000),
+    });
+    if (!res.ok) { console.warn('OpenRouter error', res.status, (await res.text()).slice(0, 200)); return null; }
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content?.trim();
+    return (text && text.length > 20) ? text : null;
+  } catch (e) { console.warn('OpenRouter fetch failed:', e.message); return null; }
+}
+
 /** DeepSeek — deepseek-chat (OpenAI-compatible) */
 async function callDeepSeek(messages, env, maxTokens) {
   if (!env.DEEPSEEK_API_KEY) return null;
@@ -846,15 +878,17 @@ async function handleQuery(prompt, env, providerHint, historyMsgs) {
   }
 
   const provider = (providerHint || '').toLowerCase();
-  if (provider === 'groq')     { const t = await callGroq(messages, env);     if (t) return t; }
-  if (provider === 'gemini')   { const t = await callGemini(messages, env);   if (t) return t; }
-  if (provider === 'openai')   { const t = await callOpenAI(messages, env);   if (t) return t; }
-  if (provider === 'deepseek') { const t = await callDeepSeek(messages, env); if (t) return t; }
+  if (provider === 'groq')       { const t = await callGroq(messages, env);       if (t) return t; }
+  if (provider === 'gemini')     { const t = await callGemini(messages, env);     if (t) return t; }
+  if (provider === 'openai')     { const t = await callOpenAI(messages, env);     if (t) return t; }
+  if (provider === 'openrouter') { const t = await callOpenRouter(messages, env); if (t) return t; }
+  if (provider === 'deepseek')   { const t = await callDeepSeek(messages, env);   if (t) return t; }
 
   // Track which providers we tried so logs show the failure cascade
   const tried = [];
   const groq     = await callGroq(messages, env);     tried.push('groq:'    +(groq?'ok':'fail')); if (groq)     return groq;
   const gemini   = await callGemini(messages, env);   tried.push('gemini:'  +(gemini?'ok':'fail'));if (gemini)   return gemini;
+  const orouter  = await callOpenRouter(messages, env);tried.push('openrouter:'+(orouter?'ok':'fail'));if (orouter)return orouter;
   const openai   = await callOpenAI(messages, env);   tried.push('openai:'  +(openai?'ok':'fail'));if (openai)   return openai;
   const deepseek = await callDeepSeek(messages, env); tried.push('deepseek:'+(deepseek?'ok':'fail'));if (deepseek) return deepseek;
   const poll     = await callPollinations(messages);  tried.push('pollinations:'+(poll?'ok':'fail'));if (poll) return poll;

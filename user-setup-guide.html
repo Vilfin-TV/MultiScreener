@@ -598,6 +598,22 @@ html[data-theme="gemini"]{
     </div>
   </div>
 
+  <!-- Option D: OpenRouter -->
+  <div class="step-block">
+    <div class="step-head">
+      <span class="step-num">D</span>
+      <span class="step-title">🌌 OpenRouter (Recommended) &nbsp;<span class="badge-free">FREE / PAID</span></span>
+    </div>
+    <div class="step-body">
+      <p>OpenRouter provides access to dozens of models (like Gemini 2.0 Flash, Llama 3) via a single API key, with many high-quality free models available.</p>
+      <ol>
+        <li>Go to <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a></li>
+        <li>Sign up or log in, click <strong>Create Key</strong></li>
+        <li>Copy your new API key</li>
+      </ol>
+    </div>
+  </div>
+
   <!-- STEP 2 -->
   <h2 class="section-title" id="step-worker">Step 2 — Deploy Your Cloudflare Worker</h2>
   <p class="section-sub">The Worker acts as a secure proxy between the dashboard and the AI API. Your API key is stored on the Worker — never in your browser or in any public file.</p>
@@ -662,10 +678,10 @@ html[data-theme="gemini"]{
       </div>
       <div class="note-info">
         <strong>What's inside worker.js?</strong> Open-source JavaScript that
-        proxies AI calls to your provider (Groq / Gemini / OpenAI / DeepSeek)
+        proxies AI calls to your provider (OpenRouter / Groq / Gemini / OpenAI / DeepSeek)
         and adds live market data context. <strong>Zero API keys, zero secrets,
         zero tracking.</strong> Your keys are added separately in Step 3 below
-        and are encrypted by Cloudflare.
+        and are encrypted by Cloudflare. <strong>Your Worker URL is never exposed to the public.</strong>
       </div>
       <p style="margin-top:8px">After pasting, click <strong>Save and Deploy</strong>.</p>
     </div>
@@ -704,6 +720,7 @@ html[data-theme="gemini"]{
           <tr><td>🚀 Groq</td><td><code style="color:var(--gold2)">GROQ_API_KEY</code></td></tr>
           <tr><td>💎 Gemini</td><td><code style="color:var(--gold2)">GEMINI_API_KEY</code></td></tr>
           <tr><td>🟢 OpenAI</td><td><code style="color:var(--gold2)">OPENAI_API_KEY</code></td></tr>
+          <tr><td>🌌 OpenRouter</td><td><code style="color:var(--gold2)">OPENROUTER_API_KEY</code></td></tr>
           <tr><td>🔵 DeepSeek</td><td><code style="color:var(--gold2)">DEEPSEEK_API_KEY</code></td></tr>
         </tbody>
       </table>
@@ -721,6 +738,7 @@ html[data-theme="gemini"]{
       <div class="cmd-block">npx wrangler secret put GROQ_API_KEY</div>
       <div class="cmd-block">npx wrangler secret put GEMINI_API_KEY</div>
       <div class="cmd-block">npx wrangler secret put OPENAI_API_KEY</div>
+      <div class="cmd-block">npx wrangler secret put OPENROUTER_API_KEY</div>
       <div class="cmd-block">npx wrangler secret put DEEPSEEK_API_KEY</div>
       <div class="note-info">ℹ️ You can add as many keys as you like. The Worker will try each provider in order and automatically fall back if one is unavailable.</div>
     </div>
@@ -769,7 +787,7 @@ html[data-theme="gemini"]{
     </div>
     <div class="step-body">
       <p>Click <strong>💾 Save &amp; Connect</strong>. The status indicator will turn green and display your connected provider. You can now use the full Market Assistant, Intelligent Search, and Gamma Report features.</p>
-      <div class="note-success">✅ Your Worker URL is stored only in your browser's localStorage — never sent to GitHub or any third-party server.</div>
+      <div class="note-success">✅ Your Worker URL is stored only in your local browser's localStorage — it is <strong>never exposed to the public</strong>, never committed to GitHub, and never sent to any third-party server. It is completely safe.</div>
     </div>
   </div>
 
@@ -812,6 +830,14 @@ html[data-theme="gemini"]{
         <td>⚡⚡ Moderate</td>
         <td>⭐⭐⭐⭐⭐</td>
         <td>No hard limit</td>
+      </tr>
+      <tr>
+        <td>🌌 OpenRouter</td>
+        <td>Multiple (Gemini, Llama)</td>
+        <td><span class="badge-free">FREE / PAID</span></td>
+        <td>⚡⚡⚡ Fast</td>
+        <td>⭐⭐⭐⭐⭐</td>
+        <td>Varies by model</td>
       </tr>
       <tr>
         <td>🔵 DeepSeek</td>
