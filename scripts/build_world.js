@@ -347,30 +347,8 @@ const WORLD_REGIONS = [
       { url: 'https://saharareporters.com/rss.xml',                              name: 'Sahara Reporters' },
     ]
   },
-  // ── Tech News ─────────────────────────────────────────────────────────────
-  {
-    id: 'tech', flag: '💻', name: 'Tech News', language: 'English', accent: '#6366f1',
-    feeds: [
-      { url: 'https://www.wired.com/feed/rss',                                   name: 'Wired' },
-      { url: 'https://www.engadget.com/rss.xml',                                 name: 'Engadget' },
-      { url: 'https://techcrunch.com/feed/',                                     name: 'TechCrunch' },
-      { url: 'https://techcrunch.com/category/artificial-intelligence/feed/',    name: 'TechCrunch AI' },
-      { url: 'https://www.techradar.com/rss',                                    name: 'TechRadar' },
-      { url: 'https://www.cnet.com/rss/news/',                                   name: 'CNET' },
-      { url: 'https://www.theverge.com/rss/index.xml',                           name: 'The Verge' },
-      { url: 'https://feeds.arstechnica.com/arstechnica/index',                  name: 'Ars Technica' },
-    ]
-  },
-  // ── Space News ────────────────────────────────────────────────────────────
-  {
-    id: 'space', flag: '🚀', name: 'Space News', language: 'English', accent: '#0ea5e9',
-    feeds: [
-      { url: 'https://www.space.com/feeds/all',                                  name: 'Space.com' },
-      { url: 'https://spacenews.com/feed/',                                      name: 'SpaceNews' },
-      { url: 'https://www.universetoday.com/feed/',                              name: 'Universe Today' },
-      { url: 'https://www.nasa.gov/rss/dyn/breaking_news.rss',                  name: 'NASA' },
-    ]
-  },
+  // Tech News & Space News removed from World — now dedicated standalone
+  // sessions (built by build_news.js) to avoid duplicate sessions on the page.
 ];
 
 /* ═══════════════════════════════════════════════════
