@@ -2891,9 +2891,13 @@ function _readerShow(text) {
   if (!r) return;
   _readerStop();
   _reader.text = text || '';
-  // Hide entirely if unsupported, so we never show a dead button
-  r.style.display = (_readerSupported && _reader.text) ? '' : 'none';
-  if (_readerSupported) _readerPopulateVoices();
+  // The News Reader relies on English system voices. Malayalam has no reliable
+  // device voice, so hide the control entirely for Malayalam featured stories
+  // (also hidden when unsupported or there is no text).
+  var lang = _readerDetectLang(_reader.text);
+  var ok = _readerSupported && !!_reader.text && lang !== 'ml';
+  r.style.display = ok ? '' : 'none';
+  if (ok) _readerPopulateVoices();
   _readerUpdateBtn();
 }
 
