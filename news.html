@@ -896,6 +896,33 @@ body{
 }
 .story-modal-close:hover{background:rgba(255,255,255,.08);color:var(--text)}
 
+/* News Reader (text-to-speech) — featured stories only */
+.story-reader{display:flex;align-items:center;gap:8px;margin:0 12px 0 auto}
+.story-reader-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  border:1px solid rgba(147,197,253,.45);
+  color:#fff;font-size:12px;font-weight:700;letter-spacing:.4px;
+  padding:6px 13px 6px 11px;border-radius:20px;cursor:pointer;
+  transition:filter .15s,transform .15s,background .2s;
+  box-shadow:0 2px 10px rgba(37,99,235,.35);white-space:nowrap;
+}
+.story-reader-btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.story-reader-btn svg{width:14px;height:14px;flex-shrink:0;fill:#fff}
+.story-reader-btn.playing{background:linear-gradient(135deg,#dc2626,#b91c1c);box-shadow:0 2px 10px rgba(220,38,38,.4)}
+.story-reader-voice{
+  background:var(--card2);border:1px solid var(--border2);
+  color:var(--text2);font-size:11.5px;border-radius:8px;
+  padding:5px 7px;max-width:160px;cursor:pointer;outline:none;
+  font-family:'DM Sans',-apple-system,sans-serif;
+}
+.story-reader-voice:focus{border-color:var(--burn2,#3b82f6)}
+@media(max-width:600px){
+  .story-reader{margin:0 8px 0 auto;gap:6px}
+  .story-reader-label{display:none}
+  .story-reader-voice{max-width:104px;font-size:11px;padding:5px}
+}
+
 .story-modal-body{
   padding:24px 28px 32px;
   overflow-y:auto;flex:1;min-height:0;
@@ -2086,6 +2113,15 @@ footer.news-footer{
     <div class="story-modal-drag" onclick="closeStory()" title="Close"></div>
     <div class="story-modal-header">
       <span class="story-modal-section-pill" id="story-section-pill" style="background:#3b82f6">Section</span>
+      <!-- News Reader (featured stories only) — plays the story via the listener's own device audio -->
+      <div class="story-reader" id="story-reader" style="display:none">
+        <button class="story-reader-btn" id="story-reader-btn" onclick="toggleStoryReader()" title="Listen to this story" aria-label="Listen to this story">
+          <svg class="sr-ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          <svg class="sr-ic-pause" viewBox="0 0 24 24" aria-hidden="true" style="display:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+          <span class="story-reader-label">Listen</span>
+        </button>
+        <select class="story-reader-voice" id="story-reader-voice" onchange="_onReaderVoiceChange()" title="Choose news reader voice" aria-label="Choose news reader voice"></select>
+      </div>
       <button class="story-modal-close" onclick="closeStory()" title="Close story">✕</button>
     </div>
     <div class="story-modal-body" id="story-modal-body">
@@ -2672,6 +2708,8 @@ function openStory(item, meta) {
   var body = document.getElementById('story-modal-body');
   var pill = document.getElementById('story-section-pill');
 
+  _readerHide();  // News Reader is for featured stories only
+
   // Set section pill
   pill.textContent = (meta.icon || '') + ' ' + (meta.label || 'Story');
   pill.style.background = meta.accent || '#3b82f6';
@@ -2748,7 +2786,129 @@ function _resetStoryScroll(body) {
 /* ═══════════════════════════════════════════════════
    MODAL: CLOSE STORY
 ═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════
+   NEWS READER — text-to-speech for featured stories
+   Uses the visitor's own browser/device speech engine, so
+   playback happens locally with no external service.
+═══════════════════════════════════════════════════ */
+var _reader = { playing:false, utter:null, text:'', voices:[] };
+var _readerSupported = (typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window);
+
+function _readerStripText(html) {
+  var tmp = document.createElement('div');
+  tmp.innerHTML = html || '';
+  return (tmp.textContent || tmp.innerText || '').replace(/\s+/g, ' ').trim();
+}
+
+/* Detect the story's script so we can offer a matching reader voice */
+function _readerDetectLang(text) {
+  text = text || '';
+  if (/[ഀ-ൿ]/.test(text)) return 'ml';  // Malayalam
+  if (/[ऀ-ॿ]/.test(text)) return 'hi';  // Hindi / Devanagari
+  if (/[぀-ヿ一-鿿]/.test(text)) return 'ja';  // Japanese
+  return 'en';
+}
+
+function _readerPopulateVoices() {
+  if (!_readerSupported) return;
+  var sel = document.getElementById('story-reader-voice');
+  if (!sel) return;
+  var voices = window.speechSynthesis.getVoices() || [];
+  if (!voices.length) return; // voices load async — 'voiceschanged' will retry
+
+  var lang = _readerDetectLang(_reader.text || '');
+  var primary = voices.filter(function(v){ return new RegExp('^' + lang, 'i').test(v.lang || ''); });
+  var english = voices.filter(function(v){ return /^en/i.test(v.lang || ''); });
+
+  // Story-language voices first, then English — deduped, relevant & short
+  var seen = {}, list = [];
+  primary.concat(english).forEach(function(v){ if (!seen[v.name]) { seen[v.name] = 1; list.push(v); } });
+  if (!list.length) list = voices;
+  _reader.voices = list;
+
+  var saved = null; try { saved = localStorage.getItem('vt_reader_voice'); } catch (e) {}
+  var def = (saved && list.some(function(v){ return v.name === saved; })) ? saved
+          : (primary[0] ? primary[0].name : (english[0] ? english[0].name : (list[0] ? list[0].name : '')));
+
+  sel.innerHTML = '';
+  list.forEach(function(v) {
+    var o = document.createElement('option');
+    o.value = v.name;
+    o.textContent = v.name.replace(/^(Microsoft|Google)\s+/, '') + (v.lang ? ' · ' + v.lang : '');
+    if (v.name === def) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+function _onReaderVoiceChange() {
+  var sel = document.getElementById('story-reader-voice');
+  if (sel) { try { localStorage.setItem('vt_reader_voice', sel.value); } catch (e) {} }
+  if (_reader.playing) { _readerStop(); toggleStoryReader(); }  // restart with the new voice
+}
+
+function _readerUpdateBtn() {
+  var btn = document.getElementById('story-reader-btn');
+  if (!btn) return;
+  var play = btn.querySelector('.sr-ic-play');
+  var pause = btn.querySelector('.sr-ic-pause');
+  var lbl = btn.querySelector('.story-reader-label');
+  btn.classList.toggle('playing', _reader.playing);
+  if (play)  play.style.display  = _reader.playing ? 'none' : '';
+  if (pause) pause.style.display = _reader.playing ? '' : 'none';
+  if (lbl)   lbl.textContent     = _reader.playing ? 'Stop' : 'Listen';
+}
+
+function _readerStop() {
+  try { if (_readerSupported) window.speechSynthesis.cancel(); } catch (e) {}
+  _reader.playing = false; _reader.utter = null;
+  _readerUpdateBtn();
+}
+
+function toggleStoryReader() {
+  if (!_readerSupported) {
+    alert('The News Reader needs a modern browser (Chrome, Edge, or Safari) with audio enabled.');
+    return;
+  }
+  if (_reader.playing) { _readerStop(); return; }
+  var text = _reader.text || '';
+  if (!text) return;
+  try { window.speechSynthesis.cancel(); } catch (e) {}
+  var u = new SpeechSynthesisUtterance(text);
+  var sel = document.getElementById('story-reader-voice');
+  var vname = sel ? sel.value : null;
+  var all = (_reader.voices && _reader.voices.length) ? _reader.voices : (window.speechSynthesis.getVoices() || []);
+  var v = all.filter(function(x){ return x.name === vname; })[0];
+  if (v) { u.voice = v; u.lang = v.lang; }
+  u.rate = 1; u.pitch = 1;
+  u.onend   = function(){ _reader.playing = false; _readerUpdateBtn(); };
+  u.onerror = function(){ _reader.playing = false; _readerUpdateBtn(); };
+  _reader.utter = u; _reader.playing = true; _readerUpdateBtn();
+  window.speechSynthesis.speak(u);
+}
+
+function _readerShow(text) {
+  var r = document.getElementById('story-reader');
+  if (!r) return;
+  _readerStop();
+  _reader.text = text || '';
+  // Hide entirely if unsupported, so we never show a dead button
+  r.style.display = (_readerSupported && _reader.text) ? '' : 'none';
+  if (_readerSupported) _readerPopulateVoices();
+  _readerUpdateBtn();
+}
+
+function _readerHide() {
+  _readerStop();
+  var r = document.getElementById('story-reader');
+  if (r) r.style.display = 'none';
+}
+
+if (_readerSupported) {
+  try { window.speechSynthesis.onvoiceschanged = _readerPopulateVoices; } catch (e) {}
+}
+
 function closeStory() {
+  _readerStop();
   document.getElementById('story-modal-overlay').classList.remove('active');
   document.body.style.overflow = '';
 }
@@ -4027,6 +4187,9 @@ function openCustomPost(id) {
   overlay.classList.add('active');
   document.body.style.overflow = 'hidden';
   _resetStoryScroll(body);
+
+  // News Reader — speak the headline then the story body
+  _readerShow(_readerStripText((post.heading || '') + '. ' + (post.story || '')));
 }
 
 async function loadNewsPage() {
