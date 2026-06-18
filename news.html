@@ -4005,6 +4005,8 @@ function buildSportsBlock(data) {
   content.id = 'sports-cat-content';
   wrap.appendChild(content);
 
+  // Featured posts published to the Sports session (console targets "sports")
+  _renderCustomPosts('sports', wrap);
   return wrap;
 }
 
@@ -4039,6 +4041,8 @@ function buildLiveSession(sectionId, data) {
   wrap.appendChild(content);
 
   _renderEditionItems(content, sectionId, data);
+  // Featured posts published to this session via the console
+  _renderCustomPosts(sectionId, wrap);
   return wrap;
 }
 

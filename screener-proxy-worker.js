@@ -719,6 +719,8 @@ ${body.text}`;
       const VALID_SECTIONS = ['trending','global','india','stock','malayalam',
         'ml_trending','ml_movies','ml_music','ml_local','ml_science','ml_space',
         'ml_sports','ml_health','ml_food','ml_realestate','ml_career','ml_tech',
+        /* Global Edition standalone sessions (news.html) */
+        'sports','tech','space','science','fashion','movies','food','automobile','home','business',
         /* story.html pinned categories */
         'story_triller','story_travel','story_health','story_comedy',
         'story_kids','story_education','story_animation','story_ai',
