@@ -1310,7 +1310,7 @@ body{
 .cp-photo-wrap{
   width:100%;height:150px;flex-shrink:0;position:relative;overflow:hidden;background:var(--card3);
 }
-.cp-photo{width:100%;height:100%;object-fit:cover;display:block}
+.cp-photo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;height:100%;object-fit:cover;display:block}
 .cp-no-photo{
   width:100%;height:150px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
   font-size:40px;opacity:.3;background:var(--card3);
@@ -2465,7 +2465,7 @@ function renderBreakingNews(data) {
     }
 
     html += '<div class="bn-hero" ' + _ca(heroItem) + '>' +
-            '<img src="' + escAttr(heroItem.imageUrl) + '" alt="">' +
+            '<img src="' + escAttr(heroItem.imageUrl) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.visibility=\'hidden\';">' +
             '<div class="bn-hero-content">' +
             '<div class="bn-badge">BREAKING</div>' +
             '<div class="bn-hero-title">' + esc(heroItem.title) + '</div>' +
@@ -2483,7 +2483,7 @@ function renderBreakingNews(data) {
           else timeStr = Math.floor(mins/60) + 'h ago';
         }
         html += '<div class="bn-card" ' + _ca(item) + '>' +
-                (item.imageUrl ? '<img src="' + escAttr(item.imageUrl) + '" alt="">' : '') +
+                (item.imageUrl ? '<img src="' + escAttr(item.imageUrl) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.visibility=\'hidden\';">' : '') +
                 '<div class="bn-card-content">' +
                 '<div class="bn-card-title">' + esc(item.title) + '</div>' +
                 '<div class="bn-card-meta">' + timeStr + ' &middot; ' + esc(item.source || '') + '</div>' +
@@ -2555,7 +2555,7 @@ function renderSection(sectionId, sectionData, meta) {
         // Stock: show the story's real RSS photo when the source provides one
         // (no image otherwise — no themed fallback).
         var cardImg = (sectionId === 'stock' && item.image)
-          ? '<img class="news-card-img" src="' + escAttr(item.image) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+          ? '<img class="news-card-img" src="' + escAttr(item.image) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">'
           : '';
         gridHtml += '<div class="news-card' + (cardImg ? ' has-img' : '') + '" onclick="openStoryIdx(' + cardIdx + ')" role="button" tabindex="0" aria-label="' + esc(item.headline) + '">'
           + cardImg
@@ -4097,7 +4097,10 @@ function _renderCustomPosts(sectionId, container) {
     card.onkeydown = (function(pid){ return function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openCustomPost(pid); } }; })(post.id);
     var _cpPos = post.photo_pos || '50% 50%';
     var _cpZoom = post.photo_zoom ? Math.min(Math.max(parseFloat(post.photo_zoom), 1), 4) : 1;
-    var _cpImgStyle = 'object-position:' + _cpPos + ';transform:scale(' + _cpZoom + ');transform-origin:' + _cpPos;
+    // Zoom by enlarging the image element (object-fit:cover re-samples from the
+    // source) instead of transform:scale, which would upsample the small
+    // thumbnail bitmap and blur it. Centering comes from the .cp-photo CSS.
+    var _cpImgStyle = 'object-position:' + _cpPos + ';width:' + (_cpZoom * 100) + '%;height:' + (_cpZoom * 100) + '%';
     var photoHtml = post.photo
       ? '<div class="cp-photo-wrap"><img class="cp-photo" src="' + escAttr(post.photo) + '" style="' + escAttr(_cpImgStyle) + '" alt="" loading="lazy" onerror="this.parentNode.innerHTML=\'<div class=cp-no-photo>📰</div>\'"></div>'
       : '<div class="cp-no-photo">📰</div>';
@@ -4585,8 +4588,8 @@ function _buildBnLayout(items, getImg, getOnClick, timeFunc, badgeText, accent) 
     _wireCard(hEl, getOnClick(hero, 0));
     var hTe = hero.teaser ? esc(_wDecodeHtml(hero.teaser)) : '';
     hEl.innerHTML =
-      '<img src="' + escAttr(_uniqueImg(hero, 0)) + '" alt="" loading="lazy"'
-      + ' onerror="this.onerror=null;this.src=\'' + escAttr(_wCardImgUrl(hero.headline || '')) + '\';">'
+      '<img src="' + escAttr(_uniqueImg(hero, 0)) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"'
+      + ' onerror="if(this.dataset.fb){this.style.visibility=\'hidden\';this.onerror=null;}else{this.dataset.fb=1;this.src=\'' + escAttr(_wCardImgUrl(hero.headline || '')) + '\';}">'
       + '<div class="bn-hero-content">'
       + (badgeText ? '<div class="bn-badge"' + (accent ? ' style="background:' + escAttr(accent) + '"' : '') + '>' + esc(badgeText) + '</div>' : '')
       + '<div class="bn-hero-title">' + esc(_wDecodeHtml(hero.headline || '')) + '</div>'
@@ -4604,8 +4607,8 @@ function _buildBnLayout(items, getImg, getOnClick, timeFunc, badgeText, accent) 
       card.className = 'bn-card';
       _wireCard(card, getOnClick(item, si + 1));
       card.innerHTML =
-        '<img src="' + escAttr(_uniqueImg(item, si + 1)) + '" alt="" loading="lazy"'
-        + ' onerror="this.onerror=null;this.src=\'' + escAttr(_wCardImgUrl(item.headline || '')) + '\';">'
+        '<img src="' + escAttr(_uniqueImg(item, si + 1)) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"'
+        + ' onerror="if(this.dataset.fb){this.style.visibility=\'hidden\';this.onerror=null;}else{this.dataset.fb=1;this.src=\'' + escAttr(_wCardImgUrl(item.headline || '')) + '\';}">'
         + '<div class="bn-card-content">'
         + '<div class="bn-card-title">' + esc(_wDecodeHtml(item.headline || '')) + '</div>'
         + '<div class="bn-card-meta">' + timeFunc(item.publishedAt) + '</div>'
@@ -4655,7 +4658,7 @@ function _buildNpLayout(items, getImg, getOnClick, timeFunc) {
     heroEl.onclick = getOnClick(hero, 0);
     heroEl.onkeydown = (function(fn){ return function(e){ if(e.key==='Enter'||e.key===' ')fn(); }; })(heroEl.onclick);
     heroEl.innerHTML =
-      '<img class="world-np-hero-img" src="' + escAttr(heroImg) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+      '<img class="world-np-hero-img" src="' + escAttr(heroImg) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">'
       + '<div class="world-np-hero-overlay"></div>'
       + '<div class="world-np-hero-body">'
       + '<div class="world-np-hero-hl">' + heroHl + '</div>'
@@ -4678,7 +4681,7 @@ function _buildNpLayout(items, getImg, getOnClick, timeFunc) {
       card.onclick = getOnClick(item, si + 1);
       card.onkeydown = (function(fn){ return function(e){ if(e.key==='Enter'||e.key===' ')fn(); }; })(card.onclick);
       card.innerHTML =
-        '<img class="world-np-side-img" src="' + escAttr(sImg) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+        '<img class="world-np-side-img" src="' + escAttr(sImg) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">'
         + '<div class="world-np-side-body">'
         + '<div class="world-np-side-hl">' + sHl + '</div>'
         + '<span class="world-np-side-time">' + timeFunc(item.publishedAt) + '</span>'
@@ -4728,7 +4731,7 @@ function _buildNpLayout(items, getImg, getOnClick, timeFunc) {
       gc.onclick = getOnClick(item, gi + 8);
       gc.onkeydown = (function(fn){ return function(e){ if(e.key==='Enter'||e.key===' ')fn(); }; })(gc.onclick);
       gc.innerHTML =
-        '<img class="world-np-grid-img" src="' + escAttr(gImg) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+        '<img class="world-np-grid-img" src="' + escAttr(gImg) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">'
         + '<div class="world-np-grid-body">'
         + '<div class="world-np-grid-hl">' + gHl + '</div>'
         + (gTe ? '<div class="world-np-grid-teaser">' + gTe + '</div>' : '')
