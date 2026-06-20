@@ -1630,6 +1630,7 @@
               <div class="upload-row">
                 <input type="file" id="ac-file" class="file-input" accept="image/*" onchange="handlePhotoUpload(this,'ac')">
                 <button type="button" class="btn-upload" id="ac-upload-btn" onclick="document.getElementById('ac-file').click()">⬆ Upload image</button>
+                <button type="button" class="btn-outline" id="ac-watermark-btn" onclick="applyManualWatermark('ac')" style="padding:4px 8px;font-size:12px;margin-left:8px;border-color:#8b5cf6;color:#8b5cf6;">✨ Add Watermark</button>
                 <span class="upload-hint">JPEG · PNG · WebP · GIF · Rec: 1200x630px (16:9) · max 8 MB</span>
               </div>
               <img id="ac-photo-preview" class="photo-preview" src="" alt="Preview"
@@ -2087,16 +2088,21 @@ async function drawVilfinWatermark(ctx, w, h) {
   var logo = await _wmLoadLogo();
   var pad = Math.round(barH * 0.3);
   var cy = h - barH / 2;
+  var label = "VilfinTV News";
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold " + Math.round(barH * 0.48) + "px Inter, sans-serif";
-  ctx.textAlign = "right";
+  ctx.font = "bold " + Math.round(barH * 0.46) + "px Inter, sans-serif";
   ctx.textBaseline = "middle";
   ctx.shadowColor = "rgba(0,0,0,0.8)";
   ctx.shadowBlur = 4;
 
   if (logo) {
+    // Order: logo on the LEFT, then the "VilfinTV News" wordmark to its right,
+    // with the whole group anchored to the right edge of the footer bar.
     var ls = Math.round(barH * 0.78);
-    var lx = w - pad - ls / 2;     // logo circle centre x
+    var gap = Math.round(pad * 0.7);
+    var textW = ctx.measureText(label).width;
+    var textLeft = w - pad - textW;     // wordmark left edge (right-anchored)
+    var lx = textLeft - gap - ls / 2;   // logo circle centre, left of the text
     ctx.save();
     ctx.shadowBlur = 0;
     ctx.beginPath();
@@ -2105,9 +2111,11 @@ async function drawVilfinWatermark(ctx, w, h) {
     ctx.clip();
     ctx.drawImage(logo, lx - ls / 2, cy - ls / 2, ls, ls);
     ctx.restore();
-    ctx.fillText("VilfinTV", lx - ls / 2 - pad * 0.7, cy);
+    ctx.textAlign = "left";
+    ctx.fillText(label, textLeft, cy);
   } else {
-    ctx.fillText("VilfinTV", w - pad, cy);
+    ctx.textAlign = "right";
+    ctx.fillText(label, w - pad, cy);
   }
   ctx.restore();
 }
@@ -2155,6 +2163,7 @@ async function applyManualWatermark(prefix) {
     urlField.value = finalUrl;
     if (prefix === 'cp' && typeof previewPhoto === 'function') previewPhoto(finalUrl);
     if (prefix === 'st' && typeof previewStoryPhoto === 'function') previewStoryPhoto(finalUrl);
+    if (prefix === 'ac' && typeof previewAcademyPhoto === 'function') previewAcademyPhoto(finalUrl);
   } catch (e) {
     alert("Watermark failed: " + e.message);
   } finally {
