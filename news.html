@@ -2753,12 +2753,14 @@ function openStory(item, meta) {
   var shareText = encodeURIComponent(item.headline || 'Read this story on VilfinTV News');
   var storyIdSlug = (item.headline || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   var rawShareUrl = 'https://vilfintv.com/news.html?story=' + encodeURIComponent(storyIdSlug);
-  var shareUrl = encodeURIComponent(rawShareUrl);
+  // Rich-preview URL: the worker serves per-story Open Graph (hero photo +
+  // heading) so WhatsApp/Facebook/X show the photo, then redirects to the story.
+  var ogShareUrl = encodeURIComponent('https://screener-proxy.vilfintv.workers.dev/s?story=' + encodeURIComponent(storyIdSlug));
   storyHtml += '<div class="story-modal-share">'
     + '<span class="story-modal-share-label">Share:</span>'
-    + '<a class="share-btn-sm share-wa" href="https://api.whatsapp.com/send?text=' + shareText + '%20' + shareUrl + '" target="_blank" rel="noopener">WhatsApp</a>'
-    + '<button type="button" class="share-btn-sm share-fb" data-url="' + escAttr(rawShareUrl) + '" onclick="fbShareMenu(this, event)">Facebook</button>'
-    + '<a class="share-btn-sm share-tw" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank" rel="noopener">X (Twitter)</a>'
+    + '<a class="share-btn-sm share-wa" href="https://api.whatsapp.com/send?text=' + shareText + '%20' + ogShareUrl + '" target="_blank" rel="noopener">WhatsApp</a>'
+    + '<button type="button" class="share-btn-sm share-fb" data-url="https://screener-proxy.vilfintv.workers.dev/s?story=' + encodeURIComponent(storyIdSlug) + '" onclick="fbShareMenu(this, event)">Facebook</button>'
+    + '<a class="share-btn-sm share-tw" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + ogShareUrl + '" target="_blank" rel="noopener">X (Twitter)</a>'
     + '<button class="share-btn-sm share-copy" onclick="copyToClipboard(\'' + rawShareUrl + '\')">Copy Link</button>'
     + '</div>';
 
@@ -4236,12 +4238,14 @@ function openCustomPost(id) {
   var shareText = encodeURIComponent(post.heading || 'Read this story on VilfinTV News');
   var storyIdSlug = post.id || (post.heading || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   var rawShareUrl = 'https://vilfintv.com/news.html?story=' + encodeURIComponent(storyIdSlug);
-  var shareUrl = encodeURIComponent(rawShareUrl);
+  // Rich-preview URL: worker serves per-story Open Graph (hero photo + heading)
+  // for WhatsApp/Facebook/X, then redirects to the live story.
+  var ogShareUrl = encodeURIComponent('https://screener-proxy.vilfintv.workers.dev/s?story=' + encodeURIComponent(storyIdSlug));
   html += '<div class="story-modal-share">'
     + '<span class="story-modal-share-label">Share:</span>'
-    + '<a class="share-btn-sm share-wa" href="https://api.whatsapp.com/send?text=' + shareText + '%20' + shareUrl + '" target="_blank" rel="noopener">WhatsApp</a>'
-    + '<button type="button" class="share-btn-sm share-fb" data-url="' + escAttr(rawShareUrl) + '" onclick="fbShareMenu(this, event)">Facebook</button>'
-    + '<a class="share-btn-sm share-tw" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank" rel="noopener">X (Twitter)</a>'
+    + '<a class="share-btn-sm share-wa" href="https://api.whatsapp.com/send?text=' + shareText + '%20' + ogShareUrl + '" target="_blank" rel="noopener">WhatsApp</a>'
+    + '<button type="button" class="share-btn-sm share-fb" data-url="https://screener-proxy.vilfintv.workers.dev/s?story=' + encodeURIComponent(storyIdSlug) + '" onclick="fbShareMenu(this, event)">Facebook</button>'
+    + '<a class="share-btn-sm share-tw" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + ogShareUrl + '" target="_blank" rel="noopener">X (Twitter)</a>'
     + '<button class="share-btn-sm share-copy" onclick="copyToClipboard(\'' + rawShareUrl + '\')">Copy Link</button>'
     + '</div>';
 

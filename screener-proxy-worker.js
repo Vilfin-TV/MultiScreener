@@ -50,6 +50,78 @@ export default {
 
     const { pathname, searchParams } = new URL(request.url);
 
+    // ── /s (alias /share)  GET — story share page with per-story Open Graph ───
+    // WhatsApp / Facebook / X scrape this URL (they don't run JS) for the hero
+    // photo + heading; human clicks are redirected to the live story.
+    if (pathname === '/s' || pathname === '/share') {
+      const slug = (searchParams.get('story') || '').trim();
+      const target = 'https://vilfintv.com/news.html' + (slug ? ('?story=' + encodeURIComponent(slug)) : '');
+      const _ogSlug = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const _ogEsc  = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      let title = 'VilfinTV News';
+      let desc  = 'Live news, markets, sports, tech and stories on VilfinTV.';
+      let image = 'https://vilfintv.com/images/vilfintv-logo.jpg';
+      let found = false;
+
+      if (slug) {
+        try {
+          // 1) Featured posts (content.json)
+          const cRes = await fetch('https://vilfintv.com/content.json', { cf: { cacheTtl: 300 } });
+          if (cRes.ok) {
+            const arr = await cRes.json();
+            const post = (Array.isArray(arr) ? arr : []).find(p => String(p.id) === slug || _ogSlug(p.heading) === slug);
+            if (post) {
+              found = true;
+              title = post.heading || title;
+              desc  = (post.story || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200) || desc;
+              if (post.photo) image = post.photo;
+            }
+          }
+          // 2) RSS / generated stories (data/news.json)
+          if (!found) {
+            const nRes = await fetch('https://vilfintv.com/data/news.json', { cf: { cacheTtl: 300 } });
+            if (nRes.ok) {
+              const data = await nRes.json();
+              const secs = (data && data.sections) ? Object.keys(data.sections) : [];
+              for (const k of secs) {
+                const items = (data.sections[k] && data.sections[k].items) || [];
+                const it = items.find(i => _ogSlug(i.headline) === slug);
+                if (it) {
+                  found = true;
+                  title = it.headline || title;
+                  desc  = (it.teaser || '').replace(/\s+/g, ' ').trim().slice(0, 200) || desc;
+                  if (it.image) image = it.image;
+                  break;
+                }
+              }
+            }
+          }
+        } catch (_) { /* fall back to brand defaults */ }
+      }
+
+      const html = '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+        + '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        + '<title>' + _ogEsc(title) + '</title>'
+        + '<meta property="og:type" content="article">'
+        + '<meta property="og:site_name" content="VilfinTV News">'
+        + '<meta property="og:title" content="' + _ogEsc(title) + '">'
+        + '<meta property="og:description" content="' + _ogEsc(desc) + '">'
+        + '<meta property="og:image" content="' + _ogEsc(image) + '">'
+        + '<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">'
+        + '<meta property="og:url" content="' + _ogEsc(target) + '">'
+        + '<meta name="twitter:card" content="summary_large_image">'
+        + '<meta name="twitter:title" content="' + _ogEsc(title) + '">'
+        + '<meta name="twitter:description" content="' + _ogEsc(desc) + '">'
+        + '<meta name="twitter:image" content="' + _ogEsc(image) + '">'
+        + '<meta http-equiv="refresh" content="0; url=' + _ogEsc(target) + '">'
+        + '<link rel="canonical" href="' + _ogEsc(target) + '">'
+        + '</head><body style="font-family:system-ui,sans-serif;background:#0a192f;color:#e2eeff;text-align:center;padding:40px">'
+        + '<p>Opening <a style="color:#7db1ff" href="' + _ogEsc(target) + '">' + _ogEsc(title) + '</a>…</p>'
+        + '<script>location.replace(' + JSON.stringify(target) + ');</script>'
+        + '</body></html>';
+      return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300', 'Access-Control-Allow-Origin': '*' } });
+    }
+
     // ── /feedback  POST — Bug reports, feature requests, user feedback ────────
     // Email is sent via Web3Forms (web3forms.com — free, no domain verification needed).
     // Required env var in Cloudflare Workers dashboard:
