@@ -2743,34 +2743,37 @@ async function _buildStoryShareCard(heading, photoUrl, portrait) {
   return await new Promise(function (res) { c.toBlob(function (b) { res(b); }, 'image/jpeg', 0.92); });
 }
 
-async function shareStoryCard(heading, photoUrl, cleanUrl, portrait, btn) {
+async function shareStoryCard(heading, photoUrl, cleanUrl, mode, btn) {
   var orig = btn ? btn.innerHTML : '';
   if (btn) { btn.disabled = true; btn.innerHTML = '⏳'; }
+  var portrait = (mode === 'status');                 // 9:16 only for Status
   var caption = heading + '\n\n📲 Read on VilfinTV News:\n' + cleanUrl;
+  // Desktop fallback (no file-share): each target's own web share, clean URL
+  var fallbackUrl;
+  if (mode === 'facebook')      fallbackUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(cleanUrl);
+  else if (mode === 'twitter')  fallbackUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(heading) + '&url=' + encodeURIComponent(cleanUrl);
+  else                          fallbackUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(caption);
   try {
-    var blob = await _buildStoryShareCard(heading, photoUrl, !!portrait);
+    var blob = await _buildStoryShareCard(heading, photoUrl, portrait);
     var file = blob ? new File([blob], 'vilfintv-news.jpg', { type: 'image/jpeg' }) : null;
     if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-      // Status: image only — the headline + link are already on the card, so a
-      // text caption would overlap WhatsApp's own status text. Chat: include the
-      // caption (it sits separately below the image and the link stays tappable).
+      // Mobile: native sheet → user picks WhatsApp / Status / Facebook / X, photo
+      // attaches. Status posts image-only so it can't overlap WhatsApp's caption.
       var shareData = portrait ? { files: [file], title: 'VilfinTV News' }
                                : { files: [file], title: 'VilfinTV News', text: caption };
       await navigator.share(shareData);
     } else {
-      // Desktop / no file-share: download the card, then open WhatsApp with a clean caption
+      // Desktop: download the card (to attach), then open the target's web share
       if (blob) {
         var a = document.createElement('a');
         a.href = URL.createObjectURL(blob); a.download = 'vilfintv-news.jpg';
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
       }
-      window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(caption), '_blank');
+      window.open(fallbackUrl, '_blank', 'noopener');
     }
   } catch (e) {
-    if (!(e && e.name === 'AbortError')) {
-      window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(caption), '_blank');
-    }
+    if (!(e && e.name === 'AbortError')) window.open(fallbackUrl, '_blank', 'noopener');
   } finally {
     if (btn) { btn.disabled = false; btn.innerHTML = orig; }
   }
@@ -2778,7 +2781,7 @@ async function shareStoryCard(heading, photoUrl, cleanUrl, portrait, btn) {
 
 function shareStoryCardCtx(mode, btn) {
   var c = _shareCtx || {};
-  shareStoryCard(c.heading || 'VilfinTV News', c.photo || '', c.url || 'https://vilfintv.com/news.html', mode === 'status', btn);
+  shareStoryCard(c.heading || 'VilfinTV News', c.photo || '', c.url || 'https://vilfintv.com/news.html', mode, btn);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2916,10 +2919,10 @@ function openStory(item, meta) {
   _shareCtx = { heading: (item.headline || 'VilfinTV News'), photo: (item.image || ''), url: rawShareUrl };
   storyHtml += '<div class="story-modal-share">'
     + '<span class="story-modal-share-label">Share:</span>'
-    + '<button type="button" class="share-btn-sm share-wa" onclick="shareStoryCardCtx(\'chat\', this)">WhatsApp</button>'
+    + '<button type="button" class="share-btn-sm share-wa" onclick="shareStoryCardCtx(\'whatsapp\', this)">WhatsApp</button>'
     + '<button type="button" class="share-btn-sm share-status" onclick="shareStoryCardCtx(\'status\', this)">📸 Status</button>'
-    + '<button type="button" class="share-btn-sm share-fb" data-url="' + escAttr(rawShareUrl) + '" onclick="fbShareMenu(this, event)">Facebook</button>'
-    + '<a class="share-btn-sm share-tw" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank" rel="noopener">X (Twitter)</a>'
+    + '<button type="button" class="share-btn-sm share-fb" onclick="shareStoryCardCtx(\'facebook\', this)">Facebook</button>'
+    + '<button type="button" class="share-btn-sm share-tw" onclick="shareStoryCardCtx(\'twitter\', this)">X (Twitter)</button>'
     + '<button class="share-btn-sm share-copy" onclick="copyToClipboard(\'' + rawShareUrl + '\')">Copy Link</button>'
     + '</div>';
 
@@ -4402,10 +4405,10 @@ function openCustomPost(id) {
   _shareCtx = { heading: (post.heading || 'VilfinTV News'), photo: (post.photo || ''), url: rawShareUrl };
   html += '<div class="story-modal-share">'
     + '<span class="story-modal-share-label">Share:</span>'
-    + '<button type="button" class="share-btn-sm share-wa" onclick="shareStoryCardCtx(\'chat\', this)">WhatsApp</button>'
+    + '<button type="button" class="share-btn-sm share-wa" onclick="shareStoryCardCtx(\'whatsapp\', this)">WhatsApp</button>'
     + '<button type="button" class="share-btn-sm share-status" onclick="shareStoryCardCtx(\'status\', this)">📸 Status</button>'
-    + '<button type="button" class="share-btn-sm share-fb" data-url="' + escAttr(rawShareUrl) + '" onclick="fbShareMenu(this, event)">Facebook</button>'
-    + '<a class="share-btn-sm share-tw" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank" rel="noopener">X (Twitter)</a>'
+    + '<button type="button" class="share-btn-sm share-fb" onclick="shareStoryCardCtx(\'facebook\', this)">Facebook</button>'
+    + '<button type="button" class="share-btn-sm share-tw" onclick="shareStoryCardCtx(\'twitter\', this)">X (Twitter)</button>'
     + '<button class="share-btn-sm share-copy" onclick="copyToClipboard(\'' + rawShareUrl + '\')">Copy Link</button>'
     + '</div>';
 
