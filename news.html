@@ -2809,6 +2809,20 @@ function _readerDetectLang(text) {
   return 'en';
 }
 
+/* Rank voices so modern, natural-sounding engines win over the old robotic
+   desktop (SAPI) voices like Hazel/David/Zira. */
+function _readerVoiceScore(v) {
+  var n = (v && v.name ? v.name : '').toLowerCase();
+  var s = 0;
+  if (/natural|neural/.test(n)) s += 100;   // Microsoft "… Online (Natural)"
+  if (/online/.test(n))         s += 60;
+  if (/google/.test(n))         s += 55;     // Chrome's Google voices
+  if (/premium|enhanced/.test(n)) s += 45;   // Apple enhanced voices
+  if (/siri/.test(n))           s += 40;
+  if (/microsoft/.test(n) && !/online|natural|neural/.test(n)) s -= 30; // legacy SAPI
+  return s;
+}
+
 function _readerPopulateVoices() {
   if (!_readerSupported) return;
   var sel = document.getElementById('story-reader-voice');
@@ -2817,18 +2831,21 @@ function _readerPopulateVoices() {
   if (!voices.length) return; // voices load async — 'voiceschanged' will retry
 
   var lang = _readerDetectLang(_reader.text || '');
-  var primary = voices.filter(function(v){ return new RegExp('^' + lang, 'i').test(v.lang || ''); });
-  var english = voices.filter(function(v){ return /^en/i.test(v.lang || ''); });
+  var byScore = function(a, b){ return _readerVoiceScore(b) - _readerVoiceScore(a); };
+  var primary = voices.filter(function(v){ return new RegExp('^' + lang, 'i').test(v.lang || ''); }).sort(byScore);
+  var english = voices.filter(function(v){ return /^en/i.test(v.lang || ''); }).sort(byScore);
 
-  // Story-language voices first, then English — deduped, relevant & short
+  // Story-language voices first, then English — deduped, ranked so natural /
+  // neural / Google voices lead and the legacy robotic ones fall to the bottom.
   var seen = {}, list = [];
   primary.concat(english).forEach(function(v){ if (!seen[v.name]) { seen[v.name] = 1; list.push(v); } });
-  if (!list.length) list = voices;
+  if (!list.length) list = voices.slice().sort(byScore);
   _reader.voices = list;
 
   var saved = null; try { saved = localStorage.getItem('vt_reader_voice'); } catch (e) {}
+  // Respect a saved pick; otherwise default to the highest-quality voice.
   var def = (saved && list.some(function(v){ return v.name === saved; })) ? saved
-          : (primary[0] ? primary[0].name : (english[0] ? english[0].name : (list[0] ? list[0].name : '')));
+          : (list[0] ? list[0].name : '');
 
   sel.innerHTML = '';
   list.forEach(function(v) {
@@ -2859,9 +2876,45 @@ function _readerUpdateBtn() {
 }
 
 function _readerStop() {
+  _reader.token = (_reader.token || 0) + 1;  // invalidate any pending chunk callbacks
   try { if (_readerSupported) window.speechSynthesis.cancel(); } catch (e) {}
-  _reader.playing = false; _reader.utter = null;
+  _reader.playing = false; _reader.utter = null; _reader.queue = null; _reader.qi = 0;
   _readerUpdateBtn();
+}
+
+function _readerPickVoice() {
+  var sel = document.getElementById('story-reader-voice');
+  var vname = sel ? sel.value : null;
+  var all = (_reader.voices && _reader.voices.length) ? _reader.voices : (window.speechSynthesis.getVoices() || []);
+  return all.filter(function(x){ return x.name === vname; })[0] || null;
+}
+
+/* Speaks one sentence at a time with a short breath between them, giving a
+   calmer, more human news-reader cadence than one long robotic utterance. */
+function _readerSpeakNext(token) {
+  if (!_reader.playing || token !== _reader.token) return;
+  if (!_reader.queue || _reader.qi >= _reader.queue.length) {
+    _reader.playing = false; _readerUpdateBtn(); return;
+  }
+  var sentence = _reader.queue[_reader.qi];
+  var u = new SpeechSynthesisUtterance(sentence);
+  var v = _readerPickVoice();
+  if (v) { u.voice = v; u.lang = v.lang; }
+  u.rate = 0.92; u.pitch = 1.0; u.volume = 1;  // measured, natural pace
+  u.onend = function() {
+    if (token !== _reader.token) return;
+    _reader.qi++;
+    // a longer beat after a paragraph break, a short breath between sentences
+    var gap = /\n/.test(sentence) ? 360 : 200;
+    setTimeout(function(){ _readerSpeakNext(token); }, gap);
+  };
+  u.onerror = function() {
+    if (token !== _reader.token) return;
+    _reader.qi++;
+    setTimeout(function(){ _readerSpeakNext(token); }, 120);
+  };
+  _reader.utter = u;
+  window.speechSynthesis.speak(u);
 }
 
 function toggleStoryReader() {
@@ -2872,18 +2925,16 @@ function toggleStoryReader() {
   if (_reader.playing) { _readerStop(); return; }
   var text = _reader.text || '';
   if (!text) return;
-  try { window.speechSynthesis.cancel(); } catch (e) {}
-  var u = new SpeechSynthesisUtterance(text);
-  var sel = document.getElementById('story-reader-voice');
-  var vname = sel ? sel.value : null;
-  var all = (_reader.voices && _reader.voices.length) ? _reader.voices : (window.speechSynthesis.getVoices() || []);
-  var v = all.filter(function(x){ return x.name === vname; })[0];
-  if (v) { u.voice = v; u.lang = v.lang; }
-  u.rate = 1; u.pitch = 1;
-  u.onend   = function(){ _reader.playing = false; _readerUpdateBtn(); };
-  u.onerror = function(){ _reader.playing = false; _readerUpdateBtn(); };
-  _reader.utter = u; _reader.playing = true; _readerUpdateBtn();
-  window.speechSynthesis.speak(u);
+  _readerStop();  // cancel anything pending and bump the token
+  // Break into sentences so the engine pauses naturally (no lookbehind — wide support)
+  var parts = text.replace(/([.!?…])(\s+)/g, '$1|~S~|').split('|~S~|')
+    .map(function(s){ return s.trim(); })
+    .filter(function(s){ return s.length; });
+  if (!parts.length) parts = [text];
+  _reader.queue = parts; _reader.qi = 0; _reader.playing = true;
+  var token = (_reader.token = (_reader.token || 0) + 1);
+  _readerUpdateBtn();
+  _readerSpeakNext(token);
 }
 
 function _readerShow(text) {
