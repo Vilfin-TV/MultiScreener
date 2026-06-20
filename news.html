@@ -1404,6 +1404,7 @@ body{
 }
 .share-btn-sm:hover{opacity:.85}
 .share-wa{background:#25D366}
+.share-status{background:linear-gradient(135deg,#25D366 0%,#128C7E 100%);box-shadow:0 2px 8px rgba(18,140,126,.35)}
 .share-tw{background:#000;border:1px solid #333}
 .share-fb{background:#1877F2}
 .share-copy{background:var(--border2);color:var(--text)}
@@ -2624,6 +2625,154 @@ function copyToClipboard(text) {
 }
 
 /* ═══════════════════════════════════════════════════
+   SHARE CARD — generates a premium image (hero photo +
+   headline + VilfinTV branding) for WhatsApp chat & Status
+═══════════════════════════════════════════════════ */
+var _shareCtx = null;                                   // {heading, photo, url} for the open story
+var _SHARE_WORKER = 'https://screener-proxy.vilfintv.workers.dev';
+
+function _roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+function _loadShareImg(src, cors) {
+  return new Promise(function (res) {
+    var im = new Image();
+    if (cors) im.crossOrigin = 'anonymous';
+    im.onload = function () { res(im); };
+    im.onerror = function () { res(null); };
+    im.src = src;
+  });
+}
+function _wrapShareLines(ctx, text, maxW, maxLines) {
+  var words = String(text || '').replace(/\s+/g, ' ').trim().split(' ');
+  var lines = [], cur = '';
+  for (var i = 0; i < words.length; i++) {
+    var t = cur ? cur + ' ' + words[i] : words[i];
+    if (ctx.measureText(t).width > maxW && cur) {
+      lines.push(cur); cur = words[i];
+      if (lines.length === maxLines) break;
+    } else { cur = t; }
+  }
+  if (cur && lines.length < maxLines) lines.push(cur);
+  if (lines.length === maxLines) {
+    var last = lines[maxLines - 1];
+    while (last.length && ctx.measureText(last + '…').width > maxW) last = last.slice(0, -1);
+    lines[maxLines - 1] = last.replace(/[\s.,;:]+$/, '') + '…';
+  }
+  return lines;
+}
+
+async function _buildStoryShareCard(heading, photoUrl, portrait) {
+  var W = 1080, H = portrait ? 1920 : 1350;
+  var c = document.createElement('canvas'); c.width = W; c.height = H;
+  var ctx = c.getContext('2d');
+  try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) {}
+
+  // Brand navy base
+  var base = ctx.createLinearGradient(0, 0, 0, H);
+  base.addColorStop(0, '#0c1b4d'); base.addColorStop(1, '#070d1f');
+  ctx.fillStyle = base; ctx.fillRect(0, 0, W, H);
+
+  // Hero photo (loaded CORS-safe via the worker image proxy so the canvas can export)
+  if (photoUrl) {
+    var img = await _loadShareImg(_SHARE_WORKER + '/img?url=' + encodeURIComponent(photoUrl), true);
+    if (!img) img = await _loadShareImg(photoUrl, true);
+    if (img && img.naturalWidth) {
+      var ph = portrait ? Math.round(H * 0.60) : H;
+      var ar = img.naturalWidth / img.naturalHeight, far = W / ph, sw, sh, sx, sy;
+      if (ar > far) { sh = img.naturalHeight; sw = sh * far; sx = (img.naturalWidth - sw) / 2; sy = 0; }
+      else { sw = img.naturalWidth; sh = sw / far; sx = 0; sy = (img.naturalHeight - sh) / 2; }
+      try { ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, ph); } catch (e) {}
+    }
+  }
+
+  // Bottom scrim for text legibility
+  var gh = Math.round(H * 0.62), gy = H - gh;
+  var g = ctx.createLinearGradient(0, gy, 0, H);
+  g.addColorStop(0, 'rgba(7,13,31,0)'); g.addColorStop(0.5, 'rgba(7,13,31,0.82)'); g.addColorStop(1, 'rgba(7,13,31,0.97)');
+  ctx.fillStyle = g; ctx.fillRect(0, gy, W, gh);
+
+  var pad = 64;
+  // Top brand row: round logo + "VilfinTV" + red NEWS chip
+  var logo = await _loadShareImg('images/vilfintv-logo.jpg', true);
+  var by = 66, ls = 88;
+  if (logo) {
+    ctx.save(); ctx.beginPath(); ctx.arc(pad + ls / 2, by + ls / 2, ls / 2, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
+    ctx.drawImage(logo, pad, by, ls, ls); ctx.restore();
+  }
+  ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  ctx.fillStyle = '#ffffff'; ctx.font = '800 50px Inter, Arial, sans-serif';
+  var brandX = pad + ls + 24;
+  ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 8;
+  ctx.fillText('VilfinTV', brandX, by + ls / 2);
+  ctx.shadowBlur = 0;
+  var vtW = ctx.measureText('VilfinTV').width;
+  var chipX = brandX + vtW + 16, chipH = 46, chipY = by + ls / 2 - chipH / 2, chipW = 96;
+  ctx.fillStyle = '#ef4444'; _roundRect(ctx, chipX, chipY, chipW, chipH, 9); ctx.fill();
+  ctx.fillStyle = '#ffffff'; ctx.font = '800 28px Inter, Arial, sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('NEWS', chipX + chipW / 2, chipY + chipH / 2 + 1);
+
+  // Footer line (read CTA) anchored to the bottom
+  var fy = H - pad - 6;
+  ctx.textAlign = 'left'; ctx.fillStyle = '#9db8ff'; ctx.font = '700 36px Inter, Arial, sans-serif';
+  ctx.fillText('Read the full story  ·  vilfintv.com', pad, fy - 18);
+
+  // Headline, stacked just above the footer
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '800 66px "Playfair Display", Georgia, serif';
+  var lineH = 88;
+  var lines = _wrapShareLines(ctx, heading, W - pad * 2, portrait ? 6 : 4);
+  var blockBottom = fy - 86;
+  var startY = blockBottom - lines.length * lineH;
+  // accent bar
+  ctx.fillStyle = '#3b82f6'; ctx.fillRect(pad, startY - 26, 96, 9);
+  ctx.fillStyle = '#ffffff'; ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 10;
+  for (var i = 0; i < lines.length; i++) ctx.fillText(lines[i], pad, startY + i * lineH + lineH / 2);
+  ctx.shadowBlur = 0;
+
+  return await new Promise(function (res) { c.toBlob(function (b) { res(b); }, 'image/jpeg', 0.92); });
+}
+
+async function shareStoryCard(heading, photoUrl, cleanUrl, portrait, btn) {
+  var orig = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '⏳'; }
+  var caption = heading + '\n\n📲 Read on VilfinTV News:\n' + cleanUrl;
+  try {
+    var blob = await _buildStoryShareCard(heading, photoUrl, !!portrait);
+    var file = blob ? new File([blob], 'vilfintv-news.jpg', { type: 'image/jpeg' }) : null;
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], text: caption, title: 'VilfinTV News' });
+    } else {
+      // Desktop / no file-share: download the card, then open WhatsApp with a clean caption
+      if (blob) {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = 'vilfintv-news.jpg';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+      }
+      window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(caption), '_blank');
+    }
+  } catch (e) {
+    if (!(e && e.name === 'AbortError')) {
+      window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(caption), '_blank');
+    }
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+  }
+}
+
+function shareStoryCardCtx(mode, btn) {
+  var c = _shareCtx || {};
+  shareStoryCard(c.heading || 'VilfinTV News', c.photo || '', c.url || 'https://vilfintv.com/news.html', mode === 'status', btn);
+}
+
+/* ═══════════════════════════════════════════════════
    FACEBOOK SHARE — choose Feed (direct) or Story
    Facebook has no web API to post directly to Stories, so "Story" opens the
    device's native share sheet (mobile) where the user can pick Facebook → Story.
@@ -2749,18 +2898,19 @@ function openStory(item, meta) {
       + '</button>';
   }
 
-  // Share buttons
+  // Share buttons — WhatsApp & Status share a branded photo card (no proxy URL
+  // shown); the public link is the clean vilfintv.com story URL.
   var shareText = encodeURIComponent(item.headline || 'Read this story on VilfinTV News');
   var storyIdSlug = (item.headline || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   var rawShareUrl = 'https://vilfintv.com/news.html?story=' + encodeURIComponent(storyIdSlug);
-  // Rich-preview URL: the worker serves per-story Open Graph (hero photo +
-  // heading) so WhatsApp/Facebook/X show the photo, then redirects to the story.
-  var ogShareUrl = encodeURIComponent('https://screener-proxy.vilfintv.workers.dev/s?story=' + encodeURIComponent(storyIdSlug));
+  var shareUrl = encodeURIComponent(rawShareUrl);
+  _shareCtx = { heading: (item.headline || 'VilfinTV News'), photo: (item.image || ''), url: rawShareUrl };
   storyHtml += '<div class="story-modal-share">'
     + '<span class="story-modal-share-label">Share:</span>'
-    + '<a class="share-btn-sm share-wa" href="https://api.whatsapp.com/send?text=' + shareText + '%20' + ogShareUrl + '" target="_blank" rel="noopener">WhatsApp</a>'
-    + '<button type="button" class="share-btn-sm share-fb" data-url="https://screener-proxy.vilfintv.workers.dev/s?story=' + encodeURIComponent(storyIdSlug) + '" onclick="fbShareMenu(this, event)">Facebook</button>'
-    + '<a class="share-btn-sm share-tw" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + ogShareUrl + '" target="_blank" rel="noopener">X (Twitter)</a>'
+    + '<button type="button" class="share-btn-sm share-wa" onclick="shareStoryCardCtx(\'chat\', this)">WhatsApp</button>'
+    + '<button type="button" class="share-btn-sm share-status" onclick="shareStoryCardCtx(\'status\', this)">📸 Status</button>'
+    + '<button type="button" class="share-btn-sm share-fb" data-url="' + escAttr(rawShareUrl) + '" onclick="fbShareMenu(this, event)">Facebook</button>'
+    + '<a class="share-btn-sm share-tw" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank" rel="noopener">X (Twitter)</a>'
     + '<button class="share-btn-sm share-copy" onclick="copyToClipboard(\'' + rawShareUrl + '\')">Copy Link</button>'
     + '</div>';
 
@@ -4238,14 +4388,15 @@ function openCustomPost(id) {
   var shareText = encodeURIComponent(post.heading || 'Read this story on VilfinTV News');
   var storyIdSlug = post.id || (post.heading || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   var rawShareUrl = 'https://vilfintv.com/news.html?story=' + encodeURIComponent(storyIdSlug);
-  // Rich-preview URL: worker serves per-story Open Graph (hero photo + heading)
-  // for WhatsApp/Facebook/X, then redirects to the live story.
-  var ogShareUrl = encodeURIComponent('https://screener-proxy.vilfintv.workers.dev/s?story=' + encodeURIComponent(storyIdSlug));
+  var shareUrl = encodeURIComponent(rawShareUrl);
+  // WhatsApp & Status share a branded photo card; the public link stays clean.
+  _shareCtx = { heading: (post.heading || 'VilfinTV News'), photo: (post.photo || ''), url: rawShareUrl };
   html += '<div class="story-modal-share">'
     + '<span class="story-modal-share-label">Share:</span>'
-    + '<a class="share-btn-sm share-wa" href="https://api.whatsapp.com/send?text=' + shareText + '%20' + ogShareUrl + '" target="_blank" rel="noopener">WhatsApp</a>'
-    + '<button type="button" class="share-btn-sm share-fb" data-url="https://screener-proxy.vilfintv.workers.dev/s?story=' + encodeURIComponent(storyIdSlug) + '" onclick="fbShareMenu(this, event)">Facebook</button>'
-    + '<a class="share-btn-sm share-tw" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + ogShareUrl + '" target="_blank" rel="noopener">X (Twitter)</a>'
+    + '<button type="button" class="share-btn-sm share-wa" onclick="shareStoryCardCtx(\'chat\', this)">WhatsApp</button>'
+    + '<button type="button" class="share-btn-sm share-status" onclick="shareStoryCardCtx(\'status\', this)">📸 Status</button>'
+    + '<button type="button" class="share-btn-sm share-fb" data-url="' + escAttr(rawShareUrl) + '" onclick="fbShareMenu(this, event)">Facebook</button>'
+    + '<a class="share-btn-sm share-tw" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank" rel="noopener">X (Twitter)</a>'
     + '<button class="share-btn-sm share-copy" onclick="copyToClipboard(\'' + rawShareUrl + '\')">Copy Link</button>'
     + '</div>';
 

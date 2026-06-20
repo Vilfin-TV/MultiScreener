@@ -1125,6 +1125,29 @@ ${body.text}`;
       }
     }
 
+    // ── /img?url=<encoded>  GET — CORS image proxy for the share-card canvas ──
+    // Lets the client composite any story photo onto a <canvas> without tainting
+    // it. Used only internally by share-card generation; never shown to users.
+    if (pathname === '/img') {
+      const target = searchParams.get('url') || '';
+      if (!/^https?:\/\//i.test(target)) return jsonError(400, 'Invalid url.');
+      try {
+        const up = await fetch(target, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (VilfinTV share-card)', 'Accept': 'image/*,*/*' },
+          cf: { cacheTtl: 86400, cacheEverything: true },
+        });
+        if (!up.ok) return jsonError(502, 'Upstream image failed.');
+        const ct = up.headers.get('Content-Type') || 'image/jpeg';
+        if (!/^image\//i.test(ct)) return jsonError(415, 'Not an image.');
+        const headers = new Headers(CORS);
+        headers.set('Content-Type', ct);
+        headers.set('Cache-Control', 'public, max-age=86400');
+        return new Response(up.body, { status: 200, headers });
+      } catch (e) {
+        return jsonError(502, 'Image proxy error.');
+      }
+    }
+
     // ── /youtube-live?cid=CHANNEL_ID ─────────────────────────────────────────
     // Resolves the current active live broadcast for a YouTube channel.
     // Requires YOUTUBE_API_KEY env var; returns {live, videoId, title} or {live:false}.
