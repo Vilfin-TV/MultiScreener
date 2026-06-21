@@ -803,8 +803,10 @@ ${body.text}`;
       if (!story   || typeof story   !== 'string' || !story.trim())   return jsonError(400, 'story is required.');
       if (_hasInlineBase64Image(story)) return jsonError(413, 'Embedded image detected. Add pictures with the image button (or paste/drag) so they upload as links — pasting an image inline bloats the post and it gets cut off.');
       if (story.trim().length > MAX_STORY) return jsonError(413, `Story is too large (${story.trim().length} chars; max ${MAX_STORY}). Use uploaded image URLs, not embedded images.`);
-      const daysInt = parseInt(days);
-      if (!daysInt || daysInt < 1 || daysInt > 365) return jsonError(400, 'days must be 1–365.');
+      // days is optional for automated posters (e.g. the Hermes agent): default
+      // to 30 instead of failing the whole upload.
+      let daysInt = parseInt(days);
+      if (!daysInt || daysInt < 1 || daysInt > 365) daysInt = 30;
       if (!env.GITHUB_TOKEN) return jsonError(503, 'GitHub not configured.');
 
       const REPO = 'Vilfin-TV/MultiScreener', FILE_PATH = 'content.json', BRANCH = 'main';
