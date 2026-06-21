@@ -469,6 +469,142 @@ ${body.text}`;
       return _rbacJson({ ok:true, deleted:true, username:uname });
     }
 
+    // ══ Agent API keys (admin-managed; for the Hermes automation) ══════════════
+    // ── /api/agent/keys  GET — list agent keys (admin only) ───────────────────
+    if (pathname === '/api/agent/keys' && request.method === 'GET') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Agent store not configured (IPTV_KV).');
+      const all = await _agAll(env);
+      return _rbacJson({ ok:true, keys: Object.values(all).map(_agPublic) });
+    }
+
+    // ── /api/agent/keys/create  POST — mint a scoped agent key (admin only) ────
+    if (pathname === '/api/agent/keys/create' && request.method === 'POST') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Agent store not configured (IPTV_KV).');
+      let b; try { b = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      const label = (b.label||'').toString().trim().slice(0,80) || 'Agent';
+      let expiresAt = null;
+      if (b.expiresAt) { const t = new Date(b.expiresAt); if (isNaN(t.getTime())) return jsonError(400, 'Invalid expiry date.'); expiresAt = t.toISOString(); }
+      const scope = { publish: b.scope ? !!b.scope.publish : true, edit: b.scope ? !!b.scope.edit : false };
+      if (!scope.publish && !scope.edit) scope.publish = true;
+      const id     = _iptvHexFromBytes(crypto.getRandomValues(new Uint8Array(6)));
+      const secret = _iptvHexFromBytes(crypto.getRandomValues(new Uint8Array(24)));
+      const h = await _iptvHashPassword(secret);
+      const all = await _agAll(env);
+      all[id] = { id, label, scope, status:'pending', expiresAt,
+        secretHash:h.hash, salt:h.salt, iterations:h.iterations,
+        createdAt:new Date().toISOString(), requestedAt:null, lastUsedAt:null, disabled:false };
+      await _agPut(env, all);
+      // The full API key is returned ONCE here and never again.
+      return _rbacJson({ ok:true, apiKey:`vtv.${id}.${secret}`, key:_agPublic(all[id]) });
+    }
+
+    // ── /api/agent/keys/approve  POST — activate a pending key (admin only) ────
+    if (pathname === '/api/agent/keys/approve' && request.method === 'POST') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Agent store not configured (IPTV_KV).');
+      let b; try { b = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      const all = await _agAll(env); const k = all[(b.id||'').toString()];
+      if (!k) return jsonError(404, 'Agent key not found.');
+      k.status = 'active'; k.disabled = false; k.approvedAt = new Date().toISOString();
+      await _agPut(env, all);
+      return _rbacJson({ ok:true, key:_agPublic(k) });
+    }
+
+    // ── /api/agent/keys/revoke  POST — delete an agent key (admin only) ────────
+    if (pathname === '/api/agent/keys/revoke' && request.method === 'POST') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Agent store not configured (IPTV_KV).');
+      let b; try { b = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      const id = (b.id||'').toString();
+      const all = await _agAll(env);
+      if (all[id]) { delete all[id]; await _agPut(env, all); }
+      return _rbacJson({ ok:true, deleted:true, id });
+    }
+
+    // ── /api/agent/request  POST — agent asks to be activated (key auth) ───────
+    // Records the activation request so the admin sees it in the console. If the
+    // key is already active this just confirms status.
+    if (pathname === '/api/agent/request' && request.method === 'POST') {
+      const a = await _agentAuth(request, env); if (a.error) return a.error;
+      const all = a.all, k = all[a.agent.id];
+      k.requestedAt = new Date().toISOString();
+      k.lastUsedAt  = k.requestedAt;
+      await _agPut(env, all);
+      return _rbacJson({ ok:true, status:k.status, scope:k.scope,
+        message: k.status === 'active' ? 'Agent is active and may publish.' : 'Activation requested — awaiting administrator approval.' });
+    }
+
+    // ── /api/agent/publish  POST — scoped content publish/edit (key auth) ──────
+    if (pathname === '/api/agent/publish' && request.method === 'POST') {
+      const a = await _agentAuth(request, env); if (a.error) return a.error;
+      const agent = a.agent;
+      if (agent.status !== 'active') return jsonError(403, 'Agent not yet approved. Ask the administrator to activate this key in the console.');
+      if (!env.GITHUB_TOKEN) return jsonError(503, 'GitHub not configured.');
+      let body; try { body = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON.'); }
+      const { id, section, heading, story, photo, link_url, days, photo_pos, photo_zoom, youtube, youtube_play } = body || {};
+      const isEdit = !!id;
+      const scope = agent.scope || {};
+      if (isEdit && !scope.edit)   return jsonError(403, 'This agent key does not have edit permission.');
+      if (!isEdit && !scope.publish) return jsonError(403, 'This agent key does not have publish permission.');
+      const VALID_SECTIONS = ['trending','global','india','stock','malayalam',
+        'ml_trending','ml_movies','ml_music','ml_local','ml_science','ml_space',
+        'ml_sports','ml_health','ml_food','ml_realestate','ml_career','ml_tech',
+        'sports','tech','space','science','fashion','movies','food','automobile','home','business',
+        'story_triller','story_travel','story_health','story_comedy',
+        'story_kids','story_education','story_animation','story_ai',
+        'academy_notice','academy_cbse','academy_jlpt'];
+      if (!section || !VALID_SECTIONS.includes(section)) return jsonError(400, 'Invalid section.');
+      if (!heading || typeof heading !== 'string' || !heading.trim()) return jsonError(400, 'heading is required.');
+      if (!story   || typeof story   !== 'string' || !story.trim())   return jsonError(400, 'story is required.');
+      // Friendlier than the human console: silently strip any genuine inline
+      // base64 image instead of failing the whole upload, then enforce the cap.
+      let cleanStory = _sanitizeStory(story);
+      if (!cleanStory.trim()) return jsonError(400, 'story is empty after sanitising.');
+      let daysInt = parseInt(days); if (!daysInt || daysInt < 1 || daysInt > 365) daysInt = 30;
+
+      let read; try { read = await _ghReadContent(env); } catch (e) { return jsonError(502, e.message); }
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + daysInt * 86400000).toISOString();
+      let items = read.items.filter(i => i && i.expires_at && new Date(i.expires_at) > now);
+
+      function applyOptionalFields(o){
+        if (photo && typeof photo === 'string' && photo.trim().startsWith('http')) o.photo = photo.trim().slice(0,500);
+        if (link_url && typeof link_url === 'string' && link_url.trim().startsWith('http')) o.link_url = link_url.trim().slice(0,500);
+        if (photo_pos && typeof photo_pos === 'string') o.photo_pos = photo_pos.trim().slice(0,20);
+        if (photo_zoom && !isNaN(parseFloat(photo_zoom))) o.photo_zoom = Math.min(Math.max(parseFloat(photo_zoom), 1), 4);
+        const ytVid = _ytId(youtube); if (ytVid) { o.youtube = ytVid; o.youtube_play = youtube_play !== false; }
+        return o;
+      }
+
+      let resultId, message;
+      if (isEdit) {
+        const idx = items.findIndex(i => String(i.id) === String(id));
+        if (idx === -1) return jsonError(404, 'Post to edit not found (it may have expired).');
+        const prev = items[idx];
+        const o = applyOptionalFields({ id: prev.id, section, heading: heading.trim().slice(0,200),
+          story: cleanStory.trim().slice(0,MAX_STORY), published_at: now.toISOString(), expires_at: expiresAt });
+        items[idx] = o; resultId = prev.id; message = `feat(content): agent edit ${section} [${agent.label}]`;
+      } else {
+        const o = applyOptionalFields({ id: String(Date.now()), section, heading: heading.trim().slice(0,200),
+          story: cleanStory.trim().slice(0,MAX_STORY), published_at: now.toISOString(), expires_at: expiresAt });
+        items.push(o); resultId = o.id; message = `feat(content): agent publish ${section} [${agent.label}]`;
+      }
+
+      try { await _ghWriteContent(env, items, read.sha, message); }
+      catch (e) { return jsonError(502, e.message); }
+
+      // record usage
+      try { const all = await _agAll(env); if (all[agent.id]) { all[agent.id].lastUsedAt = now.toISOString(); await _agPut(env, all); } } catch(_){}
+      return new Response(JSON.stringify({ ok:true, id:resultId, edited:isEdit, expires_at:expiresAt,
+        url:`https://vilfintv.com/news.html?story=${resultId}` }), { status:200, headers:{ ...CORS, 'Content-Type':'application/json' } });
+    }
+
     // ── /api/admin/profile  GET/POST — admin display profile (admin only) ─────
     if (pathname === '/api/admin/profile') {
       const auth = await requireAuth(request, env); if (auth.error) return auth.error;
@@ -1360,9 +1496,13 @@ function _b64DecodeUnicode(str) {
    multi-page feature stays well under this cap. */
 const MAX_STORY = 2000000; // 2,000,000 chars (~2MB) — generous headroom for long features
 
-// Does the story contain an inline base64 <img>? (the thing that bloats + truncates)
+// Does the story contain a *genuine* inline base64 <img> — the thing that bloats
+// and truncates posts? We require an actual `;base64,` payload of meaningful
+// length, with a lazy [^>]* that cannot bridge unrelated text. This avoids false
+// positives on long prose (e.g. Malayalam features) that merely contain the
+// words "img"/"image"/"data" near each other but no real embedded picture.
 function _hasInlineBase64Image(s) {
-  return /<img\b[^>]*\bsrc\s*=\s*["']?\s*data:image\//i.test(String(s || ''));
+  return /<img\b[^>]*?\bsrc\s*=\s*["']?\s*data:image\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=\s]{200,}/i.test(String(s || ''));
 }
 
 // Extract an 11-char YouTube video id from any common URL form (watch?v=,
@@ -1380,8 +1520,8 @@ function _ytId(url) {
 // pre-existing broken post can't lock the admin out of editing other posts.
 function _sanitizeStory(s, max = MAX_STORY) {
   s = String(s || '');
-  s = s.replace(/<img\b[^>]*\bsrc\s*=\s*["']?\s*data:image\/[^>]*>/gi, '');   // complete tags
-  s = s.replace(/<img\b[^>]*\bsrc\s*=\s*["']?\s*data:image\/[\s\S]*$/i, '');  // trailing truncated tag
+  s = s.replace(/<img\b[^>]*?\bsrc\s*=\s*["']?\s*data:image\/[a-z0-9.+-]+;base64,[^>]*>/gi, '');   // complete base64 tags
+  s = s.replace(/<img\b[^>]*?\bsrc\s*=\s*["']?\s*data:image\/[a-z0-9.+-]+;base64,[\s\S]*$/i, '');  // trailing truncated base64 tag
   if (s.length > max) s = s.slice(0, max);
   return s;
 }
@@ -1445,6 +1585,67 @@ async function _opAll(env){
   try { const r = await env.IPTV_KV.get('console_operators'); return r ? JSON.parse(r) : {}; } catch(e){ return {}; }
 }
 async function _opGet(env, username){ const all = await _opAll(env); return all[username] || null; }
+
+/* ── Agent API keys (Hermes / automation) ──────────────────────────────────────
+   Stored in IPTV_KV under 'agent_keys' as { [id]: {…} }. Each key is scoped to
+   content publish/edit only — never admin. A key is created in 'pending' state;
+   the admin must Approve it once before it can publish (one-time activation).
+   The plaintext secret is shown to the admin exactly once at creation; only a
+   PBKDF2 hash is stored. The API key string handed to the agent is:
+        vtv.<id>.<secret>
+   where <id> identifies the record and <secret> is verified against the hash. */
+async function _agAll(env){
+  if (!env.IPTV_KV) return {};
+  try { const r = await env.IPTV_KV.get('agent_keys'); return r ? JSON.parse(r) : {}; } catch(e){ return {}; }
+}
+async function _agPut(env, all){ await env.IPTV_KV.put('agent_keys', JSON.stringify(all)); }
+// Public view of a key record (no secret material)
+function _agPublic(k){
+  return { id:k.id, label:k.label, status:k.status, scope:k.scope||{publish:true,edit:false},
+    expiresAt:k.expiresAt||null, createdAt:k.createdAt, requestedAt:k.requestedAt||null,
+    lastUsedAt:k.lastUsedAt||null, disabled:!!k.disabled };
+}
+function _agExpired(k){ return !!(k.expiresAt && Date.now() > new Date(k.expiresAt).getTime()); }
+// Authenticate an agent request by its Bearer API key. Returns { agent, all }
+// on success, or { error } (a Response) on failure. Records lastUsedAt lazily.
+async function _agentAuth(request, env){
+  if (!env.IPTV_KV) return { error: jsonError(503, 'Agent store not configured (IPTV_KV).') };
+  if (!env.JWT_SECRET) return { error: jsonError(503, 'Auth not configured.') };
+  const auth = request.headers.get('Authorization') || '';
+  const raw = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
+  const parts = raw.split('.');
+  if (parts.length !== 3 || parts[0] !== 'vtv') return { error: jsonError(401, 'Missing or malformed agent API key.') };
+  const id = parts[1], secret = parts[2];
+  const all = await _agAll(env);
+  const k = all[id];
+  if (!k) return { error: jsonError(401, 'Unknown agent API key.') };
+  if (k.disabled) return { error: jsonError(403, 'This agent key is disabled.') };
+  if (_agExpired(k)) return { error: jsonError(403, 'This agent key has expired. Ask the administrator to issue a new one.') };
+  const h = await _iptvHashPassword(secret, k.salt, k.iterations);
+  if (h.hash !== k.secretHash) return { error: jsonError(401, 'Invalid agent API key.') };
+  return { agent: k, all };
+}
+
+/* ── Shared content.json GitHub read / write ───────────────────────────────────
+   Used by /api/post-content and the agent publish endpoint so both follow the
+   exact same commit path. */
+const _CONTENT_REPO = 'Vilfin-TV/MultiScreener', _CONTENT_FILE = 'content.json', _CONTENT_BRANCH = 'main';
+function _ghHeaders(env){ return { 'Authorization': `token ${env.GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'vilfintv-proxy', 'Content-Type': 'application/json' }; }
+async function _ghReadContent(env){
+  const api = `https://api.github.com/repos/${_CONTENT_REPO}/contents/${_CONTENT_FILE}`;
+  const r = await fetch(`${api}?ref=${_CONTENT_BRANCH}`, { headers: _ghHeaders(env) });
+  if (r.ok) { const d = await r.json(); let items = JSON.parse(_b64DecodeUnicode(d.content.replace(/\n/g,''))); if (!Array.isArray(items)) items = []; return { sha:d.sha, items }; }
+  if (r.status === 404) return { sha:null, items:[] };
+  throw new Error(`GitHub GET failed: ${r.status}`);
+}
+async function _ghWriteContent(env, items, sha, message){
+  const api = `https://api.github.com/repos/${_CONTENT_REPO}/contents/${_CONTENT_FILE}`;
+  const put = { message, content: _b64EncodeUnicode(JSON.stringify(items, null, 2)), branch: _CONTENT_BRANCH };
+  if (sha) put.sha = sha;
+  const r = await fetch(api, { method:'PUT', headers:_ghHeaders(env), body: JSON.stringify(put) });
+  if (!r.ok) { const e = await r.text(); throw new Error(`GitHub PUT failed: ${r.status} ${e.slice(0,160)}`); }
+  return true;
+}
 
 const STATUS_PAGES = [
   'https://vilfintv.com/','https://vilfintv.com/iptv.html','https://vilfintv.com/news.html',

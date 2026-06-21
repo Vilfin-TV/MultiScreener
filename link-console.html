@@ -2415,7 +2415,7 @@ function _attachImagePasteDrop(quill) {
    image (e.g. pasted from HTML where no file item was available). Returns true
    if the story is safe to send. */
 function _guardNoBase64Image(story, statusFn) {
-  if (/<img[^>]+src=["']?\s*data:image\//i.test(story)) {
+  if (/<img\b[^>]*?\bsrc\s*=\s*["']?\s*data:image\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=\s]{200,}/i.test(story)) {
     statusFn('err', 'A pasted/embedded image is stored inline and would be cut off (500KB story limit). '
       + 'Please remove it and re-add the picture using the 🖼 image button in the toolbar (it uploads properly).');
     return false;
@@ -5440,6 +5440,31 @@ function loadSettings(){
       '<div style="margin-top:14px;display:flex;gap:10px"><button class="rb-btn" id="op-save">Save account</button><button class="rb-btn ghost" id="op-clear">Clear form</button></div>'+
       '<div class="rb-msg" id="op-msg"></div>'+
     '</div>'+
+    '<div class="rb-sec"><h3>Agent API keys</h3>'+
+      '<p style="font-size:12px;color:#8a8a9e;margin:0 0 14px">Issue a scoped API key for an automation agent (e.g. Hermes) to publish stories. '+
+        'Keys are limited to content <b>publish/edit</b> only — never admin access. A new key starts <b>pending</b>; once the agent requests activation you approve it here, after which it can publish on its own. Delete a key any time to revoke access.</p>'+
+      '<div id="ag-list"><div style="opacity:.6;font-size:13px">Loading…</div></div>'+
+      '<div id="ag-key-box" style="display:none;margin:14px 0;padding:14px;border:1px solid rgba(124,77,255,.4);border-radius:10px;background:rgba(124,77,255,.08)">'+
+        '<div style="font-size:12px;color:#c9b8ff;font-weight:600;margin-bottom:8px">⚠ Copy this API key now — it is shown only once:</div>'+
+        '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+
+          '<code id="ag-key-val" style="flex:1;min-width:220px;font-size:12.5px;word-break:break-all;background:rgba(0,0,0,.35);padding:9px 11px;border-radius:7px;color:#e8e3ff"></code>'+
+          '<button class="rb-btn" id="ag-key-copy" style="white-space:nowrap">Copy</button>'+
+        '</div>'+
+      '</div>'+
+      '<hr style="border:none;border-top:1px solid rgba(255,255,255,.08);margin:16px 0">'+
+      '<h3 style="font-size:13px">Create a new agent key</h3>'+
+      '<div style="display:flex;gap:10px;flex-wrap:wrap">'+
+        '<div style="flex:1;min-width:200px"><label class="rb-lbl">Label</label><input class="rb-inp" id="ag-label" placeholder="e.g. Hermes Telegram agent" autocomplete="off"></div>'+
+        '<div style="min-width:170px"><label class="rb-lbl">Expiry date <span style="opacity:.5">(optional)</span></label><input class="rb-inp" id="ag-expiry" type="date"></div>'+
+      '</div>'+
+      '<label class="rb-lbl" style="margin-top:6px">Scope</label>'+
+      '<div style="display:flex;gap:18px;align-items:center;margin-top:4px">'+
+        '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="ag-scope-publish" checked> Publish new stories</label>'+
+        '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="ag-scope-edit"> Edit existing stories</label>'+
+      '</div>'+
+      '<div style="margin-top:14px"><button class="rb-btn" id="ag-create">Generate API key</button></div>'+
+      '<div class="rb-msg" id="ag-msg"></div>'+
+    '</div>'+
   '</div>');
   document.querySelectorAll('.c-panel').forEach(function(p){p.classList.toggle('active',p.id==='tab-settings');});
   _rbPermRows();
@@ -5447,7 +5472,8 @@ function loadSettings(){
   document.getElementById('op-save').addEventListener('click',_opSave);
   document.getElementById('op-clear').addEventListener('click',function(){_opFill(null);});
   document.getElementById('op-role').addEventListener('change',_opRolePreset);
-  _apLoad(); _opLoad();
+  document.getElementById('ag-create').addEventListener('click',_agCreate);
+  _apLoad(); _opLoad(); _agLoad();
 }
 function _rbPermRows(){
   var tb=document.getElementById('op-perms'); if(!tb)return;
@@ -5533,6 +5559,69 @@ async function _opDelete(u){
   try{var res=await authFetch(WORKER+'/api/operators/delete',{method:'POST',body:JSON.stringify({username:u})});var d=await res.json();
     if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
     _opLoad();
+  }catch(e){alert('Delete failed: '+e.message);}
+}
+
+/* ── Agent API keys ─────────────────────────────────────────────────────────── */
+function _agScopeText(s){s=s||{};var p=[];if(s.publish)p.push('Publish');if(s.edit)p.push('Edit');return p.join(' + ')||'—';}
+function _agFmtDate(d){if(!d)return '—';try{return new Date(d).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}catch(e){return '—';}}
+function _agStatusBadge(k){
+  var expired=k.expiresAt&&(Date.now()>new Date(k.expiresAt).getTime());
+  if(expired)return '<span style="color:#ff8888">expired</span>';
+  if(k.disabled)return '<span style="color:#ff8888">disabled</span>';
+  if(k.status==='active')return '<span style="color:#4ddb8a">active</span>';
+  return '<span style="color:#f5b942">pending'+(k.requestedAt?' · requested':'')+'</span>';
+}
+async function _agLoad(){
+  var host=document.getElementById('ag-list');if(!host)return;
+  try{var res=await authFetch(WORKER+'/api/agent/keys',{method:'GET'});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    if(!d.keys.length){host.innerHTML='<div style="opacity:.6;font-size:13px">No agent keys yet. Generate one below.</div>';return;}
+    host.innerHTML='<table class="op-tbl"><thead><tr><th>Label</th><th>Status</th><th>Scope</th><th>Expires</th><th>Last used</th><th></th></tr></thead><tbody>'+
+      d.keys.map(function(k){
+        var act='';
+        if(k.status!=='active')act+='<button class="op-act" data-ap="'+esc(k.id)+'">Approve</button>';
+        act+='<button class="op-act del" data-rv="'+esc(k.id)+'">Delete</button>';
+        return '<tr><td><b>'+esc(k.label)+'</b></td><td>'+_agStatusBadge(k)+'</td>'+
+          '<td style="font-size:12px;color:#9a9ab0">'+esc(_agScopeText(k.scope))+'</td>'+
+          '<td style="font-size:12px;color:#9a9ab0">'+esc(_agFmtDate(k.expiresAt))+'</td>'+
+          '<td style="font-size:12px;color:#9a9ab0">'+esc(_agFmtDate(k.lastUsedAt))+'</td>'+
+          '<td style="text-align:right;white-space:nowrap">'+act+'</td></tr>';
+      }).join('')+'</tbody></table>';
+    host.querySelectorAll('[data-ap]').forEach(function(b){b.addEventListener('click',function(){_agApprove(b.getAttribute('data-ap'));});});
+    host.querySelectorAll('[data-rv]').forEach(function(b){b.addEventListener('click',function(){_agDelete(b.getAttribute('data-rv'));});});
+  }catch(e){host.innerHTML='<div style="color:#ff8888">'+esc(e.message)+'</div>';}
+}
+async function _agCreate(){
+  var msg=document.getElementById('ag-msg');msg.textContent='';
+  var payload={label:document.getElementById('ag-label').value.trim(),
+    expiresAt:document.getElementById('ag-expiry').value||null,
+    scope:{publish:document.getElementById('ag-scope-publish').checked,edit:document.getElementById('ag-scope-edit').checked}};
+  if(!payload.label){msg.innerHTML='<span style="color:#ff8888">Enter a label.</span>';return;}
+  if(!payload.scope.publish&&!payload.scope.edit){msg.innerHTML='<span style="color:#ff8888">Pick at least one scope.</span>';return;}
+  var btn=document.getElementById('ag-create');btn.disabled=true;var t=btn.textContent;btn.textContent='Generating…';
+  try{var res=await authFetch(WORKER+'/api/agent/keys/create',{method:'POST',body:JSON.stringify(payload)});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    var box=document.getElementById('ag-key-box');document.getElementById('ag-key-val').textContent=d.apiKey;box.style.display='';
+    var cp=document.getElementById('ag-key-copy');cp.onclick=function(){navigator.clipboard.writeText(d.apiKey).then(function(){cp.textContent='Copied ✓';setTimeout(function(){cp.textContent='Copy';},1500);});};
+    document.getElementById('ag-label').value='';document.getElementById('ag-expiry').value='';
+    msg.innerHTML='<span style="color:#4ddb8a">Key created. Give it to the agent, then approve its request below.</span>';
+    box.scrollIntoView({behavior:'smooth',block:'center'});
+    _agLoad();
+  }catch(e){msg.innerHTML='<span style="color:#ff8888">'+esc(e.message)+'</span>';}
+  finally{btn.disabled=false;btn.textContent=t;}
+}
+async function _agApprove(id){
+  try{var res=await authFetch(WORKER+'/api/agent/keys/approve',{method:'POST',body:JSON.stringify({id:id})});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    _agLoad();
+  }catch(e){alert('Approve failed: '+e.message);}
+}
+async function _agDelete(id){
+  if(!confirm('Delete this agent key? The agent will immediately lose access.'))return;
+  try{var res=await authFetch(WORKER+'/api/agent/keys/revoke',{method:'POST',body:JSON.stringify({id:id})});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    _agLoad();
   }catch(e){alert('Delete failed: '+e.message);}
 }
 </script>
