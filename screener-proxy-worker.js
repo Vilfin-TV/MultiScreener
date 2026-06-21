@@ -1157,8 +1157,15 @@ ${body.text}`;
     // /r2/<key> — no public bucket or custom domain needed.
     if (pathname === '/api/upload-image') {
       if (request.method !== 'POST') return jsonError(405, 'Use POST.');
-      const auth = await requireAuth(request, env);
-      if (auth.error) return auth.error;
+      // Accept EITHER an admin/operator JWT session OR an approved agent API key
+      // (with publish scope), so the Hermes automation can upload story images.
+      const jwtAuth = await requireAuth(request, env);
+      if (jwtAuth.error) {
+        const ag = await _agentAuth(request, env);
+        if (ag.error) return jwtAuth.error;
+        if (ag.agent.status !== 'active') return jsonError(403, 'Agent not yet approved.');
+        if (!(ag.agent.scope && ag.agent.scope.publish)) return jsonError(403, 'This agent key lacks publish scope.');
+      }
       if (!env || !env.MEDIA) return jsonError(503, 'Image storage not configured. Bind an R2 bucket as MEDIA in the Worker.');
 
       const MAX_BYTES = 8 * 1024 * 1024; // 8 MB cap
