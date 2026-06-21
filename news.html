@@ -917,10 +917,32 @@ body{
   font-family:'DM Sans',-apple-system,sans-serif;
 }
 .story-reader-voice:focus{border-color:var(--burn2,#3b82f6)}
+/* In-story video play button (YouTube) */
+.story-video-btn{
+  display:inline-flex;align-items:center;gap:6px;margin-left:auto;
+  background:linear-gradient(135deg,#ef4444,#dc2626);
+  border:1px solid rgba(254,202,202,.45);
+  color:#fff;font-size:12px;font-weight:700;letter-spacing:.4px;
+  padding:6px 13px 6px 11px;border-radius:20px;cursor:pointer;
+  transition:filter .15s,transform .15s,background .2s;
+  box-shadow:0 2px 10px rgba(220,38,38,.38);white-space:nowrap;
+}
+.story-video-btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.story-video-btn svg{width:14px;height:14px;flex-shrink:0;fill:#fff}
+.story-video-btn.playing{background:linear-gradient(135deg,#475569,#334155);box-shadow:0 2px 10px rgba(51,65,85,.4)}
+/* Responsive 16:9 player surface, injected into the story body */
+.story-video-wrap{margin:0 0 20px}
+.story-video-frame{
+  position:relative;width:100%;padding-top:56.25%;
+  border-radius:14px;overflow:hidden;background:#000;
+  box-shadow:0 8px 30px rgba(0,0,0,.35);border:1px solid var(--border2);
+}
+.story-video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 @media(max-width:600px){
   .story-reader{margin:0 8px 0 auto;gap:6px}
   .story-reader-label{display:none}
   .story-reader-voice{max-width:104px;font-size:11px;padding:5px}
+  .story-video-label{display:none}
 }
 
 .story-modal-body{
@@ -2133,6 +2155,12 @@ footer.news-footer{
         </button>
         <select class="story-reader-voice" id="story-reader-voice" onchange="_onReaderVoiceChange()" title="Choose news reader voice" aria-label="Choose news reader voice"></select>
       </div>
+      <!-- In-story video player (featured stories that carry a YouTube link) -->
+      <button class="story-video-btn" id="story-video-btn" style="display:none" onclick="toggleStoryVideo()" title="Play video" aria-label="Play video">
+        <svg class="sv-ic-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+        <svg class="sv-ic-stop" viewBox="0 0 24 24" aria-hidden="true" style="display:none"><path d="M6 6h12v12H6z"/></svg>
+        <span class="story-video-label">Play</span>
+      </button>
       <button class="story-modal-close" onclick="closeStory()" title="Close story">✕</button>
     </div>
     <div class="story-modal-body" id="story-modal-body">
@@ -3129,6 +3157,11 @@ function _readerHide() {
   _readerStop();
   var r = document.getElementById('story-reader');
   if (r) r.style.display = 'none';
+  // Regular (RSS) stories never carry an in-story video player
+  if (typeof _videoStop === 'function') _videoStop();
+  _videoCtx = '';
+  var v = document.getElementById('story-video-btn');
+  if (v) v.style.display = 'none';
 }
 
 if (_readerSupported) {
@@ -3137,6 +3170,7 @@ if (_readerSupported) {
 
 function closeStory() {
   _readerStop();
+  if (typeof _videoStop === 'function') _videoStop();  // tear down any playing iframe
   document.getElementById('story-modal-overlay').classList.remove('active');
   document.body.style.overflow = '';
 }
@@ -4376,6 +4410,9 @@ function openCustomPost(id) {
       + '<span class="story-modal-ai-badge" style="background:rgba(99,102,241,.15);color:#818cf8">VilfinTV Staff</span>'
     + '</div>';
 
+  // Placeholder where the YouTube player is injected on demand (kept empty until Play)
+  html += '<div class="story-video-wrap" id="story-video-wrap" style="display:none"></div>';
+
   if (post.photo) {
     var _mPos = post.photo_pos || '50% 50%';
     var _mZoom = post.photo_zoom ? Math.min(Math.max(parseFloat(post.photo_zoom), 1), 4) : 1;
@@ -4427,6 +4464,65 @@ function openCustomPost(id) {
 
   // News Reader — speak the headline then the story body
   _readerShow(_readerStripText((post.heading || '') + '. ' + (post.story || '')));
+
+  // In-story video — show the Play button only when the post carries an
+  // enabled YouTube link. Reset any prior player state first.
+  _videoStop();
+  var vBtn = document.getElementById('story-video-btn');
+  if (vBtn) {
+    if (post.youtube && post.youtube_play !== false) {
+      _videoCtx = String(post.youtube);
+      vBtn.style.display = 'inline-flex';
+      // Group neatly beside the reader when both are visible
+      var rdr = document.getElementById('story-reader');
+      vBtn.style.marginLeft = (rdr && rdr.style.display !== 'none') ? '10px' : 'auto';
+    } else {
+      _videoCtx = '';
+      vBtn.style.display = 'none';
+    }
+  }
+}
+
+// ── In-story YouTube player ─────────────────────────────────────────────────
+// Privacy-first nocookie embed with ad-reducing params. Official embeds cannot
+// fully strip ads from monetized videos, but nocookie + these flags remove the
+// related-video grid, tracking cookies, and on-video annotations.
+var _videoCtx = '';
+function toggleStoryVideo() {
+  var wrap = document.getElementById('story-video-wrap');
+  var btn  = document.getElementById('story-video-btn');
+  if (!wrap || !btn) return;
+  var playing = wrap.getAttribute('data-playing') === '1';
+  if (playing) { _videoStop(); return; }
+  if (!_videoCtx) return;
+  var src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(_videoCtx)
+    + '?autoplay=1&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&fs=1';
+  wrap.innerHTML = '<div class="story-video-frame">'
+    + '<iframe src="' + src + '" title="Story video"'
+    + ' allow="autoplay; encrypted-media; picture-in-picture; fullscreen"'
+    + ' allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>'
+    + '</div>';
+  wrap.style.display = 'block';
+  wrap.setAttribute('data-playing', '1');
+  btn.classList.add('playing');
+  btn.querySelector('.sv-ic-play').style.display = 'none';
+  btn.querySelector('.sv-ic-stop').style.display = '';
+  var lbl = btn.querySelector('.story-video-label'); if (lbl) lbl.textContent = 'Stop';
+  // Stop any TTS narration so audio sources don't overlap
+  if (typeof _readerStop === 'function') _readerStop();
+  // Smoothly bring the player into view
+  if (wrap.scrollIntoView) wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function _videoStop() {
+  var wrap = document.getElementById('story-video-wrap');
+  var btn  = document.getElementById('story-video-btn');
+  if (wrap) { wrap.innerHTML = ''; wrap.style.display = 'none'; wrap.removeAttribute('data-playing'); }
+  if (btn) {
+    btn.classList.remove('playing');
+    var p = btn.querySelector('.sv-ic-play'); if (p) p.style.display = '';
+    var s = btn.querySelector('.sv-ic-stop'); if (s) s.style.display = 'none';
+    var lbl = btn.querySelector('.story-video-label'); if (lbl) lbl.textContent = 'Play';
+  }
 }
 
 async function loadNewsPage() {

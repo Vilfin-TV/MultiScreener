@@ -1154,6 +1154,13 @@
             </div>
           </div>
 
+          <label class="field-label" for="cp-youtube">Video <span style="opacity:.4;font-weight:400">(optional — YouTube link for the in-story player)</span></label>
+          <input type="url" id="cp-youtube" placeholder="https://www.youtube.com/watch?v=…">
+          <label style="display:flex;align-items:center;gap:8px;margin:8px 0 16px;font-size:13px;color:var(--muted,#94a3b8);cursor:pointer;user-select:none;">
+            <input type="checkbox" id="cp-youtube-show" checked style="width:16px;height:16px;accent-color:#ef4444;cursor:pointer;">
+            Show the play button on the published story
+          </label>
+
           <label class="field-label" for="cp-days">Visible for (days)</label>
           <input type="number" id="cp-days" placeholder="30" min="1" max="365" value="30">
 
@@ -2958,6 +2965,9 @@ function editContentItem(id) {
   document.getElementById('cp-heading').value = item.heading || '';
   if (cpQuill) cpQuill.clipboard.dangerouslyPasteHTML(item.story || '');
   document.getElementById('cp-photo').value   = item.photo   || '';
+  document.getElementById('cp-youtube').value = item.youtube
+    ? 'https://www.youtube.com/watch?v=' + item.youtube : '';
+  document.getElementById('cp-youtube-show').checked = item.youtube_play !== false;
   // Days left until expiry (defaults to 30 if none)
   var days = 30;
   if (item.expires_at) {
@@ -2993,6 +3003,8 @@ function cancelContentEdit() {
   document.getElementById('cp-heading').value = '';
   if (cpQuill) cpQuill.root.innerHTML = '';
   document.getElementById('cp-photo').value   = '';
+  document.getElementById('cp-youtube').value = '';
+  document.getElementById('cp-youtube-show').checked = true;
   document.getElementById('cp-days').value     = 30;
   resetCpFocal();
   previewPhoto('');
@@ -3006,6 +3018,16 @@ function cancelContentEdit() {
   document.querySelectorAll('.ci-item.is-editing').forEach(function(r) { r.classList.remove('is-editing'); });
 }
 
+/* ── Extract an 11-char YouTube video id from any common URL form ────────────── */
+function _cpYtId(url) {
+  if (!url) return '';
+  var s = String(url).trim();
+  // Bare id pasted directly
+  if (/^[A-Za-z0-9_-]{11}$/.test(s)) return s;
+  var m = s.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : '';
+}
+
 /* ── Publish new content ────────────────────────────────────────────────────── */
 async function publishContent() {
   var section = document.getElementById('cp-section').value;
@@ -3014,6 +3036,8 @@ async function publishContent() {
   if (story === '<p><br></p>') story = '';
   var photo   = document.getElementById('cp-photo').value.trim();
   var days    = parseInt(document.getElementById('cp-days').value, 10) || 0;
+  var youtube = document.getElementById('cp-youtube').value.trim();
+  var ytShow  = document.getElementById('cp-youtube-show').checked;
   var btn     = document.getElementById('cp-publish-btn');
 
   setCpFormStatus('', '');
@@ -3025,6 +3049,7 @@ async function publishContent() {
   if (photo) {
     try { new URL(photo); } catch(e) { return setCpFormStatus('err', 'Invalid photo URL.'); }
   }
+  if (youtube && !_cpYtId(youtube)) return setCpFormStatus('err', 'Invalid YouTube link.');
   if (!_guardNoBase64Image(story, setCpFormStatus)) return;
 
   btn.disabled    = true;
@@ -3050,6 +3075,10 @@ async function publishContent() {
           o.photo = photo;
           if (cpPhotoPos && cpPhotoPos !== '50% 50%') o.photo_pos = cpPhotoPos;
           if (cpPhotoZoom && cpPhotoZoom !== 1)        o.photo_zoom = cpPhotoZoom;
+        }
+        if (youtube) {
+          o.youtube = _cpYtId(youtube);
+          o.youtube_play = !!ytShow;
         }
         if (i.link_url) o.link_url = i.link_url;
         return o;
@@ -3083,6 +3112,10 @@ async function publishContent() {
         if (cpPhotoPos && cpPhotoPos !== '50% 50%') payload.photo_pos = cpPhotoPos;
         if (cpPhotoZoom && cpPhotoZoom !== 1)        payload.photo_zoom = cpPhotoZoom;
       }
+      if (youtube) {
+        payload.youtube = youtube;
+        payload.youtube_play = !!ytShow;
+      }
       var res  = await authFetch(WORKER + '/api/post-content', {
         method: 'POST',
         body:   JSON.stringify(payload),
@@ -3098,6 +3131,8 @@ async function publishContent() {
         document.getElementById('cp-heading').value = '';
         if (cpQuill) cpQuill.root.innerHTML = '';
         document.getElementById('cp-photo').value   = '';
+        document.getElementById('cp-youtube').value = '';
+        document.getElementById('cp-youtube-show').checked = true;
         resetCpFocal();
         previewPhoto('');
         await loadContent();

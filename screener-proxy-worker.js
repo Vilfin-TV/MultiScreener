@@ -787,7 +787,7 @@ ${body.text}`;
       const auth = await requireAuth(request, env);
       if (auth.error) return auth.error;
 
-      const { section, heading, story, photo, link_url, days, photo_pos, photo_zoom } = body || {};
+      const { section, heading, story, photo, link_url, days, photo_pos, photo_zoom, youtube, youtube_play } = body || {};
       const VALID_SECTIONS = ['trending','global','india','stock','malayalam',
         'ml_trending','ml_movies','ml_music','ml_local','ml_science','ml_space',
         'ml_sports','ml_health','ml_food','ml_realestate','ml_career','ml_tech',
@@ -828,6 +828,8 @@ ${body.text}`;
       if (link_url && typeof link_url === 'string' && link_url.trim().startsWith('http')) newItem.link_url = link_url.trim().slice(0,500);
       if (photo_pos && typeof photo_pos === 'string') newItem.photo_pos = photo_pos.trim().slice(0,20);
       if (photo_zoom && !isNaN(parseFloat(photo_zoom))) newItem.photo_zoom = Math.min(Math.max(parseFloat(photo_zoom), 1), 4);
+      const ytVid = _ytId(youtube);
+      if (ytVid) { newItem.youtube = ytVid; newItem.youtube_play = youtube_play !== false; }
       items.push(newItem);
 
       const put = { message: `feat(content): publish ${section} post`, content: _b64EncodeUnicode(JSON.stringify(items, null, 2)), branch: BRANCH };
@@ -862,7 +864,7 @@ ${body.text}`;
         else if (r.status !== 404) return jsonError(502, `GitHub GET failed: ${r.status}`);
       } catch (e) { return jsonError(502, `GitHub GET error: ${e.message}`); }
 
-      const clean = items.map(i => { const o = { id: String(i.id||Date.now()), section: String(i.section||''), heading: String(i.heading||'').slice(0,200), story: _sanitizeStory(i.story), published_at: i.published_at||new Date().toISOString(), expires_at: i.expires_at||'' }; if (i.photo) o.photo = String(i.photo).slice(0,500); if (i.link_url) o.link_url = String(i.link_url).slice(0,500); if (i.photo_pos) o.photo_pos = String(i.photo_pos).slice(0,20); if (i.photo_zoom && !isNaN(parseFloat(i.photo_zoom))) o.photo_zoom = Math.min(Math.max(parseFloat(i.photo_zoom), 1), 4); return o; });
+      const clean = items.map(i => { const o = { id: String(i.id||Date.now()), section: String(i.section||''), heading: String(i.heading||'').slice(0,200), story: _sanitizeStory(i.story), published_at: i.published_at||new Date().toISOString(), expires_at: i.expires_at||'' }; if (i.photo) o.photo = String(i.photo).slice(0,500); if (i.link_url) o.link_url = String(i.link_url).slice(0,500); if (i.photo_pos) o.photo_pos = String(i.photo_pos).slice(0,20); if (i.photo_zoom && !isNaN(parseFloat(i.photo_zoom))) o.photo_zoom = Math.min(Math.max(parseFloat(i.photo_zoom), 1), 4); const yt = _ytId(i.youtube); if (yt) { o.youtube = yt; o.youtube_play = i.youtube_play !== false; } return o; });
       const put = { message: 'chore(content): update via console', content: _b64EncodeUnicode(JSON.stringify(clean, null, 2)), branch: BRANCH };
       if (sha) put.sha = sha;
       try {
@@ -1361,6 +1363,16 @@ const MAX_STORY = 2000000; // 2,000,000 chars (~2MB) — generous headroom for l
 // Does the story contain an inline base64 <img>? (the thing that bloats + truncates)
 function _hasInlineBase64Image(s) {
   return /<img\b[^>]*\bsrc\s*=\s*["']?\s*data:image\//i.test(String(s || ''));
+}
+
+// Extract an 11-char YouTube video id from any common URL form (watch?v=,
+// youtu.be/, embed/, shorts/, live/) or a bare id. Returns '' if none.
+function _ytId(url) {
+  if (!url) return '';
+  const s = String(url).trim();
+  if (/^[A-Za-z0-9_-]{11}$/.test(s)) return s;
+  const m = s.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : '';
 }
 
 // Clean a story for safe storage: strip inline base64 images (incl. a trailing
