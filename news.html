@@ -2717,66 +2717,65 @@ async function _buildStoryShareCard(heading, photoUrl, portrait) {
   base.addColorStop(0, '#0c1b4d'); base.addColorStop(1, '#070d1f');
   ctx.fillStyle = base; ctx.fillRect(0, 0, W, H);
 
-  // Hero photo (loaded CORS-safe via the worker image proxy so the canvas can export)
-  if (photoUrl) {
-    var img = await _loadShareImg(_SHARE_WORKER + '/img?url=' + encodeURIComponent(photoUrl), true);
-    if (!img) img = await _loadShareImg(photoUrl, true);
-    if (img && img.naturalWidth) {
-      // Full-bleed cover — fills the whole card so there is no empty band
-      var ar = img.naturalWidth / img.naturalHeight, far = W / H, sw, sh, sx, sy;
-      if (ar > far) { sh = img.naturalHeight; sw = sh * far; sx = (img.naturalWidth - sw) / 2; sy = 0; }
-      else { sw = img.naturalWidth; sh = sw / far; sx = 0; sy = (img.naturalHeight - sh) / 2; }
-      try { ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H); } catch (e) {}
-    }
-  }
+  var pad = 56;
 
-  // Top scrim — keeps the brand bar legible over bright photos
-  var tg = ctx.createLinearGradient(0, 0, 0, 280);
-  tg.addColorStop(0, 'rgba(7,13,31,0.72)'); tg.addColorStop(1, 'rgba(7,13,31,0)');
-  ctx.fillStyle = tg; ctx.fillRect(0, 0, W, 280);
-  // Bottom scrim — strong, so the headline is always readable
-  var gh = Math.round(H * 0.58), gy = H - gh;
-  var g = ctx.createLinearGradient(0, gy, 0, H);
-  g.addColorStop(0, 'rgba(7,13,31,0)'); g.addColorStop(0.45, 'rgba(7,13,31,0.86)'); g.addColorStop(1, 'rgba(7,13,31,0.98)');
-  ctx.fillStyle = g; ctx.fillRect(0, gy, W, gh);
-
-  var pad = 64;
-  // Top brand row: round logo + "VilfinTV" + red NEWS chip
+  // ── Top brand row: round logo + "VilfinTV" + red NEWS chip ──────────────────
   var logo = await _loadShareImg('images/vilfintv-logo.jpg', true);
-  var by = 66, ls = 88;
+  var by = 46, ls = 84;
   if (logo) {
     ctx.save(); ctx.beginPath(); ctx.arc(pad + ls / 2, by + ls / 2, ls / 2, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
     ctx.drawImage(logo, pad, by, ls, ls); ctx.restore();
   }
   ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
-  ctx.fillStyle = '#ffffff'; ctx.font = '800 50px Inter, Arial, sans-serif';
-  var brandX = pad + ls + 24;
-  ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 8;
+  ctx.fillStyle = '#ffffff'; ctx.font = '800 48px Inter, Arial, sans-serif';
+  var brandX = pad + ls + 22;
   ctx.fillText('VilfinTV', brandX, by + ls / 2);
-  ctx.shadowBlur = 0;
   var vtW = ctx.measureText('VilfinTV').width;
-  var chipX = brandX + vtW + 16, chipH = 46, chipY = by + ls / 2 - chipH / 2, chipW = 96;
+  var chipX = brandX + vtW + 16, chipH = 44, chipY = by + ls / 2 - chipH / 2, chipW = 92;
   ctx.fillStyle = '#ef4444'; _roundRect(ctx, chipX, chipY, chipW, chipH, 9); ctx.fill();
-  ctx.fillStyle = '#ffffff'; ctx.font = '800 28px Inter, Arial, sans-serif'; ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffffff'; ctx.font = '800 27px Inter, Arial, sans-serif'; ctx.textAlign = 'center';
   ctx.fillText('NEWS', chipX + chipW / 2, chipY + chipH / 2 + 1);
 
-  // Footer line (read CTA) anchored to the bottom
-  var fy = H - pad - 6;
-  ctx.textAlign = 'left'; ctx.fillStyle = '#9db8ff'; ctx.font = '700 36px Inter, Arial, sans-serif';
-  ctx.fillText('Read the full story  ·  vilfintv.com', pad, fy - 18);
+  // ── Photo panel — CONTAIN (whole photo always fits, never cropped) ──────────
+  // A framed dark panel holds the full image centred; letterbox bands read as an
+  // intentional frame, so any aspect ratio (wide scorecards, tall posters) shows
+  // completely with nothing pushed off the card.
+  var pxx = pad, pyy = by + ls + 34, pww = W - pad * 2, phh = portrait ? 1040 : 656;
+  ctx.fillStyle = '#0a1733';
+  _roundRect(ctx, pxx, pyy, pww, phh, 28); ctx.fill();
+  if (photoUrl) {
+    var img = await _loadShareImg(_SHARE_WORKER + '/img?url=' + encodeURIComponent(photoUrl), true);
+    if (!img) img = await _loadShareImg(photoUrl, true);
+    if (img && img.naturalWidth) {
+      var ar = img.naturalWidth / img.naturalHeight, par = pww / phh, dw, dh;
+      if (ar > par) { dw = pww; dh = dw / ar; }        // wide → fit width
+      else          { dh = phh; dw = dh * ar; }         // tall → fit height
+      var dx = pxx + (pww - dw) / 2, dy = pyy + (phh - dh) / 2;
+      ctx.save(); _roundRect(ctx, pxx, pyy, pww, phh, 28); ctx.clip();
+      try { ctx.drawImage(img, dx, dy, dw, dh); } catch (e) {}
+      ctx.restore();
+    }
+  }
+  // subtle frame border
+  ctx.strokeStyle = 'rgba(157,184,255,0.18)'; ctx.lineWidth = 2;
+  _roundRect(ctx, pxx, pyy, pww, phh, 28); ctx.stroke();
 
-  // Headline, stacked just above the footer
+  // ── Footer CTA anchored to the bottom ───────────────────────────────────────
+  var fy = H - pad;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#9db8ff'; ctx.font = '700 34px Inter, Arial, sans-serif';
+  ctx.fillText('Read the full story  ·  vilfintv.com', pad, fy);
+
+  // ── Headline — clean band between the photo and the footer (no overlap) ─────
+  var hStartY = pyy + phh + 50;
+  ctx.fillStyle = '#3b82f6'; ctx.fillRect(pad, hStartY, 84, 8);
   ctx.fillStyle = '#ffffff';
-  ctx.font = '800 66px "Playfair Display", Georgia, serif';
-  var lineH = 88;
-  var lines = _wrapShareLines(ctx, heading, W - pad * 2, portrait ? 6 : 4);
-  var blockBottom = fy - 86;
-  var startY = blockBottom - lines.length * lineH;
-  // accent bar
-  ctx.fillStyle = '#3b82f6'; ctx.fillRect(pad, startY - 26, 96, 9);
-  ctx.fillStyle = '#ffffff'; ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 10;
-  for (var i = 0; i < lines.length; i++) ctx.fillText(lines[i], pad, startY + i * lineH + lineH / 2);
-  ctx.shadowBlur = 0;
+  var fSize = portrait ? 62 : 56, lineH = portrait ? 82 : 74, maxLines = portrait ? 6 : 4;
+  ctx.font = '800 ' + fSize + 'px "Playfair Display", Georgia, serif';
+  ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+  var lines = _wrapShareLines(ctx, heading, W - pad * 2, maxLines);
+  var hTop = hStartY + 26;
+  for (var i = 0; i < lines.length; i++) ctx.fillText(lines[i], pad, hTop + i * lineH);
 
   return await new Promise(function (res) { c.toBlob(function (b) { res(b); }, 'image/jpeg', 0.92); });
 }
@@ -2785,12 +2784,16 @@ async function shareStoryCard(heading, photoUrl, cleanUrl, mode, btn) {
   var orig = btn ? btn.innerHTML : '';
   if (btn) { btn.disabled = true; btn.innerHTML = '⏳'; }
   var portrait = (mode === 'status');                 // 9:16 only for Status
-  var caption = heading + '\n\n📲 Read on VilfinTV News:\n' + cleanUrl;
+  // The headline is already baked into the card image, so the image-share caption
+  // carries ONLY the link (no duplicated heading). The text-only fallbacks (no
+  // image) still include the heading so the post isn't bare.
+  var captionUrlOnly = '📲 Read the full story on VilfinTV News:\n' + cleanUrl;
+  var captionFull    = heading + '\n\n📲 Read the full story on VilfinTV News:\n' + cleanUrl;
   // Desktop fallback (no file-share): each target's own web share, clean URL
   var fallbackUrl;
   if (mode === 'facebook')      fallbackUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(cleanUrl);
   else if (mode === 'twitter')  fallbackUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(heading) + '&url=' + encodeURIComponent(cleanUrl);
-  else                          fallbackUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(caption);
+  else                          fallbackUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(captionFull);
   try {
     var blob = await _buildStoryShareCard(heading, photoUrl, portrait);
     var file = blob ? new File([blob], 'vilfintv-news.jpg', { type: 'image/jpeg' }) : null;
@@ -2798,7 +2801,7 @@ async function shareStoryCard(heading, photoUrl, cleanUrl, mode, btn) {
       // Mobile: native sheet → user picks WhatsApp / Status / Facebook / X, photo
       // attaches. Status posts image-only so it can't overlap WhatsApp's caption.
       var shareData = portrait ? { files: [file], title: 'VilfinTV News' }
-                               : { files: [file], title: 'VilfinTV News', text: caption };
+                               : { files: [file], title: 'VilfinTV News', text: captionUrlOnly };
       await navigator.share(shareData);
     } else {
       // Desktop: download the card (to attach), then open the target's web share
