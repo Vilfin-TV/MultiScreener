@@ -659,8 +659,14 @@ ${body.text}`;
       if (!(agent.scope && agent.scope.llm)) return jsonError(403, 'This agent key does not have LLM-config permission.');
       const cfg = await _llmAll(env);
       const def = cfg.providers.find(p => p.isDefault) || cfg.providers[0] || null;
+      // If any provider uses the free auto-rotate sentinel, attach the live list
+      // of free OpenRouter model ids so the agent can build a fallback chain.
+      let freeModels = [];
+      if (cfg.providers.some(p => p.model === OR_FREE_ROTATE)) {
+        freeModels = (await _orModels(env)).filter(m => m.free).map(m => m.id);
+      }
       try { const all = await _agAll(env); if (all[agent.id]) { all[agent.id].lastUsedAt = new Date().toISOString(); await _agPut(env, all); } } catch(_){}
-      return new Response(JSON.stringify({ ok:true, providers: cfg.providers, default: def ? def.id : null }),
+      return new Response(JSON.stringify({ ok:true, providers: cfg.providers, default: def ? def.id : null, freeModels: freeModels }),
         { status:200, headers:{ ...CORS, 'Content-Type':'application/json' } });
     }
 
@@ -735,22 +741,9 @@ ${body.text}`;
     if (pathname === '/api/llm/models' && request.method === 'GET') {
       const auth = await requireAuth(request, env); if (auth.error) return auth.error;
       if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
-      try {
-        const r = await fetch('https://openrouter.ai/api/v1/models', {
-          headers: { 'User-Agent': 'vilfintv-console', 'Accept': 'application/json' },
-          cf: { cacheTtl: 3600, cacheEverything: true }, signal: AbortSignal.timeout(12000) });
-        if (!r.ok) return _rbacJson({ ok:true, models: [], reason: 'OpenRouter HTTP ' + r.status });
-        const data = await r.json();
-        const models = (data.data || []).map(m => {
-          const pp = m.pricing || {};
-          const free = (parseFloat(pp.prompt || '0') === 0 && parseFloat(pp.completion || '0') === 0) || /:free$/.test(m.id || '');
-          return { id: m.id, name: m.name || m.id, provider: String(m.id || '').split('/')[0], free: free };
-        }).filter(m => m.id);
-        return new Response(JSON.stringify({ ok:true, models }), { status:200,
-          headers:{ ...CORS, 'Content-Type':'application/json', 'Cache-Control':'public, max-age=3600' } });
-      } catch (e) {
-        return _rbacJson({ ok:true, models: [], reason: String(e && e.message || e) });
-      }
+      const models = await _orModels(env);
+      return new Response(JSON.stringify({ ok:true, models }), { status:200,
+        headers:{ ...CORS, 'Content-Type':'application/json', 'Cache-Control':'public, max-age=3600' } });
     }
 
     // ── /api/admin/profile  GET/POST — admin display profile (admin only) ─────
@@ -1762,6 +1755,23 @@ async function _llmAll(env){
   catch(e){ return { providers: [] }; }
 }
 async function _llmPut(env, cfg){ await env.IPTV_KV.put('llm_config', JSON.stringify(cfg)); }
+// Sentinel model ids for the OpenRouter dropdown (expanded by the agent).
+const OR_FREE_ROTATE = 'openrouter/free-rotate';
+// Fetch + simplify the public OpenRouter catalogue (cached 1h at the edge).
+async function _orModels(env){
+  try {
+    const r = await fetch('https://openrouter.ai/api/v1/models', {
+      headers: { 'User-Agent': 'vilfintv-console', 'Accept': 'application/json' },
+      cf: { cacheTtl: 3600, cacheEverything: true }, signal: AbortSignal.timeout(12000) });
+    if (!r.ok) return [];
+    const data = await r.json();
+    return (data.data || []).map(m => {
+      const pp = m.pricing || {};
+      const free = (parseFloat(pp.prompt || '0') === 0 && parseFloat(pp.completion || '0') === 0) || /:free$/.test(m.id || '');
+      return { id: m.id, name: m.name || m.id, provider: String(m.id || '').split('/')[0], free: free };
+    }).filter(m => m.id);
+  } catch(e){ return []; }
+}
 // Admin-facing view of a provider — the secret key is masked.
 function _llmPublic(p){
   const key = p.apiKey || '';

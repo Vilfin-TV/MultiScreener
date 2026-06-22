@@ -5697,9 +5697,15 @@ function _llmOnProviderChange(){
   var sel=document.getElementById('llm-model');if(!sel)return;
   var list=window._llmModels;
   var ms=(!prov)?[]:(prov==='openrouter'?list:list.filter(function(m){return m.provider===prov;}));
-  if(!ms.length){sel.innerHTML='<option value="">'+(prov?'No models found':'Select a provider first…')+'</option>';return;}
+  // Pinned auto options for the OpenRouter gateway
+  var pinned='';
+  if(prov==='openrouter'){
+    pinned='<option value="openrouter/free-rotate">🆓 Free auto-rotate (all free models, auto-switch)</option>'+
+           '<option value="openrouter/auto">auto — OpenRouter picks best (may be paid)</option>';
+  }
+  if(!ms.length&&!pinned){sel.innerHTML='<option value="">'+(prov?'No models found':'Select a provider first…')+'</option>';return;}
   ms.sort(function(a,b){return a.id<b.id?-1:1;});
-  sel.innerHTML=ms.map(function(m){return '<option value="'+esc(m.id)+'">'+esc(m.id)+(m.free?'  · free':'')+'</option>';}).join('');
+  sel.innerHTML=pinned+ms.map(function(m){return '<option value="'+esc(m.id)+'">'+esc(m.id)+(m.free?'  · free':'')+'</option>';}).join('');
 }
 async function _llmLoad(){
   var host=document.getElementById('llm-list');if(!host)return;
