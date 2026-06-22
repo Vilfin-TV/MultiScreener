@@ -488,8 +488,9 @@ ${body.text}`;
       const label = (b.label||'').toString().trim().slice(0,80) || 'Agent';
       let expiresAt = null;
       if (b.expiresAt) { const t = new Date(b.expiresAt); if (isNaN(t.getTime())) return jsonError(400, 'Invalid expiry date.'); expiresAt = t.toISOString(); }
-      const scope = { publish: b.scope ? !!b.scope.publish : true, edit: b.scope ? !!b.scope.edit : false };
-      if (!scope.publish && !scope.edit) scope.publish = true;
+      const scope = { publish: b.scope ? !!b.scope.publish : true, edit: b.scope ? !!b.scope.edit : false,
+        delete: b.scope ? !!b.scope.delete : false, llm: b.scope ? !!b.scope.llm : false };
+      if (!scope.publish && !scope.edit && !scope.delete && !scope.llm) scope.publish = true;
       const id     = _iptvHexFromBytes(crypto.getRandomValues(new Uint8Array(6)));
       const secret = _iptvHexFromBytes(crypto.getRandomValues(new Uint8Array(24)));
       const h = await _iptvHashPassword(secret);
@@ -525,6 +526,29 @@ ${body.text}`;
       const all = await _agAll(env);
       if (all[id]) { delete all[id]; await _agPut(env, all); }
       return _rbacJson({ ok:true, deleted:true, id });
+    }
+
+    // ── /api/agent/keys/update  POST — change label/expiry/scope (admin only) ──
+    // Lets the admin grant new permissions (delete, llm) to an already-issued key
+    // without regenerating its secret.
+    if (pathname === '/api/agent/keys/update' && request.method === 'POST') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Agent store not configured (IPTV_KV).');
+      let b; try { b = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      const all = await _agAll(env); const k = all[(b.id||'').toString()];
+      if (!k) return jsonError(404, 'Agent key not found.');
+      if (typeof b.label === 'string' && b.label.trim()) k.label = b.label.trim().slice(0,80);
+      if ('expiresAt' in b) {
+        if (b.expiresAt) { const t = new Date(b.expiresAt); if (isNaN(t.getTime())) return jsonError(400, 'Invalid expiry date.'); k.expiresAt = t.toISOString(); }
+        else k.expiresAt = null;
+      }
+      if (b.scope && typeof b.scope === 'object') {
+        k.scope = { publish:!!b.scope.publish, edit:!!b.scope.edit, delete:!!b.scope.delete, llm:!!b.scope.llm };
+        if (!k.scope.publish && !k.scope.edit && !k.scope.delete && !k.scope.llm) k.scope.publish = true;
+      }
+      await _agPut(env, all);
+      return _rbacJson({ ok:true, key:_agPublic(k) });
     }
 
     // ── /api/agent/request  POST — agent asks to be activated (key auth) ───────
@@ -603,6 +627,130 @@ ${body.text}`;
       try { const all = await _agAll(env); if (all[agent.id]) { all[agent.id].lastUsedAt = now.toISOString(); await _agPut(env, all); } } catch(_){}
       return new Response(JSON.stringify({ ok:true, id:resultId, edited:isEdit, expires_at:expiresAt,
         url:`https://vilfintv.com/news.html?story=${resultId}` }), { status:200, headers:{ ...CORS, 'Content-Type':'application/json' } });
+    }
+
+    // ── /api/agent/delete  POST — remove a published story by id (key auth) ────
+    if (pathname === '/api/agent/delete' && request.method === 'POST') {
+      const a = await _agentAuth(request, env); if (a.error) return a.error;
+      const agent = a.agent;
+      if (agent.status !== 'active') return jsonError(403, 'Agent not yet approved.');
+      if (!(agent.scope && agent.scope.delete)) return jsonError(403, 'This agent key does not have delete permission.');
+      if (!env.GITHUB_TOKEN) return jsonError(503, 'GitHub not configured.');
+      let body; try { body = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON.'); }
+      const delId = (body.id||'').toString().trim();
+      if (!delId) return jsonError(400, 'id is required.');
+      let read; try { read = await _ghReadContent(env); } catch (e) { return jsonError(502, e.message); }
+      const before = read.items.length;
+      const items = read.items.filter(i => String(i.id) !== delId);
+      if (items.length === before) return jsonError(404, 'Story not found (already removed or expired).');
+      try { await _ghWriteContent(env, items, read.sha, `chore(content): agent delete ${delId} [${agent.label}]`); }
+      catch (e) { return jsonError(502, e.message); }
+      try { const all = await _agAll(env); if (all[agent.id]) { all[agent.id].lastUsedAt = new Date().toISOString(); await _agPut(env, all); } } catch(_){}
+      return new Response(JSON.stringify({ ok:true, deleted:delId }), { status:200, headers:{ ...CORS, 'Content-Type':'application/json' } });
+    }
+
+    // ── /api/agent/llm  GET — agent reads the LLM config (key auth, llm scope) ─
+    // Returns the FULL provider config (incl. API keys) so the agent can build its
+    // LiteLLM config on its own server. Requires the 'llm' scope.
+    if (pathname === '/api/agent/llm' && request.method === 'GET') {
+      const a = await _agentAuth(request, env); if (a.error) return a.error;
+      const agent = a.agent;
+      if (agent.status !== 'active') return jsonError(403, 'Agent not yet approved.');
+      if (!(agent.scope && agent.scope.llm)) return jsonError(403, 'This agent key does not have LLM-config permission.');
+      const cfg = await _llmAll(env);
+      const def = cfg.providers.find(p => p.isDefault) || cfg.providers[0] || null;
+      try { const all = await _agAll(env); if (all[agent.id]) { all[agent.id].lastUsedAt = new Date().toISOString(); await _agPut(env, all); } } catch(_){}
+      return new Response(JSON.stringify({ ok:true, providers: cfg.providers, default: def ? def.id : null }),
+        { status:200, headers:{ ...CORS, 'Content-Type':'application/json' } });
+    }
+
+    // ══ LLM / LiteLLM provider config (admin-managed) ══════════════════════════
+    // ── /api/llm/config  GET — list providers (keys masked) (admin only) ───────
+    if (pathname === '/api/llm/config' && request.method === 'GET') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Store not configured (IPTV_KV).');
+      const cfg = await _llmAll(env);
+      return _rbacJson({ ok:true, providers: cfg.providers.map(_llmPublic) });
+    }
+
+    // ── /api/llm/save  POST — add or update a provider (admin only) ────────────
+    if (pathname === '/api/llm/save' && request.method === 'POST') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Store not configured (IPTV_KV).');
+      let b; try { b = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      const name = (b.name||'').toString().trim().slice(0,80);
+      const provider = (b.provider||'').toString().trim().slice(0,40);
+      const model = (b.model||'').toString().trim().slice(0,120);
+      if (!name)     return jsonError(400, 'AI name is required.');
+      if (!provider) return jsonError(400, 'Provider is required.');
+      if (!model)    return jsonError(400, 'Default model is required.');
+      const cfg = await _llmAll(env);
+      let entry;
+      if (b.id) { entry = cfg.providers.find(p => p.id === String(b.id)); if (!entry) return jsonError(404, 'Provider entry not found.'); }
+      else { entry = { id: _iptvHexFromBytes(crypto.getRandomValues(new Uint8Array(5))), createdAt: new Date().toISOString() }; cfg.providers.push(entry); }
+      entry.name = name; entry.provider = provider; entry.model = model;
+      entry.apiBase = (b.apiBase||'').toString().trim().slice(0,200);
+      // keep the existing key when the field is left blank on edit
+      if (typeof b.apiKey === 'string' && b.apiKey.trim()) entry.apiKey = b.apiKey.trim().slice(0,400);
+      if (b.isDefault) { cfg.providers.forEach(p => { p.isDefault = (p === entry); }); }
+      else if (cfg.providers.length === 1) entry.isDefault = true;
+      await _llmPut(env, cfg);
+      return _rbacJson({ ok:true, provider: _llmPublic(entry) });
+    }
+
+    // ── /api/llm/delete  POST — remove a provider (admin only) ─────────────────
+    if (pathname === '/api/llm/delete' && request.method === 'POST') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Store not configured (IPTV_KV).');
+      let b; try { b = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      const cfg = await _llmAll(env);
+      const was = cfg.providers.length;
+      const removed = cfg.providers.find(p => p.id === String(b.id));
+      cfg.providers = cfg.providers.filter(p => p.id !== String(b.id));
+      // if we removed the default, promote the first remaining one
+      if (removed && removed.isDefault && cfg.providers.length) cfg.providers[0].isDefault = true;
+      if (cfg.providers.length !== was) await _llmPut(env, cfg);
+      return _rbacJson({ ok:true, deleted: String(b.id||'') });
+    }
+
+    // ── /api/llm/default  POST — set the default provider (admin only) ─────────
+    if (pathname === '/api/llm/default' && request.method === 'POST') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Store not configured (IPTV_KV).');
+      let b; try { b = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      const cfg = await _llmAll(env);
+      let found = false; cfg.providers.forEach(p => { p.isDefault = (p.id === String(b.id)); if (p.isDefault) found = true; });
+      if (!found) return jsonError(404, 'Provider entry not found.');
+      await _llmPut(env, cfg);
+      return _rbacJson({ ok:true });
+    }
+
+    // ── /api/llm/models  GET — OpenRouter catalogue for the dropdowns (admin) ──
+    // Server-side fetch (no CORS issues) of the public OpenRouter model list, then
+    // simplified to {id,name,provider,free}. Cached for an hour at the edge.
+    if (pathname === '/api/llm/models' && request.method === 'GET') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      try {
+        const r = await fetch('https://openrouter.ai/api/v1/models', {
+          headers: { 'User-Agent': 'vilfintv-console', 'Accept': 'application/json' },
+          cf: { cacheTtl: 3600, cacheEverything: true }, signal: AbortSignal.timeout(12000) });
+        if (!r.ok) return _rbacJson({ ok:true, models: [], reason: 'OpenRouter HTTP ' + r.status });
+        const data = await r.json();
+        const models = (data.data || []).map(m => {
+          const pp = m.pricing || {};
+          const free = (parseFloat(pp.prompt || '0') === 0 && parseFloat(pp.completion || '0') === 0) || /:free$/.test(m.id || '');
+          return { id: m.id, name: m.name || m.id, provider: String(m.id || '').split('/')[0], free: free };
+        }).filter(m => m.id);
+        return new Response(JSON.stringify({ ok:true, models }), { status:200,
+          headers:{ ...CORS, 'Content-Type':'application/json', 'Cache-Control':'public, max-age=3600' } });
+      } catch (e) {
+        return _rbacJson({ ok:true, models: [], reason: String(e && e.message || e) });
+      }
     }
 
     // ── /api/admin/profile  GET/POST — admin display profile (admin only) ─────
@@ -1606,6 +1754,20 @@ async function _agAll(env){
   try { const r = await env.IPTV_KV.get('agent_keys'); return r ? JSON.parse(r) : {}; } catch(e){ return {}; }
 }
 async function _agPut(env, all){ await env.IPTV_KV.put('agent_keys', JSON.stringify(all)); }
+
+/* ── LLM / LiteLLM provider config (admin-managed; agent reads with 'llm' scope) */
+async function _llmAll(env){
+  if (!env.IPTV_KV) return { providers: [] };
+  try { const r = await env.IPTV_KV.get('llm_config'); const o = r ? JSON.parse(r) : {}; return { providers: Array.isArray(o.providers) ? o.providers : [] }; }
+  catch(e){ return { providers: [] }; }
+}
+async function _llmPut(env, cfg){ await env.IPTV_KV.put('llm_config', JSON.stringify(cfg)); }
+// Admin-facing view of a provider — the secret key is masked.
+function _llmPublic(p){
+  const key = p.apiKey || '';
+  return { id:p.id, name:p.name, provider:p.provider, model:p.model, apiBase:p.apiBase||'',
+    isDefault:!!p.isDefault, hasKey:!!key, keyMasked: key ? ('••••••' + key.slice(-4)) : '', createdAt:p.createdAt };
+}
 // Public view of a key record (no secret material)
 function _agPublic(k){
   return { id:k.id, label:k.label, status:k.status, scope:k.scope||{publish:true,edit:false},

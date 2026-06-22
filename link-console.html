@@ -5461,13 +5461,33 @@ function loadSettings(){
         '<div style="flex:1;min-width:200px"><label class="rb-lbl">Label</label><input class="rb-inp" id="ag-label" placeholder="e.g. Hermes Telegram agent" autocomplete="off"></div>'+
         '<div style="min-width:170px"><label class="rb-lbl">Expiry date <span style="opacity:.5">(optional)</span></label><input class="rb-inp" id="ag-expiry" type="date" onclick="try{this.showPicker()}catch(e){}" onfocus="try{this.showPicker()}catch(e){}"></div>'+
       '</div>'+
-      '<label class="rb-lbl" style="margin-top:6px">Scope</label>'+
-      '<div style="display:flex;gap:18px;align-items:center;margin-top:4px">'+
+      '<label class="rb-lbl" style="margin-top:6px">Scope (permissions)</label>'+
+      '<div style="display:flex;gap:18px;align-items:center;margin-top:4px;flex-wrap:wrap">'+
         '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="ag-scope-publish" checked> Publish new stories</label>'+
         '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="ag-scope-edit"> Edit existing stories</label>'+
+        '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="ag-scope-delete"> Delete published stories</label>'+
+        '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="ag-scope-llm"> Read AI / LLM config</label>'+
       '</div>'+
-      '<div style="margin-top:14px"><button class="rb-btn" id="ag-create">Generate API key</button></div>'+
+      '<div style="margin-top:14px;display:flex;gap:10px"><button class="rb-btn" id="ag-create">Generate API key</button><button class="rb-btn ghost" id="ag-cancel" style="display:none">Cancel edit</button></div>'+
       '<div class="rb-msg" id="ag-msg"></div>'+
+    '</div>'+
+    '<div class="rb-sec"><h3>AI / LLM keys (LiteLLM)</h3>'+
+      '<p style="font-size:12px;color:#8a8a9e;margin:0 0 14px">Configure the AI providers and default model your agent should use. Pick the <b>AI / provider</b> and <b>model</b> from the dropdowns (the full OpenRouter catalogue — free &amp; paid), paste that provider\'s <b>API key</b>, and mark one as default. An agent key with the <b>Read AI / LLM config</b> scope can fetch these to build its LiteLLM config on the server. Keys are stored server-side and shown masked here.</p>'+
+      '<div id="llm-list"><div style="opacity:.6;font-size:13px">Loading…</div></div>'+
+      '<hr style="border:none;border-top:1px solid rgba(255,255,255,.08);margin:16px 0">'+
+      '<h3 id="llm-form-title" style="font-size:13px">Add an AI provider</h3>'+
+      '<div style="display:flex;gap:10px;flex-wrap:wrap">'+
+        '<div style="flex:1;min-width:180px"><label class="rb-lbl">AI name (label)</label><input class="rb-inp" id="llm-name" placeholder="e.g. OpenAI GPT-4o" autocomplete="off"></div>'+
+        '<div style="min-width:180px"><label class="rb-lbl">AI / provider</label><select class="rb-inp" id="llm-provider"><option value="">Loading…</option></select></div>'+
+      '</div>'+
+      '<div style="display:flex;gap:10px;flex-wrap:wrap">'+
+        '<div style="flex:1;min-width:220px"><label class="rb-lbl">Default model</label><select class="rb-inp" id="llm-model"><option value="">Select a provider first…</option></select></div>'+
+        '<div style="min-width:180px"><label class="rb-lbl">API base <span style="opacity:.5">(optional)</span></label><input class="rb-inp" id="llm-base" placeholder="https://… (leave blank for default)" autocomplete="off"></div>'+
+      '</div>'+
+      '<label class="rb-lbl">API key</label><input class="rb-inp" id="llm-key" type="password" placeholder="paste this provider\'s API key (blank = keep existing on edit)" autocomplete="new-password">'+
+      '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;margin:4px 0 2px"><input type="checkbox" id="llm-default"> Set as the default model the agent uses</label>'+
+      '<div style="margin-top:14px;display:flex;gap:10px"><button class="rb-btn" id="llm-save">Save provider</button><button class="rb-btn ghost" id="llm-clear">Clear form</button></div>'+
+      '<div class="rb-msg" id="llm-msg"></div>'+
     '</div>'+
   '</div>');
   document.querySelectorAll('.c-panel').forEach(function(p){p.classList.toggle('active',p.id==='tab-settings');});
@@ -5477,7 +5497,11 @@ function loadSettings(){
   document.getElementById('op-clear').addEventListener('click',function(){_opFill(null);});
   document.getElementById('op-role').addEventListener('change',_opRolePreset);
   document.getElementById('ag-create').addEventListener('click',_agCreate);
-  _apLoad(); _opLoad(); _agLoad();
+  document.getElementById('ag-cancel').addEventListener('click',function(){_agFill(null);});
+  document.getElementById('llm-save').addEventListener('click',_llmSave);
+  document.getElementById('llm-clear').addEventListener('click',function(){_llmFill(null);});
+  document.getElementById('llm-provider').addEventListener('change',_llmOnProviderChange);
+  _apLoad(); _opLoad(); _agLoad(); _llmLoad(); _llmLoadModels();
 }
 function _rbPermRows(){
   var tb=document.getElementById('op-perms'); if(!tb)return;
@@ -5567,7 +5591,8 @@ async function _opDelete(u){
 }
 
 /* ── Agent API keys ─────────────────────────────────────────────────────────── */
-function _agScopeText(s){s=s||{};var p=[];if(s.publish)p.push('Publish');if(s.edit)p.push('Edit');return p.join(' + ')||'—';}
+var _agEditId=null;
+function _agScopeText(s){s=s||{};var p=[];if(s.publish)p.push('Publish');if(s.edit)p.push('Edit');if(s.delete)p.push('Delete');if(s.llm)p.push('LLM');return p.join(' + ')||'—';}
 function _agFmtDate(d){if(!d)return '—';try{return new Date(d).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}catch(e){return '—';}}
 function _agStatusBadge(k){
   var expired=k.expiresAt&&(Date.now()>new Date(k.expiresAt).getTime());
@@ -5580,11 +5605,13 @@ async function _agLoad(){
   var host=document.getElementById('ag-list');if(!host)return;
   try{var res=await authFetch(WORKER+'/api/agent/keys',{method:'GET'});var d=await res.json();
     if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
-    if(!d.keys.length){host.innerHTML='<div style="opacity:.6;font-size:13px">No agent keys yet. Generate one below.</div>';return;}
+    if(!d.keys.length){host.innerHTML='<div style="opacity:.6;font-size:13px">No agent keys yet. Generate one below.</div>';window._agCache={};return;}
+    window._agCache={};d.keys.forEach(function(k){window._agCache[k.id]=k;});
     host.innerHTML='<table class="op-tbl"><thead><tr><th>Label</th><th>Status</th><th>Scope</th><th>Expires</th><th>Last used</th><th></th></tr></thead><tbody>'+
       d.keys.map(function(k){
         var act='';
         if(k.status!=='active')act+='<button class="op-act" data-ap="'+esc(k.id)+'">Approve</button>';
+        act+='<button class="op-act" data-ed="'+esc(k.id)+'">Edit</button>';
         act+='<button class="op-act del" data-rv="'+esc(k.id)+'">Delete</button>';
         return '<tr><td><b>'+esc(k.label)+'</b></td><td>'+_agStatusBadge(k)+'</td>'+
           '<td style="font-size:12px;color:#9a9ab0">'+esc(_agScopeText(k.scope))+'</td>'+
@@ -5593,27 +5620,50 @@ async function _agLoad(){
           '<td style="text-align:right;white-space:nowrap">'+act+'</td></tr>';
       }).join('')+'</tbody></table>';
     host.querySelectorAll('[data-ap]').forEach(function(b){b.addEventListener('click',function(){_agApprove(b.getAttribute('data-ap'));});});
+    host.querySelectorAll('[data-ed]').forEach(function(b){b.addEventListener('click',function(){_agFill(window._agCache[b.getAttribute('data-ed')]);});});
     host.querySelectorAll('[data-rv]').forEach(function(b){b.addEventListener('click',function(){_agDelete(b.getAttribute('data-rv'));});});
   }catch(e){host.innerHTML='<div style="color:#ff8888">'+esc(e.message)+'</div>';}
 }
+function _agFill(k){
+  _agEditId=k?k.id:null;
+  var s=(k&&k.scope)||{publish:true};
+  document.getElementById('ag-label').value=k?k.label:'';
+  document.getElementById('ag-expiry').value=k&&k.expiresAt?String(k.expiresAt).slice(0,10):'';
+  document.getElementById('ag-scope-publish').checked=k?!!s.publish:true;
+  document.getElementById('ag-scope-edit').checked=!!s.edit;
+  document.getElementById('ag-scope-delete').checked=!!s.delete;
+  document.getElementById('ag-scope-llm').checked=!!s.llm;
+  document.getElementById('ag-create').textContent=k?'Update permissions':'Generate API key';
+  document.getElementById('ag-cancel').style.display=k?'':'none';
+  document.getElementById('ag-key-box').style.display='none';
+  document.getElementById('ag-msg').textContent='';
+  if(k){var f=document.getElementById('ag-label');if(f&&f.scrollIntoView)f.scrollIntoView({behavior:'smooth',block:'center'});}
+}
 async function _agCreate(){
   var msg=document.getElementById('ag-msg');msg.textContent='';
-  var payload={label:document.getElementById('ag-label').value.trim(),
-    expiresAt:document.getElementById('ag-expiry').value||null,
-    scope:{publish:document.getElementById('ag-scope-publish').checked,edit:document.getElementById('ag-scope-edit').checked}};
+  var scope={publish:document.getElementById('ag-scope-publish').checked,edit:document.getElementById('ag-scope-edit').checked,
+    delete:document.getElementById('ag-scope-delete').checked,llm:document.getElementById('ag-scope-llm').checked};
+  var payload={label:document.getElementById('ag-label').value.trim(),expiresAt:document.getElementById('ag-expiry').value||null,scope:scope};
   if(!payload.label){msg.innerHTML='<span style="color:#ff8888">Enter a label.</span>';return;}
-  if(!payload.scope.publish&&!payload.scope.edit){msg.innerHTML='<span style="color:#ff8888">Pick at least one scope.</span>';return;}
-  var btn=document.getElementById('ag-create');btn.disabled=true;var t=btn.textContent;btn.textContent='Generating…';
-  try{var res=await authFetch(WORKER+'/api/agent/keys/create',{method:'POST',body:JSON.stringify(payload)});var d=await res.json();
-    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
-    var box=document.getElementById('ag-key-box');document.getElementById('ag-key-val').textContent=d.apiKey;box.style.display='';
-    var cp=document.getElementById('ag-key-copy');cp.onclick=function(){navigator.clipboard.writeText(d.apiKey).then(function(){cp.textContent='Copied ✓';setTimeout(function(){cp.textContent='Copy';},1500);});};
-    document.getElementById('ag-label').value='';document.getElementById('ag-expiry').value='';
-    msg.innerHTML='<span style="color:#4ddb8a">Key created. Give it to the agent, then approve its request below.</span>';
-    box.scrollIntoView({behavior:'smooth',block:'center'});
-    _agLoad();
+  if(!scope.publish&&!scope.edit&&!scope.delete&&!scope.llm){msg.innerHTML='<span style="color:#ff8888">Pick at least one permission.</span>';return;}
+  var btn=document.getElementById('ag-create');btn.disabled=true;var t=btn.textContent;btn.textContent=_agEditId?'Updating…':'Generating…';
+  try{
+    if(_agEditId){
+      payload.id=_agEditId;
+      var res=await authFetch(WORKER+'/api/agent/keys/update',{method:'POST',body:JSON.stringify(payload)});var d=await res.json();
+      if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+      msg.innerHTML='<span style="color:#4ddb8a">Permissions updated.</span>';_agFill(null);_agLoad();
+    }else{
+      var res=await authFetch(WORKER+'/api/agent/keys/create',{method:'POST',body:JSON.stringify(payload)});var d=await res.json();
+      if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+      var box=document.getElementById('ag-key-box');document.getElementById('ag-key-val').textContent=d.apiKey;box.style.display='';
+      var cp=document.getElementById('ag-key-copy');cp.onclick=function(){navigator.clipboard.writeText(d.apiKey).then(function(){cp.textContent='Copied ✓';setTimeout(function(){cp.textContent='Copy';},1500);});};
+      document.getElementById('ag-label').value='';document.getElementById('ag-expiry').value='';
+      msg.innerHTML='<span style="color:#4ddb8a">Key created. Give it to the agent, then approve its request below.</span>';
+      box.scrollIntoView({behavior:'smooth',block:'center'});_agLoad();
+    }
   }catch(e){msg.innerHTML='<span style="color:#ff8888">'+esc(e.message)+'</span>';}
-  finally{btn.disabled=false;btn.textContent=t;}
+  finally{btn.disabled=false;btn.textContent=_agEditId?'Update permissions':'Generate API key';}
 }
 async function _agApprove(id){
   try{var res=await authFetch(WORKER+'/api/agent/keys/approve',{method:'POST',body:JSON.stringify({id:id})});var d=await res.json();
@@ -5625,8 +5675,94 @@ async function _agDelete(id){
   if(!confirm('Delete this agent key? The agent will immediately lose access.'))return;
   try{var res=await authFetch(WORKER+'/api/agent/keys/revoke',{method:'POST',body:JSON.stringify({id:id})});var d=await res.json();
     if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
-    _agLoad();
+    if(_agEditId===id)_agFill(null);_agLoad();
   }catch(e){alert('Delete failed: '+e.message);}
+}
+
+/* ── AI / LLM (LiteLLM) provider config ─────────────────────────────────────── */
+var _llmEditId=null; window._llmModels=[];
+async function _llmLoadModels(){
+  var provSel=document.getElementById('llm-provider');if(!provSel)return;
+  try{var res=await authFetch(WORKER+'/api/llm/models',{method:'GET'});var d=await res.json();
+    window._llmModels=(d&&d.models)||[];
+  }catch(e){window._llmModels=[];}
+  var provs=Array.from(new Set(window._llmModels.map(function(m){return m.provider;}).filter(Boolean))).sort();
+  provSel.innerHTML='<option value="">Select…</option>'+
+    '<option value="openrouter">openrouter (gateway — any model)</option>'+
+    provs.map(function(p){return '<option value="'+esc(p)+'">'+esc(p)+'</option>';}).join('');
+  _llmOnProviderChange();
+}
+function _llmOnProviderChange(){
+  var prov=document.getElementById('llm-provider').value;
+  var sel=document.getElementById('llm-model');if(!sel)return;
+  var list=window._llmModels;
+  var ms=(!prov)?[]:(prov==='openrouter'?list:list.filter(function(m){return m.provider===prov;}));
+  if(!ms.length){sel.innerHTML='<option value="">'+(prov?'No models found':'Select a provider first…')+'</option>';return;}
+  ms.sort(function(a,b){return a.id<b.id?-1:1;});
+  sel.innerHTML=ms.map(function(m){return '<option value="'+esc(m.id)+'">'+esc(m.id)+(m.free?'  · free':'')+'</option>';}).join('');
+}
+async function _llmLoad(){
+  var host=document.getElementById('llm-list');if(!host)return;
+  try{var res=await authFetch(WORKER+'/api/llm/config',{method:'GET'});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    if(!d.providers.length){host.innerHTML='<div style="opacity:.6;font-size:13px">No AI providers configured yet. Add one below.</div>';window._llmCache={};return;}
+    window._llmCache={};d.providers.forEach(function(p){window._llmCache[p.id]=p;});
+    host.innerHTML='<table class="op-tbl"><thead><tr><th>Name</th><th>Provider</th><th>Model</th><th>Key</th><th>Default</th><th></th></tr></thead><tbody>'+
+      d.providers.map(function(p){
+        return '<tr><td><b>'+esc(p.name)+'</b></td><td style="font-size:12px;color:#9a9ab0">'+esc(p.provider)+'</td>'+
+          '<td style="font-size:12px;color:#9a9ab0">'+esc(p.model)+'</td>'+
+          '<td style="font-size:12px;color:#9a9ab0">'+esc(p.keyMasked||'—')+'</td>'+
+          '<td>'+(p.isDefault?'<span style="color:#4ddb8a">★ default</span>':'<button class="op-act" data-df="'+esc(p.id)+'">Make default</button>')+'</td>'+
+          '<td style="text-align:right;white-space:nowrap"><button class="op-act" data-le="'+esc(p.id)+'">Edit</button><button class="op-act del" data-ld="'+esc(p.id)+'">Delete</button></td></tr>';
+      }).join('')+'</tbody></table>';
+    host.querySelectorAll('[data-df]').forEach(function(b){b.addEventListener('click',function(){_llmSetDefault(b.getAttribute('data-df'));});});
+    host.querySelectorAll('[data-le]').forEach(function(b){b.addEventListener('click',function(){_llmFill(window._llmCache[b.getAttribute('data-le')]);});});
+    host.querySelectorAll('[data-ld]').forEach(function(b){b.addEventListener('click',function(){_llmDelete(b.getAttribute('data-ld'));});});
+  }catch(e){host.innerHTML='<div style="color:#ff8888">'+esc(e.message)+'</div>';}
+}
+function _llmFill(p){
+  _llmEditId=p?p.id:null;
+  document.getElementById('llm-name').value=p?p.name:'';
+  document.getElementById('llm-provider').value=p?p.provider:'';
+  _llmOnProviderChange();
+  if(p)document.getElementById('llm-model').value=p.model||'';
+  document.getElementById('llm-base').value=p?(p.apiBase||''):'';
+  document.getElementById('llm-key').value='';
+  document.getElementById('llm-key').placeholder=p?'leave blank to keep existing key':'paste this provider’s API key';
+  document.getElementById('llm-default').checked=p?!!p.isDefault:false;
+  document.getElementById('llm-form-title').textContent=p?('Edit “'+p.name+'”'):'Add an AI provider';
+  document.getElementById('llm-msg').textContent='';
+  if(p){var f=document.getElementById('llm-name');if(f&&f.scrollIntoView)f.scrollIntoView({behavior:'smooth',block:'center'});}
+}
+async function _llmSave(){
+  var msg=document.getElementById('llm-msg');msg.textContent='';
+  var payload={name:document.getElementById('llm-name').value.trim(),provider:document.getElementById('llm-provider').value,
+    model:document.getElementById('llm-model').value,apiBase:document.getElementById('llm-base').value.trim(),
+    apiKey:document.getElementById('llm-key').value.trim(),isDefault:document.getElementById('llm-default').checked};
+  if(!payload.name){msg.innerHTML='<span style="color:#ff8888">Enter an AI name.</span>';return;}
+  if(!payload.provider){msg.innerHTML='<span style="color:#ff8888">Pick a provider.</span>';return;}
+  if(!payload.model){msg.innerHTML='<span style="color:#ff8888">Pick a default model.</span>';return;}
+  if(!_llmEditId&&!payload.apiKey){msg.innerHTML='<span style="color:#ff8888">Paste the API key.</span>';return;}
+  if(_llmEditId)payload.id=_llmEditId;
+  var btn=document.getElementById('llm-save');btn.disabled=true;var t=btn.textContent;btn.textContent='Saving…';
+  try{var res=await authFetch(WORKER+'/api/llm/save',{method:'POST',body:JSON.stringify(payload)});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    msg.innerHTML='<span style="color:#4ddb8a">Saved.</span>';_llmFill(null);_llmLoad();
+  }catch(e){msg.innerHTML='<span style="color:#ff8888">'+esc(e.message)+'</span>';}
+  finally{btn.disabled=false;btn.textContent=t;}
+}
+async function _llmDelete(id){
+  if(!confirm('Delete this AI provider entry?'))return;
+  try{var res=await authFetch(WORKER+'/api/llm/delete',{method:'POST',body:JSON.stringify({id:id})});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    if(_llmEditId===id)_llmFill(null);_llmLoad();
+  }catch(e){alert('Delete failed: '+e.message);}
+}
+async function _llmSetDefault(id){
+  try{var res=await authFetch(WORKER+'/api/llm/default',{method:'POST',body:JSON.stringify({id:id})});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    _llmLoad();
+  }catch(e){alert('Failed: '+e.message);}
 }
 </script>
 
