@@ -948,6 +948,12 @@
     <input type="password" id="login-pass" placeholder="••••••••"
            autocomplete="current-password">
 
+    <div id="login-2fa-row" style="display:none">
+      <label class="field-label" for="login-code">Authenticator code</label>
+      <input type="text" id="login-code" inputmode="numeric" autocomplete="one-time-code"
+             maxlength="6" placeholder="123456" spellcheck="false">
+    </div>
+
     <button class="btn-login" id="login-btn">Sign In</button>
   </div>
 </div>
@@ -2301,6 +2307,7 @@ document.addEventListener('DOMContentLoaded', function() {
 async function doLogin() {
   var username = document.getElementById('login-user').value.trim();
   var password = document.getElementById('login-pass').value;
+  var code     = (document.getElementById('login-code').value || '').trim();
   var btn      = document.getElementById('login-btn');
 
   if (!username || !password) {
@@ -2312,17 +2319,26 @@ async function doLogin() {
   btn.textContent = 'Signing in…';
 
   try {
+    var payload = { username: username, password: password };
+    if (code) payload.code = code;
     var res  = await fetch(WORKER + '/api/login', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ username: username, password: password }),
+      body:    JSON.stringify(payload),
     });
     var data = await res.json();
 
     if (res.ok && data.ok && data.token) {
       setToken(data.token);
       document.getElementById('login-pass').value = '';
+      document.getElementById('login-code').value = '';
+      document.getElementById('login-2fa-row').style.display = 'none';
       showDashboard();
+    } else if (data.need2fa) {
+      // Password OK → reveal the authenticator-code field and prompt for it
+      document.getElementById('login-2fa-row').style.display = '';
+      setLoginErr(data.message || 'Enter your authenticator code.');
+      var cf = document.getElementById('login-code'); cf.focus();
     } else {
       setLoginErr(data.message || 'Invalid credentials.');
       document.getElementById('login-pass').value = '';
@@ -5430,6 +5446,24 @@ function loadSettings(){
       '<button class="rb-btn" id="ap-save">Save profile</button><div class="rb-msg" id="ap-msg"></div>'+
       '<p style="font-size:12px;color:#8a8a9e;margin-top:12px">Your admin sign-in username &amp; password are managed as Cloudflare Worker secrets (ADMIN_USERNAME / LINK_CONSOLE_PASSWORD) — change them with <code>wrangler secret put</code> for security.</p>'+
     '</div>'+
+    '<div class="rb-sec"><h3>Two-factor authentication (2FA)</h3>'+
+      '<div id="tfa-status" style="font-size:13px;margin-bottom:12px">Checking…</div>'+
+      '<div id="tfa-setup" style="display:none">'+
+        '<p style="font-size:12px;color:#8a8a9e;margin:0 0 8px">Add this key to Google Authenticator / Authy (scan the link or type the setup key), then enter the 6-digit code to turn 2FA on.</p>'+
+        '<label class="rb-lbl">Setup key (base32)</label>'+
+        '<code id="tfa-secret" style="display:block;word-break:break-all;background:rgba(0,0,0,.35);padding:9px 11px;border-radius:7px;color:#e8e3ff;font-size:13px"></code>'+
+        '<a id="tfa-otpauth" href="#" target="_blank" style="display:inline-block;margin:8px 0;font-size:12px;color:#9db8ff">Open otpauth:// link</a>'+
+        '<label class="rb-lbl">6-digit code</label><input class="rb-inp" id="tfa-code" inputmode="numeric" maxlength="6" placeholder="123456" autocomplete="one-time-code">'+
+        '<button class="rb-btn" id="tfa-enable">Verify &amp; enable</button>'+
+      '</div>'+
+      '<div id="tfa-on" style="display:none">'+
+        '<label class="rb-lbl">Enter a current code to disable 2FA</label><input class="rb-inp" id="tfa-dcode" inputmode="numeric" maxlength="6" placeholder="123456" autocomplete="one-time-code">'+
+        '<button class="rb-btn ghost" id="tfa-disable">Disable 2FA</button>'+
+      '</div>'+
+      '<div style="margin-top:8px"><button class="rb-btn" id="tfa-start" style="display:none">Set up 2FA</button></div>'+
+      '<div class="rb-msg" id="tfa-msg"></div>'+
+      '<p style="font-size:11px;color:#8a8a9e;margin-top:10px">Recovery: if you lose your device, delete the <code>admin_2fa</code> key in your Cloudflare KV (IPTV_KV) namespace to turn 2FA off.</p>'+
+    '</div>'+
     '<div class="rb-sec"><h3>Operator accounts</h3>'+
       '<div id="op-list"><div style="opacity:.6">Loading…</div></div>'+
       '<hr style="border:none;border-top:1px solid rgba(255,255,255,.08);margin:16px 0">'+
@@ -5546,7 +5580,10 @@ function loadSettings(){
   document.getElementById('les-hub').addEventListener('change',function(){_lesRenderList();_lesFill(null);});
   document.getElementById('les-save').addEventListener('click',_lesSave);
   document.getElementById('les-clear').addEventListener('click',function(){_lesFill(null);});
-  _apLoad(); _opLoad(); _agLoad(); _llmLoad(); _llmLoadModels(); _imgLoad(); _lesLoad();
+  document.getElementById('tfa-start').addEventListener('click',_tfaSetup);
+  document.getElementById('tfa-enable').addEventListener('click',_tfaEnable);
+  document.getElementById('tfa-disable').addEventListener('click',_tfaDisable);
+  _apLoad(); _opLoad(); _agLoad(); _llmLoad(); _llmLoadModels(); _imgLoad(); _lesLoad(); _tfaLoad();
 }
 function _rbPermRows(){
   var tb=document.getElementById('op-perms'); if(!tb)return;
@@ -5949,6 +5986,54 @@ async function _lesDelete(id){
     if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
     if(_lesEditId===id)_lesEditId=null;await _lesLoad();
   }catch(e){alert('Delete failed: '+e.message);}
+}
+
+/* ── Admin 2FA (TOTP) ───────────────────────────────────────────────────────── */
+function _tfaShow(enabled){
+  document.getElementById('tfa-status').innerHTML = enabled
+    ? '<span style="color:#4ddb8a">● 2FA is ON</span> — a code from your authenticator is required at sign-in.'
+    : '<span style="color:#f5b942">○ 2FA is OFF</span> — protect your console with an authenticator app.';
+  document.getElementById('tfa-start').style.display   = enabled ? 'none' : '';
+  document.getElementById('tfa-on').style.display      = enabled ? '' : 'none';
+  document.getElementById('tfa-setup').style.display   = 'none';
+}
+async function _tfaLoad(){
+  try{var res=await authFetch(WORKER+'/api/2fa/status',{method:'GET'});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    _tfaShow(!!d.enabled);
+  }catch(e){document.getElementById('tfa-status').innerHTML='<span style="color:#ff8888">'+esc(e.message)+'</span>';}
+}
+async function _tfaSetup(){
+  var msg=document.getElementById('tfa-msg');msg.textContent='';
+  try{var res=await authFetch(WORKER+'/api/2fa/setup',{method:'POST',body:JSON.stringify({})});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    document.getElementById('tfa-secret').textContent=d.secret;
+    var a=document.getElementById('tfa-otpauth');a.href=d.otpauth;
+    document.getElementById('tfa-setup').style.display='';
+    document.getElementById('tfa-start').style.display='none';
+    document.getElementById('tfa-code').value='';document.getElementById('tfa-code').focus();
+  }catch(e){msg.innerHTML='<span style="color:#ff8888">'+esc(e.message)+'</span>';}
+}
+async function _tfaEnable(){
+  var msg=document.getElementById('tfa-msg');msg.textContent='';
+  var code=(document.getElementById('tfa-code').value||'').trim();
+  if(!/^\d{6}$/.test(code)){msg.innerHTML='<span style="color:#ff8888">Enter the 6-digit code.</span>';return;}
+  try{var res=await authFetch(WORKER+'/api/2fa/enable',{method:'POST',body:JSON.stringify({code:code})});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    msg.innerHTML='<span style="color:#4ddb8a">2FA enabled. You’ll need a code at next sign-in.</span>';
+    _tfaShow(true);
+  }catch(e){msg.innerHTML='<span style="color:#ff8888">'+esc(e.message)+'</span>';}
+}
+async function _tfaDisable(){
+  var msg=document.getElementById('tfa-msg');msg.textContent='';
+  var code=(document.getElementById('tfa-dcode').value||'').trim();
+  if(!/^\d{6}$/.test(code)){msg.innerHTML='<span style="color:#ff8888">Enter a current 6-digit code to disable.</span>';return;}
+  try{var res=await authFetch(WORKER+'/api/2fa/disable',{method:'POST',body:JSON.stringify({code:code})});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    msg.innerHTML='<span style="color:#4ddb8a">2FA disabled.</span>';
+    document.getElementById('tfa-dcode').value='';
+    _tfaShow(false);
+  }catch(e){msg.innerHTML='<span style="color:#ff8888">'+esc(e.message)+'</span>';}
 }
 </script>
 

@@ -198,8 +198,14 @@ export default {
         return jsonError(503, 'Auth not configured. Set ADMIN_USERNAME, LINK_CONSOLE_PASSWORD and JWT_SECRET in Worker environment.');
       }
       const now = Math.floor(Date.now() / 1000);
-      // 1) Admin via environment credentials → full access.
+      // 1) Admin via environment credentials → full access (with optional 2FA).
       if (username && password && username === env.ADMIN_USERNAME && password === env.LINK_CONSOLE_PASSWORD) {
+        const tfa = await _2faGet(env);
+        if (tfa.enabled) {
+          const code = (body.code || '').toString().trim();
+          if (!code)                                  return _rbacJson({ ok:false, need2fa:true, message:'Enter the 6-digit code from your authenticator app.' });
+          if (!(await _totpVerify(tfa.secret, code))) return _rbacJson({ ok:false, need2fa:true, message:'Invalid 2FA code — try the current code.' });
+        }
         const token = await signJWT({ sub: username, role: 'admin', perms: null, iat: now, exp: now + 86400 }, env.JWT_SECRET);
         return _rbacJson({ ok: true, token, role: 'admin', username: username });
       }
@@ -216,6 +222,52 @@ export default {
         }
       }
       return jsonError(401, 'Invalid credentials.');
+    }
+
+    // ══ Admin 2FA (TOTP) management (admin only) ═══════════════════════════════
+    // ── /api/2fa/status  GET — is 2FA enabled? ─────────────────────────────────
+    if (pathname === '/api/2fa/status' && request.method === 'GET') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      const tfa = await _2faGet(env);
+      return _rbacJson({ ok:true, enabled: tfa.enabled });
+    }
+    // ── /api/2fa/setup  POST — start enrolment: mint a secret + otpauth URI ─────
+    if (pathname === '/api/2fa/setup' && request.method === 'POST') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Store not configured (IPTV_KV).');
+      const tfa = await _2faGet(env);
+      if (tfa.enabled) return jsonError(400, '2FA is already enabled. Disable it first to re-enrol.');
+      const secret = _b32encode(crypto.getRandomValues(new Uint8Array(20)));
+      await _2faPut(env, { enabled:false, secret:'', pending:secret });
+      const label = encodeURIComponent('VilfinTV Console:' + (env.ADMIN_USERNAME || 'admin'));
+      const otpauth = `otpauth://totp/${label}?secret=${secret}&issuer=VilfinTV&algorithm=SHA1&digits=6&period=30`;
+      return _rbacJson({ ok:true, secret, otpauth });
+    }
+    // ── /api/2fa/enable  POST — confirm a code → turn 2FA on ────────────────────
+    if (pathname === '/api/2fa/enable' && request.method === 'POST') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Store not configured (IPTV_KV).');
+      let b; try { b = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      const tfa = await _2faGet(env);
+      if (!tfa.pending) return jsonError(400, 'Run setup first.');
+      if (!(await _totpVerify(tfa.pending, b.code))) return jsonError(400, 'That code did not match. Make sure your device clock is correct and try the current code.');
+      await _2faPut(env, { enabled:true, secret:tfa.pending, pending:'' });
+      return _rbacJson({ ok:true, enabled:true });
+    }
+    // ── /api/2fa/disable  POST — verify a code → turn 2FA off ───────────────────
+    if (pathname === '/api/2fa/disable' && request.method === 'POST') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Store not configured (IPTV_KV).');
+      let b; try { b = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      const tfa = await _2faGet(env);
+      if (!tfa.enabled) return _rbacJson({ ok:true, enabled:false });
+      if (!(await _totpVerify(tfa.secret, b.code))) return jsonError(400, 'Invalid code — 2FA not disabled.');
+      await _2faPut(env, { enabled:false, secret:'', pending:'' });
+      return _rbacJson({ ok:true, enabled:false });
     }
 
     // ── /format-story POST — Formatting raw text into HTML ─────────
@@ -1889,6 +1941,32 @@ async function _opAll(env){
   try { const r = await env.IPTV_KV.get('console_operators'); return r ? JSON.parse(r) : {}; } catch(e){ return {}; }
 }
 async function _opGet(env, username){ const all = await _opAll(env); return all[username] || null; }
+
+/* ── Admin 2FA (TOTP, RFC 6238 — Google Authenticator compatible) ───────────── */
+const _B32A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+function _b32encode(bytes){ let bits=0,val=0,out=''; for(const b of bytes){ val=(val<<8)|b; bits+=8; while(bits>=5){ out+=_B32A[(val>>>(bits-5))&31]; bits-=5; } } if(bits>0) out+=_B32A[(val<<(5-bits))&31]; return out; }
+function _b32decode(s){ s=String(s||'').replace(/=+$/,'').toUpperCase().replace(/\s/g,''); let bits=0,val=0,out=[]; for(const c of s){ const i=_B32A.indexOf(c); if(i<0) continue; val=(val<<5)|i; bits+=5; if(bits>=8){ out.push((val>>>(bits-8))&0xff); bits-=8; } } return new Uint8Array(out); }
+async function _totp(secretB32, counter){
+  const key=_b32decode(secretB32); const buf=new ArrayBuffer(8); const dv=new DataView(buf);
+  dv.setUint32(0, Math.floor(counter/0x100000000)); dv.setUint32(4, counter>>>0);
+  const ck=await crypto.subtle.importKey('raw', key, {name:'HMAC',hash:'SHA-1'}, false, ['sign']);
+  const sig=new Uint8Array(await crypto.subtle.sign('HMAC', ck, buf));
+  const off=sig[sig.length-1]&0xf;
+  const code=((sig[off]&0x7f)<<24)|((sig[off+1]&0xff)<<16)|((sig[off+2]&0xff)<<8)|(sig[off+3]&0xff);
+  return String(code%1000000).padStart(6,'0');
+}
+async function _totpVerify(secretB32, token, window){
+  token=String(token||'').replace(/\s/g,''); if(!/^\d{6}$/.test(token)) return false;
+  const step=Math.floor(Date.now()/1000/30), w=(window==null?1:window);
+  for(let i=-w;i<=w;i++){ if(await _totp(secretB32, step+i)===token) return true; }
+  return false;
+}
+async function _2faGet(env){
+  if(!env.IPTV_KV) return { enabled:false };
+  try{ const r=await env.IPTV_KV.get('admin_2fa'); const o=r?JSON.parse(r):{}; return { enabled:!!o.enabled, secret:o.secret||'', pending:o.pending||'' }; }
+  catch(e){ return { enabled:false }; }
+}
+async function _2faPut(env, o){ await env.IPTV_KV.put('admin_2fa', JSON.stringify(o)); }
 
 /* ── Agent API keys (Hermes / automation) ──────────────────────────────────────
    Stored in IPTV_KV under 'agent_keys' as { [id]: {…} }. Each key is scoped to
