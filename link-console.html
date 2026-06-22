@@ -5707,11 +5707,13 @@ function _llmOnProviderChange(){
   if(custom)return;
   var list=window._llmModels;
   var ms=(!prov)?[]:(prov==='openrouter'?list:list.filter(function(m){return m.provider===prov;}));
-  // Pinned auto options for the OpenRouter gateway
+  // Pin a free auto-rotate option for any provider that has free models, plus the
+  // OpenRouter "auto" router. Value is "<provider>/free-rotate".
   var pinned='';
-  if(prov==='openrouter'){
-    pinned='<option value="openrouter/free-rotate">🆓 Free auto-rotate (all free models, auto-switch)</option>'+
-           '<option value="openrouter/auto">auto — OpenRouter picks best (may be paid)</option>';
+  if(prov){
+    var hasFree=ms.some(function(m){return m.free;});
+    if(hasFree)pinned+='<option value="'+esc(prov)+'/free-rotate">🆓 Free auto-rotate (all free '+(prov==='openrouter'?'':esc(prov)+' ')+'models, auto-switch)</option>';
+    if(prov==='openrouter')pinned+='<option value="openrouter/auto">auto — OpenRouter picks best (may be paid)</option>';
   }
   if(!ms.length&&!pinned){sel.innerHTML='<option value="">'+(prov?'No models found':'Select a provider first…')+'</option>';return;}
   ms.sort(function(a,b){return a.id<b.id?-1:1;});

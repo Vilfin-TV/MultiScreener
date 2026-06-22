@@ -659,11 +659,12 @@ ${body.text}`;
       if (!(agent.scope && agent.scope.llm)) return jsonError(403, 'This agent key does not have LLM-config permission.');
       const cfg = await _llmAll(env);
       const def = cfg.providers.find(p => p.isDefault) || cfg.providers[0] || null;
-      // If any provider uses the free auto-rotate sentinel, attach the live list
-      // of free OpenRouter model ids so the agent can build a fallback chain.
+      // If any provider uses a "<provider>/free-rotate" sentinel, attach the live
+      // list of free models (id + provider) so the agent can build a fallback
+      // chain — filtered per provider, or all for "openrouter/free-rotate".
       let freeModels = [];
-      if (cfg.providers.some(p => p.model === OR_FREE_ROTATE)) {
-        freeModels = (await _orModels(env)).filter(m => m.free).map(m => m.id);
+      if (cfg.providers.some(p => /\/free-rotate$/.test(p.model || ''))) {
+        freeModels = (await _orModels(env)).filter(m => m.free).map(m => ({ id: m.id, provider: m.provider }));
       }
       try { const all = await _agAll(env); if (all[agent.id]) { all[agent.id].lastUsedAt = new Date().toISOString(); await _agPut(env, all); } } catch(_){}
       return new Response(JSON.stringify({ ok:true, providers: cfg.providers, default: def ? def.id : null, freeModels: freeModels }),
