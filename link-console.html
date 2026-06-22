@@ -5481,8 +5481,12 @@ function loadSettings(){
         '<div style="min-width:180px"><label class="rb-lbl">AI / provider</label><select class="rb-inp" id="llm-provider"><option value="">Loading…</option></select></div>'+
       '</div>'+
       '<div style="display:flex;gap:10px;flex-wrap:wrap">'+
-        '<div style="flex:1;min-width:220px"><label class="rb-lbl">Default model</label><select class="rb-inp" id="llm-model"><option value="">Select a provider first…</option></select></div>'+
+        '<div style="flex:1;min-width:220px" id="llm-model-wrap"><label class="rb-lbl">Default model</label><select class="rb-inp" id="llm-model"><option value="">Select a provider first…</option></select></div>'+
         '<div style="min-width:180px"><label class="rb-lbl">API base <span style="opacity:.5">(optional)</span></label><input class="rb-inp" id="llm-base" placeholder="https://… (leave blank for default)" autocomplete="off"></div>'+
+      '</div>'+
+      '<div id="llm-custom-row" style="display:none;gap:10px;flex-wrap:wrap">'+
+        '<div style="flex:1;min-width:170px"><label class="rb-lbl">Custom provider</label><input class="rb-inp" id="llm-provider-custom" placeholder="e.g. groq, cerebras, together_ai" autocomplete="off"></div>'+
+        '<div style="flex:1;min-width:220px"><label class="rb-lbl">Custom model</label><input class="rb-inp" id="llm-model-custom" placeholder="e.g. groq/llama-3.3-70b-versatile" autocomplete="off"></div>'+
       '</div>'+
       '<label class="rb-lbl">API key</label><input class="rb-inp" id="llm-key" type="password" placeholder="paste this provider\'s API key (blank = keep existing on edit)" autocomplete="new-password">'+
       '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;margin:4px 0 2px"><input type="checkbox" id="llm-default"> Set as the default model the agent uses</label>'+
@@ -5689,12 +5693,18 @@ async function _llmLoadModels(){
   var provs=Array.from(new Set(window._llmModels.map(function(m){return m.provider;}).filter(Boolean))).sort();
   provSel.innerHTML='<option value="">Select…</option>'+
     '<option value="openrouter">openrouter (gateway — any model)</option>'+
-    provs.map(function(p){return '<option value="'+esc(p)+'">'+esc(p)+'</option>';}).join('');
+    provs.map(function(p){return '<option value="'+esc(p)+'">'+esc(p)+'</option>';}).join('')+
+    '<option value="__custom__">✏️ Custom / direct provider (Groq, Cerebras, …)</option>';
   _llmOnProviderChange();
 }
 function _llmOnProviderChange(){
   var prov=document.getElementById('llm-provider').value;
   var sel=document.getElementById('llm-model');if(!sel)return;
+  var custom=(prov==='__custom__');
+  // Toggle between the OpenRouter dropdown and free-text custom fields
+  document.getElementById('llm-model-wrap').style.display=custom?'none':'';
+  document.getElementById('llm-custom-row').style.display=custom?'flex':'none';
+  if(custom)return;
   var list=window._llmModels;
   var ms=(!prov)?[]:(prov==='openrouter'?list:list.filter(function(m){return m.provider===prov;}));
   // Pinned auto options for the OpenRouter gateway
@@ -5729,9 +5739,15 @@ async function _llmLoad(){
 function _llmFill(p){
   _llmEditId=p?p.id:null;
   document.getElementById('llm-name').value=p?p.name:'';
-  document.getElementById('llm-provider').value=p?p.provider:'';
+  var provSel=document.getElementById('llm-provider');
+  // If the saved provider isn't in the OpenRouter-sourced list, it's a custom one
+  var isKnown=p?Array.prototype.some.call(provSel.options,function(o){return o.value===p.provider;}):true;
+  provSel.value=(p&&!isKnown)?'__custom__':(p?p.provider:'');
   _llmOnProviderChange();
-  if(p)document.getElementById('llm-model').value=p.model||'';
+  if(p&&!isKnown){
+    document.getElementById('llm-provider-custom').value=p.provider||'';
+    document.getElementById('llm-model-custom').value=p.model||'';
+  }else if(p){document.getElementById('llm-model').value=p.model||'';}
   document.getElementById('llm-base').value=p?(p.apiBase||''):'';
   document.getElementById('llm-key').value='';
   document.getElementById('llm-key').placeholder=p?'leave blank to keep existing key':'paste this provider’s API key';
@@ -5742,8 +5758,11 @@ function _llmFill(p){
 }
 async function _llmSave(){
   var msg=document.getElementById('llm-msg');msg.textContent='';
-  var payload={name:document.getElementById('llm-name').value.trim(),provider:document.getElementById('llm-provider').value,
-    model:document.getElementById('llm-model').value,apiBase:document.getElementById('llm-base').value.trim(),
+  var sel=document.getElementById('llm-provider').value;
+  var provider=(sel==='__custom__')?document.getElementById('llm-provider-custom').value.trim():sel;
+  var model=(sel==='__custom__')?document.getElementById('llm-model-custom').value.trim():document.getElementById('llm-model').value;
+  var payload={name:document.getElementById('llm-name').value.trim(),provider:provider,
+    model:model,apiBase:document.getElementById('llm-base').value.trim(),
     apiKey:document.getElementById('llm-key').value.trim(),isDefault:document.getElementById('llm-default').checked};
   if(!payload.name){msg.innerHTML='<span style="color:#ff8888">Enter an AI name.</span>';return;}
   if(!payload.provider){msg.innerHTML='<span style="color:#ff8888">Pick a provider.</span>';return;}
