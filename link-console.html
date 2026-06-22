@@ -5467,6 +5467,7 @@ function loadSettings(){
         '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="ag-scope-edit"> Edit existing stories</label>'+
         '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="ag-scope-delete"> Delete published stories</label>'+
         '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="ag-scope-llm"> Read AI / LLM config</label>'+
+        '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="ag-scope-images"> Read image-source keys</label>'+
       '</div>'+
       '<div style="margin-top:14px;display:flex;gap:10px"><button class="rb-btn" id="ag-create">Generate API key</button><button class="rb-btn ghost" id="ag-cancel" style="display:none">Cancel edit</button></div>'+
       '<div class="rb-msg" id="ag-msg"></div>'+
@@ -5493,6 +5494,22 @@ function loadSettings(){
       '<div style="margin-top:14px;display:flex;gap:10px"><button class="rb-btn" id="llm-save">Save provider</button><button class="rb-btn ghost" id="llm-clear">Clear form</button></div>'+
       '<div class="rb-msg" id="llm-msg"></div>'+
     '</div>'+
+    '<div class="rb-sec"><h3>Image sources (stock photos)</h3>'+
+      '<p style="font-size:12px;color:#8a8a9e;margin:0 0 14px">Add stock-photo repository API keys (Pexels, Pixabay, Unsplash, …) so the agent can pull images for stories. An agent key with the <b>Read image-source keys</b> scope fetches these. Keys are stored server-side and shown masked.</p>'+
+      '<div id="img-list"><div style="opacity:.6;font-size:13px">Loading…</div></div>'+
+      '<hr style="border:none;border-top:1px solid rgba(255,255,255,.08);margin:16px 0">'+
+      '<h3 id="img-form-title" style="font-size:13px">Add an image source</h3>'+
+      '<div style="display:flex;gap:10px;flex-wrap:wrap">'+
+        '<div style="flex:1;min-width:180px"><label class="rb-lbl">Name (label)</label><input class="rb-inp" id="img-name" placeholder="e.g. Pexels" autocomplete="off"></div>'+
+        '<div style="min-width:170px"><label class="rb-lbl">Provider</label><select class="rb-inp" id="img-provider">'+
+          '<option value="pexels">Pexels</option><option value="pixabay">Pixabay</option><option value="unsplash">Unsplash</option><option value="openverse">Openverse</option><option value="pexels_video">Pexels (video)</option><option value="other">Other</option>'+
+        '</select></div>'+
+      '</div>'+
+      '<label class="rb-lbl">API key</label><input class="rb-inp" id="img-key" type="password" placeholder="paste the source API key (blank = keep existing on edit)" autocomplete="new-password">'+
+      '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;margin:4px 0 2px"><input type="checkbox" id="img-default"> Set as the default image source</label>'+
+      '<div style="margin-top:14px;display:flex;gap:10px"><button class="rb-btn" id="img-save">Save source</button><button class="rb-btn ghost" id="img-clear">Clear form</button></div>'+
+      '<div class="rb-msg" id="img-msg"></div>'+
+    '</div>'+
   '</div>');
   document.querySelectorAll('.c-panel').forEach(function(p){p.classList.toggle('active',p.id==='tab-settings');});
   _rbPermRows();
@@ -5505,7 +5522,9 @@ function loadSettings(){
   document.getElementById('llm-save').addEventListener('click',_llmSave);
   document.getElementById('llm-clear').addEventListener('click',function(){_llmFill(null);});
   document.getElementById('llm-provider').addEventListener('change',_llmOnProviderChange);
-  _apLoad(); _opLoad(); _agLoad(); _llmLoad(); _llmLoadModels();
+  document.getElementById('img-save').addEventListener('click',_imgSave);
+  document.getElementById('img-clear').addEventListener('click',function(){_imgFill(null);});
+  _apLoad(); _opLoad(); _agLoad(); _llmLoad(); _llmLoadModels(); _imgLoad();
 }
 function _rbPermRows(){
   var tb=document.getElementById('op-perms'); if(!tb)return;
@@ -5596,7 +5615,7 @@ async function _opDelete(u){
 
 /* ── Agent API keys ─────────────────────────────────────────────────────────── */
 var _agEditId=null;
-function _agScopeText(s){s=s||{};var p=[];if(s.publish)p.push('Publish');if(s.edit)p.push('Edit');if(s.delete)p.push('Delete');if(s.llm)p.push('LLM');return p.join(' + ')||'—';}
+function _agScopeText(s){s=s||{};var p=[];if(s.publish)p.push('Publish');if(s.edit)p.push('Edit');if(s.delete)p.push('Delete');if(s.llm)p.push('LLM');if(s.images)p.push('Images');return p.join(' + ')||'—';}
 function _agFmtDate(d){if(!d)return '—';try{return new Date(d).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}catch(e){return '—';}}
 function _agStatusBadge(k){
   var expired=k.expiresAt&&(Date.now()>new Date(k.expiresAt).getTime());
@@ -5637,6 +5656,7 @@ function _agFill(k){
   document.getElementById('ag-scope-edit').checked=!!s.edit;
   document.getElementById('ag-scope-delete').checked=!!s.delete;
   document.getElementById('ag-scope-llm').checked=!!s.llm;
+  document.getElementById('ag-scope-images').checked=!!s.images;
   document.getElementById('ag-create').textContent=k?'Update permissions':'Generate API key';
   document.getElementById('ag-cancel').style.display=k?'':'none';
   document.getElementById('ag-key-box').style.display='none';
@@ -5646,10 +5666,11 @@ function _agFill(k){
 async function _agCreate(){
   var msg=document.getElementById('ag-msg');msg.textContent='';
   var scope={publish:document.getElementById('ag-scope-publish').checked,edit:document.getElementById('ag-scope-edit').checked,
-    delete:document.getElementById('ag-scope-delete').checked,llm:document.getElementById('ag-scope-llm').checked};
+    delete:document.getElementById('ag-scope-delete').checked,llm:document.getElementById('ag-scope-llm').checked,
+    images:document.getElementById('ag-scope-images').checked};
   var payload={label:document.getElementById('ag-label').value.trim(),expiresAt:document.getElementById('ag-expiry').value||null,scope:scope};
   if(!payload.label){msg.innerHTML='<span style="color:#ff8888">Enter a label.</span>';return;}
-  if(!scope.publish&&!scope.edit&&!scope.delete&&!scope.llm){msg.innerHTML='<span style="color:#ff8888">Pick at least one permission.</span>';return;}
+  if(!scope.publish&&!scope.edit&&!scope.delete&&!scope.llm&&!scope.images){msg.innerHTML='<span style="color:#ff8888">Pick at least one permission.</span>';return;}
   var btn=document.getElementById('ag-create');btn.disabled=true;var t=btn.textContent;btn.textContent=_agEditId?'Updating…':'Generating…';
   try{
     if(_agEditId){
@@ -5713,6 +5734,7 @@ function _llmOnProviderChange(){
   if(prov){
     var hasFree=ms.some(function(m){return m.free;});
     if(hasFree)pinned+='<option value="'+esc(prov)+'/free-rotate">🆓 Free auto-rotate (all free '+(prov==='openrouter'?'':esc(prov)+' ')+'models, auto-switch)</option>';
+    if(ms.length)pinned+='<option value="'+esc(prov)+'/all-rotate">📦 All models incl. paid ('+(prov==='openrouter'?'every provider':esc(prov))+', auto-switch)</option>';
     if(prov==='openrouter')pinned+='<option value="openrouter/auto">auto — OpenRouter picks best (may be paid)</option>';
   }
   if(!ms.length&&!pinned){sel.innerHTML='<option value="">'+(prov?'No models found':'Select a provider first…')+'</option>';return;}
@@ -5789,6 +5811,65 @@ async function _llmSetDefault(id){
   try{var res=await authFetch(WORKER+'/api/llm/default',{method:'POST',body:JSON.stringify({id:id})});var d=await res.json();
     if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
     _llmLoad();
+  }catch(e){alert('Failed: '+e.message);}
+}
+
+/* ── Image sources (stock-photo repositories) ───────────────────────────────── */
+var _imgEditId=null;
+async function _imgLoad(){
+  var host=document.getElementById('img-list');if(!host)return;
+  try{var res=await authFetch(WORKER+'/api/images/config',{method:'GET'});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    if(!d.sources.length){host.innerHTML='<div style="opacity:.6;font-size:13px">No image sources yet. Add one below.</div>';window._imgCache={};return;}
+    window._imgCache={};d.sources.forEach(function(s){window._imgCache[s.id]=s;});
+    host.innerHTML='<table class="op-tbl"><thead><tr><th>Name</th><th>Provider</th><th>Key</th><th>Default</th><th></th></tr></thead><tbody>'+
+      d.sources.map(function(s){
+        return '<tr><td><b>'+esc(s.name)+'</b></td><td style="font-size:12px;color:#9a9ab0">'+esc(s.provider)+'</td>'+
+          '<td style="font-size:12px;color:#9a9ab0">'+esc(s.keyMasked||'—')+'</td>'+
+          '<td>'+(s.isDefault?'<span style="color:#4ddb8a">★ default</span>':'<button class="op-act" data-imd="'+esc(s.id)+'">Make default</button>')+'</td>'+
+          '<td style="text-align:right;white-space:nowrap"><button class="op-act" data-ime="'+esc(s.id)+'">Edit</button><button class="op-act del" data-imdel="'+esc(s.id)+'">Delete</button></td></tr>';
+      }).join('')+'</tbody></table>';
+    host.querySelectorAll('[data-imd]').forEach(function(b){b.addEventListener('click',function(){_imgSetDefault(b.getAttribute('data-imd'));});});
+    host.querySelectorAll('[data-ime]').forEach(function(b){b.addEventListener('click',function(){_imgFill(window._imgCache[b.getAttribute('data-ime')]);});});
+    host.querySelectorAll('[data-imdel]').forEach(function(b){b.addEventListener('click',function(){_imgDelete(b.getAttribute('data-imdel'));});});
+  }catch(e){host.innerHTML='<div style="color:#ff8888">'+esc(e.message)+'</div>';}
+}
+function _imgFill(s){
+  _imgEditId=s?s.id:null;
+  document.getElementById('img-name').value=s?s.name:'';
+  document.getElementById('img-provider').value=s?s.provider:'pexels';
+  document.getElementById('img-key').value='';
+  document.getElementById('img-key').placeholder=s?'leave blank to keep existing key':'paste the source API key';
+  document.getElementById('img-default').checked=s?!!s.isDefault:false;
+  document.getElementById('img-form-title').textContent=s?('Edit “'+s.name+'”'):'Add an image source';
+  document.getElementById('img-msg').textContent='';
+  if(s){var f=document.getElementById('img-name');if(f&&f.scrollIntoView)f.scrollIntoView({behavior:'smooth',block:'center'});}
+}
+async function _imgSave(){
+  var msg=document.getElementById('img-msg');msg.textContent='';
+  var payload={name:document.getElementById('img-name').value.trim(),provider:document.getElementById('img-provider').value,
+    apiKey:document.getElementById('img-key').value.trim(),isDefault:document.getElementById('img-default').checked};
+  if(!payload.name){msg.innerHTML='<span style="color:#ff8888">Enter a name.</span>';return;}
+  if(!_imgEditId&&!payload.apiKey){msg.innerHTML='<span style="color:#ff8888">Paste the API key.</span>';return;}
+  if(_imgEditId)payload.id=_imgEditId;
+  var btn=document.getElementById('img-save');btn.disabled=true;var t=btn.textContent;btn.textContent='Saving…';
+  try{var res=await authFetch(WORKER+'/api/images/save',{method:'POST',body:JSON.stringify(payload)});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    msg.innerHTML='<span style="color:#4ddb8a">Saved.</span>';_imgFill(null);_imgLoad();
+  }catch(e){msg.innerHTML='<span style="color:#ff8888">'+esc(e.message)+'</span>';}
+  finally{btn.disabled=false;btn.textContent=t;}
+}
+async function _imgDelete(id){
+  if(!confirm('Delete this image source?'))return;
+  try{var res=await authFetch(WORKER+'/api/images/delete',{method:'POST',body:JSON.stringify({id:id})});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    if(_imgEditId===id)_imgFill(null);_imgLoad();
+  }catch(e){alert('Delete failed: '+e.message);}
+}
+async function _imgSetDefault(id){
+  try{var res=await authFetch(WORKER+'/api/images/default',{method:'POST',body:JSON.stringify({id:id})});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    _imgLoad();
   }catch(e){alert('Failed: '+e.message);}
 }
 </script>

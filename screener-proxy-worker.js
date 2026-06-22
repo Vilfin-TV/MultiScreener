@@ -489,8 +489,9 @@ ${body.text}`;
       let expiresAt = null;
       if (b.expiresAt) { const t = new Date(b.expiresAt); if (isNaN(t.getTime())) return jsonError(400, 'Invalid expiry date.'); expiresAt = t.toISOString(); }
       const scope = { publish: b.scope ? !!b.scope.publish : true, edit: b.scope ? !!b.scope.edit : false,
-        delete: b.scope ? !!b.scope.delete : false, llm: b.scope ? !!b.scope.llm : false };
-      if (!scope.publish && !scope.edit && !scope.delete && !scope.llm) scope.publish = true;
+        delete: b.scope ? !!b.scope.delete : false, llm: b.scope ? !!b.scope.llm : false,
+        images: b.scope ? !!b.scope.images : false };
+      if (!scope.publish && !scope.edit && !scope.delete && !scope.llm && !scope.images) scope.publish = true;
       const id     = _iptvHexFromBytes(crypto.getRandomValues(new Uint8Array(6)));
       const secret = _iptvHexFromBytes(crypto.getRandomValues(new Uint8Array(24)));
       const h = await _iptvHashPassword(secret);
@@ -544,8 +545,8 @@ ${body.text}`;
         else k.expiresAt = null;
       }
       if (b.scope && typeof b.scope === 'object') {
-        k.scope = { publish:!!b.scope.publish, edit:!!b.scope.edit, delete:!!b.scope.delete, llm:!!b.scope.llm };
-        if (!k.scope.publish && !k.scope.edit && !k.scope.delete && !k.scope.llm) k.scope.publish = true;
+        k.scope = { publish:!!b.scope.publish, edit:!!b.scope.edit, delete:!!b.scope.delete, llm:!!b.scope.llm, images:!!b.scope.images };
+        if (!k.scope.publish && !k.scope.edit && !k.scope.delete && !k.scope.llm && !k.scope.images) k.scope.publish = true;
       }
       await _agPut(env, all);
       return _rbacJson({ ok:true, key:_agPublic(k) });
@@ -659,16 +660,86 @@ ${body.text}`;
       if (!(agent.scope && agent.scope.llm)) return jsonError(403, 'This agent key does not have LLM-config permission.');
       const cfg = await _llmAll(env);
       const def = cfg.providers.find(p => p.isDefault) || cfg.providers[0] || null;
-      // If any provider uses a "<provider>/free-rotate" sentinel, attach the live
-      // list of free models (id + provider) so the agent can build a fallback
-      // chain — filtered per provider, or all for "openrouter/free-rotate".
-      let freeModels = [];
-      if (cfg.providers.some(p => /\/free-rotate$/.test(p.model || ''))) {
-        freeModels = (await _orModels(env)).filter(m => m.free).map(m => ({ id: m.id, provider: m.provider, image: !!m.image }));
+      // Attach the live catalogue for any rotate sentinel: "<provider>/free-rotate"
+      // → free models only; "<provider>/all-rotate" → every model incl. paid.
+      // Each entry carries {id,provider,image,free} so the agent filters by the
+      // chosen provider (or all, for "openrouter/...") and by text/image.
+      let freeModels = [], allModels = [];
+      const needFree = cfg.providers.some(p => /\/free-rotate$/.test(p.model || ''));
+      const needAll  = cfg.providers.some(p => /\/all-rotate$/.test(p.model || ''));
+      if (needFree || needAll) {
+        const cat = (await _orModels(env)).map(m => ({ id: m.id, provider: m.provider, image: !!m.image, free: !!m.free }));
+        if (needFree) freeModels = cat.filter(m => m.free);
+        if (needAll)  allModels  = cat;
       }
       try { const all = await _agAll(env); if (all[agent.id]) { all[agent.id].lastUsedAt = new Date().toISOString(); await _agPut(env, all); } } catch(_){}
-      return new Response(JSON.stringify({ ok:true, providers: cfg.providers, default: def ? def.id : null, freeModels: freeModels }),
+      return new Response(JSON.stringify({ ok:true, providers: cfg.providers, default: def ? def.id : null, freeModels: freeModels, allModels: allModels }),
         { status:200, headers:{ ...CORS, 'Content-Type':'application/json' } });
+    }
+
+    // ── /api/agent/images  GET — agent reads image-source keys (images scope) ──
+    if (pathname === '/api/agent/images' && request.method === 'GET') {
+      const a = await _agentAuth(request, env); if (a.error) return a.error;
+      const agent = a.agent;
+      if (agent.status !== 'active') return jsonError(403, 'Agent not yet approved.');
+      if (!(agent.scope && agent.scope.images)) return jsonError(403, 'This agent key does not have image-source permission.');
+      const cfg = await _imgAll(env);
+      const def = cfg.sources.find(s => s.isDefault) || cfg.sources[0] || null;
+      try { const all = await _agAll(env); if (all[agent.id]) { all[agent.id].lastUsedAt = new Date().toISOString(); await _agPut(env, all); } } catch(_){}
+      return new Response(JSON.stringify({ ok:true, sources: cfg.sources, default: def ? def.id : null }),
+        { status:200, headers:{ ...CORS, 'Content-Type':'application/json' } });
+    }
+
+    // ══ Image-repository sources (admin-managed) ═══════════════════════════════
+    if (pathname === '/api/images/config' && request.method === 'GET') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Store not configured (IPTV_KV).');
+      const cfg = await _imgAll(env);
+      return _rbacJson({ ok:true, sources: cfg.sources.map(_imgPublic) });
+    }
+    if (pathname === '/api/images/save' && request.method === 'POST') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Store not configured (IPTV_KV).');
+      let b; try { b = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      const name = (b.name||'').toString().trim().slice(0,80);
+      const provider = (b.provider||'').toString().trim().slice(0,40);
+      if (!name)     return jsonError(400, 'Source name is required.');
+      if (!provider) return jsonError(400, 'Provider is required.');
+      const cfg = await _imgAll(env);
+      let entry;
+      if (b.id) { entry = cfg.sources.find(s => s.id === String(b.id)); if (!entry) return jsonError(404, 'Source not found.'); }
+      else { entry = { id: _iptvHexFromBytes(crypto.getRandomValues(new Uint8Array(5))), createdAt: new Date().toISOString() }; cfg.sources.push(entry); }
+      entry.name = name; entry.provider = provider;
+      if (typeof b.apiKey === 'string' && b.apiKey.trim()) entry.apiKey = b.apiKey.trim().slice(0,400);
+      if (b.isDefault) { cfg.sources.forEach(s => { s.isDefault = (s === entry); }); }
+      else if (cfg.sources.length === 1) entry.isDefault = true;
+      await _imgPut(env, cfg);
+      return _rbacJson({ ok:true, source: _imgPublic(entry) });
+    }
+    if (pathname === '/api/images/delete' && request.method === 'POST') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Store not configured (IPTV_KV).');
+      let b; try { b = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      const cfg = await _imgAll(env);
+      const removed = cfg.sources.find(s => s.id === String(b.id));
+      cfg.sources = cfg.sources.filter(s => s.id !== String(b.id));
+      if (removed && removed.isDefault && cfg.sources.length) cfg.sources[0].isDefault = true;
+      await _imgPut(env, cfg);
+      return _rbacJson({ ok:true, deleted: String(b.id||'') });
+    }
+    if (pathname === '/api/images/default' && request.method === 'POST') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Store not configured (IPTV_KV).');
+      let b; try { b = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      const cfg = await _imgAll(env);
+      let found = false; cfg.sources.forEach(s => { s.isDefault = (s.id === String(b.id)); if (s.isDefault) found = true; });
+      if (!found) return jsonError(404, 'Source not found.');
+      await _imgPut(env, cfg);
+      return _rbacJson({ ok:true });
     }
 
     // ══ LLM / LiteLLM provider config (admin-managed) ══════════════════════════
@@ -1782,6 +1853,21 @@ function _llmPublic(p){
   const key = p.apiKey || '';
   return { id:p.id, name:p.name, provider:p.provider, model:p.model, apiBase:p.apiBase||'',
     isDefault:!!p.isDefault, hasKey:!!key, keyMasked: key ? ('••••••' + key.slice(-4)) : '', createdAt:p.createdAt };
+}
+
+/* ── Image-repository sources (Pexels / Pixabay / Unsplash …) ──────────────────
+   Admin-managed; the agent reads them with the 'images' scope to fetch stock
+   photos for stories. */
+async function _imgAll(env){
+  if (!env.IPTV_KV) return { sources: [] };
+  try { const r = await env.IPTV_KV.get('img_sources'); const o = r ? JSON.parse(r) : {}; return { sources: Array.isArray(o.sources) ? o.sources : [] }; }
+  catch(e){ return { sources: [] }; }
+}
+async function _imgPut(env, cfg){ await env.IPTV_KV.put('img_sources', JSON.stringify(cfg)); }
+function _imgPublic(s){
+  const key = s.apiKey || '';
+  return { id:s.id, name:s.name, provider:s.provider, isDefault:!!s.isDefault,
+    hasKey:!!key, keyMasked: key ? ('••••••' + key.slice(-4)) : '', createdAt:s.createdAt };
 }
 // Public view of a key record (no secret material)
 function _agPublic(k){
