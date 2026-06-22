@@ -664,7 +664,7 @@ ${body.text}`;
       // chain — filtered per provider, or all for "openrouter/free-rotate".
       let freeModels = [];
       if (cfg.providers.some(p => /\/free-rotate$/.test(p.model || ''))) {
-        freeModels = (await _orModels(env)).filter(m => m.free).map(m => ({ id: m.id, provider: m.provider }));
+        freeModels = (await _orModels(env)).filter(m => m.free).map(m => ({ id: m.id, provider: m.provider, image: !!m.image }));
       }
       try { const all = await _agAll(env); if (all[agent.id]) { all[agent.id].lastUsedAt = new Date().toISOString(); await _agPut(env, all); } } catch(_){}
       return new Response(JSON.stringify({ ok:true, providers: cfg.providers, default: def ? def.id : null, freeModels: freeModels }),
@@ -1769,7 +1769,11 @@ async function _orModels(env){
     return (data.data || []).map(m => {
       const pp = m.pricing || {};
       const free = (parseFloat(pp.prompt || '0') === 0 && parseFloat(pp.completion || '0') === 0) || /:free$/.test(m.id || '');
-      return { id: m.id, name: m.name || m.id, provider: String(m.id || '').split('/')[0], free: free };
+      const arch = m.architecture || {};
+      const outs = Array.isArray(arch.output_modalities) ? arch.output_modalities
+                 : (typeof arch.modality === 'string' ? [arch.modality.split('->').pop()] : ['text']);
+      const image = outs.indexOf('image') !== -1;   // image-generation model (e.g. "Nano Banana")
+      return { id: m.id, name: m.name || m.id, provider: String(m.id || '').split('/')[0], free: free, image: image };
     }).filter(m => m.id);
   } catch(e){ return []; }
 }
