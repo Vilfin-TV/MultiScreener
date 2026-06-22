@@ -5468,6 +5468,7 @@ function loadSettings(){
         '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="ag-scope-delete"> Delete published stories</label>'+
         '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="ag-scope-llm"> Read AI / LLM config</label>'+
         '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="ag-scope-images"> Read image-source keys</label>'+
+        '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="ag-scope-lessons"> Update academy lessons</label>'+
       '</div>'+
       '<div style="margin-top:14px;display:flex;gap:10px"><button class="rb-btn" id="ag-create">Generate API key</button><button class="rb-btn ghost" id="ag-cancel" style="display:none">Cancel edit</button></div>'+
       '<div class="rb-msg" id="ag-msg"></div>'+
@@ -5510,6 +5511,24 @@ function loadSettings(){
       '<div style="margin-top:14px;display:flex;gap:10px"><button class="rb-btn" id="img-save">Save source</button><button class="rb-btn ghost" id="img-clear">Clear form</button></div>'+
       '<div class="rb-msg" id="img-msg"></div>'+
     '</div>'+
+    '<div class="rb-sec"><h3>Academy lessons</h3>'+
+      '<p style="font-size:12px;color:#8a8a9e;margin:0 0 14px">Add or remove lessons in an academy hub. New lessons are <b>appended</b> to the page — the existing built-in lessons are never changed. The agent can also add lessons via API with the <b>Update academy lessons</b> scope.</p>'+
+      '<label class="rb-lbl">Hub</label>'+
+      '<select class="rb-inp" id="les-hub">'+
+        '<option value="finlit">Financial Literacy</option><option value="finance">Finance (core)</option>'+
+        '<option value="micro">Microeconomics</option><option value="macro">Macroeconomics</option>'+
+        '<option value="ai">AI</option><option value="programming">Programming</option>'+
+        '<option value="web">Web Development</option><option value="info">Info / General</option>'+
+        '<option value="career">Career</option><option value="growth">Personal Growth</option>'+
+      '</select>'+
+      '<div id="les-list" style="margin-top:10px"><div style="opacity:.6;font-size:13px">Loading…</div></div>'+
+      '<hr style="border:none;border-top:1px solid rgba(255,255,255,.08);margin:16px 0">'+
+      '<h3 id="les-form-title" style="font-size:13px">Add a lesson</h3>'+
+      '<label class="rb-lbl">Lesson (JSON)</label>'+
+      '<textarea class="rb-inp" id="les-json" style="min-height:170px;font-family:\'JetBrains Mono\',monospace;font-size:12px;white-space:pre" spellcheck="false"></textarea>'+
+      '<div style="margin-top:14px;display:flex;gap:10px"><button class="rb-btn" id="les-save">Save lesson</button><button class="rb-btn ghost" id="les-clear">Clear / template</button></div>'+
+      '<div class="rb-msg" id="les-msg"></div>'+
+    '</div>'+
   '</div>');
   document.querySelectorAll('.c-panel').forEach(function(p){p.classList.toggle('active',p.id==='tab-settings');});
   _rbPermRows();
@@ -5524,7 +5543,10 @@ function loadSettings(){
   document.getElementById('llm-provider').addEventListener('change',_llmOnProviderChange);
   document.getElementById('img-save').addEventListener('click',_imgSave);
   document.getElementById('img-clear').addEventListener('click',function(){_imgFill(null);});
-  _apLoad(); _opLoad(); _agLoad(); _llmLoad(); _llmLoadModels(); _imgLoad();
+  document.getElementById('les-hub').addEventListener('change',function(){_lesRenderList();_lesFill(null);});
+  document.getElementById('les-save').addEventListener('click',_lesSave);
+  document.getElementById('les-clear').addEventListener('click',function(){_lesFill(null);});
+  _apLoad(); _opLoad(); _agLoad(); _llmLoad(); _llmLoadModels(); _imgLoad(); _lesLoad();
 }
 function _rbPermRows(){
   var tb=document.getElementById('op-perms'); if(!tb)return;
@@ -5615,7 +5637,7 @@ async function _opDelete(u){
 
 /* ── Agent API keys ─────────────────────────────────────────────────────────── */
 var _agEditId=null;
-function _agScopeText(s){s=s||{};var p=[];if(s.publish)p.push('Publish');if(s.edit)p.push('Edit');if(s.delete)p.push('Delete');if(s.llm)p.push('LLM');if(s.images)p.push('Images');return p.join(' + ')||'—';}
+function _agScopeText(s){s=s||{};var p=[];if(s.publish)p.push('Publish');if(s.edit)p.push('Edit');if(s.delete)p.push('Delete');if(s.llm)p.push('LLM');if(s.images)p.push('Images');if(s.lessons)p.push('Lessons');return p.join(' + ')||'—';}
 function _agFmtDate(d){if(!d)return '—';try{return new Date(d).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}catch(e){return '—';}}
 function _agStatusBadge(k){
   var expired=k.expiresAt&&(Date.now()>new Date(k.expiresAt).getTime());
@@ -5657,6 +5679,7 @@ function _agFill(k){
   document.getElementById('ag-scope-delete').checked=!!s.delete;
   document.getElementById('ag-scope-llm').checked=!!s.llm;
   document.getElementById('ag-scope-images').checked=!!s.images;
+  document.getElementById('ag-scope-lessons').checked=!!s.lessons;
   document.getElementById('ag-create').textContent=k?'Update permissions':'Generate API key';
   document.getElementById('ag-cancel').style.display=k?'':'none';
   document.getElementById('ag-key-box').style.display='none';
@@ -5667,10 +5690,11 @@ async function _agCreate(){
   var msg=document.getElementById('ag-msg');msg.textContent='';
   var scope={publish:document.getElementById('ag-scope-publish').checked,edit:document.getElementById('ag-scope-edit').checked,
     delete:document.getElementById('ag-scope-delete').checked,llm:document.getElementById('ag-scope-llm').checked,
-    images:document.getElementById('ag-scope-images').checked};
+    images:document.getElementById('ag-scope-images').checked,
+    lessons:document.getElementById('ag-scope-lessons').checked};
   var payload={label:document.getElementById('ag-label').value.trim(),expiresAt:document.getElementById('ag-expiry').value||null,scope:scope};
   if(!payload.label){msg.innerHTML='<span style="color:#ff8888">Enter a label.</span>';return;}
-  if(!scope.publish&&!scope.edit&&!scope.delete&&!scope.llm&&!scope.images){msg.innerHTML='<span style="color:#ff8888">Pick at least one permission.</span>';return;}
+  if(!scope.publish&&!scope.edit&&!scope.delete&&!scope.llm&&!scope.images&&!scope.lessons){msg.innerHTML='<span style="color:#ff8888">Pick at least one permission.</span>';return;}
   var btn=document.getElementById('ag-create');btn.disabled=true;var t=btn.textContent;btn.textContent=_agEditId?'Updating…':'Generating…';
   try{
     if(_agEditId){
@@ -5871,6 +5895,60 @@ async function _imgSetDefault(id){
     if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
     _imgLoad();
   }catch(e){alert('Failed: '+e.message);}
+}
+
+/* ── Academy lessons (lessons.json) ─────────────────────────────────────────── */
+var _lesData={}, _lesEditId=null;
+var _LES_TEMPLATE={unit:"Unit 1 · Topic",icon:"📘",title:"Lesson title",lead:"One-sentence summary of the lesson.",points:["First key point.","Second key point."],analogy:"A relatable analogy.",qa:[{q:"A common question?",a:"A clear answer."}]};
+function _lesHub(){return document.getElementById('les-hub').value;}
+async function _lesLoad(){
+  try{var res=await authFetch(WORKER+'/api/lessons',{method:'GET'});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    _lesData=d.lessons||{};
+  }catch(e){_lesData={};var h=document.getElementById('les-list');if(h)h.innerHTML='<div style="color:#ff8888">'+esc(e.message)+'</div>';return;}
+  _lesRenderList();_lesFill(null);
+}
+function _lesRenderList(){
+  var host=document.getElementById('les-list');if(!host)return;
+  var arr=_lesData[_lesHub()]||[];
+  if(!arr.length){host.innerHTML='<div style="opacity:.6;font-size:13px">No added lessons in this hub yet (built-in lessons are not listed here).</div>';return;}
+  host.innerHTML='<table class="op-tbl"><thead><tr><th>Title</th><th>Added</th><th></th></tr></thead><tbody>'+
+    arr.map(function(l){
+      return '<tr><td><b>'+esc(l.title||'(untitled)')+'</b></td>'+
+        '<td style="font-size:12px;color:#9a9ab0">'+esc(l._added?String(l._added).slice(0,10):'—')+'</td>'+
+        '<td style="text-align:right;white-space:nowrap"><button class="op-act" data-lse="'+esc(l._id)+'">Edit</button><button class="op-act del" data-lsd="'+esc(l._id)+'">Delete</button></td></tr>';
+    }).join('')+'</tbody></table>';
+  host.querySelectorAll('[data-lse]').forEach(function(b){b.addEventListener('click',function(){var id=b.getAttribute('data-lse');_lesFill((_lesData[_lesHub()]||[]).filter(function(l){return l._id===id;})[0]);});});
+  host.querySelectorAll('[data-lsd]').forEach(function(b){b.addEventListener('click',function(){_lesDelete(b.getAttribute('data-lsd'));});});
+}
+function _lesFill(l){
+  _lesEditId=l?l._id:null;
+  var obj=l?Object.assign({},l):_LES_TEMPLATE;
+  if(l){delete obj._id;delete obj._added;}
+  document.getElementById('les-json').value=JSON.stringify(obj,null,2);
+  document.getElementById('les-form-title').textContent=l?('Edit “'+(l.title||'')+'”'):'Add a lesson';
+  document.getElementById('les-msg').textContent='';
+}
+async function _lesSave(){
+  var msg=document.getElementById('les-msg');msg.textContent='';
+  var lesson;
+  try{lesson=JSON.parse(document.getElementById('les-json').value);}catch(e){msg.innerHTML='<span style="color:#ff8888">Invalid JSON: '+esc(e.message)+'</span>';return;}
+  if(!lesson||typeof lesson!=='object'||Array.isArray(lesson)||!lesson.title){msg.innerHTML='<span style="color:#ff8888">Lesson must be an object with a title.</span>';return;}
+  var payload={hub:_lesHub(),lesson:lesson};if(_lesEditId)payload.id=_lesEditId;
+  var btn=document.getElementById('les-save');btn.disabled=true;var t=btn.textContent;btn.textContent='Saving…';
+  try{var res=await authFetch(WORKER+'/api/lessons/save',{method:'POST',body:JSON.stringify(payload)});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    msg.innerHTML='<span style="color:#4ddb8a">Saved. Live on the academy page within ~1 min.</span>';
+    await _lesLoad();
+  }catch(e){msg.innerHTML='<span style="color:#ff8888">'+esc(e.message)+'</span>';}
+  finally{btn.disabled=false;btn.textContent=t;}
+}
+async function _lesDelete(id){
+  if(!confirm('Delete this lesson from the hub?'))return;
+  try{var res=await authFetch(WORKER+'/api/lessons/delete',{method:'POST',body:JSON.stringify({hub:_lesHub(),id:id})});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    if(_lesEditId===id)_lesEditId=null;await _lesLoad();
+  }catch(e){alert('Delete failed: '+e.message);}
 }
 </script>
 

@@ -10553,6 +10553,23 @@ function _escHtml(s) {
 
 // Initialize Hub
 document.addEventListener('DOMContentLoaded', function() {
+  // Append agent-added lessons (lessons.json) to each hub's inline array. Purely
+  // additive + fallback-safe: existing lessons are never moved, and a missing or
+  // empty file changes nothing.
+  (function(){
+    try {
+      fetch('lessons.json?cb=' + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).then(function(extra){
+        if (!extra) return;
+        var MAP = { finance:'FINANCE_LESSONS', micro:'MICRO_LESSONS', macro:'MACRO_LESSONS', ai:'AI_LESSONS',
+          programming:'PROGRAMMING_LESSONS', web:'WEB_LESSONS', info:'INFO_LESSONS', finlit:'FINLIT_LESSONS',
+          career:'CAREER_LESSONS', growth:'GROWTH_LESSONS' };
+        Object.keys(MAP).forEach(function(k){
+          var arr = window[MAP[k]];
+          if (Array.isArray(arr) && Array.isArray(extra[k]) && extra[k].length) Array.prototype.push.apply(arr, extra[k]);
+        });
+      }).catch(function(){});
+    } catch(e){}
+  })();
   try { setTheme(localStorage.getItem('viltv_theme') || 'midnight'); } catch(e){}
   try { switchHub('cbse'); } catch(e){}
   // Initialize recall game

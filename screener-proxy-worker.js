@@ -490,8 +490,8 @@ ${body.text}`;
       if (b.expiresAt) { const t = new Date(b.expiresAt); if (isNaN(t.getTime())) return jsonError(400, 'Invalid expiry date.'); expiresAt = t.toISOString(); }
       const scope = { publish: b.scope ? !!b.scope.publish : true, edit: b.scope ? !!b.scope.edit : false,
         delete: b.scope ? !!b.scope.delete : false, llm: b.scope ? !!b.scope.llm : false,
-        images: b.scope ? !!b.scope.images : false };
-      if (!scope.publish && !scope.edit && !scope.delete && !scope.llm && !scope.images) scope.publish = true;
+        images: b.scope ? !!b.scope.images : false, lessons: b.scope ? !!b.scope.lessons : false };
+      if (!scope.publish && !scope.edit && !scope.delete && !scope.llm && !scope.images && !scope.lessons) scope.publish = true;
       const id     = _iptvHexFromBytes(crypto.getRandomValues(new Uint8Array(6)));
       const secret = _iptvHexFromBytes(crypto.getRandomValues(new Uint8Array(24)));
       const h = await _iptvHashPassword(secret);
@@ -545,8 +545,8 @@ ${body.text}`;
         else k.expiresAt = null;
       }
       if (b.scope && typeof b.scope === 'object') {
-        k.scope = { publish:!!b.scope.publish, edit:!!b.scope.edit, delete:!!b.scope.delete, llm:!!b.scope.llm, images:!!b.scope.images };
-        if (!k.scope.publish && !k.scope.edit && !k.scope.delete && !k.scope.llm && !k.scope.images) k.scope.publish = true;
+        k.scope = { publish:!!b.scope.publish, edit:!!b.scope.edit, delete:!!b.scope.delete, llm:!!b.scope.llm, images:!!b.scope.images, lessons:!!b.scope.lessons };
+        if (!k.scope.publish && !k.scope.edit && !k.scope.delete && !k.scope.llm && !k.scope.images && !k.scope.lessons) k.scope.publish = true;
       }
       await _agPut(env, all);
       return _rbacJson({ ok:true, key:_agPublic(k) });
@@ -740,6 +740,90 @@ ${body.text}`;
       if (!found) return jsonError(404, 'Source not found.');
       await _imgPut(env, cfg);
       return _rbacJson({ ok:true });
+    }
+
+    // ══ Academy lessons (lessons.json — appended to education.html hubs) ═══════
+    // ── /api/agent/lessons  GET — agent reads current lessons (lessons scope) ──
+    if (pathname === '/api/agent/lessons' && request.method === 'GET') {
+      const a = await _agentAuth(request, env); if (a.error) return a.error;
+      if (a.agent.status !== 'active') return jsonError(403, 'Agent not yet approved.');
+      if (!(a.agent.scope && a.agent.scope.lessons)) return jsonError(403, 'This agent key does not have lessons permission.');
+      let read; try { read = await _ghReadJsonFile(env, 'lessons.json'); } catch (e) { return jsonError(502, e.message); }
+      return new Response(JSON.stringify({ ok:true, hubs: LESSON_HUBS, lessons: read.data }),
+        { status:200, headers:{ ...CORS, 'Content-Type':'application/json' } });
+    }
+
+    // ── /api/agent/lesson  POST — append a lesson to a hub (lessons scope) ─────
+    if (pathname === '/api/agent/lesson' && request.method === 'POST') {
+      const a = await _agentAuth(request, env); if (a.error) return a.error;
+      const agent = a.agent;
+      if (agent.status !== 'active') return jsonError(403, 'Agent not yet approved.');
+      if (!(agent.scope && agent.scope.lessons)) return jsonError(403, 'This agent key does not have lessons permission.');
+      if (!env.GITHUB_TOKEN) return jsonError(503, 'GitHub not configured.');
+      let body; try { body = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON.'); }
+      const hub = (body.hub||'').toString().trim();
+      const lesson = body.lesson;
+      if (LESSON_HUBS.indexOf(hub) === -1) return jsonError(400, 'Invalid hub. Use one of: ' + LESSON_HUBS.join(', '));
+      if (!lesson || typeof lesson !== 'object' || Array.isArray(lesson)) return jsonError(400, 'lesson must be an object.');
+      if (!lesson.title || !String(lesson.title).trim()) return jsonError(400, 'lesson.title is required.');
+      if (JSON.stringify(lesson).length > 20000) return jsonError(413, 'Lesson too large (max ~20KB).');
+      let read; try { read = await _ghReadJsonFile(env, 'lessons.json'); } catch (e) { return jsonError(502, e.message); }
+      const data = read.data; if (!Array.isArray(data[hub])) data[hub] = [];
+      lesson._id = _iptvHexFromBytes(crypto.getRandomValues(new Uint8Array(5)));
+      lesson._added = new Date().toISOString();
+      data[hub].push(lesson);
+      try { await _ghWriteJsonFile(env, 'lessons.json', data, read.sha, `feat(lessons): agent add ${hub} lesson [${agent.label}]`); }
+      catch (e) { return jsonError(502, e.message); }
+      try { const all = await _agAll(env); if (all[agent.id]) { all[agent.id].lastUsedAt = new Date().toISOString(); await _agPut(env, all); } } catch(_){}
+      return new Response(JSON.stringify({ ok:true, id:lesson._id, hub:hub, count:data[hub].length }),
+        { status:200, headers:{ ...CORS, 'Content-Type':'application/json' } });
+    }
+
+    // ── /api/lessons  GET — list all agent-added lessons (admin only) ──────────
+    if (pathname === '/api/lessons' && request.method === 'GET') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      let read; try { read = await _ghReadJsonFile(env, 'lessons.json'); } catch (e) { return jsonError(502, e.message); }
+      return _rbacJson({ ok:true, hubs: LESSON_HUBS, lessons: read.data });
+    }
+
+    // ── /api/lessons/save  POST — add/replace a lesson in a hub (admin only) ───
+    if (pathname === '/api/lessons/save' && request.method === 'POST') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.GITHUB_TOKEN) return jsonError(503, 'GitHub not configured.');
+      let b; try { b = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      const hub = (b.hub||'').toString().trim();
+      const lesson = b.lesson;
+      if (LESSON_HUBS.indexOf(hub) === -1) return jsonError(400, 'Invalid hub.');
+      if (!lesson || typeof lesson !== 'object' || Array.isArray(lesson)) return jsonError(400, 'lesson must be an object.');
+      if (!lesson.title || !String(lesson.title).trim()) return jsonError(400, 'lesson.title is required.');
+      if (JSON.stringify(lesson).length > 20000) return jsonError(413, 'Lesson too large (max ~20KB).');
+      let read; try { read = await _ghReadJsonFile(env, 'lessons.json'); } catch (e) { return jsonError(502, e.message); }
+      const data = read.data; if (!Array.isArray(data[hub])) data[hub] = [];
+      if (b.id) { const idx = data[hub].findIndex(l => l._id === String(b.id)); if (idx === -1) return jsonError(404, 'Lesson not found.'); lesson._id = String(b.id); lesson._added = data[hub][idx]._added || new Date().toISOString(); data[hub][idx] = lesson; }
+      else { lesson._id = _iptvHexFromBytes(crypto.getRandomValues(new Uint8Array(5))); lesson._added = new Date().toISOString(); data[hub].push(lesson); }
+      try { await _ghWriteJsonFile(env, 'lessons.json', data, read.sha, `chore(lessons): admin save ${hub} lesson`); }
+      catch (e) { return jsonError(502, e.message); }
+      return _rbacJson({ ok:true, id:lesson._id, hub:hub });
+    }
+
+    // ── /api/lessons/delete  POST — remove a lesson from a hub (admin only) ────
+    if (pathname === '/api/lessons/delete' && request.method === 'POST') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.GITHUB_TOKEN) return jsonError(503, 'GitHub not configured.');
+      let b; try { b = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      const hub = (b.hub||'').toString().trim();
+      if (LESSON_HUBS.indexOf(hub) === -1) return jsonError(400, 'Invalid hub.');
+      let read; try { read = await _ghReadJsonFile(env, 'lessons.json'); } catch (e) { return jsonError(502, e.message); }
+      const data = read.data; if (!Array.isArray(data[hub])) return jsonError(404, 'No lessons for that hub.');
+      const before = data[hub].length;
+      data[hub] = data[hub].filter(l => l._id !== String(b.id));
+      if (data[hub].length === before) return jsonError(404, 'Lesson not found.');
+      try { await _ghWriteJsonFile(env, 'lessons.json', data, read.sha, `chore(lessons): admin delete ${hub} lesson`); }
+      catch (e) { return jsonError(502, e.message); }
+      return _rbacJson({ ok:true, deleted:String(b.id||''), hub:hub });
     }
 
     // ══ LLM / LiteLLM provider config (admin-managed) ══════════════════════════
@@ -1916,6 +2000,25 @@ async function _ghWriteContent(env, items, sha, message){
   if (!r.ok) { const e = await r.text(); throw new Error(`GitHub PUT failed: ${r.status} ${e.slice(0,160)}`); }
   return true;
 }
+// Generic JSON-file read/write in the same repo (used for lessons.json).
+async function _ghReadJsonFile(env, file){
+  const api = `https://api.github.com/repos/${_CONTENT_REPO}/contents/${file}`;
+  const r = await fetch(`${api}?ref=${_CONTENT_BRANCH}`, { headers: _ghHeaders(env) });
+  if (r.ok) { const d = await r.json(); let data; try { data = JSON.parse(_b64DecodeUnicode(d.content.replace(/\n/g,''))); } catch(e){ data = {}; }
+    return { sha: d.sha, data: (data && typeof data === 'object') ? data : {} }; }
+  if (r.status === 404) return { sha: null, data: {} };
+  throw new Error(`GitHub GET ${file} failed: ${r.status}`);
+}
+async function _ghWriteJsonFile(env, file, data, sha, message){
+  const api = `https://api.github.com/repos/${_CONTENT_REPO}/contents/${file}`;
+  const put = { message, content: _b64EncodeUnicode(JSON.stringify(data, null, 2)), branch: _CONTENT_BRANCH };
+  if (sha) put.sha = sha;
+  const r = await fetch(api, { method:'PUT', headers:_ghHeaders(env), body: JSON.stringify(put) });
+  if (!r.ok) { const e = await r.text(); throw new Error(`GitHub PUT ${file} failed: ${r.status} ${e.slice(0,160)}`); }
+  return true;
+}
+// Academy lesson hubs that education.html appends from lessons.json
+const LESSON_HUBS = ['finance','micro','macro','ai','programming','web','info','finlit','career','growth'];
 
 const STATUS_PAGES = [
   'https://vilfintv.com/','https://vilfintv.com/iptv.html','https://vilfintv.com/news.html',
