@@ -2306,6 +2306,16 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 /* ── Login / Logout ────────────────────────────────────────────────────────── */
+function _deviceLabel(){
+  try{
+    var id=localStorage.getItem('vtv_device_id');
+    if(!id){ id=(window.crypto&&crypto.randomUUID?crypto.randomUUID():(String(Date.now())+Math.random())).replace(/[^a-z0-9]/gi,'').slice(0,8); localStorage.setItem('vtv_device_id',id); }
+    var ua=navigator.userAgent||'', os='Device', br='Browser';
+    if(/Windows/.test(ua))os='Windows'; else if(/Macintosh|Mac OS/.test(ua))os='Mac'; else if(/Android/.test(ua))os='Android'; else if(/iPhone|iPad|iOS/.test(ua))os='iOS'; else if(/Linux/.test(ua))os='Linux';
+    if(/Edg\//.test(ua))br='Edge'; else if(/OPR\//.test(ua))br='Opera'; else if(/Chrome\//.test(ua))br='Chrome'; else if(/Firefox\//.test(ua))br='Firefox'; else if(/Safari\//.test(ua))br='Safari';
+    return br+' on '+os+' · '+id;
+  }catch(e){ return 'Device'; }
+}
 async function doLogin() {
   var username = document.getElementById('login-user').value.trim();
   var password = document.getElementById('login-pass').value;
@@ -2321,7 +2331,7 @@ async function doLogin() {
   btn.textContent = 'Signing in…';
 
   try {
-    var payload = { username: username, password: password };
+    var payload = { username: username, password: password, device: _deviceLabel() };
     if (code) payload.code = code;
     var res  = await fetch(WORKER + '/api/login', {
       method:  'POST',
@@ -5467,6 +5477,12 @@ function loadSettings(){
       '<div class="rb-msg" id="tfa-msg"></div>'+
       '<p style="font-size:11px;color:#8a8a9e;margin-top:10px">Recovery: if you lose your device, delete the <code>admin_2fa</code> key in your Cloudflare KV (IPTV_KV) namespace to turn 2FA off.</p>'+
     '</div>'+
+    '<div class="rb-sec"><h3>Login activity &amp; devices</h3>'+
+      '<p style="font-size:12px;color:#8a8a9e;margin:0 0 12px">Every sign-in is listed here with its device, IP and location. Don\'t recognise one? <b>Sign it out</b> — that token stops working immediately.</p>'+
+      '<div id="sess-list"><div style="opacity:.6;font-size:13px">Loading…</div></div>'+
+      '<div style="margin-top:12px;display:flex;gap:10px"><button class="rb-btn ghost" id="sess-refresh">Refresh</button><button class="rb-btn ghost" id="sess-others">Sign out all other devices</button></div>'+
+      '<div class="rb-msg" id="sess-msg"></div>'+
+    '</div>'+
     '<div class="rb-sec"><h3>Operator accounts</h3>'+
       '<div id="op-list"><div style="opacity:.6">Loading…</div></div>'+
       '<hr style="border:none;border-top:1px solid rgba(255,255,255,.08);margin:16px 0">'+
@@ -5586,7 +5602,9 @@ function loadSettings(){
   document.getElementById('tfa-start').addEventListener('click',_tfaSetup);
   document.getElementById('tfa-enable').addEventListener('click',_tfaEnable);
   document.getElementById('tfa-disable').addEventListener('click',_tfaDisable);
-  _apLoad(); _opLoad(); _agLoad(); _llmLoad(); _llmLoadModels(); _imgLoad(); _lesLoad(); _tfaLoad();
+  document.getElementById('sess-refresh').addEventListener('click',_sessLoad);
+  document.getElementById('sess-others').addEventListener('click',function(){_sessRevoke(null,true);});
+  _apLoad(); _opLoad(); _agLoad(); _llmLoad(); _llmLoadModels(); _imgLoad(); _lesLoad(); _tfaLoad(); _sessLoad();
 }
 function _rbPermRows(){
   var tb=document.getElementById('op-perms'); if(!tb)return;
@@ -6042,6 +6060,38 @@ async function _tfaDisable(){
     msg.innerHTML='<span style="color:#4ddb8a">2FA disabled.</span>';
     document.getElementById('tfa-dcode').value='';
     _tfaShow(false);
+  }catch(e){msg.innerHTML='<span style="color:#ff8888">'+esc(e.message)+'</span>';}
+}
+
+/* ── Login sessions / devices ───────────────────────────────────────────────── */
+function _sessAgo(ts){ if(!ts)return '—'; var s=Math.floor((Date.now()-ts)/1000); if(s<60)return 'just now'; if(s<3600)return Math.floor(s/60)+'m ago'; if(s<86400)return Math.floor(s/3600)+'h ago'; return Math.floor(s/86400)+'d ago'; }
+async function _sessLoad(){
+  var host=document.getElementById('sess-list');if(!host)return;
+  try{var res=await authFetch(WORKER+'/api/sessions',{method:'GET'});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    if(!d.sessions.length){host.innerHTML='<div style="opacity:.6;font-size:13px">No active sessions.</div>';return;}
+    host.innerHTML='<table class="op-tbl"><thead><tr><th>Device</th><th>IP / location</th><th>User</th><th>Signed in</th><th>Last seen</th><th></th></tr></thead><tbody>'+
+      d.sessions.map(function(s){
+        var dev=esc(s.device||'Device')+(s.current?' <span style="color:#4ddb8a;font-size:11px">● this device</span>':'');
+        var iploc=esc(s.ip||'—')+(s.loc?'<br><span style="color:#9a9ab0;font-size:11px">'+esc(s.loc)+(s.org?' · '+esc(s.org):'')+'</span>':'');
+        var act=s.current?'<span style="opacity:.5;font-size:12px">current</span>':'<button class="op-act del" data-rev="'+esc(s.jti)+'">Sign out</button>';
+        return '<tr><td>'+dev+'<br><span style="color:#9a9ab0;font-size:11px">'+esc((s.ua||'').slice(0,60))+'</span></td>'+
+          '<td style="font-size:12px">'+iploc+'</td>'+
+          '<td style="font-size:12px;color:#9a9ab0">'+esc(s.username||'')+' ('+esc(s.role||'')+')</td>'+
+          '<td style="font-size:12px;color:#9a9ab0">'+_sessAgo(s.createdAt)+'</td>'+
+          '<td style="font-size:12px;color:#9a9ab0">'+_sessAgo(s.lastSeen)+'</td>'+
+          '<td style="text-align:right;white-space:nowrap">'+act+'</td></tr>';
+      }).join('')+'</tbody></table>';
+    host.querySelectorAll('[data-rev]').forEach(function(b){b.addEventListener('click',function(){_sessRevoke(b.getAttribute('data-rev'),false);});});
+  }catch(e){host.innerHTML='<div style="color:#ff8888">'+esc(e.message)+'</div>';}
+}
+async function _sessRevoke(jti,others){
+  var msg=document.getElementById('sess-msg');msg.textContent='';
+  if(others&&!confirm('Sign out ALL other devices? They will need to log in again.'))return;
+  if(!others&&!confirm('Sign out this device? Its session ends immediately.'))return;
+  try{var res=await authFetch(WORKER+'/api/sessions/revoke',{method:'POST',body:JSON.stringify(others?{others:true}:{jti:jti})});var d=await res.json();
+    if(!res.ok||!d.ok)throw new Error(d.error||d.message||('HTTP '+res.status));
+    msg.innerHTML='<span style="color:#4ddb8a">Done.</span>';_sessLoad();
   }catch(e){msg.innerHTML='<span style="color:#ff8888">'+esc(e.message)+'</span>';}
 }
 </script>

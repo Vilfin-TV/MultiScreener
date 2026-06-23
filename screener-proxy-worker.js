@@ -198,6 +198,8 @@ export default {
         return jsonError(503, 'Auth not configured. Set ADMIN_USERNAME, LINK_CONSOLE_PASSWORD and JWT_SECRET in Worker environment.');
       }
       const now = Math.floor(Date.now() / 1000);
+      const exp = now + 86400;
+      const device = (body.device || '').toString();
       // 1) Admin via environment credentials → full access (with optional 2FA).
       if (username && password && username === env.ADMIN_USERNAME && password === env.LINK_CONSOLE_PASSWORD) {
         const tfa = await _2faGet(env);
@@ -206,7 +208,9 @@ export default {
           if (!code)                                  return _rbacJson({ ok:false, need2fa:true, message:'Enter the 6-digit code from your authenticator app.' });
           if (!(await _totpVerify(tfa.secret, code))) return _rbacJson({ ok:false, need2fa:true, message:'Invalid 2FA code — try the current code.' });
         }
-        const token = await signJWT({ sub: username, role: 'admin', perms: null, iat: now, exp: now + 86400 }, env.JWT_SECRET);
+        const jti = _iptvHexFromBytes(crypto.getRandomValues(new Uint8Array(12)));
+        await _sessRecord(env, request, jti, username, 'admin', exp, device);
+        const token = await signJWT({ sub: username, role: 'admin', perms: null, jti, iat: now, exp }, env.JWT_SECRET);
         return _rbacJson({ ok: true, token, role: 'admin', username: username });
       }
       // 2) Operator/Auditor via KV accounts.
@@ -216,7 +220,9 @@ export default {
           if (op.disabled) return jsonError(403, 'This account is disabled. Contact the administrator.');
           const h = await _iptvHashPassword(password, op.salt, op.iterations);
           if (h.hash === op.hash) {
-            const token = await signJWT({ sub: username, role: op.role || 'operator', perms: op.perms || {}, iat: now, exp: now + 86400 }, env.JWT_SECRET);
+            const jti = _iptvHexFromBytes(crypto.getRandomValues(new Uint8Array(12)));
+            await _sessRecord(env, request, jti, username, op.role || 'operator', exp, device);
+            const token = await signJWT({ sub: username, role: op.role || 'operator', perms: op.perms || {}, jti, iat: now, exp }, env.JWT_SECRET);
             return _rbacJson({ ok: true, token, role: op.role || 'operator', username: username, perms: op.perms || {} });
           }
         }
@@ -268,6 +274,33 @@ export default {
       if (!(await _totpVerify(tfa.secret, b.code))) return jsonError(400, 'Invalid code — 2FA not disabled.');
       await _2faPut(env, { enabled:false, secret:'', pending:'' });
       return _rbacJson({ ok:true, enabled:false });
+    }
+
+    // ══ Login sessions / device activity (admin only) ═════════════════════════
+    // ── /api/sessions  GET — list active sign-in sessions ──────────────────────
+    if (pathname === '/api/sessions' && request.method === 'GET') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      const all = await _sessAll(env);
+      const nowMs = Date.now(); const mine = (auth.payload||{}).jti || '';
+      const sessions = Object.values(all)
+        .filter(s => !s.exp || s.exp*1000 > nowMs)
+        .sort((a,b) => (b.lastSeen||0) - (a.lastSeen||0))
+        .map(s => ({ jti:s.jti, username:s.username, role:s.role, ip:s.ip, ua:s.ua, device:s.device,
+          loc:s.loc, org:s.org, createdAt:s.createdAt, lastSeen:s.lastSeen, current: s.jti === mine }));
+      return _rbacJson({ ok:true, sessions });
+    }
+    // ── /api/sessions/revoke  POST — sign out a device by jti (admin only) ─────
+    if (pathname === '/api/sessions/revoke' && request.method === 'POST') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      if (!env.IPTV_KV) return jsonError(503, 'Store not configured (IPTV_KV).');
+      let b; try { b = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      const all = await _sessAll(env);
+      if (b.others) { const keep = (auth.payload||{}).jti; Object.keys(all).forEach(k => { if (k !== keep) delete all[k]; }); }
+      else { const jti = (b.jti||'').toString(); if (all[jti]) delete all[jti]; }
+      await _sessPut(env, all);
+      return _rbacJson({ ok:true });
     }
 
     // ── /format-story POST — Formatting raw text into HTML ─────────
@@ -1968,6 +2001,31 @@ async function _2faGet(env){
 }
 async function _2faPut(env, o){ await env.IPTV_KV.put('admin_2fa', JSON.stringify(o)); }
 
+/* ── Console login sessions (device / IP tracking + revocation) ─────────────── */
+async function _sessAll(env){
+  if(!env.IPTV_KV) return {};
+  try{ const r=await env.IPTV_KV.get('console_sessions'); return r?JSON.parse(r):{}; }catch(e){ return {}; }
+}
+async function _sessPut(env, all){ await env.IPTV_KV.put('console_sessions', JSON.stringify(all)); }
+// Record a freshly-issued session (called from /api/login). jti links it to the JWT.
+async function _sessRecord(env, request, jti, username, role, exp, device){
+  if(!env.IPTV_KV) return;
+  try{
+    const all = await _sessAll(env);
+    const now = Date.now();
+    for(const k of Object.keys(all)){ if(all[k] && all[k].exp && all[k].exp*1000 < now) delete all[k]; } // prune expired
+    const cf = request.cf || {};
+    all[jti] = { jti, username, role,
+      ip: request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || '',
+      ua: (request.headers.get('User-Agent') || '').slice(0,300),
+      device: (device || '').toString().slice(0,80),
+      loc: [cf.city, cf.region, cf.country].filter(Boolean).join(', '),
+      org: (cf.asOrganization || '').toString().slice(0,80),
+      createdAt: now, lastSeen: now, exp };
+    await _sessPut(env, all);
+  }catch(e){}
+}
+
 /* ── Agent API keys (Hermes / automation) ──────────────────────────────────────
    Stored in IPTV_KV under 'agent_keys' as { [id]: {…} }. Each key is scoped to
    content publish/edit only — never admin. A key is created in 'pending' state;
@@ -2268,6 +2326,18 @@ async function requireAuth(request, env) {
   if (!auth.startsWith('Bearer ')) return { error: jsonError(401, 'Missing Bearer token. Please sign in.') };
   try {
     const payload = await verifyJWT(auth.slice(7), env.JWT_SECRET);
+    // Session revocation: tokens minted with a jti must still have a live session
+    // record. (Tokens issued before this feature have no jti → allowed until they
+    // expire.) Fail-open on a KV error so a transient outage can't lock the admin out.
+    if (payload && payload.jti && env.IPTV_KV) {
+      try {
+        const all = await _sessAll(env);
+        const s = all[payload.jti];
+        if (!s) return { error: jsonError(401, 'This device was signed out. Please sign in again.') };
+        const nowMs = Date.now();
+        if (!s.lastSeen || nowMs - s.lastSeen > 600000) { s.lastSeen = nowMs; await _sessPut(env, all); }
+      } catch(e) { /* fail-open */ }
+    }
     return { payload };
   } catch(err) {
     return { error: jsonError(401, 'Session expired or invalid. Please sign in again.') };
