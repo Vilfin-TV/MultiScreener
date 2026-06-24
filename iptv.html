@@ -638,7 +638,16 @@
       .then(function(res){
         if(!res.ok) throw new Error(res.d&&res.d.error?res.d.error:"Failed to load providers");
         var provs = res.d.settings && res.d.settings.providers;
-        if (!provs || !Array.isArray(provs)) {
+        if (provs && !Array.isArray(provs) && typeof provs === 'object') {
+          var arr = [];
+          for (var k in provs) {
+            if (provs[k] && provs[k].enabled !== false) {
+              arr.push({ id: k, name: provs[k].name || k, icon: (provs[k].name || k).charAt(0).toUpperCase(), url: provs[k].url });
+            }
+          }
+          provs = arr;
+        }
+        if (!provs || !Array.isArray(provs) || provs.length === 0) {
           provs = [
             { id: 'jio', name: 'Jio IPTV', icon: 'J' },
             { id: 'airtel', name: 'Airtel IPTV', icon: 'A' },
@@ -1211,6 +1220,21 @@
   <input id="lang-search">
   <div id="ch-list"></div>
   <div id="ch-count"></div>
+  <div id="m2-language"></div>
+  <div id="m2-favorites"></div>
+  <div id="lang2-hide"></div>
+  <div id="lang2-reveal"></div>
+  <div id="lang2-title"></div>
+  <div id="lang2-ico"></div>
+  <div id="col-lang"></div>
+  <div id="channel-list"></div>
+  <div id="prompt-state"></div>
+  <div id="empty-state"></div>
+  <div id="dim-list"></div>
+  <div id="lang-list"></div>
+  <div id="dash-provider-name"></div>
+  <div id="video-error"></div>
+  <div id="player-error"></div>
 </div>
 
 </body>
