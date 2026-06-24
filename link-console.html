@@ -5629,6 +5629,13 @@ function _rbRender(r){
 function loadSettings(){
   _rbBuildPanel('settings','<div class="rb-wrap">'+
     '<h2 style="margin:0 0 16px">⚙️ Admin Settings</h2>'+
+    '<details class="agent-note"><summary>What the agent can &amp; can\'t do here</summary><div class="an-body">' +
+      '<b class="an-rule">Admin-only — agents CANNOT touch these:</b> Admin profile, Two-factor auth, Login activity/sessions, Operator accounts, and Agent API key creation/approval. These require an admin sign-in (no API for agents, by design).<br>' +
+      'What the agent <b>reads</b> from here (host <span class="an-host">https://screener-proxy.vilfintv.workers.dev</span>):<br>' +
+      '• <b>AI / LLM keys</b> → <code>GET /api/agent/llm</code> (key needs the <b>llm</b> scope) → returns providers, default model, freeModels[]/allModels[].<br>' +
+      '• <b>Image sources</b> → <code>GET /api/agent/images</code> (key needs the <b>images</b> scope) → returns Pexels/Pixabay/etc. keys.<br>' +
+      '<b class="an-rule">You</b> create/scope/approve the agent\'s key in the <b>Agent API keys</b> section below; the agent only consumes what you configure here.' +
+    '</div></details>'+
     '<div class="rb-sec"><h3>Admin profile</h3>'+
       '<label class="rb-lbl">Display name</label><input class="rb-inp" id="ap-name" placeholder="e.g. Filmon Joseph">'+
       '<label class="rb-lbl">Organisation</label><input class="rb-inp" id="ap-org" placeholder="VilfinTV">'+
