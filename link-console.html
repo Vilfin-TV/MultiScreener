@@ -5522,7 +5522,9 @@ function loadSettings(){
         '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="ag-scope-llm"> Read AI / LLM config</label>'+
         '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="ag-scope-images"> Read image-source keys</label>'+
         '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="ag-scope-lessons"> Update academy lessons</label>'+
+        '<label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer"><input type="checkbox" id="ag-scope-operator"> Full operator access (Links, Home Page, IPTV)</label>'+
       '</div>'+
+      '<p style="font-size:11px;color:#8a8a9e;margin:6px 0 0">Operator access lets the agent manage links, the home-page config and IPTV — everything an operator can do. Admin-only areas (operator accounts, 2FA, sessions, API-key management) are always off-limits to agents.</p>'+
       '<div style="margin-top:14px;display:flex;gap:10px"><button class="rb-btn" id="ag-create">Generate API key</button><button class="rb-btn ghost" id="ag-cancel" style="display:none">Cancel edit</button></div>'+
       '<div class="rb-msg" id="ag-msg"></div>'+
     '</div>'+
@@ -5695,7 +5697,7 @@ async function _opDelete(u){
 
 /* ── Agent API keys ─────────────────────────────────────────────────────────── */
 var _agEditId=null;
-function _agScopeText(s){s=s||{};var p=[];if(s.publish)p.push('Publish');if(s.edit)p.push('Edit');if(s.delete)p.push('Delete');if(s.llm)p.push('LLM');if(s.images)p.push('Images');if(s.lessons)p.push('Lessons');return p.join(' + ')||'—';}
+function _agScopeText(s){s=s||{};var p=[];if(s.publish)p.push('Publish');if(s.edit)p.push('Edit');if(s.delete)p.push('Delete');if(s.llm)p.push('LLM');if(s.images)p.push('Images');if(s.lessons)p.push('Lessons');if(s.operator)p.push('Operator');return p.join(' + ')||'—';}
 function _agFmtDate(d){if(!d)return '—';try{return new Date(d).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}catch(e){return '—';}}
 function _agStatusBadge(k){
   var expired=k.expiresAt&&(Date.now()>new Date(k.expiresAt).getTime());
@@ -5738,6 +5740,7 @@ function _agFill(k){
   document.getElementById('ag-scope-llm').checked=!!s.llm;
   document.getElementById('ag-scope-images').checked=!!s.images;
   document.getElementById('ag-scope-lessons').checked=!!s.lessons;
+  document.getElementById('ag-scope-operator').checked=!!s.operator;
   document.getElementById('ag-create').textContent=k?'Update permissions':'Generate API key';
   document.getElementById('ag-cancel').style.display=k?'':'none';
   document.getElementById('ag-key-box').style.display='none';
@@ -5749,10 +5752,11 @@ async function _agCreate(){
   var scope={publish:document.getElementById('ag-scope-publish').checked,edit:document.getElementById('ag-scope-edit').checked,
     delete:document.getElementById('ag-scope-delete').checked,llm:document.getElementById('ag-scope-llm').checked,
     images:document.getElementById('ag-scope-images').checked,
-    lessons:document.getElementById('ag-scope-lessons').checked};
+    lessons:document.getElementById('ag-scope-lessons').checked,
+    operator:document.getElementById('ag-scope-operator').checked};
   var payload={label:document.getElementById('ag-label').value.trim(),expiresAt:document.getElementById('ag-expiry').value||null,scope:scope};
   if(!payload.label){msg.innerHTML='<span style="color:#ff8888">Enter a label.</span>';return;}
-  if(!scope.publish&&!scope.edit&&!scope.delete&&!scope.llm&&!scope.images&&!scope.lessons){msg.innerHTML='<span style="color:#ff8888">Pick at least one permission.</span>';return;}
+  if(!scope.publish&&!scope.edit&&!scope.delete&&!scope.llm&&!scope.images&&!scope.lessons&&!scope.operator){msg.innerHTML='<span style="color:#ff8888">Pick at least one permission.</span>';return;}
   var btn=document.getElementById('ag-create');btn.disabled=true;var t=btn.textContent;btn.textContent=_agEditId?'Updating…':'Generating…';
   try{
     if(_agEditId){

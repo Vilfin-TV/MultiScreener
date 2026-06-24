@@ -375,7 +375,7 @@ ${body.text}`;
 
     // ── /api/generate-photo POST — Generating a photo from text using AI ──────
     if (pathname === '/api/generate-photo' && request.method === 'POST') {
-      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      const auth = await _authOperator(request, env); if (auth.error) return auth.error;
       let body;
       try { body = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
       if (!body.text || !body.heading) return jsonError(400, 'Missing heading or text.');
@@ -575,8 +575,9 @@ ${body.text}`;
       if (b.expiresAt) { const t = new Date(b.expiresAt); if (isNaN(t.getTime())) return jsonError(400, 'Invalid expiry date.'); expiresAt = t.toISOString(); }
       const scope = { publish: b.scope ? !!b.scope.publish : true, edit: b.scope ? !!b.scope.edit : false,
         delete: b.scope ? !!b.scope.delete : false, llm: b.scope ? !!b.scope.llm : false,
-        images: b.scope ? !!b.scope.images : false, lessons: b.scope ? !!b.scope.lessons : false };
-      if (!scope.publish && !scope.edit && !scope.delete && !scope.llm && !scope.images && !scope.lessons) scope.publish = true;
+        images: b.scope ? !!b.scope.images : false, lessons: b.scope ? !!b.scope.lessons : false,
+        operator: b.scope ? !!b.scope.operator : false };
+      if (!scope.publish && !scope.edit && !scope.delete && !scope.llm && !scope.images && !scope.lessons && !scope.operator) scope.publish = true;
       const id     = _iptvHexFromBytes(crypto.getRandomValues(new Uint8Array(6)));
       const secret = _iptvHexFromBytes(crypto.getRandomValues(new Uint8Array(24)));
       const h = await _iptvHashPassword(secret);
@@ -630,8 +631,8 @@ ${body.text}`;
         else k.expiresAt = null;
       }
       if (b.scope && typeof b.scope === 'object') {
-        k.scope = { publish:!!b.scope.publish, edit:!!b.scope.edit, delete:!!b.scope.delete, llm:!!b.scope.llm, images:!!b.scope.images, lessons:!!b.scope.lessons };
-        if (!k.scope.publish && !k.scope.edit && !k.scope.delete && !k.scope.llm && !k.scope.images && !k.scope.lessons) k.scope.publish = true;
+        k.scope = { publish:!!b.scope.publish, edit:!!b.scope.edit, delete:!!b.scope.delete, llm:!!b.scope.llm, images:!!b.scope.images, lessons:!!b.scope.lessons, operator:!!b.scope.operator };
+        if (!k.scope.publish && !k.scope.edit && !k.scope.delete && !k.scope.llm && !k.scope.images && !k.scope.lessons && !k.scope.operator) k.scope.publish = true;
       }
       await _agPut(env, all);
       return _rbacJson({ ok:true, key:_agPublic(k) });
@@ -1017,7 +1018,7 @@ ${body.text}`;
     // ── /api/iptv/config  GET — current IPTV login id + settings (auth) ───────
     if (pathname === '/api/iptv/config') {
       if (request.method !== 'GET') return jsonError(405, 'Method not allowed. Use GET for /api/iptv/config.');
-      const auth = await requireAuth(request, env);
+      const auth = await _authOperator(request, env);
       if (auth.error) return auth.error;
       if (!env.IPTV_KV) return jsonError(503, 'IPTV store not configured. Bind a KV namespace as IPTV_KV.');
       let authObj = null, settings = null;
@@ -1037,7 +1038,7 @@ ${body.text}`;
     // ── /api/iptv/credentials  POST — set IPTV login id + password (auth) ─────
     if (pathname === '/api/iptv/credentials') {
       if (request.method !== 'POST') return jsonError(405, 'Method not allowed. Use POST for /api/iptv/credentials.');
-      const auth = await requireAuth(request, env);
+      const auth = await _authOperator(request, env);
       if (auth.error) return auth.error;
       if (!env.IPTV_KV) return jsonError(503, 'IPTV store not configured. Bind a KV namespace as IPTV_KV.');
       let body;
@@ -1067,7 +1068,7 @@ ${body.text}`;
     // ── /api/iptv/delete-account  POST — delete IPTV login id (auth) ──────────
     if (pathname === '/api/iptv/delete-account') {
       if (request.method !== 'POST') return jsonError(405, 'Method not allowed. Use POST for /api/iptv/delete-account.');
-      const auth = await requireAuth(request, env);
+      const auth = await _authOperator(request, env);
       if (auth.error) return auth.error;
       if (!env.IPTV_KV) return jsonError(503, 'IPTV store not configured.');
       let body;
@@ -1088,7 +1089,7 @@ ${body.text}`;
     // ── /api/iptv/settings  POST — update IPTV console settings (auth) ────────
     if (pathname === '/api/iptv/settings') {
       if (request.method !== 'POST') return jsonError(405, 'Method not allowed. Use POST for /api/iptv/settings.');
-      const auth = await requireAuth(request, env);
+      const auth = await _authOperator(request, env);
       if (auth.error) return auth.error;
       if (!env.IPTV_KV) return jsonError(503, 'IPTV store not configured. Bind a KV namespace as IPTV_KV.');
       let body;
@@ -1125,7 +1126,7 @@ ${body.text}`;
 
       const { url, days, name, description } = body || {};
 
-      const auth = await requireAuth(request, env);
+      const auth = await _authOperator(request, env);
       if (auth.error) return auth.error;
 
       if (!url || typeof url !== 'string') {
@@ -1218,7 +1219,7 @@ ${body.text}`;
 
       const { links } = body || {};
 
-      const auth = await requireAuth(request, env);
+      const auth = await _authOperator(request, env);
       if (auth.error) return auth.error;
 
       if (!Array.isArray(links)) {
@@ -1397,7 +1398,7 @@ ${body.text}`;
       if (request.method !== 'POST') return jsonError(405, 'Use POST.');
       let body;
       try { body = await request.json(); } catch (_) { return jsonError(400, 'Invalid JSON.'); }
-      const auth = await requireAuth(request, env);
+      const auth = await _authOperator(request, env);
       if (auth.error) return auth.error;
 
       const { config } = body || {};
@@ -2114,6 +2115,21 @@ async function _agentAuth(request, env){
   const h = await _iptvHashPassword(secret, k.salt, k.iterations);
   if (h.hash !== k.secretHash) return { error: jsonError(401, 'Invalid agent API key.') };
   return { agent: k, all };
+}
+
+// Gate for operator-level endpoints (links, home page config, IPTV): accepts an
+// admin/operator JWT OR an approved agent key with the "operator" scope. Admin-only
+// endpoints keep their own requireAuth + role check, so agents can never reach them.
+async function _authOperator(request, env){
+  const j = await requireAuth(request, env);
+  if (!j.error) return { payload: j.payload, isAdmin: (j.payload||{}).role === 'admin' };
+  const a = await _agentAuth(request, env);
+  if (!a.error){
+    if (a.agent.status !== 'active') return { error: jsonError(403, 'Agent not yet approved.') };
+    if (!(a.agent.scope && a.agent.scope.operator)) return { error: jsonError(403, 'This agent key lacks operator access (links, home page, IPTV).') };
+    return { agent: a.agent, isAdmin: false };
+  }
+  return { error: j.error };
 }
 
 /* ── Shared content.json GitHub read / write ───────────────────────────────────
