@@ -5116,7 +5116,7 @@ var IPTV_PANEL_HTML =
           '</select>' +
         '</div>' +
       '</div>' +
-      '<div style="margin-top:18px"><div style="font-size:12px;color:#b9b9cc;margin-bottom:10px">Per-provider sources — set a Playlist (M3U) URL and optional EPG (XMLTV) URL. Leave blank to use the built-in default.</div><div id="iptv-providers-rows"></div></div>' +
+      '<div style="margin-top:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-size:12px;color:#b9b9cc;">Per-provider sources — set a Playlist (M3U) URL and optional EPG (XMLTV) URL. Leave blank to use the built-in default.</div><button id="iptv-add-provider" style="padding:6px 12px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:6px;font-size:12px;cursor:pointer">+ Add new provider</button></div><div id="iptv-providers-rows"></div></div>' +
       '<button id="iptv-settings-save" style="margin-top:16px;padding:11px 20px;background:linear-gradient(135deg,#7c4dff,#6b3dff);color:#fff;border:none;border-radius:9px;font-weight:600;font-size:14px;cursor:pointer">Save settings</button>' +
       '<div id="iptv-settings-msg" style="margin-top:10px;font-size:13px;min-height:18px"></div>' +
     '</div>' +
@@ -5132,35 +5132,51 @@ function _iptvBuildPanel() {
   div.innerHTML = IPTV_PANEL_HTML;
   host.parentNode.appendChild(div);
   _iptvBuildProviderRows();
+  var addProvBtn = document.getElementById('iptv-add-provider');
+  if (addProvBtn) {
+    addProvBtn.addEventListener('click', function() {
+      IPTV_PROVIDER_LIST.push({ id: 'prov_' + Math.random().toString(36).substr(2, 9), name: 'New Provider', icon: '', url: '', epg: '', enabled: true });
+      _iptvBuildProviderRows();
+    });
+  }
   document.getElementById('iptv-cred-save').addEventListener('click', saveIptvCredentials);
   document.getElementById('iptv-settings-save').addEventListener('click', saveIptvSettings);
 }
 
-var IPTV_PROVIDER_LIST = [
-  { id: 'jio',    label: 'Jio IPTV' },
-  { id: 'airtel', label: 'Airtel IPTV' },
-  { id: 'free',   label: 'Free IPTV (iptv-org)' },
-  { id: 'pro',    label: 'IPTV Pro (Free-TV)' },
-  { id: 'custom', label: 'Custom' }
-];
+var IPTV_PROVIDER_LIST = [];
+function _iptvDeleteProvider(idx) {
+  if (confirm('Delete this provider?')) {
+    IPTV_PROVIDER_LIST.splice(idx, 1);
+    _iptvBuildProviderRows();
+  }
+}
 
 function _iptvBuildProviderRows() {
   var host = document.getElementById('iptv-providers-rows');
   if (!host) return;
   var inp = 'width:100%;padding:9px 11px;background:#0f0f12;border:1px solid rgba(255,255,255,.16);border-radius:8px;color:#fff;font-size:13px;box-sizing:border-box';
-  host.innerHTML = IPTV_PROVIDER_LIST.map(function (p) {
+  host.innerHTML = IPTV_PROVIDER_LIST.map(function (p, i) {
+    var isDefault = (p.id === 'jio' || p.id === 'airtel' || p.id === 'free' || p.id === 'pro' || p.id === 'custom');
     return '<div style="border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:13px;margin-bottom:10px">' +
-      '<label style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:#f4f4f8;margin-bottom:10px;cursor:pointer">' +
-        '<input id="iptv-' + p.id + '-enabled" type="checkbox" checked> ' + esc(p.label) +
-      '</label>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+        '<label style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:#f4f4f8;cursor:pointer">' +
+          '<input id="iptv-' + p.id + '-enabled" type="checkbox" ' + (p.enabled !== false ? 'checked' : '') + '> ' +
+          '<input id="iptv-' + p.id + '-name" type="text" value="' + esc(p.name || p.label || '') + '" placeholder="Provider Name" style="background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.3);color:#fff;font-size:14px;outline:none;font-weight:bold;width:150px">' +
+        '</label>' +
+        (!isDefault ? '<button onclick="_iptvDeleteProvider(' + i + ')" style="padding:4px 8px;background:rgba(255,77,77,.15);color:#ff8888;border:1px solid rgba(255,77,77,.3);border-radius:4px;font-size:11px;cursor:pointer">Delete</button>' : '') +
+      '</div>' +
       '<div style="display:flex;gap:10px;flex-wrap:wrap">' +
-        '<div style="flex:1;min-width:230px">' +
-          '<label style="display:block;font-size:11px;color:#b9b9cc;margin-bottom:5px">Playlist (M3U) URL</label>' +
-          '<input id="iptv-' + p.id + '-url" type="url" placeholder="https://… .m3u" style="' + inp + '">' +
+        '<div style="flex:1;min-width:120px">' +
+          '<label style="display:block;font-size:11px;color:#b9b9cc;margin-bottom:5px">Icon URL / Full Name</label>' +
+          '<input id="iptv-' + p.id + '-icon" type="text" placeholder="https://... or Full Name" value="' + esc(p.icon || '') + '" style="' + inp + '">' +
         '</div>' +
-        '<div style="flex:1;min-width:230px">' +
+        '<div style="flex:1;min-width:200px">' +
+          '<label style="display:block;font-size:11px;color:#b9b9cc;margin-bottom:5px">Playlist (M3U) URL</label>' +
+          '<input id="iptv-' + p.id + '-url" type="url" placeholder="https://… .m3u" value="' + esc(p.url || '') + '" style="' + inp + '">' +
+        '</div>' +
+        '<div style="flex:1;min-width:200px">' +
           '<label style="display:block;font-size:11px;color:#b9b9cc;margin-bottom:5px">EPG (XMLTV) URL — optional</label>' +
-          '<input id="iptv-' + p.id + '-epg" type="url" placeholder="https://… .xml" style="' + inp + '">' +
+          '<input id="iptv-' + p.id + '-epg" type="url" placeholder="https://… .xml" value="' + esc(p.epg || '') + '" style="' + inp + '">' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -5231,18 +5247,33 @@ async function _iptvLoadConfig() {
     document.getElementById('iptv-username').value = '';
     var s = data.settings || {};
     document.getElementById('iptv-session-hours').value = s.sessionHours || 8;
-    var provs = s.providers || {};
+    var provs = s.providers || [];
+    if (!Array.isArray(provs)) {
+      var oldList = [
+        { id: 'jio', name: 'Jio IPTV', icon: 'Jio IPTV' },
+        { id: 'airtel', name: 'Airtel IPTV', icon: 'Airtel IPTV' },
+        { id: 'free', name: 'Free IPTV', icon: 'Free IPTV' },
+        { id: 'pro', name: 'IPTV Pro', icon: 'IPTV Pro' },
+        { id: 'custom', name: 'Custom', icon: 'Custom' }
+      ];
+      IPTV_PROVIDER_LIST = oldList.map(function(p) {
+        var pc = provs[p.id] || {};
+        p.enabled = pc.enabled !== false;
+        p.url = pc.url || '';
+        p.epg = pc.epg || '';
+        return p;
+      });
+    } else {
+      IPTV_PROVIDER_LIST = provs;
+    }
     var dp = document.getElementById('iptv-default-provider');
-    if (dp) dp.value = ['jio','airtel','free','pro','custom'].indexOf(s.defaultProvider) !== -1 ? s.defaultProvider : 'free';
-    IPTV_PROVIDER_LIST.forEach(function (p) {
-      var pc = provs[p.id] || {};
-      var en = document.getElementById('iptv-' + p.id + '-enabled');
-      var url = document.getElementById('iptv-' + p.id + '-url');
-      var epg = document.getElementById('iptv-' + p.id + '-epg');
-      if (en) en.checked = pc.enabled !== false;
-      if (url) url.value = pc.url || '';
-      if (epg) epg.value = pc.epg || '';
-    });
+    if (dp) {
+      dp.innerHTML = IPTV_PROVIDER_LIST.map(function(p) {
+        return '<option value="' + esc(p.id) + '">' + esc(p.name) + '</option>';
+      }).join('');
+      dp.value = s.defaultProvider || (IPTV_PROVIDER_LIST[0] && IPTV_PROVIDER_LIST[0].id) || 'free';
+    }
+    _iptvBuildProviderRows();
   } catch (e) {
     st.style.display = 'block';
     st.innerHTML = '<span style="color:#ff6b6b">Could not load: ' + esc(e.message) + '</span>';
@@ -5288,17 +5319,19 @@ async function saveIptvCredentials() {
 
 async function saveIptvSettings() {
   var msg = document.getElementById('iptv-settings-msg'); msg.textContent = '';
-  var providers = {};
   IPTV_PROVIDER_LIST.forEach(function (p) {
     var en = document.getElementById('iptv-' + p.id + '-enabled');
+    var nm = document.getElementById('iptv-' + p.id + '-name');
+    var ic = document.getElementById('iptv-' + p.id + '-icon');
     var url = document.getElementById('iptv-' + p.id + '-url');
     var epg = document.getElementById('iptv-' + p.id + '-epg');
-    providers[p.id] = {
-      enabled: en ? en.checked : true,
-      url: url ? url.value.trim() : '',
-      epg: epg ? epg.value.trim() : ''
-    };
+    if (en) p.enabled = en.checked;
+    if (nm) p.name = nm.value.trim();
+    if (ic) p.icon = ic.value.trim();
+    if (url) p.url = url.value.trim();
+    if (epg) p.epg = epg.value.trim();
   });
+  var providers = IPTV_PROVIDER_LIST;
   var payload = { settings: {
     sessionHours: parseInt(document.getElementById('iptv-session-hours').value, 10) || 8,
     defaultProvider: document.getElementById('iptv-default-provider').value,

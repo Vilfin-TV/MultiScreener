@@ -446,6 +446,7 @@
   var WORKER="https://page-iptv.vilfintv.workers.dev";
   var API={
     login:WORKER+"/api/login",
+    config:WORKER+"/api/iptv/config",
     playlist:function(p){return WORKER+"/api/playlist?provider="+encodeURIComponent(p);},
     stream:function(u,t){return WORKER+"/api/stream?token="+encodeURIComponent(t)+"&url="+encodeURIComponent(u);},
     epg:function(p,c){return WORKER+"/api/epg?provider="+encodeURIComponent(p)+"&channel="+encodeURIComponent(c);}
@@ -454,7 +455,7 @@
 
   var state={
     token:sessionStorage.getItem(TOKEN_KEY)||null,
-    provider:null, channels:[], filtered:[], currentChannel:null, currentIndex:-1,
+    provider:null, providersList:[], channels:[], filtered:[], currentChannel:null, currentIndex:-1,
     hls:null, renderCount:PAGE, favs:loadFavs(), prefs:loadPrefs(),
     dim:"country", mode2:"language", langHidden:false,
     filter:{country:"",category:"",language:"",search:"",favOnly:false}
@@ -480,6 +481,48 @@
 
   var $=function(id){return document.getElementById(id);};
   function show(s){["login-screen","provider-screen","player-screen"].forEach(function(x){$(x).classList.toggle("active",x===s);});window.scrollTo({top:0,behavior:"smooth"});}
+  function showProviderScreen() {
+    show("provider-screen");
+    var grid = document.querySelector(".provider-grid");
+    if(!grid) return;
+    grid.innerHTML = '<div style="color:var(--text-dim);grid-column:1/-1;">Loading providers...</div>';
+    fetch(API.config, { headers: { "Authorization": "Bearer " + state.token } })
+      .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d};});})
+      .then(function(res){
+        if(!res.ok) throw new Error(res.d&&res.d.error?res.d.error:"Failed to load providers");
+        var provs = res.d.settings && res.d.settings.providers;
+        if (!provs || !Array.isArray(provs)) {
+          provs = [
+            { id: 'jio', name: 'Jio IPTV', icon: 'J' },
+            { id: 'airtel', name: 'Airtel IPTV', icon: 'A' },
+            { id: 'free', name: 'Free IPTV', icon: 'F' },
+            { id: 'pro', name: 'IPTV Pro', icon: 'P' },
+            { id: 'custom', name: 'Custom', icon: 'C' }
+          ];
+        }
+        state.providersList = provs;
+        grid.innerHTML = provs.map(function(p) {
+          if (p.enabled === false) return '';
+          var badgeContent = p.icon;
+          if (!badgeContent) badgeContent = p.name ? p.name.charAt(0) : 'P';
+          var isImg = badgeContent.indexOf('http') === 0;
+          var badgeHtml = isImg ? '<img src="'+esc(badgeContent)+'" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">' : esc(badgeContent);
+          
+          return '<button class="provider-card pc-custom" data-provider="'+esc(p.id)+'">' +
+                 '<div class="provider-badge">'+badgeHtml+'</div>' +
+                 '<h3>'+esc(p.name)+'</h3>' +
+                 '<div class="pc-sub">Load the '+esc(p.name)+' lineup</div>' +
+                 '<span class="pc-go">Open lineup →</span></button>';
+        }).join('');
+        Array.prototype.forEach.call(grid.querySelectorAll(".provider-card"), function(card) {
+          card.addEventListener("click", function() { loadProvider(card.getAttribute("data-provider")); });
+        });
+      })
+      .catch(function(err){
+        if(err.message==="AUTH"){toast("Session expired. Sign in again.",true);logout();return;}
+        grid.innerHTML = '<div style="color:var(--danger);grid-column:1/-1;">Failed to load providers.</div>';
+      });
+  }
   var toastT;
   function toast(m,e){var t=$("toast");t.textContent=m;t.classList.toggle("err",!!e);t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("show");},3000);}
   function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
@@ -502,14 +545,14 @@
         if(!res.ok||!res.d.token)throw new Error(res.d&&res.d.error?res.d.error:"Invalid credentials");
         state.token=res.d.token;sessionStorage.setItem(TOKEN_KEY,state.token);
         msg.className="form-msg ok";msg.textContent="Welcome back.";$("password").value="";
-        setTimeout(function(){show("provider-screen");},300);
+        setTimeout(function(){showProviderScreen();},300);
       })
       .catch(function(err){msg.className="form-msg err";msg.textContent=err.message||"Sign in failed.";})
       .finally(function(){btn.disabled=false;btn.textContent="Sign In";});
   });
   function logout(){stopPlayback();state.token=null;state.channels=[];state.filtered=[];sessionStorage.removeItem(TOKEN_KEY);show("login-screen");}
   Array.prototype.forEach.call(document.querySelectorAll("[data-logout]"),function(b){b.addEventListener("click",logout);});
-  Array.prototype.forEach.call(document.querySelectorAll("[data-back]"),function(b){b.addEventListener("click",function(){stopPlayback();show("provider-screen");});});
+  Array.prototype.forEach.call(document.querySelectorAll("[data-back]"),function(b){b.addEventListener("click",function(){stopPlayback();showProviderScreen();});});
 
   /* ---------- Provider ---------- */
   Array.prototype.forEach.call(document.querySelectorAll(".provider-card"),function(card){card.addEventListener("click",function(){loadProvider(card.getAttribute("data-provider"));});});
@@ -518,7 +561,8 @@
     if(!state.token){logout();return;}
     state.provider=provider;
     var L={jio:"Jio IPTV",airtel:"Airtel IPTV",free:"Free IPTV",pro:"IPTV Pro",custom:"Custom"};
-    $("dash-provider-name").textContent=L[provider]||"VilfinTV IPTV";
+    var provObj = state.providersList.find(function(p){ return p.id === provider; });
+    $("dash-provider-name").textContent = provObj ? provObj.name : (L[provider]||"VilfinTV IPTV");
     show("player-screen");
     state.channels=[];state.filtered=[];state.currentChannel=null;state.currentIndex=-1;
     state.filter={country:"",category:"",language:"",search:"",favOnly:false};
@@ -886,7 +930,7 @@
   });
 
   /* ---------- Boot ---------- */
-  if(state.token)show("provider-screen");else show("login-screen");
+  if(state.token)showProviderScreen();else show("login-screen");
 })();
 </script>
 </body>

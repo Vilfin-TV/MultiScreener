@@ -1095,20 +1095,42 @@ ${body.text}`;
       let body;
       try { body = await request.json(); } catch (_) { return jsonError(400, 'Invalid JSON body.'); }
       const s = body.settings || body || {};
-      const IPTV_PROV = ['jio', 'airtel', 'free', 'pro', 'custom'];
-      const providers = {};
-      for (const p of IPTV_PROV) {
-        const sp = (s.providers && s.providers[p]) || {};
-        providers[p] = {
-          enabled: sp.enabled === undefined ? true : !!sp.enabled,
-          url: (sp.url || '').toString().trim(),
-          epg: (sp.epg || '').toString().trim(),
-        };
+      let parsedProviders = [];
+      if (Array.isArray(s.providers)) {
+        for (const p of s.providers) {
+          parsedProviders.push({
+            id: (p.id || '').toString().trim() || 'prov_' + Math.random().toString(36).substr(2, 9),
+            name: (p.name || 'Unnamed').toString().trim(),
+            icon: (p.icon || '').toString().trim(),
+            enabled: p.enabled === undefined ? true : !!p.enabled,
+            url: (p.url || '').toString().trim(),
+            epg: (p.epg || '').toString().trim()
+          });
+        }
+      } else {
+        const IPTV_PROV = [
+          {id: 'jio', name: 'Jio IPTV', icon: 'J'},
+          {id: 'airtel', name: 'Airtel IPTV', icon: 'A'},
+          {id: 'free', name: 'Free IPTV', icon: 'F'},
+          {id: 'pro', name: 'IPTV Pro', icon: 'P'},
+          {id: 'custom', name: 'Custom', icon: 'C'}
+        ];
+        for (const p of IPTV_PROV) {
+          const sp = (s.providers && s.providers[p.id]) || {};
+          parsedProviders.push({
+            id: p.id,
+            name: p.name,
+            icon: p.icon,
+            enabled: sp.enabled === undefined ? true : !!sp.enabled,
+            url: (sp.url || '').toString().trim(),
+            epg: (sp.epg || '').toString().trim()
+          });
+        }
       }
       const settings = {
         sessionHours: Math.max(1, Math.min(168, parseInt(s.sessionHours, 10) || 8)),
-        defaultProvider: IPTV_PROV.indexOf(s.defaultProvider) !== -1 ? s.defaultProvider : 'free',
-        providers: providers,
+        defaultProvider: s.defaultProvider || 'free',
+        providers: parsedProviders,
         updatedAt: new Date().toISOString(),
       };
       await env.IPTV_KV.put('iptv_settings', JSON.stringify(settings));
