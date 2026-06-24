@@ -256,6 +256,18 @@ async function verifyToken(token, env) {
       if (revoked[payload.jti]) return null;
     } catch (e) {}
   }
+  if (env.IPTV_PLAYLIST_KV && payload.sub) {
+    try {
+      const rawAuth = await env.IPTV_PLAYLIST_KV.get('iptv_auth');
+      if (rawAuth) {
+        let authObj = JSON.parse(rawAuth);
+        if (authObj.hash && authObj.username) authObj = { [authObj.username]: authObj };
+        const rec = authObj[payload.sub];
+        if (!rec) return null; // Account deleted
+        if (rec.expireDate && new Date() > new Date(rec.expireDate)) return null; // Account expired
+      }
+    } catch (e) {}
+  }
   return payload;
 }
 
