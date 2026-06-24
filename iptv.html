@@ -638,7 +638,7 @@
     if(!grid) return;
     grid.innerHTML = '<div style="color:var(--text-dim);grid-column:1/-1;">Loading providers...</div>';
     fetch(API.config, { headers: { "Authorization": "Bearer " + state.token } })
-      .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d};});})
+      .then(function(r){if(r.status===401||r.status===403)throw new Error("AUTH");return r.json().then(function(d){return{ok:r.ok,d:d};});})
       .then(function(res){
         if(!res.ok) throw new Error(res.d&&res.d.error?res.d.error:"Failed to load providers");
         var provs = res.d.settings && res.d.settings.providers;

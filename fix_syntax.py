@@ -1,16 +1,15 @@
-import re
+import sys
 
-with open('education.html', 'r', encoding='utf-8') as f:
-    html = f.read()
-
-bad_str = r"""}, {id:'RkQ7pE9A13I', title:'Daily Casual Japanese'}, {id:'tE1cE3xO_o4', title:'Kanji Memory Tricks'}];
-  _currentKanjiVideoIdx--;
-  if (_currentKanjiVideoIdx < 0) _currentKanjiVideoIdx = kanjiVideos.length - 1;
-  const iframe = document.getElementById('kanji-video-iframe');
-  if (iframe) iframe.src = 'https://www.youtube.com/embed/' + kanjiVideos[_currentKanjiVideoIdx].id + '?rel=0&controls=1';
-}"""
-
-html = html.replace(bad_str, "")
-
-with open('education.html', 'w', encoding='utf-8') as f:
-    f.write(html)
+def fix_file(filename):
+    with open(filename, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # Replace the incorrectly escaped quotes inside single-quoted strings
+    content = content.replace("\\\\'", "\\'")
+    
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write(content)
+        
+fix_file('generate_web_data.js')
+fix_file('generate_info_data.js')
+print("Fixed both files")
