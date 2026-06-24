@@ -207,15 +207,31 @@ async function loadSettings(env) {
 /* ----------------------------- tokens ----------------------------- */
 
 async function issueToken(username, env, ttlSeconds) {
-  const secret = env.IPTV_TOKEN_SECRET || env.IPTV_SECRET_PASS; // a dedicated secret is recommended
+  const secret = env.IPTV_TOKEN_SECRET || env.IPTV_SECRET_PASS;
   const ttl = ttlSeconds || DEFAULT_SESSION_HOURS * 3600;
+  const jti = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
   const payload = {
     sub: username,
     iat: Math.floor(Date.now() / 1000),
     exp: Math.floor(Date.now() / 1000) + ttl,
+    jti: jti
   };
   const body = b64urlEncode(enc.encode(JSON.stringify(payload)));
   const sig = await hmacSign(body, secret);
+  
+  if (env.IPTV_PLAYLIST_KV) {
+    try {
+      const r = await env.IPTV_PLAYLIST_KV.get('iptv_sessions');
+      const allSess = r ? JSON.parse(r) : {};
+      const now = Date.now();
+      for (const k of Object.keys(allSess)) {
+        if (allSess[k] && allSess[k].exp < now) delete allSess[k];
+      }
+      allSess[jti] = { username: username, exp: payload.exp * 1000 };
+      await env.IPTV_PLAYLIST_KV.put('iptv_sessions', JSON.stringify(allSess));
+    } catch (e) {}
+  }
+  
   return body + "." + sig;
 }
 
@@ -229,6 +245,13 @@ async function verifyToken(token, env) {
   try { payload = JSON.parse(b64urlDecodeToString(body)); } catch (e) { return null; }
   if (!payload || typeof payload.exp !== "number") return null;
   if (Math.floor(Date.now() / 1000) >= payload.exp) return null;
+  if (env.IPTV_PLAYLIST_KV && payload.jti) {
+    try {
+      const r = await env.IPTV_PLAYLIST_KV.get('iptv_sessions');
+      const allSess = r ? JSON.parse(r) : {};
+      if (!allSess[payload.jti]) return null;
+    } catch (e) {}
+  }
   return payload;
 }
 
@@ -295,6 +318,33 @@ async function handleLogin(request, env) {
             ok = safeEqual(h.hash, rec.hash);
           }
           if (!ok) return json({ error: "Invalid credentials" }, 401);
+
+          // Advanced Accounts Checks
+          if (rec.expireDate) {
+            if (new Date() > new Date(rec.expireDate)) {
+              return json({ error: "Account expired. Please contact support." }, 403);
+            }
+          }
+          if (rec.maxActiveSessions) {
+            let activeCount = 0;
+            try {
+              const r = await env.IPTV_PLAYLIST_KV.get('iptv_sessions');
+              const allSess = r ? JSON.parse(r) : {};
+              const now = Date.now();
+              for (const k of Object.keys(allSess)) {
+                if (allSess[k] && allSess[k].username === username && allSess[k].exp > now) activeCount++;
+              }
+            } catch (e) {}
+            if (activeCount >= rec.maxActiveSessions) {
+              return json({ error: "Maximum active sessions reached." }, 403);
+            }
+          }
+          
+          rec.loginCount = (rec.loginCount || 0) + 1;
+          rec.lastSeenAt = new Date().toISOString();
+          authObj[username] = rec;
+          await env.IPTV_PLAYLIST_KV.put("iptv_auth", JSON.stringify(authObj));
+
           const settings = await loadSettings(env);
           const ttl = settings.sessionHours * 3600;
           const token = await issueToken(username, env, ttl);
