@@ -215,11 +215,44 @@ export default {
       }
       // 2) Operator/Auditor via KV accounts.
       if (username && password && env.IPTV_KV) {
-        const op = await _opGet(env, username);
+        let authObj = null;
+        try { const r = await env.IPTV_KV.get('iptv_auth'); authObj = r ? JSON.parse(r) : {}; } catch(e){ authObj = {}; }
+        if (!authObj) authObj = {};
+        if (authObj.hash && authObj.username) authObj = { [authObj.username]: authObj };
+        const op = authObj[username];
         if (op && op.hash) {
           if (op.disabled) return jsonError(403, 'This account is disabled. Contact the administrator.');
+          if (op.expireDate && Date.now() > new Date(op.expireDate).getTime()) return jsonError(403, 'Account has expired.');
+          
           const h = await _iptvHashPassword(password, op.salt, op.iterations);
           if (h.hash === op.hash) {
+            if (device && op.maxBoundDevices) {
+              op.devices = op.devices || {};
+              if (!op.devices[device] && Object.keys(op.devices).length >= op.maxBoundDevices) {
+                return jsonError(403, 'Maximum bound devices limit reached.');
+              }
+            }
+            if (op.maxActiveSessions) {
+              const allSess = await _sessAll(env);
+              let activeCount = 0;
+              const nowMs = Date.now();
+              for (const k of Object.keys(allSess)) {
+                if (allSess[k] && allSess[k].username === username && allSess[k].exp * 1000 > nowMs) activeCount++;
+              }
+              if (activeCount >= op.maxActiveSessions) return jsonError(403, 'Maximum concurrent active sessions reached.');
+            }
+            
+            op.loginCount = (op.loginCount || 0) + 1;
+            if (device) {
+              op.devices = op.devices || {};
+              op.devices[device] = {
+                ip: request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || '',
+                ua: (request.headers.get('User-Agent') || '').slice(0,300),
+                lastSeen: new Date().toISOString()
+              };
+            }
+            await env.IPTV_KV.put('iptv_auth', JSON.stringify(authObj));
+            
             const jti = _iptvHexFromBytes(crypto.getRandomValues(new Uint8Array(12)));
             await _sessRecord(env, request, jti, username, op.role || 'operator', exp, device);
             const token = await signJWT({ sub: username, role: op.role || 'operator', perms: op.perms || {}, jti, iat: now, exp }, env.JWT_SECRET);
@@ -1026,7 +1059,15 @@ ${body.text}`;
       try { const r = await env.IPTV_KV.get('iptv_settings'); settings = r ? JSON.parse(r) : null; } catch (e) {}
       if (!authObj) authObj = {};
       if (authObj.hash && authObj.username) authObj = { [authObj.username]: authObj };
-      const accounts = Object.values(authObj).map(a => ({ username: a.username, updatedAt: a.updatedAt }));
+      const accounts = Object.values(authObj).map(a => ({
+        username: a.username,
+        updatedAt: a.updatedAt,
+        expireDate: a.expireDate,
+        maxBoundDevices: a.maxBoundDevices,
+        maxActiveSessions: a.maxActiveSessions,
+        loginCount: a.loginCount,
+        devices: a.devices ? Object.keys(a.devices).length : 0
+      }));
       return _iptvJson({
         ok: true,
         accounts: accounts,
@@ -1046,23 +1087,72 @@ ${body.text}`;
       const username = (body.username || '').toString().trim();
       const password = (body.password || '').toString();
       if (!username || username.length > 64) return jsonError(400, 'Username is required (max 64 chars).');
-      if (!password || password.length < 6)  return jsonError(400, 'Password must be at least 6 characters.');
-      const h = await _iptvHashPassword(password);
-      const rec = {
-        username: username,
-        algo: 'pbkdf2-sha256',
-        iterations: h.iterations,
-        salt: h.salt,
-        hash: h.hash,
-        updatedAt: new Date().toISOString(),
-      };
+      
       let authObj = null;
       try { const r = await env.IPTV_KV.get('iptv_auth'); authObj = r ? JSON.parse(r) : {}; } catch (e) { authObj = {}; }
       if (!authObj) authObj = {};
       if (authObj.hash && authObj.username) authObj = { [authObj.username]: authObj };
+      
+      const existing = authObj[username];
+      if (!existing && (!password || password.length < 6)) return jsonError(400, 'Password must be at least 6 characters for a new account.');
+      if (password && password.length > 0 && password.length < 6) return jsonError(400, 'Password must be at least 6 characters.');
+      
+      const rec = existing || { username: username, loginCount: 0, devices: {} };
+      if (password) {
+        const h = await _iptvHashPassword(password);
+        rec.algo = 'pbkdf2-sha256';
+        rec.iterations = h.iterations;
+        rec.salt = h.salt;
+        rec.hash = h.hash;
+      }
+      
+      rec.expireDate = body.expireDate ? body.expireDate : null;
+      rec.maxBoundDevices = body.maxBoundDevices ? parseInt(body.maxBoundDevices) : null;
+      rec.maxActiveSessions = body.maxActiveSessions ? parseInt(body.maxActiveSessions) : null;
+      rec.updatedAt = new Date().toISOString();
+      
       authObj[username] = rec;
       await env.IPTV_KV.put('iptv_auth', JSON.stringify(authObj));
       return _iptvJson({ ok: true, saved: true, username: username });
+    }
+
+    // ── /api/iptv/clear-devices  POST — clear bound devices for an account ─────
+    if (pathname === '/api/iptv/clear-devices') {
+      if (request.method !== 'POST') return jsonError(405, 'Method not allowed.');
+      const auth = await _authOperator(request, env); if (auth.error) return auth.error;
+      if (!env.IPTV_KV) return jsonError(503, 'IPTV store not configured.');
+      let body; try { body = await request.json(); } catch (_) { return jsonError(400, 'Invalid JSON body.'); }
+      const username = (body.username || '').toString().trim();
+      if (!username) return jsonError(400, 'Username is required.');
+      let authObj = null; try { const r = await env.IPTV_KV.get('iptv_auth'); authObj = r ? JSON.parse(r) : {}; } catch (e) { authObj = {}; }
+      if (!authObj) authObj = {};
+      if (authObj.hash && authObj.username) authObj = { [authObj.username]: authObj };
+      if (authObj[username]) {
+        authObj[username].devices = {};
+        await env.IPTV_KV.put('iptv_auth', JSON.stringify(authObj));
+      }
+      return _iptvJson({ ok: true, cleared: true, username: username });
+    }
+
+    // ── /api/iptv/kill-sessions  POST — kill active sessions for an account ────
+    if (pathname === '/api/iptv/kill-sessions') {
+      if (request.method !== 'POST') return jsonError(405, 'Method not allowed.');
+      const auth = await _authOperator(request, env); if (auth.error) return auth.error;
+      if (!env.IPTV_KV) return jsonError(503, 'IPTV store not configured.');
+      let body; try { body = await request.json(); } catch (_) { return jsonError(400, 'Invalid JSON body.'); }
+      const username = (body.username || '').toString().trim();
+      if (!username) return jsonError(400, 'Username is required.');
+      
+      const allSess = await _sessAll(env);
+      let killed = 0;
+      for (const k of Object.keys(allSess)) {
+        if (allSess[k] && allSess[k].username === username) {
+          delete allSess[k];
+          killed++;
+        }
+      }
+      if (killed > 0) await _sessPut(env, allSess);
+      return _iptvJson({ ok: true, killed: killed, username: username });
     }
 
     // ── /api/iptv/delete-account  POST — delete IPTV login id (auth) ──────────
@@ -2369,6 +2459,12 @@ async function requireAuth(request, env) {
     // expire.) Fail-open on a KV error so a transient outage can't lock the admin out.
     if (payload && payload.jti && env.IPTV_KV) {
       try {
+        if (payload.role !== 'admin' && payload.sub) {
+          const op = await _opGet(env, payload.sub);
+          if (op && op.expireDate && Date.now() > new Date(op.expireDate).getTime()) {
+            return { error: jsonError(401, 'Account has expired.') };
+          }
+        }
         const all = await _sessAll(env);
         const s = all[payload.jti];
         if (!s) return { error: jsonError(401, 'This device was signed out. Please sign in again.') };

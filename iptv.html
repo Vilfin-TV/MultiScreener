@@ -539,7 +539,9 @@
     var u=$("username").value.trim(),p=$("password").value;
     if(!u||!p){msg.className="form-msg err";msg.textContent="Enter username and password.";return;}
     btn.disabled=true;btn.textContent="Signing in…";msg.className="form-msg";msg.textContent="";
-    fetch(API.login,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u,password:p})})
+    var deviceId = localStorage.getItem("iptv_device_id");
+    if(!deviceId) { deviceId = "dev_" + Math.random().toString(36).substr(2, 9) + Date.now().toString(36); localStorage.setItem("iptv_device_id", deviceId); }
+    fetch(API.login,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u,password:p,device:deviceId})})
       .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d};});})
       .then(function(res){
         if(!res.ok||!res.d.token)throw new Error(res.d&&res.d.error?res.d.error:"Invalid credentials");

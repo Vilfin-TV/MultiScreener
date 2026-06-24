@@ -5099,6 +5099,20 @@ var IPTV_PANEL_HTML =
           '<input id="iptv-password2" type="password" autocomplete="new-password" placeholder="re-enter password" style="width:100%;padding:11px 12px;background:#0f0f12;border:1px solid rgba(255,255,255,.16);border-radius:9px;color:#fff;font-size:14px;box-sizing:border-box">' +
         '</div>' +
       '</div>' +
+      '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px">' +
+        '<div style="flex:1;min-width:140px">' +
+          '<label style="display:block;font-size:12px;color:#b9b9cc;margin-bottom:6px">Expire Date (Optional)</label>' +
+          '<input id="iptv-expire-date" type="date" style="width:100%;padding:11px 12px;background:#0f0f12;border:1px solid rgba(255,255,255,.16);border-radius:9px;color:#fff;font-size:14px;box-sizing:border-box;color-scheme:dark;">' +
+        '</div>' +
+        '<div style="flex:1;min-width:140px">' +
+          '<label style="display:block;font-size:12px;color:#b9b9cc;margin-bottom:6px">Max Devices (Total)</label>' +
+          '<input id="iptv-max-bound" type="number" min="1" placeholder="e.g. 5" style="width:100%;padding:11px 12px;background:#0f0f12;border:1px solid rgba(255,255,255,.16);border-radius:9px;color:#fff;font-size:14px;box-sizing:border-box">' +
+        '</div>' +
+        '<div style="flex:1;min-width:140px">' +
+          '<label style="display:block;font-size:12px;color:#b9b9cc;margin-bottom:6px">Max Concurrent</label>' +
+          '<input id="iptv-max-active" type="number" min="1" placeholder="e.g. 2" style="width:100%;padding:11px 12px;background:#0f0f12;border:1px solid rgba(255,255,255,.16);border-radius:9px;color:#fff;font-size:14px;box-sizing:border-box">' +
+        '</div>' +
+      '</div>' +
       '<button id="iptv-cred-save" style="margin-top:16px;padding:11px 20px;background:linear-gradient(135deg,#7c4dff,#6b3dff);color:#fff;border:none;border-radius:9px;font-weight:600;font-size:14px;cursor:pointer">Save login</button>' +
       '<div id="iptv-cred-msg" style="margin-top:10px;font-size:13px;min-height:18px"></div>' +
     '</div>' +
@@ -5213,26 +5227,48 @@ async function _iptvLoadConfig() {
         row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:12px;background:#0a0a0f;border:1px solid rgba(255,255,255,.05);border-radius:8px;margin-bottom:8px;';
         
         var info = document.createElement('div');
+        var stats = [];
+        if (acc.loginCount > 0) stats.push('Logins: ' + acc.loginCount);
+        if (acc.devices > 0) stats.push('Devices: ' + acc.devices + (acc.maxBoundDevices ? '/' + acc.maxBoundDevices : ''));
+        if (acc.expireDate) stats.push('Expires: ' + new Date(acc.expireDate).toLocaleDateString());
+        if (acc.maxActiveSessions) stats.push('Max Concurrent: ' + acc.maxActiveSessions);
+        
         info.innerHTML = '<strong style="color:#fff;font-size:15px;">' + esc(acc.username) + '</strong>' +
-                         '<div style="font-size:12px;color:#8a8a9e;margin-top:4px;">' + (acc.updatedAt ? 'Updated ' + new Date(acc.updatedAt).toLocaleString() : '') + '</div>';
+                         '<div style="font-size:12px;color:#8a8a9e;margin-top:4px;">' + (acc.updatedAt ? 'Updated ' + new Date(acc.updatedAt).toLocaleString() : '') + '</div>' +
+                         '<div style="font-size:12px;color:#a3a3c2;margin-top:4px;">' + stats.join(' • ') + '</div>';
         
         var actions = document.createElement('div');
-        actions.style.cssText = 'display:flex;gap:10px;';
+        actions.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:300px;';
         
         var editBtn = document.createElement('button');
-        editBtn.textContent = 'Update Password';
+        editBtn.textContent = 'Edit';
         editBtn.style.cssText = 'padding:6px 12px;background:rgba(124,77,255,.15);color:#b388ff;border:1px solid rgba(124,77,255,.3);border-radius:6px;font-size:12px;cursor:pointer;';
         editBtn.onclick = function() {
           document.getElementById('iptv-username').value = acc.username;
+          document.getElementById('iptv-expire-date').value = acc.expireDate ? acc.expireDate.split('T')[0] : '';
+          document.getElementById('iptv-max-bound').value = acc.maxBoundDevices || '';
+          document.getElementById('iptv-max-active').value = acc.maxActiveSessions || '';
           document.getElementById('iptv-password').focus();
         };
         
+        var clearBtn = document.createElement('button');
+        clearBtn.textContent = 'Clear Devices';
+        clearBtn.style.cssText = 'padding:6px 12px;background:rgba(255,160,0,.15);color:#ffb300;border:1px solid rgba(255,160,0,.3);border-radius:6px;font-size:12px;cursor:pointer;';
+        clearBtn.onclick = function() { window.clearIptvDevices && window.clearIptvDevices(acc.username); };
+
+        var killBtn = document.createElement('button');
+        killBtn.textContent = 'Kill Sessions';
+        killBtn.style.cssText = 'padding:6px 12px;background:rgba(255,160,0,.15);color:#ffb300;border:1px solid rgba(255,160,0,.3);border-radius:6px;font-size:12px;cursor:pointer;';
+        killBtn.onclick = function() { window.killIptvSessions && window.killIptvSessions(acc.username); };
+
         var delBtn = document.createElement('button');
         delBtn.textContent = 'Delete';
         delBtn.style.cssText = 'padding:6px 12px;background:rgba(255,77,77,.15);color:#ff8888;border:1px solid rgba(255,77,77,.3);border-radius:6px;font-size:12px;cursor:pointer;';
         delBtn.onclick = function() { deleteIptvAccount(acc.username); };
         
         actions.appendChild(editBtn);
+        actions.appendChild(clearBtn);
+        actions.appendChild(killBtn);
         actions.appendChild(delBtn);
         row.appendChild(info);
         row.appendChild(actions);
@@ -5296,19 +5332,37 @@ async function saveIptvCredentials() {
   var u = document.getElementById('iptv-username').value.trim();
   var p = document.getElementById('iptv-password').value;
   var c = document.getElementById('iptv-password2').value;
+  var exp = document.getElementById('iptv-expire-date').value;
+  var mb = document.getElementById('iptv-max-bound').value;
+  var ma = document.getElementById('iptv-max-active').value;
+  
   var msg = document.getElementById('iptv-cred-msg');
   msg.textContent = '';
   if (!u) { msg.innerHTML = '<span style="color:#ff6b6b">Enter a login ID.</span>'; return; }
-  if (p.length < 6) { msg.innerHTML = '<span style="color:#ff6b6b">Password must be at least 6 characters.</span>'; return; }
-  if (p !== c) { msg.innerHTML = '<span style="color:#ff6b6b">Passwords do not match.</span>'; return; }
+  if (p && p.length < 6) { msg.innerHTML = '<span style="color:#ff6b6b">Password must be at least 6 characters.</span>'; return; }
+  if (p && p !== c) { msg.innerHTML = '<span style="color:#ff6b6b">Passwords do not match.</span>'; return; }
+  
+  var payload = { username: u, password: p };
+  if (exp) {
+    var d = new Date(exp);
+    // ensure it covers the end of the day
+    d.setUTCHours(23, 59, 59, 999);
+    payload.expireDate = d.toISOString();
+  } else { payload.expireDate = null; }
+  payload.maxBoundDevices = mb ? parseInt(mb, 10) : null;
+  payload.maxActiveSessions = ma ? parseInt(ma, 10) : null;
+
   var btn = document.getElementById('iptv-cred-save'); btn.disabled = true; var t = btn.textContent; btn.textContent = 'Saving...';
   try {
-    var res = await authFetch(WORKER + '/api/iptv/credentials', { method: 'POST', body: JSON.stringify({ username: u, password: p }) });
+    var res = await authFetch(WORKER + '/api/iptv/credentials', { method: 'POST', body: JSON.stringify(payload) });
     var data = await res.json();
     if (!res.ok || !data.ok) throw new Error(data.error || ('HTTP ' + res.status));
-    msg.innerHTML = '<span style="color:#4ddb8a">Saved. Viewers can now sign in with this login.</span>';
+    msg.innerHTML = '<span style="color:#4ddb8a">Saved account details.</span>';
     document.getElementById('iptv-password').value = '';
     document.getElementById('iptv-password2').value = '';
+    document.getElementById('iptv-expire-date').value = '';
+    document.getElementById('iptv-max-bound').value = '';
+    document.getElementById('iptv-max-active').value = '';
     _iptvLoadConfig();
   } catch (e) {
     msg.innerHTML = '<span style="color:#ff6b6b">' + esc(e.message) + '</span>';
@@ -5316,6 +5370,27 @@ async function saveIptvCredentials() {
     btn.disabled = false; btn.textContent = t;
   }
 }
+
+window.clearIptvDevices = async function(username) {
+  if (!confirm('Clear all bound devices for "' + username + '"? They will need to log in again on new devices.')) return;
+  try {
+    var res = await authFetch(WORKER + '/api/iptv/clear-devices', { method: 'POST', body: JSON.stringify({ username: username }) });
+    var data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || ('HTTP ' + res.status));
+    _iptvLoadConfig();
+  } catch (e) { alert('Error clearing devices: ' + e.message); }
+};
+
+window.killIptvSessions = async function(username) {
+  if (!confirm('Kill all active streaming sessions for "' + username + '"? This logs out all currently active connections.')) return;
+  try {
+    var res = await authFetch(WORKER + '/api/iptv/kill-sessions', { method: 'POST', body: JSON.stringify({ username: username }) });
+    var data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || ('HTTP ' + res.status));
+    alert('Killed ' + data.killed + ' active sessions.');
+    _iptvLoadConfig();
+  } catch (e) { alert('Error killing sessions: ' + e.message); }
+};
 
 async function saveIptvSettings() {
   var msg = document.getElementById('iptv-settings-msg'); msg.textContent = '';
