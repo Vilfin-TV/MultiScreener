@@ -5118,12 +5118,20 @@ var IPTV_PANEL_HTML =
   '<div style="max-width:760px;color:#e2eeff">' +
     '<h2 style="margin:0 0 6px;color:#ffffff">📺 IPTV Console</h2>' +
     '<p style="opacity:.7;margin:0 0 18px;font-size:14px;color:#b9b9cc">Manage viewers\' login credentials for the private IPTV dashboard and tune global playback settings.</p>' +
-    '<details class="agent-note"><summary>How the agent updates IPTV providers</summary><div class="an-body">' +
-      'Key needs the <b>operator</b> scope. Host: <span class="an-host">https://screener-proxy.vilfintv.workers.dev</span> (NOT page-iptv — that\'s the player).<br>' +
-      '1) <code>GET /api/iptv/config</code> → take <code>settings.providers</code> (the full array).<br>' +
-      '2) Add/edit an entry: <code>{ "id":"us_sports","name":"US — Sports","icon":"https://… or a letter","url":"https://… .m3u","epg":"https://… .xml","enabled":true }</code><br>' +
-      '3) <code>POST /api/iptv/settings</code> body <code>{ "settings":{ "sessionHours":8,"defaultProvider":"&lt;an existing id&gt;","providers":[ …FULL array… ] } }</code><br>' +
-      '<b class="an-rule">Rule:</b> this REPLACES the whole list — always send every provider back or you wipe the others. <code>id</code> unique &amp; stable; only use M3U/EPG URLs you are licensed to use.' +
+    '<details class="agent-note"><summary>How the agent updates IPTV providers (full spec)</summary><div class="an-body">' +
+      '<b class="an-rule">Worker:</b> all provider management is on <span class="an-host">https://screener-proxy.vilfintv.workers.dev</span>, header <code>Authorization: Bearer vtv.&lt;id&gt;.&lt;secret&gt;</code> (<b>operator</b> scope). The player <span class="an-host">page-iptv</span> only READS the shared KV — never POST there.<br><br>' +
+      '<b>Update flow — read → modify → replace:</b><br>' +
+      '1) <code>GET /api/iptv/config</code> → keep <code>settings.providers</code> (the full array) plus <code>sessionHours</code> &amp; <code>defaultProvider</code>.<br>' +
+      '2) Add/edit a provider object:<br><code>{ "id":"us_sports", "name":"US — Sports", "icon":"S or https://logo.png", "url":"https://host/playlist.m3u", "epg":"https://host/guide.xml", "enabled":true }</code><br>' +
+      '3) <code>POST /api/iptv/settings</code> with <code>{ "settings":{ "sessionHours":8, "defaultProvider":"&lt;an existing enabled id&gt;", "providers":[ …THE FULL ARRAY… ] } }</code><br><br>' +
+      '<b class="an-rule">Hard rules:</b><br>' +
+      '• POST <b>replaces the entire list</b> — always send every existing provider back, or the omitted ones are wiped.<br>' +
+      '• <code>id</code> must be unique &amp; stable (don\'t rename ids — change the <code>name</code> instead).<br>' +
+      '• <code>defaultProvider</code> must equal an <code>id</code> that exists and is <code>enabled</code>.<br>' +
+      '• A provider only lists channels if <code>url</code> is a <b>direct, public M3U</b> (.m3u/.m3u8) returning <code>#EXTINF</code> lines — the worker fetches &amp; parses it server-side. If the player shows the provider card but <b>0 channels</b>, the URL returned an HTML/login page, is geo-blocked, empty, or &gt;24&nbsp;MB — that is the source URL, not a bug.<br>' +
+      '• <code>epg</code> is optional XMLTV (.xml); use <code>""</code> when none.<br>' +
+      '• Use only M3U/EPG URLs you are licensed to distribute.<br><br>' +
+      '<b>Propagation &amp; verify:</b> the player caches each provider\'s playlist ~30&nbsp;min, so a changed <code>url</code> can take up to 30&nbsp;min to refresh. Verify at <span class="an-host">https://vilfintv.com/iptv.html</span> → sign in → the provider card appears → click it → channels fill the vertical grid (scroll to load more, or narrow with the Country / Category / Language filters &amp; search).' +
     '</div></details>' +
     '<div id="iptv-status" style="padding:12px 14px;border:1px solid rgba(255,255,255,.12);border-radius:10px;margin-bottom:20px;font-size:14px;color:#e2eeff">Loading...</div>' +
     '<div id="iptv-accounts-container" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.10);border-radius:12px;padding:18px;margin-bottom:18px;display:none;">' +

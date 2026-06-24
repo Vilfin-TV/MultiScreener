@@ -320,22 +320,23 @@
     min-height: 0;
   }
   .channel-track {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 14px;
-    padding: 10px clamp(12px, 3vw, 26px);
-    overflow-x: auto;
-    overflow-y: hidden;
+    padding: 12px clamp(12px, 3vw, 26px) 18px;
+    overflow-y: auto;
+    overflow-x: hidden;
     scroll-behavior: smooth;
     flex: 1;
-    align-items: center;
+    min-height: 0;
+    align-content: start;
   }
-  .channel-track::-webkit-scrollbar { height: 8px; }
+  .channel-track::-webkit-scrollbar { width: 10px; }
   .channel-track::-webkit-scrollbar-track { background: transparent; }
-  .channel-track::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 8px; }
-  
+  .channel-track::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 8px; border: 2px solid var(--bg); }
+  .channel-track::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
   .ch-card {
-    flex: 0 0 auto;
-    width: 160px;
     background: linear-gradient(170deg, var(--surface-2), var(--surface));
     border: 1px solid var(--border);
     border-radius: 16px;
@@ -437,25 +438,8 @@
     background: rgba(255,255,255,0.1);
   }
   
-  .track-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--surface-3);
-    color: var(--text);
-    display: grid;
-    place-items: center;
-    z-index: 2;
-    cursor: pointer;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border);
-  }
-  .track-btn:hover { background: var(--accent); color: #fff; }
-  .track-btn.left { left: 10px; }
-  .track-btn.right { right: 10px; }
+  /* Horizontal scroll arrows are obsolete in the vertical grid layout. */
+  .track-btn { display: none !important; }
 
   /* Hide old columns CSS */
   .col-filters, .col-channels, .col-main { display: none !important; }
@@ -476,11 +460,29 @@
     .col-channels{max-height:46vh}
     .col-main{min-height:50vh}
   }
+  /* iPad / tablet: let the page scroll, give the channel grid room, tidy cards. */
+  @media (max-width:1000px){
+    .player-hero{flex-direction:column!important;height:auto!important;padding:10px clamp(10px,2.5vw,16px)!important}
+    .player-stage{width:100%;aspect-ratio:16/9;max-height:46vh}
+    .content-shelf{overflow:visible}
+    .channel-track{overflow:visible;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px}
+    .remote-panel{width:100%}
+    .filters-row{flex-wrap:wrap;row-gap:8px}
+    .filters-row #search-new{width:100%!important}
+  }
   @media (max-width:560px){
     .now-card{grid-template-columns:1fr;text-align:center}
     .now-card .nl{margin:0 auto}
     .vol-slider{width:60px}
     .player-stage{max-height:none}
+    .channel-track{grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:10px;padding:12px 12px 22px}
+    .ch-card{padding:11px;border-radius:13px}
+    .ch-card .logo{width:52px;height:52px;margin-bottom:8px}
+    .ch-card .nm{font-size:12.5px}
+    .ch-card .sub{font-size:10px}
+    .filters-row{gap:8px}
+    .filter-chip{padding:7px 13px;font-size:12.5px}
+    .filters-row select{padding:7px 11px!important;font-size:12.5px}
   }
 </style>
 </head>
@@ -980,46 +982,70 @@ function __iptvBoot(){
       if(q&&c.name.toLowerCase().indexOf(q)===-1)return false;
       return true;
     });
+    state.renderCount=PAGE; // fresh filter -> render the first page, grow on scroll
     renderList();
   }
 
-  // Override renderList
-  function renderList(){
-    var host = document.getElementById("channel-list-new");
-    document.getElementById("ch-count-new").textContent = state.filtered.length.toLocaleString() + " channels";
-    
-    if(!state.filtered.length){
-      host.innerHTML='<div style="padding:40px;text-align:center;color:var(--text-faint);width:100%;">No channels match your filters.</div>';
-      return;
-    }
-    
-    var max = Math.min(state.filtered.length, 300); // render limit for horizontal track to prevent extreme lag
-    var slice = state.filtered.slice(0, max);
-    
-    host.innerHTML = slice.map(function(c,i){
-      var playing=(state.currentChannel&&favKey(c)===favKey(state.currentChannel))?" playing":"";
-      var on=state.favs.has(favKey(c))?" on":"";
-      var logo=c.logo?`<img loading="lazy" src="${esc(c.logo)}" alt="" onerror="this.parentNode.innerHTML='<span class=ph>📺</span>'"/>`:'<span class="ph">📺</span>';
-      return `
+  // Build one channel card. `i` is the ABSOLUTE index into state.filtered.
+  function chCardHtml(c,i){
+    var playing=(state.currentChannel&&favKey(c)===favKey(state.currentChannel))?" playing":"";
+    var on=state.favs.has(favKey(c))?" on":"";
+    var logo=c.logo?`<img loading="lazy" src="${esc(c.logo)}" alt="" onerror="this.parentNode.innerHTML='<span class=ph>📺</span>'"/>`:'<span class="ph">📺</span>';
+    return `
         <div class="ch-card${playing}" data-idx="${i}">
           <div class="logo">${logo}</div>
           <div class="nm" title="${esc(c.name)}">${esc(c.name)}</div>
           <div class="sub" title="${esc(c.country)} · ${esc(c.category)}">${esc(c.country)} · ${esc(c.category)}</div>
           <span class="rq ${c.quality}">${c.quality}</span>
           <span class="star${on}" data-fav="${i}">${on?'★':'☆'}</span>
-        </div>
-      `;
-    }).join("");
-    
-    Array.prototype.forEach.call(host.querySelectorAll(".ch-card"),function(el){
+        </div>`;
+  }
+  function bindChCards(els){
+    Array.prototype.forEach.call(els,function(el){
       el.addEventListener("click",function(){playIndex(parseInt(el.getAttribute("data-idx"),10));});
+      var star=el.querySelector("[data-fav]");
+      if(star)star.addEventListener("click",function(ev){ev.stopPropagation();toggleFav(parseInt(star.getAttribute("data-fav"),10),star);});
     });
-    Array.prototype.forEach.call(host.querySelectorAll("[data-fav]"),function(el){
-      el.addEventListener("click",function(ev){ev.stopPropagation();toggleFav(parseInt(el.getAttribute("data-fav"),10),el);});
-    });
-    
+  }
+  // Override renderList — vertical grid, first page only (grows via renderMore on scroll)
+  function renderList(){
+    var host = document.getElementById("channel-list-new");
+    document.getElementById("ch-count-new").textContent = state.filtered.length.toLocaleString() + " channels";
+    if(!state.filtered.length){
+      host.innerHTML='<div style="padding:40px;text-align:center;color:var(--text-faint);width:100%;">No channels match your filters.</div>';
+      return;
+    }
+    if(!state.renderCount||state.renderCount<PAGE)state.renderCount=PAGE;
+    var max = Math.min(state.filtered.length, state.renderCount);
+    host.innerHTML = state.filtered.slice(0,max).map(function(c,i){return chCardHtml(c,i);}).join("");
+    bindChCards(host.querySelectorAll(".ch-card"));
     updateTrackButtons();
   }
+  // Append the next page of cards without re-rendering (preserves scroll position)
+  function renderMore(){
+    var host = document.getElementById("channel-list-new");
+    if(!host)return;
+    var have = host.querySelectorAll(".ch-card").length;
+    if(have===0 || have>=state.filtered.length)return;
+    var next = Math.min(state.filtered.length, have+PAGE);
+    state.renderCount = next;
+    var html = state.filtered.slice(have,next).map(function(c,k){return chCardHtml(c,have+k);}).join("");
+    host.insertAdjacentHTML("beforeend",html);
+    var all = host.querySelectorAll(".ch-card");
+    bindChCards(Array.prototype.slice.call(all,have));
+  }
+  // Infinite scroll: desktop (grid scrolls internally) + mobile (page scrolls)
+  function maybeLoadMore(){
+    var host=document.getElementById("channel-list-new"); if(!host)return;
+    var nearInner = host.scrollHeight>host.clientHeight+20 && (host.scrollTop+host.clientHeight>=host.scrollHeight-600);
+    var nearPage  = (window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-700);
+    if(nearInner||nearPage)renderMore();
+  }
+  (function(){
+    var host=document.getElementById("channel-list-new");
+    if(host)host.addEventListener("scroll",maybeLoadMore,{passive:true});
+    window.addEventListener("scroll",maybeLoadMore,{passive:true});
+  })();
 
   function updateTrackButtons() {
     var track = document.getElementById("channel-list-new");
