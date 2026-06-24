@@ -183,20 +183,24 @@ async function loadSettings(env) {
   try {
     const s = JSON.parse(raw);
     const providers = defaultProviders();
-    for (const p of IPTV_PROVIDERS) {
-      const saved = s.providers && s.providers[p];
-      if (saved) {
+    
+    if (s.providers) {
+      const provList = Array.isArray(s.providers) ? s.providers : Object.values(s.providers);
+      for (const saved of provList) {
+        if (!saved || !saved.id) continue;
+        const p = saved.id;
         providers[p] = {
-          enabled: saved.enabled === undefined ? providers[p].enabled : !!saved.enabled,
-          // A saved (even empty) url overrides the built-in default so admins can clear it.
-          url: saved.url !== undefined ? String(saved.url || "").trim() : providers[p].url,
-          epg: saved.epg !== undefined ? String(saved.epg || "").trim() : providers[p].epg,
+          name: saved.name || p,
+          enabled: saved.enabled === undefined ? (providers[p] ? providers[p].enabled : true) : !!saved.enabled,
+          url: saved.url !== undefined ? String(saved.url || "").trim() : (providers[p] ? providers[p].url : ""),
+          epg: saved.epg !== undefined ? String(saved.epg || "").trim() : (providers[p] ? providers[p].epg : ""),
         };
       }
     }
+    
     return {
       sessionHours: Math.max(1, Math.min(168, parseInt(s.sessionHours, 10) || DEFAULT_SESSION_HOURS)),
-      defaultProvider: IPTV_PROVIDERS.indexOf(s.defaultProvider) !== -1 ? s.defaultProvider : "free",
+      defaultProvider: providers[s.defaultProvider] ? s.defaultProvider : "free",
       providers,
     };
   } catch (e) {
@@ -381,9 +385,9 @@ async function handlePlaylist(request, env, url) {
   if (!auth) return json({ error: "Unauthorized" }, 401);
 
   const provider = (url.searchParams.get("provider") || "").toLowerCase();
-  if (IPTV_PROVIDERS.indexOf(provider) === -1) return json({ error: "Invalid provider" }, 400);
-
   const settings = await loadSettings(env);
+  if (!settings.providers[provider]) return json({ error: "Invalid provider" }, 400);
+
   const pconf = settings.providers[provider] || {};
   if (pconf.enabled === false) return json({ error: "Provider is disabled" }, 403);
 
@@ -434,10 +438,9 @@ async function handleEpg(request, env, url) {
 
   const provider = (url.searchParams.get("provider") || "").toLowerCase();
   const channel = (url.searchParams.get("channel") || "").trim();
-  if (IPTV_PROVIDERS.indexOf(provider) === -1) return json({ error: "Invalid provider" }, 400);
-  if (!channel) return json({ error: "Missing channel id" }, 400);
-
   const settings = await loadSettings(env);
+  if (!settings.providers[provider]) return json({ error: "Invalid provider" }, 400);
+  if (!channel) return json({ error: "Missing channel id" }, 400);
   const epgUrl = ((settings.providers[provider] || {}).epg || "").trim();
   if (!epgUrl) return json({ programs: [], now: null, next: null, note: "No EPG configured" });
 

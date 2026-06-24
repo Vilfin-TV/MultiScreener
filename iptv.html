@@ -387,22 +387,17 @@
   
   /* Remote Panel Overlay */
   .remote-panel {
-    position: absolute;
-    top: 0;
-    right: -320px;
-    width: 300px;
-    height: 100%;
-    background: rgba(18, 18, 27, 0.95);
-    backdrop-filter: blur(10px);
-    border-left: 1px solid var(--border-strong);
-    transition: right var(--t-med);
-    z-index: 10;
-    display: flex;
+    width: 320px;
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border-strong);
+    display: none;
     flex-direction: column;
     padding: 20px;
+    flex-shrink: 0;
   }
   .remote-panel.open {
-    right: 0;
+    display: flex;
   }
   .remote-toggle {
     position: absolute;
@@ -526,8 +521,8 @@
   </header>
 
     <div class="layout">
-    <div class="player-hero">
-      <div class="player-stage" id="video-shell">
+    <div class="player-hero" style="display:flex; flex-direction:row; gap:10px; padding:10px; height: 50vh;">
+      <div class="player-stage" id="video-shell" style="flex:1; position:relative;">
         <video id="video" playsinline></video>
         <div class="player-placeholder" id="player-placeholder"><div><div class="pp-ico">▶️</div>Select a channel to start watching</div></div>
         <div class="video-loading" id="video-loading"><div><div class="spinner"></div><span>Loading stream…</span></div></div>
@@ -550,16 +545,17 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="4"/><circle cx="12" cy="7" r="1.4" fill="currentColor"/></svg>
         </button>
 
-        <!-- Remote Panel -->
-        <div class="remote-panel" id="hero-remote-panel">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-            <h3 style="font-size:14px;color:var(--text-dim);letter-spacing:.5px;">REMOTE CONTROL</h3>
-            <button id="close-remote" style="color:var(--text-faint);font-size:20px;">✕</button>
-          </div>
-          <div class="remote-display" id="remote-display" style="font-size:34px;font-weight:800;text-align:center;letter-spacing:4px;background:var(--bg);border:1px solid var(--border-strong);border-radius:12px;padding:14px;margin-bottom:8px;min-height:62px;color:var(--accent-2)">—</div>
-          <div class="remote-name" id="remote-name" style="font-size:12px;text-align:center;color:var(--text-faint);min-height:16px;margin-bottom:14px"></div>
-          <div class="keypad" id="keypad"></div>
+      </div>
+      
+      <!-- Remote Panel -->
+      <div class="remote-panel" id="hero-remote-panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <h3 style="font-size:14px;color:var(--text-dim);letter-spacing:.5px;">REMOTE CONTROL</h3>
+          <button id="close-remote" style="color:var(--text-faint);font-size:20px;">✕</button>
         </div>
+        <div class="remote-display" id="remote-display" style="font-size:34px;font-weight:800;text-align:center;letter-spacing:4px;background:var(--bg);border:1px solid var(--border-strong);border-radius:12px;padding:14px;margin-bottom:8px;min-height:62px;color:var(--accent-2)">—</div>
+        <div class="remote-name" id="remote-name" style="font-size:12px;text-align:center;color:var(--text-faint);min-height:16px;margin-bottom:14px"></div>
+        <div class="keypad" id="keypad"></div>
       </div>
     </div>
     
@@ -1207,5 +1203,15 @@
   if(state.token)showProviderScreen();else show("login-screen");
 })();
 </script>
+
+<div style="display:none;" id="legacy-ui-stubs">
+  <div id="dim-country"></div>
+  <div id="dim-category"></div>
+  <input id="dim-search">
+  <input id="lang-search">
+  <div id="ch-list"></div>
+  <div id="ch-count"></div>
+</div>
+
 </body>
 </html>
