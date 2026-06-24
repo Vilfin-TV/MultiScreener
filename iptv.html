@@ -609,7 +609,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-(function(){
+function __iptvBoot(){
   "use strict";
   var _yr=document.getElementById("sf-year"); if(_yr) _yr.textContent=new Date().getFullYear();
 
@@ -760,7 +760,8 @@
         state.channels=list.map(normalizeChannel);
         applyDefaults();
         populateFilters();
-        toast(state.channels.length.toLocaleString()+" channels available — pick a filter to view.");
+        applyFilters(); // render the channel grid immediately (all channels) instead of an empty "pick a filter" state
+        toast(state.channels.length.toLocaleString()+" channels available.");
       })
       .catch(function(err){
         if(err.message==="AUTH"){toast("Session expired. Sign in again.",true);logout();return;}
@@ -897,6 +898,8 @@
   $("dim-category").addEventListener("click",function(){setDim("category");});
   $("dim-search").addEventListener("input",function(){renderDimList(this.value);});
   $("lang-search").addEventListener("input",function(){renderLangList(this.value);});
+
+  function hasAnyFilter(){var f=state.filter;return !!(f.country||f.category||f.language||f.search||f.favOnly);}
 
   function applyDefaults(){
     var p=state.prefs||{};
@@ -1215,7 +1218,12 @@
 
   /* ---------- Boot ---------- */
   if(state.token)showProviderScreen();else show("login-screen");
-})();
+}
+// Run init only after the full document (including the legacy-ui-stubs block
+// below) is parsed. The script is inline in the body, so running during parse
+// left trailing elements undefined and threw on the first getElementById(...)
+// of a not-yet-parsed node, aborting all initialization.
+if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",__iptvBoot);}else{__iptvBoot();}
 </script>
 
 <div style="display:none;" id="legacy-ui-stubs">
@@ -1240,6 +1248,30 @@
   <div id="dash-provider-name"></div>
   <div id="video-error"></div>
   <div id="player-error"></div>
+  <!-- Retired-UI stubs: JS still references these legacy ids after the grid
+       redesign. Stubbing them (hidden) keeps every getElementById(...).addEventListener
+       and .style/.innerHTML access from throwing, which otherwise aborted script
+       init (remote/keypad/menu/video controls never bound) and crashed loadProvider
+       (no channels rendered). The live controls are btn-remote/search-new/chip-*-new. -->
+  <button id="hero-remote-btn"></button>
+  <div id="load-more"></div>
+  <div id="active-tags"></div>
+  <input id="search">
+  <button id="chip-fav"></button>
+  <div id="rail-backdrop"></div>
+  <div id="col-filters"></div>
+  <!-- Retired "now playing" info-card ids still referenced by openPlayer()/stopPlayback().
+       Stubbed so playing a channel and the Back button don't throw on .style/.textContent.
+       Actual video playback uses the #video element + loadStream(). -->
+  <div id="now-card"></div>
+  <div id="ni-name"></div>
+  <div id="ni-cat"></div>
+  <div id="ni-number"></div>
+  <div id="ni-quality"></div>
+  <div id="ni-category"></div>
+  <div id="ni-language"></div>
+  <div id="ni-logo"></div>
+  <div id="ni-epg"></div>
 </div>
 
 </body>
