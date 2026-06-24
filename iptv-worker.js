@@ -263,8 +263,11 @@ async function verifyToken(token, env) {
         let authObj = JSON.parse(rawAuth);
         if (authObj.hash && authObj.username) authObj = { [authObj.username]: authObj };
         const rec = authObj[payload.sub];
-        if (!rec) return null; // Account deleted
-        if (rec.expireDate && new Date() > new Date(rec.expireDate)) return null; // Account expired
+        // Only reject on an explicit expiry. A missing record can be a bootstrap
+        // (env-secret) user or eventual-consistency lag in KV — rejecting there
+        // logged users out on every refresh. Instant revoke still works via the
+        // iptv_sessions_revoked list checked above.
+        if (rec && rec.expireDate && new Date() > new Date(rec.expireDate)) return null; // Account expired
       }
     } catch (e) {}
   }
@@ -341,21 +344,9 @@ async function handleLogin(request, env) {
               return json({ error: "Account expired. Please contact support." }, 403);
             }
           }
-          if (rec.maxActiveSessions) {
-            let activeCount = 0;
-            try {
-              const r = await env.IPTV_PLAYLIST_KV.get('iptv_sessions');
-              const allSess = r ? JSON.parse(r) : {};
-              const now = Date.now();
-              for (const k of Object.keys(allSess)) {
-                if (allSess[k] && allSess[k].username === username && allSess[k].exp > now) activeCount++;
-              }
-            } catch (e) {}
-            if (activeCount >= rec.maxActiveSessions) {
-              return json({ error: "Maximum active sessions reached." }, 403);
-            }
-          }
-          
+          /* Max concurrent sessions limit removed by request — refreshing or
+             opening the player on another device no longer blocks the user. */
+
           rec.loginCount = (rec.loginCount || 0) + 1;
           rec.lastSeenAt = new Date().toISOString();
           authObj[username] = rec;
