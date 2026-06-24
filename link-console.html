@@ -1604,6 +1604,7 @@
         <div class="ac-stab hp-stab" data-stab="hiragana" onclick="switchAcademyTab('hiragana')">🇯🇵 Hiragana Videos</div>
         <div class="ac-stab hp-stab" data-stab="katakana" onclick="switchAcademyTab('katakana')">🇯🇵 Katakana Videos</div>
         <div class="ac-stab hp-stab" data-stab="kanji" onclick="switchAcademyTab('kanji')">🈂️ Kanji Videos</div>
+        <div class="ac-stab hp-stab" data-stab="lessons" onclick="switchAcademyTab('lessons')">📚 Lessons</div>
       </div>
       
       <!-- Toolbar -->
@@ -1745,6 +1746,30 @@
           </div>
         </div>
       </div><!-- /ac-kanji -->
+
+      <!-- Lessons Panel — add/remove structured lessons in the academy hubs -->
+      <div class="ac-spanel hp-spanel" id="ac-lessons">
+        <div class="rb-wrap" style="max-width:none">
+          <div class="rb-sec"><h3>Academy lessons</h3>
+            <p style="font-size:12px;color:#8a8a9e;margin:0 0 14px">Add or remove lessons in an academy hub. New lessons are <b>appended</b> to the page — the existing built-in lessons are never changed. The agent can also add lessons via API with the <b>Update academy lessons</b> scope.</p>
+            <label class="rb-lbl">Hub</label>
+            <select class="rb-inp" id="les-hub" onchange="_lesRenderList();_lesFill(null);">
+              <option value="finlit">Financial Literacy</option><option value="finance">Finance (core)</option>
+              <option value="micro">Microeconomics</option><option value="macro">Macroeconomics</option>
+              <option value="ai">AI</option><option value="programming">Programming</option>
+              <option value="web">Web Development</option><option value="info">Info / General</option>
+              <option value="career">Career</option><option value="growth">Personal Growth</option>
+            </select>
+            <div id="les-list" style="margin-top:10px"><div style="opacity:.6;font-size:13px">Loading…</div></div>
+            <hr style="border:none;border-top:1px solid rgba(255,255,255,.08);margin:16px 0">
+            <h3 id="les-form-title" style="font-size:13px">Add a lesson</h3>
+            <label class="rb-lbl">Lesson (JSON)</label>
+            <textarea class="rb-inp" id="les-json" style="min-height:170px;font-family:'JetBrains Mono',monospace;font-size:12px;white-space:pre" spellcheck="false"></textarea>
+            <div style="margin-top:14px;display:flex;gap:10px"><button class="rb-btn" onclick="_lesSave()">Save lesson</button><button class="rb-btn ghost" onclick="_lesFill(null)">Clear / template</button></div>
+            <div class="rb-msg" id="les-msg"></div>
+          </div>
+        </div>
+      </div><!-- /ac-lessons -->
 
     </div><!-- /tab-academy -->
 
@@ -3825,6 +3850,7 @@ function switchAcademyTab(name) {
   document.querySelectorAll('.ac-spanel').forEach(function(p) {
     p.classList.toggle('active', p.id === 'ac-' + name);
   });
+  if (name === 'lessons') { try { _lesLoad(); } catch(e){} }
 }
 
 /* ── Academy Videos Manager (Hiragana / Katakana / Kanji) ─────────────────── */
@@ -5566,24 +5592,6 @@ function loadSettings(){
       '<div style="margin-top:14px;display:flex;gap:10px"><button class="rb-btn" id="img-save">Save source</button><button class="rb-btn ghost" id="img-clear">Clear form</button></div>'+
       '<div class="rb-msg" id="img-msg"></div>'+
     '</div>'+
-    '<div class="rb-sec"><h3>Academy lessons</h3>'+
-      '<p style="font-size:12px;color:#8a8a9e;margin:0 0 14px">Add or remove lessons in an academy hub. New lessons are <b>appended</b> to the page — the existing built-in lessons are never changed. The agent can also add lessons via API with the <b>Update academy lessons</b> scope.</p>'+
-      '<label class="rb-lbl">Hub</label>'+
-      '<select class="rb-inp" id="les-hub">'+
-        '<option value="finlit">Financial Literacy</option><option value="finance">Finance (core)</option>'+
-        '<option value="micro">Microeconomics</option><option value="macro">Macroeconomics</option>'+
-        '<option value="ai">AI</option><option value="programming">Programming</option>'+
-        '<option value="web">Web Development</option><option value="info">Info / General</option>'+
-        '<option value="career">Career</option><option value="growth">Personal Growth</option>'+
-      '</select>'+
-      '<div id="les-list" style="margin-top:10px"><div style="opacity:.6;font-size:13px">Loading…</div></div>'+
-      '<hr style="border:none;border-top:1px solid rgba(255,255,255,.08);margin:16px 0">'+
-      '<h3 id="les-form-title" style="font-size:13px">Add a lesson</h3>'+
-      '<label class="rb-lbl">Lesson (JSON)</label>'+
-      '<textarea class="rb-inp" id="les-json" style="min-height:170px;font-family:\'JetBrains Mono\',monospace;font-size:12px;white-space:pre" spellcheck="false"></textarea>'+
-      '<div style="margin-top:14px;display:flex;gap:10px"><button class="rb-btn" id="les-save">Save lesson</button><button class="rb-btn ghost" id="les-clear">Clear / template</button></div>'+
-      '<div class="rb-msg" id="les-msg"></div>'+
-    '</div>'+
   '</div>');
   document.querySelectorAll('.c-panel').forEach(function(p){p.classList.toggle('active',p.id==='tab-settings');});
   _rbPermRows();
@@ -5598,15 +5606,12 @@ function loadSettings(){
   document.getElementById('llm-provider').addEventListener('change',_llmOnProviderChange);
   document.getElementById('img-save').addEventListener('click',_imgSave);
   document.getElementById('img-clear').addEventListener('click',function(){_imgFill(null);});
-  document.getElementById('les-hub').addEventListener('change',function(){_lesRenderList();_lesFill(null);});
-  document.getElementById('les-save').addEventListener('click',_lesSave);
-  document.getElementById('les-clear').addEventListener('click',function(){_lesFill(null);});
   document.getElementById('tfa-start').addEventListener('click',_tfaSetup);
   document.getElementById('tfa-enable').addEventListener('click',_tfaEnable);
   document.getElementById('tfa-disable').addEventListener('click',_tfaDisable);
   document.getElementById('sess-refresh').addEventListener('click',_sessLoad);
   document.getElementById('sess-others').addEventListener('click',function(){_sessRevoke(null,true);});
-  _apLoad(); _opLoad(); _agLoad(); _llmLoad(); _llmLoadModels(); _imgLoad(); _lesLoad(); _tfaLoad(); _sessLoad();
+  _apLoad(); _opLoad(); _agLoad(); _llmLoad(); _llmLoadModels(); _imgLoad(); _tfaLoad(); _sessLoad();
 }
 function _rbPermRows(){
   var tb=document.getElementById('op-perms'); if(!tb)return;
