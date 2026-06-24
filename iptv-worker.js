@@ -247,9 +247,9 @@ async function verifyToken(token, env) {
   if (Math.floor(Date.now() / 1000) >= payload.exp) return null;
   if (env.IPTV_PLAYLIST_KV && payload.jti) {
     try {
-      const r = await env.IPTV_PLAYLIST_KV.get('iptv_sessions');
-      const allSess = r ? JSON.parse(r) : {};
-      if (!allSess[payload.jti]) return null;
+      const r = await env.IPTV_PLAYLIST_KV.get('iptv_sessions_revoked');
+      const revoked = r ? JSON.parse(r) : {};
+      if (revoked[payload.jti]) return null;
     } catch (e) {}
   }
   return payload;
