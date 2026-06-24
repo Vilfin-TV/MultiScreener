@@ -99,7 +99,7 @@
   .pc-custom .provider-badge{background:linear-gradient(135deg,#7c4dff,#4d2bb8)} .pc-custom{--glow:rgba(124,77,255,.24)}
 
   /* ===== PLAYER LAYOUT: 4 columns ===== */
-  .layout{display:grid;grid-template-columns:var(--col1) var(--col2) var(--col3) 1fr;height:calc(100vh - var(--topbar-h))}
+  .layout{display:flex;flex-direction:column;height:calc(100vh - var(--topbar-h));overflow:hidden;background:var(--bg)}
   .col-filters{display:contents}
   .col{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--border);background:var(--surface)}
   .col-main{background:transparent;border-right:none;overflow-y:auto}
@@ -237,6 +237,217 @@
 
   .rail-backdrop{display:none}
 
+  
+  .player-hero {
+    position: relative;
+    width: 100%;
+    flex: 0 0 auto;
+    background: #000;
+    display: flex;
+    justify-content: center;
+    border-bottom: 1px solid var(--border);
+    max-height: 55vh;
+  }
+  .player-stage {
+    width: 100%;
+    max-width: 1200px;
+    position: relative;
+    aspect-ratio: 16/9;
+    background: #000;
+    overflow: hidden;
+  }
+  
+  .content-shelf {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 10px 0;
+  }
+  
+  .filters-row {
+    display: flex;
+    gap: 12px;
+    padding: 0 clamp(12px, 3vw, 26px);
+    overflow-x: auto;
+    flex-shrink: 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .filters-row::-webkit-scrollbar { display: none; }
+  
+  .filter-chip {
+    padding: 8px 16px;
+    border-radius: 20px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    color: var(--text-dim);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: var(--t-fast);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .filter-chip:hover { color: var(--text); border-color: var(--accent); }
+  .filter-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  
+  .channel-track-wrap {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+    min-height: 0;
+  }
+  .channel-track {
+    display: flex;
+    gap: 14px;
+    padding: 10px clamp(12px, 3vw, 26px);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    flex: 1;
+    align-items: center;
+  }
+  .channel-track::-webkit-scrollbar { height: 8px; }
+  .channel-track::-webkit-scrollbar-track { background: transparent; }
+  .channel-track::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 8px; }
+  
+  .ch-card {
+    flex: 0 0 auto;
+    width: 160px;
+    background: linear-gradient(170deg, var(--surface-2), var(--surface));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+    cursor: pointer;
+    transition: transform var(--t-med), box-shadow var(--t-med), border-color var(--t-fast);
+    position: relative;
+    text-align: center;
+  }
+  .ch-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-strong);
+    box-shadow: 0 10px 24px rgba(0,0,0,.4);
+  }
+  .ch-card.playing {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+  }
+  .ch-card .logo {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 10px;
+    border-radius: 12px;
+    background: var(--surface-3);
+    object-fit: cover;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+  .ch-card .logo img { width: 100%; height: 100%; object-fit: cover; }
+  .ch-card .logo .ph { font-size: 24px; color: var(--text-faint); }
+  .ch-card .nm {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 4px;
+  }
+  .ch-card .sub {
+    font-size: 11px;
+    color: var(--text-faint);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ch-card .rq {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 6px;
+    color: #06121e;
+  }
+  .ch-card .star {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 16px;
+    color: var(--text-faint);
+  }
+  .ch-card .star.on { color: var(--gold); }
+  
+  /* Remote Panel Overlay */
+  .remote-panel {
+    position: absolute;
+    top: 0;
+    right: -320px;
+    width: 300px;
+    height: 100%;
+    background: rgba(18, 18, 27, 0.95);
+    backdrop-filter: blur(10px);
+    border-left: 1px solid var(--border-strong);
+    transition: right var(--t-med);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+  }
+  .remote-panel.open {
+    right: 0;
+  }
+  .remote-toggle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 11;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: var(--t-fast);
+  }
+  .remote-toggle:hover {
+    background: rgba(255,255,255,0.1);
+  }
+  
+  .track-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--surface-3);
+    color: var(--text);
+    display: grid;
+    place-items: center;
+    z-index: 2;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .track-btn:hover { background: var(--accent); color: #fff; }
+  .track-btn.left { left: 10px; }
+  .track-btn.right { right: 10px; }
+
+  /* Hide old columns CSS */
+  .col-filters, .col-channels, .col-main { display: none !important; }
+
   /* ===== Responsive ===== */
   @media (max-width:1180px){ :root{--col1:180px;--col2:160px;--col3:260px} }
   @media (max-width:1000px){
@@ -314,127 +525,67 @@
     </div>
   </header>
 
-  <div class="layout">
-    <!-- Wrapper for the two filter columns (becomes a drawer on mobile) -->
-    <div class="col-filters" id="col-filters">
-      <!-- FILTER 1: Country / Category toggle -->
-      <div class="col" id="col-dim">
-        <div class="dim-toggle">
-          <button class="dim-btn active" id="dim-country" data-dim="country"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>Country</button>
-          <button class="dim-btn" id="dim-category" data-dim="category"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Category</button>
-        </div>
-        <input class="col-search" id="dim-search" placeholder="Search…" autocomplete="off">
-        <div class="list" id="dim-list"></div>
-      </div>
-
-      <!-- FILTER 2: Language / Favorites toggle (hideable) -->
-      <div class="col" id="col-lang">
-        <div class="col-head">
-          <span class="ch-ico" id="lang2-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M9 3v2m1.5 0c0 4-3 8-6.5 9M5 9c0 3 4 5 7 5"/><path d="M13 19l4-9 4 9M14.5 16h5"/></svg></span>
-          <h3 id="lang2-title">Language</h3>
-          <button class="hide-col" id="lang2-hide" title="Hide this panel" aria-label="Hide panel">✕</button>
-        </div>
-        <div class="dim-toggle" style="border-top:1px solid var(--border)">
-          <button class="dim-btn active" id="m2-language" data-mode="language"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M9 3v2m1.5 0c0 4-3 8-6.5 9M5 9c0 3 4 5 7 5"/><path d="M13 19l4-9 4 9M14.5 16h5"/></svg>Language</button>
-          <button class="dim-btn" id="m2-favorites" data-mode="favorites"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15 9 22 9.3 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.3 9 9"/></svg>Favorites</button>
-        </div>
-        <input class="col-search" id="lang-search" placeholder="Search…" autocomplete="off">
-        <div class="list" id="lang-list"></div>
-      </div>
-      <!-- collapsed strip to re-show the hidden panel -->
-      <button class="col-reveal" id="lang2-reveal" style="display:none" title="Show Language / Favorites panel">
-        <span class="rv-ico">🗣️</span><span class="rv-txt">Language / Favorites</span>
-      </button>
-    </div>
-    <div class="rail-backdrop" id="rail-backdrop"></div>
-
-    <!-- FILTER 3: Channels -->
-    <div class="col col-channels" id="col-channels">
-      <div class="col-head">
-        <span class="ch-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><polyline points="17 2 12 7 7 2"/></svg></span>
-        <h3>Channels</h3><span class="hcount" id="ch-count">0</span>
-      </div>
-      <div class="ch-tools">
-        <div class="search-mini"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="search" placeholder="Search channels…" autocomplete="off"/></div>
-        <button class="fav-toggle" id="chip-fav" title="Favorites only">★</button>
-      </div>
-      <div class="active-tags" id="active-tags" style="margin:8px 8px 0"></div>
-      <div class="list" id="channel-list"></div>
-      <button class="load-more" id="load-more" style="display:none">Load more</button>
-      <div class="col-empty" id="prompt-state"><div class="big">📡</div><b>Pick a filter to start</b><br>Choose a Country or Category, pick a Language, search, or open ★ — channels load only after you select, so it stays fast.</div>
-      <div class="col-empty" id="empty-state" style="display:none"><div class="big">📺</div>No channels match your filters.</div>
-    </div>
-
-    <!-- MAIN: player -->
-    <div class="col col-main">
-      <div class="main-inner">
-        <div class="player-stage" id="video-shell">
-          <video id="video" playsinline></video>
-          <div class="player-placeholder" id="player-placeholder"><div><div class="pp-ico">▶️</div>Select a channel to start watching</div></div>
-          <div class="video-loading" id="video-loading"><div><div class="spinner"></div><span>Loading stream…</span></div></div>
-          <div class="controls" id="controls">
-            <button class="ctrl-btn" id="btn-prev" title="Previous"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM9.5 12l8.5 6V6z"/></svg></button>
-            <button class="ctrl-btn play" id="btn-play" title="Play/Pause"><svg id="icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg id="icon-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button>
-            <button class="ctrl-btn" id="btn-next" title="Next"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg></button>
-            <div class="vol-group">
-              <button class="ctrl-btn" id="btn-mute" title="Mute"><svg id="icon-vol" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9z"/></svg><svg id="icon-mute" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M3 9v6h4l5 5V4L7 9zm13.7-1.3-1.4 1.4L17 11l-1.7 1.9 1.4 1.4L18.4 12l1.7 1.7 1.4-1.4L19.8 10.6 21.5 8.7l-1.4-1.4L18.4 9z"/></svg></button>
-              <input type="range" class="vol-slider" id="vol-slider" min="0" max="1" step="0.01" value="1" aria-label="Volume"/>
-            </div>
-            <div class="ctrl-spacer"></div>
-            <span class="now-live"><span class="live-dot"></span>LIVE</span>
-            <button class="ctrl-btn" id="btn-pip" title="Picture in Picture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="12" y="10" width="7" height="6" rx="1" fill="currentColor" stroke="none"/></svg></button>
-            <button class="ctrl-btn" id="btn-fs" title="Fullscreen"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7zM5 10h2V7h3V5H5zm12 7h-3v2h5v-5h-2zM14 5v2h3v3h2V5z"/></svg></button>
+    <div class="layout">
+    <div class="player-hero">
+      <div class="player-stage" id="video-shell">
+        <video id="video" playsinline></video>
+        <div class="player-placeholder" id="player-placeholder"><div><div class="pp-ico">▶️</div>Select a channel to start watching</div></div>
+        <div class="video-loading" id="video-loading"><div><div class="spinner"></div><span>Loading stream…</span></div></div>
+        <div class="controls" id="controls">
+          <button class="ctrl-btn" id="btn-prev" title="Previous"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM9.5 12l8.5 6V6z"/></svg></button>
+          <button class="ctrl-btn play" id="btn-play" title="Play/Pause"><svg id="icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg id="icon-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button>
+          <button class="ctrl-btn" id="btn-next" title="Next"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg></button>
+          <div class="vol-group">
+            <button class="ctrl-btn" id="btn-mute" title="Mute"><svg id="icon-vol" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9z"/></svg><svg id="icon-mute" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M3 9v6h4l5 5V4L7 9zm13.7-1.3-1.4 1.4L17 11l-1.7 1.9 1.4 1.4L18.4 12l1.7 1.7 1.4-1.4L19.8 10.6 21.5 8.7l-1.4-1.4L18.4 9z"/></svg></button>
+            <input type="range" class="vol-slider" id="vol-slider" min="0" max="1" step="0.01" value="1" aria-label="Volume"/>
           </div>
+          <div class="ctrl-spacer"></div>
+          <span class="now-live"><span class="live-dot"></span>LIVE</span>
+          <button class="ctrl-btn" id="btn-pip" title="Picture in Picture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="12" y="10" width="7" height="6" rx="1" fill="currentColor" stroke="none"/></svg></button>
+          <button class="ctrl-btn" id="btn-fs" title="Fullscreen"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7zM5 10h2V7h3V5H5zm12 7h-3v2h5v-5h-2zM14 5v2h3v3h2V5z"/></svg></button>
         </div>
+        
+        <!-- Remote Toggle -->
+        <button class="remote-toggle" id="hero-remote-btn" title="Toggle Remote">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="4"/><circle cx="12" cy="7" r="1.4" fill="currentColor"/></svg>
+        </button>
 
-        <div class="now-card" id="now-card" style="display:none">
-          <div class="nl" id="ni-logo"><span class="ph">📺</span></div>
-          <div>
-            <div class="ni-name" id="ni-name">—</div>
-            <div class="ni-cat" id="ni-cat"></div>
-            <div class="ni-tags">
-              <span class="ni-tag">Channel <b id="ni-number">—</b></span>
-              <span class="ni-tag">Quality <b id="ni-quality">—</b></span>
-              <span class="ni-tag">Category <b id="ni-category">—</b></span>
-              <span class="ni-tag">Language <b id="ni-language">—</b></span>
-            </div>
+        <!-- Remote Panel -->
+        <div class="remote-panel" id="hero-remote-panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <h3 style="font-size:14px;color:var(--text-dim);letter-spacing:.5px;">REMOTE CONTROL</h3>
+            <button id="close-remote" style="color:var(--text-faint);font-size:20px;">✕</button>
           </div>
-          <div class="ni-epg" id="ni-epg"></div>
+          <div class="remote-display" id="remote-display" style="font-size:34px;font-weight:800;text-align:center;letter-spacing:4px;background:var(--bg);border:1px solid var(--border-strong);border-radius:12px;padding:14px;margin-bottom:8px;min-height:62px;color:var(--accent-2)">—</div>
+          <div class="remote-name" id="remote-name" style="font-size:12px;text-align:center;color:var(--text-faint);min-height:16px;margin-bottom:14px"></div>
+          <div class="keypad" id="keypad"></div>
         </div>
       </div>
-
-      <footer class="site-footer">
-        <div class="sf-grid">
-          <div class="sf-col"><div class="sf-title">VilfinTV MultiScreener</div><p class="sf-about">Your premium all-in-one platform for real-time financial screening, live global news, stories, TV channels, sports scores, radio and market status.</p></div>
-          <div class="sf-col"><div class="sf-title">Platform Features</div><ul class="sf-links">
-            <li><a href="https://vilfintv.com/">🤖 AI Screener</a></li>
-            <li><a href="https://vilfintv.com/news.html">📺 VilfinTV News</a></li>
-            <li><a href="https://vilfintv.com/story.html">📖 VilfinTV Stories</a></li>
-            <li><a href="https://vilfintv.com/education.html">🎓 VilfinTV Academy</a></li>
-            <li><a href="https://vilfintv.com/iptv.html">📡 VilfinTV IPTV</a></li>
-          </ul></div>
-          <div class="sf-col"><div class="sf-title">Legal &amp; Support</div><ul class="sf-links">
-            <li><a href="https://vilfintv.com/">Home</a></li>
-            <li><a href="https://vilfintv.com/blog_intelligence_hub.html">📰 Blog Intelligence Hub</a></li>
-            <li><a href="https://vilfintv.com/legal.html">⚖️ Legal &amp; Copyright Disclosure</a></li>
-          </ul></div>
-          <div class="sf-col"><div class="sf-title">Connect</div><p class="sf-about">VilfinTV — private streaming console. Access is limited to authorised viewers.</p></div>
-        </div>
-        <div class="sf-bottom">© <span id="sf-year"></span> VilfinTV. All rights reserved.</div>
-      </footer>
+    </div>
+    
+    <div class="content-shelf">
+      <div class="filters-row">
+        <button class="filter-chip active" id="chip-all">All Channels</button>
+        <button class="filter-chip" id="chip-fav-new">★ Favorites</button>
+        <div style="width:1px;background:var(--border-strong);margin:0 4px;"></div>
+        <select id="sel-country" style="background:var(--surface-2);border:1px solid var(--border-strong);color:var(--text);border-radius:20px;padding:8px 14px;outline:none;"><option value="">All Countries</option></select>
+        <select id="sel-category" style="background:var(--surface-2);border:1px solid var(--border-strong);color:var(--text);border-radius:20px;padding:8px 14px;outline:none;"><option value="">All Categories</option></select>
+        <select id="sel-language" style="background:var(--surface-2);border:1px solid var(--border-strong);color:var(--text);border-radius:20px;padding:8px 14px;outline:none;"><option value="">All Languages</option></select>
+        <div style="flex:1"></div>
+        <input type="text" id="search-new" placeholder="Search channels..." style="background:var(--bg);border:1px solid var(--border-strong);color:var(--text);border-radius:20px;padding:8px 16px;outline:none;width:180px;">
+      </div>
+      
+      <div class="channel-track-wrap">
+        <button class="track-btn left" id="track-left" style="display:none;"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg></button>
+        <div class="channel-track" id="channel-list-new"></div>
+        <button class="track-btn right" id="track-right" style="display:none;"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg></button>
+      </div>
+      <div style="text-align:center;padding-bottom:10px;">
+        <span id="ch-count-new" style="font-size:12px;color:var(--text-faint);">0 channels</span>
+      </div>
     </div>
   </div>
 </section>
-
-<!-- Remote modal -->
-<div class="modal-back" id="remote-modal">
-  <div class="remote">
-    <h3>ENTER CHANNEL NUMBER</h3>
-    <div class="remote-display" id="remote-display">—</div>
-    <div class="remote-name" id="remote-name"></div>
-    <div class="keypad" id="keypad"></div>
-  </div>
-</div>
 
 <div class="toast" id="toast"></div>
 
@@ -580,6 +731,7 @@
         var list=Array.isArray(res.d)?res.d:(res.d.channels||[]);
         state.channels=list.map(normalizeChannel);
         applyDefaults();
+        populateFilters();
         toast(state.channels.length.toLocaleString()+" channels available — pick a filter to view.");
       })
       .catch(function(err){
@@ -740,6 +892,150 @@
       $("ch-count").textContent=state.channels.length.toLocaleString();renderTags();}
   }
 
+  
+  // Replace old elements with new ones
+  var channelListHost = document.getElementById("channel-list-new");
+  
+  function populateFilters() {
+    var countries = new Set(), cats = new Set(), langs = new Set();
+    state.channels.forEach(function(c){
+      if(c.country) countries.add(c.country);
+      if(c.category) cats.add(c.category);
+      if(c.language && c.language!=="—") langs.add(c.language);
+    });
+    
+    var selC = document.getElementById("sel-country");
+    selC.innerHTML = '<option value="">All Countries</option>' + Array.from(countries).sort().map(x => `<option value="${x}">${x}</option>`).join('');
+    
+    var selCat = document.getElementById("sel-category");
+    selCat.innerHTML = '<option value="">All Categories</option>' + Array.from(cats).sort().map(x => `<option value="${x}">${x}</option>`).join('');
+    
+    var selL = document.getElementById("sel-language");
+    selL.innerHTML = '<option value="">All Languages</option>' + Array.from(langs).sort().map(x => `<option value="${x}">${x}</option>`).join('');
+    
+    // Set current values
+    selC.value = state.filter.country || "";
+    selCat.value = state.filter.category || "";
+    selL.value = state.filter.language || "";
+    document.getElementById("search-new").value = state.filter.search || "";
+  }
+  
+  document.getElementById("sel-country").addEventListener("change", function(){ state.filter.country = this.value; applyFilters(); });
+  document.getElementById("sel-category").addEventListener("change", function(){ state.filter.category = this.value; applyFilters(); });
+  document.getElementById("sel-language").addEventListener("change", function(){ state.filter.language = this.value; applyFilters(); });
+  document.getElementById("search-new").addEventListener("input", function(){ state.filter.search = this.value.trim(); applyFilters(); });
+  
+  document.getElementById("chip-all").addEventListener("click", function(){ 
+    state.filter.favOnly = false; 
+    document.getElementById("chip-all").classList.add("active");
+    document.getElementById("chip-fav-new").classList.remove("active");
+    applyFilters(); 
+  });
+  document.getElementById("chip-fav-new").addEventListener("click", function(){ 
+    state.filter.favOnly = true; 
+    document.getElementById("chip-fav-new").classList.add("active");
+    document.getElementById("chip-all").classList.remove("active");
+    applyFilters(); 
+  });
+
+  // Override applyFilters
+  function applyFilters(){
+    var f=state.filter, q=f.search.toLowerCase();
+    state.filtered=state.channels.filter(function(c){
+      if(f.favOnly&&!state.favs.has(favKey(c)))return false;
+      if(f.country&&c.country!==f.country)return false;
+      if(f.category&&c.category!==f.category)return false;
+      if(f.language&&c.language!==f.language)return false;
+      if(q&&c.name.toLowerCase().indexOf(q)===-1)return false;
+      return true;
+    });
+    renderList();
+  }
+
+  // Override renderList
+  function renderList(){
+    var host = document.getElementById("channel-list-new");
+    document.getElementById("ch-count-new").textContent = state.filtered.length.toLocaleString() + " channels";
+    
+    if(!state.filtered.length){
+      host.innerHTML='<div style="padding:40px;text-align:center;color:var(--text-faint);width:100%;">No channels match your filters.</div>';
+      return;
+    }
+    
+    var max = Math.min(state.filtered.length, 300); // render limit for horizontal track to prevent extreme lag
+    var slice = state.filtered.slice(0, max);
+    
+    host.innerHTML = slice.map(function(c,i){
+      var playing=(state.currentChannel&&favKey(c)===favKey(state.currentChannel))?" playing":"";
+      var on=state.favs.has(favKey(c))?" on":"";
+      var logo=c.logo?`<img loading="lazy" src="${esc(c.logo)}" alt="" onerror="this.parentNode.innerHTML='<span class=ph>📺</span>'"/>`:'<span class="ph">📺</span>';
+      return `
+        <div class="ch-card${playing}" data-idx="${i}">
+          <div class="logo">${logo}</div>
+          <div class="nm" title="${esc(c.name)}">${esc(c.name)}</div>
+          <div class="sub" title="${esc(c.country)} · ${esc(c.category)}">${esc(c.country)} · ${esc(c.category)}</div>
+          <span class="rq ${c.quality}">${c.quality}</span>
+          <span class="star${on}" data-fav="${i}">${on?'★':'☆'}</span>
+        </div>
+      `;
+    }).join("");
+    
+    Array.prototype.forEach.call(host.querySelectorAll(".ch-card"),function(el){
+      el.addEventListener("click",function(){playIndex(parseInt(el.getAttribute("data-idx"),10));});
+    });
+    Array.prototype.forEach.call(host.querySelectorAll("[data-fav]"),function(el){
+      el.addEventListener("click",function(ev){ev.stopPropagation();toggleFav(parseInt(el.getAttribute("data-fav"),10),el);});
+    });
+    
+    updateTrackButtons();
+  }
+
+  function updateTrackButtons() {
+    var track = document.getElementById("channel-list-new");
+    if(!track) return;
+    var lBtn = document.getElementById("track-left");
+    var rBtn = document.getElementById("track-right");
+    if(lBtn) lBtn.style.display = track.scrollLeft > 10 ? "grid" : "none";
+    if(rBtn) rBtn.style.display = (track.scrollWidth - track.scrollLeft - track.clientWidth > 10) ? "grid" : "none";
+  }
+  
+  var trackEl = document.getElementById("channel-list-new");
+  if(trackEl) trackEl.addEventListener("scroll", updateTrackButtons);
+  window.addEventListener("resize", updateTrackButtons);
+  
+  var leftB = document.getElementById("track-left");
+  if(leftB) leftB.addEventListener("click", function() {
+    document.getElementById("channel-list-new").scrollBy({ left: -400, behavior: "smooth" });
+  });
+  var rightB = document.getElementById("track-right");
+  if(rightB) rightB.addEventListener("click", function() {
+    document.getElementById("channel-list-new").scrollBy({ left: 400, behavior: "smooth" });
+  });
+
+  // Remote Toggle logic
+  document.getElementById("hero-remote-btn").addEventListener("click", function() {
+    document.getElementById("hero-remote-panel").classList.toggle("open");
+  });
+  document.getElementById("close-remote").addEventListener("click", function() {
+    document.getElementById("hero-remote-panel").classList.remove("open");
+  });
+  
+  // Also bind the topbar remote button if user clicks it
+  var topRemoteBtn = document.getElementById("btn-remote");
+  if(topRemoteBtn) {
+    topRemoteBtn.addEventListener("click", function() {
+      document.getElementById("hero-remote-panel").classList.toggle("open");
+    });
+  }
+
+  // Override loadProvider successfully fetched hook
+  var oldLoadProv = loadProvider;
+  loadProvider = function(p) {
+    oldLoadProv(p);
+  };
+  
+  // We need to inject `populateFilters()` right after channels are fetched.
+
   /* ---------- Filtering ---------- */
   function hasAnyFilter(){var f=state.filter;return !!(f.country||f.category||f.language||f.search||f.favOnly);}
   function applyFilters(){
@@ -784,31 +1080,7 @@
   }
 
   /* ---------- Channel list ---------- */
-  function renderList(){
-    var host=$("channel-list"),empty=$("empty-state");
-    $("ch-count").textContent=state.filtered.length.toLocaleString();
-    if(!state.filtered.length){host.innerHTML="";empty.style.display="block";$("load-more").style.display="none";return;}
-    empty.style.display="none";
-    var slice=state.filtered.slice(0,state.renderCount);
-    host.innerHTML=slice.map(function(c,i){
-      var playing=(state.currentChannel&&favKey(c)===favKey(state.currentChannel))?" playing":"";
-      var on=state.favs.has(favKey(c))?" on":"";
-      var logo=c.logo?'<span class="logo"><img loading="lazy" src="'+esc(c.logo)+'" alt="" onerror="this.parentNode.innerHTML=\'<span class=ph>📺</span>\'"/></span>':'<span class="logo"><span class="ph">📺</span></span>';
-      return '<div class="ch-row'+playing+'" data-idx="'+i+'">'+
-        '<span class="num">'+(i+1)+'</span>'+logo+
-        '<span class="meta"><span class="nm">'+esc(c.name)+'</span><span class="sub">'+esc(c.country)+' · '+esc(c.category)+'</span></span>'+
-        '<span class="rq '+c.quality+'">'+c.quality+'</span>'+
-        '<span class="star'+on+'" data-fav="'+i+'">'+(on?'★':'☆')+'</span>'+
-      '</div>';
-    }).join("");
-    $("load-more").style.display=state.filtered.length>state.renderCount?"block":"none";
-    Array.prototype.forEach.call(host.querySelectorAll(".ch-row"),function(el){
-      el.addEventListener("click",function(){playIndex(parseInt(el.getAttribute("data-idx"),10));});
-    });
-    Array.prototype.forEach.call(host.querySelectorAll("[data-fav]"),function(el){
-      el.addEventListener("click",function(ev){ev.stopPropagation();toggleFav(parseInt(el.getAttribute("data-fav"),10),el);});
-    });
-  }
+  
   $("load-more").addEventListener("click",function(){state.renderCount+=PAGE;renderList();});
 
   function toggleFav(idx,el){
@@ -900,10 +1172,10 @@
     $("remote-name").textContent=nm;
   }
   function remoteGo(){var n=parseInt(remoteBuf,10);if(n>=1&&n<=state.filtered.length){closeRemote();playIndex(n-1);}else toast(state.filtered.length?("Enter 1–"+state.filtered.length):"Pick a filter first to number channels.",true);}
-  function openRemote(){remoteBuf="";updateRemote();$("remote-modal").classList.add("show");}
-  function closeRemote(){$("remote-modal").classList.remove("show");}
-  $("btn-remote").addEventListener("click",openRemote);
-  $("remote-modal").addEventListener("click",function(e){if(e.target===$("remote-modal"))closeRemote();});
+  function openRemote(){remoteBuf="";updateRemote();var hrp = $("hero-remote-panel"); if(hrp) hrp.classList.add("open");}
+  function closeRemote(){var hrp = $("hero-remote-panel"); if(hrp) hrp.classList.remove("open");}
+  if($("btn-remote")) $("btn-remote").addEventListener("click",openRemote);
+  // removed remote-modal click
 
   /* ---------- Mobile drawer ---------- */
   function openRail(){$("col-filters").classList.add("open");$("rail-backdrop").classList.add("show");}
@@ -914,7 +1186,7 @@
   /* ---------- Keyboard ---------- */
   document.addEventListener("keydown",function(e){
     if(!$("player-screen").classList.contains("active"))return;
-    if($("remote-modal").classList.contains("show")){
+    if($("hero-remote-panel") && $("hero-remote-panel").classList.contains("open")){
       if(/^[0-9]$/.test(e.key))remoteKey(e.key);
       else if(e.key==="Enter")remoteGo();
       else if(e.key==="Backspace"){remoteBuf=remoteBuf.slice(0,-1);updateRemote();}
