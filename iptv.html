@@ -671,7 +671,7 @@
       })
       .catch(function(err){
         if(err.message==="AUTH"){toast("Session expired. Sign in again.",true);logout();return;}
-        grid.innerHTML = '<div style="color:var(--danger);grid-column:1/-1;">Failed to load providers.</div>';
+        grid.innerHTML = '<div style="color:var(--danger);grid-column:1/-1;">Failed to load providers: ' + esc(err.message) + '</div>';
       });
   }
   var toastT;
