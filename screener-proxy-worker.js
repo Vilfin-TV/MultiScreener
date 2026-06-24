@@ -1059,7 +1059,7 @@ ${body.text}`;
       try { const r = await env.IPTV_KV.get('iptv_settings'); settings = r ? JSON.parse(r) : null; } catch (e) {}
       if (!authObj) authObj = {};
       if (authObj.hash && authObj.username) authObj = { [authObj.username]: authObj };
-      const accounts = Object.values(authObj).map(a => ({
+      const accounts = Object.values(authObj).filter(a => a && typeof a === 'object').map(a => ({
         username: a.username,
         updatedAt: a.updatedAt,
         expireDate: a.expireDate,
