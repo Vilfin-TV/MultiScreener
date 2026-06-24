@@ -2363,7 +2363,7 @@ footer{
 /* Mobile: transform off-screen; .mobile-open slides it up */
 /* Use 100dvh (dynamic viewport) so the drawer auto-shrinks when the
    on-screen keyboard appears — fixes inputs hiding behind the keyboard. */
-@media(max-width:900px){
+@media(max-width:900px),(min-width:901px) and (max-width:1366px) and (pointer:coarse){
   .right-bar{
     position:fixed!important;
     top:0!important;bottom:0!important;left:0!important;right:0!important;
@@ -2431,7 +2431,7 @@ footer{
   transition:transform .2s ease;
 }
 .mobile-rb-bar::-webkit-scrollbar{display:none}
-@media(max-width:900px){
+@media(max-width:900px),(min-width:901px) and (max-width:1366px) and (pointer:coarse){
   .mobile-rb-bar{display:flex}
   .main-content{padding-bottom:74px}
 }
@@ -2474,7 +2474,7 @@ footer{
   border-radius:6px;
 }
 .rb-mobile-close:hover{color:#f1f5f9;background:#334155}
-@media(max-width:900px){.rb-mobile-close{display:block}}
+@media(max-width:900px),(min-width:901px) and (max-width:1366px) and (pointer:coarse){.rb-mobile-close{display:block}}
 /* ── Mobile: hide tab arrows, make tabs natively scrollable ── */
 @media(max-width:900px){
   .rb-tabs-arrow{display:none!important}
@@ -3492,7 +3492,7 @@ footer{
 /* ── MOBILE LIVE MARKETS STRIP (replaces hidden right-bar) ── */
 .mobile-markets-strip{display:none}
 
-@media(max-width:900px){
+@media(max-width:900px),(min-width:901px) and (max-width:1366px) and (pointer:coarse){
   /* Topbar: brand left, right section hidden, hamburger far right */
   .top-menu-items{display:none!important}  /* hide desktop menu items */
   .mobile-menu-btn{display:flex}
@@ -3508,7 +3508,7 @@ footer{
   }
 }
 
-@media(max-width:900px){
+@media(max-width:900px),(min-width:901px) and (max-width:1366px) and (pointer:coarse){
   /* Full-screen mobile dropdown from hamburger.
      Use 100dvh so the menu doesn't overflow when iOS Safari adjusts its UI. */
   .top-menu-items.mobile-open{
@@ -3590,8 +3590,9 @@ footer{
   /* footer responsive handled in .footer-main media queries */
 }
 
-/* ── TABLET — restore top menu on iPad widths (768px – 900px) ── */
-@media(min-width:768px) and (max-width:900px){
+/* ── Small non-touch windows (768–900px, mouse) — keep the horizontal top menu.
+   iPads (coarse pointer) are excluded so they use the full mobile hamburger UI. ── */
+@media(min-width:768px) and (max-width:900px) and (pointer:fine){
   .top-menu-items{display:flex!important;overflow-x:auto;scrollbar-width:none;flex:1}
   .top-menu-items::-webkit-scrollbar{display:none}
   .tmenu-btn{padding:0 9px;font-size:11px;letter-spacing:0}
@@ -3632,7 +3633,7 @@ footer{
   .main-content{padding-bottom:72px}
 }
 /* Mobile FAB — bigger touch targets inspired by powerup.money bottom nav */
-@media(max-width:900px){
+@media(max-width:900px),(min-width:901px) and (max-width:1366px) and (pointer:coarse){
   .mobile-fab-bar{gap:8px;padding:8px 12px 10px;border-top:1px solid rgba(255,255,255,.08)}
   .mobile-fab-btn{height:48px;min-width:80px;border-radius:12px;font-size:11px;font-weight:700;gap:4px;flex-direction:column;letter-spacing:.2px}
   .mobile-fab-btn .fab-icon{font-size:18px}
@@ -3643,8 +3644,8 @@ footer{
   height:46px;border-bottom:1px solid var(--border);background:var(--dark2);
   flex-shrink:0;overflow:hidden;
 }
-@media(max-width:900px){.desktop-ticker-strip{display:none}}
-@media(max-width:900px){.layout{height:auto;min-height:calc(100vh - 44px)}.right-bar{top:44px;height:calc(100vh-44px)}}
+@media(max-width:900px),(min-width:901px) and (max-width:1366px) and (pointer:coarse){.desktop-ticker-strip{display:none}}
+@media(max-width:900px),(min-width:901px) and (max-width:1366px) and (pointer:coarse){.layout{height:auto;min-height:calc(100vh - 44px)}.right-bar{top:44px;height:calc(100vh-44px)}}
 
 /* ── RIGHT-BAR AI SIDEBAR ── */
 .rb-ai-messages{
@@ -3832,7 +3833,7 @@ footer{
 /* Responsive breakpoints */
 @media(max-width:1050px){.mkt-sent-hist{display:none}}
 @media(max-width:820px){.mkt-sent-badge{display:none}}
-@media(max-width:680px){.mkt-sent-widget{display:none}.mkt-sent-mobile-bar{display:flex}}
+@media(max-width:680px),(max-width:1366px) and (pointer:coarse){.mkt-sent-widget{display:none}.mkt-sent-mobile-bar{display:flex}}
 /* Day picker strip inside expanded sentiment panel */
 .mkt-sent-day-picker{display:flex;gap:5px;padding:8px 16px;border-bottom:1px solid var(--border)}
 .mkt-sent-day-btn{flex:1;padding:5px 0;border-radius:6px;border:1px solid var(--border2);background:var(--card2);color:var(--text2);font-size:10px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .15s;line-height:1.2}
