@@ -601,7 +601,7 @@
   var TOKEN_KEY="iptv_token", FAV_KEY="iptv_favs", PREF_KEY="iptv_prefs", PAGE=150;
 
   var state={
-    token:sessionStorage.getItem(TOKEN_KEY)||null,
+    token:localStorage.getItem(TOKEN_KEY)||null,
     provider:null, providersList:[], channels:[], filtered:[], currentChannel:null, currentIndex:-1,
     hls:null, renderCount:PAGE, favs:loadFavs(), prefs:loadPrefs(),
     dim:"country", mode2:"language", langHidden:false,
@@ -701,14 +701,14 @@
       .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d};});})
       .then(function(res){
         if(!res.ok||!res.d.token)throw new Error(res.d&&res.d.error?res.d.error:"Invalid credentials");
-        state.token=res.d.token;sessionStorage.setItem(TOKEN_KEY,state.token);
+        state.token=res.d.token;localStorage.setItem(TOKEN_KEY,state.token);
         msg.className="form-msg ok";msg.textContent="Welcome back.";$("password").value="";
         setTimeout(function(){showProviderScreen();},300);
       })
       .catch(function(err){msg.className="form-msg err";msg.textContent=err.message||"Sign in failed.";})
       .finally(function(){btn.disabled=false;btn.textContent="Sign In";});
   });
-  function logout(){stopPlayback();state.token=null;state.channels=[];state.filtered=[];sessionStorage.removeItem(TOKEN_KEY);show("login-screen");}
+  function logout(){stopPlayback();state.token=null;state.channels=[];state.filtered=[];localStorage.removeItem(TOKEN_KEY);show("login-screen");}
   Array.prototype.forEach.call(document.querySelectorAll("[data-logout]"),function(b){b.addEventListener("click",logout);});
   Array.prototype.forEach.call(document.querySelectorAll("[data-back]"),function(b){b.addEventListener("click",function(){stopPlayback();showProviderScreen();});});
 
