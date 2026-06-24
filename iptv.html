@@ -540,10 +540,6 @@
           <button class="ctrl-btn" id="btn-fs" title="Fullscreen"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7zM5 10h2V7h3V5H5zm12 7h-3v2h5v-5h-2zM14 5v2h3v3h2V5z"/></svg></button>
         </div>
         
-        <!-- Remote Toggle -->
-        <button class="remote-toggle" id="hero-remote-btn" title="Toggle Remote">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="4"/><circle cx="12" cy="7" r="1.4" fill="currentColor"/></svg>
-        </button>
 
       </div>
       
@@ -1042,25 +1038,7 @@
   // We need to inject `populateFilters()` right after channels are fetched.
 
   /* ---------- Filtering ---------- */
-  function hasAnyFilter(){var f=state.filter;return !!(f.country||f.category||f.language||f.search||f.favOnly);}
-  function applyFilters(){
-    var f=state.filter, q=f.search.toLowerCase();
-    if(!hasAnyFilter()){
-      state.filtered=[];$("channel-list").innerHTML="";$("empty-state").style.display="none";
-      $("prompt-state").style.display="block";$("load-more").style.display="none";
-      $("ch-count").textContent=state.channels.length.toLocaleString();renderTags();return;
-    }
-    $("prompt-state").style.display="none";
-    state.filtered=state.channels.filter(function(c){
-      if(f.favOnly&&!state.favs.has(favKey(c)))return false;
-      if(f.country&&c.country!==f.country)return false;
-      if(f.category&&c.category!==f.category)return false;
-      if(f.language&&c.language!==f.language)return false;
-      if(q&&c.name.toLowerCase().indexOf(q)===-1)return false;
-      return true;
-    });
-    state.renderCount=PAGE;renderList();renderTags();
-  }
+  /* removed legacy applyFilters */
   var searchTimer;
   $("search").addEventListener("input",function(){clearTimeout(searchTimer);var v=this.value;searchTimer=setTimeout(function(){state.filter.search=v.trim();applyFilters();},160);});
   $("chip-fav").addEventListener("click",function(){state.filter.favOnly=!state.filter.favOnly;this.classList.toggle("active",state.filter.favOnly);applyFilters();});
