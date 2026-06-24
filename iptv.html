@@ -97,6 +97,23 @@
   .pc-free .provider-badge{background:linear-gradient(135deg,#21c45d,#0f8a3c)} .pc-free{--glow:rgba(33,196,93,.22)}
   .pc-pro .provider-badge{background:linear-gradient(135deg,#f59e0b,#b45309)} .pc-pro{--glow:rgba(245,158,11,.22)}
   .pc-custom .provider-badge{background:linear-gradient(135deg,#7c4dff,#4d2bb8)} .pc-custom{--glow:rgba(124,77,255,.24)}
+  /* ===== PREMIUM HERO (provider screen) ===== */
+  .provider-hero{position:relative;overflow:hidden;border-radius:22px;margin-top:26px;padding:46px 40px;
+    background:linear-gradient(115deg,#0b1020 0%,#171a33 45%,#2a1147 100%);
+    border:1px solid var(--border-strong);box-shadow:var(--shadow)}
+  .provider-hero::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(720px 320px at 88% -25%,rgba(124,77,255,.38),transparent 60%),
+              radial-gradient(520px 280px at -6% 125%,rgba(255,46,46,.16),transparent 55%)}
+  .provider-hero .ph-logo{width:66px;height:66px;border-radius:17px;object-fit:cover;position:relative;
+    box-shadow:0 12px 34px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.12)}
+  .provider-hero h1{font-size:clamp(26px,4vw,40px);font-weight:800;letter-spacing:-.5px;margin:18px 0 8px;position:relative}
+  .provider-hero .ph-tag{color:var(--text-dim);font-size:15px;max-width:560px;line-height:1.55;position:relative}
+  .provider-hero .ph-badges{margin-top:20px;display:flex;gap:8px;flex-wrap:wrap;position:relative}
+  .provider-hero .ph-chip{font-size:11.5px;font-weight:700;letter-spacing:.4px;padding:6px 13px;border-radius:999px;
+    background:rgba(255,255,255,.08);border:1px solid var(--border-strong);color:var(--text)}
+  .provider-hero .ph-chip.live{color:#ff5470;border-color:rgba(255,84,112,.4);background:rgba(255,84,112,.1)}
+  .provider-wrap .grid-label{margin:36px 0 2px;font-size:12.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text-faint)}
+  @media(max-width:560px){ .provider-hero{padding:30px 22px;margin-top:14px} }
 
   /* ===== PLAYER LAYOUT: 4 columns ===== */
   .layout{display:flex;flex-direction:column;height:calc(100vh - var(--topbar-h));overflow:hidden;background:var(--bg)}
@@ -488,8 +505,18 @@
     <div class="topbar-actions"><button class="ghost-btn" data-logout>Sign out</button></div>
   </header>
   <div class="provider-wrap">
-    <h1>Choose a provider</h1>
-    <p class="lead">Select a source to load its channel lineup.</p>
+    <div class="provider-hero">
+      <img class="ph-logo" src="images/vilfintv-logo.jpg" alt="VilfinTV">
+      <h1>VilfinTV — Live TV, reimagined</h1>
+      <p class="ph-tag">Every channel in one premium player. Pick a lineup below and start watching in crisp HD, with live guide and favourites.</p>
+      <div class="ph-badges">
+        <span class="ph-chip live">● LIVE</span>
+        <span class="ph-chip">HD &amp; FHD</span>
+        <span class="ph-chip">EPG Guide</span>
+        <span class="ph-chip">Favourites</span>
+      </div>
+    </div>
+    <div class="grid-label">Browse providers</div>
     <div class="provider-grid">
       <button class="provider-card pc-jio" data-provider="jio"><div class="provider-badge">J</div><h3>Jio IPTV</h3><div class="pc-sub">Load the Jio channel lineup</div><span class="pc-go">Open lineup →</span></button>
       <button class="provider-card pc-airtel" data-provider="airtel"><div class="provider-badge">A</div><h3>Airtel IPTV</h3><div class="pc-sub">Load the Airtel channel lineup</div><span class="pc-go">Open lineup →</span></button>

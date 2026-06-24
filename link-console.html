@@ -1017,7 +1017,23 @@
     </div>
 
     <!-- ══ LINKS TAB ══ -->
+    <style>
+      .agent-note{margin:14px 0 18px;border:1px solid rgba(124,77,255,.32);border-radius:10px;background:rgba(124,77,255,.06)}
+      .agent-note>summary{cursor:pointer;padding:11px 15px;font-weight:700;color:#b9a7ff;list-style:none;user-select:none;font-size:13px}
+      .agent-note>summary::-webkit-details-marker{display:none}
+      .agent-note>summary::before{content:"🤖  ";}
+      .agent-note .an-body{padding:2px 15px 14px;line-height:1.65;font-size:12.5px;color:#c9c9da}
+      .agent-note code{background:rgba(0,0,0,.4);padding:1px 6px;border-radius:5px;color:#e8e3ff;font-size:11.5px;font-family:'JetBrains Mono',monospace}
+      .agent-note b.an-rule{color:#ffcf70}
+      .agent-note .an-host{color:#7fe0a8}
+    </style>
     <div class="c-panel" id="tab-links">
+      <details class="agent-note"><summary>How the agent updates Links</summary><div class="an-body">
+        Key needs the <b>operator</b> scope. Host: <span class="an-host">https://screener-proxy.vilfintv.workers.dev</span><br>
+        • <b>Add one link:</b> <code>POST /api/post-link</code> body <code>{ "url":"https://…","name":"…","description":"…","days":30 }</code><br>
+        • <b>Replace all:</b> <code>POST /api/update-links</code> body <code>{ "links":[ … ] }</code><br>
+        <b class="an-rule">Rule:</b> for "replace all", first <code>GET https://vilfintv.com/links.json</code>, modify, then POST the FULL array back — or you wipe existing links.
+      </div></details>
       <div class="console-body">
 
         <!-- Left: Post new link -->
@@ -1068,6 +1084,12 @@
 
     <!-- ══ CONTENT POSTS TAB ══ -->
     <div class="c-panel active" id="tab-content">
+      <details class="agent-note"><summary>How the agent posts News here</summary><div class="an-body">
+        Key needs the <b>publish</b> scope (+ <b>edit</b>/<b>delete</b> for those). Host: <span class="an-host">https://screener-proxy.vilfintv.workers.dev</span><br>
+        • <b>Publish:</b> <code>POST /api/agent/publish</code> body <code>{ "section":"&lt;code&gt;","heading":"…","story":"&lt;p&gt;…&lt;/p&gt;","photo":"https://…","days":30,"youtube":"https://youtube.com/watch?v=ID","youtube_play":true }</code><br>
+        • <b>Edit:</b> same endpoint + <code>"id":"&lt;story id&gt;"</code> &nbsp;·&nbsp; <b>Delete:</b> <code>POST /api/agent/delete</code> <code>{ "id":"…" }</code><br>
+        <b class="an-rule">Rules:</b> <code>section</code> = an exact code from the dropdown above. <code>story</code> = clean HTML only (<code>&lt;p&gt; &lt;h2&gt; &lt;strong&gt; &lt;ul&gt;&lt;li&gt; &lt;a&gt;</code>) — no inline styles, no base64 images. Upload images first via <code>POST /api/upload-image</code> and put the returned URL in <code>photo</code>.
+      </div></details>
       <div class="content-body">
 
         <!-- Left: Publish new post -->
@@ -1195,6 +1217,11 @@
     <!-- ══ HOME PAGE TAB ══ -->
     <div class="c-panel" id="tab-homepage">
 
+      <details class="agent-note"><summary>How the agent updates the Home Page</summary><div class="an-body">
+        Key needs the <b>operator</b> scope. Host: <span class="an-host">https://screener-proxy.vilfintv.workers.dev</span><br>
+        • <b>Save:</b> <code>POST /api/update-config</code> body <code>{ "config": { …whole modified object… } }</code><br>
+        <b class="an-rule">Rule:</b> first <code>GET https://vilfintv.com/config.json</code>, change only the fields you need, then POST the FULL config object back — sending a partial config wipes the rest of the home-page settings.
+      </div></details>
       <!-- Sub-tab bar -->
       <div class="hp-subtabs">
         <div class="hp-stab active" data-stab="yt"      onclick="switchHomeTab('yt')">📺 YouTube Channels</div>
@@ -1510,6 +1537,11 @@
 
     <!-- ══ STORIES TAB ══ -->
     <div class="c-panel" id="tab-stories">
+      <details class="agent-note"><summary>How the agent posts Stories here</summary><div class="an-body">
+        Key needs the <b>publish</b> scope. Host: <span class="an-host">https://screener-proxy.vilfintv.workers.dev</span><br>
+        • Same as News: <code>POST /api/agent/publish</code> with <code>{ "section":"story_…","heading":"…","story":"&lt;p&gt;…&lt;/p&gt;","photo":"https://…","days":30 }</code>; edit with <code>"id"</code>, delete via <code>POST /api/agent/delete</code>.<br>
+        <b class="an-rule">Rule:</b> use a <code>story_*</code> section code (story_triller, story_travel, story_health, story_comedy, story_kids, story_education, story_animation, story_ai). Clean HTML only; upload images via <code>/api/upload-image</code> first.
+      </div></details>
       <div class="content-body">
 
         <!-- Left: Pin a story -->
@@ -1597,7 +1629,13 @@
 
     <!-- ══ ACADEMY TAB ══ -->
     <div class="c-panel" id="tab-academy">
-      
+
+      <details class="agent-note"><summary>How the agent updates Academy (notices + lessons)</summary><div class="an-body">
+        Host: <span class="an-host">https://screener-proxy.vilfintv.workers.dev</span><br>
+        • <b>Notices</b> (publish scope): <code>POST /api/agent/publish</code> with <code>"section":"academy_notice"</code> (or <code>academy_cbse</code> / <code>academy_jlpt</code>) + heading/story.<br>
+        • <b>Lessons</b> (lessons scope): <code>POST /api/agent/lesson</code> body <code>{ "hub":"finlit","lesson":{ "unit":"…","title":"…","lead":"…","points":[…],"qa":[{"q":"…","a":"…"}] } }</code><br>
+        <b class="an-rule">Rule:</b> hubs = finlit finance micro macro ai programming web info career growth. First <code>GET /api/agent/lessons</code> to avoid duplicate titles. Lessons are appended (built-in lessons never change).
+      </div></details>
       <!-- Sub-tab bar -->
       <div class="hp-subtabs">
         <div class="ac-stab hp-stab active" data-stab="notices" onclick="switchAcademyTab('notices')">📢 Notices</div>
@@ -5080,6 +5118,13 @@ var IPTV_PANEL_HTML =
   '<div style="max-width:760px;color:#e2eeff">' +
     '<h2 style="margin:0 0 6px;color:#ffffff">📺 IPTV Console</h2>' +
     '<p style="opacity:.7;margin:0 0 18px;font-size:14px;color:#b9b9cc">Manage viewers\' login credentials for the private IPTV dashboard and tune global playback settings.</p>' +
+    '<details class="agent-note"><summary>How the agent updates IPTV providers</summary><div class="an-body">' +
+      'Key needs the <b>operator</b> scope. Host: <span class="an-host">https://screener-proxy.vilfintv.workers.dev</span> (NOT page-iptv — that\'s the player).<br>' +
+      '1) <code>GET /api/iptv/config</code> → take <code>settings.providers</code> (the full array).<br>' +
+      '2) Add/edit an entry: <code>{ "id":"us_sports","name":"US — Sports","icon":"https://… or a letter","url":"https://… .m3u","epg":"https://… .xml","enabled":true }</code><br>' +
+      '3) <code>POST /api/iptv/settings</code> body <code>{ "settings":{ "sessionHours":8,"defaultProvider":"&lt;an existing id&gt;","providers":[ …FULL array… ] } }</code><br>' +
+      '<b class="an-rule">Rule:</b> this REPLACES the whole list — always send every provider back or you wipe the others. <code>id</code> unique &amp; stable; only use M3U/EPG URLs you are licensed to use.' +
+    '</div></details>' +
     '<div id="iptv-status" style="padding:12px 14px;border:1px solid rgba(255,255,255,.12);border-radius:10px;margin-bottom:20px;font-size:14px;color:#e2eeff">Loading...</div>' +
     '<div id="iptv-accounts-container" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.10);border-radius:12px;padding:18px;margin-bottom:18px;display:none;">' +
       '<h3 style="margin:0 0 14px;font-size:15px;color:#ffffff">Existing Accounts</h3>' +
