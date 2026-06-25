@@ -5197,6 +5197,13 @@ var IPTV_PANEL_HTML =
           '<div style="display:flex;gap:8px;margin-top:8px"><button id="iptv-import-load" style="padding:7px 14px;background:#2563eb;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">Load</button><button id="iptv-import-cancel" style="padding:7px 14px;background:rgba(255,255,255,.08);color:#cfcfe0;border:1px solid rgba(255,255,255,.18);border-radius:7px;font-size:12px;cursor:pointer">Cancel</button><span id="iptv-import-msg" style="font-size:12px;align-self:center"></span></div>' +
         '</div>' +
         '<datalist id="iptv-region-list"></datalist>' +
+        '<div id="iptv-bulk-bar" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:9px 12px;border:1px solid rgba(255,255,255,.1);border-radius:9px;background:rgba(255,255,255,.03)">' +
+          '<label style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:#cfcfe0;cursor:pointer;font-weight:600"><input type="checkbox" id="iptv-sel-all" style="width:16px;height:16px;cursor:pointer"> Select all</label>' +
+          '<span id="iptv-sel-count" style="font-size:12px;color:#8a8a9e">0 selected</span>' +
+          '<span style="flex:1;min-width:8px"></span>' +
+          '<input id="iptv-bulk-region" list="iptv-region-list" placeholder="Region to assign…" style="width:200px;max-width:48vw;padding:7px 10px;background:#0f0f12;border:1px solid rgba(255,255,255,.16);border-radius:8px;color:#fff;font-size:12.5px">' +
+          '<button id="iptv-bulk-apply" style="padding:7px 14px;background:rgba(96,165,250,.16);color:#93c5fd;border:1px solid rgba(96,165,250,.34);border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer">Assign to selected</button>' +
+        '</div>' +
         '<div id="iptv-providers-rows"></div></div>' +
       '<button id="iptv-settings-save" style="margin-top:16px;padding:11px 20px;background:linear-gradient(135deg,#7c4dff,#6b3dff);color:#fff;border:none;border-radius:9px;font-weight:600;font-size:14px;cursor:pointer">Save settings</button>' +
       '<div id="iptv-settings-msg" style="margin-top:10px;font-size:13px;min-height:18px"></div>' +
@@ -5223,6 +5230,12 @@ function _iptvBuildPanel() {
   }
   var expBtn = document.getElementById('iptv-export'); if (expBtn) expBtn.addEventListener('click', _iptvExportBackup);
   var agBtn = document.getElementById('iptv-autogroup'); if (agBtn) agBtn.addEventListener('click', _iptvAutoGroup);
+  var selAllBtn = document.getElementById('iptv-sel-all'); if (selAllBtn) selAllBtn.addEventListener('change', function(){
+    var on = this.checked;
+    Array.prototype.forEach.call(document.querySelectorAll('.iptv-row-sel'), function(cb){ cb.checked = on; });
+    _iptvSelCount();
+  });
+  var bulkBtn = document.getElementById('iptv-bulk-apply'); if (bulkBtn) bulkBtn.addEventListener('click', _iptvBulkApply);
   var impBtn = document.getElementById('iptv-import'); if (impBtn) impBtn.addEventListener('click', function(){ var b=document.getElementById('iptv-import-box'); if(b) b.style.display = (b.style.display==='none'?'block':'none'); });
   var impCancel = document.getElementById('iptv-import-cancel'); if (impCancel) impCancel.addEventListener('click', function(){ var b=document.getElementById('iptv-import-box'); if(b) b.style.display='none'; });
   var impLoad = document.getElementById('iptv-import-load'); if (impLoad) impLoad.addEventListener('click', _iptvImportLoad);
@@ -5295,10 +5308,13 @@ function _iptvBuildProviderRows() {
     var isDefault = (p.id === 'jio' || p.id === 'airtel' || p.id === 'free' || p.id === 'pro' || p.id === 'custom');
     html += '<div style="border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:13px;margin-bottom:10px">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
-        '<label style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:#f4f4f8;cursor:pointer">' +
-          '<input id="iptv-' + p.id + '-enabled" type="checkbox" ' + (p.enabled !== false ? 'checked' : '') + '> ' +
-          '<input id="iptv-' + p.id + '-name" type="text" value="' + esc(p.name || p.label || '') + '" placeholder="Provider Name" style="background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.3);color:#fff;font-size:14px;outline:none;font-weight:bold;width:150px">' +
-        '</label>' +
+        '<div style="display:flex;align-items:center;gap:10px;min-width:0">' +
+          '<input type="checkbox" class="iptv-row-sel" data-id="' + esc(p.id) + '" title="Select for bulk region assign" style="flex:0 0 auto;width:16px;height:16px;cursor:pointer">' +
+          '<label style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:#f4f4f8;cursor:pointer;min-width:0">' +
+            '<input id="iptv-' + p.id + '-enabled" type="checkbox" ' + (p.enabled !== false ? 'checked' : '') + '> ' +
+            '<input id="iptv-' + p.id + '-name" type="text" value="' + esc(p.name || p.label || '') + '" placeholder="Provider Name" style="background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,.3);color:#fff;font-size:14px;outline:none;font-weight:bold;width:150px">' +
+          '</label>' +
+        '</div>' +
         (!isDefault ? '<button onclick="_iptvDeleteProvider(' + i + ')" style="padding:4px 8px;background:rgba(255,77,77,.15);color:#ff8888;border:1px solid rgba(255,77,77,.3);border-radius:4px;font-size:11px;cursor:pointer">Delete</button>' : '') +
       '</div>' +
       '<div style="display:flex;gap:10px;flex-wrap:wrap">' +
@@ -5322,6 +5338,30 @@ function _iptvBuildProviderRows() {
     '</div>';
   });
   host.innerHTML = html || '<div style="opacity:.6;font-size:13px">No providers yet. Click “+ Add new provider”.</div>';
+  // Bulk-select: bind row checkboxes + reset the select-all/count after each rebuild.
+  Array.prototype.forEach.call(host.querySelectorAll('.iptv-row-sel'), function(cb){ cb.addEventListener('change', _iptvSelCount); });
+  var selAll = document.getElementById('iptv-sel-all'); if (selAll) selAll.checked = false;
+  _iptvSelCount();
+}
+
+function _iptvSelCount() {
+  var n = document.querySelectorAll('.iptv-row-sel:checked').length;
+  var el = document.getElementById('iptv-sel-count'); if (el) el.textContent = n + ' selected';
+}
+// Assign one region to every checked provider at once.
+function _iptvBulkApply() {
+  _iptvSyncRows(); // keep any in-progress row edits
+  var region = (document.getElementById('iptv-bulk-region') || {}).value || '';
+  region = region.trim();
+  var picked = {};
+  Array.prototype.forEach.call(document.querySelectorAll('.iptv-row-sel:checked'), function(cb){ picked[cb.getAttribute('data-id')] = true; });
+  var ids = Object.keys(picked);
+  var msg = document.getElementById('iptv-settings-msg');
+  if (!ids.length) { if (msg) msg.innerHTML = '<span style="color:#ffb37a">Tick some providers first (or “Select all”).</span>'; return; }
+  var n = 0;
+  IPTV_PROVIDER_LIST.forEach(function(p){ if (picked[p.id]) { p.region = region; n++; } });
+  _iptvBuildProviderRows();
+  if (msg) msg.innerHTML = '<span style="color:#93c5fd">Set region “' + esc(region || '(none)') + '” on ' + n + ' provider' + (n===1?'':'s') + '. Review, then Save settings.</span>';
 }
 
 // Sync the visible row inputs back into IPTV_PROVIDER_LIST (called before save/export/regroup).

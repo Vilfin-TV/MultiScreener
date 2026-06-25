@@ -200,7 +200,7 @@
   .player-placeholder .pp-ico{font-size:46px;margin-bottom:12px;opacity:.5}
   .controls{position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;align-items:center;gap:8px;padding:14px 12px 10px;
     background:linear-gradient(to top,rgba(0,0,0,.82),rgba(0,0,0,0));flex-wrap:wrap;opacity:0;transition:opacity var(--t-fast)}
-  .player-stage:hover .controls,.controls.pinned{opacity:1}
+  .video-col:hover .controls,.controls.pinned{opacity:1}
   .ctrl-btn{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:#fff;transition:background var(--t-fast),transform var(--t-fast)}
   .ctrl-btn:hover{background:rgba(255,255,255,.14)} .ctrl-btn:active{transform:scale(.92)}
   .ctrl-btn svg{width:20px;height:20px} .ctrl-btn.play svg{width:24px;height:24px}
@@ -527,8 +527,15 @@
   @media (max-width:1000px){
     .tb-ext{display:none}              /* hide cross-site links; keep core controls uncrowded */
     .topbar .brand #dash-provider-name{max-width:42vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .player-hero{flex-direction:column!important;height:auto!important;padding:10px clamp(10px,2.5vw,16px)!important}
+    .layout{height:auto;overflow:visible}                /* let the page scroll so the video can stick */
+    /* Mobile-app style: the video + its control bar pin under the topbar while
+       the channel list scrolls beneath — no floating up/down. */
+    .player-hero{flex-direction:column!important;height:auto!important;padding:8px clamp(10px,2.5vw,16px)!important;
+      position:sticky;top:var(--topbar-h);z-index:40;background:var(--bg);box-shadow:0 10px 20px -12px rgba(0,0,0,.6)}
     .player-stage{width:100%;aspect-ratio:16/9;max-height:46vh}
+    /* Controls move OUT of the video, into a solid bar directly below it. */
+    .controls{position:static;opacity:1!important;background:var(--surface-2);border:1px solid var(--border);border-top:none;
+      border-radius:0 0 14px 14px;padding:9px 10px;margin-top:-2px}
     .content-shelf{overflow:visible}
     .channel-track{overflow:visible;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px}
     .remote-panel{width:100%}
@@ -538,7 +545,10 @@
   @media (max-width:560px){
     .now-card{grid-template-columns:1fr;text-align:center}
     .now-card .nl{margin:0 auto}
-    .vol-slider{width:60px}
+    /* compact single-row control bar on phones (slider hidden; mute stays) */
+    .controls{flex-wrap:nowrap;gap:5px;padding:8px 10px}
+    .controls .vol-slider{display:none}
+    .ctrl-btn{width:36px;height:36px}
     .player-stage{max-height:none}
     .channel-track{grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:10px;padding:12px 12px 22px}
     .cat-row .ch-card{flex:0 0 122px;width:122px}
@@ -618,10 +628,12 @@
 
     <div class="layout">
     <div class="player-hero" style="display:flex; flex-direction:row; gap:10px; padding:10px; height: 50vh;">
-      <div class="player-stage" id="video-shell" style="flex:1; position:relative;">
+      <div class="video-col" style="flex:1; min-width:0; position:relative; display:flex; flex-direction:column;">
+      <div class="player-stage" id="video-shell" style="position:relative;">
         <video id="video" playsinline></video>
         <div class="player-placeholder" id="player-placeholder"><div><div class="pp-ico">▶️</div>Select a channel to start watching</div></div>
         <div class="video-loading" id="video-loading"><div><div class="spinner"></div><span>Loading stream…</span></div></div>
+      </div>
         <div class="controls" id="controls">
           <button class="ctrl-btn" id="btn-prev" title="Previous"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM9.5 12l8.5 6V6z"/></svg></button>
           <button class="ctrl-btn play" id="btn-play" title="Play/Pause"><svg id="icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg id="icon-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button>
@@ -1085,12 +1097,16 @@ function __iptvBoot(){
   $("lang-search").addEventListener("input",function(){renderLangList(this.value);});
 
   function hasAnyFilter(){var f=state.filter;return !!(f.country||f.category||f.language||f.search||f.favOnly);}
+  function _hasCategory(name){var n=name.toLowerCase();return state.channels.some(function(c){return (c.category||"").toLowerCase()===n;});}
 
   function applyDefaults(){
     var p=state.prefs||{};
     state.dim=(p.dim==="category")?"category":"country";
     if(p.country) state.filter.country=p.country;
-    if(p.category) state.filter.category=p.category;
+    // Default the category to News when the lineup has one (per request); ignore any
+    // stale saved category so it never sticks on e.g. Movies.
+    if(state.prefs && state.prefs.category){ delete state.prefs.category; savePrefs(); }
+    state.filter.category = _hasCategory("News") ? "News" : "";
     if(p.language) state.filter.language=p.language;
     $("dim-country").classList.toggle("active",state.dim==="country");
     $("dim-category").classList.toggle("active",state.dim==="category");
