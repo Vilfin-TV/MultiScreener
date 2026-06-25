@@ -123,6 +123,67 @@ function json(obj, status = 200, extraHeaders = {}) {
 
 const enc = new TextEncoder();
 
+/* ------------------------- m3u security / sanitizing -------------------------
+ * Lightweight guards run server-side BEFORE any channel reaches the browser, and
+ * on every proxied stream request. Purpose:
+ *   - SSRF: stop a hostile playlist from pointing stream/logo URLs at internal
+ *     hosts (localhost, RFC1918, link-local 169.254.x, cloud metadata, IPv6 ULA).
+ *   - Injection: strip control chars / angle brackets and cap field lengths so
+ *     channel metadata can't smuggle markup or absurd payloads to the front-end.
+ *   - DoS: cap channels per playlist.
+ * The heavy pass (parseM3U) runs once per fetch and is KV-cached ~30 min, so the
+ * cost is amortised to ~zero; the per-stream check is a couple of string ops.
+ * ---------------------------------------------------------------------------- */
+const MAX_CHANNELS_PER_PLAYLIST = 20000;
+
+function _hostIsBlocked(host) {
+  host = (host || "").toLowerCase().replace(/^\[|\]$/g, ""); // strip IPv6 [..]
+  if (!host) return true;
+  if (host === "localhost" || host.endsWith(".localhost") ||
+      host.endsWith(".local") || host.endsWith(".internal") ||
+      host === "metadata.google.internal") return true;
+  // IPv4 literal → block loopback / private / link-local / CGNAT / metadata.
+  const m = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (m) {
+    const a = +m[1], b = +m[2];
+    if (a === 0 || a === 127 || a === 10) return true;
+    if (a === 169 && b === 254) return true;       // link-local + 169.254.169.254 metadata
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT
+    return false;
+  }
+  // IPv6 literal → block loopback / unique-local (fc00::/7) / link-local (fe80::/10).
+  if (host.indexOf(":") !== -1) {
+    if (host === "::1" || host === "::") return true;
+    if (/^f[cd][0-9a-f]{2}:/.test(host)) return true;
+    if (/^fe[89ab][0-9a-f]:/.test(host)) return true;
+    return false;
+  }
+  return false; // ordinary hostname — allowed (cannot cheaply resolve in a Worker)
+}
+
+function _isSafeStreamUrl(u) {
+  if (!u) return false;
+  let url;
+  try { url = new URL(u); } catch (e) { return false; }
+  if (url.protocol !== "http:" && url.protocol !== "https:") return false;
+  return !_hostIsBlocked(url.hostname);
+}
+
+function _sanitizeText(s, maxLen) {
+  s = String(s == null ? "" : s);
+  let out = "";
+  for (let i = 0; i < s.length; i++) {
+    const cc = s.charCodeAt(i);
+    if (cc < 32 || cc === 127 || cc === 60 || cc === 62) continue; // strip control chars + < >
+    out += s[i];
+  }
+  out = out.trim();
+  if (maxLen && out.length > maxLen) out = out.slice(0, maxLen);
+  return out;
+}
+
 function b64urlEncode(bytes) {
   let bin = "";
   const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
@@ -559,6 +620,10 @@ async function handleStream(request, env, url) {
   if (upstreamUrl.protocol !== "http:" && upstreamUrl.protocol !== "https:") {
     return json({ error: "Unsupported protocol" }, 400);
   }
+  // SECURITY (SSRF): never let the proxy reach loopback/private/link-local/metadata hosts.
+  if (_hostIsBlocked(upstreamUrl.hostname)) {
+    return json({ error: "Blocked host" }, 403);
+  }
 
   // Forward only the headers a media relay legitimately needs.
   const fwdHeaders = new Headers();
@@ -630,6 +695,7 @@ function parseM3U(raw) {
   let cur = null;
 
   for (let i = 0; i < lines.length; i++) {
+    if (channels.length >= MAX_CHANNELS_PER_PLAYLIST) break;
     const line = lines[i].trim();
     if (!line) continue;
 
@@ -646,7 +712,20 @@ function parseM3U(raw) {
     } else if (line.startsWith("#EXTGRP") && cur) {
       cur.category = line.split(":")[1] ? line.split(":")[1].trim() : cur.category;
     } else if (!line.startsWith("#")) {
-      if (cur) { cur.url = line; channels.push(cur); cur = null; }
+      if (cur) {
+        cur.url = line.trim();
+        // SECURITY: only expose channels with a safe http(s), non-internal stream
+        // URL; sanitize every text field; drop unsafe logo URLs.
+        if (_isSafeStreamUrl(cur.url)) {
+          cur.name = _sanitizeText(cur.name, 180) || "Unknown channel";
+          cur.id = _sanitizeText(cur.id, 120);
+          cur.category = _sanitizeText(cur.category, 80) || "General";
+          cur.language = _sanitizeText(cur.language, 60);
+          cur.logo = _isSafeStreamUrl(cur.logo) ? cur.logo : "";
+          channels.push(cur);
+        }
+        cur = null;
+      }
     }
   }
   return channels;
