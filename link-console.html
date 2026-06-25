@@ -5187,9 +5187,15 @@ var IPTV_PANEL_HTML =
       '<div style="margin-top:18px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px"><div style="font-size:12px;color:#b9b9cc;flex:1;min-width:200px">Per-provider sources — set a <b>Region</b> (groups it under that menu in the player), a Playlist (M3U) URL and optional EPG (XMLTV) URL.</div>' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
           '<button id="iptv-export" title="Download a JSON backup + copy it to clipboard" style="padding:6px 12px;background:rgba(77,219,138,.12);color:#7fe0a8;border:1px solid rgba(77,219,138,.32);border-radius:6px;font-size:12px;cursor:pointer">⤓ Export / Backup</button>' +
+          '<button id="iptv-import" title="Paste an exported/regrouped JSON to load it (then review + Save)" style="padding:6px 12px;background:rgba(96,165,250,.14);color:#93c5fd;border:1px solid rgba(96,165,250,.32);border-radius:6px;font-size:12px;cursor:pointer">⤒ Import / Restore</button>' +
           '<button id="iptv-autogroup" title="Suggest a Region for each source from its name" style="padding:6px 12px;background:rgba(124,77,255,.14);color:#b9a7ff;border:1px solid rgba(124,77,255,.32);border-radius:6px;font-size:12px;cursor:pointer">✨ Auto-group by name</button>' +
           '<button id="iptv-add-provider" style="padding:6px 12px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:6px;font-size:12px;cursor:pointer">+ Add new provider</button>' +
         '</div></div>' +
+        '<div id="iptv-import-box" style="display:none;margin:0 0 12px;border:1px solid rgba(96,165,250,.3);border-radius:10px;padding:12px;background:rgba(96,165,250,.05)">' +
+          '<div style="font-size:12px;color:#b9b9cc;margin-bottom:8px">Paste an exported or re-grouped providers JSON (accepts the Export format, a <code>{settings:…}</code> object, or a raw <code>providers[]</code> array), then <b>Load</b> → review the grouped rows → <b>Save settings</b>.</div>' +
+          '<textarea id="iptv-import-text" placeholder="Paste JSON here…" style="width:100%;min-height:120px;background:#0f0f12;border:1px solid rgba(255,255,255,.16);border-radius:8px;color:#fff;font-size:12px;font-family:monospace;padding:10px;box-sizing:border-box"></textarea>' +
+          '<div style="display:flex;gap:8px;margin-top:8px"><button id="iptv-import-load" style="padding:7px 14px;background:#2563eb;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">Load</button><button id="iptv-import-cancel" style="padding:7px 14px;background:rgba(255,255,255,.08);color:#cfcfe0;border:1px solid rgba(255,255,255,.18);border-radius:7px;font-size:12px;cursor:pointer">Cancel</button><span id="iptv-import-msg" style="font-size:12px;align-self:center"></span></div>' +
+        '</div>' +
         '<datalist id="iptv-region-list"></datalist>' +
         '<div id="iptv-providers-rows"></div></div>' +
       '<button id="iptv-settings-save" style="margin-top:16px;padding:11px 20px;background:linear-gradient(135deg,#7c4dff,#6b3dff);color:#fff;border:none;border-radius:9px;font-weight:600;font-size:14px;cursor:pointer">Save settings</button>' +
@@ -5217,6 +5223,9 @@ function _iptvBuildPanel() {
   }
   var expBtn = document.getElementById('iptv-export'); if (expBtn) expBtn.addEventListener('click', _iptvExportBackup);
   var agBtn = document.getElementById('iptv-autogroup'); if (agBtn) agBtn.addEventListener('click', _iptvAutoGroup);
+  var impBtn = document.getElementById('iptv-import'); if (impBtn) impBtn.addEventListener('click', function(){ var b=document.getElementById('iptv-import-box'); if(b) b.style.display = (b.style.display==='none'?'block':'none'); });
+  var impCancel = document.getElementById('iptv-import-cancel'); if (impCancel) impCancel.addEventListener('click', function(){ var b=document.getElementById('iptv-import-box'); if(b) b.style.display='none'; });
+  var impLoad = document.getElementById('iptv-import-load'); if (impLoad) impLoad.addEventListener('click', _iptvImportLoad);
   document.getElementById('iptv-cred-save').addEventListener('click', saveIptvCredentials);
   document.getElementById('iptv-settings-save').addEventListener('click', saveIptvSettings);
 }
@@ -5358,6 +5367,42 @@ function _iptvExportBackup() {
   }
   var msg = document.getElementById('iptv-settings-msg');
   if (msg) msg.innerHTML = '<span style="color:#7fe0a8">Backup downloaded + copied to clipboard (' + IPTV_PROVIDER_LIST.length + ' providers).</span>';
+}
+
+// Load a pasted providers JSON (Export format, {settings:…}, or a raw providers[] array)
+// into the editor. Does NOT save — the user reviews then clicks Save settings.
+function _iptvImportLoad() {
+  var ta = document.getElementById('iptv-import-text');
+  var msg = document.getElementById('iptv-import-msg');
+  var setMsg = function(t, ok){ if(msg){ msg.textContent = t; msg.style.color = ok ? '#7fe0a8' : '#ff8a8a'; } };
+  var raw = (ta && ta.value || '').trim();
+  if (!raw) { setMsg('Paste some JSON first.', false); return; }
+  var data;
+  try { data = JSON.parse(raw); } catch (e) { setMsg('Invalid JSON: ' + e.message, false); return; }
+  var s = data.settings || data;
+  var provs = Array.isArray(s) ? s : (Array.isArray(s.providers) ? s.providers : null);
+  if (!provs) { setMsg('No providers[] found in that JSON.', false); return; }
+  IPTV_PROVIDER_LIST = provs.map(function(p, i){
+    return {
+      id: (p.id || ('prov_' + Math.random().toString(36).substr(2,9))).toString(),
+      name: (p.name || p.label || 'Unnamed').toString(),
+      icon: (p.icon || '').toString(),
+      region: (p.region || '').toString(),
+      url: (p.url || '').toString(),
+      epg: (p.epg || '').toString(),
+      enabled: p.enabled !== false
+    };
+  });
+  if (s.sessionHours) { var sh = document.getElementById('iptv-session-hours'); if (sh) sh.value = parseInt(s.sessionHours,10) || 8; }
+  _iptvBuildProviderRows();
+  // refresh the default-provider dropdown to the imported ids
+  var dp = document.getElementById('iptv-default-provider');
+  if (dp) {
+    dp.innerHTML = IPTV_PROVIDER_LIST.map(function(p){ return '<option value="' + esc(p.id) + '">' + esc(p.name) + '</option>'; }).join('');
+    if (s.defaultProvider && IPTV_PROVIDER_LIST.some(function(p){return p.id===s.defaultProvider;})) dp.value = s.defaultProvider;
+  }
+  var withRegion = IPTV_PROVIDER_LIST.filter(function(p){ return (p.region||'').trim(); }).length;
+  setMsg('Loaded ' + IPTV_PROVIDER_LIST.length + ' providers (' + withRegion + ' with a region). Review below, then Save settings.', true);
 }
 
 // Suggest a Region for every source from its name (only fills blanks unless forced).
