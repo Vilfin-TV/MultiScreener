@@ -182,27 +182,30 @@ async function loadSettings(env) {
   if (!raw) return base;
   try {
     const s = JSON.parse(raw);
-    const providers = defaultProviders();
-    
-    if (s.providers) {
-      const provList = Array.isArray(s.providers) ? s.providers : Object.values(s.providers);
-      for (const saved of provList) {
-        if (!saved || !saved.id) continue;
-        const p = saved.id;
-        providers[p] = {
-          name: saved.name || p,
-          icon: saved.icon !== undefined ? String(saved.icon || "").trim() : (providers[p] ? providers[p].icon || "" : ""),
-          region: saved.region !== undefined ? String(saved.region || "").trim() : (providers[p] ? providers[p].region || "" : ""),
-          enabled: saved.enabled === undefined ? (providers[p] ? providers[p].enabled : true) : !!saved.enabled,
-          url: saved.url !== undefined ? String(saved.url || "").trim() : (providers[p] ? providers[p].url : ""),
-          epg: saved.epg !== undefined ? String(saved.epg || "").trim() : (providers[p] ? providers[p].epg : ""),
-        };
-      }
+    const provList = s.providers ? (Array.isArray(s.providers) ? s.providers : Object.values(s.providers)) : [];
+    const hasSaved = provList.some((x) => x && x.id);
+    // When the admin has configured a provider list, use ONLY that list — don't
+    // re-seed the built-in jio/airtel/free/pro/custom defaults (so they can be
+    // removed/renamed for good). Fall back to defaults only when nothing is saved.
+    const providers = hasSaved ? {} : defaultProviders();
+
+    for (const saved of provList) {
+      if (!saved || !saved.id) continue;
+      const p = saved.id;
+      const prev = providers[p] || {};
+      providers[p] = {
+        name: saved.name || p,
+        icon: saved.icon !== undefined ? String(saved.icon || "").trim() : (prev.icon || ""),
+        region: saved.region !== undefined ? String(saved.region || "").trim() : (prev.region || ""),
+        enabled: saved.enabled === undefined ? (prev.enabled !== undefined ? prev.enabled : true) : !!saved.enabled,
+        url: saved.url !== undefined ? String(saved.url || "").trim() : (prev.url || ""),
+        epg: saved.epg !== undefined ? String(saved.epg || "").trim() : (prev.epg || ""),
+      };
     }
-    
+
     return {
       sessionHours: Math.max(1, Math.min(168, parseInt(s.sessionHours, 10) || DEFAULT_SESSION_HOURS)),
-      defaultProvider: providers[s.defaultProvider] ? s.defaultProvider : "free",
+      defaultProvider: providers[s.defaultProvider] ? s.defaultProvider : (Object.keys(providers)[0] || "free"),
       providers,
     };
   } catch (e) {
