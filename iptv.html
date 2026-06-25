@@ -97,6 +97,13 @@
   .pc-free .provider-badge{background:linear-gradient(135deg,#21c45d,#0f8a3c)} .pc-free{--glow:rgba(33,196,93,.22)}
   .pc-pro .provider-badge{background:linear-gradient(135deg,#f59e0b,#b45309)} .pc-pro{--glow:rgba(245,158,11,.22)}
   .pc-custom .provider-badge{background:linear-gradient(135deg,#7c4dff,#4d2bb8)} .pc-custom{--glow:rgba(124,77,255,.24)}
+  .pc-region .provider-badge{background:linear-gradient(135deg,#2563eb,#7c3aed);font-size:26px} .pc-region{--glow:rgba(99,102,241,.26)}
+  .pc-allregion .provider-badge{background:linear-gradient(135deg,#059669,#0ea5e9);font-size:24px} .pc-allregion{--glow:rgba(14,165,233,.26)}
+  .pc-allregion{border-color:var(--border-strong)}
+  .grid-label .region-back{font-size:12px;font-weight:700;letter-spacing:.4px;color:var(--accent-2);cursor:pointer;
+    background:var(--surface-2);border:1px solid var(--border-strong);border-radius:20px;padding:6px 12px;text-transform:none;transition:var(--t-fast)}
+  .grid-label .region-back:hover{color:#fff;border-color:var(--accent)}
+  .grid-label .region-crumb{margin-left:12px;color:var(--text);font-size:13px;font-weight:700;text-transform:none;letter-spacing:0}
   /* ===== PREMIUM HERO (provider screen) ===== */
   .provider-hero{position:relative;overflow:hidden;border-radius:22px;margin-top:26px;padding:46px 40px;
     background:linear-gradient(115deg,#0b1020 0%,#171a33 45%,#2a1147 100%);
@@ -682,6 +689,7 @@ function __iptvBoot(){
     login:WORKER+"/api/login",
     config:WORKER+"/api/settings",
     playlist:function(p){return WORKER+"/api/playlist?provider="+encodeURIComponent(p);},
+    region:function(r){return WORKER+"/api/playlist?region="+encodeURIComponent(r);},
     stream:function(u,t){return WORKER+"/api/stream?token="+encodeURIComponent(t)+"&url="+encodeURIComponent(u);},
     epg:function(p,c){return WORKER+"/api/epg?provider="+encodeURIComponent(p)+"&channel="+encodeURIComponent(c);}
   };
@@ -691,7 +699,7 @@ function __iptvBoot(){
     token:localStorage.getItem(TOKEN_KEY)||null,
     provider:null, providersList:[], channels:[], filtered:[], currentChannel:null, currentIndex:-1,
     hls:null, renderCount:PAGE, favs:loadFavs(), prefs:loadPrefs(),
-    dim:"country", mode2:"language", langHidden:false, view:"rows",
+    dim:"country", mode2:"language", langHidden:false, view:"rows", regionView:null,
     filter:{country:"",category:"",language:"",search:"",favOnly:false}
   };
   if(state.prefs && (state.prefs.view==="rows"||state.prefs.view==="grid")) state.view=state.prefs.view;
@@ -745,26 +753,137 @@ function __iptvBoot(){
           ];
         }
         state.providersList = provs;
-        grid.innerHTML = provs.map(function(p) {
-          if (p.enabled === false) return '';
-          var badgeContent = p.icon;
-          if (!badgeContent) badgeContent = p.name ? p.name.charAt(0) : 'P';
-          var isImg = badgeContent.indexOf('http') === 0;
-          var badgeHtml = isImg ? '<img src="'+esc(badgeContent)+'" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">' : esc(badgeContent);
-          
-          return '<button class="provider-card pc-custom" data-provider="'+esc(p.id)+'">' +
-                 '<div class="provider-badge">'+badgeHtml+'</div>' +
-                 '<h3>'+esc(p.name)+'</h3>' +
-                 '<div class="pc-sub">Load the '+esc(p.name)+' lineup</div>' +
-                 '<span class="pc-go">Open lineup →</span></button>';
-        }).join('');
-        Array.prototype.forEach.call(grid.querySelectorAll(".provider-card"), function(card) {
-          card.addEventListener("click", function() { loadProvider(card.getAttribute("data-provider")); });
-        });
+        renderProviderBrowse();
       })
       .catch(function(err){
         if(err.message==="AUTH"){toast("Session expired. Sign in again.",true);logout();return;}
         grid.innerHTML = '<div style="color:var(--danger);grid-column:1/-1;">Failed to load providers: ' + esc(err.message) + '</div>';
+      });
+  }
+
+  /* ---- Two-level provider browse: regions → sources (+ "All region") ---- */
+  function _provRegion(p){ return String(p && p.region || "").trim(); }
+  function _enabledProvs(){ return (state.providersList||[]).filter(function(p){return p.enabled!==false;}); }
+  function _regionEmoji(r){
+    var k=(r||"").toLowerCase();
+    if(k.indexOf("india")!==-1)return "🇮🇳";
+    if(k.indexOf("middle")!==-1||k.indexOf("arab")!==-1||k.indexOf("gulf")!==-1)return "🕌";
+    if(k.indexOf("asia")!==-1)return "🌏";
+    if(k.indexOf("north america")!==-1)return "🗽";
+    if(k.indexOf("latin")!==-1)return "💃";
+    if(k.indexOf("south america")!==-1)return "🌎";
+    if(k.indexOf("europe")!==-1)return "🇪🇺";
+    if(k.indexOf("sport")!==-1||k.indexOf("fifa")!==-1)return "🏆";
+    if(k.indexOf("premium")!==-1)return "👑";
+    if(k.indexOf("world")!==-1||k.indexOf("global")!==-1)return "🌐";
+    if(k.indexOf("australia")!==-1||k.indexOf("oceania")!==-1||k.indexOf("zealand")!==-1)return "🦘";
+    if(k.indexOf("africa")!==-1)return "🌍";
+    if(k.indexOf("russia")!==-1)return "🇷🇺";
+    return "📡";
+  }
+  function providerBadgeHtml(p){
+    var b=p.icon; if(!b)b=p.name?p.name.charAt(0):'P';
+    var isImg=String(b).indexOf('http')===0;
+    return isImg ? '<img src="'+esc(b)+'" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">' : esc(b);
+  }
+  function providerCardHtml(p){
+    return '<button class="provider-card pc-custom" data-provider="'+esc(p.id)+'">' +
+      '<div class="provider-badge">'+providerBadgeHtml(p)+'</div>' +
+      '<h3>'+esc(p.name)+'</h3>' +
+      '<div class="pc-sub">Open the '+esc(p.name)+' lineup</div>' +
+      '<span class="pc-go">Open lineup →</span></button>';
+  }
+  function _bindProviderCards(grid){
+    Array.prototype.forEach.call(grid.querySelectorAll(".provider-card[data-provider]"),function(c){
+      c.addEventListener("click",function(){loadProvider(c.getAttribute("data-provider"));});
+    });
+  }
+  // Region list (top level). Falls back to a flat provider grid when no provider
+  // carries a region (full backward compatibility).
+  function renderProviderBrowse(){
+    var grid=document.querySelector(".provider-grid");
+    var label=document.querySelector(".grid-label");
+    if(!grid)return;
+    state.regionView=null;
+    var provs=_enabledProvs();
+    var regions={}, order=[];
+    provs.forEach(function(p){var r=_provRegion(p);if(!r)return;if(!regions[r]){regions[r]=[];order.push(r);}regions[r].push(p);});
+    var ungrouped=provs.filter(function(p){return !_provRegion(p);});
+    if(order.length===0){
+      if(label)label.textContent="Browse providers";
+      grid.innerHTML=provs.map(providerCardHtml).join('') || '<div style="color:var(--text-dim);grid-column:1/-1;">No providers configured.</div>';
+      _bindProviderCards(grid);
+      return;
+    }
+    order.sort(function(a,b){return regions[b].length-regions[a].length || a.localeCompare(b);});
+    if(label)label.textContent="Browse by region";
+    var html=order.map(function(r){
+      var n=regions[r].length;
+      return '<button class="provider-card pc-region" data-region="'+esc(r)+'">'+
+        '<div class="provider-badge">'+esc(_regionEmoji(r))+'</div>'+
+        '<h3>'+esc(r)+'</h3>'+
+        '<div class="pc-sub">'+n+' source'+(n>1?'s':'')+' — tap to browse</div>'+
+        '<span class="pc-go">Open region →</span></button>';
+    }).join('');
+    if(ungrouped.length) html+=ungrouped.map(providerCardHtml).join('');
+    grid.innerHTML=html;
+    Array.prototype.forEach.call(grid.querySelectorAll(".provider-card[data-region]"),function(c){
+      c.addEventListener("click",function(){renderRegionProviders(c.getAttribute("data-region"));});
+    });
+    _bindProviderCards(grid);
+  }
+  // One region's sources (sub level) + an "All region" merged card.
+  function renderRegionProviders(region){
+    var grid=document.querySelector(".provider-grid");
+    var label=document.querySelector(".grid-label");
+    if(!grid)return;
+    state.regionView=region;
+    var list=_enabledProvs().filter(function(p){return _provRegion(p)===region;});
+    if(label)label.innerHTML='<button class="region-back" id="region-back">← All regions</button><span class="region-crumb">'+esc(_regionEmoji(region))+' '+esc(region)+'</span>';
+    var html='<button class="provider-card pc-allregion" data-region-all="'+esc(region)+'">'+
+      '<div class="provider-badge">▦</div>'+
+      '<h3>All '+esc(region)+'</h3>'+
+      '<div class="pc-sub">Every source combined &amp; filterable</div>'+
+      '<span class="pc-go">Open all →</span></button>';
+    html+=list.map(providerCardHtml).join('');
+    grid.innerHTML=html;
+    var back=document.getElementById("region-back");
+    if(back)back.addEventListener("click",function(){renderProviderBrowse();});
+    var allc=grid.querySelector(".provider-card[data-region-all]");
+    if(allc)allc.addEventListener("click",function(){loadRegion(region);});
+    _bindProviderCards(grid);
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+  function resetChannelState(){
+    state.channels=[];state.filtered=[];state.currentChannel=null;state.currentIndex=-1;
+    state.filter={country:"",category:"",language:"",search:"",favOnly:false};
+    $("channel-list").innerHTML="";$("ch-count").textContent="…";
+    $("prompt-state").style.display="block";$("empty-state").style.display="none";
+    $("dim-list").innerHTML='<div class="col-empty">Loading…</div>';
+    $("lang-list").innerHTML='<div class="col-empty">Loading…</div>';
+  }
+  // Load every source in a region as one merged, filterable lineup.
+  function loadRegion(region){
+    if(!state.token){logout();return;}
+    var list=_enabledProvs().filter(function(p){return _provRegion(p)===region;});
+    state.provider=(list[0]&&list[0].id)||region; // best-effort EPG context
+    $("dash-provider-name").textContent="All "+region;
+    show("player-screen");
+    resetChannelState();
+    toast("Combining "+list.length+" sources…");
+    fetch(API.region(region),{headers:{"Authorization":"Bearer "+state.token}})
+      .then(function(r){if(r.status===401)throw new Error("AUTH");return r.json().then(function(d){return{ok:r.ok,d:d};});})
+      .then(function(res){
+        if(!res.ok)throw new Error(res.d&&res.d.error?res.d.error:"Failed to load region");
+        var listc=Array.isArray(res.d)?res.d:(res.d.channels||[]);
+        state.channels=listc.map(normalizeChannel);
+        applyDefaults();populateFilters();applyFilters();
+        toast(state.channels.length.toLocaleString()+" channels across "+(res.d.sources||list.length)+" sources.");
+      })
+      .catch(function(err){
+        if(err.message==="AUTH"){toast("Session expired. Sign in again.",true);logout();return;}
+        toast(err.message||"Could not load this region.",true);
+        $("ch-count").textContent="0";
       });
   }
   var toastT;

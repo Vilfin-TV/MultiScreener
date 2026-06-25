@@ -191,6 +191,8 @@ async function loadSettings(env) {
         const p = saved.id;
         providers[p] = {
           name: saved.name || p,
+          icon: saved.icon !== undefined ? String(saved.icon || "").trim() : (providers[p] ? providers[p].icon || "" : ""),
+          region: saved.region !== undefined ? String(saved.region || "").trim() : (providers[p] ? providers[p].region || "" : ""),
           enabled: saved.enabled === undefined ? (providers[p] ? providers[p].enabled : true) : !!saved.enabled,
           url: saved.url !== undefined ? String(saved.url || "").trim() : (providers[p] ? providers[p].url : ""),
           epg: saved.epg !== undefined ? String(saved.epg || "").trim() : (providers[p] ? providers[p].epg : ""),
@@ -383,26 +385,15 @@ async function handleSettings(request, env, url) {
   return json({ settings });
 }
 
-async function handlePlaylist(request, env, url) {
-  const auth = await requireAuth(request, env, url);
-  if (!auth) return json({ error: "Unauthorized" }, 401);
-
-  const provider = (url.searchParams.get("provider") || "").toLowerCase();
-  const settings = await loadSettings(env);
-  if (!settings.providers[provider]) return json({ error: "Invalid provider" }, 400);
-
-  const pconf = settings.providers[provider] || {};
-  if (pconf.enabled === false) return json({ error: "Provider is disabled" }, 403);
-
+/** Fetch the raw M3U text for one provider id (remote URL w/ KV cache, then
+ *  synced {id}_playlist fallback). Returns "" when nothing is available. */
+async function loadProviderRaw(env, providerId, pconf) {
   const kv = env.IPTV_PLAYLIST_KV;
-  if (!kv) return json({ error: "Playlist store not configured" }, 503);
-
+  if (!kv) return "";
   let raw = "";
-  const srcUrl = (pconf.url || "").trim();
-
-  // 1) Remote URL (with short-lived KV cache to respect Worker limits).
+  const srcUrl = (pconf && pconf.url || "").trim();
   if (srcUrl) {
-    const cacheKey = "cache_playlist_" + provider;
+    const cacheKey = "cache_playlist_" + providerId;
     raw = (await kv.get(cacheKey)) || "";
     if (!raw) {
       try {
@@ -414,13 +405,33 @@ async function handlePlaylist(request, env, url) {
           }
         }
       } catch (e) {
-        console.warn("Failed to fetch playlist URL for " + provider + ": " + e);
+        console.warn("Failed to fetch playlist URL for " + providerId + ": " + e);
       }
     }
   }
+  if (!raw) raw = (await kv.get(providerId + "_playlist")) || "";
+  return raw;
+}
 
-  // 2) Fall back to the synced KV playlist ({provider}_playlist).
-  if (!raw) raw = (await kv.get(provider + "_playlist")) || "";
+async function handlePlaylist(request, env, url) {
+  const auth = await requireAuth(request, env, url);
+  if (!auth) return json({ error: "Unauthorized" }, 401);
+
+  // Region merge mode: ?region=<region> combines every provider in that region.
+  if (url.searchParams.get("region")) return handleRegionPlaylist(request, env, url);
+
+  const provider = (url.searchParams.get("provider") || "").toLowerCase();
+  const settings = await loadSettings(env);
+  if (!settings.providers[provider]) return json({ error: "Invalid provider" }, 400);
+
+  const pconf = settings.providers[provider] || {};
+  if (pconf.enabled === false) return json({ error: "Provider is disabled" }, 403);
+
+  const kv = env.IPTV_PLAYLIST_KV;
+  if (!kv) return json({ error: "Playlist store not configured" }, 503);
+
+  const srcUrl = (pconf.url || "").trim();
+  const raw = await loadProviderRaw(env, provider, pconf);
 
   if (!raw) {
     return json({ error: srcUrl ? "Could not load playlist from the configured URL." : "No playlist configured for this provider." }, 404);
@@ -428,6 +439,58 @@ async function handlePlaylist(request, env, url) {
 
   const channels = parseM3U(raw);
   return json({ provider, count: channels.length, epg: (pconf.epg || ""), channels });
+}
+
+// Cap how many sources we merge / channels we return for one region, to stay
+// within Worker subrequest & response limits and keep it fast.
+const REGION_MAX_SOURCES = 40;
+const REGION_MAX_CHANNELS = 8000;
+const REGION_CACHE_TTL = 900; // 15 min for the merged result
+
+/** ?region=<region> — merge every enabled provider tagged with that region into
+ *  one channel list (deduped by stream URL). Cached briefly per region. */
+async function handleRegionPlaylist(request, env, url) {
+  const region = (url.searchParams.get("region") || "").trim();
+  if (!region) return json({ error: "Missing region" }, 400);
+  const settings = await loadSettings(env);
+  const kv = env.IPTV_PLAYLIST_KV;
+
+  const members = Object.keys(settings.providers)
+    .map((id) => Object.assign({ id }, settings.providers[id]))
+    .filter((p) => p.enabled !== false && String(p.region || "").trim() === region);
+  if (!members.length) return json({ error: "No sources in this region" }, 404);
+
+  const cacheKey = "cache_region_" + region;
+  if (kv) {
+    const cached = await kv.get(cacheKey);
+    if (cached) {
+      try { const obj = JSON.parse(cached); return json(obj); } catch (e) {}
+    }
+  }
+
+  const seen = Object.create(null);
+  const channels = [];
+  let used = 0;
+  for (const p of members.slice(0, REGION_MAX_SOURCES)) {
+    const raw = await loadProviderRaw(env, p.id, p);
+    if (!raw) continue;
+    used++;
+    const list = parseM3U(raw);
+    for (const ch of list) {
+      const key = ch.url;
+      if (!key || seen[key]) continue;
+      seen[key] = 1;
+      channels.push(ch);
+      if (channels.length >= REGION_MAX_CHANNELS) break;
+    }
+    if (channels.length >= REGION_MAX_CHANNELS) break;
+  }
+
+  const out = { region, sources: used, count: channels.length, epg: "", channels };
+  if (kv && channels.length) {
+    try { await kv.put(cacheKey, JSON.stringify(out), { expirationTtl: REGION_CACHE_TTL }); } catch (e) {}
+  }
+  return json(out);
 }
 
 /**
