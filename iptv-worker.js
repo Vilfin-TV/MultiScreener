@@ -196,6 +196,7 @@ async function loadSettings(env) {
       providers[p] = {
         name: saved.name || p,
         icon: saved.icon !== undefined ? String(saved.icon || "").trim() : (prev.icon || ""),
+        group: saved.group !== undefined ? String(saved.group || "").trim() : (prev.group || ""),
         region: saved.region !== undefined ? String(saved.region || "").trim() : (prev.region || ""),
         enabled: saved.enabled === undefined ? (prev.enabled !== undefined ? prev.enabled : true) : !!saved.enabled,
         url: saved.url !== undefined ? String(saved.url || "").trim() : (prev.url || ""),

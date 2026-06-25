@@ -98,6 +98,7 @@
   .pc-pro .provider-badge{background:linear-gradient(135deg,#f59e0b,#b45309)} .pc-pro{--glow:rgba(245,158,11,.22)}
   .pc-custom .provider-badge{background:linear-gradient(135deg,#7c4dff,#4d2bb8)} .pc-custom{--glow:rgba(124,77,255,.24)}
   .pc-region .provider-badge{background:linear-gradient(135deg,#2563eb,#7c3aed);font-size:26px} .pc-region{--glow:rgba(99,102,241,.26)}
+  .pc-group .provider-badge{background:linear-gradient(135deg,#7c4dff,#2563eb);font-size:28px} .pc-group{--glow:rgba(124,77,255,.28)}
   .pc-allregion .provider-badge{background:linear-gradient(135deg,#059669,#0ea5e9);font-size:24px} .pc-allregion{--glow:rgba(14,165,233,.26)}
   .pc-allregion{border-color:var(--border-strong)}
   .grid-label .region-back{font-size:12px;font-weight:700;letter-spacing:.4px;color:var(--accent-2);cursor:pointer;
@@ -671,6 +672,7 @@
         <button class="filter-chip active" id="view-rows" title="Browse by category rows">▦ Rows</button>
         <button class="filter-chip" id="view-grid" title="All channels in one grid">▤ Grid</button>
         <div style="width:1px;background:var(--border-strong);margin:0 4px;"></div>
+        <select id="sel-provider" title="Pick a source in this group" style="display:none;background:var(--accent-soft);border:1px solid var(--accent);color:var(--text);border-radius:20px;padding:8px 14px;outline:none;font-weight:600;"><option value="">All Sources</option></select>
         <select id="sel-country" style="background:var(--surface-2);border:1px solid var(--border-strong);color:var(--text);border-radius:20px;padding:8px 14px;outline:none;"><option value="">All Countries</option></select>
         <select id="sel-category" style="background:var(--surface-2);border:1px solid var(--border-strong);color:var(--text);border-radius:20px;padding:8px 14px;outline:none;"><option value="">All Categories</option></select>
         <select id="sel-language" style="background:var(--surface-2);border:1px solid var(--border-strong);color:var(--text);border-radius:20px;padding:8px 14px;outline:none;"><option value="">All Languages</option></select>
@@ -712,7 +714,7 @@ function __iptvBoot(){
     token:localStorage.getItem(TOKEN_KEY)||null,
     provider:null, providersList:[], channels:[], filtered:[], currentChannel:null, currentIndex:-1,
     hls:null, renderCount:PAGE, favs:loadFavs(), prefs:loadPrefs(),
-    dim:"country", mode2:"language", langHidden:false, view:"rows", regionView:null,
+    dim:"country", mode2:"language", langHidden:false, view:"rows", regionView:null, group:null,
     filter:{country:"",category:"",language:"",search:"",favOnly:false}
   };
   if(state.prefs && (state.prefs.view==="rows"||state.prefs.view==="grid")) state.view=state.prefs.view;
@@ -811,39 +813,71 @@ function __iptvBoot(){
       c.addEventListener("click",function(){loadProvider(c.getAttribute("data-provider"));});
     });
   }
-  // Region list (top level). Falls back to a flat provider grid when no provider
-  // carries a region (full backward compatibility).
+  function _provGroup(p){ return String(p && p.group || "").trim(); }
+  function _groupEmoji(g){
+    var k=(g||"").toLowerCase();
+    if(k.indexOf("samsung")!==-1)return "📱";
+    if(k.indexOf("premium")!==-1)return "👑";
+    if(k.indexOf("free")!==-1)return "🆓";
+    if(k.indexOf("other")!==-1)return "📦";
+    return "📺";
+  }
+  // Top-level browse: the few GROUP buckets (Free / Premium / Samsung / Others).
+  // Falls back to a flat provider grid when no provider carries a group.
   function renderProviderBrowse(){
     var grid=document.querySelector(".provider-grid");
     var label=document.querySelector(".grid-label");
     if(!grid)return;
-    state.regionView=null;
+    state.regionView=null; state.group=null;
     var provs=_enabledProvs();
-    var regions={}, order=[];
-    provs.forEach(function(p){var r=_provRegion(p);if(!r)return;if(!regions[r]){regions[r]=[];order.push(r);}regions[r].push(p);});
-    var ungrouped=provs.filter(function(p){return !_provRegion(p);});
+    var groups={}, order=[];
+    provs.forEach(function(p){var g=_provGroup(p);if(!g)return;if(!groups[g]){groups[g]=[];order.push(g);}groups[g].push(p);});
+    var ungrouped=provs.filter(function(p){return !_provGroup(p);});
     if(order.length===0){
       if(label)label.textContent="Browse providers";
       grid.innerHTML=provs.map(providerCardHtml).join('') || '<div style="color:var(--text-dim);grid-column:1/-1;">No providers configured.</div>';
       _bindProviderCards(grid);
       return;
     }
-    order.sort(function(a,b){return regions[b].length-regions[a].length || a.localeCompare(b);});
-    if(label)label.textContent="Browse by region";
-    var html=order.map(function(r){
-      var n=regions[r].length;
-      return '<button class="provider-card pc-region" data-region="'+esc(r)+'">'+
-        '<div class="provider-badge">'+esc(_regionEmoji(r))+'</div>'+
-        '<h3>'+esc(r)+'</h3>'+
-        '<div class="pc-sub">'+n+' source'+(n>1?'s':'')+' — tap to browse</div>'+
-        '<span class="pc-go">Open region →</span></button>';
+    var PREF=["Free IPTV","Premium IPTV","Samsung IPTV","Others"];
+    order.sort(function(a,b){
+      var ia=PREF.indexOf(a), ib=PREF.indexOf(b);
+      if(ia!==-1||ib!==-1){ if(ia===-1)return 1; if(ib===-1)return -1; return ia-ib; }
+      return groups[b].length-groups[a].length || a.localeCompare(b);
+    });
+    if(label)label.textContent="Choose a lineup";
+    var html=order.map(function(g){
+      var n=groups[g].length;
+      return '<button class="provider-card pc-group" data-group="'+esc(g)+'">'+
+        '<div class="provider-badge">'+esc(_groupEmoji(g))+'</div>'+
+        '<h3>'+esc(g)+'</h3>'+
+        '<div class="pc-sub">'+n+' source'+(n>1?'s':'')+' — tap to open</div>'+
+        '<span class="pc-go">Open →</span></button>';
     }).join('');
     if(ungrouped.length) html+=ungrouped.map(providerCardHtml).join('');
     grid.innerHTML=html;
-    Array.prototype.forEach.call(grid.querySelectorAll(".provider-card[data-region]"),function(c){
-      c.addEventListener("click",function(){renderRegionProviders(c.getAttribute("data-region"));});
+    Array.prototype.forEach.call(grid.querySelectorAll(".provider-card[data-group]"),function(c){
+      c.addEventListener("click",function(){openGroup(c.getAttribute("data-group"));});
     });
     _bindProviderCards(grid);
+  }
+  // Open a group: fill the Provider filter with its sources, default to India,
+  // and load it (category then defaults to News via applyDefaults).
+  function openGroup(group){
+    if(!state.token){logout();return;}
+    state.group=group;
+    var list=_enabledProvs().filter(function(p){return _provGroup(p)===group;});
+    var sp=document.getElementById("sel-provider");
+    if(sp){
+      sp.innerHTML=list.map(function(p){return '<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>';}).join('');
+      sp.style.display = list.length>1 ? '' : 'none';
+    }
+    var def=null;
+    for(var i=0;i<list.length;i++){ if(/india/i.test(list[i].name)||list[i].id==="in"){def=list[i];break;} }
+    if(!def) def=list[0];
+    if(!def){ show("player-screen"); toast("No sources in this group yet.",true); return; }
+    if(sp) sp.value=def.id;
+    loadProvider(def.id);
   }
   // One region's sources (sub level) + an "All region" merged card.
   function renderRegionProviders(region){
@@ -940,7 +974,8 @@ function __iptvBoot(){
     state.provider=provider;
     var L={jio:"Jio IPTV",airtel:"Airtel IPTV",free:"Free IPTV",pro:"IPTV Pro",custom:"Custom"};
     var provObj = state.providersList.find(function(p){ return p.id === provider; });
-    $("dash-provider-name").textContent = provObj ? provObj.name : (L[provider]||"VilfinTV IPTV");
+    $("dash-provider-name").textContent = (state.group ? state.group + " · " : "") + (provObj ? provObj.name : (L[provider]||"VilfinTV IPTV"));
+    var _sp=document.getElementById("sel-provider"); if(_sp && _sp.options.length) _sp.value=provider;
     show("player-screen");
     state.channels=[];state.filtered=[];state.currentChannel=null;state.currentIndex=-1;
     state.filter={country:"",category:"",language:"",search:"",favOnly:false};
@@ -1152,6 +1187,7 @@ function __iptvBoot(){
     document.getElementById("search-new").value = state.filter.search || "";
   }
   
+  (function(){ var sp=document.getElementById("sel-provider"); if(sp) sp.addEventListener("change", function(){ if(this.value) loadProvider(this.value); }); })();
   document.getElementById("sel-country").addEventListener("change", function(){ state.filter.country = this.value; applyFilters(); });
   document.getElementById("sel-category").addEventListener("change", function(){ state.filter.category = this.value; applyFilters(); });
   document.getElementById("sel-language").addEventListener("change", function(){ state.filter.language = this.value; applyFilters(); });

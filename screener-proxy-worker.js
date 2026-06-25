@@ -1192,6 +1192,7 @@ ${body.text}`;
             id: (p.id || '').toString().trim() || 'prov_' + Math.random().toString(36).substr(2, 9),
             name: (p.name || 'Unnamed').toString().trim(),
             icon: (p.icon || '').toString().trim(),
+            group: (p.group || '').toString().trim(),
             region: (p.region || '').toString().trim(),
             enabled: p.enabled === undefined ? true : !!p.enabled,
             url: (p.url || '').toString().trim(),
