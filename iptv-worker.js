@@ -484,6 +484,8 @@ async function handlePlaylist(request, env, url) {
 
   // Region merge mode: ?region=<region> combines every provider in that region.
   if (url.searchParams.get("region")) return handleRegionPlaylist(request, env, url);
+  // Multi-source merge: ?providers=a,b,c  or  ?all=1  (dedup duplicate m3u URLs).
+  if (url.searchParams.get("providers") || url.searchParams.get("all")) return handleMergePlaylist(request, env, url);
 
   const provider = (url.searchParams.get("provider") || "").toLowerCase();
   const settings = await loadSettings(env);
@@ -555,6 +557,72 @@ async function handleRegionPlaylist(request, env, url) {
   if (kv && channels.length) {
     try { await kv.put(cacheKey, JSON.stringify(out), { expirationTtl: REGION_CACHE_TTL }); } catch (e) {}
   }
+  return json(out);
+}
+
+const MERGE_MAX_SOURCES = 60;
+const MERGE_MAX_CHANNELS = 15000;
+function _shortHash(s) { let h = 0; for (let i = 0; i < s.length; i++) { h = ((h << 5) - h + s.charCodeAt(i)) | 0; } return (h >>> 0).toString(36); }
+
+/** ?providers=a,b,c  or  ?all=1 — merge the selected sources into one list.
+ *  Duplicate m3u URLs are removed at the source level (so the same playlist is
+ *  never fetched/listed twice). Channels are kept even when names repeat across
+ *  different sources (only EXACT same stream URL is de-duplicated); each channel
+ *  is tagged with `source`. Fetches run in parallel and the merge is cached. */
+async function handleMergePlaylist(request, env, url) {
+  const settings = await loadSettings(env);
+  const kv = env.IPTV_PLAYLIST_KV;
+  const all = url.searchParams.get("all");
+  let ids;
+  if (all) {
+    ids = Object.keys(settings.providers).filter((id) => settings.providers[id].enabled !== false);
+  } else {
+    ids = (url.searchParams.get("providers") || "").split(",").map((s) => s.trim()).filter(Boolean)
+      .filter((id) => settings.providers[id] && settings.providers[id].enabled !== false);
+  }
+  if (!ids.length) return json({ error: "No valid sources selected" }, 400);
+
+  // Source-level dedup: drop providers whose m3u URL was already included.
+  const seenUrl = Object.create(null);
+  const members = [];
+  for (const id of ids) {
+    const p = Object.assign({ id }, settings.providers[id]);
+    const u = String(p.url || "").trim().toLowerCase();
+    if (u) { if (seenUrl[u]) continue; seenUrl[u] = 1; }
+    members.push(p);
+    if (members.length >= MERGE_MAX_SOURCES) break;
+  }
+
+  const cacheKey = "cache_merge_" + (all ? "all" : _shortHash(members.map((p) => p.id).sort().join(",")));
+  if (kv) {
+    const cached = await kv.get(cacheKey);
+    if (cached) { try { return json(JSON.parse(cached)); } catch (e) {} }
+  }
+
+  // Fetch every source's raw m3u in parallel (each is itself KV-cached).
+  const raws = await Promise.all(members.map((p) => loadProviderRaw(env, p.id, p).catch(() => "")));
+
+  const seenStream = Object.create(null);
+  const channels = [];
+  let used = 0;
+  for (let i = 0; i < members.length; i++) {
+    const raw = raws[i];
+    if (!raw) continue;
+    used++;
+    const list = parseM3U(raw);
+    for (const ch of list) {
+      const key = ch.url;
+      if (!key || seenStream[key]) continue; // drop only EXACT same stream
+      seenStream[key] = 1;
+      ch.source = members[i].name || members[i].id;
+      channels.push(ch);
+      if (channels.length >= MERGE_MAX_CHANNELS) break;
+    }
+    if (channels.length >= MERGE_MAX_CHANNELS) break;
+  }
+
+  const out = { sources: used, requested: ids.length, count: channels.length, epg: "", channels };
+  if (kv && channels.length) { try { await kv.put(cacheKey, JSON.stringify(out), { expirationTtl: REGION_CACHE_TTL }); } catch (e) {} }
   return json(out);
 }
 

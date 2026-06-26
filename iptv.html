@@ -99,6 +99,21 @@
   .pc-custom .provider-badge{background:linear-gradient(135deg,#7c4dff,#4d2bb8)} .pc-custom{--glow:rgba(124,77,255,.24)}
   .pc-region .provider-badge{background:linear-gradient(135deg,#2563eb,#7c3aed);font-size:26px} .pc-region{--glow:rgba(99,102,241,.26)}
   .pc-group .provider-badge{background:linear-gradient(135deg,#7c4dff,#2563eb);font-size:28px} .pc-group{--glow:rgba(124,77,255,.28)}
+  .pc-iptv .provider-badge{background:linear-gradient(135deg,#7c4dff,#1d4ed8);font-size:30px} .pc-iptv{--glow:rgba(124,77,255,.30)}
+  /* Sources multi-select panel */
+  .sources-panel{margin:8px clamp(12px,3vw,26px) 0;border:1px solid var(--border-strong);border-radius:14px;background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
+  .sources-panel .src-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:11px 14px;border-bottom:1px solid var(--border)}
+  .sources-panel .src-head strong{font-size:13px;letter-spacing:.4px;color:var(--text)}
+  .sources-list{max-height:230px;overflow-y:auto;padding:10px 14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px 14px}
+  .src-opt{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-dim);cursor:pointer;min-width:0}
+  .src-opt span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .src-opt input{width:15px;height:15px;flex:0 0 auto;cursor:pointer}
+  .src-opt.src-all{font-weight:700;color:var(--text)}
+  /* tiny hide checkbox under each channel card */
+  .ch-card .hide-cb{position:absolute;bottom:6px;right:8px;display:inline-flex;align-items:center;opacity:.45;transition:var(--t-fast)}
+  .ch-card:hover .hide-cb,.ch-card .hide-cb input:checked{opacity:1}
+  .ch-card .hide-cb input{width:13px;height:13px;cursor:pointer;accent-color:var(--danger)}
+  .stack-sec .cat-head h3{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .pc-allregion .provider-badge{background:linear-gradient(135deg,#059669,#0ea5e9);font-size:24px} .pc-allregion{--glow:rgba(14,165,233,.26)}
   .pc-allregion{border-color:var(--border-strong)}
   .grid-label .region-back{font-size:12px;font-weight:700;letter-spacing:.4px;color:var(--accent-2);cursor:pointer;
@@ -636,9 +651,11 @@
         <div class="video-loading" id="video-loading"><div><div class="spinner"></div><span>Loading stream…</span></div></div>
       </div>
         <div class="controls" id="controls">
-          <button class="ctrl-btn" id="btn-prev" title="Previous"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM9.5 12l8.5 6V6z"/></svg></button>
+          <button class="ctrl-btn" id="btn-up" title="Previous channel (up)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8l-6 6h12z"/></svg></button>
+          <button class="ctrl-btn" id="btn-prev" title="Previous source (left)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM9.5 12l8.5 6V6z"/></svg></button>
           <button class="ctrl-btn play" id="btn-play" title="Play/Pause"><svg id="icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg id="icon-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button>
-          <button class="ctrl-btn" id="btn-next" title="Next"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg></button>
+          <button class="ctrl-btn" id="btn-next" title="Next source (right)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg></button>
+          <button class="ctrl-btn" id="btn-down" title="Next channel (down)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 16l6-6H6z"/></svg></button>
           <div class="vol-group">
             <button class="ctrl-btn" id="btn-mute" title="Mute"><svg id="icon-vol" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9z"/></svg><svg id="icon-mute" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M3 9v6h4l5 5V4L7 9zm13.7-1.3-1.4 1.4L17 11l-1.7 1.9 1.4 1.4L18.4 12l1.7 1.7 1.4-1.4L19.8 10.6 21.5 8.7l-1.4-1.4L18.4 9z"/></svg></button>
             <input type="range" class="vol-slider" id="vol-slider" min="0" max="1" step="0.01" value="1" aria-label="Volume"/>
@@ -669,17 +686,33 @@
         <button class="filter-chip active" id="chip-all">All Channels</button>
         <button class="filter-chip" id="chip-fav-new">★ Favorites</button>
         <div style="width:1px;background:var(--border-strong);margin:0 4px;"></div>
-        <button class="filter-chip active" id="view-rows" title="Browse by category rows">▦ Rows</button>
-        <button class="filter-chip" id="view-grid" title="All channels in one grid">▤ Grid</button>
+        <button class="filter-chip" id="btn-sources" title="Choose which m3u sources to show">📋 Sources</button>
+        <div style="width:1px;background:var(--border-strong);margin:0 4px;"></div>
+        <button class="filter-chip active" id="view-stack" title="Stacked — each channel on its own line, duplicates across">▤ Stacked</button>
+        <button class="filter-chip" id="view-grid" title="All channels in one grid">▦ Grid</button>
+        <button class="filter-chip" id="view-rows" title="Browse by category rows" style="display:none">Rows</button>
+        <button class="filter-chip" id="chip-restore" title="Restore channels you hid" style="display:none">↺ Restore</button>
         <div style="width:1px;background:var(--border-strong);margin:0 4px;"></div>
         <select id="sel-provider" title="Pick a source in this group" style="display:none;background:var(--accent-soft);border:1px solid var(--accent);color:var(--text);border-radius:20px;padding:8px 14px;outline:none;font-weight:600;"><option value="">All Sources</option></select>
         <select id="sel-country" style="background:var(--surface-2);border:1px solid var(--border-strong);color:var(--text);border-radius:20px;padding:8px 14px;outline:none;"><option value="">All Countries</option></select>
         <select id="sel-category" style="background:var(--surface-2);border:1px solid var(--border-strong);color:var(--text);border-radius:20px;padding:8px 14px;outline:none;"><option value="">All Categories</option></select>
         <select id="sel-language" style="background:var(--surface-2);border:1px solid var(--border-strong);color:var(--text);border-radius:20px;padding:8px 14px;outline:none;"><option value="">All Languages</option></select>
         <div style="flex:1"></div>
-        <input type="text" id="search-new" placeholder="Search channels..." style="background:var(--bg);border:1px solid var(--border-strong);color:var(--text);border-radius:20px;padding:8px 16px;outline:none;width:180px;">
+        <input type="text" id="search-new" placeholder="Search channels…" style="background:var(--bg);border:1px solid var(--border-strong);color:var(--text);border-radius:20px;padding:8px 16px;outline:none;width:180px;">
       </div>
-      
+
+      <div id="sources-panel" class="sources-panel" style="display:none;">
+        <div class="src-head">
+          <strong>Sources</strong>
+          <label class="src-opt src-all"><input type="checkbox" id="src-selall"><span>Select all</span></label>
+          <span id="src-count" style="font-size:12px;color:var(--text-faint)">0 selected</span>
+          <span style="flex:1"></span>
+          <button class="filter-chip" id="src-apply">Apply</button>
+          <button class="filter-chip" id="src-close">✕</button>
+        </div>
+        <div id="sources-list" class="sources-list"></div>
+      </div>
+
       <div class="channel-track-wrap">
         <button class="track-btn left" id="track-left" style="display:none;"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg></button>
         <div class="channel-track" id="channel-list-new"></div>
@@ -705,19 +738,24 @@ function __iptvBoot(){
     config:WORKER+"/api/settings",
     playlist:function(p){return WORKER+"/api/playlist?provider="+encodeURIComponent(p);},
     region:function(r){return WORKER+"/api/playlist?region="+encodeURIComponent(r);},
+    merge:function(ids){return WORKER+"/api/playlist?providers="+encodeURIComponent(ids.join(","));},
+    all:WORKER+"/api/playlist?all=1",
     stream:function(u,t){return WORKER+"/api/stream?token="+encodeURIComponent(t)+"&url="+encodeURIComponent(u);},
     epg:function(p,c){return WORKER+"/api/epg?provider="+encodeURIComponent(p)+"&channel="+encodeURIComponent(c);}
   };
-  var TOKEN_KEY="iptv_token", FAV_KEY="iptv_favs", PREF_KEY="iptv_prefs", PAGE=150;
+  var TOKEN_KEY="iptv_token", FAV_KEY="iptv_favs", PREF_KEY="iptv_prefs", HIDDEN_KEY="iptv_hidden", PAGE=150;
+  function loadHidden(){try{return new Set(JSON.parse(localStorage.getItem(HIDDEN_KEY)||"[]"));}catch(e){return new Set();}}
+  function saveHidden(){try{localStorage.setItem(HIDDEN_KEY,JSON.stringify(Array.from(state.hidden)));}catch(e){}}
 
   var state={
     token:localStorage.getItem(TOKEN_KEY)||null,
     provider:null, providersList:[], channels:[], filtered:[], currentChannel:null, currentIndex:-1,
-    hls:null, renderCount:PAGE, favs:loadFavs(), prefs:loadPrefs(),
-    dim:"country", mode2:"language", langHidden:false, view:"rows", regionView:null, group:null,
+    hls:null, renderCount:PAGE, favs:loadFavs(), hidden:loadHidden(), prefs:loadPrefs(),
+    dim:"country", mode2:"language", langHidden:false, view:"stack", regionView:null, group:null,
+    selectedSources:[], stackRows:[], curRow:-1, curCol:-1,
     filter:{country:"",category:"",language:"",search:"",favOnly:false}
   };
-  if(state.prefs && (state.prefs.view==="rows"||state.prefs.view==="grid")) state.view=state.prefs.view;
+  if(state.prefs && (state.prefs.view==="rows"||state.prefs.view==="grid"||state.prefs.view==="stack")) state.view=state.prefs.view;
 
   /* category → emoji icon */
   var CAT_ICON={news:"📰",movies:"🎬",movie:"🎬",sports:"🏆",sport:"🏆",music:"🎵",kids:"🧸",
@@ -824,42 +862,87 @@ function __iptvBoot(){
   }
   // Top-level browse: the few GROUP buckets (Free / Premium / Samsung / Others).
   // Falls back to a flat provider grid when no provider carries a group.
+  // Single "IPTV" entry — opens the player where every source can be picked.
   function renderProviderBrowse(){
     var grid=document.querySelector(".provider-grid");
     var label=document.querySelector(".grid-label");
     if(!grid)return;
     state.regionView=null; state.group=null;
-    var provs=_enabledProvs();
-    var groups={}, order=[];
-    provs.forEach(function(p){var g=_provGroup(p);if(!g)return;if(!groups[g]){groups[g]=[];order.push(g);}groups[g].push(p);});
-    var ungrouped=provs.filter(function(p){return !_provGroup(p);});
-    if(order.length===0){
-      if(label)label.textContent="Browse providers";
-      grid.innerHTML=provs.map(providerCardHtml).join('') || '<div style="color:var(--text-dim);grid-column:1/-1;">No providers configured.</div>';
-      _bindProviderCards(grid);
-      return;
-    }
-    var PREF=["Free IPTV","Premium IPTV","Samsung IPTV","Others"];
-    order.sort(function(a,b){
-      var ia=PREF.indexOf(a), ib=PREF.indexOf(b);
-      if(ia!==-1||ib!==-1){ if(ia===-1)return 1; if(ib===-1)return -1; return ia-ib; }
-      return groups[b].length-groups[a].length || a.localeCompare(b);
+    if(label)label.textContent="Your lineup";
+    var n=_uniqueSources().length;
+    grid.innerHTML='<button class="provider-card pc-iptv" data-iptv="1">'+
+      '<div class="provider-badge">📺</div>'+
+      '<h3>IPTV</h3>'+
+      '<div class="pc-sub">'+(n?n+' sources — ':'')+'pick any or all inside</div>'+
+      '<span class="pc-go">Open IPTV →</span></button>';
+    var card=grid.querySelector('.provider-card[data-iptv]');
+    if(card)card.addEventListener("click",function(){openIPTV();});
+  }
+  // Enabled providers, de-duplicated by m3u URL (so the same playlist is listed once).
+  function _uniqueSources(){
+    var seen={}, out=[];
+    _enabledProvs().forEach(function(p){
+      var u=String(p.url||"").trim().toLowerCase();
+      if(u){ if(seen[u])return; seen[u]=1; }
+      out.push(p);
     });
-    if(label)label.textContent="Choose a lineup";
-    var html=order.map(function(g){
-      var n=groups[g].length;
-      return '<button class="provider-card pc-group" data-group="'+esc(g)+'">'+
-        '<div class="provider-badge">'+esc(_groupEmoji(g))+'</div>'+
-        '<h3>'+esc(g)+'</h3>'+
-        '<div class="pc-sub">'+n+' source'+(n>1?'s':'')+' — tap to open</div>'+
-        '<span class="pc-go">Open →</span></button>';
-    }).join('');
-    if(ungrouped.length) html+=ungrouped.map(providerCardHtml).join('');
-    grid.innerHTML=html;
-    Array.prototype.forEach.call(grid.querySelectorAll(".provider-card[data-group]"),function(c){
-      c.addEventListener("click",function(){openGroup(c.getAttribute("data-group"));});
-    });
-    _bindProviderCards(grid);
+    return out;
+  }
+  function openIPTV(){
+    if(!state.token){logout();return;}
+    state.group="IPTV";
+    var srcs=_uniqueSources();
+    var def=null;
+    for(var i=0;i<srcs.length;i++){ if(/india/i.test(srcs[i].name)||srcs[i].id==="in"){def=srcs[i];break;} }
+    if(!def) def=srcs[0];
+    state.selectedSources = def ? [def.id] : [];
+    buildSourcesPanel();
+    show("player-screen");
+    loadSelectedSources();
+  }
+  function _srcCount(){
+    var n=document.querySelectorAll("#sources-list .src-cb:checked").length;
+    var el=document.getElementById("src-count"); if(el)el.textContent=n+" selected";
+    var sa=document.getElementById("src-selall"); var tot=document.querySelectorAll("#sources-list .src-cb").length;
+    if(sa) sa.checked=(n>0 && n===tot);
+  }
+  function buildSourcesPanel(){
+    var host=document.getElementById("sources-list"); if(!host)return;
+    var srcs=_uniqueSources(); var sel={}; state.selectedSources.forEach(function(id){sel[id]=1;});
+    host.innerHTML=srcs.map(function(p){
+      return '<label class="src-opt"><input type="checkbox" class="src-cb" value="'+esc(p.id)+'"'+(sel[p.id]?' checked':'')+'><span>'+esc(p.name)+'</span></label>';
+    }).join('') || '<div style="color:var(--text-faint);font-size:13px;padding:8px">No sources.</div>';
+    Array.prototype.forEach.call(host.querySelectorAll(".src-cb"),function(cb){cb.addEventListener("change",_srcCount);});
+    _srcCount();
+  }
+  function loadSelectedSources(){
+    var ids=(state.selectedSources||[]).slice();
+    if(!ids.length){ toast("Pick at least one source.",true); return; }
+    if(ids.length===1){ loadProvider(ids[0]); return; }
+    loadProviders(ids, ids.length>=_uniqueSources().length);
+  }
+  // Merge several selected sources (or all) into one filterable, duplicate-listing lineup.
+  function loadProviders(ids, isAll){
+    if(!state.token){logout();return;}
+    state.provider=ids[0]||null;
+    $("dash-provider-name").textContent = isAll ? "IPTV · All sources" : ("IPTV · "+ids.length+" sources");
+    show("player-screen");
+    resetChannelState();
+    toast("Combining "+ids.length+" sources…");
+    var u = isAll ? API.all : API.merge(ids);
+    fetch(u,{headers:{"Authorization":"Bearer "+state.token}})
+      .then(function(r){if(r.status===401)throw new Error("AUTH");return r.json().then(function(d){return{ok:r.ok,d:d};});})
+      .then(function(res){
+        if(!res.ok)throw new Error(res.d&&res.d.error?res.d.error:"Failed to load");
+        var listc=Array.isArray(res.d)?res.d:(res.d.channels||[]);
+        state.channels=listc.map(normalizeChannel);
+        applyDefaults();populateFilters();applyFilters();
+        toast(state.channels.length.toLocaleString()+" channels across "+(res.d.sources||ids.length)+" sources.");
+      })
+      .catch(function(err){
+        if(err.message==="AUTH"){toast("Session expired. Sign in again.",true);logout();return;}
+        toast(err.message||"Could not load.",true);$("ch-count").textContent="0";
+      });
   }
   // Open a group: fill the Provider filter with its sources, default to India,
   // and load it (category then defaults to News via applyDefaults).
@@ -1006,7 +1089,7 @@ function __iptvBoot(){
     var q=(c.quality||"").toString().toUpperCase();
     if(q!=="HD"&&q!=="SD")q=/\bHD\b|FHD|1080|720/i.test((c.name||"")+" "+(c.url||""))?"HD":"SD";
     return{name:c.name||"Unknown channel",id:c.id||"",logo:c.logo||"",category:c.category||"General",
-      language:(c.language||c.lang||"").trim()||"—",country:countryOf(c),url:c.url||"",quality:q};
+      language:(c.language||c.lang||"").trim()||"—",country:countryOf(c),url:c.url||"",quality:q,source:c.source||""};
   }
   function countryOf(c){
     var id=(c.id||"");var m=id.match(/\.([a-zA-Z]{2})$/);
@@ -1138,10 +1221,10 @@ function __iptvBoot(){
     var p=state.prefs||{};
     state.dim=(p.dim==="category")?"category":"country";
     if(p.country) state.filter.country=p.country;
-    // Default the category to News when the lineup has one (per request); ignore any
-    // stale saved category so it never sticks on e.g. Movies.
+    // Show ALL categories by default (stacked view lists every channel); never
+    // stick on a stale saved category (e.g. Movies).
     if(state.prefs && state.prefs.category){ delete state.prefs.category; savePrefs(); }
-    state.filter.category = _hasCategory("News") ? "News" : "";
+    state.filter.category = "";
     if(p.language) state.filter.language=p.language;
     $("dim-country").classList.toggle("active",state.dim==="country");
     $("dim-category").classList.toggle("active",state.dim==="category");
@@ -1208,17 +1291,41 @@ function __iptvBoot(){
 
   // Override applyFilters
   function applyFilters(){
-    var f=state.filter, q=f.search.toLowerCase();
+    var f=state.filter;
+    // Advanced search: every space-separated term must match across name/source/
+    // category/country/language (so "asianet movie" or "sony hd" narrows fast).
+    var terms=(f.search||"").toLowerCase().split(/\s+/).filter(Boolean);
     state.filtered=state.channels.filter(function(c){
+      if(state.hidden.has(favKey(c)))return false;
       if(f.favOnly&&!state.favs.has(favKey(c)))return false;
       if(f.country&&c.country!==f.country)return false;
       if(f.category&&c.category!==f.category)return false;
       if(f.language&&c.language!==f.language)return false;
-      if(q&&c.name.toLowerCase().indexOf(q)===-1)return false;
+      if(terms.length){
+        var hay=(c.name+" "+(c.source||"")+" "+c.category+" "+c.country+" "+c.language).toLowerCase();
+        for(var t=0;t<terms.length;t++){ if(hay.indexOf(terms[t])===-1)return false; }
+      }
       return true;
     });
     state.renderCount=PAGE; // fresh filter -> render the first page, grow on scroll
+    _updateRestoreChip();
     renderList();
+  }
+  function _updateRestoreChip(){
+    var chip=document.getElementById("chip-restore"); if(!chip)return;
+    if(state.hidden.size){ chip.style.display=""; chip.textContent="↺ Restore ("+state.hidden.size+")"; }
+    else chip.style.display="none";
+  }
+  function hideChannel(idx){
+    var c=state.filtered[idx]; if(!c)return;
+    state.hidden.add(favKey(c)); saveHidden();
+    toast("Hidden. Use ↺ Restore to bring it back.");
+    applyFilters();
+  }
+  function restoreHidden(){
+    if(!state.hidden.size)return;
+    state.hidden.clear(); saveHidden(); applyFilters();
+    toast("Hidden channels restored.");
   }
 
   // Build one channel card. `i` is the ABSOLUTE index into state.filtered.
@@ -1226,13 +1333,15 @@ function __iptvBoot(){
     var playing=(state.currentChannel&&favKey(c)===favKey(state.currentChannel))?" playing":"";
     var on=state.favs.has(favKey(c))?" on":"";
     var logo=c.logo?`<img loading="lazy" src="${esc(c.logo)}" alt="" onerror="this.parentNode.innerHTML='<span class=ph>📺</span>'"/>`:'<span class="ph">📺</span>';
+    var sub = c.source ? esc(c.source) : (esc(c.country)+" · "+esc(c.category));
     return `
         <div class="ch-card${playing}" data-idx="${i}">
           <div class="logo">${logo}</div>
           <div class="nm" title="${esc(c.name)}">${esc(c.name)}</div>
-          <div class="sub" title="${esc(c.country)} · ${esc(c.category)}">${esc(c.country)} · ${esc(c.category)}</div>
+          <div class="sub" title="${sub}">${sub}</div>
           <span class="rq ${c.quality}">${c.quality}</span>
           <span class="star${on}" data-fav="${i}">${on?'★':'☆'}</span>
+          <label class="hide-cb" title="Hide this channel (e.g. not working)"><input type="checkbox" data-hide="${i}"></label>
         </div>`;
   }
   function bindChCards(els){
@@ -1240,6 +1349,9 @@ function __iptvBoot(){
       el.addEventListener("click",function(){playIndex(parseInt(el.getAttribute("data-idx"),10));});
       var star=el.querySelector("[data-fav]");
       if(star)star.addEventListener("click",function(ev){ev.stopPropagation();toggleFav(parseInt(star.getAttribute("data-fav"),10),star);});
+      var hide=el.querySelector("[data-hide]");
+      if(hide){ hide.addEventListener("click",function(ev){ev.stopPropagation();});
+        hide.addEventListener("change",function(ev){ev.stopPropagation();hideChannel(parseInt(hide.getAttribute("data-hide"),10));}); }
     });
   }
   // Override renderList — vertical grid, first page only (grows via renderMore on scroll)
@@ -1251,10 +1363,12 @@ function __iptvBoot(){
       host.innerHTML='<div style="padding:40px;text-align:center;color:var(--text-faint);width:100%;">No channels match your filters.</div>';
       return;
     }
+    // Stacked: one line per channel name, duplicate sources across (the default).
+    if(state.view==="stack"){ renderStack(host); updateTrackButtons(); return; }
     // Netflix/Fox category rows when browsing everything; flat grid when a filter
     // narrows the set or the user picked Grid view.
     if(state.view==="rows" && !hasAnyFilter()){ renderGrouped(host); return; }
-    host.classList.remove("grouped");
+    host.classList.remove("grouped"); state.stackRows=[];
     if(!state.renderCount||state.renderCount<PAGE)state.renderCount=PAGE;
     var max = Math.min(state.filtered.length, state.renderCount);
     host.innerHTML = state.filtered.slice(0,max).map(function(c,i){return chCardHtml(c,i);}).join("");
@@ -1291,22 +1405,58 @@ function __iptvBoot(){
       });
     });
   }
+  // Stacked: each unique channel NAME on its own line; its sources from different
+  // m3u sit across (horizontal). Builds state.stackRows for up/down navigation.
+  function _stackSecHtml(name,idxs){
+    var cards=idxs.map(function(ai){return chCardHtml(state.filtered[ai],ai);}).join("");
+    var cnt = idxs.length>1 ? '<span class="cat-count">'+idxs.length+'</span>' : '';
+    return '<section class="cat-section stack-sec">'+
+      '<div class="cat-head"><h3 title="'+esc(name)+'">'+esc(name)+'</h3>'+cnt+'</div>'+
+      '<div class="cat-row">'+cards+'</div></section>';
+  }
+  function renderStack(host){
+    host.classList.add("grouped");
+    var groups={}, order=[];
+    state.filtered.forEach(function(c,i){
+      var k=c.name||"Unknown";
+      if(!groups[k]){groups[k]=[];order.push(k);}
+      groups[k].push(i);
+    });
+    state._stackGroups=groups; state._stackOrder=order;
+    state.stackRows=order.map(function(k){return {name:k, idxs:groups[k]};});
+    if(!state.renderCount||state.renderCount<PAGE)state.renderCount=PAGE;
+    var n=Math.min(order.length, state.renderCount);
+    host.innerHTML=order.slice(0,n).map(function(k){return _stackSecHtml(k,groups[k]);}).join("");
+    bindChCards(host.querySelectorAll(".ch-card"));
+  }
   function setView(v){
-    state.view=(v==="grid")?"grid":"rows"; state.prefs.view=state.view; savePrefs();
-    var r=document.getElementById("view-rows"), g=document.getElementById("view-grid");
-    if(r)r.classList.toggle("active",state.view==="rows");
+    state.view=(v==="grid")?"grid":(v==="rows"?"rows":"stack"); state.prefs.view=state.view; savePrefs();
+    var st=document.getElementById("view-stack"),g=document.getElementById("view-grid"),r=document.getElementById("view-rows");
+    if(st)st.classList.toggle("active",state.view==="stack");
     if(g)g.classList.toggle("active",state.view==="grid");
+    if(r)r.classList.toggle("active",state.view==="rows");
     state.renderCount=PAGE; renderList();
   }
   (function(){
-    var r=document.getElementById("view-rows"), g=document.getElementById("view-grid");
-    if(r){r.classList.toggle("active",state.view==="rows");r.addEventListener("click",function(){setView("rows");});}
+    var st=document.getElementById("view-stack"),g=document.getElementById("view-grid"),r=document.getElementById("view-rows");
+    if(st){st.classList.toggle("active",state.view==="stack");st.addEventListener("click",function(){setView("stack");});}
     if(g){g.classList.toggle("active",state.view==="grid");g.addEventListener("click",function(){setView("grid");});}
+    if(r){r.classList.toggle("active",state.view==="rows");r.addEventListener("click",function(){setView("rows");});}
   })();
   // Append the next page of cards without re-rendering (preserves scroll position)
   function renderMore(){
     var host = document.getElementById("channel-list-new");
-    if(!host || host.classList.contains("grouped"))return; // grouped rows are capped, no infinite append
+    if(!host) return;
+    if(state.view==="stack"){ // append the next page of channel-name rows
+      var order=state._stackOrder||[]; var haveRows=host.querySelectorAll(".stack-sec").length;
+      if(haveRows===0 || haveRows>=order.length) return;
+      var nextRows=Math.min(order.length, haveRows+PAGE); state.renderCount=nextRows;
+      var before=host.children.length;
+      host.insertAdjacentHTML("beforeend", order.slice(haveRows,nextRows).map(function(k){return _stackSecHtml(k,state._stackGroups[k]);}).join(""));
+      for(var ci=before;ci<host.children.length;ci++){ bindChCards(host.children[ci].querySelectorAll(".ch-card")); }
+      return;
+    }
+    if(host.classList.contains("grouped"))return; // category rows are capped, no infinite append
     var have = host.querySelectorAll(".ch-card").length;
     if(have===0 || have>=state.filtered.length)return;
     var next = Math.min(state.filtered.length, have+PAGE);
@@ -1418,7 +1568,38 @@ function __iptvBoot(){
   function playIndex(idx){
     if(idx<0||idx>=state.filtered.length)return;
     state.currentIndex=idx;var ch=state.filtered[idx];state.currentChannel=ch;
+    var loc=_locateInStack(idx); state.curRow=loc.row; state.curCol=loc.col;
     openPlayer(ch,idx);updatePlayingHighlight();
+  }
+  function _locateInStack(idx){
+    var rows=state.stackRows||[];
+    for(var r=0;r<rows.length;r++){ var col=rows[r].idxs.indexOf(idx); if(col!==-1)return{row:r,col:col}; }
+    return{row:-1,col:-1};
+  }
+  // Horizontal (Prev/Next): move between the duplicate SOURCES of the current
+  // channel in stacked view; sequential in flat views.
+  function navHoriz(d){
+    if(state.currentIndex<0){ if(state.filtered.length)playIndex(0); return; }
+    if(state.view==="stack" && state.curRow>=0 && state.stackRows[state.curRow]){
+      var row=state.stackRows[state.curRow], col=state.curCol+d;
+      if(col<0||col>=row.idxs.length){ toast(d>0?"Last source of this channel.":"First source."); return; }
+      playIndex(row.idxs[col]); return;
+    }
+    var ni=state.currentIndex+d;
+    if(ni<0){toast("Already at the first channel.");return;}
+    if(ni>=state.filtered.length){toast("Already at the last channel.");return;}
+    playIndex(ni);
+  }
+  // Vertical (Up/Down): move between CHANNELS (rows) in stacked view.
+  function navVert(d){
+    if(state.view==="stack" && state.stackRows.length){
+      var nr=(state.curRow<0?0:state.curRow)+d;
+      if(nr<0){toast("First channel.");return;}
+      if(nr>=state.stackRows.length){toast("Last channel.");return;}
+      if(nr>=state.renderCount){ state.renderCount=nr+PAGE; renderList(); } // ensure target row rendered
+      playIndex(state.stackRows[nr].idxs[0]); return;
+    }
+    navHoriz(d); // flat views: up/down behaves like prev/next
   }
   // Move the "playing" highlight without rebuilding the list (keeps scroll + is instant).
   function updatePlayingHighlight(){
@@ -1477,8 +1658,27 @@ function __iptvBoot(){
   video.addEventListener("waiting",function(){setLoading(true);});
   video.addEventListener("playing",function(){setLoading(false);});
   $("btn-play").addEventListener("click",function(){if(video.paused)video.play().catch(function(){});else video.pause();});
-  $("btn-prev").addEventListener("click",function(){if(state.currentIndex>0)playIndex(state.currentIndex-1);else toast("Already at the first channel.");});
-  $("btn-next").addEventListener("click",function(){if(state.currentIndex>-1&&state.currentIndex<state.filtered.length-1)playIndex(state.currentIndex+1);else toast("Already at the last channel.");});
+  $("btn-prev").addEventListener("click",function(){navHoriz(-1);});
+  $("btn-next").addEventListener("click",function(){navHoriz(1);});
+  if($("btn-up"))$("btn-up").addEventListener("click",function(){navVert(-1);});
+  if($("btn-down"))$("btn-down").addEventListener("click",function(){navVert(1);});
+  /* ---------- Sources multi-select + Restore + Stacked view wiring ---------- */
+  (function(){
+    var btn=$("btn-sources"), panel=$("sources-panel");
+    function toggleSrc(){ if(!panel)return; var open=panel.style.display!=="none"; panel.style.display=open?"none":""; if(!open)buildSourcesPanel(); }
+    if(btn)btn.addEventListener("click",toggleSrc);
+    var close=$("src-close"); if(close)close.addEventListener("click",function(){if(panel)panel.style.display="none";});
+    var selall=$("src-selall"); if(selall)selall.addEventListener("change",function(){
+      var on=this.checked; Array.prototype.forEach.call(document.querySelectorAll("#sources-list .src-cb"),function(cb){cb.checked=on;}); _srcCount();
+    });
+    var apply=$("src-apply"); if(apply)apply.addEventListener("click",function(){
+      var ids=Array.prototype.map.call(document.querySelectorAll("#sources-list .src-cb:checked"),function(cb){return cb.value;});
+      if(!ids.length){toast("Pick at least one source.",true);return;}
+      state.selectedSources=ids; if(panel)panel.style.display="none";
+      loadSelectedSources();
+    });
+    var restore=$("chip-restore"); if(restore)restore.addEventListener("click",restoreHidden);
+  })();
   var lastVol=1;
   $("vol-slider").addEventListener("input",function(){video.volume=parseFloat(this.value);video.muted=video.volume===0;updateMute();});
   $("btn-mute").addEventListener("click",function(){if(video.muted||video.volume===0){video.muted=false;video.volume=lastVol>0?lastVol:1;$("vol-slider").value=video.volume;}else{lastVol=video.volume;video.muted=true;$("vol-slider").value=0;}updateMute();});
@@ -1525,8 +1725,10 @@ function __iptvBoot(){
     }
     if(/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName))return;
     if(e.key===" "||e.key==="k"){e.preventDefault();$("btn-play").click();}
-    else if(e.key==="ArrowRight"||e.key==="n")$("btn-next").click();
-    else if(e.key==="ArrowLeft"||e.key==="p")$("btn-prev").click();
+    else if(e.key==="ArrowRight"||e.key==="n"){e.preventDefault();navHoriz(1);}
+    else if(e.key==="ArrowLeft"||e.key==="p"){e.preventDefault();navHoriz(-1);}
+    else if(e.key==="ArrowDown"){e.preventDefault();navVert(1);}
+    else if(e.key==="ArrowUp"){e.preventDefault();navVert(-1);}
     else if(e.key==="m")$("btn-mute").click();
     else if(e.key==="f")$("btn-fs").click();
     else if(e.key==="i")$("btn-pip").click();
