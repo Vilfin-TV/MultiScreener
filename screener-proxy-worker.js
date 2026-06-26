@@ -1219,13 +1219,27 @@ ${body.text}`;
           });
         }
       }
+      // Manually-added single channels (name + direct .m3u8 URL), capped at 500.
+      let customChannels = [];
+      if (Array.isArray(s.customChannels)) {
+        for (const c of s.customChannels) {
+          const url = (c && c.url || '').toString().trim();
+          const name = (c && c.name || '').toString().trim();
+          if (!url || !name) continue;
+          customChannels.push({ name: name.slice(0, 180), url: url.slice(0, 2000), category: (c && c.category || 'Custom').toString().trim().slice(0, 80) });
+          if (customChannels.length >= 500) break;
+        }
+      }
       const settings = {
         sessionHours: Math.max(1, Math.min(168, parseInt(s.sessionHours, 10) || 8)),
         defaultProvider: s.defaultProvider || 'free',
         providers: parsedProviders,
+        customChannels: customChannels,
         updatedAt: new Date().toISOString(),
       };
       await env.IPTV_KV.put('iptv_settings', JSON.stringify(settings));
+      // Adding/removing a custom channel should show right away — drop the merged-all cache.
+      try { await env.IPTV_KV.delete('cache_merge_all'); } catch (e) {}
       return _iptvJson({ ok: true, saved: true, settings: settings });
     }
 

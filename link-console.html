@@ -5207,6 +5207,15 @@ var IPTV_PANEL_HTML =
           '<button id="iptv-bulk-apply" style="padding:7px 14px;background:rgba(96,165,250,.16);color:#93c5fd;border:1px solid rgba(96,165,250,.34);border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer">Assign to selected</button>' +
         '</div>' +
         '<div id="iptv-providers-rows"></div></div>' +
+      '<div style="margin-top:22px;border-top:1px solid rgba(255,255,255,.1);padding-top:16px">' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:13px;font-weight:700;color:#f4f4f8">★ Custom channels</span><span style="font-size:11px;color:#8a8a9e">single .m3u8 stream + name — appears under “My Channels” in the player</span></div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">' +
+          '<input id="iptv-cc-name" type="text" placeholder="Channel name (e.g. beIN SPORTS XTRA)" style="flex:1;min-width:170px;padding:9px 11px;background:#0f0f12;border:1px solid rgba(255,255,255,.16);border-radius:8px;color:#fff;font-size:13px">' +
+          '<input id="iptv-cc-url" type="url" placeholder="https://… .m3u8" style="flex:2;min-width:220px;padding:9px 11px;background:#0f0f12;border:1px solid rgba(255,255,255,.16);border-radius:8px;color:#fff;font-size:13px">' +
+          '<button id="iptv-cc-add" style="padding:9px 16px;background:rgba(77,219,138,.14);color:#7fe0a8;border:1px solid rgba(77,219,138,.34);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Add</button>' +
+        '</div>' +
+        '<div id="iptv-cc-list"></div>' +
+      '</div>' +
       '<button id="iptv-settings-save" style="margin-top:16px;padding:11px 20px;background:linear-gradient(135deg,#7c4dff,#6b3dff);color:#fff;border:none;border-radius:9px;font-weight:600;font-size:14px;cursor:pointer">Save settings</button>' +
       '<div id="iptv-settings-msg" style="margin-top:10px;font-size:13px;min-height:18px"></div>' +
     '</div>' +
@@ -5249,6 +5258,34 @@ function _iptvBuildPanel() {
   var impLoad = document.getElementById('iptv-import-load'); if (impLoad) impLoad.addEventListener('click', _iptvImportLoad);
   document.getElementById('iptv-cred-save').addEventListener('click', saveIptvCredentials);
   document.getElementById('iptv-settings-save').addEventListener('click', saveIptvSettings);
+  var ccAdd = document.getElementById('iptv-cc-add'); if (ccAdd) ccAdd.addEventListener('click', _iptvCustomAdd);
+  _iptvBuildCustomRows();
+}
+
+// ── Custom single channels (name + direct .m3u8) ──────────────────────────────
+var IPTV_CUSTOM = [];
+function _iptvCustomAdd() {
+  var nm = document.getElementById('iptv-cc-name'), ur = document.getElementById('iptv-cc-url');
+  var name = (nm && nm.value || '').trim(), url = (ur && ur.value || '').trim();
+  var msg = document.getElementById('iptv-settings-msg');
+  if (!name || !url) { if (msg) msg.innerHTML = '<span style="color:#ffb37a">Enter both a name and an .m3u8 URL.</span>'; return; }
+  if (!/^https?:\/\//i.test(url)) { if (msg) msg.innerHTML = '<span style="color:#ffb37a">URL must start with http(s)://</span>'; return; }
+  IPTV_CUSTOM.push({ name: name, url: url, category: 'Custom' });
+  if (nm) nm.value = ''; if (ur) ur.value = '';
+  _iptvBuildCustomRows();
+  if (msg) msg.innerHTML = '<span style="color:#7fe0a8">Added “' + esc(name) + '”. Click Save settings to publish.</span>';
+}
+function _iptvCustomDelete(idx) { IPTV_CUSTOM.splice(idx, 1); _iptvBuildCustomRows(); }
+function _iptvBuildCustomRows() {
+  var host = document.getElementById('iptv-cc-list'); if (!host) return;
+  if (!IPTV_CUSTOM.length) { host.innerHTML = '<div style="opacity:.55;font-size:12.5px">No custom channels yet.</div>'; return; }
+  host.innerHTML = IPTV_CUSTOM.map(function (c, i) {
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid rgba(255,255,255,.08);border-radius:8px;margin-bottom:6px">' +
+      '<span style="font-weight:600;color:#f4f4f8;font-size:13px;flex:0 0 auto">' + esc(c.name) + '</span>' +
+      '<span style="font-size:11px;color:#8a8a9e;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(c.url) + '</span>' +
+      '<button onclick="_iptvCustomDelete(' + i + ')" style="padding:4px 9px;background:rgba(255,77,77,.15);color:#ff8888;border:1px solid rgba(255,77,77,.3);border-radius:5px;font-size:11px;cursor:pointer;flex:0 0 auto">Delete</button>' +
+    '</div>';
+  }).join('');
 }
 
 var IPTV_PROVIDER_LIST = [];
@@ -5405,7 +5442,8 @@ function _iptvExportBackup() {
     settings: {
       sessionHours: parseInt((document.getElementById('iptv-session-hours')||{}).value, 10) || 8,
       defaultProvider: (document.getElementById('iptv-default-provider')||{}).value || '',
-      providers: IPTV_PROVIDER_LIST
+      providers: IPTV_PROVIDER_LIST,
+      customChannels: IPTV_CUSTOM
     }
   };
   var text = JSON.stringify(payload, null, 2);
@@ -5450,6 +5488,7 @@ function _iptvImportLoad() {
     };
   });
   if (s.sessionHours) { var sh = document.getElementById('iptv-session-hours'); if (sh) sh.value = parseInt(s.sessionHours,10) || 8; }
+  if (Array.isArray(s.customChannels)) { IPTV_CUSTOM = s.customChannels.slice(); _iptvBuildCustomRows(); }
   _iptvBuildProviderRows();
   // refresh the default-provider dropdown to the imported ids
   var dp = document.getElementById('iptv-default-provider');
@@ -5588,6 +5627,8 @@ async function _iptvLoadConfig() {
       dp.value = s.defaultProvider || (IPTV_PROVIDER_LIST[0] && IPTV_PROVIDER_LIST[0].id) || 'free';
     }
     _iptvBuildProviderRows();
+    IPTV_CUSTOM = Array.isArray(s.customChannels) ? s.customChannels.slice() : [];
+    _iptvBuildCustomRows();
   } catch (e) {
     st.style.display = 'block';
     st.innerHTML = '<span style="color:#ff6b6b">Could not load: ' + esc(e.message) + '</span>';
@@ -5677,7 +5718,8 @@ async function saveIptvSettings() {
   var payload = { settings: {
     sessionHours: parseInt(document.getElementById('iptv-session-hours').value, 10) || 8,
     defaultProvider: document.getElementById('iptv-default-provider').value,
-    providers: providers
+    providers: providers,
+    customChannels: IPTV_CUSTOM
   }};
   var btn = document.getElementById('iptv-settings-save'); btn.disabled = true; var t = btn.textContent; btn.textContent = 'Saving...';
   try {

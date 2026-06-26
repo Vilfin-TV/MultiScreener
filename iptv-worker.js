@@ -265,14 +265,40 @@ async function loadSettings(env) {
       };
     }
 
+    // Manually-added single channels (name + direct .m3u8). Surfaced as one
+    // virtual "My Channels" source so they flow through the normal player pipeline.
+    const customChannels = Array.isArray(s.customChannels) ? s.customChannels : [];
+    if (customChannels.length) {
+      providers[CUSTOM_PROVIDER_ID] = { name: "My Channels", icon: "★", group: "", region: "", enabled: true, url: "", epg: "", custom: true };
+    }
+
     return {
       sessionHours: Math.max(1, Math.min(168, parseInt(s.sessionHours, 10) || DEFAULT_SESSION_HOURS)),
       defaultProvider: providers[s.defaultProvider] ? s.defaultProvider : (Object.keys(providers)[0] || "free"),
       providers,
+      customChannels,
     };
   } catch (e) {
     return base;
   }
+}
+
+const CUSTOM_PROVIDER_ID = "_custom";
+/** Turn stored custom channels into sanitized channel objects (drops unsafe URLs). */
+function _customChannels(settings) {
+  const out = [];
+  const list = (settings && settings.customChannels) || [];
+  for (const c of list) {
+    const url = String(c && c.url || "").trim();
+    if (!_isSafeStreamUrl(url)) continue;
+    out.push({
+      name: _sanitizeText(c && c.name, 180) || "Channel",
+      id: "", logo: _isSafeStreamUrl(c && c.logo) ? c.logo : "",
+      category: _sanitizeText(c && c.category, 80) || "Custom",
+      language: "", quality: guessQuality(String(c && c.name || "")), url: url, source: "My Channels",
+    });
+  }
+  return out;
 }
 
 /* ----------------------------- tokens ----------------------------- */
@@ -489,6 +515,11 @@ async function handlePlaylist(request, env, url) {
 
   const provider = (url.searchParams.get("provider") || "").toLowerCase();
   const settings = await loadSettings(env);
+  // Virtual "My Channels" source — the manually-added single channels.
+  if (provider === CUSTOM_PROVIDER_ID) {
+    const ch = _customChannels(settings);
+    return json({ provider, count: ch.length, epg: "", channels: ch });
+  }
   if (!settings.providers[provider]) return json({ error: "Invalid provider" }, 400);
 
   const pconf = settings.providers[provider] || {};
@@ -582,10 +613,13 @@ async function handleMergePlaylist(request, env, url) {
   }
   if (!ids.length) return json({ error: "No valid sources selected" }, 400);
 
-  // Source-level dedup: drop providers whose m3u URL was already included.
+  const includeCustom = !!all || ids.indexOf(CUSTOM_PROVIDER_ID) !== -1;
+
+  // Source-level dedup by m3u URL; the virtual "My Channels" source is handled separately.
   const seenUrl = Object.create(null);
   const members = [];
   for (const id of ids) {
+    if (id === CUSTOM_PROVIDER_ID) continue;
     const p = Object.assign({ id }, settings.providers[id]);
     const u = String(p.url || "").trim().toLowerCase();
     if (u) { if (seenUrl[u]) continue; seenUrl[u] = 1; }
@@ -593,37 +627,43 @@ async function handleMergePlaylist(request, env, url) {
     if (members.length >= MERGE_MAX_SOURCES) break;
   }
 
+  // The m3u-merged portion is cacheable; custom channels are appended fresh below.
+  let channels = null, used = 0;
   const cacheKey = "cache_merge_" + (all ? "all" : _shortHash(members.map((p) => p.id).sort().join(",")));
   if (kv) {
     const cached = await kv.get(cacheKey);
-    if (cached) { try { return json(JSON.parse(cached)); } catch (e) {} }
+    if (cached) { try { const o = JSON.parse(cached); channels = o.channels; used = o.sources || 0; } catch (e) {} }
   }
-
-  // Fetch every source's raw m3u in parallel (each is itself KV-cached).
-  const raws = await Promise.all(members.map((p) => loadProviderRaw(env, p.id, p).catch(() => "")));
-
-  const seenStream = Object.create(null);
-  const channels = [];
-  let used = 0;
-  for (let i = 0; i < members.length; i++) {
-    const raw = raws[i];
-    if (!raw) continue;
-    used++;
-    const list = parseM3U(raw);
-    for (const ch of list) {
-      const key = ch.url;
-      if (!key || seenStream[key]) continue; // drop only EXACT same stream
-      seenStream[key] = 1;
-      ch.source = members[i].name || members[i].id;
-      channels.push(ch);
+  if (!channels) {
+    const raws = await Promise.all(members.map((p) => loadProviderRaw(env, p.id, p).catch(() => "")));
+    const seenStream = Object.create(null);
+    channels = [];
+    for (let i = 0; i < members.length; i++) {
+      const raw = raws[i];
+      if (!raw) continue;
+      used++;
+      const list = parseM3U(raw);
+      for (const ch of list) {
+        const key = ch.url;
+        if (!key || seenStream[key]) continue; // drop only EXACT same stream
+        seenStream[key] = 1;
+        ch.source = members[i].name || members[i].id;
+        channels.push(ch);
+        if (channels.length >= MERGE_MAX_CHANNELS) break;
+      }
       if (channels.length >= MERGE_MAX_CHANNELS) break;
     }
-    if (channels.length >= MERGE_MAX_CHANNELS) break;
+    if (kv && channels.length) { try { await kv.put(cacheKey, JSON.stringify({ channels, sources: used }), { expirationTtl: REGION_CACHE_TTL }); } catch (e) {} }
   }
 
-  const out = { sources: used, requested: ids.length, count: channels.length, epg: "", channels };
-  if (kv && channels.length) { try { await kv.put(cacheKey, JSON.stringify(out), { expirationTtl: REGION_CACHE_TTL }); } catch (e) {} }
-  return json(out);
+  // Append manually-added channels fresh, so newly-added ones appear immediately.
+  if (includeCustom) {
+    const have = Object.create(null);
+    for (const c of channels) have[c.url] = 1;
+    for (const c of _customChannels(settings)) { if (c.url && !have[c.url]) { channels.push(c); have[c.url] = 1; } }
+  }
+
+  return json({ sources: used + (includeCustom ? 1 : 0), requested: ids.length, count: channels.length, epg: "", channels });
 }
 
 /**
