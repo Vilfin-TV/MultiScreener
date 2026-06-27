@@ -210,6 +210,16 @@
   .player-stage video{width:100%;height:100%;object-fit:contain;background:#000;display:block}
   .video-loading{position:absolute;inset:0;display:none;place-items:center;background:rgba(0,0,0,.55);color:var(--text-dim);font-size:13px;z-index:3}
   .video-loading.show{display:grid}
+  /* Now Playing + EPG strip (under the controls) */
+  .now-playing{margin-top:8px;padding:9px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
+  .now-playing .np-main{display:flex;align-items:center;gap:8px;font-size:14px;min-width:0}
+  .now-playing .np-main strong{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .now-playing .np-dot{width:8px;height:8px;border-radius:50%;background:var(--accent-2);flex:0 0 auto;box-shadow:0 0 0 3px var(--accent-soft)}
+  .now-playing .np-src{font-size:11.5px;color:var(--text-faint);background:var(--surface-3);border-radius:20px;padding:1px 9px;flex:0 0 auto}
+  .now-playing .np-epg{margin-top:6px;font-size:12.5px;color:var(--text-dim);line-height:1.5;display:none}
+  .now-playing .np-epg.show{display:block}
+  .now-playing .np-epg .np-now{color:var(--accent-2);font-weight:700}
+  .now-playing .np-epg .np-time{color:var(--text-faint)}
   .spinner{width:34px;height:34px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:var(--accent);animation:spin .8s linear infinite;margin:0 auto 12px}
   @keyframes spin{to{transform:rotate(360deg)}}
   .player-placeholder{position:absolute;inset:0;display:grid;place-items:center;color:var(--text-faint);text-align:center;padding:20px}
@@ -665,10 +675,12 @@
           <button class="ctrl-btn" id="btn-pip" title="Picture in Picture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="12" y="10" width="7" height="6" rx="1" fill="currentColor" stroke="none"/></svg></button>
           <button class="ctrl-btn" id="btn-fs" title="Fullscreen"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7zM5 10h2V7h3V5H5zm12 7h-3v2h5v-5h-2zM14 5v2h3v3h2V5z"/></svg></button>
         </div>
-        
-
+        <div class="now-playing" id="now-playing" style="display:none">
+          <div class="np-main"><span class="np-dot"></span><strong id="np-name"></strong><span class="np-src" id="np-src"></span></div>
+          <div class="np-epg" id="np-epg"></div>
+        </div>
       </div>
-      
+
       <!-- Remote Panel -->
       <div class="remote-panel" id="hero-remote-panel">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
@@ -1086,7 +1098,7 @@ function __iptvBoot(){
     var q=(c.quality||"").toString().toUpperCase();
     if(q!=="HD"&&q!=="SD")q=/\bHD\b|FHD|1080|720/i.test((c.name||"")+" "+(c.url||""))?"HD":"SD";
     return{name:c.name||"Unknown channel",id:c.id||"",logo:c.logo||"",category:c.category||"General",
-      language:(c.language||c.lang||"").trim()||"—",country:countryOf(c),url:c.url||"",quality:q,source:c.source||""};
+      language:(c.language||c.lang||"").trim()||"—",country:countryOf(c),url:c.url||"",quality:q,source:c.source||"",sourceId:c.sourceId||""};
   }
   function countryOf(c){
     var id=(c.id||"");var m=id.match(/\.([a-zA-Z]{2})$/);
@@ -1619,29 +1631,30 @@ function __iptvBoot(){
   }
   function openPlayer(ch,idx){
     $("player-placeholder").style.display="none";
-    $("now-card").style.display="grid";
     $("controls").classList.add("pinned");
-    $("ni-name").textContent=ch.name;$("ni-cat").textContent=ch.country+" · "+ch.category;
-    $("ni-number").textContent="#"+(idx+1)+" / "+state.filtered.length;
-    $("ni-quality").textContent=ch.quality;$("ni-category").textContent=ch.category;$("ni-language").textContent=ch.language;
-    var nl=$("ni-logo");
-    nl.innerHTML=ch.logo?'<img src="'+esc(ch.logo)+'" alt="" onerror="this.parentNode.innerHTML=\'<span class=ph>📺</span>\'"/>':'<span class="ph">📺</span>';
+    var np=$("now-playing"); if(np){ np.style.display="";
+      $("np-name").textContent=ch.name;
+      var src=$("np-src"); src.textContent=ch.source||ch.category||""; src.style.display=(ch.source||ch.category)?"":"none";
+    }
     loadEpg(ch);loadStream(ch.url);
     if(window.innerWidth<=1000)$("video-shell").scrollIntoView({behavior:"smooth",block:"start"});
   }
+  // EPG uses the channel's OWN source (sourceId) so merged lineups query the right
+  // guide; falls back to the active provider for single-source loads.
   function loadEpg(ch){
-    var el=$("ni-epg");if(!el)return;el.innerHTML="";
-    if(!ch.id||!state.token)return;
-    el.innerHTML='<div style="color:var(--text-faint)">Loading guide…</div>';
-    fetch(API.epg(state.provider,ch.id),{headers:{"Authorization":"Bearer "+state.token}})
+    var el=$("np-epg");if(!el){return;} el.className="np-epg"; el.innerHTML="";
+    var prov = ch.sourceId || state.provider;
+    if(!ch.id || !prov || prov==="_custom" || !state.token){return;}
+    fetch(API.epg(prov,ch.id),{headers:{"Authorization":"Bearer "+state.token}})
       .then(function(r){return r.ok?r.json():null;})
       .then(function(d){
-        if(!d||(!d.now&&!d.next)){el.innerHTML="";return;}
-        var fmt=function(p){if(!p)return"";var t=p.startMs?new Date(p.startMs).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"";return '<div style="margin-bottom:6px"><span style="color:var(--text-faint)">'+t+'</span> '+esc(p.title)+'</div>';};
-        var h="";if(d.now)h+='<div style="color:var(--accent-2);font-weight:700;margin-bottom:6px">● NOW</div>'+fmt(d.now);
-        if(d.next)h+='<div style="color:var(--text-faint);font-weight:700;margin:10px 0 6px">NEXT</div>'+fmt(d.next);
-        el.innerHTML=h;
-      }).catch(function(){el.innerHTML="";});
+        if(!d||(!d.now&&!d.next)){el.className="np-epg";el.innerHTML="";return;}
+        var fmt=function(p){if(!p)return"";var t=p.startMs?new Date(p.startMs).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"";return '<span class="np-time">'+t+'</span> '+esc(p.title);};
+        var h="";
+        if(d.now)h+='<div><span class="np-now">● NOW</span> '+fmt(d.now)+'</div>';
+        if(d.next)h+='<div><span class="np-time">NEXT</span> '+fmt(d.next)+'</div>';
+        el.innerHTML=h; el.className="np-epg show";
+      }).catch(function(){el.className="np-epg";el.innerHTML="";});
   }
   function loadStream(raw){
     if(!raw){toast("This channel has no stream URL.",true);return;}
@@ -1657,7 +1670,7 @@ function __iptvBoot(){
   function tryPlay(){setLoading(false);var p=video.play();if(p&&p.catch)p.catch(function(){setPlayIcon(false);});}
   function setLoading(on){$("video-loading").classList.toggle("show",on);}
   function stopHls(){if(state.hls){try{state.hls.destroy();}catch(e){}state.hls=null;}}
-  function stopPlayback(){stopHls();try{video.pause();video.removeAttribute("src");video.load();}catch(e){}$("now-card").style.display="none";$("player-placeholder").style.display="grid";$("controls").classList.remove("pinned");state.currentChannel=null;}
+  function stopPlayback(){stopHls();try{video.pause();video.removeAttribute("src");video.load();}catch(e){}var np=$("now-playing");if(np)np.style.display="none";$("player-placeholder").style.display="grid";$("controls").classList.remove("pinned");state.currentChannel=null;}
 
   function setPlayIcon(p){$("icon-play").style.display=p?"none":"block";$("icon-pause").style.display=p?"block":"none";}
   video.addEventListener("play",function(){setPlayIcon(true);});

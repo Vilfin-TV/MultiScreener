@@ -295,7 +295,7 @@ function _customChannels(settings) {
       name: _sanitizeText(c && c.name, 180) || "Channel",
       id: "", logo: _isSafeStreamUrl(c && c.logo) ? c.logo : "",
       category: _sanitizeText(c && c.category, 80) || "Custom",
-      language: "", quality: guessQuality(String(c && c.name || "")), url: url, source: "My Channels",
+      language: "", quality: guessQuality(String(c && c.name || "")), url: url, source: "My Channels", sourceId: CUSTOM_PROVIDER_ID,
     });
   }
   return out;
@@ -648,6 +648,7 @@ async function handleMergePlaylist(request, env, url) {
         if (!key || seenStream[key]) continue; // drop only EXACT same stream
         seenStream[key] = 1;
         ch.source = members[i].name || members[i].id;
+        ch.sourceId = members[i].id;
         channels.push(ch);
         if (channels.length >= MERGE_MAX_CHANNELS) break;
       }
