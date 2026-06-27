@@ -891,11 +891,8 @@ function __iptvBoot(){
   function openIPTV(){
     if(!state.token){logout();return;}
     state.group="IPTV";
-    var srcs=_uniqueSources();
-    var def=null;
-    for(var i=0;i<srcs.length;i++){ if(/india/i.test(srcs[i].name)||srcs[i].id==="in"){def=srcs[i];break;} }
-    if(!def) def=srcs[0];
-    state.selectedSources = def ? [def.id] : [];
+    // Default to ALL sources so the same channel from different m3u stacks together.
+    state.selectedSources = _uniqueSources().map(function(p){return p.id;});
     buildSourcesPanel();
     show("player-screen");
     loadSelectedSources();
@@ -1414,19 +1411,29 @@ function __iptvBoot(){
       '<div class="cat-head"><h3 title="'+esc(name)+'">'+esc(name)+'</h3>'+cnt+'</div>'+
       '<div class="cat-row">'+cards+'</div></section>';
   }
+  // Normalised key so the SAME channel from different m3u stacks into one row even
+  // when names differ by quality/resolution: "Asianet News (1080p)" / "Asianet News HD".
+  function _stackKey(name){
+    var s=String(name||"").toLowerCase()
+      .replace(/\([^)]*\)/g," ").replace(/\[[^\]]*\]/g," ")
+      .replace(/\b(fhd|uhd|hd|sd|4k|8k|hevc|h\.?26[45]|2160p?|1080p?|720p?|576p?|480p?|360p?|240p?)\b/g," ")
+      .replace(/[^a-z0-9]+/g," ").replace(/\s+/g," ").trim();
+    return s || String(name||"").toLowerCase();
+  }
+  function _cleanName(name){ return String(name||"").replace(/\([^)]*\)/g,"").replace(/\[[^\]]*\]/g,"").replace(/\s+/g," ").trim()||String(name||""); }
   function renderStack(host){
     host.classList.add("grouped");
-    var groups={}, order=[];
+    var groups={}, order=[], labels={};
     state.filtered.forEach(function(c,i){
-      var k=c.name||"Unknown";
-      if(!groups[k]){groups[k]=[];order.push(k);}
+      var k=_stackKey(c.name);
+      if(!groups[k]){groups[k]=[];order.push(k);labels[k]=_cleanName(c.name);}
       groups[k].push(i);
     });
-    state._stackGroups=groups; state._stackOrder=order;
-    state.stackRows=order.map(function(k){return {name:k, idxs:groups[k]};});
+    state._stackGroups=groups; state._stackOrder=order; state._stackLabels=labels;
+    state.stackRows=order.map(function(k){return {name:labels[k], idxs:groups[k]};});
     if(!state.renderCount||state.renderCount<PAGE)state.renderCount=PAGE;
     var n=Math.min(order.length, state.renderCount);
-    host.innerHTML=order.slice(0,n).map(function(k){return _stackSecHtml(k,groups[k]);}).join("");
+    host.innerHTML=order.slice(0,n).map(function(k){return _stackSecHtml(labels[k],groups[k]);}).join("");
     bindChCards(host.querySelectorAll(".ch-card"));
   }
   function setView(v){
@@ -1452,7 +1459,7 @@ function __iptvBoot(){
       if(haveRows===0 || haveRows>=order.length) return;
       var nextRows=Math.min(order.length, haveRows+PAGE); state.renderCount=nextRows;
       var before=host.children.length;
-      host.insertAdjacentHTML("beforeend", order.slice(haveRows,nextRows).map(function(k){return _stackSecHtml(k,state._stackGroups[k]);}).join(""));
+      host.insertAdjacentHTML("beforeend", order.slice(haveRows,nextRows).map(function(k){return _stackSecHtml((state._stackLabels&&state._stackLabels[k])||k,state._stackGroups[k]);}).join(""));
       for(var ci=before;ci<host.children.length;ci++){ bindChCards(host.children[ci].querySelectorAll(".ch-card")); }
       return;
     }

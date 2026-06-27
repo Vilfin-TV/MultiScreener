@@ -5212,6 +5212,8 @@ var IPTV_PANEL_HTML =
         '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">' +
           '<input id="iptv-cc-name" type="text" placeholder="Channel name (e.g. beIN SPORTS XTRA)" style="flex:1;min-width:170px;padding:9px 11px;background:#0f0f12;border:1px solid rgba(255,255,255,.16);border-radius:8px;color:#fff;font-size:13px">' +
           '<input id="iptv-cc-url" type="url" placeholder="https://… .m3u8" style="flex:2;min-width:220px;padding:9px 11px;background:#0f0f12;border:1px solid rgba(255,255,255,.16);border-radius:8px;color:#fff;font-size:13px">' +
+          '<input id="iptv-cc-cat" list="iptv-cc-catlist" placeholder="Category (Sports…)" style="flex:0 0 150px;min-width:120px;padding:9px 11px;background:#0f0f12;border:1px solid rgba(255,255,255,.16);border-radius:8px;color:#fff;font-size:13px">' +
+          '<datalist id="iptv-cc-catlist"><option value="Sports"><option value="News"><option value="Movies"><option value="Entertainment"><option value="Kids"><option value="Music"><option value="Documentary"></datalist>' +
           '<button id="iptv-cc-add" style="padding:9px 16px;background:rgba(77,219,138,.14);color:#7fe0a8;border:1px solid rgba(77,219,138,.34);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Add</button>' +
         '</div>' +
         '<div id="iptv-cc-list"></div>' +
@@ -5265,13 +5267,13 @@ function _iptvBuildPanel() {
 // ── Custom single channels (name + direct .m3u8) ──────────────────────────────
 var IPTV_CUSTOM = [];
 function _iptvCustomAdd() {
-  var nm = document.getElementById('iptv-cc-name'), ur = document.getElementById('iptv-cc-url');
-  var name = (nm && nm.value || '').trim(), url = (ur && ur.value || '').trim();
+  var nm = document.getElementById('iptv-cc-name'), ur = document.getElementById('iptv-cc-url'), ca = document.getElementById('iptv-cc-cat');
+  var name = (nm && nm.value || '').trim(), url = (ur && ur.value || '').trim(), cat = (ca && ca.value || '').trim() || 'Custom';
   var msg = document.getElementById('iptv-settings-msg');
   if (!name || !url) { if (msg) msg.innerHTML = '<span style="color:#ffb37a">Enter both a name and an .m3u8 URL.</span>'; return; }
   if (!/^https?:\/\//i.test(url)) { if (msg) msg.innerHTML = '<span style="color:#ffb37a">URL must start with http(s)://</span>'; return; }
-  IPTV_CUSTOM.push({ name: name, url: url, category: 'Custom' });
-  if (nm) nm.value = ''; if (ur) ur.value = '';
+  IPTV_CUSTOM.push({ name: name, url: url, category: cat });
+  if (nm) nm.value = ''; if (ur) ur.value = ''; if (ca) ca.value = '';
   _iptvBuildCustomRows();
   if (msg) msg.innerHTML = '<span style="color:#7fe0a8">Added “' + esc(name) + '”. Click Save settings to publish.</span>';
 }
@@ -5282,6 +5284,7 @@ function _iptvBuildCustomRows() {
   host.innerHTML = IPTV_CUSTOM.map(function (c, i) {
     return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid rgba(255,255,255,.08);border-radius:8px;margin-bottom:6px">' +
       '<span style="font-weight:600;color:#f4f4f8;font-size:13px;flex:0 0 auto">' + esc(c.name) + '</span>' +
+      '<span style="font-size:10.5px;color:#b9a7ff;background:rgba(124,77,255,.12);border-radius:10px;padding:1px 8px;flex:0 0 auto">' + esc(c.category || 'Custom') + '</span>' +
       '<span style="font-size:11px;color:#8a8a9e;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(c.url) + '</span>' +
       '<button onclick="_iptvCustomDelete(' + i + ')" style="padding:4px 9px;background:rgba(255,77,77,.15);color:#ff8888;border:1px solid rgba(255,77,77,.3);border-radius:5px;font-size:11px;cursor:pointer;flex:0 0 auto">Delete</button>' +
     '</div>';
