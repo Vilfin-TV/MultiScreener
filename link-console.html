@@ -6569,12 +6569,13 @@ async function jioRequestOtp() {
 }
 
 async function jioSubmitOtp() {
+  var num = document.getElementById("jio-phone").value.trim();
   var otp = document.getElementById("jio-otp").value.trim();
   var st = document.getElementById("jio-status");
   if(!otp) { st.textContent = "Please enter OTP"; return; }
   st.textContent = "Sending OTP to worker...";
   try {
-    var res = await authFetch(WORKER+'/api/jio/auth', { method:'POST', body:JSON.stringify({ action: "set_otp", otp: otp }) });
+    var res = await authFetch(WORKER+'/api/jio/auth', { method:'POST', body:JSON.stringify({ action: "set_otp", phone: num, otp: otp }) });
     var d = await res.json();
     if(!res.ok || !d.ok) throw new Error(d.error || d.message || "HTTP "+res.status);
     st.textContent = "OTP sent to worker! The Python script on your Linux server will now log in and sync the playlist.\nCheck the frontend IPTV portal in ~30 seconds.";
