@@ -1008,6 +1008,9 @@
       <div class="c-tab" data-tab="iptv" onclick="switchTab('iptv')">
         <span class="c-tab-ico">📺</span> IPTV
       </div>
+      <div class="c-tab" data-tab="jio" onclick="switchTab('jio')">
+        <span class="c-tab-ico">📱</span> Jio TV Sync
+      </div>
       <div class="c-tab admin-only" data-tab="report" onclick="switchTab('report')">
         <span class="c-tab-ico">📊</span> Report
       </div>
@@ -1810,6 +1813,26 @@
       </div><!-- /ac-lessons -->
 
     </div><!-- /tab-academy -->
+
+    <!-- ══ JIO TV TAB ══ -->
+    <div class="c-panel" id="tab-jio">
+      <div style="padding:28px">
+        <h2 style="margin:0 0 6px;color:#ffffff">📱 Jio TV Sync</h2>
+        <p style="opacity:.7;margin:0 0 18px;font-size:14px;color:#b9b9cc">Generate Jio TV M3U by requesting an OTP. Make sure jio_generator.py is running on your server.</p>
+        
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.10);border-radius:12px;padding:18px;margin-bottom:18px">
+          <label class="field-label">1. Jio Phone Number</label>
+          <input id="jio-phone" type="number" placeholder="Enter 10 digit number" style="margin-bottom:14px">
+          <button class="btn-primary" onclick="jioRequestOtp()" style="margin-bottom:14px">Request OTP</button>
+
+          <label class="field-label">2. Enter OTP</label>
+          <input id="jio-otp" type="number" placeholder="6-digit OTP" style="margin-bottom:14px">
+          <button class="btn-primary" onclick="jioSubmitOtp()">Submit OTP</button>
+        </div>
+        
+        <div id="jio-status" style="padding:12px 14px;border:1px solid rgba(255,255,255,.12);border-radius:10px;font-size:14px;color:#e2eeff;background:#0f0f12;white-space:pre-wrap;">Waiting for action...</div>
+      </div>
+    </div><!-- /tab-jio -->
 
   </div><!-- /console -->
 </div><!-- /dashboard-view -->

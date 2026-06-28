@@ -1243,6 +1243,23 @@ ${body.text}`;
       return _iptvJson({ ok: true, saved: true, settings: settings });
     }
 
+    // ── /api/jio/auth  GET/POST — Bridging Jio OTP for local server ──
+    if (pathname === '/api/jio/auth') {
+      const auth = await _authOperator(request, env);
+      if (auth.error) return auth.error;
+
+      if (request.method === 'POST') {
+        let body;
+        try { body = await request.json(); } catch (_) { return jsonError(400, 'Invalid JSON body.'); }
+        await env.IPTV_KV.put('jio_auth_request', JSON.stringify({ ...body, ts: Date.now() }));
+        return _iptvJson({ ok: true, saved: true });
+      } else if (request.method === 'GET') {
+        let current = await env.IPTV_KV.get('jio_auth_request');
+        return _iptvJson({ ok: true, data: current ? JSON.parse(current) : null });
+      }
+      return jsonError(405, 'Method not allowed.');
+    }
+
     // ── /api/post-link  POST — append an external link to links.json via GitHub API ──
     if (pathname === '/api/post-link') {
       if (request.method !== 'POST') {

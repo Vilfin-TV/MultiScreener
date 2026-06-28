@@ -224,9 +224,9 @@
   @keyframes spin{to{transform:rotate(360deg)}}
   .player-placeholder{position:absolute;inset:0;display:grid;place-items:center;color:var(--text-faint);text-align:center;padding:20px}
   .player-placeholder .pp-ico{font-size:46px;margin-bottom:12px;opacity:.5}
-  .controls{position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;align-items:center;gap:8px;padding:14px 12px 10px;
-    background:linear-gradient(to top,rgba(0,0,0,.82),rgba(0,0,0,0));flex-wrap:wrap;opacity:0;transition:opacity var(--t-fast)}
-  .video-col:hover .controls,.controls.pinned{opacity:1}
+  /* A clean static control BAR below the video (not an overlay) on every screen. */
+  .controls{position:static;display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:9px 12px;margin-top:8px;
+    background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
   .ctrl-btn{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:#fff;transition:background var(--t-fast),transform var(--t-fast)}
   .ctrl-btn:hover{background:rgba(255,255,255,.14)} .ctrl-btn:active{transform:scale(.92)}
   .ctrl-btn svg{width:20px;height:20px} .ctrl-btn.play svg{width:24px;height:24px}
@@ -356,7 +356,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 14px;
-    padding: 12px clamp(12px, 3vw, 26px) 18px;
+    padding: 12px clamp(18px, 4vw, 48px) 18px;
     overflow-y: auto;
     overflow-x: hidden;
     scroll-behavior: smooth;
@@ -441,7 +441,7 @@
     display: block;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 6px clamp(12px, 3vw, 26px) 24px;
+    padding: 6px clamp(18px, 4vw, 48px) 24px;
   }
   .cat-section { margin: 0 0 22px; }
   .cat-head {
@@ -506,6 +506,31 @@
   }
   .remote-panel.open {
     display: flex;
+  }
+  /* ===== Favorites panel (desktop side column) ===== */
+  .fav-panel{display:none;flex-direction:column;flex:0 0 250px;max-width:250px;min-width:0;
+    background:var(--surface);border:1px solid var(--border-strong);border-radius:14px;overflow:hidden}
+  .fav-panel .fav-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;
+    border-bottom:1px solid var(--border);font-size:13px;font-weight:700;letter-spacing:.4px;color:var(--text)}
+  .fav-panel .fav-count{font-size:11px;font-weight:600;color:var(--text-faint)}
+  .fav-list{flex:1;min-height:0;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:6px;scrollbar-width:thin}
+  .fav-item{display:flex;align-items:center;gap:10px;padding:7px 9px;border-radius:9px;cursor:pointer;border:1px solid transparent}
+  .fav-item:hover{background:var(--surface-2);border-color:var(--border)}
+  .fav-item.playing{border-color:var(--accent);background:var(--accent-soft)}
+  .fav-item .fi-logo{width:34px;height:34px;border-radius:8px;background:var(--surface-3);display:grid;place-items:center;overflow:hidden;flex:0 0 auto;font-size:15px}
+  .fav-item .fi-logo img{width:100%;height:100%;object-fit:cover}
+  .fav-item .fi-body{min-width:0;flex:1;display:flex;flex-direction:column}
+  .fav-item .fi-name{font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fav-item .fi-src{font-size:10.5px;color:var(--text-faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fav-item .fi-x{flex:0 0 auto;color:var(--text-faint);font-size:15px;opacity:0;transition:var(--t-fast)}
+  .fav-item:hover .fi-x{opacity:1}
+  .fav-empty{padding:26px 14px;text-align:center;color:var(--text-faint);font-size:12.5px;line-height:1.6}
+  /* Desktop: video + favorites + remote side by side */
+  @media(min-width:1001px){
+    .fav-panel{display:flex}
+    .remote-panel{display:flex}
+    .remote-panel #close-remote{display:none}
+    .player-stage{max-height:52vh}
   }
   .remote-toggle {
     position: absolute;
@@ -653,7 +678,7 @@
   </header>
 
     <div class="layout">
-    <div class="player-hero" style="display:flex; flex-direction:row; gap:10px; padding:10px; height: 50vh;">
+    <div class="player-hero" style="display:flex; flex-direction:row; gap:12px; padding:12px; align-items:stretch;">
       <div class="video-col" style="flex:1; min-width:0; position:relative; display:flex; flex-direction:column;">
       <div class="player-stage" id="video-shell" style="position:relative;">
         <video id="video" playsinline></video>
@@ -661,11 +686,11 @@
         <div class="video-loading" id="video-loading"><div><div class="spinner"></div><span>Loading stream…</span></div></div>
       </div>
         <div class="controls" id="controls">
-          <button class="ctrl-btn" id="btn-up" title="Previous channel (up)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8l-6 6h12z"/></svg></button>
-          <button class="ctrl-btn" id="btn-prev" title="Previous source (left)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM9.5 12l8.5 6V6z"/></svg></button>
+          <button class="ctrl-btn" id="btn-up" title="Previous source (▲)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8l-6 6h12z"/></svg></button>
+          <button class="ctrl-btn" id="btn-prev" title="Previous channel (◀)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM9.5 12l8.5 6V6z"/></svg></button>
           <button class="ctrl-btn play" id="btn-play" title="Play/Pause"><svg id="icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg id="icon-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button>
-          <button class="ctrl-btn" id="btn-next" title="Next source (right)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg></button>
-          <button class="ctrl-btn" id="btn-down" title="Next channel (down)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 16l6-6H6z"/></svg></button>
+          <button class="ctrl-btn" id="btn-next" title="Next channel (▶)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg></button>
+          <button class="ctrl-btn" id="btn-down" title="Next source (▼)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 16l6-6H6z"/></svg></button>
           <div class="vol-group">
             <button class="ctrl-btn" id="btn-mute" title="Mute"><svg id="icon-vol" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9z"/></svg><svg id="icon-mute" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M3 9v6h4l5 5V4L7 9zm13.7-1.3-1.4 1.4L17 11l-1.7 1.9 1.4 1.4L18.4 12l1.7 1.7 1.4-1.4L19.8 10.6 21.5 8.7l-1.4-1.4L18.4 9z"/></svg></button>
             <input type="range" class="vol-slider" id="vol-slider" min="0" max="1" step="0.01" value="1" aria-label="Volume"/>
@@ -680,6 +705,12 @@
           <div class="np-epg" id="np-epg"></div>
         </div>
       </div>
+
+      <!-- Favorites Panel (desktop) -->
+      <aside class="fav-panel" id="fav-panel">
+        <div class="fav-head"><span>★ Favorites</span><span class="fav-count" id="fav-count"></span></div>
+        <div class="fav-list" id="fav-list"></div>
+      </aside>
 
       <!-- Remote Panel -->
       <div class="remote-panel" id="hero-remote-panel">
@@ -764,7 +795,7 @@ function __iptvBoot(){
     provider:null, providersList:[], channels:[], filtered:[], currentChannel:null, currentIndex:-1,
     hls:null, renderCount:PAGE, favs:loadFavs(), hidden:loadHidden(), prefs:loadPrefs(),
     dim:"country", mode2:"language", langHidden:false, view:"stack", regionView:null, group:null,
-    selectedSources:[], stackRows:[], curRow:-1, curCol:-1,
+    selectedSources:[], stackRows:[], curRow:-1, curCol:-1, playContext:"main", favIndex:null,
     filter:{country:"",category:"",language:"",search:"",favOnly:false}
   };
   if(state.prefs && (state.prefs.view==="rows"||state.prefs.view==="grid"||state.prefs.view==="stack")) state.view=state.prefs.view;
@@ -886,9 +917,23 @@ function __iptvBoot(){
       '<div class="provider-badge">📺</div>'+
       '<h3>IPTV</h3>'+
       '<div class="pc-sub">'+(n?n+' sources — ':'')+'pick any or all inside</div>'+
-      '<span class="pc-go">Open IPTV →</span></button>';
+      '<span class="pc-go">Open IPTV →</span></button>'+
+      '<button class="provider-card pc-jio" data-provider="jio">'+
+      '<div class="provider-badge">📱</div>'+
+      '<h3>Jio TV</h3>'+
+      '<div class="pc-sub">Exclusive live Indian channels</div>'+
+      '<span class="pc-go">Open Jio TV →</span></button>';
     var card=grid.querySelector('.provider-card[data-iptv]');
     if(card)card.addEventListener("click",function(){openIPTV();});
+    var jioCard=grid.querySelector('.provider-card[data-provider="jio"]');
+    if(jioCard)jioCard.addEventListener("click",function(){
+      // Launch directly into jio without group mode
+      state.provider = "jio";
+      state.group = null;
+      var pr = _enabledProvs().find(function(p){ return p.id==="jio"; });
+      if(pr) loadProvider("jio");
+      else alert("Jio TV playlist is missing or not configured yet!");
+    });
   }
   // Enabled providers, de-duplicated by m3u URL (so the same playlist is listed once).
   function _uniqueSources(){
@@ -945,7 +990,7 @@ function __iptvBoot(){
         if(!res.ok)throw new Error(res.d&&res.d.error?res.d.error:"Failed to load");
         var listc=Array.isArray(res.d)?res.d:(res.d.channels||[]);
         state.channels=listc.map(normalizeChannel);
-        applyDefaults();populateFilters();applyFilters();
+        applyDefaults();populateFilters();applyFilters();renderFavPanel();
         toast(state.channels.length.toLocaleString()+" channels across "+(res.d.sources||ids.length)+" sources.");
       })
       .catch(function(err){
@@ -1016,7 +1061,7 @@ function __iptvBoot(){
         if(!res.ok)throw new Error(res.d&&res.d.error?res.d.error:"Failed to load region");
         var listc=Array.isArray(res.d)?res.d:(res.d.channels||[]);
         state.channels=listc.map(normalizeChannel);
-        applyDefaults();populateFilters();applyFilters();
+        applyDefaults();populateFilters();applyFilters();renderFavPanel();
         toast(state.channels.length.toLocaleString()+" channels across "+(res.d.sources||list.length)+" sources.");
       })
       .catch(function(err){
@@ -1580,12 +1625,62 @@ function __iptvBoot(){
     saveFavs();
     if(state.filter.favOnly)applyFilters();
     if(state.mode2==="favorites"&&!state.langHidden)renderFavList($("lang-search").value);
+    renderFavPanel();
+  }
+  /* ---------- Favorites side panel (desktop) ---------- */
+  function favList(){ return (state.channels||[]).filter(function(c){return state.favs.has(favKey(c));}); }
+  function renderFavPanel(){
+    var host=document.getElementById("fav-list"); if(!host)return;
+    var list=favList();
+    var cnt=document.getElementById("fav-count"); if(cnt)cnt.textContent=list.length?String(list.length):"";
+    if(!list.length){ host.innerHTML='<div class="fav-empty">No favorites yet.<br>Tap the ☆ on any channel to add it here.</div>'; return; }
+    var curKey=state.currentChannel?favKey(state.currentChannel):null;
+    host.innerHTML=list.map(function(c){
+      var logo=c.logo?'<img loading="lazy" src="'+esc(c.logo)+'" alt="" onerror="this.parentNode.innerHTML=\'📺\'">':'📺';
+      var playing=(curKey&&favKey(c)===curKey)?" playing":"";
+      return '<div class="fav-item'+playing+'" data-fk="'+esc(favKey(c))+'">'+
+        '<span class="fi-logo">'+logo+'</span>'+
+        '<span class="fi-body"><span class="fi-name" title="'+esc(c.name)+'">'+esc(c.name)+'</span>'+(c.source?'<span class="fi-src">'+esc(c.source)+'</span>':'')+'</span>'+
+        '<span class="fi-x" title="Remove" data-rmfk="'+esc(favKey(c))+'">✕</span></div>';
+    }).join("");
+    Array.prototype.forEach.call(host.querySelectorAll(".fav-item"),function(el){
+      el.addEventListener("click",function(){ playFromFavKey(el.getAttribute("data-fk")); });
+      var x=el.querySelector("[data-rmfk]");
+      if(x)x.addEventListener("click",function(ev){ev.stopPropagation();removeFav(x.getAttribute("data-rmfk"));});
+    });
+  }
+  function removeFav(fk){ state.favs.delete(fk); saveFavs(); renderFavPanel();
+    if(state.filter.favOnly)applyFilters(); else updatePlayingHighlight();
+    // refresh any visible star in the main list
+    var host=document.getElementById("channel-list-new");
+    if(host)Array.prototype.forEach.call(host.querySelectorAll(".ch-card"),function(el){
+      var c=state.filtered[parseInt(el.getAttribute("data-idx"),10)]; var st=el.querySelector(".star");
+      if(c&&st){ var on=state.favs.has(favKey(c)); st.classList.toggle("on",on); st.textContent=on?"★":"☆"; }
+    });
+  }
+  function playFromFavKey(fk){
+    var list=favList(); for(var i=0;i<list.length;i++){ if(favKey(list[i])===fk){ playFavAt(i); return; } }
+  }
+  function playFavAt(i){
+    var list=favList(); var ch=list[i]; if(!ch)return;
+    state.favIndex=i; state.playContext="favorites"; state.currentChannel=ch;
+    var fIdx=state.filtered.indexOf(ch);
+    state.currentIndex=fIdx; // -1 if not in current filtered view (still plays)
+    openPlayer(ch, fIdx>=0?fIdx:0); updatePlayingHighlight(); renderFavPanel();
+  }
+  function navFav(d){
+    var list=favList(); if(!list.length)return;
+    var i=(state.favIndex==null?0:state.favIndex)+d;
+    if(i<0){toast("First favorite.");return;}
+    if(i>=list.length){toast("Last favorite.");return;}
+    playFavAt(i);
   }
 
   /* ---------- Playback ---------- */
   var video=$("video");
   function playIndex(idx){
     if(idx<0||idx>=state.filtered.length)return;
+    state.playContext="main"; // playing from the main channel list
     state.currentIndex=idx;var ch=state.filtered[idx];state.currentChannel=ch;
     var loc=_locateInStack(idx); state.curRow=loc.row; state.curCol=loc.col;
     openPlayer(ch,idx);updatePlayingHighlight();
@@ -1595,30 +1690,32 @@ function __iptvBoot(){
     for(var r=0;r<rows.length;r++){ var col=rows[r].idxs.indexOf(idx); if(col!==-1)return{row:r,col:col}; }
     return{row:-1,col:-1};
   }
-  // Horizontal (Prev/Next): move between the duplicate SOURCES of the current
-  // channel in stacked view; sequential in flat views.
+  // Prev/Next (◀ ▶): play the previous/next CHANNEL — the favorites list when
+  // playing from favorites, otherwise the main channel list ("from down").
   function navHoriz(d){
-    if(state.currentIndex<0){ if(state.filtered.length)playIndex(0); return; }
-    if(state.view==="stack" && state.curRow>=0 && state.stackRows[state.curRow]){
-      var row=state.stackRows[state.curRow], col=state.curCol+d;
-      if(col<0||col>=row.idxs.length){ toast(d>0?"Last source of this channel.":"First source."); return; }
-      playIndex(row.idxs[col]); return;
+    if(state.playContext==="favorites"){ navFav(d); return; }
+    if(state.view==="stack" && state.stackRows.length){
+      var nr=(state.curRow<0?(d>0?-1:0):state.curRow)+d;
+      if(nr<0){toast("Already at the first channel.");return;}
+      if(nr>=state.stackRows.length){toast("Already at the last channel.");return;}
+      if(nr>=state.renderCount){ state.renderCount=nr+PAGE; renderList(); } // ensure target row rendered
+      playIndex(state.stackRows[nr].idxs[0]); return;
     }
+    if(state.currentIndex<0){ if(state.filtered.length)playIndex(0); return; }
     var ni=state.currentIndex+d;
     if(ni<0){toast("Already at the first channel.");return;}
     if(ni>=state.filtered.length){toast("Already at the last channel.");return;}
     playIndex(ni);
   }
-  // Vertical (Up/Down): move between CHANNELS (rows) in stacked view.
+  // Up/Down (▲ ▼): step between the duplicate SOURCES of the current channel.
   function navVert(d){
-    if(state.view==="stack" && state.stackRows.length){
-      var nr=(state.curRow<0?0:state.curRow)+d;
-      if(nr<0){toast("First channel.");return;}
-      if(nr>=state.stackRows.length){toast("Last channel.");return;}
-      if(nr>=state.renderCount){ state.renderCount=nr+PAGE; renderList(); } // ensure target row rendered
-      playIndex(state.stackRows[nr].idxs[0]); return;
+    if(state.playContext==="favorites"){ navFav(d); return; }
+    if(state.view==="stack" && state.curRow>=0 && state.stackRows[state.curRow]){
+      var row=state.stackRows[state.curRow], col=state.curCol+d;
+      if(col<0||col>=row.idxs.length){ toast(d>0?"Last source of this channel.":"First source of this channel."); return; }
+      playIndex(row.idxs[col]); return;
     }
-    navHoriz(d); // flat views: up/down behaves like prev/next
+    navHoriz(d); // flat views: up/down behaves like prev/next channel
   }
   // Move the "playing" highlight without rebuilding the list (keeps scroll + is instant).
   function updatePlayingHighlight(){
