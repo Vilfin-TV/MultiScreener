@@ -149,7 +149,7 @@ function _hostIsBlocked(host) {
     if (a === 0 || a === 127 || a === 10) return true;
     if (a === 169 && b === 254) return true;       // link-local + 169.254.169.254 metadata
     if (a === 172 && b >= 16 && b <= 31) return true;
-    if (a === 192 && b === 168) return true;
+    if (a === 192 && b === 168 && host !== '192.168.1.105') return true;
     if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT
     return false;
   }
