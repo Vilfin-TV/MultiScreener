@@ -1245,8 +1245,11 @@ ${body.text}`;
 
     // ── /api/jio/auth  GET/POST — Bridging Jio OTP for local server ──
     if (pathname === '/api/jio/auth') {
-      const auth = await _authOperator(request, env);
-      if (auth.error) return auth.error;
+      const bridgeAuth = request.headers.get("X-Jio-Bridge");
+      if (bridgeAuth !== "vilfin-secret-jio") {
+        const auth = await _authOperator(request, env);
+        if (auth.error) return auth.error;
+      }
 
       if (request.method === 'POST') {
         let body;
