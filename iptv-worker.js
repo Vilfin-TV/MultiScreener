@@ -271,6 +271,10 @@ async function loadSettings(env) {
     if (customChannels.length) {
       providers[CUSTOM_PROVIDER_ID] = { name: "My Channels", icon: "★", group: "", region: "", enabled: true, url: "", epg: "", custom: true };
     }
+    
+    if (!providers['jio']) {
+      providers['jio'] = { name: "Jio IPTV", icon: "J", group: "", region: "", enabled: true, url: "", epg: "" };
+    }
 
     return {
       sessionHours: Math.max(1, Math.min(168, parseInt(s.sessionHours, 10) || DEFAULT_SESSION_HOURS)),
@@ -592,7 +596,7 @@ async function handleRegionPlaylist(request, env, url) {
 }
 
 const MERGE_MAX_SOURCES = 60;
-const MERGE_MAX_CHANNELS = 15000;
+const MERGE_MAX_CHANNELS = 40000; // per-source dedup keeps cross-source copies, so allow more
 function _shortHash(s) { let h = 0; for (let i = 0; i < s.length; i++) { h = ((h << 5) - h + s.charCodeAt(i)) | 0; } return (h >>> 0).toString(36); }
 
 /** ?providers=a,b,c  or  ?all=1 — merge the selected sources into one list.
@@ -644,8 +648,10 @@ async function handleMergePlaylist(request, env, url) {
       used++;
       const list = parseM3U(raw);
       for (const ch of list) {
-        const key = ch.url;
-        if (!key || seenStream[key]) continue; // drop only EXACT same stream
+        // Dedup PER SOURCE only — the same channel from different sources (India,
+        // Malayalam, All World …) is intentionally kept so it lists once per source.
+        const key = members[i].id + "|" + ch.url;
+        if (!ch.url || seenStream[key]) continue;
         seenStream[key] = 1;
         ch.source = members[i].name || members[i].id;
         ch.sourceId = members[i].id;
