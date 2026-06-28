@@ -1254,6 +1254,13 @@ ${body.text}`;
       if (request.method === 'POST') {
         let body;
         try { body = await request.json(); } catch (_) { return jsonError(400, 'Invalid JSON body.'); }
+        
+        if (body.action === "save_m3u" && body.m3u) {
+          if (!env.IPTV_KV) return jsonError(503, "KV not configured");
+          await env.IPTV_KV.put('jio_playlist', body.m3u);
+          return _iptvJson({ ok: true });
+        }
+
         await env.IPTV_KV.put('jio_auth_request', JSON.stringify({ ...body, ts: Date.now() }));
         return _iptvJson({ ok: true, saved: true });
       } else if (request.method === 'GET') {
