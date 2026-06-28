@@ -1755,7 +1755,9 @@ function __iptvBoot(){
   }
   function loadStream(raw){
     if(!raw){toast("This channel has no stream URL.",true);return;}
-    var src=API.stream(raw,state.token||"");setLoading(true);stopHls();
+    var src=API.stream(raw,state.token||"");
+    if(raw.indexOf("192.168.") !== -1) { src = raw; }
+    setLoading(true);stopHls();
     if(window.Hls&&window.Hls.isSupported()){
       var hls=new window.Hls({maxBufferLength:30,lowLatencyMode:true});state.hls=hls;
       hls.loadSource(src);hls.attachMedia(video);
