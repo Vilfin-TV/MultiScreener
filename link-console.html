@@ -6555,6 +6555,23 @@ async function _sessRevoke(jti,others){
 }
 
 /* ── Jio TV Sync ──────────────────────────────────────────────────────────── */
+var jioPoll = null;
+function startJioPoll() {
+  if(jioPoll) return;
+  jioPoll = setInterval(async function() {
+    try {
+      var res = await authFetch(WORKER+'/api/jio/auth');
+      var d = await res.json();
+      if(d.ok && d.data && d.data.action === "status" && d.data.message) {
+        document.getElementById("jio-status").textContent = "Update from server: " + d.data.message;
+        if(d.data.message.includes("Process complete") || d.data.message.includes("Wait 5 mins")) {
+          clearInterval(jioPoll); jioPoll=null;
+        }
+      }
+    } catch(e) {}
+  }, 2000);
+}
+
 async function jioRequestOtp() {
   var num = document.getElementById("jio-phone").value.trim();
   var st = document.getElementById("jio-status");
@@ -6564,7 +6581,8 @@ async function jioRequestOtp() {
     var res = await authFetch(WORKER+'/api/jio/auth', { method:'POST', body:JSON.stringify({ action: "set_phone", phone: num }) });
     var d = await res.json();
     if(!res.ok || !d.ok) throw new Error(d.error || d.message || "HTTP "+res.status);
-    st.textContent = "Number sent. Check your phone for OTP, then enter it below.";
+    st.textContent = "Number sent. Waiting for python script to process...";
+    startJioPoll();
   } catch(e) { st.textContent = "Error: " + e.message; }
 }
 
@@ -6578,7 +6596,8 @@ async function jioSubmitOtp() {
     var res = await authFetch(WORKER+'/api/jio/auth', { method:'POST', body:JSON.stringify({ action: "set_otp", phone: num, otp: otp }) });
     var d = await res.json();
     if(!res.ok || !d.ok) throw new Error(d.error || d.message || "HTTP "+res.status);
-    st.textContent = "OTP sent to worker! The Python script on your Linux server will now log in and sync the playlist.\nCheck the frontend IPTV portal in ~30 seconds.";
+    st.textContent = "OTP sent to worker! Waiting for python script to verify...";
+    startJioPoll();
   } catch(e) { st.textContent = "Error: " + e.message; }
 }
 
