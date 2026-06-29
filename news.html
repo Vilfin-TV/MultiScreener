@@ -4368,9 +4368,13 @@ function _renderCustomPosts(sectionId, container) {
     // source) instead of transform:scale, which would upsample the small
     // thumbnail bitmap and blur it. Centering comes from the .cp-photo CSS.
     var _cpImgStyle = 'object-position:' + _cpPos + ';width:' + (_cpZoom * 100) + '%;height:' + (_cpZoom * 100) + '%';
-    var photoHtml = post.photo
-      ? '<div class="cp-photo-wrap"><img class="cp-photo" src="' + escAttr(post.photo) + '" style="' + escAttr(_cpImgStyle) + '" alt="" loading="lazy" onerror="this.parentNode.innerHTML=\'<div class=cp-no-photo>📰</div>\'"></div>'
-      : '<div class="cp-no-photo">📰</div>';
+    // Seeded stock photo guarantees a real image even when the stored photo
+    // URL 404s — cards never fall back to a bare placeholder. 📰 is the last resort.
+    var _cpFb = _wCardImgUrl(post.heading || String(post.id || ''));
+    var _cpSrc = post.photo || _cpFb;
+    var _cpErr = 'if(this.dataset.fb){this.onerror=null;this.parentNode.innerHTML=\'<div class=cp-no-photo>📰</div>\';}'
+      + 'else{this.dataset.fb=1;this.style.width=\'100%\';this.style.height=\'100%\';this.src=\'' + escAttr(_cpFb) + '\';}';
+    var photoHtml = '<div class="cp-photo-wrap"><img class="cp-photo" src="' + escAttr(_cpSrc) + '" style="' + escAttr(_cpImgStyle) + '" alt="" loading="lazy" onerror="' + escAttr(_cpErr) + '"></div>';
     var pubDate = post.published_at
       ? new Date(post.published_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})
       : '';
@@ -4426,8 +4430,10 @@ function openCustomPost(id) {
     var _mPos = post.photo_pos || '50% 50%';
     var _mZoom = post.photo_zoom ? Math.min(Math.max(parseFloat(post.photo_zoom), 1), 4) : 1;
     // Removed fixed 280px height constraint so images fully show. 
+    var _mFb = _wCardImgUrl(post.heading || String(post.id || ''));
     html += '<div style="width:100%;border-radius:10px;margin-bottom:18px;overflow:hidden">'
-      + '<img src="' + escAttr(post.photo) + '" style="width:100%;height:auto;display:block;object-position:' + escAttr(_mPos) + ';transform:scale(' + _mZoom + ');transform-origin:' + escAttr(_mPos) + '" alt="" loading="lazy">'
+      + '<img src="' + escAttr(post.photo) + '" style="width:100%;height:auto;display:block;object-position:' + escAttr(_mPos) + ';transform:scale(' + _mZoom + ');transform-origin:' + escAttr(_mPos) + '" alt="" loading="lazy"'
+      + ' onerror="if(!this.dataset.fb){this.dataset.fb=1;this.style.transform=\'none\';this.src=\'' + escAttr(_mFb) + '\';}else{this.onerror=null;this.style.display=\'none\';}">'
       + '</div>';
   }
 
@@ -4949,6 +4955,23 @@ function _wDecodeHtml(s) {
   return d.textContent || d.innerText || s;
 }
 
+// Strip raw RSS CDATA wrappers/markers and decode entities from a single string.
+// Some feeds leak "<![CDATA[ ... ]]>" into world.json titles/descriptions.
+function _wCleanStr(s) {
+  if (typeof s !== 'string' || !s) return s;
+  s = s.replace(/<!\[CDATA\[/gi, '').replace(/\]\]>/g, '');
+  s = _wDecodeHtml(s);
+  return s.replace(/\s+/g, ' ').trim();
+}
+// Recursively clean every string value in the parsed world data so CDATA never
+// reaches the DOM regardless of which render path consumes it.
+function _wCleanDeep(v) {
+  if (typeof v === 'string') return _wCleanStr(v);
+  if (Array.isArray(v)) { for (var i = 0; i < v.length; i++) v[i] = _wCleanDeep(v[i]); return v; }
+  if (v && typeof v === 'object') { for (var k in v) { if (Object.prototype.hasOwnProperty.call(v, k)) v[k] = _wCleanDeep(v[k]); } return v; }
+  return v;
+}
+
 function _wCardImgUrl(headline) {
   var s = 0;
   for (var i = 0; i < (headline || '').length; i++) { s = ((s << 5) - s + (headline || '').charCodeAt(i)) | 0; }
@@ -5227,7 +5250,7 @@ async function loadWorldSection(container) {
   try {
     var resp = await fetch('data/world.json?_=' + Date.now());
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    data = await resp.json();
+    data = _wCleanDeep(await resp.json());
   } catch(e) {
     console.warn('World data unavailable:', e.message);
   }
