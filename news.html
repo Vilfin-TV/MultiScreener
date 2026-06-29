@@ -740,14 +740,15 @@ body{
 
 /* No inner scrollbars — stories flow with the page and reveal via a "More" button. */
 .lm-hide{display:none !important}
-.lm-more{display:block;width:100%;margin:14px 0 6px;padding:13px 18px;
-  background:var(--card,#fff);border:1px solid var(--border2,#e5e1d8);border-radius:12px;
-  color:var(--burn2,#b91c1c);font-size:15px;font-weight:700;letter-spacing:.2px;cursor:pointer;
-  transition:background .15s,border-color .15s,transform .08s;text-align:center}
-.lm-more:hover{background:rgba(185,28,28,.06);border-color:var(--burn2,#b91c1c)}
-.lm-more:active{transform:translateY(1px)}
-.lm-more .lm-cnt{display:inline-block;margin-left:8px;font-size:12px;font-weight:700;color:var(--ink-soft,#8a8a8a);
-  background:rgba(0,0,0,.06);border-radius:20px;padding:1px 9px;vertical-align:middle}
+/* Corner "More" link (Manorama style): right-aligned, red, uppercase, » arrow. */
+.lm-more-row{text-align:right;margin:6px 2px 16px}
+.lm-more{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;
+  background:transparent;border:none;color:var(--burn2,#b91c1c);font-size:12.5px;font-weight:800;
+  letter-spacing:.6px;text-transform:uppercase;cursor:pointer;border-radius:8px;
+  transition:background .15s,opacity .15s}
+.lm-more:hover{background:rgba(185,28,28,.08)}
+.lm-more:active{opacity:.7}
+.lm-more .lm-arrow{font-size:17px;font-weight:700;line-height:1;margin-top:-1px}
 .news-cards-grid::-webkit-scrollbar,.bn-side-grid::-webkit-scrollbar,.world-np-right::-webkit-scrollbar{width:7px}
 .news-cards-grid::-webkit-scrollbar-track,.bn-side-grid::-webkit-scrollbar-track,.world-np-right::-webkit-scrollbar-track{background:transparent}
 .news-cards-grid::-webkit-scrollbar-thumb,.bn-side-grid::-webkit-scrollbar-thumb,.world-np-right::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
@@ -1646,7 +1647,9 @@ footer.news-footer{
 }
 .bn-hero img {
   width: 100%;
-  height: 400px;
+  height: auto;
+  flex: 1 1 400px;       /* grow to match the taller side column — no empty gap below the image */
+  min-height: 400px;
   object-fit: cover;
   transition: transform 0.3s ease;
 }
@@ -1691,7 +1694,7 @@ footer.news-footer{
   gap: 16px;
 }
 @media(max-width: 600px) {
-  .bn-hero img { height: 260px; }
+  .bn-hero img { height: auto; flex: 1 1 260px; min-height: 260px; }
   .bn-hero-title { font-size: 20px; }
 }
 .bn-card {
@@ -4678,28 +4681,51 @@ function _lmGridType(g) {
   for (var i = 0; i < cls.length; i++) { if (g.classList.contains(cls[i])) return cls[i]; }
   return 'news-cards-grid';
 }
+function _lmCards(g) {
+  return Array.prototype.filter.call(g.children, function (c) { return c.nodeType === 1 && (c.className || '').indexOf('lm-more') === -1; });
+}
+// Hide the overflow stories of one grid and drop a corner "More from <section> »" link.
+function _lmBuild(grid, sectionEl) {
+  var cards = _lmCards(grid);
+  var INITIAL = LM_INITIAL[_lmGridType(grid)] || 6, STEP = INITIAL;
+  if (cards.length <= INITIAL) return;
+  cards.forEach(function (c, i) { if (i >= INITIAL) c.classList.add('lm-hide'); });
+  var nm = '';
+  if (sectionEl) { var ne = sectionEl.querySelector('.news-section-name'); if (ne) nm = (ne.textContent || '').replace(/[\u{1F000}-\u{1FAFF}☀-➿️]/gu, '').replace(/\s+/g, ' ').trim(); }
+  var row = document.createElement('div'); row.className = 'lm-more-row';
+  var btn = document.createElement('button'); btn.className = 'lm-more'; btn.type = 'button';
+  btn.innerHTML = '<span class="lm-txt">' + (nm ? ('More from ' + nm) : 'More stories') + '</span><span class="lm-arrow">»</span>';
+  btn.addEventListener('click', function () {
+    var hidden = grid.querySelectorAll('.lm-hide');
+    var n = Math.min(STEP, hidden.length);
+    for (var i = 0; i < n; i++) hidden[i].classList.remove('lm-hide');
+    if (grid.querySelectorAll('.lm-hide').length === 0 && row.parentNode) row.parentNode.removeChild(row);
+  });
+  row.appendChild(btn);
+  grid.parentNode.insertBefore(row, grid.nextSibling);
+}
 function _lmEnhance(root) {
   root = root || document;
-  var grids = root.querySelectorAll('.news-cards-grid,.bn-side-grid,.featured-grid,.world-np-right');
-  Array.prototype.forEach.call(grids, function (grid) {
-    if (grid.dataset.lm) return;
-    grid.dataset.lm = '1';
-    var cards = Array.prototype.filter.call(grid.children, function (c) { return c.nodeType === 1; });
-    var INITIAL = LM_INITIAL[_lmGridType(grid)] || 6, STEP = INITIAL;
-    if (cards.length <= INITIAL) return;
-    cards.forEach(function (c, i) { if (i >= INITIAL) c.classList.add('lm-hide'); });
-    var btn = document.createElement('button');
-    btn.className = 'lm-more'; btn.type = 'button';
-    btn.innerHTML = 'More stories <span class="lm-cnt">' + (cards.length - INITIAL) + '</span>';
-    btn.addEventListener('click', function () {
-      var hidden = grid.querySelectorAll('.lm-hide');
-      var n = Math.min(STEP, hidden.length);
-      for (var i = 0; i < n; i++) hidden[i].classList.remove('lm-hide');
-      var left = grid.querySelectorAll('.lm-hide').length;
-      if (left === 0) { if (btn.parentNode) btn.parentNode.removeChild(btn); }
-      else { var cEl = btn.querySelector('.lm-cnt'); if (cEl) cEl.textContent = left; }
+  // ONE "More" per top-level news section — on its largest list (so injected
+  // sub-blocks like the featured/market/category grids don't add a 2nd button).
+  document.querySelectorAll('.news-section').forEach(function (sec) {
+    if (sec.dataset.lm) return;
+    sec.dataset.lm = '1';
+    var grids = Array.prototype.slice.call(sec.querySelectorAll('.news-cards-grid,.bn-side-grid,.featured-grid,.world-np-right'));
+    grids.forEach(function (g) { g.dataset.lm = '1'; }); // claim them so the fallback skips
+    var best = null, bestExtra = 0;
+    grids.forEach(function (g) {
+      var extra = _lmCards(g).length - (LM_INITIAL[_lmGridType(g)] || 6);
+      if (extra > bestExtra) { bestExtra = extra; best = g; }
     });
-    grid.parentNode.insertBefore(btn, grid.nextSibling);
+    if (best) _lmBuild(best, sec);
+  });
+  // Grids NOT inside a .news-section (breaking news, world panel, live tabs) — one each.
+  root.querySelectorAll('.news-cards-grid,.bn-side-grid,.featured-grid,.world-np-right').forEach(function (g) {
+    if (g.dataset.lm) return;
+    g.dataset.lm = '1';
+    if (g.closest && g.closest('.news-section')) return;
+    _lmBuild(g, g.closest ? g.closest('[class*="section"]') : null);
   });
 }
 function _lmSetup(container) {
