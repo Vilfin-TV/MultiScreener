@@ -1261,6 +1261,15 @@ ${body.text}`;
           return _iptvJson({ ok: true });
         }
 
+        if (body.action === "save_auth" && body.auth) {
+          if (!env.IPTV_KV) return jsonError(503, "KV not configured");
+          await env.IPTV_KV.put('jio_auth_creds', JSON.stringify(body.auth));
+          if (body.tunnel_url) {
+            await env.IPTV_KV.put('jio_tunnel_url', body.tunnel_url);
+          }
+          return _iptvJson({ ok: true, saved: true });
+        }
+
         await env.IPTV_KV.put('jio_auth_request', JSON.stringify({ ...body, ts: Date.now() }));
         return _iptvJson({ ok: true, saved: true });
       } else if (request.method === 'GET') {

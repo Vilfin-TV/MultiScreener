@@ -80,11 +80,38 @@ const CORS_HEADERS = {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    const { pathname } = url;
 
+    // Generic proxy for DRM keys
+    if (url.pathname === '/api/proxy') {
+      const targetUrl = url.searchParams.get('url');
+      if (!targetUrl) return new Response('Missing url', { status: 400 });
+      
+      try {
+        const response = await fetch(targetUrl, {
+          headers: { 
+            'User-Agent': 'okhttp/4.12.0',
+            'X-Forwarded-For': '49.43.14.22',
+            'X-Real-IP': '49.43.14.22',
+            'CF-Connecting-IP': '49.43.14.22'
+          }
+        });
+        const headers = new Headers(response.headers);
+        headers.set('Access-Control-Allow-Origin', '*');
+        return new Response(response.body, {
+          status: response.status,
+          headers: headers
+        });
+      } catch (err) {
+        return new Response('Proxy error: ' + err.message, { status: 500 });
+      }
+    }
+
+    // CORS preflight
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
     }
+
+    const { pathname } = url;
 
     try {
       if (request.method === "GET" && (pathname === "/" || pathname === "/iptv.html")) {
@@ -105,6 +132,9 @@ export default {
       if (request.method === "GET" && pathname === "/api/stream") {
         return handleStream(request, env, url);
       }
+      if (request.method === "GET" && (pathname === "/api/jio/play" || pathname === "/proxy")) {
+        return handleJioTunnel(request, env, url);
+      }
       return json({ error: "Not found" }, 404);
     } catch (err) {
       return json({ error: "Server error", detail: String(err && err.message || err) }, 500);
@@ -118,6 +148,38 @@ function json(obj, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(obj), {
     status,
     headers: { "Content-Type": "application/json; charset=utf-8", ...CORS_HEADERS, ...extraHeaders },
+  });
+}
+
+async function handleJioTunnel(request, env, url) {
+  const kv = env.IPTV_PLAYLIST_KV;
+  if (!kv) return json({ error: "KV not configured" }, 503);
+  const tunnelUrl = await kv.get('jio_tunnel_url');
+  if (!tunnelUrl) return json({ error: "Jio Tunnel URL not found" }, 404);
+  
+  // Reconstruct the URL for the tunnel
+  const targetUrl = new URL(tunnelUrl);
+  if (url.pathname === "/api/jio/play") {
+    targetUrl.pathname = "/play";
+  } else {
+    targetUrl.pathname = url.pathname; // /proxy
+  }
+  targetUrl.search = url.search;
+  
+  // Fetch from the tunnel
+  const response = await fetch(targetUrl.toString(), {
+    method: request.method,
+    headers: request.headers,
+    redirect: "manual"
+  });
+  
+  // Return the exact response from the tunnel (including 302 redirects)
+  const responseHeaders = new Headers(response.headers);
+  responseHeaders.set("Access-Control-Allow-Origin", "*");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: responseHeaders
   });
 }
 
