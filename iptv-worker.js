@@ -229,6 +229,7 @@ function _isSafeStreamUrl(u) {
   if (!u) return false;
   let url;
   try { url = new URL(u); } catch (e) { return false; }
+  if (url.protocol === "jio:") return true;
   if (url.protocol !== "http:" && url.protocol !== "https:") return false;
   return !_hostIsBlocked(url.hostname);
 }
