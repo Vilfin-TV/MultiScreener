@@ -738,14 +738,20 @@ body{
 }
 @media(max-width:600px){.news-cards-grid{grid-template-columns:1fr}}
 
-/* ── Sliding bar on every story box: bounded height + visible scrollbar ── */
-.news-cards-grid,.bn-side-grid{max-height:640px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
-.bn-side-grid{max-height:480px}
+/* No inner scrollbars — stories flow with the page and reveal via a "More" button. */
+.lm-hide{display:none !important}
+.lm-more{display:block;width:100%;margin:14px 0 6px;padding:13px 18px;
+  background:var(--card,#fff);border:1px solid var(--border2,#e5e1d8);border-radius:12px;
+  color:var(--burn2,#b91c1c);font-size:15px;font-weight:700;letter-spacing:.2px;cursor:pointer;
+  transition:background .15s,border-color .15s,transform .08s;text-align:center}
+.lm-more:hover{background:rgba(185,28,28,.06);border-color:var(--burn2,#b91c1c)}
+.lm-more:active{transform:translateY(1px)}
+.lm-more .lm-cnt{display:inline-block;margin-left:8px;font-size:12px;font-weight:700;color:var(--ink-soft,#8a8a8a);
+  background:rgba(0,0,0,.06);border-radius:20px;padding:1px 9px;vertical-align:middle}
 .news-cards-grid::-webkit-scrollbar,.bn-side-grid::-webkit-scrollbar,.world-np-right::-webkit-scrollbar{width:7px}
 .news-cards-grid::-webkit-scrollbar-track,.bn-side-grid::-webkit-scrollbar-track,.world-np-right::-webkit-scrollbar-track{background:transparent}
 .news-cards-grid::-webkit-scrollbar-thumb,.bn-side-grid::-webkit-scrollbar-thumb,.world-np-right::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
 .news-cards-grid::-webkit-scrollbar-thumb:hover,.bn-side-grid::-webkit-scrollbar-thumb:hover,.world-np-right::-webkit-scrollbar-thumb:hover{background:var(--burn2)}
-@media(max-width:600px){.news-cards-grid,.bn-side-grid{max-height:500px}}
 
 .news-card{
   background:var(--card);border:1px solid var(--border2);
@@ -1134,7 +1140,7 @@ body{
 .world-np-hero-time{font-size:10.5px;color:var(--text3);padding-top:2px}
 
 /* Right: Latest list */
-.world-np-right{grid-area:right;display:flex;flex-direction:column;max-height:520px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.world-np-right{grid-area:right;display:flex;flex-direction:column}
 .world-np-latest-hdr{
   font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
   color:var(--text3);padding:10px 14px 8px;border-bottom:1px solid var(--border);
@@ -1392,16 +1398,13 @@ body{
 .featured-grid{
   display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
   gap:16px;align-items:stretch;
-  max-height:560px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;
-  scrollbar-width:thin;scrollbar-color:var(--border2) transparent;
-  padding-right:4px;
 }
 .featured-grid > *{margin:0;width:100%;min-width:0}
 .featured-grid::-webkit-scrollbar{width:7px}
 .featured-grid::-webkit-scrollbar-track{background:transparent}
 .featured-grid::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
 .featured-grid::-webkit-scrollbar-thumb:hover{background:var(--burn2)}
-@media(max-width:600px){.featured-grid{grid-template-columns:1fr;max-height:480px}}
+@media(max-width:600px){.featured-grid{grid-template-columns:1fr}}
 
 .story-modal-disclaimer{
   background:rgba(99,102,241,.06);border:1px solid rgba(99,102,241,.15);
@@ -4661,6 +4664,51 @@ async function loadNewsPage() {
     });
   });
 
+  // Replace per-section inner scrollbars with a "More" button (Manorama-style).
+  _lmSetup(container);
+}
+
+/* ═══════════════════════════════════════════════════
+   LOAD-MORE — per-section "More" button replaces inner scrollbars.
+   Shows a few stories per section; each click reveals the next batch.
+═══════════════════════════════════════════════════ */
+var LM_INITIAL = { 'featured-grid': 4, 'bn-side-grid': 5, 'world-np-right': 6, 'news-cards-grid': 6 };
+function _lmGridType(g) {
+  var cls = ['featured-grid', 'bn-side-grid', 'world-np-right', 'news-cards-grid'];
+  for (var i = 0; i < cls.length; i++) { if (g.classList.contains(cls[i])) return cls[i]; }
+  return 'news-cards-grid';
+}
+function _lmEnhance(root) {
+  root = root || document;
+  var grids = root.querySelectorAll('.news-cards-grid,.bn-side-grid,.featured-grid,.world-np-right');
+  Array.prototype.forEach.call(grids, function (grid) {
+    if (grid.dataset.lm) return;
+    grid.dataset.lm = '1';
+    var cards = Array.prototype.filter.call(grid.children, function (c) { return c.nodeType === 1; });
+    var INITIAL = LM_INITIAL[_lmGridType(grid)] || 6, STEP = INITIAL;
+    if (cards.length <= INITIAL) return;
+    cards.forEach(function (c, i) { if (i >= INITIAL) c.classList.add('lm-hide'); });
+    var btn = document.createElement('button');
+    btn.className = 'lm-more'; btn.type = 'button';
+    btn.innerHTML = 'More stories <span class="lm-cnt">' + (cards.length - INITIAL) + '</span>';
+    btn.addEventListener('click', function () {
+      var hidden = grid.querySelectorAll('.lm-hide');
+      var n = Math.min(STEP, hidden.length);
+      for (var i = 0; i < n; i++) hidden[i].classList.remove('lm-hide');
+      var left = grid.querySelectorAll('.lm-hide').length;
+      if (left === 0) { if (btn.parentNode) btn.parentNode.removeChild(btn); }
+      else { var cEl = btn.querySelector('.lm-cnt'); if (cEl) cEl.textContent = left; }
+    });
+    grid.parentNode.insertBefore(btn, grid.nextSibling);
+  });
+}
+function _lmSetup(container) {
+  _lmEnhance(container || document);
+  if (window.__lmObs) return; // observe once — catches async/lazy sections (world, malayalam tabs…)
+  var target = container || document.getElementById('sections-container') || document.body;
+  var t;
+  window.__lmObs = new MutationObserver(function () { clearTimeout(t); t = setTimeout(function () { _lmEnhance(document); }, 90); });
+  window.__lmObs.observe(target, { childList: true, subtree: true });
 }
 
 /* ═══════════════════════════════════════════════════
