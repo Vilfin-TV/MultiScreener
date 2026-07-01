@@ -44,17 +44,17 @@ def generate_and_upload_m3u():
         m3u_lines = ["#EXTM3U"]
         channels = ch_data.get("result", [])
         for ch in channels:
-            ch_id = ch.get("channel_id")
-            name = ch.get("channel_name", "").replace('"', '')
-            logo = ch.get("logoUrl", "")
-            if logo and not logo.startswith("http"):
-                logo = f"https://jiotvimages.cdn.jio.com/dare_images/images/{logo}"
-            cat = ch.get("channelCategoryId", "General")
+            ch_id = str(ch.get("channel_id", ""))
+            ch_name = ch.get("channel_name", f"Channel {ch_id}")
+            ch_logo = ch.get("logoUrl", "")
+            if ch_logo and not ch_logo.startswith("http"):
+                ch_logo = f"https://jiotv.catchup.cdn.jio.com/dare_images/images/{ch_logo}"
+            ch_cat = ch.get("channelCategoryId", "General")
             
             # Use jio:// protocol marker so the IPTV Worker resolves the stream
             stream_url = f"jio://{ch_id}"
             
-            m3u_lines.append(f'#EXTINF:-1 tvg-id="{ch_id}" tvg-logo="{logo}" group-title="{cat}", {name}')
+            m3u_lines.append(f'#EXTINF:-1 tvg-id="{ch_id}" tvg-logo="{ch_logo}" group-title="{ch_cat}", {ch_name}')
             m3u_lines.append(stream_url)
             
         m3u_content = "\n".join(m3u_lines)
