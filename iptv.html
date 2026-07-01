@@ -83,6 +83,12 @@
   /* ===== TOP BAR ===== */
   .topbar{position:sticky;top:0;z-index:50;min-height:var(--topbar-h);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px clamp(12px,3vw,26px);background:rgba(10,25,47,.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);flex-wrap:wrap;box-shadow: 0 4px 12px rgba(2,12,27,0.5)}
   .topbar-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  /* Local date/time/weather chips — same data source/logic as news.html's hero meta chips */
+  .topbar-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .meta-chip{display:flex;align-items:center;gap:5px;background:var(--surface-2);border:1px solid var(--border-strong);
+    border-radius:20px;padding:5px 12px;font-size:11.5px;color:var(--text-dim);white-space:nowrap}
+  .meta-chip span{color:var(--text);font-weight:600}
+  @media(max-width:1080px){ .topbar-meta{display:none} }
   .ghost-btn{padding:9px 14px;border-radius:10px;font-size:13px;font-weight:600;border:1px solid var(--border-strong);
     color:var(--text-dim);transition:var(--t-fast);white-space:nowrap}
   .ghost-btn:hover{color:var(--text);border-color:var(--accent);background:var(--accent-soft)}
@@ -271,6 +277,10 @@
   .vjs-iptv-theme .vjs-menu li.vjs-menu-item:hover,.vjs-iptv-theme .vjs-menu li.vjs-menu-item:focus{background:var(--accent-soft);color:var(--text)}
   .vjs-iptv-theme .vjs-menu li.vjs-selected{background:var(--accent);color:#fff}
   .vjs-iptv-theme .vjs-menu li.vjs-selected:hover{background:var(--accent)}
+  /* Non-interactive section dividers inside the Settings menu (Quality/Speed/Captions) */
+  .vjs-iptv-theme .vjs-menu li.vjs-menu-section-label{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--text-faint);padding:8px 14px 4px;cursor:default;pointer-events:none}
+  .vjs-iptv-theme .vjs-menu li.vjs-menu-section-label:first-child{padding-top:6px}
+  .vjs-iptv-theme .vjs-menu li.vjs-menu-section-label ~ li.vjs-menu-section-label{border-top:1px solid var(--border);margin-top:4px}
   /* Now Playing + EPG strip (under the controls) */
   .now-playing{margin-top:8px;padding:9px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
   .now-playing .np-main{display:flex;align-items:center;gap:8px;font-size:14px;min-width:0}
@@ -561,17 +571,20 @@
     display: flex;
   }
   .remote-half{flex:1 1 50%;min-height:0;display:flex;flex-direction:column;padding:12px 16px;overflow-y:auto}
-  .remote-half-top{flex-basis:56%}
-  .remote-half-epg{flex-basis:44%;border-top:1px solid var(--border);background:rgba(255,255,255,.015)}
-  .remote-half-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex:0 0 auto}
+  /* Program Guide gets most of the vertical room — the keypad is compact and
+     used briefly, the guide is what people actually want to read at a glance. */
+  .remote-half-top{flex-basis:38%}
+  .remote-half-epg{flex-basis:62%;border-top:1px solid var(--border);background:rgba(255,255,255,.015)}
+  .remote-half-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex:0 0 auto}
   .remote-half-head h3{font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--text-dim);font-weight:700}
-  .remote-half-top .remote-display{font-size:20px;padding:6px;min-height:30px;margin-bottom:4px}
-  .remote-half-top .remote-name{margin-bottom:5px;min-height:0}
-  .remote-half-top .keypad{gap:5px;flex:1;align-content:center}
-  .remote-half-top .key{padding:6px 0;font-size:13px;border-radius:8px}
+  .remote-half-top .remote-display{font-size:16px;padding:4px;min-height:22px;margin-bottom:2px}
+  .remote-half-top .remote-name{margin-bottom:2px;min-height:0}
+  .remote-half-top .keypad{gap:3px;flex:1;align-content:center}
+  .remote-half-top .key{padding:4px 0;font-size:11px;border-radius:6px}
   .epg-placeholder{color:var(--text-faint);font-size:12px;text-align:center;padding:20px 6px;line-height:1.5}
   .remote-half-epg .np-epg{display:block;margin-top:0}
-  .remote-half-epg .epg-slot{width:104px}
+  .remote-half-epg .epg-slot{width:86px}
+  .remote-half-epg .es-title{-webkit-line-clamp:3}
   /* ===== Favorites panel (desktop side column) ===== */
   .fav-panel{display:none;flex-direction:column;flex:0 0 250px;max-width:250px;min-width:0;
     background:var(--surface);border:1px solid var(--border-strong);border-radius:14px;overflow:hidden}
@@ -594,6 +607,9 @@
   @media(min-width:1001px){
     .fav-panel{display:flex}
     .remote-panel{display:flex;flex-direction:column;gap:16px;flex:0 0 var(--col3);background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
+    /* Widened from --col3 (320px) so the Program Guide can show more time
+       slots at once without horizontal scrolling. */
+    .remote-panel{flex-basis:380px}
     .remote-panel #close-remote{display:none}
     .player-stage{max-height:52vh}
     /* The program guide now lives in the remote panel's bottom half — don't
@@ -735,6 +751,11 @@
       <button class="icon-btn menu-toggle" id="menu-toggle" title="Filters" aria-label="Filters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
       <span class="logo-dot"><img src="images/vilfintv-logo.jpg" alt="VilfinTV" style="width:100%;height:100%;object-fit:cover;border-radius:9px"></span>
       <span id="dash-provider-name">VilfinTV IPTV</span>
+    </div>
+    <div class="topbar-meta" id="topbar-meta">
+      <div class="meta-chip">📅 <span id="local-date">—</span></div>
+      <div class="meta-chip">🕒 <span id="local-time">—</span></div>
+      <div class="meta-chip" id="local-weather-chip"><span id="local-weather">—</span></div>
     </div>
     <div class="topbar-actions">
       <a class="ghost-btn tb-ext" href="index.html" title="Go to MultiScreener" style="text-decoration:none">▦ Multiscreener</a>
@@ -1801,12 +1822,35 @@ function __iptvBoot(){
     var MenuButton=videojs.getComponent("MenuButton");
     var MenuItem=videojs.getComponent("MenuItem");
 
+    class SectionLabel extends MenuItem {
+      constructor(p,o){ super(p,{label:o.label,selectable:false}); this.addClass("vjs-menu-section-label"); }
+      handleClick(){} // non-interactive divider, not a real option
+    }
     class QualityItem extends MenuItem {
       constructor(p,o){ super(p,o.opts); this.heightPx=o.height; }
       handleClick(ev){
         super.handleClick(ev);
         var ql=this.player().qualityLevels();
         for(var i=0;i<ql.length;i++){ ql[i].enabled=(this.heightPx==null||ql[i].height===this.heightPx); }
+        var btn=this.player().controlBar.getChild("SettingsButton");
+        if(btn) btn.update();
+      }
+    }
+    class SpeedItem extends MenuItem {
+      constructor(p,o){ super(p,o.opts); this.rate=o.rate; }
+      handleClick(ev){
+        super.handleClick(ev);
+        this.player().playbackRate(this.rate);
+        var btn=this.player().controlBar.getChild("SettingsButton");
+        if(btn) btn.update();
+      }
+    }
+    class CaptionItem extends MenuItem {
+      constructor(p,o){ super(p,o.opts); this.track=o.track; }
+      handleClick(ev){
+        super.handleClick(ev);
+        var tracks=this.player().textTracks();
+        for(var i=0;i<tracks.length;i++){ tracks[i].mode=(this.track&&tracks[i]===this.track)?"showing":"disabled"; }
         var btn=this.player().controlBar.getChild("SettingsButton");
         if(btn) btn.update();
       }
@@ -1821,12 +1865,31 @@ function __iptvBoot(){
         heights.sort(function(a,b){return b-a;});
         var anyForced=false;
         if(ql) for(var j=0;j<ql.length;j++){ if(!ql[j].enabled) anyForced=true; }
-        var items=[new QualityItem(player,{height:null,opts:{label:"Auto",selectable:true,selected:!anyForced}})];
+        var items=[new SectionLabel(player,{label:"Quality"}),
+          new QualityItem(player,{height:null,opts:{label:"Auto",selectable:true,selected:!anyForced}})];
         heights.forEach(function(h){
           var isSel=false;
           if(ql&&anyForced){ for(var k=0;k<ql.length;k++){ if(ql[k].height===h&&ql[k].enabled) isSel=true; } }
           items.push(new QualityItem(player,{height:h,opts:{label:h+"p",selectable:true,selected:isSel}}));
         });
+        // Playback speed — always offered, harmless for live streams that don't support it.
+        items.push(new SectionLabel(player,{label:"Speed"}));
+        var curRate=player.playbackRate();
+        [0.5,0.75,1,1.25,1.5,2].forEach(function(r){
+          items.push(new SpeedItem(player,{rate:r,opts:{label:(r===1?"Normal":r+"x"),selectable:true,selected:Math.abs(curRate-r)<0.001}}));
+        });
+        // Captions — only shown when the current stream actually has text tracks.
+        var tracks=player.textTracks(), capTracks=[];
+        for(var t=0;t<tracks.length;t++){ if(tracks[t].kind==="captions"||tracks[t].kind==="subtitles"){ capTracks.push(tracks[t]); } }
+        if(capTracks.length){
+          items.push(new SectionLabel(player,{label:"Captions"}));
+          var anyShowing=false;
+          capTracks.forEach(function(tr){ if(tr.mode==="showing") anyShowing=true; });
+          items.push(new CaptionItem(player,{track:null,opts:{label:"Off",selectable:true,selected:!anyShowing}}));
+          capTracks.forEach(function(tr){
+            items.push(new CaptionItem(player,{track:tr,opts:{label:tr.label||tr.language||"Captions",selectable:true,selected:tr.mode==="showing"}}));
+          });
+        }
         return items;
       }
       createEl(){
@@ -2181,6 +2244,104 @@ function __iptvBoot(){
     else if(e.key==="i")togglePip();
     else if(/^[0-9]$/.test(e.key))openRemote();
   });
+
+  /* ---------- Local date/time/weather (same source/logic as news.html) ---------- */
+  function _localClockTick(){
+    var now=new Date();
+    var dEl=$("local-date"),tEl=$("local-time");
+    if(dEl)dEl.textContent=now.toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short",year:"numeric"});
+    if(tEl)tEl.textContent=now.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  }
+  var _WMO_WEATHER={
+    0:["☀️","Clear"],1:["🌤️","Mostly clear"],2:["⛅","Partly cloudy"],3:["☁️","Cloudy"],
+    45:["🌫️","Fog"],48:["🌫️","Fog"],
+    51:["🌦️","Light drizzle"],53:["🌦️","Drizzle"],55:["🌦️","Heavy drizzle"],
+    56:["🌧️","Freezing drizzle"],57:["🌧️","Freezing drizzle"],
+    61:["🌧️","Light rain"],63:["🌧️","Rain"],65:["🌧️","Heavy rain"],
+    66:["🌧️","Freezing rain"],67:["🌧️","Freezing rain"],
+    71:["🌨️","Light snow"],73:["🌨️","Snow"],75:["🌨️","Heavy snow"],77:["🌨️","Snow grains"],
+    80:["🌦️","Showers"],81:["🌦️","Showers"],82:["⛈️","Heavy showers"],
+    85:["🌨️","Snow showers"],86:["🌨️","Snow showers"],
+    95:["⛈️","Thunderstorm"],96:["⛈️","Thunderstorm"],99:["⛈️","Hailstorm"]
+  };
+  var _WX_CACHE_KEY="vt_local_wx";
+  async function _fetchWeather(lat,lon){
+    try{
+      var r=await fetch("https://api.open-meteo.com/v1/forecast?latitude="+lat+"&longitude="+lon+"&current=temperature_2m,weather_code&timezone=auto",{signal:AbortSignal.timeout(9000)});
+      if(r.ok){
+        var j=await r.json();
+        if(j.current&&typeof j.current.temperature_2m==="number"){
+          var c=_WMO_WEATHER[j.current.weather_code]||["🌡️",""];
+          return{temp:Math.round(j.current.temperature_2m),icon:c[0],label:c[1]};
+        }
+      }
+    }catch(e){}
+    var r2=await fetch("https://api.met.no/weatherapi/locationforecast/2.0/compact?lat="+lat+"&lon="+lon,{signal:AbortSignal.timeout(9000)});
+    if(!r2.ok)throw new Error("weather http "+r2.status);
+    var j2=await r2.json();
+    var ts=j2.properties&&j2.properties.timeseries&&j2.properties.timeseries[0];
+    if(!ts)throw new Error("no weather data");
+    var temp=ts.data.instant.details.air_temperature;
+    var summary=(ts.data.next_1_hours||ts.data.next_6_hours||{}).summary;
+    var sym=summary?String(summary.symbol_code).split("_")[0]:"";
+    var icon="🌡️",label="";
+    if(/thunder/.test(sym)){icon="⛈️";label="Thunderstorm";}
+    else if(/snow|sleet/.test(sym)){icon="🌨️";label="Snow";}
+    else if(/heavyrain/.test(sym)){icon="🌧️";label="Heavy rain";}
+    else if(/showers/.test(sym)){icon="🌦️";label="Showers";}
+    else if(/rain|drizzle/.test(sym)){icon="🌧️";label="Rain";}
+    else if(sym==="fog"){icon="🌫️";label="Fog";}
+    else if(sym==="cloudy"){icon="☁️";label="Cloudy";}
+    else if(sym==="partlycloudy"){icon="⛅";label="Partly cloudy";}
+    else if(sym==="fair"){icon="🌤️";label="Mostly clear";}
+    else if(sym==="clearsky"){icon="☀️";label="Clear";}
+    return{temp:Math.round(temp),icon:icon,label:label};
+  }
+  async function _loadLocalWeather(attempt){
+    attempt=attempt||0;
+    var chip=$("local-weather-chip"),el=$("local-weather");
+    if(!chip||!el)return;
+    var cached=null;
+    try{cached=JSON.parse(localStorage.getItem(_WX_CACHE_KEY)||"null");}catch(e){}
+    if(cached&&cached.text&&Date.now()-(cached.ts||0)<3*3600*1000){
+      el.textContent=cached.text; chip.style.display="";
+    }
+    try{
+      var lat=null,lon=null,city="";
+      if(cached&&typeof cached.lat==="number"&&isFinite(cached.lat)){lat=cached.lat;lon=cached.lon;city=cached.city||"";}
+      if(lat===null){
+        var provs=[
+          {url:"https://ipapi.co/json/",pick:function(j){return{la:j.latitude,lo:j.longitude,c:j.city||""};}},
+          {url:"https://get.geojs.io/v1/ip/geo.json",pick:function(j){return{la:parseFloat(j.latitude),lo:parseFloat(j.longitude),c:j.city||""};}}
+        ];
+        for(var i=0;i<provs.length&&lat===null;i++){
+          try{
+            var r=await fetch(provs[i].url,{signal:AbortSignal.timeout(6000)});
+            if(!r.ok)continue;
+            var g=provs[i].pick(await r.json());
+            if(g&&typeof g.la==="number"&&isFinite(g.la)){lat=g.la;lon=g.lo;city=g.c;}
+          }catch(e){}
+        }
+      }
+      if(lat===null&&navigator.geolocation){
+        var pos=await new Promise(function(res,rej){navigator.geolocation.getCurrentPosition(res,rej,{timeout:8000,maximumAge:600000});});
+        lat=pos.coords.latitude;lon=pos.coords.longitude;
+      }
+      if(lat===null)throw new Error("no location");
+      var wx=await _fetchWeather(lat,lon);
+      var text=wx.icon+" "+wx.temp+"°C"+(wx.label?" · "+wx.label:"")+(city?" · "+city:"");
+      el.textContent=text; chip.style.display="";
+      try{localStorage.setItem(_WX_CACHE_KEY,JSON.stringify({text:text,lat:lat,lon:lon,city:city,ts:Date.now()}));}catch(e){}
+    }catch(e){
+      if(cached&&cached.text){ el.textContent=cached.text; chip.style.display=""; }
+      else if(attempt<3){ chip.style.display="none"; setTimeout(function(){_loadLocalWeather(attempt+1);},45000*(attempt+1)); }
+      else{ chip.style.display="none"; }
+    }
+  }
+  _localClockTick();
+  setInterval(_localClockTick,1000);
+  _loadLocalWeather();
+  setInterval(function(){_loadLocalWeather();},30*60*1000);
 
   /* ---------- Boot ---------- */
   if(state.token)showProviderScreen();else show("login-screen");
