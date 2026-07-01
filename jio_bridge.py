@@ -37,7 +37,9 @@ def set_status(msg):
 def generate_and_upload_m3u():
     try:
         set_status("Downloading channel list from Jio CDN...")
-        ch_url = f"{WORKER_URL}/api/jio/proxy?url=https://jiotv.data.cdn.jio.com/apis/v1.4/getMobileChannelList/get/?os=android&devicetype=phone"
+        import urllib.parse
+        target = urllib.parse.quote("https://jiotv.data.cdn.jio.com/apis/v1.4/getMobileChannelList/get/?os=android&devicetype=phone")
+        ch_url = f"{WORKER_URL}/api/jio/proxy?url={target}"
         ch_req = requests.get(ch_url, headers={"User-Agent": "okhttp/4.9.0"}, timeout=15)
         ch_data = ch_req.json()
         
