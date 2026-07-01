@@ -239,8 +239,15 @@
   .vjs-iptv-theme .vjs-nav-btn{font-size:15px;font-weight:800;color:#fff;cursor:pointer;transition:var(--t-fast)}
   .vjs-iptv-theme .vjs-nav-btn:hover{color:var(--accent-2);transform:scale(1.12)}
   .vjs-iptv-theme .vjs-nav-btn .vjs-icon-placeholder{display:none}
-  /* Premium remote layout: Up, Back, [Play], Next, Down centered as one group */
-  .vjs-iptv-theme .vjs-control-bar{justify-content:center;gap:2px}
+  /* Premium remote layout: Up, Back, [Play], Next, Down grouped on the left,
+     Settings/PIP/Fullscreen pushed to the right by vjs-spacer (its normal job).
+     Deliberately NOT justify-content:center here — combining a flex-grow
+     spacer with a centered container makes the whole bar's position depend on
+     the exact rendered width of every child, so it visibly shifts left/right
+     whenever anything (live indicator, settings menu state) changes width
+     between channels. Fixed left/right anchoring is stable across switches;
+     the play button's own size/glow is what makes it read as "the center". */
+  .vjs-iptv-theme .vjs-control-bar{gap:2px}
   .vjs-iptv-theme .vjs-play-control{order:0}
   .vjs-iptv-theme .vjs-volume-panel{margin-left:14px}
   /* The play/pause button is the visual anchor of the whole bar — bigger,
