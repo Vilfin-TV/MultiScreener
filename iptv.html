@@ -8,7 +8,12 @@
 <meta name="robots" content="noindex,nofollow" />
 <title>VilfinTV IPTV</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" />
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
+<!-- Primary playback engine: video.js (bundles @videojs/http-streaming for HLS). -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/video.js@8/dist/video-js.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/video.js@8/dist/video.min.js"></script>
+<!-- Fallback engine only: used if video.js fails to load (CDN hiccup etc.) so
+     playback still works via the previous, proven hls.js path. -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js"></script>
 <style>
   :root{
     --bg:#0a0e17; --surface:#12121b; --surface-2:#1a1a26; --surface-3:#23232f;
@@ -210,6 +215,24 @@
   .player-stage video{width:100%;height:100%;object-fit:contain;background:#000;display:block}
   .video-loading{position:absolute;inset:0;display:none;place-items:center;background:rgba(0,0,0,.55);color:var(--text-dim);font-size:13px;z-index:3}
   .video-loading.show{display:grid}
+
+  /* ===== video.js theme: match the app's premium violet/navy palette ===== */
+  .player-stage .video-js{width:100%;height:100%}
+  .player-stage .vjs-tech{object-fit:contain}
+  .vjs-iptv-theme .vjs-big-play-button{background:var(--accent-soft);border:2px solid var(--accent);
+    border-radius:50%;width:74px;height:74px;line-height:70px;top:50%;left:50%;transform:translate(-50%,-50%);margin:0}
+  .vjs-iptv-theme .vjs-big-play-button:hover{background:var(--accent);border-color:var(--accent-2)}
+  .vjs-iptv-theme .vjs-control-bar{background:linear-gradient(0deg,rgba(6,9,16,.94),rgba(6,9,16,.6) 75%,transparent);height:42px}
+  .vjs-iptv-theme .vjs-play-progress,.vjs-iptv-theme .vjs-volume-level{background:var(--accent)}
+  .vjs-iptv-theme .vjs-slider{background:rgba(255,255,255,.22)}
+  .vjs-iptv-theme .vjs-load-progress div{background:rgba(255,255,255,.35)}
+  .vjs-iptv-theme .vjs-control-bar,.vjs-iptv-theme .vjs-menu-button-popup .vjs-menu{font-family:inherit}
+  .vjs-iptv-theme .vjs-live-control{color:var(--danger);font-weight:700}
+  .vjs-iptv-theme .vjs-loading-spinner{border-color:var(--accent)}
+  /* Custom channel/source-nav buttons injected into the video.js control bar */
+  .vjs-iptv-theme .vjs-nav-btn{font-size:14px;font-weight:800;color:#fff;cursor:pointer}
+  .vjs-iptv-theme .vjs-nav-btn:hover{color:var(--accent-2)}
+  .vjs-iptv-theme .vjs-nav-btn .vjs-icon-placeholder{display:none}
   /* Now Playing + EPG strip (under the controls) */
   .now-playing{margin-top:8px;padding:9px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
   .now-playing .np-main{display:flex;align-items:center;gap:8px;font-size:14px;min-width:0}
@@ -220,6 +243,22 @@
   .now-playing .np-epg.show{display:block}
   .now-playing .np-epg .np-now{color:var(--accent-2);font-weight:700}
   .now-playing .np-epg .np-time{color:var(--text-faint)}
+  /* Modern EPG timeline: live progress bar + horizontal upcoming-programs strip */
+  .epg-now{margin-bottom:8px}
+  .epg-now-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-size:12.5px}
+  .epg-now-title{color:var(--text);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .epg-now-time{color:var(--text-faint);font-size:11px;flex:0 0 auto}
+  .epg-progress{height:4px;background:var(--surface-3);border-radius:4px;margin-top:6px;overflow:hidden}
+  .epg-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:4px;transition:width .4s ease}
+  .epg-strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+  .epg-strip::-webkit-scrollbar{height:6px}
+  .epg-strip::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:6px}
+  .epg-slot{flex:0 0 auto;width:128px;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:6px 9px}
+  .epg-slot.live{border-color:var(--accent);background:var(--accent-soft)}
+  .epg-slot .es-time{font-size:10px;font-weight:800;letter-spacing:.3px;color:var(--text-faint)}
+  .epg-slot.live .es-time{color:var(--accent-2)}
+  .epg-slot .es-title{margin-top:2px;font-size:11.5px;color:var(--text-dim);line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .epg-slot.live .es-title{color:var(--text)}
   .spinner{width:34px;height:34px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:var(--accent);animation:spin .8s linear infinite;margin:0 auto 12px}
   @keyframes spin{to{transform:rotate(360deg)}}
   .player-placeholder{position:absolute;inset:0;display:grid;place-items:center;color:var(--text-faint);text-align:center;padding:20px}
@@ -493,20 +532,33 @@
   }
   .cat-row .ch-card:hover { transform: scale(1.045); z-index: 2; }
 
-  /* Remote Panel Overlay */
+  /* Remote Panel: split top (keypad) / bottom (program guide) so the tall
+     side column has no dead space next to the video. */
   .remote-panel {
-    width: 320px;
+    width: 300px;
     background: var(--surface);
     border-radius: 12px;
     border: 1px solid var(--border-strong);
     display: none;
     flex-direction: column;
-    padding: 20px;
     flex-shrink: 0;
+    overflow: hidden;
   }
   .remote-panel.open {
     display: flex;
   }
+  .remote-half{flex:1 1 50%;min-height:0;display:flex;flex-direction:column;padding:12px 16px;overflow-y:auto}
+  .remote-half-top{flex-basis:56%}
+  .remote-half-epg{flex-basis:44%;border-top:1px solid var(--border);background:rgba(255,255,255,.015)}
+  .remote-half-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex:0 0 auto}
+  .remote-half-head h3{font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--text-dim);font-weight:700}
+  .remote-half-top .remote-display{font-size:20px;padding:6px;min-height:30px;margin-bottom:4px}
+  .remote-half-top .remote-name{margin-bottom:5px;min-height:0}
+  .remote-half-top .keypad{gap:5px;flex:1;align-content:center}
+  .remote-half-top .key{padding:6px 0;font-size:13px;border-radius:8px}
+  .epg-placeholder{color:var(--text-faint);font-size:12px;text-align:center;padding:20px 6px;line-height:1.5}
+  .remote-half-epg .np-epg{display:block;margin-top:0}
+  .remote-half-epg .epg-slot{width:104px}
   /* ===== Favorites panel (desktop side column) ===== */
   .fav-panel{display:none;flex-direction:column;flex:0 0 250px;max-width:250px;min-width:0;
     background:var(--surface);border:1px solid var(--border-strong);border-radius:14px;overflow:hidden}
@@ -525,12 +577,16 @@
   .fav-item .fi-x{flex:0 0 auto;color:var(--text-faint);font-size:15px;opacity:0;transition:var(--t-fast)}
   .fav-item:hover .fi-x{opacity:1}
   .fav-empty{padding:26px 14px;text-align:center;color:var(--text-faint);font-size:12.5px;line-height:1.6}
-  /* Desktop: video + favorites + remote side by side */
+  /* Desktop: video, remote+guide, favorites side by side (left to right) */
   @media(min-width:1001px){
     .fav-panel{display:flex}
     .remote-panel{display:flex}
     .remote-panel #close-remote{display:none}
     .player-stage{max-height:52vh}
+    /* The program guide now lives in the remote panel's bottom half — don't
+       duplicate it in the strip under the video too. */
+    .now-playing .np-epg{display:none!important}
+    .fav-list:has(.fav-empty){justify-content:center;align-items:center}
   }
   .remote-toggle {
     position: absolute;
@@ -681,7 +737,7 @@
     <div class="player-hero" style="display:flex; flex-direction:row; gap:12px; padding:12px; align-items:stretch;">
       <div class="video-col" style="flex:1; min-width:0; position:relative; display:flex; flex-direction:column;">
       <div class="player-stage" id="video-shell" style="position:relative;">
-        <video id="video" playsinline></video>
+        <video id="video" class="video-js vjs-iptv-theme" playsinline></video>
         <div class="player-placeholder" id="player-placeholder"><div><div class="pp-ico">▶️</div>Select a channel to start watching</div></div>
         <div class="video-loading" id="video-loading"><div><div class="spinner"></div><span>Loading stream…</span></div></div>
       </div>
@@ -693,7 +749,7 @@
           <button class="ctrl-btn" id="btn-down" title="Next source (▼)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 16l6-6H6z"/></svg></button>
           <div class="vol-group">
             <button class="ctrl-btn" id="btn-mute" title="Mute"><svg id="icon-vol" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9z"/></svg><svg id="icon-mute" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M3 9v6h4l5 5V4L7 9zm13.7-1.3-1.4 1.4L17 11l-1.7 1.9 1.4 1.4L18.4 12l1.7 1.7 1.4-1.4L19.8 10.6 21.5 8.7l-1.4-1.4L18.4 9z"/></svg></button>
-            <input type="range" class="vol-slider" id="vol-slider" min="0" max="1" step="0.01" value="1" aria-label="Volume"/>
+            <input type="range" class="vol-slider" id="vol-slider" min="0" max="1" step="0.01" value="0.15" aria-label="Volume"/>
           </div>
           <div class="ctrl-spacer"></div>
           <span class="now-live"><span class="live-dot"></span>LIVE</span>
@@ -702,7 +758,24 @@
         </div>
         <div class="now-playing" id="now-playing" style="display:none">
           <div class="np-main"><span class="np-dot"></span><strong id="np-name"></strong><span class="np-src" id="np-src"></span></div>
-          <div class="np-epg" id="np-epg"></div>
+          <div class="np-epg np-epg-slot" id="np-epg"></div>
+        </div>
+      </div>
+
+      <!-- Remote Panel: top half = keypad, bottom half = program guide of the playing channel -->
+      <div class="remote-panel" id="hero-remote-panel">
+        <div class="remote-half remote-half-top">
+          <div class="remote-half-head">
+            <h3>Remote Control</h3>
+            <button id="close-remote" style="color:var(--text-faint);font-size:20px;">✕</button>
+          </div>
+          <div class="remote-display" id="remote-display">—</div>
+          <div class="remote-name" id="remote-name"></div>
+          <div class="keypad" id="keypad"></div>
+        </div>
+        <div class="remote-half remote-half-epg">
+          <div class="remote-half-head"><h3>Program Guide</h3></div>
+          <div class="np-epg np-epg-slot" id="np-epg-desktop"><div class="epg-placeholder">Select a channel to see its program guide.</div></div>
         </div>
       </div>
 
@@ -711,17 +784,6 @@
         <div class="fav-head"><span>★ Favorites</span><span class="fav-count" id="fav-count"></span></div>
         <div class="fav-list" id="fav-list"></div>
       </aside>
-
-      <!-- Remote Panel -->
-      <div class="remote-panel" id="hero-remote-panel">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-          <h3 style="font-size:14px;color:var(--text-dim);letter-spacing:.5px;">REMOTE CONTROL</h3>
-          <button id="close-remote" style="color:var(--text-faint);font-size:20px;">✕</button>
-        </div>
-        <div class="remote-display" id="remote-display" style="font-size:34px;font-weight:800;text-align:center;letter-spacing:4px;background:var(--bg);border:1px solid var(--border-strong);border-radius:12px;padding:14px;margin-bottom:8px;min-height:62px;color:var(--accent-2)">—</div>
-        <div class="remote-name" id="remote-name" style="font-size:12px;text-align:center;color:var(--text-faint);min-height:16px;margin-bottom:14px"></div>
-        <div class="keypad" id="keypad"></div>
-      </div>
     </div>
     
     <div class="content-shelf">
@@ -784,7 +846,7 @@ function __iptvBoot(){
     merge:function(ids){return WORKER+"/api/playlist?providers="+encodeURIComponent(ids.join(","));},
     all:WORKER+"/api/playlist?all=1",
     stream:function(u,t){return WORKER+"/api/stream?token="+encodeURIComponent(t)+"&url="+encodeURIComponent(u);},
-    epg:function(p,c){return WORKER+"/api/epg?provider="+encodeURIComponent(p)+"&channel="+encodeURIComponent(c);}
+    epg:function(p,c,n){return WORKER+"/api/epg?provider="+encodeURIComponent(p)+"&channel="+encodeURIComponent(c)+(n?"&name="+encodeURIComponent(n):"");}
   };
   var TOKEN_KEY="iptv_token", FAV_KEY="iptv_favs", PREF_KEY="iptv_prefs", HIDDEN_KEY="iptv_hidden", PAGE=150;
   function loadHidden(){try{return new Set(JSON.parse(localStorage.getItem(HIDDEN_KEY)||"[]"));}catch(e){return new Set();}}
@@ -1678,6 +1740,91 @@ function __iptvBoot(){
 
   /* ---------- Playback ---------- */
   var video=$("video");
+  var DEFAULT_VOLUME=0.15; // always start at a low, safe volume — never blast at 100%
+  video.volume=DEFAULT_VOLUME;
+  var volSliderInit=$("vol-slider"); if(volSliderInit) volSliderInit.value=DEFAULT_VOLUME;
+
+  /* ---------- video.js (primary engine) ----------
+     Registers 4 custom control-bar buttons (source/channel nav) and lazily
+     initializes the player. If video.js isn't available for any reason, every
+     caller below falls back to the previous, proven hls.js/native-HLS path —
+     channel playback must never depend on a single CDN succeeding. */
+  var player=null, VJS_OK=false;
+  function _vjsRegisterNavButtons(){
+    if(window.__vjsNavRegistered||!window.videojs)return;
+    window.__vjsNavRegistered=true;
+    var Button=videojs.getComponent("Button");
+    function make(name,label,glyph,fn){
+      class NavBtn extends Button {
+        constructor(p,o){ super(p,o); this.controlText(label); this.addClass("vjs-nav-btn"); }
+        handleClick(){ fn(); }
+        createEl(){
+          var el=Button.prototype.createEl.call(this,"button",{className:"vjs-nav-btn vjs-control vjs-button"});
+          var span=document.createElement("span"); span.setAttribute("aria-hidden","true"); span.textContent=glyph;
+          el.appendChild(span);
+          return el;
+        }
+      }
+      videojs.registerComponent(name,NavBtn);
+    }
+    make("PrevSourceButton","Previous source","▲",function(){navVert(-1);});
+    make("PrevChannelButton","Previous channel","◀",function(){navHoriz(-1);});
+    make("NextChannelButton","Next channel","▶",function(){navHoriz(1);});
+    make("NextSourceButton","Next source","▼",function(){navVert(1);});
+  }
+  function initPlayer(){
+    if(player)return player;
+    if(!window.videojs)return null;
+    try{
+      _vjsRegisterNavButtons();
+      player=videojs("video",{
+        controls:true,autoplay:false,preload:"auto",liveui:true,playsinline:true,fluid:false,
+        controlBar:{
+          pictureInPictureToggle:true,fullscreenToggle:true,
+          children:["playToggle","PrevSourceButton","PrevChannelButton","NextChannelButton","NextSourceButton","volumePanel","liveDisplay","spacer","pictureInPictureToggle","fullscreenToggle"]
+        }
+      });
+      player.volume(DEFAULT_VOLUME);
+      player.on("waiting",function(){setLoading(true);});
+      player.on("playing",function(){setLoading(false);});
+      player.on("error",function(){
+        var err=player.error();
+        setLoading(false);
+        toast("Stream error: "+((err&&err.message)||"playback failed"),true);
+      });
+      VJS_OK=true;
+      $("controls").style.display="none"; // video.js's own control bar replaces it
+    }catch(e){ player=null; VJS_OK=false; }
+    return player;
+  }
+  // Engine-aware actions — used by both the (hidden-when-video.js-active) fallback
+  // control bar and keyboard shortcuts, so behavior is identical either way.
+  function togglePlay(){
+    if(player&&VJS_OK){ if(player.paused())player.play().catch(function(){});else player.pause(); }
+    else { if(video.paused)video.play().catch(function(){});else video.pause(); }
+  }
+  function toggleMute(){
+    if(player&&VJS_OK){
+      if(player.muted()||player.volume()===0){ player.muted(false); player.volume(lastVol>0?lastVol:DEFAULT_VOLUME); }
+      else { lastVol=player.volume(); player.muted(true); }
+      return;
+    }
+    if(video.muted||video.volume===0){video.muted=false;video.volume=lastVol>0?lastVol:1;$("vol-slider").value=video.volume;}
+    else{lastVol=video.volume;video.muted=true;$("vol-slider").value=0;}
+    updateMute();
+  }
+  function toggleFullscreen(){
+    if(player&&VJS_OK){ if(player.isFullscreen())player.exitFullscreen();else player.requestFullscreen(); return; }
+    var s=$("video-shell");if(!document.fullscreenElement){(s.requestFullscreen||s.webkitRequestFullscreen||function(){if(video.webkitEnterFullscreen)video.webkitEnterFullscreen();}).call(s);}else{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}
+  }
+  function togglePip(){
+    if(player&&VJS_OK){
+      try{ if(player.isInPictureInPicture())player.exitPictureInPicture();else player.requestPictureInPicture(); }
+      catch(e){ toast("Picture-in-Picture not supported here.",true); }
+      return;
+    }
+    try{if(document.pictureInPictureElement){document.exitPictureInPicture();}else if(video.requestPictureInPicture){video.requestPictureInPicture();}else if(video.webkitSupportsPresentationMode){video.webkitSetPresentationMode("picture-in-picture");}else toast("Picture-in-Picture not supported here.",true);}catch(e){toast("Start playback before PiP.",true);}
+  }
   function playIndex(idx){
     if(idx<0||idx>=state.filtered.length)return;
     state.playContext="main"; // playing from the main channel list
@@ -1738,46 +1885,127 @@ function __iptvBoot(){
   }
   // EPG uses the channel's OWN source (sourceId) so merged lineups query the right
   // guide; falls back to the active provider for single-source loads.
+  function _epgFmtTime(ms){ return ms?new Date(ms).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):""; }
+  function _epgBuildTimeline(programs){
+    var nowMs=Date.now(), liveIdx=-1;
+    programs.forEach(function(p,i){ if(p.startMs<=nowMs&&nowMs<p.stopMs) liveIdx=i; });
+    var h="";
+    if(liveIdx>-1){
+      var p=programs[liveIdx];
+      var pct = p.stopMs>p.startMs ? Math.min(100,Math.max(0,((nowMs-p.startMs)/(p.stopMs-p.startMs))*100)) : 0;
+      h+='<div class="epg-now"><div class="epg-now-head"><span class="epg-now-title">● '+esc(p.title)+'</span>'+
+        '<span class="epg-now-time">'+_epgFmtTime(p.startMs)+' – '+_epgFmtTime(p.stopMs)+'</span></div>'+
+        '<div class="epg-progress"><div class="epg-progress-fill" style="width:'+pct.toFixed(1)+'%"></div></div></div>';
+    }
+    h+='<div class="epg-strip">'+programs.map(function(p,i){
+      var live=(i===liveIdx)?" live":"";
+      return '<div class="epg-slot'+live+'"><div class="es-time">'+_epgFmtTime(p.startMs)+'</div><div class="es-title" title="'+esc(p.title)+'">'+esc(p.title)+'</div></div>';
+    }).join("")+'</div>';
+    return h;
+  }
+  // Two copies of the guide live in the DOM: #np-epg (under the video, mobile/
+  // tablet) and #np-epg-desktop (bottom half of the remote panel, desktop). Both
+  // stay in sync off the same fetch.
+  function _epgEls(){ return Array.prototype.slice.call(document.querySelectorAll(".np-epg-slot")); }
+  function _epgSetPlaceholder(els,msg){
+    els.forEach(function(el){ el.className="np-epg np-epg-slot"; el.innerHTML='<div class="epg-placeholder">'+esc(msg)+'</div>'; });
+  }
+  function _epgRender(){
+    if(!state.epgPrograms||!state.epgPrograms.length)return;
+    var html=_epgBuildTimeline(state.epgPrograms);
+    _epgEls().forEach(function(el){
+      el.innerHTML=html;
+      var strip=el.querySelector(".epg-strip"), live=el.querySelector(".epg-slot.live");
+      if(strip&&live) strip.scrollLeft=Math.max(0,live.offsetLeft-12);
+    });
+  }
+  function _epgStopTimer(){ if(state.epgTimer){clearInterval(state.epgTimer);state.epgTimer=null;} }
   function loadEpg(ch){
-    var el=$("np-epg");if(!el){return;} el.className="np-epg"; el.innerHTML="";
+    var els=_epgEls(); if(!els.length){return;}
+    _epgStopTimer(); state.epgPrograms=null;
+    _epgSetPlaceholder(els,"Loading program guide…");
     var prov = ch.sourceId || state.provider;
-    if(!ch.id || !prov || prov==="_custom" || !state.token){return;}
-    fetch(API.epg(prov,ch.id),{headers:{"Authorization":"Bearer "+state.token}})
+    if((!ch.id&&!ch.name) || !prov || prov==="_custom" || !state.token){_epgSetPlaceholder(els,"No program guide available for this channel.");return;}
+    fetch(API.epg(prov,ch.id||"",ch.name||""),{headers:{"Authorization":"Bearer "+state.token}})
       .then(function(r){return r.ok?r.json():null;})
       .then(function(d){
-        if(!d||(!d.now&&!d.next)){el.className="np-epg";el.innerHTML="";return;}
-        var fmt=function(p){if(!p)return"";var t=p.startMs?new Date(p.startMs).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"";return '<span class="np-time">'+t+'</span> '+esc(p.title);};
-        var h="";
-        if(d.now)h+='<div><span class="np-now">● NOW</span> '+fmt(d.now)+'</div>';
-        if(d.next)h+='<div><span class="np-time">NEXT</span> '+fmt(d.next)+'</div>';
-        el.innerHTML=h; el.className="np-epg show";
-      }).catch(function(){el.className="np-epg";el.innerHTML="";});
+        if(!d||!d.programs||!d.programs.length){_epgSetPlaceholder(els,"No program guide available for this channel.");return;}
+        state.epgPrograms=d.programs;
+        _epgRender();
+        els.forEach(function(el){el.className="np-epg np-epg-slot show";});
+        state.epgTimer=setInterval(function(){_epgRender();},30000);
+      }).catch(function(){_epgSetPlaceholder(els,"No program guide available for this channel.");});
   }
   function loadStream(raw){
     if(!raw){toast("This channel has no stream URL.",true);return;}
     var src=API.stream(raw,state.token||"");
     if(raw.indexOf("192.168.") !== -1) { src = raw; }
     if(raw.startsWith("jio://")) { src = WORKER + "/api/jio/play?id=" + raw.substring(6) + "&token=" + encodeURIComponent(state.token||""); }
-    setLoading(true);stopHls();
+    var p=initPlayer(); // sets VJS_OK before setLoading() below, so the fallback
+    setLoading(true);   // spinner never shows (and never gets stuck) once video.js is active
+    if(p){
+      stopHls();
+      try{
+        p.src({src:src,type:"application/x-mpegURL"});
+        var pr=p.play(); if(pr&&pr.catch)pr.catch(function(){});
+      }catch(e){ setLoading(false); toast("Stream error: playback failed",true); }
+      return;
+    }
+    loadStreamFallback(src);
+  }
+  // Only reached if video.js failed to load/initialize — the exact engine used
+  // before video.js was added, kept verbatim as the safety net.
+  function loadStreamFallback(src){
+    stopHls();
+    state._hlsRetries=0;
     if(window.Hls&&window.Hls.isSupported()){
-      var hls=new window.Hls({maxBufferLength:30,lowLatencyMode:true});state.hls=hls;
+      var hls=new window.Hls({
+        maxBufferLength:30,
+        maxMaxBufferLength:60,
+        backBufferLength:60,
+        lowLatencyMode:true,
+        enableWorker:true,
+        liveSyncDurationCount:3
+      });state.hls=hls;
       hls.loadSource(src);hls.attachMedia(video);
       hls.on(window.Hls.Events.MANIFEST_PARSED,function(){tryPlay();});
-      hls.on(window.Hls.Events.ERROR,function(evt,data){if(data&&data.fatal){setLoading(false);toast("Stream error: "+(data.details||"playback failed"),true);try{hls.destroy();}catch(e){}}});
+      hls.on(window.Hls.Events.ERROR,function(evt,data){
+        if(!data||!data.fatal)return;
+        state._hlsRetries=(state._hlsRetries||0)+1;
+        if(state._hlsRetries>3){
+          setLoading(false);toast("Stream error: "+(data.details||"playback failed"),true);
+          try{hls.destroy();}catch(e){}
+          return;
+        }
+        if(data.type===window.Hls.ErrorTypes.NETWORK_ERROR){
+          toast("Network hiccup — reconnecting…");
+          try{hls.startLoad();}catch(e){}
+        }else if(data.type===window.Hls.ErrorTypes.MEDIA_ERROR){
+          try{hls.recoverMediaError();}catch(e){}
+        }else{
+          setLoading(false);toast("Stream error: "+(data.details||"playback failed"),true);
+          try{hls.destroy();}catch(e){}
+        }
+      });
     }else if(video.canPlayType("application/vnd.apple.mpegurl")){video.src=src;video.addEventListener("loadedmetadata",tryPlay,{once:true});}
     else{setLoading(false);toast("HLS not supported in this browser.",true);}
   }
   function tryPlay(){setLoading(false);var p=video.play();if(p&&p.catch)p.catch(function(){setPlayIcon(false);});}
-  function setLoading(on){$("video-loading").classList.toggle("show",on);}
+  function setLoading(on){ if(VJS_OK)return; $("video-loading").classList.toggle("show",on); }
   function stopHls(){if(state.hls){try{state.hls.destroy();}catch(e){}state.hls=null;}}
-  function stopPlayback(){stopHls();try{video.pause();video.removeAttribute("src");video.load();}catch(e){}var np=$("now-playing");if(np)np.style.display="none";$("player-placeholder").style.display="grid";$("controls").classList.remove("pinned");state.currentChannel=null;}
+  function stopPlayback(){
+    stopHls();_epgStopTimer();state.epgPrograms=null;_epgSetPlaceholder(_epgEls(),"Select a channel to see its program guide.");
+    if(player&&VJS_OK){ try{ player.pause(); player.reset(); }catch(e){} }
+    else { try{video.pause();video.removeAttribute("src");video.load();}catch(e){} }
+    var np=$("now-playing");if(np)np.style.display="none";$("player-placeholder").style.display="grid";$("controls").classList.remove("pinned");state.currentChannel=null;
+  }
 
   function setPlayIcon(p){$("icon-play").style.display=p?"none":"block";$("icon-pause").style.display=p?"block":"none";}
   video.addEventListener("play",function(){setPlayIcon(true);});
   video.addEventListener("pause",function(){setPlayIcon(false);});
   video.addEventListener("waiting",function(){setLoading(true);});
   video.addEventListener("playing",function(){setLoading(false);});
-  $("btn-play").addEventListener("click",function(){if(video.paused)video.play().catch(function(){});else video.pause();});
+  $("btn-play").addEventListener("click",togglePlay);
   $("btn-prev").addEventListener("click",function(){navHoriz(-1);});
   $("btn-next").addEventListener("click",function(){navHoriz(1);});
   if($("btn-up"))$("btn-up").addEventListener("click",function(){navVert(-1);});
@@ -1799,12 +2027,12 @@ function __iptvBoot(){
     });
     var restore=$("chip-restore"); if(restore)restore.addEventListener("click",restoreHidden);
   })();
-  var lastVol=1;
+  var lastVol=DEFAULT_VOLUME;
   $("vol-slider").addEventListener("input",function(){video.volume=parseFloat(this.value);video.muted=video.volume===0;updateMute();});
-  $("btn-mute").addEventListener("click",function(){if(video.muted||video.volume===0){video.muted=false;video.volume=lastVol>0?lastVol:1;$("vol-slider").value=video.volume;}else{lastVol=video.volume;video.muted=true;$("vol-slider").value=0;}updateMute();});
+  $("btn-mute").addEventListener("click",toggleMute);
   function updateMute(){var m=video.muted||video.volume===0;$("icon-vol").style.display=m?"none":"block";$("icon-mute").style.display=m?"block":"none";}
-  $("btn-fs").addEventListener("click",function(){var s=$("video-shell");if(!document.fullscreenElement){(s.requestFullscreen||s.webkitRequestFullscreen||function(){if(video.webkitEnterFullscreen)video.webkitEnterFullscreen();}).call(s);}else{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}});
-  $("btn-pip").addEventListener("click",function(){try{if(document.pictureInPictureElement){document.exitPictureInPicture();}else if(video.requestPictureInPicture){video.requestPictureInPicture();}else if(video.webkitSupportsPresentationMode){video.webkitSetPresentationMode("picture-in-picture");}else toast("Picture-in-Picture not supported here.",true);}catch(e){toast("Start playback before PiP.",true);}});
+  $("btn-fs").addEventListener("click",toggleFullscreen);
+  $("btn-pip").addEventListener("click",togglePip);
 
   /* ---------- Remote ---------- */
   var remoteBuf="";
@@ -1844,14 +2072,14 @@ function __iptvBoot(){
       return;
     }
     if(/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName))return;
-    if(e.key===" "||e.key==="k"){e.preventDefault();$("btn-play").click();}
+    if(e.key===" "||e.key==="k"){e.preventDefault();togglePlay();}
     else if(e.key==="ArrowRight"||e.key==="n"){e.preventDefault();navHoriz(1);}
     else if(e.key==="ArrowLeft"||e.key==="p"){e.preventDefault();navHoriz(-1);}
     else if(e.key==="ArrowDown"){e.preventDefault();navVert(1);}
     else if(e.key==="ArrowUp"){e.preventDefault();navVert(-1);}
-    else if(e.key==="m")$("btn-mute").click();
-    else if(e.key==="f")$("btn-fs").click();
-    else if(e.key==="i")$("btn-pip").click();
+    else if(e.key==="m")toggleMute();
+    else if(e.key==="f")toggleFullscreen();
+    else if(e.key==="i")togglePip();
     else if(/^[0-9]$/.test(e.key))openRemote();
   });
 
