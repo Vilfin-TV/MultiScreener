@@ -848,8 +848,14 @@ async function handleStream(request, env, url) {
   const fwdHeaders = new Headers();
   const range = request.headers.get("Range");
   if (range) fwdHeaders.set("Range", range);
-  // Normal browser identity — no provider impersonation.
-  fwdHeaders.set("User-Agent", request.headers.get("User-Agent") || "Mozilla/5.0 (compatible; IPTVConsole/1.0)");
+  // Some sources gate playback on the exact Referer/User-Agent their own embed
+  // player uses (declared per-channel in the M3U as http-referrer/http-user-agent
+  // — see parseM3U). Only trust these when they were already validated as a safe
+  // http(s) URL / sanitized text at parse time.
+  const refParam = url.searchParams.get("referer");
+  if (refParam && _isSafeStreamUrl(refParam)) fwdHeaders.set("Referer", refParam);
+  const uaParam = url.searchParams.get("ua");
+  fwdHeaders.set("User-Agent", (uaParam && uaParam.trim()) || request.headers.get("User-Agent") || "Mozilla/5.0 (compatible; IPTVConsole/1.0)");
   fwdHeaders.set("Accept", "*/*");
 
   const upstream = await fetch(upstreamUrl.toString(), {
@@ -872,7 +878,7 @@ async function handleStream(request, env, url) {
 
   if (looksManifest) {
     const text = await upstream.text();
-    const rewritten = rewriteManifest(text, upstreamUrl, url, bearerFrom(request, url));
+    const rewritten = rewriteManifest(text, upstreamUrl, url, bearerFrom(request, url), refParam, uaParam);
     respHeaders.set("Content-Type", "application/vnd.apple.mpegurl");
     return new Response(rewritten, { status: upstream.status, headers: respHeaders });
   }
@@ -894,8 +900,11 @@ function copyHeader(from, to, name) {
  * playlist URL itself — the #EXT-X-KEY URI inside the manifest is bare, so a
  * plain passthrough fetch of the key 403s. Copy that token onto key URIs too.
  */
-function rewriteManifest(text, baseUrl, selfUrl, token) {
-  const proxyBase = selfUrl.origin + "/api/stream?token=" + encodeURIComponent(token) + "&url=";
+function rewriteManifest(text, baseUrl, selfUrl, token, referer, userAgent) {
+  let proxyBase = selfUrl.origin + "/api/stream?token=" + encodeURIComponent(token);
+  if (referer) proxyBase += "&referer=" + encodeURIComponent(referer);
+  if (userAgent) proxyBase += "&ua=" + encodeURIComponent(userAgent);
+  proxyBase += "&url=";
   const hdnea = baseUrl.searchParams.get("__hdnea__");
   const toAbs = (ref) => {
     try { return new URL(ref, baseUrl).toString(); } catch (e) { return ref; }
@@ -939,10 +948,21 @@ function parseM3U(raw) {
         category: attr(line, "group-title") || "General",
         language: attr(line, "tvg-language") || attr(line, "language") || "",
         quality: guessQuality(line),
+        // Some sources gate playback on these (checked at the CDN edge), e.g.
+        // Asianet-family streams require the exact Referer their embed page uses.
+        referer: attr(line, "http-referrer") || attr(line, "tvg-referrer") || "",
+        userAgent: attr(line, "http-user-agent") || "",
         url: "",
       };
     } else if (line.startsWith("#EXTGRP") && cur) {
       cur.category = line.split(":")[1] ? line.split(":")[1].trim() : cur.category;
+    } else if (line.startsWith("#EXTVLCOPT") && cur) {
+      // #EXTVLCOPT:http-referrer=... / #EXTVLCOPT:http-user-agent=... (VLC-style
+      // per-entry playback options some sources use instead of/alongside tvg attrs)
+      const refM = line.match(/#EXTVLCOPT:\s*http-referrer\s*=\s*(.+)/i);
+      if (refM && !cur.referer) cur.referer = refM[1].trim();
+      const uaM = line.match(/#EXTVLCOPT:\s*http-user-agent\s*=\s*(.+)/i);
+      if (uaM && !cur.userAgent) cur.userAgent = uaM[1].trim();
     } else if (!line.startsWith("#")) {
       if (cur) {
         cur.url = line.trim();
@@ -954,6 +974,8 @@ function parseM3U(raw) {
           cur.category = _sanitizeText(cur.category, 80) || "General";
           cur.language = _sanitizeText(cur.language, 60);
           cur.logo = _isSafeStreamUrl(cur.logo) ? cur.logo : "";
+          cur.referer = _isSafeStreamUrl(cur.referer) ? cur.referer : "";
+          cur.userAgent = _sanitizeText(cur.userAgent, 300);
           channels.push(cur);
         }
         cur = null;

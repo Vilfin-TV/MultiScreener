@@ -848,7 +848,12 @@ function __iptvBoot(){
     region:function(r){return WORKER+"/api/playlist?region="+encodeURIComponent(r);},
     merge:function(ids){return WORKER+"/api/playlist?providers="+encodeURIComponent(ids.join(","));},
     all:WORKER+"/api/playlist?all=1",
-    stream:function(u,t){return WORKER+"/api/stream?token="+encodeURIComponent(t)+"&url="+encodeURIComponent(u);},
+    stream:function(u,t,referer,ua){
+      var s=WORKER+"/api/stream?token="+encodeURIComponent(t);
+      if(referer) s+="&referer="+encodeURIComponent(referer);
+      if(ua) s+="&ua="+encodeURIComponent(ua);
+      return s+"&url="+encodeURIComponent(u);
+    },
     epg:function(p,c,n){return WORKER+"/api/epg?provider="+encodeURIComponent(p)+"&channel="+encodeURIComponent(c)+(n?"&name="+encodeURIComponent(n):"");}
   };
   var TOKEN_KEY="iptv_token", FAV_KEY="iptv_favs", PREF_KEY="iptv_prefs", HIDDEN_KEY="iptv_hidden", PAGE=150;
@@ -1892,7 +1897,7 @@ function __iptvBoot(){
       $("np-name").textContent=ch.name;
       var src=$("np-src"); src.textContent=ch.source||ch.category||""; src.style.display=(ch.source||ch.category)?"":"none";
     }
-    loadEpg(ch);loadStream(ch.url);
+    loadEpg(ch);loadStream(ch);
     if(window.innerWidth<=1000)$("video-shell").scrollIntoView({behavior:"smooth",block:"start"});
   }
   // EPG uses the channel's OWN source (sourceId) so merged lineups query the right
@@ -1948,9 +1953,10 @@ function __iptvBoot(){
         state.epgTimer=setInterval(function(){_epgRender();},30000);
       }).catch(function(){_epgSetPlaceholder(els,"No program guide available for this channel.");});
   }
-  function loadStream(raw){
+  function loadStream(ch){
+    var raw=ch&&ch.url?ch.url:ch; // accept either a channel object or a bare url (fallback callers)
     if(!raw){toast("This channel has no stream URL.",true);return;}
-    var src=API.stream(raw,state.token||"");
+    var src=API.stream(raw,state.token||"",ch&&ch.referer,ch&&ch.userAgent);
     if(raw.indexOf("192.168.") !== -1) { src = raw; }
     if(raw.startsWith("jio://")) { src = WORKER + "/api/jio/play?id=" + raw.substring(6) + "&token=" + encodeURIComponent(state.token||""); }
     var p=initPlayer(); // sets VJS_OK before setLoading() below, so the fallback
