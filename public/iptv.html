@@ -509,20 +509,33 @@
   }
   .cat-row .ch-card:hover { transform: scale(1.045); z-index: 2; }
 
-  /* Remote Panel Overlay */
+  /* Remote Panel: split top (keypad) / bottom (program guide) so the tall
+     side column has no dead space next to the video. */
   .remote-panel {
-    width: 320px;
+    width: 300px;
     background: var(--surface);
     border-radius: 12px;
     border: 1px solid var(--border-strong);
     display: none;
     flex-direction: column;
-    padding: 20px;
     flex-shrink: 0;
+    overflow: hidden;
   }
   .remote-panel.open {
     display: flex;
   }
+  .remote-half{flex:1 1 50%;min-height:0;display:flex;flex-direction:column;padding:12px 16px;overflow-y:auto}
+  .remote-half-top{flex-basis:56%}
+  .remote-half-epg{flex-basis:44%;border-top:1px solid var(--border);background:rgba(255,255,255,.015)}
+  .remote-half-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex:0 0 auto}
+  .remote-half-head h3{font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--text-dim);font-weight:700}
+  .remote-half-top .remote-display{font-size:20px;padding:6px;min-height:30px;margin-bottom:4px}
+  .remote-half-top .remote-name{margin-bottom:5px;min-height:0}
+  .remote-half-top .keypad{gap:5px;flex:1;align-content:center}
+  .remote-half-top .key{padding:6px 0;font-size:13px;border-radius:8px}
+  .epg-placeholder{color:var(--text-faint);font-size:12px;text-align:center;padding:20px 6px;line-height:1.5}
+  .remote-half-epg .np-epg{display:block;margin-top:0}
+  .remote-half-epg .epg-slot{width:104px}
   /* ===== Favorites panel (desktop side column) ===== */
   .fav-panel{display:none;flex-direction:column;flex:0 0 250px;max-width:250px;min-width:0;
     background:var(--surface);border:1px solid var(--border-strong);border-radius:14px;overflow:hidden}
@@ -541,12 +554,16 @@
   .fav-item .fi-x{flex:0 0 auto;color:var(--text-faint);font-size:15px;opacity:0;transition:var(--t-fast)}
   .fav-item:hover .fi-x{opacity:1}
   .fav-empty{padding:26px 14px;text-align:center;color:var(--text-faint);font-size:12.5px;line-height:1.6}
-  /* Desktop: video + favorites + remote side by side */
+  /* Desktop: video, remote+guide, favorites side by side (left to right) */
   @media(min-width:1001px){
     .fav-panel{display:flex}
     .remote-panel{display:flex}
     .remote-panel #close-remote{display:none}
     .player-stage{max-height:52vh}
+    /* The program guide now lives in the remote panel's bottom half — don't
+       duplicate it in the strip under the video too. */
+    .now-playing .np-epg{display:none!important}
+    .fav-list:has(.fav-empty){justify-content:center;align-items:center}
   }
   .remote-toggle {
     position: absolute;
@@ -709,7 +726,7 @@
           <button class="ctrl-btn" id="btn-down" title="Next source (▼)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 16l6-6H6z"/></svg></button>
           <div class="vol-group">
             <button class="ctrl-btn" id="btn-mute" title="Mute"><svg id="icon-vol" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9z"/></svg><svg id="icon-mute" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M3 9v6h4l5 5V4L7 9zm13.7-1.3-1.4 1.4L17 11l-1.7 1.9 1.4 1.4L18.4 12l1.7 1.7 1.4-1.4L19.8 10.6 21.5 8.7l-1.4-1.4L18.4 9z"/></svg></button>
-            <input type="range" class="vol-slider" id="vol-slider" min="0" max="1" step="0.01" value="1" aria-label="Volume"/>
+            <input type="range" class="vol-slider" id="vol-slider" min="0" max="1" step="0.01" value="0.15" aria-label="Volume"/>
           </div>
           <div class="ctrl-spacer"></div>
           <span class="now-live"><span class="live-dot"></span>LIVE</span>
@@ -718,7 +735,24 @@
         </div>
         <div class="now-playing" id="now-playing" style="display:none">
           <div class="np-main"><span class="np-dot"></span><strong id="np-name"></strong><span class="np-src" id="np-src"></span></div>
-          <div class="np-epg" id="np-epg"></div>
+          <div class="np-epg np-epg-slot" id="np-epg"></div>
+        </div>
+      </div>
+
+      <!-- Remote Panel: top half = keypad, bottom half = program guide of the playing channel -->
+      <div class="remote-panel" id="hero-remote-panel">
+        <div class="remote-half remote-half-top">
+          <div class="remote-half-head">
+            <h3>Remote Control</h3>
+            <button id="close-remote" style="color:var(--text-faint);font-size:20px;">✕</button>
+          </div>
+          <div class="remote-display" id="remote-display">—</div>
+          <div class="remote-name" id="remote-name"></div>
+          <div class="keypad" id="keypad"></div>
+        </div>
+        <div class="remote-half remote-half-epg">
+          <div class="remote-half-head"><h3>Program Guide</h3></div>
+          <div class="np-epg np-epg-slot" id="np-epg-desktop"><div class="epg-placeholder">Select a channel to see its program guide.</div></div>
         </div>
       </div>
 
@@ -727,17 +761,6 @@
         <div class="fav-head"><span>★ Favorites</span><span class="fav-count" id="fav-count"></span></div>
         <div class="fav-list" id="fav-list"></div>
       </aside>
-
-      <!-- Remote Panel -->
-      <div class="remote-panel" id="hero-remote-panel">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-          <h3 style="font-size:14px;color:var(--text-dim);letter-spacing:.5px;">REMOTE CONTROL</h3>
-          <button id="close-remote" style="color:var(--text-faint);font-size:20px;">✕</button>
-        </div>
-        <div class="remote-display" id="remote-display" style="font-size:34px;font-weight:800;text-align:center;letter-spacing:4px;background:var(--bg);border:1px solid var(--border-strong);border-radius:12px;padding:14px;margin-bottom:8px;min-height:62px;color:var(--accent-2)">—</div>
-        <div class="remote-name" id="remote-name" style="font-size:12px;text-align:center;color:var(--text-faint);min-height:16px;margin-bottom:14px"></div>
-        <div class="keypad" id="keypad"></div>
-      </div>
     </div>
     
     <div class="content-shelf">
@@ -1694,6 +1717,9 @@ function __iptvBoot(){
 
   /* ---------- Playback ---------- */
   var video=$("video");
+  var DEFAULT_VOLUME=0.15; // always start at a low, safe volume — never blast at 100%
+  video.volume=DEFAULT_VOLUME;
+  var volSliderInit=$("vol-slider"); if(volSliderInit) volSliderInit.value=DEFAULT_VOLUME;
   function playIndex(idx){
     if(idx<0||idx>=state.filtered.length)return;
     state.playContext="main"; // playing from the main channel list
@@ -1772,26 +1798,38 @@ function __iptvBoot(){
     }).join("")+'</div>';
     return h;
   }
-  function _epgRender(el){
+  // Two copies of the guide live in the DOM: #np-epg (under the video, mobile/
+  // tablet) and #np-epg-desktop (bottom half of the remote panel, desktop). Both
+  // stay in sync off the same fetch.
+  function _epgEls(){ return Array.prototype.slice.call(document.querySelectorAll(".np-epg-slot")); }
+  function _epgSetPlaceholder(els,msg){
+    els.forEach(function(el){ el.className="np-epg np-epg-slot"; el.innerHTML='<div class="epg-placeholder">'+esc(msg)+'</div>'; });
+  }
+  function _epgRender(){
     if(!state.epgPrograms||!state.epgPrograms.length)return;
-    el.innerHTML=_epgBuildTimeline(state.epgPrograms);
-    var strip=el.querySelector(".epg-strip"), live=el.querySelector(".epg-slot.live");
-    if(strip&&live) strip.scrollLeft=Math.max(0,live.offsetLeft-12);
+    var html=_epgBuildTimeline(state.epgPrograms);
+    _epgEls().forEach(function(el){
+      el.innerHTML=html;
+      var strip=el.querySelector(".epg-strip"), live=el.querySelector(".epg-slot.live");
+      if(strip&&live) strip.scrollLeft=Math.max(0,live.offsetLeft-12);
+    });
   }
   function _epgStopTimer(){ if(state.epgTimer){clearInterval(state.epgTimer);state.epgTimer=null;} }
   function loadEpg(ch){
-    var el=$("np-epg");if(!el){return;} el.className="np-epg"; el.innerHTML=""; _epgStopTimer(); state.epgPrograms=null;
+    var els=_epgEls(); if(!els.length){return;}
+    _epgStopTimer(); state.epgPrograms=null;
+    _epgSetPlaceholder(els,"Loading program guide…");
     var prov = ch.sourceId || state.provider;
-    if((!ch.id&&!ch.name) || !prov || prov==="_custom" || !state.token){return;}
+    if((!ch.id&&!ch.name) || !prov || prov==="_custom" || !state.token){_epgSetPlaceholder(els,"No program guide available for this channel.");return;}
     fetch(API.epg(prov,ch.id||"",ch.name||""),{headers:{"Authorization":"Bearer "+state.token}})
       .then(function(r){return r.ok?r.json():null;})
       .then(function(d){
-        if(!d||!d.programs||!d.programs.length){el.className="np-epg";el.innerHTML="";return;}
+        if(!d||!d.programs||!d.programs.length){_epgSetPlaceholder(els,"No program guide available for this channel.");return;}
         state.epgPrograms=d.programs;
-        _epgRender(el);
-        el.className="np-epg show";
-        state.epgTimer=setInterval(function(){_epgRender(el);},30000);
-      }).catch(function(){el.className="np-epg";el.innerHTML="";});
+        _epgRender();
+        els.forEach(function(el){el.className="np-epg np-epg-slot show";});
+        state.epgTimer=setInterval(function(){_epgRender();},30000);
+      }).catch(function(){_epgSetPlaceholder(els,"No program guide available for this channel.");});
   }
   function loadStream(raw){
     if(!raw){toast("This channel has no stream URL.",true);return;}
@@ -1835,7 +1873,7 @@ function __iptvBoot(){
   function tryPlay(){setLoading(false);var p=video.play();if(p&&p.catch)p.catch(function(){setPlayIcon(false);});}
   function setLoading(on){$("video-loading").classList.toggle("show",on);}
   function stopHls(){if(state.hls){try{state.hls.destroy();}catch(e){}state.hls=null;}}
-  function stopPlayback(){stopHls();_epgStopTimer();state.epgPrograms=null;try{video.pause();video.removeAttribute("src");video.load();}catch(e){}var np=$("now-playing");if(np)np.style.display="none";$("player-placeholder").style.display="grid";$("controls").classList.remove("pinned");state.currentChannel=null;}
+  function stopPlayback(){stopHls();_epgStopTimer();state.epgPrograms=null;_epgSetPlaceholder(_epgEls(),"Select a channel to see its program guide.");try{video.pause();video.removeAttribute("src");video.load();}catch(e){}var np=$("now-playing");if(np)np.style.display="none";$("player-placeholder").style.display="grid";$("controls").classList.remove("pinned");state.currentChannel=null;}
 
   function setPlayIcon(p){$("icon-play").style.display=p?"none":"block";$("icon-pause").style.display=p?"block":"none";}
   video.addEventListener("play",function(){setPlayIcon(true);});
@@ -1864,7 +1902,7 @@ function __iptvBoot(){
     });
     var restore=$("chip-restore"); if(restore)restore.addEventListener("click",restoreHidden);
   })();
-  var lastVol=1;
+  var lastVol=DEFAULT_VOLUME;
   $("vol-slider").addEventListener("input",function(){video.volume=parseFloat(this.value);video.muted=video.volume===0;updateMute();});
   $("btn-mute").addEventListener("click",function(){if(video.muted||video.volume===0){video.muted=false;video.volume=lastVol>0?lastVol:1;$("vol-slider").value=video.volume;}else{lastVol=video.volume;video.muted=true;$("vol-slider").value=0;}updateMute();});
   function updateMute(){var m=video.muted||video.volume===0;$("icon-vol").style.display=m?"none":"block";$("icon-mute").style.display=m?"block":"none";}
