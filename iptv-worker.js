@@ -135,10 +135,24 @@ export default {
       if (request.method === "GET" && (pathname === "/api/jio/play" || pathname === "/proxy")) {
         return handleJioTunnel(request, env, url);
       }
+      // Ops-only: manually advance the D1 sync (normally driven by the cron
+      // trigger below). Guarded by a dedicated secret, not user session tokens.
+      if (request.method === "GET" && pathname === "/api/admin/sync") {
+        const key = url.searchParams.get("key") || "";
+        if (!env.IPTV_SYNC_KEY || !safeEqual(key, env.IPTV_SYNC_KEY)) return json({ error: "Unauthorized" }, 401);
+        const result = await runD1Sync(env);
+        return json(result);
+      }
       return json({ error: "Not found" }, 404);
     } catch (err) {
       return json({ error: "Server error", detail: String(err && err.message || err) }, 500);
     }
+  },
+
+  // Cron trigger (see wrangler.iptv.toml [triggers]) — advances the D1 sync
+  // cursor by D1_SYNC_BATCH_SIZE providers each tick.
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runD1Sync(env));
   },
 };
 
@@ -1059,4 +1073,141 @@ function parseEpgForChannel(xml, channelId) {
   }
   out.sort((a, b) => a.startMs - b.startMs);
   return out;
+}
+
+/**
+ * Parse EVERY <programme> entry for EVERY channel in an XMLTV file (used by
+ * the D1 sync job, unlike parseEpgForChannel which filters to one channel).
+ * Capped to stay within Worker CPU/memory limits for very large guides.
+ */
+function parseEpgAll(xml) {
+  const out = [];
+  if (!xml) return out;
+  const re = /<programme\b([^>]*)>([\s\S]*?)<\/programme>/g;
+  let m, scanned = 0;
+  while ((m = re.exec(xml)) !== null) {
+    if (++scanned > 200000) break;
+    if (out.length >= 20000) break; // per-source storage cap
+    const attrs = m[1];
+    const chMatch = attrs.match(/channel="([^"]*)"/i);
+    if (!chMatch || !chMatch[1]) continue;
+    const startMatch = attrs.match(/start="([^"]*)"/i);
+    const stopMatch = attrs.match(/stop="([^"]*)"/i);
+    const startMs = parseXmltvTime(startMatch ? startMatch[1] : "");
+    const stopMs = parseXmltvTime(stopMatch ? stopMatch[1] : "");
+    if (!startMs || !stopMs) continue;
+    const inner = m[2];
+    const titleM = inner.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    const descM = inner.match(/<desc[^>]*>([\s\S]*?)<\/desc>/i);
+    out.push({
+      tvgId: chMatch[1],
+      title: _sanitizeText(_xmlUnescape(titleM ? titleM[1].trim() : "Untitled"), 300) || "Untitled",
+      desc: _sanitizeText(_xmlUnescape(descM ? descM[1].trim() : ""), 2000),
+      startMs,
+      stopMs,
+    });
+  }
+  return out;
+}
+
+/* ----------------------------- D1 sync (streams_metadata / epg_data) -----------------------------
+ * Populates D1 as a real queryable channel/EPG database, in PARALLEL with the existing
+ * live-fetch + R2-cache path — the live /api/playlist and /api/epg routes are untouched
+ * and keep serving from that proven path. This is additive: D1 is not yet a read
+ * dependency for anything user-facing, so a sync bug can't break live playback.
+ *
+ * A full sync of ~150+ sources won't fit in one Cron Trigger invocation, so progress is
+ * tracked via sync_state (a cursor) and a slice of providers is processed per tick.
+ */
+const D1_SYNC_BATCH_SIZE = 8;   // providers processed per cron tick / manual trigger call
+const D1_TIME_BUDGET_MS = 20000; // bail early if a tick is taking too long
+
+function _runD1Batch(env, stmts) {
+  // D1 batch() has practical payload/statement-count limits; chunk defensively.
+  const chunks = [];
+  for (let i = 0; i < stmts.length; i += 400) chunks.push(stmts.slice(i, i + 400));
+  return chunks.reduce((p, chunk) => p.then(() => env.DB.batch(chunk)), Promise.resolve());
+}
+
+async function syncProviderToD1(env, providerId, pconf) {
+  const raw = await loadProviderRaw(env, providerId, pconf);
+  if (!raw) return 0;
+  const channels = parseM3U(raw);
+  if (!channels.length) return 0;
+  const now = Date.now();
+  const stmt = env.DB.prepare(
+    "INSERT OR REPLACE INTO streams_metadata (id,name,category,language,country,source_id,logo_url,stream_url,tvg_id,quality,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)"
+  );
+  const stmts = channels.map((ch) =>
+    stmt.bind(providerId + "|" + _shortHash(ch.url), ch.name, ch.category || null, ch.language || null, null, providerId, ch.logo || null, ch.url, ch.id || null, ch.quality || null, now)
+  );
+  await _runD1Batch(env, stmts);
+  return channels.length;
+}
+
+async function syncEpgToD1(env, providerId, epgUrl) {
+  if (!epgUrl) return 0;
+  const cacheKey = "cache_epg_" + providerId;
+  let xml = await cacheGet(env, cacheKey);
+  if (!xml) {
+    try {
+      const resp = await fetch(epgUrl, { headers: { "User-Agent": "Mozilla/5.0 (compatible; IPTVConsole/1.0)" }, redirect: "follow" });
+      if (resp.ok) {
+        xml = await resp.text();
+        if (xml && xml.length < 24 * 1024 * 1024) await cachePut(env, cacheKey, xml, EPG_CACHE_TTL);
+      }
+    } catch (e) { return 0; }
+  }
+  if (!xml) return 0;
+  const programs = parseEpgAll(xml);
+  if (!programs.length) return 0;
+  // Full replace per source — simpler and safer than diffing a time-series guide.
+  const del = env.DB.prepare("DELETE FROM epg_data WHERE source_id = ?").bind(providerId);
+  const stmt = env.DB.prepare("INSERT INTO epg_data (source_id,tvg_id,title,description,start_time,end_time) VALUES (?,?,?,?,?,?)");
+  const stmts = [del, ...programs.map((p) => stmt.bind(providerId, p.tvgId, p.title, p.desc || null, p.startMs, p.stopMs))];
+  await _runD1Batch(env, stmts);
+  return programs.length;
+}
+
+/** Process the next slice of providers, advancing a persisted cursor so a full
+ *  cycle completes over many ticks instead of one (which wouldn't fit the
+ *  execution time budget). Returns a summary for logging/manual-trigger responses. */
+async function runD1Sync(env) {
+  if (!env.DB) return { error: "D1 not bound" };
+  const settings = await loadSettings(env);
+  const ids = Object.keys(settings.providers).filter((id) => id !== CUSTOM_PROVIDER_ID && settings.providers[id].enabled !== false);
+  if (!ids.length) return { processed: 0, total: 0 };
+
+  let cursor = 0;
+  try {
+    const row = await env.DB.prepare("SELECT value FROM sync_state WHERE key = 'cursor'").first();
+    cursor = row ? (parseInt(row.value, 10) || 0) : 0;
+  } catch (e) {}
+
+  const started = Date.now();
+  const results = [];
+  let i = cursor;
+  let count = 0;
+  while (count < D1_SYNC_BATCH_SIZE && (Date.now() - started) < D1_TIME_BUDGET_MS) {
+    const id = ids[i % ids.length];
+    const pconf = settings.providers[id];
+    try {
+      const [channelCount, epgCount] = await Promise.all([
+        syncProviderToD1(env, id, pconf),
+        syncEpgToD1(env, id, pconf.epg),
+      ]);
+      results.push({ id, channels: channelCount, programs: epgCount });
+    } catch (e) {
+      results.push({ id, error: String(e && e.message || e) });
+    }
+    i++; count++;
+    if (i >= ids.length * 2) break; // safety: never loop forever on a tiny/empty list
+  }
+
+  try {
+    await env.DB.prepare("INSERT OR REPLACE INTO sync_state (key, value, updated_at) VALUES ('cursor', ?, ?)")
+      .bind(String(i % ids.length), Date.now()).run();
+  } catch (e) {}
+
+  return { processed: results.length, total: ids.length, cursorNext: i % ids.length, results };
 }

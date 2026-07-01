@@ -45,5 +45,11 @@ binding = "DB"
 database_name = "vilfintvsql"
 database_id = "498b4600-93f8-45b2-b23b-6d0f27329bd9"
 
+# Advances the D1 sync cursor by a slice of providers every 10 min (a full
+# cycle across ~150+ sources takes several hours). See runD1Sync() in
+# iptv-worker.js. Can also be advanced on demand via GET /api/admin/sync?key=...
+[triggers]
+crons = ["*/10 * * * *"]
+
 # IPTV_SECRET_USER / IPTV_SECRET_PASS / IPTV_TOKEN_SECRET are set via
 # `wrangler secret put` â€” never commit them here.
