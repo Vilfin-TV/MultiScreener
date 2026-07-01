@@ -37,9 +37,9 @@ def set_status(msg):
 def generate_and_upload_m3u():
     try:
         set_status("Downloading channel list from Jio CDN...")
-        ch_url = "https://raw.githubusercontent.com/Vilfin-TV/MultiScreener/main/jio_channels.json"
-        ch_req = requests.get(ch_url, timeout=15)
-        ch_data = ch_req.json()
+        import json
+        with open("/home/vilfintvserver/jio_channels.json", "r", encoding="utf-8") as f:
+            ch_data = json.load(f)
         
         m3u_lines = ["#EXTM3U"]
         channels = ch_data.get("result", [])
