@@ -1285,6 +1285,23 @@ ${body.text}`;
       return jsonError(405, 'Method not allowed.');
     }
 
+    // ── /api/jio/proxy  GET ──
+    if (pathname === '/api/jio/proxy') {
+      const targetUrl = searchParams.get('url');
+      if (!targetUrl) return jsonError(400, 'Missing url parameter');
+      try {
+        const resp = await fetch(targetUrl, {
+          method: request.method,
+          headers: { 'User-Agent': request.headers.get('User-Agent') || 'okhttp/4.9.0' },
+          body: request.method === 'POST' ? await request.text() : undefined
+        });
+        const data = await resp.arrayBuffer();
+        const headers = new Headers(resp.headers);
+        headers.set('Access-Control-Allow-Origin', '*');
+        return new Response(data, { status: resp.status, headers });
+      } catch(e) { return jsonError(500, String(e)); }
+    }
+
     // ── /api/post-link  POST — append an external link to links.json via GitHub API ──
     if (pathname === '/api/post-link') {
       if (request.method !== 'POST') {
