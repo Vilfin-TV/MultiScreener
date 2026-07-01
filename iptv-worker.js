@@ -790,7 +790,12 @@ async function handleEpg(request, env, url) {
 
   const cacheKey = "cache_epg_" + provider;
   let xml = await cacheGet(env, cacheKey);
-  if (!xml) {
+  
+  if (!xml && provider === 'jio' && env.IPTV_PLAYLIST_KV) {
+      try { xml = await env.IPTV_PLAYLIST_KV.get('jio_epg'); } catch (e) {}
+  }
+  
+  if (!xml && epgUrl) {
     try {
       const resp = await fetch(epgUrl, { headers: { "User-Agent": "Mozilla/5.0 (compatible; IPTVConsole/1.0)" }, redirect: "follow" });
       if (resp.ok) {
@@ -1168,10 +1173,15 @@ async function syncProviderToD1(env, providerId, pconf) {
 }
 
 async function syncEpgToD1(env, providerId, epgUrl) {
-  if (!epgUrl) return 0;
+  if (!epgUrl && providerId !== 'jio') return 0;
   const cacheKey = "cache_epg_" + providerId;
   let xml = await cacheGet(env, cacheKey);
-  if (!xml) {
+  
+  if (!xml && providerId === 'jio' && env.IPTV_PLAYLIST_KV) {
+      try { xml = await env.IPTV_PLAYLIST_KV.get('jio_epg'); } catch (e) {}
+  }
+  
+  if (!xml && epgUrl) {
     try {
       const resp = await fetch(epgUrl, { headers: { "User-Agent": "Mozilla/5.0 (compatible; IPTVConsole/1.0)" }, redirect: "follow" });
       if (resp.ok) {

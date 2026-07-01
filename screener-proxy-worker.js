@@ -1256,12 +1256,18 @@ ${body.text}`;
         try { body = await request.json(); } catch (_) { return jsonError(400, 'Invalid JSON body.'); }
         
         if (body.action === "save_m3u" && body.m3u) {
-          if (!env.IPTV_KV) return jsonError(503, "KV not configured");
-          await env.IPTV_KV.put('jio_playlist', body.m3u);
-          return _iptvJson({ ok: true });
-        }
-
-        if (body.action === "save_auth" && body.auth) {
+            if (!env.IPTV_KV) return jsonError(503, "KV not configured");
+            await env.IPTV_KV.put('jio_playlist', body.m3u);
+            return _iptvJson({ ok: true });
+          }
+          
+          if (body.action === "save_epg" && body.epg) {
+            if (!env.IPTV_KV) return jsonError(503, "KV not configured");
+            await env.IPTV_KV.put('jio_epg', body.epg);
+            return _iptvJson({ ok: true });
+          }
+  
+          if (body.action === "save_auth" && body.auth) {
           if (!env.IPTV_KV) return jsonError(503, "KV not configured");
           await env.IPTV_KV.put('jio_auth_creds', JSON.stringify(body.auth));
           if (body.tunnel_url) {
