@@ -29,5 +29,13 @@ binding = "ASSETS"
 binding = "IPTV_PLAYLIST_KV"
 id = "25437ace56a442c69fb435cd97ae51cc"
 
+# Cache blobs (fetched playlist M3U text, merged/region JSON, EPG XML) live here
+# instead of KV. They're refreshed every 15-60 min across ~150 sources, which was
+# burning through the Workers KV free-tier daily operations quota. R2 has a much
+# larger free quota and is the right tool for large, disposable cache blobs.
+[[r2_buckets]]
+binding = "IPTV_CACHE"
+bucket_name = "vilfintv-iptv-cache"
+
 # IPTV_SECRET_USER / IPTV_SECRET_PASS / IPTV_TOKEN_SECRET are set via
 # `wrangler secret put` â€” never commit them here.

@@ -543,23 +543,49 @@ async function handleSettings(request, env, url) {
   return json({ settings });
 }
 
-/** Fetch the raw M3U text for one provider id (remote URL w/ KV cache, then
- *  synced {id}_playlist fallback). Returns "" when nothing is available. */
+/* ----------------------------- R2 cache (playlists / EPG / merges) -----------------------------
+ * These blobs are large and refreshed every 15-60 min across ~150 sources, which was burning
+ * through the Workers KV free-tier daily operations quota (reads+writes). R2 has a much larger
+ * free quota and is the right tool for large, disposable cache blobs. Falls back to KV automatically
+ * if the R2 binding is ever missing, so a config slip degrades gracefully instead of breaking playback.
+ * Expiry is tracked via R2 customMetadata (R2 has no per-object TTL like KV's expirationTtl). */
+async function cacheGet(env, key) {
+  if (env.IPTV_CACHE) {
+    try {
+      const obj = await env.IPTV_CACHE.get(key);
+      if (!obj) return "";
+      const exp = obj.customMetadata && obj.customMetadata.expires;
+      if (exp && Date.now() > Number(exp)) return "";
+      return await obj.text();
+    } catch (e) { return ""; }
+  }
+  if (env.IPTV_PLAYLIST_KV) { try { return (await env.IPTV_PLAYLIST_KV.get(key)) || ""; } catch (e) { return ""; } }
+  return "";
+}
+async function cachePut(env, key, value, ttlSeconds) {
+  if (env.IPTV_CACHE) {
+    try { await env.IPTV_CACHE.put(key, value, { customMetadata: { expires: String(Date.now() + ttlSeconds * 1000) } }); } catch (e) {}
+    return;
+  }
+  if (env.IPTV_PLAYLIST_KV) { try { await env.IPTV_PLAYLIST_KV.put(key, value, { expirationTtl: ttlSeconds }); } catch (e) {} }
+}
+
+/** Fetch the raw M3U text for one provider id (remote URL w/ R2 cache, then
+ *  synced {id}_playlist KV fallback). Returns "" when nothing is available. */
 async function loadProviderRaw(env, providerId, pconf) {
   const kv = env.IPTV_PLAYLIST_KV;
-  if (!kv) return "";
   let raw = "";
   const srcUrl = (pconf && pconf.url || "").trim();
   if (srcUrl) {
     const cacheKey = "cache_playlist_" + providerId;
-    raw = (await kv.get(cacheKey)) || "";
+    raw = await cacheGet(env, cacheKey);
     if (!raw) {
       try {
         const resp = await fetch(srcUrl, { headers: { "User-Agent": "Mozilla/5.0 (compatible; IPTVConsole/1.0)" }, redirect: "follow" });
         if (resp.ok) {
           raw = await resp.text();
           if (raw && raw.length < 24 * 1024 * 1024) {
-            try { await kv.put(cacheKey, raw, { expirationTtl: PLAYLIST_CACHE_TTL }); } catch (e) {}
+            await cachePut(env, cacheKey, raw, PLAYLIST_CACHE_TTL);
           }
         }
       } catch (e) {
@@ -567,7 +593,7 @@ async function loadProviderRaw(env, providerId, pconf) {
       }
     }
   }
-  if (!raw) raw = (await kv.get(providerId + "_playlist")) || "";
+  if (!raw && kv) raw = (await kv.get(providerId + "_playlist")) || "";
   return raw;
 }
 
@@ -618,7 +644,6 @@ async function handleRegionPlaylist(request, env, url) {
   const region = (url.searchParams.get("region") || "").trim();
   if (!region) return json({ error: "Missing region" }, 400);
   const settings = await loadSettings(env);
-  const kv = env.IPTV_PLAYLIST_KV;
 
   const members = Object.keys(settings.providers)
     .map((id) => Object.assign({ id }, settings.providers[id]))
@@ -626,11 +651,9 @@ async function handleRegionPlaylist(request, env, url) {
   if (!members.length) return json({ error: "No sources in this region" }, 404);
 
   const cacheKey = "cache_region_" + region;
-  if (kv) {
-    const cached = await kv.get(cacheKey);
-    if (cached) {
-      try { const obj = JSON.parse(cached); return json(obj); } catch (e) {}
-    }
+  const cached = await cacheGet(env, cacheKey);
+  if (cached) {
+    try { const obj = JSON.parse(cached); return json(obj); } catch (e) {}
   }
 
   const seen = Object.create(null);
@@ -652,9 +675,7 @@ async function handleRegionPlaylist(request, env, url) {
   }
 
   const out = { region, sources: used, count: channels.length, epg: "", channels };
-  if (kv && channels.length) {
-    try { await kv.put(cacheKey, JSON.stringify(out), { expirationTtl: REGION_CACHE_TTL }); } catch (e) {}
-  }
+  if (channels.length) await cachePut(env, cacheKey, JSON.stringify(out), REGION_CACHE_TTL);
   return json(out);
 }
 
@@ -669,7 +690,6 @@ function _shortHash(s) { let h = 0; for (let i = 0; i < s.length; i++) { h = ((h
  *  is tagged with `source`. Fetches run in parallel and the merge is cached. */
 async function handleMergePlaylist(request, env, url) {
   const settings = await loadSettings(env);
-  const kv = env.IPTV_PLAYLIST_KV;
   const all = url.searchParams.get("all");
   let ids;
   if (all) {
@@ -697,10 +717,8 @@ async function handleMergePlaylist(request, env, url) {
   // The m3u-merged portion is cacheable; custom channels are appended fresh below.
   let channels = null, used = 0;
   const cacheKey = "cache_merge_" + (all ? "all" : _shortHash(members.map((p) => p.id).sort().join(",")));
-  if (kv) {
-    const cached = await kv.get(cacheKey);
-    if (cached) { try { const o = JSON.parse(cached); channels = o.channels; used = o.sources || 0; } catch (e) {} }
-  }
+  const cached = await cacheGet(env, cacheKey);
+  if (cached) { try { const o = JSON.parse(cached); channels = o.channels; used = o.sources || 0; } catch (e) {} }
   if (!channels) {
     const raws = await Promise.all(members.map((p) => loadProviderRaw(env, p.id, p).catch(() => "")));
     const seenStream = Object.create(null);
@@ -723,7 +741,7 @@ async function handleMergePlaylist(request, env, url) {
       }
       if (channels.length >= MERGE_MAX_CHANNELS) break;
     }
-    if (kv && channels.length) { try { await kv.put(cacheKey, JSON.stringify({ channels, sources: used }), { expirationTtl: REGION_CACHE_TTL }); } catch (e) {} }
+    if (channels.length) await cachePut(env, cacheKey, JSON.stringify({ channels, sources: used }), REGION_CACHE_TTL);
   }
 
   // Append manually-added channels fresh, so newly-added ones appear immediately.
@@ -756,17 +774,14 @@ async function handleEpg(request, env, url) {
   const epgUrl = ((settings.providers[provider] || {}).epg || "").trim();
   if (!epgUrl) return json({ programs: [], now: null, next: null, note: "No EPG configured" });
 
-  const kv = env.IPTV_PLAYLIST_KV;
   const cacheKey = "cache_epg_" + provider;
-  let xml = kv ? (await kv.get(cacheKey)) || "" : "";
+  let xml = await cacheGet(env, cacheKey);
   if (!xml) {
     try {
       const resp = await fetch(epgUrl, { headers: { "User-Agent": "Mozilla/5.0 (compatible; IPTVConsole/1.0)" }, redirect: "follow" });
       if (resp.ok) {
         xml = await resp.text();
-        if (kv && xml && xml.length < 24 * 1024 * 1024) {
-          try { await kv.put(cacheKey, xml, { expirationTtl: EPG_CACHE_TTL }); } catch (e) {}
-        }
+        if (xml && xml.length < 24 * 1024 * 1024) await cachePut(env, cacheKey, xml, EPG_CACHE_TTL);
       }
     } catch (e) {
       return json({ programs: [], now: null, next: null, error: "EPG fetch failed" });
