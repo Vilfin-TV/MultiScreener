@@ -37,5 +37,13 @@ id = "25437ace56a442c69fb435cd97ae51cc"
 binding = "IPTV_CACHE"
 bucket_name = "vilfintv-iptv-cache"
 
+# Provisioned for future structured/queryable data (e.g. a real channel/EPG
+# table instead of live-fetching M3U/XMLTV on every request). Bound but unused
+# for now — nothing reads or writes it yet.
+[[d1_databases]]
+binding = "DB"
+database_name = "vilfintvsql"
+database_id = "498b4600-93f8-45b2-b23b-6d0f27329bd9"
+
 # IPTV_SECRET_USER / IPTV_SECRET_PASS / IPTV_TOKEN_SECRET are set via
 # `wrangler secret put` â€” never commit them here.

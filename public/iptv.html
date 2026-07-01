@@ -8,6 +8,11 @@
 <meta name="robots" content="noindex,nofollow" />
 <title>VilfinTV IPTV</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<!-- Primary playback engine: video.js (bundles @videojs/http-streaming for HLS). -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/video.js@8/dist/video-js.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/video.js@8/dist/video.min.js"></script>
+<!-- Fallback engine only: used if video.js fails to load (CDN hiccup etc.) so
+     playback still works via the previous, proven hls.js path. -->
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js"></script>
 <style>
   :root{
@@ -210,6 +215,24 @@
   .player-stage video{width:100%;height:100%;object-fit:contain;background:#000;display:block}
   .video-loading{position:absolute;inset:0;display:none;place-items:center;background:rgba(0,0,0,.55);color:var(--text-dim);font-size:13px;z-index:3}
   .video-loading.show{display:grid}
+
+  /* ===== video.js theme: match the app's premium violet/navy palette ===== */
+  .player-stage .video-js{width:100%;height:100%}
+  .player-stage .vjs-tech{object-fit:contain}
+  .vjs-iptv-theme .vjs-big-play-button{background:var(--accent-soft);border:2px solid var(--accent);
+    border-radius:50%;width:74px;height:74px;line-height:70px;top:50%;left:50%;transform:translate(-50%,-50%);margin:0}
+  .vjs-iptv-theme .vjs-big-play-button:hover{background:var(--accent);border-color:var(--accent-2)}
+  .vjs-iptv-theme .vjs-control-bar{background:linear-gradient(0deg,rgba(6,9,16,.94),rgba(6,9,16,.6) 75%,transparent);height:42px}
+  .vjs-iptv-theme .vjs-play-progress,.vjs-iptv-theme .vjs-volume-level{background:var(--accent)}
+  .vjs-iptv-theme .vjs-slider{background:rgba(255,255,255,.22)}
+  .vjs-iptv-theme .vjs-load-progress div{background:rgba(255,255,255,.35)}
+  .vjs-iptv-theme .vjs-control-bar,.vjs-iptv-theme .vjs-menu-button-popup .vjs-menu{font-family:inherit}
+  .vjs-iptv-theme .vjs-live-control{color:var(--danger);font-weight:700}
+  .vjs-iptv-theme .vjs-loading-spinner{border-color:var(--accent)}
+  /* Custom channel/source-nav buttons injected into the video.js control bar */
+  .vjs-iptv-theme .vjs-nav-btn{font-size:14px;font-weight:800;color:#fff;cursor:pointer}
+  .vjs-iptv-theme .vjs-nav-btn:hover{color:var(--accent-2)}
+  .vjs-iptv-theme .vjs-nav-btn .vjs-icon-placeholder{display:none}
   /* Now Playing + EPG strip (under the controls) */
   .now-playing{margin-top:8px;padding:9px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
   .now-playing .np-main{display:flex;align-items:center;gap:8px;font-size:14px;min-width:0}
@@ -714,7 +737,7 @@
     <div class="player-hero" style="display:flex; flex-direction:row; gap:12px; padding:12px; align-items:stretch;">
       <div class="video-col" style="flex:1; min-width:0; position:relative; display:flex; flex-direction:column;">
       <div class="player-stage" id="video-shell" style="position:relative;">
-        <video id="video" playsinline></video>
+        <video id="video" class="video-js vjs-iptv-theme" playsinline></video>
         <div class="player-placeholder" id="player-placeholder"><div><div class="pp-ico">▶️</div>Select a channel to start watching</div></div>
         <div class="video-loading" id="video-loading"><div><div class="spinner"></div><span>Loading stream…</span></div></div>
       </div>
@@ -1720,6 +1743,88 @@ function __iptvBoot(){
   var DEFAULT_VOLUME=0.15; // always start at a low, safe volume — never blast at 100%
   video.volume=DEFAULT_VOLUME;
   var volSliderInit=$("vol-slider"); if(volSliderInit) volSliderInit.value=DEFAULT_VOLUME;
+
+  /* ---------- video.js (primary engine) ----------
+     Registers 4 custom control-bar buttons (source/channel nav) and lazily
+     initializes the player. If video.js isn't available for any reason, every
+     caller below falls back to the previous, proven hls.js/native-HLS path —
+     channel playback must never depend on a single CDN succeeding. */
+  var player=null, VJS_OK=false;
+  function _vjsRegisterNavButtons(){
+    if(window.__vjsNavRegistered||!window.videojs)return;
+    window.__vjsNavRegistered=true;
+    var Button=videojs.getComponent("Button");
+    function make(name,label,glyph,fn){
+      class NavBtn extends Button {
+        constructor(p,o){ super(p,o); this.controlText(label); this.addClass("vjs-nav-btn"); }
+        handleClick(){ fn(); }
+        createEl(){
+          var el=Button.prototype.createEl.call(this,"button",{className:"vjs-nav-btn vjs-control vjs-button"});
+          var span=document.createElement("span"); span.setAttribute("aria-hidden","true"); span.textContent=glyph;
+          el.appendChild(span);
+          return el;
+        }
+      }
+      videojs.registerComponent(name,NavBtn);
+    }
+    make("PrevSourceButton","Previous source","▲",function(){navVert(-1);});
+    make("PrevChannelButton","Previous channel","◀",function(){navHoriz(-1);});
+    make("NextChannelButton","Next channel","▶",function(){navHoriz(1);});
+    make("NextSourceButton","Next source","▼",function(){navVert(1);});
+  }
+  function initPlayer(){
+    if(player)return player;
+    if(!window.videojs)return null;
+    try{
+      _vjsRegisterNavButtons();
+      player=videojs("video",{
+        controls:true,autoplay:false,preload:"auto",liveui:true,playsinline:true,fluid:false,
+        controlBar:{
+          pictureInPictureToggle:true,fullscreenToggle:true,
+          children:["playToggle","PrevSourceButton","PrevChannelButton","NextChannelButton","NextSourceButton","volumePanel","liveDisplay","spacer","pictureInPictureToggle","fullscreenToggle"]
+        }
+      });
+      player.volume(DEFAULT_VOLUME);
+      player.on("waiting",function(){setLoading(true);});
+      player.on("playing",function(){setLoading(false);});
+      player.on("error",function(){
+        var err=player.error();
+        setLoading(false);
+        toast("Stream error: "+((err&&err.message)||"playback failed"),true);
+      });
+      VJS_OK=true;
+      $("controls").style.display="none"; // video.js's own control bar replaces it
+    }catch(e){ player=null; VJS_OK=false; }
+    return player;
+  }
+  // Engine-aware actions — used by both the (hidden-when-video.js-active) fallback
+  // control bar and keyboard shortcuts, so behavior is identical either way.
+  function togglePlay(){
+    if(player&&VJS_OK){ if(player.paused())player.play().catch(function(){});else player.pause(); }
+    else { if(video.paused)video.play().catch(function(){});else video.pause(); }
+  }
+  function toggleMute(){
+    if(player&&VJS_OK){
+      if(player.muted()||player.volume()===0){ player.muted(false); player.volume(lastVol>0?lastVol:DEFAULT_VOLUME); }
+      else { lastVol=player.volume(); player.muted(true); }
+      return;
+    }
+    if(video.muted||video.volume===0){video.muted=false;video.volume=lastVol>0?lastVol:1;$("vol-slider").value=video.volume;}
+    else{lastVol=video.volume;video.muted=true;$("vol-slider").value=0;}
+    updateMute();
+  }
+  function toggleFullscreen(){
+    if(player&&VJS_OK){ if(player.isFullscreen())player.exitFullscreen();else player.requestFullscreen(); return; }
+    var s=$("video-shell");if(!document.fullscreenElement){(s.requestFullscreen||s.webkitRequestFullscreen||function(){if(video.webkitEnterFullscreen)video.webkitEnterFullscreen();}).call(s);}else{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}
+  }
+  function togglePip(){
+    if(player&&VJS_OK){
+      try{ if(player.isInPictureInPicture())player.exitPictureInPicture();else player.requestPictureInPicture(); }
+      catch(e){ toast("Picture-in-Picture not supported here.",true); }
+      return;
+    }
+    try{if(document.pictureInPictureElement){document.exitPictureInPicture();}else if(video.requestPictureInPicture){video.requestPictureInPicture();}else if(video.webkitSupportsPresentationMode){video.webkitSetPresentationMode("picture-in-picture");}else toast("Picture-in-Picture not supported here.",true);}catch(e){toast("Start playback before PiP.",true);}
+  }
   function playIndex(idx){
     if(idx<0||idx>=state.filtered.length)return;
     state.playContext="main"; // playing from the main channel list
@@ -1836,7 +1941,22 @@ function __iptvBoot(){
     var src=API.stream(raw,state.token||"");
     if(raw.indexOf("192.168.") !== -1) { src = raw; }
     if(raw.startsWith("jio://")) { src = WORKER + "/api/jio/play?id=" + raw.substring(6) + "&token=" + encodeURIComponent(state.token||""); }
-    setLoading(true);stopHls();
+    var p=initPlayer(); // sets VJS_OK before setLoading() below, so the fallback
+    setLoading(true);   // spinner never shows (and never gets stuck) once video.js is active
+    if(p){
+      stopHls();
+      try{
+        p.src({src:src,type:"application/x-mpegURL"});
+        var pr=p.play(); if(pr&&pr.catch)pr.catch(function(){});
+      }catch(e){ setLoading(false); toast("Stream error: playback failed",true); }
+      return;
+    }
+    loadStreamFallback(src);
+  }
+  // Only reached if video.js failed to load/initialize — the exact engine used
+  // before video.js was added, kept verbatim as the safety net.
+  function loadStreamFallback(src){
+    stopHls();
     state._hlsRetries=0;
     if(window.Hls&&window.Hls.isSupported()){
       var hls=new window.Hls({
@@ -1871,16 +1991,21 @@ function __iptvBoot(){
     else{setLoading(false);toast("HLS not supported in this browser.",true);}
   }
   function tryPlay(){setLoading(false);var p=video.play();if(p&&p.catch)p.catch(function(){setPlayIcon(false);});}
-  function setLoading(on){$("video-loading").classList.toggle("show",on);}
+  function setLoading(on){ if(VJS_OK)return; $("video-loading").classList.toggle("show",on); }
   function stopHls(){if(state.hls){try{state.hls.destroy();}catch(e){}state.hls=null;}}
-  function stopPlayback(){stopHls();_epgStopTimer();state.epgPrograms=null;_epgSetPlaceholder(_epgEls(),"Select a channel to see its program guide.");try{video.pause();video.removeAttribute("src");video.load();}catch(e){}var np=$("now-playing");if(np)np.style.display="none";$("player-placeholder").style.display="grid";$("controls").classList.remove("pinned");state.currentChannel=null;}
+  function stopPlayback(){
+    stopHls();_epgStopTimer();state.epgPrograms=null;_epgSetPlaceholder(_epgEls(),"Select a channel to see its program guide.");
+    if(player&&VJS_OK){ try{ player.pause(); player.reset(); }catch(e){} }
+    else { try{video.pause();video.removeAttribute("src");video.load();}catch(e){} }
+    var np=$("now-playing");if(np)np.style.display="none";$("player-placeholder").style.display="grid";$("controls").classList.remove("pinned");state.currentChannel=null;
+  }
 
   function setPlayIcon(p){$("icon-play").style.display=p?"none":"block";$("icon-pause").style.display=p?"block":"none";}
   video.addEventListener("play",function(){setPlayIcon(true);});
   video.addEventListener("pause",function(){setPlayIcon(false);});
   video.addEventListener("waiting",function(){setLoading(true);});
   video.addEventListener("playing",function(){setLoading(false);});
-  $("btn-play").addEventListener("click",function(){if(video.paused)video.play().catch(function(){});else video.pause();});
+  $("btn-play").addEventListener("click",togglePlay);
   $("btn-prev").addEventListener("click",function(){navHoriz(-1);});
   $("btn-next").addEventListener("click",function(){navHoriz(1);});
   if($("btn-up"))$("btn-up").addEventListener("click",function(){navVert(-1);});
@@ -1904,10 +2029,10 @@ function __iptvBoot(){
   })();
   var lastVol=DEFAULT_VOLUME;
   $("vol-slider").addEventListener("input",function(){video.volume=parseFloat(this.value);video.muted=video.volume===0;updateMute();});
-  $("btn-mute").addEventListener("click",function(){if(video.muted||video.volume===0){video.muted=false;video.volume=lastVol>0?lastVol:1;$("vol-slider").value=video.volume;}else{lastVol=video.volume;video.muted=true;$("vol-slider").value=0;}updateMute();});
+  $("btn-mute").addEventListener("click",toggleMute);
   function updateMute(){var m=video.muted||video.volume===0;$("icon-vol").style.display=m?"none":"block";$("icon-mute").style.display=m?"block":"none";}
-  $("btn-fs").addEventListener("click",function(){var s=$("video-shell");if(!document.fullscreenElement){(s.requestFullscreen||s.webkitRequestFullscreen||function(){if(video.webkitEnterFullscreen)video.webkitEnterFullscreen();}).call(s);}else{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}});
-  $("btn-pip").addEventListener("click",function(){try{if(document.pictureInPictureElement){document.exitPictureInPicture();}else if(video.requestPictureInPicture){video.requestPictureInPicture();}else if(video.webkitSupportsPresentationMode){video.webkitSetPresentationMode("picture-in-picture");}else toast("Picture-in-Picture not supported here.",true);}catch(e){toast("Start playback before PiP.",true);}});
+  $("btn-fs").addEventListener("click",toggleFullscreen);
+  $("btn-pip").addEventListener("click",togglePip);
 
   /* ---------- Remote ---------- */
   var remoteBuf="";
@@ -1947,14 +2072,14 @@ function __iptvBoot(){
       return;
     }
     if(/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName))return;
-    if(e.key===" "||e.key==="k"){e.preventDefault();$("btn-play").click();}
+    if(e.key===" "||e.key==="k"){e.preventDefault();togglePlay();}
     else if(e.key==="ArrowRight"||e.key==="n"){e.preventDefault();navHoriz(1);}
     else if(e.key==="ArrowLeft"||e.key==="p"){e.preventDefault();navHoriz(-1);}
     else if(e.key==="ArrowDown"){e.preventDefault();navVert(1);}
     else if(e.key==="ArrowUp"){e.preventDefault();navVert(-1);}
-    else if(e.key==="m")$("btn-mute").click();
-    else if(e.key==="f")$("btn-fs").click();
-    else if(e.key==="i")$("btn-pip").click();
+    else if(e.key==="m")toggleMute();
+    else if(e.key==="f")toggleFullscreen();
+    else if(e.key==="i")togglePip();
     else if(/^[0-9]$/.test(e.key))openRemote();
   });
 

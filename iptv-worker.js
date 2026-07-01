@@ -874,21 +874,34 @@ function copyHeader(from, to, name) {
 /**
  * Rewrite an HLS manifest so every variant/segment/key URL is routed back
  * through /api/stream (preserving CORS and the auth token).
+ *
+ * Some sources (e.g. JioTV) protect AES-128 key delivery with an Akamai HDNEA
+ * edge-auth token (__hdnea__=...) that's only present on the master/variant
+ * playlist URL itself — the #EXT-X-KEY URI inside the manifest is bare, so a
+ * plain passthrough fetch of the key 403s. Copy that token onto key URIs too.
  */
 function rewriteManifest(text, baseUrl, selfUrl, token) {
   const proxyBase = selfUrl.origin + "/api/stream?token=" + encodeURIComponent(token) + "&url=";
+  const hdnea = baseUrl.searchParams.get("__hdnea__");
   const toAbs = (ref) => {
     try { return new URL(ref, baseUrl).toString(); } catch (e) { return ref; }
   };
-  const wrap = (ref) => proxyBase + encodeURIComponent(toAbs(ref));
+  const wrap = (ref, isKeyUri) => {
+    let abs = toAbs(ref);
+    if (isKeyUri && hdnea && abs.indexOf("__hdnea__") === -1) {
+      abs += (abs.indexOf("?") === -1 ? "?" : "&") + "__hdnea__=" + encodeURIComponent(hdnea);
+    }
+    return proxyBase + encodeURIComponent(abs);
+  };
 
   return text.split("\n").map((line) => {
     const trimmed = line.trim();
     if (!trimmed) return line;
     if (trimmed.startsWith("#")) {
-      return line.replace(/URI="([^"]+)"/g, (m, uri) => 'URI="' + wrap(uri) + '"');
+      const isKeyLine = trimmed.startsWith("#EXT-X-KEY") || trimmed.startsWith("#EXT-X-SESSION-KEY");
+      return line.replace(/URI="([^"]+)"/g, (m, uri) => 'URI="' + wrap(uri, isKeyLine) + '"');
     }
-    return wrap(trimmed);
+    return wrap(trimmed, false);
   }).join("\n");
 }
 
