@@ -738,7 +738,9 @@ async function handleMergePlaylist(request, env, url) {
 
 /**
  * EPG (XMLTV) program lookup for a single channel, on demand with caching.
- * GET /api/epg?provider=<p>&channel=<tvg-id>
+ * GET /api/epg?provider=<p>&channel=<tvg-id>&name=<display name, optional>
+ * `name` is used as a fallback match when the tvg-id isn't present in the guide
+ * verbatim (common with aggregated M3U lists whose ids don't match the guide's own).
  * Returns { now, next, programs:[{start,stop,title,desc}] } — never the whole guide.
  */
 async function handleEpg(request, env, url) {
@@ -747,9 +749,10 @@ async function handleEpg(request, env, url) {
 
   const provider = (url.searchParams.get("provider") || "").toLowerCase();
   const channel = (url.searchParams.get("channel") || "").trim();
+  const channelName = (url.searchParams.get("name") || "").trim();
   const settings = await loadSettings(env);
   if (!settings.providers[provider]) return json({ error: "Invalid provider" }, 400);
-  if (!channel) return json({ error: "Missing channel id" }, 400);
+  if (!channel && !channelName) return json({ error: "Missing channel id" }, 400);
   const epgUrl = ((settings.providers[provider] || {}).epg || "").trim();
   if (!epgUrl) return json({ programs: [], now: null, next: null, note: "No EPG configured" });
 
@@ -771,7 +774,16 @@ async function handleEpg(request, env, url) {
   }
   if (!xml) return json({ programs: [], now: null, next: null, error: "EPG unavailable" });
 
-  const programs = parseEpgForChannel(xml, channel);
+  let programs = parseEpgForChannel(xml, channel);
+  // tvg-id in aggregated M3U lists rarely matches a third-party guide's own channel
+  // id scheme (e.g. "Asianet.in@SD" vs. epg.pw's numeric "404001"). Fall back to
+  // matching by channel NAME against the guide's own id<->display-name map.
+  if (!programs.length && channelName) {
+    const foundId = _findEpgChannelIdByName(xml, channelName);
+    if (foundId && foundId.toLowerCase() !== channel.toLowerCase()) {
+      programs = parseEpgForChannel(xml, foundId);
+    }
+  }
   const nowMs = Date.now();
   let now = null, next = null;
   for (let i = 0; i < programs.length; i++) {
@@ -944,6 +956,43 @@ function _xmlUnescape(s) {
     .replace(/&lt;/g, "<").replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"').replace(/&apos;/g, "'")
     .replace(/&amp;/g, "&");
+}
+
+/** Normalize a channel/program name for fuzzy matching: strip quality tags,
+ *  parentheticals and punctuation so "Asianet (576p)" ~= "Asianet HD" ~= "asianet". */
+function _normEpgName(name) {
+  return String(name || "").toLowerCase()
+    .replace(/\([^)]*\)/g, " ").replace(/\[[^\]]*\]/g, " ")
+    .replace(/\b(fhd|uhd|hd|sd|4k|8k|hevc|h\.?26[45]|2160p?|1080p?|720p?|576p?|480p?|360p?|240p?)\b/g, " ")
+    .replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * When a playlist's tvg-id doesn't exist as a <programme channel="..."> id in the
+ * guide (common — aggregated M3U lists and third-party XMLTV guides rarely share
+ * an id scheme), fall back to matching by the human channel name against the
+ * guide's own <channel id="X"><display-name>Name</display-name></channel> map.
+ * Returns the guide's internal channel id, or "" if nothing looked close enough.
+ */
+function _findEpgChannelIdByName(xml, targetName) {
+  const norm = _normEpgName(targetName);
+  if (!norm) return "";
+  const re = /<channel\b[^>]*\bid="([^"]*)"[^>]*>([\s\S]*?)<\/channel>/g;
+  let m, scanned = 0, candidate = "";
+  while ((m = re.exec(xml)) !== null) {
+    if (++scanned > 20000) break; // channel list is short vs. programmes; generous cap
+    const id = m[1];
+    const inner = m[2];
+    const nameMatches = inner.match(/<display-name[^>]*>([\s\S]*?)<\/display-name>/gi) || [];
+    for (const raw of nameMatches) {
+      const text = raw.replace(/^<display-name[^>]*>/i, "").replace(/<\/display-name>$/i, "");
+      const n2 = _normEpgName(_xmlUnescape(text));
+      if (!n2) continue;
+      if (n2 === norm) return id; // exact normalized match — best possible, stop now
+      if (!candidate && norm.length > 2 && (n2.indexOf(norm) !== -1 || norm.indexOf(n2) !== -1)) candidate = id;
+    }
+  }
+  return candidate;
 }
 
 /**

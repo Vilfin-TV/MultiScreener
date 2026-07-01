@@ -800,7 +800,7 @@ function __iptvBoot(){
     merge:function(ids){return WORKER+"/api/playlist?providers="+encodeURIComponent(ids.join(","));},
     all:WORKER+"/api/playlist?all=1",
     stream:function(u,t){return WORKER+"/api/stream?token="+encodeURIComponent(t)+"&url="+encodeURIComponent(u);},
-    epg:function(p,c){return WORKER+"/api/epg?provider="+encodeURIComponent(p)+"&channel="+encodeURIComponent(c);}
+    epg:function(p,c,n){return WORKER+"/api/epg?provider="+encodeURIComponent(p)+"&channel="+encodeURIComponent(c)+(n?"&name="+encodeURIComponent(n):"");}
   };
   var TOKEN_KEY="iptv_token", FAV_KEY="iptv_favs", PREF_KEY="iptv_prefs", HIDDEN_KEY="iptv_hidden", PAGE=150;
   function loadHidden(){try{return new Set(JSON.parse(localStorage.getItem(HIDDEN_KEY)||"[]"));}catch(e){return new Set();}}
@@ -1782,8 +1782,8 @@ function __iptvBoot(){
   function loadEpg(ch){
     var el=$("np-epg");if(!el){return;} el.className="np-epg"; el.innerHTML=""; _epgStopTimer(); state.epgPrograms=null;
     var prov = ch.sourceId || state.provider;
-    if(!ch.id || !prov || prov==="_custom" || !state.token){return;}
-    fetch(API.epg(prov,ch.id),{headers:{"Authorization":"Bearer "+state.token}})
+    if((!ch.id&&!ch.name) || !prov || prov==="_custom" || !state.token){return;}
+    fetch(API.epg(prov,ch.id||"",ch.name||""),{headers:{"Authorization":"Bearer "+state.token}})
       .then(function(r){return r.ok?r.json():null;})
       .then(function(d){
         if(!d||!d.programs||!d.programs.length){el.className="np-epg";el.innerHTML="";return;}
