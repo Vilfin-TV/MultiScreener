@@ -236,9 +236,34 @@
   .vjs-iptv-theme .vjs-live-control{color:var(--danger);font-weight:700}
   .vjs-iptv-theme .vjs-loading-spinner{border-color:var(--accent)}
   /* Custom channel/source-nav buttons injected into the video.js control bar */
-  .vjs-iptv-theme .vjs-nav-btn{font-size:14px;font-weight:800;color:#fff;cursor:pointer}
-  .vjs-iptv-theme .vjs-nav-btn:hover{color:var(--accent-2)}
+  .vjs-iptv-theme .vjs-nav-btn{font-size:15px;font-weight:800;color:#fff;cursor:pointer;transition:var(--t-fast)}
+  .vjs-iptv-theme .vjs-nav-btn:hover{color:var(--accent-2);transform:scale(1.12)}
   .vjs-iptv-theme .vjs-nav-btn .vjs-icon-placeholder{display:none}
+  /* Premium remote layout: Up, Back, [Play], Next, Down centered as one group */
+  .vjs-iptv-theme .vjs-control-bar{justify-content:center;gap:2px}
+  .vjs-iptv-theme .vjs-play-control{order:0}
+  .vjs-iptv-theme .vjs-volume-panel{margin-left:14px}
+  /* The play/pause button is the visual anchor of the whole bar — bigger,
+     circular, accent-filled so it reads as the "center" control at a glance. */
+  .vjs-iptv-theme .vjs-play-control{
+    width:44px;height:44px;margin:0 4px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),#6b3dff);
+    display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+    box-shadow:0 4px 14px rgba(124,77,255,.4);transition:var(--t-fast);
+  }
+  .vjs-iptv-theme .vjs-play-control:hover{transform:scale(1.06);box-shadow:0 6px 18px rgba(124,77,255,.55)}
+  .vjs-iptv-theme .vjs-play-control .vjs-icon-placeholder:before{font-size:24px;line-height:44px}
+  /* Gear/settings menu button */
+  .vjs-iptv-theme .vjs-settings-button{position:relative}
+  .vjs-iptv-theme .vjs-settings-button .vjs-icon-placeholder{display:none}
+  .vjs-iptv-theme .vjs-settings-button span[aria-hidden]{font-size:17px;line-height:36px;display:block}
+  .vjs-iptv-theme .vjs-settings-button:hover span[aria-hidden]{color:var(--accent-2)}
+  .vjs-iptv-theme .vjs-menu-button-popup .vjs-menu{background:var(--surface-2);border:1px solid var(--border-strong);border-radius:10px;overflow:hidden;box-shadow:var(--shadow)}
+  .vjs-iptv-theme .vjs-menu-button-popup .vjs-menu-content{background:transparent}
+  .vjs-iptv-theme .vjs-menu li.vjs-menu-item{color:var(--text-dim);font-size:12.5px;padding:8px 14px}
+  .vjs-iptv-theme .vjs-menu li.vjs-menu-item:hover,.vjs-iptv-theme .vjs-menu li.vjs-menu-item:focus{background:var(--accent-soft);color:var(--text)}
+  .vjs-iptv-theme .vjs-menu li.vjs-selected{background:var(--accent);color:#fff}
+  .vjs-iptv-theme .vjs-menu li.vjs-selected:hover{background:var(--accent)}
   /* Now Playing + EPG strip (under the controls) */
   .now-playing{margin-top:8px;padding:9px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
   .now-playing .np-main{display:flex;align-items:center;gap:8px;font-size:14px;min-width:0}
@@ -1760,11 +1785,60 @@ function __iptvBoot(){
     make("NextChannelButton","Next channel","▶",function(){navHoriz(1);});
     make("NextSourceButton","Next source","▼",function(){navVert(1);});
   }
+  // Gear/settings menu — currently just stream quality (video.js 8 bundles
+  // qualityLevels() so no extra plugin is needed). Forcing a level works by
+  // disabling every other level; VHS's own ABR only picks among enabled ones.
+  function _vjsRegisterSettingsButton(){
+    if(window.__vjsSettingsRegistered||!window.videojs)return;
+    window.__vjsSettingsRegistered=true;
+    var MenuButton=videojs.getComponent("MenuButton");
+    var MenuItem=videojs.getComponent("MenuItem");
+
+    class QualityItem extends MenuItem {
+      constructor(p,o){ super(p,o.opts); this.heightPx=o.height; }
+      handleClick(ev){
+        super.handleClick(ev);
+        var ql=this.player().qualityLevels();
+        for(var i=0;i<ql.length;i++){ ql[i].enabled=(this.heightPx==null||ql[i].height===this.heightPx); }
+        var btn=this.player().controlBar.getChild("SettingsButton");
+        if(btn) btn.update();
+      }
+    }
+    class SettingsButton extends MenuButton {
+      constructor(p,o){ super(p,o); this.controlText("Settings"); this.addClass("vjs-settings-button"); }
+      createItems(){
+        var player=this.player();
+        var ql; try{ ql=player.qualityLevels(); }catch(e){ ql=null; }
+        var heights=[];
+        if(ql&&ql.length){ for(var i=0;i<ql.length;i++){ if(heights.indexOf(ql[i].height)===-1) heights.push(ql[i].height); } }
+        heights.sort(function(a,b){return b-a;});
+        var anyForced=false;
+        if(ql) for(var j=0;j<ql.length;j++){ if(!ql[j].enabled) anyForced=true; }
+        var items=[new QualityItem(player,{height:null,opts:{label:"Auto",selectable:true,selected:!anyForced}})];
+        heights.forEach(function(h){
+          var isSel=false;
+          if(ql&&anyForced){ for(var k=0;k<ql.length;k++){ if(ql[k].height===h&&ql[k].enabled) isSel=true; } }
+          items.push(new QualityItem(player,{height:h,opts:{label:h+"p",selectable:true,selected:isSel}}));
+        });
+        return items;
+      }
+      createEl(){
+        var el=MenuButton.prototype.createEl.call(this);
+        el.classList.add("vjs-settings-button");
+        var span=document.createElement("span"); span.setAttribute("aria-hidden","true"); span.textContent="⚙";
+        el.querySelector(".vjs-icon-placeholder,.vjs-menu-button")&&el.insertBefore(span,el.firstChild.nextSibling);
+        if(!el.querySelector("span[aria-hidden]")) el.appendChild(span);
+        return el;
+      }
+    }
+    videojs.registerComponent("SettingsButton",SettingsButton);
+  }
   function initPlayer(){
     if(player)return player;
     if(!window.videojs)return null;
     try{
       _vjsRegisterNavButtons();
+      _vjsRegisterSettingsButton();
       player=videojs("video",{
         controls:true,autoplay:false,preload:"auto",liveui:true,playsinline:true,
         fill:true, // fills .player-stage (which sets the real aspect-ratio via CSS) instead of
@@ -1778,12 +1852,23 @@ function __iptvBoot(){
         },
         controlBar:{
           pictureInPictureToggle:true,fullscreenToggle:true,
-          children:["playToggle","PrevSourceButton","PrevChannelButton","NextChannelButton","NextSourceButton","volumePanel","liveDisplay","spacer","pictureInPictureToggle","fullscreenToggle"]
+          // Premium remote-style layout: Up/Back flank the center Play button,
+          // Next/Down mirror them on the outside — then Volume, then Settings
+          // (gear) right before PIP/Fullscreen.
+          children:["PrevSourceButton","PrevChannelButton","playToggle","NextChannelButton","NextSourceButton","volumePanel","liveDisplay","spacer","SettingsButton","pictureInPictureToggle","fullscreenToggle"]
         }
       });
       player.volume(DEFAULT_VOLUME);
       player.on("waiting",function(){setLoading(true);});
       player.on("playing",function(){setLoading(false);});
+      // Quality levels aren't known until VHS parses the manifest, so the
+      // Settings menu (built at construction time) starts with just "Auto" —
+      // refresh it once real renditions are available, and again on every
+      // channel switch since a new stream may expose different renditions.
+      player.on("loadedmetadata",function(){
+        var btn=player.controlBar.getChild("SettingsButton");
+        if(btn) btn.update();
+      });
       player.on("error",function(){
         var err=player.error();
         setLoading(false);
