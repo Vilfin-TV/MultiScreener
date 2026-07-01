@@ -37,7 +37,7 @@ def set_status(msg):
 def generate_and_upload_m3u():
     try:
         set_status("Downloading channel list from Jio CDN...")
-        ch_url = "https://jiotv.data.cdn.jio.com/apis/v1.4/getMobileChannelList/get/?os=android&devicetype=phone"
+        ch_url = f"{WORKER_URL}/api/jio/proxy?url=https://jiotv.data.cdn.jio.com/apis/v1.4/getMobileChannelList/get/?os=android&devicetype=phone"
         ch_req = requests.get(ch_url, headers={"User-Agent": "okhttp/4.9.0"}, timeout=15)
         ch_data = ch_req.json()
         
@@ -343,7 +343,8 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 print("DEBUG Headers:", headers)
                 print("DEBUG Payload:", payload)
                 _proxies = {"http": "http://127.0.0.1:8118", "https": "http://127.0.0.1:8118"}
-                r = requests.post(url, headers=headers, data=payload, timeout=10)
+                _proxies = {"http": "http://127.0.0.1:8118", "https": "http://127.0.0.1:8118"}
+                r = requests.post(url, headers=headers, data=payload, timeout=10, proxies=_proxies)
                 print("DEBUG Response:", r.text)
                 if r.status_code == 200:
                     resp = r.json()
