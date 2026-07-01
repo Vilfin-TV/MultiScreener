@@ -8,12 +8,15 @@
 <meta name="robots" content="noindex,nofollow" />
 <title>VilfinTV IPTV</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" />
-<!-- Primary playback engine: video.js (bundles @videojs/http-streaming for HLS). -->
+<!-- Primary playback engine: video.js (bundles @videojs/http-streaming for HLS).
+     defer keeps it from blocking initial HTML parse/paint; it still finishes
+     loading (in order, before DOMContentLoaded) well before __iptvBoot() runs. -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/video.js@8/dist/video-js.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/video.js@8/dist/video.min.js"></script>
-<!-- Fallback engine only: used if video.js fails to load (CDN hiccup etc.) so
-     playback still works via the previous, proven hls.js path. -->
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/video.js@8/dist/video.min.js" defer></script>
+<!-- hls.js (fallback engine only) is now loaded lazily on-demand — see
+     _loadHlsScript() — instead of eagerly here, since it's only needed on the
+     rare path where video.js fails to initialize. Saves a request+parse on
+     every normal page load. -->
 <style>
   :root{
     --bg:#0a0e17; --surface:#12121b; --surface-2:#1a1a26; --surface-3:#23232f;
@@ -217,8 +220,8 @@
   .video-loading.show{display:grid}
 
   /* ===== video.js theme: match the app's premium violet/navy palette ===== */
-  .player-stage .video-js{width:100%;height:100%}
-  .player-stage .vjs-tech{object-fit:contain}
+  .player-stage .video-js{width:100%!important;height:100%!important;top:0;left:0}
+  .player-stage .vjs-tech{object-fit:contain!important}
   .vjs-iptv-theme .vjs-big-play-button{background:var(--accent-soft);border:2px solid var(--accent);
     border-radius:50%;width:74px;height:74px;line-height:70px;top:50%;left:50%;transform:translate(-50%,-50%);margin:0}
   .vjs-iptv-theme .vjs-big-play-button:hover{background:var(--accent);border-color:var(--accent-2)}
@@ -1778,7 +1781,16 @@ function __iptvBoot(){
     try{
       _vjsRegisterNavButtons();
       player=videojs("video",{
-        controls:true,autoplay:false,preload:"auto",liveui:true,playsinline:true,fluid:false,
+        controls:true,autoplay:false,preload:"auto",liveui:true,playsinline:true,
+        fill:true, // fills .player-stage (which sets the real aspect-ratio via CSS) instead of
+                   // video.js's own fixed-size default — fluid:false with no fill was stretching video
+        html5:{
+          vhs:{
+            overrideNative:true,        // consistent buffering behavior across browsers, incl. Safari
+            useBandwidthFromLocalStorage:true,
+            enableLowInitialPlaylist:true
+          }
+        },
         controlBar:{
           pictureInPictureToggle:true,fullscreenToggle:true,
           children:["playToggle","PrevSourceButton","PrevChannelButton","NextChannelButton","NextSourceButton","volumePanel","liveDisplay","spacer","pictureInPictureToggle","fullscreenToggle"]
@@ -1951,7 +1963,16 @@ function __iptvBoot(){
       }catch(e){ setLoading(false); toast("Stream error: playback failed",true); }
       return;
     }
-    loadStreamFallback(src);
+    _loadHlsScript(function(){ loadStreamFallback(src); });
+  }
+  // Fetches hls.js on demand — only the rare path where video.js couldn't
+  // initialize needs it, so it's not part of every page load's weight.
+  function _loadHlsScript(cb){
+    if(window.Hls){ cb(); return; }
+    var s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js";
+    s.onload=cb; s.onerror=cb; // loadStreamFallback() itself handles Hls still being unavailable
+    document.head.appendChild(s);
   }
   // Only reached if video.js failed to load/initialize — the exact engine used
   // before video.js was added, kept verbatim as the safety net.
