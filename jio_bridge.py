@@ -497,7 +497,6 @@ def periodic_m3u_refresh():
     """Background thread: re-upload the Jio M3U to KV every 20 minutes
     so the channel list never disappears due to KV TTL expiration."""
     while True:
-        time.sleep(M3U_REFRESH_INTERVAL)
         try:
             print(f"STATUS: [Refresh] Periodic M3U re-upload starting...")
             result = generate_and_upload_m3u()
@@ -515,7 +514,8 @@ def periodic_m3u_refresh():
                               json=payload, timeout=10)
                 print(f"STATUS: [Refresh] Tunnel URL updated: {tunnel_url}")
         except Exception as e:
-            print(f"STATUS: [Refresh] Error during periodic refresh: {e}")
+            print(f"STATUS: [Refresh] Error in periodic refresh: {e}")
+        time.sleep(M3U_REFRESH_INTERVAL)
 
 
 def main():
