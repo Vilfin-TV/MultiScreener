@@ -643,7 +643,7 @@ async function loadProviderRaw(env, providerId, pconf) {
       }
     }
   }
-  if (!raw && kv) raw = (await kv.get(providerId + "_playlist")) || "";
+  if (!raw) raw = await cacheGet(env, providerId + "_playlist");
   return raw;
 }
 
@@ -827,8 +827,8 @@ async function handleEpg(request, env, url) {
   const cacheKey = "cache_epg_" + provider;
   let xml = await cacheGet(env, cacheKey);
   
-  if (!xml && provider === 'jio' && env.IPTV_PLAYLIST_KV) {
-      try { xml = await env.IPTV_PLAYLIST_KV.get('jio_epg'); } catch (e) {}
+  if (!xml && provider === 'jio') {
+      xml = await cacheGet(env, 'jio_epg');
   }
   
   if (!xml && epgUrl) {
@@ -1213,8 +1213,8 @@ async function syncEpgToD1(env, providerId, epgUrl) {
   const cacheKey = "cache_epg_" + providerId;
   let xml = await cacheGet(env, cacheKey);
   
-  if (!xml && providerId === 'jio' && env.IPTV_PLAYLIST_KV) {
-      try { xml = await env.IPTV_PLAYLIST_KV.get('jio_epg'); } catch (e) {}
+  if (!xml && providerId === 'jio') {
+      xml = await cacheGet(env, 'jio_epg');
   }
   
   if (!xml && epgUrl) {

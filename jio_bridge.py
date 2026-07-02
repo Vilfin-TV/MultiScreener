@@ -38,7 +38,7 @@ def generate_and_upload_m3u():
     try:
         set_status("Downloading channel list from Jio CDN...")
         import json
-        with open("/home/vilfintvserver/jio_channels.json", "r", encoding="utf-8") as f:
+        with open("jio_channels.json", "r", encoding="utf-8") as f:
             ch_data = json.load(f)
         
         JIO_CATEGORY_MAP = {
@@ -112,7 +112,7 @@ def generate_and_upload_m3u():
     global _last_m3u
     _last_m3u = m3u_content
     try:
-        with open("/home/vilfintvserver/jio_playlist_backup.m3u", "w") as f:
+        with open("jio_playlist_backup.m3u", "w") as f:
             f.write(m3u_content)
     except:
         pass
