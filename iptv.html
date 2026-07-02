@@ -254,6 +254,7 @@
      between channels. Fixed left/right anchoring is stable across switches;
      the play button's own size/glow is what makes it read as "the center". */
   .vjs-iptv-theme .vjs-control-bar{gap:2px}
+  .vjs-iptv-theme .vjs-control-bar::before{content:"";flex:1 1 auto;order:-1}
   .vjs-iptv-theme .vjs-play-control{order:0}
   .vjs-iptv-theme .vjs-volume-panel{margin-left:14px}
   /* The play/pause button is the visual anchor of the whole bar — bigger,
@@ -1915,7 +1916,7 @@ function __iptvBoot(){
           // Premium remote-style layout: Up/Back flank the center Play button,
           // Next/Down mirror them on the outside — then Volume, then Settings
           // (gear) right before PIP/Fullscreen.
-          children:["PrevSourceButton","PrevChannelButton","playToggle","NextChannelButton","NextSourceButton","volumePanel","liveDisplay","spacer","SettingsButton","pictureInPictureToggle","fullscreenToggle"]
+          children:["PrevSourceButton","PrevChannelButton","playToggle","NextChannelButton","NextSourceButton","spacer","volumePanel","liveDisplay","SettingsButton","pictureInPictureToggle","fullscreenToggle"]
         }
       });
       // Restore the user's saved volume (synced across devices via prefs).
