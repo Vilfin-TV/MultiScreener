@@ -1044,7 +1044,7 @@ function __iptvBoot(){
   function loadProviders(ids, isAll){
     if(!state.token){logout();return;}
     state.provider=ids[0]||null;
-    $("dash-provider-name").textContent = isAll ? "IPTV · All sources" : ("IPTV · "+ids.length+" sources");
+    $("dash-provider-name").textContent = isAll ? "VilfinTV · All sources" : ("VilfinTV · "+ids.length+" sources");
     show("player-screen");
     resetChannelState();
     toast("Combining "+ids.length+" sources…");
@@ -1116,7 +1116,7 @@ function __iptvBoot(){
     if(!state.token){logout();return;}
     var list=_enabledProvs().filter(function(p){return _provRegion(p)===region;});
     state.provider=(list[0]&&list[0].id)||region; // best-effort EPG context
-    $("dash-provider-name").textContent="All "+region;
+    $("dash-provider-name").textContent="VilfinTV · All "+region;
     show("player-screen");
     resetChannelState();
     toast("Combining "+list.length+" sources…");
@@ -1221,7 +1221,7 @@ function __iptvBoot(){
     state.provider=provider;
     var L={jio:"Jio IPTV",airtel:"Airtel IPTV",free:"Free IPTV",pro:"IPTV Pro",custom:"Custom"};
     var provObj = state.providersList.find(function(p){ return p.id === provider; });
-    $("dash-provider-name").textContent = (state.group ? state.group + " · " : "") + (provObj ? provObj.name : (L[provider]||"VilfinTV IPTV"));
+    $("dash-provider-name").textContent = "VilfinTV · " + (state.group ? state.group + " · " : "") + (provObj ? provObj.name : (L[provider]||"IPTV"));
     var _sp=document.getElementById("sel-provider"); if(_sp && _sp.options.length) _sp.value=provider;
     show("player-screen");
     state.channels=[];state.filtered=[];state.currentChannel=null;state.currentIndex=-1;
