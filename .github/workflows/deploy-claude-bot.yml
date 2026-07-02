@@ -54,48 +54,62 @@ jobs:
           fi
           echo "Cloudflare API token verified."
 
-      - name: Ensure DNS + tunnel SSH route
+      - name: Ensure DNS + tunnel SSH route (best-effort)
+        # Best-effort: if CLOUDFLARE_API_TOKEN can edit DNS + Tunnel, this fully
+        # provisions the ssh.vilfintv.com route. If the token is read-only, it
+        # warns and continues — the route can instead be added once in the
+        # Zero Trust dashboard (Tunnels > Public Hostname). The real gate is the
+        # "Wait for SSH" step below, so a narrow token never hard-fails here.
         env:
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          set -euo pipefail
+          set -uo pipefail
           api() { curl -s -H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json" "$@"; }
           BASE=https://api.cloudflare.com/client/v4
 
           echo "== Zone lookup =="
           ZONE_ID=$(api "$BASE/zones?name=$CF_ZONE_NAME" | jq -r '.result[0].id // empty')
-          if [ -z "$ZONE_ID" ]; then
-            echo "::error::Could not read zone $CF_ZONE_NAME (token missing Zone:Read?)."; exit 1
-          fi
-          echo "zone: $ZONE_ID"
+          [ -n "$ZONE_ID" ] && echo "zone: $ZONE_ID" || echo "::warning::could not read zone $CF_ZONE_NAME"
 
-          echo "== DNS upsert ssh.$CF_ZONE_NAME =="
-          REC=$(api "$BASE/zones/$ZONE_ID/dns_records?name=$SSH_HOSTNAME")
-          REC_ID=$(echo "$REC" | jq -r '.result[0].id // empty')
-          BODY=$(jq -nc --arg c "${CF_TUNNEL_ID}.cfargotunnel.com" \
-            '{type:"CNAME",name:"ssh",content:$c,proxied:true}')
-          if [ -n "$REC_ID" ]; then
-            RES=$(api -X PUT "$BASE/zones/$ZONE_ID/dns_records/$REC_ID" -d "$BODY")
-          else
-            RES=$(api -X POST "$BASE/zones/$ZONE_ID/dns_records" -d "$BODY")
+          WANT="${CF_TUNNEL_ID}.cfargotunnel.com"
+          if [ -n "$ZONE_ID" ]; then
+            echo "== DNS ssh.$CF_ZONE_NAME =="
+            REC=$(api "$BASE/zones/$ZONE_ID/dns_records?name=$SSH_HOSTNAME")
+            REC_ID=$(echo "$REC" | jq -r '.result[0].id // empty')
+            REC_CONTENT=$(echo "$REC" | jq -r '.result[0].content // empty')
+            if [ "$REC_CONTENT" = "$WANT" ]; then
+              echo "DNS already correct."
+            else
+              BODY=$(jq -nc --arg c "$WANT" '{type:"CNAME",name:"ssh",content:$c,proxied:true}')
+              if [ -n "$REC_ID" ]; then
+                RES=$(api -X PUT "$BASE/zones/$ZONE_ID/dns_records/$REC_ID" -d "$BODY")
+              else
+                RES=$(api -X POST "$BASE/zones/$ZONE_ID/dns_records" -d "$BODY")
+              fi
+              if [ "$(echo "$RES" | jq -r '.success')" = "true" ]; then echo "DNS set."
+              else echo "::warning::DNS write failed ($(echo "$RES" | jq -c '.errors')). Token needs Zone:DNS:Edit, or add the hostname in the dashboard."; fi
+            fi
           fi
-          [ "$(echo "$RES" | jq -r '.success')" = "true" ] || { echo "::error::DNS upsert failed: $(echo "$RES" | jq -c '.errors')"; exit 1; }
-          echo "DNS ok."
 
-          echo "== Tunnel ingress upsert =="
-          CFG=$(api "$BASE/accounts/$CF_ACCOUNT_ID/cfd_tunnel/$CF_TUNNEL_ID/configurations" | jq '.result.config // {ingress:[{service:"http_status:404"}]}')
-          HAS=$(echo "$CFG" | jq --arg h "$SSH_HOSTNAME" '[.ingress[]?|select(.hostname==$h)]|length')
-          if [ "$HAS" = "0" ]; then
-            NEWCFG=$(echo "$CFG" | jq --arg h "$SSH_HOSTNAME" \
-              '.ingress = ((.ingress | map(select((.service//"")|test("http_status:404")|not)))
-                            + [{hostname:$h, service:"ssh://localhost:22"}, {service:"http_status:404"}])')
-            RES=$(api -X PUT "$BASE/accounts/$CF_ACCOUNT_ID/cfd_tunnel/$CF_TUNNEL_ID/configurations" \
-              -d "$(jq -nc --argjson c "$NEWCFG" '{config:$c}')")
-            [ "$(echo "$RES" | jq -r '.success')" = "true" ] || { echo "::error::Tunnel ingress update failed: $(echo "$RES" | jq -c '.errors')"; exit 1; }
-            echo "Added ssh route to tunnel."
+          echo "== Tunnel ingress =="
+          CFG=$(api "$BASE/accounts/$CF_ACCOUNT_ID/cfd_tunnel/$CF_TUNNEL_ID/configurations" | jq '.result.config // empty')
+          if [ -z "$CFG" ] || [ "$CFG" = "null" ]; then
+            echo "::warning::could not read tunnel config (token missing Cloudflare Tunnel:Read/Edit?)."
           else
-            echo "SSH route already present."
+            HAS=$(echo "$CFG" | jq --arg h "$SSH_HOSTNAME" '[.ingress[]?|select(.hostname==$h)]|length')
+            if [ "$HAS" != "0" ]; then
+              echo "SSH route already present."
+            else
+              NEWCFG=$(echo "$CFG" | jq --arg h "$SSH_HOSTNAME" \
+                '.ingress = ((.ingress | map(select((.service//"")|test("http_status:404")|not)))
+                              + [{hostname:$h, service:"ssh://localhost:22"}, {service:"http_status:404"}])')
+              RES=$(api -X PUT "$BASE/accounts/$CF_ACCOUNT_ID/cfd_tunnel/$CF_TUNNEL_ID/configurations" \
+                -d "$(jq -nc --argjson c "$NEWCFG" '{config:$c}')")
+              if [ "$(echo "$RES" | jq -r '.success')" = "true" ]; then echo "Added ssh route to tunnel."
+              else echo "::warning::ingress write failed ($(echo "$RES" | jq -c '.errors')). Token needs Cloudflare Tunnel:Edit, or add the hostname in the dashboard."; fi
+            fi
           fi
+          echo "CF step done (non-fatal)."
 
       - name: Set up SSH via cloudflared
         env:
