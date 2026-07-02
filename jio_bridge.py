@@ -344,7 +344,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 print("DEBUG Payload:", payload)
                 _proxies = {"http": "http://127.0.0.1:8118", "https": "http://127.0.0.1:8118"}
                 _proxies = {"http": "http://127.0.0.1:8118", "https": "http://127.0.0.1:8118"}
-                r = requests.post(url, headers=headers, data=payload, timeout=10, proxies=_proxies)
+                r = requests.post(url, headers=headers, data=payload, timeout=10)
                 print("DEBUG Response:", r.text)
                 if r.status_code == 200:
                     resp = r.json()
@@ -410,7 +410,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 
                 _proxies = {"http": "http://127.0.0.1:8118", "https": "http://127.0.0.1:8118"}
                 
-                r = requests.get(target_url, headers=headers, stream=True, proxies=_proxies)
+                r = requests.get(target_url, headers=headers, stream=True)
                 
                 self.send_response(r.status_code)
                 self._send_cors_headers()
