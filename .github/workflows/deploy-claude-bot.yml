@@ -1,0 +1,182 @@
+name: Deploy Claude Telegram Bot
+
+# Configures the Claude Code Telegram bridge on the home Debian server
+# (vilfintv-node) from GitHub Secrets. The server has no inbound internet path
+# (outbound-only via NordVPN, behind NAT), so this reaches it through the
+# EXISTING Cloudflare Tunnel: the job adds an `ssh.vilfintv.com -> ssh://localhost:22`
+# route + DNS record, then SSHes in via `cloudflared access ssh`. No ports are
+# opened on the home network.
+#
+# Manual only (never runs on pull_request), so forks can't trigger it.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/deploy-claude-bot.yml'
+
+concurrency:
+  group: deploy-claude-bot
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  CF_TUNNEL_ID: 63ba6b08-994b-4fea-b8cd-645e159609f1
+  CF_ZONE_NAME: vilfintv.com
+  SSH_HOSTNAME: ssh.vilfintv.com
+  SSH_USER: vilfintvserver
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install cloudflared
+        run: |
+          curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 \
+            -o /tmp/cloudflared
+          sudo install -m 755 /tmp/cloudflared /usr/local/bin/cloudflared
+          cloudflared --version
+
+      - name: Verify Cloudflare API token
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          ok=$(curl -s -H "Authorization: Bearer $CF_TOKEN" \
+            https://api.cloudflare.com/client/v4/user/tokens/verify | jq -r '.success')
+          if [ "$ok" != "true" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN failed verification. It needs Account>Cloudflare Tunnel:Edit, Zone>DNS:Edit, Zone>Zone:Read for ${CF_ZONE_NAME}."
+            exit 1
+          fi
+          echo "Cloudflare API token verified."
+
+      - name: Ensure DNS + tunnel SSH route
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          api() { curl -s -H "Authorization: Bearer $CF_TOKEN" -H "Content-Type: application/json" "$@"; }
+          BASE=https://api.cloudflare.com/client/v4
+
+          echo "== Zone lookup =="
+          ZONE_ID=$(api "$BASE/zones?name=$CF_ZONE_NAME" | jq -r '.result[0].id // empty')
+          if [ -z "$ZONE_ID" ]; then
+            echo "::error::Could not read zone $CF_ZONE_NAME (token missing Zone:Read?)."; exit 1
+          fi
+          echo "zone: $ZONE_ID"
+
+          echo "== DNS upsert ssh.$CF_ZONE_NAME =="
+          REC=$(api "$BASE/zones/$ZONE_ID/dns_records?name=$SSH_HOSTNAME")
+          REC_ID=$(echo "$REC" | jq -r '.result[0].id // empty')
+          BODY=$(jq -nc --arg c "${CF_TUNNEL_ID}.cfargotunnel.com" \
+            '{type:"CNAME",name:"ssh",content:$c,proxied:true}')
+          if [ -n "$REC_ID" ]; then
+            RES=$(api -X PUT "$BASE/zones/$ZONE_ID/dns_records/$REC_ID" -d "$BODY")
+          else
+            RES=$(api -X POST "$BASE/zones/$ZONE_ID/dns_records" -d "$BODY")
+          fi
+          [ "$(echo "$RES" | jq -r '.success')" = "true" ] || { echo "::error::DNS upsert failed: $(echo "$RES" | jq -c '.errors')"; exit 1; }
+          echo "DNS ok."
+
+          echo "== Tunnel ingress upsert =="
+          CFG=$(api "$BASE/accounts/$CF_ACCOUNT_ID/cfd_tunnel/$CF_TUNNEL_ID/configurations" | jq '.result.config // {ingress:[{service:"http_status:404"}]}')
+          HAS=$(echo "$CFG" | jq --arg h "$SSH_HOSTNAME" '[.ingress[]?|select(.hostname==$h)]|length')
+          if [ "$HAS" = "0" ]; then
+            NEWCFG=$(echo "$CFG" | jq --arg h "$SSH_HOSTNAME" \
+              '.ingress = ((.ingress | map(select((.service//"")|test("http_status:404")|not)))
+                            + [{hostname:$h, service:"ssh://localhost:22"}, {service:"http_status:404"}])')
+            RES=$(api -X PUT "$BASE/accounts/$CF_ACCOUNT_ID/cfd_tunnel/$CF_TUNNEL_ID/configurations" \
+              -d "$(jq -nc --argjson c "$NEWCFG" '{config:$c}')")
+            [ "$(echo "$RES" | jq -r '.success')" = "true" ] || { echo "::error::Tunnel ingress update failed: $(echo "$RES" | jq -c '.errors')"; exit 1; }
+            echo "Added ssh route to tunnel."
+          else
+            echo "SSH route already present."
+          fi
+
+      - name: Set up SSH via cloudflared
+        env:
+          SSH_KEY: ${{ secrets.DEBIAN_SERVER_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          cat > ~/.ssh/config <<EOF
+          Host claudeserver
+            HostName ${SSH_HOSTNAME}
+            User ${SSH_USER}
+            IdentityFile ~/.ssh/id_deploy
+            IdentitiesOnly yes
+            ProxyCommand /usr/local/bin/cloudflared access ssh --hostname %h
+            StrictHostKeyChecking accept-new
+            ConnectTimeout 30
+            ServerAliveInterval 15
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Wait for SSH through tunnel
+        run: |
+          set -uo pipefail
+          for i in $(seq 1 12); do
+            if ssh claudeserver 'echo up' >/dev/null 2>&1; then
+              echo "SSH reachable on attempt $i."; exit 0
+            fi
+            echo "attempt $i: not yet reachable (DNS/ingress propagating)…"; sleep 6
+          done
+          echo "::error::Could not SSH to $SSH_HOSTNAME through the tunnel after retries."
+          ssh -v claudeserver 'echo up' 2>&1 | tail -25 || true
+          exit 1
+
+      - name: Write .env and start the bridge
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          # Build the .env on the runner (secrets are masked in logs), then pipe
+          # it straight into a 0600 file on the server — values never hit argv.
+          umask 077
+          cat > /tmp/bot.env <<EOF
+          TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+          CLAUDE_CODE_OAUTH_TOKEN=${CLAUDE_CODE_OAUTH_TOKEN}
+          GH_TOKEN=${GH_TOKEN}
+          CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+          CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID}
+          ALLOWED_USER_IDS=8128771018
+          EOF
+          ssh claudeserver 'install -m 600 /dev/stdin ~/claude-agent/.env' < /tmp/bot.env
+          rm -f /tmp/bot.env
+          echo "Wrote ~/claude-agent/.env on the server."
+
+          # Restart the bridge cleanly so the new env is picked up, then verify.
+          ssh claudeserver 'bash -s' <<'REMOTE'
+            set -e
+            cd "$HOME/claude-agent"
+            pkill -f claude_bridge.py 2>/dev/null || true
+            rm -f bridge.pid
+            sleep 1
+            ./start_bridge.sh
+            sleep 4
+            if pgrep -af claude_bridge.py >/dev/null; then
+              echo "BRIDGE_RUNNING"
+            else
+              echo "BRIDGE_FAILED — last log lines:"; tail -30 bridge.log 2>/dev/null; exit 1
+            fi
+            # confirm it authenticated to Telegram
+            if grep -q "bridge online as @" bridge.log; then
+              echo "TELEGRAM_OK: $(grep 'bridge online as @' bridge.log | tail -1)"
+            else
+              echo "note: bridge started but 'online' not yet logged; last lines:"; tail -15 bridge.log 2>/dev/null || true
+            fi
+          REMOTE
+
+      - name: Summary
+        if: success()
+        run: echo "Claude Telegram bot configured and running on vilfintv-node. Message the bot to use it."
