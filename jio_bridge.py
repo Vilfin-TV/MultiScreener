@@ -410,7 +410,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 
                 _proxies = {"http": "http://127.0.0.1:8118", "https": "http://127.0.0.1:8118"}
                 
-                r = requests.get(target_url, headers=headers, stream=True)
+                r = requests.get(target_url, headers=headers, stream=True, proxies=_proxies)
                 
                 self.send_response(r.status_code)
                 self._send_cors_headers()
