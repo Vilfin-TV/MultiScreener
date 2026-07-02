@@ -41,6 +41,18 @@ def generate_and_upload_m3u():
         with open("/home/vilfintvserver/jio_channels.json", "r", encoding="utf-8") as f:
             ch_data = json.load(f)
         
+        JIO_CATEGORY_MAP = {
+            5: "Entertainment", 6: "Movies", 7: "Kids", 8: "Sports", 9: "Lifestyle",
+            10: "Infotainment", 12: "News", 13: "Music", 15: "Devotional", 16: "Business",
+            17: "Educational", 18: "Shopping", 19: "JioDarshan"
+        }
+        JIO_LANGUAGE_MAP = {
+            1: "Hindi", 2: "Marathi", 3: "Punjabi", 4: "Urdu", 5: "Bengali",
+            6: "English", 7: "Malayalam", 8: "Tamil", 9: "Gujarati", 10: "Odia",
+            11: "Telugu", 12: "Bhojpuri", 13: "Kannada", 14: "Assamese", 15: "Nepali",
+            16: "French", 18: "Konkani"
+        }
+        
         m3u_lines = ["#EXTM3U"]
         channels = ch_data.get("result", [])
         for ch in channels:
@@ -49,12 +61,16 @@ def generate_and_upload_m3u():
             ch_logo = ch.get("logoUrl", "")
             if ch_logo and not ch_logo.startswith("http"):
                 ch_logo = f"https://jiotv.catchup.cdn.jio.com/dare_images/images/{ch_logo}"
-            ch_cat = ch.get("channelCategoryId", "General")
+            
+            ch_cat_id = ch.get("channelCategoryId", 0)
+            ch_lang_id = ch.get("channelLanguageId", 0)
+            ch_cat = JIO_CATEGORY_MAP.get(int(ch_cat_id), "General") if ch_cat_id else "General"
+            ch_lang = JIO_LANGUAGE_MAP.get(int(ch_lang_id), "") if ch_lang_id else ""
             
             # Use jio:// protocol marker so the IPTV Worker resolves the stream
             stream_url = f"jio://{ch_id}"
             
-            m3u_lines.append(f'#EXTINF:-1 tvg-id="{ch_id}" tvg-logo="{ch_logo}" group-title="{ch_cat}", {ch_name}')
+            m3u_lines.append(f'#EXTINF:-1 tvg-id="{ch_id}" tvg-logo="{ch_logo}" group-title="{ch_cat}" tvg-language="{ch_lang}", {ch_name}')
             m3u_lines.append(stream_url)
             
         m3u_content = "\n".join(m3u_lines)
