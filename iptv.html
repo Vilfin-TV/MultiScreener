@@ -343,19 +343,6 @@
   .tag b{color:var(--text)} .tag .x{cursor:pointer;color:var(--text-faint);font-weight:700}
   .tag .x:hover{color:var(--danger)}
 
-  /* Remote modal */
-  .modal-back{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:80;display:none;place-items:center}
-  .modal-back.show{display:grid}
-  .remote{width:min(90vw,300px);background:linear-gradient(180deg,var(--surface-2),var(--surface));border:1px solid var(--border-strong);border-radius:20px;padding:22px;box-shadow:var(--shadow)}
-  .remote h3{font-size:14px;text-align:center;color:var(--text-dim);margin-bottom:12px;letter-spacing:.5px}
-  .remote-display{font-size:34px;font-weight:800;text-align:center;letter-spacing:4px;background:var(--bg);border:1px solid var(--border-strong);border-radius:12px;padding:14px;margin-bottom:8px;min-height:62px;color:var(--accent-2)}
-  .remote-name{font-size:12px;text-align:center;color:var(--text-faint);min-height:16px;margin-bottom:14px}
-  .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-  .key{padding:16px 0;border-radius:12px;background:var(--surface-3);font-size:20px;font-weight:700;color:var(--text);transition:var(--t-fast)}
-  .key:hover{background:var(--accent);color:#fff}
-  .key.k-act{background:var(--accent-soft);color:var(--accent-2);font-size:14px;font-weight:600}
-  .key.k-go{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff}
-
   /* Toast */
   .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--surface-3);color:var(--text);
     padding:12px 20px;border-radius:12px;font-size:13.5px;border:1px solid var(--border-strong);box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:var(--t-med);z-index:90;max-width:90vw}
@@ -564,27 +551,23 @@
   .cat-row .ch-card{position:relative;background:var(--surface-2);border-radius:var(--radius-sm);border:1px solid var(--border);padding:14px;text-align:center;cursor:pointer;transition:transform var(--t-fast),box-shadow var(--t-fast),border-color var(--t-fast);box-shadow: 0 4px 10px rgba(0,0,0,0.2)}
   .cat-row .ch-card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 8px 20px rgba(100,255,218,0.2);z-index:2}
 
-  /* Remote Panel: split top (keypad) / bottom (program guide) so the tall
-     side column has no dead space next to the video. */
-  .remote-panel{display:flex;flex-direction:column;gap:16px;flex:0 0 var(--col3);background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
-  .remote-panel.open {
-    display: flex;
-  }
-  .remote-half{flex:1 1 50%;min-height:0;display:flex;flex-direction:column;padding:12px 16px;overflow-y:auto}
-  /* Program Guide gets most of the vertical room — the keypad is compact and
-     used briefly, the guide is what people actually want to read at a glance. */
-  .remote-half-top{flex-basis:38%}
-  .remote-half-epg{flex-basis:62%;border-top:1px solid var(--border);background:rgba(255,255,255,.015)}
-  .remote-half-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex:0 0 auto}
-  .remote-half-head h3{font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--text-dim);font-weight:700}
-  .remote-half-top .remote-display{font-size:16px;padding:4px;min-height:22px;margin-bottom:2px}
-  .remote-half-top .remote-name{margin-bottom:2px;min-height:0}
-  .remote-half-top .keypad{gap:3px;flex:1;align-content:center}
-  .remote-half-top .key{padding:4px 0;font-size:11px;border-radius:6px}
+  /* Program Guide panel: the whole side column is one tall, scrollable guide
+     so many more time slots are visible at a glance next to the video. */
+  .remote-panel{display:flex;flex-direction:column;flex:0 0 var(--col3);background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
+  .remote-half{flex:1;min-height:0;display:flex;flex-direction:column;padding:12px 16px;overflow:hidden}
+  .remote-half-epg{background:rgba(255,255,255,.015)}
+  .remote-half-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex:0 0 auto;min-width:0}
+  .remote-half-head h3{font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--text-dim);font-weight:700;white-space:nowrap}
+  .remote-half-head .guide-ch{font-size:12px;font-weight:700;color:var(--accent-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
   .epg-placeholder{color:var(--text-faint);font-size:12px;text-align:center;padding:20px 6px;line-height:1.5}
-  .remote-half-epg .np-epg{display:block;margin-top:0}
-  .remote-half-epg .epg-slot{width:86px}
-  .remote-half-epg .es-title{-webkit-line-clamp:3}
+  /* Vertical timeline inside the panel: each program = one full-width row
+     (time · title), so the guide shows 12–15 upcoming slots instead of 3. */
+  .remote-half-epg .np-epg{display:flex;flex-direction:column;flex:1;min-height:0;margin-top:0}
+  .remote-half-epg .epg-now{flex:0 0 auto}
+  .remote-half-epg .epg-strip{flex-direction:column;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;gap:6px;padding-right:4px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+  .remote-half-epg .epg-slot{width:100%;display:flex;align-items:baseline;gap:10px;padding:8px 11px}
+  .remote-half-epg .epg-slot .es-time{flex:0 0 62px;font-size:11px}
+  .remote-half-epg .epg-slot .es-title{margin-top:0;flex:1;font-size:12.5px;-webkit-line-clamp:2}
   /* ===== Favorites panel (desktop side column) ===== */
   .fav-panel{display:none;flex-direction:column;flex:0 0 250px;max-width:250px;min-width:0;
     background:var(--surface);border:1px solid var(--border-strong);border-radius:14px;overflow:hidden}
@@ -603,41 +586,18 @@
   .fav-item .fi-x{flex:0 0 auto;color:var(--text-faint);font-size:15px;opacity:0;transition:var(--t-fast)}
   .fav-item:hover .fi-x{opacity:1}
   .fav-empty{padding:26px 14px;text-align:center;color:var(--text-faint);font-size:12.5px;line-height:1.6}
-  /* Desktop: video, remote+guide, favorites side by side (left to right) */
+  /* Desktop: video, program guide, favorites side by side (left to right) */
   @media(min-width:1001px){
     .fav-panel{display:flex}
-    .remote-panel{display:flex;flex-direction:column;gap:16px;flex:0 0 var(--col3);background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
-    /* Widened from --col3 (320px) so the Program Guide can show more time
-       slots at once without horizontal scrolling. */
-    .remote-panel{flex-basis:380px}
-    .remote-panel #close-remote{display:none}
+    /* Wider than --col3 (320px) so guide rows breathe. */
+    .remote-panel{flex-basis:360px}
     .player-stage{max-height:52vh}
-    /* The program guide now lives in the remote panel's bottom half — don't
+    /* The program guide lives in the full-height side panel on desktop — don't
        duplicate it in the strip under the video too. */
     .now-playing .np-epg{display:none!important}
     .fav-list:has(.fav-empty){justify-content:center;align-items:center}
   }
-  .remote-toggle {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 11;
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(255,255,255,0.2);
-    color: #fff;
-    display: grid;
-    place-items: center;
-    cursor: pointer;
-    transition: var(--t-fast);
-  }
-  .remote-toggle:hover {
-    background: rgba(255,255,255,0.1);
-  }
-  
+
   /* Horizontal scroll arrows are obsolete in the vertical grid layout. */
   .track-btn { display: none !important; }
 
@@ -674,7 +634,17 @@
       border-radius:0 0 14px 14px;padding:9px 10px;margin-top:-2px}
     .content-shelf{overflow:visible}
     .channel-track{overflow:visible;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px}
-    .remote-panel{display:flex;flex-direction:column;gap:16px;flex:0 0 var(--col3);background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
+    /* The side Program Guide panel is desktop-only — on mobile the guide strip
+       under the video does that job, so the video keeps its full width and the
+       sticky player block stays compact. */
+    .remote-panel{display:none!important}
+    .fav-panel{display:none!important}
+    .player-hero .video-col{width:100%}
+    .player-stage{border-radius:14px 14px 0 0;border-bottom:none}
+    .now-playing{margin-top:6px}
+    /* Smooth, momentum-friendly horizontal strips (EPG + category rows). */
+    .epg-strip,.cat-row{-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
+    .epg-slot,.cat-row .ch-card{scroll-snap-align:start}
     .filters-row{flex-wrap:wrap;row-gap:8px}
     .filters-row #search-new{width:100%!important}
   }
@@ -763,7 +733,6 @@
       <a class="ghost-btn tb-ext" href="news.html" title="News" style="text-decoration:none">📰 News</a>
       <a class="ghost-btn tb-ext" href="story.html" title="Stories" style="text-decoration:none">📖 Stories</a>
       <a class="ghost-btn tb-ext" href="blog_intelligence_hub.html" title="Blog" style="text-decoration:none">📝 Blog</a>
-      <button class="icon-btn" id="btn-remote" title="Channel remote" aria-label="Channel remote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="4"/><circle cx="12" cy="7" r="1.4" fill="currentColor"/></svg></button>
       <button class="ghost-btn" data-back>Providers</button>
       <button class="ghost-btn" data-logout>Sign out</button>
     </div>
@@ -798,19 +767,10 @@
         </div>
       </div>
 
-      <!-- Remote Panel: top half = keypad, bottom half = program guide of the playing channel -->
+      <!-- Program Guide panel: full-height guide of the playing channel (desktop) -->
       <div class="remote-panel" id="hero-remote-panel">
-        <div class="remote-half remote-half-top">
-          <div class="remote-half-head">
-            <h3>Remote Control</h3>
-            <button id="close-remote" style="color:var(--text-faint);font-size:20px;">✕</button>
-          </div>
-          <div class="remote-display" id="remote-display">—</div>
-          <div class="remote-name" id="remote-name"></div>
-          <div class="keypad" id="keypad"></div>
-        </div>
         <div class="remote-half remote-half-epg">
-          <div class="remote-half-head"><h3>Program Guide</h3></div>
+          <div class="remote-half-head"><h3>📺 Program Guide</h3><span class="guide-ch" id="guide-ch"></span></div>
           <div class="np-epg np-epg-slot" id="np-epg-desktop"><div class="epg-placeholder">Select a channel to see its program guide.</div></div>
         </div>
       </div>
@@ -887,11 +847,12 @@ function __iptvBoot(){
       if(ua) s+="&ua="+encodeURIComponent(ua);
       return s+"&url="+encodeURIComponent(u);
     },
-    epg:function(p,c,n){return WORKER+"/api/epg?provider="+encodeURIComponent(p)+"&channel="+encodeURIComponent(c)+(n?"&name="+encodeURIComponent(n):"");}
+    epg:function(p,c,n){return WORKER+"/api/epg?provider="+encodeURIComponent(p)+"&channel="+encodeURIComponent(c)+(n?"&name="+encodeURIComponent(n):"");},
+    userdata:WORKER+"/api/userdata"
   };
   var TOKEN_KEY="iptv_token", FAV_KEY="iptv_favs", PREF_KEY="iptv_prefs", HIDDEN_KEY="iptv_hidden", PAGE=150;
   function loadHidden(){try{return new Set(JSON.parse(localStorage.getItem(HIDDEN_KEY)||"[]"));}catch(e){return new Set();}}
-  function saveHidden(){try{localStorage.setItem(HIDDEN_KEY,JSON.stringify(Array.from(state.hidden)));}catch(e){}}
+  function saveHidden(){try{localStorage.setItem(HIDDEN_KEY,JSON.stringify(Array.from(state.hidden)));}catch(e){} syncPush();}
 
   var state={
     token:localStorage.getItem(TOKEN_KEY)||null,
@@ -1177,10 +1138,54 @@ function __iptvBoot(){
   function toast(m,e){var t=$("toast");t.textContent=m;t.classList.toggle("err",!!e);t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("show");},3000);}
   function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
   function loadFavs(){try{return new Set(JSON.parse(localStorage.getItem(FAV_KEY)||"[]"));}catch(e){return new Set();}}
-  function saveFavs(){try{localStorage.setItem(FAV_KEY,JSON.stringify(Array.from(state.favs)));}catch(e){}}
+  function saveFavs(){try{localStorage.setItem(FAV_KEY,JSON.stringify(Array.from(state.favs)));}catch(e){} syncPush();}
   function loadPrefs(){try{return JSON.parse(localStorage.getItem(PREF_KEY)||"{}")||{};}catch(e){return {};}}
-  function savePrefs(){try{localStorage.setItem(PREF_KEY,JSON.stringify(state.prefs));}catch(e){}}
+  function savePrefs(){try{localStorage.setItem(PREF_KEY,JSON.stringify(state.prefs));}catch(e){} syncPush();}
   function favKey(c){return (c.id||"")+"|"+c.url;}
+
+  /* ---------- Cross-device profile sync ----------
+     Favorites, hidden channels and preferences are mirrored to the account on
+     the server (keyed by the signed-in username), so the same profile follows
+     the user across devices and browsers. localStorage stays as the instant
+     local cache; the server copy wins only when it is newer. */
+  var SYNC_TS_KEY="iptv_sync_ts", _syncTimer=null, _syncApplying=false;
+  function syncPush(){
+    if(!state.token||_syncApplying)return;
+    clearTimeout(_syncTimer);
+    _syncTimer=setTimeout(function(){
+      var snap={favs:Array.from(state.favs),hidden:Array.from(state.hidden),prefs:state.prefs||{}};
+      fetch(API.userdata,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+state.token},body:JSON.stringify(snap)})
+        .then(function(r){return r.ok?r.json():null;})
+        .then(function(d){if(d&&d.updatedAt){try{localStorage.setItem(SYNC_TS_KEY,String(d.updatedAt));}catch(e){}}})
+        .catch(function(){});
+    },1200);
+  }
+  function syncPull(){
+    if(!state.token)return;
+    fetch(API.userdata,{headers:{"Authorization":"Bearer "+state.token}})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(res){
+        var d=res&&res.data;
+        var localTs=parseInt(localStorage.getItem(SYNC_TS_KEY)||"0",10)||0;
+        if(!d||!d.updatedAt){
+          // nothing on the server yet — seed it with this device's profile
+          if(state.favs.size||state.hidden.size||Object.keys(state.prefs||{}).length)syncPush();
+          return;
+        }
+        if(d.updatedAt<=localTs)return; // this device already has the latest
+        _syncApplying=true;
+        try{
+          state.favs=new Set(Array.isArray(d.favs)?d.favs:[]);
+          state.hidden=new Set(Array.isArray(d.hidden)?d.hidden:[]);
+          state.prefs=(d.prefs&&typeof d.prefs==="object")?d.prefs:{};
+          if(state.prefs.view==="rows"||state.prefs.view==="grid"||state.prefs.view==="stack")state.view=state.prefs.view;
+          saveFavs();saveHidden();savePrefs();
+          try{localStorage.setItem(SYNC_TS_KEY,String(d.updatedAt));}catch(e){}
+        }finally{_syncApplying=false;}
+        if(state.channels.length){applyFilters();renderFavPanel();}
+      })
+      .catch(function(){});
+  }
 
   /* ---------- Auth ---------- */
   $("login-form").addEventListener("submit",function(e){
@@ -1197,6 +1202,7 @@ function __iptvBoot(){
         if(!res.ok||!res.d.token)throw new Error(res.d&&res.d.error?res.d.error:"Invalid credentials");
         state.token=res.d.token;localStorage.setItem(TOKEN_KEY,state.token);
         msg.className="form-msg ok";msg.textContent="Welcome back.";$("password").value="";
+        syncPull();
         setTimeout(function(){showProviderScreen();},300);
       })
       .catch(function(err){msg.className="form-msg err";msg.textContent=err.message||"Sign in failed.";})
@@ -1668,22 +1674,6 @@ function __iptvBoot(){
     document.getElementById("channel-list-new").scrollBy({ left: 400, behavior: "smooth" });
   });
 
-  // Remote Toggle logic
-  document.getElementById("hero-remote-btn").addEventListener("click", function() {
-    document.getElementById("hero-remote-panel").classList.toggle("open");
-  });
-  document.getElementById("close-remote").addEventListener("click", function() {
-    document.getElementById("hero-remote-panel").classList.remove("open");
-  });
-  
-  // Also bind the topbar remote button if user clicks it
-  var topRemoteBtn = document.getElementById("btn-remote");
-  if(topRemoteBtn) {
-    topRemoteBtn.addEventListener("click", function() {
-      document.getElementById("hero-remote-panel").classList.toggle("open");
-    });
-  }
-
   // Override loadProvider successfully fetched hook
   var oldLoadProv = loadProvider;
   loadProvider = function(p) {
@@ -1928,7 +1918,16 @@ function __iptvBoot(){
           children:["PrevSourceButton","PrevChannelButton","playToggle","NextChannelButton","NextSourceButton","volumePanel","liveDisplay","spacer","SettingsButton","pictureInPictureToggle","fullscreenToggle"]
         }
       });
-      player.volume(DEFAULT_VOLUME);
+      // Restore the user's saved volume (synced across devices via prefs).
+      var savedVol=(state.prefs&&typeof state.prefs.volume==="number"&&isFinite(state.prefs.volume))
+        ? Math.min(1,Math.max(0,state.prefs.volume)) : DEFAULT_VOLUME;
+      player.volume(savedVol);
+      player.on("volumechange",function(){
+        if(player.muted())return;
+        var v=player.volume();
+        if(typeof state.prefs.volume==="number"&&Math.abs(state.prefs.volume-v)<0.01)return;
+        state.prefs.volume=v;savePrefs();
+      });
       player.on("waiting",function(){setLoading(true);});
       player.on("playing",function(){setLoading(false);});
       // Quality levels aren't known until VHS parses the manifest, so the
@@ -1939,10 +1938,30 @@ function __iptvBoot(){
         var btn=player.controlBar.getChild("SettingsButton");
         if(btn) btn.update();
       });
+      // "The media could not be loaded" recovery chain: many streams reject the
+      // relay or one mirror is down while another works. Instead of dumping the
+      // raw error on the user: (1) retry the original URL directly, then
+      // (2) hop to the same channel from the next m3u source automatically.
       player.on("error",function(){
         var err=player.error();
         setLoading(false);
-        toast("Stream error: "+((err&&err.message)||"playback failed"),true);
+        var t=state._playTry;
+        var curKey=state.currentChannel?favKey(state.currentChannel):null;
+        if(t&&t.key&&curKey===t.key){
+          if(t.attempt===0){
+            t.attempt=1;
+            if(/^https:\/\//i.test(t.raw||"")){
+              toast("Stream hiccup — retrying…");
+              try{
+                player.src({src:t.raw,type:"application/x-mpegURL"});
+                var pr=player.play(); if(pr&&pr.catch)pr.catch(function(){});
+                return;
+              }catch(e){}
+            }
+          }
+          if(t.attempt<=1){ t.attempt=2; if(_tryNextSource())return; }
+        }
+        toast("Stream error: "+((err&&err.message)||"playback failed")+". Try another source of this channel (▲/▼).",true);
       });
       VJS_OK=true;
       $("controls").style.display="none"; // video.js's own control bar replaces it
@@ -2032,6 +2051,7 @@ function __iptvBoot(){
       $("np-name").textContent=ch.name;
       var src=$("np-src"); src.textContent=ch.source||ch.category||""; src.style.display=(ch.source||ch.category)?"":"none";
     }
+    var gc=$("guide-ch"); if(gc)gc.textContent=ch.name||"";
     loadEpg(ch);loadStream(ch);
     if(window.innerWidth<=1000)$("video-shell").scrollIntoView({behavior:"smooth",block:"start"});
   }
@@ -2088,9 +2108,22 @@ function __iptvBoot(){
         state.epgTimer=setInterval(function(){_epgRender();},30000);
       }).catch(function(){_epgSetPlaceholder(els,"No program guide available for this channel.");});
   }
+  // When a stream errors, hop to the SAME channel from the next m3u source
+  // (stacked view lists duplicates across sources). Returns true if it hopped.
+  function _tryNextSource(){
+    if(state.playContext!=="main"||state.view!=="stack")return false;
+    var row=(state.curRow>=0)?(state.stackRows||[])[state.curRow]:null;
+    if(!row)return false;
+    var next=state.curCol+1;
+    if(next>=row.idxs.length)return false;
+    toast("This source failed — trying another source of the same channel…");
+    playIndex(row.idxs[next]);
+    return true;
+  }
   function loadStream(ch){
     var raw=ch&&ch.url?ch.url:ch; // accept either a channel object or a bare url (fallback callers)
     if(!raw){toast("This channel has no stream URL.",true);return;}
+    state._playTry={key:(ch&&typeof ch==="object"&&ch.url)?favKey(ch):null,raw:raw,attempt:0};
     var src=API.stream(raw,state.token||"",ch&&ch.referer,ch&&ch.userAgent);
     if(raw.indexOf("192.168.") !== -1) { src = raw; }
     if(raw.startsWith("jio://")) { src = WORKER + "/api/jio/play?id=" + raw.substring(6) + "&token=" + encodeURIComponent(state.token||""); }
@@ -2160,6 +2193,7 @@ function __iptvBoot(){
     if(player&&VJS_OK){ try{ player.pause(); player.reset(); }catch(e){} }
     else { try{video.pause();video.removeAttribute("src");video.load();}catch(e){} }
     var np=$("now-playing");if(np)np.style.display="none";$("player-placeholder").style.display="grid";$("controls").classList.remove("pinned");state.currentChannel=null;
+    var gc=$("guide-ch");if(gc)gc.textContent="";
   }
 
   function setPlayIcon(p){$("icon-play").style.display=p?"none":"block";$("icon-pause").style.display=p?"block":"none";}
@@ -2196,27 +2230,6 @@ function __iptvBoot(){
   $("btn-fs").addEventListener("click",toggleFullscreen);
   $("btn-pip").addEventListener("click",togglePip);
 
-  /* ---------- Remote ---------- */
-  var remoteBuf="";
-  (function buildKeypad(){
-    var keys=["1","2","3","4","5","6","7","8","9","CLR","0","GO"];
-    $("keypad").innerHTML=keys.map(function(k){var cls=k==="GO"?"key k-go":(k==="CLR"?"key k-act":"key");return '<button class="'+cls+'" data-k="'+k+'">'+k+'</button>';}).join("");
-    Array.prototype.forEach.call($("keypad").querySelectorAll(".key"),function(b){b.addEventListener("click",function(){remoteKey(b.getAttribute("data-k"));});});
-  })();
-  function remoteKey(k){if(k==="CLR"){remoteBuf="";}else if(k==="GO"){remoteGo();return;}else if(remoteBuf.length<5){remoteBuf+=k;}updateRemote();}
-  function updateRemote(){
-    $("remote-display").textContent=remoteBuf||"—";
-    var n=parseInt(remoteBuf,10),nm="";
-    if(n>=1&&n<=state.filtered.length)nm=state.filtered[n-1].name;
-    else if(remoteBuf)nm="No channel "+remoteBuf+(state.filtered.length?" (1–"+state.filtered.length+")":" — pick a filter first");
-    $("remote-name").textContent=nm;
-  }
-  function remoteGo(){var n=parseInt(remoteBuf,10);if(n>=1&&n<=state.filtered.length){closeRemote();playIndex(n-1);}else toast(state.filtered.length?("Enter 1–"+state.filtered.length):"Pick a filter first to number channels.",true);}
-  function openRemote(){remoteBuf="";updateRemote();var hrp = $("hero-remote-panel"); if(hrp) hrp.classList.add("open");}
-  function closeRemote(){var hrp = $("hero-remote-panel"); if(hrp) hrp.classList.remove("open");}
-  if($("btn-remote")) $("btn-remote").addEventListener("click",openRemote);
-  // removed remote-modal click
-
   /* ---------- Mobile drawer ---------- */
   function openRail(){$("col-filters").classList.add("open");$("rail-backdrop").classList.add("show");}
   function closeRailMobile(){if(window.innerWidth<=1000){$("col-filters").classList.remove("open");$("rail-backdrop").classList.remove("show");}}
@@ -2226,13 +2239,6 @@ function __iptvBoot(){
   /* ---------- Keyboard ---------- */
   document.addEventListener("keydown",function(e){
     if(!$("player-screen").classList.contains("active"))return;
-    if($("hero-remote-panel") && $("hero-remote-panel").classList.contains("open")){
-      if(/^[0-9]$/.test(e.key))remoteKey(e.key);
-      else if(e.key==="Enter")remoteGo();
-      else if(e.key==="Backspace"){remoteBuf=remoteBuf.slice(0,-1);updateRemote();}
-      else if(e.key==="Escape")closeRemote();
-      return;
-    }
     if(/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName))return;
     if(e.key===" "||e.key==="k"){e.preventDefault();togglePlay();}
     else if(e.key==="ArrowRight"||e.key==="n"){e.preventDefault();navHoriz(1);}
@@ -2242,8 +2248,42 @@ function __iptvBoot(){
     else if(e.key==="m")toggleMute();
     else if(e.key==="f")toggleFullscreen();
     else if(e.key==="i")togglePip();
-    else if(/^[0-9]$/.test(e.key))openRemote();
   });
+
+  /* ---------- Rotate-to-fullscreen (phones/tablets) ----------
+     Like the big streaming apps: turning the phone sideways while a channel is
+     playing enters fullscreen automatically; turning it back upright exits. */
+  (function(){
+    function isTouchDevice(){ return window.matchMedia&&window.matchMedia("(pointer:coarse)").matches; }
+    function isLandscape(){
+      if(screen.orientation&&screen.orientation.type)return screen.orientation.type.indexOf("landscape")===0;
+      return Math.abs(window.orientation||0)===90;
+    }
+    function isPlaying(){
+      if(!state.currentChannel)return false;
+      if(player&&VJS_OK){ try{return !player.paused();}catch(e){return false;} }
+      return !video.paused;
+    }
+    function onRotate(){
+      if(!isTouchDevice()||!state.currentChannel)return;
+      if(isLandscape()){
+        if(!isPlaying())return;
+        try{
+          if(player&&VJS_OK){ if(!player.isFullscreen())player.requestFullscreen(); }
+          else if(video.webkitEnterFullscreen){ video.webkitEnterFullscreen(); } // iOS Safari
+          else if($("video-shell").requestFullscreen){ $("video-shell").requestFullscreen().catch(function(){}); }
+        }catch(e){}
+      }else{
+        try{
+          if(player&&VJS_OK){ if(player.isFullscreen())player.exitFullscreen(); }
+          else if(document.fullscreenElement){ document.exitFullscreen().catch(function(){}); }
+        }catch(e){}
+      }
+    }
+    if(screen.orientation&&screen.orientation.addEventListener)
+      screen.orientation.addEventListener("change",function(){setTimeout(onRotate,120);});
+    window.addEventListener("orientationchange",function(){setTimeout(onRotate,160);});
+  })();
 
   /* ---------- Local date/time/weather (same source/logic as news.html) ---------- */
   function _localClockTick(){
@@ -2344,7 +2384,7 @@ function __iptvBoot(){
   setInterval(function(){_loadLocalWeather();},30*60*1000);
 
   /* ---------- Boot ---------- */
-  if(state.token)showProviderScreen();else show("login-screen");
+  if(state.token){syncPull();showProviderScreen();}else show("login-screen");
 }
 // Run init only after the full document (including the legacy-ui-stubs block
 // below) is parsed. The script is inline in the body, so running during parse

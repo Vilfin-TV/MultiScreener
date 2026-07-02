@@ -123,6 +123,9 @@ export default {
       if (request.method === "GET" && pathname === "/api/settings") {
         return handleSettings(request, env, url);
       }
+      if (pathname === "/api/userdata" && (request.method === "GET" || request.method === "POST")) {
+        return handleUserdata(request, env, url);
+      }
       if (request.method === "GET" && pathname === "/api/playlist") {
         return handlePlaylist(request, env, url);
       }
@@ -555,6 +558,39 @@ async function handleSettings(request, env, url) {
   if (!auth) return json({ error: "Unauthorized" }, 401);
   const settings = await loadSettings(env);
   return json({ settings });
+}
+
+/* Per-user profile data (favorites, hidden channels, player prefs), keyed by
+ * the signed-in username from the session token — so the same profile follows
+ * the user across devices and browsers.
+ *   GET  /api/userdata -> { data: {favs,hidden,prefs,updatedAt} | null }
+ *   POST /api/userdata -> stores a sanitized snapshot, returns { ok, updatedAt } */
+async function handleUserdata(request, env, url) {
+  const auth = await requireAuth(request, env, url);
+  if (!auth) return json({ error: "Unauthorized" }, 401);
+  const kv = env.IPTV_PLAYLIST_KV;
+  if (!kv) return json({ error: "KV not configured" }, 503);
+  const key = "iptv_userdata_" + String(auth.sub || "user").toLowerCase().slice(0, 100);
+
+  if (request.method === "GET") {
+    const raw = await kv.get(key);
+    if (!raw) return json({ data: null });
+    try { return json({ data: JSON.parse(raw) }); } catch (e) { return json({ data: null }); }
+  }
+
+  let body;
+  try { body = await request.json(); } catch (e) { return json({ error: "Invalid JSON" }, 400); }
+  const strList = (v, max) => Array.isArray(v) ? v.slice(0, max).map((x) => String(x).slice(0, 600)) : [];
+  const data = {
+    favs: strList(body.favs, 2000),
+    hidden: strList(body.hidden, 5000),
+    prefs: (body.prefs && typeof body.prefs === "object" && !Array.isArray(body.prefs)) ? body.prefs : {},
+    updatedAt: Date.now(),
+  };
+  const str = JSON.stringify(data);
+  if (str.length > 250000) return json({ error: "Profile data too large" }, 413);
+  await kv.put(key, str);
+  return json({ ok: true, updatedAt: data.updatedAt });
 }
 
 /* ----------------------------- R2 cache (playlists / EPG / merges) -----------------------------
