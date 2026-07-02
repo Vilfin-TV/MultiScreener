@@ -822,7 +822,7 @@ async function handleEpg(request, env, url) {
   if (!settings.providers[provider]) return json({ error: "Invalid provider" }, 400);
   if (!channel && !channelName) return json({ error: "Missing channel id" }, 400);
   const epgUrl = ((settings.providers[provider] || {}).epg || "").trim();
-  if (!epgUrl) return json({ programs: [], now: null, next: null, note: "No EPG configured" });
+  if (!epgUrl && provider !== 'jio') return json({ programs: [], now: null, next: null, note: "No EPG configured" });
 
   const cacheKey = "cache_epg_" + provider;
   let xml = await cacheGet(env, cacheKey);
