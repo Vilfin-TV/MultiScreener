@@ -670,6 +670,35 @@
     .filters-row select{padding:7px 11px!important;font-size:12.5px}
   }
 
+  /* Fullscreen fixes: ensure controls stay visible when the container enters fullscreen */
+  #video-shell:fullscreen .controls,
+  #video-shell:-webkit-full-screen .controls {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    margin-top: 0 !important;
+    border-radius: 0 !important;
+    background: linear-gradient(0deg,rgba(2,12,27,.92),transparent) !important;
+    z-index: 50 !important;
+  }
+  #video-shell:fullscreen #now-playing,
+  #video-shell:-webkit-full-screen #now-playing {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 50 !important;
+  }
+  .vjs-iptv-theme.vjs-fullscreen .vjs-control-bar {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    margin-top: 0 !important;
+    border-radius: 0 !important;
+  }
+
   .ph-logo { max-width: 70px; height: auto; border-radius: 50%; box-shadow: 0 4px 10px rgba(100, 255, 218, 0.2); margin-bottom: 12px; display: inline-block; }
 </style>
 </head>
@@ -747,7 +776,7 @@
         <video id="video" class="video-js vjs-iptv-theme" playsinline></video>
         <div class="player-placeholder" id="player-placeholder"><div><div class="pp-ico">▶️</div>Select a channel to start watching</div></div>
         <div class="video-loading" id="video-loading"><div><div class="spinner"></div><span>Loading stream…</span></div></div>
-      </div>
+      
         <div class="controls" id="controls">
           <div class="ctrl-spacer"></div>
           <button class="ctrl-btn" id="btn-up" title="Previous source (▲)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 8l-6 6h12z"/></svg></button>
@@ -768,6 +797,7 @@
           <div class="np-main"><span class="np-dot"></span><strong id="np-name"></strong><span class="np-src" id="np-src"></span></div>
           <div class="np-epg np-epg-slot" id="np-epg"></div>
         </div>
+      </div>
       </div>
 
       <!-- Program Guide panel: full-height guide of the playing channel (desktop) -->
@@ -1904,24 +1934,21 @@ function __iptvBoot(){
       _vjsRegisterSettingsButton();
       player=videojs("video",{
         controls:true,autoplay:false,preload:"auto",liveui:true,playsinline:true,
-        fill:true, // fills .player-stage (which sets the real aspect-ratio via CSS) instead of
-                   // video.js's own fixed-size default — fluid:false with no fill was stretching video
+        fill:true,
         html5:{
           vhs:{
-            overrideNative:true,        // consistent buffering behavior across browsers, incl. Safari
+            overrideNative:true,
             useBandwidthFromLocalStorage:true,
-            enableLowInitialPlaylist:true
+            enableLowInitialPlaylist:true,
+            fastQualityChange:true,
+            cacheEncryptionKeys:true
           }
         },
         controlBar:{
           pictureInPictureToggle:true,fullscreenToggle:true,
-          // Premium remote-style layout: Up/Back flank the center Play button,
-          // Next/Down mirror them on the outside — then Volume, then Settings
-          // (gear) right before PIP/Fullscreen.
           children:["PrevSourceButton","PrevChannelButton","playToggle","NextChannelButton","NextSourceButton","spacer","volumePanel","liveDisplay","SettingsButton","pictureInPictureToggle","fullscreenToggle"]
         }
       });
-      // Restore the user's saved volume (synced across devices via prefs).
       var savedVol=(state.prefs&&typeof state.prefs.volume==="number"&&isFinite(state.prefs.volume))
         ? Math.min(1,Math.max(0,state.prefs.volume)) : DEFAULT_VOLUME;
       player.volume(savedVol);
@@ -1933,18 +1960,10 @@ function __iptvBoot(){
       });
       player.on("waiting",function(){setLoading(true);});
       player.on("playing",function(){setLoading(false);});
-      // Quality levels aren't known until VHS parses the manifest, so the
-      // Settings menu (built at construction time) starts with just "Auto" —
-      // refresh it once real renditions are available, and again on every
-      // channel switch since a new stream may expose different renditions.
       player.on("loadedmetadata",function(){
         var btn=player.controlBar.getChild("SettingsButton");
         if(btn) btn.update();
       });
-      // "The media could not be loaded" recovery chain: many streams reject the
-      // relay or one mirror is down while another works. Instead of dumping the
-      // raw error on the user: (1) retry the original URL directly, then
-      // (2) hop to the same channel from the next m3u source automatically.
       player.on("error",function(){
         var err=player.error();
         setLoading(false);
@@ -1967,12 +1986,10 @@ function __iptvBoot(){
         toast("Stream error: "+((err&&err.message)||"playback failed")+". Try another source of this channel (▲/▼).",true);
       });
       VJS_OK=true;
-      $("controls").style.display="none"; // video.js's own control bar replaces it
+      $("controls").style.display="none"; 
     }catch(e){ player=null; VJS_OK=false; }
     return player;
   }
-  // Engine-aware actions — used by both the (hidden-when-video.js-active) fallback
-  // control bar and keyboard shortcuts, so behavior is identical either way.
   function togglePlay(){
     if(player&&VJS_OK){ if(player.paused())player.play().catch(function(){});else player.pause(); }
     else { if(video.paused)video.play().catch(function(){});else video.pause(); }
@@ -2001,7 +2018,7 @@ function __iptvBoot(){
   }
   function playIndex(idx){
     if(idx<0||idx>=state.filtered.length)return;
-    state.playContext="main"; // playing from the main channel list
+    state.playContext="main";
     state.currentIndex=idx;var ch=state.filtered[idx];state.currentChannel=ch;
     var loc=_locateInStack(idx); state.curRow=loc.row; state.curCol=loc.col;
     openPlayer(ch,idx);updatePlayingHighlight();
@@ -2011,15 +2028,13 @@ function __iptvBoot(){
     for(var r=0;r<rows.length;r++){ var col=rows[r].idxs.indexOf(idx); if(col!==-1)return{row:r,col:col}; }
     return{row:-1,col:-1};
   }
-  // Prev/Next (◀ ▶): play the previous/next CHANNEL — the favorites list when
-  // playing from favorites, otherwise the main channel list ("from down").
   function navHoriz(d){
     if(state.playContext==="favorites"){ navFav(d); return; }
     if(state.view==="stack" && state.stackRows.length){
       var nr=(state.curRow<0?(d>0?-1:0):state.curRow)+d;
       if(nr<0){toast("Already at the first channel.");return;}
       if(nr>=state.stackRows.length){toast("Already at the last channel.");return;}
-      if(nr>=state.renderCount){ state.renderCount=nr+PAGE; renderList(); } // ensure target row rendered
+      if(nr>=state.renderCount){ state.renderCount=nr+PAGE; renderList(); }
       playIndex(state.stackRows[nr].idxs[0]); return;
     }
     if(state.currentIndex<0){ if(state.filtered.length)playIndex(0); return; }
@@ -2028,7 +2043,6 @@ function __iptvBoot(){
     if(ni>=state.filtered.length){toast("Already at the last channel.");return;}
     playIndex(ni);
   }
-  // Up/Down (▲ ▼): step between the duplicate SOURCES of the current channel.
   function navVert(d){
     if(state.playContext==="favorites"){ navFav(d); return; }
     if(state.view==="stack" && state.curRow>=0 && state.stackRows[state.curRow]){
@@ -2036,9 +2050,8 @@ function __iptvBoot(){
       if(col<0||col>=row.idxs.length){ toast(d>0?"Last source of this channel.":"First source of this channel."); return; }
       playIndex(row.idxs[col]); return;
     }
-    navHoriz(d); // flat views: up/down behaves like prev/next channel
+    navHoriz(d);
   }
-  // Move the "playing" highlight without rebuilding the list (keeps scroll + is instant).
   function updatePlayingHighlight(){
     var host=document.getElementById("channel-list-new"); if(!host)return;
     var cur=state.currentChannel?favKey(state.currentChannel):null;
@@ -2058,8 +2071,6 @@ function __iptvBoot(){
     loadEpg(ch);loadStream(ch);
     if(window.innerWidth<=1000)$("video-shell").scrollIntoView({behavior:"smooth",block:"start"});
   }
-  // EPG uses the channel's OWN source (sourceId) so merged lineups query the right
-  // guide; falls back to the active provider for single-source loads.
   function _epgFmtTime(ms){ return ms?new Date(ms).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):""; }
   function _epgBuildTimeline(programs){
     var nowMs=Date.now(), liveIdx=-1;
@@ -2078,9 +2089,6 @@ function __iptvBoot(){
     }).join("")+'</div>';
     return h;
   }
-  // Two copies of the guide live in the DOM: #np-epg (under the video, mobile/
-  // tablet) and #np-epg-desktop (bottom half of the remote panel, desktop). Both
-  // stay in sync off the same fetch.
   function _epgEls(){ return Array.prototype.slice.call(document.querySelectorAll(".np-epg-slot")); }
   function _epgSetPlaceholder(els,msg){
     els.forEach(function(el){ el.className="np-epg np-epg-slot"; el.innerHTML='<div class="epg-placeholder">'+esc(msg)+'</div>'; });
@@ -2111,8 +2119,6 @@ function __iptvBoot(){
         state.epgTimer=setInterval(function(){_epgRender();},30000);
       }).catch(function(){_epgSetPlaceholder(els,"No program guide available for this channel.");});
   }
-  // When a stream errors, hop to the SAME channel from the next m3u source
-  // (stacked view lists duplicates across sources). Returns true if it hopped.
   function _tryNextSource(){
     if(state.playContext!=="main"||state.view!=="stack")return false;
     var row=(state.curRow>=0)?(state.stackRows||[])[state.curRow]:null;
@@ -2124,14 +2130,14 @@ function __iptvBoot(){
     return true;
   }
   function loadStream(ch){
-    var raw=ch&&ch.url?ch.url:ch; // accept either a channel object or a bare url (fallback callers)
+    var raw=ch&&ch.url?ch.url:ch;
     if(!raw){toast("This channel has no stream URL.",true);return;}
     state._playTry={key:(ch&&typeof ch==="object"&&ch.url)?favKey(ch):null,raw:raw,attempt:0};
     var src=API.stream(raw,state.token||"",ch&&ch.referer,ch&&ch.userAgent);
     if(raw.indexOf("192.168.") !== -1) { src = raw; }
     if(raw.startsWith("jio://")) { src = WORKER + "/api/jio/play?id=" + raw.substring(6) + "&token=" + encodeURIComponent(state.token||""); }
-    var p=initPlayer(); // sets VJS_OK before setLoading() below, so the fallback
-    setLoading(true);   // spinner never shows (and never gets stuck) once video.js is active
+    var p=initPlayer();
+    setLoading(true);
     if(p){
       stopHls();
       try{
@@ -2142,13 +2148,11 @@ function __iptvBoot(){
     }
     _loadHlsScript(function(){ loadStreamFallback(src); });
   }
-  // Fetches hls.js on demand — only the rare path where video.js couldn't
-  // initialize needs it, so it's not part of every page load's weight.
   function _loadHlsScript(cb){
     if(window.Hls){ cb(); return; }
     var s=document.createElement("script");
     s.src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js";
-    s.onload=cb; s.onerror=cb; // loadStreamFallback() itself handles Hls still being unavailable
+    s.onload=cb; s.onerror=cb;
     document.head.appendChild(s);
   }
   // Only reached if video.js failed to load/initialize — the exact engine used
