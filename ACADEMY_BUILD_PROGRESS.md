@@ -20,8 +20,8 @@ Daily automated build of empty Academy topics in `education.html`.
 ### AI & Robotics (extend AI_LESSONS — hub already exists)
 - [x] Natural Language Processing (NLP)
 - [x] Computer Vision
-- [ ] Reinforcement Learning
-- [ ] Generative AI & LLMs
+- [x] Reinforcement Learning
+- [x] Generative AI & LLMs
 
 ### Life Skills (new hub: LIFESKILLS_LESSONS)
 - [ ] Public Speaking
@@ -72,3 +72,4 @@ Daily automated build of empty Academy topics in `education.html`.
 ## Run log
 <!-- append one line per run: date — topics built — validation result -->
 - 2026-06-12 — Natural Language Processing (NLP) + Computer Vision (AI_LESSONS units 7-8, idx 27 & 32) — jsdom pass, preview render pass, 0 console errors
+- 2026-07-04 — Reinforcement Learning + Generative AI & LLMs (AI_LESSONS units 9-10, idx 36 & 41) — jsdom pass, preview render pass (both lessons + TOC verified via openAiLesson(36)/openAiLesson(41)), 0 console errors
