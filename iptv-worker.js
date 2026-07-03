@@ -41,6 +41,27 @@
 
 const DEFAULT_SESSION_HOURS = 8;
 
+// --- MEMORY CACHE TO REDUCE KV READS ---
+const _memCache = new Map();
+async function memoKvGet(kv, key, ttlMs = 60000) {
+  if (!kv) return null;
+  const now = Date.now();
+  if (_memCache.has(key)) {
+    const entry = _memCache.get(key);
+    if (now - entry.ts < ttlMs) return entry.val;
+  }
+  try {
+    const val = await kv.get(key);
+    _memCache.set(key, { ts: now, val });
+    return val;
+  } catch (e) {
+    return null;
+  }
+}
+function memoKvPut(key, val) {
+  _memCache.set(key, { ts: Date.now(), val });
+}
+
 // All providers the console understands. free/pro ship with working open-source
 // defaults; jio/airtel/custom are URL-driven (set in the admin console).
 const IPTV_PROVIDERS = ["jio", "airtel", "free", "pro", "custom"];
@@ -171,7 +192,7 @@ function json(obj, status = 200, extraHeaders = {}) {
 async function handleJioTunnel(request, env, url) {
   const kv = env.IPTV_PLAYLIST_KV;
   if (!kv) return json({ error: "KV not configured" }, 503);
-  const tunnelUrl = await kv.get('jio_tunnel_url');
+  const tunnelUrl = await memoKvGet(kv, 'jio_tunnel_url');
   if (!tunnelUrl) return json({ error: "Jio Tunnel URL not found" }, 404);
   
   // Reconstruct the URL for the tunnel
@@ -319,7 +340,7 @@ async function loadSettings(env) {
   const kv = env.IPTV_PLAYLIST_KV;
   const base = { sessionHours: DEFAULT_SESSION_HOURS, defaultProvider: "free", providers: defaultProviders() };
   if (!kv) return base;
-  const raw = await kv.get("iptv_settings");
+  const raw = await memoKvGet(kv, "iptv_settings");
   if (!raw) return base;
   try {
     const s = JSON.parse(raw);
@@ -428,14 +449,14 @@ async function verifyToken(token, env) {
   if (Math.floor(Date.now() / 1000) >= payload.exp) return null;
   if (env.IPTV_PLAYLIST_KV && payload.jti) {
     try {
-      const r = await env.IPTV_PLAYLIST_KV.get('iptv_sessions_revoked');
+      const r = await memoKvGet(env.IPTV_PLAYLIST_KV, 'iptv_sessions_revoked');
       const revoked = r ? JSON.parse(r) : {};
       if (revoked[payload.jti]) return null;
     } catch (e) {}
   }
   if (env.IPTV_PLAYLIST_KV && payload.sub) {
     try {
-      const rawAuth = await env.IPTV_PLAYLIST_KV.get('iptv_auth');
+      const rawAuth = await memoKvGet(env.IPTV_PLAYLIST_KV, 'iptv_auth');
       if (rawAuth) {
         let authObj = JSON.parse(rawAuth);
         if (authObj.hash && authObj.username) authObj = { [authObj.username]: authObj };
@@ -500,7 +521,7 @@ async function handleLogin(request, env) {
   // 1) KV-managed credential (set from link-console). Authoritative if present.
   const kv = env.IPTV_PLAYLIST_KV;
   if (kv) {
-    const raw = await kv.get("iptv_auth");
+    const raw = await memoKvGet(kv, "iptv_auth");
     if (raw) {
       let authObj = null;
       try { authObj = JSON.parse(raw); } catch (e) {}
@@ -527,7 +548,9 @@ async function handleLogin(request, env) {
           rec.loginCount = (rec.loginCount || 0) + 1;
           rec.lastSeenAt = new Date().toISOString();
           authObj[username] = rec;
-          await env.IPTV_PLAYLIST_KV.put("iptv_auth", JSON.stringify(authObj));
+          const authJson = JSON.stringify(authObj);
+          memoKvPut("iptv_auth", authJson);
+          await env.IPTV_PLAYLIST_KV.put("iptv_auth", authJson);
 
           const settings = await loadSettings(env);
           const ttl = settings.sessionHours * 3600;

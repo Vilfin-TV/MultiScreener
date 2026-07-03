@@ -98,7 +98,7 @@ def generate_and_upload_m3u():
             epg_content = epg_req.text
             set_status("Uploading EPG to Cloudflare KV...")
             epg_payload = {"action": "save_epg", "epg": epg_content}
-            r_epg = requests.post(f"{WORKER_URL}/api/jio/auth", headers={"X-Jio-Bridge": "vilfin-secret-jio"}, json=epg_payload, timeout=40)
+            r_epg = requests.post(f"{WORKER_URL}/api/jio/auth", headers={"X-Jio-Bridge": "vilfin-secret-jio"}, json=epg_payload, timeout=120)
             if r_epg.status_code != 200:
                 set_status(f"Failed to upload EPG, status {r_epg.status_code}")
             else:
