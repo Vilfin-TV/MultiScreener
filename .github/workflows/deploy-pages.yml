@@ -1,8 +1,19 @@
 name: Deploy to GitHub Pages
 
+# This workflow requires the repo's Pages source to be set to "GitHub
+# Actions" (Settings -> Pages -> Build and deployment -> Source). It
+# currently isn't — Pages is on the legacy "Deploy from a branch" source,
+# which already auto-publishes every push to main on its own and does
+# not grant this workflow permission to deploy, so it fails on every run
+# (see actions/deploy-pages "Deployment failed, try again later").
+#
+# Disabled the automatic trigger to stop the failure-email spam without
+# deleting a workflow that's otherwise correctly written. Once the Pages
+# source is switched to "GitHub Actions" in repo settings, restore the
+# `push: branches: [main]` trigger below (or just run this manually once)
+# and it will work as-is.
 on:
-  push:
-    branches: [main]
+  workflow_dispatch: {}
 
 concurrency:
   group: pages
