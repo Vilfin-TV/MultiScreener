@@ -738,12 +738,12 @@
     </div>
     <div class="grid-label">Browse providers</div>
     <div class="provider-grid">
-      <button class="provider-card pc-jio" data-provider="jio"><div class="provider-badge">J</div><h3>Jio IPTV</h3><div class="pc-sub">Load the Jio channel lineup</div><span class="pc-go">Open lineup →</span></button>
-      <button class="provider-card pc-zee5" data-provider="zee5"><div class="provider-badge">Z</div><h3>Zee5 TV</h3><div class="pc-sub">Load the Zee5 channel lineup</div><span class="pc-go">Open lineup →</span></button>
-      <button class="provider-card pc-airtel" data-provider="airtel"><div class="provider-badge">A</div><h3>Airtel IPTV</h3><div class="pc-sub">Load the Airtel channel lineup</div><span class="pc-go">Open lineup →</span></button>
-      <button class="provider-card pc-free" data-provider="free"><div class="provider-badge">F</div><h3>Free IPTV</h3><div class="pc-sub">Open-source channels from iptv-org</div><span class="pc-go">Open lineup →</span></button>
-      <button class="provider-card pc-pro" data-provider="pro"><div class="provider-badge">P</div><h3>IPTV Pro</h3><div class="pc-sub">Curated premium channel lineup</div><span class="pc-go">Open lineup →</span></button>
-      <button class="provider-card pc-custom" data-provider="custom"><div class="provider-badge">C</div><h3>Custom</h3><div class="pc-sub">Your own playlist URL from settings</div><span class="pc-go">Open lineup →</span></button>
+      <button class="provider-card pc-jio" data-provider="jio"><div class="provider-badge">J</div><h3>Jio IPTV</h3><div class="pc-sub">Load the Jio channel lineup</div><span class="pc-go">Open Zee5 →</span></button>
+      <button class="provider-card pc-zee5" data-provider="zee5"><div class="provider-badge">Z</div><h3>Zee5 TV</h3><div class="pc-sub">Launch native interface via Proxy</div><span class="pc-go">Open Zee5 →</span></button>
+      <button class="provider-card pc-airtel" data-provider="airtel"><div class="provider-badge">A</div><h3>Airtel IPTV</h3><div class="pc-sub">Load the Airtel channel lineup</div><span class="pc-go">Open Zee5 →</span></button>
+      <button class="provider-card pc-free" data-provider="free"><div class="provider-badge">F</div><h3>Free IPTV</h3><div class="pc-sub">Open-source channels from iptv-org</div><span class="pc-go">Open Zee5 →</span></button>
+      <button class="provider-card pc-pro" data-provider="pro"><div class="provider-badge">P</div><h3>IPTV Pro</h3><div class="pc-sub">Curated premium channel lineup</div><span class="pc-go">Open Zee5 →</span></button>
+      <button class="provider-card pc-custom" data-provider="custom"><div class="provider-badge">C</div><h3>Custom</h3><div class="pc-sub">Your own playlist URL from settings</div><span class="pc-go">Open Zee5 →</span></button>
     </div>
   </div>
 </section>
@@ -997,7 +997,7 @@ function __iptvBoot(){
       '<div class="provider-badge">'+providerBadgeHtml(p)+'</div>' +
       '<h3>'+esc(p.name)+'</h3>' +
       '<div class="pc-sub">Open the '+esc(p.name)+' lineup</div>' +
-      '<span class="pc-go">Open lineup →</span></button>';
+      '<span class="pc-go">Open Zee5 →</span></button>';
   }
   function _bindProviderCards(grid){
     Array.prototype.forEach.call(grid.querySelectorAll(".provider-card[data-provider]"),function(c){
@@ -1051,11 +1051,7 @@ function __iptvBoot(){
     });
     var zee5Card=grid.querySelector('.provider-card[data-provider="zee5"]');
     if(zee5Card)zee5Card.addEventListener("click",function(){
-      state.provider = "zee5";
-      state.group = null;
-      var pr = _enabledProvs().find(function(p){ return p.id==="zee5"; });
-      if(pr) loadProvider("zee5");
-      else alert("Zee5 TV playlist is missing or not configured yet!");
+      window.open("https://www.zee5.com", "_blank");
     });
   }
   // Enabled providers, de-duplicated by m3u URL (so the same playlist is listed once).
@@ -2162,6 +2158,7 @@ function __iptvBoot(){
     var src=API.stream(raw,state.token||"",ch&&ch.referer,ch&&ch.userAgent);
     if(raw.indexOf("192.168.") !== -1) { src = raw; }
     if(raw.startsWith("jio://")) { src = WORKER + "/api/jio/play?id=" + raw.substring(6) + "&token=" + encodeURIComponent(state.token||""); }
+    if(raw.startsWith("zee5://")) { src = WORKER + "/api/zee5/play?id=" + raw.substring(7) + "&token=" + encodeURIComponent(state.token||""); }
     var p=initPlayer();
     setLoading(true);
     if(p){
