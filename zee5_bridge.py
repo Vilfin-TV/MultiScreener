@@ -90,12 +90,8 @@ def generate_and_upload_m3u():
     try:
         set_status("Fetching channel list from Zee5 gwapi...")
         
-        # Retrieve today's date for EPG offset
-        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0).strftime('%Y-%m-%dT%H:%M:%SZ')
-        today_end = datetime.now(timezone.utc).replace(hour=23, minute=59, second=59).strftime('%Y-%m-%dT%H:%M:%SZ')
-        
-        # EPG Endpoint gives a list of all live channels active right now
-        epg_url = f"https://gwapi.zee5.com/v1/epg?start={urllib.parse.quote(today_start)}&end={urllib.parse.quote(today_end)}&time_offset=%2B05%3A30"
+        # Catalog API provides the list of channels (pagination applies, we get first 100)
+        epg_url = "https://catalogapi.zee5.com/v1/channel?page=1&page_size=100"
         headers = {
             "Authorization": f"Bearer {ZEE5_AUTH.get('jwt', '')}",
             "User-Agent": "Mozilla/5.0"
@@ -106,12 +102,14 @@ def generate_and_upload_m3u():
         m3u_lines = ["#EXTM3U"]
         
         if r.status_code == 200 and r.json():
-            channels = r.json().get("channels", [])
+            channels = r.json().get("items", [])
             set_status(f"Found {len(channels)} channels. Processing M3U...")
             for ch in channels:
                 ch_id = ch.get("id")
                 ch_name = ch.get("title", f"Channel {ch_id}")
-                ch_logo = ch.get("image_url", "")
+                ch_logo = ch.get("list_image", "")
+                if ch_logo and not ch_logo.startswith("http"):
+                    ch_logo = f"https://akamaividz2.zee5.com/image/upload/w_284,h_160,c_scale,f_webp,q_auto:eco/resources/{ch_id}/list/{ch_logo}"
                 
                 m3u_lines.append(f'#EXTINF:-1 tvg-id="{ch_id}" tvg-name="{ch_name}" tvg-logo="{ch_logo}" group-title="Zee5",{ch_name}')
                 # Zee5 stream URLs are generally fetched dynamically per request using the access token,
