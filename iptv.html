@@ -104,6 +104,7 @@
   .provider-grid{margin-top:42px;display:grid;gap:22px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
   .provider-card{position:relative;overflow:hidden;background:linear-gradient(170deg,var(--surface-2),var(--surface));
     border:1px solid var(--border);border-radius:20px;padding:28px 26px;text-align:left;transition:transform var(--t-med),border-color var(--t-med),box-shadow var(--t-med)}
+  .provider-card > *{position:relative;z-index:1}
   .provider-card::after{content:"";position:absolute;inset:0;background: linear-gradient(135deg, #020c1b, #0a192f);opacity:0;transition:opacity var(--t-med)}
   .provider-card:hover{transform:translateY(-6px);border-color:var(--border-strong);box-shadow:var(--shadow)}
   .provider-card:hover::after{opacity:1}
@@ -941,12 +942,22 @@ function __iptvBoot(){
         if (!provs || !Array.isArray(provs) || provs.length === 0) {
           provs = [
             { id: 'jio', name: 'Jio IPTV', icon: 'J' },
+            { id: 'zee5', name: 'Zee5 TV', icon: 'Z' },
             { id: 'airtel', name: 'Airtel IPTV', icon: 'A' },
             { id: 'free', name: 'Free IPTV', icon: 'F' },
             { id: 'pro', name: 'IPTV Pro', icon: 'P' },
             { id: 'custom', name: 'Custom', icon: 'C' }
           ];
         }
+        
+        var hasZee5 = false;
+        for (var i=0; i<provs.length; i++) {
+          if (provs[i].id === 'zee5') hasZee5 = true;
+        }
+        if (!hasZee5) {
+          provs.push({ id: 'zee5', name: 'Zee5 TV', icon: 'Z' });
+        }
+        
         state.providersList = provs;
         renderProviderBrowse();
       })
