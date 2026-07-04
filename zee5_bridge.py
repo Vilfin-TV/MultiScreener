@@ -142,6 +142,7 @@ def generate_and_upload_m3u():
         print(e)
 
 def main():
+    global ZEE5_AUTH
     print("=== Zee5 Local Bridge Started ===")
     print("Listening for Console requests...")
     last_state = None
@@ -152,15 +153,13 @@ def main():
             if req and req.get("ts") != last_state:
                 last_state = req.get("ts")
                 action = req.get("action")
-                phone = req.get("phone")
-                otp = req.get("otp")
                 
-                if action == "set_phone":
-                    print(f"Received Request OTP for: {phone}")
-                    zee5_send_otp(phone)
-                elif action == "set_otp":
-                    print(f"Received Submit OTP for: {phone} | {otp}")
-                    zee5_verify_otp_and_generate(phone, otp)
+                if action == "set_token":
+                    token = req.get("token")
+                    print(f"Received Zee5 JWT Token.")
+                    set_status("Token received by python script! Generating M3U...")
+                    ZEE5_AUTH = {"jwt": token}
+                    generate_and_upload_m3u()
                     
         except Exception as e:
             print("Poll Error:", e)

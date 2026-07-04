@@ -1844,16 +1844,13 @@
     <div class="c-panel" id="tab-zee5">
       <div style="padding:28px">
         <h2 style="margin:0 0 6px;color:#ffffff">📱 Zee5 TV Sync</h2>
-        <p style="opacity:.7;margin:0 0 18px;font-size:14px;color:#b9b9cc">Generate Zee5 TV M3U by requesting an OTP. Make sure zee5_bridge.py is running on your server.</p>
+        <p style="opacity:.7;margin:0 0 18px;font-size:14px;color:#b9b9cc">Generate Zee5 TV M3U by providing a valid ZEE5 JWT token. Make sure zee5_bridge.py is running on your server.</p>
         
         <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.10);border-radius:12px;padding:18px;margin-bottom:18px">
-          <label class="field-label">1. Zee5 Phone/Email</label>
-          <input id="zee5-phone" type="text" placeholder="Enter Phone or Email" style="margin-bottom:14px">
-          <button class="btn-primary" onclick="zee5RequestOtp()" style="margin-bottom:14px">Request OTP</button>
-
-          <label class="field-label">2. Enter OTP</label>
-          <input id="zee5-otp" type="number" placeholder="OTP" style="margin-bottom:14px">
-          <button class="btn-primary" onclick="zee5SubmitOtp()">Submit OTP</button>
+          <label class="field-label">1. ZEE5 JWT Token</label>
+          <p style="font-size:12px;color:#8ea8c8;margin:0 0 10px;">(Extract from ZEE5 Web Player via DevTools > Application > Local Storage)</p>
+          <textarea id="zee5-token" placeholder="Paste your JWT Token here..." style="width:100%;height:60px;margin-bottom:14px;background:#0f0f12;border:1px solid rgba(255,255,255,.16);color:#fff;padding:10px;border-radius:8px;"></textarea>
+          <button class="btn-primary" onclick="zee5SubmitToken()">Submit Token</button>
         </div>
         
         <div id="zee5-status" style="padding:12px 14px;border:1px solid rgba(255,255,255,.12);border-radius:10px;font-size:14px;color:#e2eeff;background:#0f0f12;white-space:pre-wrap;">Waiting for action...</div>
@@ -6645,31 +6642,16 @@ function startZee5Poll() {
   }, 2000);
 }
 
-async function zee5RequestOtp() {
-  var num = document.getElementById("zee5-phone").value.trim();
+async function zee5SubmitToken() {
+  var token = document.getElementById("zee5-token").value.trim();
   var st = document.getElementById("zee5-status");
-  if(!num) { st.textContent = "Please enter phone number/email"; return; }
-  st.textContent = "Sending credentials to worker...";
+  if(!token) { st.textContent = "Please enter a JWT token"; return; }
+  st.textContent = "Sending Token to worker...";
   try {
-    var res = await authFetch(WORKER+'/api/zee5/auth', { method:'POST', body:JSON.stringify({ action: "set_phone", phone: num }) });
+    var res = await authFetch(WORKER+'/api/zee5/auth', { method:'POST', body:JSON.stringify({ action: "set_token", token: token }) });
     var d = await res.json();
     if(!res.ok || !d.ok) throw new Error(d.error || d.message || "HTTP "+res.status);
-    st.textContent = "Credentials sent. Waiting for python script to process...";
-    startZee5Poll();
-  } catch(e) { st.textContent = "Error: " + e.message; }
-}
-
-async function zee5SubmitOtp() {
-  var num = document.getElementById("zee5-phone").value.trim();
-  var otp = document.getElementById("zee5-otp").value.trim();
-  var st = document.getElementById("zee5-status");
-  if(!otp) { st.textContent = "Please enter OTP"; return; }
-  st.textContent = "Sending OTP to worker...";
-  try {
-    var res = await authFetch(WORKER+'/api/zee5/auth', { method:'POST', body:JSON.stringify({ action: "set_otp", phone: num, otp: otp }) });
-    var d = await res.json();
-    if(!res.ok || !d.ok) throw new Error(d.error || d.message || "HTTP "+res.status);
-    st.textContent = "OTP sent to worker! Waiting for python script to verify...";
+    st.textContent = "Token sent to worker! Waiting for python script to verify...";
     startZee5Poll();
   } catch(e) { st.textContent = "Error: " + e.message; }
 }

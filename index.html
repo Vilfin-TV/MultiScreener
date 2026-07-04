@@ -15771,12 +15771,15 @@ function renderItems(listEl, items) {
     return null;
   };
 
+  const textOnly = !ds.some(d => d.imgSrc);
   const hero  = take(true) || take(false);
   const left  = [take(true) || take(false), take(true) || take(false)].filter(Boolean);
-  const minis = [take(true), take(true), take(true)].filter(Boolean);
-  // Feeds without photos still get a full front page: text cards fill the row
-  if (!minis.length) {
-    for (let i = 0; i < 3; i++) { const d = take(false); if (!d) break; minis.push(d); }
+  const minis = textOnly ? [] : [take(true), take(true), take(true)].filter(Boolean);
+  // Feeds without photos read like a paper's briefing page: a 2×3 grid of
+  // kicker + headline + standfirst briefs instead of stretched photo cards
+  const briefs = [];
+  if (textOnly) {
+    for (let i = 0; i < 6; i++) { const d = take(false); if (!d) break; briefs.push(d); }
   }
   // Balance: long feeds lend the left column a third story so the columns
   // finish at roughly the same height (the rail defines the box height)
