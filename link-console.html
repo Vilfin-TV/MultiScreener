@@ -1011,6 +1011,12 @@
       <div class="c-tab" data-tab="jio" onclick="switchTab('jio')">
         <span class="c-tab-ico">📱</span> Jio TV Sync
       </div>
+      <div class="c-tab" data-tab="zee5" onclick="switchTab('zee5')">
+        <span class="c-tab-ico">📱</span> Zee5 TV Sync
+      </div>
+      <div class="c-tab" data-tab="zee5" onclick="switchTab('zee5')">
+        <span class="c-tab-ico">📱</span> Zee5 TV Sync
+      </div>
       <div class="c-tab admin-only" data-tab="report" onclick="switchTab('report')">
         <span class="c-tab-ico">📊</span> Report
       </div>
@@ -1833,6 +1839,26 @@
         <div id="jio-status" style="padding:12px 14px;border:1px solid rgba(255,255,255,.12);border-radius:10px;font-size:14px;color:#e2eeff;background:#0f0f12;white-space:pre-wrap;">Waiting for action...</div>
       </div>
     </div><!-- /tab-jio -->
+
+    <!-- ══ ZEE5 TV TAB ══ -->
+    <div class="c-panel" id="tab-zee5">
+      <div style="padding:28px">
+        <h2 style="margin:0 0 6px;color:#ffffff">📱 Zee5 TV Sync</h2>
+        <p style="opacity:.7;margin:0 0 18px;font-size:14px;color:#b9b9cc">Generate Zee5 TV M3U by requesting an OTP. Make sure zee5_bridge.py is running on your server.</p>
+        
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.10);border-radius:12px;padding:18px;margin-bottom:18px">
+          <label class="field-label">1. Zee5 Phone/Email</label>
+          <input id="zee5-phone" type="text" placeholder="Enter Phone or Email" style="margin-bottom:14px">
+          <button class="btn-primary" onclick="zee5RequestOtp()" style="margin-bottom:14px">Request OTP</button>
+
+          <label class="field-label">2. Enter OTP</label>
+          <input id="zee5-otp" type="number" placeholder="OTP" style="margin-bottom:14px">
+          <button class="btn-primary" onclick="zee5SubmitOtp()">Submit OTP</button>
+        </div>
+        
+        <div id="zee5-status" style="padding:12px 14px;border:1px solid rgba(255,255,255,.12);border-radius:10px;font-size:14px;color:#e2eeff;background:#0f0f12;white-space:pre-wrap;">Waiting for action...</div>
+      </div>
+    </div><!-- /tab-zee5 -->
 
   </div><!-- /console -->
 </div><!-- /dashboard-view -->
@@ -6598,6 +6624,53 @@ async function jioSubmitOtp() {
     if(!res.ok || !d.ok) throw new Error(d.error || d.message || "HTTP "+res.status);
     st.textContent = "OTP sent to worker! Waiting for python script to verify...";
     startJioPoll();
+  } catch(e) { st.textContent = "Error: " + e.message; }
+}
+
+/* ════ Zee5 TV Sync ════════════════════════════════════════════════════════════════════════════════════════════════════ */
+var zee5Poll = null;
+function startZee5Poll() {
+  if(zee5Poll) return;
+  zee5Poll = setInterval(async function() {
+    try {
+      var res = await authFetch(WORKER+'/api/zee5/auth');
+      var d = await res.json();
+      if(d.ok && d.data && d.data.action === "status" && d.data.message) {
+        document.getElementById("zee5-status").textContent = "Update from server: " + d.data.message;
+        if(d.data.message.includes("Process complete") || d.data.message.includes("Wait 5 mins")) {
+          clearInterval(zee5Poll); zee5Poll=null;
+        }
+      }
+    } catch(e) {}
+  }, 2000);
+}
+
+async function zee5RequestOtp() {
+  var num = document.getElementById("zee5-phone").value.trim();
+  var st = document.getElementById("zee5-status");
+  if(!num) { st.textContent = "Please enter phone number/email"; return; }
+  st.textContent = "Sending credentials to worker...";
+  try {
+    var res = await authFetch(WORKER+'/api/zee5/auth', { method:'POST', body:JSON.stringify({ action: "set_phone", phone: num }) });
+    var d = await res.json();
+    if(!res.ok || !d.ok) throw new Error(d.error || d.message || "HTTP "+res.status);
+    st.textContent = "Credentials sent. Waiting for python script to process...";
+    startZee5Poll();
+  } catch(e) { st.textContent = "Error: " + e.message; }
+}
+
+async function zee5SubmitOtp() {
+  var num = document.getElementById("zee5-phone").value.trim();
+  var otp = document.getElementById("zee5-otp").value.trim();
+  var st = document.getElementById("zee5-status");
+  if(!otp) { st.textContent = "Please enter OTP"; return; }
+  st.textContent = "Sending OTP to worker...";
+  try {
+    var res = await authFetch(WORKER+'/api/zee5/auth', { method:'POST', body:JSON.stringify({ action: "set_otp", phone: num, otp: otp }) });
+    var d = await res.json();
+    if(!res.ok || !d.ok) throw new Error(d.error || d.message || "HTTP "+res.status);
+    st.textContent = "OTP sent to worker! Waiting for python script to verify...";
+    startZee5Poll();
   } catch(e) { st.textContent = "Error: " + e.message; }
 }
 

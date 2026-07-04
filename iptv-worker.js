@@ -64,11 +64,12 @@ function memoKvPut(key, val) {
 
 // All providers the console understands. free/pro ship with working open-source
 // defaults; jio/airtel/custom are URL-driven (set in the admin console).
-const IPTV_PROVIDERS = ["jio", "airtel", "free", "pro", "custom"];
+const IPTV_PROVIDERS = ["jio", "airtel", "zee5", "free", "pro", "custom"];
 
 const IPTV_PROVIDER_DEFAULTS = {
   jio:    { enabled: true, url: "", epg: "" },
   airtel: { enabled: true, url: "", epg: "" },
+  zee5:   { enabled: true, url: "", epg: "" },
   free:   { enabled: true, url: "https://iptv-org.github.io/iptv/index.m3u", epg: "https://epg.pw/xmltv/epg_IN.xml" },
   pro:    { enabled: true, url: "https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8", epg: "" },
   custom: { enabled: true, url: "", epg: "" },
@@ -159,6 +160,9 @@ export default {
       if (request.method === "GET" && (pathname === "/api/jio/play" || pathname === "/proxy")) {
         return handleJioTunnel(request, env, url);
       }
+      if (request.method === "GET" && pathname === "/api/zee5/play") {
+        return handleZee5Tunnel(request, env, url);
+      }
       // Ops-only: manually advance the D1 sync (normally driven by the cron
       // trigger below). Guarded by a dedicated secret, not user session tokens.
       if (request.method === "GET" && pathname === "/api/admin/sync") {
@@ -187,6 +191,22 @@ function json(obj, status = 200, extraHeaders = {}) {
     status,
     headers: { "Content-Type": "application/json; charset=utf-8", ...CORS_HEADERS, ...extraHeaders },
   });
+}
+
+async function handleZee5Tunnel(request, env, url) {
+  const kv = env.IPTV_PLAYLIST_KV;
+  if (!kv) return json({ error: KV not configured }, 503);
+  const tunnelUrl = await memoKvGet(kv, zee5_tunnel_url);
+  if (!tunnelUrl) return json({ error: Zee5 Tunnel URL not found }, 404);
+  const targetUrl = new URL(tunnelUrl);
+  targetUrl.pathname = /zee5/play;
+  targetUrl.search = url.search;
+  const response = await fetch(targetUrl.toString(), { method: request.method, headers: request.headers, redirect: manual });
+  const status = response.status === 206 ? 200 : response.status;
+  const extraHeaders = {};
+  if (response.headers.has(content-type)) extraHeaders[Content-Type] = response.headers.get(content-type);
+  if (response.headers.has(content-length)) extraHeaders[Content-Length] = response.headers.get(content-length);
+  return new Response(response.body, { status, headers: { Content-Type: application/json; charset=utf-8, ...CORS_HEADERS, ...extraHeaders } });
 }
 
 async function handleJioTunnel(request, env, url) {
