@@ -206,7 +206,12 @@ async function handleZee5Tunnel(request, env, url) {
   const extraHeaders = {};
   if (response.headers.has("content-type")) extraHeaders["Content-Type"] = response.headers.get("content-type");
   if (response.headers.has("content-length")) extraHeaders["Content-Length"] = response.headers.get("content-length");
-  return new Response(response.body, { status, headers: { "Content-Type": "application/json; charset=utf-8", ...CORS_HEADERS, ...extraHeaders } });
+  if (response.headers.has("location")) extraHeaders["Location"] = response.headers.get("location");
+  
+  const headers = { "Content-Type": "application/json; charset=utf-8", ...CORS_HEADERS, ...extraHeaders };
+  if (status >= 300 && status < 400) delete headers["Content-Type"];
+  
+  return new Response(response.body, { status, headers });
 }
 
 async function handleJioTunnel(request, env, url) {
