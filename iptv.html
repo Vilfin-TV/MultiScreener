@@ -1021,7 +1021,12 @@ function __iptvBoot(){
       '<div class="provider-badge">📱</div>'+
       '<h3>Jio TV</h3>'+
       '<div class="pc-sub">Exclusive live Indian channels</div>'+
-      '<span class="pc-go">Open Jio TV →</span></button>';
+      '<span class="pc-go">Open Jio TV →</span></button>'+
+      '<button class="provider-card pc-zee5" data-provider="zee5">'+
+      '<div class="provider-badge">🎬</div>'+
+      '<h3>Zee5 TV</h3>'+
+      '<div class="pc-sub">Exclusive live Indian channels</div>'+
+      '<span class="pc-go">Open Zee5 TV →</span></button>';
     var card=grid.querySelector('.provider-card[data-iptv]');
     if(card)card.addEventListener("click",function(){openIPTV();});
     var jioCard=grid.querySelector('.provider-card[data-provider="jio"]');
@@ -1032,6 +1037,14 @@ function __iptvBoot(){
       var pr = _enabledProvs().find(function(p){ return p.id==="jio"; });
       if(pr) loadProvider("jio");
       else alert("Jio TV playlist is missing or not configured yet!");
+    });
+    var zee5Card=grid.querySelector('.provider-card[data-provider="zee5"]');
+    if(zee5Card)zee5Card.addEventListener("click",function(){
+      state.provider = "zee5";
+      state.group = null;
+      var pr = _enabledProvs().find(function(p){ return p.id==="zee5"; });
+      if(pr) loadProvider("zee5");
+      else alert("Zee5 TV playlist is missing or not configured yet!");
     });
   }
   // Enabled providers, de-duplicated by m3u URL (so the same playlist is listed once).
