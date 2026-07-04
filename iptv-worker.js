@@ -396,6 +396,9 @@ async function loadSettings(env) {
     if (!providers['jio']) {
       providers['jio'] = { name: "Jio IPTV", icon: "J", group: "", region: "", enabled: true, url: "", epg: "" };
     }
+    if (!providers['zee5']) {
+      providers['zee5'] = { name: "Zee5 TV", icon: "Z", group: "", region: "", enabled: true, url: "", epg: "" };
+    }
 
     return {
       sessionHours: Math.max(1, Math.min(168, parseInt(s.sessionHours, 10) || DEFAULT_SESSION_HOURS)),
