@@ -114,6 +114,10 @@
   .provider-card .pc-go{margin-top:18px;font-size:13px;font-weight:700;color:var(--accent-2);display:inline-flex;align-items:center;gap:6px}
   .pc-jio .provider-badge{background:linear-gradient(135deg,#1a73e8,#0b3d91)} .pc-jio{--glow:rgba(26,115,232,.22)}
   .pc-zee5 .provider-badge{background:linear-gradient(135deg,#8224e3,#4f158b)} .pc-zee5{--glow:rgba(130,36,227,.22)}
+  .pc-netflix .provider-badge{background:linear-gradient(135deg,#e50914,#b20710)} .pc-netflix{--glow:rgba(229,9,20,.22)}
+  .pc-prime .provider-badge{background:linear-gradient(135deg,#00a8e1,#0082b4)} .pc-prime{--glow:rgba(0,168,225,.22)}
+  .pc-hotstar .provider-badge{background:linear-gradient(135deg,#1f3e7a,#0a1b3f)} .pc-hotstar{--glow:rgba(31,62,122,.22)}
+  .pc-sonyliv .provider-badge{background:linear-gradient(135deg,#ff5a00,#cc4800)} .pc-sonyliv{--glow:rgba(255,90,0,.22)}
   .pc-airtel .provider-badge{background:linear-gradient(135deg,#ff2e2e,#b30000)} .pc-airtel{--glow:rgba(255,46,46,.2)}
   .pc-free .provider-badge{background:linear-gradient(135deg,#21c45d,#0f8a3c)} .pc-free{--glow:rgba(33,196,93,.22)}
   .pc-pro .provider-badge{background:linear-gradient(135deg,#f59e0b,#b45309)} .pc-pro{--glow:rgba(245,158,11,.22)}
@@ -943,6 +947,10 @@ function __iptvBoot(){
           provs = [
             { id: 'jio', name: 'Jio IPTV', icon: 'J' },
             { id: 'zee5', name: 'Zee5 TV', icon: 'Z' },
+            { id: 'netflix', name: 'Netflix India', icon: 'N' },
+            { id: 'prime', name: 'Prime Video', icon: 'P' },
+            { id: 'hotstar', name: 'Hotstar', icon: 'H' },
+            { id: 'sonyliv', name: 'SonyLIV', icon: 'S' },
             { id: 'airtel', name: 'Airtel IPTV', icon: 'A' },
             { id: 'free', name: 'Free IPTV', icon: 'F' },
             { id: 'pro', name: 'IPTV Pro', icon: 'P' },
@@ -1034,10 +1042,30 @@ function __iptvBoot(){
       '<div class="pc-sub">Exclusive live Indian channels</div>'+
       '<span class="pc-go">Open Jio TV →</span></button>'+
       '<button class="provider-card pc-zee5" data-provider="zee5">'+
-      '<div class="provider-badge">🎬</div>'+
+      '<div class="provider-badge">Z</div>'+
       '<h3>Zee5 TV</h3>'+
-      '<div class="pc-sub">Exclusive live Indian channels</div>'+
-      '<span class="pc-go">Open Zee5 TV →</span></button>';
+      '<div class="pc-sub">Launch native interface via Proxy</div>'+
+      '<span class="pc-go">Open Zee5 →</span></button>'+
+      '<button class="provider-card pc-netflix" data-provider="netflix">'+
+      '<div class="provider-badge">N</div>'+
+      '<h3>Netflix India</h3>'+
+      '<div class="pc-sub">Launch native interface via Proxy</div>'+
+      '<span class="pc-go">Open Netflix →</span></button>'+
+      '<button class="provider-card pc-prime" data-provider="prime">'+
+      '<div class="provider-badge">P</div>'+
+      '<h3>Prime Video</h3>'+
+      '<div class="pc-sub">Launch native interface via Proxy</div>'+
+      '<span class="pc-go">Open Prime →</span></button>'+
+      '<button class="provider-card pc-hotstar" data-provider="hotstar">'+
+      '<div class="provider-badge">H</div>'+
+      '<h3>Hotstar</h3>'+
+      '<div class="pc-sub">Launch native interface via Proxy</div>'+
+      '<span class="pc-go">Open Hotstar →</span></button>'+
+      '<button class="provider-card pc-sonyliv" data-provider="sonyliv">'+
+      '<div class="provider-badge">S</div>'+
+      '<h3>SonyLIV</h3>'+
+      '<div class="pc-sub">Launch native interface via Proxy</div>'+
+      '<span class="pc-go">Open SonyLIV →</span></button>';
     var card=grid.querySelector('.provider-card[data-iptv]');
     if(card)card.addEventListener("click",function(){openIPTV();});
     var jioCard=grid.querySelector('.provider-card[data-provider="jio"]');
@@ -1052,6 +1080,22 @@ function __iptvBoot(){
     var zee5Card=grid.querySelector('.provider-card[data-provider="zee5"]');
     if(zee5Card)zee5Card.addEventListener("click",function(){
       window.open("https://www.zee5.com", "_blank");
+    });
+    var netflixCard=grid.querySelector('.provider-card[data-provider="netflix"]');
+    if(netflixCard)netflixCard.addEventListener("click",function(){
+      window.open("https://www.netflix.com/in/", "_blank");
+    });
+    var primeCard=grid.querySelector('.provider-card[data-provider="prime"]');
+    if(primeCard)primeCard.addEventListener("click",function(){
+      window.open("https://www.primevideo.com/region/in/", "_blank");
+    });
+    var hotstarCard=grid.querySelector('.provider-card[data-provider="hotstar"]');
+    if(hotstarCard)hotstarCard.addEventListener("click",function(){
+      window.open("https://www.hotstar.com/in", "_blank");
+    });
+    var sonylivCard=grid.querySelector('.provider-card[data-provider="sonyliv"]');
+    if(sonylivCard)sonylivCard.addEventListener("click",function(){
+      window.open("https://www.sonyliv.com/", "_blank");
     });
   }
   // Enabled providers, de-duplicated by m3u URL (so the same playlist is listed once).
@@ -1271,6 +1315,11 @@ function __iptvBoot(){
   Array.prototype.forEach.call(document.querySelectorAll(".provider-card"),function(card){card.addEventListener("click",function(){loadProvider(card.getAttribute("data-provider"));});});
 
   function loadProvider(provider){
+    if (provider === 'zee5') { window.open("https://www.zee5.com", "_blank"); return; }
+    if (provider === 'netflix') { window.open("https://www.netflix.com/in/", "_blank"); return; }
+    if (provider === 'prime') { window.open("https://www.primevideo.com/region/in/", "_blank"); return; }
+    if (provider === 'hotstar') { window.open("https://www.hotstar.com/in", "_blank"); return; }
+    if (provider === 'sonyliv') { window.open("https://www.sonyliv.com/", "_blank"); return; }
     if(!state.token){logout();return;}
     state.provider=provider;
     var L={jio:"Jio IPTV",airtel:"Airtel IPTV",free:"Free IPTV",pro:"IPTV Pro",custom:"Custom"};
