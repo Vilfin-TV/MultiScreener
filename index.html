@@ -1550,7 +1550,10 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 
 /* Shared building blocks */
 .lnp-imgwrap{position:relative;width:100%;aspect-ratio:16/10;border-radius:6px;overflow:hidden;background:var(--card3);flex-shrink:0}
-.lnp-imgwrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;transition:transform .3s ease}
+/* Top-biased crop: news photos carry faces in the upper third — anchoring
+   the crop near the top keeps heads in frame in wide containers */
+.lnp-imgwrap img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 22%;transition:transform .3s ease}
+.lnp-hero .lnp-imgwrap img{object-position:center 12%}
 .lnp-story:hover .lnp-imgwrap img,.lnp-hero:hover .lnp-imgwrap img,.lnp-mini:hover .lnp-imgwrap img{transform:scale(1.045)}
 .lnp-kicker{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--lnb-color,#d4231f);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lnp-time{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:.3px}
@@ -1585,6 +1588,22 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnp-mini-title{font-family:Georgia,'Times New Roman',serif;font-size:12.5px;font-weight:700;color:var(--text);line-height:1.35;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .lnp-mini:hover .lnp-mini-title{color:var(--gold2)}
 .lnp-mini .lnp-time{margin-top:auto}
+
+/* Standfirst snippets — body text fills the card, no dead space below titles */
+.lnp-story-snippet,.lnp-mini-snippet{font-size:11.5px;color:var(--text3);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:break-word;word-break:break-word}
+.lnp-story.noimg .lnp-story-snippet{-webkit-line-clamp:3}
+.lnp-mini.noimg .lnp-mini-snippet{-webkit-line-clamp:4}
+
+/* Briefing grid — text-only feeds read like a broadsheet's briefs page:
+   a 2×3 grid of kicker + headline + standfirst, ruled like newsprint */
+.lnp-brief-grid{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:1fr;flex:1}
+.lnp-brief{display:flex;flex-direction:column;gap:6px;padding:13px 16px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);min-width:0;cursor:pointer;transition:background .15s}
+.lnp-brief:nth-child(2n){border-right:none}
+.lnp-brief:hover{background:rgba(255,255,255,.04)}
+.lnp-brief-title{font-family:Georgia,'Times New Roman',serif;font-size:14px;font-weight:700;color:var(--text);line-height:1.35;overflow-wrap:break-word;word-break:break-word}
+.lnp-brief:hover .lnp-brief-title{color:var(--gold2)}
+.lnp-brief-snippet{font-size:11.5px;color:var(--text2);line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:break-word;word-break:break-word}
+.lnp-brief .lnp-time{margin-top:auto}
 
 /* Right rail — Latest News */
 .lnp-rail-head{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--text);padding:11px 14px 9px;border-bottom:2px solid var(--lnb-color,var(--burn2));display:flex;align-items:center;gap:7px;flex-shrink:0}
@@ -1637,6 +1656,8 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
   .lnp-row{grid-template-columns:1fr 1fr}
   .lnp-mini:nth-child(2){border-right:none}
   .lnp-mini:nth-child(3){border-top:1px solid var(--border);grid-column:1/-1}
+  .lnp-brief-grid{grid-template-columns:1fr}
+  .lnp-brief{border-right:none}
   .lnp-rail-item:nth-child(n+6){display:none}
 }
 
@@ -15814,6 +15835,15 @@ function renderItems(listEl, items) {
     <div class="lnp-mini${d.imgSrc ? '' : ' noimg'}" ${_ca(d)}>
       ${imgHtml(d)}
       <div class="lnp-mini-title">${d.safeTitle}</div>
+      ${d.snippet ? `<div class="lnp-mini-snippet">${escHtml(d.snippet)}</div>` : ''}
+      ${timeHtml(d)}
+    </div>`).join('')}</div>` : '';
+
+  const briefsHtml = briefs.length ? `<div class="lnp-brief-grid">${briefs.map(d => `
+    <div class="lnp-brief" ${_ca(d)}>
+      ${kickHtml(d)}
+      <div class="lnp-brief-title">${d.safeTitle}</div>
+      ${d.snippet ? `<div class="lnp-brief-snippet">${escHtml(d.snippet)}</div>` : ''}
       ${timeHtml(d)}
     </div>`).join('')}</div>` : '';
 
@@ -15822,6 +15852,7 @@ function renderItems(listEl, items) {
       ${imgHtml(d)}
       ${kickHtml(d)}
       <div class="lnp-story-title">${d.safeTitle}</div>
+      ${d.snippet ? `<div class="lnp-story-snippet">${escHtml(d.snippet)}</div>` : ''}
       ${timeHtml(d)}
     </div>`).join('');
 
@@ -15837,7 +15868,7 @@ function renderItems(listEl, items) {
     + (ds.some(d => d.imgSrc) ? '' : ' lnp-text-edition');
   listEl.innerHTML =
     (left.length ? `<div class="lnp-left">${leftHtml}</div>` : '') +
-    `<div class="lnp-center">${heroHtml}${minisHtml}</div>` +
+    `<div class="lnp-center">${heroHtml}${briefsHtml || minisHtml}</div>` +
     (rail.length ? `<div class="lnp-rail"><div class="lnp-rail-head">Latest News</div><div class="lnp-rail-list">${railHtml}</div></div>` : '');
 }
 
