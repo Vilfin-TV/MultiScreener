@@ -2,7 +2,7 @@
  * JKK Watcher email digest — Koto & Edogawa wards (2LDK / 3DK / 3LDK)
  *
  * Scrapes jkkwatcher.com category pages, filters properties whose layout
- * includes 2LDK, 3DK or 3LDK, and emails a digest to RECIPIENT.
+ * includes 2LDK, 3DK or 3LDK, and emails a digest to RECIPIENTS.
  *
  * Required env vars (GitHub Actions secrets):
  *   GMAIL_USER          - Gmail address used as the SMTP sender
@@ -11,7 +11,7 @@
 
 const DRY_RUN = process.argv.includes('--dry-run');
 
-const RECIPIENT = '[redacted]';
+const RECIPIENTS = ['[redacted]', '[redacted]'];
 const LAYOUTS = ['2LDK', '3DK', '3LDK'];
 
 const SOURCES = [
@@ -133,7 +133,7 @@ function buildEmail(results, nowJst) {
         ? `<p style="background:#16a34a;color:#ffffff;padding:10px 14px;border-radius:8px;font-weight:700">現在 ${vacantCount} 件の空室があります — 早めの申込をおすすめします。</p>`
         : `<p style="color:#5a6478;font-size:13px;margin-top:16px">現在、対象間取りの空室はありません。次回の巡回で変化があればお知らせします。</p>`}
       ${sections}
-      <p style="font-size:11px;color:#8892a6;margin-top:24px">Source: jkkwatcher.com ・ Automated digest (daily 14:10 / 15:00 / 22:00 JST)</p>
+      <p style="font-size:11px;color:#8892a6;margin-top:24px">Source: jkkwatcher.com ・ Automated digest (daily 09:35 / 11:00 / 14:30 / 18:20 JST)</p>
     </div>
   </div>`;
 
@@ -184,11 +184,11 @@ async function main() {
 
   const info = await transporter.sendMail({
     from: `"JKK Watch" <${user}>`,
-    to: RECIPIENT,
+    to: RECIPIENTS.join(', '),
     subject,
     html,
   });
-  console.log(`Email sent to ${RECIPIENT}: ${info.messageId}`);
+  console.log(`Email sent to ${RECIPIENTS.join(', ')}: ${info.messageId}`);
 }
 
 main().catch((err) => {

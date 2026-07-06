@@ -3,9 +3,10 @@ name: JKK Vacancy Email Digest
 on:
   schedule:
     # JST = UTC+9. GitHub cron runs in UTC.
-    - cron: '10 5 * * *'   # 14:10 JST
-    - cron: '0 6 * * *'    # 15:00 JST
-    - cron: '0 13 * * *'   # 22:00 JST
+    - cron: '35 0 * * *'   # 09:35 JST — JKK "golden time" (new vacancies land 9-10 AM)
+    - cron: '0 2 * * *'    # 11:00 JST
+    - cron: '30 5 * * *'   # 14:30 JST
+    - cron: '20 9 * * *'   # 18:20 JST
   workflow_dispatch:
     # Allow manual trigger from GitHub Actions UI
 
