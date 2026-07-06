@@ -1,8 +1,9 @@
 /**
- * JKK Watcher email digest — Koto & Edogawa wards (2LDK / 3DK / 3LDK)
+ * JKK + UR vacancy email digest — Koto & Edogawa wards
  *
- * Scrapes jkkwatcher.com category pages, filters properties whose layout
- * includes 2LDK, 3DK or 3LDK, and emails a digest to RECIPIENT (+ BCC list).
+ * JKK: scrapes jkkwatcher.com category pages, filters layouts 2LDK / 3DK / 3LDK.
+ * UR:  queries the ur-net.go.jp room API, filters vacant rooms 2LDK / 3DK.
+ * Sends one combined digest to RECIPIENT (+ BCC list).
  *
  * Required env vars (GitHub Actions secrets):
  *   GMAIL_USER          - Gmail address used as the SMTP sender
@@ -21,6 +22,13 @@ const SOURCES = [
 ];
 
 const NO_VACANCY = '空室なし';
+
+const UR_LAYOUTS = ['2LDK', '3DK'];
+const UR_API = 'https://chintai.r6.ur-net.go.jp/chintai/api/bukken/result/bukken_result/';
+const UR_SOURCES = [
+  { ward: '江東区 (Koto)', skcs: '108', url: 'https://www.ur-net.go.jp/chintai/kanto/tokyo/area/108.html' },
+  { ward: '江戸川区 (Edogawa)', skcs: '123', url: 'https://www.ur-net.go.jp/chintai/kanto/tokyo/area/123.html' },
+];
 
 function decodeEntities(s) {
   return s
@@ -70,6 +78,92 @@ async function fetchWard(source) {
   return { ...source, all, matched };
 }
 
+async function fetchUrWard(source) {
+  const body = new URLSearchParams({
+    mode: 'area',
+    skcs: source.skcs,
+    block: 'kanto',
+    tdfk: '13',
+    rireki_tdfk: '13',
+    orderByField: '0',
+    pageSize: '100',
+    pageIndex: '0',
+    shisya: '',
+    danchi: '',
+    shikibetu: '',
+    pageIndexRoom: '0',
+    sp: '',
+  });
+  const res = await fetch(UR_API, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'User-Agent': 'Mozilla/5.0 (compatible; URDigestBot/1.0)',
+    },
+    body,
+  });
+  if (!res.ok) throw new Error(`UR API failed ${res.status} for skcs=${source.skcs}`);
+  const items = (await res.json()) || [];
+  const rooms = [];
+  for (const b of items) {
+    for (const r of b.room || []) {
+      if (!UR_LAYOUTS.some((l) => (r.type || '').includes(l))) continue;
+      rooms.push({
+        danchi: b.danchiNm,
+        place: b.place,
+        room: `${r.roomNmMain || ''} ${r.roomNmSub || ''}`.trim(),
+        type: r.type,
+        floorspace: (r.floorspace || '').replace(/&#13217;/g, '㎡'),
+        floor: r.floor || '',
+        rent: r.rent || '',
+        commonfee: r.commonfee || '',
+        url: r.roomLinkPc ? `https://www.ur-net.go.jp${r.roomLinkPc}` : source.url,
+      });
+    }
+  }
+  const vacantRoomsTotal = items.reduce((n, b) => n + (Number(b.roomCount) || 0), 0);
+  return { ...source, danchiCount: items.length, vacantRoomsTotal, rooms };
+}
+
+function renderUrSection(results) {
+  const sections = results
+    .map((r) => {
+      const rows = r.rooms.length
+        ? r.rooms
+            .map(
+              (c) => `<tr style="border-top:1px solid #e2e8f0;background:#f0fdf4">
+        <td style="padding:10px;vertical-align:top">
+          <a href="${c.url}" style="color:#0a3d91;font-weight:700;text-decoration:none">${c.danchi} ${c.room}</a><br>
+          <span style="font-size:12px;color:#8892a6">${c.place}</span>
+        </td>
+        <td style="padding:10px;vertical-align:top;white-space:nowrap">${c.type}（${c.floorspace}・${c.floor}）</td>
+        <td style="padding:10px;vertical-align:top;font-size:12px;color:#5a6478">家賃 ${c.rent}<br>共益費 ${c.commonfee}</td>
+        <td style="padding:10px;vertical-align:top;text-align:center">
+          <span style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#16a34a;color:#ffffff">空室あり</span>
+        </td>
+      </tr>`
+            )
+            .join('\n')
+        : `<tr><td colspan="4" style="padding:10px;color:#8892a6">対象間取り（${UR_LAYOUTS.join('/')}）の空室なし — 巡回中の団地 ${r.danchiCount}件</td></tr>`;
+      return `
+      <h2 style="font-size:16px;color:#0a192f;margin:24px 0 8px">UR ${r.ward}
+        <span style="font-size:12px;font-weight:400;color:#8892a6">— 空室 ${r.rooms.length}件（全間取り ${r.vacantRoomsTotal}件）/ 団地 ${r.danchiCount}件</span>
+      </h2>
+      <table style="width:100%;border-collapse:collapse;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">
+        <tr style="background:#0a192f;color:#ffffff;text-align:left">
+          <th style="padding:10px">団地 / 部屋</th>
+          <th style="padding:10px">間取り</th>
+          <th style="padding:10px">家賃</th>
+          <th style="padding:10px;text-align:center">状況</th>
+        </tr>
+        ${rows}
+      </table>
+      <p style="font-size:12px;margin:6px 0 0"><a href="${r.url}" style="color:#0a3d91">${r.url}</a></p>`;
+    })
+    .join('\n');
+  return sections;
+}
+
 function renderRows(cards) {
   if (!cards.length) {
     return '<tr><td colspan="4" style="padding:10px;color:#8892a6">該当物件なし</td></tr>';
@@ -95,14 +189,16 @@ function renderRows(cards) {
     .join('\n');
 }
 
-function buildEmail(results, nowJst) {
-  const vacantCount = results.reduce(
+function buildEmail(results, urResults, nowJst) {
+  const jkkVacant = results.reduce(
     (n, r) => n + r.matched.filter((c) => c.vacancy !== NO_VACANCY).length,
     0
   );
+  const urVacant = urResults.reduce((n, r) => n + r.rooms.length, 0);
+  const vacantCount = jkkVacant + urVacant;
   const subject = vacantCount > 0
-    ? `【空室あり ${vacantCount}件】JKK 江東区・江戸川区 (2LDK/3DK/3LDK) — ${nowJst}`
-    : `JKK 江東区・江戸川区 空室状況 (2LDK/3DK/3LDK) — ${nowJst}`;
+    ? `【空室あり ${vacantCount}件】JKK・UR 江東区・江戸川区 — ${nowJst}`
+    : `JKK・UR 江東区・江戸川区 空室状況 — ${nowJst}`;
 
   const sections = results
     .map(
@@ -126,15 +222,18 @@ function buildEmail(results, nowJst) {
   const html = `
   <div style="font-family:'Segoe UI',Meiryo,sans-serif;max-width:720px;margin:0 auto;color:#1a2333">
     <div style="background:#0a192f;color:#ffffff;padding:18px 24px;border-radius:10px 10px 0 0">
-      <h1 style="margin:0;font-size:18px">JKK 空室ウォッチ — 江東区・江戸川区</h1>
-      <p style="margin:4px 0 0;font-size:12px;color:#9fb3d1">対象間取り: 2LDK / 3DK / 3LDK ・ ${nowJst} (JST)</p>
+      <h1 style="margin:0;font-size:18px">JKK・UR 空室ウォッチ — 江東区・江戸川区</h1>
+      <p style="margin:4px 0 0;font-size:12px;color:#9fb3d1">JKK: 2LDK / 3DK / 3LDK ・ UR: 2LDK / 3DK ・ ${nowJst} (JST)</p>
     </div>
     <div style="padding:8px 24px 24px;background:#f7f9fc;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px">
       ${vacantCount > 0
         ? `<p style="background:#16a34a;color:#ffffff;padding:12px 16px;border-radius:8px;font-weight:800;font-size:15px;margin-top:16px"><strong>現在 ${vacantCount} 件の空室があります — 早めの申込をおすすめします。</strong></p>`
         : `<p style="background:#dc2626;color:#ffffff;padding:12px 16px;border-radius:8px;font-weight:700;font-size:14px;margin-top:16px">現在、対象間取りの空室はありません。次回の巡回で変化があればお知らせします。</p>`}
+      <h2 style="font-size:14px;color:#8892a6;margin:20px 0 0;border-bottom:2px solid #0a192f;padding-bottom:4px">JKK東京（東京都住宅供給公社）</h2>
       ${sections}
-      <p style="font-size:11px;color:#8892a6;margin-top:24px">Source: jkkwatcher.com ・ Automated digest (daily 09:35 / 11:00 / 14:30 / 18:20 JST)</p>
+      <h2 style="font-size:14px;color:#8892a6;margin:28px 0 0;border-bottom:2px solid #0a192f;padding-bottom:4px">UR賃貸住宅</h2>
+      ${renderUrSection(urResults)}
+      <p style="font-size:11px;color:#8892a6;margin-top:24px">Source: jkkwatcher.com / ur-net.go.jp ・ Automated digest (daily 09:35 / 11:00 / 14:30 / 18:20 JST)</p>
     </div>
   </div>`;
 
@@ -152,8 +251,15 @@ async function main() {
   const results = [];
   for (const source of SOURCES) {
     const r = await fetchWard(source);
-    console.log(`${r.ward}: ${r.all.length} properties, ${r.matched.length} match ${LAYOUTS.join('/')}`);
+    console.log(`JKK ${r.ward}: ${r.all.length} properties, ${r.matched.length} match ${LAYOUTS.join('/')}`);
     results.push(r);
+  }
+
+  const urResults = [];
+  for (const source of UR_SOURCES) {
+    const r = await fetchUrWard(source);
+    console.log(`UR ${r.ward}: ${r.danchiCount} complexes, ${r.vacantRoomsTotal} vacant rooms, ${r.rooms.length} match ${UR_LAYOUTS.join('/')}`);
+    urResults.push(r);
   }
 
   const nowJst = new Date().toLocaleString('ja-JP', {
@@ -162,13 +268,18 @@ async function main() {
     hour: '2-digit', minute: '2-digit',
   });
 
-  const { subject, html } = buildEmail(results, nowJst);
+  const { subject, html } = buildEmail(results, urResults, nowJst);
 
   if (DRY_RUN) {
     console.log(`\n[dry-run] Subject: ${subject}`);
     for (const r of results) {
       for (const c of r.matched) {
-        console.log(`[dry-run] ${r.ward} | ${c.name} | ${c.layout} | ${c.vacancy} | ${c.url}`);
+        console.log(`[dry-run] JKK ${r.ward} | ${c.name} | ${c.layout} | ${c.vacancy} | ${c.url}`);
+      }
+    }
+    for (const r of urResults) {
+      for (const c of r.rooms) {
+        console.log(`[dry-run] UR ${r.ward} | ${c.danchi} ${c.room} | ${c.type} | ${c.rent} | ${c.url}`);
       }
     }
     console.log(`[dry-run] HTML length: ${html.length} chars. No email sent.`);
