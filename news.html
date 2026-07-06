@@ -2434,8 +2434,8 @@ function openStoryIdx(idx) {
    RENDER: SECTION
 ═══════════════════════════════════════════════════ */
 let breakingNewsData = null;
-let bnActiveContinent = 'Asia';
-let bnActiveRegion = 'India National';
+let bnActiveContinent = null;
+let bnActiveRegion = null;
 
 window.bnSetContinent = function(continent) {
   bnActiveContinent = continent;
@@ -2454,10 +2454,38 @@ window.bnRefreshUI = function() {
   }
 };
 
-function renderBreakingNews(data) {
+function renderBreakingNews(data, rotate) {
   if (!data || Object.keys(data).length === 0) return document.createElement('div');
   breakingNewsData = data;
-  
+
+  // rotate=true only on a real RSS fetch (initial load + loadNewsPage's
+  // 15-min setInterval) — picks a new random continent/region each time.
+  // Manual tab clicks (bnSetContinent/bnSetRegion -> bnRefreshUI) call this
+  // without rotate, so they aren't overridden by a fresh random pick.
+  if (rotate) {
+    var populatedPairs = [];
+    Object.keys(data).forEach(function(continent) {
+      Object.keys(data[continent]).forEach(function(region) {
+        if (data[continent][region] && data[continent][region].length > 0) {
+          populatedPairs.push([continent, region]);
+        }
+      });
+    });
+    if (populatedPairs.length > 0) {
+      // Only rotate among regions that actually have articles right now,
+      // so a random pick never lands on "No breaking news found" — most
+      // regions in the feed are empty at any given moment.
+      var pick = populatedPairs[Math.floor(Math.random() * populatedPairs.length)];
+      bnActiveContinent = pick[0];
+      bnActiveRegion = pick[1];
+    } else {
+      var continents = Object.keys(data);
+      bnActiveContinent = continents[Math.floor(Math.random() * continents.length)];
+      var regionsInContinent = Object.keys(data[bnActiveContinent]);
+      bnActiveRegion = regionsInContinent[Math.floor(Math.random() * regionsInContinent.length)];
+    }
+  }
+
   if (!data[bnActiveContinent]) {
     bnActiveContinent = Object.keys(data)[0];
   }
@@ -4616,7 +4644,7 @@ async function loadNewsPage() {
     if (bnResp.ok) {
       var bnData = await bnResp.json();
       if (bnData) {
-        var bnBlock = renderBreakingNews(bnData);
+        var bnBlock = renderBreakingNews(bnData, true);
         container.appendChild(bnBlock);
       }
     }
