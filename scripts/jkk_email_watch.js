@@ -2,7 +2,7 @@
  * JKK Watcher email digest — Koto & Edogawa wards (2LDK / 3DK / 3LDK)
  *
  * Scrapes jkkwatcher.com category pages, filters properties whose layout
- * includes 2LDK, 3DK or 3LDK, and emails a digest to RECIPIENTS.
+ * includes 2LDK, 3DK or 3LDK, and emails a digest to RECIPIENT (+ BCC list).
  *
  * Required env vars (GitHub Actions secrets):
  *   GMAIL_USER          - Gmail address used as the SMTP sender
@@ -11,7 +11,8 @@
 
 const DRY_RUN = process.argv.includes('--dry-run');
 
-const RECIPIENTS = ['[redacted]', '[redacted]'];
+const RECIPIENT = '[redacted]';
+const BCC_RECIPIENTS = ['[redacted]'];
 const LAYOUTS = ['2LDK', '3DK', '3LDK'];
 
 const SOURCES = [
@@ -184,11 +185,12 @@ async function main() {
 
   const info = await transporter.sendMail({
     from: `"JKK Watch" <${user}>`,
-    to: RECIPIENTS.join(', '),
+    to: RECIPIENT,
+    bcc: BCC_RECIPIENTS,
     subject,
     html,
   });
-  console.log(`Email sent to ${RECIPIENTS.join(', ')}: ${info.messageId}`);
+  console.log(`Email sent to ${RECIPIENT} (+${BCC_RECIPIENTS.length} bcc): ${info.messageId}`);
 }
 
 main().catch((err) => {
