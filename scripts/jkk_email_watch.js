@@ -131,8 +131,8 @@ function buildEmail(results, nowJst) {
     </div>
     <div style="padding:8px 24px 24px;background:#f7f9fc;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px">
       ${vacantCount > 0
-        ? `<p style="background:#16a34a;color:#ffffff;padding:10px 14px;border-radius:8px;font-weight:700">現在 ${vacantCount} 件の空室があります — 早めの申込をおすすめします。</p>`
-        : `<p style="color:#5a6478;font-size:13px;margin-top:16px">現在、対象間取りの空室はありません。次回の巡回で変化があればお知らせします。</p>`}
+        ? `<p style="background:#16a34a;color:#ffffff;padding:12px 16px;border-radius:8px;font-weight:800;font-size:15px;margin-top:16px"><strong>現在 ${vacantCount} 件の空室があります — 早めの申込をおすすめします。</strong></p>`
+        : `<p style="background:#dc2626;color:#ffffff;padding:12px 16px;border-radius:8px;font-weight:700;font-size:14px;margin-top:16px">現在、対象間取りの空室はありません。次回の巡回で変化があればお知らせします。</p>`}
       ${sections}
       <p style="font-size:11px;color:#8892a6;margin-top:24px">Source: jkkwatcher.com ・ Automated digest (daily 09:35 / 11:00 / 14:30 / 18:20 JST)</p>
     </div>
