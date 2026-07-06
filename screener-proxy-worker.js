@@ -1264,15 +1264,6 @@ ${body.text}`;
             return _iptvJson({ ok: true });
           }
           
-          if (body.action === "save_zee5_m3u" && body.m3u) {
-            if (env.IPTV_CACHE) {
-              await env.IPTV_CACHE.put('zee5_playlist', body.m3u, { customMetadata: { expires: String(Date.now() + 31536000000) } });
-            }
-            if (!env.IPTV_KV) return jsonError(503, "KV not configured");
-            await env.IPTV_KV.put('zee5_playlist', body.m3u);
-            return _iptvJson({ ok: true });
-          }
-
           if (body.action === "save_epg" && body.epg) {
             if (env.IPTV_CACHE) {
               await env.IPTV_CACHE.put('jio_epg', body.epg, { customMetadata: { expires: String(Date.now() + 31536000000) } });
@@ -1281,16 +1272,7 @@ ${body.text}`;
             await env.IPTV_KV.put('jio_epg', body.epg);
             return _iptvJson({ ok: true });
           }
-          
-          if (body.action === "save_zee5_epg" && body.epg) {
-            if (env.IPTV_CACHE) {
-              await env.IPTV_CACHE.put('zee5_epg', body.epg, { customMetadata: { expires: String(Date.now() + 31536000000) } });
-            }
-            if (!env.IPTV_KV) return jsonError(503, "KV not configured");
-            await env.IPTV_KV.put('zee5_epg', body.epg);
-            return _iptvJson({ ok: true });
-          }
-  
+
           if (body.action === "save_auth" && body.auth) {
           if (!env.IPTV_KV) return jsonError(503, "KV not configured");
           await env.IPTV_KV.put('jio_auth_creds', JSON.stringify(body.auth));
@@ -1300,56 +1282,17 @@ ${body.text}`;
           return _iptvJson({ ok: true, saved: true });
         }
 
-        await env.IPTV_KV.put('jio_auth_request', JSON.stringify({ ...body, ts: Date.now() }));
+        // Polled every few seconds by jio_bridge.py while an OTP flow is in
+        // progress — stored in R2 (not KV) since KV's free tier is a hard
+        // 100k-reads/day cap that this poll alone was burning through; R2's
+        // free tier (10M Class B ops/month) has plenty of headroom for it.
+        if (!env.IPTV_CACHE) return jsonError(503, "R2 cache not configured");
+        await env.IPTV_CACHE.put('jio_auth_request', JSON.stringify({ ...body, ts: Date.now() }));
         return _iptvJson({ ok: true, saved: true });
       } else if (request.method === 'GET') {
-        let current = await env.IPTV_KV.get('jio_auth_request');
-        return _iptvJson({ ok: true, data: current ? JSON.parse(current) : null });
-      }
-      return jsonError(405, 'Method not allowed.');
-    }
-
-    // ── /api/zee5/auth  GET/POST ──
-    if (pathname === '/api/zee5/auth') {
-      const bridgeAuth = request.headers.get("X-Zee5-Bridge");
-      if (bridgeAuth !== "vilfin-secret-zee5") {
-        const auth = await _authOperator(request, env);
-        if (auth.error) return auth.error;
-      }
-
-      if (request.method === 'POST') {
-        let body;
-        try { body = await request.json(); } catch (_) { return jsonError(400, 'Invalid JSON body.'); }
-        
-        if (body.action === "save_zee5_m3u" && body.m3u) {
-            if (env.IPTV_CACHE) {
-              await env.IPTV_CACHE.put('zee5_playlist', body.m3u, { customMetadata: { expires: String(Date.now() + 31536000000) } });
-            }
-            if (!env.IPTV_KV) return jsonError(503, "KV not configured");
-            await env.IPTV_KV.put('zee5_playlist', body.m3u);
-            return _iptvJson({ ok: true });
-        }
-        if (body.action === "save_zee5_epg" && body.epg) {
-            if (env.IPTV_CACHE) {
-              await env.IPTV_CACHE.put('zee5_epg', body.epg, { customMetadata: { expires: String(Date.now() + 31536000000) } });
-            }
-            if (!env.IPTV_KV) return jsonError(503, "KV not configured");
-            await env.IPTV_KV.put('zee5_epg', body.epg);
-            return _iptvJson({ ok: true });
-        }
-        if (body.action === "save_zee5_auth" && body.auth) {
-            if (!env.IPTV_KV) return jsonError(503, "KV not configured");
-            await env.IPTV_KV.put('zee5_auth_creds', JSON.stringify(body.auth));
-            if (body.tunnel_url) {
-              await env.IPTV_KV.put('zee5_tunnel_url', body.tunnel_url);
-            }
-            return _iptvJson({ ok: true, saved: true });
-        }
-
-        await env.IPTV_KV.put('zee5_auth_request', JSON.stringify({ ...body, ts: Date.now() }));
-        return _iptvJson({ ok: true, saved: true });
-      } else if (request.method === 'GET') {
-        let current = await env.IPTV_KV.get('zee5_auth_request');
+        if (!env.IPTV_CACHE) return jsonError(503, "R2 cache not configured");
+        const obj = await env.IPTV_CACHE.get('jio_auth_request');
+        const current = obj ? await obj.text() : null;
         return _iptvJson({ ok: true, data: current ? JSON.parse(current) : null });
       }
       return jsonError(405, 'Method not allowed.');
