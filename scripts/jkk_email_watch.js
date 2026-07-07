@@ -12,8 +12,13 @@
 
 const DRY_RUN = process.argv.includes('--dry-run');
 
-const RECIPIENT = '[redacted]';
-const BCC_RECIPIENTS = ['[redacted]', '[redacted]'];
+// Recipients come from repo secrets so no address is visible in this public
+// repo. EMAIL_TO = main recipient; EMAIL_BCC = comma-separated BCC list.
+const RECIPIENT = (process.env.EMAIL_TO || '').trim();
+const BCC_RECIPIENTS = (process.env.EMAIL_BCC || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
 const LAYOUTS = ['2LDK', '3DK', '3LDK'];
 
 const SOURCES = [
@@ -247,6 +252,10 @@ async function main() {
     console.error('Missing GMAIL_USER / GMAIL_APP_PASSWORD environment variables.');
     process.exit(1);
   }
+  if (!DRY_RUN && !RECIPIENT) {
+    console.error('Missing EMAIL_TO environment variable.');
+    process.exit(1);
+  }
 
   const results = [];
   for (const source of SOURCES) {
@@ -301,7 +310,8 @@ async function main() {
     subject,
     html,
   });
-  console.log(`Email sent to ${RECIPIENT} (+${BCC_RECIPIENTS.length} bcc): ${info.messageId}`);
+  // Never print addresses — Actions logs on this repo are public.
+  console.log(`Email sent (1 to, ${BCC_RECIPIENTS.length} bcc): ${info.messageId}`);
 }
 
 main().catch((err) => {
