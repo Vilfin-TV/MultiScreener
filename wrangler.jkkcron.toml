@@ -1,0 +1,18 @@
+# Cloudflare Worker config for the JKK/UR digest cron backup trigger.
+#
+# GitHub Actions cron is best-effort and can skip runs; Cloudflare crons fire
+# reliably. Each cron below runs 6 minutes after the matching GitHub cron in
+# .github/workflows/jkk_email_watch.yml and dispatches the workflow only if
+# GitHub did not already run it.
+#
+# Manual deploy: `npx wrangler deploy --config wrangler.jkkcron.toml`
+# Secret (one-time): `npx wrangler secret put GH_TOKEN --config wrangler.jkkcron.toml`
+#   GH_TOKEN — GitHub token with repo + workflow scopes.
+
+name = "jkk-cron-trigger"
+main = "jkk_cron_worker.js"
+compatibility_date = "2026-01-01"
+
+[triggers]
+# UTC. JST = UTC+9. GitHub crons: 00:35 / 02:03 / 05:30 / 09:20 UTC.
+crons = ["41 0 * * *", "9 2 * * *", "36 5 * * *", "26 9 * * *"]
