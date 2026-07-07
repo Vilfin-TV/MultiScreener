@@ -2745,6 +2745,37 @@ footer{
   border-color:#4f74e3;box-shadow:0 2px 10px rgba(29,78,216,.35);}
 #rb-panel-iptv .radio-preset-btn:active{transform:scale(.96);}
 
+/* ═══ Right-panel media lists — theme-proof dark surface ═══
+   Live TV / Radio / Music / Movies / Podcast lists use a light text palette
+   (#cbd5e1 names, #506480 tags) tuned for dark backgrounds. Light colour
+   themes (Standard / Silver / News Reader) repaint .right-bar light, which
+   made the letters unreadable. Pin these panels to the same fixed dark
+   surface the YT-Live panel uses, in EVERY theme. */
+#rb-panel-iptv,#rb-panel-radio,#rb-panel-music,#rb-panel-movies,#rb-panel-podcast{
+  background:linear-gradient(180deg,#071021,#050c19)!important;
+}
+/* Light themes force white backgrounds on .right-bar inputs/selects with
+   !important — restore the dark field styling inside these panels (ID
+   selector out-specifies the theme rules). */
+#rb-panel-iptv input,#rb-panel-iptv select,#rb-panel-iptv textarea,
+#rb-panel-radio input,#rb-panel-radio select,
+#rb-panel-music input,#rb-panel-music select,
+#rb-panel-movies input,#rb-panel-movies select,
+#rb-panel-podcast input,#rb-panel-podcast select{
+  background:#0e1f3b!important;color:#e2eeff!important;
+  -webkit-text-fill-color:#e2eeff!important;border-color:#1e3a5c!important;
+}
+/* Guarantee list text stays its dark-surface palette in every theme */
+#rb-panel-iptv .radio-station-name,#rb-panel-radio .radio-station-name,
+#rb-panel-music .radio-station-name,#rb-panel-movies .radio-station-name,
+#rb-panel-podcast .radio-station-name{color:#cbd5e1!important}
+#rb-panel-iptv .radio-station-tag,#rb-panel-radio .radio-station-tag,
+#rb-panel-music .radio-station-tag,#rb-panel-movies .radio-station-tag,
+#rb-panel-podcast .radio-station-tag{color:#64809f!important}
+#rb-panel-iptv .radio-no-data,#rb-panel-radio .radio-no-data,
+#rb-panel-music .radio-no-data,#rb-panel-movies .radio-no-data,
+#rb-panel-podcast .radio-no-data{color:#7d93b3!important}
+
 /* ═══════════════════════════════════════════════════════
    RADIO / MUSIC / MOVIES / PODCAST — 5-Style Layout System
    Reuses .iptv-panel-hdr, .iptv-gear-btn, .iptv-settings-panel,
