@@ -706,6 +706,29 @@
   }
 
   .ph-logo { max-width: 70px; height: auto; border-radius: 50%; box-shadow: 0 4px 10px rgba(100, 255, 218, 0.2); margin-bottom: 12px; display: inline-block; }
+
+  /* ═══ TV-app mode (Android TV / Nvidia Shield remote) — ?app=tv ═══
+     D-pad focus needs a bold, always-visible ring since there is no cursor. */
+  html.tv-app :focus,
+  html.tv-app :focus-visible {
+    outline: 3px solid #64ffda !important;
+    outline-offset: 2px;
+    border-radius: 8px;
+    scroll-margin: 120px;
+  }
+  html.tv-app .provider-card:focus,
+  html.tv-app .channel-item:focus,
+  html.tv-app .category-result-card:focus,
+  html.tv-app button:focus,
+  html.tv-app [tabindex]:focus {
+    box-shadow: 0 0 0 3px #64ffda, 0 0 22px rgba(100,255,218,.45) !important;
+    transform: scale(1.03);
+    z-index: 5;
+    position: relative;
+  }
+  /* Hide the tiny mouse cursor on TV and give comfortable 10-foot spacing */
+  html.tv-app, html.tv-app * { cursor: none !important; }
+  html.tv-app .provider-grid { gap: 20px; }
 </style>
 </head>
 <body>
@@ -872,6 +895,12 @@
 function __iptvBoot(){
   "use strict";
   var _yr=document.getElementById("sf-year"); if(_yr) _yr.textContent=new Date().getFullYear();
+
+  // TV-app mode (?app=tv): Android TV / Shield remote build. Shows only the
+  // IPTV + Jio TV lineups and enables D-pad focus styling. Set by the native
+  // WebView wrapper's URL.
+  var TV_APP = /[?&]app=tv\b/i.test(location.search);
+  if (TV_APP) document.documentElement.classList.add("tv-app");
 
   var WORKER="https://page-iptv.vilfintv.workers.dev";
   var API={
@@ -1041,6 +1070,8 @@ function __iptvBoot(){
       '<h3>Jio TV</h3>'+
       '<div class="pc-sub">Exclusive live Indian channels</div>'+
       '<span class="pc-go">Open Jio TV →</span></button>'+
+      // TV-app build ships IPTV + Jio TV only — hide the native-app launchers.
+      (TV_APP ? '' :
       '<button class="provider-card pc-zee5" data-provider="zee5">'+
       '<div class="provider-badge">Z</div>'+
       '<h3>Zee5 TV</h3>'+
@@ -1065,7 +1096,7 @@ function __iptvBoot(){
       '<div class="provider-badge">S</div>'+
       '<h3>SonyLIV</h3>'+
       '<div class="pc-sub">Launch native interface via Proxy</div>'+
-      '<span class="pc-go">Open SonyLIV →</span></button>';
+      '<span class="pc-go">Open SonyLIV →</span></button>');
     var card=grid.querySelector('.provider-card[data-iptv]');
     if(card)card.addEventListener("click",function(){openIPTV();});
     var jioCard=grid.querySelector('.provider-card[data-provider="jio"]');
@@ -2461,6 +2492,39 @@ function __iptvBoot(){
   setInterval(_localClockTick,1000);
   _loadLocalWeather();
   setInterval(function(){_loadLocalWeather();},30*60*1000);
+
+  /* ---------- TV-app D-pad focus helper ---------- */
+  if (TV_APP) {
+    // Make clickable non-native elements reachable by the remote, keep the
+    // focused item scrolled into view, and auto-focus the first control on
+    // each screen so the user never lands on an empty page with nowhere to go.
+    var TV_SEL = '.provider-card,.channel-item,.category-result-card,button,a[href],input,select,[data-iptv],[onclick]';
+    function tvMakeFocusable(root){
+      Array.prototype.forEach.call((root||document).querySelectorAll(TV_SEL), function(el){
+        if(!el.hasAttribute('tabindex') && el.tabIndex < 0) el.setAttribute('tabindex','0');
+      });
+    }
+    function tvFocusFirst(){
+      var scr = document.querySelector('#login-screen.active,#provider-screen.active,#player-screen.active') || document.body;
+      var first = scr.querySelector(TV_SEL);
+      if(first){ try{ first.focus(); }catch(e){} }
+    }
+    document.addEventListener('focusin', function(e){
+      if(e.target && e.target.scrollIntoView) try{ e.target.scrollIntoView({block:'center',inline:'center',behavior:'smooth'}); }catch(_){}
+    });
+    // Enter/OK on a focused clickable that isn't a native button → click it.
+    document.addEventListener('keydown', function(e){
+      if((e.key==='Enter'||e.keyCode===13) && document.activeElement){
+        var t=document.activeElement, tag=(t.tagName||'').toLowerCase();
+        if(tag!=='button'&&tag!=='a'&&tag!=='input'&&tag!=='select'&&tag!=='textarea'){ t.click(); e.preventDefault(); }
+      }
+    });
+    // Re-scan whenever the DOM changes (screens swap, channel grids render).
+    var tvObs = new MutationObserver(function(){ tvMakeFocusable(); });
+    tvObs.observe(document.body,{childList:true,subtree:true});
+    tvMakeFocusable();
+    setTimeout(tvFocusFirst, 400);
+  }
 
   /* ---------- Boot ---------- */
   if(state.token){syncPull();showProviderScreen();}else show("login-screen");

@@ -1,0 +1,34 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.vilfintv.livetv'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.vilfintv.livetv"
+        minSdk 26          // Shield runs API 28+; 26 enables pure-vector adaptive icons
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // Debug-signed by default so the sideload APK is immediately
+            // installable; a proper release keystore can be wired in later.
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // Pure-WebView wrapper — no AndroidX UI libs needed; keeps the APK tiny.
+}
