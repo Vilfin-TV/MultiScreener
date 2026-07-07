@@ -3635,16 +3635,38 @@ footer{
   /* footer responsive handled in .footer-main media queries */
 }
 
-/* ── Small non-touch windows (768–900px, mouse) — keep the horizontal top menu.
-   iPads (coarse pointer) are excluded so they use the full mobile hamburger UI. ── */
-@media(min-width:768px) and (max-width:1180px) and (pointer:fine){
+/* ── Small non-touch windows (768–1180px, mouse) — keep the horizontal top menu.
+   iPads (coarse pointer) are excluded so they use the full mobile hamburger UI.
+   Fixed-width bar pieces (brand / sentiment widget / right section) are compacted
+   here so the menu row keeps enough room — otherwise buttons clip invisibly at
+   the sentiment widget's edge and look "hidden behind" it. ── */
+@media(min-width:768px) and (max-width:1280px) and (pointer:fine){
   .top-menu-items{display:flex!important;overflow-x:auto;scrollbar-width:none;flex:1}
   .top-menu-items::-webkit-scrollbar{display:none}
   .tmenu-btn{padding:0 9px;font-size:11px;letter-spacing:0}
   .tmenu-btn .arr{font-size:8px;opacity:.5}
   .mobile-menu-btn{display:none!important}
   .mobile-markets-strip{display:none!important}
+  /* Compact brand: logo + "VilfinTV" only */
+  .top-menu-brand{padding:0 10px}
+  .brand-suffix{display:none}
+  /* Compact sentiment widget: gauge + zone label only (~140px instead of ~185px) */
+  .mkt-sent-headline{display:none}
+  .mkt-sent-hist{display:none}
+  .mkt-sent-body{padding:4px 8px;gap:6px;min-height:32px}
+  .mkt-sent-zone{font-size:11px}
+  /* Compact right section: keep status dot + clock, drop text labels */
+  #cf-label{display:none}
+  .cf-badge{padding:4px 6px}
+  .um-btn .um-txt{display:none}
+  .top-menu-right{padding:0 8px;gap:6px}
+  /* Scroll affordance: fade the clipped edge so hidden menus are discoverable */
+  .top-menu-items.has-overflow{
+    -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);
+    mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);
+  }
 }
+.brand-suffix{font-style:normal}
 
 /* Very small screens */
 @media(max-width:400px){
@@ -3895,6 +3917,11 @@ footer{
   .brand-name{font-size:15px;letter-spacing:1.8px}
 }
 @media(max-width:680px),(max-width:1366px) and (pointer:coarse){.mkt-sent-widget{display:none}.mkt-sent-mobile-bar{display:flex}}
+/* 681–950px with a mouse: the header widget steals too much menu room — move
+   sentiment to its own full-width strip (same one the ≤680px layout uses) so
+   every top menu stays visible. Must sit AFTER the .mkt-sent-mobile-bar base
+   rule above, which defaults it to display:none. */
+@media(min-width:681px) and (max-width:950px) and (pointer:fine){.mkt-sent-widget{display:none}.mkt-sent-mobile-bar{display:flex}}
 /* Day picker strip inside expanded sentiment panel */
 .mkt-sent-day-picker{display:flex;gap:5px;padding:8px 16px;border-bottom:1px solid var(--border)}
 .mkt-sent-day-btn{flex:1;padding:5px 0;border-radius:6px;border:1px solid var(--border2);background:var(--card2);color:var(--text2);font-size:10px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .15s;line-height:1.2}
@@ -3914,7 +3941,7 @@ footer{
   <!-- Brand -->
   <a href="index.html" class="top-menu-brand" style="text-decoration:none;cursor:pointer" title="VilfinTV Multiscreener — Home">
     <img src="images/vilfintv-logo.jpg" alt="VilfinTV logo" width="30" height="30" style="width:30px;height:30px;border-radius:50%;display:block;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(59,130,246,.45))"/>
-    <div class="brand-name">Vilfin<span>TV</span> Multiscreener</div>
+    <div class="brand-name">Vilfin<span>TV</span><em class="brand-suffix"> Multiscreener</em></div>
   </a>
 
   <!-- Mobile hamburger -->
@@ -4396,6 +4423,24 @@ footer{
   </div>
 
 </div><!-- /top-menubar -->
+
+<script>
+/* Flag the top menu row when its buttons overflow horizontally so CSS can
+   show the fade hint (compact 768-1180px mouse layout). */
+(function(){
+  var row = document.querySelector('.top-menu-items');
+  if (!row) return;
+  function check(){ row.classList.toggle('has-overflow', row.scrollWidth > row.clientWidth + 4); }
+  window.addEventListener('resize', check);
+  row.addEventListener('scroll', function(){
+    // Remove the fade once the user has scrolled to the end
+    var atEnd = row.scrollLeft + row.clientWidth >= row.scrollWidth - 6;
+    row.classList.toggle('has-overflow', !atEnd && row.scrollWidth > row.clientWidth + 4);
+  });
+  check();
+  setTimeout(check, 500);
+})();
+</script>
 
 <!-- MARKET SENTIMENT — mobile bar (≤680px) + shared expandable panel -->
 <div id="mkt-sent-mobile-bar" class="mkt-sent-mobile-bar" onclick="mktSentToggle(event)">
