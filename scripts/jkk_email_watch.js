@@ -13,7 +13,7 @@
 const DRY_RUN = process.argv.includes('--dry-run');
 
 const RECIPIENT = '[redacted]';
-const BCC_RECIPIENTS = ['[redacted]'];
+const BCC_RECIPIENTS = ['[redacted]', '[redacted]'];
 const LAYOUTS = ['2LDK', '3DK', '3LDK'];
 
 const SOURCES = [
