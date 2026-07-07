@@ -729,6 +729,25 @@
   /* Hide the tiny mouse cursor on TV and give comfortable 10-foot spacing */
   html.tv-app, html.tv-app * { cursor: none !important; }
   html.tv-app .provider-grid { gap: 20px; }
+
+  /* TV login: bigger tap targets + unmistakable focus ring on the fields the
+     remote lands on, so signing in with the on-screen keyboard is effortless. */
+  html.tv-app .login-card { padding: 34px 34px 30px; max-width: 460px; }
+  html.tv-app .field input {
+    padding: 15px 16px; font-size: 17px; border-width: 2px;
+  }
+  html.tv-app .field input:focus {
+    outline: 3px solid #64ffda !important; outline-offset: 3px;
+    box-shadow: 0 0 0 3px #64ffda, 0 0 22px rgba(100,255,218,.5) !important;
+    border-color: #64ffda !important;
+  }
+  html.tv-app #login-btn {
+    padding: 16px; font-size: 17px;
+  }
+  html.tv-app #login-btn:focus {
+    outline: 3px solid #ffffff !important; outline-offset: 3px;
+    box-shadow: 0 0 0 3px #64ffda, 0 0 26px rgba(100,255,218,.6) !important;
+  }
 </style>
 </head>
 <body>

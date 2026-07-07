@@ -51,6 +51,11 @@ public class MainActivity extends Activity {
 
         web = new WebView(this);
         web.setBackgroundColor(0xFF04091A);
+        // Critical for Android TV login: the WebView must be focusable in touch
+        // mode so focusing an <input> from the D-pad triggers the on-screen
+        // (Leanback) keyboard for username/password entry.
+        web.setFocusable(true);
+        web.setFocusableInTouchMode(true);
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
@@ -116,6 +121,10 @@ public class MainActivity extends Activity {
         } else {
             web.loadUrl(APP_URL);
         }
+
+        // Ensure the WebView holds focus so the very first D-pad press lands on
+        // the login username field rather than being swallowed by the window.
+        web.requestFocus();
     }
 
     // Remote BACK: exit full-screen video first, then walk web history, then quit.
