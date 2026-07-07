@@ -2707,6 +2707,44 @@ footer{
   .iptv-geo-item{font-size:9px;padding:6px 6px;}
 }
 
+/* ═══ Live TV — premium finish (channel logos, HD/LIVE badges, EPG strip) ═══ */
+#rb-panel-iptv .iptv-ch-logo{width:30px;height:30px;border-radius:8px;flex-shrink:0;object-fit:contain;
+  background:#0b1830;border:1px solid #16294a;padding:2px;box-sizing:border-box;}
+#rb-panel-iptv .iptv-ch-logo-fb{display:inline-flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#12305e,#1d4ed8);color:#dbeafe;font-size:12px;font-weight:800;
+  border:1px solid #274a7f;font-family:'DM Sans',sans-serif;}
+#rb-panel-iptv .iptv-ch-hd{flex-shrink:0;font-size:8px;font-weight:800;letter-spacing:.5px;color:#7dd3fc;
+  border:1px solid #155e87;background:rgba(14,60,92,.35);border-radius:4px;padding:1.5px 4px;}
+#rb-panel-iptv .radio-station-item.active::after{content:'LIVE';flex-shrink:0;font-size:8px;font-weight:800;
+  letter-spacing:.6px;color:#fff;background:linear-gradient(135deg,#dc2626,#ef4444);border-radius:4px;
+  padding:2px 5px;box-shadow:0 0 8px rgba(239,68,68,.45);animation:rPulse 1.8s infinite;}
+#rb-panel-iptv .radio-station-item{border:1px solid transparent;}
+#rb-panel-iptv .radio-station-item:hover{background:#0b1a33;border-color:#1b3560;transform:translateX(2px);}
+#rb-panel-iptv .radio-station-item.active{background:linear-gradient(90deg,rgba(29,78,216,.18),rgba(29,78,216,.05));
+  border-color:#2451a5;box-shadow:inset 2px 0 0 #3b82f6;}
+#rb-panel-iptv #iptv-search:focus,#rb-panel-iptv #iptv-country:focus{border-color:#3b82f6;
+  box-shadow:0 0 0 2px rgba(59,130,246,.18);}
+/* EPG Now/Next strip */
+#iptv-epg-bar{background:linear-gradient(180deg,#081326,#060e1e);border-bottom:1px solid #14284a;
+  padding:7px 12px 6px;flex-shrink:0;}
+#iptv-epg-bar .iptv-epg-now,#iptv-epg-bar .iptv-epg-next{display:flex;align-items:center;gap:8px;min-width:0;}
+#iptv-epg-bar .iptv-epg-txt{display:flex;align-items:center;gap:7px;flex:1;min-width:0;}
+#iptv-epg-bar .iptv-epg-label{font-size:8px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;
+  color:#4ade80;border:1px solid #14532d;background:rgba(20,83,45,.3);border-radius:4px;padding:1.5px 5px;flex-shrink:0;}
+#iptv-epg-bar .iptv-epg-label.next{color:#93a8c8;border-color:#1e3a5c;background:rgba(14,31,59,.5);}
+#iptv-epg-bar .iptv-epg-title{font-size:11.5px;font-weight:600;color:#e2eeff;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;font-family:'DM Sans',sans-serif;}
+#iptv-epg-bar .iptv-epg-title.dim{color:#8ba3c7;font-weight:500;font-size:10.5px;}
+#iptv-epg-bar .iptv-epg-time{font-size:9px;color:#5c749a;flex-shrink:0;font-variant-numeric:tabular-nums;}
+#iptv-epg-bar .iptv-epg-live-dot{width:6px;height:6px;border-radius:50%;background:#22c55e;flex-shrink:0;
+  animation:rPulse 1.6s infinite;}
+#iptv-epg-bar .iptv-epg-progress{height:3px;background:#0e1f3b;border-radius:99px;margin:5px 0 5px;overflow:hidden;}
+#iptv-epg-bar .iptv-epg-progress-fill{height:100%;width:0;border-radius:99px;
+  background:linear-gradient(90deg,#1d4ed8,#3b82f6,#60a5fa);transition:width .6s ease;}
+#rb-panel-iptv .radio-preset-btn.active{background:linear-gradient(135deg,#1d4ed8,#4338ca);
+  border-color:#4f74e3;box-shadow:0 2px 10px rgba(29,78,216,.35);}
+#rb-panel-iptv .radio-preset-btn:active{transform:scale(.96);}
+
 /* ═══════════════════════════════════════════════════════
    RADIO / MUSIC / MOVIES / PODCAST — 5-Style Layout System
    Reuses .iptv-panel-hdr, .iptv-gear-btn, .iptv-settings-panel,
@@ -4827,17 +4865,8 @@ footer{
       </div>
     </div>
 
-    <!-- Collapsible top section: URL input + Search + Country -->
+    <!-- Collapsible top section: Search + Country -->
     <div id="iptv-top-fold">
-      <!-- Custom M3U/M3U8 URL input -->
-      <div style="padding:5px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0;display:flex;gap:5px">
-        <input type="url" id="iptv-custom-url" placeholder="🔗 Paste any .m3u8 URL to play…"
-               onkeydown="if(event.key==='Enter')iptvPlayCustomUrl()"
-               style="flex:1;padding:7px 10px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:6px;color:#e2eeff;font-size:11px;outline:none;font-family:'JetBrains Mono',monospace"/>
-        <button onclick="iptvPlayCustomUrl()"
-                style="background:#1d4ed8;border:none;color:#fff;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">▶ Play</button>
-      </div>
-
       <!-- Search -->
       <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
         <input type="search" id="iptv-search"
@@ -4939,6 +4968,26 @@ footer{
       <button class="panel-ctrl-btn" onclick="iptvFullscreen()" title="Fullscreen">⛶</button>
       <button class="panel-ctrl-btn" onclick="iptvTogglePip()" title="Picture-in-Picture">⧉</button>
       <button class="panel-ctrl-btn" onclick="iptvStop()" title="Stop">⏹</button>
+    </div>
+
+    <!-- Programme guide strip — Now / Next for the playing channel -->
+    <div id="iptv-epg-bar" style="display:none">
+      <div class="iptv-epg-now">
+        <span class="iptv-epg-live-dot"></span>
+        <div class="iptv-epg-txt">
+          <span class="iptv-epg-label">Now</span>
+          <span class="iptv-epg-title" id="iptv-epg-now-title">—</span>
+        </div>
+        <span class="iptv-epg-time" id="iptv-epg-now-time"></span>
+      </div>
+      <div class="iptv-epg-progress"><div class="iptv-epg-progress-fill" id="iptv-epg-progress"></div></div>
+      <div class="iptv-epg-next">
+        <div class="iptv-epg-txt">
+          <span class="iptv-epg-label next">Next</span>
+          <span class="iptv-epg-title dim" id="iptv-epg-next-title">—</span>
+        </div>
+        <span class="iptv-epg-time" id="iptv-epg-next-time"></span>
+      </div>
     </div>
 
     <!-- Content area: geo-nav sidebar + channel list (flex row) -->
@@ -11158,11 +11207,13 @@ function radioOnSearchInput(value) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// LIVE TV (IPTV) — free-to-air HLS streams via iptv-org curated lists
-// All streams are HTTPS m3u8, CORS-permissive, verified by iptv-org community.
+// LIVE TV (IPTV) — served by the VilfinTV media backend (same R2/KV/D1
+// pipeline, channel list, logos and programme guide as /iptv.html).
+// Channel metadata (country/language) enriched from the iptv-org public index.
 // Loaded lazily on first open of the Live TV tab.
 // ═══════════════════════════════════════════════════════════════════
-const IPTV_API = 'https://iptv-org.github.io/api';
+const IPTV_BACKEND = 'https://page-iptv.vilfintv.workers.dev';
+const IPTV_META_API = 'https://iptv-org.github.io/api';
 let _iptvHls = null;
 let _iptvAllChannels = null;   // cached merged channel + stream list
 let _iptvLastResults = [];
@@ -11171,49 +11222,59 @@ let _iptvMuted = true;         // starts muted; preserved across channel changes
 async function iptvInit() {
   // Apply saved layout style immediately (before async fetch completes)
   _iptvRestoreStyle();
-  // Fetch catalog once on first panel open. Cache in memory only (data is updated daily by iptv-org).
+  // Fetch catalog once on first panel open. Cache in memory only (backend refreshes its cache every 15-60 min).
   if (_iptvAllChannels) { _iptvBuildGeoNav(); iptvLoadPreset('all-india'); return; }
   const list = document.getElementById('iptv-list');
   if (list) list.innerHTML = '<div class="radio-no-data">⏳ Loading channel directory…</div>';
   try {
-    const [streamsRes, channelsRes] = await Promise.all([
-      fetch(IPTV_API + '/streams.json',  { cache: 'force-cache' }),
-      fetch(IPTV_API + '/channels.json', { cache: 'force-cache' }),
+    // "in" first: the dedicated India list is richer than the worldwide index
+    // for Indian channels (identical to the /iptv.html India source).
+    const [inRes, worldRes, metaRes] = await Promise.all([
+      fetch(IPTV_BACKEND + '/api/public/playlist?provider=in'),
+      fetch(IPTV_BACKEND + '/api/public/playlist?provider=world'),
+      fetch(IPTV_META_API + '/channels.json', { cache: 'force-cache' }),
     ]);
-    if (!streamsRes.ok || !channelsRes.ok) throw new Error('directory fetch failed');
-    const streams  = await streamsRes.json();
-    const channels = await channelsRes.json();
-    // Index channels by id
-    const chanById = Object.create(null);
-    for (const c of channels) chanById[c.id] = c;
-    // Merge: keep only HTTPS streams with a known channel id, AND de-dupe so
-    // each channel appears at most once. iptv-org often lists 2-3 stream
-    // mirrors per channel — duplicates broke next/prev because findIndex by
-    // channel id always returned the FIRST occurrence.
+    if (!worldRes.ok && !inRes.ok) throw new Error('backend playlist fetch failed');
+    const inList = inRes.ok ? await inRes.json() : { channels: [] };
+    const worldList = worldRes.ok ? await worldRes.json() : { channels: [] };
+    for (const c of (inList.channels || [])) c._srcCountry = 'IN';
+    const merged = (inList.channels || []).concat(worldList.channels || []);
+    // Metadata is enrichment-only — the panel still works if it fails.
+    let chanById = Object.create(null);
+    try {
+      const meta = metaRes.ok ? await metaRes.json() : [];
+      for (const c of meta) chanById[c.id] = c;
+    } catch (_) {}
+    // De-dupe by channel id (aggregated lists carry 2-3 mirrors per channel —
+    // duplicates broke next/prev because findIndex by id returned the FIRST hit).
     const seen = new Set();
     _iptvAllChannels = [];
-    for (const s of streams) {
-      if (!s.url || !/^https:/.test(s.url)) continue;
+    for (const s of merged) {
+      if (!s.url || !/^https:/.test(s.url)) continue;   // https only (mixed-content)
       // Skip .m3u playlist index files — browsers can only play .m3u8 HLS streams
       if (/\.m3u$/i.test(s.url) && !/\.m3u8$/i.test(s.url)) continue;
-      if (!s.channel || !chanById[s.channel]) continue;
-      if (seen.has(s.channel)) continue;            // skip duplicates
-      seen.add(s.channel);
-      const c = chanById[s.channel];
-      if (c.is_nsfw) continue;
+      // tvg-id "AajTak.in@SD" → iptv-org metadata id "AajTak.in"
+      const metaId = (s.id || '').replace(/@.*$/, '');
+      const m = chanById[metaId];
+      if (m && m.is_nsfw) continue;
+      const key = metaId || s.name.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
       _iptvAllChannels.push({
-        id:         s.channel,
-        name:       c.name || s.channel,
+        id:         s.id || key,
+        epgId:      s.id || '',
+        name:       (m && m.name) || s.name,
         url:        s.url,
-        country:    c.country || '',
-        language:   (c.languages && c.languages[0]) || '',
-        languages:  c.languages || [],
-        categories: c.categories || [],
-        logo:       c.logo || '',
+        country:    (m && m.country) || s._srcCountry || '',
+        language:   (m && m.languages && m.languages[0]) || s.language || '',
+        languages:  (m && m.languages) || (s.language ? [s.language] : []),
+        categories: (m && m.categories && m.categories.length ? m.categories : [String(s.category || '').toLowerCase()]),
+        logo:       s.logo || (m && m.logo) || '',
+        quality:    s.quality || '',
         isNsfw:     false,
       });
     }
-    console.log(`[IPTV] Loaded ${_iptvAllChannels.length} unique channels (deduped)`);
+    console.log(`[IPTV] Loaded ${_iptvAllChannels.length} unique channels from media backend (deduped)`);
     // Restore saved layout style
     _iptvRestoreStyle();
     // If user has set a default preset/country, load that. Otherwise All India.
@@ -11222,7 +11283,7 @@ async function iptvInit() {
     _iptvBuildGeoNav();
   } catch (e) {
     console.warn('[IPTV] catalog fetch failed:', e);
-    if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Could not reach iptv-org directory. Please retry.</div>';
+    if (list) list.innerHTML = '<div class="radio-no-data">⚠️ Channel directory unavailable. Please retry.</div>';
   }
 }
 
@@ -11394,18 +11455,23 @@ function _iptvRender(results) {
   const favs = _iptvFavoritesSet();
   list.innerHTML = results.map(c => {
     const lang = (c.languages || []).slice(0, 2).join(', ').toUpperCase();
-    const tags = [c.country, lang].filter(Boolean).join(' · ');
+    const cat = (c.categories && c.categories[0]) ? String(c.categories[0]) : '';
+    const tags = [c.country, lang, cat && cat !== 'undefined' ? cat.charAt(0).toUpperCase() + cat.slice(1) : ''].filter(Boolean).join(' · ');
     const initial = (c.name || '?')[0].toUpperCase();
     const isFav = favs.has(c.id);
     const isActive = _iptvCurrentChannel && _iptvCurrentChannel.id === c.id;
+    const logoImg = c.logo
+      ? `<img class="iptv-ch-logo" src="${_esc(c.logo)}" alt="" loading="lazy" onerror="this.outerHTML='<span class=&quot;iptv-ch-logo iptv-ch-logo-fb&quot;>${_esc(initial)}</span>'"/>`
+      : `<span class="iptv-ch-logo iptv-ch-logo-fb">${_esc(initial)}</span>`;
     return `
       <div class="radio-station-item${isActive ? ' active' : ''}" data-iptv-id="${_esc(c.id)}"
            onclick='iptvPlay(${JSON.stringify(c.url)}, ${JSON.stringify(c.id)}, ${JSON.stringify(c.name)})'>
-        <span class="iptv-ch-logo" style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:linear-gradient(135deg,#1d4ed8,#7c3aed);color:#fff;font-size:11px;font-weight:700;flex-shrink:0">${_esc(initial)}</span>
+        ${logoImg}
         <div class="radio-station-meta">
           <span class="radio-station-name" title="${_esc(c.name)}">${_esc(c.name)}</span>
           ${tags ? '<span class="radio-station-tag">' + _esc(tags) + '</span>' : ''}
         </div>
+        ${c.quality === 'HD' ? '<span class="iptv-ch-hd">HD</span>' : ''}
         <span style="font-size:13px;flex-shrink:0;color:${isFav ? '#fbbf24' : '#506480'}" title="${isFav ? 'Favorited' : ''}">${isFav ? '★' : ''}</span>
       </div>`;
   }).join('');
@@ -11428,6 +11494,71 @@ function iptvOnSearch(value) {
 // Track currently-playing channel for next/prev/favorite
 let _iptvCurrentChannel = null;
 let _iptvCurrentIndex = -1;
+
+// ── Programme guide (Now/Next) — same guide data as /iptv.html ──────
+// Guide source is per-country; falls back to the worldwide feed.
+const _IPTV_EPG_PROVIDER = { IN: 'in', GB: 'uk', CA: 'ca', AU: 'au', NZ: 'nz' };
+let _iptvEpgSeq = 0;         // guards against out-of-order responses
+let _iptvEpgTimer = null;    // progress-bar refresher
+
+function _iptvFmtTime(ms) {
+  try { return new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } catch (_) { return ''; }
+}
+
+function _iptvHideEpg() {
+  const bar = document.getElementById('iptv-epg-bar');
+  if (bar) bar.style.display = 'none';
+  if (_iptvEpgTimer) { clearInterval(_iptvEpgTimer); _iptvEpgTimer = null; }
+}
+
+function _iptvRenderEpg(now, next) {
+  const bar = document.getElementById('iptv-epg-bar');
+  if (!bar) return;
+  if (!now && !next) { _iptvHideEpg(); return; }
+  const nowT = document.getElementById('iptv-epg-now-title');
+  const nowTime = document.getElementById('iptv-epg-now-time');
+  const nextT = document.getElementById('iptv-epg-next-title');
+  const nextTime = document.getElementById('iptv-epg-next-time');
+  const fill = document.getElementById('iptv-epg-progress');
+  if (nowT) nowT.textContent = now ? now.title : '—';
+  if (nowTime) nowTime.textContent = now ? _iptvFmtTime(now.startMs) + ' – ' + _iptvFmtTime(now.stopMs) : '';
+  if (nextT) nextT.textContent = next ? next.title : '—';
+  if (nextTime) nextTime.textContent = next ? _iptvFmtTime(next.startMs) : '';
+  bar.style.display = 'block';
+  const updateFill = () => {
+    if (!fill || !now) return;
+    const pct = Math.min(100, Math.max(0, (Date.now() - now.startMs) / (now.stopMs - now.startMs) * 100));
+    fill.style.width = pct.toFixed(1) + '%';
+  };
+  updateFill();
+  if (_iptvEpgTimer) clearInterval(_iptvEpgTimer);
+  _iptvEpgTimer = setInterval(updateFill, 30000);
+}
+
+function _iptvLoadEpg(id, name) {
+  _iptvHideEpg();
+  const seq = ++_iptvEpgSeq;
+  const ch = (_iptvAllChannels || []).find(c => c.id === id);
+  const provider = _IPTV_EPG_PROVIDER[(ch && ch.country) || ''] || 'world';
+  const epgId = (ch && ch.epgId) || id || '';
+  const qs = 'provider=' + encodeURIComponent(provider) +
+             '&channel=' + encodeURIComponent(epgId) +
+             '&name=' + encodeURIComponent(name || (ch && ch.name) || '');
+  fetch(IPTV_BACKEND + '/api/public/epg?' + qs)
+    .then(r => r.ok ? r.json() : null)
+    .then(d => {
+      if (seq !== _iptvEpgSeq || !d) return;
+      _iptvRenderEpg(d.now || null, d.next || null);
+      // Mirror the current programme into the mini now-playing bar
+      if (d.now && d.now.title) {
+        const lbl = document.getElementById('iptv-now-bar-label');
+        if (lbl && _iptvCurrentChannel && _iptvCurrentChannel.id === id) {
+          lbl.textContent = (_iptvCurrentChannel.name || 'Live TV') + ' — ' + d.now.title;
+        }
+      }
+    })
+    .catch(() => {});
+}
 
 function iptvPlay(url, id, name) {
   const video = document.getElementById('iptv-player');
@@ -11453,6 +11584,9 @@ function iptvPlay(url, id, name) {
   // Track current channel (for prev/next/fav)
   _iptvCurrentChannel = { id, name, url };
   _iptvCurrentIndex = _iptvLastResults.findIndex(c => c.id === id);
+
+  // Programme guide (Now/Next) for this channel
+  _iptvLoadEpg(id, name);
 
   // Update favorite-button icon
   if (favBtn) {
@@ -11516,6 +11650,7 @@ function iptvStop() {
   if (ctrlBar) ctrlBar.style.display = 'none';
   _iptvCurrentChannel = null;
   _iptvCurrentIndex = -1;
+  _iptvHideEpg();
   // Restore top-fold
   const panel = document.getElementById('rb-panel-iptv');
   if (panel) panel.classList.remove('iptv-playing');
@@ -11612,41 +11747,6 @@ function iptvFullscreen() {
     else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
   } catch (e) { console.warn('[IPTV] Fullscreen failed:', e); }
 }
-function iptvPlayCustomUrl() {
-  const inp = document.getElementById('iptv-custom-url');
-  const url = (inp && inp.value || '').trim();
-  if (!url) return;
-
-  // If user pasted a .m3u playlist, fetch it and extract the first .m3u8 stream
-  if (/\.m3u$/i.test(url) && !/\.m3u8$/i.test(url)) {
-    fetch(url).then(r => r.text()).then(text => {
-      const lines = text.split(/\r?\n/);
-      let found = null;
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (trimmed.startsWith('#') || !trimmed) continue;
-        if (/\.m3u8/i.test(trimmed) || /^https?:\/\//.test(trimmed)) {
-          found = trimmed; break;
-        }
-      }
-      if (found) {
-        iptvPlay(found, 'custom-' + Date.now(), 'Custom Stream (from playlist)');
-        if (inp) inp.value = found;
-      } else {
-        const nowEl = document.getElementById('iptv-now');
-        if (nowEl) nowEl.textContent = '⚠️ No .m3u8 stream found in playlist';
-      }
-    }).catch(() => {
-      const nowEl = document.getElementById('iptv-now');
-      if (nowEl) nowEl.textContent = '⚠️ Failed to fetch playlist';
-    });
-    return;
-  }
-
-  iptvPlay(url, 'custom-' + Date.now(), 'Custom Stream');
-  if (inp) inp.value = '';
-}
-
 // ═══════════════════════════════════════════════════════════════════
 // LIVE TV — 5-Style Layout + Geo-Navigation
 // ═══════════════════════════════════════════════════════════════════

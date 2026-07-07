@@ -154,6 +154,18 @@ export default {
       if (request.method === "GET" && pathname === "/api/epg") {
         return handleEpg(request, env, url);
       }
+      // Public read-only routes for the vilfintv.com homepage Live TV panel.
+      // No session needed, but ONLY providers in a "Free IPTV" region group are
+      // exposed (public iptv-org lists) — private providers stay session-gated.
+      if (request.method === "GET" && pathname === "/api/public/providers") {
+        return handlePublicProviders(env);
+      }
+      if (request.method === "GET" && pathname === "/api/public/playlist") {
+        return handlePublicPlaylist(request, env, url);
+      }
+      if (request.method === "GET" && pathname === "/api/public/epg") {
+        return handlePublicEpg(request, env, url);
+      }
       if (request.method === "GET" && pathname === "/api/stream") {
         return handleStream(request, env, url);
       }
@@ -873,6 +885,11 @@ async function handleEpg(request, env, url) {
   const settings = await loadSettings(env);
   if (!settings.providers[provider]) return json({ error: "Invalid provider" }, 400);
   if (!channel && !channelName) return json({ error: "Missing channel id" }, 400);
+  return epgLookup(env, settings, provider, channel, channelName);
+}
+
+/** Shared EPG lookup used by /api/epg (session) and /api/public/epg (public). */
+async function epgLookup(env, settings, provider, channel, channelName) {
   const epgUrl = ((settings.providers[provider] || {}).epg || "").trim();
   if (!epgUrl && provider !== 'jio') return json({ programs: [], now: null, next: null, note: "No EPG configured" });
 
@@ -914,6 +931,58 @@ async function handleEpg(request, env, url) {
     if (p.startMs > nowMs) { next = p; break; }
   }
   return json({ channel, count: programs.length, now, next, programs: programs.slice(0, 12) });
+}
+
+/* ----------------------------- public (no-session) routes -----------------------------
+ * Read-only API for the vilfintv.com homepage Live TV panel. Only providers whose
+ * region label contains "Free IPTV" (public iptv-org lists) are exposed; every
+ * session-gated provider (jio, zee5, …) is invisible here. Responses carry
+ * browser/edge cache headers because this data changes at most every 15-60 min. */
+
+const PUBLIC_CACHE_HEADERS = { "Cache-Control": "public, max-age=900" };
+
+function _isPublicProvider(pconf) {
+  // Public = the free iptv-org-style region groups ("India Free IPTV",
+  // "All World IPTV", …). "Premium IPTV" and blank-region providers
+  // (jio, zee5, …) never match.
+  return !!pconf && pconf.enabled !== false &&
+    /(free|all\s*world)\s*iptv/i.test(String(pconf.region || ""));
+}
+
+async function handlePublicProviders(env) {
+  const settings = await loadSettings(env);
+  const out = [];
+  for (const id in settings.providers) {
+    const p = settings.providers[id];
+    if (!_isPublicProvider(p)) continue;
+    out.push({ id, name: p.name || id, icon: p.icon || "", region: p.region || "", hasEpg: !!(p.epg || "").trim() });
+  }
+  return json({ count: out.length, providers: out }, 200, PUBLIC_CACHE_HEADERS);
+}
+
+async function handlePublicPlaylist(request, env, url) {
+  const provider = (url.searchParams.get("provider") || "").toLowerCase();
+  const settings = await loadSettings(env);
+  const pconf = settings.providers[provider];
+  if (!_isPublicProvider(pconf)) return json({ error: "Invalid provider" }, 400);
+
+  const raw = await loadProviderRaw(env, provider, pconf);
+  if (!raw) return json({ error: "Playlist unavailable" }, 503);
+  const channels = parseM3U(raw).map((c) => ({
+    id: c.id, name: c.name, url: c.url, logo: c.logo,
+    category: c.category, language: c.language, quality: c.quality,
+  }));
+  return json({ provider, name: pconf.name || provider, count: channels.length, channels }, 200, PUBLIC_CACHE_HEADERS);
+}
+
+async function handlePublicEpg(request, env, url) {
+  const provider = (url.searchParams.get("provider") || "").toLowerCase();
+  const channel = (url.searchParams.get("channel") || "").trim();
+  const channelName = (url.searchParams.get("name") || "").trim();
+  const settings = await loadSettings(env);
+  if (!_isPublicProvider(settings.providers[provider])) return json({ error: "Invalid provider" }, 400);
+  if (!channel && !channelName) return json({ error: "Missing channel id" }, 400);
+  return epgLookup(env, settings, provider, channel, channelName);
 }
 
 /**
