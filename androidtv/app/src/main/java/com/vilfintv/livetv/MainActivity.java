@@ -127,18 +127,54 @@ public class MainActivity extends Activity {
         web.requestFocus();
     }
 
-    // Remote BACK: exit full-screen video first, then walk web history, then quit.
+    /** Run a JS snippet on the WebView (UI thread). */
+    private void js(final String code) {
+        if (web == null) return;
+        web.post(new Runnable() {
+            @Override public void run() { web.evaluateJavascript(code, null); }
+        });
+    }
+
+    // Map the Nvidia Shield remote to the web player. D-pad arrows + OK are left
+    // to the WebView (they reach the page as key events and drive the spatial
+    // focus navigation); here we wire the media transport + BACK.
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if (customView != null) {
-                web.getWebChromeClient().onHideCustomView();
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_BACK:
+                // Exit a full-screen video first, then walk in-app history
+                // (player → providers via pushState), then let the OS quit.
+                if (customView != null) {
+                    web.getWebChromeClient().onHideCustomView();
+                    return true;
+                }
+                if (web.canGoBack()) {
+                    web.goBack();
+                    return true;
+                }
+                break;
+
+            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+            case KeyEvent.KEYCODE_MEDIA_PLAY:
+            case KeyEvent.KEYCODE_MEDIA_PAUSE:
+                js("window.__tvControl&&window.__tvControl.playPause()");
                 return true;
-            }
-            if (web.canGoBack()) {
-                web.goBack();
+
+            case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
+            case KeyEvent.KEYCODE_MEDIA_NEXT:
+            case KeyEvent.KEYCODE_CHANNEL_UP:
+                js("window.__tvControl&&window.__tvControl.next()");
                 return true;
-            }
+
+            case KeyEvent.KEYCODE_MEDIA_REWIND:
+            case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+            case KeyEvent.KEYCODE_CHANNEL_DOWN:
+                js("window.__tvControl&&window.__tvControl.prev()");
+                return true;
+
+            case KeyEvent.KEYCODE_MENU:
+                js("window.__tvControl&&window.__tvControl.filters()");
+                return true;
         }
         return super.onKeyDown(keyCode, event);
     }

@@ -748,6 +748,41 @@
     outline: 3px solid #ffffff !important; outline-offset: 3px;
     box-shadow: 0 0 0 3px #64ffda, 0 0 26px rgba(100,255,218,.6) !important;
   }
+
+  /* ── TV landing hub: compact hero so IPTV + Jio TV sit above the fold ── */
+  html.tv-app .provider-hero { padding: 18px 20px 14px; margin-bottom: 12px; }
+  html.tv-app .provider-hero h1 { font-size: 26px; margin: 8px 0 6px; }
+  html.tv-app .provider-hero .ph-tag { font-size: 13px; max-width: 640px; }
+  html.tv-app .provider-hero .ph-logo { max-width: 48px; margin-bottom: 6px; }
+  html.tv-app .provider-hero .ph-badges { margin-top: 8px; }
+  html.tv-app .grid-label { margin: 6px 0 4px; }
+
+  /* ── Force the desktop 3-panel player layout on TV (video + Program Guide +
+     Favorites), overriding the density-driven phone layout so both panels show
+     and the video stays large. ── */
+  html.tv-app .player-hero { flex-direction: row !important; height: auto; position: static !important; }
+  html.tv-app .remote-panel { display: flex !important; flex: 0 0 340px !important; }
+  html.tv-app .fav-panel { display: flex !important; flex: 0 0 240px !important; }
+  html.tv-app .player-stage { max-height: 56vh; }
+  html.tv-app .controls { position: static !important; opacity: 1 !important; }
+  html.tv-app .tb-ext { display: none; }   /* keep topbar uncrowded for the remote */
+
+  /* ── Strong, unmistakable focus ring for every remote-reachable target ── */
+  html.tv-app .ch-card:focus,
+  html.tv-app .fav-item:focus,
+  html.tv-app .filter-chip:focus,
+  html.tv-app .ctrl-btn:focus,
+  html.tv-app .provider-card:focus {
+    outline: 3px solid #64ffda !important; outline-offset: 2px;
+    box-shadow: 0 0 0 3px #64ffda, 0 0 24px rgba(100,255,218,.55) !important;
+    transform: scale(1.06);
+    transition: transform .12s ease;
+    z-index: 6; position: relative;
+  }
+  html.tv-app .ctrl-btn:focus { transform: scale(1.14); background: var(--accent-soft) !important; }
+  /* Bigger channel cards + controls for 10-foot legibility */
+  html.tv-app .ch-card { padding: 12px; }
+  html.tv-app .ctrl-btn { width: 44px; height: 44px; }
 </style>
 </head>
 <body>
@@ -919,7 +954,16 @@ function __iptvBoot(){
   // IPTV + Jio TV lineups and enables D-pad focus styling. Set by the native
   // WebView wrapper's URL.
   var TV_APP = /[?&]app=tv\b/i.test(location.search);
-  if (TV_APP) document.documentElement.classList.add("tv-app");
+  if (TV_APP) {
+    document.documentElement.classList.add("tv-app");
+    // TVs report a narrow CSS width (density-scaled), which drops iptv.html into
+    // its phone layout — hiding the Program Guide + Favorites and shrinking the
+    // video. Pin a 1280px logical viewport so the full desktop 3-panel layout
+    // renders and the WebView scales it up to the 10-foot screen.
+    var vp = document.querySelector('meta[name="viewport"]');
+    if (!vp) { vp = document.createElement("meta"); vp.name = "viewport"; document.head.appendChild(vp); }
+    vp.setAttribute("content", "width=1280, initial-scale=1, user-scalable=no");
+  }
 
   var WORKER="https://page-iptv.vilfintv.workers.dev";
   var API={
@@ -2512,37 +2556,127 @@ function __iptvBoot(){
   _loadLocalWeather();
   setInterval(function(){_loadLocalWeather();},30*60*1000);
 
-  /* ---------- TV-app D-pad focus helper ---------- */
+  /* ---------- TV-app D-pad navigation (Android TV / Shield remote) ----------
+     Gives iptv.html a premium 10-foot experience: geometry-based spatial focus
+     on the arrow keys, OK to activate, media keys wired to the player, and BACK
+     that steps player → providers instead of quitting the app. */
   if (TV_APP) {
-    // Make clickable non-native elements reachable by the remote, keep the
-    // focused item scrolled into view, and auto-focus the first control on
-    // each screen so the user never lands on an empty page with nowhere to go.
-    var TV_SEL = '.provider-card,.channel-item,.category-result-card,button,a[href],input,select,[data-iptv],[onclick]';
+    var TV_SEL = '.provider-card,.ch-card,.fav-item,.filter-chip,.channel-item,' +
+                 '.category-result-card,.ctrl-btn,button,a[href],input,select,[data-iptv],[data-idx]';
+
+    function tvVisible(el){
+      if(!el || el.disabled) return false;
+      var r = el.getBoundingClientRect();
+      if(r.width < 4 || r.height < 4) return false;
+      if(r.bottom < 0 || r.top > innerHeight || r.right < 0 || r.left > innerWidth) return false;
+      // Must be inside the currently-active screen.
+      var scr = el.closest('.screen');
+      return !scr || scr.classList.contains('active');
+    }
     function tvMakeFocusable(root){
       Array.prototype.forEach.call((root||document).querySelectorAll(TV_SEL), function(el){
-        if(!el.hasAttribute('tabindex') && el.tabIndex < 0) el.setAttribute('tabindex','0');
+        if(el.tabIndex < 0 && !el.hasAttribute('tabindex')) el.setAttribute('tabindex','0');
       });
     }
+    function tvCandidates(){
+      return Array.prototype.filter.call(document.querySelectorAll(TV_SEL), tvVisible);
+    }
+    // Pick the nearest focusable element in a direction using a directional
+    // distance metric (in-line offset weighted lighter than cross-axis drift).
+    function tvMove(dir){
+      var cur = document.activeElement;
+      var cr = (cur && cur.getBoundingClientRect) ? cur.getBoundingClientRect() : {left:innerWidth/2,right:innerWidth/2,top:0,bottom:0,width:0,height:0};
+      var cx = (cr.left+cr.right)/2, cy = (cr.top+cr.bottom)/2;
+      var best=null, bestScore=Infinity;
+      tvCandidates().forEach(function(el){
+        if(el===cur) return;
+        var r = el.getBoundingClientRect(), x=(r.left+r.right)/2, y=(r.top+r.bottom)/2;
+        var dx=x-cx, dy=y-cy, primary, cross;
+        if(dir==='right'){ if(r.left < cr.right-2) return; primary=dx; cross=Math.abs(dy); }
+        else if(dir==='left'){ if(r.right > cr.left+2) return; primary=-dx; cross=Math.abs(dy); }
+        else if(dir==='down'){ if(r.top < cr.bottom-2) return; primary=dy; cross=Math.abs(dx); }
+        else { if(r.bottom > cr.top+2) return; primary=-dy; cross=Math.abs(dx); }
+        if(primary <= 0) return;
+        var score = primary + cross*2;           // prefer aligned, then closest
+        if(score < bestScore){ bestScore=score; best=el; }
+      });
+      if(best){ try{ best.focus(); }catch(e){} return true; }
+      return false;
+    }
     function tvFocusFirst(){
-      var scr = document.querySelector('#login-screen.active,#provider-screen.active,#player-screen.active') || document.body;
-      var first = scr.querySelector(TV_SEL);
+      var scr = document.querySelector('.screen.active') || document.body;
+      // Prefer a channel card / provider card / the first meaningful control.
+      var pref = scr.querySelector('.ch-card,.provider-card,.filter-chip,input,button');
+      var first = pref || scr.querySelector(TV_SEL);
       if(first){ try{ first.focus(); }catch(e){} }
     }
+
+    // Player controls exposed for the remote's media keys (native side calls these).
+    function _clk(id){ var b=document.getElementById(id); if(b){ b.click(); return true; } return false; }
+    window.__tvControl = {
+      playPause: function(){ return _clk('btn-play'); },
+      next:      function(){ return _clk('btn-next'); },
+      prev:      function(){ return _clk('btn-prev'); },
+      fullscreen:function(){ return _clk('btn-fs'); },
+      // Jump focus to the filter chips row (All Channels / Favorites / Sources…).
+      filters:   function(){ var c=document.querySelector('#player-screen.active .filter-chip'); if(c){ try{c.focus();}catch(e){} return true; } return false; },
+      // BACK: exit fullscreen, else player → providers, else let the app exit.
+      back: function(){
+        if(document.fullscreenElement){ (document.exitFullscreen||document.webkitExitFullscreen).call(document); return true; }
+        if(document.querySelector('#player-screen.active')){ var pv=document.querySelector('[data-back]'); if(pv){ pv.click(); return true; } }
+        return false;
+      }
+    };
+
     document.addEventListener('focusin', function(e){
-      if(e.target && e.target.scrollIntoView) try{ e.target.scrollIntoView({block:'center',inline:'center',behavior:'smooth'}); }catch(_){}
+      if(e.target && e.target.scrollIntoView) try{ e.target.scrollIntoView({block:'center',inline:'nearest',behavior:'smooth'}); }catch(_){}
     });
-    // Enter/OK on a focused clickable that isn't a native button → click it.
+
     document.addEventListener('keydown', function(e){
-      if((e.key==='Enter'||e.keyCode===13) && document.activeElement){
-        var t=document.activeElement, tag=(t.tagName||'').toLowerCase();
-        if(tag!=='button'&&tag!=='a'&&tag!=='input'&&tag!=='select'&&tag!=='textarea'){ t.click(); e.preventDefault(); }
+      var t=document.activeElement, tag=(t&&t.tagName||'').toLowerCase();
+      var k=e.key;
+      // Arrow keys → spatial focus move. On TV, text is edited in the full-screen
+      // keyboard (not the inline field), so arrows always navigate — including
+      // between the username / password / Sign In controls.
+      if(k==='ArrowRight'||k==='ArrowLeft'||k==='ArrowUp'||k==='ArrowDown'){
+        var dir = k==='ArrowRight'?'right':k==='ArrowLeft'?'left':k==='ArrowUp'?'up':'down';
+        if(tvMove(dir)) e.preventDefault();
+        return;
+      }
+      // OK / Enter → native inputs open the keyboard; everything else clicks.
+      if(k==='Enter'||e.keyCode===13){
+        if(t && tag!=='input'&&tag!=='textarea'){ t.click(); e.preventDefault(); }
+        return;
+      }
+      // Media keys that some remotes deliver straight to the WebView.
+      if(k==='MediaPlayPause'||e.keyCode===179){ window.__tvControl.playPause(); e.preventDefault(); return; }
+      if(k==='MediaTrackNext'||k==='MediaFastForward'){ window.__tvControl.next(); e.preventDefault(); return; }
+      if(k==='MediaTrackPrevious'||k==='MediaRewind'){ window.__tvControl.prev(); e.preventDefault(); return; }
+    }, true);
+
+    // BACK via popstate: entering the player pushes a history state so the
+    // remote's BACK returns to the provider hub rather than exiting the app.
+    var _tvPlayerPushed=false;
+    function tvSyncHistory(){
+      var onPlayer = !!document.querySelector('#player-screen.active');
+      if(onPlayer && !_tvPlayerPushed){ history.pushState({tv:'player'},''); _tvPlayerPushed=true; }
+      if(!onPlayer){ _tvPlayerPushed=false; }
+    }
+    window.addEventListener('popstate', function(){
+      if(document.querySelector('#player-screen.active')){
+        _tvPlayerPushed=false;
+        var pv=document.querySelector('[data-back]'); if(pv) pv.click();
       }
     });
-    // Re-scan whenever the DOM changes (screens swap, channel grids render).
-    var tvObs = new MutationObserver(function(){ tvMakeFocusable(); });
-    tvObs.observe(document.body,{childList:true,subtree:true});
+
+    var tvObs = new MutationObserver(function(){ tvMakeFocusable(); tvSyncHistory(); });
+    tvObs.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
     tvMakeFocusable();
-    setTimeout(tvFocusFirst, 400);
+    setTimeout(tvFocusFirst, 500);
+    // Re-assert focus after screen swaps so the remote always has a target.
+    document.addEventListener('focusout', function(){
+      setTimeout(function(){ if(!document.activeElement||document.activeElement===document.body) tvFocusFirst(); }, 60);
+    });
   }
 
   /* ---------- Boot ---------- */

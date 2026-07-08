@@ -14,12 +14,28 @@ android {
         versionName "1.0"
     }
 
+    // Stable release key (from CI secrets) so every rebuilt APK keeps the SAME
+    // signature — the user can update in place without "app not installed", and
+    // it reads a little better to Play Protect than a throwaway debug key.
+    // Falls back to debug signing for local builds that lack the env vars.
+    def ksPath = System.getenv("TV_KEYSTORE_FILE")
+    def hasReleaseKey = ksPath != null && !ksPath.isEmpty() && file(ksPath).exists()
+    signingConfigs {
+        release {
+            if (hasReleaseKey) {
+                storeFile file(ksPath)
+                storePassword System.getenv("TV_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("TV_KEY_ALIAS")
+                keyPassword System.getenv("TV_KEYSTORE_PASSWORD")
+                storeType "PKCS12"
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
-            // Debug-signed by default so the sideload APK is immediately
-            // installable; a proper release keystore can be wired in later.
-            signingConfig signingConfigs.debug
+            signingConfig hasReleaseKey ? signingConfigs.release : signingConfigs.debug
         }
     }
 

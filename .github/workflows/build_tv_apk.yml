@@ -26,12 +26,28 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Decode release keystore
+        working-directory: androidtv
+        env:
+          TV_KEYSTORE_B64: ${{ secrets.TV_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$TV_KEYSTORE_B64" ]; then
+            echo "$TV_KEYSTORE_B64" | base64 -d > "$PWD/vilfintv-release.p12"
+            echo "Release keystore decoded ($(wc -c < vilfintv-release.p12) bytes)"
+          else
+            echo "No keystore secret — will fall back to debug signing"
+          fi
+
       - name: Generate Gradle wrapper (pinned 8.7)
         working-directory: androidtv
         run: gradle wrapper --gradle-version 8.7 --distribution-type bin
 
-      - name: Build debug APK
+      - name: Build release APK (stable-signed)
         working-directory: androidtv
+        env:
+          TV_KEYSTORE_FILE: ${{ github.workspace }}/androidtv/vilfintv-release.p12
+          TV_KEYSTORE_PASSWORD: ${{ secrets.TV_KEYSTORE_PASSWORD }}
+          TV_KEY_ALIAS: ${{ secrets.TV_KEY_ALIAS }}
         run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
 
       - name: Rename APK
