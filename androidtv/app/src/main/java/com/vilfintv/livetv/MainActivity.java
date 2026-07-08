@@ -8,11 +8,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
+import android.content.Context;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.ValueCallback;
 import android.widget.FrameLayout;
 
 /**
@@ -135,48 +138,81 @@ public class MainActivity extends Activity {
         });
     }
 
-    // Map the Nvidia Shield remote to the web player. D-pad arrows + OK are left
-    // to the WebView (they reach the page as key events and drive the spatial
-    // focus navigation); here we wire the media transport + BACK.
+    private void showKeyboard() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null && web != null) {
+            web.requestFocus();
+            imm.showSoftInput(web, InputMethodManager.SHOW_IMPLICIT);
+        }
+    }
+
+    // CAPTURE THE REMOTE BEFORE THE WEBVIEW. Android WebView does not reliably
+    // route D-pad arrows to the page's focus system (they get swallowed by the
+    // <video> element or lost on the player screen), which is why on-screen
+    // navigation felt dead. We intercept every press here and drive the web
+    // app's __tvNav() explicitly, so focus movement is deterministic. When the
+    // leanback keyboard is open it owns the keys (its own window), so typing is
+    // unaffected.
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        switch (keyCode) {
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (event.getAction() != KeyEvent.ACTION_DOWN) {
+            // Consume the matching UP for keys we handle so they don't leak.
+            int kc = event.getKeyCode();
+            if (isNavKey(kc)) return true;
+            return super.dispatchKeyEvent(event);
+        }
+        int kc = event.getKeyCode();
+        switch (kc) {
+            case KeyEvent.KEYCODE_DPAD_UP:    js("window.__tvNav&&window.__tvNav('up')");    return true;
+            case KeyEvent.KEYCODE_DPAD_DOWN:  js("window.__tvNav&&window.__tvNav('down')");  return true;
+            case KeyEvent.KEYCODE_DPAD_LEFT:  js("window.__tvNav&&window.__tvNav('left')");  return true;
+            case KeyEvent.KEYCODE_DPAD_RIGHT: js("window.__tvNav&&window.__tvNav('right')"); return true;
+
+            case KeyEvent.KEYCODE_DPAD_CENTER:
+            case KeyEvent.KEYCODE_ENTER:
+            case KeyEvent.KEYCODE_NUMPAD_ENTER:
+                if (web != null) {
+                    web.post(new Runnable() {
+                        @Override public void run() {
+                            web.evaluateJavascript("window.__tvNav?window.__tvNav('ok'):''", new ValueCallback<String>() {
+                                @Override public void onReceiveValue(String v) {
+                                    // v is a JSON string, e.g. "\"input\"" for a text field.
+                                    if (v != null && v.contains("input")) showKeyboard();
+                                }
+                            });
+                        }
+                    });
+                }
+                return true;
+
             case KeyEvent.KEYCODE_BACK:
-                // Exit a full-screen video first, then walk in-app history
-                // (player → providers via pushState), then let the OS quit.
-                if (customView != null) {
-                    web.getWebChromeClient().onHideCustomView();
-                    return true;
-                }
-                if (web.canGoBack()) {
-                    web.goBack();
-                    return true;
-                }
-                break;
+                if (customView != null) { web.getWebChromeClient().onHideCustomView(); return true; }
+                if (web != null && web.canGoBack()) { web.goBack(); return true; }
+                return super.dispatchKeyEvent(event);   // let the OS exit
 
             case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
             case KeyEvent.KEYCODE_MEDIA_PLAY:
             case KeyEvent.KEYCODE_MEDIA_PAUSE:
-                js("window.__tvControl&&window.__tvControl.playPause()");
-                return true;
-
+                js("window.__tvControl&&window.__tvControl.playPause()"); return true;
             case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
             case KeyEvent.KEYCODE_MEDIA_NEXT:
             case KeyEvent.KEYCODE_CHANNEL_UP:
-                js("window.__tvControl&&window.__tvControl.next()");
-                return true;
-
+                js("window.__tvControl&&window.__tvControl.next()"); return true;
             case KeyEvent.KEYCODE_MEDIA_REWIND:
             case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
             case KeyEvent.KEYCODE_CHANNEL_DOWN:
-                js("window.__tvControl&&window.__tvControl.prev()");
-                return true;
-
+                js("window.__tvControl&&window.__tvControl.prev()"); return true;
             case KeyEvent.KEYCODE_MENU:
-                js("window.__tvControl&&window.__tvControl.filters()");
-                return true;
+                js("window.__tvControl&&window.__tvControl.filters()"); return true;
         }
-        return super.onKeyDown(keyCode, event);
+        return super.dispatchKeyEvent(event);
+    }
+
+    private boolean isNavKey(int kc) {
+        return kc == KeyEvent.KEYCODE_DPAD_UP || kc == KeyEvent.KEYCODE_DPAD_DOWN
+            || kc == KeyEvent.KEYCODE_DPAD_LEFT || kc == KeyEvent.KEYCODE_DPAD_RIGHT
+            || kc == KeyEvent.KEYCODE_DPAD_CENTER || kc == KeyEvent.KEYCODE_ENTER
+            || kc == KeyEvent.KEYCODE_NUMPAD_ENTER;
     }
 
     @Override

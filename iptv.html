@@ -749,6 +749,14 @@
     box-shadow: 0 0 0 3px #64ffda, 0 0 26px rgba(100,255,218,.6) !important;
   }
 
+  /* Never let anything spill off the screen edges on TV (caused the hub hero
+     to be clipped on the left / "screen too wide"). */
+  html.tv-app, html.tv-app body { overflow-x: hidden !important; max-width: 100%; }
+  html.tv-app .provider-wrap, html.tv-app .layout, html.tv-app .player-hero,
+  html.tv-app .content-shelf, html.tv-app .filters-row {
+    max-width: 100% !important; box-sizing: border-box;
+  }
+
   /* ── TV landing hub: compact hero so IPTV + Jio TV sit above the fold ── */
   html.tv-app .provider-hero { padding: 18px 20px 14px; margin-bottom: 12px; }
   html.tv-app .provider-hero h1 { font-size: 26px; margin: 8px 0 6px; }
@@ -962,7 +970,9 @@ function __iptvBoot(){
     // renders and the WebView scales it up to the 10-foot screen.
     var vp = document.querySelector('meta[name="viewport"]');
     if (!vp) { vp = document.createElement("meta"); vp.name = "viewport"; document.head.appendChild(vp); }
-    vp.setAttribute("content", "width=1280, initial-scale=1, user-scalable=no");
+    // width only (no initial-scale) so the WebView's overview mode zooms the
+    // 1280px layout to fit the TV width exactly — no horizontal cropping.
+    vp.setAttribute("content", "width=1280");
   }
 
   var WORKER="https://page-iptv.vilfintv.workers.dev";
@@ -2610,6 +2620,28 @@ function __iptvBoot(){
       var first = pref || scr.querySelector(TV_SEL);
       if(first){ try{ first.focus(); }catch(e){} }
     }
+
+    // ── Native D-pad bridge ──────────────────────────────────────────────
+    // The Android wrapper captures every remote press in dispatchKeyEvent and
+    // calls this directly, so navigation never depends on the WebView routing
+    // arrow keys to the page (which it doesn't do reliably on the player
+    // screen). Returns "input" for a focused text field so the native side can
+    // pop the on-screen keyboard; otherwise moves focus / clicks.
+    window.__tvNav = function(action){
+      var t = document.activeElement, tag = (t && t.tagName || '').toLowerCase();
+      var onField = (tag==='input' || tag==='textarea' || tag==='select');
+      if(!t || t===document.body){ tvFocusFirst(); return 'move'; }
+      if(action==='ok'){
+        if(onField) return 'input';          // let native show the keyboard
+        try{ t.click(); }catch(e){}
+        return 'click';
+      }
+      if(action==='up'||action==='down'||action==='left'||action==='right'){
+        tvMove(action);
+        return 'move';
+      }
+      return 'noop';
+    };
 
     // Player controls exposed for the remote's media keys (native side calls these).
     function _clk(id){ var b=document.getElementById(id); if(b){ b.click(); return true; } return false; }
