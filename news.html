@@ -4466,11 +4466,21 @@ function openCustomPost(id) {
   }
 
   var storyContent = post.story || '';
-  
-  // Strip inline styles and classes to prevent copy-pasted 'display:none' from hiding text
-  storyContent = storyContent.replace(/ (style|class)="[^"]*"/gi, '');
-  storyContent = storyContent.replace(/ (style|class)='[^']*'/gi, '');
-  
+
+  // Strip only text-hiding CSS tricks (display:none, visibility:hidden, opacity:0,
+  // font-size:0) from inline styles, and known hiding class names — but keep
+  // legitimate styling (borders, padding, background) so authored tables/layout
+  // still render. Previously this stripped ALL style/class attributes outright,
+  // which also silently killed table borders on every article.
+  var _hideStylePattern = /display\s*:\s*none|visibility\s*:\s*hidden|opacity\s*:\s*0(?![.\d])|font-size\s*:\s*0/i;
+  var _hideClassPattern = /\b(hidden|d-none|invisible|sr-only|visually-hidden)\b/i;
+  storyContent = storyContent.replace(/ style=(["'])([\s\S]*?)\1/gi, function(m, q, val) {
+    return _hideStylePattern.test(val) ? '' : ' style=' + q + val + q;
+  });
+  storyContent = storyContent.replace(/ class=(["'])([\s\S]*?)\1/gi, function(m, q, val) {
+    return _hideClassPattern.test(val) ? '' : ' class=' + q + val + q;
+  });
+
   // Only escape and wrap in <p> if there are no HTML tags at all (legacy format)
   if (storyContent && !/<[a-zA-Z]/.test(storyContent)) {
     var paras = storyContent.split(/\n\n+/).filter(Boolean);
