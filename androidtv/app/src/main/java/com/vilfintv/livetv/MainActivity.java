@@ -60,6 +60,14 @@ public class MainActivity extends Activity {
         web.setFocusable(true);
         web.setFocusableInTouchMode(true);
 
+        // Debug builds only: expose the WebView to Chrome DevTools so the CI
+        // emulator test can inspect page state and script login. The flashed
+        // release APK is not debuggable, so this is a no-op there — no remote
+        // debugging surface ships to real devices.
+        if ((getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
+            WebView.setWebContentsDebuggingEnabled(true);
+        }
+
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);                 // localStorage: login token, favourites

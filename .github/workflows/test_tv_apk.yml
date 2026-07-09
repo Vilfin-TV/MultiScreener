@@ -35,6 +35,9 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Install CDP client (for scripted login + state assertions)
+        run: python3 -m pip install --quiet websocket-client
+
       - name: Generate Gradle wrapper (pinned 8.7)
         working-directory: androidtv
         run: gradle wrapper --gradle-version 8.7 --distribution-type bin

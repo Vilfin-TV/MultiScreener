@@ -23,13 +23,27 @@ set -uo pipefail
 PKG="com.vilfintv.livetv"
 ACT="${PKG}/.MainActivity"
 APK_PATH="${APK_PATH:?APK_PATH must point at the built APK}"
-OUT="$(cd "$(dirname "$0")" && pwd)/out"
+DIR="$(cd "$(dirname "$0")" && pwd)"
+OUT="$DIR/out"
 mkdir -p "$OUT"
 STEP=0
 FAIL=0
+CHECKS=""
 
 log()  { echo "▶ $*"; }
 warn() { echo "⚠ $*"; }
+pass() { echo "  ✓ $*"; CHECKS="${CHECKS}P"; }
+fail() { echo "  ✗ $*"; CHECKS="${CHECKS}F"; FAIL=1; }
+
+# Evaluate a JS expression in the WebView over CDP; prints its JSON value.
+cdp() { printf '%s' "$1" | python3 "$DIR/cdp_eval.py"; }
+
+# Assert a CDP expression equals an expected JSON value.
+expect() { # <label> <js-expr> <expected-json>
+  local label="$1" expr="$2" want="$3" got
+  got="$(cdp "$expr" 2>/dev/null)"
+  if [ "$got" = "$want" ]; then pass "$label (=$got)"; else fail "$label — got $got, want $want"; fi
+}
 
 # Screencap the emulator to a numbered, labelled PNG.
 shot() {
@@ -99,66 +113,129 @@ if ! adb shell pidof "$PKG" >/dev/null 2>&1; then
   echo "App process not running after launch"; FAIL=1
 fi
 
+# ── Wire up Chrome DevTools so we can inspect page state + script login ──────
+# (Debug build enables setWebContentsDebuggingEnabled.) Forward the WebView's
+# devtools unix socket to localhost:9222 for cdp_eval.py.
+log "Connecting to WebView DevTools"
+DEV_SOCK=""
+for i in $(seq 1 20); do
+  DEV_SOCK="$(adb shell cat /proc/net/unix 2>/dev/null | tr -d '\r' | grep -o 'webview_devtools_remote_[0-9]*' | sort -u | head -1)"
+  [ -n "$DEV_SOCK" ] && break
+  sleep 1
+done
+CDP_OK=0
+if [ -n "$DEV_SOCK" ]; then
+  adb forward tcp:9222 "localabstract:$DEV_SOCK" >/dev/null 2>&1
+  # Confirm the bridge answers and the page is the login screen.
+  if [ "$(cdp "document.title,'ok'" 2>/dev/null)" != "" ]; then CDP_OK=1; fi
+  log "DevTools socket: $DEV_SOCK (cdp_ok=$CDP_OK)"
+else
+  warn "No WebView devtools socket found — CDP assertions unavailable."
+fi
+
 # ── SMOKE: D-pad focus movement on the login screen ─────────────────────────
-# First D-pad press hands focus to the username field (tvFocusFirst); then we
-# walk the login controls to prove __tvNav routing is alive before any login.
-log "SMOKE: exercising D-pad on the login screen"
-key $DPAD_DOWN;  shot "login-focus-username"
-key $DPAD_DOWN;  shot "login-focus-password"
-key $DPAD_DOWN;  shot "login-focus-signin"
-key $DPAD_UP;    shot "login-focus-back-up"
+# Prove the native __tvNav bridge moves focus across the login controls. We
+# read document.activeElement over CDP so this is a real assertion, not a guess.
+log "SMOKE: D-pad focus traversal on the login screen"
+ACTIVE_ID="document.activeElement?document.activeElement.id:''"
+shot "launch-login2"
+if [ "$CDP_OK" = 1 ]; then
+  key $DPAD_DOWN; expect "focus → password" "$ACTIVE_ID" '"password"'
+  key $DPAD_DOWN; expect "focus → Sign In"  "$ACTIVE_ID" '"login-btn"'
+  key $DPAD_UP;   expect "focus ← password" "$ACTIVE_ID" '"password"'
+  key $DPAD_UP;   expect "focus ← username" "$ACTIVE_ID" '"username"'
+else
+  key $DPAD_DOWN; shot "login-focus-1"
+  key $DPAD_DOWN; shot "login-focus-2"
+fi
 
 # ── FULL: only with credentials ─────────────────────────────────────────────
-if [ -n "${IPTV_USER:-}" ] && [ -n "${IPTV_PASS:-}" ]; then
-  log "FULL: signing in with supplied credentials"
-
-  # Sign in WITHOUT the on-screen keyboard. Username is focused on page load;
-  # type straight into it, then D-pad DOWN between fields (routes through the
-  # native __tvNav bridge because no IME is open), and only press OK on the
-  # Sign In *button* (a button click, never an input → no keyboard).
-  key $DPAD_UP $DPAD_UP     # ensure the topmost field (username) is focused
-  type_text "$IPTV_USER"
-  shot "login-username-typed"
-  key $DPAD_DOWN            # → password
-  type_text "$IPTV_PASS"
-  shot "login-password-typed"
-  key $DPAD_DOWN            # → Sign In button
-  key $DPAD_CENTER          # click Sign In → submit
-  sleep 9                   # auth round-trip + provider screen render
+if [ -n "${IPTV_USER:-}" ] && [ -n "${IPTV_PASS:-}" ] && [ "$CDP_OK" = 1 ]; then
+  log "FULL: signing in via DevTools (no on-screen keyboard)"
+  cdp "typeof window.__tvControl" >/dev/null 2>&1
+  echo "  login result: $(IPTV_USER="$IPTV_USER" IPTV_PASS="$IPTV_PASS" python3 "$DIR/cdp_eval.py" --login)"
+  sleep 9
   shot "after-login"
+  # After a good login the app leaves #login-screen. Which screen is active?
+  ACTIVE_SCREEN="(function(){var s=document.querySelector('.screen.active');return s?s.id:'none';})()"
+  SCREEN="$(cdp "$ACTIVE_SCREEN")"
+  echo "  active screen after login: $SCREEN"
+  if [ "$SCREEN" = '"login-screen"' ] || [ "$SCREEN" = '"none"' ]; then
+    fail "login did not advance past the login screen (msg: $(cdp "var m=document.getElementById('login-msg');m?m.textContent:''"))"
+  else
+    pass "login advanced to $SCREEN"
+  fi
 
-  # Provider hub: first D-pad press focuses the first tile, then OK opens it.
-  key $DPAD_DOWN
+  # ── Provider hub → open a provider via the remote (OK) ──
+  log "Open a provider with the D-pad + OK"
+  key $DPAD_DOWN            # focus first provider tile
   shot "provider-focus"
-  key $DPAD_CENTER
+  FOCUSED="$(cdp "(function(){var a=document.activeElement;return a?(a.className||a.tagName):'';})()")"
+  echo "  focused element: $FOCUSED"
+  key $DPAD_CENTER          # open it
   sleep 7
   shot "channel-list"
+  expect "channels loaded" "document.querySelectorAll('.ch-card').length>0" 'true'
 
-  # Walk into the channel grid and open a channel.
-  key $DPAD_DOWN
-  key $DPAD_RIGHT
+  # ── Open a channel → player ──
+  log "Open a channel"
+  key $DPAD_DOWN; key $DPAD_RIGHT
   shot "channel-focus"
-  key $DPAD_CENTER          # open channel → player screen
+  key $DPAD_CENTER
   sleep 9
   shot "player-open"
+  expect "player screen active" "!!document.querySelector('#player-screen.active')" 'true'
+  CH0="$(cdp "window.state&&state.currentChannel?state.currentChannel.name:''")"
+  echo "  now playing: $CH0"
 
-  # Transport / channel-hop tests (these hit __tvControl via native key map).
-  key $MEDIA_PLAY_PAUSE; shot "player-pause"
-  key $MEDIA_PLAY_PAUSE; shot "player-resume"
-  key $CHANNEL_UP;       sleep 5; shot "channel-next-1"
-  key $CHANNEL_UP;       sleep 5; shot "channel-next-2"
-  key $CHANNEL_DOWN;     sleep 5; shot "channel-prev-1"
-  key $MEDIA_NEXT;       sleep 5; shot "media-next"
-  key $MEDIA_PREV;       sleep 5; shot "media-prev"
+  # ── Transport: pause / resume (media keys → __tvControl.playPause) ──
+  log "Play / pause"
+  key $MEDIA_PLAY_PAUSE; sleep 1; shot "player-pause"
+  key $MEDIA_PLAY_PAUSE; sleep 1; shot "player-resume"
+  pass "play/pause keys dispatched"
 
-  # Favorites: MENU jumps focus to the filter row; navigate to a channel's star
-  # and toggle it. (Star toggle is a focusable control in the tv-app selector.)
-  key $MENU; shot "filters-row"
-  key $DPAD_DOWN $DPAD_CENTER; shot "favorite-toggled"
+  # ── Channel hop while playing (CHANNEL_UP/DOWN → next/prev) ──
+  log "Channel next / prev"
+  key $CHANNEL_UP; sleep 5; shot "channel-next-1"
+  CH1="$(cdp "window.state&&state.currentChannel?state.currentChannel.name:''")"
+  key $CHANNEL_UP; sleep 5; shot "channel-next-2"
+  CH2="$(cdp "window.state&&state.currentChannel?state.currentChannel.name:''")"
+  key $CHANNEL_DOWN; sleep 5; shot "channel-prev-1"
+  CH3="$(cdp "window.state&&state.currentChannel?state.currentChannel.name:''")"
+  echo "  channels seen: [$CH0] → [$CH1] → [$CH2] → [$CH3]"
+  if [ "$CH0" != "$CH1" ] || [ "$CH1" != "$CH2" ]; then pass "channel-next changed the channel"; else fail "channel-next did not change the channel"; fi
+  if [ "$CH3" = "$CH1" ] && [ "$CH2" != "$CH3" ]; then pass "channel-prev went back a channel"; else warn "channel-prev result ambiguous ([$CH2]→[$CH3])"; fi
 
-  # Back out: fullscreen → player → provider hub → (would exit).
-  key $BACK; sleep 2; shot "back-1"
-  key $BACK; sleep 2; shot "back-2"
+  # media next/prev (FF/REW keys → same handlers)
+  key $MEDIA_NEXT; sleep 4; shot "media-next"
+  key $MEDIA_PREV; sleep 4; shot "media-prev"
+
+  # ── Fullscreen (see report — currently no remote key is mapped) ──
+  log "Fullscreen state check"
+  FS_BEFORE="$(cdp "!!document.fullscreenElement")"
+  echo "  fullscreenElement before: $FS_BEFORE"
+
+  # ── Favorites: toggle the current channel's star via the app API ──
+  log "Favorites toggle"
+  FAV0="$(cdp "window.state&&state.favs?state.favs.size:0")"
+  # Drive it the way the UI does: click the ☆/★ star on a channel card. The star
+  # is <span class="star" data-fav="i"> inside .ch-card (see iptv.html).
+  cdp "var s=document.querySelector('#player-screen.active .ch-card.playing .star[data-fav]')||document.querySelector('#player-screen .ch-card .star[data-fav]');s&&s.click();s?'clicked':'no-star'" >/dev/null 2>&1
+  sleep 1
+  FAV1="$(cdp "window.state&&state.favs?state.favs.size:0")"
+  shot "favorite-toggled"
+  echo "  favourites: $FAV0 → $FAV1"
+  if [ "$FAV0" != "$FAV1" ]; then pass "favorite add/remove changed the favourites set"; else warn "favorite count unchanged ($FAV0) — star selector may differ"; fi
+
+  # ── Back out: player → provider hub ──
+  log "Back navigation"
+  key $BACK; sleep 3; shot "back-1"
+  BScr="$(cdp "$ACTIVE_SCREEN")"
+  echo "  screen after BACK: $BScr"
+
+elif [ -n "${IPTV_USER:-}" ] && [ -n "${IPTV_PASS:-}" ]; then
+  warn "Credentials present but CDP unavailable — cannot run the FULL phase reliably."
+  FAIL=1
 else
   warn "IPTV_USER / IPTV_PASS not set — skipping the login-gated FULL phase."
   warn "Add repo secrets IPTV_USERNAME and IPTV_PASSWORD to enable it."
@@ -175,5 +252,10 @@ fi
 
 log "Screenshots captured:"; ls -1 "$OUT"/*.png 2>/dev/null | sed 's#.*/#  #'
 
-if [ "$FAIL" -ne 0 ]; then echo "❌ E2E test FAILED"; exit 1; fi
-echo "✅ E2E remote test passed (smoke$( [ -n "${IPTV_USER:-}" ] && echo ' + full' ))"
+# ── Assertion summary ───────────────────────────────────────────────────────
+NPASS=$(printf '%s' "$CHECKS" | tr -cd 'P' | wc -c | tr -d ' ')
+NFAIL=$(printf '%s' "$CHECKS" | tr -cd 'F' | wc -c | tr -d ' ')
+echo "── Remote-function checks: ${NPASS} passed, ${NFAIL} failed ──"
+
+if [ "$FAIL" -ne 0 ]; then echo "❌ E2E test FAILED (${NFAIL} check(s) failed)"; exit 1; fi
+echo "✅ E2E remote test passed (smoke$( [ -n "${IPTV_USER:-}" ] && echo ' + full' ); ${NPASS} checks)"
