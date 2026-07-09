@@ -194,8 +194,30 @@ public class MainActivity extends Activity {
                 return true;
 
             case KeyEvent.KEYCODE_BACK:
+                // Native <video> fullscreen (WebChromeClient custom view) exits first.
                 if (customView != null) { web.getWebChromeClient().onHideCustomView(); return true; }
-                if (web != null && web.canGoBack()) { web.goBack(); return true; }
+                // Otherwise let the web app handle BACK in order: exit page/CSS
+                // fullscreen → player → provider hub. __tvControl.back() returns
+                // truthy when it consumed the press; only then do we stop. If it
+                // didn't (e.g. already on the provider hub), fall back to history
+                // or let the OS close the app.
+                if (web != null) {
+                    web.post(new Runnable() {
+                        @Override public void run() {
+                            web.evaluateJavascript(
+                                "(window.__tvControl&&window.__tvControl.back())?'1':'0'",
+                                new ValueCallback<String>() {
+                                    @Override public void onReceiveValue(String v) {
+                                        if (v == null || !v.contains("1")) {
+                                            if (web.canGoBack()) web.goBack();
+                                            else finish();
+                                        }
+                                    }
+                                });
+                        }
+                    });
+                    return true;
+                }
                 return super.dispatchKeyEvent(event);   // let the OS exit
 
             case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:

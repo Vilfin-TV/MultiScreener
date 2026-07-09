@@ -2633,6 +2633,13 @@ function __iptvBoot(){
       if(!t || t===document.body){ tvFocusFirst(); return 'move'; }
       if(action==='ok'){
         if(onField) return 'input';          // let native show the keyboard
+        // Premium feel: OK on the channel you're already watching (its playing
+        // card) or on the video toggles fullscreen. First OK on a card still
+        // plays it (not yet ".playing" at press time); a second OK goes full.
+        var onPlaying = t.closest && (t.closest('.ch-card.playing') || t.closest('#video-shell') || t.closest('.player-stage') || t.tagName==='VIDEO');
+        if(onPlaying && document.querySelector('#player-screen.active') && window.__tvControl && __tvControl.fullscreen){
+          __tvControl.fullscreen(); return 'fullscreen';
+        }
         try{ t.click(); }catch(e){}
         return 'click';
       }

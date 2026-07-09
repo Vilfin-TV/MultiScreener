@@ -38,10 +38,15 @@ fail() { echo "  ✗ $*"; CHECKS="${CHECKS}F"; FAIL=1; }
 # Evaluate a JS expression in the WebView over CDP; prints its JSON value.
 cdp() { printf '%s' "$1" | python3 "$DIR/cdp_eval.py"; }
 
-# Assert a CDP expression equals an expected JSON value.
+# Assert a CDP expression equals an expected JSON value. Retries a few times so
+# an async focus/DOM update that hasn't landed yet doesn't flake the check.
 expect() { # <label> <js-expr> <expected-json>
-  local label="$1" expr="$2" want="$3" got
-  got="$(cdp "$expr" 2>/dev/null)"
+  local label="$1" expr="$2" want="$3" got=""
+  for _ in 1 2 3 4; do
+    got="$(cdp "$expr" 2>/dev/null)"
+    [ "$got" = "$want" ] && break
+    sleep 0.5
+  done
   if [ "$got" = "$want" ]; then pass "$label (=$got)"; else fail "$label — got $got, want $want"; fi
 }
 
@@ -219,18 +224,6 @@ if [ -n "${IPTV_USER:-}" ] && [ -n "${IPTV_PASS:-}" ] && [ "$CDP_OK" = 1 ]; then
   echo "  media next/prev: [$CH3] → [$CHn] → [$CHp]"
   if [ "$CHn" != "$CH3" ]; then pass "media-next key changed the channel"; else warn "media-next unchanged"; fi
 
-  # ── Fullscreen — probe whether the app CAN go fullscreen at all ──
-  # There is no dispatchKeyEvent case mapping a remote key to fullscreen yet, so
-  # here we call __tvControl.fullscreen() directly (with a user gesture) to learn
-  # whether fullscreen even works in this WebView, which informs the fix.
-  log "Fullscreen capability probe"
-  FS_BEFORE="$(cdp "!!document.fullscreenElement")"
-  cdp "(function(){return (window.__tvControl&&__tvControl.fullscreen)?(__tvControl.fullscreen(),'called'):'no-fn';})()" >/dev/null 2>&1
-  sleep 2
-  FS_AFTER="$(cdp "!!document.fullscreenElement")"
-  shot "fullscreen-probe"
-  echo "  fullscreenElement: $FS_BEFORE → $FS_AFTER (no remote key mapped yet — enhancement)"
-
   # ── Favorites: add the playing channel to favourites ──
   # On the remote a user moves to a card's ☆ and presses OK; the star is
   # <span class="star" data-fav="i"> in .ch-card. Count lit stars (.star.on)
@@ -244,9 +237,28 @@ if [ -n "${IPTV_USER:-}" ] && [ -n "${IPTV_PASS:-}" ] && [ "$CDP_OK" = 1 ]; then
   echo "  lit favourite stars: $FAV0 → $FAV1"
   if [ "$FAV0" != "$FAV1" ]; then pass "favorite toggle changed the favourites"; else fail "favorite toggle had no effect"; fi
 
-  # ── Back out: player → provider hub ──
-  log "Back navigation (BACK)"
-  key $BACK; sleep 4; shot "back-1"
+  # ── Fullscreen via the remote (⛶ button) + channel-hop while fullscreen ──
+  # Focus the fullscreen control the way the D-pad would land on it, then press
+  # OK (real key → __tvNav('ok') → click). Then hop channels and confirm we STAY
+  # fullscreen (openPlayer reuses the <video>, so fullscreen must persist), then
+  # BACK exits fullscreen (native BACK now delegates to __tvControl.back()).
+  log "Fullscreen via remote + hop + back"
+  cdp "(function(){var b=document.getElementById('btn-fs');b&&b.focus();return b?'focused':'no-btn';})()" >/dev/null 2>&1
+  key $DPAD_CENTER; sleep 2
+  FS1="$(cdp "!!document.fullscreenElement")"; shot "fullscreen-on"
+  if [ "$FS1" = "true" ]; then pass "OK on ⛶ entered fullscreen"; else warn "fullscreen not entered ($FS1) — WebView/site may not have the change yet"; fi
+  CHf0="$(cdp "$NP")"
+  key $CHANNEL_UP; sleep 4; shot "fullscreen-hop"
+  FS2="$(cdp "!!document.fullscreenElement")"; CHf1="$(cdp "$NP")"
+  echo "  fullscreen across hop: $FS1 → $FS2 ; channel [$CHf0] → [$CHf1]"
+  if [ "$FS2" = "true" ] && [ "$CHf1" != "$CHf0" ]; then pass "channel-next worked and stayed fullscreen"; else warn "fullscreen+hop: fs=$FS2 ch=[$CHf0]->[$CHf1]"; fi
+  key $BACK; sleep 3; shot "fullscreen-back"
+  FS3="$(cdp "!!document.fullscreenElement" 2>/dev/null)"
+  if [ "$FS3" = "false" ]; then pass "BACK exited fullscreen (stayed on player)"; else warn "BACK did not clearly exit fullscreen ($FS3)"; fi
+
+  # ── Back out to the provider hub ──
+  log "Back to provider hub (BACK)"
+  key $BACK; sleep 4; shot "back-to-providers"
   BScr="$(cdp "$ACTIVE_SCREEN" 2>/dev/null)"
   echo "  screen after BACK: $BScr"
   if [ "$BScr" = '"provider-screen"' ]; then pass "BACK returned to the provider hub"; else warn "BACK landed on [$BScr]"; fi
