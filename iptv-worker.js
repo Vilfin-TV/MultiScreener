@@ -95,7 +95,7 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Authorization, Content-Type, Range",
-  "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges",
+  "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges, X-VTV-Cache",
   "Access-Control-Max-Age": "86400",
 };
 
@@ -167,7 +167,7 @@ export default {
         return handlePublicEpg(request, env, url);
       }
       if (request.method === "GET" && pathname === "/api/stream") {
-        return handleStream(request, env, url);
+        return handleStream(request, env, url, ctx);
       }
       if (request.method === "GET" && (pathname === "/api/jio/play" || pathname === "/proxy")) {
         return handleJioTunnel(request, env, url);
@@ -990,7 +990,17 @@ async function handlePublicEpg(request, env, url) {
  * Generic CORS-safe relay. Forwards Range, relays Content-Type/Range, adds CORS.
  * Does NOT spoof any provider's mobile-app identity.
  */
-async function handleStream(request, env, url) {
+// HLS media segments are immutable once produced (a segment file's bytes never
+// change; the live manifest just advertises new files over time). So segments
+// can be safely edge-cached for a short window to skip the Worker→origin hop on
+// re-requests (multiple viewers / re-tuning). Live MANIFESTS are never cached
+// (they must stay fresh or playback stalls) and AES KEYS are never cached (they
+// rotate). Any auth token lives in the segment URL, so a rotated token is a
+// different cache key — cached content can never go stale-authed. Every cache
+// op is best-effort and wrapped so a failure degrades to the plain relay.
+const STREAM_SEG_CACHE_TTL = 30; // seconds
+
+async function handleStream(request, env, url, ctx) {
   const auth = await requireAuth(request, env, url);
   if (!auth) return json({ error: "Unauthorized" }, 401);
 
@@ -1005,6 +1015,27 @@ async function handleStream(request, env, url) {
   // SECURITY (SSRF): never let the proxy reach loopback/private/link-local/metadata hosts.
   if (_hostIsBlocked(upstreamUrl.hostname)) {
     return json({ error: "Blocked host" }, 403);
+  }
+
+  // Caching eligibility: never a key (k=key), never a range request, GET only.
+  // Manifests are excluded below once their content-type is known. Only segments
+  // are ever stored, so any cache hit is guaranteed to be an immutable segment.
+  const isKey = url.searchParams.get("k") === "key";
+  const hasRange = request.headers.has("Range");
+  const cacheEligible = !isKey && !hasRange && request.method === "GET";
+  const cache = (typeof caches !== "undefined" && caches.default) || null;
+  let cacheKey = null;
+  if (cacheEligible && cache) {
+    try {
+      cacheKey = new Request(upstreamUrl.toString(), { method: "GET" });
+      const hit = await cache.match(cacheKey);
+      if (hit) {
+        const h = new Headers(hit.headers);
+        for (const k in CORS_HEADERS) h.set(k, CORS_HEADERS[k]);
+        h.set("X-VTV-Cache", "HIT");
+        return new Response(hit.body, { status: hit.status, headers: h });
+      }
+    } catch (e) { cacheKey = null; }   // unsupported/miss → fall through to origin
   }
 
   // Forward only the headers a media relay legitimately needs.
@@ -1037,15 +1068,41 @@ async function handleStream(request, env, url) {
   copyHeader(upstream, respHeaders, "Content-Type");
   copyHeader(upstream, respHeaders, "Content-Range");
   copyHeader(upstream, respHeaders, "Accept-Ranges");
-  copyHeader(upstream, respHeaders, "Cache-Control");
 
   if (looksManifest) {
+    // Live manifest — must never be cached (edge or browser).
     const text = await upstream.text();
     const rewritten = rewriteManifest(text, upstreamUrl, url, bearerFrom(request, url), refParam, uaParam);
     respHeaders.set("Content-Type", "application/vnd.apple.mpegurl");
+    respHeaders.set("Cache-Control", "no-store");
+    respHeaders.set("X-VTV-Cache", "MANIFEST");
     return new Response(rewritten, { status: upstream.status, headers: respHeaders });
   }
 
+  // Immutable media segment (200, non-range, non-key, binary-ish body): stream it
+  // to the client AND store a copy at the edge. tee() lets both happen without
+  // buffering; the cache write runs in the background (waitUntil).
+  const segCacheable = cacheEligible && cacheKey && cache && upstream.status === 200 &&
+    !ctype.startsWith("text/") && !ctype.includes("mpegurl");
+  if (segCacheable) {
+    let a = null, b = null;
+    try { [a, b] = upstream.body.tee(); } catch (e) { a = null; b = null; }
+    if (a && b) {
+      try {
+        const cacheHeaders = new Headers(respHeaders);
+        cacheHeaders.delete("Set-Cookie");
+        cacheHeaders.set("Cache-Control", "public, max-age=" + STREAM_SEG_CACHE_TTL);
+        ctx.waitUntil(cache.put(cacheKey, new Response(a, { status: 200, headers: cacheHeaders })).catch(() => {}));
+      } catch (e) { /* best-effort cache write */ }
+      const outHeaders = new Headers(respHeaders);
+      outHeaders.set("Cache-Control", "public, max-age=" + STREAM_SEG_CACHE_TTL);
+      outHeaders.set("X-VTV-Cache", "MISS");
+      return new Response(b, { status: upstream.status, headers: outHeaders });
+    }
+  }
+
+  // Keys and anything else: plain relay, honouring the upstream cache policy.
+  copyHeader(upstream, respHeaders, "Cache-Control");
   return new Response(upstream.body, { status: upstream.status, headers: respHeaders });
 }
 
@@ -1064,10 +1121,9 @@ function copyHeader(from, to, name) {
  * plain passthrough fetch of the key 403s. Copy that token onto key URIs too.
  */
 function rewriteManifest(text, baseUrl, selfUrl, token, referer, userAgent) {
-  let proxyBase = selfUrl.origin + "/api/stream?token=" + encodeURIComponent(token);
-  if (referer) proxyBase += "&referer=" + encodeURIComponent(referer);
-  if (userAgent) proxyBase += "&ua=" + encodeURIComponent(userAgent);
-  proxyBase += "&url=";
+  let selfBase = selfUrl.origin + "/api/stream?token=" + encodeURIComponent(token);
+  if (referer) selfBase += "&referer=" + encodeURIComponent(referer);
+  if (userAgent) selfBase += "&ua=" + encodeURIComponent(userAgent);
   const hdnea = baseUrl.searchParams.get("__hdnea__");
   const toAbs = (ref) => {
     try { return new URL(ref, baseUrl).toString(); } catch (e) { return ref; }
@@ -1077,7 +1133,8 @@ function rewriteManifest(text, baseUrl, selfUrl, token, referer, userAgent) {
     if (isKeyUri && hdnea && abs.indexOf("__hdnea__") === -1) {
       abs += (abs.indexOf("?") === -1 ? "?" : "&") + "__hdnea__=" + encodeURIComponent(hdnea);
     }
-    return proxyBase + encodeURIComponent(abs);
+    // Tag AES key URIs so the proxy never edge-caches a (rotating) key.
+    return selfBase + (isKeyUri ? "&k=key" : "") + "&url=" + encodeURIComponent(abs);
   };
 
   return text.split("\n").map((line) => {
