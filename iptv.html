@@ -791,6 +791,31 @@
   /* Bigger channel cards + controls for 10-foot legibility */
   html.tv-app .ch-card { padding: 12px; }
   html.tv-app .ctrl-btn { width: 44px; height: 44px; }
+
+  /* ── Cinema (fullscreen) mode ──────────────────────────────────────────────
+     A gesture-free fullscreen for TV: the native remote intercepts OK and
+     replays it via evaluateJavascript, which the HTML5 Fullscreen API rejects
+     for lack of a user gesture. So on TV, "fullscreen" is a CSS class toggle
+     that fills the viewport with the video and hides everything else. Channel
+     up/down keep working (the <video> is reused), and BACK exits. */
+  html.tv-cinema .topbar,
+  html.tv-cinema .provider-hero,
+  html.tv-cinema .remote-panel,
+  html.tv-cinema .fav-panel,
+  html.tv-cinema .content-shelf { display: none !important; }
+  html.tv-cinema .layout { padding: 0 !important; margin: 0 !important; }
+  html.tv-cinema .player-hero { padding: 0 !important; gap: 0 !important; }
+  html.tv-cinema .player-hero .video-col { flex: 1 1 100% !important; }
+  html.tv-cinema #video-shell {
+    position: fixed !important; inset: 0 !important;
+    width: 100vw !important; height: 100vh !important;
+    max-height: none !important; border-radius: 0 !important; z-index: 9998 !important;
+    background: #000 !important;
+  }
+  html.tv-cinema #video-shell video,
+  html.tv-cinema #video-shell .video-js { width: 100% !important; height: 100% !important; }
+  /* Keep the now-playing chip as a channel OSD while in cinema mode */
+  html.tv-cinema #video-shell .now-playing { position: absolute; left: 20px; bottom: 20px; z-index: 9999; max-width: 60vw; }
 </style>
 </head>
 <body>
@@ -2180,6 +2205,15 @@ function __iptvBoot(){
     updateMute();
   }
   function toggleFullscreen(){
+    // On TV the remote's OK is replayed via evaluateJavascript, which the
+    // Fullscreen API rejects (no user gesture). Use the gesture-free CSS cinema
+    // mode instead; the <video> is reused so channel hopping stays fullscreen.
+    if(typeof TV_APP!=="undefined" && TV_APP){
+      var on=document.documentElement.classList.toggle("tv-cinema");
+      try{ window.dispatchEvent(new Event("resize")); }catch(e){}
+      try{ if(player&&VJS_OK&&player.trigger) player.trigger("resize"); }catch(e){}
+      return on;
+    }
     if(player&&VJS_OK){ if(player.isFullscreen())player.exitFullscreen();else player.requestFullscreen(); return; }
     var s=$("video-shell");if(!document.fullscreenElement){(s.requestFullscreen||s.webkitRequestFullscreen||function(){if(video.webkitEnterFullscreen)video.webkitEnterFullscreen();}).call(s);}else{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}
   }
@@ -2661,6 +2695,12 @@ function __iptvBoot(){
       filters:   function(){ var c=document.querySelector('#player-screen.active .filter-chip'); if(c){ try{c.focus();}catch(e){} return true; } return false; },
       // BACK: exit fullscreen, else player → providers, else let the app exit.
       back: function(){
+        // Exit cinema (CSS fullscreen) first, staying on the player.
+        if(document.documentElement.classList.contains('tv-cinema')){
+          document.documentElement.classList.remove('tv-cinema');
+          try{ window.dispatchEvent(new Event('resize')); }catch(e){}
+          return true;
+        }
         if(document.fullscreenElement){ (document.exitFullscreen||document.webkitExitFullscreen).call(document); return true; }
         if(document.querySelector('#player-screen.active')){ var pv=document.querySelector('[data-back]'); if(pv){ pv.click(); return true; } }
         return false;

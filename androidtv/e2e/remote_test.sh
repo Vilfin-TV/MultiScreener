@@ -139,16 +139,27 @@ else
 fi
 
 # ── SMOKE: D-pad focus movement on the login screen ─────────────────────────
-# Prove the native __tvNav bridge moves focus across the login controls. We
-# read document.activeElement over CDP so this is a real assertion, not a guess.
-log "SMOKE: D-pad focus traversal on the login screen"
+# Prove the native __tvNav bridge moves focus across the login controls. We read
+# document.activeElement over CDP so this is a real assertion. The move can be
+# dropped right after page load (native→web latency), so nav_to re-sends the key
+# until focus reaches the target (it stops as soon as it lands, so no overshoot).
 ACTIVE_ID="document.activeElement?document.activeElement.id:''"
+nav_to() { # <label> <keycode> <want-id>
+  local label="$1" kc="$2" want="\"$3\"" got=""
+  for _ in 1 2 3 4 5; do
+    adb shell input keyevent "$kc" >/dev/null 2>&1; sleep 0.7
+    got="$(cdp "$ACTIVE_ID" 2>/dev/null)"
+    [ "$got" = "$want" ] && break
+  done
+  if [ "$got" = "$want" ]; then pass "$label (=$got)"; else fail "$label — got $got, want $want"; fi
+}
+log "SMOKE: D-pad focus traversal on the login screen"
 shot "launch-login2"
 if [ "$CDP_OK" = 1 ]; then
-  key $DPAD_DOWN; expect "focus → password" "$ACTIVE_ID" '"password"'
-  key $DPAD_DOWN; expect "focus → Sign In"  "$ACTIVE_ID" '"login-btn"'
-  key $DPAD_UP;   expect "focus ← password" "$ACTIVE_ID" '"password"'
-  key $DPAD_UP;   expect "focus ← username" "$ACTIVE_ID" '"username"'
+  nav_to "focus → password" $DPAD_DOWN password
+  nav_to "focus → Sign In"  $DPAD_DOWN login-btn
+  nav_to "focus ← password" $DPAD_UP   password
+  nav_to "focus ← username" $DPAD_UP   username
 else
   key $DPAD_DOWN; shot "login-focus-1"
   key $DPAD_DOWN; shot "login-focus-2"
@@ -242,18 +253,21 @@ if [ -n "${IPTV_USER:-}" ] && [ -n "${IPTV_PASS:-}" ] && [ "$CDP_OK" = 1 ]; then
   # OK (real key → __tvNav('ok') → click). Then hop channels and confirm we STAY
   # fullscreen (openPlayer reuses the <video>, so fullscreen must persist), then
   # BACK exits fullscreen (native BACK now delegates to __tvControl.back()).
+  # On TV, fullscreen is the gesture-free CSS "cinema" mode (html.tv-cinema),
+  # not the HTML5 Fullscreen API (which the remote's replayed OK can't trigger).
+  CINEMA="document.documentElement.classList.contains('tv-cinema')"
   log "Fullscreen via remote + hop + back"
   cdp "(function(){var b=document.getElementById('btn-fs');b&&b.focus();return b?'focused':'no-btn';})()" >/dev/null 2>&1
   key $DPAD_CENTER; sleep 2
-  FS1="$(cdp "!!document.fullscreenElement")"; shot "fullscreen-on"
-  if [ "$FS1" = "true" ]; then pass "OK on ⛶ entered fullscreen"; else warn "fullscreen not entered ($FS1) — WebView/site may not have the change yet"; fi
+  FS1="$(cdp "$CINEMA")"; shot "fullscreen-on"
+  if [ "$FS1" = "true" ]; then pass "OK on ⛶ entered fullscreen (cinema)"; else warn "fullscreen not entered ($FS1) — live site may not have the change yet"; fi
   CHf0="$(cdp "$NP")"
   key $CHANNEL_UP; sleep 4; shot "fullscreen-hop"
-  FS2="$(cdp "!!document.fullscreenElement")"; CHf1="$(cdp "$NP")"
+  FS2="$(cdp "$CINEMA")"; CHf1="$(cdp "$NP")"
   echo "  fullscreen across hop: $FS1 → $FS2 ; channel [$CHf0] → [$CHf1]"
   if [ "$FS2" = "true" ] && [ "$CHf1" != "$CHf0" ]; then pass "channel-next worked and stayed fullscreen"; else warn "fullscreen+hop: fs=$FS2 ch=[$CHf0]->[$CHf1]"; fi
   key $BACK; sleep 3; shot "fullscreen-back"
-  FS3="$(cdp "!!document.fullscreenElement" 2>/dev/null)"
+  FS3="$(cdp "$CINEMA" 2>/dev/null)"
   if [ "$FS3" = "false" ]; then pass "BACK exited fullscreen (stayed on player)"; else warn "BACK did not clearly exit fullscreen ($FS3)"; fi
 
   # ── Back out to the provider hub ──
