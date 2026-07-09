@@ -42,8 +42,20 @@ shot() {
 # Send one or more key events (numeric keycodes) with a settle pause between.
 key() { for k in "$@"; do adb shell input keyevent "$k" >/dev/null 2>&1; sleep 0.6; done; }
 
-# Type text into the currently-focused WebView input (used only for login).
-type_text() { adb shell input text "$(printf '%s' "$1" | sed 's/ /%s/g')" >/dev/null 2>&1; sleep 0.8; }
+# Type text into the currently-focused WebView input WITHOUT opening the
+# on-screen keyboard. `input text` injects key events straight to the focused
+# WebView editable. Critically we never press OK/CENTER on a field first: doing
+# so pops the full-screen leanback IME, which then swallows every later key
+# (D-pad moves its key selection, CENTER types the highlighted letter) and the
+# test can never escape it. Spaces → %s; single-quote the device-side arg so &,
+# |, ; etc. in a password aren't interpreted by the device shell.
+type_text() {
+  local t="$1"
+  t=${t// /%s}
+  t=${t//\'/\'\\\'\'}
+  adb shell "input text '$t'" >/dev/null 2>&1
+  sleep 0.9
+}
 
 # Keycodes
 DPAD_UP=19; DPAD_DOWN=20; DPAD_LEFT=21; DPAD_RIGHT=22; DPAD_CENTER=23
@@ -96,32 +108,34 @@ key $DPAD_UP;    shot "login-focus-back-up"
 if [ -n "${IPTV_USER:-}" ] && [ -n "${IPTV_PASS:-}" ]; then
   log "FULL: signing in with supplied credentials"
 
-  # Focus username → OK opens the IME → type → move to password → type.
-  key $DPAD_UP $DPAD_UP     # ensure we're at the top (username)
-  key $DPAD_CENTER          # OK: __tvNav('ok') on an input asks native for the keyboard
+  # Sign in WITHOUT the on-screen keyboard. Username is focused on page load;
+  # type straight into it, then D-pad DOWN between fields (routes through the
+  # native __tvNav bridge because no IME is open), and only press OK on the
+  # Sign In *button* (a button click, never an input → no keyboard).
+  key $DPAD_UP $DPAD_UP     # ensure the topmost field (username) is focused
   type_text "$IPTV_USER"
   shot "login-username-typed"
-  key $BACK                 # close the soft keyboard
   key $DPAD_DOWN            # → password
-  key $DPAD_CENTER
   type_text "$IPTV_PASS"
   shot "login-password-typed"
-  key $BACK
-  key $DPAD_DOWN            # → Sign In
-  key $DPAD_CENTER          # submit
-  sleep 8                   # auth round-trip + provider screen render
-  shot "provider-screen"
+  key $DPAD_DOWN            # → Sign In button
+  key $DPAD_CENTER          # click Sign In → submit
+  sleep 9                   # auth round-trip + provider screen render
+  shot "after-login"
 
-  # Open the first provider tile (Free / Jio etc.) via OK.
+  # Provider hub: first D-pad press focuses the first tile, then OK opens it.
+  key $DPAD_DOWN
+  shot "provider-focus"
   key $DPAD_CENTER
-  sleep 6
+  sleep 7
   shot "channel-list"
 
   # Walk into the channel grid and open a channel.
-  key $DPAD_DOWN $DPAD_RIGHT
+  key $DPAD_DOWN
+  key $DPAD_RIGHT
   shot "channel-focus"
   key $DPAD_CENTER          # open channel → player screen
-  sleep 8
+  sleep 9
   shot "player-open"
 
   # Transport / channel-hop tests (these hit __tvControl via native key map).
