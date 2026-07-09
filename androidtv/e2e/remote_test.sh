@@ -185,6 +185,30 @@ if [ -n "${IPTV_USER:-}" ] && [ -n "${IPTV_PASS:-}" ] && [ "$CDP_OK" = 1 ]; then
     pass "login advanced to $SCREEN"
   fi
 
+  # ── Worker /api/stream: live manifest stays fresh + segments edge-cache ──
+  # Drive the deployed proxy from the page (it carries a token) against a public
+  # HLS: the manifest must be MANIFEST/no-store (never stale), and a repeated
+  # segment fetch should come back X-VTV-Cache: HIT from the edge.
+  log "Stream proxy + segment edge-cache"
+  STREAM_JS='(async function(){try{
+    var t=localStorage.getItem("iptv_token");
+    var base="https://page-iptv.vilfintv.workers.dev/api/stream?token="+encodeURIComponent(t)+"&url=";
+    var mr=await fetch(base+encodeURIComponent("https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"));
+    var mtxt=await mr.text();
+    var out={mStatus:mr.status,mCache:mr.headers.get("X-VTV-Cache"),mCC:mr.headers.get("Cache-Control")};
+    var vLine=mtxt.split("\n").find(function(l){return l&&l.charAt(0)!=="#";});
+    if(vLine){
+      var vr=await fetch(vLine); var vtxt=await vr.text();
+      var segUrl=vtxt.split("\n").find(function(l){return l&&l.charAt(0)!=="#";});
+      if(segUrl){ var c=[]; for(var i=0;i<3;i++){ var s=await fetch(segUrl); await s.arrayBuffer(); c.push(s.status+":"+s.headers.get("X-VTV-Cache")); } out.seg=c.join(","); }
+    }
+    return JSON.stringify(out);
+  }catch(e){return "ERR "+(e&&e.message||e);}})()'
+  STREAM_RES="$(cdp "$STREAM_JS")"
+  echo "  probe: $STREAM_RES"
+  case "$STREAM_RES" in *MANIFEST*no-store*|*no-store*MANIFEST*) pass "live manifest proxied fresh (no-store, X-VTV-Cache: MANIFEST)";; *) fail "manifest proxy check failed: $STREAM_RES";; esac
+  case "$STREAM_RES" in *HIT*) pass "segment served from edge cache on repeat (X-VTV-Cache: HIT)";; *) warn "no cache HIT seen (edge propagation/timing) — $STREAM_RES";; esac
+
   # ── Provider hub → open a provider via the remote (OK) ──
   log "Open a provider with the D-pad + OK"
   key $DPAD_DOWN            # focus first provider tile
