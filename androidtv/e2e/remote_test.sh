@@ -185,11 +185,12 @@ if [ -n "${IPTV_USER:-}" ] && [ -n "${IPTV_PASS:-}" ] && [ "$CDP_OK" = 1 ]; then
     pass "login advanced to $SCREEN"
   fi
 
-  # ── Worker /api/stream: live manifest stays fresh + segments edge-cache ──
+  # ── Worker /api/stream: manifest stays fresh, segments browser-cacheable ──
   # Drive the deployed proxy from the page (it carries a token) against a public
-  # HLS: the manifest must be MANIFEST/no-store (never stale), and a repeated
-  # segment fetch should come back X-VTV-Cache: HIT from the edge.
-  log "Stream proxy + segment edge-cache"
+  # HLS. On a *.workers.dev deployment the edge Cache API is a no-op, so we assert
+  # the two things that DO work and matter: the live manifest is no-store (never
+  # stale) and immutable segments are marked public/max-age for the player cache.
+  log "Stream proxy: manifest fresh + segment cache headers"
   STREAM_JS='(async function(){try{
     var t=localStorage.getItem("iptv_token");
     var base="https://page-iptv.vilfintv.workers.dev/api/stream?token="+encodeURIComponent(t)+"&url=";
@@ -200,14 +201,14 @@ if [ -n "${IPTV_USER:-}" ] && [ -n "${IPTV_PASS:-}" ] && [ "$CDP_OK" = 1 ]; then
     if(vLine){
       var vr=await fetch(vLine); var vtxt=await vr.text();
       var segUrl=vtxt.split("\n").find(function(l){return l&&l.charAt(0)!=="#";});
-      if(segUrl){ var c=[]; for(var i=0;i<3;i++){ var s=await fetch(segUrl); await s.arrayBuffer(); c.push(s.status+":"+s.headers.get("X-VTV-Cache")); await new Promise(function(r){setTimeout(r,2500);}); } out.seg=c.join(","); }
+      if(segUrl){ var s=await fetch(segUrl); await s.arrayBuffer(); out.seg=s.status+":"+(s.headers.get("X-VTV-Cache")||"?")+":cc="+(s.headers.get("Cache-Control")||"?"); }
     }
     return JSON.stringify(out);
   }catch(e){return "ERR "+(e&&e.message||e);}})()'
   STREAM_RES="$(cdp "$STREAM_JS")"
   echo "  probe: $STREAM_RES"
-  case "$STREAM_RES" in *MANIFEST*no-store*|*no-store*MANIFEST*) pass "live manifest proxied fresh (no-store, X-VTV-Cache: MANIFEST)";; *) fail "manifest proxy check failed: $STREAM_RES";; esac
-  case "$STREAM_RES" in *HIT*) pass "segment served from edge cache on repeat (X-VTV-Cache: HIT)";; *) warn "no cache HIT seen (edge propagation/timing) — $STREAM_RES";; esac
+  case "$STREAM_RES" in *MANIFEST*no-store*) pass "live manifest proxied fresh (X-VTV-Cache: MANIFEST, no-store)";; *) fail "manifest proxy check failed: $STREAM_RES";; esac
+  case "$STREAM_RES" in *SEG*max-age*) pass "segments marked browser-cacheable (X-VTV-Cache: SEG, public max-age)";; *) warn "segment cache header not seen — $STREAM_RES";; esac
 
   # ── Provider hub → open a provider via the remote (OK) ──
   log "Open a provider with the D-pad + OK"
