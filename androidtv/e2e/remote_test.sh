@@ -200,7 +200,7 @@ if [ -n "${IPTV_USER:-}" ] && [ -n "${IPTV_PASS:-}" ] && [ "$CDP_OK" = 1 ]; then
     if(vLine){
       var vr=await fetch(vLine); var vtxt=await vr.text();
       var segUrl=vtxt.split("\n").find(function(l){return l&&l.charAt(0)!=="#";});
-      if(segUrl){ var c=[]; for(var i=0;i<3;i++){ var s=await fetch(segUrl); await s.arrayBuffer(); c.push(s.status+":"+s.headers.get("X-VTV-Cache")); } out.seg=c.join(","); }
+      if(segUrl){ var c=[]; for(var i=0;i<3;i++){ var s=await fetch(segUrl); await s.arrayBuffer(); c.push(s.status+":"+s.headers.get("X-VTV-Cache")); await new Promise(function(r){setTimeout(r,2500);}); } out.seg=c.join(","); }
     }
     return JSON.stringify(out);
   }catch(e){return "ERR "+(e&&e.message||e);}})()'
