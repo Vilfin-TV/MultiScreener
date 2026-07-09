@@ -71,6 +71,10 @@ for i in $(seq 1 60); do
   sleep 2
 done
 adb shell input keyevent 82 >/dev/null 2>&1   # dismiss the lock/keyguard
+# Belt-and-suspenders with hw.keyboard=yes: never show the soft IME while a
+# hardware keyboard is present, so typing into a field can't pop the leanback
+# keyboard and hijack the D-pad.
+adb shell settings put secure show_ime_with_hard_keyboard 0 >/dev/null 2>&1
 adb shell settings put global window_animation_scale 0 >/dev/null 2>&1
 adb shell settings put global transition_animation_scale 0 >/dev/null 2>&1
 adb shell settings put global animator_duration_scale 0 >/dev/null 2>&1

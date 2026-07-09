@@ -72,6 +72,10 @@ jobs:
           cores: 2
           ram-size: 4096M
           disable-animations: true
+          # A hardware keyboard means text input goes straight to the focused
+          # field and the full-screen leanback soft-keyboard never pops up — so
+          # it can't swallow the D-pad keys the remote test relies on.
+          enable-hw-keyboard: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           script: bash androidtv/e2e/remote_test.sh
 
