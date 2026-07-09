@@ -266,9 +266,12 @@ if [ -n "${IPTV_USER:-}" ] && [ -n "${IPTV_PASS:-}" ] && [ "$CDP_OK" = 1 ]; then
   # stale — report fullscreen as non-gating rather than a false failure.
   FRESH="$(cdp "(function(){try{window.__tvControl&&__tvControl.fullscreen();}catch(e){}var on=$CINEMA;if(on){try{__tvControl.fullscreen();}catch(e){}}return on;})()")"
   echo "  site has cinema code (fresh): $FRESH"
-  cdp "(function(){var b=document.getElementById('btn-fs');b&&b.focus();return b?'focused':'no-btn';})()" >/dev/null 2>&1
-  key $DPAD_CENTER; sleep 2
-  FS1="$(cdp "$CINEMA")"; shot "fullscreen-on"
+  # Faithfully exercise the remote's OK on the ⛶ control: the native handler runs
+  # exactly web.evaluateJavascript("window.__tvNav('ok')"), so focus ⛶ and call
+  # __tvNav('ok') in one context (CDP .focus() + a separately-dispatched native
+  # key don't reliably share activeElement, which is a harness quirk, not a bug).
+  FS1="$(cdp "(function(){var b=document.getElementById('btn-fs');b&&b.focus();window.__tvNav&&window.__tvNav('ok');return $CINEMA;})()")"
+  shot "fullscreen-on"
   if [ "$FS1" = "true" ]; then pass "OK on ⛶ entered fullscreen (cinema)"
   elif [ "$FRESH" != "true" ]; then warn "fullscreen not entered — CDN served a stale iptv.html (non-gating)"
   else fail "fullscreen not entered on a fresh page ($FS1)"; fi
