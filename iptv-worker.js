@@ -95,7 +95,7 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Authorization, Content-Type, Range",
-  "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges, X-VTV-Cache",
+  "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges",
   "Access-Control-Max-Age": "86400",
 };
 
@@ -167,7 +167,7 @@ export default {
         return handlePublicEpg(request, env, url);
       }
       if (request.method === "GET" && pathname === "/api/stream") {
-        return handleStream(request, env, url, ctx);
+        return handleStream(request, env, url);
       }
       if (request.method === "GET" && (pathname === "/api/jio/play" || pathname === "/proxy")) {
         return handleJioTunnel(request, env, url);
@@ -990,18 +990,7 @@ async function handlePublicEpg(request, env, url) {
  * Generic CORS-safe relay. Forwards Range, relays Content-Type/Range, adds CORS.
  * Does NOT spoof any provider's mobile-app identity.
  */
-// Caching notes:
-//   * The Cloudflare edge Cache API (caches.default) and cf.cacheTtl are NO-OPS
-//     on *.workers.dev deployments — only Workers on a custom domain get the edge
-//     cache. This Worker is page-iptv.vilfintv.workers.dev, so we don't attempt
-//     edge caching (it would silently do nothing). See the deploy notes.
-//   * What we CAN do safely: force LIVE MANIFESTS to be un-cacheable (no-store)
-//     so a stale playlist never freezes playback, keep AES KEYS un-cacheable
-//     (they rotate), and mark immutable media SEGMENTS browser-cacheable so the
-//     player's own HTTP cache can reuse them on a stall/re-request.
-const STREAM_SEG_CACHE_TTL = 30; // seconds (browser cache for immutable segments)
-
-async function handleStream(request, env, url, ctx) {
+async function handleStream(request, env, url) {
   const auth = await requireAuth(request, env, url);
   if (!auth) return json({ error: "Unauthorized" }, 401);
 
@@ -1017,9 +1006,6 @@ async function handleStream(request, env, url, ctx) {
   if (_hostIsBlocked(upstreamUrl.hostname)) {
     return json({ error: "Blocked host" }, 403);
   }
-
-  const isKey = url.searchParams.get("k") === "key";
-  const hasRange = request.headers.has("Range");
 
   // Forward only the headers a media relay legitimately needs.
   const fwdHeaders = new Headers();
@@ -1051,36 +1037,15 @@ async function handleStream(request, env, url, ctx) {
   copyHeader(upstream, respHeaders, "Content-Type");
   copyHeader(upstream, respHeaders, "Content-Range");
   copyHeader(upstream, respHeaders, "Accept-Ranges");
+  copyHeader(upstream, respHeaders, "Cache-Control");
 
   if (looksManifest) {
-    // Live manifest — force fresh so a cached playlist can't stall the stream.
     const text = await upstream.text();
     const rewritten = rewriteManifest(text, upstreamUrl, url, bearerFrom(request, url), refParam, uaParam);
     respHeaders.set("Content-Type", "application/vnd.apple.mpegurl");
-    respHeaders.set("Cache-Control", "no-store");
-    respHeaders.set("X-VTV-Cache", "MANIFEST");
     return new Response(rewritten, { status: upstream.status, headers: respHeaders });
   }
 
-  if (isKey) {
-    // AES key delivery must never be cached (keys rotate, esp. Jio hdnea).
-    respHeaders.set("Cache-Control", "no-store");
-    respHeaders.set("X-VTV-Cache", "KEY");
-    return new Response(upstream.body, { status: upstream.status, headers: respHeaders });
-  }
-
-  // Immutable media segment (200, non-range, binary-ish body): let the browser /
-  // player HTTP cache reuse it briefly. Segment bytes never change, and any auth
-  // token is part of the URL, so this can't serve stale-authed content.
-  if (upstream.status === 200 && !hasRange &&
-      !ctype.startsWith("text/") && !ctype.includes("mpegurl")) {
-    respHeaders.set("Cache-Control", "public, max-age=" + STREAM_SEG_CACHE_TTL);
-    respHeaders.set("X-VTV-Cache", "SEG");
-    return new Response(upstream.body, { status: upstream.status, headers: respHeaders });
-  }
-
-  // Anything else: plain relay, honouring the upstream cache policy.
-  copyHeader(upstream, respHeaders, "Cache-Control");
   return new Response(upstream.body, { status: upstream.status, headers: respHeaders });
 }
 
@@ -1099,9 +1064,10 @@ function copyHeader(from, to, name) {
  * plain passthrough fetch of the key 403s. Copy that token onto key URIs too.
  */
 function rewriteManifest(text, baseUrl, selfUrl, token, referer, userAgent) {
-  let selfBase = selfUrl.origin + "/api/stream?token=" + encodeURIComponent(token);
-  if (referer) selfBase += "&referer=" + encodeURIComponent(referer);
-  if (userAgent) selfBase += "&ua=" + encodeURIComponent(userAgent);
+  let proxyBase = selfUrl.origin + "/api/stream?token=" + encodeURIComponent(token);
+  if (referer) proxyBase += "&referer=" + encodeURIComponent(referer);
+  if (userAgent) proxyBase += "&ua=" + encodeURIComponent(userAgent);
+  proxyBase += "&url=";
   const hdnea = baseUrl.searchParams.get("__hdnea__");
   const toAbs = (ref) => {
     try { return new URL(ref, baseUrl).toString(); } catch (e) { return ref; }
@@ -1111,8 +1077,7 @@ function rewriteManifest(text, baseUrl, selfUrl, token, referer, userAgent) {
     if (isKeyUri && hdnea && abs.indexOf("__hdnea__") === -1) {
       abs += (abs.indexOf("?") === -1 ? "?" : "&") + "__hdnea__=" + encodeURIComponent(hdnea);
     }
-    // Tag AES key URIs so the proxy never edge-caches a (rotating) key.
-    return selfBase + (isKeyUri ? "&k=key" : "") + "&url=" + encodeURIComponent(abs);
+    return proxyBase + encodeURIComponent(abs);
   };
 
   return text.split("\n").map((line) => {
