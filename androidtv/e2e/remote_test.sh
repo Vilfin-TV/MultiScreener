@@ -177,61 +177,79 @@ if [ -n "${IPTV_USER:-}" ] && [ -n "${IPTV_PASS:-}" ] && [ "$CDP_OK" = 1 ]; then
   shot "channel-list"
   expect "channels loaded" "document.querySelectorAll('.ch-card').length>0" 'true'
 
-  # ── Open a channel → player ──
+  # The currently-playing channel is observable at #np-name (set in openPlayer).
+  NP="(function(){var e=document.getElementById('np-name');return e?e.textContent:'';})()"
+
+  # ── Open a channel deterministically, then verify with the REMOTE keys ──
+  # Spatially hunting a card with the D-pad is a UX nicety already covered by the
+  # focus smoke test; to get a reliable playing state we click the first channel
+  # card (same code path as pressing OK on it → playIndex). What we actually want
+  # to prove is that the remote's transport keys drive playback, which we test
+  # next with real key events observed via #np-name.
   log "Open a channel"
-  key $DPAD_DOWN; key $DPAD_RIGHT
-  shot "channel-focus"
-  key $DPAD_CENTER
-  sleep 9
+  cdp "(function(){var c=document.querySelector('#player-screen.active .ch-card');c&&c.click();return c?'opened':'no-card';})()" >/dev/null 2>&1
+  sleep 8
   shot "player-open"
   expect "player screen active" "!!document.querySelector('#player-screen.active')" 'true'
-  CH0="$(cdp "window.state&&state.currentChannel?state.currentChannel.name:''")"
+  CH0="$(cdp "$NP")"
   echo "  now playing: $CH0"
+  if [ -n "$CH0" ] && [ "$CH0" != '""' ]; then pass "channel started (now playing $CH0)"; else fail "no channel started (np-name empty)"; fi
 
-  # ── Transport: pause / resume (media keys → __tvControl.playPause) ──
-  log "Play / pause"
-  key $MEDIA_PLAY_PAUSE; sleep 1; shot "player-pause"
-  key $MEDIA_PLAY_PAUSE; sleep 1; shot "player-resume"
-  pass "play/pause keys dispatched"
+  # ── Play / pause via the remote's media key (→ __tvControl.playPause) ──
+  log "Play / pause (MEDIA_PLAY_PAUSE)"
+  PAUSED0="$(cdp "(function(){var v=document.querySelector('#player-screen video');return v?v.paused:null;})()")"
+  key $MEDIA_PLAY_PAUSE; sleep 2; shot "player-pause"
+  PAUSED1="$(cdp "(function(){var v=document.querySelector('#player-screen video');return v?v.paused:null;})()")"
+  key $MEDIA_PLAY_PAUSE; sleep 2; shot "player-resume"
+  echo "  video.paused: $PAUSED0 → $PAUSED1"
+  if [ "$PAUSED0" != "$PAUSED1" ]; then pass "play/pause key toggled playback state"; else warn "paused state unchanged ($PAUSED0→$PAUSED1) — stream may not have loaded in CI"; fi
 
-  # ── Channel hop while playing (CHANNEL_UP/DOWN → next/prev) ──
-  log "Channel next / prev"
-  key $CHANNEL_UP; sleep 5; shot "channel-next-1"
-  CH1="$(cdp "window.state&&state.currentChannel?state.currentChannel.name:''")"
-  key $CHANNEL_UP; sleep 5; shot "channel-next-2"
-  CH2="$(cdp "window.state&&state.currentChannel?state.currentChannel.name:''")"
-  key $CHANNEL_DOWN; sleep 5; shot "channel-prev-1"
-  CH3="$(cdp "window.state&&state.currentChannel?state.currentChannel.name:''")"
+  # ── Channel hop with the remote (CHANNEL_UP/DOWN → __tvControl.next/prev) ──
+  log "Channel next / prev (CHANNEL_UP / CHANNEL_DOWN)"
+  key $CHANNEL_UP;   sleep 4; shot "channel-next-1"; CH1="$(cdp "$NP")"
+  key $CHANNEL_UP;   sleep 4; shot "channel-next-2"; CH2="$(cdp "$NP")"
+  key $CHANNEL_DOWN; sleep 4; shot "channel-prev-1"; CH3="$(cdp "$NP")"
   echo "  channels seen: [$CH0] → [$CH1] → [$CH2] → [$CH3]"
-  if [ "$CH0" != "$CH1" ] || [ "$CH1" != "$CH2" ]; then pass "channel-next changed the channel"; else fail "channel-next did not change the channel"; fi
-  if [ "$CH3" = "$CH1" ] && [ "$CH2" != "$CH3" ]; then pass "channel-prev went back a channel"; else warn "channel-prev result ambiguous ([$CH2]→[$CH3])"; fi
+  if [ "$CH0" != "$CH1" ] && [ "$CH1" != "$CH2" ]; then pass "channel-next stepped through channels"; else fail "channel-next did not change the channel"; fi
+  if [ "$CH3" = "$CH1" ]; then pass "channel-prev returned to the previous channel"; else warn "channel-prev landed on [$CH3] (expected [$CH1])"; fi
 
-  # media next/prev (FF/REW keys → same handlers)
-  key $MEDIA_NEXT; sleep 4; shot "media-next"
-  key $MEDIA_PREV; sleep 4; shot "media-prev"
+  # media transport keys (FF/REW) hit the same next/prev handlers
+  key $MEDIA_NEXT; sleep 4; shot "media-next"; CHn="$(cdp "$NP")"
+  key $MEDIA_PREV; sleep 4; shot "media-prev"; CHp="$(cdp "$NP")"
+  echo "  media next/prev: [$CH3] → [$CHn] → [$CHp]"
+  if [ "$CHn" != "$CH3" ]; then pass "media-next key changed the channel"; else warn "media-next unchanged"; fi
 
-  # ── Fullscreen (see report — currently no remote key is mapped) ──
-  log "Fullscreen state check"
+  # ── Fullscreen — probe whether the app CAN go fullscreen at all ──
+  # There is no dispatchKeyEvent case mapping a remote key to fullscreen yet, so
+  # here we call __tvControl.fullscreen() directly (with a user gesture) to learn
+  # whether fullscreen even works in this WebView, which informs the fix.
+  log "Fullscreen capability probe"
   FS_BEFORE="$(cdp "!!document.fullscreenElement")"
-  echo "  fullscreenElement before: $FS_BEFORE"
+  cdp "(function(){return (window.__tvControl&&__tvControl.fullscreen)?(__tvControl.fullscreen(),'called'):'no-fn';})()" >/dev/null 2>&1
+  sleep 2
+  FS_AFTER="$(cdp "!!document.fullscreenElement")"
+  shot "fullscreen-probe"
+  echo "  fullscreenElement: $FS_BEFORE → $FS_AFTER (no remote key mapped yet — enhancement)"
 
-  # ── Favorites: toggle the current channel's star via the app API ──
-  log "Favorites toggle"
-  FAV0="$(cdp "window.state&&state.favs?state.favs.size:0")"
-  # Drive it the way the UI does: click the ☆/★ star on a channel card. The star
-  # is <span class="star" data-fav="i"> inside .ch-card (see iptv.html).
-  cdp "var s=document.querySelector('#player-screen.active .ch-card.playing .star[data-fav]')||document.querySelector('#player-screen .ch-card .star[data-fav]');s&&s.click();s?'clicked':'no-star'" >/dev/null 2>&1
+  # ── Favorites: add the playing channel to favourites ──
+  # On the remote a user moves to a card's ☆ and presses OK; the star is
+  # <span class="star" data-fav="i"> in .ch-card. Count lit stars (.star.on)
+  # before/after clicking one to prove the add/remove works.
+  log "Favorites add"
+  FAV0="$(cdp "document.querySelectorAll('#player-screen .ch-card .star.on').length")"
+  cdp "(function(){var s=document.querySelector('#player-screen .ch-card .star[data-fav]');s&&s.click();return s?'clicked':'no-star';})()" >/dev/null 2>&1
   sleep 1
-  FAV1="$(cdp "window.state&&state.favs?state.favs.size:0")"
+  FAV1="$(cdp "document.querySelectorAll('#player-screen .ch-card .star.on').length")"
   shot "favorite-toggled"
-  echo "  favourites: $FAV0 → $FAV1"
-  if [ "$FAV0" != "$FAV1" ]; then pass "favorite add/remove changed the favourites set"; else warn "favorite count unchanged ($FAV0) — star selector may differ"; fi
+  echo "  lit favourite stars: $FAV0 → $FAV1"
+  if [ "$FAV0" != "$FAV1" ]; then pass "favorite toggle changed the favourites"; else fail "favorite toggle had no effect"; fi
 
   # ── Back out: player → provider hub ──
-  log "Back navigation"
-  key $BACK; sleep 3; shot "back-1"
-  BScr="$(cdp "$ACTIVE_SCREEN")"
+  log "Back navigation (BACK)"
+  key $BACK; sleep 4; shot "back-1"
+  BScr="$(cdp "$ACTIVE_SCREEN" 2>/dev/null)"
   echo "  screen after BACK: $BScr"
+  if [ "$BScr" = '"provider-screen"' ]; then pass "BACK returned to the provider hub"; else warn "BACK landed on [$BScr]"; fi
 
 elif [ -n "${IPTV_USER:-}" ] && [ -n "${IPTV_PASS:-}" ]; then
   warn "Credentials present but CDP unavailable — cannot run the FULL phase reliably."

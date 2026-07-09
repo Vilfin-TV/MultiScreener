@@ -49,7 +49,10 @@ def evaluate(expr, timeout=20):
         ws.send(json.dumps({
             "id": 2,
             "method": "Runtime.evaluate",
-            "params": {"expression": expr, "returnByValue": True, "awaitPromise": True},
+            # userGesture lets gesture-gated calls (requestFullscreen, media
+            # play) run when we script them.
+            "params": {"expression": expr, "returnByValue": True,
+                       "awaitPromise": True, "userGesture": True},
         }))
         deadline = time.time() + timeout
         while time.time() < deadline:
