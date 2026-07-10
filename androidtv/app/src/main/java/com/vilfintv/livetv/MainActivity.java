@@ -74,6 +74,14 @@ public class MainActivity extends Activity {
             WebView.setWebContentsDebuggingEnabled(true);
         }
 
+        // Bridge so the page's on-screen "Exit" button can close the app on TV.
+        web.addJavascriptInterface(new Object() {
+            @android.webkit.JavascriptInterface
+            public void exitApp() {
+                runOnUiThread(new Runnable() { @Override public void run() { finish(); } });
+            }
+        }, "AndroidTV");
+
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);                 // localStorage: login token, favourites
