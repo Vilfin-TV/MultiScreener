@@ -27,14 +27,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Read current iptv_settings from KV
+      - name: Discover the KV namespace that holds iptv_settings
         run: |
-          set -euo pipefail
-          npx --yes wrangler@4 kv key get --namespace-id="$NS" iptv_settings > cur.json 2>/dev/null || {
-            echo "::error::Could not read iptv_settings (token may lack KV read scope)"; exit 1; }
-          bytes=$(wc -c < cur.json)
-          echo "read $bytes bytes"
-          if [ "$bytes" -lt 100 ]; then echo "::error::iptv_settings too small ($bytes bytes) — aborting to avoid clobber"; head -c 200 cur.json; exit 1; fi
+          set -uo pipefail
+          # The repo tomls' namespace id is stale; find the namespace that actually
+          # contains iptv_settings by probing each namespace in the account.
+          npx --yes wrangler@4 kv namespace list > ns.json 2>/dev/null || { echo "::error::cannot list KV namespaces (token scope?)"; exit 1; }
+          ids=$(python3 -c "import json;[print(n['id']) for n in json.load(open('ns.json'))]")
+          echo "namespaces: $(echo "$ids" | tr '\n' ' ')"
+          found=""
+          for id in $ids; do
+            if npx --yes wrangler@4 kv key get --namespace-id="$id" iptv_settings > try.json 2>/dev/null; then
+              if [ "$(wc -c < try.json)" -gt 100 ] && python3 -c "import json;json.load(open('try.json'))" 2>/dev/null; then
+                found="$id"; cp try.json cur.json; echo "iptv_settings found in namespace $id"; break
+              fi
+            fi
+          done
+          if [ -z "$found" ]; then echo "::error::iptv_settings not found in any namespace"; exit 1; fi
+          echo "KV_NS=$found" >> "$GITHUB_ENV"
           python3 -c "import json;d=json.load(open('cur.json'));s=d.get('settings',d);print('current providers:',len(s.get('providers',[])))"
 
       - name: Merge in the new source (idempotent, guarded)
@@ -54,7 +64,7 @@ jobs:
       - name: Write merged iptv_settings back to KV
         run: |
           set -euo pipefail
-          npx --yes wrangler@4 kv key put --namespace-id="$NS" iptv_settings --path new.json
+          npx --yes wrangler@4 kv key put --namespace-id="$KV_NS" iptv_settings --path new.json
           echo "iptv_settings updated"
 
       - name: Bust merged-view caches (R2) so the source shows immediately
@@ -68,7 +78,7 @@ jobs:
       - name: Verify the source is now in settings
         run: |
           set -euo pipefail
-          npx --yes wrangler@4 kv key get --namespace-id="$NS" iptv_settings 2>/dev/null > check.json
+          npx --yes wrangler@4 kv key get --namespace-id="$KV_NS" iptv_settings 2>/dev/null > check.json
           python3 -c "import json,os;d=json.load(open('check.json'));s=d.get('settings',d);p=[x for x in s.get('providers',[]) if x.get('id')==os.environ['ID']];print('OK — provider present:',p[0] if p else 'MISSING');import sys;sys.exit(0 if p else 1)"
         env:
           ID: ${{ inputs.id }}
