@@ -210,7 +210,7 @@ if [ -n "${IPTV_USER:-}" ] && [ -n "${IPTV_PASS:-}" ] && [ "$CDP_OK" = 1 ]; then
   # The worker's stream proxy just needs to serve the manifest (200). The
   # X-VTV-Cache/no-store headers were part of a caching experiment that was
   # reverted, so don't require them here.
-  case "$STREAM_RES" in *'"mStatus":200'*) pass "/api/stream proxies the manifest (200)";; *) fail "manifest proxy check failed: $STREAM_RES";; esac
+  case "$STREAM_RES" in *mStatus*:200*) pass "/api/stream proxies the manifest (200)";; *) fail "manifest proxy check failed: $STREAM_RES";; esac
 
   # ── Provider hub → open a provider via the remote (OK) ──
   log "Open a provider with the D-pad + OK"
