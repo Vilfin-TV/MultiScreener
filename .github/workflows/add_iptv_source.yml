@@ -1,51 +1,54 @@
-name: Add IPTV source to KV
+name: Add IPTV source
 
-# Adds one IPTV source (provider) to the live `iptv_settings` KV object via a
-# guarded read-modify-write, then busts the merged-view caches so it shows up
-# right away. R2 (per-source m3u cache) fills on first fetch; D1 picks it up on
-# the next sync-cron ticks automatically. Uses the deploy token (Workers/KV/R2).
+# Adds one IPTV source (provider) to the live lineup via the console's own API
+# (screener-proxy /api/iptv/config + /api/iptv/settings), authenticated with an
+# operator-scoped agent API key (repo secret IPTV_AGENT_KEY). This writes to the
+# correct KV the worker actually reads — no namespace guessing. R2 per-source
+# m3u cache fills on first fetch; D1 picks it up on the next sync-cron ticks.
+#
+# One-time setup: in link-console -> Agents, issue an API key with the "operator"
+# scope, then add it as the repo secret IPTV_AGENT_KEY (format: vtv.<id>.<secret>).
 
 on:
   workflow_dispatch:
     inputs:
-      id:     { description: "Provider id",     required: true, default: "nsdev" }
-      name:   { description: "Display name",    required: true, default: "NSDev IPTV (Global)" }
-      icon:   { description: "Icon letter",     required: false, default: "N" }
-      region: { description: "Region tag",      required: true, default: "All World IPTV" }
-      group:  { description: "Group tag",       required: false, default: "Free IPTV" }
-      url:    { description: "M3U URL",         required: true, default: "https://gist.githubusercontent.com/nsdevaraj/48239b1a55a1df69be38126ed1092e13/raw" }
-      epg:    { description: "EPG URL",         required: false, default: "https://iptv-org.github.io/epg/index.xml" }
+      id:     { description: "Provider id",  required: true,  default: "nsdev" }
+      name:   { description: "Display name",  required: true,  default: "NSDev IPTV (Global)" }
+      icon:   { description: "Icon letter",   required: false, default: "N" }
+      region: { description: "Region tag",    required: true,  default: "All World IPTV" }
+      group:  { description: "Group tag",     required: false, default: "Free IPTV" }
+      url:    { description: "M3U URL",       required: true,  default: "https://gist.githubusercontent.com/nsdevaraj/48239b1a55a1df69be38126ed1092e13/raw" }
+      epg:    { description: "EPG URL",       required: false, default: "https://iptv-org.github.io/epg/index.xml" }
 
 jobs:
   add-source:
     runs-on: ubuntu-latest
     env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      NS: "25437ace56a442c69fb435cd97ae51cc"      # IPTV_PLAYLIST_KV / IPTV_KV
-      BUCKET: "vilfintv-iptv-cache"
+      WORKER: "https://screener-proxy.vilfintv.workers.dev"
+      KEY: ${{ secrets.IPTV_AGENT_KEY }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Discover the KV namespace that holds iptv_settings
+      - name: Preflight — key present
         run: |
-          set -uo pipefail
-          # The repo tomls' namespace id is stale; find the namespace that actually
-          # contains iptv_settings by probing each namespace in the account.
-          npx --yes wrangler@4 kv namespace list > ns.json 2>/dev/null || { echo "::error::cannot list KV namespaces (token scope?)"; exit 1; }
-          ids=$(python3 -c "import json;[print(n['id']) for n in json.load(open('ns.json'))]")
-          echo "namespaces: $(echo "$ids" | tr '\n' ' ')"
-          found=""
-          for id in $ids; do
-            if npx --yes wrangler@4 kv key get --namespace-id="$id" iptv_settings > try.json 2>/dev/null; then
-              if [ "$(wc -c < try.json)" -gt 100 ] && python3 -c "import json;json.load(open('try.json'))" 2>/dev/null; then
-                found="$id"; cp try.json cur.json; echo "iptv_settings found in namespace $id"; break
-              fi
-            fi
-          done
-          if [ -z "$found" ]; then echo "::error::iptv_settings not found in any namespace"; exit 1; fi
-          echo "KV_NS=$found" >> "$GITHUB_ENV"
-          python3 -c "import json;d=json.load(open('cur.json'));s=d.get('settings',d);print('current providers:',len(s.get('providers',[])))"
+          if [ -z "${KEY:-}" ]; then
+            echo "::error::Repo secret IPTV_AGENT_KEY is not set. Issue an operator-scoped agent key in link-console -> Agents and add it as IPTV_AGENT_KEY."
+            exit 1
+          fi
+
+      - name: Read current settings (GET /api/iptv/config)
+        run: |
+          set -euo pipefail
+          code=$(curl -s -o resp.json -w "%{http_code}" -H "Authorization: Bearer $KEY" "$WORKER/api/iptv/config")
+          echo "HTTP $code"
+          [ "$code" = "200" ] || { echo "::error::config read failed ($code)"; cat resp.json; exit 1; }
+          python3 -c "import json;d=json.load(open('resp.json'));\
+          assert d.get('ok'), d;\
+          s=d['settings'];\
+          n=len(s.get('providers',[]));\
+          assert n>=20, f'only {n} providers — refusing (bad read)';\
+          json.dump(s, open('cur.json','w'));\
+          print('current providers:', n)"
 
       - name: Merge in the new source (idempotent, guarded)
         env:
@@ -58,27 +61,25 @@ jobs:
           SRC_EPG: ${{ inputs.epg }}
         run: |
           set -euo pipefail
-          python3 scripts/add_iptv_source.py < cur.json > new.json
-          python3 -c "import json;json.load(open('new.json'))"   # validate JSON
+          python3 scripts/add_iptv_source.py < cur.json > merged.json
+          # POST expects { "settings": { ... } }
+          python3 -c "import json;s=json.load(open('merged.json'));s=s.get('settings',s);json.dump({'settings':s},open('payload.json','w'))"
 
-      - name: Write merged iptv_settings back to KV
+      - name: Save (POST /api/iptv/settings)
         run: |
           set -euo pipefail
-          npx --yes wrangler@4 kv key put --namespace-id="$KV_NS" iptv_settings --path new.json
-          echo "iptv_settings updated"
+          code=$(curl -s -o save.json -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+            --data @payload.json "$WORKER/api/iptv/settings")
+          echo "HTTP $code"; cat save.json | head -c 400; echo
+          [ "$code" = "200" ] || { echo "::error::save failed ($code)"; exit 1; }
 
-      - name: Bust merged-view caches (R2) so the source shows immediately
-        run: |
-          set -uo pipefail
-          for key in "cache_merge_all" "cache_region_${{ inputs.region }}"; do
-            npx --yes wrangler@4 r2 object delete "$BUCKET/$key" --remote 2>/dev/null \
-              && echo "deleted $key" || echo "no cache object $key (fine)"
-          done
-
-      - name: Verify the source is now in settings
-        run: |
-          set -euo pipefail
-          npx --yes wrangler@4 kv key get --namespace-id="$KV_NS" iptv_settings 2>/dev/null > check.json
-          python3 -c "import json,os;d=json.load(open('check.json'));s=d.get('settings',d);p=[x for x in s.get('providers',[]) if x.get('id')==os.environ['ID']];print('OK — provider present:',p[0] if p else 'MISSING');import sys;sys.exit(0 if p else 1)"
+      - name: Verify the source is live
         env:
           ID: ${{ inputs.id }}
+        run: |
+          set -euo pipefail
+          curl -s -H "Authorization: Bearer $KEY" "$WORKER/api/iptv/config" > check.json
+          python3 -c "import json,os;d=json.load(open('check.json'));p=[x for x in d['settings'].get('providers',[]) if x.get('id')==os.environ['ID']];\
+          print('OK — provider present:', p[0] if p else 'MISSING');\
+          import sys;sys.exit(0 if p else 1)"
