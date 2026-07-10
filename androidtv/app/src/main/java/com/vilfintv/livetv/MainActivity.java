@@ -35,6 +35,12 @@ public class MainActivity extends Activity {
 
     private WebView web;
 
+    // True once the page's window.__tvNav bridge is confirmed present. Until then
+    // we do NOT swallow remote keys — we let the WebView handle them natively, so
+    // the D-pad still works even if the bridge is slow/absent (older WebView, load
+    // hiccup, etc.). Re-checked on every page load.
+    private volatile boolean webNavReady = false;
+
     // Full-screen video plumbing (WebChromeClient custom view for <video> fullscreen).
     private View customView;
     private WebChromeClient.CustomViewCallback customViewCallback;
@@ -93,6 +99,18 @@ public class MainActivity extends Activity {
                 }
                 return true;
             }
+
+            @Override
+            public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
+                webNavReady = false;   // bridge not defined yet on the new page
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                // Confirm the page's remote bridge is live before we start
+                // intercepting keys. Retry briefly in case scripts run late.
+                confirmBridge(0);
+            }
         });
 
         web.setWebChromeClient(new WebChromeClient() {
@@ -146,6 +164,33 @@ public class MainActivity extends Activity {
         });
     }
 
+    /** Poll the page for window.__tvNav; flip webNavReady on once it exists. */
+    private void confirmBridge(final int attempt) {
+        if (web == null) return;
+        web.evaluateJavascript("(typeof window.__tvNav==='function')", new ValueCallback<String>() {
+            @Override public void onReceiveValue(String v) {
+                boolean ok = "true".equals(v);
+                webNavReady = ok;
+                if (!ok && attempt < 12 && web != null) {
+                    web.postDelayed(new Runnable() {
+                        @Override public void run() { confirmBridge(attempt + 1); }
+                    }, 400);
+                }
+            }
+        });
+    }
+
+    // Keys whose behaviour lives in the web bridge (window.__tvNav / __tvControl).
+    // BACK is intentionally excluded — it must always work (exit fullscreen/app).
+    private boolean isBridgeKey(int kc) {
+        return isNavKey(kc)
+            || kc == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE || kc == KeyEvent.KEYCODE_MEDIA_PLAY
+            || kc == KeyEvent.KEYCODE_MEDIA_PAUSE || kc == KeyEvent.KEYCODE_MEDIA_FAST_FORWARD
+            || kc == KeyEvent.KEYCODE_MEDIA_NEXT || kc == KeyEvent.KEYCODE_CHANNEL_UP
+            || kc == KeyEvent.KEYCODE_MEDIA_REWIND || kc == KeyEvent.KEYCODE_MEDIA_PREVIOUS
+            || kc == KeyEvent.KEYCODE_CHANNEL_DOWN || kc == KeyEvent.KEYCODE_MENU;
+    }
+
     private void showKeyboard() {
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm != null && web != null) {
@@ -163,13 +208,18 @@ public class MainActivity extends Activity {
     // unaffected.
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
+        int kc = event.getKeyCode();
+        // FAIL-SAFE: until the web bridge is confirmed loaded, do NOT swallow
+        // remote keys — let the WebView route them natively. Otherwise a missing
+        // bridge (older WebView, slow load) would leave the whole D-pad dead.
+        if (!webNavReady && isBridgeKey(kc)) {
+            return super.dispatchKeyEvent(event);
+        }
         if (event.getAction() != KeyEvent.ACTION_DOWN) {
             // Consume the matching UP for keys we handle so they don't leak.
-            int kc = event.getKeyCode();
             if (isNavKey(kc)) return true;
             return super.dispatchKeyEvent(event);
         }
-        int kc = event.getKeyCode();
         switch (kc) {
             case KeyEvent.KEYCODE_DPAD_UP:    js("window.__tvNav&&window.__tvNav('up')");    return true;
             case KeyEvent.KEYCODE_DPAD_DOWN:  js("window.__tvNav&&window.__tvNav('down')");  return true;
