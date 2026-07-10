@@ -23,6 +23,41 @@ _channel_tokens = {}  # Store acl=/* token for DRM keys
 
 WORKER_URL = "https://screener-proxy.vilfintv.workers.dev"
 
+# Jio's APIs are geo-locked to India. The host's own VPN route flaps between
+# exits (it was Singapore when playback broke), and jiotvapi then resets the TLS
+# handshake -> SSLEOFError. Always send Jio API calls through the India proxy
+# container (nord-india -> 127.0.0.1:8118). Override with the JIO_PROXY env var.
+_JIO_PROXY = os.environ.get("JIO_PROXY", "")   # "" = direct (host VPN is India)
+JIO_PROXIES = {"http": _JIO_PROXY, "https": _JIO_PROXY} if _JIO_PROXY else None
+
+
+def _jio_post(url, **kw):
+    """POST to a Jio API, surviving brief NordVPN reconnects.
+
+    The host VPN flaps; mid-reconnect the TLS handshake to jiotvapi dies with
+    SSLEOFError ("EOF occurred in violation of protocol") and playback 500s.
+    Retry a few times with backoff instead of failing the request. Set the
+    JIO_PROXY env var to route these calls through an India HTTP proxy instead.
+    """
+    kw.setdefault("timeout", 15)
+    if JIO_PROXIES:
+        kw["proxies"] = JIO_PROXIES
+    last = None
+    for attempt in range(3):
+        try:
+            return requests.post(url, **kw)
+        except (requests.exceptions.SSLError,
+                requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout) as e:
+            last = e
+            try:
+                host = url.split("/")[2]
+            except Exception:
+                host = url
+            print(f"STATUS: [Jio] {host} attempt {attempt + 1}/3 failed ({type(e).__name__}) - retrying")
+            time.sleep(2 * (attempt + 1))
+    raise last
+
 _last_m3u = ""  # Cache the last successfully generated M3U in memory
 
 ADMIN_TOKEN = os.environ.get("WORKER_ADMIN_TOKEN", "")
@@ -38,20 +73,8 @@ def generate_and_upload_m3u():
     try:
         set_status("Downloading channel list from Jio CDN...")
         import json
-        with open("jio_channels.json", "r", encoding="utf-8") as f:
+        with open("/home/vilfintvserver/jio_channels.json", "r", encoding="utf-8") as f:
             ch_data = json.load(f)
-        
-        JIO_CATEGORY_MAP = {
-            5: "Entertainment", 6: "Movies", 7: "Kids", 8: "Sports", 9: "Lifestyle",
-            10: "Infotainment", 12: "News", 13: "Music", 15: "Devotional", 16: "Business",
-            17: "Educational", 18: "Shopping", 19: "JioDarshan"
-        }
-        JIO_LANGUAGE_MAP = {
-            1: "Hindi", 2: "Marathi", 3: "Punjabi", 4: "Urdu", 5: "Bengali",
-            6: "English", 7: "Malayalam", 8: "Tamil", 9: "Gujarati", 10: "Odia",
-            11: "Telugu", 12: "Bhojpuri", 13: "Kannada", 14: "Assamese", 15: "Nepali",
-            16: "French", 18: "Konkani"
-        }
         
         m3u_lines = ["#EXTM3U"]
         channels = ch_data.get("result", [])
@@ -61,16 +84,12 @@ def generate_and_upload_m3u():
             ch_logo = ch.get("logoUrl", "")
             if ch_logo and not ch_logo.startswith("http"):
                 ch_logo = f"https://jiotv.catchup.cdn.jio.com/dare_images/images/{ch_logo}"
-            
-            ch_cat_id = ch.get("channelCategoryId", 0)
-            ch_lang_id = ch.get("channelLanguageId", 0)
-            ch_cat = JIO_CATEGORY_MAP.get(int(ch_cat_id), "General") if ch_cat_id else "General"
-            ch_lang = JIO_LANGUAGE_MAP.get(int(ch_lang_id), "") if ch_lang_id else ""
+            ch_cat = ch.get("channelCategoryId", "General")
             
             # Use jio:// protocol marker so the IPTV Worker resolves the stream
             stream_url = f"jio://{ch_id}"
             
-            m3u_lines.append(f'#EXTINF:-1 tvg-id="{ch_id}" tvg-logo="{ch_logo}" group-title="{ch_cat}" tvg-language="{ch_lang}", {ch_name}')
+            m3u_lines.append(f'#EXTINF:-1 tvg-id="{ch_id}" tvg-logo="{ch_logo}" group-title="{ch_cat}", {ch_name}')
             m3u_lines.append(stream_url)
             
         m3u_content = "\n".join(m3u_lines)
@@ -98,7 +117,7 @@ def generate_and_upload_m3u():
             epg_content = epg_req.text
             set_status("Uploading EPG to Cloudflare KV...")
             epg_payload = {"action": "save_epg", "epg": epg_content}
-            r_epg = requests.post(f"{WORKER_URL}/api/jio/auth", headers={"X-Jio-Bridge": "vilfin-secret-jio"}, json=epg_payload, timeout=120)
+            r_epg = requests.post(f"{WORKER_URL}/api/jio/auth", headers={"X-Jio-Bridge": "vilfin-secret-jio"}, json=epg_payload, timeout=40)
             if r_epg.status_code != 200:
                 set_status(f"Failed to upload EPG, status {r_epg.status_code}")
             else:
@@ -112,7 +131,7 @@ def generate_and_upload_m3u():
     global _last_m3u
     _last_m3u = m3u_content
     try:
-        with open("jio_playlist_backup.m3u", "w") as f:
+        with open("/home/vilfintvserver/jio_playlist_backup.m3u", "w") as f:
             f.write(m3u_content)
     except:
         pass
@@ -126,16 +145,7 @@ try:
         JIO_AUTH = json.load(f)
         try:
             # Get tunnel url if running
-            tunnel_url = None
-            try:
-                import os
-                home_dir = os.path.expanduser("~")
-                with open(os.path.join(home_dir, "tunnel.log"), "r") as tf:
-                    import re
-                    match = re.search(r'https://[a-zA-Z0-9-]+\.trycloudflare\.com', tf.read())
-                    if match: tunnel_url = match.group(0)
-            except:
-                pass
+            tunnel_url = _get_tunnel_url()
 
             payload = {"action": "save_auth", "auth": JIO_AUTH}
             if tunnel_url:
@@ -184,7 +194,7 @@ def jio_send_otp(phone):
     try:
         # Note: Using India proxy might be needed here if running outside India
         # proxies={"http": "http://127.0.0.1:8118", "https": "http://127.0.0.1:8118"}
-        r = requests.post(url, headers=headers, json={"number": b64_num}, timeout=15)
+        r = _jio_post(url, headers=headers, json={"number": b64_num}, timeout=15)
         if r.status_code == 204:
             set_status("OTP Sent successfully. Please enter it below.")
         else:
@@ -221,7 +231,7 @@ def jio_verify_otp_and_generate(phone, otp):
         }
     }
     try:
-        r = requests.post(url, headers=headers, json=payload, timeout=15)
+        r = _jio_post(url, headers=headers, json=payload, timeout=15)
         resp = r.json()
         if "ssoToken" in r.text or r.status_code == 200:
             JIO_AUTH = {
@@ -240,7 +250,7 @@ def jio_verify_otp_and_generate(phone, otp):
                     "Content-Type": "application/json; charset=utf-8"
                 }
                 expire_payload = {"appName": "RJIL_JioTV", "deviceId": device_id}
-                expire_r = requests.post(expire_url, headers=expire_headers, json=expire_payload, timeout=15)
+                expire_r = _jio_post(expire_url, headers=expire_headers, json=expire_payload, timeout=15)
                 expire_resp = expire_r.json()
                 if "authToken" in expire_resp.get("data", expire_resp):
                     JIO_AUTH["authToken"] = expire_resp.get("data", expire_resp).get("authToken", "")
@@ -255,15 +265,8 @@ def jio_verify_otp_and_generate(phone, otp):
             # Upload auth creds to KV so the IPTV Worker can call Jio API directly
             try:
                 payload = {"action": "save_auth", "auth": JIO_AUTH}
-                try:
-                    import os
-                    home_dir = os.path.expanduser("~")
-                    with open(os.path.join(home_dir, "tunnel.log"), "r") as tf:
-                        import re
-                        match = re.search(r'https://[a-zA-Z0-9-]+\.trycloudflare\.com', tf.read())
-                        if match: payload["tunnel_url"] = match.group(0)
-                except:
-                    pass
+                _tu = _get_tunnel_url()
+                if _tu: payload["tunnel_url"] = _tu
                 requests.post(f"{WORKER_URL}/api/jio/auth", headers={"X-Jio-Bridge": "vilfin-secret-jio"}, json=payload, timeout=10)
             except:
                 pass
@@ -358,9 +361,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
             try:
                 print("DEBUG Headers:", headers)
                 print("DEBUG Payload:", payload)
-                _proxies = {"http": "http://127.0.0.1:8118", "https": "http://127.0.0.1:8118"}
-                _proxies = {"http": "http://127.0.0.1:8118", "https": "http://127.0.0.1:8118"}
-                r = requests.post(url, headers=headers, data=payload, timeout=10)
+                r = _jio_post(url, headers=headers, data=payload, timeout=10)
                 print("DEBUG Response:", r.text)
                 if r.status_code == 200:
                     resp = r.json()
@@ -424,7 +425,6 @@ class ProxyHandler(BaseHTTPRequestHandler):
                     "User-Agent": "okhttp/4.12.0"
                 }
                 
-                _proxies = {"http": "http://127.0.0.1:8118", "https": "http://127.0.0.1:8118"}
                 
                 r = requests.get(target_url, headers=headers, stream=True)
                 
@@ -497,15 +497,33 @@ def start_proxy():
 M3U_REFRESH_INTERVAL = 20 * 60  # Re-upload M3U every 20 minutes
 
 def _get_tunnel_url():
-    """Read current Cloudflare Tunnel URL from tunnel.log."""
+    """Return the NEWEST *reachable* Cloudflare quick-tunnel URL from tunnel.log.
+
+    Two bugs used to live here:
+      1) re.search() returned the FIRST url ever written to tunnel.log, so after
+         cloudflared restarted (appending a new url) the bridge kept publishing
+         the old, dead one -> the worker proxied to a corpse and returned 530.
+      2) It published the url without checking it was alive.
+    Take the LAST match, and never publish a tunnel we cannot reach.
+    """
     try:
         import re
         home_dir = os.path.expanduser("~")
         with open(os.path.join(home_dir, "tunnel.log"), "r") as tf:
-            match = re.search(r'https://[a-zA-Z0-9-]+\.trycloudflare\.com', tf.read())
-            if match:
-                return match.group(0)
-    except:
+            urls = re.findall(r'https://[a-zA-Z0-9-]+\.trycloudflare\.com', tf.read())
+        if not urls:
+            return None
+        url = urls[-1]
+        try:
+            r = requests.get(url + "/playlist.m3u", timeout=8)
+            if r.status_code >= 500:
+                print(f"STATUS: [Tunnel] {url} unhealthy (HTTP {r.status_code}) - not publishing")
+                return None
+        except Exception as e:
+            print(f"STATUS: [Tunnel] {url} unreachable ({e}) - not publishing")
+            return None
+        return url
+    except Exception:
         pass
     return None
 
