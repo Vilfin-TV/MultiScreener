@@ -63,3 +63,16 @@ jobs:
           name: VilfinTV-LiveTV-apk
           path: androidtv/out/VilfinTV-LiveTV.apk
           if-no-files-found: error
+
+      # Debug APK too — it's debuggable, so WebView remote inspection (CDP) is
+      # enabled, for diagnosing the remote/D-pad on a real device.
+      - name: Build debug APK
+        working-directory: androidtv
+        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace && cp app/build/outputs/apk/debug/app-debug.apk out/VilfinTV-LiveTV-debug.apk
+
+      - name: Upload debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VilfinTV-LiveTV-debug-apk
+          path: androidtv/out/VilfinTV-LiveTV-debug.apk
+          if-no-files-found: error
