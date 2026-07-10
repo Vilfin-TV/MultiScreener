@@ -2126,6 +2126,30 @@ function __iptvBoot(){
     }
     videojs.registerComponent("SettingsButton",SettingsButton);
   }
+  // Cap streaming quality to 720p. Jio (and other relayed sources) tunnel every
+  // segment through a bandwidth-limited hop, and 1080p (~2.5 Mbps) has no
+  // headroom there → buffering. 720p (~1.5 Mbps) plays smoothly and still looks
+  // sharp on a large TV. Applied to the video.js/VHS player here and to the
+  // hls.js fallback in loadStreamFallback().
+  var MAX_QUALITY_HEIGHT = 720;
+  function _capQuality(){
+    try{
+      var tech = player && player.tech && player.tech(true);
+      var vhs = tech && (tech.vhs || tech.hls);
+      if(!vhs || !vhs.representations) return;
+      var reps = vhs.representations();
+      if(!reps || !reps.length) return;
+      var withH = reps.filter(function(r){ return r.height; });
+      // Enable only renditions at/below the cap; if none qualify (heights
+      // unknown or all above), leave everything enabled rather than break.
+      var anyAtOrBelow = withH.some(function(r){ return r.height <= MAX_QUALITY_HEIGHT; });
+      reps.forEach(function(r){
+        if(anyAtOrBelow && r.height) r.enabled(r.height <= MAX_QUALITY_HEIGHT);
+        else r.enabled(true);
+      });
+    }catch(e){}
+  }
+
   function initPlayer(){
     if(player)return player;
     if(!window.videojs)return null;
@@ -2163,7 +2187,9 @@ function __iptvBoot(){
       player.on("loadedmetadata",function(){
         var btn=player.controlBar.getChild("SettingsButton");
         if(btn) btn.update();
+        _capQuality();
       });
+      player.on("loadeddata",function(){ _capQuality(); });
       player.on("error",function(){
         var err=player.error();
         setLoading(false);
@@ -2380,7 +2406,17 @@ function __iptvBoot(){
         liveSyncDurationCount:3
       });state.hls=hls;
       hls.loadSource(src);hls.attachMedia(video);
-      hls.on(window.Hls.Events.MANIFEST_PARSED,function(){tryPlay();});
+      hls.on(window.Hls.Events.MANIFEST_PARSED,function(evt,data){
+        // Cap to 720p (see _capQuality): pick the highest level whose height is
+        // at/below the cap; if none, leave uncapped.
+        try{
+          var levels=(data&&data.levels)||hls.levels||[];
+          var capIdx=-1;
+          for(var i=0;i<levels.length;i++){ if(levels[i].height&&levels[i].height<=MAX_QUALITY_HEIGHT&&i>capIdx) capIdx=i; }
+          if(capIdx>=0) hls.autoLevelCapping=capIdx;
+        }catch(e){}
+        tryPlay();
+      });
       hls.on(window.Hls.Events.ERROR,function(evt,data){
         if(!data||!data.fatal)return;
         state._hlsRetries=(state._hlsRetries||0)+1;
