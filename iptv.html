@@ -2724,7 +2724,10 @@ function __iptvBoot(){
         return 'click';
       }
       if(action==='up'||action==='down'||action==='left'||action==='right'){
-        tvMove(action);
+        // Self-heal: if there's nothing focusable in that direction (or focus was
+        // stranded on a now-hidden element after a screen swap), grab the first
+        // focusable in the active screen so the remote always lands somewhere.
+        if(!tvMove(action)) tvFocusFirst();
         return 'move';
       }
       return 'noop';
@@ -2784,7 +2787,15 @@ function __iptvBoot(){
     var _tvPlayerPushed=false;
     function tvSyncHistory(){
       var onPlayer = !!document.querySelector('#player-screen.active');
-      if(onPlayer && !_tvPlayerPushed){ history.pushState({tv:'player'},''); _tvPlayerPushed=true; }
+      if(onPlayer && !_tvPlayerPushed){
+        history.pushState({tv:'player'},''); _tvPlayerPushed=true;
+        // Entering the player: immediately give the remote a visible target
+        // (first channel card) so the D-pad works without a "blind" first press.
+        setTimeout(function(){
+          var a=document.activeElement;
+          if(!a || a===document.body || !a.closest || !a.closest('#player-screen.active')) tvFocusFirst();
+        }, 250);
+      }
       if(!onPlayer){ _tvPlayerPushed=false; }
     }
     window.addEventListener('popstate', function(){

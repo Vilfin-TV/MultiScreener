@@ -35,11 +35,18 @@ public class MainActivity extends Activity {
 
     private WebView web;
 
-    // True once the page's window.__tvNav bridge is confirmed present. Until then
-    // we do NOT swallow remote keys — we let the WebView handle them natively, so
-    // the D-pad still works even if the bridge is slow/absent (older WebView, load
-    // hiccup, etc.). Re-checked on every page load.
+    // True once the page's window.__tvNav bridge is confirmed present. Re-checked
+    // on every page load.
     private volatile boolean webNavReady = false;
+
+    // Set true ONLY when confirmBridge exhausts all its retries without ever
+    // seeing window.__tvNav — i.e. the bridge genuinely never loaded. Only then
+    // do we fall back to letting the WebView route D-pad keys natively. In normal
+    // operation this stays false and we ALWAYS drive __tvNav, because the WebView
+    // does NOT reliably route arrows on the player screen (the <video> element /
+    // page swallows them), which is exactly what left the D-pad dead after
+    // opening a provider. Biasing toward the bridge fixes that.
+    private volatile boolean bridgeGaveUp = false;
 
     // Full-screen video plumbing (WebChromeClient custom view for <video> fullscreen).
     private View customView;
@@ -111,6 +118,7 @@ public class MainActivity extends Activity {
             @Override
             public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
                 webNavReady = false;   // bridge not defined yet on the new page
+                bridgeGaveUp = false;  // give the new page a fresh chance to load it
             }
 
             @Override
@@ -182,10 +190,14 @@ public class MainActivity extends Activity {
             @Override public void onReceiveValue(String v) {
                 boolean ok = "true".equals(v);
                 webNavReady = ok;
-                if (!ok && attempt < 12 && web != null) {
+                if (ok) { bridgeGaveUp = false; return; }
+                if (attempt < 12 && web != null) {
                     web.postDelayed(new Runnable() {
                         @Override public void run() { confirmBridge(attempt + 1); }
                     }, 400);
+                } else {
+                    // Bridge never appeared after ~5s — allow native key routing.
+                    bridgeGaveUp = true;
                 }
             }
         });
@@ -220,10 +232,13 @@ public class MainActivity extends Activity {
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         int kc = event.getKeyCode();
-        // FAIL-SAFE: until the web bridge is confirmed loaded, do NOT swallow
-        // remote keys — let the WebView route them natively. Otherwise a missing
-        // bridge (older WebView, slow load) would leave the whole D-pad dead.
-        if (!webNavReady && isBridgeKey(kc)) {
+        // FAIL-SAFE: only fall back to native routing if the bridge NEVER loaded
+        // (confirmBridge exhausted its retries). In normal operation we ALWAYS
+        // drive __tvNav — including during the brief confirm window, where
+        // `window.__tvNav&&…` simply no-ops until it's defined. This is what makes
+        // the D-pad work on the player screen, which the WebView cannot navigate
+        // natively (the <video> swallows the arrows).
+        if (bridgeGaveUp && isBridgeKey(kc)) {
             return super.dispatchKeyEvent(event);
         }
         if (event.getAction() != KeyEvent.ACTION_DOWN) {
