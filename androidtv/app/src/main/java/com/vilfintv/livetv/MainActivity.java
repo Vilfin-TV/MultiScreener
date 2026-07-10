@@ -148,7 +148,10 @@ public class MainActivity extends Activity {
         if (savedInstanceState != null) {
             web.restoreState(savedInstanceState);
         } else {
-            web.loadUrl(APP_URL);
+            // Cache-buster on cold start so the Shield never runs a stale cached
+            // iptv.html that predates the remote bridge. app=tv is still present,
+            // so the site's TV mode + window.__tvNav are enabled.
+            web.loadUrl(APP_URL + "&cb=" + System.currentTimeMillis());
         }
 
         // Ensure the WebView holds focus so the very first D-pad press lands on
