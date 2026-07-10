@@ -44,28 +44,50 @@ if len(provs) < MIN_PROVIDERS:
           "refusing to write — this looks like a bad/empty read", file=sys.stderr)
     sys.exit(1)
 
-new = {
-    "id":      os.environ["SRC_ID"].strip(),
-    "name":    os.environ.get("SRC_NAME", "").strip() or os.environ["SRC_ID"],
-    "icon":    os.environ.get("SRC_ICON", "").strip(),
-    "group":   os.environ.get("SRC_GROUP", "").strip(),
-    "region":  os.environ.get("SRC_REGION", "").strip(),
-    "enabled": True,
-    "url":     os.environ.get("SRC_URL", "").strip(),
-    "epg":     os.environ.get("SRC_EPG", "").strip(),
-}
-if not new["id"] or not new["url"]:
-    print("ABORT: SRC_ID and SRC_URL are required", file=sys.stderr)
-    sys.exit(1)
+# Sources to add: either a batch JSON file ($SRC_FILE, an array of provider
+# objects) or a single one from SRC_* env vars.
+if os.environ.get("SRC_FILE"):
+    try:
+        incoming = json.load(open(os.environ["SRC_FILE"], encoding="utf-8"))
+    except Exception as e:
+        print(f"ABORT: cannot read SRC_FILE ({e})", file=sys.stderr)
+        sys.exit(1)
+    if not isinstance(incoming, list) or not incoming:
+        print("ABORT: SRC_FILE must be a non-empty JSON array", file=sys.stderr)
+        sys.exit(1)
+else:
+    incoming = [{
+        "id":     os.environ.get("SRC_ID", ""),
+        "name":   os.environ.get("SRC_NAME", ""),
+        "icon":   os.environ.get("SRC_ICON", ""),
+        "group":  os.environ.get("SRC_GROUP", ""),
+        "region": os.environ.get("SRC_REGION", ""),
+        "url":    os.environ.get("SRC_URL", ""),
+        "epg":    os.environ.get("SRC_EPG", ""),
+    }]
 
 before = len(provs)
-idx = next((i for i, p in enumerate(provs) if isinstance(p, dict) and p.get("id") == new["id"]), None)
-if idx is None:
-    provs.append(new)
-    action = "added"
-else:
-    provs[idx] = new  # update in place (idempotent re-run)
-    action = "updated"
+for src in incoming:
+    new = {
+        "id":      str(src.get("id", "")).strip(),
+        "name":    str(src.get("name", "")).strip() or str(src.get("id", "")),
+        "icon":    str(src.get("icon", "")).strip(),
+        "group":   str(src.get("group", "")).strip(),
+        "region":  str(src.get("region", "")).strip(),
+        "enabled": bool(src.get("enabled", True)),
+        "url":     str(src.get("url", "")).strip(),
+        "epg":     str(src.get("epg", "")).strip(),
+    }
+    if not new["id"] or not new["url"]:
+        print(f"ABORT: each source needs id+url (bad entry: {src})", file=sys.stderr)
+        sys.exit(1)
+    idx = next((i for i, p in enumerate(provs) if isinstance(p, dict) and p.get("id") == new["id"]), None)
+    if idx is None:
+        provs.append(new)
+        print(f"added '{new['id']}' ({new['name']})", file=sys.stderr)
+    else:
+        provs[idx] = new  # idempotent re-run
+        print(f"updated '{new['id']}' ({new['name']})", file=sys.stderr)
 
 settings["providers"] = provs
 
@@ -78,5 +100,5 @@ if len(final) < before:
     print(f"ABORT: provider count shrank {before} -> {len(final)}", file=sys.stderr)
     sys.exit(1)
 
-print(f"{action} '{new['id']}' ({new['name']}); providers {before} -> {len(final)}", file=sys.stderr)
+print(f"providers {before} -> {len(final)}", file=sys.stderr)
 json.dump(out, sys.stdout, ensure_ascii=False)

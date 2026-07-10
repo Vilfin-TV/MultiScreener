@@ -1,31 +1,26 @@
-name: Add IPTV source
+name: Add IPTV sources
 
-# Adds one IPTV source (provider) to the live lineup via the console's own API
-# (screener-proxy /api/iptv/config + /api/iptv/settings), authenticated with an
-# operator-scoped agent API key (repo secret IPTV_AGENT_KEY). This writes to the
-# correct KV the worker actually reads — no namespace guessing. R2 per-source
-# m3u cache fills on first fetch; D1 picks it up on the next sync-cron ticks.
+# Adds the IPTV sources listed in scripts/iptv_sources_add.json to the live
+# lineup via the console's own API (screener-proxy /api/iptv/config +
+# /api/iptv/settings), authenticated with an operator-scoped agent API key
+# (repo secret IPTV_AGENT_KEY). Writes to the KV the worker actually reads — no
+# namespace guessing. Idempotent. R2 per-source m3u cache fills on first fetch;
+# D1 picks it up on the next sync-cron ticks.
 #
 # One-time setup: in link-console -> Agents, issue an API key with the "operator"
 # scope, then add it as the repo secret IPTV_AGENT_KEY (format: vtv.<id>.<secret>).
+# To add/remove future sources: edit scripts/iptv_sources_add.json and re-run.
 
 on:
-  workflow_dispatch:
-    inputs:
-      id:     { description: "Provider id",  required: true,  default: "nsdev" }
-      name:   { description: "Display name",  required: true,  default: "NSDev IPTV (Global)" }
-      icon:   { description: "Icon letter",   required: false, default: "N" }
-      region: { description: "Region tag",    required: true,  default: "All World IPTV" }
-      group:  { description: "Group tag",     required: false, default: "Free IPTV" }
-      url:    { description: "M3U URL",       required: true,  default: "https://gist.githubusercontent.com/nsdevaraj/48239b1a55a1df69be38126ed1092e13/raw" }
-      epg:    { description: "EPG URL",       required: false, default: "https://iptv-org.github.io/epg/index.xml" }
+  workflow_dispatch: {}
 
 jobs:
-  add-source:
+  add-sources:
     runs-on: ubuntu-latest
     env:
       WORKER: "https://screener-proxy.vilfintv.workers.dev"
       KEY: ${{ secrets.IPTV_AGENT_KEY }}
+      SRC_FILE: "scripts/iptv_sources_add.json"
     steps:
       - uses: actions/checkout@v4
 
@@ -35,6 +30,7 @@ jobs:
             echo "::error::Repo secret IPTV_AGENT_KEY is not set. Issue an operator-scoped agent key in link-console -> Agents and add it as IPTV_AGENT_KEY."
             exit 1
           fi
+          python3 -c "import json;print('sources to add:', [s['id'] for s in json.load(open('$SRC_FILE'))])"
 
       - name: Read current settings (GET /api/iptv/config)
         run: |
@@ -50,19 +46,10 @@ jobs:
           json.dump(s, open('cur.json','w'));\
           print('current providers:', n)"
 
-      - name: Merge in the new source (idempotent, guarded)
-        env:
-          SRC_ID: ${{ inputs.id }}
-          SRC_NAME: ${{ inputs.name }}
-          SRC_ICON: ${{ inputs.icon }}
-          SRC_REGION: ${{ inputs.region }}
-          SRC_GROUP: ${{ inputs.group }}
-          SRC_URL: ${{ inputs.url }}
-          SRC_EPG: ${{ inputs.epg }}
+      - name: Merge in the sources (idempotent, guarded)
         run: |
           set -euo pipefail
           python3 scripts/add_iptv_source.py < cur.json > merged.json
-          # POST expects { "settings": { ... } }
           python3 -c "import json;s=json.load(open('merged.json'));s=s.get('settings',s);json.dump({'settings':s},open('payload.json','w'))"
 
       - name: Save (POST /api/iptv/settings)
@@ -71,15 +58,17 @@ jobs:
           code=$(curl -s -o save.json -w "%{http_code}" -X POST \
             -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
             --data @payload.json "$WORKER/api/iptv/settings")
-          echo "HTTP $code"; cat save.json | head -c 400; echo
+          echo "HTTP $code"; head -c 400 save.json; echo
           [ "$code" = "200" ] || { echo "::error::save failed ($code)"; exit 1; }
 
-      - name: Verify the source is live
-        env:
-          ID: ${{ inputs.id }}
+      - name: Verify all sources are live
         run: |
           set -euo pipefail
           curl -s -H "Authorization: Bearer $KEY" "$WORKER/api/iptv/config" > check.json
-          python3 -c "import json,os;d=json.load(open('check.json'));p=[x for x in d['settings'].get('providers',[]) if x.get('id')==os.environ['ID']];\
-          print('OK — provider present:', p[0] if p else 'MISSING');\
-          import sys;sys.exit(0 if p else 1)"
+          python3 -c "import json;\
+          want={s['id'] for s in json.load(open('$SRC_FILE'))};\
+          have={p.get('id') for p in json.load(open('check.json'))['settings'].get('providers',[])};\
+          missing=want-have;\
+          print('added & verified:', sorted(want&have));\
+          print('MISSING:', sorted(missing)) or None;\
+          import sys;sys.exit(1 if missing else 0)"
