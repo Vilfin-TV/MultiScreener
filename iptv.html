@@ -842,6 +842,36 @@
   }
   html.tv-cinema #video-shell .controls .ctrl-btn { width: 52px; height: 52px; }
   html.tv-cinema #video-shell .controls .vol-slider { width: 120px; }
+
+  /* Guide/Favorites toggle buttons live in the control bar but are only useful
+     in fullscreen (windowed mode already shows both panels beside the video). */
+  .vjs-guide-btn, .vjs-favs-btn { display: none !important; }
+  html.tv-cinema .vjs-guide-btn, html.tv-cinema .vjs-favs-btn { display: inline-flex !important; }
+  html.tv-cinema .vjs-guide-btn span, html.tv-cinema .vjs-favs-btn span { font-size: 20px; line-height: 1; }
+  html.tv-cinema.cin-guide .vjs-guide-btn, html.tv-cinema.cin-favs .vjs-favs-btn {
+    color: var(--accent) !important; background: var(--accent-soft) !important; border-radius: 8px;
+  }
+
+  /* Slide-in side drawers over the fullscreen video for Program Guide / Favorites. */
+  html.tv-cinema.cin-guide .remote-panel,
+  html.tv-cinema.cin-favs  .fav-panel {
+    display: flex !important; flex-direction: column;
+    position: fixed !important; top: 0; right: 0; bottom: 0; left: auto;
+    width: min(520px, 46vw); height: 100vh; margin: 0 !important; flex: none !important;
+    z-index: 10006 !important; border-radius: 0 !important;
+    background: rgba(6, 13, 26, .975) !important;
+    border-left: 1px solid var(--border-strong);
+    box-shadow: -16px 0 48px rgba(0, 0, 0, .65);
+    overflow-y: auto; padding: 26px 22px 32px;
+    animation: cinDrawerIn .22s ease;
+  }
+  @keyframes cinDrawerIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  html.tv-cinema.cin-guide .remote-panel:focus,
+  html.tv-cinema.cin-favs  .fav-panel:focus { outline: none; }
+  html.tv-cinema.cin-guide .remote-panel .epg-slot:focus,
+  html.tv-cinema.cin-favs  .fav-panel .fav-item:focus {
+    outline: 3px solid #64ffda !important; outline-offset: 2px; border-radius: 8px;
+  }
 </style>
 </head>
 <body>
@@ -2052,12 +2082,12 @@ function __iptvBoot(){
     if(window.__vjsNavRegistered||!window.videojs)return;
     window.__vjsNavRegistered=true;
     var Button=videojs.getComponent("Button");
-    function make(name,label,glyph,fn){
+    function make(name,label,glyph,fn,extraCls){
       class NavBtn extends Button {
-        constructor(p,o){ super(p,o); this.controlText(label); this.addClass("vjs-nav-btn"); }
+        constructor(p,o){ super(p,o); this.controlText(label); this.addClass("vjs-nav-btn"); if(extraCls) this.addClass(extraCls); }
         handleClick(){ fn(); }
         createEl(){
-          var el=Button.prototype.createEl.call(this,"button",{className:"vjs-nav-btn vjs-control vjs-button"});
+          var el=Button.prototype.createEl.call(this,"button",{className:"vjs-nav-btn vjs-control vjs-button"+(extraCls?(" "+extraCls):"")});
           var span=document.createElement("span"); span.setAttribute("aria-hidden","true"); span.textContent=glyph;
           el.appendChild(span);
           return el;
@@ -2069,7 +2099,33 @@ function __iptvBoot(){
     make("PrevChannelButton","Previous channel","◀",function(){navHoriz(-1);});
     make("NextChannelButton","Next channel","▶",function(){navHoriz(1);});
     make("NextSourceButton","Next source","▼",function(){navVert(1);});
+    // In fullscreen these slide the Program Guide / Favorites in as a drawer so
+    // the user can browse them without leaving the video (see _cinToggleDrawer).
+    make("GuideButton","Program guide","☰",function(){_cinToggleDrawer("guide");},"vjs-guide-btn");
+    make("FavoritesButton","Favorites","★",function(){_cinToggleDrawer("favs");},"vjs-favs-btn");
   }
+  // Toggle a fullscreen (cinema) side-drawer for the Program Guide or Favorites.
+  function _cinToggleDrawer(which){
+    var d=document.documentElement;
+    if(!d.classList.contains("tv-cinema")) return;   // only meaningful in fullscreen
+    var cls   = which==="guide" ? "cin-guide" : "cin-favs";
+    var other = which==="guide" ? "cin-favs"  : "cin-guide";
+    d.classList.remove(other);
+    var opening = !d.classList.contains(cls);
+    d.classList.toggle(cls);
+    if(opening){
+      setTimeout(function(){
+        var panel=document.querySelector(which==="guide" ? "#hero-remote-panel" : "#fav-panel");
+        if(!panel) return;
+        var f=panel.querySelector(".fav-item,.epg-slot,button,a[href],[tabindex]");
+        if(f){ try{ f.focus(); }catch(e){} }
+        else { panel.setAttribute("tabindex","0"); try{ panel.focus(); }catch(e){} }
+      },90);
+    } else {
+      try{ var pt=player&&player.controlBar&&player.controlBar.getChild("fullscreenToggle"); if(pt&&pt.el){ pt.el().focus(); } }catch(e){}
+    }
+  }
+  window._cinToggleDrawer=_cinToggleDrawer;
   // Gear/settings menu — currently just stream quality (video.js 8 bundles
   // qualityLevels() so no extra plugin is needed). Forcing a level works by
   // disabling every other level; VHS's own ABR only picks among enabled ones.
@@ -2196,15 +2252,19 @@ function __iptvBoot(){
         html5:{
           vhs:{
             overrideNative:true,
-            useBandwidthFromLocalStorage:true,
-            enableLowInitialPlaylist:true,
-            fastQualityChange:true,
-            cacheEncryptionKeys:true
+            useBandwidthFromLocalStorage:true,   // reuse last session's bandwidth → faster ABR
+            enableLowInitialPlaylist:true,        // start on the lowest rendition → fastest first frame
+            fastQualityChange:true,               // switch quality without rebuffering
+            cacheEncryptionKeys:true,
+            bandwidth:3000000,                    // 3 Mbps seed estimate so the start level isn't over-cautious
+            useNetworkInformationApi:true,        // use the OS bandwidth hint when available
+            handlePartialData:true                // append partial segments → less stall on live
           }
         },
+        liveTracker:{ trackingThreshold:0, liveTolerance:15 },
         controlBar:{
           pictureInPictureToggle:true,fullscreenToggle:true,
-          children:["PrevSourceButton","PrevChannelButton","playToggle","NextChannelButton","NextSourceButton","spacer","volumePanel","liveDisplay","SettingsButton","pictureInPictureToggle","fullscreenToggle"]
+          children:["PrevSourceButton","PrevChannelButton","playToggle","NextChannelButton","NextSourceButton","spacer","volumePanel","liveDisplay","GuideButton","FavoritesButton","SettingsButton","pictureInPictureToggle","fullscreenToggle"]
         }
       });
       var savedVol=(state.prefs&&typeof state.prefs.volume==="number"&&isFinite(state.prefs.volume))
@@ -2448,12 +2508,22 @@ function __iptvBoot(){
     state._hlsRetries=0;
     if(window.Hls&&window.Hls.isSupported()){
       var hls=new window.Hls({
+        // ── Fastest player load ──
+        lowLatencyMode:true,
+        enableWorker:true,               // demux/parse off the main thread
+        startFragPrefetch:true,          // prefetch the first fragment while the manifest parses
+        abrEwmaDefaultEstimate:2500000,  // 2.5 Mbps seed so the initial level is watchable, not tiny
+        // ── Anti-buffering / live tuning ──
         maxBufferLength:30,
         maxMaxBufferLength:60,
-        backBufferLength:60,
-        lowLatencyMode:true,
-        enableWorker:true,
-        liveSyncDurationCount:3
+        backBufferLength:30,             // keep memory low on the TV WebView
+        liveSyncDurationCount:3,
+        liveMaxLatencyDurationCount:10,
+        nudgeMaxRetry:6,                 // recover from buffer stalls/holes instead of erroring
+        // ── Faster failover on flaky segments ──
+        manifestLoadingTimeOut:8000, manifestLoadingMaxRetry:2,
+        levelLoadingTimeOut:8000,
+        fragLoadingTimeOut:20000, fragLoadingMaxRetry:4
       });state.hls=hls;
       hls.loadSource(src);hls.attachMedia(video);
       hls.on(window.Hls.Events.MANIFEST_PARSED,function(evt,data){
@@ -2691,7 +2761,7 @@ function __iptvBoot(){
      on the arrow keys, OK to activate, media keys wired to the player, and BACK
      that steps player → providers instead of quitting the app. */
   if (TV_APP) {
-    var TV_SEL = '.provider-card,.ch-card,.fav-item,.filter-chip,.channel-item,' +
+    var TV_SEL = '.provider-card,.ch-card,.fav-item,.filter-chip,.channel-item,.epg-slot,' +
                  '.category-result-card,.ctrl-btn,button,a[href],input,select,[data-iptv],[data-idx]';
 
     function tvVisible(el){
@@ -2801,6 +2871,13 @@ function __iptvBoot(){
       filters:   function(){ var c=document.querySelector('#player-screen.active .filter-chip'); if(c){ try{c.focus();}catch(e){} return true; } return false; },
       // BACK: exit fullscreen, else player → providers, else let the app exit.
       back: function(){
+        // Close an open fullscreen Guide/Favorites drawer first (stay in cinema).
+        var _d=document.documentElement;
+        if(_d.classList.contains('cin-guide')||_d.classList.contains('cin-favs')){
+          _d.classList.remove('cin-guide','cin-favs');
+          try{ var ft=player&&player.controlBar&&player.controlBar.getChild('fullscreenToggle'); if(ft&&ft.el){ ft.el().focus(); } }catch(e){}
+          return true;
+        }
         // Exit cinema (CSS fullscreen) first, staying on the player.
         if(document.documentElement.classList.contains('tv-cinema')){
           document.documentElement.classList.remove('tv-cinema');
