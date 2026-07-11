@@ -2694,11 +2694,20 @@ function __iptvBoot(){
       return false;
     }
     function tvFocusFirst(){
-      var scr = document.querySelector('.screen.active') || document.body;
-      // Prefer a channel card / provider card / the first meaningful control.
-      var pref = scr.querySelector('.ch-card,.provider-card,.filter-chip,input,button');
-      var first = pref || scr.querySelector(TV_SEL);
-      if(first){ try{ first.focus(); }catch(e){} }
+      // Must land on a VISIBLE element. Using a raw querySelector picked the
+      // first match in DOM order regardless of visibility — on the player screen
+      // that's a hidden control (display:none menu-toggle / <select>), so
+      // .focus() was a silent no-op and focus stayed on <body>, leaving the
+      // D-pad dead. tvCandidates() already filters to visible, in-active-screen
+      // focusables, so choose from there.
+      var cands = tvCandidates();
+      if(!cands.length) return;
+      var pref = null;
+      for(var i=0;i<cands.length;i++){
+        if(cands[i].matches && cands[i].matches('.ch-card,.provider-card,.filter-chip')){ pref = cands[i]; break; }
+      }
+      var first = pref || cands[0];
+      try{ first.focus(); }catch(e){}
     }
 
     // ── Native D-pad bridge ──────────────────────────────────────────────
