@@ -777,6 +777,14 @@
   html.tv-app .controls { position: static !important; opacity: 1 !important; }
   html.tv-app .tb-ext { display: none; }   /* keep topbar uncrowded for the remote */
 
+  /* Keep the filter + search row fully on-screen on TV. The row is
+     overflow-x:auto by default, which the D-pad can't scroll, so the search
+     box (last child) sat off the right edge. Wrap instead, and drop the
+     flex-spacer that pushed search to the far right. */
+  html.tv-app .filters-row { flex-wrap: wrap !important; overflow: visible !important; row-gap: 10px; }
+  html.tv-app .filters-row > div[style*="flex:1"] { display: none !important; }
+  html.tv-app .filters-row #search-new { width: 260px !important; }
+
   /* ── Strong, unmistakable focus ring for every remote-reachable target ── */
   html.tv-app .ch-card:focus,
   html.tv-app .fav-item:focus,
@@ -2384,6 +2392,19 @@ function __iptvBoot(){
     if(raw.startsWith("zee5://")) { src = WORKER + "/api/zee5/play?id=" + raw.substring(7) + "&token=" + encodeURIComponent(state.token||""); }
     var p=initPlayer();
     setLoading(true);
+    // Stall watchdog: if the stream hasn't actually started within the window,
+    // stop the perpetual spinner and tell the user, instead of "loading" forever
+    // (common on geo-restricted / offline Jio channels). Cleared by setLoading(false),
+    // which the 'playing' event calls once video really starts.
+    if(state._stallTimer)clearTimeout(state._stallTimer);
+    state._stallTimer=setTimeout(function(){
+      state._stallTimer=null;
+      var ok = video && video.currentTime>0 && !video.paused && !video.ended && video.readyState>2;
+      if(ok) return;
+      setLoading(false);
+      try{ if(player&&VJS_OK&&player.loadingSpinner&&player.loadingSpinner.hide) player.loadingSpinner.hide(); }catch(e){}
+      toast("This channel is slow or unavailable right now — try another.",true);
+    },22000);
     if(p){
       stopHls();
       try{
@@ -2449,7 +2470,7 @@ function __iptvBoot(){
     else{setLoading(false);toast("HLS not supported in this browser.",true);}
   }
   function tryPlay(){setLoading(false);var p=video.play();if(p&&p.catch)p.catch(function(){setPlayIcon(false);});}
-  function setLoading(on){ if(VJS_OK)return; $("video-loading").classList.toggle("show",on); }
+  function setLoading(on){ if(!on&&state._stallTimer){clearTimeout(state._stallTimer);state._stallTimer=null;} if(VJS_OK)return; $("video-loading").classList.toggle("show",on); }
   function stopHls(){if(state.hls){try{state.hls.destroy();}catch(e){}state.hls=null;}}
   function stopPlayback(){
     stopHls();_epgStopTimer();state.epgPrograms=null;_epgSetPlaceholder(_epgEls(),"Select a channel to see its program guide.");
@@ -2722,14 +2743,22 @@ function __iptvBoot(){
       if(!t || t===document.body){ tvFocusFirst(); return 'move'; }
       if(action==='ok'){
         if(onField) return 'input';          // let native show the keyboard
-        // Premium feel: OK on the channel you're already watching (its playing
-        // card) or on the video toggles fullscreen. First OK on a card still
-        // plays it (not yet ".playing" at press time); a second OK goes full.
-        var onPlaying = t.closest && (t.closest('.ch-card.playing') || t.closest('#video-shell') || t.closest('.player-stage') || t.tagName==='VIDEO');
-        if(onPlaying && document.querySelector('#player-screen.active') && window.__tvControl && __tvControl.fullscreen){
-          __tvControl.fullscreen(); return 'fullscreen';
+        // OK on the channel you're already watching, or on the video, toggles
+        // fullscreen (cinema) directly.
+        var onPlaying = t.closest && (t.closest('.ch-card.playing') || t.closest('.fav-item.playing') || t.closest('#video-shell') || t.closest('.player-stage') || t.tagName==='VIDEO');
+        if(onPlaying && document.querySelector('#player-screen.active')){
+          toggleFullscreen(); return 'fullscreen';
         }
+        // OK on a channel/favourite card: play it AND open it in fullscreen, so
+        // one press "opens the channel full-screen". Remote BACK exits cinema
+        // back to the grid (see __tvControl.back).
+        var card = t.closest && t.closest('.ch-card,.fav-item,.ch-row');
         try{ t.click(); }catch(e){}
+        if(card && document.querySelector('#player-screen.active')){
+          setTimeout(function(){
+            if(!document.documentElement.classList.contains('tv-cinema')) toggleFullscreen();
+          }, 300);
+        }
         return 'click';
       }
       if(action==='up'||action==='down'||action==='left'||action==='right'){
