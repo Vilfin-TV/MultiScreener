@@ -784,6 +784,8 @@
   html.tv-app .filters-row { flex-wrap: wrap !important; overflow: visible !important; row-gap: 10px; }
   html.tv-app .filters-row > div[style*="flex:1"] { display: none !important; }
   html.tv-app .filters-row #search-new { width: 260px !important; }
+  /* Channel search relocated into the player topbar (out of the D-pad grid path). */
+  html.tv-app .tv-topbar-search { width: 210px !important; margin: 0 10px 0 0 !important; padding: 8px 14px !important; font-size: 14px; }
 
   /* ── Strong, unmistakable focus ring for every remote-reachable target ── */
   html.tv-app .ch-card:focus,
@@ -1068,6 +1070,15 @@ function __iptvBoot(){
     // width only (no initial-scale) so the WebView's overview mode zooms the
     // 1280px layout to fit the TV width exactly — no horizontal cropping.
     vp.setAttribute("content", "width=1280");
+    // Move the channel search OUT of the vertical D-pad path. It sat on its own
+    // row between the filter chips and the grid, so scrolling down kept landing
+    // on it and popping the on-screen keyboard. Park it in the player topbar so
+    // the down-path is chips → channels directly; search is a deliberate trip up.
+    try {
+      var _srch = document.getElementById("search-new");
+      var _acts = document.querySelector("#player-screen .topbar-actions");
+      if (_srch && _acts) { _srch.classList.add("tv-topbar-search"); _acts.insertBefore(_srch, _acts.firstChild); }
+    } catch (e) {}
   }
 
   var WORKER="https://page-iptv.vilfintv.workers.dev";
@@ -2259,6 +2270,7 @@ function __iptvBoot(){
     try{
       _vjsRegisterNavButtons();
       _vjsRegisterSettingsButton();
+      _jioInstallVhsHook();   // seamless Jio token renewal (rewrites __hdnea__ per request)
       player=videojs("video",{
         controls:true,autoplay:false,preload:"auto",liveui:true,playsinline:true,
         fill:true,
@@ -2415,6 +2427,15 @@ function __iptvBoot(){
     var gc=$("guide-ch"); if(gc)gc.textContent=ch.name||"";
     loadEpg(ch);loadStream(ch);
     if(window.innerWidth<=1000)$("video-shell").scrollIntoView({behavior:"smooth",block:"start"});
+    // Channel-surf while staying in cinema fullscreen: keep the remote focused on
+    // the control bar so a next/prev channel switch never drops back to the grid.
+    if(document.documentElement.classList.contains("tv-cinema")){
+      setTimeout(function(){
+        if(!document.documentElement.classList.contains("tv-cinema")) return;
+        var a=document.activeElement;
+        if(!a || !a.closest || !a.closest("#controls")){ var b=document.getElementById("btn-play"); if(b){ try{ b.focus(); }catch(e){} } }
+      }, 120);
+    }
   }
   function _epgFmtTime(ms){ return ms?new Date(ms).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):""; }
   function _epgBuildTimeline(programs){
@@ -2474,24 +2495,56 @@ function __iptvBoot(){
     playIndex(row.idxs[next]);
     return true;
   }
-  // Jio's Akamai stream URL is signed with a token that expires in ~120s, so a
-  // channel would stop after a couple of minutes. This proactively renews it a
-  // few seconds before expiry by re-fetching a freshly-signed URL and swapping it
-  // in (which seeks back to the live edge), so playback keeps going indefinitely.
-  function _jioClearRefresh(){ if(state._jioRefreshTimer){ clearTimeout(state._jioRefreshTimer); state._jioRefreshTimer=null; } }
+  // Jio's Akamai stream URL is signed with an __hdnea__ token that expires in
+  // ~120s, so a channel would stop after a couple of minutes. SEAMLESS renewal:
+  // instead of reloading the player (which stalls the video), we keep a fresh
+  // __hdnea__ query string and rewrite it into every playlist/segment request via
+  // VHS's beforeRequest hook — so the stream never stops. One token covers the
+  // whole channel path (acl=/…/<Channel>/*), so a single swap keeps every
+  // variant/segment valid. Cleared on channel change.
+  function _jioClearRefresh(){ if(state._jioRefreshTimer){ clearTimeout(state._jioRefreshTimer); state._jioRefreshTimer=null; } state._jioTokenQ=null; }
+  function _jioExtractToken(u){ try{ var m=/[?&](__hdnea__=[^&]+)/.exec(u||""); return m?m[1]:null; }catch(e){ return null; } }
+  function _jioFetchFreshToken(jid){
+    var url=WORKER+"/api/jio/play?id="+jid+"&token="+encodeURIComponent(state.token||"")+"&_r="+Date.now();
+    return fetch(url,{redirect:"follow"}).then(function(r){ var t=_jioExtractToken(r.url); if(t) state._jioTokenQ=t; return t; }).catch(function(){ return null; });
+  }
+  // Global VHS request rewriter: keep every Jio Akamai request on the freshest
+  // token. Non-Jio requests (no __hdnea__ / no active token) pass through untouched.
+  function _jioInstallVhsHook(){
+    try{
+      if(window.videojs && videojs.Vhs && videojs.Vhs.xhr && !videojs.Vhs.xhr.__jioHook){
+        videojs.Vhs.xhr.__jioHook = true;
+        videojs.Vhs.xhr.beforeRequest = function(opts){
+          try{
+            if(state._jioTokenQ && opts && opts.uri && opts.uri.indexOf("__hdnea__=")!==-1){
+              opts.uri = opts.uri.replace(/__hdnea__=[^&]*/, state._jioTokenQ);
+            }
+          }catch(e){}
+          return opts;
+        };
+      }
+    }catch(e){}
+  }
   function _jioScheduleRefresh(rawUrl){
     _jioClearRefresh();
     var jid=rawUrl.substring(6);
+    _jioFetchFreshToken(jid);   // prime the current token
     (function loop(){
       state._jioRefreshTimer=setTimeout(function(){
-        if(!state.currentChannel || String(state.currentChannel.url||"")!==rawUrl) return; // channel changed → stop
-        var fresh=WORKER+"/api/jio/play?id="+jid+"&token="+encodeURIComponent(state.token||"")+"&_r="+Date.now();
-        try{
-          if(player&&VJS_OK){ player.src({src:fresh,type:"application/x-mpegURL"}); var pr=player.play(); if(pr&&pr.catch)pr.catch(function(){}); }
-          else if(window.Hls){ loadStreamFallback(fresh); }
-        }catch(e){}
-        loop();  // schedule the next renewal
-      }, 105000);
+        if(!state.currentChannel || String(state.currentChannel.url||"")!==rawUrl){ _jioClearRefresh(); return; }
+        _jioFetchFreshToken(jid).then(function(tok){
+          // Safety net: if the seamless token fetch failed (e.g. CORS), fall back
+          // to a full reload so the channel still doesn't stop.
+          if(!tok){
+            try{
+              var fresh=WORKER+"/api/jio/play?id="+jid+"&token="+encodeURIComponent(state.token||"")+"&_r="+Date.now();
+              if(player&&VJS_OK){ player.src({src:fresh,type:"application/x-mpegURL"}); var pr=player.play(); if(pr&&pr.catch)pr.catch(function(){}); }
+              else if(window.Hls){ loadStreamFallback(fresh); }
+            }catch(e){}
+          }
+        });
+        loop();
+      }, 90000);   // renew well before the ~120s expiry
     })();
   }
   function loadStream(ch){
