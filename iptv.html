@@ -2924,8 +2924,14 @@ function __iptvBoot(){
         if(onField) return 'input';          // let native show the keyboard
         // OK on the channel you're already watching, or on the video, toggles
         // fullscreen (cinema) directly.
-        var onPlaying = t.closest && (t.closest('.ch-card.playing') || t.closest('.fav-item.playing') || t.closest('#video-shell') || t.closest('.player-stage') || t.tagName==='VIDEO');
-        if(onPlaying && document.querySelector('#player-screen.active')){
+        // Toggle fullscreen only when OK is pressed on the VIDEO itself — NOT on a
+        // control button, which also lives inside #video-shell. (This was the bug:
+        // every control in cinema matched "#video-shell" and toggled fullscreen,
+        // kicking you back to the grid instead of running the control.)
+        var onCtrl = !!(t.closest && t.closest('.controls,.vjs-control-bar,button,a[href],input,select,[role="button"]'));
+        var onVideoArea = !onCtrl && !!(t.tagName==='VIDEO' || t.id==='video-shell'
+          || (t.closest && (t.closest('.vjs-tech')||t.closest('#player-placeholder')||t.closest('.ch-card.playing')||t.closest('.fav-item.playing'))));
+        if(onVideoArea && document.querySelector('#player-screen.active')){
           toggleFullscreen(); return 'fullscreen';
         }
         // OK on a channel/favourite card: play it AND open it in fullscreen, so
