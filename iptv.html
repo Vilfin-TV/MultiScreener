@@ -2707,7 +2707,38 @@ function __iptvBoot(){
     // arrow keys to the page (which it doesn't do reliably on the player
     // screen). Returns "input" for a focused text field so the native side can
     // pop the on-screen keyboard; otherwise moves focus / clicks.
+    // ── Temporary on-screen diagnostic HUD (TV only) ──────────────────────
+    // Shows what __tvNav observes on every remote press so a dead D-pad can be
+    // diagnosed on-device without a debuggable build. Remove once resolved.
+    var _tvHud=null;
+    function _tvHudEl(){
+      if(_tvHud) return _tvHud;
+      _tvHud=document.createElement('div');
+      _tvHud.id='tv-hud';
+      _tvHud.style.cssText='position:fixed;left:8px;bottom:8px;z-index:2147483647;background:rgba(0,0,0,.85);color:#64ffda;font:13px/1.4 monospace;padding:6px 9px;border:1px solid #64ffda;border-radius:6px;max-width:70vw;white-space:pre-wrap;pointer-events:none';
+      (document.body||document.documentElement).appendChild(_tvHud);
+      return _tvHud;
+    }
+    function _desc(el){
+      if(!el) return 'null';
+      if(el===document.body) return 'BODY';
+      return (el.tagName||'?').toLowerCase()
+        + (el.id?('#'+el.id):'')
+        + (el.className&&el.className.baseVal===undefined&&typeof el.className==='string'?('.'+el.className.trim().split(/\s+/).slice(0,2).join('.')):'');
+    }
+    function _tvHudLog(action){
+      try{
+        var t=document.activeElement;
+        var scr=document.querySelector('.screen.active');
+        _tvHudEl().textContent =
+          'nav='+action+'  cand='+tvCandidates().length+'\n'+
+          'active-screen='+(scr?scr.id:'NONE')+'\n'+
+          'activeEl='+_desc(t);
+      }catch(e){ try{_tvHudEl().textContent='HUD-ERR '+e;}catch(_){}}
+    }
+
     window.__tvNav = function(action){
+      _tvHudLog(action);
       var t = document.activeElement, tag = (t && t.tagName || '').toLowerCase();
       var onField = (tag==='input' || tag==='textarea' || tag==='select');
       if(!t || t===document.body){ tvFocusFirst(); return 'move'; }
@@ -2727,7 +2758,9 @@ function __iptvBoot(){
         // Self-heal: if there's nothing focusable in that direction (or focus was
         // stranded on a now-hidden element after a screen swap), grab the first
         // focusable in the active screen so the remote always lands somewhere.
-        if(!tvMove(action)) tvFocusFirst();
+        var moved = tvMove(action);
+        if(!moved) tvFocusFirst();
+        try{ _tvHudEl().textContent += '\nmoved='+moved+' -> '+_desc(document.activeElement); }catch(e){}
         return 'move';
       }
       return 'noop';
