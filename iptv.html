@@ -2503,26 +2503,53 @@ function __iptvBoot(){
   // whole channel path (acl=/…/<Channel>/*), so a single swap keeps every
   // variant/segment valid. Cleared on channel change.
   function _jioClearRefresh(){ if(state._jioRefreshTimer){ clearTimeout(state._jioRefreshTimer); state._jioRefreshTimer=null; } state._jioTokenQ=null; }
-  function _jioExtractToken(u){ try{ var m=/[?&](__hdnea__=[^&]+)/.exec(u||""); return m?m[1]:null; }catch(e){ return null; } }
+  function _b64dec(b){ try{ return atob(String(b).replace(/-/g,"+").replace(/_/g,"/")); }catch(e){ return null; } }
+  // Pull the fresh __hdnea__ token out of a play URL. Jio's URLs come as
+  // /proxy?url=<base64-of-the-real-Akamai-URL>, so decode that first.
+  function _jioExtractToken(u){
+    try{
+      if(!u) return null;
+      var akamai=u, m=/[?&]url=([^&]+)/.exec(u);
+      if(m){ var d=_b64dec(decodeURIComponent(m[1])); if(d) akamai=d; }
+      var t=/[?&](__hdnea__=[^&]+)/.exec(akamai);
+      return t?t[1]:null;
+    }catch(e){ return null; }
+  }
   function _jioFetchFreshToken(jid){
-    var url=WORKER+"/api/jio/play?id="+jid+"&token="+encodeURIComponent(state.token||"")+"&_r="+Date.now();
-    return fetch(url,{redirect:"follow"}).then(function(r){ var t=_jioExtractToken(r.url); if(t) state._jioTokenQ=t; return t; }).catch(function(){ return null; });
+    // Use the JSON endpoint (CORS-clean) so we can read the fresh signed URL — a
+    // direct fetch that follows the 302 to Akamai is blocked from reading r.url.
+    var url=WORKER+"/api/jio/playurl?id="+jid+"&token="+encodeURIComponent(state.token||"")+"&_r="+Date.now();
+    return fetch(url).then(function(r){return r.json();}).then(function(d){ var t=_jioExtractToken(d&&d.url); if(t) state._jioTokenQ=t; return t; }).catch(function(){ return null; });
   }
   // Global VHS request rewriter: keep every Jio Akamai request on the freshest
   // token. Non-Jio requests (no __hdnea__ / no active token) pass through untouched.
+  function _jioBeforeRequest(opts){
+    try{
+      if(state._jioTokenQ && opts && opts.uri){
+        var u=opts.uri;
+        if(u.indexOf("url=")!==-1){
+          // Jio: the real Akamai URL (with __hdnea__) is base64 inside the url=
+          // param of /proxy. Decode, swap the token for the fresh one, re-encode.
+          opts.uri = u.replace(/([?&]url=)([^&]+)/, function(all,pfx,enc){
+            var dec=_b64dec(decodeURIComponent(enc)); if(!dec||dec.indexOf("__hdnea__=")===-1) return all;
+            dec=dec.replace(/__hdnea__=[^&]*/, state._jioTokenQ);
+            return pfx+encodeURIComponent(btoa(dec));
+          });
+        } else if(u.indexOf("__hdnea__=")!==-1){
+          opts.uri = u.replace(/__hdnea__=[^&]*/, state._jioTokenQ);
+        }
+      }
+    }catch(e){}
+    return opts;
+  }
   function _jioInstallVhsHook(){
     try{
-      if(window.videojs && videojs.Vhs && videojs.Vhs.xhr && !videojs.Vhs.xhr.__jioHook){
-        videojs.Vhs.xhr.__jioHook = true;
-        videojs.Vhs.xhr.beforeRequest = function(opts){
-          try{
-            if(state._jioTokenQ && opts && opts.uri && opts.uri.indexOf("__hdnea__=")!==-1){
-              opts.uri = opts.uri.replace(/__hdnea__=[^&]*/, state._jioTokenQ);
-            }
-          }catch(e){}
-          return opts;
-        };
-      }
+      ["Vhs","Hls"].forEach(function(ns){
+        if(window.videojs && videojs[ns] && videojs[ns].xhr && !videojs[ns].xhr.__jioHook){
+          videojs[ns].xhr.__jioHook = true;
+          videojs[ns].xhr.beforeRequest = _jioBeforeRequest;
+        }
+      });
     }catch(e){}
   }
   function _jioScheduleRefresh(rawUrl){

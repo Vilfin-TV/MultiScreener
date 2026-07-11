@@ -172,6 +172,9 @@ export default {
       if (request.method === "GET" && (pathname === "/api/jio/play" || pathname === "/proxy")) {
         return handleJioTunnel(request, env, url);
       }
+      if (request.method === "GET" && pathname === "/api/jio/playurl") {
+        return handleJioPlayUrl(request, env, url);
+      }
       if (request.method === "GET" && pathname === "/api/zee5/play") {
         return handleZee5Tunnel(request, env, url);
       }
@@ -256,6 +259,22 @@ async function handleJioTunnel(request, env, url) {
     statusText: response.statusText,
     headers: responseHeaders
   });
+}
+
+// Like /api/jio/play but returns the signed Akamai URL as JSON (CORS-clean), so
+// the front-end can read a fresh __hdnea__ token for SEAMLESS token renewal
+// without a cross-origin fetch to Akamai (the browser blocks reading that).
+async function handleJioPlayUrl(request, env, url) {
+  const kv = env.IPTV_PLAYLIST_KV;
+  if (!kv) return json({ error: "KV not configured" }, 503);
+  const tunnelUrl = await memoKvGet(kv, 'jio_tunnel_url');
+  if (!tunnelUrl) return json({ error: "Jio Tunnel URL not found" }, 404);
+  const t = new URL(tunnelUrl); t.pathname = "/play"; t.search = url.search;
+  const r = await fetch(t.toString(), { method: "GET", headers: request.headers, redirect: "manual" });
+  const loc = r.headers.get("location");
+  if (loc) return json({ ok: true, url: loc });
+  let body = ""; try { body = await r.text(); } catch (e) {}
+  return json({ ok: false, status: r.status, body: body.slice(0, 300) }, 502);
 }
 
 const enc = new TextEncoder();
