@@ -164,10 +164,15 @@ public class MainActivity extends Activity {
         if (savedInstanceState != null) {
             web.restoreState(savedInstanceState);
         } else {
-            // Cache-buster on cold start so the Shield never runs a stale cached
-            // iptv.html that predates the remote bridge. app=tv is still present,
-            // so the site's TV mode + window.__tvNav are enabled.
-            web.loadUrl(APP_URL + "&cb=" + System.currentTimeMillis());
+            // Always cold-load the LATEST iptv.html. A query cache-buster alone
+            // wasn't enough — a CDN edge kept serving a stale copy — so we also
+            // drop the WebView's own cache and send a no-cache request header so
+            // the CDN revalidates with origin instead of returning a cached page.
+            web.clearCache(true);
+            java.util.Map<String, String> noCache = new java.util.HashMap<>();
+            noCache.put("Cache-Control", "no-cache, no-store, max-age=0");
+            noCache.put("Pragma", "no-cache");
+            web.loadUrl(APP_URL + "&cb=" + System.currentTimeMillis(), noCache);
         }
 
         // Ensure the WebView holds focus so the very first D-pad press lands on
