@@ -31,11 +31,11 @@ public class MainActivity extends Activity {
 
     // The web app entry point. ?app=tv restricts the hub to IPTV + Jio TV and
     // enables the remote-focus styling shipped in iptv.html.
-    // NOTE: loaded from the GitHub Pages ORIGIN (github.io), not vilfintv.com,
-    // to bypass the Cloudflare edge cache that kept serving a stale iptv.html to
-    // the TV. GitHub purges its own CDN on every deploy, so this is always fresh.
-    // The app's API calls use absolute *.workers.dev URLs, so origin doesn't matter.
-    private static final String APP_URL = "https://vilfin-tv.github.io/MultiScreener/iptv.html?app=tv";
+    // (github.io was tried to dodge the Cloudflare cache but GitHub Pages
+    // redirects it to http://vilfintv.com — blocked as cleartext — so it just
+    // bounces back to Cloudflare. Staying on the https custom domain; freshness
+    // is fixed on the Cloudflare side, not here.)
+    private static final String APP_URL = "https://vilfintv.com/iptv.html?app=tv";
 
     private WebView web;
 
