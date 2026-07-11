@@ -824,7 +824,11 @@
     background: #000 !important;
   }
   html.tv-cinema #video-shell video,
-  html.tv-cinema #video-shell .video-js { width: 100% !important; height: 100% !important; object-fit: contain !important; }
+  html.tv-cinema #video-shell .video-js,
+  html.tv-cinema #video-shell .vjs-tech {
+    position: absolute !important; inset: 0 !important;
+    width: 100% !important; height: 100% !important; object-fit: contain !important; background: #000 !important;
+  }
   /* Keep the now-playing chip as a channel OSD while in cinema mode — move it to
      the TOP so it doesn't collide with the control bar at the bottom. */
   html.tv-cinema #video-shell .now-playing { position: absolute; left: 24px; top: 22px; bottom: auto; z-index: 9999; max-width: 60vw; }
@@ -2461,13 +2465,34 @@ function __iptvBoot(){
     playIndex(row.idxs[next]);
     return true;
   }
+  // Jio's Akamai stream URL is signed with a token that expires in ~120s, so a
+  // channel would stop after a couple of minutes. This proactively renews it a
+  // few seconds before expiry by re-fetching a freshly-signed URL and swapping it
+  // in (which seeks back to the live edge), so playback keeps going indefinitely.
+  function _jioClearRefresh(){ if(state._jioRefreshTimer){ clearTimeout(state._jioRefreshTimer); state._jioRefreshTimer=null; } }
+  function _jioScheduleRefresh(rawUrl){
+    _jioClearRefresh();
+    var jid=rawUrl.substring(6);
+    (function loop(){
+      state._jioRefreshTimer=setTimeout(function(){
+        if(!state.currentChannel || String(state.currentChannel.url||"")!==rawUrl) return; // channel changed → stop
+        var fresh=WORKER+"/api/jio/play?id="+jid+"&token="+encodeURIComponent(state.token||"")+"&_r="+Date.now();
+        try{
+          if(player&&VJS_OK){ player.src({src:fresh,type:"application/x-mpegURL"}); var pr=player.play(); if(pr&&pr.catch)pr.catch(function(){}); }
+          else if(window.Hls){ loadStreamFallback(fresh); }
+        }catch(e){}
+        loop();  // schedule the next renewal
+      }, 105000);
+    })();
+  }
   function loadStream(ch){
     var raw=ch&&ch.url?ch.url:ch;
     if(!raw){toast("This channel has no stream URL.",true);return;}
+    _jioClearRefresh();
     state._playTry={key:(ch&&typeof ch==="object"&&ch.url)?favKey(ch):null,raw:raw,attempt:0};
     var src=API.stream(raw,state.token||"",ch&&ch.referer,ch&&ch.userAgent);
     if(raw.indexOf("192.168.") !== -1) { src = raw; }
-    if(raw.startsWith("jio://")) { src = WORKER + "/api/jio/play?id=" + raw.substring(6) + "&token=" + encodeURIComponent(state.token||""); }
+    if(raw.startsWith("jio://")) { src = WORKER + "/api/jio/play?id=" + raw.substring(6) + "&token=" + encodeURIComponent(state.token||""); _jioScheduleRefresh(raw); }
     if(raw.startsWith("zee5://")) { src = WORKER + "/api/zee5/play?id=" + raw.substring(7) + "&token=" + encodeURIComponent(state.token||""); }
     var p=initPlayer();
     setLoading(true);
