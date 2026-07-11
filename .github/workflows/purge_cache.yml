@@ -1,0 +1,37 @@
+name: Purge Cloudflare cache
+
+# Purges the Cloudflare edge cache for vilfintv.com so a freshly-deployed
+# iptv.html (and other pages) is served immediately everywhere, instead of a
+# stale copy lingering on a regional edge. Uses the CLOUDFLARE_API_TOKEN secret
+# (needs the Zone > Cache Purge permission for the vilfintv.com zone).
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Purge everything
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TOKEN:-}" ]; then echo "::error::CLOUDFLARE_API_TOKEN not set"; exit 1; fi
+          echo "== token permission check =="
+          curl -s -H "Authorization: Bearer $TOKEN" "https://api.cloudflare.com/client/v4/user/tokens/verify" | head -c 300; echo
+          echo "== find zone =="
+          curl -s -H "Authorization: Bearer $TOKEN" "https://api.cloudflare.com/client/v4/zones?name=vilfintv.com" > z.json
+          python3 -c "import json;d=json.load(open('z.json'));r=d.get('result') or [];
+          assert d.get('success'), d;
+          assert r, 'no zone found for vilfintv.com (token may lack Zone:Read)';
+          open('zid.txt','w').write(r[0]['id']);
+          print('zone id:', r[0]['id'], 'status:', r[0].get('status'))"
+          ZID=$(cat zid.txt)
+          echo "== purge everything =="
+          code=$(curl -s -o purge.json -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}' \
+            "https://api.cloudflare.com/client/v4/zones/$ZID/purge_cache")
+          echo "HTTP $code"; cat purge.json; echo
+          python3 -c "import json;d=json.load(open('purge.json'));import sys;sys.exit(0 if d.get('success') else 1)"
