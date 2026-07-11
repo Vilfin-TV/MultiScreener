@@ -161,19 +161,15 @@ public class MainActivity extends Activity {
         fullscreenContainer.setVisibility(View.GONE);
         setContentView(root);
 
-        if (savedInstanceState != null) {
-            web.restoreState(savedInstanceState);
-        } else {
-            // Always cold-load the LATEST iptv.html. A query cache-buster alone
-            // wasn't enough — a CDN edge kept serving a stale copy — so we also
-            // drop the WebView's own cache and send a no-cache request header so
-            // the CDN revalidates with origin instead of returning a cached page.
-            web.clearCache(true);
-            java.util.Map<String, String> noCache = new java.util.HashMap<>();
-            noCache.put("Cache-Control", "no-cache, no-store, max-age=0");
-            noCache.put("Pragma", "no-cache");
-            web.loadUrl(APP_URL + "&cb=" + System.currentTimeMillis(), noCache);
-        }
+        // ALWAYS cold-load the LATEST iptv.html — never web.restoreState(), which
+        // brought back a stale cached page AND skipped the cache-busting below
+        // (that was the real reason updates never appeared on the TV). Also drop
+        // the WebView cache and send a no-cache header so the CDN serves fresh.
+        web.clearCache(true);
+        java.util.Map<String, String> noCache = new java.util.HashMap<>();
+        noCache.put("Cache-Control", "no-cache, no-store, max-age=0");
+        noCache.put("Pragma", "no-cache");
+        web.loadUrl(APP_URL + "&cb=" + System.currentTimeMillis(), noCache);
 
         // Ensure the WebView holds focus so the very first D-pad press lands on
         // the login username field rather than being swallowed by the window.
