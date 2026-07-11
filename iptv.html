@@ -820,7 +820,8 @@
   html.tv-cinema #video-shell {
     position: fixed !important; inset: 0 !important;
     width: 100% !important; height: 100% !important;
-    max-height: none !important; border-radius: 0 !important; z-index: 9998 !important;
+    max-width: none !important; max-height: none !important;   /* .player-stage caps at 1200px → 80px blue strip on the right without this */
+    border-radius: 0 !important; z-index: 9998 !important;
     background: #000 !important;
   }
   html.tv-cinema #video-shell video,
