@@ -846,6 +846,16 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, news_items
             <a href="https://www.marketscreener.com/stock-exchange/indexes/africa/" style="color: #1a0dab; text-decoration: none; margin: 0 8px; font-weight: bold;">🌍 Africa</a> |
             <a href="https://www.marketscreener.com/stock-exchange/indexes/asia/" style="color: #1a0dab; text-decoration: none; margin: 0 8px; font-weight: bold;">🌏 Asia</a>
         </div>
+        <p style="margin-bottom: 10px; color: #555; font-size: 0.95em; font-weight: bold;">Indian Market Screeners & Discoveries:</p>
+        <div style="margin-bottom: 20px; font-size: 0.85em; line-height: 1.6;">
+            <a href="https://dhan.co/all-etfs/" style="color: #1a0dab; text-decoration: none; margin: 0 8px; font-weight: bold;">📈 All ETFs</a> |
+            <a href="https://dhan.co/mutual-funds/equity-funds/" style="color: #1a0dab; text-decoration: none; margin: 0 8px; font-weight: bold;">🏦 Equity MFs</a> |
+            <a href="https://dhan.co/stock-market-live/top-gainers-today/" style="color: #1a0dab; text-decoration: none; margin: 0 8px; font-weight: bold;">🚀 Top Gainers</a> |
+            <a href="https://dhan.co/stocks/market/multibagger-stocks/" style="color: #1a0dab; text-decoration: none; margin: 0 8px; font-weight: bold;">💎 Multibaggers</a> <br>
+            <a href="https://dhan.co/stocks/market/most-active-stocks-this-week/" style="color: #1a0dab; text-decoration: none; margin: 0 8px; font-weight: bold;">🔥 Most Active</a> |
+            <a href="https://dhan.co/stocks/market/uptrend-stocks/" style="color: #1a0dab; text-decoration: none; margin: 0 8px; font-weight: bold;">↗️ Uptrend</a> |
+            <a href="https://dhan.co/stocks/market/high-growth-stocks/" style="color: #1a0dab; text-decoration: none; margin: 0 8px; font-weight: bold;">🌱 High Growth</a>
+        </div>
         <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #dee2e6;">
             <a href="https://vilfintv.com/manage_subscription.html?action=subscribe" style="color: #1a0dab; text-decoration: none; margin: 0 15px; font-size: 0.9em;">Subscribe to this Newsletter</a>
             <a href="https://vilfintv.com/manage_subscription.html?action=unsubscribe" style="color: #6c757d; text-decoration: none; margin: 0 15px; font-size: 0.9em;">Unsubscribe</a>
