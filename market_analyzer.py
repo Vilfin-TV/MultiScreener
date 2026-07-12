@@ -25,7 +25,7 @@ TICKERS_CONFIG = {
         'US 10Y': {'symbol': '^TNX', 'currency': 'Yield %'},
         'US 30Y': {'symbol': '^TYX', 'currency': 'Yield %'},
         'Japan Govt Bonds': {'symbol': '2561.T', 'currency': 'JPY'},
-        'Germany Govt Bonds': {'symbol': 'BUND.DE', 'currency': 'EUR'},
+        'Europe/Intl Bonds (BNDX)': {'symbol': 'BNDX', 'currency': 'USD'},
         'UK Govt Bonds': {'symbol': 'IGLT.L', 'currency': 'GBP'},
         'Corp Bonds (LQD)': {'symbol': 'LQD', 'currency': 'USD'},
         'High Yield (HYG)': {'symbol': 'HYG', 'currency': 'USD'},
@@ -364,6 +364,7 @@ def get_executive_summary_analysis(data, regime_score):
     broad_indices.update(data.get('US Indices', {}))
     broad_indices.update(data.get('Global Indices', {}))
     broad_indices.update(data.get('Asian Indices', {}))
+    broad_indices.update(data.get('Top 10 Broad Market ETFs', {}))
     valid_broad = {name: metrics for name, metrics in broad_indices.items() if metrics and metrics['ma_50']}
     lt_broad_name = "N/A"
     lt_broad_reason = ""
