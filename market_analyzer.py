@@ -65,6 +65,7 @@ TICKERS_CONFIG = {
     },
     'US Indices': {
         'S&P 500': {'symbol': '^GSPC', 'currency': 'USD'},
+        'Nasdaq 100': {'symbol': '^NDX', 'currency': 'USD'},
         'Nasdaq Composite': {'symbol': '^IXIC', 'currency': 'USD'},
         'Dow Jones': {'symbol': '^DJI', 'currency': 'USD'},
         'Russell 2000': {'symbol': '^RUT', 'currency': 'USD'},
@@ -80,6 +81,30 @@ TICKERS_CONFIG = {
         'BSE 500 (Nifty 500 Proxy)': {'symbol': 'BSE-500.BO', 'currency': 'INR'}, 
         'Nifty Midcap 50': {'symbol': '^NSEMDCP50', 'currency': 'INR'}, 
         'Nifty Next 50 (ETF)': {'symbol': 'JUNIORBEES.NS', 'currency': 'INR'}
+    },
+    'Top 10 US Stocks': {
+        'Apple (AAPL)': {'symbol': 'AAPL', 'currency': 'USD'},
+        'Microsoft (MSFT)': {'symbol': 'MSFT', 'currency': 'USD'},
+        'Nvidia (NVDA)': {'symbol': 'NVDA', 'currency': 'USD'},
+        'Alphabet (GOOGL)': {'symbol': 'GOOGL', 'currency': 'USD'},
+        'Amazon (AMZN)': {'symbol': 'AMZN', 'currency': 'USD'},
+        'Meta (META)': {'symbol': 'META', 'currency': 'USD'},
+        'Tesla (TSLA)': {'symbol': 'TSLA', 'currency': 'USD'},
+        'Berkshire (BRK-B)': {'symbol': 'BRK-B', 'currency': 'USD'},
+        'Eli Lilly (LLY)': {'symbol': 'LLY', 'currency': 'USD'},
+        'Broadcom (AVGO)': {'symbol': 'AVGO', 'currency': 'USD'}
+    },
+    'Top 10 Asian Stocks': {
+        'TSMC (Taiwan)': {'symbol': 'TSM', 'currency': 'USD'},
+        'Tencent (China)': {'symbol': 'TCEHY', 'currency': 'USD'},
+        'Samsung (Korea)': {'symbol': '005930.KS', 'currency': 'KRW'},
+        'Toyota (Japan)': {'symbol': 'TM', 'currency': 'USD'},
+        'Alibaba (China)': {'symbol': 'BABA', 'currency': 'USD'},
+        'Reliance (India)': {'symbol': 'RELIANCE.NS', 'currency': 'INR'},
+        'HDFC Bank (India)': {'symbol': 'HDB', 'currency': 'USD'},
+        'Sony (Japan)': {'symbol': 'SONY', 'currency': 'USD'},
+        'Keyence (Japan)': {'symbol': '6861.T', 'currency': 'JPY'},
+        'ICBC (China)': {'symbol': '1398.HK', 'currency': 'HKD'}
     },
     'Sectors & Themes (US ETFs)': {
         'AI Stocks': {'symbol': 'AIQ', 'currency': 'USD'},
@@ -238,26 +263,6 @@ def fetch_asset_data(ticker_symbol):
 
 import xml.etree.ElementTree as ET
 
-def fetch_global_news():
-    news_items = []
-    try:
-        url = 'https://news.google.com/rss/search?q=stock+market+economy+finance&hl=en-US&gl=US&ceid=US:en'
-        response = requests.get(url, timeout=10)
-        root = ET.fromstring(response.content)
-        items = root.findall('.//item')
-        for item in items[:6]:
-            news_items.append({
-                'title': item.find('title').text,
-                'link': item.find('link').text,
-                'publisher': item.find('source').text if item.find('source') is not None else 'Google News',
-                'time': 0
-            })
-        unique_news = {item['link']: item for item in news_items}
-        return list(unique_news.values())[:6]
-    except Exception as e:
-        logging.warning(f"Failed to fetch news: {e}")
-        return []
-
 def collect_market_data():
     all_data = {}
     for category, assets in TICKERS_CONFIG.items():
@@ -276,26 +281,30 @@ def collect_market_data():
     return all_data
 
 def calc_growth_score(m):
-    p50 = ((m.get('price', 0) / m['ma_50']) - 1) * 100 if m.get('ma_50') else 0
-    p20 = ((m.get('price', 0) / m['ma_20']) - 1) * 100 if m.get('ma_20') else 0
-    ytd = m.get('ytd_return') or 0
+    mult = -1 if m.get('currency') == 'Yield %' else 1
+    p50 = mult * (((m.get('price', 0) / m['ma_50']) - 1) * 100 if m.get('ma_50') else 0)
+    p20 = mult * (((m.get('price', 0) / m['ma_20']) - 1) * 100 if m.get('ma_20') else 0)
+    ytd = mult * (m.get('ytd_return') or 0)
     return (p50 * 0.4) + (p20 * 0.3) + (ytd * 0.3)
 
 def calc_value_score(m):
-    p50 = ((m.get('price', 0) / m['ma_50']) - 1) * 100 if m.get('ma_50') else 0
-    ytd = m.get('ytd_return') or 0
+    mult = -1 if m.get('currency') == 'Yield %' else 1
+    p50 = mult * (((m.get('price', 0) / m['ma_50']) - 1) * 100 if m.get('ma_50') else 0)
+    ytd = mult * (m.get('ytd_return') or 0)
     if ytd < -15: return -9999
     return -p50 + (ytd * 0.1)
 
 def calc_lt_score(m):
-    tyr = m.get('three_yr_return') or 0
-    ytd = m.get('ytd_return') or 0
-    p50 = ((m.get('price', 0) / m['ma_50']) - 1) * 100 if m.get('ma_50') else 0
+    mult = -1 if m.get('currency') == 'Yield %' else 1
+    tyr = mult * (m.get('three_yr_return') or 0)
+    ytd = mult * (m.get('ytd_return') or 0)
+    p50 = mult * (((m.get('price', 0) / m['ma_50']) - 1) * 100 if m.get('ma_50') else 0)
     return (tyr * 0.5) + (ytd * 0.3) + (p50 * 0.2)
 
 def calc_momentum_score(m):
-    p20 = ((m.get('price', 0) / m['ma_20']) - 1) * 100 if m.get('ma_20') else 0
-    daily = m.get('change') or 0
+    mult = -1 if m.get('currency') == 'Yield %' else 1
+    p20 = mult * (((m.get('price', 0) / m['ma_20']) - 1) * 100 if m.get('ma_20') else 0)
+    daily = mult * (m.get('change') or 0)
     return (p20 * 0.7) + (daily * 0.3)
 
 def get_executive_summary_analysis(data, regime_score):
@@ -337,10 +346,10 @@ def get_executive_summary_analysis(data, regime_score):
         
         if regime_score >= 10:
             if us_ratio >= asian_ratio and us_ratio >= 0.5:
-                leader_str = f"led by {us_leaders[0][0]} (+{us_leaders[0][1]:.2f}% above MA)" if us_leaders else ""
+                leader_str = f"led by {us_leaders[0][0]} ({us_leaders[0][1]:+.2f}% above MA)" if us_leaders else ""
                 regional_rec = f"US Equities. {us_above_50} out of {us_total} tracked US indices are in a confirmed uptrend, {leader_str}. Western markets show strong relative strength with an average premium of {us_avg_dist:.2f}% over their 50-day trendlines."
             elif asian_ratio > us_ratio and asian_ratio >= 0.5:
-                leader_str = f"led by {asia_leaders[0][0]} (+{asia_leaders[0][1]:.2f}% above MA)" if asia_leaders else ""
+                leader_str = f"led by {asia_leaders[0][0]} ({asia_leaders[0][1]:+.2f}% above MA)" if asia_leaders else ""
                 regional_rec = f"Asian Equities. {asia_above_50} out of {asia_total} Asian indices are trading above their 50-day moving average, {leader_str}. Eastern markets are currently outperforming the West."
             else:
                 regional_rec = "Broad Equities. Markets are expanding globally, but momentum is relatively dispersed without a single heavily dominant region."
@@ -364,8 +373,8 @@ def get_executive_summary_analysis(data, regime_score):
         momentum_sector = max(valid_sectors.items(), key=lambda x: calc_growth_score(x[1]))
         mom_metrics = momentum_sector[1]
         dist_mom = ((mom_metrics['price'] / mom_metrics['ma_50']) - 1) * 100
-        ytd_str = f" and an explosive +{mom_metrics['ytd_return']:.2f}% YTD return" if mom_metrics.get('ytd_return') else ""
-        momentum_name = f"{momentum_sector[0]}. This sector is displaying extreme relative strength, trading +{dist_mom:.2f}% above its 50-day average{ytd_str}. Capital is heavily rotating here for short-term alpha."
+        ytd_str = f" and an explosive {mom_metrics['ytd_return']:+.2f}% YTD return" if mom_metrics.get('ytd_return') else ""
+        momentum_name = f"{momentum_sector[0]}. This sector is displaying extreme relative strength, trading {dist_mom:+.2f}% above its 50-day average{ytd_str}. Capital is heavily rotating here for short-term alpha."
         
         value_names = ['Energy', 'Finance', 'Industrials', 'Banking', 'Metals & Mining']
         value_sectors = {k: v for k, v in valid_sectors.items() if k in value_names}
@@ -382,7 +391,7 @@ def get_executive_summary_analysis(data, regime_score):
             long_term_name = best_lt[0]
             tyr = best_lt[1].get('three_yr_return', 0) or 0
             ytd = best_lt[1].get('ytd_return', 0) or 0
-            lt_reason = f"Selected based on our multi-factor model. It boasts a powerful +{tyr:.2f}% 3-Year Return and +{ytd:.2f}% YTD, showing the strongest structural uptrend among our tracked secular growth themes."
+            lt_reason = f"Selected based on our multi-factor model. It boasts a powerful {tyr:+.2f}% 3-Year Return and {ytd:+.2f}% YTD, showing the strongest structural uptrend among our tracked secular growth themes."
 
     broad_indices = {}
     broad_indices.update(data.get('US Indices', {}))
@@ -397,7 +406,7 @@ def get_executive_summary_analysis(data, regime_score):
         tyr = best_broad[1].get('three_yr_return', 0) or 0
         ytd = best_broad[1].get('ytd_return', 0) or 0
         lt_broad_name = f"{best_broad[0]} Index Fund"
-        lt_broad_reason = f"Selected as the strongest long-term broad-market index globally based on its blended structural performance (+{tyr:.2f}% 3-Year, +{ytd:.2f}% YTD)."
+        lt_broad_reason = f"Selected as the strongest long-term broad-market index globally based on its blended structural performance ({tyr:+.2f}% 3-Year, {ytd:+.2f}% YTD)."
 
     bonds = data.get('Bonds', {})
     valid_bonds = {name: metrics for name, metrics in bonds.items() if metrics and metrics['ma_50']}
@@ -408,7 +417,7 @@ def get_executive_summary_analysis(data, regime_score):
         lt_bond_name = best_lt_bond[0]
         tyr = best_lt_bond[1].get('three_yr_return', 0) or 0
         ytd = best_lt_bond[1].get('ytd_return', 0) or 0
-        lt_bond_reason = f"Selected because it demonstrates massive multi-year strength (+{tyr:.2f}% 3-Year Return, +{ytd:.2f}% YTD) alongside solid current momentum."
+        lt_bond_reason = f"Selected because it demonstrates massive multi-year strength ({tyr:+.2f}% 3-Year Return, {ytd:+.2f}% YTD) alongside solid current momentum."
 
     commodities = data.get('Commodities', {})
     valid_commodities = {name: metrics for name, metrics in commodities.items() if metrics and metrics['ma_50']}
@@ -419,14 +428,14 @@ def get_executive_summary_analysis(data, regime_score):
         lt_commodity_name = best_lt_comm[0]
         tyr = best_lt_comm[1].get('three_yr_return', 0) or 0
         ytd = best_lt_comm[1].get('ytd_return', 0) or 0
-        lt_commodity_reason = f"Selected because it demonstrates massive multi-year strength (+{tyr:.2f}% 3-Year Return, +{ytd:.2f}% YTD) alongside solid current momentum."
+        lt_commodity_reason = f"Selected because it demonstrates massive multi-year strength ({tyr:+.2f}% 3-Year Return, {ytd:+.2f}% YTD) alongside solid current momentum."
 
     def get_short_term_pick(asset_dict):
         valid = {name: metrics for name, metrics in asset_dict.items() if metrics and metrics['ma_20'] and metrics['change'] > 0}
         if valid:
             best = max(valid.items(), key=lambda x: calc_momentum_score(x[1]))
             dist = ((best[1]['price'] / best[1]['ma_20']) - 1) * 100
-            return f"{best[0]} (+{dist:.2f}% above 20-Day MA, Up {best[1]['change']:.2f}% Today)"
+            return f"{best[0]} ({dist:+.2f}% above 20-Day MA, Up {best[1]['change']:+.2f}% Today)"
         return "No clear short-term momentum"
 
 
@@ -530,7 +539,7 @@ def calculate_market_regime(data):
 
     return score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad_name, lt_broad_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency
 
-def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr, news_items):
+def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr):
     html = f"""
     <html>
     <head>
@@ -596,18 +605,12 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
         </div>
     """
 
-    if news_items:
-        html += "<div class='score-box' style='background: #f8f9fa; border-left: 5px solid #6c757d;'>"
-        html += "<h4 style='margin-top: 0; margin-bottom: 15px;'>📰 What to watch out for this week (Major Events)</h4>"
-        html += "<ul style='margin-bottom:0;'>"
-        for item in news_items:
-            html += f"<li style='margin-bottom: 8px;'><a href='{item['link']}' style='color: #1a0dab; text-decoration: none;'>{item['title']}</a> <span style='color: #666; font-size: 0.85em;'>- {item['publisher']}</span></li>"
-        html += "</ul></div>"
-
     if risk_alerts:
-        html += "<div class='alerts'><h3 style='margin-top:0;'>Risk Alerts</h3><ul style='margin-bottom:0;'>"
+        html += "<div class='score-box' style='background: #fff3f3; border-left: 5px solid #d9534f;'>"
+        html += "<h4 style='margin-top: 0; margin-bottom: 15px; color: #d9534f;'>🚨 Automated Risk Alerts</h4>"
+        html += "<ul style='margin-bottom:0; color: #b91c1c;'>"
         for alert in risk_alerts:
-            html += f"<li>{alert}</li>"
+            html += f"<li style='margin-bottom: 8px;'><strong>{alert}</strong></li>"
         html += "</ul></div>"
 
     html += "<h2>Asset Dashboard</h2>"
@@ -709,7 +712,7 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
                 if valid_st:
                     best = max(valid_st.items(), key=lambda x: calc_momentum_score(x[1]))
                     dist = ((best[1]['price'] / best[1]['ma_20']) - 1) * 100
-                    st_eq = f"{best[0]} (+{dist:.2f}% vs 20D MA)"
+                    st_eq = f"{best[0]} ({dist:+.2f}% vs 20D MA)"
                 
                 valid_val = {n: m for n, m in valid_assets.items() if m.get('ma_50')}
                 if valid_val:
@@ -718,12 +721,12 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
                     if dist_val < 0:
                         val_eq = f"{best_val[0]} ({abs(dist_val):.2f}% below 50D MA)"
                     else:
-                        val_eq = f"{best_val[0]} (Lowest premium: +{dist_val:.2f}% vs 50D MA)"
+                        val_eq = f"{best_val[0]} (Lowest premium: {dist_val:+.2f}% vs 50D MA)"
                 
                 valid_lt = {n: m for n, m in valid_assets.items() if m.get('three_yr_return')}
                 if valid_lt:
                     best_lt = max(valid_lt.items(), key=lambda x: calc_lt_score(x[1]))
-                    lt_eq = f"{best_lt[0]} (+{best_lt[1]['three_yr_return']:.2f}% 3-Year)"
+                    lt_eq = f"{best_lt[0]} ({best_lt[1]['three_yr_return']:+.2f}% 3-Year)"
                 
                 html += f"""
                 <div style="background: #fdfdfd; border: 1px solid #e0e0e0; border-left: 5px solid #1a365d; padding: 15px; margin-bottom: 20px; margin-top: 10px;">
@@ -737,6 +740,46 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
                 """
 
     html += """
+    <div style="margin-top: 40px; padding: 20px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-family: sans-serif;">
+        <h3 style="margin-top: 0; color: #16a34a; text-align: center;">🏦 Best Brokers & Apps</h3>
+        <p style="margin-bottom: 20px; color: #555; text-align: center; font-size: 0.95em;">🎁 Using the referral links below benefits you (discounts, coins, or cashback) at no extra cost. Thank you for supporting this tool!</p>
+        
+        <table style="width: 100%; border: none; font-size: 0.9em; background: transparent;">
+            <tr>
+                <td style="width: 50%; padding: 10px; vertical-align: top; border: none; text-align: left;">
+                    <div style="background: white; padding: 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 15px;">
+                        <strong style="color: #0a192f;">🌐 International Transfer Apps</strong><br><br>
+                        • <a href="https://revolut.com/referral/?referral-code=vilfingeorge!APR1-26-AR-JP-H1&geo-redirect" style="color: #16a34a; text-decoration: none; font-weight: bold;">Revolut</a><br>
+                        • <a href="https://wise.com/invite/ihpc/vilfinm" style="color: #16a34a; text-decoration: none; font-weight: bold;">Wise (TransferWise)</a><br>
+                        • <a href="https://referral-link.onelink.me/gbf1/a43c48ca?deep_link_sub1=referral&deep_link_value=cWkMb3" style="color: #16a34a; text-decoration: none; font-weight: bold;">Instarem</a> (Code: <strong>cWkMb3</strong>)
+                    </div>
+                    
+                    <div style="background: white; padding: 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <strong style="color: #0a192f;">📈 Stock Brokers</strong><br><br>
+                        • <a href="https://zerodha.com/open-account?c=XKQ288" style="color: #16a34a; text-decoration: none; font-weight: bold;">Zerodha</a> (NRI & Resident)<br>
+                        • <a href="https://join.dhan.co/?invite=VFZJN04428" style="color: #16a34a; text-decoration: none; font-weight: bold;">Dhan</a> (Resident Only)<br>
+                        • <a href="https://www.interactivebrokers.co.jp/en/accounts/what-you-need-jp.php" style="color: #16a34a; text-decoration: none; font-weight: bold;">Interactive Brokers</a> (Global)
+                    </div>
+                </td>
+                <td style="width: 50%; padding: 10px; vertical-align: top; border: none; text-align: left;">
+                    <div style="background: white; padding: 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 15px;">
+                        <strong style="color: #0a192f;">🏦 Bonds & Mutual Funds (India)</strong><br><br>
+                        • <a href="https://kuvera.in/s/wsapp?referral=1T6BH" style="color: #16a34a; text-decoration: none; font-weight: bold;">Kuvera MFs</a> (Code: <strong>1T6BH</strong>)<br>
+                        • <a href="https://www.indiabonds.com/referral/CiY7ZAAt" style="color: #16a34a; text-decoration: none; font-weight: bold;">IndiaBonds</a><br>
+                        • <a href="https://goldenpi.com/sign-up?referrer=SRVL1503290" style="color: #16a34a; text-decoration: none; font-weight: bold;">GoldenPi</a><br>
+                        • <a href="https://www.wintwealth.com/bonds/referral/invite?referralCode=3AC7AF" style="color: #16a34a; text-decoration: none; font-weight: bold;">Wint Wealth</a>
+                    </div>
+                    
+                    <div style="background: white; padding: 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <strong style="color: #0a192f;">💰 Digital Gold, Silver & UPI</strong><br><br>
+                        • <a href="https://m.navi.com/X7g9gpUzoKb" style="color: #16a34a; text-decoration: none; font-weight: bold;">Navi UPI</a><br>
+                        • <a href="https://phon.pe/772mkuqo" style="color: #16a34a; text-decoration: none; font-weight: bold;">PhonePe</a>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
     <div style="margin-top: 40px; padding: 20px; background-color: #f8f9fa; border-top: 2px solid #e9ecef; border-radius: 8px; text-align: center; font-family: sans-serif;">
         <h3 style="margin-top: 0; color: #0a192f;">Explore More In-Depth Details</h3>
         <p style="margin-bottom: 20px; color: #555;">Check out our full web platforms for real-time market data and breaking news coverage:</p>
@@ -810,11 +853,10 @@ def send_email(html_content):
 if __name__ == "__main__":
     logging.info("Starting Market Analyzer Pipeline")
     market_data = collect_market_data()
-    news_items = fetch_global_news()
     score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr = calculate_market_regime(market_data)
     
     logging.info(f"Calculated Regime Score: {score} ({regime})")
     
-    html_report = generate_html_email(market_data, score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr, news_items)
+    html_report = generate_html_email(market_data, score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr)
     send_email(html_report)
     logging.info("Pipeline execution completed.")
