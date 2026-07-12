@@ -263,6 +263,26 @@ def fetch_asset_data(ticker_symbol):
 
 import xml.etree.ElementTree as ET
 
+def fetch_global_news():
+    news_items = []
+    try:
+        url = 'https://news.google.com/rss/search?q=stock+market+economy+finance&hl=en-US&gl=US&ceid=US:en'
+        response = requests.get(url, timeout=10)
+        root = ET.fromstring(response.content)
+        items = root.findall('.//item')
+        for item in items[:6]:
+            news_items.append({
+                'title': item.find('title').text,
+                'link': item.find('link').text,
+                'publisher': item.find('source').text if item.find('source') is not None else 'Google News',
+                'time': 0
+            })
+        unique_news = {item['link']: item for item in news_items}
+        return list(unique_news.values())[:6]
+    except Exception as e:
+        logging.warning(f"Failed to fetch news: {e}")
+        return []
+
 def collect_market_data():
     all_data = {}
     for category, assets in TICKERS_CONFIG.items():
@@ -539,7 +559,7 @@ def calculate_market_regime(data):
 
     return score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad_name, lt_broad_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency
 
-def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr):
+def generate_html_email(data, regime_score, regime_text, risk_alerts, news_items, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr):
     html = f"""
     <html>
     <head>
@@ -604,6 +624,14 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
             </div>
         </div>
     """
+
+    if news_items:
+        html += "<div class='score-box' style='background: #fdfdfd; border-left: 5px solid #0056b3;'>"
+        html += "<h4 style='margin-top: 0; margin-bottom: 15px; color: #0056b3;'>📰 What to Watch Out for This Week (Major Events)</h4>"
+        html += "<ul style='margin-bottom:0;'>"
+        for item in news_items:
+            html += f"<li style='margin-bottom: 8px;'><a href='{item['link']}' style='color: #1a0dab; text-decoration: none;'>{item['title']}</a> <span style='color: #666; font-size: 0.85em;'>- {item['publisher']}</span></li>"
+        html += "</ul></div>"
 
     html += "<div class='score-box' style='background: #fff3f3; border-left: 5px solid #d9534f;'>"
     html += "<h4 style='margin-top: 0; margin-bottom: 15px; color: #d9534f;'>🚨 Automated Risk Alerts</h4>"
@@ -860,6 +888,7 @@ if __name__ == "__main__":
     
     logging.info(f"Calculated Regime Score: {score} ({regime})")
     
-    html_report = generate_html_email(market_data, score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr)
+    news_items = fetch_global_news()
+    html_report = generate_html_email(market_data, score, regime, alerts, news_items, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr)
     send_email(html_report)
     logging.info("Pipeline execution completed.")
