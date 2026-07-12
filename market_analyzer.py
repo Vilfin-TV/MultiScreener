@@ -18,14 +18,23 @@ TICKERS_CONFIG = {
         'VIX': {'symbol': '^VIX', 'currency': 'Points'}
     },
     'Bonds': {
+        'US 13-Week': {'symbol': '^IRX', 'currency': 'Yield %'},
+        'US 5Y': {'symbol': '^FVX', 'currency': 'Yield %'},
         'US 10Y': {'symbol': '^TNX', 'currency': 'Yield %'},
-        'US 30Y': {'symbol': '^TYX', 'currency': 'Yield %'}
+        'US 30Y': {'symbol': '^TYX', 'currency': 'Yield %'},
+        'Corp Bonds (LQD)': {'symbol': 'LQD', 'currency': 'USD'},
+        'High Yield (HYG)': {'symbol': 'HYG', 'currency': 'USD'}
     },
     'Commodities': {
         'Brent Crude': {'symbol': 'BZ=F', 'currency': 'USD'},
+        'WTI Crude': {'symbol': 'CL=F', 'currency': 'USD'},
+        'Natural Gas': {'symbol': 'NG=F', 'currency': 'USD'},
         'Gold': {'symbol': 'GC=F', 'currency': 'USD'},
         'Silver': {'symbol': 'SI=F', 'currency': 'USD'},
-        'Copper': {'symbol': 'HG=F', 'currency': 'USD'}
+        'Copper': {'symbol': 'HG=F', 'currency': 'USD'},
+        'Platinum': {'symbol': 'PL=F', 'currency': 'USD'},
+        'Wheat': {'symbol': 'ZW=F', 'currency': 'USD'},
+        'Corn': {'symbol': 'ZC=F', 'currency': 'USD'}
     },
     'US Futures': {
         'S&P 500 Futures': {'symbol': 'ES=F', 'currency': 'USD'},
@@ -33,10 +42,15 @@ TICKERS_CONFIG = {
         'Dow Jones Futures': {'symbol': 'YM=F', 'currency': 'USD'}
     },
     'Global Indices': {
+        'UK FTSE 100': {'symbol': '^FTSE', 'currency': 'GBP'},
+        'France CAC 40': {'symbol': '^FCHI', 'currency': 'EUR'},
         'Germany DAX': {'symbol': '^GDAXI', 'currency': 'EUR'},
+        'Italy FTSE MIB': {'symbol': 'FTSEMIB.MI', 'currency': 'EUR'},
+        'Canada TSX': {'symbol': '^GSPTSE', 'currency': 'CAD'},
         'Brazil Bovespa': {'symbol': '^BVSP', 'currency': 'BRL'},
         'Turkey BIST 100': {'symbol': 'XU100.IS', 'currency': 'TRY'},
         'Australia ASX 200': {'symbol': '^AXJO', 'currency': 'AUD'},
+        'China Shanghai': {'symbol': '000001.SS', 'currency': 'CNY'},
         'Taiwan Weighted': {'symbol': '^TWII', 'currency': 'TWD'}
     },
     'US Indices': {
@@ -217,10 +231,12 @@ def get_executive_summary_analysis(data, regime_score):
     momentum_name = "N/A"
     value_name = "N/A"
     long_term_name = "N/A"
+    lt_reason = ""
     
     if valid_sectors:
         momentum_sector = max(valid_sectors.items(), key=lambda x: x[1]['price'] / x[1]['ma_50'])
-        momentum_name = f"{momentum_sector[0]} (+{momentum_sector[1]['change']:.2f}%)"
+        dist_mom = ((momentum_sector[1]['price'] / momentum_sector[1]['ma_50']) - 1) * 100
+        momentum_name = f"{momentum_sector[0]} (trading +{dist_mom:.2f}% above its 50-day average)"
         
         value_names = ['Energy', 'Finance', 'Industrials', 'Banking', 'Metals & Mining']
         value_sectors = {k: v for k, v in valid_sectors.items() if k in value_names}
@@ -233,8 +249,10 @@ def get_executive_summary_analysis(data, regime_score):
         if lt_sectors:
             best_lt = max(lt_sectors.items(), key=lambda x: x[1]['price'] / x[1]['ma_50'])
             long_term_name = best_lt[0]
+            dist_lt = ((best_lt[1]['price'] / best_lt[1]['ma_50']) - 1) * 100
+            lt_reason = f"Selected because it is currently trading +{dist_lt:.2f}% above its 50-day moving average, showing the strongest structural uptrend among our tracked secular growth themes (Tech, AI, Health, Space)."
 
-    return regional_rec, momentum_name, value_name, long_term_name
+    return regional_rec, momentum_name, value_name, long_term_name, lt_reason
 
 def calculate_market_regime(data):
     score = 0
@@ -330,11 +348,11 @@ def calculate_market_regime(data):
     else:
         regime_text = "Extremely Bearish / Risk-Off"
 
-    regional_rec, mom_sector, val_sector, lt_sector = get_executive_summary_analysis(data, score)
+    regional_rec, mom_sector, val_sector, lt_sector, lt_reason = get_executive_summary_analysis(data, score)
 
-    return score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector
+    return score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason
 
-def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector):
+def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason):
     html = f"""
     <html>
     <head>
@@ -365,9 +383,10 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
             <div class="recommendation">
                 <h4 style="margin-top: 0;">Market & Sector Insights</h4>
                 <div class="summary-item"><strong>🌍 Best Region to Buy:</strong> {regional_rec}</div>
-                <div class="summary-item"><strong>🚀 Top Momentum Sector:</strong> {mom_sector} <em>(Trading furthest above 50-day average)</em></div>
+                <div class="summary-item"><strong>🚀 Top Momentum Sector:</strong> {mom_sector}</div>
                 <div class="summary-item"><strong>⚖️ Top Value Sector:</strong> {val_sector} <em>(Strongest among classic value plays like Energy/Financials/Industrials)</em></div>
-                <div class="summary-item"><strong>💎 Best for Long-Term:</strong> {lt_sector} <em>(Leading structural growth theme)</em></div>
+                <div class="summary-item" style="margin-top: 10px;"><strong>💎 Best for Long-Term:</strong> {lt_sector}</div>
+                <div class="summary-item" style="font-size: 0.9em; color: #555; margin-left: 20px;"><em>Why {lt_sector}? {lt_reason}</em></div>
             </div>
         </div>
     """
@@ -447,10 +466,10 @@ def send_email(html_content):
 if __name__ == "__main__":
     logging.info("Starting Market Analyzer Pipeline")
     market_data = collect_market_data()
-    score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt = calculate_market_regime(market_data)
+    score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason = calculate_market_regime(market_data)
     
     logging.info(f"Calculated Regime Score: {score} ({regime})")
     
-    html_report = generate_html_email(market_data, score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt)
+    html_report = generate_html_email(market_data, score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason)
     send_email(html_report)
     logging.info("Pipeline execution completed.")
