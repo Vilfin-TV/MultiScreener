@@ -109,7 +109,7 @@ TICKERS_CONFIG = {
     'Sectors & Themes (US ETFs)': {
         'AI Stocks': {'symbol': 'AIQ', 'currency': 'USD'},
         'Semiconductor': {'symbol': 'SMH', 'currency': 'USD'},
-        'Technology': {'symbol': 'XLK', 'currency': 'USD'},
+        'Technology (Information Technology)': {'symbol': 'XLK', 'currency': 'USD'},
         'Health Care': {'symbol': 'XLV', 'currency': 'USD'},
         'Space': {'symbol': 'ARKX', 'currency': 'USD'},
         'Metals & Mining': {'symbol': 'XME', 'currency': 'USD'},
@@ -118,7 +118,15 @@ TICKERS_CONFIG = {
         'Industrials': {'symbol': 'XLI', 'currency': 'USD'},
         'Banking': {'symbol': 'KBE', 'currency': 'USD'},
         'Finance': {'symbol': 'XLF', 'currency': 'USD'},
-        'Auto': {'symbol': 'CARZ', 'currency': 'USD'}
+        'Auto': {'symbol': 'CARZ', 'currency': 'USD'},
+        'Communication Services': {'symbol': 'XLC', 'currency': 'USD'},
+        'Robotics & Automation': {'symbol': 'BOTZ', 'currency': 'USD'},
+        'Consumer Staples': {'symbol': 'XLP', 'currency': 'USD'},
+        'Materials': {'symbol': 'XLB', 'currency': 'USD'},
+        'Utilities': {'symbol': 'XLU', 'currency': 'USD'},
+        'Real Estate': {'symbol': 'XLRE', 'currency': 'USD'},
+        'Blockchain': {'symbol': 'BLOK', 'currency': 'USD'},
+        'Datacenter': {'symbol': 'SRVR', 'currency': 'USD'}
     },
     'Top 10 Thematic ETFs': {
         'Semiconductors (SOXX)': {'symbol': 'SOXX', 'currency': 'USD'},
