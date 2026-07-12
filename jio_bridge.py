@@ -60,6 +60,91 @@ def _jio_post(url, **kw):
 
 _last_m3u = ""  # Cache the last successfully generated M3U in memory
 
+import re as _re
+# ── Backend seamless Jio token renewal ──────────────────────────────────────
+# Jio's Akamai __hdnea__ token expires in ~120s. Rather than the front-end
+# reloading the player (a visible stop), the bridge re-signs server-side: it
+# caches each channel's token and, when a /proxy request arrives with an expiring
+# token, fetches a fresh geturl for that channel and swaps in the new token. The
+# player keeps fetching the same /proxy URLs — no reload, no stop.
+_JIO_CH_MAP = {}      # akamai channel folder (e.g. Star_Utsav_Movies_MOB) -> channel_id
+_JIO_TOK = {}         # channel_id -> {"keytok": str, "exp": int}
+_JIO_TOK_LOCK = threading.Lock()
+
+def _tok_exp(keytok):
+    try:
+        m = _re.search(r'exp=(\d+)', keytok or '')
+        return int(m.group(1)) if m else 0
+    except Exception:
+        return 0
+
+def _chan_folder(url):
+    m = _re.search(r'/bpk-tv/([^/]+)/', url or '')
+    return m.group(1) if m else None
+
+def _jio_geturl(ch_id):
+    """Call Jio geturl for a channel → (m3u8_url, keytok, exp). Used for the
+    initial /play AND for backend token re-signing."""
+    if not ch_id or not JIO_AUTH:
+        return (None, None, 0)
+    url = "https://jiotvapi.media.jio.com/playback/apis/v1/geturl"
+    headers = {
+        "User-Agent": "okhttp/4.12.0", "Content-Type": "application/x-www-form-urlencoded",
+        "appkey": "NzNiMDhlYzQyNjJm", "devicetype": "phone", "os": "android",
+        "deviceid": JIO_AUTH.get("deviceId", ""), "versionCode": "402", "osversion": "15",
+        "dm": "vivo V2413", "x-platform": "android_mobile", "uniqueid": JIO_AUTH.get("uniqueId", ""),
+        "usergroup": "tvYR7NSNn7rymo3F", "languageid": "6", "userid": "ril" + JIO_AUTH.get("crmid", ""),
+        "sid": JIO_AUTH.get("analyticsId", ""), "crmid": JIO_AUTH.get("crmid", ""), "isott": "false",
+        "channel_id": str(ch_id), "langid": "", "camid": "", "subscriberid": JIO_AUTH.get("crmid", ""),
+        "lbcookie": "1", "ssotoken": JIO_AUTH.get("ssoToken", ""), "accesstoken": JIO_AUTH.get("authToken", ""),
+    }
+    try:
+        r = _jio_post(url, headers=headers, data=f"stream_type=Seek&channel_id={ch_id}", timeout=10)
+        if r.status_code == 200:
+            resp = r.json()
+            m3u8_url = resp.get("result", "")
+            keytok = ""
+            mpd_key = resp.get("mpd", {}).get("key", "")
+            if "__hdnea__=" in mpd_key:
+                keytok = mpd_key.split("__hdnea__=")[1].split("&")[0]
+            if not keytok and "__hdnea__=" in (m3u8_url or ""):
+                keytok = m3u8_url.split("__hdnea__=")[1].split("&")[0]
+            return (m3u8_url, keytok, _tok_exp(keytok))
+    except Exception as e:
+        print(f"STATUS: [Jio] re-sign geturl failed for {ch_id}: {e}")
+    return (None, None, 0)
+
+def _jio_cache_channel(ch_id, m3u8_url, keytok):
+    folder = _chan_folder(m3u8_url)
+    if folder:
+        _JIO_CH_MAP[folder] = str(ch_id)
+    if keytok:
+        _JIO_TOK[str(ch_id)] = {"keytok": keytok, "exp": _tok_exp(keytok)}
+
+def _jio_fresh_keytok(target_url, cur_keytok):
+    """Return the freshest keytok for the channel behind a /proxy request,
+    re-signing (fresh geturl) if within 30s of expiry."""
+    folder = _chan_folder(target_url)
+    ch_id = _JIO_CH_MAP.get(folder) if folder else None
+    if not ch_id:
+        return cur_keytok
+    now = int(time.time())
+    cached = _JIO_TOK.get(ch_id, {})
+    best = cached.get("keytok") or cur_keytok
+    best_exp = max(_tok_exp(cur_keytok), cached.get("exp", 0))
+    if best_exp and best_exp > now + 30:
+        return best
+    with _JIO_TOK_LOCK:
+        cached = _JIO_TOK.get(ch_id, {})
+        if cached.get("exp", 0) > now + 30:
+            return cached["keytok"]
+        _, k, e = _jio_geturl(ch_id)
+        if k:
+            _JIO_TOK[ch_id] = {"keytok": k, "exp": e}
+            print(f"STATUS: [Jio] re-signed token for channel {ch_id} (exp {e})")
+            return k
+    return best
+
 ADMIN_TOKEN = os.environ.get("WORKER_ADMIN_TOKEN", "")
 
 def set_status(msg):
@@ -368,12 +453,14 @@ class ProxyHandler(BaseHTTPRequestHandler):
                     m3u8_url = resp.get("result", "")
                     if m3u8_url:
                         proxy_url = f"/proxy?url={base64.urlsafe_b64encode(m3u8_url.encode()).decode()}"
-                        
+
                         mpd_key = resp.get("mpd", {}).get("key", "")
+                        token = ""
                         if "__hdnea__=" in mpd_key:
                             token = mpd_key.split("__hdnea__=")[1].split("&")[0]
                             proxy_url += f"&keytok={base64.urlsafe_b64encode(token.encode()).decode()}"
-                            
+                        _jio_cache_channel(ch_id, m3u8_url, token)   # remember for backend re-signing
+
                         self.send_response(302)
                         self.send_header('Location', proxy_url)
                         self._send_cors_headers()
@@ -402,7 +489,11 @@ class ProxyHandler(BaseHTTPRequestHandler):
             if keytok_b64:
                 keytok_b64 += "=" * ((4 - len(keytok_b64) % 4) % 4)
                 keytok = base64.urlsafe_b64decode(keytok_b64).decode()
-                
+
+            # Backend seamless renewal: if this channel's token is expiring, swap in
+            # a freshly re-signed one so playback never stops (no front-end reload).
+            keytok = _jio_fresh_keytok(target_url, keytok)
+
             if keytok:
                 if '__hdnea__=' in target_url:
                     target_url = target_url.split('__hdnea__=')[0]

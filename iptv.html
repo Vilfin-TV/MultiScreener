@@ -2138,6 +2138,8 @@ function __iptvBoot(){
     var opening = !d.classList.contains(cls);
     d.classList.toggle(cls);
     if(opening){
+      // Remember which control opened the drawer so BACK returns focus to it.
+      state._cinDrawerOpener = document.getElementById(which==="guide" ? "btn-guide" : "btn-favs");
       setTimeout(function(){
         var panel=document.querySelector(which==="guide" ? "#hero-remote-panel" : "#fav-panel");
         if(!panel) return;
@@ -2146,8 +2148,15 @@ function __iptvBoot(){
         else { panel.setAttribute("tabindex","0"); try{ panel.focus(); }catch(e){} }
       },90);
     } else {
-      try{ var pt=player&&player.controlBar&&player.controlBar.getChild("fullscreenToggle"); if(pt&&pt.el){ pt.el().focus(); } }catch(e){}
+      _cinFocusOpener();
     }
+  }
+  // Return focus to the control that opened the last drawer (else a sane default).
+  function _cinFocusOpener(){
+    var o=state._cinDrawerOpener;
+    if(o && o.offsetParent!==null){ try{ o.focus(); return; }catch(e){} }
+    var b=document.getElementById("btn-guide")||document.getElementById("btn-play");
+    if(b){ try{ b.focus(); }catch(e){} }
   }
   window._cinToggleDrawer=_cinToggleDrawer;
   // Gear/settings menu — currently just stream quality (video.js 8 bundles
@@ -2553,26 +2562,11 @@ function __iptvBoot(){
     }catch(e){}
   }
   function _jioScheduleRefresh(rawUrl){
+    // Token renewal is now entirely BACKEND: the bridge re-signs the Akamai
+    // __hdnea__ token on each /proxy request before it expires (see
+    // _jio_fresh_keytok in jio_bridge.py). The front-end no longer refreshes or
+    // reloads the player, so the video never stops.
     _jioClearRefresh();
-    var jid=rawUrl.substring(6);
-    _jioFetchFreshToken(jid);   // prime the current token
-    (function loop(){
-      state._jioRefreshTimer=setTimeout(function(){
-        if(!state.currentChannel || String(state.currentChannel.url||"")!==rawUrl){ _jioClearRefresh(); return; }
-        _jioFetchFreshToken(jid).then(function(tok){
-          // Safety net: if the seamless token fetch failed (e.g. CORS), fall back
-          // to a full reload so the channel still doesn't stop.
-          if(!tok){
-            try{
-              var fresh=WORKER+"/api/jio/play?id="+jid+"&token="+encodeURIComponent(state.token||"")+"&_r="+Date.now();
-              if(player&&VJS_OK){ player.src({src:fresh,type:"application/x-mpegURL"}); var pr=player.play(); if(pr&&pr.catch)pr.catch(function(){}); }
-              else if(window.Hls){ loadStreamFallback(fresh); }
-            }catch(e){}
-          }
-        });
-        loop();
-      }, 90000);   // renew well before the ~120s expiry
-    })();
   }
   function loadStream(ch){
     var raw=ch&&ch.url?ch.url:ch;
@@ -2974,6 +2968,15 @@ function __iptvBoot(){
         return 'click';
       }
       if(action==='up'||action==='down'||action==='left'||action==='right'){
+        // On the volume (or any range) slider, LEFT/RIGHT changes the value
+        // instead of moving focus — otherwise the D-pad can't adjust volume.
+        if(t && t.tagName==='INPUT' && t.type==='range' && (action==='left'||action==='right')){
+          var stp=(parseFloat(t.step)||0.05)*2, mn=parseFloat(t.min)||0, mx=isNaN(parseFloat(t.max))?1:parseFloat(t.max);
+          var nv=(parseFloat(t.value)||0)+(action==='right'?stp:-stp);
+          t.value=Math.max(mn,Math.min(mx,nv));
+          try{ t.dispatchEvent(new Event('input',{bubbles:true})); t.dispatchEvent(new Event('change',{bubbles:true})); }catch(e){}
+          return 'move';
+        }
         // Self-heal: if there's nothing focusable in that direction (or focus was
         // stranded on a now-hidden element after a screen swap), grab the first
         // focusable in the active screen so the remote always lands somewhere.
@@ -2998,7 +3001,7 @@ function __iptvBoot(){
         var _d=document.documentElement;
         if(_d.classList.contains('cin-guide')||_d.classList.contains('cin-favs')){
           _d.classList.remove('cin-guide','cin-favs');
-          try{ var ft=player&&player.controlBar&&player.controlBar.getChild('fullscreenToggle'); if(ft&&ft.el){ ft.el().focus(); } }catch(e){}
+          try{ _cinFocusOpener(); }catch(e){}
           return true;
         }
         // Exit cinema (CSS fullscreen) first, staying on the player.
