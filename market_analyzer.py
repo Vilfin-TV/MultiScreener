@@ -90,6 +90,18 @@ TICKERS_CONFIG = {
         'Finance': {'symbol': 'XLF', 'currency': 'USD'},
         'Auto': {'symbol': 'CARZ', 'currency': 'USD'}
     },
+    'Top 10 Core ETFs': {
+        'Invesco QQQ (Nasdaq 100)': {'symbol': 'QQQ', 'currency': 'USD'},
+        'SPDR S&P 500 (SPY)': {'symbol': 'SPY', 'currency': 'USD'},
+        'iShares Russell 2000 (IWM)': {'symbol': 'IWM', 'currency': 'USD'},
+        'Vanguard Total Stock (VTI)': {'symbol': 'VTI', 'currency': 'USD'},
+        'Vanguard Growth (VUG)': {'symbol': 'VUG', 'currency': 'USD'},
+        'Vanguard Value (VTV)': {'symbol': 'VTV', 'currency': 'USD'},
+        'SPDR Dow Jones (DIA)': {'symbol': 'DIA', 'currency': 'USD'},
+        'ARK Innovation (ARKK)': {'symbol': 'ARKK', 'currency': 'USD'},
+        'iShares Emerging Markets (EEM)': {'symbol': 'EEM', 'currency': 'USD'},
+        'iShares Developed Markets (EFA)': {'symbol': 'EFA', 'currency': 'USD'}
+    },
     'Currencies': {
         'EUR/USD': {'symbol': 'EURUSD=X', 'currency': 'USD'}, 
         'EUR/INR': {'symbol': 'EURINR=X', 'currency': 'INR'}, 
