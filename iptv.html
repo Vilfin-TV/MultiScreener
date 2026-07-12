@@ -2971,7 +2971,8 @@ function __iptvBoot(){
         // On the volume (or any range) slider, LEFT/RIGHT changes the value
         // instead of moving focus — otherwise the D-pad can't adjust volume.
         if(t && t.tagName==='INPUT' && t.type==='range' && (action==='left'||action==='right')){
-          var stp=(parseFloat(t.step)||0.05)*2, mn=parseFloat(t.min)||0, mx=isNaN(parseFloat(t.max))?1:parseFloat(t.max);
+          var mn=parseFloat(t.min)||0, mx=isNaN(parseFloat(t.max))?1:parseFloat(t.max);
+          var stp=Math.max((mx-mn)*0.05, (parseFloat(t.step)||0.05));   // ~5% per press for a premium feel
           var nv=(parseFloat(t.value)||0)+(action==='right'?stp:-stp);
           t.value=Math.max(mn,Math.min(mx,nv));
           try{ t.dispatchEvent(new Event('input',{bubbles:true})); t.dispatchEvent(new Event('change',{bubbles:true})); }catch(e){}
