@@ -7,6 +7,7 @@ import pandas as pd
 from datetime import datetime
 import logging
 import requests
+import time
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -25,10 +26,16 @@ def fetch_asset_data(ticker_symbol):
     """Fetches market data with Cloudflare worker proxy support and Alpha Vantage fallback."""
     # 1. Try yfinance (with optional proxy)
     try:
-        session = None
+        session = requests.Session()
+        session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+            'Accept': '*/*',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive'
+        })
+        
         proxy = os.environ.get('YAHOO_PROXY') or os.environ.get('WORKER_URL')
         if proxy:
-            session = requests.Session()
             # If the proxy is just a host, make sure it has the scheme, else just pass it
             proxies = {'http': proxy, 'https': proxy}
             session.proxies.update(proxies)
@@ -99,6 +106,7 @@ def collect_market_data():
             logging.info(f"Fetching data for {name} ({symbol})")
             data = fetch_asset_data(symbol)
             all_data[category][name] = data
+            time.sleep(2) # Delay to prevent hitting Yahoo rate limits
     return all_data
 
 def calculate_market_regime(data):
