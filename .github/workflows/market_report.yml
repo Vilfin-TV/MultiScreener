@@ -1,0 +1,35 @@
+name: Daily Market Report
+
+on:
+  schedule:
+    # 21:00 UTC corresponds to 06:00 JST the next day
+    - cron: '0 21 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  run-market-analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run Market Analyzer Script
+        env:
+          ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          WORKER_URL: ${{ secrets.WORKER_URL }}
+        run: |
+          python market_analyzer.py
