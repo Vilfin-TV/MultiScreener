@@ -347,7 +347,7 @@ def get_executive_summary_analysis(data, regime_score):
         if regime_score >= 10:
             if us_ratio >= asian_ratio and us_ratio >= 0.5:
                 leader_str = f"led by {us_leaders[0][0]} ({us_leaders[0][1]:+.2f}% above MA)" if us_leaders else ""
-                regional_rec = f"US Equities. {us_above_50} out of {us_total} tracked US indices are in a confirmed uptrend, {leader_str}. Western markets show strong relative strength with an average premium of {us_avg_dist:.2f}% over their 50-day trendlines."
+                regional_rec = f"US Equities. {us_above_50} out of {us_total} tracked US indices are in a confirmed uptrend, {leader_str}. US markets show strong relative strength with an average premium of {us_avg_dist:.2f}% over their 50-day trendlines."
             elif asian_ratio > us_ratio and asian_ratio >= 0.5:
                 leader_str = f"led by {asia_leaders[0][0]} ({asia_leaders[0][1]:+.2f}% above MA)" if asia_leaders else ""
                 regional_rec = f"Asian Equities. {asia_above_50} out of {asia_total} Asian indices are trading above their 50-day moving average, {leader_str}. Eastern markets are currently outperforming the West."
@@ -405,7 +405,7 @@ def get_executive_summary_analysis(data, regime_score):
         best_broad = max(valid_broad.items(), key=lambda x: calc_lt_score(x[1]))
         tyr = best_broad[1].get('three_yr_return', 0) or 0
         ytd = best_broad[1].get('ytd_return', 0) or 0
-        lt_broad_name = f"{best_broad[0]} Index Fund"
+        lt_broad_name = f"{best_broad[0]} Index"
         lt_broad_reason = f"Selected as the strongest long-term broad-market index globally based on its blended structural performance ({tyr:+.2f}% 3-Year, {ytd:+.2f}% YTD)."
 
     bonds = data.get('Bonds', {})
@@ -585,7 +585,7 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
                 <div class="summary-item"><strong>🌍 Best Region to Buy:</strong> {regional_rec}</div>
                 <div class="summary-item"><strong>🚀 Top Equity Sector (Growth):</strong> {mom_sector}</div>
                 <div class="summary-item"><strong>⚖️ Top Equity Sector (Value):</strong> {val_sector}</div>
-                <div class="summary-item" style="margin-top: 10px;"><strong>🌎 Best Broad-Market Index Fund:</strong> {lt_broad}</div>
+                <div class="summary-item" style="margin-top: 10px;"><strong>🌎 Best Broad-Market Index:</strong> {lt_broad}</div>
                 <div class="reasoning"><em>{lt_broad_reason}</em></div>
                 <div class="summary-item" style="margin-top: 10px;"><strong>💎 Best Long-Term Thematic Sector:</strong> {lt_sector}</div>
                 <div class="reasoning"><em>{lt_reason}</em></div>
@@ -624,7 +624,7 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
             <tr>
                 <th>Asset</th>
                 <th>Currency</th>
-                <th>Current Price</th>
+                <th>Price / Yield</th>
                 <th>Daily Change</th>
                 <th>50-Day MA</th>
                 <th>YTD Return</th>
