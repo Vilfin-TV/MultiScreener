@@ -625,6 +625,12 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
         html += "</table>"
 
     html += """
+    <div style="margin-top: 40px; padding: 20px; background-color: #f8f9fa; border-top: 2px solid #e9ecef; border-radius: 8px; text-align: center; font-family: sans-serif;">
+        <h3 style="margin-top: 0; color: #0a192f;">Explore More In-Depth Details</h3>
+        <p style="margin-bottom: 20px; color: #555;">Check out our full web platforms for real-time market data and breaking news coverage:</p>
+        <a href="https://vilfintv.com/index.html" style="display: inline-block; padding: 12px 24px; margin: 5px 10px; background-color: #0a192f; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">📊 Market Dashboard</a>
+        <a href="https://vilfintv.com/news.html" style="display: inline-block; padding: 12px 24px; margin: 5px 10px; background-color: #0a192f; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">📰 Live News Feed</a>
+    </div>
     </body>
     </html>
     """
