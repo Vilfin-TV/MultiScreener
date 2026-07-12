@@ -455,7 +455,7 @@ def get_executive_summary_analysis(data, regime_score):
         if valid:
             best = max(valid.items(), key=lambda x: calc_momentum_score(x[1]))
             dist = ((best[1]['price'] / best[1]['ma_20']) - 1) * 100
-            return f"{best[0]} ({dist:+.2f}% above 20-Day MA, Up {best[1]['change']:+.2f}% Today)"
+            return f"{best[0]} ({dist:+.2f}% above 20-Day MA, Up {best[1]['change']:+.2f}% latest session)"
         return "No clear short-term momentum"
 
 
