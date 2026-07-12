@@ -18,12 +18,16 @@ TICKERS_CONFIG = {
         'VIX': {'symbol': '^VIX', 'currency': 'Points'}
     },
     'Bonds': {
+        'US 1-Year (SHY)': {'symbol': 'SHY', 'currency': 'USD'},
         'US 13-Week': {'symbol': '^IRX', 'currency': 'Yield %'},
         'US 5Y': {'symbol': '^FVX', 'currency': 'Yield %'},
         'US 10Y': {'symbol': '^TNX', 'currency': 'Yield %'},
         'US 30Y': {'symbol': '^TYX', 'currency': 'Yield %'},
         'Corp Bonds (LQD)': {'symbol': 'LQD', 'currency': 'USD'},
-        'High Yield (HYG)': {'symbol': 'HYG', 'currency': 'USD'}
+        'High Yield (HYG)': {'symbol': 'HYG', 'currency': 'USD'},
+        'Germany 10Y Bund': {'symbol': 'FGBL=F', 'currency': 'EUR'},
+        'UK 10Y Gilt': {'symbol': 'FLG=F', 'currency': 'GBP'},
+        'Japan 10Y JGB': {'symbol': 'JGB=F', 'currency': 'JPY'}
     },
     'Commodities': {
         'Brent Crude': {'symbol': 'BZ=F', 'currency': 'USD'},
@@ -36,10 +40,13 @@ TICKERS_CONFIG = {
         'Wheat': {'symbol': 'ZW=F', 'currency': 'USD'},
         'Corn': {'symbol': 'ZC=F', 'currency': 'USD'}
     },
-    'US Futures': {
+    'Global Futures': {
         'S&P 500 Futures': {'symbol': 'ES=F', 'currency': 'USD'},
         'Nasdaq 100 Futures': {'symbol': 'NQ=F', 'currency': 'USD'},
-        'Dow Jones Futures': {'symbol': 'YM=F', 'currency': 'USD'}
+        'Dow Jones Futures': {'symbol': 'YM=F', 'currency': 'USD'},
+        'DAX Futures (Germany)': {'symbol': 'FDAX=F', 'currency': 'EUR'},
+        'FTSE Futures (UK)': {'symbol': 'FTI=F', 'currency': 'GBP'},
+        'Nikkei Futures (Japan)': {'symbol': 'NK=F', 'currency': 'JPY'}
     },
     'Global Indices': {
         'UK FTSE 100': {'symbol': '^FTSE', 'currency': 'GBP'},
@@ -60,7 +67,7 @@ TICKERS_CONFIG = {
     },
     'Asian Indices': {
         'Nikkei 225': {'symbol': '^N225', 'currency': 'JPY'}, 
-        'TOPIX': {'symbol': '^TOPX', 'currency': 'JPY'}, 
+        'TOPIX (ETF)': {'symbol': '1306.T', 'currency': 'JPY'}, 
         'Kospi': {'symbol': '^KS11', 'currency': 'KRW'}, 
         'Hang Seng': {'symbol': '^HSI', 'currency': 'HKD'}, 
         'Sensex': {'symbol': '^BSESN', 'currency': 'INR'}, 
@@ -99,7 +106,6 @@ TICKERS_CONFIG = {
 }
 
 def fetch_asset_data(ticker_symbol):
-    """Fetches market data with Cloudflare worker proxy support and Alpha Vantage fallback."""
     try:
         session = requests.Session()
         session.headers.update({
@@ -125,7 +131,6 @@ def fetch_asset_data(ticker_symbol):
             ma_50 = hist['Close'].rolling(window=50).mean().iloc[-1] if len(hist) >= 50 else None
             ma_20 = hist['Close'].rolling(window=20).mean().iloc[-1] if len(hist) >= 20 else None
             
-            # YTD Return
             current_year = datetime.now().year
             ytd_data = hist[hist.index.year == current_year]
             ytd_return = None
@@ -133,7 +138,6 @@ def fetch_asset_data(ticker_symbol):
                 start_of_year_price = ytd_data['Close'].iloc[0]
                 ytd_return = ((latest_close - start_of_year_price) / start_of_year_price) * 100
                 
-            # 3-Year Return
             three_yr_return = None
             three_years_ago_date = datetime.now() - pd.DateOffset(years=3)
             past_data = hist[hist.index >= three_years_ago_date]
@@ -152,7 +156,6 @@ def fetch_asset_data(ticker_symbol):
     except Exception as e:
         logging.warning(f"yfinance failed for {ticker_symbol}: {e}")
 
-    # Alpha Vantage Fallback
     av_api_key = os.environ.get('ALPHA_VANTAGE_API_KEY')
     if av_api_key:
         logging.info(f"Attempting Alpha Vantage fallback for {ticker_symbol}")
@@ -219,14 +222,13 @@ def collect_market_data():
                 data['currency'] = currency
             all_data[category][name] = data
             
-            time.sleep(2) # Prevent Yahoo Finance rate limits
+            time.sleep(2) 
     return all_data
 
 def get_executive_summary_analysis(data, regime_score):
     if regime_score <= -50:
         regional_rec = "Safe Havens (Bonds & Gold). Equities are in a severe contraction phase. Cash and fixed income are preferred."
     else:
-        # Collect detailed metrics for US
         us_above_50 = 0
         us_total = 0
         us_avg_dist = 0.0
@@ -242,7 +244,6 @@ def get_executive_summary_analysis(data, regime_score):
         if us_total > 0: us_avg_dist /= us_total
         us_leaders.sort(key=lambda x: x[1], reverse=True)
 
-        # Collect detailed metrics for Asia
         asia_above_50 = 0
         asia_total = 0
         asia_avg_dist = 0.0
@@ -307,27 +308,57 @@ def get_executive_summary_analysis(data, regime_score):
             dist_lt = ((best_lt[1]['price'] / best_lt[1]['ma_50']) - 1) * 100
             lt_reason = f"Selected because it is currently trading +{dist_lt:.2f}% above its 50-day moving average, showing the strongest structural uptrend among our tracked secular growth themes (Tech, AI, Health, Space)."
 
-    return regional_rec, momentum_name, value_name, long_term_name, lt_reason
+    bonds = data.get('Bonds', {})
+    valid_bonds = {name: metrics for name, metrics in bonds.items() if metrics and metrics['ma_50']}
+    lt_bond_name = "N/A"
+    lt_bond_reason = ""
+    if valid_bonds:
+        best_lt_bond = max(valid_bonds.items(), key=lambda x: x[1]['price'] / x[1]['ma_50'])
+        lt_bond_name = best_lt_bond[0]
+        dist_lt_bond = ((best_lt_bond[1]['price'] / best_lt_bond[1]['ma_50']) - 1) * 100
+        lt_bond_reason = f"Selected because it is trading +{dist_lt_bond:.2f}% above its 50-day average."
+
+    commodities = data.get('Commodities', {})
+    valid_commodities = {name: metrics for name, metrics in commodities.items() if metrics and metrics['ma_50']}
+    lt_commodity_name = "N/A"
+    lt_commodity_reason = ""
+    if valid_commodities:
+        best_lt_comm = max(valid_commodities.items(), key=lambda x: x[1]['price'] / x[1]['ma_50'])
+        lt_commodity_name = best_lt_comm[0]
+        dist_lt_comm = ((best_lt_comm[1]['price'] / best_lt_comm[1]['ma_50']) - 1) * 100
+        lt_commodity_reason = f"Selected because it is trading +{dist_lt_comm:.2f}% above its 50-day average."
+
+    def get_short_term_pick(asset_dict):
+        valid = {name: metrics for name, metrics in asset_dict.items() if metrics and metrics['ma_20'] and metrics['change'] > 0}
+        if valid:
+            best = max(valid.items(), key=lambda x: x[1]['price'] / x[1]['ma_20'])
+            dist = ((best[1]['price'] / best[1]['ma_20']) - 1) * 100
+            return f"{best[0]} (+{dist:.2f}% above 20-Day MA, Up {best[1]['change']:.2f}% Today)"
+        return "No clear short-term momentum"
+
+    st_equity = get_short_term_pick(sector_data)
+    st_commodity = get_short_term_pick(commodities)
+    st_bond = get_short_term_pick(bonds)
+    st_currency = get_short_term_pick(data.get('Currencies', {}))
+
+    return regional_rec, momentum_name, value_name, long_term_name, lt_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency
 
 def calculate_market_regime(data):
     score = 0
     risk_alerts = []
 
-    # 1. Volatility (Max +20, Min -20)
     vix_data = data.get('Volatility', {}).get('VIX')
     if vix_data and vix_data['ma_20']:
         vix_price = vix_data['price']
         if vix_price < 16 and vix_price < vix_data['ma_20']:
-            score += 20  # Exceptionally calm
+            score += 20  
         elif vix_price <= 20 and vix_price < vix_data['ma_20']:
-            score += 10  # Normal calm
+            score += 10  
         elif vix_price > 20:
-            score -= 20  # Fear
-        
+            score -= 20  
         if vix_price > 25:
             risk_alerts.append(f"High Volatility: VIX is extremely elevated at {vix_price:.2f}.")
 
-    # 2. Yield Curve (Max +20, Min -20)
     yield_10y_data = data.get('Bonds', {}).get('US 10Y')
     yield_30y_data = data.get('Bonds', {}).get('US 30Y')
     
@@ -337,13 +368,12 @@ def calculate_market_regime(data):
             score -= 20
             risk_alerts.append(f"Yield Curve Inversion: US 10Y > US 30Y (Spread: {spread:.2f}%) - Recession signal.")
         elif spread > 0.8:
-            score += 20 # Very healthy steep curve
+            score += 20 
         elif spread > 0.3:
-            score += 10 # Normal upward slope
+            score += 10 
         else:
-            score += 0  # Flat curve
+            score += 0  
 
-    # 3. Global Equities (Max +30, Min -30)
     sp500 = data.get('US Indices', {}).get('S&P 500')
     nikkei = data.get('Asian Indices', {}).get('Nikkei 225')
     nifty = data.get('Asian Indices', {}).get('Nifty 50')
@@ -352,15 +382,14 @@ def calculate_market_regime(data):
     for asset, name in zip([sp500, nikkei, nifty], ['S&P 500', 'Nikkei 225', 'Nifty 50']):
         if asset and asset['ma_50'] and asset['ma_20']:
             if asset['price'] > asset['ma_20'] and asset['price'] > asset['ma_50']:
-                equity_score += 10  # Full momentum
+                equity_score += 10  
             elif asset['price'] > asset['ma_50']:
-                equity_score += 5   # Long-term trend intact, short-term dip
+                equity_score += 5   
             else:
-                equity_score -= 10  # Broken long term trend
+                equity_score -= 10  
                 risk_alerts.append(f"Momentum Warning: {name} is trading below its 50-day moving average.")
     score += equity_score
 
-    # 4. Commodities & Risk-On Check (Max +30, Min -30)
     gold = data.get('Commodities', {}).get('Gold')
     copper = data.get('Commodities', {}).get('Copper')
     
@@ -369,21 +398,21 @@ def calculate_market_regime(data):
     
     if gold: 
         valid_data_points += 1
-        if gold['change'] < 0: risk_on_signals += 1 # Gold dropping is risk-on
+        if gold['change'] < 0: risk_on_signals += 1 
     if copper:
         valid_data_points += 1
-        if copper['change'] > 0: risk_on_signals += 1 # Copper rising is risk-on
+        if copper['change'] > 0: risk_on_signals += 1 
     if sp500:
         valid_data_points += 1
-        if sp500['change'] > 0: risk_on_signals += 1 # S&P rising is risk-on
+        if sp500['change'] > 0: risk_on_signals += 1 
         
     if valid_data_points >= 2:
         if risk_on_signals == valid_data_points:
-            score += 30 # Perfect risk-on alignment
+            score += 30 
         elif risk_on_signals >= valid_data_points - 1:
-            score += 10 # Mildly risk-on
+            score += 10 
         else:
-            score -= 30 # Risk-off (Gold up, Equities down)
+            score -= 30 
 
     for curr_name, curr_data in data.get('Currencies', {}).items():
         if curr_data and abs(curr_data['change']) > 1.5:
@@ -403,17 +432,18 @@ def calculate_market_regime(data):
     else:
         regime_text = "Extremely Bearish / Risk-Off"
 
-    regional_rec, mom_sector, val_sector, lt_sector, lt_reason = get_executive_summary_analysis(data, score)
+    regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency = get_executive_summary_analysis(data, score)
 
-    return score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason
+    return score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency
 
-def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason):
+def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr):
     html = f"""
     <html>
     <head>
         <style>
             body {{ font-family: Arial, sans-serif; color: #333; }}
             h2 {{ color: #0a192f; border-bottom: 2px solid #0a192f; padding-bottom: 5px; margin-top: 30px; }}
+            h3 {{ color: #1a365d; }}
             table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.95em; }}
             th, td {{ padding: 8px; border: 1px solid #ddd; text-align: right; }}
             th {{ background-color: #f4f4f4; text-align: left; }}
@@ -425,7 +455,9 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
             .score-box {{ padding: 20px; background: #eef2f5; border-left: 5px solid #0a192f; margin-bottom: 20px; }}
             .alerts {{ background: #fff3f3; border-left: 5px solid #d9534f; padding: 15px; }}
             .recommendation {{ background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 5px solid #16a34a; padding: 15px; margin-top: 15px; }}
+            .st-momentum {{ background: #fffbeeb3; border: 1px solid #fde68a; border-left: 5px solid #d97706; padding: 15px; margin-top: 15px; }}
             .summary-item {{ margin-bottom: 8px; }}
+            .reasoning {{ font-size: 0.9em; color: #555; margin-left: 20px; }}
         </style>
     </head>
     <body>
@@ -437,12 +469,24 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
             <div class="summary-item"><strong>Current Phase:</strong> {regime_text}</div>
             
             <div class="recommendation">
-                <h4 style="margin-top: 0;">Market & Sector Insights</h4>
+                <h4 style="margin-top: 0; margin-bottom: 15px;">Long-Term Strategic Picks & Regional Insights</h4>
                 <div class="summary-item"><strong>🌍 Best Region to Buy:</strong> {regional_rec}</div>
-                <div class="summary-item"><strong>🚀 Top Momentum Sector:</strong> {mom_sector}</div>
-                <div class="summary-item"><strong>⚖️ Top Value Sector:</strong> {val_sector} <em>(Strongest among classic value plays like Energy/Financials/Industrials)</em></div>
-                <div class="summary-item" style="margin-top: 10px;"><strong>💎 Best for Long-Term:</strong> {lt_sector}</div>
-                <div class="summary-item" style="font-size: 0.9em; color: #555; margin-left: 20px;"><em>Why {lt_sector}? {lt_reason}</em></div>
+                <div class="summary-item"><strong>🚀 Top Equity Sector (Growth):</strong> {mom_sector}</div>
+                <div class="summary-item"><strong>⚖️ Top Equity Sector (Value):</strong> {val_sector}</div>
+                <div class="summary-item" style="margin-top: 10px;"><strong>💎 Best Long-Term Thematic Sector:</strong> {lt_sector}</div>
+                <div class="reasoning"><em>{lt_reason}</em></div>
+                <div class="summary-item" style="margin-top: 10px;"><strong>🏦 Best Long-Term Bond:</strong> {lt_bond}</div>
+                <div class="reasoning"><em>{lt_bond_reason}</em></div>
+                <div class="summary-item" style="margin-top: 10px;"><strong>⛏️ Best Long-Term Commodity:</strong> {lt_comm}</div>
+                <div class="reasoning"><em>{lt_comm_reason}</em></div>
+            </div>
+
+            <div class="st-momentum">
+                <h4 style="margin-top: 0; margin-bottom: 15px;">Short-Term Momentum / Swing Trades (Strongest 20-Day Trend)</h4>
+                <div class="summary-item"><strong>📈 Top Equity Pick:</strong> {st_eq}</div>
+                <div class="summary-item"><strong>🪙 Top Commodity Pick:</strong> {st_comm}</div>
+                <div class="summary-item"><strong>💵 Top Bond Pick:</strong> {st_bond}</div>
+                <div class="summary-item"><strong>💱 Top Currency Pick:</strong> {st_curr}</div>
             </div>
         </div>
     """
@@ -544,10 +588,10 @@ def send_email(html_content):
 if __name__ == "__main__":
     logging.info("Starting Market Analyzer Pipeline")
     market_data = collect_market_data()
-    score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason = calculate_market_regime(market_data)
+    score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr = calculate_market_regime(market_data)
     
     logging.info(f"Calculated Regime Score: {score} ({regime})")
     
-    html_report = generate_html_email(market_data, score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason)
+    html_report = generate_html_email(market_data, score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr)
     send_email(html_report)
     logging.info("Pipeline execution completed.")
