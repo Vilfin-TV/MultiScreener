@@ -14,56 +14,78 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 # Configuration for Tickers
 TICKERS_CONFIG = {
-    'Volatility': {'VIX': '^VIX'},
-    'Bonds': {'US 10Y': '^TNX', 'US 30Y': '^TYX'},
-    'Commodities': {'Brent Crude': 'BZ=F', 'Gold': 'GC=F', 'Silver': 'SI=F', 'Copper': 'HG=F'},
-    'US Futures': {'S&P 500 Futures': 'ES=F', 'Nasdaq 100 Futures': 'NQ=F', 'Dow Jones Futures': 'YM=F'},
+    'Volatility': {
+        'VIX': {'symbol': '^VIX', 'currency': 'Points'}
+    },
+    'Bonds': {
+        'US 10Y': {'symbol': '^TNX', 'currency': 'Yield %'},
+        'US 30Y': {'symbol': '^TYX', 'currency': 'Yield %'}
+    },
+    'Commodities': {
+        'Brent Crude': {'symbol': 'BZ=F', 'currency': 'USD'},
+        'Gold': {'symbol': 'GC=F', 'currency': 'USD'},
+        'Silver': {'symbol': 'SI=F', 'currency': 'USD'},
+        'Copper': {'symbol': 'HG=F', 'currency': 'USD'}
+    },
+    'US Futures': {
+        'S&P 500 Futures': {'symbol': 'ES=F', 'currency': 'USD'},
+        'Nasdaq 100 Futures': {'symbol': 'NQ=F', 'currency': 'USD'},
+        'Dow Jones Futures': {'symbol': 'YM=F', 'currency': 'USD'}
+    },
     'Global Indices': {
-        'Germany DAX': '^GDAXI',
-        'Brazil Bovespa': '^BVSP',
-        'Turkey BIST 100': 'XU100.IS',
-        'Australia ASX 200': '^AXJO',
-        'Taiwan Weighted': '^TWII'
+        'Germany DAX': {'symbol': '^GDAXI', 'currency': 'EUR'},
+        'Brazil Bovespa': {'symbol': '^BVSP', 'currency': 'BRL'},
+        'Turkey BIST 100': {'symbol': 'XU100.IS', 'currency': 'TRY'},
+        'Australia ASX 200': {'symbol': '^AXJO', 'currency': 'AUD'},
+        'Taiwan Weighted': {'symbol': '^TWII', 'currency': 'TWD'}
     },
-    'US Indices': {'S&P 500': '^GSPC', 'Nasdaq 100': '^NDX', 'Dow Jones': '^DJI'},
+    'US Indices': {
+        'S&P 500': {'symbol': '^GSPC', 'currency': 'USD'}, 
+        'Nasdaq 100': {'symbol': '^NDX', 'currency': 'USD'}, 
+        'Dow Jones': {'symbol': '^DJI', 'currency': 'USD'}
+    },
     'Asian Indices': {
-        'Nikkei 225': '^N225', 
-        'TOPIX': '^TOPX', 
-        'Kospi': '^KS11', 
-        'Hang Seng': '^HSI', 
-        'Sensex': '^BSESN', 
-        'Nifty 50': '^NSEI', 
-        'BSE 500 (Nifty 500 Proxy)': 'BSE-500.BO', 
-        'Nifty Midcap 50': '^NSEMDCP50', 
-        'Nifty Next 50 (ETF)': 'JUNIORBEES.NS'
+        'Nikkei 225': {'symbol': '^N225', 'currency': 'JPY'}, 
+        'TOPIX': {'symbol': '^TOPX', 'currency': 'JPY'}, 
+        'Kospi': {'symbol': '^KS11', 'currency': 'KRW'}, 
+        'Hang Seng': {'symbol': '^HSI', 'currency': 'HKD'}, 
+        'Sensex': {'symbol': '^BSESN', 'currency': 'INR'}, 
+        'Nifty 50': {'symbol': '^NSEI', 'currency': 'INR'}, 
+        'BSE 500 (Nifty 500 Proxy)': {'symbol': 'BSE-500.BO', 'currency': 'INR'}, 
+        'Nifty Midcap 50': {'symbol': '^NSEMDCP50', 'currency': 'INR'}, 
+        'Nifty Next 50 (ETF)': {'symbol': 'JUNIORBEES.NS', 'currency': 'INR'}
     },
-    'Sectors & Themes': {
-        'AI Stocks': 'AIQ',
-        'Semiconductor': 'SMH',
-        'Technology': 'XLK',
-        'Health Care': 'XLV',
-        'Space': 'ARKX',
-        'Metals & Mining': 'XME',
-        'Energy': 'XLE',
-        'Consumer Discretionary': 'XLY',
-        'Industrials': 'XLI',
-        'Banking': 'KBE',
-        'Finance': 'XLF',
-        'Auto': 'CARZ'
+    'Sectors & Themes (US ETFs)': {
+        'AI Stocks': {'symbol': 'AIQ', 'currency': 'USD'},
+        'Semiconductor': {'symbol': 'SMH', 'currency': 'USD'},
+        'Technology': {'symbol': 'XLK', 'currency': 'USD'},
+        'Health Care': {'symbol': 'XLV', 'currency': 'USD'},
+        'Space': {'symbol': 'ARKX', 'currency': 'USD'},
+        'Metals & Mining': {'symbol': 'XME', 'currency': 'USD'},
+        'Energy': {'symbol': 'XLE', 'currency': 'USD'},
+        'Consumer Discretionary': {'symbol': 'XLY', 'currency': 'USD'},
+        'Industrials': {'symbol': 'XLI', 'currency': 'USD'},
+        'Banking': {'symbol': 'KBE', 'currency': 'USD'},
+        'Finance': {'symbol': 'XLF', 'currency': 'USD'},
+        'Auto': {'symbol': 'CARZ', 'currency': 'USD'}
     },
     'Currencies': {
-        'EUR/USD': 'EURUSD=X', 
-        'EUR/INR': 'EURINR=X', 
-        'USD/JPY': 'JPY=X', 
-        'JPY/INR': 'JPYINR=X', 
-        'USD/INR': 'INR=X', 
-        'USD/CNY': 'CNY=X'
+        'EUR/USD': {'symbol': 'EURUSD=X', 'currency': 'USD'}, 
+        'EUR/INR': {'symbol': 'EURINR=X', 'currency': 'INR'}, 
+        'USD/JPY': {'symbol': 'JPY=X', 'currency': 'JPY'}, 
+        'JPY/INR': {'symbol': 'JPYINR=X', 'currency': 'INR'}, 
+        'USD/INR': {'symbol': 'INR=X', 'currency': 'INR'}, 
+        'USD/CNY (Yuan)': {'symbol': 'CNY=X', 'currency': 'CNY'},
+        'CNY/INR (Yuan/INR)': {'symbol': 'CNYINR=X', 'currency': 'INR'},
+        'AUD/USD': {'symbol': 'AUDUSD=X', 'currency': 'USD'},
+        'AUD/INR': {'symbol': 'AUDINR=X', 'currency': 'INR'},
+        'USD/SGD': {'symbol': 'SGD=X', 'currency': 'SGD'},
+        'SGD/INR': {'symbol': 'SGDINR=X', 'currency': 'INR'}
     }
 }
 
 def fetch_asset_data(ticker_symbol):
     """Fetches market data with Cloudflare worker proxy support and Alpha Vantage fallback."""
-    # 1. Try yfinance
     try:
         session = requests.Session()
         session.headers.update({
@@ -98,7 +120,7 @@ def fetch_asset_data(ticker_symbol):
     except Exception as e:
         logging.warning(f"yfinance failed for {ticker_symbol}: {e}")
 
-    # 2. Alpha Vantage Fallback
+    # Alpha Vantage Fallback
     av_api_key = os.environ.get('ALPHA_VANTAGE_API_KEY')
     if av_api_key:
         logging.info(f"Attempting Alpha Vantage fallback for {ticker_symbol}")
@@ -139,15 +161,20 @@ def collect_market_data():
     all_data = {}
     for category, assets in TICKERS_CONFIG.items():
         all_data[category] = {}
-        for name, symbol in assets.items():
+        for name, info in assets.items():
+            symbol = info['symbol']
+            currency = info['currency']
             logging.info(f"Fetching data for {name} ({symbol})")
+            
             data = fetch_asset_data(symbol)
+            if data:
+                data['currency'] = currency
             all_data[category][name] = data
+            
             time.sleep(2) # Prevent Yahoo Finance rate limits
     return all_data
 
 def get_executive_summary_analysis(data, regime_score):
-    # 1. Regional Recommendation
     if regime_score <= -50:
         regional_rec = "Safe Havens (Bonds & Gold). Equities are in a severe contraction phase. Cash and fixed income are preferred."
     else:
@@ -184,8 +211,7 @@ def get_executive_summary_analysis(data, regime_score):
             else:
                 regional_rec = "Defensive Equities & Commodities (Gold, Silver). Markets lack clear directional momentum."
 
-    # 2. Sector Analysis
-    sector_data = data.get('Sectors & Themes', {})
+    sector_data = data.get('Sectors & Themes (US ETFs)', {})
     valid_sectors = {name: metrics for name, metrics in sector_data.items() if metrics and metrics['ma_50']}
     
     momentum_name = "N/A"
@@ -193,18 +219,15 @@ def get_executive_summary_analysis(data, regime_score):
     long_term_name = "N/A"
     
     if valid_sectors:
-        # Momentum: Sector trading furthest above 50-day MA
         momentum_sector = max(valid_sectors.items(), key=lambda x: x[1]['price'] / x[1]['ma_50'])
         momentum_name = f"{momentum_sector[0]} (+{momentum_sector[1]['change']:.2f}%)"
         
-        # Value: Energy, Finance, Industrials, Banking, Metals
         value_names = ['Energy', 'Finance', 'Industrials', 'Banking', 'Metals & Mining']
         value_sectors = {k: v for k, v in valid_sectors.items() if k in value_names}
         if value_sectors:
             best_value = max(value_sectors.items(), key=lambda x: x[1]['price'] / x[1]['ma_50'])
             value_name = best_value[0]
             
-        # Long Term: Thematic/Tech that is showing steady growth
         long_term_candidates = ['Semiconductor', 'AI Stocks', 'Technology', 'Health Care', 'Space']
         lt_sectors = {k: v for k, v in valid_sectors.items() if k in long_term_candidates}
         if lt_sectors:
@@ -301,7 +324,8 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
             table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
             th, td {{ padding: 10px; border: 1px solid #ddd; text-align: right; }}
             th {{ background-color: #f4f4f4; text-align: left; }}
-            td:first-child {{ text-align: left; font-weight: bold; width: 35%; }}
+            td:nth-child(1) {{ text-align: left; font-weight: bold; width: 30%; }}
+            td:nth-child(2) {{ text-align: center; color: #666; font-size: 0.9em; }}
             .positive {{ color: green; font-weight: bold; }}
             .negative {{ color: red; font-weight: bold; }}
             .score-box {{ padding: 20px; background: #eef2f5; border-left: 5px solid #0a192f; margin-bottom: 20px; }}
@@ -341,6 +365,7 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
         <table>
             <tr>
                 <th>Asset</th>
+                <th>Currency</th>
                 <th>Current Price</th>
                 <th>Daily Change</th>
                 <th>50-Day MA</th>
@@ -351,17 +376,19 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
                 change_class = "positive" if metrics['change'] >= 0 else "negative"
                 change_sign = "+" if metrics['change'] >= 0 else ""
                 ma_50_str = f"{metrics['ma_50']:.2f}" if metrics['ma_50'] else "N/A"
+                currency_str = metrics.get('currency', 'N/A')
                 
                 html += f"""
                 <tr>
                     <td>{name}</td>
+                    <td>{currency_str}</td>
                     <td>{metrics['price']:.2f}</td>
                     <td class="{change_class}">{change_sign}{metrics['change']:.2f}%</td>
                     <td>{ma_50_str}</td>
                 </tr>
                 """
             else:
-                html += f"<tr><td>{name}</td><td colspan='3' style='text-align:center; color: #999;'>Data Unavailable</td></tr>"
+                html += f"<tr><td>{name}</td><td colspan='4' style='text-align:center; color: #999;'>Data Unavailable</td></tr>"
         html += "</table>"
 
     html += """
