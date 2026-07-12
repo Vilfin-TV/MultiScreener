@@ -332,13 +332,36 @@ def get_executive_summary_analysis(data, regime_score):
     sector_data = data.get('Sectors & Themes (US ETFs)', {})
     valid_sectors = {name: metrics for name, metrics in sector_data.items() if metrics and metrics['ma_50']}
     
+    def calc_growth_score(m):
+        p50 = ((m.get('price', 0) / m['ma_50']) - 1) * 100 if m.get('ma_50') else 0
+        p20 = ((m.get('price', 0) / m['ma_20']) - 1) * 100 if m.get('ma_20') else 0
+        ytd = m.get('ytd_return') or 0
+        return (p50 * 0.4) + (p20 * 0.3) + (ytd * 0.3)
+
+    def calc_value_score(m):
+        p50 = ((m.get('price', 0) / m['ma_50']) - 1) * 100 if m.get('ma_50') else 0
+        ytd = m.get('ytd_return') or 0
+        if ytd < -15: return -9999
+        return -p50 + (ytd * 0.1)
+
+    def calc_lt_score(m):
+        tyr = m.get('three_yr_return') or 0
+        ytd = m.get('ytd_return') or 0
+        p50 = ((m.get('price', 0) / m['ma_50']) - 1) * 100 if m.get('ma_50') else 0
+        return (tyr * 0.5) + (ytd * 0.3) + (p50 * 0.2)
+
+    def calc_momentum_score(m):
+        p20 = ((m.get('price', 0) / m['ma_20']) - 1) * 100 if m.get('ma_20') else 0
+        daily = m.get('change') or 0
+        return (p20 * 0.7) + (daily * 0.3)
+
     momentum_name = "N/A"
     value_name = "N/A"
     long_term_name = "N/A"
     lt_reason = ""
     
     if valid_sectors:
-        momentum_sector = max(valid_sectors.items(), key=lambda x: x[1]['price'] / x[1]['ma_50'])
+        momentum_sector = max(valid_sectors.items(), key=lambda x: calc_growth_score(x[1]))
         mom_metrics = momentum_sector[1]
         dist_mom = ((mom_metrics['price'] / mom_metrics['ma_50']) - 1) * 100
         ytd_str = f" and an explosive +{mom_metrics['ytd_return']:.2f}% YTD return" if mom_metrics.get('ytd_return') else ""
@@ -347,7 +370,7 @@ def get_executive_summary_analysis(data, regime_score):
         value_names = ['Energy', 'Finance', 'Industrials', 'Banking', 'Metals & Mining']
         value_sectors = {k: v for k, v in valid_sectors.items() if k in value_names}
         if value_sectors:
-            best_value = max(value_sectors.items(), key=lambda x: x[1]['price'] / x[1]['ma_50'])
+            best_value = max(value_sectors.items(), key=lambda x: calc_value_score(x[1]))
             dist_val = ((best_value[1]['price'] / best_value[1]['ma_50']) - 1) * 100
             ytd_val_str = f" and {best_value[1]['ytd_return']:.2f}% YTD" if best_value[1].get('ytd_return') else ""
             value_name = f"{best_value[0]}. Accumulating value, trading {dist_val:.2f}% relative to its 50-day MA{ytd_val_str}."
@@ -355,7 +378,7 @@ def get_executive_summary_analysis(data, regime_score):
         long_term_candidates = ['Semiconductor', 'AI Stocks', 'Technology', 'Health Care', 'Space']
         lt_sectors = {k: v for k, v in valid_sectors.items() if k in long_term_candidates}
         if lt_sectors:
-            best_lt = max(lt_sectors.items(), key=lambda x: x[1]['price'] / x[1]['ma_50'])
+            best_lt = max(lt_sectors.items(), key=lambda x: calc_lt_score(x[1]))
             long_term_name = best_lt[0]
             dist_lt = ((best_lt[1]['price'] / best_lt[1]['ma_50']) - 1) * 100
             lt_reason = f"Selected because it is currently trading +{dist_lt:.2f}% above its 50-day moving average, showing the strongest structural uptrend among our tracked secular growth themes (Tech, AI, Health, Space)."
@@ -369,7 +392,7 @@ def get_executive_summary_analysis(data, regime_score):
     lt_broad_name = "N/A"
     lt_broad_reason = ""
     if valid_broad:
-        best_broad = max(valid_broad.items(), key=lambda x: x[1]['price'] / x[1]['ma_50'])
+        best_broad = max(valid_broad.items(), key=lambda x: calc_lt_score(x[1]))
         dist_broad = ((best_broad[1]['price'] / best_broad[1]['ma_50']) - 1) * 100
         ytd_str = f" and {best_broad[1]['ytd_return']:.2f}% YTD" if best_broad[1].get('ytd_return') else ""
         lt_broad_name = f"{best_broad[0]} Index Fund"
@@ -380,7 +403,7 @@ def get_executive_summary_analysis(data, regime_score):
     lt_bond_name = "N/A"
     lt_bond_reason = ""
     if valid_bonds:
-        best_lt_bond = max(valid_bonds.items(), key=lambda x: x[1]['price'] / x[1]['ma_50'])
+        best_lt_bond = max(valid_bonds.items(), key=lambda x: calc_lt_score(x[1]))
         lt_bond_name = best_lt_bond[0]
         dist_lt_bond = ((best_lt_bond[1]['price'] / best_lt_bond[1]['ma_50']) - 1) * 100
         lt_bond_reason = f"Selected because it is trading +{dist_lt_bond:.2f}% above its 50-day average."
@@ -390,7 +413,7 @@ def get_executive_summary_analysis(data, regime_score):
     lt_commodity_name = "N/A"
     lt_commodity_reason = ""
     if valid_commodities:
-        best_lt_comm = max(valid_commodities.items(), key=lambda x: x[1]['price'] / x[1]['ma_50'])
+        best_lt_comm = max(valid_commodities.items(), key=lambda x: calc_lt_score(x[1]))
         lt_commodity_name = best_lt_comm[0]
         dist_lt_comm = ((best_lt_comm[1]['price'] / best_lt_comm[1]['ma_50']) - 1) * 100
         lt_commodity_reason = f"Selected because it is trading +{dist_lt_comm:.2f}% above its 50-day average."
@@ -398,10 +421,11 @@ def get_executive_summary_analysis(data, regime_score):
     def get_short_term_pick(asset_dict):
         valid = {name: metrics for name, metrics in asset_dict.items() if metrics and metrics['ma_20'] and metrics['change'] > 0}
         if valid:
-            best = max(valid.items(), key=lambda x: x[1]['price'] / x[1]['ma_20'])
+            best = max(valid.items(), key=lambda x: calc_momentum_score(x[1]))
             dist = ((best[1]['price'] / best[1]['ma_20']) - 1) * 100
             return f"{best[0]} (+{dist:.2f}% above 20-Day MA, Up {best[1]['change']:.2f}% Today)"
         return "No clear short-term momentum"
+
 
     st_equity = get_short_term_pick(sector_data)
     st_commodity = get_short_term_pick(commodities)
