@@ -80,7 +80,11 @@ TICKERS_CONFIG = {
         'Nifty 50': {'symbol': '^NSEI', 'currency': 'INR'}, 
         'BSE 500 (Nifty 500 Proxy)': {'symbol': 'BSE-500.BO', 'currency': 'INR'}, 
         'Nifty Midcap 50': {'symbol': '^NSEMDCP50', 'currency': 'INR'}, 
-        'Nifty Next 50 (ETF)': {'symbol': 'JUNIORBEES.NS', 'currency': 'INR'}
+        'Nifty Midcap 150 (ETF)': {'symbol': 'NIFTY_MIDCAP_150.NS', 'currency': 'INR'}, 
+        'Nifty Smallcap 250 (ETF)': {'symbol': 'NIFTY_SMLCAP_250.NS', 'currency': 'INR'}, 
+        'Nifty Next 50 (ETF)': {'symbol': 'JUNIORBEES.NS', 'currency': 'INR'}, 
+        'Taiwan Weighted': {'symbol': '^TWII', 'currency': 'TWD'}, 
+        'Vietnam Index Proxy (VNM)': {'symbol': 'VNM', 'currency': 'USD'}
     },
     'Top 10 US Stocks': {
         'Apple (AAPL)': {'symbol': 'AAPL', 'currency': 'USD'},
