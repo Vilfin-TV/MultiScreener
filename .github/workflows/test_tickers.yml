@@ -1,0 +1,23 @@
+name: Test Tickers
+on: [workflow_dispatch]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: pip install yfinance pandas requests
+      - run: |
+          python -c "
+          import yfinance as yf
+          import time
+          for t in ['NIY=F', 'NK=F', 'FDAX=F', 'FDX=F', 'Z=F', 'FTI=F', '^DE10YR', '^UK10YR', '^JN10YR', 'IGOV', 'BNDX', 'EWU', 'EWG', 'EWJ', 'BUNL.L', 'IGLS.L', 'JGBL.L']:
+              try:
+                  hist = yf.Ticker(t).history(period='1mo')
+                  print(f'{t}: {len(hist)}')
+              except Exception as e:
+                  print(f'{t}: failed - {e}')
+              time.sleep(1)
+          "
