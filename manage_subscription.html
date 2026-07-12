@@ -107,7 +107,11 @@
                 method: 'POST',
                 mode: 'no-cors'
             }).then(() => {
-                msgDiv.innerHTML = `<span style="color:#64ffda">Successfully ${action}d!</span>`;
+                if (action === 'subscribe') {
+                    msgDiv.innerHTML = `<span style="color:#64ffda">Successfully subscribed!</span><br><br><span style="color:#ffb86c; font-size: 0.85em;">⚠️ <strong>Important:</strong> Automated market reports often get filtered by email providers. Please check your <strong>Spam or Junk folder</strong> and mark the email as "Not Spam" to ensure daily delivery.</span>`;
+                } else {
+                    msgDiv.innerHTML = `<span style="color:#64ffda">Successfully unsubscribed!</span>`;
+                }
                 document.getElementById('email').value = '';
             }).catch(err => {
                 msgDiv.innerHTML = '<span style="color:#ff6b6b">An error occurred. Please try again.</span>';
