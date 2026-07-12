@@ -636,6 +636,11 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
             <a href="https://vilfintv.com/manage_subscription.html?action=unsubscribe" style="color: #6c757d; text-decoration: none; margin: 0 15px; font-size: 0.9em;">Unsubscribe</a>
         </div>
     </div>
+    <div style="margin-top: 30px; padding: 15px; text-align: center; font-size: 0.8em; color: #888; border-top: 1px dashed #ccc;">
+        <p style="margin: 0;">
+            <strong>Disclaimer:</strong> The information provided in this email is for general informational and educational purposes only and does not constitute financial, investment, or trading advice. Market data may be delayed and is subject to change without notice. Always conduct your own research or consult with a licensed financial advisor before making any investment decisions. VilfinTV is not responsible for any financial losses incurred based on this report.
+        </p>
+    </div>
     </body>
     </html>
     """
