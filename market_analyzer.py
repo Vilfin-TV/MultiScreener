@@ -353,6 +353,20 @@ def get_executive_summary_analysis(data, regime_score):
             dist_lt = ((best_lt[1]['price'] / best_lt[1]['ma_50']) - 1) * 100
             lt_reason = f"Selected because it is currently trading +{dist_lt:.2f}% above its 50-day moving average, showing the strongest structural uptrend among our tracked secular growth themes (Tech, AI, Health, Space)."
 
+    broad_indices = {}
+    broad_indices.update(data.get('US Indices', {}))
+    broad_indices.update(data.get('Global Indices', {}))
+    broad_indices.update(data.get('Asian Indices', {}))
+    valid_broad = {name: metrics for name, metrics in broad_indices.items() if metrics and metrics['ma_50']}
+    lt_broad_name = "N/A"
+    lt_broad_reason = ""
+    if valid_broad:
+        best_broad = max(valid_broad.items(), key=lambda x: x[1]['price'] / x[1]['ma_50'])
+        dist_broad = ((best_broad[1]['price'] / best_broad[1]['ma_50']) - 1) * 100
+        ytd_str = f" and {best_broad[1]['ytd_return']:.2f}% YTD" if best_broad[1].get('ytd_return') else ""
+        lt_broad_name = f"{best_broad[0]} Index Fund"
+        lt_broad_reason = f"Selected as the strongest broad-market index globally, trending +{dist_broad:.2f}% above its 50-day moving average{ytd_str}."
+
     bonds = data.get('Bonds', {})
     valid_bonds = {name: metrics for name, metrics in bonds.items() if metrics and metrics['ma_50']}
     lt_bond_name = "N/A"
@@ -386,7 +400,7 @@ def get_executive_summary_analysis(data, regime_score):
     st_bond = get_short_term_pick(bonds)
     st_currency = get_short_term_pick(data.get('Currencies', {}))
 
-    return regional_rec, momentum_name, value_name, long_term_name, lt_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency
+    return regional_rec, momentum_name, value_name, long_term_name, lt_reason, lt_broad_name, lt_broad_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency
 
 def calculate_market_regime(data):
     score = 0
@@ -477,11 +491,11 @@ def calculate_market_regime(data):
     else:
         regime_text = "Extremely Bearish / Risk-Off"
 
-    regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency = get_executive_summary_analysis(data, score)
+    regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad_name, lt_broad_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency = get_executive_summary_analysis(data, score)
 
-    return score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency
+    return score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad_name, lt_broad_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency
 
-def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr, news_items):
+def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr, news_items):
     html = f"""
     <html>
     <head>
@@ -518,6 +532,8 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
                 <div class="summary-item"><strong>🌍 Best Region to Buy:</strong> {regional_rec}</div>
                 <div class="summary-item"><strong>🚀 Top Equity Sector (Growth):</strong> {mom_sector}</div>
                 <div class="summary-item"><strong>⚖️ Top Equity Sector (Value):</strong> {val_sector}</div>
+                <div class="summary-item" style="margin-top: 10px;"><strong>🌎 Best Broad-Market Index Fund:</strong> {lt_broad}</div>
+                <div class="reasoning"><em>{lt_broad_reason}</em></div>
                 <div class="summary-item" style="margin-top: 10px;"><strong>💎 Best Long-Term Thematic Sector:</strong> {lt_sector}</div>
                 <div class="reasoning"><em>{lt_reason}</em></div>
                 <div class="summary-item" style="margin-top: 10px;"><strong>🏦 Best Long-Term Bond:</strong> {lt_bond}</div>
@@ -642,10 +658,10 @@ if __name__ == "__main__":
     logging.info("Starting Market Analyzer Pipeline")
     market_data = collect_market_data()
     news_items = fetch_global_news()
-    score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr = calculate_market_regime(market_data)
+    score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr = calculate_market_regime(market_data)
     
     logging.info(f"Calculated Regime Score: {score} ({regime})")
     
-    html_report = generate_html_email(market_data, score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr, news_items)
+    html_report = generate_html_email(market_data, score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr, news_items)
     send_email(html_report)
     logging.info("Pipeline execution completed.")
