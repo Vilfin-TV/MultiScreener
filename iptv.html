@@ -2892,14 +2892,25 @@ function __iptvBoot(){
     function tvCandidates(){
       return Array.prototype.filter.call(document.querySelectorAll(TV_SEL), tvVisible);
     }
-    // Pick the nearest focusable element in a direction using a directional
-    // distance metric (in-line offset weighted lighter than cross-axis drift).
-    function tvMove(dir){
-      var cur = document.activeElement;
-      var cr = (cur && cur.getBoundingClientRect) ? cur.getBoundingClientRect() : {left:innerWidth/2,right:innerWidth/2,top:0,bottom:0,width:0,height:0};
+    // Like tvCandidates() but WITHOUT the viewport-bounds check — returns every
+    // rendered focusable in the active screen, including ones scrolled off the
+    // fold. display:none stays excluded (its rect collapses to 0×0).
+    function tvAllFocusable(){
+      return Array.prototype.filter.call(document.querySelectorAll(TV_SEL), function(el){
+        if(!el || el.disabled) return false;
+        var r = el.getBoundingClientRect();
+        if(r.width < 4 || r.height < 4) return false;
+        var scr = el.closest('.screen');
+        return !scr || scr.classList.contains('active');
+      });
+    }
+    // Score the nearest focusable in a direction over a candidate list, using a
+    // directional distance metric (in-line offset weighted lighter than
+    // cross-axis drift). Returns the best element or null.
+    function tvBestIn(dir, list, cur, cr){
       var cx = (cr.left+cr.right)/2, cy = (cr.top+cr.bottom)/2;
       var best=null, bestScore=Infinity;
-      tvCandidates().forEach(function(el){
+      list.forEach(function(el){
         if(el===cur) return;
         var r = el.getBoundingClientRect(), x=(r.left+r.right)/2, y=(r.top+r.bottom)/2;
         var dx=x-cx, dy=y-cy, primary, cross;
@@ -2911,7 +2922,22 @@ function __iptvBoot(){
         var score = primary + cross*2;           // prefer aligned, then closest
         if(score < bestScore){ bestScore=score; best=el; }
       });
-      if(best){ try{ best.focus(); }catch(e){} return true; }
+      return best;
+    }
+    // Pick the nearest focusable in a direction. First try on-screen candidates;
+    // if none exist that way (e.g. the next grid row sits below the fold because
+    // the video/panels fill the viewport), fall back to off-screen focusables so
+    // the D-pad keeps advancing and the focusin handler scrolls the target in.
+    function tvMove(dir){
+      var cur = document.activeElement;
+      var cr = (cur && cur.getBoundingClientRect) ? cur.getBoundingClientRect() : {left:innerWidth/2,right:innerWidth/2,top:0,bottom:0,width:0,height:0};
+      var best = tvBestIn(dir, tvCandidates(), cur, cr);
+      if(!best) best = tvBestIn(dir, tvAllFocusable(), cur, cr);
+      if(best){
+        try{ best.focus(); }catch(e){}
+        try{ best.scrollIntoView({block:'center',inline:'nearest',behavior:'smooth'}); }catch(e){}
+        return true;
+      }
       return false;
     }
     function tvFocusFirst(){
