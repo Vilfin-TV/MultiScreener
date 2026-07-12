@@ -124,6 +124,7 @@ def fetch_asset_data(ticker_symbol):
         hist = ticker.history(period="3y")
 
         if not hist.empty:
+            hist.index = hist.index.tz_localize(None)
             latest_close = hist['Close'].iloc[-1]
             prev_close = hist['Close'].iloc[-2] if len(hist) > 1 else latest_close
             daily_change = ((latest_close - prev_close) / prev_close) * 100
@@ -170,6 +171,7 @@ def fetch_asset_data(ticker_symbol):
                 df = df.rename(columns={'4. close': 'Close'})
                 df['Close'] = df['Close'].astype(float)
                 df.index = pd.to_datetime(df.index)
+                df.index = df.index.tz_localize(None)
                 df = df.sort_index()
                 
                 if len(df) > 0:
