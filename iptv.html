@@ -3019,11 +3019,10 @@ function __iptvBoot(){
 
     document.addEventListener('focusin', function(e){
       var el=e.target; if(!el||!el.scrollIntoView) return;
-      // Channel grid: scroll only when the card is actually off-screen ("nearest")
-      // for a snappy feel, instead of recentering the whole grid on every press.
-      var isCard = el.closest && el.closest('.ch-card,.ch-row,.fav-item,.epg-slot,.filter-chip');
-      try{ el.scrollIntoView({block: isCard?'nearest':'center', inline:'nearest', behavior:'smooth'}); }catch(_){}
-      return;
+      // Keep the focused item centred — this scrolls the video/panels up out of the
+      // way as you move down the grid, so all rows become reachable. ('nearest' kept
+      // the video pinned and stranded the grid at ~2 visible rows.)
+      try{ el.scrollIntoView({block:'center',inline:'nearest',behavior:'smooth'}); }catch(_){}
     });
 
     document.addEventListener('keydown', function(e){
