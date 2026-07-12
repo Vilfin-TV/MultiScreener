@@ -1,0 +1,60 @@
+name: Daily Market Report Watchdog
+
+# The main "Daily Market Report" workflow fires on a fixed cron
+# (0 21 * * *, i.e. 6:00am JST) — GitHub's own docs note that on-the-hour
+# schedules are the most likely to be delayed or dropped entirely under
+# load. Its existing "backup" workflow only reacts to that job actually
+# running and *failing* (workflow_run: types: [completed]) — it can't
+# detect a true no-show, since a schedule that never fires never emits
+# a completed event for anything to react to.
+#
+# This watchdog runs shortly after the main schedule's target time, at
+# an off-the-hour minute of its own (to avoid the same congestion risk),
+# and checks via the GitHub API whether "Daily Market Report" has had
+# any run in the last few hours. If not, it dispatches it directly.
+
+on:
+  schedule:
+    - cron: '35 21 * * *'  # ~35 min after the main 21:00 UTC / 6:00am JST schedule
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  check-and-trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for a recent Daily Market Report run, trigger one if missing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          REPO="${{ github.repository }}"
+
+          gh run list --repo "$REPO" --workflow="market_report.yml" \
+            --json createdAt,status,conclusion,event --limit 20 > /tmp/runs.json
+
+          RECENT_COUNT=$(python3 - /tmp/runs.json <<'PYEOF'
+          import json, sys, datetime
+          with open(sys.argv[1]) as f:
+              data = json.load(f)
+          now = datetime.datetime.now(datetime.timezone.utc)
+          cutoff = now - datetime.timedelta(hours=3)
+          recent = [
+              r for r in data
+              if datetime.datetime.fromisoformat(r["createdAt"].replace("Z", "+00:00")) > cutoff
+          ]
+          print(len(recent))
+          PYEOF
+          )
+
+          echo "Recent runs (last 3h) for Daily Market Report: $RECENT_COUNT"
+
+          if [ "$RECENT_COUNT" -eq 0 ]; then
+            echo "No recent run found — the scheduled trigger likely didn't fire. Dispatching now."
+            gh workflow run market_report.yml --repo "$REPO"
+          else
+            echo "Daily Market Report already ran recently — nothing to do."
+          fi
