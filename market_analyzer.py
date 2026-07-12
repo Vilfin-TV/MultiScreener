@@ -275,6 +275,29 @@ def collect_market_data():
             time.sleep(2) 
     return all_data
 
+def calc_growth_score(m):
+    p50 = ((m.get('price', 0) / m['ma_50']) - 1) * 100 if m.get('ma_50') else 0
+    p20 = ((m.get('price', 0) / m['ma_20']) - 1) * 100 if m.get('ma_20') else 0
+    ytd = m.get('ytd_return') or 0
+    return (p50 * 0.4) + (p20 * 0.3) + (ytd * 0.3)
+
+def calc_value_score(m):
+    p50 = ((m.get('price', 0) / m['ma_50']) - 1) * 100 if m.get('ma_50') else 0
+    ytd = m.get('ytd_return') or 0
+    if ytd < -15: return -9999
+    return -p50 + (ytd * 0.1)
+
+def calc_lt_score(m):
+    tyr = m.get('three_yr_return') or 0
+    ytd = m.get('ytd_return') or 0
+    p50 = ((m.get('price', 0) / m['ma_50']) - 1) * 100 if m.get('ma_50') else 0
+    return (tyr * 0.5) + (ytd * 0.3) + (p50 * 0.2)
+
+def calc_momentum_score(m):
+    p20 = ((m.get('price', 0) / m['ma_20']) - 1) * 100 if m.get('ma_20') else 0
+    daily = m.get('change') or 0
+    return (p20 * 0.7) + (daily * 0.3)
+
 def get_executive_summary_analysis(data, regime_score):
     if regime_score <= -50:
         regional_rec = "Safe Havens (Bonds & Gold). Equities are in a severe contraction phase. Cash and fixed income are preferred."
@@ -332,29 +355,6 @@ def get_executive_summary_analysis(data, regime_score):
     sector_data = data.get('Sectors & Themes (US ETFs)', {})
     valid_sectors = {name: metrics for name, metrics in sector_data.items() if metrics and metrics['ma_50']}
     
-    def calc_growth_score(m):
-        p50 = ((m.get('price', 0) / m['ma_50']) - 1) * 100 if m.get('ma_50') else 0
-        p20 = ((m.get('price', 0) / m['ma_20']) - 1) * 100 if m.get('ma_20') else 0
-        ytd = m.get('ytd_return') or 0
-        return (p50 * 0.4) + (p20 * 0.3) + (ytd * 0.3)
-
-    def calc_value_score(m):
-        p50 = ((m.get('price', 0) / m['ma_50']) - 1) * 100 if m.get('ma_50') else 0
-        ytd = m.get('ytd_return') or 0
-        if ytd < -15: return -9999
-        return -p50 + (ytd * 0.1)
-
-    def calc_lt_score(m):
-        tyr = m.get('three_yr_return') or 0
-        ytd = m.get('ytd_return') or 0
-        p50 = ((m.get('price', 0) / m['ma_50']) - 1) * 100 if m.get('ma_50') else 0
-        return (tyr * 0.5) + (ytd * 0.3) + (p50 * 0.2)
-
-    def calc_momentum_score(m):
-        p20 = ((m.get('price', 0) / m['ma_20']) - 1) * 100 if m.get('ma_20') else 0
-        daily = m.get('change') or 0
-        return (p20 * 0.7) + (daily * 0.3)
-
     momentum_name = "N/A"
     value_name = "N/A"
     long_term_name = "N/A"
@@ -698,13 +698,13 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
                 
                 valid_st = {n: m for n, m in valid_assets.items() if m.get('ma_20') and m.get('change') is not None and m['change'] > 0}
                 if valid_st:
-                    best = max(valid_st.items(), key=lambda x: x[1]['price'] / x[1]['ma_20'])
+                    best = max(valid_st.items(), key=lambda x: calc_momentum_score(x[1]))
                     dist = ((best[1]['price'] / best[1]['ma_20']) - 1) * 100
                     st_eq = f"{best[0]} (+{dist:.2f}% vs 20D MA)"
                 
                 valid_val = {n: m for n, m in valid_assets.items() if m.get('ma_50')}
                 if valid_val:
-                    best_val = min(valid_val.items(), key=lambda x: x[1]['price'] / x[1]['ma_50'])
+                    best_val = max(valid_val.items(), key=lambda x: calc_value_score(x[1]))
                     dist_val = ((best_val[1]['price'] / best_val[1]['ma_50']) - 1) * 100
                     if dist_val < 0:
                         val_eq = f"{best_val[0]} ({abs(dist_val):.2f}% below 50D MA)"
@@ -713,7 +713,7 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
                 
                 valid_lt = {n: m for n, m in valid_assets.items() if m.get('three_yr_return')}
                 if valid_lt:
-                    best_lt = max(valid_lt.items(), key=lambda x: x[1]['three_yr_return'])
+                    best_lt = max(valid_lt.items(), key=lambda x: calc_lt_score(x[1]))
                     lt_eq = f"{best_lt[0]} (+{best_lt[1]['three_yr_return']:.2f}% 3-Year)"
                 
                 html += f"""
