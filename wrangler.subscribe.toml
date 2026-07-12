@@ -3,8 +3,7 @@ main = "subscribe-worker.js"
 compatibility_date = "2024-12-01"
 workers_dev = true
 
-# To deploy this worker, run:
-# npx wrangler deploy -c wrangler.subscribe.toml
-
-# To set the GitHub PAT, run:
-# npx wrangler secret put GITHUB_PAT -c wrangler.subscribe.toml
+[[d1_databases]]
+binding = "DB"
+database_name = "subscribers-db"
+database_id = "0bdd24a2-6109-4225-a873-90c216c530ab"

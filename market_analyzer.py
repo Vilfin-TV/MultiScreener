@@ -655,14 +655,21 @@ def send_email(html_content):
     msg['From'] = sender_email
     msg['To'] = receiver_email
 
-    # Read automated subscriber list
+    # Fetch automated subscriber list from D1 database via Worker
     bcc_emails = []
     try:
-        if os.path.exists('subscribers.json'):
-            with open('subscribers.json', 'r') as f:
-                bcc_emails = json.load(f)
+        worker_url = os.environ.get('SUBSCRIBER_WORKER_URL')
+        worker_secret = os.environ.get('SUBSCRIBER_WORKER_SECRET')
+        if worker_url and worker_secret:
+            resp = requests.get(f"{worker_url}?action=list", headers={'Authorization': f"Bearer {worker_secret}"})
+            if resp.status_code == 200:
+                bcc_emails = resp.json()
+            else:
+                logging.error(f"Failed to fetch subscribers from Worker: {resp.status_code} {resp.text}")
+        else:
+            logging.warning("SUBSCRIBER_WORKER_URL or SUBSCRIBER_WORKER_SECRET not set.")
     except Exception as e:
-        logging.error(f"Failed to load subscribers.json: {e}")
+        logging.error(f"Exception fetching subscribers from D1 Worker: {e}")
 
     if bcc_emails:
         msg['Bcc'] = ", ".join(bcc_emails)
