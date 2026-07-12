@@ -20,10 +20,10 @@ TICKERS_CONFIG = {
     },
     'Bonds': {
         'US 1-Year (SHY)': {'symbol': 'SHY', 'currency': 'USD'},
-        'US 13-Week': {'symbol': '^IRX', 'currency': 'Yield %'},
-        'US 5Y': {'symbol': '^FVX', 'currency': 'Yield %'},
-        'US 10Y': {'symbol': '^TNX', 'currency': 'Yield %'},
-        'US 30Y': {'symbol': '^TYX', 'currency': 'Yield %'},
+        'US 13-Week': {'symbol': '^IRX', 'currency': 'USD'},
+        'US 5Y': {'symbol': '^FVX', 'currency': 'USD'},
+        'US 10Y': {'symbol': '^TNX', 'currency': 'USD'},
+        'US 30Y': {'symbol': '^TYX', 'currency': 'USD'},
         'Japan Govt Bonds': {'symbol': '2561.T', 'currency': 'JPY'},
         'Europe/Intl Bonds (BNDX)': {'symbol': 'BNDX', 'currency': 'USD'},
         'UK Govt Bonds': {'symbol': 'IGLT.L', 'currency': 'GBP'},
@@ -605,13 +605,16 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
         </div>
     """
 
+    html += "<div class='score-box' style='background: #fff3f3; border-left: 5px solid #d9534f;'>"
+    html += "<h4 style='margin-top: 0; margin-bottom: 15px; color: #d9534f;'>🚨 Automated Risk Alerts</h4>"
     if risk_alerts:
-        html += "<div class='score-box' style='background: #fff3f3; border-left: 5px solid #d9534f;'>"
-        html += "<h4 style='margin-top: 0; margin-bottom: 15px; color: #d9534f;'>🚨 Automated Risk Alerts</h4>"
         html += "<ul style='margin-bottom:0; color: #b91c1c;'>"
         for alert in risk_alerts:
             html += f"<li style='margin-bottom: 8px;'><strong>{alert}</strong></li>"
-        html += "</ul></div>"
+        html += "</ul>"
+    else:
+        html += "<p style='margin:0; color: #b91c1c;'>✅ No extreme risk events detected today.</p>"
+    html += "</div>"
 
     html += "<h2>Asset Dashboard</h2>"
     for category, assets in data.items():
