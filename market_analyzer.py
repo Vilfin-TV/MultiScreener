@@ -240,16 +240,21 @@ def calculate_market_regime(data):
     score = 0
     risk_alerts = []
 
+    # 1. Volatility (Max +20, Min -20)
     vix_data = data.get('Volatility', {}).get('VIX')
     if vix_data and vix_data['ma_20']:
         vix_price = vix_data['price']
-        if vix_price > 20 or vix_price > vix_data['ma_20']:
-            score -= 20
-        else:
-            score += 20
+        if vix_price < 16 and vix_price < vix_data['ma_20']:
+            score += 20  # Exceptionally calm
+        elif vix_price <= 20 and vix_price < vix_data['ma_20']:
+            score += 10  # Normal calm
+        elif vix_price > 20:
+            score -= 20  # Fear
+        
         if vix_price > 25:
             risk_alerts.append(f"High Volatility: VIX is extremely elevated at {vix_price:.2f}.")
 
+    # 2. Yield Curve (Max +20, Min -20)
     yield_10y_data = data.get('Bonds', {}).get('US 10Y')
     yield_30y_data = data.get('Bonds', {}).get('US 30Y')
     
@@ -257,40 +262,55 @@ def calculate_market_regime(data):
         spread = yield_30y_data['price'] - yield_10y_data['price']
         if spread < 0:
             score -= 20
-            risk_alerts.append("Yield Curve Inversion: US 10Y yield > US 30Y yield (Recession signal).")
-        elif spread > 0.5:
-            score += 20
+            risk_alerts.append(f"Yield Curve Inversion: US 10Y > US 30Y (Spread: {spread:.2f}%) - Recession signal.")
+        elif spread > 0.8:
+            score += 20 # Very healthy steep curve
+        elif spread > 0.3:
+            score += 10 # Normal upward slope
         else:
-            score += 0 
+            score += 0  # Flat curve
 
+    # 3. Global Equities (Max +30, Min -30)
     sp500 = data.get('US Indices', {}).get('S&P 500')
     nikkei = data.get('Asian Indices', {}).get('Nikkei 225')
     nifty = data.get('Asian Indices', {}).get('Nifty 50')
     
     equity_score = 0
     for asset, name in zip([sp500, nikkei, nifty], ['S&P 500', 'Nikkei 225', 'Nifty 50']):
-        if asset and asset['ma_50']:
-            if asset['price'] > asset['ma_50']:
-                equity_score += 10
+        if asset and asset['ma_50'] and asset['ma_20']:
+            if asset['price'] > asset['ma_20'] and asset['price'] > asset['ma_50']:
+                equity_score += 10  # Full momentum
+            elif asset['price'] > asset['ma_50']:
+                equity_score += 5   # Long-term trend intact, short-term dip
             else:
-                equity_score -= 10
+                equity_score -= 10  # Broken long term trend
                 risk_alerts.append(f"Momentum Warning: {name} is trading below its 50-day moving average.")
     score += equity_score
 
+    # 4. Commodities & Risk-On Check (Max +30, Min -30)
     gold = data.get('Commodities', {}).get('Gold')
     copper = data.get('Commodities', {}).get('Copper')
     
-    risk_off_count = 0
-    if gold and gold['change'] > 0: risk_off_count += 1
-    if copper and copper['change'] < 0: risk_off_count += 1
-    if sp500 and sp500['change'] < 0: risk_off_count += 1
+    risk_on_signals = 0
+    valid_data_points = 0
     
-    if risk_off_count >= 2:
-        score -= 30
-    elif risk_off_count == 1:
-        score += 10
-    else:
-        score += 30
+    if gold: 
+        valid_data_points += 1
+        if gold['change'] < 0: risk_on_signals += 1 # Gold dropping is risk-on
+    if copper:
+        valid_data_points += 1
+        if copper['change'] > 0: risk_on_signals += 1 # Copper rising is risk-on
+    if sp500:
+        valid_data_points += 1
+        if sp500['change'] > 0: risk_on_signals += 1 # S&P rising is risk-on
+        
+    if valid_data_points >= 2:
+        if risk_on_signals == valid_data_points:
+            score += 30 # Perfect risk-on alignment
+        elif risk_on_signals >= valid_data_points - 1:
+            score += 10 # Mildly risk-on
+        else:
+            score -= 30 # Risk-off (Gold up, Equities down)
 
     for curr_name, curr_data in data.get('Currencies', {}).items():
         if curr_data and abs(curr_data['change']) > 1.5:
