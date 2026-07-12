@@ -576,11 +576,8 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, news_items
             h2 {{ color: #0a192f; margin-top: 30px; }}
             h3 {{ color: #1a365d; }}
             table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.95em; }}
-            th, td {{ padding: 8px; border: 1px solid #ddd; text-align: right; }}
-            th {{ background-color: #f4f4f4; text-align: left; }}
-            th:nth-child(n+3), td:nth-child(n+3) {{ text-align: right; }}
-            td:nth-child(1) {{ text-align: left; font-weight: bold; width: 25%; }}
-            td:nth-child(2) {{ text-align: center; color: #666; font-size: 0.9em; }}
+            th, td {{ padding: 8px; border: 1px solid #ddd; text-align: center; }}
+            th {{ background-color: #f4f4f4; }}
             .positive {{ color: green; font-weight: bold; }}
             .negative {{ color: red; font-weight: bold; }}
             .score-box {{ padding: 20px; background: #eef2f5; border-left: 5px solid #0a192f; margin-bottom: 20px; }}
@@ -658,13 +655,13 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, news_items
         html += """
         <table>
             <tr>
-                <th>Asset</th>
-                <th>Currency</th>
-                <th>Price / Yield</th>
-                <th>Daily Change</th>
-                <th>50-Day MA</th>
-                <th>YTD Return</th>
-                <th>3-Year Return</th>
+                <th style="text-align: left; width: 25%;">Asset</th>
+                <th style="text-align: center;">Currency</th>
+                <th style="text-align: center;">Price / Yield</th>
+                <th style="text-align: center;">Daily Change</th>
+                <th style="text-align: center;">50-Day MA</th>
+                <th style="text-align: center;">YTD Return</th>
+                <th style="text-align: center;">3-Year Return</th>
             </tr>
         """
         for name, metrics in assets.items():
@@ -694,13 +691,13 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, news_items
                 
                 html += f"""
                 <tr>
-                    <td>{name}</td>
-                    <td>{currency_str}</td>
-                    <td>{metrics['price']:.2f}</td>
-                    <td class="{change_class}">{change_sign}{metrics['change']:.2f}%</td>
-                    <td>{ma_50_str}</td>
-                    <td>{ytd_str}</td>
-                    <td>{three_yr_str}</td>
+                    <td style="text-align: left; font-weight: bold;">{name}</td>
+                    <td style="text-align: center; color: #666; font-size: 0.9em;">{currency_str}</td>
+                    <td style="text-align: center;">{metrics['price']:.2f}</td>
+                    <td class="{change_class}" style="text-align: center;">{change_sign}{metrics['change']:.2f}%</td>
+                    <td style="text-align: center;">{ma_50_str}</td>
+                    <td style="text-align: center;">{ytd_str}</td>
+                    <td style="text-align: center;">{three_yr_str}</td>
                 </tr>
                 """
             else:
