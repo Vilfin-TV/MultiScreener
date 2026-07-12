@@ -711,6 +711,14 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, news_items
                 html += f"<tr><td>{name}</td><td colspan='6' style='text-align:center; color: #999;'>Data Unavailable</td></tr>"
         html += "</table>"
 
+        if "Stocks" in category:
+            html += """
+            <div style="text-align: right; margin-top: -10px; margin-bottom: 20px; font-size: 0.85em;">
+                <a href="https://www.marketscreener.com/top-records/price-change/" style="color: #1a0dab; text-decoration: none; margin-left: 15px; font-weight: bold;">📊 Top Price Changers</a>
+                <a href="https://www.marketscreener.com/top-records/valuation/" style="color: #1a0dab; text-decoration: none; margin-left: 15px; font-weight: bold;">💰 Top Valuations</a>
+            </div>
+            """
+
         if category == "Volatility":
             vix_price = None
             for name, metrics in assets.items():
