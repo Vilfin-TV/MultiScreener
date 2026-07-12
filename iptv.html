@@ -2935,7 +2935,7 @@ function __iptvBoot(){
       if(!best) best = tvBestIn(dir, tvAllFocusable(), cur, cr);
       if(best){
         try{ best.focus(); }catch(e){}
-        try{ best.scrollIntoView({block:'center',inline:'nearest',behavior:'smooth'}); }catch(e){}
+        try{ best.scrollIntoView({block:'center',inline:'nearest',behavior:'auto'}); }catch(e){}
         return true;
       }
       return false;
@@ -3047,8 +3047,11 @@ function __iptvBoot(){
       var el=e.target; if(!el||!el.scrollIntoView) return;
       // Keep the focused item centred — this scrolls the video/panels up out of the
       // way as you move down the grid, so all rows become reachable. ('nearest' kept
-      // the video pinned and stranded the grid at ~2 visible rows.)
-      try{ el.scrollIntoView({block:'center',inline:'nearest',behavior:'smooth'}); }catch(_){}
+      // the video pinned and stranded the grid at ~2 visible rows.) Instant, not
+      // smooth: holding the D-pad fires rapid repeats, and a running smooth-scroll
+      // animation makes getBoundingClientRect read mid-flight positions, which
+      // misdirects the next spatial move and stalls fast navigation.
+      try{ el.scrollIntoView({block:'center',inline:'nearest',behavior:'auto'}); }catch(_){}
     });
 
     document.addEventListener('keydown', function(e){
