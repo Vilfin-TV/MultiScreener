@@ -759,8 +759,11 @@ def send_email(html_content):
 
     msg = MIMEMultipart("alternative")
     msg['Subject'] = f"Daily Market Analysis & Sector Report - {datetime.now().strftime('%Y-%m-%d')}"
-    msg['From'] = sender_email
+    # Format the sender to look professional
+    msg['From'] = f"VilfinTV Daily Screener <{sender_email}>"
     msg['To'] = receiver_email
+    # Set Reply-To so users replying will bounce
+    msg.add_header('Reply-To', 'noreply@vilfintv.com')
 
     # Fetch automated subscriber list from D1 database via Worker
     bcc_emails = []
