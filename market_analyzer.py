@@ -60,8 +60,6 @@ TICKERS_CONFIG = {
         'Brazil Bovespa': {'symbol': '^BVSP', 'currency': 'BRL'},
         'Turkey BIST 100': {'symbol': 'XU100.IS', 'currency': 'TRY'},
         'Australia ASX 200': {'symbol': '^AXJO', 'currency': 'AUD'},
-        'China Shanghai': {'symbol': '000001.SS', 'currency': 'CNY'},
-        'Taiwan Weighted': {'symbol': '^TWII', 'currency': 'TWD'}
     },
     'US Indices': {
         'S&P 500': {'symbol': '^GSPC', 'currency': 'USD'},
@@ -84,6 +82,7 @@ TICKERS_CONFIG = {
         'Nifty Smallcap 250 (ETF)': {'symbol': 'NIFTY_SMLCAP_250.NS', 'currency': 'INR'}, 
         'Nifty Next 50 (ETF)': {'symbol': 'JUNIORBEES.NS', 'currency': 'INR'}, 
         'Taiwan Weighted': {'symbol': '^TWII', 'currency': 'TWD'}, 
+        'China Shanghai': {'symbol': '000001.SS', 'currency': 'CNY'}, 
         'Vietnam Index Proxy (VNM)': {'symbol': 'VNM', 'currency': 'USD'}
     },
     'Top 10 US Stocks': {
@@ -827,8 +826,18 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, news_items
     <div style="margin-top: 40px; padding: 20px; background-color: #f8f9fa; border-top: 2px solid #e9ecef; border-radius: 8px; text-align: center; font-family: sans-serif;">
         <h3 style="margin-top: 0; color: #0a192f;">Explore More In-Depth Details</h3>
         <p style="margin-bottom: 20px; color: #555;">Check out our full web platforms for real-time market data and breaking news coverage:</p>
-        <a href="https://vilfintv.com/index.html" style="display: inline-block; padding: 12px 24px; margin: 5px 10px; background-color: #0a192f; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">📊 Market Dashboard</a>
-        <a href="https://vilfintv.com/news.html" style="display: inline-block; padding: 12px 24px; margin: 5px 10px; background-color: #0a192f; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">📰 Live News Feed</a>
+        <div style="margin-bottom: 15px;">
+            <a href="https://vilfintv.com/index.html" style="display: inline-block; padding: 12px 24px; margin: 5px 10px; background-color: #0a192f; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">📊 Market Dashboard</a>
+            <a href="https://vilfintv.com/news.html" style="display: inline-block; padding: 12px 24px; margin: 5px 10px; background-color: #0a192f; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">📰 Live News Feed</a>
+        </div>
+        <p style="margin-bottom: 10px; color: #555; font-size: 0.95em; font-weight: bold;">Global Market Rankings & Regional Indices:</p>
+        <div style="margin-bottom: 20px; font-size: 0.9em;">
+            <a href="https://www.marketscreener.com/stock-exchange/indexes/ranking/" style="color: #1a0dab; text-decoration: none; margin: 0 8px; font-weight: bold;">🏆 Top Rankings</a> |
+            <a href="https://www.marketscreener.com/stock-exchange/indexes/" style="color: #1a0dab; text-decoration: none; margin: 0 8px; font-weight: bold;">🌐 World Indices</a> |
+            <a href="https://www.marketscreener.com/stock-exchange/indexes/europe/" style="color: #1a0dab; text-decoration: none; margin: 0 8px; font-weight: bold;">🇪🇺 Europe</a> |
+            <a href="https://www.marketscreener.com/stock-exchange/indexes/africa/" style="color: #1a0dab; text-decoration: none; margin: 0 8px; font-weight: bold;">🌍 Africa</a> |
+            <a href="https://www.marketscreener.com/stock-exchange/indexes/asia/" style="color: #1a0dab; text-decoration: none; margin: 0 8px; font-weight: bold;">🌏 Asia</a>
+        </div>
         <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #dee2e6;">
             <a href="https://vilfintv.com/manage_subscription.html?action=subscribe" style="color: #1a0dab; text-decoration: none; margin: 0 15px; font-size: 0.9em;">Subscribe to this Newsletter</a>
             <a href="https://vilfintv.com/manage_subscription.html?action=unsubscribe" style="color: #6c757d; text-decoration: none; margin: 0 15px; font-size: 0.9em;">Unsubscribe</a>
