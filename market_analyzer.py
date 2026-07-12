@@ -25,9 +25,8 @@ TICKERS_CONFIG = {
         'US 30Y': {'symbol': '^TYX', 'currency': 'Yield %'},
         'Corp Bonds (LQD)': {'symbol': 'LQD', 'currency': 'USD'},
         'High Yield (HYG)': {'symbol': 'HYG', 'currency': 'USD'},
-        'Germany 10Y Bund': {'symbol': 'FGBL=F', 'currency': 'EUR'},
-        'UK 10Y Gilt': {'symbol': 'FLG=F', 'currency': 'GBP'},
-        'Japan 10Y JGB': {'symbol': 'JGB=F', 'currency': 'JPY'}
+        'Intl Treasury Bonds (IGOV)': {'symbol': 'IGOV', 'currency': 'USD'},
+        'Emerging Market Bonds (EMB)': {'symbol': 'EMB', 'currency': 'USD'}
     },
     'Commodities': {
         'Brent Crude': {'symbol': 'BZ=F', 'currency': 'USD'},
@@ -40,13 +39,13 @@ TICKERS_CONFIG = {
         'Wheat': {'symbol': 'ZW=F', 'currency': 'USD'},
         'Corn': {'symbol': 'ZC=F', 'currency': 'USD'}
     },
-    'Global Futures': {
+    'Global Futures & Proxies': {
         'S&P 500 Futures': {'symbol': 'ES=F', 'currency': 'USD'},
         'Nasdaq 100 Futures': {'symbol': 'NQ=F', 'currency': 'USD'},
         'Dow Jones Futures': {'symbol': 'YM=F', 'currency': 'USD'},
-        'DAX Futures (Germany)': {'symbol': 'FDAX=F', 'currency': 'EUR'},
-        'FTSE Futures (UK)': {'symbol': 'FTI=F', 'currency': 'GBP'},
-        'Nikkei Futures (Japan)': {'symbol': 'NK=F', 'currency': 'JPY'}
+        'Germany Market Proxy (EWG)': {'symbol': 'EWG', 'currency': 'USD'},
+        'UK Market Proxy (EWU)': {'symbol': 'EWU', 'currency': 'USD'},
+        'Japan Market Proxy (EWJ)': {'symbol': 'EWJ', 'currency': 'USD'}
     },
     'Global Indices': {
         'UK FTSE 100': {'symbol': '^FTSE', 'currency': 'GBP'},
@@ -109,11 +108,8 @@ TICKERS_CONFIG = {
         'JPY/INR': {'symbol': 'JPYINR=X', 'currency': 'INR'}, 
         'USD/INR': {'symbol': 'INR=X', 'currency': 'INR'}, 
         'USD/CNY (Yuan)': {'symbol': 'CNY=X', 'currency': 'CNY'},
-        'CNY/INR (Yuan/INR)': {'symbol': 'CNYINR=X', 'currency': 'INR'},
         'AUD/USD': {'symbol': 'AUDUSD=X', 'currency': 'USD'},
-        'AUD/INR': {'symbol': 'AUDINR=X', 'currency': 'INR'},
-        'USD/SGD': {'symbol': 'SGD=X', 'currency': 'SGD'},
-        'SGD/INR': {'symbol': 'SGDINR=X', 'currency': 'INR'}
+        'USD/SGD': {'symbol': 'SGD=X', 'currency': 'SGD'}
     }
 }
 
