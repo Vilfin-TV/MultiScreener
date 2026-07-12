@@ -536,7 +536,7 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
     <head>
         <style>
             body {{ font-family: Arial, sans-serif; color: #333; }}
-            h2 {{ color: #0a192f; border-bottom: 2px solid #0a192f; padding-bottom: 5px; margin-top: 30px; }}
+            h2 {{ color: #0a192f; margin-top: 30px; }}
             h3 {{ color: #1a365d; }}
             table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.95em; }}
             th, td {{ padding: 8px; border: 1px solid #ddd; text-align: right; }}
@@ -555,10 +555,19 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
         </style>
     </head>
     <body>
-        <h2>Market Regime Report - {datetime.now().strftime('%Y-%m-%d')}</h2>
+        <div style="display: flex; align-items: center; border-bottom: 2px solid #0a192f; padding-bottom: 15px; margin-top: 20px; margin-bottom: 20px;">
+            <img src="https://vilfintv.com/images/vilfintv-logo.jpg" alt="VilfinTV" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; box-shadow: 0 0 8px rgba(59,130,246,0.45); object-fit: cover;">
+            <div style="flex-grow: 1;">
+                <h2 style="margin: 0; color: #0a192f; border: none; padding: 0;">Market Regime Report</h2>
+                <div style="color: #555; font-size: 0.95em; margin-top: 5px;">Executive Summary by <strong>VilfinTV.com</strong></div>
+            </div>
+            <div style="color: #666; font-size: 0.9em; text-align: right; font-weight: bold;">
+                {datetime.now().strftime('%Y-%m-%d')}
+            </div>
+        </div>
         
         <div class="score-box">
-            <h3>Executive Summary</h3>
+            <h3 style="margin-top: 0;">Executive Summary</h3>
             <div class="summary-item"><strong>Market Sentiment Score:</strong> {regime_score} / 100</div>
             <div class="summary-item"><strong>Current Phase:</strong> {regime_text}</div>
             
