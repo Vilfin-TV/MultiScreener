@@ -90,17 +90,17 @@ TICKERS_CONFIG = {
         'Finance': {'symbol': 'XLF', 'currency': 'USD'},
         'Auto': {'symbol': 'CARZ', 'currency': 'USD'}
     },
-    'Top 10 Core ETFs': {
-        'Invesco QQQ (Nasdaq 100)': {'symbol': 'QQQ', 'currency': 'USD'},
-        'SPDR S&P 500 (SPY)': {'symbol': 'SPY', 'currency': 'USD'},
-        'iShares Russell 2000 (IWM)': {'symbol': 'IWM', 'currency': 'USD'},
-        'Vanguard Total Stock (VTI)': {'symbol': 'VTI', 'currency': 'USD'},
-        'Vanguard Growth (VUG)': {'symbol': 'VUG', 'currency': 'USD'},
-        'Vanguard Value (VTV)': {'symbol': 'VTV', 'currency': 'USD'},
-        'SPDR Dow Jones (DIA)': {'symbol': 'DIA', 'currency': 'USD'},
-        'ARK Innovation (ARKK)': {'symbol': 'ARKK', 'currency': 'USD'},
-        'iShares Emerging Markets (EEM)': {'symbol': 'EEM', 'currency': 'USD'},
-        'iShares Developed Markets (EFA)': {'symbol': 'EFA', 'currency': 'USD'}
+    'Top 10 Thematic ETFs': {
+        'Semiconductors (SOXX)': {'symbol': 'SOXX', 'currency': 'USD'},
+        'Robotics & AI (BOTZ)': {'symbol': 'BOTZ', 'currency': 'USD'},
+        'Global Financials (IXG)': {'symbol': 'IXG', 'currency': 'USD'},
+        'Broad Commodities (DBC)': {'symbol': 'DBC', 'currency': 'USD'},
+        'Autonomous & EVs (DRIV)': {'symbol': 'DRIV', 'currency': 'USD'},
+        'Cybersecurity (CIBR)': {'symbol': 'CIBR', 'currency': 'USD'},
+        'Clean Energy (ICLN)': {'symbol': 'ICLN', 'currency': 'USD'},
+        'Cloud Computing (CLOU)': {'symbol': 'CLOU', 'currency': 'USD'},
+        'Global Infrastructure (IGF)': {'symbol': 'IGF', 'currency': 'USD'},
+        'Biotechnology (IBB)': {'symbol': 'IBB', 'currency': 'USD'}
     },
     'Currencies': {
         'EUR/USD': {'symbol': 'EURUSD=X', 'currency': 'USD'}, 
