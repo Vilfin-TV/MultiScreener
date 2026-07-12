@@ -25,14 +25,16 @@ def fetch_asset_data(ticker_symbol):
     """Fetches market data with Cloudflare worker proxy support and Alpha Vantage fallback."""
     # 1. Try yfinance (with optional proxy)
     try:
-        ticker = yf.Ticker(ticker_symbol)
-        
-        # Check if proxy is available in environment
+        session = None
         proxy = os.environ.get('YAHOO_PROXY') or os.environ.get('WORKER_URL')
         if proxy:
-            hist = ticker.history(period="3mo", proxy=proxy)
-        else:
-            hist = ticker.history(period="3mo")
+            session = requests.Session()
+            # If the proxy is just a host, make sure it has the scheme, else just pass it
+            proxies = {'http': proxy, 'https': proxy}
+            session.proxies.update(proxies)
+            
+        ticker = yf.Ticker(ticker_symbol, session=session)
+        hist = ticker.history(period="3mo")
 
         if not hist.empty:
             latest_close = hist['Close'].iloc[-1]
