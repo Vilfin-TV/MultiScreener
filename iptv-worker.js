@@ -39,7 +39,7 @@
  * -----------------------------------------------------------------------------
  */
 
-const DEFAULT_SESSION_HOURS = 8;
+const DEFAULT_SESSION_HOURS = 720;   // 30 days — long sessions so the TV stays signed in
 
 // --- MEMORY CACHE TO REDUCE KV READS ---
 const _memCache = new Map();
@@ -438,7 +438,7 @@ async function loadSettings(env) {
     }
 
     return {
-      sessionHours: Math.max(1, Math.min(168, parseInt(s.sessionHours, 10) || DEFAULT_SESSION_HOURS)),
+      sessionHours: Math.max(1, Math.min(8760, parseInt(s.sessionHours, 10) || DEFAULT_SESSION_HOURS)),
       defaultProvider: providers[s.defaultProvider] ? s.defaultProvider : (Object.keys(providers)[0] || "free"),
       providers,
       customChannels,
