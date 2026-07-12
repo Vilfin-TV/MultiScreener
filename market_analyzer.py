@@ -625,6 +625,40 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
                 html += f"<tr><td>{name}</td><td colspan='6' style='text-align:center; color: #999;'>Data Unavailable</td></tr>"
         html += "</table>"
 
+        if category == "Volatility":
+            vix_price = None
+            for name, metrics in assets.items():
+                if "VIX" in name.upper() and metrics:
+                    vix_price = metrics['price']
+                    break
+            
+            if vix_price:
+                month_move = vix_price / 3.464
+                
+                v_range = "High (Fear / Stress)"
+                v_color = "red"
+                if vix_price < 15:
+                    v_range = "Low (Complacency)"
+                    v_color = "green"
+                elif vix_price <= 20:
+                    v_range = "Normal (Standard Market)"
+                    v_color = "#d97706"
+                
+                html += f"""
+                <div style="background: #fdfdfd; border: 1px solid #e0e0e0; border-left: 5px solid #0a192f; padding: 15px; margin-bottom: 20px; margin-top: 10px;">
+                    <h4 style="margin-top: 0; margin-bottom: 10px; color: #1a365d;">💡 How to read the VIX (Volatility Index)</h4>
+                    <ul style="margin-top: 0; margin-bottom: 15px; color: #555;">
+                        <li><strong style="color: green;">Below 15:</strong> Low Volatility (Market Complacency)</li>
+                        <li><strong style="color: #d97706;">15 - 20:</strong> Normal Volatility (Standard Market Conditions)</li>
+                        <li><strong style="color: red;">Above 20:</strong> High Volatility (Market Fear / Stress)</li>
+                    </ul>
+                    <div style="font-size: 0.95em;">
+                        Current VIX is <strong style="color: {v_color};">{vix_price:.2f}</strong> ({v_range}).<br>
+                        <strong>Expected Market Move (Per Month):</strong> ± {month_move:.1f}% <em>(Calculated as VIX ÷ √12)</em>
+                    </div>
+                </div>
+                """
+
     html += """
     <div style="margin-top: 40px; padding: 20px; background-color: #f8f9fa; border-top: 2px solid #e9ecef; border-radius: 8px; text-align: center; font-family: sans-serif;">
         <h3 style="margin-top: 0; color: #0a192f;">Explore More In-Depth Details</h3>
