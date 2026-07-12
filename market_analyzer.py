@@ -578,6 +578,10 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, news_items
             table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.95em; }}
             th, td {{ padding: 8px; border: 1px solid #ddd; text-align: center; }}
             th {{ background-color: #f4f4f4; }}
+            .t-left {{ text-align: left; }}
+            .t-center {{ text-align: center; }}
+            .t-asset {{ text-align: left; font-weight: bold; width: 25%; }}
+            .t-curr {{ text-align: center; color: #666; font-size: 0.9em; }}
             .positive {{ color: green; font-weight: bold; }}
             .negative {{ color: red; font-weight: bold; }}
             .score-box {{ padding: 20px; background: #eef2f5; border-left: 5px solid #0a192f; margin-bottom: 20px; }}
@@ -655,13 +659,13 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, news_items
         html += """
         <table>
             <tr>
-                <th style="text-align: left; width: 25%;">Asset</th>
-                <th style="text-align: center;">Currency</th>
-                <th style="text-align: center;">Price / Yield</th>
-                <th style="text-align: center;">Daily Change</th>
-                <th style="text-align: center;">50-Day MA</th>
-                <th style="text-align: center;">YTD Return</th>
-                <th style="text-align: center;">3-Year Return</th>
+                <th class="t-left" style="width: 25%;">Asset</th>
+                <th class="t-center">Currency</th>
+                <th class="t-center">Price / Yield</th>
+                <th class="t-center">Daily Change</th>
+                <th class="t-center">50-Day MA</th>
+                <th class="t-center">YTD Return</th>
+                <th class="t-center">3-Year Return</th>
             </tr>
         """
         for name, metrics in assets.items():
@@ -691,13 +695,13 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, news_items
                 
                 html += f"""
                 <tr>
-                    <td style="text-align: left; font-weight: bold;">{name}</td>
-                    <td style="text-align: center; color: #666; font-size: 0.9em;">{currency_str}</td>
-                    <td style="text-align: center;">{metrics['price']:.2f}</td>
-                    <td class="{change_class}" style="text-align: center;">{change_sign}{metrics['change']:.2f}%</td>
-                    <td style="text-align: center;">{ma_50_str}</td>
-                    <td style="text-align: center;">{ytd_str}</td>
-                    <td style="text-align: center;">{three_yr_str}</td>
+                    <td class="t-asset">{name}</td>
+                    <td class="t-curr">{currency_str}</td>
+                    <td class="t-center">{metrics['price']:.2f}</td>
+                    <td class="t-center {change_class}">{change_sign}{metrics['change']:.2f}%</td>
+                    <td class="t-center">{ma_50_str}</td>
+                    <td class="t-center">{ytd_str}</td>
+                    <td class="t-center">{three_yr_str}</td>
                 </tr>
                 """
             else:
