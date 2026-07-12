@@ -2939,7 +2939,7 @@ function __iptvBoot(){
     // pop the on-screen keyboard; otherwise moves focus / clicks.
     window.__tvNav = function(action){
       var t = document.activeElement, tag = (t && t.tagName || '').toLowerCase();
-      var onField = (tag==='input' || tag==='textarea' || tag==='select');
+      var onField = ((tag==='input' && t.type!=='range') || tag==='textarea' || tag==='select');
       if(!t || t===document.body){ tvFocusFirst(); return 'move'; }
       if(action==='ok'){
         if(onField) return 'input';          // let native show the keyboard
@@ -3018,7 +3018,12 @@ function __iptvBoot(){
     };
 
     document.addEventListener('focusin', function(e){
-      if(e.target && e.target.scrollIntoView) try{ e.target.scrollIntoView({block:'center',inline:'nearest',behavior:'smooth'}); }catch(_){}
+      var el=e.target; if(!el||!el.scrollIntoView) return;
+      // Channel grid: scroll only when the card is actually off-screen ("nearest")
+      // for a snappy feel, instead of recentering the whole grid on every press.
+      var isCard = el.closest && el.closest('.ch-card,.ch-row,.fav-item,.epg-slot,.filter-chip');
+      try{ el.scrollIntoView({block: isCard?'nearest':'center', inline:'nearest', behavior:'smooth'}); }catch(_){}
+      return;
     });
 
     document.addEventListener('keydown', function(e){
