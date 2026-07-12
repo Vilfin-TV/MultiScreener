@@ -115,7 +115,7 @@ def fetch_asset_data(ticker_symbol):
             session.proxies.update(proxies)
             
         ticker = yf.Ticker(ticker_symbol, session=session)
-        hist = ticker.history(period="3mo")
+        hist = ticker.history(period="3y")
 
         if not hist.empty:
             latest_close = hist['Close'].iloc[-1]
@@ -125,11 +125,29 @@ def fetch_asset_data(ticker_symbol):
             ma_50 = hist['Close'].rolling(window=50).mean().iloc[-1] if len(hist) >= 50 else None
             ma_20 = hist['Close'].rolling(window=20).mean().iloc[-1] if len(hist) >= 20 else None
             
+            # YTD Return
+            current_year = datetime.now().year
+            ytd_data = hist[hist.index.year == current_year]
+            ytd_return = None
+            if not ytd_data.empty:
+                start_of_year_price = ytd_data['Close'].iloc[0]
+                ytd_return = ((latest_close - start_of_year_price) / start_of_year_price) * 100
+                
+            # 3-Year Return
+            three_yr_return = None
+            three_years_ago_date = datetime.now() - pd.DateOffset(years=3)
+            past_data = hist[hist.index >= three_years_ago_date]
+            if not past_data.empty and len(hist) > 500:
+                three_yr_ago_price = past_data['Close'].iloc[0]
+                three_yr_return = ((latest_close - three_yr_ago_price) / three_yr_ago_price) * 100
+            
             return {
                 'price': latest_close,
                 'change': daily_change,
                 'ma_50': ma_50,
-                'ma_20': ma_20
+                'ma_20': ma_20,
+                'ytd_return': ytd_return,
+                'three_yr_return': three_yr_return
             }
     except Exception as e:
         logging.warning(f"yfinance failed for {ticker_symbol}: {e}")
@@ -140,7 +158,7 @@ def fetch_asset_data(ticker_symbol):
         logging.info(f"Attempting Alpha Vantage fallback for {ticker_symbol}")
         try:
             symbol_clean = ticker_symbol.replace('^', '').replace('=F', '').replace('=X', '')
-            url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol_clean}&apikey={av_api_key}&outputsize=compact"
+            url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol_clean}&apikey={av_api_key}&outputsize=full"
             response = requests.get(url)
             data = response.json()
             if "Time Series (Daily)" in data:
@@ -159,11 +177,27 @@ def fetch_asset_data(ticker_symbol):
                     ma_50 = df['Close'].rolling(window=50).mean().iloc[-1] if len(df) >= 50 else None
                     ma_20 = df['Close'].rolling(window=20).mean().iloc[-1] if len(df) >= 20 else None
                     
+                    current_year = datetime.now().year
+                    ytd_data = df[df.index.year == current_year]
+                    ytd_return = None
+                    if not ytd_data.empty:
+                        start_of_year_price = ytd_data['Close'].iloc[0]
+                        ytd_return = ((latest_close - start_of_year_price) / start_of_year_price) * 100
+                        
+                    three_yr_return = None
+                    three_years_ago_date = datetime.now() - pd.DateOffset(years=3)
+                    past_data = df[df.index >= three_years_ago_date]
+                    if not past_data.empty and len(df) > 500:
+                        three_yr_ago_price = past_data['Close'].iloc[0]
+                        three_yr_return = ((latest_close - three_yr_ago_price) / three_yr_ago_price) * 100
+                    
                     return {
                         'price': latest_close,
                         'change': daily_change,
                         'ma_50': ma_50,
-                        'ma_20': ma_20
+                        'ma_20': ma_20,
+                        'ytd_return': ytd_return,
+                        'three_yr_return': three_yr_return
                     }
         except Exception as e:
             logging.error(f"Alpha Vantage fallback failed for {ticker_symbol}: {e}")
@@ -359,10 +393,11 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
         <style>
             body {{ font-family: Arial, sans-serif; color: #333; }}
             h2 {{ color: #0a192f; border-bottom: 2px solid #0a192f; padding-bottom: 5px; margin-top: 30px; }}
-            table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
-            th, td {{ padding: 10px; border: 1px solid #ddd; text-align: right; }}
+            table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.95em; }}
+            th, td {{ padding: 8px; border: 1px solid #ddd; text-align: right; }}
             th {{ background-color: #f4f4f4; text-align: left; }}
-            td:nth-child(1) {{ text-align: left; font-weight: bold; width: 30%; }}
+            th:nth-child(n+3), td:nth-child(n+3) {{ text-align: right; }}
+            td:nth-child(1) {{ text-align: left; font-weight: bold; width: 25%; }}
             td:nth-child(2) {{ text-align: center; color: #666; font-size: 0.9em; }}
             .positive {{ color: green; font-weight: bold; }}
             .negative {{ color: red; font-weight: bold; }}
@@ -408,14 +443,34 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
                 <th>Current Price</th>
                 <th>Daily Change</th>
                 <th>50-Day MA</th>
+                <th>YTD Return</th>
+                <th>3-Year Return</th>
             </tr>
         """
         for name, metrics in assets.items():
             if metrics:
                 change_class = "positive" if metrics['change'] >= 0 else "negative"
                 change_sign = "+" if metrics['change'] >= 0 else ""
+                
                 ma_50_str = f"{metrics['ma_50']:.2f}" if metrics['ma_50'] else "N/A"
                 currency_str = metrics.get('currency', 'N/A')
+                
+                ytd_val = metrics.get('ytd_return')
+                three_yr_val = metrics.get('three_yr_return')
+                
+                if ytd_val is not None:
+                    ytd_class = "positive" if ytd_val >= 0 else "negative"
+                    ytd_sign = "+" if ytd_val >= 0 else ""
+                    ytd_str = f"<span class='{ytd_class}'>{ytd_sign}{ytd_val:.2f}%</span>"
+                else:
+                    ytd_str = "N/A"
+                    
+                if three_yr_val is not None:
+                    three_yr_class = "positive" if three_yr_val >= 0 else "negative"
+                    three_yr_sign = "+" if three_yr_val >= 0 else ""
+                    three_yr_str = f"<span class='{three_yr_class}'>{three_yr_sign}{three_yr_val:.2f}%</span>"
+                else:
+                    three_yr_str = "N/A"
                 
                 html += f"""
                 <tr>
@@ -424,10 +479,12 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
                     <td>{metrics['price']:.2f}</td>
                     <td class="{change_class}">{change_sign}{metrics['change']:.2f}%</td>
                     <td>{ma_50_str}</td>
+                    <td>{ytd_str}</td>
+                    <td>{three_yr_str}</td>
                 </tr>
                 """
             else:
-                html += f"<tr><td>{name}</td><td colspan='4' style='text-align:center; color: #999;'>Data Unavailable</td></tr>"
+                html += f"<tr><td>{name}</td><td colspan='6' style='text-align:center; color: #999;'>Data Unavailable</td></tr>"
         html += "</table>"
 
     html += """
