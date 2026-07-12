@@ -380,8 +380,9 @@ def get_executive_summary_analysis(data, regime_score):
         if lt_sectors:
             best_lt = max(lt_sectors.items(), key=lambda x: calc_lt_score(x[1]))
             long_term_name = best_lt[0]
-            dist_lt = ((best_lt[1]['price'] / best_lt[1]['ma_50']) - 1) * 100
-            lt_reason = f"Selected because it is currently trading +{dist_lt:.2f}% above its 50-day moving average, showing the strongest structural uptrend among our tracked secular growth themes (Tech, AI, Health, Space)."
+            tyr = best_lt[1].get('three_yr_return', 0) or 0
+            ytd = best_lt[1].get('ytd_return', 0) or 0
+            lt_reason = f"Selected based on our multi-factor model. It boasts a powerful +{tyr:.2f}% 3-Year Return and +{ytd:.2f}% YTD, showing the strongest structural uptrend among our tracked secular growth themes."
 
     broad_indices = {}
     broad_indices.update(data.get('US Indices', {}))
@@ -393,10 +394,10 @@ def get_executive_summary_analysis(data, regime_score):
     lt_broad_reason = ""
     if valid_broad:
         best_broad = max(valid_broad.items(), key=lambda x: calc_lt_score(x[1]))
-        dist_broad = ((best_broad[1]['price'] / best_broad[1]['ma_50']) - 1) * 100
-        ytd_str = f" and {best_broad[1]['ytd_return']:.2f}% YTD" if best_broad[1].get('ytd_return') else ""
+        tyr = best_broad[1].get('three_yr_return', 0) or 0
+        ytd = best_broad[1].get('ytd_return', 0) or 0
         lt_broad_name = f"{best_broad[0]} Index Fund"
-        lt_broad_reason = f"Selected as the strongest broad-market index globally, trending +{dist_broad:.2f}% above its 50-day moving average{ytd_str}."
+        lt_broad_reason = f"Selected as the strongest long-term broad-market index globally based on its blended structural performance (+{tyr:.2f}% 3-Year, +{ytd:.2f}% YTD)."
 
     bonds = data.get('Bonds', {})
     valid_bonds = {name: metrics for name, metrics in bonds.items() if metrics and metrics['ma_50']}
@@ -405,8 +406,9 @@ def get_executive_summary_analysis(data, regime_score):
     if valid_bonds:
         best_lt_bond = max(valid_bonds.items(), key=lambda x: calc_lt_score(x[1]))
         lt_bond_name = best_lt_bond[0]
-        dist_lt_bond = ((best_lt_bond[1]['price'] / best_lt_bond[1]['ma_50']) - 1) * 100
-        lt_bond_reason = f"Selected because it is trading +{dist_lt_bond:.2f}% above its 50-day average."
+        tyr = best_lt_bond[1].get('three_yr_return', 0) or 0
+        ytd = best_lt_bond[1].get('ytd_return', 0) or 0
+        lt_bond_reason = f"Selected because it demonstrates massive multi-year strength (+{tyr:.2f}% 3-Year Return, +{ytd:.2f}% YTD) alongside solid current momentum."
 
     commodities = data.get('Commodities', {})
     valid_commodities = {name: metrics for name, metrics in commodities.items() if metrics and metrics['ma_50']}
@@ -415,8 +417,9 @@ def get_executive_summary_analysis(data, regime_score):
     if valid_commodities:
         best_lt_comm = max(valid_commodities.items(), key=lambda x: calc_lt_score(x[1]))
         lt_commodity_name = best_lt_comm[0]
-        dist_lt_comm = ((best_lt_comm[1]['price'] / best_lt_comm[1]['ma_50']) - 1) * 100
-        lt_commodity_reason = f"Selected because it is trading +{dist_lt_comm:.2f}% above its 50-day average."
+        tyr = best_lt_comm[1].get('three_yr_return', 0) or 0
+        ytd = best_lt_comm[1].get('ytd_return', 0) or 0
+        lt_commodity_reason = f"Selected because it demonstrates massive multi-year strength (+{tyr:.2f}% 3-Year Return, +{ytd:.2f}% YTD) alongside solid current momentum."
 
     def get_short_term_pick(asset_dict):
         valid = {name: metrics for name, metrics in asset_dict.items() if metrics and metrics['ma_20'] and metrics['change'] > 0}
