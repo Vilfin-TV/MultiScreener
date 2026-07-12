@@ -498,14 +498,91 @@
     border-radius: 6px;
     color: #06121e;
   }
+  /* Favourite = pure status indicator now (actions live in the context menu,
+     opened by right-click / long-press / TV deep-press). Non-interactive so it
+     never intercepts a click or becomes a stray D-pad stop. */
   .ch-card .star {
     position: absolute;
     top: 8px;
     right: 8px;
     font-size: 16px;
-    color: var(--text-faint);
+    color: var(--gold);
+    pointer-events: none;
   }
-  .ch-card .star.on { color: var(--gold); }
+  /* Kebab affordance — a discoverable menu trigger on desktop hover/focus.
+     Hidden on TV, where the menu opens via a deep-press on the OK button. */
+  .ch-card .ch-kebab {
+    position: absolute;
+    bottom: 4px;
+    right: 6px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    font-size: 17px;
+    line-height: 1;
+    color: var(--text-faint);
+    background: rgba(4, 9, 26, .55);
+    opacity: 0;
+    cursor: pointer;
+    transition: var(--t-fast);
+  }
+  .ch-card:hover .ch-kebab, .ch-card:focus-within .ch-kebab { opacity: 1; }
+  .ch-kebab:hover { color: #fff; background: rgba(4, 9, 26, .92); }
+  html.tv-app .ch-card .ch-kebab { display: none; }
+
+  /* ===== Channel context menu (hide / favourite) ===== */
+  .ch-ctx-backdrop { position: fixed; inset: 0; z-index: 9998; display: none; }
+  .ch-ctx-backdrop.open { display: block; }
+  .ch-ctx {
+    position: fixed;
+    z-index: 9999;
+    min-width: 210px;
+    max-width: 300px;
+    background: #0e1a30;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 12px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .6);
+    padding: 6px;
+    display: none;
+  }
+  .ch-ctx.open { display: block; }
+  .ch-ctx .ctx-title {
+    padding: 8px 12px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-faint);
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ch-ctx button {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: 0;
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+    padding: 11px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .ch-ctx button:hover, .ch-ctx button:focus {
+    background: rgba(255, 255, 255, .09);
+    outline: none;
+  }
+  .ch-ctx button .ico { font-size: 16px; width: 18px; text-align: center; }
+  .ch-ctx button.danger { color: #ff7a7a; }
+  html.tv-app .ch-ctx { min-width: 260px; padding: 8px; }
+  html.tv-app .ch-ctx button { padding: 14px 14px; font-size: 16px; }
 
   /* ===== Category-row (Netflix/Fox) browse mode ===== */
   .channel-track.grouped {
@@ -1824,19 +1901,102 @@ function __iptvBoot(){
           <div class="nm" title="${esc(c.name)}">${esc(c.name)}</div>
           <div class="sub" title="${sub}">${sub}</div>
           <span class="rq ${c.quality}">${c.quality}</span>
-          <span class="star${on}" data-fav="${i}">${on?'★':'☆'}</span>
-          <label class="hide-cb" title="Hide this channel (e.g. not working)"><input type="checkbox" data-hide="${i}"></label>
+          ${on?'<span class="star">★</span>':''}
+          <span class="ch-kebab" data-menu="${i}" title="More options" aria-label="More options">⋮</span>
         </div>`;
   }
   function bindChCards(els){
     Array.prototype.forEach.call(els,function(el){
-      el.addEventListener("click",function(){playIndex(parseInt(el.getAttribute("data-idx"),10));});
-      var star=el.querySelector("[data-fav]");
-      if(star)star.addEventListener("click",function(ev){ev.stopPropagation();toggleFav(parseInt(star.getAttribute("data-fav"),10),star);});
-      var hide=el.querySelector("[data-hide]");
-      if(hide){ hide.addEventListener("click",function(ev){ev.stopPropagation();});
-        hide.addEventListener("change",function(ev){ev.stopPropagation();hideChannel(parseInt(hide.getAttribute("data-hide"),10));}); }
+      var idx=parseInt(el.getAttribute("data-idx"),10);
+      el.addEventListener("click",function(){playIndex(idx);});
+      // Right-click (desktop) → context menu at the cursor.
+      el.addEventListener("contextmenu",function(ev){ev.preventDefault();ev.stopPropagation();openChMenu(idx,ev.clientX,ev.clientY);});
+      // Kebab affordance (desktop hover) → context menu anchored to the card.
+      var kebab=el.querySelector("[data-menu]");
+      if(kebab)kebab.addEventListener("click",function(ev){ev.preventDefault();ev.stopPropagation();openChMenuForCard(el,idx);});
+      // Long-press (touch) → context menu. Cancel on move/scroll/lift.
+      var lpTimer=null, lpX=0, lpY=0;
+      el.addEventListener("touchstart",function(ev){
+        var t=ev.touches&&ev.touches[0]; if(!t)return; lpX=t.clientX; lpY=t.clientY;
+        lpTimer=setTimeout(function(){lpTimer=null;openChMenu(idx,lpX,lpY);},500);
+      },{passive:true});
+      function cancelLp(){ if(lpTimer){clearTimeout(lpTimer);lpTimer=null;} }
+      el.addEventListener("touchend",cancelLp,{passive:true});
+      el.addEventListener("touchcancel",cancelLp,{passive:true});
+      el.addEventListener("touchmove",function(ev){
+        var t=ev.touches&&ev.touches[0]; if(!t)return;
+        if(Math.abs(t.clientX-lpX)>10||Math.abs(t.clientY-lpY)>10) cancelLp();
+      },{passive:true});
     });
+  }
+
+  /* ===== Channel context menu (hide / favourite) =====================
+     Opened by desktop right-click, touch long-press, the hover kebab, or a
+     TV deep-press on OK (native APK → window.__tvContext). Actions operate on
+     the ABSOLUTE index into state.filtered. */
+  var _chMenuEls=null;          // {backdrop, menu} once built
+  var _chMenuReturnFocus=null;  // element to refocus on close (TV)
+  function _buildChMenu(){
+    if(_chMenuEls) return _chMenuEls;
+    var backdrop=document.createElement("div"); backdrop.className="ch-ctx-backdrop";
+    var menu=document.createElement("div"); menu.className="ch-ctx"; menu.setAttribute("role","menu");
+    backdrop.addEventListener("click",closeChMenu);
+    backdrop.addEventListener("contextmenu",function(e){e.preventDefault();closeChMenu();});
+    document.body.appendChild(backdrop); document.body.appendChild(menu);
+    _chMenuEls={backdrop:backdrop,menu:menu};
+    return _chMenuEls;
+  }
+  function chMenuOpen(){ return !!(_chMenuEls&&_chMenuEls.menu.classList.contains("open")); }
+  function openChMenuForCard(card,idx){
+    var r=card.getBoundingClientRect();
+    openChMenu(idx, r.right-8, r.bottom-8, card);
+  }
+  function openChMenu(idx,x,y,returnFocusEl){
+    var c=state.filtered[idx]; if(!c) return;
+    var els=_buildChMenu(); var menu=els.menu, backdrop=els.backdrop;
+    var isFav=state.favs.has(favKey(c));
+    _chMenuReturnFocus = returnFocusEl || document.activeElement;
+    menu.innerHTML =
+      '<div class="ctx-title" title="'+esc(c.name)+'">'+esc(c.name)+'</div>'+
+      '<button type="button" data-act="fav"><span class="ico">'+(isFav?'★':'☆')+'</span>'+(isFav?'Remove from Favourites':'Add to Favourites')+'</button>'+
+      '<button type="button" class="danger" data-act="hide"><span class="ico">🚫</span>Hide this channel</button>';
+    menu.querySelector('[data-act="fav"]').addEventListener("click",function(){ toggleFavIdx(idx); closeChMenu(); });
+    menu.querySelector('[data-act="hide"]').addEventListener("click",function(){ closeChMenu(); hideChannel(idx); });
+    backdrop.classList.add("open"); menu.classList.add("open");
+    // Position within the viewport (flip if it would overflow).
+    menu.style.visibility="hidden";
+    var mw=menu.offsetWidth, mh=menu.offsetHeight;
+    var px=Math.max(8,Math.min(x, innerWidth-mw-8));
+    var py=Math.max(8,Math.min(y, innerHeight-mh-8));
+    menu.style.left=px+"px"; menu.style.top=py+"px"; menu.style.visibility="";
+    // Focus the first item so the D-pad / keyboard can drive it immediately.
+    var first=menu.querySelector("button"); if(first){ try{ first.focus(); }catch(e){} }
+  }
+  document.addEventListener("keydown",function(e){
+    if(e.key==="Escape"&&chMenuOpen()){ e.preventDefault(); closeChMenu(); }
+  });
+  function closeChMenu(){
+    if(!_chMenuEls) return;
+    _chMenuEls.menu.classList.remove("open"); _chMenuEls.backdrop.classList.remove("open");
+    var rf=_chMenuReturnFocus; _chMenuReturnFocus=null;
+    if(rf&&rf.focus&&document.contains(rf)){ try{ rf.focus(); }catch(e){} }
+  }
+  // Toggle favourite by index and refresh any visible star for that card.
+  function toggleFavIdx(idx){
+    var c=state.filtered[idx]; if(!c) return; var k=favKey(c);
+    if(state.favs.has(k)){ state.favs.delete(k); toast("Removed from favorites"); }
+    else{ state.favs.add(k); toast("Added to favorites"); }
+    saveFavs();
+    // Update the on-screen star without a full re-render when possible.
+    var card=document.querySelector('.ch-card[data-idx="'+idx+'"]');
+    if(card){
+      var star=card.querySelector('.star');
+      if(state.favs.has(k)){ if(!star){ star=document.createElement('span'); star.className='star'; star.textContent='★'; card.appendChild(star);} }
+      else if(star){ star.remove(); }
+    }
+    if(state.filter.favOnly)applyFilters();
+    if(state.mode2==="favorites"&&!state.langHidden)renderFavList($("lang-search").value);
+    renderFavPanel();
   }
   // Override renderList — vertical grid, first page only (grows via renderMore on scroll)
   function renderList(){
@@ -2889,13 +3049,20 @@ function __iptvBoot(){
         if(el.tabIndex < 0 && !el.hasAttribute('tabindex')) el.setAttribute('tabindex','0');
       });
     }
+    // When the channel context menu is open it is modal: the D-pad may only move
+    // between its own items (never back onto the grid underneath).
+    function tvMenuItems(){
+      return (_chMenuEls&&chMenuOpen()) ? Array.prototype.slice.call(_chMenuEls.menu.querySelectorAll('button')) : null;
+    }
     function tvCandidates(){
+      var m=tvMenuItems(); if(m) return m;
       return Array.prototype.filter.call(document.querySelectorAll(TV_SEL), tvVisible);
     }
     // Like tvCandidates() but WITHOUT the viewport-bounds check — returns every
     // rendered focusable in the active screen, including ones scrolled off the
     // fold. display:none stays excluded (its rect collapses to 0×0).
     function tvAllFocusable(){
+      var m=tvMenuItems(); if(m) return m;
       return Array.prototype.filter.call(document.querySelectorAll(TV_SEL), function(el){
         if(!el || el.disabled) return false;
         var r = el.getBoundingClientRect();
@@ -3013,6 +3180,20 @@ function __iptvBoot(){
       return 'noop';
     };
 
+    // Deep-press (long-press OK) on a channel card → open its context menu.
+    // The native wrapper calls this when it detects a held OK button. Opens the
+    // menu for whichever channel card currently has focus; no-op elsewhere.
+    window.__tvContext = function(){
+      if(chMenuOpen()){ closeChMenu(); return 'closed'; }   // toggle
+      var t=document.activeElement;
+      var card=t&&t.closest&&t.closest('.ch-card[data-idx]');
+      if(!card) return 'noop';
+      var idx=parseInt(card.getAttribute('data-idx'),10);
+      if(isNaN(idx)) return 'noop';
+      openChMenuForCard(card, idx);
+      return 'menu';
+    };
+
     // Player controls exposed for the remote's media keys (native side calls these).
     function _clk(id){ var b=document.getElementById(id); if(b){ b.click(); return true; } return false; }
     window.__tvControl = {
@@ -3024,6 +3205,8 @@ function __iptvBoot(){
       filters:   function(){ var c=document.querySelector('#player-screen.active .filter-chip'); if(c){ try{c.focus();}catch(e){} return true; } return false; },
       // BACK: exit fullscreen, else player → providers, else let the app exit.
       back: function(){
+        // An open channel context menu swallows BACK first (just closes it).
+        if(chMenuOpen()){ closeChMenu(); return true; }
         // Close an open fullscreen Guide/Favorites drawer first (stay in cinema).
         var _d=document.documentElement;
         if(_d.classList.contains('cin-guide')||_d.classList.contains('cin-favs')){
