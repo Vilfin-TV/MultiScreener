@@ -60,9 +60,11 @@ TICKERS_CONFIG = {
         'Taiwan Weighted': {'symbol': '^TWII', 'currency': 'TWD'}
     },
     'US Indices': {
-        'S&P 500': {'symbol': '^GSPC', 'currency': 'USD'}, 
-        'Nasdaq 100': {'symbol': '^NDX', 'currency': 'USD'}, 
-        'Dow Jones': {'symbol': '^DJI', 'currency': 'USD'}
+        'S&P 500': {'symbol': '^GSPC', 'currency': 'USD'},
+        'Nasdaq Composite': {'symbol': '^IXIC', 'currency': 'USD'},
+        'Dow Jones': {'symbol': '^DJI', 'currency': 'USD'},
+        'Russell 2000': {'symbol': '^RUT', 'currency': 'USD'},
+        'US Total Market (VTI)': {'symbol': 'VTI', 'currency': 'USD'}
     },
     'Asian Indices': {
         'Nikkei 225': {'symbol': '^N225', 'currency': 'JPY'}, 
