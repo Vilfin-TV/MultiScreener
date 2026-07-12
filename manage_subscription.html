@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VilfinTV - Subscription Management</title>
+    <style>
+        body {
+            background-color: #0a192f;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #112240;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        h2 {
+            color: #64ffda;
+            margin-top: 0;
+        }
+        input[type="email"] {
+            width: 100%;
+            padding: 12px;
+            margin: 20px 0;
+            border: 1px solid #233554;
+            background-color: #0a192f;
+            color: white;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #64ffda;
+            color: #0a192f;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #52e0c4;
+        }
+        #message {
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 id="form-title">Market Intelligence</h2>
+        <p id="form-desc">Enter your email to manage your subscription.</p>
+        <form id="sub-form">
+            <input type="email" id="email" placeholder="Enter your email address" required>
+            <button type="submit" id="submit-btn">Submit</button>
+        </form>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        // YOU MUST REPLACE THIS URL WITH YOUR DEPLOYED CLOUDFLARE WORKER URL
+        const SCRIPT_URL = 'YOUR_CLOUDFLARE_WORKER_URL_HERE';
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const action = urlParams.get('action') || 'subscribe';
+        
+        if (action === 'unsubscribe') {
+            document.getElementById('form-title').innerText = 'Unsubscribe';
+            document.getElementById('form-desc').innerText = 'Enter your email to stop receiving daily market intelligence reports.';
+            document.getElementById('submit-btn').innerText = 'Unsubscribe';
+            document.getElementById('submit-btn').style.backgroundColor = '#ff6b6b';
+            document.getElementById('submit-btn').style.color = 'white';
+        } else {
+            document.getElementById('form-title').innerText = 'Subscribe';
+            document.getElementById('form-desc').innerText = 'Enter your email to receive our daily automated market intelligence reports.';
+            document.getElementById('submit-btn').innerText = 'Subscribe';
+        }
+
+        document.getElementById('sub-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const msgDiv = document.getElementById('message');
+            
+            if (SCRIPT_URL === 'YOUR_CLOUDFLARE_WORKER_URL_HERE') {
+                msgDiv.innerHTML = '<span style="color:#ff6b6b">Error: The administrator has not configured the backend URL yet.</span>';
+                return;
+            }
+
+            msgDiv.innerHTML = '<span style="color:#8892b0">Processing...</span>';
+            
+            fetch(`${SCRIPT_URL}?action=${action}&email=${encodeURIComponent(email)}`, {
+                method: 'POST',
+                mode: 'no-cors'
+            }).then(() => {
+                msgDiv.innerHTML = `<span style="color:#64ffda">Successfully ${action}d!</span>`;
+                document.getElementById('email').value = '';
+            }).catch(err => {
+                msgDiv.innerHTML = '<span style="color:#ff6b6b">An error occurred. Please try again.</span>';
+            });
+        });
+    </script>
+</body>
+</html>

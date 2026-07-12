@@ -4,6 +4,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import yfinance as yf
 import pandas as pd
+import json
 from datetime import datetime
 import logging
 import requests
@@ -630,6 +631,10 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
         <p style="margin-bottom: 20px; color: #555;">Check out our full web platforms for real-time market data and breaking news coverage:</p>
         <a href="https://vilfintv.com/index.html" style="display: inline-block; padding: 12px 24px; margin: 5px 10px; background-color: #0a192f; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">📊 Market Dashboard</a>
         <a href="https://vilfintv.com/news.html" style="display: inline-block; padding: 12px 24px; margin: 5px 10px; background-color: #0a192f; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">📰 Live News Feed</a>
+        <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #dee2e6;">
+            <a href="https://vilfintv.com/manage_subscription.html?action=subscribe" style="color: #1a0dab; text-decoration: none; margin: 0 15px; font-size: 0.9em;">Subscribe to this Newsletter</a>
+            <a href="https://vilfintv.com/manage_subscription.html?action=unsubscribe" style="color: #6c757d; text-decoration: none; margin: 0 15px; font-size: 0.9em;">Unsubscribe</a>
+        </div>
     </div>
     </body>
     </html>
@@ -650,6 +655,18 @@ def send_email(html_content):
     msg['From'] = sender_email
     msg['To'] = receiver_email
 
+    # Read automated subscriber list
+    bcc_emails = []
+    try:
+        if os.path.exists('subscribers.json'):
+            with open('subscribers.json', 'r') as f:
+                bcc_emails = json.load(f)
+    except Exception as e:
+        logging.error(f"Failed to load subscribers.json: {e}")
+
+    if bcc_emails:
+        msg['Bcc'] = ", ".join(bcc_emails)
+
     part = MIMEText(html_content, "html")
     msg.attach(part)
 
@@ -657,7 +674,8 @@ def send_email(html_content):
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login(sender_email, sender_password)
-        server.sendmail(sender_email, receiver_email, msg.as_string())
+        all_recipients = [receiver_email] + bcc_emails
+        server.sendmail(sender_email, all_recipients, msg.as_string())
         server.quit()
         logging.info("Successfully sent market report email.")
     except Exception as e:
