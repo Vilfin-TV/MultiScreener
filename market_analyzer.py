@@ -18,6 +18,13 @@ TICKERS_CONFIG = {
     'Bonds': {'US 10Y': '^TNX', 'US 30Y': '^TYX'},
     'Commodities': {'Brent Crude': 'BZ=F', 'Gold': 'GC=F', 'Silver': 'SI=F', 'Copper': 'HG=F'},
     'US Futures': {'S&P 500 Futures': 'ES=F', 'Nasdaq 100 Futures': 'NQ=F', 'Dow Jones Futures': 'YM=F'},
+    'Global Indices': {
+        'Germany DAX': '^GDAXI',
+        'Brazil Bovespa': '^BVSP',
+        'Turkey BIST 100': 'XU100.IS',
+        'Australia ASX 200': '^AXJO',
+        'Taiwan Weighted': '^TWII'
+    },
     'US Indices': {'S&P 500': '^GSPC', 'Nasdaq 100': '^NDX', 'Dow Jones': '^DJI'},
     'Asian Indices': {
         'Nikkei 225': '^N225', 
@@ -26,9 +33,23 @@ TICKERS_CONFIG = {
         'Hang Seng': '^HSI', 
         'Sensex': '^BSESN', 
         'Nifty 50': '^NSEI', 
-        'Nifty 500': '^CRSLBKTR', 
+        'BSE 500 (Nifty 500 Proxy)': 'BSE-500.BO', 
         'Nifty Midcap 50': '^NSEMDCP50', 
-        'Nifty Next 50': '^NN50'
+        'Nifty Next 50 (ETF)': 'JUNIORBEES.NS'
+    },
+    'Sectors & Themes': {
+        'AI Stocks': 'AIQ',
+        'Semiconductor': 'SMH',
+        'Technology': 'XLK',
+        'Health Care': 'XLV',
+        'Space': 'ARKX',
+        'Metals & Mining': 'XME',
+        'Energy': 'XLE',
+        'Consumer Discretionary': 'XLY',
+        'Industrials': 'XLI',
+        'Banking': 'KBE',
+        'Finance': 'XLF',
+        'Auto': 'CARZ'
     },
     'Currencies': {
         'EUR/USD': 'EURUSD=X', 
@@ -122,46 +143,75 @@ def collect_market_data():
             logging.info(f"Fetching data for {name} ({symbol})")
             data = fetch_asset_data(symbol)
             all_data[category][name] = data
-            time.sleep(2) 
+            time.sleep(2) # Prevent Yahoo Finance rate limits
     return all_data
 
-def get_best_market_recommendation(data, regime_score):
+def get_executive_summary_analysis(data, regime_score):
+    # 1. Regional Recommendation
     if regime_score <= -50:
-        return "Safe Havens (Bonds & Gold). Equities are in a severe contraction phase. Cash and fixed income are preferred."
+        regional_rec = "Safe Havens (Bonds & Gold). Equities are in a severe contraction phase. Cash and fixed income are preferred."
+    else:
+        scores = {'US Equities': 0, 'Asian Equities': 0, 'Global Indices': 0}
+        counts = {'US Equities': 0, 'Asian Equities': 0, 'Global Indices': 0}
+        
+        for name, metrics in data.get('US Indices', {}).items():
+            if metrics:
+                counts['US Equities'] += 1
+                if metrics['ma_50'] and metrics['price'] > metrics['ma_50']:
+                    scores['US Equities'] += 1
+                    
+        for name, metrics in data.get('Asian Indices', {}).items():
+            if metrics:
+                counts['Asian Equities'] += 1
+                if metrics['ma_50'] and metrics['price'] > metrics['ma_50']:
+                    scores['Asian Equities'] += 1
+                    
+        us_ratio = (scores['US Equities'] / counts['US Equities']) if counts['US Equities'] > 0 else 0
+        asian_ratio = (scores['Asian Equities'] / counts['Asian Equities']) if counts['Asian Equities'] > 0 else 0
+        
+        if regime_score >= 50:
+            if us_ratio >= asian_ratio and us_ratio >= 0.5:
+                regional_rec = "US Equities (S&P 500, Nasdaq). Momentum is exceptionally strong in Western markets."
+            elif asian_ratio > us_ratio and asian_ratio >= 0.5:
+                regional_rec = "Asian Equities (Nifty, Sensex). Eastern markets are showing leading relative strength."
+            else:
+                regional_rec = "Broad Equities. Markets are expanding globally."
+        else: 
+            if us_ratio > 0.6:
+                regional_rec = "Selective US Equities. Market is mixed, but US large-caps hold their trends."
+            elif asian_ratio > 0.6:
+                regional_rec = "Selective Asian Equities (Midcaps). Eastern markets are outperforming."
+            else:
+                regional_rec = "Defensive Equities & Commodities (Gold, Silver). Markets lack clear directional momentum."
+
+    # 2. Sector Analysis
+    sector_data = data.get('Sectors & Themes', {})
+    valid_sectors = {name: metrics for name, metrics in sector_data.items() if metrics and metrics['ma_50']}
     
-    scores = {'US Equities': 0, 'Asian Equities': 0}
-    us_count = 0
-    asian_count = 0
+    momentum_name = "N/A"
+    value_name = "N/A"
+    long_term_name = "N/A"
     
-    for name, metrics in data.get('US Indices', {}).items():
-        if metrics:
-            us_count += 1
-            if metrics['ma_50'] and metrics['price'] > metrics['ma_50']:
-                scores['US Equities'] += 1
-                
-    for name, metrics in data.get('Asian Indices', {}).items():
-        if metrics:
-            asian_count += 1
-            if metrics['ma_50'] and metrics['price'] > metrics['ma_50']:
-                scores['Asian Equities'] += 1
-                
-    us_ratio = (scores['US Equities'] / us_count) if us_count > 0 else 0
-    asian_ratio = (scores['Asian Equities'] / asian_count) if asian_count > 0 else 0
-    
-    if regime_score >= 50:
-        if us_ratio >= asian_ratio and us_ratio >= 0.5:
-            return "US Equities (S&P 500, Nasdaq). Momentum is exceptionally strong in Western markets."
-        elif asian_ratio > us_ratio and asian_ratio >= 0.5:
-            return "Asian Equities (Nifty, Sensex). Eastern markets are showing leading relative strength."
-        else:
-            return "Broad Equities. Markets are expanding globally."
-    else: 
-        if us_ratio > 0.6:
-            return "Selective US Equities. Market is mixed, but US large-caps hold their trends."
-        elif asian_ratio > 0.6:
-            return "Selective Asian Equities (Midcaps/Next 50). Eastern markets are outperforming."
-        else:
-            return "Defensive Equities & Commodities (Gold, Silver). Markets lack clear directional momentum."
+    if valid_sectors:
+        # Momentum: Sector trading furthest above 50-day MA
+        momentum_sector = max(valid_sectors.items(), key=lambda x: x[1]['price'] / x[1]['ma_50'])
+        momentum_name = f"{momentum_sector[0]} (+{momentum_sector[1]['change']:.2f}%)"
+        
+        # Value: Energy, Finance, Industrials, Banking, Metals
+        value_names = ['Energy', 'Finance', 'Industrials', 'Banking', 'Metals & Mining']
+        value_sectors = {k: v for k, v in valid_sectors.items() if k in value_names}
+        if value_sectors:
+            best_value = max(value_sectors.items(), key=lambda x: x[1]['price'] / x[1]['ma_50'])
+            value_name = best_value[0]
+            
+        # Long Term: Thematic/Tech that is showing steady growth
+        long_term_candidates = ['Semiconductor', 'AI Stocks', 'Technology', 'Health Care', 'Space']
+        lt_sectors = {k: v for k, v in valid_sectors.items() if k in long_term_candidates}
+        if lt_sectors:
+            best_lt = max(lt_sectors.items(), key=lambda x: x[1]['price'] / x[1]['ma_50'])
+            long_term_name = best_lt[0]
+
+    return regional_rec, momentum_name, value_name, long_term_name
 
 def calculate_market_regime(data):
     score = 0
@@ -237,26 +287,27 @@ def calculate_market_regime(data):
     else:
         regime_text = "Extremely Bearish / Risk-Off"
 
-    recommendation = get_best_market_recommendation(data, score)
+    regional_rec, mom_sector, val_sector, lt_sector = get_executive_summary_analysis(data, score)
 
-    return score, regime_text, risk_alerts, recommendation
+    return score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector
 
-def generate_html_email(data, regime_score, regime_text, risk_alerts, recommendation):
+def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector):
     html = f"""
     <html>
     <head>
         <style>
             body {{ font-family: Arial, sans-serif; color: #333; }}
-            h2 {{ color: #0a192f; border-bottom: 2px solid #0a192f; padding-bottom: 5px; }}
+            h2 {{ color: #0a192f; border-bottom: 2px solid #0a192f; padding-bottom: 5px; margin-top: 30px; }}
             table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
             th, td {{ padding: 10px; border: 1px solid #ddd; text-align: right; }}
             th {{ background-color: #f4f4f4; text-align: left; }}
-            td:first-child {{ text-align: left; font-weight: bold; }}
-            .positive {{ color: green; }}
-            .negative {{ color: red; }}
-            .score-box {{ padding: 15px; background: #eef2f5; border-left: 5px solid #0a192f; margin-bottom: 20px; }}
+            td:first-child {{ text-align: left; font-weight: bold; width: 35%; }}
+            .positive {{ color: green; font-weight: bold; }}
+            .negative {{ color: red; font-weight: bold; }}
+            .score-box {{ padding: 20px; background: #eef2f5; border-left: 5px solid #0a192f; margin-bottom: 20px; }}
             .alerts {{ background: #fff3f3; border-left: 5px solid #d9534f; padding: 15px; }}
-            .recommendation {{ background: #f0fdf4; border-left: 5px solid #16a34a; padding: 15px; margin-top: 10px; }}
+            .recommendation {{ background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 5px solid #16a34a; padding: 15px; margin-top: 15px; }}
+            .summary-item {{ margin-bottom: 8px; }}
         </style>
     </head>
     <body>
@@ -264,16 +315,21 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, recommenda
         
         <div class="score-box">
             <h3>Executive Summary</h3>
-            <p><strong>Market Sentiment Score:</strong> {regime_score} / 100</p>
-            <p><strong>Current Phase:</strong> {regime_text}</p>
+            <div class="summary-item"><strong>Market Sentiment Score:</strong> {regime_score} / 100</div>
+            <div class="summary-item"><strong>Current Phase:</strong> {regime_text}</div>
+            
             <div class="recommendation">
-                <p><strong>Best Market to Buy:</strong> {recommendation}</p>
+                <h4 style="margin-top: 0;">Market & Sector Insights</h4>
+                <div class="summary-item"><strong>🌍 Best Region to Buy:</strong> {regional_rec}</div>
+                <div class="summary-item"><strong>🚀 Top Momentum Sector:</strong> {mom_sector} <em>(Trading furthest above 50-day average)</em></div>
+                <div class="summary-item"><strong>⚖️ Top Value Sector:</strong> {val_sector} <em>(Strongest among classic value plays like Energy/Financials/Industrials)</em></div>
+                <div class="summary-item"><strong>💎 Best for Long-Term:</strong> {lt_sector} <em>(Leading structural growth theme)</em></div>
             </div>
         </div>
     """
 
     if risk_alerts:
-        html += "<div class='alerts'><h3>Risk Alerts</h3><ul>"
+        html += "<div class='alerts'><h3 style='margin-top:0;'>Risk Alerts</h3><ul style='margin-bottom:0;'>"
         for alert in risk_alerts:
             html += f"<li>{alert}</li>"
         html += "</ul></div>"
@@ -305,7 +361,7 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, recommenda
                 </tr>
                 """
             else:
-                html += f"<tr><td>{name}</td><td colspan='3' style='text-align:center;'>Data Unavailable</td></tr>"
+                html += f"<tr><td>{name}</td><td colspan='3' style='text-align:center; color: #999;'>Data Unavailable</td></tr>"
         html += "</table>"
 
     html += """
@@ -324,7 +380,7 @@ def send_email(html_content):
         return
 
     msg = MIMEMultipart("alternative")
-    msg['Subject'] = f"Daily Market Analysis Report - {datetime.now().strftime('%Y-%m-%d')}"
+    msg['Subject'] = f"Daily Market Analysis & Sector Report - {datetime.now().strftime('%Y-%m-%d')}"
     msg['From'] = sender_email
     msg['To'] = receiver_email
 
@@ -344,10 +400,10 @@ def send_email(html_content):
 if __name__ == "__main__":
     logging.info("Starting Market Analyzer Pipeline")
     market_data = collect_market_data()
-    score, regime, alerts, rec = calculate_market_regime(market_data)
+    score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt = calculate_market_regime(market_data)
     
     logging.info(f"Calculated Regime Score: {score} ({regime})")
     
-    html_report = generate_html_email(market_data, score, regime, alerts, rec)
+    html_report = generate_html_email(market_data, score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt)
     send_email(html_report)
     logging.info("Pipeline execution completed.")
