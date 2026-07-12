@@ -226,38 +226,57 @@ def get_executive_summary_analysis(data, regime_score):
     if regime_score <= -50:
         regional_rec = "Safe Havens (Bonds & Gold). Equities are in a severe contraction phase. Cash and fixed income are preferred."
     else:
-        scores = {'US Equities': 0, 'Asian Equities': 0, 'Global Indices': 0}
-        counts = {'US Equities': 0, 'Asian Equities': 0, 'Global Indices': 0}
-        
+        # Collect detailed metrics for US
+        us_above_50 = 0
+        us_total = 0
+        us_avg_dist = 0.0
+        us_leaders = []
         for name, metrics in data.get('US Indices', {}).items():
-            if metrics:
-                counts['US Equities'] += 1
-                if metrics['ma_50'] and metrics['price'] > metrics['ma_50']:
-                    scores['US Equities'] += 1
-                    
+            if metrics and metrics['ma_50']:
+                us_total += 1
+                dist = ((metrics['price'] / metrics['ma_50']) - 1) * 100
+                us_avg_dist += dist
+                if dist > 0:
+                    us_above_50 += 1
+                    us_leaders.append((name, dist))
+        if us_total > 0: us_avg_dist /= us_total
+        us_leaders.sort(key=lambda x: x[1], reverse=True)
+
+        # Collect detailed metrics for Asia
+        asia_above_50 = 0
+        asia_total = 0
+        asia_avg_dist = 0.0
+        asia_leaders = []
         for name, metrics in data.get('Asian Indices', {}).items():
-            if metrics:
-                counts['Asian Equities'] += 1
-                if metrics['ma_50'] and metrics['price'] > metrics['ma_50']:
-                    scores['Asian Equities'] += 1
-                    
-        us_ratio = (scores['US Equities'] / counts['US Equities']) if counts['US Equities'] > 0 else 0
-        asian_ratio = (scores['Asian Equities'] / counts['Asian Equities']) if counts['Asian Equities'] > 0 else 0
+            if metrics and metrics['ma_50']:
+                asia_total += 1
+                dist = ((metrics['price'] / metrics['ma_50']) - 1) * 100
+                asia_avg_dist += dist
+                if dist > 0:
+                    asia_above_50 += 1
+                    asia_leaders.append((name, dist))
+        if asia_total > 0: asia_avg_dist /= asia_total
+        asia_leaders.sort(key=lambda x: x[1], reverse=True)
+
+        us_ratio = (us_above_50 / us_total) if us_total > 0 else 0
+        asian_ratio = (asia_above_50 / asia_total) if asia_total > 0 else 0
         
-        if regime_score >= 50:
+        if regime_score >= 10:
             if us_ratio >= asian_ratio and us_ratio >= 0.5:
-                regional_rec = "US Equities (S&P 500, Nasdaq). Momentum is exceptionally strong in Western markets."
+                leader_str = f"led by {us_leaders[0][0]} (+{us_leaders[0][1]:.2f}% above MA)" if us_leaders else ""
+                regional_rec = f"US Equities. {us_above_50} out of {us_total} tracked US indices are in a confirmed uptrend, {leader_str}. Western markets show strong relative strength with an average premium of {us_avg_dist:.2f}% over their 50-day trendlines."
             elif asian_ratio > us_ratio and asian_ratio >= 0.5:
-                regional_rec = "Asian Equities (Nifty, Sensex). Eastern markets are showing leading relative strength."
+                leader_str = f"led by {asia_leaders[0][0]} (+{asia_leaders[0][1]:.2f}% above MA)" if asia_leaders else ""
+                regional_rec = f"Asian Equities. {asia_above_50} out of {asia_total} Asian indices are trading above their 50-day moving average, {leader_str}. Eastern markets are currently outperforming the West."
             else:
-                regional_rec = "Broad Equities. Markets are expanding globally."
+                regional_rec = "Broad Equities. Markets are expanding globally, but momentum is relatively dispersed without a single heavily dominant region."
         else: 
             if us_ratio > 0.6:
-                regional_rec = "Selective US Equities. Market is mixed, but US large-caps hold their trends."
+                regional_rec = f"Selective US Equities. Market is mixed, but US large-caps hold their trends better than international peers ({us_above_50}/{us_total} in uptrend)."
             elif asian_ratio > 0.6:
-                regional_rec = "Selective Asian Equities (Midcaps). Eastern markets are outperforming."
+                regional_rec = f"Selective Asian Equities. Eastern markets are showing resilience ({asia_above_50}/{asia_total} in uptrend) compared to Western weakness."
             else:
-                regional_rec = "Defensive Equities & Commodities (Gold, Silver). Markets lack clear directional momentum."
+                regional_rec = "Defensive Equities & Commodities (Gold, Silver). Markets lack clear directional momentum. Avoid broad index funds."
 
     sector_data = data.get('Sectors & Themes (US ETFs)', {})
     valid_sectors = {name: metrics for name, metrics in sector_data.items() if metrics and metrics['ma_50']}
@@ -269,8 +288,10 @@ def get_executive_summary_analysis(data, regime_score):
     
     if valid_sectors:
         momentum_sector = max(valid_sectors.items(), key=lambda x: x[1]['price'] / x[1]['ma_50'])
-        dist_mom = ((momentum_sector[1]['price'] / momentum_sector[1]['ma_50']) - 1) * 100
-        momentum_name = f"{momentum_sector[0]} (trading +{dist_mom:.2f}% above its 50-day average)"
+        mom_metrics = momentum_sector[1]
+        dist_mom = ((mom_metrics['price'] / mom_metrics['ma_50']) - 1) * 100
+        ytd_str = f" and an explosive +{mom_metrics['ytd_return']:.2f}% YTD return" if mom_metrics.get('ytd_return') else ""
+        momentum_name = f"{momentum_sector[0]}. This sector is displaying extreme relative strength, trading +{dist_mom:.2f}% above its 50-day average{ytd_str}. Capital is heavily rotating here for short-term alpha."
         
         value_names = ['Energy', 'Finance', 'Industrials', 'Banking', 'Metals & Mining']
         value_sectors = {k: v for k, v in valid_sectors.items() if k in value_names}
