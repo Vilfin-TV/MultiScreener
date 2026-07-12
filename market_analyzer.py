@@ -16,15 +16,33 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 TICKERS_CONFIG = {
     'Volatility': {'VIX': '^VIX'},
     'Bonds': {'US 10Y': '^TNX', 'US 30Y': '^TYX'},
-    'Commodities': {'Brent Crude': 'BZ=F', 'Gold': 'GC=F', 'Copper': 'HG=F'},
+    'Commodities': {'Brent Crude': 'BZ=F', 'Gold': 'GC=F', 'Silver': 'SI=F', 'Copper': 'HG=F'},
+    'US Futures': {'S&P 500 Futures': 'ES=F', 'Nasdaq 100 Futures': 'NQ=F', 'Dow Jones Futures': 'YM=F'},
     'US Indices': {'S&P 500': '^GSPC', 'Nasdaq 100': '^NDX', 'Dow Jones': '^DJI'},
-    'Asian Indices': {'Nikkei 225': '^N225', 'TOPIX': '^TOPX', 'Kospi': '^KS11', 'Hang Seng': '^HSI', 'Nifty 50': '^NSEI', 'Nifty 500': 'NIFTY_500.NS'},
-    'Currencies': {'EUR/USD': 'EURUSD=X', 'USD/JPY': 'JPY=X', 'USD/INR': 'INR=X', 'USD/CNY': 'CNY=X'}
+    'Asian Indices': {
+        'Nikkei 225': '^N225', 
+        'TOPIX': '^TOPX', 
+        'Kospi': '^KS11', 
+        'Hang Seng': '^HSI', 
+        'Sensex': '^BSESN', 
+        'Nifty 50': '^NSEI', 
+        'Nifty 500': '^CRSLBKTR', 
+        'Nifty Midcap 50': '^NSEMDCP50', 
+        'Nifty Next 50': '^NN50'
+    },
+    'Currencies': {
+        'EUR/USD': 'EURUSD=X', 
+        'EUR/INR': 'EURINR=X', 
+        'USD/JPY': 'JPY=X', 
+        'JPY/INR': 'JPYINR=X', 
+        'USD/INR': 'INR=X', 
+        'USD/CNY': 'CNY=X'
+    }
 }
 
 def fetch_asset_data(ticker_symbol):
     """Fetches market data with Cloudflare worker proxy support and Alpha Vantage fallback."""
-    # 1. Try yfinance (with optional proxy)
+    # 1. Try yfinance
     try:
         session = requests.Session()
         session.headers.update({
@@ -36,7 +54,6 @@ def fetch_asset_data(ticker_symbol):
         
         proxy = os.environ.get('YAHOO_PROXY') or os.environ.get('WORKER_URL')
         if proxy:
-            # If the proxy is just a host, make sure it has the scheme, else just pass it
             proxies = {'http': proxy, 'https': proxy}
             session.proxies.update(proxies)
             
@@ -65,7 +82,6 @@ def fetch_asset_data(ticker_symbol):
     if av_api_key:
         logging.info(f"Attempting Alpha Vantage fallback for {ticker_symbol}")
         try:
-            # Alpha Vantage uses different symbols sometimes, strip Yahoo-specific characters
             symbol_clean = ticker_symbol.replace('^', '').replace('=F', '').replace('=X', '')
             url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol_clean}&apikey={av_api_key}&outputsize=compact"
             response = requests.get(url)
@@ -78,19 +94,20 @@ def fetch_asset_data(ticker_symbol):
                 df.index = pd.to_datetime(df.index)
                 df = df.sort_index()
                 
-                latest_close = df['Close'].iloc[-1]
-                prev_close = df['Close'].iloc[-2] if len(df) > 1 else latest_close
-                daily_change = ((latest_close - prev_close) / prev_close) * 100
-                
-                ma_50 = df['Close'].rolling(window=50).mean().iloc[-1] if len(df) >= 50 else None
-                ma_20 = df['Close'].rolling(window=20).mean().iloc[-1] if len(df) >= 20 else None
-                
-                return {
-                    'price': latest_close,
-                    'change': daily_change,
-                    'ma_50': ma_50,
-                    'ma_20': ma_20
-                }
+                if len(df) > 0:
+                    latest_close = df['Close'].iloc[-1]
+                    prev_close = df['Close'].iloc[-2] if len(df) > 1 else latest_close
+                    daily_change = ((latest_close - prev_close) / prev_close) * 100
+                    
+                    ma_50 = df['Close'].rolling(window=50).mean().iloc[-1] if len(df) >= 50 else None
+                    ma_20 = df['Close'].rolling(window=20).mean().iloc[-1] if len(df) >= 20 else None
+                    
+                    return {
+                        'price': latest_close,
+                        'change': daily_change,
+                        'ma_50': ma_50,
+                        'ma_20': ma_20
+                    }
         except Exception as e:
             logging.error(f"Alpha Vantage fallback failed for {ticker_symbol}: {e}")
             
@@ -98,7 +115,6 @@ def fetch_asset_data(ticker_symbol):
     return None
 
 def collect_market_data():
-    """Collects market data for all configured tickers."""
     all_data = {}
     for category, assets in TICKERS_CONFIG.items():
         all_data[category] = {}
@@ -106,17 +122,51 @@ def collect_market_data():
             logging.info(f"Fetching data for {name} ({symbol})")
             data = fetch_asset_data(symbol)
             all_data[category][name] = data
-            time.sleep(2) # Delay to prevent hitting Yahoo rate limits
+            time.sleep(2) 
     return all_data
 
+def get_best_market_recommendation(data, regime_score):
+    if regime_score <= -50:
+        return "Safe Havens (Bonds & Gold). Equities are in a severe contraction phase. Cash and fixed income are preferred."
+    
+    scores = {'US Equities': 0, 'Asian Equities': 0}
+    us_count = 0
+    asian_count = 0
+    
+    for name, metrics in data.get('US Indices', {}).items():
+        if metrics:
+            us_count += 1
+            if metrics['ma_50'] and metrics['price'] > metrics['ma_50']:
+                scores['US Equities'] += 1
+                
+    for name, metrics in data.get('Asian Indices', {}).items():
+        if metrics:
+            asian_count += 1
+            if metrics['ma_50'] and metrics['price'] > metrics['ma_50']:
+                scores['Asian Equities'] += 1
+                
+    us_ratio = (scores['US Equities'] / us_count) if us_count > 0 else 0
+    asian_ratio = (scores['Asian Equities'] / asian_count) if asian_count > 0 else 0
+    
+    if regime_score >= 50:
+        if us_ratio >= asian_ratio and us_ratio >= 0.5:
+            return "US Equities (S&P 500, Nasdaq). Momentum is exceptionally strong in Western markets."
+        elif asian_ratio > us_ratio and asian_ratio >= 0.5:
+            return "Asian Equities (Nifty, Sensex). Eastern markets are showing leading relative strength."
+        else:
+            return "Broad Equities. Markets are expanding globally."
+    else: 
+        if us_ratio > 0.6:
+            return "Selective US Equities. Market is mixed, but US large-caps hold their trends."
+        elif asian_ratio > 0.6:
+            return "Selective Asian Equities (Midcaps/Next 50). Eastern markets are outperforming."
+        else:
+            return "Defensive Equities & Commodities (Gold, Silver). Markets lack clear directional momentum."
+
 def calculate_market_regime(data):
-    """
-    Calculates a Market Regime Indicator score ranging from -100 to +100.
-    """
     score = 0
     risk_alerts = []
 
-    # 1. Volatility Weight (20% -> -20 to +20)
     vix_data = data.get('Volatility', {}).get('VIX')
     if vix_data and vix_data['ma_20']:
         vix_price = vix_data['price']
@@ -124,11 +174,9 @@ def calculate_market_regime(data):
             score -= 20
         else:
             score += 20
-        
         if vix_price > 25:
             risk_alerts.append(f"High Volatility: VIX is extremely elevated at {vix_price:.2f}.")
 
-    # 2. Bond Yield Curve Weight (20% -> -20 to +20)
     yield_10y_data = data.get('Bonds', {}).get('US 10Y')
     yield_30y_data = data.get('Bonds', {}).get('US 30Y')
     
@@ -140,9 +188,8 @@ def calculate_market_regime(data):
         elif spread > 0.5:
             score += 20
         else:
-            score += 0 # Flat
+            score += 0 
 
-    # 3. Equity Momentum Weight (30% -> -30 to +30)
     sp500 = data.get('US Indices', {}).get('S&P 500')
     nikkei = data.get('Asian Indices', {}).get('Nikkei 225')
     nifty = data.get('Asian Indices', {}).get('Nifty 50')
@@ -157,7 +204,6 @@ def calculate_market_regime(data):
                 risk_alerts.append(f"Momentum Warning: {name} is trading below its 50-day moving average.")
     score += equity_score
 
-    # 4. Macro Inter-market Signals (30% -> -30 to +30)
     gold = data.get('Commodities', {}).get('Gold')
     copper = data.get('Commodities', {}).get('Copper')
     
@@ -173,13 +219,11 @@ def calculate_market_regime(data):
     else:
         score += 30
 
-    # Currency Alerts
     for curr_name, curr_data in data.get('Currencies', {}).items():
         if curr_data and abs(curr_data['change']) > 1.5:
             direction = "surged" if curr_data['change'] > 0 else "dropped"
             risk_alerts.append(f"Currency Volatility: {curr_name} {direction} by {abs(curr_data['change']):.2f}%.")
 
-    # Score clamping
     score = max(min(score, 100), -100)
     
     if score >= 50:
@@ -193,10 +237,11 @@ def calculate_market_regime(data):
     else:
         regime_text = "Extremely Bearish / Risk-Off"
 
-    return score, regime_text, risk_alerts
+    recommendation = get_best_market_recommendation(data, score)
 
-def generate_html_email(data, regime_score, regime_text, risk_alerts):
-    """Generates the HTML content for the email report."""
+    return score, regime_text, risk_alerts, recommendation
+
+def generate_html_email(data, regime_score, regime_text, risk_alerts, recommendation):
     html = f"""
     <html>
     <head>
@@ -211,6 +256,7 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts):
             .negative {{ color: red; }}
             .score-box {{ padding: 15px; background: #eef2f5; border-left: 5px solid #0a192f; margin-bottom: 20px; }}
             .alerts {{ background: #fff3f3; border-left: 5px solid #d9534f; padding: 15px; }}
+            .recommendation {{ background: #f0fdf4; border-left: 5px solid #16a34a; padding: 15px; margin-top: 10px; }}
         </style>
     </head>
     <body>
@@ -220,6 +266,9 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts):
             <h3>Executive Summary</h3>
             <p><strong>Market Sentiment Score:</strong> {regime_score} / 100</p>
             <p><strong>Current Phase:</strong> {regime_text}</p>
+            <div class="recommendation">
+                <p><strong>Best Market to Buy:</strong> {recommendation}</p>
+            </div>
         </div>
     """
 
@@ -266,7 +315,6 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts):
     return html
 
 def send_email(html_content):
-    """Sends the HTML report via Gmail SMTP."""
     sender_email = os.environ.get('GMAIL_USER')
     sender_password = os.environ.get('GMAIL_APP_PASSWORD')
     receiver_email = os.environ.get('EMAIL_TO')
@@ -296,10 +344,10 @@ def send_email(html_content):
 if __name__ == "__main__":
     logging.info("Starting Market Analyzer Pipeline")
     market_data = collect_market_data()
-    score, regime, alerts = calculate_market_regime(market_data)
+    score, regime, alerts, rec = calculate_market_regime(market_data)
     
     logging.info(f"Calculated Regime Score: {score} ({regime})")
     
-    html_report = generate_html_email(market_data, score, regime, alerts)
+    html_report = generate_html_email(market_data, score, regime, alerts, rec)
     send_email(html_report)
     logging.info("Pipeline execution completed.")
