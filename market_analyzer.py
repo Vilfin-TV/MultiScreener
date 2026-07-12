@@ -24,6 +24,10 @@ TICKERS_CONFIG = {
         'US 5Y': {'symbol': '^FVX', 'currency': 'Yield %'},
         'US 10Y': {'symbol': '^TNX', 'currency': 'Yield %'},
         'US 30Y': {'symbol': '^TYX', 'currency': 'Yield %'},
+        'India 10Y': {'symbol': '^IN10YT=RR', 'currency': 'Yield %'},
+        'Japan 10Y': {'symbol': '^JN09T=RR', 'currency': 'Yield %'},
+        'Germany 10Y': {'symbol': '^DE10YT=RR', 'currency': 'Yield %'},
+        'UK 10Y': {'symbol': '^UK10YT=RR', 'currency': 'Yield %'},
         'Corp Bonds (LQD)': {'symbol': 'LQD', 'currency': 'USD'},
         'High Yield (HYG)': {'symbol': 'HYG', 'currency': 'USD'},
         'Intl Treasury Bonds (IGOV)': {'symbol': 'IGOV', 'currency': 'USD'},
@@ -655,6 +659,40 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
                     <div style="font-size: 0.95em;">
                         Current VIX is <strong style="color: {v_color};">{vix_price:.2f}</strong> ({v_range}).<br>
                         <strong>Expected Market Move (Per Month):</strong> ± {month_move:.1f}% <em>(Calculated as VIX ÷ √12)</em>
+                    </div>
+                </div>
+                """
+        elif category != "Volatility":
+            valid_assets = {n: m for n, m in assets.items() if m}
+            if valid_assets:
+                st_eq = "N/A"
+                val_eq = "N/A"
+                lt_eq = "N/A"
+                
+                valid_st = {n: m for n, m in valid_assets.items() if m.get('ma_20') and m.get('change') is not None and m['change'] > 0}
+                if valid_st:
+                    best = max(valid_st.items(), key=lambda x: x[1]['price'] / x[1]['ma_20'])
+                    dist = ((best[1]['price'] / best[1]['ma_20']) - 1) * 100
+                    st_eq = f"{best[0]} (+{dist:.2f}% vs 20D MA)"
+                
+                valid_val = {n: m for n, m in valid_assets.items() if m.get('ma_200')}
+                if valid_val:
+                    best_val = min(valid_val.items(), key=lambda x: x[1]['price'] / x[1]['ma_200'])
+                    dist_val = (1 - (best_val[1]['price'] / best_val[1]['ma_200'])) * 100
+                    val_eq = f"{best_val[0]} ({dist_val:.2f}% below 200D MA)"
+                
+                valid_lt = {n: m for n, m in valid_assets.items() if m.get('three_yr_return')}
+                if valid_lt:
+                    best_lt = max(valid_lt.items(), key=lambda x: x[1]['three_yr_return'])
+                    lt_eq = f"{best_lt[0]} (+{best_lt[1]['three_yr_return']:.2f}% 3-Year)"
+                
+                html += f"""
+                <div style="background: #fdfdfd; border: 1px solid #e0e0e0; border-left: 5px solid #1a365d; padding: 15px; margin-bottom: 20px; margin-top: 10px;">
+                    <h4 style="margin-top: 0; margin-bottom: 10px; color: #1a365d;">🏆 Top Picks from {category}</h4>
+                    <div style="font-size: 0.95em;">
+                        <strong>📈 Best Momentum (Short Term):</strong> {st_eq}<br>
+                        <strong>⚖️ Best Value (Oversold):</strong> {val_eq}<br>
+                        <strong>💎 Best Long-Term (3-Year):</strong> {lt_eq}
                     </div>
                 </div>
                 """
