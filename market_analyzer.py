@@ -210,6 +210,39 @@ def fetch_asset_data(ticker_symbol):
     logging.error(f"All data fetch methods failed for {ticker_symbol}")
     return None
 
+def fetch_global_news():
+    news_items = []
+    try:
+        session = requests.Session()
+        session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+        })
+        proxy = os.environ.get('YAHOO_PROXY') or os.environ.get('WORKER_URL')
+        if proxy:
+            proxies = {'http': proxy, 'https': proxy}
+            session.proxies.update(proxies)
+        
+        tickers = ['SPY', 'GLD', 'SHY']
+        for t in tickers:
+            ticker = yf.Ticker(t, session=session)
+            n = ticker.news
+            if n:
+                for item in n:
+                    news_items.append({
+                        'title': item.get('title', ''),
+                        'publisher': item.get('publisher', 'News'),
+                        'link': item.get('link', '#'),
+                        'time': item.get('providerPublishTime', 0)
+                    })
+            time.sleep(1)
+            
+        unique_news = {item['title']: item for item in news_items if item['title']}
+        sorted_news = sorted(unique_news.values(), key=lambda x: x['time'], reverse=True)
+        return sorted_news[:6]
+    except Exception as e:
+        logging.warning(f"Failed to fetch news: {e}")
+        return []
+
 def collect_market_data():
     all_data = {}
     for category, assets in TICKERS_CONFIG.items():
@@ -300,7 +333,9 @@ def get_executive_summary_analysis(data, regime_score):
         value_sectors = {k: v for k, v in valid_sectors.items() if k in value_names}
         if value_sectors:
             best_value = max(value_sectors.items(), key=lambda x: x[1]['price'] / x[1]['ma_50'])
-            value_name = best_value[0]
+            dist_val = ((best_value[1]['price'] / best_value[1]['ma_50']) - 1) * 100
+            ytd_val_str = f" and {best_value[1]['ytd_return']:.2f}% YTD" if best_value[1].get('ytd_return') else ""
+            value_name = f"{best_value[0]}. Accumulating value, trading {dist_val:.2f}% relative to its 50-day MA{ytd_val_str}."
             
         long_term_candidates = ['Semiconductor', 'AI Stocks', 'Technology', 'Health Care', 'Space']
         lt_sectors = {k: v for k, v in valid_sectors.items() if k in long_term_candidates}
@@ -438,7 +473,7 @@ def calculate_market_regime(data):
 
     return score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency
 
-def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr):
+def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr, news_items):
     html = f"""
     <html>
     <head>
@@ -492,6 +527,14 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
             </div>
         </div>
     """
+
+    if news_items:
+        html += "<div class='score-box' style='background: #f8f9fa; border-left: 5px solid #6c757d;'>"
+        html += "<h4 style='margin-top: 0; margin-bottom: 15px;'>📰 What to watch out for this week (Major Events)</h4>"
+        html += "<ul style='margin-bottom:0;'>"
+        for item in news_items:
+            html += f"<li style='margin-bottom: 8px;'><a href='{item['link']}' style='color: #1a0dab; text-decoration: none;'>{item['title']}</a> <span style='color: #666; font-size: 0.85em;'>- {item['publisher']}</span></li>"
+        html += "</ul></div>"
 
     if risk_alerts:
         html += "<div class='alerts'><h3 style='margin-top:0;'>Risk Alerts</h3><ul style='margin-bottom:0;'>"
@@ -590,10 +633,11 @@ def send_email(html_content):
 if __name__ == "__main__":
     logging.info("Starting Market Analyzer Pipeline")
     market_data = collect_market_data()
+    news_items = fetch_global_news()
     score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr = calculate_market_regime(market_data)
     
     logging.info(f"Calculated Regime Score: {score} ({regime})")
     
-    html_report = generate_html_email(market_data, score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr)
+    html_report = generate_html_email(market_data, score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr, news_items)
     send_email(html_report)
     logging.info("Pipeline execution completed.")
