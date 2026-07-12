@@ -24,10 +24,9 @@ TICKERS_CONFIG = {
         'US 5Y': {'symbol': '^FVX', 'currency': 'Yield %'},
         'US 10Y': {'symbol': '^TNX', 'currency': 'Yield %'},
         'US 30Y': {'symbol': '^TYX', 'currency': 'Yield %'},
-        'India 10Y': {'symbol': '^IN10YT=RR', 'currency': 'Yield %'},
-        'Japan 10Y': {'symbol': '^JN09T=RR', 'currency': 'Yield %'},
-        'Germany 10Y': {'symbol': '^DE10YT=RR', 'currency': 'Yield %'},
-        'UK 10Y': {'symbol': '^UK10YT=RR', 'currency': 'Yield %'},
+        'Japan Govt Bonds': {'symbol': '2561.T', 'currency': 'JPY'},
+        'Germany Govt Bonds': {'symbol': 'BUND.DE', 'currency': 'EUR'},
+        'UK Govt Bonds': {'symbol': 'IGLT.L', 'currency': 'GBP'},
         'Corp Bonds (LQD)': {'symbol': 'LQD', 'currency': 'USD'},
         'High Yield (HYG)': {'symbol': 'HYG', 'currency': 'USD'},
         'Intl Treasury Bonds (IGOV)': {'symbol': 'IGOV', 'currency': 'USD'},
@@ -675,11 +674,14 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, regional_r
                     dist = ((best[1]['price'] / best[1]['ma_20']) - 1) * 100
                     st_eq = f"{best[0]} (+{dist:.2f}% vs 20D MA)"
                 
-                valid_val = {n: m for n, m in valid_assets.items() if m.get('ma_200')}
+                valid_val = {n: m for n, m in valid_assets.items() if m.get('ma_50')}
                 if valid_val:
-                    best_val = min(valid_val.items(), key=lambda x: x[1]['price'] / x[1]['ma_200'])
-                    dist_val = (1 - (best_val[1]['price'] / best_val[1]['ma_200'])) * 100
-                    val_eq = f"{best_val[0]} ({dist_val:.2f}% below 200D MA)"
+                    best_val = min(valid_val.items(), key=lambda x: x[1]['price'] / x[1]['ma_50'])
+                    dist_val = ((best_val[1]['price'] / best_val[1]['ma_50']) - 1) * 100
+                    if dist_val < 0:
+                        val_eq = f"{best_val[0]} ({abs(dist_val):.2f}% below 50D MA)"
+                    else:
+                        val_eq = f"{best_val[0]} (Lowest premium: +{dist_val:.2f}% vs 50D MA)"
                 
                 valid_lt = {n: m for n, m in valid_assets.items() if m.get('three_yr_return')}
                 if valid_lt:
