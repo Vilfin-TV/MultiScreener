@@ -52,6 +52,12 @@ public class MainActivity extends Activity {
     // opening a provider. Biasing toward the bridge fixes that.
     private volatile boolean bridgeGaveUp = false;
 
+    // OK-button deep-press detection. A quick tap activates (plays / fullscreen);
+    // holding OK past LONG_PRESS_MS opens the channel context menu (hide /
+    // favourite) via window.__tvContext. okLongFired guards it to once per hold.
+    private static final long LONG_PRESS_MS = 500;
+    private volatile boolean okLongFired = false;
+
     // Full-screen video plumbing (WebChromeClient custom view for <video> fullscreen).
     private View customView;
     private WebChromeClient.CustomViewCallback customViewCallback;
@@ -246,6 +252,33 @@ public class MainActivity extends Activity {
         if (bridgeGaveUp && isBridgeKey(kc)) {
             return super.dispatchKeyEvent(event);
         }
+        // OK / Enter: distinguish a TAP (activate: play / toggle fullscreen) from a
+        // DEEP-PRESS (open the channel context menu). We act on release so the two
+        // can be told apart — a held OK fires the menu once; a quick tap runs OK.
+        if (isOkKey(kc)) {
+            int action = event.getAction();
+            if (action == KeyEvent.ACTION_DOWN) {
+                if (event.getRepeatCount() == 0) {
+                    okLongFired = false;                 // fresh press
+                } else if (!okLongFired) {
+                    // Key-repeat means it's been held past the long-press timeout.
+                    okLongFired = true;
+                    fireContextMenu();
+                }
+                return true;
+            }
+            if (action == KeyEvent.ACTION_UP) {
+                boolean held = (event.getEventTime() - event.getDownTime()) >= LONG_PRESS_MS;
+                if (!okLongFired && held) {
+                    fireContextMenu();                   // held, but no repeats came
+                } else if (!okLongFired) {
+                    fireOk();                            // genuine tap
+                }
+                okLongFired = false;
+                return true;
+            }
+            return true;
+        }
         if (event.getAction() != KeyEvent.ACTION_DOWN) {
             // Consume the matching UP for keys we handle so they don't leak.
             if (isNavKey(kc)) return true;
@@ -257,22 +290,7 @@ public class MainActivity extends Activity {
             case KeyEvent.KEYCODE_DPAD_LEFT:  js("window.__tvNav&&window.__tvNav('left')");  return true;
             case KeyEvent.KEYCODE_DPAD_RIGHT: js("window.__tvNav&&window.__tvNav('right')"); return true;
 
-            case KeyEvent.KEYCODE_DPAD_CENTER:
-            case KeyEvent.KEYCODE_ENTER:
-            case KeyEvent.KEYCODE_NUMPAD_ENTER:
-                if (web != null) {
-                    web.post(new Runnable() {
-                        @Override public void run() {
-                            web.evaluateJavascript("window.__tvNav?window.__tvNav('ok'):''", new ValueCallback<String>() {
-                                @Override public void onReceiveValue(String v) {
-                                    // v is a JSON string, e.g. "\"input\"" for a text field.
-                                    if (v != null && v.contains("input")) showKeyboard();
-                                }
-                            });
-                        }
-                    });
-                }
-                return true;
+            // OK / Enter handled above (tap vs deep-press), before this switch.
 
             case KeyEvent.KEYCODE_BACK:
                 // Native <video> fullscreen (WebChromeClient custom view) exits first.
@@ -317,6 +335,33 @@ public class MainActivity extends Activity {
                 js("window.__tvControl&&window.__tvControl.filters()"); return true;
         }
         return super.dispatchKeyEvent(event);
+    }
+
+    private boolean isOkKey(int kc) {
+        return kc == KeyEvent.KEYCODE_DPAD_CENTER
+            || kc == KeyEvent.KEYCODE_ENTER
+            || kc == KeyEvent.KEYCODE_NUMPAD_ENTER;
+    }
+
+    /** TAP on OK → activate the focused item (play / toggle fullscreen). Opens the
+     *  on-screen keyboard when the page reports focus is on a text field. */
+    private void fireOk() {
+        if (web == null) return;
+        web.post(new Runnable() {
+            @Override public void run() {
+                web.evaluateJavascript("window.__tvNav?window.__tvNav('ok'):''", new ValueCallback<String>() {
+                    @Override public void onReceiveValue(String v) {
+                        // v is a JSON string, e.g. "\"input\"" for a text field.
+                        if (v != null && v.contains("input")) showKeyboard();
+                    }
+                });
+            }
+        });
+    }
+
+    /** DEEP-PRESS on OK → open the focused channel's context menu (hide / favourite). */
+    private void fireContextMenu() {
+        js("window.__tvContext&&window.__tvContext()");
     }
 
     private boolean isNavKey(int kc) {
