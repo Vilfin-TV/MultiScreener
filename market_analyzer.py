@@ -230,35 +230,24 @@ def fetch_asset_data(ticker_symbol):
     logging.error(f"All data fetch methods failed for {ticker_symbol}")
     return None
 
+import xml.etree.ElementTree as ET
+
 def fetch_global_news():
     news_items = []
     try:
-        session = requests.Session()
-        session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
-        })
-        proxy = os.environ.get('YAHOO_PROXY') or os.environ.get('WORKER_URL')
-        if proxy:
-            proxies = {'http': proxy, 'https': proxy}
-            session.proxies.update(proxies)
-        
-        tickers = ['SPY', 'GLD', 'SHY']
-        for t in tickers:
-            ticker = yf.Ticker(t, session=session)
-            n = ticker.news
-            if n:
-                for item in n:
-                    news_items.append({
-                        'title': item.get('title', ''),
-                        'publisher': item.get('publisher', 'News'),
-                        'link': item.get('link', '#'),
-                        'time': item.get('providerPublishTime', 0)
-                    })
-            time.sleep(1)
-            
-        unique_news = {item['title']: item for item in news_items if item['title']}
-        sorted_news = sorted(unique_news.values(), key=lambda x: x['time'], reverse=True)
-        return sorted_news[:6]
+        url = 'https://news.google.com/rss/search?q=stock+market+economy+finance&hl=en-US&gl=US&ceid=US:en'
+        response = requests.get(url, timeout=10)
+        root = ET.fromstring(response.content)
+        items = root.findall('.//item')
+        for item in items[:6]:
+            news_items.append({
+                'title': item.find('title').text,
+                'link': item.find('link').text,
+                'publisher': item.find('source').text if item.find('source') is not None else 'Google News',
+                'time': 0
+            })
+        unique_news = {item['link']: item for item in news_items}
+        return list(unique_news.values())[:6]
     except Exception as e:
         logging.warning(f"Failed to fetch news: {e}")
         return []
