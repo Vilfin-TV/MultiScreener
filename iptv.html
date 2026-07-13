@@ -881,6 +881,57 @@
   html.tv-app .ch-card { padding: 12px; }
   html.tv-app .ctrl-btn { width: 44px; height: 44px; }
 
+  /* Program Guide slots, filter selects and the side panels themselves are all
+     remote-reachable zones — give each the same unmistakable focus ring so the
+     cursor is never lost when crossing between zones (windowed AND cinema). */
+  html.tv-app .epg-slot:focus,
+  html.tv-app select:focus,
+  html.tv-app #search-new:focus {
+    outline: 3px solid #64ffda !important; outline-offset: 2px;
+    box-shadow: 0 0 0 3px #64ffda, 0 0 24px rgba(100,255,218,.55) !important;
+    z-index: 6; position: relative;
+  }
+  /* Empty panels (e.g. Guide before a channel plays) receive focus on their
+     container so RIGHT from the player controls always lands somewhere visible. */
+  html.tv-app #hero-remote-panel:focus,
+  html.tv-app #fav-panel:focus {
+    outline: 3px solid #64ffda !important; outline-offset: -3px;
+    box-shadow: inset 0 0 0 2px rgba(100,255,218,.35), 0 0 24px rgba(100,255,218,.35) !important;
+  }
+
+  /* ── Exit Confirmation (TV root-level BACK) ─────────────────────────────
+     BACK at the provider hub opens this instead of quitting; one more
+     explicitly focused OK press on "Yes, exit to Home" closes the app. */
+  .tv-exit-backdrop {
+    display: none; position: fixed; inset: 0; z-index: 11000;
+    background: rgba(2, 6, 16, .82); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center;
+  }
+  .tv-exit-backdrop.open { display: flex; animation: tvExitIn .18s ease; }
+  @keyframes tvExitIn { from { opacity: 0; } to { opacity: 1; } }
+  .tv-exit-card {
+    background: linear-gradient(180deg, #0d1f3d, #0a192f);
+    border: 1px solid var(--border-strong); border-radius: 18px;
+    padding: 40px 48px 36px; text-align: center; max-width: 500px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, .65);
+  }
+  .tv-exit-card .tv-exit-ico { font-size: 40px; margin-bottom: 10px; }
+  .tv-exit-card h2 { margin: 0 0 8px; font-size: 24px; color: var(--text); letter-spacing: .3px; }
+  .tv-exit-card p { margin: 0 0 26px; font-size: 15px; color: var(--text-dim); }
+  .tv-exit-actions { display: flex; gap: 16px; justify-content: center; }
+  .tv-exit-btn {
+    padding: 14px 26px; font-size: 16px; font-weight: 700; letter-spacing: .3px;
+    border-radius: 12px; border: 1px solid var(--border-strong); cursor: pointer;
+    background: var(--surface-2, #12233f); color: var(--text);
+    transition: transform .12s ease, background .12s ease;
+  }
+  .tv-exit-btn.primary { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .tv-exit-btn:focus {
+    outline: 3px solid #64ffda !important; outline-offset: 3px;
+    box-shadow: 0 0 0 3px #64ffda, 0 0 26px rgba(100,255,218,.6) !important;
+    transform: scale(1.06);
+  }
+
   /* ── Cinema (fullscreen) mode ──────────────────────────────────────────────
      A gesture-free fullscreen for TV: the native remote intercepts OK and
      replays it via evaluateJavascript, which the HTML5 Fullscreen API rejects
@@ -3049,27 +3100,60 @@ function __iptvBoot(){
         if(el.tabIndex < 0 && !el.hasAttribute('tabindex')) el.setAttribute('tabindex','0');
       });
     }
-    // When the channel context menu is open it is modal: the D-pad may only move
-    // between its own items (never back onto the grid underneath).
-    function tvMenuItems(){
-      return (_chMenuEls&&chMenuOpen()) ? Array.prototype.slice.call(_chMenuEls.menu.querySelectorAll('button')) : null;
+    // When an overlay is open it is MODAL to the D-pad: focus may only move
+    // between its own items (never back onto the layout underneath). Priority:
+    // exit-confirmation modal → channel context menu → cinema side drawer.
+    function tvModalItems(){
+      if(typeof tvExitOpen==='function' && tvExitOpen()){
+        return Array.prototype.slice.call(_tvExitEls.querySelectorAll('button'));
+      }
+      if(_chMenuEls && chMenuOpen()){
+        return Array.prototype.slice.call(_chMenuEls.menu.querySelectorAll('button'));
+      }
+      // Fullscreen Guide/Favorites drawer: keep the D-pad inside the drawer so
+      // Up/Down browse it; LEFT (or BACK) escapes back to the player controls.
+      var d=document.documentElement;
+      if(d.classList.contains('tv-cinema')){
+        var panel = d.classList.contains('cin-guide') ? document.getElementById('hero-remote-panel')
+                  : d.classList.contains('cin-favs')  ? document.getElementById('fav-panel') : null;
+        if(panel){
+          var items=Array.prototype.filter.call(panel.querySelectorAll(TV_SEL), tvVisible);
+          if(items.length) return items;
+        }
+      }
+      return null;
     }
     function tvCandidates(){
-      var m=tvMenuItems(); if(m) return m;
+      var m=tvModalItems(); if(m) return m;
       return Array.prototype.filter.call(document.querySelectorAll(TV_SEL), tvVisible);
     }
     // Like tvCandidates() but WITHOUT the viewport-bounds check — returns every
     // rendered focusable in the active screen, including ones scrolled off the
     // fold. display:none stays excluded (its rect collapses to 0×0).
+    function tvRendered(el){
+      if(!el || el.disabled) return false;
+      var r = el.getBoundingClientRect();
+      if(r.width < 4 || r.height < 4) return false;
+      var scr = el.closest('.screen');
+      return !scr || scr.classList.contains('active');
+    }
     function tvAllFocusable(){
-      var m=tvMenuItems(); if(m) return m;
-      return Array.prototype.filter.call(document.querySelectorAll(TV_SEL), function(el){
-        if(!el || el.disabled) return false;
-        var r = el.getBoundingClientRect();
-        if(r.width < 4 || r.height < 4) return false;
-        var scr = el.closest('.screen');
-        return !scr || scr.classList.contains('active');
-      });
+      var m=tvModalItems(); if(m) return m;
+      return Array.prototype.filter.call(document.querySelectorAll(TV_SEL), tvRendered);
+    }
+    // Which focus zone an element belongs to — used for deterministic routing
+    // between the player controls, side panels, filter row and channel grid.
+    function tvZoneOf(el){
+      if(!el || !el.closest) return null;
+      if(el.closest('#controls'))          return 'controls';
+      if(el.closest('#video-shell'))       return 'video';
+      if(el.closest('#hero-remote-panel')) return 'guide';
+      if(el.closest('#fav-panel'))         return 'favs';
+      if(el.closest('#sources-panel'))     return 'sources';
+      if(el.closest('.filters-row'))       return 'filters';
+      if(el.closest('.content-shelf'))     return 'grid';
+      if(el.closest('.topbar'))            return 'topbar';
+      return null;
     }
     // Score the nearest focusable in a direction over a candidate list, using a
     // directional distance metric (in-line offset weighted lighter than
@@ -3091,18 +3175,99 @@ function __iptvBoot(){
       });
       return best;
     }
-    // Pick the nearest focusable in a direction. First try on-screen candidates;
-    // if none exist that way (e.g. the next grid row sits below the fold because
-    // the video/panels fill the viewport), fall back to off-screen focusables so
-    // the D-pad keeps advancing and the focusin handler scrolls the target in.
+    // Deterministic cross-zone routing for the edges where pure geometry has no
+    // answer (or a wrong one). Runs only AFTER the visible spatial pass fails,
+    // so ordinary in-zone movement is untouched. Returns true when it moved.
+    function tvEdgeRoute(dir, cur){
+      var z = tvZoneOf(cur);
+      var d = document.documentElement;
+      var cinema = d.classList.contains('tv-cinema');
+      var drawer = d.classList.contains('cin-guide') ? 'guide'
+                 : d.classList.contains('cin-favs')  ? 'favs' : null;
+      function go(el){
+        if(!el) return false;
+        try{ el.focus(); }catch(e){}
+        try{ el.scrollIntoView({block:'center',inline:'nearest',behavior:'auto'}); }catch(e){}
+        if(document.activeElement===el){ tvRemember(el); return true; }
+        return false;
+      }
+      function firstVis(sel){
+        var list=document.querySelectorAll(sel);
+        for(var i=0;i<list.length;i++){ if(tvVisible(list[i])) return list[i]; }
+        return null;
+      }
+      // Fullscreen drawer open: LEFT escapes it back to the player controls
+      // (BACK does the same — see __tvControl.back).
+      if(drawer && dir==='left'){ _cinToggleDrawer(drawer); return true; }
+      // Player controls / video → RIGHT: reach the Program Guide (then Favorites)
+      // even when the Guide only shows its placeholder (no focusable children —
+      // the panel container itself takes focus). In cinema fullscreen the panels
+      // are hidden, so RIGHT past the last control slides the Guide drawer in.
+      if((z==='controls' || z==='video') && dir==='right'){
+        if(cinema){ if(!drawer) _cinToggleDrawer('guide'); return true; }
+        return go(firstVis('#hero-remote-panel .epg-slot, #hero-remote-panel button'))
+            || go(firstVis('#fav-panel .fav-item'))
+            || go(document.getElementById('hero-remote-panel'))
+            || go(document.getElementById('fav-panel'));
+      }
+      // Player controls → DOWN: the filter row is the next zone (windowed mode).
+      if((z==='controls' || z==='video') && dir==='down' && !cinema){
+        return go(firstVis('.filters-row .filter-chip.active'))
+            || go(firstVis('.filters-row .filter-chip, .filters-row select'));
+      }
+      // Filter row → UP: back to the player controls.
+      if(z==='filters' && dir==='up'){
+        return go(firstVis('#btn-play')) || go(firstVis('#controls .ctrl-btn'));
+      }
+      // Channel grid → UP past the first row: land on the filter row.
+      if(z==='grid' && dir==='up'){
+        return go(firstVis('.filters-row .filter-chip.active'))
+            || go(firstVis('.filters-row .filter-chip, .filters-row select'));
+      }
+      // Side panels → LEFT escapes back toward the main layout: Favorites steps
+      // onto the Guide first, the Guide steps onto the player controls.
+      if(z==='favs' && dir==='left'){
+        return go(firstVis('#hero-remote-panel .epg-slot'))
+            || go(document.getElementById('hero-remote-panel'))
+            || go(document.getElementById('btn-play'));
+      }
+      if(z==='guide' && dir==='left'){
+        return go(document.getElementById('btn-play'))
+            || go(firstVis('#controls .ctrl-btn'));
+      }
+      // Guide → RIGHT continues into Favorites.
+      if(z==='guide' && dir==='right'){
+        return go(firstVis('#fav-panel .fav-item')) || go(document.getElementById('fav-panel'));
+      }
+      return false;
+    }
+    // Pick the nearest focusable in a direction. Inside the player controls and
+    // side panels, movement is confined to the zone FIRST — otherwise a raw
+    // geometric pass can cross zones diagonally (e.g. RIGHT from the fullscreen
+    // button skipping past the Program Guide onto a filter select). Only at a
+    // zone edge do the deterministic routes fire; the global pass and the
+    // off-screen fallback (for grid rows below the fold) come after.
     function tvMove(dir){
       var cur = document.activeElement;
       var cr = (cur && cur.getBoundingClientRect) ? cur.getBoundingClientRect() : {left:innerWidth/2,right:innerWidth/2,top:0,bottom:0,width:0,height:0};
-      var best = tvBestIn(dir, tvCandidates(), cur, cr);
+      var cands = tvCandidates();
+      var zone = tvZoneOf(cur);
+      var best = null;
+      if(zone==='controls'||zone==='guide'||zone==='favs'||zone==='filters'||zone==='sources'){
+        var inZone = [];
+        for(var i=0;i<cands.length;i++){ if(tvZoneOf(cands[i])===zone) inZone.push(cands[i]); }
+        best = tvBestIn(dir, inZone, cur, cr);
+        if(!best && tvEdgeRoute(dir, cur)) return true;
+      }
+      if(!best) best = tvBestIn(dir, cands, cur, cr);
+      if(!best && tvEdgeRoute(dir, cur)) return true;
       if(!best) best = tvBestIn(dir, tvAllFocusable(), cur, cr);
       if(best){
         try{ best.focus(); }catch(e){}
         try{ best.scrollIntoView({block:'center',inline:'nearest',behavior:'auto'}); }catch(e){}
+        // Remember explicitly — some WebView states swallow focusin events, and
+        // the restore-after-re-render logic depends on this memory.
+        tvRemember(best);
         return true;
       }
       return false;
@@ -3113,15 +3278,79 @@ function __iptvBoot(){
       // that's a hidden control (display:none menu-toggle / <select>), so
       // .focus() was a silent no-op and focus stayed on <body>, leaving the
       // D-pad dead. tvCandidates() already filters to visible, in-active-screen
-      // focusables, so choose from there.
+      // focusables, so choose from there. Preference order matters: the playing
+      // card, then a channel card, then the ACTIVE chip — never blindly the
+      // first chip in DOM order, which was the "cursor jumps to All Channels"
+      // bug (chip-all is the first .filter-chip on the page).
       var cands = tvCandidates();
       if(!cands.length) return;
-      var pref = null;
-      for(var i=0;i<cands.length;i++){
-        if(cands[i].matches && cands[i].matches('.ch-card,.provider-card,.filter-chip')){ pref = cands[i]; break; }
+      var prefs = ['.ch-card.playing','.fav-item.playing','.ch-card','.filter-chip.active','.provider-card','.filter-chip'];
+      var first = null;
+      for(var p=0; p<prefs.length && !first; p++){
+        for(var i=0;i<cands.length;i++){
+          if(cands[i].matches && cands[i].matches(prefs[p])){ first = cands[i]; break; }
+        }
       }
-      var first = pref || cands[0];
+      first = first || cands[0];
       try{ first.focus(); }catch(e){}
+      tvRemember(first);
+    }
+
+    // ── Focus memory ─────────────────────────────────────────────────────
+    // Re-renders (playing a channel, filtering, hiding) replace the focused
+    // node, dropping focus to <body>; the old self-heal then re-focused the
+    // first chip ("All Channels"). Instead, remember a stable identity for the
+    // last focused element and restore to the SAME element — or its equivalent
+    // in the fresh DOM — so focus never teleports away from user intent.
+    var _tvMemEl = null, _tvMem = null;
+    function tvRemember(el){
+      if(!el || el===document.body || !el.getAttribute) return;
+      _tvMemEl = el;
+      _tvMem = {
+        id:   el.id || '',
+        fk:   el.getAttribute('data-fk')  || '',
+        idx:  el.getAttribute('data-idx') || '',
+        card: !!(el.classList && el.classList.contains('ch-card')),
+        zone: tvZoneOf(el)
+      };
+    }
+    function tvRestoreFocus(){
+      var m=_tvMem, el=null, i;
+      if(m){
+        // 1) Same element still alive (chips, controls, selects survive renders).
+        if(_tvMemEl && document.contains(_tvMemEl) && tvRendered(_tvMemEl)) el=_tvMemEl;
+        // 2) Same identity in the fresh DOM (id → data-fk → grid index).
+        if(!el && m.id){ var byId=document.getElementById(m.id); if(byId && tvRendered(byId)) el=byId; }
+        if(!el && m.fk){
+          var all=tvAllFocusable();
+          for(i=0;i<all.length;i++){ if(all[i].getAttribute && all[i].getAttribute('data-fk')===m.fk){ el=all[i]; break; } }
+        }
+        if(!el && m.card && m.idx!==''){
+          el=document.querySelector('.ch-card[data-idx="'+m.idx+'"]');
+          if(!el){ // index gone (e.g. last card hidden) → clamp to the last card
+            var cards=document.querySelectorAll('.ch-card[data-idx]');
+            el=cards.length ? cards[cards.length-1] : null;
+          }
+          if(el && !tvRendered(el)) el=null;
+        }
+        if(el){
+          try{ el.focus(); }catch(e){}
+          try{ el.scrollIntoView({block:'center',inline:'nearest',behavior:'auto'}); }catch(e){}
+          if(document.activeElement===el){ tvRemember(el); return; }
+        }
+        // 3) Anything in the same zone beats teleporting across the layout.
+        if(m.zone){
+          var cands=tvCandidates();
+          for(i=0;i<cands.length;i++){
+            if(tvZoneOf(cands[i])===m.zone){
+              try{ cands[i].focus(); }catch(e){}
+              tvRemember(cands[i]);
+              return;
+            }
+          }
+        }
+      }
+      tvFocusFirst();
     }
 
     // ── Native D-pad bridge ──────────────────────────────────────────────
@@ -3163,18 +3392,25 @@ function __iptvBoot(){
       if(action==='up'||action==='down'||action==='left'||action==='right'){
         // On the volume (or any range) slider, LEFT/RIGHT changes the value
         // instead of moving focus — otherwise the D-pad can't adjust volume.
+        // Once the value is pinned at its end-stop, the same press moves focus
+        // out instead, so the slider is never a trap (RIGHT at max volume
+        // continues on toward the Program Guide / Favorites).
         if(t && t.tagName==='INPUT' && t.type==='range' && (action==='left'||action==='right')){
           var mn=parseFloat(t.min)||0, mx=isNaN(parseFloat(t.max))?1:parseFloat(t.max);
           var stp=Math.max((mx-mn)*0.05, (parseFloat(t.step)||0.05));   // ~5% per press for a premium feel
-          var nv=(parseFloat(t.value)||0)+(action==='right'?stp:-stp);
-          t.value=Math.max(mn,Math.min(mx,nv));
+          var ov=parseFloat(t.value)||0;
+          var nv=Math.max(mn,Math.min(mx,ov+(action==='right'?stp:-stp)));
+          if(Math.abs(nv-ov) < 1e-9){ if(!tvMove(action)) tvFocusFirst(); return 'move'; }
+          t.value=nv;
           try{ t.dispatchEvent(new Event('input',{bubbles:true})); t.dispatchEvent(new Event('change',{bubbles:true})); }catch(e){}
           return 'move';
         }
-        // Self-heal: if there's nothing focusable in that direction (or focus was
-        // stranded on a now-hidden element after a screen swap), grab the first
-        // focusable in the active screen so the remote always lands somewhere.
-        if(!tvMove(action)) tvFocusFirst();
+        // Dead-end press: focus STAYS where it is (never teleport). Self-heal
+        // via tvFocusFirst only when focus is genuinely stranded — on <body>
+        // or on an element a screen swap just hid.
+        if(!tvMove(action)){
+          if(!t || t===document.body || !document.contains(t) || !tvRendered(t)) tvFocusFirst();
+        }
         return 'move';
       }
       return 'noop';
@@ -3194,6 +3430,70 @@ function __iptvBoot(){
       return 'menu';
     };
 
+    // ── Exit Confirmation (root-level BACK) ──────────────────────────────
+    // BACK with nothing left to close no longer quits straight to the Android
+    // home screen: it opens this modal, and only an explicitly focused OK press
+    // on "Yes, exit to Home" actually closes the app (via the native
+    // AndroidTV.exitApp bridge). BACK again — or Cancel — stays in the app.
+    var _tvExitEls=null, _tvExitReturn=null;
+    function _buildTvExit(){
+      if(_tvExitEls) return _tvExitEls;
+      var wrap=document.createElement('div');
+      wrap.className='tv-exit-backdrop';
+      wrap.innerHTML =
+        '<div class="tv-exit-card" role="dialog" aria-modal="true" aria-label="Exit confirmation">'+
+          '<div class="tv-exit-ico">⏻</div>'+
+          '<h2>Leave VilfinTV?</h2>'+
+          '<p>You are about to exit to the Home screen.</p>'+
+          '<div class="tv-exit-actions">'+
+            '<button type="button" id="tv-exit-yes" class="tv-exit-btn primary">Yes, exit to Home</button>'+
+            '<button type="button" id="tv-exit-no" class="tv-exit-btn">Cancel</button>'+
+          '</div>'+
+        '</div>';
+      document.body.appendChild(wrap);
+      wrap.querySelector('#tv-exit-yes').addEventListener('click', function(){
+        try{ if(window.AndroidTV && typeof AndroidTV.exitApp==='function'){ AndroidTV.exitApp(); return; } }catch(e){}
+        try{ window.close(); }catch(e){}
+        try{ history.back(); }catch(e){}
+      });
+      wrap.querySelector('#tv-exit-no').addEventListener('click', closeTvExit);
+      _tvExitEls=wrap;
+      return wrap;
+    }
+    function tvExitOpen(){ return !!(_tvExitEls && _tvExitEls.classList.contains('open')); }
+    function openTvExit(){
+      var w=_buildTvExit();
+      _tvExitReturn=document.activeElement;
+      w.classList.add('open');
+      // Requirement: exiting takes ONE more deliberate, focused click — land on
+      // the exit button; LEFT/RIGHT reaches Cancel, BACK dismisses.
+      setTimeout(function(){ var y=w.querySelector('#tv-exit-yes'); if(y){ try{ y.focus(); }catch(e){} } }, 50);
+    }
+    function closeTvExit(){
+      if(!_tvExitEls) return;
+      _tvExitEls.classList.remove('open');
+      var rf=_tvExitReturn; _tvExitReturn=null;
+      if(rf && document.contains(rf) && tvRendered(rf)){ try{ rf.focus(); return; }catch(e){} }
+      tvFocusFirst();
+    }
+
+    // Sources panel: opening it moves focus inside; Apply/✕ hand focus back to
+    // the Sources chip — never letting it reset to "All Channels".
+    function _tvAfterClick(id, fn){
+      var el=document.getElementById(id);
+      if(el) el.addEventListener('click', function(){ setTimeout(fn, 120); });
+    }
+    _tvAfterClick('btn-sources', function(){
+      var p=document.getElementById('sources-panel');
+      if(p && p.offsetParent!==null){
+        var f=p.querySelector('input,button');
+        if(f){ try{ f.focus(); }catch(e){} }
+      }
+    });
+    function _tvBackToSources(){ var b=document.getElementById('btn-sources'); if(b){ try{ b.focus(); }catch(e){} } }
+    _tvAfterClick('src-apply', _tvBackToSources);
+    _tvAfterClick('src-close', _tvBackToSources);
+
     // Player controls exposed for the remote's media keys (native side calls these).
     function _clk(id){ var b=document.getElementById(id); if(b){ b.click(); return true; } return false; }
     window.__tvControl = {
@@ -3203,9 +3503,16 @@ function __iptvBoot(){
       fullscreen:function(){ return _clk('btn-fs'); },
       // Jump focus to the filter chips row (All Channels / Favorites / Sources…).
       filters:   function(){ var c=document.querySelector('#player-screen.active .filter-chip'); if(c){ try{c.focus();}catch(e){} return true; } return false; },
-      // BACK: exit fullscreen, else player → providers, else let the app exit.
+      // BACK — a real back-stack, innermost context first:
+      //   exit modal → context menu → cinema drawer → cinema fullscreen →
+      //   native fullscreen → grid/filters focus back to the player →
+      //   player → providers → root exit confirmation.
+      // Returning true consumes the press on the native side; the app can now
+      // only be closed through the Exit Confirmation's own button.
       back: function(){
-        // An open channel context menu swallows BACK first (just closes it).
+        // The exit modal itself: BACK dismisses it (stay in the app).
+        if(tvExitOpen()){ closeTvExit(); return true; }
+        // An open channel context menu swallows BACK next (just closes it).
         if(chMenuOpen()){ closeChMenu(); return true; }
         // Close an open fullscreen Guide/Favorites drawer first (stay in cinema).
         var _d=document.documentElement;
@@ -3215,19 +3522,38 @@ function __iptvBoot(){
           return true;
         }
         // Exit cinema (CSS fullscreen) first, staying on the player.
-        if(document.documentElement.classList.contains('tv-cinema')){
-          document.documentElement.classList.remove('tv-cinema');
+        if(_d.classList.contains('tv-cinema')){
+          _d.classList.remove('tv-cinema');
           try{ window.dispatchEvent(new Event('resize')); }catch(e){}
           return true;
         }
         if(document.fullscreenElement){ (document.exitFullscreen||document.webkitExitFullscreen).call(document); return true; }
-        if(document.querySelector('#player-screen.active')){ var pv=document.querySelector('[data-back]'); if(pv){ pv.click(); return true; } }
-        return false;
+        if(document.querySelector('#player-screen.active')){
+          // Browsing the bottom shelf (filters / sources / channel grid):
+          // BACK first returns focus to the player area at the top.
+          var a=document.activeElement, z=tvZoneOf(a);
+          if(z==='grid'||z==='filters'||z==='sources'){
+            if(z==='sources'){ var sc=document.getElementById('src-close'); if(sc) sc.click(); }
+            var p=document.getElementById('btn-play')||document.querySelector('#controls .ctrl-btn');
+            if(p){
+              try{ p.focus(); }catch(e){}
+              try{ p.scrollIntoView({block:'center',behavior:'auto'}); }catch(e){}
+              return true;
+            }
+          }
+          var pv=document.querySelector('[data-back]'); if(pv){ pv.click(); return true; }
+        }
+        // Root level (provider hub / login): confirm before quitting.
+        openTvExit();
+        return true;
       }
     };
 
     document.addEventListener('focusin', function(e){
       var el=e.target; if(!el||!el.scrollIntoView) return;
+      // Remember every focus target so a re-render can restore it (see
+      // tvRestoreFocus) instead of teleporting to the first chip.
+      tvRemember(el);
       // Keep the focused item centred — this scrolls the video/panels up out of the
       // way as you move down the grid, so all rows become reachable. ('nearest' kept
       // the video pinned and stranded the grid at ~2 visible rows.) Instant, not
@@ -3257,6 +3583,12 @@ function __iptvBoot(){
       if(k==='MediaPlayPause'||e.keyCode===179){ window.__tvControl.playPause(); e.preventDefault(); return; }
       if(k==='MediaTrackNext'||k==='MediaFastForward'){ window.__tvControl.next(); e.preventDefault(); return; }
       if(k==='MediaTrackPrevious'||k==='MediaRewind'){ window.__tvControl.prev(); e.preventDefault(); return; }
+      // BACK delivered as a key (browser testing / remotes that bypass the
+      // native bridge) runs the same back-stack as the hardware button.
+      if(k==='Escape'||k==='GoBack'||k==='BrowserBack'||e.keyCode===10009){
+        if(window.__tvControl.back()) e.preventDefault();
+        return;
+      }
     }, true);
 
     // BACK via popstate: entering the player pushes a history state so the
@@ -3282,13 +3614,33 @@ function __iptvBoot(){
       }
     });
 
-    var tvObs = new MutationObserver(function(){ tvMakeFocusable(); tvSyncHistory(); });
+    // Removing the focused node (a grid re-render wipes innerHTML) silently
+    // drops focus to <body> WITHOUT a focusout event, so the focusout heal
+    // below never sees it. Restore from the mutation stream instead, debounced
+    // so a render burst settles before the cursor is put back.
+    var _tvHealT=null;
+    var tvObs = new MutationObserver(function(){
+      tvMakeFocusable(); tvSyncHistory();
+      if(_tvHealT) clearTimeout(_tvHealT);
+      _tvHealT=setTimeout(function(){
+        _tvHealT=null;
+        if(!document.activeElement || document.activeElement===document.body) tvRestoreFocus();
+      }, 80);
+    });
     tvObs.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
     tvMakeFocusable();
+    // The side panels themselves are focus fallbacks (an empty Program Guide
+    // has no focusable children, but RIGHT from the controls must still land).
+    ['hero-remote-panel','fav-panel'].forEach(function(id){
+      var p=document.getElementById(id);
+      if(p && !p.hasAttribute('tabindex')) p.setAttribute('tabindex','0');
+    });
     setTimeout(tvFocusFirst, 500);
-    // Re-assert focus after screen swaps so the remote always has a target.
+    // Re-assert focus after screen swaps and re-renders. tvRestoreFocus puts the
+    // cursor back on the element the user was on (or its replacement) — never
+    // arbitrarily on the first chip.
     document.addEventListener('focusout', function(){
-      setTimeout(function(){ if(!document.activeElement||document.activeElement===document.body) tvFocusFirst(); }, 60);
+      setTimeout(function(){ if(!document.activeElement||document.activeElement===document.body) tvRestoreFocus(); }, 60);
     });
   }
 
