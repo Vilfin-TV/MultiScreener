@@ -630,42 +630,9 @@ def fetch_macro_health():
     return macro_text
 
 def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text, news_items, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr):
-    html = f"""
-    <html>
-    <head>
-        <style>
-            body {{ font-family: Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }}
-            h2 {{ color: #0a192f; margin-top: 30px; }}
-            h3 {{ color: #1a365d; }}
-            table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.95em; }}
-            th, td {{ padding: 8px; border: 1px solid #ddd; text-align: center; }}
-            th {{ background-color: #f4f4f4; }}
-            .t-left {{ text-align: left; }}
-            .t-center {{ text-align: center; }}
-            .t-asset {{ text-align: left; font-weight: bold; width: 25%; }}
-            .t-curr {{ text-align: center; color: #666; font-size: 0.9em; }}
-            .positive {{ color: green; font-weight: bold; }}
-            .negative {{ color: red; font-weight: bold; }}
-            .score-box {{ padding: 20px; background: #eef2f5; border-left: 5px solid #0a192f; margin-bottom: 20px; }}
-            .alerts {{ background: #fff3f3; border-left: 5px solid #d9534f; padding: 15px; }}
-            .recommendation {{ background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 5px solid #16a34a; padding: 15px; margin-top: 15px; }}
-            .st-momentum {{ background: #fffbeeb3; border: 1px solid #fde68a; border-left: 5px solid #d97706; padding: 15px; margin-top: 15px; }}
-            .summary-item {{ margin-bottom: 8px; }}
-            .reasoning {{ font-size: 0.9em; color: #555; margin-left: 20px; }}
-        </style>
-    </head>
-    <body>
-        <div style="display: flex; align-items: center; border-bottom: 2px solid #0a192f; padding-bottom: 15px; margin-top: 20px; margin-bottom: 20px;">
-            <img src="https://vilfintv.com/images/vilfintv-logo.jpg" alt="VilfinTV" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; box-shadow: 0 0 8px rgba(59,130,246,0.45); object-fit: cover;">
-            <div style="flex-grow: 1;">
-                <h2 style="margin: 0; color: #0a192f; border: none; padding: 0;">Market Regime Report</h2>
-                <div style="color: #555; font-size: 0.95em; margin-top: 5px;">Executive Summary by <strong>VilfinTV.com</strong></div>
-            </div>
-            <div style="color: #666; font-size: 0.9em; text-align: right; font-weight: bold;">
-                {datetime.now().strftime('%Y-%m-%d')}
-            </div>
-        </div>
-        
+    html = f"""<html><head><style>\nbody {{ font-family: Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }}\nh2 {{ color: #0a192f; margin-top: 30px; }}\nh3 {{ color: #1a365d; }}\ntable {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.95em; }}\nth, td {{ padding: 8px; border: 1px solid #ddd; text-align: center; }}\nth {{ background-color: #f4f4f4; }}\n.l {{ text-align: left; }}\n.c {{ text-align: center; }}\n.a {{ text-align: left; font-weight: bold; width: 25%; }}\n.u {{ text-align: center; color: #666; font-size: 0.9em; }}\n.p {{ color: green; font-weight: bold; }}\n.n {{ color: red; font-weight: bold; }}\n.score-box {{ padding: 20px; background: #eef2f5; border-left: 5px solid #0a192f; margin-bottom: 20px; }}\n.alerts {{ background: #fff3f3; border-left: 5px solid #d9534f; padding: 15px; }}\n.recommendation {{ background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 5px solid #16a34a; padding: 15px; margin-top: 15px; }}\n.st-momentum {{ background: #fffbeeb3; border: 1px solid #fde68a; border-left: 5px solid #d97706; padding: 15px; margin-top: 15px; }}\n.summary-item {{ margin-bottom: 8px; }}\n.reasoning {{ font-size: 0.9em; color: #555; margin-left: 20px; }}\n</style></head><body>"""
+    html += f"""<div style="display: flex; align-items: center; border-bottom: 2px solid #0a192f; padding-bottom: 15px; margin-top: 20px; margin-bottom: 20px;"><img src="https://vilfintv.com/images/vilfintv-logo.jpg" alt="VilfinTV" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; box-shadow: 0 0 8px rgba(59,130,246,0.45); object-fit: cover;"><div style="flex-grow: 1;"><h2 style="margin: 0; color: #0a192f; border: none; padding: 0;">Market Regime Report</h2><div style="color: #555; font-size: 0.95em; margin-top: 5px;">Executive Summary by <strong>VilfinTV.com</strong></div></div><div style="color: #666; font-size: 0.9em; text-align: right; font-weight: bold;">{datetime.now().strftime('%Y-%m-%d')}</div></div>"""
+    html += f"""
         <div class="score-box">
             <h3 style="margin-top: 0;">Executive Summary</h3>
             <div class="summary-item"><strong>Market Sentiment Score:</strong> {regime_score} / 100</div>
@@ -727,18 +694,18 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
         html += """
         <table>
             <tr>
-                <th class="t-left" style="width: 25%;">Asset</th>
-                <th class="t-center">Currency</th>
-                <th class="t-center">Price / Yield</th>
-                <th class="t-center">Daily Change</th>
-                <th class="t-center">50-Day MA</th>
-                <th class="t-center">YTD Return</th>
-                <th class="t-center">3-Year Return</th>
+                <th class="l" style="width: 25%;">Asset</th>
+                <th class="c">Currency</th>
+                <th class="c">Price / Yield</th>
+                <th class="c">Daily Change</th>
+                <th class="c">50-Day MA</th>
+                <th class="c">YTD Return</th>
+                <th class="c">3-Year Return</th>
             </tr>
         """
         for name, metrics in assets.items():
             if metrics:
-                change_class = "positive" if metrics['change'] >= 0 else "negative"
+                change_class = "p" if metrics['change'] >= 0 else "n"
                 change_sign = "+" if metrics['change'] >= 0 else ""
                 
                 ma_50_str = f"{metrics['ma_50']:.2f}" if metrics['ma_50'] else "N/A"
@@ -748,33 +715,24 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
                 three_yr_val = metrics.get('three_yr_return')
                 
                 if ytd_val is not None:
-                    ytd_class = "positive" if ytd_val >= 0 else "negative"
+                    ytd_class = "p" if ytd_val >= 0 else "n"
                     ytd_sign = "+" if ytd_val >= 0 else ""
                     ytd_str = f"<span class='{ytd_class}'>{ytd_sign}{ytd_val:.2f}%</span>"
                 else:
                     ytd_str = "N/A"
                     
                 if three_yr_val is not None:
-                    three_yr_class = "positive" if three_yr_val >= 0 else "negative"
+                    three_yr_class = "p" if three_yr_val >= 0 else "n"
                     three_yr_sign = "+" if three_yr_val >= 0 else ""
                     three_yr_str = f"<span class='{three_yr_class}'>{three_yr_sign}{three_yr_val:.2f}%</span>"
                 else:
                     three_yr_str = "N/A"
                 
-                html += f"""
-                <tr>
-                    <td class="t-asset">{name}</td>
-                    <td class="t-curr">{currency_str}</td>
-                    <td class="t-center">{metrics['price']:.2f}</td>
-                    <td class="t-center {change_class}">{change_sign}{metrics['change']:.2f}%</td>
-                    <td class="t-center">{ma_50_str}</td>
-                    <td class="t-center">{ytd_str}</td>
-                    <td class="t-center">{three_yr_str}</td>
-                </tr>
-                """
+                html += f"<tr><td class='a'>{name}</td><td class='u'>{currency_str}</td><td class='c'>{metrics['price']:.2f}</td><td class='c {change_class}'>{change_sign}{metrics['change']:.2f}%</td><td class='c'>{ma_50_str}</td><td class='c'>{ytd_str}</td><td class='c'>{three_yr_str}</td></tr>"
             else:
-                html += f"<tr><td>{name}</td><td colspan='6' style='text-align:center; color: #999;'>Data Unavailable</td></tr>"
+                html += f"<tr><td class='a'>{name}</td><td colspan='6' class='c' style='color:#999;'>Data Unavailable</td></tr>"
         html += "</table>"
+
 
         if "Stocks" in category:
             html += """
