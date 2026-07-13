@@ -109,6 +109,30 @@ TICKERS_CONFIG = {
         'Keyence (Japan)': {'symbol': '6861.T', 'currency': 'JPY'},
         'ICBC (China)': {'symbol': '1398.HK', 'currency': 'HKD'}
     },
+    'Liquidity & Sovereign Risk Indicators (High Weight)': {
+        'US 10-Year Yield': {'symbol': '^TNX', 'currency': 'Yield'},
+        'US 13-Week Yield': {'symbol': '^IRX', 'currency': 'Yield'},
+        'US 30-Year Yield': {'symbol': '^TYX', 'currency': 'Yield'},
+        'US Dollar Index': {'symbol': 'DX-Y.NYB', 'currency': 'USD'}
+    },
+    'Inflation & Input Cost Pressures (Medium Weight)': {
+        'Brent Crude Oil': {'symbol': 'BZ=F', 'currency': 'USD'},
+        'WTI Crude Oil': {'symbol': 'CL=F', 'currency': 'USD'},
+        'Copper Futures': {'symbol': 'HG=F', 'currency': 'USD'},
+        'Gold Futures': {'symbol': 'GC=F', 'currency': 'USD'}
+    },
+    'Macroeconomic Health & Sentiment (High Weight)': {
+        'Inflation ETF Proxy (INFL)': {'symbol': 'INFL', 'currency': 'USD'},
+        'Industrial ETF Proxy (XLI)': {'symbol': 'XLI', 'currency': 'USD'},
+        'Consumer Discretionary (XLY)': {'symbol': 'XLY', 'currency': 'USD'}
+    },
+    'Supply Chain & Geopolitical Geodesics (Alternative Data)': {
+        'Baltic Dry Index Proxy (BDRY)': {'symbol': 'BDRY', 'currency': 'USD'},
+        'Volatility Index (VIX)': {'symbol': '^VIX', 'currency': 'Index'},
+        'Corn Futures': {'symbol': 'ZC=F', 'currency': 'USD'},
+        'Wheat Futures': {'symbol': 'ZW=F', 'currency': 'USD'},
+        'Soybean Futures': {'symbol': 'ZS=F', 'currency': 'USD'}
+    },
     'Sectors & Themes (US ETFs)': {
         'AI Stocks': {'symbol': 'AIQ', 'currency': 'USD'},
         'Semiconductor': {'symbol': 'SMH', 'currency': 'USD'},
@@ -508,6 +532,17 @@ def calculate_market_regime(data):
         else:
             score += 0  
 
+    # 2.5 Dynamic Yield Curve Inversion for 10Y vs 3-Month (New)
+    liq_dict = data.get('Liquidity & Sovereign Risk Indicators (High Weight)', {})
+    new_10y = liq_dict.get('US 10-Year Yield')
+    new_3m = liq_dict.get('US 13-Week Yield')
+    if new_10y and new_3m:
+        spread_10y_3m = new_10y['price'] - new_3m['price']
+        if spread_10y_3m < 0:
+            score -= 30
+            risk_alerts.append(f"CRITICAL Yield Curve Inversion: US 13-Week > US 10-Year (Spread: {spread_10y_3m:.2f}%) - Imminent Recession Signal.")
+
+
     sp500 = data.get('US Indices', {}).get('S&P 500')
     nikkei = data.get('Asian Indices', {}).get('Nikkei 225')
     nifty = data.get('Asian Indices', {}).get('Nifty 50')
@@ -570,12 +605,36 @@ def calculate_market_regime(data):
 
     return score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad_name, lt_broad_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency
 
-def generate_html_email(data, regime_score, regime_text, risk_alerts, news_items, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr):
+def fetch_macro_health():
+    av_api_key = os.environ.get('ALPHA_VANTAGE_API_KEY')
+    macro_text = ""
+    if not av_api_key:
+        return ""
+    try:
+        cpi_url = f"https://www.alphavantage.co/query?function=CPI&interval=monthly&apikey={av_api_key}"
+        cpi_resp = requests.get(cpi_url).json()
+        if "data" in cpi_resp and len(cpi_resp["data"]) > 0:
+            cpi_val = cpi_resp["data"][0].get("value", "N/A")
+            cpi_date = cpi_resp["data"][0].get("date", "N/A")
+            macro_text += f"• <b>Consumer Price Index (CPI):</b> {cpi_val} (as of {cpi_date})<br>"
+            
+        nfp_url = f"https://www.alphavantage.co/query?function=NONFARM_PAYROLL&apikey={av_api_key}"
+        nfp_resp = requests.get(nfp_url).json()
+        if "data" in nfp_resp and len(nfp_resp["data"]) > 0:
+            nfp_val = nfp_resp["data"][0].get("value", "N/A")
+            nfp_date = nfp_resp["data"][0].get("date", "N/A")
+            macro_text += f"• <b>Non-Farm Payrolls (NFP):</b> {nfp_val} thousand (as of {nfp_date})<br>"
+            
+    except Exception as e:
+        logging.error(f"Error fetching macro data: {e}")
+    return macro_text
+
+def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text, news_items, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr):
     html = f"""
     <html>
     <head>
         <style>
-            body {{ font-family: Arial, sans-serif; color: #333; }}
+            body {{ font-family: Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }}
             h2 {{ color: #0a192f; margin-top: 30px; }}
             h3 {{ color: #1a365d; }}
             table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.95em; }}
@@ -651,10 +710,16 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, news_items
         html += "<ul style='margin-bottom:0; color: #b91c1c;'>"
         for alert in risk_alerts:
             html += f"<li style='margin-bottom: 8px;'><strong>{alert}</strong></li>"
-        html += "</ul>"
+        html += "</ul></div>"
     else:
-        html += "<p style='margin:0; color: #b91c1c;'>✅ No extreme risk events detected today.</p>"
-    html += "</div>"
+        html += "<p style='margin:0; color: #b91c1c;'>✅ No extreme risk events detected today.</p></div>"
+
+    if macro_text:
+        html += "<div class='score-box' style='background: #e2e8f0; border-left: 5px solid #64748b;'>"
+        html += "<h4 style='margin-top: 0; margin-bottom: 15px; color: #0f172a;'>🏛 Macroeconomic Health & Labor</h4>"
+        html += "<p style='color: #334155; margin: 0; line-height: 1.6;'>"
+        html += macro_text
+        html += "</p></div>"
 
     html += "<h2>Asset Dashboard</h2>"
     for category, assets in data.items():
@@ -897,6 +962,8 @@ def send_email(html_content):
             resp = requests.get(f"{worker_url}?action=list", headers={'Authorization': f"Bearer {worker_secret}"})
             if resp.status_code == 200:
                 bcc_emails = resp.json()
+                bcc_emails = [e for e in bcc_emails if e != 'test@vilfintv.com']
+                print(f"Fetched {len(bcc_emails)} subscribers")
             else:
                 logging.error(f"Failed to fetch subscribers from Worker: {resp.status_code} {resp.text}")
         else:
@@ -929,6 +996,7 @@ if __name__ == "__main__":
     logging.info(f"Calculated Regime Score: {score} ({regime})")
     
     news_items = fetch_global_news()
-    html_report = generate_html_email(market_data, score, regime, alerts, news_items, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr)
+    macro_text = fetch_macro_health()
+    html_report = generate_html_email(market_data, score, regime, alerts, macro_text, news_items, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr)
     send_email(html_report)
     logging.info("Pipeline execution completed.")
