@@ -584,6 +584,24 @@
   html.tv-app .ch-ctx { min-width: 260px; padding: 8px; }
   html.tv-app .ch-ctx button { padding: 14px 14px; font-size: 16px; }
 
+  /* TV option picker for <select> filters (All Countries / Categories /
+     Languages). The native dropdown can't be opened from the remote bridge
+     (no user gesture) and OK used to pop the text keyboard instead — this
+     centered, D-pad-modal list replaces it. */
+  .tv-sel-menu {
+    position: fixed !important;
+    left: 50% !important; top: 50% !important;
+    transform: translate(-50%, -50%);
+    max-height: 72vh; overflow-y: auto;
+    min-width: 340px; max-width: 520px;
+  }
+  .tv-sel-menu .ctx-title { position: sticky; top: 0; background: inherit; z-index: 1; font-size: 14px; }
+  .tv-sel-menu button .ico { color: var(--accent); width: 22px; }
+  .tv-sel-menu button:focus {
+    background: var(--accent-soft) !important;
+    outline: 2px solid #64ffda !important; outline-offset: -2px;
+  }
+
   /* ===== Category-row (Netflix/Fox) browse mode ===== */
   .channel-track.grouped {
     display: block;
@@ -3094,6 +3112,11 @@ function __iptvBoot(){
 
     function tvVisible(el){
       if(!el || el.disabled) return false;
+      // The volume slider is NOT a D-pad stop: with LEFT/RIGHT mapped to
+      // value-adjust it trapped focus in cinema mode (nothing above/below to
+      // escape to). The Shield remote's hardware rocker owns volume; the mute
+      // button stays reachable.
+      if(el.tagName==='INPUT' && el.type==='range') return false;
       var r = el.getBoundingClientRect();
       if(r.width < 4 || r.height < 4) return false;
       if(r.bottom < 0 || r.top > innerHeight || r.right < 0 || r.left > innerWidth) return false;
@@ -3112,6 +3135,9 @@ function __iptvBoot(){
     function tvModalItems(){
       if(typeof tvExitOpen==='function' && tvExitOpen()){
         return Array.prototype.slice.call(_tvExitEls.querySelectorAll('button'));
+      }
+      if(typeof tvSelMenuOpen==='function' && tvSelMenuOpen()){
+        return Array.prototype.slice.call(_tvSelEls.menu.querySelectorAll('button'));
       }
       if(_chMenuEls && chMenuOpen()){
         return Array.prototype.slice.call(_chMenuEls.menu.querySelectorAll('button'));
@@ -3138,6 +3164,7 @@ function __iptvBoot(){
     // fold. display:none stays excluded (its rect collapses to 0×0).
     function tvRendered(el){
       if(!el || el.disabled) return false;
+      if(el.tagName==='INPUT' && el.type==='range') return false;  // volume slider: see tvVisible
       var r = el.getBoundingClientRect();
       if(r.width < 4 || r.height < 4) return false;
       var scr = el.closest('.screen');
@@ -3367,9 +3394,12 @@ function __iptvBoot(){
     // pop the on-screen keyboard; otherwise moves focus / clicks.
     window.__tvNav = function(action){
       var t = document.activeElement, tag = (t && t.tagName || '').toLowerCase();
-      var onField = ((tag==='input' && t.type!=='range') || tag==='textarea' || tag==='select');
+      // NOTE: <select> is NOT a keyboard field — OK on it opens the TV option
+      // picker below. Reporting it as 'input' popped the text keyboard.
+      var onField = ((tag==='input' && t.type!=='range') || tag==='textarea');
       if(!t || t===document.body){ tvFocusFirst(); return 'move'; }
       if(action==='ok'){
+        if(tag==='select'){ openTvSelectMenu(t); return 'menu'; }
         if(onField) return 'input';          // let native show the keyboard
         // OK on the channel you're already watching, or on the video, toggles
         // fullscreen (cinema) directly.
@@ -3484,6 +3514,58 @@ function __iptvBoot(){
       tvFocusFirst();
     }
 
+    // ── TV option picker for <select> filters ────────────────────────────
+    // OK on All Countries / All Categories / All Languages used to report
+    // 'input' to the native side, which popped the TEXT KEYBOARD (useless for
+    // a dropdown — and the WebView can't open the native picker without a
+    // user gesture). Instead OK opens this centered, D-pad-modal option list:
+    // Up/Down browse, OK applies (fires the select's change), BACK cancels.
+    var _tvSelEls=null, _tvSelReturn=null;
+    function _buildTvSelMenu(){
+      if(_tvSelEls) return _tvSelEls;
+      var backdrop=document.createElement('div'); backdrop.className='ch-ctx-backdrop';
+      var menu=document.createElement('div'); menu.className='ch-ctx tv-sel-menu'; menu.setAttribute('role','listbox');
+      backdrop.addEventListener('click', closeTvSelMenu);
+      document.body.appendChild(backdrop); document.body.appendChild(menu);
+      _tvSelEls={backdrop:backdrop, menu:menu};
+      return _tvSelEls;
+    }
+    function tvSelMenuOpen(){ return !!(_tvSelEls && _tvSelEls.menu.classList.contains('open')); }
+    function openTvSelectMenu(sel){
+      if(!sel || !sel.options || !sel.options.length) return;
+      var els=_buildTvSelMenu(), menu=els.menu;
+      _tvSelReturn=sel;
+      // The placeholder option ("All Countries" etc.) doubles as the title.
+      var title = sel.options[0].value==='' ? sel.options[0].text : (sel.title || 'Choose an option');
+      var html='<div class="ctx-title">'+esc(title)+'</div>';
+      for(var i=0;i<sel.options.length;i++){
+        var o=sel.options[i];
+        html+='<button type="button"><span class="ico">'+(o.value===sel.value?'✓':'')+'</span>'+esc(o.text)+'</button>';
+      }
+      menu.innerHTML=html;
+      var btns=menu.querySelectorAll('button');
+      Array.prototype.forEach.call(btns, function(b, idx){
+        b.addEventListener('click', function(){
+          sel.value=sel.options[idx].value;
+          try{ sel.dispatchEvent(new Event('change',{bubbles:true})); }catch(e){}
+          closeTvSelMenu();
+        });
+      });
+      els.backdrop.classList.add('open'); menu.classList.add('open');
+      var cur=btns[Math.max(0, sel.selectedIndex)] || btns[0];
+      setTimeout(function(){
+        try{ cur.focus(); }catch(e){}
+        try{ cur.scrollIntoView({block:'center', behavior:'auto'}); }catch(e){}
+      }, 40);
+    }
+    function closeTvSelMenu(){
+      if(!_tvSelEls) return;
+      _tvSelEls.menu.classList.remove('open'); _tvSelEls.backdrop.classList.remove('open');
+      var rf=_tvSelReturn; _tvSelReturn=null;
+      if(rf && document.contains(rf) && tvRendered(rf)){ try{ rf.focus(); return; }catch(e){} }
+      tvRestoreFocus();
+    }
+
     // Sources panel: opening it moves focus inside; Apply/✕ hand focus back to
     // the Sources chip — never letting it reset to "All Channels".
     function _tvAfterClick(id, fn){
@@ -3519,6 +3601,8 @@ function __iptvBoot(){
       back: function(){
         // The exit modal itself: BACK dismisses it (stay in the app).
         if(tvExitOpen()){ closeTvExit(); return true; }
+        // An open filter option picker just closes (refocuses its select).
+        if(tvSelMenuOpen()){ closeTvSelMenu(); return true; }
         // An open channel context menu swallows BACK next (just closes it).
         if(chMenuOpen()){ closeChMenu(); return true; }
         // Close an open fullscreen Guide/Favorites drawer first (stay in cinema).
@@ -3581,8 +3665,10 @@ function __iptvBoot(){
         if(tvMove(dir)) e.preventDefault();
         return;
       }
-      // OK / Enter → native inputs open the keyboard; everything else clicks.
+      // OK / Enter → native inputs open the keyboard; selects open the TV
+      // option picker; everything else clicks.
       if(k==='Enter'||e.keyCode===13){
+        if(tag==='select'){ openTvSelectMenu(t); e.preventDefault(); return; }
         if(t && tag!=='input'&&tag!=='textarea'){ t.click(); e.preventDefault(); }
         return;
       }
