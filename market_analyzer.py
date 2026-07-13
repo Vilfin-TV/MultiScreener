@@ -133,6 +133,18 @@ TICKERS_CONFIG = {
         'Wheat Futures': {'symbol': 'ZW=F', 'currency': 'USD'},
         'Soybean Futures': {'symbol': 'ZS=F', 'currency': 'USD'}
     },
+    'Digital Assets & Global Liquidity Barometers': {
+        'Bitcoin': {'symbol': 'BTC-USD', 'currency': 'USD'},
+        'Ethereum': {'symbol': 'ETH-USD', 'currency': 'USD'}
+    },
+    'Credit Stress Indicators (Junk Bonds vs Treasuries)': {
+        'High Yield Corp Bonds (HYG)': {'symbol': 'HYG', 'currency': 'USD'},
+        '7-10 Year Treasuries (IEF)': {'symbol': 'IEF', 'currency': 'USD'}
+    },
+    'Real Estate & Housing Health': {
+        'Real Estate ETF (VNQ)': {'symbol': 'VNQ', 'currency': 'USD'},
+        'US Home Construction (ITB)': {'symbol': 'ITB', 'currency': 'USD'}
+    },
     'Sectors & Themes (US ETFs)': {
         'AI Stocks': {'symbol': 'AIQ', 'currency': 'USD'},
         'Semiconductor': {'symbol': 'SMH', 'currency': 'USD'},
@@ -541,6 +553,16 @@ def calculate_market_regime(data):
         if spread_10y_3m < 0:
             score -= 30
             risk_alerts.append(f"CRITICAL Yield Curve Inversion: US 13-Week > US 10-Year (Spread: {spread_10y_3m:.2f}%) - Imminent Recession Signal.")
+
+    # 2.6 Credit Stress (High Yield vs Treasuries)
+    credit_dict = data.get('Credit Stress Indicators (Junk Bonds vs Treasuries)', {})
+    hyg = credit_dict.get('High Yield Corp Bonds (HYG)')
+    ief = credit_dict.get('7-10 Year Treasuries (IEF)')
+    if hyg and ief:
+        # Simple spread check on daily % change: if HYG drops heavily while IEF spikes, credit stress is rising
+        if hyg['change'] < -1.0 and ief['change'] > 0.5:
+            score -= 20
+            risk_alerts.append(f"Credit Stress Alert: Junk Bonds (HYG) falling while Safe Treasuries (IEF) rally. Liquidity freezing.")
 
 
     sp500 = data.get('US Indices', {}).get('S&P 500')
