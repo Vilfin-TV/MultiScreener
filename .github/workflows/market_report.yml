@@ -2,8 +2,11 @@ name: Daily Market Report
 
 on:
   schedule:
-    # 21:00 UTC corresponds to 06:00 JST the next day
-    - cron: '0 21 * * *'
+    # 21:30 UTC == 06:30 JST the next day. Deliberately OFF the top of the hour:
+    # GitHub's best-effort scheduler delays/skips crons most at :00 (the busiest
+    # global slot), which is why the once-a-day 0 21 run kept getting dropped.
+    # The watchdog (market_report_watchdog.yml) still guarantees delivery.
+    - cron: '30 21 * * *'
   workflow_dispatch: # Allow manual trigger
 
 jobs:

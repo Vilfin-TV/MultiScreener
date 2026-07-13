@@ -1,7 +1,7 @@
 name: Daily Market Report Watchdog
 
 # The main "Daily Market Report" workflow fires on a fixed cron
-# (0 21 * * *, i.e. 6:00am JST). Investigated 2026-07-13: this repo's
+# (30 21 * * *, i.e. 6:30am JST). Investigated 2026-07-13: this repo's
 # GitHub Actions scheduler runs low-frequency crons (once per day, or
 # once per several hours) with a CHRONIC delay of 30-90+ minutes versus
 # their nominal time — confirmed by checking world.yml's (every-3-hours)
@@ -27,7 +27,12 @@ name: Daily Market Report Watchdog
 
 on:
   schedule:
-    - cron: '*/20 21-22 * * *'  # every 20 min, 21:00-22:59 UTC (6:00-8:59am JST)
+    # Grace-window checks that START at the 21:30 UTC (06:30 JST) target and run
+    # every 20 min for ~70 min after it. Starting AT the target (not before) is
+    # deliberate: the check dispatches only when no run has landed in the last 3h,
+    # so beginning earlier than 21:30 would fire the report ahead of 06:30 JST.
+    - cron: '30,50 21 * * *'    # 21:30, 21:50 UTC
+    - cron: '10,30 22 * * *'    # 22:10, 22:30 UTC
   workflow_dispatch:
 
 permissions:
