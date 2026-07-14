@@ -1,0 +1,88 @@
+name: JKK Vacancy Digest Watchdog
+
+# JKK Vacancy Email Digest fires on 4 daily crons (00:35 / 02:03 / 05:30 /
+# 09:20 UTC = 09:35 / 11:03 / 14:30 / 18:20 JST). Same root cause as Market
+# Report's original issue: this repo's GitHub Actions scheduler runs
+# low-frequency crons with a chronic 30-90+ min delay (sometimes a full
+# no-show) versus their nominal time.
+#
+# JKK already had a backup for this - a separate Cloudflare Worker
+# (jkk_cron_worker.js / wrangler.jkkcron.toml) that dispatches this workflow
+# if GitHub's own cron didn't fire. Investigated 2026-07-14: that worker IS
+# deployed and live, but its GH_TOKEN secret is failing every GitHub API call
+# (its own health endpoint reports recentDigestRuns: -1, which the worker's
+# code returns specifically when the GitHub API call itself fails - an
+# identical call with a known-good token succeeds fine against the same
+# endpoint). A manually-created PAT can silently expire or be revoked with
+# no alert anywhere, since a scheduled Worker only logs to a console nobody
+# watches - that's what happened here.
+#
+# This watchdog avoids that whole failure class: it uses GitHub's own
+# auto-provisioned per-run token (via the `permissions` block below), which
+# never expires and needs no manually-managed secret at all. Same
+# idempotent design as market_report_watchdog.yml: check a grace window
+# after each target time, dispatch only if nothing has run recently.
+#
+# The lookback window is intentionally SHORT (70 min) rather than reused
+# from Market Report's 3h - JKK's slots are much closer together (the
+# tightest gap, 00:35 -> 02:03, is only 88 min), so a long lookback would
+# see the previous slot's run and wrongly think the current slot already
+# fired. 70 min stays safely under that 88-min minimum gap while still
+# covering each slot's own ~80-minute grace window below.
+
+on:
+  schedule:
+    # Slot 1 target 00:35 UTC (09:35 JST) - checks 00:55/01:15/01:35/01:55
+    - cron: '55 0 * * *'
+    - cron: '15,35,55 1 * * *'
+    # Slot 2 target 02:03 UTC (11:03 JST) - checks 02:23/02:43/03:03/03:23
+    - cron: '23,43 2 * * *'
+    - cron: '3,23 3 * * *'
+    # Slot 3 target 05:30 UTC (14:30 JST) - checks 05:50/06:10/06:30/06:50
+    - cron: '50 5 * * *'
+    - cron: '10,30,50 6 * * *'
+    # Slot 4 target 09:20 UTC (18:20 JST) - checks 09:40/10:00/10:20/10:40
+    - cron: '40 9 * * *'
+    - cron: '0,20,40 10 * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  check-and-trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for a recent JKK digest run, trigger one if missing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          REPO="${{ github.repository }}"
+
+          gh run list --repo "$REPO" --workflow="jkk_email_watch.yml" \
+            --json createdAt,status,conclusion,event --limit 20 > /tmp/runs.json
+
+          RECENT_COUNT=$(python3 - /tmp/runs.json <<'PYEOF'
+          import json, sys, datetime
+          with open(sys.argv[1]) as f:
+              data = json.load(f)
+          now = datetime.datetime.now(datetime.timezone.utc)
+          cutoff = now - datetime.timedelta(minutes=70)
+          recent = [
+              r for r in data
+              if datetime.datetime.fromisoformat(r["createdAt"].replace("Z", "+00:00")) > cutoff
+          ]
+          print(len(recent))
+          PYEOF
+          )
+
+          echo "Recent runs (last 70 min) for JKK Vacancy Email Digest: $RECENT_COUNT"
+
+          if [ "$RECENT_COUNT" -eq 0 ]; then
+            echo "No recent run found - the scheduled trigger likely didn't fire. Dispatching now."
+            gh workflow run jkk_email_watch.yml --repo "$REPO"
+          else
+            echo "JKK digest already ran recently - nothing to do."
+          fi
