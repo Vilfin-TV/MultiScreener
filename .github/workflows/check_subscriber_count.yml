@@ -1,0 +1,36 @@
+name: Check Subscriber Count
+
+# One-off/manual utility: reports how many emails are subscribed to the
+# Daily Market Report, without ever exposing the actual email addresses or
+# the ADMIN_SECRET/SUBSCRIBER_WORKER_SECRET value in logs. Manual trigger
+# only - not on a schedule.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  count:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch subscriber list and print count only
+        env:
+          SUBSCRIBER_WORKER_URL: ${{ secrets.SUBSCRIBER_WORKER_URL }}
+          SUBSCRIBER_WORKER_SECRET: ${{ secrets.SUBSCRIBER_WORKER_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUBSCRIBER_WORKER_URL:-}" ] || [ -z "${SUBSCRIBER_WORKER_SECRET:-}" ]; then
+            echo "SUBSCRIBER_WORKER_URL or SUBSCRIBER_WORKER_SECRET not set."
+            exit 1
+          fi
+          HTTP_CODE=$(curl -s -o /tmp/subs.json -w "%{http_code}" \
+            "${SUBSCRIBER_WORKER_URL}?action=list" \
+            -H "Authorization: Bearer ${SUBSCRIBER_WORKER_SECRET}")
+          echo "HTTP status: $HTTP_CODE"
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Request failed - not printing response body (may contain error detail only, but playing safe)."
+            exit 1
+          fi
+          COUNT=$(python3 -c "import json; print(len(json.load(open('/tmp/subs.json'))))")
+          echo "Subscriber count: $COUNT"
+          echo "### Daily Market Report subscriber count: $COUNT" >> "$GITHUB_STEP_SUMMARY"
+          rm -f /tmp/subs.json
