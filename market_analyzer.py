@@ -9,9 +9,29 @@ from datetime import datetime
 import logging
 import requests
 import time
+import math
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+
+def _valid(x):
+    """True if x is a real, usable number - guards against NaN slipping
+    through the `is not None` checks (NaN is never None, so those checks
+    alone let 'nan%' leak straight into the report)."""
+    return x is not None and not (isinstance(x, float) and math.isnan(x))
+
+
+def _minify_html(html):
+    """Strip leading/trailing whitespace and blank lines from the
+    generated report. This is plain HTML/CSS email (no <pre>/<script>
+    blocks with significant whitespace), so this is purely cosmetic in
+    the source and has zero effect on how it renders - but it typically
+    cuts the source ~30% smaller, which matters because Gmail clips any
+    message whose HTML source exceeds ~102KB ("[Message clipped] View
+    entire message"), hiding everything past that point."""
+    lines = (line.strip() for line in html.splitlines())
+    return "\n".join(line for line in lines if line)
 
 # Configuration for Tickers
 TICKERS_CONFIG = {
@@ -56,8 +76,15 @@ TICKERS_CONFIG = {
         'France CAC 40': {'symbol': '^FCHI', 'currency': 'EUR'},
         'Germany DAX': {'symbol': '^GDAXI', 'currency': 'EUR'},
         'Italy FTSE MIB': {'symbol': 'FTSEMIB.MI', 'currency': 'EUR'},
+        'Spain IBEX 35': {'symbol': '^IBEX', 'currency': 'EUR'},
+        'Euro Stoxx 50': {'symbol': '^STOXX50E', 'currency': 'EUR'},
+        'Switzerland SMI': {'symbol': '^SSMI', 'currency': 'CHF'},
+        'Netherlands AEX': {'symbol': '^AEX', 'currency': 'EUR'},
         'Canada TSX': {'symbol': '^GSPTSE', 'currency': 'CAD'},
+        'Mexico IPC': {'symbol': '^MXX', 'currency': 'MXN'},
+        'Chile IPSA': {'symbol': '^IPSA', 'currency': 'CLP'},
         'Brazil Bovespa': {'symbol': '^BVSP', 'currency': 'BRL'},
+        'Argentina Merval (Buenos Aires)': {'symbol': '^MERV', 'currency': 'ARS'},
         'Turkey BIST 100': {'symbol': 'XU100.IS', 'currency': 'TRY'},
         'Australia ASX 200': {'symbol': '^AXJO', 'currency': 'AUD'},
     },
@@ -192,14 +219,22 @@ TICKERS_CONFIG = {
         'iShares Developed Markets (EFA)': {'symbol': 'EFA', 'currency': 'USD'}
     },
     'Currencies': {
-        'EUR/USD': {'symbol': 'EURUSD=X', 'currency': 'USD'}, 
-        'EUR/INR': {'symbol': 'EURINR=X', 'currency': 'INR'}, 
-        'USD/JPY': {'symbol': 'JPY=X', 'currency': 'JPY'}, 
-        'JPY/INR': {'symbol': 'JPYINR=X', 'currency': 'INR'}, 
-        'USD/INR': {'symbol': 'INR=X', 'currency': 'INR'}, 
+        'EUR/USD': {'symbol': 'EURUSD=X', 'currency': 'USD'},
+        'GBP/USD': {'symbol': 'GBPUSD=X', 'currency': 'USD'},
+        'EUR/INR': {'symbol': 'EURINR=X', 'currency': 'INR'},
+        'USD/JPY': {'symbol': 'JPY=X', 'currency': 'JPY'},
+        'JPY/INR': {'symbol': 'JPYINR=X', 'currency': 'INR'},
+        'USD/INR': {'symbol': 'INR=X', 'currency': 'INR'},
         'USD/CNY (Yuan)': {'symbol': 'CNY=X', 'currency': 'CNY'},
+        'USD/CHF (Swiss Franc)': {'symbol': 'CHF=X', 'currency': 'CHF'},
+        'USD/CAD (Canadian Dollar)': {'symbol': 'CAD=X', 'currency': 'CAD'},
         'AUD/USD': {'symbol': 'AUDUSD=X', 'currency': 'USD'},
-        'USD/SGD': {'symbol': 'SGD=X', 'currency': 'SGD'}
+        'NZD/USD': {'symbol': 'NZDUSD=X', 'currency': 'USD'},
+        'USD/SGD': {'symbol': 'SGD=X', 'currency': 'SGD'},
+        'USD/HKD (Hong Kong Dollar)': {'symbol': 'HKD=X', 'currency': 'HKD'},
+        'USD/MXN (Mexican Peso)': {'symbol': 'MXN=X', 'currency': 'MXN'},
+        'USD/CLP (Chilean Peso)': {'symbol': 'CLP=X', 'currency': 'CLP'},
+        'USD/ARS (Argentine Peso)': {'symbol': 'ARS=X', 'currency': 'ARS'}
     }
 }
 
@@ -221,29 +256,38 @@ def fetch_asset_data(ticker_symbol):
         ticker = yf.Ticker(ticker_symbol, session=session)
         hist = ticker.history(period="3y")
 
+        # Some tickers (thinly-traded ETFs, exchanges in other timezones,
+        # holiday-affected sessions) return a trailing row with a NaN Close
+        # before the exchange's data has fully settled. Drop those rows so
+        # .iloc[-1] always lands on a real, usable price instead of NaN
+        # propagating into every downstream calculation (and into the
+        # report as literal "nan%").
+        if not hist.empty:
+            hist = hist[hist['Close'].notna()]
+
         if not hist.empty:
             hist.index = hist.index.tz_localize(None)
             latest_close = hist['Close'].iloc[-1]
             prev_close = hist['Close'].iloc[-2] if len(hist) > 1 else latest_close
             daily_change = ((latest_close - prev_close) / prev_close) * 100
-            
+
             ma_50 = hist['Close'].rolling(window=50).mean().iloc[-1] if len(hist) >= 50 else None
             ma_20 = hist['Close'].rolling(window=20).mean().iloc[-1] if len(hist) >= 20 else None
-            
+
             current_year = datetime.now().year
             ytd_data = hist[hist.index.year == current_year]
             ytd_return = None
             if not ytd_data.empty:
                 start_of_year_price = ytd_data['Close'].iloc[0]
                 ytd_return = ((latest_close - start_of_year_price) / start_of_year_price) * 100
-                
+
             three_yr_return = None
             three_years_ago_date = datetime.now() - pd.DateOffset(years=3)
             past_data = hist[hist.index >= three_years_ago_date]
             if not past_data.empty and len(hist) > 500:
                 three_yr_ago_price = past_data['Close'].iloc[0]
                 three_yr_return = ((latest_close - three_yr_ago_price) / three_yr_ago_price) * 100
-            
+
             return {
                 'price': latest_close,
                 'change': daily_change,
@@ -271,7 +315,8 @@ def fetch_asset_data(ticker_symbol):
                 df.index = pd.to_datetime(df.index)
                 df.index = df.index.tz_localize(None)
                 df = df.sort_index()
-                
+                df = df[df['Close'].notna()]
+
                 if len(df) > 0:
                     latest_close = df['Close'].iloc[-1]
                     prev_close = df['Close'].iloc[-2] if len(df) > 1 else latest_close
@@ -726,31 +771,33 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
             </tr>
         """
         for name, metrics in assets.items():
-            if metrics:
+            if metrics and _valid(metrics.get('price')) and _valid(metrics.get('change')):
                 change_class = "p" if metrics['change'] >= 0 else "n"
                 change_sign = "+" if metrics['change'] >= 0 else ""
-                
-                ma_50_str = f"{metrics['ma_50']:.2f}" if metrics['ma_50'] else "N/A"
+
+                ma_50 = metrics.get('ma_50')
+                ma_50_str = f"{ma_50:.2f}" if _valid(ma_50) else "N/A"
                 currency_str = metrics.get('currency', 'N/A')
-                
+                price_str = f"{metrics['price']:.2f}"
+
                 ytd_val = metrics.get('ytd_return')
                 three_yr_val = metrics.get('three_yr_return')
-                
-                if ytd_val is not None:
+
+                if _valid(ytd_val):
                     ytd_class = "p" if ytd_val >= 0 else "n"
                     ytd_sign = "+" if ytd_val >= 0 else ""
                     ytd_str = f"<span class='{ytd_class}'>{ytd_sign}{ytd_val:.2f}%</span>"
                 else:
                     ytd_str = "N/A"
-                    
-                if three_yr_val is not None:
+
+                if _valid(three_yr_val):
                     three_yr_class = "p" if three_yr_val >= 0 else "n"
                     three_yr_sign = "+" if three_yr_val >= 0 else ""
                     three_yr_str = f"<span class='{three_yr_class}'>{three_yr_sign}{three_yr_val:.2f}%</span>"
                 else:
                     three_yr_str = "N/A"
-                
-                html += f"<tr><td class='a'>{name}</td><td class='u'>{currency_str}</td><td class='c'>{metrics['price']:.2f}</td><td class='c {change_class}'>{change_sign}{metrics['change']:.2f}%</td><td class='c'>{ma_50_str}</td><td class='c'>{ytd_str}</td><td class='c'>{three_yr_str}</td></tr>"
+
+                html += f"<tr><td class='a'>{name}</td><td class='u'>{currency_str}</td><td class='c'>{price_str}</td><td class='c {change_class}'>{change_sign}{metrics['change']:.2f}%</td><td class='c'>{ma_50_str}</td><td class='c'>{ytd_str}</td><td class='c'>{three_yr_str}</td></tr>"
             else:
                 html += f"<tr><td class='a'>{name}</td><td colspan='6' class='c' style='color:#999;'>Data Unavailable</td></tr>"
         html += "</table>"
@@ -914,7 +961,7 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
     </body>
     </html>
     """
-    return html
+    return _minify_html(html)
 
 def send_email(html_content):
     sender_email = os.environ.get('GMAIL_USER')
