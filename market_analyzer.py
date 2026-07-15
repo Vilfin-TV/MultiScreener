@@ -724,59 +724,68 @@ def build_score_breakdown(data, fred_extras=None):
             "points": pts,
         })
 
-    # 7. Market Breadth: equal-weight S&P 500 (RSP) vs cap-weight (SPY). If
-    # RSP keeps pace with or beats SPY, gains are broad-based; if RSP lags
-    # meaningfully, the rally is narrow (a handful of mega-caps carrying it).
+    # 7. Market Participation: equal-weight S&P 500 (RSP) vs cap-weight
+    # (SPY). If RSP keeps pace with or beats SPY, gains are broad-based; if
+    # RSP lags meaningfully, the rally is narrow (a handful of mega-caps
+    # carrying it). Deliberately NOT called "breadth" - true breadth is
+    # % of stocks above their 200-day average, advance/decline lines, or
+    # new-highs-vs-new-lows, none of which are freely available per-stock
+    # via this pipeline's data sources. This is a related but distinct
+    # relative-strength proxy, labeled as such in the reading text.
     broad_etfs = data.get('Top 10 Broad Market ETFs', {})
     rsp = broad_etfs.get('Equal-Weight S&P 500 (RSP)')
     spy = broad_etfs.get('SPDR S&P 500 (SPY)')
     if rsp and spy and _valid(rsp.get('change')) and _valid(spy.get('change')):
         gap = rsp['change'] - spy['change']
         if gap > 0.1:
-            pts = 15
+            pts = 10
         elif gap < -0.1:
-            pts = -15
+            pts = -10
         else:
             pts = 0
         breakdown.append({
-            "label": "Market Breadth",
-            "reading": f"Equal-weight S&amp;P (RSP) {rsp['change']:+.2f}% vs cap-weight (SPY) {spy['change']:+.2f}% ({gap:+.2f}pp gap)",
+            "label": "Market Participation",
+            "reading": f"Equal-weight S&amp;P (RSP) {rsp['change']:+.2f}% vs cap-weight (SPY) {spy['change']:+.2f}% ({gap:+.2f}pp gap) — proxy for breadth, not a true advance/decline reading",
             "points": pts,
         })
 
-    # 8. Credit Spread: high-yield (HYG) vs investment-grade (LQD) corporate
-    # bonds. Distinct from the "Credit Stress" signal above, which only
-    # checks for one acute same-day stress pattern - this tracks the
-    # broader daily risk appetite inside credit markets specifically.
-    bonds_dict = data.get('Bonds', {})
-    lqd = bonds_dict.get('Corp Bonds (LQD)')
-    hyg_b = bonds_dict.get('High Yield (HYG)')
-    if lqd and hyg_b and _valid(lqd.get('change')) and _valid(hyg_b.get('change')):
-        spread_gap = hyg_b['change'] - lqd['change']
-        if spread_gap > 0.15:
+    # 8. Credit Spread: the ICE BofA US High Yield Index Option-Adjusted
+    # Spread (FRED series BAMLH0A0HYM2) - a genuine daily credit-risk-pricing
+    # figure (basis points over Treasuries), not a same-day ETF price
+    # comparison. Widening spreads are a classic recession warning, so this
+    # is weighted more heavily on the downside than the upside, alongside
+    # the other genuine macro/recession signals below.
+    credit_spread = fred_extras.get('credit_spread')
+    if credit_spread:
+        cs_val, cs_date, cs_trailing = credit_spread
+        cs_avg = sum(cs_trailing) / len(cs_trailing) if cs_trailing else cs_val
+        if cs_val < cs_avg * 0.95:
             pts = 15
-        elif spread_gap < -0.15:
-            pts = -15
+        elif cs_val > cs_avg * 1.05:
+            pts = -25
         else:
             pts = 0
         breakdown.append({
-            "label": "Credit Spread",
-            "reading": f"High-yield (HYG) {hyg_b['change']:+.2f}% vs investment-grade (LQD) {lqd['change']:+.2f}% ({spread_gap:+.2f}pp gap)",
+            "label": "Credit Spread (HY OAS)",
+            "reading": f"ICE BofA US High Yield OAS {cs_val:.2f}% for {cs_date} vs {cs_avg:.2f}% recent average — {'tightening' if cs_val < cs_avg else 'widening' if cs_val > cs_avg else 'flat'}",
             "points": pts,
         })
+        if cs_val > cs_avg * 1.15:
+            risk_alerts.append(f"Credit Spread Warning: High-yield OAS ({cs_val:.2f}%) widening sharply above its recent average ({cs_avg:.2f}%) — a genuine credit-stress signal.")
 
     # 9. Labor Market: US initial jobless claims (FRED series ICSA), a
     # genuine weekly labor-market release, not a market-price proxy.
     # Compared to its own recent trailing average since claims are noisy
-    # week to week.
+    # week to week. Weighted more heavily on the downside (rising claims)
+    # than the upside, consistent with the other recession-warning signals.
     labor = fred_extras.get('labor_claims')
     if labor:
         latest_val, latest_date, trailing = labor
         avg = sum(trailing) / len(trailing) if trailing else latest_val
         if latest_val < avg * 0.95:
-            pts = 15
+            pts = 10
         elif latest_val > avg * 1.05:
-            pts = -15
+            pts = -20
         else:
             pts = 0
         breakdown.append({
@@ -850,38 +859,44 @@ def build_score_breakdown(data, fred_extras=None):
             "points": pts,
         })
 
-    # 13. Earnings Trend (growth-vs-defensive proxy): Consumer Discretionary
-    # (XLY) vs Consumer Staples (XLP). Genuine forward-earnings-revision
-    # data isn't freely available - this is a well-known market-based proxy
-    # for earnings/growth optimism, not reported EPS data, and is labeled
-    # as such rather than implying it's a literal earnings figure.
+    # 13. Growth vs Defensive Leadership: Consumer Discretionary (XLY) vs
+    # Consumer Staples (XLP). Genuine forward-earnings-revision data isn't
+    # freely available, so this is deliberately NOT called an "earnings"
+    # signal - it's a well-known market-based sector-rotation proxy for
+    # growth optimism vs defensive positioning, nothing more. Weighted
+    # lightly (not a hard economic release) and reduced from its initial
+    # weight since it overlaps with Risk Appetite and Commodities Ratio -
+    # a single risk-on/risk-off day can move all three together, so no one
+    # of them should swing the score as much as an independent signal would.
     sectors_dict = data.get('Sectors & Themes (US ETFs)', {})
     xly = sectors_dict.get('Consumer Discretionary')
     xlp = sectors_dict.get('Consumer Staples')
     if xly and xlp and _valid(xly.get('change')) and _valid(xlp.get('change')):
         earn_gap = xly['change'] - xlp['change']
         if earn_gap > 0.2:
-            pts = 15
+            pts = 10
         elif earn_gap < -0.2:
-            pts = -15
+            pts = -10
         else:
             pts = 0
         breakdown.append({
-            "label": "Earnings Trend (Growth vs Defensive Proxy)",
-            "reading": f"Consumer Discretionary (XLY) {xly['change']:+.2f}% vs Staples (XLP) {xlp['change']:+.2f}% ({earn_gap:+.2f}pp gap) — market-based proxy, not reported EPS data",
+            "label": "Growth vs Defensive Leadership",
+            "reading": f"Consumer Discretionary (XLY) {xly['change']:+.2f}% vs Staples (XLP) {xlp['change']:+.2f}% ({earn_gap:+.2f}pp gap) — sector-rotation proxy, not an earnings/EPS figure",
             "points": pts,
         })
 
     # 14. Commodities Ratio: Copper vs Gold ("Dr. Copper" vs the safe-haven
-    # metal) - a classic growth-optimism-vs-fear signal distinct from the
-    # Risk Appetite check above (which only looks at each metal's own
-    # direction, not the ratio between them).
+    # metal) - a classic growth-optimism-vs-fear signal. Copper also feeds
+    # the Risk Appetite check above (which only looks at each metal's own
+    # direction, not the ratio between them) - weighted lightly since it's
+    # a secondary confirmation of the same underlying risk-on/risk-off move
+    # rather than fully independent evidence.
     if gold and copper and _valid(gold.get('change')) and _valid(copper.get('change')):
         comm_gap = copper['change'] - gold['change']
         if comm_gap > 0.5:
-            pts = 15
+            pts = 10
         elif comm_gap < -0.5:
-            pts = -15
+            pts = -10
         else:
             pts = 0
         breakdown.append({
@@ -1283,9 +1298,10 @@ if __name__ == "__main__":
     logging.info("Starting Market Analyzer Pipeline")
     market_data = collect_market_data()
 
-    # Genuine macro data for the Labor Market and Liquidity & Financial
-    # Conditions signals - fetched once and passed into both scoring calls
-    # so a network hiccup on one doesn't need refetching for the other.
+    # Genuine macro data for the Labor Market, Liquidity & Financial
+    # Conditions, and Credit Spread signals - fetched once and passed into
+    # both scoring calls so a network hiccup on one doesn't need refetching
+    # for the other.
     fred_extras = {}
     labor_claims = fetch_fred_series("ICSA", lookback=8)
     if labor_claims:
@@ -1293,6 +1309,9 @@ if __name__ == "__main__":
     financial_conditions = fetch_fred_series("NFCI", lookback=4)
     if financial_conditions:
         fred_extras['financial_conditions'] = financial_conditions
+    credit_spread = fetch_fred_series("BAMLH0A0HYM2", lookback=10)
+    if credit_spread:
+        fred_extras['credit_spread'] = credit_spread
 
     score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr = calculate_market_regime(market_data, fred_extras)
 
