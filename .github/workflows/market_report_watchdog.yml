@@ -19,20 +19,26 @@ name: Daily Market Report Watchdog
 # emits a completed event for anything to react to.
 #
 # Fix: instead of one fixed-offset check (which is itself just another
-# cron subject to the same delay), check repeatedly across a 2-hour
-# grace window after the target time. Each check is idempotent — it
-# only dispatches if no run (scheduled or otherwise) has landed in the
-# last 3 hours, so once the real delayed run lands (or this watchdog
-# dispatches one itself), every later check in the window is a no-op.
+# cron subject to the same delay), check repeatedly across a grace
+# window after the target time, extending all the way to 23:50 UTC
+# (08:50 JST) - a hard guarantee the report goes out before 9:00 AM JST
+# every trading day, even in a worst-case multi-hour delay. Each check
+# is idempotent — it only dispatches if no run (scheduled or otherwise)
+# has landed in the last 3 hours, so once the real delayed run lands
+# (or this watchdog dispatches one itself), every later check in the
+# window is a no-op.
 
 on:
   schedule:
     # Grace-window checks that START at the 21:30 UTC (06:30 JST) target and run
-    # every 20 min for ~70 min after it. Starting AT the target (not before) is
-    # deliberate: the check dispatches only when no run has landed in the last 3h,
-    # so beginning earlier than 21:30 would fire the report ahead of 06:30 JST.
-    - cron: '30,50 21 * * *'    # 21:30, 21:50 UTC
-    - cron: '10,30 22 * * *'    # 22:10, 22:30 UTC
+    # every 20 min through 23:50 UTC (08:50 JST) - a hard deadline guarantee that
+    # the report goes out before 9:00 AM JST even if the native cron is very late.
+    # Starting AT the target (not before) is deliberate: the check dispatches only
+    # when no run has landed in the last 3h, so beginning earlier than 21:30 would
+    # fire the report ahead of 06:30 JST.
+    - cron: '30,50 21 * * *'       # 21:30, 21:50 UTC = 06:30, 06:50 JST
+    - cron: '10,30,50 22 * * *'    # 22:10, 22:30, 22:50 UTC = 07:10, 07:30, 07:50 JST
+    - cron: '10,30,50 23 * * *'    # 23:10, 23:30, 23:50 UTC = 08:10, 08:30, 08:50 JST
   workflow_dispatch:
 
 permissions:
