@@ -1334,9 +1334,9 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
                     </div>
                     
                     <div style="background: white; padding: 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                        <strong style="color: #0a192f;">💰 Digital Gold, Silver & UPI</strong><br><br>
-                        • <a href="https://m.navi.com/X7g9gpUzoKb" style="color: #16a34a; text-decoration: none; font-weight: bold;">Navi UPI</a><br>
-                        • <a href="https://phon.pe/772mkuqo" style="color: #16a34a; text-decoration: none; font-weight: bold;">PhonePe</a>
+                        <strong style="color: #0a192f;">💰 Digital Gold, Silver, UPI &amp; Mutual Funds</strong><br><br>
+                        • <a href="https://m.navi.com/X7g9gpUzoKb" style="color: #16a34a; text-decoration: none; font-weight: bold;">Navi</a> (UPI + Mutual Funds)<br>
+                        • <a href="https://phon.pe/772mkuqo" style="color: #16a34a; text-decoration: none; font-weight: bold;">PhonePe</a> (UPI + Mutual Funds)
                     </div>
                 </td>
             </tr>
