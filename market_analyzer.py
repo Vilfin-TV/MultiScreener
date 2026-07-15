@@ -578,6 +578,61 @@ def get_executive_summary_analysis(data, regime_score):
 
     return regional_rec, momentum_name, value_name, long_term_name, lt_reason, lt_broad_name, lt_broad_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency
 
+
+def get_asset_class_recommendation(score):
+    """Maps the final capped Market Sentiment Score to the Asset Class
+    Playbook shown on the methodology page - the same 5 score bands used
+    for regime_text/the SIP strategy table, just framed as which asset
+    classes are favored rather than how to invest via SIP."""
+    if score >= 50:
+        return "Growth Stocks, Small Caps, Industrial Commodities"
+    elif score >= 10:
+        return "Broad-Market Indices, High-Yield Bonds"
+    elif score >= -10:
+        return "Dividend Yielders, Short-Term Bonds, Cash"
+    elif score >= -50:
+        return "Long-Term Treasuries, Gold, Defensive Stocks"
+    else:
+        return "US Dollars (Cash), Short Positions, Gold"
+
+
+def get_global_capital_flow_note(data):
+    """Cross-border capital flow read, using data already fetched for the
+    scored signals above (no new tickers needed): (a) which of S&P 500 /
+    Nikkei 225 / Nifty 50 has the highest premium over its own 50-day
+    moving average, as a proxy for where capital is currently
+    concentrating, and (b) whether the Dollar Index (DXY) sits above or
+    below its own 20-day average, since a strong dollar tends to keep
+    capital anchored in US assets while a weak one favors international/EM
+    inflows. Returns (flow_alert_str_or_None, dxy_note_str_or_None)."""
+    tracked = {
+        'S&P 500': data.get('US Indices', {}).get('S&P 500'),
+        'Nikkei 225': data.get('Asian Indices', {}).get('Nikkei 225'),
+        'Nifty 50': data.get('Asian Indices', {}).get('Nifty 50'),
+    }
+    valid = {
+        name: m for name, m in tracked.items()
+        if m and _valid(m.get('price')) and _valid(m.get('ma_50')) and m['ma_50']
+    }
+    flow_alert = None
+    if valid:
+        def premium(m):
+            return (m['price'] / m['ma_50']) - 1
+        best_name, best_metrics = max(valid.items(), key=lambda x: premium(x[1]))
+        dist = premium(best_metrics) * 100
+        flow_alert = f"🌍 Global Flow Alert: {best_name} is showing the strongest regional momentum, trading {dist:+.2f}% above its 50-day trendline."
+
+    dxy_note = None
+    dxy = data.get('Liquidity & Sovereign Risk Indicators (High Weight)', {}).get('US Dollar Index')
+    if dxy and _valid(dxy.get('price')) and _valid(dxy.get('ma_20')) and dxy['ma_20']:
+        if dxy['price'] < dxy['ma_20']:
+            dxy_note = "With the Dollar (DXY) trending lower, conditions are favorable for international and emerging market inflows."
+        else:
+            dxy_note = "A strong Dollar (DXY) is currently keeping global capital anchored in US assets."
+
+    return flow_alert, dxy_note
+
+
 def calculate_market_regime(data, fred_extras=None):
     # The 14-signal breakdown (build_score_breakdown) is the single source of
     # truth for both the score and the risk alerts - keeping one definition
@@ -1032,6 +1087,19 @@ def build_fred_macro_text(fred_extras):
         pay_val, pay_date, pay_prior_val = payrolls
         pay_mom_change = pay_val - pay_prior_val
         text += f"• <b>Non-Farm Payrolls, MoM change:</b> {pay_mom_change:+,.0f}K jobs for {pay_date} (total employed {pay_val/1000:.1f}M)<br>"
+    net_liq = fred_extras.get('net_liquidity')
+    if net_liq:
+        walcl, tga, rrp = net_liq
+        # All three are FRED series in different native units (WALCL and
+        # WTREGEN are millions of dollars, RRPONTSYD is billions) - converted
+        # to a common $B basis here. WALCL/WTREGEN update weekly (Wednesdays)
+        # and RRPONTSYD daily, so their "latest" dates won't always match;
+        # each is labeled with its own date rather than implying same-day data.
+        walcl_val, walcl_date, _ = walcl
+        tga_val, tga_date, _ = tga
+        rrp_val, rrp_date, _ = rrp
+        net_liquidity_b = (walcl_val / 1000) - (tga_val / 1000) - rrp_val
+        text += f"• <b>Fed Net Liquidity (Balance Sheet − TGA − Reverse Repo):</b> ${net_liquidity_b:,.0f}B (balance sheet {walcl_date}, TGA {tga_date}, reverse repo {rrp_date}) — a rising figure has historically coincided with looser system-wide liquidity for risk assets<br>"
     return text
 
 def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text, news_items, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr):
@@ -1070,6 +1138,17 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
             </div>
         </div>
     """
+
+    asset_class_rec = get_asset_class_recommendation(regime_score)
+    flow_alert, dxy_note = get_global_capital_flow_note(data)
+    html += "<div class='score-box' style='background: #f0f9ff; border-left: 5px solid #0284c7;'>"
+    html += "<h4 style='margin-top: 0; margin-bottom: 15px; color: #075985;'>🌐 Global Capital Flows &amp; Asset Positioning</h4>"
+    html += f"<div class='summary-item'><strong>Actionable Asset Class:</strong> {asset_class_rec}</div>"
+    if flow_alert:
+        html += f"<div class='summary-item' style='margin-top: 8px;'>{flow_alert}</div>"
+    if dxy_note:
+        html += f"<div class='summary-item' style='margin-top: 8px;'>{dxy_note}</div>"
+    html += "</div>"
 
     if news_items:
         html += "<div class='score-box' style='background: #fdfdfd; border-left: 5px solid #0056b3;'>"
@@ -1380,6 +1459,11 @@ if __name__ == "__main__":
     payrolls_mom = fetch_fred_change("PAYEMS", months_back=1)
     if payrolls_mom:
         fred_extras['payrolls_mom'] = payrolls_mom
+    walcl = fetch_fred_series("WALCL", lookback=4)
+    tga = fetch_fred_series("WTREGEN", lookback=4)
+    rrp = fetch_fred_series("RRPONTSYD", lookback=4)
+    if walcl and tga and rrp:
+        fred_extras['net_liquidity'] = (walcl, tga, rrp)
 
     score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr = calculate_market_regime(market_data, fred_extras)
 
