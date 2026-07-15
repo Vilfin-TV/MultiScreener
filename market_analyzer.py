@@ -94,6 +94,7 @@ TICKERS_CONFIG = {
         'Turkey BIST 100': {'symbol': 'XU100.IS', 'currency': 'TRY'},
         'Australia ASX 200': {'symbol': '^AXJO', 'currency': 'AUD'},
         'Saudi Arabia TASI': {'symbol': '^TASI.SR', 'currency': 'SAR'},
+        'UAE (ETF Proxy)': {'symbol': 'UAE', 'currency': 'USD'},
     },
     'US Indices': {
         'S&P 500': {'symbol': '^GSPC', 'currency': 'USD'},
@@ -116,8 +117,9 @@ TICKERS_CONFIG = {
         'Nifty Smallcap 250 (ETF)': {'symbol': 'HDFCSML250.NS', 'currency': 'INR'},
         'Nifty Next 50 (ETF)': {'symbol': 'JUNIORBEES.NS', 'currency': 'INR'}, 
         'Taiwan Weighted': {'symbol': '^TWII', 'currency': 'TWD'}, 
-        'China Shanghai': {'symbol': '000001.SS', 'currency': 'CNY'}, 
-        'Vietnam Index Proxy (VNM)': {'symbol': 'VNM', 'currency': 'USD'}
+        'China Shanghai': {'symbol': '000001.SS', 'currency': 'CNY'},
+        'Vietnam Index Proxy (VNM)': {'symbol': 'VNM', 'currency': 'USD'},
+        'Philippines PSEi': {'symbol': 'PSEI.PS', 'currency': 'PHP'}
     },
     'Top 10 US Stocks': {
         'Apple (AAPL)': {'symbol': 'AAPL', 'currency': 'USD'},
