@@ -3027,6 +3027,44 @@ footer{
    The player is a flex-shrink:0 block; the channel list below it is flex:1. */
 #iptv-player-wrap{max-height:52vh;overflow:hidden;flex-shrink:0}
 
+/* ── EXPANDED MODE: PREMIUM DESKTOP SPLIT-SCREEN ── */
+@media(min-width: 900px) {
+  #widget-expand-content #rb-panel-iptv.iptv-playing {
+      display: grid !important;
+      grid-template-columns: 1fr 380px !important;
+      grid-template-rows: auto auto auto auto auto 1fr auto auto !important;
+      grid-template-areas:
+          "hdr       hdr"
+          "settings  settings"
+          "video     omni"
+          "video     topfold"
+          "video     presets"
+          "video     content"
+          "ctrl      content"
+          "epg       content" !important;
+      gap: 0;
+  }
+  #widget-expand-content #rb-panel-iptv.iptv-playing > .iptv-panel-hdr { grid-area: hdr; }
+  #widget-expand-content #rb-panel-iptv.iptv-playing > #iptv-settings-panel { grid-area: settings; }
+  
+  #widget-expand-content #rb-panel-iptv.iptv-playing > #iptv-player-wrap { 
+      grid-area: video; 
+      max-height: none !important; height: auto !important; 
+      display: block; background: #000;
+  }
+  #widget-expand-content #rb-panel-iptv.iptv-playing > #iptv-player-wrap > div { padding-top: 56.25% !important; height: auto !important; width: 100% !important; position: relative !important; }
+  
+  #widget-expand-content #rb-panel-iptv.iptv-playing > #iptv-ctrl-bar { grid-area: ctrl; border-right: 1px solid #172d50; }
+  #widget-expand-content #rb-panel-iptv.iptv-playing > #iptv-epg-bar { grid-area: epg; border-right: 1px solid #172d50; }
+  
+  #widget-expand-content #rb-panel-iptv.iptv-playing > .panel-omni-bar { grid-area: omni; display: block !important; border-left: 1px solid #172d50; }
+  #widget-expand-content #rb-panel-iptv.iptv-playing > #iptv-top-fold { grid-area: topfold; display: block !important; border-left: 1px solid #172d50; }
+  #widget-expand-content #rb-panel-iptv.iptv-playing > #iptv-preset-strip { grid-area: presets; display: flex !important; border-left: 1px solid #172d50; }
+  #widget-expand-content #rb-panel-iptv.iptv-playing > #iptv-content-area { grid-area: content; border-left: 1px solid #172d50; }
+  
+  #widget-expand-content #rb-panel-iptv.iptv-playing > #iptv-now-bar { display: none !important; }
+}
+
 /* ── RADIO INDIA — default collapsed, toggle smoothly ── */
 .radio-india-body{transition:max-height .35s ease,padding .35s ease;overflow:hidden}
 
