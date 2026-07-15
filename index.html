@@ -3621,14 +3621,23 @@ footer{
   }
   .top-menu-items.mobile-open .dd-item{
     padding:13px 22px;min-height:48px;display:flex;align-items:center;
-    color:#dbe4f0;font-size:14px;
+    color:#dbe4f0;font-size:14px;flex-wrap:wrap;
+    transition:background-color .1s ease;
+  }
+  .top-menu-items.mobile-open .dd-item:active,
+  .top-menu-items.mobile-open .tmenu-btn:active{
+    background:rgba(96,165,250,.14);
   }
   .top-menu-items.mobile-open .dd-submenu{
     position:static!important;left:0!important;top:0!important;right:0!important;
-    border-radius:0;min-width:100%;max-height:none!important;
+    border-radius:0;max-height:none!important;
     box-shadow:none;border:none;
     background:#0e1f3b;       /* slightly lighter panel for nesting depth */
     transform:none!important;
+    /* .dd-item is display:flex (row) — without an explicit full-row basis this
+       submenu sits beside the label as a flex sibling instead of stacking below
+       it, overflowing the viewport width on mobile. Force it onto its own line. */
+    flex:1 1 100%;width:100%;min-width:100%;box-sizing:border-box;
   }
   .top-menu-items.mobile-open .dd-submenu .dd-item{
     padding:11px 32px;font-size:13.5px;color:#bccbe0;
@@ -3636,7 +3645,7 @@ footer{
   .top-menu-items.mobile-open .dd-has-sub.sub-open>.dd-submenu{display:block!important}
   .top-menu-items.mobile-open .dd-has-sub.sub-open::after{transform:rotate(90deg)}
   .top-menu-items.mobile-open .dd-has-sub::after{transition:transform .15s ease}
-  .top-menu-items.mobile-open .news-link{padding:11px 24px;min-height:44px}
+  .top-menu-items.mobile-open .news-link{padding:11px 24px;min-height:44px;align-items:flex-start;text-align:left;width:100%}
   .top-menu-brand .brand-name{font-size:14px}
 
   /* Sidebar: icon-only strip on mobile */
