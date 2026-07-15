@@ -531,7 +531,15 @@ def get_executive_summary_analysis(data, regime_score):
         lt_broad_name = f"{best_broad[0]} Index"
         lt_broad_reason = f"Selected as the strongest long-term broad-market index globally based on its blended structural performance ({tyr:+.2f}% 3-Year, {ytd:+.2f}% YTD)."
 
-    bonds = data.get('Bonds', {})
+    # 'Bonds' mixes real, buyable instruments (SHY, LQD, HYG, BNDX...) with
+    # raw Treasury YIELD-index tickers (^IRX/^FVX/^TNX/^TYX, e.g. "US 30Y"
+    # is the 30-year yield level, not a tradable bond). A rising yield
+    # generally means falling bond PRICES - the opposite of what "strong
+    # momentum" should mean for a bond pick - and there's no real action a
+    # reader could take on "buy US 30Y" anyway, so these are excluded from
+    # both bond-pick rankings below rather than scored as if investable.
+    YIELD_INDEX_NAMES = {'US 13-Week', 'US 5Y', 'US 10Y', 'US 30Y'}
+    bonds = {name: metrics for name, metrics in data.get('Bonds', {}).items() if name not in YIELD_INDEX_NAMES}
     valid_bonds = {name: metrics for name, metrics in bonds.items() if metrics and metrics['ma_50']}
     lt_bond_name = "N/A"
     lt_bond_reason = ""
@@ -930,36 +938,67 @@ def fetch_fred_series(series_id, lookback=8):
         return None
 
 
-def fetch_macro_health():
-    av_api_key = os.environ.get('ALPHA_VANTAGE_API_KEY')
-    macro_text = ""
-    if not av_api_key:
-        return ""
+def fetch_fred_change(series_id, months_back, lookback_months=18):
+    """Fetch a monthly FRED series and compute the change from
+    `months_back` months ago to the latest value, matched by actual
+    calendar date rather than list position - FRED occasionally omits a
+    month before revising it in later (e.g. CPIAUCSL has a gap around
+    2025-10), so a fixed-position offset would silently compare the wrong
+    months. Returns (latest_value, latest_date, prior_value) - the caller
+    computes either a percent change (for CPI YoY inflation) or an
+    absolute difference (for payrolls MoM), whichever is conventional for
+    that series. Returns None on failure or if no data point near the
+    target month exists."""
     try:
-        cpi_url = f"https://www.alphavantage.co/query?function=CPI&interval=monthly&apikey={av_api_key}"
-        cpi_resp = requests.get(cpi_url).json()
-        if "data" in cpi_resp and len(cpi_resp["data"]) > 0:
-            cpi_val = cpi_resp["data"][0].get("value", "N/A")
-            cpi_date = cpi_resp["data"][0].get("date", "N/A")
-            macro_text += f"• <b>Consumer Price Index (CPI):</b> {cpi_val} (as of {cpi_date})<br>"
-            
-        nfp_url = f"https://www.alphavantage.co/query?function=NONFARM_PAYROLL&apikey={av_api_key}"
-        nfp_resp = requests.get(nfp_url).json()
-        if "data" in nfp_resp and len(nfp_resp["data"]) > 0:
-            nfp_val = nfp_resp["data"][0].get("value", "N/A")
-            nfp_date = nfp_resp["data"][0].get("date", "N/A")
-            macro_text += f"• <b>Non-Farm Payrolls (NFP):</b> {nfp_val} thousand (as of {nfp_date})<br>"
-            
+        url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
+        resp = requests.get(url, timeout=15)
+        resp.raise_for_status()
+        lines = [l for l in resp.text.strip().split("\n") if l]
+        rows = [l.split(",") for l in lines[1:]]
+        rows = [(d, float(v)) for d, v in rows if v not in ("", ".")]
+        if not rows:
+            return None
+        rows = rows[-lookback_months:]
+        latest_date, latest_val = rows[-1]
+        latest_dt = datetime.strptime(latest_date, "%Y-%m-%d")
+        target_year = latest_dt.year
+        target_month = latest_dt.month - months_back
+        while target_month <= 0:
+            target_month += 12
+            target_year -= 1
+        target_dt = latest_dt.replace(year=target_year, month=target_month)
+        prior_candidates = [r for r in rows[:-1]]
+        if not prior_candidates:
+            return None
+        prior_date, prior_val = min(
+            prior_candidates,
+            key=lambda r: abs((datetime.strptime(r[0], "%Y-%m-%d") - target_dt).days),
+        )
+        if abs((datetime.strptime(prior_date, "%Y-%m-%d") - target_dt).days) > 45:
+            return None  # no data point close enough to the target month
+        return latest_val, latest_date, prior_val
     except Exception as e:
-        logging.error(f"Error fetching macro data: {e}")
-    return macro_text
+        logging.warning(f"FRED change fetch failed for {series_id}: {e}")
+        return None
 
 
 def build_fred_macro_text(fred_extras):
-    """Format the FRED-sourced Labor Market / Financial Conditions data
-    (see fetch_fred_series) into the same '• <b>Label:</b> value<br>' style
-    as fetch_macro_health() - unlike that function, this needs no API key,
-    so it always shows regardless of whether ALPHA_VANTAGE_API_KEY is set."""
+    """Format all FRED-sourced macro data (labor claims, financial
+    conditions, CPI, payrolls) into '• <b>Label:</b> value<br>' lines for
+    the email. Everything here uses FRED's no-auth CSV export, so unlike
+    the old Alpha-Vantage-gated version of this section, it doesn't depend
+    on ALPHA_VANTAGE_API_KEY being set or valid - which was unverifiable
+    from this pipeline (no success-path logging existed, so a silently
+    missing/invalid key and a working one were indistinguishable) and that
+    endpoint's response was also being displayed with a unit bug: Alpha
+    Vantage's NONFARM_PAYROLL returns a cumulative employment LEVEL (~159
+    million, in thousands), not a monthly change, so labeling it "Non-Farm
+    Payrolls: <level> thousand" read like a monthly jobs-added figure when
+    it was nothing of the kind. CPI here is now a proper year-over-year
+    inflation rate and payrolls a proper month-over-month change, both
+    matched by calendar date so a gap in the source series (FRED
+    occasionally omits a month before revising it in) can't silently
+    compare the wrong two months."""
     text = ""
     labor = fred_extras.get('labor_claims')
     if labor:
@@ -970,6 +1009,16 @@ def build_fred_macro_text(fred_extras):
     if fin_cond:
         nfci_val, nfci_date, _trailing = fin_cond
         text += f"• <b>Chicago Fed Financial Conditions Index:</b> {nfci_val:+.3f} for the week of {nfci_date} ({'looser' if nfci_val < 0 else 'tighter'} than average)<br>"
+    cpi = fred_extras.get('cpi_yoy')
+    if cpi and cpi[2]:
+        cpi_val, cpi_date, cpi_prior_val = cpi
+        cpi_yoy_pct = (cpi_val - cpi_prior_val) / cpi_prior_val * 100
+        text += f"• <b>Consumer Price Index (CPI), YoY:</b> {cpi_yoy_pct:+.1f}% for {cpi_date} (index level {cpi_val:.1f})<br>"
+    payrolls = fred_extras.get('payrolls_mom')
+    if payrolls:
+        pay_val, pay_date, pay_prior_val = payrolls
+        pay_mom_change = pay_val - pay_prior_val
+        text += f"• <b>Non-Farm Payrolls, MoM change:</b> {pay_mom_change:+,.0f}K jobs for {pay_date} (total employed {pay_val/1000:.1f}M)<br>"
     return text
 
 def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text, news_items, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr):
@@ -1312,13 +1361,19 @@ if __name__ == "__main__":
     credit_spread = fetch_fred_series("BAMLH0A0HYM2", lookback=10)
     if credit_spread:
         fred_extras['credit_spread'] = credit_spread
+    cpi_yoy = fetch_fred_change("CPIAUCSL", months_back=12)
+    if cpi_yoy:
+        fred_extras['cpi_yoy'] = cpi_yoy
+    payrolls_mom = fetch_fred_change("PAYEMS", months_back=1)
+    if payrolls_mom:
+        fred_extras['payrolls_mom'] = payrolls_mom
 
     score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr = calculate_market_regime(market_data, fred_extras)
 
     logging.info(f"Calculated Regime Score: {score} ({regime})")
 
     news_items = fetch_global_news()
-    macro_text = fetch_macro_health() + build_fred_macro_text(fred_extras)
+    macro_text = build_fred_macro_text(fred_extras)
     html_report = generate_html_email(market_data, score, regime, alerts, macro_text, news_items, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr)
     send_email(html_report)
 
