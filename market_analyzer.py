@@ -36,7 +36,8 @@ def _minify_html(html):
 # Configuration for Tickers
 TICKERS_CONFIG = {
     'Volatility': {
-        'VIX': {'symbol': '^VIX', 'currency': 'Points'}
+        'VIX': {'symbol': '^VIX', 'currency': 'Points'},
+        'VIX 3-Month': {'symbol': '^VIX3M', 'currency': 'Points'}
     },
     'Bonds': {
         'US 1-Year (SHY)': {'symbol': 'SHY', 'currency': 'USD'},
@@ -225,7 +226,8 @@ TICKERS_CONFIG = {
         'SPDR Dow Jones (DIA)': {'symbol': 'DIA', 'currency': 'USD'},
         'ARK Innovation (ARKK)': {'symbol': 'ARKK', 'currency': 'USD'},
         'iShares Emerging Markets (EEM)': {'symbol': 'EEM', 'currency': 'USD'},
-        'iShares Developed Markets (EFA)': {'symbol': 'EFA', 'currency': 'USD'}
+        'iShares Developed Markets (EFA)': {'symbol': 'EFA', 'currency': 'USD'},
+        'Equal-Weight S&P 500 (RSP)': {'symbol': 'RSP', 'currency': 'USD'}
     },
     'Currencies': {
         'EUR/USD': {'symbol': 'EURUSD=X', 'currency': 'USD'},
@@ -567,100 +569,18 @@ def get_executive_summary_analysis(data, regime_score):
 
     return regional_rec, momentum_name, value_name, long_term_name, lt_reason, lt_broad_name, lt_broad_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency
 
-def calculate_market_regime(data):
-    score = 0
-    risk_alerts = []
+def calculate_market_regime(data, fred_extras=None):
+    # The 14-signal breakdown (build_score_breakdown) is the single source of
+    # truth for both the score and the risk alerts - keeping one definition
+    # instead of two avoids the two functions silently drifting apart, which
+    # is exactly what happened before this was consolidated.
+    breakdown, risk_alerts = build_score_breakdown(data, fred_extras)
+    score = sum(item["points"] for item in breakdown)
 
-    vix_data = data.get('Volatility', {}).get('VIX')
-    if vix_data and vix_data['ma_20']:
-        vix_price = vix_data['price']
-        if vix_price < 16 and vix_price < vix_data['ma_20']:
-            score += 20  
-        elif vix_price <= 20 and vix_price < vix_data['ma_20']:
-            score += 10  
-        elif vix_price > 20:
-            score -= 20  
-        if vix_price > 25:
-            risk_alerts.append(f"High Volatility: VIX is extremely elevated at {vix_price:.2f}.")
-
-    yield_10y_data = data.get('Bonds', {}).get('US 10Y')
-    yield_30y_data = data.get('Bonds', {}).get('US 30Y')
-    
-    if yield_10y_data and yield_30y_data:
-        spread = yield_30y_data['price'] - yield_10y_data['price']
-        if spread < 0:
-            score -= 20
-            risk_alerts.append(f"Yield Curve Inversion: US 10Y > US 30Y (Spread: {spread:.2f}%) - Recession signal.")
-        elif spread > 0.8:
-            score += 20 
-        elif spread > 0.3:
-            score += 10 
-        else:
-            score += 0  
-
-    # 2.5 Dynamic Yield Curve Inversion for 10Y vs 3-Month (New)
-    liq_dict = data.get('Liquidity & Sovereign Risk Indicators (High Weight)', {})
-    new_10y = liq_dict.get('US 10-Year Yield')
-    new_3m = liq_dict.get('US 13-Week Yield')
-    if new_10y and new_3m:
-        spread_10y_3m = new_10y['price'] - new_3m['price']
-        if spread_10y_3m < 0:
-            score -= 30
-            risk_alerts.append(f"CRITICAL Yield Curve Inversion: US 13-Week > US 10-Year (Spread: {spread_10y_3m:.2f}%) - Imminent Recession Signal.")
-
-    # 2.6 Credit Stress (High Yield vs Treasuries)
-    credit_dict = data.get('Credit Stress Indicators (Junk Bonds vs Treasuries)', {})
-    hyg = credit_dict.get('High Yield Corp Bonds (HYG)')
-    ief = credit_dict.get('7-10 Year Treasuries (IEF)')
-    if hyg and ief:
-        # Simple spread check on daily % change: if HYG drops heavily while IEF spikes, credit stress is rising
-        if hyg['change'] < -1.0 and ief['change'] > 0.5:
-            score -= 20
-            risk_alerts.append(f"Credit Stress Alert: Junk Bonds (HYG) falling while Safe Treasuries (IEF) rally. Liquidity freezing.")
-
-
-    sp500 = data.get('US Indices', {}).get('S&P 500')
-    nikkei = data.get('Asian Indices', {}).get('Nikkei 225')
-    nifty = data.get('Asian Indices', {}).get('Nifty 50')
-    
-    equity_score = 0
-    for asset, name in zip([sp500, nikkei, nifty], ['S&P 500', 'Nikkei 225', 'Nifty 50']):
-        if asset and asset['ma_50'] and asset['ma_20']:
-            if asset['price'] > asset['ma_20'] and asset['price'] > asset['ma_50']:
-                equity_score += 10  
-            elif asset['price'] > asset['ma_50']:
-                equity_score += 5   
-            else:
-                equity_score -= 10  
-                risk_alerts.append(f"Momentum Warning: {name} is trading below its 50-day moving average.")
-    score += equity_score
-
-    gold = data.get('Commodities', {}).get('Gold')
-    copper = data.get('Commodities', {}).get('Copper')
-    
-    risk_on_signals = 0
-    valid_data_points = 0
-    
-    if gold: 
-        valid_data_points += 1
-        if gold['change'] < 0: risk_on_signals += 1 
-    if copper:
-        valid_data_points += 1
-        if copper['change'] > 0: risk_on_signals += 1 
-    if sp500:
-        valid_data_points += 1
-        if sp500['change'] > 0: risk_on_signals += 1 
-        
-    if valid_data_points >= 2:
-        if risk_on_signals == valid_data_points:
-            score += 30 
-        elif risk_on_signals >= valid_data_points - 1:
-            score += 10 
-        else:
-            score -= 30 
-
+    # Currency volatility is a pure alert, not a scored signal, so it lives
+    # here rather than in the breakdown.
     for curr_name, curr_data in data.get('Currencies', {}).items():
-        if curr_data and abs(curr_data['change']) > 1.5:
+        if curr_data and _valid(curr_data.get('change')) and abs(curr_data['change']) > 1.5:
             direction = "surged" if curr_data['change'] > 0 else "dropped"
             risk_alerts.append(f"Currency Volatility: {curr_name} {direction} by {abs(curr_data['change']):.2f}%.")
 
@@ -681,12 +601,15 @@ def calculate_market_regime(data):
 
     return score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad_name, lt_broad_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency
 
-def build_score_breakdown(data):
-    """Structured, JSON-serializable version of the same 6 signal checks in
-    calculate_market_regime() - used to publish a live 'today's real report'
-    example on market_sentiment_score.html so it updates automatically
-    instead of staying frozen on whatever day someone last hand-edited it."""
+def build_score_breakdown(data, fred_extras=None):
+    """Structured, JSON-serializable version of the 14 signal checks behind
+    the Market Sentiment Score - the single source of truth used by both
+    calculate_market_regime() (for the actual score) and the live 'today's
+    real report' example on market_sentiment_score.html, so the two can
+    never silently drift apart. Returns (breakdown_list, risk_alerts_list)."""
     breakdown = []
+    risk_alerts = []
+    fred_extras = fred_extras or {}
 
     vix_data = data.get('Volatility', {}).get('VIX')
     if vix_data and _valid(vix_data.get('ma_20')) and _valid(vix_data.get('price')):
@@ -701,6 +624,8 @@ def build_score_breakdown(data):
         else:
             pts, note = 0, f"{vix_price:.2f}, above its 20-day average ({vix_ma20:.2f}) — no clear signal"
         breakdown.append({"label": "VIX (Fear Index)", "reading": note, "points": pts})
+        if vix_price > 25:
+            risk_alerts.append(f"High Volatility: VIX is extremely elevated at {vix_price:.2f}.")
 
     y10 = data.get('Bonds', {}).get('US 10Y')
     y30 = data.get('Bonds', {}).get('US 30Y')
@@ -719,6 +644,8 @@ def build_score_breakdown(data):
             "reading": f"30Y {y30['price']:.2f}% − 10Y {y10['price']:.2f}% = {spread:+.2f}% spread",
             "points": pts,
         })
+        if spread < 0:
+            risk_alerts.append(f"Yield Curve Inversion: US 10Y > US 30Y (Spread: {spread:.2f}%) - Recession signal.")
 
     liq_dict = data.get('Liquidity & Sovereign Risk Indicators (High Weight)', {})
     new_10y = liq_dict.get('US 10-Year Yield')
@@ -731,6 +658,8 @@ def build_score_breakdown(data):
             "reading": f"10Y {new_10y['price']:.2f}% − 3-month {new_3m['price']:.2f}% = {spread_10y_3m:+.2f}% ({'inverted' if spread_10y_3m < 0 else 'not inverted'})",
             "points": pts,
         })
+        if spread_10y_3m < 0:
+            risk_alerts.append(f"CRITICAL Yield Curve Inversion: US 13-Week > US 10-Year (Spread: {spread_10y_3m:.2f}%) - Imminent Recession Signal.")
 
     credit_dict = data.get('Credit Stress Indicators (Junk Bonds vs Treasuries)', {})
     hyg = credit_dict.get('High Yield Corp Bonds (HYG)')
@@ -743,6 +672,8 @@ def build_score_breakdown(data):
             "reading": f"HYG {hyg['change']:+.2f}%, IEF {ief['change']:+.2f}% same day" + (" — stress pattern" if stressed else " — no stress pattern"),
             "points": pts,
         })
+        if stressed:
+            risk_alerts.append("Credit Stress Alert: Junk Bonds (HYG) falling while Safe Treasuries (IEF) rally. Liquidity freezing.")
 
     sp500 = data.get('US Indices', {}).get('S&P 500')
     nikkei = data.get('Asian Indices', {}).get('Nikkei 225')
@@ -757,6 +688,7 @@ def build_score_breakdown(data):
                 p = 5; eq_parts.append(f"{name} above 50-day only (+5)")
             else:
                 p = -10; eq_parts.append(f"{name} below 50-day (-10)")
+                risk_alerts.append(f"Momentum Warning: {name} is trading below its 50-day moving average.")
             eq_total += p
     if eq_parts:
         breakdown.append({"label": "Equity Momentum", "reading": ", ".join(eq_parts), "points": eq_total})
@@ -792,7 +724,195 @@ def build_score_breakdown(data):
             "points": pts,
         })
 
-    return breakdown
+    # 7. Market Breadth: equal-weight S&P 500 (RSP) vs cap-weight (SPY). If
+    # RSP keeps pace with or beats SPY, gains are broad-based; if RSP lags
+    # meaningfully, the rally is narrow (a handful of mega-caps carrying it).
+    broad_etfs = data.get('Top 10 Broad Market ETFs', {})
+    rsp = broad_etfs.get('Equal-Weight S&P 500 (RSP)')
+    spy = broad_etfs.get('SPDR S&P 500 (SPY)')
+    if rsp and spy and _valid(rsp.get('change')) and _valid(spy.get('change')):
+        gap = rsp['change'] - spy['change']
+        if gap > 0.1:
+            pts = 15
+        elif gap < -0.1:
+            pts = -15
+        else:
+            pts = 0
+        breakdown.append({
+            "label": "Market Breadth",
+            "reading": f"Equal-weight S&amp;P (RSP) {rsp['change']:+.2f}% vs cap-weight (SPY) {spy['change']:+.2f}% ({gap:+.2f}pp gap)",
+            "points": pts,
+        })
+
+    # 8. Credit Spread: high-yield (HYG) vs investment-grade (LQD) corporate
+    # bonds. Distinct from the "Credit Stress" signal above, which only
+    # checks for one acute same-day stress pattern - this tracks the
+    # broader daily risk appetite inside credit markets specifically.
+    bonds_dict = data.get('Bonds', {})
+    lqd = bonds_dict.get('Corp Bonds (LQD)')
+    hyg_b = bonds_dict.get('High Yield (HYG)')
+    if lqd and hyg_b and _valid(lqd.get('change')) and _valid(hyg_b.get('change')):
+        spread_gap = hyg_b['change'] - lqd['change']
+        if spread_gap > 0.15:
+            pts = 15
+        elif spread_gap < -0.15:
+            pts = -15
+        else:
+            pts = 0
+        breakdown.append({
+            "label": "Credit Spread",
+            "reading": f"High-yield (HYG) {hyg_b['change']:+.2f}% vs investment-grade (LQD) {lqd['change']:+.2f}% ({spread_gap:+.2f}pp gap)",
+            "points": pts,
+        })
+
+    # 9. Labor Market: US initial jobless claims (FRED series ICSA), a
+    # genuine weekly labor-market release, not a market-price proxy.
+    # Compared to its own recent trailing average since claims are noisy
+    # week to week.
+    labor = fred_extras.get('labor_claims')
+    if labor:
+        latest_val, latest_date, trailing = labor
+        avg = sum(trailing) / len(trailing) if trailing else latest_val
+        if latest_val < avg * 0.95:
+            pts = 15
+        elif latest_val > avg * 1.05:
+            pts = -15
+        else:
+            pts = 0
+        breakdown.append({
+            "label": "Labor Market (Jobless Claims)",
+            "reading": f"{latest_val:,.0f} claims for the week of {latest_date} vs {avg:,.0f} recent average",
+            "points": pts,
+        })
+        if latest_val > avg * 1.15:
+            risk_alerts.append(f"Labor Market Warning: Initial jobless claims ({latest_val:,.0f}) are spiking well above their recent average ({avg:,.0f}).")
+
+    # 10. Liquidity & Financial Conditions: Chicago Fed National Financial
+    # Conditions Index (FRED series NFCI) - the standard professional
+    # composite for how loose/tight financial conditions are. Negative =
+    # looser than average, positive = tighter than average.
+    fin_cond = fred_extras.get('financial_conditions')
+    if fin_cond:
+        nfci_val, nfci_date, _trailing = fin_cond
+        if nfci_val < -0.5:
+            pts = 15
+        elif nfci_val < 0:
+            pts = 5
+        elif nfci_val < 0.5:
+            pts = -5
+        else:
+            pts = -20
+        breakdown.append({
+            "label": "Liquidity &amp; Financial Conditions",
+            "reading": f"Chicago Fed NFCI {nfci_val:+.3f} for the week of {nfci_date} — {'looser' if nfci_val < 0 else 'tighter'} than average",
+            "points": pts,
+        })
+        if nfci_val > 0.5:
+            risk_alerts.append(f"Financial Conditions Warning: Chicago Fed NFCI at {nfci_val:+.3f} — tighter than average, a genuine stress signal.")
+
+    # 11. Volatility Term Structure: spot VIX vs 3-month VIX (VIX3M).
+    # Contango (spot below VIX3M) is the normal, calm state; backwardation
+    # (spot above VIX3M) means near-term fear has spiked above longer-term
+    # expectations - a classic acute-stress signal.
+    vix3m_data = data.get('Volatility', {}).get('VIX 3-Month')
+    if vix_data and vix3m_data and _valid(vix_data.get('price')) and _valid(vix3m_data.get('price')) and vix3m_data['price']:
+        vt_ratio = vix_data['price'] / vix3m_data['price']
+        if vt_ratio < 0.9:
+            pts = 15
+        elif vt_ratio < 1.0:
+            pts = 5
+        elif vt_ratio < 1.1:
+            pts = -10
+        else:
+            pts = -20
+        breakdown.append({
+            "label": "Volatility Term Structure",
+            "reading": f"VIX {vix_data['price']:.2f} vs VIX3M {vix3m_data['price']:.2f} (ratio {vt_ratio:.2f}) — {'contango, calm' if vt_ratio < 1 else 'backwardation, stress'}",
+            "points": pts,
+        })
+        if vt_ratio > 1.1:
+            risk_alerts.append(f"Volatility Term Structure Warning: VIX ({vix_data['price']:.2f}) above VIX3M ({vix3m_data['price']:.2f}) — backwardation signals acute near-term stress.")
+
+    # 12. Dollar Strength: US Dollar Index (DXY) vs its own 20-day average.
+    # A strengthening dollar typically pressures EM assets and commodities
+    # (risk-off); a weakening dollar is usually risk-on/liquidity-friendly.
+    dxy = data.get('Liquidity & Sovereign Risk Indicators (High Weight)', {}).get('US Dollar Index')
+    if dxy and _valid(dxy.get('price')) and _valid(dxy.get('ma_20')):
+        if dxy['price'] < dxy['ma_20'] * 0.995:
+            pts = 10
+        elif dxy['price'] > dxy['ma_20'] * 1.005:
+            pts = -10
+        else:
+            pts = 0
+        breakdown.append({
+            "label": "Dollar Strength",
+            "reading": f"DXY {dxy['price']:.2f} vs its 20-day average {dxy['ma_20']:.2f}",
+            "points": pts,
+        })
+
+    # 13. Earnings Trend (growth-vs-defensive proxy): Consumer Discretionary
+    # (XLY) vs Consumer Staples (XLP). Genuine forward-earnings-revision
+    # data isn't freely available - this is a well-known market-based proxy
+    # for earnings/growth optimism, not reported EPS data, and is labeled
+    # as such rather than implying it's a literal earnings figure.
+    sectors_dict = data.get('Sectors & Themes (US ETFs)', {})
+    xly = sectors_dict.get('Consumer Discretionary')
+    xlp = sectors_dict.get('Consumer Staples')
+    if xly and xlp and _valid(xly.get('change')) and _valid(xlp.get('change')):
+        earn_gap = xly['change'] - xlp['change']
+        if earn_gap > 0.2:
+            pts = 15
+        elif earn_gap < -0.2:
+            pts = -15
+        else:
+            pts = 0
+        breakdown.append({
+            "label": "Earnings Trend (Growth vs Defensive Proxy)",
+            "reading": f"Consumer Discretionary (XLY) {xly['change']:+.2f}% vs Staples (XLP) {xlp['change']:+.2f}% ({earn_gap:+.2f}pp gap) — market-based proxy, not reported EPS data",
+            "points": pts,
+        })
+
+    # 14. Commodities Ratio: Copper vs Gold ("Dr. Copper" vs the safe-haven
+    # metal) - a classic growth-optimism-vs-fear signal distinct from the
+    # Risk Appetite check above (which only looks at each metal's own
+    # direction, not the ratio between them).
+    if gold and copper and _valid(gold.get('change')) and _valid(copper.get('change')):
+        comm_gap = copper['change'] - gold['change']
+        if comm_gap > 0.5:
+            pts = 15
+        elif comm_gap < -0.5:
+            pts = -15
+        else:
+            pts = 0
+        breakdown.append({
+            "label": "Commodities Ratio (Copper vs Gold)",
+            "reading": f"Copper {copper['change']:+.2f}% vs Gold {gold['change']:+.2f}% ({comm_gap:+.2f}pp gap)",
+            "points": pts,
+        })
+
+    return breakdown, risk_alerts
+
+
+def fetch_fred_series(series_id, lookback=8):
+    """Fetch a public FRED economic series via its no-auth CSV export
+    (https://fred.stlouisfed.org/graph/fredgraph.csv?id=<series>) - no API
+    key required, unlike the Alpha Vantage macro data below. Returns
+    (latest_value, latest_date_str, trailing_values) or None on failure."""
+    try:
+        url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
+        resp = requests.get(url, timeout=15)
+        resp.raise_for_status()
+        lines = [l for l in resp.text.strip().split("\n") if l]
+        rows = [l.split(",") for l in lines[1:]]  # skip header row
+        rows = [(d, v) for d, v in rows if v not in ("", ".")]
+        if not rows:
+            return None
+        trailing = [float(v) for _, v in rows[-lookback:]]
+        latest_date, latest_val = rows[-1][0], float(rows[-1][1])
+        return latest_val, latest_date, trailing
+    except Exception as e:
+        logging.warning(f"FRED fetch failed for {series_id}: {e}")
+        return None
 
 
 def fetch_macro_health():
@@ -818,6 +938,24 @@ def fetch_macro_health():
     except Exception as e:
         logging.error(f"Error fetching macro data: {e}")
     return macro_text
+
+
+def build_fred_macro_text(fred_extras):
+    """Format the FRED-sourced Labor Market / Financial Conditions data
+    (see fetch_fred_series) into the same '• <b>Label:</b> value<br>' style
+    as fetch_macro_health() - unlike that function, this needs no API key,
+    so it always shows regardless of whether ALPHA_VANTAGE_API_KEY is set."""
+    text = ""
+    labor = fred_extras.get('labor_claims')
+    if labor:
+        latest_val, latest_date, trailing = labor
+        avg = sum(trailing) / len(trailing) if trailing else latest_val
+        text += f"• <b>Initial Jobless Claims (Labor Market):</b> {latest_val:,.0f} for the week of {latest_date}, vs {avg:,.0f} recent average<br>"
+    fin_cond = fred_extras.get('financial_conditions')
+    if fin_cond:
+        nfci_val, nfci_date, _trailing = fin_cond
+        text += f"• <b>Chicago Fed Financial Conditions Index:</b> {nfci_val:+.3f} for the week of {nfci_date} ({'looser' if nfci_val < 0 else 'tighter'} than average)<br>"
+    return text
 
 def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text, news_items, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr):
     html = f"""<html><head><style>\nbody {{ font-family: Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }}\nh2 {{ color: #0a192f; margin-top: 30px; }}\nh3 {{ color: #1a365d; }}\ntable {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.95em; }}\nth, td {{ padding: 8px; border: 1px solid #ddd; text-align: center; }}\nth {{ background-color: #f4f4f4; }}\n.l {{ text-align: left; }}\n.c {{ text-align: center; }}\n.a {{ text-align: left; font-weight: bold; width: 25%; }}\n.u {{ text-align: center; color: #666; font-size: 0.9em; }}\n.p {{ color: green; font-weight: bold; }}\n.n {{ color: red; font-weight: bold; }}\n.score-box {{ padding: 20px; background: #eef2f5; border-left: 5px solid #0a192f; margin-bottom: 20px; }}\n.alerts {{ background: #fff3f3; border-left: 5px solid #d9534f; padding: 15px; }}\n.recommendation {{ background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 5px solid #16a34a; padding: 15px; margin-top: 15px; }}\n.st-momentum {{ background: #fffbeeb3; border: 1px solid #fde68a; border-left: 5px solid #d97706; padding: 15px; margin-top: 15px; }}\n.summary-item {{ margin-bottom: 8px; }}\n.reasoning {{ font-size: 0.9em; color: #555; margin-left: 20px; }}\n</style></head><body>"""
@@ -1144,12 +1282,24 @@ def send_email(html_content):
 if __name__ == "__main__":
     logging.info("Starting Market Analyzer Pipeline")
     market_data = collect_market_data()
-    score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr = calculate_market_regime(market_data)
-    
+
+    # Genuine macro data for the Labor Market and Liquidity & Financial
+    # Conditions signals - fetched once and passed into both scoring calls
+    # so a network hiccup on one doesn't need refetching for the other.
+    fred_extras = {}
+    labor_claims = fetch_fred_series("ICSA", lookback=8)
+    if labor_claims:
+        fred_extras['labor_claims'] = labor_claims
+    financial_conditions = fetch_fred_series("NFCI", lookback=4)
+    if financial_conditions:
+        fred_extras['financial_conditions'] = financial_conditions
+
+    score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr = calculate_market_regime(market_data, fred_extras)
+
     logging.info(f"Calculated Regime Score: {score} ({regime})")
-    
+
     news_items = fetch_global_news()
-    macro_text = fetch_macro_health()
+    macro_text = fetch_macro_health() + build_fred_macro_text(fred_extras)
     html_report = generate_html_email(market_data, score, regime, alerts, macro_text, news_items, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr)
     send_email(html_report)
 
@@ -1163,7 +1313,7 @@ if __name__ == "__main__":
             "score": score,
             "regime": regime,
             "risk_alerts": alerts,
-            "breakdown": build_score_breakdown(market_data),
+            "breakdown": build_score_breakdown(market_data, fred_extras)[0],
             "regional_rec": rec_regional,
             "momentum_sector": rec_mom,
         }

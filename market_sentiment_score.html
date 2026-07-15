@@ -6,7 +6,7 @@
 <link rel="apple-touch-icon" href="images/vilfintv-logo.jpg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>VilfinTV Market Sentiment Score — How It's Calculated &amp; How to Read It</title>
-<meta name="description" content="A plain-English guide to the Market Sentiment Score in VilfinTV's Daily Market Report email — every signal that feeds it (VIX, yield curve, credit stress, equity momentum, risk appetite), the five regime bands, and a live example from today's real report."/>
+<meta name="description" content="A plain-English guide to the Market Sentiment Score in VilfinTV's Daily Market Report email — all 14 signals that feed it (VIX, yield curves, credit spread, market breadth, labor market, financial conditions, volatility term structure, dollar strength, equity momentum, risk appetite, and more), the five regime bands, and a live example from today's real report."/>
 <meta name="keywords" content="VilfinTV, Vilfin TV, vilfintv.com, market sentiment score, daily market report, market regime, bullish expansion, bearish contraction, yield curve inversion, VIX, SIP vs lumpsum"/>
 <meta name="robots" content="index, follow, max-image-preview:large"/>
 <meta name="author" content="VilfinTV"/>
@@ -382,7 +382,7 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
   <div class="live-card" id="live-card">
     <div class="live-card-top">
       <div class="live-score-block">
-        <div class="live-score-num" id="live-score-num" style="color:var(--green)">55</div>
+        <div class="live-score-num" id="live-score-num" style="color:var(--green)">100</div>
         <div class="live-score-meta">
           <div>Market Sentiment Score</div>
           <span class="phase-pill" id="live-phase-pill" style="background:rgba(20,191,150,0.15); color:var(--green); border:1px solid rgba(20,191,150,0.35)">Bullish Expansion</span>
@@ -400,6 +400,14 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
         <tr><td>Credit Stress</td><td>HYG +0.20%, IEF +0.28% same day — no stress pattern</td><td class="contrib-zero">+0</td></tr>
         <tr><td>Equity Momentum</td><td>S&amp;P 500 above both MAs (+10), Nikkei above 50-day only (+5), Nifty 50 above both MAs (+10)</td><td class="contrib-pos">+25</td></tr>
         <tr><td>Risk Appetite</td><td>Copper +2.32% &amp; S&amp;P +0.38% risk-on, but Gold also rose +1.72% (2 of 3 signals agreed)</td><td class="contrib-pos">+10</td></tr>
+        <tr><td>Market Breadth</td><td>Equal-weight S&amp;P (RSP) +0.61% vs cap-weight (SPY) +0.22% (+0.39pp gap)</td><td class="contrib-pos">+15</td></tr>
+        <tr><td>Credit Spread</td><td>High-yield (HYG) +0.20% vs investment-grade (LQD) +0.14% (+0.06pp gap)</td><td class="contrib-zero">+0</td></tr>
+        <tr><td>Labor Market (Jobless Claims)</td><td>215,000 claims for the week vs 219,000 recent average</td><td class="contrib-zero">+0</td></tr>
+        <tr><td>Liquidity &amp; Financial Conditions</td><td>Chicago Fed NFCI -0.32 for the week — looser than average</td><td class="contrib-pos">+5</td></tr>
+        <tr><td>Volatility Term Structure</td><td>VIX 16.50 vs VIX3M 17.90 (ratio 0.92) — mild contango</td><td class="contrib-pos">+5</td></tr>
+        <tr><td>Dollar Strength</td><td>DXY 101.20 vs its 20-day average 100.70 — strengthening</td><td class="contrib-neg">-10</td></tr>
+        <tr><td>Earnings Trend (Growth vs Defensive Proxy)</td><td>Consumer Discretionary (XLY) +0.85% vs Staples (XLP) +0.12% (+0.73pp gap)</td><td class="contrib-pos">+15</td></tr>
+        <tr><td>Commodities Ratio (Copper vs Gold)</td><td>Copper +2.32% vs Gold +0.61% (+1.71pp gap)</td><td class="contrib-pos">+15</td></tr>
         </tbody>
       </table>
       <div style="margin-top:18px;">
@@ -416,7 +424,7 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
       </div>
     </div>
     <div class="live-card-foot">
-      <span id="live-foot-sum">10 + 10 + 0 + 0 + 25 + 10 = <b style="color:var(--text)">55</b> → Bullish Expansion (≥ 50)</span>
+      <span id="live-foot-sum">10 + 10 + 0 + 0 + 25 + 10 + 15 + 0 + 0 + 5 + 5 − 10 + 15 + 15 = <b style="color:var(--text)">100</b> → Bullish Expansion (≥ 50)</span>
       <span id="live-foot-note">Example only — live data not loaded (viewing this file locally or offline)</span>
     </div>
   </div>
@@ -425,8 +433,8 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
 
 <div class="section" id="signals">
   <div class="section-kicker">03 · The Signals</div>
-  <h2 class="section-title">The 6 Signals Behind the Number</h2>
-  <p class="section-lead">The score is a sum of independent checks against real market data fetched fresh every run. Nothing here is a prediction — it's a same-day snapshot of how several classic macro/market indicators line up.</p>
+  <h2 class="section-title">The 14 Signals Behind the Number</h2>
+  <p class="section-lead">The score is a sum of independent checks against real market data fetched fresh every run — plus two genuine weekly economic releases (jobless claims, financial conditions), not just market prices. Nothing here is a prediction — it's a same-day snapshot of how several classic macro/market indicators line up.</p>
   <div class="factor-grid">
 
     <div class="factor-card" style="--accent:#7c3aed">
@@ -504,6 +512,112 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
         <div><span>All available signals agree (risk-on)</span><span class="pts-pos">+30</span></div>
         <div><span>All but one agree</span><span class="pts-pos">+10</span></div>
         <div><span>Mixed / majority disagree</span><span class="pts-neg">-30</span></div>
+      </div>
+    </div>
+
+    <div class="factor-card" style="--accent:#06b6d4">
+      <div class="factor-head">
+        <div class="factor-icon">📊</div>
+        <div><div class="factor-title">Market Breadth</div><div class="factor-weight">±15 points</div></div>
+      </div>
+      <div class="factor-body">Compares the equal-weight S&amp;P 500 (RSP) against the standard cap-weight S&amp;P 500 (SPY). If RSP keeps pace, gains are broad-based; if it lags, a handful of mega-caps are carrying the whole index — a fragile kind of rally.</div>
+      <div class="factor-rules">
+        <div><span>RSP outperforms SPY by &gt;0.1pp (broad)</span><span class="pts-pos">+15</span></div>
+        <div><span>Within ±0.1pp of each other</span><span class="pts-zero">+0</span></div>
+        <div><span>RSP underperforms SPY by &gt;0.1pp (narrow)</span><span class="pts-neg">-15</span></div>
+      </div>
+    </div>
+
+    <div class="factor-card" style="--accent:#f43f5e">
+      <div class="factor-head">
+        <div class="factor-icon">📉</div>
+        <div><div class="factor-title">Credit Spread</div><div class="factor-weight">±15 points</div></div>
+      </div>
+      <div class="factor-body">Compares high-yield "junk" bonds (HYG) against investment-grade corporate bonds (LQD) on the day. Distinct from the Credit Stress check above — this tracks everyday risk appetite inside credit markets, not just acute stress days.</div>
+      <div class="factor-rules">
+        <div><span>HYG outperforms LQD by &gt;0.15pp (risk-on)</span><span class="pts-pos">+15</span></div>
+        <div><span>Within ±0.15pp of each other</span><span class="pts-zero">+0</span></div>
+        <div><span>HYG underperforms LQD by &gt;0.15pp (risk-off)</span><span class="pts-neg">-15</span></div>
+      </div>
+    </div>
+
+    <div class="factor-card" style="--accent:#84cc16">
+      <div class="factor-head">
+        <div class="factor-icon">💼</div>
+        <div><div class="factor-title">Labor Market</div><div class="factor-weight">±15 points</div></div>
+      </div>
+      <div class="factor-body">US Initial Jobless Claims, sourced directly from the Federal Reserve's public FRED database (series ICSA) — a genuine weekly government release, not a market-price proxy. Compared against its own recent average since weekly claims are naturally noisy.</div>
+      <div class="factor-rules">
+        <div><span>Claims &gt;5% below recent average (strong)</span><span class="pts-pos">+15</span></div>
+        <div><span>Within ±5% of recent average</span><span class="pts-zero">+0</span></div>
+        <div><span>Claims &gt;5% above recent average (weakening)</span><span class="pts-neg">-15</span></div>
+      </div>
+    </div>
+
+    <div class="factor-card" style="--accent:#6366f1">
+      <div class="factor-head">
+        <div class="factor-icon">🏦</div>
+        <div><div class="factor-title">Liquidity &amp; Financial Conditions</div><div class="factor-weight">+15 / -20</div></div>
+      </div>
+      <div class="factor-body">The Chicago Fed's National Financial Conditions Index (NFCI, via FRED) — the standard professional composite for how loose or tight financial conditions are across money markets, credit, and leverage. Negative = looser than average.</div>
+      <div class="factor-rules">
+        <div><span>NFCI &lt; -0.5 (very loose)</span><span class="pts-pos">+15</span></div>
+        <div><span>NFCI -0.5 to 0 (loose)</span><span class="pts-pos">+5</span></div>
+        <div><span>NFCI 0 to 0.5 (tight)</span><span class="pts-neg">-5</span></div>
+        <div><span>NFCI &gt; 0.5 (very tight — stress)</span><span class="pts-neg">-20</span></div>
+      </div>
+    </div>
+
+    <div class="factor-card" style="--accent:#eab308">
+      <div class="factor-head">
+        <div class="factor-icon">🌪️</div>
+        <div><div class="factor-title">Volatility Term Structure</div><div class="factor-weight">+15 / -20</div></div>
+      </div>
+      <div class="factor-body">Compares spot VIX against 3-month VIX (VIX3M). Spot below the 3-month figure ("contango") is the normal, calm state; spot above it ("backwardation") means near-term fear has spiked above longer-term expectations — a classic acute-stress signal.</div>
+      <div class="factor-rules">
+        <div><span>Ratio &lt; 0.9 (strong contango, calm)</span><span class="pts-pos">+15</span></div>
+        <div><span>Ratio 0.9–1.0 (mild contango)</span><span class="pts-pos">+5</span></div>
+        <div><span>Ratio 1.0–1.1 (mild backwardation)</span><span class="pts-neg">-10</span></div>
+        <div><span>Ratio &gt; 1.1 (strong backwardation)</span><span class="pts-neg">-20</span></div>
+      </div>
+    </div>
+
+    <div class="factor-card" style="--accent:#0ea5e9">
+      <div class="factor-head">
+        <div class="factor-icon">💵</div>
+        <div><div class="factor-title">Dollar Strength</div><div class="factor-weight">±10 points</div></div>
+      </div>
+      <div class="factor-body">The US Dollar Index (DXY) against its own 20-day average. A strengthening dollar typically pressures emerging markets and commodities (risk-off); a weakening dollar is usually risk-on and liquidity-friendly globally.</div>
+      <div class="factor-rules">
+        <div><span>DXY &gt;0.5% below its 20-day average</span><span class="pts-pos">+10</span></div>
+        <div><span>Within ±0.5% of its 20-day average</span><span class="pts-zero">+0</span></div>
+        <div><span>DXY &gt;0.5% above its 20-day average</span><span class="pts-neg">-10</span></div>
+      </div>
+    </div>
+
+    <div class="factor-card" style="--accent:#ec4899">
+      <div class="factor-head">
+        <div class="factor-icon">🛍️</div>
+        <div><div class="factor-title">Earnings Trend (Proxy)</div><div class="factor-weight">±15 points</div></div>
+      </div>
+      <div class="factor-body">Genuine forward-earnings-revision data isn't freely available, so this uses a well-known market-based stand-in: Consumer Discretionary (XLY) vs Consumer Staples (XLP). Discretionary outperforming signals growth/earnings optimism; staples outperforming signals defensive positioning. Labeled as a proxy, not reported EPS data.</div>
+      <div class="factor-rules">
+        <div><span>XLY outperforms XLP by &gt;0.2pp (optimism)</span><span class="pts-pos">+15</span></div>
+        <div><span>Within ±0.2pp of each other</span><span class="pts-zero">+0</span></div>
+        <div><span>XLY underperforms XLP by &gt;0.2pp (defensive)</span><span class="pts-neg">-15</span></div>
+      </div>
+    </div>
+
+    <div class="factor-card" style="--accent:#a855f7">
+      <div class="factor-head">
+        <div class="factor-icon">⛏️</div>
+        <div><div class="factor-title">Commodities Ratio</div><div class="factor-weight">±15 points</div></div>
+      </div>
+      <div class="factor-body">Copper vs Gold — "Dr. Copper" is the classic industrial-demand growth barometer, while gold is the safe-haven. Copper outperforming gold signals growth optimism; gold outperforming copper signals growth fear. Distinct from the Risk Appetite check above, which only looks at each metal's own direction, not the ratio between them.</div>
+      <div class="factor-rules">
+        <div><span>Copper outperforms Gold by &gt;0.5pp (growth)</span><span class="pts-pos">+15</span></div>
+        <div><span>Within ±0.5pp of each other</span><span class="pts-zero">+0</span></div>
+        <div><span>Copper underperforms Gold by &gt;0.5pp (fear)</span><span class="pts-neg">-15</span></div>
       </div>
     </div>
 
