@@ -497,7 +497,7 @@ def get_executive_summary_analysis(data, regime_score):
         mom_metrics = momentum_sector[1]
         dist_mom = ((mom_metrics['price'] / mom_metrics['ma_50']) - 1) * 100
         ytd_str = f" and an explosive {mom_metrics['ytd_return']:+.2f}% YTD return" if mom_metrics.get('ytd_return') else ""
-        momentum_name = f"{momentum_sector[0]}. This sector is displaying extreme relative strength, trading {dist_mom:+.2f}% above its 50-day average{ytd_str}. Capital is heavily rotating here for short-term alpha."
+        momentum_name = f"{momentum_sector[0]}. This sector is displaying extreme relative strength, trading {dist_mom:+.2f}% above its 50-day average{ytd_str}. Capital is heavily rotating into this sector."
         
         value_names = ['Energy', 'Finance', 'Industrials', 'Banking', 'Metals & Mining']
         value_sectors = {k: v for k, v in valid_sectors.items() if k in value_names}
@@ -760,26 +760,35 @@ def build_score_breakdown(data, fred_extras=None):
     # 8. Credit Spread: the ICE BofA US High Yield Index Option-Adjusted
     # Spread (FRED series BAMLH0A0HYM2) - a genuine daily credit-risk-pricing
     # figure (basis points over Treasuries), not a same-day ETF price
-    # comparison. Widening spreads are a classic recession warning, so this
-    # is weighted more heavily on the downside than the upside, alongside
-    # the other genuine macro/recession signals below.
+    # comparison. Scored primarily on the ABSOLUTE level against
+    # widely-recognized credit-cycle bands (below ~3% is historically tight/
+    # healthy, above ~6% is genuine stress territory) rather than only its
+    # own short-term trailing average - a 10-day average is too easily
+    # already-elevated during a slow-building stress episode to reward
+    # "still tight relative to itself." A sharp widening move on top of
+    # that gets an extra penalty, since the RATE of change matters too.
     credit_spread = fred_extras.get('credit_spread')
     if credit_spread:
         cs_val, cs_date, cs_trailing = credit_spread
         cs_avg = sum(cs_trailing) / len(cs_trailing) if cs_trailing else cs_val
-        if cs_val < cs_avg * 0.95:
+        if cs_val < 3.0:
             pts = 15
-        elif cs_val > cs_avg * 1.05:
-            pts = -25
-        else:
+        elif cs_val < 4.5:
             pts = 0
+        elif cs_val < 6.0:
+            pts = -15
+        else:
+            pts = -25
+        widening_fast = cs_val > cs_avg * 1.05
+        if widening_fast and pts > -25:
+            pts -= 10
         breakdown.append({
             "label": "Credit Spread (HY OAS)",
-            "reading": f"ICE BofA US High Yield OAS {cs_val:.2f}% for {cs_date} vs {cs_avg:.2f}% recent average — {'tightening' if cs_val < cs_avg else 'widening' if cs_val > cs_avg else 'flat'}",
+            "reading": f"ICE BofA US High Yield OAS {cs_val:.2f}% for {cs_date} (recent average {cs_avg:.2f}%) — {'tight, healthy credit market' if cs_val < 3.0 else 'normal range' if cs_val < 4.5 else 'elevated stress' if cs_val < 6.0 else 'severe stress'}{', widening fast' if widening_fast else ''}",
             "points": pts,
         })
-        if cs_val > cs_avg * 1.15:
-            risk_alerts.append(f"Credit Spread Warning: High-yield OAS ({cs_val:.2f}%) widening sharply above its recent average ({cs_avg:.2f}%) — a genuine credit-stress signal.")
+        if cs_val >= 6.0 or widening_fast and cs_val >= 4.5:
+            risk_alerts.append(f"Credit Spread Warning: High-yield OAS at {cs_val:.2f}% — {'severe stress territory' if cs_val >= 6.0 else 'elevated and widening fast'}, a genuine credit-stress signal.")
 
     # 9. Labor Market: US initial jobless claims (FRED series ICSA), a
     # genuine weekly labor-market release, not a market-price proxy.
@@ -790,9 +799,9 @@ def build_score_breakdown(data, fred_extras=None):
     if labor:
         latest_val, latest_date, trailing = labor
         avg = sum(trailing) / len(trailing) if trailing else latest_val
-        if latest_val < avg * 0.95:
+        if latest_val < avg * 0.97:
             pts = 10
-        elif latest_val > avg * 1.05:
+        elif latest_val > avg * 1.03:
             pts = -20
         else:
             pts = 0
@@ -812,13 +821,13 @@ def build_score_breakdown(data, fred_extras=None):
     if fin_cond:
         nfci_val, nfci_date, _trailing = fin_cond
         if nfci_val < -0.5:
-            pts = 15
+            pts = 10
         elif nfci_val < 0:
             pts = 5
         elif nfci_val < 0.5:
             pts = -5
         else:
-            pts = -20
+            pts = -15
         breakdown.append({
             "label": "Liquidity &amp; Financial Conditions",
             "reading": f"Chicago Fed NFCI {nfci_val:+.3f} for the week of {nfci_date} — {'looser' if nfci_val < 0 else 'tighter'} than average",
@@ -1035,7 +1044,7 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
 
             <div class="recommendation">
                 <h4 style="margin-top: 0; margin-bottom: 15px;">Long-Term Strategic Picks & Regional Insights</h4>
-                <div class="summary-item"><strong>🌍 Best Region to Buy:</strong> {regional_rec}</div>
+                <div class="summary-item"><strong>🌍 Strongest Region Today:</strong> {regional_rec}</div>
                 <div class="summary-item"><strong>🚀 Top Equity Sector (Growth):</strong> {mom_sector}</div>
                 <div class="summary-item"><strong>⚖️ Top Equity Sector (Value):</strong> {val_sector}</div>
                 <div class="summary-item" style="margin-top: 10px;"><strong>🌎 Best Broad-Market Index:</strong> {lt_broad}</div>
