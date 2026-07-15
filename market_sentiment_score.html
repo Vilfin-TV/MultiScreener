@@ -275,9 +275,18 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
 .playbook-table tbody tr:hover { background: var(--card-hover); }
 .playbook-table td:first-child { white-space: nowrap; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
 
-.footer { margin-top: 76px; background: var(--footer-bg); color: var(--footer-text); padding: 44px 24px 32px; text-align: center; font-size: 13px; }
+.share-row { margin-top: 76px; text-align: center; }
+.share-label { font-size: 12.5px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; margin-bottom: 14px; }
+.share-btns { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.share-btn { padding: 10px 20px; color: #fff !important; text-decoration: none; border-radius: 8px; font-size: 13.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; transition: opacity 0.2s, transform 0.2s; }
+.share-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+.footer { margin-top: 32px; background: var(--footer-bg); color: var(--footer-text); padding: 44px 24px 32px; text-align: center; font-size: 13px; }
 .footer .disclaimer { max-width: 760px; margin: 0 auto 20px; line-height: 1.75; }
 .footer a { color: var(--green); font-weight: 700; }
+.footer-links-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 4px; max-width: 760px; margin: 0 auto 18px; }
+.footer-links-row a { padding: 0 10px; border-right: 1px solid var(--border); line-height: 1.4; }
+.footer-links-row a:last-child { border-right: none; }
 
 @media(max-width: 640px) {
   .hero-title { font-size: 32px; }
@@ -501,11 +510,29 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
   </div>
 </div>
 
+<div class="share-row">
+  <div class="share-label">Found this useful? Share it</div>
+  <div class="share-btns">
+    <a href="https://api.whatsapp.com/send?text=How%20to%20read%20VilfinTV's%20Market%20Sentiment%20Score%3A%20https%3A%2F%2Fvilfintv.com%2Fmarket_sentiment_score.html" target="_blank" rel="noopener" class="share-btn" style="background:#25D366">WhatsApp</a>
+    <a href="https://twitter.com/intent/tweet?text=How%20to%20read%20the%20Market%20Sentiment%20Score%20%E2%80%94%20a%20breakdown%20of%20VilfinTV's%20Daily%20Market%20Report&url=https%3A%2F%2Fvilfintv.com%2Fmarket_sentiment_score.html" target="_blank" rel="noopener" class="share-btn" style="background:#000;border:1px solid #333">X (Twitter)</a>
+    <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fvilfintv.com%2Fmarket_sentiment_score.html" target="_blank" rel="noopener" class="share-btn" style="background:#1877F2">Facebook</a>
+  </div>
+</div>
+
 <div class="footer">
   <div class="disclaimer">
     This page and the Daily Market Report are for informational and educational purposes only and do not constitute financial, investment, or trading advice. The score is a same-day mechanical read of public market data, not a prediction — past patterns do not guarantee future results. Always do your own research or consult a licensed financial advisor before making investment decisions. VilfinTV is not responsible for losses incurred based on this content.
   </div>
-  <div>© VilfinTV · <a href="manage_subscription.html?action=subscribe">Subscribe to the Daily Market Report</a> · <a href="index.html">Back to MultiScreener</a></div>
+  <div class="footer-links-row">
+    <a href="manage_subscription.html?action=subscribe">Subscribe to the Daily Market Report</a>
+    <a href="index.html">MultiScreener Dashboard</a>
+    <a href="news.html" target="_blank">Stock &amp; Market News</a>
+    <a href="sip_calc.html" target="_blank">SIP Calculator</a>
+    <a href="lumpsum_calc.html" target="_blank">Lumpsum Calculator</a>
+    <a href="education.html" target="_blank">VilfinTV Academy</a>
+    <a href="legal.html" target="_blank">Legal &amp; Disclosure</a>
+  </div>
+  <div>© VilfinTV</div>
 </div>
 
 <script>
