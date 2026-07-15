@@ -799,9 +799,9 @@ def build_score_breakdown(data, fred_extras=None):
     if labor:
         latest_val, latest_date, trailing = labor
         avg = sum(trailing) / len(trailing) if trailing else latest_val
-        if latest_val < avg * 0.97:
+        if latest_val < avg * 0.985:
             pts = 10
-        elif latest_val > avg * 1.03:
+        elif latest_val > avg * 1.015:
             pts = -20
         else:
             pts = 0

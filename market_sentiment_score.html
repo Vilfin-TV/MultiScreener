@@ -402,7 +402,7 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
         <tr><td>Risk Appetite</td><td>Gold -0.83% (risk-on), Copper +0.73% (risk-on), S&amp;P -0.79% (risk-off) — 2 of 3 signals agreed</td><td class="contrib-pos">+10</td></tr>
         <tr><td>Market Participation</td><td>Equal-weight S&amp;P (RSP) -0.03% vs cap-weight (SPY) -0.77% (+0.73pp gap) — proxy for breadth, not a true advance/decline reading</td><td class="contrib-pos">+10</td></tr>
         <tr><td>Credit Spread (HY OAS)</td><td>ICE BofA US High Yield OAS 2.69% (recent average 2.72%) — tight, healthy credit market</td><td class="contrib-pos">+15</td></tr>
-        <tr><td>Labor Market (Jobless Claims)</td><td>215,000 claims for the week vs 219,000 recent average</td><td class="contrib-zero">+0</td></tr>
+        <tr><td>Labor Market (Jobless Claims)</td><td>215,000 claims for the week vs 219,000 recent average</td><td class="contrib-pos">+10</td></tr>
         <tr><td>Liquidity &amp; Financial Conditions</td><td>Chicago Fed NFCI -0.515 for the week — looser than average</td><td class="contrib-pos">+10</td></tr>
         <tr><td>Volatility Term Structure</td><td>VIX 16.38 vs VIX3M 18.57 (ratio 0.88) — contango, calm</td><td class="contrib-pos">+15</td></tr>
         <tr><td>Dollar Strength</td><td>DXY 100.92 vs its 20-day average 100.93</td><td class="contrib-zero">+0</td></tr>
@@ -424,7 +424,7 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
       </div>
     </div>
     <div class="live-card-foot">
-      <span id="live-foot-sum">10 + 10 + 0 + 0 + 20 + 10 + 10 + 15 + 0 + 10 + 15 + 0 − 10 + 10 = <b style="color:var(--text)">100</b> → Bullish Expansion (≥ 50)</span>
+      <span id="live-foot-sum">10 + 10 + 0 + 0 + 20 + 10 + 10 + 15 + 10 + 10 + 15 + 0 − 10 + 10 = <b style="color:var(--text)">100</b> → Bullish Expansion (≥ 50, capped)</span>
       <span id="live-foot-note">Example only — live data not loaded (viewing this file locally or offline)</span>
     </div>
   </div>
@@ -548,11 +548,11 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
         <div class="factor-icon">💼</div>
         <div><div class="factor-title">Labor Market</div><div class="factor-weight">+10 / -20</div></div>
       </div>
-      <div class="factor-body">US Initial Jobless Claims, sourced directly from the Federal Reserve's public FRED database (series ICSA) — a genuine weekly government release, not a market-price proxy. Compared against its own recent average since weekly claims are naturally noisy. The band is deliberately tight (±3%, not ±5%) so this signal actually moves on a real week-to-week shift instead of reading neutral almost every week.</div>
+      <div class="factor-body">US Initial Jobless Claims, sourced directly from the Federal Reserve's public FRED database (series ICSA) — a genuine weekly government release, not a market-price proxy. Compared against its own recent average since weekly claims are naturally noisy. The band is calibrated from real history: claims deviate from their own trailing average by more than 1.5% in roughly 3 out of 4 weeks, so a ±1.5% band lets this signal actually move most weeks instead of sitting at zero.</div>
       <div class="factor-rules">
-        <div><span>Claims &gt;3% below recent average (strong)</span><span class="pts-pos">+10</span></div>
-        <div><span>Within ±3% of recent average</span><span class="pts-zero">+0</span></div>
-        <div><span>Claims &gt;3% above recent average (weakening)</span><span class="pts-neg">-20</span></div>
+        <div><span>Claims &gt;1.5% below recent average (strong)</span><span class="pts-pos">+10</span></div>
+        <div><span>Within ±1.5% of recent average</span><span class="pts-zero">+0</span></div>
+        <div><span>Claims &gt;1.5% above recent average (weakening)</span><span class="pts-neg">-20</span></div>
       </div>
     </div>
 
