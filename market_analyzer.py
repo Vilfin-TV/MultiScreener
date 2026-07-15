@@ -681,6 +681,120 @@ def calculate_market_regime(data):
 
     return score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad_name, lt_broad_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency
 
+def build_score_breakdown(data):
+    """Structured, JSON-serializable version of the same 6 signal checks in
+    calculate_market_regime() - used to publish a live 'today's real report'
+    example on market_sentiment_score.html so it updates automatically
+    instead of staying frozen on whatever day someone last hand-edited it."""
+    breakdown = []
+
+    vix_data = data.get('Volatility', {}).get('VIX')
+    if vix_data and _valid(vix_data.get('ma_20')) and _valid(vix_data.get('price')):
+        vix_price = vix_data['price']
+        vix_ma20 = vix_data['ma_20']
+        if vix_price < 16 and vix_price < vix_ma20:
+            pts, note = 20, f"{vix_price:.2f}, below its 20-day average ({vix_ma20:.2f}) — calm (&lt;16)"
+        elif vix_price <= 20 and vix_price < vix_ma20:
+            pts, note = 10, f"{vix_price:.2f}, below its 20-day average ({vix_ma20:.2f}) — in the 16-20 calm zone"
+        elif vix_price > 20:
+            pts, note = -20, f"{vix_price:.2f}, above the 20 threshold — elevated fear"
+        else:
+            pts, note = 0, f"{vix_price:.2f}, above its 20-day average ({vix_ma20:.2f}) — no clear signal"
+        breakdown.append({"label": "VIX (Fear Index)", "reading": note, "points": pts})
+
+    y10 = data.get('Bonds', {}).get('US 10Y')
+    y30 = data.get('Bonds', {}).get('US 30Y')
+    if y10 and y30 and _valid(y10.get('price')) and _valid(y30.get('price')):
+        spread = y30['price'] - y10['price']
+        if spread < 0:
+            pts = -20
+        elif spread > 0.8:
+            pts = 20
+        elif spread > 0.3:
+            pts = 10
+        else:
+            pts = 0
+        breakdown.append({
+            "label": "Yield Curve — 30Y vs 10Y",
+            "reading": f"30Y {y30['price']:.2f}% − 10Y {y10['price']:.2f}% = {spread:+.2f}% spread",
+            "points": pts,
+        })
+
+    liq_dict = data.get('Liquidity & Sovereign Risk Indicators (High Weight)', {})
+    new_10y = liq_dict.get('US 10-Year Yield')
+    new_3m = liq_dict.get('US 13-Week Yield')
+    if new_10y and new_3m and _valid(new_10y.get('price')) and _valid(new_3m.get('price')):
+        spread_10y_3m = new_10y['price'] - new_3m['price']
+        pts = -30 if spread_10y_3m < 0 else 0
+        breakdown.append({
+            "label": "Yield Curve — 10Y vs 3-Month",
+            "reading": f"10Y {new_10y['price']:.2f}% − 3-month {new_3m['price']:.2f}% = {spread_10y_3m:+.2f}% ({'inverted' if spread_10y_3m < 0 else 'not inverted'})",
+            "points": pts,
+        })
+
+    credit_dict = data.get('Credit Stress Indicators (Junk Bonds vs Treasuries)', {})
+    hyg = credit_dict.get('High Yield Corp Bonds (HYG)')
+    ief = credit_dict.get('7-10 Year Treasuries (IEF)')
+    if hyg and ief and _valid(hyg.get('change')) and _valid(ief.get('change')):
+        stressed = hyg['change'] < -1.0 and ief['change'] > 0.5
+        pts = -20 if stressed else 0
+        breakdown.append({
+            "label": "Credit Stress",
+            "reading": f"HYG {hyg['change']:+.2f}%, IEF {ief['change']:+.2f}% same day" + (" — stress pattern" if stressed else " — no stress pattern"),
+            "points": pts,
+        })
+
+    sp500 = data.get('US Indices', {}).get('S&P 500')
+    nikkei = data.get('Asian Indices', {}).get('Nikkei 225')
+    nifty = data.get('Asian Indices', {}).get('Nifty 50')
+    eq_parts = []
+    eq_total = 0
+    for asset, name in zip([sp500, nikkei, nifty], ['S&P 500', 'Nikkei', 'Nifty 50']):
+        if asset and _valid(asset.get('ma_50')) and _valid(asset.get('ma_20')) and _valid(asset.get('price')):
+            if asset['price'] > asset['ma_20'] and asset['price'] > asset['ma_50']:
+                p = 10; eq_parts.append(f"{name} above both MAs (+10)")
+            elif asset['price'] > asset['ma_50']:
+                p = 5; eq_parts.append(f"{name} above 50-day only (+5)")
+            else:
+                p = -10; eq_parts.append(f"{name} below 50-day (-10)")
+            eq_total += p
+    if eq_parts:
+        breakdown.append({"label": "Equity Momentum", "reading": ", ".join(eq_parts), "points": eq_total})
+
+    gold = data.get('Commodities', {}).get('Gold')
+    copper = data.get('Commodities', {}).get('Copper')
+    risk_on_signals, valid_data_points, ra_parts = 0, 0, []
+    if gold and _valid(gold.get('change')):
+        valid_data_points += 1
+        agree = gold['change'] < 0
+        if agree: risk_on_signals += 1
+        ra_parts.append(f"Gold {gold['change']:+.2f}% ({'risk-on' if agree else 'risk-off'})")
+    if copper and _valid(copper.get('change')):
+        valid_data_points += 1
+        agree = copper['change'] > 0
+        if agree: risk_on_signals += 1
+        ra_parts.append(f"Copper {copper['change']:+.2f}% ({'risk-on' if agree else 'risk-off'})")
+    if sp500 and _valid(sp500.get('change')):
+        valid_data_points += 1
+        agree = sp500['change'] > 0
+        if agree: risk_on_signals += 1
+        ra_parts.append(f"S&P {sp500['change']:+.2f}% ({'risk-on' if agree else 'risk-off'})")
+    if valid_data_points >= 2:
+        if risk_on_signals == valid_data_points:
+            pts = 30
+        elif risk_on_signals >= valid_data_points - 1:
+            pts = 10
+        else:
+            pts = -30
+        breakdown.append({
+            "label": "Risk Appetite",
+            "reading": f"{', '.join(ra_parts)} — {risk_on_signals} of {valid_data_points} signals agreed",
+            "points": pts,
+        })
+
+    return breakdown
+
+
 def fetch_macro_health():
     av_api_key = os.environ.get('ALPHA_VANTAGE_API_KEY')
     macro_text = ""
@@ -1038,4 +1152,25 @@ if __name__ == "__main__":
     macro_text = fetch_macro_health()
     html_report = generate_html_email(market_data, score, regime, alerts, macro_text, news_items, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr)
     send_email(html_report)
+
+    # Publish a JSON snapshot of today's real score + signal breakdown so
+    # market_sentiment_score.html's "live example" section can fetch and
+    # render it client-side instead of staying frozen on a hand-edited date.
+    try:
+        snapshot = {
+            "date": datetime.now().strftime('%Y-%m-%d'),
+            "generated_at_utc": datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+            "score": score,
+            "regime": regime,
+            "risk_alerts": alerts,
+            "breakdown": build_score_breakdown(market_data),
+            "regional_rec": rec_regional,
+            "momentum_sector": rec_mom,
+        }
+        with open("data/market_sentiment_snapshot.json", "w") as f:
+            json.dump(snapshot, f, indent=2)
+        logging.info("Wrote data/market_sentiment_snapshot.json")
+    except Exception as e:
+        logging.error(f"Failed to write market sentiment snapshot: {e}")
+
     logging.info("Pipeline execution completed.")

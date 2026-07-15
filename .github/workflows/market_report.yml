@@ -11,7 +11,7 @@ on:
 
 permissions:
   actions: read      # guard job reads recent run history
-  contents: read
+  contents: write    # commit the daily sentiment-score snapshot JSON
 
 jobs:
   # Dedup guard: when GitHub finally fires the (often 30-90 min late) scheduled
@@ -90,3 +90,18 @@ jobs:
           SUBSCRIBER_WORKER_SECRET: ${{ secrets.SUBSCRIBER_WORKER_SECRET }}
         run: |
           python market_analyzer.py
+
+      - name: Commit today's sentiment-score snapshot
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/market_sentiment_snapshot.json
+          git commit -m "chore(data): refresh market sentiment snapshot [skip ci]" || echo "No changes to commit"
+          for i in 1 2 3 4 5; do
+            git pull --rebase --autostash origin main
+            if git push origin main; then
+              break
+            fi
+            echo "Push rejected (attempt $i/5), another job likely pushed first — retrying..."
+            sleep $((RANDOM % 10 + 5))
+          done
