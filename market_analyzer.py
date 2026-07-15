@@ -497,7 +497,7 @@ def get_executive_summary_analysis(data, regime_score):
         mom_metrics = momentum_sector[1]
         dist_mom = ((mom_metrics['price'] / mom_metrics['ma_50']) - 1) * 100
         ytd_str = f" and an explosive {mom_metrics['ytd_return']:+.2f}% YTD return" if mom_metrics.get('ytd_return') else ""
-        momentum_name = f"{momentum_sector[0]}. This sector is displaying extreme relative strength, trading {dist_mom:+.2f}% above its 50-day average{ytd_str}. Capital is heavily rotating into this sector."
+        momentum_name = f"{momentum_sector[0]}. This sector currently shows the strongest relative momentum among tracked sectors, trading {dist_mom:+.2f}% above its 50-day average{ytd_str}."
         
         value_names = ['Energy', 'Finance', 'Industrials', 'Banking', 'Metals & Mining']
         value_sectors = {k: v for k, v in valid_sectors.items() if k in value_names}
