@@ -1,326 +1,314 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="midnight">
 <head>
-<script>(function(){var t=localStorage.getItem('viltv_theme');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>
+<script>(function(){var t=localStorage.getItem('viltv_theme');var THEMES=['midnight','default','standard','maroon','silver','gold','gemini'];if(t&&THEMES.indexOf(t)!==-1)document.documentElement.setAttribute('data-theme',t);})();</script>
 <meta charset="UTF-8"/>
 <link rel="icon" type="image/jpeg" href="images/vilfintv-logo.jpg">
 <link rel="apple-touch-icon" href="images/vilfintv-logo.jpg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SIP Calculator — VilfinTV Multiscreener</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<title>SIP Calculator — Project Your Wealth &amp; Real Returns | VilfinTV</title>
+<meta name="description" content="Free SIP calculator with step-up SIP, inflation-adjusted real value, and a year-by-year projection table. See how a monthly SIP compounds into a corpus, then check today's Market Sentiment Score to decide whether to SIP or lump sum."/>
+<meta name="keywords" content="SIP calculator, VilfinTV, systematic investment plan, step-up SIP, inflation adjusted returns, CAGR calculator, lumpsum calculator, mutual fund SIP"/>
+<meta name="robots" content="index, follow, max-image-preview:large"/>
+<meta name="author" content="VilfinTV"/>
+<meta property="og:title" content="SIP Calculator — VilfinTV"/>
+<meta property="og:description" content="Project your SIP's future value with step-up contributions and inflation-adjusted real returns, year by year."/>
+<meta property="og:url" content="https://vilfintv.com/sip_calc.html"/>
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="VilfinTV Multiscreener"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:image" content="https://vilfintv.com/images/vilfintv-logo.jpg"/>
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="SIP Calculator — VilfinTV"/>
+<meta name="twitter:description" content="Project your SIP's future value with step-up contributions and inflation-adjusted real returns, year by year."/>
+<link rel="canonical" href="https://vilfintv.com/sip_calc.html"/>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://vilfintv.com/sip_calc.html",
+      "name": "SIP Calculator — VilfinTV",
+      "url": "https://vilfintv.com/sip_calc.html",
+      "description": "Free SIP calculator with step-up SIP, inflation-adjusted real value, and a year-by-year projection table.",
+      "isPartOf": {
+        "@type": "WebSite",
+        "@id": "https://vilfintv.com/#website",
+        "name": "VilfinTV Multiscreener",
+        "url": "https://vilfintv.com/"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "VilfinTV Multiscreener", "item": "https://vilfintv.com/" },
+        { "@type": "ListItem", "position": 2, "name": "SIP Calculator", "item": "https://vilfintv.com/sip_calc.html" }
+      ]
+    }
+  ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
-:root{
-  --burn:#c0390b;--burn2:#e8540f;--burn3:#ff7235;
-  --gold:#f5a623;--gold2:#ffd166;
-  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;
-  --dark:#0f0f0f;--dark2:#1a1a1a;--dark3:#242424;--dark4:#2e2e2e;
-  --card:#1e1e1e;--card2:#272727;
-  --text:#f0ede8;--text2:#b0a898;--text3:#6e6558;
-  --border:#3a342c;--border2:#4a4238;--radius:12px;
+
+:root {
+  --bg: #ffffff; --bg2: #f5f7fa; --text: #21242c; --text2: #3b3e46; --text3: #6b7280; --border: #e2e2e2;
+  --card: #f7f7f8; --card-hover: #ebf2ff; --blue: #1865f2; --green: #14bf96; --red: #d92916; --gold: #d99a2b;
+  --footer-bg: #21242c; --footer-text: #a4a7b0; --glow: rgba(37,99,235,0.12);
 }
-*{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{font-family:'DM Sans',sans-serif;background:#111;color:var(--text);min-height:100vh}
-.top-bar{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,#0d0400,#1a0800 50%,#2a0e00);border-bottom:2px solid var(--gold);display:flex;align-items:center;gap:14px;padding:0 20px;height:48px;box-shadow:0 2px 20px rgba(0,0,0,.5)}
-.back-btn{display:flex;align-items:center;gap:7px;padding:7px 16px;background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.35);border-radius:8px;color:var(--gold2);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .15s}
-.back-btn:hover{background:rgba(245,166,35,.22);border-color:var(--gold2)}
-.top-bar-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff}
-.calc-body{max-width:960px;margin:0 auto;padding:32px 20px 60px}
-.cc{background:var(--card2);border:1px solid var(--border2);border-radius:var(--radius);padding:24px;margin-bottom:20px}
-.cc-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;color:var(--gold2);margin-bottom:18px;display:flex;align-items:center;gap:8px}
-.cc-title::before{content:'';width:4px;height:20px;background:var(--burn2);border-radius:2px;flex-shrink:0}
-.calc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:20px}
-.calc-field label{display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
-.calc-input{width:100%;padding:11px 14px;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;outline:none;transition:border-color .2s}
-.calc-input:focus{border-color:var(--burn2)}
-.calc-select{width:100%;padding:11px 14px;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;cursor:pointer}
-.calc-range{width:100%;accent-color:var(--burn2)}
-.range-val{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--gold2);margin-top:4px;display:block}
-.calc-results{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px}
-.calc-stat{background:var(--dark3);border-radius:10px;padding:14px;border:1px solid var(--border)}
-.calc-stat-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
-.calc-stat-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold2)}
-.calc-stat-sub{font-size:11px;color:var(--text3);margin-top:2px}
-.donut-wrap{display:flex;flex-direction:column;align-items:center;gap:16px}
-.donut-canvas{max-width:240px;max-height:240px}
-.donut-legend{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
-.donut-leg-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
-.donut-leg-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
-.alloc-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
-.alloc-table th{background:linear-gradient(135deg,var(--burn),var(--burn2));color:#fff;padding:10px 12px;text-align:left;font-weight:600;white-space:nowrap}
-.alloc-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text2)}
-.alloc-table tr:hover td{background:var(--card2)}
-.alloc-table tr:last-child td{border-bottom:none}
-.prompt-box{background:#0d0d0d;border:1px solid var(--border);border-radius:12px;padding:20px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#d4c9bb;line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:60vh;overflow-y:auto}
-.paste-area{width:100%;min-height:160px;padding:18px;background:#0d0d0d;border:2px dashed var(--border2);border-radius:12px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;resize:vertical;outline:none;transition:border-color .2s}
-.paste-area:focus{border-color:var(--burn2);border-style:solid}
-.action-btn{padding:12px 22px;border-radius:10px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:8px;margin-right:8px;margin-bottom:8px}
-.action-btn.primary{background:linear-gradient(135deg,var(--burn),var(--burn2));color:#fff}
-.action-btn.primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(192,57,11,.4)}
-.action-btn.secondary{background:var(--card2);border:1px solid var(--border2);color:var(--text2)}
-.action-btn.secondary:hover{color:var(--text);border-color:var(--burn2)}
-.copy-btn{padding:10px 20px;background:linear-gradient(135deg,var(--burn),var(--burn2));border:none;border-radius:8px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:8px}
-.copy-btn.copied{background:linear-gradient(135deg,#16a34a,#22c55e)}
-@media(max-width:700px){.calc-grid{grid-template-columns:1fr}}
-
-
-/* â•â• GEMINI THEME â€” Google Gemini AI â•â• */
-@keyframes gemini-shimmer{0%{background-position:-200% center}100%{background-position:200% center}}`n@keyframes gemini-flow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}`n@keyframes gemini-pulse{0%,100%{opacity:.6}50%{opacity:1}}`n@keyframes gemini-flow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}`n@keyframes gemini-pulse{0%,100%{opacity:.6}50%{opacity:1}}
-
-/* â”€â”€ Variable overrides â”€â”€ */
-html[data-theme="gemini"]{
-  --burn:#4285f4;--burn2:#9b72cb;--burn3:#d96570;
-  --gold:#f8bc24;--gold2:#f8bc24;
-  --green:#34a853;--red:#ea4335;--amber:#fbbc04;
-  --dark:#1e1f20;--dark2:#282a2c;--dark3:#313335;--dark4:#3c4043;
-  --card:#1e1f20;--card2:#282a2c;--card3:#313335;--card4:#3c4043;
-  --text:#e3e3e3;--text2:#9aa0a6;--text3:#7a8186;
-  --border:#3c4043;--border2:#4a4e52;--border3:#565b60;
-  --page-bg:#131314;
-  --nav-bg:#1e1f20;--nav-text:#e3e3e3;--nav-border:#3c4043;
-  --glow:rgba(66,133,244,.25);
-  --radius:16px;
-  --gem-gradient:linear-gradient(90deg,#4285f4,#9b72cb,#d96570,#f8bc24);
+[data-theme="midnight"] {
+  --bg: #060f1f; --bg2: #0a1830; --text: #e6f1ff; --text2: #9fb2cf; --text3: #64789c; --border: #1b2c4a;
+  --card: #0d1b34; --card-hover: #14284a; --blue: #4f8dff; --green: #22d3ac; --red: #ff6b6b; --gold: #ffc857;
+  --footer-bg: #030a17; --footer-text: #7288ab; --glow: rgba(79,141,255,0.14);
+}
+[data-theme="default"] {
+  --bg: #030810; --bg2: #060f1c; --text: #e2eeff; --text2: #8ea8c8; --text3: #5c7396; --border: #162d4a;
+  --card: #0a1830; --card-hover: #162d4a; --blue: #2563eb; --green: #10b981; --red: #f87171; --gold: #f5b942;
+  --footer-bg: #060f1c; --footer-text: #8ea8c8; --glow: rgba(37,99,235,0.14);
+}
+[data-theme="standard"] {
+  --bg: #f0f4f9; --bg2: #e8edf5; --text: #0f172a; --text2: #374151; --text3: #6b7280; --border: #dde3ed;
+  --card: #ffffff; --card-hover: #edf2f9; --blue: #1d4ed8; --green: #059669; --red: #dc2626; --gold: #b7791f;
+  --footer-bg: #e8edf5; --footer-text: #6b7280; --glow: rgba(29,78,216,0.08);
+}
+[data-theme="maroon"] {
+  --bg: #0a0202; --bg2: #150505; --text: #ffe2e2; --text2: #c89494; --text3: #8a6666; --border: #3a1414;
+  --card: #250a0a; --card-hover: #3a1414; --blue: #ff7f7f; --green: #10b981; --red: #ff4d4d; --gold: #f5b942;
+  --footer-bg: #150505; --footer-text: #c89494; --glow: rgba(255,127,127,0.12);
+}
+[data-theme="silver"] {
+  --bg: #f3f4f6; --bg2: #e5e7eb; --text: #111827; --text2: #4b5563; --text3: #6b7280; --border: #e5e7eb;
+  --card: #ffffff; --card-hover: #f3f4f6; --blue: #374151; --green: #059669; --red: #dc2626; --gold: #b7791f;
+  --footer-bg: #e5e7eb; --footer-text: #4b5563; --glow: rgba(55,65,81,0.06);
+}
+[data-theme="gold"] {
+  --bg: #0a0804; --bg2: #141108; --text: #fffae8; --text2: #c8b387; --text3: #8f7d59; --border: #352d19;
+  --card: #201b0e; --card-hover: #352d19; --blue: #ffd700; --green: #10b981; --red: #ff8080; --gold: #ffd700;
+  --footer-bg: #141108; --footer-text: #c8b387; --glow: rgba(255,215,0,0.1);
+}
+[data-theme="gemini"] {
+  --bg: #050310; --bg2: #09061c; --text: #f5e2ff; --text2: #bca8c8; --text3: #82688f; --border: #1e144a;
+  --card: #130b30; --card-hover: #1e144a; --blue: #f48fb1; --green: #10b981; --red: #ff6b9d; --gold: #ffd166;
+  --footer-bg: #09061c; --footer-text: #bca8c8; --glow: rgba(244,143,177,0.12);
 }
 
-/* â”€â”€ Static dark body â€” no animated background â”€â”€ */
-[data-theme="gemini"] body{`n  background:linear-gradient(-45deg,#131314,#1a2232,#22213a,#2a1f34,#1c2a3a,#241f37)!important;`n  background-size:400% 400%!important;`n  color:#e3e3e3!important;`n  animation:gemini-flow 18s ease-in-out infinite!important;`n}
-[data-theme="gemini"] .layout{background:#131314}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', 'DM Sans', sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  padding-bottom: 60px;
+  transition: background-color 0.3s, color 0.3s;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; transition: color 0.2s ease; }
+button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
 
-/* â”€â”€ Gemini gradient â€” accent text/icons only â”€â”€ */
-[data-theme="gemini"] .brand-name span,
-[data-theme="gemini"] .site-title span,
-[data-theme="gemini"] .gemini-label{
-  background:linear-gradient(90deg,#4285f4,#9b72cb,#d96570,#f8bc24,#4285f4);
-  background-size:200% auto;
-  -webkit-background-clip:text;background-clip:text;
-  -webkit-text-fill-color:transparent;
-  animation:gemini-shimmer 4s linear infinite;
+/* ── Nav ── */
+.top-menubar {
+  position: sticky; top: 0; z-index: 1000;
+  height: 62px; background-color: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  transition: background-color 0.3s, border-color 0.3s;
+}
+.nav-inner {
+  max-width: 1120px; margin: 0 auto; height: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px;
+}
+.nav-brand-group { display: flex; align-items: center; gap: 26px; flex-wrap: wrap; }
+.nav-brand { display: flex; align-items: center; gap: 9px; font-size: 17px; font-weight: 800; color: var(--green); white-space: nowrap; letter-spacing: -0.01em; }
+.nav-links { display: flex; align-items: center; gap: 20px; font-weight: 600; color: var(--text2); font-size: 13.5px; flex-wrap: wrap; }
+.nav-links a:hover { color: var(--green); }
+.theme-btn { background: transparent; border: 1px solid var(--border); font-size: 16px; padding: 7px 10px; border-radius: 8px; }
+.theme-btn:hover { background: var(--card); border-color: var(--blue); }
+@media(max-width: 760px) {
+  .top-menubar { position: static; height: auto; }
+  .nav-inner { flex-wrap: wrap; height: auto; padding: 12px 18px; row-gap: 10px; }
 }
 
-/* â”€â”€ Navigation / header bars â”€â”€ */
-[data-theme="gemini"] .main-nav,
-[data-theme="gemini"] .site-header,
-[data-theme="gemini"] .top-menubar,
-[data-theme="gemini"] .top-bar,
-[data-theme="gemini"] nav.nav,
-[data-theme="gemini"] .nav-bar{
-  background:#1e1f20!important;
-  border-bottom:1px solid #3c4043!important;
-  box-shadow:none!important;
-  backdrop-filter:none!important;
-  -webkit-backdrop-filter:none!important;
-}
-
-/* â”€â”€ Header accent line â”€â”€ */
-[data-theme="gemini"] .site-header::after{
-  background:linear-gradient(90deg,#4285f4,#9b72cb,#d96570,#f8bc24)!important;
-  background-size:200% 100%!important;
-  animation:gemini-shimmer 4s linear infinite!important;
-  height:2px!important;
-}
-[data-theme="gemini"] .site-header::before{background:none!important}
-
-/* â”€â”€ Brand icon â”€â”€ */
-[data-theme="gemini"] .brand-icon{
-  background:linear-gradient(135deg,#4285f4,#9b72cb)!important;
-  box-shadow:0 0 10px rgba(66,133,244,.3)!important;
-}
-[data-theme="gemini"] .brand-name span{color:#4285f4}
-
-/* â”€â”€ Sidebar â”€â”€ */
-[data-theme="gemini"] .sidebar{background:#1e1f20!important;border-right:1px solid #3c4043!important;backdrop-filter:none!important}
-[data-theme="gemini"] .sidebar-toggle{background:rgba(66,133,244,.08);border-color:#3c4043;color:#e3e3e3}
-[data-theme="gemini"] .sidebar-menu-item{color:#9aa0a6}
-[data-theme="gemini"] .sidebar-menu-item:hover{background:rgba(66,133,244,.1);color:#e3e3e3}
-[data-theme="gemini"] .sidebar-menu-item.active-menu{background:rgba(66,133,244,.15);color:#4285f4;border-left:3px solid #4285f4}
-
-/* â”€â”€ Right bar â”€â”€ */
-[data-theme="gemini"] .right-bar{background:#1e1f20!important;border-left:1px solid #3c4043!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-[data-theme="gemini"] .rb-header{background:#1e1f20;border-bottom:1px solid #3c4043}
-[data-theme="gemini"] .rb-title{color:#e3e3e3}
-[data-theme="gemini"] .rb-tab{background:transparent;color:#9aa0a6;border:1px solid #3c4043}
-[data-theme="gemini"] .rb-tab:hover{background:rgba(66,133,244,.1);color:#e3e3e3;border-color:#4285f4}
-[data-theme="gemini"] .rb-tab.active{background:rgba(66,133,244,.15);color:#4285f4;border-color:#4285f4;box-shadow:none}
-[data-theme="gemini"] .rb-ai-input{background:#282a2c;border-color:#3c4043;color:#e3e3e3}
-[data-theme="gemini"] .rb-msg-bubble{background:#282a2c;border-color:#3c4043;color:#e3e3e3}
-[data-theme="gemini"] .rb-md-h2{color:#4285f4}
-
-/* â”€â”€ Mobile bottom bar â”€â”€ */
-[data-theme="gemini"] .mobile-rb-bar{background:#1e1f20!important;border-top:1px solid #3c4043!important;backdrop-filter:none!important}
-[data-theme="gemini"] .mobile-rb-btn{background:#282a2c;border-color:#3c4043;color:#9aa0a6}
-[data-theme="gemini"] .mobile-rb-btn.active,
-[data-theme="gemini"] .mobile-rb-btn:active{background:rgba(66,133,244,.15);border-color:#4285f4;color:#4285f4}
-
-/* â”€â”€ Dropdowns â”€â”€ */
-[data-theme="gemini"] .tmenu-dropdown{background:#282a2c;border-color:#3c4043;box-shadow:0 8px 32px rgba(0,0,0,.6)}
-[data-theme="gemini"] .dd-item{color:#9aa0a6;border-bottom-color:#3c4043}
-[data-theme="gemini"] .dd-item:hover{background:rgba(66,133,244,.1);color:#e3e3e3}
-[data-theme="gemini"] .dd-sep{background:#3c4043}
-[data-theme="gemini"] .dd-submenu{background:#282a2c;border-color:#3c4043;box-shadow:8px 8px 32px rgba(0,0,0,.5)}
-
-/* â”€â”€ Cards / panels â”€â”€ */
-[data-theme="gemini"] .cc,
-[data-theme="gemini"] .calc-stat,
-[data-theme="gemini"] .card,
-[data-theme="gemini"] .panel,
-[data-theme="gemini"] .q-block,
-[data-theme="gemini"] .mode-card,
-[data-theme="gemini"] .signal-card,
-[data-theme="gemini"] .news-card,
-[data-theme="gemini"] .article-card,
-[data-theme="gemini"] .stat-card,
-[data-theme="gemini"] .result-card,
-[data-theme="gemini"] .info-box,
-[data-theme="gemini"] .output-section,
-[data-theme="gemini"] .result-box,
-[data-theme="gemini"] .prompt-box,
-[data-theme="gemini"] .paste-area,
-[data-theme="gemini"] .nsm-box,
-[data-theme="gemini"] .lnb{
-  background:#1e1f20!important;
-  border-color:#3c4043!important;
-}
-[data-theme="gemini"] .mode-card:hover{border-color:#4285f4!important;background:rgba(66,133,244,.08)!important;transform:translateY(-2px)}
-[data-theme="gemini"] .mode-card.selected{border-color:#4285f4!important;background:rgba(66,133,244,.12)!important}
-
-/* â”€â”€ Form elements â”€â”€ */
-[data-theme="gemini"] .calc-input,
-[data-theme="gemini"] .calc-select,
-[data-theme="gemini"] .text-input,
-[data-theme="gemini"] input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
-[data-theme="gemini"] textarea,
-[data-theme="gemini"] select{
-  background:#282a2c!important;
-  border-color:#3c4043!important;
-  color:#e3e3e3!important;
-}
-[data-theme="gemini"] input:focus,
-[data-theme="gemini"] textarea:focus,
-[data-theme="gemini"] select:focus{
-  border-color:#4285f4!important;
-  outline:none!important;
-  box-shadow:0 0 0 2px rgba(66,133,244,.2)!important;
-}
-[data-theme="gemini"] input[type="range"]{accent-color:#4285f4!important}
-[data-theme="gemini"] .range-val{color:#4285f4!important}
-
-/* â”€â”€ Right-bar inputs â”€â”€ */
-[data-theme="gemini"] .right-bar input,
-[data-theme="gemini"] .right-bar textarea,
-[data-theme="gemini"] .right-bar select{background:#282a2c!important;color:#e3e3e3!important;border-color:#3c4043!important}
-
-/* â”€â”€ Primary buttons â”€â”€ */
-[data-theme="gemini"] .action-btn.primary,
-[data-theme="gemini"] .copy-btn,
-[data-theme="gemini"] .query-ai-btn,
-[data-theme="gemini"] .generate-btn,
-[data-theme="gemini"] .run-btn,
-[data-theme="gemini"] button.primary{
-  background:#4285f4!important;color:#fff!important;
-  box-shadow:0 2px 8px rgba(66,133,244,.3)!important;
-}
-[data-theme="gemini"] .action-btn.primary:hover,
-[data-theme="gemini"] .query-ai-btn:hover{background:#5a95f5!important;box-shadow:0 4px 16px rgba(66,133,244,.4)!important}
-[data-theme="gemini"] .copy-btn.copied{background:#34a853!important}
-
-/* â”€â”€ Secondary buttons â”€â”€ */
-[data-theme="gemini"] .action-btn.secondary{background:#282a2c!important;border-color:#3c4043!important;color:#9aa0a6!important}
-[data-theme="gemini"] .action-btn.secondary:hover{border-color:#4285f4!important;color:#e3e3e3!important}
-
-/* â”€â”€ Back buttons â”€â”€ */
-[data-theme="gemini"] .back-btn{background:rgba(66,133,244,.08)!important;border-color:#3c4043!important;color:#4285f4!important}
-[data-theme="gemini"] .back-btn:hover{background:rgba(66,133,244,.15)!important;border-color:#4285f4!important;color:#e3e3e3!important}
-
-/* â”€â”€ Option pills â”€â”€ */
-[data-theme="gemini"] .opt{border-color:#3c4043!important;background:#282a2c!important;color:#9aa0a6!important}
-[data-theme="gemini"] .opt:hover{border-color:#4285f4!important;color:#e3e3e3!important;background:rgba(66,133,244,.08)!important}
-[data-theme="gemini"] .opt.selected{border-color:#4285f4!important;background:rgba(66,133,244,.15)!important;color:#4285f4!important}
-
-/* â”€â”€ Tables â”€â”€ */
-[data-theme="gemini"] .alloc-table th,[data-theme="gemini"] table th{background:#282a2c!important;color:#e3e3e3!important;border-bottom:2px solid #3c4043!important}
-[data-theme="gemini"] .alloc-table td,[data-theme="gemini"] table td{border-bottom-color:#3c4043!important;color:#9aa0a6!important}
-[data-theme="gemini"] .alloc-table tr:hover td,[data-theme="gemini"] table tr:hover td{background:rgba(66,133,244,.05)!important}
-
-/* â”€â”€ Step headers â”€â”€ */
-[data-theme="gemini"] .step-header{border-bottom-color:#3c4043!important}
-[data-theme="gemini"] .step-num{background:#4285f4!important}
-[data-theme="gemini"] .step-title,[data-theme="gemini"] .cc-title{color:#4285f4!important}
-[data-theme="gemini"] .cc-title::before{background:#4285f4!important}
-
-/* â”€â”€ Stat / values â”€â”€ */
-[data-theme="gemini"] .calc-stat-val{color:#4285f4!important}
-[data-theme="gemini"] .q-num{background:#4285f4!important}
-
-/* â”€â”€ News / live feed â”€â”€ */
-[data-theme="gemini"] .nsm-title,[data-theme="gemini"] .nsm-feed-name{color:#e3e3e3}
-[data-theme="gemini"] .lnb-text{color:#9aa0a6}
-[data-theme="gemini"] .lnb-label{color:#e3e3e3}
-[data-theme="gemini"] .lnb-live{background:rgba(66,133,244,.12);color:#4285f4}
-
-/* â”€â”€ Blog hub â”€â”€ */
-[data-theme="gemini"] .header-chip{background:rgba(66,133,244,.1)!important;border-color:#3c4043!important;color:#4285f4!important}
-[data-theme="gemini"] .eyebrow{color:#4285f4!important}
-[data-theme="gemini"] .signal-grid .signal-card,[data-theme="gemini"] .hero-grid .panel{background:#1e1f20!important;border-color:#3c4043!important}
-
-/* â”€â”€ Status indicators â”€â”€ */
-[data-theme="gemini"] .cf-dot.connected{background:#34a853!important;box-shadow:0 0 6px rgba(52,168,83,.5)!important}
-
-/* â”€â”€ Left menu overlay â”€â”€ */
-[data-theme="gemini"] .left-menu-overlay{background:#131314}
-[data-theme="gemini"] .left-menu-header{background:#1e1f20;border-bottom-color:#3c4043}
-[data-theme="gemini"] .left-menu-page{background:#131314}
-
-/* â”€â”€ Footer â”€â”€ */
-[data-theme="gemini"] footer{background:#1e1f20!important;border-top:1px solid #3c4043!important;color:#9aa0a6!important}
-
-/* â”€â”€ Scrollbar â”€â”€ */
-[data-theme="gemini"] ::-webkit-scrollbar{width:6px;height:6px}
-[data-theme="gemini"] ::-webkit-scrollbar-track{background:#131314}
-[data-theme="gemini"] ::-webkit-scrollbar-thumb{background:#3c4043;border-radius:3px}
-[data-theme="gemini"] ::-webkit-scrollbar-thumb:hover{background:#565b60}
-
-/* â”€â”€ Selection â”€â”€ */
-[data-theme="gemini"] ::selection{background:rgba(66,133,244,.3);color:#e3e3e3}
-
-[data-theme="gemini"] body::before{
-  content:"";
-  position:fixed;
-  inset:-10%;
-  pointer-events:none;
-  z-index:0;
+/* ── Hero ── */
+.hero-wrap {
+  position: relative; overflow: hidden;
   background:
-    radial-gradient(circle at 20% 25%,rgba(66,133,244,.16),transparent 42%),
-    radial-gradient(circle at 80% 20%,rgba(155,114,203,.16),transparent 44%),
-    radial-gradient(circle at 35% 80%,rgba(217,101,112,.12),transparent 45%),
-    radial-gradient(circle at 78% 76%,rgba(248,188,36,.10),transparent 40%);
-  filter:blur(18px);
-  animation:gemini-pulse 8s ease-in-out infinite;
+    radial-gradient(ellipse 900px 500px at 20% -10%, var(--glow), transparent 60%),
+    radial-gradient(ellipse 700px 500px at 90% 10%, var(--glow), transparent 55%);
+  border-bottom: 1px solid var(--border);
 }
-[data-theme="gemini"] #app,
-[data-theme="gemini"] .app-shell,
-[data-theme="gemini"] .layout,
-[data-theme="gemini"] .site-header,
-[data-theme="gemini"] .main-nav{position:relative;z-index:1}
-@media (prefers-reduced-motion: reduce){
-  [data-theme="gemini"] body{animation:none!important;background:#131314!important}
-  [data-theme="gemini"] body::before{animation:none!important}
+.hero-section { max-width: 900px; margin: 0 auto; padding: 76px 24px 64px; text-align: center; position: relative; }
+.score-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'JetBrains Mono', monospace; font-size: 12.5px;
+  letter-spacing: 0.14em; color: var(--green); text-transform: uppercase; margin-bottom: 20px;
+  border: 1px solid var(--border); padding: 7px 16px; border-radius: 999px; background: var(--card);
+}
+.score-eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+.hero-title {
+  font-size: 46px; font-weight: 800; color: var(--text); margin-bottom: 18px; line-height: 1.12;
+  font-family: 'Playfair Display', serif; letter-spacing: -0.01em;
+}
+.hero-subtitle { font-size: 17.5px; color: var(--text2); max-width: 680px; margin: 0 auto 34px; }
+.subscribe-cta {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: linear-gradient(135deg, var(--green), #0ea885); color: #04241c; font-weight: 800; font-size: 15.5px;
+  padding: 15px 30px; border-radius: 10px; box-shadow: 0 10px 30px -8px rgba(20,191,150,0.5);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.subscribe-cta:hover { transform: translateY(-1px); box-shadow: 0 14px 34px -8px rgba(20,191,150,0.6); color: #04241c; }
+.trust-row {
+  display: flex; justify-content: center; gap: 26px; flex-wrap: wrap; margin-top: 26px;
+  font-size: 12.5px; color: var(--text3); font-family: 'JetBrains Mono', monospace;
+}
+.trust-row span { display: flex; align-items: center; gap: 6px; }
+
+/* ── Sections ── */
+.section { max-width: 1120px; margin: 56px auto 0; padding: 0 24px; }
+.section-kicker {
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.12em;
+  color: var(--blue); text-transform: uppercase; margin-bottom: 10px; font-weight: 700;
+}
+.section-title { font-size: 26px; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.01em; }
+.section-lead { color: var(--text2); font-size: 15px; margin-bottom: 26px; max-width: 740px; }
+
+/* ── Calculator cards ── */
+.tool-card {
+  background: linear-gradient(180deg, var(--card), var(--bg2));
+  border: 1px solid var(--border); border-radius: 18px; padding: 30px 32px;
+  box-shadow: 0 20px 50px -30px rgba(0,0,0,0.5);
+}
+.tool-card-title {
+  font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 22px; display: flex; align-items: center; gap: 10px;
+}
+.tool-card-title::before { content: ''; width: 4px; height: 16px; background: var(--blue); border-radius: 2px; flex-shrink: 0; }
+
+.calc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 22px; margin-bottom: 26px; }
+.calc-field label { display: block; font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+.calc-input, .calc-select {
+  width: 100%; padding: 12px 14px; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+  color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 14px; outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.calc-select { font-family: 'Inter', 'DM Sans', sans-serif; font-size: 13.5px; cursor: pointer; }
+.calc-input:focus, .calc-select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--glow); }
+.calc-range { width: 100%; accent-color: var(--blue); margin-top: 2px; }
+.range-val { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: var(--green); margin-top: 6px; display: block; }
+
+.calc-results { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 14px; }
+.calc-stat { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; transition: border-color 0.2s, transform 0.2s; }
+.calc-stat:hover { border-color: var(--blue); transform: translateY(-2px); }
+.calc-stat-lbl { font-size: 10.5px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 7px; font-weight: 700; }
+.calc-stat-val { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; color: var(--text); }
+.calc-stat-sub { font-size: 11.5px; color: var(--text3); margin-top: 3px; }
+
+.donut-row { display: grid; grid-template-columns: auto 1fr; gap: 34px; align-items: center; }
+.donut-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.donut-canvas { max-width: 220px; max-height: 220px; }
+.donut-legend { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.donut-leg-item { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--text2); }
+.donut-leg-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+.donut-facts { font-size: 14.5px; color: var(--text2); }
+.donut-facts b { color: var(--text); }
+.donut-facts p { margin-bottom: 12px; }
+@media(max-width: 620px) { .donut-row { grid-template-columns: 1fr; text-align: center; } .donut-facts { text-align: left; } }
+
+.proj-table-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--border); }
+.proj-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 620px; }
+.proj-table th {
+  background: var(--bg2); color: var(--text3); padding: 13px 16px; text-align: left; font-weight: 700;
+  text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.05em; white-space: nowrap; border-bottom: 1px solid var(--border);
+}
+.proj-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text2); white-space: nowrap; font-family: 'JetBrains Mono', monospace; }
+.proj-table tr:last-child td { border-bottom: none; }
+.proj-table tbody tr:hover td { background: var(--card-hover); }
+
+.callout-box {
+  margin-top: 26px; padding: 22px 26px; background: linear-gradient(135deg, var(--card), var(--bg2));
+  border: 1px solid var(--border); border-left: 4px solid var(--green); border-radius: 14px;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+}
+.callout-box .txt { font-size: 14.5px; color: var(--text2); max-width: 620px; }
+.callout-box .txt b { color: var(--text); }
+.callout-btn {
+  display: inline-flex; align-items: center; gap: 8px; background: var(--blue); color: #fff !important;
+  font-weight: 700; font-size: 13.5px; padding: 12px 20px; border-radius: 10px; white-space: nowrap;
+  box-shadow: 0 8px 20px -8px var(--blue);
+}
+.callout-btn:hover { transform: translateY(-1px); }
+
+.note-box {
+  background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--blue); border-radius: 10px;
+  padding: 16px 20px; font-size: 13.5px; color: var(--text2); margin-top: 22px;
 }
 
+/* ── Share row + footer ── */
+.share-row { margin-top: 68px; text-align: center; }
+.share-label { font-size: 12.5px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; margin-bottom: 14px; }
+.share-btns { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.share-btn { padding: 10px 20px; color: #fff !important; text-decoration: none; border-radius: 8px; font-size: 13.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; transition: opacity 0.2s, transform 0.2s; }
+.share-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+.footer { margin-top: 32px; background: var(--footer-bg); color: var(--footer-text); padding: 44px 24px 32px; text-align: center; font-size: 13px; }
+.footer .disclaimer { max-width: 760px; margin: 0 auto 20px; line-height: 1.75; }
+.footer a { color: var(--green); font-weight: 700; }
+.footer-links-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 4px; max-width: 780px; margin: 0 auto 18px; }
+.footer-links-row a { padding: 0 10px; border-right: 1px solid var(--border); line-height: 1.4; }
+.footer-links-row a:last-child { border-right: none; }
+
+@media(max-width: 640px) {
+  .hero-title { font-size: 32px; }
+  .section-title { font-size: 22px; }
+  .tool-card { padding: 24px 20px; }
+}
 </style>
 </head>
 <body>
-<div class="top-bar">
-  <a href="index.html" class="back-btn" title="Go to MultiScreener">&#9638; Multiscreener</a>
-  <a href="sip_calc.html" class="back-btn" title="Reload this page">&#127968; Home</a>
-  <a href="news.html" class="back-btn" title="News">📰 News</a>
-  <a href="story.html" class="back-btn" title="Stories">📖 Stories</a>
-  <a href="blog_intelligence_hub.html" class="back-btn" title="Blog">📝 Blog</a>
-  <div class="top-bar-title">&#128200; SIP Calculator</div>
+
+<nav class="top-menubar">
+  <div class="nav-inner">
+    <div class="nav-brand-group">
+      <div class="nav-brand">
+        <img src="images/vilfintv-logo.jpg" alt="VilfinTV logo" width="22" height="22" style="width:22px;height:22px;border-radius:50%;display:inline-block;vertical-align:middle;flex-shrink:0"/>
+        VilfinTV
+      </div>
+      <div class="nav-links">
+        <a href="index.html" title="Go to MultiScreener">&#9638; Multiscreener</a>
+        <a href="index.html">&#127968; Home</a>
+        <a href="lumpsum_calc.html">💰 Lumpsum Calculator</a>
+        <a href="market_sentiment_score.html">📊 Sentiment Score</a>
+        <a href="news.html">📰 News</a>
+        <a href="education.html">🎓 Academy</a>
+      </div>
+    </div>
+    <button class="theme-btn" onclick="cycleTheme()" title="Change theme">&#x1F3A8;</button>
+  </div>
+</nav>
+
+<div class="hero-wrap">
+  <div class="hero-section">
+    <div class="score-eyebrow"><span class="dot"></span> Financial Calculator</div>
+    <h1 class="hero-title">SIP Calculator</h1>
+    <p class="hero-subtitle">Project how a monthly Systematic Investment Plan compounds into a corpus — with optional annual step-ups and an inflation-adjusted real value, plus a full year-by-year breakdown. Free, instant, no login.</p>
+    <a class="subscribe-cta" href="manage_subscription.html?action=subscribe">📩 Subscribe to the Daily Market Report</a>
+    <div class="trust-row">
+      <span>● Step-up SIP support</span>
+      <span>● Inflation-adjusted real value</span>
+      <span>● 6 currencies</span>
+    </div>
+  </div>
 </div>
-<div class="calc-body">
-  <div class="cc">
-    <div class="cc-title">SIP Parameters</div>
+
+<div class="section" id="parameters">
+  <div class="section-kicker">01 · Your Inputs</div>
+  <h2 class="section-title">SIP Parameters</h2>
+  <p class="section-lead">Set your monthly contribution, expected return, horizon, and (optionally) an annual step-up — every result below updates instantly as you adjust these.</p>
+  <div class="tool-card">
     <div class="calc-grid">
       <div class="calc-field"><label>Currency</label><select class="calc-select" id="sip-currency" onchange="calcSIP()"><option value="₹">🇮🇳 INR — ₹ Rupee</option><option value="¥">🇯🇵 JPY — ¥ Yen</option><option value="$">🇺🇸 USD — $ Dollar</option><option value="€">🇪🇺 EUR — € Euro</option><option value="£">🇬🇧 GBP — £ Pound</option><option value="S$">🇸🇬 SGD — S$ Dollar</option></select></div>
       <div class="calc-field"><label>Monthly SIP Amount</label><input class="calc-input" type="number" id="sip-amount" value="10000" min="1" oninput="calcSIP()"/></div>
@@ -331,30 +319,88 @@ html[data-theme="gemini"]{
     </div>
     <div class="calc-results" id="sip-results"></div>
   </div>
-  <div class="cc">
-    <div class="cc-title">Wealth Breakdown</div>
-    <div class="donut-wrap">
-      <canvas class="donut-canvas" id="sip-donut" width="240" height="240"></canvas>
-      <div class="donut-legend" id="sip-legend"></div>
+</div>
+
+<div class="section" id="breakdown">
+  <div class="section-kicker">02 · The Result</div>
+  <h2 class="section-title">Wealth Breakdown</h2>
+  <p class="section-lead">How much of your final corpus is money you actually put in, versus growth from compounding.</p>
+  <div class="tool-card">
+    <div class="donut-row">
+      <div class="donut-wrap">
+        <canvas class="donut-canvas" id="sip-donut" width="220" height="220"></canvas>
+        <div class="donut-legend" id="sip-legend"></div>
+      </div>
+      <div class="donut-facts">
+        <p>Every SIP's final value splits into two parts: <b>what you contributed</b> (your monthly amount, times every month you invested) and <b>what the market added</b> on top through compounding.</p>
+        <p>The longer the horizon and the higher the return assumption, the larger the "Returns" slice becomes relative to your own contributions — this is the core case for starting early rather than investing a larger amount later.</p>
+      </div>
     </div>
   </div>
-  <div class="cc">
-    <div class="cc-title">Year-by-Year Projection</div>
-    <div style="overflow-x:auto">
-      <table class="alloc-table" id="sip-table">
+  <div class="callout-box">
+    <div class="txt"><b>🤔 Not sure if now's a good time to start, or to lump sum instead?</b> VilfinTV's Market Sentiment Score reads six real market signals every trading day and maps them to a SIP-vs-lump-sum playbook.</div>
+    <a class="callout-btn" href="market_sentiment_score.html">Check today's score &rarr;</a>
+  </div>
+</div>
+
+<div class="section" id="projection">
+  <div class="section-kicker">03 · Year by Year</div>
+  <h2 class="section-title">Full Projection Table</h2>
+  <p class="section-lead">Your invested amount, estimated value, gain, and inflation-adjusted real value for every year of the plan. Scroll sideways on mobile to see every column.</p>
+  <div class="tool-card">
+    <div class="proj-table-wrap">
+      <table class="proj-table" id="sip-table">
         <thead><tr><th>Year</th><th>Monthly SIP</th><th>Total Invested</th><th>Est. Value</th><th>Gain</th><th>Real Value (adj)</th></tr></thead>
         <tbody id="sip-table-body"></tbody>
       </table>
     </div>
+    <div class="note-box">📐 <b>Method:</b> compounds monthly at your expected return, applies the step-up (if any) at the start of each new year, then divides the year-end value by <code>(1 + inflation)^years</code> to get today's-money "Real Value." Approx. CAGR is solved from total invested vs. total value over the full period.</div>
   </div>
 </div>
+
+<div class="share-row">
+  <div class="share-label">Found this useful? Share it</div>
+  <div class="share-btns">
+    <a href="https://api.whatsapp.com/send?text=Free%20SIP%20Calculator%20with%20step-up%20%26%20inflation-adjusted%20returns%3A%20https%3A%2F%2Fvilfintv.com%2Fsip_calc.html" target="_blank" rel="noopener" class="share-btn" style="background:#25D366">WhatsApp</a>
+    <a href="https://twitter.com/intent/tweet?text=Free%20SIP%20Calculator%20with%20step-up%20SIP%20%26%20inflation-adjusted%20real%20returns&url=https%3A%2F%2Fvilfintv.com%2Fsip_calc.html" target="_blank" rel="noopener" class="share-btn" style="background:#000;border:1px solid #333">X (Twitter)</a>
+    <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fvilfintv.com%2Fsip_calc.html" target="_blank" rel="noopener" class="share-btn" style="background:#1877F2">Facebook</a>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="disclaimer">
+    This calculator is for informational and educational purposes only and does not constitute financial or investment advice. Results are illustrative projections based on the fixed return rate you enter — actual mutual fund and market returns fluctuate year to year and are never guaranteed. Past performance does not predict future results. Always do your own research or consult a licensed financial advisor before making investment decisions. VilfinTV is not responsible for decisions made based on this tool.
+  </div>
+  <div class="footer-links-row">
+    <a href="lumpsum_calc.html">Lumpsum Calculator</a>
+    <a href="market_sentiment_score.html">Market Sentiment Score</a>
+    <a href="manage_subscription.html?action=subscribe">Subscribe to the Daily Market Report</a>
+    <a href="index.html">MultiScreener Dashboard</a>
+    <a href="news.html" target="_blank">Stock &amp; Market News</a>
+    <a href="education.html" target="_blank">VilfinTV Academy</a>
+    <a href="legal.html" target="_blank">Legal &amp; Disclosure</a>
+  </div>
+  <div>© VilfinTV</div>
+</div>
+
 <script>
+const THEMES = ['midnight','default','standard','maroon','silver','gold','gemini'];
+function cycleTheme(){
+  const html = document.documentElement;
+  const cur = html.getAttribute('data-theme') || 'midnight';
+  const idx = THEMES.indexOf(cur);
+  const next = THEMES[(idx + 1) % THEMES.length];
+  html.setAttribute('data-theme', next);
+  try { localStorage.setItem('viltv_theme', next); } catch(e) {}
+  calcSIP();
+}
+
 function drawDonut(canvasId, legendId, segments) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
-  const cx = W/2, cy = H/2, R = Math.min(W,H)/2 - 10, r = R*0.55;
+  const cx = W/2, cy = H/2, R = Math.min(W,H)/2 - 8, r = R*0.58;
   ctx.clearRect(0,0,W,H);
   const total = segments.reduce((s,x)=>s+x.value,0);
   if (!total) return;
@@ -364,13 +410,16 @@ function drawDonut(canvasId, legendId, segments) {
     ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,R,angle,angle+slice); ctx.closePath();
     ctx.fillStyle = seg.color; ctx.fill(); angle += slice;
   });
-  ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI); ctx.fillStyle = '#1a1a1a'; ctx.fill();
-  ctx.fillStyle = '#ffd166'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = 'bold 11px DM Sans,sans-serif'; ctx.fillText('Breakdown', cx, cy);
+  const rootStyles = getComputedStyle(document.documentElement);
+  const holeColor = (rootStyles.getPropertyValue('--card') || '#0d1b34').trim();
+  const labelColor = (rootStyles.getPropertyValue('--text') || '#e6f1ff').trim();
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI); ctx.fillStyle = holeColor || '#0d1b34'; ctx.fill();
+  ctx.fillStyle = labelColor || '#e6f1ff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = '700 12px Inter, DM Sans, sans-serif'; ctx.fillText('Breakdown', cx, cy);
   const legendEl = document.getElementById(legendId);
   if (legendEl) {
     legendEl.innerHTML = segments.map(s=>
-      `<div class="donut-leg-item"><div class="donut-leg-dot" style="background:${s.color}"></div><span>${s.label}: <strong style="color:#ffd166">${s.pct}%</strong></span></div>`
+      `<div class="donut-leg-item"><div class="donut-leg-dot" style="background:${s.color}"></div><span>${s.label}: <strong style="color:${s.color}">${s.pct}%</strong></span></div>`
     ).join('');
   }
 }
@@ -380,19 +429,6 @@ function fmt(n, sym) {
   if (n>=1e7) return sym+(n/1e7).toFixed(2)+' Cr';
   if (n>=1e5) return sym+(n/1e5).toFixed(2)+' L';
   return sym+Math.round(n).toLocaleString('en-IN');
-}
-
-function _copyText(text, btnId, resetLabel) {
-  const btn = document.getElementById(btnId);
-  const markCopied = () => {
-    if (btn) { btn.classList.add('copied'); btn.innerHTML = '✅ Copied!'; }
-    setTimeout(() => { if(btn){ btn.classList.remove('copied'); btn.innerHTML = resetLabel; } }, 2500);
-  };
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(text).then(markCopied).catch(() => { document.execCommand('copy'); markCopied(); });
-  } else {
-    try { const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); markCopied(); } catch(e) { alert('Copy failed. Please select and copy manually.'); }
-  }
 }
 
 function calcSIP() {
@@ -422,11 +458,14 @@ function calcSIP() {
     {lbl:'Approx CAGR',val:xirr+'%',sub:'Annual growth rate'},
     {lbl:'Period',val:years+' Years',sub:stepup>0?`Step-up ${stepup}%/yr`:'Fixed SIP'},
   ].map(s=>`<div class="calc-stat"><div class="calc-stat-lbl">${s.lbl}</div><div class="calc-stat-val">${s.val}</div><div class="calc-stat-sub">${s.sub}</div></div>`).join('');
+  const rootStyles = getComputedStyle(document.documentElement);
+  const blueColor = (rootStyles.getPropertyValue('--blue') || '#4f8dff').trim();
+  const greenColor = (rootStyles.getPropertyValue('--green') || '#22d3ac').trim();
   drawDonut('sip-donut','sip-legend',[
-    {label:'Invested',value:totalInvested,color:'#e8540f',pct:Math.round(totalInvested/totalValue*100)},
-    {label:'Returns',value:gain,color:'#ffd166',pct:Math.round(gain/totalValue*100)},
+    {label:'Invested',value:totalInvested,color:blueColor,pct:Math.round(totalInvested/totalValue*100)},
+    {label:'Returns',value:gain,color:greenColor,pct:Math.round(gain/totalValue*100)},
   ]);
-  document.getElementById('sip-table-body').innerHTML=rows.map(r=>`<tr><td>${r.y}</td><td>${fmt(r.monthly,sym)}/mo</td><td>${fmt(r.invested,sym)}</td><td style="color:#ffd166;font-weight:700">${fmt(r.value,sym)}</td><td style="color:#22c55e">${fmt(r.gain,sym)}</td><td style="color:#888">${fmt(r.real,sym)}</td></tr>`).join('');
+  document.getElementById('sip-table-body').innerHTML=rows.map(r=>`<tr><td>${r.y}</td><td>${fmt(r.monthly,sym)}/mo</td><td>${fmt(r.invested,sym)}</td><td style="color:var(--text);font-weight:700">${fmt(r.value,sym)}</td><td style="color:var(--green)">${fmt(r.gain,sym)}</td><td style="color:var(--text3)">${fmt(r.real,sym)}</td></tr>`).join('');
 }
 
 document.addEventListener('DOMContentLoaded', calcSIP);
