@@ -412,7 +412,7 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
       </table>
       <div style="margin-top:18px;">
         <b style="font-size:13.5px; color:var(--text3); text-transform:uppercase; letter-spacing:0.06em;">Risk Alerts</b><br/>
-        <span class="no-alerts" id="live-risk-alerts">No risk alerts fired today — no extreme VIX, no yield curve inversion, no credit stress spike.</span>
+        <span class="no-alerts" id="live-risk-alerts">No risk alerts fired today — no extreme VIX, no yield curve inversion, no credit stress or spread widening, no labor-market deterioration, no tightening financial conditions, no volatility backwardation.</span>
       </div>
       <div class="rec-box" id="live-rec-region">
         <b>🌍 Strongest Region Today:</b>
@@ -743,7 +743,7 @@ fetch('data/market_sentiment_snapshot.json', { cache: 'no-store' })
       alertsEl.innerHTML = snap.risk_alerts.map(a => `<span class="alert-chip">⚠️ ${a}</span>`).join('');
     } else {
       alertsEl.className = 'no-alerts';
-      alertsEl.textContent = 'No risk alerts fired today — no extreme VIX, no yield curve inversion, no credit stress spike.';
+      alertsEl.textContent = 'No risk alerts fired today — no extreme VIX, no yield curve inversion, no credit stress or spread widening, no labor-market deterioration, no tightening financial conditions, no volatility backwardation.';
     }
 
     if (snap.regional_rec) {
