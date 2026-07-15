@@ -1749,11 +1749,38 @@ function __iptvBoot(){
       });
   }
 
+  const _LANG_MAP = [
+    { name: "Hindi", regex: /\b(aaj\s*tak|zee\s*hind|abp\s*news|india\s*tv|ndtv\s*india|republic\s*bharat|news18\s*india|tv9\s*bharatvarsh|good\s*news|times\s*now\s*navbharat|hindi\b|bharat\s*samachar|janta\s*tv|sansad|dd\s*news|dd\s*national)\b/i },
+    { name: "Malayalam", regex: /\b(asianet|manorama|mathrubhumi|mazhavil|surya|kairali|amrita|reporter|media\s*one|jeevan|24\s*news|goodness|jai\s*hind\s*malayalam|kappa|kaumudi|safari|news18\s*kerala|janam|swasthya|malayalam|kerala)\b/i },
+    { name: "Tamil", regex: /\b(sun\s*tv|vijay\s*tv|star\s*vijay|polimer|kalaignar|raj\s*tv|captain|puthiya\s*thalaimurai|thanthi|news\s*7\s*tamil|j\s*movies|peppers|news18\s*tamil|jaya\s*tv|tamil)\b/i },
+    { name: "Telugu", regex: /\b(etv|tv5|tv9\s*telugu|sakshi|abn\s*andhra|10tv|t\s*news|ntv\s*telugu|raj\s*news|hmtv|mahaa|v6|i\s*news|maa\s*tv|gemini|telugu)\b/i },
+    { name: "Kannada", regex: /\b(suvarna|public\s*tv|tv9\s*kannada|asianet\s*suvarna|power\s*tv|news18\s*kannada|udaya|udaya\s*news|kannada)\b/i },
+    { name: "Marathi", regex: /\b(abp\s*majha|saam\s*marathi|tv9\s*marathi|zee\s*marathi|star\s*pravah|news18\s*lokmat|ibn\s*lokmat|jai\s*maharashtra|sahyadri|colors\s*marathi|marathi)\b/i },
+    { name: "Punjabi", regex: /\b(ptc\s*news|ptc\s*punjabi|abp\s*sanjha|zee\s*punjabi|news18\s*punjab|day\s*&\s*night|chardikla|9x\s*tashan|punjab|punjabi)\b/i },
+    { name: "Bengali", regex: /\b(abp\s*ananda|zee\s*bangla|star\s*jalsha|news18\s*bangla|kolkata\s*tv|24\s*ghanta|akash\s*aath|news\s*time\s*bangla|tara\s*muzik|bengali|bangla)\b/i },
+    { name: "Odia", regex: /\b(otv|kalinga\s*tv|news18\s*odia|kanak\s*news|tarang|sidharth\s*tv|prarthana|odisha|odia)\b/i },
+    { name: "Assamese", regex: /\b(dy365|news18\s*assam|pratidin\s*time|prag\s*news|protidin|gnn|hayagrib|rongali|assamese|assam)\b/i },
+    { name: "English", regex: /\b(english|bbc|cnn|cnbc|bloomberg|al\s*jazeera|ndtv\s*24x7|republic\s*tv|wion|times\s*now|india\s*today|mirror\s*now|news18\s*lokmat|news\s*x)\b/i },
+    { name: "Spanish", regex: /\b(spanish|español|telemundo|univision|tve)\b/i },
+    { name: "French", regex: /\b(french|français|tf1|france\s*24|tv5monde)\b/i },
+    { name: "Arabic", regex: /\b(arabic|mbc|al\s*arabiya|rotana|sky\s*news\s*arabia)\b/i }
+  ];
+
+  function inferLanguage(c) {
+    var hay = ((c.name||"") + " " + (c.category||"")).toLowerCase();
+    for(var i=0; i<_LANG_MAP.length; i++){
+      if(_LANG_MAP[i].regex.test(hay)) return _LANG_MAP[i].name;
+    }
+    return "—";
+  }
+
   function normalizeChannel(c){
     var q=(c.quality||"").toString().toUpperCase();
     if(q!=="HD"&&q!=="SD")q=/\bHD\b|FHD|1080|720/i.test((c.name||"")+" "+(c.url||""))?"HD":"SD";
+    var lang = (c.language||c.lang||"").trim();
+    if (!lang || lang === "—") lang = inferLanguage(c);
     return{name:c.name||"Unknown channel",id:c.id||"",logo:c.logo||"",category:c.category||"General",
-      language:(c.language||c.lang||"").trim()||"—",country:countryOf(c),url:c.url||"",quality:q,source:c.source||"",sourceId:c.sourceId||""};
+      language:lang,country:countryOf(c),url:c.url||"",quality:q,source:c.source||"",sourceId:c.sourceId||""};
   }
   function countryOf(c){
     var id=(c.id||"");var m=id.match(/\.([a-zA-Z]{2})$/);
