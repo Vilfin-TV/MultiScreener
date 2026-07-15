@@ -497,7 +497,8 @@ def get_executive_summary_analysis(data, regime_score):
         mom_metrics = momentum_sector[1]
         dist_mom = ((mom_metrics['price'] / mom_metrics['ma_50']) - 1) * 100
         ytd_str = f" and an explosive {mom_metrics['ytd_return']:+.2f}% YTD return" if mom_metrics.get('ytd_return') else ""
-        momentum_name = f"{momentum_sector[0]}. This sector currently shows the strongest relative momentum among tracked sectors, trading {dist_mom:+.2f}% above its 50-day average{ytd_str}."
+        mom_direction = "above" if dist_mom >= 0 else "below"
+        momentum_name = f"{momentum_sector[0]}. This sector currently shows the strongest relative momentum among tracked sectors, trading {abs(dist_mom):.2f}% {mom_direction} its 50-day average{ytd_str}."
         
         value_names = ['Energy', 'Finance', 'Industrials', 'Banking', 'Metals & Mining']
         value_sectors = {k: v for k, v in valid_sectors.items() if k in value_names}
@@ -751,9 +752,10 @@ def build_score_breakdown(data, fred_extras=None):
             pts = -10
         else:
             pts = 0
+        display_gap = round(rsp['change'], 2) - round(spy['change'], 2)
         breakdown.append({
             "label": "Market Participation",
-            "reading": f"Equal-weight S&amp;P (RSP) {rsp['change']:+.2f}% vs cap-weight (SPY) {spy['change']:+.2f}% ({gap:+.2f}pp gap) — proxy for breadth, not a true advance/decline reading",
+            "reading": f"Equal-weight S&amp;P (RSP) {rsp['change']:+.2f}% vs cap-weight (SPY) {spy['change']:+.2f}% ({display_gap:+.2f}pp gap) — proxy for breadth, not a true advance/decline reading",
             "points": pts,
         })
 
@@ -896,9 +898,10 @@ def build_score_breakdown(data, fred_extras=None):
             pts = -10
         else:
             pts = 0
+        display_earn_gap = round(xly['change'], 2) - round(xlp['change'], 2)
         breakdown.append({
             "label": "Growth vs Defensive Leadership",
-            "reading": f"Consumer Discretionary (XLY) {xly['change']:+.2f}% vs Staples (XLP) {xlp['change']:+.2f}% ({earn_gap:+.2f}pp gap) — sector-rotation proxy, not an earnings/EPS figure",
+            "reading": f"Consumer Discretionary (XLY) {xly['change']:+.2f}% vs Staples (XLP) {xlp['change']:+.2f}% ({display_earn_gap:+.2f}pp gap) — sector-rotation proxy, not an earnings/EPS figure",
             "points": pts,
         })
 
@@ -916,9 +919,10 @@ def build_score_breakdown(data, fred_extras=None):
             pts = -10
         else:
             pts = 0
+        display_comm_gap = round(copper['change'], 2) - round(gold['change'], 2)
         breakdown.append({
             "label": "Commodities Ratio (Copper vs Gold)",
-            "reading": f"Copper {copper['change']:+.2f}% vs Gold {gold['change']:+.2f}% ({comm_gap:+.2f}pp gap)",
+            "reading": f"Copper {copper['change']:+.2f}% vs Gold {gold['change']:+.2f}% ({display_comm_gap:+.2f}pp gap)",
             "points": pts,
         })
 

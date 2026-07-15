@@ -435,7 +435,7 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
       </div>
     </div>
     <div class="live-card-foot">
-      <span id="live-foot-sum">10 + 10 + 0 + 0 + 20 + 10 + 10 + 15 + 10 + 10 + 15 + 0 − 10 + 10 = <b style="color:var(--text)">100</b> → Bullish Expansion (≥ 50, capped)</span>
+      <span id="live-foot-sum">Raw score: 10 + 10 + 0 + 0 + 20 + 10 + 10 + 15 + 10 + 10 + 15 + 0 − 10 + 10 = 110 → capped at <b style="color:var(--text)">100</b> → Bullish Expansion (≥ 50)</span>
       <span id="live-foot-note">Example only — live data not loaded (viewing this file locally or offline)</span>
     </div>
   </div>
@@ -806,7 +806,12 @@ fetch('data/market_sentiment_snapshot.json', { cache: 'no-store' })
     }
 
     if (Array.isArray(snap.breakdown) && snap.breakdown.length) {
-      document.getElementById('live-foot-sum').innerHTML = `${snap.breakdown.map(b=>b.points).join(' + ')} = <b style="color:var(--text)">${snap.score}</b> &rarr; ${snap.regime}`;
+      const rawSum = snap.breakdown.reduce((s, b) => s + b.points, 0);
+      const equation = snap.breakdown.map((b, i) => i === 0 ? `${b.points}` : (b.points < 0 ? `− ${Math.abs(b.points)}` : `+ ${b.points}`)).join(' ');
+      const sumText = rawSum === snap.score
+        ? `${equation} = <b style="color:var(--text)">${snap.score}</b>`
+        : `Raw score: ${equation} = ${rawSum} &rarr; capped at <b style="color:var(--text)">${snap.score}</b>`;
+      document.getElementById('live-foot-sum').innerHTML = `${sumText} &rarr; ${snap.regime}`;
     }
     document.getElementById('live-foot-note').textContent = isStale
       ? "Showing the last successful run (" + dateStr + ") — today's hasn't posted yet"
