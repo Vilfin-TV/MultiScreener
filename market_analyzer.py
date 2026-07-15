@@ -78,15 +78,22 @@ TICKERS_CONFIG = {
         'Italy FTSE MIB': {'symbol': 'FTSEMIB.MI', 'currency': 'EUR'},
         'Spain IBEX 35': {'symbol': '^IBEX', 'currency': 'EUR'},
         'Euro Stoxx 50': {'symbol': '^STOXX50E', 'currency': 'EUR'},
+        'STOXX Europe 600': {'symbol': '^STOXX', 'currency': 'EUR'},
         'Switzerland SMI': {'symbol': '^SSMI', 'currency': 'CHF'},
         'Netherlands AEX': {'symbol': '^AEX', 'currency': 'EUR'},
         'Canada TSX': {'symbol': '^GSPTSE', 'currency': 'CAD'},
         'Mexico IPC': {'symbol': '^MXX', 'currency': 'MXN'},
-        'Chile IPSA': {'symbol': '^IPSA', 'currency': 'CLP'},
+        # ^IPSA has almost no historical data via yfinance (Yahoo only
+        # returns 1 row regardless of period requested), so daily
+        # change/moving averages could never be computed - this ETF
+        # proxy (iShares MSCI Chile) has full, reliable history instead,
+        # same pattern already used for Vietnam via the VNM ETF below.
+        'Chile IPSA (ETF Proxy)': {'symbol': 'ECH', 'currency': 'USD'},
         'Brazil Bovespa': {'symbol': '^BVSP', 'currency': 'BRL'},
         'Argentina Merval (Buenos Aires)': {'symbol': '^MERV', 'currency': 'ARS'},
         'Turkey BIST 100': {'symbol': 'XU100.IS', 'currency': 'TRY'},
         'Australia ASX 200': {'symbol': '^AXJO', 'currency': 'AUD'},
+        'Saudi Arabia TASI': {'symbol': '^TASI.SR', 'currency': 'SAR'},
     },
     'US Indices': {
         'S&P 500': {'symbol': '^GSPC', 'currency': 'USD'},
@@ -704,7 +711,10 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
             <h3 style="margin-top: 0;">Executive Summary</h3>
             <div class="summary-item"><strong>Market Sentiment Score:</strong> {regime_score} / 100</div>
             <div class="summary-item"><strong>Current Phase:</strong> {regime_text}</div>
-            
+            <div class="summary-item" style="margin-top:12px;">
+                <a href="https://vilfintv.com/market_sentiment_score.html" target="_blank" style="display:inline-block; background:linear-gradient(135deg,#14bf96,#0ea885); color:#04241c; font-weight:bold; font-size:0.92em; padding:10px 18px; border-radius:8px; text-decoration:none; box-shadow:0 4px 12px rgba(20,191,150,0.35);">📊 What does this score mean? Read the full breakdown &rarr;</a>
+            </div>
+
             <div class="recommendation">
                 <h4 style="margin-top: 0; margin-bottom: 15px;">Long-Term Strategic Picks & Regional Insights</h4>
                 <div class="summary-item"><strong>🌍 Best Region to Buy:</strong> {regional_rec}</div>
