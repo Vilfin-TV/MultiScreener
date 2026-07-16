@@ -28,22 +28,47 @@ name: JKK Vacancy Digest Watchdog
 # tightest gap, 00:35 -> 02:03, is only 88 min), so a long lookback would
 # see the previous slot's run and wrongly think the current slot already
 # fired. 70 min stays safely under that 88-min minimum gap while still
-# covering each slot's own ~80-minute grace window below.
+# covering each slot's own grace window below.
+#
+# INCIDENT 2026-07-16: this watchdog (and the main digest cron) went
+# completely silent for the whole morning - not one of the 12 scheduled
+# trigger attempts fired. Investigated via run-history timing across the
+# whole repo (GitHub gives no log at all for a schedule event it decides to
+# skip, so this is inference from evidence, not a confirmed root cause):
+# monitor_fix.yml (target 00:00 UTC) has fired ~2 hours late EVERY day this
+# past week, not just that day - proving this repo's scheduler runs
+# chronically ~2h behind around that time of day, not just occasionally.
+# GitHub documents that a workflow's OWN schedule entries get silently
+# skipped once "the delay is longer than the next scheduled run" - with
+# checks only 20 min apart, a ~2h backlog is long enough to supersede (and
+# so drop) every single one of them in a cascade, all the way through a
+# slot's grace window. Checks are now 40 min apart (below) specifically so
+# each one needs a smaller relative backlog to survive, and each slot's
+# window extends to +140 min so a very-late scheduler still gets a chance
+# to catch up before giving up on that slot entirely.
 
 on:
   schedule:
-    # Slot 1 target 00:35 UTC (09:35 JST) - checks 00:55/01:15/01:35/01:55
+    # Slot 1 target 00:35 UTC (09:35 JST) - checks +20/+60/+100/+140 min
     - cron: '55 0 * * *'
-    - cron: '15,35,55 1 * * *'
-    # Slot 2 target 02:03 UTC (11:03 JST) - checks 02:23/02:43/03:03/03:23
-    - cron: '23,43 2 * * *'
-    - cron: '3,23 3 * * *'
-    # Slot 3 target 05:30 UTC (14:30 JST) - checks 05:50/06:10/06:30/06:50
+    - cron: '35 1 * * *'
+    - cron: '15 2 * * *'
+    - cron: '55 2 * * *'
+    # Slot 2 target 02:03 UTC (11:03 JST) - checks +20/+60/+100/+140 min
+    - cron: '23 2 * * *'
+    - cron: '3 3 * * *'
+    - cron: '43 3 * * *'
+    - cron: '23 4 * * *'
+    # Slot 3 target 05:30 UTC (14:30 JST) - checks +20/+60/+100/+140 min
     - cron: '50 5 * * *'
-    - cron: '10,30,50 6 * * *'
-    # Slot 4 target 09:20 UTC (18:20 JST) - checks 09:40/10:00/10:20/10:40
+    - cron: '30 6 * * *'
+    - cron: '10 7 * * *'
+    - cron: '50 7 * * *'
+    # Slot 4 target 09:20 UTC (18:20 JST) - checks +20/+60/+100/+140 min
     - cron: '40 9 * * *'
-    - cron: '0,20,40 10 * * *'
+    - cron: '20 10 * * *'
+    - cron: '0 11 * * *'
+    - cron: '40 11 * * *'
   workflow_dispatch:
 
 permissions:
