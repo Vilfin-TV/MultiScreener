@@ -133,7 +133,9 @@ async function fetchUrWard(source) {
 function renderUrSection(results) {
   const sections = results
     .map((r) => {
-      const rows = r.rooms.length
+      const rows = r.error
+        ? `<tr><td colspan="4" style="padding:10px;color:#dc2626">⚠️ 取得エラー — 今回は巡回できませんでした（次回に再試行します）</td></tr>`
+        : r.rooms.length
         ? r.rooms
             .map(
               (c) => `<tr style="border-top:1px solid #e2e8f0;background:#f0fdf4">
@@ -152,7 +154,7 @@ function renderUrSection(results) {
         : `<tr><td colspan="4" style="padding:10px;color:#8892a6">対象間取り（${UR_LAYOUTS.join('/')}）の空室なし — 巡回中の団地 ${r.danchiCount}件</td></tr>`;
       return `
       <h2 style="font-size:16px;color:#0a192f;margin:24px 0 8px">UR ${r.ward}
-        <span style="font-size:12px;font-weight:400;color:#8892a6">— 空室 ${r.rooms.length}件（全間取り ${r.vacantRoomsTotal}件）/ 団地 ${r.danchiCount}件</span>
+        <span style="font-size:12px;font-weight:400;color:#8892a6">${r.error ? '— 取得エラー' : `— 空室 ${r.rooms.length}件（全間取り ${r.vacantRoomsTotal}件）/ 団地 ${r.danchiCount}件`}</span>
       </h2>
       <table style="width:100%;border-collapse:collapse;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">
         <tr style="background:#0a192f;color:#ffffff;text-align:left">
@@ -169,7 +171,10 @@ function renderUrSection(results) {
   return sections;
 }
 
-function renderRows(cards) {
+function renderRows(cards, error) {
+  if (error) {
+    return `<tr><td colspan="4" style="padding:10px;color:#dc2626">⚠️ 取得エラー — 今回は巡回できませんでした（次回に再試行します）</td></tr>`;
+  }
   if (!cards.length) {
     return '<tr><td colspan="4" style="padding:10px;color:#8892a6">該当物件なし</td></tr>';
   }
@@ -201,15 +206,16 @@ function buildEmail(results, urResults, nowJst) {
   );
   const urVacant = urResults.reduce((n, r) => n + r.rooms.length, 0);
   const vacantCount = jkkVacant + urVacant;
-  const subject = vacantCount > 0
+  const hasError = results.some((r) => r.error) || urResults.some((r) => r.error);
+  const subject = (vacantCount > 0
     ? `【空室あり ${vacantCount}件】JKK・UR 江東区・江戸川区 — ${nowJst}`
-    : `JKK・UR 江東区・江戸川区 空室状況 — ${nowJst}`;
+    : `JKK・UR 江東区・江戸川区 空室状況 — ${nowJst}`) + (hasError ? '【一部取得エラー】' : '');
 
   const sections = results
     .map(
       (r) => `
       <h2 style="font-size:16px;color:#0a192f;margin:24px 0 8px">${r.ward}
-        <span style="font-size:12px;font-weight:400;color:#8892a6">— 対象 ${r.matched.length}件 / 全 ${r.all.length}件</span>
+        <span style="font-size:12px;font-weight:400;color:#8892a6">${r.error ? '— 取得エラー' : `— 対象 ${r.matched.length}件 / 全 ${r.all.length}件`}</span>
       </h2>
       <table style="width:100%;border-collapse:collapse;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;font-size:14px">
         <tr style="background:#0a192f;color:#ffffff;text-align:left">
@@ -218,7 +224,7 @@ function buildEmail(results, urResults, nowJst) {
           <th style="padding:10px">アクセス</th>
           <th style="padding:10px;text-align:center">空室状況</th>
         </tr>
-        ${renderRows(r.matched)}
+        ${renderRows(r.matched, r.error)}
       </table>
       <p style="font-size:12px;margin:6px 0 0"><a href="${r.url}" style="color:#0a3d91">${r.url}</a></p>`
     )
@@ -238,7 +244,7 @@ function buildEmail(results, urResults, nowJst) {
       ${sections}
       <h2 style="font-size:14px;color:#8892a6;margin:28px 0 0;border-bottom:2px solid #0a192f;padding-bottom:4px">UR賃貸住宅</h2>
       ${renderUrSection(urResults)}
-      <p style="font-size:11px;color:#8892a6;margin-top:24px">Source: jkkwatcher.com / ur-net.go.jp ・ Automated digest (daily 09:35 / 11:00 / 14:30 / 18:20 JST)</p>
+      <p style="font-size:11px;color:#8892a6;margin-top:24px">Source: jkkwatcher.com / ur-net.go.jp ・ Automated digest (daily 09:35 / 11:03 / 14:30 / 16:45 / 20:15 JST)</p>
     </div>
   </div>`;
 
@@ -257,18 +263,31 @@ async function main() {
     process.exit(1);
   }
 
+  // A transient upstream failure on ONE ward must not cancel the whole digest
+  // (and with it, every OTHER ward's data that fetched fine) — catch per-ward
+  // and carry an `error` flag into the email instead of throwing.
   const results = [];
   for (const source of SOURCES) {
-    const r = await fetchWard(source);
-    console.log(`JKK ${r.ward}: ${r.all.length} properties, ${r.matched.length} match ${LAYOUTS.join('/')}`);
-    results.push(r);
+    try {
+      const r = await fetchWard(source);
+      console.log(`JKK ${r.ward}: ${r.all.length} properties, ${r.matched.length} match ${LAYOUTS.join('/')}`);
+      results.push(r);
+    } catch (err) {
+      console.error(`JKK ${source.ward} fetch failed: ${err.message}`);
+      results.push({ ...source, all: [], matched: [], error: err.message });
+    }
   }
 
   const urResults = [];
   for (const source of UR_SOURCES) {
-    const r = await fetchUrWard(source);
-    console.log(`UR ${r.ward}: ${r.danchiCount} complexes, ${r.vacantRoomsTotal} vacant rooms, ${r.rooms.length} match ${UR_LAYOUTS.join('/')}`);
-    urResults.push(r);
+    try {
+      const r = await fetchUrWard(source);
+      console.log(`UR ${r.ward}: ${r.danchiCount} complexes, ${r.vacantRoomsTotal} vacant rooms, ${r.rooms.length} match ${UR_LAYOUTS.join('/')}`);
+      urResults.push(r);
+    } catch (err) {
+      console.error(`UR ${source.ward} fetch failed: ${err.message}`);
+      urResults.push({ ...source, danchiCount: 0, vacantRoomsTotal: 0, rooms: [], error: err.message });
+    }
   }
 
   const nowJst = new Date().toLocaleString('ja-JP', {
