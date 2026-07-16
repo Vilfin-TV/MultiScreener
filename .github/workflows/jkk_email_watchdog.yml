@@ -102,19 +102,25 @@ jobs:
               data = json.load(f)
           now = datetime.datetime.now(datetime.timezone.utc)
           cutoff = now - datetime.timedelta(minutes=70)
+          # A run only counts as "handled" if it succeeded, or is still
+          # in-flight (queued/in_progress). A completed-but-failed run (e.g.
+          # a transient upstream API error) must NOT count, or the watchdog
+          # would wrongly conclude nothing needs retrying - the exact
+          # scenario it exists to catch (2026-07-16 UR API 500 incident).
           recent = [
               r for r in data
               if datetime.datetime.fromisoformat(r["createdAt"].replace("Z", "+00:00")) > cutoff
+              and (r["status"] != "completed" or r["conclusion"] == "success")
           ]
           print(len(recent))
           PYEOF
           )
 
-          echo "Recent runs (last 70 min) for JKK Vacancy Email Digest: $RECENT_COUNT"
+          echo "Recent successful/in-flight runs (last 70 min) for JKK Vacancy Email Digest: $RECENT_COUNT"
 
           if [ "$RECENT_COUNT" -eq 0 ]; then
-            echo "No recent run found - the scheduled trigger likely didn't fire. Dispatching now."
+            echo "No recent successful run found - the scheduled trigger either didn't fire or failed. Dispatching now."
             gh workflow run jkk_email_watch.yml --repo "$REPO"
           else
-            echo "JKK digest already ran recently - nothing to do."
+            echo "JKK digest already ran successfully (or is running) recently - nothing to do."
           fi
