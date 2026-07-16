@@ -5,10 +5,12 @@ on:
     # JST = UTC+9. GitHub cron runs in UTC.
     # Note: GitHub's scheduler is best-effort; runs can start a few minutes late.
     # Avoid exact top-of-hour crons — they are the most likely to be dropped under load.
+    # 5 sends/day: 2 morning, 2 afternoon, 1 late evening.
     - cron: '35 0 * * *'   # 09:35 JST — JKK "golden time" (new vacancies land 9-10 AM)
     - cron: '3 2 * * *'    # 11:03 JST
     - cron: '30 5 * * *'   # 14:30 JST
-    - cron: '20 9 * * *'   # 18:20 JST
+    - cron: '45 7 * * *'   # 16:45 JST
+    - cron: '15 11 * * *'  # 20:15 JST
   workflow_dispatch:
     # Allow manual trigger from GitHub Actions UI
 

@@ -1,10 +1,11 @@
 name: JKK Vacancy Digest Watchdog
 
-# JKK Vacancy Email Digest fires on 4 daily crons (00:35 / 02:03 / 05:30 /
-# 09:20 UTC = 09:35 / 11:03 / 14:30 / 18:20 JST). Same root cause as Market
-# Report's original issue: this repo's GitHub Actions scheduler runs
-# low-frequency crons with a chronic 30-90+ min delay (sometimes a full
-# no-show) versus their nominal time.
+# JKK Vacancy Email Digest fires on 5 daily crons (00:35 / 02:03 / 05:30 /
+# 07:45 / 11:15 UTC = 09:35 / 11:03 / 14:30 / 16:45 / 20:15 JST - 2 morning,
+# 2 afternoon, 1 late evening, per owner request 2026-07-16). Same root
+# cause as Market Report's original issue: this repo's GitHub Actions
+# scheduler runs low-frequency crons with a chronic 30-90+ min delay
+# (sometimes a full no-show) versus their nominal time.
 #
 # JKK already had a backup for this - a separate Cloudflare Worker
 # (jkk_cron_worker.js / wrangler.jkkcron.toml) that dispatches this workflow
@@ -25,10 +26,11 @@ name: JKK Vacancy Digest Watchdog
 #
 # The lookback window is intentionally SHORT (70 min) rather than reused
 # from Market Report's 3h - JKK's slots are much closer together (the
-# tightest gap, 00:35 -> 02:03, is only 88 min), so a long lookback would
-# see the previous slot's run and wrongly think the current slot already
-# fired. 70 min stays safely under that 88-min minimum gap while still
-# covering each slot's own grace window below.
+# tightest gap, 00:35 -> 02:03, is only 88 min - unchanged by adding the
+# 16:45/20:15 JST slots, which sit 135/210 min from their neighbors), so a
+# long lookback would see the previous slot's run and wrongly think the
+# current slot already fired. 70 min stays safely under that 88-min
+# minimum gap while still covering each slot's own grace window below.
 #
 # INCIDENT 2026-07-16: this watchdog (and the main digest cron) went
 # completely silent for the whole morning - not one of the 12 scheduled
@@ -64,11 +66,16 @@ on:
     - cron: '30 6 * * *'
     - cron: '10 7 * * *'
     - cron: '50 7 * * *'
-    # Slot 4 target 09:20 UTC (18:20 JST) - checks +20/+60/+100/+140 min
-    - cron: '40 9 * * *'
-    - cron: '20 10 * * *'
-    - cron: '0 11 * * *'
-    - cron: '40 11 * * *'
+    # Slot 4 target 07:45 UTC (16:45 JST) - checks +20/+60/+100/+140 min
+    - cron: '5 8 * * *'
+    - cron: '45 8 * * *'
+    - cron: '25 9 * * *'
+    - cron: '5 10 * * *'
+    # Slot 5 target 11:15 UTC (20:15 JST) - checks +20/+60/+100/+140 min
+    - cron: '35 11 * * *'
+    - cron: '15 12 * * *'
+    - cron: '55 12 * * *'
+    - cron: '35 13 * * *'
   workflow_dispatch:
 
 permissions:
