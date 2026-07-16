@@ -2803,6 +2803,20 @@ html.iptv-cinema #iptv-ctrl-bar{
   background:linear-gradient(to top, rgba(0,0,0,.92), rgba(0,0,0,.4) 60%, transparent) !important;
   padding:14px 16px !important; border:none !important;
 }
+/* Program Guide icon only makes sense in cinema mode — outside it the same
+   Now/Next data already shows inline below the video (see _iptvRenderEpg). */
+html.iptv-cinema #iptv-guide-btn{ display:flex !important; }
+/* Reuse the existing (already data-populated) EPG strip as a floating card
+   above the cinema transport bar instead of duplicating its markup. */
+html.iptv-cinema #rb-panel-iptv.iptv-guide-open #iptv-epg-bar{
+  display:block !important; position:absolute !important;
+  left:12px !important; right:12px !important; bottom:74px !important;
+  z-index:10001 !important; border:1px solid #1d4ed8 !important;
+  border-radius:10px !important; box-shadow:0 8px 28px rgba(0,0,0,.55) !important;
+  background:linear-gradient(180deg,#0b1830,#060e1e) !important;
+  animation:iptvGuideIn .18s ease;
+}
+@keyframes iptvGuideIn{ from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
 
 /* ═══ Right-panel media lists — theme-proof dark surface ═══
    Live TV / Radio / Music / Movies / Podcast lists use a light text palette
@@ -2939,6 +2953,9 @@ html.iptv-cinema #iptv-ctrl-bar{
 .panel-ctrl-btn:disabled{opacity:.35;cursor:not-allowed}
 .panel-ctrl-btn.fav{color:#fbbf24}
 .panel-ctrl-btn.fav.active{color:#f59e0b;background:#2d1e0a;border-color:#92400e}
+#iptv-cc-btn{font-size:9.5px;font-weight:800;letter-spacing:.2px}
+#iptv-cc-btn.active{color:#60a5fa;background:#0d2547;border-color:#1d4ed8}
+#iptv-guide-btn.active{color:#60a5fa;background:#0d2547;border-color:#1d4ed8}
 /* Play button variant — bigger, accent blue */
 .panel-play-btn{
   width:30px;height:30px;border-radius:50%;background:#2563eb;
@@ -5173,6 +5190,8 @@ html.iptv-cinema #iptv-ctrl-bar{
              oninput="iptvSetVolume(this.value)" title="Volume" style="--vol:80%"/>
       <span class="panel-now-label" id="iptv-now">—</span>
       <button class="panel-ctrl-btn fav" onclick="iptvToggleFav()" id="iptv-fav-btn" title="Add to favorites">☆</button>
+      <button class="panel-ctrl-btn" onclick="iptvToggleSubtitles()" id="iptv-cc-btn" title="Subtitles (if this channel provides any)" disabled>CC</button>
+      <button class="panel-ctrl-btn" onclick="iptvToggleGuidePopup()" id="iptv-guide-btn" title="Program Guide" style="display:none">📋</button>
       <button class="panel-ctrl-btn" onclick="iptvFullscreen()" title="Fullscreen">⛶</button>
       <button class="panel-ctrl-btn" onclick="iptvTogglePip()" title="Picture-in-Picture">⧉</button>
       <button class="panel-ctrl-btn" onclick="iptvStop()" title="Stop">⏹</button>
@@ -11423,6 +11442,7 @@ function radioOnSearchInput(value) {
 const IPTV_BACKEND = 'https://page-iptv.vilfintv.workers.dev';
 const IPTV_META_API = 'https://iptv-org.github.io/api';
 let _iptvHls = null;
+let _iptvSubtitlesOn = false;
 let _iptvAllChannels = null;   // cached merged channel + stream list
 let _iptvLastResults = [];
 let _iptvMuted = true;         // starts muted; preserved across channel changes
@@ -11785,6 +11805,10 @@ function iptvPlay(url, id, name) {
   if (wrap) wrap.style.display = 'block';
   if (ctrlBar) ctrlBar.style.display = 'flex';
   if (nowEl) nowEl.textContent = name || 'Live TV';
+  // Reset subtitles state for the new channel — re-enabled below only if
+  // this stream's manifest actually carries subtitle tracks.
+  _iptvSubtitlesOn = false;
+  _iptvUpdateCcButton(false);
   // Collapse top-fold, show now-playing bar
   const panel = document.getElementById('rb-panel-iptv');
   if (panel) panel.classList.add('iptv-playing');
@@ -11833,6 +11857,16 @@ function iptvPlay(url, id, name) {
     // Play immediately (within user gesture), HLS will start when buffer is ready
     video.play().catch(e => console.warn('[IPTV] initial play rejected:', e));
     _iptvHls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(e => console.warn('[IPTV] manifest play rejected:', e)));
+    _iptvHls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, (ev, data) => {
+      const has = !!(data && data.subtitleTracks && data.subtitleTracks.length);
+      if (!has) { _iptvUpdateCcButton(false); return; }
+      let pref = false;
+      try { pref = localStorage.getItem('viltv_iptv_cc') === '1'; } catch(_){}
+      _iptvSubtitlesOn = pref;
+      _iptvHls.subtitleDisplay = pref;
+      _iptvHls.subtitleTrack = pref ? 0 : -1;
+      _iptvUpdateCcButton(true);
+    });
     _iptvHls.on(Hls.Events.ERROR, (ev, data) => {
       if (data.fatal) {
         console.warn('[IPTV] HLS fatal:', data.type, data.details);
@@ -11846,6 +11880,34 @@ function iptvPlay(url, id, name) {
   } else {
     video.src = httpsUrl; video.play().catch(() => iptvOnError(name));
   }
+}
+
+function _iptvUpdateCcButton(available) {
+  const btn = document.getElementById('iptv-cc-btn');
+  if (!btn) return;
+  btn.disabled = !available;
+  btn.classList.toggle('active', available && _iptvSubtitlesOn);
+  btn.title = available ? 'Subtitles' : 'Subtitles (not available on this channel)';
+}
+
+function iptvToggleSubtitles() {
+  if (!_iptvHls || !_iptvHls.subtitleTracks || !_iptvHls.subtitleTracks.length) return;
+  _iptvSubtitlesOn = !_iptvSubtitlesOn;
+  _iptvHls.subtitleDisplay = _iptvSubtitlesOn;
+  _iptvHls.subtitleTrack = _iptvSubtitlesOn ? 0 : -1;
+  try { localStorage.setItem('viltv_iptv_cc', _iptvSubtitlesOn ? '1' : '0'); } catch(_){}
+  _iptvUpdateCcButton(true);
+}
+
+// Program Guide icon (cinema mode only) — reuses the existing #iptv-epg-bar,
+// which _iptvRenderEpg() already keeps populated even while it's CSS-hidden
+// in cinema mode, so this just repositions it as a floating overlay.
+function iptvToggleGuidePopup() {
+  const panel = document.getElementById('rb-panel-iptv');
+  const btn = document.getElementById('iptv-guide-btn');
+  if (!panel) return;
+  const open = panel.classList.toggle('iptv-guide-open');
+  if (btn) btn.classList.toggle('active', open);
 }
 
 function iptvOnError(name) {
@@ -11864,9 +11926,16 @@ function iptvStop() {
   _iptvCurrentChannel = null;
   _iptvCurrentIndex = -1;
   _iptvHideEpg();
+  _iptvSubtitlesOn = false;
+  _iptvUpdateCcButton(false);
   // Restore top-fold
   const panel = document.getElementById('rb-panel-iptv');
-  if (panel) panel.classList.remove('iptv-playing');
+  if (panel) {
+    panel.classList.remove('iptv-playing');
+    panel.classList.remove('iptv-guide-open');
+  }
+  const guideBtn = document.getElementById('iptv-guide-btn');
+  if (guideBtn) guideBtn.classList.remove('active');
   const nowBar = document.getElementById('iptv-now-bar');
   if (nowBar) nowBar.style.display = 'none';
 }
