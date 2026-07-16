@@ -1025,6 +1025,22 @@ body{
 .story-body .ql-align-right{text-align:right;}
 .story-body .ql-align-justify{text-align:justify;}
 
+/* Broker/app referral cards — same format as market_sentiment_score.html's
+   "Best Brokers & Apps" grid, reused here so every article's referral
+   section looks consistent site-wide instead of a plain bullet list. */
+.story-body .broker-note{background:var(--card2);border:1px solid var(--border);border-left:4px solid var(--gold2,#38bdf8);border-radius:10px;padding:14px 18px;font-size:13.5px;color:var(--text2);margin:16px 0 18px;}
+.story-body .broker-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:0 0 20px;}
+.story-body .broker-card{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--border);border-radius:14px;padding:18px 20px;}
+.story-body .broker-card h4{font-size:13px;font-weight:800;color:var(--text);margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+.story-body .broker-links{list-style:none;display:flex;flex-direction:column;gap:9px;margin:0;padding:0;}
+.story-body .broker-links li{margin:0;color:inherit;}
+.story-body .broker-links a{font-size:13.5px;font-weight:700;color:var(--green);display:flex;align-items:center;justify-content:space-between;gap:8px;text-decoration:none;}
+.story-body .broker-links a:hover{color:var(--burn2,#3b82f6);text-decoration:none;}
+.story-body .broker-links .code-tag{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text3);font-weight:600;}
+@media(max-width:600px){
+  .story-body .broker-grid{grid-template-columns:1fr;gap:12px;}
+}
+
 /* ── Axios Smart Brevity article format ───────── */
 .story-body .story-lead{
   font-size:17px;line-height:1.8;margin-bottom:20px;color:var(--text);
