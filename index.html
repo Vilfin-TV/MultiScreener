@@ -2576,6 +2576,21 @@ footer{
 .radio-station-tag{font-size:9.5px;color:#506480;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .radio-station-list{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 6px 8px;scrollbar-width:thin;scrollbar-color:#1e293b transparent;-webkit-overflow-scrolling:touch}
 
+/* ── Live TV: single consolidated, premium search box ── */
+.iptv-search-row{position:relative;padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0}
+.iptv-search-icon{position:absolute;left:18px;top:50%;transform:translateY(-50%);font-size:12px;color:#4b607d;pointer-events:none;line-height:1}
+.iptv-search-input{width:100%;padding:9px 12px 9px 32px;background:#0c1525;color:#e2eeff;border:1px solid #1e3a5c;border-radius:9px;font-size:12.5px;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box;transition:border-color .15s,box-shadow .15s,background .15s}
+.iptv-search-input::placeholder{color:#5c749a}
+.iptv-search-input:focus{border-color:#3b82f6;background:#0e1f3b;box-shadow:0 0 0 3px rgba(59,130,246,.18)}
+
+/* On mobile the channel list needs room far more than the filter strip does
+   once you're already watching (see the space-audit comment on
+   #iptv-content-area below) - hide it while .iptv-playing there. Excluded on
+   real desktop (pointer:fine), which has plenty of vertical room. */
+@media(max-width:900px),(min-width:901px) and (max-width:1366px) and (pointer:coarse){
+  #rb-panel-iptv.iptv-playing #iptv-preset-strip{display:none!important}
+}
+
 /* ── Mobile: enforce correct flex-scroll layout for IPTV + Radio ──
    ROOT CAUSE OF BUG: The old override (height:auto!important on the panel)
    broke the flex-column layout, causing the channel list to not scroll
@@ -2613,6 +2628,13 @@ footer{
 .radio-station-item.active{background:rgba(37,99,235,.22);border-color:#2563eb}
 .radio-station-name{flex:1;font-size:11px;font-weight:500;color:#cbd5e1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .radio-station-genre{font-size:9px;color:#475569;flex-shrink:0;white-space:nowrap}
+/* Premium touch target + subtle depth for channel/station rows (shared by
+   Live TV, Radio, Music, Movies, Podcast lists). */
+.radio-station-item{min-height:44px;padding:8px 10px}
+.radio-station-item:hover{background:#0d1c34;border-color:#1b3560}
+.radio-station-item:active{transform:scale(.985)}
+.radio-station-item.active{box-shadow:inset 2px 0 0 #3b82f6}
+.iptv-ch-logo,.iptv-ch-logo-fb{box-shadow:0 1px 4px rgba(0,0,0,.35)}
 .radio-default-btn{font-size:9px;padding:2px 7px;border:1px solid #1e3a5f;border-radius:9px;background:transparent;color:#475569;cursor:pointer;flex-shrink:0;transition:all .15s;white-space:nowrap;line-height:1.6}
 .radio-default-btn:hover{background:rgba(37,99,235,.2);border-color:#2563eb;color:#93c5fd}
 .radio-default-btn.pinned{background:#2563eb;border-color:#2563eb;color:#fff}
@@ -5042,21 +5064,17 @@ html.iptv-cinema #iptv-ctrl-bar{
       <button onclick="iptvShowSearch()" style="font-size:10px;padding:3px 8px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:5px;color:#94a3b8;cursor:pointer">🔍 Browse</button>
     </div>
 
-    <!-- IPTV Omnisearch bar -->
-    <div class="panel-omni-bar">
-      <div class="panel-omni-input-wrap">
-        <span style="position:absolute;left:9px;font-size:14px;color:#64748b;pointer-events:none;z-index:1;line-height:1">📡</span>
-        <button class="panel-omni-trigger" id="iptv-omni-trigger" onclick="panelOmniOpen('iptv')">Search live TV channels…</button>
-      </div>
-    </div>
-
-    <!-- Collapsible top section: Search + Country -->
+    <!-- Collapsible top section: Search + Country. One consolidated search box
+         (was two - this local instant filter, plus a button opening a full
+         modal with its own input - both searched the exact same already-
+         loaded channel list, so the modal added nothing for Live TV and was
+         removed). -->
     <div id="iptv-top-fold">
       <!-- Search -->
-      <div style="padding:6px 8px;background:#080e1a;border-bottom:1px solid #131d35;flex-shrink:0">
-        <input type="search" id="iptv-search"
-               placeholder="🔍 Search channels…"
-               style="width:100%;padding:7px 10px;background:#0e1f3b;border:1px solid #1e3a5c;border-radius:8px;color:#e2eeff;font-size:12px;font-family:'DM Sans',sans-serif;outline:none"
+      <div class="iptv-search-row">
+        <span class="iptv-search-icon">🔍</span>
+        <input type="search" id="iptv-search" class="iptv-search-input"
+               placeholder="Search 9,900+ live TV channels…"
                oninput="iptvOnSearch(this.value)"/>
       </div>
 
@@ -5090,7 +5108,10 @@ html.iptv-cinema #iptv-ctrl-bar{
     </div>
     </div><!-- /iptv-top-fold -->
 
-    <!-- Preset categories — always visible (needed for switching while watching) -->
+    <!-- Preset categories — always visible on desktop. On mobile, hidden while
+         a channel is playing (see .iptv-playing rules) - the channel list
+         underneath needs the room far more than a filter strip does once
+         you're already watching; tap "🔍 Browse" to bring it back. -->
     <div class="panel-preset-strip" id="iptv-preset-strip">
       <!-- Languages — Indian -->
       <button class="radio-preset-btn iptv-preset" onclick="iptvLoadPreset('all')">🌍 All</button>
@@ -11851,10 +11872,16 @@ function iptvStop() {
 }
 // Show search (unfold top controls while keeping video playing)
 function iptvShowSearch() {
+  // .iptv-playing is the single source of truth for whether top-fold/preset-
+  // strip are collapsed (see the CSS rules keyed off it) - toggling the class
+  // is enough. This used to ALSO manually toggle #iptv-top-fold's inline
+  // display in parallel, which could desync from the class (e.g. the first
+  // tap after a fresh page load would set an inline display:none that
+  // persisted even after the class was removed, since the fold's inline
+  // style started as '' rather than 'none') and leave the fold hidden even
+  // though Browse was tapped specifically to bring it back.
   const panel = document.getElementById('rb-panel-iptv');
   if (panel) panel.classList.toggle('iptv-playing');
-  const fold = document.getElementById('iptv-top-fold');
-  if (fold) fold.style.display = fold.style.display === 'none' ? '' : 'none';
 }
 
 // ── Transport controls ──────────────────────────────────────────────────
