@@ -2745,6 +2745,43 @@ footer{
   border-color:#4f74e3;box-shadow:0 2px 10px rgba(29,78,216,.35);}
 #rb-panel-iptv .radio-preset-btn:active{transform:scale(.96);}
 
+/* ── Live TV mobile "cinema" mode ──────────────────────────────────────────
+   Rotating the phone to landscape fires no user gesture, so <video>.
+   requestFullscreen() silently no-ops on iOS Safari / modern Chrome. And even
+   when it IS granted, it only fullscreens the bare <video> element (which has
+   the native `controls` attribute) - the custom transport bar (prev/next/
+   favourite/PiP/stop) below it is never included, since it's a sibling, not
+   inside the video. A CSS-only "cinema" layout sidesteps both problems: it's
+   guaranteed to engage (no permission needed) and keeps our own controls
+   visible. The mobile drawer (.right-bar.mobile-open) already covers the
+   full viewport when open, so this just needs to hide everything in the
+   panel except the video + transport bar, and let the video fill the rest. */
+html.iptv-cinema, html.iptv-cinema body, html.iptv-cinema .right-bar{ background:#000 !important; }
+html.iptv-cinema .rb-header,
+html.iptv-cinema #rb-panel-iptv .iptv-panel-hdr,
+html.iptv-cinema #rb-panel-iptv .iptv-settings-panel,
+html.iptv-cinema #rb-panel-iptv #iptv-now-bar,
+html.iptv-cinema #rb-panel-iptv .panel-omni-bar,
+html.iptv-cinema #rb-panel-iptv #iptv-top-fold,
+html.iptv-cinema #rb-panel-iptv #iptv-preset-strip,
+html.iptv-cinema #rb-panel-iptv #iptv-epg-bar,
+html.iptv-cinema #rb-panel-iptv #iptv-content-area{ display:none !important; }
+html.iptv-cinema #rb-panel-iptv{ position:relative !important; }
+html.iptv-cinema #iptv-player-wrap{
+  flex:1 !important; display:flex !important; padding-top:0 !important; margin:0 !important;
+  max-height:none !important; height:100% !important;
+}
+html.iptv-cinema #iptv-player-wrap > div{
+  width:100% !important; height:100% !important; padding-top:0 !important;
+}
+html.iptv-cinema #iptv-player{ object-fit:contain !important; }
+html.iptv-cinema #iptv-ctrl-bar{
+  position:absolute !important; left:0 !important; right:0 !important; bottom:0 !important;
+  z-index:10000 !important; display:flex !important; margin:0 !important;
+  background:linear-gradient(to top, rgba(0,0,0,.92), rgba(0,0,0,.4) 60%, transparent) !important;
+  padding:14px 16px !important; border:none !important;
+}
+
 /* ═══ Right-panel media lists — theme-proof dark surface ═══
    Live TV / Radio / Music / Movies / Podcast lists use a light text palette
    (#cbd5e1 names, #506480 tags) tuned for dark backgrounds. Light colour
@@ -11883,15 +11920,69 @@ function iptvVolDown() {
   sl.value = Math.max(0, Number(sl.value || 80) - 10);
   iptvSetVolume(sl.value);
 }
+// Gesture-free CSS "cinema" mode for the Live TV panel - see the CSS comment
+// above html.iptv-cinema for why this exists instead of relying solely on the
+// native Fullscreen API. Guaranteed to work and keeps the custom transport
+// bar (prev/next/fav/PiP/stop) visible, unlike requestFullscreen() on the
+// bare <video> element.
+function setIptvCinemaMode(on) {
+  document.documentElement.classList.toggle('iptv-cinema', !!on);
+  return document.documentElement.classList.contains('iptv-cinema');
+}
 function iptvFullscreen() {
   const video = document.getElementById('iptv-player');
   if (!video) return;
+  const nativeFs = !!document.fullscreenElement;
+  if (document.documentElement.classList.contains('iptv-cinema') || nativeFs) {
+    setIptvCinemaMode(false);
+    try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+    return;
+  }
+  // A direct tap carries a real user gesture, so also try the native API for
+  // true immersive fullscreen (hides browser chrome) - cinema mode is the
+  // guaranteed-to-work layout underneath either way.
+  setIptvCinemaMode(true);
   try {
-    if (document.fullscreenElement) document.exitFullscreen();
-    else if (video.requestFullscreen) video.requestFullscreen();
+    if (video.requestFullscreen) video.requestFullscreen().catch(() => {});
     else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
   } catch (e) { console.warn('[IPTV] Fullscreen failed:', e); }
 }
+// ---------- Rotate-to-fullscreen (phones/tablets) ----------
+// Like the big streaming apps: turning the phone sideways while a channel is
+// playing enters cinema mode automatically; turning it back upright exits.
+// Gated to touch devices and only while the Live TV tab is the active panel.
+(function () {
+  function isTouchDevice() { return window.matchMedia && window.matchMedia('(pointer:coarse)').matches; }
+  function isLandscape() {
+    if (screen.orientation && screen.orientation.type) return screen.orientation.type.indexOf('landscape') === 0;
+    return Math.abs(window.orientation || 0) === 90;
+  }
+  function iptvPanelActive() {
+    const el = document.getElementById('rb-panel-iptv');
+    return !!el && el.style.display !== 'none';
+  }
+  function isPlaying() {
+    const video = document.getElementById('iptv-player');
+    return !!video && !video.paused;
+  }
+  function onIptvRotate() {
+    if (!isTouchDevice() || !iptvPanelActive()) return;
+    if (isLandscape()) {
+      if (!isPlaying()) return;
+      setIptvCinemaMode(true);
+      try {
+        const video = document.getElementById('iptv-player');
+        if (video && video.requestFullscreen) video.requestFullscreen().catch(() => {});
+      } catch (e) {}
+    } else {
+      setIptvCinemaMode(false);
+      try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch (e) {}
+    }
+  }
+  if (screen.orientation && screen.orientation.addEventListener)
+    screen.orientation.addEventListener('change', function () { setTimeout(onIptvRotate, 120); });
+  window.addEventListener('orientationchange', function () { setTimeout(onIptvRotate, 160); });
+})();
 // ═══════════════════════════════════════════════════════════════════
 // LIVE TV — 5-Style Layout + Geo-Navigation
 // ═══════════════════════════════════════════════════════════════════
