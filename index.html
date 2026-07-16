@@ -3063,6 +3063,16 @@ html.iptv-cinema #iptv-ctrl-bar{
 /* Cap video height so controls + channel list always stay visible below the player.
    The player is a flex-shrink:0 block; the channel list below it is flex:1. */
 #iptv-player-wrap{max-height:52vh;overflow:hidden;flex-shrink:0}
+/* On real desktop (mouse, not touch, so this doesn't also affect wide touch
+   tablets that intentionally get the same collapsed mobile-style layout),
+   the sidebar has plenty of vertical room even with the video capped at
+   52vh - keep the search + country selector reachable instead of forcing
+   users to hit "🔍 Browse" or open the separate Expand overlay just to
+   change country while a channel is already playing. */
+@media(min-width:900px) and (pointer:fine){
+  #rb-panel-iptv.iptv-playing #iptv-top-fold{display:block!important}
+  #rb-panel-iptv.iptv-playing #iptv-now-bar{display:none!important}
+}
 
 /* ── EXPANDED MODE: PREMIUM DESKTOP SPLIT-SCREEN ── */
 @media(min-width: 900px) {
