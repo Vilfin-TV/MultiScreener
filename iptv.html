@@ -2701,21 +2701,48 @@ function __iptvBoot(){
     else{lastVol=video.volume;video.muted=true;$("vol-slider").value=0;}
     updateMute();
   }
+  // Gesture-free CSS "cinema" fullscreen: fills the viewport with the video
+  // and shows the overlay control bar, without touching the native Fullscreen
+  // API (which requires a genuine user gesture and silently no-ops when
+  // called from things like orientationchange). Originally built for the TV
+  // app's remote-replayed OK button; reused below for phone/tablet rotation,
+  // where the native API has the exact same gesture problem.
+  function setCinemaMode(on){
+    var d=document.documentElement;
+    d.classList.toggle("tv-cinema",!!on);
+    try{ window.dispatchEvent(new Event("resize")); }catch(e){}
+    try{ if(player&&VJS_OK&&player.trigger) player.trigger("resize"); }catch(e){}
+    return d.classList.contains("tv-cinema");
+  }
   function toggleFullscreen(){
     // On TV the remote's OK is replayed via evaluateJavascript, which the
     // Fullscreen API rejects (no user gesture). Use the gesture-free CSS cinema
     // mode instead; the <video> is reused so channel hopping stays fullscreen.
     if(typeof TV_APP!=="undefined" && TV_APP){
-      var on=document.documentElement.classList.toggle("tv-cinema");
-      try{ window.dispatchEvent(new Event("resize")); }catch(e){}
-      try{ if(player&&VJS_OK&&player.trigger) player.trigger("resize"); }catch(e){}
+      var on=setCinemaMode(!document.documentElement.classList.contains("tv-cinema"));
       // Entering cinema: put focus on the play button so the remote can drive the
       // control bar (◀◀ prev / play·pause / next ▶▶ / mute / volume) right away.
       if(on){ setTimeout(function(){ var b=document.getElementById("btn-play"); if(b){ try{ b.focus(); }catch(e){} } }, 80); }
       return on;
     }
-    if(player&&VJS_OK){ if(player.isFullscreen())player.exitFullscreen();else player.requestFullscreen(); return; }
-    var s=$("video-shell");if(!document.fullscreenElement){(s.requestFullscreen||s.webkitRequestFullscreen||function(){if(video.webkitEnterFullscreen)video.webkitEnterFullscreen();}).call(s);}else{(document.exitFullscreen||document.webkitExitFullscreen).call(document);}
+    // Phone/tablet: if rotation already put us in cinema mode, or we're
+    // already in native fullscreen, the button's job is to exit both cleanly.
+    var nativeFs = (player&&VJS_OK) ? (function(){ try{ return player.isFullscreen(); }catch(e){ return false; } })() : !!document.fullscreenElement;
+    if(document.documentElement.classList.contains("tv-cinema") || nativeFs){
+      setCinemaMode(false);
+      try{ if(player&&VJS_OK){ if(player.isFullscreen())player.exitFullscreen(); } else if(document.fullscreenElement){ (document.exitFullscreen||document.webkitExitFullscreen).call(document); } }catch(e){}
+      return false;
+    }
+    // A direct tap here DOES carry a user gesture, so try the native API first
+    // for true immersive fullscreen (hides browser chrome too) — cinema mode
+    // is the guaranteed-to-work layout underneath either way, regardless of
+    // whether the native request is granted.
+    setCinemaMode(true);
+    try{
+      if(player&&VJS_OK){ player.requestFullscreen(); }
+      else{ var s=$("video-shell"); (s.requestFullscreen||s.webkitRequestFullscreen||function(){if(video.webkitEnterFullscreen)video.webkitEnterFullscreen();}).call(s); }
+    }catch(e){}
+    return true;
   }
   function togglePip(){
     if(player&&VJS_OK){
@@ -3096,15 +3123,25 @@ function __iptvBoot(){
       if(!isTouchDevice()||!state.currentChannel)return;
       if(isLandscape()){
         if(!isPlaying())return;
-        try{
-          if(player&&VJS_OK){ if(!player.isFullscreen())player.requestFullscreen(); }
-          else if(video.webkitEnterFullscreen){ video.webkitEnterFullscreen(); } // iOS Safari
-          else if($("video-shell").requestFullscreen){ $("video-shell").requestFullscreen().catch(function(){}); }
-        }catch(e){}
+        // Guaranteed layer: orientationchange carries no user gesture, so the
+        // native Fullscreen API silently no-ops on iOS Safari and modern
+        // Chrome — cinema mode is what actually makes rotation reliably work,
+        // and it's also the only path that keeps our custom controls (channel
+        // switch, guide, favorites) visible, since player.requestFullscreen()
+        // only fullscreens the inner video.js element, not the sibling
+        // controls bar.
+        setCinemaMode(true);
+        // Best-effort bonus: on the (uncommon) browser that still grants this
+        // without a gesture, also hide the OS/browser chrome. Deliberately NOT
+        // using video.webkitEnterFullscreen() here — that swaps in iOS's own
+        // native video player UI in place of our controls, working against
+        // the "all controls in fullscreen" requirement.
+        try{ if($("video-shell").requestFullscreen){ $("video-shell").requestFullscreen().catch(function(){}); } }catch(e){}
       }else{
+        setCinemaMode(false);
         try{
           if(player&&VJS_OK){ if(player.isFullscreen())player.exitFullscreen(); }
-          else if(document.fullscreenElement){ document.exitFullscreen().catch(function(){}); }
+          if(document.fullscreenElement){ document.exitFullscreen().catch(function(){}); }
         }catch(e){}
       }
     }
