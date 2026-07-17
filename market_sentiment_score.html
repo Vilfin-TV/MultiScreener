@@ -433,6 +433,30 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
         <b style="color:var(--green)">🚀 Top Growth Sector:</b>
         <p>Semiconductor — currently shows the strongest relative momentum among tracked sectors, trading +1.10% above its 50-day average with a +60.81% year-to-date return.</p>
       </div>
+      <div class="rec-box" id="live-rec-value" style="border-left-color:var(--gold)">
+        <b style="color:var(--gold)">⚖️ Top Value Sector:</b>
+        <p>Example — populated live from today's report.</p>
+      </div>
+      <div class="rec-box" id="live-rec-lt" style="border-left-color:var(--blue)">
+        <b style="color:var(--blue)">💎 Top Long-Term Sector:</b>
+        <p>Example — populated live from today's report.</p>
+      </div>
+
+      <div style="margin-top:18px; display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px;">
+        <div class="rec-box" id="live-pick-trending-eq" style="border-left-color:#d97706"><b style="color:#d97706">📈 Trending — Equities</b><p>—</p></div>
+        <div class="rec-box" id="live-pick-trending-comm" style="border-left-color:#d97706"><b style="color:#d97706">🪙 Trending — Commodities</b><p>—</p></div>
+        <div class="rec-box" id="live-pick-trending-bond" style="border-left-color:#d97706"><b style="color:#d97706">💵 Trending — Bonds</b><p>—</p></div>
+        <div class="rec-box" id="live-pick-trending-curr" style="border-left-color:#d97706"><b style="color:#d97706">💱 Trending — Currencies</b><p>—</p></div>
+        <div class="rec-box" id="live-pick-quality-eq" style="border-left-color:var(--blue)"><b style="color:var(--blue)">🛡️ Quality — Equities</b><p>—</p></div>
+        <div class="rec-box" id="live-pick-quality-comm" style="border-left-color:var(--blue)"><b style="color:var(--blue)">🛡️ Quality — Commodities</b><p>—</p></div>
+        <div class="rec-box" id="live-pick-quality-bond" style="border-left-color:var(--blue)"><b style="color:var(--blue)">🛡️ Quality — Bonds</b><p>—</p></div>
+        <div class="rec-box" id="live-pick-quality-curr" style="border-left-color:var(--blue)"><b style="color:var(--blue)">🛡️ Quality — Currencies</b><p>—</p></div>
+      </div>
+      <div class="rec-box" id="live-notable-fx" style="border-left-color:#ca8a04; display:none; margin-top:14px;">
+        <b style="color:#ca8a04">🆕 Notable FX Mover (auto-detected):</b>
+        <p id="live-notable-fx-text">—</p>
+      </div>
+      <p style="font-size:12.5px; color:var(--text3); margin-top:14px;">What "Trending" and "Quality" mean, and how the sector picks above are chosen — see <a href="#methodology" style="color:var(--blue)">How We Pick These</a> below.</p>
     </div>
     <div class="live-card-foot">
       <span id="live-foot-sum">Raw score: 10 + 10 + 0 + 0 + 20 + 10 + 10 + 15 + 10 + 10 + 15 + 0 − 10 + 10 = 110 → capped at <b style="color:var(--text)">100</b> → Bullish Expansion (≥ 50)</span>
@@ -655,8 +679,34 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
   </div>
 </div>
 
+<div class="section" id="methodology">
+  <div class="section-kicker">05 · The Picks</div>
+  <h2 class="section-title">How We Pick These: Momentum, Value, Long-Term &amp; Quality</h2>
+  <p class="section-lead">Every session in the Daily Market Report and on this page (Equities, Commodities, Bonds, Currencies) shows the same four picks. None of these are fundamental/earnings-based scores — this pipeline only sees price history (today's change, the 20-day and 50-day moving averages, year-to-date return, and 3-year return), so every pick below is built purely from those numbers.</p>
+  <div class="broker-grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr));">
+    <div class="broker-card">
+      <h4 style="color:#d97706">📈 Momentum / Trending — "what's moving right now"</h4>
+      <p style="font-size:13.5px; color:var(--text2); line-height:1.6;">Score = <b>(20-day MA premium × 0.7) + (today's % change × 0.3)</b>. Weighted toward the 20-day trend rather than a single day's move, with today's session as a smaller confirming factor. Only assets that are <em>up</em> in the latest session are eligible at all — this deliberately favors things with real, current upward pull, not something merely "less bad" than everything else.</p>
+    </div>
+    <div class="broker-card">
+      <h4 style="color:var(--gold)">⚖️ Value — "washed out, not yet a falling knife"</h4>
+      <p style="font-size:13.5px; color:var(--text2); line-height:1.6;">Score = <b>−(50-day MA premium) + (YTD return × 0.1)</b> — rewards trading <em>below</em> its own 50-day average (cheaper relative to its recent range), with a small YTD tiebreaker. Anything down more than 15% year-to-date is automatically disqualified rather than ranked — being far below its average isn't "value" if the underlying trend is a genuine collapse, not a temporary dip.</p>
+    </div>
+    <div class="broker-card">
+      <h4 style="color:var(--blue)">💎 Long-Term — "the structural performer"</h4>
+      <p style="font-size:13.5px; color:var(--text2); line-height:1.6;">Score = <b>(3-year return × 0.5) + (YTD return × 0.3) + (50-day MA premium × 0.2)</b>. Weighted mostly toward the 3-year track record on purpose — a single strong year can be luck or a short-term theme; three years of outperformance is much harder to fake.</p>
+    </div>
+    <div class="broker-card">
+      <h4 style="color:var(--blue)">🛡️ Quality — "consistent, not just spiky"</h4>
+      <p style="font-size:13.5px; color:var(--text2); line-height:1.6;">Counts how many of <b>5 timeframes</b> (today, 20-day, 50-day, YTD, 3-year) are simultaneously positive — each one is worth 20 points, with total strength only used to break ties. An asset that's up big today but underwater on its longer averages scores <em>lower</em> here than a steady all-round performer — the opposite of what Momentum rewards, which is why the two picks can (and often do) point to different assets in the same session.</p>
+    </div>
+  </div>
+  <div class="note-box" style="margin-top:16px;">🏦 <b>Bonds and yield instruments</b> (e.g. "US 10Y" is a yield level, not a tradable price) get every one of these formulas <b>sign-flipped</b> automatically — a rising yield number means a falling bond price, so "positive" consistently means "bullish for the instrument" everywhere on this page, not "the number went up."</div>
+  <div class="note-box">💱 <b>Currencies session:</b> alongside the ~16 permanently tracked pairs, the pipeline scans a handful of additional liquid pairs (USD/ZAR, USD/TRY, USD/BRL, EUR/JPY, GBP/JPY) not in that regular list every run, and automatically surfaces whichever one moved the most that day as a "🆕 Notable FX Mover" — so an unusually large move in a pair you don't normally track still gets flagged.</div>
+</div>
+
 <div class="section" id="asset-playbook">
-  <div class="section-kicker">05 · Asset Positioning</div>
+  <div class="section-kicker">06 · Asset Positioning</div>
   <h2 class="section-title">Asset Class Playbook &amp; Global Capital Flows</h2>
   <p class="section-lead">The same five score bands from above also map to which asset classes are typically favored in that regime — and two of the signals already powering the score double as a read on where capital is flowing across borders.</p>
   <div class="playbook-wrap">
@@ -680,7 +730,7 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
 </div>
 
 <div class="section" id="brokers">
-  <div class="section-kicker">06 · Get Started</div>
+  <div class="section-kicker">07 · Get Started</div>
   <h2 class="section-title">Best Brokers &amp; Apps</h2>
   <p class="section-lead">The same broker, bond, and app picks from the Daily Market Report — one place to open the accounts you'd need to actually act on any of this.</p>
   <div class="broker-note">🎁 Using the links below benefits you (discounts, coins, or cashback) at no extra cost — thank you for supporting this tool.</div>
@@ -827,6 +877,29 @@ fetch('data/market_sentiment_snapshot.json', { cache: 'no-store' })
     }
     if (snap.momentum_sector) {
       document.querySelector('#live-rec-sector p').textContent = snap.momentum_sector;
+    }
+    if (snap.value_sector) {
+      document.querySelector('#live-rec-value p').textContent = snap.value_sector;
+    }
+    if (snap.long_term_sector) {
+      document.querySelector('#live-rec-lt p').textContent = snap.long_term_sector;
+    }
+    if (snap.picks) {
+      const t = snap.picks.trending || {};
+      const q = snap.picks.quality || {};
+      if (t.equity) document.querySelector('#live-pick-trending-eq p').textContent = t.equity;
+      if (t.commodity) document.querySelector('#live-pick-trending-comm p').textContent = t.commodity;
+      if (t.bond) document.querySelector('#live-pick-trending-bond p').textContent = t.bond;
+      if (t.currency) document.querySelector('#live-pick-trending-curr p').textContent = t.currency;
+      if (q.equity) document.querySelector('#live-pick-quality-eq p').textContent = q.equity;
+      if (q.commodity) document.querySelector('#live-pick-quality-comm p').textContent = q.commodity;
+      if (q.bond) document.querySelector('#live-pick-quality-bond p').textContent = q.bond;
+      if (q.currency) document.querySelector('#live-pick-quality-curr p').textContent = q.currency;
+    }
+    if (snap.notable_fx_mover) {
+      const fxBox = document.getElementById('live-notable-fx');
+      fxBox.style.display = 'block';
+      document.getElementById('live-notable-fx-text').textContent = snap.notable_fx_mover + ' — not one of the regularly tracked pairs, surfaced automatically because it moved the most today.';
     }
 
     if (Array.isArray(snap.breakdown) && snap.breakdown.length) {

@@ -65,19 +65,27 @@ jobs:
               data = json.load(f)
           now = datetime.datetime.now(datetime.timezone.utc)
           cutoff = now - datetime.timedelta(hours=3)
+          # A run only counts as "handled" if it succeeded, or is still
+          # in-flight (queued/in_progress). A completed-but-failed or
+          # -cancelled run must NOT count, or the watchdog would wrongly
+          # conclude nothing needs retrying - the exact scenario it exists
+          # to catch (same bug class found and fixed in the JKK digest
+          # watchdog on 2026-07-16: a real script/SMTP failure would have
+          # silently gone unnoticed and unretried).
           recent = [
               r for r in data
               if datetime.datetime.fromisoformat(r["createdAt"].replace("Z", "+00:00")) > cutoff
+              and (r["status"] != "completed" or r["conclusion"] == "success")
           ]
           print(len(recent))
           PYEOF
           )
 
-          echo "Recent runs (last 3h) for Daily Market Report: $RECENT_COUNT"
+          echo "Recent successful/in-flight runs (last 3h) for Daily Market Report: $RECENT_COUNT"
 
           if [ "$RECENT_COUNT" -eq 0 ]; then
-            echo "No recent run found — the scheduled trigger likely didn't fire. Dispatching now."
+            echo "No recent successful run found - the scheduled trigger either didn't fire or failed. Dispatching now."
             gh workflow run market_report.yml --repo "$REPO"
           else
-            echo "Daily Market Report already ran recently — nothing to do."
+            echo "Daily Market Report already ran successfully (or is running) recently - nothing to do."
           fi

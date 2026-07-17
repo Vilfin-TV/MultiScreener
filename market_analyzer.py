@@ -62,7 +62,19 @@ TICKERS_CONFIG = {
         'Copper': {'symbol': 'HG=F', 'currency': 'USD'},
         'Platinum': {'symbol': 'PL=F', 'currency': 'USD'},
         'Wheat': {'symbol': 'ZW=F', 'currency': 'USD'},
-        'Corn': {'symbol': 'ZC=F', 'currency': 'USD'}
+        'Corn': {'symbol': 'ZC=F', 'currency': 'USD'},
+        # No raw futures/spot ticker exists on Yahoo for uranium, hydrogen,
+        # or lithium/cobalt/nickel (unlike GC=F/HG=F-style continuous
+        # futures) - these three are the standard, verified, currently-live
+        # ETF proxies used across the industry for that exposure, same
+        # "ETF Proxy" pattern already used for Chile/Vietnam/UAE above.
+        'Uranium (URA ETF Proxy)': {'symbol': 'URA', 'currency': 'USD'},
+        'Battery Metals (LIT ETF Proxy)': {'symbol': 'LIT', 'currency': 'USD'},
+        # HDRO trades thin (~70K shares/day vs LIT's ~470K) - its single-day
+        # % change is noisier than the other commodities here. Included for
+        # coverage, but flagged in the email/site copy rather than treated
+        # as equally reliable signal.
+        'Hydrogen Economy (HDRO ETF Proxy, thin volume)': {'symbol': 'HDRO', 'currency': 'USD'}
     },
     'Global Futures & Proxies': {
         'S&P 500 Futures': {'symbol': 'ES=F', 'currency': 'USD'},
@@ -400,8 +412,41 @@ def collect_market_data():
                 data['currency'] = currency
             all_data[category][name] = data
             
-            time.sleep(2) 
+            time.sleep(2)
     return all_data
+
+# Liquid, actively-traded FX pairs NOT already in the permanent 'Currencies'
+# dashboard above - verified live Yahoo Finance tickers as of 2026-07.
+# Scanned separately each run (see find_notable_fx_mover) so a pair having
+# an unusually large day gets surfaced automatically, even though nobody
+# manually added it to the ~16 pairs tracked every day.
+FX_CANDIDATE_POOL = {
+    'USD/ZAR (South African Rand)': {'symbol': 'ZAR=X', 'currency': 'ZAR'},
+    'USD/TRY (Turkish Lira)': {'symbol': 'TRY=X', 'currency': 'TRY'},
+    'USD/BRL (Brazilian Real)': {'symbol': 'BRL=X', 'currency': 'BRL'},
+    'EUR/JPY': {'symbol': 'EURJPY=X', 'currency': 'JPY'},
+    'GBP/JPY': {'symbol': 'GBPJPY=X', 'currency': 'JPY'},
+}
+
+def find_notable_fx_mover(tracked_currencies):
+    """Scans FX_CANDIDATE_POOL (pairs NOT already in the main Currencies
+    table) and returns (name, data_dict) for whichever pair had the
+    biggest absolute daily move - or (None, None) if nothing usable came
+    back. The caller merges this into data['Currencies'] before scoring,
+    so it automatically flows through the same momentum/value/long-term/
+    quality picks and the Asset Dashboard table as every other tracked
+    pair, just clearly labeled as auto-detected in the display layer."""
+    best_name, best_data, best_abs_change = None, None, -1
+    for name, info in FX_CANDIDATE_POOL.items():
+        if name in tracked_currencies:
+            continue  # already manually tracked under this exact name - skip
+        data = fetch_asset_data(info['symbol'])
+        time.sleep(2)
+        if data and _valid(data.get('change')):
+            data['currency'] = info['currency']
+            if abs(data['change']) > best_abs_change:
+                best_name, best_data, best_abs_change = name, data, abs(data['change'])
+    return best_name, best_data
 
 def calc_growth_score(m):
     mult = -1 if m.get('currency') == 'Yield %' else 1
@@ -429,6 +474,54 @@ def calc_momentum_score(m):
     p20 = mult * (((m.get('price', 0) / m['ma_20']) - 1) * 100 if m.get('ma_20') else 0)
     daily = mult * (m.get('change') or 0)
     return (p20 * 0.7) + (daily * 0.3)
+
+def calc_quality_score(m):
+    """Not a fundamentals factor - no earnings/balance-sheet data flows
+    through this pipeline, only price series. 'Quality' here means
+    technical CONSISTENCY: is this asset positive across every timeframe
+    we track at once (today, 20-day, 50-day, YTD, 3-year), or is it just
+    one recent spike propping up an otherwise mixed picture? An asset up
+    big today but underwater on its longer averages scores LOWER here
+    than a steady all-round performer - the opposite of what Momentum
+    rewards, which is exactly the point of having both."""
+    mult = -1 if m.get('currency') == 'Yield %' else 1
+    price = m.get('price', 0)
+    daily = mult * (m.get('change') or 0)
+    ytd = mult * (m.get('ytd_return') or 0)
+    tyr = mult * (m.get('three_yr_return') or 0)
+    p20 = mult * (((price / m['ma_20']) - 1) * 100) if m.get('ma_20') else 0
+    p50 = mult * (((price / m['ma_50']) - 1) * 100) if m.get('ma_50') else 0
+    signals = [daily, p20, p50, ytd, tyr]
+    positive_count = sum(1 for s in signals if s > 0)
+    avg_strength = sum(signals) / len(signals)
+    # Alignment across timeframes is worth far more than raw magnitude -
+    # each of the 5 signals being positive is worth 20 "consistency
+    # points", with the blended average only breaking ties within the
+    # same alignment count.
+    return positive_count * 20 + avg_strength * 0.1
+
+def _quality_alignment_count(m):
+    mult = -1 if m.get('currency') == 'Yield %' else 1
+    price = m.get('price', 0)
+    signals = [
+        mult * (m.get('change') or 0),
+        mult * (((price / m['ma_20']) - 1) * 100) if m.get('ma_20') else 0,
+        mult * (((price / m['ma_50']) - 1) * 100) if m.get('ma_50') else 0,
+        mult * (m.get('ytd_return') or 0),
+        mult * (m.get('three_yr_return') or 0),
+    ]
+    return sum(1 for s in signals if s > 0)
+
+def get_quality_pick(asset_dict):
+    """Best-quality pick for one session/category: the asset trading
+    positively across the most timeframes at once (see calc_quality_score),
+    used the same way get_short_term_pick() is used for momentum below."""
+    valid = {name: metrics for name, metrics in asset_dict.items() if metrics and metrics.get('ma_20') and metrics.get('ma_50')}
+    if valid:
+        best = max(valid.items(), key=lambda x: calc_quality_score(x[1]))
+        aligned = _quality_alignment_count(best[1])
+        return f"{best[0]} (positive across {aligned}/5 tracked timeframes)"
+    return "No clear quality leader"
 
 def get_executive_summary_analysis(data, regime_score):
     if regime_score <= -50:
@@ -576,7 +669,12 @@ def get_executive_summary_analysis(data, regime_score):
     st_bond = get_short_term_pick(bonds)
     st_currency = get_short_term_pick(data.get('Currencies', {}))
 
-    return regional_rec, momentum_name, value_name, long_term_name, lt_reason, lt_broad_name, lt_broad_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency
+    qual_equity = get_quality_pick(sector_data)
+    qual_commodity = get_quality_pick(commodities)
+    qual_bond = get_quality_pick(bonds)
+    qual_currency = get_quality_pick(data.get('Currencies', {}))
+
+    return regional_rec, momentum_name, value_name, long_term_name, lt_reason, lt_broad_name, lt_broad_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency, qual_equity, qual_commodity, qual_bond, qual_currency
 
 
 def get_asset_class_recommendation(score):
@@ -661,9 +759,9 @@ def calculate_market_regime(data, fred_extras=None):
     else:
         regime_text = "Extremely Bearish / Risk-Off"
 
-    regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad_name, lt_broad_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency = get_executive_summary_analysis(data, score)
+    regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad_name, lt_broad_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency, qual_equity, qual_commodity, qual_bond, qual_currency = get_executive_summary_analysis(data, score)
 
-    return score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad_name, lt_broad_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency
+    return score, regime_text, risk_alerts, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad_name, lt_broad_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency, qual_equity, qual_commodity, qual_bond, qual_currency
 
 def build_score_breakdown(data, fred_extras=None):
     """Structured, JSON-serializable version of the 14 signal checks behind
@@ -1102,7 +1200,7 @@ def build_fred_macro_text(fred_extras):
         text += f"• <b>Fed Net Liquidity (Balance Sheet − TGA − Reverse Repo):</b> ${net_liquidity_b:,.0f}B (balance sheet {walcl_date}, TGA {tga_date}, reverse repo {rrp_date}) — a rising figure has historically coincided with looser system-wide liquidity for risk assets<br>"
     return text
 
-def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text, news_items, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr):
+def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text, news_items, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr, qual_eq, qual_comm, qual_bond, qual_curr, notable_fx=None):
     html = f"""<html><head><style>\nbody {{ font-family: Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }}\nh2 {{ color: #0a192f; margin-top: 30px; }}\nh3 {{ color: #1a365d; }}\ntable {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.95em; }}\nth, td {{ padding: 8px; border: 1px solid #ddd; text-align: center; }}\nth {{ background-color: #f4f4f4; }}\n.l {{ text-align: left; }}\n.c {{ text-align: center; }}\n.a {{ text-align: left; font-weight: bold; width: 25%; }}\n.u {{ text-align: center; color: #666; font-size: 0.9em; }}\n.p {{ color: green; font-weight: bold; }}\n.n {{ color: red; font-weight: bold; }}\n.score-box {{ padding: 20px; background: #eef2f5; border-left: 5px solid #0a192f; margin-bottom: 20px; }}\n.alerts {{ background: #fff3f3; border-left: 5px solid #d9534f; padding: 15px; }}\n.recommendation {{ background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 5px solid #16a34a; padding: 15px; margin-top: 15px; }}\n.st-momentum {{ background: #fffbeeb3; border: 1px solid #fde68a; border-left: 5px solid #d97706; padding: 15px; margin-top: 15px; }}\n.summary-item {{ margin-bottom: 8px; }}\n.reasoning {{ font-size: 0.9em; color: #555; margin-left: 20px; }}\n</style></head><body>"""
     html += f"""<div style="display: flex; align-items: center; border-bottom: 2px solid #0a192f; padding-bottom: 15px; margin-top: 20px; margin-bottom: 20px;"><img src="https://vilfintv.com/images/vilfintv-logo.jpg" alt="VilfinTV" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; box-shadow: 0 0 8px rgba(59,130,246,0.45); object-fit: cover;"><div style="flex-grow: 1;"><h2 style="margin: 0; color: #0a192f; border: none; padding: 0;">Market Regime Report</h2><div style="color: #555; font-size: 0.95em; margin-top: 5px;">Executive Summary by <strong>VilfinTV.com</strong></div></div><div style="color: #666; font-size: 0.9em; text-align: right; font-weight: bold;">{datetime.now().strftime('%Y-%m-%d')}</div></div>"""
     html += f"""
@@ -1130,12 +1228,22 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
             </div>
 
             <div class="st-momentum">
-                <h4 style="margin-top: 0; margin-bottom: 15px;">Short-Term Momentum / Swing Trades (Strongest 20-Day Trend)</h4>
+                <h4 style="margin-top: 0; margin-bottom: 15px;">Trending Now / Swing Trades (Strongest 20-Day Trend)</h4>
                 <div class="summary-item"><strong>📈 Top Equity Pick:</strong> {st_eq}</div>
                 <div class="summary-item"><strong>🪙 Top Commodity Pick:</strong> {st_comm}</div>
                 <div class="summary-item"><strong>💵 Top Bond Pick:</strong> {st_bond}</div>
                 <div class="summary-item"><strong>💱 Top Currency Pick:</strong> {st_curr}</div>
             </div>
+
+            <div class="st-momentum" style="background:#eff6ff; border-color:#bfdbfe; border-left-color:#2563eb;">
+                <h4 style="margin-top: 0; margin-bottom: 15px;">Best Quality (Consistent Across Every Timeframe)</h4>
+                <div class="summary-item"><strong>📈 Equities:</strong> {qual_eq}</div>
+                <div class="summary-item"><strong>🪙 Commodities:</strong> {qual_comm}</div>
+                <div class="summary-item"><strong>💵 Bonds:</strong> {qual_bond}</div>
+                <div class="summary-item"><strong>💱 Currencies:</strong> {qual_curr}</div>
+                <div class="reasoning" style="margin-top:8px;">"Quality" here means trading positively across today's session, the 20-day, 50-day, YTD and 3-year windows all at once - a steady all-round performer, not a single recent spike. See "How We Pick These" on the methodology page for the full explanation of Momentum/Trending, Value, Long-Term and Quality.</div>
+            </div>
+            {"<div class='summary-item' style='margin-top:15px; padding:10px; background:#fef9c3; border-left:4px solid #ca8a04;'><strong>🆕 Notable FX Mover (auto-detected):</strong> " + notable_fx + " - not one of the regularly tracked pairs above, surfaced automatically because it moved the most today.</div>" if notable_fx else ""}
         </div>
     """
 
@@ -1290,15 +1398,19 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
                 if valid_lt:
                     best_lt = max(valid_lt.items(), key=lambda x: calc_lt_score(x[1]))
                     lt_eq = f"{best_lt[0]} ({best_lt[1]['three_yr_return']:+.2f}% 3-Year)"
-                
+
+                qual_eq_cat = get_quality_pick(valid_assets)
+
                 html += f"""
                 <div style="background: #fdfdfd; border: 1px solid #e0e0e0; border-left: 5px solid #1a365d; padding: 15px; margin-bottom: 20px; margin-top: 10px;">
                     <h4 style="margin-top: 0; margin-bottom: 10px; color: #1a365d;">🏆 Top Picks from {category}</h4>
                     <div style="font-size: 0.95em;">
-                        <strong>📈 Best Momentum (Short Term):</strong> {st_eq}<br>
+                        <strong>📈 Best Momentum / Trending (Short Term):</strong> {st_eq}<br>
                         <strong>⚖️ Best Value (Oversold):</strong> {val_eq}<br>
-                        <strong>💎 Best Long-Term (3-Year):</strong> {lt_eq}
+                        <strong>💎 Best Long-Term (3-Year):</strong> {lt_eq}<br>
+                        <strong>🛡️ Best Quality (Consistent):</strong> {qual_eq_cat}
                     </div>
+                    <div style="font-size:0.82em; color:#888; margin-top:8px;">How these are picked: <a href="https://vilfintv.com/market_sentiment_score.html#methodology" style="color:#0056b3;">see the methodology breakdown &rarr;</a></div>
                 </div>
                 """
 
@@ -1439,6 +1551,19 @@ if __name__ == "__main__":
     logging.info("Starting Market Analyzer Pipeline")
     market_data = collect_market_data()
 
+    # Auto-detect the biggest mover among FX pairs NOT already in the
+    # permanent Currencies table, and merge it in before scoring so it
+    # flows through the dashboard table + momentum/value/long-term/quality
+    # picks automatically, clearly labeled as auto-detected downstream.
+    notable_fx_name, notable_fx_data = find_notable_fx_mover(market_data.get('Currencies', {}))
+    notable_fx_summary = None
+    if notable_fx_name and notable_fx_data:
+        market_data.setdefault('Currencies', {})[notable_fx_name] = notable_fx_data
+        chg = notable_fx_data.get('change')
+        chg_str = f"{chg:+.2f}%" if _valid(chg) else "N/A"
+        notable_fx_summary = f"{notable_fx_name} ({chg_str} today)"
+        logging.info(f"Notable FX mover auto-detected: {notable_fx_summary}")
+
     # Genuine macro data for the Labor Market, Liquidity & Financial
     # Conditions, and Credit Spread signals - fetched once and passed into
     # both scoring calls so a network hiccup on one doesn't need refetching
@@ -1465,13 +1590,13 @@ if __name__ == "__main__":
     if walcl and tga and rrp:
         fred_extras['net_liquidity'] = (walcl, tga, rrp)
 
-    score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr = calculate_market_regime(market_data, fred_extras)
+    score, regime, alerts, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr, qual_eq, qual_comm, qual_bond, qual_curr = calculate_market_regime(market_data, fred_extras)
 
     logging.info(f"Calculated Regime Score: {score} ({regime})")
 
     news_items = fetch_global_news()
     macro_text = build_fred_macro_text(fred_extras)
-    html_report = generate_html_email(market_data, score, regime, alerts, macro_text, news_items, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr)
+    html_report = generate_html_email(market_data, score, regime, alerts, macro_text, news_items, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr, qual_eq, qual_comm, qual_bond, qual_curr, notable_fx_summary)
     send_email(html_report)
 
     # Publish a JSON snapshot of today's real score + signal breakdown so
@@ -1487,6 +1612,13 @@ if __name__ == "__main__":
             "breakdown": build_score_breakdown(market_data, fred_extras)[0],
             "regional_rec": rec_regional,
             "momentum_sector": rec_mom,
+            "value_sector": rec_val,
+            "long_term_sector": rec_lt,
+            "picks": {
+                "trending": {"equity": st_eq, "commodity": st_comm, "bond": st_bond, "currency": st_curr},
+                "quality": {"equity": qual_eq, "commodity": qual_comm, "bond": qual_bond, "currency": qual_curr},
+            },
+            "notable_fx_mover": notable_fx_summary,
         }
         with open("data/market_sentiment_snapshot.json", "w") as f:
             json.dump(snapshot, f, indent=2)
