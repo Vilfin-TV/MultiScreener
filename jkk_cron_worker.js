@@ -1,65 +1,30 @@
 /**
- * JKK/UR digest cron backup trigger.
+ * JKK/UR digest cron exact-time trigger.
  *
- * Cloudflare Worker crons fire reliably, unlike GitHub's best-effort
- * scheduler - the whole point of this backup. Originally used 5 separate
- * fixed-time crons (one per daily digest slot), but Cloudflare enforces a
- * 5-cron-trigger limit PER ACCOUNT (not per worker) - this account was
- * already at that cap with 4 JKK crons + 1 IPTV worker cron, so adding a
- * 5th JKK slot for the 2026-07-16 schedule expansion (4->5 sends/day)
- * silently couldn't deploy (discovered 2026-07-17: the stale 4-slot cron
- * list left the two newest slots with zero Cloudflare-side backup at all,
- * on top of the GH_TOKEN issue below).
+ * Cloudflare Worker crons fire reliably to the minute, unlike GitHub's
+ * best-effort scheduler. This worker is now the PRIMARY trigger to ensure
+ * exact JST time delivery. It dispatches the jkk_email_watch.yml workflow
+ * via workflow_dispatch so the email is sent precisely when scheduled.
  *
- * Redesigned to use a SINGLE frequent cron (every 15 min) with in-worker
- * time-window logic instead - this uses just 1 of the account's 5 cron
- * slots total, and is arguably MORE robust than 5 one-shot crons since it
- * re-checks repeatedly through each slot's whole grace window rather than
- * getting one attempt.
- *
- * If GitHub already started a digest run recently (from its own cron, its
- * watchdog, or an earlier tick of this same worker), this does nothing;
- * otherwise it triggers the workflow via workflow_dispatch — so the email
- * can never be silently skipped, and never sends twice.
+ * If this worker fails (e.g. GH_TOKEN expires), jkk_email_watchdog.yml
+ * acts as a backup and will dispatch the workflow ~20 minutes late.
  *
  * Secret (set via `wrangler secret put GH_TOKEN -c wrangler.jkkcron.toml`):
- *   GH_TOKEN — GitHub token with repo + workflow scopes. CONFIRMED BROKEN
- *   as of 2026-07-17 (health endpoint reports recentDigestRuns: -1, the
- *   value returned specifically when the GitHub API call itself fails) -
- *   same finding as the 2026-07-14 investigation referenced in
- *   jkk_email_watchdog.yml. This needs a fresh PAT with repo+workflow
- *   scopes set via the command above before this backup can do anything.
+ *   GH_TOKEN — GitHub token with repo + workflow scopes.
  */
 
 const OWNER = 'Vilfin-TV';
 const REPO = 'MultiScreener';
 const WORKFLOW = 'jkk_email_watch.yml';
-// A GitHub-cron (or this worker's own prior tick) run created within this
-// window counts as "already sent" - must comfortably exceed the ~15 min
-// interval this worker now runs on, or it would re-dispatch every tick.
-const RECENT_WINDOW_MIN = 25;
-// Target times (minutes since UTC midnight) for the 5 daily digest slots -
-// must stay in sync with .github/workflows/jkk_email_watch.yml's own cron
-// schedule: 00:35 / 02:03 / 05:30 / 07:45 / 11:15 UTC.
-const TARGET_MINUTES_UTC = [35, 123, 330, 465, 675];
-// How long after a target time this worker still considers a catch-up
-// dispatch - mirrors jkk_email_watchdog.yml's own +140 min grace window.
-const GRACE_WINDOW_MIN = 150;
 
-function minutesSinceMidnightUTC(date) {
-  return date.getUTCHours() * 60 + date.getUTCMinutes();
-}
-
-function withinGraceWindowOfAnyTarget(date) {
-  const nowMin = minutesSinceMidnightUTC(date);
-  return TARGET_MINUTES_UTC.some((t) => nowMin >= t && nowMin <= t + GRACE_WINDOW_MIN);
-}
+// A GitHub-cron run created within this window counts as "already sent".
+const RECENT_WINDOW_MIN = 12;
 
 function ghHeaders(env) {
   return {
     Authorization: `Bearer ${env.GH_TOKEN}`,
     Accept: 'application/vnd.github+json',
-    'User-Agent': 'jkk-cron-worker',
+    'User-Agent': 'cloudflare-cron-trigger',
     'X-GitHub-Api-Version': '2022-11-28',
   };
 }
@@ -96,11 +61,6 @@ async function ensureDigestRan(env) {
 
 export default {
   async scheduled(event, env, ctx) {
-    const now = new Date(event.scheduledTime || Date.now());
-    if (!withinGraceWindowOfAnyTarget(now)) {
-      console.log(`Not within any target's grace window (now=${now.toISOString()}) - nothing to check.`);
-      return;
-    }
     ctx.waitUntil(ensureDigestRan(env));
   },
 
@@ -109,7 +69,7 @@ export default {
     const recent = await recentRunCount(env);
     return new Response(
       JSON.stringify({
-        worker: 'jkk-cron-trigger',
+        worker: 'cron-trigger',
         recentDigestRuns: recent,
         windowMinutes: RECENT_WINDOW_MIN,
       }),

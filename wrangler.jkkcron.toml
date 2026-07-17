@@ -1,27 +1,20 @@
 # Cloudflare Worker config for the JKK/UR digest cron backup trigger.
 #
 # GitHub Actions cron is best-effort and can skip runs; Cloudflare crons fire
-# reliably. This worker runs every 15 minutes and uses IN-WORKER time-window
-# logic (see jkk_cron_worker.js) to decide whether it's within a target
-# slot's grace window and dispatches the workflow only if GitHub did not
-# already run it.
+# reliably. This worker is the PRIMARY trigger to guarantee exact delivery times.
+#
+# exact JST time.
 #
 # Manual deploy: `npx wrangler deploy --config wrangler.jkkcron.toml`
 # Secret (one-time): `npx wrangler secret put GH_TOKEN --config wrangler.jkkcron.toml`
 #   GH_TOKEN — GitHub token with repo + workflow scopes.
-#
-# Single frequent cron instead of one-per-slot: Cloudflare enforces a
-# 5-cron-trigger limit PER ACCOUNT (not per worker) - this account was
-# already at that cap (4 JKK slots + 1 IPTV worker cron = 5) before the
-# 2026-07-16 schedule expansion to 5 daily slots, so a 5th one-shot cron
-# here silently failed to deploy, leaving the two newest slots with zero
-# Cloudflare-side backup. A single every-15-min cron uses only 1 of the
-# account's 5 slots and covers all 5 daily targets via the grace-window
-# check in jkk_cron_worker.js, with room to spare for other workers.
 
 name = "jkk-cron-trigger"
 main = "jkk_cron_worker.js"
 compatibility_date = "2026-01-01"
 
 [triggers]
-crons = ["*/15 * * * *"]
+# UTC. JST = UTC+9. Nominal slots:
+# JKK: 00:35 / 02:03 / 05:30 / 09:20 UTC
+# We now fire exactly on time to guarantee immediate dispatch.
+crons = ["35 0 * * *", "3 2 * * *", "30 5 * * *", "20 9 * * *"]

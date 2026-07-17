@@ -9,7 +9,6 @@
 <meta name="author" content="VilfinTV"/>
 <meta property="og:title" content="VilfinTV News — Live News Aggregator"/>
 <meta property="og:description" content="Real-time headlines across Trending, World, India, Stock Market and Malayalam news."/>
-<meta property="og:url" content="https://vilfintv.com/news.html"/>
 <meta property="og:type" content="website"/>
 <meta property="og:site_name" content="VilfinTV Multiscreener"/>
 <meta property="og:locale" content="en_US"/>
@@ -20,7 +19,6 @@
 <link rel="icon" type="image/jpeg" href="images/vilfintv-logo.jpg">
 <link rel="apple-touch-icon" href="images/vilfintv-logo.jpg">
 <title>VilfinTV News — Live World, India, Stock Market &amp; Malayalam News</title>
-<link rel="canonical" href="https://vilfintv.com/news.html"/>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -526,7 +524,7 @@ body{
   padding:16px 20px 14px;border-bottom:1px solid var(--border);
 }
 .ml-cat-title{
-  font-family:'Playfair Display','Noto Sans Malayalam',serif;font-size:18px;
+  font-family:'Playfair Display',serif;font-size:18px;
   font-weight:700;color:var(--text);
 }
 .ml-cat-subtitle{
@@ -963,7 +961,7 @@ body{
 @media(max-width:600px){.story-modal-body{padding:18px 16px 24px}}
 
 .story-modal-headline{
-  font-family:'Playfair Display','Noto Sans Malayalam',Georgia,serif;
+  font-family:'Playfair Display',Georgia,serif;
   font-size:clamp(18px,3.5vw,26px);font-weight:700;
   color:var(--text);line-height:1.35;margin-bottom:14px;
 }
@@ -995,51 +993,18 @@ body{
   background:transparent;border:0;padding:0;margin:0 0 16px;
 }
 
-/* Authored tables (e.g. comparison/data tables in longer stories) - scroll
-   horizontally within the table itself rather than overflowing the whole
-   modal on narrow phone screens. */
-.story-body table{
-  display:block;width:100%;max-width:100%;overflow-x:auto;
-  -webkit-overflow-scrolling:touch;border-collapse:collapse;
-  margin:16px 0 20px;font-size:14px;white-space:nowrap;
-}
-.story-body th, .story-body td{
-  border:1px solid var(--border);padding:10px 8px;text-align:left;white-space:normal;
-}
-.story-body th{background:var(--card2);color:var(--text)}
-@media(max-width:600px){
-  .story-body table{font-size:12.5px}
-  .story-body th, .story-body td{padding:8px 6px}
-}
-
 /* Quill output formatting */
 .story-body img{max-width:100%;height:auto;border-radius:8px;margin:16px 0;display:block;}
 .story-body ul, .story-body ol{margin-bottom:16px;padding-left:24px;}
 .story-body li{margin-bottom:6px;color:var(--text);}
-.story-body h1{font-size:24px;font-weight:700;margin:24px 0 16px;color:var(--text);font-family:'Playfair Display','Noto Sans Malayalam',Georgia,serif;}
-.story-body h2{font-size:20px;font-weight:700;margin:20px 0 12px;color:var(--text);font-family:'Playfair Display','Noto Sans Malayalam',Georgia,serif;}
-.story-body h3{font-size:18px;font-weight:700;margin:16px 0 10px;color:var(--text);font-family:'Playfair Display','Noto Sans Malayalam',Georgia,serif;}
+.story-body h1{font-size:24px;font-weight:700;margin:24px 0 16px;color:var(--text);font-family:'Playfair Display',Georgia,serif;}
+.story-body h2{font-size:20px;font-weight:700;margin:20px 0 12px;color:var(--text);font-family:'Playfair Display',Georgia,serif;}
+.story-body h3{font-size:18px;font-weight:700;margin:16px 0 10px;color:var(--text);font-family:'Playfair Display',Georgia,serif;}
 .story-body a{color:var(--burn2,#3b82f6);text-decoration:none;}
 .story-body a:hover{text-decoration:underline;}
 .story-body .ql-align-center{text-align:center;}
 .story-body .ql-align-right{text-align:right;}
 .story-body .ql-align-justify{text-align:justify;}
-
-/* Broker/app referral cards — same format as market_sentiment_score.html's
-   "Best Brokers & Apps" grid, reused here so every article's referral
-   section looks consistent site-wide instead of a plain bullet list. */
-.story-body .broker-note{background:var(--card2);border:1px solid var(--border);border-left:4px solid var(--gold2,#38bdf8);border-radius:10px;padding:14px 18px;font-size:13.5px;color:var(--text2);margin:16px 0 18px;}
-.story-body .broker-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:0 0 20px;}
-.story-body .broker-card{background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--border);border-radius:14px;padding:18px 20px;}
-.story-body .broker-card h4{font-size:13px;font-weight:800;color:var(--text);margin:0 0 12px;display:flex;align-items:center;gap:8px;}
-.story-body .broker-links{list-style:none;display:flex;flex-direction:column;gap:9px;margin:0;padding:0;}
-.story-body .broker-links li{margin:0;color:inherit;}
-.story-body .broker-links a{font-size:13.5px;font-weight:700;color:var(--green);display:flex;align-items:center;justify-content:space-between;gap:8px;text-decoration:none;}
-.story-body .broker-links a:hover{color:var(--burn2,#3b82f6);text-decoration:none;}
-.story-body .broker-links .code-tag{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text3);font-weight:600;}
-@media(max-width:600px){
-  .story-body .broker-grid{grid-template-columns:1fr;gap:12px;}
-}
 
 /* ── Axios Smart Brevity article format ───────── */
 .story-body .story-lead{
@@ -1389,7 +1354,7 @@ body{
 }
 .cp-body{padding:14px 16px 16px;flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
 .cp-heading{
-  font-family:'Playfair Display','Noto Sans Malayalam',Georgia,serif;
+  font-family:'Playfair Display',Georgia,serif;
   font-size:15px;font-weight:700;color:var(--text);line-height:1.4;
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
 }
