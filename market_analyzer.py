@@ -261,6 +261,13 @@ TICKERS_CONFIG = {
     }
 }
 
+# 'Bonds' mixes real, buyable instruments (SHY, LQD, HYG, BNDX...) with raw
+# Treasury YIELD-index tickers (^IRX/^FVX/^TNX/^TYX). Module-level so both
+# get_executive_summary_analysis() and the pick-confidence calculation in
+# main() filter these out identically rather than risking two definitions
+# drifting apart.
+YIELD_INDEX_NAMES = {'US 13-Week', 'US 5Y', 'US 10Y', 'US 30Y'}
+
 def fetch_asset_data(ticker_symbol):
     try:
         session = requests.Session()
@@ -296,6 +303,14 @@ def fetch_asset_data(ticker_symbol):
 
             ma_50 = hist['Close'].rolling(window=50).mean().iloc[-1] if len(hist) >= 50 else None
             ma_20 = hist['Close'].rolling(window=20).mean().iloc[-1] if len(hist) >= 20 else None
+            # 200-day MA and 5-day return are both derivable from the SAME
+            # 3-year history already being fetched here - zero extra network
+            # calls, used by the Value pick's falling-knife guard below.
+            ma_200 = hist['Close'].rolling(window=200).mean().iloc[-1] if len(hist) >= 200 else None
+            five_day_return = None
+            if len(hist) > 5:
+                price_5d_ago = hist['Close'].iloc[-6]
+                five_day_return = ((latest_close - price_5d_ago) / price_5d_ago) * 100
 
             current_year = datetime.now().year
             ytd_data = hist[hist.index.year == current_year]
@@ -316,6 +331,8 @@ def fetch_asset_data(ticker_symbol):
                 'change': daily_change,
                 'ma_50': ma_50,
                 'ma_20': ma_20,
+                'ma_200': ma_200,
+                'five_day_return': five_day_return,
                 'ytd_return': ytd_return,
                 'three_yr_return': three_yr_return
             }
@@ -347,26 +364,33 @@ def fetch_asset_data(ticker_symbol):
                     
                     ma_50 = df['Close'].rolling(window=50).mean().iloc[-1] if len(df) >= 50 else None
                     ma_20 = df['Close'].rolling(window=20).mean().iloc[-1] if len(df) >= 20 else None
-                    
+                    ma_200 = df['Close'].rolling(window=200).mean().iloc[-1] if len(df) >= 200 else None
+                    five_day_return = None
+                    if len(df) > 5:
+                        price_5d_ago = df['Close'].iloc[-6]
+                        five_day_return = ((latest_close - price_5d_ago) / price_5d_ago) * 100
+
                     current_year = datetime.now().year
                     ytd_data = df[df.index.year == current_year]
                     ytd_return = None
                     if not ytd_data.empty:
                         start_of_year_price = ytd_data['Close'].iloc[0]
                         ytd_return = ((latest_close - start_of_year_price) / start_of_year_price) * 100
-                        
+
                     three_yr_return = None
                     three_years_ago_date = datetime.now() - pd.DateOffset(years=3)
                     past_data = df[df.index >= three_years_ago_date]
                     if not past_data.empty and len(df) > 500:
                         three_yr_ago_price = past_data['Close'].iloc[0]
                         three_yr_return = ((latest_close - three_yr_ago_price) / three_yr_ago_price) * 100
-                    
+
                     return {
                         'price': latest_close,
                         'change': daily_change,
                         'ma_50': ma_50,
                         'ma_20': ma_20,
+                        'ma_200': ma_200,
+                        'five_day_return': five_day_return,
                         'ytd_return': ytd_return,
                         'three_yr_return': three_yr_return
                     }
@@ -459,15 +483,82 @@ def calc_value_score(m):
     mult = -1 if m.get('currency') == 'Yield %' else 1
     p50 = mult * (((m.get('price', 0) / m['ma_50']) - 1) * 100 if m.get('ma_50') else 0)
     ytd = mult * (m.get('ytd_return') or 0)
-    if ytd < -15: return -9999
+    daily = mult * (m.get('change') or 0)
+    five_day = mult * (m.get('five_day_return') or 0)
+    price = m.get('price', 0)
+    ma_200 = m.get('ma_200')
+    p200 = mult * (((price / ma_200) - 1) * 100) if ma_200 else None
+    # Falling-knife guards, layered - a single YTD cutoff alone has real
+    # gaps a straight -15% YTD threshold misses: an asset 20% below its
+    # 50-day MA but only -14% YTD would otherwise score an attractive-
+    # looking 20 - 1.4 = 18.6 here (a concrete example that exposed this).
+    if ytd < -15:
+        return -9999
+    if ytd < -8 and daily < -2:
+        return -9999
+    # An asset can't be "washed out, stabilizing" value if it's THIS far
+    # below its own 50-day average - that's still an extended decline, not
+    # a dip. Matches the exact gap above (p50 -20% would now be excluded
+    # regardless of YTD).
+    if p50 < -15:
+        return -9999
+    # If we have enough history for a 200-day MA, being deeply below it too
+    # (not just the shorter 50-day) is additional confirmation of a real
+    # structural decline rather than a short-term dip.
+    if p200 is not None and p200 < -25:
+        return -9999
+    # Require some sign of stabilization when the 5-day window is available
+    # - still actively falling over the last week isn't "washed out" yet.
+    if m.get('five_day_return') is not None and five_day < -5:
+        return -9999
     return -p50 + (ytd * 0.1)
 
-def calc_lt_score(m):
-    mult = -1 if m.get('currency') == 'Yield %' else 1
-    tyr = mult * (m.get('three_yr_return') or 0)
-    ytd = mult * (m.get('ytd_return') or 0)
-    p50 = mult * (((m.get('price', 0) / m['ma_50']) - 1) * 100 if m.get('ma_50') else 0)
-    return (tyr * 0.5) + (ytd * 0.3) + (p50 * 0.2)
+def rank_by_lt_score(pool_dict):
+    """Long-Term pick ranking, by PERCENTILE RANK rather than raw weighted
+    value. Raw 3-year returns run 5-10x larger in magnitude than YTD or
+    50-day premium figures (e.g. a themed ETF up 300% over 3 years
+    contributes 150 points from that term alone at a nominal 50% weight,
+    before any other consideration) - a fixed cap helps but is still an
+    arbitrary number. Percentile rank is always bounded 0-1 regardless of
+    the underlying value's scale, so being the single best 3-year
+    performer in the pool is worth the same whether it's by 300% or by
+    30% - one extreme outlier can no longer silently dominate the blend.
+    Returns (name, metrics) tuples sorted winner-first, same shape callers
+    previously got from max(pool.items(), key=calc_lt_score)."""
+    items = list(pool_dict.items())
+    n = len(items)
+    if n == 0:
+        return []
+    if n == 1:
+        return items
+
+    def mult_of(m):
+        return -1 if m.get('currency') == 'Yield %' else 1
+
+    def pct_rank(values):
+        order = sorted(range(n), key=lambda i: values[i])
+        ranks = [0.0] * n
+        i = 0
+        while i < n:
+            j = i
+            while j + 1 < n and values[order[j + 1]] == values[order[i]]:
+                j += 1
+            avg_rank = (i + j) / 2 / (n - 1)
+            for k in range(i, j + 1):
+                ranks[order[k]] = avg_rank
+            i = j + 1
+        return ranks
+
+    tyr_vals = [mult_of(m) * (m.get('three_yr_return') or 0) for _, m in items]
+    ytd_vals = [mult_of(m) * (m.get('ytd_return') or 0) for _, m in items]
+    p50_vals = [mult_of(m) * (((m.get('price', 0) / m['ma_50']) - 1) * 100 if m.get('ma_50') else 0) for _, m in items]
+
+    tyr_ranks = pct_rank(tyr_vals)
+    ytd_ranks = pct_rank(ytd_vals)
+    p50_ranks = pct_rank(p50_vals)
+
+    blended = [tyr_ranks[i] * 0.5 + ytd_ranks[i] * 0.3 + p50_ranks[i] * 0.2 for i in range(n)]
+    return [item for item, _ in sorted(zip(items, blended), key=lambda x: x[1], reverse=True)]
 
 def calc_momentum_score(m):
     mult = -1 if m.get('currency') == 'Yield %' else 1
@@ -492,13 +583,15 @@ def calc_quality_score(m):
     p20 = mult * (((price / m['ma_20']) - 1) * 100) if m.get('ma_20') else 0
     p50 = mult * (((price / m['ma_50']) - 1) * 100) if m.get('ma_50') else 0
     signals = [daily, p20, p50, ytd, tyr]
-    positive_count = sum(1 for s in signals if s > 0)
-    avg_strength = sum(signals) / len(signals)
-    # Alignment across timeframes is worth far more than raw magnitude -
-    # each of the 5 signals being positive is worth 20 "consistency
-    # points", with the blended average only breaking ties within the
-    # same alignment count.
-    return positive_count * 20 + avg_strength * 0.1
+    # Each signal earns UP TO 20 points, scaled by how strongly positive it
+    # is relative to a "genuinely strong" reference magnitude for that
+    # timeframe (a barely-positive +0.01% shouldn't earn the same credit as
+    # a robust move) - capped at 20 so a single extreme outlier still can't
+    # dominate the way a flat per-signal count would have let alignment
+    # alone do. Reference magnitudes scale with the timeframe: a "strong"
+    # single day is a much smaller % than a "strong" 3-year run.
+    thresholds = [2, 4, 8, 15, 40]  # daily, 20-day, 50-day, YTD, 3-year
+    return sum(min(20, (s / t) * 20) for s, t in zip(signals, thresholds) if s > 0)
 
 def _quality_alignment_count(m):
     mult = -1 if m.get('currency') == 'Yield %' else 1
@@ -518,10 +611,74 @@ def get_quality_pick(asset_dict):
     used the same way get_short_term_pick() is used for momentum below."""
     valid = {name: metrics for name, metrics in asset_dict.items() if metrics and metrics.get('ma_20') and metrics.get('ma_50')}
     if valid:
-        best = max(valid.items(), key=lambda x: calc_quality_score(x[1]))
+        ranked = sorted(valid.items(), key=lambda x: calc_quality_score(x[1]), reverse=True)
+        top3 = ", ".join(f"{n} ({calc_quality_score(m):.1f})" for n, m in ranked[:3])
+        logging.info(f"[Pick debug] Quality candidates (top 3 of {len(ranked)}): {top3}")
+        best = ranked[0]
         aligned = _quality_alignment_count(best[1])
         return f"{best[0]} (positive across {aligned}/5 tracked timeframes)"
     return "No clear quality leader"
+
+# Static, pick-TYPE-level risk/invalidation framing for the JSON snapshot
+# (the website's data consumer, not the size-constrained email). This is
+# honest about what a purely mechanical, price-only pick can and can't
+# tell you - not a fabricated per-instance narrative, since this pipeline
+# has no fundamentals data and no backtested per-pick-type hit rate yet.
+PICK_TYPE_META = {
+    "trending": {
+        "risk": "Short-term price momentum can reverse quickly, especially around news events or earnings.",
+        "invalidation": "If the asset closes back below its 20-day moving average, the trending thesis is invalidated.",
+    },
+    "value": {
+        "risk": "A washed-out asset can keep falling further before it recovers (\"catching a falling knife\").",
+        "invalidation": "Automatically disqualified on the next run if YTD return drops below -15%, or below -8% combined with a sharp same-day drop.",
+    },
+    "long_term": {
+        "risk": "Past 3-year outperformance doesn't guarantee the next 3 years will look the same.",
+        "invalidation": "If the 3-year return materially deteriorates on a future run, the structural case weakens.",
+    },
+    "quality": {
+        "risk": "Being positive across every timeframe doesn't mean the moves are large - this measures consistency, not magnitude.",
+        "invalidation": "If two or more of the 5 tracked timeframes turn negative, the consistency case breaks down.",
+    },
+}
+
+def summarize_pick_confidence(asset_dict, calc_fn, require_positive_change=False):
+    """Qualitative confidence for a pick, based on how clearly the winner
+    separates from the runner-up and how many candidates were even in the
+    running - a pick chosen from a close 2-way field is a much weaker
+    signal than one that clearly leads a wide one. Re-ranks the same
+    candidate pool get_short_term_pick/get_quality_pick already use,
+    without touching those functions' tested string-return contract that
+    the email directly depends on."""
+    if require_positive_change:
+        valid = {n: m for n, m in asset_dict.items() if m and m.get('ma_20') and m.get('change') is not None and m['change'] > 0}
+    else:
+        valid = {n: m for n, m in asset_dict.items() if m and m.get('ma_20') and m.get('ma_50')}
+    if len(valid) < 2:
+        return "Low (fewer than 2 comparable candidates)"
+    ranked = sorted(valid.items(), key=lambda x: calc_fn(x[1]), reverse=True)
+    top_score = calc_fn(ranked[0][1])
+    second_score = calc_fn(ranked[1][1])
+    denom = abs(top_score) if top_score else 1
+    gap_pct = abs(top_score - second_score) / denom * 100
+    if len(ranked) >= 5 and gap_pct > 20:
+        return "High"
+    elif gap_pct > 10:
+        return "Medium"
+    return "Low"
+
+def build_pick_bundle(pick_type, reason_text, confidence, generated_at_iso):
+    """Attach the shared reason/risk/invalidation/confidence/timestamp
+    structure used throughout the JSON snapshot's 'picks' section."""
+    meta = PICK_TYPE_META.get(pick_type, {})
+    return {
+        "reason": reason_text,
+        "risk": meta.get("risk", ""),
+        "invalidation": meta.get("invalidation", ""),
+        "confidence": confidence,
+        "timestamp": generated_at_iso,
+    }
 
 def get_executive_summary_analysis(data, regime_score):
     if regime_score <= -50:
@@ -596,15 +753,19 @@ def get_executive_summary_analysis(data, regime_score):
         value_names = ['Energy', 'Finance', 'Industrials', 'Banking', 'Metals & Mining']
         value_sectors = {k: v for k, v in valid_sectors.items() if k in value_names}
         if value_sectors:
-            best_value = max(value_sectors.items(), key=lambda x: calc_value_score(x[1]))
+            ranked_val = sorted(value_sectors.items(), key=lambda x: calc_value_score(x[1]), reverse=True)
+            logging.info(f"[Pick debug] Value candidates: {', '.join(f'{n} ({calc_value_score(m):.1f})' for n, m in ranked_val)}")
+            best_value = ranked_val[0]
             dist_val = ((best_value[1]['price'] / best_value[1]['ma_50']) - 1) * 100
             ytd_val_str = f" and {best_value[1]['ytd_return']:.2f}% YTD" if best_value[1].get('ytd_return') else ""
             value_name = f"{best_value[0]}. Accumulating value, trading {dist_val:.2f}% relative to its 50-day MA{ytd_val_str}."
-            
+
         long_term_candidates = ['Semiconductor', 'AI Stocks', 'Technology', 'Health Care', 'Space']
         lt_sectors = {k: v for k, v in valid_sectors.items() if k in long_term_candidates}
         if lt_sectors:
-            best_lt = max(lt_sectors.items(), key=lambda x: calc_lt_score(x[1]))
+            ranked_lt = rank_by_lt_score(lt_sectors)
+            logging.info(f"[Pick debug] Long-Term sector candidates (percentile-ranked, winner first): {', '.join(n for n, _ in ranked_lt)}")
+            best_lt = ranked_lt[0]
             long_term_name = best_lt[0]
             tyr = best_lt[1].get('three_yr_return', 0) or 0
             ytd = best_lt[1].get('ytd_return', 0) or 0
@@ -619,7 +780,7 @@ def get_executive_summary_analysis(data, regime_score):
     lt_broad_name = "N/A"
     lt_broad_reason = ""
     if valid_broad:
-        best_broad = max(valid_broad.items(), key=lambda x: calc_lt_score(x[1]))
+        best_broad = rank_by_lt_score(valid_broad)[0]
         tyr = best_broad[1].get('three_yr_return', 0) or 0
         ytd = best_broad[1].get('ytd_return', 0) or 0
         lt_broad_name = f"{best_broad[0]} Index"
@@ -632,13 +793,12 @@ def get_executive_summary_analysis(data, regime_score):
     # momentum" should mean for a bond pick - and there's no real action a
     # reader could take on "buy US 30Y" anyway, so these are excluded from
     # both bond-pick rankings below rather than scored as if investable.
-    YIELD_INDEX_NAMES = {'US 13-Week', 'US 5Y', 'US 10Y', 'US 30Y'}
     bonds = {name: metrics for name, metrics in data.get('Bonds', {}).items() if name not in YIELD_INDEX_NAMES}
     valid_bonds = {name: metrics for name, metrics in bonds.items() if metrics and metrics['ma_50']}
     lt_bond_name = "N/A"
     lt_bond_reason = ""
     if valid_bonds:
-        best_lt_bond = max(valid_bonds.items(), key=lambda x: calc_lt_score(x[1]))
+        best_lt_bond = rank_by_lt_score(valid_bonds)[0]
         lt_bond_name = best_lt_bond[0]
         tyr = best_lt_bond[1].get('three_yr_return', 0) or 0
         ytd = best_lt_bond[1].get('ytd_return', 0) or 0
@@ -649,16 +809,30 @@ def get_executive_summary_analysis(data, regime_score):
     lt_commodity_name = "N/A"
     lt_commodity_reason = ""
     if valid_commodities:
-        best_lt_comm = max(valid_commodities.items(), key=lambda x: calc_lt_score(x[1]))
+        best_lt_comm = rank_by_lt_score(valid_commodities)[0]
         lt_commodity_name = best_lt_comm[0]
         tyr = best_lt_comm[1].get('three_yr_return', 0) or 0
         ytd = best_lt_comm[1].get('ytd_return', 0) or 0
         lt_commodity_reason = f"Selected because it demonstrates massive multi-year strength ({tyr:+.2f}% 3-Year Return, {ytd:+.2f}% YTD) alongside solid current momentum."
 
     def get_short_term_pick(asset_dict):
-        valid = {name: metrics for name, metrics in asset_dict.items() if metrics and metrics['ma_20'] and metrics['change'] > 0}
+        # Eligibility requires BOTH today's change positive AND the asset
+        # actually trading above its own 20-day average - previously only
+        # today's change was required, so on a broadly weak day where every
+        # eligible candidate happened to still be below its 20-day MA, a
+        # merely +0.01%-today asset with no real trend behind it could
+        # still win. Requiring p20 > 0 too means "trending" always implies
+        # an actual established uptrend, not just a single green tick.
+        valid = {
+            name: metrics for name, metrics in asset_dict.items()
+            if metrics and metrics['ma_20'] and metrics['change'] > 0
+            and metrics['price'] > metrics['ma_20']
+        }
         if valid:
-            best = max(valid.items(), key=lambda x: calc_momentum_score(x[1]))
+            ranked = sorted(valid.items(), key=lambda x: calc_momentum_score(x[1]), reverse=True)
+            top3 = ", ".join(f"{n} ({calc_momentum_score(m):.1f})" for n, m in ranked[:3])
+            logging.info(f"[Pick debug] Trending candidates (top 3 of {len(ranked)}): {top3}")
+            best = ranked[0]
             dist = ((best[1]['price'] / best[1]['ma_20']) - 1) * 100
             return f"{best[0]} ({dist:+.2f}% above 20-Day MA, Up {best[1]['change']:+.2f}% latest session)"
         return "No clear short-term momentum"
@@ -675,6 +849,25 @@ def get_executive_summary_analysis(data, regime_score):
     qual_currency = get_quality_pick(data.get('Currencies', {}))
 
     return regional_rec, momentum_name, value_name, long_term_name, lt_reason, lt_broad_name, lt_broad_reason, lt_bond_name, lt_bond_reason, lt_commodity_name, lt_commodity_reason, st_equity, st_commodity, st_bond, st_currency, qual_equity, qual_commodity, qual_bond, qual_currency
+
+
+def get_regime_note(score):
+    """Regime-aware framing for the Picks section: how much weight to put
+    on Trending/Quality/Value/Long-Term picks changes with the overall
+    market regime, even though the underlying calculations themselves
+    don't change. This is an interpretive note only - it never filters,
+    hides, or re-ranks the actual picks, it just explains which of them
+    tend to be more or less reliable in the current environment."""
+    if score >= 50:
+        return "Bullish Expansion: Trending picks are most reliable here, with a broad tailwind behind them. Quality and Long-Term picks remain solid. Value picks are naturally scarcer in a strong uptrend - fewer assets are genuinely washed out."
+    elif score >= 10:
+        return "Bullish Leaning: A reasonably balanced environment. Trending picks are gaining conviction, Quality is a solid middle-ground choice, and Value can still be found in laggard sectors that haven't joined the move yet."
+    elif score >= -10:
+        return "Neutral / Mixed: No strong directional edge across signals, so Trending picks have less confirming behind them than usual. Quality (consistency across timeframes) and Long-Term (structural performance) tend to be the more durable reads in this band."
+    elif score >= -50:
+        return "Bearish Contraction: Treat Trending/momentum picks with extra caution - an \"up\" mover in a contraction is more likely to be a short-lived bounce. Quality and Value picks carry more relative weight here, though Value's falling-knife guard matters more than ever."
+    else:
+        return "Extremely Bearish / Risk-Off: Trending picks are least reliable in this band - most short-term \"up\" moves are dead-cat bounces, not real reversals. Quality (consistency) and Long-Term (structural) picks provide more ballast; Value picks need extra scrutiny given how many assets are under genuine stress market-wide."
 
 
 def get_asset_class_recommendation(score):
@@ -814,10 +1007,33 @@ def build_score_breakdown(data, fred_extras=None):
     new_3m = liq_dict.get('US 13-Week Yield')
     if new_10y and new_3m and _valid(new_10y.get('price')) and _valid(new_3m.get('price')):
         spread_10y_3m = new_10y['price'] - new_3m['price']
-        pts = -30 if spread_10y_3m < 0 else 0
+        # 10Y-3M inversion is historically the single most reliable
+        # recession predictor of any yield-curve pair tracked here, but
+        # previously it was fully binary in BOTH directions: any inversion
+        # at all scored the same -30 regardless of depth, and any
+        # non-inverted spread scored a flat 0 regardless of how healthy.
+        # Now graded on both sides - a deep inversion is treated as more
+        # severe than a razor-thin one, and a steep healthy curve earns
+        # more credit than one sitting right at zero - while keeping the
+        # inversion side's penalties larger than the steepening side's
+        # rewards on purpose (asymmetric: this curve is watched far more
+        # for inversion risk than rewarded for steepness).
+        if spread_10y_3m < -0.3:
+            pts = -30
+        elif spread_10y_3m < 0:
+            pts = -15
+        elif spread_10y_3m >= 1.2:
+            pts = 15
+        elif spread_10y_3m >= 0.5:
+            pts = 5
+        else:
+            pts = 0
+        depth_note = ""
+        if spread_10y_3m < 0:
+            depth_note = " (deep inversion)" if spread_10y_3m < -0.3 else " (slight inversion)"
         breakdown.append({
             "label": "Yield Curve — 10Y vs 3-Month",
-            "reading": f"10Y {new_10y['price']:.2f}% − 3-month {new_3m['price']:.2f}% = {spread_10y_3m:+.2f}% ({'inverted' if spread_10y_3m < 0 else 'not inverted'})",
+            "reading": f"10Y {new_10y['price']:.2f}% − 3-month {new_3m['price']:.2f}% = {spread_10y_3m:+.2f}% ({'inverted' if spread_10y_3m < 0 else 'not inverted'}{depth_note})",
             "points": pts,
         })
         if spread_10y_3m < 0:
@@ -828,10 +1044,23 @@ def build_score_breakdown(data, fred_extras=None):
     ief = credit_dict.get('7-10 Year Treasuries (IEF)')
     if hyg and ief and _valid(hyg.get('change')) and _valid(ief.get('change')):
         stressed = hyg['change'] < -1.0 and ief['change'] > 0.5
-        pts = -20 if stressed else 0
+        # Was binary (-20 or flat 0) - a confirmed absence of stress got no
+        # more credit than a borderline reading right at the edge of the
+        # stress threshold. Graded to mirror how the other credit/yield
+        # checks reward a genuinely healthy state, not just "not stressed".
+        risk_on_credit = hyg['change'] > 0.3 and ief['change'] < 0
+        if stressed:
+            pts = -20
+            reading_note = "stress pattern"
+        elif risk_on_credit:
+            pts = 10
+            reading_note = "strong risk-on credit behavior (junk bonds up, safe treasuries down)"
+        else:
+            pts = 0
+            reading_note = "no stress pattern"
         breakdown.append({
             "label": "Credit Stress",
-            "reading": f"HYG {hyg['change']:+.2f}%, IEF {ief['change']:+.2f}% same day" + (" — stress pattern" if stressed else " — no stress pattern"),
+            "reading": f"HYG {hyg['change']:+.2f}%, IEF {ief['change']:+.2f}% same day — {reading_note}",
             "points": pts,
         })
         if stressed:
@@ -874,12 +1103,23 @@ def build_score_breakdown(data, fred_extras=None):
         if agree: risk_on_signals += 1
         ra_parts.append(f"S&P {sp500['change']:+.2f}% ({'risk-on' if agree else 'risk-off'})")
     if valid_data_points >= 2:
+        risk_off_signals = valid_data_points - risk_on_signals
+        # Symmetric by design: unanimous agreement in either direction is
+        # the strongest signal (±30), a clear majority is a moderate signal
+        # (±10), and only an exact tie nets to 0. The previous version
+        # collapsed "majority risk-off" (e.g. 2 of 3) into the same -30 as
+        # unanimous risk-off, while "majority risk-on" correctly got the
+        # softer +10 - fixed so both directions are scored the same way.
         if risk_on_signals == valid_data_points:
             pts = 30
-        elif risk_on_signals >= valid_data_points - 1:
-            pts = 10
-        else:
+        elif risk_off_signals == valid_data_points:
             pts = -30
+        elif risk_on_signals > risk_off_signals:
+            pts = 10
+        elif risk_off_signals > risk_on_signals:
+            pts = -10
+        else:
+            pts = 0
         breakdown.append({
             "label": "Risk Appetite",
             "reading": f"{', '.join(ra_parts)} — {risk_on_signals} of {valid_data_points} signals agreed",
@@ -907,7 +1147,7 @@ def build_score_breakdown(data, fred_extras=None):
             pts = 0
         display_gap = round(rsp['change'], 2) - round(spy['change'], 2)
         breakdown.append({
-            "label": "Market Participation",
+            "label": "Equal-Weight Participation (Proxy)",
             "reading": f"Equal-weight S&amp;P (RSP) {rsp['change']:+.2f}% vs cap-weight (SPY) {spy['change']:+.2f}% ({display_gap:+.2f}pp gap) — proxy for breadth, not a true advance/decline reading",
             "points": pts,
         })
@@ -1059,11 +1299,18 @@ def build_score_breakdown(data, fred_extras=None):
         })
 
     # 14. Commodities Ratio: Copper vs Gold ("Dr. Copper" vs the safe-haven
-    # metal) - a classic growth-optimism-vs-fear signal. Copper also feeds
-    # the Risk Appetite check above (which only looks at each metal's own
-    # direction, not the ratio between them) - weighted lightly since it's
-    # a secondary confirmation of the same underlying risk-on/risk-off move
-    # rather than fully independent evidence.
+    # metal) - a classic growth-optimism-vs-fear signal. Copper and Gold
+    # also feed the Risk Appetite check above, but via DIFFERENT logic:
+    # Risk Appetite scores each metal's own ABSOLUTE direction (is gold
+    # falling, is copper rising), while this checks their RELATIVE spread.
+    # These can genuinely diverge on the same day - e.g. gold -2% and
+    # copper -1% both falling reads as risk-off on their own absolute
+    # moves, but copper falling LESS than gold is a relatively
+    # growth-optimistic spread. That divergence is real, informative
+    # information (not a bug to be forced into agreement), which is why
+    # this is deliberately weighted lighter (±10 vs Risk Appetite's ±30)
+    # as a secondary, relative-only confirmation rather than independent
+    # primary evidence.
     if gold and copper and _valid(gold.get('change')) and _valid(copper.get('change')):
         comm_gap = copper['change'] - gold['change']
         if comm_gap > 0.5:
@@ -1073,9 +1320,17 @@ def build_score_breakdown(data, fred_extras=None):
         else:
             pts = 0
         display_comm_gap = round(copper['change'], 2) - round(gold['change'], 2)
+        reading = f"Copper {copper['change']:+.2f}% vs Gold {gold['change']:+.2f}% ({display_comm_gap:+.2f}pp gap)"
+        # Flag it explicitly when this signal's relative-spread read
+        # disagrees in direction with both metals simply moving the same
+        # absolute way, so the divergence is visible rather than hidden.
+        if copper['change'] > 0 and gold['change'] > 0 and pts < 0:
+            reading += " — both up, but copper lagging gold (relatively risk-off despite both rising)"
+        elif copper['change'] < 0 and gold['change'] < 0 and pts > 0:
+            reading += " — both down, but copper falling less than gold (relatively risk-on despite both falling)"
         breakdown.append({
             "label": "Commodities Ratio (Copper vs Gold)",
-            "reading": f"Copper {copper['change']:+.2f}% vs Gold {gold['change']:+.2f}% ({display_comm_gap:+.2f}pp gap)",
+            "reading": reading,
             "points": pts,
         })
 
@@ -1226,6 +1481,8 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
                 <div class="summary-item" style="margin-top: 10px;"><strong>⛏️ Best Long-Term Commodity:</strong> {lt_comm}</div>
                 <div class="reasoning"><em>{lt_comm_reason}</em></div>
             </div>
+
+            <div class="reasoning" style="background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid #64748b; padding:10px 14px; margin-top:15px; font-style:normal;"><strong>📋 Regime-aware read on the Picks below:</strong> {get_regime_note(regime_score)}</div>
 
             <div class="st-momentum">
                 <h4 style="margin-top: 0; margin-bottom: 15px;">Trending Now / Swing Trades (Strongest 20-Day Trend)</h4>
@@ -1396,7 +1653,7 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
                 
                 valid_lt = {n: m for n, m in valid_assets.items() if m.get('three_yr_return')}
                 if valid_lt:
-                    best_lt = max(valid_lt.items(), key=lambda x: calc_lt_score(x[1]))
+                    best_lt = rank_by_lt_score(valid_lt)[0]
                     lt_eq = f"{best_lt[0]} ({best_lt[1]['three_yr_return']:+.2f}% 3-Year)"
 
                 qual_eq_cat = get_quality_pick(valid_assets)
@@ -1603,9 +1860,45 @@ if __name__ == "__main__":
     # market_sentiment_score.html's "live example" section can fetch and
     # render it client-side instead of staying frozen on a hand-edited date.
     try:
+        generated_at_iso = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+
+        # Reconstruct the same session pools get_executive_summary_analysis
+        # ranks from, so confidence can be computed here without changing
+        # get_short_term_pick/get_quality_pick's tested string-return
+        # contract that the email directly depends on.
+        sector_data = market_data.get('Sectors & Themes (US ETFs)', {})
+        commodities_pool = market_data.get('Commodities', {})
+        bonds_pool = {n: m for n, m in market_data.get('Bonds', {}).items() if n not in YIELD_INDEX_NAMES}
+        currencies_pool = market_data.get('Currencies', {})
+
+        def trending_bundle(pool):
+            conf = summarize_pick_confidence(pool, calc_momentum_score, require_positive_change=True)
+            return build_pick_bundle("trending", None, conf, generated_at_iso)
+
+        def quality_bundle(pool):
+            conf = summarize_pick_confidence(pool, calc_quality_score)
+            return build_pick_bundle("quality", None, conf, generated_at_iso)
+
+        picks_meta = {
+            "trending": {
+                "equity": {**trending_bundle(sector_data), "reason": st_eq},
+                "commodity": {**trending_bundle(commodities_pool), "reason": st_comm},
+                "bond": {**trending_bundle(bonds_pool), "reason": st_bond},
+                "currency": {**trending_bundle(currencies_pool), "reason": st_curr},
+            },
+            "quality": {
+                "equity": {**quality_bundle(sector_data), "reason": qual_eq},
+                "commodity": {**quality_bundle(commodities_pool), "reason": qual_comm},
+                "bond": {**quality_bundle(bonds_pool), "reason": qual_bond},
+                "currency": {**quality_bundle(currencies_pool), "reason": qual_curr},
+            },
+            "value": {**build_pick_bundle("value", rec_val, "N/A (single sector-level pick, not ranked here)", generated_at_iso)},
+            "long_term": {**build_pick_bundle("long_term", rec_lt, "N/A (single sector-level pick, not ranked here)", generated_at_iso)},
+        }
+
         snapshot = {
             "date": datetime.now().strftime('%Y-%m-%d'),
-            "generated_at_utc": datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+            "generated_at_utc": generated_at_iso,
             "score": score,
             "regime": regime,
             "risk_alerts": alerts,
@@ -1618,7 +1911,9 @@ if __name__ == "__main__":
                 "trending": {"equity": st_eq, "commodity": st_comm, "bond": st_bond, "currency": st_curr},
                 "quality": {"equity": qual_eq, "commodity": qual_comm, "bond": qual_bond, "currency": qual_curr},
             },
+            "picks_meta": picks_meta,
             "notable_fx_mover": notable_fx_summary,
+            "regime_note": get_regime_note(score),
         }
         with open("data/market_sentiment_snapshot.json", "w") as f:
             json.dump(snapshot, f, indent=2)

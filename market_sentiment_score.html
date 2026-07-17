@@ -411,7 +411,7 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
         <tr><td>Credit Stress</td><td>HYG -0.24%, IEF -0.36% same day — no stress pattern</td><td class="contrib-zero">+0</td></tr>
         <tr><td>Equity Momentum</td><td>S&amp;P 500 above both MAs (+10), Nikkei above 50-day only (+5), Nifty 50 above 50-day only (+5)</td><td class="contrib-pos">+20</td></tr>
         <tr><td>Risk Appetite</td><td>Gold -0.83% (risk-on), Copper +0.73% (risk-on), S&amp;P -0.79% (risk-off) — 2 of 3 signals agreed</td><td class="contrib-pos">+10</td></tr>
-        <tr><td>Market Participation</td><td>Equal-weight S&amp;P (RSP) -0.03% vs cap-weight (SPY) -0.77% (+0.73pp gap) — proxy for breadth, not a true advance/decline reading</td><td class="contrib-pos">+10</td></tr>
+        <tr><td>Equal-Weight Participation (Proxy)</td><td>Equal-weight S&amp;P (RSP) -0.03% vs cap-weight (SPY) -0.77% (+0.73pp gap) — proxy for breadth, not a true advance/decline reading</td><td class="contrib-pos">+10</td></tr>
         <tr><td>Credit Spread (HY OAS)</td><td>ICE BofA US High Yield OAS 2.69% (recent average 2.72%) — tight, healthy credit market</td><td class="contrib-pos">+15</td></tr>
         <tr><td>Labor Market (Jobless Claims)</td><td>215,000 claims for the week vs 219,000 recent average</td><td class="contrib-pos">+10</td></tr>
         <tr><td>Liquidity &amp; Financial Conditions</td><td>Chicago Fed NFCI -0.515 for the week — looser than average</td><td class="contrib-pos">+10</td></tr>
@@ -442,16 +442,22 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
         <p>Example — populated live from today's report.</p>
       </div>
 
-      <div style="margin-top:18px; display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px;">
-        <div class="rec-box" id="live-pick-trending-eq" style="border-left-color:#d97706"><b style="color:#d97706">📈 Trending — Equities</b><p>—</p></div>
-        <div class="rec-box" id="live-pick-trending-comm" style="border-left-color:#d97706"><b style="color:#d97706">🪙 Trending — Commodities</b><p>—</p></div>
-        <div class="rec-box" id="live-pick-trending-bond" style="border-left-color:#d97706"><b style="color:#d97706">💵 Trending — Bonds</b><p>—</p></div>
-        <div class="rec-box" id="live-pick-trending-curr" style="border-left-color:#d97706"><b style="color:#d97706">💱 Trending — Currencies</b><p>—</p></div>
-        <div class="rec-box" id="live-pick-quality-eq" style="border-left-color:var(--blue)"><b style="color:var(--blue)">🛡️ Quality — Equities</b><p>—</p></div>
-        <div class="rec-box" id="live-pick-quality-comm" style="border-left-color:var(--blue)"><b style="color:var(--blue)">🛡️ Quality — Commodities</b><p>—</p></div>
-        <div class="rec-box" id="live-pick-quality-bond" style="border-left-color:var(--blue)"><b style="color:var(--blue)">🛡️ Quality — Bonds</b><p>—</p></div>
-        <div class="rec-box" id="live-pick-quality-curr" style="border-left-color:var(--blue)"><b style="color:var(--blue)">🛡️ Quality — Currencies</b><p>—</p></div>
+      <div class="rec-box" id="live-regime-note" style="border-left-color:#64748b; margin-top:14px;">
+        <b style="color:#94a3b8">📋 Regime-Aware Read on the Picks Below:</b>
+        <p id="live-regime-note-text">—</p>
       </div>
+
+      <div style="margin-top:18px; display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px;">
+        <div class="rec-box" id="live-pick-trending-eq" style="border-left-color:#d97706"><b style="color:#d97706">📈 Trending — Equities</b><p>—</p><p class="pick-meta" style="font-size:11.5px; color:var(--text3); margin-top:4px;"></p></div>
+        <div class="rec-box" id="live-pick-trending-comm" style="border-left-color:#d97706"><b style="color:#d97706">🪙 Trending — Commodities</b><p>—</p><p class="pick-meta" style="font-size:11.5px; color:var(--text3); margin-top:4px;"></p></div>
+        <div class="rec-box" id="live-pick-trending-bond" style="border-left-color:#d97706"><b style="color:#d97706">💵 Trending — Bonds</b><p>—</p><p class="pick-meta" style="font-size:11.5px; color:var(--text3); margin-top:4px;"></p></div>
+        <div class="rec-box" id="live-pick-trending-curr" style="border-left-color:#d97706"><b style="color:#d97706">💱 Trending — Currencies</b><p>—</p><p class="pick-meta" style="font-size:11.5px; color:var(--text3); margin-top:4px;"></p></div>
+        <div class="rec-box" id="live-pick-quality-eq" style="border-left-color:var(--blue)"><b style="color:var(--blue)">🛡️ Quality — Equities</b><p>—</p><p class="pick-meta" style="font-size:11.5px; color:var(--text3); margin-top:4px;"></p></div>
+        <div class="rec-box" id="live-pick-quality-comm" style="border-left-color:var(--blue)"><b style="color:var(--blue)">🛡️ Quality — Commodities</b><p>—</p><p class="pick-meta" style="font-size:11.5px; color:var(--text3); margin-top:4px;"></p></div>
+        <div class="rec-box" id="live-pick-quality-bond" style="border-left-color:var(--blue)"><b style="color:var(--blue)">🛡️ Quality — Bonds</b><p>—</p><p class="pick-meta" style="font-size:11.5px; color:var(--text3); margin-top:4px;"></p></div>
+        <div class="rec-box" id="live-pick-quality-curr" style="border-left-color:var(--blue)"><b style="color:var(--blue)">🛡️ Quality — Currencies</b><p>—</p><p class="pick-meta" style="font-size:11.5px; color:var(--text3); margin-top:4px;"></p></div>
+      </div>
+      <p style="font-size:12px; color:var(--text3); margin-top:8px;">Each pick above shows its confidence level (how clearly it led the field it was chosen from) plus the risk and invalidation condition for that pick type — hover for details, or see the full breakdown in the JSON feed.</p>
       <div class="rec-box" id="live-notable-fx" style="border-left-color:#ca8a04; display:none; margin-top:14px;">
         <b style="color:#ca8a04">🆕 Notable FX Mover (auto-detected):</b>
         <p id="live-notable-fx-text">—</p>
@@ -553,7 +559,7 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
     <div class="factor-card" style="--accent:#06b6d4">
       <div class="factor-head">
         <div class="factor-icon">📊</div>
-        <div><div class="factor-title">Market Participation</div><div class="factor-weight">±10 points</div></div>
+        <div><div class="factor-title">Equal-Weight Participation (Proxy)</div><div class="factor-weight">±10 points</div></div>
       </div>
       <div class="factor-body">Compares the equal-weight S&amp;P 500 (RSP) against the standard cap-weight S&amp;P 500 (SPY). If RSP keeps pace, gains are broad-based; if it lags, a handful of mega-caps are carrying the whole index — a fragile kind of rally. This is a relative-strength proxy, not textbook market breadth (% of stocks above their 200-day average, advance/decline lines) — that per-stock data isn't freely available here.</div>
       <div class="factor-rules">
@@ -703,6 +709,8 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
   </div>
   <div class="note-box" style="margin-top:16px;">🏦 <b>Bonds and yield instruments</b> (e.g. "US 10Y" is a yield level, not a tradable price) get every one of these formulas <b>sign-flipped</b> automatically — a rising yield number means a falling bond price, so "positive" consistently means "bullish for the instrument" everywhere on this page, not "the number went up."</div>
   <div class="note-box">💱 <b>Currencies session:</b> alongside the ~16 permanently tracked pairs, the pipeline scans a handful of additional liquid pairs (USD/ZAR, USD/TRY, USD/BRL, EUR/JPY, GBP/JPY) not in that regular list every run, and automatically surfaces whichever one moved the most that day as a "🆕 Notable FX Mover" — so an unusually large move in a pair you don't normally track still gets flagged.</div>
+  <div class="note-box">📋 <b>Regime-aware picks:</b> the underlying calculations above never change based on the overall Market Sentiment Score, but how much weight to put on them does. Every Trending/Quality/Value/Long-Term pick is shown alongside a regime-aware note (e.g. Trending picks are flagged as less reliable during a Bearish Contraction or Extremely Bearish regime, since an "up" mover is more likely a short-lived bounce than a real reversal).</div>
+  <div class="note-box">🎯 <b>Confidence, risk &amp; invalidation:</b> each Trending/Quality pick also carries a <b>confidence</b> level (how clearly it led the field of candidates it was chosen from — a pick from a close 2-way field is weaker than one that clearly leads a wide one), a <b>risk</b> note (the general failure mode of that pick <em>type</em>, not a per-instance prediction), and an <b>invalidation</b> rule (the specific condition that would mean the pick's own thesis has broken down).</div>
 </div>
 
 <div class="section" id="asset-playbook">
@@ -721,7 +729,7 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
   </div>
   <div class="rec-box">
     <b>🌍 Regional Strength</b>
-    <p>Comparing the premium of major indices (S&amp;P 500, Nikkei 225, Nifty 50) over their own 50-day moving average shows which region is currently capturing the most capital — the index with the highest premium is the one attracting the most inflows right now. This is the same relative-strength read used by the Market Participation signal and the regional recommendation above, just narrowed to these three benchmark indices.</p>
+    <p>Comparing the premium of major indices (S&amp;P 500, Nikkei 225, Nifty 50) over their own 50-day moving average shows which region is currently capturing the most capital — the index with the highest premium is the one attracting the most inflows right now. This is the same relative-strength read used by the Equal-Weight Participation (Proxy) signal and the regional recommendation above, just narrowed to these three benchmark indices.</p>
   </div>
   <div class="rec-box">
     <b>💵 Dollar Valve (DXY)</b>
@@ -895,6 +903,27 @@ fetch('data/market_sentiment_snapshot.json', { cache: 'no-store' })
       if (q.commodity) document.querySelector('#live-pick-quality-comm p').textContent = q.commodity;
       if (q.bond) document.querySelector('#live-pick-quality-bond p').textContent = q.bond;
       if (q.currency) document.querySelector('#live-pick-quality-curr p').textContent = q.currency;
+    }
+    if (snap.regime_note) {
+      document.getElementById('live-regime-note-text').textContent = snap.regime_note;
+    }
+    if (snap.picks_meta) {
+      const boxIds = {
+        trending: { equity: 'live-pick-trending-eq', commodity: 'live-pick-trending-comm', bond: 'live-pick-trending-bond', currency: 'live-pick-trending-curr' },
+        quality: { equity: 'live-pick-quality-eq', commodity: 'live-pick-quality-comm', bond: 'live-pick-quality-bond', currency: 'live-pick-quality-curr' },
+      };
+      Object.keys(boxIds).forEach(kind => {
+        const group = snap.picks_meta[kind] || {};
+        Object.keys(boxIds[kind]).forEach(session => {
+          const meta = group[session];
+          const boxId = boxIds[kind][session];
+          const metaEl = document.querySelector('#' + boxId + ' .pick-meta');
+          if (meta && metaEl) {
+            metaEl.textContent = `Confidence: ${meta.confidence} · Risk: ${meta.risk}`;
+            metaEl.title = `Invalidation: ${meta.invalidation}\nAs of: ${meta.timestamp}`;
+          }
+        });
+      });
     }
     if (snap.notable_fx_mover) {
       const fxBox = document.getElementById('live-notable-fx');
