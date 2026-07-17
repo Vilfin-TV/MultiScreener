@@ -9544,7 +9544,7 @@ const SIDE_CONTENT = {
           <a class="sp-broker-btn" href="https://zerodha.com/open-account?c=XKQ288" target="_blank">Open Zerodha Account →</a>
         </div>
         <div class="sp-broker-card">
-          <div class="sp-broker-name">🔥 Dhan (Resident Only)</div>
+          <div class="sp-broker-name">🔥 Dhan (Resident & NRI)</div>
           <div class="sp-broker-desc">Fast order execution, powerful charts. 🔥 1 Crore MTF funding | 2500 Price Alerts | Instant Pledge Margin. Smooth experience for active traders.</div>
           <a class="sp-broker-btn" href="https://join.dhan.co/?invite=VFZJN04428" target="_blank">Open Dhan Account →</a>
         </div>
@@ -11152,8 +11152,8 @@ function generateAndCopy() {
 // ═══════════════════════════════════════════════════════════════════
 function buildQuery(asset, market, resident, horizon, amount, assetType, isDigital, digitalType, today, commSub) {
   const refs = {
-    'Stock':       `Zerodha (NRI & Resident): https://zerodha.com/open-account?c=XKQ288\nDhan (Resident only): https://join.dhan.co/?invite=VFZJN04428`,
-    'ETF':         `Zerodha (NRI & Resident): https://zerodha.com/open-account?c=XKQ288\nDhan (Resident only): https://join.dhan.co/?invite=VFZJN04428`,
+    'Stock':       `Zerodha (NRI & Resident): https://zerodha.com/open-account?c=XKQ288\nDhan (Resident & NRI): https://join.dhan.co/?invite=VFZJN04428`,
+    'ETF':         `Zerodha (NRI & Resident): https://zerodha.com/open-account?c=XKQ288\nDhan (Resident & NRI): https://join.dhan.co/?invite=VFZJN04428`,
     'Mutual Fund': `Kuvera (Free Direct MF, Code 1T6BH - 100 coins): https://kuvera.in/s/wsapp?referral=1T6BH\nZerodha: https://zerodha.com/open-account?c=XKQ288\nDhan: https://join.dhan.co/?invite=VFZJN04428\nPhonePe: https://phon.pe/772mkuqo\nNavi UPI: https://m.navi.com/X7g9gpUzoKb`,
     'Bond':        `IndiaBonds: https://www.indiabonds.com/referral/CiY7ZAAt\nGoldenPi: https://goldenpi.com/sign-up?referrer=SRVL1503290\nZerodha (listed bonds): https://zerodha.com/open-account?c=XKQ288`,
     'Commodity':   `Zerodha (commodity F&O): https://zerodha.com/open-account?c=XKQ288\nDhan: https://join.dhan.co/?invite=VFZJN04428\nPhonePe (Digital Gold/Silver): https://phon.pe/772mkuqo\nNavi UPI: https://m.navi.com/X7g9gpUzoKb`,

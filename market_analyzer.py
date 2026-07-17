@@ -1689,7 +1689,7 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
                     <div style="background: white; padding: 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                         <strong style="color: #0a192f;">📈 Stock Brokers</strong><br><br>
                         • <a href="https://zerodha.com/open-account?c=XKQ288" style="color: #16a34a; text-decoration: none; font-weight: bold;">Zerodha</a> (NRI & Resident)<br>
-                        • <a href="https://join.dhan.co/?invite=VFZJN04428" style="color: #16a34a; text-decoration: none; font-weight: bold;">Dhan</a> (Resident Only)<br>
+                        • <a href="https://join.dhan.co/?invite=VFZJN04428" style="color: #16a34a; text-decoration: none; font-weight: bold;">Dhan</a> (Resident & NRI)<br>
                         • <a href="https://www.interactivebrokers.co.jp/en/accounts/what-you-need-jp.php" style="color: #16a34a; text-decoration: none; font-weight: bold;">Interactive Brokers</a> (Global)
                     </div>
                 </td>
