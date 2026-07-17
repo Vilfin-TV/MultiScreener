@@ -269,23 +269,46 @@ TICKERS_CONFIG = {
 YIELD_INDEX_NAMES = {'US 13-Week', 'US 5Y', 'US 10Y', 'US 30Y'}
 
 def fetch_asset_data(ticker_symbol):
-    try:
-        session = requests.Session()
-        session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
-            'Accept': '*/*',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Connection': 'keep-alive'
-        })
-        
-        proxy = os.environ.get('YAHOO_PROXY') or os.environ.get('WORKER_URL')
-        if proxy:
-            proxies = {'http': proxy, 'https': proxy}
-            session.proxies.update(proxies)
-            
-        ticker = yf.Ticker(ticker_symbol, session=session)
-        hist = ticker.history(period="3y")
+    # yfinance occasionally rate-limits a ticker fetched early in the run
+    # ("Too Many Requests. Rate limited.") even though the exact same
+    # symbol succeeds a few minutes later elsewhere in the same pipeline
+    # run (observed 2026-07-17 with ^VIX) - a short retry-with-backoff
+    # here resolves most of these without needing the Alpha Vantage
+    # fallback, which doesn't support index symbols like ^VIX anyway.
+    RATE_LIMIT_RETRIES = 3
+    RATE_LIMIT_BACKOFF_SEC = [5, 15, 30]
+    for attempt in range(RATE_LIMIT_RETRIES):
+        try:
+            session = requests.Session()
+            session.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+                'Accept': '*/*',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': 'keep-alive'
+            })
 
+            proxy = os.environ.get('YAHOO_PROXY') or os.environ.get('WORKER_URL')
+            if proxy:
+                proxies = {'http': proxy, 'https': proxy}
+                session.proxies.update(proxies)
+
+            ticker = yf.Ticker(ticker_symbol, session=session)
+            hist = ticker.history(period="3y")
+            break
+        except Exception as e:
+            is_rate_limit = 'rate limit' in str(e).lower() or 'too many requests' in str(e).lower()
+            if is_rate_limit and attempt < RATE_LIMIT_RETRIES - 1:
+                wait_s = RATE_LIMIT_BACKOFF_SEC[attempt]
+                logging.warning(f"yfinance rate-limited for {ticker_symbol}, retrying in {wait_s}s (attempt {attempt + 1}/{RATE_LIMIT_RETRIES}): {e}")
+                time.sleep(wait_s)
+                continue
+            logging.warning(f"yfinance failed for {ticker_symbol}: {e}")
+            hist = None
+            break
+
+    try:
+        if hist is None:
+            raise ValueError("yfinance history unavailable after retries")
         # Some tickers (thinly-traded ETFs, exchanges in other timezones,
         # holiday-affected sessions) return a trailing row with a NaN Close
         # before the exchange's data has fully settled. Drop those rows so
@@ -422,6 +445,51 @@ def fetch_global_news():
         logging.warning(f"Failed to fetch news: {e}")
         return []
 
+# Tickers fetched under more than one TICKERS_CONFIG category (e.g. ^VIX
+# appears under both 'Volatility' and the alternative-data pool) shouldn't
+# have to survive a rate-limit fight twice in the same run - once a symbol
+# fetches successfully, later occurrences in this same run reuse it. A
+# failed attempt is NOT cached, so a later occurrence still gets its own
+# fresh try (this is exactly how ^VIX recovered on 2026-07-17: it failed
+# early in the run but a later independent fetch of the same symbol
+# succeeded once the rate limit had cleared).
+_FETCH_CACHE = {}
+
+# Tickers important enough to the score that losing them for a day
+# shouldn't silently zero out a whole scoring signal - see
+# _load_last_known_good() below for how the fallback value is sourced.
+CRITICAL_FALLBACK_SYMBOLS = {'^VIX', '^VIX3M'}
+
+def _load_last_known_good(symbol):
+    """Last-resort fallback for CRITICAL_FALLBACK_SYMBOLS: reads yesterday's
+    (or the most recent) committed data/market_sentiment_snapshot.json for a
+    previously-fetched price/ma_20 when today's live fetch (yfinance +
+    retries + Alpha Vantage) has genuinely failed. Returns a metrics dict
+    with is_stale=True/stale_since set so callers can flag it visibly
+    instead of silently treating stale data as fresh, or None if no
+    previous snapshot/value is available."""
+    try:
+        with open("data/market_sentiment_snapshot.json") as f:
+            prev = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
+    cache = prev.get("raw_fallback_cache", {})
+    entry = cache.get(symbol)
+    if not entry or not _valid(entry.get('price')):
+        return None
+    return {
+        'price': entry['price'],
+        'change': 0,
+        'ma_50': entry.get('ma_50'),
+        'ma_20': entry.get('ma_20'),
+        'ma_200': entry.get('ma_200'),
+        'five_day_return': None,
+        'ytd_return': None,
+        'three_yr_return': None,
+        'is_stale': True,
+        'stale_since': prev.get('date'),
+    }
+
 def collect_market_data():
     all_data = {}
     for category, assets in TICKERS_CONFIG.items():
@@ -430,12 +498,23 @@ def collect_market_data():
             symbol = info['symbol']
             currency = info['currency']
             logging.info(f"Fetching data for {name} ({symbol})")
-            
-            data = fetch_asset_data(symbol)
+
+            data = _FETCH_CACHE.get(symbol)
+            if data is None:
+                data = fetch_asset_data(symbol)
+                if data:
+                    _FETCH_CACHE[symbol] = data
+                elif symbol in CRITICAL_FALLBACK_SYMBOLS:
+                    fallback = _load_last_known_good(symbol)
+                    if fallback:
+                        logging.warning(f"Using last-known-good fallback for {name} ({symbol}) from {fallback['stale_since']} - live fetch failed")
+                        data = fallback
+                        _FETCH_CACHE[symbol] = data
+
             if data:
-                data['currency'] = currency
+                data = {**data, 'currency': currency}
             all_data[category][name] = data
-            
+
             time.sleep(2)
     return all_data
 
@@ -978,6 +1057,8 @@ def build_score_breakdown(data, fred_extras=None):
             pts, note = -20, f"{vix_price:.2f}, above the 20 threshold — elevated fear"
         else:
             pts, note = 0, f"{vix_price:.2f}, above its 20-day average ({vix_ma20:.2f}) — no clear signal"
+        if vix_data.get('is_stale'):
+            note += f" (⚠️ last known value from {vix_data.get('stale_since', 'a previous day')} — live VIX data was unavailable today)"
         breakdown.append({"label": "VIX (Fear Index)", "reading": note, "points": pts})
         if vix_price > 25:
             risk_alerts.append(f"High Volatility: VIX is extremely elevated at {vix_price:.2f}.")
@@ -1246,9 +1327,12 @@ def build_score_breakdown(data, fred_extras=None):
             pts = -10
         else:
             pts = -20
+        vt_reading = f"VIX {vix_data['price']:.2f} vs VIX3M {vix3m_data['price']:.2f} (ratio {vt_ratio:.2f}) — {'contango, calm' if vt_ratio < 1 else 'backwardation, stress'}"
+        if vix_data.get('is_stale') or vix3m_data.get('is_stale'):
+            vt_reading += " (⚠️ using last known value for one or both legs — live data was unavailable today)"
         breakdown.append({
             "label": "Volatility Term Structure",
-            "reading": f"VIX {vix_data['price']:.2f} vs VIX3M {vix3m_data['price']:.2f} (ratio {vt_ratio:.2f}) — {'contango, calm' if vt_ratio < 1 else 'backwardation, stress'}",
+            "reading": vt_reading,
             "points": pts,
         })
         if vt_ratio > 1.1:
@@ -1582,7 +1666,11 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
                 else:
                     three_yr_str = "N/A"
 
-                html += f"<tr><td class='a'>{name}</td><td class='u'>{currency_str}</td><td class='c'>{price_str}</td><td class='c {change_class}'>{change_sign}{metrics['change']:.2f}%</td><td class='c'>{ma_50_str}</td><td class='c'>{ytd_str}</td><td class='c'>{three_yr_str}</td></tr>"
+                name_str = name
+                if metrics.get('is_stale'):
+                    stale_since_str = metrics.get('stale_since') or 'a previous day'
+                    name_str += f" <span style='color:#b45309;font-size:0.85em' title='Live data unavailable today - showing last known value from {stale_since_str}'>⚠️ stale</span>"
+                html += f"<tr><td class='a'>{name_str}</td><td class='u'>{currency_str}</td><td class='c'>{price_str}</td><td class='c {change_class}'>{change_sign}{metrics['change']:.2f}%</td><td class='c'>{ma_50_str}</td><td class='c'>{ytd_str}</td><td class='c'>{three_yr_str}</td></tr>"
             else:
                 html += f"<tr><td class='a'>{name}</td><td colspan='6' class='c' style='color:#999;'>Data Unavailable</td></tr>"
         html += "</table>"
@@ -1598,11 +1686,15 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
 
         if category == "Volatility":
             vix_price = None
+            vix_is_stale = False
+            vix_stale_since = None
             for name, metrics in assets.items():
                 if "VIX" in name.upper() and metrics:
                     vix_price = metrics['price']
+                    vix_is_stale = bool(metrics.get('is_stale'))
+                    vix_stale_since = metrics.get('stale_since')
                     break
-            
+
             if vix_price:
                 month_move = vix_price / 3.464
                 
@@ -1627,6 +1719,7 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
                         Current VIX is <strong style="color: {v_color};">{vix_price:.2f}</strong> ({v_range}).<br>
                         <strong>Expected Market Move (Per Month):</strong> ± {month_move:.1f}% <em>(Calculated as VIX ÷ √12)</em>
                     </div>
+                    {'<div style="font-size: 0.85em; color: #b45309; margin-top: 8px;">⚠️ Live VIX data was unavailable today - showing the last known value from ' + (vix_stale_since or 'a previous day') + '.</div>' if vix_is_stale else ''}
                 </div>
                 """
         elif category != "Volatility":
@@ -1896,6 +1989,27 @@ if __name__ == "__main__":
             "long_term": {**build_pick_bundle("long_term", rec_lt, "N/A (single sector-level pick, not ranked here)", generated_at_iso)},
         }
 
+        # Carry forward the last-known-good raw cache (see
+        # CRITICAL_FALLBACK_SYMBOLS / _load_last_known_good above), only
+        # overwriting an entry when TODAY's value is itself fresh - so a
+        # stale fallback used today doesn't get re-persisted as if it were
+        # new, and a run that fails multiple days in a row still has the
+        # last genuinely-live value to fall back on rather than losing it.
+        try:
+            with open("data/market_sentiment_snapshot.json") as f:
+                raw_fallback_cache = json.load(f).get("raw_fallback_cache", {})
+        except (FileNotFoundError, json.JSONDecodeError):
+            raw_fallback_cache = {}
+        for vol_name, vol_metrics in market_data.get('Volatility', {}).items():
+            if vol_metrics and not vol_metrics.get('is_stale') and _valid(vol_metrics.get('price')):
+                vol_symbol = TICKERS_CONFIG['Volatility'][vol_name]['symbol']
+                raw_fallback_cache[vol_symbol] = {
+                    'price': vol_metrics['price'],
+                    'ma_20': vol_metrics.get('ma_20'),
+                    'ma_50': vol_metrics.get('ma_50'),
+                    'ma_200': vol_metrics.get('ma_200'),
+                }
+
         snapshot = {
             "date": datetime.now().strftime('%Y-%m-%d'),
             "generated_at_utc": generated_at_iso,
@@ -1914,6 +2028,7 @@ if __name__ == "__main__":
             "picks_meta": picks_meta,
             "notable_fx_mover": notable_fx_summary,
             "regime_note": get_regime_note(score),
+            "raw_fallback_cache": raw_fallback_cache,
         }
         with open("data/market_sentiment_snapshot.json", "w") as f:
             json.dump(snapshot, f, indent=2)
