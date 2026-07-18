@@ -1811,28 +1811,62 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
     </div>
 
     <div style="margin-top: 24px; padding: 20px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-family: sans-serif;">
-        <h3 style="margin-top: 0; color: #16a34a; text-align: center;">🏦 Best Brokers & Apps</h3>
-        <p style="margin-bottom: 20px; color: #555; text-align: center; font-size: 0.95em;">🎁 Using the referral links below benefits you (discounts, coins, or cashback) at no extra cost. Thank you for supporting this tool!</p>
+        <h3 style="margin-top: 0; color: #16a34a; text-align: center;">📈 Stock Brokers</h3>
+        <p style="margin-bottom: 20px; color: #555; text-align: center; font-size: 0.95em;">🎁 Using the referral links below benefits you at no extra cost.</p>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
+            <tr>
+                <td style="width: 33.3%; padding: 14px; vertical-align: top; background: white; border-radius: 6px 0 0 6px;">
+                    <div style="font-weight: bold; color: #0a192f; font-size: 1.05em; margin-bottom: 4px;">🟢 Zerodha</div>
+                    <div style="color: #888; font-size: 0.85em; margin-bottom: 10px;">India's largest broker</div>
+                    <div style="line-height: 1.9; color: #333;">
+                        ✅ Stocks (India), ETFs, Bonds<br>
+                        ✅ Commodities (MCX) &amp; currency derivatives<br>
+                        ✅ Mutual funds — Coin, 2000+ direct funds<br>
+                        ✅ Market reports — free Varsity research<br>
+                        🔜 US stocks — announced, not yet live
+                    </div>
+                    <a href="https://zerodha.com/open-account?c=XKQ288" style="display: inline-block; margin-top: 12px; color: #16a34a; font-weight: bold; text-decoration: none;">Open Zerodha →</a>
+                </td>
+                <td style="width: 33.3%; padding: 14px; vertical-align: top; background: white; border-left: 1px solid #eee;">
+                    <div style="font-weight: bold; color: #0a192f; font-size: 1.05em; margin-bottom: 4px;">🔥 Dhan</div>
+                    <div style="color: #888; font-size: 0.85em; margin-bottom: 10px;">India + US in one account</div>
+                    <div style="line-height: 1.9; color: #333;">
+                        ✅ Stocks — India, plus live US stocks (GIFT City)<br>
+                        ✅ ETFs, Bonds/NCDs, Commodities &amp; currency derivatives<br>
+                        ✅ Mutual funds — direct, 0% commission<br>
+                        ✅ Market reports — Pre/Post-Market Insights
+                    </div>
+                    <a href="https://join.dhan.co/?invite=VFZJN04428" style="display: inline-block; margin-top: 12px; color: #16a34a; font-weight: bold; text-decoration: none;">Open Dhan →</a>
+                </td>
+                <td style="width: 33.3%; padding: 14px; vertical-align: top; background: white; border-left: 1px solid #eee; border-radius: 0 6px 6px 0;">
+                    <div style="font-weight: bold; color: #0a192f; font-size: 1.05em; margin-bottom: 4px;">🌐 Interactive Brokers</div>
+                    <div style="color: #888; font-size: 0.85em; margin-bottom: 10px;">Global markets, incl. Japan NISA</div>
+                    <div style="line-height: 1.9; color: #333;">
+                        ✅ Stocks/ETFs/Bonds/Funds — 170 markets, 40 countries<br>
+                        ✅ Commodities/futures &amp; currency exchange (100+ pairs)<br>
+                        ✅ Japan NISA (IBKR Securities Japan, since 2025)<br>
+                        ✅ English interface · GlobalAnalyst/Morningstar/Zacks
+                    </div>
+                    <a href="https://www.interactivebrokers.co.jp/en/accounts/what-you-need-jp.php" style="display: inline-block; margin-top: 12px; color: #16a34a; font-weight: bold; text-decoration: none;">Open IBKR →</a>
+                </td>
+            </tr>
+        </table>
+    </div>
 
+    <div style="margin-top: 24px; padding: 20px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-family: sans-serif;">
+        <h3 style="margin-top: 0; color: #16a34a; text-align: center;">🏦 Bonds, Mutual Funds &amp; Digital Gold</h3>
         <table style="width: 100%; border: none; font-size: 0.9em; background: transparent;">
             <tr>
                 <td style="width: 50%; padding: 10px; vertical-align: top; border: none; text-align: left;">
                     <div style="background: white; padding: 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                        <strong style="color: #0a192f;">📈 Stock Brokers</strong><br><br>
-                        • <a href="https://zerodha.com/open-account?c=XKQ288" style="color: #16a34a; text-decoration: none; font-weight: bold;">Zerodha</a> (NRI & Resident)<br>
-                        • <a href="https://join.dhan.co/?invite=VFZJN04428" style="color: #16a34a; text-decoration: none; font-weight: bold;">Dhan</a> (Resident & NRI)<br>
-                        • <a href="https://www.interactivebrokers.co.jp/en/accounts/what-you-need-jp.php" style="color: #16a34a; text-decoration: none; font-weight: bold;">Interactive Brokers</a> (Global)
-                    </div>
-                </td>
-                <td style="width: 50%; padding: 10px; vertical-align: top; border: none; text-align: left;">
-                    <div style="background: white; padding: 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 15px;">
                         <strong style="color: #0a192f;">🏦 Bonds & Mutual Funds (India)</strong><br><br>
                         • <a href="https://kuvera.in/s/wsapp?referral=1T6BH" style="color: #16a34a; text-decoration: none; font-weight: bold;">Kuvera MFs</a> (Code: <strong>1T6BH</strong>)<br>
                         • <a href="https://www.indiabonds.com/referral/CiY7ZAAt" style="color: #16a34a; text-decoration: none; font-weight: bold;">IndiaBonds</a><br>
                         • <a href="https://goldenpi.com/sign-up?referrer=SRVL1503290" style="color: #16a34a; text-decoration: none; font-weight: bold;">GoldenPi</a><br>
                         • <a href="https://www.wintwealth.com/bonds/referral/invite?referralCode=3AC7AF" style="color: #16a34a; text-decoration: none; font-weight: bold;">Wint Wealth</a>
                     </div>
-                    
+                </td>
+                <td style="width: 50%; padding: 10px; vertical-align: top; border: none; text-align: left;">
                     <div style="background: white; padding: 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                         <strong style="color: #0a192f;">💰 Digital Gold, Silver, UPI &amp; Mutual Funds</strong><br><br>
                         • <a href="https://m.navi.com/X7g9gpUzoKb" style="color: #16a34a; text-decoration: none; font-weight: bold;">Navi</a> (UPI + Mutual Funds)<br>
