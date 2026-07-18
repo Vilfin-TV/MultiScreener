@@ -1851,6 +1851,21 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
                 </td>
             </tr>
         </table>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.85em; margin-top: 10px;">
+            <tr>
+                <td style="padding: 14px; vertical-align: top; background: white; border-radius: 6px;">
+                    <div style="font-weight: bold; color: #0a192f; font-size: 1.05em; margin-bottom: 4px;">💹 ProStocks</div>
+                    <div style="color: #888; font-size: 0.85em; margin-bottom: 10px;">India's flat-fee specialist — cheapest for high-volume traders</div>
+                    <div style="line-height: 1.9; color: #333;">
+                        ✅ Stocks, ETFs, Bonds/Debt &amp; currency derivatives<br>
+                        ✅ ₹0 delivery, ₹15/order flat, or ₹899/month unlimited equity+F&amp;O<br>
+                        ✅ ₹0 AMC for life · NRI accounts (₹100/order PIS, ₹40/order NRO)<br>
+                        ❌ No commodities, no mutual funds, no research/market reports
+                    </div>
+                    <a href="https://prostocks.com/open-an-account?ref=G1392" style="display: inline-block; margin-top: 12px; color: #16a34a; font-weight: bold; text-decoration: none;">Open ProStocks →</a>
+                </td>
+            </tr>
+        </table>
     </div>
 
     <div style="margin-top: 24px; padding: 20px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-family: sans-serif;">
