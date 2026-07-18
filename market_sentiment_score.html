@@ -298,6 +298,19 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
 .broker-links a:hover { color: var(--blue); }
 .broker-links .code-tag { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text3); font-weight: 600; }
 
+/* ── International Transfer Apps — richer feature-comparison card ── */
+.tf-card { grid-column: 1 / -1; }
+.tf-apps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 4px; }
+.tf-app { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; }
+.tf-app-name { font-size: 14.5px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+.tf-app-tag { font-size: 11.5px; color: var(--text3); margin-bottom: 12px; line-height: 1.5; }
+.tf-feat-list { list-style: none; display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; flex: 1; }
+.tf-feat { font-size: 12.5px; color: var(--text2); display: flex; align-items: flex-start; gap: 7px; line-height: 1.4; }
+.tf-feat .ic { flex-shrink: 0; }
+.tf-feat.no { color: var(--text3); }
+.tf-app-btn { align-self: flex-start; font-size: 12.5px; font-weight: 700; color: var(--green); }
+.tf-app-btn:hover { color: var(--blue); }
+
 .footer { margin-top: 32px; background: var(--footer-bg); color: var(--footer-text); padding: 44px 24px 32px; text-align: center; font-size: 13px; }
 .footer .disclaimer { max-width: 760px; margin: 0 auto 20px; line-height: 1.75; }
 .footer a { color: var(--green); font-weight: 700; }
@@ -743,13 +756,46 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
   <p class="section-lead">The same broker, bond, and app picks from the Daily Market Report — one place to open the accounts you'd need to actually act on any of this.</p>
   <div class="broker-note">🎁 Using the links below benefits you (discounts, coins, or cashback) at no extra cost — thank you for supporting this tool.</div>
   <div class="broker-grid">
-    <div class="broker-card">
-      <h4>🌐 International Transfer Apps</h4>
-      <ul class="broker-links">
-        <li><a href="https://revolut.com/referral/?referral-code=vilfingeorge!APR1-26-AR-JP-H1&geo-redirect" target="_blank" rel="noopener">Revolut</a></li>
-        <li><a href="https://wise.com/invite/ihpc/vilfinm" target="_blank" rel="noopener">Wise (TransferWise)</a></li>
-        <li><a href="https://referral-link.onelink.me/gbf1/a43c48ca?deep_link_sub1=referral&amp;deep_link_value=cWkMb3" target="_blank" rel="noopener">Instarem <span class="code-tag">code cWkMb3</span></a></li>
-      </ul>
+    <div class="broker-card tf-card">
+      <h4>🌐 International Money Transfer Apps</h4>
+      <div class="tf-apps">
+        <div class="tf-app">
+          <div class="tf-app-name">🌍 Revolut</div>
+          <div class="tf-app-tag">The all-in-one option — banking, investing &amp; travel perks in one app.</div>
+          <ul class="tf-feat-list">
+            <li class="tf-feat"><span class="ic">✅</span> Currency exchange — 36+ currencies, 160+ countries</li>
+            <li class="tf-feat"><span class="ic">✅</span> Debit card — free Standard plan, Metal/Premium tiers</li>
+            <li class="tf-feat"><span class="ic">✅</span> Digital gold &amp; silver — invest from $1</li>
+            <li class="tf-feat"><span class="ic">✅</span> Built-in eSIM for travel data</li>
+            <li class="tf-feat"><span class="ic">✅</span> Cashback up to 1% (paid in gold/silver on Metal)</li>
+          </ul>
+          <a class="tf-app-btn" href="https://revolut.com/referral/?referral-code=vilfingeorge!APR1-26-AR-JP-H1&amp;geo-redirect" target="_blank" rel="noopener">Join Revolut →</a>
+        </div>
+        <div class="tf-app">
+          <div class="tf-app-name">💚 Wise <span class="code-tag" style="font-weight:400">(TransferWise)</span></div>
+          <div class="tf-app-tag">Best true mid-market rate for large transfers &amp; holding many currencies.</div>
+          <ul class="tf-feat-list">
+            <li class="tf-feat"><span class="ic">✅</span> Currency exchange — 40+ currencies, near-zero markup</li>
+            <li class="tf-feat"><span class="ic">✅</span> Debit card — Apple Pay &amp; Google Pay compatible</li>
+            <li class="tf-feat no"><span class="ic">❌</span> No digital gold/silver investing</li>
+            <li class="tf-feat no"><span class="ic">❌</span> No eSIM</li>
+            <li class="tf-feat no"><span class="ic">❌</span> No cashback/rewards program</li>
+          </ul>
+          <a class="tf-app-btn" href="https://wise.com/invite/ihpc/vilfinm" target="_blank" rel="noopener">Join Wise →</a>
+        </div>
+        <div class="tf-app">
+          <div class="tf-app-name">⚡ Instarem <span class="code-tag" style="font-weight:400">code cWkMb3</span></div>
+          <div class="tf-app-tag">Good for straightforward remittances (strong Asia rates) — fewer extras than Revolut or Wise.</div>
+          <ul class="tf-feat-list">
+            <li class="tf-feat"><span class="ic">✅</span> Currency exchange — 60+ countries, strong Asia corridors</li>
+            <li class="tf-feat"><span class="ic">✅</span> Amaze debit card — 11 currencies (FX spread up to 2.1%)</li>
+            <li class="tf-feat no"><span class="ic">❌</span> No digital gold/silver investing</li>
+            <li class="tf-feat no"><span class="ic">❌</span> No eSIM</li>
+            <li class="tf-feat"><span class="ic">✅</span> InstaPoints on every transfer (fee discounts, air miles)</li>
+          </ul>
+          <a class="tf-app-btn" href="https://referral-link.onelink.me/gbf1/a43c48ca?deep_link_sub1=referral&amp;deep_link_value=cWkMb3" target="_blank" rel="noopener">Join Instarem →</a>
+        </div>
+      </div>
     </div>
     <div class="broker-card">
       <h4>📈 Stock Brokers</h4>

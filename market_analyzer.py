@@ -1766,19 +1766,57 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
 
     html += """
     <div style="margin-top: 40px; padding: 20px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-family: sans-serif;">
+        <h3 style="margin-top: 0; color: #16a34a; text-align: center;">🌐 International Money Transfer Apps</h3>
+        <p style="margin-bottom: 20px; color: #555; text-align: center; font-size: 0.95em;">🎁 Sign up via these referral links for bonus rates, cashback, or rewards at no extra cost.</p>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
+            <tr>
+                <td style="width: 33.3%; padding: 14px; vertical-align: top; background: white; border-radius: 6px 0 0 6px;">
+                    <div style="font-weight: bold; color: #0a192f; font-size: 1.05em; margin-bottom: 4px;">🌍 Revolut</div>
+                    <div style="color: #888; font-size: 0.85em; margin-bottom: 10px;">All-in-one: banking, investing &amp; travel</div>
+                    <div style="line-height: 1.9; color: #333;">
+                        ✅ Currency exchange (36+ currencies)<br>
+                        ✅ Debit card (free Standard plan)<br>
+                        ✅ Digital gold &amp; silver (from $1)<br>
+                        ✅ Built-in eSIM for travel data<br>
+                        ✅ Cashback up to 1%
+                    </div>
+                    <a href="https://revolut.com/referral/?referral-code=vilfingeorge!APR1-26-AR-JP-H1&geo-redirect" style="display: inline-block; margin-top: 12px; color: #16a34a; font-weight: bold; text-decoration: none;">Join Revolut →</a>
+                </td>
+                <td style="width: 33.3%; padding: 14px; vertical-align: top; background: white; border-left: 1px solid #eee;">
+                    <div style="font-weight: bold; color: #0a192f; font-size: 1.05em; margin-bottom: 4px;">💚 Wise (TransferWise)</div>
+                    <div style="color: #888; font-size: 0.85em; margin-bottom: 10px;">Best true mid-market exchange rate</div>
+                    <div style="line-height: 1.9; color: #333;">
+                        ✅ Currency exchange (40+ currencies, ~0% markup)<br>
+                        ✅ Debit card (Apple/Google Pay)<br>
+                        ❌ No digital gold/silver<br>
+                        ❌ No eSIM<br>
+                        ❌ No cashback program
+                    </div>
+                    <a href="https://wise.com/invite/ihpc/vilfinm" style="display: inline-block; margin-top: 12px; color: #16a34a; font-weight: bold; text-decoration: none;">Join Wise →</a>
+                </td>
+                <td style="width: 33.3%; padding: 14px; vertical-align: top; background: white; border-left: 1px solid #eee; border-radius: 0 6px 6px 0;">
+                    <div style="font-weight: bold; color: #0a192f; font-size: 1.05em; margin-bottom: 4px;">⚡ Instarem</div>
+                    <div style="color: #888; font-size: 0.85em; margin-bottom: 10px;">Straightforward remittances, strong Asia rates</div>
+                    <div style="line-height: 1.9; color: #333;">
+                        ✅ Currency exchange (60+ countries)<br>
+                        ✅ Amaze debit card (11 currencies)<br>
+                        ❌ No digital gold/silver<br>
+                        ❌ No eSIM<br>
+                        ✅ InstaPoints on every transfer
+                    </div>
+                    <a href="https://referral-link.onelink.me/gbf1/a43c48ca?deep_link_sub1=referral&deep_link_value=cWkMb3" style="display: inline-block; margin-top: 12px; color: #16a34a; font-weight: bold; text-decoration: none;">Join Instarem →</a> <span style="font-size: 0.8em; color: #888;">(code cWkMb3)</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div style="margin-top: 24px; padding: 20px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-family: sans-serif;">
         <h3 style="margin-top: 0; color: #16a34a; text-align: center;">🏦 Best Brokers & Apps</h3>
         <p style="margin-bottom: 20px; color: #555; text-align: center; font-size: 0.95em;">🎁 Using the referral links below benefits you (discounts, coins, or cashback) at no extra cost. Thank you for supporting this tool!</p>
-        
+
         <table style="width: 100%; border: none; font-size: 0.9em; background: transparent;">
             <tr>
                 <td style="width: 50%; padding: 10px; vertical-align: top; border: none; text-align: left;">
-                    <div style="background: white; padding: 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 15px;">
-                        <strong style="color: #0a192f;">🌐 International Transfer Apps</strong><br><br>
-                        • <a href="https://revolut.com/referral/?referral-code=vilfingeorge!APR1-26-AR-JP-H1&geo-redirect" style="color: #16a34a; text-decoration: none; font-weight: bold;">Revolut</a><br>
-                        • <a href="https://wise.com/invite/ihpc/vilfinm" style="color: #16a34a; text-decoration: none; font-weight: bold;">Wise (TransferWise)</a><br>
-                        • <a href="https://referral-link.onelink.me/gbf1/a43c48ca?deep_link_sub1=referral&deep_link_value=cWkMb3" style="color: #16a34a; text-decoration: none; font-weight: bold;">Instarem</a> (Code: <strong>cWkMb3</strong>)
-                    </div>
-                    
                     <div style="background: white; padding: 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                         <strong style="color: #0a192f;">📈 Stock Brokers</strong><br><br>
                         • <a href="https://zerodha.com/open-account?c=XKQ288" style="color: #16a34a; text-decoration: none; font-weight: bold;">Zerodha</a> (NRI & Resident)<br>
