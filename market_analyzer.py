@@ -1860,17 +1860,17 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
                 <td style="width: 50%; padding: 10px; vertical-align: top; border: none; text-align: left;">
                     <div style="background: white; padding: 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                         <strong style="color: #0a192f;">🏦 Bonds & Mutual Funds (India)</strong><br><br>
-                        • <a href="https://kuvera.in/s/wsapp?referral=1T6BH" style="color: #16a34a; text-decoration: none; font-weight: bold;">Kuvera MFs</a> (Code: <strong>1T6BH</strong>)<br>
+                        • <a href="https://kuvera.in/s/wsapp?referral=1T6BH" style="color: #16a34a; text-decoration: none; font-weight: bold;">Kuvera MFs</a> (Code: <strong>1T6BH</strong> — 2000+ direct funds, 0% commission)<br>
                         • <a href="https://www.indiabonds.com/referral/CiY7ZAAt" style="color: #16a34a; text-decoration: none; font-weight: bold;">IndiaBonds</a><br>
-                        • <a href="https://goldenpi.com/sign-up?referrer=SRVL1503290" style="color: #16a34a; text-decoration: none; font-weight: bold;">GoldenPi</a><br>
+                        • <a href="https://goldenpi.com/sign-up?referrer=SRVL1503290" style="color: #16a34a; text-decoration: none; font-weight: bold;">GoldenPi</a> (bonds up to ~14% p.a.)<br>
                         • <a href="https://www.wintwealth.com/bonds/referral/invite?referralCode=3AC7AF" style="color: #16a34a; text-decoration: none; font-weight: bold;">Wint Wealth</a>
                     </div>
                 </td>
                 <td style="width: 50%; padding: 10px; vertical-align: top; border: none; text-align: left;">
                     <div style="background: white; padding: 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                         <strong style="color: #0a192f;">💰 Digital Gold, Silver, UPI &amp; Mutual Funds</strong><br><br>
-                        • <a href="https://m.navi.com/X7g9gpUzoKb" style="color: #16a34a; text-decoration: none; font-weight: bold;">Navi</a> (UPI + Mutual Funds)<br>
-                        • <a href="https://phon.pe/772mkuqo" style="color: #16a34a; text-decoration: none; font-weight: bold;">PhonePe</a> (UPI + Mutual Funds)
+                        • <a href="https://m.navi.com/X7g9gpUzoKb" style="color: #16a34a; text-decoration: none; font-weight: bold;">Navi</a> (own direct low-cost MF + Digital Gold only, no silver)<br>
+                        • <a href="https://phon.pe/772mkuqo" style="color: #16a34a; text-decoration: none; font-weight: bold;">PhonePe</a> (Gold &amp; Silver + Regular MF, not direct)
                     </div>
                 </td>
             </tr>
