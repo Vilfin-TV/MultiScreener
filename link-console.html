@@ -5835,11 +5835,7 @@ function _rbBuildPanel(id,html){
 function loadReport(){
   _rbBuildPanel('report','<div class="rb-wrap"><h2 style="margin:0 0 6px">📊 Site Status &amp; Security Report</h2>'+
     '<p style="opacity:.7;margin:0 0 16px;font-size:14px">Live status across your web pages, GitHub repository &amp; Cloudflare. <button class="rb-btn" id="rb-refresh" style="padding:7px 14px;font-size:13px;margin-left:8px">↻ Refresh</button></p>'+
-    '<div id="ga-dashboard-section" style="margin-bottom:24px; padding:20px; background:color-mix(in srgb,var(--tp-text) 4%,transparent); border:1px solid var(--tp-border); border-radius:8px;">
-<h3 style="margin:0 0 10px; color:var(--tp-text);">📈 Live Traffic Analytics</h3>
-<p style="font-size:13px; color:var(--tp-text3); margin:0 0 16px;">View detailed reports of your active visitors, geographic locations, and page views via Google Analytics. For embedded charts, connect a Looker Studio report.</p>
-<a href="https://analytics.google.com/analytics/web/" target="_blank" class="btn-primary" style="text-decoration:none; display:inline-block; font-size:13px; padding:8px 16px;">Open Google Analytics Dashboard &rarr;</a>
-</div><div id="rb-body"><div style="opacity:.6">Loading…</div></div></div>');
+    '<div id="ga-dashboard-section" style="margin-bottom:24px; padding:20px; background:color-mix(in srgb,var(--tp-text) 4%,transparent); border:1px solid var(--tp-border); border-radius:8px;"><h3 style="margin:0 0 10px; color:var(--tp-text);">📈 Live Traffic Analytics</h3><p style="font-size:13px; color:var(--tp-text3); margin:0 0 16px;">View detailed reports of your active visitors, geographic locations, and page views via Google Analytics. For embedded charts, connect a Looker Studio report.</p><a href="https://analytics.google.com/analytics/web/" target="_blank" class="btn-primary" style="text-decoration:none; display:inline-block; font-size:13px; padding:8px 16px;">Open Google Analytics Dashboard &rarr;</a></div><div id="rb-body"><div style="opacity:.6">Loading…</div></div></div>');
   document.querySelectorAll('.c-panel').forEach(function(p){p.classList.toggle('active',p.id==='tab-report');});
   var rf=document.getElementById('rb-refresh'); if(rf) rf.addEventListener('click',_rbFetch);
   _rbFetch();
