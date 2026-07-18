@@ -1860,7 +1860,8 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
                         ✅ Stocks, ETFs, Bonds/Debt &amp; currency derivatives<br>
                         ✅ ₹0 delivery, ₹15/order flat, or ₹899/month unlimited equity+F&amp;O<br>
                         ✅ ₹0 AMC for life · NRI accounts (₹100/order PIS, ₹40/order NRO)<br>
-                        ❌ No commodities, no mutual funds, no research/market reports
+                        ✅ Mutual funds — can be held via demat (no direct purchase platform)<br>
+                        ❌ No commodities (MCX/NCDEX), no research/market reports
                     </div>
                     <a href="https://prostocks.com/open-an-account?ref=G1392" style="display: inline-block; margin-top: 12px; color: #16a34a; font-weight: bold; text-decoration: none;">Open ProStocks →</a>
                 </td>
