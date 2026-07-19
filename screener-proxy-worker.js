@@ -726,8 +726,20 @@ ${body.text}`;
           // top-level "photo" field, WhatsApp/social sharing (which reads
           // post.photo, not the story body) has nothing to share. Fall back
           // to the first embedded image so sharing still gets a picture.
-          const imgMatch = cleanStory.match(/<img[^>]+src=["']([^"']+)["']/i);
-          if (imgMatch && imgMatch[1].startsWith('http')) o.photo = imgMatch[1].slice(0,500);
+          // The reader also gets that image as the top-of-story hero banner
+          // (post.photo), so drop the embedded copy (and its caption <p>, if
+          // any) from the body - otherwise the same photo shows twice.
+          const imgMatch = cleanStory.match(/<p[^>]*>\s*<img[^>]+src=["']([^"']+)["'][^>]*>\s*<\/p>\s*(?:<p[^>]*>\s*<em>[\s\S]*?<\/em>\s*<\/p>\s*)?|<img[^>]+src=["']([^"']+)["'][^>]*>/i);
+          const imgUrl = imgMatch && (imgMatch[1] || imgMatch[2]);
+          if (imgUrl && imgUrl.startsWith('http')) {
+            o.photo = imgUrl.slice(0,500);
+            // o.story was already sliced from cleanStory at the call site
+            // before this function ran, so strip the same match out of it
+            // directly (not just out of cleanStory).
+            const stripped = cleanStory.slice(0, imgMatch.index) + cleanStory.slice(imgMatch.index + imgMatch[0].length);
+            cleanStory = stripped;
+            if (typeof o.story === 'string') o.story = o.story.replace(imgMatch[0], '').trim();
+          }
         }
         if (link_url && typeof link_url === 'string' && link_url.trim().startsWith('http')) o.link_url = link_url.trim().slice(0,500);
         if (photo_pos && typeof photo_pos === 'string') o.photo_pos = photo_pos.trim().slice(0,20);
