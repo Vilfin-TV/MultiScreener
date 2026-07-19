@@ -2089,6 +2089,7 @@ footer.news-footer{
       <a class="news-nav-link" href="#india">🇮🇳 India</a>
       <a class="news-nav-link" href="#stock">📈 Stock</a>
       <a class="news-nav-link" href="#malayalam">🎭 Malayalam</a>
+      <a class="news-nav-link" href="#tech">💻 Tech</a>
       <a class="news-nav-link" href="#world">🌐 World</a>
     </div>
     <div class="news-nav-right">
@@ -2203,12 +2204,16 @@ footer.news-footer{
         <li><a href="#stock">📈 Stock News</a></li>
         <li><a href="#malayalam">🎭 Malayalam News</a></li>
         <li><a href="#world">🌎 World News</a></li>
-        <li><a href="#tech">💻 Technology News</a></li>
-        <li><a href="#business">💼 Business News</a></li>
-        <li><a href="#science">🔬 Science News</a></li>
+        <li><a href="#sports">🏆 Sports News</a></li>
+        <li><a href="#tech">💻 Tech News</a></li>
         <li><a href="#space">🚀 Space News</a></li>
-        <li><a href="#sports">⚽ Sports Update</a></li>
+        <li><a href="#science">🔬 Science News</a></li>
+        <li><a href="#fashion">👗 Fashion News</a></li>
         <li><a href="#movies">🎬 Movies News</a></li>
+        <li><a href="#food">🌾 Food &amp; Agriculture</a></li>
+        <li><a href="#automobile">🚗 Automobile News</a></li>
+        <li><a href="#business">💼 Business News</a></li>
+        <li><a href="#home">🏠 Home &amp; Smart Living</a></li>
       </ul>
     </div>
     <div>
@@ -4307,7 +4312,9 @@ function _renderEditionItems(content, catId, data) {
 function buildSportsBlock(data) {
   var wrap = document.createElement('div');
   wrap.className = 'ml-cat-block';
-  wrap.id = 'sports-block';
+  // Plain 'sports' (not 'sports-block') so anchor links like #sports work,
+  // matching the same fix applied to buildLiveSession's other sections.
+  wrap.id = 'sports';
 
   var hdr = document.createElement('div');
   hdr.className = 'ml-cat-header';
@@ -4355,7 +4362,10 @@ function buildLiveSession(sectionId, data) {
   var meta = SECTION_META[sectionId] || {};
   var wrap = document.createElement('div');
   wrap.className = 'ml-cat-block';
-  wrap.id = sectionId + '-block';
+  // Plain sectionId (not "<id>-block") so footer/anchor links like #tech
+  // actually scroll here, matching how the core sections (renderSection)
+  // set section.id = sectionId.
+  wrap.id = sectionId;
 
   var hdr = document.createElement('div');
   hdr.className = 'ml-cat-header';
