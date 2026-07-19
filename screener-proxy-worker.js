@@ -718,7 +718,17 @@ ${body.text}`;
       let items = read.items.filter(i => i && i.expires_at && new Date(i.expires_at) > now);
 
       function applyOptionalFields(o){
-        if (photo && typeof photo === 'string' && photo.trim().startsWith('http')) o.photo = photo.trim().slice(0,500);
+        if (photo && typeof photo === 'string' && photo.trim().startsWith('http')) {
+          o.photo = photo.trim().slice(0,500);
+        } else {
+          // Callers (e.g. an AI agent) sometimes embed an <img> directly in
+          // the story HTML instead of also passing photo_url - without a
+          // top-level "photo" field, WhatsApp/social sharing (which reads
+          // post.photo, not the story body) has nothing to share. Fall back
+          // to the first embedded image so sharing still gets a picture.
+          const imgMatch = cleanStory.match(/<img[^>]+src=["']([^"']+)["']/i);
+          if (imgMatch && imgMatch[1].startsWith('http')) o.photo = imgMatch[1].slice(0,500);
+        }
         if (link_url && typeof link_url === 'string' && link_url.trim().startsWith('http')) o.link_url = link_url.trim().slice(0,500);
         if (photo_pos && typeof photo_pos === 'string') o.photo_pos = photo_pos.trim().slice(0,20);
         if (photo_zoom && !isNaN(parseFloat(photo_zoom))) o.photo_zoom = Math.min(Math.max(parseFloat(photo_zoom), 1), 4);
