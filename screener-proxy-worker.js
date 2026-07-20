@@ -50,6 +50,49 @@ export default {
 
     const { pathname, searchParams } = new URL(request.url);
 
+    // ── /api/reactions  GET/POST — permanent, anonymous like/dislike counters ──
+    // Storage is a single {likes,dislikes} JSON blob per story id, keyed
+    // "reactions:<id>" in the existing IPTV_KV store. Deliberately NOT
+    // storing anything about WHO reacted (no IP, cookie, device id) per an
+    // explicit no-client-data requirement — so there is no server-side way
+    // to stop the same visitor voting twice; the page's own localStorage
+    // flag is the only (client-side, non-transmitted) guard against that.
+    if (pathname === '/api/reactions') {
+      if (!env.IPTV_KV) return jsonError(503, 'Store not configured (IPTV_KV).');
+      const id = (searchParams.get('id') || '').trim().slice(0, 100);
+
+      if (request.method === 'GET') {
+        if (!id) return jsonError(400, 'Missing id.');
+        let counts = { likes: 0, dislikes: 0 };
+        try {
+          const raw = await env.IPTV_KV.get('reactions:' + id);
+          if (raw) counts = { ...counts, ...JSON.parse(raw) };
+        } catch (e) { /* corrupt/missing entry -> serve zeros */ }
+        return new Response(JSON.stringify({ ok: true, id, likes: counts.likes|0, dislikes: counts.dislikes|0 }),
+          { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
+      }
+
+      if (request.method === 'POST') {
+        let body; try { body = await request.json(); } catch (_) { return jsonError(400, 'Invalid JSON body.'); }
+        const bodyId = (body.id || id || '').toString().trim().slice(0, 100);
+        const action = (body.action || '').toString().trim();
+        if (!bodyId) return jsonError(400, 'Missing id.');
+        if (action !== 'like' && action !== 'dislike') return jsonError(400, 'action must be "like" or "dislike".');
+
+        let counts = { likes: 0, dislikes: 0 };
+        try {
+          const raw = await env.IPTV_KV.get('reactions:' + bodyId);
+          if (raw) counts = { ...counts, ...JSON.parse(raw) };
+        } catch (e) { /* corrupt entry -> reset to zeros rather than fail the vote */ }
+        counts[action === 'like' ? 'likes' : 'dislikes'] += 1;
+        await env.IPTV_KV.put('reactions:' + bodyId, JSON.stringify(counts));
+        return new Response(JSON.stringify({ ok: true, id: bodyId, likes: counts.likes, dislikes: counts.dislikes }),
+          { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
+      }
+
+      return jsonError(405, 'Use GET to read or POST to react.');
+    }
+
     // ── /s (alias /share)  GET — story share page with per-story Open Graph ───
     // WhatsApp / Facebook / X scrape this URL (they don't run JS) for the hero
     // photo + heading; human clicks are redirected to the live story.

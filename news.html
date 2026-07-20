@@ -1454,6 +1454,26 @@ body{
 .share-fb{background:#1877F2}
 .share-copy{background:var(--border2);color:var(--text)}
 
+/* ── Like/Dislike reactions (permanent, anonymous, server-side counts) ── */
+.story-modal-reactions{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding-top:12px;
+}
+.reaction-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:7px 16px;border-radius:20px;
+  font-size:13px;font-weight:700;
+  background:var(--border2);color:var(--text);
+  border:1.5px solid transparent;cursor:pointer;
+  transition:opacity .15s,border-color .15s,transform .1s;
+}
+.reaction-btn:hover:not(:disabled){opacity:.85}
+.reaction-btn:active:not(:disabled){transform:scale(.96)}
+.reaction-btn:disabled{cursor:default;opacity:.7}
+.reaction-btn .reaction-emoji{font-size:15px;line-height:1}
+.reaction-btn.reaction-like.reaction-picked{border-color:#22c55e;background:rgba(34,197,94,.15);color:#22c55e}
+.reaction-btn.reaction-dislike.reaction-picked{border-color:#ef4444;background:rgba(239,68,68,.15);color:#ef4444}
+
 /* ── Facebook share chooser (Feed vs Story) ── */
 .fb-share-menu{
   position:fixed;z-index:10050;
@@ -2743,6 +2763,78 @@ function copyToClipboard(text) {
 var _shareCtx = null;                                   // {heading, photo, url} for the open story
 var _SHARE_WORKER = 'https://screener-proxy.vilfintv.workers.dev';
 
+/* ═══════════════════════════════════════════════════
+   LIKE / DISLIKE REACTIONS — permanent, anonymous, server-side
+   counts (Cloudflare KV via /api/reactions). No account, cookie,
+   IP, or device id is ever sent or stored — only a per-story
+   {likes,dislikes} integer pair. The only per-visitor "memory" is
+   a localStorage flag on THIS browser (never transmitted) so a
+   reload doesn't let the same browser vote again by accident.
+═══════════════════════════════════════════════════ */
+function _reactionsHtml(storyId) {
+  var safeId = escAttr(String(storyId));
+  var voted = _reactionsVotedLocally(storyId);
+  var likeCls = 'reaction-btn reaction-like' + (voted === 'like' ? ' reaction-picked' : '');
+  var dislikeCls = 'reaction-btn reaction-dislike' + (voted === 'dislike' ? ' reaction-picked' : '');
+  var disabled = voted ? ' disabled' : '';
+  return '<div class="story-modal-reactions" data-reaction-story="' + safeId + '">'
+    + '<button type="button" class="' + likeCls + '" data-reaction-id="' + safeId + '" data-reaction-action="like" onclick="_reactionsVote(this)"' + disabled + '>'
+      + '<span class="reaction-emoji">👍</span><span class="reaction-count" data-count="like">…</span>'
+    + '</button>'
+    + '<button type="button" class="' + dislikeCls + '" data-reaction-id="' + safeId + '" data-reaction-action="dislike" onclick="_reactionsVote(this)"' + disabled + '>'
+      + '<span class="reaction-emoji">👎</span><span class="reaction-count" data-count="dislike">…</span>'
+    + '</button>'
+  + '</div>';
+}
+function _reactionsVotedKey(storyId) { return 'vilfin_reacted_' + storyId; }
+function _reactionsVotedLocally(storyId) {
+  try { return localStorage.getItem(_reactionsVotedKey(storyId)) || ''; } catch (e) { return ''; }
+}
+function _reactionsSetCounts(container, likes, dislikes) {
+  if (!container) return;
+  var likeEl = container.querySelector('[data-count="like"]');
+  var dislikeEl = container.querySelector('[data-count="dislike"]');
+  if (likeEl) likeEl.textContent = String(likes);
+  if (dislikeEl) dislikeEl.textContent = String(dislikes);
+}
+async function _reactionsLoad(storyId) {
+  var container = document.querySelector('.story-modal-reactions[data-reaction-story="' + CSS.escape(String(storyId)) + '"]');
+  if (!container) return;
+  try {
+    var resp = await fetch(_SHARE_WORKER + '/api/reactions?id=' + encodeURIComponent(storyId));
+    if (!resp.ok) throw new Error('bad status');
+    var data = await resp.json();
+    _reactionsSetCounts(container, data.likes || 0, data.dislikes || 0);
+  } catch (e) {
+    _reactionsSetCounts(container, 0, 0);
+  }
+}
+async function _reactionsVote(btn) {
+  var storyId = btn.getAttribute('data-reaction-id');
+  var action = btn.getAttribute('data-reaction-action');
+  if (_reactionsVotedLocally(storyId)) return; // already reacted from this browser
+  var container = btn.closest('.story-modal-reactions');
+  var buttons = container ? container.querySelectorAll('.reaction-btn') : [btn];
+  buttons.forEach(function(b){ b.disabled = true; });
+  try {
+    var resp = await fetch(_SHARE_WORKER + '/api/reactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: storyId, action: action })
+    });
+    var data = await resp.json();
+    if (data && data.ok) {
+      _reactionsSetCounts(container, data.likes || 0, data.dislikes || 0);
+      try { localStorage.setItem(_reactionsVotedKey(storyId), action); } catch (e) {}
+      btn.classList.add('reaction-picked');
+    } else {
+      buttons.forEach(function(b){ b.disabled = false; }); // request failed -> allow retry
+    }
+  } catch (e) {
+    buttons.forEach(function(b){ b.disabled = false; });
+  }
+}
+
 function _roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
@@ -3039,11 +3131,13 @@ function openStory(item, meta) {
     + '<button type="button" class="share-btn-sm share-tw" onclick="shareStoryCardCtx(\'twitter\', this)">X (Twitter)</button>'
     + '<button class="share-btn-sm share-copy" onclick="copyToClipboard(\'' + rawShareUrl + '\')">Copy Link</button>'
     + '</div>';
+  storyHtml += _reactionsHtml(storyIdSlug);
 
   body.innerHTML = storyHtml;
   overlay.classList.add('active');
   document.body.style.overflow = 'hidden';
   _resetStoryScroll(body);
+  _reactionsLoad(storyIdSlug);
 }
 
 /* Reset the modal scroll position to the top every time a story opens, so a
@@ -4554,11 +4648,13 @@ function openCustomPost(id) {
     + '<button type="button" class="share-btn-sm share-tw" onclick="shareStoryCardCtx(\'twitter\', this)">X (Twitter)</button>'
     + '<button class="share-btn-sm share-copy" onclick="copyToClipboard(\'' + rawShareUrl + '\')">Copy Link</button>'
     + '</div>';
+  html += _reactionsHtml(storyIdSlug);
 
   body.innerHTML = html;
   overlay.classList.add('active');
   document.body.style.overflow = 'hidden';
   _resetStoryScroll(body);
+  _reactionsLoad(storyIdSlug);
 
   // News Reader — speak the headline then the story body
   _readerShow(_readerStripText((post.heading || '') + '. ' + (post.story || '')));
