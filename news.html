@@ -2768,20 +2768,20 @@ var _SHARE_WORKER = 'https://screener-proxy.vilfintv.workers.dev';
    counts (Cloudflare KV via /api/reactions). No account, cookie,
    IP, or device id is ever sent or stored — only a per-story
    {likes,dislikes} integer pair. The only per-visitor "memory" is
-   a localStorage flag on THIS browser (never transmitted) so a
-   reload doesn't let the same browser vote again by accident.
+   a localStorage flag on THIS browser (never transmitted) recording
+   which way THIS browser last clicked, so clicking the same button
+   again undoes it, and clicking the other button switches sides.
 ═══════════════════════════════════════════════════ */
 function _reactionsHtml(storyId) {
   var safeId = escAttr(String(storyId));
   var voted = _reactionsVotedLocally(storyId);
   var likeCls = 'reaction-btn reaction-like' + (voted === 'like' ? ' reaction-picked' : '');
   var dislikeCls = 'reaction-btn reaction-dislike' + (voted === 'dislike' ? ' reaction-picked' : '');
-  var disabled = voted ? ' disabled' : '';
   return '<div class="story-modal-reactions" data-reaction-story="' + safeId + '">'
-    + '<button type="button" class="' + likeCls + '" data-reaction-id="' + safeId + '" data-reaction-action="like" onclick="_reactionsVote(this)"' + disabled + '>'
+    + '<button type="button" class="' + likeCls + '" data-reaction-id="' + safeId + '" data-reaction-choice="like" onclick="_reactionsVote(this)">'
       + '<span class="reaction-emoji">👍</span><span class="reaction-count" data-count="like">…</span>'
     + '</button>'
-    + '<button type="button" class="' + dislikeCls + '" data-reaction-id="' + safeId + '" data-reaction-action="dislike" onclick="_reactionsVote(this)"' + disabled + '>'
+    + '<button type="button" class="' + dislikeCls + '" data-reaction-id="' + safeId + '" data-reaction-choice="dislike" onclick="_reactionsVote(this)">'
       + '<span class="reaction-emoji">👎</span><span class="reaction-count" data-count="dislike">…</span>'
     + '</button>'
   + '</div>';
@@ -2797,6 +2797,12 @@ function _reactionsSetCounts(container, likes, dislikes) {
   if (likeEl) likeEl.textContent = String(likes);
   if (dislikeEl) dislikeEl.textContent = String(dislikes);
 }
+function _reactionsSetPicked(container, choice) {
+  if (!container) return;
+  container.querySelectorAll('.reaction-btn').forEach(function(b) {
+    b.classList.toggle('reaction-picked', b.getAttribute('data-reaction-choice') === choice);
+  });
+}
 async function _reactionsLoad(storyId) {
   var container = document.querySelector('.story-modal-reactions[data-reaction-story="' + CSS.escape(String(storyId)) + '"]');
   if (!container) return;
@@ -2811,26 +2817,32 @@ async function _reactionsLoad(storyId) {
 }
 async function _reactionsVote(btn) {
   var storyId = btn.getAttribute('data-reaction-id');
-  var action = btn.getAttribute('data-reaction-action');
-  if (_reactionsVotedLocally(storyId)) return; // already reacted from this browser
+  var choice = btn.getAttribute('data-reaction-choice');
   var container = btn.closest('.story-modal-reactions');
   var buttons = container ? container.querySelectorAll('.reaction-btn') : [btn];
+  if (Array.prototype.some.call(buttons, function(b){ return b.disabled; })) return; // request already in flight
+
+  var from = _reactionsVotedLocally(storyId);           // '', 'like', or 'dislike'
+  var to = (from === choice) ? '' : choice;              // clicking the active choice again undoes it
   buttons.forEach(function(b){ b.disabled = true; });
   try {
     var resp = await fetch(_SHARE_WORKER + '/api/reactions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: storyId, action: action })
+      body: JSON.stringify({ id: storyId, from: from, to: to })
     });
     var data = await resp.json();
     if (data && data.ok) {
       _reactionsSetCounts(container, data.likes || 0, data.dislikes || 0);
-      try { localStorage.setItem(_reactionsVotedKey(storyId), action); } catch (e) {}
-      btn.classList.add('reaction-picked');
-    } else {
-      buttons.forEach(function(b){ b.disabled = false; }); // request failed -> allow retry
+      _reactionsSetPicked(container, to);
+      try {
+        if (to) localStorage.setItem(_reactionsVotedKey(storyId), to);
+        else localStorage.removeItem(_reactionsVotedKey(storyId));
+      } catch (e) {}
     }
   } catch (e) {
+    // network/API error - counts on screen stay as last known good state
+  } finally {
     buttons.forEach(function(b){ b.disabled = false; });
   }
 }

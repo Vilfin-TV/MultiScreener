@@ -75,16 +75,30 @@ export default {
       if (request.method === 'POST') {
         let body; try { body = await request.json(); } catch (_) { return jsonError(400, 'Invalid JSON body.'); }
         const bodyId = (body.id || id || '').toString().trim().slice(0, 100);
-        const action = (body.action || '').toString().trim();
+        // "from"/"to" each describe the visitor's reaction state ('', 'like',
+        // or 'dislike') before/after this click, as tracked by THEIR OWN
+        // browser (localStorage) - never anything the server itself recorded.
+        // This lets one request express every transition: casting a fresh
+        // vote ('' -> 'like'), un-voting (toggling the same button off,
+        // 'like' -> ''), or switching sides ('like' -> 'dislike') - by just
+        // decrementing whichever bucket "from" names and incrementing
+        // whichever bucket "to" names.
+        const VALID = ['', 'like', 'dislike'];
+        const from = (body.from || '').toString().trim();
+        const to = (body.to || '').toString().trim();
         if (!bodyId) return jsonError(400, 'Missing id.');
-        if (action !== 'like' && action !== 'dislike') return jsonError(400, 'action must be "like" or "dislike".');
+        if (!VALID.includes(from) || !VALID.includes(to)) return jsonError(400, 'from/to must each be "", "like", or "dislike".');
+        if (from === to) return jsonError(400, 'from and to must differ.');
 
         let counts = { likes: 0, dislikes: 0 };
         try {
           const raw = await env.IPTV_KV.get('reactions:' + bodyId);
           if (raw) counts = { ...counts, ...JSON.parse(raw) };
         } catch (e) { /* corrupt entry -> reset to zeros rather than fail the vote */ }
-        counts[action === 'like' ? 'likes' : 'dislikes'] += 1;
+        if (from === 'like') counts.likes = Math.max(0, counts.likes - 1);
+        if (from === 'dislike') counts.dislikes = Math.max(0, counts.dislikes - 1);
+        if (to === 'like') counts.likes += 1;
+        if (to === 'dislike') counts.dislikes += 1;
         await env.IPTV_KV.put('reactions:' + bodyId, JSON.stringify(counts));
         return new Response(JSON.stringify({ ok: true, id: bodyId, likes: counts.likes, dislikes: counts.dislikes }),
           { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
