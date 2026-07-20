@@ -2777,11 +2777,16 @@ function _reactionsHtml(storyId) {
   var voted = _reactionsVotedLocally(storyId);
   var likeCls = 'reaction-btn reaction-like' + (voted === 'like' ? ' reaction-picked' : '');
   var dislikeCls = 'reaction-btn reaction-dislike' + (voted === 'dislike' ? ' reaction-picked' : '');
+  // Buttons start disabled until _reactionsLoad's initial GET resolves and
+  // renders the real counts - otherwise a click fired before that GET
+  // completes can have its vote response arrive FIRST, only for the
+  // slower, stale pre-vote GET to land afterward and clobber the display
+  // back down (a real race hit once in manual testing).
   return '<div class="story-modal-reactions" data-reaction-story="' + safeId + '">'
-    + '<button type="button" class="' + likeCls + '" data-reaction-id="' + safeId + '" data-reaction-choice="like" onclick="_reactionsVote(this)">'
+    + '<button type="button" class="' + likeCls + '" data-reaction-id="' + safeId + '" data-reaction-choice="like" onclick="_reactionsVote(this)" disabled>'
       + '<span class="reaction-emoji">👍</span><span class="reaction-count" data-count="like">…</span>'
     + '</button>'
-    + '<button type="button" class="' + dislikeCls + '" data-reaction-id="' + safeId + '" data-reaction-choice="dislike" onclick="_reactionsVote(this)">'
+    + '<button type="button" class="' + dislikeCls + '" data-reaction-id="' + safeId + '" data-reaction-choice="dislike" onclick="_reactionsVote(this)" disabled>'
       + '<span class="reaction-emoji">👎</span><span class="reaction-count" data-count="dislike">…</span>'
     + '</button>'
   + '</div>';
@@ -2813,6 +2818,10 @@ async function _reactionsLoad(storyId) {
     _reactionsSetCounts(container, data.likes || 0, data.dislikes || 0);
   } catch (e) {
     _reactionsSetCounts(container, 0, 0);
+  } finally {
+    // Only now is it safe to allow a vote - see the "disabled" comment in
+    // _reactionsHtml for why this can't be enabled any earlier.
+    container.querySelectorAll('.reaction-btn').forEach(function(b){ b.disabled = false; });
   }
 }
 async function _reactionsVote(btn) {
