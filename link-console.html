@@ -5847,6 +5847,7 @@ async function _rbFetch(){
     var data=await res.json();
     if(!res.ok||!data.ok)throw new Error(data.error||data.message||('HTTP '+res.status));
     body.innerHTML=_rbRender(data.report);
+    _rbLoadEngagement();
   }catch(e){ body.innerHTML='<div style="color:#ff8888">Could not load report: '+esc(e.message)+'</div>'; }
 }
 function _rbPill(s){var c=s==='healthy'?'rb-ok':(s==='attention'?'rb-bad':'rb-warn');return '<span class="rb-pill '+c+'">'+esc(s)+'</span>';}
@@ -5923,7 +5924,88 @@ function _rbRender(r){
     h+='<div class="rb-row"><span style="color:#9a9ab0">'+esc((a&&a.note)||'No analytics source configured.')+'</span><b></b></div>';
   }
   h+='</div>';
+
+  // story engagement (likes/dislikes) — loads independently below, see
+  // _rbLoadEngagement(); kept as its own section so a failure here can
+  // never affect the status/security data already rendered above.
+  h+='<div class="rb-sec"><h3>💬 Story Engagement — Likes/Dislikes by Topic</h3>'
+    +'<div id="rb-engagement-body" style="opacity:.6">Loading engagement data…</div></div>';
   return h;
+}
+
+/* ── Story engagement (likes/dislikes) — which topics/stories get read ──────
+   Pulls content.json + a single batched /api/reactions?ids=... call (not one
+   request per post), then renders a by-section rollup (which TOPIC gets the
+   most reaction) and a by-story breakdown (which STORY specifically). Runs
+   independently of _rbFetch's server-side status report so a content.json
+   or reactions-endpoint hiccup never breaks the rest of the Report tab. */
+async function _rbLoadEngagement(){
+  var box=document.getElementById('rb-engagement-body');
+  if(!box) return;
+  try{
+    var cRes=await fetch(CONTENT_URL+'?_='+Date.now());
+    if(!cRes.ok) throw new Error('content.json HTTP '+cRes.status);
+    var items=await cRes.json();
+    if(!Array.isArray(items)) items=[];
+    if(!items.length){ box.innerHTML='<div style="opacity:.6">No posts in content.json yet.</div>'; return; }
+
+    var ids=items.map(function(i){return String(i.id);}).filter(Boolean);
+    var counts={};
+    // Batch endpoint caps at 500 ids per call — chunk just in case this ever
+    // grows past that instead of silently dropping the tail.
+    for(var off=0; off<ids.length; off+=500){
+      var chunk=ids.slice(off,off+500);
+      var rRes=await fetch(WORKER+'/api/reactions?ids='+chunk.map(encodeURIComponent).join(','));
+      var rData=await rRes.json();
+      if(rData&&rData.ok&&rData.counts) Object.assign(counts,rData.counts);
+    }
+
+    var rows=items.map(function(i){
+      var c=counts[String(i.id)]||{likes:0,dislikes:0};
+      return {id:i.id, heading:i.heading||'(untitled)', section:i.section, likes:c.likes|0, dislikes:c.dislikes|0};
+    });
+
+    // By-topic rollup — sums likes/dislikes across every story in a section,
+    // sorted by total engagement so the most-reacted-to topic is on top.
+    var bySection={};
+    rows.forEach(function(r){
+      var k=r.section||'(no section)';
+      if(!bySection[k]) bySection[k]={likes:0,dislikes:0,posts:0};
+      bySection[k].likes+=r.likes; bySection[k].dislikes+=r.dislikes; bySection[k].posts+=1;
+    });
+    var sectionRows=Object.keys(bySection).map(function(k){return Object.assign({section:k},bySection[k]);})
+      .sort(function(a,b){return (b.likes+b.dislikes)-(a.likes+a.dislikes);});
+
+    var h='<div style="margin-bottom:18px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.04em;opacity:.6;margin-bottom:8px">By topic (section)</div>';
+    if(!sectionRows.length || sectionRows.every(function(s){return s.likes===0 && s.dislikes===0;})){
+      h+='<div style="opacity:.6;font-size:13px">No likes or dislikes recorded yet.</div>';
+    } else {
+      sectionRows.forEach(function(s){
+        var label=SECTION_LABELS[s.section]||s.section;
+        h+=_rbRow(esc(label)+' <span style="opacity:.5">('+s.posts+' post'+(s.posts!==1?'s':'')+')</span>',
+          '👍 '+s.likes+' &nbsp; 👎 '+s.dislikes);
+      });
+    }
+    h+='</div>';
+
+    // By-story detail, same total-engagement sort, so the single most
+    // talked-about story (regardless of section) surfaces immediately.
+    var storyRows=rows.slice().sort(function(a,b){return (b.likes+b.dislikes)-(a.likes+a.dislikes);});
+    h+='<div><div style="font-size:12px;text-transform:uppercase;letter-spacing:.04em;opacity:.6;margin-bottom:8px">By story</div>';
+    var shown=storyRows.filter(function(r){return r.likes>0||r.dislikes>0;});
+    if(!shown.length){
+      h+='<div style="opacity:.6;font-size:13px">No individual story has any likes/dislikes yet.</div>';
+    } else {
+      shown.forEach(function(r){
+        var label=esc(r.heading)+' <span style="opacity:.5">('+esc(SECTION_LABELS[r.section]||r.section||'')+')</span>';
+        h+=_rbRow(label,'👍 '+r.likes+' &nbsp; 👎 '+r.dislikes);
+      });
+    }
+    h+='</div>';
+    box.innerHTML=h;
+  }catch(e){
+    box.innerHTML='<div style="color:#ff8888">Could not load engagement data: '+esc(e.message)+'</div>';
+  }
 }
 
 /* ── SETTINGS (admin profile + operator accounts) ───────────────────────── */

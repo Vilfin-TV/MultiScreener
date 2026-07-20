@@ -60,6 +60,25 @@ export default {
     if (pathname === '/api/reactions') {
       if (!env.IPTV_KV) return jsonError(503, 'Store not configured (IPTV_KV).');
       const id = (searchParams.get('id') || '').trim().slice(0, 100);
+      const idsParam = (searchParams.get('ids') || '').trim();
+
+      // Batch mode — GET ?ids=a,b,c returns every story's counts in one round
+      // trip (used by the console's engagement report so it doesn't fire one
+      // request per post). Single-id mode below is unchanged for news.html.
+      if (request.method === 'GET' && idsParam) {
+        const ids = idsParam.split(',').map(s => s.trim().slice(0, 100)).filter(Boolean).slice(0, 500);
+        const counts = {};
+        await Promise.all(ids.map(async (storyId) => {
+          let c = { likes: 0, dislikes: 0 };
+          try {
+            const raw = await env.IPTV_KV.get('reactions:' + storyId);
+            if (raw) c = { ...c, ...JSON.parse(raw) };
+          } catch (e) { /* corrupt/missing entry -> zeros */ }
+          counts[storyId] = { likes: c.likes | 0, dislikes: c.dislikes | 0 };
+        }));
+        return new Response(JSON.stringify({ ok: true, counts }),
+          { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
+      }
 
       if (request.method === 'GET') {
         if (!id) return jsonError(400, 'Missing id.');
