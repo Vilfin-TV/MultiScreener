@@ -22,6 +22,8 @@ import html
 import json
 import os
 import re
+import struct
+import urllib.request
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONTENT_JSON = os.path.join(REPO_ROOT, 'content.json')
@@ -29,9 +31,59 @@ SHARE_DIR = os.path.join(REPO_ROOT, 'share')
 SITE = 'https://vilfintv.com'
 DEFAULT_IMAGE = SITE + '/images/vilfintv-logo.jpg'
 EXCERPT_LEN = 160
+# A default urllib/Python User-Agent gets flat-out blocked (Cloudflare error
+# 1010) on this site's Workers domain - confirmed the hard way with the
+# antigravity bot. Every outbound fetch here needs a normal-looking UA.
+FETCH_UA = 'Mozilla/5.0 (compatible; VilfinTV-ShareGen/1.0)'
 
 TAG_RE = re.compile(r'<[^>]+>')
 WS_RE = re.compile(r'\s+')
+
+
+def fetch_image_info(url):
+    """Return (width, height, content_type) for an image URL, or None on any
+    failure - dimensions are a nice-to-have for og:image:width/height, never
+    worth failing the whole page generation over."""
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': FETCH_UA})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            content_type = resp.headers.get('Content-Type', '').split(';')[0].strip()
+            data = resp.read(1_000_000)
+    except Exception:
+        return None
+
+    size = _image_size(data)
+    if not size:
+        return None
+    return size[0], size[1], (content_type or 'image/jpeg')
+
+
+def _image_size(data):
+    if data[:8] == b'\x89PNG\r\n\x1a\n' and len(data) >= 24:
+        w, h = struct.unpack('>II', data[16:24])
+        return w, h
+    if data[:6] in (b'GIF87a', b'GIF89a') and len(data) >= 10:
+        w, h = struct.unpack('<HH', data[6:10])
+        return w, h
+    if data[:2] == b'\xff\xd8':  # JPEG - walk markers to find the SOF segment
+        i = 2
+        n = len(data)
+        while i + 9 < n:
+            if data[i] != 0xFF:
+                i += 1
+                continue
+            marker = data[i + 1]
+            if marker in (0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7,
+                          0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF):
+                h, w = struct.unpack('>HH', data[i + 5:i + 9])
+                return w, h
+            if marker in (0xD8, 0x01) or 0xD0 <= marker <= 0xD7:
+                i += 2
+                continue
+            seglen = struct.unpack('>H', data[i + 2:i + 4])[0]
+            i += 2 + seglen
+        return None
+    return None
 
 
 def resolve_photo(photo):
@@ -56,7 +108,7 @@ def excerpt_of(story_html):
     return text[:EXCERPT_LEN].rsplit(' ', 1)[0] + '…'
 
 
-def page_html(item):
+def page_html(item, image_info=None):
     story_id = str(item['id'])
     heading = (item.get('heading') or 'VilfinTV News').strip()
     photo = resolve_photo(item.get('photo'))
@@ -70,6 +122,20 @@ def page_html(item):
     target_esc = html.escape(target, quote=True)
     self_url_esc = html.escape(self_url, quote=True)
     target_js = json.dumps(target)
+
+    # Facebook's own docs say width/height let it render the image without
+    # first downloading it - some clients silently skip a custom image
+    # entirely rather than doing that download-to-measure step themselves,
+    # which is the leading suspect for a headline-but-no-photo preview.
+    image_extra = ''
+    if image_info:
+        w, h, ctype = image_info
+        image_extra = (
+            f'<meta property="og:image:secure_url" content="{photo_esc}"/>\n'
+            f'<meta property="og:image:width" content="{w}"/>\n'
+            f'<meta property="og:image:height" content="{h}"/>\n'
+            f'<meta property="og:image:type" content="{html.escape(ctype, quote=True)}"/>'
+        )
 
     # og:url and rel=canonical are deliberately self-referential (this page's
     # own URL), NOT the news.html target. Crawlers (Facebook confirmed) treat
@@ -92,6 +158,7 @@ def page_html(item):
 <meta property="og:title" content="{title_esc}"/>
 <meta property="og:description" content="{desc_esc}"/>
 <meta property="og:image" content="{photo_esc}"/>
+{image_extra}
 <meta property="og:url" content="{self_url_esc}"/>
 
 <meta name="twitter:card" content="summary_large_image"/>
@@ -132,13 +199,17 @@ def main():
     os.makedirs(SHARE_DIR, exist_ok=True)
     live_ids = set()
     written = 0
+    image_cache = {}
     for item in items:
         if not item.get('id') or not item.get('heading'):
             continue
         story_id = str(item['id'])
         live_ids.add(story_id)
+        photo_url = resolve_photo(item.get('photo'))
+        if photo_url not in image_cache:
+            image_cache[photo_url] = fetch_image_info(photo_url)
         path = os.path.join(SHARE_DIR, f'{story_id}.html')
-        new_content = page_html(item)
+        new_content = page_html(item, image_cache[photo_url])
         if os.path.exists(path):
             with open(path, encoding='utf-8') as f:
                 if f.read() == new_content:
