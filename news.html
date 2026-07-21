@@ -857,28 +857,33 @@ body{
 
 .story-modal{
   background:var(--card);
-  border:1px solid var(--border2);
-  border-radius:20px 20px 0 0;
+  border:none;
+  border-radius:0;
   width:100%;max-width:760px;
-  /* Mobile: 90% of the VISIBLE screen height. In-app browsers (WhatsApp,
-     Instagram, FB) have chrome bars that make 100vh taller than the visible
-     area, pushing the modal header/close button off-screen — so prefer the
+  /* Mobile: full VISIBLE screen height, edge-to-edge - no bottom-sheet gap.
+     A percentage-based sheet (e.g. 90%) left a gap at the top showing the
+     dark overlay backdrop, and in-app browsers (WhatsApp, Instagram, FB)
+     have chrome bars that make 100vh taller than the visible area, so that
+     gap could grow much larger than intended and read as a broken empty
+     page. Going full-height removes the gap outright instead of chasing
+     viewport-unit accuracy across every in-app browser's quirks. Prefer the
      JS-measured --app-vh, then dvh, with vh as the last fallback. */
-  height:90vh;
-  height:calc(var(--app-vh, 1vh) * 90);
+  height:100vh;
+  height:calc(var(--app-vh, 1vh) * 100);
   max-height:100%;
+  padding-top:env(safe-area-inset-top, 0);
   padding-bottom:env(safe-area-inset-bottom, 0);
   display:flex;flex-direction:column;
-  box-shadow:0 -8px 64px rgba(0,0,0,.6);
+  box-shadow:none;
   animation:modalSlideUp .3s cubic-bezier(.32,.72,0,1) both;
   overflow:hidden;
 }
-@supports(height:90dvh){
-  .story-modal{height:90dvh;max-height:100dvh}
+@supports(height:100dvh){
+  .story-modal{height:100dvh;max-height:100dvh}
 }
 @media(min-width:800px){
   .story-modal-overlay{align-items:center}
-  .story-modal{border-radius:18px;height:auto;max-height:88vh;max-height:calc(var(--app-vh, 1vh) * 88);padding-bottom:0}
+  .story-modal{border:1px solid var(--border2);border-radius:18px;height:auto;max-height:88vh;max-height:calc(var(--app-vh, 1vh) * 88);padding-top:0;padding-bottom:0;box-shadow:0 -8px 64px rgba(0,0,0,.6)}
   @supports(height:88dvh){
     .story-modal{max-height:88dvh}
   }
