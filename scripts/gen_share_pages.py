@@ -9,7 +9,11 @@ execute JS, so they only ever read the site's generic default OG tags.
 Each generated share/<id>.html is a tiny static page carrying that story's
 real Open Graph / Twitter Card tags (title, excerpt, hero photo), so pasted
 links unfurl with the correct headline and image. Real visitors are sent on
-to the live story instantly via meta-refresh + JS redirect.
+to the live story instantly via a JS redirect only - deliberately NOT a
+<meta http-equiv="refresh">, because Facebook's crawler (and some others)
+follows an immediate meta-refresh as if it were a real redirect and scrapes
+the target URL's tags instead of this page's, which defeats the whole
+point. Crawlers don't execute JS, so they stay put and read these tags.
 
 Regenerated automatically by .github/workflows/gen_share_pages.yml on every
 push that touches content.json - no manual step.
@@ -88,7 +92,6 @@ def page_html(item):
 <meta name="twitter:description" content="{desc_esc}"/>
 <meta name="twitter:image" content="{photo_esc}"/>
 
-<meta http-equiv="refresh" content="0; url={target_esc}"/>
 <script>location.replace({target_js});</script>
 <style>
   html,body{{height:100%;margin:0;background:#0a192f;color:#e6edf7;
