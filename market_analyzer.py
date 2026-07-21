@@ -5,8 +5,23 @@ from email.mime.multipart import MIMEMultipart
 import yfinance as yf
 import pandas as pd
 import json
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import logging
+
+# GitHub Actions runners are UTC. This workflow's whole schedule (target
+# ~7:00 AM JST, watchdog grace window through 08:40 JST) is built around
+# Japan time, but every previous "today's date" in the email/report used
+# naive datetime.now() - i.e. the UTC calendar date. Since the run fires at
+# 22:00-23:40 UTC, which is already 07:00-08:40 the NEXT day in JST, every
+# email was stamping itself with YESTERDAY's date relative to the JST
+# reader actually opening it (caught 2026-07-21: an email delivered at
+# 07:35 AM JST on the 21st was headered "2026-07-20"). jst_today_str() is
+# the fix - always convert through UTC first, then to JST, before taking
+# the date, rather than relying on the runner's local system clock.
+JST = timezone(timedelta(hours=9))
+
+def jst_today_str():
+    return datetime.now(timezone.utc).astimezone(JST).strftime('%Y-%m-%d')
 import requests
 import time
 import math
@@ -1541,7 +1556,7 @@ def build_fred_macro_text(fred_extras):
 
 def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text, news_items, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr, qual_eq, qual_comm, qual_bond, qual_curr, notable_fx=None):
     html = f"""<html><head><style>\nbody {{ font-family: Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }}\nh2 {{ color: #0a192f; margin-top: 30px; }}\nh3 {{ color: #1a365d; }}\ntable {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.95em; }}\nth, td {{ padding: 8px; border: 1px solid #ddd; text-align: center; }}\nth {{ background-color: #f4f4f4; }}\n.l {{ text-align: left; }}\n.c {{ text-align: center; }}\n.a {{ text-align: left; font-weight: bold; width: 25%; }}\n.u {{ text-align: center; color: #666; font-size: 0.9em; }}\n.p {{ color: green; font-weight: bold; }}\n.n {{ color: red; font-weight: bold; }}\n.score-box {{ padding: 20px; background: #eef2f5; border-left: 5px solid #0a192f; margin-bottom: 20px; }}\n.alerts {{ background: #fff3f3; border-left: 5px solid #d9534f; padding: 15px; }}\n.recommendation {{ background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 5px solid #16a34a; padding: 15px; margin-top: 15px; }}\n.st-momentum {{ background: #fffbeeb3; border: 1px solid #fde68a; border-left: 5px solid #d97706; padding: 15px; margin-top: 15px; }}\n.summary-item {{ margin-bottom: 8px; }}\n.reasoning {{ font-size: 0.9em; color: #555; margin-left: 20px; }}\n</style></head><body>"""
-    html += f"""<div style="display: flex; align-items: center; border-bottom: 2px solid #0a192f; padding-bottom: 15px; margin-top: 20px; margin-bottom: 20px;"><img src="https://vilfintv.com/images/vilfintv-logo.jpg" alt="VilfinTV" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; box-shadow: 0 0 8px rgba(59,130,246,0.45); object-fit: cover;"><div style="flex-grow: 1;"><h2 style="margin: 0; color: #0a192f; border: none; padding: 0;">Market Regime Report</h2><div style="color: #555; font-size: 0.95em; margin-top: 5px;">Executive Summary by <strong>VilfinTV.com</strong></div></div><div style="color: #666; font-size: 0.9em; text-align: right; font-weight: bold;">{datetime.now().strftime('%Y-%m-%d')}</div></div>"""
+    html += f"""<div style="display: flex; align-items: center; border-bottom: 2px solid #0a192f; padding-bottom: 15px; margin-top: 20px; margin-bottom: 20px;"><img src="https://vilfintv.com/images/vilfintv-logo.jpg" alt="VilfinTV" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; box-shadow: 0 0 8px rgba(59,130,246,0.45); object-fit: cover;"><div style="flex-grow: 1;"><h2 style="margin: 0; color: #0a192f; border: none; padding: 0;">Market Regime Report</h2><div style="color: #555; font-size: 0.95em; margin-top: 5px;">Executive Summary by <strong>VilfinTV.com</strong></div></div><div style="color: #666; font-size: 0.9em; text-align: right; font-weight: bold;">{jst_today_str()}</div></div>"""
     html += f"""
         <div class="score-box">
             <h3 style="margin-top: 0;">Executive Summary</h3>
@@ -1943,7 +1958,7 @@ def send_email(html_content):
         return
 
     msg = MIMEMultipart("alternative")
-    msg['Subject'] = f"Daily Market Analysis & Sector Report - {datetime.now().strftime('%Y-%m-%d')}"
+    msg['Subject'] = f"Daily Market Analysis & Sector Report - {jst_today_str()}"
     # Format the sender to look professional
     msg['From'] = f"VilfinTV Daily Screener <{sender_email}>"
     msg['To'] = receiver_email
@@ -2099,7 +2114,7 @@ if __name__ == "__main__":
                 }
 
         snapshot = {
-            "date": datetime.now().strftime('%Y-%m-%d'),
+            "date": jst_today_str(),
             "generated_at_utc": generated_at_iso,
             "score": score,
             "regime": regime,
