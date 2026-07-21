@@ -62,13 +62,20 @@ def page_html(item):
     photo = resolve_photo(item.get('photo'))
     desc = excerpt_of(item.get('story')) or 'Read the full story on VilfinTV News.'
     target = f'{SITE}/news.html?story={story_id}'
+    self_url = f'{SITE}/share/{story_id}.html'
 
     title_esc = html.escape(heading, quote=True)
     desc_esc = html.escape(desc, quote=True)
     photo_esc = html.escape(photo, quote=True)
     target_esc = html.escape(target, quote=True)
+    self_url_esc = html.escape(self_url, quote=True)
     target_js = json.dumps(target)
 
+    # og:url and rel=canonical are deliberately self-referential (this page's
+    # own URL), NOT the news.html target. Crawlers (Facebook confirmed) treat
+    # rel=canonical as "the real content lives there" and re-scrape THAT url
+    # instead - which would land back on news.html's generic, client-rendered
+    # default tags and silently undo this entire page's purpose.
     return f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -77,7 +84,7 @@ def page_html(item):
 <title>{title_esc} — VilfinTV News</title>
 <meta name="description" content="{desc_esc}"/>
 <meta name="robots" content="index, follow, max-image-preview:large"/>
-<link rel="canonical" href="{target_esc}"/>
+<link rel="canonical" href="{self_url_esc}"/>
 
 <meta property="og:type" content="article"/>
 <meta property="og:site_name" content="VilfinTV News"/>
@@ -85,7 +92,7 @@ def page_html(item):
 <meta property="og:title" content="{title_esc}"/>
 <meta property="og:description" content="{desc_esc}"/>
 <meta property="og:image" content="{photo_esc}"/>
-<meta property="og:url" content="{target_esc}"/>
+<meta property="og:url" content="{self_url_esc}"/>
 
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="{title_esc}"/>
