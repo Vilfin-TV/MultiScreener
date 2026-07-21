@@ -1,9 +1,9 @@
 name: Daily Market Report Watchdog
 
 # The main "Daily Market Report" workflow fires on a fixed cron
-# (30 21 * * *, i.e. 6:30am JST). Investigated 2026-07-13: this repo's
+# (0 22 * * *, i.e. 7:00am JST). Investigated 2026-07-13: this repo's
 # GitHub Actions scheduler runs low-frequency crons (once per day, or
-# once per several hours) with a CHRONIC delay of 30-90+ minutes versus
+# once per several hours) with a CHRONIC delay of 20-90+ minutes versus
 # their nominal time — confirmed by checking world.yml's (every-3-hours)
 # actual fire times over the last two days, every single one landed
 # well past its nominal slot. High-frequency crons (every 5-30 min,
@@ -13,6 +13,16 @@ name: Daily Market Report Watchdog
 # missing run. This is GitHub's own documented best-effort scheduling
 # behavior, not something fixable by editing the workflow file itself.
 #
+# 2026-07-21 update: the original 06:30 JST target was moved to 07:00
+# JST because it "never appears" at 06:30 by design (see above) - actual
+# delivery over 2026-07-13/21 clustered at 06:48-07:28 JST regardless of
+# the nominal target, so 07:00 is a realistic expectation rather than a
+# time that always reads as late. The grace window's hard deadline was
+# also pulled in from 08:50 to 08:40 JST, to leave a real ~20-minute
+# safety margin before 9:00 AM JST (email/SMTP delivery itself can add a
+# few more minutes after the workflow completes) instead of cutting it
+# to the wire.
+#
 # The existing "backup" workflow can't help here either — it only
 # reacts to the main job actually running and *failing*
 # (workflow_run: types: [completed]); a schedule that never fires never
@@ -20,25 +30,24 @@ name: Daily Market Report Watchdog
 #
 # Fix: instead of one fixed-offset check (which is itself just another
 # cron subject to the same delay), check repeatedly across a grace
-# window after the target time, extending all the way to 23:50 UTC
-# (08:50 JST) - a hard guarantee the report goes out before 9:00 AM JST
-# every trading day, even in a worst-case multi-hour delay. Each check
-# is idempotent — it only dispatches if no run (scheduled or otherwise)
-# has landed in the last 3 hours, so once the real delayed run lands
-# (or this watchdog dispatches one itself), every later check in the
-# window is a no-op.
+# window after the target time, extending to 23:40 UTC (08:40 JST) - a
+# hard guarantee the report goes out with a safety margin before 9:00 AM
+# JST every trading day, even in a worst-case multi-hour delay. Each
+# check is idempotent — it only dispatches if no run (scheduled or
+# otherwise) has landed in the last 3 hours, so once the real delayed
+# run lands (or this watchdog dispatches one itself), every later check
+# in the window is a no-op.
 
 on:
   schedule:
-    # Grace-window checks that START at the 21:30 UTC (06:30 JST) target and run
-    # every 20 min through 23:50 UTC (08:50 JST) - a hard deadline guarantee that
-    # the report goes out before 9:00 AM JST even if the native cron is very late.
-    # Starting AT the target (not before) is deliberate: the check dispatches only
-    # when no run has landed in the last 3h, so beginning earlier than 21:30 would
-    # fire the report ahead of 06:30 JST.
-    - cron: '30,50 21 * * *'       # 21:30, 21:50 UTC = 06:30, 06:50 JST
-    - cron: '10,30,50 22 * * *'    # 22:10, 22:30, 22:50 UTC = 07:10, 07:30, 07:50 JST
-    - cron: '10,30,50 23 * * *'    # 23:10, 23:30, 23:50 UTC = 08:10, 08:30, 08:50 JST
+    # Grace-window checks that START at the 22:00 UTC (07:00 JST) target and run
+    # every 20 min through 23:40 UTC (08:40 JST) - a hard deadline guarantee that
+    # the report goes out with margin before 9:00 AM JST even if the native cron
+    # is very late. Starting AT the target (not before) is deliberate: the check
+    # dispatches only when no run has landed in the last 3h, so beginning earlier
+    # than 22:00 would fire the report ahead of 07:00 JST.
+    - cron: '0,20,40 22 * * *'    # 22:00, 22:20, 22:40 UTC = 07:00, 07:20, 07:40 JST
+    - cron: '0,20,40 23 * * *'    # 23:00, 23:20, 23:40 UTC = 08:00, 08:20, 08:40 JST
   workflow_dispatch:
 
 permissions:
