@@ -2739,9 +2739,10 @@ function openSourceLink(btn) {
    MODAL: OPEN STORY
 ═══════════════════════════════════════════════════ */
 function copyToClipboard(text) {
+  var msg = 'Link copied! Paste it anywhere (Facebook, X, WhatsApp...) and it will show this story\'s photo & headline.';
   if (navigator.clipboard) {
     navigator.clipboard.writeText(text).then(function() {
-      alert('Link copied to clipboard!');
+      alert(msg);
     }).catch(function() {
       alert('Failed to copy link. Please manually copy the URL.');
     });
@@ -2752,7 +2753,7 @@ function copyToClipboard(text) {
     ta.select();
     document.execCommand('copy');
     document.body.removeChild(ta);
-    alert('Link copied to clipboard!');
+    alert(msg);
   }
 }
 
@@ -4658,7 +4659,15 @@ function openCustomPost(id) {
 
   var shareText = encodeURIComponent(post.heading || 'Read this story on VilfinTV News');
   var storyIdSlug = post.id || (post.heading || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  var rawShareUrl = 'https://vilfintv.com/news.html?story=' + encodeURIComponent(storyIdSlug);
+  // Point copy/share links at the pre-rendered share page (share/<id>.html),
+  // which carries this story's own og:title/og:image as static HTML - a
+  // crawler-visible link preview for Facebook/X/WhatsApp/Telegram. news.html
+  // itself is client-rendered from content.json, so those crawlers (which
+  // never run JS) would otherwise only ever see the site's generic default
+  // OG tags. Falls back to the raw news.html link if a story has no id.
+  var rawShareUrl = post.id
+    ? 'https://vilfintv.com/share/' + encodeURIComponent(String(post.id)) + '.html'
+    : 'https://vilfintv.com/news.html?story=' + encodeURIComponent(storyIdSlug);
   var shareUrl = encodeURIComponent(rawShareUrl);
   // WhatsApp & Status share a branded photo card; the public link stays clean.
   _shareCtx = { heading: (post.heading || 'VilfinTV News'), photo: (post.photo || ''), url: rawShareUrl };
