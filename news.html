@@ -337,10 +337,17 @@ body{
   .brand-name{font-size:15px}
   /* Nav must auto-size to accommodate second row */
   .top-menubar{height:auto}
-  /* Allow nav to wrap to two rows */
+  /* Allow the section-tabs row to wrap below row 1 */
   .nav-inner{flex-wrap:wrap;height:auto;padding:0 10px;gap:0}
-  /* Row 1: brand group (left) + right-side controls — never overflow viewport */
-  .nav-brand-group{height:auto;min-height:46px;padding-right:8px;flex:1 1 auto;min-width:0;flex-wrap:wrap;border-right:none}
+  /* Row 1: brand group (left) + right-side controls — a single 46px-tall line.
+     This used to wrap internally when all 5 links didn't fit, which made this
+     row taller than the fixed-height controls (theme/LIVE) sitting next to it
+     - since they're vertically centered against the row's own (now taller)
+     height, that mismatch left a visible empty gap around the controls.
+     Scrolling horizontally instead of wrapping keeps the row a fixed 46px,
+     matching the controls exactly, so there's no dead space to center into. */
+  .nav-brand-group{height:46px;padding-right:8px;flex:1 1 auto;min-width:0;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-right:none}
+  .nav-brand-group::-webkit-scrollbar{display:none}
   .nav-home-link{padding:5px 7px;font-size:11px;margin-right:6px}
   .news-nav-right{height:46px;margin-left:auto;flex-shrink:0}
   /* Row 2: section tabs become a full-width horizontal scroll strip (no longer hidden) */
@@ -352,8 +359,8 @@ body{
     overflow-x:auto;-webkit-overflow-scrolling:touch;
   }
   .news-nav-link{padding:0 13px;font-size:12.5px;border-right-color:rgba(255,255,255,.1)}
-  /* Section anchors clear the taller two-row nav */
-  .news-section{scroll-margin-top:108px}
+  /* Section anchors clear the two-row nav (now a fixed 46px + 42px) */
+  .news-section{scroll-margin-top:96px}
 }
 
 /* ═══════════════════════════════════════════════════
