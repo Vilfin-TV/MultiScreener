@@ -1933,20 +1933,42 @@ ${body.text}`;
     }
 
     // ── /r2/<key>  GET — serve an image stored in R2 (public, cached) ─────────
+    // Supports HTTP Range requests (206 Partial Content) - some link-preview
+    // crawlers and CDNs fetch just an image's header bytes first to validate
+    // format/dimensions before committing to a full download, and treat a
+    // plain 200-with-full-body response to a Range request as unexpected.
     if (pathname.startsWith('/r2/')) {
       if (!env || (!env.MEDIA && !env.STORY)) return jsonError(503, 'Image storage not configured.');
       let key;
       try { key = decodeURIComponent(pathname.slice(4)); } catch (_) { key = pathname.slice(4); }
       if (!key || !key.startsWith('media/')) return jsonError(400, 'Invalid image key.');
       try {
+        let r2Range;
+        const rangeHeader = request.headers.get('Range');
+        if (rangeHeader) {
+          const m = /^bytes=(\d+)-(\d*)$/.exec(rangeHeader.trim());
+          if (m) {
+            const offset = parseInt(m[1], 10);
+            r2Range = m[2] ? { offset, length: parseInt(m[2], 10) - offset + 1 } : { offset };
+          }
+        }
         // Serve from the primary media bucket, then fall back to the story bucket.
-        let obj = env.MEDIA ? await env.MEDIA.get(key) : null;
-        if (!obj && env.STORY) obj = await env.STORY.get(key);
+        let obj = env.MEDIA ? await env.MEDIA.get(key, r2Range ? { range: r2Range } : undefined) : null;
+        if (!obj && env.STORY) obj = await env.STORY.get(key, r2Range ? { range: r2Range } : undefined);
         if (!obj) return jsonError(404, 'Image not found.');
         const headers = new Headers(CORS);
         headers.set('Content-Type', (obj.httpMetadata && obj.httpMetadata.contentType) || 'application/octet-stream');
         headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+        headers.set('Accept-Ranges', 'bytes');
         if (obj.httpEtag) headers.set('ETag', obj.httpEtag);
+        if (r2Range && obj.range) {
+          const total = obj.size;
+          const start = obj.range.offset || 0;
+          const len = obj.range.length !== undefined ? obj.range.length : (total - start);
+          headers.set('Content-Range', `bytes ${start}-${start + len - 1}/${total}`);
+          headers.set('Content-Length', String(len));
+          return new Response(obj.body, { status: 206, headers });
+        }
         return new Response(obj.body, { status: 200, headers });
       } catch (e) {
         return jsonError(502, `R2 read failed: ${e.message}`);
