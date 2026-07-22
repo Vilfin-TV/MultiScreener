@@ -340,16 +340,23 @@ body{
   /* Allow the section-tabs row to wrap below row 1 */
   .nav-inner{flex-wrap:wrap;height:auto;padding:0 10px;gap:0}
   /* Row 1: brand group (left) + right-side controls — a single 46px-tall line.
-     This used to wrap internally when all 5 links didn't fit, which made this
-     row taller than the fixed-height controls (theme/LIVE) sitting next to it
-     - since they're vertically centered against the row's own (now taller)
-     height, that mismatch left a visible empty gap around the controls.
-     Scrolling horizontally instead of wrapping keeps the row a fixed 46px,
-     matching the controls exactly, so there's no dead space to center into. */
-  .nav-brand-group{height:46px;padding-right:8px;flex:1 1 auto;min-width:0;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-right:none}
+     Two earlier attempts both left visible dead space: (1) wrapping the 5
+     labelled pills onto a 2nd internal line made this row taller than the
+     fixed-height controls beside it, which then centered with a gap around
+     them; (2) switching to flex:1 1 auto to scroll instead of wrap still
+     used flex-basis:auto, which sizes to the pills' full unwrapped content
+     width as their "preferred" size BEFORE the wrap decision is made -
+     leaving no room on the line for the controls at all and pushing them
+     onto their own row regardless. flex-basis:0 (the standard "flex:1"
+     idiom) is what actually makes an item share a row correctly with a
+     fixed-width sibling instead of hogging it. Text labels are hidden here
+     too - 5 icon-only pills comfortably fit next to the controls on any
+     phone width, so nothing needs to scroll or wrap to be found. */
+  .nav-brand-group{height:46px;flex:1 1 0%;min-width:0;flex-wrap:nowrap;border-right:none;justify-content:flex-start;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
   .nav-brand-group::-webkit-scrollbar{display:none}
-  .nav-home-link{padding:5px 7px;font-size:11px;margin-right:6px}
-  .news-nav-right{height:46px;margin-left:auto;flex-shrink:0}
+  .nav-home-link{padding:0;width:34px;height:34px;justify-content:center;margin-right:6px;flex-shrink:0}
+  .nav-home-label{display:none}
+  .news-nav-right{height:46px;margin-left:auto;flex:0 0 auto}
   /* Row 2: section tabs become a full-width horizontal scroll strip (no longer hidden) */
   .news-nav-links{
     display:flex;order:10;
@@ -2092,23 +2099,23 @@ footer.news-footer{
     <div class="nav-brand-group">
       <a href="index.html" class="nav-home-link" title="Go to MultiScreener" style="margin-right:6px">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        Multiscreener
+        <span class="nav-home-label">Multiscreener</span>
       </a>
       <a href="news.html" class="nav-home-link" title="Reload News home">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Home
+        <span class="nav-home-label">Home</span>
       </a>
       <a href="story.html" class="nav-home-link" title="Stories">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-        Stories
+        <span class="nav-home-label">Stories</span>
       </a>
       <a href="blog_intelligence_hub.html" class="nav-home-link" title="Blog">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
-        Blog
+        <span class="nav-home-label">Blog</span>
       </a>
       <a href="education.html" class="nav-home-link" title="Academy">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2.5 3 6 3s6-1 6-3v-5"/></svg>
-        Academy
+        <span class="nav-home-label">Academy</span>
       </a>
     </div>
     <div class="news-nav-links" id="news-nav-links">
