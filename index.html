@@ -2166,6 +2166,7 @@ footer{
 }
 .brand-name span{color:#38bdf8;text-shadow:0 0 16px rgba(56,189,248,.5)}
 .top-menu-items{display:flex;align-items:center;height:100%;flex:1;overflow:hidden}
+.tmenu-quicklinks{display:none}
 .top-menu-right{
   display:flex;align-items:center;gap:8px;padding:0 12px;
   height:100%;border-left:1px solid rgba(255,255,255,.1);flex-shrink:0;
@@ -3741,6 +3742,29 @@ html.iptv-cinema #rb-panel-iptv.iptv-guide-open #iptv-epg-bar{
     box-shadow:0 8px 32px rgba(0,0,0,.8);
     padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));
   }
+  /* Quick-links: one-tap access to the core VilfinTV sections (News, Stories,
+     Academy, Blog, IPTV) right at the top of the mobile menu. These were
+     previously only reachable by opening the "News & Media" dropdown and
+     scrolling past several regional-news submenus - easy to miss entirely,
+     which is exactly what happened with Academy. Desktop is unaffected; this
+     block only renders inside the mobile hamburger drawer. */
+  .tmenu-quicklinks{
+    display:flex;flex-wrap:wrap;gap:9px;
+    padding:18px 18px 16px;
+    border-bottom:1px solid rgba(255,255,255,.1);
+  }
+  .tmenu-quicklink{
+    display:flex;align-items:center;gap:7px;
+    padding:10px 15px;border-radius:22px;
+    background:linear-gradient(135deg,rgba(37,99,235,.32),rgba(29,78,216,.18));
+    border:1px solid rgba(96,165,250,.4);
+    color:#e8f1ff;font-size:13px;font-weight:700;letter-spacing:.2px;
+    text-decoration:none;transition:background .15s,border-color .15s;
+  }
+  .tmenu-quicklink:active{
+    background:linear-gradient(135deg,rgba(37,99,235,.5),rgba(29,78,216,.32));
+    border-color:rgba(147,197,253,.6);
+  }
   /* Lock background body scroll while the mobile menu is open */
   body.mobile-menu-open{overflow:hidden;position:fixed;width:100%}
   .tmenu-item{height:auto;width:100%}
@@ -4132,6 +4156,17 @@ html.iptv-cinema #rb-panel-iptv.iptv-guide-open #iptv-epg-bar{
 
   <!-- Menu Items -->
   <div class="top-menu-items">
+
+    <!-- Quick links: mobile-only, one-tap access to the core VilfinTV
+         sections (previously buried inside the News & Media dropdown,
+         past several regional-news submenus) -->
+    <div class="tmenu-quicklinks">
+      <a class="tmenu-quicklink" href="news.html">📺 News</a>
+      <a class="tmenu-quicklink" href="story.html">📖 Stories</a>
+      <a class="tmenu-quicklink" href="education.html">🎓 Academy</a>
+      <a class="tmenu-quicklink" href="blog_intelligence_hub.html" target="_blank">📰 Blog</a>
+      <a class="tmenu-quicklink" href="iptv.html">📡 IPTV</a>
+    </div>
 
     <!-- FILE -->
     <div class="tmenu-item" id="tmenu-file">
