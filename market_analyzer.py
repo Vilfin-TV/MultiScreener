@@ -207,7 +207,10 @@ TICKERS_CONFIG = {
     },
     'Real Estate & Housing Health': {
         'Real Estate ETF (VNQ)': {'symbol': 'VNQ', 'currency': 'USD'},
-        'US Home Construction (ITB)': {'symbol': 'ITB', 'currency': 'USD'}
+        'US Home Construction (ITB)': {'symbol': 'ITB', 'currency': 'USD'},
+        'International Real Estate ex-US (RWX)': {'symbol': 'RWX', 'currency': 'USD'},
+        'Japan REIT (1343.T)': {'symbol': '1343.T', 'currency': 'JPY'},
+        'India Realty Sector (Nifty Realty)': {'symbol': '^CNXREALTY', 'currency': 'INR'}
     },
     'Sectors & Themes (US ETFs)': {
         'AI Stocks': {'symbol': 'AIQ', 'currency': 'USD'},
