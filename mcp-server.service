@@ -1,0 +1,15 @@
+[Unit]
+Description=Antigravity Central MCP Server
+After=network.target
+
+[Service]
+User=vilfintvserver
+WorkingDirectory=/home/vilfintvserver/antigravity-bot
+Environment="PATH=/home/vilfintvserver/antigravity-bot/venv/bin"
+# Run the MCP server over SSE on port 8000
+ExecStart=/home/vilfintvserver/antigravity-bot/venv/bin/python mcp_server.py --sse --port 8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
