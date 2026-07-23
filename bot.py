@@ -98,7 +98,7 @@ def fetch_webpage(url: str) -> str:
             for script in soup(["script", "style"]):
                 script.extract()
             text = soup.get_text(separator=' ', strip=True)
-            return text[:8000] # Return first 8000 chars to avoid token limits
+            return text
     except Exception as e:
         return f"Failed to fetch webpage: {e}"
 
@@ -112,7 +112,7 @@ def delegate_to_specialist(persona: str, prompt: str) -> str:
     """
     try:
         sub_model = genai.GenerativeModel(
-            'models/gemini-flash-latest',
+            'models/gemini-1.5-pro',
             system_instruction=f"You are an expert {persona}. Completely fulfill the user's prompt in your specific style."
         )
         response = sub_model.generate_content(prompt)
@@ -192,9 +192,9 @@ tools = [
 
 if GEMINI_API_KEY and GEMINI_API_KEY != "PLACEHOLDER_KEY":
     genai.configure(api_key=GEMINI_API_KEY)
-    # Using the latest available flash model from 2026
+    # Using the Gemini 1.5 Pro model for maximum capability
     model = genai.GenerativeModel(
-        'models/gemini-flash-latest',
+        'models/gemini-1.5-pro',
         tools=tools,
         system_instruction="You are Antigravity, a highly capable parallel multi-agent orchestrator for VilfinTV. You have access to various specialized tools (web search, web browsing, publishing, python testing, specialized personas, and AI image generation). Use them concurrently when needed. For complex requests (e.g. 'Research X, generate a photo, translate to Malayalam, and publish'), you can orchestrate multiple tools to achieve the final result. For python execution, ensure you pass the user's Telegram ID into the tool. NEVER use markdown ```html blocks when generating story content for publish_story. When asked to create an image, use the generate_image tool, then pass the resulting URL to publish_story."
     )
@@ -233,7 +233,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db.add_message(user_id, "user", user_text or "[Sent a file]")
 
     # Fetch history
-    history = db.get_history(user_id, limit=10)
+    history = db.get_history(user_id, limit=30)
     
     messages = []
     for role, content in history:

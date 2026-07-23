@@ -549,6 +549,55 @@ FX_CANDIDATE_POOL = {
     'GBP/JPY': {'symbol': 'GBPJPY=X', 'currency': 'JPY'},
 }
 
+UNLISTED_POOLS = {
+    'Unlisted Global & Asian Indices': {
+        'KOSPI (South Korea)': {'symbol': '^KS11', 'currency': 'KRW'},
+        'Taiwan Weighted': {'symbol': '^TWII', 'currency': 'TWD'},
+        'Jakarta Composite': {'symbol': '^JKSE', 'currency': 'IDR'},
+        'Sensex (India)': {'symbol': '^BSESN', 'currency': 'INR'},
+        'BSE MidCap (India)': {'symbol': 'BSE-MIDCAP.BO', 'currency': 'INR'},
+        'Vietnam Ho Chi Minh': {'symbol': '^VNINDEX.VN', 'currency': 'VND'},
+        'MOEX Russia': {'symbol': 'IMOEX.ME', 'currency': 'RUB'},
+        'Johannesburg Top 40': {'symbol': '^J200.JO', 'currency': 'ZAR'}
+    },
+    'Unlisted US Indices': {
+        'Russell 2000 (Small Cap)': {'symbol': '^RUT', 'currency': 'USD'},
+        'S&P MidCap 400': {'symbol': '^MID', 'currency': 'USD'},
+        'Dow Jones Transports': {'symbol': '^DJT', 'currency': 'USD'},
+        'S&P 100 (Mega Cap)': {'symbol': '^OEX', 'currency': 'USD'},
+        'Wilshire 5000': {'symbol': '^W5000', 'currency': 'USD'}
+    },
+    'Unlisted Commodities': {
+        'Palladium': {'symbol': 'PA=F', 'currency': 'USD'},
+        'Aluminum': {'symbol': 'ALI=F', 'currency': 'USD'},
+        'Soybeans': {'symbol': 'ZS=F', 'currency': 'USD'},
+        'Cocoa': {'symbol': 'CC=F', 'currency': 'USD'},
+        'Coffee': {'symbol': 'KC=F', 'currency': 'USD'},
+        'Lumber': {'symbol': 'LBS=F', 'currency': 'USD'},
+        'Lean Hogs': {'symbol': 'HE=F', 'currency': 'USD'},
+        'Live Cattle': {'symbol': 'LE=F', 'currency': 'USD'}
+    },
+    'Unlisted ETFs': {
+        'Invesco QQQ': {'symbol': 'QQQ', 'currency': 'USD'},
+        'ARK Innovation': {'symbol': 'ARKK', 'currency': 'USD'},
+        'VanEck Semiconductor': {'symbol': 'SMH', 'currency': 'USD'},
+        'Energy Select Sector': {'symbol': 'XLE', 'currency': 'USD'},
+        'Financial Select Sector': {'symbol': 'XLF', 'currency': 'USD'},
+        'Health Care Select': {'symbol': 'XLV', 'currency': 'USD'},
+        'iShares US Aerospace': {'symbol': 'ITA', 'currency': 'USD'},
+        'iShares Cybersecurity': {'symbol': 'IHAK', 'currency': 'USD'},
+        'Global X Uranium': {'symbol': 'URA', 'currency': 'USD'},
+        'Global X Lithium': {'symbol': 'LIT', 'currency': 'USD'}
+    },
+    'Unlisted Bonds': {
+        'iShares 20+ Year Treasury': {'symbol': 'TLT', 'currency': 'USD'},
+        'iShares 7-10 Year Treasury': {'symbol': 'IEF', 'currency': 'USD'},
+        'SPDR Bloomberg High Yield': {'symbol': 'JNK', 'currency': 'USD'},
+        'iShares MBS ETF': {'symbol': 'MBB', 'currency': 'USD'},
+        'iShares National Muni': {'symbol': 'MUB', 'currency': 'USD'}
+    }
+}
+
 def find_notable_fx_mover(tracked_currencies):
     """Scans FX_CANDIDATE_POOL (pairs NOT already in the main Currencies
     table) and returns (name, data_dict) for whichever pair had the
@@ -1556,8 +1605,113 @@ def build_fred_macro_text(fred_extras):
         net_liquidity_b = (walcl_val / 1000) - (tga_val / 1000) - rrp_val
         text += f"• <b>Fed Net Liquidity (Balance Sheet − TGA − Reverse Repo):</b> ${net_liquidity_b:,.0f}B (balance sheet {walcl_date}, TGA {tga_date}, reverse repo {rrp_date}) — a rising figure has historically coincided with looser system-wide liquidity for risk assets<br>"
     return text
+def find_best_unlisted_picks():
+    """Scans all UNLISTED_POOLS for the top 3 highest-volume assets per category, 
+    fetches their full 3-year history, and calculates their Momentum, Value, 
+    and Quality scores to find the absolute best in each category without 
+    adding them to the main dashboard table."""
+    best_picks_meta = {}
+    
+    all_symbols = []
+    symbol_to_info = {}
+    for cat, items in UNLISTED_POOLS.items():
+        for name, info in items.items():
+            sym = info['symbol']
+            all_symbols.append(sym)
+            symbol_to_info[sym] = {'name': name, 'category': cat, 'currency': info['currency']}
+            
+    avg_volumes = {}
+    if all_symbols:
+        try:
+            logging.info(f"Bulk fetching volume for {len(all_symbols)} unlisted candidates...")
+            bulk_data = yf.download(" ".join(all_symbols), period="5d", threads=True, progress=False)
+            if 'Volume' in bulk_data:
+                volume_df = bulk_data['Volume']
+                if isinstance(volume_df, pd.DataFrame):
+                    for sym in all_symbols:
+                        if sym in volume_df.columns:
+                            vol = volume_df[sym].mean()
+                            if _valid(vol):
+                                avg_volumes[sym] = vol
+                elif isinstance(volume_df, pd.Series) and len(all_symbols) == 1:
+                    vol = volume_df.mean()
+                    if _valid(vol):
+                        avg_volumes[all_symbols[0]] = vol
+        except Exception as e:
+            logging.error(f"Bulk volume fetch for unlisted pools failed: {e}")
 
-def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text, news_items, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr, qual_eq, qual_comm, qual_bond, qual_curr, notable_fx=None):
+    top_candidates = {cat: [] for cat in UNLISTED_POOLS.keys()}
+    for cat in UNLISTED_POOLS.keys():
+        cat_symbols = [info['symbol'] for info in UNLISTED_POOLS[cat].values()]
+        sorted_cat_symbols = sorted(cat_symbols, key=lambda s: avg_volumes.get(s, 0), reverse=True)
+        top_candidates[cat] = sorted_cat_symbols[:3]
+        
+    for cat, top_syms in top_candidates.items():
+        best_mom_score, best_mom_name = -9999, None
+        best_val_score, best_val_name = -9999, None
+        best_qual_score, best_qual_name = -9999, None
+        best_mom_change, best_val_change, best_qual_change = 0, 0, 0
+        
+        for sym in top_syms:
+            info = symbol_to_info[sym]
+            name = info['name']
+            data = fetch_asset_data(sym)
+            time.sleep(1)
+            if data and _valid(data.get('price')):
+                data['currency'] = info['currency']
+                mom_score = calc_growth_score(data)
+                val_score = calc_value_score(data)
+                qual_score = calc_quality_score(data)
+                
+                if mom_score > best_mom_score and data.get('change', 0) >= 0:
+                    best_mom_score = mom_score
+                    best_mom_name = name
+                    best_mom_change = data.get('change', 0)
+                    
+                if val_score > best_val_score:
+                    best_val_score = val_score
+                    best_val_name = name
+                    best_val_change = data.get('change', 0)
+                    
+                if qual_score > best_qual_score:
+                    best_qual_score = qual_score
+                    best_qual_name = name
+                    best_qual_change = data.get('change', 0)
+                    
+        best_picks_meta[cat] = {
+            'momentum': {'name': best_mom_name, 'score': best_mom_score, 'change': best_mom_change},
+            'value': {'name': best_val_name, 'score': best_val_score, 'change': best_val_change},
+            'quality': {'name': best_qual_name, 'score': best_qual_score, 'change': best_qual_change}
+        }
+        
+    return best_picks_meta
+
+def build_unlisted_summary_html(unlisted_meta):
+    if not unlisted_meta:
+        return ""
+    html = "<div class='score-box' style='background: #fdfdfd; border-left: 5px solid #0056b3;'>"
+    html += "<h4 style='margin-top: 0; margin-bottom: 15px; color: #0056b3;'>🔍 Top Unlisted Movers (Volume-Weighted)</h4>"
+    html += "<p style='font-size: 0.85em; color: #666; margin-top: 0; margin-bottom: 15px;'>These high-volume assets were scanned in the background and scored for Momentum, Value, and Quality without being added to the main table.</p>"
+    html += "<ul style='margin-bottom:0;'>"
+    for cat, winners in unlisted_meta.items():
+        mom = winners.get('momentum', {})
+        val = winners.get('value', {})
+        qual = winners.get('quality', {})
+        if mom.get('name') or val.get('name') or qual.get('name'):
+            html += f"<li style='margin-bottom: 8px;'><strong>{cat}:</strong> "
+            parts = []
+            if mom.get('name'):
+                parts.append(f"Trending: <strong>{mom['name']}</strong> ({mom['change']:+.2f}%)")
+            if val.get('name'):
+                parts.append(f"Value: <strong>{val['name']}</strong> ({val['change']:+.2f}%)")
+            if qual.get('name'):
+                parts.append(f"Quality: <strong>{qual['name']}</strong> ({qual['change']:+.2f}%)")
+            html += " | ".join(parts)
+            html += "</li>"
+    html += "</ul></div>"
+    return html
+
+def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text, news_items, regional_rec, mom_sector, val_sector, lt_sector, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr, qual_eq, qual_comm, qual_bond, qual_curr, notable_fx=None, unlisted_html=""):
     html = f"""<html><head><style>\nbody {{ font-family: Arial, sans-serif; background-color: #f4f6f9; color: #333; margin: 0; padding: 20px; }}\nh2 {{ color: #0a192f; margin-top: 30px; }}\nh3 {{ color: #1a365d; }}\ntable {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.95em; }}\nth, td {{ padding: 8px; border: 1px solid #ddd; text-align: center; }}\nth {{ background-color: #f4f4f4; }}\n.l {{ text-align: left; }}\n.c {{ text-align: center; }}\n.a {{ text-align: left; font-weight: bold; width: 25%; }}\n.u {{ text-align: center; color: #666; font-size: 0.9em; }}\n.p {{ color: green; font-weight: bold; }}\n.n {{ color: red; font-weight: bold; }}\n.score-box {{ padding: 20px; background: #eef2f5; border-left: 5px solid #0a192f; margin-bottom: 20px; }}\n.alerts {{ background: #fff3f3; border-left: 5px solid #d9534f; padding: 15px; }}\n.recommendation {{ background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 5px solid #16a34a; padding: 15px; margin-top: 15px; }}\n.st-momentum {{ background: #fffbeeb3; border: 1px solid #fde68a; border-left: 5px solid #d97706; padding: 15px; margin-top: 15px; }}\n.summary-item {{ margin-bottom: 8px; }}\n.reasoning {{ font-size: 0.9em; color: #555; margin-left: 20px; }}\n</style></head><body>"""
     html += f"""<div style="display: flex; align-items: center; border-bottom: 2px solid #0a192f; padding-bottom: 15px; margin-top: 20px; margin-bottom: 20px;"><img src="https://vilfintv.com/images/vilfintv-logo.jpg" alt="VilfinTV" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; box-shadow: 0 0 8px rgba(59,130,246,0.45); object-fit: cover;"><div style="flex-grow: 1;"><h2 style="margin: 0; color: #0a192f; border: none; padding: 0;">Market Regime Report</h2><div style="color: #555; font-size: 0.95em; margin-top: 5px;">Executive Summary by <strong>VilfinTV.com</strong></div></div><div style="color: #666; font-size: 0.9em; text-align: right; font-weight: bold;">{jst_today_str()}</div></div>"""
     html += f"""
@@ -1605,6 +1759,7 @@ def generate_html_email(data, regime_score, regime_text, risk_alerts, macro_text
             {"<div class='summary-item' style='margin-top:15px; padding:10px; background:#fef9c3; border-left:4px solid #ca8a04;'><strong>🆕 Notable FX Mover (auto-detected):</strong> " + notable_fx + " - not one of the regularly tracked pairs above, surfaced automatically because it moved the most today.</div>" if notable_fx else ""}
         </div>
     """
+    html += unlisted_html
 
     asset_class_rec = get_asset_class_recommendation(regime_score)
     flow_alert, dxy_note = get_global_capital_flow_note(data)
@@ -2052,7 +2207,11 @@ if __name__ == "__main__":
 
     news_items = fetch_global_news()
     macro_text = build_fred_macro_text(fred_extras)
-    html_report = generate_html_email(market_data, score, regime, alerts, macro_text, news_items, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr, qual_eq, qual_comm, qual_bond, qual_curr, notable_fx_summary)
+    
+    unlisted_meta = find_best_unlisted_picks()
+    unlisted_html = build_unlisted_summary_html(unlisted_meta)
+    
+    html_report = generate_html_email(market_data, score, regime, alerts, macro_text, news_items, rec_regional, rec_mom, rec_val, rec_lt, lt_reason, lt_broad, lt_broad_reason, lt_bond, lt_bond_reason, lt_comm, lt_comm_reason, st_eq, st_comm, st_bond, st_curr, qual_eq, qual_comm, qual_bond, qual_curr, notable_fx_summary, unlisted_html)
     send_email(html_report)
 
     # Publish a JSON snapshot of today's real score + signal breakdown so
@@ -2134,6 +2293,7 @@ if __name__ == "__main__":
             "picks_meta": picks_meta,
             "notable_fx_mover": notable_fx_summary,
             "regime_note": get_regime_note(score),
+            "unlisted_picks_meta": unlisted_meta,
             "raw_fallback_cache": raw_fallback_cache,
         }
         with open("data/market_sentiment_snapshot.json", "w") as f:
