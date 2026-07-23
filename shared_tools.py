@@ -171,3 +171,30 @@ def run_python_code(code: str, user_id: int) -> str:
             return f.getvalue() or "Code executed successfully with no output."
         except Exception as e:
             return f.getvalue() + f"\nError: {e}"
+
+def render_js_webpage(url: str, wait_for_timeout: int = 2000) -> str:
+    "\""
+    Load a URL in a headless Chromium browser to render JavaScript widgets (like TradingView or Trendlyne) and return the fully rendered text content.
+    
+    Args:
+        url: The URL to load.
+        wait_for_timeout: How long to wait in milliseconds for JS to finish rendering (default 2000ms).
+    "\""
+    try:
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            page = browser.new_page()
+            page.goto(url, wait_until='networkidle', timeout=30000)
+            page.wait_for_timeout(wait_for_timeout)
+            
+            # Remove scripts/styles for clean text extraction
+            page.evaluate('''() => {
+                document.querySelectorAll('script, style').forEach(el => el.remove());
+            }''')
+            
+            text_content = page.locator('body').inner_text()
+            browser.close()
+            return text_content
+    except Exception as e:
+        return f"Failed to render JS webpage: {e}"

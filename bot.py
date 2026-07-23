@@ -25,7 +25,8 @@ from shared_tools import (
     fetch_webpage,
     delegate_to_specialist,
     generate_image,
-    run_python_code
+    run_python_code,
+    render_js_webpage
 )
 
 tools = [
@@ -34,7 +35,8 @@ tools = [
     fetch_webpage,
     delegate_to_specialist,
     run_python_code,
-    generate_image
+    generate_image,
+    render_js_webpage
 ]
 
 if GEMINI_API_KEY and GEMINI_API_KEY != "PLACEHOLDER_KEY":

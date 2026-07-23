@@ -5,7 +5,8 @@ from shared_tools import (
     fetch_webpage,
     delegate_to_specialist,
     generate_image,
-    run_python_code
+    run_python_code,
+    render_js_webpage
 )
 
 # Initialize FastMCP Server
@@ -47,12 +48,14 @@ def mcp_generate_image(heading: str, text: str) -> str:
     return generate_image(heading, text)
 
 @mcp.tool()
-def mcp_run_python_code(code: str, user_id: int) -> str:
-    """
-    Execute Python code locally on the server for testing purposes.
-    WARNING: This executes arbitrary code. It is protected by an ownership check.
-    """
-    return run_python_code(code, user_id)
+def run_python_code_mcp(code: str, telegram_id: str = None) -> str:
+    """Run python code locally on the server."""
+    return run_python_code(code, telegram_id)
+
+@mcp.tool()
+def render_js_webpage_mcp(url: str, wait_for_timeout: int = 2000) -> str:
+    """Load a URL in a headless Chromium browser to render JavaScript widgets."""
+    return render_js_webpage(url, wait_for_timeout)
 
 if __name__ == "__main__":
     import argparse
