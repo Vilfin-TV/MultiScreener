@@ -1,4 +1,30 @@
 User-agent: *
 Allow: /
 
+# Admin console — never index
+Disallow: /link-console.html
+
+# Per-story social-share redirect stubs (share/<id>.html) — these exist only
+# so Facebook/X/WhatsApp/Telegram crawlers get correct link-preview tags;
+# they redirect real visitors to the actual story and add nothing distinct
+# for search results.
+Disallow: /share/
+
+# Stale/duplicate/internal test artifacts — not real public pages, never
+# meant to be indexed. Kept in the repo for reference, excluded from search.
+Disallow: /education_backup.html
+Disallow: /education_today_broken.html
+Disallow: /old_edu.html
+Disallow: /khan_layout_backup.html
+Disallow: /moc_test.html
+Disallow: /_domain_index_check.html
+Disallow: /_ghpages_check.html
+Disallow: /_live_check.html
+Disallow: /live_education.html
+Disallow: /live_tv_geo_concepts.html
+Disallow: /live_tv_premium_concepts.html
+# Accidentally-saved copy of a third-party site (emaxis.am.mufg.jp) - flagged
+# to the owner for deletion, blocked here in the meantime as a safety net.
+Disallow: /Adding%20_innovation_%20to%20investment%20infrastructure.%20eMAXIS%20Neo,%20a%20no-load%20index%20fund..html
+
 Sitemap: https://vilfintv.com/sitemap.xml

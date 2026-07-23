@@ -18,6 +18,7 @@
 <meta name="keywords" content="VilfinTV News, Vilfin TV, vilfintv.com, live news, news aggregator, world news, India news, stock market news, Malayalam news, trending news"/>
 <meta name="robots" content="index, follow, max-image-preview:large"/>
 <meta name="author" content="VilfinTV"/>
+<link rel="canonical" href="https://vilfintv.com/news.html"/>
 <meta property="og:title" content="VilfinTV News — Live News Aggregator"/>
 <meta property="og:description" content="Real-time headlines across Trending, World, India, Stock Market and Malayalam news."/>
 <meta property="og:type" content="website"/>
@@ -3483,6 +3484,19 @@ document.addEventListener('keydown', function(e) {
   searchInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') { doSearch(this.value); e.preventDefault(); }
   });
+
+  // Google's Sitelinks Search Box (index.html's JSON-LD SearchAction) sends
+  // searches here as ?q=<term>. Exposed globally and applied only after
+  // loadNewsPage() finishes rendering cards (see its call site below) -
+  // calling doSearch() this early would filter over zero cards, since news
+  // data loads asynchronously well after this script block runs.
+  window._applyUrlSearchQuery = function() {
+    var qParam = new URLSearchParams(window.location.search).get('q');
+    if (qParam) {
+      searchInput.value = qParam;
+      doSearch(qParam);
+    }
+  };
 })();
 
 /* Clear any stale hero-dismiss flag from the removed close button so the
@@ -5572,9 +5586,12 @@ window.addEventListener('resize', _setAppVh);
 window.addEventListener('orientationchange', _setAppVh);
 if (window.visualViewport) window.visualViewport.addEventListener('resize', _setAppVh);
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
   _setAppVh();
-  loadNewsPage();
+  await loadNewsPage();
+  // Cards now exist in the DOM - safe to apply a ?q= search from the
+  // Sitelinks Search Box (see window._applyUrlSearchQuery definition above).
+  if (window._applyUrlSearchQuery) window._applyUrlSearchQuery();
   // Auto-refresh all RSS news content every 15 minutes
   setInterval(function() { loadNewsPage(); }, 15 * 60 * 1000);
 });
