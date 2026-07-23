@@ -2460,7 +2460,27 @@ function _ghHeaders(env){ return { 'Authorization': `token ${env.GITHUB_TOKEN}`,
 async function _ghReadContent(env){
   const api = `https://api.github.com/repos/${_CONTENT_REPO}/contents/${_CONTENT_FILE}`;
   const r = await fetch(`${api}?ref=${_CONTENT_BRANCH}`, { headers: _ghHeaders(env) });
-  if (r.ok) { const d = await r.json(); let items = JSON.parse(_b64DecodeUnicode(d.content.replace(/\n/g,''))); if (!Array.isArray(items)) items = []; return { sha:d.sha, items }; }
+  if (r.ok) {
+    const d = await r.json();
+    // GitHub's Contents API omits "content" once the file exceeds 1MB -
+    // content.json crossed that line (2026-07-23). Fall back to the
+    // documented download_url (raw blob fetch) in that case instead of
+    // crashing on content.replace(undefined), which surfaced as a 502 to
+    // every publisher (console, agent keys, Hermes) hitting this endpoint.
+    let text;
+    if (d.content) {
+      text = _b64DecodeUnicode(d.content.replace(/\n/g,''));
+    } else if (d.download_url) {
+      const raw = await fetch(d.download_url, { headers: _ghHeaders(env) });
+      if (!raw.ok) throw new Error(`GitHub raw content fetch failed: ${raw.status}`);
+      text = await raw.text();
+    } else {
+      throw new Error('GitHub content response missing both content and download_url');
+    }
+    let items = JSON.parse(text);
+    if (!Array.isArray(items)) items = [];
+    return { sha:d.sha, items };
+  }
   if (r.status === 404) return { sha:null, items:[] };
   throw new Error(`GitHub GET failed: ${r.status}`);
 }
@@ -2476,8 +2496,19 @@ async function _ghWriteContent(env, items, sha, message){
 async function _ghReadJsonFile(env, file){
   const api = `https://api.github.com/repos/${_CONTENT_REPO}/contents/${file}`;
   const r = await fetch(`${api}?ref=${_CONTENT_BRANCH}`, { headers: _ghHeaders(env) });
-  if (r.ok) { const d = await r.json(); let data; try { data = JSON.parse(_b64DecodeUnicode(d.content.replace(/\n/g,''))); } catch(e){ data = {}; }
-    return { sha: d.sha, data: (data && typeof data === 'object') ? data : {} }; }
+  if (r.ok) {
+    const d = await r.json();
+    let data = {};
+    try {
+      // Same >1MB Contents-API fallback as _ghReadContent - this file is
+      // tiny today but this prevents the identical 502 recurring here later.
+      let text;
+      if (d.content) text = _b64DecodeUnicode(d.content.replace(/\n/g,''));
+      else if (d.download_url) { const raw = await fetch(d.download_url, { headers: _ghHeaders(env) }); text = raw.ok ? await raw.text() : null; }
+      if (text) data = JSON.parse(text);
+    } catch(e){ data = {}; }
+    return { sha: d.sha, data: (data && typeof data === 'object') ? data : {} };
+  }
   if (r.status === 404) return { sha: null, data: {} };
   throw new Error(`GitHub GET ${file} failed: ${r.status}`);
 }
