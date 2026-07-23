@@ -103,7 +103,7 @@ def delegate_to_specialist(persona: str, prompt: str) -> str:
     """
     try:
         sub_model = genai.GenerativeModel(
-            'models/gemini-1.5-pro',
+            'models/gemini-pro-latest',
             system_instruction=f"You are an expert {persona}. Completely fulfill the user's prompt in your specific style."
         )
         response = sub_model.generate_content(prompt)
