@@ -894,9 +894,17 @@ body{
 }
 @media(min-width:800px){
   .story-modal-overlay{align-items:center}
-  .story-modal{border:1px solid var(--border2);border-radius:18px;height:auto;max-height:88vh;max-height:calc(var(--app-vh, 1vh) * 88);padding-top:0;padding-bottom:0;box-shadow:0 -8px 64px rgba(0,0,0,.6)}
+  /* height:auto previously made the modal shrink to fit whatever content it
+     held - fine for a very long article, but it read as "a tiny window" for
+     anything shorter, since it never actually used the 88vh cap as anything
+     but a ceiling. Using that as the real height (not just a max) instead
+     gives every story a consistent, generously-sized standard reading pane
+     regardless of length - only the outer container's size changes here,
+     nothing about how story content itself renders inside it. Widened
+     max-width too (760px read narrow on a real desktop monitor). */
+  .story-modal{border:1px solid var(--border2);border-radius:18px;width:92vw;max-width:900px;height:88vh;height:calc(var(--app-vh, 1vh) * 88);max-height:88vh;max-height:calc(var(--app-vh, 1vh) * 88);padding-top:0;padding-bottom:0;box-shadow:0 -8px 64px rgba(0,0,0,.6)}
   @supports(height:88dvh){
-    .story-modal{max-height:88dvh}
+    .story-modal{height:88dvh;max-height:88dvh}
   }
 }
 @keyframes modalSlideUp{
