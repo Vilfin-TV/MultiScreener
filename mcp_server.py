@@ -6,7 +6,8 @@ from shared_tools import (
     delegate_to_specialist,
     generate_image,
     run_python_code,
-    render_js_webpage
+    render_js_webpage,
+    get_market_data
 )
 
 # Initialize FastMCP Server
@@ -56,6 +57,11 @@ def run_python_code_mcp(code: str, telegram_id: str = None) -> str:
 def render_js_webpage_mcp(url: str, wait_for_timeout: int = 2000) -> str:
     """Load a URL in a headless Chromium browser to render JavaScript widgets."""
     return render_js_webpage(url, wait_for_timeout)
+
+@mcp.tool()
+def get_market_data_mcp(ticker_symbol: str) -> str:
+    """Fetch real-time stock market data, fundamentals, historical prices, and news using yfinance."""
+    return get_market_data(ticker_symbol)
 
 if __name__ == "__main__":
     import argparse

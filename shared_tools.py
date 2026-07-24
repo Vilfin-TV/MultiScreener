@@ -173,13 +173,13 @@ def run_python_code(code: str, user_id: int) -> str:
             return f.getvalue() + f"\nError: {e}"
 
 def render_js_webpage(url: str, wait_for_timeout: int = 2000) -> str:
-    "\""
+    """
     Load a URL in a headless Chromium browser to render JavaScript widgets (like TradingView or Trendlyne) and return the fully rendered text content.
     
     Args:
         url: The URL to load.
         wait_for_timeout: How long to wait in milliseconds for JS to finish rendering (default 2000ms).
-    "\""
+    """
     try:
         from playwright.sync_api import sync_playwright
         with sync_playwright() as p:
@@ -198,3 +198,51 @@ def render_js_webpage(url: str, wait_for_timeout: int = 2000) -> str:
             return text_content
     except Exception as e:
         return f"Failed to render JS webpage: {e}"
+
+def get_market_data(ticker_symbol: str) -> str:
+    """
+    Fetch real-time stock market data, fundamentals, historical prices, and news for a specific stock ticker using yfinance.
+    For Indian stocks, append '.NS' (NSE) or '.BO' (BSE) to the ticker (e.g. 'TATAMOTORS.NS', 'RELIANCE.NS').
+    
+    Args:
+        ticker_symbol: The stock ticker (e.g. 'AAPL', 'TATAMOTORS.NS').
+    """
+    try:
+        import yfinance as yf
+        import json
+        
+        stock = yf.Ticker(ticker_symbol)
+        info = stock.info
+        
+        # Get last 5 days of history
+        hist = stock.history(period="5d")
+        recent_prices = []
+        if not hist.empty:
+            for date, row in hist.iterrows():
+                recent_prices.append({
+                    "Date": str(date.date()),
+                    "Close": round(row['Close'], 2),
+                    "Volume": int(row['Volume'])
+                })
+        
+        # Get latest news
+        news = stock.news[:3] if stock.news else []
+        news_items = [{"Title": n.get('title'), "Link": n.get('link')} for n in news]
+        
+        data = {
+            "Symbol": ticker_symbol,
+            "Name": info.get("shortName", info.get("longName", "Unknown")),
+            "CurrentPrice": info.get("currentPrice", info.get("regularMarketPrice")),
+            "PreviousClose": info.get("previousClose"),
+            "MarketCap": info.get("marketCap"),
+            "PE_Ratio": info.get("trailingPE"),
+            "DividendYield": info.get("dividendYield"),
+            "52WeekHigh": info.get("fiftyTwoWeekHigh"),
+            "52WeekLow": info.get("fiftyTwoWeekLow"),
+            "RecentPrices": recent_prices,
+            "LatestNews": news_items
+        }
+        
+        return json.dumps(data, indent=2)
+    except Exception as e:
+        return f"Failed to fetch market data for {ticker_symbol}: {e}"
