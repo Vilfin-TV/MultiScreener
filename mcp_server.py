@@ -7,7 +7,8 @@ from shared_tools import (
     generate_image,
     run_python_code,
     render_js_webpage,
-    get_market_data
+    get_market_data,
+    get_latest_news
 )
 
 # Initialize FastMCP Server
@@ -62,6 +63,11 @@ def render_js_webpage_mcp(url: str, wait_for_timeout: int = 2000) -> str:
 def get_market_data_mcp(ticker_symbol: str) -> str:
     """Fetch real-time stock market data, fundamentals, historical prices, and news using yfinance."""
     return get_market_data(ticker_symbol)
+
+@mcp.tool()
+def get_latest_news_mcp(source_name: str) -> str:
+    """Fetch the latest top 10 news headlines and summaries from global and Indian sources (livemint, reuters, cnn, axios, etc)."""
+    return get_latest_news(source_name)
 
 if __name__ == "__main__":
     import argparse

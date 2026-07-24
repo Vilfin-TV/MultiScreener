@@ -246,3 +246,58 @@ def get_market_data(ticker_symbol: str) -> str:
         return json.dumps(data, indent=2)
     except Exception as e:
         return f"Failed to fetch market data for {ticker_symbol}: {e}"
+
+def get_latest_news(source_name: str) -> str:
+    """
+    Fetch the latest top 10 news headlines and summaries from global and Indian sources via RSS.
+    Supported sources: 'livemint', 'the hindu', 'reuters', 'cnn', 'axios', 'yahoo finance', 'manorama'.
+    
+    Args:
+        source_name: The name of the news source (case-insensitive).
+    """
+    import requests
+    import xml.etree.ElementTree as ET
+    
+    # Official RSS Feed mappings
+    feeds = {
+        'livemint': 'https://www.livemint.com/rss/news',
+        'the hindu': 'https://www.thehindu.com/business/feeder/default.rss',
+        'reuters': 'https://www.reutersagency.com/feed/?best-topics=business-finance&post_type=best',
+        'cnn': 'http://rss.cnn.com/rss/money_latest.rss',
+        'axios': 'https://api.axios.com/feed/',
+        'yahoo finance': 'https://finance.yahoo.com/news/rssindex',
+        'manorama': 'https://www.onmanorama.com/news/business.feed.xml'
+    }
+    
+    source = source_name.lower().strip()
+    if source not in feeds:
+        return f"Error: '{source_name}' is not supported. Supported sources are: {', '.join(feeds.keys())}"
+        
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        res = requests.get(feeds[source], headers=headers, timeout=10)
+        res.raise_for_status()
+        
+        root = ET.fromstring(res.content)
+        items = root.findall('.//item')[:10]  # Grab top 10
+        
+        if not items:
+            return f"No news items found in {source_name} feed."
+            
+        news_text = f"Top 10 Latest News from {source_name.title()}:\n\n"
+        for idx, item in enumerate(items, 1):
+            title = item.find('title').text if item.find('title') is not None else 'No Title'
+            link = item.find('link').text if item.find('link') is not None else 'No Link'
+            desc_elem = item.find('description')
+            desc = desc_elem.text if desc_elem is not None else ''
+            
+            # Strip excessive HTML from description if any
+            if desc and '<' in desc:
+                import re
+                desc = re.sub('<[^<]+>', '', desc).strip()
+            
+            news_text += f"{idx}. {title}\nLink: {link}\nSummary: {desc[:200]}...\n\n"
+            
+        return news_text
+    except Exception as e:
+        return f"Failed to fetch news from {source_name}: {e}"
