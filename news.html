@@ -2810,17 +2810,15 @@ function renderSection(sectionId, sectionData, meta) {
     var heroIdx = _cacheStory(hero, meta);
     // Stock: prefer the story's real RSS photo for the hero when present.
     var heroSrc = (sectionId === 'stock' && hero.image) ? hero.image : heroImage;
-    var heroHtml = '<div class="news-hero-card" onclick="openStoryIdx(' + heroIdx + ')" role="button" tabindex="0" aria-label="' + esc(hero.headline) + '">'
-      + '<img class="news-hero-img" src="' + escAttr(heroSrc) + '" alt="" loading="lazy"'
+    var heroHtml = '<div class="news-hero-card" onclick="openStoryIdx(' + heroIdx + ')" role="button" tabindex="0" aria-label="' + esc(hero.headline) + '" style="background:transparent; display:block; padding:0; border:none; cursor:pointer; min-height:0; box-shadow:none;">'
+      + '<div class="news-hero-cnn-title" style="font-size:28px; font-weight:800; line-height:1.2; margin-bottom:12px; color:var(--text); letter-spacing:-0.5px;">' + esc(hero.headline) + '</div>'
+      + '<div class="news-hero-cnn-media" style="position:relative; width:100%; border-radius:4px; overflow:hidden; padding-top:56.25%;">'
+      + '<img class="news-hero-img" src="' + escAttr(heroSrc) + '" alt="" loading="lazy" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; border-radius:4px;"'
       + ' data-fallback="' + escAttr(meta.image) + '"'
       + ' onerror="if(this.src!==this.dataset.fallback){this.src=this.dataset.fallback;}else{this.style.display=\'none\';}">'
-      + '<div class="news-hero-gradient"></div>'
-      + '<div class="news-hero-body">'
-      + '<div class="news-hero-headline">' + esc(hero.headline) + '</div>'
-      + '<div class="news-hero-meta">'
-      + '<span class="news-hero-time">' + timeAgo(hero.publishedAt) + '</span>'
-      + '<span class="news-hero-read">Read full story</span>'
       + '</div>'
+      + '<div class="news-hero-cnn-meta" style="font-size:16px; color:var(--text2); margin-top:12px; display:flex; align-items:center; gap:12px; font-weight:500;">'
+      + '<span class="news-hero-time">' + timeAgo(hero.publishedAt) + '</span>'
       + '</div>'
       + '</div>';
     contentHtml += heroHtml;
