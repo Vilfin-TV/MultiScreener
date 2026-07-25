@@ -2133,34 +2133,23 @@ footer.news-footer{
    DESKTOP SESSION MENU
 ═══════════════════════════════════════════════════ */
 .desktop-session-menu {
-  position: sticky;
-  top: 52px;
-  z-index: 990;
-  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
-  border-bottom: 1px solid #93c5fd;
+  background: var(--page-bg);
+  border-bottom: 1px solid var(--border);
   height: auto;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  margin-bottom: 20px;
 }
-[data-theme="standard"] .desktop-session-menu { background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 55%, #2563eb 100%); border-bottom: 1px solid rgba(255,255,255,0.1); }
-[data-theme="midnight"] .desktop-session-menu { background: var(--dark2); border-bottom: 1px solid rgba(255,255,255,0.05); }
-[data-theme="maroon"] .desktop-session-menu { background: linear-gradient(135deg, #1a0a0a, #2d1111); border-bottom: 1px solid rgba(255,255,255,0.05); }
-[data-theme="silver"] .desktop-session-menu { background: linear-gradient(135deg, #2d2d30, #48484a); border-bottom: 1px solid rgba(255,255,255,0.1); }
-[data-theme="gold"] .desktop-session-menu { background: linear-gradient(135deg, #1a1500, #2d2200); border-bottom: 1px solid rgba(255,255,255,0.1); }
-[data-theme="gemini"] .desktop-session-menu { background: #1e1f20 !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important; }
-[data-theme="news-reader"] .desktop-session-menu { background: #111111 !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important; }
-
 .dsm-inner {
   max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 12px 16px 14px; gap: 14px;
 }
 .dsm-row {
-  display: flex; justify-content: center; gap: 40px; width: 100%;
+  display: flex; justify-content: center; gap: 40px; width: 100%; flex-wrap: wrap;
 }
 .dsm-link {
   display: flex; align-items: center; gap: 8px;
-  color: #fff; opacity: 0.7; text-decoration: none; font-size: 13.5px; font-weight: 500; letter-spacing: 0.4px; transition: all 0.2s ease; white-space: nowrap;
+  color: var(--text2); opacity: 1; text-decoration: none; font-size: 14px; font-weight: 600; letter-spacing: 0.3px; transition: color 0.2s ease; white-space: nowrap;
 }
 .dsm-link:hover {
-  opacity: 1;
+  color: var(--theme-accent);
 }
 @media(max-width:700px) {
   .desktop-session-menu {
@@ -2215,31 +2204,7 @@ footer.news-footer{
   </div>
 </nav>
 
-<!-- ══════════════════════════════════════════
-     DESKTOP SESSION MENU (2ND MENU)
-══════════════════════════════════════════ -->
-<div class="desktop-session-menu" id="desktop-session-menu">
-  <div class="dsm-inner">
-      <div class="dsm-row">
-          <a class="dsm-link" href="#global">🌍 Global</a>
-          <a class="dsm-link" href="#india">🇮🇳 India</a>
-          <a class="dsm-link" href="#stock">📈 Stock</a>
-          <a class="dsm-link" href="#malayalam">🎭 Malayalam</a>
-          <a class="dsm-link" href="#tech">💻 Tech</a>
-          <a class="dsm-link" href="#space">🚀 Space</a>
-          <a class="dsm-link" href="#science">🔬 Science</a>
-      </div>
-      <div class="dsm-row">
-          <a class="dsm-link" href="#fashion">👗 Fashion</a>
-          <a class="dsm-link" href="#movies">🎬 Movies</a>
-          <a class="dsm-link" href="#food">🍔 Food</a>
-          <a class="dsm-link" href="#automobile">🚗 Auto</a>
-          <a class="dsm-link" href="#home">🏠 Home & Smart Living</a>
-          <a class="dsm-link" href="#business">💼 Business</a>
-          <a class="dsm-link" href="#world">🌐 World</a>
-      </div>
-  </div>
-</div>
+
 
 
 <!-- ══════════════════════════════════════════
@@ -2281,6 +2246,33 @@ footer.news-footer{
      MAIN NEWS BODY
 ══════════════════════════════════════════ -->
 <div class="news-page-body" id="news-page-body">
+
+<!-- ══════════════════════════════════════════
+     DESKTOP SESSION MENU (2ND MENU)
+══════════════════════════════════════════ -->
+<div class="desktop-session-menu" id="desktop-session-menu">
+  <div class="dsm-inner">
+      <div class="dsm-row">
+          <a class="dsm-link" href="#global">🌍 Global</a>
+          <a class="dsm-link" href="#india">🇮🇳 India</a>
+          <a class="dsm-link" href="#stock">📈 Stock</a>
+          <a class="dsm-link" href="#malayalam">🎭 Malayalam</a>
+          <a class="dsm-link" href="#tech">💻 Tech</a>
+          <a class="dsm-link" href="#space">🚀 Space</a>
+          <a class="dsm-link" href="#science">🔬 Science</a>
+      </div>
+      <div class="dsm-row">
+          <a class="dsm-link" href="#fashion">👗 Fashion</a>
+          <a class="dsm-link" href="#movies">🎬 Movies</a>
+          <a class="dsm-link" href="#food">🍔 Food</a>
+          <a class="dsm-link" href="#automobile">🚗 Auto</a>
+          <a class="dsm-link" href="#home">🏠 Home & Smart Living</a>
+          <a class="dsm-link" href="#business">💼 Business</a>
+          <a class="dsm-link" href="#world">🌐 World</a>
+      </div>
+  </div>
+</div>
+
   <!-- Sections rendered by JS -->
   <div id="sections-container"></div>
 </div>
