@@ -2735,20 +2735,26 @@ function renderBreakingNews(data, rotate) {
     var streamCid = regionStreamMap[activeLower] || null;
     var heroMediaHtml = '';
     
+    var streamIframeHtml = '';
+    
     if (streamCid) {
-      heroMediaHtml = '<iframe src="https://www.youtube.com/embed/live_stream?channel=' + streamCid + '&autoplay=1&mute=1&controls=0&rel=0&modestbranding=1&playsinline=1" style="width:100%; height:auto; flex: 1 1 400px; min-height:400px; border:none; pointer-events:none;" allow="autoplay; encrypted-media" allowfullscreen></iframe>';
-    } else {
-      heroMediaHtml = '<img src="' + escAttr(heroItem.imageUrl) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.visibility=\'hidden\';">';
+      streamIframeHtml = '<div style="width:100%; aspect-ratio:16/9; border-radius:8px; overflow:hidden; margin-bottom:24px; background:#000;">' +
+          '<iframe src="https://www.youtube.com/embed/live_stream?channel=' + streamCid + '&autoplay=1&mute=1" style="width:100%; height:100%; border:none;" allow="autoplay; encrypted-media" allowfullscreen></iframe>' +
+          '</div>';
     }
 
-        html += '<div class="bn-hero" ' + _ca(heroItem) + ' style="background:transparent; display:block; padding:0; border:none; cursor:pointer;">' +
-            '<div class="bn-hero-cnn-title" style="font-size:32px; font-weight:800; line-height:1.2; margin-bottom:12px; color:var(--text); letter-spacing:-0.5px;">' + esc(heroItem.title) + '</div>' +
-            '<div class="bn-hero-cnn-media" style="position:relative; width:100%; border-radius:4px; overflow:hidden;">' +
-               heroMediaHtml +
-               '<div class="bn-badge" style="position:absolute; top:12px; left:12px; margin:0; z-index:10; background:#cc0000; color:#fff; padding:4px 8px; font-size:12px; font-weight:800; border-radius:2px; text-transform:uppercase;">Live Updates</div>' +
-            '</div>' +
-            (heroItem.description ? '<div class="bn-hero-cnn-desc" style="font-size:16px; line-height:1.4; color:var(--text2); margin-top:12px;">' + esc(heroItem.description) + '</div>' : '') +
-            '</div>';
+    var heroMediaHtml = '<img src="' + escAttr(heroItem.imageUrl) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" style="width:100%; height:auto; object-fit:cover; display:block;" onerror="this.onerror=null;this.style.visibility=\'hidden\';">';
+
+    html += '<div class="bn-hero" style="background:transparent; display:flex; flex-direction:column; padding:0; border:none;">' +
+        streamIframeHtml +
+        '<div class="bn-hero-article" ' + _ca(heroItem) + ' style="cursor:pointer; display:block; text-decoration:none;">' +
+        '<div class="bn-hero-cnn-title" style="font-size:32px; font-weight:800; line-height:1.2; margin-bottom:12px; color:var(--text); letter-spacing:-0.5px;">' + esc(heroItem.title) + '</div>' +
+        '<div class="bn-hero-cnn-media" style="position:relative; width:100%; border-radius:4px; overflow:hidden;">' +
+           heroMediaHtml +
+           '<div class="bn-badge" style="position:absolute; top:12px; left:12px; margin:0; z-index:10; background:#cc0000; color:#fff; padding:4px 8px; font-size:12px; font-weight:800; border-radius:2px; text-transform:uppercase;">Latest Update</div>' +
+        '</div>' +
+        (heroItem.description ? '<div class="bn-hero-cnn-desc" style="font-size:16px; line-height:1.4; color:var(--text2); margin-top:12px;">' + esc(heroItem.description) + '</div>' : '') +
+        '</div></div>';
 
     if (sideItems.length > 0) {
             var mid = Math.ceil(sideItems.length / 2);
