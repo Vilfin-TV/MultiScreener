@@ -2740,11 +2740,11 @@ function renderBreakingNews(data, rotate) {
 
         var regionStreamMap = {
       'india': 'UC_gUM8rL-Lrg6O3adPW9K1g', // WION
-      'national': 'UC9CYT9gSNLevX5ey2_6CK0Q', // NDTV India
+      'national': '_qf6M0_e4hI', // NDTV India (Direct Video ID)
       'malayalam': 'UCf8w5m0YsRa8MHQ5bwSGmbw', // Asianet
       'north america': 'UCIALMKvObZNtJ6AmdCLP7Lg', // Bloomberg
-      'us': 'UCupvZG-5ko_eiXAupbDfxWw', // CNN
-      'usa': 'UCupvZG-5ko_eiXAupbDfxWw', // CNN
+      'us': 'F1We9JABQU8', // CNN-News18 (Direct Video ID)
+      'usa': 'F1We9JABQU8', // CNN-News18 (Direct Video ID)
       'europe': 'UCSrZ3UV4jOidv8ppoVuvW9Q', // Euronews
       'europe general': 'UCSrZ3UV4jOidv8ppoVuvW9Q',
       'middle east': 'UCNye-wNBqNL5ZzHSJj3l8Bg', // Al Jazeera
@@ -2758,14 +2758,21 @@ function renderBreakingNews(data, rotate) {
       'africa': 'UCNye-wNBqNL5ZzHSJj3l8Bg'
     };
     var activeLower = bnActiveRegion ? bnActiveRegion.toLowerCase() : '';
-    var streamCid = regionStreamMap[activeLower] || null;
+    var streamSrc = regionStreamMap[activeLower] || null;
     var heroMediaHtml = '';
     
     var streamIframeHtml = '';
     
-    if (streamCid) {
+    if (streamSrc) {
+      var embedUrl = '';
+      if (streamSrc.startsWith('UC')) {
+        embedUrl = 'https://www.youtube.com/embed/live_stream?channel=' + streamSrc + '&autoplay=1&mute=1';
+      } else {
+        embedUrl = 'https://www.youtube.com/embed/' + streamSrc + '?autoplay=1&mute=1';
+      }
+
       streamIframeHtml = '<div style="width:100%; aspect-ratio:16/9; border-radius:8px; overflow:hidden; margin-bottom:24px; background:#000;">' +
-          '<iframe src="https://www.youtube.com/embed/live_stream?channel=' + streamCid + '&autoplay=1&mute=1" style="width:100%; height:100%; border:none;" allow="autoplay; encrypted-media" allowfullscreen></iframe>' +
+          '<iframe src="' + embedUrl + '" style="width:100%; height:100%; border:none;" allow="autoplay; encrypted-media" allowfullscreen></iframe>' +
           '</div>';
     }
 
