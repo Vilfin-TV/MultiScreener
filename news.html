@@ -2732,13 +2732,14 @@ function renderBreakingNews(data, rotate) {
       heroMediaHtml = '<img src="' + escAttr(heroItem.imageUrl) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.visibility=\'hidden\';">';
     }
 
-    html += '<div class="bn-hero" ' + _ca(heroItem) + '>' +
-            heroMediaHtml +
-            '<div class="bn-hero-content">' +
-            '<div class="bn-badge">BREAKING</div>' +
-            '<div class="bn-hero-title">' + esc(heroItem.title) + '</div>' +
-            (heroItem.description ? '<div class="bn-hero-desc">' + esc(heroItem.description) + '</div>' : '') +
-            '</div></div>';
+        html += '<div class="bn-hero" ' + _ca(heroItem) + ' style="background:transparent; display:block; padding:0; border:none; cursor:pointer;">' +
+            '<div class="bn-hero-cnn-title" style="font-size:32px; font-weight:800; line-height:1.2; margin-bottom:12px; color:var(--text); letter-spacing:-0.5px;">' + esc(heroItem.title) + '</div>' +
+            '<div class="bn-hero-cnn-media" style="position:relative; width:100%; border-radius:4px; overflow:hidden;">' +
+               heroMediaHtml +
+               '<div class="bn-badge" style="position:absolute; top:12px; left:12px; margin:0; z-index:10; background:#cc0000; color:#fff; padding:4px 8px; font-size:12px; font-weight:800; border-radius:2px; text-transform:uppercase;">Live Updates</div>' +
+            '</div>' +
+            (heroItem.description ? '<div class="bn-hero-cnn-desc" style="font-size:16px; line-height:1.4; color:var(--text2); margin-top:12px;">' + esc(heroItem.description) + '</div>' : '') +
+            '</div>';
 
     if (sideItems.length > 0) {
             var mid = Math.ceil(sideItems.length / 2);
@@ -5758,5 +5759,20 @@ document.addEventListener('DOMContentLoaded', async function() {
     </div>
   </div>
 </div>
+
+<script>
+  // Autostop video when clicking any session menu tab
+  document.addEventListener('DOMContentLoaded', function() {
+    var tabs = document.querySelectorAll('.dsm-link');
+    tabs.forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        var iframes = document.querySelectorAll('.breaking-news-grid iframe');
+        iframes.forEach(function(ifr) {
+          ifr.src = ''; // Stops playback and destroys iframe content
+        });
+      });
+    });
+  });
+</script>
 </body>
 </html>
