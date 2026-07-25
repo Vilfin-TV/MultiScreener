@@ -3339,7 +3339,7 @@ function openStory(item, meta) {
   var storyIdSlug = (item.headline || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   var rawShareUrl = 'https://vilfintv.com/news.html?story=' + encodeURIComponent(storyIdSlug);
   var shareUrl = encodeURIComponent(rawShareUrl);
-  _shareCtx = { heading: (item.headline || 'VilfinTV News'), photo: (item.image || ''), url: rawShareUrl };
+  _shareCtx = { heading: (item.headline || 'VilfinTV News'), photo: (item.image || item.photo || item.imageUrl || ''), url: rawShareUrl };
   storyHtml += '<div class="story-modal-share">'
     + '<span class="story-modal-share-label">Share:</span>'
     + '<button type="button" class="share-btn-sm share-wa" onclick="shareStoryCardCtx(\'whatsapp\', this)">WhatsApp</button>'
@@ -4766,10 +4766,12 @@ function _renderCustomPosts(sectionId, container) {
     var _cpImgStyle = 'object-position:' + _cpPos + ';width:' + (_cpZoom * 100) + '%;height:' + (_cpZoom * 100) + '%';
     // Seeded stock photo guarantees a real image even when the stored photo
     // URL 404s — cards never fall back to a bare placeholder. 📰 is the last resort.
+    var rawPhoto = post.photo || post.imageUrl || post.image;
     var _cpFb = _wCardImgUrl(post.heading || String(post.id || ''));
-    var _cpSrc = post.photo || _cpFb;
-    var _cpErr = 'if(this.dataset.fb){this.onerror=null;this.parentNode.innerHTML=\'<div class=cp-no-photo>📰</div>\';}'
-      + 'else{this.dataset.fb=1;this.style.width=\'100%\';this.style.height=\'100%\';this.src=\'' + escAttr(_cpFb) + '\';}';
+    var _cpSrc = rawPhoto || _cpFb;
+    var _cpErr = 'if(!this.dataset.fb){this.dataset.fb=1;this.style.width=\'100%\';this.style.height=\'100%\';this.src=\'' + escAttr(_cpFb) + '\';}'
+      + 'else if(this.dataset.fb==\'1\'){this.dataset.fb=2;this.src=\'' + escAttr(_SHARE_WORKER + '/img?url=' + encodeURIComponent(rawPhoto || '')) + '\';}'
+      + 'else{this.onerror=null;this.parentNode.innerHTML=\'<div class=cp-no-photo>📰</div>\';}';
     var photoHtml = '<div class="cp-photo-wrap"><img class="cp-photo" src="' + escAttr(_cpSrc) + '" style="' + escAttr(_cpImgStyle) + '" alt="" loading="lazy" onerror="' + escAttr(_cpErr) + '"></div>';
     var pubDate = post.published_at
       ? new Date(post.published_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})
@@ -4822,14 +4824,15 @@ function openCustomPost(id) {
   // Placeholder where the YouTube player is injected on demand (kept empty until Play)
   html += '<div class="story-video-wrap" id="story-video-wrap" style="display:none"></div>';
 
-  if (post.photo) {
+  var rawPhoto = post.photo || post.imageUrl || post.image;
+  if (rawPhoto) {
     var _mPos = post.photo_pos || '50% 50%';
     var _mZoom = post.photo_zoom ? Math.min(Math.max(parseFloat(post.photo_zoom), 1), 4) : 1;
     // Removed fixed 280px height constraint so images fully show. 
     var _mFb = _wCardImgUrl(post.heading || String(post.id || ''));
     html += '<div style="width:100%;border-radius:10px;margin-bottom:18px;overflow:hidden">'
-      + '<img src="' + escAttr(post.photo) + '" style="width:100%;height:auto;display:block;object-position:' + escAttr(_mPos) + ';transform:scale(' + _mZoom + ');transform-origin:' + escAttr(_mPos) + '" alt="" loading="lazy"'
-      + ' onerror="if(!this.dataset.fb){this.dataset.fb=1;this.style.transform=\'none\';this.src=\'' + escAttr(_mFb) + '\';}else{this.onerror=null;this.style.display=\'none\';}">'
+      + '<img src="' + escAttr(rawPhoto) + '" style="width:100%;height:auto;display:block;object-position:' + escAttr(_mPos) + ';transform:scale(' + _mZoom + ');transform-origin:' + escAttr(_mPos) + '" alt="" loading="lazy"'
+      + ' onerror="if(!this.dataset.fb){this.dataset.fb=1;this.style.transform=\'none\';this.src=\'' + escAttr(_mFb) + '\';}else if(this.dataset.fb==\'1\'){this.dataset.fb=2;this.src=\'' + escAttr(_SHARE_WORKER + '/img?url=' + encodeURIComponent(rawPhoto)) + '\';}else{this.onerror=null;this.style.display=\'none\';}">'
       + '</div>';
   }
 
@@ -4847,6 +4850,10 @@ function openCustomPost(id) {
   });
   storyContent = storyContent.replace(/ class=(["'])([\s\S]*?)\1/gi, function(m, q, val) {
     return _hideClassPattern.test(val) ? '' : ' class=' + q + val + q;
+  });
+  // Route TMDB/blocked images through our proxy to fix ISP blocks
+  storyContent = storyContent.replace(/src=(["'])(https?:\/\/(?:media\.themoviedb\.org|image\.tmdb\.org)[^"']+)\1/gi, function(m, q, url) {
+    return 'src=' + q + _SHARE_WORKER + '/img?url=' + encodeURIComponent(url) + q;
   });
 
   // Only escape and wrap in <p> if there are no HTML tags at all (legacy format)
@@ -4877,7 +4884,7 @@ function openCustomPost(id) {
     : 'https://vilfintv.com/news.html?story=' + encodeURIComponent(storyIdSlug);
   var shareUrl = encodeURIComponent(rawShareUrl);
   // WhatsApp & Status share a branded photo card; the public link stays clean.
-  _shareCtx = { heading: (post.heading || 'VilfinTV News'), photo: (post.photo || ''), url: rawShareUrl };
+  _shareCtx = { heading: (post.heading || 'VilfinTV News'), photo: (rawPhoto || ''), url: rawShareUrl };
   html += '<div class="story-modal-share">'
     + '<span class="story-modal-share-label">Share:</span>'
     + '<button type="button" class="share-btn-sm share-wa" onclick="shareStoryCardCtx(\'whatsapp\', this)">WhatsApp</button>'
