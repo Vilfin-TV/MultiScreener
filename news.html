@@ -384,8 +384,9 @@ body{
     overflow-x:auto;-webkit-overflow-scrolling:touch;
   }
   .news-nav-link{padding:0 13px;font-size:12.5px;border-right-color:rgba(255,255,255,.1)}
-  /* Section anchors clear the two-row nav (now a fixed 46px + 42px) */
-  .news-section{scroll-margin-top:96px}
+  /* Section anchors clear the two-row nav (46px + 42px) AND the sticky
+     session chip rail that sits under it. */
+  .news-section{scroll-margin-top:150px}
 }
 
 /* ═══════════════════════════════════════════════════
@@ -494,7 +495,7 @@ body{
 ═══════════════════════════════════════════════════ */
 .news-section{
   margin-bottom:56px;
-  scroll-margin-top:68px;
+  scroll-margin-top:116px;  /* top nav (52px) + sticky session menu */
 }
 
 /* Section header bar */
@@ -1742,8 +1743,10 @@ footer.news-footer{
 .bn-hero:hover img { transform: scale(1.02); }
 
 /* CNN-style hero media: a fixed 16:9 frame so a portrait/oversized source
-   photo is cropped to the same footprint as every other card instead of
-   stretching the whole column. */
+   photo keeps the same footprint as every other card instead of stretching
+   the whole column. The photo is fitted whole (object-fit:contain) so faces
+   are never cropped; a blurred, scaled copy of the same image fills the
+   leftover space so there are no flat letterbox bars. */
 .bn-hero-cnn-media {
   position: relative;
   width: 100%;
@@ -1752,6 +1755,16 @@ footer.news-footer{
   overflow: hidden;
   background: var(--card2);
 }
+.bn-hero-cnn-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(26px) saturate(1.25) brightness(.6);
+  transform: scale(1.2);          /* overscan so blurred edges never show */
+  pointer-events: none;
+}
 .bn-hero-cnn-media img {
   position: absolute;
   inset: 0;
@@ -1759,10 +1772,11 @@ footer.news-footer{
   height: 100%;
   min-height: 0;
   flex: none;
-  object-fit: cover;
-  object-position: center top;   /* keep faces in frame on portrait sources */
+  object-fit: contain;            /* whole photo, nothing cropped */
+  object-position: center;
   display: block;
 }
+.bn-hero:hover .bn-hero-cnn-media img { transform: none; }
 /* Older browsers without aspect-ratio support */
 @supports not (aspect-ratio: 16 / 9) {
   .bn-hero-cnn-media { height: 0; padding-top: 56.25%; }
@@ -2268,45 +2282,85 @@ footer.news-footer{
   z-index: 990;
 }
 .dsm-inner {
-  max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 12px 16px 14px; gap: 14px;
+  max-width: 1400px; margin: 0 auto; padding: 12px 16px 14px;
 }
+/* Desktop / laptop: one list that wraps into centred rows. */
 .dsm-row {
-  display: flex; justify-content: center; gap: 40px; width: 100%; flex-wrap: wrap;
+  display: flex; justify-content: center; align-items: center;
+  gap: 14px 34px; width: 100%; flex-wrap: wrap;
 }
 .dsm-link {
-  display: flex; align-items: center; gap: 8px;
-  color: var(--text2); opacity: 1; text-decoration: none; font-size: 14px; font-weight: 600; letter-spacing: 0.3px; transition: color 0.2s ease; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 8px;
+  color: var(--text2); opacity: 1; text-decoration: none;
+  font-size: 14px; font-weight: 600; letter-spacing: 0.3px;
+  white-space: nowrap; border-radius: 999px;
+  transition: color .2s ease, background-color .2s ease;
 }
-.dsm-link:hover {
-  color: var(--theme-accent);
+.dsm-link:hover { color: var(--theme-accent); }
+/* Section currently in view */
+.dsm-link.dsm-active { color: var(--theme-accent); }
+
+/* Laptop: tighten the gaps before the list needs a third row. */
+@media(max-width:1280px) {
+  .dsm-row { gap: 12px 24px; }
+  .dsm-link { font-size: 13.5px; }
 }
 
+/* Tablet + mobile: the same list becomes a scrollable chip rail.
+   Chips have real hit targets and the active one is scrolled into view,
+   so every session stays reachable on a narrow screen. */
 @media(max-width:900px) {
   .desktop-session-menu {
-    top: 90px; /* Accounts for mobile double-header */
+    top: 88px; /* clears the two-row mobile header */
     margin-bottom: 15px;
   }
+  /* Fade hint on the right edge so it reads as scrollable */
   .dsm-inner {
-    flex-direction: row;
-    justify-content: flex-start;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Hide scrollbar for cleaner look */
-    gap: 20px;
-    padding: 12px 16px;
-  }
-  .dsm-inner::-webkit-scrollbar {
-    display: none;
+    position: relative;
+    padding: 0;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent 100%);
+            mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent 100%);
   }
   .dsm-row {
     flex-wrap: nowrap;
-    width: auto;
-    gap: 20px;
     justify-content: flex-start;
+    gap: 8px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    padding: 9px 26px 9px 12px;
   }
+  .dsm-row::-webkit-scrollbar { display: none; }
   .dsm-link {
-    font-size: 13px;
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 7px 13px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    scroll-snap-align: start;
+    flex: 0 0 auto;
   }
+  .dsm-link.dsm-active {
+    background: var(--theme-accent);
+    border-color: var(--theme-accent);
+    color: #fff;
+  }
+}
+@media(max-width:420px) {
+  .dsm-link { font-size: 12px; padding: 6px 11px; }
+  .dsm-row  { gap: 7px; padding: 8px 24px 8px 10px; }
+}
+
+/* Anchor targets must clear the sticky header + session rail. The core
+   .news-section rule lives further down; these cover the blocks built by
+   buildLiveSession()/buildSportsBlock()/the world panel, which previously
+   scrolled up underneath the header. */
+.ml-cat-block, .world-news-wrap { scroll-margin-top: 116px; }
+@media(max-width:900px) {
+  .ml-cat-block, .world-news-wrap { scroll-margin-top: 150px; }
 }
 
 </style>
@@ -2402,28 +2456,33 @@ footer.news-footer{
 <!-- ══════════════════════════════════════════
      DESKTOP SESSION MENU (2ND MENU)
 ══════════════════════════════════════════ -->
-<div class="desktop-session-menu" id="desktop-session-menu">
+<!-- One flat link list — every session on the page, in the order it renders.
+     Desktop/laptop wraps it into centred rows; tablet and mobile turn the same
+     list into a horizontally scrollable chip rail, so the two can never fall
+     out of sync. Keep this list in step with `sectionOrder` in loadNewsPage(). -->
+<nav class="desktop-session-menu" id="desktop-session-menu" aria-label="News sections">
   <div class="dsm-inner">
-      <div class="dsm-row">
+      <div class="dsm-row" id="dsm-row">
+          <a class="dsm-link" href="#breaking-news-content">🚨 Breaking</a>
+          <a class="dsm-link" href="#trending">🔥 Trending</a>
           <a class="dsm-link" href="#global">🌍 Global</a>
           <a class="dsm-link" href="#india">🇮🇳 India</a>
           <a class="dsm-link" href="#stock">📈 Stock</a>
           <a class="dsm-link" href="#malayalam">🎭 Malayalam</a>
+          <a class="dsm-link" href="#sports">🏆 Sports</a>
           <a class="dsm-link" href="#tech">💻 Tech</a>
           <a class="dsm-link" href="#space">🚀 Space</a>
           <a class="dsm-link" href="#science">🔬 Science</a>
-      </div>
-      <div class="dsm-row">
           <a class="dsm-link" href="#fashion">👗 Fashion</a>
           <a class="dsm-link" href="#movies">🎬 Movies</a>
-          <a class="dsm-link" href="#food">🍔 Food</a>
+          <a class="dsm-link" href="#food">🌾 Food &amp; Agriculture</a>
           <a class="dsm-link" href="#automobile">🚗 Auto</a>
-          <a class="dsm-link" href="#home">🏠 Home & Smart Living</a>
+          <a class="dsm-link" href="#home">🏠 Home &amp; Smart Living</a>
           <a class="dsm-link" href="#business">💼 Business</a>
           <a class="dsm-link" href="#world">🌐 World</a>
       </div>
   </div>
-</div>
+</nav>
 
   <!-- Sections rendered by JS -->
   <div id="sections-container"></div>
@@ -3101,8 +3160,12 @@ function renderBreakingNews(data, rotate) {
         return 'role="button" tabindex="0" data-title="' + escAttr(item.title) + '" data-snippet="' + encSnippet + '" data-url="' + escAttr(item.link) + '" data-source="' + escAttr(item.source || '') + '" onclick="lnbCardOpen(this)"';
     }
 
+    // Blurred backdrop + fully-fitted photo. The backdrop URL is applied from
+    // JS (see below) rather than an inline style, so a stray quote or paren in
+    // a feed image URL can't break out of the declaration.
     var heroMediaHtml = heroItem.imageUrl
-      ? '<img src="' + escAttr(heroItem.imageUrl) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.visibility=\'hidden\';">'
+      ? '<div class="bn-hero-cnn-bg" data-bg="' + escAttr(heroItem.imageUrl) + '"></div>' +
+        '<img src="' + escAttr(heroItem.imageUrl) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.visibility=\'hidden\';">'
       : '';
 
     html += '<div class="bn-hero" style="background:transparent; display:flex; flex-direction:column; padding:0; border:none;">' +
@@ -3156,6 +3219,12 @@ function renderBreakingNews(data, rotate) {
   html += '</div></div>';
 
   wrapper.innerHTML = html;
+
+  // Apply the hero backdrop image safely (no URL interpolated into markup).
+  var bgEl = wrapper.querySelector('.bn-hero-cnn-bg');
+  if (bgEl && bgEl.getAttribute('data-bg')) {
+    bgEl.style.backgroundImage = 'url("' + bgEl.getAttribute('data-bg').replace(/"/g, '%22') + '")';
+  }
 
   // Resolve + start the live channel once the wrapper is in the document.
   // Always call it: a region without a stream cancels any player still
@@ -5470,15 +5539,43 @@ function _lmBuild(grid, sectionEl) {
   row.appendChild(btn);
   grid.parentNode.insertBefore(row, grid.nextSibling);
 }
+/* Every block that counts as one "section" for load-more purposes. Ordered
+   innermost-first so a nested block claims its own grids before an outer one
+   can. `.ml-cat-block` covers Sports and the standalone English sessions
+   (Tech → Business); `.world-region-block` is one country panel inside World —
+   without these two only `.news-section` was treated as a unit, so those
+   blocks got a "More" button per grid (2–3 each, and 56 across World). */
+var LM_SECTION_SEL = '.world-region-block, .ml-cat-block, .news-section';
+var LM_GRID_SEL    = '.news-cards-grid,.bn-side-grid,.featured-grid,.world-np-right';
+
+function _lmSectionName(sectionEl) {
+  if (!sectionEl) return '';
+  var ne = sectionEl.querySelector('.news-section-name, .ml-cat-title, .world-region-title');
+  if (!ne) return '';
+  return (ne.textContent || '').replace(/[\u{1F000}-\u{1FAFF}☀-➿️]/gu, '').replace(/\s+/g, ' ').trim();
+}
+
 function _lmEnhance(root) {
   root = root || document;
-  // ONE "More" per top-level news section — on its largest list (so injected
-  // sub-blocks like the featured/market/category grids don't add a 2nd button).
-  document.querySelectorAll('.news-section').forEach(function (sec) {
+  // ONE "More" per section block — placed on its largest list, so injected
+  // sub-blocks (featured/market/category grids, the left+right columns of a
+  // breaking-news grid) never add a second button.
+  // Deepest blocks first, so a nested one claims its own grids before the
+  // block wrapping it can swallow them (querySelectorAll returns document
+  // order, not selector order).
+  var secs = Array.prototype.slice.call(document.querySelectorAll(LM_SECTION_SEL));
+  secs.sort(function (a, b) {
+    var da = 0, db = 0, n;
+    for (n = a; n; n = n.parentElement) da++;
+    for (n = b; n; n = n.parentElement) db++;
+    return db - da;
+  });
+  secs.forEach(function (sec) {
     if (sec.dataset.lm) return;
     sec.dataset.lm = '1';
-    var grids = Array.prototype.slice.call(sec.querySelectorAll('.news-cards-grid,.bn-side-grid,.featured-grid,.world-np-right'));
-    grids.forEach(function (g) { g.dataset.lm = '1'; }); // claim them so the fallback skips
+    var grids = Array.prototype.slice.call(sec.querySelectorAll(LM_GRID_SEL))
+      .filter(function (g) { return !g.dataset.lm; }); // a nested block already claimed its own
+    grids.forEach(function (g) { g.dataset.lm = '1'; });
     var best = null, bestExtra = 0;
     grids.forEach(function (g) {
       var extra = _lmCards(g).length - (LM_INITIAL[_lmGridType(g)] || 6);
@@ -5486,11 +5583,11 @@ function _lmEnhance(root) {
     });
     if (best) _lmBuild(best, sec);
   });
-  // Grids NOT inside a .news-section (breaking news, world panel, live tabs) — one each.
-  root.querySelectorAll('.news-cards-grid,.bn-side-grid,.featured-grid,.world-np-right').forEach(function (g) {
+  // Any remaining grid that sits outside every section block — one each.
+  root.querySelectorAll(LM_GRID_SEL).forEach(function (g) {
     if (g.dataset.lm) return;
     g.dataset.lm = '1';
-    if (g.closest && g.closest('.news-section')) return;
+    if (g.closest && g.closest(LM_SECTION_SEL)) return;
     _lmBuild(g, g.closest ? g.closest('[class*="section"]') : null);
   });
 }
