@@ -1,0 +1,88 @@
+name: Decode Daily Market Report
+
+# Turns data/market_sentiment_snapshot.json into a stock-news article every
+# day at 10:00 JST — well after market_report.yml's snapshot refresh (07:00
+# JST target, 08:40 JST hard deadline via the watchdog).
+#
+# Weekdays (Mon-Fri JST): a day-over-day decode with a 14-factor comparison
+# chart against the previous available snapshot.
+# Saturday (JST): a weekly decode covering the trailing week's score
+# trajectory with a bar chart, since Saturday's snapshot reflects the week's
+# last trading day (Friday) close.
+# Sunday (JST): no report - the script exits cleanly with no changes, since
+# there's no new trading data since Saturday.
+#
+# Requires repository secrets (already present, same as upload_story_images.yml):
+#   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+
+on:
+  schedule:
+    - cron: '0 1 * * *'   # 01:00 UTC == 10:00 JST daily
+  workflow_dispatch:        # manual trigger for testing
+
+jobs:
+  decode-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          # Full history: this repo has very high commit velocity (~150
+          # commits/day from Hermes, share-page regen, several data-refresh
+          # crons), so `git log -- <path>` on a shallow clone could walk back
+          # through 1000+ unrelated commits before finding a week's worth of
+          # snapshot-file commits. Correctness for the weekly comparison
+          # matters more than shaving clone time on a once-daily job.
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install matplotlib
+
+      - name: Generate the decode article (writes content.json + a local chart PNG)
+        id: decode
+        run: |
+          python3 scripts/decode_market_report.py | tee /tmp/decode_output.txt
+          if grep -q '^CHART_LOCAL_PATH=' /tmp/decode_output.txt; then
+            echo "chart_local_path=$(grep '^CHART_LOCAL_PATH=' /tmp/decode_output.txt | cut -d= -f2-)" >> "$GITHUB_OUTPUT"
+            echo "chart_r2_key=$(grep '^CHART_R2_KEY=' /tmp/decode_output.txt | cut -d= -f2-)" >> "$GITHUB_OUTPUT"
+            echo "has_report=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_report=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install wrangler
+        if: steps.decode.outputs.has_report == 'true'
+        run: npm install -g wrangler@4
+
+      - name: Upload chart to R2 (bucket vilfintv-media)
+        if: steps.decode.outputs.has_report == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          wrangler r2 object put "vilfintv-media/${{ steps.decode.outputs.chart_r2_key }}" \
+            --file="${{ steps.decode.outputs.chart_local_path }}" \
+            --content-type=image/jpeg --remote
+
+      - name: Commit and push the new article
+        if: steps.decode.outputs.has_report == 'true'
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git add content.json
+          git commit -m "feat(content): decode daily market report [skip ci]" || echo "No changes to commit"
+          for i in 1 2 3 4 5; do
+            git pull --rebase --autostash origin main
+            if git push origin main; then
+              break
+            fi
+            echo "Push rejected (attempt $i/5), another job likely pushed first — retrying..."
+            sleep $((RANDOM % 10 + 5))
+          done
