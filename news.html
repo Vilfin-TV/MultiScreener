@@ -1696,12 +1696,30 @@ footer.news-footer{
 ═══════════════════════════════════════════════════ */
 .breaking-news-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-areas: "left hero right";
   gap: 20px;
   margin-bottom: 30px;
 }
+.bn-hero { grid-area: hero; }
+.bn-left-col { grid-area: left; }
+.bn-right-col { grid-area: right; }
+@media(max-width: 1100px) {
+  .breaking-news-grid {
+    grid-template-columns: 2fr 1fr;
+    grid-template-areas: 
+      "hero left"
+      "hero right";
+  }
+}
 @media(max-width: 900px) {
-  .breaking-news-grid { grid-template-columns: 1fr; }
+  .breaking-news-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas: 
+      "hero"
+      "left"
+      "right";
+  }
 }
 .bn-hero {
   position: relative;
@@ -2711,8 +2729,11 @@ function renderBreakingNews(data, rotate) {
             '</div></div>';
 
     if (sideItems.length > 0) {
-      html += '<div class="bn-side-grid">';
-      sideItems.forEach(function(item) {
+            var mid = Math.ceil(sideItems.length / 2);
+      var leftItems = sideItems.slice(0, mid);
+      var rightItems = sideItems.slice(mid);
+
+      function renderSideCard(item) {
         var timeStr = 'Just now';
         if (item.publishedAt) {
           var ms = Date.now() - item.publishedAt;
@@ -2720,13 +2741,20 @@ function renderBreakingNews(data, rotate) {
           if (mins < 60) timeStr = mins + 'm ago';
           else timeStr = Math.floor(mins/60) + 'h ago';
         }
-        html += '<div class="bn-card" ' + _ca(item) + '>' +
+        return '<div class="bn-card" ' + _ca(item) + '>' +
                 (item.imageUrl ? '<img src="' + escAttr(item.imageUrl) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.visibility=\'hidden\';">' : '') +
                 '<div class="bn-card-content">' +
                 '<div class="bn-card-title">' + esc(item.title) + '</div>' +
                 '<div class="bn-card-meta">' + timeStr + ' &middot; ' + esc(item.source || '') + '</div>' +
                 '</div></div>';
-      });
+      }
+
+      html += '<div class="bn-side-grid bn-left-col">';
+      leftItems.forEach(function(item) { html += renderSideCard(item); });
+      html += '</div>';
+
+      html += '<div class="bn-side-grid bn-right-col">';
+      rightItems.forEach(function(item) { html += renderSideCard(item); });
       html += '</div>';
     }
   } else {
@@ -5347,11 +5375,11 @@ function _buildBnLayout(items, getImg, getOnClick, timeFunc, badgeText, accent) 
     grid.appendChild(hEl);
   }
 
-  var sideItems = items.slice(1, 41); // side column scrolls — up to 40 stories
+  var sideItems = items.slice(1, 41); // side columns scroll — up to 40 stories
   if (sideItems.length) {
-    var side = document.createElement('div');
-    side.className = 'bn-side-grid';
-    sideItems.forEach(function(item, si) {
+    var mid = Math.ceil(sideItems.length / 2);
+    
+    function createSideCard(item, si) {
       var card = document.createElement('div');
       card.className = 'bn-card';
       _wireCard(card, getOnClick(item, si + 1));
@@ -5362,9 +5390,22 @@ function _buildBnLayout(items, getImg, getOnClick, timeFunc, badgeText, accent) 
         + '<div class="bn-card-title">' + esc(_wDecodeHtml(item.headline || '')) + '</div>'
         + '<div class="bn-card-meta">' + timeFunc(item.publishedAt) + '</div>'
         + '</div>';
-      side.appendChild(card);
+      return card;
+    }
+
+    var leftSide = document.createElement('div');
+    leftSide.className = 'bn-side-grid bn-left-col';
+    sideItems.slice(0, mid).forEach(function(item, idx) {
+      leftSide.appendChild(createSideCard(item, idx));
     });
-    grid.appendChild(side);
+    grid.appendChild(leftSide);
+
+    var rightSide = document.createElement('div');
+    rightSide.className = 'bn-side-grid bn-right-col';
+    sideItems.slice(mid).forEach(function(item, idx) {
+      rightSide.appendChild(createSideCard(item, mid + idx));
+    });
+    grid.appendChild(rightSide);
   }
 
   return grid;
