@@ -300,7 +300,7 @@ body{
   margin-left:6px;vertical-align:middle;font-family:'DM Sans',sans-serif;
 }
 .news-nav-links{
-  display:flex;align-items:center;gap:2px;
+  display:none;align-items:center;gap:2px;
   flex:1;overflow-x:auto;height:100%;
   scrollbar-width:none;
 }
@@ -2096,6 +2096,52 @@ footer.news-footer{
 .collapsed .news-section-toggle svg {
   transform: rotate(180deg);
 }
+
+/* ═══════════════════════════════════════════════════
+   DESKTOP SESSION MENU
+═══════════════════════════════════════════════════ */
+.desktop-session-menu {
+  position: sticky;
+  top: 52px;
+  z-index: 990;
+  background: var(--page-bg);
+  border-bottom: 1px solid var(--border);
+  height: 48px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.dsm-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 32px;
+  gap: 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.dsm-inner::-webkit-scrollbar { display: none; }
+.dsm-link {
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.dsm-link:hover {
+  background: rgba(128,128,128,0.15);
+  color: var(--text);
+}
+@media(max-width:700px) {
+  .desktop-session-menu {
+    display: none !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -2142,6 +2188,29 @@ footer.news-footer{
     </div>
   </div>
 </nav>
+
+<!-- ══════════════════════════════════════════
+     DESKTOP SESSION MENU (2ND MENU)
+══════════════════════════════════════════ -->
+<div class="desktop-session-menu" id="desktop-session-menu">
+  <div class="dsm-inner">
+      <a class="dsm-link" href="#global">🌍 Global</a>
+      <a class="dsm-link" href="#india">🇮🇳 India</a>
+      <a class="dsm-link" href="#stock">📈 Stock</a>
+      <a class="dsm-link" href="#malayalam">🎭 Malayalam</a>
+      <a class="dsm-link" href="#tech">💻 Tech</a>
+      <a class="dsm-link" href="#space">🚀 Space</a>
+      <a class="dsm-link" href="#science">🔬 Science</a>
+      <a class="dsm-link" href="#fashion">👗 Fashion</a>
+      <a class="dsm-link" href="#movies">🎬 Movies</a>
+      <a class="dsm-link" href="#food">🍔 Food</a>
+      <a class="dsm-link" href="#automobile">🚗 Auto</a>
+      <a class="dsm-link" href="#home">🏠 Home</a>
+      <a class="dsm-link" href="#business">💼 Business</a>
+      <a class="dsm-link" href="#world">🌐 World</a>
+  </div>
+</div>
+
 
 <!-- ══════════════════════════════════════════
      PAGE HERO — title block (left) + compact search (right)
