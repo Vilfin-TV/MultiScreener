@@ -2137,6 +2137,9 @@ footer.news-footer{
   border-bottom: 1px solid var(--border);
   height: auto;
   margin-bottom: 20px;
+  position: sticky;
+  top: 52px;
+  z-index: 990;
 }
 .dsm-inner {
   max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 12px 16px 14px; gap: 14px;
@@ -2151,9 +2154,32 @@ footer.news-footer{
 .dsm-link:hover {
   color: var(--theme-accent);
 }
-@media(max-width:700px) {
+
+@media(max-width:900px) {
   .desktop-session-menu {
-    display: none !important;
+    top: 90px; /* Accounts for mobile double-header */
+    margin-bottom: 15px;
+  }
+  .dsm-inner {
+    flex-direction: row;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Hide scrollbar for cleaner look */
+    gap: 20px;
+    padding: 12px 16px;
+  }
+  .dsm-inner::-webkit-scrollbar {
+    display: none;
+  }
+  .dsm-row {
+    flex-wrap: nowrap;
+    width: auto;
+    gap: 20px;
+    justify-content: flex-start;
+  }
+  .dsm-link {
+    font-size: 13px;
   }
 }
 
