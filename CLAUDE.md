@@ -78,3 +78,21 @@ When generating, modifying, or reviewing web code, you must **always** strictly 
     *   Clean, polished styling (e.g., subtle shadows, appropriate hover states, and logical alignment).
     *   Modular and easily maintainable code structure.
 
+
+
+## Story Generation: Broker Referral Links
+Whenever creating, publishing, or editing a "stock" or "mutual fund" story, you MUST automatically append the "Best Brokers & Apps" button and the direct referral links to the end of the story HTML. Do not wait for the user to ask.
+
+Use the following exact HTML snippet at the very end of the story content:
+```html
+<p style="text-align: center;">
+  <a href="https://vilfintv.com/market_sentiment_score.html" style="color: #e94560; text-decoration: none; font-weight: bold; font-size: 1.1em;">💼 Best Brokers &amp; Apps</a>
+</p>
+<ul style="list-style: none; padding: 0; text-align: center; line-height: 1.8; font-size: 0.95em; margin-bottom: 20px;">
+  <li>🟢 <a href="https://zerodha.com/open-account?c=XKQ288" style="color:#1a73e8;text-decoration:none;">Zerodha (India)</a></li>
+  <li>🔥 <a href="https://join.dhan.co/?invite=VFZJN04428" style="color:#1a73e8;text-decoration:none;">Dhan (India + US)</a></li>
+  <li>💹 <a href="https://prostocks.com/open-an-account?ref=G1392" style="color:#1a73e8;text-decoration:none;">ProStocks (Flat-fee)</a></li>
+  <li>🌐 <a href="https://www.interactivebrokers.co.jp/en/accounts/what-you-need-jp.php" style="color:#1a73e8;text-decoration:none;">Interactive Brokers (Global)</a></li>
+  <li>🚀 <a href="https://kuvera.in/s/wsapp?referral=1T6BH" style="color:#1a73e8;text-decoration:none;">Kuvera (Mutual Funds)</a></li>
+</ul>
+```
