@@ -317,6 +317,7 @@ body{
   display:flex;align-items:center;gap:8px;
   padding:0 12px;border-left:1px solid rgba(255,255,255,.1);
   height:100%;flex-shrink:0;
+  margin-left:auto;
 }
 .news-theme-btn{
   background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
@@ -2104,36 +2105,49 @@ footer.news-footer{
   position: sticky;
   top: 52px;
   z-index: 990;
-  background: var(--page-bg);
-  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  border-bottom: 1px solid #93c5fd;
   height: auto;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
+[data-theme="standard"] .desktop-session-menu { background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%); border-bottom: 1px solid #93c5fd; }
+[data-theme="midnight"] .desktop-session-menu { background: var(--dark2); border-bottom: 1px solid var(--border); }
+[data-theme="maroon"] .desktop-session-menu { background: linear-gradient(135deg, #1a0a0a, #2d1111); border-bottom: 1px solid var(--border); }
+[data-theme="silver"] .desktop-session-menu { background: linear-gradient(135deg, #2d2d30, #48484a); border-bottom: 1px solid var(--border); }
+[data-theme="gold"] .desktop-session-menu { background: linear-gradient(135deg, #1a1500, #2d2200); border-bottom: 1px solid var(--border); }
+[data-theme="gemini"] .desktop-session-menu { background: #1e1f20 !important; border-bottom: 1px solid #3c4043 !important; }
+[data-theme="news-reader"] .desktop-session-menu { background: #111111 !important; border-bottom: 3px solid #d81921 !important; }
+
 .dsm-inner {
   max-width: 1400px;
   margin: 0 auto;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
-  flex-wrap: wrap;
-  padding: 8px 16px;
-  gap: 8px 24px;
+  align-items: center;
+  padding: 10px 16px;
+  gap: 8px;
 }
-.dsm-inner::-webkit-scrollbar { display: none; }
+.dsm-row {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  width: 100%;
+}
 .dsm-link {
-  color: var(--text2);
+  color: rgba(255,255,255,0.75);
   text-decoration: none;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   letter-spacing: 0.3px;
-  padding: 6px 12px;
+  padding: 4px 14px;
   border-radius: 6px;
   transition: all 0.2s ease;
   white-space: nowrap;
 }
 .dsm-link:hover {
-  background: rgba(128,128,128,0.15);
-  color: var(--text);
+  background: rgba(255,255,255,0.12);
+  color: #fff;
 }
 @media(max-width:700px) {
   .desktop-session-menu {
@@ -2193,20 +2207,24 @@ footer.news-footer{
 ══════════════════════════════════════════ -->
 <div class="desktop-session-menu" id="desktop-session-menu">
   <div class="dsm-inner">
-      <a class="dsm-link" href="#global">🌍 Global</a>
-      <a class="dsm-link" href="#india">🇮🇳 India</a>
-      <a class="dsm-link" href="#stock">📈 Stock</a>
-      <a class="dsm-link" href="#malayalam">🎭 Malayalam</a>
-      <a class="dsm-link" href="#tech">💻 Tech</a>
-      <a class="dsm-link" href="#space">🚀 Space</a>
-      <a class="dsm-link" href="#science">🔬 Science</a>
-      <a class="dsm-link" href="#fashion">👗 Fashion</a>
-      <a class="dsm-link" href="#movies">🎬 Movies</a>
-      <a class="dsm-link" href="#food">🍔 Food</a>
-      <a class="dsm-link" href="#automobile">🚗 Auto</a>
-      <a class="dsm-link" href="#home">🏠 Home</a>
-      <a class="dsm-link" href="#business">💼 Business</a>
-      <a class="dsm-link" href="#world">🌐 World</a>
+      <div class="dsm-row">
+          <a class="dsm-link" href="#global">🌍 Global</a>
+          <a class="dsm-link" href="#india">🇮🇳 India</a>
+          <a class="dsm-link" href="#stock">📈 Stock</a>
+          <a class="dsm-link" href="#malayalam">🎭 Malayalam</a>
+          <a class="dsm-link" href="#tech">💻 Tech</a>
+          <a class="dsm-link" href="#space">🚀 Space</a>
+          <a class="dsm-link" href="#science">🔬 Science</a>
+      </div>
+      <div class="dsm-row">
+          <a class="dsm-link" href="#fashion">👗 Fashion</a>
+          <a class="dsm-link" href="#movies">🎬 Movies</a>
+          <a class="dsm-link" href="#food">🍔 Food</a>
+          <a class="dsm-link" href="#automobile">🚗 Auto</a>
+          <a class="dsm-link" href="#home">🏠 Home & Smart Living</a>
+          <a class="dsm-link" href="#business">💼 Business</a>
+          <a class="dsm-link" href="#world">🌐 World</a>
+      </div>
   </div>
 </div>
 
