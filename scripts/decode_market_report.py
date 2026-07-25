@@ -27,6 +27,7 @@ from datetime import datetime, timedelta, timezone
 JST = timezone(timedelta(hours=9))
 SNAPSHOT_FILE = 'data/market_sentiment_snapshot.json'
 CONTENT_FILE = 'content.json'
+HOLIDAYS_FILE = 'data/nse_holidays.json'
 HERO_URL = 'https://screener-proxy.vilfintv.workers.dev/r2/media/stock/daily-market-report-2026-07-20-hero.jpg'
 R2_BUCKET = 'vilfintv-media'
 R2_PREFIX = 'media/stock'
@@ -59,6 +60,18 @@ def img(url, alt, w=460):
 def git_show_json(commit, path):
     raw = subprocess.check_output(['git', 'show', f'{commit}:{path}'])
     return json.loads(raw)
+
+
+def load_holidays():
+    """{date_str: holiday_name} for NSE/BSE weekday market closures. See
+    data/nse_holidays.json's own _comment for sourcing/confidence notes -
+    update that file if a date turns out wrong; takes effect next run."""
+    try:
+        with open(HOLIDAYS_FILE, encoding='utf-8') as f:
+            data = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+    return {k: v for k, v in data.items() if not k.startswith('_')}
 
 
 def get_recent_snapshots(days_back=10):
@@ -245,13 +258,16 @@ def make_chart_weekly(week_rows, out_path):
     vals = [r[1] if r[1] is not None else 0 for r in week_rows]
     colors = [color_for(r[1]) for r in week_rows]
     ax.bar(xs, vals, color=colors, width=0.6, zorder=3, edgecolor=SURFACE, linewidth=1)
-    for i, (label, v) in enumerate(week_rows):
+    for i, row in enumerate(week_rows):
+        label, v = row[0], row[1]
+        gap_reason = row[2] if len(row) > 2 else None
         if v is not None:
             off = 3 if v >= 0 else -3
             va = 'bottom' if v >= 0 else 'top'
             ax.text(i, v + off, f'{v}', ha='center', va=va, fontsize=11, fontweight='bold', color=INK, zorder=4)
         else:
-            ax.text(i, 5, 'no data', ha='center', va='bottom', fontsize=9, color=MUTED,
+            gap_label = 'holiday' if gap_reason == 'holiday' else 'no data'
+            ax.text(i, 5, gap_label, ha='center', va='bottom', fontsize=9, color=MUTED,
                     style='italic', rotation=90, zorder=4)
     ax.axhline(0, color=GRID, linewidth=1.2, zorder=1)
     ax.axhline(50, color=BLUE, linewidth=1, linestyle='--', alpha=0.4, zorder=1)
@@ -338,9 +354,9 @@ def build_weekday_article(today, prev, chart_url):
     return heading, story
 
 
-def build_weekly_article(week_snapshots, today, chart_url):
+def build_weekly_article(week_snapshots, today, chart_url, holidays=None):
+    holidays = holidays or {}
     dates_sorted = sorted(week_snapshots.keys())
-    week_rows_for_chart = []
     week_table_rows = []
     prev_score = None
     for d in dates_sorted:
@@ -349,11 +365,11 @@ def build_weekly_article(week_snapshots, today, chart_url):
         if snap:
             change = f'{snap["score"] - prev_score:+d}' if prev_score is not None else '—'
             week_table_rows.append([f'{wd}, {_fmt_date(d)}', str(snap['score']), snap['regime'], change])
-            week_rows_for_chart.append((f'{wd}\n{_fmt_date_short(d)}', snap['score']))
             prev_score = snap['score']
+        elif d in holidays:
+            week_table_rows.append([f'{wd}, {_fmt_date(d)}', f'Market Holiday — {holidays[d]}', '—', '—'])
         else:
             week_table_rows.append([f'{wd}, {_fmt_date(d)}', 'no archived data', '—', '—'])
-            week_rows_for_chart.append((f'{wd}\n{_fmt_date_short(d)}', None))
 
     score, regime = today['score'], today['regime']
     factor_rows_data, biggest_label, biggest_delta = build_factor_rows(today, None)
@@ -408,6 +424,7 @@ def _fmt_date_short(date_str):
 def main():
     now_jst = datetime.now(JST)
     weekday = now_jst.weekday()  # Monday=0 ... Sunday=6
+    holidays = load_holidays()
 
     if weekday == 6:
         print('Sunday — no report (Indian/US markets closed since Saturday, no new data). Exiting cleanly.')
@@ -418,6 +435,10 @@ def main():
 
     date_str = today['date']
     is_weekend_report = (weekday == 5)  # Saturday
+
+    if not is_weekend_report and date_str in holidays:
+        print(f"{date_str} is an NSE trading holiday ({holidays[date_str]}) — no report. Exiting cleanly.")
+        return
 
     if is_weekend_report:
         week_snapshots = get_recent_snapshots(days_back=8)
@@ -432,11 +453,12 @@ def main():
         for d in sorted(full_week.keys()):
             snap = full_week[d]
             wd = datetime.strptime(d, '%Y-%m-%d').strftime('%a')
-            week_rows_for_chart.append((f'{wd}\n{_fmt_date_short(d)}', snap['score'] if snap else None))
+            gap_reason = 'holiday' if (not snap and d in holidays) else None
+            week_rows_for_chart.append((f'{wd}\n{_fmt_date_short(d)}', snap['score'] if snap else None, gap_reason))
         make_chart_weekly(week_rows_for_chart, chart_path)
         chart_key = f'{R2_PREFIX}/weekly-market-report-{date_str}-score-chart.jpg'
         chart_url = f'{PUBLIC_R2_BASE}/weekly-market-report-{date_str}-score-chart.jpg'
-        heading, story = build_weekly_article(full_week, today, chart_url)
+        heading, story = build_weekly_article(full_week, today, chart_url, holidays)
     else:
         prev_snapshots = get_recent_snapshots(days_back=5)
         prev_dates = sorted([d for d in prev_snapshots if d < date_str], reverse=True)
