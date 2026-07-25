@@ -788,10 +788,8 @@ ${body.text}`;
       if (!cleanStory.trim()) return jsonError(400, 'story is empty after sanitising.');
       let daysInt = parseInt(days); if (!daysInt || daysInt < 1 || daysInt > 365) daysInt = 30;
 
-      let read; try { read = await _ghReadContent(env); } catch (e) { return jsonError(502, e.message); }
       const now = new Date();
       const expiresAt = new Date(now.getTime() + daysInt * 86400000).toISOString();
-      let items = read.items.filter(i => i && i.expires_at && new Date(i.expires_at) > now);
 
       function applyOptionalFields(o){
         if (photo && typeof photo === 'string' && photo.trim().startsWith('http')) {
@@ -824,22 +822,31 @@ ${body.text}`;
         return o;
       }
 
-      let resultId, message;
-      if (isEdit) {
-        const idx = items.findIndex(i => String(i.id) === String(id));
-        if (idx === -1) return jsonError(404, 'Post to edit not found (it may have expired).');
-        const prev = items[idx];
-        const o = applyOptionalFields({ id: prev.id, section, heading: heading.trim().slice(0,200),
-          story: cleanStory.trim().slice(0,MAX_STORY), published_at: now.toISOString(), expires_at: expiresAt });
-        items[idx] = o; resultId = prev.id; message = `feat(content): agent edit ${section} [${agent.label}]`;
-      } else {
-        const o = applyOptionalFields({ id: String(Date.now()), section, heading: heading.trim().slice(0,200),
-          story: cleanStory.trim().slice(0,MAX_STORY), published_at: now.toISOString(), expires_at: expiresAt });
-        items.push(o); resultId = o.id; message = `feat(content): agent publish ${section} [${agent.label}]`;
-      }
+      // Computed once, outside the retry loop below: applyOptionalFields has a
+      // one-time side effect (stripping an embedded <img> out of cleanStory),
+      // so it must not run more than once even if the write below retries.
+      const withOptional = applyOptionalFields({ section, heading: heading.trim().slice(0,200),
+        story: cleanStory.trim().slice(0,MAX_STORY), published_at: now.toISOString(), expires_at: expiresAt });
 
-      try { await _ghWriteContent(env, items, read.sha, message); }
+      const computeFn = (freshItems) => {
+        const items = freshItems.filter(i => i && i.expires_at && new Date(i.expires_at) > now);
+        if (isEdit) {
+          const idx = items.findIndex(i => String(i.id) === String(id));
+          if (idx === -1) return _CONTENT_NOT_FOUND;
+          const resultId = items[idx].id;
+          items[idx] = { ...withOptional, id: resultId };
+          return { items, message: `feat(content): agent edit ${section} [${agent.label}]`, meta: { resultId } };
+        } else {
+          const resultId = String(Date.now());
+          items.push({ ...withOptional, id: resultId });
+          return { items, message: `feat(content): agent publish ${section} [${agent.label}]`, meta: { resultId } };
+        }
+      };
+      let written;
+      try { written = await _ghWriteContentSafe(env, computeFn); }
       catch (e) { return jsonError(502, e.message); }
+      if (written === _CONTENT_NOT_FOUND) return jsonError(404, 'Post to edit not found (it may have expired).');
+      const resultId = written.meta.resultId;
 
       // record usage
       try { const all = await _agAll(env); if (all[agent.id]) { all[agent.id].lastUsedAt = now.toISOString(); await _agPut(env, all); } } catch(_){}
@@ -857,12 +864,17 @@ ${body.text}`;
       let body; try { body = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON.'); }
       const delId = (body.id||'').toString().trim();
       if (!delId) return jsonError(400, 'id is required.');
-      let read; try { read = await _ghReadContent(env); } catch (e) { return jsonError(502, e.message); }
-      const before = read.items.length;
-      const items = read.items.filter(i => String(i.id) !== delId);
-      if (items.length === before) return jsonError(404, 'Story not found (already removed or expired).');
-      try { await _ghWriteContent(env, items, read.sha, `chore(content): agent delete ${delId} [${agent.label}]`); }
+      const computeFn = (freshItems) => {
+        const before = freshItems.length;
+        const items = freshItems.filter(i => String(i.id) !== delId);
+        if (items.length === before) return _CONTENT_NOT_FOUND;
+        return { items, message: `chore(content): agent delete ${delId} [${agent.label}]`, meta: { delId } };
+      };
+      let written;
+      try { written = await _ghWriteContentSafe(env, computeFn); }
       catch (e) { return jsonError(502, e.message); }
+      if (written === _CONTENT_NOT_FOUND) return jsonError(404, 'Story not found (already removed or expired).');
+
       try { const all = await _agAll(env); if (all[agent.id]) { all[agent.id].lastUsedAt = new Date().toISOString(); await _agPut(env, all); } } catch(_){}
       return new Response(JSON.stringify({ ok:true, deleted:delId }), { status:200, headers:{ ...CORS, 'Content-Type':'application/json' } });
     }
@@ -1626,36 +1638,31 @@ ${body.text}`;
       if (!daysInt || daysInt < 1 || daysInt > 365) daysInt = 30;
       if (!env.GITHUB_TOKEN) return jsonError(503, 'GitHub not configured.');
 
-      const REPO = 'Vilfin-TV/MultiScreener', FILE_PATH = 'content.json', BRANCH = 'main';
-      const GH_API = `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`;
-      const GH_H = { 'Authorization': `token ${env.GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'vilfintv-proxy', 'Content-Type': 'application/json' };
-
-      let sha = null, items = [];
-      try {
-        const r = await fetch(`${GH_API}?ref=${BRANCH}`, { headers: GH_H });
-        if (r.ok) { const d = await r.json(); sha = d.sha; items = JSON.parse(_b64DecodeUnicode(d.content.replace(/\n/g,''))); if (!Array.isArray(items)) items = []; }
-        else if (r.status !== 404) return jsonError(502, `GitHub GET failed: ${r.status}`);
-      } catch (e) { return jsonError(502, `GitHub GET error: ${e.message}`); }
-
+      // Uses the same _ghReadContent/_ghWriteContentSafe helpers as the agent
+      // publish endpoint (this used to be an independent, older copy of the
+      // read/write logic that never got the >1MB GitHub Contents API fallback
+      // fix, and had no race-condition guard - both fixed by sharing the code).
       const now = new Date();
       const expiresAt = new Date(now.getTime() + daysInt * 86400000).toISOString();
-      items = items.filter(i => i && i.expires_at && new Date(i.expires_at) > now);
-      const newItem = { id: String(Date.now()), section, heading: heading.trim().slice(0,200), story: story.trim().slice(0,MAX_STORY), published_at: now.toISOString(), expires_at: expiresAt };
-      if (photo && typeof photo === 'string' && photo.trim().startsWith('http')) newItem.photo = photo.trim().slice(0,500);
-      if (link_url && typeof link_url === 'string' && link_url.trim().startsWith('http')) newItem.link_url = link_url.trim().slice(0,500);
-      if (photo_pos && typeof photo_pos === 'string') newItem.photo_pos = photo_pos.trim().slice(0,20);
-      if (photo_zoom && !isNaN(parseFloat(photo_zoom))) newItem.photo_zoom = Math.min(Math.max(parseFloat(photo_zoom), 1), 4);
-      const ytVid = _ytId(youtube);
-      if (ytVid) { newItem.youtube = ytVid; newItem.youtube_play = youtube_play !== false; }
-      items.push(newItem);
 
-      const put = { message: `feat(content): publish ${section} post`, content: _b64EncodeUnicode(JSON.stringify(items, null, 2)), branch: BRANCH };
-      if (sha) put.sha = sha;
-      try {
-        const r = await fetch(GH_API, { method: 'PUT', headers: GH_H, body: JSON.stringify(put) });
-        if (!r.ok) { const e = await r.text(); return jsonError(502, `GitHub PUT failed: ${r.status}`, { detail: e.slice(0,200) }); }
-      } catch (e) { return jsonError(502, `GitHub PUT error: ${e.message}`); }
-      return new Response(JSON.stringify({ ok: true, id: newItem.id, expires_at: expiresAt }), { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
+      const newItemBase = { section, heading: heading.trim().slice(0,200), story: story.trim().slice(0,MAX_STORY), published_at: now.toISOString(), expires_at: expiresAt };
+      if (photo && typeof photo === 'string' && photo.trim().startsWith('http')) newItemBase.photo = photo.trim().slice(0,500);
+      if (link_url && typeof link_url === 'string' && link_url.trim().startsWith('http')) newItemBase.link_url = link_url.trim().slice(0,500);
+      if (photo_pos && typeof photo_pos === 'string') newItemBase.photo_pos = photo_pos.trim().slice(0,20);
+      if (photo_zoom && !isNaN(parseFloat(photo_zoom))) newItemBase.photo_zoom = Math.min(Math.max(parseFloat(photo_zoom), 1), 4);
+      const ytVid = _ytId(youtube);
+      if (ytVid) { newItemBase.youtube = ytVid; newItemBase.youtube_play = youtube_play !== false; }
+
+      const computeFn = (freshItems) => {
+        const items = freshItems.filter(i => i && i.expires_at && new Date(i.expires_at) > now);
+        const resultId = String(Date.now());
+        items.push({ ...newItemBase, id: resultId });
+        return { items, message: `feat(content): publish ${section} post`, meta: { resultId } };
+      };
+      let written;
+      try { written = await _ghWriteContentSafe(env, computeFn); }
+      catch (e) { return jsonError(502, e.message); }
+      return new Response(JSON.stringify({ ok: true, id: written.meta.resultId, expires_at: expiresAt }), { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
     }
 
     // ── /api/update-content  POST — replace entire content.json ─────────────
@@ -2459,7 +2466,16 @@ const _CONTENT_REPO = 'Vilfin-TV/MultiScreener', _CONTENT_FILE = 'content.json',
 function _ghHeaders(env){ return { 'Authorization': `token ${env.GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'vilfintv-proxy', 'Content-Type': 'application/json' }; }
 async function _ghReadContent(env){
   const api = `https://api.github.com/repos/${_CONTENT_REPO}/contents/${_CONTENT_FILE}`;
-  const r = await fetch(`${api}?ref=${_CONTENT_BRANCH}`, { headers: _ghHeaders(env) });
+  // Confirmed via direct testing (2026-07-25): repeated reads of this same
+  // URL can return a response that doesn't reflect a write made moments
+  // earlier - even with a single sequential writer, no concurrency involved.
+  // Most likely Cloudflare's own edge cache on this Worker's outbound fetch()
+  // subrequest to the same GitHub API URL. Both a cache-busting query param
+  // and { cf: cacheTtl: -1 } are used together since either mechanism alone
+  // may not cover every caching layer in the path.
+  const r = await fetch(`${api}?ref=${_CONTENT_BRANCH}&_cb=${Date.now()}`, {
+    headers: _ghHeaders(env), cf: { cacheTtl: -1, cacheEverything: false }
+  });
   if (r.ok) {
     const d = await r.json();
     // GitHub's Contents API omits "content" once the file exceeds 1MB -
@@ -2471,7 +2487,8 @@ async function _ghReadContent(env){
     if (d.content) {
       text = _b64DecodeUnicode(d.content.replace(/\n/g,''));
     } else if (d.download_url) {
-      const raw = await fetch(d.download_url, { headers: _ghHeaders(env) });
+      const bust = d.download_url.includes('?') ? `&_cb=${Date.now()}` : `?_cb=${Date.now()}`;
+      const raw = await fetch(d.download_url + bust, { headers: _ghHeaders(env), cf: { cacheTtl: -1, cacheEverything: false } });
       if (!raw.ok) throw new Error(`GitHub raw content fetch failed: ${raw.status}`);
       text = await raw.text();
     } else {
@@ -2492,10 +2509,71 @@ async function _ghWriteContent(env, items, sha, message){
   if (!r.ok) { const e = await r.text(); throw new Error(`GitHub PUT failed: ${r.status} ${e.slice(0,160)}`); }
   return true;
 }
+
+/* ── Race-safe content.json read/compute/write ──────────────────────────────
+   Incident, 2026-07-25: two concurrent publishers (an agent key + this
+   Worker's own console endpoint) each read content.json, and one write
+   landed based on a GitHub Contents API read that didn't reflect the other's
+   already-committed change — silently reverting 2 published articles with
+   no error surfaced to either caller. content.json is large (>1MB) and
+   written frequently, and GitHub's Contents API GET is not guaranteed
+   strongly consistent with the latest commit under that combination.
+   _ghWriteContent's sha-based conditional PUT does NOT catch this case,
+   because the stale read GitHub served was itself internally consistent
+   (its sha matched its own content) - there's no 409 to catch.
+
+   TRIED AND REJECTED (2026-07-25): re-reading after the write to verify the
+   expected change landed, retrying the whole cycle on mismatch. Live-tested
+   against this repo with a temporary agent key: verification failed on
+   EVERY attempt (3/3, twice in a row) even though the write itself had
+   genuinely succeeded each time (confirmed via git log - real commits,
+   correctly chained). This repo has very high commit velocity (Hermes,
+   share-page regen, data-refresh crons all writing constantly), and one
+   retry even stopped seeing an *earlier, already-committed* test item -
+   meaning the staleness window is wider than a few sequential retries can
+   reliably outlast, and it's on GitHub's own Contents-API read path, not a
+   Cloudflare edge cache (adding cache-busting query params + cf.cacheTtl:-1
+   made no difference). A hard fail-after-retries on this check would report
+   real successful writes as errors to every caller - worse than the
+   original silent-data-loss bug, not better. Do not resurrect a same-shaped
+   "verify by re-read" gate without solving the underlying consistency
+   problem first (the real fix is almost certainly the Git Data API's
+   refs/trees/commits with an atomic compare-and-swap ref update, which
+   doesn't share the Contents API's read-replica lag - that's a bigger,
+   separate change, not attempted here yet).
+
+   What this DOES still do: retry on a genuine thrown error (network hiccup,
+   a real GitHub PUT conflict) - a real resilience improvement over zero
+   retries, without pretending to solve the deeper consistency issue.
+   computeFn(freshItems) -> { items, message, meta } | _CONTENT_NOT_FOUND
+     (_CONTENT_NOT_FOUND is a genuine business-logic failure - e.g. an edit
+     or delete target that's genuinely missing - and is never retried.) */
+const _CONTENT_NOT_FOUND = Symbol('content_not_found');
+function _sleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
+async function _ghWriteContentSafe(env, computeFn, maxAttempts = 3){
+  let lastErr;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    let read;
+    try { read = await _ghReadContent(env); }
+    catch (e) { lastErr = e; await _sleep(300 * attempt); continue; }
+
+    const computed = computeFn(read.items);
+    if (computed === _CONTENT_NOT_FOUND) return _CONTENT_NOT_FOUND;
+
+    try { await _ghWriteContent(env, computed.items, read.sha, computed.message); }
+    catch (e) { lastErr = e; await _sleep(300 * attempt); continue; }
+
+    return { items: computed.items, meta: computed.meta };
+  }
+  throw lastErr || new Error('_ghWriteContentSafe: exhausted retries');
+}
 // Generic JSON-file read/write in the same repo (used for lessons.json).
 async function _ghReadJsonFile(env, file){
   const api = `https://api.github.com/repos/${_CONTENT_REPO}/contents/${file}`;
-  const r = await fetch(`${api}?ref=${_CONTENT_BRANCH}`, { headers: _ghHeaders(env) });
+  // Same cache-busting as _ghReadContent - see the comment there.
+  const r = await fetch(`${api}?ref=${_CONTENT_BRANCH}&_cb=${Date.now()}`, {
+    headers: _ghHeaders(env), cf: { cacheTtl: -1, cacheEverything: false }
+  });
   if (r.ok) {
     const d = await r.json();
     let data = {};
@@ -2504,7 +2582,11 @@ async function _ghReadJsonFile(env, file){
       // tiny today but this prevents the identical 502 recurring here later.
       let text;
       if (d.content) text = _b64DecodeUnicode(d.content.replace(/\n/g,''));
-      else if (d.download_url) { const raw = await fetch(d.download_url, { headers: _ghHeaders(env) }); text = raw.ok ? await raw.text() : null; }
+      else if (d.download_url) {
+        const bust = d.download_url.includes('?') ? `&_cb=${Date.now()}` : `?_cb=${Date.now()}`;
+        const raw = await fetch(d.download_url + bust, { headers: _ghHeaders(env), cf: { cacheTtl: -1, cacheEverything: false } });
+        text = raw.ok ? await raw.text() : null;
+      }
       if (text) data = JSON.parse(text);
     } catch(e){ data = {}; }
     return { sha: d.sha, data: (data && typeof data === 'object') ? data : {} };
