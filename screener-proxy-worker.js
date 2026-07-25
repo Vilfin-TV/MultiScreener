@@ -2486,13 +2486,29 @@ async function _ghReadContent(env){
     let text;
     if (d.content) {
       text = _b64DecodeUnicode(d.content.replace(/\n/g,''));
-    } else if (d.download_url) {
-      const bust = d.download_url.includes('?') ? `&_cb=${Date.now()}` : `?_cb=${Date.now()}`;
-      const raw = await fetch(d.download_url + bust, { headers: _ghHeaders(env), cf: { cacheTtl: -1, cacheEverything: false } });
-      if (!raw.ok) throw new Error(`GitHub raw content fetch failed: ${raw.status}`);
-      text = await raw.text();
+    } else if (d.sha) {
+      // GitHub's Contents API omits "content" once the file exceeds 1MB -
+      // content.json crossed that line permanently around 2026-07-23 and
+      // keeps growing, so this path is now taken on every single read.
+      // FIRST FIX (superseded): followed d.download_url (raw.githubusercontent.com).
+      // That "worked" for the 502 crash but reintroduced a WORSE bug: raw.
+      // githubusercontent.com sits behind its own CDN (Fastly) with a cache
+      // window that a cache-busting query string does NOT reliably defeat
+      // (confirmed 2026-07-25 - a delete call returned a real 404 for an
+      // item that demonstrably existed, moments after publishing it, on a
+      // request with zero concurrent writers - the raw-URL fetch was simply
+      // serving old cached bytes). REAL FIX: fetch the exact blob by its sha
+      // via the Git Data API instead - that's a direct object-store lookup
+      // tied to an immutable sha, not a "latest content at this URL" cache,
+      // so there's nothing to go stale. Confirmed via direct testing that
+      // this endpoint reflects a write immediately, unlike download_url.
+      const blobApi = `https://api.github.com/repos/${_CONTENT_REPO}/git/blobs/${d.sha}`;
+      const blob = await fetch(blobApi, { headers: _ghHeaders(env), cf: { cacheTtl: -1, cacheEverything: false } });
+      if (!blob.ok) throw new Error(`GitHub git-blobs fetch failed: ${blob.status}`);
+      const bd = await blob.json();
+      text = _b64DecodeUnicode((bd.content || '').replace(/\n/g,''));
     } else {
-      throw new Error('GitHub content response missing both content and download_url');
+      throw new Error('GitHub content response missing both content and sha');
     }
     let items = JSON.parse(text);
     if (!Array.isArray(items)) items = [];
@@ -2580,12 +2596,19 @@ async function _ghReadJsonFile(env, file){
     try {
       // Same >1MB Contents-API fallback as _ghReadContent - this file is
       // tiny today but this prevents the identical 502 recurring here later.
+      // Uses the Git Blobs API (immutable, sha-addressed), not download_url
+      // (raw.githubusercontent.com), which has its own CDN cache that a
+      // cache-busting query string doesn't reliably defeat - see the longer
+      // comment in _ghReadContent for the confirmed incident.
       let text;
       if (d.content) text = _b64DecodeUnicode(d.content.replace(/\n/g,''));
-      else if (d.download_url) {
-        const bust = d.download_url.includes('?') ? `&_cb=${Date.now()}` : `?_cb=${Date.now()}`;
-        const raw = await fetch(d.download_url + bust, { headers: _ghHeaders(env), cf: { cacheTtl: -1, cacheEverything: false } });
-        text = raw.ok ? await raw.text() : null;
+      else if (d.sha) {
+        const blobApi = `https://api.github.com/repos/${_CONTENT_REPO}/git/blobs/${d.sha}`;
+        const blob = await fetch(blobApi, { headers: _ghHeaders(env), cf: { cacheTtl: -1, cacheEverything: false } });
+        if (blob.ok) {
+          const bd = await blob.json();
+          text = _b64DecodeUnicode((bd.content || '').replace(/\n/g,''));
+        }
       }
       if (text) data = JSON.parse(text);
     } catch(e){ data = {}; }
