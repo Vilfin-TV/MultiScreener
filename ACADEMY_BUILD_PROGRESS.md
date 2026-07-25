@@ -24,32 +24,32 @@ Daily automated build of empty Academy topics in `education.html`.
 - [x] Generative AI & LLMs
 
 ### Life Skills (new hub: LIFESKILLS_LESSONS)
-- [ ] Public Speaking
-- [ ] Time Management
-- [ ] Emotional Intelligence
-- [ ] Stress Management
+- [x] Public Speaking
+- [x] Time Management
+- [x] Emotional Intelligence
+- [x] Stress Management
 
 ### Computer Science (new hub: CS_LESSONS)
-- [ ] Data Science
-- [ ] Cybersecurity
-- [ ] Operating System
-- [ ] Computer Network
-- [ ] Software Engineering
+- [x] Data Science
+- [x] Cybersecurity
+- [x] Operating System
+- [x] Computer Network
+- [x] Software Engineering
 
 ### Emerging Technologies (new hub: EMTECH_LESSONS)
-- [ ] Cloud Computing
-- [ ] Blockchain
-- [ ] Quantum Computing
-- [ ] Internet of Things (IoT)
+- [x] Cloud Computing
+- [x] Blockchain
+- [x] Quantum Computing
+- [x] Internet of Things (IoT)
 
 ### Aerospace Engineering (new hub: AERO_LESSONS)
-- [ ] Aerodynamics
-- [ ] Propulsion Systems
-- [ ] Orbital Mechanics
+- [x] Aerodynamics
+- [x] Propulsion Systems
+- [x] Orbital Mechanics
 
 ### Life Sciences & Biotechnology (new hub: BIO_LESSONS)
-- [ ] Genetic Engineering
-- [ ] Bioinformatics
+- [x] Genetic Engineering
+- [x] Bioinformatics
 - [ ] Molecular Biology
 
 ### Mechanical & Mobility (new hub: MECH_LESSONS)
@@ -73,3 +73,5 @@ Daily automated build of empty Academy topics in `education.html`.
 <!-- append one line per run: date — topics built — validation result -->
 - 2026-06-12 — Natural Language Processing (NLP) + Computer Vision (AI_LESSONS units 7-8, idx 27 & 32) — jsdom pass, preview render pass, 0 console errors
 - 2026-07-04 — Reinforcement Learning + Generative AI & LLMs (AI_LESSONS units 9-10, idx 36 & 41) — jsdom pass, preview render pass (both lessons + TOC verified via openAiLesson(36)/openAiLesson(41)), 0 console errors
+- 2026-07-26 — retro-sync: found Life Skills, Computer Science, Emerging Technologies and Aerospace Engineering hubs were already fully built and wired in earlier feature commits (0f8776fd, 240fe98b, 1ad24347, 311beb5c) before this queue file existed — ticked all 16 topics to match actual code state, no code changes needed for those
+- 2026-07-26 — Genetic Engineering + Bioinformatics (new hub BIO_LESSONS, idx 0 & 1) — jsdom pass, preview render pass (both lessons + TOC verified via openBioLesson(0)/openBioLesson(1), plus a real click on the Bioinformatics index link), 0 console errors

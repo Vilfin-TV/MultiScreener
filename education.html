@@ -1015,10 +1015,10 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
           <div class="subject-title">Life Sciences &amp; Biotechnology</div>
         </div>
         <div class="subject-links">
-          <a href="#" onclick="return false; alert('Coming Soon');">Genetic Engineering</a>
+          <a href="#" onclick="openBioLesson(0); return false;">Genetic Engineering</a>
           <a href="#" onclick="return false; alert('Coming Soon');">Nanotechnology</a>
           <a href="#" onclick="return false; alert('Coming Soon');">Molecular Biology</a>
-          <a href="#" onclick="return false; alert('Coming Soon');">Bioinformatics</a>
+          <a href="#" onclick="openBioLesson(1); return false;">Bioinformatics</a>
           <a href="#" onclick="return false; alert('Coming Soon');">Synthetic Biology</a>
           <a href="#" onclick="return false; alert('Coming Soon');">Immunology</a>
         </div>
@@ -1543,6 +1543,22 @@ button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
       </div>
     </div>
 
+    <!-- ── LIFE SCIENCES & BIOTECHNOLOGY ── -->
+    <div id="bio-content-area" style="display:none;">
+      <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">🧬 Life Sciences &amp; Biotechnology</h2>
+      <p style="margin:0 0 20px; font-size:14px; color:var(--text2);">2-lesson course · Teaching-style · Simple language</p>
+      <div class="fin-layout">
+        <aside class="fin-toc" id="bio-toc">
+          <div class="fin-toc-header">📚 Course Outline</div>
+          <div class="fin-toc-list" id="bio-toc-list"></div>
+        </aside>
+        <div class="fin-main" id="bio-main">
+          <div class="fin-progress-bar"><div class="fin-progress-fill" id="bio-progress-fill" style="width:50%"></div></div>
+          <div id="bio-lesson-content"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── AI & ROBOTICS ── -->
     <div id="ai-content-area" style="display:none;">
       <h2 style="margin-bottom:6px; font-size:22px; color:var(--text);">🤖 AI &amp; Robotics</h2>
@@ -1628,6 +1644,8 @@ function _hideAllLessonAreas() {
   if (_cs) _cs.style.display = 'none';
   var _lsk = document.getElementById('lifeskills-content-area');
   if (_lsk) _lsk.style.display = 'none';
+  var _bio = document.getElementById('bio-content-area');
+  if (_bio) _bio.style.display = 'none';
 }
 
 function openCbseLesson(subject, classNum) {
@@ -1874,6 +1892,21 @@ function openLifeSkillLesson(startIdx) {
   if (typeof renderLskLesson === 'function') renderLskLesson(_activeLskIdx);
   document.getElementById('lesson-view-container').scrollTop = 0;
   try { history.replaceState(null, '', '?subject=lifeskills'); } catch(e){}
+}
+
+var _activeBioIdx = 0;
+function openBioLesson(startIdx) {
+  document.getElementById('hero-section').style.display = 'none';
+  document.getElementById('subjects-section').style.display = 'none';
+  document.getElementById('lesson-view-container').style.display = 'block';
+  _hideAllLessonAreas();
+  document.getElementById('bio-content-area').style.display = 'block';
+  _activeHub = 'bio';
+  _activeBioIdx = (typeof startIdx === 'number') ? startIdx : 0;
+  if (typeof renderBioTOC === 'function') renderBioTOC();
+  if (typeof renderBioLesson === 'function') renderBioLesson(_activeBioIdx);
+  document.getElementById('lesson-view-container').scrollTop = 0;
+  try { history.replaceState(null, '', '?subject=life-sciences'); } catch(e){}
 }
 
 var _activeAiIdx = 0;
@@ -9380,6 +9413,115 @@ function renderLskLesson(idx) {
   var contentDiv = document.getElementById('lsk-lesson-content');
   if (contentDiv) contentDiv.innerHTML = html;
   var mainDiv = document.getElementById('lsk-main');
+  if (mainDiv) mainDiv.scrollTop = 0;
+}
+
+
+// ═══════════════════════════════════════
+// LIFE SCIENCES & BIOTECHNOLOGY — DATA + RENDER
+// ═══════════════════════════════════════
+var BIO_LESSONS = [
+  { unit: "Unit 1 · Life Sciences & Biotechnology", icon: "🧬",
+    title: "Genetic Engineering",
+    lead: "Genetic engineering is the direct, deliberate modification of an organism's DNA to change its traits — inserting, deleting or editing specific genes rather than waiting on random mutation and generations of selective breeding.",
+    points: [
+      "<strong>Recombinant DNA:</strong> a gene from one organism is cut out with restriction enzymes and spliced into another organism's genome, creating a combination that would not occur naturally.",
+      "<strong>CRISPR-Cas9:</strong> a bacterial immune-defence system repurposed as a programmable pair of molecular scissors — a guide RNA leads the Cas9 enzyme to an exact DNA sequence, where it cuts and lets researchers delete, disable or insert genetic material.",
+      "<strong>Vectors:</strong> plasmids and modified viruses act as delivery vehicles, ferrying new genetic instructions into a target cell's nucleus.",
+      "<strong>Applications:</strong> insulin and other medicines mass-produced by engineered bacteria, pest- and drought-resistant crops, gene therapies for inherited diseases, and engineered model organisms for research.",
+      "<strong>Regulation &amp; ethics:</strong> germline edits (which pass to offspring) are far more tightly restricted and debated than somatic edits (which affect only the treated individual)."
+    ],
+    analogy: "Traditional breeding is like reshuffling an entire recipe book hoping a tastier dish turns up by chance. Genetic engineering is opening the book to one exact line and rewriting just that word — precise, deliberate, and much faster.",
+    qa: [
+      { q: "How exactly does CRISPR know where to cut in three billion base pairs of DNA?", a: "CRISPR-Cas9 uses a short synthetic guide RNA, typically about 20 bases long, that is designed to be complementary to the target DNA sequence — it binds only where that exact sequence occurs, the same way a key matches only one lock. Once the guide RNA locks onto its matching site, it recruits the Cas9 enzyme, which slices both strands of the DNA at that precise location. The cell's own repair machinery then either stitches the cut back together imperfectly, disabling the gene, or, if researchers supply a template strand, copies in a new, deliberately-chosen sequence. Off-target effects — cuts at similar-looking sequences elsewhere in the genome — are the main safety concern, so much of current CRISPR research focuses on improving guide-RNA specificity and using higher-fidelity Cas variants." },
+      { q: "What is the difference between somatic and germline gene editing, and why does that distinction matter so much?", a: "Somatic editing changes the DNA only in specific body cells of one patient — for example, editing bone-marrow cells to treat sickle-cell disease — and the change dies with that individual; it cannot be passed to children. Germline editing changes DNA in eggs, sperm or very early embryos, meaning the edit becomes permanent in every cell of the resulting person and is inherited by all future generations. Somatic therapies are already approved and in clinical use because their risk is contained to a consenting patient. Germline editing raises far deeper concerns: an error compounds across a lineage, consent cannot be obtained from unborn descendants, and it edges toward selecting or enhancing human traits — which is why most countries currently restrict or ban heritable human germline editing." }
+    ]
+  },
+  { unit: "Unit 1 · Life Sciences & Biotechnology", icon: "🧫",
+    title: "Bioinformatics",
+    lead: "Bioinformatics is the field that applies computer science, statistics and algorithms to biological data — most famously DNA and protein sequences — turning oceans of raw genetic letters into usable biological knowledge.",
+    points: [
+      "<strong>Sequence alignment:</strong> algorithms like BLAST compare a new DNA or protein sequence against enormous databases to find matches, revealing shared ancestry or likely function.",
+      "<strong>The scale problem:</strong> a single human genome is about 3 billion base pairs; sequencing machines now generate that much data in hours, far faster than any human could ever read or compare by hand.",
+      "<strong>Genome assembly:</strong> sequencing produces millions of short overlapping DNA fragments that must be computationally stitched back together into a complete genome, like reassembling a shredded book from countless small pieces.",
+      "<strong>Structural &amp; functional prediction:</strong> tools such as AlphaFold predict a protein's 3D shape from its amino-acid sequence, a problem that stumped biologists for decades and now drives drug design.",
+      "<strong>Applications:</strong> personalised medicine matched to a patient's own genetic variants, tracing viral outbreaks by comparing pathogen genomes, and agricultural breeding guided by genomic data instead of years of field trials."
+    ],
+    analogy: "Raw DNA sequencing is like being handed millions of torn pages from an unknown number of copies of the same encyclopedia, all shuffled together. Bioinformatics is the software that sorts, matches and reassembles those pages into readable, searchable chapters — and then helps you understand what they actually mean.",
+    qa: [
+      { q: "Why can't biologists just read a genome directly the way you'd read a book?", a: "Current sequencing technology cannot read one long continuous DNA strand from end to end reliably; instead it chops the genome into millions of short, overlapping fragments called reads, each only a few hundred bases long, and reads those individually. To reconstruct the full 3-billion-base-pair genome, software has to find where these fragments overlap and stitch them into one continuous sequence — a computational puzzle called assembly that requires substantial computing power, especially where the genome contains long repetitive regions that make it ambiguous exactly how pieces overlap. On top of that, raw reads contain sequencing errors that must be statistically corrected, and the assembled genome still needs to be annotated — mapped against known genes and regulatory regions — before it becomes biologically meaningful rather than just a long string of letters." },
+      { q: "What made AlphaFold such a breakthrough for bioinformatics and medicine?", a: "A protein's function is determined by its precise 3D folded shape, not just its flat sequence of amino acids, but for decades predicting that shape computationally from sequence alone was considered one of biology's hardest unsolved problems — experimentally determining a single structure via X-ray crystallography or cryo-electron microscopy could take years of lab work. AlphaFold, built by DeepMind, used deep learning trained on the tens of thousands of experimentally-solved structures to predict shapes for previously unsolved proteins with accuracy rivaling wet-lab methods, and it did so in hours rather than years. This mattered enormously because a protein's shape reveals how it interacts with other molecules, which drives rational drug design, helps explain disease-causing mutations, and has already been used to model proteins relevant to antibiotic resistance and neglected tropical diseases where lab-based structural studies were never affordable at scale." }
+    ]
+  }
+];
+
+function renderBioTOC() {
+  var list = document.getElementById('bio-toc-list');
+  if (!list) return;
+  var html = '';
+  var currentUnit = '';
+  BIO_LESSONS.forEach(function(lesson, i) {
+    if (lesson.unit !== currentUnit) {
+      currentUnit = lesson.unit;
+      html += '<div class="fin-toc-unit">' + esc(lesson.unit) + '</div>';
+    }
+    html += '<div class="fin-toc-item' + (i === _activeBioIdx ? ' active' : '') + '" onclick="renderBioLesson(' + i + ')" id="bio-toc-' + i + '">'
+          + '<span style="margin-right:7px;">' + lesson.icon + '</span>' + esc(lesson.title)
+          + '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function renderBioLesson(idx) {
+  _activeBioIdx = idx;
+  var lesson = BIO_LESSONS[idx];
+  if (!lesson) return;
+
+  var pct = ((idx + 1) / BIO_LESSONS.length) * 100;
+  var pfill = document.getElementById('bio-progress-fill');
+  if (pfill) pfill.style.width = pct + '%';
+
+  renderBioTOC();
+  var act = document.getElementById('bio-toc-' + idx);
+  if (act && act.scrollIntoView) act.scrollIntoView({ behavior:'smooth', block:'center' });
+
+  var html = '<div class="fin-lesson-num">LESSON ' + (idx+1) + ' OF ' + BIO_LESSONS.length + '</div>';
+  html += '<h1 class="fin-lesson-title">' + esc(lesson.title) + '</h1>';
+  if (lesson.lead) html += '<div class="fin-lesson-lead">' + lesson.lead + '</div>';
+
+  if (lesson.points && lesson.points.length > 0) {
+    html += '<div class="fin-section-title">Key Concepts</div><ul class="fin-key-points">';
+    lesson.points.forEach(function(pt) { html += '<li>' + pt + '</li>'; });
+    html += '</ul>';
+  }
+
+  if (lesson.analogy) {
+    html += '<div class="fin-analogy-box"><div class="fin-analogy-title">💡 The Intuition</div><div class="fin-analogy-text">' + esc(lesson.analogy) + '</div></div>';
+  }
+
+  if (lesson.qa && lesson.qa.length > 0) {
+    html += '<div class="fin-qa-section"><div class="fin-section-title">Common Questions</div>';
+    lesson.qa.forEach(function(item, qidx) {
+      var uniq = 'bio-q-' + idx + '-' + qidx;
+      html += '<div class="fin-qa-item" id="' + uniq + '">'
+            + '<div class="fin-qa-q" onclick="document.getElementById(\'' + uniq + '\').classList.toggle(\'open\')">'
+            + '<span>' + esc(item.q) + '</span>'
+            + '<svg class="fin-qa-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>'
+            + '</div><div class="fin-qa-a">' + item.a + '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  var prevDisabled = (idx === 0) ? ' disabled' : '';
+  var nextDisabled = (idx === BIO_LESSONS.length - 1) ? ' disabled' : '';
+  html += '<div class="fin-nav-row">'
+        + '<button class="fin-nav-btn"' + prevDisabled + ' onclick="renderBioLesson(' + (idx-1) + ')">&#8592; Previous</button>'
+        + '<button class="fin-nav-btn primary"' + nextDisabled + ' onclick="renderBioLesson(' + (idx+1) + ')">Next &#8594;</button>'
+        + '</div>';
+
+  var contentDiv = document.getElementById('bio-lesson-content');
+  if (contentDiv) contentDiv.innerHTML = html;
+  var mainDiv = document.getElementById('bio-main');
   if (mainDiv) mainDiv.scrollTop = 0;
 }
 
