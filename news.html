@@ -2713,17 +2713,26 @@ function renderBreakingNews(data, rotate) {
     }
 
         var regionStreamMap = {
-      'India': 'UC_gUM8rL-Lrg6O3adPW9K1g', // WION
-      'Malayalam': 'UCf8w5m0YsRa8MHQ5bwSGmbw', // Asianet
-      'North America': 'UCIALMKvObZNtJ6AmdCLP7Lg', // Bloomberg
-      'USA': 'UCIALMKvObZNtJ6AmdCLP7Lg', // Bloomberg
-      'Europe': 'UCSrZ3UV4jOidv8ppoVuvW9Q', // Euronews
-      'Middle East': 'UCNye-wNBqNL5ZzHSJj3l8Bg', // Al Jazeera
-      'Japan': 'UCSPEjw8F2nQDtmUKPFNF7_A', // NHK
-      'Global': 'UCIALMKvObZNtJ6AmdCLP7Lg',
-      'World': 'UCIALMKvObZNtJ6AmdCLP7Lg'
+      'india': 'UC_gUM8rL-Lrg6O3adPW9K1g',
+      'national': 'UC_gUM8rL-Lrg6O3adPW9K1g',
+      'malayalam': 'UCf8w5m0YsRa8MHQ5bwSGmbw',
+      'north america': 'UCIALMKvObZNtJ6AmdCLP7Lg',
+      'us': 'UCIALMKvObZNtJ6AmdCLP7Lg',
+      'usa': 'UCIALMKvObZNtJ6AmdCLP7Lg',
+      'europe': 'UCSrZ3UV4jOidv8ppoVuvW9Q',
+      'europe general': 'UCSrZ3UV4jOidv8ppoVuvW9Q',
+      'middle east': 'UCNye-wNBqNL5ZzHSJj3l8Bg',
+      'uae': 'UCNye-wNBqNL5ZzHSJj3l8Bg',
+      'japan': 'UCSPEjw8F2nQDtmUKPFNF7_A',
+      'asia': 'UC_gUM8rL-Lrg6O3adPW9K1g',
+      'asia general': 'UC_gUM8rL-Lrg6O3adPW9K1g',
+      'global': 'UCIALMKvObZNtJ6AmdCLP7Lg',
+      'world': 'UCIALMKvObZNtJ6AmdCLP7Lg',
+      'australia': 'UCIALMKvObZNtJ6AmdCLP7Lg',
+      'africa': 'UCNye-wNBqNL5ZzHSJj3l8Bg'
     };
-    var streamCid = (bnActiveRegion && regionStreamMap[bnActiveRegion]) ? regionStreamMap[bnActiveRegion] : null;
+    var activeLower = bnActiveRegion ? bnActiveRegion.toLowerCase() : '';
+    var streamCid = regionStreamMap[activeLower] || null;
     var heroMediaHtml = '';
     
     if (streamCid) {
