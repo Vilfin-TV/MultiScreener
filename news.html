@@ -1740,6 +1740,132 @@ footer.news-footer{
   transition: transform 0.3s ease;
 }
 .bn-hero:hover img { transform: scale(1.02); }
+
+/* CNN-style hero media: a fixed 16:9 frame so a portrait/oversized source
+   photo is cropped to the same footprint as every other card instead of
+   stretching the whole column. */
+.bn-hero-cnn-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--card2);
+}
+.bn-hero-cnn-media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: none;
+  object-fit: cover;
+  object-position: center top;   /* keep faces in frame on portrait sources */
+  display: block;
+}
+/* Older browsers without aspect-ratio support */
+@supports not (aspect-ratio: 16 / 9) {
+  .bn-hero-cnn-media { height: 0; padding-top: 56.25%; }
+}
+
+/* ── Breaking News live channel module ── */
+.bn-live {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--card);
+  margin-bottom: 24px;
+}
+.bn-live-hdr {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--card2);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.bn-live-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 0 0 rgba(239,68,68,.6);
+  animation: bnLivePulse 1.8s ease-out infinite;
+  flex-shrink: 0;
+}
+@keyframes bnLivePulse {
+  0%   { box-shadow: 0 0 0 0 rgba(239,68,68,.55); }
+  70%  { box-shadow: 0 0 0 7px rgba(239,68,68,0); }
+  100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+}
+.bn-live-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: .2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bn-live-region {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: var(--text3);
+  border-left: 1px solid var(--border);
+  padding-left: 8px;
+}
+.bn-live-note {
+  flex: 1;
+  min-width: 0;
+  font-size: 10.5px;
+  color: #f59e0b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bn-live-btn {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text2);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 4px 9px;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color .15s, color .15s;
+}
+.bn-live-btn:hover { border-color: var(--burn2); color: var(--text); }
+.bn-live-btn-yt {
+  background: #cc0000;
+  border-color: #cc0000;
+  color: #fff;
+}
+.bn-live-btn-yt:hover { background: #a80000; border-color: #a80000; color: #fff; }
+.bn-live-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+}
+.bn-live-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+@supports not (aspect-ratio: 16 / 9) {
+  .bn-live-frame { height: 0; padding-top: 56.25%; }
+}
+@media(max-width: 600px) {
+  .bn-live-region { display: none; }
+}
+
 .bn-hero-content {
   position: absolute;
   bottom: 0; left: 0; right: 0;
@@ -2655,6 +2781,215 @@ window.bnRefreshUI = function() {
   }
 };
 
+/* ═══════════════════════════════════════════════════
+   BREAKING NEWS — LIVE CHANNEL
+   Uses the exact same resolution backend as the vilfintv.com home-page
+   live panel: shared 4-hour localStorage videoId cache → /youtube-live
+   lookup → curated video-ID fallbacks → channel uploads playlist.
+═══════════════════════════════════════════════════ */
+var _BN_YT_CACHE_KEY = 'viltv_live_cache';   // same key the home panel writes
+var _BN_YT_CACHE_TTL = 4 * 60 * 60 * 1000;   // 4 hours
+
+function _bnYtCacheGet(cid) {
+  try {
+    var store = JSON.parse(localStorage.getItem(_BN_YT_CACHE_KEY) || '{}');
+    var e = store[cid];
+    if (e && e.videoId && (Date.now() - e.ts) < _BN_YT_CACHE_TTL) return e.videoId;
+  } catch (err) {}
+  return null;
+}
+function _bnYtCacheSet(cid, videoId) {
+  try {
+    var store = JSON.parse(localStorage.getItem(_BN_YT_CACHE_KEY) || '{}');
+    store[cid] = { videoId: videoId, ts: Date.now() };
+    localStorage.setItem(_BN_YT_CACHE_KEY, JSON.stringify(store));
+  } catch (err) {}
+}
+
+/* Channel roster — mirrors the home-page live directory (cid = channel ID,
+   v1/v2 = verified embeddable fallback video IDs). */
+var _BN_CH = {
+  ndtv:      { name:'NDTV 24x7',            cid:'UCZFMm1mMw0F81Z37aaEzTUA', v1:'y4vvJJNF1ro', v2:'N-ZthvsWswU' },
+  cnnnews18: { name:'CNN-News18',           cid:'UCef1-8eOpJgud7szVPlZQAQ', v1:'4yivvIX7Umo', v2:'EU8EF3doHuI' },
+  wion:      { name:'WION',                 cid:'UC_gUM8rL-Lrg6O3adPW9K1g', v1:'lmZRiDMK3OU', v2:'_KnLD1uPF90' },
+  aajtak:    { name:'Aaj Tak',              cid:'UCt4t-jeY85JegMlZ-E5UWtA', v1:'PNxDir65frc', v2:'2D90PCpYI5o' },
+  asianet:   { name:'Asianet News',         cid:'UCf8w5m0YsRa8MHQ5bwSGmbw', v1:'s0LLVQeMmtU', v2:'' },
+  puthiya:   { name:'Puthiya Thalaimurai',  cid:'UCmyKnNRH0wH-r8I-ceP-dsg', v1:'PMOhxFY_niM', v2:'0oOj5H2RY0E' },
+  tv9kn:     { name:'TV9 Kannada',          cid:'UC8dnBi4WUErqYQHZ4PfsLTg', v1:'IuqTrRUogTU', v2:'j3vvIdTtveQ' },
+  abpmajha:  { name:'ABP Majha',            cid:'UCH7nv1A9xIrAifZJNvt7cgA', v1:'',            v2:'' },
+  zeedelhi:  { name:'Zee Delhi-NCR Haryana',cid:'UCG6L5cIg2XZvXVksq5B9edw', v1:'',            v2:'' },
+  tv9guj:    { name:'TV9 Gujarati',         cid:'UCeJWZgSMlzqYEDytDnvzHnw', v1:'',            v2:'' },
+  abpananda: { name:'ABP Ananda',           cid:'UCv3rFzn-GHGtqzXiaq3sWNg', v1:'',            v2:'' },
+  n18up:     { name:'News18 UP Uttarakhand',cid:'UCafYgzpyw7aIUYOLjjADu7w', v1:'',            v2:'' },
+  ptc:       { name:'PTC News',             cid:'UCQLEbraENUGWh6p1Rv664rQ', v1:'',            v2:'' },
+  n18bihar:  { name:'News18 Bihar Jharkhand',cid:'UC531MlZA5LUbeGwEN_zcppw',v1:'',            v2:'' },
+  cna:       { name:'CNA',                  cid:'UC83jt4dlz1Gjl58fzQrrKZg', v1:'XWq5kBlakcQ', v2:'' },
+  nhk:       { name:'NHK WORLD-JAPAN',      cid:'UCSPEjw8F2nQDtmUKPFNF7_A', v1:'f0lYkdA-Gtw', v2:'' },
+  cgtn:      { name:'CGTN',                 cid:'UCgrNz-aDmcr2uuto8_DL2jg', v1:'R79Yrpkn1Bk', v2:'iUt4CkuPz3g' },
+  thairath:  { name:'Thairath News',        cid:'UCrFDdD-EE05N7gjwZho2wqw', v1:'',            v2:'' },
+  vtv24:     { name:'VTV24',                cid:'UCabsTV34JwALXKGMqHpvUiA', v1:'',            v2:'' },
+  awani:     { name:'Astro AWANI',          cid:'UC5dYmq91e5_g54krpO06NJw', v1:'',            v2:'' },
+  tvbs:      { name:'TVBS News',            cid:'UC5nwNW4KdC0SzrhF9BXEYOQ', v1:'',            v2:'' },
+  somoy:     { name:'Somoy TV',             cid:'UCxHoBXkY88Tb8z1Ssj6CWsQ', v1:'ABnvuDjicEE', v2:'' },
+  hiru:      { name:'Hiru TV',              cid:'UC2sO_F_Ky4LIAUtSJYXqBDA', v1:'p-OvM8hxx4s', v2:'' },
+  arirang:   { name:'Arirang TV',           cid:'UC-PHIZjV-oX8H7zD1cCN2NQ', v1:'trrPwbBZaLg', v2:'' },
+  tvone:     { name:'tvOneNews',            cid:'UCER4rvDnRBPr_ncYW4UCZjg', v1:'',            v2:'' },
+  eagle:     { name:'Eagle News',           cid:'UCPoVy9RE7OvlX8AkksLHsyA', v1:'',            v2:'' },
+  abc:       { name:'ABC News',             cid:'UCBi2mrWuNuyYy4gbM6fU18Q', v1:'3MT3lPGqUsA', v2:'' },
+  livenow:   { name:'LiveNOW from FOX',     cid:'UCJg9wBPyKMNA5sRDnvzmkdg', v1:'C96oohpWBGw', v2:'' },
+  bloomberg: { name:'Bloomberg Television', cid:'UCIALMKvObZNtJ6AmdCLP7Lg', v1:'iEpJwprxDdk', v2:'' },
+  sky:       { name:'Sky News',             cid:'UCoMdktPbSTixAyNGwb-UYkQ', v1:'YDvsBbKfLPA', v2:'' },
+  skyau:     { name:'Sky News Australia',   cid:'UCO0akufu9MOzyz3nvGIXAAw', v1:'',            v2:'' },
+  euronews:  { name:'Euronews',             cid:'UCSrZ3UV4jOidv8ppoVuvW9Q', v1:'4mu5Ccj74W8', v2:'' },
+  france24:  { name:'France 24 English',    cid:'UCQfwfsi5VrQ8yKZ-UWmAEFg', v1:'Ap-UM1O9RBU', v2:'' },
+  dw:        { name:'DW News',              cid:'UCknLrEdhRCp1aegoMqRaCZg', v1:'LuKwFajn37U', v2:'' },
+  skytg24:   { name:'Sky TG24',             cid:'UCz6E3lF72mb6uoJ-mOlNo2A', v1:'',            v2:'' },
+  srf:       { name:'SRF News',             cid:'UCVuR4hBxX3zWY_xUCZeIc3A', v1:'',            v2:'' },
+  aljazeera: { name:'Al Jazeera English',   cid:'UCNye-wNBqNL5ZzHSJj3l8Bg', v1:'gCNeDWCI0vo', v2:'' },
+  alarabiya: { name:'Al Arabiya',           cid:'UCahpxixMCwoANAftn6IxkTg', v1:'',            v2:'' },
+  trt:       { name:'TRT World',            cid:'UC7fWeaHhqgM4Ry-RMpM2YYw', v1:'0T3jv70ypu4', v2:'' },
+  arise:     { name:'Arise News',           cid:'UCyEJX-kSj0kOOCS7Qlq2G7g', v1:'TJ5V8KRSu9Y', v2:'' }
+};
+
+/* Region (secondary tab) → channel. Keys are lowercased region names. */
+var _BN_REGION_CH = {
+  // India
+  'national':'ndtv', 'kerala':'asianet', 'tamil nadu':'puthiya', 'karnataka':'tv9kn',
+  'maharashtra':'abpmajha', 'delhi':'zeedelhi', 'gujarat':'tv9guj', 'west bengal':'abpananda',
+  'uttar pradesh':'n18up', 'punjab':'ptc', 'rajasthan':'aajtak', 'bihar':'n18bihar',
+  // Asia
+  'asia general':'cna', 'japan':'nhk', 'china':'cgtn', 'singapore':'cna', 'thailand':'thairath',
+  'vietnam':'vtv24', 'malaysia':'awani', 'taiwan':'tvbs', 'bangladesh':'somoy',
+  'sri lanka':'hiru', 'afghanistan':'aljazeera', 'south korea':'arirang',
+  'indonesia':'tvone', 'philippines':'eagle', 'pakistan':'wion',
+  // North America
+  'us':'abc', 'canada':'livenow', 'mexico':'bloomberg',
+  // South America
+  'brazil':'bloomberg', 'argentina':'bloomberg', 'colombia':'bloomberg',
+  'chile':'bloomberg', 'peru':'bloomberg',
+  // Europe
+  'europe general':'euronews', 'uk':'sky', 'france':'france24', 'germany':'dw',
+  'italy':'skytg24', 'spain':'euronews', 'netherlands':'euronews', 'switzerland':'srf',
+  'sweden':'euronews', 'poland':'euronews', 'ireland':'sky', 'russia':'dw', 'ukraine':'euronews',
+  // Middle East
+  'middle east general':'aljazeera', 'uae':'alarabiya', 'saudi arabia':'alarabiya',
+  'israel':'aljazeera', 'qatar':'aljazeera', 'egypt':'alarabiya', 'turkey':'trt',
+  'lebanon':'alarabiya', 'iran':'aljazeera',
+  // Australia
+  'australia':'skyau', 'new zealand':'skyau',
+  // Africa
+  'africa':'arise', 'south africa':'arise', 'nigeria':'arise', 'kenya':'arise',
+  'ghana':'arise', 'morocco':'aljazeera'
+};
+
+/* Continent fallback so a newly added region still gets a sensible channel. */
+var _BN_CONTINENT_CH = {
+  'india':'ndtv', 'asia':'cna', 'north america':'abc', 'south america':'bloomberg',
+  'europe':'sky', 'middle east':'aljazeera', 'australia':'skyau', 'africa':'arise'
+};
+
+function _bnStreamFor(continent, region) {
+  var key = _BN_REGION_CH[String(region || '').toLowerCase().trim()] ||
+            _BN_CONTINENT_CH[String(continent || '').toLowerCase().trim()];
+  return (key && _BN_CH[key]) ? _BN_CH[key] : null;
+}
+
+/* 4-stage fallback chain, identical to the home-page live panel:
+   1 = cache / live_stream?channel= + parallel /youtube-live upgrade
+   2 = curated video ID v1
+   3 = curated video ID v2
+   4 = channel uploads playlist (UU… — always resolves to something) */
+var _bnStream = { entry: null, stage: 0, token: 0, timer: null };
+
+function _bnEmbed(videoId) {
+  return 'https://www.youtube.com/embed/' + videoId +
+         '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
+}
+function _bnStreamSetSrc(src) {
+  var f = document.getElementById('bn-live-frame');
+  if (f && f.src !== src) f.src = src;
+}
+function _bnStreamNote(msg) {
+  var n = document.getElementById('bn-live-note');
+  if (n) n.textContent = msg || '';
+}
+
+function _bnStreamStart(ch) {
+  clearTimeout(_bnStream.timer);
+  _bnStream.timer = null;
+  _bnStream.token++;
+  _bnStream.entry = ch || null;
+  if (!ch) return;
+  _bnStream.stage = 1;
+  _bnStreamTry();
+}
+
+function _bnStreamTry() {
+  var ch = _bnStream.entry;
+  if (!ch) return;
+  // Skip stages with no data behind them
+  while (_bnStream.stage <= 4) {
+    if (_bnStream.stage === 1 && ch.cid) break;
+    if (_bnStream.stage === 2 && ch.v1)  break;
+    if (_bnStream.stage === 3 && ch.v2)  break;
+    if (_bnStream.stage === 4 && ch.cid) break;
+    _bnStream.stage++;
+  }
+  if (_bnStream.stage > 4) { _bnStreamNote('Stream unavailable — open on YouTube'); return; }
+
+  clearTimeout(_bnStream.timer);
+  _bnStream.timer = null;
+
+  if (_bnStream.stage === 1) {
+    var token = _bnStream.token;
+    var cid   = ch.cid;
+    var cached = _bnYtCacheGet(cid);
+    if (cached) { _bnStreamSetSrc(_bnEmbed(cached)); _bnStreamNote(''); return; }
+
+    // Load the channel live embed straight away so there is no blank wait,
+    // then upgrade to the resolved videoId when the lookup returns.
+    _bnStreamSetSrc('https://www.youtube.com/embed/live_stream?channel=' + cid +
+      '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
+    _bnStream.timer = setTimeout(function() {
+      if (_bnStream.token !== token || _bnStream.stage !== 1) return;
+      _bnStream.stage = ch.v1 ? 2 : 4;
+      _bnStreamTry();
+    }, 20000);
+
+    fetch(_SHARE_WORKER + '/youtube-live?cid=' + encodeURIComponent(cid))
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (_bnStream.token !== token || _bnStream.stage !== 1) return;
+        if (d && d.live && d.videoId) {
+          clearTimeout(_bnStream.timer); _bnStream.timer = null;
+          _bnYtCacheSet(cid, d.videoId);
+          _bnStreamSetSrc(_bnEmbed(d.videoId));
+          _bnStreamNote('');
+        } else if (d && !d.live && d.reason !== 'API key not configured') {
+          clearTimeout(_bnStream.timer); _bnStream.timer = null;
+          _bnStream.stage = ch.v1 ? 2 : 4;
+          _bnStreamTry();
+        }
+      })
+      .catch(function() { /* lookup failed — channel embed + 20s timer cover it */ });
+    return;
+  }
+
+  if (_bnStream.stage === 2)      _bnStreamSetSrc(_bnEmbed(ch.v1));
+  else if (_bnStream.stage === 3) _bnStreamSetSrc(_bnEmbed(ch.v2));
+  else _bnStreamSetSrc('https://www.youtube.com/embed/videoseries?list=UU' + ch.cid.slice(2) +
+                       '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
+  _bnStreamNote('');
+}
+
+window.bnStreamNext = function() {
+  if (!_bnStream.entry) return;
+  _bnStream.stage++;
+  if (_bnStream.stage > 4) _bnStream.stage = 1;
+  _bnStreamNote('');
+  _bnStreamTry();
+};
+
 function renderBreakingNews(data, rotate) {
   if (!data || Object.keys(data).length === 0) return document.createElement('div');
   breakingNewsData = data;
@@ -2727,7 +3062,35 @@ function renderBreakingNews(data, rotate) {
   }
 
   var items = (bnActiveContinent && bnActiveRegion && data[bnActiveContinent][bnActiveRegion]) ? data[bnActiveContinent][bnActiveRegion] : [];
-  
+
+  // Live channel for this region — resolved through the shared live backend.
+  // Built before the article grid so a region with no stories still gets its
+  // live feed instead of an empty panel.
+  var streamCh = _bnStreamFor(bnActiveContinent, bnActiveRegion);
+  var streamIframeHtml = '';
+
+  if (streamCh) {
+      var ytLink = streamCh.cid
+        ? 'https://www.youtube.com/channel/' + streamCh.cid + '/live'
+        : 'https://www.youtube.com/watch?v=' + streamCh.v1;
+      streamIframeHtml =
+        '<div class="bn-live">' +
+          '<div class="bn-live-hdr">' +
+            '<span class="bn-live-dot"></span>' +
+            '<span class="bn-live-name">' + esc(streamCh.name) + '</span>' +
+            '<span class="bn-live-region">' + esc(bnActiveRegion || '') + '</span>' +
+            '<span class="bn-live-note" id="bn-live-note"></span>' +
+            '<button type="button" class="bn-live-btn" onclick="bnStreamNext()" title="Switch to the next available source">&#x21BA; Next source</button>' +
+            '<a class="bn-live-btn bn-live-btn-yt" href="' + escAttr(ytLink) + '" target="_blank" rel="noopener">&#x25BA; YouTube</a>' +
+          '</div>' +
+          '<div class="bn-live-frame">' +
+            '<iframe id="bn-live-frame" title="' + escAttr(streamCh.name) + ' live" src="about:blank" ' +
+            'allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen ' +
+            'referrerpolicy="strict-origin-when-cross-origin" loading="lazy"></iframe>' +
+          '</div>' +
+        '</div>';
+  }
+
   html += '<div class="breaking-news-grid" style="padding-top:16px; border-top:1px solid var(--border);">';
   if (items.length > 0) {
     var heroItem = items[0];
@@ -2738,55 +3101,19 @@ function renderBreakingNews(data, rotate) {
         return 'role="button" tabindex="0" data-title="' + escAttr(item.title) + '" data-snippet="' + encSnippet + '" data-url="' + escAttr(item.link) + '" data-source="' + escAttr(item.source || '') + '" onclick="lnbCardOpen(this)"';
     }
 
-        var regionStreamMap = {
-      'india': 'UC_gUM8rL-Lrg6O3adPW9K1g', // WION
-      'national': '_qf6M0_e4hI', // NDTV India (Direct Video ID)
-      'malayalam': 'UCf8w5m0YsRa8MHQ5bwSGmbw', // Asianet
-      'north america': 'UCIALMKvObZNtJ6AmdCLP7Lg', // Bloomberg
-      'us': 'F1We9JABQU8', // CNN-News18 (Direct Video ID)
-      'usa': 'F1We9JABQU8', // CNN-News18 (Direct Video ID)
-      'europe': 'UCSrZ3UV4jOidv8ppoVuvW9Q', // Euronews
-      'europe general': 'UCSrZ3UV4jOidv8ppoVuvW9Q',
-      'middle east': 'UCNye-wNBqNL5ZzHSJj3l8Bg', // Al Jazeera
-      'uae': 'UCNye-wNBqNL5ZzHSJj3l8Bg',
-      'japan': 'UCSPEjw8F2nQDtmUKPFNF7_A', // NHK
-      'asia': 'UC_gUM8rL-Lrg6O3adPW9K1g',
-      'asia general': 'UCER4rvDnRBPr_ncYW4UCZjg', // tvOneNews
-      'global': 'UCIALMKvObZNtJ6AmdCLP7Lg',
-      'world': 'UCIALMKvObZNtJ6AmdCLP7Lg',
-      'australia': 'UCO0akufu9MOzyz3nvGIXAAw', // Sky News Australia
-      'africa': 'UCNye-wNBqNL5ZzHSJj3l8Bg'
-    };
-    var activeLower = bnActiveRegion ? bnActiveRegion.toLowerCase() : '';
-    var streamSrc = regionStreamMap[activeLower] || null;
-    var heroMediaHtml = '';
-    
-    var streamIframeHtml = '';
-    
-    if (streamSrc) {
-      var embedUrl = '';
-      if (streamSrc.startsWith('UC')) {
-        embedUrl = 'https://www.youtube.com/embed/live_stream?channel=' + streamSrc + '&autoplay=1&mute=1';
-      } else {
-        embedUrl = 'https://www.youtube.com/embed/' + streamSrc + '?autoplay=1&mute=1';
-      }
-
-      streamIframeHtml = '<div style="width:100%; aspect-ratio:16/9; border-radius:8px; overflow:hidden; margin-bottom:24px; background:#000;">' +
-          '<iframe src="' + embedUrl + '" style="width:100%; height:100%; border:none;" allow="autoplay; encrypted-media" allowfullscreen></iframe>' +
-          '</div>';
-    }
-
-    var heroMediaHtml = '<img src="' + escAttr(heroItem.imageUrl) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" style="width:100%; height:auto; object-fit:cover; display:block;" onerror="this.onerror=null;this.style.visibility=\'hidden\';">';
+    var heroMediaHtml = heroItem.imageUrl
+      ? '<img src="' + escAttr(heroItem.imageUrl) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.visibility=\'hidden\';">'
+      : '';
 
     html += '<div class="bn-hero" style="background:transparent; display:flex; flex-direction:column; padding:0; border:none;">' +
         streamIframeHtml +
         '<div class="bn-hero-article" ' + _ca(heroItem) + ' style="cursor:pointer; display:block; text-decoration:none;">' +
-        '<div class="bn-hero-cnn-title" style="font-size:32px; font-weight:800; line-height:1.2; margin-bottom:12px; color:var(--text); letter-spacing:-0.5px;">' + esc(heroItem.title) + '</div>' +
-        '<div class="bn-hero-cnn-media" style="position:relative; width:100%; border-radius:4px; overflow:hidden;">' +
+        '<div class="bn-hero-cnn-title" style="font-size:32px; font-weight:800; line-height:1.2; margin-bottom:12px; color:var(--text); letter-spacing:-0.5px;">' + esc(_wDecodeHtml(heroItem.title)) + '</div>' +
+        '<div class="bn-hero-cnn-media">' +
            heroMediaHtml +
            '<div class="bn-badge" style="position:absolute; top:12px; left:12px; margin:0; z-index:10; background:#cc0000; color:#fff; padding:4px 8px; font-size:12px; font-weight:800; border-radius:2px; text-transform:uppercase;">Latest Update</div>' +
         '</div>' +
-        (heroItem.description ? '<div class="bn-hero-cnn-desc" style="font-size:16px; line-height:1.4; color:var(--text2); margin-top:12px;">' + esc(heroItem.description) + '</div>' : '') +
+        (heroItem.description ? '<div class="bn-hero-cnn-desc" style="font-size:16px; line-height:1.4; color:var(--text2); margin-top:12px;">' + esc(_wDecodeHtml(heroItem.description)) + '</div>' : '') +
         '</div></div>';
 
     if (sideItems.length > 0) {
@@ -2819,12 +3146,22 @@ function renderBreakingNews(data, rotate) {
       html += '</div>';
     }
   } else {
-    html += '<div style="padding:20px; color:var(--text3);">No breaking news found for this region.</div>';
+    // No stories right now — still surface the region's live channel.
+    html += '<div class="bn-hero" style="background:transparent; display:flex; flex-direction:column; padding:0; border:none;">' +
+            streamIframeHtml +
+            '<div style="padding:20px; color:var(--text3);">No breaking news found for this region.</div>' +
+            '</div>';
   }
-  
+
   html += '</div></div>';
 
   wrapper.innerHTML = html;
+
+  // Resolve + start the live channel once the wrapper is in the document.
+  // Always call it: a region without a stream cancels any player still
+  // running from the previously selected region.
+  setTimeout(function() { _bnStreamStart(streamCh || null); }, 0);
+
   return wrapper;
 }
 
