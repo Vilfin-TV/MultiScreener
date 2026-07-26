@@ -5527,22 +5527,54 @@ function _lmCards(g) {
 // Hide the overflow stories of one grid and drop a corner "More from <section> »" link.
 function _lmBuild(grid, sectionEl) {
   var cards = _lmCards(grid);
+  
+  // If this grid is a left column, we must also truncate the corresponding right column synchronously.
+  var isLeft = grid.classList.contains('bn-left-col');
+  var rightGrid = isLeft ? grid.parentNode.querySelector('.bn-right-col') : null;
+  var rightCards = rightGrid ? _lmCards(rightGrid) : [];
+  
   var INITIAL = LM_INITIAL[_lmGridType(grid)] || 6, STEP = INITIAL;
-  if (cards.length <= INITIAL) return;
+  if (cards.length <= INITIAL && rightCards.length <= INITIAL) return;
+  
   cards.forEach(function (c, i) { if (i >= INITIAL) c.classList.add('lm-hide'); });
+  if (rightGrid) {
+    rightCards.forEach(function (c, i) { if (i >= INITIAL) c.classList.add('lm-hide'); });
+    rightGrid.dataset.lm = '1'; // prevent it from being processed again
+  }
+  
   var nm = '';
   if (sectionEl) { var ne = sectionEl.querySelector('.news-section-name'); if (ne) nm = (ne.textContent || '').replace(/[\u{1F000}-\u{1FAFF}☀-➿️]/gu, '').replace(/\s+/g, ' ').trim(); }
   var row = document.createElement('div'); row.className = 'lm-more-row';
+  
+  // If we are inside a breaking-news-grid, span the button across the full width
+  if (isLeft && grid.parentNode.classList.contains('breaking-news-grid')) {
+    row.style.gridColumn = '1 / -1';
+  }
+  
   var btn = document.createElement('button'); btn.className = 'lm-more'; btn.type = 'button';
   btn.innerHTML = '<span class="lm-txt">' + (nm ? ('More from ' + nm) : 'More stories') + '</span><span class="lm-arrow">»</span>';
   btn.addEventListener('click', function () {
     var hidden = grid.querySelectorAll('.lm-hide');
     var n = Math.min(STEP, hidden.length);
     for (var i = 0; i < n; i++) hidden[i].classList.remove('lm-hide');
-    if (grid.querySelectorAll('.lm-hide').length === 0 && row.parentNode) row.parentNode.removeChild(row);
+    
+    if (rightGrid) {
+      var rHidden = rightGrid.querySelectorAll('.lm-hide');
+      var rn = Math.min(STEP, rHidden.length);
+      for (var i = 0; i < rn; i++) rHidden[i].classList.remove('lm-hide');
+    }
+    
+    var remain = grid.querySelectorAll('.lm-hide').length + (rightGrid ? rightGrid.querySelectorAll('.lm-hide').length : 0);
+    if (remain === 0 && row.parentNode) row.parentNode.removeChild(row);
   });
   row.appendChild(btn);
-  grid.parentNode.insertBefore(row, grid.nextSibling);
+  
+  // Insert the row appropriately. For paired columns, it's safer to append it to the end of the grid parent.
+  if (isLeft) {
+    grid.parentNode.appendChild(row);
+  } else {
+    grid.parentNode.insertBefore(row, grid.nextSibling);
+  }
 }
 /* Every block that counts as one "section" for load-more purposes. Ordered
    innermost-first so a nested block claims its own grids before an outer one
