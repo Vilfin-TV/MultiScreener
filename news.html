@@ -3158,6 +3158,7 @@ function renderBreakingNews(data, rotate) {
   if (items.length > 0) {
     var heroItem = items[0];
     var sideItems = items.slice(1, 13); // side column scrolls — show up to 12
+    if (sideItems.length % 2 !== 0) sideItems.pop(); // ensure equal numbers in left and right
 
     function _ca(item) {
         var encSnippet = item.description ? encodeURIComponent(item.description) : '';
@@ -5884,6 +5885,7 @@ function _buildBnLayout(items, getImg, getOnClick, timeFunc, badgeText, accent) 
   }
 
   var sideItems = items.slice(1, 41); // side columns scroll — up to 40 stories
+  if (sideItems.length % 2 !== 0) sideItems.pop(); // ensure equal numbers in left and right
   if (sideItems.length) {
     var mid = Math.ceil(sideItems.length / 2);
     
