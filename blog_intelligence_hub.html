@@ -787,6 +787,189 @@ html[data-theme="gemini"]{
   [data-theme="gemini"] body::before{animation:none!important}
 }
 
+/* ══════════════════════════════════════════════════════════════
+   COMPLETE THEME SYSTEM — Variable blocks + structural overrides
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 1. CSS VARIABLE BLOCKS (auto-fix all var()-based styles) ── */
+[data-theme="standard"]{
+  --burn:#2563eb;--burn2:#3b82f6;--burn3:#1d4ed8;
+  --gold:#1e3a8a;--gold2:#1d4ed8;
+  --dark:#f0f4f9;--dark2:#e8edf5;--dark3:#dde3ed;--dark4:#ccd6e3;
+  --card:#ffffff;--card2:#f5f8fc;--card3:#edf2f9;--card4:#e4ebf5;
+  --text:#0f172a;--text2:#374151;--text3:#6b7280;
+  --border:#dde3ed;--border2:#c8d3e0;
+  --page-bg:#f0f4f9;--glow:rgba(37,99,235,.12);
+}
+[data-theme="standard"] body{background:var(--page-bg)!important;color:var(--text)!important}
+
+[data-theme="midnight"]{
+  --burn:#2563eb;--burn2:#3b82f6;--burn3:#58a6ff;
+  --gold:#1e3a8a;--gold2:#58a6ff;
+  --dark:#0b0e14;--dark2:#161b22;--dark3:#1c2433;--dark4:#21262d;
+  --card:#161b22;--card2:#1c2433;--card3:#21262d;--card4:#2d333b;
+  --text:#e6edf3;--text2:#adbac7;--text3:#636e7b;
+  --border:#30363d;--border2:#444c56;
+  --page-bg:#0b0e14;--glow:rgba(88,166,255,.2);
+}
+[data-theme="midnight"] body{background:var(--page-bg)!important;color:var(--text)!important}
+
+[data-theme="maroon"]{
+  --burn:#8b0000;--burn2:#b22222;--burn3:#dc143c;
+  --gold:#8b0000;--gold2:#dc143c;
+  --dark:#1a0a0a;--dark2:#2d1111;--dark3:#3d1a1a;--dark4:#4d2222;
+  --card:#2d1111;--card2:#3d1a1a;--card3:#4d2222;--card4:#5d2a2a;
+  --text:#f5e6e6;--text2:#c9a8a8;--text3:#8a6a6a;
+  --border:#3d1a1a;--border2:#5d2a2a;
+  --page-bg:#1a0a0a;--glow:rgba(220,20,60,.25);
+}
+[data-theme="maroon"] body{background:var(--page-bg)!important;color:var(--text)!important}
+
+[data-theme="silver"]{
+  --burn:#0066cc;--burn2:#4099ff;--burn3:#73b9ff;
+  --gold:#0066cc;--gold2:#4099ff;
+  --dark:#f5f5f7;--dark2:#e8e8ed;--dark3:#dcdce0;--dark4:#cfcfd4;
+  --card:#ffffff;--card2:#f8f8fa;--card3:#e8e8ed;--card4:#dcdce0;
+  --text:#1d1d1f;--text2:#515154;--text3:#8e8e93;
+  --border:#dcdce0;--border2:#c7c7cc;
+  --page-bg:#f5f5f7;--glow:rgba(0,102,204,.18);
+}
+[data-theme="silver"] body{background:var(--page-bg)!important;color:var(--text)!important}
+
+[data-theme="gold"]{
+  --burn:#b8860b;--burn2:#d4af37;--burn3:#f5d060;
+  --gold:#b8860b;--gold2:#d4af37;
+  --dark:#1a1500;--dark2:#2d2200;--dark3:#3d3000;--dark4:#4d3e00;
+  --card:#2d2200;--card2:#3d3000;--card3:#4d3e00;--card4:#5d4e00;
+  --text:#fff8e6;--text2:#d4c08a;--text3:#9e8b50;
+  --border:#3d3000;--border2:#5d4e00;
+  --page-bg:#1a1500;--glow:rgba(212,175,55,.3);
+}
+[data-theme="gold"] body{background:var(--page-bg)!important;color:var(--text)!important}
+
+html[data-theme="gemini"]{
+  --burn:#4285f4;--burn2:#9b72cb;--burn3:#d96570;
+  --gold:#f8bc24;--gold2:#f8bc24;
+  --dark:#1e1f20;--dark2:#282a2c;--dark3:#313335;--dark4:#3c4043;
+  --card:#1e1f20;--card2:#282a2c;--card3:#313335;--card4:#3c4043;
+  --text:#e3e3e3;--text2:#9aa0a6;--text3:#7a8186;
+  --border:#3c4043;--border2:#4a4e52;
+  --page-bg:#131314;--glow:rgba(66,133,244,.25);
+}
+
+html[data-theme="news-reader"]{
+  --burn:#d81921;--burn2:#e8333a;--burn3:#f04148;
+  --gold:#d81921;--gold2:#b31118;
+  --dark:#f5f7f8;--dark2:#ebeef0;--dark3:#dde1e4;--dark4:#cdd2d6;
+  --card:#ffffff;--card2:#f5f7f8;--card3:#ebeef0;--card4:#dde1e4;
+  --text:#111111;--text2:#444444;--text3:#777777;
+  --border:#e5e7e8;--border2:#d0d4d7;
+  --page-bg:#ffffff;--glow:rgba(216,25,33,.15);
+}
+[data-theme="news-reader"] body{background:#ffffff!important;color:#111!important}
+
+/* ── 2. STRUCTURAL OVERRIDES — hardcoded dark rgba() → CSS vars ── */
+/* Panels & Cards */
+.panel,.empty-state{background:var(--card)!important;border-color:var(--border)!important}
+.briefing-card,.topic-card{background:var(--card)!important;border-color:var(--border)!important}
+.signal-card{background:var(--card2)!important;border-color:var(--border2)!important}
+.search-box{background:var(--card2)!important;border-color:var(--border2)!important}
+.stat-pill{background:var(--card2)!important;border-color:var(--border2)!important;color:var(--text2)!important}
+
+/* NFO Board */
+.nfo-board,.ipo-widget-panel{background:var(--card)!important;border-color:var(--border)!important;box-shadow:0 4px 24px rgba(0,0,0,.2)!important}
+.nfo-col{background:var(--card2)!important;border-color:var(--border2)!important}
+.nfo-col-head,.nfo-board-footer{border-color:var(--border2)!important}
+.nfo-card{background:var(--card3)!important;border-color:var(--border2)!important}
+.nfo-news-item{border-bottom-color:var(--border)!important}
+.ipo-widget-head{border-bottom-color:var(--border2)!important}
+.ipo-widget-body{background:var(--page-bg)!important}
+.ipo-news-panel{background:var(--card2)!important;border-color:var(--border2)!important}
+.ipo-news-item{border-bottom-color:var(--border)!important}
+.ipo-widget-footer{border-top-color:var(--border2)!important}
+
+/* Mobile tab chips */
+.mobile-tab-chip{background:var(--card2)!important;border-color:var(--border)!important;color:var(--text2)!important}
+.mobile-tab-chip.active{background:rgba(37,99,235,.18)!important;color:var(--burn3)!important;border-color:var(--burn2)!important}
+
+/* Briefing/topic card internals */
+.briefing-foot,.topic-foot{border-top-color:var(--border)!important}
+.tag{background:var(--card2)!important;border-color:var(--border)!important;color:var(--text2)!important}
+footer{background:var(--dark2)!important;border-top-color:var(--border)!important}
+footer strong{color:var(--text)!important}
+
+/* ── 3. TEXT COLOR OVERRIDES — hardcoded whites → CSS vars ── */
+.toolbar-title{color:var(--text)!important}
+.briefings-title,.empty-title,.topic-title,.briefing-title{color:var(--text)!important}
+.nfo-board-title,.nfo-col-name,.nfo-card-name,.ipo-widget-title{color:var(--text)!important}
+.topic-state,.briefing-source{color:var(--text2)!important}
+.nfo-card-meta,.nfo-news-meta,.ipo-news-meta,.nfo-board-sub{color:var(--text3)!important}
+.nfo-news-title,.nfo-empty{color:var(--text2)!important}
+.ipo-news-title{color:var(--text2)!important}
+.ipo-news-cat{color:var(--burn2)!important}
+.ipo-news-title:hover,.nfo-news-title:hover{color:var(--burn3)!important}
+.search-input{background:transparent!important;color:var(--text)!important}
+
+/* ── 4. SIDEBAR overrides ── */
+.sidebar-title{color:var(--burn3)!important}
+.sidebar-group{color:var(--text3)!important;border-left-color:var(--burn)!important}
+.tab-btn{color:var(--text2)!important}
+.tab-btn:hover{background:rgba(128,128,128,.07)!important;color:var(--text)!important;border-color:var(--border)!important}
+.tab-count{color:var(--text3)!important;background:rgba(128,128,128,.15)!important}
+
+/* ── 5. LIGHT THEME extras (standard, silver, news-reader) ── */
+[data-theme="standard"] .tab-btn.active,
+[data-theme="silver"] .tab-btn.active{background:rgba(37,99,235,.1)!important;color:var(--burn)!important;border-color:rgba(37,99,235,.22)!important}
+[data-theme="news-reader"] .tab-btn.active{background:rgba(216,25,33,.1)!important;color:#d81921!important;border-color:rgba(216,25,33,.25)!important}
+
+[data-theme="standard"] .mobile-tab-chip.active,
+[data-theme="silver"] .mobile-tab-chip.active{background:rgba(37,99,235,.14)!important;color:var(--burn)!important;border-color:var(--burn2)!important;box-shadow:0 0 8px rgba(37,99,235,.2)!important}
+[data-theme="news-reader"] .mobile-tab-chip.active{background:rgba(216,25,33,.12)!important;color:#d81921!important;border-color:#d81921!important}
+
+[data-theme="standard"] .briefing-badge,
+[data-theme="silver"] .briefing-badge{background:rgba(37,99,235,.08)!important;border-color:rgba(37,99,235,.2)!important;color:var(--burn)!important}
+[data-theme="news-reader"] .briefing-badge{background:rgba(216,25,33,.08)!important;border-color:rgba(216,25,33,.2)!important;color:#d81921!important}
+
+[data-theme="standard"] .topic-category,
+[data-theme="silver"] .topic-category{background:rgba(37,99,235,.07)!important;border-color:rgba(37,99,235,.18)!important;color:var(--burn)!important}
+[data-theme="news-reader"] .topic-category{background:rgba(216,25,33,.07)!important;border-color:rgba(216,25,33,.18)!important;color:#d81921!important}
+
+[data-theme="standard"] .nfo-col-count,
+[data-theme="silver"] .nfo-col-count{background:rgba(37,99,235,.1)!important;color:var(--burn)!important}
+[data-theme="news-reader"] .nfo-col-count{background:rgba(216,25,33,.1)!important;color:#d81921!important}
+
+[data-theme="standard"] .briefing-link,
+[data-theme="silver"] .briefing-link{background:rgba(37,99,235,.06)!important;border-color:rgba(37,99,235,.18)!important;color:var(--burn)!important}
+[data-theme="news-reader"] .briefing-link{background:rgba(216,25,33,.06)!important;border-color:rgba(216,25,33,.18)!important;color:#d81921!important}
+
+[data-theme="standard"] .nfo-card-link,
+[data-theme="silver"] .nfo-card-link{color:var(--burn)!important}
+[data-theme="news-reader"] .nfo-card-link{color:#d81921!important}
+
+[data-theme="standard"] .meta-chip,
+[data-theme="silver"] .meta-chip{background:rgba(37,99,235,.07)!important;border-color:rgba(37,99,235,.16)!important;color:var(--burn)!important}
+[data-theme="news-reader"] .meta-chip{background:rgba(216,25,33,.06)!important;border-color:rgba(216,25,33,.15)!important;color:#d81921!important}
+
+/* ── 6. DARK THEME card gradients (restore premium feel) ── */
+[data-theme="midnight"] .panel,[data-theme="midnight"] .briefing-card,[data-theme="midnight"] .topic-card{background:linear-gradient(180deg,#161b22,#1c2433)!important;border-color:#30363d!important}
+[data-theme="maroon"] .panel,[data-theme="maroon"] .briefing-card,[data-theme="maroon"] .topic-card{background:linear-gradient(180deg,#2d1111,#3d1a1a)!important;border-color:#3d1a1a!important}
+[data-theme="gold"] .panel,[data-theme="gold"] .briefing-card,[data-theme="gold"] .topic-card{background:linear-gradient(180deg,#2d2200,#3d3000)!important;border-color:#3d3000!important}
+[data-theme="gemini"] .panel,[data-theme="gemini"] .briefing-card,[data-theme="gemini"] .topic-card{background:linear-gradient(180deg,#1e1f20,#282a2c)!important;border-color:#3c4043!important}
+
+/* ── 7. SITE HEADER text always visible (header has colored bg) ── */
+.site-header h1,.site-header .sub,.header-chip{color:#fff!important}
+
+/* ── 8. Theme dropdown — per-theme colors ── */
+[data-theme="standard"] .theme-dropdown,[data-theme="silver"] .theme-dropdown{background:#fff!important;border-color:#dde3ed!important;box-shadow:0 8px 32px rgba(0,0,0,.12)!important}
+[data-theme="standard"] .theme-opt,[data-theme="silver"] .theme-opt{color:#374151!important}
+[data-theme="standard"] .theme-opt:hover,[data-theme="silver"] .theme-opt:hover{background:rgba(37,99,235,.07)!important;color:#1d4ed8!important}
+[data-theme="standard"] .theme-opt.active-theme,[data-theme="silver"] .theme-opt.active-theme{color:#1d4ed8!important;background:rgba(37,99,235,.1)!important}
+[data-theme="standard"] .theme-opt.active-theme::after,[data-theme="silver"] .theme-opt.active-theme::after{color:#1d4ed8!important}
+[data-theme="news-reader"] .theme-dropdown{background:#111!important;border-color:#333!important}
+[data-theme="gold"] .theme-dropdown{background:#2d2200!important;border-color:#3d3000!important}
+[data-theme="maroon"] .theme-dropdown{background:#2d1111!important;border-color:#3d1a1a!important}
+[data-theme="midnight"] .theme-dropdown{background:#161b22!important;border-color:#30363d!important}
+
 </style>
 </head>
 <body>
