@@ -148,6 +148,29 @@ FEEDS: dict[str, list[dict[str, str]]] = {
         _gn("Bollywood+Hindi+movie+film+actor+actress+OTT+news", india=True, when="7d"),
         _gn("Hindi+cinema+box+office+release+trailer+streaming", india=True, when="7d"),
     ],
+    "malayalam_cinema": [
+        {"url": "https://www.onmanorama.com/entertainment/movies.rss", "source": "OnManorama Movies"},
+        {"url": "https://english.mathrubhumi.com/movies/feed", "source": "Mathrubhumi Movies"},
+        _gn("Malayalam+cinema+Mollywood+movie+actor+OTT+release+2026", india=True, when="7d"),
+        _gn("Mollywood+box+office+Kerala+film+award+streaming+2026", india=True, when="7d"),
+    ],
+    "tamil_cinema": [
+        {"url": "https://www.behindwoods.com/feed/", "source": "Behindwoods"},
+        {"url": "https://www.cinemaexpress.com/feed/", "source": "Cinema Express"},
+        _gn("Kollywood+Tamil+cinema+movie+actor+release+OTT+2026", india=True, when="7d"),
+        _gn("Tamil+box+office+Chennai+Vijay+Ajith+Rajinikanth+film+2026", india=True, when="7d"),
+    ],
+    "telugu_cinema": [
+        {"url": "https://www.123telugu.com/feed", "source": "123Telugu"},
+        {"url": "https://www.gulte.com/feed/", "source": "Gulte"},
+        _gn("Tollywood+Telugu+cinema+movie+actor+release+OTT+2026", india=True, when="7d"),
+        _gn("Telugu+box+office+Hyderabad+Prabhas+Mahesh+Allu+film+2026", india=True, when="7d"),
+    ],
+    "kannada_cinema": [
+        {"url": "https://www.deccanherald.com/rss/entertainment.rss", "source": "Deccan Herald Ent"},
+        _gn("Sandalwood+Kannada+cinema+movie+actor+release+OTT+2026", india=True, when="7d"),
+        _gn("Kannada+film+Yash+Rishab+Shetty+box+office+Karnataka+2026", india=True, when="7d"),
+    ],
     "mumbai": [
         _gn("Mumbai+latest+news+Maharashtra+city+development", india=True, when="7d"),
         _gn("Mumbai+metro+infrastructure+BMC+real+estate+project", india=True, when="7d"),
