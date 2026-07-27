@@ -91,10 +91,11 @@ a{text-decoration:none;color:inherit}
 
 .top-menubar{
   position:sticky;top:0;z-index:1000;
-  background:linear-gradient(135deg,#040913 0%,#081324 45%,#10264a 100%);
-  border-bottom:2px solid rgba(56,189,248,.32);
-  display:flex;align-items:center;height:46px;padding:0 14px;gap:12px;
-  box-shadow:0 2px 20px rgba(0,0,0,.35);
+  background:rgba(4,9,19,.88);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(56,189,248,.2);
+  box-shadow:0 1px 0 rgba(56,189,248,.08),0 4px 24px rgba(0,0,0,.4);
+  display:flex;align-items:center;height:52px;padding:0 20px;gap:0;
 }
 .top-menu-brand{display:flex;align-items:center;gap:10px;min-width:0}
 .brand-icon{
@@ -204,7 +205,7 @@ a{text-decoration:none;color:inherit}
 .tab-btn.active .tab-count{background:rgba(59,130,246,.25);color:#93c5fd}
 
 /* Mobile: horizontal scrollable tab strip instead of vertical sidebar */
-.mobile-tab-strip{display:none;position:sticky;top:44px;z-index:50;background:linear-gradient(180deg,var(--page-bg) 70%,transparent);padding:8px 0 12px;margin:0 -16px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.mobile-tab-strip{display:none;position:sticky;top:48px;z-index:50;background:linear-gradient(180deg,var(--page-bg) 70%,transparent);padding:8px 0 12px;margin:0 -16px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .mobile-tab-strip::-webkit-scrollbar{display:none}
 .mobile-tab-strip-inner{display:flex;gap:6px;padding:0 16px;width:max-content}
 .mobile-tab-chip{flex-shrink:0;padding:7px 14px;border-radius:999px;background:rgba(14,31,59,.85);border:1px solid var(--border);color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s;-webkit-tap-highlight-color:transparent}
@@ -617,6 +618,151 @@ html[data-theme="gemini"]{
 /* â”€â”€ Selection â”€â”€ */
 [data-theme="gemini"] ::selection{background:rgba(66,133,244,.3);color:#e3e3e3}
 
+/* ══ PREMIUM NAV CENTRE + RIGHT ZONE ══ */
+.top-nav-center{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:2px;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+}
+.top-nav-center::-webkit-scrollbar{display:none}
+.top-nav-link{
+  font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:600;
+  letter-spacing:0.4px;color:rgba(255,255,255,.68);
+  padding:6px 14px;border-radius:8px;
+  border:1px solid transparent;
+  transition:all 0.2s;white-space:nowrap;flex-shrink:0;
+}
+.top-nav-link:hover{background:rgba(255,255,255,.06);color:#fff;}
+.top-nav-link.active{background:rgba(37,99,235,.15);color:#93c5fd;border-color:rgba(37,99,235,.25);}
+.top-nav-right{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-left:12px;}
+.top-status{
+  display:flex;align-items:center;gap:6px;font-size:10px;color:rgba(255,255,255,.5);font-weight:700;letter-spacing:.5px
+}
+/* ── Theme switcher ── */
+.theme-switcher-wrap{position:relative}
+.theme-switcher-btn{
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+  border-radius:8px;padding:4px 9px;font-size:14px;cursor:pointer;line-height:1;
+  color:#fff;transition:all .2s;
+}
+.theme-switcher-btn:hover{background:rgba(255,255,255,.13);border-color:rgba(56,189,248,.35);}
+.theme-dropdown{
+  display:none;position:absolute;top:calc(100% + 8px);right:0;z-index:2000;
+  background:rgba(8,16,36,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid rgba(56,189,248,.22);border-radius:12px;
+  box-shadow:0 8px 32px rgba(0,0,0,.55);padding:6px;min-width:168px;
+}
+.theme-dropdown.open{display:block}
+.theme-opt{
+  display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;
+  border:none;background:transparent;color:rgba(255,255,255,.78);
+  font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;
+  border-radius:8px;cursor:pointer;transition:all .15s;text-align:left;
+}
+.theme-opt:hover{background:rgba(255,255,255,.09);color:#fff;}
+.theme-opt.active-theme{color:#93c5fd;background:rgba(37,99,235,.14);}
+.theme-opt.active-theme::after{content:'✓';margin-left:auto;font-size:11px;color:#93c5fd;}
+.topt-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;display:inline-block;border:1px solid rgba(255,255,255,.18);}
+/* Responsive: mobile height + compact strip */
+@media(max-width:767px){
+  .top-menubar{height:48px;padding:0 12px;}
+  .top-nav-center{gap:0;justify-content:flex-start;}
+  .top-nav-link{font-size:11.5px;padding:5px 10px;}
+  .top-nav-right{gap:6px;margin-left:6px;}
+  .top-status .status-dot{display:none;}
+  #topNavUpdated{display:none;}
+}
+/* ══ PER-THEME OVERRIDES FOR BLOG HUB ══ */
+/* default / black (base vars) */
+[data-theme="black"] .top-menubar,[data-theme="default"] .top-menubar{
+  background:rgba(4,9,19,.88);border-bottom-color:rgba(56,189,248,.2);
+}
+/* standard — bold blue */
+[data-theme="standard"] .top-menubar{
+  background:rgba(30,58,138,.92)!important;border-bottom-color:#93c5fd!important;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+[data-theme="standard"] .top-nav-link{color:rgba(255,255,255,.8);}
+[data-theme="standard"] .top-nav-link:hover{background:rgba(255,255,255,.12);color:#fff;}
+[data-theme="standard"] .top-nav-link.active{background:rgba(255,255,255,.18);color:#fff;border-color:rgba(255,255,255,.4);}
+[data-theme="standard"] .top-menubar .theme-switcher-btn{border-color:rgba(255,255,255,.3);}
+[data-theme="standard"] .site-header{background:linear-gradient(135deg,#1e3a8a 0%,#1d4ed8 55%,#2563eb 100%);}
+[data-theme="standard"] .panel{background:#fff;border-color:#dde3ed;box-shadow:0 4px 16px rgba(0,0,0,.08);}
+[data-theme="standard"] .sidebar-card{background:#f5f8fc;border-color:#dde3ed;}
+[data-theme="standard"] .tab-btn.active{background:rgba(29,78,216,.12);color:#1d4ed8;border-color:rgba(29,78,216,.28);}
+/* midnight */
+[data-theme="midnight"] .top-menubar{
+  background:rgba(22,27,34,.92)!important;border-bottom-color:#30363d!important;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+[data-theme="midnight"] .top-nav-link{color:rgba(230,237,243,.65);}
+[data-theme="midnight"] .top-nav-link:hover{background:rgba(255,255,255,.06);color:#e6edf3;}
+[data-theme="midnight"] .top-nav-link.active{background:rgba(88,166,255,.14);color:#58a6ff;border-color:rgba(88,166,255,.3);}
+[data-theme="midnight"] .site-header{background:#161b22;border-bottom-color:#30363d;}
+[data-theme="midnight"] .panel{background:#161b22;border-color:#30363d;}
+[data-theme="midnight"] .sidebar-card{background:#1c2433;border-color:#30363d;}
+[data-theme="midnight"] .tab-btn.active{background:rgba(88,166,255,.14);color:#58a6ff;border-color:rgba(88,166,255,.3);}
+/* maroon */
+[data-theme="maroon"] .top-menubar{
+  background:rgba(26,8,8,.92)!important;border-bottom-color:rgba(220,20,60,.25)!important;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+[data-theme="maroon"] .top-nav-link{color:rgba(245,230,230,.65);}
+[data-theme="maroon"] .top-nav-link:hover{background:rgba(220,20,60,.1);color:#f5e6e6;}
+[data-theme="maroon"] .top-nav-link.active{background:rgba(220,20,60,.18);color:#dc143c;border-color:rgba(220,20,60,.35);}
+[data-theme="maroon"] .site-header{background:linear-gradient(135deg,#1a0a0a,#2d1111);}
+[data-theme="maroon"] .panel{background:#2d1111;border-color:#3d1a1a;}
+[data-theme="maroon"] .sidebar-card{background:#3d1a1a;border-color:#3d1a1a;}
+[data-theme="maroon"] .tab-btn.active{background:rgba(220,20,60,.16);color:#dc143c;border-color:rgba(220,20,60,.32);}
+/* silver */
+[data-theme="silver"] .top-menubar{
+  background:rgba(45,45,48,.94)!important;border-bottom-color:rgba(0,102,204,.3)!important;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+[data-theme="silver"] .top-nav-link{color:rgba(255,255,255,.72);}
+[data-theme="silver"] .top-nav-link:hover{background:rgba(255,255,255,.1);color:#fff;}
+[data-theme="silver"] .top-nav-link.active{background:rgba(0,102,204,.22);color:#73b9ff;border-color:rgba(0,102,204,.4);}
+[data-theme="silver"] .site-header{background:linear-gradient(135deg,#2d2d30,#48484a);}
+[data-theme="silver"] .panel{background:#fff;border-color:#dcdce0;box-shadow:0 4px 16px rgba(0,0,0,.08);}
+[data-theme="silver"] .sidebar-card{background:#f8f8fa;border-color:#dcdce0;}
+[data-theme="silver"] .tab-btn.active{background:rgba(0,102,204,.12);color:#0066cc;border-color:rgba(0,102,204,.28);}
+/* gold */
+[data-theme="gold"] .top-menubar{
+  background:rgba(26,21,0,.92)!important;border-bottom-color:rgba(212,175,55,.25)!important;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+[data-theme="gold"] .top-nav-link{color:rgba(255,248,230,.65);}
+[data-theme="gold"] .top-nav-link:hover{background:rgba(212,175,55,.1);color:#fff8e6;}
+[data-theme="gold"] .top-nav-link.active{background:rgba(212,175,55,.18);color:#f5d060;border-color:rgba(212,175,55,.35);}
+[data-theme="gold"] .site-header{background:linear-gradient(135deg,#1a1500,#2d2200);}
+[data-theme="gold"] .panel{background:#2d2200;border-color:#3d3000;}
+[data-theme="gold"] .sidebar-card{background:#3d3000;border-color:#3d3000;}
+[data-theme="gold"] .tab-btn.active{background:rgba(212,175,55,.16);color:#d4af37;border-color:rgba(212,175,55,.32);}
+/* gemini — nav already overridden above; add accent overrides */
+[data-theme="gemini"] .top-nav-link{color:rgba(227,227,227,.65);}
+[data-theme="gemini"] .top-nav-link:hover{background:rgba(66,133,244,.1);color:#e3e3e3;}
+[data-theme="gemini"] .top-nav-link.active{background:rgba(66,133,244,.18);color:#4285f4;border-color:rgba(66,133,244,.35);}
+[data-theme="gemini"] .theme-dropdown{background:rgba(28,31,35,.97);border-color:#3c4043;}
+[data-theme="gemini"] .theme-opt{color:#9aa0a6;}
+[data-theme="gemini"] .theme-opt:hover{background:rgba(66,133,244,.1);color:#e3e3e3;}
+[data-theme="gemini"] .theme-opt.active-theme{color:#4285f4;background:rgba(66,133,244,.14);}
+[data-theme="gemini"] .theme-opt.active-theme::after{color:#4285f4;}
+/* news-reader — nav already overridden above; add accent overrides */
+[data-theme="news-reader"] .top-nav-link{color:rgba(255,255,255,.78);}
+[data-theme="news-reader"] .top-nav-link:hover{background:rgba(255,255,255,.1);color:#fff;}
+[data-theme="news-reader"] .top-nav-link.active{background:rgba(216,25,33,.22);color:#fff;border-color:rgba(216,25,33,.4);}
+[data-theme="news-reader"] .theme-dropdown{background:rgba(17,17,17,.97);border-color:#333;}
+[data-theme="news-reader"] .theme-opt{color:#aaa;}
+[data-theme="news-reader"] .theme-opt:hover{background:rgba(216,25,33,.1);color:#fff;}
+[data-theme="news-reader"] .theme-opt.active-theme{color:#d81921;background:rgba(216,25,33,.12);}
+[data-theme="news-reader"] .theme-opt.active-theme::after{color:#d81921;}
+[data-theme="news-reader"] .panel{background:#fff!important;border-color:#e5e7e8!important;color:#111!important;box-shadow:0 4px 16px rgba(0,0,0,.08);}
+[data-theme="news-reader"] .sidebar-card{background:#f5f7f8!important;border-color:#e5e7e8!important;}
+[data-theme="news-reader"] .tab-btn.active{background:rgba(216,25,33,.1)!important;color:#d81921!important;border-color:rgba(216,25,33,.25)!important;}
+/* smooth theme transitions for new nav elements */
+.top-nav-link,.theme-switcher-btn,.theme-dropdown,.theme-opt{
+  transition:background-color .3s ease,color .3s ease,border-color .3s ease;
+}
+
 [data-theme="gemini"] body::before{
   content:"";
   position:fixed;
@@ -647,15 +793,34 @@ html[data-theme="gemini"]{
 <div class="top-menubar">
   <a href="index.html" class="top-menu-brand">
     <img src="images/vilfintv-logo.jpg" alt="VilfinTV logo" width="30" height="30" style="width:30px;height:30px;border-radius:50%;display:block;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(59,130,246,.45))"/>
-    <div class="brand-name">Vilfin<span>TV</span> Multiscreener</div>
+    <div class="brand-name">Vilfin<span>TV</span></div>
   </a>
-  <a href="blog_intelligence_hub.html" class="back-btn" title="Reload this page">&#127968; Home</a>
-  <a href="news.html" class="back-btn" title="News">📰 News</a>
-  <a href="story.html" class="back-btn" title="Stories">📖 Stories</a>
-  <div class="top-page-title">BLOG INTELLIGENCE HUB</div>
-  <div class="top-status">
-    <span class="status-dot"></span>
-    <span id="topNavUpdated">Updated</span>
+  <nav class="top-nav-center" aria-label="Site navigation">
+    <a href="blog_intelligence_hub.html" class="top-nav-link active">Home</a>
+    <a href="news.html" class="top-nav-link">News</a>
+    <a href="story.html" class="top-nav-link">Story</a>
+    <a href="academy.html" class="top-nav-link">Academy</a>
+    <a href="index.html" class="top-nav-link">Screener</a>
+  </nav>
+  <div class="top-nav-right">
+    <div class="top-status">
+      <span class="status-dot"></span>
+      <span id="topNavUpdated">Updated</span>
+    </div>
+    <div class="theme-switcher-wrap" id="themeSwitcherWrap">
+      <button class="theme-switcher-btn" id="themeSwitcherBtn" title="Switch theme" aria-label="Switch theme" aria-expanded="false" aria-haspopup="true">&#127912;</button>
+      <div class="theme-dropdown" id="themeDropdown" role="menu">
+        <button class="theme-opt" data-theme-val="black" role="menuitem"><span class="topt-dot" style="background:linear-gradient(135deg,#040913,#10264a)"></span>Default Dark</button>
+        <button class="theme-opt" data-theme-val="midnight" role="menuitem"><span class="topt-dot" style="background:linear-gradient(135deg,#0b0e14,#30363d)"></span>Midnight</button>
+        <button class="theme-opt" data-theme-val="standard" role="menuitem"><span class="topt-dot" style="background:linear-gradient(135deg,#1e3a8a,#2563eb)"></span>Standard Blue</button>
+        <button class="theme-opt" data-theme-val="gemini" role="menuitem"><span class="topt-dot" style="background:linear-gradient(135deg,#4285f4,#9b72cb,#d96570,#f8bc24)"></span>Gemini</button>
+        <button class="theme-opt" data-theme-val="news-reader" role="menuitem"><span class="topt-dot" style="background:linear-gradient(135deg,#111 50%,#d81921 50%)"></span>News Reader</button>
+        <button class="theme-opt" data-theme-val="maroon" role="menuitem"><span class="topt-dot" style="background:linear-gradient(135deg,#3d0a0a,#8b0000)"></span>Maroon</button>
+        <button class="theme-opt" data-theme-val="gold" role="menuitem"><span class="topt-dot" style="background:linear-gradient(135deg,#b8860b,#ffd700)"></span>Gold</button>
+        <button class="theme-opt" data-theme-val="silver" role="menuitem"><span class="topt-dot" style="background:linear-gradient(135deg,#c0c0c0,#f5f5f7)"></span>Silver</button>
+        <button class="theme-opt" data-theme-val="default" role="menuitem"><span class="topt-dot" style="background:linear-gradient(135deg,#0a192f,#1e3a5f)"></span>Navy</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -3901,6 +4066,56 @@ function renderPage() {
 }
 
 searchInput.addEventListener('input', renderPage);
+
+// ── Theme switcher ──
+(function(){
+  const btn = document.getElementById('themeSwitcherBtn');
+  const dropdown = document.getElementById('themeDropdown');
+  const wrap = document.getElementById('themeSwitcherWrap');
+  if (!btn || !dropdown) return;
+
+  function getCurrentTheme(){
+    return document.documentElement.getAttribute('data-theme') || 'black';
+  }
+  function applyTheme(name){
+    document.documentElement.setAttribute('data-theme', name);
+    localStorage.setItem('viltv_theme', name);
+    updateActiveOpt(name);
+  }
+  function updateActiveOpt(name){
+    dropdown.querySelectorAll('.theme-opt').forEach(function(o){
+      o.classList.toggle('active-theme', o.dataset.themeVal === name);
+    });
+  }
+  function openDropdown(){
+    dropdown.classList.add('open');
+    btn.setAttribute('aria-expanded','true');
+    updateActiveOpt(getCurrentTheme());
+  }
+  function closeDropdown(){
+    dropdown.classList.remove('open');
+    btn.setAttribute('aria-expanded','false');
+  }
+
+  btn.addEventListener('click', function(e){
+    e.stopPropagation();
+    dropdown.classList.contains('open') ? closeDropdown() : openDropdown();
+  });
+  dropdown.querySelectorAll('.theme-opt').forEach(function(o){
+    o.addEventListener('click', function(){
+      applyTheme(o.dataset.themeVal);
+      closeDropdown();
+    });
+  });
+  document.addEventListener('click', function(e){
+    if (!wrap.contains(e.target)) closeDropdown();
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') closeDropdown();
+  });
+  // Mark initial active state
+  updateActiveOpt(getCurrentTheme());
+})();
 
 // Show a placeholder until the live feed reports its actual generated date
 (function() {
