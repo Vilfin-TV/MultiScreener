@@ -62,6 +62,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=Noto+Sans+Malayalam:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
 <script>
+  // Prevent browser from restoring scroll position to bottom on hard refresh
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+  window.scrollTo(0, 0);
+
   // Apply saved colour theme before first paint
   (function(){
     var t = localStorage.getItem('viltv_theme') || 'news-reader';
