@@ -2464,120 +2464,103 @@ async function _authOperator(request, env){
    exact same commit path. */
 const _CONTENT_REPO = 'Vilfin-TV/MultiScreener', _CONTENT_FILE = 'content.json', _CONTENT_BRANCH = 'main';
 function _ghHeaders(env){ return { 'Authorization': `token ${env.GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'vilfintv-proxy', 'Content-Type': 'application/json' }; }
-async function _ghReadContent(env){
-  const api = `https://api.github.com/repos/${_CONTENT_REPO}/contents/${_CONTENT_FILE}`;
-  // Confirmed via direct testing (2026-07-25): repeated reads of this same
-  // URL can return a response that doesn't reflect a write made moments
-  // earlier - even with a single sequential writer, no concurrency involved.
-  // Most likely Cloudflare's own edge cache on this Worker's outbound fetch()
-  // subrequest to the same GitHub API URL. Both a cache-busting query param
-  // and { cf: cacheTtl: -1 } are used together since either mechanism alone
-  // may not cover every caching layer in the path.
-  const r = await fetch(`${api}?ref=${_CONTENT_BRANCH}&_cb=${Date.now()}`, {
-    headers: _ghHeaders(env), cf: { cacheTtl: -1, cacheEverything: false }
-  });
-  if (r.ok) {
-    const d = await r.json();
-    // GitHub's Contents API omits "content" once the file exceeds 1MB -
-    // content.json crossed that line (2026-07-23). Fall back to the
-    // documented download_url (raw blob fetch) in that case instead of
-    // crashing on content.replace(undefined), which surfaced as a 502 to
-    // every publisher (console, agent keys, Hermes) hitting this endpoint.
-    let text;
-    if (d.content) {
-      text = _b64DecodeUnicode(d.content.replace(/\n/g,''));
-    } else if (d.sha) {
-      // GitHub's Contents API omits "content" once the file exceeds 1MB -
-      // content.json crossed that line permanently around 2026-07-23 and
-      // keeps growing, so this path is now taken on every single read.
-      // FIRST FIX (superseded): followed d.download_url (raw.githubusercontent.com).
-      // That "worked" for the 502 crash but reintroduced a WORSE bug: raw.
-      // githubusercontent.com sits behind its own CDN (Fastly) with a cache
-      // window that a cache-busting query string does NOT reliably defeat
-      // (confirmed 2026-07-25 - a delete call returned a real 404 for an
-      // item that demonstrably existed, moments after publishing it, on a
-      // request with zero concurrent writers - the raw-URL fetch was simply
-      // serving old cached bytes). REAL FIX: fetch the exact blob by its sha
-      // via the Git Data API instead - that's a direct object-store lookup
-      // tied to an immutable sha, not a "latest content at this URL" cache,
-      // so there's nothing to go stale. Confirmed via direct testing that
-      // this endpoint reflects a write immediately, unlike download_url.
-      const blobApi = `https://api.github.com/repos/${_CONTENT_REPO}/git/blobs/${d.sha}`;
-      const blob = await fetch(blobApi, { headers: _ghHeaders(env), cf: { cacheTtl: -1, cacheEverything: false } });
-      if (!blob.ok) throw new Error(`GitHub git-blobs fetch failed: ${blob.status}`);
-      const bd = await blob.json();
-      text = _b64DecodeUnicode((bd.content || '').replace(/\n/g,''));
-    } else {
-      throw new Error('GitHub content response missing both content and sha');
-    }
-    let items = JSON.parse(text);
-    if (!Array.isArray(items)) items = [];
-    return { sha:d.sha, items };
-  }
-  if (r.status === 404) return { sha:null, items:[] };
-  throw new Error(`GitHub GET failed: ${r.status}`);
+/* ── Git Data API read: HEAD ref → commit → tree → blob ────────────────────
+   Uses the Git Data API (not the Contents API) for every step.
+   Each object is sha-addressed and immutable, so no caching layer can serve
+   stale bytes. The only potentially-stale call is GET refs/heads/main, but
+   that's OK: if we read a slightly old HEAD, our PATCH in _ghWriteContentGit
+   will fail with 422 (non-fast-forward) and we retry cleanly from scratch.
+   Returns { headCommitSha, treeSha, items }. */
+async function _ghReadContentGit(env){
+  const h = _ghHeaders(env), base = `https://api.github.com/repos/${_CONTENT_REPO}`;
+  const cf = { cacheTtl: -1, cacheEverything: false };
+
+  const refR = await fetch(`${base}/git/refs/heads/${_CONTENT_BRANCH}`, { headers:h, cf });
+  if (!refR.ok) throw new Error(`git refs read failed: ${refR.status}`);
+  const headCommitSha = (await refR.json()).object.sha;
+
+  const commitR = await fetch(`${base}/git/commits/${headCommitSha}`, { headers:h, cf });
+  if (!commitR.ok) throw new Error(`git commit read failed: ${commitR.status}`);
+  const treeSha = (await commitR.json()).tree.sha;
+
+  const treeR = await fetch(`${base}/git/trees/${treeSha}`, { headers:h, cf });
+  if (!treeR.ok) throw new Error(`git tree read failed: ${treeR.status}`);
+  const entry = (await treeR.json()).tree.find(e => e.path === _CONTENT_FILE && e.type === 'blob');
+  if (!entry) return { headCommitSha, treeSha, items:[] };
+
+  const blobR = await fetch(`${base}/git/blobs/${entry.sha}`, { headers:h, cf });
+  if (!blobR.ok) throw new Error(`git blob read failed: ${blobR.status}`);
+  const bd = await blobR.json();
+  let items; try { items = JSON.parse(_b64DecodeUnicode((bd.content||'').replace(/\n/g,''))); } catch(e){ items=[]; }
+  if (!Array.isArray(items)) items = [];
+  return { headCommitSha, treeSha, items };
 }
-async function _ghWriteContent(env, items, sha, message){
-  const api = `https://api.github.com/repos/${_CONTENT_REPO}/contents/${_CONTENT_FILE}`;
-  const put = { message, content: _b64EncodeUnicode(JSON.stringify(items, null, 2)), branch: _CONTENT_BRANCH };
-  if (sha) put.sha = sha;
-  const r = await fetch(api, { method:'PUT', headers:_ghHeaders(env), body: JSON.stringify(put) });
-  if (!r.ok) { const e = await r.text(); throw new Error(`GitHub PUT failed: ${r.status} ${e.slice(0,160)}`); }
+
+/* ── Git Data API write: blob → tree → commit → ref PATCH (atomic CAS) ────
+   The PATCH refs step with force:false succeeds only if our new commit is a
+   fast-forward from the current HEAD (i.e. our headCommitSha is still HEAD).
+   If another writer pushed in between, PATCH returns 422 → caller retries.
+   This is a true compare-and-swap: concurrent writers can never silently
+   overwrite each other. */
+async function _ghWriteContentGit(env, items, headCommitSha, treeSha, message){
+  const h = _ghHeaders(env), base = `https://api.github.com/repos/${_CONTENT_REPO}`;
+
+  const blobR = await fetch(`${base}/git/blobs`, { method:'POST', headers:h,
+    body: JSON.stringify({ content: _b64EncodeUnicode(JSON.stringify(items, null, 2)), encoding:'base64' }) });
+  if (!blobR.ok){ const e=await blobR.text(); throw new Error(`git create blob failed: ${blobR.status} ${e.slice(0,160)}`); }
+  const newBlobSha = (await blobR.json()).sha;
+
+  const newTreeR = await fetch(`${base}/git/trees`, { method:'POST', headers:h,
+    body: JSON.stringify({ base_tree: treeSha,
+      tree: [{ path: _CONTENT_FILE, mode:'100644', type:'blob', sha: newBlobSha }] }) });
+  if (!newTreeR.ok){ const e=await newTreeR.text(); throw new Error(`git create tree failed: ${newTreeR.status} ${e.slice(0,160)}`); }
+  const newTreeSha = (await newTreeR.json()).sha;
+
+  const newCommitR = await fetch(`${base}/git/commits`, { method:'POST', headers:h,
+    body: JSON.stringify({ message, tree: newTreeSha, parents: [headCommitSha] }) });
+  if (!newCommitR.ok){ const e=await newCommitR.text(); throw new Error(`git create commit failed: ${newCommitR.status} ${e.slice(0,160)}`); }
+  const newCommitSha = (await newCommitR.json()).sha;
+
+  // Non-force PATCH: fails with 422 if HEAD moved since our read → retry loop catches it
+  const refR = await fetch(`${base}/git/refs/heads/${_CONTENT_BRANCH}`, { method:'PATCH', headers:h,
+    body: JSON.stringify({ sha: newCommitSha, force: false }) });
+  if (!refR.ok){ const e=await refR.text(); throw new Error(`git update ref failed: ${refR.status} ${e.slice(0,160)}`); }
   return true;
 }
 
 /* ── Race-safe content.json read/compute/write ──────────────────────────────
-   Incident, 2026-07-25: two concurrent publishers (an agent key + this
-   Worker's own console endpoint) each read content.json, and one write
-   landed based on a GitHub Contents API read that didn't reflect the other's
-   already-committed change — silently reverting 2 published articles with
-   no error surfaced to either caller. content.json is large (>1MB) and
-   written frequently, and GitHub's Contents API GET is not guaranteed
-   strongly consistent with the latest commit under that combination.
-   _ghWriteContent's sha-based conditional PUT does NOT catch this case,
-   because the stale read GitHub served was itself internally consistent
-   (its sha matched its own content) - there's no 409 to catch.
+   Uses the Git Data API (blob → tree → commit → ref PATCH) instead of the
+   Contents API PUT. The ref PATCH with force:false is a true atomic CAS:
+   it succeeds only if our new commit fast-forwards from the current HEAD.
+   If any concurrent writer pushed between our read and our PATCH, we get a
+   422 and retry the full read-compute-write cycle from scratch, so we never
+   silently overwrite another writer's changes.
 
-   TRIED AND REJECTED (2026-07-25): re-reading after the write to verify the
-   expected change landed, retrying the whole cycle on mismatch. Live-tested
-   against this repo with a temporary agent key: verification failed on
-   EVERY attempt (3/3, twice in a row) even though the write itself had
-   genuinely succeeded each time (confirmed via git log - real commits,
-   correctly chained). This repo has very high commit velocity (Hermes,
-   share-page regen, data-refresh crons all writing constantly), and one
-   retry even stopped seeing an *earlier, already-committed* test item -
-   meaning the staleness window is wider than a few sequential retries can
-   reliably outlast, and it's on GitHub's own Contents-API read path, not a
-   Cloudflare edge cache (adding cache-busting query params + cf.cacheTtl:-1
-   made no difference). A hard fail-after-retries on this check would report
-   real successful writes as errors to every caller - worse than the
-   original silent-data-loss bug, not better. Do not resurrect a same-shaped
-   "verify by re-read" gate without solving the underlying consistency
-   problem first (the real fix is almost certainly the Git Data API's
-   refs/trees/commits with an atomic compare-and-swap ref update, which
-   doesn't share the Contents API's read-replica lag - that's a bigger,
-   separate change, not attempted here yet).
-
-   What this DOES still do: retry on a genuine thrown error (network hiccup,
-   a real GitHub PUT conflict) - a real resilience improvement over zero
-   retries, without pretending to solve the deeper consistency issue.
    computeFn(freshItems) -> { items, message, meta } | _CONTENT_NOT_FOUND
-     (_CONTENT_NOT_FOUND is a genuine business-logic failure - e.g. an edit
-     or delete target that's genuinely missing - and is never retried.) */
+     (_CONTENT_NOT_FOUND = genuine business-logic miss, e.g. delete target
+      not found — never retried.) */
 const _CONTENT_NOT_FOUND = Symbol('content_not_found');
 function _sleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
-async function _ghWriteContentSafe(env, computeFn, maxAttempts = 3){
+async function _ghWriteContentSafe(env, computeFn, maxAttempts = 5){
   let lastErr;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     let read;
-    try { read = await _ghReadContent(env); }
+    try { read = await _ghReadContentGit(env); }
     catch (e) { lastErr = e; await _sleep(300 * attempt); continue; }
 
     const computed = computeFn(read.items);
     if (computed === _CONTENT_NOT_FOUND) return _CONTENT_NOT_FOUND;
 
-    try { await _ghWriteContent(env, computed.items, read.sha, computed.message); }
-    catch (e) { lastErr = e; await _sleep(300 * attempt); continue; }
+    try {
+      await _ghWriteContentGit(env, computed.items, read.headCommitSha, read.treeSha, computed.message);
+    } catch (e) {
+      lastErr = e;
+      // 422 = HEAD moved (CAS conflict) → retry immediately with a short jitter
+      // Other errors (network, GitHub 5xx) → back off before retry
+      const isConflict = e.message && e.message.includes('422');
+      await _sleep(isConflict ? 100 + attempt * 50 : 400 * attempt);
+      continue;
+    }
 
     return { items: computed.items, meta: computed.meta };
   }
