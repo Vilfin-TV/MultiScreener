@@ -95,15 +95,23 @@ FEEDS: dict[str, list[dict[str, str]]] = {
         _gn("stock+broker+discount+broker+platform+India+review+2026", india=True),
     ],
     "sebi": [
+        # Economic Times SEBI news via Google News (ET direct RSS is not section-filtered)
+        _gn("SEBI+regulation+order+circular+site:economictimes.indiatimes.com", india=True, when="7d"),
+        _gn("SEBI+enforcement+penalty+settlement+site:economictimes.indiatimes.com", india=True, when="7d"),
+        _gn("SEBI+IPO+FPI+AIF+regulation+new+rule+site:economictimes.indiatimes.com", india=True, when="7d"),
+        # Broader SEBI news from all sources
         _gn("SEBI+circular+regulation+order+India+2026", india=True),
         _gn("SEBI+enforcement+penalty+settlement+insider+trading+India+2026", india=True),
-        _gn("SEBI+IPO+FPI+regulation+new+rule+India+2026", india=True),
         _gn("SEBI+board+meeting+notification+India+market+regulator+2026", india=True),
         _gn("SEBI+NSE+BSE+compliance+surveillance+India+2026", india=True),
     ],
     "tax": [
         {"url": "https://taxguru.in/feed/", "source": "TaxGuru"},
         {"url": "https://www.moneycontrol.com/rss/itr.xml", "source": "Moneycontrol ITR"},
+        # Economic Times tax and ClearTax news via Google News
+        _gn("income+tax+ITR+GST+site:economictimes.indiatimes.com", india=True, when="7d"),
+        _gn("cleartax+ITR+filing+income+tax+site:economictimes.indiatimes.com", india=True, when="14d"),
+        # Broader tax news from all sources
         _gn("income+tax+India+ITR+filing+refund+AY2026+deadline", india=True),
         _gn("GST+India+return+rate+change+deadline+2026", india=True),
         _gn("TDS+TCS+80C+HRA+tax+slab+rebate+new+regime+India+2026", india=True),
