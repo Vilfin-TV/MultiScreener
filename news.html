@@ -398,6 +398,28 @@ body{
   .news-section{scroll-margin-top:100px}
 }
 
+/* ── Background-refresh notification bar ─────────────────────────────────── */
+#news-fresh-bar{
+  display:none;position:sticky;top:0;z-index:999;
+  background:linear-gradient(90deg,#1d4ed8,#2563eb);
+  color:#fff;font-size:13px;font-weight:500;
+  padding:9px 16px;text-align:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.25);
+  animation:freshSlideIn .3s ease;
+}
+@keyframes freshSlideIn{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
+#news-fresh-bar button{
+  background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);
+  color:#fff;font-size:12px;font-weight:600;border-radius:4px;
+  padding:3px 10px;margin-left:10px;cursor:pointer;vertical-align:middle;
+}
+#news-fresh-bar button:hover{background:rgba(255,255,255,.35)}
+#news-fresh-bar .fresh-dismiss{
+  background:none;border:none;opacity:.7;font-size:16px;
+  margin-left:8px;padding:0 4px;line-height:1;
+}
+#news-fresh-bar .fresh-dismiss:hover{opacity:1;background:none;border:none}
+
 /* ═══════════════════════════════════════════════════
    PAGE HERO
 ═══════════════════════════════════════════════════ */
@@ -2496,6 +2518,9 @@ footer.news-footer{
       </div>
   </div>
 </nav>
+
+  <!-- Background-refresh notification — appears when new stories are available without disrupting current view -->
+  <div id="news-fresh-bar" role="status" aria-live="polite"></div>
 
   <!-- Sections rendered by JS -->
   <div id="sections-container"></div>
@@ -6267,14 +6292,108 @@ window.addEventListener('resize', _setAppVh);
 window.addEventListener('orientationchange', _setAppVh);
 if (window.visualViewport) window.visualViewport.addEventListener('resize', _setAppVh);
 
+/* ── Background-refresh: fetch new data silently, notify user, never disrupt ──
+   How professional news sites (BBC, Reuters, Bloomberg) work:
+   - Data is fetched in the background every 15 minutes
+   - If new content is detected, a notification bar appears at the top
+   - The current DOM (video stream, open article, scroll position) is NEVER
+     touched until the user explicitly clicks "Load new stories"
+   - Clicking the bar triggers a fresh loadNewsPage() and scrolls to top
+   - Dismissing hides the bar and leaves everything unchanged                 */
+
+var _bgNewsCs  = '';  // checksum of last-rendered news.json
+var _bgCustCs  = '';  // checksum of last-rendered content.json
+
+function _bgNewsChecksum(data) {
+  if (!data || !data.sections) return '';
+  var p = [];
+  ['trending','global','india','stock','malayalam'].forEach(function(s) {
+    var sec = data.sections[s];
+    if (sec && sec.items && sec.items.length)
+      p.push(sec.items.length + ':' + (sec.items[0].headline || ''));
+  });
+  return p.join('|');
+}
+
+function _bgCustChecksum(arr) {
+  if (!arr || !arr.length) return '0:';
+  return arr.length + ':' + (arr[arr.length - 1].id || '');
+}
+
+function _bgSetBaseline() {
+  _bgNewsCs = _bgNewsChecksum(window._newsData);
+  _bgCustCs = _bgCustChecksum(window._customContent);
+}
+
+function _showFreshBar(newCount) {
+  var bar = document.getElementById('news-fresh-bar');
+  if (!bar) return;
+  var label = newCount > 0 ? newCount + ' new ' + (newCount === 1 ? 'story' : 'stories') + ' available'
+                           : 'New stories available';
+  bar.innerHTML = '📡 ' + label
+    + '<button onclick="_applyFreshNews()">Load now</button>'
+    + '<button class="fresh-dismiss" onclick="_dismissFreshBar()" title="Dismiss">✕</button>';
+  bar.style.display = 'block';
+}
+
+function _dismissFreshBar() {
+  var bar = document.getElementById('news-fresh-bar');
+  if (bar) bar.style.display = 'none';
+}
+
+async function _applyFreshNews() {
+  _dismissFreshBar();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  await loadNewsPage();
+  _bgSetBaseline();
+  if (window._applyUrlSearchQuery) window._applyUrlSearchQuery();
+}
+
+async function _bgFetchCheck() {
+  try {
+    var results = await Promise.all([
+      fetch('data/news.json?_=' + Date.now()).catch(function() { return null; }),
+      fetch('content.json?_=' + Date.now()).catch(function() { return null; })
+    ]);
+    var newsResp = results[0], custResp = results[1];
+
+    var newsChanged = false, custChanged = false, newCustCount = 0;
+
+    if (newsResp && newsResp.ok) {
+      var nd = await newsResp.json();
+      var cs = _bgNewsChecksum(nd);
+      if (_bgNewsCs && cs !== _bgNewsCs) newsChanged = true;
+    }
+
+    if (custResp && custResp.ok) {
+      var cd = await custResp.json();
+      var now2 = new Date();
+      var filtered = Array.isArray(cd)
+        ? cd.filter(function(i) { return i && (!i.expires_at || new Date(i.expires_at) > now2); })
+             .sort(function(a, b) { return new Date(b.published_at || 0) - new Date(a.published_at || 0); })
+        : [];
+      var cs2 = _bgCustChecksum(filtered);
+      if (_bgCustCs && cs2 !== _bgCustCs) {
+        custChanged = true;
+        newCustCount = Math.max(0, filtered.length - (window._customContent ? window._customContent.length : 0));
+      }
+    }
+
+    if (newsChanged || custChanged) {
+      _showFreshBar(newCustCount);
+    }
+  } catch(e) { /* network error — silently skip this check */ }
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
   _setAppVh();
   await loadNewsPage();
+  _bgSetBaseline();  // snapshot what just rendered as the baseline
   // Cards now exist in the DOM - safe to apply a ?q= search from the
   // Sitelinks Search Box (see window._applyUrlSearchQuery definition above).
   if (window._applyUrlSearchQuery) window._applyUrlSearchQuery();
-  // Auto-refresh all RSS news content every 15 minutes
-  setInterval(function() { loadNewsPage(); }, 15 * 60 * 1000);
+  // Background-check every 15 min — never re-renders the page automatically
+  setInterval(_bgFetchCheck, 15 * 60 * 1000);
 });
 </script>
 
