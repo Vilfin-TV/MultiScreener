@@ -1,19 +1,12 @@
 #!/usr/bin/env python3
-"""Generate static per-story preview pages under share/<id>.html.
+"""Generate static per-story article pages under share/<id>.html.
 
-news.html renders stories client-side from content.json, so link-preview
-crawlers (Facebook, X/Twitter, WhatsApp, Telegram, ...) never see a story's
-own headline/photo when a news.html?story=<id> link is pasted - they don't
-execute JS, so they only ever read the site's generic default OG tags.
+Each share/<id>.html is a fully rendered, indexable article page carrying:
+- The story's full HTML content (readable by humans and search engines)
+- NewsArticle JSON-LD structured data
+- Open Graph / Twitter Card meta tags for social link previews
 
-Each generated share/<id>.html is a tiny static page carrying that story's
-real Open Graph / Twitter Card tags (title, excerpt, hero photo), so pasted
-links unfurl with the correct headline and image. Real visitors are sent on
-to the live story instantly via a JS redirect only - deliberately NOT a
-<meta http-equiv="refresh">, because Facebook's crawler (and some others)
-follows an immediate meta-refresh as if it were a real redirect and scrapes
-the target URL's tags instead of this page's, which defeats the whole
-point. Crawlers don't execute JS, so they stay put and read these tags.
+No JS redirect — the share page IS the canonical article page for search.
 
 Regenerated automatically by .github/workflows/gen_share_pages.yml on every
 push that touches content.json - no manual step.
@@ -108,25 +101,57 @@ def excerpt_of(story_html):
     return text[:EXCERPT_LEN].rsplit(' ', 1)[0] + '…'
 
 
+SECTION_LABELS = {
+    'trending': 'Trending',
+    'global': 'World',
+    'india': 'India',
+    'stock': 'Markets',
+    'malayalam': 'Malayalam',
+    'tech': 'Technology',
+    'space': 'Space',
+    'science': 'Science',
+    'movies': 'Entertainment',
+    'sports': 'Sports',
+    'business': 'Business',
+    'food': 'Lifestyle',
+    'ml_food': 'Malayalam',
+    'education': 'Education',
+}
+
+
+def _format_date(iso_str):
+    """Parse an ISO date string and return e.g. 'July 28, 2026'. Returns '' on failure."""
+    if not iso_str:
+        return ''
+    try:
+        from datetime import datetime, timezone
+        # Handle both 'Z' suffix and offset-aware strings
+        s = iso_str.replace('Z', '+00:00')
+        dt = datetime.fromisoformat(s)
+        return f'{dt.strftime("%B")} {dt.day}, {dt.year}'
+    except Exception:
+        return ''
+
+
 def page_html(item, image_info=None):
     story_id = str(item['id'])
     heading = (item.get('heading') or 'VilfinTV News').strip()
     photo = resolve_photo(item.get('photo'))
-    desc = excerpt_of(item.get('story')) or 'Read the full story on VilfinTV News.'
-    target = f'{SITE}/news.html?story={story_id}'
+    story_html_raw = item.get('story') or ''
+    desc = excerpt_of(story_html_raw) or 'Read the full story on VilfinTV News.'
     self_url = f'{SITE}/share/{story_id}.html'
+    section_key = (item.get('section') or '').lower()
+    section_label = SECTION_LABELS.get(section_key, 'News')
+    published_at = item.get('published_at') or ''
+    date_display = _format_date(published_at)
 
     title_esc = html.escape(heading, quote=True)
     desc_esc = html.escape(desc, quote=True)
     photo_esc = html.escape(photo, quote=True)
-    target_esc = html.escape(target, quote=True)
     self_url_esc = html.escape(self_url, quote=True)
-    target_js = json.dumps(target)
+    section_label_esc = html.escape(section_label, quote=True)
 
-    # Facebook's own docs say width/height let it render the image without
-    # first downloading it - some clients silently skip a custom image
-    # entirely rather than doing that download-to-measure step themselves,
-    # which is the leading suspect for a headline-but-no-photo preview.
+    # og:url and rel=canonical point to self — this page IS the article.
     image_extra = ''
     if image_info:
         w, h, ctype = image_info
@@ -137,16 +162,36 @@ def page_html(item, image_info=None):
             f'<meta property="og:image:type" content="{html.escape(ctype, quote=True)}"/>'
         )
 
-    # og:url and rel=canonical are deliberately self-referential (this page's
-    # own URL), NOT the news.html target. Crawlers (Facebook confirmed) treat
-    # rel=canonical as "the real content lives there" and re-scrape THAT url
-    # instead - which would land back on news.html's generic, client-rendered
-    # default tags and silently undo this entire page's purpose.
+    date_line = f'<p class="article-date">{html.escape(date_display)}</p>' if date_display else ''
+
+    json_ld = json.dumps({
+        "@context": "https://schema.org",
+        "@type": "NewsArticle",
+        "headline": heading,
+        "description": desc,
+        "image": photo,
+        "datePublished": published_at if published_at else None,
+        "url": self_url,
+        "publisher": {
+            "@type": "Organization",
+            "name": "VilfinTV",
+            "url": SITE,
+            "logo": {
+                "@type": "ImageObject",
+                "url": f"{SITE}/images/vilfintv-logo.jpg"
+            }
+        },
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": self_url
+        }
+    }, ensure_ascii=False, indent=2)
+
     return f'''<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>{title_esc} — VilfinTV News</title>
 <meta name="description" content="{desc_esc}"/>
 <meta name="robots" content="index, follow, max-image-preview:large"/>
@@ -166,27 +211,107 @@ def page_html(item, image_info=None):
 <meta name="twitter:description" content="{desc_esc}"/>
 <meta name="twitter:image" content="{photo_esc}"/>
 
-<script>location.replace({target_js});</script>
+<script type="application/ld+json">
+{json_ld}
+</script>
+
 <style>
-  html,body{{height:100%;margin:0;background:#0a192f;color:#e6edf7;
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}}
-  .wrap{{min-height:100%;display:flex;flex-direction:column;align-items:center;
-    justify-content:center;text-align:center;padding:32px;box-sizing:border-box}}
-  .spin{{width:34px;height:34px;border-radius:50%;
-    border:3px solid rgba(230,237,247,.2);border-top-color:#3b82f6;
-    animation:sp .8s linear infinite;margin-bottom:18px}}
-  @keyframes sp{{to{{transform:rotate(360deg)}}}}
-  h1{{font-size:17px;font-weight:600;margin:0 0 8px;max-width:480px}}
-  p{{font-size:13px;color:#9fb0c8;margin:0}}
-  a{{color:#60a5fa;text-decoration:none}}
+:root {{
+  --page-bg:#0f1117; --card:#1a1f2e; --card2:#1e2436; --card3:#222840; --card4:#282d42;
+  --text:#e8edf5; --text2:#b8c4d8; --text3:#8896b0;
+  --border:#2a3148; --border2:#333d55;
+  --amber:#f59e0b; --burn:#3b82f6; --burn2:#60a5fa; --burn3:#2563eb;
+  --gold:#f59e0b; --gold2:#fbbf24; --glow:rgba(59,130,246,.15);
+}}
+*,*::before,*::after{{box-sizing:border-box}}
+html,body{{margin:0;padding:0;background:var(--page-bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:17px;line-height:1.7}}
+a{{color:var(--burn2);text-decoration:none}}
+a:hover{{text-decoration:underline}}
+img{{max-width:100%;height:auto;display:block}}
+
+/* Site header */
+.site-header{{background:var(--card);border-bottom:1px solid var(--border);padding:12px 20px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}}
+.site-header .brand{{display:flex;flex-direction:column}}
+.site-header .brand-name{{font-size:20px;font-weight:700;color:var(--text);letter-spacing:-0.3px}}
+.site-header .brand-tag{{font-size:11px;color:var(--text3);letter-spacing:.5px;text-transform:uppercase}}
+.site-header .back-link{{font-size:13px;color:var(--burn2);white-space:nowrap}}
+
+/* Main layout */
+main{{max-width:780px;margin:0 auto;padding:32px 20px 48px}}
+
+/* Section badge */
+.section-badge{{display:inline-block;background:var(--burn3);color:#fff;
+  font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;
+  padding:3px 10px;border-radius:4px;margin-bottom:14px}}
+
+/* Headline */
+h1{{font-size:clamp(22px,4vw,34px);font-weight:700;line-height:1.25;
+  color:var(--text);margin:0 0 10px}}
+
+/* Date */
+.article-date{{font-size:13px;color:var(--text3);margin:0 0 20px}}
+
+/* Hero image */
+.hero-img{{width:100%;max-height:420px;object-fit:cover;border-radius:8px;
+  margin-bottom:28px;background:var(--card2)}}
+
+/* Article body — inherit story HTML styles as-is */
+.article-body{{color:var(--text2);font-size:17px;line-height:1.75}}
+.article-body p{{margin:0 0 1.1em}}
+.article-body h2,.article-body h3,.article-body h4{{color:var(--text);margin:1.4em 0 .6em;line-height:1.3}}
+.article-body ul,.article-body ol{{padding-left:1.4em;margin:0 0 1.1em}}
+.article-body li{{margin-bottom:.35em}}
+.article-body strong,.article-body b{{color:var(--text);font-weight:600}}
+.article-body a{{color:var(--burn2)}}
+.article-body img{{border-radius:6px;margin:12px 0}}
+.article-body blockquote{{border-left:3px solid var(--amber);margin:1em 0;
+  padding:.5em 1em;color:var(--text3);font-style:italic}}
+.article-body table{{border-collapse:collapse;width:100%;margin:1em 0;font-size:15px}}
+.article-body th,.article-body td{{border:1px solid var(--border2);padding:8px 12px;text-align:left}}
+.article-body th{{background:var(--card2);color:var(--text)}}
+
+/* Footer */
+.site-footer{{border-top:1px solid var(--border);padding:24px 20px;text-align:center;
+  color:var(--text3);font-size:14px}}
+.site-footer a{{color:var(--burn2);font-weight:500}}
+
+@media(max-width:600px){{
+  main{{padding:20px 14px 36px}}
+  .site-header{{padding:10px 14px}}
+}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="spin"></div>
-  <h1>{title_esc}</h1>
-  <p>Opening on VilfinTV News… <a href="{target_esc}">Continue</a></p>
-</div>
+
+<header class="site-header">
+  <a href="{SITE}" style="text-decoration:none">
+    <div class="brand">
+      <span class="brand-name">VilfinTV</span>
+      <span class="brand-tag">News &amp; Markets</span>
+    </div>
+  </a>
+  <a class="back-link" href="{SITE}/news.html">← Back to VilfinTV News</a>
+</header>
+
+<main>
+  <article>
+    <div class="section-badge">{section_label_esc}</div>
+    <h1>{title_esc}</h1>
+    {date_line}
+    <img class="hero-img" src="{photo_esc}" alt="{title_esc}" loading="eager"/>
+    <div class="article-body">
+{story_html_raw}
+    </div>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <a href="{SITE}/news.html">More stories on VilfinTV →</a>
+</footer>
+
 </body>
 </html>
 '''
