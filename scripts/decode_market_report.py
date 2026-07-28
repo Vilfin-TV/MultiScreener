@@ -27,6 +27,7 @@ from datetime import datetime, timedelta, timezone
 JST = timezone(timedelta(hours=9))
 SNAPSHOT_FILE = 'data/market_sentiment_snapshot.json'
 CONTENT_FILE = 'content.json'
+PENDING_FILE = 'data/decode_pending.json'  # staging file; merged into content.json by the workflow
 HOLIDAYS_FILE = 'data/nse_holidays.json'
 HERO_URL = 'https://screener-proxy.vilfintv.workers.dev/r2/media/stock/daily-market-report-2026-07-20-hero.jpg'
 R2_BUCKET = 'vilfintv-media'
@@ -483,9 +484,6 @@ def main():
         print(f'[DRY RUN] Article saved to /tmp/dry_run_article_{date_str}.html — content.json NOT modified, chart NOT uploaded.')
         return
 
-    with open(CONTENT_FILE, encoding='utf-8') as f:
-        data = json.load(f)
-
     new_item = {
         'id': str(int(time.time() * 1000)),
         'section': 'stock',
@@ -493,14 +491,20 @@ def main():
         'story': story,
         'photo': HERO_URL,
         'published_at': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.000Z'),
+        'decode_date': date_str,  # idempotency key used by the workflow merge step
     }
     assert new_item['photo'] not in new_item['story']
-    data.append(new_item)
 
-    with open(CONTENT_FILE, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+    # Write to the staging file only — the workflow merge step is responsible for
+    # pulling the latest content.json and inserting the article atomically on each
+    # push retry, so concurrent jobs cannot cause a lost-update race.
+    import os
+    os.makedirs(os.path.dirname(PENDING_FILE), exist_ok=True)
+    with open(PENDING_FILE, 'w', encoding='utf-8') as f:
+        json.dump(new_item, f, indent=2, ensure_ascii=False)
 
-    print(f'PUBLISHED_ID={new_item["id"]}')
+    print(f'PENDING_FILE={PENDING_FILE}')
+    print(f'PENDING_ID={new_item["id"]}')
 
 
 if __name__ == '__main__':

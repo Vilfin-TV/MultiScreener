@@ -1,7 +1,7 @@
 name: Decode Daily Market Report
 
 # Turns data/market_sentiment_snapshot.json into a stock-news article every
-# day at 10:00 JST — well after market_report.yml's snapshot refresh (07:00
+# day at 12:30 JST — well after market_report.yml's snapshot refresh (07:00
 # JST target, 08:40 JST hard deadline via the watchdog).
 #
 # Weekdays (Mon-Fri JST): a day-over-day decode with a 14-factor comparison
@@ -12,12 +12,19 @@ name: Decode Daily Market Report
 # Sunday (JST): no report - the script exits cleanly with no changes, since
 # there's no new trading data since Saturday.
 #
+# Hybrid push strategy: the Python script writes the article to
+# data/decode_pending.json (a staging file no other job touches). The
+# "merge-and-push" step re-reads the latest content.json from origin on
+# every retry and re-inserts the article, so push rejections from
+# concurrent jobs can never cause a lost-update race. 20 retries with
+# progressive backoff outlast any morning traffic burst.
+#
 # Requires repository secrets (already present, same as upload_story_images.yml):
 #   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
 
 on:
   schedule:
-    - cron: '0 1 * * *'   # 01:00 UTC == 10:00 JST daily
+    - cron: '30 3 * * *'   # 03:30 UTC == 12:30 JST daily (quiet slot)
   workflow_dispatch:        # manual trigger for testing
 
 jobs:
@@ -45,11 +52,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install matplotlib
 
-      - name: Generate the decode article (writes content.json + a local chart PNG)
+      - name: Generate article into staging file (data/decode_pending.json)
         id: decode
         run: |
           python3 scripts/decode_market_report.py | tee /tmp/decode_output.txt
-          if grep -q '^CHART_LOCAL_PATH=' /tmp/decode_output.txt; then
+          if grep -q '^PENDING_FILE=' /tmp/decode_output.txt; then
+            echo "pending_file=$(grep '^PENDING_FILE=' /tmp/decode_output.txt | cut -d= -f2-)" >> "$GITHUB_OUTPUT"
             echo "chart_local_path=$(grep '^CHART_LOCAL_PATH=' /tmp/decode_output.txt | cut -d= -f2-)" >> "$GITHUB_OUTPUT"
             echo "chart_r2_key=$(grep '^CHART_R2_KEY=' /tmp/decode_output.txt | cut -d= -f2-)" >> "$GITHUB_OUTPUT"
             echo "has_report=true" >> "$GITHUB_OUTPUT"
@@ -71,18 +79,70 @@ jobs:
             --file="${{ steps.decode.outputs.chart_local_path }}" \
             --content-type=image/jpeg --remote
 
-      - name: Commit and push the new article
+      - name: Merge staging file into content.json and push (20 retries, progressive backoff)
         if: steps.decode.outputs.has_report == 'true'
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git add content.json
-          git commit -m "feat(content): decode daily market report [skip ci]" || echo "No changes to commit"
-          for i in 1 2 3 4 5; do
+
+          PENDING="${{ steps.decode.outputs.pending_file }}"
+
+          # Extract the idempotency key (decode_date) from the pending article
+          DECODE_DATE=$(python3 -c "import json; d=json.load(open('$PENDING')); print(d['decode_date'])")
+          echo "Decode date: $DECODE_DATE"
+
+          PUSHED=false
+          for i in $(seq 1 20); do
+            # Pull the very latest main so we work with fresh content.json
             git pull --rebase --autostash origin main
-            if git push origin main; then
+
+            # Idempotency check: abort if this date's article is already in content.json
+            ALREADY=$(python3 -c "
+          import json, sys
+          d = json.load(open('content.json'))
+          date = '$DECODE_DATE'
+          found = any(x.get('decode_date') == date or ('decode' in x.get('heading','').lower() and date in x.get('heading','')) for x in d)
+          print('yes' if found else 'no')
+          ")
+            if [ "$ALREADY" = "yes" ]; then
+              echo "Article for $DECODE_DATE already in content.json (published by a prior retry). Done."
+              PUSHED=true
               break
             fi
-            echo "Push rejected (attempt $i/5), another job likely pushed first — retrying..."
-            sleep $((RANDOM % 10 + 5))
+
+            # Merge pending article into the freshly-pulled content.json
+            python3 -c "
+          import json, os
+          pending = json.load(open('$PENDING'))
+          data = json.load(open('content.json'))
+          # Guard: don't double-insert
+          date = pending['decode_date']
+          if not any(x.get('decode_date') == date for x in data):
+              data.append(pending)
+              json.dump(data, open('content.json', 'w'), indent=2, ensure_ascii=False)
+              print('Merged.')
+          else:
+              print('Already present, skipping insert.')
+          "
+            git add content.json data/decode_pending.json
+            git diff --cached --quiet && echo "Nothing to commit" && PUSHED=true && break
+
+            git commit -m "feat(content): decode daily market report ${DECODE_DATE} [skip ci]"
+            if git push origin main; then
+              echo "Push succeeded on attempt $i."
+              PUSHED=true
+              break
+            fi
+
+            # Progressive backoff: 10s, 20s, 30s … capped at 60s
+            SLEEP=$(( i * 10 < 60 ? i * 10 : 60 ))
+            echo "Push rejected (attempt $i/20) — retrying in ${SLEEP}s..."
+            # Undo the local commit so the next iteration can re-merge cleanly
+            git reset --soft HEAD~1
+            sleep $SLEEP
           done
+
+          if [ "$PUSHED" != "true" ]; then
+            echo "::error::All 20 push attempts failed. The article was generated but not published."
+            exit 1
+          fi
