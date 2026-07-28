@@ -1517,6 +1517,11 @@ input::placeholder,textarea::placeholder{color:#94a3b8!important}
 .lnb-header .lnb-label{color:#ffffff!important}
 .lnb-header .lnb-live{color:#ffffff!important;background:rgba(255,255,255,.2)!important}
 @keyframes livePulse{0%,100%{opacity:1}50%{opacity:.4}}
+#lns-fresh-bar{display:none;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(90deg,#1e40af,#1d4ed8);color:#fff;padding:9px 14px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:12px;animation:lnsFreshSlide .35s ease}
+#lns-fresh-bar.visible{display:flex}
+@keyframes lnsFreshSlide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+#lns-fresh-bar button{background:rgba(255,255,255,.18);border:none;color:#fff;padding:4px 10px;border-radius:5px;cursor:pointer;font-size:12px;font-weight:700}
+#lns-fresh-bar button:hover{background:rgba(255,255,255,.3)}
 @keyframes ytPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(1.04)}}
 .lnb-list{flex:1;padding:8px 4px;display:flex;flex-direction:column;gap:1px;min-height:140px}
 .lnb-item{display:flex;flex-direction:column;padding:6px 10px;border-radius:6px;text-decoration:none;transition:background .15s;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04)}
@@ -4779,6 +4784,7 @@ html.iptv-cinema #rb-panel-iptv.iptv-guide-open #iptv-epg-bar{
       <button class="lns-settings-btn" id="lns-settings-btn" onclick="openNewsSettings()" title="Customize news feeds">⚙️ Customize</button>
     </div>
   </div>
+  <div id="lns-fresh-bar" role="status" aria-live="polite"></div>
   <div class="lns-grid" id="lns-grid">
     <!-- injected by JS -->
   </div>
@@ -16077,7 +16083,7 @@ let lnsTimer;
 function initLiveNews() {
   renderNewsBoxes();
   fetchAllNews();
-  lnsTimer = setInterval(fetchAllNews, 600000);
+  lnsTimer = setInterval(_bgLnsFetchCheck, 600000);
 }
 
 // Unique picsum fallback images per channel group — seeded for determinism, no duplicates.
@@ -16183,6 +16189,47 @@ async function fetchAllNews() {
   }
 
   activeFeeds.forEach(s => fetchFeed(s, 0));
+  _lnsBgBaseline = _lnsChecksum(liveNewsCache);
+  _hideLnsFreshBar();
+}
+
+// ── Background-refresh: silent check, user-triggered apply ──────────────────
+let _lnsBgBaseline = null;
+function _lnsChecksum(data) {
+  if (!data || typeof data !== 'object') return '';
+  try {
+    var keys = Object.keys(data).sort();
+    return keys.map(k => {
+      var items = data[k];
+      if (!Array.isArray(items) || !items.length) return k + ':0';
+      return k + ':' + items.length + ':' + (items[0].link || items[0].url || items[0].title || '');
+    }).join('|');
+  } catch(e) { return ''; }
+}
+function _showLnsFreshBar() {
+  var bar = document.getElementById('lns-fresh-bar');
+  if (!bar) return;
+  bar.innerHTML = '<span>📡 New live news available</span><span style="display:flex;gap:8px"><button onclick="_applyLnsNews()">Refresh</button><button onclick="_hideLnsFreshBar()" style="background:rgba(255,255,255,.1)">✕</button></span>';
+  bar.classList.add('visible');
+}
+function _hideLnsFreshBar() {
+  var bar = document.getElementById('lns-fresh-bar');
+  if (bar) bar.classList.remove('visible');
+}
+function _applyLnsNews() {
+  _hideLnsFreshBar();
+  fetchAllNews();
+}
+async function _bgLnsFetchCheck() {
+  try {
+    var res = await fetch('data/live_news.json?_t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) return;
+    var data = await res.json();
+    var cs = _lnsChecksum(data);
+    if (_lnsBgBaseline && cs && cs !== _lnsBgBaseline) {
+      _showLnsFreshBar();
+    }
+  } catch(e) {}
 }
 
 // ── Universal copyright-safe RSS content sanitizer ───────────────
