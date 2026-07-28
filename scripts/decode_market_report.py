@@ -484,13 +484,15 @@ def main():
         print(f'[DRY RUN] Article saved to /tmp/dry_run_article_{date_str}.html — content.json NOT modified, chart NOT uploaded.')
         return
 
+    _now = datetime.now(timezone.utc)
     new_item = {
         'id': str(int(time.time() * 1000)),
         'section': 'stock',
         'heading': heading,
         'story': story,
         'photo': HERO_URL,
-        'published_at': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.000Z'),
+        'published_at': _now.strftime('%Y-%m-%dT%H:%M:%S.000Z'),
+        'expires_at': (_now + timedelta(days=30)).strftime('%Y-%m-%dT%H:%M:%S.000Z'),
         'decode_date': date_str,  # idempotency key used by the workflow merge step
     }
     assert new_item['photo'] not in new_item['story']
