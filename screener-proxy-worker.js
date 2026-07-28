@@ -829,7 +829,7 @@ ${body.text}`;
         story: cleanStory.trim().slice(0,MAX_STORY), published_at: now.toISOString(), expires_at: expiresAt });
 
       const computeFn = (freshItems) => {
-        const items = freshItems.filter(i => i && i.expires_at && new Date(i.expires_at) > now);
+        const items = freshItems.filter(i => i && (!i.expires_at || new Date(i.expires_at) > now));
         if (isEdit) {
           const idx = items.findIndex(i => String(i.id) === String(id));
           if (idx === -1) return _CONTENT_NOT_FOUND;
@@ -1654,7 +1654,7 @@ ${body.text}`;
       if (ytVid) { newItemBase.youtube = ytVid; newItemBase.youtube_play = youtube_play !== false; }
 
       const computeFn = (freshItems) => {
-        const items = freshItems.filter(i => i && i.expires_at && new Date(i.expires_at) > now);
+        const items = freshItems.filter(i => i && (!i.expires_at || new Date(i.expires_at) > now));
         const resultId = String(Date.now());
         items.push({ ...newItemBase, id: resultId });
         return { items, message: `feat(content): publish ${section} post`, meta: { resultId } };
