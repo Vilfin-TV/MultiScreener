@@ -2999,7 +2999,7 @@ function _bnStreamFor(continent, region) {
 var _bnStream = { entry: null, stage: 0, token: 0, timer: null };
 
 function _bnEmbed(videoId) {
-  return 'https://www.youtube.com/embed/' + videoId +
+  return 'https://www.youtube-nocookie.com/embed/' + videoId +
          '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
 }
 function _bnStreamSetSrc(src) {
@@ -3073,7 +3073,7 @@ function _bnStreamTry() {
 
   if (_bnStream.stage === 2)      _bnStreamSetSrc(_bnEmbed(ch.v1));
   else if (_bnStream.stage === 3) _bnStreamSetSrc(_bnEmbed(ch.v2));
-  else _bnStreamSetSrc('https://www.youtube.com/embed/videoseries?list=UU' + ch.cid.slice(2) +
+  else _bnStreamSetSrc('https://www.youtube-nocookie.com/embed/videoseries?list=UU' + ch.cid.slice(2) +
                        '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
   _bnStreamNote('');
 }
@@ -3182,7 +3182,7 @@ function renderBreakingNews(data, rotate) {
           '<div class="bn-live-frame">' +
             '<iframe id="bn-live-frame" title="' + escAttr(streamCh.name) + ' live" src="about:blank" ' +
             'allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen ' +
-            'referrerpolicy="strict-origin-when-cross-origin" loading="lazy"></iframe>' +
+            'referrerpolicy="strict-origin-when-cross-origin"></iframe>' +
           '</div>' +
         '</div>';
   }
