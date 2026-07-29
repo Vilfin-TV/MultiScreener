@@ -3043,10 +3043,9 @@ function _bnStreamTry() {
     var cached = _bnYtCacheGet(cid);
     if (cached) { _bnStreamSetSrc(_bnEmbed(cached)); _bnStreamNote(''); return; }
 
-    // Load the channel live embed straight away so there is no blank wait,
-    // then upgrade to the resolved videoId when the lookup returns.
-    _bnStreamSetSrc('https://www.youtube.com/embed/live_stream?channel=' + cid +
-      '&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1');
+    // Wait for the Worker to confirm live status before loading any video —
+    // the live_stream?channel= URL shows a paused preview when the channel
+    // is not broadcasting, making every non-live channel look broken.
     _bnStream.timer = setTimeout(function() {
       if (_bnStream.token !== token || _bnStream.stage !== 1) return;
       _bnStream.stage = ch.v1 ? 2 : 4;
@@ -3062,13 +3061,13 @@ function _bnStreamTry() {
           _bnYtCacheSet(cid, d.videoId);
           _bnStreamSetSrc(_bnEmbed(d.videoId));
           _bnStreamNote('');
-        } else if (d && !d.live && d.reason !== 'API key not configured') {
+        } else {
           clearTimeout(_bnStream.timer); _bnStream.timer = null;
           _bnStream.stage = ch.v1 ? 2 : 4;
           _bnStreamTry();
         }
       })
-      .catch(function() { /* lookup failed — channel embed + 20s timer cover it */ });
+      .catch(function() { /* lookup failed — 5s timer fires fallback */ });
     return;
   }
 
