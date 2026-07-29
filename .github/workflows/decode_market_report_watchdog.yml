@@ -1,0 +1,69 @@
+name: Decode Market Report Watchdog
+
+# Guarantees the Decode Daily Market Report publishes by 12:00 JST every
+# weekday and Saturday, even when GitHub's once-a-day scheduler is late.
+#
+# The main decode_market_report.yml targets 10:00 JST (23:00 UTC nominal,
+# 09:30-11:00 JST actual with GitHub's typical 1-3h delay). This watchdog
+# sweeps the window from 10:00-12:00 JST every 20 minutes on Mon-Sat JST
+# and dispatches the decode job if no successful or in-flight run has landed
+# in the last 4 hours. Each check is idempotent — once the real run lands
+# (or this watchdog dispatches one), all later checks in the window are no-ops.
+#
+# Day-of-week alignment (UTC vs JST):
+#   01:00-03:00 UTC Mon  ==  10:00-12:00 JST Mon  → weekday decode  ✓
+#   01:00-03:00 UTC Tue  ==  10:00-12:00 JST Tue  → weekday decode  ✓
+#   01:00-03:00 UTC Wed  ==  10:00-12:00 JST Wed  → weekday decode  ✓
+#   01:00-03:00 UTC Thu  ==  10:00-12:00 JST Thu  → weekday decode  ✓
+#   01:00-03:00 UTC Fri  ==  10:00-12:00 JST Fri  → weekday decode  ✓
+#   01:00-03:00 UTC Sat  ==  10:00-12:00 JST Sat  → weekly decode   ✓
+#   01:00-03:00 UTC Sun  ==  10:00-12:00 JST Sun  → NO cron fires   ✓
+
+on:
+  schedule:
+    - cron: '0,20,40 1 * * 1-6'   # 01:00, 01:20, 01:40 UTC Mon-Sat = 10:00-10:40 JST
+    - cron: '0,20,40 2 * * 1-6'   # 02:00, 02:20, 02:40 UTC Mon-Sat = 11:00-11:40 JST
+    - cron: '0 3 * * 1-6'         # 03:00 UTC Mon-Sat = 12:00 JST (hard deadline)
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  check-and-trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for recent decode run; dispatch if missing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          REPO="${{ github.repository }}"
+
+          gh run list --repo "$REPO" --workflow="decode_market_report.yml" \
+            --json createdAt,status,conclusion,event --limit 20 > /tmp/runs.json
+
+          RECENT_COUNT=$(python3 - /tmp/runs.json <<'PYEOF'
+          import json, sys, datetime
+          with open(sys.argv[1]) as f:
+              data = json.load(f)
+          now = datetime.datetime.now(datetime.timezone.utc)
+          cutoff = now - datetime.timedelta(hours=4)
+          recent = [
+              r for r in data
+              if datetime.datetime.fromisoformat(r["createdAt"].replace("Z", "+00:00")) > cutoff
+              and (r["status"] != "completed" or r["conclusion"] == "success")
+          ]
+          print(len(recent))
+          PYEOF
+          )
+
+          echo "Recent successful/in-flight decode runs (last 4h): $RECENT_COUNT"
+
+          if [ "$RECENT_COUNT" -eq 0 ]; then
+            echo "No recent decode run found - dispatching now."
+            gh workflow run decode_market_report.yml --repo "$REPO"
+          else
+            echo "Decode report already ran or is running - nothing to do."
+          fi

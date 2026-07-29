@@ -1,16 +1,23 @@
 name: Decode Daily Market Report
 
-# Turns data/market_sentiment_snapshot.json into a stock-news article every
-# day at 12:30 JST — well after market_report.yml's snapshot refresh (07:00
-# JST target, 08:40 JST hard deadline via the watchdog).
+# Turns data/market_sentiment_snapshot.json into a stock-news article targeting
+# 10:00 JST on weekdays (Mon-Fri) and Saturdays. No report on Sundays.
 #
-# Weekdays (Mon-Fri JST): a day-over-day decode with a 14-factor comparison
-# chart against the previous available snapshot.
-# Saturday (JST): a weekly decode covering the trailing week's score
-# trajectory with a bar chart, since Saturday's snapshot reflects the week's
-# last trading day (Friday) close.
-# Sunday (JST): no report - the script exits cleanly with no changes, since
-# there's no new trading data since Saturday.
+# Schedule: '0 23 * * 0-5' = 23:00 UTC Sun-Fri == 08:00 JST Mon-Sat.
+# GitHub's once-a-day crons run with a chronic 1-3 hour delay vs nominal time
+# (documented best-effort behaviour, unfixable). Scheduling at 08:00 JST means
+# the job actually fires at 09:30-11:00 JST — centred on 10:00 JST.
+# The decode_market_report_watchdog.yml guarantees delivery by 12:00 JST even
+# on a worst-case 3-hour delay day.
+#
+# Snapshot dependency: market_report.yml targets 07:00 JST (22:00 UTC) and
+# commits the snapshot by ~08:00 JST (23:00 UTC). This job's 23:00 UTC trigger
+# fires AFTER that snapshot commit, but with GitHub's delay it actually executes
+# 60-120 minutes later — well clear of any snapshot race.
+#
+# Weekdays (Mon-Fri JST): day-over-day decode with a 14-factor comparison chart.
+# Saturday (JST): weekly decode covering the trailing week's score trajectory.
+# Sunday (JST): no cron fires — the script's Sunday guard is a safety net only.
 #
 # Hybrid push strategy: the Python script writes the article to
 # data/decode_pending.json (a staging file no other job touches). The
@@ -24,8 +31,8 @@ name: Decode Daily Market Report
 
 on:
   schedule:
-    - cron: '30 3 * * *'   # 03:30 UTC == 12:30 JST daily (quiet slot)
-  workflow_dispatch:        # manual trigger for testing
+    - cron: '0 23 * * 0-5'  # 23:00 UTC Sun-Fri == 08:00 JST Mon-Sat (lands ~10:00 JST)
+  workflow_dispatch:          # manual trigger for testing / watchdog dispatch
 
 jobs:
   decode-and-publish:
