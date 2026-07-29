@@ -2932,7 +2932,7 @@ var _BN_CH = {
   arirang:   { name:'Arirang TV',           cid:'UC-PHIZjV-oX8H7zD1cCN2NQ', v1:'trrPwbBZaLg', v2:'' },
   tvone:     { name:'tvOneNews',            cid:'UCER4rvDnRBPr_ncYW4UCZjg', v1:'',            v2:'' },
   eagle:     { name:'Eagle News',           cid:'UCPoVy9RE7OvlX8AkksLHsyA', v1:'',            v2:'' },
-  abc:       { name:'ABC News',             cid:'UCBi2mrWuNuyYy4gbM6fU18Q', v1:'3MT3lPGqUsA', v2:'' },
+  abc:       { name:'ABC News',             cid:'UCBi2mrWuNuyYy4gbM6fU18Q', v1:'iipR5yUp36o', v2:'3MT3lPGqUsA' },
   livenow:   { name:'LiveNOW from FOX',     cid:'UCJg9wBPyKMNA5sRDnvzmkdg', v1:'C96oohpWBGw', v2:'' },
   bloomberg: { name:'Bloomberg Television', cid:'UCIALMKvObZNtJ6AmdCLP7Lg', v1:'iEpJwprxDdk', v2:'' },
   sky:       { name:'Sky News',             cid:'UCoMdktPbSTixAyNGwb-UYkQ', v1:'YDvsBbKfLPA', v2:'' },
@@ -3051,7 +3051,7 @@ function _bnStreamTry() {
       if (_bnStream.token !== token || _bnStream.stage !== 1) return;
       _bnStream.stage = ch.v1 ? 2 : 4;
       _bnStreamTry();
-    }, 20000);
+    }, 5000);
 
     fetch(_SHARE_WORKER + '/youtube-live?cid=' + encodeURIComponent(cid))
       .then(function(r) { return r.json(); })
