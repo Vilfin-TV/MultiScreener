@@ -3003,8 +3003,15 @@ function _bnEmbed(videoId) {
          '?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
 }
 function _bnStreamSetSrc(src) {
-  var f = document.getElementById('bn-live-frame');
-  if (f && f.src !== src) f.src = src;
+  var wrap = document.getElementById('bn-live-frame-wrap');
+  if (!wrap) return;
+  var prev = wrap.querySelector('iframe');
+  if (prev && prev.src === src) return;
+  // Inject a fresh iframe with the real src from the start — changing src on
+  // an existing about:blank iframe loses autoplay permissions in Chrome mobile.
+  wrap.innerHTML = '<iframe src="' + src + '" ' +
+    'allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen ' +
+    'referrerpolicy="strict-origin-when-cross-origin"></iframe>';
 }
 function _bnStreamNote(msg) {
   var n = document.getElementById('bn-live-note');
@@ -3179,11 +3186,7 @@ function renderBreakingNews(data, rotate) {
             '<button type="button" class="bn-live-btn" onclick="bnStreamNext()" title="Switch to the next available source">&#x21BA; Next source</button>' +
             '<a class="bn-live-btn bn-live-btn-yt" href="' + escAttr(ytLink) + '" target="_blank" rel="noopener">&#x25BA; YouTube</a>' +
           '</div>' +
-          '<div class="bn-live-frame">' +
-            '<iframe id="bn-live-frame" title="' + escAttr(streamCh.name) + ' live" src="about:blank" ' +
-            'allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen ' +
-            'referrerpolicy="strict-origin-when-cross-origin"></iframe>' +
-          '</div>' +
+          '<div class="bn-live-frame" id="bn-live-frame-wrap"></div>' +
         '</div>';
   }
 
