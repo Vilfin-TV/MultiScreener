@@ -34,6 +34,9 @@ on:
     - cron: '0 23 * * 0-5'  # 23:00 UTC Sun-Fri == 08:00 JST Mon-Sat (lands ~10:00 JST)
   workflow_dispatch:          # manual trigger for testing / watchdog dispatch
 
+permissions:
+  contents: write             # required for git push via GITHUB_TOKEN
+
 jobs:
   decode-and-publish:
     runs-on: ubuntu-latest
@@ -144,8 +147,13 @@ jobs:
             # Progressive backoff: 10s, 20s, 30s … capped at 60s
             SLEEP=$(( i * 10 < 60 ? i * 10 : 60 ))
             echo "Push rejected (attempt $i/20) — retrying in ${SLEEP}s..."
-            # Undo the local commit so the next iteration can re-merge cleanly
+            # Undo the local commit and revert content.json to HEAD so that
+            # --autostash on the next git pull doesn't carry the merged
+            # content.json into the next iteration (which would fool the
+            # idempotency check into thinking the article was already pushed).
             git reset --soft HEAD~1
+            git restore --staged content.json
+            git restore content.json
             sleep $SLEEP
           done
 
