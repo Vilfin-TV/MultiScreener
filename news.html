@@ -1131,6 +1131,45 @@ body{
   .story-body .story-sub-bullets li{background:rgba(0,0,0,.03);border-color:rgba(100,116,139,.25)}
 }
 
+/* ── Story body: dark-theme inline-style neutraliser ────────────────────────
+   Story HTML often carries hardcoded colours (color:#555, background:#f8f9fa)
+   optimised for light backgrounds. On dark themes those values become nearly
+   invisible. These rules override inline `style` attributes inside .story-body
+   and restore readable text using theme CSS variables.
+   Applies to: midnight, maroon, gold, gemini (the four dark-background themes).
+   Light themes (standard, silver, news-reader) are unaffected.                */
+
+/* 1. Force theme text colour on any element whose inline style mentions "color"
+      (catches color:#555, background-color:#fff, border-color:#ccc etc.)       */
+[data-theme="midnight"] .story-body [style*="color"],
+[data-theme="maroon"]   .story-body [style*="color"],
+[data-theme="gold"]     .story-body [style*="color"],
+[data-theme="gemini"]   .story-body [style*="color"]
+{ color: var(--text) !important; }
+
+/* 2. Restore <a> link colour so links stay distinguishable from body text     */
+[data-theme="midnight"] .story-body a,
+[data-theme="maroon"]   .story-body a,
+[data-theme="gold"]     .story-body a,
+[data-theme="gemini"]   .story-body a
+{ color: var(--burn2, #60a5fa) !important; }
+
+/* 3. Adapt hardcoded white/light solid backgrounds (disclaimers, callout
+      boxes) to a semi-transparent dark-friendly surface.
+      Excludes <img> and <svg> to avoid nuking real images.                    */
+[data-theme="midnight"] .story-body :not(img):not(svg)[style*="background"],
+[data-theme="maroon"]   .story-body :not(img):not(svg)[style*="background"],
+[data-theme="gold"]     .story-body :not(img):not(svg)[style*="background"],
+[data-theme="gemini"]   .story-body :not(img):not(svg)[style*="background"]
+{ background: rgba(255,255,255,.06) !important; }
+
+/* 4. Neutralise hardcoded table borders that vanish on dark backgrounds       */
+[data-theme="midnight"] .story-body table,[data-theme="midnight"] .story-body th,[data-theme="midnight"] .story-body td,
+[data-theme="maroon"]   .story-body table,[data-theme="maroon"]   .story-body th,[data-theme="maroon"]   .story-body td,
+[data-theme="gold"]     .story-body table,[data-theme="gold"]     .story-body th,[data-theme="gold"]     .story-body td,
+[data-theme="gemini"]   .story-body table,[data-theme="gemini"]   .story-body th,[data-theme="gemini"]   .story-body td
+{ border-color: var(--border, rgba(255,255,255,.12)) !important; }
+
 /* ═══════════════════════════════════════════════
    WORLD NEWS + MALAYALAM — Newspaper Layout
 ═══════════════════════════════════════════════ */

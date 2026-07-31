@@ -83,17 +83,28 @@ When generating, modifying, or reviewing web code, you must **always** strictly 
 ## Story Generation: Broker Referral Links
 Whenever creating, publishing, or editing a "stock" or "mutual fund" story, you MUST automatically append the "Best Brokers & Apps" button and the direct referral links to the end of the story HTML. Do not wait for the user to ask.
 
-Use the following exact HTML snippet at the very end of the story content:
+Use the following exact HTML snippet at the very end of the story content.
+**Font/theme rule**: NEVER use hardcoded `color:` or `background:` hex values in inline styles — they break dark themes. Use only `rgba()` for backgrounds and omit `color` on `<a>` tags (the site CSS handles link colours per theme via `--burn2`).
+
 ```html
 <p style="text-align: center;">
-  <a href="https://vilfintv.com/market_sentiment_score.html" style="color: #e94560; text-decoration: none; font-weight: bold; font-size: 1.1em;">💼 Best Brokers &amp; Apps</a>
+  <a href="https://vilfintv.com/market_sentiment_score.html" style="text-decoration: none; font-weight: bold; font-size: 1.1em;">💼 Best Brokers &amp; Apps</a>
 </p>
 <ul style="list-style: none; padding: 0; text-align: center; line-height: 1.8; font-size: 0.95em; margin-bottom: 20px;">
-  <li>🟢 <a href="https://zerodha.com/open-account?c=XKQ288" style="color:#1a73e8;text-decoration:none;">Zerodha (India)</a></li>
-  <li>🔥 <a href="https://join.dhan.co/?invite=VFZJN04428" style="color:#1a73e8;text-decoration:none;">Dhan (India + US)</a></li>
-  <li>💹 <a href="https://prostocks.com/open-an-account?ref=G1392" style="color:#1a73e8;text-decoration:none;">ProStocks (Flat-fee)</a></li>
-  <li>🌐 <a href="https://www.interactivebrokers.co.jp/en/accounts/what-you-need-jp.php" style="color:#1a73e8;text-decoration:none;">Interactive Brokers (Global)</a></li>
-  <li>🚀 <a href="https://kuvera.in/s/wsapp?referral=1T6BH" style="color:#1a73e8;text-decoration:none;">Kuvera (Mutual Funds)</a></li>
+  <li>🪙 <a href="https://kuvera.in/s/wsapp?referral=1T6BH" style="text-decoration:none;">Kuvera (Free Direct MF Platform)</a></li>
+  <li>🟢 <a href="https://zerodha.com/open-account?c=XKQ288" style="text-decoration:none;">Zerodha (India's Largest Broker)</a></li>
+  <li>🔥 <a href="https://join.dhan.co/?invite=VFZJN04428" style="text-decoration:none;">Dhan (India + US Markets)</a></li>
+  <li>💹 <a href="https://prostocks.com/open-an-account?ref=G1392" style="text-decoration:none;">ProStocks (Flat-fee Broker)</a></li>
+  <li>🌐 <a href="https://www.interactivebrokers.co.jp/en/accounts/what-you-need-jp.php" style="text-decoration:none;">Interactive Brokers (Global Markets)</a></li>
+  <li>📜 <a href="https://www.indiabonds.com/referral/CiY7ZAAt" style="text-decoration:none;">IndiaBonds (Bond Investment)</a></li>
+  <li>🥇 <a href="https://goldenpi.com/sign-up?referrer=SRVL1503290" style="text-decoration:none;">GoldenPi (Bonds &amp; NCDs)</a></li>
+  <li>💎 <a href="https://www.wintwealth.com/bonds/referral/invite?referralCode=3AC7AF" style="text-decoration:none;">Wint Wealth (Fixed-Income Bonds)</a></li>
+  <li>🌍 <a href="https://revolut.com/referral/?referral-code=vilfingeorge!APR1-26-AR-JP-H1&geo-redirect" style="text-decoration:none;">Revolut (Multi-currency)</a></li>
+  <li>💚 <a href="https://wise.com/invite/ihpc/vilfinm" style="text-decoration:none;">Wise (Best Rate Transfers)</a></li>
+  <li>⚡ <a href="https://referral-link.onelink.me/gbf1/a43c48ca?deep_link_sub1=referral&deep_link_value=cWkMb3" style="text-decoration:none;">Instarem (Asia Remittance)</a></li>
+  <li>📱 <a href="https://m.navi.com/X7g9gpUzoKb" style="text-decoration:none;">Navi (UPI &amp; Loans)</a></li>
+  <li>📲 <a href="https://phon.pe/772mkuqo" style="text-decoration:none;">PhonePe</a></li>
+  <li>🏦 <a href="https://axmobile.axis.bank.in/refernearn/services/refer/bf7c6ce179b84ef0a766759bd153739c" style="text-decoration:none;">Axis Bank Digital Salary Account</a></li>
 </ul>
 ```
 
@@ -103,14 +114,14 @@ Whenever creating, publishing, or editing a "stock" or "mutual fund" story (in a
 
 For Malayalam stories, use this exact HTML snippet:
 ```html
-<p style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid #ffc107; font-size: 0.9em; color: #555; line-height: 1.6;">
+<p style="background: rgba(255,193,7,.1); padding: 15px; border-radius: 8px; border-left: 5px solid #ffc107; font-size: 0.9em; line-height: 1.6;">
   <strong>ഡിസ്‌ക്ലൈമർ (Disclaimer):</strong> മ്യൂച്വൽ ഫണ്ട്, ഓഹരി വിപണി നിക്ഷേപങ്ങൾ വിപണിയിലെ നഷ്ടസാധ്യതകൾക്ക് വിധേയമാണ്. നിക്ഷേപിക്കുന്നതിന് മുൻപ് സ്കീം സംബന്ധിച്ച രേഖകൾ പൂർണ്ണമായും ശ്രദ്ധാപൂർവ്വം വായിക്കുക. ഈ ലേഖനത്തിൽ നൽകിയിട്ടുള്ള വിവരങ്ങൾ തികച്ചും വിദ്യാഭ്യാസ പരമായ ആവശ്യങ്ങൾക്ക് (Educational purposes only) മാത്രമുള്ളതാണ്. ഞങ്ങൾ SEBI രജിസ്റ്റർ ചെയ്ത നിക്ഷേപ ഉപദേശകരല്ല (Not SEBI registered advisors). നിങ്ങളുടെ സാമ്പത്തിക ലക്ഷ്യങ്ങൾക്കും റിസ്ക് എടുക്കാനുള്ള കഴിവിനും അനുസരിച്ച് സ്വന്തമായി തീരുമാനങ്ങൾ എടുക്കുകയോ, അംഗീകൃത സാമ്പത്തിക ഉപദേശകന്റെ സഹായം തേടുകയോ ചെയ്യുക.
 </p>
 ```
 
 For English stories, use this exact HTML snippet:
 ```html
-<p style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid #ffc107; font-size: 0.9em; color: #555; line-height: 1.6;">
+<p style="background: rgba(255,193,7,.1); padding: 15px; border-radius: 8px; border-left: 5px solid #ffc107; font-size: 0.9em; line-height: 1.6;">
   <strong>Disclaimer:</strong> Mutual fund and stock market investments are subject to market risks. Please read all scheme-related documents carefully before investing. The information provided in this article is strictly for educational and informational purposes only. We are not SEBI registered investment advisors. Please conduct your own research or consult with a certified financial advisor before making any investment decisions based on your personal risk tolerance and financial goals.
 </p>
 ```
