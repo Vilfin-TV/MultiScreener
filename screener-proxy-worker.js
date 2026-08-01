@@ -134,9 +134,17 @@ export default {
       const target = 'https://vilfintv.com/news.html' + (slug ? ('?story=' + encodeURIComponent(slug)) : '');
       const _ogSlug = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
       const _ogEsc  = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-      let title = 'VilfinTV News';
-      let desc  = 'Live news, markets, sports, tech and stories on VilfinTV.';
-      let image = 'https://vilfintv.com/images/vilfintv-logo.jpg';
+      const _SECT_LABELS = {
+        trending:'Trending', global:'Global News', india:'India News',
+        stock:'Stock News', malayalam:'Malayalam News', ml_trending:'Malayalam Trending',
+        ml_movies:'Malayalam Movies', movies:'Movie News', sports:'Sports',
+        tech:'Tech News', space:'Space & Science', science:'Science News',
+        entertainment:'Entertainment', business:'Business News',
+      };
+      let title    = 'VilfinTV News';
+      let desc     = 'Live news, markets, sports, tech and stories on VilfinTV.';
+      let image    = 'https://vilfintv.com/images/vilfintv-logo.jpg';
+      let siteName = 'VilfinTV News';
       let found = false;
 
       if (slug) {
@@ -149,7 +157,10 @@ export default {
             if (post) {
               found = true;
               title = post.heading || title;
-              desc  = (post.story || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200) || desc;
+              const _sl = _SECT_LABELS[post.section] || '';
+              if (_sl) siteName = 'VilfinTV · ' + _sl;
+              const _rawDesc = (post.story || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 180);
+              desc = (_sl ? _sl + ' | ' : '') + (_rawDesc || desc);
               if (post.photo) image = post.photo;
             }
           }
@@ -179,7 +190,7 @@ export default {
         + '<meta name="viewport" content="width=device-width,initial-scale=1">'
         + '<title>' + _ogEsc(title) + '</title>'
         + '<meta property="og:type" content="article">'
-        + '<meta property="og:site_name" content="VilfinTV News">'
+        + '<meta property="og:site_name" content="' + _ogEsc(siteName) + '">'
         + '<meta property="og:title" content="' + _ogEsc(title) + '">'
         + '<meta property="og:description" content="' + _ogEsc(desc) + '">'
         + '<meta property="og:image" content="' + _ogEsc(image) + '">'
