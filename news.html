@@ -5346,7 +5346,10 @@ function openCustomPost(id) {
   }
 
   var rawPhoto = post.photo || post.imageUrl || post.image;
-  if (rawPhoto) {
+  // Skip hero photo when the YouTube thumbnail card above already shows the same image.
+  // (Applies only when youtube_play is enabled and the photo is a ytimg.com URL.)
+  var _ytDupe = rawPhoto && post.youtube && post.youtube_play !== false && rawPhoto.indexOf('ytimg.com') !== -1;
+  if (rawPhoto && !_ytDupe) {
     var _mPos = post.photo_pos || '50% 50%';
     var _mZoom = post.photo_zoom ? Math.min(Math.max(parseFloat(post.photo_zoom), 1), 4) : 1;
     // Removed fixed 280px height constraint so images fully show. 
