@@ -5331,17 +5331,20 @@ function openCustomPost(id) {
   if (post.youtube && post.youtube_play !== false) {
     var _ytId = encodeURIComponent(String(post.youtube));
     html += '<div id="story-yt-thumb" onclick="toggleStoryVideo();this.style.display=\'none\';" '
-      + 'style="position:relative;border-radius:10px;overflow:hidden;background:#000;cursor:pointer;margin-bottom:18px;">'
+      + 'style="display:block;position:relative;width:100%;border-radius:10px;overflow:hidden;background:#000;cursor:pointer;margin-bottom:18px;">'
       + '<img src="https://i.ytimg.com/vi/' + _ytId + '/maxresdefault.jpg" '
-      + 'style="width:100%;height:auto;display:block;opacity:.82;" '
+      + 'style="display:block;width:100%;height:auto;opacity:.82;" '
       + 'onerror="this.src=\'https://i.ytimg.com/vi/' + _ytId + '/hqdefault.jpg\'" alt="Video thumbnail">'
-      + '<div style="position:absolute;top:0;left:0;right:0;bottom:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;">'
-      + '<svg height="56" viewBox="0 0 68 48" width="80">'
+      // SVG positioned directly — no flex wrapper needed (avoids height:100% bug in WhatsApp WebView)
+      // Classic negative-margin centering works in every WebKit version
+      + '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68 48" width="68" height="48" '
+      + 'style="display:block;position:absolute;top:50%;left:50%;margin-top:-24px;margin-left:-34px;">'
       + '<path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.63 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="#f00"/>'
       + '<path d="M45 24 27 14v20" fill="#fff"/>'
       + '</svg>'
+      + '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.72));padding:18px 12px 10px;">'
+      + '<span style="color:#fff;font-size:.88em;font-weight:600;">&#9654; Tap to play video</span>'
       + '</div>'
-      + '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.65));padding:20px 12px 10px;color:#fff;font-size:.88em;font-weight:500;">▶ Tap to play video</div>'
       + '</div>';
   }
 
