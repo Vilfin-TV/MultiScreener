@@ -5325,6 +5325,26 @@ function openCustomPost(id) {
   // Placeholder where the YouTube player is injected on demand (kept empty until Play)
   html += '<div class="story-video-wrap" id="story-video-wrap" style="display:none"></div>';
 
+  // In-body YouTube thumbnail with red play button — visible in ALL environments
+  // including WhatsApp WebView where the header Play button is unreachable.
+  // Clicking hides the thumbnail and fires toggleStoryVideo() to load the iframe.
+  if (post.youtube && post.youtube_play !== false) {
+    var _ytId = encodeURIComponent(String(post.youtube));
+    html += '<div id="story-yt-thumb" onclick="toggleStoryVideo();this.style.display=\'none\';" '
+      + 'style="position:relative;border-radius:10px;overflow:hidden;background:#000;cursor:pointer;margin-bottom:18px;">'
+      + '<img src="https://i.ytimg.com/vi/' + _ytId + '/maxresdefault.jpg" '
+      + 'style="width:100%;height:auto;display:block;opacity:.82;" '
+      + 'onerror="this.src=\'https://i.ytimg.com/vi/' + _ytId + '/hqdefault.jpg\'" alt="Video thumbnail">'
+      + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">'
+      + '<svg height="56" viewBox="0 0 68 48" width="80" style="filter:drop-shadow(0 2px 8px rgba(0,0,0,.6));">'
+      + '<path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.63 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="#f00"/>'
+      + '<path d="M45 24 27 14v20" fill="#fff"/>'
+      + '</svg>'
+      + '</div>'
+      + '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.65));padding:20px 12px 10px;color:#fff;font-size:.88em;font-weight:500;">▶ Tap to play video</div>'
+      + '</div>';
+  }
+
   var rawPhoto = post.photo || post.imageUrl || post.image;
   if (rawPhoto) {
     var _mPos = post.photo_pos || '50% 50%';
@@ -5447,6 +5467,8 @@ function toggleStoryVideo() {
   btn.querySelector('.sv-ic-play').style.display = 'none';
   btn.querySelector('.sv-ic-stop').style.display = '';
   var lbl = btn.querySelector('.story-video-label'); if (lbl) lbl.textContent = 'Stop';
+  // Hide the in-body thumbnail card (shown for WhatsApp WebView) when video starts
+  var _ytThumb = document.getElementById('story-yt-thumb'); if (_ytThumb) _ytThumb.style.display = 'none';
   // Stop any TTS narration so audio sources don't overlap
   if (typeof _readerStop === 'function') _readerStop();
   // Smoothly bring the player into view
@@ -5462,6 +5484,8 @@ function _videoStop() {
     var s = btn.querySelector('.sv-ic-stop'); if (s) s.style.display = 'none';
     var lbl = btn.querySelector('.story-video-label'); if (lbl) lbl.textContent = 'Play';
   }
+  // Restore the in-body thumbnail card when video is stopped
+  var _ytThumb = document.getElementById('story-yt-thumb'); if (_ytThumb) _ytThumb.style.display = '';
 }
 
 async function loadNewsPage() {
