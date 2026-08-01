@@ -198,17 +198,17 @@ def page_html(item, image_info=None):
 <link rel="canonical" href="{self_url_esc}"/>
 
 <meta property="og:type" content="article"/>
-<meta property="og:site_name" content="VilfinTV News"/>
+<meta property="og:site_name" content="VilfinTV · {section_label_esc}"/>
 <meta property="og:locale" content="en_US"/>
 <meta property="og:title" content="{title_esc}"/>
-<meta property="og:description" content="{desc_esc}"/>
+<meta property="og:description" content="{section_label_esc} | {desc_esc}"/>
 <meta property="og:image" content="{photo_esc}"/>
 {image_extra}
 <meta property="og:url" content="{self_url_esc}"/>
 
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="{title_esc}"/>
-<meta name="twitter:description" content="{desc_esc}"/>
+<meta name="twitter:description" content="{section_label_esc} | {desc_esc}"/>
 <meta name="twitter:image" content="{photo_esc}"/>
 
 <script type="application/ld+json">
