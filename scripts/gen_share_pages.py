@@ -110,7 +110,7 @@ SECTION_LABELS = {
     'tech': 'Technology',
     'space': 'Space',
     'science': 'Science',
-    'movies': 'Entertainment',
+    'movies': 'Movie & Entertainment',
     'sports': 'Sports',
     'business': 'Business',
     'food': 'Lifestyle',
