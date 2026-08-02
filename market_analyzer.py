@@ -2123,23 +2123,34 @@ def send_email(html_content):
     # Set Reply-To so users replying will bounce
     msg.add_header('Reply-To', 'noreply@vilfintv.com')
 
-    # Fetch automated subscriber list from D1 database via Worker
+    # Fetch subscriber list — prefer the pre-fetched D1 file written by the
+    # workflow step; fall back to the HTTP worker endpoint if not present.
     bcc_emails = []
-    try:
-        worker_url = os.environ.get('SUBSCRIBER_WORKER_URL')
-        worker_secret = os.environ.get('SUBSCRIBER_WORKER_SECRET')
-        if worker_url and worker_secret:
-            resp = requests.get(f"{worker_url}?action=list", headers={'Authorization': f"Bearer {worker_secret}"})
-            if resp.status_code == 200:
-                bcc_emails = resp.json()
-                bcc_emails = [e for e in bcc_emails if e != 'test@vilfintv.com']
-                print(f"Fetched {len(bcc_emails)} subscribers")
+    sub_file = os.environ.get('SUBSCRIBER_LIST_FILE')
+    if sub_file and os.path.exists(sub_file):
+        try:
+            import json as _json
+            bcc_emails = _json.load(open(sub_file))
+            bcc_emails = [e for e in bcc_emails if e and e != 'test@vilfintv.com']
+            print(f"Loaded {len(bcc_emails)} subscribers from D1 file")
+        except Exception as e:
+            logging.error(f"Failed to load subscriber file: {e}")
+    else:
+        try:
+            worker_url = os.environ.get('SUBSCRIBER_WORKER_URL')
+            worker_secret = os.environ.get('SUBSCRIBER_WORKER_SECRET')
+            if worker_url and worker_secret:
+                resp = requests.get(f"{worker_url}?action=list", headers={'Authorization': f"Bearer {worker_secret}"})
+                if resp.status_code == 200:
+                    bcc_emails = resp.json()
+                    bcc_emails = [e for e in bcc_emails if e != 'test@vilfintv.com']
+                    print(f"Fetched {len(bcc_emails)} subscribers from Worker")
+                else:
+                    logging.error(f"Failed to fetch subscribers from Worker: {resp.status_code} {resp.text}")
             else:
-                logging.error(f"Failed to fetch subscribers from Worker: {resp.status_code} {resp.text}")
-        else:
-            logging.warning("SUBSCRIBER_WORKER_URL or SUBSCRIBER_WORKER_SECRET not set.")
-    except Exception as e:
-        logging.error(f"Exception fetching subscribers from D1 Worker: {e}")
+                logging.warning("SUBSCRIBER_WORKER_URL or SUBSCRIBER_WORKER_SECRET not set.")
+        except Exception as e:
+            logging.error(f"Exception fetching subscribers from D1 Worker: {e}")
 
     # Do NOT set msg['Bcc'] — adding that header to the message object would
     # expose the full subscriber list to every recipient in the raw headers.
