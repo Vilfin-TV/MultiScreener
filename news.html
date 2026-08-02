@@ -5277,7 +5277,7 @@ function _renderCustomPosts(sectionId, container) {
     var pubDate = post.published_at
       ? new Date(post.published_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})
       : '';
-    var textTeaser = (post.story || '').replace(/<[^>]*>?/gm, '').trim();
+    var textTeaser = (post.story || '').replace(/<style[^>]*>[\s\S]*?<\/style>/gi, ' ').replace(/<script[^>]*>[\s\S]*?<\/script>/gi, ' ').replace(/<[^>]*>?/gm, '').trim();
     if (textTeaser.length > 150) textTeaser = textTeaser.slice(0, 150) + '...';
     card.innerHTML =
       photoHtml
