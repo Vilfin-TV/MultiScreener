@@ -90,10 +90,13 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           npx wrangler d1 execute subscribers-db \
-            --database-id 0bdd24a2-6109-4225-a873-90c216c530ab \
+            --config wrangler.screener.toml \
             --command "SELECT email FROM subscribers" \
-            --remote --json > /tmp/d1_result.json 2>/dev/null \
+            --remote --json > /tmp/d1_result.json 2>&1 \
             || echo "[]" > /tmp/d1_result.json
+          echo "--- raw d1 result ---"
+          cat /tmp/d1_result.json | head -5
+          echo "---------------------"
           python3 -c "
           import json, sys
           try:
