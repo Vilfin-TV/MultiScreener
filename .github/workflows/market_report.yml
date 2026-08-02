@@ -12,6 +12,7 @@ on:
     # delivery well before 9:00 AM JST even on a bad day.
     - cron: '0 22 * * *'
   workflow_dispatch: # Allow manual trigger
+  repository_dispatch: # Allow trigger via API (e.g. from server scripts)
 
 permissions:
   actions: read      # guard job reads recent run history
