@@ -1945,6 +1945,25 @@ ${body.text}`;
       });
     }
 
+    // ── /api/subscribers  GET — list email subscribers (admin only) ─────────
+    if (pathname === '/api/subscribers' && request.method === 'GET') {
+      const auth = await requireAuth(request, env);
+      if (auth.error) return auth.error;
+      if ((auth.payload || {}).role !== 'admin') return jsonError(403, 'Admin only.');
+      const subUrl = env.SUBSCRIBER_WORKER_URL;
+      const subSecret = env.SUBSCRIBER_WORKER_SECRET;
+      if (!subUrl || !subSecret) return jsonError(503, 'Subscriber worker not configured (set SUBSCRIBER_WORKER_URL and SUBSCRIBER_WORKER_SECRET secrets).');
+      try {
+        const res = await fetch(`${subUrl}?action=list`, { headers: { 'Authorization': `Bearer ${subSecret}` } });
+        const data = await res.json();
+        return new Response(JSON.stringify({ ok: true, subscribers: Array.isArray(data) ? data : [] }), {
+          status: 200, headers: { ...CORS, 'Content-Type': 'application/json' },
+        });
+      } catch (e) {
+        return jsonError(502, `Subscriber fetch failed: ${e.message}`);
+      }
+    }
+
     // ── Only allow GET for all other routes ──────────────────────────────────
     if (request.method !== 'GET') {
       return jsonError(405, 'Method not allowed. Use GET.');
