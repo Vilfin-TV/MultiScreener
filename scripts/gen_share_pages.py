@@ -31,6 +31,8 @@ FETCH_UA = 'Mozilla/5.0 (compatible; VilfinTV-ShareGen/1.0)'
 
 TAG_RE = re.compile(r'<[^>]+>')
 WS_RE = re.compile(r'\s+')
+STYLE_RE = re.compile(r'<style[^>]*>.*?</style>', re.DOTALL | re.IGNORECASE)
+SCRIPT_RE = re.compile(r'<script[^>]*>.*?</script>', re.DOTALL | re.IGNORECASE)
 
 
 def fetch_image_info(url):
@@ -91,7 +93,9 @@ def resolve_photo(photo):
 
 
 def excerpt_of(story_html):
-    text = TAG_RE.sub(' ', story_html or '')
+    text = STYLE_RE.sub(' ', story_html or '')
+    text = SCRIPT_RE.sub(' ', text)
+    text = TAG_RE.sub(' ', text)
     text = html.unescape(text)
     text = WS_RE.sub(' ', text).strip()
     if not text:
@@ -103,19 +107,20 @@ def excerpt_of(story_html):
 
 SECTION_LABELS = {
     'trending': 'Trending',
-    'global': 'World',
-    'india': 'India',
-    'stock': 'Markets',
-    'malayalam': 'Malayalam',
-    'tech': 'Technology',
-    'space': 'Space',
-    'science': 'Science',
+    'global': 'Global News',
+    'india': 'India News',
+    'stock': 'Stock News',
+    'malayalam': 'Malayalam News',
+    'tech': 'Tech News',
+    'space': 'Space & Science',
+    'science': 'Science News',
     'movies': 'Movie & Entertainment',
     'sports': 'Sports',
-    'business': 'Business',
+    'business': 'Business News',
     'food': 'Lifestyle',
-    'ml_food': 'Malayalam',
+    'ml_food': 'Malayalam News',
     'education': 'Education',
+    'trending': 'Trending',
 }
 
 
