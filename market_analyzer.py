@@ -2141,8 +2141,10 @@ def send_email(html_content):
     except Exception as e:
         logging.error(f"Exception fetching subscribers from D1 Worker: {e}")
 
-    if bcc_emails:
-        msg['Bcc'] = ", ".join(bcc_emails)
+    # Do NOT set msg['Bcc'] — adding that header to the message object would
+    # expose the full subscriber list to every recipient in the raw headers.
+    # BCC delivery is achieved solely by passing bcc_emails to sendmail's
+    # to_addrs; the SMTP server delivers there without revealing the addresses.
 
     part = MIMEText(html_content, "html")
     msg.attach(part)

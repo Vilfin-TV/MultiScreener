@@ -982,6 +982,41 @@ ${body.text}`;
       return _rbacJson({ ok:true });
     }
 
+    // ── /api/subscribers  GET — list mailing-list subscribers (admin only) ──────
+    // Proxies to the vilfintv-subscribe-worker D1 endpoint so the SUBSCRIBER_WORKER_URL
+    // and SUBSCRIBER_WORKER_SECRET are never exposed in client-side code.
+    if (pathname === '/api/subscribers' && request.method === 'GET') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      const subUrl    = (env.SUBSCRIBER_WORKER_URL || '').trim();
+      const subSecret = (env.SUBSCRIBER_WORKER_SECRET || '').trim();
+      if (!subUrl || !subSecret) return jsonError(503, 'Subscriber worker not configured (set SUBSCRIBER_WORKER_URL and SUBSCRIBER_WORKER_SECRET secrets).');
+      let emails;
+      try {
+        const r = await fetch(subUrl + '?action=list', { headers: { Authorization: 'Bearer ' + subSecret } });
+        if (!r.ok) return jsonError(502, 'Subscriber worker returned ' + r.status + ': ' + await r.text());
+        emails = await r.json();
+      } catch (e) { return jsonError(502, 'Failed to reach subscriber worker: ' + e.message); }
+      return new Response(JSON.stringify({ ok: true, count: emails.length, subscribers: emails }), { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
+    }
+
+    // ── /api/subscribers/remove  POST — remove an email (admin only) ──────────
+    if (pathname === '/api/subscribers/remove' && request.method === 'POST') {
+      const auth = await requireAuth(request, env); if (auth.error) return auth.error;
+      if ((auth.payload||{}).role !== 'admin') return jsonError(403, 'Admin only.');
+      const subUrl    = (env.SUBSCRIBER_WORKER_URL || '').trim();
+      const subSecret = (env.SUBSCRIBER_WORKER_SECRET || '').trim();
+      if (!subUrl || !subSecret) return jsonError(503, 'Subscriber worker not configured.');
+      let b; try { b = await request.json(); } catch(_) { return jsonError(400, 'Invalid JSON body.'); }
+      const email = (b.email||'').trim();
+      if (!email || !email.includes('@')) return jsonError(400, 'Valid email required.');
+      try {
+        const r = await fetch(subUrl + '?action=unsubscribe&email=' + encodeURIComponent(email), { method: 'POST', headers: { Authorization: 'Bearer ' + subSecret } });
+        if (!r.ok) return jsonError(502, 'Subscriber worker returned ' + r.status);
+      } catch (e) { return jsonError(502, 'Failed to reach subscriber worker: ' + e.message); }
+      return new Response(JSON.stringify({ ok: true, removed: email }), { status: 200, headers: { ...CORS, 'Content-Type': 'application/json' } });
+    }
+
     // ══ Academy lessons (lessons.json — appended to education.html hubs) ═══════
     // ── /api/agent/lessons  GET — agent reads current lessons (lessons scope) ──
     if (pathname === '/api/agent/lessons' && request.method === 'GET') {
