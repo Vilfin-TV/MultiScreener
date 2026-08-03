@@ -126,7 +126,7 @@ jobs:
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
           WORKER_URL: ${{ secrets.WORKER_URL }}
           SUBSCRIBER_WORKER_URL: ${{ secrets.SUBSCRIBER_WORKER_URL }}
-          SUBSCRIBER_WORKER_SECRET: ${{ secrets.SUBSCRIBER_WORKER_SECRET }}
+          SUBSCRIBER_WORKER_SECRET: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           SUBSCRIBER_LIST_FILE: /tmp/subscribers.json
         run: |
           python market_analyzer.py
