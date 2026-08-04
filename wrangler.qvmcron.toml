@@ -1,0 +1,22 @@
+# Cloudflare Worker config for the Daily QVM Screener cron trigger.
+#
+# GitHub Actions cron is best-effort and chronically skips once-a-day jobs.
+# This Cloudflare Worker is the PRIMARY trigger — it fires to the minute.
+#
+# Target: 09:30 JST = 00:30 UTC
+# Repo:   Vilfin-TV/nifty-screener  (different from MultiScreener — separate worker)
+#
+# Deploy:
+#   npx wrangler deploy --config wrangler.qvmcron.toml
+#
+# Secret (one-time — GitHub PAT with  Actions: Read/Write + Contents: Read):
+#   npx wrangler secret put GH_TOKEN --config wrangler.qvmcron.toml
+
+name = "qvm-cron-trigger"
+main = "qvm_cron_worker.js"
+compatibility_date = "2026-01-01"
+
+[triggers]
+# UTC. JST = UTC+9.
+# 09:30 JST = 00:30 UTC
+crons = ["30 0 * * *"]
