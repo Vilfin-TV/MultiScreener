@@ -17,6 +17,11 @@ const OWNER = 'Vilfin-TV';
 const REPO = 'MultiScreener';
 const WORKFLOW = 'jkk_email_watch.yml';
 
+// Nifty screener — fired once at the 00:35 UTC slot on Mon–Fri (09:35 AM JST)
+const NIFTY_REPO = 'nifty-screener';
+const NIFTY_WORKFLOW = 'daily-screener.yml';
+const NIFTY_CRON_SLOT = '35 0 * * *';
+
 // A GitHub-cron run created within this window counts as "already sent".
 const RECENT_WINDOW_MIN = 12;
 
@@ -48,6 +53,23 @@ async function dispatchWorkflow(env) {
   return res.status; // 204 on success
 }
 
+async function dispatchNiftyScreener(env) {
+  const url = `https://api.github.com/repos/${OWNER}/${NIFTY_REPO}/actions/workflows/${NIFTY_WORKFLOW}/dispatches`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { ...ghHeaders(env), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ref: 'main' }),
+  });
+  const status = res.status;
+  if (status === 204) {
+    console.log('Nifty screener workflow dispatched successfully.');
+  } else {
+    const body = await res.text().catch(() => '');
+    console.error(`Nifty screener dispatch failed: HTTP ${status} — ${body}`);
+  }
+  return status;
+}
+
 async function ensureDigestRan(env) {
   const recent = await recentRunCount(env);
   if (recent > 0) {
@@ -62,6 +84,14 @@ async function ensureDigestRan(env) {
 export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil(ensureDigestRan(env));
+
+    // Trigger nifty screener only at the 00:35 UTC weekday slot (09:35 AM JST Mon–Fri)
+    if (event.cron === NIFTY_CRON_SLOT) {
+      const day = new Date(event.scheduledTime).getUTCDay(); // 0=Sun…6=Sat
+      if (day >= 1 && day <= 5) {
+        ctx.waitUntil(dispatchNiftyScreener(env));
+      }
+    }
   },
 
   // Health/status endpoint: reports whether a digest ran recently. Read-only.
