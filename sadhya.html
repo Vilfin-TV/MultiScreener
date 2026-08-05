@@ -339,14 +339,35 @@
         ];
 
         const ITEMS = [
-            "Banana Leaf/Paper Banana leaf", "Choru (Matta Rice)", "Pappadam", 
-            "Pazham", "Salt", "Upperi (Banana Chips)", "Sharkara Varatti", 
-            "Manga Achar (Mango Pickle)", "Naranga Achar (Lime Pickle)", "Inji Puli (or Puli Inji)", 
-            "Parippu", "Sambar", "Rasam", "Pulissery", "Sambaram (Moru)/Curd", 
-            "Avial", "Thoran (cabbage, beans, or carrots)", "Olan", "Kaalan", 
-            "Erissery", "Koottukari (Kootu Curry)", "Pachadi", "Kichadi", 
-            "Mezhukkupuratti (often yams, long beans, or raw bananas)", "Parippu Pradhaman", 
-            "Semiya Payasam", "Water", "Papercup for water & Payasam", "Pookalam flowers"
+            { name: "Banana Leaf/Paper Banana leaf", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Banana-leaf-1.JPG/330px-Banana-leaf-1.JPG" },
+            { name: "Choru (Matta Rice)", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Matta_Rice.jpg/330px-Matta_Rice.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail" },
+            { name: "Pappadam", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Roasted_Papad_-_Howrah_2013-11-02_4068.jpg/330px-Roasted_Papad_-_Howrah_2013-11-02_4068.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail" },
+            { name: "Pazham", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Bananavarieties.jpg/330px-Bananavarieties.jpg" },
+            { name: "Salt", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Salt_Farmers_-_Pak_Thale-edit1.jpg/330px-Salt_Farmers_-_Pak_Thale-edit1.jpg" },
+            { name: "Upperi (Banana Chips)", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Chips_de_bananes_de_S%C3%A3o_Tom%C3%A9-et-Pr%C3%ADncipe.jpg/330px-Chips_de_bananes_de_S%C3%A3o_Tom%C3%A9-et-Pr%C3%ADncipe.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail" },
+            { name: "Sharkara Varatti", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Sadhya_DSW.jpg/330px-Sadhya_DSW.jpg" },
+            { name: "Manga Achar (Mango Pickle)", image: "https://upload.wikimedia.org/wikipedia/en/thumb/0/01/Cut-Mango-pickle.jpg/330px-Cut-Mango-pickle.jpg" },
+            { name: "Naranga Achar (Lime Pickle)", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Chanh_Mu%E1%BB%91i.jpg/330px-Chanh_Mu%E1%BB%91i.jpg" },
+            { name: "Inji Puli (or Puli Inji)", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Puliyinchi_with_a_face.jpg/330px-Puliyinchi_with_a_face.jpg" },
+            { name: "Parippu", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/3_types_of_lentil.png/330px-3_types_of_lentil.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail" },
+            { name: "Sambar", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Pumpkin_sambar.JPG/330px-Pumpkin_sambar.JPG" },
+            { name: "Rasam", image: "https://placehold.co/150x150/0a192f/ccd6f6?text=13" },
+            { name: "Pulissery", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Sadhya_DSW.jpg/330px-Sadhya_DSW.jpg" },
+            { name: "Sambaram (Moru)/Curd", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Buttermilk-%28right%29-and-Milk-%28left%29.jpg/330px-Buttermilk-%28right%29-and-Milk-%28left%29.jpg" },
+            { name: "Avial", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Ayiyal.jpg/330px-Ayiyal.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail" },
+            { name: "Thoran (cabbage, beans, or carrots)", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Travancore_Cheera_Thoran.JPG/330px-Travancore_Cheera_Thoran.JPG" },
+            { name: "Olan", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Olan.jpg/330px-Olan.jpg" },
+            { name: "Kaalan", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Kalan_kerala_dish.jpg/330px-Kalan_kerala_dish.jpg" },
+            { name: "Erissery", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/%E0%B4%8E%E0%B4%B0%E0%B4%BF%E0%B4%B6%E0%B5%8D%E0%B4%B6%E0%B5%87%E0%B4%B0%E0%B4%BF.jpg/330px-%E0%B4%8E%E0%B4%B0%E0%B4%BF%E0%B4%B6%E0%B5%8D%E0%B4%B6%E0%B5%87%E0%B4%B0%E0%B4%BF.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail" },
+            { name: "Koottukari (Kootu Curry)", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Koottukari_Food_kerala.jpg/330px-Koottukari_Food_kerala.jpg" },
+            { name: "Pachadi", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Chutneykarnataka.jpg/330px-Chutneykarnataka.jpg" },
+            { name: "Kichadi", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Indianfoodleaf.jpg/330px-Indianfoodleaf.jpg" },
+            { name: "Mezhukkupuratti (often yams, long beans, or raw bananas)", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Sadhya_DSW.jpg/330px-Sadhya_DSW.jpg" },
+            { name: "Parippu Pradhaman", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Kheer.jpg/330px-Kheer.jpg" },
+            { name: "Semiya Payasam", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Kheer.jpg/330px-Kheer.jpg" },
+            { name: "Water", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Clean_water_for_a_village_in_West_Lombok_%2810686572086%29.jpg/330px-Clean_water_for_a_village_in_West_Lombok_%2810686572086%29.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail" },
+            { name: "Papercup for water & Payasam", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Paper_cup_DS.jpg/330px-Paper_cup_DS.jpg" },
+            { name: "Pookalam flowers", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Brussels_floral_carpet_B.jpg/330px-Brussels_floral_carpet_B.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail" }
         ];
 
         let state = {};
@@ -372,7 +393,7 @@
             const container = document.getElementById('itemsList');
             container.innerHTML = '';
 
-            ITEMS.forEach((itemName, index) => {
+            ITEMS.forEach((item, index) => {
                 const itemNum = index + 1;
                 const safeId = `item_${itemNum}`;
 
@@ -386,9 +407,9 @@
 
                 card.innerHTML = `
                     <div class="item-number">#${itemNum}</div>
-                    <img src="https://placehold.co/150x150/0a192f/ccd6f6?text=${itemNum}" class="item-thumbnail" alt="Thumbnail">
+                    <img src="${item.image}" class="item-thumbnail" alt="Thumbnail">
                     <div class="item-details">
-                        <div class="item-name">${itemName}</div>
+                        <div class="item-name">${item.name}</div>
                         
                         <div class="input-group">
                             <label>Prepared By:</label>
@@ -463,7 +484,7 @@
 
         function buildStateFromForm() {
             const newState = {};
-            ITEMS.forEach((itemName, index) => {
+            ITEMS.forEach((item, index) => {
                 const itemNum = index + 1;
                 const safeId = `item_${itemNum}`;
                 
@@ -478,7 +499,7 @@
 
                 if (preparedBy || comment.value.trim()) {
                     newState[safeId] = {
-                        itemName: itemName,
+                        itemName: item.name,
                         preparedBy: preparedBy,
                         comment: comment.value.trim()
                     };
@@ -518,12 +539,12 @@
         function exportData() {
             const exportText = ["Onam Sadhya 2026 - Claims\n==========================\n"];
             
-            ITEMS.forEach((itemName, index) => {
+            ITEMS.forEach((item, index) => {
                 const itemNum = index + 1;
                 const safeId = `item_${itemNum}`;
                 const data = state[safeId];
                 
-                exportText.push(`${itemNum}. ${itemName}`);
+                exportText.push(`${itemNum}. ${item.name}`);
                 if (data && data.preparedBy) {
                     exportText.push(`   Prepared By: ${data.preparedBy}`);
                     if (data.comment) {
