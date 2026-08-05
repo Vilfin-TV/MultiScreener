@@ -3663,15 +3663,16 @@ async function _buildStoryShareCard(heading, photoUrl, portrait) {
   return await new Promise(function (res) { c.toBlob(function (b) { res(b); }, 'image/jpeg', 0.92); });
 }
 
-async function shareStoryCard(heading, photoUrl, cleanUrl, mode, btn) {
+async function shareStoryCard(heading, photoUrl, cleanUrl, mode, btn, session) {
   var orig = btn ? btn.innerHTML : '';
   if (btn) { btn.disabled = true; btn.innerHTML = '⏳'; }
   var portrait = (mode === 'status');                 // 9:16 only for Status
   // The headline is already baked into the card image, so the image-share caption
   // carries ONLY the link (no duplicated heading). The text-only fallbacks (no
   // image) still include the heading so the post isn't bare.
-  var captionUrlOnly = '📲 Read the full story on VilfinTV News:\n' + cleanUrl;
-  var captionFull    = heading + '\n\n📲 Read the full story on VilfinTV News:\n' + cleanUrl;
+  var sessionTag = session ? '[' + session + '] ' : '';
+  var captionUrlOnly = sessionTag + '📲 Read the full story on VilfinTV News:\n' + cleanUrl;
+  var captionFull    = heading + '\n\n' + sessionTag + '📲 Read the full story on VilfinTV News:\n' + cleanUrl;
   // Desktop fallback (no file-share): each target's own web share, clean URL
   var fallbackUrl;
   if (mode === 'facebook')      fallbackUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(cleanUrl);
@@ -3705,7 +3706,7 @@ async function shareStoryCard(heading, photoUrl, cleanUrl, mode, btn) {
 
 function shareStoryCardCtx(mode, btn) {
   var c = _shareCtx || {};
-  shareStoryCard(c.heading || 'VilfinTV News', c.photo || '', c.url || 'https://vilfintv.com/news.html', mode, btn);
+  shareStoryCard(c.heading || 'VilfinTV News', c.photo || '', c.url || 'https://vilfintv.com/news.html', mode, btn, c.session || '');
 }
 
 /* ═══════════════════════════════════════════════════
@@ -3840,7 +3841,7 @@ function openStory(item, meta) {
   var storyIdSlug = (item.headline || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   var rawShareUrl = 'https://vilfintv.com/news.html?story=' + encodeURIComponent(storyIdSlug);
   var shareUrl = encodeURIComponent(rawShareUrl);
-  _shareCtx = { heading: (item.headline || 'VilfinTV News'), photo: (item.image || item.photo || item.imageUrl || ''), url: rawShareUrl };
+  _shareCtx = { heading: (item.headline || 'VilfinTV News'), photo: (item.image || item.photo || item.imageUrl || ''), url: rawShareUrl, session: (meta.label || '') };
   storyHtml += '<div class="story-modal-share">'
     + '<span class="story-modal-share-label">Share:</span>'
     + '<button type="button" class="share-btn-sm share-wa" onclick="shareStoryCardCtx(\'whatsapp\', this)">WhatsApp</button>'
@@ -5411,7 +5412,8 @@ function openCustomPost(id) {
     : 'https://vilfintv.com/news.html?story=' + encodeURIComponent(storyIdSlug);
   var shareUrl = encodeURIComponent(rawShareUrl);
   // WhatsApp & Status share a branded photo card; the public link stays clean.
-  _shareCtx = { heading: (post.heading || 'VilfinTV News'), photo: (rawPhoto || ''), url: rawShareUrl };
+  var _postSecMeta = (post.section && typeof SECTION_META !== 'undefined') ? (SECTION_META[post.section] || {}) : {};
+  _shareCtx = { heading: (post.heading || 'VilfinTV News'), photo: (rawPhoto || ''), url: rawShareUrl, session: (_postSecMeta.label || '') };
   html += '<div class="story-modal-share">'
     + '<span class="story-modal-share-label">Share:</span>'
     + '<button type="button" class="share-btn-sm share-wa" onclick="shareStoryCardCtx(\'whatsapp\', this)">WhatsApp</button>'
