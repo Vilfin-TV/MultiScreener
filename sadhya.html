@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onam Sadhya Potluck - August 22, 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a192f;
+            --card-bg: #112240;
+            --text-primary: #ccd6f6;
+            --text-secondary: #8892b0;
+            --accent-color: #64ffda;
+            --accent-hover: #52e0c4;
+            --border-color: #233554;
+            --input-bg: #0a192f;
+            --danger: #ff6b6b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h1 {
+            color: var(--text-primary);
+            font-size: 2rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        .map-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.2s;
+        }
+
+        .map-link:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        .action-bar {
+            position: sticky;
+            top: 0;
+            background-color: rgba(10, 25, 47, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(100, 255, 218, 0.1);
+        }
+
+        .btn-whatsapp {
+            background-color: #25D366;
+            color: white;
+            border: none;
+        }
+
+        .btn-whatsapp:hover {
+            background-color: #128C7E;
+        }
+
+        .list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding-bottom: 40px;
+        }
+
+        .item-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .item-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border-color: var(--accent-color);
+        }
+
+        .item-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            min-width: 40px;
+            display: flex;
+            align-items: flex-start;
+            padding-top: 5px;
+        }
+
+        .item-thumbnail {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .item-details {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .item-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        select, input[type="text"] {
+            width: 100%;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        select:focus, input[type="text"]:focus {
+            border-color: var(--accent-color);
+        }
+
+        .other-input-container {
+            display: none;
+            margin-top: 8px;
+        }
+
+        /* Loading Overlay */
+        .loader-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10, 25, 47, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            color: var(--accent-color);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #exportBtn {
+            display: none; /* Shown only with ?admin=true */
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background-color: var(--card-bg);
+            color: var(--accent-color);
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: 1px solid var(--accent-color);
+            font-weight: 500;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 2000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @media (max-width: 600px) {
+            .item-card {
+                flex-direction: column;
+                position: relative;
+            }
+            .item-number {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+            }
+            .item-thumbnail {
+                width: 100%;
+                height: 150px;
+            }
+            .action-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            button {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="loader-overlay" id="loader">
+        Syncing data...
+    </div>
+
+    <div id="toast" class="toast">Changes Saved!</div>
+
+    <div class="container">
+        <header>
+            <h1>Onam Sadhya Potluck 🌸</h1>
+            <div class="subtitle">August 22, 2026 | 6:00PM JST to 10:00PM JST</div>
+            <div class="subtitle">Kojimacho Building 1, Nishi Kasai 5-8-1</div>
+            <a href="https://share.google/P1yaS6ILuhRyTflFN" target="_blank" class="map-link">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                View on Google Maps
+            </a>
+        </header>
+
+        <div class="action-bar">
+            <button id="saveBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                Save Changes
+            </button>
+            <button id="shareBtn" class="btn-whatsapp">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                Share via WhatsApp
+            </button>
+            <button id="exportBtn" class="btn-secondary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Export Data
+            </button>
+        </div>
+
+        <div class="list-container" id="itemsList">
+            <!-- Items injected by JS -->
+        </div>
+    </div>
+
+    <script>
+        // Use relative URL if deployed on same origin, else hardcode the worker URL
+        const WORKER_URL = 'https://sadhya-worker.vilfintv.workers.dev'; 
+        
+        const FAMILIES = [
+            "Vilfin&Family",
+            "Abhilash&Family",
+            "Jackson&Family",
+            "Alvin&Family",
+            "Sreejith&Family",
+            "Other"
+        ];
+
+        const ITEMS = [
+            "Banana Leaf/Paper Banana leaf", "Choru (Matta Rice)", "Pappadam", 
+            "Pazham", "Salt", "Upperi (Banana Chips)", "Sharkara Varatti", 
+            "Manga Achar (Mango Pickle)", "Naranga Achar (Lime Pickle)", "Inji Puli (or Puli Inji)", 
+            "Parippu", "Sambar", "Rasam", "Pulissery", "Sambaram (Moru)/Curd", 
+            "Avial", "Thoran (cabbage, beans, or carrots)", "Olan", "Kaalan", 
+            "Erissery", "Koottukari (Kootu Curry)", "Pachadi", "Kichadi", 
+            "Mezhukkupuratti (often yams, long beans, or raw bananas)", "Parippu Pradhaman", 
+            "Semiya Payasam", "Water", "Papercup for water & Payasam", "Pookalam flowers"
+        ];
+
+        let state = {};
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAdmin();
+            renderList();
+            fetchState();
+
+            document.getElementById('saveBtn').addEventListener('click', saveState);
+            document.getElementById('shareBtn').addEventListener('click', shareWhatsApp);
+            document.getElementById('exportBtn').addEventListener('click', exportData);
+        });
+
+        function checkAdmin() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('admin') === 'true') {
+                document.getElementById('exportBtn').style.display = 'inline-flex';
+            }
+        }
+
+        function renderList() {
+            const container = document.getElementById('itemsList');
+            container.innerHTML = '';
+
+            ITEMS.forEach((itemName, index) => {
+                const itemNum = index + 1;
+                const safeId = `item_${itemNum}`;
+
+                const card = document.createElement('div');
+                card.className = 'item-card';
+
+                // Dropdown Options
+                const optionsHtml = ['<option value="">-- Select --</option>']
+                    .concat(FAMILIES.map(f => `<option value="${f}">${f}</option>`))
+                    .join('');
+
+                card.innerHTML = `
+                    <div class="item-number">#${itemNum}</div>
+                    <img src="https://placehold.co/150x150/0a192f/ccd6f6?text=${itemNum}" class="item-thumbnail" alt="Thumbnail">
+                    <div class="item-details">
+                        <div class="item-name">${itemName}</div>
+                        
+                        <div class="input-group">
+                            <label>Prepared By:</label>
+                            <select id="${safeId}_select" onchange="handleSelectChange('${safeId}')">
+                                ${optionsHtml}
+                            </select>
+                            <div class="other-input-container" id="${safeId}_other_container">
+                                <input type="text" id="${safeId}_other" placeholder="Enter name...">
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Comments / Dietary Notes:</label>
+                            <input type="text" id="${safeId}_comment" placeholder="e.g. No garlic, extra spicy...">
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function handleSelectChange(safeId) {
+            const select = document.getElementById(`${safeId}_select`);
+            const otherContainer = document.getElementById(`${safeId}_other_container`);
+            if (select.value === 'Other') {
+                otherContainer.style.display = 'block';
+            } else {
+                otherContainer.style.display = 'none';
+            }
+        }
+
+        async function fetchState() {
+            showLoader(true);
+            try {
+                const res = await fetch(WORKER_URL);
+                if(res.ok) {
+                    state = await res.json();
+                    populateForm();
+                } else {
+                    console.error('Failed to load state');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+            showLoader(false);
+        }
+
+        function populateForm() {
+            ITEMS.forEach((_, index) => {
+                const itemNum = index + 1;
+                const safeId = `item_${itemNum}`;
+                const data = state[safeId];
+                if (data) {
+                    const select = document.getElementById(`${safeId}_select`);
+                    const otherInput = document.getElementById(`${safeId}_other`);
+                    const comment = document.getElementById(`${safeId}_comment`);
+
+                    if (FAMILIES.includes(data.preparedBy)) {
+                        select.value = data.preparedBy;
+                    } else if (data.preparedBy) {
+                        select.value = 'Other';
+                        otherInput.value = data.preparedBy;
+                    }
+                    handleSelectChange(safeId);
+
+                    if (data.comment) {
+                        comment.value = data.comment;
+                    }
+                }
+            });
+        }
+
+        function buildStateFromForm() {
+            const newState = {};
+            ITEMS.forEach((itemName, index) => {
+                const itemNum = index + 1;
+                const safeId = `item_${itemNum}`;
+                
+                const select = document.getElementById(`${safeId}_select`);
+                const otherInput = document.getElementById(`${safeId}_other`);
+                const comment = document.getElementById(`${safeId}_comment`);
+
+                let preparedBy = select.value;
+                if (preparedBy === 'Other') {
+                    preparedBy = otherInput.value.trim();
+                }
+
+                if (preparedBy || comment.value.trim()) {
+                    newState[safeId] = {
+                        itemName: itemName,
+                        preparedBy: preparedBy,
+                        comment: comment.value.trim()
+                    };
+                }
+            });
+            return newState;
+        }
+
+        async function saveState() {
+            const newState = buildStateFromForm();
+            showLoader(true, 'Saving...');
+            try {
+                const res = await fetch(WORKER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newState)
+                });
+                if(res.ok) {
+                    state = newState;
+                    showToast();
+                } else {
+                    alert('Failed to save changes. Please try again.');
+                }
+            } catch(e) {
+                console.error(e);
+                alert('Network error while saving.');
+            }
+            showLoader(false);
+        }
+
+        function shareWhatsApp() {
+            const currentUrl = window.location.href.split('?')[0]; // Remove query params like admin
+            const message = encodeURIComponent(`Hey! Claim the dish you are making for our Onam Sadhya here: ${currentUrl}`);
+            window.open(`https://wa.me/?text=${message}`, '_blank');
+        }
+
+        function exportData() {
+            const exportText = ["Onam Sadhya 2026 - Claims\n==========================\n"];
+            
+            ITEMS.forEach((itemName, index) => {
+                const itemNum = index + 1;
+                const safeId = `item_${itemNum}`;
+                const data = state[safeId];
+                
+                exportText.push(`${itemNum}. ${itemName}`);
+                if (data && data.preparedBy) {
+                    exportText.push(`   Prepared By: ${data.preparedBy}`);
+                    if (data.comment) {
+                        exportText.push(`   Note: ${data.comment}`);
+                    }
+                } else {
+                    exportText.push(`   [Unclaimed]`);
+                }
+                exportText.push(""); // empty line
+            });
+
+            const blob = new Blob([exportText.join("\n")], { type: "text/plain" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "Sadhya_Claims.txt";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function showLoader(show, text = 'Syncing data...') {
+            const loader = document.getElementById('loader');
+            loader.textContent = text;
+            if(show) {
+                loader.classList.remove('hidden');
+            } else {
+                loader.classList.add('hidden');
+            }
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
