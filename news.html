@@ -3589,20 +3589,20 @@ function _wrapShareLines(ctx, text, maxW, maxLines) {
   return lines;
 }
 
-async function _buildStoryShareCard(heading, photoUrl, portrait) {
+async function _buildStoryShareCard(heading, photoUrl, portrait, session) {
   var W = 1080, H = portrait ? 1920 : 1350;
   var c = document.createElement('canvas'); c.width = W; c.height = H;
   var ctx = c.getContext('2d');
   try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) {}
 
-  // Brand navy base
+  // ── Background gradient ──────────────────────────────────────────────────────
   var base = ctx.createLinearGradient(0, 0, 0, H);
   base.addColorStop(0, '#0c1b4d'); base.addColorStop(1, '#070d1f');
   ctx.fillStyle = base; ctx.fillRect(0, 0, W, H);
 
   var pad = 56;
 
-  // ── Top brand row: round logo + "VilfinTV" + red NEWS chip ──────────────────
+  // ── Brand row: logo · VilfinTV · red NEWS chip · blue session chip ───────────
   var logo = await _loadShareImg('images/vilfintv-logo.jpg', true);
   var by = 46, ls = 84;
   if (logo) {
@@ -3614,16 +3614,26 @@ async function _buildStoryShareCard(heading, photoUrl, portrait) {
   var brandX = pad + ls + 22;
   ctx.fillText('VilfinTV', brandX, by + ls / 2);
   var vtW = ctx.measureText('VilfinTV').width;
-  var chipX = brandX + vtW + 16, chipH = 44, chipY = by + ls / 2 - chipH / 2, chipW = 92;
-  ctx.fillStyle = '#ef4444'; _roundRect(ctx, chipX, chipY, chipW, chipH, 9); ctx.fill();
-  ctx.fillStyle = '#ffffff'; ctx.font = '800 27px Inter, Arial, sans-serif'; ctx.textAlign = 'center';
-  ctx.fillText('NEWS', chipX + chipW / 2, chipY + chipH / 2 + 1);
+  var chipH = 44, chipY = by + ls / 2 - chipH / 2;
 
-  // ── Photo panel — CONTAIN (whole photo always fits, never cropped) ──────────
-  // A framed dark panel holds the full image centred; letterbox bands read as an
-  // intentional frame, so any aspect ratio (wide scorecards, tall posters) shows
-  // completely with nothing pushed off the card.
-  var pxx = pad, pyy = by + ls + 34, pww = W - pad * 2, phh = portrait ? 1040 : 656;
+  // red NEWS chip
+  var newsChipX = brandX + vtW + 16, newsChipW = 94;
+  ctx.fillStyle = '#ef4444'; _roundRect(ctx, newsChipX, chipY, newsChipW, chipH, 9); ctx.fill();
+  ctx.fillStyle = '#ffffff'; ctx.font = '800 27px Inter, Arial, sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('NEWS', newsChipX + newsChipW / 2, chipY + chipH / 2 + 1);
+
+  // blue session chip (shown when session label is provided)
+  if (session) {
+    ctx.font = '700 26px Inter, Arial, sans-serif';
+    var sesChipW = ctx.measureText(session).width + 30;
+    var sesChipX = newsChipX + newsChipW + 14;
+    ctx.fillStyle = '#2563eb'; _roundRect(ctx, sesChipX, chipY, sesChipW, chipH, 9); ctx.fill();
+    ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
+    ctx.fillText(session, sesChipX + sesChipW / 2, chipY + chipH / 2 + 1);
+  }
+
+  // ── Photo panel ──────────────────────────────────────────────────────────────
+  var pxx = pad, pyy = by + ls + 28, pww = W - pad * 2, phh = portrait ? 1060 : 680;
   ctx.fillStyle = '#0a1733';
   _roundRect(ctx, pxx, pyy, pww, phh, 28); ctx.fill();
   if (photoUrl) {
@@ -3631,34 +3641,33 @@ async function _buildStoryShareCard(heading, photoUrl, portrait) {
     if (!img) img = await _loadShareImg(photoUrl, true);
     if (img && img.naturalWidth) {
       var ar = img.naturalWidth / img.naturalHeight, par = pww / phh, dw, dh;
-      if (ar > par) { dw = pww; dh = dw / ar; }        // wide → fit width
-      else          { dh = phh; dw = dh * ar; }         // tall → fit height
+      if (ar > par) { dw = pww; dh = dw / ar; }
+      else          { dh = phh; dw = dh * ar; }
       var dx = pxx + (pww - dw) / 2, dy = pyy + (phh - dh) / 2;
       ctx.save(); _roundRect(ctx, pxx, pyy, pww, phh, 28); ctx.clip();
       try { ctx.drawImage(img, dx, dy, dw, dh); } catch (e) {}
       ctx.restore();
     }
   }
-  // subtle frame border
   ctx.strokeStyle = 'rgba(157,184,255,0.18)'; ctx.lineWidth = 2;
   _roundRect(ctx, pxx, pyy, pww, phh, 28); ctx.stroke();
 
-  // ── Footer CTA anchored to the bottom ───────────────────────────────────────
-  var fy = H - pad;
-  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = '#9db8ff'; ctx.font = '700 34px Inter, Arial, sans-serif';
-  ctx.fillText('Read the full story  ·  vilfintv.com', pad, fy);
-
-  // ── Headline — clean band between the photo and the footer (no overlap) ─────
-  var hStartY = pyy + phh + 50;
+  // ── Headline — flush under the photo, no fixed-bottom dead space ─────────────
+  var hStartY = pyy + phh + 32;
   ctx.fillStyle = '#3b82f6'; ctx.fillRect(pad, hStartY, 84, 8);
   ctx.fillStyle = '#ffffff';
   var fSize = portrait ? 62 : 56, lineH = portrait ? 82 : 74, maxLines = portrait ? 6 : 4;
   ctx.font = '800 ' + fSize + 'px "Playfair Display", Georgia, serif';
   ctx.textBaseline = 'top'; ctx.textAlign = 'left';
   var lines = _wrapShareLines(ctx, heading, W - pad * 2, maxLines);
-  var hTop = hStartY + 26;
+  var hTop = hStartY + 22;
   for (var i = 0; i < lines.length; i++) ctx.fillText(lines[i], pad, hTop + i * lineH);
+
+  // ── Footer domain — right below the last headline line ───────────────────────
+  var footerY = hTop + lines.length * lineH + 32;
+  ctx.fillStyle = '#9db8ff'; ctx.font = '700 34px Inter, Arial, sans-serif';
+  ctx.textBaseline = 'top'; ctx.textAlign = 'left';
+  ctx.fillText('vilfintv.com/news', pad, footerY);
 
   return await new Promise(function (res) { c.toBlob(function (b) { res(b); }, 'image/jpeg', 0.92); });
 }
@@ -3667,25 +3676,24 @@ async function shareStoryCard(heading, photoUrl, cleanUrl, mode, btn, session) {
   var orig = btn ? btn.innerHTML : '';
   if (btn) { btn.disabled = true; btn.innerHTML = '⏳'; }
   var portrait = (mode === 'status');                 // 9:16 only for Status
-  // The headline is already baked into the card image, so the image-share caption
-  // carries ONLY the link (no duplicated heading). The text-only fallbacks (no
-  // image) still include the heading so the post isn't bare.
-  var sessionTag = session ? '[' + session + '] ' : '';
-  var captionUrlOnly = sessionTag + '📲 Read the full story on VilfinTV News:\n' + cleanUrl;
-  var captionFull    = heading + '\n\n' + sessionTag + '📲 Read the full story on VilfinTV News:\n' + cleanUrl;
+  // Card image already carries brand, session chip, headline and domain — caption
+  // is just the clean link so nothing is duplicated in the WhatsApp text area.
+  var sessionLine = session ? session + ' · VilfinTV News' : 'VilfinTV News';
+  var captionText = sessionLine + '\n' + cleanUrl;
+  var captionFull = heading + '\n' + captionText;    // text-only fallback (no image)
   // Desktop fallback (no file-share): each target's own web share, clean URL
   var fallbackUrl;
   if (mode === 'facebook')      fallbackUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(cleanUrl);
   else if (mode === 'twitter')  fallbackUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(heading) + '&url=' + encodeURIComponent(cleanUrl);
   else                          fallbackUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(captionFull);
   try {
-    var blob = await _buildStoryShareCard(heading, photoUrl, portrait);
+    var blob = await _buildStoryShareCard(heading, photoUrl, portrait, session);
     var file = blob ? new File([blob], 'vilfintv-news.jpg', { type: 'image/jpeg' }) : null;
     if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
       // Mobile: native sheet → user picks WhatsApp / Status / Facebook / X, photo
       // attaches. Status posts image-only so it can't overlap WhatsApp's caption.
-      var shareData = portrait ? { files: [file], title: 'VilfinTV News' }
-                               : { files: [file], title: 'VilfinTV News', text: captionUrlOnly };
+      var shareData = portrait ? { files: [file], title: sessionLine }
+                               : { files: [file], title: 'VilfinTV News', text: captionText };
       await navigator.share(shareData);
     } else {
       // Desktop: download the card (to attach), then open the target's web share
