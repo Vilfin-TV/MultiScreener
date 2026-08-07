@@ -184,7 +184,7 @@
         .priority-mandatory { background: rgba(255,107,107,0.15); color: var(--danger); border: 1px solid rgba(255,107,107,0.3); }
         .priority-optional { background: rgba(136,146,176,0.15); color: var(--text-secondary); border: 1px solid rgba(136,146,176,0.3); }
         .admin-priority-select {
-            background: rgba(10,25,47,0.8); color: var(--accent-color); border: 1px solid rgba(100,255,218,0.3); border-radius: 4px; padding: 2px 4px; font-size: 0.75rem; font-weight: 600; outline: none; cursor: pointer;
+            background: rgba(10,25,47,0.8); color: var(--accent-color); border: 1px solid rgba(100,255,218,0.3); border-radius: 4px; padding: 2px 4px; font-size: 0.75rem; font-weight: 600; outline: none; cursor: pointer; width: auto !important; min-width: 90px;
         }
         .user-note {
             background: rgba(100,255,218,0.05); border-left: 3px solid var(--accent-color); color: var(--text-primary); padding: 12px 16px; margin-bottom: 20px; border-radius: 0 8px 8px 0; font-size: 0.95rem; font-weight: 500;
@@ -677,9 +677,9 @@
         card.innerHTML = `
             ${numHtml}${thumbHtml}
             <div class="item-details">
-                <div class="item-name" style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
-                    <div style="flex:1;">${buildNameHtml(safeId, display)}</div>
-                    ${buildPriorityHtml(safeId, display)}
+                <div class="item-name" style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                    <div style="flex-grow:1; min-width:0;">${buildNameHtml(safeId, display)}</div>
+                    <div style="flex-shrink:0;">${buildPriorityHtml(safeId, display)}</div>
                 </div>
                 ${slotBadge}
                 ${claimants.length > 0 ? `<div class="claimants-row"><span class="claimants-label">Also bringing:</span>${claimantTagsHtml}</div>` : ''}
@@ -741,9 +741,9 @@
         card.innerHTML = `
             ${numHtml}${thumbHtml}
             <div class="item-details">
-                <div class="item-name" style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
-                    <div style="flex:1;">${escHtml(display.name)}</div>
-                    ${buildPriorityHtml(safeId, display)}
+                <div class="item-name" style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                    <div style="flex-grow:1; min-width:0;">${escHtml(display.name)}</div>
+                    <div style="flex-shrink:0;">${buildPriorityHtml(safeId, display)}</div>
                 </div>
                 <div class="claimed-badge">✓ Claimed by <strong>${escHtml(data.preparedBy)}</strong></div>
                 ${data?.comment ? `<div class="claimed-comment">📝 ${escHtml(data.comment)}</div>` : ''}
@@ -777,9 +777,9 @@
         card.innerHTML = `
             ${numHtml}${thumbHtml}
             <div class="item-details">
-                <div class="item-name" style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
-                    <div style="flex:1;">${buildNameHtml(safeId, display)}</div>
-                    ${buildPriorityHtml(safeId, display)}
+                <div class="item-name" style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                    <div style="flex-grow:1; min-width:0;">${buildNameHtml(safeId, display)}</div>
+                    <div style="flex-shrink:0;">${buildPriorityHtml(safeId, display)}</div>
                 </div>
                 ${isMyItem && !isAdmin ? `<div class="my-item-badge">✓ Your item</div>` : ''}
                 ${adminInfoHtml}
