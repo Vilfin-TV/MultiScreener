@@ -178,6 +178,17 @@
             background: rgba(100,255,218,0.15); color: var(--accent-color);
             border-radius: 20px; padding: 3px 12px; font-size: 0.83rem; font-weight: 600; width: fit-content;
         }
+        .priority-badge {
+            display: inline-flex; align-items: center; gap: 4px; border-radius: 4px; padding: 2px 6px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .priority-mandatory { background: rgba(255,107,107,0.15); color: var(--danger); border: 1px solid rgba(255,107,107,0.3); }
+        .priority-optional { background: rgba(136,146,176,0.15); color: var(--text-secondary); border: 1px solid rgba(136,146,176,0.3); }
+        .admin-priority-select {
+            background: rgba(10,25,47,0.8); color: var(--accent-color); border: 1px solid rgba(100,255,218,0.3); border-radius: 4px; padding: 2px 4px; font-size: 0.75rem; font-weight: 600; outline: none; cursor: pointer;
+        }
+        .user-note {
+            background: rgba(100,255,218,0.05); border-left: 3px solid var(--accent-color); color: var(--text-primary); padding: 12px 16px; margin-bottom: 20px; border-radius: 0 8px 8px 0; font-size: 0.95rem; font-weight: 500;
+        }
         .admin-claim-row {
             display: flex; align-items: center; justify-content: space-between;
             background: rgba(255,170,50,0.08); border: 1px solid rgba(255,170,50,0.25);
@@ -316,10 +327,17 @@
         </button>
     </div>
 
+    <div class="user-note" id="topUserNote">
+        <strong style="color:var(--accent-color);">Instructions:</strong> First, select your family name above. Then, claim the items you'd like to bring. Please prioritize <span class="priority-badge priority-mandatory">Mandatory</span> items first. <span class="priority-badge priority-optional">Optional</span> items have less priority.
+    </div>
+
     <div class="list-container" id="itemsList"></div>
 
     <!-- Family Summary -->
     <div class="family-summary hidden" id="familySummary">
+        <div class="user-note" style="margin-bottom:25px; border-radius:8px; border-left:none; text-align:center; background:rgba(100,255,218,0.1);">
+            <strong style="color:var(--accent-color);">After claiming and saving your items</strong>, please copy your items below and paste them into our WhatsApp group!
+        </div>
         <div class="summary-header">
             <h2>📋 Who's Bringing What</h2>
             <button class="btn-secondary" onclick="copyAllSummary()">
@@ -407,6 +425,7 @@
             hasCustomImage: !!meta.image,
             hasCustomName: !!meta.name,
             isCustom: !!item.isCustom,
+            isOptional: !!meta.isOptional,
             safeId
         };
     }
@@ -561,6 +580,31 @@
         return escHtml(display.name);
     }
 
+    function buildPriorityHtml(safeId, display) {
+        if (isAdmin) {
+            const isOpt = display.isOptional ? 'selected' : '';
+            return `<select class="admin-priority-select" onchange="toggleItemPriority('${escAttr(safeId)}', this.value === 'true')">
+                        <option value="false">Mandatory</option>
+                        <option value="true" ${isOpt}>Optional</option>
+                    </select>`;
+        } else {
+            return display.isOptional 
+                ? `<span class="priority-badge priority-optional">Optional</span>`
+                : `<span class="priority-badge priority-mandatory">Mandatory</span>`;
+        }
+    }
+
+    async function toggleItemPriority(safeId, isOptional) {
+        try {
+            const ls = await fetchLatest();
+            if (!ls._meta) ls._meta = {};
+            if (!ls._meta[safeId]) ls._meta[safeId] = {};
+            ls._meta[safeId].isOptional = isOptional;
+            const res = await fetch(WORKER_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(ls) });
+            if (res.ok) { state = ls; showToast('Priority saved ✓'); renderList(); renderFamilySummary(); }
+        } catch (e) { console.error(e); showToast('Network error', true); }
+    }
+
     function buildItemCard(item, index) {
         const itemNum = index + 1;
         const safeId = `item_${itemNum}`;
@@ -633,7 +677,10 @@
         card.innerHTML = `
             ${numHtml}${thumbHtml}
             <div class="item-details">
-                <div class="item-name">${buildNameHtml(safeId, display)}</div>
+                <div class="item-name" style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                    <div style="flex:1;">${buildNameHtml(safeId, display)}</div>
+                    ${buildPriorityHtml(safeId, display)}
+                </div>
                 ${slotBadge}
                 ${claimants.length > 0 ? `<div class="claimants-row"><span class="claimants-label">Also bringing:</span>${claimantTagsHtml}</div>` : ''}
                 ${actionHtml}
@@ -694,7 +741,10 @@
         card.innerHTML = `
             ${numHtml}${thumbHtml}
             <div class="item-details">
-                <div class="item-name">${escHtml(display.name)}</div>
+                <div class="item-name" style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                    <div style="flex:1;">${escHtml(display.name)}</div>
+                    ${buildPriorityHtml(safeId, display)}
+                </div>
                 <div class="claimed-badge">✓ Claimed by <strong>${escHtml(data.preparedBy)}</strong></div>
                 ${data?.comment ? `<div class="claimed-comment">📝 ${escHtml(data.comment)}</div>` : ''}
             </div>`;
@@ -727,7 +777,10 @@
         card.innerHTML = `
             ${numHtml}${thumbHtml}
             <div class="item-details">
-                <div class="item-name">${buildNameHtml(safeId, display)}</div>
+                <div class="item-name" style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                    <div style="flex:1;">${buildNameHtml(safeId, display)}</div>
+                    ${buildPriorityHtml(safeId, display)}
+                </div>
                 ${isMyItem && !isAdmin ? `<div class="my-item-badge">✓ Your item</div>` : ''}
                 ${adminInfoHtml}
                 <div class="input-group">
