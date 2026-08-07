@@ -22,78 +22,92 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            line-height: 1.6;
-            -webkit-font-smoothing: antialiased;
-        }
+        body { background-color: var(--bg-color); color: var(--text-primary); line-height: 1.6; -webkit-font-smoothing: antialiased; }
 
         .container { max-width: 800px; margin: 0 auto; padding: 20px; }
 
         /* Admin Banner */
         .admin-banner {
             background: linear-gradient(135deg, rgba(255,170,50,0.15), rgba(255,107,107,0.1));
-            border: 1px solid rgba(255,170,50,0.4);
-            border-radius: 10px;
-            padding: 12px 18px;
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--warning);
-            font-size: 0.9rem;
-            font-weight: 600;
+            border: 1px solid rgba(255,170,50,0.4); border-radius: 10px;
+            padding: 12px 18px; margin-bottom: 14px;
+            display: flex; align-items: center; gap: 10px;
+            color: var(--warning); font-size: 0.9rem; font-weight: 600;
         }
         .admin-banner svg { flex-shrink: 0; }
         .admin-banner span { color: var(--text-secondary); font-weight: 400; font-size: 0.83rem; }
 
-        header {
-            text-align: center;
-            margin-bottom: 24px;
-            padding: 30px 0 24px;
-            border-bottom: 1px solid var(--border-color);
+        /* Admin Families Panel */
+        .admin-families-panel {
+            background-color: var(--card-bg); border: 1px solid rgba(255,170,50,0.3);
+            border-radius: 10px; padding: 16px 18px; margin-bottom: 14px;
         }
+        .admin-families-title {
+            font-size: 0.85rem; font-weight: 600; color: var(--warning);
+            margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+        }
+        .admin-family-tags {
+            display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; min-height: 32px;
+        }
+        .admin-family-tag {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: rgba(100,255,218,0.1); border: 1px solid rgba(100,255,218,0.25);
+            color: var(--accent-color); border-radius: 20px; padding: 4px 10px 4px 12px;
+            font-size: 0.83rem; font-weight: 500;
+        }
+        .admin-family-tag.tag-other {
+            background: rgba(136,146,176,0.1); border-color: rgba(136,146,176,0.2);
+            color: var(--text-secondary);
+        }
+        .family-remove-btn {
+            background: none; border: none; cursor: pointer;
+            color: rgba(100,255,218,0.5); font-size: 0.8rem; line-height: 1;
+            padding: 0; transition: color 0.15s; display: inline-flex; align-items: center;
+        }
+        .family-remove-btn:hover { color: var(--danger); transform: none; background: none; }
+        .add-family-row { display: flex; gap: 8px; }
+        .add-family-row input[type="text"] {
+            flex: 1; background-color: var(--input-bg); border: 1px solid var(--border-color);
+            color: var(--text-primary); padding: 8px 12px; border-radius: 6px;
+            font-size: 0.9rem; outline: none; transition: border-color 0.2s;
+        }
+        .add-family-row input[type="text"]:focus { border-color: var(--accent-color); }
+        .btn-add {
+            background-color: var(--accent-color); color: var(--bg-color);
+            border: none; padding: 8px 16px; border-radius: 6px;
+            font-weight: 600; font-size: 0.9rem; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
+            display: inline-flex; align-items: center; gap: 5px;
+        }
+        .btn-add:hover { background-color: var(--accent-hover); transform: translateY(-1px); }
+
+        /* Header */
+        header { text-align: center; margin-bottom: 24px; padding: 30px 0 24px; border-bottom: 1px solid var(--border-color); }
         h1 { color: var(--text-primary); font-size: 2rem; margin-bottom: 10px; font-weight: 700; }
         .subtitle { color: var(--text-secondary); font-size: 1rem; margin-bottom: 8px; }
-        .map-link {
-            color: var(--accent-color); text-decoration: none; font-weight: 500;
-            display: inline-flex; align-items: center; gap: 5px; transition: color 0.2s;
-        }
+        .map-link { color: var(--accent-color); text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 5px; transition: color 0.2s; }
         .map-link:hover { color: var(--accent-hover); text-decoration: underline; }
 
-        /* Family Picker Bar */
+        /* Family Picker */
         .family-picker-bar {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 14px 18px;
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
+            background-color: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 10px; padding: 14px 18px; margin-bottom: 14px;
+            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
         }
         .picker-label { color: var(--text-secondary); font-size: 0.9rem; font-weight: 500; white-space: nowrap; }
-        .family-picker-bar select,
-        .family-picker-bar input[type="text"] {
-            flex: 1; min-width: 180px;
-            background-color: var(--input-bg); border: 1px solid var(--border-color);
-            color: var(--text-primary); padding: 8px 12px; border-radius: 6px;
-            font-size: 0.95rem; outline: none; transition: border-color 0.2s;
+        .family-picker-bar select, .family-picker-bar input[type="text"] {
+            flex: 1; min-width: 180px; background-color: var(--input-bg);
+            border: 1px solid var(--border-color); color: var(--text-primary);
+            padding: 8px 12px; border-radius: 6px; font-size: 0.95rem;
+            outline: none; transition: border-color 0.2s;
         }
-        .family-picker-bar select:focus,
-        .family-picker-bar input[type="text"]:focus { border-color: var(--accent-color); }
-        .family-tag {
-            background: rgba(100,255,218,0.12); color: var(--accent-color);
-            border-radius: 20px; padding: 4px 12px; font-size: 0.85rem; font-weight: 600;
-        }
+        .family-picker-bar select:focus, .family-picker-bar input[type="text"]:focus { border-color: var(--accent-color); }
+        .family-tag { background: rgba(100,255,218,0.12); color: var(--accent-color); border-radius: 20px; padding: 4px 12px; font-size: 0.85rem; font-weight: 600; }
 
         /* Action Bar */
         .action-bar {
-            position: sticky; top: 0;
-            background-color: rgba(10,25,47,0.95); backdrop-filter: blur(10px);
-            padding: 12px 0;
+            position: sticky; top: 0; background-color: rgba(10,25,47,0.95);
+            backdrop-filter: blur(10px); padding: 12px 0;
             display: flex; justify-content: space-between; align-items: center;
             z-index: 100; border-bottom: 1px solid var(--border-color);
             margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
@@ -106,59 +120,32 @@
             transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
         }
         button:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
-
-        .btn-secondary {
-            background-color: transparent; color: var(--accent-color);
-            border: 1px solid var(--accent-color);
-        }
+        .btn-secondary { background-color: transparent; color: var(--accent-color); border: 1px solid var(--accent-color); }
         .btn-secondary:hover { background-color: rgba(100,255,218,0.1); }
-
         .btn-whatsapp { background-color: #25D366; color: white; border: none; }
         .btn-whatsapp:hover { background-color: #128C7E; }
-
-        .btn-danger {
-            background-color: transparent; color: var(--danger);
-            border: 1px solid var(--danger); font-size: 0.82rem; padding: 5px 10px;
-        }
-        .btn-danger:hover { background-color: var(--danger-bg); transform: none; }
-
-        .btn-sm {
-            font-size: 0.82rem; padding: 5px 10px; font-weight: 500;
-        }
+        .btn-danger { background-color: transparent; color: var(--danger); border: 1px solid var(--danger); }
+        .btn-danger:hover { background-color: var(--danger-bg); }
+        .btn-sm { font-size: 0.82rem; padding: 5px 10px; font-weight: 500; }
         .btn-sm:hover { transform: none; }
-
         #exportBtn { display: none; }
 
         /* Item Cards */
         .list-container { display: flex; flex-direction: column; gap: 16px; }
-
         .item-card {
             background-color: var(--card-bg); border-radius: 12px; padding: 18px;
             display: flex; gap: 18px; border: 1px solid var(--border-color);
             transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
         }
         .item-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); border-color: var(--accent-color); }
-
-        /* Claimed by another family */
         .item-card.item-claimed { opacity: 0.5; border-color: var(--border-color) !important; }
         .item-card.item-claimed:hover { transform: none; box-shadow: none; border-color: var(--border-color) !important; }
-
-        /* My item */
         .item-card.item-mine { border-color: rgba(100,255,218,0.45); background: linear-gradient(135deg, #112240, rgba(100,255,218,0.04)); }
-
-        /* Admin-mode item (already claimed by someone) */
         .item-card.item-admin-claimed { border-color: rgba(255,170,50,0.35); background: linear-gradient(135deg, #112240, rgba(255,170,50,0.04)); }
 
-        .item-number {
-            font-size: 1.3rem; font-weight: 700; color: var(--text-secondary);
-            min-width: 38px; display: flex; align-items: flex-start; padding-top: 4px;
-        }
-        .item-thumbnail {
-            width: 80px; height: 80px; border-radius: 8px; object-fit: cover;
-            background-color: var(--bg-color); border: 1px solid var(--border-color); flex-shrink: 0;
-        }
+        .item-number { font-size: 1.3rem; font-weight: 700; color: var(--text-secondary); min-width: 38px; display: flex; align-items: flex-start; padding-top: 4px; }
+        .item-thumbnail { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; background-color: var(--bg-color); border: 1px solid var(--border-color); flex-shrink: 0; }
         .item-claimed .item-thumbnail { filter: grayscale(50%); }
-
         .item-details { flex-grow: 1; display: flex; flex-direction: column; gap: 10px; }
         .item-name { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); }
         .item-claimed .item-name { color: var(--text-secondary); }
@@ -170,14 +157,11 @@
             padding: 3px 12px; font-size: 0.83rem; font-weight: 500; width: fit-content;
         }
         .claimed-comment { color: var(--text-secondary); font-size: 0.83rem; font-style: italic; }
-
         .my-item-badge {
             display: inline-flex; align-items: center; gap: 5px;
             background: rgba(100,255,218,0.15); color: var(--accent-color);
             border-radius: 20px; padding: 3px 12px; font-size: 0.83rem; font-weight: 600; width: fit-content;
         }
-
-        /* Admin claim info row */
         .admin-claim-row {
             display: flex; align-items: center; justify-content: space-between;
             background: rgba(255,170,50,0.08); border: 1px solid rgba(255,170,50,0.25);
@@ -186,7 +170,7 @@
         .admin-claim-label { font-size: 0.83rem; color: var(--warning); }
         .admin-claim-label strong { color: var(--text-primary); }
 
-        /* Choru multi-family */
+        /* Choru */
         .multi-tag {
             display: inline-block; background: rgba(255,170,50,0.12); color: var(--warning);
             border: 1px solid rgba(255,170,50,0.3); border-radius: 20px;
@@ -201,12 +185,10 @@
         }
         .claimant-remove {
             background: none; border: none; color: rgba(100,255,218,0.5);
-            cursor: pointer; font-size: 0.85rem; line-height: 1;
-            padding: 0 0 0 2px; transition: color 0.15s;
-            display: inline-flex; align-items: center;
+            cursor: pointer; font-size: 0.85rem; line-height: 1; padding: 0 0 0 2px;
+            transition: color 0.15s; display: inline-flex; align-items: center;
         }
         .claimant-remove:hover { color: var(--danger); transform: none; background: none; }
-
         .choru-check-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
         .choru-check-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent-color); cursor: pointer; }
         .choru-check-row label { color: var(--text-primary); font-size: 0.9rem; cursor: pointer; }
@@ -240,18 +222,30 @@
             transition: all 0.2s; display: inline-flex; align-items: center; gap: 4px;
         }
         .copy-btn:hover { border-color: var(--accent-color); color: var(--accent-color); background: rgba(100,255,218,0.05); transform: none; }
-        .family-items-list { list-style: none; padding: 10px 16px 12px; display: flex; flex-direction: column; gap: 5px; }
-        .family-items-list li { display: flex; align-items: baseline; gap: 7px; color: var(--text-primary); font-size: 0.88rem; }
+        .family-items-list { list-style: none; padding: 8px 16px 12px; display: flex; flex-direction: column; gap: 4px; }
+        .family-items-list li {
+            display: flex; align-items: center; gap: 7px;
+            color: var(--text-primary); font-size: 0.88rem; padding: 4px 0;
+            border-bottom: 1px solid rgba(35,53,84,0.5);
+        }
+        .family-items-list li:last-child { border-bottom: none; }
         .family-items-list li::before { content: "•"; color: var(--accent-color); flex-shrink: 0; }
+        .li-name { flex: 1; }
         .item-note { color: var(--text-secondary); font-size: 0.8rem; font-style: italic; }
+        .item-delete-btn {
+            background: none; border: none; color: var(--text-secondary);
+            cursor: pointer; font-size: 0.8rem; padding: 2px 4px;
+            border-radius: 4px; transition: all 0.15s; flex-shrink: 0;
+            display: inline-flex; align-items: center;
+        }
+        .item-delete-btn:hover { color: var(--danger); background: var(--danger-bg); transform: none; }
 
         /* Loader + Toast */
         .loader-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(10,25,47,0.85); display: flex;
-            justify-content: center; align-items: center; z-index: 1000;
-            backdrop-filter: blur(4px); color: var(--accent-color);
-            font-size: 1.2rem; font-weight: 600;
+            background: rgba(10,25,47,0.85); display: flex; justify-content: center;
+            align-items: center; z-index: 1000; backdrop-filter: blur(4px);
+            color: var(--accent-color); font-size: 1.2rem; font-weight: 600;
         }
         .hidden { display: none !important; }
         .toast {
@@ -260,8 +254,7 @@
             background-color: var(--card-bg); color: var(--accent-color);
             padding: 12px 24px; border-radius: 8px; border: 1px solid var(--accent-color);
             font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: transform 0.3s cubic-bezier(0.68,-0.55,0.265,1.55); z-index: 2000;
-            white-space: nowrap;
+            transition: transform 0.3s cubic-bezier(0.68,-0.55,0.265,1.55); z-index: 2000; white-space: nowrap;
         }
         .toast.show { transform: translateX(-50%) translateY(0); }
 
@@ -273,6 +266,7 @@
             button { justify-content: center; }
             .summary-header { flex-direction: column; align-items: stretch; }
             .admin-claim-row { flex-direction: column; align-items: flex-start; }
+            .add-family-row { flex-direction: column; }
         }
     </style>
 </head>
@@ -283,11 +277,28 @@
 
 <div class="container">
 
-    <!-- Admin Banner (hidden unless ?admin=true) -->
+    <!-- Admin Banner -->
     <div class="admin-banner hidden" id="adminBanner">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         Admin Mode
-        <span>— You can edit, reassign, or clear any item. Changes save to KV immediately.</span>
+        <span>— Manage families, edit or clear any item. Changes save to KV immediately.</span>
+    </div>
+
+    <!-- Admin Families Panel (admin only) -->
+    <div class="admin-families-panel hidden" id="adminFamiliesPanel">
+        <div class="admin-families-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Manage Families
+        </div>
+        <div class="admin-family-tags" id="adminFamilyTags"></div>
+        <div class="add-family-row">
+            <input type="text" id="newFamilyInput" placeholder='e.g. Thomas&amp;Family' maxlength="40"
+                onkeydown="if(event.key==='Enter') addFamily()">
+            <button class="btn-add" onclick="addFamily()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Family
+            </button>
+        </div>
     </div>
 
     <header>
@@ -301,17 +312,9 @@
     </header>
 
     <!-- Family Picker -->
-    <div class="family-picker-bar" id="familyPickerBar">
+    <div class="family-picker-bar">
         <span class="picker-label">👨‍👩‍👧 You are:</span>
-        <select id="myFamilySelect" onchange="handleMyFamilyChange(this.value)">
-            <option value="">-- Select Your Family --</option>
-            <option value="Vilfin&amp;Family">Vilfin &amp; Family</option>
-            <option value="Abhilash&amp;Family">Abhilash &amp; Family</option>
-            <option value="Jackson&amp;Family">Jackson &amp; Family</option>
-            <option value="Alvin&amp;Family">Alvin &amp; Family</option>
-            <option value="Sreejith&amp;Family">Sreejith &amp; Family</option>
-            <option value="Other">Other</option>
-        </select>
+        <select id="myFamilySelect" onchange="handleMyFamilyChange(this.value)"></select>
         <input type="text" id="myFamilyOtherInput" placeholder="Type your name..."
             style="display:none; flex:1; min-width:150px;" oninput="handleMyFamilyOther(this.value)">
         <span class="family-tag hidden" id="myFamilyTag"></span>
@@ -350,12 +353,11 @@
 
 <script>
     const WORKER_URL = 'https://sadhya-worker.vilfintv.workers.dev';
-    const CHORU_INDEX = 1; // 0-based; Choru (Matta Rice) is the 2nd item
+    const CHORU_INDEX = 1;
 
-    const FAMILIES = [
-        "Vilfin&Family", "Abhilash&Family", "Jackson&Family",
-        "Alvin&Family", "Sreejith&Family", "Other"
-    ];
+    // Default families — may be overridden by KV-stored list
+    const DEFAULT_FAMILIES = ["Vilfin&Family","Abhilash&Family","Jackson&Family","Alvin&Family","Sreejith&Family"];
+    let FAMILIES = [...DEFAULT_FAMILIES]; // without "Other"; "Other" is appended dynamically in UI
 
     const ITEMS = [
         { name: "Banana Leaf / Paper Banana Leaf", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Banana-leaf-1.JPG/330px-Banana-leaf-1.JPG" },
@@ -401,16 +403,39 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         isAdmin = new URLSearchParams(window.location.search).get('admin') === 'true';
-
         if (isAdmin) {
             document.getElementById('adminBanner').classList.remove('hidden');
+            document.getElementById('adminFamiliesPanel').classList.remove('hidden');
             document.getElementById('exportBtn').style.display = 'inline-flex';
         }
+        document.getElementById('saveBtn').addEventListener('click', saveState);
+        document.getElementById('shareBtn').addEventListener('click', shareWhatsApp);
+        document.getElementById('exportBtn').addEventListener('click', exportData);
+        fetchState();
+    });
 
-        // Restore saved family selection
-        if (myFamily) {
-            const sel = document.getElementById('myFamilySelect');
-            if (FAMILIES.includes(myFamily)) {
+    // ── Family List Management ────────────────────────────────────────────────
+
+    function familiesWithOther() {
+        return [...FAMILIES, 'Other'];
+    }
+
+    function refreshFamilyPicker() {
+        const sel = document.getElementById('myFamilySelect');
+        const prev = sel.value;
+        sel.innerHTML = '<option value="">-- Select Your Family --</option>';
+        familiesWithOther().forEach(f => {
+            const opt = document.createElement('option');
+            opt.value = f;
+            opt.textContent = f === 'Other' ? 'Other (type below)' : f;
+            if (f === prev) opt.selected = true;
+            sel.appendChild(opt);
+        });
+
+        // Restore saved family
+        if (myFamily && prev === '') {
+            const allOpts = familiesWithOther();
+            if (allOpts.includes(myFamily)) {
                 sel.value = myFamily;
             } else {
                 sel.value = 'Other';
@@ -418,15 +443,57 @@
                 inp.style.display = '';
                 inp.value = myFamily;
             }
-            updateFamilyTag();
         }
+    }
 
-        document.getElementById('saveBtn').addEventListener('click', saveState);
-        document.getElementById('shareBtn').addEventListener('click', shareWhatsApp);
-        document.getElementById('exportBtn').addEventListener('click', exportData);
+    function renderAdminFamilyTags() {
+        const container = document.getElementById('adminFamilyTags');
+        if (!container) return;
+        container.innerHTML = FAMILIES.map(f => `
+            <span class="admin-family-tag">
+                ${escHtml(f)}
+                <button class="family-remove-btn" title="Remove ${escAttr(f)}" onclick="removeFamily('${escAttr(f)}')">✕</button>
+            </span>`).join('') +
+            `<span class="admin-family-tag tag-other">Other <small style="opacity:.6">(always shown)</small></span>`;
+    }
 
-        fetchState();
-    });
+    async function addFamily() {
+        const input = document.getElementById('newFamilyInput');
+        const name = input.value.trim();
+        if (!name) { showToast('Enter a family name', true); return; }
+        if (FAMILIES.includes(name) || name === 'Other') { showToast('Family already exists', true); return; }
+
+        FAMILIES.push(name);
+        input.value = '';
+        await persistFamilies();
+        refreshFamilyPicker();
+        renderAdminFamilyTags();
+        renderList();
+        showToast(`${name} added ✓`);
+    }
+
+    async function removeFamily(name) {
+        if (!confirm(`Remove "${name}" from the family list?\n\nNote: their existing item claims will remain in the data.`)) return;
+        FAMILIES = FAMILIES.filter(f => f !== name);
+        await persistFamilies();
+        refreshFamilyPicker();
+        renderAdminFamilyTags();
+        renderList();
+        showToast(`${name} removed ✓`);
+    }
+
+    async function persistFamilies() {
+        try {
+            const latestState = await fetchLatest();
+            latestState.families = FAMILIES; // store without "Other"
+            const res = await fetch(WORKER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(latestState)
+            });
+            if (res.ok) state = latestState;
+        } catch (e) { console.error('Failed to persist families:', e); }
+    }
 
     // ── Family Picker ─────────────────────────────────────────────────────────
 
@@ -455,12 +522,8 @@
 
     function updateFamilyTag() {
         const tag = document.getElementById('myFamilyTag');
-        if (myFamily) {
-            tag.textContent = '✓ ' + myFamily;
-            tag.classList.remove('hidden');
-        } else {
-            tag.classList.add('hidden');
-        }
+        if (myFamily) { tag.textContent = '✓ ' + myFamily; tag.classList.remove('hidden'); }
+        else { tag.classList.add('hidden'); }
     }
 
     // ── Data Fetch ────────────────────────────────────────────────────────────
@@ -469,14 +532,48 @@
         showLoader(true, 'Syncing data...');
         try {
             const res = await fetch(WORKER_URL);
-            if (res.ok) state = await res.json();
+            if (res.ok) {
+                state = await res.json();
+                // Load persisted family list if present
+                if (Array.isArray(state.families) && state.families.length > 0) {
+                    FAMILIES = state.families;
+                }
+            }
         } catch (e) { console.error('Fetch error:', e); }
         showLoader(false);
+
+        // Restore myFamily from localStorage after FAMILIES is loaded
+        if (myFamily) {
+            const allFamilies = familiesWithOther();
+            const sel = document.getElementById('myFamilySelect');
+            refreshFamilyPicker();
+            if (allFamilies.includes(myFamily)) {
+                sel.value = myFamily;
+            } else {
+                sel.value = 'Other';
+                const inp = document.getElementById('myFamilyOtherInput');
+                inp.style.display = '';
+                inp.value = myFamily;
+            }
+            updateFamilyTag();
+        } else {
+            refreshFamilyPicker();
+        }
+
+        if (isAdmin) renderAdminFamilyTags();
         renderList();
         renderFamilySummary();
     }
 
-    // ── Render ────────────────────────────────────────────────────────────────
+    async function fetchLatest() {
+        try {
+            const res = await fetch(WORKER_URL);
+            if (res.ok) return await res.json();
+        } catch (_) {}
+        return { ...state };
+    }
+
+    // ── Render Items ──────────────────────────────────────────────────────────
 
     function renderList() {
         const container = document.getElementById('itemsList');
@@ -489,10 +586,8 @@
         const safeId = `item_${itemNum}`;
         const isChoru = index === CHORU_INDEX;
         const data = state[safeId] || null;
-
         const card = document.createElement('div');
         card.className = 'item-card';
-
         const fb = `https://placehold.co/80x80/112240/ccd6f6?text=${itemNum}`;
         const imgHtml = `<img src="${item.image}" class="item-thumbnail" alt="${escHtml(item.name)}" onerror="this.onerror=null;this.src='${fb}'">`;
         const numHtml = `<div class="item-number">#${itemNum}</div>`;
@@ -501,27 +596,18 @@
             buildChoruCard(card, item, safeId, data, numHtml, imgHtml);
         } else {
             const claimedBy = data?.preparedBy || null;
-            // Gray out only when: not admin, family is known, item belongs to a different family
             const isOthers = !isAdmin && myFamily && claimedBy && claimedBy !== myFamily;
-
-            if (isOthers) {
-                buildClaimedCard(card, item, safeId, data, numHtml, imgHtml);
-            } else {
-                buildEditableCard(card, item, safeId, data, numHtml, imgHtml);
-            }
+            if (isOthers) buildClaimedCard(card, item, safeId, data, numHtml, imgHtml);
+            else buildEditableCard(card, item, safeId, data, numHtml, imgHtml);
         }
         return card;
     }
 
     function buildChoruCard(card, item, safeId, data, numHtml, imgHtml) {
         let claimants = [];
-        if (data?.preparedBy) {
-            claimants = Array.isArray(data.preparedBy) ? data.preparedBy : [data.preparedBy];
-        }
+        if (data?.preparedBy) claimants = Array.isArray(data.preparedBy) ? data.preparedBy : [data.preparedBy];
         const iAmBringing = myFamily && claimants.includes(myFamily);
-        const comment = data?.comment || '';
 
-        // Claimant tags — in admin mode each has an × button
         const claimantTagsHtml = claimants.map(f => `
             <span class="claimant-tag">
                 ${escHtml(f)}
@@ -533,11 +619,7 @@
             <div class="item-details">
                 <div class="item-name">${escHtml(item.name)}</div>
                 <div class="multi-tag">👥 Multiple families can bring this</div>
-                ${claimants.length > 0 ? `
-                    <div class="claimants-row">
-                        <span class="claimants-label">Bringing:</span>
-                        ${claimantTagsHtml}
-                    </div>` : ''}
+                ${claimants.length > 0 ? `<div class="claimants-row"><span class="claimants-label">Bringing:</span>${claimantTagsHtml}</div>` : ''}
                 ${myFamily ? `
                 <div class="choru-check-row">
                     <input type="checkbox" id="${safeId}_check" ${iAmBringing ? 'checked' : ''}>
@@ -545,9 +627,8 @@
                 </div>
                 <div class="input-group">
                     <label>Comments:</label>
-                    <input type="text" id="${safeId}_comment" value="${escAttr(comment)}" placeholder="e.g. Red matta rice...">
-                </div>
-                ` : `<div class="select-family-hint">Select your family above to claim items</div>`}
+                    <input type="text" id="${safeId}_comment" value="${escAttr(data?.comment||'')}" placeholder="e.g. Red matta rice...">
+                </div>` : `<div class="select-family-hint">Select your family above to claim items</div>`}
             </div>`;
     }
 
@@ -556,7 +637,7 @@
         card.innerHTML = `
             ${numHtml}${imgHtml}
             <div class="item-details">
-                <div class="item-name">${escHtml(data?.itemName || item.name)}</div>
+                <div class="item-name">${escHtml(data?.itemName||item.name)}</div>
                 <div class="claimed-badge">✓ Claimed by <strong>${escHtml(data.preparedBy)}</strong></div>
                 ${data?.comment ? `<div class="claimed-comment">📝 ${escHtml(data.comment)}</div>` : ''}
             </div>`;
@@ -565,34 +646,32 @@
     function buildEditableCard(card, item, safeId, data, numHtml, imgHtml) {
         const claimedBy = data?.preparedBy || null;
         const isMyItem = claimedBy && claimedBy === myFamily;
-        const isAdminClaimed = isAdmin && claimedBy; // admin sees claimed items but can still edit
+        const isAdminClaimed = isAdmin && claimedBy;
 
         if (isMyItem) card.classList.add('item-mine');
         if (isAdminClaimed && !isMyItem) card.classList.add('item-admin-claimed');
 
-        // Determine dropdown state
-        const namedFamilies = FAMILIES.slice(0, -1); // exclude "Other"
+        const allFamilies = familiesWithOther();
+        const namedFamilies = FAMILIES;
         const storedIsOther = claimedBy && !namedFamilies.includes(claimedBy);
         const selectVal = storedIsOther ? 'Other' : (claimedBy || '');
         const otherVal = storedIsOther ? claimedBy : '';
 
         const opts = ['<option value="">-- Not Bringing --</option>',
-            ...FAMILIES.map(f =>
-                `<option value="${escAttr(f)}"${selectVal === f ? ' selected' : ''}>${escHtml(f)}</option>`)
+            ...allFamilies.map(f =>
+                `<option value="${escAttr(f)}"${selectVal===f?' selected':''}>${escHtml(f)}</option>`)
         ].join('');
 
         const itemNameHtml = item.isCustom
-            ? `<input type="text" id="${safeId}_name" placeholder="Enter item name..." value="${escAttr(data?.itemName || '')}">`
+            ? `<input type="text" id="${safeId}_name" placeholder="Enter item name..." value="${escAttr(data?.itemName||'')}">`
             : escHtml(item.name);
 
-        // Admin: show current claim info + clear button
         const adminInfoHtml = isAdminClaimed ? `
             <div class="admin-claim-row">
                 <span class="admin-claim-label">Currently: <strong>${escHtml(claimedBy)}</strong></span>
                 <button class="btn-danger btn-sm" onclick="clearItem('${escAttr(safeId)}')">✕ Clear Claim</button>
             </div>` : '';
 
-        // Non-admin: remove button on own items
         const removeHtml = (!isAdmin && isMyItem) ? `
             <button class="btn-secondary btn-sm" onclick="clearItem('${escAttr(safeId)}')">✕ Remove My Claim</button>` : '';
 
@@ -607,13 +686,13 @@
                     <select id="${safeId}_select" onchange="handleSelectChange('${escAttr(safeId)}')">
                         ${opts}
                     </select>
-                    <div class="other-input-container" id="${safeId}_other_container" style="${storedIsOther ? 'display:block' : ''}">
+                    <div class="other-input-container" id="${safeId}_other_container" style="${storedIsOther?'display:block':''}">
                         <input type="text" id="${safeId}_other" value="${escAttr(otherVal)}" placeholder="Enter name...">
                     </div>
                 </div>
                 <div class="input-group">
                     <label>Comments / Dietary Notes:</label>
-                    <input type="text" id="${safeId}_comment" value="${escAttr(data?.comment || '')}" placeholder="e.g. No garlic, extra spicy...">
+                    <input type="text" id="${safeId}_comment" value="${escAttr(data?.comment||'')}" placeholder="e.g. No garlic, extra spicy...">
                 </div>
                 ${removeHtml}
             </div>`;
@@ -625,41 +704,29 @@
         if (container) container.style.display = sel.value === 'Other' ? 'block' : 'none';
     }
 
-    // ── Save (with read-then-merge) ───────────────────────────────────────────
+    // ── Save ──────────────────────────────────────────────────────────────────
 
     async function saveState() {
-        if (!myFamily && !isAdmin) {
-            showToast('Please select your family first!', true);
-            return;
-        }
+        if (!myFamily && !isAdmin) { showToast('Please select your family first!', true); return; }
         showLoader(true, 'Saving...');
         try {
             const latestState = await fetchLatest();
+            // Preserve families list in state
+            latestState.families = FAMILIES;
+
             ITEMS.forEach((item, index) => {
                 const safeId = `item_${index + 1}`;
-                if (index === CHORU_INDEX) {
-                    saveChoru(latestState, safeId, item);
-                } else {
-                    saveSingleItem(latestState, safeId, item);
-                }
+                if (index === CHORU_INDEX) saveChoru(latestState, safeId, item);
+                else saveSingleItem(latestState, safeId, item);
             });
+
             const res = await fetch(WORKER_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(latestState)
             });
-            if (res.ok) {
-                state = latestState;
-                renderList();
-                renderFamilySummary();
-                showToast('Saved! ✓');
-            } else {
-                alert('Failed to save. Please try again.');
-            }
-        } catch (e) {
-            console.error(e);
-            alert('Network error while saving.');
-        }
+            if (res.ok) { state = latestState; renderList(); renderFamilySummary(); showToast('Saved! ✓'); }
+            else alert('Failed to save. Please try again.');
+        } catch (e) { alert('Network error while saving.'); }
         showLoader(false);
     }
 
@@ -671,45 +738,32 @@
         let families = Array.isArray(existing.preparedBy)
             ? [...existing.preparedBy]
             : (existing.preparedBy ? [existing.preparedBy] : []);
-
         if (myFamily) {
             if (checkEl.checked && !families.includes(myFamily)) families.push(myFamily);
             else if (!checkEl.checked) families = families.filter(f => f !== myFamily);
         }
-
-        if (families.length > 0) {
-            latestState[safeId] = { itemName: item.name, preparedBy: families, comment };
-        } else {
-            delete latestState[safeId];
-        }
+        if (families.length > 0) latestState[safeId] = { itemName: item.name, preparedBy: families, comment };
+        else delete latestState[safeId];
     }
 
     function saveSingleItem(latestState, safeId, item) {
         const selectEl = document.getElementById(`${safeId}_select`);
-        if (!selectEl) return; // grayed-out card (non-admin) — skip
-
-        // Protect other families' claims from non-admin users
+        if (!selectEl) return;
         const existingClaim = latestState[safeId]?.preparedBy;
         if (!isAdmin && myFamily && existingClaim && existingClaim !== myFamily) return;
 
         let preparedBy = selectEl.value;
-        if (preparedBy === 'Other') {
-            preparedBy = document.getElementById(`${safeId}_other`)?.value.trim() || '';
-        }
+        if (preparedBy === 'Other') preparedBy = document.getElementById(`${safeId}_other`)?.value.trim() || '';
         const comment = document.getElementById(`${safeId}_comment`)?.value.trim() || '';
-        let itemName = item.name;
-        if (item.isCustom) {
-            itemName = document.getElementById(`${safeId}_name`)?.value.trim() || 'Extra Item';
-        }
+        const itemName = item.isCustom
+            ? (document.getElementById(`${safeId}_name`)?.value.trim() || 'Extra Item')
+            : item.name;
 
-        if (preparedBy) {
-            latestState[safeId] = { itemName, preparedBy, comment };
-        } else {
-            delete latestState[safeId];
-        }
+        if (preparedBy) latestState[safeId] = { itemName, preparedBy, comment };
+        else delete latestState[safeId];
     }
 
-    // ── Instant Clear (admin + self-remove) ───────────────────────────────────
+    // ── Instant Clear / Delete ────────────────────────────────────────────────
 
     async function clearItem(safeId) {
         showLoader(true, 'Clearing...');
@@ -717,18 +771,11 @@
             const latestState = await fetchLatest();
             delete latestState[safeId];
             const res = await fetch(WORKER_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(latestState)
             });
-            if (res.ok) {
-                state = latestState;
-                renderList();
-                renderFamilySummary();
-                showToast('Cleared ✓');
-            } else {
-                alert('Failed to clear');
-            }
+            if (res.ok) { state = latestState; renderList(); renderFamilySummary(); showToast('Cleared ✓'); }
+            else alert('Failed to clear');
         } catch (e) { alert('Network error'); }
         showLoader(false);
     }
@@ -739,39 +786,46 @@
             const latestState = await fetchLatest();
             const existing = latestState[safeId] || {};
             let families = Array.isArray(existing.preparedBy)
-                ? [...existing.preparedBy]
-                : (existing.preparedBy ? [existing.preparedBy] : []);
+                ? [...existing.preparedBy] : (existing.preparedBy ? [existing.preparedBy] : []);
             families = families.filter(f => f !== familyName);
-
-            if (families.length > 0) {
-                latestState[safeId] = { ...existing, preparedBy: families };
-            } else {
-                delete latestState[safeId];
-            }
-
+            if (families.length > 0) latestState[safeId] = { ...existing, preparedBy: families };
+            else delete latestState[safeId];
             const res = await fetch(WORKER_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(latestState)
             });
-            if (res.ok) {
-                state = latestState;
-                renderList();
-                renderFamilySummary();
-                showToast(`${familyName} removed ✓`);
-            } else {
-                alert('Failed');
-            }
+            if (res.ok) { state = latestState; renderList(); renderFamilySummary(); showToast(`${familyName} removed ✓`); }
+            else alert('Failed');
         } catch (e) { alert('Network error'); }
         showLoader(false);
     }
 
-    async function fetchLatest() {
+    // Delete a specific item from the family summary (user self-service or admin)
+    async function deleteFromSummary(safeId, familyName) {
+        showLoader(true, 'Removing...');
         try {
-            const res = await fetch(WORKER_URL);
-            if (res.ok) return await res.json();
-        } catch (_) {}
-        return { ...state }; // fallback to current local state
+            const latestState = await fetchLatest();
+            const data = latestState[safeId];
+            if (!data) { showLoader(false); return; }
+
+            if (Array.isArray(data.preparedBy)) {
+                // Choru: remove just this family
+                const families = data.preparedBy.filter(f => f !== familyName);
+                if (families.length > 0) latestState[safeId] = { ...data, preparedBy: families };
+                else delete latestState[safeId];
+            } else {
+                // Regular item: clear it entirely
+                delete latestState[safeId];
+            }
+
+            const res = await fetch(WORKER_URL, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(latestState)
+            });
+            if (res.ok) { state = latestState; renderList(); renderFamilySummary(); showToast('Removed ✓'); }
+            else alert('Failed');
+        } catch (e) { alert('Network error'); }
+        showLoader(false);
     }
 
     // ── Family Summary ────────────────────────────────────────────────────────
@@ -781,26 +835,45 @@
         const cardsEl = document.getElementById('familySummaryCards');
         cardsEl.innerHTML = '';
 
+        // Build map: family → [{name, comment, safeId}]
         const familyItems = {};
         ITEMS.forEach((item, index) => {
-            const data = state[`item_${index + 1}`];
+            const safeId = `item_${index + 1}`;
+            const data = state[safeId];
             if (!data?.preparedBy) return;
             const displayName = data.itemName || item.name;
             const families = Array.isArray(data.preparedBy) ? data.preparedBy : [data.preparedBy];
             families.forEach(fam => {
                 if (!familyItems[fam]) familyItems[fam] = [];
-                familyItems[fam].push({ name: displayName, comment: data.comment || '' });
+                familyItems[fam].push({ name: displayName, comment: data.comment || '', safeId });
             });
         });
 
         const families = Object.keys(familyItems);
         if (families.length === 0) { summaryEl.classList.add('hidden'); return; }
-
         summaryEl.classList.remove('hidden');
+
         families.forEach(fam => {
             const items = familyItems[fam];
+            // Show delete button if: admin OR this is the current user's family card
+            const canDelete = isAdmin || fam === myFamily;
+
             const card = document.createElement('div');
             card.className = 'family-card';
+            const itemsHtml = items.map(it => `
+                <li>
+                    <span class="li-name">
+                        ${escHtml(it.name)}
+                        ${it.comment ? `<span class="item-note"> (${escHtml(it.comment)})</span>` : ''}
+                    </span>
+                    ${canDelete ? `<button class="item-delete-btn"
+                        title="Remove this item"
+                        data-safeid="${escAttr(it.safeId)}"
+                        data-family="${escAttr(fam)}">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>` : ''}
+                </li>`).join('');
+
             card.innerHTML = `
                 <div class="family-card-header">
                     <span class="family-card-name">${escHtml(fam)}</span>
@@ -809,15 +882,20 @@
                         Copy
                     </button>
                 </div>
-                <ul class="family-items-list">
-                    ${items.map(it =>
-                        `<li>${escHtml(it.name)}${it.comment ? ` <span class="item-note">(${escHtml(it.comment)})</span>` : ''}</li>`
-                    ).join('')}
-                </ul>`;
+                <ul class="family-items-list">${itemsHtml}</ul>`;
+
             card.querySelector('.copy-btn').addEventListener('click', () => copyFamilyItems(fam));
+            if (canDelete) {
+                card.querySelectorAll('.item-delete-btn').forEach(btn => {
+                    btn.addEventListener('click', () =>
+                        deleteFromSummary(btn.dataset.safeid, btn.dataset.family));
+                });
+            }
             cardsEl.appendChild(card);
         });
     }
+
+    // ── Copy Helpers ──────────────────────────────────────────────────────────
 
     function copyFamilyItems(familyName) {
         const lines = [`🌸 ${familyName} — Onam Sadhya 2026`, ''];
@@ -826,20 +904,17 @@
             const data = state[`item_${i + 1}`];
             if (!data?.preparedBy) return;
             const families = Array.isArray(data.preparedBy) ? data.preparedBy : [data.preparedBy];
-            if (families.includes(familyName)) {
+            if (families.includes(familyName))
                 items.push({ name: data.itemName || item.name, comment: data.comment || '' });
-            }
         });
-        items.forEach((it, i) =>
-            lines.push(`${i + 1}. ${it.name}${it.comment ? ` (${it.comment})` : ''}`)
-        );
+        items.forEach((it, i) => lines.push(`${i+1}. ${it.name}${it.comment ? ` (${it.comment})` : ''}`));
         navigator.clipboard.writeText(lines.join('\n'))
             .then(() => showToast('Copied! 📋'))
             .catch(() => showToast('Could not copy', true));
     }
 
     function copyAllSummary() {
-        const lines = ['🌸 Onam Sadhya Potluck 2026 🌸', 'August 22, 2026 | 6:00PM–10:00PM JST', 'Nishi Kasai 5-8-1', ''];
+        const lines = ['🌸 Onam Sadhya Potluck 2026 🌸','August 22, 2026 | 6:00PM–10:00PM JST','Nishi Kasai 5-8-1',''];
         const familyItems = {};
         ITEMS.forEach((item, index) => {
             const data = state[`item_${index + 1}`];
@@ -856,19 +931,14 @@
             items.forEach(it => lines.push(`  • ${it.name}${it.comment ? ` (${it.comment})` : ''}`));
             lines.push('');
         });
-        const unclaimed = ITEMS
-            .filter((item, i) => !item.isCustom && !state[`item_${i + 1}`]?.preparedBy)
-            .map(item => item.name);
-        if (unclaimed.length > 0) {
-            lines.push('❓ Still Needed:');
-            unclaimed.forEach(name => lines.push(`  • ${name}`));
-        }
+        const unclaimed = ITEMS.filter((item, i) => !item.isCustom && !state[`item_${i+1}`]?.preparedBy).map(i => i.name);
+        if (unclaimed.length > 0) { lines.push('❓ Still Needed:'); unclaimed.forEach(n => lines.push(`  • ${n}`)); }
         navigator.clipboard.writeText(lines.join('\n'))
             .then(() => showToast('Summary copied! 📋'))
             .catch(() => showToast('Could not copy', true));
     }
 
-    // ── Misc Actions ──────────────────────────────────────────────────────────
+    // ── Misc ──────────────────────────────────────────────────────────────────
 
     function shareWhatsApp() {
         const url = window.location.href.split('?')[0];
@@ -877,33 +947,24 @@
     }
 
     function exportData() {
-        const lines = ['Onam Sadhya 2026 — Claims', '==========================', ''];
+        const lines = ['Onam Sadhya 2026 — Claims','==========================',''];
         ITEMS.forEach((item, index) => {
-            const data = state[`item_${index + 1}`];
-            const name = data?.itemName || item.name;
-            lines.push(`${index + 1}. ${name}`);
+            const data = state[`item_${index+1}`];
+            lines.push(`${index+1}. ${data?.itemName || item.name}`);
             if (data?.preparedBy) {
-                const by = Array.isArray(data.preparedBy) ? data.preparedBy.join(', ') : data.preparedBy;
-                lines.push(`   Prepared By: ${by}`);
+                lines.push(`   Prepared By: ${Array.isArray(data.preparedBy) ? data.preparedBy.join(', ') : data.preparedBy}`);
                 if (data.comment) lines.push(`   Note: ${data.comment}`);
-            } else {
-                lines.push('   [Unclaimed]');
-            }
+            } else lines.push('   [Unclaimed]');
             lines.push('');
         });
         const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'Sadhya_Claims.txt';
-        document.body.appendChild(a); a.click();
-        document.body.removeChild(a); URL.revokeObjectURL(url);
+        const a = document.createElement('a'); a.href = url; a.download = 'Sadhya_Claims.txt';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
     function showLoader(show, text = 'Syncing data...') {
-        const el = document.getElementById('loader');
-        el.textContent = text;
+        const el = document.getElementById('loader'); el.textContent = text;
         el.classList.toggle('hidden', !show);
     }
 
@@ -919,10 +980,10 @@
     }
 
     function escHtml(str) {
-        return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        return String(str??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
     function escAttr(str) {
-        return String(str ?? '').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        return String(str??'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     }
 </script>
 </body>
