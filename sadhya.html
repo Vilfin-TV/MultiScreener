@@ -334,6 +334,7 @@
 <script>
     const WORKER_URL = 'https://sadhya-worker.vilfintv.workers.dev';
     const CHORU_INDEX = 1;
+    const MAX_CHORU = 3;
 
     const DEFAULT_FAMILIES = ["Vilfin&Family","Abhilash&Family","Jackson&Family","Alvin&Family","Sreejith&Family"];
     let FAMILIES = [...DEFAULT_FAMILIES];
@@ -587,27 +588,105 @@
         let claimants = [];
         if (data?.preparedBy) claimants = Array.isArray(data.preparedBy) ? data.preparedBy : [data.preparedBy];
         const iAmBringing = myFamily && claimants.includes(myFamily);
+        const isFull = claimants.length >= MAX_CHORU;
+        const isGrayedOut = isFull && !iAmBringing && !isAdmin;
+
+        if (isGrayedOut) card.classList.add('item-claimed');
+
         const claimantTagsHtml = claimants.map(f => `
             <span class="claimant-tag">
                 ${escHtml(f)}
                 ${isAdmin ? `<button class="claimant-remove" onclick="removeChoruClaimant('${escAttr(safeId)}','${escAttr(f)}')">✕</button>` : ''}
             </span>`).join('');
+
+        const slotsLeft = MAX_CHORU - claimants.length;
+        const slotBadge = isFull
+            ? `<span class="multi-tag" style="background:rgba(255,107,107,0.12);border-color:rgba(255,107,107,0.3);color:var(--danger)">🔒 Fully claimed — ${MAX_CHORU}/${MAX_CHORU} families</span>`
+            : `<span class="multi-tag">👥 Up to ${MAX_CHORU} families can bring this · ${slotsLeft} slot${slotsLeft!==1?'s':''} left</span>`;
+
+        let actionHtml = '';
+        if (!myFamily) {
+            actionHtml = `<div class="select-family-hint">Select your family above to claim</div>`;
+        } else if (iAmBringing) {
+            actionHtml = `
+                <div class="my-item-badge">✓ ${escHtml(myFamily)} is bringing Choru</div>
+                <div class="input-group">
+                    <label>Comments:</label>
+                    <input type="text" id="${safeId}_comment" value="${escAttr(data?.comment||'')}"
+                        placeholder="e.g. Red matta rice..."
+                        onblur="saveChoruComment('${escAttr(safeId)}',this.value)">
+                </div>
+                <button class="btn-danger btn-sm" style="width:fit-content" onclick="unclaimChoru('${escAttr(safeId)}')">✕ Remove My Claim</button>`;
+        } else if (isGrayedOut) {
+            actionHtml = `<div class="claimed-badge" style="color:var(--danger);border-color:rgba(255,107,107,0.3)">🔒 Fully claimed (${MAX_CHORU}/${MAX_CHORU})</div>`;
+        } else {
+            actionHtml = `
+                <div class="input-group">
+                    <label>Comments (optional):</label>
+                    <input type="text" id="${safeId}_comment" value="" placeholder="e.g. Red matta rice...">
+                </div>
+                <button onclick="claimChoru('${escAttr(safeId)}')" style="width:fit-content">
+                    ✓ ${escHtml(myFamily)} is bringing Choru
+                </button>`;
+        }
+
         card.innerHTML = `
             ${numHtml}${thumbHtml}
             <div class="item-details">
                 <div class="item-name">${buildNameHtml(safeId, display)}</div>
-                <div class="multi-tag">👥 Multiple families can bring this</div>
-                ${claimants.length > 0 ? `<div class="claimants-row"><span class="claimants-label">Bringing:</span>${claimantTagsHtml}</div>` : ''}
-                ${myFamily ? `
-                <div class="choru-check-row">
-                    <input type="checkbox" id="${safeId}_check" ${iAmBringing?'checked':''}>
-                    <label for="${safeId}_check">${escHtml(myFamily)} is bringing Choru</label>
-                </div>
-                <div class="input-group">
-                    <label>Comments:</label>
-                    <input type="text" id="${safeId}_comment" value="${escAttr(data?.comment||'')}" placeholder="e.g. Red matta rice...">
-                </div>` : `<div class="select-family-hint">Select your family above to claim items</div>`}
+                ${slotBadge}
+                ${claimants.length > 0 ? `<div class="claimants-row"><span class="claimants-label">Also bringing:</span>${claimantTagsHtml}</div>` : ''}
+                ${actionHtml}
             </div>`;
+    }
+
+    async function claimChoru(safeId) {
+        if (!myFamily) { showToast('Select your family first!', true); return; }
+        const comment = document.getElementById(`${safeId}_comment`)?.value.trim() || '';
+        showLoader(true, 'Saving...');
+        try {
+            const ls = await fetchLatest();
+            const existing = ls[safeId] || {};
+            let families = Array.isArray(existing.preparedBy) ? [...existing.preparedBy]
+                : (existing.preparedBy ? [existing.preparedBy] : []);
+            if (families.length >= MAX_CHORU && !families.includes(myFamily)) {
+                showLoader(false); showToast('Choru is already fully claimed!', true); return;
+            }
+            if (!families.includes(myFamily)) families.push(myFamily);
+            const index = parseInt(safeId.split('_')[1]) - 1;
+            ls[safeId] = { ...existing, itemName: getItemDisplay(index).name, preparedBy: families, comment };
+            const res = await fetch(WORKER_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(ls) });
+            if (res.ok) { state = ls; renderList(); renderFamilySummary(); showToast('Choru claimed! ✓'); }
+            else alert('Failed to save');
+        } catch(e) { alert('Network error'); }
+        showLoader(false);
+    }
+
+    async function unclaimChoru(safeId) {
+        showLoader(true, 'Removing...');
+        try {
+            const ls = await fetchLatest();
+            const existing = ls[safeId] || {};
+            let families = Array.isArray(existing.preparedBy) ? [...existing.preparedBy]
+                : (existing.preparedBy ? [existing.preparedBy] : []);
+            families = families.filter(f => f !== myFamily);
+            if (families.length > 0) ls[safeId] = { ...existing, preparedBy: families };
+            else delete ls[safeId];
+            const res = await fetch(WORKER_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(ls) });
+            if (res.ok) { state = ls; renderList(); renderFamilySummary(); showToast('Removed ✓'); }
+            else alert('Failed');
+        } catch(e) { alert('Network error'); }
+        showLoader(false);
+    }
+
+    async function saveChoruComment(safeId, comment) {
+        try {
+            const ls = await fetchLatest();
+            if (!ls[safeId]?.preparedBy) return;
+            ls[safeId] = { ...ls[safeId], comment: comment.trim() };
+            const res = await fetch(WORKER_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(ls) });
+            if (res.ok) { state = ls; showToast('Comment saved ✓'); }
+        } catch(e) { console.error(e); }
     }
 
     function buildClaimedCard(card, safeId, data, display, numHtml, thumbHtml) {
@@ -772,16 +851,13 @@
     }
 
     function saveChoru(ls, safeId, index) {
-        const checkEl = document.getElementById(`${safeId}_check`);
-        if (!checkEl) return;
-        const comment = document.getElementById(`${safeId}_comment`)?.value.trim() || '';
+        // Claiming/unclaiming is instant via buttons; Save Changes only syncs the comment.
+        const commentEl = document.getElementById(`${safeId}_comment`);
+        if (!commentEl) return;
         const existing = ls[safeId] || {};
         let families = Array.isArray(existing.preparedBy) ? [...existing.preparedBy]
             : (existing.preparedBy ? [existing.preparedBy] : []);
-        if (myFamily) {
-            if (checkEl.checked && !families.includes(myFamily)) families.push(myFamily);
-            else if (!checkEl.checked) families = families.filter(f => f !== myFamily);
-        }
+        const comment = commentEl.value.trim();
         const display = getItemDisplay(index);
         if (families.length > 0) ls[safeId] = { itemName: display.name, preparedBy: families, comment };
         else delete ls[safeId];
