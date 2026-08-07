@@ -21,12 +21,10 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-
         body { background-color: var(--bg-color); color: var(--text-primary); line-height: 1.6; -webkit-font-smoothing: antialiased; }
-
         .container { max-width: 800px; margin: 0 auto; padding: 20px; }
 
-        /* Admin Banner */
+        /* ── Admin Banner ── */
         .admin-banner {
             background: linear-gradient(135deg, rgba(255,170,50,0.15), rgba(255,107,107,0.1));
             border: 1px solid rgba(255,170,50,0.4); border-radius: 10px;
@@ -37,58 +35,48 @@
         .admin-banner svg { flex-shrink: 0; }
         .admin-banner span { color: var(--text-secondary); font-weight: 400; font-size: 0.83rem; }
 
-        /* Admin Families Panel */
-        .admin-families-panel {
+        /* ── Admin Families Panel ── */
+        .admin-panel {
             background-color: var(--card-bg); border: 1px solid rgba(255,170,50,0.3);
             border-radius: 10px; padding: 16px 18px; margin-bottom: 14px;
         }
-        .admin-families-title {
+        .admin-panel-title {
             font-size: 0.85rem; font-weight: 600; color: var(--warning);
             margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
         }
-        .admin-family-tags {
-            display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; min-height: 32px;
-        }
+        .admin-family-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; min-height: 32px; }
         .admin-family-tag {
             display: inline-flex; align-items: center; gap: 5px;
             background: rgba(100,255,218,0.1); border: 1px solid rgba(100,255,218,0.25);
-            color: var(--accent-color); border-radius: 20px; padding: 4px 10px 4px 12px;
-            font-size: 0.83rem; font-weight: 500;
+            color: var(--accent-color); border-radius: 20px; padding: 4px 10px 4px 12px; font-size: 0.83rem; font-weight: 500;
         }
-        .admin-family-tag.tag-other {
-            background: rgba(136,146,176,0.1); border-color: rgba(136,146,176,0.2);
-            color: var(--text-secondary);
-        }
+        .admin-family-tag.tag-other { background: rgba(136,146,176,0.1); border-color: rgba(136,146,176,0.2); color: var(--text-secondary); }
         .family-remove-btn {
-            background: none; border: none; cursor: pointer;
-            color: rgba(100,255,218,0.5); font-size: 0.8rem; line-height: 1;
-            padding: 0; transition: color 0.15s; display: inline-flex; align-items: center;
+            background: none; border: none; cursor: pointer; color: rgba(100,255,218,0.5);
+            font-size: 0.8rem; line-height: 1; padding: 0; transition: color 0.15s; display: inline-flex; align-items: center;
         }
         .family-remove-btn:hover { color: var(--danger); transform: none; background: none; }
-        .add-family-row { display: flex; gap: 8px; }
-        .add-family-row input[type="text"] {
+        .add-row { display: flex; gap: 8px; }
+        .add-row input[type="text"] {
             flex: 1; background-color: var(--input-bg); border: 1px solid var(--border-color);
-            color: var(--text-primary); padding: 8px 12px; border-radius: 6px;
-            font-size: 0.9rem; outline: none; transition: border-color 0.2s;
+            color: var(--text-primary); padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; outline: none; transition: border-color 0.2s;
         }
-        .add-family-row input[type="text"]:focus { border-color: var(--accent-color); }
+        .add-row input[type="text"]:focus { border-color: var(--accent-color); }
         .btn-add {
-            background-color: var(--accent-color); color: var(--bg-color);
-            border: none; padding: 8px 16px; border-radius: 6px;
-            font-weight: 600; font-size: 0.9rem; cursor: pointer;
-            transition: all 0.2s; white-space: nowrap;
-            display: inline-flex; align-items: center; gap: 5px;
+            background-color: var(--accent-color); color: var(--bg-color); border: none;
+            padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.9rem;
+            cursor: pointer; transition: all 0.2s; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px;
         }
         .btn-add:hover { background-color: var(--accent-hover); transform: translateY(-1px); }
 
-        /* Header */
+        /* ── Header ── */
         header { text-align: center; margin-bottom: 24px; padding: 30px 0 24px; border-bottom: 1px solid var(--border-color); }
         h1 { color: var(--text-primary); font-size: 2rem; margin-bottom: 10px; font-weight: 700; }
         .subtitle { color: var(--text-secondary); font-size: 1rem; margin-bottom: 8px; }
         .map-link { color: var(--accent-color); text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 5px; transition: color 0.2s; }
         .map-link:hover { color: var(--accent-hover); text-decoration: underline; }
 
-        /* Family Picker */
+        /* ── Family Picker ── */
         .family-picker-bar {
             background-color: var(--card-bg); border: 1px solid var(--border-color);
             border-radius: 10px; padding: 14px 18px; margin-bottom: 14px;
@@ -98,25 +86,20 @@
         .family-picker-bar select, .family-picker-bar input[type="text"] {
             flex: 1; min-width: 180px; background-color: var(--input-bg);
             border: 1px solid var(--border-color); color: var(--text-primary);
-            padding: 8px 12px; border-radius: 6px; font-size: 0.95rem;
-            outline: none; transition: border-color 0.2s;
+            padding: 8px 12px; border-radius: 6px; font-size: 0.95rem; outline: none; transition: border-color 0.2s;
         }
         .family-picker-bar select:focus, .family-picker-bar input[type="text"]:focus { border-color: var(--accent-color); }
         .family-tag { background: rgba(100,255,218,0.12); color: var(--accent-color); border-radius: 20px; padding: 4px 12px; font-size: 0.85rem; font-weight: 600; }
 
-        /* Action Bar */
+        /* ── Action Bar ── */
         .action-bar {
-            position: sticky; top: 0; background-color: rgba(10,25,47,0.95);
-            backdrop-filter: blur(10px); padding: 12px 0;
-            display: flex; justify-content: space-between; align-items: center;
-            z-index: 100; border-bottom: 1px solid var(--border-color);
-            margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+            position: sticky; top: 0; background-color: rgba(10,25,47,0.95); backdrop-filter: blur(10px);
+            padding: 12px 0; display: flex; justify-content: space-between; align-items: center;
+            z-index: 100; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
         }
-
         button {
-            background-color: var(--accent-color); color: var(--bg-color);
-            border: none; padding: 10px 20px; border-radius: 6px;
-            font-weight: 600; font-size: 1rem; cursor: pointer;
+            background-color: var(--accent-color); color: var(--bg-color); border: none;
+            padding: 10px 20px; border-radius: 6px; font-weight: 600; font-size: 1rem; cursor: pointer;
             transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
         }
         button:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
@@ -130,7 +113,7 @@
         .btn-sm:hover { transform: none; }
         #exportBtn { display: none; }
 
-        /* Item Cards */
+        /* ── Item Cards ── */
         .list-container { display: flex; flex-direction: column; gap: 16px; }
         .item-card {
             background-color: var(--card-bg); border-radius: 12px; padding: 18px;
@@ -144,11 +127,44 @@
         .item-card.item-admin-claimed { border-color: rgba(255,170,50,0.35); background: linear-gradient(135deg, #112240, rgba(255,170,50,0.04)); }
 
         .item-number { font-size: 1.3rem; font-weight: 700; color: var(--text-secondary); min-width: 38px; display: flex; align-items: flex-start; padding-top: 4px; }
-        .item-thumbnail { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; background-color: var(--bg-color); border: 1px solid var(--border-color); flex-shrink: 0; }
-        .item-claimed .item-thumbnail { filter: grayscale(50%); }
+
+        /* ── Thumbnail + Admin Upload Overlay ── */
+        .thumb-wrapper { position: relative; flex-shrink: 0; width: 80px; height: 80px; }
+        .thumb-wrapper .item-thumbnail { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); }
+        .item-claimed .thumb-wrapper .item-thumbnail { filter: grayscale(50%); }
+        /* Non-admin: plain img */
+        .item-thumbnail-plain { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; background-color: var(--bg-color); border: 1px solid var(--border-color); flex-shrink: 0; }
+        .item-claimed .item-thumbnail-plain { filter: grayscale(50%); }
+
+        .thumb-upload-btn {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: rgba(10,25,47,0.82); color: var(--accent-color);
+            display: flex; align-items: center; justify-content: center; gap: 3px;
+            padding: 5px 4px; cursor: pointer; font-size: 0.68rem; font-weight: 600;
+            border-radius: 0 0 8px 8px; transition: background 0.2s;
+        }
+        .thumb-upload-btn:hover { background: rgba(100,255,218,0.85); color: var(--bg-color); }
+        .thumb-reset-btn {
+            position: absolute; top: 2px; right: 2px;
+            background: rgba(255,107,107,0.85); color: white; border: none;
+            border-radius: 4px; padding: 1px 5px; cursor: pointer; font-size: 0.65rem; line-height: 1.4;
+        }
+        .thumb-reset-btn:hover { background: var(--danger); transform: none; }
+
+        /* ── Item Detail Fields ── */
         .item-details { flex-grow: 1; display: flex; flex-direction: column; gap: 10px; }
         .item-name { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); }
         .item-claimed .item-name { color: var(--text-secondary); }
+
+        /* Inline editable name in admin */
+        .admin-name-input {
+            background: transparent; border: none; border-bottom: 1px dashed rgba(100,255,218,0.35);
+            color: var(--text-primary); font-size: 1.1rem; font-weight: 600;
+            width: 100%; outline: none; padding: 2px 4px; border-radius: 4px;
+            transition: all 0.2s; font-family: 'Inter', sans-serif;
+        }
+        .admin-name-input:hover { border-bottom-color: rgba(100,255,218,0.6); }
+        .admin-name-input:focus { border: 1px solid var(--accent-color); background: rgba(100,255,218,0.04); }
 
         .claimed-badge {
             display: inline-flex; align-items: center; gap: 5px;
@@ -170,7 +186,7 @@
         .admin-claim-label { font-size: 0.83rem; color: var(--warning); }
         .admin-claim-label strong { color: var(--text-primary); }
 
-        /* Choru */
+        /* ── Choru ── */
         .multi-tag {
             display: inline-block; background: rgba(255,170,50,0.12); color: var(--warning);
             border: 1px solid rgba(255,170,50,0.3); border-radius: 20px;
@@ -178,95 +194,60 @@
         }
         .claimants-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
         .claimants-label { color: var(--text-secondary); font-size: 0.83rem; }
-        .claimant-tag {
-            display: inline-flex; align-items: center; gap: 4px;
-            background: rgba(100,255,218,0.12); color: var(--accent-color);
-            border-radius: 12px; padding: 2px 9px; font-size: 0.8rem; font-weight: 500;
-        }
-        .claimant-remove {
-            background: none; border: none; color: rgba(100,255,218,0.5);
-            cursor: pointer; font-size: 0.85rem; line-height: 1; padding: 0 0 0 2px;
-            transition: color 0.15s; display: inline-flex; align-items: center;
-        }
+        .claimant-tag { display: inline-flex; align-items: center; gap: 4px; background: rgba(100,255,218,0.12); color: var(--accent-color); border-radius: 12px; padding: 2px 9px; font-size: 0.8rem; font-weight: 500; }
+        .claimant-remove { background: none; border: none; cursor: pointer; color: rgba(100,255,218,0.5); font-size: 0.85rem; line-height: 1; padding: 0 0 0 2px; transition: color 0.15s; display: inline-flex; align-items: center; }
         .claimant-remove:hover { color: var(--danger); transform: none; background: none; }
         .choru-check-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
         .choru-check-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent-color); cursor: pointer; }
         .choru-check-row label { color: var(--text-primary); font-size: 0.9rem; cursor: pointer; }
 
-        /* Inputs */
+        /* ── Form Inputs ── */
         .input-group { display: flex; flex-direction: column; gap: 6px; }
         label { font-size: 0.83rem; color: var(--text-secondary); font-weight: 500; }
         select, input[type="text"] {
             width: 100%; background-color: var(--input-bg); border: 1px solid var(--border-color);
-            color: var(--text-primary); padding: 9px 10px; border-radius: 6px;
-            font-size: 0.93rem; outline: none; transition: border-color 0.2s;
+            color: var(--text-primary); padding: 9px 10px; border-radius: 6px; font-size: 0.93rem; outline: none; transition: border-color 0.2s;
         }
         select:focus, input[type="text"]:focus { border-color: var(--accent-color); }
         .other-input-container { display: none; margin-top: 6px; }
         .select-family-hint { color: var(--text-secondary); font-size: 0.83rem; font-style: italic; }
 
-        /* Family Summary */
+        /* ── Family Summary ── */
         .family-summary { margin-top: 40px; border-top: 2px solid var(--border-color); padding-top: 28px; padding-bottom: 60px; }
         .summary-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
         .summary-header h2 { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); }
         .family-summary-cards { display: flex; flex-direction: column; gap: 12px; }
         .family-card { background-color: var(--card-bg); border-radius: 10px; border: 1px solid var(--border-color); overflow: hidden; }
-        .family-card-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 11px 16px; background: rgba(100,255,218,0.05); border-bottom: 1px solid var(--border-color);
-        }
+        .family-card-header { display: flex; justify-content: space-between; align-items: center; padding: 11px 16px; background: rgba(100,255,218,0.05); border-bottom: 1px solid var(--border-color); }
         .family-card-name { font-size: 0.95rem; font-weight: 600; color: var(--accent-color); }
-        .copy-btn {
-            background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary);
-            padding: 4px 10px; border-radius: 6px; font-size: 0.82rem; cursor: pointer;
-            transition: all 0.2s; display: inline-flex; align-items: center; gap: 4px;
-        }
+        .copy-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); padding: 4px 10px; border-radius: 6px; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 4px; }
         .copy-btn:hover { border-color: var(--accent-color); color: var(--accent-color); background: rgba(100,255,218,0.05); transform: none; }
-        .family-items-list { list-style: none; padding: 8px 16px 12px; display: flex; flex-direction: column; gap: 4px; }
-        .family-items-list li {
-            display: flex; align-items: center; gap: 7px;
-            color: var(--text-primary); font-size: 0.88rem; padding: 4px 0;
-            border-bottom: 1px solid rgba(35,53,84,0.5);
-        }
+        .family-items-list { list-style: none; padding: 8px 16px 12px; display: flex; flex-direction: column; gap: 2px; }
+        .family-items-list li { display: flex; align-items: center; gap: 7px; color: var(--text-primary); font-size: 0.88rem; padding: 5px 0; border-bottom: 1px solid rgba(35,53,84,0.5); }
         .family-items-list li:last-child { border-bottom: none; }
         .family-items-list li::before { content: "•"; color: var(--accent-color); flex-shrink: 0; }
         .li-name { flex: 1; }
         .item-note { color: var(--text-secondary); font-size: 0.8rem; font-style: italic; }
-        .item-delete-btn {
-            background: none; border: none; color: var(--text-secondary);
-            cursor: pointer; font-size: 0.8rem; padding: 2px 4px;
-            border-radius: 4px; transition: all 0.15s; flex-shrink: 0;
-            display: inline-flex; align-items: center;
-        }
+        .item-delete-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 0.8rem; padding: 2px 4px; border-radius: 4px; transition: all 0.15s; flex-shrink: 0; display: inline-flex; align-items: center; }
         .item-delete-btn:hover { color: var(--danger); background: var(--danger-bg); transform: none; }
 
-        /* Loader + Toast */
-        .loader-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(10,25,47,0.85); display: flex; justify-content: center;
-            align-items: center; z-index: 1000; backdrop-filter: blur(4px);
-            color: var(--accent-color); font-size: 1.2rem; font-weight: 600;
-        }
+        /* ── Utility ── */
+        .loader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10,25,47,0.85); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); color: var(--accent-color); font-size: 1.2rem; font-weight: 600; }
         .hidden { display: none !important; }
-        .toast {
-            position: fixed; bottom: 20px; left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background-color: var(--card-bg); color: var(--accent-color);
-            padding: 12px 24px; border-radius: 8px; border: 1px solid var(--accent-color);
-            font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: transform 0.3s cubic-bezier(0.68,-0.55,0.265,1.55); z-index: 2000; white-space: nowrap;
-        }
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background-color: var(--card-bg); color: var(--accent-color); padding: 12px 24px; border-radius: 8px; border: 1px solid var(--accent-color); font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: transform 0.3s cubic-bezier(0.68,-0.55,0.265,1.55); z-index: 2000; white-space: nowrap; }
         .toast.show { transform: translateX(-50%) translateY(0); }
 
         @media (max-width: 600px) {
             .item-card { flex-direction: column; position: relative; }
             .item-number { position: absolute; top: 18px; right: 18px; }
-            .item-thumbnail { width: 100%; height: 140px; }
+            .thumb-wrapper { width: 100%; height: 140px; }
+            .thumb-wrapper .item-thumbnail { border-radius: 8px 8px 0 0; }
+            .item-thumbnail-plain { width: 100%; height: 140px; }
             .action-bar { flex-direction: column; align-items: stretch; }
             button { justify-content: center; }
             .summary-header { flex-direction: column; align-items: stretch; }
             .admin-claim-row { flex-direction: column; align-items: flex-start; }
-            .add-family-row { flex-direction: column; }
+            .add-row { flex-direction: column; }
         }
     </style>
 </head>
@@ -281,19 +262,19 @@
     <div class="admin-banner hidden" id="adminBanner">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         Admin Mode
-        <span>— Manage families, edit or clear any item. Changes save to KV immediately.</span>
+        <span>— Edit item names/photos, manage families, clear any claim.</span>
     </div>
 
-    <!-- Admin Families Panel (admin only) -->
-    <div class="admin-families-panel hidden" id="adminFamiliesPanel">
-        <div class="admin-families-title">
+    <!-- Admin: Manage Families -->
+    <div class="admin-panel hidden" id="adminFamiliesPanel">
+        <div class="admin-panel-title">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             Manage Families
         </div>
         <div class="admin-family-tags" id="adminFamilyTags"></div>
-        <div class="add-family-row">
+        <div class="add-row">
             <input type="text" id="newFamilyInput" placeholder='e.g. Thomas&amp;Family' maxlength="40"
-                onkeydown="if(event.key==='Enter') addFamily()">
+                onkeydown="if(event.key==='Enter')addFamily()">
             <button class="btn-add" onclick="addFamily()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Add Family
@@ -348,51 +329,49 @@
         </div>
         <div class="family-summary-cards" id="familySummaryCards"></div>
     </div>
-
 </div>
 
 <script>
     const WORKER_URL = 'https://sadhya-worker.vilfintv.workers.dev';
     const CHORU_INDEX = 1;
 
-    // Default families — may be overridden by KV-stored list
     const DEFAULT_FAMILIES = ["Vilfin&Family","Abhilash&Family","Jackson&Family","Alvin&Family","Sreejith&Family"];
-    let FAMILIES = [...DEFAULT_FAMILIES]; // without "Other"; "Other" is appended dynamically in UI
+    let FAMILIES = [...DEFAULT_FAMILIES];
 
     const ITEMS = [
-        { name: "Banana Leaf / Paper Banana Leaf", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Banana-leaf-1.JPG/330px-Banana-leaf-1.JPG" },
-        { name: "Choru (Matta Rice)", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Matta_Rice.jpg/330px-Matta_Rice.jpg" },
-        { name: "Pappadam", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Roasted_Papad_-_Howrah_2013-11-02_4068.jpg/330px-Roasted_Papad_-_Howrah_2013-11-02_4068.jpg" },
-        { name: "Pazham (Banana)", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Bananavarieties.jpg/330px-Bananavarieties.jpg" },
-        { name: "Salt", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Salt_grains.jpg/320px-Salt_grains.jpg" },
-        { name: "Upperi (Banana Chips)", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Chips_de_bananes_de_S%C3%A3o_Tom%C3%A9-et-Pr%C3%ADncipe.jpg/330px-Chips_de_bananes_de_S%C3%A3o_Tom%C3%A9-et-Pr%C3%ADncipe.jpg" },
-        { name: "Sharkara Varatti", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Sadhya_DSW.jpg/330px-Sadhya_DSW.jpg" },
-        { name: "Manga Achar (Mango Pickle)", image: "https://upload.wikimedia.org/wikipedia/en/thumb/0/01/Cut-Mango-pickle.jpg/330px-Cut-Mango-pickle.jpg" },
-        { name: "Naranga Achar (Lime Pickle)", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Lemon_Pickle.jpg/330px-Lemon_Pickle.jpg" },
-        { name: "Inji Puli / Puli Inji", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Puliyinchi_with_a_face.jpg/330px-Puliyinchi_with_a_face.jpg" },
-        { name: "Onam Parippu Curry / Ghee", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Kerala_Sadya_-_Parippu_curry.jpg/320px-Kerala_Sadya_-_Parippu_curry.jpg" },
-        { name: "Sambar", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Pumpkin_sambar.JPG/330px-Pumpkin_sambar.JPG" },
-        { name: "Rasam", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Rasam.JPG/330px-Rasam.JPG" },
-        { name: "Pulissery (Kumbalanga / Pineapple)", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Pulissery.jpg/330px-Pulissery.jpg" },
-        { name: "Sambaram (Moru) / Curd", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Buttermilk-%28right%29-and-Milk-%28left%29.jpg/330px-Buttermilk-%28right%29-and-Milk-%28left%29.jpg" },
-        { name: "Avial", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Ayiyal.jpg/330px-Ayiyal.jpg" },
-        { name: "Thoran (Cabbage / Beans / Carrots)", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Travancore_Cheera_Thoran.JPG/330px-Travancore_Cheera_Thoran.JPG" },
-        { name: "Olan", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Olan.jpg/330px-Olan.jpg" },
-        { name: "Kaalan", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Kalan_kerala_dish.jpg/330px-Kalan_kerala_dish.jpg" },
-        { name: "Erissery", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/%E0%B4%8E%E0%B4%B0%E0%B4%BF%E0%B4%B6%E0%B5%8D%E0%B4%B6%E0%B5%87%E0%B4%B0%E0%B4%BF.jpg/330px-%E0%B4%8E%E0%B4%B0%E0%B4%BF%E0%B4%B6%E0%B5%8D%E0%B4%B6%E0%B5%87%E0%B4%B0%E0%B4%BF.jpg" },
-        { name: "Koottukari (Kootu Curry)", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Koottukari_Food_kerala.jpg/330px-Koottukari_Food_kerala.jpg" },
-        { name: "Pachadi (Beetroot / Cucumber)", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Beetroot_Pachadi.jpg/330px-Beetroot_Pachadi.jpg" },
-        { name: "Kichadi (Pineapple / Cucumber)", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Kichadi.jpg/330px-Kichadi.jpg" },
-        { name: "Mezhukkupuratti (Yams / Long Beans / Raw Banana)", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Mezhukupuratti.jpg/320px-Mezhukupuratti.jpg" },
-        { name: "Parippu Pradhaman", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/%E0%B4%85%E0%B4%9F%E0%B4%AA%E0%B5%8D%E0%B4%B0%E0%B4%A5%E0%B4%AE%E0%B5%BB.JPG/330px-%E0%B4%85%E0%B4%9F%E0%B4%AA%E0%B5%8D%E0%B4%B0%E0%B4%A5%E0%B4%AE%E0%B5%BB.JPG" },
-        { name: "Semiya Payasam", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Kheer.jpg/330px-Kheer.jpg" },
-        { name: "Water", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Drinking_water.jpg/240px-Drinking_water.jpg" },
-        { name: "Paper Cup (Water & Payasam)", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Paper_cup_DS.jpg/330px-Paper_cup_DS.jpg" },
-        { name: "Pookalam Flowers", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Pookalam.jpg/320px-Pookalam.jpg" },
-        { name: "Extra Item 1", image: "https://placehold.co/150x150/0a192f/ccd6f6?text=30", isCustom: true },
-        { name: "Extra Item 2", image: "https://placehold.co/150x150/0a192f/ccd6f6?text=31", isCustom: true },
-        { name: "Extra Item 3", image: "https://placehold.co/150x150/0a192f/ccd6f6?text=32", isCustom: true },
-        { name: "Extra Item 4", image: "https://placehold.co/150x150/0a192f/ccd6f6?text=33", isCustom: true }
+        { name:"Banana Leaf / Paper Banana Leaf", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Banana-leaf-1.JPG/330px-Banana-leaf-1.JPG" },
+        { name:"Choru (Matta Rice)", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Matta_Rice.jpg/330px-Matta_Rice.jpg" },
+        { name:"Pappadam", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Roasted_Papad_-_Howrah_2013-11-02_4068.jpg/330px-Roasted_Papad_-_Howrah_2013-11-02_4068.jpg" },
+        { name:"Pazham (Banana)", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Bananavarieties.jpg/330px-Bananavarieties.jpg" },
+        { name:"Salt", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Salt_grains.jpg/320px-Salt_grains.jpg" },
+        { name:"Upperi (Banana Chips)", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Chips_de_bananes_de_S%C3%A3o_Tom%C3%A9-et-Pr%C3%ADncipe.jpg/330px-Chips_de_bananes_de_S%C3%A3o_Tom%C3%A9-et-Pr%C3%ADncipe.jpg" },
+        { name:"Sharkara Varatti", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Sadhya_DSW.jpg/330px-Sadhya_DSW.jpg" },
+        { name:"Manga Achar (Mango Pickle)", image:"https://upload.wikimedia.org/wikipedia/en/thumb/0/01/Cut-Mango-pickle.jpg/330px-Cut-Mango-pickle.jpg" },
+        { name:"Naranga Achar (Lime Pickle)", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Lemon_Pickle.jpg/330px-Lemon_Pickle.jpg" },
+        { name:"Inji Puli / Puli Inji", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Puliyinchi_with_a_face.jpg/330px-Puliyinchi_with_a_face.jpg" },
+        { name:"Onam Parippu Curry / Ghee", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Kerala_Sadya_-_Parippu_curry.jpg/320px-Kerala_Sadya_-_Parippu_curry.jpg" },
+        { name:"Sambar", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Pumpkin_sambar.JPG/330px-Pumpkin_sambar.JPG" },
+        { name:"Rasam", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Rasam.JPG/330px-Rasam.JPG" },
+        { name:"Pulissery (Kumbalanga / Pineapple)", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Pulissery.jpg/330px-Pulissery.jpg" },
+        { name:"Sambaram (Moru) / Curd", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Buttermilk-%28right%29-and-Milk-%28left%29.jpg/330px-Buttermilk-%28right%29-and-Milk-%28left%29.jpg" },
+        { name:"Avial", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Ayiyal.jpg/330px-Ayiyal.jpg" },
+        { name:"Thoran (Cabbage / Beans / Carrots)", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Travancore_Cheera_Thoran.JPG/330px-Travancore_Cheera_Thoran.JPG" },
+        { name:"Olan", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Olan.jpg/330px-Olan.jpg" },
+        { name:"Kaalan", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Kalan_kerala_dish.jpg/330px-Kalan_kerala_dish.jpg" },
+        { name:"Erissery", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/%E0%B4%8E%E0%B4%B0%E0%B4%BF%E0%B4%B6%E0%B5%8D%E0%B4%B6%E0%B5%87%E0%B4%B0%E0%B4%BF.jpg/330px-%E0%B4%8E%E0%B4%B0%E0%B4%BF%E0%B4%B6%E0%B5%8D%E0%B4%B6%E0%B5%87%E0%B4%B0%E0%B4%BF.jpg" },
+        { name:"Koottukari (Kootu Curry)", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Koottukari_Food_kerala.jpg/330px-Koottukari_Food_kerala.jpg" },
+        { name:"Pachadi (Beetroot / Cucumber)", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Beetroot_Pachadi.jpg/330px-Beetroot_Pachadi.jpg" },
+        { name:"Kichadi (Pineapple / Cucumber)", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Kichadi.jpg/330px-Kichadi.jpg" },
+        { name:"Mezhukkupuratti (Yams / Long Beans / Raw Banana)", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Mezhukupuratti.jpg/320px-Mezhukupuratti.jpg" },
+        { name:"Parippu Pradhaman", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/%E0%B4%85%E0%B4%9F%E0%B4%AA%E0%B5%8D%E0%B4%B0%E0%B4%A5%E0%B4%AE%E0%B5%BB.JPG/330px-%E0%B4%85%E0%B4%9F%E0%B4%AA%E0%B5%8D%E0%B4%B0%E0%B4%A5%E0%B4%AE%E0%B5%BB.JPG" },
+        { name:"Semiya Payasam", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Kheer.jpg/330px-Kheer.jpg" },
+        { name:"Water", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Drinking_water.jpg/240px-Drinking_water.jpg" },
+        { name:"Paper Cup (Water & Payasam)", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Paper_cup_DS.jpg/330px-Paper_cup_DS.jpg" },
+        { name:"Pookalam Flowers", image:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Pookalam.jpg/320px-Pookalam.jpg" },
+        { name:"Extra Item 1", image:"https://placehold.co/150x150/0a192f/ccd6f6?text=30", isCustom:true },
+        { name:"Extra Item 2", image:"https://placehold.co/150x150/0a192f/ccd6f6?text=31", isCustom:true },
+        { name:"Extra Item 3", image:"https://placehold.co/150x150/0a192f/ccd6f6?text=32", isCustom:true },
+        { name:"Extra Item 4", image:"https://placehold.co/150x150/0a192f/ccd6f6?text=33", isCustom:true }
     ];
 
     let state = {};
@@ -414,11 +393,26 @@
         fetchState();
     });
 
-    // ── Family List Management ────────────────────────────────────────────────
+    // ── Display helper: meta name/image takes priority over defaults ──────────
 
-    function familiesWithOther() {
-        return [...FAMILIES, 'Other'];
+    function getItemDisplay(index) {
+        const safeId = `item_${index + 1}`;
+        const item = ITEMS[index];
+        const meta = state._meta?.[safeId] || {};
+        const claimData = state[safeId] || null;
+        return {
+            name: meta.name || claimData?.itemName || item.name,
+            image: meta.image || item.image,
+            hasCustomImage: !!meta.image,
+            hasCustomName: !!meta.name,
+            isCustom: !!item.isCustom,
+            safeId
+        };
     }
+
+    // ── Family management ────────────────────────────────────────────────────
+
+    function familiesWithOther() { return [...FAMILIES, 'Other']; }
 
     function refreshFamilyPicker() {
         const sel = document.getElementById('myFamilySelect');
@@ -426,33 +420,19 @@
         sel.innerHTML = '<option value="">-- Select Your Family --</option>';
         familiesWithOther().forEach(f => {
             const opt = document.createElement('option');
-            opt.value = f;
-            opt.textContent = f === 'Other' ? 'Other (type below)' : f;
+            opt.value = f; opt.textContent = f === 'Other' ? 'Other (type below)' : f;
             if (f === prev) opt.selected = true;
             sel.appendChild(opt);
         });
-
-        // Restore saved family
-        if (myFamily && prev === '') {
-            const allOpts = familiesWithOther();
-            if (allOpts.includes(myFamily)) {
-                sel.value = myFamily;
-            } else {
-                sel.value = 'Other';
-                const inp = document.getElementById('myFamilyOtherInput');
-                inp.style.display = '';
-                inp.value = myFamily;
-            }
-        }
     }
 
     function renderAdminFamilyTags() {
-        const container = document.getElementById('adminFamilyTags');
-        if (!container) return;
-        container.innerHTML = FAMILIES.map(f => `
+        const c = document.getElementById('adminFamilyTags');
+        if (!c) return;
+        c.innerHTML = FAMILIES.map(f => `
             <span class="admin-family-tag">
                 ${escHtml(f)}
-                <button class="family-remove-btn" title="Remove ${escAttr(f)}" onclick="removeFamily('${escAttr(f)}')">✕</button>
+                <button class="family-remove-btn" onclick="removeFamily('${escAttr(f)}')">✕</button>
             </span>`).join('') +
             `<span class="admin-family-tag tag-other">Other <small style="opacity:.6">(always shown)</small></span>`;
     }
@@ -462,7 +442,6 @@
         const name = input.value.trim();
         if (!name) { showToast('Enter a family name', true); return; }
         if (FAMILIES.includes(name) || name === 'Other') { showToast('Family already exists', true); return; }
-
         FAMILIES.push(name);
         input.value = '';
         await persistFamilies();
@@ -473,7 +452,7 @@
     }
 
     async function removeFamily(name) {
-        if (!confirm(`Remove "${name}" from the family list?\n\nNote: their existing item claims will remain in the data.`)) return;
+        if (!confirm(`Remove "${name}" from the list?\n\nExisting claims by this family are kept.`)) return;
         FAMILIES = FAMILIES.filter(f => f !== name);
         await persistFamilies();
         refreshFamilyPicker();
@@ -484,49 +463,31 @@
 
     async function persistFamilies() {
         try {
-            const latestState = await fetchLatest();
-            latestState.families = FAMILIES; // store without "Other"
-            const res = await fetch(WORKER_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(latestState)
-            });
-            if (res.ok) state = latestState;
-        } catch (e) { console.error('Failed to persist families:', e); }
+            const ls = await fetchLatest();
+            ls.families = FAMILIES;
+            const res = await fetch(WORKER_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(ls) });
+            if (res.ok) state = ls;
+        } catch(e) { console.error('persistFamilies:', e); }
     }
 
     // ── Family Picker ─────────────────────────────────────────────────────────
 
     function handleMyFamilyChange(value) {
-        const otherInput = document.getElementById('myFamilyOtherInput');
-        if (value === 'Other') {
-            otherInput.style.display = '';
-            otherInput.focus();
-            myFamily = otherInput.value.trim();
-        } else {
-            otherInput.style.display = 'none';
-            myFamily = value;
-            localStorage.setItem('sadhya_my_family', myFamily);
-            updateFamilyTag();
-            renderList();
-            renderFamilySummary();
-        }
+        const inp = document.getElementById('myFamilyOtherInput');
+        if (value === 'Other') { inp.style.display = ''; inp.focus(); myFamily = inp.value.trim(); }
+        else { inp.style.display = 'none'; myFamily = value; localStorage.setItem('sadhya_my_family', myFamily); updateFamilyTag(); renderList(); renderFamilySummary(); }
     }
-
     function handleMyFamilyOther(value) {
-        myFamily = value.trim();
-        localStorage.setItem('sadhya_my_family', myFamily);
-        updateFamilyTag();
+        myFamily = value.trim(); localStorage.setItem('sadhya_my_family', myFamily); updateFamilyTag();
         if (myFamily) { renderList(); renderFamilySummary(); }
     }
-
     function updateFamilyTag() {
         const tag = document.getElementById('myFamilyTag');
         if (myFamily) { tag.textContent = '✓ ' + myFamily; tag.classList.remove('hidden'); }
-        else { tag.classList.add('hidden'); }
+        else tag.classList.add('hidden');
     }
 
-    // ── Data Fetch ────────────────────────────────────────────────────────────
+    // ── Data ──────────────────────────────────────────────────────────────────
 
     async function fetchState() {
         showLoader(true, 'Syncing data...');
@@ -534,51 +495,69 @@
             const res = await fetch(WORKER_URL);
             if (res.ok) {
                 state = await res.json();
-                // Load persisted family list if present
-                if (Array.isArray(state.families) && state.families.length > 0) {
-                    FAMILIES = state.families;
-                }
+                if (Array.isArray(state.families) && state.families.length > 0) FAMILIES = state.families;
             }
-        } catch (e) { console.error('Fetch error:', e); }
+        } catch(e) { console.error(e); }
         showLoader(false);
 
-        // Restore myFamily from localStorage after FAMILIES is loaded
+        const allF = familiesWithOther();
+        const sel = document.getElementById('myFamilySelect');
+        refreshFamilyPicker();
         if (myFamily) {
-            const allFamilies = familiesWithOther();
-            const sel = document.getElementById('myFamilySelect');
-            refreshFamilyPicker();
-            if (allFamilies.includes(myFamily)) {
-                sel.value = myFamily;
-            } else {
-                sel.value = 'Other';
-                const inp = document.getElementById('myFamilyOtherInput');
-                inp.style.display = '';
-                inp.value = myFamily;
-            }
+            if (allF.includes(myFamily)) sel.value = myFamily;
+            else { sel.value = 'Other'; const i = document.getElementById('myFamilyOtherInput'); i.style.display=''; i.value=myFamily; }
             updateFamilyTag();
-        } else {
-            refreshFamilyPicker();
         }
-
         if (isAdmin) renderAdminFamilyTags();
-        renderList();
-        renderFamilySummary();
+        renderList(); renderFamilySummary();
     }
 
     async function fetchLatest() {
-        try {
-            const res = await fetch(WORKER_URL);
-            if (res.ok) return await res.json();
-        } catch (_) {}
+        try { const r = await fetch(WORKER_URL); if (r.ok) return await r.json(); } catch(_) {}
         return { ...state };
     }
 
     // ── Render Items ──────────────────────────────────────────────────────────
 
     function renderList() {
-        const container = document.getElementById('itemsList');
-        container.innerHTML = '';
-        ITEMS.forEach((item, index) => container.appendChild(buildItemCard(item, index)));
+        const c = document.getElementById('itemsList');
+        c.innerHTML = '';
+        ITEMS.forEach((item, index) => c.appendChild(buildItemCard(item, index)));
+    }
+
+    function buildThumbHtml(safeId, display, itemNum) {
+        const fb = `https://placehold.co/80x80/112240/ccd6f6?text=${itemNum}`;
+        if (isAdmin) {
+            return `<div class="thumb-wrapper">
+                <img src="${escAttr(display.image)}" class="item-thumbnail" id="${safeId}_thumb"
+                    onerror="this.onerror=null;this.src='${fb}'">
+                <label for="${safeId}_imgfile" class="thumb-upload-btn" title="Upload photo">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    Photo
+                </label>
+                <input type="file" id="${safeId}_imgfile" accept="image/*" class="hidden"
+                    onchange="handleImageUpload('${escAttr(safeId)}',this)">
+                <button class="thumb-reset-btn${display.hasCustomImage ? '' : ' hidden'}"
+                    id="${safeId}_resetbtn"
+                    onclick="resetItemImage('${escAttr(safeId)}')" title="Restore default">↺</button>
+            </div>`;
+        }
+        return `<img src="${escAttr(display.image)}" class="item-thumbnail-plain" id="${safeId}_thumb"
+            onerror="this.onerror=null;this.src='${fb}'">`;
+    }
+
+    function buildNameHtml(safeId, display) {
+        if (isAdmin) {
+            return `<input type="text" class="admin-name-input" id="${safeId}_adminname"
+                value="${escAttr(display.name)}" placeholder="Item name..."
+                onblur="saveItemName('${escAttr(safeId)}',this.value)"
+                onkeydown="if(event.key==='Enter')this.blur()">`;
+        }
+        if (display.isCustom) {
+            return `<input type="text" id="${safeId}_name" placeholder="Enter item name..."
+                value="${escAttr(display.name)}">`;
+        }
+        return escHtml(display.name);
     }
 
     function buildItemCard(item, index) {
@@ -586,43 +565,42 @@
         const safeId = `item_${itemNum}`;
         const isChoru = index === CHORU_INDEX;
         const data = state[safeId] || null;
+        const display = getItemDisplay(index);
+
         const card = document.createElement('div');
         card.className = 'item-card';
-        const fb = `https://placehold.co/80x80/112240/ccd6f6?text=${itemNum}`;
-        const imgHtml = `<img src="${item.image}" class="item-thumbnail" alt="${escHtml(item.name)}" onerror="this.onerror=null;this.src='${fb}'">`;
         const numHtml = `<div class="item-number">#${itemNum}</div>`;
+        const thumbHtml = buildThumbHtml(safeId, display, itemNum);
 
         if (isChoru) {
-            buildChoruCard(card, item, safeId, data, numHtml, imgHtml);
+            buildChoruCard(card, safeId, data, display, numHtml, thumbHtml);
         } else {
             const claimedBy = data?.preparedBy || null;
             const isOthers = !isAdmin && myFamily && claimedBy && claimedBy !== myFamily;
-            if (isOthers) buildClaimedCard(card, item, safeId, data, numHtml, imgHtml);
-            else buildEditableCard(card, item, safeId, data, numHtml, imgHtml);
+            if (isOthers) buildClaimedCard(card, safeId, data, display, numHtml, thumbHtml);
+            else buildEditableCard(card, item, safeId, data, display, numHtml, thumbHtml);
         }
         return card;
     }
 
-    function buildChoruCard(card, item, safeId, data, numHtml, imgHtml) {
+    function buildChoruCard(card, safeId, data, display, numHtml, thumbHtml) {
         let claimants = [];
         if (data?.preparedBy) claimants = Array.isArray(data.preparedBy) ? data.preparedBy : [data.preparedBy];
         const iAmBringing = myFamily && claimants.includes(myFamily);
-
         const claimantTagsHtml = claimants.map(f => `
             <span class="claimant-tag">
                 ${escHtml(f)}
-                ${isAdmin ? `<button class="claimant-remove" title="Remove ${escAttr(f)}" onclick="removeChoruClaimant('${escAttr(safeId)}','${escAttr(f)}')">✕</button>` : ''}
+                ${isAdmin ? `<button class="claimant-remove" onclick="removeChoruClaimant('${escAttr(safeId)}','${escAttr(f)}')">✕</button>` : ''}
             </span>`).join('');
-
         card.innerHTML = `
-            ${numHtml}${imgHtml}
+            ${numHtml}${thumbHtml}
             <div class="item-details">
-                <div class="item-name">${escHtml(item.name)}</div>
+                <div class="item-name">${buildNameHtml(safeId, display)}</div>
                 <div class="multi-tag">👥 Multiple families can bring this</div>
                 ${claimants.length > 0 ? `<div class="claimants-row"><span class="claimants-label">Bringing:</span>${claimantTagsHtml}</div>` : ''}
                 ${myFamily ? `
                 <div class="choru-check-row">
-                    <input type="checkbox" id="${safeId}_check" ${iAmBringing ? 'checked' : ''}>
+                    <input type="checkbox" id="${safeId}_check" ${iAmBringing?'checked':''}>
                     <label for="${safeId}_check">${escHtml(myFamily)} is bringing Choru</label>
                 </div>
                 <div class="input-group">
@@ -632,39 +610,31 @@
             </div>`;
     }
 
-    function buildClaimedCard(card, item, safeId, data, numHtml, imgHtml) {
+    function buildClaimedCard(card, safeId, data, display, numHtml, thumbHtml) {
         card.classList.add('item-claimed');
         card.innerHTML = `
-            ${numHtml}${imgHtml}
+            ${numHtml}${thumbHtml}
             <div class="item-details">
-                <div class="item-name">${escHtml(data?.itemName||item.name)}</div>
+                <div class="item-name">${escHtml(display.name)}</div>
                 <div class="claimed-badge">✓ Claimed by <strong>${escHtml(data.preparedBy)}</strong></div>
                 ${data?.comment ? `<div class="claimed-comment">📝 ${escHtml(data.comment)}</div>` : ''}
             </div>`;
     }
 
-    function buildEditableCard(card, item, safeId, data, numHtml, imgHtml) {
+    function buildEditableCard(card, item, safeId, data, display, numHtml, thumbHtml) {
         const claimedBy = data?.preparedBy || null;
         const isMyItem = claimedBy && claimedBy === myFamily;
         const isAdminClaimed = isAdmin && claimedBy;
-
         if (isMyItem) card.classList.add('item-mine');
         if (isAdminClaimed && !isMyItem) card.classList.add('item-admin-claimed');
 
-        const allFamilies = familiesWithOther();
         const namedFamilies = FAMILIES;
         const storedIsOther = claimedBy && !namedFamilies.includes(claimedBy);
         const selectVal = storedIsOther ? 'Other' : (claimedBy || '');
         const otherVal = storedIsOther ? claimedBy : '';
-
         const opts = ['<option value="">-- Not Bringing --</option>',
-            ...allFamilies.map(f =>
-                `<option value="${escAttr(f)}"${selectVal===f?' selected':''}>${escHtml(f)}</option>`)
+            ...familiesWithOther().map(f => `<option value="${escAttr(f)}"${selectVal===f?' selected':''}>${escHtml(f)}</option>`)
         ].join('');
-
-        const itemNameHtml = item.isCustom
-            ? `<input type="text" id="${safeId}_name" placeholder="Enter item name..." value="${escAttr(data?.itemName||'')}">`
-            : escHtml(item.name);
 
         const adminInfoHtml = isAdminClaimed ? `
             <div class="admin-claim-row">
@@ -676,9 +646,9 @@
             <button class="btn-secondary btn-sm" onclick="clearItem('${escAttr(safeId)}')">✕ Remove My Claim</button>` : '';
 
         card.innerHTML = `
-            ${numHtml}${imgHtml}
+            ${numHtml}${thumbHtml}
             <div class="item-details">
-                <div class="item-name">${itemNameHtml}</div>
+                <div class="item-name">${buildNameHtml(safeId, display)}</div>
                 ${isMyItem && !isAdmin ? `<div class="my-item-badge">✓ Your item</div>` : ''}
                 ${adminInfoHtml}
                 <div class="input-group">
@@ -700,131 +670,195 @@
 
     function handleSelectChange(safeId) {
         const sel = document.getElementById(`${safeId}_select`);
-        const container = document.getElementById(`${safeId}_other_container`);
-        if (container) container.style.display = sel.value === 'Other' ? 'block' : 'none';
+        const c = document.getElementById(`${safeId}_other_container`);
+        if (c) c.style.display = sel.value === 'Other' ? 'block' : 'none';
     }
 
-    // ── Save ──────────────────────────────────────────────────────────────────
+    // ── Admin: Edit Item Name ─────────────────────────────────────────────────
+
+    async function saveItemName(safeId, name) {
+        const trimmed = name.trim();
+        await saveItemMeta(safeId, { name: trimmed });
+    }
+
+    // ── Admin: Upload / Reset Thumbnail ──────────────────────────────────────
+
+    async function handleImageUpload(safeId, input) {
+        const file = input.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) { showToast('Select an image file', true); return; }
+        showLoader(true, 'Processing image...');
+        try {
+            const base64 = await resizeImageToBase64(file, 200, 0.82);
+            showLoader(false);
+            await saveItemMeta(safeId, { image: base64 });
+            // Update thumbnail in place without full re-render
+            const thumb = document.getElementById(`${safeId}_thumb`);
+            if (thumb) thumb.src = base64;
+            const resetBtn = document.getElementById(`${safeId}_resetbtn`);
+            if (resetBtn) resetBtn.classList.remove('hidden');
+        } catch(e) { showLoader(false); showToast('Failed to process image', true); }
+        input.value = '';
+    }
+
+    async function resetItemImage(safeId) {
+        await saveItemMeta(safeId, { image: '' });
+        const index = parseInt(safeId.split('_')[1]) - 1;
+        const thumb = document.getElementById(`${safeId}_thumb`);
+        if (thumb) thumb.src = ITEMS[index].image;
+        const resetBtn = document.getElementById(`${safeId}_resetbtn`);
+        if (resetBtn) resetBtn.classList.add('hidden');
+    }
+
+    async function saveItemMeta(safeId, updates) {
+        showLoader(true, 'Saving...');
+        try {
+            const ls = await fetchLatest();
+            if (!ls._meta) ls._meta = {};
+            if (!ls._meta[safeId]) ls._meta[safeId] = {};
+            Object.assign(ls._meta[safeId], updates);
+            // Clean empty values
+            if (ls._meta[safeId].name === '') delete ls._meta[safeId].name;
+            if (ls._meta[safeId].image === '') delete ls._meta[safeId].image;
+            if (!Object.keys(ls._meta[safeId]).length) delete ls._meta[safeId];
+            ls.families = FAMILIES;
+
+            const res = await fetch(WORKER_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(ls) });
+            if (res.ok) { state = ls; showToast('Saved ✓'); }
+            else alert('Failed to save');
+        } catch(e) { alert('Network error'); }
+        showLoader(false);
+    }
+
+    function resizeImageToBase64(file, maxPx, quality) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            const url = URL.createObjectURL(file);
+            img.onload = () => {
+                const scale = Math.min(maxPx / img.width, maxPx / img.height, 1);
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.round(img.width * scale);
+                canvas.height = Math.round(img.height * scale);
+                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                URL.revokeObjectURL(url);
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.onerror = e => { URL.revokeObjectURL(url); reject(e); };
+            img.src = url;
+        });
+    }
+
+    // ── Save Claims ───────────────────────────────────────────────────────────
 
     async function saveState() {
         if (!myFamily && !isAdmin) { showToast('Please select your family first!', true); return; }
         showLoader(true, 'Saving...');
         try {
-            const latestState = await fetchLatest();
-            // Preserve families list in state
-            latestState.families = FAMILIES;
+            const ls = await fetchLatest();
+            ls.families = FAMILIES;
+            if (!ls._meta) ls._meta = state._meta || {};
 
             ITEMS.forEach((item, index) => {
                 const safeId = `item_${index + 1}`;
-                if (index === CHORU_INDEX) saveChoru(latestState, safeId, item);
-                else saveSingleItem(latestState, safeId, item);
+                if (index === CHORU_INDEX) saveChoru(ls, safeId, index);
+                else saveSingleItem(ls, safeId, item, index);
             });
 
-            const res = await fetch(WORKER_URL, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(latestState)
-            });
-            if (res.ok) { state = latestState; renderList(); renderFamilySummary(); showToast('Saved! ✓'); }
+            const res = await fetch(WORKER_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(ls) });
+            if (res.ok) { state = ls; renderList(); renderFamilySummary(); showToast('Saved! ✓'); }
             else alert('Failed to save. Please try again.');
-        } catch (e) { alert('Network error while saving.'); }
+        } catch(e) { alert('Network error while saving.'); }
         showLoader(false);
     }
 
-    function saveChoru(latestState, safeId, item) {
+    function saveChoru(ls, safeId, index) {
         const checkEl = document.getElementById(`${safeId}_check`);
         if (!checkEl) return;
         const comment = document.getElementById(`${safeId}_comment`)?.value.trim() || '';
-        const existing = latestState[safeId] || {};
-        let families = Array.isArray(existing.preparedBy)
-            ? [...existing.preparedBy]
+        const existing = ls[safeId] || {};
+        let families = Array.isArray(existing.preparedBy) ? [...existing.preparedBy]
             : (existing.preparedBy ? [existing.preparedBy] : []);
         if (myFamily) {
             if (checkEl.checked && !families.includes(myFamily)) families.push(myFamily);
             else if (!checkEl.checked) families = families.filter(f => f !== myFamily);
         }
-        if (families.length > 0) latestState[safeId] = { itemName: item.name, preparedBy: families, comment };
-        else delete latestState[safeId];
+        const display = getItemDisplay(index);
+        if (families.length > 0) ls[safeId] = { itemName: display.name, preparedBy: families, comment };
+        else delete ls[safeId];
     }
 
-    function saveSingleItem(latestState, safeId, item) {
+    function saveSingleItem(ls, safeId, item, index) {
         const selectEl = document.getElementById(`${safeId}_select`);
         if (!selectEl) return;
-        const existingClaim = latestState[safeId]?.preparedBy;
+        const existingClaim = ls[safeId]?.preparedBy;
         if (!isAdmin && myFamily && existingClaim && existingClaim !== myFamily) return;
 
         let preparedBy = selectEl.value;
         if (preparedBy === 'Other') preparedBy = document.getElementById(`${safeId}_other`)?.value.trim() || '';
         const comment = document.getElementById(`${safeId}_comment`)?.value.trim() || '';
-        const itemName = item.isCustom
-            ? (document.getElementById(`${safeId}_name`)?.value.trim() || 'Extra Item')
-            : item.name;
 
-        if (preparedBy) latestState[safeId] = { itemName, preparedBy, comment };
-        else delete latestState[safeId];
+        // Item name: admin-name-input (admin) or custom _name input (non-admin isCustom) or default
+        let itemName;
+        if (isAdmin) {
+            itemName = document.getElementById(`${safeId}_adminname`)?.value.trim() || getItemDisplay(index).name;
+        } else if (item.isCustom) {
+            itemName = document.getElementById(`${safeId}_name`)?.value.trim() || getItemDisplay(index).name;
+        } else {
+            itemName = getItemDisplay(index).name;
+        }
+
+        if (preparedBy) ls[safeId] = { itemName, preparedBy, comment };
+        else delete ls[safeId];
     }
 
-    // ── Instant Clear / Delete ────────────────────────────────────────────────
+    // ── Instant Clear ─────────────────────────────────────────────────────────
 
     async function clearItem(safeId) {
         showLoader(true, 'Clearing...');
         try {
-            const latestState = await fetchLatest();
-            delete latestState[safeId];
-            const res = await fetch(WORKER_URL, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(latestState)
-            });
-            if (res.ok) { state = latestState; renderList(); renderFamilySummary(); showToast('Cleared ✓'); }
+            const ls = await fetchLatest();
+            delete ls[safeId];
+            const res = await fetch(WORKER_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(ls) });
+            if (res.ok) { state = ls; renderList(); renderFamilySummary(); showToast('Cleared ✓'); }
             else alert('Failed to clear');
-        } catch (e) { alert('Network error'); }
+        } catch(e) { alert('Network error'); }
         showLoader(false);
     }
 
     async function removeChoruClaimant(safeId, familyName) {
         showLoader(true, 'Removing...');
         try {
-            const latestState = await fetchLatest();
-            const existing = latestState[safeId] || {};
-            let families = Array.isArray(existing.preparedBy)
-                ? [...existing.preparedBy] : (existing.preparedBy ? [existing.preparedBy] : []);
+            const ls = await fetchLatest();
+            const existing = ls[safeId] || {};
+            let families = Array.isArray(existing.preparedBy) ? [...existing.preparedBy]
+                : (existing.preparedBy ? [existing.preparedBy] : []);
             families = families.filter(f => f !== familyName);
-            if (families.length > 0) latestState[safeId] = { ...existing, preparedBy: families };
-            else delete latestState[safeId];
-            const res = await fetch(WORKER_URL, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(latestState)
-            });
-            if (res.ok) { state = latestState; renderList(); renderFamilySummary(); showToast(`${familyName} removed ✓`); }
+            if (families.length > 0) ls[safeId] = { ...existing, preparedBy: families };
+            else delete ls[safeId];
+            const res = await fetch(WORKER_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(ls) });
+            if (res.ok) { state = ls; renderList(); renderFamilySummary(); showToast(`${familyName} removed ✓`); }
             else alert('Failed');
-        } catch (e) { alert('Network error'); }
+        } catch(e) { alert('Network error'); }
         showLoader(false);
     }
 
-    // Delete a specific item from the family summary (user self-service or admin)
     async function deleteFromSummary(safeId, familyName) {
         showLoader(true, 'Removing...');
         try {
-            const latestState = await fetchLatest();
-            const data = latestState[safeId];
+            const ls = await fetchLatest();
+            const data = ls[safeId];
             if (!data) { showLoader(false); return; }
-
             if (Array.isArray(data.preparedBy)) {
-                // Choru: remove just this family
                 const families = data.preparedBy.filter(f => f !== familyName);
-                if (families.length > 0) latestState[safeId] = { ...data, preparedBy: families };
-                else delete latestState[safeId];
+                if (families.length > 0) ls[safeId] = { ...data, preparedBy: families };
+                else delete ls[safeId];
             } else {
-                // Regular item: clear it entirely
-                delete latestState[safeId];
+                delete ls[safeId];
             }
-
-            const res = await fetch(WORKER_URL, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(latestState)
-            });
-            if (res.ok) { state = latestState; renderList(); renderFamilySummary(); showToast('Removed ✓'); }
+            const res = await fetch(WORKER_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(ls) });
+            if (res.ok) { state = ls; renderList(); renderFamilySummary(); showToast('Removed ✓'); }
             else alert('Failed');
-        } catch (e) { alert('Network error'); }
+        } catch(e) { alert('Network error'); }
         showLoader(false);
     }
 
@@ -835,45 +869,35 @@
         const cardsEl = document.getElementById('familySummaryCards');
         cardsEl.innerHTML = '';
 
-        // Build map: family → [{name, comment, safeId}]
         const familyItems = {};
         ITEMS.forEach((item, index) => {
             const safeId = `item_${index + 1}`;
             const data = state[safeId];
             if (!data?.preparedBy) return;
-            const displayName = data.itemName || item.name;
+            const display = getItemDisplay(index);
             const families = Array.isArray(data.preparedBy) ? data.preparedBy : [data.preparedBy];
             families.forEach(fam => {
                 if (!familyItems[fam]) familyItems[fam] = [];
-                familyItems[fam].push({ name: displayName, comment: data.comment || '', safeId });
+                familyItems[fam].push({ name: display.name, comment: data.comment || '', safeId });
             });
         });
 
         const families = Object.keys(familyItems);
-        if (families.length === 0) { summaryEl.classList.add('hidden'); return; }
+        if (!families.length) { summaryEl.classList.add('hidden'); return; }
         summaryEl.classList.remove('hidden');
 
         families.forEach(fam => {
             const items = familyItems[fam];
-            // Show delete button if: admin OR this is the current user's family card
             const canDelete = isAdmin || fam === myFamily;
-
             const card = document.createElement('div');
             card.className = 'family-card';
             const itemsHtml = items.map(it => `
                 <li>
-                    <span class="li-name">
-                        ${escHtml(it.name)}
-                        ${it.comment ? `<span class="item-note"> (${escHtml(it.comment)})</span>` : ''}
-                    </span>
-                    ${canDelete ? `<button class="item-delete-btn"
-                        title="Remove this item"
-                        data-safeid="${escAttr(it.safeId)}"
-                        data-family="${escAttr(fam)}">
+                    <span class="li-name">${escHtml(it.name)}${it.comment ? ` <span class="item-note">(${escHtml(it.comment)})</span>` : ''}</span>
+                    ${canDelete ? `<button class="item-delete-btn" data-safeid="${escAttr(it.safeId)}" data-family="${escAttr(fam)}" title="Remove">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>` : ''}
                 </li>`).join('');
-
             card.innerHTML = `
                 <div class="family-card-header">
                     <span class="family-card-name">${escHtml(fam)}</span>
@@ -883,108 +907,89 @@
                     </button>
                 </div>
                 <ul class="family-items-list">${itemsHtml}</ul>`;
-
             card.querySelector('.copy-btn').addEventListener('click', () => copyFamilyItems(fam));
             if (canDelete) {
-                card.querySelectorAll('.item-delete-btn').forEach(btn => {
-                    btn.addEventListener('click', () =>
-                        deleteFromSummary(btn.dataset.safeid, btn.dataset.family));
-                });
+                card.querySelectorAll('.item-delete-btn').forEach(btn =>
+                    btn.addEventListener('click', () => deleteFromSummary(btn.dataset.safeid, btn.dataset.family)));
             }
             cardsEl.appendChild(card);
         });
     }
 
-    // ── Copy Helpers ──────────────────────────────────────────────────────────
+    // ── Copy ──────────────────────────────────────────────────────────────────
 
     function copyFamilyItems(familyName) {
         const lines = [`🌸 ${familyName} — Onam Sadhya 2026`, ''];
         const items = [];
         ITEMS.forEach((item, i) => {
-            const data = state[`item_${i + 1}`];
+            const data = state[`item_${i+1}`];
             if (!data?.preparedBy) return;
             const families = Array.isArray(data.preparedBy) ? data.preparedBy : [data.preparedBy];
-            if (families.includes(familyName))
-                items.push({ name: data.itemName || item.name, comment: data.comment || '' });
+            if (families.includes(familyName)) items.push({ name: getItemDisplay(i).name, comment: data.comment||'' });
         });
-        items.forEach((it, i) => lines.push(`${i+1}. ${it.name}${it.comment ? ` (${it.comment})` : ''}`));
-        navigator.clipboard.writeText(lines.join('\n'))
-            .then(() => showToast('Copied! 📋'))
-            .catch(() => showToast('Could not copy', true));
+        items.forEach((it, i) => lines.push(`${i+1}. ${it.name}${it.comment?` (${it.comment})`:''}`));
+        navigator.clipboard.writeText(lines.join('\n')).then(() => showToast('Copied! 📋')).catch(() => showToast('Could not copy', true));
     }
 
     function copyAllSummary() {
         const lines = ['🌸 Onam Sadhya Potluck 2026 🌸','August 22, 2026 | 6:00PM–10:00PM JST','Nishi Kasai 5-8-1',''];
         const familyItems = {};
         ITEMS.forEach((item, index) => {
-            const data = state[`item_${index + 1}`];
+            const data = state[`item_${index+1}`];
             if (!data?.preparedBy) return;
-            const displayName = data.itemName || item.name;
             const families = Array.isArray(data.preparedBy) ? data.preparedBy : [data.preparedBy];
             families.forEach(fam => {
                 if (!familyItems[fam]) familyItems[fam] = [];
-                familyItems[fam].push({ name: displayName, comment: data.comment || '' });
+                familyItems[fam].push({ name: getItemDisplay(index).name, comment: data.comment||'' });
             });
         });
         Object.entries(familyItems).forEach(([fam, items]) => {
             lines.push(`👨‍👩‍👧 ${fam}:`);
-            items.forEach(it => lines.push(`  • ${it.name}${it.comment ? ` (${it.comment})` : ''}`));
+            items.forEach(it => lines.push(`  • ${it.name}${it.comment?` (${it.comment})`:''}`));
             lines.push('');
         });
         const unclaimed = ITEMS.filter((item, i) => !item.isCustom && !state[`item_${i+1}`]?.preparedBy).map(i => i.name);
-        if (unclaimed.length > 0) { lines.push('❓ Still Needed:'); unclaimed.forEach(n => lines.push(`  • ${n}`)); }
-        navigator.clipboard.writeText(lines.join('\n'))
-            .then(() => showToast('Summary copied! 📋'))
-            .catch(() => showToast('Could not copy', true));
+        if (unclaimed.length) { lines.push('❓ Still Needed:'); unclaimed.forEach(n => lines.push(`  • ${n}`)); }
+        navigator.clipboard.writeText(lines.join('\n')).then(() => showToast('Summary copied! 📋')).catch(() => showToast('Could not copy', true));
     }
 
     // ── Misc ──────────────────────────────────────────────────────────────────
 
     function shareWhatsApp() {
         const url = window.location.href.split('?')[0];
-        const msg = encodeURIComponent(`Claim your dish for Onam Sadhya 2026! 🌸\n${url}`);
-        window.open(`https://wa.me/?text=${msg}`, '_blank');
+        window.open(`https://wa.me/?text=${encodeURIComponent(`Claim your dish for Onam Sadhya 2026! 🌸\n${url}`)}`, '_blank');
     }
 
     function exportData() {
         const lines = ['Onam Sadhya 2026 — Claims','==========================',''];
         ITEMS.forEach((item, index) => {
             const data = state[`item_${index+1}`];
-            lines.push(`${index+1}. ${data?.itemName || item.name}`);
+            lines.push(`${index+1}. ${getItemDisplay(index).name}`);
             if (data?.preparedBy) {
                 lines.push(`   Prepared By: ${Array.isArray(data.preparedBy) ? data.preparedBy.join(', ') : data.preparedBy}`);
                 if (data.comment) lines.push(`   Note: ${data.comment}`);
             } else lines.push('   [Unclaimed]');
             lines.push('');
         });
-        const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+        const blob = new Blob([lines.join('\n')], { type:'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); a.href = url; a.download = 'Sadhya_Claims.txt';
         document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
     }
 
-    function showLoader(show, text = 'Syncing data...') {
-        const el = document.getElementById('loader'); el.textContent = text;
-        el.classList.toggle('hidden', !show);
+    function showLoader(show, text='Syncing data...') {
+        const el = document.getElementById('loader'); el.textContent = text; el.classList.toggle('hidden', !show);
     }
-
     let toastTimer;
-    function showToast(msg = 'Saved!', isError = false) {
-        const toast = document.getElementById('toast');
-        toast.textContent = msg;
-        toast.style.borderColor = isError ? 'var(--danger)' : 'var(--accent-color)';
-        toast.style.color = isError ? 'var(--danger)' : 'var(--accent-color)';
-        toast.classList.add('show');
-        clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+    function showToast(msg='Saved!', isError=false) {
+        const t = document.getElementById('toast'); t.textContent = msg;
+        t.style.borderColor = isError ? 'var(--danger)' : 'var(--accent-color)';
+        t.style.color = isError ? 'var(--danger)' : 'var(--accent-color)';
+        t.classList.add('show'); clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
     }
-
-    function escHtml(str) {
-        return String(str??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-    function escAttr(str) {
-        return String(str??'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-    }
+    function escHtml(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function escAttr(s) { return String(s??'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 </script>
 </body>
 </html>
