@@ -15,6 +15,9 @@
             --accent-hover: #52e0c4;
             --border-color: #233554;
             --input-bg: #0a192f;
+            --danger: #ff6b6b;
+            --danger-bg: rgba(255,107,107,0.1);
+            --warning: #ffaa32;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
@@ -28,25 +31,34 @@
 
         .container { max-width: 800px; margin: 0 auto; padding: 20px; }
 
+        /* Admin Banner */
+        .admin-banner {
+            background: linear-gradient(135deg, rgba(255,170,50,0.15), rgba(255,107,107,0.1));
+            border: 1px solid rgba(255,170,50,0.4);
+            border-radius: 10px;
+            padding: 12px 18px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--warning);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .admin-banner svg { flex-shrink: 0; }
+        .admin-banner span { color: var(--text-secondary); font-weight: 400; font-size: 0.83rem; }
+
         header {
             text-align: center;
             margin-bottom: 24px;
             padding: 30px 0 24px;
             border-bottom: 1px solid var(--border-color);
         }
-
         h1 { color: var(--text-primary); font-size: 2rem; margin-bottom: 10px; font-weight: 700; }
-
         .subtitle { color: var(--text-secondary); font-size: 1rem; margin-bottom: 8px; }
-
         .map-link {
-            color: var(--accent-color);
-            text-decoration: none;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: color 0.2s;
+            color: var(--accent-color); text-decoration: none; font-weight: 500;
+            display: inline-flex; align-items: center; gap: 5px; transition: color 0.2s;
         }
         .map-link:hover { color: var(--accent-hover); text-decoration: underline; }
 
@@ -62,78 +74,58 @@
             gap: 12px;
             flex-wrap: wrap;
         }
-        .family-picker-bar .picker-label {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            font-weight: 500;
-            white-space: nowrap;
-        }
+        .picker-label { color: var(--text-secondary); font-size: 0.9rem; font-weight: 500; white-space: nowrap; }
         .family-picker-bar select,
         .family-picker-bar input[type="text"] {
-            flex: 1;
-            min-width: 180px;
-            background-color: var(--input-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.95rem;
-            outline: none;
-            transition: border-color 0.2s;
+            flex: 1; min-width: 180px;
+            background-color: var(--input-bg); border: 1px solid var(--border-color);
+            color: var(--text-primary); padding: 8px 12px; border-radius: 6px;
+            font-size: 0.95rem; outline: none; transition: border-color 0.2s;
         }
         .family-picker-bar select:focus,
         .family-picker-bar input[type="text"]:focus { border-color: var(--accent-color); }
         .family-tag {
-            background: rgba(100,255,218,0.12);
-            color: var(--accent-color);
-            border-radius: 20px;
-            padding: 4px 12px;
-            font-size: 0.85rem;
-            font-weight: 600;
+            background: rgba(100,255,218,0.12); color: var(--accent-color);
+            border-radius: 20px; padding: 4px 12px; font-size: 0.85rem; font-weight: 600;
         }
 
         /* Action Bar */
         .action-bar {
-            position: sticky;
-            top: 0;
-            background-color: rgba(10, 25, 47, 0.95);
-            backdrop-filter: blur(10px);
+            position: sticky; top: 0;
+            background-color: rgba(10,25,47,0.95); backdrop-filter: blur(10px);
             padding: 12px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 100;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100; border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
         }
 
         button {
-            background-color: var(--accent-color);
-            color: var(--bg-color);
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+            background-color: var(--accent-color); color: var(--bg-color);
+            border: none; padding: 10px 20px; border-radius: 6px;
+            font-weight: 600; font-size: 1rem; cursor: pointer;
+            transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
         }
         button:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
 
         .btn-secondary {
-            background-color: transparent;
-            color: var(--accent-color);
+            background-color: transparent; color: var(--accent-color);
             border: 1px solid var(--accent-color);
         }
-        .btn-secondary:hover { background-color: rgba(100, 255, 218, 0.1); }
+        .btn-secondary:hover { background-color: rgba(100,255,218,0.1); }
 
         .btn-whatsapp { background-color: #25D366; color: white; border: none; }
         .btn-whatsapp:hover { background-color: #128C7E; }
+
+        .btn-danger {
+            background-color: transparent; color: var(--danger);
+            border: 1px solid var(--danger); font-size: 0.82rem; padding: 5px 10px;
+        }
+        .btn-danger:hover { background-color: var(--danger-bg); transform: none; }
+
+        .btn-sm {
+            font-size: 0.82rem; padding: 5px 10px; font-weight: 500;
+        }
+        .btn-sm:hover { transform: none; }
 
         #exportBtn { display: none; }
 
@@ -141,275 +133,135 @@
         .list-container { display: flex; flex-direction: column; gap: 16px; }
 
         .item-card {
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            padding: 18px;
-            display: flex;
-            gap: 18px;
-            border: 1px solid var(--border-color);
+            background-color: var(--card-bg); border-radius: 12px; padding: 18px;
+            display: flex; gap: 18px; border: 1px solid var(--border-color);
             transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
         }
-        .item-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            border-color: var(--accent-color);
-        }
+        .item-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); border-color: var(--accent-color); }
 
         /* Claimed by another family */
-        .item-card.item-claimed {
-            opacity: 0.5;
-            border-color: var(--border-color) !important;
-        }
-        .item-card.item-claimed:hover {
-            transform: none;
-            box-shadow: none;
-            border-color: var(--border-color) !important;
-        }
+        .item-card.item-claimed { opacity: 0.5; border-color: var(--border-color) !important; }
+        .item-card.item-claimed:hover { transform: none; box-shadow: none; border-color: var(--border-color) !important; }
 
         /* My item */
-        .item-card.item-mine {
-            border-color: rgba(100,255,218,0.45);
-            background: linear-gradient(135deg, #112240, rgba(100,255,218,0.05));
-        }
+        .item-card.item-mine { border-color: rgba(100,255,218,0.45); background: linear-gradient(135deg, #112240, rgba(100,255,218,0.04)); }
+
+        /* Admin-mode item (already claimed by someone) */
+        .item-card.item-admin-claimed { border-color: rgba(255,170,50,0.35); background: linear-gradient(135deg, #112240, rgba(255,170,50,0.04)); }
 
         .item-number {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--text-secondary);
-            min-width: 38px;
-            display: flex;
-            align-items: flex-start;
-            padding-top: 4px;
+            font-size: 1.3rem; font-weight: 700; color: var(--text-secondary);
+            min-width: 38px; display: flex; align-items: flex-start; padding-top: 4px;
         }
-
         .item-thumbnail {
-            width: 80px;
-            height: 80px;
-            border-radius: 8px;
-            object-fit: cover;
-            background-color: var(--bg-color);
-            border: 1px solid var(--border-color);
-            flex-shrink: 0;
+            width: 80px; height: 80px; border-radius: 8px; object-fit: cover;
+            background-color: var(--bg-color); border: 1px solid var(--border-color); flex-shrink: 0;
         }
         .item-claimed .item-thumbnail { filter: grayscale(50%); }
 
-        .item-details {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .item-name {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
+        .item-details { flex-grow: 1; display: flex; flex-direction: column; gap: 10px; }
+        .item-name { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); }
         .item-claimed .item-name { color: var(--text-secondary); }
 
         .claimed-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            background: rgba(100,255,218,0.08);
-            color: var(--accent-color);
-            border: 1px solid rgba(100,255,218,0.25);
-            border-radius: 20px;
-            padding: 3px 12px;
-            font-size: 0.83rem;
-            font-weight: 500;
-            width: fit-content;
+            display: inline-flex; align-items: center; gap: 5px;
+            background: rgba(100,255,218,0.08); color: var(--accent-color);
+            border: 1px solid rgba(100,255,218,0.25); border-radius: 20px;
+            padding: 3px 12px; font-size: 0.83rem; font-weight: 500; width: fit-content;
         }
-
-        .claimed-comment {
-            color: var(--text-secondary);
-            font-size: 0.83rem;
-            font-style: italic;
-        }
+        .claimed-comment { color: var(--text-secondary); font-size: 0.83rem; font-style: italic; }
 
         .my-item-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            background: rgba(100,255,218,0.15);
-            color: var(--accent-color);
-            border-radius: 20px;
-            padding: 3px 12px;
-            font-size: 0.83rem;
-            font-weight: 600;
-            width: fit-content;
+            display: inline-flex; align-items: center; gap: 5px;
+            background: rgba(100,255,218,0.15); color: var(--accent-color);
+            border-radius: 20px; padding: 3px 12px; font-size: 0.83rem; font-weight: 600; width: fit-content;
         }
+
+        /* Admin claim info row */
+        .admin-claim-row {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255,170,50,0.08); border: 1px solid rgba(255,170,50,0.25);
+            border-radius: 8px; padding: 6px 12px; gap: 10px; flex-wrap: wrap;
+        }
+        .admin-claim-label { font-size: 0.83rem; color: var(--warning); }
+        .admin-claim-label strong { color: var(--text-primary); }
 
         /* Choru multi-family */
         .multi-tag {
-            display: inline-block;
-            background: rgba(255,170,50,0.12);
-            color: #ffaa32;
-            border: 1px solid rgba(255,170,50,0.3);
-            border-radius: 20px;
-            padding: 2px 10px;
-            font-size: 0.78rem;
-            font-weight: 500;
-            width: fit-content;
+            display: inline-block; background: rgba(255,170,50,0.12); color: var(--warning);
+            border: 1px solid rgba(255,170,50,0.3); border-radius: 20px;
+            padding: 2px 10px; font-size: 0.78rem; font-weight: 500; width: fit-content;
         }
-
-        .claimants-row {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
+        .claimants-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
         .claimants-label { color: var(--text-secondary); font-size: 0.83rem; }
         .claimant-tag {
-            background: rgba(100,255,218,0.12);
-            color: var(--accent-color);
-            border-radius: 12px;
-            padding: 2px 9px;
-            font-size: 0.8rem;
-            font-weight: 500;
+            display: inline-flex; align-items: center; gap: 4px;
+            background: rgba(100,255,218,0.12); color: var(--accent-color);
+            border-radius: 12px; padding: 2px 9px; font-size: 0.8rem; font-weight: 500;
         }
+        .claimant-remove {
+            background: none; border: none; color: rgba(100,255,218,0.5);
+            cursor: pointer; font-size: 0.85rem; line-height: 1;
+            padding: 0 0 0 2px; transition: color 0.15s;
+            display: inline-flex; align-items: center;
+        }
+        .claimant-remove:hover { color: var(--danger); transform: none; background: none; }
 
-        .choru-check-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 4px;
-        }
-        .choru-check-row input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: var(--accent-color);
-            cursor: pointer;
-        }
-        .choru-check-row label {
-            color: var(--text-primary);
-            font-size: 0.9rem;
-            cursor: pointer;
-        }
+        .choru-check-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+        .choru-check-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent-color); cursor: pointer; }
+        .choru-check-row label { color: var(--text-primary); font-size: 0.9rem; cursor: pointer; }
 
         /* Inputs */
         .input-group { display: flex; flex-direction: column; gap: 6px; }
-
         label { font-size: 0.83rem; color: var(--text-secondary); font-weight: 500; }
-
         select, input[type="text"] {
-            width: 100%;
-            background-color: var(--input-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 9px 10px;
-            border-radius: 6px;
-            font-size: 0.93rem;
-            outline: none;
-            transition: border-color 0.2s;
+            width: 100%; background-color: var(--input-bg); border: 1px solid var(--border-color);
+            color: var(--text-primary); padding: 9px 10px; border-radius: 6px;
+            font-size: 0.93rem; outline: none; transition: border-color 0.2s;
         }
         select:focus, input[type="text"]:focus { border-color: var(--accent-color); }
-
         .other-input-container { display: none; margin-top: 6px; }
         .select-family-hint { color: var(--text-secondary); font-size: 0.83rem; font-style: italic; }
 
         /* Family Summary */
-        .family-summary {
-            margin-top: 40px;
-            border-top: 2px solid var(--border-color);
-            padding-top: 28px;
-            padding-bottom: 60px;
-        }
-        .summary-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 18px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
+        .family-summary { margin-top: 40px; border-top: 2px solid var(--border-color); padding-top: 28px; padding-bottom: 60px; }
+        .summary-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
         .summary-header h2 { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); }
-
         .family-summary-cards { display: flex; flex-direction: column; gap: 12px; }
-
-        .family-card {
-            background-color: var(--card-bg);
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-            overflow: hidden;
-        }
+        .family-card { background-color: var(--card-bg); border-radius: 10px; border: 1px solid var(--border-color); overflow: hidden; }
         .family-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 11px 16px;
-            background: rgba(100,255,218,0.05);
-            border-bottom: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 11px 16px; background: rgba(100,255,218,0.05); border-bottom: 1px solid var(--border-color);
         }
         .family-card-name { font-size: 0.95rem; font-weight: 600; color: var(--accent-color); }
-
         .copy-btn {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.82rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
+            background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary);
+            padding: 4px 10px; border-radius: 6px; font-size: 0.82rem; cursor: pointer;
+            transition: all 0.2s; display: inline-flex; align-items: center; gap: 4px;
         }
-        .copy-btn:hover {
-            border-color: var(--accent-color);
-            color: var(--accent-color);
-            background: rgba(100,255,218,0.05);
-            transform: none;
-        }
-
-        .family-items-list {
-            list-style: none;
-            padding: 10px 16px 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        .family-items-list li {
-            display: flex;
-            align-items: baseline;
-            gap: 7px;
-            color: var(--text-primary);
-            font-size: 0.88rem;
-        }
+        .copy-btn:hover { border-color: var(--accent-color); color: var(--accent-color); background: rgba(100,255,218,0.05); transform: none; }
+        .family-items-list { list-style: none; padding: 10px 16px 12px; display: flex; flex-direction: column; gap: 5px; }
+        .family-items-list li { display: flex; align-items: baseline; gap: 7px; color: var(--text-primary); font-size: 0.88rem; }
         .family-items-list li::before { content: "•"; color: var(--accent-color); flex-shrink: 0; }
         .item-note { color: var(--text-secondary); font-size: 0.8rem; font-style: italic; }
 
         /* Loader + Toast */
         .loader-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(10, 25, 47, 0.85);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            backdrop-filter: blur(4px);
-            color: var(--accent-color);
-            font-size: 1.2rem;
-            font-weight: 600;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10,25,47,0.85); display: flex;
+            justify-content: center; align-items: center; z-index: 1000;
+            backdrop-filter: blur(4px); color: var(--accent-color);
+            font-size: 1.2rem; font-weight: 600;
         }
         .hidden { display: none !important; }
-
         .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
+            position: fixed; bottom: 20px; left: 50%;
             transform: translateX(-50%) translateY(100px);
-            background-color: var(--card-bg);
-            color: var(--accent-color);
-            padding: 12px 24px;
-            border-radius: 8px;
-            border: 1px solid var(--accent-color);
-            font-weight: 500;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            z-index: 2000;
+            background-color: var(--card-bg); color: var(--accent-color);
+            padding: 12px 24px; border-radius: 8px; border: 1px solid var(--accent-color);
+            font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: transform 0.3s cubic-bezier(0.68,-0.55,0.265,1.55); z-index: 2000;
+            white-space: nowrap;
         }
         .toast.show { transform: translateX(-50%) translateY(0); }
 
@@ -420,6 +272,7 @@
             .action-bar { flex-direction: column; align-items: stretch; }
             button { justify-content: center; }
             .summary-header { flex-direction: column; align-items: stretch; }
+            .admin-claim-row { flex-direction: column; align-items: flex-start; }
         }
     </style>
 </head>
@@ -429,6 +282,14 @@
 <div id="toast" class="toast">Saved!</div>
 
 <div class="container">
+
+    <!-- Admin Banner (hidden unless ?admin=true) -->
+    <div class="admin-banner hidden" id="adminBanner">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Admin Mode
+        <span>— You can edit, reassign, or clear any item. Changes save to KV immediately.</span>
+    </div>
+
     <header>
         <h1>Onam Sadhya Potluck 🌸</h1>
         <div class="subtitle">August 22, 2026 | 6:00PM – 10:00PM JST</div>
@@ -451,7 +312,8 @@
             <option value="Sreejith&amp;Family">Sreejith &amp; Family</option>
             <option value="Other">Other</option>
         </select>
-        <input type="text" id="myFamilyOtherInput" placeholder="Type your name..." style="display:none; flex:1; min-width:150px;" oninput="handleMyFamilyOther(this.value)">
+        <input type="text" id="myFamilyOtherInput" placeholder="Type your name..."
+            style="display:none; flex:1; min-width:150px;" oninput="handleMyFamilyOther(this.value)">
         <span class="family-tag hidden" id="myFamilyTag"></span>
     </div>
 
@@ -466,7 +328,7 @@
         </button>
         <button id="exportBtn" class="btn-secondary">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Export Data
+            Export All Data
         </button>
     </div>
 
@@ -483,6 +345,7 @@
         </div>
         <div class="family-summary-cards" id="familySummaryCards"></div>
     </div>
+
 </div>
 
 <script>
@@ -490,12 +353,8 @@
     const CHORU_INDEX = 1; // 0-based; Choru (Matta Rice) is the 2nd item
 
     const FAMILIES = [
-        "Vilfin&Family",
-        "Abhilash&Family",
-        "Jackson&Family",
-        "Alvin&Family",
-        "Sreejith&Family",
-        "Other"
+        "Vilfin&Family", "Abhilash&Family", "Jackson&Family",
+        "Alvin&Family", "Sreejith&Family", "Other"
     ];
 
     const ITEMS = [
@@ -538,20 +397,26 @@
     let myFamily = localStorage.getItem('sadhya_my_family') || '';
     let isAdmin = false;
 
+    // ── Init ──────────────────────────────────────────────────────────────────
+
     document.addEventListener('DOMContentLoaded', () => {
         isAdmin = new URLSearchParams(window.location.search).get('admin') === 'true';
-        if (isAdmin) document.getElementById('exportBtn').style.display = 'inline-flex';
 
-        // Restore saved family
+        if (isAdmin) {
+            document.getElementById('adminBanner').classList.remove('hidden');
+            document.getElementById('exportBtn').style.display = 'inline-flex';
+        }
+
+        // Restore saved family selection
         if (myFamily) {
             const sel = document.getElementById('myFamilySelect');
             if (FAMILIES.includes(myFamily)) {
                 sel.value = myFamily;
             } else {
                 sel.value = 'Other';
-                const otherInput = document.getElementById('myFamilyOtherInput');
-                otherInput.style.display = '';
-                otherInput.value = myFamily;
+                const inp = document.getElementById('myFamilyOtherInput');
+                inp.style.display = '';
+                inp.value = myFamily;
             }
             updateFamilyTag();
         }
@@ -563,12 +428,14 @@
         fetchState();
     });
 
+    // ── Family Picker ─────────────────────────────────────────────────────────
+
     function handleMyFamilyChange(value) {
         const otherInput = document.getElementById('myFamilyOtherInput');
         if (value === 'Other') {
             otherInput.style.display = '';
             otherInput.focus();
-            myFamily = otherInput.value.trim() || '';
+            myFamily = otherInput.value.trim();
         } else {
             otherInput.style.display = 'none';
             myFamily = value;
@@ -583,10 +450,7 @@
         myFamily = value.trim();
         localStorage.setItem('sadhya_my_family', myFamily);
         updateFamilyTag();
-        if (myFamily) {
-            renderList();
-            renderFamilySummary();
-        }
+        if (myFamily) { renderList(); renderFamilySummary(); }
     }
 
     function updateFamilyTag() {
@@ -599,27 +463,25 @@
         }
     }
 
+    // ── Data Fetch ────────────────────────────────────────────────────────────
+
     async function fetchState() {
         showLoader(true, 'Syncing data...');
         try {
             const res = await fetch(WORKER_URL);
-            if (res.ok) {
-                state = await res.json();
-            }
-        } catch (e) {
-            console.error('Fetch error:', e);
-        }
+            if (res.ok) state = await res.json();
+        } catch (e) { console.error('Fetch error:', e); }
         showLoader(false);
         renderList();
         renderFamilySummary();
     }
 
+    // ── Render ────────────────────────────────────────────────────────────────
+
     function renderList() {
         const container = document.getElementById('itemsList');
         container.innerHTML = '';
-        ITEMS.forEach((item, index) => {
-            container.appendChild(buildItemCard(item, index));
-        });
+        ITEMS.forEach((item, index) => container.appendChild(buildItemCard(item, index)));
     }
 
     function buildItemCard(item, index) {
@@ -631,93 +493,130 @@
         const card = document.createElement('div');
         card.className = 'item-card';
 
-        const imgFallback = `https://placehold.co/80x80/112240/ccd6f6?text=${itemNum}`;
-        const imgHtml = `<img src="${item.image}" class="item-thumbnail" alt="${item.name}" onerror="this.onerror=null;this.src='${imgFallback}'">`;
+        const fb = `https://placehold.co/80x80/112240/ccd6f6?text=${itemNum}`;
+        const imgHtml = `<img src="${item.image}" class="item-thumbnail" alt="${escHtml(item.name)}" onerror="this.onerror=null;this.src='${fb}'">`;
         const numHtml = `<div class="item-number">#${itemNum}</div>`;
 
         if (isChoru) {
-            // Multi-family Choru
-            let claimants = [];
-            if (data?.preparedBy) {
-                claimants = Array.isArray(data.preparedBy) ? data.preparedBy : [data.preparedBy];
-            }
-            const iAmBringing = myFamily && claimants.includes(myFamily);
-            const comment = data?.comment || '';
-
-            card.innerHTML = `
-                ${numHtml}${imgHtml}
-                <div class="item-details">
-                    <div class="item-name">${item.name}</div>
-                    <div class="multi-tag">👥 Multiple families can bring this</div>
-                    ${claimants.length > 0 ? `
-                        <div class="claimants-row">
-                            <span class="claimants-label">Bringing:</span>
-                            ${claimants.map(f => `<span class="claimant-tag">${escHtml(f)}</span>`).join('')}
-                        </div>` : ''}
-                    ${myFamily ? `
-                    <div class="choru-check-row">
-                        <input type="checkbox" id="${safeId}_check" ${iAmBringing ? 'checked' : ''}>
-                        <label for="${safeId}_check">${escHtml(myFamily)} is bringing Choru</label>
-                    </div>
-                    <div class="input-group">
-                        <label>Comments:</label>
-                        <input type="text" id="${safeId}_comment" value="${escAttr(comment)}" placeholder="e.g. Red matta rice...">
-                    </div>` : `<div class="select-family-hint">Select your family above to claim items</div>`}
-                </div>`;
+            buildChoruCard(card, item, safeId, data, numHtml, imgHtml);
         } else {
-            // Single-family items
             const claimedBy = data?.preparedBy || null;
-            const isOthers = claimedBy && !isAdmin && myFamily && claimedBy !== myFamily;
-            const isMyItem = claimedBy && claimedBy === myFamily;
+            // Gray out only when: not admin, family is known, item belongs to a different family
+            const isOthers = !isAdmin && myFamily && claimedBy && claimedBy !== myFamily;
 
             if (isOthers) {
-                card.classList.add('item-claimed');
-                card.innerHTML = `
-                    ${numHtml}${imgHtml}
-                    <div class="item-details">
-                        <div class="item-name">${escHtml(data?.itemName || item.name)}</div>
-                        <div class="claimed-badge">✓ Claimed by <strong>${escHtml(claimedBy)}</strong></div>
-                        ${data?.comment ? `<div class="claimed-comment">📝 ${escHtml(data.comment)}</div>` : ''}
-                    </div>`;
+                buildClaimedCard(card, item, safeId, data, numHtml, imgHtml);
             } else {
-                if (isMyItem) card.classList.add('item-mine');
-
-                // Determine if stored value is "Other" (not in named families)
-                const namedFamilies = FAMILIES.slice(0, -1);
-                const storedIsOther = claimedBy && !namedFamilies.includes(claimedBy);
-                const selectVal = storedIsOther ? 'Other' : (claimedBy || '');
-                const otherVal = storedIsOther ? claimedBy : '';
-
-                const opts = ['<option value="">-- Not Bringing --</option>',
-                    ...FAMILIES.map(f => `<option value="${escAttr(f)}"${selectVal === f ? ' selected' : ''}>${escHtml(f)}</option>`)
-                ].join('');
-
-                const itemNameHtml = item.isCustom
-                    ? `<input type="text" id="${safeId}_name" placeholder="Enter item name..." value="${escAttr(data?.itemName || '')}">`
-                    : escHtml(item.name);
-
-                card.innerHTML = `
-                    ${numHtml}${imgHtml}
-                    <div class="item-details">
-                        <div class="item-name">${itemNameHtml}</div>
-                        ${isMyItem ? `<div class="my-item-badge">✓ Your item</div>` : ''}
-                        <div class="input-group">
-                            <label>Prepared By:</label>
-                            <select id="${safeId}_select" onchange="handleSelectChange('${safeId}')">
-                                ${opts}
-                            </select>
-                            <div class="other-input-container" id="${safeId}_other_container" style="${storedIsOther ? 'display:block' : ''}">
-                                <input type="text" id="${safeId}_other" value="${escAttr(otherVal)}" placeholder="Enter name...">
-                            </div>
-                        </div>
-                        <div class="input-group">
-                            <label>Comments / Dietary Notes:</label>
-                            <input type="text" id="${safeId}_comment" value="${escAttr(data?.comment || '')}" placeholder="e.g. No garlic, extra spicy...">
-                        </div>
-                    </div>`;
+                buildEditableCard(card, item, safeId, data, numHtml, imgHtml);
             }
         }
         return card;
+    }
+
+    function buildChoruCard(card, item, safeId, data, numHtml, imgHtml) {
+        let claimants = [];
+        if (data?.preparedBy) {
+            claimants = Array.isArray(data.preparedBy) ? data.preparedBy : [data.preparedBy];
+        }
+        const iAmBringing = myFamily && claimants.includes(myFamily);
+        const comment = data?.comment || '';
+
+        // Claimant tags — in admin mode each has an × button
+        const claimantTagsHtml = claimants.map(f => `
+            <span class="claimant-tag">
+                ${escHtml(f)}
+                ${isAdmin ? `<button class="claimant-remove" title="Remove ${escAttr(f)}" onclick="removeChoruClaimant('${escAttr(safeId)}','${escAttr(f)}')">✕</button>` : ''}
+            </span>`).join('');
+
+        card.innerHTML = `
+            ${numHtml}${imgHtml}
+            <div class="item-details">
+                <div class="item-name">${escHtml(item.name)}</div>
+                <div class="multi-tag">👥 Multiple families can bring this</div>
+                ${claimants.length > 0 ? `
+                    <div class="claimants-row">
+                        <span class="claimants-label">Bringing:</span>
+                        ${claimantTagsHtml}
+                    </div>` : ''}
+                ${myFamily ? `
+                <div class="choru-check-row">
+                    <input type="checkbox" id="${safeId}_check" ${iAmBringing ? 'checked' : ''}>
+                    <label for="${safeId}_check">${escHtml(myFamily)} is bringing Choru</label>
+                </div>
+                <div class="input-group">
+                    <label>Comments:</label>
+                    <input type="text" id="${safeId}_comment" value="${escAttr(comment)}" placeholder="e.g. Red matta rice...">
+                </div>
+                ` : `<div class="select-family-hint">Select your family above to claim items</div>`}
+            </div>`;
+    }
+
+    function buildClaimedCard(card, item, safeId, data, numHtml, imgHtml) {
+        card.classList.add('item-claimed');
+        card.innerHTML = `
+            ${numHtml}${imgHtml}
+            <div class="item-details">
+                <div class="item-name">${escHtml(data?.itemName || item.name)}</div>
+                <div class="claimed-badge">✓ Claimed by <strong>${escHtml(data.preparedBy)}</strong></div>
+                ${data?.comment ? `<div class="claimed-comment">📝 ${escHtml(data.comment)}</div>` : ''}
+            </div>`;
+    }
+
+    function buildEditableCard(card, item, safeId, data, numHtml, imgHtml) {
+        const claimedBy = data?.preparedBy || null;
+        const isMyItem = claimedBy && claimedBy === myFamily;
+        const isAdminClaimed = isAdmin && claimedBy; // admin sees claimed items but can still edit
+
+        if (isMyItem) card.classList.add('item-mine');
+        if (isAdminClaimed && !isMyItem) card.classList.add('item-admin-claimed');
+
+        // Determine dropdown state
+        const namedFamilies = FAMILIES.slice(0, -1); // exclude "Other"
+        const storedIsOther = claimedBy && !namedFamilies.includes(claimedBy);
+        const selectVal = storedIsOther ? 'Other' : (claimedBy || '');
+        const otherVal = storedIsOther ? claimedBy : '';
+
+        const opts = ['<option value="">-- Not Bringing --</option>',
+            ...FAMILIES.map(f =>
+                `<option value="${escAttr(f)}"${selectVal === f ? ' selected' : ''}>${escHtml(f)}</option>`)
+        ].join('');
+
+        const itemNameHtml = item.isCustom
+            ? `<input type="text" id="${safeId}_name" placeholder="Enter item name..." value="${escAttr(data?.itemName || '')}">`
+            : escHtml(item.name);
+
+        // Admin: show current claim info + clear button
+        const adminInfoHtml = isAdminClaimed ? `
+            <div class="admin-claim-row">
+                <span class="admin-claim-label">Currently: <strong>${escHtml(claimedBy)}</strong></span>
+                <button class="btn-danger btn-sm" onclick="clearItem('${escAttr(safeId)}')">✕ Clear Claim</button>
+            </div>` : '';
+
+        // Non-admin: remove button on own items
+        const removeHtml = (!isAdmin && isMyItem) ? `
+            <button class="btn-secondary btn-sm" onclick="clearItem('${escAttr(safeId)}')">✕ Remove My Claim</button>` : '';
+
+        card.innerHTML = `
+            ${numHtml}${imgHtml}
+            <div class="item-details">
+                <div class="item-name">${itemNameHtml}</div>
+                ${isMyItem && !isAdmin ? `<div class="my-item-badge">✓ Your item</div>` : ''}
+                ${adminInfoHtml}
+                <div class="input-group">
+                    <label>Prepared By:</label>
+                    <select id="${safeId}_select" onchange="handleSelectChange('${escAttr(safeId)}')">
+                        ${opts}
+                    </select>
+                    <div class="other-input-container" id="${safeId}_other_container" style="${storedIsOther ? 'display:block' : ''}">
+                        <input type="text" id="${safeId}_other" value="${escAttr(otherVal)}" placeholder="Enter name...">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Comments / Dietary Notes:</label>
+                    <input type="text" id="${safeId}_comment" value="${escAttr(data?.comment || '')}" placeholder="e.g. No garlic, extra spicy...">
+                </div>
+                ${removeHtml}
+            </div>`;
     }
 
     function handleSelectChange(safeId) {
@@ -726,39 +625,29 @@
         if (container) container.style.display = sel.value === 'Other' ? 'block' : 'none';
     }
 
+    // ── Save (with read-then-merge) ───────────────────────────────────────────
+
     async function saveState() {
         if (!myFamily && !isAdmin) {
             showToast('Please select your family first!', true);
             return;
         }
-
         showLoader(true, 'Saving...');
         try {
-            // Re-fetch latest to merge (avoids overwriting others)
-            let latestState = {};
-            try {
-                const res = await fetch(WORKER_URL);
-                if (res.ok) latestState = await res.json();
-            } catch (_) {}
-
+            const latestState = await fetchLatest();
             ITEMS.forEach((item, index) => {
-                const itemNum = index + 1;
-                const safeId = `item_${itemNum}`;
-                const isChoru = index === CHORU_INDEX;
-
-                if (isChoru) {
+                const safeId = `item_${index + 1}`;
+                if (index === CHORU_INDEX) {
                     saveChoru(latestState, safeId, item);
                 } else {
                     saveSingleItem(latestState, safeId, item);
                 }
             });
-
             const res = await fetch(WORKER_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(latestState)
             });
-
             if (res.ok) {
                 state = latestState;
                 renderList();
@@ -776,22 +665,16 @@
 
     function saveChoru(latestState, safeId, item) {
         const checkEl = document.getElementById(`${safeId}_check`);
-        if (!checkEl) return; // no family selected, skip choru
-
-        const commentEl = document.getElementById(`${safeId}_comment`);
-        const comment = commentEl?.value.trim() || '';
-
+        if (!checkEl) return;
+        const comment = document.getElementById(`${safeId}_comment`)?.value.trim() || '';
         const existing = latestState[safeId] || {};
         let families = Array.isArray(existing.preparedBy)
             ? [...existing.preparedBy]
             : (existing.preparedBy ? [existing.preparedBy] : []);
 
         if (myFamily) {
-            if (checkEl.checked && !families.includes(myFamily)) {
-                families.push(myFamily);
-            } else if (!checkEl.checked) {
-                families = families.filter(f => f !== myFamily);
-            }
+            if (checkEl.checked && !families.includes(myFamily)) families.push(myFamily);
+            else if (!checkEl.checked) families = families.filter(f => f !== myFamily);
         }
 
         if (families.length > 0) {
@@ -803,25 +686,21 @@
 
     function saveSingleItem(latestState, safeId, item) {
         const selectEl = document.getElementById(`${safeId}_select`);
-        if (!selectEl) return; // grayed-out claimed card has no select — skip
+        if (!selectEl) return; // grayed-out card (non-admin) — skip
 
-        // Protect others' claims
+        // Protect other families' claims from non-admin users
         const existingClaim = latestState[safeId]?.preparedBy;
         if (!isAdmin && myFamily && existingClaim && existingClaim !== myFamily) return;
 
         let preparedBy = selectEl.value;
         if (preparedBy === 'Other') {
-            const otherEl = document.getElementById(`${safeId}_other`);
-            preparedBy = otherEl?.value.trim() || '';
+            preparedBy = document.getElementById(`${safeId}_other`)?.value.trim() || '';
         }
-
+        const comment = document.getElementById(`${safeId}_comment`)?.value.trim() || '';
         let itemName = item.name;
         if (item.isCustom) {
-            const nameEl = document.getElementById(`${safeId}_name`);
-            itemName = nameEl?.value.trim() || 'Extra Item';
+            itemName = document.getElementById(`${safeId}_name`)?.value.trim() || 'Extra Item';
         }
-
-        const comment = document.getElementById(`${safeId}_comment`)?.value.trim() || '';
 
         if (preparedBy) {
             latestState[safeId] = { itemName, preparedBy, comment };
@@ -830,12 +709,78 @@
         }
     }
 
+    // ── Instant Clear (admin + self-remove) ───────────────────────────────────
+
+    async function clearItem(safeId) {
+        showLoader(true, 'Clearing...');
+        try {
+            const latestState = await fetchLatest();
+            delete latestState[safeId];
+            const res = await fetch(WORKER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(latestState)
+            });
+            if (res.ok) {
+                state = latestState;
+                renderList();
+                renderFamilySummary();
+                showToast('Cleared ✓');
+            } else {
+                alert('Failed to clear');
+            }
+        } catch (e) { alert('Network error'); }
+        showLoader(false);
+    }
+
+    async function removeChoruClaimant(safeId, familyName) {
+        showLoader(true, 'Removing...');
+        try {
+            const latestState = await fetchLatest();
+            const existing = latestState[safeId] || {};
+            let families = Array.isArray(existing.preparedBy)
+                ? [...existing.preparedBy]
+                : (existing.preparedBy ? [existing.preparedBy] : []);
+            families = families.filter(f => f !== familyName);
+
+            if (families.length > 0) {
+                latestState[safeId] = { ...existing, preparedBy: families };
+            } else {
+                delete latestState[safeId];
+            }
+
+            const res = await fetch(WORKER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(latestState)
+            });
+            if (res.ok) {
+                state = latestState;
+                renderList();
+                renderFamilySummary();
+                showToast(`${familyName} removed ✓`);
+            } else {
+                alert('Failed');
+            }
+        } catch (e) { alert('Network error'); }
+        showLoader(false);
+    }
+
+    async function fetchLatest() {
+        try {
+            const res = await fetch(WORKER_URL);
+            if (res.ok) return await res.json();
+        } catch (_) {}
+        return { ...state }; // fallback to current local state
+    }
+
+    // ── Family Summary ────────────────────────────────────────────────────────
+
     function renderFamilySummary() {
         const summaryEl = document.getElementById('familySummary');
         const cardsEl = document.getElementById('familySummaryCards');
         cardsEl.innerHTML = '';
 
-        // Group items by family
         const familyItems = {};
         ITEMS.forEach((item, index) => {
             const data = state[`item_${index + 1}`];
@@ -849,22 +794,13 @@
         });
 
         const families = Object.keys(familyItems);
-        if (families.length === 0) {
-            summaryEl.classList.add('hidden');
-            return;
-        }
+        if (families.length === 0) { summaryEl.classList.add('hidden'); return; }
 
         summaryEl.classList.remove('hidden');
-
         families.forEach(fam => {
             const items = familyItems[fam];
             const card = document.createElement('div');
             card.className = 'family-card';
-
-            const itemsHtml = items.map(it =>
-                `<li>${escHtml(it.name)}${it.comment ? ` <span class="item-note">(${escHtml(it.comment)})</span>` : ''}</li>`
-            ).join('');
-
             card.innerHTML = `
                 <div class="family-card-header">
                     <span class="family-card-name">${escHtml(fam)}</span>
@@ -873,8 +809,11 @@
                         Copy
                     </button>
                 </div>
-                <ul class="family-items-list">${itemsHtml}</ul>`;
-
+                <ul class="family-items-list">
+                    ${items.map(it =>
+                        `<li>${escHtml(it.name)}${it.comment ? ` <span class="item-note">(${escHtml(it.comment)})</span>` : ''}</li>`
+                    ).join('')}
+                </ul>`;
             card.querySelector('.copy-btn').addEventListener('click', () => copyFamilyItems(fam));
             cardsEl.appendChild(card);
         });
@@ -891,23 +830,16 @@
                 items.push({ name: data.itemName || item.name, comment: data.comment || '' });
             }
         });
-        items.forEach((it, i) => {
-            lines.push(`${i + 1}. ${it.name}${it.comment ? ` (${it.comment})` : ''}`);
-        });
-
+        items.forEach((it, i) =>
+            lines.push(`${i + 1}. ${it.name}${it.comment ? ` (${it.comment})` : ''}`)
+        );
         navigator.clipboard.writeText(lines.join('\n'))
             .then(() => showToast('Copied! 📋'))
-            .catch(() => showToast('Could not copy'));
+            .catch(() => showToast('Could not copy', true));
     }
 
     function copyAllSummary() {
-        const lines = [
-            '🌸 Onam Sadhya Potluck 2026 🌸',
-            'August 22, 2026 | 6:00PM–10:00PM JST',
-            'Nishi Kasai 5-8-1',
-            ''
-        ];
-
+        const lines = ['🌸 Onam Sadhya Potluck 2026 🌸', 'August 22, 2026 | 6:00PM–10:00PM JST', 'Nishi Kasai 5-8-1', ''];
         const familyItems = {};
         ITEMS.forEach((item, index) => {
             const data = state[`item_${index + 1}`];
@@ -919,13 +851,11 @@
                 familyItems[fam].push({ name: displayName, comment: data.comment || '' });
             });
         });
-
         Object.entries(familyItems).forEach(([fam, items]) => {
             lines.push(`👨‍👩‍👧 ${fam}:`);
             items.forEach(it => lines.push(`  • ${it.name}${it.comment ? ` (${it.comment})` : ''}`));
             lines.push('');
         });
-
         const unclaimed = ITEMS
             .filter((item, i) => !item.isCustom && !state[`item_${i + 1}`]?.preparedBy)
             .map(item => item.name);
@@ -933,11 +863,12 @@
             lines.push('❓ Still Needed:');
             unclaimed.forEach(name => lines.push(`  • ${name}`));
         }
-
         navigator.clipboard.writeText(lines.join('\n'))
             .then(() => showToast('Summary copied! 📋'))
-            .catch(() => showToast('Could not copy'));
+            .catch(() => showToast('Could not copy', true));
     }
+
+    // ── Misc Actions ──────────────────────────────────────────────────────────
 
     function shareWhatsApp() {
         const url = window.location.href.split('?')[0];
@@ -948,9 +879,8 @@
     function exportData() {
         const lines = ['Onam Sadhya 2026 — Claims', '==========================', ''];
         ITEMS.forEach((item, index) => {
-            const safeId = `item_${index + 1}`;
-            const data = state[safeId];
-            const name = (data?.itemName) || item.name;
+            const data = state[`item_${index + 1}`];
+            const name = data?.itemName || item.name;
             lines.push(`${index + 1}. ${name}`);
             if (data?.preparedBy) {
                 const by = Array.isArray(data.preparedBy) ? data.preparedBy.join(', ') : data.preparedBy;
@@ -969,6 +899,8 @@
         document.body.removeChild(a); URL.revokeObjectURL(url);
     }
 
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
     function showLoader(show, text = 'Syncing data...') {
         const el = document.getElementById('loader');
         el.textContent = text;
@@ -979,8 +911,8 @@
     function showToast(msg = 'Saved!', isError = false) {
         const toast = document.getElementById('toast');
         toast.textContent = msg;
-        toast.style.borderColor = isError ? '#ff6b6b' : 'var(--accent-color)';
-        toast.style.color = isError ? '#ff6b6b' : 'var(--accent-color)';
+        toast.style.borderColor = isError ? 'var(--danger)' : 'var(--accent-color)';
+        toast.style.color = isError ? 'var(--danger)' : 'var(--accent-color)';
         toast.classList.add('show');
         clearTimeout(toastTimer);
         toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
