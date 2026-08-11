@@ -91,13 +91,13 @@ Whenever creating, publishing, or editing a "stock" or "mutual fund" story (in a
 For Malayalam stories, use this exact HTML snippet:
 ```html
 <p style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid #ffc107; font-size: 0.9em; color: #555; line-height: 1.6;">
-  <strong>ഡിസ്‌ക്ലൈമർ (Disclaimer):</strong> മ്യൂച്വൽ ഫണ്ട്, ഓഹരി വിപണി നിക്ഷേപങ്ങൾ വിപണിയിലെ നഷ്ടസാധ്യതകൾക്ക് വിധേയമാണ്. നിക്ഷേപിക്കുന്നതിന് മുൻപ് സ്കീം സംബന്ധിച്ച രേഖകൾ പൂർണ്ണമായും ശ്രദ്ധാപൂർവ്വം വായിക്കുക. ഈ ലേഖനത്തിൽ നൽകിയിട്ടുള്ള വിവരങ്ങൾ തികച്ചും വിദ്യാഭ്യാസ പരമായ ആവശ്യങ്ങൾക്ക് (Educational purposes only) മാത്രമുള്ളതാണ്. ഞങ്ങൾ SEBI രജിസ്റ്റർ ചെയ്ത നിക്ഷേപ ഉപദേശകരല്ല (Not SEBI registered advisors). നിങ്ങളുടെ സാമ്പത്തിക ലക്ഷ്യങ്ങൾക്കും റിസ്ക് എടുക്കാനുള്ള കഴിവിനും അനുസരിച്ച് സ്വന്തമായി തീരുമാനങ്ങൾ എടുക്കുകയോ, അംഗീകൃത സാമ്പത്തിക ഉപദേശകന്റെ സഹായം തേടുകയോ ചെയ്യുക.
+  <strong style="color: #333;">ഡിസ്‌ക്ലൈമർ (Disclaimer):</strong> മ്യൂച്വൽ ഫണ്ട്, ഓഹരി വിപണി നിക്ഷേപങ്ങൾ വിപണിയിലെ നഷ്ടസാധ്യതകൾക്ക് വിധേയമാണ്. നിക്ഷേപിക്കുന്നതിന് മുൻപ് സ്കീം സംബന്ധിച്ച രേഖകൾ പൂർണ്ണമായും ശ്രദ്ധാപൂർവ്വം വായിക്കുക. ഈ ലേഖനത്തിൽ നൽകിയിട്ടുള്ള വിവരങ്ങൾ തികച്ചും വിദ്യാഭ്യാസ പരമായ ആവശ്യങ്ങൾക്ക് (Educational purposes only) മാത്രമുള്ളതാണ്. ഞങ്ങൾ SEBI രജിസ്റ്റർ ചെയ്ത നിക്ഷേപ ഉപദേശകരല്ല (Not SEBI registered advisors). നിങ്ങളുടെ സാമ്പത്തിക ലക്ഷ്യങ്ങൾക്കും റിസ്ക് എടുക്കാനുള്ള കഴിവിനും അനുസരിച്ച് സ്വന്തമായി തീരുമാനങ്ങൾ എടുക്കുകയോ, അംഗീകൃത സാമ്പത്തിക ഉപദേശകന്റെ സഹായം തേടുകയോ ചെയ്യുക.
 </p>
 ```
 
 For English stories, use this exact HTML snippet:
 ```html
 <p style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid #ffc107; font-size: 0.9em; color: #555; line-height: 1.6;">
-  <strong>Disclaimer:</strong> Mutual fund and stock market investments are subject to market risks. Please read all scheme-related documents carefully before investing. The information provided in this article is strictly for educational and informational purposes only. We are not SEBI registered investment advisors. Please conduct your own research or consult with a certified financial advisor before making any investment decisions based on your personal risk tolerance and financial goals.
+  <strong style="color: #333;">Disclaimer:</strong> Mutual fund and stock market investments are subject to market risks. Please read all scheme-related documents carefully before investing. The information provided in this article is strictly for educational and informational purposes only. We are not SEBI registered investment advisors. Please conduct your own research or consult with a certified financial advisor before making any investment decisions based on your personal risk tolerance and financial goals.
 </p>
 ```
