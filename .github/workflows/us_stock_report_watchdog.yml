@@ -1,0 +1,67 @@
+name: US Stock Report Watchdog
+
+# The main "US Stock Daily Report (S&P 500)" workflow fires on a fixed cron
+# (0 2 * * *, i.e. 11:00 AM JST). GitHub's best-effort scheduler runs
+# low-frequency crons with a chronic delay of 20-90+ minutes. This watchdog
+# checks repeatedly across a grace window and dispatches the report if the
+# scheduled run hasn't landed yet, guaranteeing delivery.
+#
+# Each check is idempotent — it only dispatches if no run (scheduled or
+# otherwise) has landed in the last 3 hours, so once the real delayed run
+# lands (or this watchdog dispatches one itself), every later check in the
+# window is a no-op.
+
+on:
+  schedule:
+    # Grace-window checks that START at the 02:00 UTC (11:00 JST) target and run
+    # every 20 min through 03:40 UTC (12:40 JST) — a hard deadline guarantee that
+    # the report goes out even if the native cron is very late.
+    - cron: '0,20,40 2 * * *'     # 02:00, 02:20, 02:40 UTC = 11:00, 11:20, 11:40 JST
+    - cron: '0,20,40 3 * * *'     # 03:00, 03:20, 03:40 UTC = 12:00, 12:20, 12:40 JST
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  check-and-trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for a recent US Stock Report run, trigger one if missing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          REPO="${{ github.repository }}"
+
+          gh run list --repo "$REPO" --workflow="us_stock_report.yml" \
+            --json createdAt,status,conclusion,event --limit 20 > /tmp/runs.json
+
+          RECENT_COUNT=$(python3 - /tmp/runs.json <<'PYEOF'
+          import json, sys, datetime
+          with open(sys.argv[1]) as f:
+              data = json.load(f)
+          now = datetime.datetime.now(datetime.timezone.utc)
+          cutoff = now - datetime.timedelta(hours=3)
+          # A run only counts as "handled" if it succeeded, or is still
+          # in-flight (queued/in_progress). A completed-but-failed or
+          # -cancelled run must NOT count, or the watchdog would wrongly
+          # conclude nothing needs retrying.
+          recent = [
+              r for r in data
+              if datetime.datetime.fromisoformat(r["createdAt"].replace("Z", "+00:00")) > cutoff
+              and (r["status"] != "completed" or r["conclusion"] == "success")
+          ]
+          print(len(recent))
+          PYEOF
+          )
+
+          echo "Recent successful/in-flight runs (last 3h) for US Stock Report: $RECENT_COUNT"
+
+          if [ "$RECENT_COUNT" -eq 0 ]; then
+            echo "No recent successful run found - the scheduled trigger either didn't fire or failed. Dispatching now."
+            gh workflow run us_stock_report.yml --repo "$REPO"
+          else
+            echo "US Stock Report already ran successfully (or is running) recently - nothing to do."
+          fi

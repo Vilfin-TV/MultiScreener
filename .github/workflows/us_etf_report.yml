@@ -1,0 +1,127 @@
+name: US ETF Daily Report
+
+on:
+  schedule:
+    # 02:10 UTC == 11:10 AM JST. Staggered 10 minutes after the US Stock report
+    # to avoid yfinance/API rate-limit collisions. GitHub's best-effort scheduler
+    # may delay 20-90 min; the watchdog guarantees delivery.
+    - cron: '10 2 * * *'
+  workflow_dispatch: # Allow manual trigger
+  repository_dispatch: # Allow trigger via API (e.g. from server scripts)
+
+permissions:
+  actions: read      # guard job reads recent run history
+  contents: read
+
+jobs:
+  # Dedup guard: when GitHub finally fires the (often 30-90 min late) scheduled
+  # cron AFTER the watchdog has already dispatched and delivered today's report,
+  # that late scheduled run would send a DUPLICATE. So a *scheduled* run skips
+  # if a report already succeeded in the last 4h. Manual and watchdog dispatches
+  # always run (the watchdog self-checks a 3h window before dispatching), so the
+  # report is never suppressed — the guard only ever cancels a redundant re-send.
+  guard:
+    runs-on: ubuntu-latest
+    outputs:
+      proceed: ${{ steps.check.outputs.proceed }}
+    steps:
+      - name: Decide whether to run (skip a late scheduled duplicate)
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          # Only the scheduled cron is deduped; everything else always runs.
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+            echo "event=${{ github.event_name }} -> always run"
+            exit 0
+          fi
+          gh run list --repo "${{ github.repository }}" --workflow="us_etf_report.yml" \
+            --json databaseId,createdAt,status,conclusion --limit 20 > /tmp/runs.json 2>/dev/null
+          DUP=0
+          if [ -s /tmp/runs.json ]; then
+            CUTOFF=$(( $(date -u +%s) - 4*3600 ))
+            DUP=$(jq -r --argjson me ${{ github.run_id }} --argjson cut "$CUTOFF" '
+              [ .[]
+                | select(.databaseId != $me)
+                | select(.status=="completed" and .conclusion=="success")
+                | (.createdAt | sub("\\.[0-9]+";"") | fromdateiso8601)
+                | select(. > $cut) ] | length' /tmp/runs.json 2>/dev/null)
+          fi
+          [ -z "$DUP" ] && DUP=0
+          # Fail-safe: any parse/API error leaves DUP=0 -> proceed=true (never
+          # let a guard bug silently suppress the report).
+          if [ "$DUP" -gt 0 ] 2>/dev/null; then
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+            echo "A report already succeeded in the last 4h -> skipping this late scheduled run."
+          else
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+            echo "No recent successful report -> running."
+          fi
+
+  run-us-etf-analysis:
+    needs: guard
+    if: ${{ needs.guard.outputs.proceed == 'true' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Fetch subscriber list from D1
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          DB_ID="0bdd24a2-6109-4225-a873-90c216c530ab"
+          HTTP_CODE=$(curl -s -o /tmp/d1_result.json -w "%{http_code}" \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/d1/database/${DB_ID}/query" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"sql":"SELECT email FROM subscribers"}')
+          echo "D1 API HTTP status: $HTTP_CODE"
+          if [ "$HTTP_CODE" = "200" ]; then
+            python3 -c "
+          import json, sys
+          try:
+              data = json.load(open('/tmp/d1_result.json'))
+              if not data.get('success'):
+                  print(f'D1 error: {data}', file=sys.stderr)
+                  sys.exit(1)
+              rows = data['result'][0]['results']
+              emails = [r['email'] for r in rows
+                        if r.get('email') and r['email'] != 'test@vilfintv.com']
+              print(json.dumps(emails))
+          except Exception as e:
+              print(f'D1 parse error: {e}', file=sys.stderr)
+              sys.exit(1)
+            " > /tmp/subscribers.json && \
+            COUNT=$(python3 -c "import json; print(len(json.load(open('/tmp/subscribers.json'))))" 2>/dev/null || echo 0) && \
+            echo "Subscriber count from D1: $COUNT"
+          else
+            echo "D1 fetch failed (HTTP $HTTP_CODE) — skipping subscriber file so script falls back to SUBSCRIBER_WORKER_URL"
+          fi
+
+      - name: Run US ETF Analyzer Script
+        env:
+          ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          WORKER_URL: ${{ secrets.WORKER_URL }}
+          SUBSCRIBER_WORKER_URL: ${{ secrets.SUBSCRIBER_WORKER_URL }}
+          SUBSCRIBER_WORKER_SECRET: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          SUBSCRIBER_LIST_FILE: /tmp/subscribers.json
+        run: |
+          python us_etf_analyzer.py

@@ -39,6 +39,31 @@ jobs:
       - name: Run update_symbols.py
         run: python scripts/update_symbols.py
 
+      # ── 4b. Refresh S&P 500 fallback snapshot ──────────────────────────────
+      - name: Refresh S&P 500 symbols from Wikipedia
+        run: |
+          python3 -c "
+import json, sys
+try:
+    import pandas as pd
+    tables = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
+    df = tables[0]
+    symbols = []
+    for _, row in df.iterrows():
+        symbols.append({
+            'symbol': str(row['Symbol']).replace('.', '-'),
+            'name': str(row['Security']),
+            'sector': str(row['GICS Sector']),
+            'sub_industry': str(row['GICS Sub-Industry'])
+        })
+    symbols.sort(key=lambda x: x['symbol'])
+    with open('data/sp500_symbols.json', 'w') as f:
+        json.dump(symbols, f, indent=2)
+    print(f'Refreshed data/sp500_symbols.json with {len(symbols)} symbols')
+except Exception as e:
+    print(f'S&P 500 refresh failed (non-fatal): {e}', file=sys.stderr)
+          "
+
       # ── 5. Commit if changed (with rebase-and-retry to handle concurrent pushes) ─
       - name: Commit master_symbols.json
         run: |
@@ -46,14 +71,14 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global pull.rebase true
 
-          git add data/master_symbols.json
+          git add data/master_symbols.json data/sp500_symbols.json
 
           if git diff --staged --quiet; then
             echo "ℹ️  No changes to master_symbols.json — skipping commit."
             exit 0
           fi
 
-          git commit -m "chore: refresh master_symbols.json [skip ci]"
+          git commit -m "chore: refresh master_symbols.json & sp500_symbols.json [skip ci]"
 
           # Retry up to 3 times if remote moved between our checkout and push
           for attempt in 1 2 3; do
