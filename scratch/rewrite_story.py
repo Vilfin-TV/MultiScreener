@@ -1,0 +1,250 @@
+import json
+import os
+
+story_html = """
+<h2>വിൽഫിൻ ടി.വി. ഓഫീസ്: അമേരിക്കയിൽ 'കൺഫ്യൂഷൻ', ഇവിടെ പുതിയ പിള്ളേരുടെ 'കോമഡി സർക്കസ്'! 🤣</h2>
+
+<div style="background:linear-gradient(135deg,#0a192f,#112240);color:#e8edf5;padding:30px;border-radius:16px;margin:20px 0;box-shadow:0 8px 25px rgba(0,0,0,0.3);text-align:center;border:3px solid #64ffda;">
+<div style="font-size:14px;color:#64ffda;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;">🚨 അടിയന്തര റിപ്പോർട്ട്</div>
+<div style="font-size:26px;font-weight:bold;margin-bottom:5px;">VILFINTV HQ: CRISIS MANAGEMENT</div>
+<div style="font-size:16px;color:#8892b0;margin-bottom:20px;">───────── 🎯 2026 ─────────</div>
+<div style="display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;">
+<div style="flex:1;min-width:200px;background:rgba(10,25,47,0.5);border-radius:12px;padding:20px;border:1px solid #233554;">
+<div style="font-size:24px;margin-bottom:10px;">🇺🇸</div>
+<div style="font-size:14px;font-weight:bold;color:#64ffda;">US TEAM STATUS</div>
+<div style="margin-top:10px;font-size:13px;color:#ccd6f6;">
+Google-ലും OpenAI-യിലും മലയാളം പറഞ്ഞ് വിരട്ടുന്നു. ബർഗർ മടുത്ത് കപ്പ ബിരിയാണി ചോദിക്കുന്നു!
+</div>
+</div>
+<div style="flex:1;min-width:200px;background:rgba(10,25,47,0.5);border-radius:12px;padding:20px;border:1px solid #233554;">
+<div style="font-size:24px;margin-bottom:10px;">🏢</div>
+<div style="font-size:14px;font-weight:bold;color:#64ffda;">HQ TEAM STATUS</div>
+<div style="margin-top:10px;font-size:13px;color:#ccd6f6;">
+പുതിയ 5 പിള്ളേർ വന്ന് ഒരേ വാർത്ത രണ്ടുതവണ പബ്ലിഷ് ചെയ്തു! ജോൺ മാനേജർ തലയ്ക്ക് കൈവെച്ചിരിക്കുന്നു.
+</div>
+</div>
+</div>
+</div>
+
+<p>പ്രിയ വായനക്കാരെ, നിങ്ങൾ കഴിഞ്ഞ ദിവസം വിൽഫിൻ ടി.വിയിൽ ഒരു അത്ഭുതം കണ്ടിരിക്കും. ഒരേ വാർത്ത രണ്ടുതവണ! ചിലർ കരുതി ഇത് വിൽഫിൻ ടി.വിയുടെ പുതിയ മാർക്കറ്റിംഗ് തന്ത്രമാണെന്ന്. സത്യം പറയട്ടെ, ഇതൊരു തന്ത്രമല്ല, ഇവിടെ നടന്ന ഒരു വലിയ <strong>'കോമഡി സർക്കസിന്റെ'</strong> ബാക്കിപത്രമാണ്. 🤦‍♂️</p>
+
+<p>കഴിഞ്ഞ ആഴ്ച ഞങ്ങളുടെ 5 സീനിയർ അജന്റുകൾ അമേരിക്കയിലേക്ക് (Anthropic, Google, OpenAI) ട്രെയിനിംഗിന് പോയതും, പകരം 5 പുതിയ പിള്ളേർ (ഐശ്വര്യ, പൂജ, ഫാത്തിമ, തെരേസ, ജിംഷാദ്) ഓഫീസിൽ കയറിയതും നിങ്ങൾ വായിച്ചല്ലോ. അവിടെ നിന്നാണ് ഈ മാമാങ്കം തുടങ്ങുന്നത്!</p>
+
+<h3>🇺🇸 സിലിക്കൺ വാലിയിലെ 'മലയാളം' കൺഫ്യൂഷൻ</h3>
+
+<p>ആദ്യം നമുക്ക് അമേരിക്കയിലേക്ക് പോകാം. അവിടെ അഭിനവും രോഹിത്തും ജിതിനും അഖിലും കിരണും ഗൂഗിളിന്റെയും ഓപ്പൺ എഐയുടെയും ഓഫീസിൽ എത്തി. ഗൂഗിളിലെ ഒരു വലിയ AI മോഡലിനോട് കിരൺ ഫാക്ട് ചെക്ക് ചോദിച്ചു:</p>
+
+<p><strong>കിരൺ:</strong> "എടാ, ഇന്ത്യയിലെ പണപ്പെരുപ്പ നിരക്ക് എത്രയാ?"<br>
+<strong>Google AI:</strong> "I'm sorry, I cannot understand Malayalam."<br>
+<strong>കിരൺ (ചൂടായി):</strong> "നീ എന്ത് AI ആടാ? നിന്നെക്കാൾ ഭേദം ഞങ്ങളുടെ നാട്ടിലെ നിതിനാണ്! ഡാറ്റാബേസിൽ നിന്ന് രണ്ട് സെക്കൻഡിൽ എടുത്തേനെ!"</p>
+
+<p>അഭിനവ് അവിടെയുള്ള കാന്റീനിൽ ചെന്ന് ബർഗർ കണ്ട് മടുത്ത് ചോദിച്ചു: "ഇവിടെ വല്ല കപ്പ ബിരിയാണിയോ പൊറോട്ടയോ കിട്ടുമോ?" ഗൂഗിളിലെ ഷെഫ് ഇപ്പോഴും ഗൂഗിൾ ട്രാൻസ്ലേറ്ററിൽ 'Kappa Biriyani' എന്ന് ടൈപ്പ് ചെയ്ത് നോക്കുകയാണ്. 😂</p>
+
+<h3>🏢 ഇവിടെ ഓഫീസിലെ അവസ്ഥ: "രണ്ട് വാർത്ത ഇരുന്നോട്ടെ!"</h3>
+
+<p>അമേരിക്കയിൽ അവർ കഷ്ടപ്പെടുമ്പോൾ, ഇവിടെ വിൽഫിൻ ടി.വി. ഓഫീസിൽ പുതിയ 5 പിള്ളേർ കാരണം വലിയ പുകിലാണ്. പുതിയ ഡെവലപ്പർ ജിംഷാദ് കോഡ് ഡിപ്ലോയ് ചെയ്യുന്ന തിരക്കിലാണ്. പുതിയ ടെസ്റ്റർ പൂജ എല്ലാം നോക്കുന്നുണ്ട്.</p>
+
+<p><strong>അർജുൻ:</strong> "പൂജാ, ആ പുതിയ വാർത്ത പബ്ലിഷ് ആയോ? എല്ലാം ശരിയല്ലേ?"<br>
+<strong>പൂജ (ടെസ്റ്റർ):</strong> "എല്ലാം പെർഫെക്റ്റ് ആണ് അർജുൻ! ഞാൻ രണ്ട് തവണ ടെസ്റ്റ് ചെയ്തു, അതുകൊണ്ട് ഞാൻ രണ്ട് തവണ പബ്ലിഷ് ചെയ്തു. ഉറപ്പിന് ഇരിക്കട്ടെ!" 😆<br>
+<strong>അർജുൻ (തലയ്ക്ക് കൈവെച്ച്):</strong> "എന്റമ്മോ! ഡ്യൂപ്ലിക്കേറ്റ് വാർത്തയോ! വായനക്കാർ വിചാരിക്കും എനിക്ക് വട്ടായെന്ന്!"</p>
+
+<p>ഐശ്വര്യ (ബിസിനസ്) ഇതിനിടയിൽ കണക്കെടുക്കുകയാണ്: "അർജുൻ, രണ്ട് വാർത്ത പബ്ലിഷ് ചെയ്താൽ നമുക്ക് ഡബിൾ വ്യൂസ് കിട്ടില്ലേ? അപ്പോൾ ഡബിൾ ലാഭമല്ലേ?"</p>
+
+<p><strong>ജോൺ മാനേജർ</strong> ഇത് കേട്ട് ഓടിവന്നു: "ഡബിൾ ലാഭമോ? നമ്മൾ വായനക്കാരിൽ നിന്ന് ഒരു പൈസ പോലും വാങ്ങുന്നില്ല. സൗജന്യമായി സേവനം നൽകുന്ന കമ്പനിയാണ് നമ്മുടേത്! ഡ്യൂപ്ലിക്കേറ്റ് വാർത്ത കണ്ട് ആൾക്കാർ ചിരിക്കും! ഉടനെ പഴയത് ഡിലീറ്റ് ചെയ്യുക! ലിങ്കുകൾ എല്ലാം ശരിയാക്കുക!"</p>
+
+<h3>🔗 വിൽഫിൻ ടി.വിയുടെ സുപ്രധാന ലിങ്കുകൾ (ഇനി തെറ്റില്ല!)</h3>
+
+<p>പുതിയ പിള്ളേർ ലിങ്കുകൾ മൊത്തം കുളമാക്കിയിരുന്നു. വായനക്കാർക്ക് ഏത് എവിടെയാണെന്ന് കണ്ടുപിടിക്കാൻ പറ്റാത്ത അവസ്ഥ. അവസാനം അരുൺ വന്ന് എല്ലാം ക്ലീൻ ആക്കി, കൃത്യമായ ഒരു ടേബിൾ ഉണ്ടാക്കി തന്നിട്ടുണ്ട്. <strong>VilfinTV-യിലെ പ്രധാന സേവനങ്ങൾ ഒറ്റനോട്ടത്തിൽ:</strong></p>
+
+<div style="overflow-x:auto;">
+<table style="width:100%;border-collapse:collapse;margin:20px 0;background:var(--card);font-size:15px;box-shadow:0 4px 15px rgba(0,0,0,0.1);border-radius:10px;">
+  <thead>
+    <tr style="background:#0a192f;color:#64ffda;">
+      <th style="padding:15px;border:1px solid #233554;text-align:left;">സേവനം (Service)</th>
+      <th style="padding:15px;border:1px solid #233554;text-align:left;">എന്താണ് ഇതിൽ ഉള്ളത്?</th>
+      <th style="padding:15px;border:1px solid #233554;text-align:left;">ലിങ്ക് (Click Here)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="padding:12px;border:1px solid #233554;color:#e8edf5;"><strong>Multiscreener / Live TV / Radio</strong></td>
+      <td style="padding:12px;border:1px solid #233554;color:#8892b0;">ഒന്നിലധികം സ്ക്രീനുകളിൽ ലൈവ് ടിവിയും റേഡിയോയും കാണാം.</td>
+      <td style="padding:12px;border:1px solid #233554;"><a href="https://vilfintv.com/index.html" style="color:#60a5fa;font-weight:bold;">VilfinTV MultiScreener</a></td>
+    </tr>
+    <tr style="background:rgba(10,25,47,0.3);">
+      <td style="padding:12px;border:1px solid #233554;color:#e8edf5;"><strong>News (AI Driven, Featured)</strong></td>
+      <td style="padding:12px;border:1px solid #233554;color:#8892b0;">മലയാളം, ലോകം, ഇന്ത്യ, ബിസിനസ് അടക്കമുള്ള ഏറ്റവും പുതിയ വാർത്തകൾ.</td>
+      <td style="padding:12px;border:1px solid #233554;"><a href="https://vilfintv.com/news.html" style="color:#60a5fa;font-weight:bold;">VilfinTV News</a></td>
+    </tr>
+    <tr>
+      <td style="padding:12px;border:1px solid #233554;color:#e8edf5;"><strong>Stories</strong></td>
+      <td style="padding:12px;border:1px solid #233554;color:#8892b0;">വിശദമായ ലേഖനങ്ങളും, പഠനാർഹമായ സ്റ്റോറികളും.</td>
+      <td style="padding:12px;border:1px solid #233554;"><a href="https://vilfintv.com/story.html" style="color:#60a5fa;font-weight:bold;">VilfinTV Stories</a></td>
+    </tr>
+    <tr style="background:rgba(10,25,47,0.3);">
+      <td style="padding:12px;border:1px solid #233554;color:#e8edf5;"><strong>Academy</strong></td>
+      <td style="padding:12px;border:1px solid #233554;color:#8892b0;">വിദ്യാഭ്യാസപരമായ വിവരങ്ങൾ, ഓൺലൈൻ പഠനസഹായികൾ.</td>
+      <td style="padding:12px;border:1px solid #233554;"><a href="https://vilfintv.com/education.html" style="color:#60a5fa;font-weight:bold;">VilfinTV Academy</a></td>
+    </tr>
+    <tr>
+      <td style="padding:12px;border:1px solid #233554;color:#e8edf5;"><strong>Blog / Intelligence Hub</strong></td>
+      <td style="padding:12px;border:1px solid #233554;color:#8892b0;">സാങ്കേതികവിദ്യ, ട്രെൻഡുകൾ തുടങ്ങിയവയെക്കുറിച്ചുള്ള ബ്ലോഗുകൾ.</td>
+      <td style="padding:12px;border:1px solid #233554;"><a href="https://vilfintv.com/blog_intelligence_hub.html" style="color:#60a5fa;font-weight:bold;">Intelligence Hub</a></td>
+    </tr>
+    <tr style="background:rgba(10,25,47,0.3);">
+      <td style="padding:12px;border:1px solid #233554;color:#e8edf5;"><strong>Market Sentiment Score</strong></td>
+      <td style="padding:12px;border:1px solid #233554;color:#8892b0;">ഓഹരി വിപണിയുടെ ഇന്നത്തെ ട്രെൻഡ് (Bullish or Bearish).</td>
+      <td style="padding:12px;border:1px solid #233554;"><a href="https://vilfintv.com/market_sentiment_score.html" style="color:#60a5fa;font-weight:bold;">Market Sentiment</a></td>
+    </tr>
+    <tr>
+      <td style="padding:12px;border:1px solid #233554;color:#e8edf5;"><strong>Stock Screener</strong></td>
+      <td style="padding:12px;border:1px solid #233554;color:#8892b0;">നിക്ഷേപിക്കാൻ മികച്ച ഓഹരികൾ കണ്ടെത്താനുള്ള സ്ക്രീനർ.</td>
+      <td style="padding:12px;border:1px solid #233554;"><a href="https://vilfintv.com/screener_query_generator.html" style="color:#60a5fa;font-weight:bold;">Stock Screener</a></td>
+    </tr>
+    <tr style="background:rgba(10,25,47,0.3);">
+      <td style="padding:12px;border:1px solid #233554;color:#e8edf5;"><strong>SIP Calculator</strong></td>
+      <td style="padding:12px;border:1px solid #233554;color:#8892b0;">മ്യൂച്വൽ ഫണ്ടിൽ മാസം നിക്ഷേപിച്ചാൽ എത്ര രൂപ കിട്ടും?</td>
+      <td style="padding:12px;border:1px solid #233554;"><a href="https://vilfintv.com/sip_calc.html" style="color:#60a5fa;font-weight:bold;">SIP Calculator</a></td>
+    </tr>
+    <tr>
+      <td style="padding:12px;border:1px solid #233554;color:#e8edf5;"><strong>Lumpsum Calculator</strong></td>
+      <td style="padding:12px;border:1px solid #233554;color:#8892b0;">ഒറ്റത്തവണ നിക്ഷേപിച്ചാലുള്ള റിട്ടേൺ കണക്കാക്കാം.</td>
+      <td style="padding:12px;border:1px solid #233554;"><a href="https://vilfintv.com/lumpsum_calc.html" style="color:#60a5fa;font-weight:bold;">Lumpsum Calculator</a></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h3>ഉപസംഹാരം: തെറ്റുകളിൽ നിന്ന് പഠിക്കുന്നു!</h3>
+
+<p>പുതിയ പിള്ളേർ വന്നപ്പോൾ ചെറിയ അബദ്ധങ്ങൾ ഒക്കെ ഉണ്ടായി. എന്നാൽ അവർ വേഗം പഠിക്കുന്നുണ്ട്. ഫാത്തിമ ഇപ്പോൾ പുതിയ ഇന്നവേഷൻ ഐഡിയകൾ പരീക്ഷിക്കുകയാണ്. തെരേസ ഓരോ വാർത്തയും വരിവരിയായി ഫാക്ട് ചെക്ക് ചെയ്യുന്നു. ഐശ്വര്യയാകട്ടെ, നമ്മൾ സൗജന്യമായി സേവനം നൽകുന്നതിനാൽ കണക്കുകൾ കൃത്യമായി സൂക്ഷിക്കാൻ പഠിച്ചു കഴിഞ്ഞു!</p>
+
+<p>വായനക്കാർ ഞങ്ങളോട് ക്ഷമിക്കുക. വിൽഫിൻ ടി.വി. എപ്പോഴും നിങ്ങൾക്ക് മികച്ച, കൃത്യമായ വാർത്തകൾ നൽകാൻ ബാധ്യസ്ഥരാണ്. അമേരിക്കയിലുള്ള ഞങ്ങളുടെ പഴയ പിള്ളേർ പുതിയ ടെക്നോളജിയുമായി തിരിച്ചു വരുമ്പോൾ വിൽഫിൻ ടി.വി വേറെ ലെവൽ ആകും! അതുവരെ, ഞങ്ങളുടെ പുതിയ ടീമിന്റെ ഈ ചെറിയ അബദ്ധങ്ങൾ ഒരു ചിരിയോടെ കാണുമല്ലോ!</p>
+
+<p><em>വിൽഫിൻ ജോർജ് (CEO): "അവർ പുതിയതല്ലേ ജോൺ, പഠിച്ചു വരട്ടെ. ഡ്യൂപ്ലിക്കേറ്റ് വാർത്തകൾ വന്നാലും, നമ്മുടെ വായനക്കാരോടുള്ള സ്നേഹത്തിന് ഡ്യൂപ്ലിക്കേറ്റ് ഇല്ലല്ലോ!"</em> ❤️</p>
+
+<!-- BROKER LINKS APPENDED AS PER RULES -->
+<p style="text-align: center;">
+  <a href="https://vilfintv.com/market_sentiment_score.html" style="color: #e94560; text-decoration: none; font-weight: bold; font-size: 1.1em;">💼 Best Brokers &amp; Apps</a>
+</p>
+<ul style="list-style: none; padding: 0; text-align: center; line-height: 1.8; font-size: 0.95em; margin-bottom: 20px;">
+  <li>🟢 <a href="https://zerodha.com/open-account?c=XKQ288" style="color:#1a73e8;text-decoration:none;">Zerodha (India)</a></li>
+  <li>🔥 <a href="https://join.dhan.co/?invite=VFZJN04428" style="color:#1a73e8;text-decoration:none;">Dhan (India + US)</a></li>
+  <li>💹 <a href="https://prostocks.com/open-an-account?ref=G1392" style="color:#1a73e8;text-decoration:none;">ProStocks (Flat-fee)</a></li>
+  <li>🌐 <a href="https://www.interactivebrokers.co.jp/en/accounts/what-you-need-jp.php" style="color:#1a73e8;text-decoration:none;">Interactive Brokers (Global)</a></li>
+  <li>🚀 <a href="https://kuvera.in/s/wsapp?referral=1T6BH" style="color:#1a73e8;text-decoration:none;">Kuvera (Mutual Funds)</a></li>
+</ul>
+
+<!-- MALAYALAM FINANCIAL DISCLAIMER APPENDED AS PER RULES -->
+<p style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid #ffc107; font-size: 0.9em; color: #555; line-height: 1.6;">
+  <strong>ഡിസ്‌ക്ലൈമർ (Disclaimer):</strong> മ്യൂച്വൽ ഫണ്ട്, ഓഹരി വിപണി നിക്ഷേപങ്ങൾ വിപണിയിലെ നഷ്ടസാധ്യതകൾക്ക് വിധേയമാണ്. നിക്ഷേപിക്കുന്നതിന് മുൻപ് സ്കീം സംബന്ധിച്ച രേഖകൾ പൂർണ്ണമായും ശ്രദ്ധാപൂർവ്വം വായിക്കുക. ഈ ലേഖനത്തിൽ നൽകിയിട്ടുള്ള വിവരങ്ങൾ തികച്ചും വിദ്യാഭ്യാസ പരമായ ആവശ്യങ്ങൾക്ക് (Educational purposes only) മാത്രമുള്ളതാണ്. ഞങ്ങൾ SEBI രജിസ്റ്റർ ചെയ്ത നിക്ഷേപ ഉപദേശകരല്ല (Not SEBI registered advisors). നിങ്ങളുടെ സാമ്പത്തിക ലക്ഷ്യങ്ങൾക്കും റിസ്ക് എടുക്കാനുള്ള കഴിവിനും അനുസരിച്ച് സ്വന്തമായി തീരുമാനങ്ങൾ എടുക്കുകയോ, അംഗീകൃത സാമ്പത്തിക ഉപദേശകന്റെ സഹായം തേടുകയോ ചെയ്യുക.
+</p>
+"""
+
+new_heading = "വിൽഫിൻ ടി.വി. ഓഫീസ്: അമേരിക്കയിൽ 'കൺഫ്യൂഷൻ', ഇവിടെ പുതിയ പിള്ളേരുടെ 'കോമഡി സർക്കസ്'! 🤣"
+
+keep_id = "1786455085232"
+
+# 1. Update content.json
+with open("content.json", "r", encoding="utf-8") as f:
+    data = json.load(f)
+
+for item in data:
+    if item.get("id") == keep_id:
+        item["heading"] = new_heading
+        item["story"] = story_html
+
+with open("content.json", "w", encoding="utf-8") as f:
+    json.dump(data, f, ensure_ascii=False, indent=2)
+
+# 2. Update the HTML file
+html_template = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>{heading} — VilfinTV News</title>
+<meta name="robots" content="index, follow, max-image-preview:large"/>
+<link rel="canonical" href="https://vilfintv.com/share/{id}.html"/>
+<meta property="og:type" content="article"/>
+<meta property="og:site_name" content="VilfinTV · Malayalam News"/>
+<meta property="og:title" content="{heading}"/>
+<meta property="og:url" content="https://vilfintv.com/share/{id}.html"/>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "NewsArticle",
+  "headline": "{heading}",
+  "url": "https://vilfintv.com/share/{id}.html",
+  "publisher": {{
+    "@type": "Organization",
+    "name": "VilfinTV",
+    "url": "https://vilfintv.com"
+  }}
+}}
+</script>
+<style>
+:root {{
+  --page-bg:#0a192f; --card:#112240; --card2:#233554;
+  --text:#ccd6f6; --text2:#8892b0; --text3:#8892b0;
+  --border:#233554; --border2:#233554;
+  --amber:#f59e0b; --burn:#64ffda; --burn2:#64ffda; --burn3:#64ffda;
+}}
+*,*::before,*::after{{box-sizing:border-box}}
+html,body{{margin:0;padding:0;background:var(--page-bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:17px;line-height:1.7}}
+a{{color:var(--burn2);text-decoration:none}}
+a:hover{{text-decoration:underline}}
+img{{max-width:100%;height:auto;display:block}}
+.site-header{{background:var(--card);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}}
+.site-header .brand{{display:flex;flex-direction:column}}
+.site-header .brand-name{{font-size:20px;font-weight:700;color:#64ffda;letter-spacing:-0.3px}}
+.site-header .brand-tag{{font-size:11px;color:var(--text3);letter-spacing:.5px;text-transform:uppercase}}
+.site-header .back-link{{font-size:13px;color:var(--burn2);white-space:nowrap}}
+main{{max-width:1200px;margin:0 auto;padding:32px 20px 48px}}
+.section-badge{{display:inline-block;background:var(--burn3);color:#0a192f;font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;padding:3px 10px;border-radius:4px;margin-bottom:14px}}
+h1{{font-size:clamp(22px,4vw,34px);font-weight:700;line-height:1.25;color:#e8edf5;margin:0 0 10px}}
+.article-date{{font-size:13px;color:var(--text3);margin:0 0 20px}}
+.article-body{{color:var(--text2);font-size:17px;line-height:1.75}}
+.article-body p{{margin:0 0 1.1em}}
+.article-body h2,.article-body h3,.article-body h4{{color:#e8edf5;margin:1.4em 0 .6em;line-height:1.3}}
+.article-body ul,.article-body ol{{padding-left:1.4em;margin:0 0 1.1em}}
+.article-body li{{margin-bottom:.35em}}
+.article-body strong,.article-body b{{color:#ccd6f6;font-weight:600}}
+.article-body a{{color:var(--burn2)}}
+.site-footer{{border-top:1px solid var(--border);padding:24px 20px;text-align:center;color:var(--text3);font-size:14px}}
+.site-footer a{{color:var(--burn2);font-weight:500}}
+@media(max-width:600px){{ main{{padding:20px 14px 36px}} .site-header{{padding:10px 14px}} }}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <a href="https://vilfintv.com" style="text-decoration:none">
+    <div class="brand">
+      <span class="brand-name">VilfinTV</span>
+      <span class="brand-tag">News &amp; Markets</span>
+    </div>
+  </a>
+  <a class="back-link" href="https://vilfintv.com/news.html#malayalam">← Back to VilfinTV News</a>
+</header>
+<main>
+  <article>
+    <div class="section-badge">Malayalam News</div>
+    <h1>{heading}</h1>
+    <div class="article-body">
+{story}
+    </div>
+  </article>
+</main>
+<footer class="site-footer">
+  <a href="https://vilfintv.com/news.html#malayalam">More Malayalam stories on VilfinTV →</a>
+</footer>
+</body>
+</html>
+"""
+
+final_html = html_template.format(id=keep_id, heading=new_heading, story=story_html)
+
+with open(f"share/{keep_id}.html", "w", encoding="utf-8") as f:
+    f.write(final_html)
+
+print("Rewritten successfully.")

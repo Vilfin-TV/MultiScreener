@@ -245,7 +245,7 @@ img{{max-width:100%;height:auto;display:block}}
 .site-header .back-link{{font-size:13px;color:var(--burn2);white-space:nowrap}}
 
 /* Main layout */
-main{{max-width:780px;margin:0 auto;padding:32px 20px 48px}}
+main{{max-width:1200px;margin:0 auto;padding:32px 20px 48px}}
 
 /* Section badge */
 .section-badge{{display:inline-block;background:var(--burn3);color:#fff;
