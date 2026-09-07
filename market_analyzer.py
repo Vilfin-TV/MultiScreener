@@ -305,7 +305,7 @@ def fetch_asset_data(ticker_symbol):
                 'Connection': 'keep-alive'
             })
 
-            proxy = os.environ.get('YAHOO_PROXY') or os.environ.get('WORKER_URL')
+            proxy = os.environ.get('YAHOO_PROXY')
             if proxy:
                 proxies = {'http': proxy, 'https': proxy}
                 session.proxies.update(proxies)
@@ -2174,6 +2174,13 @@ def send_email(html_content):
 if __name__ == "__main__":
     logging.info("Starting Market Analyzer Pipeline")
     market_data = collect_market_data()
+
+    # Data Integrity Guard: Ensure we actually fetched data before sending an empty report.
+    total_tickers = sum(len(cat) for cat in market_data.values())
+    fetched_ok = sum(1 for cat in market_data.values() for v in cat.values() if v is not None)
+    if total_tickers > 0 and fetched_ok < total_tickers * 0.3:
+        logging.critical(f"DATA INTEGRITY FAILURE: Only {fetched_ok}/{total_tickers} tickers returned data. Aborting email to avoid sending an empty report.")
+        raise SystemExit(1)
 
     # Auto-detect the biggest mover among FX pairs NOT already in the
     # permanent Currencies table, and merge it in before scoring so it
