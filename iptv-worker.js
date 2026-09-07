@@ -1405,6 +1405,12 @@ async function syncEpgToD1(env, providerId, epgUrl) {
  *  cycle completes over many ticks instead of one (which wouldn't fit the
  *  execution time budget). Returns a summary for logging/manual-trigger responses. */
 async function runD1Sync(env) {
+  // D1 sync disabled — free tier rows_written limit (100K/day) is insufficient
+  // for the ~150-source IPTV sync (~700K-2.9M writes/day). The IPTV console reads
+  // from KV/R2/live-fetch, so this sync has zero impact on the live service.
+  // Re-enable after upgrading to Workers Paid plan ($5/mo) or when a D1 read path
+  // is built. See: https://dash.cloudflare.com/?account=/workers/plans
+  return { disabled: true, reason: 'D1 free tier limit — sync paused' };
   if (!env.DB) return { error: "D1 not bound" };
   const settings = await loadSettings(env);
   const ids = Object.keys(settings.providers).filter((id) => id !== CUSTOM_PROVIDER_ID && settings.providers[id].enabled !== false);
